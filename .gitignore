@@ -123,22 +123,22 @@ dmypy.json
 .DS_Store
 
 # Large File
-.png
-.jpg
-.gif
-.ipynb
-.mp4
-.pkl
-.npy
-.bin
-.wav
-.bmp
-.pt
-.rst
+*.png
+*.jpg
+*.gif
+*.ipynb
+*.mp4
+*.pkl
+*.npy
+*.bin
+*.wav
+*.bmp
+*.pt
+*.rst
 fusion_result.json
-.docx
-.doc
-.x86_64
+*.docx
+*.doc
+*.x86_64
 unsupported_op.csv
 
 
