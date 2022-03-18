@@ -1,0 +1,6 @@
+onnx==1.7.0
+pytorch==1.8.0
+TorchVision==0.9.1
+numpy==1.19.2
+pillow==7.2.0
+opencv-python == 4.2.0.34

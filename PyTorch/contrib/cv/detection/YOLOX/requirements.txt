@@ -1,0 +1,12 @@
+# TODO: Update with exact module version
+numpy
+opencv_python
+loguru
+scikit-image
+tqdm
+torchvision
+Pillow
+thop
+ninja
+tabulate
+tensorboard

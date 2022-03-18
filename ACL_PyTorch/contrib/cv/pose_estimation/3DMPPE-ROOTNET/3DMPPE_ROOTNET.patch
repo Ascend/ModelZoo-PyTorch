@@ -1,0 +1,117 @@
+diff --git a/common/utils/pose_utils.py b/common/utils/pose_utils.py
+index c9f04bf..4059154 100644
+--- a/common/utils/pose_utils.py
++++ b/common/utils/pose_utils.py
+@@ -1,6 +1,6 @@
+ import torch
+ import numpy as np
+-from config import cfg
++from main.config import cfg
+ import copy
+ 
+ def cam2pixel(cam_coord, f, c):
+diff --git a/data/MuPoTS/MuPoTS.py b/data/MuPoTS/MuPoTS.py
+index c62d6e1..11f54c9 100644
+--- a/data/MuPoTS/MuPoTS.py
++++ b/data/MuPoTS/MuPoTS.py
+@@ -3,21 +3,21 @@ import os.path as osp
+ import scipy.io as sio
+ import numpy as np
+ from pycocotools.coco import COCO
+-from config import cfg
++from main.config import cfg
+ import json
+ import cv2
+ import random
+ import math
+-from utils.pose_utils import pixel2cam, process_bbox
++from common.utils.pose_utils import pixel2cam, process_bbox
+ from sklearn.metrics import average_precision_score
+-from MuPoTS_eval import calculate_score
++from data.MuPoTS.MuPoTS_eval import calculate_score
+ 
+ class MuPoTS:
+-    def __init__(self, data_split):
++    def __init__(self, data_split, img_path, ann_path):
+         self.data_split = data_split
+-        self.img_dir = osp.join('..', 'data', 'MuPoTS', 'data', 'MultiPersonTestSet')
+-        self.annot_path = osp.join('..', 'data', 'MuPoTS', 'data', 'MuPoTS-3D.json')
+-        self.human_bbox_dir = osp.join('..', 'data', 'MuPoTS', 'bbox', 'bbox_mupots_output.json')
++        self.img_dir = img_path;
++        self.annot_path = ann_path;
++        self.human_bbox_dir = osp.join('3DMPPE_ROOTNET_RELEASE', 'data', 'MuPoTS', 'bbox', 'bbox_mupots_output.json')
+         self.joint_num = 21 # MuCo-3DHP
+         self.joints_name = ('Head_top', 'Thorax', 'R_Shoulder', 'R_Elbow', 'R_Wrist', 'L_Shoulder', 'L_Elbow', 'L_Wrist', 'R_Hip', 'R_Knee', 'R_Ankle', 'L_Hip', 'L_Knee', 'L_Ankle', 'Pelvis', 'Spine', 'Head', 'R_Hand', 'L_Hand', 'R_Toe', 'L_Toe') # MuCo-3DHP
+         self.original_joint_num = 17 # MuPoTS
+@@ -139,7 +139,7 @@ class MuPoTS:
+             json.dump(pred_save, f)
+         print("Test result is saved at " + output_path)
+ 
+-        calculate_score(output_path, self.annot_path, 250)
++        calculate_score(output_path, self.annot_path, 250, result_dir)
+ 
+  
+ 
+diff --git a/data/MuPoTS/MuPoTS_eval.py b/data/MuPoTS/MuPoTS_eval.py
+index f4862d6..5ed31de 100644
+--- a/data/MuPoTS/MuPoTS_eval.py
++++ b/data/MuPoTS/MuPoTS_eval.py
+@@ -5,7 +5,7 @@ import os.path as osp
+ import numpy as np
+ import math
+ 
+-def calculate_score(output_path, annot_path, thr):
++def calculate_score(output_path, annot_path, thr, result_dir):
+ 
+     with open(output_path, 'r') as f:
+         output = json.load(f)
+@@ -67,7 +67,9 @@ def calculate_score(output_path, annot_path, thr):
+     AP = 0
+     for n in range(len(precision)-1):
+         AP += precision[n+1] * (recall[n+1] - recall[n])
+-
++    result_path = osp.join(result_dir, 'result_score.json')
++    with open(result_path, 'w') as f:
++        json.dump('AP_root: ' + str(AP), f)
+     print('AP_root: ' + str(AP))
+ 
+ if __name__ == '__main__':
+diff --git a/data/dataset.py b/data/dataset.py
+index 2157646..6fd8340 100644
+--- a/data/dataset.py
++++ b/data/dataset.py
+@@ -6,7 +6,7 @@ import torch
+ import copy
+ import math
+ from torch.utils.data.dataset import Dataset
+-from config import cfg
++from main.config import cfg
+ 
+ class DatasetLoader(Dataset):
+     def __init__(self, db, is_train, transform):
+diff --git a/main/model.py b/main/model.py
+index a97d0d1..20018c1 100644
+--- a/main/model.py
++++ b/main/model.py
+@@ -1,8 +1,8 @@
+ import torch
+ import torch.nn as nn
+ from torch.nn import functional as F
+-from nets.resnet import ResNetBackbone
+-from config import cfg
++from common.nets.resnet import ResNetBackbone
++from main.config import cfg
+ 
+ class RootNet(nn.Module):
+ 
+@@ -58,8 +58,8 @@ class RootNet(nn.Module):
+         hm_x = xy.sum(dim=(2))
+         hm_y = xy.sum(dim=(3))
+ 
+-        coord_x = hm_x * torch.arange(cfg.output_shape[1]).float().cuda()
+-        coord_y = hm_y * torch.arange(cfg.output_shape[0]).float().cuda()
++        coord_x = hm_x * torch.arange(cfg.output_shape[1]).float()
++        coord_y = hm_y * torch.arange(cfg.output_shape[0]).float()
+         
+         coord_x = coord_x.sum(dim=2)
+         coord_y = coord_y.sum(dim=2)

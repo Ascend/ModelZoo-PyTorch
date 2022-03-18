@@ -1,0 +1,6 @@
+GPUStatus:OK
+NPUMigrationStatus:OK
+FuncStatus:OK
+PrecisionStatus:POK
+AutoTune:OK
+PerfStatus:OK

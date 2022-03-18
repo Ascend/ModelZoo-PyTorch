@@ -1,0 +1,81 @@
+# Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+import re
+
+_no_period_re = re.compile(r'(No[.])(?=[ ]?[0-9])')
+_percent_re = re.compile(r'([ ]?[%])')
+_half_re = re.compile('([0-9]½)|(½)')
+_url_re = re.compile(r'([a-zA-Z])\.(com|gov|org)')
+
+
+# List of (regular expression, replacement) pairs for abbreviations:
+_abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in [
+    ('mrs', 'misess'),
+    ('ms', 'miss'),
+    ('mr', 'mister'),
+    ('dr', 'doctor'),
+    ('st', 'saint'),
+    ('co', 'company'),
+    ('jr', 'junior'),
+    ('maj', 'major'),
+    ('gen', 'general'),
+    ('drs', 'doctors'),
+    ('rev', 'reverend'),
+    ('lt', 'lieutenant'),
+    ('hon', 'honorable'),
+    ('sgt', 'sergeant'),
+    ('capt', 'captain'),
+    ('esq', 'esquire'),
+    ('ltd', 'limited'),
+    ('col', 'colonel'),
+    ('ft', 'fort'),
+    ('sen', 'senator'),
+    ('etc', 'et cetera'),
+]]
+
+
+def _expand_no_period(m):
+    word = m.group(0)
+    if word[0] == 'N':
+        return 'Number'
+    return 'number'
+
+
+def _expand_percent(m):
+    return ' percent'
+
+
+def _expand_half(m):
+    word = m.group(1)
+    if word is None:
+        return 'half'
+    return word[0] + ' and a half'
+
+
+def _expand_urls(m):
+    return f'{m.group(1)} dot {m.group(2)}'
+
+
+def normalize_abbreviations(text):
+    text = re.sub(_no_period_re, _expand_no_period, text)
+    text = re.sub(_percent_re, _expand_percent, text)
+    text = re.sub(_half_re, _expand_half, text)
+    text = re.sub('&', ' and ', text)
+    text = re.sub('@', ' at ', text)
+    text = re.sub(_url_re, _expand_urls, text)
+
+    for regex, replacement in _abbreviations:
+        text = re.sub(regex, replacement, text)
+    return text

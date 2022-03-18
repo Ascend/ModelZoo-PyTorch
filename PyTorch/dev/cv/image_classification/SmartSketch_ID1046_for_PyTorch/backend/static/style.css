@@ -1,0 +1,87 @@
+@font-face {
+  font-family: "Rubik";
+  src: url("https://use.typekit.net/ymw8ood.css");
+}
+
+.rubik {
+  font-family: "Rubik", sans-serif;
+  font-weight: 100;
+}
+
+.branding {
+  font-size: 30px;
+}
+
+.dark-background {
+  background-color: rgb(24, 25, 27);
+}
+
+.colorButtons {
+  display: block;
+  margin: 5px 0px;
+}
+
+.sidebar {
+  text-align: center;
+}
+
+h4 {
+  margin-bottom: 16px;
+}
+
+canvas {
+  cursor: crosshair;
+}
+
+.content {
+  padding-top: 40px;
+}
+
+canvas#canvas {
+  /* height: 100%; */
+  /* width: 403px; */
+  position: absolute;
+}
+
+.container {
+  max-width: 1380px;
+}
+
+.image {
+  left: 230px;
+  top: 150px;
+}
+
+.btn {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+input {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.input-group {
+  margin-bottom: 10px;
+}
+.toolsButtons {
+  margin-bottom: 10px;
+}
+
+.tips {
+  margin-top: 20px;
+  text-align: center;
+}
+.toolsButtons .btn {
+  width: 48%;
+}
+
+.sizeButtons .btn {
+  width: 48%;
+}
+
+.colorpicker {
+  background: transparent;
+  height: 40px;
+}

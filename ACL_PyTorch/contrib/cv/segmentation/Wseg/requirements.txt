@@ -1,0 +1,8 @@
+torch == 1.5.0
+torchvision == 0.6.0
+onnx == 1.7.0
+numpy == 1.15.4
+pillow == 5.4.1
+opencv-python == 4.5.2.54
+pydensecrf == 1.0rc2
+six == 1.12.0

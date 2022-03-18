@@ -1,0 +1,1 @@
+python3.7 -u run_train.py $1

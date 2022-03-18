@@ -1,0 +1,31 @@
+index bd70000..1a720d2 100644
+--- a/pretrainedmodels/models/dpn.py
++++ b/pretrainedmodels/models/dpn.py
+@@ -373,7 +373,7 @@ class DPN(nn.Module):
+         self.last_linear = nn.Conv2d(in_chs, num_classes, kernel_size=1, bias=True)
+ 
+     def logits(self, features):
+-        if not self.training and self.test_time_pool:
++        if not self.training and self.test_time_pool and False:
+             x = F.avg_pool2d(features, kernel_size=7, stride=1)
+             out = self.last_linear(x)
+             # The extra test time pool should be pooling an img_size//32 - 6 size patch
+@@ -423,8 +423,9 @@ def adaptive_avgmax_pool2d(x, pool_type='avg', padding=0, count_include_pad=Fals
+     else:
+         if pool_type != 'avg':
+             print('Invalid pool type %s specified. Defaulting to average pooling.' % pool_type)
+-        x = F.avg_pool2d(
+-            x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad)
++        #x = F.avg_pool2d(
++        #    x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad)
++        x = F.adaptive_avg_pool2d(x, (1, 1))
+     return x
+ 
+ 
+@@ -459,4 +460,4 @@ class AdaptiveAvgMaxPool2d(torch.nn.Module):
+     def __repr__(self):
+         return self.__class__.__name__ + ' (' \
+                + 'output_size=' + str(self.output_size) \
+-               + ', pool_type=' + self.pool_type + ')'
+\ No newline at end of file
++               + ', pool_type=' + self.pool_type + ')'

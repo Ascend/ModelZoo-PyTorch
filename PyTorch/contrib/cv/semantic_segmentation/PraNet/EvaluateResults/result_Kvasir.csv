@@ -1,0 +1,6 @@
+method, meanDic, meanIoU
+PraNet,0.8914,0.8346,(NPU8 bs128 O2 lr4e-4)
+PraNet,0.8906,0.8389,（单卡GPU + O2）
+PraNet,0.8830,0.8297,（多卡GPU bs48，146服务器）
+PraNet,0.8988,0.8419,（单卡NPU 66服务器）
+PraNet,0.9030,0.8474,(单卡NPU 精度比0.898还高)

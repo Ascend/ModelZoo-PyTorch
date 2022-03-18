@@ -1,0 +1,6 @@
+apex
+tensor-fused-plugin
+torchvision
+scikit-learn
+h5py
+tqmd

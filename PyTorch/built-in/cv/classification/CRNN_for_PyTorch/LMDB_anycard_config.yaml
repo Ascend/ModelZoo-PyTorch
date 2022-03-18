@@ -1,0 +1,52 @@
+DEVICE_ID: 6
+WORKERS: 80
+PRINT_FREQ: 1
+SAVE_FREQ: 1
+PIN_MEMORY: true
+DROP_LAST: true
+LR: 1.0
+OUTPUT_DIR: 'output'
+
+DATASET:
+  DATA_FILTER: true
+  DATASET: LMDB
+  TRAIN_ROOT: "/home/dataset/MJ_LMDB"
+  TEST_ROOT: "/home/dataset/IIIT5K_lmdb"
+  ALPHABETS: '0123456789abcdefghijklmnopqrstuvwxyz'
+
+TRAIN:
+  AMP: True
+  OPT_LEVEL: O2
+  LOSS_SCALE: 128
+  BATCH_SIZE_PER_GPU: 10240
+  SHUFFLE: True
+  BEGIN_EPOCH: 0
+  END_EPOCH: 20
+  OPTIMIZER: 'adadelta'
+  RESUME:
+    IS_RESUME: False
+    FILE: '/home/CRNN_Chinese_Characters_Rec-stable_o2_epoch100/npu/output/2020-10-10-12-45/checkpoints/checkpoint_10_acc_0.7927.pth'
+
+TEST:
+  MODEL_FILE: ''
+  BATCH_SIZE_PER_GPU: 1280
+  SHUFFLE: True
+  NUM_TEST_DISP: 10
+
+DISTRIBUTED:
+  ADDR: '90.90.176.52'
+  WORLD_SIZE: 1
+  RANK: 0
+  DIST_URL: 'tcp://224.66.41.62:23456'
+  DIST_BACKEND: 'hccl'
+  DEVICE_LIST: '0,1,2,3'
+  MULTIPROCESSING_DISTRIBUTED: True
+
+MODEL:
+  NAME: 'crnn'
+  IMAGE_SIZE:
+    H: 32
+    W: 100
+  NUM_CLASSES: 0
+  NUM_HIDDEN: 256
+

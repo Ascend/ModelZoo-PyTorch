@@ -1,0 +1,68 @@
+diff -uNr RefineDet.PyTorch/data/scripts/VOC2007.sh RefineDet.PyTorch_modified/data/scripts/VOC2007.sh
+--- RefineDet.PyTorch/data/scripts/VOC2007.sh	2021-08-19 17:26:19.954052711 +0800
++++ RefineDet.PyTorch_modified/data/scripts/VOC2007.sh	2021-08-19 15:18:39.993919207 +0800
+@@ -8,8 +8,8 @@
+   then
+     # navigate to ~/data
+     echo "navigating to ~/data/ ..." 
+-    mkdir -p ~/data
+-    cd ~/data/
++    # mkdir -p ~/data
++    cd ./data/
+   else
+     # check if is valid directory
+     if [ ! -d $1 ]; then
+diff -uNr RefineDet.PyTorch/data/scripts/VOC2012.sh RefineDet.PyTorch_modified/data/scripts/VOC2012.sh
+--- RefineDet.PyTorch/data/scripts/VOC2012.sh	2021-08-19 17:26:19.954052711 +0800
++++ RefineDet.PyTorch_modified/data/scripts/VOC2012.sh	2021-08-19 15:18:47.561951498 +0800
+@@ -8,8 +8,8 @@
+   then
+     # navigate to ~/data
+     echo "navigating to ~/data/ ..." 
+-    mkdir -p ~/data
+-    cd ~/data/
++    # mkdir -p ~/data
++    cd ./data/
+   else
+     # check if is valid directory
+     if [ ! -d $1 ]; then
+diff -uNr RefineDet.PyTorch/data/voc0712.py RefineDet.PyTorch_modified/data/voc0712.py
+--- RefineDet.PyTorch/data/voc0712.py	2021-08-19 17:26:19.954052711 +0800
++++ RefineDet.PyTorch_modified/data/voc0712.py	2021-08-19 16:32:55.831861256 +0800
+@@ -111,6 +111,15 @@
+             for line in open(osp.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
+                 self.ids.append((rootpath, line.strip()))
+ 
++    def get_h_w_list(self):
++        h_list, w_list = [], []
++        for i in range(len(self.ids)):
++            _, _, h, w = self.pull_item(i)
++            h_list.append(h)
++            w_list.append(w)
++        return h_list, w_list
++    
++
+     def __getitem__(self, index):
+         im, gt, h, w = self.pull_item(index)
+ 
+diff -uNr RefineDet.PyTorch/models/refinedet.py RefineDet.PyTorch_modified/models/refinedet.py
+--- RefineDet.PyTorch/models/refinedet.py	2021-08-19 17:26:20.050055376 +0800
++++ RefineDet.PyTorch_modified/models/refinedet.py	2021-08-19 15:44:17.143628413 +0800
+@@ -138,7 +138,16 @@
+ 
+         if self.phase == "test":
+             #print(loc, conf)
+-            output = self.detect(
++            # output = self.detect(
++            #     arm_loc.view(arm_loc.size(0), -1, 4),           # arm loc preds
++            #     self.softmax(arm_conf.view(arm_conf.size(0), -1,
++            #                  2)),                               # arm conf preds
++            #     odm_loc.view(odm_loc.size(0), -1, 4),           # odm loc preds
++            #     self.softmax(odm_conf.view(odm_conf.size(0), -1,
++            #                  self.num_classes)),                # odm conf preds
++            #     self.priors.type(type(x.data))                  # default boxes
++            # )
++            output = (
+                 arm_loc.view(arm_loc.size(0), -1, 4),           # arm loc preds
+                 self.softmax(arm_conf.view(arm_conf.size(0), -1,
+                              2)),                               # arm conf preds

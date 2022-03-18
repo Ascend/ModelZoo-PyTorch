@@ -1,0 +1,295 @@
+diff --git a/lib/core/group.py b/lib/core/group.py
+index f09be8f..93b6240 100644
+--- a/lib/core/group.py
++++ b/lib/core/group.py
+@@ -162,7 +162,7 @@ class HeatmapParser(object):
+         )
+ 
+         x = ind % w
+-        y = (ind / w).long()
++        y = (ind // w).long()
+ 
+         ind_k = torch.stack((x, y), dim=3)
+ 
+diff --git a/lib/core/inference.py b/lib/core/inference.py
+index fbc427e..d70c7be 100644
+--- a/lib/core/inference.py
++++ b/lib/core/inference.py
+@@ -12,7 +12,7 @@ from __future__ import print_function
+ 
+ import torch
+ 
+-from dataset.transforms import FLIP_CONFIG
++from lib.dataset.transforms.build import FLIP_CONFIG
+ 
+ 
+ def get_outputs(
+@@ -84,6 +84,7 @@ def get_multi_stage_outputs(
+ 
+     outputs = model(image)
+     for i, output in enumerate(outputs):
++        print(output.shape)
+         if len(outputs) > 1 and i != len(outputs) - 1:
+             output = torch.nn.functional.interpolate(
+                 output,
+@@ -164,6 +165,7 @@ def get_multi_stage_outputs(
+             torch.nn.functional.interpolate(
+                 tms,
+                 size=(size_projected[1], size_projected[0]),
++                # size=(512, 512),
+                 mode='bilinear',
+                 align_corners=False
+             )
+diff --git a/lib/core/trainer.py b/lib/core/trainer.py
+index 0a20940..de29826 100644
+--- a/lib/core/trainer.py
++++ b/lib/core/trainer.py
+@@ -36,6 +36,8 @@ def do_train(cfg, model, data_loader, loss_factory, optimizer, epoch,
+         # measure data loading time
+         data_time.update(time.time() - end)
+ 
++
++
+         # compute output
+         outputs = model(images)
+ 
+diff --git a/lib/dataset/COCODataset.py b/lib/dataset/COCODataset.py
+index 265c54a..1f51f94 100644
+--- a/lib/dataset/COCODataset.py
++++ b/lib/dataset/COCODataset.py
+@@ -1,10 +1,3 @@
+-# ------------------------------------------------------------------------------
+-# Copyright (c) Microsoft
+-# Licensed under the MIT License.
+-# Written by Bin Xiao (leoxiaobin@gmail.com)
+-# Modified by Bowen Cheng (bcheng9@illinois.edu)
+-# ------------------------------------------------------------------------------
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+@@ -21,14 +14,13 @@ import numpy as np
+ from torch.utils.data import Dataset
+ 
+ from pycocotools.cocoeval import COCOeval
+-from utils import zipreader
++from lib.utils import zipreader
+ 
+ logger = logging.getLogger(__name__)
+ 
+ 
+ class CocoDataset(Dataset):
+     """`MS Coco Detection <http://mscoco.org/dataset/#detections-challenge2016>`_ Dataset.
+-
+     Args:
+         root (string): Root directory where dataset is located to.
+         dataset (string): Dataset name(train2017, val2017, test2017).
+@@ -97,7 +89,6 @@ class CocoDataset(Dataset):
+         """
+         Args:
+             index (int): Index
+-
+         Returns:
+             tuple: Tuple (image, target). target is the object returned by ``coco.loadAnns``.
+         """
+@@ -163,9 +154,9 @@ class CocoDataset(Dataset):
+         :param cfg: cfg dictionary
+         :param preds: prediction
+         :param output_dir: output directory
+-        :param args: 
+-        :param kwargs: 
+-        :return: 
++        :param args:
++        :param kwargs:
++        :return:
+         '''
+         res_folder = os.path.join(output_dir, 'results')
+         if not os.path.exists(res_folder):
+@@ -306,4 +297,4 @@ class CocoDataset(Dataset):
+             info_str.append((name, coco_eval.stats[ind]))
+             # info_str.append(coco_eval.stats[ind])
+ 
+-        return info_str
++        return info_str
+\ No newline at end of file
+diff --git a/lib/dataset/COCOKeypoints.py b/lib/dataset/COCOKeypoints.py
+index 9957720..f380492 100644
+--- a/lib/dataset/COCOKeypoints.py
++++ b/lib/dataset/COCOKeypoints.py
+@@ -1,10 +1,3 @@
+-# ------------------------------------------------------------------------------
+-# Copyright (c) Microsoft
+-# Licensed under the MIT License.
+-# Written by Bin Xiao (leoxiaobin@gmail.com)
+-# Modified by Bowen Cheng (bcheng9@illinois.edu)
+-# ------------------------------------------------------------------------------
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+@@ -14,8 +7,8 @@ import logging
+ import numpy as np
+ 
+ import pycocotools
+-from .COCODataset import CocoDataset
+-from .target_generators import HeatmapGenerator
++from lib.dataset.COCODataset import CocoDataset
++from lib.dataset.target_generators.target_generators import HeatmapGenerator
+ 
+ 
+ logger = logging.getLogger(__name__)
+@@ -148,4 +141,4 @@ class CocoKeypoints(CocoDataset):
+             'got {} vs {}.'.format(
+                 len(heatmap_generator), len(joints_generator)
+             )
+-        return len(heatmap_generator)
++        return len(heatmap_generator)
+\ No newline at end of file
+diff --git a/lib/dataset/__init__.py b/lib/dataset/__init__.py
+index 1d32d71..9ac170a 100644
+--- a/lib/dataset/__init__.py
++++ b/lib/dataset/__init__.py
+@@ -5,7 +5,7 @@
+ # ------------------------------------------------------------------------------
+ 
+ from .COCOKeypoints import CocoKeypoints as coco
+-from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose
++# from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose
+ from .build import make_dataloader
+ from .build import make_test_dataloader
+ 
+diff --git a/lib/dataset/build.py b/lib/dataset/build.py
+index 5b45ce3..0a1d77d 100644
+--- a/lib/dataset/build.py
++++ b/lib/dataset/build.py
+@@ -1,24 +1,13 @@
+-# ------------------------------------------------------------------------------
+-# Copyright (c) Microsoft
+-# Licensed under the MIT License.
+-# Written by Bin Xiao (leoxiaobin@gmail.com)
+-# Modified by Bowen Cheng (bcheng9@illinois.edu)
+-# ------------------------------------------------------------------------------
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+ 
+ import torch.utils.data
+-
+-from .COCODataset import CocoDataset as coco
+-from .COCOKeypoints import CocoKeypoints as coco_kpt
+-from .CrowdPoseDataset import CrowdPoseDataset as crowd_pose
+-from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose_kpt
+-from .transforms import build_transforms
+-from .target_generators import HeatmapGenerator
+-from .target_generators import ScaleAwareHeatmapGenerator
+-from .target_generators import JointsGenerator
++from lib.dataset.COCODataset import CocoDataset as coco
++from lib.dataset.transforms.build import build_transforms
++from lib.dataset.target_generators.target_generators import HeatmapGenerator
++from lib.dataset.target_generators.target_generators import ScaleAwareHeatmapGenerator
++from lib.dataset.target_generators.target_generators import JointsGenerator
+ 
+ 
+ def build_dataset(cfg, is_train):
+diff --git a/lib/dataset/target_generators/target_generators.py b/lib/dataset/target_generators/target_generators.py
+index e8e3165..db9bd49 100644
+--- a/lib/dataset/target_generators/target_generators.py
++++ b/lib/dataset/target_generators/target_generators.py
+@@ -1,10 +1,3 @@
+-# ------------------------------------------------------------------------------
+-# Copyright (c) Microsoft
+-# Licensed under the MIT License.
+-# Written by Bin Xiao (leoxiaobin@gmail.com)
+-# Modified by Bowen Cheng (bcheng9@illinois.edu)
+-# ------------------------------------------------------------------------------
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+@@ -112,4 +105,4 @@ class JointsGenerator():
+                         visible_nodes[i][tot] = \
+                             (y * output_res + x, 1)
+                     tot += 1
+-        return visible_nodes
++        return visible_nodes
+\ No newline at end of file
+diff --git a/lib/dataset/transforms/build.py b/lib/dataset/transforms/build.py
+index 6b18320..5de3d02 100644
+--- a/lib/dataset/transforms/build.py
++++ b/lib/dataset/transforms/build.py
+@@ -1,10 +1,3 @@
+-# ------------------------------------------------------------------------------
+-# Copyright (c) Microsoft
+-# Licensed under the MIT License.
+-# Written by Bin Xiao (leoxiaobin@gmail.com)
+-# Modified by Bowen Cheng (bcheng9@illinois.edu)
+-# ------------------------------------------------------------------------------
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+@@ -82,4 +75,4 @@ def build_transforms(cfg, is_train=True):
+         ]
+     )
+ 
+-    return transforms
++    return transforms
+\ No newline at end of file
+diff --git a/lib/dataset/transforms/transforms.py b/lib/dataset/transforms/transforms.py
+index 0be0ecc..2fbe4d8 100644
+--- a/lib/dataset/transforms/transforms.py
++++ b/lib/dataset/transforms/transforms.py
+@@ -1,10 +1,3 @@
+-# ------------------------------------------------------------------------------
+-# Copyright (c) Microsoft
+-# Licensed under the MIT License.
+-# Written by Bin Xiao (leoxiaobin@gmail.com)
+-# Modified by Bowen Cheng (bcheng9@illinois.edu)
+-# ------------------------------------------------------------------------------
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+@@ -179,4 +172,4 @@ class RandomAffineTransform(object):
+             image, mat_input, (self.input_size, self.input_size)
+         )
+ 
+-        return image, mask, joints
++        return image, mask, joints
+\ No newline at end of file
+diff --git a/lib/models/__init__.py b/lib/models/__init__.py
+index 11df676..7c5eea1 100644
+--- a/lib/models/__init__.py
++++ b/lib/models/__init__.py
+@@ -8,4 +8,4 @@ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+ 
+-import models.pose_higher_hrnet
++# import models.pose_higher_hrnet
+diff --git a/lib/utils/transforms.py b/lib/utils/transforms.py
+index 8f366d9..be4faaf 100644
+--- a/lib/utils/transforms.py
++++ b/lib/utils/transforms.py
+@@ -186,7 +186,6 @@ def resize_align_multi_scale(image, input_size, current_scale, min_scale):
+         image,
+         trans,
+         size_resized
+-        # (int(w_resized), int(h_resized))
+     )
+ 
+     return image_resized, center, scale
+diff --git a/lib/utils/vis.py b/lib/utils/vis.py
+index 69a1f77..a6ad0bb 100755
+--- a/lib/utils/vis.py
++++ b/lib/utils/vis.py
+@@ -15,7 +15,7 @@ import cv2
+ import numpy as np
+ import torchvision
+ 
+-from dataset import VIS_CONFIG
++from lib.dataset._init_ import VIS_CONFIG
+ 
+ 
+ def add_joints(image, joints, color, dataset='COCO'):

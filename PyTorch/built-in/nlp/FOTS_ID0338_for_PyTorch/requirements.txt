@@ -1,0 +1,4 @@
+# progress bars in model download and training scripts
+tqdm
+numpy>=1.15.4
+cv2

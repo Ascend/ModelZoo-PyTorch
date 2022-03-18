@@ -1,0 +1,4 @@
+MODEL:
+  NAME: 'resnest50'
+TRAINING:
+  EPOCHS: 1

@@ -1,0 +1,46 @@
+File,Start Line,End Line,Operation Type,Message
+inference.py,49,51,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+inference.py,64,67,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+inference.py,56,56,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+inference.py,103,103,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+inference.py,99,99,MODIFY,change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+inference.py,101,101,MODIFY,change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+inference.py,99,99,MODIFY,change module cuda to npu
+inference.py,99,99,MODIFY,"replace string ""cuda"" with ""npu"""
+make_data_list.py,40,43,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+train.py,55,57,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+train.py,175,178,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+train.py,97,97,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+window_inference.py,50,52,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+window_inference.py,57,60,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+window_inference.py,79,79,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+window_inference.py,146,146,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+window_inference.py,142,142,MODIFY,change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+window_inference.py,144,144,MODIFY,change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+window_inference.py,142,142,MODIFY,change module cuda to npu
+window_inference.py,142,142,MODIFY,"replace string ""cuda"" with ""npu"""
+config_parser.py,40,42,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+config_parser.py,64,67,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+config_parser.py,58,58,MODIFY,change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+config_parser.py,58,58,MODIFY,change module cuda to npu
+config_parser.py,58,58,MODIFY,"replace string ""cuda"" with ""npu"""
+utils/loss.py,38,40,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+utils/loss.py,38,41,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+utils/dataset.py,50,52,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+utils/dataset.py,99,102,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+utils/trainer.py,44,46,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+utils/trainer.py,73,76,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+utils/trainer.py,60,60,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+utils/trainer.py,60,60,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+utils/trainer.py,92,92,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+utils/trainer.py,92,92,MODIFY,change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+utils/augment.py,40,43,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+utils/opt.py,37,39,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+utils/opt.py,37,40,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+utils/misc.py,45,47,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+utils/misc.py,61,64,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+utils/misc.py,56,56,MODIFY,change module cuda to npu
+utils/scheduler.py,38,40,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+utils/scheduler.py,59,62,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"
+models/kwmlp.py,71,73,INSERT,"['import torch.npu', ""if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')""]"
+models/kwmlp.py,87,90,INSERT,"['import os', 'NPU_CALCULATE_DEVICE = 0', ""if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))""]"

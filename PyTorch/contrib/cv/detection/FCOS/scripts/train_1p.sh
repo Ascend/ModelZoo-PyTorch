@@ -1,0 +1,1 @@
+PORT=29880 ./tools/dist_train.sh ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x_coco.py 1 --npu-ids 0 --cfg-options optimizer.lr=0.00125 data.samples_per_gpu=16 --seed 0 --opt-level O1 --loss-scale 32.0

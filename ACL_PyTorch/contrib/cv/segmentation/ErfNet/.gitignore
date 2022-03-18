@@ -1,0 +1,11 @@
+*.pth
+*.om
+__pycache__
+prep_dataset
+fusion_result.json
+resuls
+*.info
+*.onnx
+benchmark.x86_64
+erfnet_pytorch/
+*.log

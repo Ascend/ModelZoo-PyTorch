@@ -1,0 +1,485 @@
+2021-10-14 06:27:46 [INFO]    Initialing rules...
+2021-10-14 06:27:46 [INFO]    MsFmkTransplt start working now, please wait for a moment.
+2021-10-14 06:27:46 [INFO]    Analysis start...
+2021-10-14 06:27:46 [INFO]    LICENSE.txt is not a python script, skip.
+2021-10-14 06:27:46 [INFO]    train_mbart.sh is not a python script, skip.
+2021-10-14 06:27:46 [INFO]    Start analysis preprocess.py.
+2021-10-14 06:27:47 [WARNING] line: 185 ~ 185       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:27:47 [WARNING] line: 325 ~ 325       Operation Type: UNSUPPORTED         Message: torch.manual_seed is not supported now!
+2021-10-14 06:27:48 [INFO]    line: 28 ~ 30         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:48 [INFO]    line: 50 ~ 53         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:48 [INFO]    Analysis preprocess.py complete.
+2021-10-14 06:27:48 [INFO]    Start analysis decode.py.
+2021-10-14 06:27:48 [INFO]    line: 29 ~ 31         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:48 [INFO]    line: 120 ~ 123       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:48 [INFO]    line: 65 ~ 65         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:48 [INFO]    line: 68 ~ 68         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:48 [INFO]    line: 64 ~ 64         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:48 [INFO]    line: 65 ~ 65         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:48 [INFO]    Analysis decode.py complete.
+2021-10-14 06:27:48 [INFO]    requirements.txt is not a python script, skip.
+2021-10-14 06:27:48 [INFO]    Start analysis translate.py.
+2021-10-14 06:27:49 [INFO]    line: 20 ~ 22         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:49 [INFO]    line: 121 ~ 124       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:49 [INFO]    line: 64 ~ 64         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:49 [INFO]    line: 67 ~ 67         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:49 [INFO]    line: 63 ~ 63         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:49 [INFO]    line: 64 ~ 64         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:49 [INFO]    Analysis translate.py complete.
+2021-10-14 06:27:49 [INFO]    prep_mbart.sh is not a python script, skip.
+2021-10-14 06:27:49 [INFO]    Start analysis train.py.
+2021-10-14 06:27:49 [WARNING] line: 39 ~ 40         Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:27:49 [WARNING] line: 44 ~ 44         Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:27:49 [WARNING] line: 119 ~ 119       Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:49 [INFO]    line: 29 ~ 31         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:49 [INFO]    line: 161 ~ 164       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:49 [INFO]    line: 112 ~ 112       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:49 [INFO]    line: 39 ~ 40         Operation Type: MODIFY              Message: change the arg at position 1 of function torch.load to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:49 [INFO]    line: 115 ~ 115       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:49 [INFO]    line: 111 ~ 111       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:49 [INFO]    line: 117 ~ 117       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:49 [INFO]    line: 118 ~ 118       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:49 [INFO]    line: 112 ~ 112       Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:49 [INFO]    Analysis train.py complete.
+2021-10-14 06:27:49 [INFO]    prep.sh is not a python script, skip.
+2021-10-14 06:27:49 [INFO]    train_mbart_finetune_nmt.sh is not a python script, skip.
+2021-10-14 06:27:49 [INFO]    decode.sh is not a python script, skip.
+2021-10-14 06:27:49 [INFO]    README.md is not a python script, skip.
+2021-10-14 06:27:49 [INFO]    Start analysis options.py.
+2021-10-14 06:27:50 [INFO]    line: 11 ~ 14         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:50 [INFO]    Analysis options.py complete.
+2021-10-14 06:27:50 [INFO]    prep_roberta.sh is not a python script, skip.
+2021-10-14 06:27:50 [INFO]    .gitignore is not a python script, skip.
+2021-10-14 06:27:50 [INFO]    Start analysis classify.py.
+2021-10-14 06:27:50 [WARNING] line: 85 ~ 85         Operation Type: UNSUPPORTED         Message: torch.nn.functional.nll_loss is not supported now!
+2021-10-14 06:27:50 [WARNING] line: 92 ~ 92         Operation Type: UNSUPPORTED         Message: torch.nn.utils.clip_grad_norm_ is not supported now!
+2021-10-14 06:27:50 [INFO]    line: 17 ~ 19         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:50 [INFO]    line: 18 ~ 21         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:50 [INFO]    line: 62 ~ 62         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:50 [INFO]    line: 78 ~ 78         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:50 [INFO]    line: 80 ~ 80         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:50 [INFO]    line: 60 ~ 60         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:50 [INFO]    line: 59 ~ 59         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:50 [INFO]    line: 60 ~ 60         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:50 [INFO]    Analysis classify.py complete.
+2021-10-14 06:27:50 [INFO]    Start analysis train_roberta.py.
+2021-10-14 06:27:51 [WARNING] line: 40 ~ 41         Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:27:51 [WARNING] line: 45 ~ 45         Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:27:51 [WARNING] line: 102 ~ 102       Operation Type: UNSUPPORTED         Message: torch.nn.NLLLoss is not supported now!
+2021-10-14 06:27:51 [WARNING] line: 115 ~ 115       Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:51 [INFO]    line: 30 ~ 32         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:51 [INFO]    line: 156 ~ 159       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:51 [INFO]    line: 108 ~ 108       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:51 [INFO]    line: 40 ~ 41         Operation Type: MODIFY              Message: change the arg at position 1 of function torch.load to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:51 [INFO]    line: 111 ~ 111       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:51 [INFO]    line: 107 ~ 107       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:51 [INFO]    line: 113 ~ 113       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:51 [INFO]    line: 114 ~ 114       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:51 [INFO]    line: 108 ~ 108       Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:51 [INFO]    Analysis train_roberta.py complete.
+2021-10-14 06:27:51 [INFO]    translate_file.sh is not a python script, skip.
+2021-10-14 06:27:51 [INFO]    msFmkTranspltlog.txt is not a python script, skip.
+2021-10-14 06:27:51 [INFO]    Start analysis classify_intent.py.
+2021-10-14 06:27:51 [WARNING] line: 60 ~ 60         Operation Type: UNSUPPORTED         Message: torch.nn.functional.nll_loss is not supported now!
+2021-10-14 06:27:51 [WARNING] line: 68 ~ 68         Operation Type: UNSUPPORTED         Message: torch.nn.utils.clip_grad_norm_ is not supported now!
+2021-10-14 06:27:52 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:52 [INFO]    line: 104 ~ 107       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:52 [INFO]    line: 31 ~ 31         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:52 [INFO]    line: 29 ~ 29         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:52 [INFO]    line: 51 ~ 51         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:52 [INFO]    line: 82 ~ 82         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:52 [INFO]    line: 28 ~ 28         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:52 [INFO]    line: 50 ~ 50         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:52 [INFO]    line: 52 ~ 52         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:52 [INFO]    line: 81 ~ 81         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:52 [INFO]    line: 29 ~ 29         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:52 [INFO]    Analysis classify_intent.py complete.
+2021-10-14 06:27:52 [INFO]    train.sh is not a python script, skip.
+2021-10-14 06:27:52 [INFO]    prep_mbart_finetune_nmt.sh is not a python script, skip.
+2021-10-14 06:27:52 [INFO]    train_roberta.sh is not a python script, skip.
+2021-10-14 06:27:52 [INFO]    Start analysis test/test_spm.py.
+2021-10-14 06:27:52 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:52 [INFO]    Analysis test/test_spm.py complete.
+2021-10-14 06:27:52 [INFO]    test/train_performance_1p.sh is not a python script, skip.
+2021-10-14 06:27:52 [INFO]    Start analysis test/pytorch_basics.py.
+2021-10-14 06:27:52 [WARNING] line: 16 ~ 16         Operation Type: UNSUPPORTED         Message: torch.manual_seed is not supported now!
+2021-10-14 06:27:52 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:52 [INFO]    line: 18 ~ 21         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:52 [INFO]    Analysis test/pytorch_basics.py complete.
+2021-10-14 06:27:52 [INFO]    Start analysis test/test_data_iter.py.
+2021-10-14 06:27:52 [INFO]    line: 14 ~ 16         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:52 [INFO]    line: 15 ~ 18         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:52 [INFO]    Analysis test/test_data_iter.py complete.
+2021-10-14 06:27:52 [INFO]    Start analysis test/train_nmt_iwslt.py.
+2021-10-14 06:27:52 [WARNING] line: 92 ~ 92         Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:53 [INFO]    line: 30 ~ 32         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:53 [INFO]    line: 131 ~ 134       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:53 [INFO]    line: 49 ~ 49         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:53 [INFO]    line: 53 ~ 53         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:53 [INFO]    line: 85 ~ 85         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:53 [INFO]    line: 145 ~ 145       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:53 [INFO]    line: 149 ~ 149       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:53 [INFO]    line: 166 ~ 166       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:53 [INFO]    line: 88 ~ 88         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 169 ~ 169       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 49 ~ 49         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 53 ~ 53         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 84 ~ 84         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 90 ~ 90         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 91 ~ 91         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 145 ~ 145       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 149 ~ 149       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 165 ~ 165       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:53 [INFO]    line: 49 ~ 49         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:27:53 [INFO]    line: 53 ~ 53         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:27:53 [INFO]    line: 145 ~ 145       Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:27:53 [INFO]    line: 149 ~ 149       Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:27:53 [INFO]    line: 85 ~ 85         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:53 [INFO]    line: 166 ~ 166       Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:53 [INFO]    Analysis test/train_nmt_iwslt.py complete.
+2021-10-14 06:27:53 [INFO]    Start analysis test/beam_search.py.
+2021-10-14 06:27:53 [INFO]    line: 15 ~ 18         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:53 [INFO]    Analysis test/beam_search.py complete.
+2021-10-14 06:27:53 [INFO]    Start analysis test/__init__.py.
+2021-10-14 06:27:53 [INFO]    Analysis test/__init__.py complete.
+2021-10-14 06:27:53 [INFO]    Start analysis test/test_seq_len_sampler.py.
+2021-10-14 06:27:53 [INFO]    line: 14 ~ 16         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:53 [INFO]    line: 15 ~ 18         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:53 [INFO]    Analysis test/test_seq_len_sampler.py complete.
+2021-10-14 06:27:53 [INFO]    Start analysis test/test_transformer.py.
+2021-10-14 06:27:53 [WARNING] line: 52 ~ 52         Operation Type: UNSUPPORTED         Message: torch.nn.NLLLoss is not supported now!
+2021-10-14 06:27:53 [WARNING] line: 64 ~ 64         Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:54 [INFO]    line: 34 ~ 36         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:54 [INFO]    line: 38 ~ 41         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:54 [INFO]    line: 74 ~ 74         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 57 ~ 57         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 60 ~ 60         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 56 ~ 56         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 62 ~ 62         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 63 ~ 63         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 57 ~ 57         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:54 [INFO]    Analysis test/test_transformer.py complete.
+2021-10-14 06:27:54 [INFO]    test/train_full_1p.sh is not a python script, skip.
+2021-10-14 06:27:54 [INFO]    Start analysis test/pretrain_mbart.py.
+2021-10-14 06:27:54 [WARNING] line: 72 ~ 72         Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:54 [INFO]    line: 24 ~ 26         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:54 [INFO]    line: 99 ~ 102        Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:54 [INFO]    line: 68 ~ 68         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 66 ~ 66         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 65 ~ 65         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 70 ~ 70         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 71 ~ 71         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 66 ~ 66         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:54 [INFO]    Analysis test/pretrain_mbart.py complete.
+2021-10-14 06:27:54 [INFO]    Start analysis test/test_dataloader_classyfier.py.
+2021-10-14 06:27:54 [INFO]    line: 9 ~ 11          Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:54 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:54 [INFO]    line: 26 ~ 26         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 28 ~ 28         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 23 ~ 23         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:54 [INFO]    line: 22 ~ 22         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:54 [INFO]    line: 23 ~ 23         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:54 [INFO]    Analysis test/test_dataloader_classyfier.py complete.
+2021-10-14 06:27:54 [INFO]    Start analysis test/test_subsequent_masking.py.
+2021-10-14 06:27:54 [INFO]    line: 6 ~ 8           Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:54 [INFO]    line: 13 ~ 16         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:54 [INFO]    Analysis test/test_subsequent_masking.py complete.
+2021-10-14 06:27:54 [INFO]    Start analysis test/basics.py.
+2021-10-14 06:27:55 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:55 [INFO]    Analysis test/basics.py complete.
+2021-10-14 06:27:55 [INFO]    Start analysis test/convert_latin2ascii.py.
+2021-10-14 06:27:55 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:55 [INFO]    Analysis test/convert_latin2ascii.py complete.
+2021-10-14 06:27:55 [INFO]    Start analysis test/test_activation.py.
+2021-10-14 06:27:55 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:55 [INFO]    Analysis test/test_activation.py complete.
+2021-10-14 06:27:55 [INFO]    Start analysis test/neural_network.py.
+2021-10-14 06:27:55 [INFO]    line: 12 ~ 15         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:55 [INFO]    Analysis test/neural_network.py complete.
+2021-10-14 06:27:55 [INFO]    Start analysis test/train_nmt.py.
+2021-10-14 06:27:55 [WARNING] line: 110 ~ 110       Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:56 [INFO]    line: 35 ~ 37         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:56 [INFO]    line: 149 ~ 152       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:56 [INFO]    line: 103 ~ 103       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:56 [INFO]    line: 179 ~ 179       Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:56 [INFO]    line: 106 ~ 106       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 182 ~ 182       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 102 ~ 102       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 108 ~ 108       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 109 ~ 109       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 178 ~ 178       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 103 ~ 103       Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:56 [INFO]    line: 179 ~ 179       Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:56 [INFO]    Analysis test/train_nmt.py complete.
+2021-10-14 06:27:56 [INFO]    Start analysis test/pretrain_bert.py.
+2021-10-14 06:27:56 [WARNING] line: 40 ~ 40         Operation Type: UNSUPPORTED         Message: torch.nn.NLLLoss is not supported now!
+2021-10-14 06:27:56 [WARNING] line: 53 ~ 53         Operation Type: UNSUPPORTED         Message: 'torch.nn.DataParallel' is not recommend to use now! Please replace it with 'torch.nn.parallel.DistributedDataParallel'.
+2021-10-14 06:27:56 [INFO]    line: 23 ~ 25         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:27:56 [INFO]    line: 92 ~ 95         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:56 [INFO]    line: 63 ~ 63         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:56 [INFO]    line: 46 ~ 46         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:27:56 [INFO]    line: 49 ~ 49         Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 45 ~ 45         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 51 ~ 51         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 52 ~ 52         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:27:56 [INFO]    line: 46 ~ 46         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-10-14 06:27:56 [INFO]    Analysis test/pretrain_bert.py complete.
+2021-10-14 06:27:56 [INFO]    Start analysis onmt/__init__.py.
+2021-10-14 06:27:57 [INFO]    line: 8 ~ 11          Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:27:57 [INFO]    Analysis onmt/__init__.py complete.
+2021-10-14 06:27:57 [INFO]    Start analysis onmt/opts.py.
+2021-10-14 06:28:00 [INFO]    line: 8 ~ 11          Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:00 [INFO]    line: 408 ~ 408       Operation Type: MODIFY              Message: replace string "nccl" with "hccl"
+2021-10-14 06:28:00 [INFO]    Analysis onmt/opts.py complete.
+2021-10-14 06:28:00 [INFO]    Start analysis onmt/utils/loss.py.
+2021-10-14 06:28:00 [WARNING] line: 45 ~ 45         Operation Type: UNSUPPORTED         Message: torch.nn.NLLLoss is not supported now!
+2021-10-14 06:28:01 [INFO]    line: 15 ~ 17         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:01 [INFO]    line: 67 ~ 70         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:01 [INFO]    line: 62 ~ 62         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:01 [INFO]    line: 24 ~ 24         Operation Type: MODIFY              Message: change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:01 [INFO]    line: 24 ~ 24         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:28:01 [INFO]    Analysis onmt/utils/loss.py complete.
+2021-10-14 06:28:01 [INFO]    Start analysis onmt/utils/distributed.py.
+2021-10-14 06:28:01 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:01 [INFO]    line: 20 ~ 23         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:01 [INFO]    line: 112 ~ 112       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:28:01 [INFO]    line: 94 ~ 94         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:28:01 [INFO]    line: 96 ~ 96         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:28:01 [INFO]    Analysis onmt/utils/distributed.py complete.
+2021-10-14 06:28:01 [INFO]    Start analysis onmt/utils/__init__.py.
+2021-10-14 06:28:01 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:01 [INFO]    Analysis onmt/utils/__init__.py complete.
+2021-10-14 06:28:01 [INFO]    Start analysis onmt/utils/report_manager.py.
+2021-10-14 06:28:01 [INFO]    line: 11 ~ 13         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:01 [INFO]    line: 28 ~ 31         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:01 [INFO]    Analysis onmt/utils/report_manager.py complete.
+2021-10-14 06:28:01 [INFO]    Start analysis onmt/utils/statistics.py.
+2021-10-14 06:28:02 [INFO]    line: 10 ~ 12         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:02 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:02 [INFO]    Analysis onmt/utils/statistics.py complete.
+2021-10-14 06:28:02 [INFO]    Start analysis onmt/utils/parse.py.
+2021-10-14 06:28:02 [INFO]    line: 10 ~ 12         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:02 [INFO]    line: 10 ~ 13         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:02 [INFO]    line: 100 ~ 100       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:28:02 [INFO]    Analysis onmt/utils/parse.py complete.
+2021-10-14 06:28:02 [INFO]    Start analysis onmt/utils/cnn_factory.py.
+2021-10-14 06:28:02 [INFO]    line: 10 ~ 12         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:02 [INFO]    line: 13 ~ 16         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:02 [INFO]    Analysis onmt/utils/cnn_factory.py complete.
+2021-10-14 06:28:02 [INFO]    Start analysis onmt/utils/earlystopping.py.
+2021-10-14 06:28:03 [INFO]    line: 6 ~ 9           Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:03 [INFO]    Analysis onmt/utils/earlystopping.py complete.
+2021-10-14 06:28:03 [INFO]    Start analysis onmt/utils/optimizers.py.
+2021-10-14 06:28:04 [WARNING] line: 359 ~ 359       Operation Type: UNSUPPORTED         Message: torch.nn.utils.clip_grad_norm_ is not supported now!
+2021-10-14 06:28:05 [INFO]    line: 14 ~ 16         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:05 [INFO]    line: 111 ~ 114       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:05 [INFO]    Analysis onmt/utils/optimizers.py complete.
+2021-10-14 06:28:05 [INFO]    Start analysis onmt/utils/logging.py.
+2021-10-14 06:28:05 [INFO]    line: 6 ~ 9           Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:05 [INFO]    Analysis onmt/utils/logging.py complete.
+2021-10-14 06:28:05 [INFO]    Start analysis onmt/utils/misc.py.
+2021-10-14 06:28:05 [WARNING] line: 89 ~ 89         Operation Type: UNSUPPORTED         Message: torch.manual_seed is not supported now!
+2021-10-14 06:28:05 [WARNING] line: 99 ~ 99         Operation Type: UNSUPPORTED         Message: torch.cuda.manual_seed is not supported now!
+2021-10-14 06:28:06 [INFO]    line: 10 ~ 12         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:06 [INFO]    line: 20 ~ 23         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:06 [INFO]    line: 99 ~ 99         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:28:06 [INFO]    Analysis onmt/utils/misc.py complete.
+2021-10-14 06:28:06 [INFO]    Start analysis onmt/utils/alignment.py.
+2021-10-14 06:28:06 [WARNING] line: 19 ~ 20         Operation Type: UNSUPPORTED         Message: torch.sparse_coo_tensor is not supported now!
+2021-10-14 06:28:06 [INFO]    line: 7 ~ 9           Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:06 [INFO]    line: 29 ~ 32         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:06 [INFO]    Analysis onmt/utils/alignment.py complete.
+2021-10-14 06:28:06 [INFO]    Start analysis onmt/utils/rnn_factory.py.
+2021-10-14 06:28:06 [INFO]    line: 8 ~ 10          Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:06 [INFO]    line: 8 ~ 11          Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:06 [INFO]    Analysis onmt/utils/rnn_factory.py complete.
+2021-10-14 06:28:06 [INFO]    Start analysis onmt/inputters/vec_dataset.py.
+2021-10-14 06:28:07 [INFO]    line: 8 ~ 10          Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:07 [INFO]    line: 14 ~ 17         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:07 [INFO]    line: 132 ~ 132       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:07 [INFO]    Analysis onmt/inputters/vec_dataset.py complete.
+2021-10-14 06:28:07 [INFO]    Start analysis onmt/inputters/image_dataset.py.
+2021-10-14 06:28:07 [INFO]    line: 11 ~ 13         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:07 [INFO]    line: 19 ~ 22         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:07 [INFO]    Analysis onmt/inputters/image_dataset.py complete.
+2021-10-14 06:28:07 [INFO]    Start analysis onmt/inputters/dataset_base.py.
+2021-10-14 06:28:07 [INFO]    line: 12 ~ 14         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:07 [INFO]    line: 24 ~ 27         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:07 [INFO]    Analysis onmt/inputters/dataset_base.py complete.
+2021-10-14 06:28:07 [INFO]    Start analysis onmt/inputters/text_dataset.py.
+2021-10-14 06:28:08 [INFO]    line: 11 ~ 13         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:08 [INFO]    line: 38 ~ 41         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:08 [INFO]    Analysis onmt/inputters/text_dataset.py complete.
+2021-10-14 06:28:08 [INFO]    Start analysis onmt/inputters/__init__.py.
+2021-10-14 06:28:08 [INFO]    line: 16 ~ 19         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:08 [INFO]    Analysis onmt/inputters/__init__.py complete.
+2021-10-14 06:28:08 [INFO]    Start analysis onmt/inputters/inputter.py.
+2021-10-14 06:28:09 [WARNING] line: 193 ~ 193       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:09 [WARNING] line: 485 ~ 485       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:09 [WARNING] line: 510 ~ 510       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:09 [WARNING] line: 745 ~ 745       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:09 [WARNING] line: 810 ~ 810       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:11 [INFO]    line: 30 ~ 32         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:11 [INFO]    line: 34 ~ 37         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:11 [INFO]    line: 908 ~ 908       Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:28:11 [INFO]    line: 926 ~ 926       Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:28:11 [INFO]    Analysis onmt/inputters/inputter.py complete.
+2021-10-14 06:28:11 [INFO]    Start analysis onmt/inputters/audio_dataset.py.
+2021-10-14 06:28:11 [INFO]    line: 11 ~ 13         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:11 [INFO]    line: 19 ~ 22         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:11 [INFO]    line: 214 ~ 214       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:11 [INFO]    Analysis onmt/inputters/audio_dataset.py complete.
+2021-10-14 06:28:11 [INFO]    Start analysis onmt/inputters/datareader_base.py.
+2021-10-14 06:28:11 [INFO]    Analysis onmt/inputters/datareader_base.py complete.
+2021-10-14 06:28:11 [INFO]    Start analysis optim/lr_warm_up.py.
+2021-10-14 06:28:12 [INFO]    line: 13 ~ 15         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:12 [INFO]    line: 13 ~ 16         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:12 [INFO]    Analysis optim/lr_warm_up.py complete.
+2021-10-14 06:28:12 [INFO]    Start analysis optim/__init__.py.
+2021-10-14 06:28:12 [INFO]    Analysis optim/__init__.py complete.
+2021-10-14 06:28:12 [INFO]    Start analysis criterion/__init__.py.
+2021-10-14 06:28:12 [INFO]    Analysis criterion/__init__.py complete.
+2021-10-14 06:28:12 [INFO]    Start analysis criterion/label_smoothed_cross_entropy.py.
+2021-10-14 06:28:12 [INFO]    line: 14 ~ 16         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:12 [INFO]    line: 14 ~ 17         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:12 [INFO]    line: 37 ~ 37         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:12 [INFO]    Analysis criterion/label_smoothed_cross_entropy.py complete.
+2021-10-14 06:28:12 [INFO]    Start analysis models/bert.py.
+2021-10-14 06:28:12 [INFO]    line: 14 ~ 16         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:12 [INFO]    line: 14 ~ 17         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:12 [INFO]    Analysis models/bert.py complete.
+2021-10-14 06:28:12 [INFO]    Start analysis models/bert_lm.py.
+2021-10-14 06:28:12 [WARNING] line: 36 ~ 36         Operation Type: UNSUPPORTED         Message: torch.nn.LogSoftmax is not supported now!
+2021-10-14 06:28:12 [WARNING] line: 48 ~ 48         Operation Type: UNSUPPORTED         Message: torch.nn.LogSoftmax is not supported now!
+2021-10-14 06:28:12 [INFO]    line: 13 ~ 15         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:12 [INFO]    line: 30 ~ 33         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:12 [INFO]    Analysis models/bert_lm.py complete.
+2021-10-14 06:28:12 [INFO]    Start analysis models/decoding.py.
+2021-10-14 06:28:14 [INFO]    line: 17 ~ 19         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:14 [INFO]    line: 31 ~ 34         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:14 [INFO]    line: 60 ~ 60         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:14 [INFO]    line: 83 ~ 83         Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:14 [INFO]    line: 103 ~ 103       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:14 [INFO]    Analysis models/decoding.py complete.
+2021-10-14 06:28:14 [INFO]    Start analysis models/__init__.py.
+2021-10-14 06:28:14 [INFO]    Analysis models/__init__.py complete.
+2021-10-14 06:28:14 [INFO]    Start analysis models/fconv.py.
+2021-10-14 06:28:14 [WARNING] line: 112 ~ 112       Operation Type: UNSUPPORTED         Message: torch.nn.functional.cross_entropy is not supported now!
+2021-10-14 06:28:14 [INFO]    line: 19 ~ 21         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:14 [INFO]    line: 75 ~ 78         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:14 [INFO]    Analysis models/fconv.py complete.
+2021-10-14 06:28:14 [INFO]    Start analysis models/transformer.py.
+2021-10-14 06:28:15 [INFO]    line: 17 ~ 19         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:15 [INFO]    line: 66 ~ 69         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:15 [INFO]    Analysis models/transformer.py complete.
+2021-10-14 06:28:15 [INFO]    Start analysis models/utils/fconv_layer_norm.py.
+2021-10-14 06:28:16 [INFO]    line: 12 ~ 14         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:16 [INFO]    line: 12 ~ 15         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:16 [INFO]    Analysis models/utils/fconv_layer_norm.py complete.
+2021-10-14 06:28:16 [INFO]    Start analysis models/utils/__init__.py.
+2021-10-14 06:28:16 [INFO]    Analysis models/utils/__init__.py complete.
+2021-10-14 06:28:16 [INFO]    Start analysis models/utils/model_utils.py.
+2021-10-14 06:28:16 [WARNING] line: 34 ~ 34         Operation Type: UNSUPPORTED         Message: torch.triu_indices is not supported now!
+2021-10-14 06:28:16 [WARNING] line: 130 ~ 130       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:16 [INFO]    line: 24 ~ 26         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:16 [INFO]    line: 38 ~ 41         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:16 [INFO]    line: 68 ~ 68         Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:28:16 [INFO]    line: 68 ~ 68         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:28:16 [INFO]    line: 69 ~ 69         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-10-14 06:28:16 [INFO]    line: 69 ~ 69         Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2021-10-14 06:28:16 [INFO]    Analysis models/utils/model_utils.py complete.
+2021-10-14 06:28:16 [INFO]    Start analysis models/embeddings/bert_embeddings.py.
+2021-10-14 06:28:16 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:16 [INFO]    line: 16 ~ 19         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:16 [INFO]    Analysis models/embeddings/bert_embeddings.py complete.
+2021-10-14 06:28:16 [INFO]    Start analysis models/embeddings/mbart_embeddings.py.
+2021-10-14 06:28:17 [INFO]    line: 14 ~ 16         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:17 [INFO]    line: 14 ~ 17         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis models/embeddings/mbart_embeddings.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis models/embeddings/token_emb.py.
+2021-10-14 06:28:17 [INFO]    line: 13 ~ 15         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:17 [INFO]    line: 13 ~ 16         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis models/embeddings/token_emb.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis models/embeddings/__init__.py.
+2021-10-14 06:28:17 [INFO]    Analysis models/embeddings/__init__.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis models/embeddings/seg_emb.py.
+2021-10-14 06:28:17 [INFO]    line: 12 ~ 14         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:17 [INFO]    line: 12 ~ 15         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis models/embeddings/seg_emb.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis models/embeddings/position_emb.py.
+2021-10-14 06:28:17 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:17 [INFO]    line: 16 ~ 19         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis models/embeddings/position_emb.py complete.
+2021-10-14 06:28:17 [INFO]    examples/translation/add-lang-id-finetune-mabrt.sh is not a python script, skip.
+2021-10-14 06:28:17 [INFO]    examples/translation/add-lang-id.sh is not a python script, skip.
+2021-10-14 06:28:17 [INFO]    examples/translation/concat-roberta.sh is not a python script, skip.
+2021-10-14 06:28:17 [INFO]    examples/translation/prepare-iwslt14.sh is not a python script, skip.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/next_sentence.py.
+2021-10-14 06:28:17 [INFO]    line: 11 ~ 14         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis dataset/next_sentence.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/data_loader_iter.py.
+2021-10-14 06:28:17 [INFO]    line: 11 ~ 13         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:17 [INFO]    line: 11 ~ 14         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis dataset/data_loader_iter.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/vocab.py.
+2021-10-14 06:28:17 [INFO]    line: 11 ~ 14         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis dataset/vocab.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/config.py.
+2021-10-14 06:28:17 [INFO]    Analysis dataset/config.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/__init__.py.
+2021-10-14 06:28:17 [INFO]    Analysis dataset/__init__.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/spm_apply.py.
+2021-10-14 06:28:17 [INFO]    line: 12 ~ 15         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:17 [INFO]    Analysis dataset/spm_apply.py complete.
+2021-10-14 06:28:17 [INFO]    Start analysis dataset/data_loader_translation.py.
+2021-10-14 06:28:18 [INFO]    line: 18 ~ 20         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:18 [INFO]    line: 70 ~ 73         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:18 [INFO]    Analysis dataset/data_loader_translation.py complete.
+2021-10-14 06:28:18 [INFO]    Start analysis dataset/spm_train.py.
+2021-10-14 06:28:18 [INFO]    line: 11 ~ 14         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:18 [INFO]    Analysis dataset/spm_train.py complete.
+2021-10-14 06:28:18 [INFO]    Start analysis dataset/iwslt_data.py.
+2021-10-14 06:28:19 [WARNING] line: 334 ~ 334       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:19 [WARNING] line: 335 ~ 335       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-10-14 06:28:19 [INFO]    line: 25 ~ 27         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:19 [INFO]    line: 82 ~ 85         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:19 [INFO]    line: 127 ~ 127       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 129 ~ 129       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 131 ~ 131       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 133 ~ 133       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 136 ~ 136       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 138 ~ 138       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 140 ~ 140       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 157 ~ 157       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 159 ~ 159       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 161 ~ 161       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 163 ~ 163       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 165 ~ 165       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 167 ~ 167       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 184 ~ 184       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 186 ~ 186       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 188 ~ 188       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 190 ~ 190       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 193 ~ 193       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 195 ~ 195       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:19 [INFO]    line: 197 ~ 197       Operation Type: MODIFY              Message: change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-10-14 06:28:20 [INFO]    Analysis dataset/iwslt_data.py complete.
+2021-10-14 06:28:20 [INFO]    Start analysis dataset/data_loader_bert.py.
+2021-10-14 06:28:20 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:20 [INFO]    line: 16 ~ 19         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:20 [INFO]    Analysis dataset/data_loader_bert.py complete.
+2021-10-14 06:28:20 [INFO]    Start analysis dataset/bilingual_data_iter.py.
+2021-10-14 06:28:20 [INFO]    line: 12 ~ 14         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:20 [INFO]    line: 12 ~ 15         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:20 [INFO]    Analysis dataset/bilingual_data_iter.py complete.
+2021-10-14 06:28:20 [INFO]    Start analysis dataset/dataloader_classifier.py.
+2021-10-14 06:28:21 [INFO]    line: 12 ~ 14         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:21 [INFO]    line: 116 ~ 119       Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:21 [INFO]    line: 121 ~ 121       Operation Type: MODIFY              Message: change function cuda to npu
+2021-10-14 06:28:21 [INFO]    line: 120 ~ 120       Operation Type: MODIFY              Message: change module cuda to npu
+2021-10-14 06:28:21 [INFO]    Analysis dataset/dataloader_classifier.py complete.
+2021-10-14 06:28:21 [INFO]    Start analysis dataset/data_loader_mbart.py.
+2021-10-14 06:28:21 [INFO]    line: 16 ~ 18         Operation Type: INSERT              Message: ['import torch.npu', "if torch.npu.current_device() != NPU_CALCULATE_DEVICE:\n    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')"]
+2021-10-14 06:28:21 [INFO]    line: 16 ~ 19         Operation Type: INSERT              Message: ['import os', 'NPU_CALCULATE_DEVICE = 0', "if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):\n    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))"]
+2021-10-14 06:28:21 [INFO]    Analysis dataset/data_loader_mbart.py complete.
+2021-10-14 06:28:21 [INFO]    MsFmkTransplt run success, welcome to the next use.

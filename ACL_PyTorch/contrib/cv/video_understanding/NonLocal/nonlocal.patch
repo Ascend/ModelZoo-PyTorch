@@ -1,0 +1,90 @@
+From 9839a0698b4639ebac51ed71fe318a489fc40ad1 Mon Sep 17 00:00:00 2001
+From: congee524 <congee524@gmail.com>
+Date: Fri, 3 Dec 2021 14:29:15 +0800
+Subject: [PATCH] modify config
+
+---
+ ...t_product_r50_1x1x8_50e_kinetics400_rgb.py | 26 +++++++++++--------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/configs/recognition/tsm/tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb.py b/configs/recognition/tsm/tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb.py
+index 884a2d66..09050793 100644
+--- a/configs/recognition/tsm/tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb.py
++++ b/configs/recognition/tsm/tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb.py
+@@ -14,17 +14,20 @@ model = dict(
+             mode='dot_product')))
+ 
+ # dataset settings
+-dataset_type = 'RawframeDataset'
+-data_root = 'data/kinetics400/rawframes_train'
+-data_root_val = 'data/kinetics400/rawframes_val'
+-ann_file_train = 'data/kinetics400/kinetics400_train_list_rawframes.txt'
+-ann_file_val = 'data/kinetics400/kinetics400_val_list_rawframes.txt'
+-ann_file_test = 'data/kinetics400/kinetics400_val_list_rawframes.txt'
++dataset_type = 'VideoDataset'
++data_root = 'data/kinetics400/videos_train'
++data_root_val = 'data/kinetics400/videos_val'
++ann_file_train = 'data/kinetics400/kinetics400_train_list_videos.txt'
++ann_file_val = 'data/kinetics400/kinetics400_val_list_videos.txt'
++ann_file_test = 'data/kinetics400/kinetics400_val_list_videos.txt'
++
+ img_norm_cfg = dict(
+     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
++
+ train_pipeline = [
++    dict(type='DecordInit'),
+     dict(type='SampleFrames', clip_len=1, frame_interval=1, num_clips=8),
+-    dict(type='RawFrameDecode'),
++    dict(type='DecordDecode'),
+     dict(type='Resize', scale=(-1, 256)),
+     dict(
+         type='MultiScaleCrop',
+@@ -41,13 +44,14 @@ train_pipeline = [
+     dict(type='ToTensor', keys=['imgs', 'label'])
+ ]
+ val_pipeline = [
++    dict(type='DecordInit'),
+     dict(
+         type='SampleFrames',
+         clip_len=1,
+         frame_interval=1,
+         num_clips=8,
+         test_mode=True),
+-    dict(type='RawFrameDecode'),
++    dict(type='DecordDecode'),
+     dict(type='Resize', scale=(-1, 256)),
+     dict(type='CenterCrop', crop_size=224),
+     dict(type='Normalize', **img_norm_cfg),
+@@ -56,13 +60,14 @@ val_pipeline = [
+     dict(type='ToTensor', keys=['imgs'])
+ ]
+ test_pipeline = [
++    dict(type='DecordInit'),
+     dict(
+         type='SampleFrames',
+         clip_len=1,
+         frame_interval=1,
+         num_clips=8,
+         test_mode=True),
+-    dict(type='RawFrameDecode'),
++    dict(type='DecordDecode'),
+     dict(type='Resize', scale=(-1, 256)),
+     dict(type='CenterCrop', crop_size=224),
+     dict(type='Normalize', **img_norm_cfg),
+@@ -73,7 +78,6 @@ test_pipeline = [
+ data = dict(
+     videos_per_gpu=8,
+     workers_per_gpu=2,
+-    test_dataloader=dict(videos_per_gpu=1),
+     train=dict(
+         type=dataset_type,
+         ann_file=ann_file_train,
+@@ -93,4 +97,4 @@ evaluation = dict(
+     interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
+ 
+ # runtime settings
+-work_dir = './work_dirs/tsm_nl_gaussian_r50_1x1x8_50e_kinetics400_rgb/'
++work_dir = './work_dirs/tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb/'
+-- 
+2.25.1
+

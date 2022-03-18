@@ -1,0 +1,36 @@
+{
+    "graph_id": 546,
+    "op": [
+        {
+            "error_type": "infer_shape_error",
+            "name": "SliceD",
+            "reason": "InferShapeFailed!",
+            "type": "SliceD"
+        }
+    ],
+    "session_id": 546
+}
+{
+    "graph_id": 547,
+    "op": [
+        {
+            "error_type": "infer_shape_error",
+            "name": "SliceD",
+            "reason": "InferShapeFailed!",
+            "type": "SliceD"
+        }
+    ],
+    "session_id": 547
+}
+{
+    "graph_id": 548,
+    "op": [
+        {
+            "error_type": "infer_shape_error",
+            "name": "SliceD",
+            "reason": "InferShapeFailed!",
+            "type": "SliceD"
+        }
+    ],
+    "session_id": 548
+}

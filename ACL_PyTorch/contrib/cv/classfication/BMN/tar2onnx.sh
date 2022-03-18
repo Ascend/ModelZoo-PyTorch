@@ -1,0 +1,1 @@
+python3.7 tar2onnx.py --input_file='checkpoint/BMN_best.pth.tar' --output_file='bmn-bs1.onnx' --infer_batch_size=1

@@ -1,0 +1,1 @@
+python3 train.py --train-folder ${data_path} --batch-size 16 --batches-before-train 2

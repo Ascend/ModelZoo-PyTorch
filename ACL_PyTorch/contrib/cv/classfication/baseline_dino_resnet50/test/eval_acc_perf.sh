@@ -1,0 +1,66 @@
+#!/bin/bash
+
+datasets_path="/root/datasets/"
+
+for para in $*
+do
+    if [[ $para == --datasets_path* ]]; then
+        datasets_path=`echo ${para#*=}`
+    fi
+done
+rm -rf ./pre_dataset
+python3.7 dino_resnet50_preprocess.py resnet ${datasets_path}/imagenet/val ./pre_dataset
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+ fi
+python3.7  get_info.py bin ./pre_dataset  ./pre_dataset_bin 224 224
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+source env.sh
+rm -rf result
+./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./dino_resnet50_bs1.om -input_text_path=./pre_dataset_bin -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=16 -om_path=./dino_resnet50_bs16.om -input_text_path=./pre_dataset_bin -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+python3.7  dino_resnet50_postprocess.py --anno_file ${datasets_path}/imagenet/val_label.txt --benchmark_out ./result/dumpOutput_device0 --result_file ./result.json
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+python3.7  dino_resnet50_postprocess.py --anno_file ${datasets_path}/imagenet/val_label.txt --benchmark_out ./result/dumpOutput_device1 --result_file ./result16.json
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+echo "====accuracy data===="
+python3.7 test/parse.py result.json
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+python3.7 test/parse.py result16.json
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+echo "====performance data===="
+python3.7 test/parse.py result/perf_vision_batchsize_1_device_0.txt
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+python3.7 test/parse.py result/perf_vision_batchsize_16_device_1.txt
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+echo "success"

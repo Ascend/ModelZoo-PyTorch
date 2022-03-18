@@ -1,0 +1,8 @@
+pytorch==1.5.0
+torchvision==0.6.0
+onnx==1.7.0
+numpy==1.18.5
+Pillow==7.2.0
+opencv-python3==1.0
+yacs
+iopath

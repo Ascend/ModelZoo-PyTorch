@@ -1,0 +1,10 @@
+pytorch==1.5.0
+torchvision==0.6.0
+onnx
+onnxruntime
+numpy
+mmcv
+opencv-python
+pillow
+scipy
+

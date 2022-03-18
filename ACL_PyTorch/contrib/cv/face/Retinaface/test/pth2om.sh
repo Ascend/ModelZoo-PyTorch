@@ -1,0 +1,19 @@
+#!/bin/bash
+
+currentDir=$(cd "$(dirname "$0")";pwd)/..
+rm -rf retinaface.onnx
+python3.7 pth2onnx.py -m $currentDir/Pytorch_Retinaface/weights/mobilenet0.25_Final.pth
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+source test/env.sh
+rm -rf retinaface_bs1.om retinaface_bs16.om
+atc --framework=5 --model=retinaface.onnx --input_format=NCHW --input_shape="image:1,3,1000,1000" --output=retinaface_bs1 --log=debug --soc_version=Ascend310 --out-nodes="Concat_205:0;Softmax_206:0;Concat_155:0"
+atc --framework=5 --model=retinaface.onnx --input_format=NCHW --input_shape="image:16,3,1000,1000" --output=retinaface_bs16 --log=debug --soc_version=Ascend310 --out-nodes="Concat_205:0;Softmax_206:0;Concat_155:0"
+
+if [ -f "retinaface_bs1.om" ] && [ -f "retinaface_bs16.om" ]; then
+    echo "success"
+else
+    echo "fail!"
+fi

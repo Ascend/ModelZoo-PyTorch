@@ -1,0 +1,1 @@
+python3.7 CNN_Transformer_Preprocess.py --pre_data_save_path=./pre_data/validation --which_dataset=validation

@@ -1,0 +1,5 @@
+Eval:
+    gt_path: "data/TestDataset"
+    pred_path: "results/PraNet"
+    result_path: "EvaluateResults"
+    datasets: ['Kvasir']

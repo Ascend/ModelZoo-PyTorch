@@ -1,0 +1,16 @@
+Cython==0.29.24
+matplotlib==3.4.3
+numpy==1.21.4
+opencv-python==4.5.4.58
+Pillow==8.4.0
+PyYAML==6.0
+scipy==1.7.2
+tensorboard==2.7.0
+torch==1.7.0
+torchvision==0.8.1
+tqdm==4.62.3
+seaborn==0.11.2
+thop==0.0.31.post2005241907  # FLOPS computation
+pycocotools==2.0.2  # COCO mAP
+onnx==1.7.0
+onnx-simplifier==0.3.6

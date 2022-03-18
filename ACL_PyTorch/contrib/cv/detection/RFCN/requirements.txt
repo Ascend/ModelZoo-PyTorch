@@ -1,0 +1,10 @@
+cython
+cffi
+opencv-python
+scipy
+easydict
+matplotlib
+pyyaml
+imageio
+numpy
+future

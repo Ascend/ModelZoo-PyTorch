@@ -1,0 +1,232 @@
+diff -Naur Pelee.Pytorch/configs/Pelee_VOC.py Pelee/configs/Pelee_VOC.py
+--- Pelee.Pytorch/configs/Pelee_VOC.py	2021-12-15 19:31:18.196000000 +0800
++++ Pelee/configs/Pelee_VOC.py	2021-12-15 19:27:56.824000000 +0800
+@@ -35,7 +35,7 @@
+ )
+ 
+ test_cfg = dict(
+-    cuda=True,
++    cuda=False,
+     topk=0,
+     iou=0.45,
+     soft_nms=True,
+@@ -68,5 +68,5 @@
+ 
+ import os
+ home = os.path.expanduser("~")
+-VOCroot = os.path.join(home, "data/VOCdevkit/")
++VOCroot = os.path.join("/opt/dataset/", "")
+ COCOroot = os.path.join(home, "data/coco/")
+diff -Naur Pelee.Pytorch/data/data_augment.py Pelee/data/data_augment.py
+--- Pelee.Pytorch/data/data_augment.py	2021-12-15 19:31:18.196000000 +0800
++++ Pelee/data/data_augment.py	2021-12-15 19:29:04.196000000 +0800
+@@ -245,7 +245,7 @@
+         interp_method = interp_methods[0]
+         img = cv2.resize(np.array(img), (self.resize,
+                                          self.resize),interpolation = interp_method).astype(np.float32)
+-        img -= self.means
+-        img = img.transpose(self.swap)
++        # img -= self.means
++        # img = img.transpose(self.swap)
+         return torch.from_numpy(img)
+ 
+diff -Naur Pelee.Pytorch/demo.py Pelee/demo.py
+--- Pelee.Pytorch/demo.py	2021-12-15 19:31:18.200000000 +0800
++++ Pelee/demo.py	2021-12-15 19:27:56.824000000 +0800
+@@ -120,6 +120,7 @@
+         img = img.cuda()
+     scale = torch.Tensor([w, h, w, h])
+     out = net(img)
++    
+     boxes, scores = detector.forward(out, priors)
+     boxes = (boxes[0] * scale).cpu().numpy()
+     scores = scores[0].cpu().numpy()
+diff -Naur Pelee.Pytorch/make.sh Pelee/make.sh
+--- Pelee.Pytorch/make.sh	2021-12-15 19:31:18.244000000 +0800
++++ Pelee/make.sh	2021-12-15 19:27:56.824000000 +0800
+@@ -3,6 +3,6 @@
+ 
+ CUDA_PATH=/usr/local/cuda/
+ 
+-python build.py build_ext --inplace
++python3.7.5 build.py build_ext --inplace
+ 
+ cd ..
+diff -Naur Pelee.Pytorch/test.py Pelee/test.py
+--- Pelee.Pytorch/test.py	2021-12-15 19:31:18.244000000 +0800
++++ Pelee/test.py	2021-12-20 14:08:01.148000000 +0800
+@@ -25,10 +25,12 @@
+     '-c', '--config', default='configs/Pelee_VOC.py', type=str)
+ parser.add_argument('-d', '--dataset', default='VOC',
+                     help='VOC or COCO version')
+-parser.add_argument('-m', '--trained_model', default=None,
+-                    type=str, help='Trained state_dict file path to open')
++parser.add_argument('-m', '--model', default=None,
++                    type=str, help='Inference model')
+ parser.add_argument('--test', action='store_true',
+                     help='to submit a test file')
++parser.add_argument('--device_id', default=0, type=int,
++                    help='use npu device')
+ args = parser.parse_args()
+ 
+ print_info('----------------------------------------------------------------------\n'
+@@ -50,6 +52,32 @@
+ num_classes = cfg.model.num_classes
+ 
+ 
++from acl_net import Net
++import acl
++
++def check_ret(message, ret):
++    if ret != 0:
++        raise Exception("{} failed ret = {}".format(message, ret))
++
++class Peleenet():
++    def __init__(self, device_id, model) -> None:
++        ret = acl.init()
++        check_ret("acl.init failed", ret)
++        ret = acl.rt.set_device(device_id)
++        check_ret("acl.rt.set_device failed", ret)
++        context, ret = acl.rt.create_context(device_id)
++        check_ret("acl.rt.create_context failed", ret)
++        self.device_id = device_id
++                            
++        self.pelee_context = Net(context, model_path=model, device_id=device_id, first=True)
++
++    def __del__(self):
++        del self.pelee_context
++
++    def inference(self, input_data):
++        return self.pelee_context([input_data.numpy().astype(np.int8])
++
++
+ def test_net(save_folder, net, detector, cuda, testset, transform, max_per_image=300, thresh=0.005):
+     if not os.path.exists(save_folder):
+         os.mkdir(save_folder)
+@@ -94,17 +122,14 @@
+ 
+ if __name__ == '__main__':
+     net = build_net('test', cfg.model.input_size, cfg.model)
+-    init_net(net, cfg, args.trained_model)
+-    print_info('===> Finished constructing and loading model',
+-               ['yellow', 'bold'])
+-    net.eval()
++
+     _set = 'eval_sets' if not args.test else 'test_sets'
+     testset = get_dataloader(cfg, args.dataset, _set)
+     if cfg.test_cfg.cuda:
+         net = net.cuda()
+         cudnn.benckmark = True
+     else:
+-        net = net.cpu()
++        net = Peleenet(args.device_id, args.model)
+     detector = Detect(num_classes, cfg.loss.bkg_label, anchor_config)
+     save_folder = os.path.join(cfg.test_cfg.save_folder, args.dataset)
+     _preprocess = BaseTransform(
+diff -Naur Pelee.Pytorch/utils/build.py Pelee/utils/build.py
+--- Pelee.Pytorch/utils/build.py	2021-12-15 19:31:18.244000000 +0800
++++ Pelee/utils/build.py	2021-12-15 19:27:56.828000000 +0800
+@@ -56,8 +56,6 @@
+     return cudaconfig
+ 
+ 
+-CUDA = locate_cuda()
+-
+ # Obtain the numpy include directory.  This logic works across numpy versions.
+ try:
+     numpy_include = np.get_include()
+@@ -118,23 +116,6 @@
+         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+         include_dirs=[numpy_include]
+     ),
+-    Extension('nms.gpu_nms',
+-              ['nms/nms_kernel.cu', 'nms/gpu_nms.pyx'],
+-              library_dirs=[CUDA['lib64']],
+-              libraries=['cudart'],
+-              language='c++',
+-              runtime_library_dirs=[CUDA['lib64']],
+-              # this syntax is specific to this build system
+-              # we're only going to use certain compiler args with nvcc and not with gcc
+-              # the implementation of this trick is in customize_compiler() below
+-              extra_compile_args={'gcc': ["-Wno-unused-function"],
+-                                  'nvcc': ['-arch=sm_52',
+-                                           '--ptxas-options=-v',
+-                                           '-c',
+-                                           '--compiler-options',
+-                                           "'-fPIC'"]},
+-              include_dirs=[numpy_include, CUDA['include']]
+-              ),
+     Extension(
+         'pycocotools._mask',
+         sources=['pycocotools/maskApi.c', 'pycocotools/_mask.pyx'],
+diff -Naur Pelee.Pytorch/utils/core.py Pelee/utils/core.py
+--- Pelee.Pytorch/utils/core.py	2021-12-15 19:31:18.244000000 +0800
++++ Pelee/utils/core.py	2021-12-15 19:27:56.828000000 +0800
+@@ -41,7 +41,7 @@
+     step = int(math.floor(max_ratio - min_ratio) / (mbox_source_num - 2))
+     min_sizes = list()
+     max_sizes = list()
+-    for ratio in xrange(min_ratio, max_ratio + 1, step):
++    for ratio in range(min_ratio, max_ratio + 1, step):
+         min_sizes.append(input_size * ratio / 100)
+         max_sizes.append(input_size * (ratio + step) / 100)
+ 
+@@ -73,7 +73,7 @@
+         net.init_model(cfg.model.pretained_model)
+     else:
+         print('Loading resume network...')
+-        state_dict = torch.load(resume_net)
++        state_dict = torch.load(resume_net, map_location='cpu')
+ 
+         from collections import OrderedDict
+         new_state_dict = OrderedDict()
+@@ -172,7 +172,15 @@
+         if cuda:
+             x = x.cuda()
+             scale = scale.cuda()
+-    out = net(x)
++        else:
++            priors = priors.cpu()
++
++    if cuda:
++        out = net(x)
++    else:
++        tmp = net.inference(x)
++        out = (torch.from_numpy(tmp[0]), torch.from_numpy(tmp[1]).permute(1, 0))
++
+     boxes, scores = detector.forward(out, priors)
+     boxes = (boxes[0] * scale).cpu().numpy()
+     scores = scores[0].cpu().numpy()
+diff -Naur Pelee.Pytorch/utils/nms_wrapper.py Pelee/utils/nms_wrapper.py
+--- Pelee.Pytorch/utils/nms_wrapper.py	2021-12-15 19:31:18.248000000 +0800
++++ Pelee/utils/nms_wrapper.py	2021-12-15 19:27:56.828000000 +0800
+@@ -6,26 +6,16 @@
+ # --------------------------------------------------------
+ 
+ from .nms.cpu_nms import cpu_nms, cpu_soft_nms
+-from .nms.gpu_nms import gpu_nms
+ 
+ 
+-# def nms(dets, thresh, force_cpu=False):
+-#     """Dispatch to either CPU or GPU NMS implementations."""
+-#
+-#     if dets.shape[0] == 0:
+-#         return []
+-#     if cfg.USE_GPU_NMS and not force_cpu:
+-#         return gpu_nms(dets, thresh, device_id=cfg.GPU_ID)
+-#     else:
+-#         return cpu_nms(dets, thresh)
+ 
+ 
+-def nms(dets, thresh, force_cpu=False):
++
++def nms(dets, thresh, force_cpu=True):
+     """Dispatch to either CPU or GPU NMS implementations."""
+ 
+     if dets.shape[0] == 0:
+         return []
+     if force_cpu:
+         return cpu_soft_nms(dets, thresh, method = 1)
+-        #return cpu_nms(dets, thresh)
+-    return gpu_nms(dets, thresh)
++

@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0; python ./train.py configs/recognition/r2plus1d/r2plus1d_r34_8x8x1_180e_ucf101_rgb.py --validate --seed 0 --deterministic

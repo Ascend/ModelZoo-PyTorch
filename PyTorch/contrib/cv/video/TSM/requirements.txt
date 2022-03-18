@@ -1,0 +1,8 @@
+numpy==1.20.2
+onnx==1.8.0
+onnx-simplifier==0.3.6
+onnxoptimizer==0.2.6
+onnxruntime==1.7.0
+opencv-python==4.5.3.56
+opencv-python3==1.0
+torchvision==0.2.0

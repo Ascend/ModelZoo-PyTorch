@@ -1,0 +1,6 @@
+apex
+numpy==4.62.3
+torch==1.5.0
+torchvision==0.6.0
+onnx
+tqdm==4.62.3

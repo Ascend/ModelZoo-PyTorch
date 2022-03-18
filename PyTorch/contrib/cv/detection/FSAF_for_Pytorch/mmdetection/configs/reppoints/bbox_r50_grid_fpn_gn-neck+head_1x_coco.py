@@ -1,0 +1,28 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the License);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+_base_ = './reppoints_moment_r50_fpn_gn-neck+head_1x_coco.py'
+model = dict(
+    bbox_head=dict(transform_method='minmax', use_grid_points=True),
+    # training and testing settings
+    train_cfg=dict(
+        init=dict(
+            assigner=dict(
+                _delete_=True,
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.5,
+                neg_iou_thr=0.4,
+                min_pos_iou=0,
+                ignore_iof_thr=-1))))

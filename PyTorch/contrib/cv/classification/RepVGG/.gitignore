@@ -1,0 +1,11 @@
+.idea/
+*nori*
+/__pycache__/
+*.json
+*.log
+/kernel_meta/
+train_RepVGG-A0_hello_exp.txt
+train_RepVGG-A0_testtest_exp.txt
+*.pth.tar
+*.prof
+*.jpg

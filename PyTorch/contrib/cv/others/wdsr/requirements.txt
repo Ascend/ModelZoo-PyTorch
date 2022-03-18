@@ -1,0 +1,9 @@
+apex
+h5py==2.8
+numpy
+Pillow
+scikit-image
+tables
+torch
+torchvision
+tensorboard

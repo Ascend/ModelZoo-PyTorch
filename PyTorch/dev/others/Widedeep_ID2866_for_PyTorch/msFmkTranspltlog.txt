@@ -1,0 +1,244 @@
+2022-01-20 10:08:30 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2022-01-20 10:08:30 [INFO] Output path: tools/ETP/test/DeepCTR-pytorch-main_msft.
+2022-01-20 10:08:30 [INFO] Analysis start...
+2022-01-20 10:08:30 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/LICENSE is not a python script, skip.
+2022-01-20 10:08:30 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/.DS_Store is not a python script, skip.
+2022-01-20 10:08:30 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/README.md is not a python script, skip.
+2022-01-20 10:08:30 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/msFmkTranspltlog.txt is not a python script, skip.
+2022-01-20 10:08:30 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/train.py.
+2022-01-20 10:08:30 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:30 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:30 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:30 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/train.py complete.
+2022-01-20 10:08:30 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/config.py.
+2022-01-20 10:08:31 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:31 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/config.py complete.
+2022-01-20 10:08:31 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/model.py.
+2022-01-20 10:08:31 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-01-20 10:08:31 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-01-20 10:08:31 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/model.py complete.
+2022-01-20 10:08:31 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:31 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/PNN/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:31 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/train.py.
+2022-01-20 10:08:32 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:32 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:32 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:32 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/train.py complete.
+2022-01-20 10:08:32 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/config.py.
+2022-01-20 10:08:32 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:32 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/config.py complete.
+2022-01-20 10:08:32 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/model.py.
+2022-01-20 10:08:32 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:32 [INFO] OperatorType.INSERT in line 29 ~ 30, import and init statement of torch.npu
+2022-01-20 10:08:32 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/model.py complete.
+2022-01-20 10:08:32 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:32 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/Deep&Cross/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:32 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/data/.DS_Store is not a python script, skip.
+2022-01-20 10:08:32 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/data/criteo_sampled_data.csv is not a python script, skip.
+2022-01-20 10:08:32 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/train.py.
+2022-01-20 10:08:33 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:33 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:33 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:33 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/train.py complete.
+2022-01-20 10:08:33 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/config.py.
+2022-01-20 10:08:33 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:33 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/config.py complete.
+2022-01-20 10:08:33 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/model.py.
+2022-01-20 10:08:33 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-01-20 10:08:33 [INFO] OperatorType.INSERT in line 56 ~ 57, import and init statement of torch.npu
+2022-01-20 10:08:33 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/model.py complete.
+2022-01-20 10:08:33 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:33 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/xDeepFM/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:33 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/train.py.
+2022-01-20 10:08:34 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:34 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:34 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:34 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/train.py complete.
+2022-01-20 10:08:34 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/config.py.
+2022-01-20 10:08:34 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:34 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/config.py complete.
+2022-01-20 10:08:34 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/model.py.
+2022-01-20 10:08:34 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-01-20 10:08:34 [INFO] OperatorType.INSERT in line 43 ~ 44, import and init statement of torch.npu
+2022-01-20 10:08:34 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/model.py complete.
+2022-01-20 10:08:34 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:34 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/AutoInt/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:34 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/train.py.
+2022-01-20 10:08:35 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:35 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:35 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:35 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/train.py complete.
+2022-01-20 10:08:35 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/config.py.
+2022-01-20 10:08:35 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:35 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/config.py complete.
+2022-01-20 10:08:35 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/model.py.
+2022-01-20 10:08:35 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-01-20 10:08:35 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-01-20 10:08:35 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/model.py complete.
+2022-01-20 10:08:35 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:35 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/WideDeep/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:35 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/FM/train.py.
+2022-01-20 10:08:36 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:36 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:36 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:36 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/FM/train.py complete.
+2022-01-20 10:08:36 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/FM/config.py.
+2022-01-20 10:08:36 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:36 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/FM/config.py complete.
+2022-01-20 10:08:36 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/FM/model.py.
+2022-01-20 10:08:36 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:36 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:36 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/FM/model.py complete.
+2022-01-20 10:08:36 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/FM/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:36 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/FM/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:36 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/train.py.
+2022-01-20 10:08:37 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:37 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:37 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:37 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/train.py complete.
+2022-01-20 10:08:37 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/config.py.
+2022-01-20 10:08:37 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:37 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/config.py complete.
+2022-01-20 10:08:37 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/model.py.
+2022-01-20 10:08:37 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:37 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:37 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/model.py complete.
+2022-01-20 10:08:37 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:37 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/NFM/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:37 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/train.py.
+2022-01-20 10:08:38 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:38 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:38 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:38 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/train.py complete.
+2022-01-20 10:08:38 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/config.py.
+2022-01-20 10:08:38 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:38 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/config.py complete.
+2022-01-20 10:08:38 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/model.py.
+2022-01-20 10:08:38 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:38 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-20 10:08:38 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/model.py complete.
+2022-01-20 10:08:38 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:38 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/DeepFM/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:38 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/train.py.
+2022-01-20 10:08:39 [INFO] OperatorType.INSERT in line 22 ~ 23, import and init statement of torch.npu
+2022-01-20 10:08:39 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 41 ~ 41, change module cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 46 ~ 46, change module cuda to npu
+2022-01-20 10:08:39 [INFO] OperatorType.MODIFY in line 61 ~ 61, change module cuda to npu
+2022-01-20 10:08:39 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/train.py complete.
+2022-01-20 10:08:39 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/config.py.
+2022-01-20 10:08:39 [INFO] OperatorType.INSERT in line 9 ~ 10, import and init statement of torch.npu
+2022-01-20 10:08:39 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/config.py complete.
+2022-01-20 10:08:39 [INFO] Start analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/model.py.
+2022-01-20 10:08:39 [INFO] OperatorType.INSERT in line 12 ~ 13, import and init statement of torch.npu
+2022-01-20 10:08:39 [INFO] OperatorType.INSERT in line 12 ~ 13, import and init statement of torch.npu
+2022-01-20 10:08:39 [INFO] Analysis tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/model.py complete.
+2022-01-20 10:08:39 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/__pycache__/model.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:39 [INFO] tools/ETP/test/DeepCTR-pytorch-main_msft/AFM/__pycache__/config.cpython-36.pyc is not a python script, skip.
+2022-01-20 10:08:39 [INFO] MsFmkTransplt run success, welcome to the next use.

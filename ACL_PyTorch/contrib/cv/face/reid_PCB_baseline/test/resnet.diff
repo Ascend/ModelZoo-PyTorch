@@ -1,0 +1,11 @@
+--- resnet.py	2021-06-30 18:13:34.165260365 +0800
++++ resnet_modified.py	2021-06-30 18:14:03.373647350 +0800
+@@ -128,7 +128,7 @@ class ResNet(nn.Module):
+             y = F.avg_pool3d(x,(16,1,1)).squeeze(1)
+             sx = x.size(2)/6
+             kx = x.size(2)-sx*5
+-            x = F.avg_pool2d(x,kernel_size=(kx,x.size(3)),stride=(sx,x.size(3)))   # H4 W8
++            x = F.avg_pool2d(x,kernel_size=(4,8),stride=(4,8))   # H4 W8
+ #========================================================================#            
+ 
+             out0 = x.view(x.size(0),-1)

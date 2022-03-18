@@ -1,0 +1,38 @@
+{
+  "name": "modulation_noise45_adafmnet_noise15to75"
+  , "suffix": null
+  , "model": "sr"
+  , "crop_size": 0  // 0 for image restoration | upscale (x2,3,4) for SR
+  , "gpu_ids": [0]
+
+  , "interpolate_stride": 0.1 // 0.1, 0.05, 0.01, ... for modulation testing
+
+  , "datasets": {
+//    "test_1": { // the 1st test dataset
+//      "name": "CBSD68"
+//      , "mode": "LRHR"
+//      , "dataroot_HR": "../datasets/val_CBSD68/CBSD68" // path for HR images
+//      , "dataroot_LR": "../datasets/val_CBSD68/CBSD68_noise75" // path for LR images
+//    },
+     "test_2": { // the 2nd test dataset
+      "name": "personal_images"
+      , "mode": "LR"
+      , "dataroot_LR": "../datasets/personal_images/personal_images_noise45"
+    }
+  }
+
+  , "path": {
+    "root": "../"
+    , "pretrain_model_G": "../experiments/pretrained_models/noise15to75.pth"
+  }
+
+  , "network_G": {
+    "which_model_G": "adaptive_resnet"
+    , "norm_type": "adafm" // basic | adafm | null | instance | batch
+    , "nf": 64
+    , "nb": 16
+    , "in_nc": 3
+    , "out_nc": 3
+    , "adafm_ksize": 1 // 1 | 3 | 5 | 7
+  }
+}

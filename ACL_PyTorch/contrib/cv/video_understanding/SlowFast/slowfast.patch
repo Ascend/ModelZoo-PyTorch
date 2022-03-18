@@ -1,0 +1,125 @@
+From 9015e71e602b89d3e81d4445a2c48d19cc8871f7 Mon Sep 17 00:00:00 2001
+From: congee524 <congee524@gmail.com>
+Date: Sat, 20 Nov 2021 18:51:14 +0800
+Subject: [PATCH] replace with index_select
+
+modify config
+---
+ ...slowfast_r50_8x8x1_256e_kinetics400_rgb.py | 75 +++++++++++++++++++
+ .../models/backbones/resnet3d_slowfast.py     | 13 +---
+ 2 files changed, 79 insertions(+), 9 deletions(-)
+
+diff --git a/configs/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb.py b/configs/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb.py
+index 49a30be6..388843b6 100644
+--- a/configs/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb.py
++++ b/configs/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb.py
+@@ -7,4 +7,79 @@ model = dict(
+         channel_ratio=8,  # beta_inv
+         slow_pathway=dict(fusion_kernel=7)))
+ 
++# dataset settings
++dataset_type = 'VideoDataset'
++data_root = 'data/kinetics400/videos_train'
++data_root_val = 'data/kinetics400/videos_val'
++ann_file_train = 'data/kinetics400/kinetics400_train_list_videos.txt'
++ann_file_val = 'data/kinetics400/kinetics400_val_list_videos.txt'
++ann_file_test = 'data/kinetics400/kinetics400_val_list_videos.txt'
++
++img_norm_cfg = dict(
++    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
++
++train_pipeline = [
++    dict(type='DecordInit'),
++    dict(type='SampleFrames', clip_len=32, frame_interval=2, num_clips=1),
++    dict(type='DecordDecode'),
++    dict(type='Resize', scale=(-1, 256)),
++    dict(type='RandomResizedCrop'),
++    dict(type='Resize', scale=(224, 224), keep_ratio=False),
++    dict(type='Flip', flip_ratio=0.5),
++    dict(type='Normalize', **img_norm_cfg),
++    dict(type='FormatShape', input_format='NCTHW'),
++    dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
++    dict(type='ToTensor', keys=['imgs', 'label'])
++]
++val_pipeline = [
++    dict(type='DecordInit'),
++    dict(
++        type='SampleFrames',
++        clip_len=32,
++        frame_interval=2,
++        num_clips=1,
++        test_mode=True),
++    dict(type='DecordDecode'),
++    dict(type='Resize', scale=(-1, 256)),
++    dict(type='CenterCrop', crop_size=224),
++    dict(type='Normalize', **img_norm_cfg),
++    dict(type='FormatShape', input_format='NCTHW'),
++    dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
++    dict(type='ToTensor', keys=['imgs'])
++]
++test_pipeline = [
++    dict(type='DecordInit'),
++    dict(
++        type='SampleFrames',
++        clip_len=32,
++        frame_interval=2,
++        num_clips=1,
++        test_mode=True),
++    dict(type='DecordDecode'),
++    dict(type='Resize', scale=(-1, 256)),
++    dict(type='CenterCrop', crop_size=224),
++    dict(type='Normalize', **img_norm_cfg),
++    dict(type='FormatShape', input_format='NCTHW'),
++    dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
++    dict(type='ToTensor', keys=['imgs'])
++]
++data = dict(
++    videos_per_gpu=8,
++    workers_per_gpu=2,
++    train=dict(
++        type=dataset_type,
++        ann_file=ann_file_train,
++        data_prefix=data_root,
++        pipeline=train_pipeline),
++    val=dict(
++        type=dataset_type,
++        ann_file=ann_file_val,
++        data_prefix=data_root_val,
++        pipeline=val_pipeline),
++    test=dict(
++        type=dataset_type,
++        ann_file=ann_file_test,
++        data_prefix=data_root_val,
++        pipeline=test_pipeline))
++
+ work_dir = './work_dirs/slowfast_r50_3d_8x8x1_256e_kinetics400_rgb'
+diff --git a/mmaction/models/backbones/resnet3d_slowfast.py b/mmaction/models/backbones/resnet3d_slowfast.py
+index 0b70f4ac..f9f8d955 100644
+--- a/mmaction/models/backbones/resnet3d_slowfast.py
++++ b/mmaction/models/backbones/resnet3d_slowfast.py
+@@ -488,18 +488,13 @@ class ResNet3dSlowFast(nn.Module):
+             tuple[torch.Tensor]: The feature of the input samples extracted
+                 by the backbone.
+         """
+-        x_slow = nn.functional.interpolate(
+-            x,
+-            mode='nearest',
+-            scale_factor=(1.0 / self.resample_rate, 1.0, 1.0))
++        t = x.size(2)
++        x_slow = x.index_select(2, torch.arange(0, t, self.resample_rate))
+         x_slow = self.slow_path.conv1(x_slow)
+         x_slow = self.slow_path.maxpool(x_slow)
+ 
+-        x_fast = nn.functional.interpolate(
+-            x,
+-            mode='nearest',
+-            scale_factor=(1.0 / (self.resample_rate // self.speed_ratio), 1.0,
+-                          1.0))
++        x_fast = x.index_select(
++            2, torch.arange(0, t, self.resample_rate // self.speed_ratio))
+         x_fast = self.fast_path.conv1(x_fast)
+         x_fast = self.fast_path.maxpool(x_fast)
+ 
+-- 
+2.25.1
+

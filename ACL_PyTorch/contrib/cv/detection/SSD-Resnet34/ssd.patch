@@ -1,0 +1,2347 @@
+diff -Naur pytorch/base_model.py ssd/base_model.py
+--- pytorch/base_model.py	1970-01-01 00:00:00.000000000 +0000
++++ ssd/base_model.py	2021-12-03 10:41:59.146120967 +0000
+@@ -0,0 +1,198 @@
++# Copyright (c) 2018-2019, NVIDIA CORPORATION. All rights reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++import torch
++import torch.nn as nn
++from torchvision.models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
++
++
++class ResNet(nn.Module):
++    def __init__(self, backbone='resnet34', backbone_path=None):
++        super().__init__()
++        if backbone == 'resnet18':
++            backbone = resnet18(pretrained=not backbone_path)
++            self.out_channels = [256, 512, 512, 256, 256, 128]
++        elif backbone == 'resnet34':
++            backbone = resnet34(pretrained=not backbone_path)
++            self.out_channels = [256, 512, 512, 256, 256, 256]
++        elif backbone == 'resnet50':
++            backbone = resnet50(pretrained=not backbone_path)
++            self.out_channels = [1024, 512, 512, 256, 256, 256]
++        elif backbone == 'resnet101':
++            backbone = resnet101(pretrained=not backbone_path)
++            self.out_channels = [1024, 512, 512, 256, 256, 256]
++        else:  # backbone == 'resnet152':
++            backbone = resnet152(pretrained=not backbone_path)
++            self.out_channels = [1024, 512, 512, 256, 256, 256]
++        if backbone_path:
++            backbone.load_state_dict(torch.load(backbone_path))
++
++
++        self.feature_extractor = nn.Sequential(*list(backbone.children())[:7])
++
++        conv4_block1 = self.feature_extractor[-1][0]
++
++        conv4_block1.conv1.stride = (1, 1)
++        conv4_block1.conv2.stride = (1, 1)
++        conv4_block1.downsample[0].stride = (1, 1)
++
++    def forward(self, x):
++        x = self.feature_extractor(x)
++        return x
++
++'''
++class SSD300(nn.Module):
++    def __init__(self, backbone=ResNet('resnet34')):
++        super().__init__()
++
++        self.feature_extractor = backbone
++
++        self.label_num = 81  # number of COCO classes
++        self._build_additional_features(self.feature_extractor.out_channels)
++        self.num_defaults = [4, 6, 6, 6, 4, 4]
++        self.loc = []
++        self.conf = []
++
++        for nd, oc in zip(self.num_defaults, self.feature_extractor.out_channels):
++            self.loc.append(nn.Conv2d(oc, nd * 4, kernel_size=3, padding=1))
++            self.conf.append(nn.Conv2d(oc, nd * self.label_num, kernel_size=3, padding=1))
++
++        self.loc = nn.ModuleList(self.loc)
++        self.conf = nn.ModuleList(self.conf)
++        self._init_weights()
++
++    def _build_additional_features(self, input_size):
++        self.additional_blocks = []
++        for i, (input_size, output_size, channels) in enumerate(zip(input_size[:-1], input_size[1:], [256, 256, 128, 128, 128])):
++            if i < 3:
++                layer = nn.Sequential(
++                    nn.Conv2d(input_size, channels, kernel_size=1, bias=False),
++                    nn.BatchNorm2d(channels),
++                    nn.ReLU(inplace=True),
++                    nn.Conv2d(channels, output_size, kernel_size=3, padding=1, stride=2, bias=False),
++                    nn.BatchNorm2d(output_size),
++                    nn.ReLU(inplace=True),
++                )
++            else:
++                layer = nn.Sequential(
++                    nn.Conv2d(input_size, channels, kernel_size=1, bias=False),
++                    nn.BatchNorm2d(channels),
++                    nn.ReLU(inplace=True),
++                    nn.Conv2d(channels, output_size, kernel_size=3, bias=False),
++                    nn.BatchNorm2d(output_size),
++                    nn.ReLU(inplace=True),
++                )
++
++            self.additional_blocks.append(layer)
++
++        self.additional_blocks = nn.ModuleList(self.additional_blocks)
++
++    def _init_weights(self):
++        layers = [*self.additional_blocks, *self.loc, *self.conf]
++        for layer in layers:
++            for param in layer.parameters():
++                if param.dim() > 1: nn.init.xavier_uniform_(param)
++
++    # Shape the classifier to the view of bboxes
++    def bbox_view(self, src, loc, conf):
++        ret = []
++        for s, l, c in zip(src, loc, conf):
++            ret.append((l(s).view(s.size(0), 4, -1), c(s).view(s.size(0), self.label_num, -1)))
++
++        locs, confs = list(zip(*ret))
++        locs, confs = torch.cat(locs, 2).contiguous(), torch.cat(confs, 2).contiguous()
++        return locs, confs
++
++    def forward(self, x):
++        x = self.feature_extractor(x)
++
++        detection_feed = [x]
++        for l in self.additional_blocks:
++            x = l(x)
++            detection_feed.append(x)
++
++        # Feature Map 38x38x4, 19x19x6, 10x10x6, 5x5x6, 3x3x4, 1x1x4
++        locs, confs = self.bbox_view(detection_feed, self.loc, self.conf)
++
++        # For SSD 300, shall return nbatch x 8732 x {nlabels, nlocs} results
++        return locs, confs
++'''
++
++class Loss(nn.Module):
++    """
++        Implements the loss as the sum of the followings:
++        1. Confidence Loss: All labels, with hard negative mining
++        2. Localization Loss: Only on positive labels
++        Suppose input dboxes has the shape 8732x4
++    """
++    def __init__(self, dboxes):
++        super(Loss, self).__init__()
++        self.scale_xy = 1.0/dboxes.scale_xy
++        self.scale_wh = 1.0/dboxes.scale_wh
++
++        self.sl1_loss = nn.SmoothL1Loss(reduce=False)
++        self.dboxes = nn.Parameter(dboxes(order="xywh").transpose(0, 1).unsqueeze(dim = 0),
++            requires_grad=False)
++        # Two factor are from following links
++        # http://jany.st/post/2017-11-05-single-shot-detector-ssd-from-scratch-in-tensorflow.html
++        self.con_loss = nn.CrossEntropyLoss(reduce=False)
++
++    def _loc_vec(self, loc):
++        """
++            Generate Location Vectors
++        """
++        gxy = self.scale_xy*(loc[:, :2, :] - self.dboxes[:, :2, :])/self.dboxes[:, 2:, ]
++        gwh = self.scale_wh*(loc[:, 2:, :]/self.dboxes[:, 2:, :]).log()
++        return torch.cat((gxy, gwh), dim=1).contiguous()
++
++    def forward(self, ploc, plabel, gloc, glabel):
++        """
++            ploc, plabel: Nx4x8732, Nxlabel_numx8732
++                predicted location and labels
++
++            gloc, glabel: Nx4x8732, Nx8732
++                ground truth location and labels
++        """
++        mask = glabel > 0
++        pos_num = mask.sum(dim=1)
++
++        vec_gd = self._loc_vec(gloc)
++
++        # sum on four coordinates, and mask
++        sl1 = self.sl1_loss(ploc, vec_gd).sum(dim=1)
++        sl1 = (mask.float()*sl1).sum(dim=1)
++
++        # hard negative mining
++        con = self.con_loss(plabel, glabel)
++
++        # postive mask will never selected
++        con_neg = con.clone()
++        con_neg[mask] = 0
++        _, con_idx = con_neg.sort(dim=1, descending=True)
++        _, con_rank = con_idx.sort(dim=1)
++        torch.save(con_neg,'/home/yzc/pytorch3/pytorch2/con_neg.pth')
++        torch.save(con_idx,'/home/yzc/pytorch3/pytorch2/con_idx.pth')
++        # number of negative three times positive
++        neg_num = torch.clamp(3*pos_num, max=mask.size(1)).unsqueeze(-1)
++        neg_mask = con_rank < neg_num
++
++        #print(con.shape, mask.shape, neg_mask.shape)
++        closs = (con*(mask.float() + neg_mask.float())).sum(dim=1)
++
++        # avoid no object detected
++        total_loss = sl1 + closs
++        num_mask = (pos_num > 0).float()
++        pos_num = pos_num.float().clamp(min=1e-6)
++        ret = (total_loss*num_mask/pos_num).mean(dim=0)
++        return ret
+diff -Naur pytorch/box_coder.py ssd/box_coder.py
+--- pytorch/box_coder.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/box_coder.py	2021-12-03 10:41:58.742117678 +0000
+@@ -1,12 +1,43 @@
+ import torch
+ 
+ import torch.nn.functional as F
+-from SSD import _C as C
+ import numpy as np
+ import itertools
+ 
+ from math import sqrt
+ 
++def calc_iou_tensor(box1, box2):
++    """ 
++        Calculation of IoU based on two boxes tensor,
++        Reference to https://github.com/kuangliu/pytorch-ssd
++        input:
++            box1 (N, 4)
++            box2 (M, 4)
++        output:
++            IoU (N, M)
++    """
++    N = box1.size(0)
++    M = box2.size(0)
++
++    be1 = box1.unsqueeze(1).expand(-1, M, -1)
++    be2 = box2.unsqueeze(0).expand(N, -1, -1)
++
++    # Left Top & Right Bottom
++    lt = torch.max(be1[:, :, :2], be2[:, :, :2])
++    rb = torch.min(be1[:, :, 2:], be2[:, :, 2:])
++
++    delta = rb - lt
++    delta[delta < 0] = 0
++    intersect = delta[:, :, 0] * delta[:, :, 1]
++
++    delta1 = be1[:, :, 2:] - be1[:, :, :2]
++    area1 = delta1[:, :, 0] * delta1[:, :, 1]
++    delta2 = be2[:, :, 2:] - be2[:, :, :2]
++    area2 = delta2[:, :, 0] * delta2[:, :, 1]
++
++    iou = intersect / (area1 + area2 - intersect)
++    return iou
++
+ class DefaultBoxes(object):
+     def __init__(self, fig_size, feat_size, steps, scales, aspect_ratios, \
+                        scale_xy=0.1, scale_wh=0.2):
+@@ -43,7 +74,7 @@
+                     cx, cy = (j+0.5)/fk[idx], (i+0.5)/fk[idx]
+                     self.default_boxes.append((cx, cy, w, h))
+ 
+-        self.dboxes = torch.tensor(self.default_boxes, dtype=torch.float)
++        self.dboxes = torch.tensor(self.default_boxes, dtype=torch.float).cpu()
+         self.dboxes.clamp_(min=0, max=1)
+         # For IoU calculation
+         self.dboxes_ltrb = self.dboxes.clone()
+@@ -90,55 +121,43 @@
+         self.dboxes = dboxes(order="ltrb")
+         self.dboxes_xywh = dboxes(order="xywh").unsqueeze(dim=0)
+         self.nboxes = self.dboxes.size(0)
+-        #print("# Bounding boxes: {}".format(self.nboxes))
+         self.scale_xy = dboxes.scale_xy
+         self.scale_wh = dboxes.scale_wh
+ 
+-        self.dboxes = self.dboxes.cuda()
+-        self.dboxes_xywh = self.dboxes_xywh.cuda()
+-
++        self.dboxes = self.dboxes.cpu()
++        self.dboxes_xywh = self.dboxes_xywh.cpu()
++        self.dboxes_cpu = self.dboxes.cpu()
++        self.dboxes_xywh_cpu = self.dboxes_xywh.cpu()
+     def encode(self, bboxes_in, labels_in, criteria = 0.5):
+ 
+-        try:
+-            ious = calc_iou_tensor(bboxes_in, self.dboxes)
+-            best_dbox_ious, best_dbox_idx = ious.max(dim=0)
+-            best_bbox_ious, best_bbox_idx = ious.max(dim=1)
+-
+-            # set best ious 2.0
+-            best_dbox_ious.index_fill_(0, best_bbox_idx, 2.0)
+-
+-            idx = torch.arange(0, best_bbox_idx.size(0), dtype=torch.int64)
+-            best_dbox_idx[best_bbox_idx[idx]] = idx
+-
+-            # filter IoU > 0.5
+-            masks = best_dbox_ious > criteria
+-            labels_out = torch.zeros(self.nboxes, dtype=torch.long)
+-            #print(maxloc.shape, labels_in.shape, labels_out.shape)
+-
+-            #print("labels_out")
+-            #print(labels_out.shape)
+-            #print("masks")
+-            #print(masks.shape)
+-            #print("labels_in")
+-            #print(labels_in.shape)
+-            #print("best_dbox_idx")
+-            #print(best_dbox_idx.shape)
+-
+-            labels_out[masks] = labels_in[best_dbox_idx[masks]]
+-            bboxes_out = self.dboxes.clone()
+-            bboxes_out[masks, :] = bboxes_in[best_dbox_idx[masks], :]
+-            # Transform format to xywh format
+-            x, y, w, h = 0.5*(bboxes_out[:, 0] + bboxes_out[:, 2]), \
+-                         0.5*(bboxes_out[:, 1] + bboxes_out[:, 3]), \
+-                         -bboxes_out[:, 0] + bboxes_out[:, 2], \
+-                         -bboxes_out[:, 1] + bboxes_out[:, 3]
+-            bboxes_out[:, 0] = x
+-            bboxes_out[:, 1] = y
+-            bboxes_out[:, 2] = w
+-            bboxes_out[:, 3] = h
+-        except:
+-            labels_out = torch.zeros(self.nboxes, dtype=torch.long)
+-            bboxes_out = torch.zeros(self.nboxes, 4)
++        # try: 
++        # print("bboxes_in.shape, self.dboxes.shape", bboxes_in.shape, self.dboxes.shape)
++        ious = calc_iou_tensor(bboxes_in, self.dboxes)
++        best_dbox_ious, best_dbox_idx = ious.max(dim=0)
++        best_bbox_ious, best_bbox_idx = ious.max(dim=1)
++
++        # set best ious 2.0
++        best_dbox_ious.index_fill_(0, best_bbox_idx, 2.0)
++
++        idx = torch.arange(0, best_bbox_idx.size(0), dtype=torch.int64)
++        best_dbox_idx[best_bbox_idx[idx]] = idx
++
++        # filter IoU > 0.5
++        masks = best_dbox_ious > criteria
++        labels_out = torch.zeros(self.nboxes, dtype=torch.long).cpu()
++
++        labels_out[masks] = labels_in[best_dbox_idx[masks]]
++        bboxes_out = self.dboxes.clone()                     
++        bboxes_out[masks, :] = bboxes_in[best_dbox_idx[masks], :]
++        # Transform format to xywh format
++        x, y, w, h = 0.5*(bboxes_out[:, 0] + bboxes_out[:, 2]), \
++                    0.5*(bboxes_out[:, 1] + bboxes_out[:, 3]), \
++                    -bboxes_out[:, 0] + bboxes_out[:, 2], \
++                    -bboxes_out[:, 1] + bboxes_out[:, 3]
++        bboxes_out[:, 0] = x
++        bboxes_out[:, 1] = y
++        bboxes_out[:, 2] = w
++        bboxes_out[:, 3] = h
+         return bboxes_out, labels_out
+ 
+     def scale_back_batch(self, bboxes_in, scores_in):
+@@ -146,85 +165,192 @@
+             Do scale and transform from xywh to ltrb
+             suppose input Nx4xnum_bbox Nxlabel_numxnum_bbox
+         """
++        
+         bboxes_in = bboxes_in.permute(0, 2, 1)
+         scores_in = scores_in.permute(0, 2, 1)
+-
++        
+         bboxes_in[:, :, :2] = self.scale_xy*bboxes_in[:, :, :2]
+         bboxes_in[:, :, 2:] = self.scale_wh*bboxes_in[:, :, 2:]
+-
+-        bboxes_in[:, :, :2] = bboxes_in[:, :, :2]*self.dboxes_xywh[:, :, 2:] + self.dboxes_xywh[:, :, :2]
+-        bboxes_in[:, :, 2:] = bboxes_in[:, :, 2:].exp()*self.dboxes_xywh[:, :, 2:]
+-
++        
++        bboxes_in[:, :, :2] = bboxes_in[:, :, :2]*self.dboxes_xywh_cpu[:, :, 2:] + self.dboxes_xywh_cpu[:, :, :2]
++        bboxes_in[:, :, 2:] = bboxes_in[:, :, 2:].exp()*self.dboxes_xywh_cpu[:, :, 2:]
++        
+         # Transform format to ltrb
+         l, t, r, b = bboxes_in[:, :, 0] - 0.5*bboxes_in[:, :, 2],\
+                      bboxes_in[:, :, 1] - 0.5*bboxes_in[:, :, 3],\
+                      bboxes_in[:, :, 0] + 0.5*bboxes_in[:, :, 2],\
+                      bboxes_in[:, :, 1] + 0.5*bboxes_in[:, :, 3]
+-
++        
+         bboxes_in[:, :, 0] = l
+         bboxes_in[:, :, 1] = t
+         bboxes_in[:, :, 2] = r
+         bboxes_in[:, :, 3] = b
+-
++        
+         return bboxes_in, F.softmax(scores_in, dim=-1)
+ 
+     def decode_batch(self, bboxes_in, scores_in,  criteria = 0.45, max_output=200):
++        
+         bboxes, probs = self.scale_back_batch(bboxes_in, scores_in)
++        
++        N,A,C = probs.shape
++        bboxes = bboxes.unsqueeze(-2).repeat([1,1,80,1])
++        probs = probs[...,1:]
++        bboxes=bboxes.npu()
++        probs=probs.npu()
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(bboxes.half(), probs.half(),
++                                                                                  0.05, criteria,
++                                                                                  max_output, max_output)
++        return nmsed_boxes, nmsed_classes, nmsed_scores
+ 
+-        output = []
+-        # This split seems dumb to me -- it's already [1, 8732, 4] and [1, 8732, 81]...
+-        for bbox, prob in zip(bboxes.split(1, 0), probs.split(1, 0)):
+-            bbox = bbox.squeeze(0)
+-            prob = prob.squeeze(0)
+-            output.append(self.decode_single(bbox, prob, criteria, max_output))
+-            #print(output[-1])
+-        return output
+-
+-    # perform non-maximum suppression
++    # perform non-maximum suppression###############################################################
+     def decode_single(self, bboxes_in, scores_in, criteria, max_output, max_num=200):
+-        # Reference to https://github.com/amdegroot/ssd.pytorch
+-
++    #     # Reference to https://github.com/amdegroot/ssd.pytorch
++    #
+         bboxes_out = []
+         scores_out = []
+         labels_out = []
+-
+-        # From [8732, num_classes] -> [num_classes, 8732]
+-        # Makes everything easier.
++        #
++        #     # From [8732, num_classes] -> [num_classes, 8732]
++        #     # Makes everything easier.
+         scores_in = scores_in.transpose(1, 0)
+-
+-        # Sort every row (in hopefully a single kernel launch)
+-        # NOTE: Not masked out things yet
+-        # NOTE: descending sort is easier to reason about
+-        # NOTE: Indices are to _global_ bboxes, we're not going to mask them
++        #
++        #     # Sort every row (in hopefully a single kernel launch)
++        #     # NOTE: Not masked out things yet
++        #     # NOTE: descending sort is easier to reason about
++        #     # NOTE: Indices are to _global_ bboxes, we're not going to mask them
+         score_sorted, score_sorted_idx = scores_in.sort(dim=1, descending=True)
+-
+-        # Now generate the mask on the sorted scores
++        
++        #     # Now generate the mask on the sorted scores
+         mask = score_sorted > 0.05
+-
+-        # number of default boxes per class that have a score > 0.05
++        
++        #     # number of default boxes per class that have a score > 0.05
+         splits = mask.sum(dim=1).tolist()
+-
++        
+         # only keep scores & indices for default boxes that contribute to this class
+         # NOTE: Not masking out bboxes, all indices are global
+         score_sorted = score_sorted[mask].split(splits)
+         score_sorted_idx = score_sorted_idx[mask].split(splits)
+-
++        
+         # assemble prefix sum of splits
+         offsets = torch.tensor([0] + list(itertools.accumulate(splits)), dtype=torch.int32, device=bboxes_in.device)
+-
+         bboxes_out, scores_out, labels_out = C.nms(1, # N
+-                                                   scores_in.shape[0],
+-                                                   offsets,
+-                                                   torch.cat(score_sorted),
+-                                                   torch.cat(score_sorted_idx),
+-                                                   bboxes_in.contiguous(), # VITAL otherwise we get bad results :(
+-                                                   criteria,
+-                                                   max_num)
+-
++                                                  scores_in.shape[0],
++                                                  offsets,
++                                                  torch.cat(score_sorted),
++                                                  torch.cat(score_sorted_idx),
++                                                  bboxes_in.contiguous(), # VITAL otherwise we get bad results :(
++                                                  criteria,
++                                                  max_num)
++        
+         _, max_ids = scores_out.sort(dim=0)
+         max_ids = max_ids[-max_output:]
+         return bboxes_out[max_ids, :], labels_out[max_ids], scores_out[max_ids]
+ 
++def npu_multiclass_nms(multi_bboxes,
++                       multi_scores,
++                       score_thr=0.05,
++                       nms_thr=0.5,
++                       max_num=200,
++                       max_output = 200,
++                       score_factors=None):
++    """NMS for multi-class bboxes using npu api.
++
++    Origin implement from mmdetection is
++    https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/post_processing/bbox_nms.py#L7
++
++    This interface is similar to the original interface, but not exactly the same.
++
++    Args:
++        multi_bboxes (Tensor): shape (n, #class, 4) or (n, 4)
++        multi_scores (Tensor): shape (n, #class+1), where the last column
++            contains scores of the background class, but this will be ignored.
++            On npu, in order to keep the semantics unblocked, we will unify the dimensions
++        score_thr (float): bbox threshold, bboxes with scores lower than it
++            will not be considered.
++        nms_thr (float): NMS IoU threshold. In the original implementation, a dictionary of {"iou_threshold": 0.45}
++            was passed, which is simplified here.
++        max_num (int): if there are more than max_num bboxes after NMS,
++            only top max_num will be kept; if there are less than max_num bboxes after NMS,
++            the output will zero pad to max_num. On the NPU, the memory needs to be requested in advance,
++            so the current max_num cannot be set to -1 at present
++        score_factors (Tensor): The factors multiplied to scores before applying NMS
++
++    Returns:
++        tuple: (bboxes, labels), tensors of shape (k, 5) and (k, 1). Labels are 0-based.
++    """
++
++    num_classes = multi_scores.size(1)-1
++    num_boxes = multi_scores.size(0)
++    if score_factors is not None:
++        multi_scores = multi_scores[:, :-1] * score_factors[:, None]
++    else:
++        multi_scores = multi_scores[:, :-1]
++    multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
++    multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
++                                                                              score_thr, nms_thr,
++                                                                              max_num, max_num)
++    print(nmsed_boxes.shape, nmsed_scores.shape, nmsed_classes.shape, nmsed_num.shape)
++    nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
++    nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])
++    nmsed_classes = nmsed_classes.reshape(nmsed_classes.shape[1])
++    _, max_ids = nmsed_scores.sort(dim=0)
++    max_ids = max_ids[-max_output:]
++    ones = torch.ones(200).npu()
++    nmsed_classes = nmsed_classes + ones
++    return nmsed_boxes[max_ids, :], nmsed_classes[max_ids], nmsed_scores[max_ids]
++             
++def npu_batched_multiclass_nms(
++        multi_bboxes,
++        multi_scores,
++        score_thr=0.05,
++        nms_thr=0.5,
++        max_num=200,
++        score_factors=None):
++    """NMS for batched multi-class bboxes using npu api.
++
++    Origin implement from mmdetection is
++    https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/post_processing/bbox_nms.py#L7
++
++    This interface is similar to the original interface, but not exactly the same.
++    This interface implements the nms method under batch.
++
++    Args:
++        multi_bboxes (Tensor): shape (bs, n, #class, 4) or (bs, n, 4)
++        multi_scores (Tensor): shape (bs, n, #class+1), where the last column
++            contains scores of the background class, but this will be ignored.
++            On npu, in order to keep the semantics unblocked, we will unify the dimensions
++        score_thr (float): bbox threshold, bboxes with scores lower than it
++            will not be considered.
++        nms_thr (float): NMS IoU threshold. In the original implementation, a dictionary of {"iou_threshold": 0.45}
++            was passed, which is simplified here.
++        max_num (int): if there are more than max_num bboxes after NMS,
++            only top max_num will be kept; if there are less than max_num bboxes after NMS,
++            the output will zero pad to max_num. On the NPU, the memory needs to be requested in advance,
++            so the current max_num cannot be set to -1 at present
++        score_factors (Tensor): The factors multiplied to scores before applying NMS
++
++    Returns:
++        tuple: (bboxes, labels), tensors of shape (bs, k, 5) and (bs, k, 1). Labels are 0-based.
++    """
++
++    num_classes = multi_scores.size(2) - 1
++    num_boxes = multi_scores.size(1)
++    batch_size = multi_scores.size(0)
++    if score_factors is not None:
++        multi_scores = multi_scores[..., :-1] * score_factors[..., None]
++    else:
++        multi_scores = multi_scores[..., :-1]
++    multi_bboxes = multi_bboxes.reshape(batch_size, num_boxes, multi_bboxes.numel() // 4 // num_boxes // batch_size, 4)
++    multi_scores = multi_scores.reshape(batch_size, num_boxes, num_classes)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
++                                                                              score_thr, nms_thr,
++                                                                              max_num, max_num)
++
++    return torch.cat([nmsed_boxes, nmsed_scores[..., None]], -1), nmsed_classes, nmsed_scores
++
+ def dboxes300_coco():
+     figsize = 300
+     feat_size = [38, 19, 10, 5, 3, 1]
+diff -Naur pytorch/coco_pipeline.py ssd/coco_pipeline.py
+--- pytorch/coco_pipeline.py	1970-01-01 00:00:00.000000000 +0000
++++ ssd/coco_pipeline.py	2021-12-03 10:41:58.622116701 +0000
+@@ -0,0 +1,267 @@
++# Copyright (c) 2018-2019, NVIDIA CORPORATION. All rights reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++from __future__ import absolute_import
++from __future__ import division
++from __future__ import print_function
++import torch
++import ctypes
++import logging
++
++import numpy as np
++
++# DALI imports
++from nvidia.dali.pipeline import Pipeline
++import nvidia.dali.ops as ops
++import nvidia.dali.types as types
++
++import time
++
++
++class COCOPipeline(Pipeline):
++    def __init__(self, batch_size, device_id, file_root, annotations_file, num_gpus,
++            output_fp16=False, output_nhwc=False, pad_output=False, num_threads=1, seed=15):
++        super(COCOPipeline, self).__init__(batch_size=batch_size, device_id=device_id,
++                                           num_threads=num_threads, seed = seed)
++
++        if torch.distributed.is_initialized():
++            shard_id = torch.distributed.get_rank()
++        else:
++            shard_id = 0
++
++        self.input = ops.COCOReader(file_root = file_root, annotations_file = annotations_file,
++                            shard_id = shard_id, num_shards = num_gpus, ratio=True, ltrb=True, random_shuffle=True,
++                                    skip_empty=True)
++        self.decode = ops.ImageDecoder(device = "cpu", output_type = types.RGB)
++
++        # Augumentation techniques
++        self.crop = ops.SSDRandomCrop(device="cpu", num_attempts=1)
++        self.twist = ops.ColorTwist(device="gpu")
++
++        self.resize = ops.Resize(device = "gpu", resize_x = 300, resize_y = 300)
++
++        output_dtype = types.FLOAT16 if output_fp16 else types.FLOAT
++        output_layout = types.NHWC if output_nhwc else types.NCHW
++
++        self.normalize = ops.CropMirrorNormalize(device="gpu", crop=(300, 300),
++                                                 mean=[0.0, 0.0, 0.0],
++                                                 std=[255.0, 255.0, 255.0],
++                                                 mirror=0,
++                                                 output_dtype=output_dtype,
++                                                 output_layout=output_layout,
++                                                 pad_output=pad_output)
++
++        # Random variables
++        self.rng1 = ops.Uniform(range=[0.5, 1.5])
++        self.rng2 = ops.Uniform(range=[0.875, 1.125])
++        self.rng3 = ops.Uniform(range=[-0.5, 0.5])
++
++    def define_graph(self):
++        saturation = self.rng1()
++        contrast = self.rng1()
++        brightness = self.rng2()
++        hue = self.rng3()
++
++        inputs, bboxes, labels = self.input()
++        images = self.decode(inputs)
++
++        images, bboxes, labels = self.crop(images, bboxes, labels)
++        images = self.resize(images.gpu())
++        images = self.twist(images.gpu(), saturation=saturation, contrast=contrast, brightness=brightness, hue=hue)
++        images = self.normalize(images)
++
++        # bboxes and images and labels on GPU
++        return (images, bboxes.gpu(), labels.gpu())
++
++to_torch_type = {
++    np.dtype(np.float32) : torch.float32,
++    np.dtype(np.float64) : torch.float64,
++    np.dtype(np.float16) : torch.float16,
++    np.dtype(np.uint8)   : torch.uint8,
++    np.dtype(np.int8)    : torch.int8,
++    np.dtype(np.int16)   : torch.int16,
++    np.dtype(np.int32)   : torch.int32,
++    np.dtype(np.int64)   : torch.int64
++}
++
++def feed_ndarray(dali_tensor, arr):
++    """
++    Copy contents of DALI tensor to pyTorch's Tensor.
++
++    Parameters
++    ----------
++    `dali_tensor` : nvidia.dali.backend.TensorCPU or nvidia.dali.backend.TensorGPU
++                    Tensor from which to copy
++    `arr` : torch.Tensor
++            Destination of the copy
++    """
++    assert dali_tensor.shape() == list(arr.size()), \
++            ("Shapes do not match: DALI tensor has size {0}"
++            ", but PyTorch Tensor has size {1}".format(dali_tensor.shape(), list(arr.size())))
++    #turn raw int to a c void pointer
++    c_type_pointer = ctypes.c_void_p(arr.data_ptr())
++    dali_tensor.copy_to_external(c_type_pointer)
++    return arr
++
++class DALICOCOIterator(object):
++    """
++    COCO DALI iterator for pyTorch.
++
++    Parameters
++    ----------
++    pipelines : list of nvidia.dali.pipeline.Pipeline
++                List of pipelines to use
++    size : int
++           Epoch size.
++    """
++    def __init__(self, pipelines, size):
++        if not isinstance(pipelines, list):
++            pipelines = [pipelines]
++
++        self._num_gpus = len(pipelines)
++        assert pipelines is not None, "Number of provided pipelines has to be at least 1"
++        self.batch_size = pipelines[0].batch_size
++        self._size = size
++        self._pipes = pipelines
++
++        # Build all pipelines
++        for p in self._pipes:
++            p.build()
++
++        # Use double-buffering of data batches
++        self._data_batches = [[None, None, None, None] for i in range(self._num_gpus)]
++        self._counter = 0
++        self._current_data_batch = 0
++        self.output_map = ["image", "bboxes", "labels"]
++
++        # We need data about the batches (like shape information),
++        # so we need to run a single batch as part of setup to get that info
++        self._first_batch = None
++        self._first_batch = self.next()
++
++    def __next__(self):
++        if self._first_batch is not None:
++            batch = self._first_batch
++            self._first_batch = None
++            return batch
++        if self._counter > self._size:
++            raise StopIteration
++
++        # Gather outputs
++        outputs = []
++        for p in self._pipes:
++            p._prefetch()
++        for p in self._pipes:
++            outputs.append(p.share_outputs())
++        for i in range(self._num_gpus):
++            dev_id = self._pipes[i].device_id
++            out_images = []
++            bboxes = []
++            labels = []
++            # segregate outputs into image/labels/bboxes entries
++            for j, out in enumerate(outputs[i]):
++                if self.output_map[j] == "image":
++                    out_images.append(out)
++                elif self.output_map[j] == "bboxes":
++                    bboxes.append(out)
++                elif self.output_map[j] == "labels":
++                    labels.append(out)
++
++            # Change DALI TensorLists into Tensors
++            images = [x.as_tensor() for x in out_images]
++            images_shape = [x.shape() for x in images]
++
++            # Prepare bboxes shapes
++            bboxes_shape = []
++            for j in range(len(bboxes)):
++                bboxes_shape.append([])
++                for k in range(len(bboxes[j])):
++                    bboxes_shape[j].append(bboxes[j][k].shape())
++
++            # Prepare labels shapes and offsets
++            labels_shape = []
++            bbox_offsets = []
++
++            torch.npu.synchronize()
++            for j in range(len(labels)):
++                labels_shape.append([])
++                bbox_offsets.append([0])
++                for k in range(len(labels[j])):
++                    lshape = labels[j][k].shape()
++                    bbox_offsets[j].append(bbox_offsets[j][k] + lshape[0])
++                    labels_shape[j].append(lshape)
++
++            # We always need to alocate new memory as bboxes and labels varies in shape
++            images_torch_type = to_torch_type[np.dtype(images[0].dtype())]
++            bboxes_torch_type = to_torch_type[np.dtype(bboxes[0][0].dtype())]
++            labels_torch_type = to_torch_type[np.dtype(labels[0][0].dtype())]
++
++            torch_gpu_device = torch.device('npu', dev_id)
++            torch_cpu_device = torch.device('cpu')
++
++            pyt_images = [torch.zeros(shape, dtype=images_torch_type, device=torch_gpu_device) for shape in images_shape]
++            pyt_bboxes = [[torch.zeros(shape, dtype=bboxes_torch_type, device=torch_gpu_device) for shape in shape_list] for shape_list in bboxes_shape]
++            pyt_labels = [[torch.zeros(shape, dtype=labels_torch_type, device=torch_gpu_device) for shape in shape_list] for shape_list in labels_shape]
++            pyt_offsets = [torch.zeros(len(offset), dtype=torch.int32, device=torch_cpu_device) for offset in bbox_offsets]
++
++            self._data_batches[i][self._current_data_batch] = (pyt_images, pyt_bboxes, pyt_labels, pyt_offsets)
++
++            # Copy data from DALI Tensors to torch tensors
++            for j, i_arr in enumerate(images):
++                feed_ndarray(i_arr, pyt_images[j])
++
++            for j, b_list in enumerate(bboxes):
++                for k in range(len(b_list)):
++                    if (pyt_bboxes[j][k].shape[0] != 0):
++                        feed_ndarray(b_list[k], pyt_bboxes[j][k])
++                pyt_bboxes[j] = torch.cat(pyt_bboxes[j])
++
++            for j, l_list in enumerate(labels):
++                for k in range(len(l_list)):
++                    if (pyt_labels[j][k].shape[0] != 0):
++                        feed_ndarray(l_list[k], pyt_labels[j][k])
++                pyt_labels[j] = torch.cat(pyt_labels[j]).squeeze(dim=1)
++
++            for j in range(len(pyt_offsets)):
++                pyt_offsets[j] = torch.IntTensor(bbox_offsets[j])
++
++        for p in self._pipes:
++            p.release_outputs()
++            p.schedule_run()
++
++        copy_db_index = self._current_data_batch
++        # Change index for double buffering
++        self._current_data_batch = (self._current_data_batch + 1) % 2
++        self._counter += self._num_gpus * self.batch_size
++        return [db[copy_db_index] for db in self._data_batches]
++
++    def next(self):
++        """
++        Returns the next batch of data.
++        """
++        return self.__next__();
++
++    def __iter__(self):
++        return self
++
++    def reset(self):
++        """
++        Resets the iterator after the full epoch.
++        DALI iterators do not support resetting before the end of the epoch
++        and will ignore such request.
++        """
++        if self._counter > self._size:
++            self._counter = self._counter % self._size
++        else:
++            logging.warning("DALI iterator does not support resetting while epoch is not finished. Ignoring...")
+diff -Naur pytorch/data/build_pipeline.py ssd/data/build_pipeline.py
+--- pytorch/data/build_pipeline.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/data/build_pipeline.py	2021-12-03 10:41:56.454099069 +0000
+@@ -15,9 +15,8 @@
+ import torch
+ 
+ from .native_pipeline import build_native_pipeline
+-from .dali_pipeline import prebuild_dali_pipeline, build_dali_pipeline
+ from .input_iterators import ConvertDaliInputIterator, RateMatcher, FakeInputIterator
+-
++from torch.utils.data import DataLoader
+ from mlperf_logger import log_event
+ from mlperf_logging.mllog import constants
+ 
+@@ -27,10 +26,7 @@
+ returns train_pipe
+ """
+ def prebuild_pipeline(args):
+-    if args.dali:
+-        return prebuild_dali_pipeline(args)
+-    else:
+-        return None
++    return None
+ 
+ """
+ Build a data pipeline for either training or eval
+@@ -43,12 +39,10 @@
+     # outputs. But still want to do this to abstract out the
+     # use of EncodingInputIterator and RateMatcher
+     if training:
+-        builder_fn = build_dali_pipeline if args.dali else build_native_pipeline
++        builder_fn = build_native_pipeline
+         train_loader, epoch_size = builder_fn(args, training=True, pipe=pipe)
+         log_event(key=constants.TRAIN_SAMPLES, value=epoch_size)
+ 
+-        train_loader = ConvertDaliInputIterator(train_loader)
+-
+         if args.fake_input:
+             train_loader = FakeInputIterator(train_loader, epoch_size, args.N_gpu)
+ 
+diff -Naur pytorch/data/dali_iterator.py ssd/data/dali_iterator.py
+--- pytorch/data/dali_iterator.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/data/dali_iterator.py	2021-12-03 10:41:56.322097997 +0000
+@@ -56,6 +56,7 @@
+                 num_shards = num_gpus,
+                 ratio=True,
+                 ltrb=True,
++		#bbox_layout="xyXY",
+                 skip_empty = True,
+                 random_shuffle=(dali_cache>0),
+                 stick_to_shard=(dali_cache>0),
+@@ -77,6 +78,7 @@
+                                        thresholds=[0, 0.1, 0.3, 0.5, 0.7, 0.9],
+                                        scaling=[0.3, 1.0],
+                                        ltrb=True,
++				       #bbox_layout="xyXY",	
+                                        allow_no_crop=True,
+                                        num_attempts=1)
+         decoder_device = 'mixed' if use_nvjpeg else 'cpu'
+diff -Naur pytorch/data/input_iterators.py ssd/data/input_iterators.py
+--- pytorch/data/input_iterators.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/data/input_iterators.py	2021-12-03 10:41:56.070095949 +0000
+@@ -13,7 +13,7 @@
+ # limitations under the License.
+ 
+ import torch
+-from SSD import _C as C
++# from SSD import _C as C
+ 
+ 
+ class ConvertDaliInputIterator(object):
+diff -Naur pytorch/data/native_pipeline.py ssd/data/native_pipeline.py
+--- pytorch/data/native_pipeline.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/data/native_pipeline.py	2021-12-03 10:41:55.954095006 +0000
+@@ -2,7 +2,7 @@
+ import os
+ 
+ from functools import partial
+-
++import numpy as np
+ from torch.utils.data import DataLoader
+ from mlperf_logger import log_event
+ from mlperf_logging.mllog import constants
+@@ -27,12 +27,10 @@
+         image_sizes.append(item[2])
+         bboxes.append(item[3])
+         labels.append(item[4])
+-
+         bbox_offsets.append(bbox_offsets[-1] + item[3].shape[0])
+ 
+     images = torch.cat(images)
+     bbox_offsets = np.array(bbox_offsets).astype(np.int32)
+-
+     if is_training:
+         return [images, torch.cat(bboxes), torch.cat(labels), torch.tensor(bbox_offsets)]
+     else:
+@@ -45,8 +43,8 @@
+     if args.pad_input:
+         mean_val.append(0.)
+         std_val.append(1.)
+-    mean = torch.tensor(mean_val).cuda()
+-    std = torch.tensor(std_val).cuda()
++    mean = torch.tensor(mean_val).npu()
++    std = torch.tensor(std_val).npu()
+ 
+     if args.nhwc:
+         view = [1, 1, 1, len(mean_val)]
+@@ -69,20 +67,18 @@
+     input_size = args.input_size
+     train_trans = SSDTransformer((input_size, input_size), val=False)
+     train_coco = COCODetection(train_coco_root, train_annotate, train_trans)
+-
+     if args.distributed:
+         train_sampler = GeneralDistributedSampler(train_coco, pad=False)
+     else:
+         train_sampler = None
+-
++    print(len(train_coco[0]))
+     train_loader = DataLoader(train_coco,
+                               batch_size=args.batch_size*args.input_batch_multiplier,
++                              #shuffle=(train_sampler is None),
+                               shuffle=(train_sampler is None),
+                               sampler=train_sampler,
+                               num_workers=args.num_workers,
+                               collate_fn=partial(SSDCollator, is_training=True))
+-
+-
+     return train_loader, len(train_loader)
+ 
+ def build_eval_pipe(args):
+@@ -92,7 +88,7 @@
+ 
+     input_size = args.input_size
+     val_trans = SSDTransformer((input_size, input_size), val=True)
+-    cocoGt = COCO(annotation_file=val_annotate, use_ext=True)
++    cocoGt = COCO(annotation_file=val_annotate)
+     val_coco = COCODetection(val_coco_root, val_annotate, val_trans, cocoGt.dataset)
+     log_event(key=constants.EVAL_SAMPLES, value=len(val_coco))
+ 
+@@ -105,7 +101,8 @@
+                                   batch_size=args.eval_batch_size,
+                                   shuffle=False, # Note: distributed sampler is shuffled :(
+                                   sampler=val_sampler,
+-                                  num_workers=args.num_workers)
++                                  num_workers=0
++                                  )
+ 
+     inv_map = {v:k for k,v in val_coco.label_map.items()}
+ 
+diff -Naur pytorch/data/prefetcher.py ssd/data/prefetcher.py
+--- pytorch/data/prefetcher.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/data/prefetcher.py	2021-12-03 10:41:55.842094097 +0000
+@@ -1,16 +1,17 @@
+ import torch
+ 
+ def eval_prefetcher(load_iterator, device, pad_input=False, nhwc=False, fp16=False):
+-    prefetch_stream = torch.cuda.Stream()
++    prefetch_stream = torch.npu.Stream()
+ 
+     def _prefetch():
+         try:
+             # Note: eval has 5 outputs, only care about 3
+             img, img_id, img_size, _, _ = next(load_iterator)
++            
+         except StopIteration:
+             return None, None, None
+ 
+-        with torch.cuda.stream(prefetch_stream):
++        with torch.npu.stream(prefetch_stream):
+             img = img.to(device, non_blocking=True)
+             if fp16:
+                 img = img.half()
+@@ -26,7 +27,7 @@
+     next_img, next_img_id, next_img_size = _prefetch()
+ 
+     while next_img is not None:
+-        torch.cuda.current_stream().wait_stream(prefetch_stream)
++        torch.npu.current_stream().wait_stream(prefetch_stream)
+         current_img, current_img_id, current_img_size = next_img, next_img_id, next_img_size
+         next_img, next_img_id, next_img_size = _prefetch()
+         yield current_img, current_img_id, current_img_size
+diff -Naur pytorch/eval.py ssd/eval.py
+--- pytorch/eval.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/eval.py	2021-12-03 10:41:55.358090167 +0000
+@@ -38,11 +38,10 @@
+     from apex.parallel import DistributedDataParallel as DDP
+     from apex.fp16_utils import *
+     from apex.multi_tensor_apply import multi_tensor_applier
+-    import amp_C
+ except ImportError:
+     raise ImportError("Please install APEX from https://github.com/nvidia/apex")
+ 
+-from SSD import _C as C
++# from SSD import _C as C
+ 
+ def print_message(rank, *print_args):
+     if rank == 0:
+@@ -56,9 +55,8 @@
+ """
+ def evaluate_coco(final_results, cocoGt, local_rank, threshold):
+     from pycocotools.cocoeval import COCOeval
+-    cocoDt = cocoGt.loadRes(final_results, use_ext=True)
+-
+-    E = COCOeval(cocoGt, cocoDt, iouType='bbox', use_ext=True)
++    cocoDt = cocoGt.loadRes(final_results)
++    E = COCOeval(cocoGt, cocoDt, iouType='bbox')
+     E.evaluate()
+     E.accumulate()
+     E.summarize()
+@@ -86,7 +84,7 @@
+ 
+     # Wrap dataloader for prefetching
+     coco = eval_prefetcher(iter(coco),
+-                           torch.cuda.current_device(),
++                           torch.npu.current_device(),
+                            args.pad_input,
+                            args.nhwc,
+                            args.use_fp16)
+@@ -95,8 +93,9 @@
+         with torch.no_grad():
+             # Get predictions
+             ploc, plabel = model(img)
++            ploc = ploc.npu_format_cast(2)
++            plabel = plabel.npu_format_cast(2)
+             ploc, plabel = ploc.float(), plabel.float()
+-
+             # Handle the batch of predictions produced
+             # This is slow, but consistent with old implementation.
+             for idx in range(ploc.shape[0]):
+@@ -104,17 +103,16 @@
+                 ploc_i = ploc[idx, :, :].unsqueeze(0)
+                 plabel_i = plabel[idx, :, :].unsqueeze(0)
+ 
+-                result = encoder.decode_batch(ploc_i, plabel_i, overlap_threshold, nms_max_detections)[0]
+-
++                result = encoder.decode_batch(ploc_i, plabel_i, overlap_threshold, nms_max_detections)
+                 htot, wtot = img_size[0][idx].item(), img_size[1][idx].item()
+-                loc, label, prob = [r.cpu().numpy() for r in result]
++                loc, label, prob = [r[0].cpu().numpy() for r in result]
+                 for loc_, label_, prob_ in zip(loc, label, prob):
+                     ret.append([img_id[idx], loc_[0]*wtot, \
+                                         loc_[1]*htot,
+                                         (loc_[2] - loc_[0])*wtot,
+                                         (loc_[3] - loc_[1])*htot,
+                                         prob_,
+-                                        inv_map[label_]])
++                                        inv_map[(label_+1)]])
+ 
+     # Now we have all predictions from this rank, gather them all together
+     # if necessary
+@@ -123,11 +121,11 @@
+     # Multi-GPU eval
+     if distributed:
+         # NCCL backend means we can only operate on GPU tensors
+-        ret_copy = torch.tensor(ret).cuda()
++        ret_copy = torch.tensor(ret).npu()
+ 
+         # Everyone exchanges the size of their results
+-        ret_sizes = [torch.tensor(0).cuda() for _ in range(N_gpu)]
+-        torch.distributed.all_gather(ret_sizes, torch.tensor(ret_copy.shape[0]).cuda())
++        ret_sizes = [torch.tensor(0).npu() for _ in range(N_gpu)]
++        torch.distributed.all_gather(ret_sizes, torch.tensor(ret_copy.shape[0]).npu())
+ 
+         # Get the maximum results size, as all tensors must be the same shape for
+         # the all_gather call we need to make
+@@ -138,10 +136,10 @@
+             sizes.append(s.item())
+ 
+         # Need to pad my output to max_size in order to use in all_gather
+-        ret_pad = torch.cat([ret_copy, torch.zeros(max_size-ret_copy.shape[0], 7, dtype=torch.float32).cuda()])
++        ret_pad = torch.cat([ret_copy, torch.zeros(max_size-ret_copy.shape[0], 7, dtype=torch.float32).npu()])
+ 
+         # allocate storage for results from all other processes
+-        other_ret = [torch.zeros(max_size, 7, dtype=torch.float32).cuda() for i in range(N_gpu)]
++        other_ret = [torch.zeros(max_size, 7, dtype=torch.float32).npu() for i in range(N_gpu)]
+         # Everyone exchanges (padded) results
+         torch.distributed.all_gather(other_ret, ret_pad)
+ 
+@@ -182,7 +180,7 @@
+         args.distributed = int(os.environ['WORLD_SIZE']) > 1
+ 
+     if args.distributed:
+-        torch.cuda.set_device(args.local_rank)
++        torch.npu.set_device(args.local_rank)
+         torch.distributed.init_process_group(backend='nccl',
+                                              init_method='env://')
+     args.local_seed = 0 # set_seeds(args)
+@@ -212,8 +210,8 @@
+     val_coco_root = os.path.join(args.data, "val2017")
+ 
+     cocoGt = COCO(annotation_file=val_annotate)
+-
+-    val_loader, inv_map = build_pipeline(args, training=False)
++    
++    val_loader, inv_map,_ = build_pipeline(args, training=False)
+ 
+     model_options = {
+         'use_nhwc' : args.nhwc,
+@@ -222,7 +220,7 @@
+         'pretrained' : False,
+     }
+ 
+-    ssd300_eval = SSD300(args, args.num_classes, **model_options).cuda()
++    ssd300_eval = SSD300(args, args.num_classes, **model_options).npu()
+     if args.use_fp16:
+         convert_network(ssd300_eval, torch.half)
+     ssd300_eval.eval()
+@@ -245,6 +243,14 @@
+     res = evaluator.task_result(0)
+ 
+ if __name__ == "__main__":
++
++    option = {}
++    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta" # cacheæ‰€åœ¨æ–‡ä»¶å¤¹
++    print("option:",option)
++    torch.npu.set_option(option)
++
++
++    
+     args = parse_args()
+     validate_arguments(args)
+ 
+diff -Naur pytorch/mlperf_logger.py ssd/mlperf_logger.py
+--- pytorch/mlperf_logger.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/mlperf_logger.py	2021-12-03 10:41:55.010087341 +0000
+@@ -63,8 +63,8 @@
+     Calls all_reduce on dummy tensor and synchronizes with GPU.
+     """
+     if torch.distributed.is_initialized():
+-        torch.distributed.all_reduce(torch.cuda.FloatTensor(1))
+-        torch.cuda.synchronize()
++        torch.distributed.all_reduce(torch.npu.FloatTensor(1))
++        torch.npu.synchronize()
+ 
+ 
+ def get_rank():
+@@ -85,8 +85,8 @@
+     return seed
+ 
+ def set_seeds(args):
+-    torch.cuda.set_device(args.local_rank)
+-    device = torch.device('cuda')
++    torch.npu.set_device(args.local_rank)
++    device = torch.device('npu')
+ 
+     # make sure that all workers has the same master seed
+     log_event(key=mllog.constants.SEED, value=args.seed)
+diff -Naur pytorch/new.py ssd/new.py
+--- pytorch/new.py	1970-01-01 00:00:00.000000000 +0000
++++ ssd/new.py	2021-12-03 10:41:54.766085361 +0000
+@@ -0,0 +1,40 @@
++
++import sys
++#sys.path.append('/share/home/litaotao/yzc/training_results_v0.7-master/NVIDIA/benchmarks/ssd/implementations/pytorch/')#
++import os
++#from base_model import Loss
++from opt_loss import OptLoss
++from mlperf_logger import configure_logger, log_start, log_end, log_event, set_seeds, get_rank, barrier
++from mlperf_logging.mllog import constants
++import torch
++from torch.autograd import Variable
++import time
++import numpy as np
++import io
++from bisect import bisect       # for lr_scheduler
++
++from ssd300 import SSD300
++from master_params import create_flat_master
++from parse_config import parse_args, validate_arguments, validate_group_bn
++
++from async_evaluator import AsyncEvaluator
++from eval import coco_eval
++
++#import sys
++import gc
++from data.native_pipeline import build_train_pipe
++# necessary pytorch imports
++import torch.utils.data.distributed
++import torch.distributed as dist
++configure_logger(constants.SSD)
++log_start(key=constants.INIT_START, log_all_ranks=True)
++args = parse_args()
++# make sure the epoch lists are in sorted order
++args.evaluation.sort()
++args.lr_decay_epochs.sort()
++
++validate_arguments(args)
++
++torch.set_num_threads(1)
++torch.backends.cudnn.benchmark = not args.profile_cudnn_get
++build_train_pipe(args)
+\ No newline at end of file
+diff -Naur pytorch/nms.py ssd/nms.py
+--- pytorch/nms.py	1970-01-01 00:00:00.000000000 +0000
++++ ssd/nms.py	2021-12-03 10:41:53.514075205 +0000
+@@ -0,0 +1,146 @@
++# Copyright (c) 2020, Huawei Technologies.All rights reserved.
++#
++# Licensed under the BSD 3-Clause License  (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# https://opensource.org/licenses/BSD-3-Clause
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++import torch
++
++
++def npu_multiclass_nms(multi_bboxes,
++                       multi_scores,
++                       score_thr=0.05,
++                       nms_thr=0.45,
++                       max_num=50,
++                       score_factors=None):
++    """NMS for multi-class bboxes using npu api.
++
++    Origin implement from mmdetection is
++    https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/post_processing/bbox_nms.py#L7
++
++    This interface is similar to the original interface, but not exactly the same.
++
++    Args:
++        multi_bboxes (Tensor): shape (n, #class, 4) or (n, 4)
++        multi_scores (Tensor): shape (n, #class+1), where the last column
++            contains scores of the background class, but this will be ignored.
++            On npu, in order to keep the semantics unblocked, we will unify the dimensions
++        score_thr (float): bbox threshold, bboxes with scores lower than it
++            will not be considered.
++        nms_thr (float): NMS IoU threshold. In the original implementation, a dictionary of {"iou_threshold": 0.45}
++            was passed, which is simplified here.
++        max_num (int): if there are more than max_num bboxes after NMS,
++            only top max_num will be kept; if there are less than max_num bboxes after NMS,
++            the output will zero pad to max_num. On the NPU, the memory needs to be requested in advance,
++            so the current max_num cannot be set to -1 at present
++        score_factors (Tensor): The factors multiplied to scores before applying NMS
++
++    Returns:
++        tuple: (bboxes, labels), tensors of shape (k, 5) and (k, 1). Labels are 0-based.
++    """
++
++    num_classes = multi_scores.size(1) - 1
++    num_boxes = multi_scores.size(0)
++    if score_factors is not None:
++        multi_scores = multi_scores[:, :-1] * score_factors[:, None]
++    else:
++        multi_scores = multi_scores[:, :-1]
++    multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
++    multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
++                                                                              score_thr, nms_thr,
++                                                                              max_num, max_num)
++
++    nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
++    nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])
++    nmsed_classes = nmsed_classes.reshape(nmsed_classes.shape[1])
++
++    return torch.cat([nmsed_boxes, nmsed_scores[:, None]], -1), nmsed_classes
++
++
++def npu_batched_multiclass_nms(
++        multi_bboxes,
++        multi_scores,
++        score_thr=0.05,
++        nms_thr=0.45,
++        max_num=50,
++        score_factors=None):
++    """NMS for batched multi-class bboxes using npu api.
++
++    Origin implement from mmdetection is
++    https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/post_processing/bbox_nms.py#L7
++
++    This interface is similar to the original interface, but not exactly the same.
++    This interface implements the nms method under batch.
++
++    Args:
++        multi_bboxes (Tensor): shape (bs, n, #class, 4) or (bs, n, 4)
++        multi_scores (Tensor): shape (bs, n, #class+1), where the last column
++            contains scores of the background class, but this will be ignored.
++            On npu, in order to keep the semantics unblocked, we will unify the dimensions
++        score_thr (float): bbox threshold, bboxes with scores lower than it
++            will not be considered.
++        nms_thr (float): NMS IoU threshold. In the original implementation, a dictionary of {"iou_threshold": 0.45}
++            was passed, which is simplified here.
++        max_num (int): if there are more than max_num bboxes after NMS,
++            only top max_num will be kept; if there are less than max_num bboxes after NMS,
++            the output will zero pad to max_num. On the NPU, the memory needs to be requested in advance,
++            so the current max_num cannot be set to -1 at present
++        score_factors (Tensor): The factors multiplied to scores before applying NMS
++
++    Returns:
++        tuple: (bboxes, labels), tensors of shape (bs, k, 5) and (bs, k, 1). Labels are 0-based.
++    """
++
++    num_classes = multi_scores.size(2) - 1
++    num_boxes = multi_scores.size(1)
++    batch_size = multi_scores.size(0)
++    if score_factors is not None:
++        multi_scores = multi_scores[..., :-1] * score_factors[..., None]
++    else:
++        multi_scores = multi_scores[..., :-1]
++    multi_bboxes = multi_bboxes.reshape(batch_size, num_boxes, multi_bboxes.numel() // 4 // num_boxes // batch_size, 4)
++    multi_scores = multi_scores.reshape(batch_size, num_boxes, num_classes)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
++                                                                              score_thr, nms_thr,
++                                                                              max_num, max_num)
++
++    return torch.cat([nmsed_boxes, nmsed_scores[..., None]], -1), nmsed_classes
++
++
++if __name__ == '__main__':
++    print('test npu_multiclass_nms')
++    boxes = torch.randint(1, 255, size=(1000, 4))
++    scores = torch.randn(1000, 81)
++
++    torch.npu.set_device(0)
++    boxes = boxes.npu().half()
++    scores = scores.npu().half()
++
++    det_bboxes, det_labels = npu_multiclass_nms(boxes, scores)
++    print(det_bboxes.shape)
++    print(det_labels.shape)
++
++
++    print('test npu_batched_multiclass_nms')
++    boxes = torch.randint(1, 255, size=(4, 200, 80, 4))
++    scores = torch.randn(4, 200, 81)
++
++    torch.npu.set_device(0)
++    boxes = boxes.npu().half()
++    scores = scores.npu().half()
++
++    det_bboxes, det_labels = npu_batched_multiclass_nms(boxes, scores)
++    print(det_bboxes.shape)
++    print(det_labels.shape)
++
+diff -Naur pytorch/opt_loss.py ssd/opt_loss.py
+--- pytorch/opt_loss.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/opt_loss.py	2021-12-03 10:41:53.386074167 +0000
+@@ -30,7 +30,7 @@
+         # http://jany.st/post/2017-11-05-single-shot-detector-ssd-from-scratch-in-tensorflow.html
+         self.con_loss = torch.nn.CrossEntropyLoss(reduce=False)
+ 
+-    @torch.jit.script_method
++    #@torch.jit.script_method
+     def forward(self, ploc, plabel, gloc, glabel):
+         """
+             ploc, plabel: Nx4x8732, Nxlabel_numx8732
+@@ -46,18 +46,13 @@
+         # sum on four coordinates, and mask
+         sl1 = self.sl1_loss(ploc, gloc).sum(dim=1)
+         sl1 = (mask.type_as(sl1) * sl1).sum(dim=1)
+-
+         # hard negative mining
+         con = self.con_loss(plabel, glabel)
+-
+-        # postive mask will never selected
+         con_neg = con.clone()
+-        # con_neg[mask] = 0
+         con_neg.masked_fill_(mask, 0)
+-        # con_neg[con_neg!=con_neg] = 0
+         con_neg.masked_fill_(con_neg!=con_neg, 0)
+         con_s, con_idx = con_neg.sort(dim=1, descending=True)
+-        r = torch.arange(0, con_neg.size(1), dtype=torch.long, device='cuda').expand(con_neg.size(0), -1)
++        r = torch.arange(0, con_neg.size(1), dtype=torch.long, device='npu').expand(con_neg.size(0), -1)
+         con_rank = r.scatter(1, con_idx, r)
+ 
+         # number of negative three times positive
+@@ -65,8 +60,6 @@
+         neg_mask = con_rank < neg_num
+ 
+         closs = (con*(mask.type_as(con_s) + neg_mask.type_as(con_s))).sum(dim=1)
+-
+-        # avoid no object detected
+         total_loss = sl1 + closs
+         num_mask = (pos_num > 0).type_as(closs)
+         pos_num = pos_num.type_as(closs).clamp(min=1e-6)
+diff -Naur pytorch/opt_loss.pyc ssd/opt_loss.pyc
+--- pytorch/opt_loss.pyc	1970-01-01 00:00:00.000000000 +0000
++++ ssd/opt_loss.pyc	2021-12-03 10:41:53.266073195 +0000
+@@ -0,0 +1,26 @@
++ó
++u¶5ac           @   s,   d  d l  Z  d e  j j f d „  ƒ  YZ d S(   iÿÿÿÿNt   OptLossc           B   s    e  Z d  Z d „  Z d „  Z RS(   sé   
++        Implements the loss as the sum of the followings:
++        1. Confidence Loss: All labels, with hard negative mining
++        2. Localization Loss: Only on positive labels
++        Suppose input dboxes has the shape 8732x4
++    c         C   sG   t  t |  ƒ j ƒ  t j j d t ƒ |  _ t j j d t ƒ |  _	 d  S(   Nt   reduce(
++   t   superR    t   __init__t   torcht   nnt   SmoothL1Losst   Falset   sl1_losst   CrossEntropyLosst   con_loss(   t   self(    (    s'   /home/yzc/pytorch3/pytorch2/opt_loss.pyR      s    c         C   sÌ  | d k } | j  d d ƒ } |  j | | ƒ j  d d ƒ } | j | ƒ | j  d d ƒ } |  j | | ƒ } | j ƒ  }	 |	 j | d ƒ |	 j |	 |	 k d ƒ |	 j d d d t ƒ \ }
++ } t j	 d |	 j
++ d ƒ d t j d d ƒj |	 j
++ d ƒ d ƒ } | j d | | ƒ } t j d	 | d
++ | j
++ d ƒ ƒj d ƒ } | | k  } | | j |
++ ƒ | j |
++ ƒ j  d d ƒ } | | } | d k j | ƒ } | j | ƒ j d d ƒ } | | | j d d ƒ } | S(   sÉ   
++            ploc, plabel: Nx4x8732, Nxlabel_numx8732
++                predicted location and labels
++
++            gloc, glabel: Nx4x8732, Nx8732
++                ground truth location and labels
++        i    t   dimi   t
++   descendingt   dtypet   devicet   npuiÿÿÿÿi   t   maxt   mingíµ ÷Æ°>(   t   sumR   t   type_asR
++   t   clonet   masked_fill_t   sortt   TrueR   t   aranget   sizet   longt   expandt   scattert   clampt	   unsqueezet   mean(   R   t   ploct   plabelt   gloct   glabelt   maskt   pos_numt   sl1t   cont   con_negt   con_st   con_idxt   rt   con_rankt   neg_numt   neg_maskt   closst
++   total_losst   num_maskt   ret(    (    s'   /home/yzc/pytorch3/pytorch2/opt_loss.pyt   forward#   s&    	?+,
++(   t   __name__t
++   __module__t   __doc__R   R4   (    (    (    s'   /home/yzc/pytorch3/pytorch2/opt_loss.pyR       s   		(   R   R   t   ModuleR    (    (    (    s'   /home/yzc/pytorch3/pytorch2/opt_loss.pyt   <module>   s   
+\ No newline at end of file
+diff -Naur pytorch/parse_config.py ssd/parse_config.py
+--- pytorch/parse_config.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/parse_config.py	2021-12-03 10:41:53.146072221 +0000
+@@ -42,32 +42,39 @@
+                         help='path to COCO meta files')
+     data_group.add_argument('--batch-size', '-b', type=int, default=32,
+                         help='number of examples for each iteration')
+-    data_group.add_argument('--eval-batch-size', type=int, default=32,
++    data_group.add_argument('--eval-batch-size', type=int, default=1,
+                         help='number of examples for each evaluation iteration')
+     # input pipeline stuff
+-    add_bool_arg(data_group, 'dali', default=True) # --dali (default) and --no-dali
++    add_bool_arg(data_group, 'dali', default=False) 
+     data_group.add_argument('--fake-input', action='store_true',
+                         help='run input pipeline with fake data (avoid all i/o and work except on very first call)')
+     data_group.add_argument('--input-batch-multiplier', type=int, default=1,
+                         help='run input pipeline at batch size <n> times larger than that given in --batch-size')
+     data_group.add_argument('--dali-sync', action='store_true',
+                         help='run dali in synchronous mode instead of the (default) asynchronous')
+-    data_group.add_argument('--dali-cache', type=int, default=-1,
++    data_group.add_argument('--dali-cache', type=int, default=0,                      
+                         help="cache size (in GB) for Dali's nvjpeg caching")
+-    data_group.add_argument('--use-nvjpeg', action='store_true')
+-    data_group.add_argument('--use-roi-decode', action='store_true',
++    data_group.add_argument('--use-nvjpeg', default=False)                     
++    data_group.add_argument('--use-roi-decode', default=False,              
+                             help="DEPRECATED: Dali input pipeline uses roi decode if and only if --dali-cache is not set" )
+ 
++    data_group.add_argument('--pth-path', type=str, default='/home/yzc/ssd/models/iter_183250.pt')
++    data_group.add_argument('--bin-output', type=str, default='/home/yzc/ssd/ssd_bin/')
++    data_group.add_argument('--bin-input', type=str, default='/home/yzc/ssd/result/dumpOutput_device0')
++    data_group.add_argument('--bs', type=int, default=1)
++    data_group.add_argument('--onnx-path', type=str, default='/home/yzc/ssd/ssd.onnx')
++    data_group.add_argument('--resnet34-model', type=str, default='/home/yzc/ssd/models/resnet34-333f7ec4.pth')
++    
+     # model-related
+     model_group = parser.add_argument_group('model', 'Model-related options')
+     model_group.add_argument('--model-path', type=str, default='./vgg16n.pth')
+     model_group.add_argument('--backbone', type=str, choices=['vgg16', 'vgg16bn', 'resnet18', 'resnet34', 'resnet50'], default='resnet34')
+-    model_group.add_argument('--num-workers', type=int, default=4)
++    model_group.add_argument('--num-workers', type=int, default=8)
+     model_group.add_argument('--use-fp16', action='store_true')
+     model_group.add_argument('--print-interval', type=int, default=20)
+     model_group.add_argument('--jit', action='store_true')
+-    model_group.add_argument('--nhwc', action='store_true')
+-    model_group.add_argument('--pad-input', action='store_true')
++    model_group.add_argument('--nhwc', default=False)
++    model_group.add_argument('--pad-input', default=False)
+     model_group.add_argument('--num-classes', type=int, default=81)
+     model_group.add_argument('--input-size', type=int, default=300)
+ 
+@@ -79,7 +86,7 @@
+                  help='allreduce batch norm running stats before evaluation')
+     solver_group.add_argument('--seed', '-s', type=int, default=random.SystemRandom().randint(0, 2**32 - 1),
+                         help='manually set random seed for torch')
+-    solver_group.add_argument('--threshold', '-t', type=float, default=0.212,
++    solver_group.add_argument('--threshold', '-t', type=float, default=0.23,
+                         help='stop training early at threshold')
+     solver_group.add_argument('--iteration', type=int, default=0,
+                         help='iteration to start from')
+diff -Naur pytorch/prepare-json.py ssd/prepare-json.py
+--- pytorch/prepare-json.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/prepare-json.py	2021-12-03 10:41:53.030071281 +0000
+@@ -72,4 +72,3 @@
+ #     cat = a['category_id']
+ #     myid = a['id']
+ #     print(imid, myid, bbox[0], bbox[1], bbox[2], bbox[3], cat)
+-
+diff -Naur pytorch/resnet.py ssd/resnet.py
+--- pytorch/resnet.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/resnet.py	2021-12-03 10:41:52.642068138 +0000
+@@ -15,16 +15,8 @@
+ import torch                    # for torch.cat and torch.zeros
+ import torch.nn as nn
+ import torch.utils.model_zoo as model_zoo
++from parse_config import parse_args
+ 
+-from nhwc.conv import Conv2d_NHWC
+-from nhwc.batch_norm import BatchNorm2d_NHWC
+-from nhwc.max_pool import MaxPool2d_NHWC
+-
+-# Group batch norm
+-from apex.parallel import SyncBatchNorm as gbn
+-# Persistent group BN for NHWC case
+-from apex.contrib.groupbn.batch_norm import BatchNorm2d_NHWC as gbn_persistent
+-import apex.parallel
+ 
+ __all__ = ['resnet']
+ 
+@@ -46,20 +38,10 @@
+         super(Layers_NCHW, self).__init__()
+         self.nhwc = False
+         self.bn_group = bn_group
+-
+-        if (bn_group > 1):
+-            bn_base = gbn
+-        else:
+-            bn_base = nn.BatchNorm2d
+-
++        bn_base = nn.BatchNorm2d
+         class BnAddRelu_(bn_base):
+             def __init__(self, planes, fuse_relu=False, bn_group=1):
+-                if (bn_group > 1):
+-                    super(BnAddRelu_, self).__init__(
+-                        planes,
+-                        process_group=apex.parallel.create_syncbn_process_group(bn_group))
+-                else:
+-                    super(BnAddRelu_, self).__init__(planes)
++                super(BnAddRelu_, self).__init__(planes)
+ 
+                 self.fuse_relu_flag = fuse_relu
+ 
+@@ -77,36 +59,15 @@
+     def build_bn(self, planes, fuse_relu=False):
+         return self.BnAddRelu(planes, fuse_relu, self.bn_group)
+ 
+-
+-class Layers_NHWC:
+-    Conv2d = Conv2d_NHWC
+-    MaxPool = MaxPool2d_NHWC
+-
+-    class BnAddRelu(gbn_persistent):
+-        def __init__(self, planes, fuse_relu=False, bn_group=1):
+-            super(Layers_NHWC.BnAddRelu, self).__init__(planes,
+-                                                          fuse_relu,
+-                                                          bn_group=bn_group)
+-
+-    def __init__(self, bn_group, **kwargs):
+-        super(Layers_NHWC, self).__init__()
+-        self.nhwc = True
+-        self.bn_group = bn_group
+-
+-    def build_bn(self, planes, fuse_relu):
+-        return self.BnAddRelu(planes, fuse_relu, self.bn_group)
+-
+-
+-
+ def conv1x1(layer_types, in_planes, out_planes, stride=1):
+-    """1x1 convolution"""
+-    return layer_types.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
+-                           bias=False)
++     """1x1 convolution"""
++     return layer_types.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
++                            bias=False)
+ 
+ def conv3x3(layer_types, in_planes, out_planes, stride=1):
+-    """3x3 convolution with padding"""
+-    return layer_types.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+-                           padding=1, bias=False)
++     """3x3 convolution with padding"""
++     return layer_types.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
++                            padding=1, bias=False)
+ 
+ 
+ class BasicBlock(nn.Module):
+@@ -211,18 +172,14 @@
+     Args:
+         pretrained (bool): If True, returns a model pre-trained on ImageNet
+     """
+-    if nhwc:
+-        layerImpls = Layers_NHWC(**kwargs)
+-    else:
+-        layerImpls = Layers_NCHW(**kwargs)
+-
++    layerImpls = Layers_NCHW(**kwargs)
+     block = BasicBlock
+     layer_list = [3, 4, 6, 3]
+     model = ResNet(layerImpls, block, layer_list, ssd_mods=ssd_mods, use_nhwc=nhwc, **kwargs)
+-
++    args = parse_args()
++    resnet_model=args.resnet34_model
+     if pretrained:
+-        orig_state_dict = model_zoo.load_url(model_urls['resnet34'])
+-
++        orig_state_dict = torch.load(resnet_model)
+         # Modify the state dict to remove conv5 / layer4
+         state_dict = {k:orig_state_dict[k] for k in orig_state_dict if (not k.startswith('layer4') and not k.startswith('fc'))}
+ 
+diff -Naur pytorch/ssd300.py ssd/ssd300.py
+--- pytorch/ssd300.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/ssd300.py	2021-12-03 10:41:51.722060685 +0000
+@@ -17,7 +17,6 @@
+ # from base_model import L2Norm, ResNet
+ from resnet import ResNet, resnet34
+ 
+-from nhwc.conv import Conv2d_NHWC
+ 
+ class SSD300(nn.Module):
+     """
+@@ -69,19 +68,12 @@
+         self.mbox = []
+         self.padding_amounts = []
+ 
+-        if self.use_nhwc:
+-            conv_fn = Conv2d_NHWC
+-        else:
+-            conv_fn = nn.Conv2d
++        conv_fn = nn.Conv2d
+         # Multiple to pad channels to
+         for nd, oc in zip(self.num_defaults, self.out_chan):
+             # Horizontally fuse loc and conf convolutions
+             my_num_channels = nd*(4+self.label_num)
+-            if self.use_nhwc:
+-                # Want to manually pad to get HMMA kernels in NHWC case
+-                padding_amount = padding_channels_to - (my_num_channels % padding_channels_to)
+-            else:
+-                padding_amount = 0
++            padding_amount = 0
+             self.padding_amounts.append(padding_amount)
+             self.mbox.append(conv_fn(oc, my_num_channels + padding_amount, kernel_size=3, padding=1))
+ 
+@@ -93,12 +85,7 @@
+     """
+     def _build_additional_features(self):
+         self.additional_blocks = []
+-
+-        if self.use_nhwc:
+-            conv_fn = Conv2d_NHWC
+-        else:
+-            conv_fn = nn.Conv2d
+-
++        conv_fn = nn.Conv2d
+         def build_block(input_channels, inter_channels, out_channels, stride=1, pad=0):
+             return nn.Sequential(
+                 conv_fn(input_channels, inter_channels, kernel_size=1),
+@@ -122,16 +109,7 @@
+         for layer in addn_blocks:
+             for param in layer.parameters():
+                 if param.dim() > 1:
+-                    if self.use_nhwc:
+-                        # xavier_uniform relies on fan-in/-out, so need to use NCHW here to get
+-                        # correct values (K, R) instead of the correct (K, C)
+-                        nchw_param_data = param.data.permute(0, 3, 1, 2).contiguous()
+-                        nn.init.xavier_uniform_(nchw_param_data)
+-                        # Now permute correctly-initialized param back to NHWC
+-                        param.data.copy_(nchw_param_data.permute(0, 2, 3, 1).contiguous())
+-                    else:
+-                        nn.init.xavier_uniform_(param)
+-
++                    nn.init.xavier_uniform_(param)
+     def _init_multibox_weights(self):
+         layers = [ *self.mbox ]
+ 
+@@ -177,26 +155,11 @@
+             conf_channels = num_defaults * self.label_num
+             loc_channels  = num_defaults * 4
+ 
+-            if self.use_nhwc:
+-                conf, loc, _ = mm.split([conf_channels, loc_channels, pad], dim=3)
+-                conf, loc = conf.contiguous(), loc.contiguous()
+-                # We now have unfused [N, H, W, C]
+-                # Layout is a little awkward here.
+-                # Take C = c * d, then we actually have:
+-                # [N, H, W, c*d]
+-                # flatten HW first:
+-                #   [N, H, W, c*d] -> [N, HW, c*d]
+-                locs.append(
+-                    loc.view(s.size(0), -1, 4 * num_defaults).permute(0, 2, 1).contiguous().view(loc.size(0), 4, -1))
+-                confs.append(
+-                    conf.view(s.size(0), -1, self.label_num * num_defaults).permute(0, 2, 1).contiguous().view(conf.size(0), self.label_num, -1))
+-            else:
+-                conf, loc = mm.split([conf_channels, loc_channels], dim=1)
+-                conf, loc = conf.contiguous(), loc.contiguous()
+-                # flatten the anchors for this layer
+-                locs.append(loc.view(s.size(0), 4, -1))
+-                confs.append(conf.view(s.size(0), self.label_num, -1))
+-
++            conf, loc = mm.split([conf_channels, loc_channels], dim=1)
++            conf, loc = conf.contiguous(), loc.contiguous()
++            # flatten the anchors for this layer
++            locs.append(loc.view(s.size(0), 4, -1))
++            confs.append(conf.view(s.size(0), self.label_num, -1))
+         cat_dim = 2
+         locs, confs = torch.cat(locs, cat_dim), torch.cat(confs, cat_dim)
+ 
+diff -Naur pytorch/test.py ssd/test.py
+--- pytorch/test.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/test.py	2021-12-03 10:41:51.206056508 +0000
+@@ -49,8 +49,6 @@
+                         help='path to test and training data files')
+     parser.add_argument('--batch-size', '-b', type=int, default=128,
+                         help='number of examples for each iteration')
+-    #parser.add_argument('--checkpoint', type=str, default=None,
+-    #                    help='path to model checkpoint file', required=True)
+     parser.add_argument('--backbone', type=str, choices=['vgg16', 'vgg16bn',
+                         'resnet18', 'resnet34', 'resnet50'], default='resnet34')
+     parser.add_argument('--num-workers', type=int, default=3)
+@@ -76,8 +74,8 @@
+     return dboxes
+ 
+ def test_coco(args):
+-    # For testing purposes we have to use CUDA
+-    use_cuda = True
++    # For testing purposes we have to use npu
++    use_npu = True
+ 
+     # Setup multi-GPU if necessary
+     args.distributed = False
+@@ -85,7 +83,7 @@
+         args.distributed = int(os.environ['WORLD_SIZE']) > 1
+ 
+     if args.distributed:
+-        torch.cuda.set_device(args.local_rank)
++        torch.npu.set_device(args.local_rank)
+ 
+         torch.distributed.init_process_group(backend='nccl',
+                                              init_method='env://')
+@@ -132,10 +130,10 @@
+     """
+ 
+ 
+-    ssd300.cuda()
++    ssd300.npu()
+     ssd300.eval()
+     loss_func = Loss(dboxes)
+-    loss_func.cuda()
++    loss_func.npu()
+ 
+     # parallelize
+     if args.distributed:
+@@ -159,9 +157,9 @@
+                 img = data[0][0][0]
+                 bbox = data[0][1][0]
+                 label = data[0][2][0]
+-                label = label.type(torch.cuda.LongTensor)
++                label = label.type(torch.npu.LongTensor)
+                 bbox_offsets = data[0][3][0]
+-                bbox_offsets = bbox_offsets.cuda()
++                bbox_offsets = bbox_offsets.npu()
+ 
+                 # Encode labels
+                 N = img.shape[0]
+@@ -169,7 +167,7 @@
+                     print("No labels in batch")
+                     continue
+                 bbox, label = C.box_encoder(N, bbox, bbox_offsets, label,
+-                                            encoder.dboxes.cuda(), 0.5)
++                                            encoder.dboxes.npu(), 0.5)
+ 
+                 # Prepare tensors for computing loss
+                 M = bbox.shape[0] // N
+diff -Naur pytorch/tmp.py ssd/tmp.py
+--- pytorch/tmp.py	1970-01-01 00:00:00.000000000 +0000
++++ ssd/tmp.py	2021-12-03 10:41:51.098055634 +0000
+@@ -0,0 +1,9 @@
++
++import torch
++
++option = {}
++option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
++option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta" 
++print("option:",option)
++torch.npu.set_option(option)
++torch.multiprocessing.set_start_method('spawn')
+diff -Naur pytorch/train.py ssd/train.py
+--- pytorch/train.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/train.py	2021-12-03 10:41:50.978054663 +0000
+@@ -11,9 +11,11 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
++from base_model import Loss
++import sys
++#sys.path.append('/share/home/litaotao/yzc/training_results_v0.7-master/NVIDIA/benchmarks/ssd/implementations/pytorch/')#
+ import os
+-# from base_model import Loss
++#from base_model import Loss
+ from opt_loss import OptLoss
+ from mlperf_logger import configure_logger, log_start, log_end, log_event, set_seeds, get_rank, barrier
+ from mlperf_logging.mllog import constants
+@@ -23,7 +25,7 @@
+ import numpy as np
+ import io
+ from bisect import bisect       # for lr_scheduler
+-
++from apex import amp
+ from ssd300 import SSD300
+ from master_params import create_flat_master
+ from parse_config import parse_args, validate_arguments, validate_group_bn
+@@ -31,8 +33,8 @@
+ from box_coder import dboxes300_coco, build_ssd300_coder
+ from async_evaluator import AsyncEvaluator
+ from eval import coco_eval
+-
+-import sys
++from apex.optimizers import NpuFusedSGD
++#import sys
+ import gc
+ 
+ # necessary pytorch imports
+@@ -47,13 +49,36 @@
+     from apex.parallel import DistributedDataParallel as DDP
+     from apex.fp16_utils import *
+     from apex.multi_tensor_apply import multi_tensor_applier
+-    import amp_C
++    #import amp_C
+ except ImportError:
+     raise ImportError("Please install APEX from https://github.com/nvidia/apex")
+ 
+ from contextlib import redirect_stdout
+ 
+-from SSD import _C as C
++import logging
++
++
++class Logger(object):
++    logfile = ""
++
++    def __init__(self, filename=""):
++        self.logfile = filename
++        self.terminal = sys.stdout
++        return
++
++    def write(self, message):
++        self.terminal.write(message)
++        if self.logfile != "":
++            try:
++                self.log = open(self.logfile, "a")
++                self.log.write(message)
++                self.log.close()
++            except:
++                pass
++
++    def flush(self):
++        pass
++
+ 
+ def print_message(rank, *print_args):
+     if rank == 0:
+@@ -97,7 +122,7 @@
+     # Now we know from all ranks if they're done - reduce result
+     # Note: Already caught the non-distributed case above, can assume broadcast is available
+     with torch.no_grad():
+-        finish_tensor = torch.tensor([finished], dtype=torch.int32, device=torch.device('cuda'))
++        finish_tensor = torch.tensor([finished], dtype=torch.int32, device=torch.device('npu'))
+         # torch.distributed.all_reduce(finish_tensor)
+         torch.distributed.broadcast(finish_tensor, src=0)
+ 
+@@ -126,7 +151,7 @@
+         args.distributed = int(os.environ['WORLD_SIZE']) > 1
+ 
+     if args.distributed:
+-        torch.cuda.set_device(args.local_rank)
++        torch.npu.set_device(args.local_rank)
+         torch.distributed.init_process_group(backend='nccl',
+                                              init_method='env://')
+ 
+@@ -145,8 +170,9 @@
+ 
+ def train300_mlperf_coco(args):
+ 
++    
+     args = setup_distributed(args)
+-
++    
+     # Build the model
+     model_options = {
+         'use_nhwc' : args.nhwc,
+@@ -159,11 +185,11 @@
+         load_checkpoint(ssd300, args.checkpoint)
+ 
+     ssd300.train()
+-    ssd300.cuda()
++    ssd300.npu()
+     dboxes = dboxes300_coco()
+     # Note: No reason not to use optimised loss
+-    loss_func = OptLoss()
+-    loss_func.cuda()
++    loss_func = Loss(dboxes)
++    loss_func.npu()
+ 
+     # Create optimizer.  This must also be done after network_to_half.
+     global_batch_size = (args.N_gpu * args.batch_size)
+@@ -180,12 +206,12 @@
+     current_weight_decay = args.wd
+     static_loss_scale = 128.
+ 
+-    optim = apex.optimizers.FusedSGD(ssd300.parameters(),
++    optim = torch.optim.SGD(ssd300.parameters(),
+                                      lr=current_lr,
+                                      momentum=current_momentum,
+                                      weight_decay=current_weight_decay)
+ 
+-    ssd300, optim = apex.amp.initialize(ssd300, optim, opt_level='O2', loss_scale=static_loss_scale)
++    ssd300, optim = amp.initialize(ssd300, optim, opt_level='O2', loss_scale=static_loss_scale)
+ 
+     # Parallelize.  Need to do this after network_to_half.
+     if args.distributed:
+@@ -206,7 +232,7 @@
+ 
+     # Model is completely finished -- need to create separate copies, preserve parameters across
+     # them, and jit
+-    ssd300_eval = SSD300(args, args.num_classes, **model_options).cuda()
++    ssd300_eval = SSD300(args, args.num_classes, **model_options).npu()
+ 
+     if args.use_fp16:
+         convert_network(ssd300_eval, torch.half)
+@@ -229,10 +255,11 @@
+ 
+     input_c = 4 if args.pad_input else 3
+     example_shape = [args.batch_size, 300, 300, input_c] if args.nhwc else [args.batch_size, input_c, 300, 300]
+-    example_input = torch.randn(*example_shape).cuda()
++    example_input = torch.randn(*example_shape).npu()
+ 
+     if args.use_fp16:
+         example_input = example_input.half()
++    
+     if args.jit:
+         # DDP has some Python-side control flow.  If we JIT the entire DDP-wrapped module,
+         # the resulting ScriptModule will elide this control flow, resulting in allreduce
+@@ -258,11 +285,11 @@
+     loss.backward(dloss)
+ 
+     # Necessary import in init
+-    from pycocotools.coco import COCO
++    #from pycocotools.coco import COCO
+ 
+     encoder = build_ssd300_coder()
+ 
+-    evaluator = AsyncEvaluator(num_threads=1)
++    evaluator = AsyncEvaluator(num_threads=4)
+ 
+     log_end(key=constants.INIT_STOP)
+ 
+@@ -275,7 +302,7 @@
+     barrier()
+ 
+     train_pipe = prebuild_pipeline(args)
+-
++       
+     train_loader, epoch_size = build_pipeline(args, training=True, pipe=train_pipe)
+     if args.rank == 0:
+         print("epoch size is: ", epoch_size, " images")
+@@ -316,7 +343,7 @@
+                     if not os.path.isdir('./models'):
+                         os.mkdir('./models')
+                     torch.save({"model" : ssd300.state_dict()}, "./models/iter_{}.pt".format(iter_num))
+-
++            
+             ssd300_eval.load_state_dict(train_model.state_dict())
+             # Note: No longer returns, evaluation is abstracted away inside evaluator
+             coco_eval(args,
+@@ -345,22 +372,25 @@
+ 
+         log_start(key=constants.EPOCH_START,
+                   metadata={'epoch_num': epoch + 1,
+-                            'current_iter_num': iter_num})
+-
+-        for i, (img, bbox, label) in enumerate(train_loader):
++                            'current_iter_nufm': iter_num})
+ 
++        for i, data in enumerate(train_loader):
++            (img, bbox, label, _) = data
++            img = img.npu()
++            bbox = bbox.npu()
++            label = label.npu()
+             if args.profile_start is not None and iter_num == args.profile_start:
+-                torch.cuda.profiler.start()
+-                torch.cuda.synchronize()
++                torch.npu.profiler.start()
++                torch.npu.synchronize()
+                 if args.profile_nvtx:
+                     torch.autograd._enable_profiler(torch.autograd.ProfilerState.NVTX)
+ 
+             if args.profile is not None and iter_num == args.profile:
+                 if args.profile_start is not None and iter_num >=args.profile_start:
+-                    # we turned cuda and nvtx profiling on, better turn it off too
++                    # we turned npu and nvtx profiling on, better turn it off too
+                     if args.profile_nvtx:
+                         torch.autograd._disable_profiler()
+-                    torch.cuda.profiler.stop()
++                    torch.npu.profiler.stop()
+                 return
+ 
+             if args.warmup is not None:
+@@ -369,7 +399,7 @@
+             if (img is None) or (bbox is None) or (label is None):
+                 print("No labels in batch")
+                 continue
+-
++            
+             ploc, plabel = ssd300(img)
+             ploc, plabel = ploc.float(), plabel.float()
+ 
+@@ -389,20 +419,21 @@
+                 sys.exit()
+ 
+             num_elapsed_samples += N
++            # if args.rank == 0 and iter_num % args.print_interval == 0:
+             if args.rank == 0 and iter_num % args.print_interval == 0:
+                 end_elapsed_time = time.time()
+                 elapsed_time = end_elapsed_time - start_elapsed_time
+ 
+                 avg_samples_per_sec = num_elapsed_samples * args.N_gpu / elapsed_time
+ 
+-                print("Iteration: {:6d}, Loss function: {:5.3f}, Average Loss: {:.3f}, avg. samples / sec: {:.2f}"\
+-                            .format(iter_num, loss.item(), avg_loss, avg_samples_per_sec), end="\n")
++                print("Epoch:{:4d}, Iteration: {:6d}, Loss function: {:5.3f}, Average Loss: {:.3f}, avg. samples / sec: {:.2f}"\
++                            .format(epoch, iter_num, loss.item(), avg_loss, avg_samples_per_sec), end="\n")
+ 
+                 last_printed_iter = iter_num
+                 start_elapsed_time = time.time()
+                 num_elapsed_samples = 0
+ 
+-            with apex.amp.scale_loss(loss, optim) as scaled_loss:
++            with amp.scale_loss(loss, optim) as scaled_loss:
+                 scaled_loss.backward()
+ 
+             if not args.profile_fake_optim:
+@@ -413,7 +444,27 @@
+             # placement of this is worth trying.
+             for p in ssd300.parameters():
+                 p.grad = None
+-
++            if iter_num == 400:
++                with torch.autograd.profiler.profile(use_npu=True) as prof:
++                    ploc, plabel = ssd300(img)
++                    ploc, plabel = ploc.float(), plabel.float()
++
++                    N = img.shape[0]
++                    bbox.requires_grad = False
++                    label.requires_grad = False
++                # reshape (N*8732X4 -> Nx8732x4) and transpose (Nx8732x4 -> Nx4x8732)
++                    bbox = bbox.view(N, -1, 4).transpose(1, 2).contiguous()
++                # reshape (N*8732 -> Nx8732) and cast to Long
++                    label = label.view(N, -1).long()
++
++                    loss = loss_func(ploc, plabel, bbox, label)
++                    optim.zero_grad()
++                    with apex.amp.scale_loss(loss, optim) as scaled_loss:
++                        scaled_loss.backward()
++
++                    if not args.profile_fake_optim:
++                        optim.step()
++                prof.export_chrome_trace("output1.prof")#1p
+             # Don't check every iteration due to cost of broadcast
+             if iter_num % 20 == 0:
+                 finished = check_async_evals(args, evaluator, args.threshold)
+@@ -423,13 +474,38 @@
+ 
+             iter_num += 1
+ 
+-        train_loader.reset()
++
++        '''
++        with torch.autograd.profiler.profile(use_npu=True) as prof:
++            ploc, plabel = ssd300(img)
++            ploc, plabel = ploc.float(), plabel.float()
++
++            N = img.shape[0]
++            bbox.requires_grad = False
++            label.requires_grad = False
++                # reshape (N*8732X4 -> Nx8732x4) and transpose (Nx8732x4 -> Nx4x8732)
++            bbox = bbox.view(N, -1, 4).transpose(1, 2).contiguous()
++                # reshape (N*8732 -> Nx8732) and cast to Long
++            label = label.view(N, -1).long()
++
++            loss = loss_func(ploc, plabel, bbox, label)
++            optim.zero_grad()  ##########
++            with apex.amp.scale_loss(loss, optim) as scaled_loss:
++                scaled_loss.backward()
++
++            if not args.profile_fake_optim:
++                optim.step()
++        
++        #prof.export_chrome_trace("output.prof")  # 3p"output.prof"##############################
++            ########################################################################
++        prof.export_chrome_trace("output1.prof")#1p
++        '''
+         log_end(key=constants.EPOCH_STOP, metadata={'epoch_num': epoch + 1})
+ 
+     return False
+ 
+ def main():
+-
++    # torch.multiprocessing.set_start_method('spawn')
+     configure_logger(constants.SSD)
+     log_start(key=constants.INIT_START, log_all_ranks=True)
+     args = parse_args()
+@@ -448,5 +524,14 @@
+     # end timing here
+     log_end(key=constants.RUN_STOP, metadata={'status': status})
+ 
++
+ if __name__ == "__main__":
++
++    option = {}
++    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
++    print("option:",option)
++    torch.npu.set_option(option)
++
++    sys.stdout = Logger("log1.log")
++    sys.stderr = Logger("log1.log")
+     main()
+diff -Naur pytorch/utils.py ssd/utils.py
+--- pytorch/utils.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/utils.py	2021-12-03 10:41:50.862053724 +0000
+@@ -84,10 +84,8 @@
+ from math import sqrt, ceil, cos, sin, pi
+ from mlperf_logging.mllog import constants
+ from mlperf_logger import log_event
+-
+-from SSD import _C as C
+-
+-from fused_color_jitter import FusedColorJitter
++from box_coder import Encoder
++from box_coder import dboxes300_coco,build_ssd300_coder
+ 
+ # This function is from https://github.com/kuangliu/pytorch-ssd
+ def calc_iou_tensor(box1, box2):
+@@ -107,11 +105,8 @@
+ 
+     # Left Top & Right Bottom
+     lt = torch.max(be1[:,:,:2], be2[:,:,:2])
+-    #mask1 = (be1[:,:, 0] < be2[:,:, 0]) ^ (be1[:,:, 1] < be2[:,:, 1])
+-    #mask1 = ~mask1
+     rb = torch.min(be1[:,:,2:], be2[:,:,2:])
+-    #mask2 = (be1[:,:, 2] < be2[:,:, 2]) ^ (be1[:,:, 3] < be2[:,:, 3])
+-    #mask2 = ~mask2
++
+ 
+     delta = rb - lt
+     delta[delta < 0] = 0
+@@ -173,21 +168,20 @@
+             # Implementation use 50 iteration to find possible candidate
+             for _ in range(self.num_cropping_iterations):
+                 # suze of each sampled path in [0.1, 1] 0.3*0.3 approx. 0.1
+-                w = random.uniform(0.3 , 1.0)
+-                h = random.uniform(0.3 , 1.0)
++                w = random.uniform(0.3 , 1.0)         
++                h = random.uniform(0.3 , 1.0)        
+ 
+                 if w/h < 0.5 or w/h > 2:
+                     continue
+ 
+                 # left 0 ~ wtot - w, top 0 ~ htot - h
+-                left = random.uniform(0, 1.0 - w)
+-                top = random.uniform(0, 1.0 - h)
++                left = random.uniform(0, 1.0 - w)       
++                top = random.uniform(0, 1.0 - h)           
+ 
+                 right = left + w
+                 bottom = top + h
+-
+-                ious = calc_iou_tensor(bboxes, torch.tensor([[left, top, right, bottom]]))
+-
++                tensor = torch.tensor([[left, top, right, bottom]]).cpu()
++                ious = calc_iou_tensor(bboxes, tensor)
+                 # tailor all the bboxes and return
+                 if not ((ious > min_iou) & (ious < max_iou)).all():
+                     continue
+@@ -207,8 +201,6 @@
+                 bboxes[bboxes[:, 2] > right, 2] = right
+                 bboxes[bboxes[:, 3] > bottom, 3] = bottom
+ 
+-                #print(left, top, right, bottom)
+-                #print(labels, bboxes, masks)
+                 bboxes = bboxes[masks, :]
+                 labels = labels[masks]
+ 
+@@ -216,8 +208,6 @@
+                 top_idx =  int(top*htot)
+                 right_idx = int(right*wtot)
+                 bottom_idx = int(bottom*htot)
+-                #print(left_idx,top_idx,right_idx,bottom_idx)
+-                #img = img[:, top_idx:bottom_idx, left_idx:right_idx]
+                 img = img.crop((left_idx, top_idx, right_idx, bottom_idx))
+ 
+                 bboxes[:, 0] = (bboxes[:, 0] - left)/w
+@@ -235,7 +225,7 @@
+         pass
+ 
+     def __call__(self, img):
+-        img = torch.Tensor(np.array(img))
++        img = torch.Tensor(np.array(img)).cpu()
+         # Transform from HWC to CHW
+         img = img.permute(2, 0 ,1).div(255)
+         return img
+@@ -268,12 +258,10 @@
+         self.crop = SSDCropping()
+         self.img_trans = transforms.Compose([
+             transforms.Resize(self.size),
+-            #transforms.ColorJitter(brightness=0.125, contrast=0.5,
+-            #    saturation=0.5, hue=0.05
+-            #),
+-            #transforms.ToTensor(),
+-            FusedColorJitter(),
+-            ToTensor(),
++            transforms.ColorJitter(brightness=0.125, contrast=0.5,
++                saturation=0.5, hue=0.05
++            ),
++            transforms.ToTensor(),
+         ])
+         self.hflip = RandomHorizontalFlip()
+ 
+@@ -291,7 +279,6 @@
+             self.normalize,])
+ 
+     def __call__(self, img, img_size, bbox=None, label=None, max_num=200):
+-        #img = torch.tensor(img)
+         if self.val:
+             bbox_out = torch.zeros(max_num, 4)
+             label_out =  torch.zeros(max_num, dtype=torch.long)
+@@ -311,6 +298,7 @@
+         img = self.normalize(img)
+ 
+         return img, img_size, bbox, label
++        
+ 
+ # Implement a datareader for COCO dataset
+ class COCODetection(data.Dataset):
+@@ -365,12 +353,13 @@
+ 
+         for k, v in list(self.images.items()):
+             if len(v[2]) == 0:
+-                #print("empty image: {}".format(k))
+                 self.images.pop(k)
+ 
+         self.img_keys = list(self.images.keys())
+         self.transform = transform
+-        #print("End parsing COCO data, total time {}".format(time.time()-start_time))
++
++        self.encoder = Encoder(dboxes300_coco())
++
+ 
+     @property
+     def labelnum(self):
+@@ -378,13 +367,11 @@
+ 
+     @staticmethod
+     def load(pklfile):
+-        #print("Loading from {}".format(pklfile))
+         with bz2.open(pklfile, "rb") as fin:
+             ret = pickle.load(fin)
+         return ret
+ 
+     def save(self, pklfile):
+-        #print("Saving to {}".format(pklfile))
+         with bz2.open(pklfile, "wb") as fout:
+             pickle.dump(self, fout)
+ 
+@@ -406,11 +393,9 @@
+         bbox_sizes = []
+         bbox_labels = []
+ 
+-        #for (xc, yc, w, h), bbox_label in img_data[2]:
+         for (l,t,w,h), bbox_label in img_data[2]:
+             r = l + w
+             b = t + h
+-            #l, t, r, b = xc - 0.5*w, yc - 0.5*h, xc + 0.5*w, yc + 0.5*h
+             bbox_size = (l/wtot, t/htot, r/wtot, b/htot)
+             # filter out zero-size bboxes
+             if l == r or t == b:
+@@ -426,7 +411,9 @@
+             img, (htot, wtot), bbox_sizes, bbox_labels = \
+                 self.transform(img, (htot, wtot), bbox_sizes, bbox_labels)
+         else:
+-            pass # img = transforms.ToTensor()(img)
++            img = transforms.ToTensor()(img)
++
++        bbox_sizes, bbox_labels = self.encoder.encode(bbox_sizes, bbox_labels)
+ 
+-        return img, img_id, (htot, wtot), bbox_sizes, bbox_labels
+ 
++        return img, img_id, (htot, wtot), bbox_sizes, bbox_labels
+\ No newline at end of file
+diff -Naur pytorch/visualize.py ssd/visualize.py
+--- pytorch/visualize.py	2021-12-03 10:28:10.553776939 +0000
++++ ssd/visualize.py	2021-12-03 10:41:50.726052624 +0000
+@@ -12,9 +12,6 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
+-from nvidia.dali.pipeline import Pipeline
+-import nvidia.dali.ops as ops
+-import nvidia.dali.types as types
+ 
+ import numpy as np
+ from time import time

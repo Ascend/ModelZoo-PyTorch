@@ -1,0 +1,4 @@
+numpy
+tensorboardX
+opencv-python
+lmdb

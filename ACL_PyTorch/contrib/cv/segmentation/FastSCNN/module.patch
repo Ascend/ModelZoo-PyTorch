@@ -1,0 +1,66 @@
+diff --git a/segmentron/modules/module.py b/segmentron/modules/module.py
+index 942ea13..51e324d 100644
+--- a/segmentron/modules/module.py
++++ b/segmentron/modules/module.py
+@@ -2,6 +2,7 @@
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
++import numpy as np
+ 
+ from collections import OrderedDict
+ from .basic import _ConvBNReLU, SeparableConv2d, _ConvBN, _BNPReLU, _ConvBNPReLU
+@@ -82,16 +83,34 @@ class _ASPP(nn.Module):
+ class PyramidPooling(nn.Module):
+     def __init__(self, in_channels, sizes=(1, 2, 3, 6), norm_layer=nn.BatchNorm2d, **kwargs):
+         super(PyramidPooling, self).__init__()
+-        out_channels = int(in_channels / 4)
+         self.avgpools = nn.ModuleList()
+         self.convs = nn.ModuleList()
++        self.out_channels = int(in_channels / 4)
++        self.in_channels = in_channels
++        self.sizes = sizes
++        self.norm_layer = norm_layer
++        out_channels = self.out_channels
+         for size in sizes:
+-            self.avgpools.append(nn.AdaptiveAvgPool2d(size))
++            # inputsz = np.array(input.shape[2:])
++            # outputsz = np.array([bin_size, bin_size])
++            # stridesz = np.floor(inputsz / outputsz).astype(np.int32)
++            # kernelsz = inputsz - (outputsz - 1) * stridesz
++            # self.avgpools.append(nn.AdaptiveAvgPool2d(size))
+             self.convs.append(_ConvBNReLU(in_channels, out_channels, 1, norm_layer=norm_layer, **kwargs))
+ 
+     def forward(self, x):
+         size = x.size()[2:]
+         feats = [x]
++        # out_channels = self.out_channels
++        # self.avgpools = nn.ModuleList()
++
++        for bin_size in self.sizes:
++            inputsz = np.array(x.shape[2:])
++            outputsz = np.array([bin_size, bin_size])
++            stridesz = np.floor(inputsz / outputsz).astype(np.int32)
++            kernelsz = inputsz - (outputsz - 1) * stridesz
++            self.avgpools.append(nn.AvgPool2d(kernel_size=list(kernelsz), stride=list(stridesz)))
++
+         for (avgpool, conv) in zip(self.avgpools, self.convs):
+             feats.append(F.interpolate(conv(avgpool(x)), size, mode='bilinear', align_corners=True))
+         return torch.cat(feats, dim=1)
+diff --git a/segmentron/utils/options.py b/segmentron/utils/options.py
+index ea4c8b0..d2940a0 100644
+--- a/segmentron/utils/options.py
++++ b/segmentron/utils/options.py
+@@ -21,6 +21,12 @@ def parse_args():
+     # for visual
+     parser.add_argument('--input-img', type=str, default='tools/demo_vis.png',
+                         help='path to the input image or a directory of images')
++    parser.add_argument('--pth_path',type=str, help='path of pth model',
++                        default='best_model.pth')
++    parser.add_argument('--batch_size', type=int, help='batchsize of pth model ',
++                        default=1)
++    parser.add_argument('--onnx_name', type=str, default= 'fast_scnn_bs1',
++                        help='name of onnx model')
+     # config options
+     parser.add_argument('opts', help='See config for all options',
+                         default=None, nargs=argparse.REMAINDER)

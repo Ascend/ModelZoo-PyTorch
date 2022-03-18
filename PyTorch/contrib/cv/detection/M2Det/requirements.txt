@@ -1,0 +1,6 @@
+torchvision == 0.2.2.post2
+numpy == 1.21.2
+Cython == 0.29.24
+opencv-python ==  4.5.3.56
+setuptools == 41.2.0
+matplotlib == 2.2.5

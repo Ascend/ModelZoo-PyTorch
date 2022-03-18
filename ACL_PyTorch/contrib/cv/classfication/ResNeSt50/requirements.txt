@@ -1,0 +1,8 @@
+pytorch==1.5.0
+torchvision==0.6.0
+onnx
+opencv-python
+numpy
+Pillow
+resnest==0.0.6b20210812
+onnx-simplifier

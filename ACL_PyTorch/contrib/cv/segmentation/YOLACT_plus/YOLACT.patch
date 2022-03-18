@@ -1,0 +1,334 @@
+diff --git a/backbone.py b/backbone.py
+index 4df59d0..8dbd124 100644
+--- a/backbone.py
++++ b/backbone.py
+@@ -5,7 +5,7 @@ import pickle
+ from collections import OrderedDict
+ 
+ try:
+-    from dcn_v2 import DCN
++    from deform_conv import DCNv2 as DCN
+ except ImportError:
+     def DCN(*args, **kwdargs):
+         raise Exception('DCN could not be imported. If you want to use YOLACT++ models, compile DCN. Check the README for instructions.')
+diff --git a/layers/functions/detection.py b/layers/functions/detection.py
+index 4e5fd06..0194fd5 100644
+--- a/layers/functions/detection.py
++++ b/layers/functions/detection.py
+@@ -29,7 +29,7 @@ class Detect(object):
+         self.use_cross_class_nms = False
+         self.use_fast_nms = False
+ 
+-    def __call__(self, predictions, net):
++    def __call__(self, predictions):
+         """
+         Args:
+              loc_data: (tensor) Loc preds from loc layers
+@@ -73,7 +73,7 @@ class Detect(object):
+                 if result is not None and proto_data is not None:
+                     result['proto'] = proto_data[batch_idx]
+ 
+-                out.append({'detection': result, 'net': net})
++                out.append(result)
+         
+         return out
+ 
+@@ -205,7 +205,7 @@ class Detect(object):
+             if cls_scores.size(0) == 0:
+                 continue
+             
+-            preds = torch.cat([boxes[conf_mask], cls_scores[:, None]], dim=1).cpu().numpy()
++            preds = torch.cat([boxes[conf_mask], cls_scores[:, None]], dim=1).detach().numpy()
+             keep = cnms(preds, iou_threshold)
+             keep = torch.Tensor(keep, device=boxes.device).long()
+ 
+diff --git a/layers/modules/multibox_loss.py b/layers/modules/multibox_loss.py
+index ddf3904..f65014c 100644
+--- a/layers/modules/multibox_loss.py
++++ b/layers/modules/multibox_loss.py
+@@ -13,11 +13,14 @@ class MultiBoxLoss(nn.Module):
+         1) Produce Confidence Target Indices by matching  ground truth boxes
+            with (default) 'priorboxes' that have jaccard index > threshold parameter
+            (default threshold: 0.5).
++
+         2) Produce localization target by 'encoding' variance into offsets of ground
+            truth boxes and their matched  'priorboxes'.
++
+         3) Hard negative mining to filter the excessive number of negative examples
+            that comes with using a large number of default bounding boxes.
+            (default negative:positive ratio 3:1)
++
+     Objective Loss:
+         L(x,c,l,g) = (Lconf(x, c) + αLloc(x,l,g)) / N
+         Where, Lconf is the CrossEntropy Loss and Lloc is the SmoothL1 Loss
+@@ -47,7 +50,7 @@ class MultiBoxLoss(nn.Module):
+             self.class_instances = None
+             self.total_instances = 0
+ 
+-    def forward(self, net, predictions, targets, masks, num_crowds):
++    def forward(self, net, predictions, wrapper, wrapper_mask):
+         """Multibox Loss
+         Args:
+             predictions (tuple): A tuple containing loc preds, conf preds,
+@@ -70,6 +73,10 @@ class MultiBoxLoss(nn.Module):
+             * Only if mask_type == lincomb
+         """
+ 
++        targets, masks, num_crowds = wrapper.get_args(wrapper_mask)
++        targets = targets[0]
++        masks = masks[0]
++        num_crowds = num_crowds[0]
+         loc_data  = predictions['loc']
+         conf_data = predictions['conf']
+         mask_data = predictions['mask']
+@@ -232,7 +239,7 @@ class MultiBoxLoss(nn.Module):
+                 # Construct Semantic Segmentation
+                 segment_t = torch.zeros_like(cur_segment, requires_grad=False)
+                 for obj_idx in range(downsampled_masks.size(0)):
+-                    segment_t[cur_class_t[obj_idx]] = torch.max(segment_t[cur_class_t[obj_idx]], downsampled_masks[obj_idx])
++                    segment_t[cur_class_t[obj_idx]] = torch.max(segment_t[cur_class_t[obj_idx]].float(), downsampled_masks[obj_idx])
+             
+             loss_s += F.binary_cross_entropy_with_logits(cur_segment, segment_t, reduction='sum')
+         
+diff --git a/layers/output_utils.py b/layers/output_utils.py
+index 27efac9..52454c5 100644
+--- a/layers/output_utils.py
++++ b/layers/output_utils.py
+@@ -12,7 +12,8 @@ from utils.augmentations import Resize
+ from utils import timer
+ from .box_utils import crop, sanitize_coordinates
+ 
+-def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
++
++def postprocess(dets, w, h, batch_idx=0, interpolation_mode='bilinear',
+                 visualize_lincomb=False, crop_masks=True, score_threshold=0):
+     """
+     Postprocesses the output of Yolact on testing mode into a format that makes sense,
+@@ -31,13 +32,13 @@ def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
+         - boxes   [num_det, 4]: The bounding box for each detection in absolute point form.
+         - masks   [num_det, h, w]: Full image masks for each detection.
+     """
+-    
+-    dets = det_output[batch_idx]
++
++
+     net = dets['net']
+-    dets = dets['detection']
++    dets = dets['detection'][0]
+ 
+     if dets is None:
+-        return [torch.Tensor()] * 4 # Warning, this is 4 copies of the same thing
++        return [torch.Tensor()] * 4  # Warning, this is 4 copies of the same thing
+ 
+     if score_threshold > 0:
+         keep = dets['score'] > score_threshold
+@@ -45,24 +46,24 @@ def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
+         for k in dets:
+             if k != 'proto':
+                 dets[k] = dets[k][keep]
+-        
++
+         if dets['score'].size(0) == 0:
+             return [torch.Tensor()] * 4
+-    
++
+     # Actually extract everything from dets now
+     classes = dets['class']
+-    boxes   = dets['box']
+-    scores  = dets['score']
+-    masks   = dets['mask']
++    boxes = dets['box']
++    scores = dets['score']
++    masks = dets['mask']
+ 
+     if cfg.mask_type == mask_type.lincomb and cfg.eval_mask_branch:
+         # At this points masks is only the coefficients
+         proto_data = dets['proto']
+-        
++
+         # Test flag, do not upvote
+         if cfg.mask_proto_debug:
+             np.save('scripts/proto.npy', proto_data.cpu().numpy())
+-        
++
+         if visualize_lincomb:
+             display_lincomb(proto_data, masks)
+ 
+@@ -77,7 +78,7 @@ def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
+         masks = masks.permute(2, 0, 1).contiguous()
+ 
+         if cfg.use_maskiou:
+-            with timer.env('maskiou_net'):                
++            with timer.env('maskiou_net'):
+                 with torch.no_grad():
+                     maskiou_p = net.maskiou_net(masks.unsqueeze(1))
+                     maskiou_p = torch.gather(maskiou_p, dim=1, index=classes.unsqueeze(1)).squeeze(1)
+@@ -93,7 +94,6 @@ def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
+         # Binarize the masks
+         masks.gt_(0.5)
+ 
+-    
+     boxes[:, 0], boxes[:, 2] = sanitize_coordinates(boxes[:, 0], boxes[:, 2], w, cast=False)
+     boxes[:, 1], boxes[:, 3] = sanitize_coordinates(boxes[:, 1], boxes[:, 3], h, cast=False)
+     boxes = boxes.long()
+@@ -111,12 +111,12 @@ def postprocess(det_output, w, h, batch_idx=0, interpolation_mode='bilinear',
+             # Just in case
+             if mask_w * mask_h <= 0 or mask_w < 0:
+                 continue
+-            
++
+             mask = masks[jdx, :].view(1, 1, cfg.mask_size, cfg.mask_size)
+             mask = F.interpolate(mask, (mask_h, mask_w), mode=interpolation_mode, align_corners=False)
+             mask = mask.gt(0.5).float()
+             full_masks[jdx, y1:y2, x1:x2] = mask
+-        
++
+         masks = full_masks
+ 
+     return classes, scores, boxes, masks
+diff --git a/utils/logger.py b/utils/logger.py
+index 6d87f57..42c308e 100644
+--- a/utils/logger.py
++++ b/utils/logger.py
+@@ -12,8 +12,8 @@ import numpy as np
+ 
+ # Because Python's package heierarchy system sucks
+ if __name__ == '__main__':
+-    from nvinfo import gpu_info, visible_gpus, nvsmi_available
+-    from functions import MovingAverage
++    from utils.nvinfo import gpu_info, visible_gpus, nvsmi_available
++    from utils.functions import MovingAverage
+ else:
+     from .nvinfo import gpu_info, visible_gpus, nvsmi_available
+     from .functions import MovingAverage
+diff --git a/yolact.py b/yolact.py
+index d83703b..df10ff4 100644
+--- a/yolact.py
++++ b/yolact.py
+@@ -19,10 +19,10 @@ from utils.functions import MovingAverage, make_net
+ 
+ # This is required for Pytorch 1.0.1 on Windows to initialize Cuda on some driver versions.
+ # See the bug report here: https://github.com/pytorch/pytorch/issues/17108
+-torch.cuda.current_device()
++#torch.cuda.current_device()
+ 
+ # As of March 10, 2019, Pytorch DataParallel still doesn't support JIT Script Modules
+-use_jit = torch.cuda.device_count() <= 1
++use_jit = False
+ if not use_jit:
+     print('Multiple GPUs detected! Turning off JIT.')
+ 
+@@ -245,7 +245,7 @@ class PredictionModule(nn.Module):
+ 
+                                 prior_data += [x, y, w, h]
+ 
+-                self.priors = torch.Tensor(prior_data, device=device).view(-1, 4).detach()
++                self.priors = torch.Tensor(prior_data).to(device).view(-1, 4).detach()
+                 self.priors.requires_grad = False
+                 self.last_img_size = (cfg._tmp_img_w, cfg._tmp_img_h)
+                 self.last_conv_size = (conv_w, conv_h)
+@@ -283,7 +283,7 @@ class FPN(ScriptModuleWrapper):
+     def __init__(self, in_channels):
+         super().__init__()
+ 
+-        self.lat_layers  = nn.ModuleList([
++        self.lat_layers = nn.ModuleList([
+             nn.Conv2d(x, cfg.fpn.num_features, kernel_size=1)
+             for x in reversed(in_channels)
+         ])
+@@ -398,20 +398,20 @@ class Yolact(nn.Module):
+ 
+     def __init__(self):
+         super().__init__()
++        self.exportOnnx = False
++        self.backbone = construct_backbone(cfg.backbone) #backbone: resnetbackbone. backbone_modules:{list:104}. bn1:{BatchNorm2d}
+ 
+-        self.backbone = construct_backbone(cfg.backbone)
+-
+-        if cfg.freeze_bn:
++        if cfg.freeze_bn: # it's true
+             self.freeze_bn()
+ 
+         # Compute mask_dim here and add it back to the config. Make sure Yolact's constructor is called early!
+         if cfg.mask_type == mask_type.direct:
+             cfg.mask_dim = cfg.mask_size**2
+-        elif cfg.mask_type == mask_type.lincomb:
++        elif cfg.mask_type == mask_type.lincomb: # the module will execute this branch
+             if cfg.mask_proto_use_grid:
+                 self.grid = torch.Tensor(np.load(cfg.mask_proto_grid_file))
+                 self.num_grids = self.grid.size(0)
+-            else:
++            else: # the module will execute this branch
+                 self.num_grids = 0
+ 
+             self.proto_src = cfg.mask_proto_src
+@@ -420,7 +420,7 @@ class Yolact(nn.Module):
+             elif cfg.fpn is not None: in_channels = cfg.fpn.num_features
+             else: in_channels = self.backbone.channels[self.proto_src]
+             in_channels += self.num_grids
+-
++            #in_channels will be 256
+             # The include_last_relu=false here is because we might want to change it to another function
+             self.proto_net, cfg.mask_dim = make_net(in_channels, cfg.mask_proto_net, include_last_relu=False)
+ 
+@@ -431,10 +431,10 @@ class Yolact(nn.Module):
+         self.selected_layers = cfg.backbone.selected_layers
+         src_channels = self.backbone.channels
+ 
+-        if cfg.use_maskiou:
++        if cfg.use_maskiou: #false
+             self.maskiou_net = FastMaskIoUNet()
+ 
+-        if cfg.fpn is not None:
++        if cfg.fpn is not None: #true
+             # Some hacky rewiring to accomodate the FPN
+             self.fpn = FPN([src_channels[i] for i in self.selected_layers])
+             self.selected_layers = list(range(len(self.selected_layers) + cfg.fpn.num_downsample))
+@@ -447,7 +447,7 @@ class Yolact(nn.Module):
+         for idx, layer_idx in enumerate(self.selected_layers):
+             # If we're sharing prediction module weights, have every module's parent be the first one
+             parent = None
+-            if cfg.share_prediction_module and idx > 0:
++            if cfg.share_prediction_module and idx > 0: #cfg.share_prediction_module is True
+                 parent = self.prediction_layers[0]
+ 
+             pred = PredictionModule(src_channels[layer_idx], src_channels[layer_idx],
+@@ -458,12 +458,12 @@ class Yolact(nn.Module):
+             self.prediction_layers.append(pred)
+ 
+         # Extra parameters for the extra losses
+-        if cfg.use_class_existence_loss:
++        if cfg.use_class_existence_loss: #false
+             # This comes from the smallest layer selected
+             # Also note that cfg.num_classes includes background
+             self.class_existence_fc = nn.Linear(src_channels[-1], cfg.num_classes - 1)
+         
+-        if cfg.use_semantic_segmentation_loss:
++        if cfg.use_semantic_segmentation_loss: #true
+             self.semantic_seg_conv = nn.Conv2d(src_channels[0], cfg.num_classes-1, kernel_size=1)
+ 
+         # For use in evaluation
+@@ -474,9 +474,9 @@ class Yolact(nn.Module):
+         """ Saves the model's weights using compression because the file sizes were getting too big. """
+         torch.save(self.state_dict(), path)
+     
+-    def load_weights(self, path):
++    def load_weights(self, path, useCuda = True):
+         """ Loads weights from a compressed save file. """
+-        state_dict = torch.load(path)
++        state_dict = torch.load(path) if useCuda else torch.load(path, map_location=torch.device('cpu'))
+ 
+         # For backward compatability, remove these (the new variable is called layers)
+         for key in list(state_dict.keys()):
+@@ -673,7 +673,10 @@ class Yolact(nn.Module):
+                 else:
+                     pred_outs['conf'] = F.softmax(pred_outs['conf'], -1)
+ 
+-            return self.detect(pred_outs, self)
++            if self.exportOnnx:
++                return pred_outs
++            else:
++                return self.detect(pred_outs)
+ 
+ 
+ 

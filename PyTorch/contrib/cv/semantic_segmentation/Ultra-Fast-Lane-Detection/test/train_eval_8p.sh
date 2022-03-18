@@ -1,0 +1,1 @@
+source UFLD/test/env_npu.sh&&nohup python -u UFLD/test.py UFLD/configs/tusimple.py --test_model UFLD/UFLD_LOG/model_par/ep099.pth --test_work_dir ./tmp >> train_eval_8p.log&

@@ -1,0 +1,252 @@
+# Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+# Copyright (c) Open-MMLab. All rights reserved.
+from mmcv.parallel import distributed
+import os.path as osp
+import platform
+import shutil
+import time
+import warnings
+
+import torch
+
+import mmcv
+from .base_runner import BaseRunner
+from .builder import RUNNERS
+from .checkpoint import save_checkpoint
+from .utils import get_host_info
+from .scatter_gather import scatter_kwargs
+from .data_container import DataContainer
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+
+    def __init__(self, name, fmt=':f', start_count_index=5):
+        self.name = name
+        self.fmt = fmt
+        self.reset()
+        self.start_count_index = start_count_index
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        if self.count == 0:
+            self.N = n
+
+        self.val = val
+        self.count += n
+        if self.count > (self.start_count_index * self.N):
+            self.sum += val * n
+            self.avg = self.sum / (self.count - self.start_count_index * self.N)
+
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+@RUNNERS.register_module()
+class EpochBasedRunner(BaseRunner):
+    """Epoch-based Runner.
+
+    This runner train models epoch by epoch.
+    """
+    def scatter_data_batch(self,data_batch):
+        for key in data_batch.keys():
+            if isinstance(data_batch[key], torch.Tensor):
+                data_batch[key].requires_grad=True
+                if self.meta['dev']=='npu':
+                    data_batch[key]=data_batch[key].npu()
+                elif self.meta['dev']=='gpu':
+                    data_batch[key]=data_batch[key].cuda()
+            elif isinstance(data_batch[key], DataContainer):
+                if self.meta['dev']=='npu':
+                    data_batch[key].data=data_batch[key].data.npu()
+                elif self.meta['dev']=='gpu':
+                    data_batch[key].data=data_batch[key].data.cuda()
+    def run_iter(self, data_batch, train_mode, **kwargs):
+        if self.batch_processor is not None:
+            outputs = self.batch_processor(
+                self.model, data_batch, train_mode=train_mode, **kwargs)
+        elif train_mode:
+            start=time.time()
+            self.scatter_data_batch(data_batch)
+            inputs=(data_batch,self.optimizer)
+            if self.meta['world_size']==1:
+                outputs = self.model.train_step(*inputs)
+            elif self.meta['world_size']>1:
+                outputs = self.model.train_step(*inputs,**kwargs)
+            #outputs = self.model.train_step(*inputs[0], **kwargs[0])
+        else:
+            self.scatter_data_batch(data_batch)
+            inputs=(data_batch,self.optimizer)
+            outputs = self.model.val_step(*inputs)
+        if not isinstance(outputs, dict):
+            raise TypeError('"batch_processor()" or "model.train_step()"'
+                            'and "model.val_step()" must return a dict')
+        if 'log_vars' in outputs:
+            self.log_buffer.update(outputs['log_vars'], outputs['num_samples'])
+        self.outputs = outputs
+
+    def train(self, data_loader, **kwargs):
+        self.model.train()
+        self.mode = 'train'
+        self.data_loader = data_loader
+        self._max_iters = self._max_epochs * len(self.data_loader)
+        batch_time = AverageMeter('Time', ':6.3f')
+        self.call_hook('before_train_epoch')
+        time.sleep(2)  # Prevent possible deadlock during epoch transition
+        end = time.time()
+        for i, data_batch in enumerate(self.data_loader):
+            self._inner_iter = i
+            self.call_hook('before_train_iter')
+            self.run_iter(data_batch, train_mode=True, **kwargs)
+            batch_time.update(time.time() - end)
+            end = time.time()
+            self.call_hook('after_train_iter')
+            self._iter += 1
+        if batch_time.avg > 0 :
+            fps = self.meta['world_size'] * self.meta['batch_size'] / batch_time.avg
+            self.logger.info("[gpu num:8 ],* FPS@all {:.3f}, TIME@all {:.3f}".format(fps, batch_time.avg))
+        self.call_hook('after_train_epoch')
+        self._epoch += 1
+
+    @torch.no_grad()
+    def val(self, data_loader, **kwargs):
+        self.model.eval()
+        self.mode = 'val'
+        self.data_loader = data_loader
+        self.call_hook('before_val_epoch')
+        time.sleep(2)  # Prevent possible deadlock during epoch transition
+        for i, data_batch in enumerate(self.data_loader):
+            self._inner_iter = i
+            self.call_hook('before_val_iter')
+            self.run_iter(data_batch, train_mode=False)
+            self.call_hook('after_val_iter')
+        self.call_hook('after_val_epoch')
+
+    def run(self, data_loaders, workflow, max_epochs=None, **kwargs):
+        """Start running.
+
+        Args:
+            data_loaders (list[:obj:`DataLoader`]): Dataloaders for training
+                and validation.
+            workflow (list[tuple]): A list of (phase, epochs) to specify the
+                running order and epochs. E.g, [('train', 2), ('val', 1)] means
+                running 2 epochs for training and 1 epoch for validation,
+                iteratively.
+        """
+        assert isinstance(data_loaders, list)
+        assert mmcv.is_list_of(workflow, tuple)
+        assert len(data_loaders) == len(workflow)
+        if max_epochs is not None:
+            warnings.warn(
+                'setting max_epochs in run is deprecated, '
+                'please set max_epochs in runner_config', DeprecationWarning)
+            self._max_epochs = max_epochs
+
+        assert self._max_epochs is not None, (
+            'max_epochs must be specified during instantiation')
+
+        for i, flow in enumerate(workflow):
+            mode, epochs = flow
+            if mode == 'train':
+                self._max_iters = self._max_epochs * len(data_loaders[i])
+                break
+
+        work_dir = self.work_dir if self.work_dir is not None else 'NONE'
+        self.logger.info('Start running, host: %s, work_dir: %s',
+                         get_host_info(), work_dir)
+        self.logger.info('workflow: %s, max: %d epochs', workflow,
+                         self._max_epochs)
+        self.call_hook('before_run')
+
+        while self.epoch < self._max_epochs:
+            for i, flow in enumerate(workflow):
+                mode, epochs = flow
+                if isinstance(mode, str):  # self.train()
+                    if not hasattr(self, mode):
+                        raise ValueError(
+                            f'runner has no method named "{mode}" to run an '
+                            'epoch')
+                    epoch_runner = getattr(self, mode)
+                else:
+                    raise TypeError(
+                        'mode in workflow must be a str, but got {}'.format(
+                            type(mode)))
+
+                for _ in range(epochs):
+                    if mode == 'train' and self.epoch >= self._max_epochs:
+                        break
+                    epoch_runner(data_loaders[i], **kwargs)
+
+        time.sleep(1)  # wait for some hooks like loggers to finish
+        self.call_hook('after_run')
+
+    def save_checkpoint(self,
+                        out_dir,
+                        filename_tmpl='epoch_{}.pth',
+                        save_optimizer=True,
+                        meta=None,
+                        create_symlink=True):
+        """Save the checkpoint.
+
+        Args:
+            out_dir (str): The directory that checkpoints are saved.
+            filename_tmpl (str, optional): The checkpoint filename template,
+                which contains a placeholder for the epoch number.
+                Defaults to 'epoch_{}.pth'.
+            save_optimizer (bool, optional): Whether to save the optimizer to
+                the checkpoint. Defaults to True.
+            meta (dict, optional): The meta information to be saved in the
+                checkpoint. Defaults to None.
+            create_symlink (bool, optional): Whether to create a symlink
+                "latest.pth" to point to the latest checkpoint.
+                Defaults to True.
+        """
+        if meta is None:
+            meta = dict(epoch=self.epoch + 1, iter=self.iter)
+        elif isinstance(meta, dict):
+            meta.update(epoch=self.epoch + 1, iter=self.iter)
+        else:
+            raise TypeError(
+                f'meta should be a dict or None, but got {type(meta)}')
+        if self.meta is not None:
+            meta.update(self.meta)
+
+        filename = filename_tmpl.format(self.epoch + 1)
+        filepath = osp.join(out_dir, filename)
+        optimizer = self.optimizer if save_optimizer else None
+        save_checkpoint(self.model, filepath, optimizer=optimizer, meta=meta)
+        # in some environments, `os.symlink` is not supported, you may need to
+        # set `create_symlink` to False
+        if create_symlink:
+            dst_file = osp.join(out_dir, 'latest.pth')
+            if platform.system() != 'Windows':
+                mmcv.symlink(filename, dst_file)
+            else:
+                shutil.copy(filepath, dst_file)
+
+
+@RUNNERS.register_module()
+class Runner(EpochBasedRunner):
+    """Deprecated name of EpochBasedRunner."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            'Runner was deprecated, please use EpochBasedRunner instead')
+        super().__init__(*args, **kwargs)

@@ -1,0 +1,5 @@
+onnx
+iopath
+fvcore
+pillow
+torchvision==0.2.2.post2

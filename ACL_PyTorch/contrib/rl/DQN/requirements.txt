@@ -1,0 +1,14 @@
+torch==1.5.0
+gym==0.15.7
+tensorflow==1.15.0
+atari-py==0.2.5
+opencv-python==4.5.3.56
+scikit-image==0.14.2
+tqdm==4.31.1
+pandas==0.24.1
+torchmeta
+torchvision
+
+pathlib==1.0.1
+seaborn==0.9.0
+roboschool==1.0.49

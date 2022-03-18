@@ -1,0 +1,9 @@
+torchsummary==1.5.1
+torchvision==0.2.2
+numpy==1.20.1
+Pillow==6.0.0
+PyYAML==5.1.2
+requests==2.22.0
+tqdm==4.19.9
+sympy==1.4
+decorator==4.4.2

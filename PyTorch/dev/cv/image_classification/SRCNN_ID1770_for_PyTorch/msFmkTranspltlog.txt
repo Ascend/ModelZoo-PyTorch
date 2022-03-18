@@ -1,0 +1,58 @@
+2021-06-30 08:40:28 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2021-06-30 08:40:28 [INFO] Input path: /data/GTN/GPU_Input/SRCNN_ID1770_for_PyTorch.
+2021-06-30 08:40:28 [INFO] Output path: /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft.
+2021-06-30 08:40:28 [INFO] Analysis start...
+2021-06-30 08:40:28 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/LICENSE is not a python script, skip.
+2021-06-30 08:40:28 [INFO] Start analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/models.py.
+2021-06-30 08:40:28 [INFO] OperatorType.INSERT in line 36 ~ 37, import and init statement of torch.npu
+2021-06-30 08:40:28 [INFO] OperatorType.INSERT in line 36 ~ 37, import and init statement of torch.npu
+2021-06-30 08:40:28 [INFO] Analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/models.py complete.
+2021-06-30 08:40:28 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2021-06-30 08:40:28 [INFO] Start analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/datasets.py.
+2021-06-30 08:40:28 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-06-30 08:40:28 [INFO] OperatorType.INSERT in line 52 ~ 53, import and init statement of torch.npu
+2021-06-30 08:40:28 [INFO] Analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/datasets.py complete.
+2021-06-30 08:40:28 [INFO] Start analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/train.py.
+2021-06-30 08:40:28 [WARNING] torch.manual_seed in line 71 ~ 71 is not supported
+2021-06-30 08:40:29 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-06-30 08:40:29 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 73 ~ 73, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 105 ~ 105, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 106 ~ 106, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 129 ~ 129, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 130 ~ 130, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 69 ~ 69, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 69 ~ 69, change module cuda to npu
+2021-06-30 08:40:29 [INFO] Analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/train.py complete.
+2021-06-30 08:40:29 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/README.md is not a python script, skip.
+2021-06-30 08:40:29 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/.gitignore is not a python script, skip.
+2021-06-30 08:40:29 [INFO] Start analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/test.py.
+2021-06-30 08:40:29 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-06-30 08:40:29 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 55 ~ 55, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 80 ~ 80, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-06-30 08:40:29 [INFO] OperatorType.MODIFY in line 53 ~ 53, change module cuda to npu
+2021-06-30 08:40:29 [INFO] Analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/test.py complete.
+2021-06-30 08:40:29 [INFO] Start analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/utils.py.
+2021-06-30 08:40:29 [WARNING] torch.log10 in line 84 ~ 84 is not supported
+2021-06-30 08:40:30 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-06-30 08:40:30 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-06-30 08:40:30 [INFO] Analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/utils.py complete.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2021-06-30 08:40:30 [INFO] Start analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/prepare.py.
+2021-06-30 08:40:30 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-06-30 08:40:30 [INFO] Analysis /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/prepare.py complete.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/butterfly_GT.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/zebra.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/ppt3_bicubic_x3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/zebra_srcnn_x3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/butterfly_GT_srcnn_x3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/ppt3_srcnn_x3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/zebra_bicubic_x3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/ppt3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/data/butterfly_GT_bicubic_x3.bmp is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/test/train_full_1p.sh is not a python script, skip.
+2021-06-30 08:40:30 [INFO] /data/GTN/NPU_Output/SRCNN_ID1770_for_PyTorch_msft/thumbnails/fig1.png is not a python script, skip.
+2021-06-30 08:40:30 [INFO] MsFmkTransplt run success, welcome to the next use.

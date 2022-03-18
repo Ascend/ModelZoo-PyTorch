@@ -1,0 +1,245 @@
+#
+# BSD 3-Clause License
+#
+# Copyright (c) 2017 xxxx
+# All rights reserved.
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ============================================================================
+#
+import torch
+import random
+import numpy as np
+
+from PIL import Image, ImageOps, ImageFilter
+import torch.npu
+import os
+NPU_CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
+
+class Normalize(object):
+    """Normalize a tensor image with mean and standard deviation.
+    Args:
+        mean (tuple): means for each channel.
+        std (tuple): standard deviations for each channel.
+    """
+    def __init__(self, mean=(0., 0., 0.), std=(1., 1., 1.)):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        img = np.array(img).astype(np.float32)
+        if mask is not None:
+            mask = np.array(mask).astype(np.float32)
+        else:
+            mask = 0
+        img /= 255.0
+        img -= self.mean
+        img /= self.std
+
+        return {'image': img,
+                'label': mask}
+
+class ToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __init__(self, ignore_label=255, num_class=21, flag=False):
+        self.ignore_label = ignore_label
+        self.num_class = num_class
+        self.flag = flag
+
+    def __call__(self, sample):
+        # swap color axis because
+        # numpy image: H x W x C
+        # torch image: C X H X W
+        img = sample['image']
+        mask = sample['label']
+        img = np.array(img).astype(np.float32).transpose((2, 0, 1))
+        img = torch.from_numpy(img).float()
+        if mask is not None:
+            if self.flag:
+                mask[mask >= self.num_class] = self.ignore_label
+                mask[mask < 0] = self.ignore_label
+            mask = np.array(mask).astype(np.float32)
+            mask = torch.from_numpy(mask).float()
+        else:
+            mask = 0
+
+
+        return {'image': img,
+                'label': mask}
+
+
+class RandomHorizontalFlip(object):
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        if random.random() < 0.5:
+            img = img.transpose(Image.FLIP_LEFT_RIGHT)
+            mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
+
+        return {'image': img,
+                'label': mask}
+
+
+class RandomRotate(object):
+    def __init__(self, degree):
+        self.degree = degree
+
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        rotate_degree = random.uniform(-1*self.degree, self.degree)
+        img = img.rotate(rotate_degree, Image.BILINEAR)
+        mask = mask.rotate(rotate_degree, Image.NEAREST)
+
+        return {'image': img,
+                'label': mask}
+
+
+class RandomGaussianBlur(object):
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        if random.random() < 0.5:
+            img = img.filter(ImageFilter.GaussianBlur(
+                radius=random.random()))
+
+        return {'image': img,
+                'label': mask}
+
+
+class RandomScaleCrop(object):
+    def __init__(self, base_size, crop_size, fill=0):
+        self.base_size = base_size
+        self.crop_size = crop_size
+        self.fill = fill
+
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        # random scale (short edge)
+        short_size = random.randint(int(self.base_size * 0.5), int(self.base_size * 2.0))
+        w, h = img.size
+        if h > w:
+            ow = short_size
+            oh = int(1.0 * h * ow / w)
+        else:
+            oh = short_size
+            ow = int(1.0 * w * oh / h)
+        img = img.resize((ow, oh), Image.BILINEAR)
+        mask = mask.resize((ow, oh), Image.NEAREST)
+        # pad crop
+        if short_size < self.crop_size:
+            padh = self.crop_size - oh if oh < self.crop_size else 0
+            padw = self.crop_size - ow if ow < self.crop_size else 0
+            img = ImageOps.expand(img, border=(0, 0, padw, padh), fill=0)
+            mask = ImageOps.expand(mask, border=(0, 0, padw, padh), fill=self.fill)
+        # random crop crop_size
+        w, h = img.size
+        x1 = random.randint(0, w - self.crop_size)
+        y1 = random.randint(0, h - self.crop_size)
+        img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
+        mask = mask.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
+
+        return {'image': img,
+                'label': mask}
+
+
+class FixScaleCrop(object):
+    def __init__(self, crop_size):
+        self.crop_size = crop_size
+
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        w, h = img.size
+        if w > h:
+            oh = self.crop_size
+            ow = int(1.0 * w * oh / h)
+        else:
+            ow = self.crop_size
+            oh = int(1.0 * h * ow / w)
+        img = img.resize((ow, oh), Image.BILINEAR)
+        mask = mask.resize((ow, oh), Image.NEAREST)
+        # center crop
+        w, h = img.size
+        x1 = int(round((w - self.crop_size) / 2.))
+        y1 = int(round((h - self.crop_size) / 2.))
+        img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
+        mask = mask.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
+
+        return {'image': img,
+                'label': mask}
+
+class MultiScaleResize(object):
+    def __init__(self, size, scales):
+        ratio = np.random.choice(scales)
+        size = int(size * ratio)
+        self.size = (size, size)  # size: (h, w)
+
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+
+        assert img.size == mask.size
+
+        img = img.resize(self.size, Image.BILINEAR)
+        mask = mask.resize(self.size, Image.NEAREST)
+
+        return {'image': img,
+                'label': mask}
+
+class MultiScaleResizeTest(object):
+    def __init__(self, scales):
+        self.ratio = np.random.choice(scales)
+        # h, w = size
+        # h_ = int(h * ratio)
+        # w_ = int(w * ratio)
+        # size_ = (h_, w_)
+
+    def __call__(self, sample):
+        img = sample['image']
+        mask = sample['label']
+        size = sample['size']
+
+        # assert img.size == mask.size
+
+        h, w = size
+        size_new = (int(h * self.ratio), int(w * self.ratio))
+        img = img.resize(size_new, Image.BILINEAR)
+        if mask is not None:
+            mask = mask.resize(size_new, Image.BILINEAR)
+
+        return {'image': img,
+                'label': mask,
+                'size': size}

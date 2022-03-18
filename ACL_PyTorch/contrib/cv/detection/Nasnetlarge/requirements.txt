@@ -1,0 +1,6 @@
+torch
+torchvision
+munch
+tqdm
+scipy
+onnx-simplefier

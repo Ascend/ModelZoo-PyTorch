@@ -1,0 +1,58 @@
+2021-07-13 11:33:25 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2021-07-13 11:33:25 [INFO] Input path: /data/GTN/GPU_Input/ADACOS_ID1082_for_PyTorch.
+2021-07-13 11:33:25 [INFO] Output path: /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft.
+2021-07-13 11:33:25 [INFO] Analysis start...
+2021-07-13 11:33:25 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/LICENSE is not a python script, skip.
+2021-07-13 11:33:25 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2021-07-13 11:33:25 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/mnist_train.py.
+2021-07-13 11:33:26 [INFO] OperatorType.INSERT in line 54 ~ 55, import and init statement of torch.npu
+2021-07-13 11:33:26 [INFO] OperatorType.INSERT in line 81 ~ 82, import and init statement of torch.npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 94 ~ 94, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 95 ~ 95, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 136 ~ 136, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 137 ~ 137, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 184 ~ 184, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 225 ~ 225, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 240 ~ 240, change function cuda to npu
+2021-07-13 11:33:26 [INFO] OperatorType.MODIFY in line 184 ~ 184, change module cuda to npu
+2021-07-13 11:33:26 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/mnist_train.py complete.
+2021-07-13 11:33:26 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/metrics.py.
+2021-07-13 11:33:27 [INFO] OperatorType.INSERT in line 40 ~ 41, import and init statement of torch.npu
+2021-07-13 11:33:27 [INFO] OperatorType.INSERT in line 74 ~ 75, import and init statement of torch.npu
+2021-07-13 11:33:27 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/metrics.py complete.
+2021-07-13 11:33:27 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot_train.py.
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 59 ~ 60, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 88 ~ 89, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 102 ~ 102, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 103 ~ 103, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 147 ~ 147, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 148 ~ 148, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 193 ~ 193, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 248 ~ 248, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 267 ~ 267, change function cuda to npu
+2021-07-13 11:33:28 [INFO] OperatorType.MODIFY in line 193 ~ 193, change module cuda to npu
+2021-07-13 11:33:28 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot_train.py complete.
+2021-07-13 11:33:28 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/README.md is not a python script, skip.
+2021-07-13 11:33:28 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/utils.py.
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 50 ~ 51, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/utils.py complete.
+2021-07-13 11:33:28 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2021-07-13 11:33:28 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2021-07-13 11:33:28 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/test/train_full_1p.sh is not a python script, skip.
+2021-07-13 11:33:28 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot/archs.py.
+2021-07-13 11:33:28 [WARNING] torch.nn.Dropout2d in line 75 ~ 75 is not supported
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot/archs.py complete.
+2021-07-13 11:33:28 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot/dataset.py.
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 45 ~ 46, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] OperatorType.INSERT in line 45 ~ 46, import and init statement of torch.npu
+2021-07-13 11:33:28 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot/dataset.py complete.
+2021-07-13 11:33:28 [INFO] /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/omniglot/download.sh is not a python script, skip.
+2021-07-13 11:33:28 [INFO] Start analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/mnist/archs.py.
+2021-07-13 11:33:29 [WARNING] torch.nn.Dropout2d in line 82 ~ 82 is not supported
+2021-07-13 11:33:29 [INFO] OperatorType.INSERT in line 42 ~ 43, import and init statement of torch.npu
+2021-07-13 11:33:29 [INFO] OperatorType.INSERT in line 45 ~ 46, import and init statement of torch.npu
+2021-07-13 11:33:29 [INFO] Analysis /data/GTN/NPU_Output/ADACOS_ID1082_for_PyTorch_msft/mnist/archs.py complete.
+2021-07-13 11:33:29 [INFO] MsFmkTransplt run success, welcome to the next use.

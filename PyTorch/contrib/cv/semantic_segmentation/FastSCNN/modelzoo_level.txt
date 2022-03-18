@@ -1,0 +1,3 @@
+FuncStatus:OK
+PerfStatus:OK,but performance on npu less than performance on gpu
+PrecisionStatus:OK

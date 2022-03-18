@@ -1,0 +1,117 @@
+2021-07-07 05:54:26 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2021-07-07 05:54:26 [INFO] Input path: /data/GTN/GPU_Input/AdaFM-Net_ID1101_for_PyTorch.
+2021-07-07 05:54:26 [INFO] Output path: /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft.
+2021-07-07 05:54:26 [INFO] Analysis start...
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/LICENSE is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/:q is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/README.md is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/.gitignore is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/datasets/personal_images/personal_images_noise45/soilder.png is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2021-07-07 05:54:26 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/test/train_full_1p.sh is not a python script, skip.
+2021-07-07 05:54:26 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/train.py.
+2021-07-07 05:54:27 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-07-07 05:54:27 [INFO] OperatorType.INSERT in line 201 ~ 202, import and init statement of torch.npu
+2021-07-07 05:54:27 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/train.py complete.
+2021-07-07 05:54:27 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/test.py.
+2021-07-07 05:54:27 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-07-07 05:54:27 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/test.py complete.
+2021-07-07 05:54:27 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/interpolate.py.
+2021-07-07 05:54:28 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-07-07 05:54:28 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-07-07 05:54:28 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/interpolate.py complete.
+2021-07-07 05:54:28 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/LR_dataset.py.
+2021-07-07 05:54:28 [INFO] OperatorType.INSERT in line 39 ~ 40, import and init statement of torch.npu
+2021-07-07 05:54:28 [INFO] OperatorType.INSERT in line 39 ~ 40, import and init statement of torch.npu
+2021-07-07 05:54:28 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/LR_dataset.py complete.
+2021-07-07 05:54:28 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/README.md is not a python script, skip.
+2021-07-07 05:54:28 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/__init__.py.
+2021-07-07 05:54:28 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-07-07 05:54:28 [INFO] OperatorType.INSERT in line 54 ~ 55, import and init statement of torch.npu
+2021-07-07 05:54:28 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/__init__.py complete.
+2021-07-07 05:54:28 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/util.py.
+2021-07-07 05:54:29 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-07-07 05:54:29 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/util.py complete.
+2021-07-07 05:54:29 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/LRHR_dataset.py.
+2021-07-07 05:54:30 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-07-07 05:54:30 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-07-07 05:54:30 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/data/LRHR_dataset.py complete.
+2021-07-07 05:54:30 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/README.md is not a python script, skip.
+2021-07-07 05:54:30 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/__init__.py.
+2021-07-07 05:54:30 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/__init__.py complete.
+2021-07-07 05:54:30 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/util.py.
+2021-07-07 05:54:30 [WARNING] torch.manual_seed in line 79 ~ 79 is not supported
+2021-07-07 05:54:30 [WARNING] torch.cuda.manual_seed_all in line 80 ~ 80 is not supported
+2021-07-07 05:54:30 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-07-07 05:54:30 [INFO] OperatorType.INSERT in line 52 ~ 53, import and init statement of torch.npu
+2021-07-07 05:54:30 [INFO] OperatorType.MODIFY in line 80 ~ 80, change module cuda to npu
+2021-07-07 05:54:30 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/util.py complete.
+2021-07-07 05:54:30 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/progress_bar.py.
+2021-07-07 05:54:31 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-07-07 05:54:31 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/utils/progress_bar.py complete.
+2021-07-07 05:54:31 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/net_interp.py.
+2021-07-07 05:54:31 [INFO] OperatorType.INSERT in line 35 ~ 36, import and init statement of torch.npu
+2021-07-07 05:54:31 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-07-07 05:54:31 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/net_interp.py complete.
+2021-07-07 05:54:31 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/README.md is not a python script, skip.
+2021-07-07 05:54:31 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/generate_mod_LR_bic.m is not a python script, skip.
+2021-07-07 05:54:31 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/generate_LR_JPEG.m is not a python script, skip.
+2021-07-07 05:54:31 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/create_lmdb.py.
+2021-07-07 05:54:31 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-07-07 05:54:31 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/create_lmdb.py complete.
+2021-07-07 05:54:31 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/extract_subimgs_single.py.
+2021-07-07 05:54:31 [INFO] OperatorType.INSERT in line 43 ~ 44, import and init statement of torch.npu
+2021-07-07 05:54:31 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/extract_subimgs_single.py complete.
+2021-07-07 05:54:31 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/generate_LR_noise.m is not a python script, skip.
+2021-07-07 05:54:31 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/color2gray.py.
+2021-07-07 05:54:32 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-07-07 05:54:32 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/scripts/color2gray.py complete.
+2021-07-07 05:54:32 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/README.md is not a python script, skip.
+2021-07-07 05:54:32 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/__init__.py.
+2021-07-07 05:54:32 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/__init__.py complete.
+2021-07-07 05:54:32 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/options.py.
+2021-07-07 05:54:32 [INFO] OperatorType.INSERT in line 40 ~ 41, import and init statement of torch.npu
+2021-07-07 05:54:32 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/options.py complete.
+2021-07-07 05:54:32 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/train/train_adafm.json is not a python script, skip.
+2021-07-07 05:54:32 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/train/train_basic.json is not a python script, skip.
+2021-07-07 05:54:32 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/options/test/test.json is not a python script, skip.
+2021-07-07 05:54:32 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/SR_model.py.
+2021-07-07 05:54:33 [INFO] OperatorType.INSERT in line 42 ~ 43, import and init statement of torch.npu
+2021-07-07 05:54:33 [INFO] OperatorType.INSERT in line 45 ~ 46, import and init statement of torch.npu
+2021-07-07 05:54:33 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-07-07 05:54:33 [INFO] OperatorType.MODIFY in line 61 ~ 61, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-07-07 05:54:33 [INFO] OperatorType.MODIFY in line 63 ~ 63, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-07-07 05:54:33 [INFO] OperatorType.MODIFY in line 101 ~ 101, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-07-07 05:54:33 [INFO] OperatorType.MODIFY in line 103 ~ 103, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-07-07 05:54:33 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/SR_model.py complete.
+2021-07-07 05:54:33 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/__init__.py.
+2021-07-07 05:54:33 [INFO] OperatorType.INSERT in line 34 ~ 35, import and init statement of torch.npu
+2021-07-07 05:54:33 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/__init__.py complete.
+2021-07-07 05:54:33 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/base_model.py.
+2021-07-07 05:54:33 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-07-07 05:54:33 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-07-07 05:54:33 [INFO] OperatorType.MODIFY in line 42 ~ 42, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-07-07 05:54:33 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/base_model.py complete.
+2021-07-07 05:54:33 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/networks.py.
+2021-07-07 05:54:34 [INFO] OperatorType.INSERT in line 40 ~ 41, import and init statement of torch.npu
+2021-07-07 05:54:34 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-07-07 05:54:34 [INFO] OperatorType.MODIFY in line 130 ~ 130, change module cuda to npu
+2021-07-07 05:54:34 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/networks.py complete.
+2021-07-07 05:54:34 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/modules/architecture.py.
+2021-07-07 05:54:34 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-07-07 05:54:34 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-07-07 05:54:34 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/modules/architecture.py complete.
+2021-07-07 05:54:34 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/modules/__init__.py.
+2021-07-07 05:54:34 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/modules/__init__.py complete.
+2021-07-07 05:54:34 [INFO] Start analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/modules/block.py.
+2021-07-07 05:54:34 [WARNING] torch.nn.PReLU in line 68 ~ 68 is not supported
+2021-07-07 05:54:34 [WARNING] torch.nn.ReflectionPad2d in line 81 ~ 81 is not supported
+2021-07-07 05:54:34 [WARNING] torch.nn.ReplicationPad2d in line 83 ~ 83 is not supported
+2021-07-07 05:54:35 [INFO] OperatorType.INSERT in line 42 ~ 43, import and init statement of torch.npu
+2021-07-07 05:54:35 [INFO] OperatorType.INSERT in line 57 ~ 58, import and init statement of torch.npu
+2021-07-07 05:54:35 [INFO] Analysis /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/codes/models/modules/block.py complete.
+2021-07-07 05:54:35 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/figures/framework.PNG is not a python script, skip.
+2021-07-07 05:54:35 [INFO] /data/GTN/NPU_Output/AdaFM-Net_ID1101_for_PyTorch_msft/figures/modulation_testing.PNG is not a python script, skip.
+2021-07-07 05:54:35 [INFO] MsFmkTransplt run success, welcome to the next use.

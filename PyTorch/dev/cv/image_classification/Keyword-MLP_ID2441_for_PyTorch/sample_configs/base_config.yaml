@@ -1,0 +1,81 @@
+######################
+# sample config file
+######################
+
+data_root: ./data/
+train_list_file: ./data/training_list.txt
+val_list_file: ./data/validation_list.txt
+test_list_file: ./data/testing_list.txt
+label_map: ./data/label_map.json
+
+exp:
+    wandb: False
+    wandb_api_key:
+    proj_name: torch-kw-mlp
+    exp_dir: ./runs
+    exp_name: kw-mlp-0.1.0
+    device: auto
+    log_freq: 20  # steps
+    log_to_file: False
+    log_to_stdout: True
+    val_freq: 1   # epochs
+    n_workers: 128
+    pin_memory: True
+    cache: 2      # 0 -> no cache | 1 -> cache wavs | 2 -> cache specs; stops wav augments
+    
+
+hparams:
+    restore_ckpt:
+    seed: 0
+    batch_size: 256
+    start_epoch: 0
+    n_epochs: 140
+    l_smooth: 0.1
+
+    audio:
+        sr: 16000
+        n_mels: 40
+        n_fft: 480
+        win_length: 480
+        hop_length: 160
+        center: False
+    
+    model:
+        type: kw-mlp 
+        input_res: [40, 98]
+        patch_res: [40, 1]
+        num_classes: 35
+        channels: 1
+        dim: 64
+        depth: 12
+        pre_norm: False
+        prob_survival: 0.9
+
+    optimizer:
+        opt_type: adamw
+        opt_kwargs:
+          lr: 0.001
+          weight_decay: 0.1
+    
+    scheduler:
+        n_warmup: 10
+        max_epochs: 140
+        scheduler_type: cosine_annealing
+
+    augment:
+        # resample:
+            # r_min: 0.85
+            # r_max: 1.15
+        
+        # time_shift:
+            # s_min: -0.1
+            # s_max: 0.1
+
+        # bg_noise:
+            # bg_folder: ./data/bg_folder/
+
+        spec_aug:
+            n_time_masks: 2
+            time_mask_width: 25
+            n_freq_masks: 2
+            freq_mask_width: 7

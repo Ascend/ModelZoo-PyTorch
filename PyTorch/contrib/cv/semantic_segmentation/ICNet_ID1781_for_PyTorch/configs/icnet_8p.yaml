@@ -1,0 +1,34 @@
+### 1.Model
+model:
+  name: "icnet"
+  backbone: "resnet50"
+  base_size: 1024    # during augentation, shorter size will be resized between [base_size*0.5, base_size*2.0]
+  crop_size: 960     # end of augmentation, crop to trainning
+
+### 2.Optimizer
+optimizer:
+  init_lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+
+### 3.Trainning 
+train:
+  specific_npu_num: "0,1,2,3,4,5,6,7"     # for example: "0", "1" or "0, 1"
+  train_batch_size: 16      # adjust according to gpu resources
+  valid_batch_size: 16
+  cityscapes_root: "/home/dataset/cityscapes"
+  epochs: 200
+  log_iter: 10        # print log every log-iter 
+  val_epoch: 5        # run validation every val-epoch
+  ckpt_dir: "./ckpt/" # ckpt and trainning log will be saved here
+
+### 4.Test
+test:
+  ckpt_path: "./ckpt/icnet_resnet50_197_0.710_best_model.pth" # set the pretrained model path correctly
+
+### 5.apex
+apex:
+  is_distributed: 1
+  world_size: 8
+  dist_backend: 'hccl'
+  dist_url: 'tcp://127.0.0.1:41111'

@@ -1,0 +1,6 @@
+onnx==1.7.0
+pytorch==1.5.0
+TorchVision==0.7.0
+numpy==1.18.5
+pillow==7.2.0
+

@@ -1,0 +1,31 @@
+From 42ffcab064326570979099fb36e7cefc8b45c492 Mon Sep 17 00:00:00 2001
+From: zx <2597798649@qq.com>
+Date: Mon, 15 Nov 2021 15:57:49 +0800
+Subject: [PATCH] c51-infer update
+
+---
+ deep_rl/component/replay.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/deep_rl/component/replay.py b/deep_rl/component/replay.py
+index d688a63..de98459 100644
+--- a/deep_rl/component/replay.py
++++ b/deep_rl/component/replay.py
+@@ -202,12 +202,12 @@ class ReplayWrapper(mp.Process):
+     EXIT = 2
+     UPDATE_PRIORITIES = 3
+ 
+-    def __init__(self, replay_cls, replay_kwargs, async=True):
++    def __init__(self, replay_cls, replay_kwargs, async_=True):
+         mp.Process.__init__(self)
+         self.replay_kwargs = replay_kwargs
+         self.replay_cls = replay_cls
+         self.cache_len = 2
+-        if async:
++        if async_:
+             self.pipe, self.worker_pipe = mp.Pipe()
+             self.start()
+         else:
+-- 
+2.33.1.windows.1
+

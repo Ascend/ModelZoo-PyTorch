@@ -1,0 +1,9 @@
+fvcore==0.1.5.post20210825
+iopath==0.1.9
+opencv==4.5.3.56
+psutil==5.8.0
+scikit-learn==0.24.2
+sklearn==0.0
+tensorboard==2.6.0
+simplejson==3.17.5
+

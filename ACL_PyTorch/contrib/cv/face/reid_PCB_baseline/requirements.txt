@@ -1,0 +1,9 @@
+torch == 1.8.1
+torchvision == 0.2.1
+numpy == 1.19.2
+opencv-python == 4.5.2.54
+onnx == 1.9.0
+skl2onnx == 1.8.0
+scikit-learn
+h5py
+onnx-simplifier

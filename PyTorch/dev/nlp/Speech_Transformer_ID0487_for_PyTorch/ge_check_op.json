@@ -1,0 +1,39 @@
+{
+    "graph_id": 122,
+    "op": [
+        {
+            "error_type": "infer_shape_error",
+            "input0": {
+                "data_type": "DT_BOOL",
+                "layout": "NCHW",
+                "shape": [
+                    32,
+                    30,
+                    30
+                ]
+            },
+            "input1": {
+                "data_type": "DT_UINT8",
+                "layout": "NCHW",
+                "shape": [
+                    32,
+                    30,
+                    30
+                ]
+            },
+            "name": "Add",
+            "output0": {
+                "data_type": "DT_BOOL",
+                "layout": "NCHW",
+                "shape": [
+                    32,
+                    30,
+                    30
+                ]
+            },
+            "reason": "InferShapeFailed!",
+            "type": "Add"
+        }
+    ],
+    "session_id": 122
+}

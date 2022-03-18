@@ -1,0 +1,10 @@
+Cython==0.29.23
+numpy==1.20.2
+opencv-python==4.5.1.48
+protobuf==3.15.8
+pyramid==2.0
+pyramid-mailer==0.15.1
+pyrsistent==0.17.3
+pytest==6.2.4
+QtPy==1.9.0
+tqdm==4.61.0

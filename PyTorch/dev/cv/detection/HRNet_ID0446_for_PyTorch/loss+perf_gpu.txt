@@ -1,0 +1,6 @@
+Epoch: [0][0/569]       Time 437.090s (437.090s)        Speed 0.0 samples/s     Data 0.348s (0.348s)    Loss 6.97378 (6.97378)  Accuracy@1 0.000 (0.000)        Accuracy@5 0.000 (0.000)
+Test: Time 30.452       Loss 1.7528     Error@1 63.143  Error@5 14.571  Accuracy@1 36.857       Accuracy@5 85.429
+=> saving checkpoint to output/imagenet/cls_hrnet_w18_sgd_lr5e-2_wd1e-4_bs32_x100
+Epoch: [1][0/569]       Time 9.693s (9.693s)    Speed 1.7 samples/s     Data 0.348s (0.348s)    Loss 1.99938 (1.99938)  Accuracy@1 31.250 (31.250)      Accuracy@5 68.750 (68.750)
+Test: Time 0.645        Loss 1.7753     Error@1 64.857  Error@5 8.857   Accuracy@1 35.143       Accuracy@5 91.143
+=> saving checkpoint to output/imagenet/cls_hrnet_w18_sgd_lr5e-2_wd1e-4_bs32_x100

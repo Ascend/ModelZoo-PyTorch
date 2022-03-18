@@ -1,0 +1,12 @@
+python3.7.5
+
+pytorch >= 1.5.0
+torchvision == 0.6.0
+onnx == 1.7.0
+
+onnxruntime
+onnxoptimizer
+
+numpy
+Pillow
+opencv-python

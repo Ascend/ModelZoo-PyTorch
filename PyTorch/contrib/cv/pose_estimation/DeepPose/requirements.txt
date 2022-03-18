@@ -1,0 +1,15 @@
+numpy
+torch
+torchvision
+apex
+tqdm
+PyYaml
+addict
+yapf
+opencv-python
+json_tricks
+xtcocotools
+scipy
+Cython
+munkres
+matplotlib

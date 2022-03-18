@@ -1,0 +1,26 @@
+apex                 0.1+ascend.20210825
+backcall
+certifi
+Cython
+easydict
+ipython
+matplotlib-inline
+mpmath
+numpy
+opencv-python
+parso
+pexpect
+pickleshare
+Pillow
+scipy
+six
+sympy
+te
+tensor-fused-plugin 0.1+ascend
+topi                0.4.0
+torch               1.5.0+ascend.post3.20210825
+torchvision         0.6.0a0+b68adcf
+tqdm
+traitlets
+urllib3
+wcwidth

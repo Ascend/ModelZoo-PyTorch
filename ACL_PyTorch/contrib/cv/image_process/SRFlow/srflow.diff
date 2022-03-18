@@ -1,0 +1,134 @@
+From 846000ad8aecd738d40e26324b31e913938c2b69 Mon Sep 17 00:00:00 2001
+From: zhixinaa <1696730989@qq.com>
+Date: Thu, 5 Aug 2021 16:42:11 +0800
+Subject: [PATCH] =?UTF-8?q?=E5=AF=BC=E5=87=BAonnx=E4=BF=AE=E6=94=B9?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ code/confs/SRFlow_DF2K_8X.yml         |  2 +-
+ code/models/SRFlow_model.py           |  8 ++++----
+ code/models/modules/Permutations.py   |  6 +++---
+ code/models/modules/SRFlowNet_arch.py |  4 +++-
+ code/models/modules/flow.py           |  6 +++---
+ code/models/modules/thops.py          |  4 ++++
+ 7 files changed, 36 insertions(+), 13 deletions(-)
+
+diff --git a/code/confs/SRFlow_DF2K_8X.yml b/code/confs/SRFlow_DF2K_8X.yml
+index 4b0e4f2..702a08c 100644
+--- a/code/confs/SRFlow_DF2K_8X.yml
++++ b/code/confs/SRFlow_DF2K_8X.yml
+@@ -78,7 +78,7 @@ network_G:
+ 
+ #### path
+ path:
+-  pretrain_model_G: ../pretrained_models/RRDB_DF2K_8X.pth
++#  pretrain_model_G: ../pretrained_models/RRDB_DF2K_8X.pth
+   strict_load: true
+   resume_state: auto
+ 
+diff --git a/code/models/SRFlow_model.py b/code/models/SRFlow_model.py
+index 8c4a7c9..9e2e8b7 100644
+--- a/code/models/SRFlow_model.py
++++ b/code/models/SRFlow_model.py
+@@ -47,10 +47,10 @@ class SRFlowModel(BaseModel):
+ 
+         # define network and load pretrained models
+         self.netG = networks.define_Flow(opt, step).to(self.device)
+-        if opt['dist']:
+-            self.netG = DistributedDataParallel(self.netG, device_ids=[torch.cuda.current_device()])
+-        else:
+-            self.netG = DataParallel(self.netG)
++        # if opt['dist']:
++        #     self.netG = DistributedDataParallel(self.netG, device_ids=[torch.cuda.current_device()])
++        # else:
++        #     self.netG = DataParallel(self.netG)
+         # print network
+         self.print_network()
+ 
+diff --git a/code/models/modules/Permutations.py b/code/models/modules/Permutations.py
+index 78c8b72..39cf52a 100644
+--- a/code/models/modules/Permutations.py
++++ b/code/models/modules/Permutations.py
+@@ -34,13 +34,13 @@ class InvertibleConv1x1(nn.Module):
+     def get_weight(self, input, reverse):
+         w_shape = self.w_shape
+         pixels = thops.pixels(input)
+-        dlogdet = torch.slogdet(self.weight)[1] * pixels
++        dlogdet = torch.log(abs(torch.det(self.weight))) * pixels
+         if not reverse:
+             weight = self.weight.view(w_shape[0], w_shape[1], 1, 1)
+         else:
+-            weight = torch.inverse(self.weight.double()).float() \
+-                .view(w_shape[0], w_shape[1], 1, 1)
++            weight = self.weight.float().view(w_shape[0], w_shape[1], 1, 1)
+         return weight, dlogdet
++
+     def forward(self, input, logdet=None, reverse=False):
+         """
+         log-det = log|abs(|W|)| * pixels
+diff --git a/code/models/modules/SRFlowNet_arch.py b/code/models/modules/SRFlowNet_arch.py
+index feb722f..fcd0f6b 100644
+--- a/code/models/modules/SRFlowNet_arch.py
++++ b/code/models/modules/SRFlowNet_arch.py
+@@ -57,7 +57,7 @@ class SRFlowNet(nn.Module):
+             return True
+         return False
+ 
+-    def forward(self, gt=None, lr=None, z=None, eps_std=None, reverse=False, epses=None, reverse_with_grad=False,
++    def forward(self, lr=None, gt=None, z=None, eps_std=0.9, reverse=True, epses=None, reverse_with_grad=False,
+                 lr_enc=None,
+                 add_gt_noise=False, step=None, y_label=None):
+         if not reverse:
+@@ -143,6 +143,8 @@ class SRFlowNet(nn.Module):
+         return -score_real
+ 
+     def reverse_flow(self, lr, z, y_onehot, eps_std, epses=None, lr_enc=None, add_gt_noise=True):
++        if z == None:
++            z = thops.normal(mean=0, std=eps_std, size=(lr.size(0), 192, lr.size(2)//2, lr.size(3)//2)).to(lr.device)
+         logdet = torch.zeros_like(lr[:, 0, 0, 0])
+         pixels = thops.pixels(lr) * self.opt['scale'] ** 2
+ 
+diff --git a/code/models/modules/flow.py b/code/models/modules/flow.py
+index eb6ec96..4bcee94 100644
+--- a/code/models/modules/flow.py
++++ b/code/models/modules/flow.py
+@@ -51,7 +51,7 @@ class Conv2d(nn.Conv2d):
+         super().__init__(in_channels, out_channels, kernel_size, stride,
+                          padding, bias=(not do_actnorm))
+         # init weight with std
+-        self.weight.data.normal_(mean=0.0, std=weight_std)
++        # self.weight.data.normal_(mean=0.0, std=weight_std)
+         if not do_actnorm:
+             self.bias.data.zero_()
+         else:
+@@ -114,8 +114,8 @@ class GaussianDiag:
+     def sample_eps(shape, eps_std, seed=None):
+         if seed is not None:
+             torch.manual_seed(seed)
+-        eps = torch.normal(mean=torch.zeros(shape),
+-                           std=torch.ones(shape) * eps_std)
++        eps = thops.normal(mean=0.,
++                           std=1. * eps_std,size =shape)
+         return eps
+ 
+ 
+diff --git a/code/models/modules/thops.py b/code/models/modules/thops.py
+index 5481cca..a110fa3 100644
+--- a/code/models/modules/thops.py
++++ b/code/models/modules/thops.py
+@@ -15,6 +15,10 @@
+ # This file contains content licensed by https://github.com/chaiyujin/glow-pytorch/blob/master/LICENSE
+ 
+ import torch
++import numpy as np
++def normal(size=None,mean=0.0, std=1):
++    a = np.random.normal(loc=mean, scale=std, size=size).astype(np.float32)
++    return torch.from_numpy(a)
+ 
+ 
+ def sum(tensor, dim=None, keepdim=False):
+-- 
+2.29.2.windows.2
+

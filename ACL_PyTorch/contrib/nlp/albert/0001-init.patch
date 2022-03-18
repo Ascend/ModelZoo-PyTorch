@@ -1,0 +1,3049 @@
+From c0c8e8ae10ec3de9b3aeb2c1861439c408804b97 Mon Sep 17 00:00:00 2001
+From: suda-liuyj-an <1223319037@qq.com>
+Date: Thu, 26 Aug 2021 16:59:51 +0800
+Subject: [PATCH] init
+
+---
+ callback/lr_scheduler.py        |  47 ++-
+ callback/modelcheckpoint.py     |  20 +-
+ callback/progressbar.py         |   7 +-
+ callback/trainingmonitor.py     |   6 +-
+ metrics/custom_metrics.py       |  69 ++--
+ metrics/glue_compute_metrics.py |   4 +
+ model/configuration_albert.py   |   5 +-
+ model/configuration_bert.py     |   5 +-
+ model/configuration_utils.py    |   9 +-
+ model/file_utils.py             |  11 +-
+ model/modeling_albert.py        |  97 +++--
+ model/modeling_albert_bright.py |  20 +-
+ model/modeling_bert.py          |  60 ++--
+ model/modeling_utils.py         |  67 ++--
+ model/tokenization_albert.py    | 603 ++++++++++++++++----------------
+ model/tokenization_bert.py      |   1 +
+ model/tokenization_utils.py     |  76 ++--
+ processors/__init__.py          |   2 +-
+ processors/glue.py              |  65 +++-
+ processors/utils.py             |   4 +-
+ tools/common.py                 |  10 +-
+ tools/fps_counter.py            |  99 ++++++
+ 22 files changed, 793 insertions(+), 494 deletions(-)
+ create mode 100644 tools/fps_counter.py
+
+diff --git a/callback/lr_scheduler.py b/callback/lr_scheduler.py
+index 57543c3..555ffd1 100644
+--- a/callback/lr_scheduler.py
++++ b/callback/lr_scheduler.py
+@@ -12,6 +12,7 @@ __all__ = ['CustomDecayLR',
+            'CosineLRWithRestarts',
+            ]
+ 
++
+ def get_constant_schedule(optimizer, last_epoch=-1):
+     """ Create a schedule with a constant learning rate.
+     """
+@@ -22,6 +23,7 @@ def get_constant_schedule_with_warmup(optimizer, num_warmup_steps, last_epoch=-1
+     """ Create a schedule with a constant learning rate preceded by a warmup
+     period during which the learning rate increases linearly between 0 and 1.
+     """
++
+     def lr_lambda(current_step):
+         if current_step < num_warmup_steps:
+             return float(current_step) / float(max(1.0, num_warmup_steps))
+@@ -34,6 +36,7 @@ def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_st
+     """ Create a schedule with a learning rate that decreases linearly after
+     linearly increasing during a warmup period.
+     """
++
+     def lr_lambda(current_step):
+         if current_step < num_warmup_steps:
+             return float(current_step) / float(max(1, num_warmup_steps))
+@@ -47,6 +50,7 @@ def get_cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_st
+     values of the cosine function between 0 and `pi * cycles` after a warmup
+     period during which it increases linearly between 0 and 1.
+     """
++
+     def lr_lambda(current_step):
+         if current_step < num_warmup_steps:
+             return float(current_step) / float(max(1, num_warmup_steps))
+@@ -56,11 +60,13 @@ def get_cosine_schedule_with_warmup(optimizer, num_warmup_steps, num_training_st
+     return LambdaLR(optimizer, lr_lambda, last_epoch)
+ 
+ 
+-def get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles=1., last_epoch=-1):
++def get_cosine_with_hard_restarts_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, num_cycles=1.,
++                                                       last_epoch=-1):
+     """ Create a schedule with a learning rate that decreases following the
+     values of the cosine function with several hard restarts, after a warmup
+     period during which it increases linearly between 0 and 1.
+     """
++
+     def lr_lambda(current_step):
+         if current_step < num_warmup_steps:
+             return float(current_step) / float(max(1, num_warmup_steps))
+@@ -86,11 +92,12 @@ class CustomDecayLR(object):
+         >>>         optimizer.step()
+         >>>     validate(...)
+     '''
+-    def __init__(self,optimizer,lr):
++
++    def __init__(self, optimizer, lr):
+         self.optimizer = optimizer
+         self.lr = lr
+ 
+-    def epoch_step(self,epoch):
++    def epoch_step(self, epoch):
+         lr = self.lr
+         if epoch > 12:
+             lr = lr / 1000
+@@ -101,6 +108,7 @@ class CustomDecayLR(object):
+         for param_group in self.optimizer.param_groups:
+             param_group['lr'] = lr
+ 
++
+ class BertLR(object):
+     '''
+     Bert模型内定的学习率变化机制
+@@ -116,23 +124,25 @@ class BertLR(object):
+         >>>         scheduler.batch_step()
+         >>>     validate(...)
+     '''
+-    def __init__(self,optimizer,learning_rate,t_total,warmup):
++
++    def __init__(self, optimizer, learning_rate, t_total, warmup):
+         self.learning_rate = learning_rate
+         self.optimizer = optimizer
+         self.t_total = t_total
+         self.warmup = warmup
+ 
+     # 线性预热方式
+-    def warmup_linear(self,x, warmup=0.002):
++    def warmup_linear(self, x, warmup=0.002):
+         if x < warmup:
+             return x / warmup
+         return 1.0 - x
+ 
+-    def batch_step(self,training_step):
+-        lr_this_step = self.learning_rate * self.warmup_linear(training_step / self.t_total,self.warmup)
++    def batch_step(self, training_step):
++        lr_this_step = self.learning_rate * self.warmup_linear(training_step / self.t_total, self.warmup)
+         for param_group in self.optimizer.param_groups:
+             param_group['lr'] = lr_this_step
+ 
++
+ class CyclicLR(object):
+     '''
+     Cyclical learning rates for training neural networks
+@@ -148,6 +158,7 @@ class CyclicLR(object):
+         >>>         scheduler.batch_step()
+         >>>     validate(...)
+     '''
++
+     def __init__(self, optimizer, base_lr=1e-3, max_lr=6e-3,
+                  step_size=2000, mode='triangular', gamma=1.,
+                  scale_fn=None, scale_mode='cycle', last_batch_iteration=-1):
+@@ -207,7 +218,7 @@ class CyclicLR(object):
+         return 1 / (2. ** (x - 1))
+ 
+     def _exp_range_scale_fn(self, x):
+-        return self.gamma**(x)
++        return self.gamma ** (x)
+ 
+     def get_lr(self):
+         step_size = float(self.step_size)
+@@ -232,6 +243,7 @@ class CyclicLR(object):
+         for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
+             param_group['lr'] = lr
+ 
++
+ class ReduceLROnPlateau(object):
+     """Reduce learning rate when a metric has stopped improving.
+     Models often benefit from reducing the learning rate by a factor
+@@ -267,7 +279,7 @@ class ReduceLROnPlateau(object):
+     """
+ 
+     def __init__(self, optimizer, mode='min', factor=0.1, patience=10,
+-                 verbose=0, epsilon=1e-4, cooldown=0, min_lr=0,eps=1e-8):
++                 verbose=0, epsilon=1e-4, cooldown=0, min_lr=0, eps=1e-8):
+ 
+         super(ReduceLROnPlateau, self).__init__()
+         assert isinstance(optimizer, Optimizer)
+@@ -335,6 +347,7 @@ class ReduceLROnPlateau(object):
+     def in_cooldown(self):
+         return self.cooldown_counter > 0
+ 
++
+ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
+     """Reduce learning rate and weight decay when a metric has stopped
+     improving. Models often benefit from reducing the learning rate by
+@@ -356,6 +369,7 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
+         >>>     # Note that step should be called after validate()
+         >>>     scheduler.epoch_step(val_loss)
+     """
++
+     def epoch_step(self, metrics, epoch):
+         current = metrics
+         if current is None:
+@@ -384,11 +398,13 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
+                             if old_weight_decay > new_weight_decay + self.eps:
+                                 param_group['weight_decay'] = new_weight_decay
+                                 if self.verbose:
+-                                    print('\nEpoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}.')
++                                    print(
++                                        '\nEpoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}.')
+                     self.cooldown_counter = self.cooldown
+                     self.wait = 0
+                 self.wait += 1
+ 
++
+ class CosineLRWithRestarts(object):
+     """Decays learning rate with cosine annealing, normalizes weight decay
+     hyperparameter value, implements restarts.
+@@ -501,7 +517,7 @@ class CosineLRWithRestarts(object):
+                                "training loop and while initializing "
+                                "scheduler should be the same.")
+ 
+-        for param_group, (lr, weight_decay) in zip(self.optimizer.param_groups,self.get_lr(t_cur)):
++        for param_group, (lr, weight_decay) in zip(self.optimizer.param_groups, self.get_lr(t_cur)):
+             param_group['lr'] = lr
+             param_group['weight_decay'] = weight_decay
+ 
+@@ -522,18 +538,19 @@ class NoamLR(object):
+         >>>         scheduler.batch_step(global_step)
+         >>>     validate(...)
+     '''
+-    def __init__(self,d_model,factor,warm_up,optimizer):
++
++    def __init__(self, d_model, factor, warm_up, optimizer):
+         self.optimizer = optimizer
+         self.warm_up = warm_up
+         self.factor = factor
+         self.d_model = d_model
+         self._lr = 0
+ 
+-    def get_lr(self,step):
+-        lr = self.factor * (self.d_model ** (-0.5) * min(step ** (-0.5),step * self.warm_up ** (-1.5)))
++    def get_lr(self, step):
++        lr = self.factor * (self.d_model ** (-0.5) * min(step ** (-0.5), step * self.warm_up ** (-1.5)))
+         return lr
+ 
+-    def batch_step(self,step):
++    def batch_step(self, step):
+         '''
+         update parameters and rate
+         :return:
+diff --git a/callback/modelcheckpoint.py b/callback/modelcheckpoint.py
+index b7f4ffa..20b0663 100644
+--- a/callback/modelcheckpoint.py
++++ b/callback/modelcheckpoint.py
+@@ -3,19 +3,21 @@ import numpy as np
+ import torch
+ from ..tools.common import logger
+ 
++
+ class ModelCheckpoint(object):
+     '''
+     模型保存，两种模式：
+     1. 直接保存最好模型
+     2. 按照epoch频率保存模型
+     '''
++
+     def __init__(self, checkpoint_dir,
+                  monitor,
+-                 arch,mode='min',
++                 arch, mode='min',
+                  epoch_freq=1,
+-                 best = None,
+-                 save_best_only = True):
+-        if isinstance(checkpoint_dir,Path):
++                 best=None,
++                 save_best_only=True):
++        if isinstance(checkpoint_dir, Path):
+             checkpoint_dir = checkpoint_dir
+         else:
+             checkpoint_dir = Path(checkpoint_dir)
+@@ -36,14 +38,14 @@ class ModelCheckpoint(object):
+             self.monitor_op = np.greater
+             self.best = -np.Inf
+         # 这里主要重新加载模型时候
+-        #对best重新赋值
++        # 对best重新赋值
+         if best:
+             self.best = best
+ 
+         if save_best_only:
+             self.model_name = f"BEST_{arch}_MODEL.pth"
+ 
+-    def epoch_step(self, state,current):
++    def epoch_step(self, state, current):
+         '''
+         正常模型
+         :param state: 需要保存的信息
+@@ -56,7 +58,7 @@ class ModelCheckpoint(object):
+                 logger.info(f"\nEpoch {state['epoch']}: {self.monitor} improved from {self.best:.5f} to {current:.5f}")
+                 self.best = current
+                 state['best'] = self.best
+-                best_path = self.base_path/ self.model_name
++                best_path = self.base_path / self.model_name
+                 torch.save(state, str(best_path))
+         # 每隔几个epoch保存下模型
+         else:
+@@ -65,7 +67,7 @@ class ModelCheckpoint(object):
+                 logger.info(f"\nEpoch {state['epoch']}: save model to disk.")
+                 torch.save(state, str(filename))
+ 
+-    def bert_epoch_step(self, state,current):
++    def bert_epoch_step(self, state, current):
+         '''
+         适合bert类型模型，适合pytorch_transformer模块
+         :param state:
+@@ -83,7 +85,7 @@ class ModelCheckpoint(object):
+                 with open(str(output_config_file), 'w') as f:
+                     f.write(model_to_save.config.to_json_string())
+                 state.pop("model")
+-                torch.save(state,self.base_path / 'checkpoint_info.bin')
++                torch.save(state, self.base_path / 'checkpoint_info.bin')
+         else:
+             if state['epoch'] % self.epoch_freq == 0:
+                 save_path = self.base_path / f"checkpoint-epoch-{state['epoch']}"
+diff --git a/callback/progressbar.py b/callback/progressbar.py
+index 5e43b88..c9d9613 100644
+--- a/callback/progressbar.py
++++ b/callback/progressbar.py
+@@ -1,4 +1,6 @@
+ import time
++
++
+ class ProgressBar(object):
+     '''
+     custom progress bar
+@@ -7,7 +9,8 @@ class ProgressBar(object):
+         >>> step = 2
+         >>> pbar(step=step)
+     '''
+-    def __init__(self, n_total,width=30,desc = 'Training'):
++
++    def __init__(self, n_total, width=30, desc='Training'):
+         self.width = width
+         self.n_total = n_total
+         self.start_time = time.time()
+@@ -23,7 +26,7 @@ class ProgressBar(object):
+         prog_width = int(self.width * recv_per)
+         if prog_width > 0:
+             bar += '=' * (prog_width - 1)
+-            if current< self.n_total:
++            if current < self.n_total:
+                 bar += ">"
+             else:
+                 bar += '='
+diff --git a/callback/trainingmonitor.py b/callback/trainingmonitor.py
+index 6aea128..cb78168 100644
+--- a/callback/trainingmonitor.py
++++ b/callback/trainingmonitor.py
+@@ -4,8 +4,10 @@ from pathlib import Path
+ import matplotlib.pyplot as plt
+ from ..tools.common import load_json
+ from ..tools.common import save_json
++
+ plt.switch_backend('agg')
+ 
++
+ class TrainingMonitor():
+     def __init__(self, file_dir, arch, add_test=False):
+         '''
+@@ -23,7 +25,7 @@ class TrainingMonitor():
+         self.add_test = add_test
+         self.json_path = file_dir / (arch + "_training_monitor.json")
+ 
+-    def reset(self,start_at):
++    def reset(self, start_at):
+         if start_at > 0:
+             if self.json_path is not None:
+                 if self.json_path.exists():
+@@ -42,7 +44,7 @@ class TrainingMonitor():
+ 
+         # 写入文件
+         if self.json_path is not None:
+-            save_json(data = self.H,file_path=self.json_path)
++            save_json(data=self.H, file_path=self.json_path)
+ 
+         # 保存train图像
+         if len(self.H["loss"]) == 1:
+diff --git a/metrics/custom_metrics.py b/metrics/custom_metrics.py
+index 679602d..c7afb77 100644
+--- a/metrics/custom_metrics.py
++++ b/metrics/custom_metrics.py
+@@ -1,4 +1,4 @@
+-#encoding:utf-8
++# encoding:utf-8
+ import torch
+ from tqdm import tqdm
+ import numpy as np
+@@ -6,7 +6,8 @@ from collections import Counter
+ from sklearn.metrics import roc_auc_score
+ from sklearn.metrics import f1_score, classification_report
+ 
+-__call__ = ['Accuracy','AUC','F1Score','EntityScore','ClassReport','MultiLabelReport','AccuracyThresh']
++__call__ = ['Accuracy', 'AUC', 'F1Score', 'EntityScore', 'ClassReport', 'MultiLabelReport', 'AccuracyThresh']
++
+ 
+ class Metric:
+     def __init__(self):
+@@ -24,6 +25,7 @@ class Metric:
+     def name(self):
+         raise NotImplementedError
+ 
++
+ class Accuracy(Metric):
+     '''
+     计算准确度
+@@ -37,8 +39,9 @@ class Accuracy(Metric):
+         >>>         metrics(logits,target)
+         >>>         print(metrics.name(),metrics.value())
+     '''
+-    def __init__(self,topK):
+-        super(Accuracy,self).__init__()
++
++    def __init__(self, topK):
++        super(Accuracy, self).__init__()
+         self.topK = topK
+         self.reset()
+ 
+@@ -54,7 +57,7 @@ class Accuracy(Metric):
+         self.total = 0
+ 
+     def value(self):
+-        return float(self.correct_k)  / self.total
++        return float(self.correct_k) / self.total
+ 
+     def name(self):
+         return 'accuracy'
+@@ -73,8 +76,9 @@ class AccuracyThresh(Metric):
+         >>>         metrics(logits,target)
+         >>>         print(metrics.name(),metrics.value())
+     '''
+-    def __init__(self,thresh = 0.5):
+-        super(AccuracyThresh,self).__init__()
++
++    def __init__(self, thresh=0.5):
++        super(AccuracyThresh, self).__init__()
+         self.thresh = thresh
+         self.reset()
+ 
+@@ -88,7 +92,7 @@ class AccuracyThresh(Metric):
+ 
+     def value(self):
+         data_size = self.y_pred.size(0)
+-        acc = np.mean(((self.y_pred>self.thresh)==self.y_true.byte()).float().cpu().numpy(), axis=1).sum()
++        acc = np.mean(((self.y_pred > self.thresh) == self.y_true.byte()).float().cpu().numpy(), axis=1).sum()
+         return acc / data_size
+ 
+     def name(self):
+@@ -119,16 +123,16 @@ class AUC(Metric):
+         >>>         print(metrics.name(),metrics.value())
+     '''
+ 
+-    def __init__(self,task_type = 'binary',average = 'binary'):
++    def __init__(self, task_type='binary', average='binary'):
+         super(AUC, self).__init__()
+ 
+-        assert task_type in ['binary','multiclass']
+-        assert average in ['binary','micro', 'macro', 'samples', 'weighted']
++        assert task_type in ['binary', 'multiclass']
++        assert average in ['binary', 'micro', 'macro', 'samples', 'weighted']
+ 
+         self.task_type = task_type
+         self.average = average
+ 
+-    def __call__(self,logits,target):
++    def __call__(self, logits, target):
+         '''
+         计算整个结果
+         '''
+@@ -152,6 +156,7 @@ class AUC(Metric):
+     def name(self):
+         return 'auc'
+ 
++
+ class F1Score(Metric):
+     '''
+     F1 Score
+@@ -178,18 +183,19 @@ class F1Score(Metric):
+         >>>         metrics(logits,target)
+         >>>         print(metrics.name(),metrics.value())
+     '''
+-    def __init__(self,thresh = 0.5, normalizate = True,task_type = 'binary',average = 'binary',search_thresh = False):
++
++    def __init__(self, thresh=0.5, normalizate=True, task_type='binary', average='binary', search_thresh=False):
+         super(F1Score).__init__()
+-        assert task_type in ['binary','multiclass']
+-        assert average in ['binary','micro', 'macro', 'samples', 'weighted']
++        assert task_type in ['binary', 'multiclass']
++        assert average in ['binary', 'micro', 'macro', 'samples', 'weighted']
+ 
+         self.thresh = thresh
+         self.task_type = task_type
+-        self.normalizate  = normalizate
++        self.normalizate = normalizate
+         self.search_thresh = search_thresh
+         self.average = average
+ 
+-    def thresh_search(self,y_prob):
++    def thresh_search(self, y_prob):
+         '''
+         对于f1评分的指标，一般我们需要对阈值进行调整，一般不会使用默认的0.5值，因此
+         这里我们队Thresh进行优化
+@@ -203,9 +209,9 @@ class F1Score(Metric):
+             if score > best_score:
+                 best_threshold = threshold
+                 best_score = score
+-        return best_threshold,best_score
++        return best_threshold, best_score
+ 
+-    def __call__(self,logits,target):
++    def __call__(self, logits, target):
+         '''
+         计算整个结果
+         :return:
+@@ -220,10 +226,10 @@ class F1Score(Metric):
+ 
+         if self.task_type == 'binary':
+             if self.thresh and self.search_thresh == False:
+-                self.y_pred = (y_prob > self.thresh ).astype(int)
++                self.y_pred = (y_prob > self.thresh).astype(int)
+                 self.value()
+             else:
+-                thresh,f1 = self.thresh_search(y_prob = y_prob)
++                thresh, f1 = self.thresh_search(y_prob=y_prob)
+                 print(f"Best thresh: {thresh:.4f} - F1 Score: {f1:.4f}")
+ 
+         if self.task_type == 'multiclass':
+@@ -247,11 +253,13 @@ class F1Score(Metric):
+     def name(self):
+         return 'f1'
+ 
++
+ class ClassReport(Metric):
+     '''
+     class report
+     '''
+-    def __init__(self,target_names = None):
++
++    def __init__(self, target_names=None):
+         super(ClassReport).__init__()
+         self.target_names = target_names
+ 
+@@ -263,10 +271,10 @@ class ClassReport(Metric):
+         '''
+         计算指标得分
+         '''
+-        score = classification_report(y_true = self.y_true, y_pred = self.y_pred, target_names=self.target_names)
++        score = classification_report(y_true=self.y_true, y_pred=self.y_pred, target_names=self.target_names)
+         print(f"\n\n classification report: {score}")
+ 
+-    def __call__(self,logits,target):
++    def __call__(self, logits, target):
+         _, y_pred = torch.max(logits.data, 1)
+         self.y_pred = y_pred.cpu().numpy()
+         self.y_true = target.cpu().numpy()
+@@ -274,11 +282,13 @@ class ClassReport(Metric):
+     def name(self):
+         return "class_report"
+ 
++
+ class MultiLabelReport(Metric):
+     '''
+     multi label report
+     '''
+-    def __init__(self,id2label = None):
++
++    def __init__(self, id2label=None):
+         super(MultiLabelReport).__init__()
+         self.id2label = id2label
+ 
+@@ -286,8 +296,7 @@ class MultiLabelReport(Metric):
+         self.y_prob = 0
+         self.y_true = 0
+ 
+-    def __call__(self,logits,target):
+-
++    def __call__(self, logits, target):
+         self.y_prob = logits.sigmoid().data.cpu().detach().numpy()
+         self.y_true = target.cpu().numpy()
+ 
+@@ -304,12 +313,12 @@ class MultiLabelReport(Metric):
+ 
+ 
+ class LMAccuracy(Metric):
+-    def __init__(self,topK =1):
++    def __init__(self, topK=1):
+         super(LMAccuracy).__init__()
+         self.topK = topK
+         self.reset()
+ 
+-    def __call__(self,logits,target):
++    def __call__(self, logits, target):
+         pred = torch.argmax(logits, 1)
+         active_acc = target.view(-1) != -1
+         active_pred = pred[active_acc]
+@@ -328,5 +337,3 @@ class LMAccuracy(Metric):
+ 
+     def name(self):
+         return 'accuracy'
+-
+-
+diff --git a/metrics/glue_compute_metrics.py b/metrics/glue_compute_metrics.py
+index dd9a7b2..7afb658 100644
+--- a/metrics/glue_compute_metrics.py
++++ b/metrics/glue_compute_metrics.py
+@@ -22,11 +22,13 @@ logger = logging.getLogger(__name__)
+ try:
+     from scipy.stats import pearsonr, spearmanr
+     from sklearn.metrics import matthews_corrcoef, f1_score
++
+     _has_sklearn = True
+ except (AttributeError, ImportError) as e:
+     logger.warning("To use data.metrics please install scikit-learn. See https://scikit-learn.org/stable/index.html")
+     _has_sklearn = False
+ 
++
+ def simple_accuracy(preds, labels):
+     return (preds == labels).mean()
+ 
+@@ -40,6 +42,7 @@ def acc_and_f1(preds, labels):
+         "acc_and_f1": (acc + f1) / 2,
+     }
+ 
++
+ def pearson_and_spearman(preds, labels):
+     pearson_corr = pearsonr(preds, labels)[0]
+     spearman_corr = spearmanr(preds, labels)[0]
+@@ -49,6 +52,7 @@ def pearson_and_spearman(preds, labels):
+         "corr": (pearson_corr + spearman_corr) / 2,
+     }
+ 
++
+ def compute_metrics(task_name, preds, labels):
+     assert len(preds) == len(labels)
+     if task_name == "cola":
+diff --git a/model/configuration_albert.py b/model/configuration_albert.py
+index d8c8310..4968acb 100644
+--- a/model/configuration_albert.py
++++ b/model/configuration_albert.py
+@@ -7,8 +7,10 @@ import sys
+ from io import open
+ 
+ from .configuration_utils import PretrainedConfig
++
+ logger = logging.getLogger(__name__)
+ 
++
+ class AlbertConfig(PretrainedConfig):
+     r"""
+         Arguments:
+@@ -34,6 +36,7 @@ class AlbertConfig(PretrainedConfig):
+                 initializing all weight matrices.
+             layer_norm_eps: The epsilon used by LayerNorm.
+     """
++
+     def __init__(self,
+                  vocab_size_or_config_json_file=30000,
+                  embedding_size=128,
+@@ -53,7 +56,7 @@ class AlbertConfig(PretrainedConfig):
+                  **kwargs):
+         super(AlbertConfig, self).__init__(**kwargs)
+         if isinstance(vocab_size_or_config_json_file, str) or (sys.version_info[0] == 2
+-                        and isinstance(vocab_size_or_config_json_file, unicode)):
++                                                               and isinstance(vocab_size_or_config_json_file, unicode)):
+             with open(vocab_size_or_config_json_file, "r", encoding='utf-8') as reader:
+                 json_config = json.loads(reader.read())
+             for key, value in json_config.items():
+diff --git a/model/configuration_bert.py b/model/configuration_bert.py
+index 1524a4b..e636f1f 100644
+--- a/model/configuration_bert.py
++++ b/model/configuration_bert.py
+@@ -1,4 +1,3 @@
+-
+ """ BERT model configuration """
+ 
+ from __future__ import absolute_import, division, print_function, unicode_literals
+@@ -13,6 +12,8 @@ from .configuration_utils import PretrainedConfig
+ logger = logging.getLogger(__name__)
+ 
+ BERT_PRETRAINED_CONFIG_ARCHIVE_MAP = {}
++
++
+ class BertConfig(PretrainedConfig):
+     r"""
+         :class:`~pytorch_transformers.BertConfig` is the configuration class to store the configuration of a
+@@ -60,7 +61,7 @@ class BertConfig(PretrainedConfig):
+                  **kwargs):
+         super(BertConfig, self).__init__(**kwargs)
+         if isinstance(vocab_size_or_config_json_file, str) or (sys.version_info[0] == 2
+-                        and isinstance(vocab_size_or_config_json_file, unicode)):
++                                                               and isinstance(vocab_size_or_config_json_file, unicode)):
+             with open(vocab_size_or_config_json_file, "r", encoding='utf-8') as reader:
+                 json_config = json.loads(reader.read())
+             for key, value in json_config.items():
+diff --git a/model/configuration_utils.py b/model/configuration_utils.py
+index a3588d0..e57e885 100644
+--- a/model/configuration_utils.py
++++ b/model/configuration_utils.py
+@@ -28,6 +28,7 @@ from model.file_utils import cached_path, CONFIG_NAME
+ 
+ logger = logging.getLogger(__name__)
+ 
++
+ class PretrainedConfig(object):
+     r""" Base class for all configuration classes.
+         Handles a few parameters tools to all models' configurations as well as methods for loading/downloading/saving configurations.
+@@ -60,7 +61,8 @@ class PretrainedConfig(object):
+         """ Save a configuration object to the directory `save_directory`, so that it
+             can be re-loaded using the :func:`~pytorch_transformers.PretrainedConfig.from_pretrained` class method.
+         """
+-        assert os.path.isdir(save_directory), "Saving path should be a directory where the model and configuration can be saved"
++        assert os.path.isdir(
++            save_directory), "Saving path should be a directory where the model and configuration can be saved"
+ 
+         # If we save using the predefined names, we can load using `from_pretrained`
+         output_config_file = os.path.join(save_directory, CONFIG_NAME)
+@@ -127,7 +129,8 @@ class PretrainedConfig(object):
+             config_file = pretrained_model_name_or_path
+         # redirect to the cache, if necessary
+         try:
+-            resolved_config_file = cached_path(config_file, cache_dir=cache_dir, force_download=force_download, proxies=proxies)
++            resolved_config_file = cached_path(config_file, cache_dir=cache_dir, force_download=force_download,
++                                               proxies=proxies)
+         except EnvironmentError as e:
+             if pretrained_model_name_or_path in cls.pretrained_config_archive_map:
+                 logger.error(
+@@ -161,7 +164,7 @@ class PretrainedConfig(object):
+                 setattr(config, key, value)
+                 to_remove.append(key)
+             else:
+-                setattr(config,key,value)
++                setattr(config, key, value)
+         for key in to_remove:
+             kwargs.pop(key, None)
+ 
+diff --git a/model/file_utils.py b/model/file_utils.py
+index 3fe7fa8..68036c7 100644
+--- a/model/file_utils.py
++++ b/model/file_utils.py
+@@ -25,6 +25,7 @@ from tqdm import tqdm
+ 
+ try:
+     from torch.hub import _get_torch_home
++
+     torch_cache_home = _get_torch_home()
+ except ImportError:
+     torch_cache_home = os.path.expanduser(
+@@ -39,6 +40,7 @@ except ImportError:
+ 
+ try:
+     from pathlib import Path
++
+     PYTORCH_PRETRAINED_BERT_CACHE = Path(
+         os.getenv('PYTORCH_TRANSFORMERS_CACHE', os.getenv('PYTORCH_PRETRAINED_BERT_CACHE', default_cache_path)))
+ except (AttributeError, ImportError):
+@@ -59,25 +61,32 @@ if not six.PY2:
+         def docstring_decorator(fn):
+             fn.__doc__ = ''.join(docstr) + fn.__doc__
+             return fn
++
+         return docstring_decorator
+ 
++
+     def add_end_docstrings(*docstr):
+         def docstring_decorator(fn):
+             fn.__doc__ = fn.__doc__ + ''.join(docstr)
+             return fn
++
+         return docstring_decorator
+ else:
+     # Not possible to update class docstrings on python2
+     def add_start_docstrings(*docstr):
+         def docstring_decorator(fn):
+             return fn
++
+         return docstring_decorator
+ 
++
+     def add_end_docstrings(*docstr):
+         def docstring_decorator(fn):
+             return fn
++
+         return docstring_decorator
+ 
++
+ def url_to_filename(url, etag=None):
+     """
+     Convert `url` into a hashed filename in a repeatable way.
+@@ -210,7 +219,7 @@ def http_get(url, temp_file, proxies=None):
+     total = int(content_length) if content_length is not None else None
+     progress = tqdm(unit="B", total=total)
+     for chunk in req.iter_content(chunk_size=1024):
+-        if chunk: # filter out keep-alive new chunks
++        if chunk:  # filter out keep-alive new chunks
+             progress.update(len(chunk))
+             temp_file.write(chunk)
+     progress.close()
+diff --git a/model/modeling_albert.py b/model/modeling_albert.py
+index 899e6e6..cc0c532 100644
+--- a/model/modeling_albert.py
++++ b/model/modeling_albert.py
+@@ -1,16 +1,31 @@
++# Copyright 2021 Huawei Technologies Co., Ltd
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
+ """PyTorch ALBERT model. """
+ from __future__ import absolute_import, division, print_function, unicode_literals
+-import logging
++
+ import math
+ import os
+ import sys
+ import torch
+ from torch import nn
+-from torch.nn import CrossEntropyLoss, MSELoss
++from torch.nn import MSELoss
++from torch.nn import CrossEntropyLoss
+ from .modeling_utils import PreTrainedModel, prune_linear_layer
+ from .configuration_albert import AlbertConfig
+ from .file_utils import add_start_docstrings
+-logger = logging.getLogger(__name__)
++from tools.common import logger  # get args via logger
+ 
+ ALBERT_PRETRAINED_MODEL_ARCHIVE_MAP = {
+     'albert-base': "",
+@@ -18,6 +33,8 @@ ALBERT_PRETRAINED_MODEL_ARCHIVE_MAP = {
+     'albert-xlarge': "",
+     'albert-xxlarge': "",
+ }
++
++
+ def load_tf_weights_in_albert(model, config, tf_checkpoint_path):
+     """ Load tf checkpoints in a pytorch model.
+     """
+@@ -31,7 +48,7 @@ def load_tf_weights_in_albert(model, config, tf_checkpoint_path):
+         raise
+     tf_path = os.path.abspath(tf_checkpoint_path)
+     logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
+-    if not os.path.exists(tf_path+'/checkpoint'):
++    if not os.path.exists(tf_path + '/checkpoint'):
+         tf_path = tf_path + "/variables/variables"
+     # Load weights from TF model
+     init_vars = tf.train.list_variables(tf_path)
+@@ -43,8 +60,8 @@ def load_tf_weights_in_albert(model, config, tf_checkpoint_path):
+         names.append(name)
+         arrays.append(array)
+     for name, array in zip(names, arrays):
+-        name = name.replace("attention_1","attention")
+-        name = name.replace("ffn_1","ffn")
++        name = name.replace("attention_1", "attention")
++        name = name.replace("ffn_1", "ffn")
+         name = name.split('/')
+         # adam_v and adam_m are variables used in AdamWeightDecayOptimizer to calculated m and v
+         # which are not required for using pretrained model
+@@ -92,6 +109,7 @@ def load_tf_weights_in_albert(model, config, tf_checkpoint_path):
+         pointer.data = torch.from_numpy(array)
+     return model
+ 
++
+ def gelu(x):
+     """ Original Implementation of the gelu activation function in Google Bert repo when initially created.
+         For information: OpenAI GPT's gelu is slightly different (and gives slightly different results):
+@@ -100,21 +118,26 @@ def gelu(x):
+     """
+     return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
+ 
++
+ def gelu_new(x):
+     """ Implementation of the gelu activation function currently in Google Bert repo (identical to OpenAI GPT).
+         Also see https://arxiv.org/abs/1606.08415
+     """
+     return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
+ 
++
+ def swish(x):
+     return x * torch.sigmoid(x)
+ 
++
+ ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "gelu_new": gelu_new}
+ AlbertLayerNorm = torch.nn.LayerNorm
+ 
++
+ class AlbertEmbeddings(nn.Module):
+     """Construct the embeddings from word, position and token_type embeddings.
+     """
++
+     def __init__(self, config):
+         super(AlbertEmbeddings, self).__init__()
+         self.word_embeddings = nn.Embedding(config.vocab_size, config.embedding_size, padding_idx=0)
+@@ -123,22 +146,25 @@ class AlbertEmbeddings(nn.Module):
+         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
+         self.LayerNorm = AlbertLayerNorm(config.embedding_size, eps=config.layer_norm_eps)
+         self.dropout = nn.Dropout(config.hidden_dropout_prob)
++        self.position_ids = torch.LongTensor([list(range(logger.args.max_seq_length))] * logger.args.batch_size).to(
++            logger.args.device)
+ 
+     def forward(self, input_ids, token_type_ids=None, position_ids=None):
+-        seq_length = input_ids.size(1)
+         if position_ids is None:
+-            position_ids = torch.arange(seq_length, dtype=torch.long, device=input_ids.device)
+-            position_ids = position_ids.unsqueeze(0).expand_as(input_ids)
++            position_ids = self.position_ids
++
+         if token_type_ids is None:
+             token_type_ids = torch.zeros_like(input_ids)
+         words_embeddings = self.word_embeddings(input_ids)
+         position_embeddings = self.position_embeddings(position_ids)
+         token_type_embeddings = self.token_type_embeddings(token_type_ids)
+         embeddings = words_embeddings + position_embeddings + token_type_embeddings
++
+         embeddings = self.LayerNorm(embeddings)
+         embeddings = self.dropout(embeddings)
+         return embeddings
+ 
++
+ class AlbertSelfAttention(nn.Module):
+     def __init__(self, config):
+         super(AlbertSelfAttention, self).__init__()
+@@ -195,16 +221,19 @@ class AlbertSelfAttention(nn.Module):
+         outputs = (context_layer, attention_probs) if self.output_attentions else (context_layer,)
+         return outputs
+ 
++
+ class AlbertSelfOutput(nn.Module):
+     def __init__(self, config):
+         super(AlbertSelfOutput, self).__init__()
+         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+         self.dropout = nn.Dropout(config.hidden_dropout_prob)
++
+     def forward(self, hidden_states, input_tensor):
+         hidden_states = self.dense(hidden_states)
+         hidden_states = self.dropout(hidden_states)
+         return hidden_states
+ 
++
+ class AlbertAttention(nn.Module):
+     def __init__(self, config):
+         super(AlbertAttention, self).__init__()
+@@ -238,9 +267,10 @@ class AlbertAttention(nn.Module):
+     def forward(self, input_tensor, attention_mask=None, head_mask=None):
+         self_outputs = self.self(input_tensor, attention_mask, head_mask)
+         attention_output = self.output(self_outputs[0], input_tensor)
+-        outputs = (attention_output,self_outputs)
++        outputs = (attention_output, self_outputs)
+         return outputs
+ 
++
+ class AlbertOutput(nn.Module):
+     def __init__(self, config):
+         super(AlbertOutput, self).__init__()
+@@ -252,6 +282,7 @@ class AlbertOutput(nn.Module):
+         hidden_states = self.dropout(hidden_states)
+         return hidden_states
+ 
++
+ class AlbertIntermediate(nn.Module):
+     def __init__(self, config):
+         super(AlbertIntermediate, self).__init__()
+@@ -268,6 +299,7 @@ class AlbertIntermediate(nn.Module):
+         output = self.output(intermediate_output)
+         return output
+ 
++
+ class AlbertFFN(nn.Module):
+     def __init__(self, config):
+         super(AlbertFFN, self).__init__()
+@@ -277,6 +309,7 @@ class AlbertFFN(nn.Module):
+         output = self.intermediate(attention_output)
+         return output
+ 
++
+ class AlbertLayer(nn.Module):
+     def __init__(self, config):
+         super(AlbertLayer, self).__init__()
+@@ -289,10 +322,11 @@ class AlbertLayer(nn.Module):
+         attention_outputs = self.attention(hidden_states, attention_mask, head_mask)
+         attention_output = self.LayerNorm(attention_outputs[0] + hidden_states)
+         ffn_output = self.ffn(attention_output)
+-        ffn_output = self.LayerNorm_1(ffn_output+attention_output)
+-        outputs = (ffn_output,) + attention_outputs[1:] # add attentions if we output them
++        ffn_output = self.LayerNorm_1(ffn_output + attention_output)
++        outputs = (ffn_output,) + attention_outputs[1:]  # add attentions if we output them #
+         return outputs
+ 
++
+ class AlbertGroup(nn.Module):
+     def __init__(self, config):
+         super(AlbertGroup, self).__init__()
+@@ -310,6 +344,7 @@ class AlbertGroup(nn.Module):
+             layer_hidden_states = layer_hidden_states + (hidden_states,)
+         return (layer_hidden_states, layer_attentions)
+ 
++
+ class AlbertTransformer(nn.Module):
+     def __init__(self, config):
+         super(AlbertTransformer, self).__init__()
+@@ -340,6 +375,7 @@ class AlbertTransformer(nn.Module):
+             outputs = outputs + (all_attentions,)
+         return outputs  # last-layer hidden state, (all hidden states), (all attentions)
+ 
++
+ class AlbertEncoder(nn.Module):
+     def __init__(self, config):
+         super(AlbertEncoder, self).__init__()
+@@ -356,6 +392,7 @@ class AlbertEncoder(nn.Module):
+         outputs = self.transformer(prev_output, attention_mask, head_mask)
+         return outputs  # last-layer hidden state, (all hidden states), (all attentions)
+ 
++
+ class AlbertPooler(nn.Module):
+     def __init__(self, config):
+         super(AlbertPooler, self).__init__()
+@@ -370,6 +407,7 @@ class AlbertPooler(nn.Module):
+         pooled_output = self.activation(pooled_output)
+         return pooled_output
+ 
++
+ class AlbertPredictionHeadTransform(nn.Module):
+     def __init__(self, config):
+         super(AlbertPredictionHeadTransform, self).__init__()
+@@ -386,13 +424,14 @@ class AlbertPredictionHeadTransform(nn.Module):
+         hidden_states = self.LayerNorm(hidden_states)
+         return hidden_states
+ 
++
+ class AlbertLMPredictionHead(nn.Module):
+     def __init__(self, config):
+         super(AlbertLMPredictionHead, self).__init__()
+         self.transform = AlbertPredictionHeadTransform(config)
+         # The output weights are the same as the input embeddings, but there is
+         # an output-only bias for each token.
+-        self.decoder = nn.Linear(config.embedding_size,config.vocab_size,bias=False)
++        self.decoder = nn.Linear(config.embedding_size, config.vocab_size, bias=False)
+         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
+ 
+     def forward(self, hidden_states):
+@@ -400,6 +439,7 @@ class AlbertLMPredictionHead(nn.Module):
+         hidden_states = self.decoder(hidden_states) + self.bias
+         return hidden_states
+ 
++
+ class AlbertOnlyMLMHead(nn.Module):
+     def __init__(self, config):
+         super(AlbertOnlyMLMHead, self).__init__()
+@@ -409,6 +449,7 @@ class AlbertOnlyMLMHead(nn.Module):
+         prediction_scores = self.predictions(sequence_output)
+         return prediction_scores
+ 
++
+ class AlbertOnlyNSPHead(nn.Module):
+     def __init__(self, config):
+         super(AlbertOnlyNSPHead, self).__init__()
+@@ -418,6 +459,7 @@ class AlbertOnlyNSPHead(nn.Module):
+         seq_relationship_score = self.seq_relationship(pooled_output)
+         return seq_relationship_score
+ 
++
+ class AlbertPreTrainingHeads(nn.Module):
+     def __init__(self, config):
+         super(AlbertPreTrainingHeads, self).__init__()
+@@ -429,6 +471,7 @@ class AlbertPreTrainingHeads(nn.Module):
+         seq_relationship_score = self.seq_relationship(pooled_output)
+         return prediction_scores, seq_relationship_score
+ 
++
+ class AlbertPreTrainedModel(PreTrainedModel):
+     """ An abstract class to handle weights initialization and
+         a simple interface for dowloading and loading pretrained models.
+@@ -500,8 +543,10 @@ ALBERT_INPUTS_DOCSTRING = r"""
+             ``1`` indicates the head is **not masked**, ``0`` indicates the head is **masked**.
+ """
+ 
+-@add_start_docstrings("The bare Albert Model transformer outputting raw hidden-states without any specific head on top.",
+-                      ALBERT_START_DOCSTRING, ALBERT_INPUTS_DOCSTRING)
++
++@add_start_docstrings(
++    "The bare Albert Model transformer outputting raw hidden-states without any specific head on top.",
++    ALBERT_START_DOCSTRING, ALBERT_INPUTS_DOCSTRING)
+ class AlbertModel(AlbertPreTrainedModel):
+     r"""
+     Outputs: `Tuple` comprising various elements depending on the configuration (config) and inputs:
+@@ -531,11 +576,9 @@ class AlbertModel(AlbertPreTrainedModel):
+ 
+     def __init__(self, config):
+         super(AlbertModel, self).__init__(config)
+-
+         self.embeddings = AlbertEmbeddings(config)
+         self.encoder = AlbertEncoder(config)
+         self.pooler = AlbertPooler(config)
+-
+         self.init_weights()
+ 
+     def _resize_token_embeddings(self, new_num_tokens):
+@@ -552,8 +595,9 @@ class AlbertModel(AlbertPreTrainedModel):
+         for layer, heads in heads_to_prune.items():
+             self.encoder.layer[layer].attention.prune_heads(heads)
+ 
++    # def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None):
+     def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None):
+-        if attention_mask is None:
++        if attention_mask is None:  # forward1
+             attention_mask = torch.ones_like(input_ids)
+         if token_type_ids is None:
+             token_type_ids = torch.zeros_like(input_ids)
+@@ -583,14 +627,14 @@ class AlbertModel(AlbertPreTrainedModel):
+                 head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+                 head_mask = head_mask.expand(self.config.num_hidden_layers, -1, -1, -1, -1)
+             elif head_mask.dim() == 2:
+-                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(
+-                    -1)  # We can specify head_mask for each layer
++                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)  # can specify head_mask for each layer
+             head_mask = head_mask.to(
+                 dtype=next(self.parameters()).dtype)  # switch to fload if need + fp16 compatibility
+         else:
+             head_mask = [None] * self.config.num_hidden_layers
+ 
+-        embedding_output = self.embeddings(input_ids, position_ids=position_ids, token_type_ids=token_type_ids)
++        embedding_output = self.embeddings(input_ids, position_ids=position_ids,
++                                           token_type_ids=token_type_ids)  # error2
+         encoder_outputs = self.encoder(embedding_output,
+                                        extended_attention_mask,
+                                        head_mask=head_mask)
+@@ -601,6 +645,7 @@ class AlbertModel(AlbertPreTrainedModel):
+                                                       1:]  # add hidden_states and attentions if they are here
+         return outputs  # sequence_output, pooled_output, (hidden_states), (attentions)
+ 
++
+ @add_start_docstrings("""Bert Model with two heads on top as done during the pre-training:
+     a `masked language modeling` head and a `next sentence prediction (classification)` head. """,
+                       ALBERT_START_DOCSTRING, ALBERT_INPUTS_DOCSTRING)
+@@ -675,6 +720,7 @@ class AlbertForPreTraining(AlbertPreTrainedModel):
+             outputs = (total_loss,) + outputs
+         return outputs  # (loss), prediction_scores, seq_relationship_score, (hidden_states), (attentions)
+ 
++
+ @add_start_docstrings("""Bert Model with a `language modeling` head on top. """,
+                       ALBERT_START_DOCSTRING, ALBERT_INPUTS_DOCSTRING)
+ class AlbertForMaskedLM(AlbertPreTrainedModel):
+@@ -840,9 +886,9 @@ class AlbertForSequenceClassification(AlbertPreTrainedModel):
+         self.init_weights()
+ 
+     def forward(self, input_ids, attention_mask=None, token_type_ids=None,
+-                position_ids=None, head_mask=None, labels=None):
++                labels=None, position_ids=None, head_mask=None):
+ 
+-        outputs = self.bert(input_ids,
++        outputs = self.bert(input_ids,  # forward0
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+                             position_ids=position_ids,
+@@ -850,7 +896,7 @@ class AlbertForSequenceClassification(AlbertPreTrainedModel):
+ 
+         pooled_output = outputs[1]
+ 
+-        pooled_output = self.dropout(pooled_output+0.1)
++        pooled_output = self.dropout(pooled_output + 0.1)
+         logits = self.classifier(pooled_output)
+ 
+         outputs = (logits,) + outputs[2:]  # add hidden states and attention if they are here
+@@ -858,7 +904,7 @@ class AlbertForSequenceClassification(AlbertPreTrainedModel):
+         if labels is not None:
+             if self.num_labels == 1:
+                 #  We are doing regression
+-                loss_fct = MSELoss()
++                loss_fct = MSELoss().to(logits.device)
+                 loss = loss_fct(logits.view(-1), labels.view(-1))
+             else:
+                 loss_fct = CrossEntropyLoss()
+@@ -938,7 +984,6 @@ class AlbertForMultipleChoice(AlbertPreTrainedModel):
+ @add_start_docstrings("""Bert Model with a token classification head on top (a linear layer on top of
+     the hidden-states output) e.g. for Named-Entity-Recognition (NER) tasks. """,
+                       ALBERT_START_DOCSTRING, ALBERT_INPUTS_DOCSTRING)
+-
+ class AlbertForTokenClassification(AlbertPreTrainedModel):
+     r"""
+         **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size, sequence_length)``:
+diff --git a/model/modeling_albert_bright.py b/model/modeling_albert_bright.py
+index 433db06..7c8dc1f 100644
+--- a/model/modeling_albert_bright.py
++++ b/model/modeling_albert_bright.py
+@@ -25,6 +25,8 @@ ALBERT_PRETRAINED_MODEL_ARCHIVE_MAP = {
+     'albert-xlarge': "",
+     'albert-xxlarge': "",
+ }
++
++
+ def load_tf_weights_in_albert(model, config, tf_checkpoint_path):
+     """ Load tf checkpoints in a pytorch model.
+     """
+@@ -93,10 +95,14 @@ def load_tf_weights_in_albert(model, config, tf_checkpoint_path):
+         pointer.data = torch.from_numpy(array)
+     return model
+ 
++
+ AlbertLayerNorm = torch.nn.LayerNorm
++
++
+ class AlbertEmbeddings(nn.Module):
+     """Construct the embeddings from word, position and token_type embeddings.
+     """
++
+     def __init__(self, config):
+         super(AlbertEmbeddings, self).__init__()
+         self.word_embeddings = nn.Embedding(config.vocab_size, config.embedding_size, padding_idx=0)
+@@ -108,7 +114,7 @@ class AlbertEmbeddings(nn.Module):
+ 
+         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
+         # any TensorFlow checkpoint file
+-        self.LayerNorm =AlbertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
++        self.LayerNorm = AlbertLayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+         self.dropout = nn.Dropout(config.hidden_dropout_prob)
+ 
+     def forward(self, input_ids, token_type_ids=None, position_ids=None):
+@@ -130,6 +136,7 @@ class AlbertEmbeddings(nn.Module):
+         embeddings = self.dropout(embeddings)
+         return embeddings
+ 
++
+ class AlbertSelfOutput(nn.Module):
+     def __init__(self, config):
+         super(AlbertSelfOutput, self).__init__()
+@@ -182,6 +189,7 @@ class AlbertAttention(nn.Module):
+         outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
+         return outputs
+ 
++
+ class AlbertOutput(nn.Module):
+     def __init__(self, config):
+         super(AlbertOutput, self).__init__()
+@@ -196,6 +204,7 @@ class AlbertOutput(nn.Module):
+         hidden_states = self.LayerNorm(hidden_states + input_tensor)
+         return hidden_states
+ 
++
+ class BertLayer(nn.Module):
+     def __init__(self, config):
+         super(BertLayer, self).__init__()
+@@ -213,6 +222,7 @@ class BertLayer(nn.Module):
+         outputs = (layer_output,) + attention_outputs[1:]  # add attentions if we output them
+         return outputs
+ 
++
+ class AlbertEncoder(nn.Module):
+     def __init__(self, config):
+         super(AlbertEncoder, self).__init__()
+@@ -243,6 +253,7 @@ class AlbertEncoder(nn.Module):
+             outputs = outputs + (all_attentions,)
+         return outputs  # last-layer hidden state, (all hidden states), (all attentions)
+ 
++
+ class AlbertLMPredictionHead(nn.Module):
+     def __init__(self, config):
+         super(AlbertLMPredictionHead, self).__init__()
+@@ -261,6 +272,7 @@ class AlbertLMPredictionHead(nn.Module):
+         hidden_states = self.decoder(hidden_states) + self.bias
+         return hidden_states
+ 
++
+ class AlbertOnlyMLMHead(nn.Module):
+     def __init__(self, config):
+         super(AlbertOnlyMLMHead, self).__init__()
+@@ -270,6 +282,7 @@ class AlbertOnlyMLMHead(nn.Module):
+         prediction_scores = self.predictions(sequence_output)
+         return prediction_scores
+ 
++
+ class AlbertOnlyNSPHead(nn.Module):
+     def __init__(self, config):
+         super(AlbertOnlyNSPHead, self).__init__()
+@@ -279,6 +292,7 @@ class AlbertOnlyNSPHead(nn.Module):
+         seq_relationship_score = self.seq_relationship(pooled_output)
+         return seq_relationship_score
+ 
++
+ class AlbertPreTrainingHeads(nn.Module):
+     def __init__(self, config):
+         super(AlbertPreTrainingHeads, self).__init__()
+@@ -290,6 +304,7 @@ class AlbertPreTrainingHeads(nn.Module):
+         seq_relationship_score = self.seq_relationship(pooled_output)
+         return prediction_scores, seq_relationship_score
+ 
++
+ class AlbertPreTrainedModel(PreTrainedModel):
+     """ An abstract class to handle weights initialization and
+         a simple interface for dowloading and loading pretrained models.
+@@ -311,6 +326,7 @@ class AlbertPreTrainedModel(PreTrainedModel):
+         if isinstance(module, nn.Linear) and module.bias is not None:
+             module.bias.data.zero_()
+ 
++
+ BERT_START_DOCSTRING = r"""    The BERT model was proposed in
+     `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding`_
+     by Jacob Devlin, Ming-Wei Chang, Kenton Lee and Kristina Toutanova. It's a bidirectional transformer
+@@ -535,7 +551,7 @@ class AlbertForPreTraining(AlbertPreTrainedModel):
+             Export to TorchScript can't handle parameter sharing so we are cloning them instead.
+         """
+         self._tie_or_clone_weights(self.cls.predictions.decoder,
+-                                       self.bert.embeddings.word_embeddings)
++                                   self.bert.embeddings.word_embeddings)
+ 
+     def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
+                 masked_lm_labels=None, next_sentence_label=None):
+diff --git a/model/modeling_bert.py b/model/modeling_bert.py
+index fecf1e4..1b593c6 100644
+--- a/model/modeling_bert.py
++++ b/model/modeling_bert.py
+@@ -52,6 +52,7 @@ BERT_PRETRAINED_MODEL_ARCHIVE_MAP = {
+     'bert-base-german-dbmdz-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-german-dbmdz-uncased-pytorch_model.bin",
+ }
+ 
++
+ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
+     """ Load tf checkpoints in a pytorch model.
+     """
+@@ -61,7 +62,7 @@ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
+         import tensorflow as tf
+     except ImportError:
+         logger.error("Loading a TensorFlow model in PyTorch, requires TensorFlow to be installed. Please see "
+-            "https://www.tensorflow.org/install/ for installation instructions.")
++                     "https://www.tensorflow.org/install/ for installation instructions.")
+         raise
+     tf_path = os.path.abspath(tf_checkpoint_path)
+     logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
+@@ -127,24 +128,27 @@ def gelu(x):
+     """
+     return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
+ 
++
+ def gelu_new(x):
+     """ Implementation of the gelu activation function currently in Google Bert repo (identical to OpenAI GPT).
+         Also see https://arxiv.org/abs/1606.08415
+     """
+     return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
+ 
++
+ def swish(x):
+     return x * torch.sigmoid(x)
+ 
+ 
+ ACT2FN = {"gelu": gelu, "relu": torch.nn.functional.relu, "swish": swish, "gelu_new": gelu_new}
+ 
+-
+ BertLayerNorm = torch.nn.LayerNorm
+ 
++
+ class BertEmbeddings(nn.Module):
+     """Construct the embeddings from word, position and token_type embeddings.
+     """
++
+     def __init__(self, config):
+         super(BertEmbeddings, self).__init__()
+         self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=0)
+@@ -531,6 +535,7 @@ BERT_INPUTS_DOCSTRING = r"""
+             ``1`` indicates the head is **not masked**, ``0`` indicates the head is **masked**.
+ """
+ 
++
+ @add_start_docstrings("The bare Bert Model transformer outputting raw hidden-states without any specific head on top.",
+                       BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertModel(BertPreTrainedModel):
+@@ -562,6 +567,7 @@ class BertModel(BertPreTrainedModel):
+         last_hidden_states = outputs[0]  # The last hidden-state is the first element of the output tuple
+ 
+     """
++
+     def __init__(self, config):
+         super(BertModel, self).__init__(config)
+ 
+@@ -603,7 +609,7 @@ class BertModel(BertPreTrainedModel):
+         # positions we want to attend and -10000.0 for masked positions.
+         # Since we are adding it to the raw scores before the softmax, this is
+         # effectively the same as removing these entirely.
+-        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
++        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+ 
+         # Prepare head mask if needed
+@@ -616,8 +622,10 @@ class BertModel(BertPreTrainedModel):
+                 head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+                 head_mask = head_mask.expand(self.config.num_hidden_layers, -1, -1, -1, -1)
+             elif head_mask.dim() == 2:
+-                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)  # We can specify head_mask for each layer
+-            head_mask = head_mask.to(dtype=next(self.parameters()).dtype) # switch to fload if need + fp16 compatibility
++                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(
++                    -1)  # We can specify head_mask for each layer
++            head_mask = head_mask.to(
++                dtype=next(self.parameters()).dtype)  # switch to fload if need + fp16 compatibility
+         else:
+             head_mask = [None] * self.config.num_hidden_layers
+ 
+@@ -628,13 +636,14 @@ class BertModel(BertPreTrainedModel):
+         sequence_output = encoder_outputs[0]
+         pooled_output = self.pooler(sequence_output)
+ 
+-        outputs = (sequence_output, pooled_output,) + encoder_outputs[1:]  # add hidden_states and attentions if they are here
++        outputs = (sequence_output, pooled_output,) + encoder_outputs[
++                                                      1:]  # add hidden_states and attentions if they are here
+         return outputs  # sequence_output, pooled_output, (hidden_states), (attentions)
+ 
+ 
+ @add_start_docstrings("""Bert Model with two heads on top as done during the pre-training:
+     a `masked language modeling` head and a `next sentence prediction (classification)` head. """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForPreTraining(BertPreTrainedModel):
+     r"""
+         **masked_lm_labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size, sequence_length)``:
+@@ -672,6 +681,7 @@ class BertForPreTraining(BertPreTrainedModel):
+         prediction_scores, seq_relationship_scores = outputs[:2]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForPreTraining, self).__init__(config)
+ 
+@@ -690,17 +700,17 @@ class BertForPreTraining(BertPreTrainedModel):
+ 
+     def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
+                 masked_lm_labels=None, next_sentence_label=None):
+-
+         outputs = self.bert(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+-                            position_ids=position_ids, 
++                            position_ids=position_ids,
+                             head_mask=head_mask)
+ 
+         sequence_output, pooled_output = outputs[:2]
+         prediction_scores, seq_relationship_score = self.cls(sequence_output, pooled_output)
+ 
+-        outputs = (prediction_scores, seq_relationship_score,) + outputs[2:]  # add hidden states and attention if they are here
++        outputs = (prediction_scores, seq_relationship_score,) + outputs[
++                                                                 2:]  # add hidden states and attention if they are here
+ 
+         if masked_lm_labels is not None and next_sentence_label is not None:
+             loss_fct = CrossEntropyLoss(ignore_index=-1)
+@@ -713,7 +723,7 @@ class BertForPreTraining(BertPreTrainedModel):
+ 
+ 
+ @add_start_docstrings("""Bert Model with a `language modeling` head on top. """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForMaskedLM(BertPreTrainedModel):
+     r"""
+         **masked_lm_labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size, sequence_length)``:
+@@ -744,6 +754,7 @@ class BertForMaskedLM(BertPreTrainedModel):
+         loss, prediction_scores = outputs[:2]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForMaskedLM, self).__init__(config)
+ 
+@@ -762,11 +773,10 @@ class BertForMaskedLM(BertPreTrainedModel):
+ 
+     def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
+                 masked_lm_labels=None):
+-
+         outputs = self.bert(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+-                            position_ids=position_ids, 
++                            position_ids=position_ids,
+                             head_mask=head_mask)
+ 
+         sequence_output = outputs[0]
+@@ -782,7 +792,7 @@ class BertForMaskedLM(BertPreTrainedModel):
+ 
+ 
+ @add_start_docstrings("""Bert Model with a `next sentence prediction (classification)` head on top. """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForNextSentencePrediction(BertPreTrainedModel):
+     r"""
+         **next_sentence_label**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size,)``:
+@@ -813,6 +823,7 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
+         seq_relationship_scores = outputs[0]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForNextSentencePrediction, self).__init__(config)
+ 
+@@ -823,11 +834,10 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
+ 
+     def forward(self, input_ids, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None,
+                 next_sentence_label=None):
+-
+         outputs = self.bert(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+-                            position_ids=position_ids, 
++                            position_ids=position_ids,
+                             head_mask=head_mask)
+ 
+         pooled_output = outputs[1]
+@@ -845,7 +855,7 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
+ 
+ @add_start_docstrings("""Bert Model transformer with a sequence classification/regression head on top (a linear layer on top of
+     the pooled output) e.g. for GLUE tasks. """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForSequenceClassification(BertPreTrainedModel):
+     r"""
+         **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size,)``:
+@@ -877,6 +887,7 @@ class BertForSequenceClassification(BertPreTrainedModel):
+         loss, logits = outputs[:2]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForSequenceClassification, self).__init__(config)
+         self.num_labels = config.num_labels
+@@ -893,7 +904,7 @@ class BertForSequenceClassification(BertPreTrainedModel):
+         outputs = self.bert(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+-                            position_ids=position_ids, 
++                            position_ids=position_ids,
+                             head_mask=head_mask)
+ 
+         pooled_output = outputs[1]
+@@ -918,7 +929,7 @@ class BertForSequenceClassification(BertPreTrainedModel):
+ 
+ @add_start_docstrings("""Bert Model with a multiple choice classification head on top (a linear layer on top of
+     the pooled output and a softmax) e.g. for RocStories/SWAG tasks. """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForMultipleChoice(BertPreTrainedModel):
+     r"""
+         **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size,)``:
+@@ -951,6 +962,7 @@ class BertForMultipleChoice(BertPreTrainedModel):
+         loss, classification_scores = outputs[:2]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForMultipleChoice, self).__init__(config)
+ 
+@@ -993,7 +1005,7 @@ class BertForMultipleChoice(BertPreTrainedModel):
+ 
+ @add_start_docstrings("""Bert Model with a token classification head on top (a linear layer on top of
+     the hidden-states output) e.g. for Named-Entity-Recognition (NER) tasks. """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForTokenClassification(BertPreTrainedModel):
+     r"""
+         **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size, sequence_length)``:
+@@ -1023,6 +1035,7 @@ class BertForTokenClassification(BertPreTrainedModel):
+         loss, scores = outputs[:2]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForTokenClassification, self).__init__(config)
+         self.num_labels = config.num_labels
+@@ -1039,7 +1052,7 @@ class BertForTokenClassification(BertPreTrainedModel):
+         outputs = self.bert(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+-                            position_ids=position_ids, 
++                            position_ids=position_ids,
+                             head_mask=head_mask)
+ 
+         sequence_output = outputs[0]
+@@ -1065,7 +1078,7 @@ class BertForTokenClassification(BertPreTrainedModel):
+ 
+ @add_start_docstrings("""Bert Model with a span classification head on top for extractive question-answering tasks like SQuAD (a linear layers on top of
+     the hidden-states output to compute `span start logits` and `span end logits`). """,
+-    BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
++                      BERT_START_DOCSTRING, BERT_INPUTS_DOCSTRING)
+ class BertForQuestionAnswering(BertPreTrainedModel):
+     r"""
+         **start_positions**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size,)``:
+@@ -1103,6 +1116,7 @@ class BertForQuestionAnswering(BertPreTrainedModel):
+         loss, start_scores, end_scores = outputs[:2]
+ 
+     """
++
+     def __init__(self, config):
+         super(BertForQuestionAnswering, self).__init__(config)
+         self.num_labels = config.num_labels
+@@ -1118,7 +1132,7 @@ class BertForQuestionAnswering(BertPreTrainedModel):
+         outputs = self.bert(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+-                            position_ids=position_ids, 
++                            position_ids=position_ids,
+                             head_mask=head_mask)
+ 
+         sequence_output = outputs[0]
+diff --git a/model/modeling_utils.py b/model/modeling_utils.py
+index 56a52e9..ac82dff 100644
+--- a/model/modeling_utils.py
++++ b/model/modeling_utils.py
+@@ -12,11 +12,11 @@ from torch.nn import CrossEntropyLoss
+ from torch.nn import functional as F
+ 
+ from model.configuration_utils import PretrainedConfig
++from model.configuration_albert import AlbertConfig
+ from model.file_utils import cached_path, WEIGHTS_NAME, TF_WEIGHTS_NAME
+ 
+ logger = logging.getLogger(__name__)
+ 
+-
+ try:
+     from torch.nn import Identity
+ except ImportError:
+@@ -24,12 +24,14 @@ except ImportError:
+     class Identity(nn.Module):
+         r"""A placeholder identity operator that is argument-insensitive.
+         """
++
+         def __init__(self, *args, **kwargs):
+             super(Identity, self).__init__()
+ 
+         def forward(self, input):
+             return input
+ 
++
+ class PreTrainedModel(nn.Module):
+     r""" Base class for all models.
+ 
+@@ -54,7 +56,7 @@ class PreTrainedModel(nn.Module):
+ 
+     def __init__(self, config, *inputs, **kwargs):
+         super(PreTrainedModel, self).__init__()
+-        if not isinstance(config, PretrainedConfig):
++        if not 'AlbertConfig' in str(type(config)) : # modify via infer changes root
+             raise ValueError(
+                 "Parameter config in `{}(config)` should be an instance of class `PretrainedConfig`. "
+                 "To create a model from a pretrained model use "
+@@ -107,7 +109,6 @@ class PreTrainedModel(nn.Module):
+         else:
+             first_module.weight = second_module.weight
+ 
+-
+         if hasattr(first_module, 'bias') and first_module.bias is not None:
+             first_module.bias.data = torch.nn.functional.pad(
+                 first_module.bias.data,
+@@ -174,7 +175,8 @@ class PreTrainedModel(nn.Module):
+         """ Save a model and its configuration file to a directory, so that it
+             can be re-loaded using the `:func:`~pytorch_transformers.PreTrainedModel.from_pretrained`` class method.
+         """
+-        assert os.path.isdir(save_directory), "Saving path should be a directory where the model and configuration can be saved"
++        assert os.path.isdir(
++            save_directory), "Saving path should be a directory where the model and configuration can be saved"
+ 
+         # Only save the model it-self if we are using distributed training
+         model_to_save = self.module if hasattr(self, 'module') else self
+@@ -288,7 +290,8 @@ class PreTrainedModel(nn.Module):
+                 archive_file = pretrained_model_name_or_path
+         # redirect to the cache, if necessary
+         try:
+-            resolved_archive_file = cached_path(archive_file, cache_dir=cache_dir, force_download=force_download, proxies=proxies)
++            resolved_archive_file = cached_path(archive_file, cache_dir=cache_dir, force_download=force_download,
++                                                proxies=proxies)
+         except EnvironmentError as e:
+             if pretrained_model_name_or_path in cls.pretrained_model_archive_map:
+                 logger.error(
+@@ -354,9 +357,11 @@ class PreTrainedModel(nn.Module):
+         # Make sure we are able to load base models as well as derived models (with heads)
+         start_prefix = ''
+         model_to_load = model
+-        if not hasattr(model, cls.base_model_prefix) and any(s.startswith(cls.base_model_prefix) for s in state_dict.keys()):
++        if not hasattr(model, cls.base_model_prefix) and any(
++                s.startswith(cls.base_model_prefix) for s in state_dict.keys()):
+             start_prefix = cls.base_model_prefix + '.'
+-        if hasattr(model, cls.base_model_prefix) and not any(s.startswith(cls.base_model_prefix) for s in state_dict.keys()):
++        if hasattr(model, cls.base_model_prefix) and not any(
++                s.startswith(cls.base_model_prefix) for s in state_dict.keys()):
+             model_to_load = getattr(model, cls.base_model_prefix)
+ 
+         load(model_to_load, prefix=start_prefix)
+@@ -368,7 +373,7 @@ class PreTrainedModel(nn.Module):
+                 model.__class__.__name__, unexpected_keys))
+         if len(error_msgs) > 0:
+             raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
+-                               model.__class__.__name__, "\n\t".join(error_msgs)))
++                model.__class__.__name__, "\n\t".join(error_msgs)))
+ 
+         if hasattr(model, 'tie_weights'):
+             model.tie_weights()  # make sure word embedding weights are still tied
+@@ -404,6 +409,7 @@ class Conv1D(nn.Module):
+ 
+ class PoolerStartLogits(nn.Module):
+     """ Compute SQuAD start_logits from sequence hidden states. """
++
+     def __init__(self, config):
+         super(PoolerStartLogits, self).__init__()
+         self.dense = nn.Linear(config.hidden_size, 1)
+@@ -425,6 +431,7 @@ class PoolerStartLogits(nn.Module):
+ class PoolerEndLogits(nn.Module):
+     """ Compute SQuAD end_logits from sequence hidden states and start token hidden state.
+     """
++
+     def __init__(self, config):
+         super(PoolerEndLogits, self).__init__()
+         self.dense_0 = nn.Linear(config.hidden_size * 2, config.hidden_size)
+@@ -448,9 +455,9 @@ class PoolerEndLogits(nn.Module):
+         assert start_states is not None or start_positions is not None, "One of start_states, start_positions should be not None"
+         if start_positions is not None:
+             slen, hsz = hidden_states.shape[-2:]
+-            start_positions = start_positions[:, None, None].expand(-1, -1, hsz) # shape (bsz, 1, hsz)
+-            start_states = hidden_states.gather(-2, start_positions) # shape (bsz, 1, hsz)
+-            start_states = start_states.expand(-1, slen, -1) # shape (bsz, slen, hsz)
++            start_positions = start_positions[:, None, None].expand(-1, -1, hsz)  # shape (bsz, 1, hsz)
++            start_states = hidden_states.gather(-2, start_positions)  # shape (bsz, 1, hsz)
++            start_states = start_states.expand(-1, slen, -1)  # shape (bsz, slen, hsz)
+ 
+         x = self.dense_0(torch.cat([hidden_states, start_states], dim=-1))
+         x = self.activation(x)
+@@ -465,6 +472,7 @@ class PoolerEndLogits(nn.Module):
+ 
+ class PoolerAnswerClass(nn.Module):
+     """ Compute SQuAD 2.0 answer class from classification and start tokens hidden states. """
++
+     def __init__(self, config):
+         super(PoolerAnswerClass, self).__init__()
+         self.dense_0 = nn.Linear(config.hidden_size * 2, config.hidden_size)
+@@ -491,14 +499,14 @@ class PoolerAnswerClass(nn.Module):
+         hsz = hidden_states.shape[-1]
+         assert start_states is not None or start_positions is not None, "One of start_states, start_positions should be not None"
+         if start_positions is not None:
+-            start_positions = start_positions[:, None, None].expand(-1, -1, hsz) # shape (bsz, 1, hsz)
+-            start_states = hidden_states.gather(-2, start_positions).squeeze(-2) # shape (bsz, hsz)
++            start_positions = start_positions[:, None, None].expand(-1, -1, hsz)  # shape (bsz, 1, hsz)
++            start_states = hidden_states.gather(-2, start_positions).squeeze(-2)  # shape (bsz, hsz)
+ 
+         if cls_index is not None:
+-            cls_index = cls_index[:, None, None].expand(-1, -1, hsz) # shape (bsz, 1, hsz)
+-            cls_token_state = hidden_states.gather(-2, cls_index).squeeze(-2) # shape (bsz, hsz)
++            cls_index = cls_index[:, None, None].expand(-1, -1, hsz)  # shape (bsz, 1, hsz)
++            cls_token_state = hidden_states.gather(-2, cls_index).squeeze(-2)  # shape (bsz, hsz)
+         else:
+-            cls_token_state = hidden_states[:, -1, :] # shape (bsz, hsz)
++            cls_token_state = hidden_states[:, -1, :]  # shape (bsz, hsz)
+ 
+         x = self.dense_0(torch.cat([start_states, cls_token_state], dim=-1))
+         x = self.activation(x)
+@@ -547,6 +555,7 @@ class SQuADHead(nn.Module):
+             ``torch.FloatTensor`` of shape ``(batch_size,)``
+             Log probabilities for the ``is_impossible`` label of the answers.
+     """
++
+     def __init__(self, config):
+         super(SQuADHead, self).__init__()
+         self.start_n_top = config.start_n_top
+@@ -590,19 +599,22 @@ class SQuADHead(nn.Module):
+         else:
+             # during inference, compute the end logits based on beam search
+             bsz, slen, hsz = hidden_states.size()
+-            start_log_probs = F.softmax(start_logits, dim=-1) # shape (bsz, slen)
++            start_log_probs = F.softmax(start_logits, dim=-1)  # shape (bsz, slen)
+ 
+-            start_top_log_probs, start_top_index = torch.topk(start_log_probs, self.start_n_top, dim=-1) # shape (bsz, start_n_top)
+-            start_top_index_exp = start_top_index.unsqueeze(-1).expand(-1, -1, hsz) # shape (bsz, start_n_top, hsz)
+-            start_states = torch.gather(hidden_states, -2, start_top_index_exp) # shape (bsz, start_n_top, hsz)
+-            start_states = start_states.unsqueeze(1).expand(-1, slen, -1, -1) # shape (bsz, slen, start_n_top, hsz)
++            start_top_log_probs, start_top_index = torch.topk(start_log_probs, self.start_n_top,
++                                                              dim=-1)  # shape (bsz, start_n_top)
++            start_top_index_exp = start_top_index.unsqueeze(-1).expand(-1, -1, hsz)  # shape (bsz, start_n_top, hsz)
++            start_states = torch.gather(hidden_states, -2, start_top_index_exp)  # shape (bsz, start_n_top, hsz)
++            start_states = start_states.unsqueeze(1).expand(-1, slen, -1, -1)  # shape (bsz, slen, start_n_top, hsz)
+ 
+-            hidden_states_expanded = hidden_states.unsqueeze(2).expand_as(start_states) # shape (bsz, slen, start_n_top, hsz)
++            hidden_states_expanded = hidden_states.unsqueeze(2).expand_as(
++                start_states)  # shape (bsz, slen, start_n_top, hsz)
+             p_mask = p_mask.unsqueeze(-1) if p_mask is not None else None
+             end_logits = self.end_logits(hidden_states_expanded, start_states=start_states, p_mask=p_mask)
+-            end_log_probs = F.softmax(end_logits, dim=1) # shape (bsz, slen, start_n_top)
++            end_log_probs = F.softmax(end_logits, dim=1)  # shape (bsz, slen, start_n_top)
+ 
+-            end_top_log_probs, end_top_index = torch.topk(end_log_probs, self.end_n_top, dim=1) # shape (bsz, end_n_top, start_n_top)
++            end_top_log_probs, end_top_index = torch.topk(end_log_probs, self.end_n_top,
++                                                          dim=1)  # shape (bsz, end_n_top, start_n_top)
+             end_top_log_probs = end_top_log_probs.view(-1, self.start_n_top * self.end_n_top)
+             end_top_index = end_top_index.view(-1, self.start_n_top * self.end_n_top)
+ 
+@@ -631,6 +643,7 @@ class SequenceSummary(nn.Module):
+             summary_first_dropout: Add a dropout before the projection and activation
+             summary_last_dropout: Add a dropout after the projection and activation
+     """
++
+     def __init__(self, config):
+         super(SequenceSummary, self).__init__()
+ 
+@@ -676,12 +689,12 @@ class SequenceSummary(nn.Module):
+             output = hidden_states.mean(dim=1)
+         elif self.summary_type == 'cls_index':
+             if cls_index is None:
+-                cls_index = torch.full_like(hidden_states[..., :1, :], hidden_states.shape[-2]-1, dtype=torch.long)
++                cls_index = torch.full_like(hidden_states[..., :1, :], hidden_states.shape[-2] - 1, dtype=torch.long)
+             else:
+                 cls_index = cls_index.unsqueeze(-1).unsqueeze(-1)
+-                cls_index = cls_index.expand((-1,) * (cls_index.dim()-1) + (hidden_states.size(-1),))
++                cls_index = cls_index.expand((-1,) * (cls_index.dim() - 1) + (hidden_states.size(-1),))
+             # shape of cls_index: (bsz, XX, 1, hidden_size) where XX are optional leading dim of hidden_states
+-            output = hidden_states.gather(-2, cls_index).squeeze(-2) # shape (bsz, XX, hidden_size)
++            output = hidden_states.gather(-2, cls_index).squeeze(-2)  # shape (bsz, XX, hidden_size)
+         elif self.summary_type == 'attn':
+             raise NotImplementedError
+ 
+diff --git a/model/tokenization_albert.py b/model/tokenization_albert.py
+index 9af918a..dfba335 100644
+--- a/model/tokenization_albert.py
++++ b/model/tokenization_albert.py
+@@ -11,342 +11,355 @@ import sentencepiece as spm
+ logger = logging.getLogger(__name__)
+ SPIECE_UNDERLINE = u"▁"
+ 
+-def preprocess_text(inputs,remove_space=True,do_lower_case=True):
+-  if remove_space:
+-    outputs = ' '.join(inputs.strip().split())
+-  else:
+-    outputs = inputs
+-  outputs = outputs.replace("``", '"').replace("''", '"')
+-  if six.PY2 and isinstance(outputs, str):
+-    outputs = outputs.decode('utf-8')
+-  outputs = unicodedata.normalize("NFKD", outputs)
+-  outputs = "".join([c for c in outputs if not unicodedata.combining(c)])
+-  if do_lower_case:
+-    outputs = outputs.lower()
+-  return outputs
++
++def preprocess_text(inputs, remove_space=True, do_lower_case=True):
++    if remove_space:
++        outputs = ' '.join(inputs.strip().split())
++    else:
++        outputs = inputs
++    outputs = outputs.replace("``", '"').replace("''", '"')
++    if six.PY2 and isinstance(outputs, str):
++        outputs = outputs.decode('utf-8')
++    outputs = unicodedata.normalize("NFKD", outputs)
++    outputs = "".join([c for c in outputs if not unicodedata.combining(c)])
++    if do_lower_case:
++        outputs = outputs.lower()
++    return outputs
++
+ 
+ def encode_pieces(sp_model, text, return_unicode=True, sample=False):
+-  """turn sentences into word pieces."""
+-  text = preprocess_text(text,)
+-  if six.PY2 and isinstance(text, unicode):
+-    text = text.encode('utf-8')
+-  if not sample:
+-    pieces = sp_model.EncodeAsPieces(text)
+-  else:
+-    pieces = sp_model.SampleEncodeAsPieces(text, 64, 0.1)
+-  new_pieces = []
+-  for piece in pieces:
+-    if len(piece) > 1 and piece[-1] == ',' and piece[-2].isdigit():
+-      cur_pieces = sp_model.EncodeAsPieces(
+-        piece[:-1].replace(SPIECE_UNDERLINE, ''))
+-      if piece[0] != SPIECE_UNDERLINE and cur_pieces[0][0] == SPIECE_UNDERLINE:
+-        if len(cur_pieces[0]) == 1:
+-          cur_pieces = cur_pieces[1:]
+-        else:
+-          cur_pieces[0] = cur_pieces[0][1:]
+-      cur_pieces.append(piece[-1])
+-      new_pieces.extend(cur_pieces)
++    """turn sentences into word pieces."""
++    text = preprocess_text(text, )
++    if six.PY2 and isinstance(text, unicode):
++        text = text.encode('utf-8')
++    if not sample:
++        pieces = sp_model.EncodeAsPieces(text)
+     else:
+-      new_pieces.append(piece)
++        pieces = sp_model.SampleEncodeAsPieces(text, 64, 0.1)
++    new_pieces = []
++    for piece in pieces:
++        if len(piece) > 1 and piece[-1] == ',' and piece[-2].isdigit():
++            cur_pieces = sp_model.EncodeAsPieces(
++                piece[:-1].replace(SPIECE_UNDERLINE, ''))
++            if piece[0] != SPIECE_UNDERLINE and cur_pieces[0][0] == SPIECE_UNDERLINE:
++                if len(cur_pieces[0]) == 1:
++                    cur_pieces = cur_pieces[1:]
++                else:
++                    cur_pieces[0] = cur_pieces[0][1:]
++            cur_pieces.append(piece[-1])
++            new_pieces.extend(cur_pieces)
++        else:
++            new_pieces.append(piece)
+ 
+-  # note(zhiliny): convert back to unicode for py2
+-  if six.PY2 and return_unicode:
+-    ret_pieces = []
+-    for piece in new_pieces:
+-      if isinstance(piece, str):
+-        piece = piece.decode(piece, "utf-8")
+-      ret_pieces.append(piece)
+-    new_pieces = ret_pieces
++    # note(zhiliny): convert back to unicode for py2
++    if six.PY2 and return_unicode:
++        ret_pieces = []
++        for piece in new_pieces:
++            if isinstance(piece, str):
++                piece = piece.decode(piece, "utf-8")
++            ret_pieces.append(piece)
++        new_pieces = ret_pieces
++
++    return new_pieces
+ 
+-  return new_pieces
+ 
+ def encode_ids(sp_model, text, sample=False):
+-  pieces = encode_pieces(sp_model, text, return_unicode=False, sample=sample)
+-  ids = [sp_model.PieceToId(piece) for piece in pieces]
+-  return ids
++    pieces = encode_pieces(sp_model, text, return_unicode=False, sample=sample)
++    ids = [sp_model.PieceToId(piece) for piece in pieces]
++    return ids
+ 
+ 
+ def load_vocab(vocab_file):
+-  """Loads a vocabulary file into a dictionary."""
+-  vocab = collections.OrderedDict()
+-  with open(vocab_file, "r", encoding="utf-8") as reader:
+-    tokens = reader.readlines()
+-  for index, token in enumerate(tokens):
+-    token = token.rstrip('\n')
+-    vocab[token] = index
+-  return vocab
++    """Loads a vocabulary file into a dictionary."""
++    vocab = collections.OrderedDict()
++    with open(vocab_file, "r", encoding="utf-8") as reader:
++        tokens = reader.readlines()
++    for index, token in enumerate(tokens):
++        token = token.rstrip('\n')
++        vocab[token] = index
++    return vocab
++
+ 
+ def convert_by_vocab(vocab, items):
+-  """Converts a sequence of [tokens|ids] using the vocab."""
+-  output = []
+-  for item in items:
+-    output.append(vocab[item])
+-  return output
++    """Converts a sequence of [tokens|ids] using the vocab."""
++    output = []
++    for item in items:
++        output.append(vocab[item])
++    return output
++
+ 
+ def convert_tokens_to_ids(vocab, tokens):
+-  return convert_by_vocab(vocab, tokens)
++    return convert_by_vocab(vocab, tokens)
++
+ 
+ def convert_ids_to_tokens(inv_vocab, ids):
+-  return convert_by_vocab(inv_vocab, ids)
++    return convert_by_vocab(inv_vocab, ids)
++
+ 
+ def whitespace_tokenize(text):
+-  """Runs basic whitespace cleaning and splitting on a piece of text."""
+-  text = text.strip()
+-  if not text:
+-    return []
+-  tokens = text.split()
+-  return tokens
++    """Runs basic whitespace cleaning and splitting on a piece of text."""
++    text = text.strip()
++    if not text:
++        return []
++    tokens = text.split()
++    return tokens
++
+ 
+ class FullTokenizer(object):
+-  """Runs end-to-end tokenziation."""
+-
+-  def __init__(self, vocab_file, do_lower_case=True, spm_model_file=None):
+-    self.vocab = None
+-    self.sp_model = None
+-    if spm_model_file:
+-      self.sp_model = spm.SentencePieceProcessor()
+-      logger.info("loading sentence piece model")
+-      self.sp_model.Load(spm_model_file)
+-      # # Note(mingdachen): For the purpose of consisent API, we are
+-      # # generating a vocabulary for the sentence piece tokenizer.
+-      self.vocab = {self.sp_model.IdToPiece(i): i for i
+-                    in range(self.sp_model.GetPieceSize())}
+-    else:
+-      print("load vocab")
+-      self.vocab = load_vocab(vocab_file)
+-      print("load token")
+-      self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case)
+-      self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab,unk_token="[UNK]", max_input_chars_per_word=100)
+-    self.inv_vocab = {v: k for k, v in self.vocab.items()}
+-
+-  def tokenize(self, text):
+-    if self.sp_model:
+-      split_tokens = encode_pieces(self.sp_model, text, return_unicode=False)
+-    else:
+-      split_tokens = []
+-      for token in self.basic_tokenizer.tokenize(text):
+-        for sub_token in self.wordpiece_tokenizer.tokenize(token):
+-          split_tokens.append(sub_token)
++    """Runs end-to-end tokenziation."""
++
++    def __init__(self, vocab_file, do_lower_case=True, spm_model_file=None):
++        self.vocab = None
++        self.sp_model = None
++        if spm_model_file:
++            self.sp_model = spm.SentencePieceProcessor()
++            logger.info("loading sentence piece model")
++            self.sp_model.Load(spm_model_file)
++            # # Note(mingdachen): For the purpose of consisent API, we are
++            # # generating a vocabulary for the sentence piece tokenizer.
++            self.vocab = {self.sp_model.IdToPiece(i): i for i
++                          in range(self.sp_model.GetPieceSize())}
++        else:
++            print("load vocab")
++            self.vocab = load_vocab(vocab_file)
++            print("load token")
++            self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case)
++            self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab, unk_token="[UNK]",
++                                                          max_input_chars_per_word=100)
++        self.inv_vocab = {v: k for k, v in self.vocab.items()}
+ 
+-    return split_tokens
++    def tokenize(self, text):
++        if self.sp_model:
++            split_tokens = encode_pieces(self.sp_model, text, return_unicode=False)
++        else:
++            split_tokens = []
++            for token in self.basic_tokenizer.tokenize(text):
++                for sub_token in self.wordpiece_tokenizer.tokenize(token):
++                    split_tokens.append(sub_token)
+ 
+-  def convert_tokens_to_ids(self, tokens):
+-    if self.sp_model:
+-      return [self.sp_model.PieceToId(token) for token in tokens]
+-    else:
+-      return convert_by_vocab(self.vocab, tokens)
++        return split_tokens
++
++    def convert_tokens_to_ids(self, tokens):
++        if self.sp_model:
++            return [self.sp_model.PieceToId(token) for token in tokens]
++        else:
++            return convert_by_vocab(self.vocab, tokens)
++
++    def convert_ids_to_tokens(self, ids):
++        if self.sp_model:
++            logger.info("using sentence piece tokenzier.")
++            return [self.sp_model.IdToPiece(id_) for id_ in ids]
++        else:
++            return convert_by_vocab(self.inv_vocab, ids)
+ 
+-  def convert_ids_to_tokens(self, ids):
+-    if self.sp_model:
+-      logger.info("using sentence piece tokenzier.")
+-      return [self.sp_model.IdToPiece(id_) for id_ in ids]
+-    else:
+-      return convert_by_vocab(self.inv_vocab, ids)
+ 
+ class BasicTokenizer(object):
+-  """Runs basic tokenization (punctuation splitting, lower casing, etc.)."""
+-
+-  def __init__(self, do_lower_case=True):
+-    """Constructs a BasicTokenizer.
+-
+-    Args:
+-      do_lower_case: Whether to lower case the input.
+-    """
+-    self.do_lower_case = do_lower_case
+-
+-  def tokenize(self, text):
+-    """Tokenizes a piece of text."""
+-    text = self._clean_text(text)
+-
+-    # This was added on November 1st, 2018 for the multilingual and Chinese
+-    # models. This is also applied to the English models now, but it doesn't
+-    # matter since the English models were not trained on any Chinese data
+-    # and generally don't have any Chinese data in them (there are Chinese
+-    # characters in the vocabulary because Wikipedia does have some Chinese
+-    # words in the English Wikipedia.).
+-    text = self._tokenize_chinese_chars(text)
+-    orig_tokens = whitespace_tokenize(text)
+-    split_tokens = []
+-    for token in orig_tokens:
+-      if self.do_lower_case:
+-        token = token.lower()
+-        token = self._run_strip_accents(token)
+-      split_tokens.extend(self._run_split_on_punc(token))
+-    output_tokens = whitespace_tokenize(" ".join(split_tokens))
+-    return output_tokens
+-
+-  def _run_strip_accents(self, text):
+-    """Strips accents from a piece of text."""
+-    text = unicodedata.normalize("NFD", text)
+-    output = []
+-    for char in text:
+-      cat = unicodedata.category(char)
+-      if cat == "Mn":
+-        continue
+-      output.append(char)
+-    return "".join(output)
+-
+-  def _run_split_on_punc(self, text):
+-    """Splits punctuation on a piece of text."""
+-    chars = list(text)
+-    i = 0
+-    start_new_word = True
+-    output = []
+-    while i < len(chars):
+-      char = chars[i]
+-      if _is_punctuation(char):
+-        output.append([char])
+-        start_new_word = True
+-      else:
+-        if start_new_word:
+-          output.append([])
+-        start_new_word = False
+-        output[-1].append(char)
+-      i += 1
++    """Runs basic tokenization (punctuation splitting, lower casing, etc.)."""
+ 
+-    return ["".join(x) for x in output]
++    def __init__(self, do_lower_case=True):
++        """Constructs a BasicTokenizer.
+ 
+-  def _tokenize_chinese_chars(self, text):
+-    """Adds whitespace around any CJK character."""
+-    output = []
+-    for char in text:
+-      cp = ord(char)
+-      if self._is_chinese_char(cp):
+-        output.append(" ")
+-        output.append(char)
+-        output.append(" ")
+-      else:
+-        output.append(char)
+-    return "".join(output)
+-
+-  def _is_chinese_char(self, cp):
+-    """Checks whether CP is the codepoint of a CJK character."""
+-    # This defines a "chinese character" as anything in the CJK Unicode block:
+-    #   https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)
+-    #
+-    # Note that the CJK Unicode block is NOT all Japanese and Korean characters,
+-    # despite its name. The modern Korean Hangul alphabet is a different block,
+-    # as is Japanese Hiragana and Katakana. Those alphabets are used to write
+-    # space-separated words, so they are not treated specially and handled
+-    # like the all of the other languages.
+-    if ((cp >= 0x4E00 and cp <= 0x9FFF) or  #
+-        (cp >= 0x3400 and cp <= 0x4DBF) or  #
+-        (cp >= 0x20000 and cp <= 0x2A6DF) or  #
+-        (cp >= 0x2A700 and cp <= 0x2B73F) or  #
+-        (cp >= 0x2B740 and cp <= 0x2B81F) or  #
+-        (cp >= 0x2B820 and cp <= 0x2CEAF) or
+-        (cp >= 0xF900 and cp <= 0xFAFF) or  #
+-        (cp >= 0x2F800 and cp <= 0x2FA1F)):  #
+-      return True
++        Args:
++          do_lower_case: Whether to lower case the input.
++        """
++        self.do_lower_case = do_lower_case
+ 
+-    return False
++    def tokenize(self, text):
++        """Tokenizes a piece of text."""
++        text = self._clean_text(text)
++
++        # This was added on November 1st, 2018 for the multilingual and Chinese
++        # models. This is also applied to the English models now, but it doesn't
++        # matter since the English models were not trained on any Chinese data
++        # and generally don't have any Chinese data in them (there are Chinese
++        # characters in the vocabulary because Wikipedia does have some Chinese
++        # words in the English Wikipedia.).
++        text = self._tokenize_chinese_chars(text)
++        orig_tokens = whitespace_tokenize(text)
++        split_tokens = []
++        for token in orig_tokens:
++            if self.do_lower_case:
++                token = token.lower()
++                token = self._run_strip_accents(token)
++            split_tokens.extend(self._run_split_on_punc(token))
++        output_tokens = whitespace_tokenize(" ".join(split_tokens))
++        return output_tokens
++
++    def _run_strip_accents(self, text):
++        """Strips accents from a piece of text."""
++        text = unicodedata.normalize("NFD", text)
++        output = []
++        for char in text:
++            cat = unicodedata.category(char)
++            if cat == "Mn":
++                continue
++            output.append(char)
++        return "".join(output)
++
++    def _run_split_on_punc(self, text):
++        """Splits punctuation on a piece of text."""
++        chars = list(text)
++        i = 0
++        start_new_word = True
++        output = []
++        while i < len(chars):
++            char = chars[i]
++            if _is_punctuation(char):
++                output.append([char])
++                start_new_word = True
++            else:
++                if start_new_word:
++                    output.append([])
++                start_new_word = False
++                output[-1].append(char)
++            i += 1
++
++        return ["".join(x) for x in output]
++
++    def _tokenize_chinese_chars(self, text):
++        """Adds whitespace around any CJK character."""
++        output = []
++        for char in text:
++            cp = ord(char)
++            if self._is_chinese_char(cp):
++                output.append(" ")
++                output.append(char)
++                output.append(" ")
++            else:
++                output.append(char)
++        return "".join(output)
++
++    def _is_chinese_char(self, cp):
++        """Checks whether CP is the codepoint of a CJK character."""
++        # This defines a "chinese character" as anything in the CJK Unicode block:
++        #   https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)
++        #
++        # Note that the CJK Unicode block is NOT all Japanese and Korean characters,
++        # despite its name. The modern Korean Hangul alphabet is a different block,
++        # as is Japanese Hiragana and Katakana. Those alphabets are used to write
++        # space-separated words, so they are not treated specially and handled
++        # like the all of the other languages.
++        if ((cp >= 0x4E00 and cp <= 0x9FFF) or  #
++                (cp >= 0x3400 and cp <= 0x4DBF) or  #
++                (cp >= 0x20000 and cp <= 0x2A6DF) or  #
++                (cp >= 0x2A700 and cp <= 0x2B73F) or  #
++                (cp >= 0x2B740 and cp <= 0x2B81F) or  #
++                (cp >= 0x2B820 and cp <= 0x2CEAF) or
++                (cp >= 0xF900 and cp <= 0xFAFF) or  #
++                (cp >= 0x2F800 and cp <= 0x2FA1F)):  #
++            return True
++
++        return False
++
++    def _clean_text(self, text):
++        """Performs invalid character removal and whitespace cleanup on text."""
++        output = []
++        for char in text:
++            cp = ord(char)
++            if cp == 0 or cp == 0xfffd or _is_control(char):
++                continue
++            if _is_whitespace(char):
++                output.append(" ")
++            else:
++                output.append(char)
++        return "".join(output)
+ 
+-  def _clean_text(self, text):
+-    """Performs invalid character removal and whitespace cleanup on text."""
+-    output = []
+-    for char in text:
+-      cp = ord(char)
+-      if cp == 0 or cp == 0xfffd or _is_control(char):
+-        continue
+-      if _is_whitespace(char):
+-        output.append(" ")
+-      else:
+-        output.append(char)
+-    return "".join(output)
+ 
+ class WordpieceTokenizer(object):
+     """Runs WordPiece tokenization."""
+ 
+     def __init__(self, vocab, unk_token, max_input_chars_per_word=100):
+-      self.vocab = vocab
+-      self.unk_token = unk_token
+-      self.max_input_chars_per_word = max_input_chars_per_word
++        self.vocab = vocab
++        self.unk_token = unk_token
++        self.max_input_chars_per_word = max_input_chars_per_word
+ 
+     def tokenize(self, text):
+-      """Tokenizes a piece of text into its word pieces.
+-
+-      This uses a greedy longest-match-first algorithm to perform tokenization
+-      using the given vocabulary.
+-
+-      For example:
+-        input = "unaffable"
+-        output = ["un", "##aff", "##able"]
+-
+-      Args:
+-        text: A single token or whitespace separated tokens. This should have
+-          already been passed through `BasicTokenizer`.
+-
+-      Returns:
+-        A list of wordpiece tokens.
+-      """
+-
+-      output_tokens = []
+-      for token in whitespace_tokenize(text):
+-        chars = list(token)
+-        if len(chars) > self.max_input_chars_per_word:
+-          output_tokens.append(self.unk_token)
+-          continue
+-
+-        is_bad = False
+-        start = 0
+-        sub_tokens = []
+-        while start < len(chars):
+-          end = len(chars)
+-          cur_substr = None
+-          while start < end:
+-            substr = "".join(chars[start:end])
+-            if start > 0:
+-              substr = "##" + substr
+-            if substr in self.vocab:
+-              cur_substr = substr
+-              break
+-            end -= 1
+-          if cur_substr is None:
+-            is_bad = True
+-            break
+-          sub_tokens.append(cur_substr)
+-          start = end
+-
+-        if is_bad:
+-          output_tokens.append(self.unk_token)
+-        else:
+-          output_tokens.extend(sub_tokens)
+-      return output_tokens
++        """Tokenizes a piece of text into its word pieces.
++
++        This uses a greedy longest-match-first algorithm to perform tokenization
++        using the given vocabulary.
++
++        For example:
++          input = "unaffable"
++          output = ["un", "##aff", "##able"]
++
++        Args:
++          text: A single token or whitespace separated tokens. This should have
++            already been passed through `BasicTokenizer`.
++
++        Returns:
++          A list of wordpiece tokens.
++        """
++
++        output_tokens = []
++        for token in whitespace_tokenize(text):
++            chars = list(token)
++            if len(chars) > self.max_input_chars_per_word:
++                output_tokens.append(self.unk_token)
++                continue
++
++            is_bad = False
++            start = 0
++            sub_tokens = []
++            while start < len(chars):
++                end = len(chars)
++                cur_substr = None
++                while start < end:
++                    substr = "".join(chars[start:end])
++                    if start > 0:
++                        substr = "##" + substr
++                    if substr in self.vocab:
++                        cur_substr = substr
++                        break
++                    end -= 1
++                if cur_substr is None:
++                    is_bad = True
++                    break
++                sub_tokens.append(cur_substr)
++                start = end
++
++            if is_bad:
++                output_tokens.append(self.unk_token)
++            else:
++                output_tokens.extend(sub_tokens)
++        return output_tokens
++
+ 
+ def _is_whitespace(char):
+-  """Checks whether `chars` is a whitespace character."""
+-  # \t, \n, and \r are technically control characters but we treat them
+-  # as whitespace since they are generally considered as such.
+-  if char == " " or char == "\t" or char == "\n" or char == "\r":
+-    return True
+-  cat = unicodedata.category(char)
+-  if cat == "Zs":
+-    return True
+-  return False
++    """Checks whether `chars` is a whitespace character."""
++    # \t, \n, and \r are technically control characters but we treat them
++    # as whitespace since they are generally considered as such.
++    if char == " " or char == "\t" or char == "\n" or char == "\r":
++        return True
++    cat = unicodedata.category(char)
++    if cat == "Zs":
++        return True
++    return False
+ 
+ 
+ def _is_control(char):
+-  """Checks whether `chars` is a control character."""
+-  # These are technically control characters but we count them as whitespace
+-  # characters.
+-  if char == "\t" or char == "\n" or char == "\r":
++    """Checks whether `chars` is a control character."""
++    # These are technically control characters but we count them as whitespace
++    # characters.
++    if char == "\t" or char == "\n" or char == "\r":
++        return False
++    cat = unicodedata.category(char)
++    if cat in ("Cc", "Cf"):
++        return True
+     return False
+-  cat = unicodedata.category(char)
+-  if cat in ("Cc", "Cf"):
+-    return True
+-  return False
++
+ 
+ def _is_punctuation(char):
+-  """Checks whether `chars` is a punctuation character."""
+-  cp = ord(char)
+-  # We treat all non-letter/number ASCII as punctuation.
+-  # Characters such as "^", "$", and "`" are not in the Unicode
+-  # Punctuation class but we treat them as punctuation anyways, for
+-  # consistency.
+-  if ((cp >= 33 and cp <= 47) or (cp >= 58 and cp <= 64) or
+-      (cp >= 91 and cp <= 96) or (cp >= 123 and cp <= 126)):
+-    return True
+-  cat = unicodedata.category(char)
+-  if cat.startswith("P"):
+-    return True
+-  return False
++    """Checks whether `chars` is a punctuation character."""
++    cp = ord(char)
++    # We treat all non-letter/number ASCII as punctuation.
++    # Characters such as "^", "$", and "`" are not in the Unicode
++    # Punctuation class but we treat them as punctuation anyways, for
++    # consistency.
++    if ((cp >= 33 and cp <= 47) or (cp >= 58 and cp <= 64) or
++            (cp >= 91 and cp <= 96) or (cp >= 123 and cp <= 126)):
++        return True
++    cat = unicodedata.category(char)
++    if cat.startswith("P"):
++        return True
++    return False
+diff --git a/model/tokenization_bert.py b/model/tokenization_bert.py
+index ad3d480..70fb84d 100644
+--- a/model/tokenization_bert.py
++++ b/model/tokenization_bert.py
+@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
+ 
+ VOCAB_FILES_NAMES = {'vocab_file': 'vocab.txt'}
+ 
++
+ def load_vocab(vocab_file):
+     """Loads a vocabulary file into a dictionary."""
+     vocab = collections.OrderedDict()
+diff --git a/model/tokenization_utils.py b/model/tokenization_utils.py
+index c80a764..7ce6e3c 100644
+--- a/model/tokenization_utils.py
++++ b/model/tokenization_utils.py
+@@ -33,6 +33,7 @@ SPECIAL_TOKENS_MAP_FILE = 'special_tokens_map.json'
+ ADDED_TOKENS_FILE = 'added_tokens.json'
+ TOKENIZER_CONFIG_FILE = 'tokenizer_config.json'
+ 
++
+ class PreTrainedTokenizer(object):
+     """ Base class for all tokenizers.
+     Handle all the shared methods for tokenization and special tokens as well as methods dowloading/caching/loading pretrained tokenizers as well as adding tokens to the vocabulary.
+@@ -224,12 +225,12 @@ class PreTrainedTokenizer(object):
+         for key, value in kwargs.items():
+             if key in self.SPECIAL_TOKENS_ATTRIBUTES:
+                 if key == 'additional_special_tokens':
+-                    assert isinstance(value, (list, tuple)) and all(isinstance(t, str) or (six.PY2 and isinstance(t, unicode)) for t in value)
++                    assert isinstance(value, (list, tuple)) and all(
++                        isinstance(t, str) or (six.PY2 and isinstance(t, unicode)) for t in value)
+                 else:
+                     assert isinstance(value, str) or (six.PY2 and isinstance(value, unicode))
+                 setattr(self, key, value)
+ 
+-
+     @classmethod
+     def from_pretrained(cls, *inputs, **kwargs):
+         r"""
+@@ -278,7 +279,6 @@ class PreTrainedTokenizer(object):
+         """
+         return cls._from_pretrained(*inputs, **kwargs)
+ 
+-
+     @classmethod
+     def _from_pretrained(cls, pretrained_model_name_or_path, *init_inputs, **kwargs):
+         cache_dir = kwargs.pop('cache_dir', None)
+@@ -339,7 +339,7 @@ class PreTrainedTokenizer(object):
+                     "We assumed '{}' was a path or url to a directory containing vocabulary files "
+                     "named {} but couldn't find such vocabulary files at this path or url.".format(
+                         pretrained_model_name_or_path, ', '.join(s3_models),
+-                        pretrained_model_name_or_path, 
++                        pretrained_model_name_or_path,
+                         list(cls.vocab_files_names.values())))
+ 
+         # Get files from url, cache, or disk depending on the case
+@@ -349,17 +349,18 @@ class PreTrainedTokenizer(object):
+                 if file_path is None:
+                     resolved_vocab_files[file_id] = None
+                 else:
+-                    resolved_vocab_files[file_id] = cached_path(file_path, cache_dir=cache_dir, force_download=force_download, proxies=proxies)
++                    resolved_vocab_files[file_id] = cached_path(file_path, cache_dir=cache_dir,
++                                                                force_download=force_download, proxies=proxies)
+         except EnvironmentError:
+             if pretrained_model_name_or_path in s3_models:
+                 msg = "Couldn't reach server at '{}' to download vocabulary files."
+             else:
+                 msg = "Model name '{}' was not found in tokenizers model name list ({}). " \
+-                    "We assumed '{}' was a path or url to a directory containing vocabulary files " \
+-                    "named {}, but couldn't find such vocabulary files at this path or url.".format(
+-                        pretrained_model_name_or_path, ', '.join(s3_models),
+-                        pretrained_model_name_or_path,
+-                        list(cls.vocab_files_names.values()))
++                      "We assumed '{}' was a path or url to a directory containing vocabulary files " \
++                      "named {}, but couldn't find such vocabulary files at this path or url.".format(
++                    pretrained_model_name_or_path, ', '.join(s3_models),
++                    pretrained_model_name_or_path,
++                    list(cls.vocab_files_names.values()))
+ 
+             raise EnvironmentError(msg)
+ 
+@@ -414,13 +415,12 @@ class PreTrainedTokenizer(object):
+         # Add supplementary tokens.
+         if added_tokens_file is not None:
+             added_tok_encoder = json.load(open(added_tokens_file, encoding="utf-8"))
+-            added_tok_decoder = {v:k for k, v in added_tok_encoder.items()}
++            added_tok_decoder = {v: k for k, v in added_tok_encoder.items()}
+             tokenizer.added_tokens_encoder.update(added_tok_encoder)
+             tokenizer.added_tokens_decoder.update(added_tok_decoder)
+ 
+         return tokenizer
+ 
+-
+     def save_pretrained(self, save_directory):
+         """ Save the tokenizer vocabulary files together with:
+                 - added tokens,
+@@ -462,7 +462,6 @@ class PreTrainedTokenizer(object):
+ 
+         return vocab_files + (special_tokens_map_file, added_tokens_file)
+ 
+-
+     def save_vocabulary(self, save_directory):
+         """ Save the tokenizer vocabulary to a directory. This method does *NOT* save added tokens
+             and special token mappings.
+@@ -471,17 +470,14 @@ class PreTrainedTokenizer(object):
+         """
+         raise NotImplementedError
+ 
+-
+     def vocab_size(self):
+         """ Size of the base vocabulary (without the added tokens) """
+         raise NotImplementedError
+ 
+-
+     def __len__(self):
+         """ Size of the full vocabulary with the added tokens """
+         return self.vocab_size + len(self.added_tokens_encoder)
+ 
+-
+     def add_tokens(self, new_tokens):
+         """
+         Add a list of new tokens to the tokenizer class. If the new tokens are not in the
+@@ -516,7 +512,7 @@ class PreTrainedTokenizer(object):
+                 logger.info("Adding %s to the vocabulary", token)
+ 
+         added_tok_encoder = dict((tok, len(self) + i) for i, tok in enumerate(to_add_tokens))
+-        added_tok_decoder = {v:k for k, v in added_tok_encoder.items()}
++        added_tok_decoder = {v: k for k, v in added_tok_encoder.items()}
+         self.added_tokens_encoder.update(added_tok_encoder)
+         self.added_tokens_decoder.update(added_tok_decoder)
+ 
+@@ -585,7 +581,8 @@ class PreTrainedTokenizer(object):
+         for key, value in special_tokens_dict.items():
+             assert key in self.SPECIAL_TOKENS_ATTRIBUTES
+             if key == 'additional_special_tokens':
+-                assert isinstance(value, (list, tuple)) and all(isinstance(t, str) or (six.PY2 and isinstance(t, unicode)) for t in value)
++                assert isinstance(value, (list, tuple)) and all(
++                    isinstance(t, str) or (six.PY2 and isinstance(t, unicode)) for t in value)
+                 added_tokens += self.add_tokens(value)
+             else:
+                 assert isinstance(value, str) or (six.PY2 and isinstance(value, unicode))
+@@ -602,6 +599,7 @@ class PreTrainedTokenizer(object):
+ 
+             Take care of added tokens.
+         """
++
+         def split_on_token(tok, text):
+             result = []
+             split_text = text.split(tok)
+@@ -639,8 +637,8 @@ class PreTrainedTokenizer(object):
+                 text_list = tokenized_text
+ 
+             return sum((self._tokenize(token, **kwargs) if token not \
+-                    in self.added_tokens_encoder and token not in self.all_special_tokens \
+-                    else [token] for token in tokenized_text), [])
++                                                           in self.added_tokens_encoder and token not in self.all_special_tokens \
++                            else [token] for token in tokenized_text), [])
+ 
+         added_tokens = list(self.added_tokens_encoder.keys()) + self.all_special_tokens
+         tokenized_text = split_on_tokens(added_tokens, text)
+@@ -686,14 +684,14 @@ class PreTrainedTokenizer(object):
+         raise NotImplementedError
+ 
+     def encode(self,
+-                text,
+-                text_pair=None,
+-                add_special_tokens=False,
+-                max_length=None,
+-                stride=0,
+-                truncation_strategy='longest_first',
+-                return_tensors=None,
+-                **kwargs):
++               text,
++               text_pair=None,
++               add_special_tokens=False,
++               max_length=None,
++               stride=0,
++               truncation_strategy='longest_first',
++               return_tensors=None,
++               **kwargs):
+         """
+         Converts a string in a sequence of ids (integer), using the tokenizer and vocabulary.
+ 
+@@ -778,7 +776,8 @@ class PreTrainedTokenizer(object):
+             elif isinstance(text, (list, tuple)) and len(text) > 0 and isinstance(text[0], int):
+                 return text
+             else:
+-                raise ValueError("Input is not valid. Should be a string, a list/tuple of strings or a list/tuple of integers.")
++                raise ValueError(
++                    "Input is not valid. Should be a string, a list/tuple of strings or a list/tuple of integers.")
+ 
+         first_ids = get_input_ids(text)
+         second_ids = get_input_ids(text_pair) if text_pair is not None else None
+@@ -843,7 +842,7 @@ class PreTrainedTokenizer(object):
+         total_len = len_ids + len_pair_ids + (self.num_added_tokens(pair=pair) if add_special_tokens else 0)
+         if max_length and total_len > max_length:
+             ids, pair_ids, overflowing_tokens = self.truncate_sequences(ids, pair_ids=pair_ids,
+-                                                                        num_tokens_to_remove=total_len-max_length,
++                                                                        num_tokens_to_remove=total_len - max_length,
+                                                                         truncation_strategy=truncation_strategy,
+                                                                         stride=stride)
+             encoded_inputs["overflowing_tokens"] = overflowing_tokens
+@@ -864,7 +863,9 @@ class PreTrainedTokenizer(object):
+             sequence = torch.tensor([sequence])
+             token_type_ids = torch.tensor([token_type_ids])
+         elif return_tensors is not None:
+-            logger.warning("Unable to convert output to tensors format {}, PyTorch or TensorFlow is not available.".format(return_tensors))
++            logger.warning(
++                "Unable to convert output to tensors format {}, PyTorch or TensorFlow is not available.".format(
++                    return_tensors))
+ 
+         encoded_inputs["input_ids"] = sequence
+         encoded_inputs["token_type_ids"] = token_type_ids
+@@ -876,7 +877,8 @@ class PreTrainedTokenizer(object):
+ 
+         return encoded_inputs
+ 
+-    def truncate_sequences(self, ids, pair_ids=None, num_tokens_to_remove=0, truncation_strategy='longest_first', stride=0):
++    def truncate_sequences(self, ids, pair_ids=None, num_tokens_to_remove=0, truncation_strategy='longest_first',
++                           stride=0):
+         """Truncates a sequence pair in place to the maximum length.
+             truncation_strategy: string selected in the following options:
+                 - 'longest_first' (default) Iteratively reduce the inputs sequence until the input is under max_length
+@@ -913,7 +915,8 @@ class PreTrainedTokenizer(object):
+         elif truncation_strategy == 'do_not_truncate':
+             raise ValueError("Input sequence are too long for max_length. Please select a truncation strategy.")
+         else:
+-            raise ValueError("Truncation_strategy should be selected in ['longest_first', 'only_first', 'only_second', 'do_not_truncate']")
++            raise ValueError(
++                "Truncation_strategy should be selected in ['longest_first', 'only_first', 'only_second', 'do_not_truncate']")
+         return (ids, pair_ids, overflowing_tokens)
+ 
+     def create_token_type_ids_from_sequences(self, token_ids_0, token_ids_1=None):
+@@ -1060,6 +1063,9 @@ class PreTrainedTokenizer(object):
+         """ Clean up a list of simple English tokenization artifacts like spaces before punctuations and abreviated forms.
+         """
+         out_string = out_string.replace(' .', '.').replace(' ?', '?').replace(' !', '!').replace(' ,', ','
+-                        ).replace(" ' ", "'").replace(" n't", "n't").replace(" 'm", "'m").replace(" do not", " don't"
+-                        ).replace(" 's", "'s").replace(" 've", "'ve").replace(" 're", "'re")
++                                                                                                 ).replace(" ' ",
++                                                                                                           "'").replace(
++            " n't", "n't").replace(" 'm", "'m").replace(" do not", " don't"
++                                                        ).replace(" 's", "'s").replace(" 've", "'ve").replace(" 're",
++                                                                                                              "'re")
+         return out_string
+diff --git a/processors/__init__.py b/processors/__init__.py
+index 2e1a53e..c633c31 100644
+--- a/processors/__init__.py
++++ b/processors/__init__.py
+@@ -1,5 +1,5 @@
+ from .utils import InputExample, InputFeatures, DataProcessor
+ from .glue import (glue_output_modes, glue_processors, glue_tasks_num_labels,
+-                   glue_convert_examples_to_features,collate_fn)
++                   glue_convert_examples_to_features,collate_fn,collate_fn0)
+ 
+ 
+diff --git a/processors/glue.py b/processors/glue.py
+index 6628226..f7ee9fa 100644
+--- a/processors/glue.py
++++ b/processors/glue.py
+@@ -1,3 +1,16 @@
++# Copyright 2021 Huawei Technologies Co., Ltd
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
+ """ GLUE processors and helpers """
+ 
+ import logging
+@@ -8,7 +21,7 @@ from .utils import DataProcessor, InputExample, InputFeatures
+ logger = logging.getLogger(__name__)
+ 
+ 
+-def collate_fn(batch):
++def collate_fn0(batch):  # 动态shape罪魁祸首，初始代码
+     """
+     batch should be a list of (sequence, target, length) tuples...
+     Returns a padded tensor of sequences sorted from longest to shortest,
+@@ -21,6 +34,15 @@ def collate_fn(batch):
+     return all_input_ids, all_attention_mask, all_token_type_ids, all_labels
+ 
+ 
++def collate_fn(batch):  # 动态shape罪魁祸首
++    """
++    batch should be a list of (sequence, target, length) tuples...
++    Returns a padded tensor of sequences sorted from longest to shortest,
++    """
++    all_input_ids, all_attention_mask, all_token_type_ids, all_lens, all_labels = map(torch.stack, zip(*batch))
++    return all_input_ids, all_attention_mask, all_token_type_ids, all_labels
++
++
+ def glue_convert_examples_to_features(examples, tokenizer,
+                                       max_seq_length=512,
+                                       task=None,
+@@ -65,7 +87,7 @@ def glue_convert_examples_to_features(examples, tokenizer,
+             logger.info("Writing example %d" % (ex_index))
+ 
+         tokens_a = tokenizer.tokenize(example.text_a)
+-        tokens_b  =None
++        tokens_b = None
+         if example.text_b:
+             tokens_b = tokenizer.tokenize(example.text_b)
+         if tokens_b:
+@@ -134,21 +156,23 @@ def glue_convert_examples_to_features(examples, tokenizer,
+                           input_len=input_len))
+     return features
+ 
++
+ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
+-  """Truncates a sequence pair in place to the maximum length."""
+-
+-  # This is a simple heuristic which will always truncate the longer sequence
+-  # one token at a time. This makes more sense than truncating an equal percent
+-  # of tokens from each, since if one sequence is very short then each token
+-  # that's truncated likely contains more information than a longer sequence.
+-  while True:
+-    total_length = len(tokens_a) + len(tokens_b)
+-    if total_length <= max_length:
+-      break
+-    if len(tokens_a) > len(tokens_b):
+-      tokens_a.pop()
+-    else:
+-      tokens_b.pop()
++    """Truncates a sequence pair in place to the maximum length."""
++
++    # This is a simple heuristic which will always truncate the longer sequence
++    # one token at a time. This makes more sense than truncating an equal percent
++    # of tokens from each, since if one sequence is very short then each token
++    # that's truncated likely contains more information than a longer sequence.
++    while True:
++        total_length = len(tokens_a) + len(tokens_b)
++        if total_length <= max_length:
++            break
++        if len(tokens_a) > len(tokens_b):
++            tokens_a.pop()
++        else:
++            tokens_b.pop()
++
+ 
+ class MrpcProcessor(DataProcessor):
+     """Processor for the MRPC data set (GLUE version)."""
+@@ -215,6 +239,7 @@ class MnliProcessor(DataProcessor):
+                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+         return examples
+ 
++
+ class MnliMismatchedProcessor(MnliProcessor):
+     """Processor for the MultiNLI Mismatched data set (GLUE version)."""
+ 
+@@ -253,6 +278,7 @@ class ColaProcessor(DataProcessor):
+                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+         return examples
+ 
++
+ class Sst2Processor(DataProcessor):
+     """Processor for the SST-2 data set (GLUE version)."""
+ 
+@@ -266,6 +292,11 @@ class Sst2Processor(DataProcessor):
+         return self._create_examples(
+             self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+ 
++    def get_test_examples(self, data_dir):
++        """See base class."""
++        return self._create_examples(
++            self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
++
+     def get_labels(self):
+         """See base class."""
+         return ["0", "1"]
+@@ -283,6 +314,7 @@ class Sst2Processor(DataProcessor):
+                 InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+         return examples
+ 
++
+ class StsbProcessor(DataProcessor):
+     """Processor for the sts-b data set (GLUE version)."""
+ 
+@@ -414,6 +446,7 @@ class RteProcessor(DataProcessor):
+                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+         return examples
+ 
++
+ class LcqmcProcessor(DataProcessor):
+     """Processor for the LCQMC data set (GLUE version)."""
+ 
+diff --git a/processors/utils.py b/processors/utils.py
+index b159465..d0c053b 100644
+--- a/processors/utils.py
++++ b/processors/utils.py
+@@ -3,6 +3,7 @@ import sys
+ import copy
+ import json
+ 
++
+ class InputExample(object):
+     """
+     A single training/test example for simple sequence classification.
+@@ -16,6 +17,7 @@ class InputExample(object):
+         label: (Optional) string. The label of the example. This should be
+         specified for train and dev examples, but not for test examples.
+     """
++
+     def __init__(self, guid, text_a, text_b=None, label=None):
+         self.guid = guid
+         self.text_a = text_a
+@@ -48,7 +50,7 @@ class InputFeatures(object):
+         label: Label corresponding to the input
+     """
+ 
+-    def __init__(self, input_ids, attention_mask, token_type_ids, label,input_len):
++    def __init__(self, input_ids, attention_mask, token_type_ids, label, input_len):
+         self.input_ids = input_ids
+         self.attention_mask = attention_mask
+         self.token_type_ids = token_type_ids
+diff --git a/tools/common.py b/tools/common.py
+index bd4cd9f..ec8e30f 100644
+--- a/tools/common.py
++++ b/tools/common.py
+@@ -8,16 +8,19 @@ import torch.nn as nn
+ from collections import OrderedDict
+ from pathlib import Path
+ import logging
++from threading import Lock
+ 
++lock = Lock()
+ logger = logging.getLogger()
+ 
++
+ def init_logger(log_file=None, log_file_level=logging.NOTSET):
+     '''
+     Example:
+         >>> init_logger(log_file)
+         >>> logger.info("abc'")
+     '''
+-    if isinstance(log_file,Path):
++    if isinstance(log_file, Path):
+         log_file = str(log_file)
+ 
+     log_format = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+@@ -34,6 +37,7 @@ def init_logger(log_file=None, log_file_level=logging.NOTSET):
+         logger.addHandler(file_handler)
+     return logger
+ 
++
+ def seed_everything(seed=1029):
+     '''
+     设置整个开发环境的seed
+@@ -114,7 +118,7 @@ def restore_checkpoint(resume_path, model=None):
+         model.module.load_state_dict(states)
+     else:
+         model.load_state_dict(states)
+-    return [model,best,start_epoch]
++    return [model, best, start_epoch]
+ 
+ 
+ def save_pickle(data, file_path):
+@@ -172,6 +176,7 @@ def load_json(file_path):
+         data = json.load(f)
+     return data
+ 
++
+ def save_model(model, model_path):
+     """ 存储不含有显卡信息的state_dict或model
+     :param model:
+@@ -188,6 +193,7 @@ def save_model(model, model_path):
+         state_dict[key] = state_dict[key].cpu()
+     torch.save(state_dict, model_path)
+ 
++
+ def load_model(model, model_path):
+     '''
+     加载模型
+diff --git a/tools/fps_counter.py b/tools/fps_counter.py
+new file mode 100644
+index 0000000..4f637f3
+--- /dev/null
++++ b/tools/fps_counter.py
+@@ -0,0 +1,99 @@
++# Copyright 2021 Huawei Technologies Co., Ltd
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++import time
++from threading import Lock
++
++
++class FpsCounter:
++    """
++how to use
++
++fps=FpsCounter()
++fps.begin()
++code
++fps.end()
++print(fps.fps())
++
++    """
++    def __init__(self):
++        self.step_sum = 0
++        self.time_sum = 0
++        self.t1 = 0
++        self.on = False
++
++    def begin(self):
++        assert self.on == False, "didnot end last time"
++        self.on = True
++        self.t1 = time.time_ns()
++
++    def end(self):
++        t2 = time.time_ns()
++        assert self.on == True, "didnot begin"
++        self.time_sum += t2 - self.t1
++        self.step_sum += 1
++        self.on = False
++
++    def reset(self):
++        self.step_sum = 0
++        self.time_sum = 0
++        self.t1 = 0
++        self.on = False
++
++    def fps(self, batch=1, n_device=1):
++        if self.step_sum == 0: return 0
++        time_avg = self.time_sum / 1e9 / self.step_sum
++        return batch * n_device / time_avg
++
++
++class FpsCounter2:
++    def __init__(self, node_num=0):
++        self.node_num = node_num
++        self.lock = Lock()
++        self.step_sum = [0 for i in range(node_num)]
++        self.time_sum = [0 for i in range(node_num)]
++        self.t1 = [0 for i in range(node_num)]
++        self.on = [False for i in range(node_num)]
++
++    def begin(self, node_idx=0):
++        assert self.on[node_idx] == False, "didnot end last time"
++        self.lock.acquire()
++        self.on[node_idx] = True
++        self.t1[node_idx] = time.time_ns()
++        self.lock.release()
++
++    def end(self, node_idx=0):
++        t2 = time.time_ns()
++        assert self.on[node_idx] == True, "didnot begin"
++        self.lock.acquire()
++        self.time_sum[node_idx] += t2 - self.t1[node_idx]
++        self.step_sum[node_idx] += 1
++        self.on[node_idx] = False
++        self.lock.release()
++
++    def reset(self, node_idx=0):
++        self.lock.acquire()
++        self.step_sum[node_idx] = 0
++        self.time_sum[node_idx] = 0
++        self.t1[node_idx] = 0
++        self.on[node_idx] = False
++        self.lock.release()
++
++    def fps(self, batch=1, n_device=1, world_size=0):
++        fps = 0
++        for i in range(world_size):
++            if self.step_sum[i] == 0: continue
++            time_avg = self.time_sum[i] / 1e9 / self.step_sum[i]
++            fps += batch * n_device / time_avg
++        return fps
+-- 
+2.17.1
+

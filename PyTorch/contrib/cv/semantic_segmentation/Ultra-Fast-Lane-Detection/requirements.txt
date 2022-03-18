@@ -1,0 +1,7 @@
+addict
+apex
+opencv-python
+pathspec
+sklearn
+tensorboard
+torch==1.5.0

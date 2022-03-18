@@ -1,0 +1,284 @@
+diff --git a/timm/data/dataset.py b/timm/data/dataset.py
+index a7c5ebe..aae275f 100644
+--- a/timm/data/dataset.py
++++ b/timm/data/dataset.py
+@@ -36,6 +36,7 @@ class ImageDataset(data.Dataset):
+ 
+     def __getitem__(self, index):
+         img, target = self.parser[index]
++        path = img.name
+         try:
+             img = img.read() if self.load_bytes else Image.open(img).convert('RGB')
+         except Exception as e:
+@@ -50,8 +51,8 @@ class ImageDataset(data.Dataset):
+             img = self.transform(img)
+         if target is None:
+             target = torch.tensor(-1, dtype=torch.long)
+-        return img, target
+-
++        return (img, target, path)
++        
+     def __len__(self):
+         return len(self.parser)
+ 
+diff --git a/timm/data/loader.py b/timm/data/loader.py
+index 7614466..2d0509d 100644
+--- a/timm/data/loader.py
++++ b/timm/data/loader.py
+@@ -14,7 +14,7 @@ from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+ from .distributed_sampler import OrderedDistributedSampler
+ from .random_erasing import RandomErasing
+ from .mixup import FastCollateMixup
+-
++import os
+ 
+ def fast_collate(batch):
+     """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
+@@ -39,7 +39,9 @@ def fast_collate(batch):
+         tensor = torch.zeros((batch_size, *batch[0][0].shape), dtype=torch.uint8)
+         for i in range(batch_size):
+             tensor[i] += torch.from_numpy(batch[i][0])
+-        return tensor, targets
++
++        paths = [b[2] for b in batch]
++        return tensor, targets, paths
+     elif isinstance(batch[0][0], torch.Tensor):
+         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+         assert len(targets) == batch_size
+@@ -63,8 +65,8 @@ class PrefetchLoader:
+                  re_count=1,
+                  re_num_splits=0):
+         self.loader = loader
+-        self.mean = torch.tensor([x * 255 for x in mean]).cuda().view(1, 3, 1, 1)
+-        self.std = torch.tensor([x * 255 for x in std]).cuda().view(1, 3, 1, 1)
++        self.mean = torch.tensor([x * 255 for x in mean]).view(1, 3, 1, 1)
++        self.std = torch.tensor([x * 255 for x in std]).view(1, 3, 1, 1)
+         self.fp16 = fp16
+         if fp16:
+             self.mean = self.mean.half()
+@@ -76,30 +78,24 @@ class PrefetchLoader:
+             self.random_erasing = None
+ 
+     def __iter__(self):
+-        stream = torch.cuda.Stream()
+         first = True
+ 
+-        for next_input, next_target in self.loader:
+-            with torch.cuda.stream(stream):
+-                next_input = next_input.cuda(non_blocking=True)
+-                next_target = next_target.cuda(non_blocking=True)
+-                if self.fp16:
+-                    next_input = next_input.half().sub_(self.mean).div_(self.std)
+-                else:
+-                    next_input = next_input.float().sub_(self.mean).div_(self.std)
+-                if self.random_erasing is not None:
+-                    next_input = self.random_erasing(next_input)
++        for next_input, next_target,next_path in self.loader:
++            if self.fp16:
++                next_input = next_input.half().sub_(self.mean).div_(self.std)
++            else:
++                next_input = next_input.float().sub_(self.mean).div_(self.std)
++            if self.random_erasing is not None:
++                next_input = self.random_erasing(next_input)
+ 
+             if not first:
+-                yield input, target
++                yield input, target,path
+             else:
+                 first = False
+-
+-            torch.cuda.current_stream().wait_stream(stream)
+             input = next_input
+             target = next_target
+-
+-        yield input, target
++            path = next_path
++        yield input, target, path
+ 
+     def __len__(self):
+         return len(self.loader)
+diff --git a/timm/models/helpers.py b/timm/models/helpers.py
+index 4d9b8a2..e9a582a 100644
+--- a/timm/models/helpers.py
++++ b/timm/models/helpers.py
+@@ -212,7 +212,7 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
+         classifier_bias = state_dict[classifier_name + '.bias']
+         state_dict[classifier_name + '.bias'] = classifier_bias[label_offset:]
+ 
+-    model.load_state_dict(state_dict, strict=strict)
++    model.load_state_dict(state_dict, strict=False)
+ 
+ 
+ def extract_layer(model, layer):
+diff --git a/timm/models/layers/anti_aliasing.py b/timm/models/layers/anti_aliasing.py
+index 9d3837e..f4f7572 100644
+--- a/timm/models/layers/anti_aliasing.py
++++ b/timm/models/layers/anti_aliasing.py
+@@ -18,7 +18,7 @@ class AntiAliasDownsampleLayer(nn.Module):
+         return self.op(x)
+ 
+ 
+-@torch.jit.script
++#@torch.jit.script
+ class DownsampleJIT(object):
+     def __init__(self, channels: int = 0, filt_size: int = 3, stride: int = 2):
+         self.channels = channels
+@@ -35,10 +35,11 @@ class DownsampleJIT(object):
+         return filt[None, None, :, :].repeat((self.channels, 1, 1, 1))
+ 
+     def __call__(self, input: torch.Tensor):
+-        input_pad = F.pad(input, (1, 1, 1, 1), 'reflect')
++        #input_pad = F.pad(input, (1, 1, 1, 1), 'reflect')
++        #filt = self.filt.get(str(input.device), self._create_filter(input))
++        #return F.conv2d(input_pad, filt, stride=2, padding=0, groups=input.shape[1])
+         filt = self.filt.get(str(input.device), self._create_filter(input))
+-        return F.conv2d(input_pad, filt, stride=2, padding=0, groups=input.shape[1])
+-
++        return F.conv2d(input, filt, stride=2, padding=1, groups=input.shape[1])
+ 
+ class Downsample(nn.Module):
+     def __init__(self, channels=None, filt_size=3, stride=2):
+diff --git a/timm/models/layers/space_to_depth.py b/timm/models/layers/space_to_depth.py
+index a7e8e0b..c0a02d1 100644
+--- a/timm/models/layers/space_to_depth.py
++++ b/timm/models/layers/space_to_depth.py
+@@ -16,7 +16,7 @@ class SpaceToDepth(nn.Module):
+         return x
+ 
+ 
+-@torch.jit.script
++#@torch.jit.script
+ class SpaceToDepthJit(object):
+     def __call__(self, x: torch.Tensor):
+         # assuming hard-coded that block_size==4 for acceleration
+diff --git a/timm/models/tresnet.py b/timm/models/tresnet.py
+index e371292..06f085e 100644
+--- a/timm/models/tresnet.py
++++ b/timm/models/tresnet.py
+@@ -57,14 +57,28 @@ def IABN2Float(module: nn.Module) -> nn.Module:
+         IABN2Float(child)
+     return module
+ 
+-
+ def conv2d_iabn(ni, nf, stride, kernel_size=3, groups=1, act_layer="leaky_relu", act_param=1e-2):
+-    return nn.Sequential(
+-        nn.Conv2d(
+-            ni, nf, kernel_size=kernel_size, stride=stride, padding=kernel_size // 2, groups=groups, bias=False),
+-        InplaceAbn(nf, act_layer=act_layer, act_param=act_param)
+-    )
+-
++    if act_layer=="leaky_relu":
++        return nn.Sequential(
++            nn.Conv2d(
++                ni, nf, kernel_size=kernel_size, stride=stride, padding=kernel_size // 2, groups=groups, bias=False),
++            #InplaceAbn(nf, act_layer=act_layer, act_param=act_param)
++            nn.BatchNorm2d(nf),
++            LeakyRelu()
++        )
++    if act_layer=="identity":
++        return nn.Sequential(
++            nn.Conv2d(
++                ni, nf, kernel_size=kernel_size, stride=stride, padding=kernel_size // 2, groups=groups, bias=False),
++            #InplaceAbn(nf, act_layer=act_layer, act_param=act_param)
++            nn.BatchNorm2d(nf)
++        )
++
++class LeakyRelu(nn.Module):
++    def __init__(self):
++        super(LeakyRelu, self).__init__()
++    def forward(self,x):
++        return F.leaky_relu(x,negative_slope=0.01, inplace=False)
+ 
+ class BasicBlock(nn.Module):
+     expansion = 1
+@@ -80,7 +94,7 @@ class BasicBlock(nn.Module):
+                 self.conv1 = nn.Sequential(
+                     conv2d_iabn(inplanes, planes, stride=1, act_param=1e-3),
+                     aa_layer(channels=planes, filt_size=3, stride=2))
+-
++        
+         self.conv2 = conv2d_iabn(planes, planes, stride=1, act_layer="identity")
+         self.relu = nn.ReLU(inplace=True)
+         self.downsample = downsample
+@@ -96,7 +110,6 @@ class BasicBlock(nn.Module):
+ 
+         out = self.conv1(x)
+         out = self.conv2(out)
+-
+         if self.se is not None:
+             out = self.se(out)
+ 
+@@ -124,13 +137,11 @@ class Bottleneck(nn.Module):
+                 self.conv2 = nn.Sequential(
+                     conv2d_iabn(planes, planes, kernel_size=3, stride=1, act_layer=act_layer, act_param=1e-3),
+                     aa_layer(channels=planes, filt_size=3, stride=2))
+-
+         reduction_chs = max(planes * self.expansion // 8, 64)
+         self.se = SEModule(planes, reduction_channels=reduction_chs) if use_se else None
+ 
+         self.conv3 = conv2d_iabn(
+             planes, planes * self.expansion, kernel_size=1, stride=1, act_layer="identity")
+-
+         self.relu = nn.ReLU(inplace=True)
+         self.downsample = downsample
+         self.stride = stride
+@@ -162,6 +173,10 @@ class TResNet(nn.Module):
+ 
+         # JIT layers
+         space_to_depth = SpaceToDepthModule()
++        #space_to_depth =  nn.Sequential(nn.Conv2d(3,48,kernel_size=7,stride=2,padding=3,bias=False),
++        #                        nn.BatchNorm2d(48),
++        #                        nn.ReLU(True),
++        #                        nn.MaxPool2d(3,2,padding=1),)
+         aa_layer = partial(AntiAliasDownsampleLayer, no_jit=no_aa_jit)
+ 
+         # TResnet stages
+@@ -178,6 +193,7 @@ class TResNet(nn.Module):
+             Bottleneck, self.planes * 8, layers[3], stride=2, use_se=False, aa_layer=aa_layer)  # 7x7
+ 
+         # body
++        
+         self.body = nn.Sequential(OrderedDict([
+             ('SpaceToDepth', space_to_depth),
+             ('conv1', conv1),
+@@ -185,7 +201,6 @@ class TResNet(nn.Module):
+             ('layer2', layer2),
+             ('layer3', layer3),
+             ('layer4', layer4)]))
+-
+         self.feature_info = [
+             dict(num_chs=self.planes, reduction=2, module=''),  # Not with S2D?
+             dict(num_chs=self.planes, reduction=4, module='body.layer1'),
+@@ -193,6 +208,7 @@ class TResNet(nn.Module):
+             dict(num_chs=self.planes * 4 * Bottleneck.expansion, reduction=16, module='body.layer3'),
+             dict(num_chs=self.planes * 8 * Bottleneck.expansion, reduction=32, module='body.layer4'),
+         ]
++        
+ 
+         # head
+         self.num_features = (self.planes * 8) * Bottleneck.expansion
+@@ -246,6 +262,24 @@ class TResNet(nn.Module):
+         return self.body(x)
+ 
+     def forward(self, x):
++        '''
++        self.body = nn.Sequential(OrderedDict([
++        ('SpaceToDepth', space_to_depth),
++        ('conv1', conv1),
++        ('layer1', layer1),
++        ('layer2', layer2),
++        ('layer3', layer3),
++        ('layer4', layer4)]))
++        '''
++        '''
++        x = self.space_to_depth(x)
++        x = self.conv1Error(x)
++        x = self.inplave_abn(x)
++        x = self.layer1(x)
++        x = self.layer2(x)
++        x = self.layer3(x)
++        x = self.layer4(x)
++        '''
+         x = self.forward_features(x)
+         x = self.head(x)
+         return x

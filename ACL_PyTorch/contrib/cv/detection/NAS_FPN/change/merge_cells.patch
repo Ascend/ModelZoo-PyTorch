@@ -1,0 +1,3 @@
+98a99,100
+>             if isinstance(kernel_size,int) == False:
+>                 kernel_size=kernel_size.cpu().detach().numpy().tolist()

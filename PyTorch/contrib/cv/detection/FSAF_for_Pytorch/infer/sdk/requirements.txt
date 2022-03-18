@@ -1,0 +1,7 @@
+numpy==1.20.2
+opencv-python==4.5.1.48
+matplotlib==3.4.1
+pycocotools==2.0.2
+mmcv==0.2.14
+scikit-image==0.18.3
+protobuf==3.16.0

@@ -1,0 +1,218 @@
+2022-01-07 01:21:50 [INFO] MsFmkTransplt start working now, please wait for a moment.
+
+2022-01-07 01:21:50 [INFO] Output path: output/DGMS_ID2460_for_PyTorch_msft.
+2022-01-07 01:21:50 [INFO] Analysis start...
+2022-01-07 01:21:50 [INFO] output/DGMS_ID2460_for_PyTorch_msft/LICENSE is not a python script, skip.
+2022-01-07 01:21:50 [INFO] output/DGMS_ID2460_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2022-01-07 01:21:50 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/config.py.
+2022-01-07 01:21:50 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/config.py complete.
+2022-01-07 01:21:50 [INFO] output/DGMS_ID2460_for_PyTorch_msft/README.md is not a python script, skip.
+2022-01-07 01:21:50 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/main.py.
+2022-01-07 01:21:50 [WARNING] torch.manual_seed in line 322 ~ 322 is not supported
+2022-01-07 01:21:51 [INFO] OperatorType.INSERT in line 30 ~ 31, import and init statement of torch.npu
+2022-01-07 01:21:51 [INFO] OperatorType.INSERT in line 211 ~ 212, import and init statement of torch.npu
+2022-01-07 01:21:51 [INFO] OperatorType.MODIFY in line 72 ~ 72, change function cuda to npu
+2022-01-07 01:21:51 [INFO] OperatorType.MODIFY in line 106 ~ 106, change function cuda to npu
+2022-01-07 01:21:51 [INFO] OperatorType.MODIFY in line 106 ~ 106, change function cuda to npu
+2022-01-07 01:21:51 [INFO] OperatorType.MODIFY in line 164 ~ 164, change function cuda to npu
+2022-01-07 01:21:51 [INFO] OperatorType.MODIFY in line 164 ~ 164, change function cuda to npu
+2022-01-07 01:21:51 [INFO] OperatorType.MODIFY in line 300 ~ 300, change module cuda to npu
+2022-01-07 01:21:51 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/main.py complete.
+2022-01-07 01:21:51 [INFO] output/DGMS_ID2460_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2022-01-07 01:21:51 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/mypath.py.
+2022-01-07 01:21:51 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:51 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:51 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/mypath.py complete.
+2022-01-07 01:21:51 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/__init__.py.
+2022-01-07 01:21:52 [INFO] OperatorType.INSERT in line 2 ~ 3, import and init statement of torch.npu
+2022-01-07 01:21:52 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/__init__.py complete.
+2022-01-07 01:21:52 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/custom_transforms.py.
+2022-01-07 01:21:52 [INFO] OperatorType.INSERT in line 6 ~ 7, import and init statement of torch.npu
+2022-01-07 01:21:52 [INFO] OperatorType.INSERT in line 31 ~ 32, import and init statement of torch.npu
+2022-01-07 01:21:52 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/custom_transforms.py complete.
+2022-01-07 01:21:52 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/__init__.py.
+2022-01-07 01:21:52 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/__init__.py complete.
+2022-01-07 01:21:52 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/cifar10.py.
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 64 ~ 65, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/cifar10.py complete.
+2022-01-07 01:21:53 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/imagenet.py.
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/imagenet.py complete.
+2022-01-07 01:21:53 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/cars.py.
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/cars.py complete.
+2022-01-07 01:21:53 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/cub200.py.
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:53 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/cub200.py complete.
+2022-01-07 01:21:53 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/aircraft.py.
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/dataloader/datasets/aircraft.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/loss.py.
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 6 ~ 7, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 6 ~ 7, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/loss.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/lazy_property.py.
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/lazy_property.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/metrics.py.
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/metrics.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/__init__.py.
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/__init__.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/cluster.py.
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 21 ~ 22, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 55 ~ 55, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 67 ~ 67, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 81 ~ 81, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 138 ~ 138, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 148 ~ 148, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 148 ~ 148, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 164 ~ 164, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 164 ~ 164, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 30 ~ 30, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 115 ~ 115, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 146 ~ 146, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 162 ~ 162, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 108 ~ 108, change function cuda to npu
+2022-01-07 01:21:54 [INFO] OperatorType.MODIFY in line 108 ~ 108, change function cuda to npu
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/cluster.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/utils.py.
+2022-01-07 01:21:54 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:54 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/utils.py complete.
+2022-01-07 01:21:54 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/misc.py.
+2022-01-07 01:21:55 [INFO] OperatorType.INSERT in line 14 ~ 15, import and init statement of torch.npu
+2022-01-07 01:21:55 [INFO] OperatorType.INSERT in line 17 ~ 18, import and init statement of torch.npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 75 ~ 75, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 68 ~ 68, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 72 ~ 72, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 84 ~ 84, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 91 ~ 91, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 93 ~ 93, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 94 ~ 94, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 110 ~ 110, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 128 ~ 128, change function cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 72 ~ 72, change module cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 84 ~ 84, change module cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 91 ~ 91, change module cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 93 ~ 93, change module cuda to npu
+2022-01-07 01:21:55 [INFO] OperatorType.MODIFY in line 94 ~ 94, change module cuda to npu
+2022-01-07 01:21:55 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/misc.py complete.
+2022-01-07 01:21:55 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/saver.py.
+2022-01-07 01:21:55 [INFO] OperatorType.INSERT in line 6 ~ 7, import and init statement of torch.npu
+2022-01-07 01:21:55 [INFO] OperatorType.INSERT in line 6 ~ 7, import and init statement of torch.npu
+2022-01-07 01:21:55 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/saver.py complete.
+2022-01-07 01:21:55 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/sparsity.py.
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 4 ~ 5, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/sparsity.py complete.
+2022-01-07 01:21:56 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/summaries.py.
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/summaries.py complete.
+2022-01-07 01:21:56 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/lr_scheduler.py.
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 3 ~ 4, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/lr_scheduler.py complete.
+2022-01-07 01:21:56 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/README.md is not a python script, skip.
+2022-01-07 01:21:56 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transform_example.ipynb is not a python script, skip.
+2022-01-07 01:21:56 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/.gitignore is not a python script, skip.
+2022-01-07 01:21:56 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/test.py.
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-01-07 01:21:56 [INFO] OperatorType.MODIFY in line 9 ~ 9, change function cuda to npu
+2022-01-07 01:21:56 [INFO] OperatorType.MODIFY in line 20 ~ 20, change function cuda to npu
+2022-01-07 01:21:56 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/test.py complete.
+2022-01-07 01:21:56 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/summary_example.ipynb is not a python script, skip.
+2022-01-07 01:21:56 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/visualize_example.ipynb is not a python script, skip.
+2022-01-07 01:21:56 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/torchTransformer.py.
+2022-01-07 01:21:58 [INFO] OperatorType.INSERT in line 18 ~ 19, import and init statement of torch.npu
+2022-01-07 01:21:58 [INFO] OperatorType.INSERT in line 18 ~ 19, import and init statement of torch.npu
+2022-01-07 01:21:58 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/torchTransformer.py complete.
+2022-01-07 01:21:58 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/__init__.py.
+2022-01-07 01:21:58 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/__init__.py complete.
+2022-01-07 01:21:58 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/utils.py.
+2022-01-07 01:21:58 [INFO] OperatorType.INSERT in line 6 ~ 7, import and init statement of torch.npu
+2022-01-07 01:21:58 [INFO] OperatorType.INSERT in line 20 ~ 21, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/utils.py complete.
+2022-01-07 01:21:59 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/quantize.py.
+2022-01-07 01:21:59 [INFO] OperatorType.INSERT in line 12 ~ 13, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] OperatorType.INSERT in line 69 ~ 70, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/transformers/quantize.py complete.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/inception_v3.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/vgg16.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/squeezenet1_0.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/googlenet.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/shufflenet_v2_x1_0.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/alexnet.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/mobilenet_v2.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/utils/PyTransformer/examples/resnet18.png is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/tools/train_cifar.sh is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/tools/validation.sh is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/tools/train_imgnet.sh is not a python script, skip.
+2022-01-07 01:21:59 [INFO] output/DGMS_ID2460_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2022-01-07 01:21:59 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/__init__.py.
+2022-01-07 01:21:59 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/__init__.py complete.
+2022-01-07 01:21:59 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/mnasnet.py.
+2022-01-07 01:21:59 [INFO] OperatorType.INSERT in line 5 ~ 6, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] OperatorType.INSERT in line 13 ~ 14, import and init statement of torch.npu
+2022-01-07 01:21:59 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/mnasnet.py complete.
+2022-01-07 01:21:59 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/vgg_small_cifar.py.
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 4 ~ 5, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 34 ~ 35, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/vgg_small_cifar.py complete.
+2022-01-07 01:22:00 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/__init__.py.
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/__init__.py complete.
+2022-01-07 01:22:00 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/resnet_cifar.py.
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 5 ~ 6, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/resnet_cifar.py complete.
+2022-01-07 01:22:00 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/resnet.py.
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/resnet.py complete.
+2022-01-07 01:22:00 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/proxylessnas.py.
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 2 ~ 3, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] OperatorType.INSERT in line 2 ~ 3, import and init statement of torch.npu
+2022-01-07 01:22:00 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/networks/proxylessnas.py complete.
+2022-01-07 01:22:00 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/DGMS/__init__.py.
+2022-01-07 01:22:00 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/DGMS/__init__.py complete.
+2022-01-07 01:22:00 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/DGMS/DGMSConv.py.
+2022-01-07 01:22:01 [INFO] OperatorType.INSERT in line 13 ~ 14, import and init statement of torch.npu
+2022-01-07 01:22:01 [INFO] OperatorType.INSERT in line 69 ~ 70, import and init statement of torch.npu
+2022-01-07 01:22:01 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/DGMS/DGMSConv.py complete.
+2022-01-07 01:22:01 [INFO] Start analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/DGMS/GMM.py.
+2022-01-07 01:22:01 [INFO] OperatorType.INSERT in line 15 ~ 16, import and init statement of torch.npu
+2022-01-07 01:22:01 [INFO] OperatorType.INSERT in line 81 ~ 82, import and init statement of torch.npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 24 ~ 24, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 26 ~ 26, change the arg at position 0 of function torch.device to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 40 ~ 40, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 40 ~ 40, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 41 ~ 41, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 41 ~ 41, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 42 ~ 42, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 43 ~ 43, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 45 ~ 45, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 50 ~ 50, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 60 ~ 60, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 62 ~ 62, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 64 ~ 64, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 64 ~ 64, change function cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 23 ~ 23, change module cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 40 ~ 40, change module cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 40 ~ 40, change module cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 42 ~ 42, change module cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 43 ~ 43, change module cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-01-07 01:22:01 [INFO] OperatorType.MODIFY in line 50 ~ 50, change module cuda to npu
+2022-01-07 01:22:01 [INFO] Analysis output/DGMS_ID2460_for_PyTorch_msft/modeling/DGMS/GMM.py complete.
+2022-01-07 01:22:01 [INFO] MsFmkTransplt run success, welcome to the next use.

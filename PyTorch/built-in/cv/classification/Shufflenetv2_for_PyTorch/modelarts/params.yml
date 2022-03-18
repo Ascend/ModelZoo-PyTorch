@@ -1,0 +1,26 @@
+
+arch: shufflenet_v2_x1_0
+num_classes: 1000
+workers: 128
+epochs: 5
+print_freq: 1
+eval_freq: 1
+batch_size: 128
+lr: 0.75
+momentum: 0
+weight_decay: 3.0517578125e-05
+world_size: 1
+rank: 0
+dist_backend: hccl
+seed: 49
+amp: true
+multiprocessing_distributed: false
+addr: 127.0.0.1
+dist_url: tcp://127.0.0.1:50000
+device_list: ''
+warm_up_epochs: 5
+gpu: 0
+
+# 迁移学习需要启用以下两个参数
+#pretrained: true           # 预训练标识
+#resume: checkpoint.pth.tar # 预训练模型路径，相对于train_start.py文件的路径

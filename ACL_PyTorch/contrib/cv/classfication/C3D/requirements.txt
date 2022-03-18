@@ -1,0 +1,14 @@
+numpy
+torch>=1.3
+imgaug
+librosa
+lmdb
+moviepy
+onnx
+onnxruntime
+PyTurboJPEG
+timm
+matplotlib
+numpy
+opencv-contrib-python
+Pillow

@@ -1,0 +1,293 @@
+2021-08-13 07:00:18 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2021-08-13 07:00:18 [INFO] Input path: /data/GTN/GPU_Input/Xception_ID1722_for_PyTorch.
+2021-08-13 07:00:18 [INFO] Output path: /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft.
+2021-08-13 07:00:18 [INFO] Analysis start...
+2021-08-13 07:00:18 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/LICENSE is not a python script, skip.
+2021-08-13 07:00:18 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2021-08-13 07:00:18 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/dataset.py.
+2021-08-13 07:00:19 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:19 [INFO] OperatorType.INSERT in line 72 ~ 73, import and init statement of torch.npu
+2021-08-13 07:00:19 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/dataset.py complete.
+2021-08-13 07:00:19 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/README.md is not a python script, skip.
+2021-08-13 07:00:19 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/.gitignore is not a python script, skip.
+2021-08-13 07:00:19 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/lr_finder.py.
+2021-08-13 07:00:19 [INFO] OperatorType.INSERT in line 57 ~ 58, import and init statement of torch.npu
+2021-08-13 07:00:19 [INFO] OperatorType.INSERT in line 75 ~ 76, import and init statement of torch.npu
+2021-08-13 07:00:19 [INFO] OperatorType.MODIFY in line 118 ~ 118, change function cuda to npu
+2021-08-13 07:00:19 [INFO] OperatorType.MODIFY in line 119 ~ 119, change function cuda to npu
+2021-08-13 07:00:19 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/lr_finder.py complete.
+2021-08-13 07:00:19 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/test.py.
+2021-08-13 07:00:19 [INFO] OperatorType.INSERT in line 54 ~ 55, import and init statement of torch.npu
+2021-08-13 07:00:19 [INFO] OperatorType.INSERT in line 54 ~ 55, import and init statement of torch.npu
+2021-08-13 07:00:19 [INFO] OperatorType.MODIFY in line 87 ~ 87, change function cuda to npu
+2021-08-13 07:00:19 [INFO] OperatorType.MODIFY in line 88 ~ 88, change function cuda to npu
+2021-08-13 07:00:19 [INFO] OperatorType.MODIFY in line 90 ~ 90, change module cuda to npu
+2021-08-13 07:00:19 [INFO] OperatorType.MODIFY in line 107 ~ 107, change module cuda to npu
+2021-08-13 07:00:19 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/test.py complete.
+2021-08-13 07:00:19 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/utils.py.
+2021-08-13 07:00:20 [INFO] OperatorType.INSERT in line 51 ~ 52, import and init statement of torch.npu
+2021-08-13 07:00:20 [INFO] OperatorType.INSERT in line 198 ~ 199, import and init statement of torch.npu
+2021-08-13 07:00:20 [INFO] OperatorType.MODIFY in line 194 ~ 194, change function cuda to npu
+2021-08-13 07:00:20 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/utils.py complete.
+2021-08-13 07:00:20 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2021-08-13 07:00:20 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2021-08-13 07:00:20 [INFO] /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/test/train_full_1p.sh is not a python script, skip.
+2021-08-13 07:00:20 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/conf/__init__.py.
+2021-08-13 07:00:20 [INFO] OperatorType.INSERT in line 39 ~ 40, import and init statement of torch.npu
+2021-08-13 07:00:20 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/conf/__init__.py complete.
+2021-08-13 07:00:20 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/conf/global_settings.py.
+2021-08-13 07:00:21 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-08-13 07:00:21 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/conf/global_settings.py complete.
+2021-08-13 07:00:21 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/googlenet.py.
+2021-08-13 07:00:21 [WARNING] torch.nn.Dropout2d in line 136 ~ 136 is not supported
+2021-08-13 07:00:21 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:21 [INFO] OperatorType.INSERT in line 97 ~ 98, import and init statement of torch.npu
+2021-08-13 07:00:21 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/googlenet.py complete.
+2021-08-13 07:00:21 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/mobilenetv2.py.
+2021-08-13 07:00:22 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-13 07:00:22 [INFO] OperatorType.INSERT in line 79 ~ 80, import and init statement of torch.npu
+2021-08-13 07:00:22 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/mobilenetv2.py complete.
+2021-08-13 07:00:22 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/nasnet.py.
+2021-08-13 07:00:23 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-13 07:00:23 [INFO] OperatorType.INSERT in line 70 ~ 71, import and init statement of torch.npu
+2021-08-13 07:00:23 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/nasnet.py complete.
+2021-08-13 07:00:23 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/shufflenetv2.py.
+2021-08-13 07:00:23 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-13 07:00:23 [INFO] OperatorType.INSERT in line 57 ~ 58, import and init statement of torch.npu
+2021-08-13 07:00:23 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/shufflenetv2.py complete.
+2021-08-13 07:00:23 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/inceptionv3.py.
+2021-08-13 07:00:24 [WARNING] torch.nn.Dropout2d in line 310 ~ 310 is not supported
+2021-08-13 07:00:24 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-13 07:00:24 [INFO] OperatorType.INSERT in line 62 ~ 63, import and init statement of torch.npu
+2021-08-13 07:00:24 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/inceptionv3.py complete.
+2021-08-13 07:00:24 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/wideresidual.py.
+2021-08-13 07:00:25 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-08-13 07:00:25 [INFO] OperatorType.INSERT in line 77 ~ 78, import and init statement of torch.npu
+2021-08-13 07:00:25 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/wideresidual.py complete.
+2021-08-13 07:00:25 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/resnext.py.
+2021-08-13 07:00:25 [INFO] OperatorType.INSERT in line 54 ~ 55, import and init statement of torch.npu
+2021-08-13 07:00:25 [INFO] OperatorType.INSERT in line 55 ~ 56, import and init statement of torch.npu
+2021-08-13 07:00:25 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/resnext.py complete.
+2021-08-13 07:00:25 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/attention.py.
+2021-08-13 07:00:26 [WARNING] torch.nn.functional.interpolate in line 163 ~ 163 is not supported
+2021-08-13 07:00:26 [WARNING] torch.nn.functional.interpolate in line 168 ~ 168 is not supported
+2021-08-13 07:00:26 [WARNING] torch.nn.functional.interpolate in line 173 ~ 173 is not supported
+2021-08-13 07:00:26 [WARNING] torch.nn.functional.interpolate in line 247 ~ 247 is not supported
+2021-08-13 07:00:26 [WARNING] torch.nn.functional.interpolate in line 252 ~ 252 is not supported
+2021-08-13 07:00:26 [WARNING] torch.nn.functional.interpolate in line 313 ~ 313 is not supported
+2021-08-13 07:00:27 [INFO] OperatorType.INSERT in line 50 ~ 51, import and init statement of torch.npu
+2021-08-13 07:00:27 [INFO] OperatorType.INSERT in line 90 ~ 91, import and init statement of torch.npu
+2021-08-13 07:00:27 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/attention.py complete.
+2021-08-13 07:00:27 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/rir.py.
+2021-08-13 07:00:27 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:27 [INFO] OperatorType.INSERT in line 112 ~ 113, import and init statement of torch.npu
+2021-08-13 07:00:27 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/rir.py complete.
+2021-08-13 07:00:27 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/mobilenet.py.
+2021-08-13 07:00:28 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:28 [INFO] OperatorType.INSERT in line 75 ~ 76, import and init statement of torch.npu
+2021-08-13 07:00:28 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/mobilenet.py complete.
+2021-08-13 07:00:28 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/senet.py.
+2021-08-13 07:00:29 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:29 [INFO] OperatorType.INSERT in line 92 ~ 93, import and init statement of torch.npu
+2021-08-13 07:00:29 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/senet.py complete.
+2021-08-13 07:00:29 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/squeezenet.py.
+2021-08-13 07:00:29 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:29 [INFO] OperatorType.INSERT in line 80 ~ 81, import and init statement of torch.npu
+2021-08-13 07:00:29 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/squeezenet.py complete.
+2021-08-13 07:00:29 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/stochasticdepth.py.
+2021-08-13 07:00:29 [WARNING] torch.bernoulli in line 73 ~ 73 is not supported
+2021-08-13 07:00:29 [WARNING] torch.bernoulli in line 153 ~ 153 is not supported
+2021-08-13 07:00:30 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-13 07:00:30 [INFO] OperatorType.INSERT in line 123 ~ 124, import and init statement of torch.npu
+2021-08-13 07:00:30 [INFO] OperatorType.MODIFY in line 74 ~ 74, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-13 07:00:30 [INFO] OperatorType.MODIFY in line 154 ~ 154, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-13 07:00:30 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/stochasticdepth.py complete.
+2021-08-13 07:00:30 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/inceptionv4.py.
+2021-08-13 07:00:31 [WARNING] torch.nn.Dropout2d in line 324 ~ 324 is not supported
+2021-08-13 07:00:31 [WARNING] torch.nn.Dropout2d in line 552 ~ 552 is not supported
+2021-08-13 07:00:32 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-13 07:00:32 [INFO] OperatorType.INSERT in line 61 ~ 62, import and init statement of torch.npu
+2021-08-13 07:00:32 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/inceptionv4.py complete.
+2021-08-13 07:00:32 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/vgg.py.
+2021-08-13 07:00:32 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-13 07:00:32 [INFO] OperatorType.INSERT in line 53 ~ 54, import and init statement of torch.npu
+2021-08-13 07:00:32 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/vgg.py complete.
+2021-08-13 07:00:32 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/resnet.py.
+2021-08-13 07:00:33 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-13 07:00:33 [INFO] OperatorType.INSERT in line 83 ~ 84, import and init statement of torch.npu
+2021-08-13 07:00:33 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/resnet.py complete.
+2021-08-13 07:00:33 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/xception.py.
+2021-08-13 07:00:33 [INFO] OperatorType.INSERT in line 45 ~ 46, import and init statement of torch.npu
+2021-08-13 07:00:33 [INFO] OperatorType.INSERT in line 70 ~ 71, import and init statement of torch.npu
+2021-08-13 07:00:33 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/xception.py complete.
+2021-08-13 07:00:33 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/densenet.py.
+2021-08-13 07:00:34 [INFO] OperatorType.INSERT in line 54 ~ 55, import and init statement of torch.npu
+2021-08-13 07:00:34 [INFO] OperatorType.INSERT in line 79 ~ 80, import and init statement of torch.npu
+2021-08-13 07:00:34 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/densenet.py complete.
+2021-08-13 07:00:34 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/preactresnet.py.
+2021-08-13 07:00:34 [INFO] OperatorType.INSERT in line 45 ~ 46, import and init statement of torch.npu
+2021-08-13 07:00:34 [INFO] OperatorType.INSERT in line 71 ~ 72, import and init statement of torch.npu
+2021-08-13 07:00:34 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/preactresnet.py complete.
+2021-08-13 07:00:34 [INFO] Start analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/shufflenet.py.
+2021-08-13 07:00:35 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-13 07:00:35 [INFO] OperatorType.INSERT in line 63 ~ 64, import and init statement of torch.npu
+2021-08-13 07:00:35 [INFO] Analysis /data/GTN/NPU_Output/Xception_ID1722_for_PyTorch_msft/models/shufflenet.py complete.
+2021-08-13 07:00:35 [INFO] MsFmkTransplt run success, welcome to the next use.
+2021-08-27 02:39:00 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2021-08-27 02:39:00 [INFO] Input path: /data/GTN/GPU_Input/InceptionV4_ID1778_for_PyTorch.
+2021-08-27 02:39:00 [INFO] Output path: /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft.
+2021-08-27 02:39:00 [INFO] Analysis start...
+2021-08-27 02:39:00 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/LICENSE is not a python script, skip.
+2021-08-27 02:39:00 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2021-08-27 02:39:00 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/train.py.
+2021-08-27 02:39:01 [INFO] OperatorType.INSERT in line 62 ~ 63, import and init statement of torch.npu
+2021-08-27 02:39:01 [INFO] OperatorType.INSERT in line 63 ~ 64, import and init statement of torch.npu
+2021-08-27 02:39:01 [INFO] OperatorType.MODIFY in line 67 ~ 67, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:01 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/train.py complete.
+2021-08-27 02:39:01 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/dataset.py.
+2021-08-27 02:39:01 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:01 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:01 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:01 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/dataset.py complete.
+2021-08-27 02:39:01 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/README.md is not a python script, skip.
+2021-08-27 02:39:01 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/.gitignore is not a python script, skip.
+2021-08-27 02:39:01 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/lr_finder.py.
+2021-08-27 02:39:01 [INFO] OperatorType.INSERT in line 57 ~ 58, import and init statement of torch.npu
+2021-08-27 02:39:01 [INFO] OperatorType.INSERT in line 58 ~ 59, import and init statement of torch.npu
+2021-08-27 02:39:01 [INFO] OperatorType.MODIFY in line 62 ~ 62, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:01 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/lr_finder.py complete.
+2021-08-27 02:39:01 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/test.py.
+2021-08-27 02:39:02 [INFO] OperatorType.INSERT in line 55 ~ 56, import and init statement of torch.npu
+2021-08-27 02:39:02 [INFO] OperatorType.INSERT in line 56 ~ 57, import and init statement of torch.npu
+2021-08-27 02:39:02 [INFO] OperatorType.MODIFY in line 60 ~ 60, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:02 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/test.py complete.
+2021-08-27 02:39:02 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/utils.py.
+2021-08-27 02:39:03 [INFO] OperatorType.INSERT in line 51 ~ 52, import and init statement of torch.npu
+2021-08-27 02:39:03 [INFO] OperatorType.INSERT in line 52 ~ 53, import and init statement of torch.npu
+2021-08-27 02:39:03 [INFO] OperatorType.MODIFY in line 56 ~ 56, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:03 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/utils.py complete.
+2021-08-27 02:39:03 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/unsupported_op.csv is not a python script, skip.
+2021-08-27 02:39:03 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2021-08-27 02:39:03 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2021-08-27 02:39:03 [INFO] /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/test/train_full_1p.sh is not a python script, skip.
+2021-08-27 02:39:03 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/conf/__init__.py.
+2021-08-27 02:39:03 [INFO] OperatorType.INSERT in line 39 ~ 40, import and init statement of torch.npu
+2021-08-27 02:39:03 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/conf/__init__.py complete.
+2021-08-27 02:39:03 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/conf/global_settings.py.
+2021-08-27 02:39:03 [INFO] OperatorType.INSERT in line 40 ~ 41, import and init statement of torch.npu
+2021-08-27 02:39:03 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/conf/global_settings.py complete.
+2021-08-27 02:39:03 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/googlenet.py.
+2021-08-27 02:39:03 [WARNING] torch.nn.Dropout2d in line 143 ~ 143 is not supported
+2021-08-27 02:39:03 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:03 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:03 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:03 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/googlenet.py complete.
+2021-08-27 02:39:03 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/mobilenetv2.py.
+2021-08-27 02:39:04 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:04 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:04 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:04 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/mobilenetv2.py complete.
+2021-08-27 02:39:04 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/nasnet.py.
+2021-08-27 02:39:05 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:05 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:05 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:05 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/nasnet.py complete.
+2021-08-27 02:39:05 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/shufflenetv2.py.
+2021-08-27 02:39:06 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:06 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:06 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:06 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/shufflenetv2.py complete.
+2021-08-27 02:39:06 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/inceptionv3.py.
+2021-08-27 02:39:06 [WARNING] torch.nn.Dropout2d in line 317 ~ 317 is not supported
+2021-08-27 02:39:07 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-27 02:39:07 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:07 [INFO] OperatorType.MODIFY in line 51 ~ 51, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:07 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/inceptionv3.py complete.
+2021-08-27 02:39:07 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/wideresidual.py.
+2021-08-27 02:39:07 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-08-27 02:39:07 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-08-27 02:39:07 [INFO] OperatorType.MODIFY in line 42 ~ 42, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:07 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/wideresidual.py complete.
+2021-08-27 02:39:07 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/resnext.py.
+2021-08-27 02:39:08 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:08 [INFO] OperatorType.INSERT in line 50 ~ 51, import and init statement of torch.npu
+2021-08-27 02:39:08 [INFO] OperatorType.MODIFY in line 54 ~ 54, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:08 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/resnext.py complete.
+2021-08-27 02:39:08 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/attention.py.
+2021-08-27 02:39:08 [WARNING] torch.nn.functional.interpolate in line 170 ~ 170 is not supported
+2021-08-27 02:39:08 [WARNING] torch.nn.functional.interpolate in line 175 ~ 175 is not supported
+2021-08-27 02:39:08 [WARNING] torch.nn.functional.interpolate in line 180 ~ 180 is not supported
+2021-08-27 02:39:08 [WARNING] torch.nn.functional.interpolate in line 254 ~ 254 is not supported
+2021-08-27 02:39:08 [WARNING] torch.nn.functional.interpolate in line 259 ~ 259 is not supported
+2021-08-27 02:39:08 [WARNING] torch.nn.functional.interpolate in line 320 ~ 320 is not supported
+2021-08-27 02:39:09 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:09 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:09 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:09 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/attention.py complete.
+2021-08-27 02:39:09 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/rir.py.
+2021-08-27 02:39:10 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:10 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:10 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:10 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/rir.py complete.
+2021-08-27 02:39:10 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/mobilenet.py.
+2021-08-27 02:39:10 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:10 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:10 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:10 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/mobilenet.py complete.
+2021-08-27 02:39:10 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/senet.py.
+2021-08-27 02:39:11 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:11 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:11 [INFO] OperatorType.MODIFY in line 53 ~ 53, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:11 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/senet.py complete.
+2021-08-27 02:39:11 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/squeezenet.py.
+2021-08-27 02:39:12 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:12 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:12 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:12 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/squeezenet.py complete.
+2021-08-27 02:39:12 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/stochasticdepth.py.
+2021-08-27 02:39:12 [WARNING] torch.bernoulli in line 80 ~ 80 is not supported
+2021-08-27 02:39:12 [WARNING] torch.bernoulli in line 160 ~ 160 is not supported
+2021-08-27 02:39:12 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:12 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:12 [INFO] OperatorType.MODIFY in line 81 ~ 81, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:12 [INFO] OperatorType.MODIFY in line 161 ~ 161, change the arg at position 0 of function to to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:12 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:12 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/stochasticdepth.py complete.
+2021-08-27 02:39:12 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/inceptionv4.py.
+2021-08-27 02:39:13 [WARNING] torch.nn.Dropout2d in line 331 ~ 331 is not supported
+2021-08-27 02:39:13 [WARNING] torch.nn.Dropout2d in line 559 ~ 559 is not supported
+2021-08-27 02:39:15 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:15 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:15 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:15 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/inceptionv4.py complete.
+2021-08-27 02:39:15 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/vgg.py.
+2021-08-27 02:39:15 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:15 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:15 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:15 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/vgg.py complete.
+2021-08-27 02:39:15 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/resnet.py.
+2021-08-27 02:39:16 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:16 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:16 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:16 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/resnet.py complete.
+2021-08-27 02:39:16 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/xception.py.
+2021-08-27 02:39:16 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-27 02:39:16 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:16 [INFO] OperatorType.MODIFY in line 51 ~ 51, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:16 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/xception.py complete.
+2021-08-27 02:39:16 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/densenet.py.
+2021-08-27 02:39:17 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:17 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-08-27 02:39:17 [INFO] OperatorType.MODIFY in line 52 ~ 52, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:17 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/densenet.py complete.
+2021-08-27 02:39:17 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/preactresnet.py.
+2021-08-27 02:39:17 [INFO] OperatorType.INSERT in line 46 ~ 47, import and init statement of torch.npu
+2021-08-27 02:39:17 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-08-27 02:39:17 [INFO] OperatorType.MODIFY in line 51 ~ 51, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:17 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/preactresnet.py complete.
+2021-08-27 02:39:17 [INFO] Start analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/shufflenet.py.
+2021-08-27 02:39:18 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-08-27 02:39:18 [INFO] OperatorType.INSERT in line 50 ~ 51, import and init statement of torch.npu
+2021-08-27 02:39:18 [INFO] OperatorType.MODIFY in line 54 ~ 54, change the arg at position 0 of function set_device to f'npu:{NPU_CALCULATE_DEVICE}'
+2021-08-27 02:39:18 [INFO] Analysis /data/GTN/NPU_Output/InceptionV4_ID1778_for_PyTorch_msft/models/shufflenet.py complete.
+2021-08-27 02:39:18 [INFO] MsFmkTransplt run success, welcome to the next use.

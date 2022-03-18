@@ -1,0 +1,1 @@
+source UFLD/test/env_npu.sh&&nohup python -u UFLD/train.py UFLD/configs/tusimple.py --epoch=10 --batch_size=128 --learning_rate=16e-4 --data_root=/opt/npu/dataset/TUSIMPLEROOT>> 1p_performance.log &

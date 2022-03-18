@@ -1,0 +1,120 @@
+diff --git a/configs/Kinetics/X3D_S.yaml b/configs/Kinetics/X3D_S.yaml
+index 33dd5f7..4545bfe 100644
+--- a/configs/Kinetics/X3D_S.yaml
++++ b/configs/Kinetics/X3D_S.yaml
+@@ -15,7 +15,7 @@ TEST:
+   ENABLE: True
+   DATASET: kinetics
+   BATCH_SIZE: 64
+-  # CHECKPOINT_FILE_PATH: 'x3d_s.pyth' # 73.50% top1 30-view accuracy to download from the model zoo (optional).
++  CHECKPOINT_FILE_PATH: 'x3d_s.pyth' # 73.50% top1 30-view accuracy to download from the model zoo (optional).
+   # NUM_SPATIAL_CROPS: 1
+   NUM_SPATIAL_CROPS: 3
+ DATA:
+@@ -26,7 +26,9 @@ DATA:
+   # TEST_CROP_SIZE: 160 # use if TEST.NUM_SPATIAL_CROPS: 1
+   TEST_CROP_SIZE: 182 # use if TEST.NUM_SPATIAL_CROPS: 3
+   INPUT_CHANNEL_NUM: [3]
+-  DECODING_BACKEND: torchvision
++  #DECODING_BACKEND: torchvision
++  DECODING_BACKEND: pyav
++
+ RESNET:
+   ZERO_INIT_FINAL_BN: True
+   TRANS_FUNC: x3d_transform
+@@ -53,6 +55,17 @@ MODEL:
+ DATA_LOADER:
+   NUM_WORKERS: 8
+   PIN_MEMORY: True
+-NUM_GPUS: 8
++#NUM_GPUS: 8
++NUM_GPUS: 0
+ RNG_SEED: 0
+ OUTPUT_DIR: .
++
++X3D_PTH2ONNX:
++  ENABLE: False
++  ONNX_OUTPUT_PATH: ""
++X3D_PREPROCESS:
++  ENABLE: False
++  DATA_OUTPUT_PATH: ""
++X3D_POSTPROCESS:
++  ENABLE: False
++  OM_OUTPUT_PATH: ""
+diff --git a/setup.py b/setup.py
+index afeab49..a16643d 100644
+--- a/setup.py
++++ b/setup.py
+@@ -23,7 +23,7 @@ setup(
+         "opencv-python",
+         "pandas",
+         "torchvision>=0.4.2",
+-        "PIL",
++        "pillow",
+         "sklearn",
+         "tensorboard",
+     ],
+diff --git a/slowfast/config/defaults.py b/slowfast/config/defaults.py
+index e20ef02..8233576 100644
+--- a/slowfast/config/defaults.py
++++ b/slowfast/config/defaults.py
+@@ -37,6 +37,24 @@ _C.BN.NUM_SPLITS = 1
+ _C.BN.NUM_SYNC_DEVICES = 1
+ 
+ 
++
++_C.X3D_PTH2ONNX = CfgNode()
++_C.X3D_PTH2ONNX.ENABLE = True
++_C.X3D_PTH2ONNX.ONNX_OUTPUT_PATH = ""
++_C.X3D_PTH2ONNX.CHECKPOINT_FILE_PATH = ""
++
++
++_C.X3D_PREPROCESS = CfgNode()
++_C.X3D_PREPROCESS.ENABLE = True
++_C.X3D_PREPROCESS.DATA_OUTPUT_PATH = ""
++
++
++_C.X3D_POSTPROCESS = CfgNode()
++_C.X3D_POSTPROCESS.ENABLE = True
++_C.X3D_POSTPROCESS.OM_OUTPUT_PATH = ""
++
++
++
+ # ---------------------------------------------------------------------------- #
+ # Training options.
+ # ---------------------------------------------------------------------------- #
+diff --git a/slowfast/models/operators.py b/slowfast/models/operators.py
+index 0825669..94d2721 100644
+--- a/slowfast/models/operators.py
++++ b/slowfast/models/operators.py
+@@ -14,7 +14,9 @@ class Swish(nn.Module):
+         super(Swish, self).__init__()
+ 
+     def forward(self, x):
+-        return SwishEfficient.apply(x)
++        #return SwishEfficient.apply(x)
++        result = x * torch.sigmoid(x)
++        return result
+ 
+ 
+ class SwishEfficient(torch.autograd.Function):
+diff --git a/slowfast/utils/meters.py b/slowfast/utils/meters.py
+index bd5ee83..e4eda69 100644
+--- a/slowfast/utils/meters.py
++++ b/slowfast/utils/meters.py
+@@ -309,11 +309,13 @@ class TestMeter(object):
+         """
+         for ind in range(preds.shape[0]):
+             vid_id = int(clip_ids[ind]) // self.num_clips
+-            if self.video_labels[vid_id].sum() > 0:
++            '''if self.video_labels[vid_id].sum() > 0:
+                 assert torch.equal(
+                     self.video_labels[vid_id].type(torch.FloatTensor),
+                     labels[ind].type(torch.FloatTensor),
+-                )
++                )'''
++            if (labels[ind] == -1):
++                break
+             self.video_labels[vid_id] = labels[ind]
+             if self.ensemble_method == "sum":
+                 self.video_preds[vid_id] += preds[ind]

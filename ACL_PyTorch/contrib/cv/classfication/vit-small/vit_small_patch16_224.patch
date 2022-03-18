@@ -1,0 +1,421 @@
+Binary files pytorch-image-models/timm/__pycache__/__init__.cpython-37.pyc and vit/timm/__pycache__/__init__.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/__pycache__/version.cpython-37.pyc and vit/timm/__pycache__/version.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/__init__.cpython-37.pyc and vit/timm/data/__pycache__/__init__.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/auto_augment.cpython-37.pyc and vit/timm/data/__pycache__/auto_augment.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/config.cpython-37.pyc and vit/timm/data/__pycache__/config.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/constants.cpython-37.pyc and vit/timm/data/__pycache__/constants.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/dataset.cpython-37.pyc and vit/timm/data/__pycache__/dataset.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/dataset_factory.cpython-37.pyc and vit/timm/data/__pycache__/dataset_factory.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/distributed_sampler.cpython-37.pyc and vit/timm/data/__pycache__/distributed_sampler.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/loader.cpython-37.pyc and vit/timm/data/__pycache__/loader.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/mixup.cpython-37.pyc and vit/timm/data/__pycache__/mixup.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/random_erasing.cpython-37.pyc and vit/timm/data/__pycache__/random_erasing.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/real_labels.cpython-37.pyc and vit/timm/data/__pycache__/real_labels.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/transforms.cpython-37.pyc and vit/timm/data/__pycache__/transforms.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/__pycache__/transforms_factory.cpython-37.pyc and vit/timm/data/__pycache__/transforms_factory.cpython-37.pyc differ
+diff -urN pytorch-image-models/timm/data/dataset.py vit/timm/data/dataset.py
+--- pytorch-image-models/timm/data/dataset.py	2021-11-25 07:21:38.774569449 +0000
++++ vit/timm/data/dataset.py	2021-11-25 06:26:53.829894625 +0000
+@@ -23,21 +23,19 @@
+             self,
+             root,
+             parser=None,
+-            class_map=None,
++            class_map='',
+             load_bytes=False,
+             transform=None,
+-            target_transform=None,
+     ):
+         if parser is None or isinstance(parser, str):
+             parser = create_parser(parser or '', root=root, class_map=class_map)
+         self.parser = parser
+         self.load_bytes = load_bytes
+         self.transform = transform
+-        self.target_transform = target_transform
+         self._consecutive_errors = 0
+-
+     def __getitem__(self, index):
+         img, target = self.parser[index]
++        path = img.name
+         try:
+             img = img.read() if self.load_bytes else Image.open(img).convert('RGB')
+         except Exception as e:
+@@ -51,10 +49,8 @@
+         if self.transform is not None:
+             img = self.transform(img)
+         if target is None:
+-            target = -1
+-        elif self.target_transform is not None:
+-            target = self.target_transform(target)
+-        return img, target
++            target = torch.tensor(-1, dtype=torch.long)
++        return (img, target, path)
+ 
+     def __len__(self):
+         return len(self.parser)
+@@ -75,28 +71,26 @@
+             split='train',
+             is_training=False,
+             batch_size=None,
++            class_map='',
++            load_bytes=False,
+             repeats=0,
+-            download=False,
+             transform=None,
+-            target_transform=None,
+     ):
+         assert parser is not None
+         if isinstance(parser, str):
+             self.parser = create_parser(
+-                parser, root=root, split=split, is_training=is_training,
+-                batch_size=batch_size, repeats=repeats, download=download)
++                parser, root=root, split=split, is_training=is_training, batch_size=batch_size, repeats=repeats)
+         else:
+             self.parser = parser
+         self.transform = transform
+-        self.target_transform = target_transform
+         self._consecutive_errors = 0
+ 
+     def __iter__(self):
+         for img, target in self.parser:
+             if self.transform is not None:
+                 img = self.transform(img)
+-            if self.target_transform is not None:
+-                target = self.target_transform(target)
++            if target is None:
++                target = torch.tensor(-1, dtype=torch.long)
+             yield img, target
+ 
+     def __len__(self):
+diff -urN pytorch-image-models/timm/data/loader.py vit/timm/data/loader.py
+--- pytorch-image-models/timm/data/loader.py	2021-11-25 07:21:38.774569449 +0000
++++ vit/timm/data/loader.py	2021-11-25 06:24:02.277020481 +0000
+@@ -3,20 +3,18 @@
+ Prefetcher and Fast Collate inspired by NVIDIA APEX example at
+ https://github.com/NVIDIA/apex/commit/d5e2bb4bdeedd27b1dfaf5bb2b24d6c000dee9be#diff-cf86c282ff7fba81fad27a559379d5bf
+ 
+-Hacked together by / Copyright 2021 Ross Wightman
++Hacked together by / Copyright 2020 Ross Wightman
+ """
+-import random
+-from functools import partial
+-from typing import Callable
+ 
+ import torch.utils.data
+ import numpy as np
+ 
+ from .transforms_factory import create_transform
+ from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+-from .distributed_sampler import OrderedDistributedSampler, RepeatAugSampler
++from .distributed_sampler import OrderedDistributedSampler
+ from .random_erasing import RandomErasing
+ from .mixup import FastCollateMixup
++import os
+ 
+ 
+ def fast_collate(batch):
+@@ -42,7 +40,9 @@
+         tensor = torch.zeros((batch_size, *batch[0][0].shape), dtype=torch.uint8)
+         for i in range(batch_size):
+             tensor[i] += torch.from_numpy(batch[i][0])
+-        return tensor, targets
++
++        paths = [b[2] for b in batch]
++        return tensor, targets, paths
+     elif isinstance(batch[0][0], torch.Tensor):
+         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+         assert len(targets) == batch_size
+@@ -66,43 +66,80 @@
+                  re_count=1,
+                  re_num_splits=0):
+         self.loader = loader
+-        self.mean = torch.tensor([x * 255 for x in mean]).cuda().view(1, 3, 1, 1)
+-        self.std = torch.tensor([x * 255 for x in std]).cuda().view(1, 3, 1, 1)
++        if os.environ['device'] == 'npu':
++            self.mean = torch.tensor([x * 255 for x in mean]).npu().view(1, 3, 1, 1)
++            self.std = torch.tensor([x * 255 for x in std]).npu().view(1, 3, 1, 1)
++        elif os.environ['device'] == 'gpu':
++            self.mean = torch.tensor([x * 255 for x in mean]).cuda().view(1, 3, 1, 1)
++            self.std = torch.tensor([x * 255 for x in std]).cuda().view(1, 3, 1, 1)
++        else:
++            self.mean = torch.tensor([x * 255 for x in mean]).view(1, 3, 1, 1)
++            self.std = torch.tensor([x * 255 for x in std]).view(1, 3, 1, 1)
+         self.fp16 = fp16
+         if fp16:
+             self.mean = self.mean.half()
+             self.std = self.std.half()
+         if re_prob > 0.:
++            re_device = None
++            if os.environ['device'] == 'npu':
++                re_device = 'npu'
++            elif os.environ['device'] == 'gpu':
++                re_device = 'cuda'
++            else:
++                re_device = 'cpu'
+             self.random_erasing = RandomErasing(
+-                probability=re_prob, mode=re_mode, max_count=re_count, num_splits=re_num_splits)
++                probability=re_prob, mode=re_mode, max_count=re_count, num_splits=re_num_splits, device=re_device)
+         else:
+             self.random_erasing = None
+ 
+     def __iter__(self):
+-        stream = torch.cuda.Stream()
++        if os.environ['device'] == 'npu':
++            stream = torch.npu.Stream()
++        elif os.environ['device'] == 'gpu':
++            stream = torch.cuda.Stream()
+         first = True
+ 
+-        for next_input, next_target in self.loader:
+-            with torch.cuda.stream(stream):
+-                next_input = next_input.cuda(non_blocking=True)
+-                next_target = next_target.cuda(non_blocking=True)
++        for next_input, next_target, next_path in self.loader:
++            if os.environ['device'] == 'npu':
++                with torch.npu.stream(stream):
++                    next_input = next_input.npu(non_blocking=True)
++                    next_target = next_target.npu(non_blocking=True)
++                    if self.fp16:
++                        next_input = next_input.half().sub_(self.mean).div_(self.std)
++                    else:
++                        next_input = next_input.float().sub_(self.mean).div_(self.std)
++                    if self.random_erasing is not None:
++                        next_input = self.random_erasing(next_input)
++            elif os.environ['device'] == 'gpu':
++                with torch.cuda.stream(stream):
++                    next_input = next_input.cuda(non_blocking=True)
++                    next_target = next_target.cuda(non_blocking=True)
++                    if self.fp16:
++                        next_input = next_input.half().sub_(self.mean).div_(self.std)
++                    else:
++                        next_input = next_input.float().sub_(self.mean).div_(self.std)
++                    if self.random_erasing is not None:
++                        next_input = self.random_erasing(next_input)
++            else:
+                 if self.fp16:
+                     next_input = next_input.half().sub_(self.mean).div_(self.std)
+                 else:
+                     next_input = next_input.float().sub_(self.mean).div_(self.std)
+                 if self.random_erasing is not None:
+                     next_input = self.random_erasing(next_input)
+-
+             if not first:
+-                yield input, target
++                yield input, target, path
+             else:
+                 first = False
+-
+-            torch.cuda.current_stream().wait_stream(stream)
++            if os.environ['device'] == 'npu':
++                torch.npu.current_stream().wait_stream(stream)
++            elif os.environ['device'] == 'gpu':
++                torch.cuda.current_stream().wait_stream(stream)
+             input = next_input
+             target = next_target
++            path = next_path
+ 
+-        yield input, target
++        yield input, target, path
+ 
+     def __len__(self):
+         return len(self.loader)
+@@ -128,22 +165,6 @@
+             self.loader.collate_fn.mixup_enabled = x
+ 
+ 
+-def _worker_init(worker_id, worker_seeding='all'):
+-    worker_info = torch.utils.data.get_worker_info()
+-    assert worker_info.id == worker_id
+-    if isinstance(worker_seeding, Callable):
+-        seed = worker_seeding(worker_info)
+-        random.seed(seed)
+-        torch.manual_seed(seed)
+-        np.random.seed(seed % (2 ** 32 - 1))
+-    else:
+-        assert worker_seeding in ('all', 'part')
+-        # random / torch seed already called in dataloader iter class w/ worker_info.seed
+-        # to reproduce some old results (same seed + hparam combo), partial seeding is required (skip numpy re-seed)
+-        if worker_seeding == 'all':
+-            np.random.seed(worker_info.seed % (2 ** 32 - 1))
+-
+-
+ def create_loader(
+         dataset,
+         input_size,
+@@ -161,7 +182,6 @@
+         vflip=0.,
+         color_jitter=0.4,
+         auto_augment=None,
+-        num_aug_repeats=0,
+         num_aug_splits=0,
+         interpolation='bilinear',
+         mean=IMAGENET_DEFAULT_MEAN,
+@@ -175,7 +195,6 @@
+         tf_preprocessing=False,
+         use_multi_epochs_loader=False,
+         persistent_workers=True,
+-        worker_seeding='all',
+ ):
+     re_num_splits = 0
+     if re_split:
+@@ -207,21 +226,17 @@
+     sampler = None
+     if distributed and not isinstance(dataset, torch.utils.data.IterableDataset):
+         if is_training:
+-            if num_aug_repeats:
+-                sampler = RepeatAugSampler(dataset, num_repeats=num_aug_repeats)
+-            else:
+-                sampler = torch.utils.data.distributed.DistributedSampler(dataset)
++            sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+         else:
+             # This will add extra duplicate entries to result in equal num
+             # of samples per-process, will slightly alter validation results
+             sampler = OrderedDistributedSampler(dataset)
+-    else:
+-        assert num_aug_repeats == 0, "RepeatAugment not currently supported in non-distributed or IterableDataset use"
+ 
+     if collate_fn is None:
+         collate_fn = fast_collate if use_prefetcher else torch.utils.data.dataloader.default_collate
+ 
+     loader_class = torch.utils.data.DataLoader
++
+     if use_multi_epochs_loader:
+         loader_class = MultiEpochsDataLoader
+ 
+@@ -233,9 +248,7 @@
+         collate_fn=collate_fn,
+         pin_memory=pin_memory,
+         drop_last=is_training,
+-        worker_init_fn=partial(_worker_init, worker_seeding=worker_seeding),
+-        persistent_workers=persistent_workers
+-    )
++        persistent_workers=persistent_workers)
+     try:
+         loader = loader_class(dataset, **loader_args)
+     except TypeError as e:
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/__init__.cpython-37.pyc and vit/timm/data/parsers/__pycache__/__init__.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/class_map.cpython-37.pyc and vit/timm/data/parsers/__pycache__/class_map.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/constants.cpython-37.pyc and vit/timm/data/parsers/__pycache__/constants.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/parser.cpython-37.pyc and vit/timm/data/parsers/__pycache__/parser.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/parser_factory.cpython-37.pyc and vit/timm/data/parsers/__pycache__/parser_factory.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/parser_image_folder.cpython-37.pyc and vit/timm/data/parsers/__pycache__/parser_image_folder.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/parser_image_in_tar.cpython-37.pyc and vit/timm/data/parsers/__pycache__/parser_image_in_tar.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/data/parsers/__pycache__/parser_image_tar.cpython-37.pyc and vit/timm/data/parsers/__pycache__/parser_image_tar.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/__init__.cpython-37.pyc and vit/timm/models/__pycache__/__init__.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/beit.cpython-37.pyc and vit/timm/models/__pycache__/beit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/byoanet.cpython-37.pyc and vit/timm/models/__pycache__/byoanet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/byobnet.cpython-37.pyc and vit/timm/models/__pycache__/byobnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/cait.cpython-37.pyc and vit/timm/models/__pycache__/cait.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/coat.cpython-37.pyc and vit/timm/models/__pycache__/coat.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/convit.cpython-37.pyc and vit/timm/models/__pycache__/convit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/convmixer.cpython-37.pyc and vit/timm/models/__pycache__/convmixer.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/crossvit.cpython-37.pyc and vit/timm/models/__pycache__/crossvit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/cspnet.cpython-37.pyc and vit/timm/models/__pycache__/cspnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/densenet.cpython-37.pyc and vit/timm/models/__pycache__/densenet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/dla.cpython-37.pyc and vit/timm/models/__pycache__/dla.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/dpn.cpython-37.pyc and vit/timm/models/__pycache__/dpn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/efficientnet.cpython-37.pyc and vit/timm/models/__pycache__/efficientnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/efficientnet_blocks.cpython-37.pyc and vit/timm/models/__pycache__/efficientnet_blocks.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/efficientnet_builder.cpython-37.pyc and vit/timm/models/__pycache__/efficientnet_builder.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/factory.cpython-37.pyc and vit/timm/models/__pycache__/factory.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/features.cpython-37.pyc and vit/timm/models/__pycache__/features.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/fx_features.cpython-37.pyc and vit/timm/models/__pycache__/fx_features.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/ghostnet.cpython-37.pyc and vit/timm/models/__pycache__/ghostnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/gluon_resnet.cpython-37.pyc and vit/timm/models/__pycache__/gluon_resnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/gluon_xception.cpython-37.pyc and vit/timm/models/__pycache__/gluon_xception.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/hardcorenas.cpython-37.pyc and vit/timm/models/__pycache__/hardcorenas.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/helpers.cpython-37.pyc and vit/timm/models/__pycache__/helpers.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/hrnet.cpython-37.pyc and vit/timm/models/__pycache__/hrnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/hub.cpython-37.pyc and vit/timm/models/__pycache__/hub.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/inception_resnet_v2.cpython-37.pyc and vit/timm/models/__pycache__/inception_resnet_v2.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/inception_v3.cpython-37.pyc and vit/timm/models/__pycache__/inception_v3.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/inception_v4.cpython-37.pyc and vit/timm/models/__pycache__/inception_v4.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/levit.cpython-37.pyc and vit/timm/models/__pycache__/levit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/mlp_mixer.cpython-37.pyc and vit/timm/models/__pycache__/mlp_mixer.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/mobilenetv3.cpython-37.pyc and vit/timm/models/__pycache__/mobilenetv3.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/nasnet.cpython-37.pyc and vit/timm/models/__pycache__/nasnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/nest.cpython-37.pyc and vit/timm/models/__pycache__/nest.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/nfnet.cpython-37.pyc and vit/timm/models/__pycache__/nfnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/pit.cpython-37.pyc and vit/timm/models/__pycache__/pit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/pnasnet.cpython-37.pyc and vit/timm/models/__pycache__/pnasnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/registry.cpython-37.pyc and vit/timm/models/__pycache__/registry.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/regnet.cpython-37.pyc and vit/timm/models/__pycache__/regnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/res2net.cpython-37.pyc and vit/timm/models/__pycache__/res2net.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/resnest.cpython-37.pyc and vit/timm/models/__pycache__/resnest.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/resnet.cpython-37.pyc and vit/timm/models/__pycache__/resnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/resnetv2.cpython-37.pyc and vit/timm/models/__pycache__/resnetv2.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/rexnet.cpython-37.pyc and vit/timm/models/__pycache__/rexnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/selecsls.cpython-37.pyc and vit/timm/models/__pycache__/selecsls.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/senet.cpython-37.pyc and vit/timm/models/__pycache__/senet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/sknet.cpython-37.pyc and vit/timm/models/__pycache__/sknet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/swin_transformer.cpython-37.pyc and vit/timm/models/__pycache__/swin_transformer.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/tnt.cpython-37.pyc and vit/timm/models/__pycache__/tnt.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/tresnet.cpython-37.pyc and vit/timm/models/__pycache__/tresnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/twins.cpython-37.pyc and vit/timm/models/__pycache__/twins.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/vgg.cpython-37.pyc and vit/timm/models/__pycache__/vgg.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/visformer.cpython-37.pyc and vit/timm/models/__pycache__/visformer.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/vision_transformer.cpython-37.pyc and vit/timm/models/__pycache__/vision_transformer.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/vision_transformer_hybrid.cpython-37.pyc and vit/timm/models/__pycache__/vision_transformer_hybrid.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/vovnet.cpython-37.pyc and vit/timm/models/__pycache__/vovnet.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/xception.cpython-37.pyc and vit/timm/models/__pycache__/xception.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/xception_aligned.cpython-37.pyc and vit/timm/models/__pycache__/xception_aligned.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/__pycache__/xcit.cpython-37.pyc and vit/timm/models/__pycache__/xcit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/__init__.cpython-37.pyc and vit/timm/models/layers/__pycache__/__init__.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/activations.cpython-37.pyc and vit/timm/models/layers/__pycache__/activations.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/activations_jit.cpython-37.pyc and vit/timm/models/layers/__pycache__/activations_jit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/activations_me.cpython-37.pyc and vit/timm/models/layers/__pycache__/activations_me.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/adaptive_avgmax_pool.cpython-37.pyc and vit/timm/models/layers/__pycache__/adaptive_avgmax_pool.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/blur_pool.cpython-37.pyc and vit/timm/models/layers/__pycache__/blur_pool.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/bottleneck_attn.cpython-37.pyc and vit/timm/models/layers/__pycache__/bottleneck_attn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/cbam.cpython-37.pyc and vit/timm/models/layers/__pycache__/cbam.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/classifier.cpython-37.pyc and vit/timm/models/layers/__pycache__/classifier.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/cond_conv2d.cpython-37.pyc and vit/timm/models/layers/__pycache__/cond_conv2d.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/config.cpython-37.pyc and vit/timm/models/layers/__pycache__/config.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/conv2d_same.cpython-37.pyc and vit/timm/models/layers/__pycache__/conv2d_same.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/conv_bn_act.cpython-37.pyc and vit/timm/models/layers/__pycache__/conv_bn_act.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/create_act.cpython-37.pyc and vit/timm/models/layers/__pycache__/create_act.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/create_attn.cpython-37.pyc and vit/timm/models/layers/__pycache__/create_attn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/create_conv2d.cpython-37.pyc and vit/timm/models/layers/__pycache__/create_conv2d.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/create_norm_act.cpython-37.pyc and vit/timm/models/layers/__pycache__/create_norm_act.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/drop.cpython-37.pyc and vit/timm/models/layers/__pycache__/drop.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/eca.cpython-37.pyc and vit/timm/models/layers/__pycache__/eca.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/evo_norm.cpython-37.pyc and vit/timm/models/layers/__pycache__/evo_norm.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/gather_excite.cpython-37.pyc and vit/timm/models/layers/__pycache__/gather_excite.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/global_context.cpython-37.pyc and vit/timm/models/layers/__pycache__/global_context.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/halo_attn.cpython-37.pyc and vit/timm/models/layers/__pycache__/halo_attn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/helpers.cpython-37.pyc and vit/timm/models/layers/__pycache__/helpers.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/inplace_abn.cpython-37.pyc and vit/timm/models/layers/__pycache__/inplace_abn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/lambda_layer.cpython-37.pyc and vit/timm/models/layers/__pycache__/lambda_layer.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/linear.cpython-37.pyc and vit/timm/models/layers/__pycache__/linear.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/mixed_conv2d.cpython-37.pyc and vit/timm/models/layers/__pycache__/mixed_conv2d.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/mlp.cpython-37.pyc and vit/timm/models/layers/__pycache__/mlp.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/non_local_attn.cpython-37.pyc and vit/timm/models/layers/__pycache__/non_local_attn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/norm.cpython-37.pyc and vit/timm/models/layers/__pycache__/norm.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/norm_act.cpython-37.pyc and vit/timm/models/layers/__pycache__/norm_act.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/padding.cpython-37.pyc and vit/timm/models/layers/__pycache__/padding.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/patch_embed.cpython-37.pyc and vit/timm/models/layers/__pycache__/patch_embed.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/pool2d_same.cpython-37.pyc and vit/timm/models/layers/__pycache__/pool2d_same.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/selective_kernel.cpython-37.pyc and vit/timm/models/layers/__pycache__/selective_kernel.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/separable_conv.cpython-37.pyc and vit/timm/models/layers/__pycache__/separable_conv.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/space_to_depth.cpython-37.pyc and vit/timm/models/layers/__pycache__/space_to_depth.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/split_attn.cpython-37.pyc and vit/timm/models/layers/__pycache__/split_attn.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/split_batchnorm.cpython-37.pyc and vit/timm/models/layers/__pycache__/split_batchnorm.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/squeeze_excite.cpython-37.pyc and vit/timm/models/layers/__pycache__/squeeze_excite.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/std_conv.cpython-37.pyc and vit/timm/models/layers/__pycache__/std_conv.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/test_time_pool.cpython-37.pyc and vit/timm/models/layers/__pycache__/test_time_pool.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/trace_utils.cpython-37.pyc and vit/timm/models/layers/__pycache__/trace_utils.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/models/layers/__pycache__/weight_init.cpython-37.pyc and vit/timm/models/layers/__pycache__/weight_init.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/__init__.cpython-37.pyc and vit/timm/utils/__pycache__/__init__.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/agc.cpython-37.pyc and vit/timm/utils/__pycache__/agc.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/checkpoint_saver.cpython-37.pyc and vit/timm/utils/__pycache__/checkpoint_saver.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/clip_grad.cpython-37.pyc and vit/timm/utils/__pycache__/clip_grad.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/cuda.cpython-37.pyc and vit/timm/utils/__pycache__/cuda.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/distributed.cpython-37.pyc and vit/timm/utils/__pycache__/distributed.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/jit.cpython-37.pyc and vit/timm/utils/__pycache__/jit.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/log.cpython-37.pyc and vit/timm/utils/__pycache__/log.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/metrics.cpython-37.pyc and vit/timm/utils/__pycache__/metrics.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/misc.cpython-37.pyc and vit/timm/utils/__pycache__/misc.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/model.cpython-37.pyc and vit/timm/utils/__pycache__/model.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/model_ema.cpython-37.pyc and vit/timm/utils/__pycache__/model_ema.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/random.cpython-37.pyc and vit/timm/utils/__pycache__/random.cpython-37.pyc differ
+Binary files pytorch-image-models/timm/utils/__pycache__/summary.cpython-37.pyc and vit/timm/utils/__pycache__/summary.cpython-37.pyc differ

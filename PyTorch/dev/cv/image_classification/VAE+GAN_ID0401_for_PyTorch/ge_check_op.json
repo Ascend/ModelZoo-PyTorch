@@ -1,0 +1,41 @@
+{
+    "graph_id": 78,
+    "op": [
+        {
+            "error_type": "check_support_error",
+            "input0": {
+                "data_type": "DT_FLOAT",
+                "layout": "ND",
+                "shape": [
+                    64,
+                    1
+                ]
+            },
+            "input1": {
+                "data_type": "DT_FLOAT",
+                "layout": "ND",
+                "shape": [
+                    64,
+                    1
+                ]
+            },
+            "input2": {
+                "data_type": "DT_FLOAT",
+                "layout": "ND",
+                "shape": [
+                    64,
+                    1
+                ]
+            },
+            "name": "BinaryCrossEntropy",
+            "output0": {
+                "data_type": "DT_FLOAT",
+                "layout": "ND",
+                "shape": []
+            },
+            "reason": "AIcoreEngine:Op BinaryCrossEntropy not supported reason: The type of this op is not found in op store, check whether the op store has this type of op. Op store name is tbe-custom.\n;",
+            "type": "BinaryCrossEntropy"
+        }
+    ],
+    "session_id": 78
+}

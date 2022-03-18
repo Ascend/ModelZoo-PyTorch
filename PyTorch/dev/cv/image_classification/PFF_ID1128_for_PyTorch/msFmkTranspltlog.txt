@@ -1,0 +1,49 @@
+2021-07-08 06:03:07 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2021-07-08 06:03:07 [INFO] Input path: /data/GTN/GPU_Input/PFF_ID1128_for_PyTorch.
+2021-07-08 06:03:07 [INFO] Output path: /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft.
+2021-07-08 06:03:07 [INFO] Analysis start...
+2021-07-08 06:03:07 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/LICENSE is not a python script, skip.
+2021-07-08 06:03:07 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/BrokenNet_filter.png is not a python script, skip.
+2021-07-08 06:03:07 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/requirements.txt is not a python script, skip.
+2021-07-08 06:03:07 [INFO] Start analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/flops.py.
+2021-07-08 06:03:07 [INFO] OperatorType.INSERT in line 42 ~ 43, import and init statement of torch.npu
+2021-07-08 06:03:07 [INFO] OperatorType.INSERT in line 47 ~ 48, import and init statement of torch.npu
+2021-07-08 06:03:07 [INFO] OperatorType.MODIFY in line 120 ~ 120, change function cuda to npu
+2021-07-08 06:03:07 [INFO] OperatorType.MODIFY in line 120 ~ 120, change module cuda to npu
+2021-07-08 06:03:07 [INFO] Analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/flops.py complete.
+2021-07-08 06:03:07 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/README.md is not a python script, skip.
+2021-07-08 06:03:07 [INFO] Start analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/main.py.
+2021-07-08 06:03:08 [WARNING] torch.manual_seed in line 72 ~ 72 is not supported
+2021-07-08 06:03:08 [WARNING] torch.cuda.manual_seed in line 73 ~ 73 is not supported
+2021-07-08 06:03:08 [WARNING] torch.nn.functional.cross_entropy in line 110 ~ 110 is not supported
+2021-07-08 06:03:08 [WARNING] torch.nn.functional.cross_entropy in line 134 ~ 134 is not supported
+2021-07-08 06:03:08 [INFO] OperatorType.INSERT in line 48 ~ 49, import and init statement of torch.npu
+2021-07-08 06:03:08 [INFO] OperatorType.INSERT in line 49 ~ 50, import and init statement of torch.npu
+2021-07-08 06:03:08 [INFO] OperatorType.MODIFY in line 94 ~ 94, change function cuda to npu
+2021-07-08 06:03:08 [INFO] OperatorType.MODIFY in line 107 ~ 107, change function cuda to npu
+2021-07-08 06:03:08 [INFO] OperatorType.MODIFY in line 107 ~ 107, change function cuda to npu
+2021-07-08 06:03:08 [INFO] OperatorType.MODIFY in line 132 ~ 132, change function cuda to npu
+2021-07-08 06:03:08 [INFO] OperatorType.MODIFY in line 132 ~ 132, change function cuda to npu
+2021-07-08 06:03:08 [INFO] OperatorType.MODIFY in line 73 ~ 73, change module cuda to npu
+2021-07-08 06:03:08 [INFO] Analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/main.py complete.
+2021-07-08 06:03:08 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/msFmkTranspltlog.txt is not a python script, skip.
+2021-07-08 06:03:08 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/.gitattributes is not a python script, skip.
+2021-07-08 06:03:08 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/test/train_performance_1p.sh is not a python script, skip.
+2021-07-08 06:03:08 [INFO] /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/test/train_full_1p.sh is not a python script, skip.
+2021-07-08 06:03:08 [INFO] Start analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/resnet56.py.
+2021-07-08 06:03:09 [INFO] OperatorType.INSERT in line 39 ~ 40, import and init statement of torch.npu
+2021-07-08 06:03:09 [INFO] OperatorType.INSERT in line 42 ~ 43, import and init statement of torch.npu
+2021-07-08 06:03:09 [INFO] Analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/resnet56.py complete.
+2021-07-08 06:03:09 [INFO] Start analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/__init__.py.
+2021-07-08 06:03:09 [INFO] Analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/__init__.py complete.
+2021-07-08 06:03:09 [INFO] Start analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/stripe.py.
+2021-07-08 06:03:09 [INFO] OperatorType.INSERT in line 41 ~ 42, import and init statement of torch.npu
+2021-07-08 06:03:09 [INFO] OperatorType.INSERT in line 44 ~ 45, import and init statement of torch.npu
+2021-07-08 06:03:09 [INFO] OperatorType.MODIFY in line 55 ~ 55, change function cuda to npu
+2021-07-08 06:03:09 [INFO] OperatorType.MODIFY in line 54 ~ 54, replace attribute "x.is_cuda" with "x.is_npu"
+2021-07-08 06:03:09 [INFO] Analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/stripe.py complete.
+2021-07-08 06:03:09 [INFO] Start analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/vgg.py.
+2021-07-08 06:03:10 [INFO] OperatorType.INSERT in line 37 ~ 38, import and init statement of torch.npu
+2021-07-08 06:03:10 [INFO] OperatorType.INSERT in line 38 ~ 39, import and init statement of torch.npu
+2021-07-08 06:03:10 [INFO] Analysis /data/GTN/NPU_Output/PFF_ID1128_for_PyTorch_msft/models/vgg.py complete.
+2021-07-08 06:03:10 [INFO] MsFmkTransplt run success, welcome to the next use.

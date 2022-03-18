@@ -1,0 +1,7 @@
+File,Start Line,End Line,Operation Type,Message
+base/base_trainer.py,169,169,MODIFY,change function cuda to npu
+base/base_trainer.py,57,57,MODIFY,change module cuda to npu
+base/base_trainer.py,58,58,MODIFY,change module cuda to npu
+base/base_trainer.py,57,57,MODIFY,"replace string ""cuda"" with ""npu"""
+base/base_trainer.py,58,58,MODIFY,"replace string ""cuda"" with ""npu"""
+base/base_trainer.py,62,62,MODIFY,"replace string ""cuda:"" with ""npu:"""

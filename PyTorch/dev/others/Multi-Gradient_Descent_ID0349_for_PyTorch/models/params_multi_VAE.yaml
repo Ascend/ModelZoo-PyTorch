@@ -1,0 +1,12 @@
+dropout: 0.5
+no_latent_features: 200
+norm_mean: 0.0
+norm_std: 0.001
+input_size: 1000
+output_size: 1000
+enc1_out: 600
+enc2_in: 600
+enc2_out: 400
+dec1_in: 200
+dec1_out: 600
+dec2_in: 600

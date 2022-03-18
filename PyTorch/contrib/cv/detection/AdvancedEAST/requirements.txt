@@ -1,0 +1,7 @@
+torch
+torchvision
+apex
+onnx
+Pillow
+opencv-python
+Shapely

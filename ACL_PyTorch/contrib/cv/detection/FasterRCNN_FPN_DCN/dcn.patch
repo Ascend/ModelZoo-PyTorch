@@ -1,0 +1,398 @@
+diff --git a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
+index e9eb3579..4b28385a 100644
+--- a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
++++ b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
+@@ -168,22 +168,63 @@ def delta2bbox(rois,
+                 [0.0000, 0.3161, 4.1945, 0.6839],
+                 [5.0000, 5.0000, 5.0000, 5.0000]])
+     """
+-    means = deltas.new_tensor(means).view(1, -1).repeat(1, deltas.size(1) // 4)
+-    stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(1) // 4)
++    if torch.onnx.is_in_onnx_export():
++        means = deltas.new_tensor(means).view(1, -1).repeat(1, deltas.size(1).numpy() // 4)
++        stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(1).numpy() // 4)
++    else:
++        means = deltas.new_tensor(means).view(1, -1).repeat(1, deltas.size(1) // 4)
++        stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(1) // 4)
++    #means = deltas.new_tensor(means).view(1, -1).repeat(1, deltas.size(1) // 4)
++    #stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(1) // 4)
++    
+     denorm_deltas = deltas * stds + means
++    '''
+     dx = denorm_deltas[:, 0::4]
+     dy = denorm_deltas[:, 1::4]
+     dw = denorm_deltas[:, 2::4]
+     dh = denorm_deltas[:, 3::4]
++   '''
++    if denorm_deltas.shape[1] > 4:
++        denorm_deltas = denorm_deltas.view(-1, 80, 4)
++        dx = denorm_deltas[:, :, 0:1:].view(-1, 80)
++        dy = denorm_deltas[:, :, 1:2:].view(-1, 80)
++        dw = denorm_deltas[:, :, 2:3:].view(-1, 80)
++        dh = denorm_deltas[:, :, 3:4:].view(-1, 80)
++    else:
++        dx = denorm_deltas[:, 0:1:]
++        dy = denorm_deltas[:, 1:2:]
++        dw = denorm_deltas[:, 2:3:]
++        dh = denorm_deltas[:, 3:4:]
++    
+     max_ratio = np.abs(np.log(wh_ratio_clip))
+     dw = dw.clamp(min=-max_ratio, max=max_ratio)
+     dh = dh.clamp(min=-max_ratio, max=max_ratio)
++    # improve gather performance on NPU
++    
++    '''
++    if torch.onnx.is_in_onnx_export():
++        rois_perf = rois.permute(1, 0)
++        # Compute center of each roi
++        px = ((rois_perf[0, :] + rois_perf[2, :]) * 0.5).unsqueeze(1).expand_as(dx)
++        py = ((rois_perf[1, :] + rois_perf[3, :]) * 0.5).unsqueeze(1).expand_as(dy)
++        # Compute width/height of each roi
++        pw = (rois_perf[2, :] - rois_perf[0, :]).unsqueeze(1).expand_as(dw)
++        ph = (rois_perf[3, :] - rois_perf[1, :]).unsqueeze(1).expand_as(dh)
++    else:
++        # Compute center of each roi
++        px = ((rois[:, 0] + rois[:, 2]) * 0.5).unsqueeze(1).expand_as(dx)
++        py = ((rois[:, 1] + rois[:, 3]) * 0.5).unsqueeze(1).expand_as(dy)
++        # Compute width/height of each roi
++        pw = (rois[:, 2] - rois[:, 0]).unsqueeze(1).expand_as(dw)
++        ph = (rois[:, 3] - rois[:, 1]).unsqueeze(1).expand_as(dh)    
++    '''
+     # Compute center of each roi
+     px = ((rois[:, 0] + rois[:, 2]) * 0.5).unsqueeze(1).expand_as(dx)
+     py = ((rois[:, 1] + rois[:, 3]) * 0.5).unsqueeze(1).expand_as(dy)
+     # Compute width/height of each roi
+     pw = (rois[:, 2] - rois[:, 0]).unsqueeze(1).expand_as(dw)
+     ph = (rois[:, 3] - rois[:, 1]).unsqueeze(1).expand_as(dh)
++    
+     # Use exp(network energy) to enlarge/shrink each roi
+     gw = pw * dw.exp()
+     gh = ph * dh.exp()
+diff --git a/mmdet/core/post_processing/bbox_nms.py b/mmdet/core/post_processing/bbox_nms.py
+index 463fe2e4..853e520a 100644
+--- a/mmdet/core/post_processing/bbox_nms.py
++++ b/mmdet/core/post_processing/bbox_nms.py
+@@ -1,16 +1,77 @@
++# Copyright 2021 Huawei Technologies Co., Ltd
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
+ import torch
+ from mmcv.ops.nms import batched_nms
+ 
+ from mmdet.core.bbox.iou_calculators import bbox_overlaps
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (1, N, 4)
++            nmsed_scores: (1, N)
++            nmsed_classes: (1, N)
++            nmsed_num: (1,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.arange(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++            bboxes, scores, score_threshold_f=score_thr, iou_threshold_f=iou_thr,
++            max_size_per_class_i=max_size_p_class, max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0].numpy(), -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4)
++        scores = scores.reshape(1, scores.shape[0].numpy(), -1)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    # max_total_size num_bbox
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
+ 
+ def multiclass_nms(multi_bboxes,
+                    multi_scores,
+                    score_thr,
+                    nms_cfg,
+                    max_num=-1,
+-                   score_factors=None,
+-                   return_inds=False):
++                   score_factors=None):
+     """NMS for multi-class bboxes.
+ 
+     Args:
+@@ -20,48 +81,55 @@ def multiclass_nms(multi_bboxes,
+         score_thr (float): bbox threshold, bboxes with scores lower than it
+             will not be considered.
+         nms_thr (float): NMS IoU threshold
+-        max_num (int, optional): if there are more than max_num bboxes after
+-            NMS, only top max_num will be kept. Default to -1.
+-        score_factors (Tensor, optional): The factors multiplied to scores
+-            before applying NMS. Default to None.
+-        return_inds (bool, optional): Whether return the indices of kept
+-            bboxes. Default to False.
++        max_num (int): if there are more than max_num bboxes after NMS,
++            only top max_num will be kept.
++        score_factors (Tensor): The factors multiplied to scores before
++            applying NMS
+ 
+     Returns:
+-        tuple: (bboxes, labels, indices (optional)), tensors of shape (k, 5),
+-            (k), and (k). Labels are 0-based.
++        tuple: (bboxes, labels), tensors of shape (k, 5) and (k, 1). Labels \
++            are 0-based.
+     """
+     num_classes = multi_scores.size(1) - 1
++    
+     # exclude background category
+     if multi_bboxes.shape[1] > 4:
+         bboxes = multi_bboxes.view(multi_scores.size(0), -1, 4)
+     else:
+-        bboxes = multi_bboxes[:, None].expand(
+-            multi_scores.size(0), num_classes, 4)
+-
++        # export expand operator to onnx more nicely
++        if torch.onnx.is_in_onnx_export:
++            bbox_shape_tensor = torch.ones(multi_scores.size(0), num_classes, 4)
++            bboxes = multi_bboxes[:, None].expand_as(bbox_shape_tensor)
++        else:
++            bboxes = multi_bboxes[:, None].expand(
++                multi_scores.size(0), num_classes, 4)    
+     scores = multi_scores[:, :-1]
++ 
++    
+     if score_factors is not None:
+         scores = scores * score_factors[:, None]
+-
++    
++    if torch.onnx.is_in_onnx_export():
++        dets, labels = batch_nms_op(bboxes, scores, score_thr, nms_cfg.get("iou_threshold"), max_num, max_num)
++        return dets, labels
+     labels = torch.arange(num_classes, dtype=torch.long)
+     labels = labels.view(1, -1).expand_as(scores)
+ 
+     bboxes = bboxes.reshape(-1, 4)
+     scores = scores.reshape(-1)
+     labels = labels.reshape(-1)
+-
+     # remove low scoring boxes
+-    valid_mask = scores > score_thr
+-    inds = valid_mask.nonzero(as_tuple=False).squeeze(1)
+-    bboxes, scores, labels = bboxes[inds], scores[inds], labels[inds]
+-    if inds.numel() == 0:
+-        if torch.onnx.is_in_onnx_export():
+-            raise RuntimeError('[ONNX Error] Can not record NMS '
+-                               'as it has not been executed this time')
+-        if return_inds:
+-            return bboxes, labels, inds
+-        else:
+-            return bboxes, labels
++    # valid_mask = scores > score_thr
++    # inds = valid_mask.nonzero(as_tuple=False).squeeze(1)
++    # bboxes, scores, labels = bboxes[inds], scores[inds], labels[inds]
++    if torch.onnx.is_in_onnx_export():
++            #raise RuntimeError('[ONNX Error] Can not record NMS '
++            #                   'as it has not been executed this time')
++        dets, labels = batch_nms_op(bboxes, scores, score_thr, 
++                                    nms_cfg.get("iou_threshold"), 
++                                    max_num, max_num)
++        return dets, labels
++    return bboxes, labels
+ 
+     # TODO: add size check before feed into batched_nms
+     dets, keep = batched_nms(bboxes, scores, labels, nms_cfg)
+@@ -70,10 +138,7 @@ def multiclass_nms(multi_bboxes,
+         dets = dets[:max_num]
+         keep = keep[:max_num]
+ 
+-    if return_inds:
+-        return dets, labels[keep], keep
+-    else:
+-        return dets, labels[keep]
++    return dets, labels[keep]
+ 
+ 
+ def fast_nms(multi_bboxes,
+diff --git a/mmdet/models/dense_heads/rpn_head.py b/mmdet/models/dense_heads/rpn_head.py
+index f565d1a4..cf9a1302 100644
+--- a/mmdet/models/dense_heads/rpn_head.py
++++ b/mmdet/models/dense_heads/rpn_head.py
+@@ -8,6 +8,56 @@ from ..builder import HEADS
+ from .anchor_head import AnchorHead
+ from .rpn_test_mixin import RPNTestMixin
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (1, N, 4)
++            nmsed_scores: (1, N)
++            nmsed_classes: (1, N)
++            nmsed_num: (1,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.arange(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++            bboxes, scores, score_threshold_f=score_thr, iou_threshold_f=iou_thr,
++            max_size_per_class_i=max_size_p_class, max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0], -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4)
++        scores = scores.reshape(1, scores.shape[0], -1)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    # max_total_size num_bbox
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
+ 
+ @HEADS.register_module()
+ class RPNHead(RPNTestMixin, AnchorHead):
+@@ -132,9 +182,19 @@ class RPNHead(RPNTestMixin, AnchorHead):
+             if cfg.nms_pre > 0 and scores.shape[0] > cfg.nms_pre:
+                 # sort is faster than topk
+                 # _, topk_inds = scores.topk(cfg.nms_pre)
++                
++                '''
+                 ranked_scores, rank_inds = scores.sort(descending=True)
+                 topk_inds = rank_inds[:cfg.nms_pre]
+                 scores = ranked_scores[:cfg.nms_pre]
++                '''
++                # onnx uses topk to sort, this is simpler for onnx export
++                if torch.onnx.is_in_onnx_export():
++                    scores, topk_inds = torch.topk(scores, cfg.nms_pre)
++                else:
++                    ranked_scores, rank_inds = scores.sort(descending=True)
++                    topk_inds = rank_inds[:cfg.nms_pre]
++                    scores = ranked_scores[:cfg.nms_pre]
+                 rpn_bbox_pred = rpn_bbox_pred[topk_inds, :]
+                 anchors = anchors[topk_inds, :]
+             mlvl_scores.append(scores)
+@@ -164,5 +224,10 @@ class RPNHead(RPNTestMixin, AnchorHead):
+ 
+         # TODO: remove the hard coded nms type
+         nms_cfg = dict(type='nms', iou_threshold=cfg.nms_thr)
+-        dets, keep = batched_nms(proposals, scores, ids, nms_cfg)
+-        return dets[:cfg.nms_post]
++        if torch.onnx.is_in_onnx_export():
++            dets, labels = batch_nms_op(proposals, scores, 0.0, nms_cfg.get("iou_threshold"), cfg.nms_post, cfg.nms_post)
++            return dets
++        else:
++
++            dets, keep = batched_nms(proposals, scores, ids, nms_cfg)
++            return dets[:cfg.nms_post]
+diff --git a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+index c0eebc4a..618c1de3 100644
+--- a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
++++ b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+@@ -5,6 +5,29 @@ from mmdet.models.builder import ROI_EXTRACTORS
+ from .base_roi_extractor import BaseRoIExtractor
+ 
+ 
++class RoiExtractor(torch.autograd.Function):
++    @staticmethod
++    def forward(self, f0, f1, f2, f3, rois, aligned=1, finest_scale=56, pooled_height=7, pooled_width=7,
++                         pool_mode='avg', roi_scale_factor=0, sample_num=0, spatial_scale=[0.25, 0.125, 0.0625, 0.03125]):
++        """
++        feats (torch.Tensor): feats in shape (batch, 256, H, W).
++        rois (torch.Tensor): rois in shape (k, 5).
++        return:
++            roi_feats (torch.Tensor): (k, 256, pooled_width, pooled_width)
++        """
++
++        # phony implementation for shape inference
++        k = rois.size()[0]
++        roi_feats = torch.ones(k, 256, pooled_height, pooled_width)
++        return roi_feats
++
++    @staticmethod
++    def symbolic(g, f0, f1, f2, f3, rois):
++        # TODO: support tensor list type for feats
++        roi_feats = g.op('RoiExtractor', f0, f1, f2, f3, rois, aligned_i=1, finest_scale_i=56, pooled_height_i=7, pooled_width_i=7,
++                         pool_mode_s='avg', roi_scale_factor_i=0, sample_num_i=0, spatial_scale_f=[0.25, 0.125, 0.0625, 0.03125], outputs=1)
++        return roi_feats
++
+ @ROI_EXTRACTORS.register_module()
+ class SingleRoIExtractor(BaseRoIExtractor):
+     """Extract RoI features from a single level feature map.
+@@ -52,6 +75,11 @@ class SingleRoIExtractor(BaseRoIExtractor):
+ 
+     @force_fp32(apply_to=('feats', ), out_fp16=True)
+     def forward(self, feats, rois, roi_scale_factor=None):
++        # Work around to export onnx for npu
++        if torch.onnx.is_in_onnx_export():
++            roi_feats = RoiExtractor.apply(feats[0], feats[1], feats[2], feats[3], rois)
++            # roi_feats = RoiExtractor.apply(list(feats), rois)
++            return roi_feats
+         """Forward function."""
+         out_size = self.roi_layers[0].output_size
+         num_levels = len(feats)
+diff --git a/tools/pytorch2onnx.py b/tools/pytorch2onnx.py
+index a8e7487b..daacae0d 100644
+--- a/tools/pytorch2onnx.py
++++ b/tools/pytorch2onnx.py
+@@ -49,6 +49,7 @@ def pytorch2onnx(config_path,
+         keep_initializers_as_inputs=True,
+         do_constant_folding=True,
+         verbose=show,
++        enable_onnx_checker=False,
+         opset_version=opset_version)
+ 
+     model.forward = orig_model.forward

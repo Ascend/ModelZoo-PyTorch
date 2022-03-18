@@ -1,0 +1,7 @@
+cython
+opencv-python
+pillow
+matplotlib
+GitPython
+termcolor
+tensorboard

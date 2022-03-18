@@ -1,0 +1,5 @@
+torchvision==0.2.2.post2
+h5py
+FFmpeg
+FFprobe
+tensorboard

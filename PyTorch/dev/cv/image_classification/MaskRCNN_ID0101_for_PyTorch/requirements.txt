@@ -1,0 +1,7 @@
+torch==1.5.0
+apex
+torchvision==0.2.2.post2
+fvcore
+pycocotools
+cloudpickle
+tensorboard

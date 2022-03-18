@@ -1,0 +1,6 @@
+torch==1.9.1
+tqdm==4.62.3
+transformers==4.12.2
+jiwer==2.3.0
+datasets==1.15.1
+soundfile==0.10.3.post1

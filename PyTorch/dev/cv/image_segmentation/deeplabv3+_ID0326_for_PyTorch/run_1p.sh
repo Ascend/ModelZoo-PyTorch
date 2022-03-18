@@ -1,0 +1,1 @@
+python3 train.py --backbone resnet --lr 0.007 --workers 4 --epochs 1 --batch-size 4 --checkname deeplab-resnet --eval-interval 1 --dataset pascal --data_path=${data_path}

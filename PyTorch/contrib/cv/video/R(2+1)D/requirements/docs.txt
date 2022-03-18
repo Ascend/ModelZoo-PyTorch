@@ -1,0 +1,7 @@
+einops
+opencv-python
+recommonmark
+scipy
+sphinx
+sphinx_markdown_tables
+sphinx_rtd_theme

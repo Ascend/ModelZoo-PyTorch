@@ -1,0 +1,32 @@
+diff --git a/res2net_v1b.py b/res2net_v1b.py
+index 6ced156..0ec1ce8 100644
+--- a/res2net_v1b.py
++++ b/res2net_v1b.py
+@@ -64,6 +64,7 @@ class Bottle2neck(nn.Module):
+         out = self.relu(out)
+ 
+         spx = torch.split(out, self.width, 1)
++        out_list = []
+         for i in range(self.nums):
+           if i==0 or self.stype=='stage':
+             sp = spx[i]
+@@ -71,15 +72,13 @@ class Bottle2neck(nn.Module):
+             sp = sp + spx[i]
+           sp = self.convs[i](sp)
+           sp = self.relu(self.bns[i](sp))
+-          if i==0:
+-            out = sp
+-          else:
+-            out = torch.cat((out, sp), 1)
++          out_list.append(sp)
+         if self.scale != 1 and self.stype=='normal':
+-          out = torch.cat((out, spx[self.nums]),1)
++          out_list.append(spx[self.nums])
+         elif self.scale != 1 and self.stype=='stage':
+-          out = torch.cat((out, self.pool(spx[self.nums])),1)
++          out_list.append(self.pool(spx[self.nums]))
+ 
++        out = torch.cat(out_list, 1)
+         out = self.conv3(out)
+         out = self.bn3(out)
+ 

@@ -1,0 +1,20 @@
+#     Copyright [yyyy] [name of copyright owner]
+#     Copyright 2021 Huawei Technologies Co., Ltd
+#
+#     Licensed under the Apache License, Version 2.0 (the "License");
+#     you may not use this file except in compliance with the License.
+#     You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#     Unless required by applicable law or agreed to in writing, software
+#     distributed under the License is distributed on an "AS IS" BASIS,
+#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#     See the License for the specific language governing permissions and
+#     limitations under the License.
+#
+
+from .version import __version__
+from .models import create_model, list_models, is_model, list_modules, model_entrypoint, \
+    is_scriptable, is_exportable, set_scriptable, set_exportable, has_model_default_key, is_model_default_key, \
+    get_model_default_value, is_model_pretrained

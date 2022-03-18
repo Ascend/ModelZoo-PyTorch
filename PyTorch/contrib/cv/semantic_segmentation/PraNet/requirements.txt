@@ -1,0 +1,9 @@
+easydict
+pyyaml
+opencv-python
+thop
+tabulate
+scipy==1.1.0
+onnx==1.7.0
+decorator
+sympy

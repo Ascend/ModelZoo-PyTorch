@@ -1,0 +1,274 @@
+From f61f75ad713231c24d1c434b75ba19f5036750c2 Mon Sep 17 00:00:00 2001
+From: wenqi_yang <983981759@qq.com>
+Date: Mon, 13 Dec 2021 15:34:29 +0800
+Subject: [PATCH] modified
+
+---
+ utils/datasets.py    |   3 +-
+ utils/general.py     | 122 +++++++++++++++++++++++++++++++++++++++++++
+ utils/layers.py      |  27 ++++++----
+ utils/torch_utils.py |   7 ++-
+ 4 files changed, 148 insertions(+), 11 deletions(-)
+
+diff --git a/utils/datasets.py b/utils/datasets.py
+index 116cd41..0ea9d70 100644
+--- a/utils/datasets.py
++++ b/utils/datasets.py
+@@ -568,7 +568,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
+             img, (h0, w0), (h, w) = load_image(self, index)
+ 
+             # Letterbox
+-            shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
++            # shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
++            shape = 1344
+             img, ratio, pad = letterbox(img, shape, auto=False, scaleup=self.augment)
+             shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
+ 
+diff --git a/utils/general.py b/utils/general.py
+index 9b06c8b..9f6ff46 100644
+--- a/utils/general.py
++++ b/utils/general.py
+@@ -355,6 +355,128 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6, merge=False,
+ 
+     return output
+ 
++def non_max_suppression_ori(prediction, conf_thres=0.1, iou_thres=0.6, merge=False, classes=None, agnostic=False):
++    """Performs Non-Maximum Suppression (NMS) on inference results
++
++    Returns:
++         detections with shape: nx6 (x1, y1, x2, y2, conf, cls)
++    """
++    # if prediction.dtype is torch.float16:
++    #     prediction = prediction.float()  # to FP32
++
++    nc = prediction[0].shape[1] - 5  # number of classes
++    xc = prediction[..., 4] > conf_thres  # candidates
++
++    # Settings
++    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
++    max_det = 300  # maximum number of detections per image
++    time_limit = 10.0  # seconds to quit after
++    redundant = True  # require redundant detections
++    multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
++
++    t = time.time()
++    output = [None] * prediction.shape[0]
++
++    for xi, x in enumerate(prediction):  # image index, image inference
++        # Apply constraints
++        # x[((x[..., 2:4] < min_wh) | (x[..., 2:4] > max_wh)).any(1), 4] = 0  # width-height
++        x = x.cpu()
++
++        x = x[xc[xi]]  # confidence
++
++        # If none remain process next image
++        if not x.shape[0]:
++            continue
++
++        # Compute conf
++        x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
++
++        # Box (center x, center y, width, height) to (x1, y1, x2, y2)
++        box = xywh2xyxy(x[:, :4])
++
++        # Detections matrix nx6 (xyxy, conf, cls)
++        if multi_label:
++            i, j = (x[:, 5:] > conf_thres).nonzero(as_tuple=False).T
++            x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
++        else:  # best class only
++            conf, j = x[:, 5:].max(1, keepdim=True)
++            x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > conf_thres]
++
++        # Filter by class
++        if classes:
++            x = x[(x[:, 5:6] == torch.tensor(classes, device=x.device)).any(1)]
++
++        # Apply finite constraint
++        # if not torch.isfinite(x).all():
++        #     x = x[torch.isfinite(x).all(1)]
++
++        # If none remain process next image
++        n = x.shape[0]  # number of boxes
++        if not n:
++            continue
++
++        # Sort by confidence
++        # x = x[x[:, 4].argsort(descending=True)]
++
++        # Batched NMS
++        c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
++        boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
++        start_t = time.time()
++        if scores.device.type != 'cuda':
++            i = nms_(boxes, scores, iou_thres)
++        else:
++            import torchvision
++            i = torchvision.ops.boxes.nms(boxes, scores, iou_thres)
++        if i.shape[0] > max_det:  # limit detections
++            i = i[:max_det]
++        # print('nms finished in : ', time.time() - start_t)
++        if merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
++            try:  # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
++                iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
++                weights = iou * scores[None]  # box weights
++                x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
++                if redundant:
++                    i = i[iou.sum(1) > 1]  # require redundancy
++            except:  # possible CUDA error https://github.com/ultralytics/yolov3/issues/1139
++                print(x, i, x.shape, i.shape)
++                pass
++
++        output[xi] = x[i]
++        # if (time.time() - t) > time_limit:
++        #     break  # time limit exceeded
++
++    return output
++
++def nms_(bboxes, scores, threshold=0.5):
++    x1 = bboxes[:,0]
++    y1 = bboxes[:,1]
++    x2 = bboxes[:,2]
++    y2 = bboxes[:,3]
++    areas = (x2-x1)*(y2-y1)
++    _, order = scores.sort(0, descending=True)
++
++    keep = []
++    while order.numel() > 0:
++        if order.numel() == 1:
++            i = order.item()
++            keep.append(i)
++            break
++        else:
++            i = order[0].item()
++            keep.append(i)
++  
++        xx1 = x1[order[1:]].clamp(min=x1[i])
++        yy1 = y1[order[1:]].clamp(min=y1[i])
++        xx2 = x2[order[1:]].clamp(max=x2[i])
++        yy2 = y2[order[1:]].clamp(max=y2[i])
++        inter = (xx2-xx1).clamp(min=0) * (yy2-yy1).clamp(min=0)
++
++        iou = inter / (areas[i]+areas[order[1:]]-inter)
++        idx = (iou <= threshold).nonzero().squeeze()
++        if idx.numel() == 0:
++            break
++        order = order[idx+1]
++    return torch.LongTensor(keep)
+ 
+ def strip_optimizer(f='weights/best.pt', s=''):  # from utils.general import *; strip_optimizer()
+     # Strip optimizer from 'f' to finalize training, optionally save as 's'
+diff --git a/utils/layers.py b/utils/layers.py
+index 218da9e..7921a90 100644
+--- a/utils/layers.py
++++ b/utils/layers.py
+@@ -371,7 +371,8 @@ class ScaleChannel(nn.Module):  # weighted sum of 2 or more layers https://arxiv
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]]
+-        return x.expand_as(a) * a
++        n, c, h, w = a.shape
++        return x.expand(n, c, h, w) * a
+ 
+ 
+ class ShiftChannel(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -381,7 +382,8 @@ class ShiftChannel(nn.Module):  # weighted sum of 2 or more layers https://arxiv
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]]
+-        return a.expand_as(x) + x
++        n, c, h, w = x.shape
++        return a.expand(n, c, h, w) + x
+ 
+ 
+ class ShiftChannel2D(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -391,7 +393,8 @@ class ShiftChannel2D(nn.Module):  # weighted sum of 2 or more layers https://arx
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]].view(1,-1,1,1)
+-        return a.expand_as(x) + x
++        n, c, h, w = x.shape
++        return a.expand(n, c, h, w) + x
+ 
+ 
+ class ControlChannel(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -401,7 +404,8 @@ class ControlChannel(nn.Module):  # weighted sum of 2 or more layers https://arx
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]]
+-        return a.expand_as(x) * x
++        n, c, h, w = x.shape
++        return a.expand(n, c, h, w) * x
+ 
+ 
+ class ControlChannel2D(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -411,7 +415,8 @@ class ControlChannel2D(nn.Module):  # weighted sum of 2 or more layers https://a
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]].view(1,-1,1,1)
+-        return a.expand_as(x) * x
++        n, c, h, w = x.shape
++        return a.expand(n, c, h, w) * x
+ 
+ 
+ class AlternateChannel(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -421,7 +426,8 @@ class AlternateChannel(nn.Module):  # weighted sum of 2 or more layers https://a
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]]
+-        return torch.cat([a.expand_as(x), x], dim=1)
++        n, c, h, w = x.shape
++        return torch.cat([a.expand(n, c, h, w), x], dim=1)
+ 
+ 
+ class AlternateChannel2D(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -431,7 +437,8 @@ class AlternateChannel2D(nn.Module):  # weighted sum of 2 or more layers https:/
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]].view(1,-1,1,1)
+-        return torch.cat([a.expand_as(x), x], dim=1)
++        n, c, h, w = x.shape
++        return torch.cat([a.expand(n, c, h, w), x], dim=1)
+ 
+ 
+ class SelectChannel(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -441,7 +448,8 @@ class SelectChannel(nn.Module):  # weighted sum of 2 or more layers https://arxi
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]]
+-        return a.sigmoid().expand_as(x) * x
++        n, c, h, w = x.shape
++        return a.sigmoid().expand(n, c, h, w) * x
+ 
+ 
+ class SelectChannel2D(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+@@ -451,7 +459,8 @@ class SelectChannel2D(nn.Module):  # weighted sum of 2 or more layers https://ar
+ 
+     def forward(self, x, outputs):
+         a = outputs[self.layers[0]].view(1,-1,1,1)
+-        return a.sigmoid().expand_as(x) * x
++        n, c, h, w = x.shape
++        return a.sigmoid().expand(n, c, h, w) * x
+ 
+ 
+ class ScaleSpatial(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
+diff --git a/utils/torch_utils.py b/utils/torch_utils.py
+index 4d07baa..705cee5 100644
+--- a/utils/torch_utils.py
++++ b/utils/torch_utils.py
+@@ -39,7 +39,12 @@ def init_torch_seeds(seed=0):
+         cudnn.benchmark = True
+ 
+ 
+-def select_device(device='', batch_size=None):
++def select_device(device='', npu='', batch_size=None):
++    npu_request = device.lower() == 'npu'
++    if npu_request and npu != -1:
++        torch.npu.set_device("npu:%d" % npu)
++        print('Using NPU %d to train' % npu)
++        return torch.device("npu:%d" % npu)
+     # device = 'cpu' or '0' or '0,1,2,3'
+     cpu_request = device.lower() == 'cpu'
+     if device and not cpu_request:  # if device requested other than 'cpu'
+-- 
+2.17.1
+

@@ -1,0 +1,310 @@
+diff --git RFCN-pytorch.1.0/lib/datasets/pascal_voc.py b/lib/datasets/pascal_voc.py
+index f01424e..f70e6dd 100644
+--- RFCN-pytorch.1.0/lib/datasets/pascal_voc.py
++++ b/lib/datasets/pascal_voc.py
+@@ -46,12 +46,12 @@ class pascal_voc(imdb):
+             else devkit_path
+         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
+         self._classes = ('__background__',  # always index 0
+-                            'sparse')
+-                        #  'aeroplane', 'bicycle', 'bird', 'boat',
+-                        #  'bottle', 'bus', 'car', 'cat', 'chair',
+-                        #  'cow', 'diningtable', 'dog', 'horse',
+-                        #  'motorbike', 'person', 'pottedplant',
+-                        #  'sheep', 'sofa', 'train', 'tvmonitor')
++                            # 'sparse')
++                         'aeroplane', 'bicycle', 'bird', 'boat',
++                         'bottle', 'bus', 'car', 'cat', 'chair',
++                         'cow', 'diningtable', 'dog', 'horse',
++                         'motorbike', 'person', 'pottedplant',
++                         'sheep', 'sofa', 'train', 'tvmonitor')
+         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+         self._image_ext = '.jpg'
+         self._image_index = self._load_image_set_index()
+@@ -219,6 +219,8 @@ class pascal_voc(imdb):
+         #     #     print 'Removed {} difficult objects'.format(
+         #     #         len(objs) - len(non_diff_objs))
+         #     objs = non_diff_objs
++        cls_objs = [obj for obj in objs if obj.find('name').text in self._classes]
++        objs = cls_objs
+         num_objs = len(objs)
+ 
+         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
+diff --git RFCN-pytorch.1.0/lib/datasets/pascal_voc_rbg.py b/lib/datasets/pascal_voc_rbg.py
+index 23b4224..7c36754 100644
+--- RFCN-pytorch.1.0/lib/datasets/pascal_voc_rbg.py
++++ b/lib/datasets/pascal_voc_rbg.py
+@@ -156,6 +156,8 @@ class pascal_voc(imdb):
+       #     print 'Removed {} difficult objects'.format(
+       #         len(objs) - len(non_diff_objs))
+       objs = non_diff_objs
++      cls_objs = [obj for obj in objs if obj.find('name').text in self._classes]
++      objs = cls_objs
+     num_objs = len(objs)
+ 
+     boxes = np.zeros((num_objs, 4), dtype=np.uint16)
+diff --git RFCN-pytorch.1.0/lib/model/rfcn/rfcn.py b/lib/model/rfcn/rfcn.py
+index d55bb5e..9ebef40 100644
+--- RFCN-pytorch.1.0/lib/model/rfcn/rfcn.py
++++ b/lib/model/rfcn/rfcn.py
+@@ -79,7 +79,6 @@ class _RFCN(nn.Module):
+ 
+     def forward(self, im_data, im_info, gt_boxes, num_boxes):
+         batch_size = im_data.size(0)
+-
+         im_info = im_info.data
+         gt_boxes = gt_boxes.data
+         num_boxes = num_boxes.data
+@@ -113,12 +112,20 @@ class _RFCN(nn.Module):
+ 
+         # do roi pooling based on predicted rois
+         cls_feat = self.RCNN_cls_base(base_feat)
+-        pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, rois.view(-1, 5))
++
++        if torch.onnx.is_in_onnx_export():
++            pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, rois.permute(0, 2, 1))
++        else:
++            pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, rois.view(-1, 5))
++
+         cls_score = self.pooling(pooled_feat_cls)
+         cls_score = cls_score.squeeze()
+ 
+         bbox_base = self.RCNN_bbox_base(base_feat)
+-        pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, rois.view(-1, 5))
++        if torch.onnx.is_in_onnx_export():
++            pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, rois.permute(0, 2, 1))
++        else:
++            pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, rois.view(-1, 5))
+         pooled_feat_loc = self.pooling(pooled_feat_loc)
+         bbox_pred = pooled_feat_loc.squeeze()
+ 
+@@ -140,6 +147,9 @@ class _RFCN(nn.Module):
+         cls_prob = cls_prob.view(batch_size, rois.size(1), -1)
+         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
+ 
++        if torch.onnx.is_in_onnx_export():
++            return rois, cls_prob, bbox_pred
++            # return rois, cls_prob, bbox_pred, bboxes, scores
+         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
+ 
+     def _init_weights(self):
+diff --git RFCN-pytorch.1.0/lib/model/roi_layers/ps_roi_pool.py b/lib/model/roi_layers/ps_roi_pool.py
+index 80f3b06..f1cd7de 100644
+--- RFCN-pytorch.1.0/lib/model/roi_layers/ps_roi_pool.py
++++ b/lib/model/roi_layers/ps_roi_pool.py
+@@ -6,6 +6,24 @@ from torch.autograd.function import once_differentiable
+ from model import _C
+ 
+ 
++class _PSROIPool_onnx(Function):
++    @staticmethod
++    def forward(ctx, features, rois, pooled_height, pooled_width, spatial_scale, group_size, output_dim):
++        ctx.pooled_height = int(pooled_height)
++        ctx.pooled_width = int(pooled_width)
++        ctx.spatial_scale = float(spatial_scale)
++        ctx.group_size = int(group_size)
++        ctx.output_dim = int(output_dim)
++        num_rois = rois.size()[2]
++        output = torch.zeros(num_rois, ctx.output_dim, ctx.pooled_height, ctx.pooled_width).to(features.device)
++        return output
++
++    @staticmethod
++    def symbolic(g, features, rois, pooled_height, pooled_width, spatial_scale, group_size, output_dim):
++        output = g.op('PSROIPooling', features, rois, pooled_height_i=pooled_height, pooled_width_i=pooled_width, spatial_scale_f=spatial_scale, group_size_i=group_size, output_dim_i=output_dim)
++        return output
++
++
+ class _PSROIPool(Function):
+     @staticmethod
+     def forward(ctx, features, rois, pooled_height, pooled_width, spatial_scale, group_size, output_dim):
+@@ -14,7 +32,7 @@ class _PSROIPool(Function):
+         ctx.spatial_scale = float(spatial_scale)
+         ctx.group_size = int(group_size)
+         ctx.output_dim = int(output_dim)
+-        num_rois = rois.size()[0]
++        num_rois = rois.size()[0] * rois.size()[2]
+         output = torch.zeros(num_rois, ctx.output_dim, ctx.pooled_height, ctx.pooled_width).to(features.device)
+         mappingchannel = torch.IntTensor(num_rois, ctx.output_dim, ctx.pooled_height, ctx.pooled_width).zero_().to(features.device)
+         _C.ps_roi_pool_forward(ctx.pooled_height,
+@@ -54,7 +72,8 @@ class _PSROIPool(Function):
+         return grad_input, None, None, None, None, None, None
+ 
+ 
+-ps_roi_pool = _PSROIPool.apply
++ps_roi_pool = _PSROIPool_onnx.apply
++# ps_roi_pool = _PSROIPool.apply
+ 
+ 
+ class PSROIPool(nn.Module):
+diff --git RFCN-pytorch.1.0/lib/model/rpn/bbox_transform.py b/lib/model/rpn/bbox_transform.py
+index 450de0f..8e918ac 100644
+--- RFCN-pytorch.1.0/lib/model/rpn/bbox_transform.py
++++ b/lib/model/rpn/bbox_transform.py
+@@ -102,6 +102,33 @@ def bbox_transform_inv(boxes, deltas, batch_size):
+ 
+     return pred_boxes
+ 
++def bbox_transform_inv_onnx(boxes, deltas, batch_size):
++    widths = boxes[:, :, 2] - boxes[:, :, 0] + 1.0
++    heights = boxes[:, :, 3] - boxes[:, :, 1] + 1.0
++    ctr_x = boxes[:, :, 0] + 0.5 * widths
++    ctr_y = boxes[:, :, 1] + 0.5 * heights
++
++    dx = deltas[:, :, 0::4]
++    dy = deltas[:, :, 1::4]
++    dw = deltas[:, :, 2::4]
++    dh = deltas[:, :, 3::4]
++
++    pred_ctr_x = dx * widths.unsqueeze(2) + ctr_x.unsqueeze(2)
++    pred_ctr_y = dy * heights.unsqueeze(2) + ctr_y.unsqueeze(2)
++    pred_w = torch.exp(dw) * widths.unsqueeze(2)
++    pred_h = torch.exp(dh) * heights.unsqueeze(2)
++
++    pred_boxes = torch.cat(
++        (
++            pred_ctr_x - 0.5 * pred_w,
++            pred_ctr_y - 0.5 * pred_h,
++            pred_ctr_x + 0.5 * pred_w,
++            pred_ctr_y + 0.5 * pred_h
++        ),
++        axis=2
++    )
++    return pred_boxes
++
+ def clip_boxes_batch(boxes, im_shape, batch_size):
+     """
+     Clip boxes to image boundaries.
+diff --git RFCN-pytorch.1.0/lib/model/rpn/proposal_layer.py b/lib/model/rpn/proposal_layer.py
+index 9c787da..84ef90a 100644
+--- RFCN-pytorch.1.0/lib/model/rpn/proposal_layer.py
++++ b/lib/model/rpn/proposal_layer.py
+@@ -16,13 +16,61 @@ import math
+ import yaml
+ from model.utils.config import cfg
+ from .generate_anchors import generate_anchors
+-from .bbox_transform import bbox_transform_inv, clip_boxes, clip_boxes_batch
++from .bbox_transform import bbox_transform_inv, bbox_transform_inv_onnx, clip_boxes, clip_boxes_batch
+ # from model.nms.nms_wrapper import nms
+ from model.roi_layers import nms
+ import pdb
+ 
+ DEBUG = False
+ 
++
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (1, N, 4)
++            nmsed_scores: (1, N)
++            nmsed_classes: (1, N)
++            nmsed_num: (1,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.arange(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++                                                                   bboxes, scores, score_threshold_f=score_thr, iou_threshold_f=iou_thr,
++                                                                   max_size_per_class_i=max_size_p_class, max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    bboxes = bboxes.reshape(1, bboxes.shape[1].numpy(), -1, 4)
++    scores = scores.reshape(1, scores.shape[1].numpy(), -1)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    # max_total_size num_bbox
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    # dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    # labels = nmsed_classes.reshape((max_total_size, ))
++    # return dets, labels
++    return nmsed_boxes, nmsed_scores
++
++
+ class _ProposalLayer(nn.Module):
+     """
+     Outputs object detection proposals by applying estimated bounding-box
+@@ -47,7 +95,6 @@ class _ProposalLayer(nn.Module):
+         #     top[1].reshape(1, 1, 1, 1)
+ 
+     def forward(self, input):
+-
+         # Algorithm:
+         #
+         # for each (H, W) location i
+@@ -103,7 +150,10 @@ class _ProposalLayer(nn.Module):
+         scores = scores.view(batch_size, -1)
+ 
+         # Convert anchors into proposals via bbox transformations
+-        proposals = bbox_transform_inv(anchors, bbox_deltas, batch_size)
++        if torch.onnx.is_in_onnx_export():
++            proposals = bbox_transform_inv_onnx(anchors, bbox_deltas, batch_size)
++        else:
++            proposals = bbox_transform_inv(anchors, bbox_deltas, batch_size)
+ 
+         # 2. clip predicted boxes to image
+         proposals = clip_boxes(proposals, im_info, batch_size)
+@@ -122,6 +172,16 @@ class _ProposalLayer(nn.Module):
+ 
+         scores_keep = scores
+         proposals_keep = proposals
++        if torch.onnx.is_in_onnx_export():
++            _, topk_inds = torch.topk(scores, pre_nms_topN)
++            proposals = proposals.squeeze()
++            scores = scores.squeeze()
++            proposals = proposals[topk_inds, :]
++            scores = scores[topk_inds]
++            nmsed_bboxes, nmsed_scores = batch_nms_op(proposals, scores, 0.0, nms_thresh, post_nms_topN, post_nms_topN)
++            idx_mask = torch.zeros([1, post_nms_topN, 1])
++            return torch.cat((idx_mask, nmsed_bboxes), axis=2)
++
+         _, order = torch.sort(scores_keep, 1, True)
+ 
+         output = scores.new(batch_size, post_nms_topN, 5).zero_()
+diff --git RFCN-pytorch.1.0/lib/model/rpn/rpn.py b/lib/model/rpn/rpn.py
+index 29bdaad..1dc6d3e 100644
+--- RFCN-pytorch.1.0/lib/model/rpn/rpn.py
++++ b/lib/model/rpn/rpn.py
+@@ -74,8 +74,10 @@ class _RPN(nn.Module):
+         # proposal layer
+         cfg_key = 'TRAIN' if self.training else 'TEST'
+ 
+-        rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
+-                                 im_info, cfg_key))
++        # rois = self.RPN_proposal((rpn_cls_prob.data, rpn_bbox_pred.data,
++        #                          im_info, cfg_key))
++        rois = self.RPN_proposal((rpn_cls_prob, rpn_bbox_pred,
++                                  im_info, cfg_key))
+ 
+         self.rpn_loss_cls = 0
+         self.rpn_loss_box = 0
+diff --git RFCN-pytorch.1.0/lib/model/utils/config.py b/lib/model/utils/config.py
+index c2f42e0..40c2480 100644
+--- RFCN-pytorch.1.0/lib/model/utils/config.py
++++ b/lib/model/utils/config.py
+@@ -374,7 +374,7 @@ def cfg_from_file(filename):
+   """Load a config file and merge it into the default options."""
+   import yaml
+   with open(filename, 'r') as f:
+-    yaml_cfg = edict(yaml.load(f))
++    yaml_cfg = edict(yaml.safe_load(f))
+ 
+   _merge_a_into_b(yaml_cfg, __C)
+ 

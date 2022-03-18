@@ -1,0 +1,12 @@
+{
+    "batch_size": 8,
+    "n_epochs": 20,
+    "lr": 1e-3,
+    "weight_decay": 5e-4,
+    "use_cuda": true,
+    "data_folder": "dataset",
+    "voc07_path" : "1111",
+    "voc12_path" : "2222",
+    "backbone_network" : "MobileNetV1"
+}
+

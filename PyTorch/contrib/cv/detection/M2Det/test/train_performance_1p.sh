@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+source ./test/env_npu.sh
+
+python3.7 -u train_8p.py \
+        --c=configs/m2det512_vgg.py \
+        --ngpu=1 \
+        --amp \
+        --opt_level=O1 \
+        --loss_scale=32.0 \
+        --world_size=1 \
+        --dist-url='tcp://127.0.0.1:30003' \
+        --dist_backend=hccl \
+        --dist_rank=0 \
+        --device_list=0 \
+        --device='npu' \
+        --addr=$(hostname -I |awk '{print $1}') \
+        --seed=49 \
+        --FusedSGD \
+        --performance

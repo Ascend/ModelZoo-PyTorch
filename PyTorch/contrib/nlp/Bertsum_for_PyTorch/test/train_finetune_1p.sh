@@ -1,0 +1,23 @@
+source ../test/env_npu.sh
+taskset -c 0-23 python train.py \
+        -mode train \
+	    -encoder classifier  \
+	    -dropout 0.1 \
+        -bert_data_path ../bert_data/cnndm  \
+	    -model_path ../models/bert_classifier  \
+	    -lr 2e-3  \
+	    -visible_gpus 0  \
+        -gpu_ranks 0  \
+	    -world_size 1  \
+	    -report_every 1  \
+	    -save_checkpoint_steps 1000  \
+	    -batch_size 3000  \
+	    -decay_method noam  \
+	    -train_steps 50000 \
+        -accum_count 2  \
+	    -log_file ../logs/bert_classifier  \
+	    -use_interval true  \
+	    -warmup_steps 10000  \
+	    -train_npu true  \
+        -train_with_amp true 
+        -train_from PRETRAINED_MODEL_PATH > log.train_finetune_1p.txt 2>&1 &

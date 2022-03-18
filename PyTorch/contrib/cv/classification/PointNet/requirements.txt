@@ -1,0 +1,4 @@
+numpy ==1.21.1
+onnxsimplifier == 0.3.6
+tqdm == 4.62.2
+plyfile == 0.7.4

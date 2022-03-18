@@ -1,0 +1,8 @@
+6c6
+< # from opt import opt
+---
+> from opt import opt
+12c12
+<     def __init__(self, opt):
+---
+>     def __init__(self):

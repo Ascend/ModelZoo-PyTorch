@@ -1,0 +1,60 @@
+2021-09-30 08:50:58 [INFO]    Initialing rules...
+2021-09-30 08:50:58 [INFO]    MsFmkTransplt start working now, please wait for a moment.
+2021-09-30 08:50:58 [INFO]    Analysis start...
+2021-09-30 08:50:58 [INFO]    LICENSE is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    requirements.txt is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    Start analysis train.py.
+2021-09-30 08:50:58 [WARNING] line: 86 ~ 86         Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-09-30 08:50:58 [INFO]    Analysis train.py complete.
+2021-09-30 08:50:58 [INFO]    README.md is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    .flake8 is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    .gitignore is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    config.json is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    msFmkTranspltlog.txt is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    Start analysis logger/logger.py.
+2021-09-30 08:50:58 [INFO]    Analysis logger/logger.py complete.
+2021-09-30 08:50:58 [INFO]    Start analysis logger/__init__.py.
+2021-09-30 08:50:58 [INFO]    Analysis logger/__init__.py complete.
+2021-09-30 08:50:58 [INFO]    Start analysis utils/__init__.py.
+2021-09-30 08:50:58 [INFO]    Analysis utils/__init__.py complete.
+2021-09-30 08:50:58 [INFO]    Start analysis utils/util.py.
+2021-09-30 08:50:58 [INFO]    Analysis utils/util.py complete.
+2021-09-30 08:50:58 [INFO]    datasets/.gitignore is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    test/train_performance_1p.sh is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    test/train_full_1p.sh is not a python script, skip.
+2021-09-30 08:50:58 [INFO]    Start analysis base/__init__.py.
+2021-09-30 08:50:58 [INFO]    Analysis base/__init__.py complete.
+2021-09-30 08:50:58 [INFO]    Start analysis base/base_model.py.
+2021-09-30 08:50:58 [INFO]    Analysis base/base_model.py complete.
+2021-09-30 08:50:58 [INFO]    Start analysis base/base_trainer.py.
+2021-09-30 08:50:59 [WARNING] line: 160 ~ 160       Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2021-09-30 08:50:59 [INFO]    line: 169 ~ 169       Operation Type: MODIFY              Message: change function cuda to npu
+2021-09-30 08:50:59 [INFO]    line: 57 ~ 57         Operation Type: MODIFY              Message: change module cuda to npu
+2021-09-30 08:50:59 [INFO]    line: 58 ~ 58         Operation Type: MODIFY              Message: change module cuda to npu
+2021-09-30 08:50:59 [INFO]    line: 57 ~ 57         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-09-30 08:50:59 [INFO]    line: 58 ~ 58         Operation Type: MODIFY              Message: replace string "cuda" with "npu"
+2021-09-30 08:50:59 [INFO]    line: 62 ~ 62         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2021-09-30 08:50:59 [INFO]    Analysis base/base_trainer.py complete.
+2021-09-30 08:50:59 [INFO]    Start analysis base/base_data_loader.py.
+2021-09-30 08:50:59 [INFO]    Analysis base/base_data_loader.py complete.
+2021-09-30 08:50:59 [INFO]    Start analysis trainer/trainer.py.
+2021-09-30 08:51:00 [INFO]    Analysis trainer/trainer.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis trainer/__init__.py.
+2021-09-30 08:51:00 [INFO]    Analysis trainer/__init__.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis data_loader/data_loaders.py.
+2021-09-30 08:51:00 [INFO]    Analysis data_loader/data_loaders.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis data_loader/__init__.py.
+2021-09-30 08:51:00 [INFO]    Analysis data_loader/__init__.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis model/metric.py.
+2021-09-30 08:51:00 [INFO]    Analysis model/metric.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis model/loss.py.
+2021-09-30 08:51:00 [WARNING] line: 38 ~ 38         Operation Type: UNSUPPORTED         Message: torch.nn.functional.nll_loss is not supported now!
+2021-09-30 08:51:00 [INFO]    Analysis model/loss.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis model/__init__.py.
+2021-09-30 08:51:00 [INFO]    Analysis model/__init__.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis model/model.py.
+2021-09-30 08:51:00 [WARNING] line: 45 ~ 45         Operation Type: UNSUPPORTED         Message: torch.nn.Dropout2d is not supported now!
+2021-09-30 08:51:00 [INFO]    Analysis model/model.py complete.
+2021-09-30 08:51:00 [INFO]    Start analysis model/modules/__init__.py.
+2021-09-30 08:51:00 [INFO]    Analysis model/modules/__init__.py complete.
+2021-09-30 08:51:00 [INFO]    MsFmkTransplt run success, welcome to the next use.

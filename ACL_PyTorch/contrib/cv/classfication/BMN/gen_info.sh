@@ -1,0 +1,1 @@
+python3.7 gen_info.py 'bin' 'preprocessed_imgs' BMN.info 400 100

@@ -1,0 +1,8 @@
+DATA:
+  ROOT: '/opt/npu/imagenet'
+TRAINING:
+  EPOCHS: 1
+  BATCH_SIZE: 128
+  WORKERS: 16
+OPTIMIZER:
+  LR: 0.05

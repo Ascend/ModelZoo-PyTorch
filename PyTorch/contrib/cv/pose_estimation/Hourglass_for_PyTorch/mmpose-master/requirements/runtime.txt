@@ -1,0 +1,10 @@
+dataclasses; python_version == '3.6'
+json_tricks
+matplotlib
+munkres
+numpy
+opencv-python
+pillow
+scipy
+xtcocotools>=1.6
+

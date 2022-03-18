@@ -1,0 +1,8 @@
+__pycache__/
+.vscode/
+env/
+configs/
+data/
+runs/
+wandb/
+notes.txt

@@ -1,0 +1,10 @@
+DATASET="--train-dir Path2DatasetCIFAR10/train/ --val-dir Path2DatasetCIFAR10/val/ -d cifar10 --num-classes 10"
+GENERAL="--lr 2e-5 --batch-size 128 --epochs 350 --workers 4 --base-size 32 --crop-size 32"
+INFO="--checkname vggsmall2bit --lr-scheduler one-cycle"
+MODEL="--network vggsmall --mask --K 4 --weight-decay 5e-4 --empirical True"
+PARAMS="--tau 0.01"
+NORMAL="--normal"
+RESUME="--resume Path2FP32Model --rt --show-info"
+DEVICES="0"
+GPU="--gpu-ids 0"
+CUDA_VISIBLE_DEVICES=$DEVICES python3 main.py $GPU $DATASET $GENERAL $MODEL $INFO $PARAMS $RESUME

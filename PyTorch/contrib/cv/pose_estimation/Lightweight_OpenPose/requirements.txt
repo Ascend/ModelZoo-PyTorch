@@ -1,0 +1,2 @@
+opencv-python
+pycocotools==2.0.2

@@ -1,0 +1,16 @@
+python3 ffdnet.py \
+    --use_gpu \
+    --is_train \
+    --train_path './train_data/' \
+    --model_path './models/' \
+    --batch_size 1024 \
+    --epoches 150 \
+    --val_epoch 5 \
+    --patch_size 32 \
+    --save_checkpoints 20 \
+    --train_noise_interval 15 75 15 \
+    --val_noise_interval 30 60 30 \
+    --is_test \
+    --test_path './test_data/color.png' \
+    --add_noise \
+    --noise_sigma 30

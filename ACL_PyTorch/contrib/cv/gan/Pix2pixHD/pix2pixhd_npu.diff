@@ -1,0 +1,77 @@
+diff --git a/models/networks.py b/models/networks.py
+index ee05d85..bc72291 100755
+--- a/models/networks.py
++++ b/models/networks.py
+@@ -36,7 +36,7 @@ def define_G(input_nc, output_nc, ngf, netG, n_downsample_global=3, n_blocks_glo
+         netG = Encoder(input_nc, output_nc, ngf, n_downsample_global, norm_layer)
+     else:
+         raise('generator not implemented!')
+-    print(netG)
++    # print(netG)
+     if len(gpu_ids) > 0:
+         assert(torch.cuda.is_available())   
+         netG.cuda(gpu_ids[0])
+@@ -46,7 +46,7 @@ def define_G(input_nc, output_nc, ngf, netG, n_downsample_global=3, n_blocks_glo
+ def define_D(input_nc, ndf, n_layers_D, norm='instance', use_sigmoid=False, num_D=1, getIntermFeat=False, gpu_ids=[]):        
+     norm_layer = get_norm_layer(norm_type=norm)   
+     netD = MultiscaleDiscriminator(input_nc, ndf, n_layers_D, norm_layer, use_sigmoid, num_D, getIntermFeat)   
+-    print(netD)
++    # print(netD)
+     if len(gpu_ids) > 0:
+         assert(torch.cuda.is_available())
+         netD.cuda(gpu_ids[0])
+diff --git a/models/pix2pixHD_model.py b/models/pix2pixHD_model.py
+index fafdec0..cbd6f27 100755
+--- a/models/pix2pixHD_model.py
++++ b/models/pix2pixHD_model.py
+@@ -54,7 +54,7 @@ class Pix2PixHDModel(BaseModel):
+ 
+         # load networks
+         if not self.isTrain or opt.continue_train or opt.load_pretrain:
+-            pretrained_path = '' if not self.isTrain else opt.load_pretrain
++            pretrained_path = opt.load_pretrain
+             self.load_network(self.netG, 'G', opt.which_epoch, pretrained_path)            
+             if self.isTrain:
+                 self.load_network(self.netD, 'D', opt.which_epoch, pretrained_path)  
+diff --git a/options/base_options.py b/options/base_options.py
+index 0d5e769..61a6a1e 100755
+--- a/options/base_options.py
++++ b/options/base_options.py
+@@ -11,7 +11,8 @@ class BaseOptions():
+     def initialize(self):    
+         # experiment specifics
+         self.parser.add_argument('--name', type=str, default='label2city', help='name of the experiment. It decides where to store samples and models')        
+-        self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
++        # self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
++        self.parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
+         self.parser.add_argument('--model', type=str, default='pix2pixHD', help='which model to use')
+         self.parser.add_argument('--norm', type=str, default='instance', help='instance normalization or batch normalization')        
+@@ -81,10 +82,10 @@ class BaseOptions():
+ 
+         args = vars(self.opt)
+ 
+-        print('------------ Options -------------')
+-        for k, v in sorted(args.items()):
+-            print('%s: %s' % (str(k), str(v)))
+-        print('-------------- End ----------------')
++        # print('------------ Options -------------')
++        # for k, v in sorted(args.items()):
++        #     print('%s: %s' % (str(k), str(v)))
++        # print('-------------- End ----------------')
+ 
+         # save to the disk        
+         expr_dir = os.path.join(self.opt.checkpoints_dir, self.opt.name)
+diff --git a/options/test_options.py b/options/test_options.py
+index f27fc5e..d3e383f 100755
+--- a/options/test_options.py
++++ b/options/test_options.py
+@@ -13,5 +13,7 @@ class TestOptions(BaseOptions):
+         self.parser.add_argument('--use_encoded_image', action='store_true', help='if specified, encode the real image to get the feature map')
+         self.parser.add_argument("--export_onnx", type=str, help="export ONNX model to a given file")
+         self.parser.add_argument("--engine", type=str, help="run serialized TRT engine")
+-        self.parser.add_argument("--onnx", type=str, help="run ONNX model via TRT")        
++        self.parser.add_argument("--onnx", type=str, help="run ONNX model via TRT") 
++        self.parser.add_argument("--output_file", type=str, help="run ONNX model via TRT")    
++        self.parser.add_argument('--load_pretrain', type=str, default='', help='load the pretrained model from the specified location') 
+         self.isTrain = False

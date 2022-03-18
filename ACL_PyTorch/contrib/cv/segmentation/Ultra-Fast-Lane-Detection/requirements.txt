@@ -1,0 +1,17 @@
+torch==1.9.0
+torchvision==0.10.0
+numpy==1.19.5
+scipy==1.6.2
+decorator==5.1.0
+attrs
+psutil
+absl-py
+tqdm
+sympy
+tensorflow
+tensorboard
+onnx==1.10.2
+onnxruntime==1.9.0
+json5==0.9.6
+scikit-learn==0.24.2 
+opencv-python==4.5.3.56

@@ -1,0 +1,7 @@
+_BASE_: "../Base-RetinaNet.yaml"
+INPUT:
+  FIX_SHAPE: (1344, 1344)
+MODEL:
+  WEIGHTS: "/root/txyWorkSpace/Faster_Mask_RCNN_for_PyTorch/R-50.pkl"
+  RESNETS:
+    DEPTH: 50

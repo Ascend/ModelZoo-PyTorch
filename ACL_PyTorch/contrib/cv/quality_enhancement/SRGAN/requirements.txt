@@ -1,0 +1,14 @@
+onnx >= 1.10.2
+numpy >= 1.19.5
+onnx-simplifier >= 0.3.6
+onnxconverter-common >= 1.9.0
+onnxoptimizer >= 0.2.6
+onnxruntime >= 1.10.0
+opencv-python >= 4.5.4.58
+Pillow >= 8.4.0
+protobuf >= 3.19.1
+pytz >= 2021.3
+requests >= 2.26.0
+scikit-learn >= 0.24.2
+scipy >= 1.5.4
+skl2onnx >= 1.10.3

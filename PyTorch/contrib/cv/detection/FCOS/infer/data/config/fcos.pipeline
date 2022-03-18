@@ -1,0 +1,56 @@
+{
+    "im_fcos": {
+        "stream_config": {
+            "deviceId": "0"
+        },
+        "appsrc0": {
+            "props": {
+                "blocksize": "4096000"
+            },
+            "factory": "appsrc",
+            "next": "mxpi_imagedecoder0"
+        },
+        "mxpi_imagedecoder0": {
+            "props": {
+                "cvProcessor": "opencv",
+                "outputDataFormat": "BGR",
+                "dataType": "uint8"
+            },
+            "factory": "mxpi_imagedecoder",
+            "next": "mxpi_imageresize0"
+        },
+        "mxpi_imageresize0": {
+            "props": {
+                "cvProcessor": "opencv",
+                "dataSource": "mxpi_imagedecoder0",
+                "resizeHeight": "800",
+                "resizeWidth": "1333",
+                "resizeType": "Resizer_KeepAspectRatio_Fit",
+                "paddingType": "Padding_Around"
+            },
+            "factory": "mxpi_imageresize",
+            "next": "mxpi_tensorinfer0"
+        },
+        "mxpi_tensorinfer0": {
+            "props": {
+                "dataSource": "mxpi_imageresize0",
+                "modelPath": "../data/model/fcos.om"
+            },
+            "factory": "mxpi_tensorinfer",
+            "next": "mxpi_dumpdata0"
+        },
+        "mxpi_dumpdata0": {
+            "props": {
+                "requiredMetaDataKeys": "mxpi_tensorinfer0"
+            },
+            "factory": "mxpi_dumpdata",
+            "next": "appsink0"
+        },
+        "appsink0": {
+            "props": {
+                "blocksize": "4096000"
+            },
+            "factory": "appsink"
+        }
+    }
+}

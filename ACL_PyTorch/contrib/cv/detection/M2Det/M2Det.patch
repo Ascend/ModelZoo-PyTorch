@@ -1,0 +1,299 @@
+diff --git a/configs/m2det512_vgg.py b/configs/m2det512_vgg.py
+index 01d21b1..df49100 100644
+--- a/configs/m2det512_vgg.py
++++ b/configs/m2det512_vgg.py
+@@ -2,7 +2,7 @@ model = dict(
+     type = 'm2det',
+     input_size = 512,
+     init_net = True,
+-    pretrained = 'weights/vgg16_reducedfc.pth',
++    pretrained = 'M2Det/weights/vgg16_reducedfc.pth',
+     m2det_config = dict(
+         backbone = 'vgg16',
+         net_family = 'vgg', # vgg includes ['vgg16','vgg19'], res includes ['resnetxxx','resnextxxx']
+diff --git a/data/coco.py b/data/coco.py
+index 3784d65..9d07625 100644
+--- a/data/coco.py
++++ b/data/coco.py
+@@ -24,9 +24,10 @@ from utils.pycocotools import mask as COCOmask
+ 
+ class COCODetection(data.Dataset):
+ 
+-    def __init__(self, root, image_sets, preproc=None, target_transform=None,
++    def __init__(self, args, image_sets, preproc=None, target_transform=None,
+                  dataset_name='COCO'):
+-        self.root = root
++        self.COCO_imgs = args.COCO_imgs
++        self.COCO_anns = args.COCO_anns
+         self.data_path = os.path.join(os.path.expanduser("~"),'data')
+         self.cache_path = os.path.join(self.data_path, 'coco_cache')
+         self.image_set = image_sets
+@@ -57,6 +58,7 @@ class COCODetection(data.Dataset):
+             self._class_to_coco_cat_id = dict(zip([c['name'] for c in cats],
+                                                   _COCO.getCatIds()))
+             indexes = _COCO.getImgIds()
++            indexes = sorted(indexes)
+             self.image_indexes = indexes
+             self.ids.extend([self.image_path_from_index(data_name, index) for index in indexes ])
+             if image_set.find('test') != -1:
+@@ -74,8 +76,9 @@ class COCODetection(data.Dataset):
+         #   images/train2014/COCO_train2014_000000119993.jpg
+         file_name = ('COCO_' + name + '_' +
+                      str(index).zfill(12) + '.jpg')
+-        image_path = os.path.join(self.root, 'images',
+-                              name, file_name)
++        #image_path = os.path.join(self.root, 'images',
++        #                      name, file_name)
++        image_path = os.path.join(self.COCO_imgs, name, file_name)
+         assert os.path.exists(image_path), \
+                 'Path does not exist: {}'.format(image_path)
+         return image_path
+@@ -84,12 +87,14 @@ class COCODetection(data.Dataset):
+     def _get_ann_file(self, name):
+         prefix = 'instances' if name.find('test') == -1 \
+                 else 'image_info'
+-        return os.path.join(self.root, 'annotations',
+-                        prefix + '_' + name + '.json')
+-
++        #return os.path.join(self.root, 'annotations',
++        #                prefix + '_' + name + '.json')
++        return os.path.join(self.COCO_anns, prefix + '_' + name + '.json')
+ 
+     def _load_coco_annotations(self, coco_name, indexes, _COCO):
+         cache_file=os.path.join(self.cache_path,coco_name+'_gt_roidb.pkl')
++        if not os.path.exists(self.cache_path):
++            os.makedirs(self.cache_path)
+         if os.path.exists(cache_file):
+             with open(cache_file, 'rb') as fid:
+                 roidb = pickle.load(fid)
+@@ -179,7 +184,7 @@ class COCODetection(data.Dataset):
+             PIL img
+         '''
+         img_id = self.ids[index]
+-        return cv2.imread(img_id, cv2.IMREAD_COLOR)
++        return cv2.imread(img_id, cv2.IMREAD_COLOR), img_id
+ 
+ 
+     def pull_tensor(self, index):
+@@ -246,7 +251,7 @@ class COCODetection(data.Dataset):
+     def _coco_results_one_category(self, boxes, cat_id):
+         results = []
+         for im_ind, index in enumerate(self.image_indexes):
+-            dets = boxes[im_ind].astype(np.float)
++            dets = np.array(boxes[im_ind], dtype=np.float)
+             if dets == []:
+                 continue
+             scores = dets[:, -1]
+diff --git a/layers/functions/detection.py b/layers/functions/detection.py
+index 841abf9..767c0c4 100644
+--- a/layers/functions/detection.py
++++ b/layers/functions/detection.py
+@@ -32,13 +32,18 @@ class Detect(Function):
+         loc, conf = predictions
+ 
+         loc_data = loc.data
++        #print('loc_data:{}'.format(loc_data.shape))
+         conf_data = conf.data
++        #print('conf_data:{}'.format(conf_data.shape))
+         prior_data = prior.data
+         num = loc_data.size(0)  # batch size
++        #print('num:{}'.format(num))
+         self.num_priors = prior_data.size(0)
++        #print('num_priors:{}'.format(self.num_priors))
+         self.boxes = torch.zeros(1, self.num_priors, 4)
+         self.scores = torch.zeros(1, self.num_priors, self.num_classes)
+         if loc_data.is_cuda:
++            print('use cuda')
+             self.boxes = self.boxes.cuda()
+             self.scores = self.scores.cuda()
+ 
+@@ -47,11 +52,10 @@ class Detect(Function):
+             conf_preds = conf_data.unsqueeze(0)
+ 
+         else:
+-            conf_preds = conf_data.view(num, num_priors,
++            conf_preds = conf_data.view(num, self.num_priors,
+                                         self.num_classes)
+             self.boxes.expand_(num, self.num_priors, 4)
+             self.scores.expand_(num, self.num_priors, self.num_classes)
+-
+         # Decode predictions into bboxes.
+         for i in range(num):
+             decoded_boxes = decode(loc_data[i], prior_data, self.variance)
+diff --git a/make.sh b/make.sh
+index a8893bc..84af1e2 100644
+--- a/make.sh
++++ b/make.sh
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env bash
+ cd ./utils/
+ 
+-CUDA_PATH=/usr/local/cuda/
++#CUDA_PATH=/usr/local/cuda/
+ 
+ python build.py build_ext --inplace
+ 
+diff --git a/utils/build.py b/utils/build.py
+index fe33bc1..db29076 100644
+--- a/utils/build.py
++++ b/utils/build.py
+@@ -56,7 +56,7 @@ def locate_cuda():
+     return cudaconfig
+ 
+ 
+-CUDA = locate_cuda()
++#CUDA = locate_cuda()
+ 
+ # Obtain the numpy include directory.  This logic works across numpy versions.
+ try:
+@@ -87,6 +87,7 @@ def customize_compiler_for_nvcc(self):
+     # based on source extension: we add it.
+     def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
+         print(extra_postargs)
++        '''
+         if os.path.splitext(src)[1] == '.cu':
+             # use the cuda for .cu files
+             self.set_executable('compiler_so', CUDA['nvcc'])
+@@ -95,7 +96,8 @@ def customize_compiler_for_nvcc(self):
+             postargs = extra_postargs['nvcc']
+         else:
+             postargs = extra_postargs['gcc']
+-
++        '''
++        postargs = extra_postargs['gcc']
+         super(obj, src, ext, cc_args, postargs, pp_opts)
+         # reset the default compiler_so, which we might have changed for cuda
+         self.compiler_so = default_compiler_so
+@@ -110,7 +112,7 @@ class custom_build_ext(build_ext):
+         customize_compiler_for_nvcc(self.compiler)
+         build_ext.build_extensions(self)
+ 
+-
++'''
+ ext_modules = [
+     Extension(
+         "nms.cpu_nms",
+@@ -143,7 +145,22 @@ ext_modules = [
+             'gcc': ['-Wno-cpp', '-Wno-unused-function', '-std=c99']},
+     ),
+ ]
+-
++'''
++ext_modules = [
++    Extension(
++        "nms.cpu_nms",
++        ["nms/cpu_nms.pyx"],
++        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
++        include_dirs=[numpy_include]
++    ),
++    Extension(
++        'pycocotools._mask',
++        sources=['pycocotools/maskApi.c', 'pycocotools/_mask.pyx'],
++        include_dirs=[numpy_include, 'pycocotools'],
++        extra_compile_args={
++            'gcc': ['-Wno-cpp', '-Wno-unused-function', '-std=c99']},
++    ),
++]
+ setup(
+     name='mot_utils',
+     ext_modules=ext_modules,
+diff --git a/utils/core.py b/utils/core.py
+index 4da901e..26ba394 100644
+--- a/utils/core.py
++++ b/utils/core.py
+@@ -84,15 +84,15 @@ def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_s
+     return lr
+ 
+ 
+-def get_dataloader(cfg, dataset, setname='train_sets'):
++def get_dataloader(args, cfg, dataset, setname='train_sets'):
+     _preproc = preproc(cfg.model.input_size, cfg.model.rgb_means, cfg.model.p)
+     Dataloader_function = {'VOC': VOCDetection, 'COCO':COCODetection}
+     _Dataloader_function = Dataloader_function[dataset]
+     if setname == 'train_sets':
+-        dataset = _Dataloader_function(cfg.COCOroot if dataset == 'COCO' else cfg.VOCroot,
++        dataset = _Dataloader_function(args if dataset == 'COCO' else cfg.VOCroot,
+                                    getattr(cfg.dataset, dataset)[setname], _preproc)
+     else:
+-        dataset = _Dataloader_function(cfg.COCOroot if dataset == 'COCO' else cfg.VOCroot,
++        dataset = _Dataloader_function(args if dataset == 'COCO' else cfg.VOCroot,
+                                    getattr(cfg.dataset, dataset)[setname], None)
+     return dataset
+     
+@@ -165,4 +165,34 @@ def nms_process(num_classes, i, scores, boxes, cfg, min_thresh, all_boxes, max_p
+                 keep = np.where(all_boxes[j][i][:, -1] >= image_thresh)[0]
+                 all_boxes[j][i] = all_boxes[j][i][keep, :]
+ 
+-
++##-自定义logr函数
++def set_train_log():
++
++     date = time.strftime("%m_%d_%H_%M") + '_loss.log'
++     log_path = 'M2Det/logs/'+ date
++     if os.path.exists(log_path):
++         #os.remove(log_path)
++         print('{}路径已存在'.format(log_path))
++     else:
++         os.mknod(log_path)
++     logr = train_log(log_path)
++     return logr
++
++def train_log(filename, verbosity=1, name=None):
++    import logging
++    level_dict = {0: logging.DEBUG, 1: logging.INFO, 2: logging.WARNING}
++    formatter = logging.Formatter(
++        "[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s"
++    )
++    logr = logging.getLogger(name)
++    logr.setLevel(level_dict[verbosity])
++
++    fh = logging.FileHandler(filename, "w")
++    fh.setFormatter(formatter)
++    logr.addHandler(fh)
++    #输出到终端
++    #sh = logging.StreamHandler()
++    #sh.setFormatter(formatter)
++    #logr.addHandler(sh)
++
++    return logr
+diff --git a/utils/nms_wrapper.py b/utils/nms_wrapper.py
+index 09b1ca7..b65ef70 100644
+--- a/utils/nms_wrapper.py
++++ b/utils/nms_wrapper.py
+@@ -6,7 +6,7 @@
+ # --------------------------------------------------------
+ 
+ from .nms.cpu_nms import cpu_nms, cpu_soft_nms
+-from .nms.gpu_nms import gpu_nms
++
+ 
+ 
+ # def nms(dets, thresh, force_cpu=False):
+@@ -25,7 +25,5 @@ def nms(dets, thresh, force_cpu=False):
+ 
+     if dets.shape[0] == 0:
+         return []
+-    if force_cpu:
+-        return cpu_soft_nms(dets, thresh, method = 1)
+-        #return cpu_nms(dets, thresh)
+-    return gpu_nms(dets, thresh)
++
++    return cpu_soft_nms(dets, thresh, method = 1)
+\ No newline at end of file
+diff --git a/utils/pycocotools/cocoeval.py b/utils/pycocotools/cocoeval.py
+index cd42852..281813f 100644
+--- a/utils/pycocotools/cocoeval.py
++++ b/utils/pycocotools/cocoeval.py
+@@ -498,8 +498,10 @@ class Params:
+         self.imgIds = []
+         self.catIds = []
+         # np.arange causes trouble.  the data point on arange is slightly larger than the true value
+-        self.iouThrs = np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
+-        self.recThrs = np.linspace(.0, 1.00, np.round((1.00 - .0) / .01) + 1, endpoint=True)
++        #self.iouThrs = np.linspace(.5, 0.95, np.round((0.95 - .5) / .05) + 1, endpoint=True)
++        #self.recThrs = np.linspace(.0, 1.00, np.round((1.00 - .0) / .01) + 1, endpoint=True)
++        self.iouThrs = np.linspace(.5, 0.95, 10, endpoint=True)
++        self.recThrs = np.linspace(.0, 1.00, 101, endpoint=True)
+         self.maxDets = [1, 10, 100]
+         self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
+         self.areaRngLbl = ['all', 'small', 'medium', 'large']

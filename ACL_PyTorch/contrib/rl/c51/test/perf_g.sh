@@ -1,0 +1,1 @@
+trtexec --onnx=c51.onnx --fp16 --shapes=input:1x4x84x84

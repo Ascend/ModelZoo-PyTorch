@@ -1,0 +1,7 @@
+torch==1.9.0
+tqdm==4.62.3
+easydict==1.9
+onnx-simplifier==0.3.6
+pytz==2021.3
+scipy==1.7.3
+scikit-learn=1.0.1

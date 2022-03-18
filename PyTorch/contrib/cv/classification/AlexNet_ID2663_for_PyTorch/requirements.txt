@@ -1,0 +1,5 @@
+torch==1.5.0+ascend.post2
+torchvision
+numpy
+opencv-python
+Pillow

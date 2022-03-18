@@ -1,0 +1,7 @@
+attrs
+numpy
+pytorch==1.5.0
+torchvision
+Pillow
+tqdm
+setproctitle

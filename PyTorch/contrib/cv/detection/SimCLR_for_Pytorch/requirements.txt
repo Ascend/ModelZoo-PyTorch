@@ -1,0 +1,7 @@
+torchvision==0.6.0
+apex==0.1+ascend
+tqdm==4.62.3
+torch==1.5.0+ascend.post3
+numpy==1.17.3
+PyYAML==5.4.1
+simclr==1.0.2

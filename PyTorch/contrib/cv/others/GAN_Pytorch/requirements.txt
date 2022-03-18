@@ -1,0 +1,5 @@
+#torch==1.5.0
+#apex
+numpy
+matplotlib
+#torchvision==0.6.0

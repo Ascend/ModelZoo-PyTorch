@@ -1,0 +1,24 @@
+{
+    "graph_id": 10,
+    "op": [
+        {
+            "error_type": "check_support_error",
+            "input0": {
+                "data_type": "DT_INT64",
+                "layout": "NCHW",
+                "shape": [
+                    48
+                ]
+            },
+            "name": "ReduceMaxD",
+            "output0": {
+                "data_type": "DT_INT64",
+                "layout": "NCHW",
+                "shape": []
+            },
+            "reason": "AIcoreEngine:Op ReduceMaxD not supported reason: The type of this op is not found in op store, check whether the op store has this type of op. Op store name is tbe-custom.\nThe dtype, format or shape of input in op desc is not supported in op store, check the dtype, format or shape of input between the op store and the graph. Op store name is tbe-builtin.\n;",
+            "type": "ReduceMaxD"
+        }
+    ],
+    "session_id": 10
+}

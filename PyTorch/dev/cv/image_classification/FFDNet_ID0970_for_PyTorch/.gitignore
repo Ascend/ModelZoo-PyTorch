@@ -1,0 +1,10 @@
+__pycache__/
+
+models/*.*
+train_data/gray/train/*.*
+train_data/gray/val/*.*
+train_data/rgb/train/*.*
+train_data/rgb/val/*.*
+!.gitkeep
+
+*.zip

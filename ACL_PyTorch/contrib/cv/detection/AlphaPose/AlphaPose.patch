@@ -1,0 +1,260 @@
+diff --git a/alphapose/datasets/__init__.py b/alphapose/datasets/__init__.py
+index 5b5b469..9d91e1d 100644
+--- a/alphapose/datasets/__init__.py
++++ b/alphapose/datasets/__init__.py
+@@ -1,10 +1,11 @@
+ from .coco_det import Mscoco_det
+-from .concat_dataset import ConcatDataset
+-from .custom import CustomDataset
+-from .mscoco import Mscoco
+-from .mpii import Mpii
+-from .halpe_26 import Halpe_26
+-from .halpe_136 import Halpe_136
+-from .halpe_136_det import  Halpe_136_det
+-from .halpe_26_det import  Halpe_26_det
+-__all__ = ['CustomDataset', 'Halpe_136', 'Halpe_26_det', 'Halpe_136_det', 'Halpe_26', 'Mscoco', 'Mscoco_det', 'Mpii', 'ConcatDataset', 'coco_wholebody', 'coco_wholebody_det']
++# from .concat_dataset import ConcatDataset
++# from .custom import CustomDataset
++# from .mscoco import Mscoco
++# from .mpii import Mpii
++# from .halpe_26 import Halpe_26
++# from .halpe_136 import Halpe_136
++# from .halpe_136_det import  Halpe_136_det
++# from .halpe_26_det import  Halpe_26_det
++# __all__ = ['CustomDataset', 'Halpe_136', 'Halpe_26_det', 'Halpe_136_det', 'Halpe_26', 'Mscoco', 'Mscoco_det', 'Mpii', 'ConcatDataset', 'coco_wholebody', 'coco_wholebody_det']
++__all__ = ['Mscoco_det']
+diff --git a/alphapose/datasets/coco_det.py b/alphapose/datasets/coco_det.py
+index 187d431..69681ae 100644
+--- a/alphapose/datasets/coco_det.py
++++ b/alphapose/datasets/coco_det.py
+@@ -32,7 +32,7 @@ class Mscoco_det(data.Dataset):
+         self._cfg = cfg
+         self._opt = opt
+         self._preset_cfg = cfg['PRESET']
+-        self._root = cfg['ROOT']
++        self._root = opt.dataroot
+         self._img_prefix = cfg['IMG_PREFIX']
+         if not det_file:
+             det_file = cfg['DET_FILE']
+@@ -68,7 +68,7 @@ class Mscoco_det(data.Dataset):
+             img_id = int(img_id)
+         else:
+             img_id = det_res['image_id']
+-        img_path = './data/coco/val2017/%012d.jpg' % img_id
++        img_path = self._root + '/val2017/%012d.jpg' % img_id
+ 
+         # Load image
+         image = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB) #scipy.misc.imread(img_path, mode='RGB')
+diff --git a/alphapose/models/__init__.py b/alphapose/models/__init__.py
+index 6605b78..dbc8536 100644
+--- a/alphapose/models/__init__.py
++++ b/alphapose/models/__init__.py
+@@ -1,10 +1,11 @@
+ from .fastpose import FastPose
+-from .fastpose_duc import FastPose_DUC
+-from .hrnet import PoseHighResolutionNet
+-from .simplepose import SimplePose
+-from .fastpose_duc_dense import FastPose_DUC_Dense
+-from .hardnet import HarDNetPose
+-from .criterion import L1JointRegression
++# from .fastpose_duc import FastPose_DUC
++# from .hrnet import PoseHighResolutionNet
++# from .simplepose import SimplePose
++# from .fastpose_duc_dense import FastPose_DUC_Dense
++# from .hardnet import HarDNetPose
++# from .criterion import L1JointRegression
+ 
+-__all__ = ['FastPose', 'SimplePose', 'PoseHighResolutionNet',
+-           'FastPose_DUC', 'FastPose_DUC_Dense', 'HarDNetPose', 'L1JointRegression']
++# __all__ = ['FastPose', 'SimplePose', 'PoseHighResolutionNet',
++#            'FastPose_DUC', 'FastPose_DUC_Dense', 'HarDNetPose', 'L1JointRegression']
++__all__ = ['FastPose']
+diff --git a/alphapose/models/fastpose.py b/alphapose/models/fastpose.py
+index 0ca4f65..72885b5 100644
+--- a/alphapose/models/fastpose.py
++++ b/alphapose/models/fastpose.py
+@@ -31,7 +31,7 @@ class FastPose(nn.Module):
+         # Imagenet pretrain model
+         import torchvision.models as tm   # noqa: F401,F403
+         assert cfg['NUM_LAYERS'] in [18, 34, 50, 101, 152]
+-        x = eval(f"tm.resnet{cfg['NUM_LAYERS']}(pretrained=True)")
++        x = eval(f"tm.resnet{cfg['NUM_LAYERS']}(pretrained=False)")
+ 
+         model_state = self.preact.state_dict()
+         state = {k: v for k, v in x.state_dict().items()
+diff --git a/alphapose/utils/presets/simple_transform.py b/alphapose/utils/presets/simple_transform.py
+index ce72dd4..1147d8d 100644
+--- a/alphapose/utils/presets/simple_transform.py
++++ b/alphapose/utils/presets/simple_transform.py
+@@ -18,8 +18,8 @@ from ..transforms import (addDPG, affine_transform, flip_joints_3d,
+ # Only windows visual studio 2013 ~2017 support compile c/cuda extensions
+ # If you force to compile extension on Windows and ensure appropriate visual studio
+ # is intalled, you can try to use these ext_modules.
+-if platform.system() != 'Windows':
+-    from ..roi_align import RoIAlign
++# if platform.system() != 'Windows':
++#     from ..roi_align import RoIAlign
+ 
+ 
+ class SimpleTransform(object):
+@@ -76,10 +76,11 @@ class SimpleTransform(object):
+ 
+             self.upper_body_ids = dataset.upper_body_ids
+             self.lower_body_ids = dataset.lower_body_ids
+-        if platform.system() != 'Windows':
+-            self.roi_align = RoIAlign(self._input_size, sample_num=-1)
+-            if gpu_device is not None:
+-                self.roi_align = self.roi_align.to(gpu_device)
++        self.roi_align = None
++        # if platform.system() != 'Windows':
++        #     self.roi_align = RoIAlign(self._input_size, sample_num=-1)
++        #     if gpu_device is not None:
++        #         self.roi_align = self.roi_align.to(gpu_device)
+ 
+     def test_transform(self, src, bbox):
+         xmin, ymin, xmax, ymax = bbox
+diff --git a/detector/nms/nms_wrapper.py b/detector/nms/nms_wrapper.py
+index 9a051e7..64dcb3d 100644
+--- a/detector/nms/nms_wrapper.py
++++ b/detector/nms/nms_wrapper.py
+@@ -1,7 +1,8 @@
+ import numpy as np
+ import torch
+ 
+-from . import nms_cpu, nms_cuda
++# from . import nms_cpu, nms_cuda
++from . import nms_cpu
+ from .soft_nms_cpu import soft_nms_cpu
+ 
+ 
+@@ -42,7 +43,7 @@ def nms(dets, iou_thr, device_id=None):
+         if dets_th.is_cuda:
+             inds = nms_cuda.nms(dets_th, iou_thr)
+         else:
+-            inds = nms_cpu.nms(dets_th, iou_thr)
++            inds = nms_cpu.nms(dets_th.numpy(), iou_thr)
+ 
+     if is_numpy:
+         inds = inds.cpu().numpy()
+diff --git a/detector/nms/src/nms_cpu.pyx b/detector/nms/src/nms_cpu.pyx
+new file mode 100644
+index 0000000..c9040dc
+--- /dev/null
++++ b/detector/nms/src/nms_cpu.pyx
+@@ -0,0 +1,62 @@
++import numpy as np
++cimport numpy as np
++
++cdef inline np.float32_t max(np.float32_t a, np.float32_t b):
++    return a if a >= b else b
++
++cdef inline np.float32_t min(np.float32_t a, np.float32_t b):
++    return a if a <= b else b
++
++
++def nms(np.ndarray[np.float32_t, ndim=2] dets, np.float thresh):
++    cdef np.ndarray[np.float32_t, ndim=1] x1 = dets[:, 0]
++    cdef np.ndarray[np.float32_t, ndim=1] y1 = dets[:, 1]
++    cdef np.ndarray[np.float32_t, ndim=1] x2 = dets[:, 2]
++    cdef np.ndarray[np.float32_t, ndim=1] y2 = dets[:, 3]
++    cdef np.ndarray[np.float32_t, ndim=1] scores = dets[:, 4]
++
++    cdef np.ndarray[np.float32_t, ndim=1] areas = (x2 - x1 + 1) * (y2 - y1 + 1)
++    cdef np.ndarray[np.int_t, ndim=1] order = scores.argsort()[::-1]
++
++    cdef int ndets = dets.shape[0]
++    cdef np.ndarray[np.int_t, ndim=1] suppressed = \
++            np.zeros((ndets), dtype=np.int)
++
++    # nominal indices
++    cdef int _i, _j
++    # sorted indices
++    cdef int i, j
++    # temp variables for box i's (the box currently under consideration)
++    cdef np.float32_t ix1, iy1, ix2, iy2, iarea
++    # variables for computing overlap with box j (lower scoring box)
++    cdef np.float32_t xx1, yy1, xx2, yy2
++    cdef np.float32_t w, h
++    cdef np.float32_t inter, ovr
++
++    keep = []
++    for _i in range(ndets):
++        i = order[_i]
++        if suppressed[i] == 1:
++            continue
++        keep.append(i)
++        ix1 = x1[i]
++        iy1 = y1[i]
++        ix2 = x2[i]
++        iy2 = y2[i]
++        iarea = areas[i]
++        for _j in range(_i + 1, ndets):
++            j = order[_j]
++            if suppressed[j] == 1:
++                continue
++            xx1 = max(ix1, x1[j])
++            yy1 = max(iy1, y1[j])
++            xx2 = min(ix2, x2[j])
++            yy2 = min(iy2, y2[j])
++            w = max(0.0, xx2 - xx1 + 1)
++            h = max(0.0, yy2 - yy1 + 1)
++            inter = w * h
++            ovr = inter / (iarea + areas[j] - inter)
++            if ovr >= thresh:
++                suppressed[j] = 1
++
++    return keep
+diff --git a/detector/yolo_cfg.py b/detector/yolo_cfg.py
+index 8a755c9..b8e4c57 100644
+--- a/detector/yolo_cfg.py
++++ b/detector/yolo_cfg.py
+@@ -1,8 +1,8 @@
+ from easydict import EasyDict as edict
+ 
+ cfg = edict()
+-cfg.CONFIG = 'detector/yolo/cfg/yolov3-spp.cfg'
+-cfg.WEIGHTS = 'detector/yolo/data/yolov3-spp.weights'
++cfg.CONFIG = 'AlphaPose/detector/yolo/cfg/yolov3-spp.cfg'
++cfg.WEIGHTS = 'AlphaPose/detector/yolo/data/yolov3-spp.weights'
+ cfg.INP_DIM =  608
+ cfg.NMS_THRES =  0.6
+ cfg.CONFIDENCE = 0.1
+diff --git a/setup.py b/setup.py
+index d1e397d..4ad65f8 100644
+--- a/setup.py
++++ b/setup.py
+@@ -128,32 +128,10 @@ def get_ext_modules():
+                 name='soft_nms_cpu',
+                 module='detector.nms',
+                 sources=['src/soft_nms_cpu.pyx']),
+-            make_cuda_ext(
++            make_cython_ext(
+                 name='nms_cpu',
+                 module='detector.nms',
+-                sources=['src/nms_cpu.cpp']),
+-            make_cuda_ext(
+-                name='nms_cuda',
+-                module='detector.nms',
+-                sources=['src/nms_cuda.cpp', 'src/nms_kernel.cu']),
+-            make_cuda_ext(
+-                name='roi_align_cuda',
+-                module='alphapose.utils.roi_align',
+-                sources=['src/roi_align_cuda.cpp', 'src/roi_align_kernel.cu']),
+-            make_cuda_ext(
+-                name='deform_conv_cuda',
+-                module='alphapose.models.layers.dcn',
+-                sources=[
+-                    'src/deform_conv_cuda.cpp',
+-                    'src/deform_conv_cuda_kernel.cu'
+-                ]),
+-            make_cuda_ext(
+-                name='deform_pool_cuda',
+-                module='alphapose.models.layers.dcn',
+-                sources=[
+-                    'src/deform_pool_cuda.cpp',
+-                    'src/deform_pool_cuda_kernel.cu'
+-                ]),
++                sources=['src/nms_cpu.pyx']),
+         ]
+     return ext_modules
+ 

@@ -1,0 +1,77 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the License);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Code reference from "Temporal Interlacing Network"
+# https://github.com/deepcs233/TIN/blob/master/cuda_shift/rtc_wrap.py
+# Hao Shao, Shengju Qian, Yu Liu
+# shaoh19@mails.tsinghua.edu.cn, sjqian@cse.cuhk.edu.hk, yuliu@ee.cuhk.edu.hk
+
+import torch
+import torch.nn as nn
+from torch.autograd import Function
+
+from ..utils import ext_loader
+
+ext_module = ext_loader.load_ext('_ext',
+                                 ['tin_shift_forward', 'tin_shift_backward'])
+
+
+class TINShiftFunction(Function):
+
+    @staticmethod
+    def forward(ctx, input, shift):
+
+        ctx.save_for_backward(shift)
+
+        out = torch.zeros_like(input)
+        ext_module.tin_shift_forward(input, shift, out)
+
+        return out
+
+    @staticmethod
+    def backward(ctx, grad_output):
+
+        shift = ctx.saved_tensors[0]
+        data_grad_input = grad_output.new(*grad_output.size()).zero_()
+        shift_grad_input = shift.new(*shift.size()).zero_()
+        ext_module.tin_shift_backward(grad_output, shift, data_grad_input)
+
+        return data_grad_input, shift_grad_input
+
+
+tin_shift = TINShiftFunction.apply
+
+
+class TINShift(nn.Module):
+    """Temporal Interlace Shift.
+
+    Temporal Interlace shift is a differentiable temporal-wise frame shifting
+    which is proposed in "Temporal Interlacing Network"
+
+    Please refer to https://arxiv.org/abs/2001.06499 for more details.
+    Code is modified from https://github.com/mit-han-lab/temporal-shift-module
+    """
+
+    def forward(self, input, shift):
+        """Perform temporal interlace shift.
+
+        Args:
+            input (Tensor): Feature map with shape [N, num_segments, C, H * W].
+            shift (Tensor): Shift tensor with shape [N, num_segments].
+
+        Returns:
+            Feature map after temporal interlace shift.
+        """
+        return tin_shift(input, shift)

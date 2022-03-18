@@ -1,0 +1,143 @@
+diff --git a/assets/ops/dcn/functions/deform_conv.py b/assets/ops/dcn/functions/deform_conv.py
+index 6af75a7..4055a68 100644
+--- a/assets/ops/dcn/functions/deform_conv.py
++++ b/assets/ops/dcn/functions/deform_conv.py
+@@ -2,7 +2,7 @@ import torch
+ from torch.autograd import Function
+ from torch.nn.modules.utils import _pair
+ 
+-from .. import deform_conv_cuda
++#from .. import deform_conv_cuda
+ 
+ 
+ class DeformConvFunction(Function):
+@@ -107,12 +107,32 @@ class DeformConvFunction(Function):
+ 
+ class ModulatedDeformConvFunction(Function):
+ 
++    @staticmethod
++    def symbolic(g, input, weight, offset, bias, stride, padding,
++                 dilation, groups, defomable_groups):
++        if isinstance(stride, int):
++            stride = (stride, stride)
++        if isinstance(padding, int):
++            padding = (padding, padding)
++        if isinstance(dilation, int):
++            dilation = (dilation, dilation)
++        return g.op(
++            'DeformableConv2D',
++            input,
++            weight,
++            offset,
++            bias=None,
++            strides_i=stride,
++            pads_i=padding,
++            dilations_i=dilation,
++            groups_i=groups,
++            defomable_groups_i=defomable_groups)
++
+     @staticmethod
+     def forward(ctx,
+                 input,
+-                offset,
+-                mask,
+                 weight,
++                offset,
+                 bias=None,
+                 stride=1,
+                 padding=0,
+@@ -127,13 +147,15 @@ class ModulatedDeformConvFunction(Function):
+         ctx.with_bias = bias is not None
+         if not ctx.with_bias:
+             bias = input.new_empty(1)  # fake tensor
+-        if not input.is_cuda:
++        if not input.is_cuda and not torch.onnx.is_in_onnx_export():
+             raise NotImplementedError
+-        if weight.requires_grad or mask.requires_grad or offset.requires_grad \
++        '''if weight.requires_grad or mask.requires_grad or offset.requires_grad \
+                 or input.requires_grad:
+-            ctx.save_for_backward(input, offset, mask, weight, bias)
++            ctx.save_for_backward(input, offset, mask, weight, bias)'''
+         output = input.new_empty(
+             ModulatedDeformConvFunction._infer_shape(ctx, input, weight))
++        if torch.onnx.is_in_onnx_export():
++            return torch.rand(output.shape).to(input.device)
+         ctx._bufs = [input.new_empty(0), input.new_empty(0)]
+         deform_conv_cuda.modulated_deform_conv_cuda_forward(
+             input, weight, bias, ctx._bufs[0], offset, mask, output,
+diff --git a/assets/ops/dcn/functions/deform_pool.py b/assets/ops/dcn/functions/deform_pool.py
+index 65ff0ef..9403ef6 100644
+--- a/assets/ops/dcn/functions/deform_pool.py
++++ b/assets/ops/dcn/functions/deform_pool.py
+@@ -1,7 +1,7 @@
+ import torch
+ from torch.autograd import Function
+ 
+-from .. import deform_pool_cuda
++#from .. import deform_pool_cuda
+ 
+ 
+ class DeformRoIPoolingFunction(Function):
+diff --git a/assets/ops/dcn/modules/deform_conv.py b/assets/ops/dcn/modules/deform_conv.py
+index 50d15d1..332eb48 100644
+--- a/assets/ops/dcn/modules/deform_conv.py
++++ b/assets/ops/dcn/modules/deform_conv.py
+@@ -123,7 +123,14 @@ class ModulatedDeformConv(nn.Module):
+             self.bias.data.zero_()
+ 
+     def forward(self, x, offset, mask):
+-        return modulated_deform_conv(x, offset, mask, self.weight, self.bias,
++        offset_x = offset.reshape(offset.shape[0], -1, 2, offset.shape[2].numpy(), offset.shape[3].numpy()) \
++                         [:, :, 1, ...].reshape(offset.shape[0], offset.shape[1].numpy() // 2,
++                                                offset.shape[2].numpy(), offset.shape[3].numpy())
++        offset_y = offset.reshape(offset.shape[0], -1, 2, offset.shape[2].numpy(), offset.shape[3].numpy()) \
++                         [:, :, 0, ...].reshape(offset.shape[0], offset.shape[1].numpy() // 2,
++                                                offset.shape[2].numpy(), offset.shape[3].numpy())
++        offset = torch.cat((offset_x, offset_y, mask), 1)
++        return modulated_deform_conv(x, self.weight, offset, self.bias,
+                                      self.stride, self.padding, self.dilation,
+                                      self.groups, self.deformable_groups)
+ 
+diff --git a/backbones/resnet.py b/backbones/resnet.py
+index df6e5a2..796b02f 100644
+--- a/backbones/resnet.py
++++ b/backbones/resnet.py
+@@ -129,7 +129,8 @@ class Bottleneck(nn.Module):
+             self.conv2_offset = nn.Conv2d(
+                 planes, deformable_groups * offset_channels,
+                 kernel_size=3,
+-                padding=1)
++                padding=1,
++                stride=stride)
+             self.conv2 = conv_op(
+                 planes, planes, kernel_size=3, padding=1, stride=stride,
+                 deformable_groups=deformable_groups, bias=False)
+@@ -295,7 +296,7 @@ def resnet50(pretrained=True, **kwargs):
+     return model
+ 
+ 
+-def deformable_resnet50(pretrained=True, **kwargs):
++def deformable_resnet50(pretrained=False, **kwargs):
+     """Constructs a ResNet-50 model with deformable conv.
+     Args:
+         pretrained (bool): If True, returns a model pre-trained on ImageNet
+diff --git a/structure/model.py b/structure/model.py
+index 060191b..ea1705b 100644
+--- a/structure/model.py
++++ b/structure/model.py
+@@ -36,7 +36,7 @@ class SegDetectorModel(nn.Module):
+ 
+         self.model = BasicModel(args)
+         # for loading models
+-        self.model = parallelize(self.model, distributed, local_rank)
++        #self.model = parallelize(self.model, distributed, local_rank)
+         self.criterion = SegDetectorLossBuilder(
+             args['loss_class'], *args.get('loss_args', []), **args.get('loss_kwargs', {})).build()
+         self.criterion = parallelize(self.criterion, distributed, local_rank)
+@@ -63,4 +63,4 @@ class SegDetectorModel(nn.Module):
+             loss_with_metrics = self.criterion(pred, batch)
+             loss, metrics = loss_with_metrics
+             return loss, pred, metrics
+-        return pred
+\ No newline at end of file
++        return pred

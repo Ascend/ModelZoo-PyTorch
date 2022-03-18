@@ -1,0 +1,646 @@
+二进制文件 Chinese-Text-Classification-Pytorch_back/.git/index 和 Chinese-Text-Classification-Pytorch/.git/index 不同
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/DPCNN.py Chinese-Text-Classification-Pytorch/models/DPCNN.py
+--- Chinese-Text-Classification-Pytorch_back/models/DPCNN.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/DPCNN.py	1970-01-01 08:00:00.000000000 +0800
+@@ -1,89 +0,0 @@
+-# coding: UTF-8
+-import torch
+-import torch.nn as nn
+-import torch.nn.functional as F
+-import numpy as np
+-
+-
+-class Config(object):
+-
+-    """配置参数"""
+-    def __init__(self, dataset, embedding):
+-        self.model_name = 'DPCNN'
+-        self.train_path = dataset + '/data/train.txt'                                # 训练集
+-        self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+-        self.test_path = dataset + '/data/test.txt'                                  # 测试集
+-        self.class_list = [x.strip() for x in open(
+-            dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+-        self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
+-        self.log_path = dataset + '/log/' + self.model_name
+-        self.embedding_pretrained = torch.tensor(
+-            np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+-            if embedding != 'random' else None                                       # 预训练词向量
+-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
+-
+-        self.dropout = 0.5                                              # 随机失活
+-        self.require_improvement = 1000                                 # 若超过1000batch效果还没提升，则提前结束训练
+-        self.num_classes = len(self.class_list)                         # 类别数
+-        self.n_vocab = 0                                                # 词表大小，在运行时赋值
+-        self.num_epochs = 20                                            # epoch数
+-        self.batch_size = 128                                           # mini-batch大小
+-        self.pad_size = 32                                              # 每句话处理成的长度(短填长切)
+-        self.learning_rate = 1e-3                                       # 学习率
+-        self.embed = self.embedding_pretrained.size(1)\
+-            if self.embedding_pretrained is not None else 300           # 字向量维度
+-        self.num_filters = 250                                          # 卷积核数量(channels数)
+-
+-
+-'''Deep Pyramid Convolutional Neural Networks for Text Categorization'''
+-
+-
+-class Model(nn.Module):
+-    def __init__(self, config):
+-        super(Model, self).__init__()
+-        if config.embedding_pretrained is not None:
+-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+-        else:
+-            self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+-        self.conv_region = nn.Conv2d(1, config.num_filters, (3, config.embed), stride=1)
+-        self.conv = nn.Conv2d(config.num_filters, config.num_filters, (3, 1), stride=1)
+-        self.max_pool = nn.MaxPool2d(kernel_size=(3, 1), stride=2)
+-        self.padding1 = nn.ZeroPad2d((0, 0, 1, 1))  # top bottom
+-        self.padding2 = nn.ZeroPad2d((0, 0, 0, 1))  # bottom
+-        self.relu = nn.ReLU()
+-        self.fc = nn.Linear(config.num_filters, config.num_classes)
+-
+-    def forward(self, x):
+-        x = x[0]
+-        x = self.embedding(x)
+-        x = x.unsqueeze(1)  # [batch_size, 250, seq_len, 1]
+-        x = self.conv_region(x)  # [batch_size, 250, seq_len-3+1, 1]
+-
+-        x = self.padding1(x)  # [batch_size, 250, seq_len, 1]
+-        x = self.relu(x)
+-        x = self.conv(x)  # [batch_size, 250, seq_len-3+1, 1]
+-        x = self.padding1(x)  # [batch_size, 250, seq_len, 1]
+-        x = self.relu(x)
+-        x = self.conv(x)  # [batch_size, 250, seq_len-3+1, 1]
+-        while x.size()[2] > 2:
+-            x = self._block(x)
+-        x = x.squeeze()  # [batch_size, num_filters(250)]
+-        x = self.fc(x)
+-        return x
+-
+-    def _block(self, x):
+-        x = self.padding2(x)
+-        px = self.max_pool(x)
+-
+-        x = self.padding1(px)
+-        x = F.relu(x)
+-        x = self.conv(x)
+-
+-        x = self.padding1(x)
+-        x = F.relu(x)
+-        x = self.conv(x)
+-
+-        # Short Cut
+-        x = x + px
+-        return x
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/FastText.py Chinese-Text-Classification-Pytorch/models/FastText.py
+--- Chinese-Text-Classification-Pytorch_back/models/FastText.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/FastText.py	1970-01-01 08:00:00.000000000 +0800
+@@ -1,69 +0,0 @@
+-# coding: UTF-8
+-import torch
+-import torch.nn as nn
+-import torch.nn.functional as F
+-import numpy as np
+-
+-
+-class Config(object):
+-
+-    """配置参数"""
+-    def __init__(self, dataset, embedding):
+-        self.model_name = 'FastText'
+-        self.train_path = dataset + '/data/train.txt'                                # 训练集
+-        self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+-        self.test_path = dataset + '/data/test.txt'                                  # 测试集
+-        self.class_list = [x.strip() for x in open(
+-            dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+-        self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
+-        self.log_path = dataset + '/log/' + self.model_name
+-        self.embedding_pretrained = torch.tensor(
+-            np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+-            if embedding != 'random' else None                                       # 预训练词向量
+-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
+-
+-        self.dropout = 0.5                                              # 随机失活
+-        self.require_improvement = 1000                                 # 若超过1000batch效果还没提升，则提前结束训练
+-        self.num_classes = len(self.class_list)                         # 类别数
+-        self.n_vocab = 0                                                # 词表大小，在运行时赋值
+-        self.num_epochs = 20                                            # epoch数
+-        self.batch_size = 128                                           # mini-batch大小
+-        self.pad_size = 32                                              # 每句话处理成的长度(短填长切)
+-        self.learning_rate = 1e-3                                       # 学习率
+-        self.embed = self.embedding_pretrained.size(1)\
+-            if self.embedding_pretrained is not None else 300           # 字向量维度
+-        self.hidden_size = 256                                          # 隐藏层大小
+-        self.n_gram_vocab = 250499                                      # ngram 词表大小
+-
+-
+-'''Bag of Tricks for Efficient Text Classification'''
+-
+-
+-class Model(nn.Module):
+-    def __init__(self, config):
+-        super(Model, self).__init__()
+-        if config.embedding_pretrained is not None:
+-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+-        else:
+-            self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+-        self.embedding_ngram2 = nn.Embedding(config.n_gram_vocab, config.embed)
+-        self.embedding_ngram3 = nn.Embedding(config.n_gram_vocab, config.embed)
+-        self.dropout = nn.Dropout(config.dropout)
+-        self.fc1 = nn.Linear(config.embed * 3, config.hidden_size)
+-        # self.dropout2 = nn.Dropout(config.dropout)
+-        self.fc2 = nn.Linear(config.hidden_size, config.num_classes)
+-
+-    def forward(self, x):
+-
+-        out_word = self.embedding(x[0])
+-        out_bigram = self.embedding_ngram2(x[2])
+-        out_trigram = self.embedding_ngram3(x[3])
+-        out = torch.cat((out_word, out_bigram, out_trigram), -1)
+-
+-        out = out.mean(dim=1)
+-        out = self.dropout(out)
+-        out = self.fc1(out)
+-        out = F.relu(out)
+-        out = self.fc2(out)
+-        return out
+二进制文件 Chinese-Text-Classification-Pytorch_back/models/__pycache__/TextCNN.cpython-37.pyc 和 Chinese-Text-Classification-Pytorch/models/__pycache__/TextCNN.cpython-37.pyc 不同
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/TextCNN.py Chinese-Text-Classification-Pytorch/models/TextCNN.py
+--- Chinese-Text-Classification-Pytorch_back/models/TextCNN.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/TextCNN.py	2021-09-07 21:23:07.218366753 +0800
+@@ -1,4 +1,6 @@
+ # coding: UTF-8
++import os.path
++
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
+@@ -13,10 +15,11 @@ class Config(object):
+         self.train_path = dataset + '/data/train.txt'                                # 训练集
+         self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+         self.test_path = dataset + '/data/test.txt'                                  # 测试集
++        print('path', os.path.abspath(dataset+'/data/class.txt'))
+         self.class_list = [x.strip() for x in open(
+             dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+         self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
++        self.save_path = dataset + '/saved_dict/' + self.model_name + '.pth'         # 模型训练结果
+         self.log_path = dataset + '/log/' + self.model_name
+         self.embedding_pretrained = torch.tensor(
+             np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+@@ -49,18 +52,21 @@ class Model(nn.Module):
+             self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+         self.convs = nn.ModuleList(
+             [nn.Conv2d(1, config.num_filters, (k, config.embed)) for k in config.filter_sizes])
++        self.pools = nn.ModuleList(
++            [nn.MaxPool1d(config.pad_size - k + 1) for k in config.filter_sizes])
+         self.dropout = nn.Dropout(config.dropout)
+         self.fc = nn.Linear(config.num_filters * len(config.filter_sizes), config.num_classes)
+ 
+-    def conv_and_pool(self, x, conv):
++    def conv_and_pool(self, x, conv, pool):
+         x = F.relu(conv(x)).squeeze(3)
+-        x = F.max_pool1d(x, x.size(2)).squeeze(2)
++        x = pool(x).squeeze(2)
++        # x = F.max_pool1d(x, x.size(2)).squeeze(2)
+         return x
+ 
+     def forward(self, x):
+-        out = self.embedding(x[0])
++        out = self.embedding(x)
+         out = out.unsqueeze(1)
+-        out = torch.cat([self.conv_and_pool(out, conv) for conv in self.convs], 1)
++        out = torch.cat([self.conv_and_pool(out, conv, pool) for conv, pool in zip(self.convs, self.pools)], 1)
+         out = self.dropout(out)
+         out = self.fc(out)
+         return out
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/TextRCNN.py Chinese-Text-Classification-Pytorch/models/TextRCNN.py
+--- Chinese-Text-Classification-Pytorch_back/models/TextRCNN.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/TextRCNN.py	1970-01-01 08:00:00.000000000 +0800
+@@ -1,64 +0,0 @@
+-# coding: UTF-8
+-import torch
+-import torch.nn as nn
+-import torch.nn.functional as F
+-import numpy as np
+-
+-
+-class Config(object):
+-
+-    """配置参数"""
+-    def __init__(self, dataset, embedding):
+-        self.model_name = 'TextRCNN'
+-        self.train_path = dataset + '/data/train.txt'                                # 训练集
+-        self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+-        self.test_path = dataset + '/data/test.txt'                                  # 测试集
+-        self.class_list = [x.strip() for x in open(
+-            dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+-        self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
+-        self.log_path = dataset + '/log/' + self.model_name
+-        self.embedding_pretrained = torch.tensor(
+-            np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+-            if embedding != 'random' else None                                       # 预训练词向量
+-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
+-
+-        self.dropout = 1.0                                              # 随机失活
+-        self.require_improvement = 1000                                 # 若超过1000batch效果还没提升，则提前结束训练
+-        self.num_classes = len(self.class_list)                         # 类别数
+-        self.n_vocab = 0                                                # 词表大小，在运行时赋值
+-        self.num_epochs = 10                                            # epoch数
+-        self.batch_size = 128                                           # mini-batch大小
+-        self.pad_size = 32                                              # 每句话处理成的长度(短填长切)
+-        self.learning_rate = 1e-3                                       # 学习率
+-        self.embed = self.embedding_pretrained.size(1)\
+-            if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
+-        self.hidden_size = 256                                          # lstm隐藏层
+-        self.num_layers = 1                                             # lstm层数
+-
+-
+-'''Recurrent Convolutional Neural Networks for Text Classification'''
+-
+-
+-class Model(nn.Module):
+-    def __init__(self, config):
+-        super(Model, self).__init__()
+-        if config.embedding_pretrained is not None:
+-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+-        else:
+-            self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+-        self.lstm = nn.LSTM(config.embed, config.hidden_size, config.num_layers,
+-                            bidirectional=True, batch_first=True, dropout=config.dropout)
+-        self.maxpool = nn.MaxPool1d(config.pad_size)
+-        self.fc = nn.Linear(config.hidden_size * 2 + config.embed, config.num_classes)
+-
+-    def forward(self, x):
+-        x, _ = x
+-        embed = self.embedding(x)  # [batch_size, seq_len, embeding]=[64, 32, 64]
+-        out, _ = self.lstm(embed)
+-        out = torch.cat((embed, out), 2)
+-        out = F.relu(out)
+-        out = out.permute(0, 2, 1)
+-        out = self.maxpool(out).squeeze()
+-        out = self.fc(out)
+-        return out
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/TextRNN_Att.py Chinese-Text-Classification-Pytorch/models/TextRNN_Att.py
+--- Chinese-Text-Classification-Pytorch_back/models/TextRNN_Att.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/TextRNN_Att.py	1970-01-01 08:00:00.000000000 +0800
+@@ -1,73 +0,0 @@
+-# coding: UTF-8
+-import torch
+-import torch.nn as nn
+-import torch.nn.functional as F
+-import numpy as np
+-
+-
+-class Config(object):
+-
+-    """配置参数"""
+-    def __init__(self, dataset, embedding):
+-        self.model_name = 'TextRNN_Att'
+-        self.train_path = dataset + '/data/train.txt'                                # 训练集
+-        self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+-        self.test_path = dataset + '/data/test.txt'                                  # 测试集
+-        self.class_list = [x.strip() for x in open(
+-            dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+-        self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
+-        self.log_path = dataset + '/log/' + self.model_name
+-        self.embedding_pretrained = torch.tensor(
+-            np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+-            if embedding != 'random' else None                                       # 预训练词向量
+-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
+-
+-        self.dropout = 0.5                                              # 随机失活
+-        self.require_improvement = 1000                                 # 若超过1000batch效果还没提升，则提前结束训练
+-        self.num_classes = len(self.class_list)                         # 类别数
+-        self.n_vocab = 0                                                # 词表大小，在运行时赋值
+-        self.num_epochs = 10                                            # epoch数
+-        self.batch_size = 128                                           # mini-batch大小
+-        self.pad_size = 32                                              # 每句话处理成的长度(短填长切)
+-        self.learning_rate = 1e-3                                       # 学习率
+-        self.embed = self.embedding_pretrained.size(1)\
+-            if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
+-        self.hidden_size = 128                                          # lstm隐藏层
+-        self.num_layers = 2                                             # lstm层数
+-        self.hidden_size2 = 64
+-
+-
+-'''Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification'''
+-
+-
+-class Model(nn.Module):
+-    def __init__(self, config):
+-        super(Model, self).__init__()
+-        if config.embedding_pretrained is not None:
+-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+-        else:
+-            self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+-        self.lstm = nn.LSTM(config.embed, config.hidden_size, config.num_layers,
+-                            bidirectional=True, batch_first=True, dropout=config.dropout)
+-        self.tanh1 = nn.Tanh()
+-        # self.u = nn.Parameter(torch.Tensor(config.hidden_size * 2, config.hidden_size * 2))
+-        self.w = nn.Parameter(torch.zeros(config.hidden_size * 2))
+-        self.tanh2 = nn.Tanh()
+-        self.fc1 = nn.Linear(config.hidden_size * 2, config.hidden_size2)
+-        self.fc = nn.Linear(config.hidden_size2, config.num_classes)
+-
+-    def forward(self, x):
+-        x, _ = x
+-        emb = self.embedding(x)  # [batch_size, seq_len, embeding]=[128, 32, 300]
+-        H, _ = self.lstm(emb)  # [batch_size, seq_len, hidden_size * num_direction]=[128, 32, 256]
+-
+-        M = self.tanh1(H)  # [128, 32, 256]
+-        # M = torch.tanh(torch.matmul(H, self.u))
+-        alpha = F.softmax(torch.matmul(M, self.w), dim=1).unsqueeze(-1)  # [128, 32, 1]
+-        out = H * alpha  # [128, 32, 256]
+-        out = torch.sum(out, 1)  # [128, 256]
+-        out = F.relu(out)
+-        out = self.fc1(out)
+-        out = self.fc(out)  # [128, 64]
+-        return out
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/TextRNN.py Chinese-Text-Classification-Pytorch/models/TextRNN.py
+--- Chinese-Text-Classification-Pytorch_back/models/TextRNN.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/TextRNN.py	1970-01-01 08:00:00.000000000 +0800
+@@ -1,75 +0,0 @@
+-# coding: UTF-8
+-import torch
+-import torch.nn as nn
+-import numpy as np
+-
+-
+-class Config(object):
+-
+-    """配置参数"""
+-    def __init__(self, dataset, embedding):
+-        self.model_name = 'TextRNN'
+-        self.train_path = dataset + '/data/train.txt'                                # 训练集
+-        self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+-        self.test_path = dataset + '/data/test.txt'                                  # 测试集
+-        self.class_list = [x.strip() for x in open(
+-            dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+-        self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
+-        self.log_path = dataset + '/log/' + self.model_name
+-        self.embedding_pretrained = torch.tensor(
+-            np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+-            if embedding != 'random' else None                                       # 预训练词向量
+-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
+-
+-        self.dropout = 0.5                                              # 随机失活
+-        self.require_improvement = 1000                                 # 若超过1000batch效果还没提升，则提前结束训练
+-        self.num_classes = len(self.class_list)                         # 类别数
+-        self.n_vocab = 0                                                # 词表大小，在运行时赋值
+-        self.num_epochs = 10                                            # epoch数
+-        self.batch_size = 128                                           # mini-batch大小
+-        self.pad_size = 32                                              # 每句话处理成的长度(短填长切)
+-        self.learning_rate = 1e-3                                       # 学习率
+-        self.embed = self.embedding_pretrained.size(1)\
+-            if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
+-        self.hidden_size = 128                                          # lstm隐藏层
+-        self.num_layers = 2                                             # lstm层数
+-
+-
+-'''Recurrent Neural Network for Text Classification with Multi-Task Learning'''
+-
+-
+-class Model(nn.Module):
+-    def __init__(self, config):
+-        super(Model, self).__init__()
+-        if config.embedding_pretrained is not None:
+-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+-        else:
+-            self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+-        self.lstm = nn.LSTM(config.embed, config.hidden_size, config.num_layers,
+-                            bidirectional=True, batch_first=True, dropout=config.dropout)
+-        self.fc = nn.Linear(config.hidden_size * 2, config.num_classes)
+-
+-    def forward(self, x):
+-        x, _ = x
+-        out = self.embedding(x)  # [batch_size, seq_len, embeding]=[128, 32, 300]
+-        out, _ = self.lstm(out)
+-        out = self.fc(out[:, -1, :])  # 句子最后时刻的 hidden state
+-        return out
+-
+-    '''变长RNN，效果差不多，甚至还低了点...'''
+-    # def forward(self, x):
+-    #     x, seq_len = x
+-    #     out = self.embedding(x)
+-    #     _, idx_sort = torch.sort(seq_len, dim=0, descending=True)  # 长度从长到短排序（index）
+-    #     _, idx_unsort = torch.sort(idx_sort)  # 排序后，原序列的 index
+-    #     out = torch.index_select(out, 0, idx_sort)
+-    #     seq_len = list(seq_len[idx_sort])
+-    #     out = nn.utils.rnn.pack_padded_sequence(out, seq_len, batch_first=True)
+-    #     # [batche_size, seq_len, num_directions * hidden_size]
+-    #     out, (hn, _) = self.lstm(out)
+-    #     out = torch.cat((hn[2], hn[3]), -1)
+-    #     # out, _ = nn.utils.rnn.pad_packed_sequence(out, batch_first=True)
+-    #     out = out.index_select(0, idx_unsort)
+-    #     out = self.fc(out)
+-    #     return out
+diff -uprN Chinese-Text-Classification-Pytorch_back/models/Transformer.py Chinese-Text-Classification-Pytorch/models/Transformer.py
+--- Chinese-Text-Classification-Pytorch_back/models/Transformer.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/models/Transformer.py	1970-01-01 08:00:00.000000000 +0800
+@@ -1,178 +0,0 @@
+-import torch
+-import torch.nn as nn
+-import torch.nn.functional as F
+-import numpy as np
+-import copy
+-
+-
+-class Config(object):
+-
+-    """配置参数"""
+-    def __init__(self, dataset, embedding):
+-        self.model_name = 'Transformer'
+-        self.train_path = dataset + '/data/train.txt'                                # 训练集
+-        self.dev_path = dataset + '/data/dev.txt'                                    # 验证集
+-        self.test_path = dataset + '/data/test.txt'                                  # 测试集
+-        self.class_list = [x.strip() for x in open(
+-            dataset + '/data/class.txt', encoding='utf-8').readlines()]              # 类别名单
+-        self.vocab_path = dataset + '/data/vocab.pkl'                                # 词表
+-        self.save_path = dataset + '/saved_dict/' + self.model_name + '.ckpt'        # 模型训练结果
+-        self.log_path = dataset + '/log/' + self.model_name
+-        self.embedding_pretrained = torch.tensor(
+-            np.load(dataset + '/data/' + embedding)["embeddings"].astype('float32'))\
+-            if embedding != 'random' else None                                       # 预训练词向量
+-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
+-
+-        self.dropout = 0.5                                              # 随机失活
+-        self.require_improvement = 2000                                 # 若超过1000batch效果还没提升，则提前结束训练
+-        self.num_classes = len(self.class_list)                         # 类别数
+-        self.n_vocab = 0                                                # 词表大小，在运行时赋值
+-        self.num_epochs = 20                                            # epoch数
+-        self.batch_size = 128                                           # mini-batch大小
+-        self.pad_size = 32                                              # 每句话处理成的长度(短填长切)
+-        self.learning_rate = 5e-4                                       # 学习率
+-        self.embed = self.embedding_pretrained.size(1)\
+-            if self.embedding_pretrained is not None else 300           # 字向量维度
+-        self.dim_model = 300
+-        self.hidden = 1024
+-        self.last_hidden = 512
+-        self.num_head = 5
+-        self.num_encoder = 2
+-
+-
+-'''Attention Is All You Need'''
+-
+-
+-class Model(nn.Module):
+-    def __init__(self, config):
+-        super(Model, self).__init__()
+-        if config.embedding_pretrained is not None:
+-            self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
+-        else:
+-            self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=config.n_vocab - 1)
+-
+-        self.postion_embedding = Positional_Encoding(config.embed, config.pad_size, config.dropout, config.device)
+-        self.encoder = Encoder(config.dim_model, config.num_head, config.hidden, config.dropout)
+-        self.encoders = nn.ModuleList([
+-            copy.deepcopy(self.encoder)
+-            # Encoder(config.dim_model, config.num_head, config.hidden, config.dropout)
+-            for _ in range(config.num_encoder)])
+-
+-        self.fc1 = nn.Linear(config.pad_size * config.dim_model, config.num_classes)
+-        # self.fc2 = nn.Linear(config.last_hidden, config.num_classes)
+-        # self.fc1 = nn.Linear(config.dim_model, config.num_classes)
+-
+-    def forward(self, x):
+-        out = self.embedding(x[0])
+-        out = self.postion_embedding(out)
+-        for encoder in self.encoders:
+-            out = encoder(out)
+-        out = out.view(out.size(0), -1)
+-        # out = torch.mean(out, 1)
+-        out = self.fc1(out)
+-        return out
+-
+-
+-class Encoder(nn.Module):
+-    def __init__(self, dim_model, num_head, hidden, dropout):
+-        super(Encoder, self).__init__()
+-        self.attention = Multi_Head_Attention(dim_model, num_head, dropout)
+-        self.feed_forward = Position_wise_Feed_Forward(dim_model, hidden, dropout)
+-
+-    def forward(self, x):
+-        out = self.attention(x)
+-        out = self.feed_forward(out)
+-        return out
+-
+-
+-class Positional_Encoding(nn.Module):
+-    def __init__(self, embed, pad_size, dropout, device):
+-        super(Positional_Encoding, self).__init__()
+-        self.device = device
+-        self.pe = torch.tensor([[pos / (10000.0 ** (i // 2 * 2.0 / embed)) for i in range(embed)] for pos in range(pad_size)])
+-        self.pe[:, 0::2] = np.sin(self.pe[:, 0::2])
+-        self.pe[:, 1::2] = np.cos(self.pe[:, 1::2])
+-        self.dropout = nn.Dropout(dropout)
+-
+-    def forward(self, x):
+-        out = x + nn.Parameter(self.pe, requires_grad=False).to(self.device)
+-        out = self.dropout(out)
+-        return out
+-
+-
+-class Scaled_Dot_Product_Attention(nn.Module):
+-    '''Scaled Dot-Product Attention '''
+-    def __init__(self):
+-        super(Scaled_Dot_Product_Attention, self).__init__()
+-
+-    def forward(self, Q, K, V, scale=None):
+-        '''
+-        Args:
+-            Q: [batch_size, len_Q, dim_Q]
+-            K: [batch_size, len_K, dim_K]
+-            V: [batch_size, len_V, dim_V]
+-            scale: 缩放因子 论文为根号dim_K
+-        Return:
+-            self-attention后的张量，以及attention张量
+-        '''
+-        attention = torch.matmul(Q, K.permute(0, 2, 1))
+-        if scale:
+-            attention = attention * scale
+-        # if mask:  # TODO change this
+-        #     attention = attention.masked_fill_(mask == 0, -1e9)
+-        attention = F.softmax(attention, dim=-1)
+-        context = torch.matmul(attention, V)
+-        return context
+-
+-
+-class Multi_Head_Attention(nn.Module):
+-    def __init__(self, dim_model, num_head, dropout=0.0):
+-        super(Multi_Head_Attention, self).__init__()
+-        self.num_head = num_head
+-        assert dim_model % num_head == 0
+-        self.dim_head = dim_model // self.num_head
+-        self.fc_Q = nn.Linear(dim_model, num_head * self.dim_head)
+-        self.fc_K = nn.Linear(dim_model, num_head * self.dim_head)
+-        self.fc_V = nn.Linear(dim_model, num_head * self.dim_head)
+-        self.attention = Scaled_Dot_Product_Attention()
+-        self.fc = nn.Linear(num_head * self.dim_head, dim_model)
+-        self.dropout = nn.Dropout(dropout)
+-        self.layer_norm = nn.LayerNorm(dim_model)
+-
+-    def forward(self, x):
+-        batch_size = x.size(0)
+-        Q = self.fc_Q(x)
+-        K = self.fc_K(x)
+-        V = self.fc_V(x)
+-        Q = Q.view(batch_size * self.num_head, -1, self.dim_head)
+-        K = K.view(batch_size * self.num_head, -1, self.dim_head)
+-        V = V.view(batch_size * self.num_head, -1, self.dim_head)
+-        # if mask:  # TODO
+-        #     mask = mask.repeat(self.num_head, 1, 1)  # TODO change this
+-        scale = K.size(-1) ** -0.5  # 缩放因子
+-        context = self.attention(Q, K, V, scale)
+-
+-        context = context.view(batch_size, -1, self.dim_head * self.num_head)
+-        out = self.fc(context)
+-        out = self.dropout(out)
+-        out = out + x  # 残差连接
+-        out = self.layer_norm(out)
+-        return out
+-
+-
+-class Position_wise_Feed_Forward(nn.Module):
+-    def __init__(self, dim_model, hidden, dropout=0.0):
+-        super(Position_wise_Feed_Forward, self).__init__()
+-        self.fc1 = nn.Linear(dim_model, hidden)
+-        self.fc2 = nn.Linear(hidden, dim_model)
+-        self.dropout = nn.Dropout(dropout)
+-        self.layer_norm = nn.LayerNorm(dim_model)
+-
+-    def forward(self, x):
+-        out = self.fc1(x)
+-        out = F.relu(out)
+-        out = self.fc2(out)
+-        out = self.dropout(out)
+-        out = out + x  # 残差连接
+-        out = self.layer_norm(out)
+-        return out
+diff -uprN Chinese-Text-Classification-Pytorch_back/utils.py Chinese-Text-Classification-Pytorch/utils.py
+--- Chinese-Text-Classification-Pytorch_back/utils.py	2021-08-13 20:49:45.263263000 +0800
++++ Chinese-Text-Classification-Pytorch/utils.py	2021-09-07 21:23:50.874085521 +0800
+@@ -60,7 +60,7 @@ def build_dataset(config, ues_word):
+                 # word to id
+                 for word in token:
+                     words_line.append(vocab.get(word, vocab.get(UNK)))
+-                contents.append((words_line, int(label), seq_len))
++                contents.append((words_line, int(label)))
+         return contents  # [([...], 0), ([...], 1), ...]
+     train = load_dataset(config.train_path, config.pad_size)
+     dev = load_dataset(config.dev_path, config.pad_size)
+@@ -83,9 +83,7 @@ class DatasetIterater(object):
+         x = torch.LongTensor([_[0] for _ in datas]).to(self.device)
+         y = torch.LongTensor([_[1] for _ in datas]).to(self.device)
+ 
+-        # pad前的长度(超过pad_size的设为pad_size)
+-        seq_len = torch.LongTensor([_[2] for _ in datas]).to(self.device)
+-        return (x, seq_len), y
++        return x, y
+ 
+     def __next__(self):
+         if self.residue and self.index == self.n_batches:
