@@ -41,7 +41,6 @@ def build_optimizer(
 ):
     if all(isinstance(p, dict) for p in params):
         params = [t for p in params for t in p.values()]
-    params = list(filter(lambda p: p.requires_grad, params))
     return _build_optimizer(optimizer_cfg, params, *extra_args, **extra_kwargs)
 
 

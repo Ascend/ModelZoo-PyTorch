@@ -43,19 +43,11 @@ def collate_tokens(
 ):
     """Convert a list of 1d tensors into a padded 2d tensor."""
     size = max(max(v.size(0) for v in values), max(ov.size(0) for ov in other_values))
-    if size <= 16:
-        size = 16
-    elif size <= 32:
-        size = 32
-    elif size <= 64:
-        size = 64
-    elif size <= 128:
-        size = 128
-    elif size <= 256:
-        size = 256
-    else:
-        size = 512
-
+    buckets = [16, 32, 64, 128, 256, 512, 1024]
+    for buck in buckets:
+        if size <= buck:
+            size = buck
+            break
     size = size if pad_to_length is None else max(size, pad_to_length)
     if pad_to_multiple != 1 and size % pad_to_multiple != 0:
         size = int(((size - 0.1) // pad_to_multiple + 1) * pad_to_multiple)
@@ -352,17 +344,20 @@ def batch_by_size(
 
 def batch_by_size_fast_fix(indices, num_tokens_fn,max_tokens,max_sentences,bsz_mult):
     indices_view = indices
-    fix_shape_dict = {16:[],32:[],64:[],128:[],256:[],512:[]}
+    buckets = [16, 32, 64, 128, 256, 512, 1024]
+    fix_shape_dict = {}
+    for buck in buckets:
+        fix_shape_dict[buck] = []
     batch_by_size_list = []
     for i in range(len(indices_view)):
         idx = indices_view[i]
         fix_shape_dict[num_tokens_fn(idx)].append(idx)
-    for key_len in fix_shape_dict.keys():
+    for idx, key_len in enumerate(buckets):
         max_batch = max_tokens // key_len
         division_len = max_batch * (len(fix_shape_dict[key_len]) // max_batch)
         tail_len = len(fix_shape_dict[key_len]) - division_len
-        if tail_len > 0 and key_len != 512:
-            fix_shape_dict[key_len * 2] = fix_shape_dict[key_len][division_len:] + fix_shape_dict[key_len * 2]
+        if tail_len > 0 and key_len != 1024:
+            fix_shape_dict[buckets[idx + 1]] = fix_shape_dict[key_len][division_len:] + fix_shape_dict[buckets[idx + 1]]
         if division_len == 0:
             pass
         else:

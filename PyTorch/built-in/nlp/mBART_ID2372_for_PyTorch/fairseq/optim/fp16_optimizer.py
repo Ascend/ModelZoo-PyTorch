@@ -10,7 +10,7 @@ import torch
 from fairseq import optim, utils
 
 from .dynamic_loss_scaler import DynamicLossScaler
-
+from apex.contrib.combine_tensors import combine_npu
 
 class _FP16OptimizerMixin(object):
     def __init__(self, *args, **kwargs):
@@ -26,38 +26,26 @@ class _FP16OptimizerMixin(object):
         )
 
     @classmethod
+    @torch.no_grad()
     def build_fp32_params(cls, args, params, flatten=True):
         # create FP32 copy of parameters and grads
+        cls.fp32_tmp_params = dict()
         if flatten:
             is_pipeline_parallel = getattr(
                 args, "pipeline_model_parallel", False
             ) and getattr(args, "distributed_no_spawn", False)
-            total_param_size = sum(p.data.numel() for p in params)
+
             devices = [torch.npu.current_device()]
             if is_pipeline_parallel:
                 devices = list(set(args.pipeline_devices))
             fp32_params = {}
             for device in devices:
-                if is_pipeline_parallel:
-                    device_param_size = sum(
-                        p.data.numel() for p in params if p.device.index == device
-                    )
-                    device_params = [p for p in params if p.device.index == device]
-                else:
-                    device_param_size = total_param_size
-                    device_params = params
-                fp32_params[device] = (
-                    device_params[0].new(0).float().new(device_param_size)
-                )
-                offset = 0
-                for p in device_params:
-                    numel = p.data.numel()
-                    fp32_params[device][offset : offset + numel].copy_(p.data.view(-1))
-                    offset += numel
-                fp32_params[device] = torch.nn.Parameter(fp32_params[device])
-                fp32_params[device].grad = fp32_params[device].data.new(
-                    device_param_size
-                )
+                cls.fp32_tmp_params[device] = []
+                for idx, p in enumerate(params):
+                    cls.fp32_tmp_params[device].append(p.data.float())
+                fp32_params[device] = combine_npu(cls.fp32_tmp_params[device])
+
+                fp32_params[device].grad = torch.zeros_like(fp32_params[device].data)
             return fp32_params
         else:
             fp32_params = []
@@ -103,24 +91,31 @@ class _FP16OptimizerMixin(object):
             # copy FP16 grads to FP32
             if self.has_flat_params:
                 devices = list(self.fp32_params.keys())
-                device_params_dict = defaultdict(list)
-                for p in self.fp16_params:
-                    if p.requires_grad:
-                        device_params_dict[p.device.index].append(p)
-                for device in devices:
-                    device_params = device_params_dict[device]
-                    offset = 0
-                    for p in device_params:
-                        grad_data = (
-                            p.grad.data
-                            if p.grad is not None
-                            else p.data.new_zeros(p.data.shape)
-                        )
-                        numel = grad_data.numel()
-                        self.fp32_params[device].grad.data[
-                            offset : offset + numel
-                        ].copy_(grad_data.view(-1))
-                        offset += numel
+                if not self.combine_grads_flag:
+                    device_params_dict = defaultdict(list)
+                    for p in self.fp16_params:
+                        if p.requires_grad:
+                            device_params_dict[p.device.index].append(p)
+                    for device in devices:
+                        device_params = device_params_dict[device]
+                        fp16_grads_list = []
+                        fp16_params_list = []
+                        for p in device_params:
+                            grad_data = (
+                                p.grad.data
+                                if p.grad is not None
+                                else p.data.new_zeros(p.data.shape)
+                            )
+                            fp16_grads_list.append(grad_data)
+                            fp16_params_list.append(p.data)
+                        self.fp16_tmp_grads[device] = combine_npu(fp16_grads_list)
+                        self.fp16_tmp_params[device] = combine_npu(fp16_params_list)
+                        self.fp32_params[device].grad.data.copy_(self.fp16_tmp_grads[device])
+                    self.combine_grads_flag = True
+                else:
+                    for device in devices:
+                        self.fp32_params[device].grad.data.copy_(self.fp16_tmp_grads[device])
+
             else:
                 for p, p32 in zip(self.fp16_params, self.fp32_params):
                     if not p.requires_grad:
@@ -136,20 +131,17 @@ class _FP16OptimizerMixin(object):
         # copy FP32 params back into FP16 model
         if self.has_flat_params:
             devices = list(self.fp32_params.keys())
-            device_params_dict = defaultdict(list)
-            for p in self.fp16_params:
-                device_params_dict[p.device.index].append(p)
-            for device in devices:
-                device_params = device_params_dict[device]
-                offset = 0
-                for p in device_params:
-                    numel = p.data.numel()
-                    p.data.copy_(
-                        self.fp32_params[device]
-                        .data[offset : offset + numel]
-                        .view_as(p.data)
-                    )
-                    offset += numel
+            if not self.combine_grads_flag:
+                device_params_dict = defaultdict(list)
+                for p in self.fp16_params:
+                    device_params_dict[p.device.index].append(p)
+                for device in devices:
+                    device_params = device_params_dict[device]
+                    for idx, p in enumerate(device_params):
+                        p.data.copy_(self.fp32_tmp_params[device][idx].data)
+            else:
+                for device in devices:
+                    self.fp16_tmp_params[device].data.copy_(self.fp32_params[device])
         else:
             for p, p32 in zip(self.fp16_params, self.fp32_params):
                 if not p.requires_grad:
@@ -175,10 +167,10 @@ class _FP16OptimizerMixin(object):
         )
 
         if self.scaler is not None:
-            if grad_norm > max_norm > 0.0:
-                self._multiply_factor *= max_norm / grad_norm
+            if max_norm > 0.0:
+                if grad_norm > max_norm:
+                    self._multiply_factor *= max_norm / grad_norm
 
-            self.scaler.check_overflow(grad_norm)
         elif max_norm > 0.0:
             clip_coef = (max_norm / (grad_norm + 1e-6)).clamp_(max=1)
             self._multiply_factor *= clip_coef
@@ -202,8 +194,14 @@ class _FP16OptimizerMixin(object):
 
     def zero_grad(self):
         """Clears the gradients of all optimized parameters."""
-        for p in self.fp16_params:
-            p.grad = None
+        if self.combine_grads_flag:
+            devices = list(self.fp16_tmp_grads.keys())
+            for device in devices:
+                self.fp16_tmp_grads[device].zero_()
+        else:
+            for p in self.fp16_params:
+                if p.grad is not None:
+                    p.grad.zero_()
         if self.has_flat_params:
             if torch.is_tensor(self.fp32_params):
                 self.fp32_params.grad.zero_()
@@ -232,6 +230,9 @@ class FP16Optimizer(_FP16OptimizerMixin, optim.FairseqOptimizer):
         self.fp16_params = params
         self.fp32_optimizer = fp32_optimizer
         self.fp32_params = fp32_params
+        self.fp16_tmp_grads = dict()
+        self.fp16_tmp_params = dict()
+        self.combine_grads_flag = False
 
         if getattr(args, "fp16_scale_window", None) is None:
             if len(args.update_freq) > 1:

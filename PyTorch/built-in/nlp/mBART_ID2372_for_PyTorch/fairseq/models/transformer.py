@@ -419,11 +419,14 @@ class TransformerEncoder(FairseqEncoder):
 
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
-        encoder_padding_mask = (encoder_padding_mask.to(torch.float16) * 65504).unsqueeze(1).unsqueeze(2)
+        encoder_padding_mask = (encoder_padding_mask.to(torch.float16) * -65504).unsqueeze(1).unsqueeze(2)
         encoder_padding_mask = encoder_padding_mask.repeat(1,self.encoder_attention_heads,
                                                            tgt_len, 1).clone().npu_format_cast(29)
         encoder_states = [] if return_all_hiddens else None
-
+        if len(x.shape) == 3:
+            x = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
+        else:
+            x = x.npu_format_cast(29)
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask, bsz, tgt_len, s_len)
@@ -790,28 +793,41 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         self_attn_padding_mask: Optional[Tensor] = None
         if self.cross_self_attention or prev_output_tokens.eq(self.padding_idx).any():
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
-            self_attn_padding_mask = (self_attn_padding_mask.to(torch.float16) * 65504).unsqueeze(1).unsqueeze(2)
+            self_attn_padding_mask = (self_attn_padding_mask.to(torch.float16) * -65504).unsqueeze(1).unsqueeze(2)
             self_attn_padding_mask = self_attn_padding_mask.repeat(1, self.decoder_attention_heads,
                                                                tgt_len, 1).clone().npu_format_cast(
                 29)
+
         if encoder_out is not None:
             encoder_padding_mask = encoder_out.encoder_padding_mask.unsqueeze(1).unsqueeze(2)\
                 .repeat(1, self.decoder_attention_heads, tgt_len, 1)
+            if len(encoder_out.encoder_out.shape) == 3:
+                encoder_out_ = encoder_out.encoder_out.view(-1, encoder_out.encoder_out.shape[2]).clone().npu_format_cast(29)
+            else:
+                encoder_out_ = encoder_out.encoder_out.npu_format_cast(29)
+        if len(x.shape) == 3:
+            x = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
+        else:
+            x = x.npu_format_cast(29)
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
         for idx, layer in enumerate(self.layers):
             if incremental_state is None and not full_context_alignment:
                 self_attn_mask = self.buffered_future_mask(x, tgt_len)
-            else:
-                self_attn_mask = None
+                if self_attn_padding_mask is not None:
+                    self_attn_padding_mask = self_attn_padding_mask + self_attn_mask
+                else:
+                    self_attn_padding_mask = self_attn_mask.unsqueeze(0).unsqueeze(1).repeat(bsz, self.decoder_attention_heads,
+                                                               1, 1).clone().npu_format_cast(
+                29)
 
             x, layer_attn, _ = layer(
                 x, bsz, tgt_len, s_len,
-                encoder_out.encoder_out if encoder_out is not None else None,
+                encoder_out_ if encoder_out is not None else None,
                 encoder_padding_mask if encoder_out is not None else None,
                 incremental_state,
-                self_attn_mask=self_attn_mask,
+                self_attn_mask=None,
                 self_attn_padding_mask=self_attn_padding_mask,
                 need_attn=bool((idx == alignment_layer)),
                 need_head_weights=bool((idx == alignment_layer)),

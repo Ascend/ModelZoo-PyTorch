@@ -28,6 +28,7 @@ from fairseq.data import iterators
 from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
+from fairseq.modules.multihead_attention import MHAConfig
 
 
 logging.basicConfig(
@@ -172,6 +173,66 @@ def should_stop_early(args, valid_loss):
         else:
             return False
 
+def wrapper_model_all_reduce(model, fp_16_grads, reduce_stream):
+    from change_data_ptr import change_data_ptr
+    import torch.distributed as dist
+    total_param_size = 0
+    for name, para in model.named_parameters():
+        if name == "module.encoder.embed_tokens.weight":
+            continue
+        total_param_size += para.storage().size()
+
+    target_para_size_list = []
+    tmp_size = 0
+    name_dict = dict()
+    name_order = 0
+    for name, para in model.named_parameters():
+        if name == "module.necoder.embed_tokens.weight":
+            target_para_size_list.append(para.storage().size())
+            name_dict[name] =name_order
+            name_order += 1
+            continue
+        tmp_size += para.storage().size()
+        name_dict[name] = name_order
+        if tmp_size > total_param_size // 8:
+            target_para_size_list.append(tmp_size)
+            tmp_size = 0
+            name_order += 1
+    target_para_size_list.append(tmp_size)
+    partial_combined_grad_list = []
+    idx = 0
+    for ss in target_para_size_list:
+        tmp_tensor = torch.zeros(ss).half().npu()
+        for device in fp_16_grads:
+            change_data_ptr(tmp_tensor, fp_16_grads[device], idx)
+        partial_combined_grad_list.append(tmp_tensor)
+        idx += ss
+
+    target_para_size_list = [pp *2 for pp in target_para_size_list]
+    current_para_size_list = [0] *(len(target_para_size_list))
+    ready_reduce_index = []
+
+    def hook_func(name, target_para_size_list, current_para_size_list, name_dict, reduce_stream, partial_combined_grad_list, ready_reduce_index):
+        def hook_function(grad):
+            if ready_reduce_index:
+                index = ready_reduce_index.pop()
+                current_para_size_list[index] = 0
+                with torch.npu.stream(reduce_stream):
+                    partial_combined_grad_list[index].div_(8)
+                    dist.all_reduce(partial_combined_grad_list[index])
+
+            current_para_size_list[name_dict[name]] += grad.storage().size()
+            for i in range(len(current_para_size_list)):
+                if current_para_size_list[i] == target_para_size_list[i] and i != 0:
+                    ready_reduce_index.append(i)
+                    return
+        return hook_function
+
+    for name, para in model.named_parameters():
+        para.register_hook(hook_func(name, target_para_size_list, current_para_size_list, name_dict, reduce_stream, partial_combined_grad_list, ready_reduce_index))
+
+    return partial_combined_grad_list[0]
+
 
 @metrics.aggregate("train")
 def train(args, trainer, task, epoch_itr):
@@ -206,11 +267,16 @@ def train(args, trainer, task, epoch_itr):
     valid_subsets = args.valid_subset.split(",")
     should_stop = False
     num_updates = trainer.get_num_updates()
+    visited = False
+    MHAConfig.set_fussion()
     for i, samples in enumerate(progress):
         with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
             "train_step-%d" % i
         ):
             log_output = trainer.train_step(samples)
+            if hasattr(trainer.model, "all_reduce") and (trainer.optimizer.fp16_tmp_grads is not None) and (not visited) and (epoch_itr.epoch <= 1):
+                trainer.first_grad = wrapper_model_all_reduce(trainer.model, trainer.optimizer.fp16_tmp_grads, trainer.reduce_stream)
+                visited = True
 
         if log_output is not None:  # not OOM, overflow, ...
             # log mid-epoch stats

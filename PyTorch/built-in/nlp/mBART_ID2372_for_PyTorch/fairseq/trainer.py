@@ -15,14 +15,46 @@ from itertools import chain
 from typing import Any, Dict, List
 
 import torch
+import torch.distributed as dist
 from fairseq import checkpoint_utils, distributed_utils, models, optim, utils
 from fairseq.file_io import PathManager
 from fairseq.logging import meters, metrics
 from fairseq.nan_detector import NanDetector
 from fairseq.optim import lr_scheduler
+from fairseq.modules.fairseq_dropout import NpuFairseqDropout, get_dropout_class
 
 
 logger = logging.getLogger(__name__)
+
+
+class PreFetcher:
+    def __init__(self, loader, device):
+        self.stream = torch.npu.Stream()
+        self.iterable = iter(loader)
+        self.len = len(loader)
+        self.device = device
+        self.preload()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        torch.npu.current_stream().wait_stream(self.stream)
+        data = self.next_data
+        if data == -1:
+            raise StopIteration
+        if data is not None:
+            self.preload()
+        return data
+
+    def preload(self):
+        try:
+            self.next_data = next(self.iterable)
+        except StopIteration:
+            self.next_data = -1
+            return
+        with torch.npu.stream(self.stream):
+            self.next_data = utils.move_to_cuda(self.next_data, self.device)
 
 
 class Trainer(object):
@@ -38,7 +70,8 @@ class Trainer(object):
     def __init__(self, args, task, model, criterion, quantizer=None):
         self.args = args
         self.task = task
-
+        self.reduce_stream = torch.npu.Stream()
+        self.first_grad = None
         # catalog shared parameters
         shared_params = _catalog_shared_params(model)
 
@@ -67,6 +100,9 @@ class Trainer(object):
         if not args.pipeline_model_parallel:
             self._criterion = self._criterion.to(device=self.device)
             self._model = self._model.to(device=self.device)
+
+        self._model.encoder.embed_positions.weight.data = self._model.encoder.embed_positions.weight.data.npu_format_cast(29)
+        self._model.decoder.embed_positions.weight.data = self._model.decoder.embed_positions.weight.data.npu_format_cast(29)
         self.pipeline_model_parallel = args.pipeline_model_parallel
         self.last_device = None
         if self.npu and self.pipeline_model_parallel:
@@ -119,6 +155,8 @@ class Trainer(object):
         self._start_time = time.time()
         self._previous_training_time = 0
         self._cumulative_training_time = None
+        if get_dropout_class() is NpuFairseqDropout:
+            NpuFairseqDropout.enable_dropout_ensemble(self.model)
 
     def reinitialize(self):
         """Reinitialize the Trainer, typically after model params change."""
@@ -436,13 +474,13 @@ class Trainer(object):
         self.criterion.train()
         self.zero_grad()
 
+        prefetch_samples = PreFetcher(samples, torch.npu.current_device())
         metrics.log_start_time("train_wall", priority=800, round=4)
 
         # forward and backward pass
         logging_outputs, sample_size, ooms = [], 0, 0
-        for i, sample in enumerate(samples):
-            sample = self._prepare_sample(sample)
-            if sample is None:
+        for i, sample in enumerate(prefetch_samples):
+            if sample == {}:
                 # when sample is None, run forward/backward on a dummy batch
                 # and ignore the resulting gradients
                 sample = self._prepare_sample(self._dummy_batch)
@@ -544,7 +582,10 @@ class Trainer(object):
             )
 
         if hasattr(self.model, "all_reduce"):
-            self.model.all_reduce()
+            torch.npu.current_stream().wait_stream(self.reduce_stream)
+            if self.first_grad is not None:
+                self.first_grad.div_(8)
+                dist.all_reduce(self.first_grad)
 
         overflow = False
         try:

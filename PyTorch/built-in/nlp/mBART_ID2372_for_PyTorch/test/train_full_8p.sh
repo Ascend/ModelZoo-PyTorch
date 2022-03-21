@@ -12,7 +12,7 @@ export RANK_SIZE=8
 #网络名称，同目录名称
 Network="mBART_for_PyTorch"
 #训练batch_size
-token_size=512
+token_size=1024
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -64,7 +64,7 @@ do
 							  --optimizer adam --adam-eps 1e-06 --adam-betas '(0.9, 0.98)' \
 							  --lr-scheduler polynomial_decay --lr 3e-05 --min-lr -1 --warmup-updates 2500 --total-num-update 40000 \
 							  --dropout 0.3 --attention-dropout 0.1 --weight-decay 0.0 \
-							  --max-tokens 512 --update-freq 2 \
+							  --max-tokens 1024 --update-freq 2 \
 							  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
 							  --seed 222 --log-format simple --log-interval 2 \
 							  --restore-file $PRETRAIN \
@@ -82,7 +82,7 @@ do
 							  --optimizer adam --adam-eps 1e-06 --adam-betas '(0.9, 0.98)' \
 							  --lr-scheduler polynomial_decay --lr 3e-05 --min-lr -1 --warmup-updates 2500 --total-num-update 40000 \
 							  --dropout 0.3 --attention-dropout 0.1 --weight-decay 0.0 \
-							  --max-tokens 512 --update-freq 2 \
+							  --max-tokens 1024 --update-freq 2 \
 							  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
 							  --seed 222 --log-format simple --log-interval 2 \
 							  --restore-file $PRETRAIN \

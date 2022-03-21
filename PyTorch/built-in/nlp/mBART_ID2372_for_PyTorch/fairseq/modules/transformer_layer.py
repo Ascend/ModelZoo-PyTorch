@@ -9,9 +9,11 @@ import torch
 import torch.nn as nn
 from fairseq import utils
 from fairseq.modules import LayerNorm, MultiheadAttention
-from fairseq.modules.fairseq_dropout import FairseqDropout
+from fairseq.modules.fairseq_dropout import get_dropout_class
 from fairseq.modules.quant_noise import quant_noise
 from torch import Tensor
+
+dropout_class = get_dropout_class()
 
 class NpuLinear(torch.nn.Linear):
     def forward(self, input):
@@ -39,7 +41,7 @@ class TransformerEncoderLayer(nn.Module):
         self.quant_noise_block_size = getattr(args, "quant_noise_pq_block_size", 8)
         self.self_attn = self.build_self_attention(self.embed_dim, args)
         self.self_attn_layer_norm = LayerNorm(self.embed_dim)
-        self.dropout_module = FairseqDropout(
+        self.dropout_module = dropout_class(
             args.dropout, module_name=self.__class__.__name__
         )
         self.activation_fn = utils.get_activation_fn(
@@ -49,7 +51,7 @@ class TransformerEncoderLayer(nn.Module):
         if activation_dropout_p == 0:
             # for backwards compatibility with models that use args.relu_dropout
             activation_dropout_p = getattr(args, "relu_dropout", 0)
-        self.activation_dropout_module = FairseqDropout(
+        self.activation_dropout_module = dropout_class(
             float(activation_dropout_p), module_name=self.__class__.__name__
         )
         self.normalize_before = args.encoder_normalize_before
@@ -129,17 +131,11 @@ class TransformerEncoderLayer(nn.Module):
         if attn_mask is not None:
             attn_mask = attn_mask.masked_fill(attn_mask.to(torch.bool), -1e8)
 
-        if len(x.shape) == 3:
-            residual = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
-        else:
-            residual = x.npu_format_cast(29)
+        residual = x
 
         if self.normalize_before:
             x = self.self_attn_layer_norm(x)
-        if len(x.shape) == 3:
-            x = x.view(-1,x.shape[2]).clone().npu_format_cast(29)
-        else:
-            x= x.npu_format_cast(29)
+
         x, _ = self.self_attn(
             query=x,
             key=x,
@@ -188,7 +184,7 @@ class TransformerDecoderLayer(nn.Module):
     ):
         super().__init__()
         self.embed_dim = args.decoder_embed_dim
-        self.dropout_module = FairseqDropout(
+        self.dropout_module = dropout_class(
             args.dropout, module_name=self.__class__.__name__
         )
         self.quant_noise = getattr(args, "quant_noise_pq", 0)
@@ -212,7 +208,7 @@ class TransformerDecoderLayer(nn.Module):
         if activation_dropout_p == 0:
             # for backwards compatibility with models that use args.relu_dropout
             activation_dropout_p = getattr(args, "relu_dropout", 0)
-        self.activation_dropout_module = FairseqDropout(
+        self.activation_dropout_module = dropout_class(
             float(activation_dropout_p), module_name=self.__class__.__name__
         )
         self.normalize_before = args.decoder_normalize_before
@@ -315,22 +311,10 @@ class TransformerDecoderLayer(nn.Module):
         if need_head_weights:
             need_attn = True
 
-        if len(x.shape) == 3:
-            residual = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
-        else:
-            residual = x.npu_format_cast(29)
-
-        if len(encoder_out.shape) == 3:
-            encoder_out = encoder_out.view(-1, encoder_out.shape[2]).clone().npu_format_cast(29)
-        else:
-            encoder_out = encoder_out.npu_format_cast(29)
+        residual = x
 
         if self.normalize_before:
             x = self.self_attn_layer_norm(x)
-        if len(x.shape) == 3:
-            x = x.view(-1,x.shape[2]).clone().npu_format_cast(29)
-        else:
-            x= x.npu_format_cast(29)
 
         if prev_self_attn_state is not None:
             prev_key, prev_value = prev_self_attn_state[:2]

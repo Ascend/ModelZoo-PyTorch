@@ -39,12 +39,28 @@ train_data
         | -- valid.en_XX-ro_RO.ro_RO.idx
         | -- valid.en_XX-ro_RO.en_XX.bin
         | -- valid.en_XX-ro_RO.en_XX.idx
+    | -- en_de
+        | -- preprocess.log
+        | -- dict.en_XX.txt
+        | -- dict.de_DE.txt
+        | -- test.en_XX-de_DE.de_DE.bin
+        | -- test.en_XX-de_DE.de_DE.idx
+        | -- test.en_XX-de_DE.en_XX.bin
+        | -- test.en_XX-de_DE.en_XX.idx
+        | -- train.en_XX-de_DE.de_DE.bin
+        | -- train.en_XX-de_DE.de_DE.idx
+        | -- train.en_XX-de_DE.en_XX.bin
+        | -- train.en_XX-de_DE.en_XX.idx
+        | -- valid.en_XX-de_DE.de_DE.bin
+        | -- valid.en_XX-de_DE.de_DE.idx
+        | -- valid.en_XX-de_DE.en_XX.bin
+        | -- valid.en_XX-de_DE.en_XX.idx
 
 ```
 
 ## 方法二. 下载数据集并自行处理
 ### 1. 分词处理
-1. 下载en_ro数据集并放于工程根目录下
+1. 下载数据集并放于工程根目录下，以en_ro数据集为例
 2. 下载并安装SPM [here](https://github.com/google/sentencepiece)
 ```bash
 SPM=/path/to/sentencepiece/build/src/spm_encode
@@ -95,7 +111,8 @@ fairseq-preprocess \
 # 在数据集上进行fine-tune
 
 ```bash
-1. 修改run_8p.sh中PRETRAIN为模型的路径，DATA_PATH为数据集的路径  
+1. 修改run_8p.sh中PRETRAIN为模型的路径，DATA_PATH为数据集的路径 
+ [若需要训练en_de数据集，则需要将run_8p.sh中dropout的参数设置为0.1,total-num-update与max-update设置为300000]
 2. 执行 bash run_8p.sh
 ```
 # 在数据集上进行评估
@@ -111,8 +128,12 @@ pip install sacrebleu==1.5.1
 2.执行评估脚本
 
 ```bash
+验证en_ro精度
 1. 修改generate_on_en_ro.sh中DATA_PATH为数据集的路径，BPE_PATH为sentence.bpe.model的路径，SCRIPTS为mosesdecoder/scripts的路径，WMT16_SCRIPTS为wmt16-scripts的路径
-2. 执行 bash generate_on_en_ro.sh  checkpoints/checkpoint_best.pt
+2. 执行 bash generate_on_en_ro.sh  checkpoints/checkpoint_best.pt 验证en_ro的训练精度
+验证en_de精度
+1.  修改generate_on_en_de.sh中DATA_PATH为数据集的路径，BPE_PATH为sentence.bpe.model的路径，DETOKENIZER为mosesdecoder/scripts/tokenizer/detokenizer.perl的路径
+2.  执行 bash generate_on_en_de.sh  checkpoints/checkpoint_best.pt 验证en_de的训练精度
 ```
 
 # Docker容器训练

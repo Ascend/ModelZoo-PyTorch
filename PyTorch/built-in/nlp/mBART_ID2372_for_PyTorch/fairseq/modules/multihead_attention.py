@@ -10,10 +10,12 @@ import torch
 import torch.nn.functional as F
 from fairseq import utils
 from fairseq.incremental_decoding_utils import with_incremental_state
-from fairseq.modules.fairseq_dropout import FairseqDropout
+from fairseq.modules.fairseq_dropout import NpuFairseqDropout, get_dropout_class
 from fairseq.modules.quant_noise import quant_noise
 from torch import Tensor, nn
 from torch.nn import Parameter
+
+dropout_class = get_dropout_class()
 
 
 class NpuLinear(nn.Linear):
@@ -28,6 +30,17 @@ class NpuLinear(nn.Linear):
             return torch.npu_linear(input, self.weight,self.bias)
         else:
             raise RuntimeError('not support this dim')
+
+class MHAConfig:
+    use_fussion_mha = False
+
+    @classmethod
+    def set_fussion(cls):
+        try:
+            from torch import npu_multi_head_attention
+            cls.use_fussion_mha = True
+        except:
+            cls.use_fussion_mha = False
 
 class MatmulApply(torch.autograd.Function):
     @staticmethod
@@ -74,9 +87,12 @@ class MultiheadAttention(nn.Module):
         self.qkv_same_dim = self.kdim == embed_dim and self.vdim == embed_dim
 
         self.num_heads = num_heads
-        self.dropout_module = FairseqDropout(
+        self.dropout_module = dropout_class(
             dropout, module_name=self.__class__.__name__
         )
+        self.dropout_prob = dropout
+
+        self.use_dropout_optim = (dropout_class is NpuFairseqDropout)
 
         self.head_dim = embed_dim // num_heads
         assert (
@@ -143,6 +159,7 @@ class MultiheadAttention(nn.Module):
             nn.init.xavier_normal_(self.bias_k)
         if self.bias_v is not None:
             nn.init.xavier_normal_(self.bias_v)
+
     def transpose_for_scores(self, x):
         new_x_shape = (self.batch_size, self.squence_length) + (self.num_attention_heads, self.attention_head_size)
         return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
@@ -177,47 +194,21 @@ class MultiheadAttention(nn.Module):
                 weights for each head. Implies *need_weights*. Default:
                 return the average attention weights over all heads.
         """
+        if MHAConfig.use_fussion_mha:
+            attn = self.multi_attn(query, key, value, key_padding_mask, bsz, tgt_len)
+            return attn, None
+        else:
+            return self.ori_attn(query, key, value, bsz, tgt_len, key_padding_mask, incremental_state,
+                                    need_weights, static_kv, attn_mask, before_softmax, need_head_weights)
+
+    def ori_attn(self, query, key, value, bsz, tgt_len, key_padding_mask, incremental_state,
+                    need_weights, static_kv, attn_mask, before_softmax, need_head_weights):
         if need_head_weights:
             need_weights = True
 
         embed_dim = query.size()[-1]
         assert embed_dim == self.embed_dim
         assert list(query.size()) == [tgt_len * bsz, embed_dim]
-
-        if (
-            not self.onnx_trace
-            and not self.tpu  # don't use PyTorch version on TPUs
-            and not self.npu
-            and incremental_state is None
-            and not static_kv
-            # A workaround for quantization to work. Otherwise JIT compilation
-            # treats bias in linear module as method.
-            and not torch.jit.is_scripting()
-        ):
-            assert key is not None and value is not None
-            return F.multi_head_attention_forward(
-                query,
-                key,
-                value,
-                self.embed_dim,
-                self.num_heads,
-                torch.empty([0]),
-                torch.cat((self.q_proj.bias, self.k_proj.bias, self.v_proj.bias)),
-                self.bias_k,
-                self.bias_v,
-                self.add_zero_attn,
-                self.dropout_module.p,
-                self.out_proj.weight,
-                self.out_proj.bias,
-                self.training or self.dropout_module.apply_during_inference,
-                key_padding_mask,
-                need_weights,
-                attn_mask,
-                use_separate_proj_weight=True,
-                q_proj_weight=self.q_proj.weight,
-                k_proj_weight=self.k_proj.weight,
-                v_proj_weight=self.v_proj.weight,
-            )
 
         if incremental_state is not None:
             saved_state = self._get_input_buffer(incremental_state)
@@ -359,7 +350,7 @@ class MultiheadAttention(nn.Module):
         if key_padding_mask is not None:
             # don't attend to padding symbols
             attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights - key_padding_mask
+            attn_weights = attn_weights + key_padding_mask
 
         if before_softmax:
             return attn_weights, v
@@ -392,6 +383,20 @@ class MultiheadAttention(nn.Module):
                 attn_weights = attn_weights.mean(dim=0)
 
         return attn, attn_weights
+
+    def multi_attn(self, query, key, value, key_padding_mask, bsz, tgt_len):
+        src_len = key.size(0) // bsz
+        if self.use_dropout_optim:
+            dropout_mask = self.dropout_module([(bsz, self.num_heads, tgt_len, src_len), query.dtype, query.device])
+        else:
+            dropout_mask = None
+        attn = torch.npu_multi_head_attention(query, key, value, self.q_proj.weight,
+                                                 self.k_proj.weight, self.v_proj.weight,
+                                                 key_padding_mask, self.out_proj.weight,
+                                                 self.q_proj.bias, self.k_proj.bias, self.v_proj.bias,
+                                                 self.out_proj.bias, dropout_mask, self.num_heads,
+                                                 self.head_dim, src_len, tgt_len, self.dropout_prob, True)
+        return attn[0]
 
     @staticmethod
     def _append_prev_key_padding_mask(

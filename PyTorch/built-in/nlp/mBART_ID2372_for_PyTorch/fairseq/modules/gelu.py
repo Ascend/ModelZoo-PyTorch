@@ -22,4 +22,4 @@ def gelu_accurate(x):
 
 
 def gelu(x: torch.Tensor) -> torch.Tensor:
-    return torch.nn.functional.gelu(x).type_as(x)
+    return torch.fast_gelu(x).type_as(x)
