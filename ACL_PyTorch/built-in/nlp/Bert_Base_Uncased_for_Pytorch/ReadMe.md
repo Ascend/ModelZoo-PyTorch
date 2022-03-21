@@ -158,11 +158,11 @@
 
 
          ![img](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/img/public_sys-resources/notice_3.0-zh-cn.png)
-
+    
          使用ATC工具将.onnx文件转换为.om文件，需要.onnx算子版本需为11。在bert_base_pth2onnx.py脚本中torch.onnx.export方法中的输入参数opset_version的值需为11，请勿修改。
-
+    
       3. 此步可选，根据onnx图里是否存在（0，2，3，1）的transpose进行优化，若存在，根据这类Transpose和紧跟它的MatMul的name更新add_attr_transB.py，也就是更新里面的transpose_nodes和bmm_nodes两个list，然后运行下面命令。
-
+    
          ```
          python3 add_attr_trans_b.py bert_base_batch_8.onnx bert_base_batch_8.onnx
          ```
@@ -180,7 +180,7 @@
          export ASCEND_OPP_PATH=${install_path}/opp
          
          # 使用二进制输入时，执行如下命令
-         atc --input_format=ND --framework=5 --model=bert_base_batch_8.onnx --input_shape="input_ids:8,512;token_type_ids:8,512;attention_mask:8,512" --output=bert_base_batch_8_auto --log=info --soc_version=Ascend710
+         atc --input_format=ND --framework=5 --model=bert_base_batch_8.onnx --input_shape="input_ids:8,512;token_type_ids:8,512;attention_mask:8,512" --output=bert_base_batch_8_auto --log=info --soc_version=Ascend710 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_fp16_nodes="attention_mask"
          ```
 
          ![img](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/img/public_sys-resources/note_3.0-zh-cn.png)
