@@ -76,7 +76,7 @@ start_time=$(date +%s)
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ../test/env.sh
+    source ../test/env_npu.sh
 fi
 python3.7 ./tools/train.py ./configs/fsaf/fsaf_r50_fpn_1x_coco.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
