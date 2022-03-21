@@ -64,7 +64,6 @@ if __name__ == '__main__':
                                operator_export_type=OPERATOR_EXPORT_TYPE,
                                input_names=['input_ids', 'token_type_ids', 'attention_mask'],
                                output_names=['output'],
-                               dynamic_axes={'input_ids': [0], 'token_type_ids': [0], 'attention_mask': [0]},
                                opset_version=11
                                )
     print("Export of torch_model.onnx complete!")

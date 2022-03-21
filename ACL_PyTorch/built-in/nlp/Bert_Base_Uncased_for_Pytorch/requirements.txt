@@ -1,0 +1,5 @@
+torch==1.6.0
+onnx==1.7.0
+onnxsim==0.3.3
+numpy==1.19.5
+boto3==1.21.1
