@@ -1,20 +1,19 @@
 # 欢迎使用Ascend ModelZoo
 
-为方便更多开发者使用Ascend ModelZoo，我们将持续增加典型网络和相关预训练模型。如果您有任何需求，请在[Gitee](https://gitee.com/ascend/modelzoo/issues)提交issue，我们会及时处理。
+为方便更多开发者使用Ascend ModelZoo，我们将持续增加典型网络和相关预训练模型。如果您有任何需求，请在[modelzoo/issues](https://gitee.com/ascend/modelzoo/issues)提交issue，我们会及时处理。
 
 ## 如何贡献
 
-在开始贡献之前，请先阅读[notice](https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md)。
+在开始贡献之前，请先阅读[CONTRIBUTING](https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md)。
 谢谢！
 
 ## 目录
 
-- Models
 
-- PyTorch
+### PyTorch
 
-    - built-in
-    
+#### built-in
+
     - [3D_ResNet_ID0421_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/3D_ResNet_ID0421_for_PyTorch)
     - [CRNN_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/CRNN_for_PyTorch)
     - [DeepMar_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/DeepMar_for_PyTorch)
@@ -63,7 +62,7 @@
     - [DeepFM_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/others/DeepFM_for_PyTorch)
     - [WDL_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/others/WDL_for_PyTorch)
     
-    -  contrib
+####  contrib
     
     - [baseline-rawnet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/audio/baseline-rawnet)
     - [deepspeech](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/audio/deepspeech)
@@ -243,7 +242,7 @@
     - [DQN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/others/DQN)
     - [RotatE](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/others/RotatE)
     
-    - dev
+#### dev
     
     - [tacotron2_ID0406_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/dev/audio/tacotron2_ID0406_for_PyTorch)
     - [3D_attentionnet_ID0478_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/dev/cv/detection/3D_attentionnet_ID0478_for_PyTorch)
@@ -375,9 +374,9 @@
     - [Multi-Gradient_Descent_ID0349_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/dev/others/Multi-Gradient_Descent_ID0349_for_PyTorch)
     - [Widedeep_ID2866_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/dev/others/Widedeep_ID2866_for_PyTorch)
 
-- ACL_PyTorch
+### ACL_PyTorch
 
-    - built-in
+#### built-in
     
     - [EspNet_for_Pytoch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/EspNet_for_Pytoch)
     - [Jasper_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/Jasper_for_PyTorch)
@@ -430,7 +429,7 @@
     - [TransformerXL_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/TransformerXL_for_Pytorch)
     - [VilBert_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/VilBert_for_Pytorch)
     
-    - contrib
+#### contrib
     
     - [FastPitch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/FastPitch)
     - [Jasper](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/Jasper)
