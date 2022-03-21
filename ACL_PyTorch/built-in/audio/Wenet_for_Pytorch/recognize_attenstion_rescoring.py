@@ -155,7 +155,7 @@ if __name__ == '__main__':
     device_id = 0
     ret = acl.rt.set_device(device_id)
     context, ret = acl.rt.create_context(device_id)
-    decoder_output_data_shape = 4233000
+    decoder_output_data_shape = 42330000
     decoder_model = Net(model_path =args.model_path, output_data_shape = decoder_output_data_shape, device_id = device_id, )
     json_data = {}
     with open(args.json_path, 'r') as load_f:

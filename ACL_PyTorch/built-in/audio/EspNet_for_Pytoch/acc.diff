@@ -91,7 +91,7 @@ index 6c6d4ce11..dc150b4a5 100644
  from espnet.nets.scorers.length_bonus import LengthBonus
  from espnet.utils.deterministic_utils import set_deterministic_pytorch
  from espnet.utils.io_utils import LoadInputsAndTargets
-+from acl_infer.acl_net import AclNet
++from pyacl.acl_infer import AclNet
 +import acl
 +def _pad_sequence(sequences, batch_first=False, padding_value=0, mul_shape = None):
 +    r"""Pad a list of variable length Tensors with ``padding_value``
