@@ -1,10 +1,10 @@
 # Welcome to Ascend ModelZoo
 
-To make it easier for developers to enjoy the benefits of Ascend ModelZoo, we are continuing to add typical networks and related pre-trained models. If you have any needs, open an issue on [Gitee](https://gitee.com/ascend/modelzoo/issues) or [ModelZoo](https://bbs.huaweicloud.com/forum/forum-726-1.html), and we will response to it in a timely manner.
+To make it easier for developers to enjoy the benefits of Ascend ModelZoo, we are continuing to add typical networks and related pre-trained models. If you have any needs, open an issue on [Gitee](https://gitee.com/ascend/modelzoo/issues) , and we will response to it in a timely manner.
 
 ## Contribution
 
-Before you start, read the [notice](https://gitee.com/ascend/modelzoo/blob/master/contrib/CONTRIBUTING.md) first.
+Before you start, read the [notice](https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md) first.
  
 Thank you!
 
@@ -128,7 +128,7 @@ Thank you!
     - [Swin-Transformer](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Swin-Transformer)
     - [TNT](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/TNT)
     - [TResNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/TResNet)
-    - [Vehicle Re-Identification](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vehicle Re-Identification)
+    - [Vehicle_Re-Identification](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vehicle_Re-Identification)
     - [Vgg16_ID1630_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vgg16_ID1630_for_PyTorch)
     - [Vgg19_ID1631_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vgg19_ID1631_for_PyTorch)
     - [vit_base_patch32_224](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/vit_base_patch32_224)

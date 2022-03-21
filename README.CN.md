@@ -1,10 +1,10 @@
 # 欢迎使用Ascend ModelZoo
 
-为方便更多开发者使用Ascend ModelZoo，我们将持续增加典型网络和相关预训练模型。如果您有任何需求，请在[Gitee](https://gitee.com/ascend/modelzoo/issues)或[ModelZoo](https://bbs.huaweicloud.com/forum-726-1.html)提交issue，我们会及时处理。
+为方便更多开发者使用Ascend ModelZoo，我们将持续增加典型网络和相关预训练模型。如果您有任何需求，请在[Gitee](https://gitee.com/ascend/modelzoo/issues)提交issue，我们会及时处理。
 
 ## 如何贡献
 
-在开始贡献之前，请先阅读[notice](https://gitee.com/ascend/modelzoo/blob/master/contrib/CONTRIBUTING.md)。
+在开始贡献之前，请先阅读[notice](https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md)。
 谢谢！
 
 ## 目录
@@ -128,7 +128,7 @@
     - [Swin-Transformer](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Swin-Transformer)
     - [TNT](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/TNT)
     - [TResNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/TResNet)
-    - [Vehicle Re-Identification](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vehicle Re-Identification)
+    - [Vehicle_Re-Identification](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vehicle_Re-Identification)
     - [Vgg16_ID1630_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vgg16_ID1630_for_PyTorch)
     - [Vgg19_ID1631_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/Vgg19_ID1631_for_PyTorch)
     - [vit_base_patch32_224](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/vit_base_patch32_224)
