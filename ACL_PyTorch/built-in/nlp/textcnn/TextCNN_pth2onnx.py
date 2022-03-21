@@ -16,9 +16,9 @@ import sys
 import argparse
 import pickle as pkl
 import torch
-from models import TextCNN
 
 sys.path.append(r'./Chinese-Text-Classification-Pytorch')
+from models import TextCNN
 
 parser = argparse.ArgumentParser(description='TextCNN_pth2onnx.py')
 parser.add_argument('--weight_path', required=True, help='Path to model weight file, abs path recommended.')
