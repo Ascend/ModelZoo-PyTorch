@@ -174,7 +174,7 @@ if __name__ == '__main__':
     #init acl
     if os.path.exists(args.json_path):
         os.remove(args.json_path)
-
+    total_t = 0
     encoder_dic = {}
     import time
     for batch_idx, batch in enumerate(test_data_loader):
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         feats_lengths = feats_lengths.to(device)
         target_lengths = target_lengths.to(device)
         assert (feats.size(0) == 1)
-        encoder_out, encoder_mask = model.get_no_flash_encoder_out(
+        encoder_out, encoder_mask, exe_time = model.get_no_flash_encoder_out(
             encoder_model_noflash,
             batch_idx,
             feats,
@@ -196,11 +196,14 @@ if __name__ == '__main__':
             ctc_weight=args.ctc_weight,
             simulate_streaming=args.simulate_streaming,
             reverse_weight=args.reverse_weight)
-
+        total_t += exe_time
         encoder_dic["encoder_out_"+ str(batch_idx)] = [encoder_out.shape[0], encoder_out.shape[1],encoder_out.shape[2]]
         encoder_dic["encoder_mask_"+ str(batch_idx)] = [encoder_mask.shape[0], encoder_mask.shape[1],encoder_mask.shape[2]]
         encoder_out.numpy().tofile(os.path.join(args.bin_path, "encoder_out_{}.bin".format(batch_idx)))
         encoder_mask.numpy().tofile(os.path.join(args.bin_path, "encoder_mask_{}.bin".format(batch_idx)))
-
+    ave_t = total_t / (batch_idx + 1)
+    dic_perf = {}
+    dic_perf["t1"] = ave_t
+    dic2json(dic_perf, "t1.json")
     dic2json(encoder_dic, args.json_path)
 

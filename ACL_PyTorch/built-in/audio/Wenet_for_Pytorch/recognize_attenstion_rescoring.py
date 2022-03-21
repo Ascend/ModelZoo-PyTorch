@@ -52,6 +52,12 @@ import acl
 from wenet.transformer.acl_net import Net
 import json
 import os
+
+def dic2json(input_dict, json_path):
+    json_str = json.dumps(input_dict)
+    with open(json_path, 'a') as json_file:
+        json_file.write(json_str)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='recognize with your model')
     parser.add_argument('--config', required=True, help='config file')
@@ -149,7 +155,7 @@ if __name__ == '__main__':
     model = model.to(device)
 
     model.eval()
-
+    total_t = 0
     #init acl
     ret = acl.init()
     device_id = 0
@@ -169,7 +175,7 @@ if __name__ == '__main__':
             feats_lengths = feats_lengths.to(device)
             target_lengths = target_lengths.to(device)
             assert (feats.size(0) == 1)
-            hyp = model.get_wer(
+            hyp, exe_time = model.get_wer(
                 batch_idx,
                 bin_path,
                 json_data,
@@ -182,6 +188,7 @@ if __name__ == '__main__':
                 ctc_weight=args.ctc_weight,
                 simulate_streaming=args.simulate_streaming,
                 reverse_weight=args.reverse_weight)
+            total_t += exe_time
             hyps = [hyp]
             for i, key in enumerate(keys):
                 content = ''
@@ -191,3 +198,8 @@ if __name__ == '__main__':
                     content += char_dict[w]
                 logging.info('{} {}'.format(key, content))
                 fout.write('{} {}\n'.format(key, content))
+        ave_t = total_t / (batch_idx + 1)
+        dic_perf = {}
+        dic_perf["t2"] = ave_t
+        if "no" in args.bin_path:
+            dic2json(dic_perf, "t2.json")

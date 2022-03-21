@@ -32,7 +32,7 @@ index 73990fa..e2f3555 100644
 +        y, exe_time = encoder_model_noflash(
 +            [speech.numpy(), speech_lengths.numpy().astype("int32")])  # (beam_size, max_hyps_len, vocab_size)
 +        encoder_out, encoder_mask = torch.from_numpy(y[0]), torch.from_numpy(y[1])
-+        return encoder_out, encoder_mask
++        return encoder_out, encoder_mask, exe_time
  
      def recognize(
          self,

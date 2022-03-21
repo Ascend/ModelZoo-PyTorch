@@ -167,7 +167,7 @@ index 73990fa..82337ca 100644
 +            if score > best_score:
 +                best_score = score
 +                best_index = i
-+        return hyps[best_index][0]
++        return hyps[best_index][0], exe_time
 +
      def attention_rescoring(
          self,

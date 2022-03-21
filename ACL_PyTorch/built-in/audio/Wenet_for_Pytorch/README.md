@@ -102,7 +102,9 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
 
 | 模型  |          官网pth精度           |     710/310离线推理精度     | gpu性能 | 710性能 | 310性能 |
 | :---: | :----------------------------: | :-------------------------: | :-----: | :-----: | ------- |
-| wenet | GPU流式：5.94%， 非流式：4.64% | 流式：5.66%， 非流式：5.66% |  66fps  | 5.8fps  | 11.6fps |
+| wenet | GPU流式：5.94%， 非流式：4.64% | 流式：5.66%， 非流式：5.66% |  66fps  |  7.69   | 11.6fps |
+
+生成的t1.json, t2.json文件中分别为encoder，decoder耗时，将其相加即可，运行python3.7.5 infer_perf.py
 
 静态shape场景(仅支持非流式场景)：
 
