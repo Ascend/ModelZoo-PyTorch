@@ -111,8 +111,8 @@ fairseq-preprocess \
 # 在数据集上进行fine-tune
 
 ```bash
-1. 修改run_8p.sh中PRETRAIN为模型的路径，DATA_PATH为数据集的路径 
- [若需要训练en_de数据集，则需要将run_8p.sh中dropout的参数设置为0.1,total-num-update与max-update设置为300000]
+1. 修改run_8p.sh中PRETRAIN为模型的路径，DATA_PATH为数据集的路径（train_data/en_ro 或train_data/en_de）
+ [若需要训练en_de数据集，则需要将run_8p.sh中dropout的参数设置为0.1,total-num-update与max-update设置为300000，target-lang设置为de_DE]
 2. 执行 bash run_8p.sh
 ```
 # 在数据集上进行评估
