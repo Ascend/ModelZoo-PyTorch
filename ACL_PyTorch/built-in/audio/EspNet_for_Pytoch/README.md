@@ -8,7 +8,7 @@
 pip3.7 install -r requirements.txt  
 ```
 
-2. 安装acl_infer，https://gitee.com/peng-ao/acl_infer
+2. 安装acl_infer，https://gitee.com/peng-ao/pyacl
 
 3. 获取，修改与安装开源模型代码  
 
@@ -45,7 +45,7 @@ pip3.7 install -r requirements.txt
 
    ```
    patch -p1 < export_onnx.diff
-   cd espnet/egs/aishell/asr1/
+   cd ./egs/aishell/asr1/
    bash export_onnx.sh
    ```
 
@@ -67,6 +67,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 1.  拷贝encoder_out_shape.json文件到espnet/egs/aishell/asr1目录下
 
 2. 获取精度
+
+   首先修改acc.diff文件中的om模型路径（约162行）为生成的om路径
 
    ```
    cd espnet

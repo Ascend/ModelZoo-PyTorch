@@ -14,7 +14,7 @@
 # ============================================================================
 import os
 import argparse
-from acl_infer.acl_net import AclNet, init_acl, release_acl
+from pyacl.acl_infer import AclNet, init_acl, release_acl
 import acl
 import numpy as np
 
