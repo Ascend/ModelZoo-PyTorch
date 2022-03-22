@@ -161,7 +161,7 @@
     
          使用ATC工具将.onnx文件转换为.om文件，需要.onnx算子版本需为11。在bert_base_pth2onnx.py脚本中torch.onnx.export方法中的输入参数opset_version的值需为11，请勿修改。
     
-      3. 此步可选，根据onnx图里是否存在（0，2，3，1）的transpose进行优化，若存在，根据这类Transpose和紧跟它的MatMul的name更新add_attr_transB.py，也就是更新里面的transpose_nodes和bmm_nodes两个list，然后运行下面命令。
+      3. 此步可选，根据onnx图里是否存在（0，2，3，1）的transpose进行优化，若存在，运行下面命令。
     
          ```
          python3 add_attr_trans_b.py bert_base_batch_8.onnx bert_base_batch_8.onnx
