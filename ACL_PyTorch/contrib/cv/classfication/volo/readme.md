@@ -67,10 +67,10 @@ bash eval_acc_perf.sh
 ```
 
 ## Volo inference result
-| accuracy | top1  | top2  | top3  | top4  | top5  |
-| :------: | :---: | :---: | :---: | :---: | :---: |
-|    bs1   |   -   |    O2    |   1    | 152.37  |
-|   bs16   |   -   |    O2    |   1    |  23.26  |
+| accuracy |    top1    | 
+| :------: | :--------: | 
+|    bs1   |   80.619   |  
+|   bs16   |   82.275   |  
 
 | performance | average time  | average time without first  |
 | :---------: | :-----------: | :-------------------------: |
