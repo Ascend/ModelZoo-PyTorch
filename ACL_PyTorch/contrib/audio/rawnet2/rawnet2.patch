@@ -1,15 +1,15 @@
-From 0876124bd723f26561911fff951d1e6524b3f332 Mon Sep 17 00:00:00 2001
-From: 
-Date: Thu, 4 Nov 2021 13:04:37 +0800
-Subject: [PATCH] rawnet2
+From 63d3f6f71de11066a3df2781c62836dd09f3b1f5 Mon Sep 17 00:00:00 2001
+From: yinin <yzl1154695556@qq.com>
+Date: Tue, 22 Mar 2022 23:11:27 +0800
+Subject: [PATCH] patch
 
 ---
- python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py | 2 +-
- python/RawNet2/dataloader.py                                    | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ .../RawNet2/Pre-trained_model/model_RawNet2_original_code.py  | 2 +-
+ python/RawNet2/dataloader.py                                  | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py b/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py
-index c5981fc..9e3df1d 100644
+index c5981fc..9e3df1d 100755
 --- a/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py
 +++ b/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py
 @@ -265,7 +265,7 @@ class RawNet(nn.Module):
@@ -22,14 +22,16 @@ index c5981fc..9e3df1d 100644
          nb_samp = x.shape[0]
          len_seq = x.shape[1]
 diff --git a/python/RawNet2/dataloader.py b/python/RawNet2/dataloader.py
-index c1791e2..67a4d2d 100644
+index c1791e2..3dfa802 100644
 --- a/python/RawNet2/dataloader.py
 +++ b/python/RawNet2/dataloader.py
-@@ -114,7 +114,7 @@ class TA_Dataset_VoxCeleb2(data.Dataset):
+@@ -113,8 +113,8 @@ class TA_Dataset_VoxCeleb2(data.Dataset):
+ 
  		if not self.return_label:
  			return list_X
- 		y = self.labels[ID.split('/')[0]]
+-		y = self.labels[ID.split('/')[0]]
 -		return list_X, y 
++		#y = self.labels[ID.split('/')[0]]
 +		return list_X, ID 
  
  	def _normalize_scale(self, x):
