@@ -1,0 +1,39 @@
+From 0876124bd723f26561911fff951d1e6524b3f332 Mon Sep 17 00:00:00 2001
+From: 
+Date: Thu, 4 Nov 2021 13:04:37 +0800
+Subject: [PATCH] rawnet2
+
+---
+ python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py | 2 +-
+ python/RawNet2/dataloader.py                                    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py b/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py
+index c5981fc..9e3df1d 100644
+--- a/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py
++++ b/python/RawNet2/Pre-trained_model/model_RawNet2_original_code.py
+@@ -265,7 +265,7 @@ class RawNet(nn.Module):
+         
+         self.sig = nn.Sigmoid()
+         
+-    def forward(self, x, y = 0, is_test=False, is_TS=False):
++    def forward(self, x, y = 0, is_test=True, is_TS=False):
+         #follow sincNet recipe
+         nb_samp = x.shape[0]
+         len_seq = x.shape[1]
+diff --git a/python/RawNet2/dataloader.py b/python/RawNet2/dataloader.py
+index c1791e2..67a4d2d 100644
+--- a/python/RawNet2/dataloader.py
++++ b/python/RawNet2/dataloader.py
+@@ -114,7 +114,7 @@ class TA_Dataset_VoxCeleb2(data.Dataset):
+ 		if not self.return_label:
+ 			return list_X
+ 		y = self.labels[ID.split('/')[0]]
+-		return list_X, y 
++		return list_X, ID 
+ 
+ 	def _normalize_scale(self, x):
+ 		'''
+-- 
+2.33.0.windows.2
+
