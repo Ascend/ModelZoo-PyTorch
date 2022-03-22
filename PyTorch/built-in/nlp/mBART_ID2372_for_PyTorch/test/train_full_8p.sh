@@ -111,7 +111,7 @@ cat en_ro | grep -P "^T" |sort -V |cut -f 2- | sed 's/\[ro_RO\]//g' |$TOKENIZER 
 
 for f in $HYP $REF
 	do
-	rm "en_ro."$f
+	rm -rf "en_ro."$f
 	cat $f".txt" | \
 	perl $REPLACE_UNICODE_PUNCT | \
 	perl $NORM_PUNC -l ro | \
