@@ -16,43 +16,22 @@ from gener_core.mod_modify.onnx_graph import OXGraph
 from gener_core.mod_modify.interface import AttrType as AT
 
 
+FUS_NODE_TRANS = "Transpose"
+FUS_NODE_BMM = "MatMul"
 input_model = sys.argv[1]
 output_model = sys.argv[2]
 
 mod = OXGraph(input_model)
-
-transpose_nodes = ['Transpose_60',
-    'Transpose_154',
-    'Transpose_248',
-    'Transpose_342',
-    'Transpose_436',
-    'Transpose_530',
-    'Transpose_624',
-    'Transpose_718',
-    'Transpose_812',
-    'Transpose_906',
-    'Transpose_1000',
-    'Transpose_1094']
-bmm_nodes = ['MatMul_72',
-    'MatMul_166',
-    'MatMul_260',
-    'MatMul_354',
-    'MatMul_448',
-    'MatMul_542',
-    'MatMul_636',
-    'MatMul_730',
-    'MatMul_824',
-    'MatMul_918',
-    'MatMul_1012',
-    'MatMul_1106']
 io_map = mod.get_net_in_out_map()
+trans_nodes = mod.get_nodes_by_optype(FUS_NODE_TRANS)
 
-for transpose_node in transpose_nodes:
-    now_trans = mod.get_node(transpose_node)
-    now_trans.set_attr({"perm": (AT.LIST_INT, [0, 2, 1, 3])})
-for bmm in bmm_nodes:
-    now_bmm = mod.get_node(bmm)
-    now_bmm.set_attr({"transB": (AT.INT, 1)})
+for trans_node in trans_nodes:
+    if trans_node.get_attr("perm", AT.LIST_INT) == [0, 2, 3, 1]:
+        trans_node.set_attr({"perm": (AT.LIST_INT, [0, 2, 1, 3])})
+        bmm = io_map.get(trans_node.name)
+        if FUS_NODE_BMM in bmm[0]:
+            new_bmm = mod.get_node(bmm[0])
+            new_bmm.set_attr({"transB": (AT.INT, 1)})
 
 mod.save_new_model(output_model)
 print("OK")
