@@ -57,7 +57,7 @@
 | [ITK-SNAP](http://www.itksnap.org/pmwiki/pmwiki.php)  | 三维图像可视化工具。 |
 | [UNET++模型权重文件](https://github.com/MrGiovanni/UNetPlusPlus/tree/master/pytorch)  | UNET++作者提供的模型权重，在官方仓中“How to use UNet++”章节中存有链接。 |
 | 权重文件download_models文件夹  | 本文所使用的，只节选了fold_0及plans.pkl的权重文件。若无链接，可下载UNET++作者提供的权重文件。 |
-| 备份文件backup文件夹  | 本文所使用的，相关实验配置文件。链接位于：obs://ascend-pytorch-model-file/验收-推理/cv/segmentation/3D_Nested_Unet/实验配置文件、推理结果、性能参考文件/ |
+| 备份文件backup文件夹  | 本文所使用的，相关实验配置文件。使用wget命令，链接：https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/segmentation/3D_Nested_Unet/%E5%AE%9E%E9%AA%8C%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E3%80%81%E6%8E%A8%E7%90%86%E7%BB%93%E6%9E%9C%E3%80%81%E6%80%A7%E8%83%BD%E5%8F%82%E8%80%83%E6%96%87%E4%BB%B6/backup.ziphttps://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/segmentation/3D_Nested_Unet/%E5%AE%9E%E9%AA%8C%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E3%80%81%E6%8E%A8%E7%90%86%E7%BB%93%E6%9E%9C%E3%80%81%E6%80%A7%E8%83%BD%E5%8F%82%E8%80%83%E6%96%87%E4%BB%B6/backup.zip |
 | [benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)  | 在310上进行推理所需的可执行文件。或许更新的msame工具也可以使用。 |
 ## 1 环境准备 
 
