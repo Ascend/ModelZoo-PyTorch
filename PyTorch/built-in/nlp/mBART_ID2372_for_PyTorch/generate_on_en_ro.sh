@@ -16,7 +16,7 @@ HYP=hyp
 REF=ref
 
 fairseq-generate $DATA_PATH \
-  --fp16 --path $model_dir --max-tokens 4096 \
+  --fp16 --path $model_dir --max-tokens 1024 \
   --task translation_from_pretrained_bart \
   --gen-subset test \
   -t ro_RO -s en_XX \
