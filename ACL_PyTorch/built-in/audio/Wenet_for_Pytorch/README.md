@@ -129,7 +129,7 @@ bash static_decoder.sh
 
 精度测试:
 
-首先export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型，修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring
+首先export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型，修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring， stage=5 decode阶段185、198行修改python为python3.7.5, 185行recognize.py修改为static.py
 
 ```
 git checkout .
