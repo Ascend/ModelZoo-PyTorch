@@ -1,0 +1,38 @@
+diff --git a/wenet/transformer/asr_model.py b/wenet/transformer/asr_model.py
+index 73990fa..e2f3555 100644
+--- a/wenet/transformer/asr_model.py
++++ b/wenet/transformer/asr_model.py
+@@ -175,6 +175,33 @@ class ASRModel(torch.nn.Module):
+                 num_decoding_left_chunks=num_decoding_left_chunks
+             )  # (B, maxlen, encoder_dim)
+         return encoder_out, encoder_mask
++    
++    def get_no_flash_encoder_out(
++        self,
++        encoder_model_noflash,
++        batch_idx: int,
++        speech: torch.Tensor,
++        speech_lengths: torch.Tensor,
++        beam_size: int,
++        decoding_chunk_size: int = -1,
++        num_decoding_left_chunks: int = -1,
++        ctc_weight: float = 0.0,
++        simulate_streaming: bool = False,
++        reverse_weight: float = 0.0,
++    ) -> List[int]:
++        assert speech.shape[0] == speech_lengths.shape[0]
++        assert decoding_chunk_size != 0
++        if reverse_weight > 0.0:
++            # decoder should be a bitransformer decoder if reverse_weight > 0.0
++            assert hasattr(self.decoder, 'right_decoder')
++        device = speech.device
++        batch_size = speech.shape[0]
++        # For attention rescoring we only support batch_size=1
++        assert batch_size == 1
++        y, exe_time = encoder_model_noflash(
++            [speech.numpy(), speech_lengths.numpy().astype("int32")])  # (beam_size, max_hyps_len, vocab_size)
++        encoder_out, encoder_mask = torch.from_numpy(y[0]), torch.from_numpy(y[1])
++        return encoder_out, encoder_mask, exe_time
+ 
+     def recognize(
+         self,
