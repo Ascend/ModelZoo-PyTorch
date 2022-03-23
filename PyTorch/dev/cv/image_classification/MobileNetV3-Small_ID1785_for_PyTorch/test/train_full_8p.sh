@@ -18,7 +18,7 @@ data_path="/npu/traindata/imagenet_pytorch/"
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="MobileNetV3-Small_ID1785_for_Pytorch"
+Network="MobileNetV3-Small_ID1785_for_PyTorch"
 
 #训练epoch
 train_epochs=400
