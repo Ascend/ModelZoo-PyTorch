@@ -234,6 +234,9 @@ def register_all_pascal_voc(root):
 # Register them all under "./datasets"
 _root = os.getenv("DETECTRON2_DATASETS", "datasets")
 register_all_coco(_root)
-register_all_lvis(_root)
+
+# lvis dataset is not supported in this repo, please refer to origin repo if used..
+# register_all_lvis(_root)
+
 register_all_cityscapes(_root)
 register_all_pascal_voc(_root)
