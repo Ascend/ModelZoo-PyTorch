@@ -1,11 +1,29 @@
 diff --git a/wenet/transformer/asr_model.py b/wenet/transformer/asr_model.py
-index 73990fa..cbb1dc9 100644
+index 73990fa..bb3e10f 100644
 --- a/wenet/transformer/asr_model.py
 +++ b/wenet/transformer/asr_model.py
-@@ -443,6 +443,58 @@ class ASRModel(torch.nn.Module):
+@@ -158,6 +158,7 @@ class ASRModel(torch.nn.Module):
+         decoding_chunk_size: int = -1,
+         num_decoding_left_chunks: int = -1,
+         simulate_streaming: bool = False,
++        encoder_model=None
+     ) -> Tuple[torch.Tensor, torch.Tensor]:
+         # Let's assume B = batch_size
+         # 1. Encoder
+@@ -165,7 +166,8 @@ class ASRModel(torch.nn.Module):
+             encoder_out, encoder_mask = self.encoder.forward_chunk_by_chunk(
+                 speech,
+                 decoding_chunk_size=decoding_chunk_size,
+-                num_decoding_left_chunks=num_decoding_left_chunks
++                num_decoding_left_chunks=num_decoding_left_chunks,
++                encoder_model=encoder_model
+             )  # (B, maxlen, encoder_dim)
+         else:
+             encoder_out, encoder_mask = self.encoder(
+@@ -443,6 +445,57 @@ class ASRModel(torch.nn.Module):
                                                 simulate_streaming)
          return hyps[0][0]
- 
+
 +    def get_encoder_flash_data(
 +        self,
 +        speech: torch.Tensor,
@@ -16,6 +34,7 @@ index 73990fa..cbb1dc9 100644
 +        ctc_weight: float = 0.0,
 +        simulate_streaming: bool = False,
 +        reverse_weight: float = 0.0,
++        encoder_model=None
 +    ) -> List[int]:
 +        """ Apply attention rescoring decoding, CTC prefix beam search
 +            is applied first to get nbest, then we resoring the nbest on
@@ -48,13 +67,11 @@ index 73990fa..cbb1dc9 100644
 +        # For attention rescoring we only support batch_size=1
 +        assert batch_size == 1
 +        # encoder_out: (1, maxlen, encoder_dim), len(hyps) = beam_size
-+        hyps, encoder_out = self._ctc_prefix_beam_search(
-+            speech, speech_lengths, beam_size, decoding_chunk_size,
-+            num_decoding_left_chunks, simulate_streaming)
 +
 +        encoder_out, encoder_mask = self._forward_encoder(
 +            speech, speech_lengths, decoding_chunk_size,
-+            num_decoding_left_chunks,simulate_streaming)  # (B, maxlen, encoder_dim)
++            num_decoding_left_chunks,simulate_streaming,
++            encoder_model=encoder_model)  # (B, maxlen, encoder_dim)
 +        return encoder_out, encoder_mask
 +
 +
@@ -62,13 +79,13 @@ index 73990fa..cbb1dc9 100644
          self,
          speech: torch.Tensor,
 diff --git a/wenet/transformer/encoder.py b/wenet/transformer/encoder.py
-index e342ed4..c1724bd 100644
+index e342ed4..21b536a 100644
 --- a/wenet/transformer/encoder.py
 +++ b/wenet/transformer/encoder.py
 @@ -26,7 +26,9 @@ from wenet.utils.common import get_activation
  from wenet.utils.mask import make_pad_mask
  from wenet.utils.mask import add_optional_chunk_mask
- 
+
 -
 +import acl
 +from wenet.transformer.acl_net import Net
@@ -76,19 +93,15 @@ index e342ed4..c1724bd 100644
  class BaseEncoder(torch.nn.Module):
      def __init__(
          self,
-@@ -117,6 +119,11 @@ class BaseEncoder(torch.nn.Module):
-         self.use_dynamic_chunk = use_dynamic_chunk
-         self.use_dynamic_left_chunk = use_dynamic_left_chunk
- 
-+        device_id = 0
-+        self.decoder_output_data_shape = 4233000
-+        self.encoder_model = Net(model_path="model.om", \
-+                                 output_data_shape = self.decoder_output_data_shape, device_id=device_id, )
-+
-     def output_size(self) -> int:
-         return self._output_size
- 
-@@ -295,17 +302,22 @@ class BaseEncoder(torch.nn.Module):
+@@ -254,6 +256,7 @@ class BaseEncoder(torch.nn.Module):
+         xs: torch.Tensor,
+         decoding_chunk_size: int,
+         num_decoding_left_chunks: int = -1,
++        encoder_model=None
+     ) -> Tuple[torch.Tensor, torch.Tensor]:
+         """ Forward input chunk by chunk with chunk_size like a streaming
+             fashion
+@@ -295,17 +298,22 @@ class BaseEncoder(torch.nn.Module):
          outputs = []
          offset = 0
          required_cache_size = decoding_chunk_size * num_decoding_left_chunks
@@ -109,7 +122,7 @@ index e342ed4..c1724bd 100644
 +            if offset > 0:
 +                offset = offset - 1
 +            offset = offset + 1
-+            encoder_output, exe_time = self.encoder_model(
++            encoder_output, exe_time = encoder_model(
 +                [chunk_xs.cpu().numpy(), np.array(offset), subsampling_cache_om.cpu().numpy(), \
 +                 elayers_output_cache_om.cpu().numpy(), conformer_cnn_cache_om.cpu().numpy()])
 +            y, subsampling_cache_om, elayers_output_cache_om, conformer_cnn_cache_om = \
