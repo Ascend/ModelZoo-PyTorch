@@ -63,7 +63,7 @@ bash test/pth2om.sh d1_224_84.pth.tar volo_bs16.onnx volo_modify_bs16.onnx volo_
 ./msame --model "volo_bs16.om" --input "/opt/npu/data_bs16" --output "./" --outfmt TXT
 
 # compute the val accuracy, modify the batchsize, result dir and label dir
-bash eval_acc_perf.sh 
+bash eval_acc_perf.sh 1 /path/to/result /path/to/label.txt
 ```
 
 ## Volo inference result

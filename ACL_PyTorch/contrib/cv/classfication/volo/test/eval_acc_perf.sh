@@ -1,1 +1,1 @@
-python volo_postprocess.py --batchsize 1 --result 2022321_14_50_42_791955 --label ./volo_val_bs1.txt
+python volo_postprocess.py --batchsize $1 --result $2 --label $3
