@@ -170,7 +170,8 @@ if __name__ == '__main__':
     model = model.to(device)
 
     model.eval()
-
+    if not os.path.exists(args.bin_path):
+        os.mkdir(args.bin_path)
     #init acl
     if os.path.exists(args.json_path):
         os.remove(args.json_path)
@@ -206,4 +207,4 @@ if __name__ == '__main__':
     dic_perf["t1"] = ave_t
     dic2json(dic_perf, "t1.json")
     dic2json(encoder_dic, args.json_path)
-
+    del encoder_model_noflash

@@ -203,3 +203,4 @@ if __name__ == '__main__':
         dic_perf["t2"] = ave_t
         if "no" in args.bin_path:
             dic2json(dic_perf, "t2.json")
+    del decoder_model
