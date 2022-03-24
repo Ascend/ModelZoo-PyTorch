@@ -97,7 +97,7 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
    
     (2) 流式场景精度获取
    
-   ​	获取非流式场景下encoder处理数据：cd到wenet根目录下
+   ​	获取流式场景下encoder处理数据：cd到wenet根目录下
    
    ```
    git checkout .
@@ -121,7 +121,11 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
    bash run_attention_rescoring.sh
    ```
    
-   注意wenet/bin/recognize_attenstion_rescoring.py文件中--bin_path， --model_path， --json_path分别是非流式encoder om生成bin文件，即上一步生成的bin文件路径，decoder模型om路径，流式encoder生成bin文件shape信息对应的json文件，即上一步生成的json文件。查看wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer文件的最后，即可获取overall精度。流式场景下测试速度较慢，可以在encoder.py文件中的BaseEncoder中修改，chunk_xs = xs[:, cur:end, :]修改为chunk_xs = xs[:, cur: num_frames, :]，同时在for循环最后offset += y.size(1)后面一行加上break**评测结果：**   
+   注意wenet/bin/recognize_attenstion_rescoring.py文件中--bin_path， --model_path， --json_path分别是非流式encoder om生成bin文件，即上一步生成的bin文件路径，decoder模型om路径，流式encoder生成bin文件shape信息对应的json文件，即上一步生成的json文件。查看wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer文件的最后，即可获取overall精度。流式场景下测试速度较慢，可以在encoder.py文件中的BaseEncoder中修改，chunk_xs = xs[:, cur:end, :]修改为chunk_xs = xs[:, cur: num_frames, :]，同时在for循环最后offset += y.size(1)后面一行加上break
+   
+   
+   
+   **评测结果：**   
 
 | 模型  |          官网pth精度           |     710/310离线推理精度     | gpu性能 | 710性能 | 310性能 |
 | :---: | :----------------------------: | :-------------------------: | :-----: | :-----: | ------- |
