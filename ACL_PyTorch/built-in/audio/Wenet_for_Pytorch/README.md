@@ -8,150 +8,235 @@
 pip3.7 install -r requirements.txt  
 ```
 
-其他需要安装的请自行安装
+2. 改图工具om_gener
 
-1. 获取，修改与安装开源模型代码  
+   ```
+   git clone https://gitee.com/liurf_hw/om_gener.git
+   cd om_gener
+   pip3 install .
+   ```
+
+ 其他需要安装的请自行安装
+
+3. 获取开源模型代码  
 
 ```
 git clone https://github.com/wenet-e2e/wenet.git
 cd wenet
 git reset 9c4e305bcc24a06932f6a65c8147429d8406cc63 --hard
+wenet_path=$(pwd)
 ```
 
-3. 下载网络权重文件并导出onnx
+路径说明：
+
+${wenet_path}表示wenet开源模型代码的路径
+
+${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code_path=/home/ModelZoo-PyTorch/ACL_PyTorch/built-in/audio/Wenet_for_Pytorch
+
+4. 下载网络权重文件并导出onnx
 
 下载链接：http://mobvoi-speech-public.ufile.ucloud.cn/public/wenet/aishell/20210601_u2pp_conformer_exp.tar.gz
 
 下载压缩文件，将文件解压，将文件夹内的文件放置到wenet/examples/aishell/s0/exp/conformer_u2文件夹下，若没有该文件夹，则创建该文件夹
 
-首先将所有提供的diff文件放到wenet根目录，将提供的export_onnx.py、process_encoder_data_flash.py、process_encoder_data_noflash.py、recognize_attenstion_rescoring.py、static.py文件放到wenet/wenet/bin/目录下，将提供的slice_helper.py, acl_net.py文件放到wenet/wenet/transformer文件夹下，将提供的sh脚本文件放到wenet/examples/aishell/s0/目录下，
+```
+tar -zvxf 20210601_u2pp_conformer_exp.tar.gz
+mkdir -p ${wenet_path}/examples/aishell/s0/exp/conformer_u2
+cp -r 20210601_u2pp_conformer_exp/20210601_u2++_conformer_exp/*
+${wenet_path}/examples/aishell/s0/exp/conformer_u2
+```
+
+5. 拷贝本工程下提供的diff、sh、py文件到wenet对应目录下
+
+   ```
+   cd  ${code_path}
+   cp -r *diff ${wenet_path}
+   cp -r *.sh ${wenet_path}/examples/aishell/s0
+   cp -r export_onnx.py ${wenet_path}/wenet/bin/
+   cp -r process_encoder_data_noflash.py ${wenet_path}/wenet/bin/
+   cp -r process_encoder_data_flash.py ${wenet_path}/wenet/bin/
+   cp -r recognize_attenstion_rescoring.py ${wenet_path}/wenet/bin/
+   cp -r static.py ${wenet_path}/wenet/bin/
+   cp -r slice_helper.py ${wenet_path}/wenet/transformer
+   cp -r acl_net.py ${wenet_path}/wenet/transformer
+   ```
+
+6. 数据集下载
+
+   ```
+   cd ${wenet_path}/examples/aishell/s0/
+   bash run.sh --stage -1 --stop_stage -1 # 下载数据集
+   bash run.sh --stage 0 --stop_stage 0 # 处理数据集
+   bash run.sh --stage 1 --stop_stage 1 # 处理数据集
+   bash run.sh --stage 2 --stop_stage 2 # 处理数据集
+   bash run.sh --stage 3 --stop_stage 3 # 处理数据集
+   ```
+
+
+
+## 2 模型转换
+
+1. 导出onnx
 
 ```
+cd ${wenet_path}
 patch -p1 < export_onnx.diff
 bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt
 ```
 
-运行导出onnx文件并保存在当前目录下的onnx文件夹下
+运行导出onnx文件并保存${wenet_path}/examples/aishell/s0/onnx/文件夹下
 
-4.  运行脚本将onnx转为om模型
+2.  运行脚本将onnx转为om模型
 
-首先使用改图工具om_gener改图，该工具链接为https://gitee.com/liurf_hw/om_gener，
+   om_gener工具修改onnx模型，生成decoder_final.onnx、encoder_revise.onnx、no_flash_encoder_revise.onnx，并运行相应脚本生成om模型，注意配置环境变量
 
-安装之后，将生成的onnx放至修改脚本文件同一目录，使用以下命令修改脚本，
+```
+cd ${code_path}
+cp ${wenet_path}/examples/aishell/s0/onnx/* ${code_path}/
+python3 adaptdecoder.py
+python3 adaptencoder.py
+python3 adaptnoflashencoder.py
+bash encoder.sh
+bash decoder.sh
+bash no_flash_encoder.sh
+```
 
-python3 adaptdecoder.py生成decoder_final.onnx
+若设备为710设备，修改sh脚本中的--soc_version=Ascend710即可
 
-python3 adaptencoder.py生成encoder_revise.onnx
+## 3 离线推理 
 
-python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
+### 	动态shape场景：
 
-配置环境变量，使用atc工具将模型转换为om文件，命令参考提供的encoder.sh, decoder.sh, no_flash_encoder.sh脚本，运行即可生成对应的om文件，若设备为710设备，修改sh脚本中的
+​        1. 设置日志等级 export ASCEND_GLOBAL_LOG_LEVEL=3
 
---soc_version=Ascend710即可
+​        2. 拷贝om模型到${wenet_path}/examples/aishell/s0
 
-5. 数据集下载：
+```
+cp ${code_path}/decoder_final.om ${wenet_path}/examples/aishell/s0/
+cp ${code_path}/encoder_revise.om ${wenet_path}/examples/aishell/s0/
+cp ${code_path}/no_flash_encoder_revise.om ${wenet_path}/examples/aishell/s0/
+```
 
-   在wenet/examples/aishell/s0/文件夹下运行
+#### 非流式场景
 
-   bash run.sh --stage -1 –stop_stage -1下载数据集
+- 非流式场景下encoder处理数据
 
-   运行bash run.sh --stage 0 --stop_stage 0处理数据集
 
-   运行bash run.sh --stage 1 --stop_stage 1处理数据集
+```
+cd ${wenet_path}
+git checkout .
+patch -p1 < get_no_flash_encoder_out.diff
+cd ${wenet_path}/examples/aishell/s0/
+bash run_no_flash_encoder_out.sh
+mv encoder_data_noflash encoder_data
+nv encoder_noflash_all.json encoder.json
+```
 
-   运行bash run.sh --stage 2 --stop_stage 2处理数据集
-   
-   运行bash run.sh --stage 3 --stop_stage 3处理数据集
+- 获取非流式场景下decoder处理结果：
 
-## 2 离线推理 
 
-​	动态shape场景：
+```
+cd ${wenet_path}
+git checkout .
+patch -p1 < getwer.diff
+cd ${wenet_path}/examples/aishell/s0/
+bash run_attention_rescoring.sh
+```
 
-   首先export ASCEND_GLOBAL_LOG_LEVEL=3
+- 查看overall精度
 
-1. (1)非流式场景精度获取
+  ```
+  cat ${wenet_path}/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer | grep "Overall"
+  ```
 
-   获取非流式场景下encoder处理数据：cd到wenet根目录下
-   
-   ```
-   git checkout .
-   patch -p1 < get_no_flash_encoder_out.diff
-   cd examples/aishell/s0/
-   bash run_no_flash_encoder_out.sh
-   ```
-   
-   以上步骤注意，wenet/bin/process_encoder_data_noflash.py文件中--bin_path， --model_path，--json_path分别保存encoder生成的bin文件，非流式encoder om模型位置，encoder生成bin文件的shape信息。
-   
-   获取非流式场景下，decoder处理结果：
-   
-   首先cd到wenet根目录下
-   
-   ```
-   git checkout .
-   patch -p1 < getwer.diff
-   cd examples/aishell/s0/
-   bash run_attention_rescoring.sh
-   ```
-   
-   注意wenet/bin/recognize_attenstion_rescoring.py文件中--bin_path， --model_path， --json_path分别是非流式encoder om生成bin文件，即上一步生成的bin文件路径，decoder模型om路径，非流式encoder生成bin文件shape信息对应的json文件，即上一步生成的json文件。查看wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer文件的最后几行，即可获取overall精度
-   
-    (2) 流式场景精度获取
-   
-   ​	获取流式场景下encoder处理数据：cd到wenet根目录下
-   
-   ```
-   git checkout .
-   patch -p1 < get_flash_encoder_out.diff
-   cd examples/aishell/s0/
-   bash run_encoder_out.sh
-   ```
-   
-   以上步骤注意，wenet/bin/process_encoder_data_flash.py文件中--bin_path, --model_path, --json_path分别保存encoder生成的bin文件， 模型路径信息，encoder生成bin文件的shape信息；
-   
-   
-   
-   获取流式场景下，decoder处理结果：
-   
-   首先cd到wenet根目录下
-   
-   ```
-   git checkout .
-   patch -p1 < getwer.diff
-   cd examples/aishell/s0/
-   bash run_attention_rescoring.sh
-   ```
-   
-   注意wenet/bin/recognize_attenstion_rescoring.py文件中--bin_path， --model_path， --json_path分别是非流式encoder om生成bin文件，即上一步生成的bin文件路径，decoder模型om路径，流式encoder生成bin文件shape信息对应的json文件，即上一步生成的json文件。查看wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer文件的最后，即可获取overall精度。流式场景下测试速度较慢，可以在encoder.py文件中的BaseEncoder中修改，chunk_xs = xs[:, cur:end, :]修改为chunk_xs = xs[:, cur: num_frames, :]，同时在for循环最后offset += y.size(1)后面一行加上break
-   
-   
-   
-   **评测结果：**   
+- 查看非流式性能
+
+  t1.json为encoder耗时，t2.json为decoder耗时，非流式性能为encoder耗时和decoder耗时的总和
+
+  ```
+  cp ${wenet_path}/examples/aishell/s0/t1.json ${code_path}
+  cp ${wenet_path}/examples/aishell/s0/t2.json ${code_path}
+  cd ${code_path}
+  python3.7.5 infer_perf.py
+  ```
+
+  
+
+#### 流式场景
+
+流式场景下测试速度较慢，可以在encoder.py文件中的BaseEncoder中修改，chunk_xs = xs[:, cur:end, :]修改为chunk_xs = xs[:, cur: num_frames, :]，同时在for循环最后offset += y.size(1)后面一行加上break
+
+- 获取流式场景下encoder处理数据
+
+```
+cd ${wenet_path}
+git checkout .
+patch -p1 < get_flash_encoder_out.diff
+cd ${wenet_path}/examples/aishell/s0/
+bash run_encoder_out.sh
+```
+
+- 获取流式场景下，decoder处理结果：
+
+
+首先cd到wenet根目录下
+
+```
+cd ${wenet_path}
+git checkout .
+patch -p1 < getwer.diff
+cd ${wenet_path}/examples/aishell/s0/
+bash run_attention_rescoring.sh
+```
+
+- 查看overall精度
+
+  ```
+  cat ${wenet_path}/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer | grep "Overall"
+  ```
+
+### **评测结果：**   
 
 | 模型  |          官网pth精度           |     710/310离线推理精度     | gpu性能 | 710性能 | 310性能 |
 | :---: | :----------------------------: | :-------------------------: | :-----: | :-----: | ------- |
-| wenet | GPU流式：5.94%， 非流式：4.64% | 流式：5.66%， 非流式：5.66% |         |  7.69   | 11.6fps |
+| wenet | GPU流式：5.94%， 非流式：4.64% | 流式：5.66%， 非流式：4.78% |         |  7.69   | 11.6fps |
 
-生成的t1.json, t2.json文件中分别为encoder，decoder耗时，将其相加即可，运行python3.7.5 infer_perf.py
 
-静态shape场景(仅支持非流式场景)：
 
-onnx转om:
+### 静态shape场景(仅支持非流式场景)：
+
+- onnx转om:
+
 
 ```
+cd ${code_path}
 bash static_encoder.sh
 bash static_decoder.sh
+cp ${code_path}/encoder_fendang_262_1478_static.om ${wenet_path}/
+cp ${code_path}/decoder_fendang.om ${wenet_path}/
 ```
 
-精度测试:
+- 精度测试:
 
-首先export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型，修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring， stage=5 decode阶段185、198行修改python为python3.7.5, 185行recognize.py修改为static.py
+  - 设置日志等级export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型，修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring， stage=5 decode阶段185、198行修改python为python3.7.5, 185行recognize.py修改为static.py
 
 ```
+cd ${wenet_path}/
 git checkout .
 patch -p1 < acc.diff
-cd examples/aishell/s0/
+cd ${wenet_path}/examples/aishell/s0/
 bash run.sh --stage 5 --stop_stage 5
 ```
 
-性能：在wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/text文件最后一行有FPS性能数据
+- 查看overall精度
+
+  ```
+  cat ${wenet_path}/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer | grep "Overall"
+  ```
+
+- 查看性能
+
+```
+cat ${wenet_path}/examples/aishell/s0/exp/conformer/test_attention_rescoring/text
+```
 
