@@ -24,7 +24,14 @@ git reset 9c4e305bcc24a06932f6a65c8147429d8406cc63 --hard
 
 下载压缩文件，将文件解压，将文件夹内的文件放置到wenet/examples/aishell/s0/exp/conformer_u2文件夹下，若没有该文件夹，则创建该文件夹
 
-首先将所有提供的diff文件放到wenet根目录下，patch -p1 < export_onnx.diff文件适配导出onnx的代码，将提供的export_onnx.py、process_encoder_data_flash.py、process_encoder_data_noflash.py、recognize_attenstion_rescoring.py、static.py文件放到wenet/wenet/bin/目录下，将提供的slice_helper.py, acl_net.py文件放到wenet/wenet/transformer文件夹下，将提供的sh脚本文件放到wenet/examples/aishell/s0/目录下，运行bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt导出onnx文件在当前目录下的onnx文件夹下
+首先将所有提供的diff文件放到wenet根目录，将提供的export_onnx.py、process_encoder_data_flash.py、process_encoder_data_noflash.py、recognize_attenstion_rescoring.py、static.py文件放到wenet/wenet/bin/目录下，将提供的slice_helper.py, acl_net.py文件放到wenet/wenet/transformer文件夹下，将提供的sh脚本文件放到wenet/examples/aishell/s0/目录下，
+
+```
+patch -p1 < export_onnx.diff
+bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt
+```
+
+运行导出onnx文件在当前目录下的onnx文件夹下
 
 4.  运行脚本将onnx转为om模型
 
