@@ -45,6 +45,8 @@ from collections import OrderedDict, namedtuple, defaultdict
 import time
 import torch.npu
 import os
+import apex
+from apex import amp
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
@@ -178,8 +180,8 @@ class DCAP(nn.Module):
             self.embedding_dic[feat[0]](X[:, self.feature_index[feat[0]]].to(torch.int32)).reshape(X.shape[0], 1, -1)
             for feat in self.sparse_feature_columns]
         sparse_input = torch.cat(sparse_embedding, dim=1)
-        attn_mask = (torch.triu(torch.ones(len(self.sparse_feature_columns), len(self.sparse_feature_columns))) == 1)
-        attn_mask = attn_mask.float().masked_fill(attn_mask==0, float('-inf')).masked_fill(attn_mask==1, float(0.0)).to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
+        attn_mask = (torch.triu(torch.ones(len(self.sparse_feature_columns), len(self.sparse_feature_columns)).to(f'npu:{NPU_CALCULATE_DEVICE}')) == 1)
+        attn_mask = attn_mask.float().masked_fill(attn_mask==0, float('-inf')).masked_fill(attn_mask==1, float(0.0))
         X, X_0 = sparse_input, sparse_input
         output = []
         for layer in self.layers:
@@ -238,7 +240,7 @@ if __name__ == '__main__':
     train_label = pd.DataFrame(train['label'])
     train = train.drop(columns=['label'])
     train_tensor_data = TensorDataset(torch.from_numpy(np.array(train)), torch.from_numpy(np.array(train_label)))
-    train_loader = DataLoader(train_tensor_data, shuffle=True, batch_size=batch_size)
+    train_loader = DataLoader(train_tensor_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 
     test_label = pd.DataFrame(test['label'])
     test = test.drop(columns=['label'])
@@ -246,37 +248,38 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_tensor_data, batch_size=batch_size)
 
     loss_func = nn.BCELoss(reduction='mean')
-    # optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=lr, weight_decay=wd)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=wd)
-    # model, optimizer = amp.initialize(model, optimizer, opt_level = 'O2', loss_scale = 128.0, combine_grad=True)
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=lr, weight_decay=wd)
+    model, optimizer = amp.initialize(model, optimizer, opt_level = 'O2', loss_scale = 128.0, combine_grad=True)
 
     step = 0
     for epoch in range(epoches):
         total_loss_epoch = 0.0
         total_tmp = 0
         model.train()
-        for index, (x, y) in enumerate(train_loader):
+        step = 0
+        from prefetcher import Prefetcher
+        prefetcher = Prefetcher(train_loader)
+        x, y = prefetcher.next()
+        while x is not None:
             if step > 10:
               pass
             start_time = time.time()
-            #x, y = x.to(f'npu:{NPU_CALCULATE_DEVICE}').float(), y.to(f'npu:{NPU_CALCULATE_DEVICE}').float()
-            x, y = x.float(), y.float()
-            x, y = x.to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True), y.to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
             y_hat = model(x)
 
             optimizer.zero_grad()
             loss = loss_func(y_hat, y)
-            # with amp.scale_loss(loss,optimizer) as scaled_loss:
-                # scaled_loss.backward()
-            loss.backward()
+            with amp.scale_loss(loss,optimizer) as scaled_loss:
+                scaled_loss.backward()
             optimizer.step()
-            total_loss_epoch += loss.item()
+            total_loss_epoch += loss.detach()
             total_tmp += 1
             step_time = time.time() - start_time
             FPS = batch_size / step_time
             step += 1
             print("Epoch:{}, step:{}, Loss:{:.4f}, time/step(s):{:.4f}, FPS:{:.3f}".format(epoch,step,loss.item(),step_time,FPS))
-
+            if step == 79:
+                break
+            x, y = prefetcher.next()
         auc = get_auc(test_loader, model)
         print('epoch/epoches: {}/{}, train loss: {:.3f}, test auc: {:.3f}'.format(epoch, epoches,
                                                                                   total_loss_epoch / total_tmp, auc))
