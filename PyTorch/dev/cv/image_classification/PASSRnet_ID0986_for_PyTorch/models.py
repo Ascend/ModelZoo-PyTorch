@@ -181,6 +181,7 @@ class PAM(nn.Module):
         ### fusion
         buffer = self.b3(x_right).permute(0,2,3,1).contiguous().view(-1, w, c)                      # (B*H) * W * C
         buffer = torch.bmm(M_right_to_left, buffer).contiguous().view(b, h, w, c).permute(0,3,1,2)  #  B * C * H * W
+        V_left_to_right = V_left_to_right.to(x_left.dtype)
         out = self.fusion(torch.cat((buffer, x_left, V_left_to_right), 1))
 
         ## output
