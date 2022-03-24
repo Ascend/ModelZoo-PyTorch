@@ -142,7 +142,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep FPS  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS:" '{print $2}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+FPS=`grep FPS  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS:" '{print $2}'|tail -n +3|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`
 
 
