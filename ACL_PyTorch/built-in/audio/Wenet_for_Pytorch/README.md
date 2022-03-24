@@ -31,7 +31,7 @@ patch -p1 < export_onnx.diff
 bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt
 ```
 
-运行导出onnx文件在当前目录下的onnx文件夹下
+运行导出onnx文件并保存在当前目录下的onnx文件夹下
 
 4.  运行脚本将onnx转为om模型
 
@@ -82,7 +82,9 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
    
    以上步骤注意，wenet/bin/process_encoder_data_noflash.py文件中--bin_path， --model_path，--json_path分别保存encoder生成的bin文件，非流式encoder om模型位置，encoder生成bin文件的shape信息。
    
-   获取非流式场景下，decoder处理结果：cd到wenet根目录下
+   获取非流式场景下，decoder处理结果：
+   
+   首先cd到wenet根目录下
    
    ```
    git checkout .
@@ -108,7 +110,9 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
    
    
    
-   获取流式场景下，decoder处理结果：cd到wenet根目录下
+   获取流式场景下，decoder处理结果：
+   
+   首先cd到wenet根目录下
    
    ```
    git checkout .
