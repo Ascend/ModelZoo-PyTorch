@@ -72,30 +72,30 @@ class Engine(object):
 
     def train_single_batch(self, users, items, ratings):
         assert hasattr(self, 'model'), 'Please specify the exact model !'
-        #if self.config['use_npu'] is True:
-        users, items, ratings = users.npu(), items.npu(), ratings.npu()
         self.opt.zero_grad()
         ratings_pred = self.model(users, items)
         loss = self.crit(ratings_pred.view(-1), ratings)
-        #loss.backward()
         with amp.scale_loss(loss, self.opt) as scaled_loss:
             scaled_loss.backward()
         self.opt.step()
-        loss = loss.item()
+        loss = loss.detach()
         return loss
 
     def train_an_epoch(self, train_loader, epoch_id):
         assert hasattr(self, 'model'), 'Please specify the exact model !'
         self.model.train()
         total_loss = 0
-        for batch_id, batch in enumerate(train_loader):
+        batch_id = 0
+        from prefetcher import Prefetcher
+        prefetcher = Prefetcher(train_loader)
+        user, item, rating = prefetcher.next()
+        while user is not None:
             start_time=time.time()
-            assert isinstance(batch[0], torch.LongTensor)
-            user, item, rating = batch[0], batch[1], batch[2]
-            rating = rating.float()
             loss = self.train_single_batch(user, item, rating)
             print('[Training Epoch {}] Batch {}/{}, Loss:{:.3f}, Train-time:{:.4f}'.format(epoch_id, batch_id, len(train_loader), loss,time.time()-start_time))
             total_loss += loss
+            batch_id += 1
+            user, item, rating = prefetcher.next()
         self._writer.add_scalar('model/loss', total_loss, epoch_id)
 
     def evaluate(self, evaluate_data, epoch_id):

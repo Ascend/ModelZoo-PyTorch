@@ -123,8 +123,8 @@ class SampleGenerator(object):
                 users.append(int(row.userId))
                 items.append(int(row.negatives[i]))
                 ratings.append(float(0))  # negative samples get 0 rating
-        dataset = UserItemRatingDataset(user_tensor=torch.LongTensor(users),
-                                        item_tensor=torch.LongTensor(items),
+        dataset = UserItemRatingDataset(user_tensor=torch.IntTensor(users),
+                                        item_tensor=torch.IntTensor(items),
                                         target_tensor=torch.FloatTensor(ratings))
         return DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=16)
 
