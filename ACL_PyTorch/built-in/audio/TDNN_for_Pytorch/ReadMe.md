@@ -1,31 +1,59 @@
-文件作用说明：
+# TDNN模型pytorch离线推理指导
 
-1.atc.sh：模型转换脚本，生成动态分档模型
+## 1 环境准备
 
-2.pth2onnx.py：用于转换ckpt文件到onnx文件
+1.获取，修改与安装开源模型代码
 
-3.acl_net.py: pyACL推理依赖模块
+```shell
+git clone https://github.com/speechbrain/speechbrain.git
+cd speechbrain    
+git checkout  develop    
+git reset --hard 51a2becdcf3a337578a9307a0b2fc3906bf20391
+export PYTHONPATH=`pwd`:$PYTHONPATH
+cd ..
+git clone https://gitee.com/Ronnie_zheng/MagicONNX.git
+cd MagicONNX && git checkout 8d62ae9dde478f35bece4b3d04eef573448411c9
+pip install .
+```
+将源码包中文件放入speechbrain/templates/speaker_id中
+```shell
+cd speechbrain
+git apply --reject --whitespace=fix templates/speaker_id/modify.patch
+```
 
-4.interfaces.py: 替换speechbrain/pretrained 目录下同名文件
+2.获取权重文件
 
-5.om_infer.sh: pyACL推理启动脚本
+https://www.hiascend.com/zh/software/modelzoo/detail/1/f4f4103245624c1a8637f8a5eadd950c
+将模型权重文件夹best_model放入speechbrain/templates/speaker_id下，将hyperparams.yaml文件放入best_model中
 
-6.pyacl_infer.py: pyACL推理代码
+3.获取数据集
 
-7.tdnn_postprocess.py: 预处理脚本
+预处理阶段自动下载
+```shell
+python3 tdnn_preprocess.py
+```
 
-8.tdnn_preprocess.py: 后处理脚本
+## 2 模型转换
+```shell
+# 生成tdnn_bs64.onnx
+python3 tdnn_pth2onnx.py 64
+# 优化onnx模型
+python3 -m onnxsim tdnn_bs64.onnx tdnn_bs64s.onnx
+python3 modify_onnx.py tdnn_bs64s.onnx
+# 生成om模型
+bash atc.sh tdnn_bs64s.onnx
+```
 
+## 3 离线推理
 
+```shell
+bash om_infer.sh 64
+python3 tdnn_postprocess.py
+```
+**评测结果：**
 
-推理端到端步骤：
-
-（1） 从Speechbrain克隆源代码，修改speechbrain/nnet/CNN.py 349行padding_mode='constant',从Ascend Modelzoo获取训练好的权重文件夹best model, 进templates/speaker_id 运行 pth2onnx.py脚本生成tdnn.onnx模型
-
-（2） 准备数据集，注释掉speechbrain/templates/speaker_id/mini_librispeech_prepare.py 174行代码，然后执行预处理脚本，python3 tdnn_preprocess.py, 将数据集处理为二进制文件
-
-（3） 执行atc脚本, bash atc.sh tdnn.onnx tdnn，生成tdnn.om
-
-（4） 执行om_infer脚本， bash om_infer.sh，推理结果输出在result目录下
-
- (5)  执行后处理脚本，python3 tdnn_postprocess.py 得到模型精度
+由于TensorRT不支持原模型，故只能对比修改后的模型性能。
+| 模型              | pth精度        | 710离线推理精度      | 基准性能      | 710性能  |
+| :------:          | :------:       | :------:            | :------:     | :------: |
+| TDNN bs64         | 99.93%         | 99.93%              | -            |  2467fps  |
+| TDNN修改 bs64     | -              | -                   | 2345.179 fps |  3815.886fps  |

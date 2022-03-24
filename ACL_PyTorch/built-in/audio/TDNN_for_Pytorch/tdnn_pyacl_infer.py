@@ -86,6 +86,7 @@ if __name__ == '__main__':
     # 参数解析
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', required=True)
+    parser.add_argument('--batch_size', required=True)
     parser.add_argument('--device_id', required=True, type=int)
     parser.add_argument('--cpu_run', required=True, choices=['True', 'False'])
     parser.add_argument('--sync_infer', required=True, choices=['True', 'False'])
@@ -129,27 +130,59 @@ if __name__ == '__main__':
     total_infer_time = 0
     total_infer_time_workspace = 0
     total_infer_num = 0
-    for key, values in tqdm(inputs_info.items()):
+    dataset = {}
+    dims_infos = {}
+    bs = int(opt.batch_size)
+    for key, values in inputs_info.items():
         # 构造输入
         inputs = []
         dims = []
         for idx, value in enumerate(values):
             x = np.fromfile(value['path'], dtype=input_dtypes[idx]).reshape(value['shape'])
-            inputs.append(x)
-            dims.extend(value['shape'])
+            inputs.append((key,x))
+            dims.extend((bs, value['shape'][1], value['shape'][2]))
         dims_info = {'dimCount': len(dims), 'name': '', 'dims': dims}
 
+        # (1, 1500, 23) {'dimCount': 3, 'name': '', 'dims': [1, 1500, 23]}
+        length = inputs[0][1].shape[1]
+        dataset[length] = dataset.get(length,[]) + inputs
+        dims_infos[length] = dims_infos.get(length,dims_info)
+    
+    total_inputs = []
+    total_keys = []
+    for k in sorted(dataset.keys()):
+        total_len = len(dataset[k])
+        batch_input = []
+        batch_key = []
+        for i, (key, ipt) in enumerate(dataset[k]):
+            batch_input.append(ipt)
+            batch_key.append(key)
+            if (i+1) % bs == 0:
+                total_inputs.append(batch_input)
+                total_keys.append(batch_key)
+                batch_input = []
+                batch_key = []
+        if batch_input != []:
+            total_inputs.append(batch_input)
+            total_keys.append(batch_key)
+
+    for i, b_ipt in tqdm(enumerate(total_inputs)):
+        batch_input = np.squeeze(np.array(b_ipt), axis=1)
+        if batch_input.shape[0] < bs:
+            batch_input = np.pad(batch_input, [(0, bs-batch_input.shape[0]), (0, 0), (0, 0)], mode='constant')
+
         # 推理得到输出
-        output = om_model(inputs, dims_info)
+        # (bs, 28)
+        output = om_model([batch_input], dims_infos[batch_input.shape[1]])
+
         total_infer_num += 1
 
         # 保存文件
-        if opt.res_save_type == 'bin':
-            for idx, data in enumerate(output):
-                data.tofile(os.path.join(opt.infer_res_save_path, key + '.' + str(idx) + '.bin'))
-        else:
-            for idx, data in enumerate(output):
-                np.save(os.path.join(opt.infer_res_save_path, key + '.' + str(idx) + '.npy'), data)
+        for j, key in enumerate(total_keys[i]):
+            if opt.res_save_type == 'bin':
+                output[0][j].tofile(os.path.join(opt.infer_res_save_path, key + '.' + str(0) + '.bin'))
+            else:
+                np.save(os.path.join(opt.infer_res_save_path, key + '.' + str(0) + '.npy'), output[0][j])
 
         # 计算时间
         total_infer_time += measurements['per_infer_time_ns']

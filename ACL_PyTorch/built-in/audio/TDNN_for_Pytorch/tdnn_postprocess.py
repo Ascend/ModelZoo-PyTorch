@@ -15,7 +15,7 @@
 import os
 import re
 import argparse
-import numpy as numpy
+import numpy as np
 label = {0:'163', 1:'7367', 2:'332', 3:'1970', 4:'4640', 5:'8629', 6:'6848', 7:'1088', 8:'460', 9:'6272', 10:'7312', 11:'2136', 12:'1867', 13:'669', 14:'3526', 15:'3664', 16:'3242', 17:'19', 18:'32', 19:'5789', 20:'118', 21:'226', 22:'7859', 23:'3947', 24:'1898', 25:'2416', 26:'1737', 27:'4680'}
 
 if __name__ == '__main__':
@@ -42,9 +42,10 @@ if __name__ == '__main__':
             index = split[0]
             input_file = split[1]
             target = re.search('/(\d*)-', input_file).group()[1:-1]
+            output_file = opt.result_dir + '/' + index + '.0.bin'
             output = np.fromfile(output_file, np.float32)
             res = np.argmax(output)
-            print('Predicted:', lable[res], 'Target:', target)
+            print('Predicted:', label[res], 'Target:', target)
             total += 1
             if label[res] != target:
                 error += 1

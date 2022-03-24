@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
 import torch
 import torchaudio
 from speechbrain.pretrained import EncoderClassifier
@@ -29,12 +31,13 @@ class Xvector(torch.nn.Module):
         return res
 
 model = Xvector(classifier)
-feats = torch.randn([1, 1800, 23])
+batch_size=int(sys.argv[1])
+feats = torch.randn([batch_size, 1800, 23])
 
 torch.onnx.export(
     model,
     feats,
-    'tdnn.onnx',
+    'tdnn_bs%d.onnx'%(batch_size),
     input_names=['feats'],
     output_names=['output'],
     export_params=True,
