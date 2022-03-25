@@ -153,6 +153,7 @@ if __name__ == '__main__':
     if not os.path.exists("output/PEM_results"):
             os.makedirs("output/PEM_results") 
     out_files = os.listdir(args.PEM_out_path)
+    print("processing...")
     for i in range(len(out_files)):
         video_name = str(out_files[i])
         video_name = video_name[0:int(len(video_name)-6)]
@@ -184,5 +185,6 @@ if __name__ == '__main__':
         df["xmax_score"]=video_xmax_score
         df["iou_score"]=video_data       
         df.to_csv(args.result_path+'/'+video_name+".csv",index=False)
-        
+    print("PGM: start generating BSN_post feature")   
     BSN_post_processing()
+    print("PGM: finish generate BSN_post feature")

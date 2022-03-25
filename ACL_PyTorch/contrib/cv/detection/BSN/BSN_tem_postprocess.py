@@ -275,6 +275,7 @@ if __name__ == '__main__':
     out_files = os.listdir(args.TEM_out_path)
     if not os.path.exists("output/TEM_results"):
             os.makedirs("output/TEM_results") 
+    print("processing...")
     for i in range(len(out_files)):
         video_name = str(out_files[i])
         video_name = video_name[0:int(len(video_name)-6)]
@@ -300,13 +301,13 @@ if __name__ == '__main__':
       
     if not os.path.exists("output/PGM_proposals"):
         os.makedirs("output/PGM_proposals") 
-    print("PGM: start generate proposals")
+    print("PGM: start generating proposals")
     PGM_proposal_generation()
     print("PGM: finish generate proposals")
         
     if not os.path.exists("output/PGM_feature"):
         os.makedirs("output/PGM_feature") 
-    print("PGM: start generate BSP feature")
+    print("PGM: start generating BSP feature")
     PGM_feature_generation()
     print("PGM: finish generate BSP feature")
         

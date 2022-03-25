@@ -53,6 +53,7 @@ if __name__ == '__main__':
     video_list = list(video_dict.keys())
     print("%s subset video numbers: %d" %(subset,len(video_list)))
     
+    print("processing...")
     for i in range(len(video_list)):
         video_name=video_list[i]
         anchor_xmin=[temporal_gap*i for i in range(temporal_scale)]
