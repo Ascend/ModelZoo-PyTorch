@@ -38,7 +38,7 @@ import copy
 import logging
 import os
 import sys
-
+import numpy as np
 import torch
 import yaml
 from torch.utils.data import DataLoader
@@ -121,6 +121,13 @@ if __name__ == '__main__':
     context, ret = acl.rt.create_context(device_id)
     output_shape = 4233000
     encoder_model = Net(model_path = args.model_path, output_data_shape = output_shape, device_id = device_id)
+    x = torch.randn(1, 131, 80)
+    offset = torch.tensor(1)
+    subsampling_cache = torch.randn(1, 1, 256)
+    elayers_cache = torch.randn(12, 1, 1, 256)
+    conformer_cnn_cache = torch.randn(12, 1, 256, 7)
+    y, _ = encoder_model([x.numpy(), offset.numpy(), subsampling_cache.numpy(), elayers_cache.numpy(), conformer_cnn_cache.numpy()])
+
     with open(args.config, 'r') as fin:
         configs = yaml.load(fin, Loader=yaml.FullLoader)
     raw_wav = configs['raw_wav']
