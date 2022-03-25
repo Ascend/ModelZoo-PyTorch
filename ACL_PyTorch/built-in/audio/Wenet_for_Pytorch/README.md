@@ -164,8 +164,6 @@ bash run_attention_rescoring.sh
 
 #### 流式场景
 
-流式场景下测试速度较慢，可以在encoder.py文件中的BaseEncoder中修改，chunk_xs = xs[:, cur:end, :]修改为chunk_xs = xs[:, cur: num_frames, :]，同时在for循环最后offset += y.size(1)后面一行加上break
-
 - 获取流式场景下encoder处理数据
 
 ```
