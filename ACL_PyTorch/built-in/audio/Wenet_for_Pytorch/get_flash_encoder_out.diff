@@ -23,7 +23,7 @@ index 73990fa..bb3e10f 100644
 @@ -443,6 +445,57 @@ class ASRModel(torch.nn.Module):
                                                 simulate_streaming)
          return hyps[0][0]
-
+ 
 +    def get_encoder_flash_data(
 +        self,
 +        speech: torch.Tensor,
@@ -79,13 +79,13 @@ index 73990fa..bb3e10f 100644
          self,
          speech: torch.Tensor,
 diff --git a/wenet/transformer/encoder.py b/wenet/transformer/encoder.py
-index e342ed4..21b536a 100644
+index e342ed4..a105abf 100644
 --- a/wenet/transformer/encoder.py
 +++ b/wenet/transformer/encoder.py
 @@ -26,7 +26,9 @@ from wenet.utils.common import get_activation
  from wenet.utils.mask import make_pad_mask
  from wenet.utils.mask import add_optional_chunk_mask
-
+ 
 -
 +import acl
 +from wenet.transformer.acl_net import Net
@@ -101,7 +101,7 @@ index e342ed4..21b536a 100644
      ) -> Tuple[torch.Tensor, torch.Tensor]:
          """ Forward input chunk by chunk with chunk_size like a streaming
              fashion
-@@ -295,17 +298,22 @@ class BaseEncoder(torch.nn.Module):
+@@ -295,19 +298,25 @@ class BaseEncoder(torch.nn.Module):
          outputs = []
          offset = 0
          required_cache_size = decoding_chunk_size * num_decoding_left_chunks
@@ -112,13 +112,14 @@ index e342ed4..21b536a 100644
          # Feed forward overlap input step by step
          for cur in range(0, num_frames - context + 1, stride):
              end = min(cur + decoding_window, num_frames)
-             chunk_xs = xs[:, cur:end, :]
+-            chunk_xs = xs[:, cur:end, :]
 -            (y, subsampling_cache, elayers_output_cache,
 -             conformer_cnn_cache) = self.forward_chunk(chunk_xs, offset,
 -                                                       required_cache_size,
 -                                                       subsampling_cache,
 -                                                       elayers_output_cache,
 -                                                       conformer_cnn_cache)
++            chunk_xs = xs[:, cur:num_frames, :]
 +            if offset > 0:
 +                offset = offset - 1
 +            offset = offset + 1
@@ -130,4 +131,7 @@ index e342ed4..21b536a 100644
 +                torch.from_numpy(encoder_output[2]), torch.from_numpy(encoder_output[3])
              outputs.append(y)
              offset += y.size(1)
++            break
          ys = torch.cat(outputs, 1)
+         masks = torch.ones(1, ys.size(1), device=ys.device, dtype=torch.bool)
+         masks = masks.unsqueeze(1)
