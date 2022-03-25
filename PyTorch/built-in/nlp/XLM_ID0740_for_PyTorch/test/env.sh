@@ -42,7 +42,6 @@ export COMBINED_ENABLE=1
 export HCCL_WHITELIST_DISABLE=1
 
 export SCALAR_TO_HOST_MEM=1
-export TRI_COMBINED_ENABLE=1
 
 #设置Device侧日志等级为error
 ${install_path}/driver/tools/msnpureport -d 0 -g error
