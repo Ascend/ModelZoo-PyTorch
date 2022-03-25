@@ -62,6 +62,10 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
+
+for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++));
+do
+export RANK_ID=$RANK_ID
 python3.7 run/train_3d.py \
     --cfg configs/shelf/prn64_cpn80x80x20.yaml \
     --data_path ${data_path} \
@@ -69,6 +73,7 @@ python3.7 run/train_3d.py \
     --num_epochs ${num_epochs} \
     --apex \
     --addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
 
 wait
 
