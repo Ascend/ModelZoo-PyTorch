@@ -7,6 +7,8 @@ import math
 from typing import Dict, Optional, Tuple
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn.functional as F
 from fairseq import utils
 from fairseq.incremental_decoding_utils import with_incremental_state
@@ -162,7 +164,7 @@ class MultiheadAttention(nn.Module):
 
     def transpose_for_scores(self, x):
         new_x_shape = (self.batch_size, self.squence_length) + (self.num_attention_heads, self.attention_head_size)
-        return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
+        return torch.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
 
     def forward(
         self,
@@ -261,12 +263,12 @@ class MultiheadAttention(nn.Module):
         new_shape = (bsz, tgt_len) + (self.num_heads, self.head_dim)
         if k is not None:
             key_shape = (bsz, k.size(0) // bsz) + (self.num_heads, self.head_dim)
-        q = q.npu_confusion_transpose((0, 2, 1, 3), new_shape, False)
+        q = torch.npu_confusion_transpose(q, (0, 2, 1, 3), new_shape, False)
 
         if k is not None:
-            k = k.npu_confusion_transpose((0, 2, 1, 3), key_shape, False)
+            k = torch.npu_confusion_transpose(k, (0, 2, 1, 3), key_shape, False)
         if v is not None:
-            v = v.npu_confusion_transpose((0, 2, 1, 3), key_shape, False)
+            v = torch.npu_confusion_transpose(v, (0, 2, 1, 3), key_shape, False)
 
         if saved_state is not None:
             # saved states are stored with shape (bsz, num_heads, seq_len, head_dim)
@@ -369,7 +371,7 @@ class MultiheadAttention(nn.Module):
             # the transpose is a no-op copy before view, thus unnecessary
             attn = attn.contiguous().view(tgt_len, bsz, embed_dim)
         else:
-            attn =attn.npu_confusion_transpose((0, 2, 1, 3),
+            attn = torch.npu_confusion_transpose(attn, (0, 2, 1, 3),
                                                (attn.size()[0]* attn.size()[2], embed_dim),
                                                True)
         attn = self.out_proj(attn)

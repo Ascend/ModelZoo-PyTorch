@@ -24,6 +24,8 @@ import math
 import itertools
 import numpy as np
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -204,7 +206,7 @@ class MultiHeadAttention(nn.Module):
 
     def _transpose_for_scores(self, x, bs, qlen):
         new_x_shape = (bs, qlen) + (self.n_heads, self.dim // self.n_heads)
-        return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
+        return torch.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
 
     def forward(self, input, bs, qlen, mask, kv=None, cache=None):
         """
@@ -244,7 +246,7 @@ class MultiHeadAttention(nn.Module):
         weights = F.dropout(weights, p=self.dropout, training=self.training)  # (bs, n_heads, qlen, klen)
         context = torch.matmul(weights, v)                                    # (bs, n_heads, qlen, dim_per_head)
         # context = unshape(context)                                            # (bs, qlen, dim)
-        context = context.npu_confusion_transpose((0, 2, 1, 3), (context.size()[0] * context.size()[2], dim), True)
+        context = torch.npu_confusion_transpose(context, (0, 2, 1, 3), (context.size()[0] * context.size()[2], dim), True)
 
         return self.out_lin(context)
 

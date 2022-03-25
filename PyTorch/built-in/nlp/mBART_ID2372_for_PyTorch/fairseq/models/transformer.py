@@ -7,6 +7,8 @@ import math
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 from fairseq import utils
 from fairseq.models import (

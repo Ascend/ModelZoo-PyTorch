@@ -26,6 +26,8 @@ from logging import getLogger
 from collections import OrderedDict
 import numpy as np
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from torch import nn
 from torch.nn import functional as F
 #from torch.nn.utils import clip_grad_norm_
