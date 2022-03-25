@@ -110,7 +110,7 @@ sed -i "s|'/media/ssd/sr data/BSDS100'|'$data_path/coco2014/val2014'|g" create_d
 sed -i "s|srresnet_checkpoint = \"./checkpoint_srresnet.pth.tar\"|srresnet_checkpoint = \"$data_path/checkpoint_srresnet.pth.tar\"|g" train_srgan.py
 sed -i "s|batch_size = 16|batch_size = $batch_size|g" train_srgan.py
 sed -i "s|print_freq = 500|print_freq = $print_freq|g" train_srgan.py
-sed -i "s|for epoch in range(start_epoch, epochs)|for epoch in range(start_epoch, $train_epochs)|g" train_srgan.py
+#sed -i "s|for epoch in range(start_epoch, epochs)|for epoch in range(start_epoch, $train_epochs)|g" train_srgan.py
 #sed -i "s|pass|break|g" train_srgan.py
 sed -i "s|srresnet_checkpoint = \"./checkpoint_srresnet.pth.tar\"|srresnet_checkpoint = \"$data_path/checkpoint_srresnet.pth.tar\"|g" eval.py
  
@@ -134,7 +134,7 @@ sed -i "s|'$data_path/coco2014/val2014'|'/media/ssd/sr data/BSDS100'|g" create_d
 sed -i "s|srresnet_checkpoint = \"$data_path/checkpoint_srresnet.pth.tar\"|srresnet_checkpoint = \"./checkpoint_srresnet.pth.tar\"|g" train_srgan.py
 sed -i "s|batch_size = $batch_size|batch_size = 16|g" train_srgan.py
 sed -i "s|print_freq = $print_freq|print_freq = 500|g" train_srgan.py
-sed -i "s|for epoch in range(start_epoch, $train_epochs)|for epoch in range(start_epoch, epochs)|g" train_srgan.py
+#sed -i "s|for epoch in range(start_epoch, $train_epochs)|for epoch in range(start_epoch, epochs)|g" train_srgan.py
 #sed -i "s|break|pass|g" train_srgan.py
 sed -i "s|srresnet_checkpoint = \"$data_path/checkpoint_srresnet.pth.tar\"|srresnet_checkpoint = \"./checkpoint_srresnet.pth.tar\"|g" eval.py
 
