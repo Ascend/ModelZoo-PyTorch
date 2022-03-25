@@ -42,8 +42,7 @@ ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code
 ```
 tar -zvxf 20210601_u2pp_conformer_exp.tar.gz
 mkdir -p ${wenet_path}/examples/aishell/s0/exp/conformer_u2
-cp -r 20210601_u2pp_conformer_exp/20210601_u2++_conformer_exp/*
-${wenet_path}/examples/aishell/s0/exp/conformer_u2
+cp -r 20210601_u2pp_conformer_exp/20210601_u2++_conformer_exp/* ${wenet_path}/examples/aishell/s0/exp/conformer_u2
 ```
 
 5. 拷贝本工程下提供的diff、sh、py文件到wenet对应目录下
@@ -129,10 +128,11 @@ patch -p1 < get_no_flash_encoder_out.diff
 cd ${wenet_path}/examples/aishell/s0/
 bash run_no_flash_encoder_out.sh
 mv encoder_data_noflash encoder_data
-nv encoder_noflash_all.json encoder.json
 ```
 
 - 获取非流式场景下decoder处理结果：
+
+  注意修改、wenet/bin/recognize_attension_rescoring.py中json_path的路径，为了测试返回的性能，json_path里面带有"no"关键字
 
 
 ```
@@ -236,7 +236,9 @@ bash run.sh --stage 5 --stop_stage 5
 
 - 查看性能
 
+  性能为encoder + decoder 在数据集上的平均时间
+
 ```
-cat ${wenet_path}/examples/aishell/s0/exp/conformer/test_attention_rescoring/text
+cat ${wenet_path}/examples/aishell/s0/exp/conformer/test_attention_rescoring/text | grep "FPS"
 ```
 
