@@ -1,6 +1,6 @@
 
 
-python RawNet2_pth2onnx.py -name x
+python RawNet2_pth2onnx.py
 
 
 python3.7 -m onnxsim --input-shape="1,59049" RawNet2.onnx RawNet2_sim_bs1.onnx
