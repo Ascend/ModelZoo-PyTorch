@@ -53,7 +53,7 @@ import acl
 from wenet.transformer.acl_net import Net
 def dic2json(input_dict, json_path):
     json_str = json.dumps(input_dict)
-    with open(json_path, 'a') as json_file:
+    with open(json_path, 'w+') as json_file:
         json_file.write(json_str)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='recognize with your model')
