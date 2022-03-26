@@ -138,7 +138,7 @@ cd ${wenet_path}
 git checkout .
 patch -p1 < getwer.diff
 cd ${wenet_path}/examples/aishell/s0/
-bash run_attention_rescoring.sh --model_path ./decoder_final.om --perf_json t2.json --json_path encoder_noflash.jso --bin_path encoder_data_noflash
+bash run_attention_rescoring.sh --model_path ./decoder_final.om --perf_json t2.json --json_path encoder_noflash.json --bin_path encoder_data_noflash
 ```
 
 - 查看overall精度
