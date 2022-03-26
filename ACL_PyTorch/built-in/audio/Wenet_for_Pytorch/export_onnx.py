@@ -84,7 +84,7 @@ if __name__ == '__main__':
                     output_names=['xs_output', 'masks_output'],
                     dynamic_axes={'xs_input': [1], 'xs_input_lens': [0],
                                     'xs_output': [1], 'masks_output': [2]},
-                    verbose=True
+                    verbose=False
                     )
     onnx_model = onnx.load(onnx_encoder_path)
     onnx.checker.check_model(onnx_model)
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                                   'conformer_cnn_cache_output'],
                     dynamic_axes={'input': [1], 'subsampling_cache':[1], 'elayers_cache':[2],
                                     'output': [1]},
-                    verbose=True
+                    verbose=False
                     )
 
     onnx_model = onnx.load(onnx_encoder_path)
@@ -174,7 +174,7 @@ if __name__ == '__main__':
                         output_names=['l_x', 'r_x'],
                         dynamic_axes={'memory': [1], 'memory_mask':[2], 'ys_in_pad':[1],
                                         'ys_in_lens': [0]},
-                        verbose=True
+                        verbose=False
                         )
     elif isinstance(decoder, BiTransformerDecoder):
         print("BI mode")
@@ -188,6 +188,6 @@ if __name__ == '__main__':
                         output_names=['l_x', 'r_x', 'olens'],
                         dynamic_axes={'memory': [1], 'memory_mask':[2], 'ys_in_pad':[1],
                                         'ys_in_lens': [0], 'r_ys_in_pad':[1]},
-                        verbose=True
+                        verbose=False
                         )
 

@@ -38,7 +38,7 @@ import copy
 import logging
 import os
 import sys
-
+import numpy as np
 import torch
 import yaml
 from torch.utils.data import DataLoader
@@ -124,6 +124,10 @@ if __name__ == '__main__':
         model_path=args.model_path,
         output_data_shape=decoder_output_data_shape,
         device_id=device_id, )
+
+    input_1 = np.random.random((1,200,80)).astype("float32")
+    lenth = np.array([200])
+    y, _ = encoder_model_noflash([input_1, lenth])
 
     with open(args.config, 'r') as fin:
         configs = yaml.load(fin, Loader=yaml.FullLoader)
