@@ -26,15 +26,13 @@ patch -p1 < export_onnx.diff文件适配导出onnx的代码
 将提供的slice_helper.py, acl_net.py文件放到wenet/wenet/transformer文件夹下，将提供的sh脚本文件放到wenet/examples/aishell/s0/目录下
 运行bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt导出onnx文件在当前目录下的onnx文件夹下
 
-4.  运行脚本将onnx转为om模型
+4.  修改onnx
 
 首先使用改图工具om_gener改图，该工具链接为https://gitee.com/liurf_hw/om_gener，安装之后使用以下命令修改脚本，
 
 python3 adaptdecoder.py生成decoder_final.onnx
 
 python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
-
-配置环境变量，使用atc工具将模型转换为om文件，命令参考提供的decoder.sh, no_flash_encoder.sh脚本，运行即可生成对应的om文件
 
 5. 数据集下载：
 
