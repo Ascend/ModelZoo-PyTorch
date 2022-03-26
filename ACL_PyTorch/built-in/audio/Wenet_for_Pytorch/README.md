@@ -216,14 +216,13 @@ cp ${code_path}/decoder_fendang.om ${wenet_path}/
 
 - 精度测试:
 
-  - 设置日志等级export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型，修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring， stage=5 decode阶段185、198行修改python为python3.7.5, 185行recognize.py修改为static.py
 
 ```
 cd ${wenet_path}/
 git checkout .
 patch -p1 < acc.diff
 cd ${wenet_path}/examples/aishell/s0/
-bash run.sh --stage 5 --stop_stage 5
+bash run_static.sh
 ```
 
 - 查看overall精度
