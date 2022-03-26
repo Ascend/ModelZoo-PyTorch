@@ -21,7 +21,7 @@ git reset 9c4e305bcc24a06932f6a65c8147429d8406cc63 --hard
 下载链接：http://mobvoi-speech-public.ufile.ucloud.cn/public/wenet/aishell/20210601_u2pp_conformer_exp.tar.gz下载压缩文件，将文件解压，将文件夹内的文件放置到wenet/examples/aishell/s0/exp/conformer_u2文件夹下，若没有该文件夹，则创建该文件夹
 
 将提供的diff文件放到wenet根目录下
-patch -p1 < export_onnx.diff文件适配导出onnx的代码
+patch -p1 < wenet_onnx.diff文件适配导出onnx的代码
 将提供的export_onnx.py、static.py文件放到wenet/wenet/bin/目录下
 将提供的slice_helper.py, acl_net.py文件放到wenet/wenet/transformer文件夹下
 将提供的sh脚本文件（除了static_encoder.sh和static_decoder.sh）放到wenet/examples/aishell/s0/目录下
@@ -50,6 +50,7 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
 ## 2 离线推理 
 
 onnx转om:
+将static_encoder.sh和static_decoder.sh放到s0/onnx文件下
 
 ```
 bash static_encoder.sh
@@ -58,7 +59,7 @@ bash static_decoder.sh
 
 精度测试:
 
-首先export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型，修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring
+首先export ASCEND_GLOBAL_LOG_LEVEL=3，指定acc.diff中self.encoder_ascend， self.decoder_ascend加载的文件为静态转出的encoder，decoder模型路径
 
 ```
 git checkout .
