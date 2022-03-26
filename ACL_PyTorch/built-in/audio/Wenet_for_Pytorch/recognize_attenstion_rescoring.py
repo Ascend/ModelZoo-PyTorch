@@ -55,7 +55,7 @@ import os
 
 def dic2json(input_dict, json_path):
     json_str = json.dumps(input_dict)
-    with open(json_path, 'a') as json_file:
+    with open(json_path, 'w+') as json_file:
         json_file.write(json_str)
 
 if __name__ == '__main__':
@@ -75,6 +75,7 @@ if __name__ == '__main__':
     parser.add_argument('--bin_path', type=str, default="./encoder_data", help='encoder bin images dir')
     parser.add_argument('--model_path', type=str, default="decoder_final.om", help='encoder bin images dir')
     parser.add_argument('--json_path', type=str, default="encoder.json", help='encoder bin images dir')
+    parser.add_argument('--perf_json', type=str, default="t2.json", help='decoder time')
     parser.add_argument('--penalty',
                         type=float,
                         default=0.0,
@@ -201,6 +202,5 @@ if __name__ == '__main__':
         ave_t = total_t / (batch_idx + 1)
         dic_perf = {}
         dic_perf["t2"] = ave_t
-        if "no" in args.bin_path:
-            dic2json(dic_perf, "t2.json")
+        dic2json(dic_perf, args.perf_json)
     del decoder_model

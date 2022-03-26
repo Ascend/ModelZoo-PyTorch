@@ -126,13 +126,11 @@ cd ${wenet_path}
 git checkout .
 patch -p1 < get_no_flash_encoder_out.diff
 cd ${wenet_path}/examples/aishell/s0/
-bash run_no_flash_encoder_out.sh
-mv encoder_data_noflash encoder_data
+bash run_no_flash_encoder_out.sh --bin_path encoder_data_noflash --model_path ./no_flash_encoder_revise.om --json_path encoder_noflash.json --perf_json t1.json
 ```
 
 - 获取非流式场景下decoder处理结果：
 
-  注意修改、wenet/bin/recognize_attension_rescoring.py中json_path的路径，为了测试返回的性能，json_path里面带有"no"关键字
 
 
 ```
@@ -140,7 +138,7 @@ cd ${wenet_path}
 git checkout .
 patch -p1 < getwer.diff
 cd ${wenet_path}/examples/aishell/s0/
-bash run_attention_rescoring.sh
+bash run_attention_rescoring.sh --model_path ./decoder_final.om --perf_json t2.json --json_path encoder_noflash.jso --bin_path encoder_data_noflash
 ```
 
 - 查看overall精度
@@ -171,7 +169,7 @@ cd ${wenet_path}
 git checkout .
 patch -p1 < get_flash_encoder_out.diff
 cd ${wenet_path}/examples/aishell/s0/
-bash run_encoder_out.sh
+bash run_encoder_out.sh --bin_path encoder_data --model_path encoder_revise.om --json_path encoder.json
 ```
 
 - 获取流式场景下，decoder处理结果：
@@ -184,7 +182,7 @@ cd ${wenet_path}
 git checkout .
 patch -p1 < getwer.diff
 cd ${wenet_path}/examples/aishell/s0/
-bash run_attention_rescoring.sh
+bash run_attention_rescoring.sh --model_path ./decoder_final.om --json_path  encoder.json --bin_path ./encoder_data
 ```
 
 - 查看overall精度
