@@ -100,57 +100,6 @@ if __name__ == '__main__':
     # np.testing.assert_allclose(to_numpy(y2), ort_outs[1], rtol=1e-05, atol=1e-05)
     print("Exported no flash encoder model has been tested with ONNXRuntime, and the result looks good!")
 
-    #export the flash encoder
-    encoder = model.encoder
-    encoder.forward = encoder.forward_chunk
-
-    batch_size = 1
-    audio_len = 131
-    x = torch.randn(batch_size, audio_len, 80, requires_grad=False)
-    offset = torch.tensor(1)
-    decoding_chunk_size = 16
-    num_decoding_left_chunks = -1
-    required_cache_size = decoding_chunk_size * num_decoding_left_chunks
-    required_cache_size = torch.tensor(required_cache_size)
-    subsampling_cache = torch.randn(batch_size, 1, 256, requires_grad=False)
-    elayers_cache = torch.randn(12, batch_size, 1, 256, requires_grad=False)
-    conformer_cnn_cache = torch.randn(12, batch_size, 256, 7, requires_grad=False)
-
-
-    encoder.set_onnx_mode(False)
-    y, subsampling_cache_output, elayers_cache_output, conformer_cnn_cache_output = encoder(x, torch.tensor(0), \
-                                                                required_cache_size, None, None, conformer_cnn_cache)
-
-    encoder.set_onnx_mode(True)
-    onnx_encoder_path = os.path.join(args.output_onnx_file, 'encoder.onnx')
-    torch.onnx.export(encoder,
-                    (x, offset, required_cache_size, subsampling_cache, elayers_cache, conformer_cnn_cache),
-                    onnx_encoder_path,
-                    export_params=True,
-                    opset_version=11,
-                    do_constant_folding=True,
-                    input_names=['input', 'offset', 'required_cache_size', 'subsampling_cache', 'elayers_cache', \
-                                 'conformer_cnn_cache'],
-                    output_names=['output', 'subsampling_cache_output', 'elayers_cache_output', \
-                                  'conformer_cnn_cache_output'],
-                    dynamic_axes={'input': [1], 'subsampling_cache':[1], 'elayers_cache':[2],
-                                    'output': [1]},
-                    verbose=True
-                    )
-
-    onnx_model = onnx.load(onnx_encoder_path)
-    onnx.checker.check_model(onnx_model)
-    print("encoder onnx_model check pass!")
-
-    ort_session = onnxruntime.InferenceSession(onnx_encoder_path)
-    ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x),
-                ort_session.get_inputs()[1].name: to_numpy(offset),
-                ort_session.get_inputs()[2].name: to_numpy(subsampling_cache),
-                ort_session.get_inputs()[3].name: to_numpy(elayers_cache),
-                ort_session.get_inputs()[4].name: to_numpy(conformer_cnn_cache),
-                }
-    ort_outs = ort_session.run(None, ort_inputs)
-    print("Exported encoder model has been tested with ONNXRuntime, and the result looks good!")
 
     #export decoder onnx
 
