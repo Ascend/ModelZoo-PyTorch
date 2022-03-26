@@ -49,21 +49,20 @@ def proc_node_module(checkpoint, AttrName):
     return new_state_dict
 
 
-def convert(pth_file, onnx_path, class_num, train_url, npu):
+def convert(pth_file, onnx_path, class_num, train_url):
 
-    loc = 'npu:{}'.format(npu)
-    checkpoint = torch.load(pth_file, map_location=loc)
-
-    checkpoint['state_dict'] = proc_node_module(checkpoint, 'state_dict')
+    checkpoint = torch.load(pth_file, map_location=None)
+    
     model = mnasnet.mnasnet1_0(num_classes=class_num)
+    model.load_state_dict(checkpoint)
 
-    model.to(loc)
-    model.load_state_dict(checkpoint['state_dict'])
     model.eval()
-    input_names = ["actual_input_1"]
-    output_names = ["output1"]
-    dummy_input = torch.randn(16, 3, 224, 224)
-    dummy_input = dummy_input.to(loc, non_blocking=False)
+    
+    input_names = ["image"]
+    output_names = ["class"]
+    dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
+    dummy_input = torch.randn(1, 3, 224, 224)
+
     torch.onnx.export(model, dummy_input, onnx_path, input_names=input_names, output_names=output_names,  opset_version=11)
     mox.file.copy_parallel(onnx_path, train_url + 'model.onnx')
 
@@ -76,7 +75,7 @@ def convert_pth_to_onnx(config_args):
         return
     pth_file = pth_file_list[0]
     onnx_path = pth_file.split(".")[0] + '.onnx'
-    convert(pth_file, onnx_path, config_args.class_num, config_args.train_url, config_args.npu)
+    convert(pth_file, onnx_path, config_args.class_num, config_args.train_url)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
     # modelarts
