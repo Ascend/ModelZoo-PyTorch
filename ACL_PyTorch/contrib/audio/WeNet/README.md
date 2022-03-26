@@ -50,39 +50,6 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
 
 ## 2 离线推理 
 
-​	动态shape场景：
-
-   获取非流式场景下encoder处理数据：cd到wenet根目录下
-   
-   ```
-   git checkout .
-   patch -p1 < get_no_flash_encoder_out.diff
-   cd examples/aishell/s0/
-   bash run_no_flash_encoder_out.sh
-   ```
-   
-   wenet/bin/process_encoder_data_noflash.py文件中
-   --bin_path 保存encoder生成的bin文件
-    --model_path 保存非流式encoder om模型位置
-    --json_path保存encoder生成bin文件的shape信息
-   获取非流式场景下，decoder处理结果：cd到wenet根目录下
-   
-   ```
-   git checkout .
-   patch -p1 < getwer.diff
-   cd examples/aishell/s0/
-   bash run_attention_rescoring.sh
-   ```
-   
-   wenet/bin/recognize_attenstion_rescoring.py文件中
-   --bin_path 非流式encoder om生成bin文件，即上一步生成的bin文件路径
-   --model_path decoder模型om路径
-   --json_path 非流式encoder生成bin文件shape信息对应的json文件，即上一步生成的json文件。
-   查看wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/wer文件的最后几行，即可获取overall精度
-   运行infer.py可以得到fps性能数据
-
-静态shape场景(仅支持非流式场景)：
-
 onnx转om:
 
 ```
