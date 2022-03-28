@@ -292,9 +292,9 @@ def main():
     
     train_dst, val_dst = get_dataset(opts)
     train_loader = data.DataLoader(
-        train_dst, batch_size=opts.batch_size, shuffle=True, num_workers=2)
+        train_dst, batch_size=opts.batch_size, shuffle=True, pin_memory=True,num_workers=64)
     val_loader = data.DataLoader(
-        val_dst, batch_size=opts.val_batch_size, shuffle=True, num_workers=2)
+        val_dst, batch_size=opts.val_batch_size, shuffle=True, pin_memory=True,num_workers=2)
     print("Dataset: %s, Train set: %d, Val set: %d" %
           (opts.dataset, len(train_dst), len(val_dst)))
 
@@ -400,8 +400,8 @@ def main():
         for (images, labels) in train_loader: 
             cur_itrs += 1
 
-            images = images.to(f'npu:{NPU_CALCULATE_DEVICE}', dtype=torch.float32)
-            labels = labels.to(f'npu:{NPU_CALCULATE_DEVICE}', dtype=torch.long)
+            images = images.to(f'npu:{NPU_CALCULATE_DEVICE}', dtype=torch.float32, non_blocking=True)
+            labels = labels.to(f'npu:{NPU_CALCULATE_DEVICE}', dtype=torch.long, non_blocking=True)
             optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels)
