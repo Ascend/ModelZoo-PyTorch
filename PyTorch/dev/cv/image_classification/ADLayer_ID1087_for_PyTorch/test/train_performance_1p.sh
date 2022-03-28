@@ -66,6 +66,7 @@ nohup python3 main.py --dataset_name OpenImages \
                --weight_decay 5.00E-04 \
                --override_cache True \
                --workers 4 \
+               --metadata_root $data_path/metadata/ \
                --data_root $data_path \
                --mask_root $data_path \
                --box_v2_metric True \
