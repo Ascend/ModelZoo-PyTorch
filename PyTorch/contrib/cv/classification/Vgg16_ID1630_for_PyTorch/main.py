@@ -236,7 +236,7 @@ def main_worker(gpu, ngpus_per_node, args):
     model = vgg16()
     model = model.to(loc)
 
-    optimizer = apex.optimizers.NpuFusedSGDSGD(model.parameters(), args.lr,
+    optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
 
