@@ -31,5 +31,4 @@ data = dict(
     workers_per_gpu=8
 )
 
-#optimizer_config = dict(_delete_=True, grad_clip=dict(max_norm=10, norm_type=2))
-total_epochs = 1
+optimizer_config = dict(_delete_=True, grad_clip=dict(max_norm=10, norm_type=2))
