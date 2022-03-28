@@ -66,14 +66,14 @@ def main():
                 l += 1
                 n += 1
                 bs16.append(t)
-                if n == 16:
+                if n == batch_size:
                     np.vstack(bs16).tofile(out_dir + str(i) + ".bin")
                     i += 1
                     bs16 = []
                     n = 0
-        if n % 16 == 0:
+        if n % batch_size == 0:
             return
-        for j in range(16 - (n % 16)):
+        for j in range(batch_size - (n % batch_size)):
             bs16_key.write("temp$" + str(j) + "\n")
             bs16.append(np.empty((59049,), dtype='float32'))
         bs16_key.close()
