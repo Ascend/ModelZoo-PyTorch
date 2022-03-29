@@ -5,7 +5,7 @@
 #网络名称，同目录名称
 Network="ResNet18_ID1593_for_PyTorch"
 #训练epoch
-train_epochs=2
+train_epochs=1
 #训练batch_size
 batch_size=256
 # 训练使用的npu卡数
@@ -114,7 +114,6 @@ python3 ./main.py \
 	--dist-backend 'hccl' \
 	--epochs=${train_epochs} \
 	--batch-size=${batch_size} \
-	--stop-step-num=128 \
     --device_list=${ASCEND_DEVICE_ID} \
 	--amp > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
