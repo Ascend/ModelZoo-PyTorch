@@ -281,7 +281,7 @@ class ExperimentOTB(object):
 
     def report(self, tracker_names):
 
-        assert isinstance(tracker_names, (list, tuple))  # ‘SiamFC�?
+        assert isinstance(tracker_names, (list, tuple))  # ‘SiamFC’
 
         # assume tracker_names[0] is your tracker
         report_dir = os.path.join(self.report_dir, tracker_names[0])
