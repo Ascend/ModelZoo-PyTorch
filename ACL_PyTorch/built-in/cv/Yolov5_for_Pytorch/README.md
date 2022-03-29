@@ -111,7 +111,7 @@ python3.7 models/export.py --weights=./yolov5s.pt --img-size=640 --batch-size 1 
 python3.7 export.py --weights=./yolov5s.pt --imgsz=640 --batch-size=1 --opset=11  # 用于v6.0
 ```
 
-（2）对导出的onnx模型使用onnx-simplifer工具进行简化
+（2）对导出的onnx模型使用onnx-simplifier工具进行简化
 
 ```shell
 python3.7 -m onnxsim --skip-optimization yolov5s.onnx yolov5s_sim.onnx
@@ -158,8 +158,8 @@ python3.7 modify_model.py --model=yolov5s_sim_amct.onnx --conf-thres=0.4 --iou-t
 
 ### 3.5 利用ATC工具转换为om模型
 ```shell
-bash atc.sh yolov5s_sim_t.onnx yolov5s_sim_t 1 Ascend310  # 量化模型
-bash atc.sh yolov5s_sim_amct_t.onnx yolov5s_sim_t 1 Ascend310  # 非量化模型
+bash atc.sh yolov5s_sim_t.onnx yolov5s_sim_t 1 Ascend310  # 非量化模型
+bash atc.sh yolov5s_sim_amct_t.onnx yolov5s_sim_t 1 Ascend310  # 量化模型
 ```
 atc转模型参数说明：待转换onnx模型、转换后om模型、batchsize、运行平台(Ascend310/Ascend710)
 
