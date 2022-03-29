@@ -45,6 +45,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=1
 | 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
 | YOLOX bs1 | box AP:50.9 | box AP:51.0 | fps 11.828 | fps 35.706 |
+| YOLOX bs16 | box AP:50.9 | box AP:51.0 | fps 14.480 | fps 38.069 |
 
 
 
