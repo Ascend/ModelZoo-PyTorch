@@ -242,10 +242,10 @@ class ExperimentOTB(object):
                     file1.write(content)
                     file1.write('\n')
                 # infer
-                os.system('./benchmark.%s -model_type=vision -device_id=%d -batch_size=1 '
-                          '-om_path=./om/exemplar_bs1.om -input_text_path=%s '
+                os.system('%s -model_type=vision -device_id=%d -batch_size=1 '
+                          '-om_path=s%/exemplar_bs1.om -input_text_path=%s '
                           '-input_width=127 -input_height=127 -output_binary=True -useDvpp=False >/dev/null 2>&1'
-                          % (arch, deviceid, infopath))
+                          % (benchmark_path, deviceid, om_path, infopath))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
                 filename = img_file.replace('/', '-').split('.')[0] + '_1.bin'
@@ -260,10 +260,10 @@ class ExperimentOTB(object):
                     file2.write(content)
                     file2.write('\n')
                 # infer
-                os.system('./benchmark.%s -model_type=vision -device_id=%d -batch_size=1 '
-                          '-om_path=./om/search_bs1.om -input_text_path=%s '
+                os.system('%s -model_type=vision -device_id=%d -batch_size=1 '
+                          '-om_path=%s/search_bs1.om -input_text_path=%s '
                           '-input_width=255 -input_height=255 -output_binary=True -useDvpp=False >/dev/null 2>&1'
-                          % (arch, deviceid, infopath))
+                          % (benchmark_path, deviceid, om_path, infopath))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
                 filename = img_file.replace('/', '-').split('.')[0] + '_1.bin'
@@ -281,7 +281,7 @@ class ExperimentOTB(object):
 
     def report(self, tracker_names):
 
-        assert isinstance(tracker_names, (list, tuple))  # ‘SiamFC’
+        assert isinstance(tracker_names, (list, tuple))  # ‘SiamFC�?
 
         # assume tracker_names[0] is your tracker
         report_dir = os.path.join(self.report_dir, tracker_names[0])
@@ -404,6 +404,8 @@ if __name__ == "__main__":
     info_path = sys.argv[3]
     arch = sys.argv[4]
     deviceid = int(sys.argv[5])
+    benchmark_path = sys.argv[6]
+    om_path = sys.argv[7]
     os.system('rm -rf %s' % save_path)
     os.system('rm -rf %s' % info_path)
     os.system('rm -rf ./result/dumpOutput_device%d' % deviceid)
