@@ -59,7 +59,7 @@ bash atc.sh
   数据预处理，把ImageNet 50000张图片转为二进制文件（.bin）
 
    ```shell
-   python3.7 imagenet_torch_preprocess.py /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_bin
+   python3.7 imagenet_torch_preprocess.py res2net101 /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_bin
    ```
   生成数据集info文件
 
