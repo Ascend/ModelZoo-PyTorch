@@ -62,7 +62,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
         start_time = time.time()
         #image, target = image.to(device), target.to(device)
-        image, target = image.to(device), target.to(torch.int).to(device)
+        image, target = image.to(device, non_blocking=True), target.to(torch.int).to(device, non_blocking=True)
         output = model(image)
         loss = criterion(output, target)
 
