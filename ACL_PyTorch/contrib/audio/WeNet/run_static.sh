@@ -65,8 +65,8 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     # Specify decoding_chunk_size if it's a unified dynamic chunk trained model
     # -1 for full chunk
     decoding_chunk_size=
-    ctc_weight=0.5
-    reverse_weight=0.0
+    ctc_weight=0.3
+    reverse_weight=0.3
     for mode in ${decode_modes}; do
     {
         test_dir=$dir/test_${mode}
