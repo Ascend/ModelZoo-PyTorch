@@ -7,6 +7,7 @@ export RANK_SIZE=8
 export MASTER_ADDR=localhost
 export MASTER_PORT=29688
 export HCCL_WHITELIST_DISABLE=1
+export BMMV2_ENABLE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 

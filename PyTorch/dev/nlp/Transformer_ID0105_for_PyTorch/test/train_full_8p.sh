@@ -11,6 +11,7 @@ data_path=""
 #网络名称,同目录名称,需要模型审视修改
 Network="Transformer_ID0105_for_PyTorch"
 
+export BMMV2_ENABLE=1
 #训练epoch
 train_epochs=30
 #训练batch_size,,需要模型审视修改
