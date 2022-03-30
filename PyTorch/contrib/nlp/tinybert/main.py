@@ -306,7 +306,7 @@ def result_to_file(result, args, step, rank, delta_time, epoch, ngpus_per_node):
                 file_name = args.fps_acc_dir + '/train_performance_' + str(ngpus_per_node) + 'p_2.txt'
             else:
                 file_name = args.fps_acc_dir + '/train_full_' + str(ngpus_per_node) + 'p_2.txt'
-            with open(file_name, "a") as writer:
+            with open(file_name, "w+") as writer:
                 writer.write(content)
         else:
             basic = "[NPU:" + str(rank) + "] "
@@ -318,7 +318,7 @@ def result_to_file(result, args, step, rank, delta_time, epoch, ngpus_per_node):
                 file_name = args.fps_acc_dir + '/train_performance_' + str(ngpus_per_node) + 'p_1.txt'
             else:
                 file_name = args.fps_acc_dir + '/train_full_' + str(ngpus_per_node) + 'p_1.txt'
-            with open(file_name, "a") as writer:
+            with open(file_name, "w+") as writer:
                 writer.write(content)
 
 
@@ -691,9 +691,9 @@ def main_worker(npu, args, ngpus_per_node):
 
             for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration", ascii=True)):
                 if args.performance:
-                    if (step + 1) == 1000:
+                    if (step + 1) == 1100:
                         logger.info("End performance testing. Ready to exit.")
-                        sys.exit()
+                        break
                 if rank == 0:
                     start_time = time.time()
                 batch = tuple(t.to(loc, non_blocking=False) for t in batch)
