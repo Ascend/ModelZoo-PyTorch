@@ -432,7 +432,6 @@ def main():
         all_results.append(RawResult(unique_id=unique_id,
                                      start_logits=start_logits,
                                      end_logits=end_logits))
-        print(" [INFO] i == ", i)
     time_to_infer = time.time() - infer_start
     output_prediction_file = os.path.join("./", "predictions.json")
     output_nbest_file = os.path.join("./", "nbest_predictions.json")
@@ -442,7 +441,8 @@ def main():
         f.write(json.dumps(answers, indent=4) + "\n")
     with open(output_nbest_file, "w") as f:
         f.write(json.dumps(nbest_answers, indent=4) + "\n")
-    
+    print("Completed")
+
 if __name__ == '__main__':
    main() 
     
