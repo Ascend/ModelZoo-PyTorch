@@ -35,6 +35,7 @@ import numpy as np
 import acl
 import functools
 import time
+import os
 
 # error code
 ACL_ERROR_NONE = 0
