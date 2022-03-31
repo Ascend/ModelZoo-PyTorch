@@ -100,7 +100,7 @@ class Net(object):
         self.check_input = check_input
         self.dynamic = False
         self.device_id = device_id
-        self.model_path = model_path
+        self.model_path = os.getcwd()+'/onnx/'+model_path.split('/')[-1]
         self.model_id = None
         # if self.ascend_mbatch_shape_data = True, the model is static with multi input shape
         self.ascend_mbatch_shape_data = False
