@@ -16,12 +16,12 @@
 model_path=$1
 output_model_name=$2
 aipp_cfg=$3
-/usr/local/Ascend/atc/bin/atc \
+atc \
        	--model=$model_path \
        	--framework=5 \
 	--output=$output_model_name \
 	--input_format=NCHW \
-        --input_shape="image:1,3,256,256" \
+        --input_shape="actual_input_1:1,3,256,256" \
        	--enable_small_channel=1 \
 	--log=error \
        	--soc_version=Ascend310 \
