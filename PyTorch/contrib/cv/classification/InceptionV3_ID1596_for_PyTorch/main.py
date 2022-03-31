@@ -435,8 +435,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         if i % args.print_freq == 0:
             progress.display(i)
 
-        if i > 100:
-            pass
+        if i < 10:
+            batch_time.reset()
 
     print("batch_size:", args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
             args.batch_size/batch_time.avg))

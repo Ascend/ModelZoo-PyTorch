@@ -161,10 +161,7 @@ def main():
     args.world_size = ngpus_per_node * args.world_size
     args.distributed = args.world_size > 1
 
-    if args.distributed:
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
-    else:
-        main_worker(args.gpu, ngpus_per_node, args)
+    main_worker(args.gpu, ngpus_per_node, args)
 
 
 def main_worker(gpu, ngpus_per_node, args):

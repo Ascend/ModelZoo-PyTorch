@@ -70,7 +70,12 @@ fi
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 #参数修改
 sed -i "s|pass|break|g"  main.py
 wait
@@ -103,7 +108,7 @@ wait
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "FPS" '{print $2}'|awk -F " " '{print $1}' | tail -n +2|awk '{sum+=$1} END {print sum/NR}' | sed s/[[]:space:]//g `
+FPS=`grep "FPS@all" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk '{print $7}' | tail -1`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
