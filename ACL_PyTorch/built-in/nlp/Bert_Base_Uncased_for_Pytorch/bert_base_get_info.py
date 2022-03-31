@@ -13,12 +13,20 @@
 # limitations under the License.
 # ============================================================================
 import os
+import argparse
 
-test_num = 10649
+
 base_path = './bert_bin/'
+# three inputs in each eval
+test_num = len(os.listdir(base_path))
+parser = argparse.ArgumentParser(description='manual to this script')
+parser.add_argument('--batchsize', type=int, default=8)
+args = parser.parse_args()
+batchsize = args.batchsize
+real_test = test_num // batchsize * batchsize
 
 with open('./bert_base_uncased.info', 'w') as f:
-    for i in range(test_num):
+    for i in range(real_test):
         ids_name = base_path + 'input_ids_{}.bin'.format(i)
         segment_name = base_path + 'segment_ids_{}.bin'.format(i)
         mask_name = base_path + 'input_mask_{}.bin'.format(i)

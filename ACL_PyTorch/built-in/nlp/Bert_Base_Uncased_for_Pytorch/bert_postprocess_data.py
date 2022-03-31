@@ -395,8 +395,8 @@ def main():
                         required=True,
                         help="NPU benchmark infer result path")
     args = parser.parse_args()
-    test_num = 10649
     npu_path = args.npu_result
+    test_num = len(os.listdir(npu_path)) // 2
     tokenizer = BertTokenizer(args.vocab_file, do_lower_case=args.do_lower_case, max_len=512) # for bert large
     eval_examples = read_squad_examples(
         input_file=args.predict_file, is_training=False)
