@@ -18,7 +18,7 @@ import argparse
 
 base_path = './bert_bin/'
 # three inputs in each eval
-test_num = len(os.listdir(base_path))
+test_num = len(os.listdir(base_path)) // 3
 parser = argparse.ArgumentParser(description='manual to this script')
 parser.add_argument('--batchsize', type=int, default=8)
 args = parser.parse_args()
