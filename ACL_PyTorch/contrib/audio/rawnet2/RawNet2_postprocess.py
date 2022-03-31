@@ -58,7 +58,13 @@ def get_l_embeddings(list_embeddings,bs,path="def"):
             if (index == len(files)):
                 l_embeddings.append(np.mean(l_code, axis=0))
             pbar.update(1)
-    return l_utt,l_embeddings
+    if not len(l_utt) == len(l_embeddings):
+        print(len(l_utt), len(l_embeddings))
+        exit()
+    d_embeddings = {}
+    for k, v in zip(l_utt, l_embeddings):
+        d_embeddings[k] = v
+    return d_embeddings
 
 def main():
     parser = argparse.ArgumentParser()
@@ -72,12 +78,7 @@ def main():
     d_embeddings = {}
     if batch_size == 1:
         for path, dirs, files in os.walk(base):
-            l_utt,l_embeddings = get_l_embeddings(files,batch_size,path);
-            if not len(l_utt) == len(l_embeddings):
-                print(len(l_utt), len(l_embeddings))
-                exit()
-            for k, v in zip(l_utt, l_embeddings):
-                d_embeddings[k] = v
+            d_embeddings = get_l_embeddings(files,batch_size,path);
     else:
         with open('bs16_key.txt', 'r') as f:
             l_val = f.readlines()
@@ -95,12 +96,7 @@ def main():
             exit()
         for k, v in zip(l_val, bs16_out):
             bs16_out_embeddings[k] = v
-        l_utt,l_embeddings = get_l_embeddings(bs16_out_embeddings,batch_size);
-        if not len(l_utt) == len(l_embeddings):
-            print(len(l_utt), len(l_embeddings))
-            exit()
-        for k, v in zip(l_utt, l_embeddings):
-            d_embeddings[k] = v
+        d_embeddings = get_l_embeddings(bs16_out_embeddings,batch_size);
 
     with open('RawNet/trials/vox_original.txt', 'r') as f:
         l_val_trial = f.readlines()
