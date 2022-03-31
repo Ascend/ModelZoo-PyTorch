@@ -37,21 +37,17 @@ if __name__ == '__main__':
 
     dataset = build_dataset(cfg.data.test)
 
-    fp1 = open(info_name, "w")
-    fp2 = open(info_meta_name, "w")
-
-    for idx in range(5000):
-        img_id = dataset.img_ids[idx]
-        fp1.write("{} {}/{:0>12d}.bin {} {}\n".format(idx, bin_path, img_id, width, height))
-        fp_meta = open("%s/%012d.pk" % (meta_path, img_id), "rb")
-        meta = pk.load(fp_meta)
-        fp_meta.close()
-        fp2.write("{} {}/{:0>12d}.bin {}\n".format(
-            idx,
-            meta_path,
-            img_id,
-            meta['scalar']
-        ))
-    fp1.close()
-    fp2.close()
+    with open(info_name, "w") as fp1, open(info_meta_name, "w") as fp2:
+        for idx in range(5000):
+            img_id = dataset.img_ids[idx]
+            fp1.write("{} {}/{:0>12d}.bin {} {}\n".format(idx, bin_path, img_id, width, height))
+            fp_meta = open("%s/%012d.pk" % (meta_path, img_id), "rb")
+            meta = pk.load(fp_meta)
+            fp_meta.close()
+            fp2.write("{} {}/{:0>12d}.bin {}\n".format(
+                idx,
+                meta_path,
+                img_id,
+                meta['scalar']
+            ))
     print("Get info done!")

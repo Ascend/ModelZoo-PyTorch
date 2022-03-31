@@ -27,16 +27,24 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-python gen_dataset_info.py ${datasets_path}/coco mmdetection/configs/yolox/yolox_s_8x8_300e_coco.py  val2017_bin  val2017_bin_meta  yolox.info  yolox_meta.info  640 640
+python gen_dataset_info.py \
+${datasets_path}/coco \
+mmdetection/configs/yolox/yolox_s_8x8_300e_coco.py  \
+val2017_bin  val2017_bin_meta  \
+yolox.info  yolox_meta.info  \
+640 640
+
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result
 
-./benchmark.${arch} -model_type=vision -om_path=yolox.om -device_id=0 -batch_size=${batch_size} -input_text_path=yolox.info -input_width=640 -input_height=640 -useDvpp=false -output_binary=true
+./benchmark.${arch} -model_type=vision -om_path=yolox.om -device_id=0 -batch_size=${batch_size} \
+-input_text_path=yolox.info -input_width=640 -input_height=640 -useDvpp=false -output_binary=true
+
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
