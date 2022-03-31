@@ -129,17 +129,6 @@ diff --git a/tools/deployment/pytorch2onnx.py b/tools/deployment/pytorch2onnx.py
 index 5c786f8..2d0b89d 100644
 --- a/tools/deployment/pytorch2onnx.py
 +++ b/tools/deployment/pytorch2onnx.py
-@@ -71,8 +71,8 @@ def pytorch2onnx(model,
-         dynamic_axes = {
-             input_name: {
-                 0: 'batch',
--                2: 'height',
--                3: 'width'
-+                # 2: 'height',
-+                # 3: 'width'
-             },
-             'dets': {
-                 0: 'batch',
 @@ -97,7 +97,8 @@ def pytorch2onnx(model,
          do_constant_folding=True,
          verbose=show,
