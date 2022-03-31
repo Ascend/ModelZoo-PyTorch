@@ -25,6 +25,40 @@ import argparse
 sys.path.append('RawNet/python/RawNet2/')
 from utils import cos_sim
 
+def get_l_embeddings(list_embeddings,bs,path="def"):
+    temp = ""
+    l_embeddings = []
+    index = 0
+    l_utt = []
+    l_code = []
+    with tqdm(total=len(list_embeddings), ncols=70) as pbar:
+        if bs==1:
+            files = sorted(list_embeddings)
+        else:
+            files = list_embeddings.keys()
+        for f in files:
+            if bs==1:
+                t = np.loadtxt(path + "/" + f)
+                t = t.astype(np.float32)
+            else:
+                t = list_embeddings[f]
+            index += 1
+            key = f.replace("$", "/", 2).split("$")[0]
+            if (temp == ""):
+                temp = key
+                l_utt.append(key)
+            if (key == temp):
+                l_code.append(t)
+            else:
+                l_embeddings.append(np.mean(l_code, axis=0))
+                temp = key
+                l_utt.append(key)
+                l_code = []
+                l_code.append(t)
+            if (index == len(files)):
+                l_embeddings.append(np.mean(l_code, axis=0))
+            pbar.update(1)
+    return l_utt,l_embeddings
 
 def main():
     parser = argparse.ArgumentParser()
@@ -38,38 +72,12 @@ def main():
     d_embeddings = {}
     if batch_size == 1:
         for path, dirs, files in os.walk(base):
-            temp = ""
-            l_embeddings = []
-            index = 0
-            l_utt = []
-            l_code = []
-            with tqdm(total=len(files), ncols=70) as pbar:
-                files = sorted(files)
-                for f in files:
-                    t = np.loadtxt(path + "/" + f)
-                    t = t.astype(np.float32)
-                    index += 1
-                    key = f.replace("$", "/", 2).split("$")[0]
-                    if (temp == ""):
-                        temp = key
-                        l_utt.append(key)
-                    if (key == temp):
-                        l_code.append(t)
-                    if (key != temp):
-                        l_embeddings.append(np.mean(l_code, axis=0))
-                        temp = key
-                        l_utt.append(key)
-                        l_code = []
-                        l_code.append(t)
-                    if (index == len(files)):
-                        l_embeddings.append(np.mean(l_code, axis=0))
-                    pbar.update(1)
+            l_utt,l_embeddings = get_l_embeddings(files,batch_size,path);
             if not len(l_utt) == len(l_embeddings):
                 print(len(l_utt), len(l_embeddings))
                 exit()
             for k, v in zip(l_utt, l_embeddings):
                 d_embeddings[k] = v
-
     else:
         with open('bs16_key.txt', 'r') as f:
             l_val = f.readlines()
@@ -87,41 +95,17 @@ def main():
             exit()
         for k, v in zip(l_val, bs16_out):
             bs16_out_embeddings[k] = v
-        temp = ""
-        l_embeddings = []
-        index = 0
-        l_utt = []
-        l_code = []
-        with tqdm(total=len(bs16_out_embeddings), ncols=70) as pbar:
-            for key in bs16_out_embeddings.keys():
-                index += 1
-                xxx = key
-                key = key.replace("$", "/", 2).split("$")[0]
-                if (temp == ""):
-                    temp = key
-                    l_utt.append(key)
-                if (key == temp):
-                    l_code.append(bs16_out_embeddings[xxx])
-                if (key != temp):
-                    l_embeddings.append(np.mean(l_code, axis=0))
-                    temp = key
-                    l_utt.append(key)
-                    l_code = []
-                    l_code.append(bs16_out_embeddings[xxx])
-                if (index == len(bs16_out_embeddings.keys())):
-                    l_embeddings.append(np.mean(l_code, axis=0))
-                pbar.update(1)
-            if not len(l_utt) == len(l_embeddings):
-                print(len(l_utt), len(l_embeddings))
-                exit()
-            for k, v in zip(l_utt, l_embeddings):
-                d_embeddings[k] = v
+        l_utt,l_embeddings = get_l_embeddings(bs16_out_embeddings,batch_size);
+        if not len(l_utt) == len(l_embeddings):
+            print(len(l_utt), len(l_embeddings))
+            exit()
+        for k, v in zip(l_utt, l_embeddings):
+            d_embeddings[k] = v
 
     with open('RawNet/trials/vox_original.txt', 'r') as f:
         l_val_trial = f.readlines()
     y_score = []
     y = []
-
     f_res = open(save_dir + 'result_detail_bs{}.txt'.format(batch_size), 'w')
     for line in l_val_trial:
         trg, utt_a, utt_b = line.strip().split(' ')
