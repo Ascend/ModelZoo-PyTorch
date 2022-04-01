@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ import multiprocessing
 
 
 model_config = {
-    'resnet': {
+    'res2net101': {
         'resize': 256,
-        'centercrop': 256,
+        'centercrop': 224,
         'mean': [0.485, 0.456, 0.406],
         'std': [0.229, 0.224, 0.225],
-    },
+    },                                                                         
     'inceptionv3': {
         'resize': 342,
         'centercrop': 299,
@@ -78,25 +78,13 @@ def gen_input_bin(mode_type, file_batches, batch):
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
         image = resize(image, model_config[mode_type]['resize']) # Resize
         image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
-        img = np.array(image, dtype=np.int8)
+        img = np.array(image, dtype=np.float32)
+        img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
+        img = img / 255. # ToTensor: div 255
+        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
+        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
         img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
-def preprocess_s(mode_type, src_path, save_path):
-    files = os.listdir(src_path)
-    i = 0
-    for file in files:
-        if not file.endswith(".jpeg"):
-            continue
-        print("start to process image {}....".format(file))
-        i = i + 1
-        print("file", file, "===", i)
-        path_image = os.path.join(src_path, file)
-        # RGBA to RGB
-        image = Image.open(path_image).convert('RGB')
-        image = resize(image, model_config[mode_type]['resize']) # Resize
-        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
-        img = np.array(image, dtype=np.int8)
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
 def preprocess(mode_type, src_path, save_path):
     files = os.listdir(src_path)
@@ -125,4 +113,4 @@ if __name__ == '__main__':
         raise Exception(model_type_help)
     if not os.path.isdir(save_path):
         os.makedirs(os.path.realpath(save_path))
-    preprocess_s(mode_type, src_path, save_path)
+    preprocess(mode_type, src_path, save_path)
