@@ -71,3 +71,11 @@ bash static.sh
 性能：在wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/text文件最后一行有fps性能数据
 
 
+gpu性能测试：
+```
+git checkout .
+patch -p1 < gpu_fps.diff
+cd examples/aishell/s0/
+bash run.sh --stage 5 --stop_stage 5
+```
+在wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/text文件最后一行有fps性能数据
