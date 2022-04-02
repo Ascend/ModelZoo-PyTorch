@@ -53,7 +53,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='export your script model')
     parser.add_argument('--config', required=True, help='config file')
     parser.add_argument('--checkpoint', required=True, help='checkpoint model')
-    # parser.add_argument('--output_file', required=True, help='output file')
     parser.add_argument('--output_onnx_file', required=True, help='output onnx file')
     args = parser.parse_args()
     # No need gpu for model export
@@ -96,8 +95,6 @@ if __name__ == '__main__':
                 }
     ort_outs = ort_session.run(None, ort_inputs)
     y1, y2 = encoder(xs, xs_lens)
-    # np.testing.assert_allclose(to_numpy(y1), ort_outs[0], rtol=1e-05, atol=1e-05)
-    # np.testing.assert_allclose(to_numpy(y2), ort_outs[1], rtol=1e-05, atol=1e-05)
     print("Exported no flash encoder model has been tested with ONNXRuntime, and the result looks good!")
 
 
