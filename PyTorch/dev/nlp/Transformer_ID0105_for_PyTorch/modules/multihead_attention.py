@@ -294,7 +294,7 @@ class MultiheadAttention(nn.Module):
 
         attn_weights = F.softmax(attn_weights, dim=-1)
         if self.training:
-            attn_weights, _, _ = torch.npu_dropoutV2(attn_weights, self.seed, p=self.dropout)
+            attn_weights = F.dropout(attn_weights, p=self.dropout, training=self.training)
 
         attn = strided_bmm2(attn_weights, v)
         assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]

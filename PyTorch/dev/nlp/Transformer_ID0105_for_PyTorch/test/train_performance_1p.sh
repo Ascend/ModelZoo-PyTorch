@@ -62,8 +62,11 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 export PTCOPY_ENABLE=1
 export TASK_QUEUE_ENABLE=1
-export DYNAMIC_OP="ADD#MUL"
+#export DYNAMIC_OP="ADD#MUL"
+export COMBINED_ENABLE=1
+export SCALAR_TO_HOST_MEM=1
 start_time=$(date +%s)
+
 python3 -u train_1p.py \
   $data_path \
   --device-id ${ASCEND_DEVICE_ID}\
@@ -81,7 +84,7 @@ python3 -u train_1p.py \
   --min-lr 0.0 \
   --dropout 0.1 \
   --weight-decay 0.0 \
-  --criterion label_smoothed_cross_entropy \
+  --criterion cross_entropy \
   --label-smoothing 0.1 \
   --max-sentences 128\
   --max-tokens 102400\
@@ -97,7 +100,7 @@ python3 -u train_1p.py \
     
 wait
 sed -i "s|if i>100:break|if i>100:pass|g" train_1p.py
-sed -i "s|if m >=2:break|if i>100:pass|g" train_1p.py
+sed -i "s|if m >=2:break|if m>=2:pass|g" train_1p.py
 ##################获取训练数据################
 #训练结束时间，不需要修改
 end_time=$(date +%s)

@@ -10,10 +10,12 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export ASCEND_GLOBAL_LOG_LEVEL=3
 export PTCOPY_ENABLE=1
 export TASK_QUEUE_ENABLE=1
-export DYNAMIC_OP="ADD#MUL"
+#export DYNAMIC_OP="ADD#MUL"
+export COMBINED_ENABLE=1
+export SCALAR_TO_HOST_MEM=1
 
 python3 -u train_1p.py \
-  ./data/dataset/wmt14_en_de_joined_dict/ \
+./data/dataset/wmt14_en_de_joined_dict/ \
   --device-id 7\
   --arch transformer_wmt_en_de \
   --share-all-embeddings \
@@ -29,7 +31,7 @@ python3 -u train_1p.py \
   --min-lr 0.0 \
   --dropout 0.1 \
   --weight-decay 0.0 \
-  --criterion label_smoothed_cross_entropy \
+  --criterion cross_entropy \
   --label-smoothing 0.1 \
   --max-sentences 128\
   --max-tokens 102400\
