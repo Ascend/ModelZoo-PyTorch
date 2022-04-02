@@ -78,8 +78,7 @@ git checkout .
 patch -p1 < gpu_fps.diff
 cd examples/aishell/s0/
 
-// 运行之前修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring
-修改stage5中ctc_weight=0.3 reverse_weight=0.3
+// 运行之前修改run.sh中average_checkpoint为false, decode_modes修改为attention_rescoring 修改stage5中ctc_weight=0.3 reverse_weight=0.3
 bash run.sh --stage 5 --stop_stage 5
 ```
 在wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/text文件最后一行有fps性能数据
