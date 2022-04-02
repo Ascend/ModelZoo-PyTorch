@@ -54,7 +54,6 @@ def get_item(x):
 
 @torch.jit.script
 def get_next_cache_start(required_cache_size: torch.Tensor, xs: torch.Tensor):
-    # required_cache_size = required_cache_size_tensor.detach().item()
     next_cache_start = 0
     if required_cache_size < 0:
         next_cache_start = 0
