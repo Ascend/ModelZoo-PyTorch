@@ -27,24 +27,10 @@ def preprocess_volo(data_dir, save_path, batch_size):
         save_name = os.path.join(save_path, "test_" + str(batch_idx) + ".bin")
         print(save_name)
         img.tofile(save_name)
-        if batch_size == 1:
-            info = "%s %d \n" % ("test_" + str(batch_idx) + ".bin", target)
-        if batch_size == 2:
-            info = "%s %d %d \n" % ("test_" + str(batch_idx) + ".bin", target[0], target[1])
-        if batch_size == 4:
-            info = "%s %d %d %d %d \n" % ("test_" + str(batch_idx) + ".bin", target[0], target[1], target[2], target[3])
-        if batch_size == 8:
-            info = "%s %d %d %d %d %d %d %d %d \n" % ("test_" + str(batch_idx) + ".bin", target[0], target[1], target[2], target[3], \
-                target[4], target[5], target[6], target[7])
-        if batch_size == 16:
-            info = "%s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d \n" % ("test_" + str(batch_idx) + ".bin",  \
-                target[0], target[1], target[2], target[3], target[4], target[5], target[6], target[7], target[8], \
-                target[9], target[10], target[11], target[12], target[13], target[14], target[15])
-        if batch_size == 32:
-            info = "%s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d \n" % ("test_" + str(batch_idx) + ".bin",  \
-                target[0], target[1], target[2], target[3], target[4], target[5], target[6], target[7], target[8], target[9], target[10], target[11], target[12], \
-                target[13], target[14], target[15], target[16], target[17], target[18], target[19], target[20], target[21], target[22], target[23], target[24], \
-                target[25], target[26], target[27], target[28], target[29], target[30], target[31])
+        info = "%s " % ("test_" + str(batch_idx) + ".bin")
+        for i in range(batch_size):
+            info = info + str(int(target[i])) + " "
+        info = info + "\n"
         f.write(info)
 
     f.close()
