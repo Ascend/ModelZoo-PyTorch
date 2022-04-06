@@ -96,6 +96,7 @@ then
   do
   let p_start=0+24*i
   let p_end=23+24*i
+  export RANK=${i}
   if [ -d ${cur_path}/output/${i} ];then
         rm -rf ${cur_path}/output/${i}
         mkdir -p ${cur_path}/output/$i
@@ -107,6 +108,7 @@ then
 else
   for i in $(seq 0 7)
   do
+  export RANK=${i}
   if [ -d ${cur_path}/output/${i} ];then
       rm -rf ${cur_path}/output/${i}
       mkdir -p ${cur_path}/output/$i
