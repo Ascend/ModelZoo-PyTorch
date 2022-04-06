@@ -13,7 +13,7 @@ def preprocess_volo(data_dir, save_path, batch_size):
         ImageDataset(data_dir),
         input_size=(3, 224, 224),
         batch_size=batch_size,
-        use_prefetcher=True,
+        use_prefetcher=False,
         interpolation="bicubic",
         mean=(0.485, 0.456, 0.406),
         std=(0.229, 0.224, 0.225),

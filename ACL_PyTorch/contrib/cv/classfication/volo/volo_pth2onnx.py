@@ -22,7 +22,7 @@ def pth_to_onnx(input, checkpoint, onnx_path, input_names=['input'], output_name
     load_checkpoint(model, checkpoint, False, strict=False)
     model.eval()
     
-    torch.onnx.export(model, input, onnx_path, verbose=True, input_names=input_names, output_names=output_names, opset_version=12, export_modules_as_functions=False)
+    torch.onnx.export(model, input, onnx_path, verbose=True, input_names=input_names, output_names=output_names, opset_version=12)
     print("Exporting .pth model to onnx model has been successful!")
 
 if __name__ == '__main__':

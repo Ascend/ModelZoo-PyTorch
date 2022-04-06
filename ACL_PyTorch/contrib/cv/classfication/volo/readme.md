@@ -72,7 +72,9 @@ bash eval_acc_perf.sh 1 /path/to/result /path/to/label.txt
 |    bs1   |   80.619   |  
 |   bs16   |   82.275   |  
 
-| performance | average time  | average time without first  |
-| :---------: | :-----------: | :-------------------------: |
-|     bs1     |    396.46ms   |            396.46ms         |
-|     bs16    |   3635.25ms   |           3635.25ms         |
+|batchsize| performance | average time  | average time without first  |
+| :-----: | :---------: | :-----------: | :-------------------------: |
+|   bs1   |  10.08fps   |    396.46ms   |            396.46ms         |
+|   bs16  |  17.6fps    |   3635.25ms   |           3635.25ms         |
+
+
