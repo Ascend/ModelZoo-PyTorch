@@ -259,6 +259,10 @@ parser.add_argument('-t',
                     '--fine-tuning',
                     action='store_true',
                     help='transfer learning + fine tuning - train only the last FC layer.')
+# 图模式
+parser.add_argument('--graph_mode',
+                    action='store_true',
+                    help='whether to enable graph mode.')
 best_acc1 = 0
 
 def nvidia_model_config(args):
@@ -682,6 +686,10 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
     if args.benchmark == 1 :
         optimizer.zero_grad()
     for i, (images, target) in enumerate(train_loader):
+        # 图模式
+        if args.graph_mode:
+            print("graph mode on")
+            torch.npu.enable_graph_mode()
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -689,8 +697,15 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
 
         if args.device == 'npu':
             loc = 'npu:{}'.format(args.gpu)
-            images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
-            target = target.to(torch.int32).to(loc, non_blocking=True)
+            # 图模式
+            if args.graph_mode:
+                images = images.to(loc, non_blocking=True)
+                target = target.to(loc, non_blocking=True)
+                images = images.to(torch.float).sub(mean).div(std)
+                target = target.to(torch.int32)
+            else:
+                images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
+                target = target.to(torch.int32).to(loc, non_blocking=True)
         else:
             images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
@@ -701,10 +716,12 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        # 图模式
+        if not args.graph_mode:
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
         # compute gradient and do SGD step
         if args.benchmark == 0 :
@@ -727,7 +744,13 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
                 optimizer.zero_grad()
 
         torch.npu.synchronize()
-        
+
+        # 图模式
+        if args.graph_mode:
+            print("graph mode launch")
+            torch.npu.launch_graph()
+            if i == len(train_loader):
+                torch.npu.synchronize()
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
@@ -736,7 +759,10 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                     and args.rank % ngpus_per_node == 0):
                     progress.display(i)
-
+    # 图模式
+    if args.graph_mode:
+        print("graph mode off")
+        torch.npu.disable_graph_mode()   
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed
             and args.rank % ngpus_per_node == 0):
         print("[npu id:",args.gpu,"]", "batch_size:", ngpus_per_node*args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
