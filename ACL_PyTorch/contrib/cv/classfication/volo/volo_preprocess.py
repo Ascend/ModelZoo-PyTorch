@@ -24,6 +24,8 @@ def preprocess_volo(data_dir, save_path, batch_size):
 
     for batch_idx, (input, target) in enumerate(loader):
         img = np.array(input).astype(np.float32)
+        if img.shape[0] < batch_size:
+            continue
         save_name = os.path.join(save_path, "test_" + str(batch_idx) + ".bin")
         print(save_name)
         img.tofile(save_name)
