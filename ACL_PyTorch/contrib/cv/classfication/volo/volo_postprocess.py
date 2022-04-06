@@ -16,7 +16,12 @@ def read_label(path, bs):
     lines = [line for line in content.split('\n')]
     if lines[-1] == "":
         lines = lines[:-1]
-    if bs == 16:
+    if bs == 1:
+        labels = [int(line.split(' ')[-2]) for line in lines]
+        labels = np.array(labels)
+        labels = np.expand_dims(labels, 1)
+        return labels
+    else:
         total_label = np.zeros((len(files) * bs))
         base = 0
         for line in lines:
@@ -27,16 +32,11 @@ def read_label(path, bs):
             base = base + 1
         total_label = np.expand_dims(total_label, 1)
         return total_label
-    if bs == 1:
-        labels = [int(line.split(' ')[-2]) for line in lines]
-        labels = np.array(labels)
-        labels = np.expand_dims(labels, 1)
-        return labels
 
 def get_topK(files, topk, bs):
     if bs == 1:
         matrix = np.zeros((len(files), topk))
-    if bs ==16:
+    else:
         matrix = np.zeros((len(files) * bs, topk))
     for file in files:
         data = read_txt_data(root + file)
@@ -44,7 +44,7 @@ def get_topK(files, topk, bs):
             line = np.argsort(data)[-topk:][::-1]
             index = int(file.split('_')[1])
             matrix[index-1, :] = line[:topk]
-        if bs == 16:
+        else:
             base_index = int(file.split('_')[1])
             newdata = data.reshape(bs, 1000)
             for i in range(bs):
