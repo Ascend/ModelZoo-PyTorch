@@ -227,8 +227,8 @@ for epoch in range(0, args.epochs):
             break
         start_time = time.time()
         # get batch size data
-        real_image_A = data["A"].to(device)
-        real_image_B = data["B"].to(device)
+        real_image_A = data["A"].to(device,non_blocking=True)
+        real_image_B = data["B"].to(device,non_blocking=True)
         batch_size = real_image_A.size(0)
 
         # real data label is 1, fake data label is 0.
