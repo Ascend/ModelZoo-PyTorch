@@ -158,8 +158,8 @@ def train(config, train_loader, model, criterion, optimizer,):
 
     pbar = tqdm(total=len(train_loader))
     for input, target, _ in train_loader:
-        input = input.npu()
-        target = target.npu()
+        input = input.npu(non_blocking=True)
+        target = target.npu(non_blocking=True)
         start_time=time.time()
         batchsize=input.shape[0]
         # compute output
