@@ -64,6 +64,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+export RANK=0
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 

@@ -63,6 +63,8 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
+export NODE_RANK=0
+
 python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --data ${data_path} \
         --addr=$(hostname -I |awk '{print $1}') \
