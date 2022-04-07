@@ -44,7 +44,11 @@ git apply diff.patch
 通过pth2onnx.py脚本转化为onnx模型
 
 ```shell
+# 直接导出原始ONNX
 python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx
+
+# 导出NPU上优化后的ONNX
+python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx --optimizer
 ```
 
 利用ATC工具转换为om模型
