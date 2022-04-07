@@ -75,10 +75,10 @@ def run_epoch(epoch_id, model, data_iter, loss_fn, device, optimizer=None, print
     for i, data in enumerate(data_iter):
         start_time = time.time()
         inputs, input_sizes, targets, target_sizes, utt_list = data
-        inputs = inputs.to(device)
-        input_sizes = input_sizes.to(device)
-        targets = targets.to(device)
-        target_sizes = target_sizes.to(device)
+        inputs = inputs.to(device,non_blocking=True)
+        input_sizes = input_sizes.to(device,non_blocking=True)
+        targets = targets.to(device,non_blocking=True)
+        target_sizes = target_sizes.to(device,non_blocking=True)
        
         out = model(inputs)
         out_len, batch_size, _ = out.size()
