@@ -54,7 +54,6 @@ from dataset.cifar import DATASET_GETTERS
 from utils import AverageMeter, accuracy
 import apex
 
-torch.npu.set_start_fuzz_compile_step(3)
 logger = logging.getLogger(__name__)
 best_acc = 0
 
@@ -366,8 +365,6 @@ def train(args, labeled_trainloader, unlabeled_trainloader, test_loader,
             p_bar = tqdm(range(args.eval_step),
                          disable=args.local_rank not in [-1, 0])
         for batch_idx in range(args.eval_step):
-            #模糊编译
-            torch.npu.global_step_inc()
             try:
                 inputs_x, targets_x = labeled_iter.next()
             except:
