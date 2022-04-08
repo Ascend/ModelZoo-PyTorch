@@ -1,0 +1,11 @@
+export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/compiler/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/compiler/lib64/plugin/nnengine:$LD_LIBRARY_PATH
+export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe:$PYTHONPATH
+export PATH=/usr/local/Ascend/ascend-toolkit/latest/bin:/usr/local/Ascend/ascend-toolkit/latest/compiler/ccec_compiler/bin:$PATH
+export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
+export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
+export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export DDK_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export NPU_HOST_LIB=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/stub:/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/runtime/lib64/stub
+export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/fwkacllib/lib64:${LD_LIBRARY_PATH}
