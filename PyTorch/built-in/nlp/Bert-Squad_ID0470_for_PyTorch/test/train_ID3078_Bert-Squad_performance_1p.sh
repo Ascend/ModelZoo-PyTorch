@@ -16,7 +16,7 @@ ckpt_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Bert-Squad_ID0470_for_PyTorch"
+Network="Bert-Squad_ID3078_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
@@ -83,6 +83,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -130,6 +131,7 @@ do
 		  --do_lower_case \
 		  --output_dir ${cur_path}/../results \
 		  --config_file bert_config.json \
+          --graph_mode \
 		  --json-summary ${cur_path}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait

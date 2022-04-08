@@ -5,7 +5,7 @@ cur_path=`pwd`
 
 #集合通信参数,不需要修改
 export BMMV2_ENABLE=1
-export RANK_SIZE=1
+export RANK_SIZE=8
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -16,7 +16,7 @@ ckpt_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Bert-Squad_ID0470_for_PyTorch"
+Network="Bert-Squad_ID3078_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
@@ -24,7 +24,7 @@ batch_size=32
 #训练step
 train_steps=
 #学习率
-learning_rate=6e-5
+learning_rate=2e-4
 
 
 #维测参数，precision_mode需要模型审视修改
@@ -91,6 +91,7 @@ cd $cur_path/../
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
+    export ASCEND_DEVICE_ID=$RANK_ID
     echo "Device ID: $ASCEND_DEVICE_ID"
     export RANK_ID=$RANK_ID
 
@@ -130,6 +131,8 @@ do
 		  --do_lower_case \
 		  --output_dir ${cur_path}/../results \
 		  --config_file bert_config.json \
+		  --num_npu 8 \
+          --graph_mode \
 		  --json-summary ${cur_path}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
@@ -141,9 +144,9 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-step_time=`grep 'step_time : ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk '{print$13}'| tail -n+3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
+step_time=`grep 'step_time : ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk '{print$13}' | tail -n+3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
 
-FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'}'`
+FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

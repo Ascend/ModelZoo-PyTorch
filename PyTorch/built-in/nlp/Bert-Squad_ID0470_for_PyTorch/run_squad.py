@@ -894,6 +894,10 @@ def main():
                         default=None,
                         type=str,
                         help="addr used for distributed training")
+    # 图模式
+    parser.add_argument('--graph_mode',
+                        action='store_true',
+                        help='whether to enable graph mode.')
 
     args = parser.parse_args()
     args.fp16 = args.fp16 or args.amp    
@@ -1010,18 +1014,20 @@ def main():
     ]
     if args.do_train:
         if args.fp16:
-            # try:
-            #     from apex.optimizers import NpuFusedAdam
-            # except ImportError:
-            #     raise ImportError(
-            #         "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-            # optimizer = NpuFusedAdam(optimizer_grouped_parameters,
-            #                       lr=args.learning_rate)
-
-            optimizer = NpuFusedBertAdamV2(optimizer_grouped_parameters,
-                                         lr=args.learning_rate,
-                                         warmup=args.warmup_proportion,
-                                         t_total=num_train_optimization_steps)
+            try:
+                from apex.optimizers import NpuFusedAdam
+            except ImportError:
+                raise ImportError(
+                    "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
+            # 图模式
+            if args.graph_mode:
+                optimizer = NpuFusedAdam(optimizer_grouped_parameters,
+                                    lr=args.learning_rate)
+            else:
+                optimizer = NpuFusedBertAdamV2(optimizer_grouped_parameters,
+                                            lr=args.learning_rate,
+                                            warmup=args.warmup_proportion,
+                                            t_total=num_train_optimization_steps)
 
             if args.loss_scale == 0:
                 model, optimizer = amp.initialize(model, optimizer, opt_level="O2", keep_batchnorm_fp32=False,
@@ -1108,6 +1114,10 @@ def main():
             train_iter = train_dataloader
             step_start_time = time.time()
             for step, batch in enumerate(train_iter):
+                # 图模式
+                if args.graph_mode:
+                    print("graph mode on")
+                    torch.npu.enable_graph_mode()
                 # Terminate early for benchmarking
                 data_time = time.time() - step_start_time
                 if args.max_steps > 0 and global_step > args.max_steps:
@@ -1141,7 +1151,7 @@ def main():
                 else:
                     loss.backward()
 
- 
+
                 if (step + 1) % args.gradient_accumulation_steps == 0:
                     if args.fp16 :
                         # modify learning rate with special warm up for BERT which FusedAdam doesn't do
@@ -1149,8 +1159,18 @@ def main():
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
-
-                final_loss = loss.item()
+                # 图模式
+                if args.graph_mode:
+                    print("graph mode launch")
+                    torch.npu.launch_graph()
+                    if step == args.max_steps:
+                        print("graph mode synchronize")
+                        torch.npu.synchronize()
+                # 图模式
+                if args.graph_mode:
+                    final_loss = 0.0 
+                else:
+                    final_loss = loss.item()
                 step_time = time.time() - step_start_time
                 if step % args.log_freq == 0:
                     # dllogger.log(step=(epoch, global_step,), data={"step_loss": final_loss,
@@ -1162,7 +1182,10 @@ def main():
                                        "step_loss": round(final_loss, 4),
                                        "learning_rate": round(optimizer.param_groups[0]['lr'], 10)})
                 step_start_time = time.time()
-
+        # 图模式
+        if args.graph_mode:
+            print("graph mode off")
+            torch.npu.disable_graph_mode()
         time_to_train = time.time() - train_start
 
     if args.do_train and is_main_process() and not args.skip_checkpoint:
@@ -1276,6 +1299,7 @@ if __name__ == "__main__":
     option = {}
     option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
     option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
+    option["MM_BMM_ND_ENABLE"] = "enable"
     torch.npu.set_option(option)
     main()
     dllogger.flush()

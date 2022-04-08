@@ -83,7 +83,6 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-cp run_squad.py $cur_path/../
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -144,7 +143,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-step_time=`grep 'step_time : ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $13}'`
+step_time=`grep 'step_time : ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk '{print$13}'| tail -n+3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
 
 FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
 
