@@ -1,0 +1,10 @@
+torch == 1.7.1
+torchvision == 0.8.2
+
+onnx==1.7.0
+onnx-simplifier
+opencv-python
+cython
+lvis
+scipy==1.7.3
+sympy
