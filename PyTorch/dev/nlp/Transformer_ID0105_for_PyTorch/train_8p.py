@@ -48,7 +48,16 @@ import dllogger as DLLogger
 from utils.log_helper import AggregatorBackend, setup_logger
 
 
+NPU_CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
+NPU_WORLD_SIZE = int(os.getenv('NPU_WORLD_SIZE'))
+RANK = int(os.getenv('RANK'))
+torch.distributed.init_process_group('hccl', rank=RANK, world_size=NPU_WORLD_SIZE)
 MAX = 2147483647
+
 def _gen_seeds(shape):
     return np.random.uniform(1, MAX, size=shape).astype(np.float32)
 seed_shape = (32 * 1024 * 12, )
@@ -102,16 +111,16 @@ def main():
     print(args)
     os.environ['MASTER_ADDR'] = args.addr
     os.environ['MASTER_PORT'] = args.port
-    mp.spawn(main_worker, nprocs=args.distributed_world_size, args=(args.distributed_world_size, args))
+    device_id = args.device_id
+    main_worker(pid_idx=device_id, args=args)
 
 
 
-def main_worker(pid_idx, device_nums_per_node, args):
+def main_worker(pid_idx, args):
     setup_logger(args)
-
+    print('pid_idx:',str(pid_idx))
     args.distributed_rank = pid_idx
     args.device_id = args.distributed_rank
-    dist.init_process_group(backend=args.dist_backend, world_size=args.distributed_world_size, rank=args.distributed_rank)
     loc = 'npu:{}'.format(args.device_id)
     torch.npu.set_device(loc)
 
@@ -128,16 +137,16 @@ def main_worker(pid_idx, device_nums_per_node, args):
     seed = torch.from_numpy(seed)
     seed = seed.to(loc)
     model = build_model(args, seed=seed)
-    if args.distributed_world_size > 1 and args.distributed_rank == 0:
+    if args.distributed_world_size > 1 :
         print('| num. model params: {}'.format(sum(p.numel() for p in model.parameters())))
 
     # Build trainer
     trainer = DDPTrainer(args, model)
-    if args.distributed_world_size > 1 and args.distributed_rank == 0:
+    if args.distributed_world_size > 1 :
         print('| model {}, criterion {}'.format(args.arch, trainer.criterion.__class__.__name__))
         print('| training on {} NPUs'.format(args.distributed_world_size))
 
-    if args.distributed_world_size > 1 and args.distributed_rank == 0:
+    if args.distributed_world_size > 1 :
         print('| max sentences per NPU = {}'.format(args.max_sentences))
 
     epoch_itr = data.EpochBatchIterator(
@@ -199,7 +208,7 @@ def main_worker(pid_idx, device_nums_per_node, args):
     train_meter.stop()
     DLLogger.log(step=[], data=run_summary, verbosity=0)
     DLLogger.log(step='RUN', data={'walltime': train_meter.sum}, verbosity=0)
-    if args.distributed_world_size > 1 and args.distributed_rank == 0:
+    if args.distributed_world_size > 1 :
         print('| done training in {:.1f} seconds'.format(train_meter.sum))
 
 
@@ -219,7 +228,7 @@ def train(args, trainer, datasets, epoch_itr):
     batch_time = AverageMeter('Time', ':6.3f')
     sentence_s = AverageMeter('Sentence/s', ':6.3f')
     losses = AverageMeter('Loss', ':.4f')
-    progress = ProgressMeter(int(num_batches/args.distributed_world_size),
+    progress = ProgressMeter(int(num_batches/args.distributed_world_size/update_freq),
                              [batch_time, sentence_s,losses],
                              prefix = "Epoch: [{}]".format(epoch_itr.epoch))
 
@@ -230,6 +239,7 @@ def train(args, trainer, datasets, epoch_itr):
     # reset meters
     DLLogger.flush()
     trainer.get_throughput_meter().reset()
+    end = time.time()
 
     for i, sample in enumerate(itr):
         if i>100:pass
@@ -242,16 +252,13 @@ def train(args, trainer, datasets, epoch_itr):
             if loss != None:
                 losses.update(loss)
 
-        if i >= 2:
-            t = time.time()
-            batch_time.update((t - end)/update_freq)
-            sentence_s.update(args.max_sentences/(t-end)*args.distributed_world_size)
-            end = time.time()
-        if i < 2:
-            end = time.time()
-        if i >= 2:
-            if args.distributed_world_size > 1 and args.distributed_rank == 0:
-                progress.display(int((i+1)/update_freq))
+        t = time.time()
+        batch_time.update((t - end)/update_freq)
+        sentence_s.update(args.max_sentences/(t-end)*args.distributed_world_size)
+        end = time.time()
+
+        if args.distributed_world_size > 1 :
+            progress.display(int((i+1)/update_freq))
 
 
         # ignore the first mini-batch in words-per-second calculation
@@ -265,7 +272,7 @@ def train(args, trainer, datasets, epoch_itr):
 
         # Mid epoch checkpoint
         num_updates = trainer.get_num_updates()
-        if args.distributed_world_size > 1 and args.distributed_rank == 0:
+        if args.distributed_world_size > 1 :
             if args.save_interval_updates > 0 and num_updates % args.save_interval_updates == 0:
                 valid_losses = validate(args, trainer, datasets, [first_valid])
                 save_checkpoint(args, trainer, epoch_itr, valid_losses[0])
@@ -276,14 +283,14 @@ def train(args, trainer, datasets, epoch_itr):
         if num_updates >= max_update:
             break
 
-    if args.distributed_world_size > 1 and args.distributed_rank == 0:
+    if args.distributed_world_size > 1 :
         if batch_time.avg > 0:
             print("End of epoch, batch_size:", args.max_sentences, 'Time: {:.3f}'.format(batch_time.avg),
                   ' Sentence/s@all {:.3f}'.format(
                       args.max_sentences / batch_time.avg * args.distributed_world_size))
 
     # Print epoch stats and reset training meters
-    if args.distributed_world_size > 1 and args.distributed_rank == 0:
+    if args.distributed_world_size > 1 :
         DLLogger.log(step=trainer.get_num_updates(), data={'speed': trainer.get_throughput_meter().avg}, verbosity=0)
         DLLogger.flush()
 
@@ -314,7 +321,7 @@ def validate(args, trainer, datasets, subsets):
         ).next_epoch_itr(shuffle=False)
 
         # reset validation loss meters
-        if args.distributed_world_size > 1 and args.distributed_rank == 0:
+        if args.distributed_world_size > 1 :
             DLLogger.flush()
 
         subset_losses = []
@@ -326,7 +333,7 @@ def validate(args, trainer, datasets, subsets):
         DLLogger.flush()
 
         valid_losses.append(subset_loss)
-        if args.distributed_world_size > 1 and args.distributed_rank == 0:
+        if args.distributed_world_size > 1 :
             print(f'Validation loss on subset {subset}: {subset_loss}')
 
     return valid_losses
@@ -393,7 +400,7 @@ def load_checkpoint(args, trainer, epoch_itr):
         if extra_state is not None:
             # replay train iterator to match checkpoint
             epoch_itr.load_state_dict(extra_state['train_iterator'])
-            if args.distributed_world_size > 1 and args.distributed_rank == 0:
+            if args.distributed_world_size > 1 :
                 print('| loaded checkpoint {} (epoch {} @ {} updates)'.format(
                     checkpoint_path, epoch_itr.epoch, trainer.get_num_updates()))
 
