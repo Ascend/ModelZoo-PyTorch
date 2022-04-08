@@ -26,9 +26,9 @@ cd ..
 
    获取COCO数据集，并重命名为coco，放到当前目录下的 YOLOF/datasets/ 文件夹内
 
-5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
+5. [获取msame工具](https://gitee.com/ascend/tools/tree/master/msame)
 
-   将benchmark.x86_64或benchmark.aarch64放到当前工作目录
+   将msame文件放到当前工作目录
 
 ### 2. 离线推理
 
@@ -41,7 +41,7 @@ bash test/eval_acc_perf.sh  --batch_size=1
 
 **评测结果：**
 
-| 模型       | pth精度     | 710离线推理精度 | 性能基准 | 710性能  |
-| ---------- | ----------- | --------------- | -------- | -------- |
-| YOLOF bs1  | box AP:42.8 | box AP:42.8     | fps 14.7 | fps 51.1 |
-| YOLOF bs16 | box AP:42.8 | box AP:42.8     | fps 18.3 | fps 60.9 |
+| 模型       | pth精度     | 710离线推理精度 | 710性能    |
+| ---------- | ----------- | --------------- | ---------- |
+| YOLOF bs1  | box AP:50.9 | box AP:51.0     | fps 27.697 |
+| YOLOF bs16 | box AP:50.9 | box AP:51.0     | fps 38.069 |

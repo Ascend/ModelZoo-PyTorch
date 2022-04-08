@@ -20,20 +20,17 @@ const_img_shape = (608, 608)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='generate dataset info file')
-    parser.add_argument("--bin_file_path", default="val2017_bin")
     parser.add_argument("--meta_file_path", default="val2017_bin_meta")
-    parser.add_argument("--bin_info_file_name", default="yolof.info")
     parser.add_argument("--meta_info_file_name", default="yolof_meta.info")
     args = parser.parse_args()
 
-    with open(args.bin_info_file_name, "w") as fp1, open(args.meta_info_file_name, "w") as fp2:
-        file_list = os.listdir(args.bin_file_path)
-        idx = 0
+    with open(args.meta_info_file_name, "w") as fp1:
+        file_list = os.listdir(args.meta_file_path)
         for file in file_list:
-            fp1.write("{} {}/{} {} {}\n".format(idx, args.bin_file_path, file, *const_img_shape))
-            file_name = file.split(".")[0]
-            with open("{}/{}.pk".format(args.meta_file_path, file_name), "rb") as fp_t:
-                meta = pk.load(fp_t)
-                fp2.write("{} {} {} {}\n".format(idx, file_name, *meta["ori_shape"]))
-            idx += 1
+            with open("{}/{}".format(args.meta_file_path, file), "rb") as fp2:
+                meta = pk.load(fp2)
+            fp1.write(file.split(".")[0])
+            for dic in meta:
+                fp1.write(" {} {} {}".format(dic['file_name'], *dic['ori_shape']))
+            fp1.write("\n")
     print("Get info done!")
