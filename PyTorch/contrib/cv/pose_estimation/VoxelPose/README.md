@@ -18,15 +18,10 @@ Set AscendProject = /usr/local/Ascend #use real path
 
 ### Training
 To train a model, run the following scripts with the real path of dataset:
+PS：There is a large jitter on single card training with bs=1, do not perform single card trainning.
 
 ```bash
 # real_data_path = data/shelf
-# training 1p accuracy
-bash ./test/train_full_1p.sh --data_path=real_data_path --device_id=xxx
-
-# training 1p performance
-bash ./test/train_performance_1p.sh --data_path=real_data_path --device_id=xxx
-
 # training 8p accuracy
 bash ./test/train_full_8p.sh --data_path=real_data_path
 
@@ -43,8 +38,8 @@ Log path:
 
 
 ### VoxelPose training result
+说明：由于模型单卡训练（bs=1）抖动大，loss不收敛，暂不持支单卡训练。
 
 | 名称    | 精度       | FPS | AMP_Type   |
 | :------: | :------:  | :------: | :------: |
-| NPU-1p        |  96.62      |   0.289      |   O1      |
 |  NPU-8p  |   97.10    |    1.267     |   O1    |
