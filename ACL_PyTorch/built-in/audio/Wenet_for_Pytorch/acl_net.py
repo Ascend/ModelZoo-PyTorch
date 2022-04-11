@@ -239,7 +239,7 @@ class Net(object):
         for i in range(len(dataset)):
             if policy == ACL_MEMCPY_HOST_TO_DEVICE:
                 #ptr = acl.util.numpy_to_ptr(dataset[i])
-                bytes_in = np_arr_in.tobytes()
+                bytes_in = dataset[i].tobytes()
                 ptr = acl.util.bytes_to_ptr(bytes_in)
                 if self.ascend_mbatch_shape_data:
                     malloc_size = dataset[i].size * dataset[i].itemsize
