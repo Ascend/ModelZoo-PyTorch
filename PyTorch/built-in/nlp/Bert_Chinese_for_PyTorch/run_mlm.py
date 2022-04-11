@@ -187,6 +187,7 @@ class DataTrainingArguments:
             "value if set."
         },
     )
+    eval_metric_path: Optional[str] = field(default='accuracy.py', metadata={"help": "path to the metric processing script."})
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -486,9 +487,10 @@ def main():
                 # Depending on the model and config, logits may contain extra tensors,
                 # like past_key_values, but logits always come first
                 logits = logits[0]
+            logits = logits.view(labels.shape[0], labels.shape[1], -1) # on npu, logits are 2-dim, need to be reshaped before op argmax 
             return logits.argmax(dim=-1)
 
-        metric = load_metric("accuracy")
+        metric = load_metric(data_args.eval_metric_path)
 
         def compute_metrics(eval_preds):
             preds, labels = eval_preds

@@ -669,8 +669,8 @@ class Trainer:
             raise ValueError("Trainer: training requires a train_dataset.")
 
         train_dataset = self.train_dataset
-        # if is_datasets_available() and isinstance(train_dataset, datasets.Dataset):
-        #     train_dataset = self._remove_unused_columns(train_dataset, description="training")
+        if is_datasets_available() and isinstance(train_dataset, datasets.Dataset):
+            train_dataset = self._remove_unused_columns(train_dataset, description="training")
 
         if isinstance(train_dataset, torch.utils.data.IterableDataset):
             if self.args.world_size > 1:
@@ -2475,9 +2475,9 @@ class Trainer:
                 labels_host = labels if labels_host is None else nested_concat(labels_host, labels, padding_index=-100)
             if logits is not None:
                 logits = self._pad_across_processes(logits)
-                logits = self._nested_gather(logits)
                 if self.preprocess_logits_for_metrics is not None:
                     logits = self.preprocess_logits_for_metrics(logits, labels)
+                logits = self._nested_gather(logits)
                 preds_host = logits if preds_host is None else nested_concat(preds_host, logits, padding_index=-100)
             self.control = self.callback_handler.on_prediction_step(args, self.state, self.control)
 
