@@ -238,7 +238,6 @@ class Net(object):
             dataset = self.output_data_host
         for i in range(len(dataset)):
             if policy == ACL_MEMCPY_HOST_TO_DEVICE:
-                #ptr = acl.util.numpy_to_ptr(dataset[i])
                 bytes_in = dataset[i].tobytes()
                 ptr = acl.util.bytes_to_ptr(bytes_in)
                 if self.ascend_mbatch_shape_data:
@@ -381,7 +380,6 @@ class Net(object):
             ftype = np.dtype(ACL_DTYPE.get(data_type))
             size = output_data[i]["size"]
             ptr = output_data[i]["buffer"]
-            #data = acl.util.ptr_to_numpy(ptr, (size,), 1)
             data = acl.util.ptr_to_bytes(ptr, size)
             np_array = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
             np_array = np_array.reshape(output_shape[i])
