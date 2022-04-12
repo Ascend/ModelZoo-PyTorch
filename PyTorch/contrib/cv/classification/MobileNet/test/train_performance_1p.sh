@@ -85,7 +85,7 @@ python3.7 mobilenet.py \
         --epochs=${train_epochs} \
         -j $(($(nproc))) \
         --lr=${learning_rate} \
-        --device_id={ASCEND_DEVICE_ID}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --device_id=${ASCEND_DEVICE_ID}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
