@@ -91,7 +91,7 @@ def main(args):
     model.graph.output.append(box_out)
     model.graph.output.append(box_out_num)
 
-    onnx.save(model, model_path.split('.')[0] + "_t.onnx")
+    onnx.save(model, model_path.split('.onnx')[0] + "_t.onnx")
     print("success")
 
 
