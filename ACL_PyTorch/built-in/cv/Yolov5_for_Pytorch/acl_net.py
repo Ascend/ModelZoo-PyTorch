@@ -158,7 +158,8 @@ class Net(object):
 
         for i, item in enumerate(temp_data_buffer):
             if policy == ACL_MEMCPY_HOST_TO_DEVICE:
-                ptr = acl.util.numpy_to_ptr(dataset[i])
+                bytes_in = dataset[i].tobytes()
+                ptr = acl.util.bytes_to_ptr(bytes_in)
                 ret = acl.rt.memcpy(item["buffer"], item["size"], ptr, item["size"], policy)
                 check_ret("acl.rt.memcpy", ret)
 
@@ -241,7 +242,7 @@ class Net(object):
 
             size = output_data[i]["size"]
             ptr = output_data[i]["buffer"]
-            data = acl.util.ptr_to_numpy(ptr, (size,), 1)
+            data = acl.util.ptr_to_bytes(ptr, size)
             np_array = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
             np_array = np_array.reshape(data_shape)
             dataset.append(np_array)
