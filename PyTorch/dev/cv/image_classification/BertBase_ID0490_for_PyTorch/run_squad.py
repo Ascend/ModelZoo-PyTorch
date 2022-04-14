@@ -897,7 +897,9 @@ def main():
                         default=None,
                         type=str,
                         help="addr used for distributed training")
-
+    parser.add_argument('--graph_mode',
+                        action='store_true',
+                        help='whether to enable graph mode.')
     args = parser.parse_args()
     args.fp16 = args.fp16 or args.amp
 
@@ -1119,12 +1121,20 @@ def main():
             step_start_time = time.time()
             for step, batch in enumerate(train_iter):
                 # Terminate early for benchmarking
+                # 图模式
+                if args.graph_mode:
+                    print("graph mode on")
+                    torch.npu.enable_graph_mode()
                 data_time = time.time() - step_start_time
                 if args.max_steps > 0 and global_step > args.max_steps:
                     break
 
                 if n_npu == 1:
-                    batch = tuple(t.to(device) for t in batch)  # multi-gpu does scattering it-self
+                    # 图模式
+                    if args.graph_mode:
+                        batch = tuple(t.to(device, non_blocking=True) for t in batch)
+                    else:
+                        batch = tuple(t.to(device) for t in batch)  # multi-gpu does scattering it-self
                 input_ids, input_mask, segment_ids, start_positions, end_positions = batch
                 start_logits, end_logits = model(input_ids, segment_ids, input_mask)
                 # If we are on multi-GPU, split add a dimension
@@ -1159,8 +1169,17 @@ def main():
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
-
-                final_loss = loss.item()
+                # 图模式
+                if args.graph_mode:
+                    final_loss = 0
+                else: 
+                    final_loss = loss.item()
+                # 图模式
+                if args.graph_mode:
+                    print("graph mode launch")
+                    torch.npu.launch_graph()
+                    if step == len(train_iter):
+                        torch.npu.synchronize()
                 step_time = time.time() - step_start_time
                 if step % args.log_freq == 0:
                     # dllogger.log(step=(epoch, global_step,), data={"step_loss": final_loss,
@@ -1171,7 +1190,10 @@ def main():
                                        "step_loss": round(final_loss, 4), "iter/s": round(1 / step_time, 4),
                                        "learning_rate": round(optimizer.param_groups[0]['lr'], 10)})
                 step_start_time = time.time()
-
+            # 图模式
+            if args.graph_mode:
+                print("graph mode off")
+                torch.npu.disable_graph_mode() 
         time_to_train = time.time() - train_start
 
     if args.do_train and is_main_process() and not args.skip_checkpoint:
