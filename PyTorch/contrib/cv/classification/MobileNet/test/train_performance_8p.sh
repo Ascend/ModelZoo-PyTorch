@@ -12,7 +12,7 @@ export RANK_SIZE=8
 data_path=""
 
 # 训练epoch
-train_epochs=1
+train_epochs=2
 # 学习率
 learning_rate=0.8
 

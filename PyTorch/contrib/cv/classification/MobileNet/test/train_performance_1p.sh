@@ -12,7 +12,7 @@ export RANK_SIZE=1
 data_path=""
 
 # 训练epoch
-train_epochs=1
+train_epochs=2
 # 指定训练所使用的npu device卡id
 device_id=0
 # 学习率
