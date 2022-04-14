@@ -1,0 +1,419 @@
+diff --git a/cvpods/evaluation/coco_evaluation.py b/cvpods/evaluation/coco_evaluation.py
+index 2a4b4a0..36cb539 100644
+--- a/cvpods/evaluation/coco_evaluation.py
++++ b/cvpods/evaluation/coco_evaluation.py
+@@ -16,7 +16,7 @@ from pycocotools.coco import COCO
+ import torch
+ 
+ from cvpods.data.datasets.coco import convert_to_coco_json
+-from cvpods.evaluation.fast_eval_api import COCOeval_opt as COCOeval
++from pycocotools.cocoeval import COCOeval
+ from cvpods.structures import Boxes, BoxMode, pairwise_iou
+ from cvpods.utils import PathManager, comm, create_small_table, create_table_with_header
+ 
+diff --git a/cvpods/evaluation/fast_eval_api.py b/cvpods/evaluation/fast_eval_api.py
+index 55d0e26..9e0597e 100644
+--- a/cvpods/evaluation/fast_eval_api.py
++++ b/cvpods/evaluation/fast_eval_api.py
+@@ -5,7 +5,6 @@ import time
+ import numpy as np
+ from pycocotools.cocoeval import COCOeval
+ 
+-from cvpods import _C
+ 
+ 
+ class COCOeval_opt(COCOeval):
+diff --git a/cvpods/layers/border_align.py b/cvpods/layers/border_align.py
+index 6fe47d0..e037514 100644
+--- a/cvpods/layers/border_align.py
++++ b/cvpods/layers/border_align.py
+@@ -6,7 +6,6 @@ from torch import nn
+ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ 
+-from cvpods import _C
+ 
+ 
+ class BorderAlignFunc(Function):
+diff --git a/cvpods/layers/deform_conv.py b/cvpods/layers/deform_conv.py
+index 875b614..5b626c8 100644
+--- a/cvpods/layers/deform_conv.py
++++ b/cvpods/layers/deform_conv.py
+@@ -8,7 +8,6 @@ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ from torch.nn.modules.utils import _pair
+ 
+-from cvpods import _C
+ 
+ from .wrappers import _NewEmptyTensorOp
+ 
+diff --git a/cvpods/layers/nms.py b/cvpods/layers/nms.py
+index 925886d..ec097df 100644
+--- a/cvpods/layers/nms.py
++++ b/cvpods/layers/nms.py
+@@ -5,11 +5,10 @@ import torch
+ from torchvision.ops import boxes as box_ops
+ from torchvision.ops import nms  # BC-compat
+ 
+-from cvpods import _C
+ from cvpods.layers.rotated_boxes import pairwise_iou_rotated
+ from cvpods.utils.apex_wrapper import float_function
+ 
+-ml_nms = _C.ml_nms
++ml_nms = None
+ 
+ 
+ @float_function
+diff --git a/cvpods/layers/psroi_pool.py b/cvpods/layers/psroi_pool.py
+index 3340db1..b0143e5 100644
+--- a/cvpods/layers/psroi_pool.py
++++ b/cvpods/layers/psroi_pool.py
+@@ -6,7 +6,6 @@ import torch
+ from torch import nn
+ from torch.autograd import Function
+ 
+-from cvpods import _C
+ 
+ 
+ class _PSROIPool(Function):
+diff --git a/cvpods/layers/roi_align.py b/cvpods/layers/roi_align.py
+index fc087e4..4502cc3 100644
+--- a/cvpods/layers/roi_align.py
++++ b/cvpods/layers/roi_align.py
+@@ -4,7 +4,6 @@ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ from torch.nn.modules.utils import _pair
+ 
+-from cvpods import _C
+ from cvpods.utils.apex_wrapper import float_function
+ 
+ 
+diff --git a/cvpods/layers/roi_align_rotated.py b/cvpods/layers/roi_align_rotated.py
+index 7e6bd52..c2a3997 100644
+--- a/cvpods/layers/roi_align_rotated.py
++++ b/cvpods/layers/roi_align_rotated.py
+@@ -4,7 +4,6 @@ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ from torch.nn.modules.utils import _pair
+ 
+-from cvpods import _C
+ 
+ 
+ class _ROIAlignRotated(Function):
+diff --git a/cvpods/layers/rotated_boxes.py b/cvpods/layers/rotated_boxes.py
+index 3be7a11..326c264 100644
+--- a/cvpods/layers/rotated_boxes.py
++++ b/cvpods/layers/rotated_boxes.py
+@@ -2,7 +2,6 @@
+ from __future__ import absolute_import, division, print_function, unicode_literals
+ 
+ # import torch
+-from cvpods import _C
+ 
+ 
+ def pairwise_iou_rotated(boxes1, boxes2):
+diff --git a/cvpods/layers/swap_align2nat.py b/cvpods/layers/swap_align2nat.py
+index dd3798b..83eb6f7 100644
+--- a/cvpods/layers/swap_align2nat.py
++++ b/cvpods/layers/swap_align2nat.py
+@@ -2,7 +2,6 @@ from torch import nn
+ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ 
+-from cvpods import _C
+ 
+ 
+ class _SwapAlign2Nat(Function):
+diff --git a/cvpods/layers/tree_filter_core.py b/cvpods/layers/tree_filter_core.py
+index ea8ec77..5e8c0f6 100644
+--- a/cvpods/layers/tree_filter_core.py
++++ b/cvpods/layers/tree_filter_core.py
+@@ -7,7 +7,6 @@ from torch import nn
+ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ 
+-from cvpods import _C
+ 
+ # pylint: disable=W0613
+ 
+diff --git a/cvpods/modeling/anchor_generator.py b/cvpods/modeling/anchor_generator.py
+index f57fffc..b69d059 100644
+--- a/cvpods/modeling/anchor_generator.py
++++ b/cvpods/modeling/anchor_generator.py
+@@ -195,7 +195,7 @@ class DefaultAnchorGenerator(nn.Module):
+             boxes = Boxes(anchors_per_feature_map)
+             anchors_in_image.append(boxes)
+ 
+-        anchors = [copy.deepcopy(anchors_in_image) for _ in range(num_images)]
++        anchors = anchors_in_image
+         return anchors
+ 
+ 
+diff --git a/cvpods/modeling/box_regression.py b/cvpods/modeling/box_regression.py
+index 56f2ccb..7225d3c 100644
+--- a/cvpods/modeling/box_regression.py
++++ b/cvpods/modeling/box_regression.py
+@@ -99,10 +99,16 @@ class Box2BoxTransform(object):
+         ctr_y = boxes[..., 1] + 0.5 * heights
+ 
+         wx, wy, ww, wh = self.weights
+-        dx = deltas[..., 0::4] / wx
+-        dy = deltas[..., 1::4] / wy
+-        dw = deltas[..., 2::4] / ww
+-        dh = deltas[..., 3::4] / wh
++        if torch.onnx.is_in_onnx_export():
++            dx = deltas[..., 0:1:]
++            dy = deltas[..., 1:2:]
++            dw = deltas[..., 2:3:]
++            dh = deltas[..., 3:4:]
++        else:
++            dx = deltas[..., 0::4] / wx
++            dy = deltas[..., 1::4] / wy
++            dw = deltas[..., 2::4] / ww
++            dh = deltas[..., 3::4] / wh
+ 
+         # Prevent sending too large values into torch.exp()
+         dx_width = dx * widths[..., None]
+@@ -122,11 +128,17 @@ class Box2BoxTransform(object):
+         pred_w = torch.exp(dw) * widths[..., None]
+         pred_h = torch.exp(dh) * heights[..., None]
+ 
+-        pred_boxes = torch.zeros_like(deltas)
+-        pred_boxes[..., 0::4] = pred_ctr_x - 0.5 * pred_w  # x1
+-        pred_boxes[..., 1::4] = pred_ctr_y - 0.5 * pred_h  # y1
+-        pred_boxes[..., 2::4] = pred_ctr_x + 0.5 * pred_w  # x2
+-        pred_boxes[..., 3::4] = pred_ctr_y + 0.5 * pred_h  # y2
++        if torch.onnx.is_in_onnx_export():
++            pred_boxes = torch.cat([pred_ctr_x - 0.5 * pred_w,
++                                    pred_ctr_y - 0.5 * pred_h,
++                                    pred_ctr_x + 0.5 * pred_w,
++                                    pred_ctr_y + 0.5 * pred_h], dim=1)
++        else:
++            pred_boxes = torch.zeros_like(deltas)
++            pred_boxes[..., 0::4] = pred_ctr_x - 0.5 * pred_w  # x1
++            pred_boxes[..., 1::4] = pred_ctr_y - 0.5 * pred_h  # y1
++            pred_boxes[..., 2::4] = pred_ctr_x + 0.5 * pred_w  # x2
++            pred_boxes[..., 3::4] = pred_ctr_y + 0.5 * pred_h  # y2
+         return pred_boxes
+ 
+ 
+diff --git a/cvpods/modeling/losses/sigmoid_focal_loss.py b/cvpods/modeling/losses/sigmoid_focal_loss.py
+index 1fd5949..7cdc8ed 100644
+--- a/cvpods/modeling/losses/sigmoid_focal_loss.py
++++ b/cvpods/modeling/losses/sigmoid_focal_loss.py
+@@ -7,7 +7,6 @@ from torch import nn
+ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ 
+-from cvpods import _C
+ 
+ 
+ # TODO: Use JIT to replace CUDA implementation in the future.
+diff --git a/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/net.py b/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/net.py
+index ab3aa15..48887f5 100644
+--- a/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/net.py
++++ b/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/net.py
+@@ -5,7 +5,7 @@ from cvpods.layers import ShapeSpec
+ from cvpods.modeling.backbone import Backbone
+ from cvpods.modeling.anchor_generator import DefaultAnchorGenerator
+ 
+-from .cspdarknet import build_darknet_backbone
++from cspdarknet import build_darknet_backbone
+ sys.path.append("..")
+ from yolof_base import build_encoder, build_decoder, YOLOF
+ 
+diff --git a/playground/detection/coco/yolof/yolof_base/yolof.py b/playground/detection/coco/yolof/yolof_base/yolof.py
+index c5143f9..ea86670 100644
+--- a/playground/detection/coco/yolof/yolof_base/yolof.py
++++ b/playground/detection/coco/yolof/yolof_base/yolof.py
+@@ -3,6 +3,7 @@ from typing import List
+ 
+ import torch
+ from torch import nn
++import torch.nn.functional as F
+ import torch.distributed as dist
+ 
+ from cvpods.layers import ShapeSpec, cat, generalized_batched_nms
+@@ -12,11 +13,58 @@ from cvpods.modeling.losses import sigmoid_focal_loss_jit
+ from cvpods.modeling.postprocessing import detector_postprocess
+ from cvpods.structures import Boxes, ImageList, Instances
+ from cvpods.utils import log_first_n
++from cvpods.modeling.anchor_generator import DefaultAnchorGenerator
+ 
+ from .box_ops import box_iou, generalized_box_iou
+ from .uniform_matcher import UniformMatcher
+ 
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (batch, N, 4)
++            nmsed_scores: (batch, N)
++            nmsed_classes: (batch, N)
++            nmsed_num: (batch,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.arange(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++                                                                   bboxes, scores, score_threshold_f=score_thr,
++                                                                   iou_threshold_f=iou_thr,
++                                                                   max_size_per_class_i=max_size_p_class,
++                                                                   max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, class_num, max_size_per_class=100, max_total_size=100):
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.half()
++        scores = scores.half()
++    bboxes = bboxes.reshape(-1, bboxes.shape[1].numpy(), 1, 4)
++    scores = scores.reshape(-1, scores.shape[1].numpy(), class_num)
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,
++                                                                           score_threshold, iou_threshold,
++                                                                           max_size_per_class, max_total_size)
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    return nmsed_boxes, nmsed_scores, nmsed_classes
++
++
+ def permute_to_N_HWA_K(tensor, K):
+     """
+     Transpose/reshape a tensor from (N, (A x K), H, W) to (N, (HxWxA), K)
+@@ -53,18 +101,19 @@ class YOLOF(nn.Module):
+         self.nms_threshold = cfg.MODEL.YOLOF.NMS_THRESH_TEST
+         self.nms_type = cfg.MODEL.NMS_TYPE
+         self.max_detections_per_image = cfg.TEST.DETECTIONS_PER_IMAGE
++        self.cfg = cfg
+         # fmt: on
+ 
+         self.backbone = cfg.build_backbone(
+             cfg, input_shape=ShapeSpec(channels=len(cfg.MODEL.PIXEL_MEAN)))
+ 
+         backbone_shape = self.backbone.output_shape()
+-        feature_shapes = [backbone_shape[f] for f in self.in_features]
++        self.feature_shapes = [backbone_shape[f] for f in self.in_features]
+         self.encoder = cfg.build_encoder(
+             cfg, backbone_shape
+         )
+         self.decoder = cfg.build_decoder(cfg)
+-        self.anchor_generator = cfg.build_anchor_generator(cfg, feature_shapes)
++        self.anchor_generator = cfg.build_anchor_generator(cfg, self.feature_shapes)
+ 
+         # Matching and loss
+         self.box2box_transform = Box2BoxTransform(
+@@ -83,6 +132,7 @@ class YOLOF(nn.Module):
+             torch.Tensor(cfg.MODEL.PIXEL_STD).to(self.device).view(3, 1, 1)
+         )
+         self.to(self.device)
++        self._batch_size = 1
+ 
+     def forward(self, batched_inputs):
+         """
+@@ -145,6 +195,75 @@ class YOLOF(nn.Module):
+                 processed_results.append({"instances": r})
+             return processed_results
+ 
++    def forward_onnx(self, inputs):
++        features = self.backbone(inputs)
++        features = [features[f] for f in self.in_features]
++        # return encode_tensor
++        box_cls, box_delta = self.decoder(self.encoder(features[0]))
++        anchors = [DefaultAnchorGenerator(self.cfg, self.feature_shapes)(features) for i in range(self._batch_size)]
++        results = self.inference_onnx([box_cls], [box_delta], anchors)
++        return results
++
++    def inference_onnx(self, box_cls, box_delta, anchors):
++        boxes_all = []
++        score_all = []
++
++        box_cls = [permute_to_N_HWA_K(x, self.num_classes) for x in box_cls]
++        box_delta = [permute_to_N_HWA_K(x, 4) for x in box_delta]
++        # list[Tensor], one per level, each has shape (N, Hi x Wi x A, K or 4)
++
++        for img_idx, anchors_per_image in enumerate(anchors):
++            box_cls_per_image = [
++                box_cls_per_level[img_idx] for box_cls_per_level in box_cls
++            ]
++            box_reg_per_image = [
++                box_reg_per_level[img_idx] for box_reg_per_level in box_delta
++            ]
++            boxes, score = self.inference_single_image_onnx(
++                box_cls_per_image, box_reg_per_image, anchors_per_image)
++            boxes_all.append(boxes)
++            score_all.append(score)
++        boxes_all = torch.cat(boxes_all, dim=0)
++        score_all = torch.cat(score_all, dim=0)
++        nmsed_boxes, nmsed_scores, nmsed_classes = batch_nms_op(boxes_all, score_all, self.score_threshold,
++                                                                self.nms_threshold, self.num_classes)
++        return nmsed_boxes, nmsed_scores, nmsed_classes
++
++    def inference_single_image_onnx(self, box_cls, box_delta, anchors):
++        boxes_all = []
++        scores_all = []
++        class_idxs_all = []
++
++        # Iterate over every feature level
++        for box_cls_i, box_reg_i, anchors_i in zip(box_cls, box_delta,
++                                                   anchors):
++            # (HxWxAxK,)
++            box_cls_i = box_cls_i.flatten().sigmoid_()
++            num_topk = min(self.topk_candidates, box_reg_i.size(0))
++            predicted_prob, topk_idxs = torch.topk(box_cls_i, k=num_topk)
++            topk_idxs = topk_idxs.int()
++            anchor_idxs = topk_idxs // self.num_classes
++            classes_idxs = topk_idxs % self.num_classes
++
++            anchor_idxs = anchor_idxs.long()
++            classes_idxs = classes_idxs.long()
++
++            box_reg_i = box_reg_i[anchor_idxs]
++            anchors_i = anchors_i[anchor_idxs]
++            predicted_boxes = self.box2box_transform.apply_deltas(
++                box_reg_i, anchors_i.tensor)
++            boxes_all.append(predicted_boxes)
++            scores_all.append(predicted_prob)
++            class_idxs_all.append(classes_idxs)
++        boxes_all, scores_all, class_idxs_all = [
++            cat(x) for x in [boxes_all, scores_all, class_idxs_all]
++        ]
++        scores_all = scores_all.reshape(-1, 1)
++        class_idxs_all = class_idxs_all.reshape(-1, 1)
++        scores_t = torch.zeros([scores_all.shape[0], self.num_classes], dtype=torch.float32)
++        scores_t = scores_t.scatter(1, class_idxs_all, scores_all)
++        return boxes_all.unsqueeze(0), scores_t.unsqueeze(0)
++
+     def losses(self,
+                indices,
+                gt_instances,
+diff --git a/setup.py b/setup.py
+index 6280b8f..e5990f5 100644
+--- a/setup.py
++++ b/setup.py
+@@ -74,13 +74,6 @@ def get_extensions():
+     include_dirs = [extensions_dir]
+ 
+     ext_modules = [
+-        extension(
+-            "cvpods._C",
+-            sources,
+-            include_dirs=include_dirs,
+-            define_macros=define_macros,
+-            extra_compile_args=extra_compile_args,
+-        )
+     ]
+ 
+     return ext_modules
