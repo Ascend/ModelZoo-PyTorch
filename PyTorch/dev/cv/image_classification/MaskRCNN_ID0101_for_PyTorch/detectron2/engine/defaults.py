@@ -317,7 +317,8 @@ class DefaultTrainer(SimpleTrainer):
                 model,
                 optimizer,
                 opt_level=cfg.OPT_LEVEL,
-                loss_scale=cfg.LOSS_SCALE_VALUE)
+                loss_scale=cfg.LOSS_SCALE_VALUE,
+                combine_grad=True)
 
         data_loader = self.build_train_loader(cfg)
 
