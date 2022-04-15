@@ -28,7 +28,7 @@ def main(args):
     yolo_coord, yolo_obj, yolo_classes = [], [], []
     yolo_node = []
     yolo_num = 3
-    class_num = 80
+    cls_num = args.class_num
     boxes = 3
     coords = 4
 
@@ -40,18 +40,16 @@ def main(args):
         crd_align_len = ceil_x(f_h * f_w * 2 + 32, 32) // 2
         obj_align_len = ceil_x(boxes * f_h * f_w * 2 + 32, 32) // 2
 
-        yolo_coord.append(
-            helper.make_tensor_value_info(f"yolo{i}_coord", onnx.TensorProto.FLOAT, [bs, boxes * coords, crd_align_len]))
+        yolo_coord.append(helper.make_tensor_value_info(f"yolo{i}_coord", onnx.TensorProto.FLOAT, [bs, boxes * coords, crd_align_len]))
         yolo_obj.append(helper.make_tensor_value_info(f"yolo{i}_obj", onnx.TensorProto.FLOAT, [bs, obj_align_len]))
-        yolo_classes.append(
-            helper.make_tensor_value_info(f"yolo{i}_classes", onnx.TensorProto.FLOAT, [bs, class_num, obj_align_len]))
+        yolo_classes.append(helper.make_tensor_value_info(f"yolo{i}_classes", onnx.TensorProto.FLOAT, [bs, cls_num, obj_align_len]))
 
         yolo_node.append(helper.make_node('YoloPreDetection',
                                           inputs=[model.graph.output[i].name],
                                           outputs=[f"yolo{i}_coord", f"yolo{i}_obj", f"yolo{i}_classes"],
                                           boxes=boxes,
                                           coords=coords,
-                                          classes=class_num,
+                                          classes=cls_num,
                                           yolo_version='V5',
                                           name=f'yolo_{i}'))
         model.graph.node.append(yolo_node[i])
@@ -69,7 +67,7 @@ def main(args):
                                         outputs=['box_out', 'box_out_num'],
                                         boxes=boxes,
                                         coords=coords,
-                                        classes=class_num,
+                                        classes=cls_num,
                                         pre_nms_topn=1024,
                                         post_nms_topn=1024,
                                         relative=1,
@@ -77,9 +75,7 @@ def main(args):
                                         obj_threshold=args.conf_thres,
                                         score_threshold=args.conf_thres,
                                         iou_threshold=args.iou_thres,
-                                        biases=[10., 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198,
-                                                373,
-                                                326],
+                                        biases=args.anchors,
                                         name='YoloV5DetectionOutput_1')
 
     # add input and output
@@ -102,5 +98,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=1, help='batch size')
     parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
+    parser.add_argument('--class-num', type=int, default=80, help='class num')
+    parser.add_argument('--anchors', type=float, nargs='+', default=[10., 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326], help='anchors')
     flags = parser.parse_args()
     main(flags)
