@@ -40,11 +40,9 @@ def main(args):
         crd_align_len = ceil_x(f_h * f_w * 2 + 32, 32) // 2
         obj_align_len = ceil_x(boxes * f_h * f_w * 2 + 32, 32) // 2
 
-        yolo_coord.append(
-            helper.make_tensor_value_info(f"yolo{i}_coord", onnx.TensorProto.FLOAT, [bs, boxes * coords, crd_align_len]))
+        yolo_coord.append(helper.make_tensor_value_info(f"yolo{i}_coord", onnx.TensorProto.FLOAT, [bs, boxes * coords, crd_align_len]))
         yolo_obj.append(helper.make_tensor_value_info(f"yolo{i}_obj", onnx.TensorProto.FLOAT, [bs, obj_align_len]))
-        yolo_classes.append(
-            helper.make_tensor_value_info(f"yolo{i}_classes", onnx.TensorProto.FLOAT, [bs, cls_num, obj_align_len]))
+        yolo_classes.append(helper.make_tensor_value_info(f"yolo{i}_classes", onnx.TensorProto.FLOAT, [bs, cls_num, obj_align_len]))
 
         yolo_node.append(helper.make_node('YoloPreDetection',
                                           inputs=[model.graph.output[i].name],
