@@ -111,6 +111,10 @@ def train_model(model):
         train_loss_sum = 0.0
         start_time = time.time()
         for step, x in enumerate(train_loader):
+            #图模式
+            if args.graph_mode:
+                print("graph mode on")
+                torch.npu.enable_graph_mode()
             cat_fea, num_fea, label = x[0], x[1], x[2]
             if torch.npu.is_available():
                 cat_fea, num_fea, label = cat_fea.npu(non_blocking=True), num_fea.npu(non_blocking=True), label.npu(non_blocking=True)
@@ -127,17 +131,27 @@ def train_model(model):
 
             #loss.backward()
             optimizer.step()
-            
-            #措施
-            #train_loss_sum += loss.cpu().item()
-            #train_loss_sum += loss.detach()
-            train_loss_sum += loss
-            #措施
+            #图模式
+            if args.graph_mode:
+                torch.npu.launch_graph()
+                if step == len(train_loader):
+                    torch.npu.synchronize()
+            else:
+                #措施
+                #train_loss_sum += loss.cpu().item()
+                #train_loss_sum += loss.detach()
+                train_loss_sum += loss
+                #措施
 
             #if (step + 1) % 50 == 0 or (step + 1) == len(train_loader):
             print("Epoch {:04d} | Step {:04d} / {} | Loss {:.4f} | Time {:.4f}".format(
                     epoch+1, step+1, len(train_loader), train_loss_sum/(step+1), time.time() - start_time))
             start_time = time.time()
+        #图模式
+        if args.graph_mode:
+            print("graph mode off")
+            torch.npu.disable_graph_mode()
+
         scheduler.step()
         cur_auc = evaluate_model(model)
         if cur_auc > best_auc:
