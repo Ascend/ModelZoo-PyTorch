@@ -117,7 +117,7 @@ python3.7 -m onnxsim yolov5s.onnx yolov5s_sim.onnx
 ```
 若步骤（1）导出动态shape模型，使用onnxsim简化时要增加传参：  
 --dynamic-input-shape：说明导出模型为动态shape  
---input-shape images:1,3,640,640：该参数设置shape的缺省值，若onnxsim不支持动态shape模型简化，则使用该值导出静态shape模型  
+--input-shape images:1,3,640,640：设置shape的缺省值，若onnxsim不支持动态shape模型简化，则使用该值导出静态shape模型  
 
 
 （3）生成量化所需的校准数据
@@ -156,7 +156,7 @@ python3.7 modify_model.py --model=yolov5s_sim_amct.onnx --conf-thres=0.4 --iou-t
 --conf-thres：后处理算子置信度阈值  
 --iou-thres：后处理算子IOU阈值  
 --class-num：模型训练数据集的类别数，需根据实际数据集类别修改，默认80类  
---anchors：训练数据集聚类得到的anchors，不同数据集聚类得到的anchors不同，需根据实际数据集修改，默认值为yolo提供的anchors，参见[yolo官方代码](https://github.com/ultralytics/yolov5/blob/master/models/yolov5s.yaml)  
+--anchors：训练数据集聚类得到的anchors，需根据实际数据集修改，默认值为yolo提供的anchors，参见[yolo官方代码](https://github.com/ultralytics/yolov5/blob/master/models/yolov5s.yaml)  
 运行脚本后，由xx.onnx生成名为xx_t.onnx的模型。
 
 
