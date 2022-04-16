@@ -1,0 +1,24 @@
+source env.sh
+python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
+        --model_type bert \
+        --config_name ./bert-large-chinese/config.json \
+        --tokenizer_name ./bert-large-chinese \
+        --max_seq_length 512 \
+        --train_file ./train_huawei.txt \
+        --eval_metric_path ./accuracy.py \
+        --line_by_line \
+        --pad_to_max_length \
+        --remove_unused_columns false \
+        --save_steps 5000 \
+        --num_train_epochs 3 \
+        --overwrite_output_dir \
+        --per_device_train_batch_size 16 \
+        --per_device_eval_batch_size 16 \
+        --do_train \
+        --do_eval \
+        --fp16 \
+        --fp16_opt_level O2 \
+        --loss_scale 8192 \
+        --use_combine_grad \
+        --optim adamw_apex_fused_npu \
+        --output_dir ./output

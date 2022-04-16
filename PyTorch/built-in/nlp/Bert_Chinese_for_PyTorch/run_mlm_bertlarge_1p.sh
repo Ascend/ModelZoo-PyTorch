@@ -1,17 +1,19 @@
 source env.sh
 python3 run_mlm.py \
         --model_type bert \
-        --config_name bert-base-chinese/config.json \
-        --tokenizer_name bert-base-chinese \
+        --config_name ./bert-large-chinese/config.json \
+        --tokenizer_name ./bert-large-chinese \
+        --max_seq_length 512 \
         --train_file ./train_huawei.txt \
         --eval_metric_path ./accuracy.py \
         --line_by_line \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
+        --num_train_epochs 3 \
         --overwrite_output_dir \
-        --per_device_train_batch_size 32 \
-        --per_device_eval_batch_size 32 \
+        --per_device_train_batch_size 16 \
+        --per_device_eval_batch_size 16 \
         --do_train \
         --do_eval \
         --fp16 \

@@ -20,17 +20,7 @@ pip3 install -e ./
 cd ..
 ```
 
-### 3.下载模型配置和分词配置文件
-
-在当前目录执行下载命令
-
-```
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/bert-base-chinese
-```
-
-下载后会在当前目录生成bert-base-chinese子目录
-
-### 4.下载精度评估处理脚本
+### 3.下载精度评估处理脚本
 
 下载命令
 
@@ -40,21 +30,53 @@ curl https://raw.githubusercontent.com/huggingface/datasets/master/metrics/accur
 
 默认会下载accuracy.py到当前目录。如果将其下载到其他目录，请配置参数**--eval_metric_path**为accuracy.py的实际路径。
 
-### 5.训练
+### 4.训练
 
-修改run_mlm_cn.sh和run_mlm_cn_8p.sh中**--train_file**参数为使用的中文文本数据的实际路径，然后执行训练
+#### Bert-base
+
+下载配置模型和分词文件
+
+```
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/bert-base-chinese
+```
+
+修改run_mlm_bertbase_1p.sh和run_mlm_bertbase_8p.sh中**--train_file**参数为使用的中文文本数据的实际路径，然后执行训练
 
 单卡训练
 
 ```
-bash run_mlm_cn.sh
+bash run_mlm_bertbase_1p.sh
 ```
 
 单机8卡训练
 
 ```
-bash run_mlm_cn_8p.sh
+bash run_mlm_bertbase_8p.sh
 ```
+
+#### Bert-large
+
+下载配置模型和分词文件
+
+```
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/algolet/bert-large-chinese
+```
+
+修改run_mlm_bertlarge_1p.sh和run_mlm_bertlarge_8p.sh中**--train_file**参数为使用的中文文本数据的实际路径，然后执行训练
+
+单卡训练
+
+```
+bash run_mlm_bertlarge_1p.sh
+```
+
+单机8卡训练
+
+```
+bash run_mlm_bertlarge_8p.sh
+```
+
+
 
 ### 附录：单机8卡训练脚本参数说明
 
