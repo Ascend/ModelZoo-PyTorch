@@ -43,12 +43,12 @@ git clone -b v1.2.7 --depth=1 https://github.com/open-mmlab/mmcv.git
 ```
 2. 进入GFocalV2目录，用mmcv_need里的文件替换mmcv中对应的文件
 ```
-cp -f ./mmcv_need/_functions.py ../mmcv/mmcv/parallel/
-cp -f ./mmcv_need/builder.py ../mmcv/mmcv/runner/optimizer/
-cp -f ./mmcv_need/distributed.py ../mmcv/mmcv/parallel/
-cp -f ./mmcv_need/data_parallel.py ../mmcv/mmcv/parallel/
-cp -f ./mmcv_need/dist_utils.py ../mmcv/mmcv/runner/
-cp -f ./mmcv_need/optimizer.py ../mmcv/mmcv/runner/hooks/
+cp -f ./mmcv_need/_functions.py ./mmcv/mmcv/parallel/
+cp -f ./mmcv_need/builder.py ./mmcv/mmcv/runner/optimizer/
+cp -f ./mmcv_need/distributed.py ./mmcv/mmcv/parallel/
+cp -f ./mmcv_need/data_parallel.py ./mmcv/mmcv/parallel/
+cp -f ./mmcv_need/dist_utils.py ./mmcv/mmcv/runner/
+cp -f ./mmcv_need/optimizer.py ./mmcv/mmcv/runner/hooks/
 ```
 3. 以下三个文件的替换是为了在log中打印出FPS的信息
 ```
