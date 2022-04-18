@@ -26,7 +26,7 @@ cd ../..
 
 4. 数据集
 
-   获取COCO数据集，并重命名为coco，放到/root/datasets目录
+   获取COCO数据集，并重命名为coco，放到当前目录的data目录下
 
 5. [获取msame工具](https://gitee.com/ascend/tools/tree/master/msame)
 
@@ -38,7 +38,7 @@ cd ../..
 
 ```bash
 bash test/pth2om.sh --batch_size=1
-bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=1
+bash test/eval_acc_perf.sh --datasets_path=data/coco --batch_size=1
 ```
 
 **评测结果：**

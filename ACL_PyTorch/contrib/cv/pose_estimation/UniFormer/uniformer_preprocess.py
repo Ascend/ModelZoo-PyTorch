@@ -19,24 +19,8 @@ import numpy as np
 from argparse import ArgumentParser
 from xtcocotools.coco import COCO
 from mmpose.core.post_processing import get_affine_transform
+from mmpose.apis.inference import _box2cs
 from tqdm import tqdm
-
-
-def _box2cs(box, image_size):
-    x, y, w, h = box[:4]
-
-    aspect_ratio = 1. * image_size[0] / image_size[1]
-    center = np.zeros((2), dtype=np.float32)
-    center[0] = x + w * 0.5
-    center[1] = y + h * 0.5
-
-    if w > aspect_ratio * h:
-        h = w * 1.0 / aspect_ratio
-    elif w < aspect_ratio * h:
-        w = h * aspect_ratio
-    scale = np.array([w * 1.0 / 200.0, h * 1.0 / 200.0], dtype=np.float32)
-    scale = scale * 1.25
-    return center, scale
 
 
 def main():
@@ -81,7 +65,7 @@ def main():
 
             # bbox format is 'xywh'
             bbox = ann['bbox']
-            center, scale = _box2cs(bbox, image_size)
+            center, scale = _box2cs(cfg, bbox)
 
             img = ori_img.copy()
             # TopDownAffine

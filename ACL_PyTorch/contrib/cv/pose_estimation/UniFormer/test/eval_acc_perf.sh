@@ -2,7 +2,7 @@
 
 set -eu
 
-datasets_path="/root/datasets/coco"
+datasets_path="data/coco"
 batch_size=1
 
 for para in $*
