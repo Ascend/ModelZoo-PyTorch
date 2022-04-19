@@ -83,12 +83,6 @@ def train_8p(rank, npus, config):
         model_unet.train(True)
         epoch_loss = 0. 
         acc = 0.	# Accuracy
-        SE = 0.		# Sensitivity (Recall)
-        SP = 0.		# Specificity
-        PC = 0. 	# Precision
-        F1 = 0.		# F1 Score
-        JS = 0.		# Jaccard Similarity
-        DC = 0.		# Dice Coefficient
         length = 0
         threshold = 0.5
         steps = len(train_loader)
@@ -98,7 +92,7 @@ def train_8p(rank, npus, config):
             GT = GT.to("npu")
             if i == 10:
                 start_time = time.time()
-
+            step_start_time = time.time()
             # SR : Segmentation Result
             SR = model_unet(images)
             SR_probs = F.sigmoid(SR)
@@ -116,34 +110,21 @@ def train_8p(rank, npus, config):
             else:
                 loss.backward()
             optimizer.step()
-
+            if rank == 0:
+                print('Epoch [%d/%d], Step: %d, FPS: %.2f' % (
+                        epoch+1, config.num_epochs, i, config.npus*config.batch_size/(time.time() - step_start_time)))
             SR_ac = SR > threshold
             GT_ac = GT == torch.max(GT)
             acc += get_accuracy(SR_ac, GT_ac)
-            SE += get_sensitivity(SR_ac, GT_ac)
-            SP += get_specificity(SR_ac, GT_ac)
-            PC += get_precision(SR_ac, GT_ac)
-            F1 += get_F1(SR_ac, GT_ac)
-            JS += get_JS(SR_ac, GT_ac)
-            DC += get_DC(SR_ac, GT_ac)
             length += 1
-            if config.display_freq > 0 and (i+1) % config.display_freq == 0 and rank == 0:
-                print('Rank %d , Epoch [%d/%d], Step: %d, Loss: %.4f, [Training] Acc: %.4f, FPS: %.2f' % (
-                        rank, epoch+1, config.num_epochs, i, loss.item(),acc/length, config.batch_size*(i-10)/(time.time() - start_time)))
+
         acc = acc/length
-        SE = SE/length
-        SP = SP/length
-        PC = PC/length
-        F1 = F1/length
-        JS = JS/length
-        DC = DC/length
 
         # Print the log info
         if rank == 0:
-            print('Rank %d , Epoch [%d/%d], Loss: %.4f, [Training] Acc: %.4f, SE: %.4f, SP: %.4f, PC: %.4f, F1: %.4f, JS: %.4f, DC: %.4f, FPS: %.2f' % (
-                rank, epoch+1, config.num_epochs, epoch_loss, acc ,SE,SP,PC,F1,JS,DC, config.batch_size*(steps-10)/(time.time() - start_time)))
+            print('Rank %d , Epoch [%d/%d], Loss: %.4f, [Training] Acc: %.4f,  FPS: %.2f' % (
+                rank, epoch+1, config.num_epochs, epoch_loss, acc , config.batch_size*(steps-10)/(time.time() - start_time)))
         # Decay learning rate
-        # if (epoch+1) > (config.num_epochs - config.num_epochs_decay):
         if (epoch+1) % 10 == 0:
             lr = lr/2.
             # lr -= (config.lr / float(config.num_epochs_decay))
@@ -157,12 +138,6 @@ def train_8p(rank, npus, config):
             model_unet.eval()
 
             acc = 0.	# Accuracy
-            SE = 0.		# Sensitivity (Recall)
-            SP = 0.		# Specificity
-            PC = 0. 	# Precision
-            F1 = 0.		# F1 Score
-            JS = 0.		# Jaccard Similarity
-            DC = 0.		# Dice Coefficient
             length=0
             for i, (images, GT) in enumerate(valid_loader):
 
@@ -172,25 +147,14 @@ def train_8p(rank, npus, config):
                 SR_ac = SR > threshold
                 GT_ac = GT == torch.max(GT)
                 acc += get_accuracy(SR_ac, GT_ac)
-                SE += get_sensitivity(SR_ac, GT_ac)
-                SP += get_specificity(SR_ac, GT_ac)
-                PC += get_precision(SR_ac, GT_ac)
-                F1 += get_F1(SR_ac, GT_ac)
-                JS += get_JS(SR_ac, GT_ac)
-                DC += get_DC(SR_ac, GT_ac)
                     
                 length += 1
                 
             acc = acc/length
-            SE = SE/length
-            SP = SP/length
-            PC = PC/length
-            F1 = F1/length
-            JS = JS/length
-            DC = DC/length
+
             unet_score = acc#JS + DC
 
-            print('[Validation] Rank: %d, Epoch %d,Acc: %.4f, SE: %.4f, SP: %.4f, PC: %.4f, F1: %.4f, JS: %.4f, DC: %.4f'%(rank, epoch, acc,SE,SP,PC,F1,JS,DC))
+            print('[Validation] Rank: %d, Epoch %d,Acc: %.4f'%(rank, epoch, acc))
             
             '''
             torchvision.utils.save_image(images.data.cpu(),
@@ -212,6 +176,6 @@ def train_8p(rank, npus, config):
                 best_unet = model_unet.state_dict()
                 print('Best %s model score : %.4f'%(config.model_type,best_unet_score))
                 torch.save(best_unet,unet_path)
-                print("Validation Best", [config.model_type,acc,SE,SP,PC,F1,JS,DC,config.lr,best_epoch,\
+                print("Validation Best", [config.model_type,acc,config.lr,best_epoch,\
                     config.num_epochs,config.num_epochs_decay,config.augmentation_prob])
             

@@ -304,7 +304,7 @@ class Solver(object):
     def test(self):
         threshold = 0.5
         pre_dict = torch.load(self.test_model_path)
-        new_dict = None
+        new_dict = {}
         if list(pre_dict.keys())[0].startswith("module"):
             for key, value in pre_dict.items():
                 name = key[7:]

@@ -32,9 +32,8 @@ def proc_nodes_module(checkpoint):
 
 
 def convert(pth_file_path, onnx_file_path):
-    checkpoint = torch.load(pth_file_path, map_location='cpu')
+    model_checkpoint = torch.load(pth_file_path, map_location='cpu')
     
-    model_checkpoint = checkpoint["model"]
     if list(model_checkpoint.keys())[0].startswith("module."):
         model_checkpoint = proc_nodes_module(model_checkpoint)
 
