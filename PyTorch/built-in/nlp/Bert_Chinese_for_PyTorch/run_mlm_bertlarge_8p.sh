@@ -16,6 +16,7 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --per_device_eval_batch_size 16 \
         --do_train \
         --do_eval \
+        --eval_accumulation_steps 100 \
         --fp16 \
         --fp16_opt_level O2 \
         --loss_scale 8192 \

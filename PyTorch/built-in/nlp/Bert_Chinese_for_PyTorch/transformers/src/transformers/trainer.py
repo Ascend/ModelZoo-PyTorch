@@ -2442,9 +2442,9 @@ class Trainer:
 
         # Initialize containers
         # losses/preds/labels on GPU/TPU (accumulated for eval_accumulation_steps)
-        losses_host = None
-        preds_host = None
-        labels_host = None
+        losses_host = []
+        preds_host = []
+        labels_host = []
         # losses/preds/labels on CPU (final containers)
         all_losses = None
         all_preds = None
@@ -2471,48 +2471,54 @@ class Trainer:
             # Update containers on host
             if loss is not None:
                 losses = self._nested_gather(loss.repeat(batch_size))
-                losses_host = losses if losses_host is None else torch.cat((losses_host, losses), dim=0)
+                losses_host.append(losses)
             if labels is not None:
                 labels = self._pad_across_processes(labels)
                 labels = self._nested_gather(labels)
-                labels_host = labels if labels_host is None else nested_concat(labels_host, labels, padding_index=-100)
+                labels_host.append(labels)
             if logits is not None:
                 logits = self._pad_across_processes(logits)
                 if self.preprocess_logits_for_metrics is not None:
                     logits = self.preprocess_logits_for_metrics(logits, labels)
                 logits = self._nested_gather(logits)
-                preds_host = logits if preds_host is None else nested_concat(preds_host, logits, padding_index=-100)
+                preds_host.append(logits)
             self.control = self.callback_handler.on_prediction_step(args, self.state, self.control)
 
             # Gather all tensors and put them back on the CPU if we have done enough accumulation steps.
             if args.eval_accumulation_steps is not None and (step + 1) % args.eval_accumulation_steps == 0:
-                if losses_host is not None:
+                if losses_host:
+                    losses_host = torch.cat(losses_host, dim=0)
                     losses = nested_numpify(losses_host)
                     all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
-                if preds_host is not None:
+                if preds_host:
+                    preds_host = torch.cat(preds_host, dim=0)
                     logits = nested_numpify(preds_host)
                     all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
-                if labels_host is not None:
+                if labels_host:
+                    labels_host = torch.cat(labels_host, dim=0)
                     labels = nested_numpify(labels_host)
                     all_labels = (
                         labels if all_labels is None else nested_concat(all_labels, labels, padding_index=-100)
                     )
 
                 # Set back to None to begin a new accumulation
-                losses_host, preds_host, labels_host = None, None, None
+                losses_host, preds_host, labels_host = [], [], []
 
         if args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
             delattr(self, "_past")
 
         # Gather all remaining tensors and put them back on the CPU
-        if losses_host is not None:
+        if losses_host:
+            losses_host = torch.cat(losses_host, dim=0)
             losses = nested_numpify(losses_host)
             all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
-        if preds_host is not None:
+        if preds_host:
+            preds_host = torch.cat(preds_host, dim=0)
             logits = nested_numpify(preds_host)
             all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
-        if labels_host is not None:
+        if labels_host:
+            labels_host = torch.cat(labels_host, dim=0)
             labels = nested_numpify(labels_host)
             all_labels = labels if all_labels is None else nested_concat(all_labels, labels, padding_index=-100)
 
