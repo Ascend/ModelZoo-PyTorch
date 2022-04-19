@@ -4,3 +4,4 @@ tokenizers
 sentencepiece != 0.1.92
 protobuf
 wikiextractor
+sklearn

@@ -104,3 +104,17 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --output_dir ./output                            # 输出保存路径
 ```
 
+### Q&A
+
+1. Q:第一次运行报类似"xxx **socket timeout** xxx"的错误该怎么办？
+
+   A:第一次运行tokenizer会对单词进行预处理，根据您的数据集大小，耗时不同，若时间过长，可能导致HCCL通信超时。此时可以通过设置以下环境变量，设置较大的超时时间阈值（单位秒，默认为600秒）：
+
+   ```
+   export HCCL_CONNECT_TIMEOUT=3600
+   ```
+
+   
+
+
+
