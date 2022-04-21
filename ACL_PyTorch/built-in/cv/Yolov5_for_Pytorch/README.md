@@ -13,6 +13,7 @@
 ------
 
 ## 1 文件说明
+将本仓库代码放在下载的 [yolov5开源仓](https://github.com/ultralytics/yolov5) 根目录下。
 ```
 Yolov5_for_Pytorch
   ├── acl_net.py         PyACL接口封装脚本
@@ -120,7 +121,7 @@ python3.7 -m onnxsim yolov5s.onnx yolov5s_sim.onnx
 --input-shape images:1,3,640,640：设置shape的缺省值，若onnxsim不支持动态shape模型简化，则使用该值导出静态shape模型  
 
 
-（3）生成量化所需的校准数据
+（3）生成量化所需的校准数据（可选）
 ```shell
 python3.7 generate_data.py --img_info_file=img_info_amct.txt --save_path=amct_data --batch_size=1
 ```
@@ -129,7 +130,7 @@ python3.7 generate_data.py --img_info_file=img_info_amct.txt --save_path=amct_da
 --save_path：生成校准bin格式数据保存路径  
 --batch_size：量化数据batch size，根据使用图片数量修改  
 
-（4）对简化后的onnx模型进行量化
+（4）对简化后的onnx模型进行量化（可选）
 ```shell
 bash amct.sh
 ```
@@ -148,15 +149,15 @@ bash amct.sh
 ### 3.4 修改onnx模型
 运行modify_yolov5.py修改生成的onnx文件，添加后处理算子
 ```shell
-python3.7 modify_model.py --model=yolov5s_sim.onnx --conf-thres=0.4 --iou-thres=0.5  # 非量化模型
-python3.7 modify_model.py --model=yolov5s_sim_amct.onnx --conf-thres=0.4 --iou-thres=0.5  # 量化模型
+python3.7 modify_model.py --pt=yolov5s.pt --onnx=yolov5s_sim.onnx --conf-thres=0.4 --iou-thres=0.5  # 非量化模型
+python3.7 modify_model.py --pt=yolov5s.pt --onnx=yolov5s_sim_amct.onnx --conf-thres=0.4 --iou-thres=0.5  # 量化模型
 ```
 参数说明：  
---model：原始onnx模型  
+--pt：用于导出onnx模型的pt模型  
+--onnx：简化后的onnx模型  
 --conf-thres：后处理算子置信度阈值  
 --iou-thres：后处理算子IOU阈值  
 --class-num：模型训练数据集的类别数，需根据实际数据集类别修改，默认80类  
---anchors：训练数据集聚类得到的anchors，需根据实际数据集修改，默认值为yolo提供的anchors，参见[yolo官方代码](https://github.com/ultralytics/yolov5/blob/master/models/yolov5s.yaml)  
 运行脚本后，由xx.onnx生成名为xx_t.onnx的模型。
 
 
@@ -187,7 +188,8 @@ python3.7 om_infer.py --model=yolov5s_sim_t_bs1.om --img-path=./val2017 --batch-
 参数说明：  
 --model: 推理om模型  
 --img-path: 测试数据集图片所在路径  
---batch-size: 模型batch size
+--batch-size: 模型batch size  
+注：若推理报错has no attribute 'bytes_to_ptr'，使用om_infer.py的上一版本即可
 
 
 （3）统计mAP值
