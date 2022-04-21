@@ -164,6 +164,7 @@ then
 else
   for i in $(seq 0 7)
   do
+  export RANK=`awk 'BEGIN{printf "%.0f\n",'${i}'+'${rank_server}'}'`
   if [ -d ${cur_path}/output/${i} ];then
         rm -rf ${cur_path}/output/${i}
         mkdir -p ${cur_path}/output/$i
