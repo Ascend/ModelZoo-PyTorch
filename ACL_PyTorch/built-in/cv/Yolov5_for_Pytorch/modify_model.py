@@ -14,15 +14,19 @@
 import onnx
 import argparse
 from onnx import helper
-
+from models.experimental import attempt_load
 
 def ceil_x(value, align_len):
     return (value + align_len - 1) // align_len * align_len
 
 
 def main(args):
-    model_path = args.model
-    model = onnx.load(model_path)
+    
+    pt_model = attempt_load(args.pt_path, map_location='cpu')
+    m = pt_model.module.model[-1] if hasattr(pt_model, 'module') else pt_model.model[-1]
+    for i in range(m.nl):
+        m.anchors[i] *= m.stride[i]
+    onnx_model = onnx.load(args.onnx_path)
 
     bs = args.batch_size
     yolo_coord, yolo_obj, yolo_classes = [], [], []
@@ -45,14 +49,14 @@ def main(args):
         yolo_classes.append(helper.make_tensor_value_info(f"yolo{i}_classes", onnx.TensorProto.FLOAT, [bs, cls_num, obj_align_len]))
 
         yolo_node.append(helper.make_node('YoloPreDetection',
-                                          inputs=[model.graph.output[i].name],
+                                          inputs=[onnx_model.graph.output[i].name],
                                           outputs=[f"yolo{i}_coord", f"yolo{i}_obj", f"yolo{i}_classes"],
                                           boxes=boxes,
                                           coords=coords,
                                           classes=cls_num,
                                           yolo_version='V5',
                                           name=f'yolo_{i}'))
-        model.graph.node.append(yolo_node[i])
+        onnx_model.graph.node.append(yolo_node[i])
         f_h, f_w = f_h // 2, f_w // 2
 
     # create yolo detection output layer
@@ -75,30 +79,30 @@ def main(args):
                                         obj_threshold=args.conf_thres,
                                         score_threshold=args.conf_thres,
                                         iou_threshold=args.iou_thres,
-                                        biases=args.anchors,
+                                        biases=m.anchors.numpy().flatten().astype('float16').tolist(),
                                         name='YoloV5DetectionOutput_1')
 
     # add input and output
-    model.graph.node.append(yolo_detout_node)
-    while len(model.graph.output) > 0:
-        model.graph.output.remove(model.graph.output[0])
+    onnx_model.graph.node.append(yolo_detout_node)
+    while len(onnx_model.graph.output) > 0:
+        onnx_model.graph.output.remove(onnx_model.graph.output[0])
 
-    model.graph.input.append(img_info)
-    model.graph.output.append(box_out)
-    model.graph.output.append(box_out_num)
+    onnx_model.graph.input.append(img_info)
+    onnx_model.graph.output.append(box_out)
+    onnx_model.graph.output.append(box_out_num)
 
-    onnx.save(model, model_path.split('.onnx')[0] + "_t.onnx")
+    onnx.save(onnx_model, args.onnx_path.split('.onnx')[0] + "_t.onnx")
     print("success")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("modify yolov5 onnx model for atc convert")
-    parser.add_argument('--model', type=str, default='./yolov5s_sim.onnx', help='model path')
+    parser.add_argument('--pt-path', type=str, default='./yolov5s.pt', help='pt_model path')
+    parser.add_argument('--onnx-path', type=str, default='./yolov5s_sim.onnx', help='onnx_model path')
     parser.add_argument('--img-size', nargs='+', type=int, default=[640, 640], help='image size')  # height, width
     parser.add_argument('--batch-size', type=int, default=1, help='batch size')
     parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.5, help='IOU threshold for NMS')
     parser.add_argument('--class-num', type=int, default=80, help='class num')
-    parser.add_argument('--anchors', type=float, nargs='+', default=[10., 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326], help='anchors')
     flags = parser.parse_args()
     main(flags)
