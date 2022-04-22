@@ -92,6 +92,7 @@ python3.7 ./train_1p.py  \
     --lr 1.6  \
     --epochs=${train_epochs} \
     --workers=${workers} \
+    --no-prefetcher \
     --npu ${ASCEND_DEVICE_ID} \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
