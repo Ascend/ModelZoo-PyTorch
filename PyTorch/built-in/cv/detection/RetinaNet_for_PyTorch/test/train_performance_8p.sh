@@ -115,6 +115,9 @@ cp train_retinanet_8p.sh $cur_path/../
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
+#设置性能执行1个epoch
+sed -i '/optimizer_config/a\total_epochs = 1\' $cur_path/../configs/retinanet/retinanet_r50_fpn_1x_coco.py
+
 #进入训练脚本目录
 cd $cur_path/../
 SIll=1
@@ -147,6 +150,9 @@ do
 	#	> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
+
+#还原
+sed -i "s|total_epochs = 1| |g" $cur_path/../configs/retinanet/retinanet_r50_fpn_1x_coco.py
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)
