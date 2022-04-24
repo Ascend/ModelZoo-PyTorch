@@ -44,6 +44,7 @@ export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+export HCCL_CONNECT_TIMEOUT=5400
 
 #设置device侧日志登记为error
 ${install_path}/driver/tools/msnpureport -g error -d 0

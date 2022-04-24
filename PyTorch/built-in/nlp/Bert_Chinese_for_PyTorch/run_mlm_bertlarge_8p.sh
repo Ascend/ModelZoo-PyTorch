@@ -22,4 +22,5 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --loss_scale 8192 \
         --use_combine_grad \
         --optim adamw_apex_fused_npu \
+        --distributed_process_group_timeout 5400 \
         --output_dir ./output

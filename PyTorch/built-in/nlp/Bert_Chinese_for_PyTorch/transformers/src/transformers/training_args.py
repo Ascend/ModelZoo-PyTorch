@@ -16,6 +16,7 @@ import contextlib
 import json
 import math
 import os
+import datetime
 import warnings
 from dataclasses import asdict, dataclass, field
 from enum import Enum
@@ -710,6 +711,13 @@ class TrainingArguments:
             "`DistributedDataParallel`."
         },
     )
+    distributed_process_group_timeout: Optional[int] = field(
+        default=1800,
+        metadata={
+            "help": "Timeout(seconds) for operations executed against the process group, the value of the flag `timeout` passed to "
+            "`init_process_group`."
+        },
+    )    
     dataloader_pin_memory: bool = field(
         default=True, metadata={"help": "Whether or not to pin memory for DataLoader."}
     )
@@ -1076,7 +1084,7 @@ class TrainingArguments:
         else:
             # Here, we'll use torch.distributed.
             # Initializes the distributed backend which will take care of synchronizing nodes/GPUs
-            torch.distributed.init_process_group(backend="hccl")
+            torch.distributed.init_process_group(backend="hccl", timeout=datetime.timedelta(seconds=self.distributed_process_group_timeout))
             device = torch.device("npu", self.local_rank)
             self._n_gpu = 1
 
