@@ -744,8 +744,9 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
                         param.grad /= BATCH_SIZE_multiplier
                 optimizer.step()
                 optimizer.zero_grad()
-
-        torch.npu.synchronize()
+        # 图模式        
+        if not args.graph_mode:
+            torch.npu.synchronize()
 
         # 图模式
         if args.graph_mode:
