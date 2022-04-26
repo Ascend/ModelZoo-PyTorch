@@ -182,7 +182,7 @@ def main():
         # main_worker process function
         # The child process uses the environment variables of the parent process,
         # we have to set KERNEL_NAME_ID for every proc
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+        main_worker(args.gpu, ngpus_per_node, args)
 
     else:
         # Simply call main_worker function
