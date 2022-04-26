@@ -28,7 +28,15 @@ cd v1.1
          ---evaluate-v1.1.py
 ```
 
-​     
+3. 下载词典
+
+在工程根目录执行
+
+```
+cd data/uncased_L-24_H-1024_A-16
+wget https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt -O vocab.txt
+cd ../../
+```
 
 #### 预训练模型准备
 1. 获取预训练模型，新建checkpoints目录，并将预训练模型置于checkpoints目录下，参照：https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/LanguageModeling/BERT
