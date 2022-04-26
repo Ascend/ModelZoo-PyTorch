@@ -916,7 +916,11 @@ def main():
             os.environ['MASTER_PORT'] = '29668'
             torch.npu.set_device("npu:%d" % args.local_rank)
             device = torch.device("npu:%d" % args.local_rank)
-            torch.distributed.init_process_group(backend='hccl', world_size=8, rank=args.local_rank)
+            if args.num_npu == 8:
+                torch.distributed.init_process_group(backend='hccl', world_size=8, rank=args.local_rank)
+            if args.num_npu == 16:
+                global_rank = int(os.getenv('RANK'))
+                torch.distributed.init_process_group(backend='hccl', world_size=16, rank=global_rank)
             n_npu = 1
         else:
             torch.cuda.set_device(args.local_rank)
