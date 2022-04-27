@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 # ============================================================================
 
 export ASCEND_HOME=/usr/local/Ascend
-export ASCEND_VERSION=nnrt/latest
+export ASCEND_VERSION=ascend-toolkit/latest
 export ARCH_PATTERN=.
 export LD_LIBRARY_PATH=${MX_SDK_HOME}/lib/modelpostprocessors:${LD_LIBRARY_PATH}
 export ASCEND_GLOBAL_LOG_LEVEL=0
