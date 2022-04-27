@@ -158,3 +158,5 @@ if __name__ == "__main__":
             for f, cm in zip(fname_list, score_list):
                 fh.write('{} {}\n'.format(f, cm))
     print('Scores saved to {}'.format(args.eval_output))
+    
+    del model
