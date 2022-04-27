@@ -20,7 +20,6 @@ import sys
 import numpy as np
 from tqdm import tqdm
 
-from data import cfg_mnet
 import cv2
 
 
@@ -59,9 +58,7 @@ if __name__ == '__main__':
         img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0,0,0))
         im_height, im_width, _ = img.shape
         scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
-        img -= (104, 117, 123)
-        img = img.transpose(2, 0, 1)
-        img = torch.from_numpy(img).unsqueeze(0)
+        img = torch.from_numpy(img).unsqueeze(0).byte()
         save_path = img_name[:-4].split('/')
         save_info_path = os.path.join(args.preinfo_folder, save_path[0])
         if not os.path.exists(save_info_path):

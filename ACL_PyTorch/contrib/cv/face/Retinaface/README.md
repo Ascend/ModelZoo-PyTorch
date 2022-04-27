@@ -103,11 +103,11 @@ python3.7 pth2onnx.py -m mobilenet0.25_Final.pth
 
 1.设置环境变量
 ```
-source test/env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc工具将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 ```
-atc --framework=5 --model=./retinface.onnx --input_format=NCHW --input_shape="image:16,3,1000,1000" --output=retinface_bs16 --log=debug --soc_version=Ascend310 --out-nodes="Concat_205:0;Softmax_206:0;Concat_155:0"
+atc --framework 5 --model retinaface.onnx --input_shape "image:16,3,1000,1000" --soc_version Ascend710 --output retinaface_bs16 --log error --out-nodes="Concat_205:0;Softmax_206:0;Concat_155:0" --enable_small_channel=1 --insert_op_conf=./aipp.cfg
 ```
 
 ## 4 数据集预处理
@@ -154,11 +154,11 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source test/env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理，确保benchmark工具在当前目录下，使用uname -m，检查本地环境架构，使用合理的benchmark工具如x86_64版本
 ```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=retinface_bs16.om -input_text_path=./retinface_prep_bin.info -input_width=1000 -input_height=1000 -output_binary=True -useDvpp=False
+./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=retinaface_bs16.om -input_text_path=./retinface_prep_bin.info -input_width=1000 -input_height=1000 -output_binary=True -useDvpp=False
 ```
 输出结果默认保存在当前目录result/dumpOutput_device{0}
 ## 6 精度对比
@@ -179,7 +179,7 @@ python3.7 retinaface_pth_postprocess.py
 ```
 1 cd Pytorch_Retinaface/widerface_evaluate
 2 python3.7 setup.py build_ext --inplace
-3 python3.7 evalution.py -p ../../widerface_result/
+3 python3.7 evaluation.py -p ../../widerface_result/
 ```
 经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如下描述  
 
