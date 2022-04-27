@@ -157,18 +157,17 @@ class Net(object):
 
         for i, item in enumerate(temp_data_buffer):
             if policy == ACL_MEMCPY_HOST_TO_DEVICE:
-                bytes_in = dataset[i].tobytes()
-                ptr = acl.util.bytes_to_ptr(bytes_in)
+                if 'bytes_to_ptr' in dir(acl.util):
+                    bytes_in = dataset[i].tobytes()
+                    ptr = acl.util.bytes_to_ptr(bytes_in)
+                else:
+                    ptr = acl.util.numpy_to_ptr(dataset[i])
                 ret = acl.rt.memcpy(item["buffer"], item["size"], ptr, item["size"], policy)
                 check_ret("acl.rt.memcpy", ret)
 
             else:
                 ptr = dataset[i]["buffer"]
-                ret = acl.rt.memcpy(ptr,
-                                    item["size"],
-                                    item["buffer"],
-                                    item["size"],
-                                    policy)
+                ret = acl.rt.memcpy(ptr, item["size"], item["buffer"], item["size"], policy)
                 check_ret("acl.rt.memcpy", ret)
 
     def _gen_dataset(self, type_str="input"):
@@ -249,7 +248,10 @@ class Net(object):
 
             size = output_data[i]["size"]
             ptr = output_data[i]["buffer"]
-            data = acl.util.ptr_to_bytes(ptr, size)
+            if 'ptr_to_bytes' in dir(acl.util):
+                data = acl.util.ptr_to_bytes(ptr, size)
+            else:
+                data = acl.util.ptr_to_numpy(ptr, (size,), 1)
             np_arr = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
             np_arr = np_arr.reshape(data_shape)
             dataset.append(np_arr)
