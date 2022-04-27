@@ -179,7 +179,7 @@ python3.7 retinaface_pth_postprocess.py
 ```
 1 cd Pytorch_Retinaface/widerface_evaluate
 2 python3.7 setup.py build_ext --inplace
-3 python3.7 evalution.py -p ../../widerface_result/
+3 python3.7 evaluation.py -p ../../widerface_result/
 ```
 经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如下描述  
 
