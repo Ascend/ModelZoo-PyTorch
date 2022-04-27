@@ -40,8 +40,7 @@ export DEVICE=npu
 TASK_NAME="SST-2"
 for i in $(seq 7 -1 0)
     do
-      echo $i
-      python3.7 ./run_classifier.py \
+      nohup python3.7 ./run_classifier.py \
         --device=$DEVICE \
         --model_type=$BERT_MODEL \
         --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \
@@ -61,9 +60,7 @@ for i in $(seq 7 -1 0)
         --seed=42 \
         --local_rank=$i \
         --fp16 \
-        --fp16_opt_level=O2 \
-        > p$i.log &
+        --fp16_opt_level=O2  &
     done
 
 wait
-echo "THPModule_npu_shutdown"
