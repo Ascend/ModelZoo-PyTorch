@@ -189,7 +189,6 @@ python3.7 om_infer.py --model=yolov5s_sim_t_bs1.om --img-path=./val2017 --batch-
 --model: 推理om模型  
 --img-path: 测试数据集图片所在路径  
 --batch-size: 模型batch size  
-注：若推理报错has no attribute 'bytes_to_ptr'，使用om_infer.py的上一版本即可
 
 
 （3）统计mAP值
