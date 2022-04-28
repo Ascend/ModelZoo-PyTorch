@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 root_path=$1
 
-nohup python -m torch.distributed.launch --nproc_per_node 8 ../main.py \
+nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu gpu \
     --use_prof 0 \
@@ -16,4 +16,4 @@ nohup python -m torch.distributed.launch --nproc_per_node 8 ../main.py \
     --batch_size 640 \
     --n_threads 64 \
 	  --ft_portion complete \
-	  > ${root_path}results/gpu_train_full_8p.log 2>&1 &
+	  > ${root_path}/results/gpu_train_full_8p.log 2>&1 &

@@ -10,7 +10,7 @@ KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python ../main.py --local_rank $RANK_ID   \
+nohup taskset -c $PID_START-$PID_END python3.7 ../main.py --local_rank $RANK_ID   \
     --root_path ${root_path} \
     --gpu_or_npu npu \
     --use_prof 0 \
@@ -25,5 +25,5 @@ nohup taskset -c $PID_START-$PID_END python ../main.py --local_rank $RANK_ID   \
     --batch_size 640 \
     --n_threads 64 \
 	  --ft_portion complete \
-	  > ${root_path}results/npu_train_performance_8p.log 2>&1 &
+	  > ${root_path}/results/npu_train_performance_8p.log 2>&1 &
 done

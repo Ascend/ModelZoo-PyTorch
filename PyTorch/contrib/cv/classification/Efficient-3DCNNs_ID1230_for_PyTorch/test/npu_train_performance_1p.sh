@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 root_path=$1
 
-nohup python ../main.py \
+nohup python3.7 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu npu \
     --use_prof 1 \
@@ -16,7 +16,7 @@ nohup python ../main.py \
 	  --batch_size 80 \
 	  --n_threads 16 \
 	  --ft_portion complete \
-	  > ${root_path}results/npu_train_performance_1p.log 2>&1 &
+	  > ${root_path}/results/npu_train_performance_1p.log 2>&1 &
 
 
 
