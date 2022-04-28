@@ -28,8 +28,8 @@ def main():
     model.eval()
 
     feats = torch.randn([4, 64, 4000], dtype=torch.float32)
-    feat_lens = torch.Tensor([1000], dtype=torch.int32)
-    dynamic_axes = {'feats': {2: '-1'}, 'output': {1, '-1'}}
+    feat_lens = torch.tensor([1000], dtype=torch.int32)
+    dynamic_axes = {'feats': {2: '-1'}, 'output': {1: '-1'}}
     torch.onnx.export(model,
                       (feats, feat_lens),
                       'jasper_dynamic.onnx',
