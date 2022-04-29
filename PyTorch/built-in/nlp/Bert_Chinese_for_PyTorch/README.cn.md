@@ -20,17 +20,7 @@ pip3 install -e ./
 cd ..
 ```
 
-### 3.下载精度评估处理脚本
-
-下载命令
-
-```
-curl https://raw.githubusercontent.com/huggingface/datasets/master/metrics/accuracy/accuracy.py -k -o accuracy.py
-```
-
-默认会下载accuracy.py到当前目录。如果将其下载到其他目录，请配置参数**--eval_metric_path**为accuracy.py的实际路径。
-
-### 4.训练
+### 3.训练
 
 #### Bert-base
 

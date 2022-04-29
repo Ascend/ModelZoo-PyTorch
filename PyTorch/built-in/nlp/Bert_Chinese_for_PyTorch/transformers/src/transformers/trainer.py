@@ -721,15 +721,7 @@ class Trainer:
             else:
                 return SequentialSampler(eval_dataset)
 
-        if self.args.world_size <= 1:
-            return SequentialSampler(eval_dataset)
-        else:
-            return ShardSampler(
-                eval_dataset,
-                batch_size=self.args.per_device_eval_batch_size,
-                num_processes=self.args.world_size,
-                process_index=self.args.process_index,
-            )
+        return SequentialDistributedSampler(eval_dataset)
 
     def get_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
         """
@@ -2470,17 +2462,13 @@ class Trainer:
 
             # Update containers on host
             if loss is not None:
-                losses = self._nested_gather(loss.repeat(batch_size))
+                losses = loss.repeat(batch_size)
                 losses_host.append(losses)
             if labels is not None:
-                labels = self._pad_across_processes(labels)
-                labels = self._nested_gather(labels)
                 labels_host.append(labels)
             if logits is not None:
-                logits = self._pad_across_processes(logits)
                 if self.preprocess_logits_for_metrics is not None:
                     logits = self.preprocess_logits_for_metrics(logits, labels)
-                logits = self._nested_gather(logits)
                 preds_host.append(logits)
             self.control = self.callback_handler.on_prediction_step(args, self.state, self.control)
 
