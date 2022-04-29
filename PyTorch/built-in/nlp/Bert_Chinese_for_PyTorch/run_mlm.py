@@ -547,7 +547,7 @@ def main():
         trainer.save_state()
 
     # Evaluation
-    if training_args.do_eval:
+    if training_args.do_eval and training_args.local_rank < 1:
         logger.info("*** Evaluate ***")
 
         metrics = trainer.evaluate()
