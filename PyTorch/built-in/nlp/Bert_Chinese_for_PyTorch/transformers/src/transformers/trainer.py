@@ -721,7 +721,7 @@ class Trainer:
             else:
                 return SequentialSampler(eval_dataset)
 
-        return SequentialDistributedSampler(eval_dataset)
+        return SequentialSampler(eval_dataset)
 
     def get_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
         """
