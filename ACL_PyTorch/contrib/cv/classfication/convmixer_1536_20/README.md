@@ -149,7 +149,7 @@ python3.7 test/parse.py --result-file ./msame_bs1.txt --batch-size 1
 2. 精度数据的计算
 精度计算利用convmixer_eval_acc.py脚本
 ```
-python3.7 convmixer_eval_acc.py --folder-davinci-target ./result/outputs_bs16_om/ --annotation-file-path /opt/npu/imageNet/val_label.txt --result-json-path ./result --json-file-name result_bs16.json --batch-size 16
+python3.7 convmixer_eval_acc.py --folder-davinci-target ./result/outputs_bs1_om/ --annotation-file-path /opt/npu/imageNet/val_label.txt --result-json-path ./result --json-file-name result_bs16.json --batch-size 1
 ```
 其中"folder-davinci-target"表示离线推理输出所在的文件夹，"annotation-file-path"表示ImageNet2012验证集标签的地址和名称，"result-json-path"输出精度数据所在的文件夹，"json-file-name"表示输出精度数据所在的文件名，"batch-size"表示精度测试时模型对应的batch size
 
