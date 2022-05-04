@@ -247,9 +247,10 @@ class Net(object):
             ptr = output_data[i]["buffer"]
             if 'ptr_to_bytes' in dir(acl.util):
                 data = acl.util.ptr_to_bytes(ptr, size)
+                np_array = np.frombuffer(data, dtype=ftype, count=data_len)
             else:
                 data = acl.util.ptr_to_numpy(ptr, (size,), 1)
-            np_array = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
+                np_array = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
             np_array = np_array.reshape(data_shape)
             dataset.append(np_array)
         return dataset
