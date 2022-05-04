@@ -64,7 +64,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ../test/env_npu.sh
 fi
-python3.7 ./tools/train.py ./configs/fsaf/fsaf_r50_fpn_1x_coco.py 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+PORT=29888 ./tools/dist_train.sh ./configs/fsaf/fsaf_r50_fpn_1x_coco.py 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
