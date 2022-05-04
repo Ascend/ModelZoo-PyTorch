@@ -239,7 +239,12 @@ class Net(object):
             dataset = self.output_data_host
         for i in range(len(dataset)):
             if policy == ACL_MEMCPY_HOST_TO_DEVICE:
-                ptr = acl.util.numpy_to_ptr(dataset[i])
+                if 'bytes_to_ptr' in dir(acl.util):
+                    bytes_in = dataset[i].tobytes()
+                    ptr = acl.util.bytes_to_ptr(bytes_in)
+                else:
+                    ptr = acl.util.numpy_to_ptr(dataset[i])
+                    
                 if self.ascend_mbatch_shape_data:
                     malloc_size = dataset[i].size * dataset[i].itemsize
                 else:
@@ -380,9 +385,14 @@ class Net(object):
             ftype = np.dtype(ACL_DTYPE.get(data_type))
             size = output_data[i]["size"]
             ptr = output_data[i]["buffer"]
-            data = acl.util.ptr_to_numpy(ptr, (size,), 1)
-            np_array = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
-            np_array = np_array.reshape(output_shape[i])
+            if 'ptr_to_bytes' in dir(acl.util):
+                data = acl.util.ptr_to_bytes(ptr, size)
+                np_arr = np.frombuffer(data, dtype=ftype, count=data_len)
+            else:
+                data = acl.util.ptr_to_numpy(ptr, (size,), 1)
+                np_arr = np.frombuffer(
+                    bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
+            np_array = np_arr.reshape(output_shape[i])
             dataset.append(np_array)
         return dataset, self.exe_t * 1000
 
