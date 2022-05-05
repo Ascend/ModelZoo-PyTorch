@@ -285,8 +285,8 @@ python3.7 RefineDet_postprocess.py --datasets_path '/root/datasets/VOCdevkit/' -
 
 |       模型       | pth精度  | 310精度  |310性能  |710精度  |710性能
 |:--------------:| :------: | :------: | :------:  | :------:  |  :------:  |
-| RefineDet bs1  | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) | mAP:79.56%|166.06fps|mAP:79.58%|917.81fps
-| RefineDet bs32 | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) |mAP:79.56% | 232.18fps|mAP:79.58%|1454.03fps
+| RefineDet bs1  | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) | mAP:79.56%|664.24fps|mAP:79.58%|917.81fps
+| RefineDet bs32 | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) |mAP:79.56% | 928.72fps|mAP:79.58%|1454.03fps
 
 备注：
 
