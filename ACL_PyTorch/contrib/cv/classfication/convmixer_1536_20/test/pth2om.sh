@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 batch_size=1
 not_skip_onnx=true
