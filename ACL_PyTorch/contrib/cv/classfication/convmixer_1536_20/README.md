@@ -48,7 +48,7 @@ numpy
 Pillow==9.0.1
 ```
 > **说明：**  
-> pytorch，torchvision和onnx:(X86架构)可以通过官方下载whl包安装; (Arm架构)可以通过源码编译安装   
+> pytorch，torchvision和onnx:(X86架构)可以通过pip方式安装或官方下载whl包安装; (Arm架构)可以通过源码编译安装   
 > 其他第三方库: 可以通过 pip3.7 install -r requirements.txt 进行安装
 
 ## <a name="3">3. 模型转换</a>
@@ -65,11 +65,11 @@ bash ./test/pth2om.sh --batch_size=1 --not_skip_onnx=true
 ### <a name="31">3.1 pth转onnx模型</a>
 1. 设置环境变量
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2. 下载convmixer_1536_20的权重文件: 
-[[convmixer_1536_20_ks9_p7.pth.tar]](https://github.com/tmp-iclr/convmixer/releases/download/v1.0/convmixer_1536_20_ks9_p7.pth.tar)
+[convmixer_1536_20_ks9_p7.pth.tar](https://github.com/tmp-iclr/convmixer/releases/download/v1.0/convmixer_1536_20_ks9_p7.pth.tar)
 
 3. 执行convmixer_pth2onnx.py脚本，生成onnx模型文件 
 ```bash
@@ -78,7 +78,7 @@ python3.7 convmixer_pth2onnx.py --source "./convmixer_1536_20_ks9_p7.pth.tar" --
 其中"source"表示模型加载权重的地址和名称，"target"表示转换后生成的onnx模型的存储地址和名称  
 
 ### <a name="32">3.2 onnx转om模型</a>
-1. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+1. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/51RC2alpha002/infacldevg/atctool)
 
 ```bash
 atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend710
@@ -89,7 +89,7 @@ atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_
 ### <a name="41">4.1 数据处理</a>
 1. 设置环境变量
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2. convmixer模型使用ImageNet2012中的5万张验证集数据进行测试，具体来说参考convmixer的源码仓中的测试过程对验证集图像进行缩放，中心裁剪以及归一化，并将图像数据转换为二进制文件(.bin)
@@ -128,7 +128,7 @@ msame模型推理工具，其输入是om模型以及模型所需要的输入bin�
 ### <a name="52">5.2 离线推理</a>
 1. 设置环境变量
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2. 执行离线推理
