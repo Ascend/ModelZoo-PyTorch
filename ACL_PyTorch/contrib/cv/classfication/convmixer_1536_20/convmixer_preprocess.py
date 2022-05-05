@@ -53,7 +53,7 @@ def img_preprocess(args):
             file_index = i * args.batch_size + idx
             if file_index < len(in_files):
                 file = in_files[file_index]
-                input_image = Image.open(args.image_path + '/' + file).convert('RGB')
+                input_image = Image.open(os.path.join(args.image_path, file)).convert('RGB')
                 image_tensor = preprocess(input_image, 224, 0.96).unsqueeze(0)
             else:
                 image_tensor = torch.zeros([1,3,224,224])
