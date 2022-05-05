@@ -292,6 +292,7 @@ python3.7 RefineDet_postprocess.py --datasets_path '/root/datasets/VOCdevkit/' -
 
 - nms放在后处理，在cpu上计算
 - onnx转om时，不能使用fp16，否则精度不达标
+- 310性能数据需要乘以4
 
 ```
 --precision_mode allow_fp32_to_fp16
