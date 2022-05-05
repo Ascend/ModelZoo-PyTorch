@@ -98,7 +98,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 3. 执行输入数据的生成脚本，生成模型输入的bin文件
 ```bash
-python3.7 convmixer_preprocess.py --image-path /opt/npu/imageNet/val --prep-image ./prep_image --batch-size 1
+python3.7 convmixer_preprocess.py --image-path /opt/npu/imageNet/val --prep-image ./prep_image_bs1 --batch-size 1
 ```
 其中"image-path"表示处理前原数据集的地址，"prep-image"表示生成数据集的文件夹名称(将在文件夹名称后会自动标识对应batch size)，"batch-size"表示生成数据集对应的batch size
 运行后，将会得到如下形式的文件夹：
