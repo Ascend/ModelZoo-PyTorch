@@ -107,6 +107,7 @@ start_time=$(date +%s)
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
+    export ASCEND_DEVICE_ID=$RANK_ID
     echo "Device ID: $ASCEND_DEVICE_ID"
     export RANK_ID=$RANK_ID
     
@@ -119,6 +120,8 @@ do
     else
         mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
     fi
+
+
     
     #绑核，不需要绑核的模型删除，需要绑核的模型根据实际修改
     #cpucount=`lscpu | grep "CPU(s):" | head -n 1 | awk '{print $2}'`
@@ -132,6 +135,8 @@ do
 
     #SOLVER.MAX_ITER 82000 \
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
+
+
 done 
 wait
 
@@ -145,7 +150,8 @@ rank=0
 for i in ${NPUS[@]}
 do
     export NPU_CALCULATE_DEVICE=${i}
-    mkdir -p  $cur_path/test/output/${i}/
+    mkdir -p  $cur_path/output/${i}/
+    export ASCEND_DEVICE_ID=${i}
     export RANK=${rank}
     echo run process ${rank}
      python3 tools/train_net.py \
@@ -161,12 +167,9 @@ do
         MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
         MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
         DATALOADER.NUM_WORKERS 4 \
-        SOLVER.BASE_LR 0.0025   > $cur_path/test/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+        SOLVER.BASE_LR 0.0025   > $cur_path/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
     let rank++
 done
-
-
-
 wait
 
 
@@ -175,7 +178,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
-
+export ASCEND_DEVICE_ID=0
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
@@ -187,7 +190,11 @@ FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${Time}'}'`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-#train_accuracy=None
+a=`grep -A 2 'Task: bbox' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk '{print $5}'`
+array=(${a// / })
+b=${array[2]}
+array1=(${b//,/ })
+train_accuracy=${array1[0]}
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -218,6 +225,6 @@ echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseNa
 echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-#echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
