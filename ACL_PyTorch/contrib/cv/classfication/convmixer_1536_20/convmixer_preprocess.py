@@ -39,7 +39,6 @@ def preprocess(img, img_size, crop_pct):
 
 def img_preprocess(args):
     save_path = os.path.realpath(args.prep_image)
-    save_path += '_bs{}'.format(args.batch_size)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
@@ -71,7 +70,7 @@ def img_preprocess(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--image-path', type=str, default="/opt/npu/imageNet/val")
-    parser.add_argument('--prep-image', type=str, default="./prep_image")
+    parser.add_argument('--prep-image', type=str, default="./prep_image_bs1")
     parser.add_argument('--batch-size', type=int, default=1)
     opt = parser.parse_args()
 
