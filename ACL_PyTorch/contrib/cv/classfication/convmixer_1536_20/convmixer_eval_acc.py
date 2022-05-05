@@ -105,8 +105,8 @@ def create_visualization_statistical_result(prediction_file_path,
             temp = tfile_name.split('.')[0]
             index = temp.find('_') + 1
             img_index = temp[index: index+5]
-            convert_index = int(img_index) * batch_size + i + 1 > img_num
-            if convert_index:
+            convert_index = int(img_index) * batch_size + i + 1
+            if convert_index > img_num:
                 break
             img_name = "ILSVRC2012_val_{:08d}".format(convert_index)
             filepath = os.path.join(prediction_file_path, tfile_name)
