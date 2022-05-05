@@ -67,7 +67,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=str, default="./convmixer_1536_20_ks9_p7.pth.tar")
     parser.add_argument('--target', type=str, default="./convmixer_1536_20.onnx")
-    parser.add_argument('--device', type=str, choices=['gpu', 'npu'], default='gpu')
+    parser.add_argument('--source-train-device', type=str, choices=['gpu', 'npu'], default='gpu', 
+                        help="which training device the pth comes from")
     args = parser.parse_args()
 
     pth2onnx(args.source, args.target, args.device)
