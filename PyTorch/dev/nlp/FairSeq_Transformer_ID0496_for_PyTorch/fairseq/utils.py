@@ -219,13 +219,11 @@ def make_positions(tensor, padding_idx, onnx_trace=False):
     # balanced to both work with ONNX export and XLA. In particular XLA
     # prefers ints, cumsum defaults to output longs, and ONNX doesn't know
     # how to handle the dtype kwarg in cumsum.
-    tensor = tensor.cpu()
     mask = tensor.ne(padding_idx).int()
     ret = (torch.cumsum(mask, dim=1).type_as(mask) * mask).long() + padding_idx
     if torch.cuda.is_available():
         ret = ret.cuda()
-    else:
-        ret = ret.npu()
+
 
     # return (
     #    torch.cumsum(mask, dim=1).type_as(mask) * mask
