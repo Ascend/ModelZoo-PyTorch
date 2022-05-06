@@ -39,7 +39,8 @@ def test_net(dataset, det_nms, result_path, set_type='test'):
             bin_path = os.path.join(result_path, '%07d_%d.bin'%(i+1,j))
             out1 = np.fromfile(bin_path ,dtype=np.float32)
             res_ls.append(out1)
-        # 参数位置对调
+        # 参数位置对调  
+        
         odm_loc_data, odm_conf_data,arm_loc_data,arm_conf_data = res_ls
         arm_loc_data = torch.from_numpy(arm_loc_data.reshape(1, 6375, 4))
         arm_conf_data = torch.from_numpy(arm_conf_data.reshape(1, 6375, 2))
