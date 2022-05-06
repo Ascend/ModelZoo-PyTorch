@@ -41,4 +41,4 @@
 3.执行步骤一训练流程（环境安装除外）
 
 三、训练结果
-/home/CRNN_for_Pytorch/output/0/
+/home/CRNN_for_Pytorch/test/output/0/
