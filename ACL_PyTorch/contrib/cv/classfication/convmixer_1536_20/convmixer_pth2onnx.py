@@ -71,4 +71,4 @@ if __name__ == '__main__':
                         help="which training device the pth comes from")
     args = parser.parse_args()
 
-    pth2onnx(args.source, args.target, args.device)
+    pth2onnx(args.source, args.target, args.source_train_device)
