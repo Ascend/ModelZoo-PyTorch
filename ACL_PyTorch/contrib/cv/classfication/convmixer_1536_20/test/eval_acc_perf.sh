@@ -28,6 +28,9 @@ fi
 echo "==> 1. creating ./prep_image_bs${batch_size} successfully."
 
 # =============================== msame ======================================
+if [ ! -d ./result ]; then
+    mkdir ./result
+fi
 rm -rf ./result/outputs_bs${batch_size}_om
 ./msame --model "./convmixer_1536_20_bs${batch_size}.om" \
         --input "./prep_image_bs${batch_size}" \
