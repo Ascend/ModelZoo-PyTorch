@@ -122,20 +122,31 @@ a.  设置环境变量
 
 ```
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
-（该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。)
 ```
 
+- 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。
+
 b.  执行命令得到om模型
+
+Ascend710：
 
 ```
 atc --framework=5 --out_nodes="Reshape_239:0;Softmax_246:0;Reshape_226:0;Softmax_233:0" --model=RefineDet320_VOC_final_no_nms.onnx 
 --output=refinedet_voc_320_non_nms_bs1_710 --input_format=NCHW --input_shape="image:1,3,320,320" --log=debug 
 --soc_version=Ascend710 --precision_mode allow_fp32_to_fp16 
-（切换不同batchsize时需要修改参数--output中的文件名"_nms_bs<batchsize>_710"和--input_shape="<batchsize>,3,320,320"）
-（默认使用的是Ascend710处理器，当使用Ascend310处理器时，应当修改对应参数"--soc_version=Ascend310"和"--output"后缀名为310）
 ```
 
-- 参数说明
+Ascend310：
+
+```
+atc --framework=5 --out_nodes="Reshape_239:0;Softmax_246:0;Reshape_226:0;Softmax_233:0" --model=RefineDet320_VOC_final_no_nms.onnx 
+--output=refinedet_voc_320_non_nms_bs1_310 --input_format=NCHW --input_shape="image:1,3,320,320" --log=debug 
+--soc_version=Ascend310 --precision_mode allow_fp32_to_fp16 
+```
+
+提示：切换不同batchsize时需要修改参数--output中的文件名"和--input_shape="batchsize,3,320,320"
+
+参数说明
 - --model：为ONNX模型文件。
 - --framework：5代表ONNX模型。
 - --output：输出的OM模型。
@@ -167,13 +178,14 @@ b.  执行推理
 ```
 ./benchmark.x86_64  -model_type=vision  -device_id=0  -batch_size=1  -om_path=./refinedet_voc_320_non_nms_bs1_710.om  
  -input_text_path=./voc07test.info  -input_width=320 -input_height=320  -output_binary=True  -useDvpp=False
- (切换不同batchsize时需要修改参数 -batch_size=<batchsize>和对应的om文件名即参数 -om_path)
- (默认推理的是Ascend710处理器下转换的om文件，如要推理Ascend310处理器下转换的om文件，应当修改对应参数"--om_path="的后缀为310)
 ```
+
+- 切换不同batchsize时需要修改参数 -batch_size=<batchsize>和对应的om文件名即参数 -om_path
+- 默认推理的是Ascend710处理器下转换的om文件，如要推理Ascend310处理器下转换的om文件，应当修改对应参数"--om_path="的后缀为310
 
 推理后的输出默认在当前目录result下。
 
-- 参数说明
+参数说明
 - -model_type：模型类型
 - -om_path：om文件路径
 - -device_id：NPU设备编号
@@ -195,14 +207,15 @@ python3.7 get_prior_data.py
 ```
 ```
 mv result/dumpOutput_device0 result/dumpOutput_device0_bs1
-(不同batchsize文件名需修改"_bs<batchsize>")
 ```
+- 不同batchsize文件名需修改"_bs【batchsize】"
 ```
 python3.7 RefineDet_postprocess.py --datasets_path '/root/datasets/VOCdevkit/' --result_path result/dumpOutput_device0_bs1   > result_bs1.json 
-(不同batchsize文件名需修改"_bs<batchsize>",即修改参数--result_path，还需修改输出的json文件名"_bs<batchsize>")
 ```
 
-- 参数说明
+- 不同batchsize文件名需修改"_bs【batchsize】",即修改参数--result_path，还需修改输出的json文件名"_bs【batchsize】"
+
+参数说明
 - --datasets_path：数据集路径。
 - --result_path：推理得到的bin文件路径。
 
