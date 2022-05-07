@@ -40,7 +40,7 @@ commit_id=815d6585344826e0346a01efd57de45498cfe52b
   ```
   python3.7 gen_labels_16.py
   ```
-  下载https://github.com/ifzhang/FairMOT模型， 将刚下载下的FairMOT/src下的data文件夹放至本模型的scr目录下
+  下载https://github.com/ifzhang/FairMOT模型， 将刚下载下的FairMOT/src下的data文件夹放至本模型的src目录下
 
 ## 准备预训练权重
 下载[DLA-34 official] 下载链接参考源码仓。
