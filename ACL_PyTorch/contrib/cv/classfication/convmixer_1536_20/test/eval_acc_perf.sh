@@ -19,7 +19,7 @@ done
 rm -rf ./prep_image_bs${batch_size}
 python convmixer_preprocess.py \
     --image-path ${datasets_path}/val \
-    --prep-image ./prep_image_${batch_size} \
+    --prep-image ./prep_image_bs${batch_size} \
     --batch-size ${batch_size}
 if [ $? != 0 ]; then
     echo "convmixer preprocess fail!"
