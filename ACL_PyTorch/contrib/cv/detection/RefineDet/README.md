@@ -1,92 +1,15 @@
 # RefineDet模型PyTorch离线推理指导
 
-## Ascend310：
- 
-
-## 1 环境准备
-
-1.安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装
-
-```
-pip3.7 install -r requirements.txt
-```
-
-2.获取代码和[权重文件](https://drive.google.com/file/d/1RCCTaNeby0g-TFE1Cvjm3dYweBiyyPoq/view?usp=sharing)，放到当前路径下
-
-```
-git clone https://github.com/luuuyi/RefineDet.PyTorch.git -b master
-cd RefineDet.PyTorch
-git reset --hard 0e4b24ce07245fcb8c48292326a731729cc5746a
-patch -p1 < ../refinedet.patch
-
-```
-
-3.获取数据集,[VOC数据集](http://host.robots.ox.ac.uk/pascal/VOC)，可以通过下面的命令下载
-
-
-```
-sh data/scripts/VOC2007.sh
-cd ../
-```
-4.获取[benchamrk](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)
-
-把benchmark.x86_64 或者 benchmark.aarch64 放到当前目录
-
-
-## 2 离线推理
-
-pth转换为om
-```
-bash test/pth2om.sh 
-```
-
-
-精度,性能测试
-
-```
- bash test/eval_acc_perf.sh --datasets_path=/root/datasets/VOCdevkit/
-```
-
-
-
-
-**评测结果：**
-
-| 模型      | pth精度  | 310精度  |    基准性能    |310性能  |
-| :------: | :------: | :------: | :------:  | :------:  | 
-| RefineDet bs1  | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) | mAP:79.56%|  63.94fps | 101.24fps |
-| RefineDet bs16 | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) |mAP:79.56% |  72.77fps | 136.8fps |
-
-
-
-
-备注：
-
-- nms放在后处理，在cpu上计算
-- onnx转om时，不能使用fp16，否则精度不达标
-  ```
-  --precision_mode allow_fp32_to_fp16
-  ```
-
-
-## Ascend710：
-
 ##  文件说明
 
 ```  
 ├── test                          //打印精度性能脚本文件夹
-├── eval_utils.py                 //后处理精度计算时需要用到的函数  
-├── benchmark.aarch64            //离线推理工具（适用ARM架构）  
-├── benchmark.x86_64             //离线推理工具（适用x86架构）  
+├── eval_utils.py                 //后处理精度计算时需要用到的函数    
 ├── get_prior_data.py             //获取prior_data的脚本  
 ├── get_info.py                   //用于获取二进制数据集信息的脚本    
-├── RefineDet320_VOC_final.pth       //训练后的权重文件  
-├── RefineDet320_VOC_final_no_nms.onnx     //onnx文件
 ├── RefineDet_postprocess.py      //后处理精度计算脚本  
 ├── RefineDet_preprocess.py     //数据集预处理脚本 
 ├── RefineDet_pth2onnx.py        //pth转onnx脚本  
-├── refinedet_voc_320_non_nms_bs1_710.om   //推理om文件 
-├── refinedet_voc_320_non_nms_bs32_710.om //推理om文件  
 ├── refinedet.patch             //开源代码补丁  
 ├── requirements.txt            //环境依赖
 ├── LICENSE
@@ -102,7 +25,9 @@ bash test/pth2om.sh
 pip3.7 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-2. 获取开源代码仓放到当前路径下(https://github.com/luuuyi/RefineDet.PyTorch)
+2. 获取开源代码仓和权重文件放到当前路径下
+
+[权重文件](https://drive.google.com/file/d/1RCCTaNeby0g-TFE1Cvjm3dYweBiyyPoq/view?usp=sharing)
 
 ```
 git clone https://github.com/luuuyi/RefineDet.PyTorch.git
@@ -123,6 +48,8 @@ cd ..
 1. 获取原始数据集
 
 本模型支持VOC2007 4952张图片的验证集。请用户需自行获取VOC2007数据集，上传数据集到服务器任意目录并解压（如：/root/datasets/VOCdevkit/）。
+
+[VOC数据集下载](http://host.robots.ox.ac.uk/pascal/VOC)
 
 文件目录结构如下：
 
@@ -225,6 +152,8 @@ atc --framework=5 --out_nodes="Reshape_239:0;Softmax_246:0;Reshape_226:0;Softmax
 
 a.  使用Benchmark工具进行推理
 
+[benchmark获取](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)
+
 执行以下命令增加Benchmark工具可执行权限，并根据OS架构选择工具，如果是X86架构，工具选择benchmark.x86_64，如果是Arm，选择benchmark.aarch64 。
 
 ```
@@ -285,14 +214,13 @@ python3.7 RefineDet_postprocess.py --datasets_path '/root/datasets/VOCdevkit/' -
 
 |       模型       | pth精度  | 310精度  |310性能  |710精度  |710性能
 |:--------------:| :------: | :------: | :------:  | :------:  |  :------:  |
-| RefineDet bs1  | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) | mAP:79.56%|664.24fps|mAP:79.58%|917.81fps
-| RefineDet bs32 | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) |mAP:79.56% | 928.72fps|mAP:79.58%|1454.03fps
+| RefineDet bs1  | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) | mAP:79.56%|166.06fps|mAP:79.58%|917.81fps
+| RefineDet bs32 | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) |mAP:79.56% | 232.18fps|mAP:79.58%|1454.03fps
 
 备注：
 
 - nms放在后处理，在cpu上计算
 - onnx转om时，不能使用fp16，否则精度不达标
-- 310性能数据需要乘以4
 
 ```
 --precision_mode allow_fp32_to_fp16
