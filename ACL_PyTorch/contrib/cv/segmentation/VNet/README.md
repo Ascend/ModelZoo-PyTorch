@@ -51,10 +51,10 @@ commit_id:a00c8ea16bcaea2bddf73b2bf506796f70077687
 
 ### 2.1 深度学习框架
 ```
-CANN 5.0.3.alpha002 
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
+CANN 5.1.RC1
+pytorch = 1.5.0
+torchvision = 0.6.0
+onnx = 1.7.0
 ```
 
 ### 2.2 python第三方库
@@ -149,10 +149,18 @@ python3.7 gen_dataset_info.py bin ./prep_bin ./vnet_prep_bin.info 80 80
 ### 5.1 benchmark工具概述
 
 benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN 5.0.1 推理benchmark工具用户指南 01]
+获取推理benchmark工具软件包：解压后获取benchmark工具运行脚本benchmark.{arch}和scripts目录，该目录下包含各种模型处理脚本，包括模型预处理脚本、模型后处理脚本、精度统计脚本等。
+
+获取地址：https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software
+
+Ascend-cann-benchmark_{version}_Linux-{arch}.zip
+
+{version}为软件包的版本号；{arch}为CPU架构，请用户根据实际需要获取对应的软件包。
+
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -175,11 +183,15 @@ source env.sh
 python3.7 vnet_postprocess.py result/dumpOutput_device0 ./vnet.pytorch/luna16/normalized_lung_mask ./vnet.pytorch/test_uids.txt
 ```
 第一个为benchmark输出目录，第二个为真值所在目录，第三个为测试集样本的序列号。  
-查看输出结果：
+310精度测试结果：
 ```
-Error rate: 2479051/439091200 (0.5646%)
+Test set: Error: 2497889/439091200 (0.5689%)
 ```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
+710精度测试结果：
+```
+Test set: Error: 2485695/439091200 (0.5661%)
+```
+经过对batchsize为1/4/8/16/32/64的om测试，精度数据均如上。
 
 ### 6.2 开源精度
 [原代码仓公布精度](https://github.com/mattmacy/vnet.pytorch/blob/master/README.md)
@@ -209,47 +221,11 @@ batch1的性能，benchmark工具在整个数据集上推理后生成result/perf
 [inference] throughputRate: 7.52821, Interface throughputRate: 7.91715, moduleLatency: 132.521
 [postprocess] throughputRate: 7.53499, moduleLatency: 132.714
 ```
-Interface throughputRate: 7.91715
-
-batch4的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_4_device_0.txt：  
-```
-[e2e] throughputRate: 8.02038, latency: 133659
-[data read] throughputRate: 256.163, moduleLatency: 3.90377
-[preprocess] throughputRate: 74.4952, moduleLatency: 13.4237
-[inference] throughputRate: 8.07395, Interface throughputRate: 8.5008, moduleLatency: 123.502
-[postprocess] throughputRate: 2.0257, moduleLatency: 493.657
-```
-Interface throughputRate: 8.5008
-
-batch8的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_8_device_0.txt：  
-```
-[e2e] throughputRate: 7.56515, latency: 141702
-[data read] throughputRate: 158.551, moduleLatency: 6.30713
-[preprocess] throughputRate: 69.7176, moduleLatency: 14.3436
-[inference] throughputRate: 7.62455, Interface throughputRate: 8.00694, moduleLatency: 130.843
-[postprocess] throughputRate: 0.959852, moduleLatency: 1041.83
-```
-Interface throughputRate: 8.00694
-
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_0.txt：  
-```
-[e2e] throughputRate: 6.91842, latency: 154949
-[data read] throughputRate: 159.874, moduleLatency: 6.25492
-[preprocess] throughputRate: 64.2452, moduleLatency: 15.5654
-[inference] throughputRate: 7.01609, Interface throughputRate: 8.11015, moduleLatency: 142.495
-[postprocess] throughputRate: 0.444102, moduleLatency: 2251.73
-```
-Interface throughputRate: 8.11015
-
-batch32的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_32_device_0.txt：  
-```
-[e2e] throughputRate: 7.00262, latency: 153086
-[data read] throughputRate: 49.452, moduleLatency: 20.2216
-[preprocess] throughputRate: 31.2921, moduleLatency: 31.9569
-[inference] throughputRate: 7.6059, Interface throughputRate: 7.91441, moduleLatency: 131.19
-[postprocess] throughputRate: 0.231605, moduleLatency: 4317.69
-```
-Interface throughputRate: 7.91441
+batch1：Interface throughputRate: 7.91715
+batch4：Interface throughputRate: 8.5008
+batch8：Interface throughputRate: 8.00694
+batch16：Interface throughputRate: 8.11015
+batch32：Interface throughputRate: 7.91441
 
 2.执行parse脚本，计算单卡吞吐率
 ```
@@ -271,57 +247,12 @@ batch1的性能，benchmark工具在整个数据集上推理后生成result/perf
 [inference] throughputRate: 51.1218, Interface throughputRate: 65.5303, moduleLatency: 19.3435
 [postprocess] throughputRate: 51.1467, moduleLatency: 19.5516
 ```
-Interface throughputRate: 65.5303 ,710吞吐率为65.5303fps
-
-batch4的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_4_device_0.txt：  
-```
-[e2e] throughputRate: 42.564, latency: 25185.6
-[data read] throughputRate: 406.421, moduleLatency: 2.4605
-[preprocess] throughputRate: 362.538, moduleLatency: 2.75833
-[inference] throughputRate: 52.2084, Interface throughputRate: 64.5802, moduleLatency: 19.0107
-[postprocess] throughputRate: 13.0862, moduleLatency: 76.4162
-```
-Interface throughputRate: 64.5802 ,710吞吐率为64.5802fps
-
-batch8的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_8_device_0.txt：  
-```
-[e2e] throughputRate: 49.2402, latency: 21770.8
-[data read] throughputRate: 289.375, moduleLatency: 3.45572
-[preprocess] throughputRate: 257.388, moduleLatency: 3.88518
-[inference] throughputRate: 52.3712, Interface throughputRate: 64.3861, moduleLatency: 18.9541
-[postprocess] throughputRate: 6.58254, moduleLatency: 151.917
-```
-Interface throughputRate: 64.3861 ,710吞吐率为64.3861fps
-
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_0.txt：  
-```
-[e2e] throughputRate: 49.1128, latency: 21827.3
-[data read] throughputRate: 410.883, moduleLatency: 2.43378
-[preprocess] throughputRate: 342.018, moduleLatency: 2.92382
-[inference] throughputRate: 52.3557, Interface throughputRate: 63.617, moduleLatency: 18.9643
-[postprocess] throughputRate: 3.30508, moduleLatency: 302.564
-```
-Interface throughputRate: 63.617 ,710吞吐率为63.617fps
-
-batch32的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_32_device_0.txt：  
-```
-[e2e] throughputRate: 46.8253, latency: 22893.6
-[data read] throughputRate: 229.907, moduleLatency: 4.34959
-[preprocess] throughputRate: 205.598, moduleLatency: 4.86385
-[inference] throughputRate: 50.0849, Interface throughputRate: 59.7592, moduleLatency: 19.8353
-[postprocess] throughputRate: 1.62482, moduleLatency: 615.454
-```
-Interface throughputRate: 59.7592 ,710吞吐率为59.7592fps
-
-batch64的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_64_device_0.txt：  
-```
-[e2e] throughputRate: 46.8914, latency: 22861.4
-[data read] throughputRate: 293.548, moduleLatency: 3.40659
-[preprocess] throughputRate: 245.811, moduleLatency: 4.06817
-[inference] throughputRate: 51.4797, Interface throughputRate: 61.1219, moduleLatency: 19.2984
-[postprocess] throughputRate: 0.85154, moduleLatency: 1174.34
-```
-Interface throughputRate: 61.1219 ,710吞吐率为61.1219fps
+batch1：Interface throughputRate: 65.5303 ,710吞吐率为65.5303fps
+batch4：Interface throughputRate: 64.5802 ,710吞吐率为64.5802fps
+batch8：Interface throughputRate: 64.3861 ,710吞吐率为64.3861fps
+batch16：Interface throughputRate: 63.617 ,710吞吐率为63.617fps
+batch32：Interface throughputRate: 59.7592 ,710吞吐率为59.7592fps
+batch64：Interface throughputRate: 61.1219 ,710吞吐率为61.1219fps
 
 ### 7.3 T4性能数据
 在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
@@ -425,7 +356,6 @@ trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:64x1x64x80x80 --threads
 [04/29/2022-16:19:59] [I] median: 13051.4 ms
 [04/29/2022-16:19:59] [I] percentile: 13251.7 ms at 99%
 [04/29/2022-16:19:59] [I] total compute time: 130.519 s
-
 
 ```
 batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
