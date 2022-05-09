@@ -19,6 +19,7 @@ import logging
 import functools
 import json
 import time
+import pathlib
 from datetime import datetime
 
 from tensorboardX import SummaryWriter
@@ -57,8 +58,7 @@ class Logger(Configurable):
         if self.verbose:
             print('Initializing log dir for', self.log_dir)
 
-        if not os.path.exists(self.log_dir):
-            os.makedirs(self.log_dir)
+        pathlib.Path(self.log_dir).mkdir(parents=True, exist_ok=True)
 
         self.message_logger = self._init_message_logger()
 
@@ -77,8 +77,7 @@ class Logger(Configurable):
         application = os.path.basename(os.getcwd())
         storage_dir = os.path.join(
             self.database_dir, self.log_dir, application)
-        if not os.path.exists(storage_dir):
-            os.makedirs(storage_dir)
+        pathlib.Path(storage_dir).mkdir(parents=True, exist_ok=True)
         if not os.path.exists(self.log_dir):
             os.symlink(storage_dir, self.log_dir)
 
