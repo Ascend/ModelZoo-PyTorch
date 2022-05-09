@@ -21,9 +21,10 @@
 		- [6.2 开源精度](#62-开源精度)
 		- [6.3 精度对比](#63-精度对比)
 	- [7 性能对比](#7-性能对比)
-		- [7.1 npu性能数据](#71-npu性能数据)
-		- [7.2 T4性能数据](#72-t4性能数据)
-		- [7.3 性能对比](#73-性能对比)
+		- [7.1 310性能数据](#71-310性能数据)
+		- [7.2 710性能数据](#72-710性能数据)
+		- [7.3 T4性能数据](#73-T4性能数据)
+		- [7.4 性能对比](#74-性能对比)
 
 
 
@@ -143,7 +144,6 @@ python3.7 gen_dataset_info.py bin ./prep_bin ./vnet_prep_bin.info 80 80
 ## 5 离线推理
 
 -   **[benchmark工具概述](#51-benchmark工具概述)**  
-
 -   **[离线推理](#52-离线推理)**  
 
 ### 5.1 benchmark工具概述
@@ -194,132 +194,257 @@ VNet    0.355%
 
 ## 7 性能对比
 
--   **[npu性能数据](#71-npu性能数据)**  
--   **[T4性能数据](#72-T4性能数据)**  
--   **[性能对比](#73-性能对比)**  
+-   **[310性能数据](#71-310性能数据)**  
+-   **[710性能数据](#72-710性能数据)**  
+-   **[T4性能数据](#73-T4性能数据)**  
+-   **[性能对比](#74-性能对比)**  
 
-### 7.1 npu性能数据
+### 7.1 310性能数据
 1.benchmark工具在整个数据集上推理获得性能数据  
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 ```
-[e2e] throughputRate: 5.70609, latency: 187869
-[data read] throughputRate: 225.606, moduleLatency: 4.43251
-[preprocess] throughputRate: 53.7844, moduleLatency: 18.5928
-[inference] throughputRate: 5.75202, Interface throughputRate: 6.10496, moduleLatency: 173.468
-[postprocess] throughputRate: 5.75712, moduleLatency: 173.698
+[e2e] throughputRate: 7.44924, latency: 143907
+[data read] throughputRate: 159.324, moduleLatency: 6.27652
+[preprocess] throughputRate: 68.514, moduleLatency: 14.5956
+[inference] throughputRate: 7.52821, Interface throughputRate: 7.91715, moduleLatency: 132.521
+[postprocess] throughputRate: 7.53499, moduleLatency: 132.714
 ```
-Interface throughputRate: 6.10496，6.10496x4=24.41984既是batch1 310单卡吞吐率  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
-```
-[e2e] throughputRate: 6.24092, latency: 171769
-[data read] throughputRate: 377.232, moduleLatency: 2.65089
-[preprocess] throughputRate: 61.2764, moduleLatency: 16.3195
-[inference] throughputRate: 6.2793, Interface throughputRate: 6.49396, moduleLatency: 159.033
-[postprocess] throughputRate: 0.398022, moduleLatency: 2512.42
-```
-Interface throughputRate: 6.49396，6.49396x4=25.97584既是batch16 310单卡吞吐率  
-batch4性能：
-```
-[e2e] throughputRate: 6.38643, latency: 167856
-[data read] throughputRate: 220.829, moduleLatency: 4.52839
-[preprocess] throughputRate: 59.272, moduleLatency: 16.8714
-[inference] throughputRate: 6.42624, Interface throughputRate: 6.67466, moduleLatency: 155.341
-[postprocess] throughputRate: 1.61227, moduleLatency: 620.245
-```
-batch4 310单卡吞吐率：6.67466x4=26.69864fps  
-batch8性能：
-```
-[e2e] throughputRate: 6.17056, latency: 173728
-[data read] throughputRate: 216.73, moduleLatency: 4.61403
-[preprocess] throughputRate: 57.3928, moduleLatency: 17.4238
-[inference] throughputRate: 6.20835, Interface throughputRate: 6.41992, moduleLatency: 160.848
-[postprocess] throughputRate: 0.781576, moduleLatency: 1279.47
-```
-batch8 310单卡吞吐率：6.41992x4=25.67968fps  
-batch32性能：
-```
-[e2e] throughputRate: 6.09413, latency: 175907
-[data read] throughputRate: 183.187, moduleLatency: 5.45889
-[preprocess] throughputRate: 49.9254, moduleLatency: 20.0299
-[inference] throughputRate: 6.15986, Interface throughputRate: 6.35151, moduleLatency: 162.051
-[postprocess] throughputRate: 0.200903, moduleLatency: 4977.52
-```
-batch32 310单卡吞吐率：6.35151x4=25.40604fps  
+Interface throughputRate: 7.91715
 
-### 7.2 T4性能数据
+batch4的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_4_device_0.txt：  
+```
+[e2e] throughputRate: 8.02038, latency: 133659
+[data read] throughputRate: 256.163, moduleLatency: 3.90377
+[preprocess] throughputRate: 74.4952, moduleLatency: 13.4237
+[inference] throughputRate: 8.07395, Interface throughputRate: 8.5008, moduleLatency: 123.502
+[postprocess] throughputRate: 2.0257, moduleLatency: 493.657
+```
+Interface throughputRate: 8.5008
+
+batch8的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_8_device_0.txt：  
+```
+[e2e] throughputRate: 7.56515, latency: 141702
+[data read] throughputRate: 158.551, moduleLatency: 6.30713
+[preprocess] throughputRate: 69.7176, moduleLatency: 14.3436
+[inference] throughputRate: 7.62455, Interface throughputRate: 8.00694, moduleLatency: 130.843
+[postprocess] throughputRate: 0.959852, moduleLatency: 1041.83
+```
+Interface throughputRate: 8.00694
+
+batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_0.txt：  
+```
+[e2e] throughputRate: 6.91842, latency: 154949
+[data read] throughputRate: 159.874, moduleLatency: 6.25492
+[preprocess] throughputRate: 64.2452, moduleLatency: 15.5654
+[inference] throughputRate: 7.01609, Interface throughputRate: 8.11015, moduleLatency: 142.495
+[postprocess] throughputRate: 0.444102, moduleLatency: 2251.73
+```
+Interface throughputRate: 8.11015
+
+batch32的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_32_device_0.txt：  
+```
+[e2e] throughputRate: 7.00262, latency: 153086
+[data read] throughputRate: 49.452, moduleLatency: 20.2216
+[preprocess] throughputRate: 31.2921, moduleLatency: 31.9569
+[inference] throughputRate: 7.6059, Interface throughputRate: 7.91441, moduleLatency: 131.19
+[postprocess] throughputRate: 0.231605, moduleLatency: 4317.69
+```
+Interface throughputRate: 7.91441
+
+2.执行parse脚本，计算单卡吞吐率
+```
+python parse.py result/perf_vision_batchsize_1_device_0.txt
+```
+batch1_310吞吐率为31.6686fps
+batch4_310吞吐率为34.0032fps
+batch8_310吞吐率为32.02776fps
+batch16_310吞吐率为32.4406fps
+batch32_310吞吐率为31.65764fps
+
+### 7.2 710性能数据
+
+batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
+```
+[e2e] throughputRate: 49.5601, latency: 21630.3
+[data read] throughputRate: 643.612, moduleLatency: 1.55373
+[preprocess] throughputRate: 348.108, moduleLatency: 2.87267
+[inference] throughputRate: 51.1218, Interface throughputRate: 65.5303, moduleLatency: 19.3435
+[postprocess] throughputRate: 51.1467, moduleLatency: 19.5516
+```
+Interface throughputRate: 65.5303 ,710吞吐率为65.5303fps
+
+batch4的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_4_device_0.txt：  
+```
+[e2e] throughputRate: 42.564, latency: 25185.6
+[data read] throughputRate: 406.421, moduleLatency: 2.4605
+[preprocess] throughputRate: 362.538, moduleLatency: 2.75833
+[inference] throughputRate: 52.2084, Interface throughputRate: 64.5802, moduleLatency: 19.0107
+[postprocess] throughputRate: 13.0862, moduleLatency: 76.4162
+```
+Interface throughputRate: 64.5802 ,710吞吐率为64.5802fps
+
+batch8的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_8_device_0.txt：  
+```
+[e2e] throughputRate: 49.2402, latency: 21770.8
+[data read] throughputRate: 289.375, moduleLatency: 3.45572
+[preprocess] throughputRate: 257.388, moduleLatency: 3.88518
+[inference] throughputRate: 52.3712, Interface throughputRate: 64.3861, moduleLatency: 18.9541
+[postprocess] throughputRate: 6.58254, moduleLatency: 151.917
+```
+Interface throughputRate: 64.3861 ,710吞吐率为64.3861fps
+
+batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_0.txt：  
+```
+[e2e] throughputRate: 49.1128, latency: 21827.3
+[data read] throughputRate: 410.883, moduleLatency: 2.43378
+[preprocess] throughputRate: 342.018, moduleLatency: 2.92382
+[inference] throughputRate: 52.3557, Interface throughputRate: 63.617, moduleLatency: 18.9643
+[postprocess] throughputRate: 3.30508, moduleLatency: 302.564
+```
+Interface throughputRate: 63.617 ,710吞吐率为63.617fps
+
+batch32的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_32_device_0.txt：  
+```
+[e2e] throughputRate: 46.8253, latency: 22893.6
+[data read] throughputRate: 229.907, moduleLatency: 4.34959
+[preprocess] throughputRate: 205.598, moduleLatency: 4.86385
+[inference] throughputRate: 50.0849, Interface throughputRate: 59.7592, moduleLatency: 19.8353
+[postprocess] throughputRate: 1.62482, moduleLatency: 615.454
+```
+Interface throughputRate: 59.7592 ,710吞吐率为59.7592fps
+
+batch64的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_64_device_0.txt：  
+```
+[e2e] throughputRate: 46.8914, latency: 22861.4
+[data read] throughputRate: 293.548, moduleLatency: 3.40659
+[preprocess] throughputRate: 245.811, moduleLatency: 4.06817
+[inference] throughputRate: 51.4797, Interface throughputRate: 61.1219, moduleLatency: 19.2984
+[postprocess] throughputRate: 0.85154, moduleLatency: 1174.34
+```
+Interface throughputRate: 61.1219 ,710吞吐率为61.1219fps
+
+### 7.3 T4性能数据
 在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
 batch1性能：
 ```
 trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:1x1x64x80x80 --threads
 ```
-gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch
-```
-[09/17/2021-15:39:40] [I] GPU Compute
-[09/17/2021-15:39:40] [I] min: 92.4146 ms
-[09/17/2021-15:39:40] [I] max: 103.909 ms
-[09/17/2021-15:39:40] [I] mean: 97.0678 ms
-[09/17/2021-15:39:40] [I] median: 96.9087 ms
-[09/17/2021-15:39:40] [I] percentile: 103.909 ms at 99%
-[09/17/2021-15:39:40] [I] total compute time: 3.20324 s
-```
-batch1 t4单卡吞吐率：1000/(96.9087/1)=10.31899fps  
 
-batch16性能：
 ```
-trtexec --onnx=nested_unet.onnx --fp16 --shapes=actual_input_1:16x3x96x96 --threads
+[04/29/2022-14:15:41] [I] GPU Compute
+[04/29/2022-14:15:41] [I] min: 90.6819 ms
+[04/29/2022-14:15:41] [I] max: 92.8173 ms
+[04/29/2022-14:15:41] [I] mean: 91.687 ms
+[04/29/2022-14:15:41] [I] median: 91.8387 ms
+[04/29/2022-14:15:41] [I] percentile: 92.8173 ms at 99%
+[04/29/2022-14:15:41] [I] total compute time: 3.11736 s
+
 ```
-```
-[09/17/2021-16:11:37] [I] GPU Compute
-[09/17/2021-16:11:37] [I] min: 1574.28 ms
-[09/17/2021-16:11:37] [I] max: 1576.2 ms
-[09/17/2021-16:11:37] [I] mean: 1575.22 ms
-[09/17/2021-16:11:37] [I] median: 1574.94 ms
-[09/17/2021-16:11:37] [I] percentile: 1576.2 ms at 99%
-[09/17/2021-16:11:37] [I] total compute time: 15.7522 s
-```
-batch16 t4单卡吞吐率：1000/(1575.22/16)=10.15731fps  
+batch1 t4单卡吞吐率：1000/(91.687/1)=10.90667fps  
 
 batch4性能：
 ```
-[09/17/2021-15:44:51] [I] GPU Compute
-[09/17/2021-15:44:51] [I] min: 361.722 ms
-[09/17/2021-15:44:51] [I] max: 375.435 ms
-[09/17/2021-15:44:51] [I] mean: 365.263 ms
-[09/17/2021-15:44:51] [I] median: 363.615 ms
-[09/17/2021-15:44:51] [I] percentile: 375.435 ms at 99%
-[09/17/2021-15:44:51] [I] total compute time: 3.65263 s
+trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:4x1x64x80x80 --threads
 ```
-batch4 t4单卡吞吐率：1000/(365.263/4)=10.95101fps  
+
+```
+[04/29/2022-14:27:39] [I] GPU Compute
+[04/29/2022-14:27:39] [I] min: 358.297 ms
+[04/29/2022-14:27:39] [I] max: 366.323 ms
+[04/29/2022-14:27:39] [I] mean: 360.984 ms
+[04/29/2022-14:27:39] [I] median: 360.4 ms
+[04/29/2022-14:27:39] [I] percentile: 366.323 ms at 99%
+[04/29/2022-14:27:39] [I] total compute time: 3.60984 s
+
+```
+batch4 t4单卡吞吐率：1000/(360.984/4)=11.08082fps
 
 batch8性能：
 ```
-[09/17/2021-15:52:50] [I] GPU Compute
-[09/17/2021-15:52:50] [I] min: 796.131 ms
-[09/17/2021-15:52:50] [I] max: 802.935 ms
-[09/17/2021-15:52:50] [I] mean: 798.473 ms
-[09/17/2021-15:52:50] [I] median: 798.262 ms
-[09/17/2021-15:52:50] [I] percentile: 802.935 ms at 99%
-[09/17/2021-15:52:50] [I] total compute time: 7.98473 s
+trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:8x1x64x80x80 --threads
 ```
-batch8 t4单卡吞吐率：1000/(798.473/8)=10.01912fps  
+
+```
+[[04/29/2022-14:36:16] [I] GPU Compute
+[04/29/2022-14:36:16] [I] min: 810.815 ms
+[04/29/2022-14:36:16] [I] max: 817.788 ms
+[04/29/2022-14:36:16] [I] mean: 813.193 ms
+[04/29/2022-14:36:16] [I] median: 813.153 ms
+[04/29/2022-14:36:16] [I] percentile: 817.788 ms at 99%
+[04/29/2022-14:36:16] [I] total compute time: 8.13194 s
+
+```
+batch8 t4单卡吞吐率：1000/(813.193/8)=9.83776fps
+
+batch16性能：
+```
+trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:16x1x64x80x80 --threads
+```
+
+```
+[04/29/2022-14:45:58] [I] GPU Compute
+[04/29/2022-14:45:58] [I] min: 1561.08 ms
+[04/29/2022-14:45:58] [I] max: 1566.75 ms
+[04/29/2022-14:45:58] [I] mean: 1563.66 ms
+[04/29/2022-14:45:58] [I] median: 1563.35 ms
+[04/29/2022-14:45:58] [I] percentile: 1566.75 ms at 99%
+[04/29/2022-14:45:58] [I] total compute time: 15.6366 s
+
+
+```
+batch16 t4单卡吞吐率：1000/(1563.66/16)=10.41219fps
 
 batch32性能：
 ```
-[09/17/2021-16:29:35] [I] GPU Compute
-[09/17/2021-16:29:35] [I] min: 3382.94 ms
-[09/17/2021-16:29:35] [I] max: 3395.54 ms
-[09/17/2021-16:29:35] [I] mean: 3389.83 ms
-[09/17/2021-16:29:35] [I] median: 3390.36 ms
-[09/17/2021-16:29:35] [I] percentile: 3395.54 ms at 99%
-[09/17/2021-16:29:35] [I] total compute time: 33.8983 s
+trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:32x1x64x80x80 --threads
 ```
-batch32 t4单卡吞吐率：1000/(3389.83/32)=9.44fps  
 
-### 7.3 性能对比
-batch1：6.10496x4 > 1000x1/(96.9087/1)  
-batch16：6.49396x4 > 1000x1/(1575.22/16)  
-310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率大，故310性能高于T4性能，性能达标。  
-对于batch1与batch16，310性能均高于T4性能1.2倍，该模型放在ACL_PyTorch/Benchmark/cv/segmentation目录下。  
+```
+[04/29/2022-15:08:59] [I] GPU Compute
+[04/29/2022-15:08:59] [I] min: 3571.51 ms
+[04/29/2022-15:08:59] [I] max: 6799 ms
+[04/29/2022-15:08:59] [I] mean: 5932.02 ms
+[04/29/2022-15:08:59] [I] median: 6416.47 ms
+[04/29/2022-15:08:59] [I] percentile: 6799 ms at 99%
+[04/29/2022-15:08:59] [I] total compute time: 59.3202 s
+
+
+```
+batch32 t4单卡吞吐率：1000/(5932.02/32)=5.39445fps
+
+batch64性能：
+```
+trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:64x1x64x80x80 --threads
+```
+
+```
+[04/29/2022-16:19:59] [I] GPU Compute
+[04/29/2022-16:19:59] [I] min: 12874.2 ms
+[04/29/2022-16:19:59] [I] max: 13251.7 ms
+[04/29/2022-16:19:59] [I] mean: 13051.9 ms
+[04/29/2022-16:19:59] [I] median: 13051.4 ms
+[04/29/2022-16:19:59] [I] percentile: 13251.7 ms at 99%
+[04/29/2022-16:19:59] [I] total compute time: 130.519 s
+
+
+```
+batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
+
+### 7.4 性能对比
+
+310 710 T4性能对比如下(benchmark推理工具)
+| batch | 310      | 710     | T4       | 710/310 | 710/T4   |
+|-------|----------|---------|----------|---------|----------|
+| 1     | 31.6686  | 65.5303 | 10.90667 | 2.06925 | 6.00828  |
+| 4     | 34.0032  | 64.5802 | 11.08082 | 1.89924 | 5.82811  |
+| 8     | 32.02776 | 64.3861 | 9.83776  | 2.01032 | 6.54479  |
+| 16    | 32.4406  | 63.617  | 10.41219 | 1.96103 | 6.10986  |
+| 32    | 31.65764 | 59.7592 | 5.39445  | 1.88767 | 11.07790 |
+| 64    | -        | 61.1219 | 4.90369  | -       | 12.46447 |
+|       |          |         |          |         |          |
+| 最优  | 34.0032  | 65.5303 | 11.08082 |         |          |
+		
+对于所有batchsize，710性能均高于310性能1.2倍，同时710性能均高于T4性能1.6倍，性能达标。  
  **性能优化：**  
 >没有遇到性能不达标的问题，故不需要进行性能优化
 
