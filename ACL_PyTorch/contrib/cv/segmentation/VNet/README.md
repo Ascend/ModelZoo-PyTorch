@@ -175,11 +175,15 @@ source env.sh
 python3.7 vnet_postprocess.py result/dumpOutput_device0 ./vnet.pytorch/luna16/normalized_lung_mask ./vnet.pytorch/test_uids.txt
 ```
 第一个为benchmark输出目录，第二个为真值所在目录，第三个为测试集样本的序列号。  
-查看输出结果：
+310精度测试结果：
 ```
-Error rate: 2479051/439091200 (0.5646%)
+Test set: Error: 2497889/439091200 (0.5689%)
 ```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
+710精度测试结果：
+```
+Test set: Error: 2485695/439091200 (0.5661%)
+```
+经过对batchsize为1/4/8/16/32/64的om测试，精度数据均如上。
 
 ### 6.2 开源精度
 [原代码仓公布精度](https://github.com/mattmacy/vnet.pytorch/blob/master/README.md)
