@@ -214,13 +214,7 @@ VNet    0.355%
 ### 7.1 310性能数据
 1.benchmark工具在整个数据集上推理获得性能数据  
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-```
-[e2e] throughputRate: 7.44924, latency: 143907
-[data read] throughputRate: 159.324, moduleLatency: 6.27652
-[preprocess] throughputRate: 68.514, moduleLatency: 14.5956
-[inference] throughputRate: 7.52821, Interface throughputRate: 7.91715, moduleLatency: 132.521
-[postprocess] throughputRate: 7.53499, moduleLatency: 132.714
-```
+
 batch1：Interface throughputRate: 7.91715
 batch4：Interface throughputRate: 8.5008
 batch8：Interface throughputRate: 8.00694
@@ -240,13 +234,7 @@ batch32_310吞吐率为31.65764fps
 ### 7.2 710性能数据
 
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-```
-[e2e] throughputRate: 49.5601, latency: 21630.3
-[data read] throughputRate: 643.612, moduleLatency: 1.55373
-[preprocess] throughputRate: 348.108, moduleLatency: 2.87267
-[inference] throughputRate: 51.1218, Interface throughputRate: 65.5303, moduleLatency: 19.3435
-[postprocess] throughputRate: 51.1467, moduleLatency: 19.5516
-```
+
 batch1：Interface throughputRate: 65.5303 ,710吞吐率为65.5303fps
 batch4：Interface throughputRate: 64.5802 ,710吞吐率为64.5802fps
 batch8：Interface throughputRate: 64.3861 ,710吞吐率为64.3861fps
@@ -261,103 +249,11 @@ batch1性能：
 trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:1x1x64x80x80 --threads
 ```
 
-```
-[04/29/2022-14:15:41] [I] GPU Compute
-[04/29/2022-14:15:41] [I] min: 90.6819 ms
-[04/29/2022-14:15:41] [I] max: 92.8173 ms
-[04/29/2022-14:15:41] [I] mean: 91.687 ms
-[04/29/2022-14:15:41] [I] median: 91.8387 ms
-[04/29/2022-14:15:41] [I] percentile: 92.8173 ms at 99%
-[04/29/2022-14:15:41] [I] total compute time: 3.11736 s
-
-```
 batch1 t4单卡吞吐率：1000/(91.687/1)=10.90667fps  
-
-batch4性能：
-```
-trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:4x1x64x80x80 --threads
-```
-
-```
-[04/29/2022-14:27:39] [I] GPU Compute
-[04/29/2022-14:27:39] [I] min: 358.297 ms
-[04/29/2022-14:27:39] [I] max: 366.323 ms
-[04/29/2022-14:27:39] [I] mean: 360.984 ms
-[04/29/2022-14:27:39] [I] median: 360.4 ms
-[04/29/2022-14:27:39] [I] percentile: 366.323 ms at 99%
-[04/29/2022-14:27:39] [I] total compute time: 3.60984 s
-
-```
 batch4 t4单卡吞吐率：1000/(360.984/4)=11.08082fps
-
-batch8性能：
-```
-trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:8x1x64x80x80 --threads
-```
-
-```
-[[04/29/2022-14:36:16] [I] GPU Compute
-[04/29/2022-14:36:16] [I] min: 810.815 ms
-[04/29/2022-14:36:16] [I] max: 817.788 ms
-[04/29/2022-14:36:16] [I] mean: 813.193 ms
-[04/29/2022-14:36:16] [I] median: 813.153 ms
-[04/29/2022-14:36:16] [I] percentile: 817.788 ms at 99%
-[04/29/2022-14:36:16] [I] total compute time: 8.13194 s
-
-```
 batch8 t4单卡吞吐率：1000/(813.193/8)=9.83776fps
-
-batch16性能：
-```
-trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:16x1x64x80x80 --threads
-```
-
-```
-[04/29/2022-14:45:58] [I] GPU Compute
-[04/29/2022-14:45:58] [I] min: 1561.08 ms
-[04/29/2022-14:45:58] [I] max: 1566.75 ms
-[04/29/2022-14:45:58] [I] mean: 1563.66 ms
-[04/29/2022-14:45:58] [I] median: 1563.35 ms
-[04/29/2022-14:45:58] [I] percentile: 1566.75 ms at 99%
-[04/29/2022-14:45:58] [I] total compute time: 15.6366 s
-
-
-```
 batch16 t4单卡吞吐率：1000/(1563.66/16)=10.41219fps
-
-batch32性能：
-```
-trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:32x1x64x80x80 --threads
-```
-
-```
-[04/29/2022-15:08:59] [I] GPU Compute
-[04/29/2022-15:08:59] [I] min: 3571.51 ms
-[04/29/2022-15:08:59] [I] max: 6799 ms
-[04/29/2022-15:08:59] [I] mean: 5932.02 ms
-[04/29/2022-15:08:59] [I] median: 6416.47 ms
-[04/29/2022-15:08:59] [I] percentile: 6799 ms at 99%
-[04/29/2022-15:08:59] [I] total compute time: 59.3202 s
-
-
-```
 batch32 t4单卡吞吐率：1000/(5932.02/32)=5.39445fps
-
-batch64性能：
-```
-trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:64x1x64x80x80 --threads
-```
-
-```
-[04/29/2022-16:19:59] [I] GPU Compute
-[04/29/2022-16:19:59] [I] min: 12874.2 ms
-[04/29/2022-16:19:59] [I] max: 13251.7 ms
-[04/29/2022-16:19:59] [I] mean: 13051.9 ms
-[04/29/2022-16:19:59] [I] median: 13051.4 ms
-[04/29/2022-16:19:59] [I] percentile: 13251.7 ms at 99%
-[04/29/2022-16:19:59] [I] total compute time: 130.519 s
-
-```
 batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
 
 ### 7.4 性能对比
