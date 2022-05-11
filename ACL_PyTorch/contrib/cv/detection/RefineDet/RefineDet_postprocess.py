@@ -22,6 +22,7 @@ import pickle
 import os
 import time
 import argparse
+from tqdm import tqdm
 
 def test_net(dataset, det_nms, result_path, set_type='test'):
     num_images = len(dataset)
@@ -32,7 +33,7 @@ def test_net(dataset, det_nms, result_path, set_type='test'):
     detection_list = []
     h_list, w_list = dataset.get_h_w_list()
     prior_data = torch.from_numpy(np.loadtxt('prior_data.txt', dtype=np.float32).reshape(6375, 4))
-    for i in range(num_images):
+    for i in tqdm(range(num_images)):
         start = time.time()
         res_ls = []
         for j in range(1, 5):
