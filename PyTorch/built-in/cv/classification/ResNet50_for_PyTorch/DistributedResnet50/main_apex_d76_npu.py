@@ -25,6 +25,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn

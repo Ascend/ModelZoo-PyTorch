@@ -29,6 +29,8 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import Optional
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 option = {}
 option['ACL_OP_SELECT_IMPL_MODE'] = "high_precision"
 option['ACL_OPTYPELIST_FOR_IMPLMODE'] = "NLLLoss,NLLLossGrad"
