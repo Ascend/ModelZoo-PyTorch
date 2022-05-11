@@ -16,6 +16,8 @@ import sys
 
 import numpy as np
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from fairseq import (
     checkpoint_utils,
     distributed_utils,
