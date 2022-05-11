@@ -27,5 +27,5 @@ if __name__ == '__main__':
         with open(result_txt, 'r') as f:
             content = f.read()
         txt_data_list = [i.strip() for i in re.findall(r':(.*?),', content.replace('\n', ',') + ',')]
-        fps = float(txt_data_list[7].replace('samples/s', '')) 
+        fps = float(txt_data_list[7].replace('samples/s', '')) * 4
         print('310 bs{} fps:{}'.format(result_txt.split('_')[3], fps))
