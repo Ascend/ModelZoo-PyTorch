@@ -78,6 +78,7 @@ def train_epoch(loader, model, loss_fun, optimizer, scaler, meter, cur_epoch):
     model.train()
     meter.reset()
     meter.iter_tic()
+    PERF_MAX_STEPS = os.environ.get("PERF_MAX_STEPS", None)
     for cur_iter, (inputs, labels) in enumerate(loader):
         # Transfer the data to the current GPU device
         inputs = inputs.npu()
@@ -116,7 +117,9 @@ def train_epoch(loader, model, loss_fun, optimizer, scaler, meter, cur_epoch):
         mb_size = inputs.size(0) * cfg.NUM_GPUS
         meter.update_stats(top1_err, top5_err, loss, lr, mb_size)
         meter.log_iter_stats(cur_epoch, cur_iter)
-        meter.iter_tic()                
+        meter.iter_tic()
+        if PERF_MAX_STEPS and cur_iter == int(PERF_MAX_STEPS):
+            break
     # Log epoch stats
     meter.log_epoch_stats(cur_epoch)
 
