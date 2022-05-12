@@ -33,6 +33,7 @@ cd v1.1
 在工程根目录执行
 
 ```
+mkdir data/uncased_L-24_H-1024_A-16
 cd data/uncased_L-24_H-1024_A-16
 wget https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt -O vocab.txt
 cd ../../
