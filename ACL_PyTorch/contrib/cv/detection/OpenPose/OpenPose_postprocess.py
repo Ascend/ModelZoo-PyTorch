@@ -67,9 +67,9 @@ def post_process(args):
         txt_pure_name = txt.split('.')[0]
         index = txt_pure_name.rfind('_')
         name_suffix = txt_pure_name[index + 1]
-        if name_suffix == "1":
+        if name_suffix == "3":
             txt_1.append(txt)
-        else:
+        elif name_suffix == "4":
             txt_2.append(txt)
     txt_1.sort()
     txt_2.sort()
