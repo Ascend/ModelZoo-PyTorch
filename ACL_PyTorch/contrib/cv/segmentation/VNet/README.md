@@ -100,11 +100,7 @@ python3.7 vnet_pth2onnx.py vnet_model_best.pth.tar vnet.onnx
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
-```
-source env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1 开发辅助工具指南 (推理) 01]
+使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1 开发辅助工具指南 (推理) 01]
 ```
 atc --model=./vnet.onnx --framework=5 --output=vnet_bs1 --input_format=NCDHW --input_shape="actual_input_1:1,1,64,80,80" --log=info --soc_version=Ascend310
 
@@ -120,6 +116,14 @@ atc --model=./vnet.onnx --framework=5 --output=vnet_bs1 --input_format=NCDHW --i
 
 ### 4.1 数据集获取
 该模型使用[LUNA16数据集](https://luna16.grand-challenge.org/Download/)的888例CT数据进行肺部区域分割。全部888例CT数据分别存储在subset0.zip~subset9.zip共10个文件中，解压后需要将所有文件移动到vnet.pytorch/luna16/lung_ct_image目录下。另有与CT数据一一对应的分割真值文件存放于seg-lungs-LUNA16.zip文件，将其解压到vnet.pytorch/luna16/seg-lungs-LUNA16目录。
+```
+cd vnet.pytorch/luna16/lung_ct_image  
+wget https://zenodo.org/record/3723295/files/subset0.zip
+wget https://zenodo.org/record/4121926/files/subset7.zip
+7za x subset0.zip
+```
+**说明：** 
+>   数据集subset0~subset6在3723295链接下载，subset7~subset9在4121926链接下载，解压后lung_ct_image包含888个.raw文件和888个.mhd文件
 
 ### 4.2 数据集预处理
 1.执行原代码仓提供的数据集预处理脚本。
