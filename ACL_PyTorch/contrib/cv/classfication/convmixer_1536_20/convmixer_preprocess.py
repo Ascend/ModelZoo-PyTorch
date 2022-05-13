@@ -43,16 +43,28 @@ def img_preprocess(args):
         os.makedirs(save_path)
 
     in_files = os.listdir(args.image_path)
-    in_files.sort(key=lambda x:int(x[15:-5]))
-    for i in range(int(np.ceil(len(in_files) / args.batch_size))):
+    file_list = []
+    if not os.path.isfile(in_files[0]):
+        for sub_dir in in_files:
+            image_path = os.path.join(args.image_path, sub_dir)
+            sub_file_list = os.listdir(image_path)
+            for file in sub_file_list:
+                file_list.append(os.path.join(image_path, file))
+    else:
+        for file in in_files:
+            file_list.append(os.path.join(args.image_path, file))
+
+    suffix_len = -5
+    file_list.sort(key=lambda x:int(x[suffix_len-8:suffix_len]))
+    for i in range(int(np.ceil(len(file_list) / args.batch_size))):
         if i % 100 == 0:
             print("has generated input {:05d}...".format(i*args.batch_size))
 
         for idx in range(args.batch_size):
             file_index = i * args.batch_size + idx
-            if file_index < len(in_files):
-                file = in_files[file_index]
-                input_image = Image.open(os.path.join(args.image_path, file)).convert('RGB')
+            if file_index < len(file_list):
+                file = file_list[file_index]
+                input_image = Image.open(file).convert('RGB')
                 image_tensor = preprocess(input_image, 224, 0.96).unsqueeze(0)
             else:
                 image_tensor = torch.zeros([1,3,224,224])
