@@ -489,7 +489,6 @@ def main():
                 # Depending on the model and config, logits may contain extra tensors,
                 # like past_key_values, but logits always come first
                 logits = logits[0]
-            logits = logits.view(labels.shape[0], labels.shape[1], -1) # on npu, logits are 2-dim, need to be reshaped before op argmax 
             return logits.argmax(dim=-1)
 
         metric = load_metric(data_args.eval_metric_path)
@@ -549,7 +548,7 @@ def main():
         trainer.save_state()
 
     # Evaluation
-    if training_args.do_eval and training_args.local_rank < 1:
+    if training_args.do_eval:
         logger.info("*** Evaluate ***")
 
         metrics = trainer.evaluate()
