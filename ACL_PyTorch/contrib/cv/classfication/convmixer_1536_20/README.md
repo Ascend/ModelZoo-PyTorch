@@ -134,7 +134,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 2. 执行离线推理
 运行如下命令进行离线推理：
 ```bash
-./msame --model ./convmixer_1536_20_bs1.om --input ./prep_image_bs1 --output ./result/outputs_bs1_om -outfmt TXT > ./msame_bs1.txt
+./msame --model ./convmixer_1536_20_bs1.om  --output ./result/outputs_bs1_om --outfmt TXT --input ./prep_image_bs1 > msame_bs1.txt
 ```
 模型输出格式是txt，输出保存在"output"参数指定的文件夹中，同时会生成推理的日志文件msame_bs1.txt
 
