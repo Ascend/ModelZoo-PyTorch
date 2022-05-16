@@ -116,33 +116,59 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-# 绑核，不需要的绑核的模型删除，需要模型审视修改
-corenum=`cat /proc/cpuinfo |grep "processor"|wc -l`
-for i in $(seq 0 7)
-do 
-let p_start=0+24*i
-let p_end=23+24*i
-nohup taskset -c $p_start-$p_end  python3.7 ${cur_path}/densenet121_8p_main.py  \
-      --addr=$(hostname -I |awk '{print $1}') \
-      --seed 49 \
-      --workers 160 \
-      --arch densenet121 \
-      --lr 0.8 \
-      --print-freq 1 \
-      --eval-freq 5 \
-      --batch-size $batch_size \
-      --epochs $train_epochs \
-      --dist-url 'tcp://127.0.0.1:50000' \
-      --dist-backend 'hccl' \
-      --multiprocessing-distributed \
-      --world-size 1 \
-      --rank 0 \
-      --gpu $i \
-      --device-list '0,1,2,3,4,5,6,7' \
-      --amp \
-      --benchmark 0 \
-      --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
-done
+if [ $(uname -m) = "aarch64" ]
+then
+    KERNEL_NUM=$(($(nproc)/8))
+    for i in $(seq 0 7)
+    do
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/densenet121_8p_main.py \
+        --addr=$(hostname -I|awk '{print $1}') \
+        --seed 49 \
+        --workers 160 \
+        --arch densenet121 \
+        --lr 0.8 \
+        --print-freq 1 \
+        --eval-freq 5 \
+        --batch-size ${batch_size} \
+        --epochs ${train_epochs} \
+        --dist-url 'tcp://127.0.0.1:50000' \
+        --dist-backend 'hccl' \
+        --multiprocessing-distributed \
+        --world-size 1 \
+        --rank 0 \
+        --gpu $i \
+        --device-list '0,1,2,3,4,5,6,7' \
+        --amp \
+        --benchmark 0 \
+        --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    done
+else
+    for i in $(seq 0 7)
+    do
+    nohup python3.7 ${cur_path}/densenet121_8p_main.py \
+        --addr=$(hostname -I|awk '{print $1}') \
+        --seed 49 \
+        --workers 160 \
+        --arch densenet121 \
+        --lr 0.8 \
+        --print-freq 1 \
+        --eval-freq 5 \
+        --batch-size ${batch_size} \
+        --epochs ${train_epochs} \
+        --dist-url 'tcp://127.0.0.1:50000' \
+        --dist-backend 'hccl' \
+        --multiprocessing-distributed \
+        --world-size 1 \
+        --rank 0 \
+        --gpu $i \
+        --device-list '0,1,2,3,4,5,6,7' \
+        --amp \
+        --benchmark 0 \
+        --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    done
+fi
 wait
 
 #训练结束时间，不需要修改

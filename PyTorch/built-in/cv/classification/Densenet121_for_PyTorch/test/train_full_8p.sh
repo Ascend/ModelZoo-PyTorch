@@ -107,37 +107,64 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-# 绑核，不需要的绑核的模型删除，需要模型审视修改
-#let a=RANK_ID*${corenum}/${RANK_SIZE}
-#let b=RANK_ID+1
-#let c=b*${corenum}/${RANK_SIZE}-1
-
-#执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-#--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
-for i in $(seq 0 7)
-do 
-    nohup  python3.7 ${cur_path}/densenet121_8p_main.py  \
-      --addr=$(hostname -I |awk '{print $1}') \
-      --seed 49 \
-      --workers 160 \
-      --arch densenet121 \
-      --lr 0.8 \
-      --print-freq 1 \
-      --eval-freq 5 \
-      --batch-size 2048 \
-      --epoch 90 \
-      --dist-url 'tcp://127.0.0.1:50000' \
-      --dist-backend 'hccl' \
-      --multiprocessing-distributed \
-      --world-size 1 \
-      --rank 0 \
-      --gpu $i \
-      --device-list '0,1,2,3,4,5,6,7' \
-      --amp \
-      --benchmark 0 \
-      --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
-done
+if [ $(uname -m) = "aarch64" ]
+then
+    KERNEL_NUM=$(($(nproc)/8))
+    for i in $(seq 0 7)
+    do
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/densenet121_8p_main.py \
+        --addr=$(hostname -I|awk '{print $1}') \
+        --seed 49 \
+        --workers 160 \
+        --arch densenet121 \
+        --lr 0.8 \
+        --print-freq 1 \
+        --eval-freq 5 \
+        --batch-size ${batch_size} \
+        --epochs ${train_epochs} \
+        --dist-url 'tcp://127.0.0.1:50000' \
+        --dist-backend 'hccl' \
+        --multiprocessing-distributed \
+        --world-size 1 \
+        --rank 0 \
+        --gpu $i \
+        --device-list '0,1,2,3,4,5,6,7' \
+        --amp \
+        --benchmark 0 \
+        --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    done
+else
+    for i in $(seq 0 7)
+    do
+    nohup python3.7 ${cur_path}/densenet121_8p_main.py \
+        --addr=$(hostname -I|awk '{print $1}') \
+        --seed 49 \
+        --workers 160 \
+        --arch densenet121 \
+        --lr 0.8 \
+        --print-freq 1 \
+        --eval-freq 5 \
+        --batch-size ${batch_size} \
+        --epochs ${train_epochs} \
+        --dist-url 'tcp://127.0.0.1:50000' \
+        --dist-backend 'hccl' \
+        --multiprocessing-distributed \
+        --world-size 1 \
+        --rank 0 \
+        --gpu $i \
+        --device-list '0,1,2,3,4,5,6,7' \
+        --amp \
+        --benchmark 0 \
+        --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    done
+fi
 wait
+
+
+
+
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)
