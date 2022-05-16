@@ -30,19 +30,27 @@ cd ..
 GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/bert-base-chinese
 ```
 
-修改run_mlm_bertbase_1p.sh和run_mlm_bertbase_8p.sh中**--train_file**参数为使用的中文文本数据的实际路径，然后执行训练
+将下载下的bert-base-chinese放置在模型脚本一级目录下
 
 单卡训练
 
 ```
-bash run_mlm_bertbase_1p.sh
+bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base  --device_id=0  # 单卡精度训练
+bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 单卡性能训练
 ```
 
 单机8卡训练
 
 ```
-bash run_mlm_bertbase_8p.sh
+bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡精度训练
+bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡性能训练
 ```
+
+训练脚本参数说明：
+    --data_path：  数据集路径
+	--model_size： 训练model是base或者是large
+    --device_id：  单卡训练时所使用的device_id
+
 
 #### Bert-large
 
@@ -52,20 +60,26 @@ bash run_mlm_bertbase_8p.sh
 GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/algolet/bert-large-chinese
 ```
 
-修改run_mlm_bertlarge_1p.sh和run_mlm_bertlarge_8p.sh中**--train_file**参数为使用的中文文本数据的实际路径，然后执行训练
+将下载下的bert-large-chinese放置在模型脚本一级目录下
 
 单卡训练
 
 ```
-bash run_mlm_bertlarge_1p.sh
+bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large  --device_id=0   # 单卡精度训练
+bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 单卡性能训练
 ```
 
 单机8卡训练
 
 ```
-bash run_mlm_bertlarge_8p.sh
+bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡精度训练
+bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡性能训练
 ```
 
+训练脚本参数说明：
+    --data_path：  数据集路径
+	--model_size： 训练model是base或者是large
+    --device_id：  单卡训练时所使用的device_id
 
 
 ### 附录：单机8卡训练脚本参数说明
@@ -102,15 +116,15 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
 
    （1）设置pytorch框架内置超时时间，修改脚本中的distributed_process_group_timeout（单位秒）为更大的值，例如设置为7200：
    
-   ```
---distributed_process_group_timeout 7200
-   ```
+```
+    --distributed_process_group_timeout 7200
+```
    
    （2）设置HCCL的建链时间为更大的值，修改env.sh中环境变量HCCL_CONNECT_TIMEOUT（单位秒）的值：
    
-   ```
+```
    export HCCL_CONNECT_TIMEOUT=7200
-   ```
+ ```
    
    
 
