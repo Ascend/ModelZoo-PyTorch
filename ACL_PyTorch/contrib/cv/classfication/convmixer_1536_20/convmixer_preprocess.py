@@ -44,7 +44,7 @@ def img_preprocess(args):
 
     in_files = os.listdir(args.image_path)
     file_list = []
-    if not os.path.isfile(in_files[0]):
+    if not os.path.isfile(os.path.join(args.image_path, in_files[0])):
         for sub_dir in in_files:
             image_path = os.path.join(args.image_path, sub_dir)
             sub_file_list = os.listdir(image_path)
