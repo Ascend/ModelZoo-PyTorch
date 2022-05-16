@@ -121,7 +121,7 @@ do
             --seed 1 \
             --fp16 \
             --loss_scale 4096 \
-            --vocab_file "data/uncased_L-24_H-1024_A-16/vocab.txt" \
+            --vocab_file ${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt \
             --do_eval \
             --eval_script ${data_path}/evaluate-v1.1.py \
             --npu_id ${ASCEND_DEVICE_ID} \
