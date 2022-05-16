@@ -42,4 +42,4 @@
 3.执行步骤一训练流程（环境安装除外）
 
 三、训练结果
-/home/3D_ResNet_ID0421_for_PyTorch/output/0/
+/home/3D_ResNet_ID0421_for_PyTorch/output/test/0/
