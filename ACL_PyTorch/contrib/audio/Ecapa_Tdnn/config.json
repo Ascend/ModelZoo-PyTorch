@@ -1,0 +1,31 @@
+{
+    "mel_config": {
+        "segment_length": 0,
+        "sampling_rate": 16000,
+        "filter_length": 400,
+        "hop_length": 160,
+        "win_length": 400,
+        "mel_fmin": 0.0,
+        "mel_fmax": 8000.0
+    },
+    "hp":{
+        "SR": 22050,
+        "NUM_WORKERS": 4,
+        "BATCH_SIZE": 192,
+        "MEL_MIN": -12,
+        "NUM_EPOCH": 288,
+        "LR": 1e-5,
+        "WEIGHT_DECAY": 2e-5,
+        "MASKING_RATIO": 0.0,
+        "APPLY_SPECAUG": false,
+        "APPLY_T_SHIFT": false,
+        "CHECKPOINT_STEPS": 500,
+        "KEEP_LAST_ONLY": true,
+        "LOGGING_STEPS": 500,
+        "MAX_GRADIENT_NORM": 4.0,
+        "MAX_MEL_LENGTH": 200,
+        "REDUCED_SPEAKER_NUM": -1,
+        "REDUCED_SPEAKER_NUM_TEST": -1,
+        "LOAD_MEL_FROM_DISK": true
+    }
+}
