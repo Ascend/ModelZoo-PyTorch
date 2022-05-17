@@ -1,0 +1,32 @@
+diff --git a/detector/YOLOv3/darknet.py b/detector/YOLOv3/darknet.py
+index da6d3c0..b4cc2b5 100644
+--- a/detector/YOLOv3/darknet.py
++++ b/detector/YOLOv3/darknet.py
+@@ -147,7 +147,8 @@ class Darknet(nn.Module):
+                 continue
+             else:
+                 print('unknown type %s' % (block['type']))
+-        return x if outno == 0 else out_boxes
++        return out_boxes[0]['x'], out_boxes[0]['a'], out_boxes[1]['x'], out_boxes[1]['a'], out_boxes[2]['x'], out_boxes[2]['a']
++        # return x if outno == 0 else out_boxes
+ 
+     def print_network(self):
+         print_cfg(self.blocks)
+diff --git a/detector/YOLOv3/detector.py b/detector/YOLOv3/detector.py
+index 8fb302b..80dbf6f 100644
+--- a/detector/YOLOv3/detector.py
++++ b/detector/YOLOv3/detector.py
+@@ -41,6 +41,13 @@ class YOLOv3(object):
+         # forward
+         with torch.no_grad():
+             img = img.to(self.device)
++
++            input_names = ["actual_input_1"]
++            import onnx
++            self.net.eval()
++            torch.onnx.export(self.net, img, "yolov3.onnx", input_names=input_names, opset_version=11)
++            return
++
+             out_boxes = self.net(img)
+             boxes = get_all_boxes(out_boxes, self.conf_thresh, self.num_classes,
+                                   use_cuda=self.use_cuda)  # batch size is 1
