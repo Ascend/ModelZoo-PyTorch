@@ -113,17 +113,17 @@ source /usr/local/Ascend/ascend-lastest/set_env.sh
 chmod u+x benchmark.x86_64
 ```
 3.使用atc将onnx模型转换为om模型文件
+（310）
 ```
 atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend310
 ```
-(710_bs1)
+(710) for循环分别执行bs1和bs16
 ```
-atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend710
+for i in 1 16;do
+atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:"$i",1,481,481" --output=DnCNN-S-15_bs"$i" --log=debug --soc_version=Ascend710
+done
 ```
-(710_bs16)
-```
-atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:16,1,481,481" --output=DnCNN-S-15_bs16 --log=debug --soc_version=Ascend710
-```
+
 
 ## 4 数据集预处理
 
