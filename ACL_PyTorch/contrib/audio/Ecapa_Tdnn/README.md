@@ -111,6 +111,7 @@ python preprocess.py VoxCeleb input/ speaker/
 ```
 
 在/home/zhn/result目录下，文件内容如下
+
 ![输入图片说明](image.png)
 
 只需获取其中后缀为_0的文件，平均大小为31KB左右，统共290个，将放入一个文件夹后传回GPU环境下
@@ -137,6 +138,7 @@ python postprocess.py result/ speaker/
 trtexec --onnx=/home/zhn/infer_cpu.onnx --fp16 --shapes=mel:16x80x200
 ```
 ![输入图片说明](image1.png)
+
 根据红框中信息，得到吞吐率为1000/(19.92/16)=803.21
 
 ### 6.2 NPU性能数据
@@ -147,6 +149,7 @@ trtexec --onnx=/home/zhn/infer_cpu.onnx --fp16 --shapes=mel:16x80x200
  ./msame --model "/home/zhn/om1/infer_16_tdnn_om.om" --output "/home/zhn/result" --outfmt TXT --loop 100
 ```
 ![输入图片说明](image2.png)
+
 根据红框中信息，得到吞吐率为1000/(12.68/16)= 1261.82
 
 在bs=16时，模型性能达标
