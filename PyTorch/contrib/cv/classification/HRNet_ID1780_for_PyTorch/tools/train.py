@@ -140,6 +140,7 @@ def main():
     
     os.environ['MASTER_ADDR'] = host_ip
     os.environ['MASTER_PORT'] = '29988'
+    rank_id = device_id
     dist.init_process_group(backend='hccl', rank=rank_id, world_size=device_num)
     
     logger, final_output_dir, tb_log_dir = create_logger(

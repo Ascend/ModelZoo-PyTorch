@@ -51,19 +51,19 @@
     - bash ./test/train_performance_1p.sh --data_path=xxx # training performance
 
 - training 8p
-    - bash ./test/train_full_8p.sh --data_path=xxx # training accuracy
+    - bash ./test/train_full_8p.sh --data_path=xxx --device_id=xxx # training accuracy  
     
-    - bash ./test/train_performance_8p.sh --data_path=xxx # training performance
+    - bash ./test/train_performance_8p.sh --data_path=xxx  --device_id=xxx  # training performance
 
 - eval default 8p， should support 1p
-    - bash ./test/train_eval_8p.sh --data_path=xxx
+    - bash ./test/train_eval_8p.sh --data_path=xxx   --device_id=xxx
 
 - Traing log
     - test/output/devie_id/train_${device_id}.log # training detail log
     
-    - test/output/devie_id/ResNet101_${device_id}_bs_8p_perf.log # 8p training performance result
+    - test/output/devie_id/HRNe_ID1780${device_id}_bs_8p_perf.log # 8p training performance result
     
-    - test/output/devie_id/ResNet101_${device_id}_bs_8p_acc.log # 8p training accuracy result    
+    - test/output/devie_id/HRNe_ID1780${device_id}_bs_8p_acc.log # 8p training accuracy result    
 
 ```bash
 
