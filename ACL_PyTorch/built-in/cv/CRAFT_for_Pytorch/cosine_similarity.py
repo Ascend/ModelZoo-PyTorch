@@ -26,14 +26,14 @@ def cos_sim(a, b):
 if __name__ == '__main__':
     DEVICE = 0
     init_acl(DEVICE)
-    input = np.random.random((1, 3, 640, 640)).astype("float32")
+    input_data = np.random.random((1, 3, 640, 640)).astype("float32")
     net = AclNet(model_path="craft.om", device_id=DEVICE)
-    output_data, exe_time = net([input])
+    output_data, exe_time = net([input_data])
     y = output_data[0].flatten()
     feature = output_data[1].flatten()
     onnx_model = onnxruntime.InferenceSession("craft.onnx")
     inputs = {
-        onnx_model.get_inputs()[0].name: input,
+        onnx_model.get_inputs()[0].name: input_data,
     }
     onnx_output = onnx_model.run(None, inputs)
     onnx_y = onnx_output[0].flatten()
