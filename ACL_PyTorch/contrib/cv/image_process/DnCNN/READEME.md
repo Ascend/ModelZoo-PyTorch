@@ -167,15 +167,12 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 source env.sh
 ```
 2.执行离线推理
-(bs1)
+for循环分别执行bs1和bs16
 ```
-./benchmark.x86_64 -model_type=vision -om_path=DnCNN-S-15_bs1.om -device_id=0 -batch_size=1 -input_text_path=DnCNN_bin.info -input_width=481 -input_height=481 -useDvpp=false -output_binary=true
+for i in 1 16;do
+./benchmark.x86_64 -model_type=vision -om_path=DnCNN-S-15_bs"$i".om -device_id=0 -batch_size="$i" -input_text_path=DnCNN_bin.info -input_width=481 -input_height=481 -useDvpp=false -output_binary=true
+done
 ```
-(bs16)
-```
-./benchmark.x86_64 -model_type=vision -om_path=DnCNN-S-15_bs16.om -device_id=0 -batch_size=16 -input_text_path=DnCNN_bin.info -input_width=481 -input_height=481 -useDvpp=false -output_binary=true
-```
-
 输出结果默认保存在当前目录result/dumpOutput_deviceX(X为对应的device_id)，每个输入对应的输出对应一个_X.bin文件。
 
 ## 6 精度对比
