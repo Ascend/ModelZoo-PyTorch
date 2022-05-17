@@ -106,7 +106,7 @@ python3.7 DnCNN_pth2onnx.py net.pth DnCNN-S-15.onnx
 
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-lastest/set_env.sh
 ```
 2.增加benchmark.{arch}可执行权限。
 ```
