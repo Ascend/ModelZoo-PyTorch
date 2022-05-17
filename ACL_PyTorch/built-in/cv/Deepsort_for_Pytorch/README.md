@@ -52,6 +52,15 @@ git reset 4c2d86229b0b69316af67d519f8476eee69c9b20 --hard
    return
    ```
 
+   以上代码修改也可以通过patch实现:
+
+   ```shell
+   cd deep_sort_pytorch
+   patch -p1 < ../yolov3.patch
+   ```
+
+   
+
    运行如下导出onnx：
 
    ```
@@ -80,7 +89,18 @@ git reset 4c2d86229b0b69316af67d519f8476eee69c9b20 --hard
 
 2. 
 
-   原仓提供的评测脚本有误，使用我们提供的yolov3_deepsort_eval.py、并按照deepsort_revise_method.md修改对应detector.py、feature_extractor.py，并将acl_net_dynamic.py脚本放置在detector/YOLOv3/以及deep_sort/deep目录下，将yolov3-sim.om和deep_dims.om放在deep_sort_pytorch目录下
+   原仓提供的评测脚本有误，使用我们提供的yolov3_deepsort_eval.py、并按照deepsort_revise_method.md修改对应detector.py、feature_extractor.py，也可以通过patch修改文件：
+
+   ```shell
+   cd deep_sort_pytorch
+   patch -p1 < ../evaluation.patch
+   ```
+
+   
+
+   并将acl_net_dynamic.py脚本放置在detector/YOLOv3/以及deep_sort/deep目录下，将yolov3-sim.om和deep_dims.om以及我们提供的yolov3_deepsort_eval.py放在deep_sort_pytorch目录下
+
+   
 
 3. 运行如下脚本即可获取精度
 
