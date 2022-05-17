@@ -37,7 +37,7 @@ pip3.7 install -r requirements.txt
    ```
    cp export_onnx.py CRAFT-pytorch/
    cp craft_mlt_25k.pth CRAFT-pytorch/
-   python3 export_onnx.py craft_mlt_25k.pth
+   python3 export_onnx.py --trained_model craft_mlt_25k.pth
    ```
 
    生成craft.onnx
@@ -53,7 +53,7 @@ pip3.7 install -r requirements.txt
 
 ## 2 离线推理 
 
-   首先为了获得更好的性能，可以首先设置日志等级，商发版本默认ERROR级别
+1. 首先为了获得更好的性能，可以首先设置日志等级，商发版本默认ERROR级别
 
 ```
 export ASCEND_GLOBAL_LOG_LEVEL=3
@@ -62,23 +62,27 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
 2. 获取精度,模型有2个输出，我们计算余弦相似度
 
-   ```
+```
 cp cosine_similarity.py CRAFT-pytorch/
-   python3 cosine_similarity.py
-   ```
-   
-   可获取打印的余弦相似度
-   
+python3 cosine_similarity.py
+```
+
 3. 获取性能，用benchmark做纯推理即可
 
    需要首先配置环境变量:
 
-   ```
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   ./benchmark.x86_64 -round=10 -batch_size=1 -device_id=0 -om_path=craft.om 
+```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh 
+./benchmark.x86_64 -round=10 -batch_size=1 -device_id=0 -om_path=craft.om 
+```
+
+
+
 ```
    
 
 |     模型      | 官网pth精度 | 710离线推理精度 | gpu性能 | 710性能 |
 | :-----------: | :---------: | :-------------: | :-----: | :-----: |
-| CRAFT_General |             |                 |  80fps  | 148fps  |
+| CRAFT_General |             |                 |         | 148fps  |
+
+```
