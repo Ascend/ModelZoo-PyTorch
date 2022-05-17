@@ -1,0 +1,13 @@
+timm==0.4.12
+Pillow
+blobfile
+mypy
+numpy
+pytest
+requests
+einops
+tensorboardX
+scipy
+decorator
+torch==1.5.0
+torchvision==0.6.0
