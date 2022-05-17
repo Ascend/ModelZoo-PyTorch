@@ -132,7 +132,7 @@ python postprocess.py result/ speaker/
 
 > 测试gpu性能要确保device空闲，使用nvidia-smi命令可查看device是否在运行其它推理任务
 
-以bs=16为例
+以bs=16为例，这里的infer_cpu.onnx为优化前onnx模型
 
 ```
 trtexec --onnx=/home/zhn/infer_cpu.onnx --fp16 --shapes=mel:16x80x200
