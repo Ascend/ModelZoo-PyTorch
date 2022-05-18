@@ -67,9 +67,7 @@ cp cosine_similarity.py CRAFT-pytorch/
 python3 cosine_similarity.py
 ```
 
-3. 获取性能，用benchmark做纯推理即可
-
-   需要首先配置环境变量:
+3. [获取benchmark工具，](https://gitee.com/ascend/cann-benchmark/tree/master/infer)将benchmark.x86_64或benchmark.aarch64放到与craft相同的目录
 
 ```
 source /usr/local/Ascend/ascend-toolkit/set_env.sh 
