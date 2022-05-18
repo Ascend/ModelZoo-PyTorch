@@ -474,7 +474,7 @@ class TransformerModel(nn.Module):
         attn_mask = (attn_mask==0).unsqueeze(-2).unsqueeze(-2)
 
         attn_mask = attn_mask.repeat(1, self.n_heads, slen, 1).half()
-        attn_mask = attn_mask*(-65536.0)
+        attn_mask = attn_mask*(-65504.0)
         attn_mask = attn_mask.npu_format_cast(29)
 
         # transformer layers
