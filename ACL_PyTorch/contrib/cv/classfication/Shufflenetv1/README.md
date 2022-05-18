@@ -254,7 +254,7 @@
   batch64性能：
   batch64 710吞吐率：5501.23fps 
    ### 7.2 T4性能数据
-  在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2 batch1性能：
+  在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2 
  batch1性能：
  ```
  trtexec --onnx=shufflenetv1_bs1.onnx --fp16 --shapes=image:1x3x224x224 --threads
