@@ -42,6 +42,7 @@ data_dump_step="10"
 profiling=False
 autotune=False
 bin_mode=False
+bin_analysis=False
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -80,10 +81,19 @@ elif [[ $para == --over_dump* ]];then
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --bin_analysis* ]];then
+    elif [[ $para == --bin_mode* ]];then
         bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
     fi
 done
+
+#设置二进制变量
+if [ $bin_mode == "True" ];then
+    line=`grep "torch.npu.set_option" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -221,7 +231,8 @@ echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseNa
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 
 #获取二进制算子信息
-if [ $bin_mode == "True" ];then
+if [ $bin_analysis == "True" ];then
+    echo "========start bin analysis========"
     #1、版本已支持二进制的算子清单：
     cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
     cmd1_num=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'|wc -l`
@@ -275,21 +286,27 @@ if [ $bin_mode == "True" ];then
     oldIFS=${IFS}
     IFS=","
     num=1
+    dot_num=""
     touch $cur_path/output/$ASCEND_DEVICE_ID/$num.csv
     for i in ${str[@]};
     do  
-        if (( $num == 1 ));then
-            dot=""
-        else
-            dot=","
-        fi
-
         IFS=$oldIFS
-        for j in $i;
-        do  
-            echo "${dot}$j" >>$cur_path/output/$ASCEND_DEVICE_ID/a.csv
-            # echo "${dot}$j"   
-        done    
+        if [[ $i == "" ]];then
+            dot_num=",${dot_num}"
+        else
+            if (( $num == 1 ));then
+                dot=""
+            else
+                dot=",${dot_num}"
+            fi
+
+            for j in $i;
+            do  
+                echo "${dot}$j" >>$cur_path/output/$ASCEND_DEVICE_ID/a.csv
+                dot_num=
+            done 
+            
+        fi   
         if [ ! -f "$cur_path/output/$ASCEND_DEVICE_ID/a.csv" ];then
             cp $cur_path/output/$ASCEND_DEVICE_ID/$num.csv $cur_path/output/$ASCEND_DEVICE_ID/$(($num+1)).csv
         else
@@ -304,5 +321,6 @@ if [ $bin_mode == "True" ];then
     printf "\xEF\xBB\xBF" > $cur_path/output/$ASCEND_DEVICE_ID/bin_op_details.csv
     sed -i '1i1-已发布二进制的算子清单 ,2-模型中所有编译的算子及次数 ,3-成功复用二进制的算子及次数 ,4-二进制未发布的算子及次数 ,5-未匹配模糊编译或者属于高性能模式，导致无法复用二进制的算子及数量,6-static key不匹配，导致无法复用二进制的算子及数量 ,7-动态参数范围不匹配，导致无法复用二进制的算子及数量 ,8-匹配到编译缓存，不需要复用二进制算子及数量' $cur_path/output/$ASCEND_DEVICE_ID/$num.csv 
     cat $cur_path/output/$ASCEND_DEVICE_ID/$num.csv >> $cur_path/output/$ASCEND_DEVICE_ID/bin_op_details.csv
-    rm -f $cur_path/output/$ASCEND_DEVICE_ID/$num.csv 
+    rm -f $cur_path/output/$ASCEND_DEVICE_ID/$num.csv
+    echo "========end bin analysis========"
 fi
