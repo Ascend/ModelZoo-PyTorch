@@ -67,9 +67,10 @@ def post_process(args):
         txt_pure_name = txt.split('.')[0]
         index = txt_pure_name.rfind('_')
         name_suffix = txt_pure_name[index + 1]
-        if name_suffix == "3":
+        # 单张推理输出的文件有四个，前两个是第一阶段输出的heatmaps和pafs数据，后两个是第二阶段输出的heatmaps和pafs数据
+        if name_suffix == "3":  # 第二阶段输出的heatmaps数据
             txt_1.append(txt)
-        elif name_suffix == "4":
+        elif name_suffix == "4":    # 第二阶段输出的pafs数据
             txt_2.append(txt)
     txt_1.sort()
     txt_2.sort()
