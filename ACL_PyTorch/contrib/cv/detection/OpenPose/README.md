@@ -58,9 +58,10 @@ b 生成bin文件
 ```
 python3.7 OpenPose_preprocess.py --src_path ${DATASET_PATH} --save_path ./datasets/coco/prep_dataset --pad_txt_path ./output/pad.txt
 ```
-    --src_path：为数据集路径。
-    --save_path：为模型输入数据存储路径。
-    --pad_txt_path：输出文件路径。
+参数说明：
+- --src_path：为数据集路径。
+- --save_path：为模型输入数据存储路径。
+- --pad_txt_path：输出文件路径。
 ### 3.3 生成数据集info文件
 ```
 python3.7 gen_dataset_info.py bin  ./datasets/coco/prep_dataset ./openpose_prep_bin.info 640 368
@@ -139,10 +140,10 @@ percentile(99%) = 6.24855 ms
 python3.7 OpenPose_postprocess.py --benchmark_result_path result/dumpOutput_device0/  --labels  ${LABLES_PATH}  --pad_txt_path ./output/pad.txt --detections_save_path ./output/result_b1.json
 ```
 参数说明：
---benchmark_result_path：生成推理结果所在路径。
---labels ：标签数据。
---pad_txt_path：填充信息。
---detections_save_path：生成结果文件。
+- --benchmark_result_path：生成推理结果所在路径。
+- --labels ：标签数据。
+- --pad_txt_path：填充信息。
+- --detections_save_path：生成结果文件。
 
 ## 6 测评结果
 | 模型            | Ascend310（samples/s） | Ascend710（samples/s） | T4（samples/s） | 710/310 | 710/T4 | 精度    |
