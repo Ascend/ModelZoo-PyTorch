@@ -81,7 +81,4 @@ if __name__ == "__main__":
         i = i + 1
         mels = np.array(mels).astype(np.float32)
         mels.tofile(predata_path + 'mels' + str(i) + ".bin")
-        # speakers = np.array(speakers).astype(np.int64)
-        # speakers.tofile('prespeaker/speakers'+str(i)+".txt")
-        # np.savetxt('prespeaker/speakers'+str(i)+".txt",speakers)
         torch.save(speakers, prespeaker_path + 'speakers' + str(i) + ".pt")
