@@ -5,12 +5,16 @@ cur_path=`pwd`
 
 #集合通信参数,不需要修改
 
-export RANK_SIZE=8
+export RANK_SIZE=16
 export JOB_ID=10087
 RANK_ID_START=0
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
+conf_path=""
+server_index=""
+fix_node_ip=""
+devicesnum=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
@@ -69,8 +73,19 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --fix_node_ip* ]];then
+	    fix_node_ip=`echo ${para#*=}`
+	elif [[ $para == --devicesnum* ]];then
+	    devicesnum=`echo ${para#*=}`
+    elif [[ $para == --conf_path* ]];then
+        conf_path=`echo ${para#*=}`
+    elif [[ $para == --server_index* ]];then
+        server_index=`echo ${para#*=}`
     fi
 done
+
+one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+linux_num=`find $conf_path -name "server_*.info" |wc -l`
 
 PREC=""
 if [[ $precision_mode == "amp" ]];then
@@ -81,6 +96,17 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
+export HCCL_IF_IP=$fix_node_ip
+export MASTER_ADDR=$one_node_ip
+export MASTER_PORT=29501
+export HCCL_WHITELIST_DISABLE=1
+device_num=${#devicesnum}
+devices_num=`awk 'BEGIN{printf "%.0f\n",'${device_num}'-1}'`
+
+NPUS=($(seq 0 $devices_num))
+rank_server=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${server_index}'}'`
+export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'}'`
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../NPU/8p/
@@ -110,8 +136,8 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
 nohup python3 -u steps/train_ctc.py \
---rank 0 \
---world_size 1 \
+--rank ${server_index} \
+--world_size 2 \
 --dist_backend 'hccl' \
 --dist_url 'tcp://127.0.0.1:50000' \
 --multiprocessing_distributed \
@@ -121,7 +147,7 @@ $PREC \
 --loss_scale 128 \
 --opt_level O2 \
 --conf 'conf/ctc_config.yaml' \
---addr $(hostname -I |awk '{print $1}') > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+--addr $one_node_ip > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
@@ -141,7 +167,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 #fps=`grep "Epoch:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $11}'|sed 's/,$//'`
 fps=`grep "Epoch:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $11}'|sed 's/,$//'|tail -n +5|awk '{sum+=$1} END {print sum/NR}'`
-FPS=`awk 'BEGIN{printf "%.2f\n",'${fps}'*8}'`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${fps}'*16}'`
 #打印，不需要修改
 echo "Final Performance item/sec : $FPS"
 
