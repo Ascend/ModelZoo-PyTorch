@@ -26,7 +26,6 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
 rm -rf result/dumpOutput_device*
 
 ./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=4 -om_path=./models/yolox.om -input_text_path=./prep_bin.info -input_width=640 -input_height=640 -output_binary=True -useDvpp=False

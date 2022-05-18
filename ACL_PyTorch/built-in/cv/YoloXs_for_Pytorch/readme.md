@@ -14,13 +14,14 @@ pip3.7 install -r requirements.txt
 git clone https://github.com/Megvii-BaseDetection/YOLOX.git
 cd YOLOX
 git reset c9d128384cf0758723804c23ab7e042dbf3c967f --hard
+pip3 install -v -e .
 ```
 
 3. 在https://github.com/Megvii-BaseDetection/YOLOX 界面下载YOLOX-s对应的weights， 名称为yolox_s.pth。
 
 4. 数据集
 
-   获取COCO数据集，并重命名为COCO，放到/root/datasets目录
+   获取COCO数据集，并重命名为COCO，放到/root/datasets目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)
 
 5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
@@ -28,9 +29,13 @@ git reset c9d128384cf0758723804c23ab7e042dbf3c967f --hard
 
 ### 2. 离线推理
 
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+710上执行，执行时使npu-smi info查看设备状态，确保device空闲，设置环境变量后运行对应脚本即可
 
 ```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+cd YOLOX
+cp yolox_s.pth ./YOLOX
+cp -r YoloXs_for_Pytorch/* ./YOLOX
 bash test/pth2om.sh  
 bash test/eval_acc_perf.sh --datasets_path=/root/datasets  
 ```

@@ -63,7 +63,7 @@ def main():
 
     data_list = []
     coco_evaluator = COCOEvaluator(val_loader, img_size=(640, 640), confthre=0.001, nmsthre=0.65, num_classes=80)
-    statistics = torch.FloatTensor([10, 10, max(len(val_loader) - 1), 1])
+    statistics = torch.FloatTensor([10, 10, max(len(val_loader) - 1, 1)])
     for cur_iter, (imgs, _, info_imgs, ids) in enumerate(tqdm(val_loader)):
         
         outputs = get_output_data(opt.dump_dir, cur_iter)
