@@ -129,20 +129,6 @@ bash ./test/run8p.sh
 bash test/eval.sh
 ```
 
-测试之前请指定测试的模型路径。打开./test/eval.sh文件，最后一行如下所示：
-
-```
-python3.7.5 -u ./tools/eval.py --config-file configs/cityscapes_fast_scnn.yaml TEST.TEST_MODEL_PATH runs/checkpoints/FastSCNN__cityscape_2021-07-15-00-51/best_model.pth
-```
-
-请指定需要测试的模型路径，将runs/checkpoints/FastSCNN__cityscape_2021-07-15-00-51/best_model.pth替换掉即可。
-
-## Demo
-修改 configs/cityscapes_fast_scnn.yaml中的TEST_MODEL_PATH: 'runs/checkpoints/fast_scnn__cityscape_2019-11-19-02-02/best_model.pth'替换成自己实际存储的模型路径，demo.py的输入图片默认时tool/demo_vis.png，运行的结果保存在runs/demo_result目录下，然后运行以下脚本，执行demo.py：
-```
-python3.7 tools/demo.py --config-file configs/cityscapes_fast_scnn.yaml  
-```
-
 ### 精度对比
 
 GPU8p loss scale使用O1 128混合精度获得的结果为：mIoU:64.46
