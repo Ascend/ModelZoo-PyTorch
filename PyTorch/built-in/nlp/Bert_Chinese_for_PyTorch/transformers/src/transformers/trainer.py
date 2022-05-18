@@ -448,7 +448,7 @@ class Trainer:
         if args.fp16 or args.bf16:
             if args.half_precision_backend == "auto":
                 if _is_native_amp_available:
-                    args.half_precision_backend = "amp"
+                    args.half_precision_backend = "apex"
                 else:
                     if args.bf16:
                         raise ValueError("Tried to use `bf16` but native amp is not available")
