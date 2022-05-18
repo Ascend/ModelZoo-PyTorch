@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,12 +42,7 @@ def main():
     
     parser.add_argument('--batch', dest='batch', help='batch for dataloader', default=1, type=int)
     opt = parser.parse_args()
-    
-    if os.path.exists(opt.dump_dir):
-        os.system("rm-rf " + opt.dump_dir)
-    else:
-        os.system("mkdir " + opt.dump_dir)
-    
+
     valdataset = COCODataset(
         data_dir=opt.dataroot,
         json_file='instances_val2017.json',

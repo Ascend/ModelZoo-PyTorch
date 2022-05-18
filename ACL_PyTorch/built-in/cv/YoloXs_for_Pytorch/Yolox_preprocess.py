@@ -46,7 +46,7 @@ def main():
 
     val_loader = torch.utils.data.DataLoader(valdataset, **dataloader_kwargs)
     if os.path.exists(opt.output):
-        os.system("rm-rf " + opt.output)
+        os.system("rm -rf " + opt.output)
     else:
         os.system("mkdir " + opt.output)
     for idx, data in tqdm(enumerate(val_loader)):
