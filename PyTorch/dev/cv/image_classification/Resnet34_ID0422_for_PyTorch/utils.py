@@ -65,7 +65,7 @@ class SmoothedValue(object):
         """
         if not is_dist_avail_and_initialized():
             return
-        t = torch.tensor([self.count, self.total], dtype=torch.float64, device='npu')
+        t = torch.tensor([self.count, self.total], dtype=torch.float32, device='npu')
         dist.barrier()
         dist.all_reduce(t)
         t = t.tolist()
@@ -280,7 +280,7 @@ def init_distributed_mode(args):
     args.distributed = True
 
     torch.npu.set_device(args.gpu)
-    args.dist_backend = 'nccl'
+    args.dist_backend = 'hccl'
     print('| distributed init (rank {}): {}'.format(
         args.rank, args.dist_url), flush=True)
     torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
