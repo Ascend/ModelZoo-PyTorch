@@ -1,6 +1,8 @@
 #!/bin/bash
-
-cur_path=`pwd`/../
+#当前路径,不需要修改
+cur_path=`pwd`
+# 指定训练所使用的npu device卡id
+device_id=0
 #失败用例打屏
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export SCALAR_TO_HOST_MEM=1
@@ -18,7 +20,7 @@ RankSize=1
 #训练epoch，可选
 train_epochs=1
 #训练step
-train_steps=
+#train_steps=
 #学习率
 learning_rate=3e-05
 
@@ -32,26 +34,55 @@ fi
 
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
-        source set_conda.sh --conda_name=$conda_name
-        #export PATH=/usr/local/python3.7.5/bin:/home/anaconda3/bin:$PATH
+        source ${cur_path}/test/set_conda.sh --conda_name=$conda_name
+        #export PATH=/usr/local/python3.7/bin:/home/anaconda3/bin:$PATH
         #source activate py8
         source activate $conda_name
         
 	fi
 done
 
-if [[ $data_path  == "" ]];then
-	echo "[Error] para \"data_path\" must be config"
-	exit 1
-
+#校验是否传入data_path,不需要修改
+if [[ $data_path == "" ]];then
+    echo "[Error] para \"data_path\" must be confing"
+    exit 1
 fi
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
+#进入训练脚本目录，需要模型审视修改
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
+
+#训练开始时间，不需要修改
+start_time=$(date +%s)
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+
 sed -i "s|checkpoint_utils.save_checkpoint(|#checkpoint_utils.save_checkpoint(|g" $cur_path/fairseq_cli/train.py
-##############执行训练##########
-cd $cur_path
+#创建DeviceID输出目录，不需要修改
 if [ -d $cur_path/test/output ];then
 	rm -rf $cur_path/test/output/*
 	mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
@@ -61,9 +92,9 @@ fi
 wait
 
 
-pip3 install --editable ./
+pip3.7 install --editable ./ 
 start=$(date +%s)
-python3 train.py $data_path/en_ro/ \
+nohup python3.7 ${cur_path}/train.py $data_path/en_ro/ \
   --distributed-world-size 1 --npu --npu-id $ASCEND_DEVICE_ID --fp16 --encoder-normalize-before --decoder-normalize-before \
   --arch mbart_large --layernorm-embedding \
   --task translation_from_pretrained_bart \
