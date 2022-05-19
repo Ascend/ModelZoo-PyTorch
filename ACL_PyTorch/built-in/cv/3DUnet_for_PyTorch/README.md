@@ -25,7 +25,7 @@ mv nnUNet nnUnet
 3. 编译环境，进入inference/loadgen目录，执行以下命令。
 
    ```
-   CFLAGS="-std=c++14 -03" python3.7.5 setup.py develop
+   CFLAGS="-std=c++14 -O3" python3.7.5 setup.py develop
    ```
 
    若失败，则升级gcc版本
