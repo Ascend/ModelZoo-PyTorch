@@ -92,12 +92,19 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 train_1p.py \
-	--npu ${ASCEND_DEVICE_ID} \
-	--amp \
+# 修改worker
+worker=64
+if (( "$worker" > "$(nproc)" )); then
+worker=$(nproc)
+fi
+echo $worker
+
+taskset -c 0-42 python3.7 train_1p.py \
+--npu ${ASCEND_DEVICE_ID} \
+--amp \
     	--data ${data_path} \
     	--seed=49 \
-    	--workers=$(nproc) \
+    	--workers=$(worker) \
     	--learning-rate=${learning_rate} \
     	--mom=0.9 \
     	--weight-decay=1.0e-04  \
