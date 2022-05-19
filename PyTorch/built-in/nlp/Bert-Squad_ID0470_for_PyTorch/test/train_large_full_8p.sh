@@ -1,7 +1,16 @@
 #!/bin/bash
 
-#当前路径,不需要修改
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
 
 #集合通信参数,不需要修改
 
@@ -90,20 +99,27 @@ echo "Device ID: $ASCEND_DEVICE_ID"
 
 	
 #创建DeviceID输出目录，不需要修改
-if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
-    mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
 
 else
-    mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID 
-    mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
+fi
+
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
 fi
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
 #进入训练脚本目录，需要模型审视修改
-cd $cur_path/../
+cd $cur_path/
 
 for i in $(seq 0 7)
 do
@@ -126,12 +142,12 @@ do
             --eval_script ${data_path}/evaluate-v1.1.py \
             --npu_id ${ASCEND_DEVICE_ID} \
             --do_lower_case \
-            --output_dir ${cur_path}/../results \
+            --output_dir ${cur_path}/results \
             --config_file bert_config.json \
             --num_npu 8 \
             --local_rank=$i \
             --addr=127.0.0.1 \
-            --json-summary ${cur_path}/output/${ASCEND_DEVICE_ID}/dllogger.json > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done           
  
 wait
@@ -143,7 +159,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-step_time=`grep 'step_time : ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $13}'`
+step_time=`grep 'step_time : ' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $13}'`
 
 FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
 
@@ -151,7 +167,7 @@ FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep 'F1 : ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $10}'` 
+train_accuracy=`grep 'F1 : ' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $10}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -169,20 +185,20 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep -r "step_loss :" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk '{print $19}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep -r "step_loss :" $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk '{print $19}' > $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
-ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}">> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "Network = ${Network}" > $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}">> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 export BMMV2_ENABLE=0

@@ -4,8 +4,14 @@ export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
 export CPATH=/usr/local/hdf5/include:$CPATH
 export HDF5_DISABLE_VERSION_CHECK=1
-#当前路径,不需要修改
-cur_path=`pwd`
+
+#################创建日志输出目录，不需要修改#################
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
 
 #集合通信参数,不需要修改
 export BMMV2_ENABLE=1
@@ -13,6 +19,12 @@ export RANK_SIZE=8
 export JOB_ID=10087
 RANK_ID_START=0
 
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
+fi
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -121,7 +133,7 @@ export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'
 
 
 #进入训练脚本目录，需要模型审视修改
-cd $cur_path/../
+cd $cur_path
 rank=0
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
@@ -133,11 +145,11 @@ do
 
 
     #创建DeviceID输出目录，不需要修改
-    if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
-        rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+    if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+        rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     else
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     fi
 
     
@@ -164,12 +176,12 @@ do
           --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
-		  --output_dir ${cur_path}/../results \
+		  --output_dir ${cur_path}/results \
 		  --config_file bert_config.json \
 		  --num_npu 16 \
 		  --local_rank=$RANK_ID \
           --addr $one_node_ip \
-		  --json-summary ${cur_path}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+		  --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 		  let rank++
 done 
 wait
@@ -181,7 +193,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-step_time=`grep 'step_time : ' $cur_path/output/0/train_0.log| awk '{print$13}'| tail -n +3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
+step_time=`grep 'step_time : ' $test_path_dir/output/0/train_0.log| awk '{print$13}'| tail -n +3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
 
 FPS=`awk 'BEGIN{printf "%.2f\n", '$batch_size'/'$step_time'*16}'`
 
@@ -189,7 +201,7 @@ FPS=`awk 'BEGIN{printf "%.2f\n", '$batch_size'/'$step_time'*16}'`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep 'F1 : ' $cur_path/output/0/train_0.log|awk '{print $10}'` 
+train_accuracy=`grep 'F1 : ' $test_path_dir/output/0/train_0.log|awk '{print $10}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -207,20 +219,20 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep -r "step_loss :" $cur_path/output/0/train_0.log | awk '{print $19}' > $cur_path/output/0/train_${CaseName}_loss.txt
+grep -r "step_loss :" $test_path_dir/output/0/train_0.log | awk '{print $19}' > $test_path_dir/output/0/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $cur_path/output/0/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" > $cur_path/output/0/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/0/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >> $cur_path/output/0/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >> $cur_path/output/0/${CaseName}.log
-echo "CaseName = ${CaseName}" >> $cur_path/output/0/${CaseName}.log
-echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/0/${CaseName}.log
-echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/0/${CaseName}.log
-echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/0/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/0/${CaseName}.log
+echo "Network = ${Network}" > $test_path_dir/output/0/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >> $test_path_dir/output/0/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >> $test_path_dir/output/0/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >> $test_path_dir/output/0/${CaseName}.log
+echo "CaseName = ${CaseName}" >> $test_path_dir/output/0/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/0/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/0/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/0/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/0/${CaseName}.log
 rm -rf ${data_path}/train-v1.1-min.json_bert-large-uncased_384_128_64
 export BMMV2_ENABLE=0
