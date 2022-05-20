@@ -7,3 +7,5 @@ matplotlib
 pydub
 tensorboardX
 onnx
+onnxruntime
+skl2onnx
