@@ -21,7 +21,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source set_env.sh
+source /usr/local/Ascend/ascend-lastest/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=spnasnet_100_bs1.om -input_text_path=./spnasnet_100_val.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 if [ $? != 0 ]; then
