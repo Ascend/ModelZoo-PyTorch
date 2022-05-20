@@ -9,7 +9,7 @@
 CANN == 5.0.2
 torch == 1.7.1
 torchvision == 0.8.2
-onnx == 1.8.1
+onnx 
 ```
 ### 1.2 python第三方库
 
@@ -20,7 +20,9 @@ librosa
 matplotlib
 pydub
 tensorboardX
-
+onnx
+onnxruntime
+skl2onnx
 ```
 
 
