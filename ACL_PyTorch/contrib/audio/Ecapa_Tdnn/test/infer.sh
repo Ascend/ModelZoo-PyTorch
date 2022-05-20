@@ -6,7 +6,7 @@ echo batch_size=16
 
 rm -rf ./result
 mkdir result
-./msame --model "./om/ecapa_tdnn_bs16.om" --input "./input/" --output "./result" --outfmt TXT
+./msame --model "./om/ecapa_tdnn_bs16.om" --input "./input_bs16/" --output "./result" --outfmt TXT
 rm -rf ./output
 mkdir output_bs16
 cd ./result/*
@@ -24,7 +24,7 @@ echo batch_size=1
 cd ../..
 rm -rf ./result
 mkdir result
-./msame --model "./om/ecapa_tdnn_bs1.om" --input "./input/" --output "./result" --outfmt TXT
+./msame --model "./om/ecapa_tdnn_bs1.om" --input "./input_bs1/" --output "./result" --outfmt TXT
 rm -rf ./output
 mkdir output_bs1
 cd ./result/*
