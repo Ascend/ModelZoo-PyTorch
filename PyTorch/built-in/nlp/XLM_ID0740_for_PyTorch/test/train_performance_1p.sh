@@ -7,7 +7,6 @@ export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
-export JOB_ID=10087
 RANK_ID_START=0
 
 

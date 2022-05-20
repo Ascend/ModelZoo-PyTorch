@@ -7,7 +7,6 @@ export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #集合通信参数,不需要修改
 export RANK_SIZE=8
-export JOB_ID=10087
 RANK_ID_START=0
 
 
@@ -122,6 +121,7 @@ else
 fi
 
 #################创建日志输出目录，不需要修改#################
+ASCEND_DEVICE_ID=0
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
@@ -156,7 +156,7 @@ export HCCL_WHITELIST_DISABLE=1
 
 NPUS=($(seq 0 7))
 export NPU_WORLD_SIZE=${#NPUS[@]}
-rank=0
+RANK=0
 
 KERNEL_NUM=$(($(nproc)/8))
 #for((RANK_ID=0;RANK_ID<NNPU;RANK_ID++))
@@ -165,9 +165,9 @@ for i in ${NPUS[@]}
 do  
     mkdir -p  ${test_path_dir}/output/${i}/
     export NPU_CALCULATE_DEVICE=${i}
-    export RANK=${rank}
+    export RANK=${RANK}
     export ASCEND_DEVICE_ID=${i}
-    echo run process ${rank} 
+    echo run process ${RANK} 
     if [ $(uname -m) = "aarch64" ]
     then
         PID_START=$((KERNEL_NUM * i))
@@ -194,8 +194,8 @@ do
             --fp16 true     \
             --amp 2 \
             --seed 1 \
-            --local_rank $rank > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let rank++
+            --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+    let RANK ++
     else
         nohup python3.7 ${cur_path}/train.py --exp_name xlm_en_zh \
             --dump_path ./dumped        \
@@ -219,8 +219,8 @@ do
             --fp16 true     \
             --amp 2 \
             --seed 1 \
-            --local_rank $rank > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let rank++
+            --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+    let RANK++
     fi
 done
 

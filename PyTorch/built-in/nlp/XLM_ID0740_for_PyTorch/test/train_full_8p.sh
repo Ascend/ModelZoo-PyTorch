@@ -7,15 +7,9 @@ export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #集合通信参数,不需要修改
 export RANK_SIZE=8
-export JOB_ID=10087
 RANK_ID_START=0
 
 
-#export HCCL_WHITELIST_DISABLE=1
-#export MASTER_ADDR=127.0.0.1
-#export MASTER_PORT=23456
-#export RANK=0
-#export WORLD_SIZE=$NNPU
 RANK_ID=0
 export NNPU=8
 export WORLD_SIZE=$NNPU
@@ -98,16 +92,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
-if [ $ASCEND_DEVICE_ID ];then
-    echo "device id is ${ASCEND_DEVICE_ID}"
-elif [ ${device_id} ];then
-    export ASCEND_DEVICE_ID=${device_id}
-    echo "device id is ${ASCEND_DEVICE_ID}"
-else
-    "[Error] device id must be config"
-    exit 1
-fi
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -122,6 +106,7 @@ else
 fi
 
 #################创建日志输出目录，不需要修改#################
+ASCEND_DEVICE_ID=0
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
@@ -156,7 +141,7 @@ export HCCL_WHITELIST_DISABLE=1
 
 NPUS=($(seq 0 7))
 export NPU_WORLD_SIZE=${#NPUS[@]}
-rank=0
+RANK =0
 
 KERNEL_NUM=$(($(nproc)/8))
 #for((RANK_ID=0;RANK_ID<NNPU;RANK_ID++))
@@ -165,9 +150,9 @@ for i in ${NPUS[@]}
 do  
     mkdir -p  ${test_path_dir}/output/${i}/
     export NPU_CALCULATE_DEVICE=${i}
-    export RANK=${rank}
+    export RANK=${RANK}
     export ASCEND_DEVICE_ID=${i}
-    echo run process ${rank} 
+    echo run process ${RANK} 
     if [ $(uname -m) = "aarch64" ]
     then
         PID_START=$((KERNEL_NUM * i))
@@ -194,8 +179,8 @@ do
             --fp16 true     \
             --amp 2 \
             --seed 1 \
-            --local_rank $rank > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let rank++
+            --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+    let RANK++
     else
         nohup python3.7 ${cur_path}/train.py --exp_name xlm_en_zh \
             --dump_path ./dumped        \
@@ -219,8 +204,8 @@ do
             --fp16 true     \
             --amp 2 \
             --seed 1 \
-            --local_rank $rank > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let rank++
+            --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+    let RANK++
     fi
 done
 
@@ -248,8 +233,7 @@ echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep eval_accuracy ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v mlp_log|awk 'END {print $5}'| sed 's/,//g' |cut -c 1-5`
-#train_accuracy=`grep "vaild_en_mlm_acc" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "vaild_en_mlm_acc ->" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-train_accuracy=`grep -a 'valid_mlm_acc ->' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk 'BEGIN { max = 0 } { if ($1 > max) max = $1; fi} END{printf "%f\n", max}'`
+train_accuracy=`grep "vaild_en_mlm_acc" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "vaild_en_mlm_acc ->" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

@@ -7,9 +7,7 @@ export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
-export JOB_ID=10087
 RANK_ID_START=0
-
 
 export NNPU=1
 
@@ -133,15 +131,6 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-
-#sed -i "s|./data|$data_path|g" examples/cats_and_dogs.py
-#sed -i "s|epochs = 20|epochs = 1|g" examples/cats_and_dogs.py
-#sed -i "s|pass|break|g" train.py
-
-#python3 setup.py install
-#mkdir -p checkpoints
-#mkdir -p /root/.cache/torch/hub/checkpoints
-#cp $data_path/fcn_* /root/.cache/torch/hub/checkpoints
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
