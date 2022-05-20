@@ -2,7 +2,6 @@
 
 #集合通信参数,不需要修改
 export RANK_SIZE=8
-export JOB_ID=10087
 # 数据集路径,保持为空,不需要修改
 data_path=""
 device_id=0
