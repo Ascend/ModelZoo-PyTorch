@@ -15,7 +15,7 @@ fi
 
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
-export JOB_ID=10087
+
 RANK_ID_START=0
 
 # 数据集路径,保持为空,不需要修改
@@ -26,7 +26,7 @@ data_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="DeepMar_for_PyTorch"
+Network="MobileNetV2_ID0098_for_PyTorch"
 #训练epoch
 train_epochs=600
 #训练batch_size
@@ -130,7 +130,6 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-#FPS=`grep -a 'FPS'  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
 FPS=`grep FPS ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

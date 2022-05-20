@@ -15,10 +15,8 @@ fi
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
 export RANK_SIZE=8
-export JOB_ID=10087
 RANK_ID_START=0
-# source env.sh
-#RANK_SIZE=8
+
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
