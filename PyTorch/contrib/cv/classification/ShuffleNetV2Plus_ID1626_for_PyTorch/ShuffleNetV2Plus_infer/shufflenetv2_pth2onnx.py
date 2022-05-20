@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
+import argparse
 import torch
 from collections import OrderedDict
-sys.path.append(r"./ShuffleNet-Series/ShuffleNetV2+")
+sys.path.append(r"./ShuffleNetV2+_source_code")
 from network import ShuffleNetV2_Plus
 
-def pth2onnx(input_file, output_file):
+def pth2onnx(input_file, output_file, bs=1):
     architecture = [0, 0, 3, 1, 1, 1, 0, 0, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 3, 2]
     model = ShuffleNetV2_Plus(architecture=architecture,model_size='Small')
     checkpoint = torch.load(input_file, map_location="cpu")
@@ -29,11 +30,15 @@ def pth2onnx(input_file, output_file):
     model.eval()
     input_names = ["image"]
     output_names = ["class"]
-    dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
-    dummy_input = torch.rand(16, 3, 224, 224)
+    # dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
+    dynamic_axes = {}
+    dummy_input = torch.rand(bs, 3, 224, 224)
     torch.onnx.export(model, dummy_input, output_file,
                       input_names = input_names, dynamic_axes = dynamic_axes,
                       output_names = output_names, opset_version=11, verbose=True)
 
 if __name__=="__main__":
-    pth2onnx(sys.argv[1], sys.argv[2])
+    # p = argparse.ArgumentParser()
+    # p.add_argument('--bs', type=int, default=1)
+    # args = p.parse_args()
+    pth2onnx(sys.argv[1], sys.argv[2], sys.argv[3])

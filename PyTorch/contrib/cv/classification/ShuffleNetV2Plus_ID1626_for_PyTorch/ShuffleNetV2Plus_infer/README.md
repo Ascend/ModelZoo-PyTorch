@@ -89,17 +89,14 @@ git clone https://github.com/megvii-model/ShuffleNet-Series.git
 ```
 具体开源代码已放置在本目录下
 
-3.编写pth2onnx脚本shufflenetv2_pth2onnx_bs{x}.py
-
-针对不同batch_size需修改脚本shufflenetv2_pth2onnx_bs{x}.py中的bs参数，本仓库给出bs为1和16时的示例脚本
-
  **说明：**  
 >注意目前ATC支持的onnx算子版本为11
 
-4.执行pth2onnx脚本，生成onnx模型文件
+3.执行pth2onnx脚本，生成onnx模型文件
 ```
-python3.7 shufflenetv2_pth2onnx_bs1.py ShuffleNetV2+.Small.pth.tar shufflenetv2_bs1.onnx
+python3.7 shufflenetv2_pth2onnx.py ShuffleNetV2+.Small.pth.tar shufflenetv2_bs1.onnx 1
 ```
+脚本第一参数为输入的pth模型，第二参数为输出的onnx模型名，第三参数为bs大小
 
 ### 3.2 onnx转om模型
 
@@ -115,7 +112,7 @@ source env.sh
 ```
 atc --framework=5 --model=./shufflenetv2_bs1.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=shufflenetv2_bs1 --log=debug --soc_version=Ascend310
 ```
-
+针对不同bs的onnx模型，需修改--model, --input_shape, --output 三个参数中的bs值
 ## 4 数据集预处理
 
 -   **[数据集获取](#41-数据集获取)**  
