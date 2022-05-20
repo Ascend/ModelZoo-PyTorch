@@ -74,6 +74,7 @@ start_time=$(date +%s)
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
+
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
@@ -115,7 +116,7 @@ do
 		  --loss_scale 4096 \
 		  --vocab_file ${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt \
 		  --do_eval \
-          --eval_script ${data_path}/evaluate-v1.1.py \
+      --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
 		  --output_dir results/SQUAD \
@@ -173,5 +174,3 @@ echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
-rm -rf ${data_path}/train-v1.1-min.json_bert-large-uncased_384_128_64
-export BMMV2_ENABLE=0

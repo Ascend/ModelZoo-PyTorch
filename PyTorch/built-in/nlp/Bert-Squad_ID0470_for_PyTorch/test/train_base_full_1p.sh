@@ -72,6 +72,7 @@ start_time=$(date +%s)
 ASCEND_DEVICE_ID=0
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/
+mkdir -p results/SQUAD
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
@@ -91,7 +92,7 @@ do
     #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
     nohup python3.7 run_squad.py \
           --init_checkpoint ${ckpt_path}/bert_base_pretrained_amp.pt \
-          --bert_model bert-large-uncased \
+          --bert_model bert-base-uncased \
 		  --do_train \
 		  --train_file ${data_path}/train-v1.1.json \
 		  --train_batch_size ${batch_size} \
@@ -165,5 +166,3 @@ echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
-rm -rf ${data_path}/train-v1.1-min.json_bert-large-uncased_384_128_64
-export BMMV2_ENABLE=0

@@ -14,11 +14,8 @@ fi
 
 
 #集合通信参数,不需要修改
-export BMMV2_ENABLE=1
 export RANK_SIZE=8
-export JOB_ID=10087
 RANK_ID_START=0
-
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -39,11 +36,7 @@ learning_rate=2e-4
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_fp32_to_fp16"
-#维持参数，以下不需要修改
-over_dump=False
-data_dump_flag=False
-data_dump_step="10"
-profiling=False
+
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -105,6 +98,7 @@ start_time=$(date +%s)
 ASCEND_DEVICE_ID=0
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
+mkdir -p results/SQUAD
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
@@ -138,6 +132,8 @@ do
 		  --num_train_epochs ${train_epochs} \
 		  --seed 1 \
 		  --fp16 \
+		  --max_seq_length 384 \
+		  --doc_stride 128 \
 		  --max_steps 100 \
 		  --use_npu \
 		  --loss_scale 4096 \
@@ -146,9 +142,11 @@ do
       --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
-		  --output_dir ${cur_path}/results \
+		  --output_dir results/SQUAD \
 		  --config_file bert_config.json \
 		  --num_npu 8 \
+		  --local_rank=$RANK_ID \
+		  --addr=127.0.0.1 \
 		  --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
@@ -201,5 +199,3 @@ echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
-rm -rf ${data_path}/train-v1.1-min.json_bert-large-uncased_384_128_64
-export BMMV2_ENABLE=0

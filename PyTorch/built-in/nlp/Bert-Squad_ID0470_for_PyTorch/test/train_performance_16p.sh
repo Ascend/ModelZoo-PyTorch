@@ -5,18 +5,20 @@ export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
 export CPATH=/usr/local/hdf5/include:$CPATH
 export HDF5_DISABLE_VERSION_CHECK=1
 
-#################创建日志输出目录，不需要修改#################
-if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
 else
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+    test_path_dir=${cur_path}/test
 fi
 
 #集合通信参数,不需要修改
-export BMMV2_ENABLE=1
 export RANK_SIZE=8
-export JOB_ID=10087
 RANK_ID_START=0
 
 #非平台场景时source 环境变量
@@ -50,11 +52,7 @@ learning_rate=2e-4
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_fp32_to_fp16"
-#维持参数，以下不需要修改
-over_dump=False
-data_dump_flag=False
-data_dump_step="10"
-profiling=False
+
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -134,6 +132,7 @@ export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
+mkdir -p results/SQUAD
 rank=0
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
@@ -176,7 +175,7 @@ do
           --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
-		  --output_dir ${cur_path}/results \
+		  --output_dir results/SQUAD \
 		  --config_file bert_config.json \
 		  --num_npu 16 \
 		  --local_rank=$RANK_ID \
@@ -234,5 +233,3 @@ echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/0/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/0/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/0/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/0/${CaseName}.log
-rm -rf ${data_path}/train-v1.1-min.json_bert-large-uncased_384_128_64
-export BMMV2_ENABLE=0
