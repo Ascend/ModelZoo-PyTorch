@@ -25,7 +25,7 @@ if __name__ == "__main__":
             data_line = str(data_read).split('\n')
 
 
-            for j in range(16):
+            for j in range(batch_size):
                 data_list = []
                 num = data_line[j].split(' ')
 
