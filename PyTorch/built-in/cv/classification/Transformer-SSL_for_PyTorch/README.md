@@ -11,13 +11,13 @@ This folder contains the implementation of the `MoBY` with `Swin Transformer` fo
 - Install `timm==0.3.2`:
 
 ```bash
-pip install timm==0.3.2
+pip3.7 install timm==0.3.2
 ```
 
 - Install other requirements:
 
 ```bash
-pip install opencv-python==4.4.0.46 termcolor==1.1.0 yacs==0.1.8 diffdist
+pip3.7 install opencv-python==4.4.0.46 termcolor==1.1.0 yacs==0.1.8 diffdist
 ```
 
 ### Data preparation
@@ -56,23 +56,9 @@ To train `MoBY` with `Swin Transformer Tiny` on ImageNet, run:
 ```bash
 bash ./test/train_full_8p.sh --data_path=<data_path>
 ```
-
-For example, to train `MoBY` with `Swin Transformer Tiny` with 8 NPU on a single node for 300 epochs, run:
-
-```bash
-bash ./test/train_full_8p.sh --data_path=/data/imagenet
-```
-
 Defaultly, training auto-resumes checkpoint in output directory. Remove the `output` directory to train from begin.
 
 ### Performance Test
-
-To train `MoBY Swin-T` on 1 NPU for performance test, run:
-
-```bash
-bash ./test/train_performance_1p.sh --data_path=<data_path>
-```
-
 For performance test on 8 NPU, run:
 
 ```bash
@@ -85,12 +71,6 @@ To evaluate a pre-trained `MoBY` with `Swin Transformer Tiny` on ImageNet-1K lin
 
 ```bash
 bash ./test/eval_8p.sh --data_path=<data_path>
-```
-
-For example, to evaluate `MoBY Swin-T` with 8 NPU on a single node on ImageNet-1K linear evluation, run:
-
-```bash
-bash ./test/eval_8p.sh --data_path=/data/imagenet
 ```
 
 ### Training result for `MoBY Swin-T`

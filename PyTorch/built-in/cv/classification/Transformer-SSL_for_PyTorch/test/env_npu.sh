@@ -56,7 +56,7 @@ ${install_path}/driver/tools/msnpureport -g error -d 4
 ${install_path}/driver/tools/msnpureport -g error -d 5
 ${install_path}/driver/tools/msnpureport -g error -d 6
 ${install_path}/driver/tools/msnpureport -g error -d 7
-#关闭Device侧Event日志
+##关闭Device侧Event日志
 ${install_path}/driver/tools/msnpureport -e disable
 
 path_lib=$(python3.7 -c """
