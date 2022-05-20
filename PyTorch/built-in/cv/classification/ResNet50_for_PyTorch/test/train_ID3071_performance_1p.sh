@@ -81,7 +81,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./pytorch_resnet50_apex.py \
+nohup python3.7 ./pytorch_resnet50_apex.py \
     --data ${data_path} \
     --npu ${ASCEND_DEVICE_ID} \
     -j ${workers} \

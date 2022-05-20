@@ -65,7 +65,7 @@ fi
 
 export NODE_RANK=0
 
-python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
+nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --data ${data_path} \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49 \
