@@ -5,8 +5,8 @@ export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$L
 export ASCEND_OPP_PATH=${install_path}/opp
 export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 
-export ASCEND_SLOG_PRINT_TO_STDOUT=1
-export ASCEND_GLOBAL_LOG_LEVEL=0
+#export ASCEND_SLOG_PRINT_TO_STDOUT=1
+#export ASCEND_GLOBAL_LOG_LEVEL=0
 
 
-atc --framework=5 --model=/home/zhn/infer_cpu_conv2d.onnx --output=om1/infer_16_tdnn_om --input_format=ND --input_shape="mel:16,80,200" --log=debug --fusion_switch_file=fusion_switch.cfg --soc_version=Ascend710>after.log 
+atc --framework=5 --model=ecapa_tdnn_sim.onnx --output=om/ecapa_tdnn_bs1 --input_format=ND --input_shape="mel:1,80,200" --log=debug  --soc_version=Ascend710
