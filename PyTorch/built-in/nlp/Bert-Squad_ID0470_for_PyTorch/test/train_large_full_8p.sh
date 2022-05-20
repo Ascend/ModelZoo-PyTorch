@@ -28,7 +28,7 @@ Network="Bert-Squad_ID0470_for_PyTorch"
 #训练epoch
 train_epochs=2
 #训练batch_size
-batch_size=16
+batch_size=32
 #训练step
 train_steps=
 #学习率
