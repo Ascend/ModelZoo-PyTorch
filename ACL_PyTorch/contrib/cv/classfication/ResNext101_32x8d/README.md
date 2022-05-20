@@ -90,6 +90,8 @@ wget https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth
 
 文件MD5sum：4454a42689454b94296e378762f2333f
 
+> 或者直接使用下载模型中线程的pth模型即可
+
 3.编写pth2onnx脚本resnext101_32x8d_pth2onnx.py
 
  **说明：**  
@@ -110,16 +112,18 @@ python3.7 resnext101_32x8d_pth2onnx.py ./resnext101_32x8d-8ba56ff5.pth resnext10
 
 1.设置环境变量
 
-```
-source env.sh
+```shell
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
-```
+```shell
 atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend310
-
 ```
+
+* 其中在710机器上应该将处理器型号修改为```--soc_version=Ascend710```
+* 修改```input_shape```可以修改的导出的om模型对应batch size， 例如```input_shape="image:4, 3, 224, 224"```导出的模型适配batch size为4。同时需注意```--output```参数需要改名防止命名冲突。
 
 ## 4 数据集预处理
 
@@ -132,6 +136,8 @@ atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 
 ### 4.1 数据集获取
 
 该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
+
+> 710和310机器上无需额外下载数据集合，在/opt/npu/imageNet/下已有现成数据集和label
 
 ### 4.2 数据集预处理
 
@@ -167,19 +173,32 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 
 ### 5.2 离线推理
 
-1.设置环境变量
+1. 设置环境变量
 
-```
-source env.sh
+```shell
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
-2.执行离线推理
+2. 执行离线推理
 
-```
+```shell
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=resnext101_32x8d_bs1.om -input_text_path=./resnext101_32x8d.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 ```
 
+**注意修改```-batch_size```参数以对应前一阶段转换的适配不同batch size的om模型， 同时```-om_path```也要修改为对应的om模型名字。**
+
 输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
+
+3. T4(GPU)推理指导
+
+只需要onnx模型即可。
+
+```shell
+trtexec --onnx=<your_onnx_file_path>  --fp16 --shapes=image:<N>x3x224x224  --threads
+```
+
+* ```--onnx```参数对应onnx模型的路径
+* ```--shapes```第一个参数对应不同的batch size.
 
 ## 6 精度对比
 
@@ -285,4 +304,3 @@ ave_throughputRate: 108.28，108.28x4=433.12既是batch32 310单卡吞吐率
  **性能优化：**  
 
 对于batch32的性能不达标，从profiling数据的op_statistic_0_1.csv看出影响性能的是Conv2D算子，从op_summary_0_1.csv看出单个Conv_Relu算子aicore耗时0.6毫秒到6毫秒，shape大的耗时就多，不存在优化问题。
-
