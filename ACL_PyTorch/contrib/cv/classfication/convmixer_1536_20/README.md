@@ -81,7 +81,7 @@ python3.7 convmixer_pth2onnx.py --source "./convmixer_1536_20_ks9_p7.pth.tar" --
 1. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/51RC2alpha002/infacldevg/atctool)
 
 ```bash
-atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend710
+atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend710 --op_select_implmode=high_performance --optypelist_for_implmode="Gelu"
 ```
 
 ## <a name="4">4. 数据预处理</a>
