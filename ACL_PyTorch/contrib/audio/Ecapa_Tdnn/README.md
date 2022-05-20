@@ -120,7 +120,7 @@ python preprocess.py VoxCeleb input_bs4/ speaker_bs4/ 4
 roc_auc:
           om          pth
 bs1	  0.6833      0.6896
-bs16	  0.6755      0.6793
+bs4	  0.6755      0.6793
 ```
 
 ## 7.性能对比
