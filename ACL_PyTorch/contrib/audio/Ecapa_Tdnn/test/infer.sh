@@ -2,19 +2,19 @@ cd ..
 
 
 
-echo batch_size=16
+echo batch_size=4
 
 rm -rf ./result
 mkdir result
-./msame --model "./om/ecapa_tdnn_bs16.om" --input "./input_bs16/" --output "./result" --outfmt TXT
+./msame --model "./om/ecapa_tdnn_bs4.om" --input "./input_bs4/" --output "./result" --outfmt TXT
 rm -rf ./output
-mkdir output_bs16
+mkdir output_bs4
 cd ./result/*
 num1=0
 for file_old in `ls | grep output_0`
 do
         num1=`expr $num1 + 1`
-        file_new="../../output_bs16/${file_old}"
+        file_new="../../output_bs4/${file_old}"
         cp ${file_old} ${file_new}
 done
 echo result_nums:${num1}
