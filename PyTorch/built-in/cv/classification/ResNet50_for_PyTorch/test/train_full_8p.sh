@@ -45,28 +45,13 @@ fi
 
 
 #################创建日志输出目录，不需要修改#################
-
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
-do
-    #设置环境变量，不需要修改
-    export ASCEND_DEVICE_ID=$RANK_ID
-    echo "Device ID: $ASCEND_DEVICE_ID"
-    
-    
-    
-    #创建DeviceID输出目录，不需要修改
-    if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-        rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
-        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-    else
-        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-    fi
-
-    echo run process ${RANK_ID}
-
-    #SOLVER.MAX_ITER 82000 \
-    #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-done 
+ASCEND_DEVICE_ID=0
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
 
 export NODE_RANK=0
 #################启动训练脚本#################
