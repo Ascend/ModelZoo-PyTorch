@@ -53,12 +53,7 @@ python3.7 pthtar2onnx.py ${model_path}
 ### 4.3 onnx转om模型
 设置环境变量
 ```
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
 ```
@@ -77,7 +72,7 @@ chmod u+x benchmark.x86_64
 ```
 2.推理
 ```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=genet_bs1_tuned.om -input_text_path=genet_prep_bin.info -input_width=32 -input_height=32 -output_binary=False -useDvpp=False
+bash test/infer_bin.sh
 ```
 可以通过修改batch_size的值进行在不同batchsize情况下的推理（同时要修改对应的om文件路径即om_path的值）。运行该指令后输出结果默认保存在当前目录/result/dumpOutput_device0中，同时在/result目录下会生成一个推理性能文件  
 
@@ -148,5 +143,14 @@ percentile(99%) = 0.690048 ms
 batch1 t4单卡吞吐率：1000/(0.55392/1)=1805.315 fps  
 计算方法为1000/(GPU Compute mean/batch)
 ### 7.4 性能对比
-310、710、T4都取性能最优（即最优batch）的数据进行比较；  
-710的最优batch性能 >=1.2倍310最优batch性能x 4且710的最优batch性能 >=1.6倍T4最优batch性能时性能达标
+性能对比结果参考如下：
+|         | 310      | 710     | T4       | 710/310     | 710/T4      |
+|---------|----------|---------|----------|-------------|-------------|
+| bs1     | 3239.252 | 2580.59 | 1805.315 | 0.796662316 | 1.429440292 |
+| bs4     | 6923.88  | 6962.42 | 3258.019 | 1.005566243 | 2.137010251 |
+| bs8     | 6631     | 9350.57 | 5226.538 | 1.410129694 | 1.789056159 |
+| bs16    | 7796.88  | 10586.7 | 5922.109 | 1.357812356 | 1.787657066 |
+| bs32    | 7295.48  | 11005.9 | 5898.248 | 1.508591621 | 1.865960875 |
+| bs64    | 6611.72  | 11256.5 | 6105.938 | 1.702507063 | 1.843533295 |
+| 最优batch | 7796.88  | 11256.5 | 6105.938 | 1.443718513 | 1.843533295 |
+取310、710与T4的最优batch进行对比，当710的最优batch性能不低于310最优batch的1.2倍以及T4最优batch的1.6倍时，性能达标
