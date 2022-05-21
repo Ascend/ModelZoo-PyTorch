@@ -9,13 +9,13 @@
 
 ## <a name="1">2. 推理环境准备</a>
 ### 2.1 环境介绍
-CANN=[5.0.3](https://www.hiascend.com/software/cann/commercial?version=5.0.3)。  
+CANN=[5.0.4](https://www.hiascend.com/software/cann/commercial?version=5.0.4)。  
 硬件环境、开发环境和运行环境准备请参见[CANN 软件安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/504/envdeployment/instg)。
 ### 2.2 所需依赖
 ```
-Pytorch==1.5.0
-Torchvision==0.6.0
-ONNX==1.7.0
+Pytorch>=1.5.0
+Torchvision>=0.6.0
+ONNX>=1.7.0
 numpy==1.18.5
 Pillow==7.2.0
 ```
