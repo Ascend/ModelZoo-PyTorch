@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
 import warnings
@@ -86,6 +87,8 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
+    cfg.data.test['datasets'][0]['ann_file'] = "mmocr/" + cfg.data.test['datasets'][0]['ann_file']
+    cfg.data.test['datasets'][0]['img_prefix'] = "mmocr/" + cfg.data.test['datasets'][0]['img_prefix']
     dataset = build_dataset(cfg.data.test, dict(test_mode=True))
     # step 1: give default values and override (if exist) from cfg.data
     loader_cfg = {
