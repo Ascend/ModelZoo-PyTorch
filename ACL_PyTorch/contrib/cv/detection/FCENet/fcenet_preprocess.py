@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os
 import warnings
@@ -68,7 +69,7 @@ def parse_args():
     parser.add_argument(
         '--config-dir',
         type=str,
-        default=os.path.join(str(Path.cwd()), 'configs/'),
+        default=os.path.join(str(Path.cwd()), 'mmocr/configs/'),
         help='Path to the config directory where all the config files '
         'are located. Defaults to "configs/"')
     parser.add_argument(
@@ -95,7 +96,7 @@ class MMOCR:
                  kie='',
                  kie_config='',
                  kie_ckpt='',
-                 config_dir=os.path.join(str(Path.cwd()), 'configs/'),
+                 config_dir=os.path.join(str(Path.cwd()), 'mmocr/configs/'),
                  device=None,
                  **kwargs):
 
