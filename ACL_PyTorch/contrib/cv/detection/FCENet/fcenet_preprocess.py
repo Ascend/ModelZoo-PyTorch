@@ -1,5 +1,17 @@
-#!/usr/bin/env python
-# Copyright (c) OpenMMLab. All rights reserved.
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import copy
 import os
 import warnings
@@ -54,40 +66,6 @@ def parse_args():
         help='Path to the custom checkpoint file of the selected det model. '
         'It overrides the settings in det')
     parser.add_argument(
-        '--recog',
-        type=str,
-        default='None',
-        help='Pretrained text recognition algorithm')
-    parser.add_argument(
-        '--recog-config',
-        type=str,
-        default='',
-        help='Path to the custom config file of the selected recog model. It'
-        'overrides the settings in recog')
-    parser.add_argument(
-        '--recog-ckpt',
-        type=str,
-        default='',
-        help='Path to the custom checkpoint file of the selected recog model. '
-        'It overrides the settings in recog')
-    parser.add_argument(
-        '--kie',
-        type=str,
-        default='',
-        help='Pretrained key information extraction algorithm')
-    parser.add_argument(
-        '--kie-config',
-        type=str,
-        default='',
-        help='Path to the custom config file of the selected kie model. It'
-        'overrides the settings in kie')
-    parser.add_argument(
-        '--kie-ckpt',
-        type=str,
-        default='',
-        help='Path to the custom checkpoint file of the selected kie model. '
-        'It overrides the settings in kie')
-    parser.add_argument(
         '--config-dir',
         type=str,
         default=os.path.join(str(Path.cwd()), 'configs/'),
@@ -97,69 +75,11 @@ def parse_args():
         '--batch-mode',
         action='store_true',
         help='Whether use batch mode for inference')
-    parser.add_argument(
-        '--recog-batch-size',
-        type=int,
-        default=0,
-        help='Batch size for text recognition')
-    parser.add_argument(
-        '--det-batch-size',
-        type=int,
-        default=0,
-        help='Batch size for text detection')
-    parser.add_argument(
-        '--single-batch-size',
-        type=int,
-        default=0,
-        help='Batch size for separate det/recog inference')
-    parser.add_argument(
-        '--device', default=None, help='Device used for inference.')
-    parser.add_argument(
-        '--export',
-        type=str,
-        default='',
-        help='Folder where the results of each image are exported')
-    parser.add_argument(
-        '--export-format',
-        type=str,
-        default='json',
-        help='Format of the exported result file(s)')
-    parser.add_argument(
-        '--details',
-        action='store_true',
-        help='Whether include the text boxes coordinates and confidence values'
-    )
-    parser.add_argument(
-        '--imshow',
-        action='store_true',
-        help='Whether show image with OpenCV.')
-    parser.add_argument(
-        '--print-result',
-        action='store_true',
-        help='Prints the recognised text')
-    parser.add_argument(
-        '--merge', action='store_true', help='Merge neighboring boxes')
-    parser.add_argument(
-        '--merge-xdist',
-        type=float,
-        default=20,
-        help='The maximum x-axis distance to merge boxes')
+
     args = parser.parse_args()
     if args.det == 'None':
         args.det = None
-    if args.recog == 'None':
-        args.recog = None
-    # Warnings
-    if args.merge and not (args.det and args.recog):
-        warnings.warn(
-            'Box merging will not work if the script is not'
-            ' running in detection + recognition mode.', UserWarning)
-    if not os.path.samefile(args.config_dir, os.path.join(str(
-            Path.cwd()))) and (args.det_config != ''
-                               or args.recog_config != ''):
-        warnings.warn(
-            'config_dir will be overridden by det-config or recog-config.',
-            UserWarning)
+
     return args
 
 
@@ -180,138 +100,17 @@ class MMOCR:
                  **kwargs):
 
         textdet_models = {
-            'DB_r18': {
-                'config':
-                'dbnet/dbnet_r18_fpnc_1200e_icdar2015.py',
-                'ckpt':
-                'dbnet/'
-                'dbnet_r18_fpnc_sbn_1200e_icdar2015_20210329-ba3ab597.pth'
-            },
-            'DB_r50': {
-                'config':
-                'dbnet/dbnet_r50dcnv2_fpnc_1200e_icdar2015.py',
-                'ckpt':
-                'dbnet/'
-                'dbnet_r50dcnv2_fpnc_sbn_1200e_icdar2015_20211025-9fe3b590.pth'
-            },
-            'DRRG': {
-                'config':
-                'drrg/drrg_r50_fpn_unet_1200e_ctw1500.py',
-                'ckpt':
-                'drrg/drrg_r50_fpn_unet_1200e_ctw1500_20211022-fb30b001.pth'
-            },
+
             'FCE_IC15': {
                 'config':
                 'fcenet/fcenet_r50_fpn_1500e_icdar2015.py',
                 'ckpt':
                 'fcenet/fcenet_r50_fpn_1500e_icdar2015_20211022-daefb6ed.pth'
-            },
-            'FCE_CTW_DCNv2': {
-                'config':
-                'fcenet/fcenet_r50dcnv2_fpn_1500e_ctw1500.py',
-                'ckpt':
-                'fcenet/' +
-                'fcenet_r50dcnv2_fpn_1500e_ctw1500_20211022-e326d7ec.pth'
-            },
-            'MaskRCNN_CTW': {
-                'config':
-                'maskrcnn/mask_rcnn_r50_fpn_160e_ctw1500.py',
-                'ckpt':
-                'maskrcnn/'
-                'mask_rcnn_r50_fpn_160e_ctw1500_20210219-96497a76.pth'
-            },
-            'MaskRCNN_IC15': {
-                'config':
-                'maskrcnn/mask_rcnn_r50_fpn_160e_icdar2015.py',
-                'ckpt':
-                'maskrcnn/'
-                'mask_rcnn_r50_fpn_160e_icdar2015_20210219-8eb340a3.pth'
-            },
-            'MaskRCNN_IC17': {
-                'config':
-                'maskrcnn/mask_rcnn_r50_fpn_160e_icdar2017.py',
-                'ckpt':
-                'maskrcnn/'
-                'mask_rcnn_r50_fpn_160e_icdar2017_20210218-c6ec3ebb.pth'
-            },
-            'PANet_CTW': {
-                'config':
-                'panet/panet_r18_fpem_ffm_600e_ctw1500.py',
-                'ckpt':
-                'panet/'
-                'panet_r18_fpem_ffm_sbn_600e_ctw1500_20210219-3b3a9aa3.pth'
-            },
-            'PANet_IC15': {
-                'config':
-                'panet/panet_r18_fpem_ffm_600e_icdar2015.py',
-                'ckpt':
-                'panet/'
-                'panet_r18_fpem_ffm_sbn_600e_icdar2015_20210219-42dbe46a.pth'
-            },
-            'PS_CTW': {
-                'config': 'psenet/psenet_r50_fpnf_600e_ctw1500.py',
-                'ckpt':
-                'psenet/psenet_r50_fpnf_600e_ctw1500_20210401-216fed50.pth'
-            },
-            'PS_IC15': {
-                'config':
-                'psenet/psenet_r50_fpnf_600e_icdar2015.py',
-                'ckpt':
-                'psenet/psenet_r50_fpnf_600e_icdar2015_pretrain-eefd8fe6.pth'
-            },
-            'TextSnake': {
-                'config':
-                'textsnake/textsnake_r50_fpn_unet_1200e_ctw1500.py',
-                'ckpt':
-                'textsnake/textsnake_r50_fpn_unet_1200e_ctw1500-27f65b64.pth'
             }
         }
-
+        
         textrecog_models = {
-            'CRNN': {
-                'config': 'crnn/crnn_academic_dataset.py',
-                'ckpt': 'crnn/crnn_academic-a723a1c5.pth'
-            },
-            'SAR': {
-                'config': 'sar/sar_r31_parallel_decoder_academic.py',
-                'ckpt': 'sar/sar_r31_parallel_decoder_academic-dba3a4a3.pth'
-            },
-            'SAR_CN': {
-                'config':
-                'sar/sar_r31_parallel_decoder_chinese.py',
-                'ckpt':
-                'sar/sar_r31_parallel_decoder_chineseocr_20210507-b4be8214.pth'
-            },
-            'NRTR_1/16-1/8': {
-                'config': 'nrtr/nrtr_r31_1by16_1by8_academic.py',
-                'ckpt':
-                'nrtr/nrtr_r31_1by16_1by8_academic_20211124-f60cebf4.pth'
-            },
-            'NRTR_1/8-1/4': {
-                'config': 'nrtr/nrtr_r31_1by8_1by4_academic.py',
-                'ckpt':
-                'nrtr/nrtr_r31_1by8_1by4_academic_20211123-e1fdb322.pth'
-            },
-            'RobustScanner': {
-                'config': 'robust_scanner/robustscanner_r31_academic.py',
-                'ckpt': 'robustscanner/robustscanner_r31_academic-5f05874f.pth'
-            },
-            'SATRN': {
-                'config': 'satrn/satrn_academic.py',
-                'ckpt': 'satrn/satrn_academic_20211009-cb8b1580.pth'
-            },
-            'SATRN_sm': {
-                'config': 'satrn/satrn_small.py',
-                'ckpt': 'satrn/satrn_small_20211009-2cf13355.pth'
-            },
-            'ABINet': {
-                'config': 'abinet/abinet_academic.py',
-                'ckpt': 'abinet/abinet_academic-f718abf6.pth'
-            },
-            'SEG': {
-                'config': 'seg/seg_r31_1by16_fpnocr_academic.py',
-                'ckpt': 'seg/seg_r31_1by16_fpnocr_academic-72235b11.pth'
-            },
+
             'CRNN_TPS': {
                 'config': 'tps/crnn_tps_academic_dataset.py',
                 'ckpt': 'tps/crnn_tps_academic_dataset_20210510-d221a905.pth'
@@ -325,7 +124,7 @@ class MMOCR:
                 'sdmgr/sdmgr_unet16_60e_wildreceipt_20210520-7489e6de.pth'
             }
         }
-
+        
         self.td = det
         self.tr = recog
         self.kie = kie
@@ -338,18 +137,6 @@ class MMOCR:
         if self.td and self.td not in textdet_models:
             raise ValueError(self.td,
                              'is not a supported text detection algorthm')
-        elif self.tr and self.tr not in textrecog_models:
-            raise ValueError(self.tr,
-                             'is not a supported text recognition algorithm')
-        elif self.kie:
-            if self.kie not in kie_models:
-                raise ValueError(
-                    self.kie, 'is not a supported key information extraction'
-                    ' algorithm')
-            elif not (self.td and self.tr):
-                raise NotImplementedError(
-                    self.kie, 'has to run together'
-                    ' with text detection and recognition algorithms.')
 
         self.detect_model = None
         if self.td:
@@ -364,38 +151,10 @@ class MMOCR:
             self.detect_model = init_detector(
                 det_config, det_ckpt, device=self.device)
             self.detect_model = revert_sync_batchnorm(self.detect_model)
-
+        
         self.recog_model = None
-        if self.tr:
-            # Build recognition model
-            if not recog_config:
-                recog_config = os.path.join(
-                    config_dir, 'textrecog/',
-                    textrecog_models[self.tr]['config'])
-            if not recog_ckpt:
-                recog_ckpt = 'https://download.openmmlab.com/mmocr/' + \
-                    'textrecog/' + textrecog_models[self.tr]['ckpt']
-
-            self.recog_model = init_detector(
-                recog_config, recog_ckpt, device=self.device)
-            self.recog_model = revert_sync_batchnorm(self.recog_model)
 
         self.kie_model = None
-        if self.kie:
-            # Build key information extraction model
-            if not kie_config:
-                kie_config = os.path.join(config_dir, 'kie/',
-                                          kie_models[self.kie]['config'])
-            if not kie_ckpt:
-                kie_ckpt = 'https://download.openmmlab.com/mmocr/' + \
-                    'kie/' + kie_models[self.kie]['ckpt']
-
-            kie_cfg = Config.fromfile(kie_config)
-            self.kie_model = build_detector(
-                kie_cfg.model, test_cfg=kie_cfg.get('test_cfg'))
-            self.kie_model = revert_sync_batchnorm(self.kie_model)
-            self.kie_model.cfg = kie_cfg
-            load_checkpoint(self.kie_model, kie_ckpt, map_location=self.device)
 
         # Attribute check
         for model in list(filter(None, [self.recog_model, self.detect_model])):
@@ -556,18 +315,7 @@ def model_inference(model,
                     ann=None,
                     batch_mode=False,
                     return_data=False):
-    """Inference image(s) with the detector.
 
-    Args:
-        model (nn.Module): The loaded detector.
-        imgs (str/ndarray or list[str/ndarray] or tuple[str/ndarray]):
-            Either image files or loaded images.
-        batch_mode (bool): If True, use batch mode for inference.
-        ann (dict): Annotation info for key information extraction.
-        return_data: Return postprocessed data.
-    Returns:
-        result (dict): Predicted results.
-    """
     if isinstance(imgs, (list, tuple)):
         is_batch = True
         if len(imgs) == 0:
