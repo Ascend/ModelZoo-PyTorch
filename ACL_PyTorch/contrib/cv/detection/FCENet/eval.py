@@ -1,5 +1,17 @@
-#!/usr/bin/env python
-# Copyright (c) OpenMMLab. All rights reserved.
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import os
 import warnings
@@ -20,95 +32,7 @@ from mmocr.datasets import build_dataloader, build_dataset
 from mmocr.models import build_detector
 from mmocr.utils import revert_sync_batchnorm, setup_multi_processes
 
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='MMOCR test (and eval) a model.')
-    parser.add_argument('config', help='Test config file path.')
-    parser.add_argument('checkpoint', help='Checkpoint file.')
-    parser.add_argument('--out', help='Output result file in pickle format.')
-    parser.add_argument(
-        '--fuse-conv-bn',
-        action='store_true',
-        help='Whether to fuse conv and bn, this will slightly increase'
-        'the inference speed.')
-    parser.add_argument(
-        '--gpu-id',
-        type=int,
-        default=0,
-        help='id of gpu to use '
-        '(only applicable to non-distributed testing)')
-    parser.add_argument(
-        '--format-only',
-        action='store_true',
-        help='Format the output results without performing evaluation. It is'
-        'useful when you want to format the results to a specific format and '
-        'submit them to the test server.')
-    parser.add_argument(
-        '--eval',
-        type=str,
-        nargs='+',
-        help='The evaluation metrics, which depends on the dataset, e.g.,'
-        '"bbox", "seg", "proposal" for COCO, and "mAP", "recall" for'
-        'PASCAL VOC.')
-    parser.add_argument('--show', action='store_true', help='Show results.')
-    parser.add_argument(
-        '--show-dir', help='Directory where the output images will be saved.')
-    parser.add_argument(
-        '--show-score-thr',
-        type=float,
-        default=0.3,
-        help='Score threshold (default: 0.3).')
-    parser.add_argument(
-        '--gpu-collect',
-        action='store_true',
-        help='Whether to use gpu to collect results.')
-    parser.add_argument(
-        '--tmpdir',
-        help='The tmp directory used for collecting results from multiple '
-        'workers, available when gpu-collect is not specified.')
-    parser.add_argument(
-        '--cfg-options',
-        nargs='+',
-        action=DictAction,
-        help='Override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into the config file. If the value '
-        'to be overwritten is a list, it should be of the form of either '
-        'key="[a,b]" or key=a,b. The argument also allows nested list/tuple '
-        'values, e.g. key="[(a,b),(c,d)]". Note that the quotation marks '
-        'are necessary and that no white space is allowed.')
-    parser.add_argument(
-        '--options',
-        nargs='+',
-        action=DictAction,
-        help='Custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function (deprecate), '
-        'change to --eval-options instead.')
-    parser.add_argument(
-        '--eval-options',
-        nargs='+',
-        action=DictAction,
-        help='Custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function.')
-    parser.add_argument(
-        '--launcher',
-        choices=['none', 'pytorch', 'slurm', 'mpi'],
-        default='none',
-        help='Options for job launcher.')
-    parser.add_argument('--local_rank', type=int, default=0)
-    args = parser.parse_args()
-    if 'LOCAL_RANK' not in os.environ:
-        os.environ['LOCAL_RANK'] = str(args.local_rank)
-
-    if args.options and args.eval_options:
-        raise ValueError(
-            '--options and --eval-options cannot be both '
-            'specified, --options is deprecated in favor of --eval-options.')
-    if args.options:
-        warnings.warn('--options is deprecated in favor of --eval-options.')
-        args.eval_options = args.options
-    return args
-
+from tools.test import parse_args
 
 def main():
     args = parse_args()
