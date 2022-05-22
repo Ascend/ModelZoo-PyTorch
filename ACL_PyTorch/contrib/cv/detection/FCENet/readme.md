@@ -16,9 +16,10 @@ pip install -r requirements.txt
 pip install -v -e . # or "python setup.py develop"
 export PYTHONPATH=$(pwd):$PYTHONPATH
 ```
-3. 将权重文件fcenet_r50_fpn_1500e_icdar2015_20211022-daefb6ed.pth放到当前工作目录
+3. 我们利用官方的PTH文件进行验证，官方PTH文件可从原始开源库中获取。
+   将权重文件fcenet_r50_fpn_1500e_icdar2015_20211022-daefb6ed.pth放到当前工作目录下。
 4. 数据集
-   获取icdar2015数据集，放到当前目录下的data文件夹内
+   本模型需要icdar2015数据集，数据集请参考开源代码仓方式获取。获取icdar2015数据集，放到当前目录下的data文件夹内。
 5. [获取msame工具](https://gitee.com/ascend/tools/tree/master/msame)
    将msame文件放到当前工作目录
 
@@ -33,6 +34,6 @@ bash test/eval_acc_perf.sh
 | 模型          | pth精度 | 310离线推理精度 | 710性能      |
 |-------------|-------|-----------|------------|
 | FCENet bs1  | 0.880 | 0.872     | fps 39.404 |
-| FCENet bs16 | 0.880 | 0.872     | fps 40.510 |
+| FCENet bs4 | 0.880 | 0.872     | fps 41.823 |
 
 
