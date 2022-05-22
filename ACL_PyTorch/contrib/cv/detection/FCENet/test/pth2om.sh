@@ -7,11 +7,11 @@ do
     fi
 done
 
-python ./tools/deployment/pytorch2onnx.py \
-./configs/textdet/fcenet/fcenet_r50_fpn_1500e_icdar2015.py \
+python ./pytorch2onnx.py \
+./mmocr/configs/textdet/fcenet/fcenet_r50_fpn_1500e_icdar2015.py \
 ./fcenet_r50_fpn_1500e_icdar2015_20211022-daefb6ed.pth \
 det \
-./data/icdar2015/imgs/test/img_1.jpg \
+./mmocr/data/icdar2015/imgs/test/img_1.jpg \
 --dynamic-export \
 --output-file ./fcenet.onnx
 
