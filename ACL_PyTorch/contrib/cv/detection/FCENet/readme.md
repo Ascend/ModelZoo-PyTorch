@@ -30,7 +30,7 @@ bash test/eval_acc_perf.sh #精度统计
 ./tools/msame/out/msame --model fcenet.om --loop 20 #纯推理查看性能
 ```
  **评测结果** 
-| 模型          | pth精度 | 310离线推理精度 | 710性能      |
+| 模型          | pth精度 | 710离线推理精度 | 710性能      |
 |-------------|-------|-----------|------------|
 | FCENet bs1  | 0.880 | 0.872     | fps 39.404 |
 | FCENet bs4 |  |     | fps 41.823 |
