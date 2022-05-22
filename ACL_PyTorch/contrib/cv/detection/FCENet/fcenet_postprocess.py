@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import cv2
 import numpy as np
@@ -21,8 +22,8 @@ import json
 np.set_printoptions(threshold=np.inf)
 
 from mmocr.models.builder import POSTPROCESSOR
-from base_postprocessor import BasePostprocessor
-from utils import fill_hole, fourier2poly, poly_nms
+from mmocr.models.textdet.postprocess.base_postprocessor import BasePostprocessor
+from mmocr.models.textdet.postprocess.utils import fill_hole, fourier2poly, poly_nms
 
 from mmocr.utils import check_argument
 from mmocr.models.textdet.postprocess import FCEPostprocessor
@@ -84,7 +85,7 @@ if __name__ == '__main__':
                  container[i][j].append([])
                  
     img_idx = []
-    file_name = './data/icdar2015/instances_test.json'
+    file_name = './mmocr/data/icdar2015/instances_test.json'
     img_name = []
 
     file_info = json.load(open(file_name, 'r'))
