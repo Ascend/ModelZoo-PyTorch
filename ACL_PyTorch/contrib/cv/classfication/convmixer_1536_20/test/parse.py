@@ -37,4 +37,4 @@ if __name__ == '__main__':
         txt_data_list = re.findall(r'Inference average time without first time:.*ms', content.replace('\n', ',') + ',')[-1]
         avg_time = txt_data_list.split(' ')[-2]
         fps = args.batch_size * 1000 / float(avg_time)
-        print('710 bs{} fps:{:.3f}'.format(args.batch_size, fps))
+        print('310P bs{} fps:{:.3f}'.format(args.batch_size, fps))
