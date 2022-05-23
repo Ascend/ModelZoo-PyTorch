@@ -158,7 +158,7 @@ python3.7 convmixer_eval_acc.py --folder-davinci-target ./result/outputs_bs1_om/
 ```bash
 python3.7 test/parse.py --result-file ./result/result_bs1.json
 ```
-| 模型      | 参考精度  | 710精度  | 性能基准    | 710性能    |
+| 模型      | 参考精度  | 310P精度  | 性能基准    | 310P性能    |
 | :------: | :------: | :------: | :------:  | :------:  | 
 | convmixer_1536_20 bs1  | top1:81.37%  | top1:81.35%  | 44.445fps | 115.790fps | 
 | convmixer_1536_20 bs4 | top1:81.37%  | top1:81.35%  |59.353fps | 117.252fps | 
