@@ -10,7 +10,7 @@ from preprocess import get_dataloader
 import sys
 
 if __name__ == "__main__":
-    device = torch.device("cuda")
+    device = torch.device("cpu")
     model = ECAPA_TDNN(1211, device).to(device)
     checkpoint = sys.argv[1]
     data_set = sys.argv[2]
