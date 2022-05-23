@@ -50,7 +50,7 @@ branch:master commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 ### 2.1 深度学习框架
 
 ```
-CANN 5.0.1
+CANN 5.0.2
 
 torch == 1.5.1
 torchvision == 0.6.1
@@ -90,7 +90,7 @@ wget https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth
 
 文件MD5sum：4454a42689454b94296e378762f2333f
 
-> 或者直接使用下载模型中线程的pth模型即可
+> 或者直接使用下载模型中现成的pth模型即可
 
 3.编写pth2onnx脚本resnext101_32x8d_pth2onnx.py
 
