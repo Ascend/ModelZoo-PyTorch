@@ -57,7 +57,7 @@ def pth2onnx(input_file, output_file, device):
 
     dummy_img = torch.randn(1, 3, 224, 224)
     torch.onnx.export(model, dummy_img, output_file, dynamic_axes=dynamic_axes,
-                      verbose=True, input_names=input_names, output_names=output_names, opset_version=11)
+                      verbose=False, input_names=input_names, output_names=output_names, opset_version=11)
 
 
 #============================================================================
