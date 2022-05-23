@@ -150,7 +150,7 @@ python3.7 get_info.py bin ./prep_dataset ./shufflenetv2_prep_bin.info 224 224
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310/710上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310/310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
 ### 5.2 离线推理
 1.设置环境变量
 ```
@@ -187,7 +187,7 @@ python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /path/to/imagenet/val_
 Model                     Acc@1     Acc@5
 shufflenetv2_open_source  74.1      91.7
 shufflenetv2_bs32_310	  74.08	    91.67
-shufflenetv2_bs32_710	  74.08	    91.67
+shufflenetv2_bs32_310P	  74.08	    91.67
 ```
 ### 6.3 精度对比
 将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
