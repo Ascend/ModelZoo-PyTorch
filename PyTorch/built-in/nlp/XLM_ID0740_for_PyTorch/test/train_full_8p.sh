@@ -141,7 +141,7 @@ export HCCL_WHITELIST_DISABLE=1
 
 NPUS=($(seq 0 7))
 export NPU_WORLD_SIZE=${#NPUS[@]}
-RANK =0
+RANK=0
 
 KERNEL_NUM=$(($(nproc)/8))
 #for((RANK_ID=0;RANK_ID<NNPU;RANK_ID++))
