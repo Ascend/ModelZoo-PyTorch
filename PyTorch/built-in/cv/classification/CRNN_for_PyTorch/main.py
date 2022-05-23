@@ -21,6 +21,8 @@ import time
 import crnn
 import utils
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn.parallel
 from torch.utils.data import DataLoader
 from apex import amp
