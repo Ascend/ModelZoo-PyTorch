@@ -29,11 +29,7 @@ def check_keywords_in_name(name, keywords=()):
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        output = input.matmul(self.weight.t())
-        if self.bias is not None:
-            output = output.npu_format_cast(2) + self.bias # use format ND(2) to enable high accuracy on NPU
-        return output
-        # return torch.npu_linear(input, self.weight, self.bias)
+        return torch.npu_linear(input, self.weight, self.bias)
 
 
 def dist_collect(x):
@@ -109,7 +105,7 @@ class MoBY(nn.Module):
         self.queue1 = F.normalize(self.queue1, dim=0)
         self.queue2 = F.normalize(self.queue2, dim=0)
 
-        self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
+        self.queue_ptr = 0
 
         # for fused momentum update
         self.is_fused = False
@@ -195,7 +191,7 @@ class MoBY(nn.Module):
         self.queue2[:, ptr:ptr + batch_size] = keys2.T
         ptr = (ptr + batch_size) % self.contrast_num_negative  # move pointer
 
-        self.queue_ptr[0] = ptr
+        self.queue_ptr = ptr
 
     def contrastive_loss(self, q, k, queue):
 
@@ -216,12 +212,12 @@ class MoBY(nn.Module):
         return F.cross_entropy(logits, labels)
 
     def forward(self, im_1, im_2, optimizer):
-        feat_1 = self.encoder(im_1)  # queries: NxC
+        feat_1 = self.encoder(im_1).float()  # queries: NxC
         proj_1 = self.projector(feat_1)
         pred_1 = self.predictor(proj_1)
         pred_1 = F.normalize(pred_1, dim=1)
 
-        feat_2 = self.encoder(im_2)
+        feat_2 = self.encoder(im_2).float()
         proj_2 = self.projector(feat_2)
         pred_2 = self.predictor(proj_2)
         pred_2 = F.normalize(pred_2, dim=1)
@@ -234,11 +230,11 @@ class MoBY(nn.Module):
             else:
                 self._fused_momentum_update_key_encoder(optimizer)
 
-            feat_1_ng = self.encoder_k(im_1)  # keys: NxC
+            feat_1_ng = self.encoder_k(im_1).float()  # keys: NxC
             proj_1_ng = self.projector_k(feat_1_ng)
             proj_1_ng = F.normalize(proj_1_ng, dim=1)
 
-            feat_2_ng = self.encoder_k(im_2)
+            feat_2_ng = self.encoder_k(im_2).float()
             proj_2_ng = self.projector_k(feat_2_ng)
             proj_2_ng = F.normalize(proj_2_ng, dim=1)
 

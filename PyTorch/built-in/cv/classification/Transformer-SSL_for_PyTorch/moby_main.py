@@ -13,6 +13,8 @@ import datetime
 import numpy as np
 
 import torch
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 from timm.utils import AverageMeter
@@ -26,36 +28,15 @@ from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper, reduce_tensor
 
+from models.swin_transformer import NpuDropPath
+
 try:
     # noinspection PyUnresolvedReferences
     from apex import amp
     amp.register_half_function(torch.nn.functional, 'softmax')
-    amp.register_half_function(torch.nn.functional, 'layer_norm')
     amp.register_half_function(torch, 'fast_gelu')
 except ImportError:
     amp = None
-
-
-def clip_grad_norm_(parameters, max_norm, optimizer, norm_type=2):
-    # return torch.nn.utils.clip_grad_norm_(parameters, max_norm)
-    torch.npu.synchronize()
-    if isinstance(parameters, torch.Tensor):
-        parameters = [parameters]
-    max_norm = float(max_norm)
-    norm_type = float(norm_type)
-    combine_grads = optimizer.get_optimizer_combined_grads()[0]
-    if norm_type == inf:
-        parameters = list(filter(lambda p: p.grad is not None, parameters))
-        total_norm = max(p.grad.detach().abs().max() for p in parameters)
-    else:
-        torch.npu.synchronize()
-        total_norm = torch.norm(combine_grads.detach(), norm_type)
-        torch.npu.synchronize()
-    clip_coef = max_norm / (total_norm + 1e-6)
-    if clip_coef < 1:
-        combine_grads.detach().mul_(clip_coef)
-    return total_norm
-
 
 
 def parse_option():
@@ -111,6 +92,8 @@ def main(config, args):
     model = build_model(config)
     model.npu()
     logger.info(str(model))
+
+    NpuDropPath.enable_droppath_ensemble(model)
 
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
@@ -186,24 +169,27 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
             if config.TRAIN.CLIP_GRAD:
-                grad_norm = clip_grad_norm_(amp.master_params(optimizer), config.TRAIN.CLIP_GRAD, optimizer)
+                grad_norm = optimizer.clip_optimizer_grad_norm_fused(config.TRAIN.CLIP_GRAD)
             else:
                 grad_norm = get_grad_norm(amp.master_params(optimizer))
         else:
             loss.backward()
             if config.TRAIN.CLIP_GRAD:
-                grad_norm = clip_grad_norm_(model.parameters(), config.TRAIN.CLIP_GRAD, optimizer)
+                grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.TRAIN.CLIP_GRAD)
             else:
                 grad_norm = get_grad_norm(model.parameters())
         optimizer.step()
-        lr_scheduler.step_update(epoch * num_steps + idx)
 
         torch.npu.synchronize()
+        batch_time.update(time.time() - end)
 
+        lr_scheduler.step_update(epoch * num_steps + idx)
         loss_meter.update(loss.item(), targets.size(0))
         norm_meter.update(grad_norm)
-        batch_time.update(time.time() - end)
-        end = time.time()
+
+        if idx < 20:
+            data_time.reset()
+            batch_time.reset()
 
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
@@ -217,6 +203,8 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
                 f'loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
                 f'grad_norm {norm_meter.val:.4f} ({norm_meter.avg:.4f})\t'
                 f'mem {memory_used:.0f}MB')
+
+        end = time.time()
     epoch_time = time.time() - start
     logger.info(f"EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}")
 
@@ -232,6 +220,7 @@ if __name__ == '__main__':
     # enable high-perfomance-mode on aicore
     option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
     option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
+    option["MM_BMM_ND_ENABLE"] = "enable"
 
     torch.npu.set_option(option)
 

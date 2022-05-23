@@ -20,7 +20,7 @@ To avoid unnecessary format transformation, a blacklist is set here.
 
 TODO: create blacklist automatically
 """
-_LAYERNORM_FORMAT_NZ = True
+_LAYERNORM_FORMAT_NZ = False # To accelerate if layernorm in fp16, but acc not ok here
 _LAYERNORM_FORMAT_NZ_BLACKLIST = {192, 384, 768, 1536}
 
 class FastGELU(nn.Module):
@@ -30,19 +30,90 @@ class FastGELU(nn.Module):
     def forward(x):
         return torch.fast_gelu(x)
 
-def drop_path(x, random_tensor, drop_prob: float = 0., training: bool = False):
+
+def npu_drop_path(x, random_tensor, keep_prob: float = 0.):
     """
-    Less op than timm version.
-    But memory copy and aicpu op 'Uniform' cannot be avoided, not faster apparently
+    Less ops than timm version.
+    Async generating and applying of random tensor for accelerating.
     """
-    if drop_prob == 0. or not training:
-        return x
-    keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)
-    random_tensor_new = random_tensor.clone().detach().uniform_(keep_prob, keep_prob + 1).half()
-    random_tensor_new.floor_()
-    output = x.div(keep_prob)
+    random_tensor += keep_prob
+    random_tensor.floor_()  # binarize
+    output = x.div(keep_prob) * random_tensor
     return output
+
+
+class DropPathTask:
+    def __init__(self, shape, device, dtype, ndim, drop_prob):
+        self.shape = shape
+        self.device = device
+        self.dtype = dtype
+        self.ndim = ndim
+        self.drop_prob = drop_prob
+
+        self.request_count = 0
+        self.rand_queue = []
+
+
+class NpuDropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks.)
+    """
+    task_dict = {}
+    droppath_stream = None
+
+    def __init__(self, drop_prob=None):
+        super(NpuDropPath, self).__init__()
+        self.drop_prob = drop_prob
+        self.keep_prob = 1 - drop_prob
+
+    def forward(self, x):
+        if self.drop_prob == 0. or not self.training:
+            return x
+
+        if isinstance(x, torch.Tensor):
+            shape = x.shape
+            dtype = x.dtype
+            device = x.device
+            ndim = x.ndim
+        else:
+            raise RuntimeError("input type error!")
+
+        key = (shape, device, dtype, ndim)
+        if key not in NpuDropPath.task_dict:
+            droppath_task = DropPathTask(shape, device, dtype, ndim, self.drop_prob)
+            droppath_task.request_count += 1
+            NpuDropPath.task_dict[key] = droppath_task
+        elif not NpuDropPath.task_dict[key].rand_queue:
+            NpuDropPath.task_dict[key].request_count += 1
+        else:
+            random_tensor = NpuDropPath.task_dict[key].rand_queue.pop(0)
+            return npu_drop_path(x, random_tensor, self.keep_prob)
+
+        return x
+
+    @classmethod
+    def enable_droppath_ensemble(cls, model):
+        if cls.droppath_stream is None:
+            cls.droppath_stream = torch.npu.Stream()
+
+        def wait_stream_hook():
+            def hook_function(module, inputs):
+                torch.npu.current_stream().wait_stream(cls.droppath_stream)
+            return hook_function
+        model.register_forward_pre_hook(wait_stream_hook())
+
+        def random_tensor_gen_hook():
+            def hook_function(module, inputs):
+                with torch.npu.stream(cls.droppath_stream):
+                    with torch.no_grad():
+                        for _, task in cls.task_dict.items():
+                            if len(task.rand_queue) >= task.request_count:
+                                continue
+                            for i in range(task.request_count - len(task.rand_queue)):
+                                shape = (task.shape[0],) + (1,) * (task.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+                                random_tensor = torch.rand(shape, dtype=task.dtype, device=task.device)
+                                task.rand_queue.append(random_tensor)
+            return hook_function
+        model.register_forward_pre_hook(random_tensor_gen_hook())
 
 class MatmulApply(torch.autograd.Function):
     @staticmethod
@@ -174,7 +245,7 @@ class WindowAttention(nn.Module):
         relative_coords[:, :, 0] += self.window_size[0] - 1  # shift to start from 0
         relative_coords[:, :, 1] += self.window_size[1] - 1
         relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
-        relative_position_index = relative_coords.sum(-1)  # Wh*Ww, Wh*Ww
+        relative_position_index = relative_coords.sum(-1).view(-1).clone()  # Wh*Ww, Wh*Ww
         self.register_buffer("relative_position_index", relative_position_index)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
@@ -194,7 +265,7 @@ class WindowAttention(nn.Module):
         """
         B_, N, C = x.shape
         qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous().npu_format_cast(2)
-        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
+        q, k, v = qkv[0].clone(), qkv[1].clone(), qkv[2].clone()  # make torchscript happy (cannot use tensor as tuple)
 
         if not self.scale.device == q.device:
             self.scale = self.scale.to(q.device).to(q.dtype)
@@ -205,7 +276,7 @@ class WindowAttention(nn.Module):
 
         # relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)].view(
         #     self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)  # Wh*Ww,Wh*Ww,nH
-        relative_position_bias = torch.index_select(self.relative_position_bias_table, 0, self.relative_position_index.view(-1)).view(
+        relative_position_bias = torch.index_select(self.relative_position_bias_table, 0, self.relative_position_index).view(
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wh*Ww, Wh*Ww
         attn = attn + relative_position_bias.unsqueeze(0).half()
@@ -292,7 +363,7 @@ class SwinTransformerBlock(nn.Module):
             dim, window_size=to_2tuple(self.window_size), num_heads=num_heads,
             qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
 
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = NpuDropPath(drop_path) if drop_path > 0. else nn.Identity()
         if self.norm_before_mlp == 'ln':
             self.norm2 = nn.LayerNorm(dim)
         elif self.norm_before_mlp == 'bn':
@@ -447,7 +518,7 @@ class PatchMerging(nn.Module):
 
     def cast_kernel_device(self, device):
         for k, v in self.kernel_dict.items():
-            self.kernel_dict[k] = v.to(device)
+            self.kernel_dict[k] = v.to(device).npu_format_cast(4) # cast weight
 
     @amp.half_function
     def forward(self, x):
@@ -476,7 +547,7 @@ class PatchMerging(nn.Module):
         x = x.permute(0, 3, 1, 2).repeat(1, 4, 1, 1) # B 4*C H W
         kernel = self.kernel_dict[C]
         x = torch.nn.functional.conv2d(x, kernel, stride=2, groups=4*C) # B 4*C H/2 W/2
-        x = x.npu_format_cast(0).npu_confusion_transpose([0, 2, 3, 1], (B, int(H * W / 4), 4 * C), True)
+        x = x.permute(0, 2, 3, 1).reshape(B, int(H * W / 4), 4 * C)
 
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
             x = x.npu_format_cast(2).npu_format_cast(29).contiguous()

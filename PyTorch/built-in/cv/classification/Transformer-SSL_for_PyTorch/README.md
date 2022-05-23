@@ -17,6 +17,10 @@ pip3.7 install timm==0.3.2
 - Install other requirements:
 
 ```bash
+pip3.7 install torchvision==0.6.0 pillow==9.1.0
+```
+
+```bash
 pip3.7 install opencv-python==4.4.0.46 termcolor==1.1.0 yacs==0.1.8 diffdist
 ```
 
