@@ -15,7 +15,7 @@ import sys
 import argparse
 import torch
 from collections import OrderedDict
-sys.path.append(r"./ShuffleNetV2+_source_code")
+sys.path.append(r"./ShuffleNet-Series/ShuffleNetV2+")
 from network import ShuffleNetV2_Plus
 
 def pth2onnx(input_file, output_file, bs):
