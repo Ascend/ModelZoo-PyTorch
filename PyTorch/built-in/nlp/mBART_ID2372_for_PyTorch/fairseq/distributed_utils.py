@@ -423,7 +423,7 @@ def all_reduce_dict(
         t = data[k]
         if not torch.is_tensor(t):
             cpu_data[k] = torch.tensor(t, dtype=torch.float32)
-        elif t.device.type != 'npu':
+        elif not t.is_npu():
             cpu_data[k] = t.to(dtype=torch.float32)
         else:
             device_data[k] = t.to(dtype=torch.float32)
