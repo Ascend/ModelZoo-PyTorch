@@ -122,7 +122,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend310
 ```
 
-* 其中在710机器上应该将处理器型号修改为```--soc_version=Ascend710```
+* 其中在710（310p)机器上应该将处理器型号修改为```--soc_version=Ascend710```
 * 修改```input_shape```可以修改的导出的om模型对应batch size， 例如```input_shape="image:4, 3, 224, 224"```导出的模型适配batch size为4。同时需注意```--output```参数需要改名防止命名冲突。
 
 ## 4 数据集预处理
@@ -137,7 +137,7 @@ atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 
 
 该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
 
-> 710和310机器上无需额外下载数据集合，在/opt/npu/imageNet/下已有现成数据集和label
+> 710(310p)和310机器上无需额外下载数据集合，在/opt/npu/imageNet/下已有现成数据集和label
 
 ### 4.2 数据集预处理
 
@@ -303,4 +303,13 @@ ave_throughputRate: 108.28，108.28x4=433.12既是batch32 310单卡吞吐率
 
  **性能优化：**  
 
-对于batch32的性能不达标，从profiling数据的op_statistic_0_1.csv看出影响性能的是Conv2D算子，从op_summary_0_1.csv看出单个Conv_Relu算子aicore耗时0.6毫秒到6毫秒，shape大的耗时就多，不存在优化问题。
+| ThroughoutRate | 710(310p)     | 310       | T4 | 710(310p)/310 | 710(310p)/T4 |
+|----------------|---------|-----------|----|---------|--------|
+| bs1            | 594.884 | 594.696 |  248.576  | 1.000  | 2.393   |
+| bs4            | 566.742 | 674.64  |  458.576  | 0.840  | 1.236  |
+| bs8            | 937.698 | 669.232 |  536.354  | 1.401  | 1.748  |
+| bs16           | 1086.34 | 670.3   |  540.981  | 1.621  | 2.008  |
+| bs32           | 1191.32 | 429.944 |  564.448  | 2.771  | 2.111  |
+| bs64           | 781.172 | 427.304 |  573.050  | 1.828  | 1.363  |
+| 最优batch       | 1191.32 | 674.64  |  573.050  | 1.766  | 2.079  |
+由以上性能对比表格可知，710(310p)最优batch高于310最优batch1.2倍，高于T4最优batch的1.6倍，故性能合格，无需优化。
