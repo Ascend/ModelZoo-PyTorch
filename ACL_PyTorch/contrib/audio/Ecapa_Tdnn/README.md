@@ -38,6 +38,7 @@ cd ..
 
 ```
 git clone --recursive https://github.com/Joovvhan/ECAPA-TDNN.git
+mv ECAPA-TDNN ECAPA_TDNN
 ```
 
 ### 1.5 准备数据集
