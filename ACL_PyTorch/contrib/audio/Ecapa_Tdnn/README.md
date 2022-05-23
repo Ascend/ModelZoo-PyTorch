@@ -70,6 +70,9 @@ python get_originroc.py checkpoint.pt VoxCeleb 4
 利用权重文件和模型的网络结构转换出所需的onnx模型， checkpoint.pt为权重文件相对路径， ecapa_tdnn.onnx 为生成的onnx模型相对路径
 
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+export PYTHONPATH=$PYTHONPATH:./ECAPA_TDNN
+export PYTHONPATH=$PYTHONPATH:./ECAPA_TDNN/tacotron2
 python pytorch2onnx.py checkpoint.pt ecapa_tdnn.onnx 
 ```
 
@@ -83,7 +86,10 @@ python fix_conv1d.py ecapa_tdnn.onnx ecapa_tdnn_sim.onnx
 在710环境下，运行to_om.sh脚本，其中--model和--output参数自行修改，下面仅作参考
 
 ```
-atc --framework=5 --model=ecapa_tdnn_sim.onnx --output=om/ecapa_tdnn_bs4 --input_format=ND --input_shape="mel:4,80,200" --log=debug --fusion_switch_file=fusion_switch.cfg --soc_version=Ascend710>after.log 
+sudo apt install dos2unix
+dos2unix ./*.sh
+chmod +x *.sh
+./to_om.sh
 ```
 
 ## 3.数据集预处理
