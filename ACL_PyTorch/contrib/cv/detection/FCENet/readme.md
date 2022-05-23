@@ -27,7 +27,6 @@ export PYTHONPATH=$(pwd):$PYTHONPATH
 ```
 bash test/pth2om.sh --batch_size=1 #转onnx、om模型
 bash test/eval_acc_perf.sh #精度统计
-./tools/msame/out/msame --model fcenet.om --loop 20 #纯推理查看性能
 ```
  **评测结果** 
 | 模型          | pth精度 | 710离线推理精度 | 710性能      |
