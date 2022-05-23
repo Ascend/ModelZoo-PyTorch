@@ -36,7 +36,7 @@ cd ..
 ## <a name="2">2. 环境说明</a>
 ### <a name="21">2.1 深度学习框架</a>
 ```
-CANN 5.0.2
+CANN 5.1.RC1
 torch==1.5.0
 torchvision==0.6.0
 onnx==1.10.2
