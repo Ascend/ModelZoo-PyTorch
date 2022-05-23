@@ -1,3 +1,6 @@
+export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
+export PATH=/usr/local/python3.7.5/bin:$PATH
+
 export ASCEND_DEVICE_ID=0
 export TUNE_BANK_PATH=./aoe_result_bs4
 export TE_PARALLEL_COMPILER=8
