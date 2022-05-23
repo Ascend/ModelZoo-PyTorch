@@ -190,9 +190,12 @@ def main():
         else:
             args.n_gpu = torch.npu.device_count()
     else:
+        print("***Distributed Training Start***")
         torch.npu.set_device(args.local_rank)
         device = torch.device('npu', args.local_rank)
-        torch.distributed.init_process_group(backend='nccl')
+        rank_size= int(os.environ['RANK_SIZE'])
+        rank_id= int(os.environ['RANK_ID'])
+        torch.distributed.init_process_group(backend='hccl', rank=rank_id, world_size=rank_size)
         args.world_size = torch.distributed.get_world_size()
         args.n_gpu = 1
 
@@ -290,6 +293,8 @@ def main():
     optimizer = apex.optimizers.NpuFusedSGD(grouped_parameters, lr=args.lr,
                           momentum=0.9, nesterov=args.nesterov)
 
+    args.total_steps = args.total_steps // rank_size
+    args.eval_step = args.eval_step // rank_size
     args.epochs = math.ceil(args.total_steps / args.eval_step)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer, args.warmup, args.total_steps)
