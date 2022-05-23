@@ -97,6 +97,7 @@ git clone https://github.com/megvii-model/ShuffleNet-Series.git
 python3.7 shufflenetv2_pth2onnx.py ShuffleNetV2+.Small.pth.tar shufflenetv2_bs1.onnx 1
 ```
 脚本第一参数为输入的pth模型，第二参数为输出的onnx模型名，第三参数为bs大小
+
 shufflenetv2_pth2onnx_bs{x}.py是固定bs的转换脚本，为保留文件，不推荐使用
 
 ### 3.2 onnx转om模型
