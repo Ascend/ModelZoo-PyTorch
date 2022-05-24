@@ -112,12 +112,11 @@ python mnasnet_pth2onnx.py ./mnasnet1.0_top1_73.512-f206786ef8.pth mnasnet1.0.on
 
 1.设置环境变量
 ```
-source /usr/local/Ascend/ascend-latest/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
 ```
-sed -i 's/\r//' onnx2om.sh
 ./onnx2om.sh
 ```
 
@@ -130,14 +129,17 @@ sed -i 's/\r//' onnx2om.sh
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在 /home/zhx/datasets/imagenet/val 与/home/zhx/datasets/imagenet/val_label.txt。
+
+userDatasetPath=/home/zhx/datasets/imagenet
+
+该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在 $userDatasetPath/val 与$userDatasetPath/val_label.txt。
 
 ### 4.2 数据集预处理
 1.预处理脚本imagenet_torch_preprocess.py
 
 2.执行预处理脚本，生成数据集预处理后的bin文件
 ```
-python imagenet_torch_preprocess.py mnasnet /home/zhx/datasets/imagenet/val ./prep_dataset
+python imagenet_torch_preprocess.py mnasnet $userDatasetPath/val ./prep_dataset
 ```
 ### 4.3 生成数据集信息文件
 1.生成数据集信息文件脚本gen_dataset_info.py
@@ -164,7 +166,7 @@ msame：https://gitee.com/ascend/tools/tree/master/msame
 1.设置环境变量
 
 ```
-source /usr/local/Ascend/ascend-latest/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -185,7 +187,7 @@ chmod 777 benchmark.sh
 
 调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 ```
-python imagenet_acc_eval.py result/dumpOutput_device0/ /home/zhx/datasets/imagenet/val_label.txt ./ result.json
+python imagenet_acc_eval.py result/dumpOutput_device0/ $userDatasetPath/val_label.txt ./ result.json
 ```
 第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
 查看输出结果：
@@ -270,6 +272,16 @@ batch32 t4单卡吞吐率：1000x1/( 13.6909/64)= 4674.638fps
 ### 7.3 性能对比
 batch1：2113.01 > 1000x1/(0.534034/1) =1872.539
 batch16：9836.44> 1000x1/(3.43677/16)=4655.534
+
+| batchsize | 310/FPS    | 710/FPS    | T4/FPS      | 710/310 | 710/T4  |
+| --------- | ---------- | ---------- | ----------- | ------- | ------- |
+| 1         | 3106.844   | 2113.01    | 1872.54     | 0.68011 | 1.12842 |
+| 4         | 5682.52    | 6606.25    | 4004.645    | 1.16256 | 1.64965 |
+| 8         | 5868.36    | 8926.09    | 4633.818    | 1.52105 | 1.92639 |
+| 16        | 6005.48    | 9836.44    | 4655.534    | 1.63791 | 2.11285 |
+| 32        | 5590.4     | 10649.9    | 4689.016    | 1.90503 | 2.27124 |
+| 64        | 5293.56    | 5511.77    | 4674.638    | 1.04122 | 1.17908 |
+| 最优      | 16:6005.48 | 32:10649.9 | 32:4689.016 | 1.77336 | 2.27125 |
 
 npu的吞吐率乘4比T4的吞吐率大，也等同于npu的时延除4比T4的时延除以batch小，故npu性能高于T4性能，性能达标。  
 对于batch1与batch16，npu性能均高于T4性能1.2倍，该模型放在Benchmark/cv/classification目录下。  
