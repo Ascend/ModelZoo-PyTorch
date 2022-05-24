@@ -1,0 +1,13 @@
+diff --git a/mmocr/models/textdet/detectors/fcenet.py b/mmocr/models/textdet/detectors/fcenet.py
+index da9bcb7..827854a 100644
+--- a/mmocr/models/textdet/detectors/fcenet.py
++++ b/mmocr/models/textdet/detectors/fcenet.py
+@@ -27,7 +27,7 @@ class FCENet(TextDetectorMixin, SingleStageTextDetector):
+                                          init_cfg)
+         TextDetectorMixin.__init__(self, show_score)
+ 
+-    def simple_test(self, img, img_metas, rescale=False):
++    def asimple_test(self, img, img_metas, rescale=False):
+         x = self.extract_feat(img)
+         outs = self.bbox_head(x)
+         boundaries = self.bbox_head.get_boundary(outs, img_metas, rescale)
