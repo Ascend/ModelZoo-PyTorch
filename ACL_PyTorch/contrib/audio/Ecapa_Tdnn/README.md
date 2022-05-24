@@ -123,7 +123,7 @@ python preprocess.py VoxCeleb input_bs4/ speaker_bs4/ 4
 ./msame --model "om/ecapa_tdnn_bs4.om" --input "input_bs4/" --output "result" --outfmt TXT
 ```
 
-在生成的结果只需获取其中后缀为_0的文件，将其放入一个文件夹(命名为output_bs4)后传回GPU环境下
+在生成的结果只需获取其中后缀为_0的文件，运行一下命令将其放入一个文件夹(命名为output_bs4)，其中第一个参数为batchsize
 
 ```
 ./generate_output.sh 4
@@ -132,7 +132,7 @@ python preprocess.py VoxCeleb input_bs4/ speaker_bs4/ 4
 
 ## 5.生成推理精度
 
-在GPU环境下，根据第四步中获取的结果output_bs4/和第三步中产生的speaker_bs4/标签文件，得到推理精度
+根据第四步中获取的结果output_bs4/和第三步中产生的speaker_bs4/标签文件，得到推理精度
 
 ```
  python postprocess.py output_bs4/ speaker_bs4/ 4 4648
@@ -144,9 +144,10 @@ python preprocess.py VoxCeleb input_bs4/ speaker_bs4/ 4
 ```
 roc_auc:
           om          pth
-bs1	  0.6833      0.6896
-bs4	  0.6755      0.6793
+bs1	  0.9866      0.9914
+bs4	  0.9866      0.9908
 ```
+精度下降不超过百分之一，精度达标
 
 ## 7.性能对比
 
@@ -155,33 +156,30 @@ bs4	  0.6755      0.6793
 
 > 测试gpu性能要确保device空闲，使用nvidia-smi命令可查看device是否在运行其它推理任务
 
-以bs=16为例，这里的infer_cpu.onnx为优化前onnx模型
+以bs=4为例，这里的infer_cpu.onnx为优化前onnx模型
 
 ```
-trtexec --onnx=ecapa_tdnn.onnx --fp16 --shapes=mel:16x80x200
+trtexec --onnx=ecapa_tdnn.onnx --fp16 --shapes=mel:4x80x200
 ```
-![输入图片说明](image1.png)
 
-根据红框中信息，得到吞吐率为1000/(19.92/16)=803.21
 
 ### 7.2 NPU性能数据
 
-以bs=16为例。利用msame进行纯推理
+以bs=4为例。利用msame进行纯推理
 
 ```
- ./msame --model "om/ecapa_tdnn_bs16.om" --output "result" --outfmt TXT --loop 100
+ ./msame --model "om/ecapa_tdnn_bs4.om" --output "result" --outfmt TXT --loop 100
 ```
-![输入图片说明](image2.png)
 
-根据红框中信息，得到吞吐率为1000/(12.68/16)= 1261.82
+| Model      | batch_size | T4Throughput/Card | 710Throughput/Card |
+|------------|------------|-------------------|--------------------|
+| ECAPA-TDNN | 1          | 485.43            | 764.52             |
+| ECAPA-TDNN | 4          | 705.46            | 1408.45            |
+| ECAPA-TDNN | 8          | 798.4             | 1408.43            |
+| ECAPA-TDNN | 16         | 770.89            | 1315.78            |
+| ECAPA-TDNN | 32         | 828.84            | 1281.53            |
+| ECAPA-TDNN | 64         | 847.37            | 1221.6             |
+| ECAPA-TDNN | best       | 847.37            | 1408.45            |
 
-在bs=16时，模型性能达标
+1408.46/847.37 = 1.66 ,性能达标
 
-| Model      | batch_size | T4Throughput/Card | 710Throughput/Card | 710/T4         |
-|------------|------------|-------------------|--------------------|----------------|
-| ECAPA-TDNN | 1          | 485.43            | 711.23             | 1.46           |
-| ECAPA-TDNN | 4          | 705.46            | 1223.24            | 1.73475177305  |
-| ECAPA-TDNN | 8          | 798.4             | 1242.23            | 1.556390977444 |
-| ECAPA-TDNN | 16         | 770.89            | 1263.63            | 1.64025974026  |
-| ECAPA-TDNN | 32         | 828.84            | 1104.59            | 1.33333333333  |
-| ECAPA-TDNN | 64         | 847.37            | 1049.008           | 1.238488783943 |
