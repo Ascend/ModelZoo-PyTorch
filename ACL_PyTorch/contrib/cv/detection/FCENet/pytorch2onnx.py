@@ -1,17 +1,3 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 from argparse import ArgumentParser
@@ -178,32 +164,7 @@ def pytorch2onnx(model: nn.Module,
     # pytorch has some bug in pytorch1.3, we have to fix it
     # by replacing these existing op
     register_extra_symbolics(opset_version)
-    dynamic_axes = None
-    if dynamic_export and model_type == 'det':
-        dynamic_axes = {
-            'input': {
-                0: 'batch',
-                2: 'height',
-                3: 'width'
-            },
-            'output': {
-                0: 'batch',
-                2: 'height',
-                3: 'width'
-            }
-        }
-    elif dynamic_export and model_type == 'recog':
-        dynamic_axes = {
-            'input': {
-                0: 'batch',
-                3: 'width'
-            },
-            'output': {
-                0: 'batch',
-                1: 'seq_len',
-                2: 'num_classes'
-            }
-        }
+    dynamic_axes = {'input': {0: '-1'}, 'output': {0: '-1'}}
     with torch.no_grad():
         torch.onnx.export(
             model, (img_list[0], ),
@@ -216,78 +177,7 @@ def pytorch2onnx(model: nn.Module,
             opset_version=opset_version,
             dynamic_axes=dynamic_axes)
     print(f'Successfully exported ONNX model: {output_file}')
-    if verify:
-        # check by onnx
-        import onnx
-        onnx_model = onnx.load(output_file)
-        onnx.checker.check_model(onnx_model)
-
-        scale_factor = (0.5, 0.5) if model_type == 'det' else (1, 0.5)
-        if dynamic_export:
-            # scale image for dynamic shape test
-            img_list = [
-                nn.functional.interpolate(_, scale_factor=scale_factor)
-                for _ in img_list
-            ]
-            if model_type == 'det':
-                img_metas[0][0][
-                    'scale_factor'] = img_metas[0][0]['scale_factor'] * (
-                        scale_factor * 2)
-
-        # check the numerical value
-        # get pytorch output
-        with torch.no_grad():
-            model.forward = origin_forward
-            pytorch_out = model.simple_test(
-                img_list[0], img_metas[0], rescale=True)
-
-        # get onnx output
-        if model_type == 'det':
-            onnx_model = ONNXRuntimeDetector(output_file, model.cfg, device_id)
-        else:
-            onnx_model = ONNXRuntimeRecognizer(output_file, model.cfg,
-                                               device_id)
-        onnx_out = onnx_model.simple_test(
-            img_list[0], img_metas[0], rescale=True)
-
-        # compare results
-        same_diff = 'same'
-        if model_type == 'recog':
-            for onnx_result, pytorch_result in zip(onnx_out, pytorch_out):
-                if onnx_result['text'] != pytorch_result[
-                        'text'] or not np.allclose(
-                            np.array(onnx_result['score']),
-                            np.array(pytorch_result['score']),
-                            rtol=1e-4,
-                            atol=1e-4):
-                    same_diff = 'different'
-                    break
-        else:
-            for onnx_result, pytorch_result in zip(
-                    onnx_out[0]['boundary_result'],
-                    pytorch_out[0]['boundary_result']):
-                if not np.allclose(
-                        np.array(onnx_result),
-                        np.array(pytorch_result),
-                        rtol=1e-4,
-                        atol=1e-4):
-                    same_diff = 'different'
-                    break
-        print('The outputs are {} between PyTorch and ONNX'.format(same_diff))
-
-        if show:
-            onnx_img = onnx_model.show_result(
-                img_path, onnx_out[0], out_file='onnx.jpg', show=False)
-            pytorch_img = model.show_result(
-                img_path, pytorch_out[0], out_file='pytorch.jpg', show=False)
-            if onnx_img is None:
-                onnx_img = cv2.imread(img_path)
-            if pytorch_img is None:
-                pytorch_img = cv2.imread(img_path)
-
-            cv2.imshow('PyTorch', pytorch_img)
-            cv2.imshow('ONNXRuntime', onnx_img)
-            cv2.waitKey()
+    
     return
 
 
