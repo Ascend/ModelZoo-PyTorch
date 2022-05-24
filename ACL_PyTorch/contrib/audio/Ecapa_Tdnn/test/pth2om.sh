@@ -1,5 +1,5 @@
 cd ..
-python pytorch2onnx.py checkpoint.pt ecapa_tdnn.onnx 
+python pytorch2onnx.py checkpoint ecapa_tdnn.onnx 
 
 python fix_conv1d.py ecapa_tdnn.onnx ecapa_tdnn_sim.onnx
 
