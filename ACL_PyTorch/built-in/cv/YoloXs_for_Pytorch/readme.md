@@ -39,7 +39,7 @@ cd YOLOX
 cp yolox_s.pth ./YOLOX
 cp -r YoloXs_for_Pytorch/* ./YOLOX
 bash test/pth2om.sh  
-bash test/eval_acc_perf.sh --datasets_path=/root/datasets  
+bash test/eval-acc-perf.sh --datasets_path=/root/datasets  
 ```
 
 **评测结果：**
