@@ -29,7 +29,7 @@ if __name__ == "__main__":
                 data_list = []
                 num = data_line[j].split(' ')
 
-                for k in range(batch_size):
+                for k in range(192):
                     data_list.append(float(num[k]))
                 batch.append(data_list)
             h_tensor = torch.Tensor(batch)
