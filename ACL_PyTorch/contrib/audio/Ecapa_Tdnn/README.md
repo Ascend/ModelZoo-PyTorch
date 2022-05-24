@@ -38,7 +38,7 @@ cd ..
 
 ```
 git clone --recursive https://github.com/Joovvhan/ECAPA-TDNN.git
-mv ECAPA-TDNN ECAPA_TDNN
+mv ecapa-tdnn ECAPA_TDNN
 ```
 
 ### 1.5 准备数据集
@@ -113,6 +113,11 @@ python preprocess.py VoxCeleb input_bs4/ speaker_bs4/ 4
 ```
 
 在生成的结果只需获取其中后缀为_0的文件，将其放入一个文件夹(命名为output_bs4)后传回GPU环境下
+
+```
+./generate_output.sh 4
+```
+
 
 ## 5.生成推理精度
 
