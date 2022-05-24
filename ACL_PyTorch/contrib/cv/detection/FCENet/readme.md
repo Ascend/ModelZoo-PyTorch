@@ -16,6 +16,7 @@ patch -p1 < ../fcenet.patch
 pip install -r requirements.txt
 pip install -v -e . # or "python setup.py develop"
 export PYTHONPATH=$(pwd):$PYTHONPATH
+cd ..
 ```
 3. 权重文件：我们利用官方的pth文件进行验证，官方pth文件可从原始开源库中获取。将权重文件fcenet_r50_fpn_1500e_icdar2015_20211022-daefb6ed.pth放到当前工作目录下。
 4. 数据集：本模型需要icdar2015数据集，数据集请参考开源代码仓方式获取。获取icdar2015数据集，放到当前目录下的data文件夹内。
