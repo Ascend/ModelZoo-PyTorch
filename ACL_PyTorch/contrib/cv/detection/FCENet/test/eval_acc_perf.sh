@@ -15,7 +15,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 echo "start inference..."
 rm -rf result
 ./tools/msame/out/msame \
---model fcenet.om \
+--model fcenet_bs1.om \
 --input preprocessed_imgs \
 --output result \
 --outfmt TXT
