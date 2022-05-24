@@ -59,8 +59,8 @@ index 0000000..0919009
 +    print('Shape images to %dx%dx%d'%(Z_MAX,Y_MAX,X_MAX))
 +    lung_ct_path = os.path.join(root_path, 'lung_ct_image')
 +    lung_mask_path = os.path.join(root_path, 'seg-lungs-LUNA16')
-+    lung_ct_save_path = os.path.join(root_path, 'normalized_lung_ct0')
-+    lung_mask_save_path = os.path.join(root_path, 'normalized_lung_mask0')
++    lung_ct_save_path = os.path.join(root_path, 'normalized_lung_ct')
++    lung_mask_save_path = os.path.join(root_path, 'normalized_lung_mask')
 +    if not os.path.isdir(lung_mask_save_path):
 +        os.mkdir(lung_mask_save_path)
 +    if not os.path.isdir(lung_ct_save_path):
