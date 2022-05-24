@@ -33,8 +33,73 @@ from mmocr.datasets import build_dataloader, build_dataset
 from mmocr.models import build_detector
 from mmocr.utils import revert_sync_batchnorm, setup_multi_processes
 
-from tools.test import parse_args
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='MMOCR test (and eval) a model.')
+    parser.add_argument('config', help='Test config file path.')
+    parser.add_argument('checkpoint', help='Checkpoint file.')
+    parser.add_argument('--out', help='Output result file in pickle format.')
+    
+    parser.add_argument(
+        '--gpu-id',
+        type=int,
+        default=0,
+        help='id of gpu to use '
+        '(only applicable to non-distributed testing)')
+    parser.add_argument(
+        '--eval',
+        type=str,
+        nargs='+',
+        help='The evaluation metrics. Options: \'hmean-ic13\', \'hmean-iou'
+        '\' for text detection tasks, \'acc\' for text recognition tasks, and '
+        '\'macro-f1\' for key information extraction tasks.')
+    parser.add_argument(
+        '--show-score-thr',
+        type=float,
+        default=0.3,
+        help='Score threshold (default: 0.3).')
+    parser.add_argument(
+        '--cfg-options',
+        nargs='+',
+        action=DictAction,
+        help='Override some settings in the used config, the key-value pair '
+        'in xxx=yyy format will be merged into the config file. If the value '
+        'to be overwritten is a list, it should be of the form of either '
+        'key="[a,b]" or key=a,b. The argument also allows nested list/tuple '
+        'values, e.g. key="[(a,b),(c,d)]". Note that the quotation marks '
+        'are necessary and that no white space is allowed.')
+    parser.add_argument(
+        '--options',
+        nargs='+',
+        action=DictAction,
+        help='Custom options for evaluation, the key-value pair in xxx=yyy '
+        'format will be kwargs for dataset.evaluate() function (deprecate), '
+        'change to --eval-options instead.')
+    parser.add_argument(
+        '--eval-options',
+        nargs='+',
+        action=DictAction,
+        help='Custom options for evaluation, the key-value pair in xxx=yyy '
+        'format will be kwargs for dataset.evaluate() function.')
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='Options for job launcher.')
+    parser.add_argument('--local_rank', type=int, default=0)
+    args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
 
+    if args.options and args.eval_options:
+        raise ValueError(
+            '--options and --eval-options cannot be both '
+            'specified, --options is deprecated in favor of --eval-options.')
+    if args.options:
+        warnings.warn('--options is deprecated in favor of --eval-options.')
+        args.eval_options = args.options
+    return args
+    
 def main():
     args = parse_args()
 
@@ -44,9 +109,6 @@ def main():
             'Please specify at least one operation (save/eval/format/show the '
             'results / save the results) with the argument "--out", "--eval"'
             ', "--format-only", "--show" or "--show-dir".')
-
-    if args.eval and args.format_only:
-        raise ValueError('--eval and --format_only cannot be both specified.')
 
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
@@ -122,21 +184,15 @@ def main():
     if fp16_cfg is not None:
         wrap_fp16_model(model)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
-    if args.fuse_conv_bn:
-        model = fuse_conv_bn(model)
 
     if not distributed:
         model = MMDataParallel(model, device_ids=cfg.gpu_ids)
         is_kie = cfg.model.type in ['SDMGR']
-        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  is_kie, args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
-        outputs = multi_gpu_test(model, data_loader, args.tmpdir,
-                                 args.gpu_collect)
 
     rank, _ = get_dist_info()
     if rank == 0:
@@ -144,8 +200,6 @@ def main():
             print(f'\nwriting results to {args.out}')
             mmcv.dump(outputs, args.out)
         kwargs = {} if args.eval_options is None else args.eval_options
-        if args.format_only:
-            dataset.format_results(outputs, **kwargs)
         if args.eval:
             eval_kwargs = cfg.get('evaluation', {}).copy()
             # hard-code way to remove EvalHook args
