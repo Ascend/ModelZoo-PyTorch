@@ -19,7 +19,14 @@ export PYTHONPATH=$(pwd):$PYTHONPATH
 cd ..
 ```
 3. 权重文件：我们利用官方的pth文件进行验证，官方pth文件可从原始开源库中获取。将权重文件fcenet_r50_fpn_1500e_icdar2015_20211022-daefb6ed.pth放到当前工作目录下。
-4. 数据集：本模型需要icdar2015数据集，数据集请参考开源代码仓方式获取。获取icdar2015数据集，放到当前目录下的data文件夹内。
+4. 数据集：本模型需要icdar2015数据集，数据集请参考开源代码仓方式获取。获取icdar2015数据集，放到mmocr的data文件夹内,放置顺序如下。
+```
+├── icdar2015
+│   ├── imgs
+│   ├── annotations
+│   ├── instances_test.json
+│   └── instances_training.json
+```
 5. [获取msame工具](https://gitee.com/ascend/tools/tree/master/msame)
    将msame工具放到当前工作目录下。
 
