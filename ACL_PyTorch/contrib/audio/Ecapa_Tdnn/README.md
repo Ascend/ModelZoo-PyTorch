@@ -25,6 +25,12 @@ onnxruntime
 skl2onnx
 ```
 
+```
+conda create -n tdnn python==3.7
+pip install -r requirements.txt
+```
+
+
 
 ### 1.3 onnx优化工具onnx_tool
 
