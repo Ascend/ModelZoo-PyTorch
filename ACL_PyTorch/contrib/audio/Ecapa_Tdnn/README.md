@@ -52,6 +52,17 @@ mv ecapa-tdnn ECAPA_TDNN
 ### 1.6 [获取msame工具](https://gitee.com/ascend/tools/tree/master/msame)
 将msame文件放到当前工作目录
 
+```
+git clone https://gitee.com/ascend/tools.git
+export DDK_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export NPU_HOST_LIB=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/stub
+cd tools/msame
+./build.sh g++ out
+cd out
+mv main ../../../msame
+```
+
+
 
 
 ## 2.模型转换
