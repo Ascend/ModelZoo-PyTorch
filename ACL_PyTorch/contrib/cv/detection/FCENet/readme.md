@@ -7,11 +7,12 @@
 ```
 pip install -r requirements.txt
 ```
-2. 获取并安装开源模型代码
+2. 获取、安装、修改开源模型代码
 
 ```
 git clone https://github.com/open-mmlab/mmocr.git
 cd mmocr
+patch -p1 < ../fcenet.patch
 pip install -r requirements.txt
 pip install -v -e . # or "python setup.py develop"
 export PYTHONPATH=$(pwd):$PYTHONPATH
