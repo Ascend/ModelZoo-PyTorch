@@ -57,23 +57,23 @@ mv ecapa-tdnn ECAPA_TDNN
 ## 2.模型转换
 
 ### 2.1 pytorch模型转onnx模型
-加载当前工作目录下权重文件即Ecapa_Tdnn/checkpoint.pt,该权重为自己训练出的权重，后续精度以该权重下精度为标准
+加载当前工作目录下权重文件即Ecapa_Tdnn/checkpoint/,该权重为自己训练出的权重，后续精度以该权重下精度为标准
 
-获取基准精度，作为精度对比参考， checkpoint.pt为权重文件相对路径， VoxCeleb为数据集相对路径， batch_size = 4
+获取基准精度，作为精度对比参考， checkpoint为权重文件相对路径， VoxCeleb为数据集相对路径， batch_size = 4
 
 ```
-python get_originroc.py checkpoint.pt VoxCeleb 4
+python get_originroc.py checkpoint VoxCeleb 4
 ```
 
 
 
-利用权重文件和模型的网络结构转换出所需的onnx模型， checkpoint.pt为权重文件相对路径， ecapa_tdnn.onnx 为生成的onnx模型相对路径
+利用权重文件和模型的网络结构转换出所需的onnx模型， checkpoint为权重文件相对路径， ecapa_tdnn.onnx 为生成的onnx模型相对路径
 
 ```
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export PYTHONPATH=$PYTHONPATH:./ECAPA_TDNN
 export PYTHONPATH=$PYTHONPATH:./ECAPA_TDNN/tacotron2
-python pytorch2onnx.py checkpoint.pt ecapa_tdnn.onnx 
+python pytorch2onnx.py checkpoint ecapa_tdnn.onnx 
 ```
 
 将转化出的onnx模型进行优化， ecapa_tdnn.onnx为优化前onnx模型， ecapa_tdnn_sim.onnx为优化后onnx模型
