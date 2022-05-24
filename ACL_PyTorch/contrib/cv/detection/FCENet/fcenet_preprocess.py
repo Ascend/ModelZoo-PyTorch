@@ -76,6 +76,16 @@ def parse_args():
         '--batch-mode',
         action='store_true',
         help='Whether use batch mode for inference')
+    parser.add_argument(
+        '--det-batch-size',
+        type=int,
+        default=0,
+        help='Batch size for text detection')
+    parser.add_argument(
+        '--single-batch-size',
+        type=int,
+        default=0,
+        help='Batch size for separate det/recog inference')
 
     args = parser.parse_args()
     if args.det == 'None':
@@ -208,9 +218,11 @@ class MMOCR:
                 arr_chunks = [
                     arrays[i:i + n] for i in range(0, len(arrays), n)
                 ]
-                for chunk in arr_chunks:
-                    result.extend(
-                        model_inference( model, chunk, filenames, batch_mode=True))
+                #for chunk in arr_chunks:
+                #print("arr_chunks:",arr_chunks)
+                #print("filenames:",filenames)
+                for (chunk,filename) in zip(arr_chunks,filenames) :
+                    model_inference(model, chunk, filename, batch_mode=True)
         else:
             for (arr,filename) in zip(arrays,filenames) :
                 model_inference(model, arr, filename, batch_mode=False)
@@ -419,7 +431,6 @@ def model_inference(model,
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
         
-    
     #input bin file
     save_path = "./preprocessed_imgs"
     input_tensor = data['img'][0][0]
