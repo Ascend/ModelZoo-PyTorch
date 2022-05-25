@@ -25,7 +25,7 @@ mv nnUNet nnUnet
 3. 编译环境，进入inference/loadgen目录，执行以下命令。
 
    ```
-   CFLAGS="-std=c++14 -03" python3 setup.py develop
+   CFLAGS="-std=c++14 -O3" python3 setup.py develop
    ```
 
    若失败，则升级gcc版本
@@ -117,9 +117,9 @@ python3 preprocess.py
 
 **评测结果：**   
 
-|    模型    |    官网pth精度    | 710/310离线推理精度 | gpu性能 | 710性能 | 310性能 |
-| :--------: | :---------------: | :-----------------: | :-----: | :-----: | ------- |
-| 3DUNet bs1 | mean tumor:0.8530 |  mean tumor:0.8530  | 0.5fps  | 4.4fps  | 0.78fps |
+|    模型    |    官网pth精度    | 710/310离线推理精度 | gpu性能 |         710性能         | 310性能 |
+| :--------: | :---------------: | :-----------------: | :-----: | :---------------------: | ------- |
+| 3DUNet bs1 | mean tumor:0.8530 |  mean tumor:0.8530  | 0.5fps  | ~~4.4fps~~<br />6.26fps | 0.78fps |
 
 
 
