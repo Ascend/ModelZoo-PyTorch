@@ -31,6 +31,8 @@
 - [7 性能对比](#7-性能对比)
 
   -   [7.1 npu性能数据](#71-npu性能数据)
+  -   [7.2 T4性能数据](#72-T4性能数据)
+  -   [7.3 性能对比](#73-性能对比)
 
   
 
@@ -62,19 +64,19 @@ commit id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 ### 2.1 深度学习框架
 
 ```
-CANN 5.0.1
+CANN 5.1RC1
 
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
+pytorch == 1.11.0
+torchvision = 0.6.0
+onnx = 1.11.0
 ```
 
 ### 2.2 python第三方库
 
 ```
-numpy == 1.18.5
-Pillow == 7.2.0
-opencv-python == 4.2.0.34
+numpy == 1.21.6
+Pillow == 8.3.2
+opencv-python == 4.5.3.56
 ```
 
 **说明：** 
@@ -132,12 +134,16 @@ python3.7 wrn101_2_pth2onnx.py wide_resnet101_2-32ee1156.pth wrn101_2_pth.onnx
 1.设置环境变量
 
 ```python
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 
 ```python
+310：
 atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310
+
+310p:
+atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend7
 ```
 
 
@@ -188,7 +194,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 
@@ -242,9 +248,12 @@ bs16            78.85      94.29
 
 ## 7 性能对比
 
--   **[npu性能数据](#71-npu性能数据)**  
+-   **[310npu性能数据](#71-310npu性能数据)**  
+-   **[310p npu性能数据](#72-310p npu性能数据)**  
+-   **[T4性能数据](#73-T4性能数据)**  
+-   **[性能对比](#73-性能对比)**  
 
-### 7.1 npu性能数据
+### 7.1 310 npu性能数据
 
 benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
 
@@ -253,49 +262,49 @@ benchmark工具在整个数据集上推理时也会统计性能数据，但是�
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
 
 ```
-[e2e] throughputRate: 105.142, latency: 475550
-[data read] throughputRate: 111.355, moduleLatency: 8.98031
-[preprocess] throughputRate: 111.053, moduleLatency: 9.00469
-[infer] throughputRate: 105.494, Interface throughputRate: 127.878, moduleLatency: 8.77965
-[post] throughputRate: 105.494, moduleLatency: 9.47924
+[e2e] throughputRate: 105.964, latency: 471859
+[data read] throughputRate: 112.337, moduleLatency: 8.90179
+[preprocess] throughputRate: 111.931, moduleLatency: 8.93404
+[infer] throughputRate: 106.222, Interface throughputRate: 129.018, moduleLatency: 8.70911
+[post] throughputRate: 106.222, moduleLatency: 9.41428
 ```
 
-Interface throughputRate: 127.878，127.878x4=511.512即是batch1 310单卡吞吐率
+Interface throughputRate: 129.018，129.018x4=516.072即是batch1 310单卡吞吐率
 
 batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
 
 ```
-[e2e] throughputRate: 117.321, latency: 426182
-[data read] throughputRate: 124.66, moduleLatency: 8.0218
-[preprocess] throughputRate: 124.054, moduleLatency: 8.06101
-[infer] throughputRate: 117.825, Interface throughputRate: 169.604, moduleLatency: 7.35524
-[post] throughputRate: 7.36397, moduleLatency: 135.796
+[e2e] throughputRate: 119.367, latency: 418876
+[data read] throughputRate: 126.399, moduleLatency: 7.91145
+[preprocess] throughputRate: 126.137, moduleLatency: 7.92786
+[infer] throughputRate: 119.647, Interface throughputRate: 170.965, moduleLatency: 7.27049
+[post] throughputRate: 7.47771, moduleLatency: 133.731
 ```
 
-Interface throughputRate: 169.604，169.604x4=678.416即是batch1 310单卡吞吐率
+Interface throughputRate: 170.965，170.965x4=683.86即是batch1 310单卡吞吐率
 
 batch4性能：
 
 ```
-[e2e] throughputRate: 114.374, latency: 437161
-[data read] throughputRate: 121.259, moduleLatency: 8.2468
-[preprocess] throughputRate: 121.014, moduleLatency: 8.26352
-[infer] throughputRate: 114.92, Interface throughputRate: 157.07, moduleLatency: 7.83108
-[post] throughputRate: 28.73, moduleLatency: 34.8068
+[e2e] throughputRate: 101.852, latency: 490910
+[data read] throughputRate: 107.479, moduleLatency: 9.30415
+[preprocess] throughputRate: 107.138, moduleLatency: 9.33379
+[infer] throughputRate: 102.151, Interface throughputRate: 157.248, moduleLatency: 8.78044
+[post] throughputRate: 25.5375, moduleLatency: 39.1581
 ```
 
-batch4 310单卡吞吐率：157.07x4=628.28fps
+batch4 310单卡吞吐率：157.248x4=628.992fps
 batch8性能：
 
 ```
-[e2e] throughputRate: 111.341, latency: 449071
-[data read] throughputRate: 117.759, moduleLatency: 8.49194
-[preprocess] throughputRate: 117.55, moduleLatency: 8.50701
-[infer] throughputRate: 111.703, Interface throughputRate: 156.132, moduleLatency: 7.85466
-[post] throughputRate: 13.9628, moduleLatency: 71.6188
+[e2e] throughputRate: 106.178, latency: 470906
+[data read] throughputRate: 112.19, moduleLatency: 8.91342
+[preprocess] throughputRate: 111.912, moduleLatency: 8.93559
+[infer] throughputRate: 106.421, Interface throughputRate: 157.434, moduleLatency: 8.37058
+[post] throughputRate: 13.3024, moduleLatency: 75.1742
 ```
 
-batch8 310单卡吞吐率：156.132x4=624.528fps
+batch8 310单卡吞吐率：157.434x4=629.736fps
 batch32性能：
 
 ```
@@ -306,8 +315,253 @@ batch32性能：
 [post] throughputRate: 3.2138, moduleLatency: 311.159
 ```
 
-batch32 310单卡吞吐率：139.595x4=558.38fps
+batch32 310单卡吞吐率：139.595x4=591.376fps
 
-**性能优化：**
+batch64性能：
 
-> 对于batch32的性能不达标，从profiling数据的op_statistic_0_1.csv看出影响性能的是Conv2D算子，从op_summary_0_1.csv看出单个Conv_Relu算子耗时0.6毫秒到12毫秒，shape大的耗时就多，不存在优化问题
+```
+[e2e] throughputRate: 90.2739, latency: 553870
+[data read] throughputRate: 95.3212, moduleLatency: 10.4908
+[preprocess] throughputRate: 95.1398, moduleLatency: 10.5108
+[infer] throughputRate: 90.4519, Interface throughputRate: 125.414, moduleLatency: 9.90415
+[post] throughputRate: 1.41463, moduleLatency: 706.898
+```
+
+batch64 310单卡吞吐率：125.414x4=501.656fps
+
+
+
+### 7.2 310p npu性能数据
+
+1.benchmark工具在整个数据集上推理获得性能数据
+
+batch1的性能（没有执行aoe），benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
+
+```
+[e2e] throughputRate: 195.097, latency: 256282
+[data read] throughputRate: 201.138, moduleLatency: 4.97171
+[preprocess] throughputRate: 200.301, moduleLatency: 4.99249
+[infer] throughputRate: 196.592, Interface throughputRate: 265.092, moduleLatency: 4.45654
+[post] throughputRate: 196.592, moduleLatency: 5.08668
+```
+
+Interface throughputRate: 265.092是batch1 310p调优前的单卡吞吐率
+
+
+
+batch1的性能（执行aoe），benchmark工具在整个数据集上推理后生成result_aoe/perf_vision_batchsize_1_device_0.txt：
+
+```
+aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs1_aoe --input_shape "image:1,3,224,224" --log=error
+```
+
+```
+[e2e] throughputRate: 105.883, latency: 472219
+[data read] throughputRate: 107.982, moduleLatency: 9.26082
+[preprocess] throughputRate: 107.76, moduleLatency: 9.27989
+[infer] throughputRate: 106.271, Interface throughputRate: 465.954, moduleLatency: 7.71249
+[post] throughputRate: 106.27, moduleLatency: 9.40996
+```
+
+Interface throughputRate: 465.954是batch1 310p调优后的单卡吞吐率
+
+
+
+batch8的性能（没有执行aoe），benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
+
+```
+[e2e] throughputRate: 166.691, latency: 299956
+[data read] throughputRate: 167.683, moduleLatency: 5.96365
+[preprocess] throughputRate: 167.347, moduleLatency: 5.97561
+[infer] throughputRate: 167.444, Interface throughputRate: 322.615, moduleLatency: 4.05673
+[post] throughputRate: 20.93, moduleLatency: 47.7783
+```
+
+Interface throughputRate: 322.615是batch8 310p调优前的单卡吞吐率
+
+
+
+batch8的性能（执行aoe），benchmark工具在整个数据集上推理后生成result_aoe/perf_vision_batchsize_8_device_0.txt：
+
+```
+aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs8_aoe --input_shape "image:8,3,224,224" --log=error
+```
+
+```
+[e2e] throughputRate: 144.975, latency: 344886
+[data read] throughputRate: 145.776, moduleLatency: 6.85985
+[preprocess] throughputRate: 145.478, moduleLatency: 6.87388
+[infer] throughputRate: 145.664, Interface throughputRate: 1003.8, moduleLatency: 2.76154
+[post] throughputRate: 18.2077, moduleLatency: 54.922
+```
+
+Interface throughputRate: 1003.8是batch8 310p调优后的单卡吞吐率
+
+
+
+batch4性能（没有执行aoe）：
+
+```
+[e2e] throughputRate: 179.241, latency: 278954
+[data read] throughputRate: 180.657, moduleLatency: 5.53536
+[preprocess] throughputRate: 180.266, moduleLatency: 5.54736
+[infer] throughputRate: 180.403, Interface throughputRate: 318.947, moduleLatency: 4.10043
+[post] throughputRate: 45.1001, moduleLatency: 22.1729
+```
+
+batch4 310p调优前的单卡吞吐率：318.947fps
+
+batch4性能（执行aoe）：
+
+```
+aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs4_aoe --input_shape "image:4,3,224,224" --log=error
+```
+
+```
+[e2e] throughputRate: 168.435, latency: 296851
+[data read] throughputRate: 169.043, moduleLatency: 5.91564
+[preprocess] throughputRate: 168.686, moduleLatency: 5.92816
+[infer] throughputRate: 169.004, Interface throughputRate: 946.034, moduleLatency: 2.43772
+[post] throughputRate: 42.2506, moduleLatency: 23.6683
+```
+
+batch4 310p调优后的单卡吞吐率：946.034fps
+
+
+
+batch16性能（没有执行aoe）：
+
+```
+[e2e] throughputRate: 243.49, latency: 205347
+[data read] throughputRate: 259.265, moduleLatency: 3.85705
+[preprocess] throughputRate: 257.943, moduleLatency: 3.87683
+[infer] throughputRate: 245.795, Interface throughputRate: 407.177, moduleLatency: 3.29788
+[post] throughputRate: 15.3612, moduleLatency: 65.0991
+```
+
+batch16 310p调优前的单卡吞吐率：407.177fps
+
+
+
+batch16性能（执行aoe）：
+
+```
+aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs16_aoe --input_shape "image:16,3,224,224" --log=error
+```
+
+```
+[e2e] throughputRate: 116.841, latency: 427930
+[data read] throughputRate: 117.63, moduleLatency: 8.50121
+[preprocess] throughputRate: 117.471, moduleLatency: 8.51277
+[infer] throughputRate: 117.184, Interface throughputRate: 1001.67, moduleLatency: 3.9011
+[post] throughputRate: 7.32378, moduleLatency: 136.542
+```
+
+batch16 310p调优后的单卡吞吐率：1001.67fps
+
+
+
+batch32性能（没有执行aoe）：
+
+```
+[e2e] throughputRate: 214.139, latency: 233494
+[data read] throughputRate: 215.786, moduleLatency: 4.63422
+[preprocess] throughputRate: 214.711, moduleLatency: 4.65742
+[infer] throughputRate: 215.578, Interface throughputRate: 410.758, moduleLatency: 3.28237
+[post] throughputRate: 6.7386, moduleLatency: 148.399
+```
+
+batch32 310p调优前的单卡吞吐率：410.758fps
+
+
+
+batch32性能（执行aoe）：
+
+```
+aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs32_aoe --input_shape "image:32,3,224,224" --log=error
+```
+
+```
+[e2e] throughputRate: 99.8225, latency: 500889
+[data read] throughputRate: 102.585, moduleLatency: 9.74806
+[preprocess] throughputRate: 102.428, moduleLatency: 9.76292
+[infer] throughputRate: 100.129, Interface throughputRate: 895.306, moduleLatency: 4.0268
+[post] throughputRate: 3.12995, moduleLatency: 319.494
+```
+
+batch32 310p调优后的单卡吞吐率：895.306fps
+
+
+
+batch64性能（没有执行aoe）：
+
+```
+[e2e] throughputRate: 188.317, latency: 265509
+[data read] throughputRate: 193.949, moduleLatency: 5.15601
+[preprocess] throughputRate: 193.029, moduleLatency: 5.18057
+[infer] throughputRate: 189.853, Interface throughputRate: 275.251, moduleLatency: 4.45045
+[post] throughputRate: 2.96915, moduleLatency: 336.797
+```
+
+batch64 310p调优前的单卡吞吐率：275.251fps
+
+
+
+batch64性能（执行aoe）：
+
+```
+aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs64_aoe --input_shape "image:64,3,224,224" --log=error
+```
+
+```
+[e2e] throughputRate: 99.3163, latency: 503442
+[data read] throughputRate: 99.8186, moduleLatency: 10.0182
+[preprocess] throughputRate: 99.6759, moduleLatency: 10.0325
+[infer] throughputRate: 99.7346, Interface throughputRate: 823.149, moduleLatency: 4.09318
+[post] throughputRate: 1.55981, moduleLatency: 641.103
+```
+
+batch64 310p调优后的单卡吞吐率：823.149fps
+
+### 7.3 T4性能数据
+
+在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2
+
+batch1性能：
+
+```
+trtexec --onnx=wrn101_2_pth.onnx --fp16 --shapes=image:1x3x224x224 --threads
+```
+
+batch1 t4单卡吞吐率：244.615fps
+
+gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch。其中--fp16是算子精度，目前算子精度只测--fp16的。注意--shapes是onnx的输入节点名与shape，当onnx输入节点的batch为-1时，可以用同一个onnx文件测不同batch的性能，否则用固定batch的onnx测不同batch的性能不准
+
+batch64性能：
+
+```
+trtexec --onnx=wrn101_2_pth.onnx --fp16 --shapes=image:64x3x224x224 --threads
+```
+
+batch64 t4单卡吞吐率：572.999fps
+
+
+
+batch4 t4单卡吞吐率：421.312fps
+
+batch8 t4单卡吞吐率：482.41fps
+
+batch16 t4单卡吞吐率：538.522fps
+
+batch32 t4单卡吞吐率：570.786fps
+
+
+
+### 7.4 性能对比
+
+最优batch下，已经达到：
+
+1. 310p调优后的最优batch性能 >=1.2倍310最优batch性能; 
+
+2. 310p的最优batch性能 >=1.6倍T4最优batch性能。
+
