@@ -114,6 +114,7 @@ do
       --world-size=1 \
       --rank=0 \
       --device='npu' \
+      --gpu=${i}  \
       --epochs=${train_epochs} \
       --label-smoothing=0.1 \
       --batch-size=${batch_size} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
