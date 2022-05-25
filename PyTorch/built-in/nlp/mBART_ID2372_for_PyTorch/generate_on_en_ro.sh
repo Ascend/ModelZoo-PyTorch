@@ -1,4 +1,4 @@
-source env.sh
+source ./test/env_npu.sh
 DATA_PATH=path_of_data                     # fix it to your own train data path
 BPE_PATH=/path/sentence.bpe.model         # fix it to your own sentence.bpe.model path
 SCRIPTS=mosesdecoder/scripts              # fix it to your own mosesdecoder path
@@ -34,8 +34,8 @@ for f in $HYP $REF
 	perl $REPLACE_UNICODE_PUNCT | \
 	perl $NORM_PUNC -l ro | \
 	perl $REM_NON_PRINT_CHAR | \
-	python3 $NORMALIZE_ROMANIAN | \
-	python3 $REMOVE_DIACRITICS | \
+	python3.7 $NORMALIZE_ROMANIAN | \
+	python3.7 $REMOVE_DIACRITICS | \
 	perl $TOKENIZER -no-escape -threads 16 -a -l ro >"en_ro."$f
 	done
 sacrebleu -tok 'none' -s 'none' en_ro.ref < en_ro.hyp

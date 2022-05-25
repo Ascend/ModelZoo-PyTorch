@@ -11,6 +11,16 @@ export RANK_SIZE=8
 Network="mBART_for_PyTorch"
 #训练batch_size
 token_size=1024
+# 数据集路径,保持为空,不需要修改
+data_path=""
+
+# 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
+for para in $*
+do
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    fi
+done
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path  == "" ]];then
@@ -18,7 +28,8 @@ if [[ $data_path  == "" ]];then
 	exit 1
 fi
 
-# cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ]; then
@@ -51,7 +62,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 # 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
-DATA_PATH=train_data/en_ro
+DATA_PATH=train_data/en_ro            
 PRETRAIN=mbart.cc25/model.pt
 BPE_PATH=mbart.cc25/sentence.bpe.model
 model_dir=checkpoints/checkpoint_best.pt
@@ -84,7 +95,7 @@ do
 		then
 			let a=0+RANK_ID*24
 			let b=23+RANK_ID*24
-			taskset -c $a-$b fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
+			nohup taskset -c $a-$b fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
 							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 40000 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
@@ -100,9 +111,9 @@ do
 							  --restore-file $PRETRAIN \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
-							  --ddp-backend no_c10d > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
+							  --ddp-backend no_c10d > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	else
-		fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
+		nohup fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
 							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 40000 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
@@ -118,7 +129,7 @@ do
 							  --restore-file $PRETRAIN \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
-							  --ddp-backend no_c10d > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
+							  --ddp-backend no_c10d > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	fi
 done
 wait
@@ -127,7 +138,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 
-fairseq-generate $DATA_PATH \
+nohup fairseq-generate $DATA_PATH \
   --fp16 --path $model_dir --max-tokens 4096 \
   --task translation_from_pretrained_bart \
   --gen-subset test \
@@ -146,15 +157,15 @@ for f in $HYP $REF
 	perl $REPLACE_UNICODE_PUNCT | \
 	perl $NORM_PUNC -l ro | \
 	perl $REM_NON_PRINT_CHAR | \
-	python3 $NORMALIZE_ROMANIAN | \
-	python3 $REMOVE_DIACRITICS | \
+	python3.7 $NORMALIZE_ROMANIAN | \
+	python3.7 $REMOVE_DIACRITICS | \
 	perl $TOKENIZER -no-escape -threads 16 -a -l ro >"en_ro."$f
 	done
 sacrebleu -tok 'none' -s 'none' en_ro.ref < en_ro.hyp > res.log
 wait
 ASCEND_DEVICE_ID=0
 
-
+cp ${cur_path}/nohup.out ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
