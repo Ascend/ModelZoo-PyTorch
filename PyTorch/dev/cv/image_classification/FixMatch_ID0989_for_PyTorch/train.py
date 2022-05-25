@@ -187,6 +187,7 @@ def main():
         args.world_size = 1
         if os.environ["RANK_SIZE"]:
             args.n_gpu = int(os.environ["RANK_SIZE"])
+            rank_size = int(os.environ['RANK_SIZE'])
         else:
             args.n_gpu = torch.npu.device_count()
     else:
@@ -432,7 +433,8 @@ def train(args, labeled_trainloader, unlabeled_trainloader, test_loader,
             step_time=time.time() - end
             end = time.time()
             mask_probs.update(mask.mean().item())
-            fps = batch_size / step_time
+            rank_size = int(os.environ['RANK_SIZE'])
+            fps = batch_size * rank_size / step_time
 
             if not args.no_progress:
                 p_bar.set_description("Train Epoch: {epoch}/{epochs:4} Iter: {batch:4}/{iter:4} LR: {lr:.4f} Data: {data:.3f}s Batch: {bt:.3f}s T_Fps: {fps:.3f} T_Loss: {loss:.4f} T_Loss_x: {loss_x:.4f} T_Loss_u: {loss_u:.4f} Mask: {mask:.2f} ".format(
