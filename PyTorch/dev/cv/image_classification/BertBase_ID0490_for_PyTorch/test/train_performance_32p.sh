@@ -10,7 +10,7 @@ server_index=""
 fix_node_ip=""
 #集合通信参数,不需要修改
 
-export RANK_SIZE=16
+export RANK_SIZE=32
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
@@ -80,7 +80,7 @@ epochs=${6:-"1.0"}
 batch_size=${7:-"80"}
 learning_rate=${8:-"2e-4"}
 precision=${9:-"fp16"}
-num_npu=${10:-"16"}
+num_npu=${10:-"32"}
 seed=${11:-"1"}
 squad_dir=${12:-"`${data_path}/squad/v1.1`"}
 vocab_file=${13:-"${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt"}
@@ -185,7 +185,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 iter=`grep 'Epoch: ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "iter/s :" '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-FPS=`awk 'BEGIN{printf "%.2f\n",'${iter}'*16*'${batch_size}'}'`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${iter}'*32*'${batch_size}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 echo "E2E Training Duration sec : $e2e_time"
