@@ -99,6 +99,14 @@ python3.7 demo.py
 |    -     | 20.68 |   1    |    O1    | 1p Gpu |
 |  53.78   | 74.84 |   40   |    O1    | 8p Gpu |
 
+## 310P上的精度验证
+
+python3.8 tools/i3d_inference.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json -bs 1 --model i3d_bs1.om --device_id 0
+
+## 310P上的性能测试（benchmark工具）
+
+xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
+
 ## FAQ
 
 1.在安装decord库的时候apt_pak报错
