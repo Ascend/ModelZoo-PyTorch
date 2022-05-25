@@ -244,7 +244,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.amp:
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale_value,combine_grad=True)
-    #model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
+    if args.distributed:   
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     # optionally resume from a checkpoint
     if args.resume:
