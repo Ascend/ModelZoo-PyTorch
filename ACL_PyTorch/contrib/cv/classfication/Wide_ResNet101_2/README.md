@@ -74,7 +74,7 @@ onnx = 1.11.0
 ### 2.2 python第三方库
 
 ```
-numpy == 1.21.6
+numpy == 1.21.2
 Pillow == 8.3.2
 opencv-python == 4.5.3.56
 ```
