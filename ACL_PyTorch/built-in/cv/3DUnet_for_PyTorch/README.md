@@ -25,7 +25,7 @@ mv nnUNet nnUnet
 3. 编译环境，进入inference/loadgen目录，执行以下命令。
 
    ```
-   CFLAGS="-std=c++14 -O3" python3.7.5 setup.py develop
+   CFLAGS="-std=c++14 -O3" python3 setup.py develop
    ```
 
    若失败，则升级gcc版本
@@ -43,7 +43,7 @@ mv nnUNet nnUnet
    运行脚本导出onnx，onnx默认保存在build/model下，
 
 ```
-python3.7.5 unet_pytorch_to_onnx.py
+python3 unet_pytorch_to_onnx.py
 ```
 
 5. 运行脚本将onnx转为om模型，该框架和应用场景都是单batch，导出单batch om模型即可
@@ -58,6 +58,7 @@ bash atc.sh
 
    ```
    nnUNet_raw_data="./build/raw_data/nnUNet_raw_data"
+   maybe_mkdir_p(nnUNet_raw_data)
    ```
    
 2. 修改onnxruntime_SUT.py
@@ -85,6 +86,13 @@ bash atc.sh
    ```
    output = self.model(data[np.newaxis, ...])[0].squeeze(0).astype(np.float16)
    ```
+   
+   或者直接通过patch文件进行修改：
+   
+   ```
+   cd inference
+   patch -p1 < ../3DUnet.patch
+   ```
 
 3. 运行脚本
 
@@ -95,8 +103,8 @@ bash atc.sh
    ```
 
 ```
-python3.7.5 Task043_BraTS_2019.py
-python3.7.5 preprocess.py
+python3 Task043_BraTS_2019.py
+python3 preprocess.py
 ```
 
 3. 获取精度
@@ -104,14 +112,14 @@ python3.7.5 preprocess.py
    将acl_net.py拷贝到3d-unet目录下，运行source acl_env_x86.sh或source acl_env_arm.sh设置环境变量。运行如下命令获取精度：
 
    ```
-   python3.7.5 run.py --accuracy --backend onnxruntime --model ./build/model/3DUnet.om
+   python3 run.py --accuracy --backend onnxruntime --model ./build/model/3DUnet.om
    ```
 
 **评测结果：**   
 
-|    模型    |    官网pth精度    | 710/310离线推理精度 | gpu性能 | 710性能 | 310性能 |
-| :--------: | :---------------: | :-----------------: | :-----: | :-----: | ------- |
-| 3DUNet bs1 | mean tumor:0.8530 |  mean tumor:0.8530  | 0.5fps  | 4.4fps  | 0.78fps |
+|    模型    |    官网pth精度    | 710/310离线推理精度 | gpu性能 |         710性能         | 310性能 |
+| :--------: | :---------------: | :-----------------: | :-----: | :---------------------: | ------- |
+| 3DUNet bs1 | mean tumor:0.8530 |  mean tumor:0.8530  | 0.5fps  | ~~4.4fps~~<br />6.26fps | 0.78fps |
 
 
 
