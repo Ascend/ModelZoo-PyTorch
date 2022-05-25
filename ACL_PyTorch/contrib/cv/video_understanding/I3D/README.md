@@ -14,13 +14,17 @@
 
 无明确要求，以下环境仅供参考：
 
+CANN:5.1.RC1
+
+cuda:10.2
 ```shell
-onnx==1.9.0
-torch==1.5.0
-torchvision==0.6.0
-numpy==1.21.0
-opencv-python==4.5.3.56
-mmcv==1.3.9
+onnx==1.7.0
+torch==1.8.0
+torchvision==0.9.0
+numpy==1.22.3
+Pillow==7.2.0
+mmcv==1.4.0
+scipy==1.8.1
 ```
 
 ## 3、获取数据集
