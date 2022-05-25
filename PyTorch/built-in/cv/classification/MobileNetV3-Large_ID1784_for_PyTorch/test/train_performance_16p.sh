@@ -4,14 +4,16 @@
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
-export MASTER_ADDR=$(hostname -I |awk '{print $1}')
-export RANK_SIZE=8
+export RANK_SIZE=16
 export JOB_ID=10087
 RANK_ID_START=0
-#source env.sh
-RANK_SIZE=8
+
 # 数据集路径,保持为空,不需要修改
 data_path="/npu/traindata/imagenet_pytorch/"
+conf_path=""
+server_index=""
+fix_node_ip=""
+devicesnum=""
 
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL=3
@@ -22,7 +24,7 @@ Network="MobileNetV3-Large_ID1784_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
-batch_size=1024
+batch_size=2048
 #训练step
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
@@ -49,27 +51,51 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
+    elif [[ $para == --fix_node_ip* ]];then
+	    fix_node_ip=`echo ${para#*=}`
+	elif [[ $para == --devicesnum* ]];then
+	    devicesnum=`echo ${para#*=}`
+    elif [[ $para == --conf_path* ]];then
+        conf_path=`echo ${para#*=}`
+    elif [[ $para == --server_index* ]];then
+        server_index=`echo ${para#*=}`
     fi
 done
+
+one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+linux_num=`find $conf_path -name "server_*.info" |wc -l`
    
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
+export HCCL_IF_IP=$fix_node_ip
+export MASTER_ADDR=$one_node_ip
+export MASTER_PORT=29688
+export HCCL_WHITELIST_DISABLE=1
+device_num=${#devicesnum}
+devices_num=`awk 'BEGIN{printf "%.0f\n",'${device_num}'-1}'`
+
+NPUS=($(seq 0 $devices_num))
+rank_server=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${server_index}'}'`
+export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'}'`
  
 cd $cur_path
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 RANK_ID_START=0
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+rank=0
+for((RANK_ID=$RANK_ID_START;RANK_ID<8;RANK_ID++));
 do
     #设置环境变量，不需要修改
     echo "Device ID: $RANK_ID"
     export RANK_ID=$RANK_ID
     export ASCEND_DEVICE_ID=$RANK_ID
     ASCEND_DEVICE_ID=$RANK_ID
+    export RANK=`awk 'BEGIN{printf "%.0f\n",'${rank}'+'${rank_server}'}'`
 
     #创建DeviceID输出目录，不需要修改
     if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
@@ -98,7 +124,7 @@ do
         --world-size=1 \
 		--max_steps=64 \
         --dist-rank=0 > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
- 
+    let rank++
 done
 wait
 #训练结束时间，不需要修改
