@@ -130,6 +130,14 @@ xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_nl_dot_bs1.om -round=30 -batch_s
 
 需要先确定benchmark工具所在的绝对路径将上述命令中的xx替换。
 
+
+Ascend 310P: 需要om文件。执行脚本。
+
+```shell
+xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
+```
+需要先确定benchmark工具所在的绝对路径将上述命令中的xx替换。
+
 GPU：只需要onnx文件。执行脚本。
 
 ```shell
