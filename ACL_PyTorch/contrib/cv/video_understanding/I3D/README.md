@@ -17,6 +17,8 @@
 CANN:5.1.RC1
 
 cuda:10.2
+
+python:3.8.0
 ```shell
 onnx==1.7.0
 torch==1.8.0
