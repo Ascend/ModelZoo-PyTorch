@@ -98,17 +98,27 @@ mkdir checkpoints
 
 将pth文件转换为onnx文件：
 
-```shell
-bash i3d_pth2onnx.sh
+310:
+```
+python3.8 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
 ```
 
+310P:
+```
+python3.8 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
+```
 将onnx文件转换为om文件：
 
-```shell
-bash i3d_onnx2om.sh
-```
 
-得到i3d_nl_dot_bs1.om。模型转换完成。
+310:
+```shell
+bash i3d_atc.sh
+```
+310P:
+```shell
+bash i3d_atc.sh
+```
+得到i3d_bs1.om。模型转换完成。
 
 ## 6、离线推理
 
@@ -120,7 +130,15 @@ bash i3d_infer.sh
 
 即可获取top1_acc，top5_acc和mean_acc。
 
-## 7、性能检测
+
+
+## 7、精度统计
+|        | TOP1 | TOP5 | 
+| :----: | :---: | :----:|
+| 310精度  | 71.18% |   90.21%   |
+| 310P精度 |71.19% |   90.21%   |
+
+## 8、性能对比
 
 Ascend 310：需要om文件。执行脚本。
 
@@ -144,3 +162,11 @@ GPU：只需要onnx文件。执行脚本。
 trtexec --onnx=i3d_nl_dot.onnx --fp16 --shapes=0:1x30x3x32x256x256 --threads
 ```
 
+|  |  310  | 310P | 310P_aoe | t4 |310P_aoe/310|310P_aoe/t4|
+| :------: | :---: | :----: | :------: | :----: |:----: |:----: |
+|    bs1     | 3.03 |   4.45    |    6.15    | 3.38 |2.03|1.82|
+|    top1     | 0.7118 |       |    0.7119    |  |||
+|  top5   | 0.9021 |      |    0.9021    |  |||
+
+
+最优batch：310P大于310的1.2；310P大于t4的1.6倍，性能达标。
