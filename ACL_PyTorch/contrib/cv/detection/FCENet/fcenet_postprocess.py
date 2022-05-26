@@ -19,6 +19,9 @@ import numpy as np
 import os
 import sys
 import json
+import argparse
+from tqdm import tqdm
+import time
 np.set_printoptions(threshold=np.inf)
 
 from mmocr.models.builder import POSTPROCESSOR
@@ -70,7 +73,15 @@ def get_boundary_single(score_map, scale):
     
 
 if __name__ == '__main__':
-    prediction_file_path = './result/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_path',type=str,default='./result/')
+    parser.add_argument('--instance_file',type=str,default='./mmocr/data/icdar2015/instances_test.json')
+    parser.add_argument('--output_file',type=str,default='./boundary_results.txt')
+    args = parser.parse_args()
+    #print(args.input_path)
+    #print(args.output_file)
+    #prediction_file_path = './result/'
+    prediction_file_path = args.input_path
     for root, dirs, files in os.walk(prediction_file_path):
         prediction_file_path = os.path.join(prediction_file_path,dirs[0])
         break
@@ -85,7 +96,8 @@ if __name__ == '__main__':
                  container[i][j].append([])
                  
     img_idx = []
-    file_name = './mmocr/data/icdar2015/instances_test.json'
+    #file_name = './mmocr/data/icdar2015/instances_test.json'
+    file_name = args.instance_file
     img_name = []
 
     file_info = json.load(open(file_name, 'r'))
@@ -144,8 +156,12 @@ if __name__ == '__main__':
             elif l == 999680:
                 temp = temp.reshape(1,22,160,284)
                 container[flag][0][1] = temp
-                count += 1         
-                
+                count += 1     
+            print("\r", end="")
+            i = int(count/30)
+            print("process: {}%: ".format(i), ">" * (i // 2), end="")
+            sys.stdout.flush()
+            time.sleep(0.05)
     postprocess = FCEPostprocessor(fourier_degree = 5,
                      text_repr_type='poly',
                      num_reconstr_points=50,
@@ -160,5 +176,6 @@ if __name__ == '__main__':
         idx = img_idx[i]
         score_maps = container[idx]    
         result = get_boundary(scales, score_maps, scale_factor, rescale)
-        f=open("./boundary_results.txt","a+")
+        save_path = args.output_file
+        f=open(save_path,"a+")
         f.writelines(str(result)+'\n')
