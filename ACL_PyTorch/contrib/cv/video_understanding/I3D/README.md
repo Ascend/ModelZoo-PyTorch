@@ -16,8 +16,6 @@
 
 CANN:5.1.RC1
 
-cuda:10.2
-
 python:3.8.0
 ```shell
 onnx==1.7.0
@@ -102,28 +100,19 @@ mkdir checkpoints
 
 然后下载预训练模型：[i3d_nl_not_product_r50](https://github.com/open-mmlab/mmaction2/tree/master/configs/recognition/i3d)，在README里选择i3d_nl_dot_product_r50_32x2x1_100e_kinetics400_rgb配置，下载权重文件，并将该权重文件重命名为i3d_nl_dot_product_r50.pth，并保存在checkpoints目录下。
 
-将pth文件转换为onnx文件：
-
-310:
-```
-python3.8 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
-```
-
-310P:
-```
-python3.8 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
-```
-将onnx文件转换为om文件：
-
+将pth文件转换为om文件：
 
 310:
 ```shell
-bash i3d_atc.sh
+bash i3d_pth2pm.sh
 ```
+
 310P:
 ```shell
-bash i3d_atc.sh
+bash i3d_pth2pm.sh
 ```
+
+
 得到i3d_bs1.om。模型转换完成。
 
 ## 6、离线推理
@@ -146,21 +135,20 @@ bash i3d_infer.sh
 
 ## 8、性能对比
 
-Ascend 310：需要om文件。执行脚本。
+Ascend 310：需要om文件。执行命令
 
 ```shell
-xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_nl_dot_bs1.om -round=30 -batch_size=1
+./benchmark.x86_64 -device_id=0 -om_path=./i3d_nl_dot_bs1.om -round=30 -batch_size=1
 ```
 
-需要先确定benchmark工具所在的绝对路径将上述命令中的xx替换。
 
 
-Ascend 310P: 需要om文件。执行脚本。
+
+Ascend 310P: 需要om文件。执行命令
 
 ```shell
-xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
+./benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
 ```
-需要先确定benchmark工具所在的绝对路径将上述命令中的xx替换。
 
 GPU：只需要onnx文件。执行脚本。
 
