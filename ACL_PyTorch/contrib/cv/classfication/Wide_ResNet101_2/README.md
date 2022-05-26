@@ -138,12 +138,12 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 
-```python
-310：
+```shell
+#310:
 atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310
 
-310p:
-atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend7
+#310p:
+atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend710
 ```
 
 
@@ -555,9 +555,17 @@ batch16 t4单卡吞吐率：538.522fps
 
 batch32 t4单卡吞吐率：570.786fps
 
-
-
 ### 7.4 性能对比
+
+|                |   310   |  310p   | aoe后的310p |   T4    | 310p/310(aoe后) | 310p/T4(aoe后) |
+| :------------: | :-----: | :-----: | :---------: | :-----: | :-------------: | :------------: |
+|      bs1       | 516.072 | 265.092 |   465.954   | 244.615 |      0.903      |     1.905      |
+|      bs4       | 628.992 | 318.947 |   946.034   | 421.312 |      1.504      |     2.245      |
+|      bs8       | 629.736 | 322.615 |  1003.800   | 482.410 |      1.594      |     2.081      |
+|      bs16      | 683.860 | 407.177 |  1001.670   | 538.522 |      1.465      |     1.860      |
+|      bs32      | 591.376 | 410.758 |   895.306   | 570.786 |      1.785      |     1.569      |
+|      bs64      | 501.656 | 275.251 |   823.149   | 572.999 |      1.641      |     1.436      |
+| 最优batch_szie | 683.860 | 410.758 |  1003.800   | 572.999 |      1.468      |     1.752      |
 
 最优batch下，已经达到：
 
