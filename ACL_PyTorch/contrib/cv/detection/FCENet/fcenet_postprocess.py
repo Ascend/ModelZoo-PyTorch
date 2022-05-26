@@ -159,7 +159,7 @@ if __name__ == '__main__':
                 count += 1     
             print("\r", end="")
             i = int(count/30)
-            print("process: {}%: ".format(i), ">" * (i // 2), end="")
+            print("process: {}%: ".format(i), ">" * (i // 2), end="\n")
             sys.stdout.flush()
             time.sleep(0.05)
     postprocess = FCEPostprocessor(fourier_degree = 5,
