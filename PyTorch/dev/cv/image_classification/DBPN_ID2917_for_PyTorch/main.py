@@ -140,7 +140,10 @@ def train(epoch):
             scaled_loss.backward()
         optimizer.step()
         step_time = time.time() - start_time
-        FPS = opt.batchSize / step_time
+        if opt.distributed:
+            FPS = (opt.batchSize* opt.rank_size) / step_time
+        else:
+            FPS = opt.batchSize / step_time
         print("===> Epoch[{}]({}/{}): Loss: {:.4f} || Timer: {:.4f} sec, time/step(s):{:.4f}, FPS:{:.3f}".format(epoch, iteration, len(training_data_loader), loss.data, (t1 - t0),step_time,FPS))
 
     print("===> Epoch {} Complete: Avg. Loss: {:.4f}".format(epoch, epoch_loss / len(training_data_loader)))
