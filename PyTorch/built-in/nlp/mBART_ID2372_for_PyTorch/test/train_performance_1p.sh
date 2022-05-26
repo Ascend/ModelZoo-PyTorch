@@ -32,6 +32,17 @@ if [[ $1 == --help || $1 == --h ]];then
 	exit 1
 fi
 
+#进入训练脚本目录，需要模型审视修改
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
+
 for para in $*
 do
     if [[ $para == --data_path* ]];then
@@ -61,16 +72,7 @@ else
     "[Error] device id must be config"
     exit 1
 fi
-#进入训练脚本目录，需要模型审视修改
-cur_path=`pwd`
-cur_path_last_dirname=${cur_path##*/}
-if [ x"${cur_path_last_dirname}" == x"test" ];then
-    test_path_dir=${cur_path}
-    cd ..
-    cur_path=`pwd`
-else
-    test_path_dir=${cur_path}/test
-fi
+
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)

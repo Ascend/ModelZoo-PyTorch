@@ -29,6 +29,18 @@ if [[ $1 == --help || $1 == --h ]];then
 	exit 1
 fi
 
+
+# cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ]; then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
+
+
 for para in $*
 do
 	if [[ $para == --data_path* ]];then
@@ -47,17 +59,6 @@ done
 if [[ $data_path  == "" ]];then
 	echo "[Error] para \"data_path\" must be config"
 	exit 1
-fi
-##############执行训练##########
-# cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
-cur_path=`pwd`
-cur_path_last_dirname=${cur_path##*/}
-if [ x"${cur_path_last_dirname}" == x"test" ]; then
-    test_path_dir=${cur_path}
-    cd ..
-    cur_path=`pwd`
-else
-    test_path_dir=${cur_path}/test
 fi
 
 sed -i "s|checkpoint_utils.save_checkpoint(|#checkpoint_utils.save_checkpoint(|g" $cur_path/fairseq_cli/train.py
