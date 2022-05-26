@@ -155,6 +155,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 ASCEND_DEVICE_ID=0
+
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改

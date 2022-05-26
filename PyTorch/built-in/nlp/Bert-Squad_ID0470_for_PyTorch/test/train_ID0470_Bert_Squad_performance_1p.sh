@@ -12,10 +12,11 @@ else
     test_path_dir=${cur_path}/test
 fi
 
-
 #集合通信参数,不需要修改
-export RANK_SIZE=8
+export RANK_SIZE=1
+
 RANK_ID_START=0
+
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -31,7 +32,7 @@ batch_size=32
 #训练step
 train_steps=
 #学习率
-learning_rate=2e-4
+learning_rate=6e-5
 
 
 #维测参数，precision_mode需要模型审视修改
@@ -92,21 +93,17 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
-
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-
+ASCEND_DEVICE_ID=0
 #进入训练脚本目录，需要模型审视修改
-cd $cur_path
+cd $cur_path/
 mkdir -p results/SQUAD
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
-    export ASCEND_DEVICE_ID=$RANK_ID
     echo "Device ID: $ASCEND_DEVICE_ID"
     export RANK_ID=$RANK_ID
-
-
 
     #创建DeviceID输出目录，不需要修改
     if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
@@ -137,16 +134,14 @@ do
 		  --max_steps 100 \
 		  --use_npu \
 		  --loss_scale 4096 \
+		  --addr=127.0.0.1 \
 		  --vocab_file ${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt \
 		  --do_eval \
       --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
-		  --output_dir results/SQUAD \
+		  --output_dir ${cur_path}/results \
 		  --config_file bert_config.json \
-		  --num_npu 8 \
-		  --local_rank=$RANK_ID \
-		  --addr=127.0.0.1 \
 		  --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
@@ -154,13 +149,13 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-ASCEND_DEVICE_ID=0
+
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 step_time=`grep 'step_time : ' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk '{print$13}'| tail -n+3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
 
-FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
+FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
