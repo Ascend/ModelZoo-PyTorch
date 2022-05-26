@@ -109,7 +109,7 @@ bash i3d_pth2pm.sh
 
 310P:
 ```shell
-bash i3d_pth2pm.sh
+bash i3d_pth2om_310P.sh
 ```
 
 
@@ -138,7 +138,7 @@ bash i3d_infer.sh
 Ascend 310：需要om文件。执行命令
 
 ```shell
-./benchmark.x86_64 -device_id=0 -om_path=./i3d_nl_dot_bs1.om -round=30 -batch_size=1
+./benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
 ```
 
 
@@ -156,11 +156,11 @@ GPU：只需要onnx文件。执行脚本。
 trtexec --onnx=i3d_nl_dot.onnx --fp16 --shapes=0:1x30x3x32x256x256 --threads
 ```
 
-|  |  310  | 310P | 310P_aoe | t4 |310P_aoe/310|310P_aoe/t4|
-| :------: | :---: | :----: | :------: | :----: |:----: |:----: |
-|    bs1     | 3.03 |   4.45    |    6.15    | 3.38 |2.03|1.82|
-|    top1     | 0.7118 |       |    0.7119    |  |||
-|  top5   | 0.9021 |      |    0.9021    |  |||
+|          |  310   | 310P      | 310P_aoe        | t4         |310P_aoe/310|310P_aoe/t4|
+| :------: | :---:  | :----:    | :------:        | :----:     |:----:      |:----:     |
+|    bs1   | 3.03   |   4.45    |    6.15         | 3.38       |2.03        |1.82       |
+|    top1  | 0.7118 |           |    0.7119       |            |            |           |
+|    top5  | 0.9021 |           |    0.9021       |            |            |           |
 
 
 最优batch：310P大于310的1.2；310P大于t4的1.6倍，性能达标。
