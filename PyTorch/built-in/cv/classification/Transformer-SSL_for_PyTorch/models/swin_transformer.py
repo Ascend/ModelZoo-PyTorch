@@ -502,24 +502,6 @@ class PatchMerging(nn.Module):
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
         self.norm = norm_layer(4 * dim)
 
-        """
-        Using depth-wise conv2d to merge patches for high performance.
-        """
-        C_list = [96, 192, 384]
-        self.kernel_dict = {}
-        self.kernel_device = torch.device('cpu')
-        for c in C_list:
-            kernel0 = torch.FloatTensor([[1, 0], [0, 0]]).unsqueeze(0).unsqueeze(0).repeat(c, 1, 1, 1)
-            kernel1 = torch.FloatTensor([[0, 0], [1, 0]]).unsqueeze(0).unsqueeze(0).repeat(c, 1, 1, 1)
-            kernel2 = torch.FloatTensor([[0, 1], [0, 0]]).unsqueeze(0).unsqueeze(0).repeat(c, 1, 1, 1)
-            kernel3 = torch.FloatTensor([[0, 0], [0, 1]]).unsqueeze(0).unsqueeze(0).repeat(c, 1, 1, 1)
-            kernel = torch.cat([kernel0, kernel1, kernel2, kernel3], 0)
-            self.kernel_dict[c] = kernel
-
-    def cast_kernel_device(self, device):
-        for k, v in self.kernel_dict.items():
-            self.kernel_dict[k] = v.to(device).npu_format_cast(4) # cast weight
-
     @amp.half_function
     def forward(self, x):
         """
@@ -532,22 +514,15 @@ class PatchMerging(nn.Module):
         # x3 = x[:, 1::2, 1::2, :]  # B H/2 W/2 C
         # x = torch.cat([x0, x1, x2, x3], -1)  # B H/2 W/2 4*C
         """
-        if not self.kernel_device == x.device:
-            self.cast_kernel_device(x.device)
-            self.kernel_device = x.device
 
         H, W = self.input_resolution
         B, L, C = x.shape
         assert L == H * W, "input feature has wrong size"
         assert H % 2 == 0 and W % 2 == 0, f"x size ({H}*{W}) are not even."
 
-        x = x.view(B, H, W, C)
-
-        # depth-conv2d version
-        x = x.permute(0, 3, 1, 2).repeat(1, 4, 1, 1) # B 4*C H W
-        kernel = self.kernel_dict[C]
-        x = torch.nn.functional.conv2d(x, kernel, stride=2, groups=4*C) # B 4*C H/2 W/2
-        x = x.permute(0, 2, 3, 1).reshape(B, int(H * W / 4), 4 * C)
+        x = x.reshape(B, int(H / 2), 2, int(W / 2), 2, C)
+        x = x.permute(0, 1, 3, 4, 2, 5)
+        x = x.reshape(B, int(H * W / 4), C * 4)
 
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
             x = x.npu_format_cast(2).npu_format_cast(29).contiguous()
