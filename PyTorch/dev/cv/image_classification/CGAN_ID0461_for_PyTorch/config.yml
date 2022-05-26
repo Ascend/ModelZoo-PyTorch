@@ -1,0 +1,48 @@
+reproduce: True
+seed: 999
+data_path: "./celeba/"
+
+#output image dimensions
+img_h: 64 
+img_w: 64
+img_c: 3
+
+#input parameters
+input_normalise_mean: 0.5
+input_normalise_std: 0.5
+shuffle: True
+num_workers: 64
+
+#Generator Parameters in Generator.py (as per the paper)
+len_z: 100
+g_feature_size: 64
+g_layers: 4 #number of transpose convolutions
+g_stride: 2
+g_kernel_size: 4
+g_input_pad: 1 #needed to make the direct convolutions work
+g_output_pad: 0 #needed to get the correct output dims because stride > 1 
+
+#discriminator params
+leaky_ReLU_slope: 0.2
+
+# training related
+ngpu: 1
+
+#need to find a way to add initialization function params here
+
+#optimizer
+lr: 0.0002
+beta1: 0.5
+beta2: 0.999 #default
+
+#training parameters
+################################ modify by npu ##########################################
+#epochs: 3         
+epochs: 3
+################################ modify by npu ##########################################
+batch_size: 128
+discriminator_steps: 1
+generator_steps: 1
+
+load_params: False
+save_params: True
