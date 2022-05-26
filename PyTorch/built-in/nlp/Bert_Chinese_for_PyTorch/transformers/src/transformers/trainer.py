@@ -2514,7 +2514,17 @@ class Trainer:
             losses = nested_numpify(losses_host)
             all_losses = losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
         if preds_host:
-            preds_host = torch.cat(preds_host, dim=0)
+            if isinstance(preds_host[0], (list, tuple)):
+                num_logits = len(preds_host[0])
+                tmp_pred_host = []
+                for nl in range(num_logits):
+                    tmp = []
+                    for preds in preds_host:
+                        tmp.append(preds[nl])
+                    tmp_pred_host.append(torch.cat(tmp, dim=0))
+                preds_host = tmp_pred_host
+            else:
+                preds_host = torch.cat(preds_host, dim=0)
             logits = nested_numpify(preds_host)
             all_preds = logits if all_preds is None else nested_concat(all_preds, logits, padding_index=-100)
         if labels_host:
