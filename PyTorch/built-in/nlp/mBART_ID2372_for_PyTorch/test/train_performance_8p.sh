@@ -21,6 +21,10 @@ token_size=1024
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 learning_rate=3e-05
+
+# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
+PRETRAIN=./train_data/mbart.cc25/model.pt
+
 #参数配置
 data_path=""
 
@@ -43,7 +47,7 @@ fi
 
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
+    if [[ $para == --data_path* ]];then
 		data_path=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
@@ -51,8 +55,10 @@ do
         #export PATH=/usr/local/python3.7/bin:/home/anaconda3/bin:$PATH
         #source activate py8
         source activate $conda_name
-        
-	fi
+        pip3.7 install --editable ./ 
+    elif [[ $para == --ckpt* ]];then
+        PRETRAIN=`echo ${para#*=}`
+fi
 done
 
 #校验是否传入data_path,不需要修改
@@ -73,7 +79,6 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-pip3.7 install --editable ./ 
 ##################启动训练脚本##################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -111,7 +116,7 @@ do
 							  --max-tokens 1024 --update-freq 2 \
 							  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
 							  --seed 222 --log-format simple --log-interval 2 \
-							  --restore-file $data_path/mbart.cc25/model.pt \
+							  --restore-file ${PRETRAIN} \
                               --max-epoch $train_epochs \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
@@ -130,7 +135,7 @@ do
 							  --max-tokens 1024 --update-freq 2 \
 							  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
 							  --seed 222 --log-format simple --log-interval 2 \
-							  --restore-file $data_path/mbart.cc25/model.pt \
+							  --restore-file ${PRETRAIN} \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
                               --max-epoch $train_epochs \

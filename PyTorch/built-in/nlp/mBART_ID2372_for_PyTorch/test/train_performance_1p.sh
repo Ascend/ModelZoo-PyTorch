@@ -24,6 +24,9 @@ train_epochs=1
 #学习率
 learning_rate=3e-05
 
+# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
+PRETRAIN=./train_data/mbart.cc25/model.pt
+
 #参数配置
 data_path=""
 
@@ -53,8 +56,10 @@ do
         #export PATH=/usr/local/python3.7/bin:/home/anaconda3/bin:$PATH
         #source activate py8
         source activate $conda_name
-        
-	fi
+        pip3.7 install --editable ./ 
+    elif [[ $para == --ckpt* ]];then
+        PRETRAIN=`echo ${para#*=}`
+fi
 done
 
 #校验是否传入data_path,不需要修改
@@ -94,7 +99,6 @@ fi
 wait
 
 
-pip3.7 install --editable ./ 
 start=$(date +%s)
 nohup python3.7 ${cur_path}/train.py $data_path/ \
   --distributed-world-size 1 --npu --npu-id $ASCEND_DEVICE_ID --fp16 --encoder-normalize-before --decoder-normalize-before \
@@ -108,7 +112,7 @@ nohup python3.7 ${cur_path}/train.py $data_path/ \
   --max-tokens 1024 --update-freq 2 \
   --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
   --seed 222 --log-format simple --log-interval 2 \
-  --restore-file $data_path/mbart.cc25/model.pt \
+  --restore-file ${PRETRAIN} \
   --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
   --langs $langs \
   --max-epoch $train_epochs \
@@ -116,7 +120,7 @@ nohup python3.7 ${cur_path}/train.py $data_path/ \
   --ddp-backend no_c10d > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
-e2etime=$(( $end - $start ))
+e2e_time=$(( $end - $start ))
 
 sed -i "s|#checkpoint_utils.save_checkpoint(|checkpoint_utils.save_checkpoint(|g" $cur_path/fairseq_cli/train.py
 #结果打印，不需要修改

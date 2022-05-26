@@ -107,41 +107,24 @@ fairseq-preprocess \
   --workers 70
 
 ```
-# 性能测试
-```单卡训练流程：
-1.安装环境
-2.bash ./test/train_performance_1p.sh --data_path=/train_data/en_ro（数据集路径为当前磁盘路径，写到en_ro）
-```
-```多卡训练流程：
-1.安装环境
-2.bash ./test/train_performance_8p.sh --data_path=/train_data/en_ro（数据集路径为当前磁盘路径，写到en_ro）
-```
-# 在数据集上进行fine-tune
-```bash
-1. 修改./test/train_full_8p.sh中DATA_PATH为数据集的路径（train_data/en_ro 或train_data/en_de）,PRETRAIN为model.pt的路径，BPE_PATH为sentence.bpe.model路径；
- [若需要训练en_de数据集，则需要将train_full_8p.sh中dropout的参数设置为0.1,total-num-update与max-update设置为300000，target-lang设置为de_DE]
-2. 执行 bash ./test/train_full_8p.sh --data_path=DATA_PATH
-```
-# 在数据集上进行评估
 
-1.下载依赖评估包
+# 模型训练
+单卡训练
+    执行 bash ./test/train_performance_1p.sh --data_path=./train_data/en_ro   
+[ data_path为数据集路径，若训练en_ro数据集，路径写到en_ro；若训练en_de数据集，路径写到en_de ，同时需要将train_performance_1p.sh中dropout的参数设置为0.1，target-lang设置为de_DE ]
+ [ 若传参 --ckpt，则ckpt 为 model.pt的路径 ]
+```
 
+多卡训练
+1 、下载依赖评估包
 ```bash  
 git clone https://github.com/moses-smt/mosesdecoder.git
 git clone https://github.com/rsennrich/wmt16-scripts.git
 pip3.7 install sacrebleu==1.5.1
 ```
-
-2.执行评估脚本
-
-```bash
-验证en_ro精度
-1. 修改 generate_on_en_ro.sh中DATA_PATH为数据集的路径，BPE_PATH为sentence.bpe.model的路径，SCRIPTS为mosesdecoder/scripts的路径，WMT16_SCRIPTS为wmt16-scripts的路径
-2. 执行 bash generate_on_en_ro.sh  checkpoints/checkpoint_best.pt 验证en_ro的训练精度
-验证en_de精度
-1.  修改 generate_on_en_de.sh中DATA_PATH为数据集的路径，BPE_PATH为sentence.bpe.model的路径，DETOKENIZER为mosesdecoder/scripts/tokenizer/detokenizer.perl的路径
-2.  执行 bash generate_on_en_de.sh  checkpoints/checkpoint_best.pt 验证en_de的训练精度
-```
+2 、执行 bash ./test/train_full_8p.sh --data_path=./train_data/en_ro  
+[ data_path为数据集路径，若训练en_ro数据集，路径写到en_ro；若训练en_de数据集，路径写到en_de ，同时需要将train_full_8p.sh中dropout的参数设置为0.1，total-num-update与max-update设置为300000，target-lang设置为de_DE ]
+[ 若传参 --ckpt，则ckpt 为 model.pt的路径 ]
 
 # Docker容器训练
 

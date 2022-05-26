@@ -14,11 +14,20 @@ token_size=1024
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
+# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练       
+PRETRAIN=./train_data/mbart.cc25/model.pt
+BPE_PATH=./train_data/mbart.cc25/sentence.bpe.model
+model_dir=checkpoints/checkpoint_best.pt
+SCRIPTS=mosesdecoder/scripts
+WMT16_SCRIPTS=wmt16-scripts
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --ckpt* ]];then
+        PRETRAIN=`echo ${para#*=}`
     fi
 done
 
@@ -61,13 +70,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
-DATA_PATH=train_data/en_ro            
-PRETRAIN=mbart.cc25/model.pt
-BPE_PATH=mbart.cc25/sentence.bpe.model
-model_dir=checkpoints/checkpoint_best.pt
-SCRIPTS=mosesdecoder/scripts
-WMT16_SCRIPTS=wmt16-scripts
 
 REPLACE_UNICODE_PUNCT=$SCRIPTS/tokenizer/replace-unicode-punctuation.perl
 TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
@@ -95,7 +97,7 @@ do
 		then
 			let a=0+RANK_ID*24
 			let b=23+RANK_ID*24
-			nohup taskset -c $a-$b fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
+			nohup taskset -c $a-$b fairseq-train $data_path --fp16 --distributed-world-size 8 --npu \
 							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 40000 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
@@ -113,7 +115,7 @@ do
 							  --langs $langs \
 							  --ddp-backend no_c10d > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	else
-		nohup fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
+		nohup fairseq-train $data_path --fp16 --distributed-world-size 8 --npu \
 							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 40000 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
@@ -165,7 +167,7 @@ sacrebleu -tok 'none' -s 'none' en_ro.ref < en_ro.hyp > res.log
 wait
 ASCEND_DEVICE_ID=0
 
-cp ${cur_path}/nohup.out ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
