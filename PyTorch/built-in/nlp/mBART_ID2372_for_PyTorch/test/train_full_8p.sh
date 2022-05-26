@@ -173,8 +173,11 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 WPS=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "wps=" '{print $NF}'|awk -F "wps" '{print $1}'|awk -F "," '{print $1}'|awk 'END {print}'`
 train_wall=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk 'NR==1{min=$1;next}{min=min<$1?min:$1}END{print min}'`
+TRAIN_WALL=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk -F "," '{print $1}'|tail -n  20|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $WPS"
+echo "train_wall : $TRAIN_WALL"
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep 'version.1.5.1 = ' res.log |awk '{print $3}'`

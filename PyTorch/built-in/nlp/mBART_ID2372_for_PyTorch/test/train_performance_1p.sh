@@ -128,8 +128,11 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 TrainingTime=0
 FPS=`grep -rn train_inner $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F "wps=" '{print$2}' | awk -F "," '{print$1}' | tail -n+6 | awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
+TRAIN_WALL=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk -F "," '{print $1}'|tail -n  20|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+echo "train_wall : $TRAIN_WALL"
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*1000/'${FPS}'}'`
 #输出训练精度,需要模型审视修改
 #打印，不需要修改
