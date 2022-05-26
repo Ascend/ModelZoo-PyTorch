@@ -97,6 +97,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+ASCEND_DEVICE_ID=0
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -121,7 +122,6 @@ else
 fi
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
@@ -195,7 +195,7 @@ do
             --amp 2 \
             --seed 1 \
             --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let RANK ++
+    let RANK++
     else
         nohup python3.7 ${cur_path}/train.py --exp_name xlm_en_zh \
             --dump_path ./dumped        \
