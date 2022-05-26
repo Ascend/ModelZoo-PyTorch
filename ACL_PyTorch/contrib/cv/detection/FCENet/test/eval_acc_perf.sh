@@ -21,7 +21,10 @@ rm -rf result
 --outfmt TXT
 echo "start postprocess..."
 rm boundary_results.txt
-python fcenet_postprocess.py
+python fcenet_postprocess.py \
+--input_path=./result \
+--instance_file=./mmocr/data/icdar2015/instances_test.json \
+--output_file=./boundary_results.txt
 echo "start evaluate metric..."
 python eval.py \
 ./mmocr/configs/textdet/fcenet/fcenet_r50_fpn_1500e_icdar2015.py \
