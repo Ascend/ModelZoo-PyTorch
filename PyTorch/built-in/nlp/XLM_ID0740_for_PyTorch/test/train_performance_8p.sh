@@ -226,6 +226,7 @@ done
 
 wait
 
+ASCEND_DEVICE_ID=0
 
 
 #恢复参数
