@@ -104,7 +104,7 @@ mkdir checkpoints
 
 310:
 ```shell
-bash i3d_pth2pm.sh
+bash i3d_pth2om.sh
 ```
 
 310P:
