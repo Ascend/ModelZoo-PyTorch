@@ -179,6 +179,8 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./wrn101_2_prep_bin.info 224 22
 ```
 第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
 
+
+
 ## 5 离线推理
 
 -   **[benchmark工具概述](#51-benchmark工具概述)**  
@@ -202,6 +204,8 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=wrn101_2_bs16.om -input_text_path=./wrn101_2_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 ```
 输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
+
+
 
 ## 6 精度对比
 
@@ -245,6 +249,8 @@ bs16            78.85      94.29
  **精度调试：**  
 
 >没有遇到精度不达标的问题，故不需要进行精度调试
+
+
 
 ## 7 性能对比
 
