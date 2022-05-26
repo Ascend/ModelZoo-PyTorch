@@ -84,7 +84,7 @@ ActualFPS=${FPS}
 grep Iteration $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log |awk -F 'Gen Loss:' '{print $2}'|awk  -F ',' '{print $1}' >> $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
-ActualLoss=`awk 'END {print $1}' $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`tail -3|awk '{sum+=$1} END {print sum/NR}'  $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep "accuracy:" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 'END {print $8}'`
