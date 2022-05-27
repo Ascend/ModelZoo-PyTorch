@@ -354,12 +354,12 @@ class DeformConv(nn.Module):
 
     def forward(self, x):
         
-        x = x.cuda().float()
-        x = x.to(torch.float32).cuda()
+        x = x.float()
+        x = x.to(torch.float32)
         #print(x.type())
         x = self.conv(x)
         #print(x.shape)
-        x = x.to(torch.float32).cuda()
+        x = x.to(torch.float32)
         #import pdb;pdb.set_trace()
         x = self.actf(x)
         return x

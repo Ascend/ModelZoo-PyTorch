@@ -16,7 +16,7 @@ from __future__ import print_function
 # limitations under the License.
 
 import sys
-CENTERNET_PATH = '../src'
+CENTERNET_PATH = './CenterNet/src'
 sys.path.insert(0, CENTERNET_PATH)
 MODEL_PATH = '../models/ctdet_coco_dla_2x.pth'
 import os
@@ -31,9 +31,10 @@ from datasets.dataset_factory import get_dataset
 
 
 def convert():
-    #device = torch.device("cpu")
-    device = torch.device("cuda")
-    torch.set_default_tensor_type(torch.cuda.FloatTensor)
+    device = torch.device("cpu")
+    torch.set_default_tensor_type(torch.FloatTensor)
+    # device = torch.device("cuda")
+    # torch.set_default_tensor_type(torch.cuda.FloatTensor)
     TASK = 'ctdet' 
     opt = opts().parse('{} --load_model {}'.format(TASK, MODEL_PATH).split(' '))
     Dataset = get_dataset(opt.dataset, opt.task)
