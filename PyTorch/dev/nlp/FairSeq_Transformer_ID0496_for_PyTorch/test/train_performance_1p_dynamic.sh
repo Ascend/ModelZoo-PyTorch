@@ -22,7 +22,7 @@ data_path=""
 #网络名称，同目录名称
 Network="FairSeq_Transformer_ID0496_for_PyTorch"
 #训练epoch
-train_epochs=4
+train_epochs=2
 #训练batch_size
 batch_size=32
 #训练step
