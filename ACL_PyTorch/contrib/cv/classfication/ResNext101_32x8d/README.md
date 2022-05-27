@@ -50,7 +50,7 @@ branch:master commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 ### 2.1 深度学习框架
 
 ```
-CANN 5.0.2
+CANN 5.1.RC1
 
 torch == 1.5.1
 torchvision == 0.6.1
