@@ -26,7 +26,7 @@ train_epochs=1
 learning_rate=3e-05
 
 # 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
-PRETRAIN=./train_data/mbart.cc25/model.pt
+PRETRAIN=./mbart.cc25/model.pt
 
 #参数配置
 data_path=""

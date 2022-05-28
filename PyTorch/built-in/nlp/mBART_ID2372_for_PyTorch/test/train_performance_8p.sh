@@ -23,7 +23,7 @@ start_time=$(date +%s)
 learning_rate=3e-05
 
 # 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
-PRETRAIN=./train_data/mbart.cc25/model.pt
+PRETRAIN=./mbart.cc25/model.pt
 
 #参数配置
 data_path=""
@@ -58,6 +58,7 @@ do
         pip3.7 install --editable ./ 
     elif [[ $para == --ckpt* ]];then
         PRETRAIN=`echo ${para#*=}`
+
 fi
 done
 

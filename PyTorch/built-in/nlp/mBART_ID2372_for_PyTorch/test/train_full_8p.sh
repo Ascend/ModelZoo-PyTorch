@@ -15,8 +15,8 @@ token_size=1024
 data_path=""
 
 # 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练       
-PRETRAIN=./train_data/mbart.cc25/model.pt
-BPE_PATH=./train_data/mbart.cc25/sentence.bpe.model
+PRETRAIN=./mbart.cc25/model.pt
+BPE_PATH=./mbart.cc25/sentence.bpe.model
 model_dir=checkpoints/checkpoint_best.pt
 SCRIPTS=mosesdecoder/scripts
 WMT16_SCRIPTS=wmt16-scripts
@@ -28,6 +28,7 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --ckpt* ]];then
         PRETRAIN=`echo ${para#*=}`
+        BPE_PATH=${PRETRAIN%/*}/sentence.bpe.model
     fi
 done
 
@@ -140,7 +141,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 
-nohup fairseq-generate $DATA_PATH \
+nohup fairseq-generate $data_path \
   --fp16 --path $model_dir --max-tokens 4096 \
   --task translation_from_pretrained_bart \
   --gen-subset test \
