@@ -27,6 +27,8 @@ import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
 from skimage.metrics import peak_signal_noise_ratio
 
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.npu
 import random
 import numpy as np
@@ -352,7 +354,7 @@ def parse_args():
     parser.add_argument('--pretrained_weight_path', default='', help='pretrained weight path')
     parser.add_argument('--prof', default=False, action='store_true',
                         help='use profiling to evaluate the performance of pretrainedmodels')
-    parser.add_argument('--prof_path', default='', help='prof path')
+    parser.add_argument('--prof_path', default="", help='prof path')
     parser.add_argument('--warm_up', dest='warm_up', action='store_true', help='warm up')
     parser.add_argument('--warm_up_epochs', default=10, type=int, help='warm up epochs')
 

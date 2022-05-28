@@ -20,14 +20,12 @@ To train a model, run `train.py` with the desired model architecture and the pat
 
 ```bash
 # training 1p performance
-# 备注： 目标性能4196.8829；验收性能4060.2765
 bash ./test/train_performance_1p.sh --data_path=real_data_path
 
 # finetuning 1p 
 bash test/train_finetune_1p.sh --data_path=real_data_path --pre_train_path=real_pre_train_model_path
 
 # training 8p accuracy
-# 备注： 目标精度36.65；验收精度36.60
 bash ./test/train_full_8p.sh --data_path=real_data_path
 
 # training 8p performance
@@ -47,9 +45,11 @@ Log path:
     test/output/0/Srcnn_x2_bs256_8p_acc.log   # 8p training accuracy result log
 
 ## Srcnn_2 training result
+使用动态lossscale会溢出
 
-| PSNR  |    FPS     | Npu_nums | Epochs | AMP_Type |
-| :---: | :--------: | :------: | :----: | :------: |
-| 36.52 | 4060.2765  |    1     |  400   |    O1    |
-| 36.60 | 12944.0177 |    8     |  400   |    O1    |
-
+|   名称  | 精度(PSNR)| 性能(FPS) | 
+| :---:  | :----:| :--------: | 
+| GPU-1P |   -   | 4060.2765  |
+| GPU-8P |   -   | 12944.0177 |
+| NPU-1P |   -   | 5736.3541  |
+| NPU-8P | 36.62 | 13953.0316 | 
