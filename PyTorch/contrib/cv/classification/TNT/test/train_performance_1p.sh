@@ -100,6 +100,7 @@ nohup python3.7 train.py ${data_path} \
 	--reprob 0.25 \
 	--amp \
 	--lr 1e-3 \
+	--performance_step 1000 \
 	--weight-decay .05 \
 	--drop 0 \
 	--drop-path .1 \
