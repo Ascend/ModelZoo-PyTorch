@@ -53,6 +53,8 @@
 branch:master
 commit id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
+
+
 ## 2 环境说明
 
 -   **[深度学习框架](#21-深度学习框架)**  
@@ -81,6 +83,8 @@ opencv-python == 4.5.3.56
 >   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
 >
 >   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+
+
 
 ## 3 模型转换
 
@@ -252,7 +256,7 @@ bs16            78.85      94.29
 
 ## 7 性能对比
 
--   **[310npu性能数据](#71-310npu性能数据)**  
+-   **[310 npu性能数据](#71-310npu性能数据)**  
 -   **[310p npu性能数据](#72-310p npu性能数据)**  
 -   **[T4性能数据](#73-T4性能数据)**  
 -   **[性能对比](#73-性能对比)**  
@@ -526,6 +530,8 @@ aoe --framewor=5 --model=wrn101_2_pth.onnx --job_type=2 --output=wrn101_2_bs64_a
 ```
 
 batch64 310p调优后的单卡吞吐率：823.149fps
+
+
 
 ### 7.3 T4性能数据
 
