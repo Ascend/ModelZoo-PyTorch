@@ -29,7 +29,7 @@ from models.data_parallel import DataParallel
 from logger import Logger
 from datasets.dataset_factory import get_dataset
 
-
+# pth转onnx
 def convert():
     device = torch.device("cpu")
     torch.set_default_tensor_type(torch.FloatTensor)
@@ -52,4 +52,5 @@ def convert():
 if __name__ == "__main__":
     input_file = sys.argv[1]
     output_file = sys.argv[2]
+    # pth转onnx
     convert()
