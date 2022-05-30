@@ -6,4 +6,4 @@ export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
 export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
 export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
-export ASCEND_SLOG_PRINT_TO_STDOUT=1
+# export ASCEND_SLOG_PRINT_TO_STDOUT=1
