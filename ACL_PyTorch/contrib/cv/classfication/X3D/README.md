@@ -1,8 +1,22 @@
-# X3D模型PyTorch离线推理指导
+# X3D模型ONNX离线推理指导
 
 ## 1 环境准备
 
-1.安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装
+1.安装必要的依赖，测试的base环境可能已经安装其中的一些不同版本的库了，故手动测试时需要使用conda创建一个虚拟环境，并使用该命令安装基础依赖
+
+CANN版本为5.1.RC1
+
+| 依赖名称    |  版本  |
+| ----------- | :----: |
+| onnx        | 1.9.0  |
+| torch       | 1.8.0  |
+| torchvision | 0.9.0  |
+| numpy       | 1.20.3 |
+| pillow      | 8.2.0  |
+
+```
+conda create -n 环境名 python=3.8
+```
 
 ```
 pip3 install -r requirements.txt
@@ -60,11 +74,11 @@ download.sh val_link.list
 bash test/pth2om.sh  
 bash test/eval_acc_pref.sh --datasets_path=X3D/Kinetics-400
 ```
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```
-bash test710/pth2om.sh
-bash test710/eval_acc_perf.sh --datasets_path=X3D/Kinetics-400
+bash test310P/pth2om.sh
+bash test310P/eval_acc_perf.sh --datasets_path=X3D/Kinetics-400
 ```
 
 备注：存在fp16算子溢出，精度不达标，因此atc模型转换需要添加--precision_mode allow_mix_precision
