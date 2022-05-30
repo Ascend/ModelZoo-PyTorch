@@ -28,13 +28,11 @@
 
    将benchmark.x86_64放到当前目录
 
-6. TransposeD算子性能优化
-
-   由于om模型中存在低性能的TransposeD算子，通过添加白名单使用高性能的Transpose算子。/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/opp/op_impl/built-in/ai_core/tbe/impl/dynamic/transpose.py里添加shape白名单：[1, 64, 2, 2, 114, 114]
+   
 
 ### 2 离线推理
 
-310上执行，执行时使npu-smi info查看设备状态，确保device空闲
+710上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```
 bash test/pth2om.sh 
@@ -45,8 +43,9 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets
 
 **评测结果：**
 
-|  模型   | 官网pth精度 | 310离线推理精度 |  基准性能  |  310性能  |
-| :-----: | :---------: | :-------------: | :--------: | :-------: |
-| RDN bs1 | PSNR：38.18 |   PSNR：38.27   | fps:25.393 | fps:29.577 |
+|  模型   | 官网pth精度 | 310离线推理精度 | 710离线推理精度 |  基准性能  |  310性能   |  710性能   |
+| :-----: | :---------: | :-------------: | :-------------: | :--------: | :--------: | :--------: |
+| RDN bs1 | PSNR：38.18 |   PSNR：38.27   |   PSNR：38.27   | fps:22.267 | fps:29.653 | fps:49.469 |
 
 - 因Set5数据集只有5张图片，因此仅使用了bs1进行评测。
+
