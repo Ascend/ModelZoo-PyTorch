@@ -30,6 +30,9 @@ from logger import Logger
 from datasets.dataset_factory import get_dataset
 
 def convert():
+    """
+    pth->onnx
+    """
     device = torch.device("cpu")
     torch.set_default_tensor_type(torch.FloatTensor)
     TASK = 'ctdet' 
