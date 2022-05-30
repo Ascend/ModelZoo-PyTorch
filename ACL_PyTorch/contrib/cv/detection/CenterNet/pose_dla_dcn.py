@@ -343,6 +343,9 @@ def fill_up_weights(up):
 
 
 class DeformConv(nn.Module):
+    """
+    DeformConv
+    """
     def __init__(self, chi, cho):
         super(DeformConv, self).__init__()
         self.actf = nn.Sequential(
