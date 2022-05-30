@@ -1,7 +1,3 @@
-# Author : zyc
-# Date   : 2022/5/16/15:26
-# Func   : Correction of onnx model
-
 import numpy as np
 import onnx
 import argparse
