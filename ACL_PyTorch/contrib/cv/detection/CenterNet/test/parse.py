@@ -20,6 +20,6 @@ if __name__ == '__main__':
         result_txt = sys.argv[1]
         with open(result_txt, 'r') as f:
             content = f.read()
-        fps = content.split('\n')[-2].split(',')[1].split(':')[-1] # 解析710的结果
+        fps = content.split('\n')[-2].split(',')[1].split(':')[-1] # 解析310P的结果
         # fps = float(content.split('\n')[-2].split(',')[1].split(':')[-1]) * 解析310的结果
         print('710 bs{} fps:{}'.format(result_txt.split('_')[3], fps))
