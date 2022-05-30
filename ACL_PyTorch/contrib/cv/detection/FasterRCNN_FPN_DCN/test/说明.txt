@@ -1,0 +1,3 @@
+1：请把sh文件放于上一目录执行。
+3：不同服务器上export环境可能有区别，具体请以自己服务器环境的env.sh文件中的export语句为准。
+4：使用benchmark工具推理前需要使用chmod u+x benchmark.x86_64进行激活环境。

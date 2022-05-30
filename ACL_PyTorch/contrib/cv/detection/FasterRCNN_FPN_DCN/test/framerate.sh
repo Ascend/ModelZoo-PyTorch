@@ -1,8 +1,11 @@
-
-
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-./benchmark -round=50 -om_path=faster_rcnn_r50_fpn_1x_coco.om -device_id=0 -batch_size=1
+export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:$LD_LIBRARY_PATH
+export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe:$PYTHONPATH
+export PATH=/usr/local/Ascend/ascend-toolkit/latest/bin:/usr/local/Ascend/ascend-toolkit/latest/compiler/ccec_compiler/bin:$PATH
+export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
+export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
+export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export ASCEND_SLOG_PRINT_TO_STDOUT=1
+chmod u+x benchmark.x86_64
+./benchmark -round=50 -om_path=faster_rcnn_r50_fpn_1x_coco_bs1.om -device_id=0 -batch_size=1

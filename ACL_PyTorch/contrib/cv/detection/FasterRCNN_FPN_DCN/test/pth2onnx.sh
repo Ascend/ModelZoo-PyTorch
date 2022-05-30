@@ -1,4 +1,4 @@
-export PYTHONPATH=/root/anaconda3/envs/env_wgzheng/bin/python
+export PYTHONPATH=/root/anaconda3/envs/zycyyy/bin/python
 
 
 python3.7 mmdetection/tools/pytorch2onnx.py \

@@ -1,17 +1,9 @@
-#!/bin/bash
-
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
+export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:$LD_LIBRARY_PATH
+export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe:$PYTHONPATH
+export PATH=/usr/local/Ascend/ascend-toolkit/latest/bin:/usr/local/Ascend/ascend-toolkit/latest/compiler/ccec_compiler/bin:$PATH
 export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
-
-# 开启TASK多线程下发
-# export TASK_QUEUE_ENABLE=1
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
-export ASCEND_GLOBAL_LOG_LEVEL=1 #debug 0 --> info 1 --> warning 2 --> error 3
-# 开启AICPU PTCOPY (用于缓解某些场景下的非连续转连续问题)
-# export PTCOPY_ENABLE=1
-# export COMBINED_ENABLE=1
-# export DUMP_GE_GRAPH=2
+export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
+export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
+export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+export ASCEND_SLOG_PRINT_TO_STDOUT=1
