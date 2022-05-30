@@ -26,7 +26,7 @@ batch_size=2048
 #训练step
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=0.045
+learning_rate=0.72
 
 
 

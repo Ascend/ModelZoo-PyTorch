@@ -20,13 +20,13 @@ data_path=""
 #网络名称，同目录名称
 Network="InceptionV2_ID0698_for_PyTorch"
 #训练epoch
-train_epochs=240
+train_epochs=100
 #训练batch_size
 batch_size=2048
 #训练step
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=0.045
+learning_rate=0.72
 
 
 
