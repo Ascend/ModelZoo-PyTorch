@@ -343,9 +343,6 @@ def fill_up_weights(up):
 
 
 class DeformConv(nn.Module):
-    """
-    DeformConv
-    """
     def __init__(self, chi, cho):
         super(DeformConv, self).__init__()
         self.actf = nn.Sequential(
@@ -355,6 +352,9 @@ class DeformConv(nn.Module):
         self.conv = DCN(chi, cho, kernel_size=(3, 3), stride=1, padding=1, dilation=1, deformable_groups=1)
 
     def forward(self, x):
+        """
+        DeformConv
+        """
         x = x.float()
         x = x.to(torch.float32)
         x = self.conv(x)
