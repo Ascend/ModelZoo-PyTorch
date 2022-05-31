@@ -46,6 +46,8 @@ bash ../test/train_full_8p.sh --data_path=xxx
 
 ## CSNLA Testing
 
+CANN版本: 5.1.RC1
+
 ###  获取源码
 
 1. 单击“立即下载”，下载源码包。
@@ -163,7 +165,7 @@ bash ../test/train_full_8p.sh --data_path=xxx
    3. 编辑环境变量
 
       ```
-      source env.sh
+      source /usr/local/Ascend/.../set_env.sh
       ```
 
    4. 执行ATC命令，生成om文件
@@ -248,5 +250,4 @@ bash ../test/train_full_8p.sh --data_path=xxx
 | ---- | ----- | -------- | -------- |
 | bs1  | 32.57 | 0.184669 | 0.314836 |
 
-
-
+备注：由于内存限制，离线模型不支持多batch
