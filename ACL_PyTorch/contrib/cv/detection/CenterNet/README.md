@@ -122,6 +122,8 @@ bash test/onnx2om.sh
 ```
 bash test/eval_acc_perf.sh --datasets_path=/opt/npu/datasets/coco
 ```
+**注： 若出现使用ATC、benchmark工具出现错误时，请参考推理指导书上的解决方案**
+
 **评测结果：**
 
 精度：

@@ -8,7 +8,7 @@ export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
 export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
 export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
 export ASCEND_SLOG_PRINT_TO_STDOUT=1
-datasets_path="/opt/npu/datasets/coco"
+datasets_path="/opt/npu/coco" #该路径根据实际数据集地址更改，但必须的是需在主路径下的./CenterNet/data/coco/中放入数据集，便于后续推理执行
 
 for para in $*
 do
