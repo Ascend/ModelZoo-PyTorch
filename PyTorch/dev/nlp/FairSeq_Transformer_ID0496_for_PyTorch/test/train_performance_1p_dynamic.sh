@@ -89,7 +89,7 @@ elif [[ $para == --over_dump* ]];then
 done
 
 #设置二进制变量
-if [ $bin_mode == "True" ];then
+if [ $bin_analysis == "True" ];then
     line=`grep "torch.npu.set_option" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
     sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../train.py
     sed -i "${line}s/^/    /" ${cur_path}/../train.py
@@ -205,6 +205,12 @@ if [ $bin_mode == "True" ];then
     CaseName=$CaseName"_binary"
 fi
 
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
+
+
 ##获取性能数据
 #吞吐量，不需要修改
 ActualFPS=${FPS}
@@ -229,98 +235,3 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Ca
 #echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
-#获取二进制算子信息
-if [ $bin_analysis == "True" ];then
-    echo "========start bin analysis========"
-    #1、版本已支持二进制的算子清单：
-    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
-    cmd1_num=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'|wc -l`
-
-
-    #2、模型中所有编译的算子及次数
-    cmd2=`grep -rn "The compile strategy of task" $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "First node is " '{print $2}'|awk -F "." '{print $1}'|awk -F "/" ' {print $NF}'`
-    cmd2_num=`grep -rn "The compile strategy of task" $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "First node is " '{print $2}'|awk -F "." '{print $1}'|awk -F "/" ' {print $NF}'|wc -l`
-
-
-    #3、成功复用二进制的算子及次数：
-    cmd3=`grep -rn "json) can be reused. No need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "/" '{print $14}'|awk -F "_" '{print $1}'`
-    cmd3_num=`grep -rn "json) can be reused. No need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "/" '{print $14}'|awk -F "_" '{print $1}'|wc -l`
-
-    #4、二进制未发布的二进制算子及次数
-    cmd4=`grep -rn "json) does not exist. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F ".json" '{print $1}'|awk -F "/" ' {print $NF}'`
-    cmd4_num=`grep -rn "json) does not exist. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F ".json" '{print $1}'|awk -F "/" ' {print $NF}'|wc -l`
-
-
-    #5、未匹配模糊编译或者属于高性能模式，导致无法复用二进制的算子及数量
-    cmd5=`grep -rn "not fuzzy or performance mode() is not normal. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "(" '{print $3}'|awk -F ")" '{print $1}'`
-    cmd5_num=`grep -rn "not fuzzy or performance mode() is not normal. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "(" '{print $3}'|awk -F ")" '{print $1}'|wc -l`
-
-
-    #6、static key不匹配，导致无法复用二进制的算子及数量
-    cmd6=`grep -rn "does not match in binary file. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "The node " '{print $2}'|awk '{print $1}'`
-    cmd6_num=`grep -rn "does not match in binary file. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "The node " '{print $2}'|awk '{print $1}'|wc -l`
-
-
-    #7、动态参数范围不匹配，导致无法复用二进制的算子及数量
-    cmd7=`grep -rn "match attrs failed. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "(" '{print $3}'|awk -F ")" '{print $1}'`
-    cmd7_num=`grep -rn "match attrs failed. Need to compile." $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "(" '{print $3}'|awk -F ")" '{print $1}'|wc -l`
-
-
-    #8、匹配到编译缓存，不需要复用二进制算子及数量
-    cmd8=`grep -rn "don't need to compile" $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "te_" '{print $2}'|awk -F "_" '{print $1}'`
-    cmd8_num=`grep -rn "don't need to compile" $cur_path/output/$ASCEND_DEVICE_ID/train*log|awk -F "te_" '{print $2}'|awk -F "_" '{print $1}'|wc -l`
-
-
-    count_name="$cur_path/output/$ASCEND_DEVICE_ID/bin_op_summay.csv"
-
-    title="网络名称 ,用例名称 ,1-已发布二进制的算子数量 ,2-模型中所有编译的算子及次数 ,3-成功复用二进制的算子及次数 ,4-二进制未发布的算子及次数, 5-未匹配模糊编译或者属于高性能模式，导致无法复用二进制的算子及数量,6-static key不匹配，导致无法复用二进制的算子及数量 ,7-动态参数范围不匹配，导致无法复用二进制的算子及数量 ,8-匹配到编译缓存，不需要复用二进制算子及数量"
-    printf "\xEF\xBB\xBF" > $count_name
-    echo $title >> $count_name
-    echo "$Network,$CaseName,$cmd1_num,$cmd2_num,$cmd3_num,$cmd4_num,$cmd5_num,$cmd6_num,$cmd7_num,$cmd8_num" >> $count_name
-
-
-    str="$cmd1,$cmd2,$cmd3,$cmd4,$cmd5,$cmd6,$cmd7,$cmd8"
-
-
-    oldIFS=${IFS}
-    IFS=","
-    num=1
-    dot_num=""
-    touch $cur_path/output/$ASCEND_DEVICE_ID/$num.csv
-    for i in ${str[@]};
-    do  
-        IFS=$oldIFS
-        if [[ $i == "" ]];then
-            dot_num=",${dot_num}"
-        else
-            if (( $num == 1 ));then
-                dot=""
-            else
-                dot=",${dot_num}"
-            fi
-
-            for j in $i;
-            do  
-                echo "${dot}$j" >>$cur_path/output/$ASCEND_DEVICE_ID/a.csv
-                dot_num=
-            done 
-            
-        fi   
-        if [ ! -f "$cur_path/output/$ASCEND_DEVICE_ID/a.csv" ];then
-            cp $cur_path/output/$ASCEND_DEVICE_ID/$num.csv $cur_path/output/$ASCEND_DEVICE_ID/$(($num+1)).csv
-        else
-            paste $cur_path/output/$ASCEND_DEVICE_ID/$num.csv $cur_path/output/$ASCEND_DEVICE_ID/a.csv > $cur_path/output/$ASCEND_DEVICE_ID/$(($num+1)).csv
-        fi
-        
-        num=$(($num+1)) 
-        rm -f $cur_path/output/$ASCEND_DEVICE_ID/a.csv
-        rm -f $cur_path/output/$ASCEND_DEVICE_ID/$(($num-1)).csv 
-        IFS=","
-    done
-    printf "\xEF\xBB\xBF" > $cur_path/output/$ASCEND_DEVICE_ID/bin_op_details.csv
-    sed -i '1i1-已发布二进制的算子清单 ,2-模型中所有编译的算子及次数 ,3-成功复用二进制的算子及次数 ,4-二进制未发布的算子及次数 ,5-未匹配模糊编译或者属于高性能模式，导致无法复用二进制的算子及数量,6-static key不匹配，导致无法复用二进制的算子及数量 ,7-动态参数范围不匹配，导致无法复用二进制的算子及数量 ,8-匹配到编译缓存，不需要复用二进制算子及数量' $cur_path/output/$ASCEND_DEVICE_ID/$num.csv 
-    cat $cur_path/output/$ASCEND_DEVICE_ID/$num.csv >> $cur_path/output/$ASCEND_DEVICE_ID/bin_op_details.csv
-    rm -f $cur_path/output/$ASCEND_DEVICE_ID/$num.csv
-    echo "========end bin analysis========"
-fi
