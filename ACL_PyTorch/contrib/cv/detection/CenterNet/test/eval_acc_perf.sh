@@ -24,13 +24,13 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf result/dumpOutput_device0
-./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=./CenterNet_bs1_710.om -input_text_path=./prep_bin.info -input_width=512 -input_height=512 -output_binary=True -useDvpp=False
+./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=./CenterNet_bs1_310P.om -input_text_path=./prep_bin.info -input_width=512 -input_height=512 -output_binary=True -useDvpp=False
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
 
-#./benchmark.${arch} -model_type=vision -device_id=1 -batch_size=32 -om_path=test/CenterNet_bs32_710.om -input_text_path=./prep_bin.info -input_width=512 -input_height=512 -output_binary=True -useDvpp=False
+#./benchmark.${arch} -model_type=vision -device_id=1 -batch_size=32 -om_path=test/CenterNet_bs32_310P.om -input_text_path=./prep_bin.info -input_width=512 -input_height=512 -output_binary=True -useDvpp=False
 #if [ $? != 0 ]; then
 #    echo "fail!"
 #    exit -1
