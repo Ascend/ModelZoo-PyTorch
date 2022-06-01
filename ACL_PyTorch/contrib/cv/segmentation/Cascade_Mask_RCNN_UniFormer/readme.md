@@ -4,6 +4,7 @@
 
 1. 安装依赖
 
+CANN版本为5.1.RC1
 ```bash
 pip install -r requirements.txt
 ```
@@ -34,7 +35,7 @@ cd ../..
 
 ### 2. 离线推理
 
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```bash
 bash test/pth2om.sh
@@ -43,6 +44,6 @@ bash test/eval_acc_perf.sh --datasets_path=data/coco
 
 **评测结果：**
 
-| 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
+| 模型        | pth精度   | 310P离线推理精度 | 性能基准  | 310P性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
 | UniFormer bs1 | bbox_mAP=53.4<br />segm_mAP=46.0 | bbox_mAP=52.8<br />segm_mAP=45.6 | 2.2 fps | 3.22 fps |
