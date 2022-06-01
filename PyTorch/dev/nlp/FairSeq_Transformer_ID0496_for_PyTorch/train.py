@@ -250,7 +250,9 @@ def train(args, trainer, task, epoch_itr):
         else:
            exit(0)
         '''
-
+        end = time.time()
+        print("iteration {} time = {} ms".format(i, (end-start)*1000))
+        
         if log_output is None:
             continue
 
@@ -265,8 +267,7 @@ def train(args, trainer, task, epoch_itr):
                 extra_meters[k].update(v)
             stats[k] = extra_meters[k].avg
         progress.log(stats, tag='train', step=stats['num_updates'])
-        end = time.time()
-        print("iteration {} time = {} ms".format(i, (end-start)*1000))
+
 
         # ignore the first mini-batch in words-per-second and updates-per-second calculation
         if i == 0:

@@ -12,7 +12,7 @@ export RANK_SIZE=1
 data_path=""
 
 #网络名称,同目录名称,需要模型审视修改
-Network="Transformer-SSL_for_PyTorch"
+Network="Transformer-SSL_ID3434_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=128
@@ -82,7 +82,7 @@ fi
 nohup python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  moby_main.py \
     --cfg configs/moby_swin_tiny.yaml \
     --data-path $data_path \
-    --steps 1000 \
+    --steps 150 \
     --batch-size 128 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

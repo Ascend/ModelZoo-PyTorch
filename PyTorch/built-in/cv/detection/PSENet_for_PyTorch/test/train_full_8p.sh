@@ -53,6 +53,7 @@ do
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
     fi
+    
 done
 
 PREC=""

@@ -724,8 +724,7 @@ class BertLMPredictionHead(nn.Module):
 
         # The output weights are the same as the input embeddings, but there is
         # an output-only bias for each token.
-        # self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-        self.decoder = NpuLinear(config.hidden_size, config.vocab_size, bias=False)
+        self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
         self.decoder.weight.data = self.decoder.weight.data.npu()
@@ -764,8 +763,7 @@ class BertPreTrainingHeads(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.predictions = BertLMPredictionHead(config)
-        # self.seq_relationship = nn.Linear(config.hidden_size, 2)
-        self.seq_relationship = NpuLinear(config.hidden_size, 2)
+        self.seq_relationship = nn.Linear(config.hidden_size, 2)
 
     def forward(self, sequence_output, pooled_output):
         prediction_scores = self.predictions(sequence_output)
@@ -1074,8 +1072,8 @@ class BertModel(BertPreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        sequence_output = encoder_outputs[0]
-        pooled_output = self.pooler(sequence_output.view(bs, from_seq_len, -1)) if self.pooler is not None else None
+        sequence_output = encoder_outputs[0].view(bs, from_seq_len, -1)
+        pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
         if not return_dict:
             return (sequence_output, pooled_output) + encoder_outputs[1:]
