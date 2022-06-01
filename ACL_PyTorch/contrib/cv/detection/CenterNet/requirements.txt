@@ -9,7 +9,6 @@ matplotlib==3.4.3
 numba==0.53.1
 numpy==1.21.2
 opencv-python==4.5.3.56
-#op-test-frame==0.1
 pillow==8.3.2
 progress==1.5
 pycocotools==2.0.2

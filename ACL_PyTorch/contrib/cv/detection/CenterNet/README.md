@@ -10,10 +10,11 @@ pip3 install -r requirements.txt
 
 2.获取，修改与安装开源模型代码
 
-安装CenterNet
+安装CenterNet，这里的CANN使用自带的环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 git clone https://github.com/xingyizhou/CenterNet
 cd CenterNet/src/lib/models/networks
 rm -r DCNv2
@@ -33,32 +34,39 @@ python3 setup.py build develop
 cd ../../../../../../
 ```
 
-备注：将源码中DCNv2算子更新到DCNv2_latest，以支持pytorch1.8；按照上述步骤替换pose_dcn_dla.py文件与dcn_v2.py文件，以修改自定义算子，实现onnx的推理过程
+备注：将源码中DCNv2算子更新到DCNv2_latest，以支持pytorch1.8；按照上述步骤替换pose_dcn_dla.py文件与dcn_v2.py文件，以修改自定义算子，实现onnx的推理过程 (CANN版本为5.1.RC1)
 
 另外，需要单独修改python环境中的utils.py文件，不同环境下具体路径有一定差异。手动将/usr/local/python3.7.5/lib/python3.7/site-packages/torch/onnx/utils.py下述部分做相应更改：
 
 ```python
-            not val_use_external_data_format:
-             # Only run checker if enabled and we are not using ATEN fallback and
-             # large model format export in not enabled.
--            _check_onnx_proto(proto)
-+            pass
+if enable_onnx_checker and \
+    operator_export_type is OperatorExportTypes.ONNX and \
+        not val_use_external_data_format:
+    # Only run checker if enabled and we are using ONNX export type and
+    # large model format export in not enabled.
+    # _check_onnx_proto(proto)
+    pass
 ```
 备注：在编译可变形卷积的时候可能出现编译不成功的情况，如果出现下面这类错误
 ```
 error: ‘TORCH_CHECK_ARG’ was not declared in this scope
 error: command '/usr/bin/g++' failed with exit code 1
 ```
-需对DCNv2/src/cpu下的各个.cpp文件添加，且并对dcn_v2_cpu.cpp中141-142行处的TORCH_CHECK_ARG改为THArgCheck
+需对DCNv2/src/cpu下的各个.cpp文件添加以下声明
 ```
 #include <TH/TH.h>
 ```
-DCNv2/src/cuda下的各个.cpp添加
+除此之外，还需要对dcn_v2_cpu.cpp中141-142行处的TORCH_CHECK_ARG改为THArgCheck，
+并将dcn_v2_psroi_pooling_cpu.cpp中的#include <ATen/ceil_div.h>注释掉
+
+DCNv2/src/cuda下的各个.cu添加如下声明，.cu可用vim编辑修改
 ```
 #include <THC/THC.h>
 #include <THC/THCAtomics.cuh>
 #include <THC/THCDeviceUtils.cuh>
 ```
+同将dcn_v2_psroi_pooling_cuda.cu中的#include <ATen/ceil_div.h>注释掉，最后再重新执行python3 setup.py build develop进行编译，即可成功
+
 3.获取权重文件
 
 [ctdet_coco_dla_2x.pth](https://drive.google.com/open?id=1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT)，放在当前目录下
@@ -91,7 +99,7 @@ python3.7 CenterNet_pth2onnx.py ctdet_coco_dla_2x.pth CenterNet.onnx
 执行ATC脚本完成onnx模型到om模型的转换
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=CenterNet.onnx  --output=CenterNet_bs1 --input_format=NCHW --input_shape="actual_input:1,3,512,512" --out_nodes="Conv_1120:0;Conv_1123:0;Conv_1126:0" --log=info --soc_version=Ascend710
 ```
 5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)
@@ -104,17 +112,10 @@ chmod u+x benchmark.x86_64
 
 获取ctdet_coco_dla_2x.pth权重文件，放在主目录下，接着可以执行.sh完成整个推理流程
 
-**1.pth转onnx：**
+**1.pth转om：**
 
 ```
-bash test/pth2onnx.sh
-```
-成功执行后会在主目录下生成CenterNet.onnx权重文件
-
-**2.在310P环境上进行.onnx转.om：**
-
-```
-bash test/onnx2om.sh  
+bash test/pth2om.sh
 ```
 成功执行后会生成bs1和bs16对应的.om文件
 

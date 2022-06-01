@@ -21,5 +21,5 @@ if __name__ == '__main__':
         with open(result_txt, 'r') as f:
             content = f.read()
         fps = content.split('\n')[-2].split(',')[1].split(':')[-1] # 解析310P的结果
-        # fps = float(content.split('\n')[-2].split(',')[1].split(':')[-1]) * 解析310的结果
-        print('710 bs{} fps:{}'.format(result_txt.split('_')[3], fps))
+        # fps = float(content.split('\n')[-2].split(',')[1].split(':')[-1])*4 # 解析310的结果
+        print('310P bs{} fps:{}'.format(result_txt.split('_')[3], fps))
