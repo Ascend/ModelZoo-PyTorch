@@ -142,7 +142,8 @@ bash test/eval_acc_perf.sh --datasets_path=/opt/npu/datasets/coco
 | 8 | -   | 19.50532       | 36.3168
 | 16 | -   | 19.632       | 36.8814
 | 32 | -   | 19.75924       | 37.1302
-最优batch： 
+
+最优batch对比：
 
 310P/t4 : 37.1302/14.2857>1.6 
 
