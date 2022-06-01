@@ -121,7 +121,7 @@ bash test/pth2om.sh
 
 **3.执行推理和评估脚本：**
 ```
-bash test/eval_acc_perf.sh --datasets_path=/opt/npu/datasets/coco
+bash test/eval_acc_perf.sh --datasets_path=/opt/npu/coco
 ```
 **注： 若出现使用ATC、benchmark工具出现错误时，请参考推理指导书上的解决方案**
 
