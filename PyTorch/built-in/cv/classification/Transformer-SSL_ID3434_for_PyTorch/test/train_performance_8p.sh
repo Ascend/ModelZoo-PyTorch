@@ -11,7 +11,7 @@ RANK_ID_START=0
 data_path=""
 
 #网络名称,同目录名称,需要模型审视修改
-Network="Transformer-SSL_for_PyTorch"
+Network="Transformer-SSL_ID3434_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=128
@@ -140,7 +140,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${time}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep 'INFO Train' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss " '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep 'INFO Train' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss " '{print $NF}' | awk -F " " '{print $1}'|awk -F " " '{print $1}'|awk 'NR>1{print line}{line=$0}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
