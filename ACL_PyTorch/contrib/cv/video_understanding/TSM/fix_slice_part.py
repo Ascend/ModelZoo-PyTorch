@@ -63,7 +63,6 @@ def fix_slice_part(start_idx, dims, batch_size):
     merge_slice(slice_node2_1, slice_node2_2, concat_node2, 1)
 
     # build and replace constant node
-    # values = np.random.rand(1, 1, dims[0], dims[1]).astype(np.float32)
     values = np.zeros([batch_size, 1, dims[0], dims[1]]).astype('float32')
     const_node = onnx_graph.add_node(
         const_name,
@@ -87,7 +86,6 @@ def fix_slice_part(start_idx, dims, batch_size):
 
     replace_const(sub_node_1, slice_node3_1, concat_node1, 1)
     replace_const(sub_node_2, slice_node3_2, concat_node2)
-
 
 
 if __name__ == '__main__':
