@@ -1,4 +1,6 @@
-# FasterRCNN-FPN-DCN模型PyTorch离线推理指导(NPU:710)
+# FasterRCNN-FPN-DCN模型PyTorch离线推理指导(NPU:310P、CANN:5.1RC1)
+
+
 
 ## 1 环境准备
 
@@ -35,7 +37,6 @@ cd ..
 cd mmdetection 
 mkdir checkpoints
 cd checkpoints
-
 ``` 
 
 [faster_rcnn_r50_fpn_dconv_c3-c5_1x_coco_20200130-d68aed1e.pth](参照指导书文档)
@@ -60,38 +61,19 @@ FasterRCNN-FPN-DCN
   
 ## 2 离线推理
 
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲（本模型推理时显存占用较大，需设备空闲时才能测试出正常性能指标）
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲（本模型推理时显存占用较大，需设备空闲时才能测试出正常性能指标）
 
+获取faster_rcnn_r50_fpn_dconv_c3-c5_1x_coco_20200130-d68aed1e.pth权重文件，放在1.3创建的目录下。依次执行下面两条sh命令可以完成整个推理流程。
 
-
-
+注：详细的步骤细节，请参考推理指导书的对应内容。
 ```
-# 1：生成onnx模型
-source pth2onnx.sh
+# 1：pth转om模型
+bash pth2om.sh
+# 得到onnx以及om模型。
 
-# 2：修改onnx模型（pth转出的onnx模型在转om时会报部分结点参数类型不一致的错误）
-source correctonnx.sh
-
-# 3:生成om模型
-source onnx2om.sh
-
-# 4:生成coco数据集相关文件
-python3.7 FasterRCNN+FPN+DCN_preprocess.py --image_folder_path ./data/coco/val2017 --bin_folder_path coco2017_bin	 
-python3.7 gen_dataset_info.py bin coco2017_bin coco2017_bin.info 1216 1216
-python3.7 gen_dataset_info.py jpg ./data/coco/val2017 coco2017_jpg.info
-
-# 5:om模型推理
-source inf.sh
-
-# 6:数据后处理
-python3.7 FasterRCNN+FPN+DCN_postprocess.py --test_annotation coco2017_jpg.info --bin_data_path result/dumpOutput_device0
-
-# 7：coco eval验证，获取精度数据
-python3.7 txt2json.py --npu_txt_path detection-results --json_output_file coco_detection_result
-python3.7 coco_eval.py --ground_truth data/coco/annotations/instances_val2017.json --detection_result coco_detection_result.json
-
-# 8:纯推理测试性能
-source framerate.sh
+# 2：执行推理和评估脚本
+bash eval_acc.sh
+# 此步骤包含：数据预处理、模型推理（输出性能数据）、数据后处理、输出精度数据。
 ```
 
 **评测结果：**
@@ -104,3 +86,14 @@ source framerate.sh
 |faster_rcnn_r50_fpn_dcn|8|-|3.60FPS|-|7.21FPS|-|8.45FPS|
 |faster_rcnn_r50_fpn_dcn|16|-|显存不够|-|显存不够|-|8.71FPS|
 
+最优batch性能对比：
+
+310P/t4 : 8.81/5.40  ≈ 1.63 > 1.6
+
+310P/310: 8.81/7.21  ≈ 1.22 > 1.2
+
+精度对比：（注：本模型为静态模型，因网络和后处理代码的影响。只能得到bs=1下精度数据）
+
+0.412/0.413 ≈ 99.76% ＞ 99%
+
+0.411/0.413 ≈ 99.52% ＞ 99%

@@ -1,1 +1,0 @@
-python3.7  correctonnx.py --batch_size=1
