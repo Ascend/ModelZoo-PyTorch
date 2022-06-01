@@ -61,14 +61,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-#创建DeviceID输出目录，不需要修改
-if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/
-else
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/
-fi
-
 #设置环境变量，不需要修改
 RANK_ID=0
 ASCEND_DEVICE_ID=0
@@ -76,6 +68,14 @@ echo "Decive ID: $RANK_ID"
 export RANK_ID=$RANK_ID
 export ASCEND_DEVICE_ID=$RANK_ID
 ASCEND_DEVICE_ID=$RANK_ID
+
+#创建DeviceID输出目录，不需要修改
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/
+fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export RANK_SIZE=8
