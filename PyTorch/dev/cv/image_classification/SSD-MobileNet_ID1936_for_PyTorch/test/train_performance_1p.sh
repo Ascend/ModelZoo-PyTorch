@@ -20,6 +20,10 @@ Network="SSD-MobileNet_ID1936_for_PyTorch"
 #训练batch_size,,需要模型审视修改
 batch_size=8
 
+#二进制开关
+bin_mode=False
+bin_analysis=False
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -27,6 +31,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
     fi
 done
 
@@ -40,6 +48,22 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    sed -i "61itorch.npu.global_step_inc()" ${cur_path}/../train.py
+fi
+
+#设置二进制变量
+if [ $bin_analysis == "True" ];then
+    #增加编译缓存设置
+    line=`grep "    main(args)" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption = {}" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+fi
 
 if [ -d $data_path/VOCdevkit ];then
         echo "NO NEED TARZXVF"
@@ -114,6 +138,16 @@ echo "Final Performance images/sec : $FPS"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+#修改二进制用例名称
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
+
+#获取二进制支持算子
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
 
 ##获取性能数据
 #吞吐量，不需要修改
