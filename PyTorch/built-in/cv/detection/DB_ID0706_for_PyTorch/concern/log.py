@@ -79,7 +79,12 @@ class Logger(Configurable):
             self.database_dir, self.log_dir, application)
         pathlib.Path(storage_dir).mkdir(parents=True, exist_ok=True)
         if not os.path.exists(self.log_dir):
-            os.symlink(storage_dir, self.log_dir)
+            try:
+                os.symlink(storage_dir, self.log_dir)
+            except FileExitsError as e:
+                # it happened when multi-processing build symlink at the same time
+                # no need to new one when file exists
+                pass
 
     def save_dir(self, dir_name):
         return os.path.join(self.log_dir, dir_name)
