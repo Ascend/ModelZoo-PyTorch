@@ -51,7 +51,7 @@ root
 ### 3.2 数据预处理
 a 建立数据存储文件夹
 ```
-mkdir  ./datasets/coco/prep_dataset
+mkdir -p ./datasets/coco/prep_dataset
 mkdir ./output
 ```
 b 生成bin文件
@@ -87,7 +87,7 @@ python3.7 OpenPose_pth2onnx.py --checkpoint_path='./checkpoint_iter_370000.pth' 
 ### 4.4 onnx转om模型
 设置环境变量
 ```
-source /usr/local/Ascend/ascend-lastest/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
 ```
