@@ -29,9 +29,12 @@ from dataclasses import dataclass, field
 from itertools import chain
 from typing import Optional
 import torch
+option = {}
 if torch.__version__ >= "1.8.1":
     import torch_npu
-option = {}
+    option['ACL_OP_COMPILER_CACHE_MODE'] = "enable"  # cache功能启用
+    option['ACL_OP_COMPILER_CACHE_DIR'] = "./cache"  # cache所在的文件夹
+
 option['ACL_OP_SELECT_IMPL_MODE'] = "high_precision"
 option['ACL_OPTYPELIST_FOR_IMPLMODE'] = "NLLLoss,NLLLossGrad"
 torch.npu.set_option(option)
