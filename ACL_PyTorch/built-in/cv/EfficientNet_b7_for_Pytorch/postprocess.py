@@ -40,8 +40,7 @@ def postprocess(output_dir, label_path):
             if int(t) == sorted_index[i][0]:
                 correct += 1
     
-    print(correct, total)
-    print("top 1 accuracy: %s" % str(correct / total))
+    print("top 1 accuracy: {}".format(str(correct / total)))
 
 if __name__ == "__main__":
     """

@@ -32,7 +32,7 @@ def export(version):
             'efficientnet-b8': (2.2, 3.6, 672, 0.5),
         }
 
-    model_name = 'efficientnet-b%s' % version
+    model_name = 'efficientnet-b{}'.format(version)
     model = EfficientNet.from_pretrained(model_name)
     _, _, img_size, _ = params_dict.get(model_name)
     dummy_input = torch.randn(1, 3, img_size, img_size)
@@ -40,7 +40,7 @@ def export(version):
     model.set_swish(memory_efficient=False)
     torch.onnx.export(model,
                     dummy_input,
-                    "efficientnet_b%s_%s_%d.onnx" % (version, 'dym', img_size),
+                    "efficientnet_b{}_{}_{}.onnx".format(version, 'dym', img_size),
                     input_names=['image'],
                     output_names=['output'],
                     dynamic_axes={

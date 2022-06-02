@@ -18,7 +18,7 @@ pip3.7 install efficientnet_pytorch==0.7.1
 
 1. 获取原始数据集
    
-   本模型使用ImageNet 50000张图片的验证集，请参考Pytorch官方文档下载和处理数据集：https://github.com/pytorch/examples/tree/main/imagenet
+   本模型使用ImageNet 50000张图片的验证集，请参考[Pytorch官方文档](https://github.com/pytorch/examples/tree/main/imagenet)下载和处理数据集
 
 2. 数据预处理
 
@@ -51,7 +51,7 @@ pip3.7 install efficientnet_pytorch==0.7.1
 
    1. 安装mindx-toolbox工具
         
-        https://support.huawei.com/enterprise/zh/ascend-computing/mindx-pid-252501207/software
+        前往https://support.huawei.com/enterprise/zh/ascend-computing/mindx-pid-252501207/software，根据自己的环境下载对应的mindx-toolbox安装包
 
    2. 配置环境变量
         ```
@@ -61,7 +61,7 @@ pip3.7 install efficientnet_pytorch==0.7.1
    3. 使用ATC工具将onnx模型转om模型
 
         ```
-        bash atc.sh
+        bash atc.sh efficientnet_b7_dym_600_sim.onnx efficientnet_b7_32_600_sim
         ```
         运行成功后生成efficientnet_b7_32_600_sim.om模型文件
 
@@ -81,10 +81,11 @@ pip3.7 install efficientnet_pytorch==0.7.1
 
 3. 精度验证
 
-     将outputs/{dir}改为实际目录
+   将outputs/{dir}改为实际目录，统计推理输出的Top 1 Accuracy
    ```
    python3.7 postprocess.py --output_dir=outputs/{dir} --label_path=label.txt
    ```
+   
 
 **评测结果：**   
 
