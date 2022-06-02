@@ -78,7 +78,7 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet18)')
-parser.add_argument('-j', '--workers', default=10, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=64, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -104,7 +104,7 @@ parser.add_argument('--world-size', default=1, type=int,
                     help='number of distributed processes')
 parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
                     help='url used to set up distributed training')
-parser.add_argument('--dist-backend', default='gloo', type=str,
+parser.add_argument('--dist-backend', default='hccl', type=str,
                     help='distributed backend')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
@@ -154,10 +154,10 @@ def main():
                       'disable data parallelism.')
 
     args.distributed = args.world_size > 1
+    rank_id = int(os.environ['RANK_ID'])
 
     if args.distributed:
-        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                world_size=args.world_size)
+        dist.init_process_group(backend=args.dist_backend, rank=rank_id, world_size=args.world_size)
 
     # create model
     if args.pretrained:
@@ -178,7 +178,7 @@ def main():
         model.to(device)
         if args.apex:
             model, optimizer = amp.initialize(model, optimizer,opt_level=args.apex_opt_level, combine_grad=True)
-        model = torch.nn.parallel.DistributedDataParallel(model)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank_id])
     else:
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
             model = model.npu()
@@ -263,7 +263,7 @@ def main():
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch)
+        train(train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
         prec1, prec5 = validate(val_loader, model, criterion, epoch)
@@ -283,7 +283,7 @@ def main():
           best_prec5 = prec5
         log_string(' * BestPrec so far@1 {top1:.3f} @5 {top5:.3f} in epoch {best_epoch}'.format(top1=best_prec1, top5=best_prec5, best_epoch=best_epoch))
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -329,7 +329,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         batch_time.update(time.time() - end)
         end = time.time()
         batch_size = target.size(0)
-        fps = (batch_size / batch_time.val)
+        fps = (batch_size * args.world_size / batch_time.val)
 
         if i % args.print_freq == 0:
             log_string('Epoch: [{0}][{1}/{2}]\t'
