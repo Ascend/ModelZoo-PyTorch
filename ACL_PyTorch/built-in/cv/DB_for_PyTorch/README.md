@@ -52,6 +52,8 @@ Your_Soc_version是你的npu型号，目前可选值为Ascend310和Ascend310P
 | DB bs16 | precision : 91.3 recall : 80.3 fmeasure : 85.4 | 0.886823 0.803563 0.843142 | 7.240fps | 11.22672fps | 22.79fps |
 | DB bs32 | - | 0.886823 0.803563 0.843142 | - | - | 22.46fps |
 | DB bs64 | - | 0.886823 0.803563 0.843142 | - | - | 23.14fps |
+
+
 备注：精度问题参见[issue](https://github.com/MhLiao/DB/issues/250)，修改代码后在线推理重新测评pth精度，可以看出om与pth精度一致  
 
 
