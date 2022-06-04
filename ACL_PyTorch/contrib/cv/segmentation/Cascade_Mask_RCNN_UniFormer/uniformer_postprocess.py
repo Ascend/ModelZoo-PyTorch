@@ -1,11 +1,24 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import argparse
 import numpy as np
 import torch
+from tqdm import tqdm
 from mmdet.core import bbox2result, encode_mask_results
 from mmdet.datasets import CocoDataset
-from torchvision.models.detection.roi_heads import paste_masks_in_image
-from tqdm import tqdm
 from mmdet.models.roi_heads.mask_heads.fcn_mask_head import _do_paste_mask
 
 
