@@ -45,7 +45,7 @@ def get_pred_mat(pred_path):
     file = open(pred_path)
     pred = []
     for line in file.readlines():
-        pred.append(line.strip().split(' '))  # 去除头尾的空白符之后，按照空格分割
+        pred.append(line.strip().split(' '))
     pred = np.asarray(pred).astype(np.int64)
     pred = torch.from_numpy(pred)
     pred = pred.reshape((-1, 1024, 2048))
@@ -55,10 +55,10 @@ def get_pred_mat(pred_path):
 
 def get_one_hot(label, N):
     size = list(label.size())
-    label = label.view(-1)  # reshape 为向量
+    label = label.view(-1)
     ones = torch.sparse.torch.eye(N)
-    ones = ones.index_select(0, label)  # 用上面的办法转为换one hot
-    size.append(N)  # 把类别输目添到size的尾后，准备reshape回原来的尺寸
+    ones = ones.index_select(0, label)
+    size.append(N)
     return ones.view(*size)
 
 
@@ -122,9 +122,6 @@ def calculate_area(pred, label, num_classes, ignore_index):
     label = get_one_hot(label, num_classes + 1)
     pred = pred[:, :, :, 1:]
     label = label[:, :, :, 1:]
-
-    # print("after one-hot: ", pred[:,:,:,3])
-
     pred_area = []
     label_area = []
     intersect_area = []
@@ -135,12 +132,10 @@ def calculate_area(pred, label, num_classes, ignore_index):
         pred_area_i = torch.sum(pred_i).unsqueeze(0)
         label_area_i = torch.sum(label_i).unsqueeze(0)
         intersect_area_i = torch.sum(pred_i * label_i).unsqueeze(0)
-        # print(pred_area_i)
         pred_area.append(pred_area_i)
         label_area.append(label_area_i)
         intersect_area.append(intersect_area_i)
     pred_area = torch.cat(pred_area, 0)
-    # print(pred_area)
     label_area = torch.cat(label_area, 0)
     intersect_area = torch.cat(intersect_area, 0)
     return intersect_area, pred_area, label_area
@@ -161,10 +156,8 @@ def main(args):
     for i, item in tqdm(enumerate(files)):
         pred_path = item["pred_path"]
         label_path = item["label_path"]
-        # label = np.asarray(Image.open(label_path)).astype(np.int64)
         label = np.fromfile(label_path, dtype=np.int32).astype(np.int64)
         label = label.reshape((-1, 1024, 2048))
-        # label = label[np.newaxis, :, :]
         label = torch.from_numpy(label)
         pred = get_pred_mat(pred_path)
         intersect_area, pred_area, label_area = calculate_area(
@@ -175,7 +168,6 @@ def main(args):
         intersect_area_all = intersect_area_all + intersect_area
         pred_area_all = pred_area_all + pred_area
         label_area_all = label_area_all + label_area
-        # 记录时间
     class_iou, miou = get_mean_iou(intersect_area_all, pred_area_all,
                                    label_area_all)
     class_acc, acc = get_accuracy(intersect_area_all, pred_area_all)
