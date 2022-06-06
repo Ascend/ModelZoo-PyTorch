@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
+import torch
+if torch.version>="1.8.0":
+    try:
+        import torch_npu
+    except:
+        print('WARNING! torch_npu is not imported.. Please using without npu..')         
 import argparse
 import os
 import sys
@@ -25,7 +30,6 @@ import torchvision.transforms as transforms
 from torchvision.utils import save_image
 from torchvision import datasets
 
-import torch
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.multiprocessing as mp
@@ -62,7 +66,7 @@ def train_one_epoch(generator, discriminator, optimizer_G, optimizer_D, adversar
         fake = Variable(Tensor(imgs.size(0), 1).fill_(0.0), requires_grad=False)
 
         # Configure input
-        real_imgs = Variable(imgs.type(Tensor)).to(device)
+        real_imgs = Variable(imgs.type(torch.Tensor)).to(device)
 
         # -----------------
         #  Train Generator
@@ -106,7 +110,7 @@ def train_one_epoch(generator, discriminator, optimizer_G, optimizer_D, adversar
             d_loss.backward()
         optimizer_D.step()
         batch_time.update(time.time() - start_time)
-        if args.n_epochs == 1:
+        if args.n_epochs == 1 and args.is_master_node:
             print(
                 "[Epoch %d] [step %d] [D loss: %f] [G loss: %f]"
                 % (epoch, i, D_loss.avg, G_loss.avg)
@@ -117,7 +121,7 @@ def train_one_epoch(generator, discriminator, optimizer_G, optimizer_D, adversar
     if args.is_master_node:
         print(
             "[Epoch %d] [D loss: %f] [G loss: %f] FPS:%.3f"
-            % (epoch, D_loss.avg,G_loss.avg,args.batch_size*args.gpus/batch_time.avg)
+            % (epoch, D_loss.avg, G_loss.avg, args.batch_size * args.gpus / batch_time.avg)
         )
     LOSS_G.append(G_loss.avg)
     LOSS_D.append(D_loss.avg)
@@ -135,43 +139,30 @@ def main(args):
         if amp is None:
             raise RuntimeError("Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
                                "to enable mixed-precision training.")
-    # if args.output_dir:
-    #     os.mkdir(args.output_dir)
-
+    
+    device = torch.device(f'npu:{args.local_rank}')  # npu
+    torch.npu.set_device(f'npu:{args.local_rank}')
+    print('device_id=', args.local_rank)
     if args.distributed:
+        torch.distributed.init_process_group(backend='hccl', world_size=args.gpus, rank=args.local_rank)
 
-        mp.spawn(main_worker, nprocs=args.gpus,
-                 args=(args,))
-    else:
-        main_worker(args.gpus, args)
+    args.is_master_node = not args.distributed or args.local_rank == 0
 
-def main_worker(nprocs, args):
-    local_rank = 0
-    if args.distributed:
-        torch.distributed.init_process_group(backend="hccl",
-                                             init_method='env://',
-                                             world_size=args.nodes * args.gpus,
-                                             rank=nprocs)
-        local_rank = torch.distributed.get_rank()
-    args.is_master_node = not args.distributed or local_rank == 0
     if args.is_master_node:
         print(args)
-    args.device_id = args.device_id + local_rank
-    print('device_id=', args.device_id)
-    device = torch.device(f'npu:{args.device_id}')  # npu
-    torch.npu.set_device(device)  # for npu
-    print("Downloading dataset...")
+        print("Preparing dataset...")
+
     # Configure data loader
-    os.makedirs("../data/mnist", exist_ok=True)
     train_dataset = datasets.MNIST(
-        "../../data/mnist",
+        args.data_path,
         train=True,
         download=True,
         transform=transforms.Compose(
             [transforms.Resize(args.img_size), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])]
         ))
-
-    print("Creating dataloader")
+    
+    if args.is_master_node:    
+        print("Creating dataloader")
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
@@ -185,12 +176,11 @@ def main_worker(nprocs, args):
 
     if args.is_master_node:
         print("Creating model")
-        # create model
+
     Tensor = torch.npu.FloatTensor
     LOSS_G=[]
     LOSS_D=[]
-    os.makedirs("../output", exist_ok=True)
-    os.chdir("../output")
+
     generator = Generator()
     discriminator = Discriminator()
     if args.pretrained:
@@ -233,10 +223,11 @@ def main_worker(nprocs, args):
                                                     opt_level='O1', loss_scale=128,combine_grad=True)
 
     if args.distributed:
-        generator = DDP(generator, device_ids=[local_rank], broadcast_buffers=False)
-        discriminator = DDP(discriminator, device_ids=[local_rank], broadcast_buffers=False)
+        generator = DDP(generator, device_ids=[args.local_rank], broadcast_buffers=False)
+        discriminator = DDP(discriminator, device_ids=[args.local_rank], broadcast_buffers=False)
 
     if args.test_only :
+        os.makedirs("test_images",exist_ok=True)
         Tensor = torch.npu.FloatTensor
         generator = Generator().npu()
         checkpoint = torch.load(r'./checkpoint.pth.tar', map_location='cpu')
@@ -268,7 +259,7 @@ def main_worker(nprocs, args):
             # Generate a batch of images
             gen_imgs = generator(z)
 
-            save_image(gen_imgs.data[:25], "image/%d.png" % i, nrow=5, normalize=True)
+            save_image(gen_imgs.data[:25], "test_images/image/%d.png" % i, nrow=5, normalize=True)
         print("Generate done!")
         return
 
@@ -357,9 +348,9 @@ def parse_args():
     parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
     parser.add_argument("--img_size", type=int, default=28, help="size of each image dimension")
     parser.add_argument("--channels", type=int, default=1, help="number of image channels")
-    parser.add_argument("--gpus", type=int, default=8, help="num of gpus of per node")
+    parser.add_argument("--gpus", type=int, default=1, help="num of gpus of per node")
     parser.add_argument("--nodes", type=int, default=1)
-    parser.add_argument('--device_id', default=0, type=int, help='device id')
+    parser.add_argument('--local_rank', default=0, type=int, help='device id')
     parser.add_argument("--test_only", type=int, default=None, help="only generate images")
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='manual epoch number (useful on restarts)')
@@ -368,6 +359,9 @@ def parse_args():
     parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                         help='use pre-trained model')
 
+    # 数据集path
+    parser.add_argument('--data_path', default='../data/mnist',
+                        help='the path of the dataset')
     parser.add_argument('--distributed', action='store_true',
                         help='Use multi-processing distributed training to launch '
                              'N processes per node, which has N GPUs. This is the '
@@ -381,6 +375,9 @@ def parse_args():
     parser.add_argument('--apex', default=False, action='store_true',
                         help='use apex to train the model')
     args = parser.parse_args()
+    
+    args.gpus = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1
+    
     return args
 if __name__ == '__main__':
     args = parse_args()
