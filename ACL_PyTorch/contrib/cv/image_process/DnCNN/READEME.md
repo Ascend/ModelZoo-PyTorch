@@ -106,12 +106,24 @@ python3.7 DnCNN_pth2onnx.py net.pth DnCNN-S-15.onnx
 
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-lastest/set_env.sh
 ```
-2.使用atc将onnx模型转换为om模型文件
+2.增加benchmark.{arch}可执行权限。
+```
+chmod u+x benchmark.x86_64
+```
+3.使用atc将onnx模型转换为om模型文件
+（310）
 ```
 atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend310
 ```
+(710) for循环分别执行bs1和bs16
+```
+for i in 1 16;do
+atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:"$i",1,481,481" --output=DnCNN-S-15_bs"$i" --log=debug --soc_version=Ascend710
+done
+```
+
 
 ## 4 数据集预处理
 
@@ -152,11 +164,14 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-lastest/set_env.sh
 ```
 2.执行离线推理
+for循环分别执行bs1和bs16
 ```
-./benchmark.x86_64 -model_type=vision -om_path=DnCNN-S-15.om -device_id=0 -batch_size=1 -input_text_path=DnCNN_bin.info -input_width=481 -input_height=481 -useDvpp=false -output_binary=true
+for i in 1 16;do
+./benchmark.x86_64 -model_type=vision -om_path=DnCNN-S-15_bs"$i".om -device_id=0 -batch_size="$i" -input_text_path=DnCNN_bin.info -input_width=481 -input_height=481 -useDvpp=false -output_binary=true
+done
 ```
 输出结果默认保存在当前目录result/dumpOutput_deviceX(X为对应的device_id)，每个输入对应的输出对应一个_X.bin文件。
 
