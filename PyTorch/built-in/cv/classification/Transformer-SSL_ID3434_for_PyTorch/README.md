@@ -63,6 +63,12 @@ bash ./test/train_full_8p.sh --data_path=<data_path>
 Defaultly, training auto-resumes checkpoint in output directory. Remove the `output` directory to train from begin.
 
 ### Performance Test
+For performance test on 1 NPU, run:
+
+```bash
+bash ./test/train_performance_1p.sh --data_path=<data_path>
+```
+
 For performance test on 8 NPU, run:
 
 ```bash
@@ -71,7 +77,7 @@ bash ./test/train_performance_8p.sh --data_path=<data_path>
 
 ### Linear Evaluation (for accuracy test)
 
-To evaluate a pre-trained `MoBY` with `Swin Transformer Tiny` on ImageNet-1K linear evaluation, run:
+To pretrain `MoBY` with `Swin Transformer Tiny` on ImageNet-1K for 100 epochs and do linear evaluation, run:
 
 ```bash
 bash ./test/eval_8p.sh --data_path=<data_path>
@@ -81,5 +87,6 @@ bash ./test/eval_8p.sh --data_path=<data_path>
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type | CPU |
 | :------: | :------:  | :------: | :------: | :------: |:------:|
-| -        | 140      | 1        | 1        | O1       | ARM |
-| 74.14    | 1113      | 8        | 300      | O1       | ARM |
+| -        | 140       | 1        | 1        | O1       | ARM |
+| 67.48    | 1150      | 8        | 100      | O1       | ARM |
+| 74.14    | 1150      | 8        | 300      | O1       | ARM |
