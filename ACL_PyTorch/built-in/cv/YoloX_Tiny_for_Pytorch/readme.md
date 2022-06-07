@@ -32,7 +32,7 @@ mmdeploy_path=$(pwd)
 
 5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
-   将benchmark.x86_64或benchmark.aarch64放到当前工作目录
+   将benchmark.x86_64或benchmark.aarch64放到当前YoloX_Tiny_for_Pytorch目录下
 
 ### 2. 离线推理
 

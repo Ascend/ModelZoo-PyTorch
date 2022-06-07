@@ -37,7 +37,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 rm -rf result
 
 ./benchmark.${arch} -model_type=vision -om_path=yolox.om -device_id=0 -batch_size=${batch_size} \
