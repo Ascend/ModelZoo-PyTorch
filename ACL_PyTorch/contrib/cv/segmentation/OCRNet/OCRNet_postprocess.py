@@ -18,6 +18,12 @@ import torch
 from tqdm import tqdm
 import argparse
 
+import paddle
+import paddle.nn.functional as F
+
+import sys
+sys.path.append('PaddleSeg')
+from paddleseg.utils import metrics
 
 def parse_args():
     parser = argparse.ArgumentParser(description='preprocess for OCRNet mocel')
@@ -28,118 +34,32 @@ def parse_args():
 def read_files(preds_path, labels_path):
     pred_list = [os.path.join(preds_path, file) for file in os.listdir(preds_path)]
     label_list = [os.path.join(labels_path, label) for label in os.listdir(labels_path)]
-    files = []
-    for pred_path in pred_list:
-        id = int(pred_path.split('/')[-1].split('_')[1][3:])
-        files.append({
-            "id": id,
-            "pred_path": pred_path
-        })
-    files = sorted(files, key=lambda f: f["id"])
-    for label_path in label_list:
-        id = int(label_path.split('/')[-1].split('.')[0].split('_')[1][3:])
-        files[id]["label_path"] = label_path
+    files = [{
+        "id": int(file.split('_')[1][3:]), 
+        "pred_path": os.path.join(preds_path, file),
+        "label_path": os.path.join(labels_path, "label_bin"+file.split('_')[1][3:]+".bin" )}
+        for file in os.listdir(preds_path) 
+    ]
     return files
+  
 
-def get_pred_mat(pred_path):
-    file = open(pred_path)
+def get_pred(pred_path):
     pred = []
-    for line in file.readlines():
-        pred.append(line.strip().split(' '))
-    pred = np.asarray(pred).astype(np.int64)
-    pred = torch.from_numpy(pred)
-    pred = pred.reshape((-1, 1024, 2048))
+    with open(pred_path) as file:
+        for line in file.readlines():
+            pred.append(line.strip().split(' '))
+        pred = np.asarray(pred).astype(np.int64)
+        pred = paddle.to_tensor(pred)
+        pred = pred.reshape((-1, 1024, 2048))
 
     return pred
 
-
-def get_one_hot(label, N):
-    size = list(label.size())
-    label = label.view(-1)
-    ones = torch.sparse.torch.eye(N)
-    ones = ones.index_select(0, label)
-    size.append(N)
-    return ones.view(*size)
-
-
-def get_mean_iou(intersect_area, pred_area, label_area):
-    intersect_area = intersect_area.numpy()
-    pred_area = pred_area.numpy()
-    label_area = label_area.numpy()
-    union = pred_area + label_area - intersect_area
-    class_iou = []
-    for i in range(len(intersect_area)):
-        if union[i] == 0:
-            iou = 0
-        else:
-            iou = intersect_area[i] / union[i]
-        class_iou.append(iou)
-    miou = np.mean(class_iou)
-    return np.array(class_iou), miou
-
-
-def get_accuracy(intersect_area, pred_area):
-    intersect_area = intersect_area.numpy()
-    pred_area = pred_area.numpy()
-    class_acc = []
-    for i in range(len(intersect_area)):
-        if pred_area[i] == 0:
-            acc = 0
-        else:
-            acc = intersect_area[i] / pred_area[i]
-        class_acc.append(acc)
-    macc = np.sum(intersect_area) / np.sum(pred_area)
-    return np.array(class_acc), macc
-
-
-def get_kappa(intersect_area, pred_area, label_area):
-    intersect_area = intersect_area.numpy()
-    pred_area = pred_area.numpy()
-    label_area = label_area.numpy()
-    total_area = np.sum(label_area)
-    po = np.sum(intersect_area) / total_area
-    pe = np.sum(pred_area * label_area) / (total_area * total_area)
-    kappa = (po - pe) / (1 - pe)
-    return kappa
-
-
-def calculate_area(pred, label, num_classes, ignore_index):
-    if len(pred.shape) == 4:
-        pred = torch.squeeze(pred, 1)
-    if len(label.shape) == 4:
-        label = torch.squeeze(label, 1)
-    if not pred.shape == label.shape:
-        raise ValueError('Shape of `pred` and `label should be equal, '
-                         'but there are {} and {}.'.format(
-            pred.shape, label.shape))
-        # Delete ignore_index
-    mask = label != ignore_index
-    pred = pred + 1
-    label = label + 1
-    pred = pred * mask
-    label = label * mask
-    pred = get_one_hot(pred, num_classes + 1)
-    label = get_one_hot(label, num_classes + 1)
-    pred = pred[:, :, :, 1:]
-    label = label[:, :, :, 1:]
-    pred_area = []
-    label_area = []
-    intersect_area = []
-
-    for i in range(num_classes):
-        pred_i = pred[:, :, :, i]
-        label_i = label[:, :, :, i]
-        pred_area_i = torch.sum(pred_i).unsqueeze(0)
-        label_area_i = torch.sum(label_i).unsqueeze(0)
-        intersect_area_i = torch.sum(pred_i * label_i).unsqueeze(0)
-        pred_area.append(pred_area_i)
-        label_area.append(label_area_i)
-        intersect_area.append(intersect_area_i)
-    pred_area = torch.cat(pred_area, 0)
-    label_area = torch.cat(label_area, 0)
-    intersect_area = torch.cat(intersect_area, 0)
-    return intersect_area, pred_area, label_area
-
+  
+def get_label(label_path):
+    label = np.fromfile(label_path, dtype=np.int32).astype(np.int64)
+    label = label.reshape((-1, 1024, 2048))
+    label = paddle.to_tensor(label)
+    return label
 
 def main(args):
     preds_path = args.pred_path
@@ -156,11 +76,9 @@ def main(args):
     for i, item in tqdm(enumerate(files)):
         pred_path = item["pred_path"]
         label_path = item["label_path"]
-        label = np.fromfile(label_path, dtype=np.int32).astype(np.int64)
-        label = label.reshape((-1, 1024, 2048))
-        label = torch.from_numpy(label)
-        pred = get_pred_mat(pred_path)
-        intersect_area, pred_area, label_area = calculate_area(
+        pred = get_pred(pred_path)
+        label = get_label(label_path)
+        intersect_area, pred_area, label_area = metrics.calculate_area(
             pred,
             label,
             num_classes,
@@ -168,10 +86,10 @@ def main(args):
         intersect_area_all = intersect_area_all + intersect_area
         pred_area_all = pred_area_all + pred_area
         label_area_all = label_area_all + label_area
-    class_iou, miou = get_mean_iou(intersect_area_all, pred_area_all,
+    class_iou, miou = metrics.mean_iou(intersect_area_all, pred_area_all,
                                    label_area_all)
-    class_acc, acc = get_accuracy(intersect_area_all, pred_area_all)
-    kappa = get_kappa(intersect_area_all, pred_area_all, label_area_all)
+    class_acc, acc = metrics.accuracy(intersect_area_all, pred_area_all)
+    kappa = metrics.kappa(intersect_area_all, pred_area_all, label_area_all)
     print("[EVAL] #mIoU: {:.4f} Acc: {:.4f} Kappa: {:.4f} ".format(
         miou, acc, kappa))
     print("[EVAL] Class IoU: \n" + str(np.round(class_iou, 4)))

@@ -26,7 +26,6 @@ optimize_resize_list = ['Resize_0', 'Resize_2', 'Resize_3', 'Resize_5', 'Resize_
 
 for node in nodes:
     if node.name in optimize_resize_list:
-        print(node.name)
         node.attribute[1].s = b'nearest'
 
 onnx.save(onnx_model, out_onnx)

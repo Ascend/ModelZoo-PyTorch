@@ -4,8 +4,7 @@ echo batch_size=1
 
 rm -rf ./result
 mkdir result
-# 需要修改数据集地址
-python OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1_bin --batch_size 1
+python OCRNet_preprocess.py --src_path $1 --bin_file_path bs1_bin --batch_size 1
 
 rm -rf ./result
 mkdir result
