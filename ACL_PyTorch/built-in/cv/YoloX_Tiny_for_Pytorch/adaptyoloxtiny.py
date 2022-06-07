@@ -40,13 +40,8 @@ def revise_model(src_path, save_path):
     mod1 = OXGraph(input_path)
     nodes_behind = mod1.get_nodes_behind_node(NMS[0].name, if_self=True)
     nms_node = mod1.get_node(NMS[0].name)
-
-    nms_input1 = mod1.get_node(nms_node.input_name[0])
-    nms_input2 = mod1.get_node(nms_node.input_name[1])
-
     mod1.mod.graph.output.remove(mod1.mod.graph.output[0])
     mod1.mod.graph.output.remove(mod1.mod.graph.output[0])
-
     onnx1 = mod1.node_remove(nodes_behind)
     new_1750 = mod1.add_output_node("1259", "float16")
     new_1753 = mod1.add_output_node("1272", "float16")

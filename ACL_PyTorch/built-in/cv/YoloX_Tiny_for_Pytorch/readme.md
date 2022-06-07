@@ -49,6 +49,8 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=64 --mmde
 
 **评测结果：**
 
+性能和精度保存在result.txt文件中
+
 | 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
 | YOLOX bs64 | box AP:0.337 | box AP:0.331 | fps 741 | fps 890 |
