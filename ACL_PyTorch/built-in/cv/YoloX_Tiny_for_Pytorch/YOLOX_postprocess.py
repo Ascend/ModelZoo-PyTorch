@@ -51,7 +51,7 @@ if __name__ == '__main__':
             bbox_result = bbox2result(result_list[0], result_list[1], num_classes)
             outputs.append(bbox_result)
     eval_kwargs = {'metric': ['bbox']}
-    dataset.evaluate(outputs, **eval_kwargs)
+    res = dataset.evaluate(outputs, **eval_kwargs)
     resstr = "precision:{}\n".format(res['bbox_mAP'])
     with open("result.txt", "a") as resfile:
         resfile.write(resstr)
