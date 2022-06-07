@@ -1,0 +1,9 @@
+torch==1.7.0
+torchvision==0.8.0
+onnx==1.8.1
+onnxruntime==1.6.0
+sclblonnx==0.1.9
+opencv-python
+sympy
+cython
+numpy
