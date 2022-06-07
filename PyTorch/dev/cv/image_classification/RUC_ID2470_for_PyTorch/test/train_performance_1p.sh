@@ -27,6 +27,9 @@ batch_size=250
 train_steps=20
 #学习率
 learning_rate=
+#二进制开关
+bin_mode=False
+bin_analysis=False
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
@@ -85,6 +88,10 @@ do
         conda_name=`echo ${para#*=}`
         source set_conda.sh --conda_name=$conda_name
         source activate $conda_name
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
     fi
 done
 
@@ -93,6 +100,27 @@ done
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
+fi
+
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/main_ruc_cifar10.py -n | awk -F ':' '{print $1}'`
+    sed -i "${step_line}s/^/#/" ${cur_path}/main_ruc_cifar10.py
+    inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/main_ruc_cifar10.py -n | awk -F ':' '{print $1}'`
+    sed -i "${inc_line}s/^/#/" ${cur_path}/main_ruc_cifar10.py
+    sed -i "59itorch.npu.global_step_inc()" ${cur_path}/main_ruc_cifar10.py
+fi
+
+#设置二进制变量
+if [ $bin_analysis == "True" ];then
+    #增加编译缓存设置
+    line=`grep "    main()" ${cur_path}/main_ruc_cifar10.py -n | awk -F ':' '{print $1}'`
+    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/main_ruc_cifar10.py
+    sed -i "${line}s/^/    /" ${cur_path}/main_ruc_cifar10.py
+    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/main_ruc_cifar10.py
+    sed -i "${line}s/^/    /" ${cur_path}/main_ruc_cifar10.py
+    sed -i "${line}ioption = {}" ${cur_path}/main_ruc_cifar10.py
+    sed -i "${line}s/^/    /" ${cur_path}/main_ruc_cifar10.py
 fi
 
 #进入训练脚本目录，需要模型审视修改
@@ -145,6 +173,16 @@ echo "E2E Training Duration sec : $e2e_time"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+#修改二进制用例名称
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
+
+#获取二进制支持算子
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量

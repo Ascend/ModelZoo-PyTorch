@@ -1,18 +1,18 @@
 #!/bin/bash
-
+cur_path=`pwd`
 #集合通信参数,不需要修改
-export RANK_SIZE=1
+export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
 device_id=0
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Bert_Chinese_for_PyTorch"
+Network="Bert_Chinese_ID3433_for_PyTorch"
 #训练epoch
-train_epochs=1
+train_epochs=3
 #训练batch_size 默认bert base batch size, 该参数外部可传入
-batch_size=16
+batch_size=32
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
 
@@ -25,10 +25,17 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --model_size* ]];then
       model_size=`echo ${para#*=}`
-    elif [[ $para == --device_id* ]];then
-      device_id=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
+#判断是否使用conda环境
+if [[ $conda_name != "" ]];then
+   cp -r $data_path/* $cur_path/../
+   data_path=$data_path/'train_huawei.txt'
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -75,7 +82,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 run_mlm.py \
+nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --model_type bert \
         --config_name ./bert-${model_size}-chinese/config.json \
         --tokenizer_name ./bert-${model_size}-chinese \
@@ -98,6 +105,7 @@ nohup python3.7 run_mlm.py \
         --loss_scale 8192 \
         --use_combine_grad \
         --optim adamw_apex_fused_npu \
+        --distributed_process_group_timeout 5400 \
         --output_dir ./output > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
