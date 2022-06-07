@@ -14,6 +14,7 @@ img_src_path=$1
 src_path=$2
 save_path=$3
 soc_version=$4
+
 # get quant data
 python generate_data.py --img_src_path ${img_src_path} --save_path int8data --batch_size 16
 # get quant onnx

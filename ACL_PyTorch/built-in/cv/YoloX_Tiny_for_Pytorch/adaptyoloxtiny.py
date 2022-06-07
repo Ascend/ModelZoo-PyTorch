@@ -22,9 +22,9 @@ from gener_core.mod_modify.onnx_node import OXNode
 from gener_core.mod_modify.interface import AttrType as AT
 import sclblonnx as so
 import onnx
-
-def revise_model():
-    input_path = 'end2end.onnx'
+import args
+def revise_model(src_path, save_path):
+    input_path = src_path
     mod2 = OXGraph(input_path)
     NMS = mod2.get_nodes_by_optype("BatchMultiClassNMS")
     nodes_before = mod2.get_nodes_forward_node(NMS[0].name, if_self=False)
@@ -75,11 +75,11 @@ def revise_model():
     g1 = so.graph_from_file("result_deploy_model_revise.onnx")
     g2 = so.graph_from_file("o2.onnx")
     g_merge = so.merge(sg1=g1, sg2=g2, io_match=[("1259", "o2_p1_1750"), ("1272", "o2_p2_1753")], complete=False)
-    so.graph_to_file(g_merge, "yoloxtiny_int8.onnx")
+    so.graph_to_file(g_merge, save_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("yolox tiny generate quant data")
     parser.add_argument('--src_path', type=str, default='./src.onnx', help='src onnx')
     parser.add_argument('--save_path', type=str, default='./res.onnx', help='int8 onnx')
-    flags = parser.parse_args()
-    main(flags)
+    args = parser.parse_args()
+    revise_model(args.src_path, args.save_path)
