@@ -70,6 +70,7 @@ def parse_option():
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
     parser.add_argument('--epochs', type=int, help="training epochs")
     parser.add_argument('--steps', type=int, help="training steps")
+    parser.add_argument('--max_epochs', type=int, help="max training epochs")
 
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
@@ -131,6 +132,8 @@ def main(config, args):
     logger.info("Start self-supervised pre-training")
     start_time = time.time()
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
+        if epoch == args.max_epochs:
+            exit(0)
         data_loader_train.sampler.set_epoch(epoch)
 
         train_one_epoch(config, model, data_loader_train, optimizer, epoch, lr_scheduler, args)

@@ -16,6 +16,9 @@ Network="Transformer-SSL_for_PyTorch"
 #训练batch_size,,需要模型审视修改
 batch_size=128
 
+#训练epoch数
+epochs=100
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -94,12 +97,14 @@ do
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
             --local_rank $RANK_ID \
+            --max_epochs $epochs \
             --batch-size $batch_size > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         nohup python3.7 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
             --local_rank $RANK_ID \
+            --max_epochs $epochs \
             --batch-size $batch_size > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
