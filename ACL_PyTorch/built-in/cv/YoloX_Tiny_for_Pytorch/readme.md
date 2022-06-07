@@ -1,4 +1,4 @@
-###  YOLOX模型PyTorch离线推理指导
+###  YOLOX_tiny模型PyTorch离线推理指导
 
 ### 1. 环境准备
 
@@ -24,7 +24,7 @@ pip3 install -v -e .
 mmdeploy_path=$(pwd)
 ```
 
-3. 点击链接https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。
+3. 点击链接https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。放到mmdeploy_path目录下
 
 4. 数据集
 
@@ -39,10 +39,13 @@ mmdeploy_path=$(pwd)
 710上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/pth2onnx.sh ${mmdetection_path} ${mmdeploy_path}
 bash test/onnx2om.sh /root/datasets/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yoloxint8.onnx Ascend710
 bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=64 --mmdetection_path=${mmdetection_path}
 ```
+
+注意：量化要求使用onnxruntime版本为1.6.0
 
 **评测结果：**
 
