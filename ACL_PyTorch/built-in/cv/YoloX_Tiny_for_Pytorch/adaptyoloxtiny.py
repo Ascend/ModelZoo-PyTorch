@@ -22,7 +22,8 @@ from gener_core.mod_modify.onnx_node import OXNode
 from gener_core.mod_modify.interface import AttrType as AT
 import sclblonnx as so
 import onnx
-import args
+import argparse
+
 def revise_model(src_path, save_path):
     input_path = src_path
     mod2 = OXGraph(input_path)
