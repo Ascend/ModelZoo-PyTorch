@@ -11,14 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from acl_net import Net
-from tqdm import tqdm
-import numpy as np
+
 import os
 import cv2
-import argparse
 import glob
 import json
+import argparse
+from tqdm import tqdm
+import numpy as np
+from collections import OrderedDict
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
+from util.acl_net import Net
 
 np.set_printoptions(suppress=True)
 neth, netw = 640, 640
@@ -65,14 +69,6 @@ class BatchDataLoader:
             img.append(img[0])
             img_info.append(img_info[0])
         return valid_num, name_list, img0, np.stack(img, axis=0), np.stack(img_info, axis=0)
-
-
-def read_class_names(class_img_path_name):
-    names = {}
-    with open(class_img_path_name, 'r') as data:
-        for id, name in enumerate(data):
-            names[id] = name.strip('\n')
-    return names
 
 
 def coco80_to_coco91_class():
@@ -126,6 +122,24 @@ def xyxy2xywh(x):
     return y
 
 
+def read_class_names(ground_truth_json):
+    with open(ground_truth_json, 'r') as file:
+        content = file.read()
+    content = json.loads(content)
+    categories = content.get('categories')
+    
+    names = {}
+    # generate names file
+    with open(args.names_path, 'w') as f:
+        for id, category in enumerate(categories):
+            category_name = category.get('name')
+            if len(category_name.split()) == 2:
+                temp = category_name.split()
+                category_name = temp[0] + '_' + temp[1]
+            names[id] = name.strip('\n')
+    return names
+
+
 def draw_bbox(bbox, img0, color, wt, names):
     det_result_str = ''
     for idx, class_id in enumerate(bbox[:, 5]):
@@ -142,9 +156,60 @@ def draw_bbox(bbox, img0, color, wt, names):
     return img0
 
 
+def eval(ground_truth_json, detection_results_json):
+    annType = ['segm', 'bbox', 'keypoints']
+    annType = annType[1]  # specify type here
+    print('Start evaluate *%s* results...' % (annType))
+    cocoGt_file = ground_truth_json
+    cocoDt_file = detection_results_json
+    cocoGt = COCO(cocoGt_file)
+    cocoDt = cocoGt.loadRes(cocoDt_file)
+    imgIds = cocoGt.getImgIds()
+    print('get %d images' % len(imgIds))
+    imgIds = sorted(imgIds)
+    cocoEval = COCOeval(cocoGt, cocoDt, annType)
+    cocoEval.params.imgIds = imgIds
+    cocoEval.evaluate()
+    cocoEval.accumulate()
+    cocoEval.summarize()
+
+    # copy-paste style
+    eval_results = OrderedDict()
+    metric = annType
+    metric_items = [
+        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+    ]
+    coco_metric_names = {
+        'mAP': 0,
+        'mAP_50': 1,
+        'mAP_75': 2,
+        'mAP_s': 3,
+        'mAP_m': 4,
+        'mAP_l': 5,
+        'AR@100': 6,
+        'AR@300': 7,
+        'AR@1000': 8,
+        'AR_s@1000': 9,
+        'AR_m@1000': 10,
+        'AR_l@1000': 11
+    }
+
+    for metric_item in metric_items:
+        key = f'{metric}_{metric_item}'
+        val = float(
+            f'{cocoEval.stats[coco_metric_names[metric_item]]:.3f}'
+        )
+        eval_results[key] = val
+    ap = cocoEval.stats[:6]
+    eval_results[f'{metric}_mAP_copypaste'] = (
+        f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} {ap[4]:.3f} {ap[5]:.3f}'
+    )
+    print(dict(eval_results))
+
+
 def main(args):
     if args.visable:
-        coco_names = read_class_names(args.names_path)
+        coco_names = read_class_names(args.ground_truth_json)
     coco91class = coco80_to_coco91_class()
     model = Net(device_id=args.device_id, model_path=args.model)
 
@@ -189,24 +254,25 @@ def main(args):
 
     print('model infer average time:{:.3f} ms / {} image'.format(total_time * 1000 / it, args.batch_size))
 
-    detection_result_path = args.detection_result_path
-    print('\nsaveing %s...' % detection_result_path)
-    with open(detection_result_path, 'w') as f:
+    print('\nsaveing %s...' % args.detection_results_json)
+    with open(args.detection_results_json, 'w') as f:
         json.dump(det_result_dict, f)
-    print('done.')
+    
+    eval(args.ground_truth_json, args.detection_results_json)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='YoloV5 offline model inference.')
-    parser.add_argument('--detection_result_path', type=str, default="./predictions.json",
+    parser.add_argument('--detection_results_json', type=str, default="./predictions.json",
                         help='detection result file path')
+    parser.add_argument('--ground_truth_json', type=str, default="./instances_val2017.json",
+                         help='annotation file path')
     parser.add_argument('--img-path', type=str, default="./val2017", help='input images dir')
     parser.add_argument('--model', type=str, default="yolov5s.om", help='om model path')
     parser.add_argument('--batch-size', type=int, default=1, help='om batch size')
     parser.add_argument('--device-id', type=int, default=0, help='device id')
     parser.add_argument('-v', '--visable', action='store_true',
                         help='draw detect result at image and save to dir \'output\'')
-    parser.add_argument('--names-path', type=str, default="./coco_2017.names", help='class name save path')
     flags = parser.parse_args()
 
     main(flags)

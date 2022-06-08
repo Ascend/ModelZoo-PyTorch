@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ def ceil_x(value, align_len):
 
 
 def main(args):
-    
     pt_model = attempt_load(args.pt_path, map_location='cpu')
     m = pt_model.module.model[-1] if hasattr(pt_model, 'module') else pt_model.model[-1]
     for i in range(m.nl):
@@ -91,14 +90,13 @@ def main(args):
     onnx_model.graph.output.append(box_out)
     onnx_model.graph.output.append(box_out_num)
 
-    onnx.save(onnx_model, args.onnx_path.split('.onnx')[0] + "_t.onnx")
-    print("success")
+    onnx.save(onnx_model, args.onnx_path.split('.onnx')[0] + "_nms.onnx")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("modify yolov5 onnx model for atc convert")
     parser.add_argument('--pt-path', type=str, default='./yolov5s.pt', help='pt_model path')
-    parser.add_argument('--onnx-path', type=str, default='./yolov5s_sim.onnx', help='onnx_model path')
+    parser.add_argument('--onnx-path', type=str, default='./yolov5s.onnx', help='onnx_model path')
     parser.add_argument('--img-size', nargs='+', type=int, default=[640, 640], help='image size')  # height, width
     parser.add_argument('--batch-size', type=int, default=1, help='batch size')
     parser.add_argument('--conf-thres', type=float, default=0.4, help='object confidence threshold')
