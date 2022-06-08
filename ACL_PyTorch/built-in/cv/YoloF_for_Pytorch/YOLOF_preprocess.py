@@ -37,8 +37,8 @@ def gen_input_bin(file_batches, batch):
         image = mmcv.impad(image, shape=(flags.model_input_height, flags.model_input_width),
                            pad_val=(flags.model_pad_val, flags.model_pad_val, flags.model_pad_val))
 
-        image = image.transpose(2, 0, 1)
-        image = image.astype(np.float32)
+        #image = image.transpose(2, 0, 1)
+        image = image.astype(np.uint8)
         image.tofile(os.path.join(flags.bin_file_path, file.split('.')[0] + ".bin"))
         image_meta = {'scalar': scalar}
         with open(os.path.join(flags.meta_file_path, file.split('.')[0] + ".pk"), "wb") as fp:

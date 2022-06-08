@@ -8,7 +8,11 @@
 pip install -r requirements.txt
 ```
 
-2. 获取，修改与安装开源模型代码
+2. 第三方依赖
+
+   需要从https://gitee.com/liurf_hw/om_gener 安装om_gener
+
+3. 获取，修改与安装开源模型代码
 
 ```
 git clone https://github.com/open-mmlab/mmdetection.git

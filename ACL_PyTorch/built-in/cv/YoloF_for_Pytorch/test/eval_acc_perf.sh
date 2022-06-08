@@ -40,7 +40,7 @@ fi
 
 rm -rf result
 
-./benchmark.${arch} -model_type=vision -om_path=yolox.om -device_id=0 -batch_size=${batch_size} \
+./benchmark.${arch} -model_type=vision -om_path=yolof.om -device_id=0 -batch_size=${batch_size} \
 -input_text_path=yolof.info -input_width=640 -input_height=640 -useDvpp=false -output_binary=true
 
 if [ $? != 0 ]; then

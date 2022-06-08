@@ -8,7 +8,11 @@
 pip install -r requirements.txt
 ```
 
-2. 获取，修改与安装开源模型代码
+2. 第三方依赖
+
+   需要从https://gitee.com/liurf_hw/om_gener 安装om_gener
+
+3. 获取，修改与安装开源模型代码
 
 ```
 git clone https://github.com/open-mmlab/mmdetection.git
@@ -41,8 +45,8 @@ mmdeploy_path=$(pwd)
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/pth2onnx.sh ${mmdetection_path} ${mmdeploy_path}
-bash test/onnx2om.sh /root/datasets/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yoloxint8.onnx Ascend710
-bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=64 --mmdetection_path=${mmdetection_path}
+bash test/onnx2om.sh /root/datasets/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yolofint8.onnx Ascend710
+bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=16 --mmdetection_path=${mmdetection_path}
 ```
 
 注意：量化要求使用onnxruntime版本为1.6.0
@@ -53,7 +57,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=64 --mmde
 
 | 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
-| YOLOF bs16 | box AP:0.337 | box AP:0.331 | fps 741 | fps 890 |
+| YOLOF bs16 | box AP:0.302 | box AP:0.296 | fps 420 | fps 560 |
 
 
 
