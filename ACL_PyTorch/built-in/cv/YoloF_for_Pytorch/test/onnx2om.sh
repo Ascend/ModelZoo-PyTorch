@@ -25,7 +25,7 @@ python adaptyolof.py --src_path ${src_path} --save_path ${save_path}
 rm -f yolof.om
 
 atc --framework=5 --model=${save_path} --output=yolof  --input_format=NCHW \
---op_precision_mode=op_precision.ini --input_shape="input:$batch_size,3,640,640" --log=error --soc_version=${soc_version}
+--op_precision_mode=op_precision.ini --insert_op_conf=aipp.conf --input_shape="input:$batch_size,3,640,640" --log=error --soc_version=${soc_version}
 
 if [ -f "yolof.om" ]; then
     echo "success"
