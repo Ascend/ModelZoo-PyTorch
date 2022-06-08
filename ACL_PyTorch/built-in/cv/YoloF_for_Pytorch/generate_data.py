@@ -64,6 +64,6 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=16, help='om batch size')
     parser.add_argument('--model_input_width', type=int, default=640, help='image width')
     parser.add_argument('--model_input_height', type=int, default=640, help='image height')
-    parser.add_argument('--model_pad_val', type=int, default=114, help='image height')
+    parser.add_argument('--model_pad_val', type=int, default=0, help='image height')
     args = parser.parse_args()
     preprocess(args.img_src_path, args.save_path, args.batch_size)
