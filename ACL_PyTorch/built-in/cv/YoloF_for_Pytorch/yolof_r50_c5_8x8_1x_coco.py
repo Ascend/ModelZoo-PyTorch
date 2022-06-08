@@ -35,8 +35,7 @@ model = dict(
         in_channels=2048,
         out_channels=512,
         block_mid_channels=128,
-        num_residual_blocks=4,
-        block_dilations=[2, 4, 6, 8]),
+        num_residual_blocks=4),
     bbox_head=dict(
         type='YOLOFHead',
         num_classes=80,
@@ -118,8 +117,3 @@ data = dict(
     train=dict(pipeline=train_pipeline),
     val=dict(pipeline=test_pipeline),
     test=dict(pipeline=test_pipeline))
-
-# NOTE: `auto_scale_lr` is for automatically scaling LR,
-# USER SHOULD NOT CHANGE ITS VALUES.
-# base_batch_size = (8 GPUs) x (8 samples per GPU)
-auto_scale_lr = dict(base_batch_size=64)
