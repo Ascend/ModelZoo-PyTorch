@@ -6,6 +6,8 @@
 	-   [2.2 pt导出om模型](#22-pt导出om模型)
 	-   [2.3 om模型推理](#23-om模型推理)
 -   [3 端到端推理Demo](#3-端到端推理Demo)
+-   [4 量化（可选）](#4-量化（可选）)
+-   [5 FAQ](#5-FAQ)
 
 ------
 
@@ -81,5 +83,5 @@ bash common/pth2om.sh --version 6.1 --model yolov5s --bs 4 --type int8 --calib_b
 （2）设置参数--type int8 --calib_bs 16可生成om量化模型，其中16为量化使用的校准数据个数，根据实际所用的校准数据修改。  
 
 
-## Q & A
-常见问题可参考[Q & A](Q&A.md)
+## FAQ
+常见问题可参考 [FAQ](FAQ.md)
