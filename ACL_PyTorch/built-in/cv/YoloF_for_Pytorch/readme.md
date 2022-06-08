@@ -32,21 +32,27 @@ mmdeploy_path=$(pwd)
 
 4. 数据集
 
-   使用coco2017数据集，请到https://cocodataset.org自行下载coco2017，放到/root/datasets目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，目录下包含val2017及annotations目录
+   使用coco2017数据集，请到https://cocodataset.org自行下载coco2017，放到/root/datasets/coco目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，
+
+   ```
+   |---- val2017
+   |———— annotations
+   ```
 
 5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
-   将benchmark.x86_64或benchmark.aarch64放到当前YoloX_Tiny_for_Pytorch目录下
+   将benchmark.x86_64或benchmark.aarch64放到当前YoloF_for_Pytorch目录下
 
 ### 2. 离线推理
 
 710上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```bash
+cp -r YoloF_for_Pytorch ${mmdeploy_path}
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/pth2onnx.sh ${mmdetection_path} ${mmdeploy_path}
-bash test/onnx2om.sh /root/datasets/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yolofint8.onnx Ascend710
-bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=16 --mmdetection_path=${mmdetection_path}
+bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yolofint8.onnx Ascend710
+bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=16 --mmdetection_path=${mmdetection_path}
 ```
 
 注意：量化要求使用onnxruntime版本为1.6.0

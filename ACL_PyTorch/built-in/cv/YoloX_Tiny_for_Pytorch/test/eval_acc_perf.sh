@@ -23,10 +23,10 @@ arch=`uname -m`
 
 rm -rf val2017_bin
 rm -rf val2017_bin_meta
-python YOLOX_preprocess.py --image_src_path ${datasets_path}/coco/val2017
+python YOLOX_preprocess.py --image_src_path ${datasets_path}/val2017
 
 python gen_dataset_info.py \
-${datasets_path}/coco \
+${datasets_path} \
 ${mmdetection_path}/configs/yolox/yolox_s_8x8_300e_coco.py  \
 val2017_bin  val2017_bin_meta  \
 yolox.info  yolox_meta.info  \
@@ -57,7 +57,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-python YOLOX_postprocess.py --dataset_path ${datasets_path}/coco --model_config ${mmdetection_path}/configs/yolox/yolox_tiny_8x8_300e_coco.py
+python YOLOX_postprocess.py --dataset_path ${datasets_path} --model_config ${mmdetection_path}/configs/yolox/yolox_tiny_8x8_300e_coco.py
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

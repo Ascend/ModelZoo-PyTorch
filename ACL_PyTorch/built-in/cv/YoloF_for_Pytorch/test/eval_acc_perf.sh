@@ -23,10 +23,10 @@ arch=`uname -m`
 
 rm -rf val2017_bin
 rm -rf val2017_bin_meta
-python YOLOF_preprocess.py --image_src_path ${datasets_path}/coco/val2017
+python YOLOF_preprocess.py --image_src_path ${datasets_path}/val2017
 
 python gen_dataset_info.py \
-${datasets_path}/coco \
+${datasets_path} \
 ${mmdetection_path}/configs/yolof/yolof_r50_c5_8x8_1x_coco.py  \
 val2017_bin  val2017_bin_meta  \
 yolof.info  yolof_meta.info  \
@@ -57,7 +57,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-python YOLOF_postprocess.py --dataset_path ${datasets_path}/coco --model_config ${mmdetection_path}/configs/yolof/yolof_r50_c5_8x8_1x_coco.py
+python YOLOF_postprocess.py --dataset_path ${datasets_path} --model_config ${mmdetection_path}/configs/yolof/yolof_r50_c5_8x8_1x_coco.py
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
