@@ -6,7 +6,7 @@ cur_path=`pwd`
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 
-export RANK_SIZE=1
+export RANK_SIZE=8
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -18,7 +18,7 @@ data_path=""
 #网络名称，同目录名称
 Network="GhostNet_ID1622_for_PyTorch"
 #训练epoch
-train_epochs=30
+train_epochs=100
 #训练batch_size
 batch_size=32
 #训练step
@@ -101,9 +101,13 @@ cd $cur_path/../
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
-    echo "Device ID: $ASCEND_DEVICE_ID"
+    export ASCEND_DEVICE_ID=$RANK_ID
     export RANK_ID=$RANK_ID
-    
+    export WORLD_SIZE=$RANK_SIZE
+    export RANK=$RANK_ID
+    export MASTER_ADDR=127.0.0.1
+    export MASTER_PORT=29688
+    export NPU_CALCULATE_DEVICE=$RANK_ID
     
     
     #创建DeviceID输出目录，不需要修改
@@ -114,17 +118,9 @@ do
         mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
     fi
     
-    #绑核，不需要绑核的模型删除，需要绑核的模型根据实际修改
-    #cpucount=`lscpu | grep "CPU(s):" | head -n 1 | awk '{print $2}'`
-    #cpustep=`expr $cpucount / 8`
-    #echo "taskset c steps:" $cpustep
-    #let a=RANK_ID*$cpustep
-    #let b=RANK_ID+1
-    #let c=b*$cpustep-1
-	
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3 train.py $PREC --workers 20 $data_path --num-classes 1000 --batch-size $batch_size --epochs $train_epochs > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 train.py $PREC --workers 20 $data_path --num-classes 1000 --batch-size $batch_size --lr=0.08 --epochs $train_epochs --local_rank=$ASCEND_DEVICE_ID > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
 
@@ -132,7 +128,7 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-
+ASCEND_DEVICE_ID=0
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
