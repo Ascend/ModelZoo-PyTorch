@@ -22,7 +22,7 @@ def pth2onnx(model, output_file):
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 114, 114)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=9, verbose=True)
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

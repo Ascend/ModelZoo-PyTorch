@@ -64,10 +64,6 @@ mmcv == 1.5.1
 
 3. 编写pth2onnx脚本RDN_pth2onnx.py
 
-   **说明：**
-
-   > 由于onnx 11版本的算子导出的模型会包含暂不支持的DepthToSpace算子，因此pth2onnx中用onnx 9的版本导出onnx模型
-
    
 
 4. 执行pth2onnx脚本，生成onnx模型文件
@@ -89,7 +85,7 @@ mmcv == 1.5.1
 2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 
    ```
-   atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend710
+   atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend310P
    ```
 
 
@@ -132,7 +128,7 @@ python3.7 RDN_preprocess.py --src-path=/root/dataset/set5 --save-path=./prep_dat
 
 ####  5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend710上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理benchmark工具用户指南 01
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理benchmark工具用户指南 01
 
 
 
@@ -198,7 +194,7 @@ python3.7 RDN_postprocess.py --pred-path=./result/dumpOutput_device0 --label-pat
 
 #### 6.2 精度对比
 
-github仓库中给出的官方精度为PSNR：38.18，310离线推理的精度为PSNR：38.27，710离线推理的精度为PSNR：38.27，故精度达标
+github仓库中给出的官方精度为PSNR：38.18，310离线推理的精度为PSNR：38.27，310P离线推理的精度为PSNR：38.27，故精度达标
 
 
 
@@ -233,14 +229,12 @@ bs1 310单卡吞吐率：7.41332x4=29.653fps/card
 
 
 
-
-
-#### 7.2 npu(710)性能数据
+#### 7.2 npu(310P)性能数据
 
 运行
 
 ```
-atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend310P
 ```
 
 得到size为114的om模型
@@ -260,7 +254,7 @@ batch1的性能，benchmark工具在整个数据集上推理后生成result/perf
 ```
 
 Interface throughputRate: 49.4688
-bs1 710单卡吞吐率：49.469fps/card
+bs1 310P单卡吞吐率：49.469fps/card
 
 
 
@@ -293,7 +287,7 @@ batch1 t4单卡吞吐率：1000/(44.9095/1)=22.267fps
 #### 7.3 性能对比
 
 batch1：
-710/310 = 49.469fps/29.653fps = 1.668 > 1.2
-710/T4 = 49.469fps/22.267fps = 2.222 > 1.6
+310P/310 = 49.469fps/29.653fps = 1.668 > 1.2
+310P/T4 = 49.469fps/22.267fps = 2.222 > 1.6
 
-710单卡吞吐率大于1.2倍310单卡吞吐率，且大于1.6倍T4单卡吞吐率，故性能达标。
+310P单卡吞吐率大于1.2倍310单卡吞吐率，且大于1.6倍T4单卡吞吐率，故性能达标。

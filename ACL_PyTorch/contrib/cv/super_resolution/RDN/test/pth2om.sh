@@ -9,7 +9,7 @@ fi
 
 rm -rf rdn_x2_bs1.om
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend310P
 
 if [ -f "rdn_x2_bs1.om" ]; then
     echo "success"
