@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cur_path=`pwd`
 #集合通信参数,不需要修改
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
@@ -8,11 +8,11 @@ device_id=0
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Bert_Chinese_for_PyTorch"
+Network="Bert_Chinese_ID3433_for_PyTorch"
 #训练epoch
 train_epochs=3
 #训练batch_size 默认bert base batch size, 该参数外部可传入
-batch_size=16
+batch_size=32
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
 
@@ -25,8 +25,18 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --model_size* ]];then
       model_size=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
+
+#判断是否使用conda环境
+if [[ $conda_name != "" ]];then
+   cp -r $data_path/* $cur_path/../
+   data_path=$data_path/'train_huawei.txt'
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
