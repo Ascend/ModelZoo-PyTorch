@@ -46,4 +46,4 @@ bash test/eval_acc_perf.sh --datasets_path=data/coco
 
 | 模型        | pth精度   | 310P离线推理精度 | 性能基准  | 310P性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
-| UniFormer bs1 | bbox_mAP=53.4<br />segm_mAP=46.0 | bbox_mAP=52.8<br />segm_mAP=45.6 | 2.2 fps | 3.22 fps |
+| UniFormer bs1 | bbox_mAP_50=72.5<br />segm_mAP_50=69.6 | bbox_mAP_50=72.0<br />segm_mAP_50=69.1 | 2.2 fps | 3.22 fps |
