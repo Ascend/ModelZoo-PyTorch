@@ -40,11 +40,15 @@ git checkout v2.0/v3.1/v4.0/v5.0/v6.0/v6.1
 ```
 
 ### 1.2 准备以下文件，放到pytorch源码根目录
-
 （1）common文件夹及对应版本文件夹  
 （2）对应版本的 [权重文件](https://github.com/ultralytics/yolov5/tags)  
 （3）coco2017数据集val2017和label文件**instances_val2017.json**    
 （4）[可选] 若需评估性能，下载benchmark工具，不同平台下载路径 [x86](https://support.huawei.com/enterprise/zh/software/255327333-ESW2000481524) / [arm](https://support.huawei.com/enterprise/zh/software/255327333-ESW2000481500)
+
+### 安装依赖
+```shell
+pip install -r requirements.txt
+```
 
 
 ## 2 推理步骤
