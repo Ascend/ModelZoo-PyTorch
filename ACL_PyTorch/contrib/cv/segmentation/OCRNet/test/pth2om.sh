@@ -8,7 +8,7 @@ onnx_path=ocrnet.onnx
 
 
 rm -rf ./${pd_model}
-python PaddleSeg/export.py --save_dir ${pd_model} --model_path ${pdparams_path} --config ${config_path}
+python3 PaddleSeg/export.py --save_dir ${pd_model} --model_path ${pdparams_path} --config ${config_path}
 paddle2onnx --model_dir ${pd_model} --model_filename ${pd_model}/model.pdmodel --params_filename ${pd_model}/model.pdiparams --save_file ${onnx_path} --opset_version 11
 
 rm -rf ./om
@@ -19,8 +19,8 @@ mkdir onnx
 
 for batch_size in 1 4 8 16
 do
-	python -m onnxsim ocrnet.onnx onnx/ocrnet_bs${batch_size}.onnx --input-shape="x:${batch_size},3,1024,2048" --skip-fuse-bn
-	python optimize_onnx.py onnx/ocrnet_bs${batch_size}.onnx onnx/ocrnet_optimize_bs${batch_size}.onnx
+	python3 -m onnxsim ocrnet.onnx onnx/ocrnet_bs${batch_size}.onnx --input-shape="x:${batch_size},3,1024,2048" --skip-fuse-bn
+	python3 optimize_onnx.py onnx/ocrnet_bs${batch_size}.onnx onnx/ocrnet_optimize_bs${batch_size}.onnx
 	
 done
 

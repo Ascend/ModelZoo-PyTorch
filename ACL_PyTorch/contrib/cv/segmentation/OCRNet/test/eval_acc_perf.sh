@@ -4,7 +4,7 @@ echo batch_size=1
 
 rm -rf ./result
 mkdir result
-python OCRNet_preprocess.py --src_path $1 --bin_file_path bs1_bin --batch_size 1
+python3 OCRNet_preprocess.py --src_path $1 --bin_file_path bs1_bin --batch_size 1
 
 rm -rf ./result
 mkdir result
@@ -16,4 +16,4 @@ path=`pwd`
 echo $path
 cd ../..
 
-python OCRNet_postprocess.py --bin_file_path bs1_bin --pred_path $path
+python3 OCRNet_postprocess.py --bin_file_path bs1_bin --pred_path $path

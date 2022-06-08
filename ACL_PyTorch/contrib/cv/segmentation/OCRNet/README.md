@@ -8,8 +8,7 @@
 
 ```
 CANN == 5.1.RC1
-torch == 1.11.0
-torchvision == 0.12.0
+paddlepaddle == 2.3.0
 onnx 
 ```
 
@@ -101,7 +100,7 @@ mv main ../../../msame
 在当前工作目录下，执行以下命令：
 
 ```
-python OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1_bin --batch_size 1
+python3 OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1_bin --batch_size 1
 ```
 
 参数解释如下：
@@ -123,7 +122,7 @@ python OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1_
 在当前工作目录下，使用后处理脚本，计算得到模型的推理精度：
 
 ```
-python OCRNet_postprocess.py --bin_file_path bs1_bin --pred_path /home/lzh/out
+python3 OCRNet_postprocess.py --bin_file_path bs1_bin --pred_path /home/lzh/out
 ```
 
 参数解释如下：
