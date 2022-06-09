@@ -1,5 +1,5 @@
 import sys
-sys.path.append(r"./SpanBERT-main/code")
+sys.path.append(r"./SpanBERT/code")
 from pytorch_pretrained_bert.modeling import BertForQuestionAnswering
 from pytorch_pretrained_bert import modeling
 from collections import OrderedDict

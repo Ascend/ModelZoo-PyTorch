@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import sys
-sys.path.append(r"./SpanBERT-main/code")
+sys.path.append(r"./SpanBERT/code")
 import argparse
 import collections
 import json
@@ -743,24 +743,20 @@ def evaluate(args, eval_dataset, eval_dataloader,
     bin_path = all_file[0]
 
     for idx, (input_ids, input_mask, segment_ids, example_indices) in enumerate(eval_dataloader):
-        batch_start_logit = np.fromfile('{}/{}_output_0.bin'.format(bin_path, idx), dtype='float32')
-        batch_end_logit = np.fromfile('{}/{}_output_1.bin'.format(bin_path, idx), dtype='float32')       
-        batch_start_logits = torch.from_numpy(batch_start_logit) 
-        batch_end_logits = torch.from_numpy(batch_end_logit)   
-        start_logits = batch_start_logits.cpu().tolist()
-        end_logits = batch_end_logits.cpu().tolist()
-        print(idx)
-        if pred_only and idx % 10 == 0:
-            logger.info("Running test: %d / %d" % (idx, len(eval_dataloader)))
-        input_ids = input_ids
-        input_mask = input_mask
-        segment_ids = segment_ids
-        eval_feature = eval_features[idx]
-        unique_id = int(eval_feature.unique_id)
-        all_results.append(RawResult(unique_id=unique_id,
-                                     start_logits=start_logits,
-                                     end_logits=end_logits))
-
+        batch_start_logits = np.fromfile('{}/{}_output_0.bin'.format(bin_path, idx), dtype='float32')
+        batch_end_logits = np.fromfile('{}/{}_output_1.bin'.format(bin_path, idx), dtype='float32')
+        batch_start_logits = torch.from_numpy(batch_start_logits) 
+        batch_end_logits = torch.from_numpy(batch_end_logits)
+        batch_start_logits = torch.reshape(batch_start_logits, (-1, 512))
+        batch_end_logits = torch.reshape(batch_end_logits, (-1, 512))
+        for i, example_index in enumerate(example_indices):
+            start_logits = batch_start_logits[i].detach().cpu().tolist()
+            end_logits = batch_end_logits[i].detach().cpu().tolist()
+            eval_feature = eval_features[example_index.item()]
+            unique_id = int(eval_feature.unique_id)
+            all_results.append(RawResult(unique_id=unique_id,
+                                         start_logits=start_logits,
+                                         end_logits=end_logits))
     preds, nbest_preds, na_probs = \
         make_predictions(eval_examples, eval_features, all_results,
                          args.n_best_size, args.max_answer_length,

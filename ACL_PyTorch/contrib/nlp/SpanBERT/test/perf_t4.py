@@ -22,8 +22,9 @@ def make_inf_dummy_input(bs):
 if __name__ == '__main__':   
     parser = argparse.ArgumentParser()
     parser.add_argument("--bs", default=1, type=int, required=True)
+    parser.add_argument("--path", default="./spanBert_dynamicbs.onnx", type=str, required=True)
     args = parser.parse_args()
-    ort_session = ort.InferenceSession('/home/zxy/spanBertWeight_batch1.onnx',providers=['CUDAExecutionProvider'])
+    ort_session = ort.InferenceSession(args.path, providers=['CUDAExecutionProvider'])
     inf_dummy_input = make_inf_dummy_input(args.bs)
     inf_dummy_input = [t.cpu().numpy() for t in inf_dummy_input]
     totaltime = 0

@@ -1,5 +1,5 @@
 import sys
-sys.path.append(r"./SpanBERT-main/code")
+sys.path.append(r"./SpanBERT/code")
 import argparse
 import collections
 import json
@@ -365,7 +365,7 @@ def main(args):
     all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
     all_example_index = torch.arange(all_input_ids.size(0), dtype=torch.long)
     eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_example_index)
-    eval_dataloader = DataLoader(eval_data, batch_size=1)
+    eval_dataloader = DataLoader(eval_data, batch_size=args.batch_size)
     input_ids_path = "./input_ids"
     input_mask_path = "./input_mask"
     segment_ids_path = "./segment_ids"
@@ -405,6 +405,9 @@ if __name__ == "__main__":
         parser.add_argument("--do_lower_case", action='store_true', help="Set this flag if you are using an uncased model.")
         parser.add_argument('--version_2_with_negative', action='store_true',
                             help='If true, the SQuAD examples contain some that do not have an answer.')
+        parser.add_argument("--batch_size", default=1, type=int,
+                            help="When splitting up a long document into chunks, "
+                                 "how much stride to take between chunks.")
         args = parser.parse_args()
 
         main(args)

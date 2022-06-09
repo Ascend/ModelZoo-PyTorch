@@ -19,7 +19,8 @@ rm -rf ./input_ids
 rm -rf ./input_mask
 rm -rf ./segment_ids
 python spanBert_preprocess.py \
-    --dev_file ${datasets_path}/dev-v1.1.json
+    --dev_file ${datasets_path}/dev-v1.1.json \
+    --batch_size ${batch_size}
 if [ $? != 0 ]; then
     echo "spanBert_preprocess fail!"
     exit -1
@@ -48,7 +49,8 @@ python spanBert_postprocess.py \
 	--doc_stride 128 \
 	--eval_metric f1 \
 	--fp16 \
-	--bin_dir ./result/outputs_bs${batch_size}_om
+	--bin_dir ./result/outputs_bs${batch_size}_om \
+    --eval_batch_size ${batch_size}
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

@@ -14,7 +14,7 @@ if __name__ == '__main__':
         with open(result_json, 'r') as f:
             content = f.read()
         tops = [i.get('value') for i in json.loads(content).get('value') if 'Top' in i.get('key')]
-        print('om {} top1:{}'.format(result_json.split('_')[1].split('.')[0], tops[0]))
+        print('om {} f1:{}'.format(result_json.split('_')[1].split('.')[0], tops[0]))
     elif args.result_file.endswith('.txt'):
         result_txt = args.result_file
         with open(result_txt, 'r') as f:

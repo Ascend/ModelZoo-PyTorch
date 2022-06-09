@@ -27,11 +27,11 @@ fi
 rm -rf spanBert_bs${batch_size}.om
 atc --framework=5 --model=./spanBert_dynamicbs.onnx \
     --output=./spanBert_bs${batch_size} \
-    --input_format=ND --input_shape="input_ids:1,512;token_type_ids:1,512;attention_mask:1,512" \
+    --input_format=ND --input_shape="input_ids:${batch_size},512;token_type_ids:${batch_size},512;attention_mask:${batch_size},512" \
     --log=error --soc_version=Ascend710
 if [ -f "spanBert_bs${batch_size}.om" ] ; then
-  echo "==> 2. creating om model successfully."
+  echo "==> 2. creating spanBert_bs${batch_size}.om successfully."
 else
-  echo "sim_om export failed"
+  echo "om export failed"
 fi
 echo "==> 3. Done."
