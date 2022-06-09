@@ -870,7 +870,7 @@ def scan_core_binding(path_pr_list, fram_str, modelzoo_dir):
                     print('{},The file has binding cores, please check and modify it'.format(pr_filelist0_str))
     print('core_binding_check=%d' % core_binding_check)
 
-# 无效代码删除，对应每个检查部分需要做好注释工作，另外硬编码较多，需要看看是否合理
+# TODO 无效代码删除，对应每个检查部分需要做好注释工作，另外硬编码较多，需要看看是否合理
 def main():
     args = init_args()
     path_pr_list = args.pr_filelist_dir
