@@ -1,4 +1,4 @@
-###  YOLOX_tiny模型PyTorch离线推理指导
+###  YOLOF模型PyTorch离线推理指导
 
 ### 1. 环境准备
 
@@ -28,31 +28,31 @@ pip3 install -v -e .
 mmdeploy_path=$(pwd)
 ```
 
-3. 点击链接https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth  下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。放到mmdeploy_path目录下
+3. 点击链接https://download.openmmlab.com/mmdetection/v2.0/yolof/yolof_r50_c5_8x8_1x_coco/yolof_r50_c5_8x8_1x_coco_20210425_024427-8e864411.pth  下载YOLOF对应的weights， 名称为yolof_r50_c5_8x8_1x_coco_20210425_024427-8e864411.pth。放到mmdeploy_path目录下
 
 4. 数据集
 
-   使用coco2017数据集，请到https://cocodataset.org  自行下载coco2017，放到/root/datasets/coco目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，目录下包含val2017及annotations目录：
+   使用coco2017数据集，请到https://cocodataset.org  自行下载coco2017，放到/root/datasets/coco目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，
 
    ```
    |---- val2017
-   |———— annotations                                      
+   |———— annotations
    ```
 
 5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
-   将benchmark.x86_64或benchmark.aarch64放到当前YoloX_Tiny_for_Pytorch目录下
+   将benchmark.x86_64或benchmark.aarch64放到当前YoloF_for_Pytorch目录下
 
 ### 2. 离线推理
 
 710上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```bash
-cp -r YoloX_Tiny_for_Pytorch ${mmdeploy_path}
+cp -r YoloF_for_Pytorch ${mmdeploy_path}
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/pth2onnx.sh ${mmdetection_path} ${mmdeploy_path}
-bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yoloxint8.onnx Ascend710
-bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=64 --mmdetection_path=${mmdetection_path}
+bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yolofint8.onnx Ascend710
+bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=16 --mmdetection_path=${mmdetection_path}
 ```
 
 注意：量化要求使用onnxruntime版本为1.6.0
@@ -63,7 +63,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=64 -
 
 | 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
-| YOLOX bs64 | box AP:0.337 | box AP:0.331 | fps 741 | fps 890 |
+| YOLOF bs16 | box AP:0.302 | box AP:0.296 | fps 420 | fps 560 |
 
 
 
