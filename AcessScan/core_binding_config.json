@@ -1,0 +1,6 @@
+{
+  "taskset -c": {
+    "need": "taskset -c $",
+    "not need": "taskset -c $a-$c"
+  }
+}
