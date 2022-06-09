@@ -24,9 +24,11 @@ import torch.distributed as dist
 import torchvision
 import torchvision.transforms as transforms
 import torch.multiprocessing as mp
+import torch.nn as nn
 import random
 
 from models import *
+from models.wideresnet import WideResNet
 from utils import *
 
 import apex
