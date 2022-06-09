@@ -6,6 +6,8 @@
 	-   [2.2 pt导出om模型](#22-pt导出om模型)
 	-   [2.3 om模型推理](#23-om模型推理)
 -   [3 端到端推理Demo](#3-端到端推理Demo)
+-   [4 量化（可选）](#4-量化（可选）)
+-   [5 FAQ](#5-FAQ)
 
 ------
 
@@ -38,11 +40,15 @@ git checkout v2.0/v3.1/v4.0/v5.0/v6.0/v6.1
 ```
 
 ### 1.2 准备以下文件，放到pytorch源码根目录
-
 （1）common文件夹及对应版本文件夹  
 （2）对应版本的 [权重文件](https://github.com/ultralytics/yolov5/tags)  
 （3）coco2017数据集val2017和label文件**instances_val2017.json**    
 （4）[可选] 若需评估性能，下载benchmark工具，不同平台下载路径 [x86](https://support.huawei.com/enterprise/zh/software/255327333-ESW2000481524) / [arm](https://support.huawei.com/enterprise/zh/software/255327333-ESW2000481500)
+
+### 安装依赖
+```shell
+pip install -r requirements.txt
+```
 
 
 ## 2 推理步骤
@@ -81,5 +87,5 @@ bash common/pth2om.sh --version 6.1 --model yolov5s --bs 4 --type int8 --calib_b
 （2）设置参数--type int8 --calib_bs 16可生成om量化模型，其中16为量化使用的校准数据个数，根据实际所用的校准数据修改。  
 
 
-## Q & A
-常见问题可参考[Q & A](Q&A.md)
+## FAQ
+常见问题可参考 [FAQ](FAQ.md)
