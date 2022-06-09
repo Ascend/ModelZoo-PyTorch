@@ -96,10 +96,7 @@ FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-#输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'best' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $18}'`
 #打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总
