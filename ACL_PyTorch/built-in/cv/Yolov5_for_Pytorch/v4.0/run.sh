@@ -21,6 +21,11 @@ bash common/pth2om.sh --version $version \
                       --output_dir $output_dir \
                       --soc $soc
 
+if [ $? -ne 0 ]; then
+    echo -e "pth导出om模型 Failed \n"
+    exit 1
+fi
+
 ## 推理om模型
 bash common/eval.sh --version $version \
                     --model $model \
@@ -30,3 +35,4 @@ bash common/eval.sh --version $version \
                     --output_dir $output_dir \
                     --install_path $install_path \
                     --arch $arch
+

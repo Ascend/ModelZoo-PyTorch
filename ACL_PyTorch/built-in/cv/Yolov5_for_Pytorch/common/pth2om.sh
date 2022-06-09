@@ -62,6 +62,9 @@ else
     echo -e $args_info
 fi
 
+if [ ! -d ${output_dir} ]; then
+  mkdir ${output_dir}
+fi
 
 ## pt导出om模型
 echo "Starting 修改pytorch源码"
@@ -69,33 +72,33 @@ git apply v${version}/v${version}.patch
 
 echo "Starting 导出onnx模型并简化"
 if [[ ${version} == 6* ]] ; then
-    python3 export.py --weights=${model}.pt --imgsz=640 --batch-size=${bs} --opset=11 --dynamic
+    python3 export.py --weights=${model}.pt --imgsz=640 --batch-size=${bs} --opset=11 --dynamic || exit 1
 else
-    python3 models/export.py --weights=${model}.pt --img-size=640 --batch-size=${bs} --opset=11 --dynamic
+    python3 models/export.py --weights=${model}.pt --img-size=640 --batch-size=${bs} --opset=11 --dynamic || exit 1
 fi
-python3 -m onnxsim ${model}.onnx ${model}.onnx --dynamic-input-shape --input-shape images:${bs},3,640,640
+python3 -m onnxsim ${model}.onnx ${model}.onnx --dynamic-input-shape --input-shape images:${bs},3,640,640 || exit 1
 model_tmp=${model}
 
 if [ ${type} == int8 ] ; then
     echo "Starting 生成量化数据"
-    python3 common/quantize/generate_data.py --img_info_file=common/quantize/img_info_amct.txt --save_path=amct_data --batch_size=${calib_bs}
+    python3 common/quantize/generate_data.py --img_info_file=common/quantize/img_info_amct.txt --save_path=amct_data --batch_size=${calib_bs} || exit 1
     
     if [[ ${version} == 6.1 && ${model} == yolov5[nl] ]] ; then
         echo "Starting pre_amct"
-        python3 common/quantize/calibration_scale.py --input=${model}.onnx --output=${model}_cali.onnx --mode=pre_amct
+        python3 common/quantize/calibration_scale.py --input=${model}.onnx --output=${model}_cali.onnx --mode=pre_amct || exit 1
 
         echo "Starting onnx模型量化"
-        bash common/quantize/amct.sh ${model}_cali.onnx
+        bash common/quantize/amct.sh ${model}_cali.onnx || exit 1
         if [[ -f ${output_dir}/result_deploy_model.onnx ]];then
             mv ${output_dir}/result_deploy_model.onnx ${model}_amct.onnx
         fi
         rm -rf ${model}_cali.onnx
 
         echo "Starting after_amct"
-        python3 common/quantize/calibration_scale.py --input=${model}_amct.onnx --output=${model}_amct.onnx --mode=after_amct
+        python3 common/quantize/calibration_scale.py --input=${model}_amct.onnx --output=${model}_amct.onnx --mode=after_amct || exit 1
     else
         echo "Starting onnx模型量化"
-        bash common/quantize/amct.sh ${model}.onnx
+        bash common/quantize/amct.sh ${model}.onnx || exit 1
         if [[ -f ${output_dir}/result_deploy_model.onnx ]];then
             mv ${output_dir}/result_deploy_model.onnx ${model}_amct.onnx
         fi
@@ -108,15 +111,15 @@ if [ ${type} == int8 ] ; then
 fi
 
 echo "Starting 修改onnx模型，添加NMS后处理算子"
-python3 common/util/modify_model.py --pt=${model}.pt --onnx=${model_tmp}.onnx --conf-thres=${conf} --iou-thres=${iou}
+python3 common/util/modify_model.py --pt=${model}.pt --onnx=${model_tmp}.onnx --conf-thres=${conf} --iou-thres=${iou} || exit 1
 
 echo "Starting onnx导出om模型（有后处理）"
-bash common/util/atc.sh infer ${model_tmp}_nms.onnx ${output_dir}/${model_tmp}_nms ${bs} ${soc}
+bash common/util/atc.sh infer ${model_tmp}_nms.onnx ${output_dir}/${model_tmp}_nms ${bs} ${soc} || exit 1
 rm -rf ${model_tmp}_nms.onnx
 
 if [[ ${mode} == val ]] ; then
     echo "Starting onnx导出om模型（无后处理）"
-    bash common/util/atc.sh val ${model_tmp}.onnx ${output_dir}/${model_tmp} ${bs} ${soc}
+    bash common/util/atc.sh val ${model_tmp}.onnx ${output_dir}/${model_tmp} ${bs} ${soc} || exit 1
     rm -rf ${model_tmp}.onnx
 fi
 
