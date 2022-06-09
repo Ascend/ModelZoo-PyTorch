@@ -49,7 +49,7 @@ source env.sh
 ```
 #### 3.2.2 使用atc将onnx模型转换为om模型
 ```shell
-atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape="image:1,10,3,16,112,112" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
+atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape="image:1,10,3,16,112,112" --log=debug --soc_version=Ascend310
 ```
 参数说明：
 
@@ -59,7 +59,6 @@ atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape=
 - `--input_shape`: 模型输入的形状。
 - `--log`: 设置ATC模型转换过程中日志的级别
 - `--soc_version`:soc版本
-- `--auto_tune-mode`:是否开启auto-tune
 
 ## 4.数据预处理
 ### 4.1 数据集获取
