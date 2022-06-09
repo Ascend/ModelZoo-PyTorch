@@ -32,7 +32,7 @@
 
 2. [使用Netron工具打开模型](https://netron.app/)<br>
 Netron用来可视化模型，我们再直观看下上述子模块有啥区别。<br>
-<img src="img/tag_2.png" width = 80% /><br>
+<img src="img/tag_2.png" width = 50% /><br>
 
 **结论：不同版本的模型，整网结构相同，子模块不同。**
 
