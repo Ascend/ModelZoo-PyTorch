@@ -363,6 +363,7 @@ def main():
     # TODO 检查正确的模型根目录
     # check_firstlevel_file(path_pr_list, fram_str, modelzoo_dir)
     print('=================Start to Check Internal Link =================')
+    # TODO 设置正确的涉A的不允许出现在资料里的网站，维护到link_list.txt
     with open(alink, 'r') as food:
         for onelink in food:
             check_link(path_pr_list, fram_str, modelzoo_dir, onelink)
