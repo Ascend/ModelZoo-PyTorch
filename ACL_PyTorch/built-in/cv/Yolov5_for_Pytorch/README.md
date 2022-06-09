@@ -45,7 +45,7 @@ git checkout v2.0/v3.1/v4.0/v5.0/v6.0/v6.1
 （3）coco2017数据集val2017和label文件**instances_val2017.json**    
 （4）[可选] 若需评估性能，下载benchmark工具，不同平台下载路径 [x86](https://support.huawei.com/enterprise/zh/software/255327333-ESW2000481524) / [arm](https://support.huawei.com/enterprise/zh/software/255327333-ESW2000481500)
 
-### 安装依赖
+### 1.3 安装依赖
 ```shell
 pip install -r requirements.txt
 ```
@@ -70,7 +70,7 @@ python3 common/om_infer.py --img-path=./val2017 --model=output/yolov5s_nms_bs4.o
 ```
 
 
-## 3   端到端推理Demo
+## 3 端到端推理Demo
 对应版本文件夹下提供run.sh，可直接执行
 ```shell
 bash v6.1/run.sh  
@@ -89,3 +89,4 @@ bash common/pth2om.sh --version 6.1 --model yolov5s --bs 4 --type int8 --calib_b
 
 ## FAQ
 常见问题可参考 [FAQ](FAQ.md)
+
