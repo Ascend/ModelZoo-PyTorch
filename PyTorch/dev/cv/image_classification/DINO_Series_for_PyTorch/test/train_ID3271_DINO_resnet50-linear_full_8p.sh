@@ -24,7 +24,7 @@ batch_size=1024
 #训练step
 train_steps=
 #学习率
-learning_rate=
+learning_rate=0.3
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
@@ -112,6 +112,8 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../eval_linear.py \
     --checkpoint_key teacher \
     --data_path $data_path \
     $PREC \
+    --lr $learning_rate \
+    --num_workers 25 \
     --output_dir ${cur_path}/output/0/ckpt \
     --apex  > ${cur_path}/output/0/train_0.log 2>&1 &
 wait

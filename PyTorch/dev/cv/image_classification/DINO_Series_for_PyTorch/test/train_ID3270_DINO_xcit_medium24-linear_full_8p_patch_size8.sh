@@ -18,7 +18,7 @@ ckpt_path=""
 #网络名称，同目录名称
 Network="DINO_xcit_medium24-linear_ID3270_for_PyTorch"
 #训练epoch
-train_epochs=100
+train_epochs=50
 #训练batch_size
 batch_size=1024
 #训练step
@@ -113,6 +113,7 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../eval_linear.py \
     --patch_size 8 \
     --checkpoint_key teacher \
     --data_path $data_path \
+    --epochs $train_epochs \
     $PREC \
     --output_dir ${cur_path}/output/0/ckpt \
     --apex  > ${cur_path}/output/0/train_0.log 2>&1 &
