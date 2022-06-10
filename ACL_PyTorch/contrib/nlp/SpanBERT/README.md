@@ -83,9 +83,9 @@ bash download_finetuned.sh model_dir squad1
 ```bash
 python spanBert_bin2onnx.py  \
 --config_file ./model_dir/squad1/bert_config.json  \
---bin_file ./model_dir/squad1/pytorch_model.bin
+--checkpoint ./model_dir/squad1/pytorch_model.bin
 ```
-其中"config_file"表示模型config文件的路径，"bin_file"表示模型bin文件的路径，执行后会在当前路径生成spanBert_dynamicbs.onnx  
+其中"config_file"表示模型config文件的路径，"checkpoint"表示模型bin文件的路径，执行后会在当前路径生成spanBert_dynamicbs.onnx  
 
 ### <a name="32">3.2 onnx转om模型</a>
 1. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/51RC2alpha002/infacldevg/atctool)
