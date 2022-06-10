@@ -91,7 +91,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
 ```
-atc --framework=5 --model=./human-pose-estimation.onnx --output=./human-pose-estimation_bs1 --input_format=NCHW --input_shape="data:1, 3, 368, 640" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=./human-pose-estimation.onnx --output=./human-pose-estimation_bs1 --input_format=NCHW --input_shape="data:1, 3, 368, 640" --log=debug --soc_version=Ascend710
 ```
 >  **说明**
 > 注意目前ATC支持的onnx算子版本为11
@@ -103,7 +103,7 @@ atc --framework=5 --model=./human-pose-estimation.onnx --output=./human-pose-est
 chmod 777 benchmark.x86_64
 ```
 ### 5.2 离线推理
-310/710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310/310p上执行，执行时使npu-smi info查看设备状态，确保device空闲
 ```
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./human-pose-estimation_bs1.om -input_text_path=./openpose_prep_bin.info -input_width=640 -input_height=368 -output_binary=False -useDvpp=False
 ```
@@ -146,6 +146,6 @@ python3.7 OpenPose_postprocess.py --benchmark_result_path result/dumpOutput_devi
 - --detections_save_path：生成结果文件。
 
 ## 6 测评结果
-| 模型            | Ascend310（samples/s） | Ascend710（samples/s） | T4（samples/s） | 710/310 | 710/T4 | 精度    |
+| 模型            | Ascend310（samples/s） | Ascend310p（samples/s） | T4（samples/s） | 310p/310 | 310p/T4 | 精度    |
 |---------------|----------------------|----------------------|---------------|---------|--------|-------|
 | OpenPose_bs1  | 547.996              | 674.06               | 252.592       | 1.23    | 2.66   | 0.404 |
