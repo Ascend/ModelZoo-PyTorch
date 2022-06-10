@@ -46,21 +46,24 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help="The BERT model config")
-    parser.add_argument("--bin_file",
+    parser.add_argument("--checkpoint",
                         default=None,
                         type=str,
                         required=True,
                         help="The checkpoint file from pretraining") 
+    parser.add_argument("--onnx_path",
+                        default='./spanBert_dynamicbs.onnx',
+                        type=str)
     parser.add_argument('--fp16',
                         action='store_true',
                         default=False,
                         help="use mixed-precision")
     args = parser.parse_args()
-    MODEL_ONNX_PATH = "./spanBert_dynamicbs.onnx"
+    MODEL_ONNX_PATH = args.onnx_path
     OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
     config = modeling.BertConfig.from_json_file(args.config_file)
     model = modeling.BertForQuestionAnswering(config) 
-    checkpoint = torch.load(args.bin_file, map_location='cpu')
+    checkpoint = torch.load(args.checkpoint, map_location='cpu')
     checkpoint = proc_nodes_module(checkpoint)
     model.load_state_dict(checkpoint)
     model.to("cpu")

@@ -14,9 +14,9 @@ done
 # ======================= convert onnx =======================================
 
 rm -rf spanBert_dynamicbs.onnx
-python spanBert_bin2onnx.py  \
+python spanBert_pth2onnx.py  \
     --config_file ./model_dir/squad1/bert_config.json  \
-    --bin_file ./model_dir/squad1/pytorch_model.bin
+    --checkpoint ./model_dir/squad1/pytorch_model.bin
 if [ -f "spanBert_dynamicbs.onnx" ]; then
   echo "==> 1. creating onnx model successfully."
 else

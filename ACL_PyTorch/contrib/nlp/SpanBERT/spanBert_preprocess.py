@@ -22,6 +22,7 @@ from io import open
 import numpy as np
 import torch
 import os
+from tqdm import tqdm
 from torch.utils.data import DataLoader, TensorDataset
 from run_squad import *
 from pytorch_pretrained_bert.tokenization import (BertTokenizer,
@@ -63,10 +64,9 @@ def main(args):
     if not os.path.exists(segment_ids_path):
         os.makedirs(segment_ids_path)
     i = -1
-    for input_ids, input_mask, segment_ids, example_indices in eval_dataloader:
+    # for input_ids, input_mask, segment_ids, example_indices in eval_dataloader:
+    for input_ids, input_mask, segment_ids, example_indices in tqdm(eval_dataloader, leave = False):
         i = i + 1
-        print("[info] file", "===", i)
-        
         input_ids_np = input_ids.numpy()
         input_mask_np = input_mask.numpy()
         segment_ids_np = segment_ids.numpy()
