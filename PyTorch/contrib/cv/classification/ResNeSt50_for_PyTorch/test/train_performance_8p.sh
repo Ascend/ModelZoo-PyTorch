@@ -11,9 +11,9 @@ export PYTHONWARNINGS="ignore:semaphore_tracker:UserWarning"
 # 配置文件路径
 config_path=""
 # loss scale
-loss_scale=8
+loss_scale=dynamic
 # optimizer level
-opt_level=O1
+opt_level=O2
 # txt name
 txt_name=log_${RANK_SIZE}P_per_${opt_level}_${loss_scale}
 
@@ -80,7 +80,7 @@ do
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
 
-  nohup taskset -c $PID_START-$PID_END python3.7.5 -u ./train_npu.py  \
+  nohup taskset -c $PID_START-$PID_END python3 -u ./train_npu.py  \
       --config-file "${config_path}"            \
       --device "npu"                            \
       --loss-scale ${loss_scale}                \

@@ -11,9 +11,9 @@ export PYTHONWARNINGS="ignore:semaphore_tracker:UserWarning"
 # 配置文件路径
 config_path=""
 # loss scale
-loss_scale=8
+loss_scale=dynamic
 # optimizer level
-opt_level=O1
+opt_level=O2
 # txt name
 txt_name=log_${RANK_SIZE}P_per_${opt_level}_${loss_scale}
 
@@ -83,7 +83,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7.5 -u ./train_npu.py                 \
+python3 -u ./train_npu.py                 \
     --config-file "${config_path}"            \
     --device "npu"                            \
     --loss-scale ${loss_scale}                \
