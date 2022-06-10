@@ -447,7 +447,7 @@ def check_Sensitive_content(path_pr_list, fram_str, modelzoo_dir):
             # 判断文件是否存在
             file_name = model_str_name(pr_filelist0_str1)
             pr_filelist0_str = Path(file_name)
-            if pr_filelist0_str.exists():
+            if pr_filelist0_str.exists() and os.path.isfile(pr_filelist0_str):
                 # 如果文件存在，打开文件
                 with open(str(pr_filelist0_str), 'r', encoding='gb18030', errors='ignore') as foo:
                     for words in foo:
