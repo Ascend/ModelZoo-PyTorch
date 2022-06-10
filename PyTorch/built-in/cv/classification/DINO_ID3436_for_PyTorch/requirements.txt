@@ -1,0 +1,5 @@
+torch==1.5.0
+apex
+torchvision==0.6.0
+timm
+pillow==9.1.0
