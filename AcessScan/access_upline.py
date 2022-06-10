@@ -911,7 +911,8 @@ def main():
     # TODO official已删，不需要再检查放哪了，modelzoo_level检查可以继续保留
     # modelzoo_level_check(path_pr_list, fram_str, modelzoo_dir)
     print('=================Start to Check File&Keywords of Test Directory  =================')
-    file_word_check(fram_str, modelzoo_dir, path_pr_list, train_full_keyword, train_performance_keyword)
+    # TODO 兼容train*full*.sh形式
+    # file_word_check(fram_str, modelzoo_dir, path_pr_list, train_full_keyword, train_performance_keyword)
     print('=================Start to Check core_binding&Device Id status =================')
     scan_core_binding(path_pr_list, fram_str, modelzoo_dir)
 
