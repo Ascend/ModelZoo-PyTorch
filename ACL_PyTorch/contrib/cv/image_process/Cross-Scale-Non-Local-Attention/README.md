@@ -32,9 +32,7 @@ cd ../
 
 4.获取权重文件 Cross-Scale-Non-Local-Attention预训练pth权重文件
 
-`wget https://drive.google.com/drive/folders/1C--KFcfAsvLM4K0J6td4TqNeiaGsTXd_?usp=sharing`
-
-解压后将model_x4.pt放在当前目录
+model_x4.pt放在当前目录
 
 5.获取Set5数据集
 
@@ -78,7 +76,11 @@ python3.7.5 get_info.py bin prep_dataset/bin_56 prep_bin.info 56 56
 
 “./prep_bin.info”：生成的数据集文件保存的路径。
 
-6.[获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
+6.获取benchmark工具
+
+```
+https://gitee.com/ascend/cann-benchmark/tree/master/infer
+```
 
 将benchmark.x86_64或benchmark.aarch64放到当前目录
 
@@ -184,23 +186,9 @@ python3.7.5 get_info.py bin prep_dataset/bin_56 prep_bin.info 56 56
 
    “res_png”：保存推理完成之后的图片路径
 
-#### 性能调优
-
-使用AOE工具进行性能调优
-
-```
-aoe --framework=5 --model=csnln_x4.onnx --job_type=2 --output=./test_perf  --input_format=NCHW --input_shape="image:1,3,56,56"
-```
-
-进行纯推理，验证优化性能
-
-```
-./benchmark.x86_64 -round=20 -om_path=test_perf.om -device_id=0 -batch_size=1
-```
-
-|      | 精度    | 性能       | AOE优化性能  |
-| ---- | ----- | -------- | -------- |
-| bs1  | 32.57 | 0.184669 | 0.314836 |
+|      | 精度    | 性能       |
+| ---- | ----- | -------- |
+| bs1  | 32.57 | 0.314836 |
 
 
 备注：由于内存限制，离线模型不支持多batch
