@@ -106,7 +106,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'cmc1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $4}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a 'cmc1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $4}'|awk -F "," '{print $1}'`
+train_accuracy=${train_accuracy%\]*}
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "AlignedReID Training Duration sec : $e2e_time"
