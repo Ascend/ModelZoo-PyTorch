@@ -23,7 +23,7 @@ ckpt_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Bert-Squad_ID0470_for_PyTorch"
+Network="Bert-Squad_ID3078_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
