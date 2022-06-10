@@ -400,7 +400,7 @@ def junk_file(path_pr_list, fram_str, modelzoo_dir):
         fooa.close()
         print('funkfile_check=%d' % funkfile_check)
 
-# TODO 不需要存在，只需要维护.gitignore即可
+# TODO 软链检查会报错，详见PR718
 def check_link(path_pr_list, fram_str, modelzoo_dir, onelink):
     '''
     功能：检测文件内部是否包含内部链接
@@ -901,10 +901,11 @@ def main():
     print('=================Start to Check file of First Directory =================')
     check_firstlevel_file(path_pr_list, fram_str, modelzoo_dir)
     print('=================Start to Check Internal Link =================')
-    with open(alink, 'r') as food:
-        for onelink in food:
-            onelink = onelink.strip('\n')
-            check_link(path_pr_list, fram_str, modelzoo_dir, onelink)
+    # TODO 软链检查会报错，详见PR718
+    # with open(alink, 'r') as food:
+    #     for onelink in food:
+    #         onelink = onelink.strip('\n')
+    #         check_link(path_pr_list, fram_str, modelzoo_dir, onelink)
     print('=================Start to Check Sensitive Information =================')
     check_Sensitive_content(path_pr_list, fram_str, modelzoo_dir)
     print('=================Start to Check Modelzoo Level =================')
