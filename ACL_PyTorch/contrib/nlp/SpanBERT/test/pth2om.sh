@@ -3,6 +3,8 @@
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 batch_size=1
+config_file="./model_dir/squad1/config.json"
+checkpoint="./model_dir/squad1/pytorch_model.bin"
 
 for para in $*
 do
@@ -15,8 +17,8 @@ done
 
 rm -rf spanBert_dynamicbs.onnx
 python spanBert_pth2onnx.py  \
-    --config_file ./model_dir/squad1/bert_config.json  \
-    --checkpoint ./model_dir/squad1/pytorch_model.bin
+    --config_file ${config_file}  \
+    --checkpoint ${checkpoint}
 if [ -f "spanBert_dynamicbs.onnx" ]; then
   echo "==> 1. creating onnx model successfully."
 else

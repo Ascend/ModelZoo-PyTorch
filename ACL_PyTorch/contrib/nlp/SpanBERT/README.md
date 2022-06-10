@@ -41,23 +41,23 @@ onnxruntime==1.11.1
 
 ### <a name="21">2.2 权重文件及原仓代码数据集下载</a>
 
-使用源仓提供的bin以及config文件，可使用download_finetuned.sh进行下载,第一个参数为权重下载后存放的文件夹，第二个参数为任务名
-
-```bash
-bash download_finetuned.sh model_dir squad1
-```
-
 由于后续需要用到部分源仓代码，需要使用以下命令进行下载
 
 ```bash
 git clone https://github.com/facebookresearch/SpanBERT.git
 ```
 
+使用源仓提供的bin以及config文件，可使用download_finetuned.sh进行下载,第一个参数为权重下载后存放的文件夹，第二个参数为任务名
+
+```bash
+bash SpanBERT/code/download_finetuned.sh model_dir squad1
+```
+
 ## <a name="3">3. 模型转换</a>
 
 一步式从pth权重文件转om模型的脚本，能够由bin权重文件以及config文件生成动态Batch的onnx模型和指定bacth_size的om模型，以下代码batch_size设为1：
 ```bash
-bash ./test/pth2om.sh --batch_size=1
+bash ./test/pth2om.sh --batch_size=1 --config_file="./model_dir/squad1/config.json" --checkpoint="./model_dir/squad1/pytorch_model.bin"
 ```
 运行后会生成如下文件：
 ```bash
@@ -82,7 +82,7 @@ bash download_finetuned.sh model_dir squad1
 3. 执行spanBert_pth2onnx.py脚本，生成onnx模型文件 
 ```bash
 python spanBert_pth2onnx.py  \
---config_file ./model_dir/squad1/bert_config.json  \
+--config_file ./model_dir/squad1/config.json  \
 --checkpoint ./model_dir/squad1/pytorch_model.bin
 ```
 其中"config_file"表示模型config文件的路径，"checkpoint"表示模型bin文件的路径，执行后会在当前路径生成spanBert_dynamicbs.onnx  
@@ -101,7 +101,7 @@ atc --framework=5 --model=./spanBert_dynamicbs.onnx --output=./spanBert_bs1 --in
 数据预处理过程包含在 test/eval_acc_perf.sh 的脚本中，可以直接运行，完成预处理以及推理：
 
 ```bash
-bash eval_acc_perf.sh --batch_size=1 --datasets_path="/opt/npu/squad1"
+bash test/eval_acc_perf.sh --batch_size=1 --datasets_path="/opt/npu/squad1"
 ```
 
 ### <a name="41">4.1 数据处理</a>
