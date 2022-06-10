@@ -79,9 +79,9 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash download_finetuned.sh model_dir squad1
 ```
 
-3. 执行spanBert_bin2onnx.py脚本，生成onnx模型文件 
+3. 执行spanBert_pth2onnx.py脚本，生成onnx模型文件 
 ```bash
-python spanBert_bin2onnx.py  \
+python spanBert_pth2onnx.py  \
 --config_file ./model_dir/squad1/bert_config.json  \
 --checkpoint ./model_dir/squad1/pytorch_model.bin
 ```
