@@ -1,8 +1,0 @@
-torch == 1.11.0
-torchvision == 0.12.0
-onnx == 1.10.2
-numpy == 1.21.2
-Pillow == 9.0.1
-opencv-python == 4.5.5.64
-mmcv-full == 1.4.8
-git==2.17.7
