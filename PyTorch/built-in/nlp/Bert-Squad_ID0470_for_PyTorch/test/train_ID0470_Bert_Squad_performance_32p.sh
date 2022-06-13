@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -14,7 +13,7 @@ else
 fi
 
 #集合通信参数,不需要修改
-export RANK_SIZE=16
+export RANK_SIZE=32
 RANK_ID_START=0
 
 #非平台场景时source 环境变量
@@ -115,7 +114,7 @@ fi
 
 export HCCL_IF_IP=$fix_node_ip
 export MASTER_ADDR=$one_node_ip
-export MASTER_PORT=29688
+export MASTER_PORT=29668
 export HCCL_WHITELIST_DISABLE=1
 device_num=${#devicesnum}
 devices_num=`awk 'BEGIN{printf "%.0f\n",'${device_num}'-1}'`
@@ -173,7 +172,7 @@ do
 		  --do_lower_case \
 		  --output_dir results/SQUAD \
 		  --config_file bert_config.json \
-		  --num_npu 16 \
+		  --num_npu 32 \
 		  --local_rank=$RANK_ID \
           --addr $one_node_ip \
 		  --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -190,7 +189,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 step_time=`grep 'step_time : ' $test_path_dir/output/0/train_0.log| awk '{print$13}'| tail -n +3 |awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
 
-FPS=`awk 'BEGIN{printf "%.2f\n", '$batch_size'/'$step_time'*16}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '$batch_size'/'$step_time'*32}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -214,7 +213,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep -r "step_loss :" $test_path_dir/output/0/train_0.log | awk '{print $19}' > $test_path_dir/output/0/train_${CaseName}_loss.txt
+grep -r "step_loss :" $test_path_dir/output/0/train_0.log | awk -F 'step_loss : ' '{print $2}'|awk '{print $1}' > $test_path_dir/output/0/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $cur_path/output/0/train_${CaseName}_loss.txt`

@@ -9,11 +9,16 @@ ls /npu/traindata/coco_txl/images/train2017 >3.txt
 # 网络名称，同目录名称
 Network="YOLOV4_ID0396_for_PyTorch"
 # 训练batch_size
-batch_size=256
+batch_size=512
 # 训练使用的npu卡数
-export RANK_SIZE=8
+export RANK_SIZE=16
 # 数据集路径,保持为空,不需要修改
 data_path=""
+conf_path=""
+server_index=""
+fix_node_ip=""
+devicesnum=""
+
 # 训练epoch
 train_epochs=1
 # 图片大小
@@ -26,8 +31,19 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --fix_node_ip* ]];then
+	    fix_node_ip=`echo ${para#*=}`
+	elif [[ $para == --devicesnum* ]];then
+	    devicesnum=`echo ${para#*=}`
+    elif [[ $para == --conf_path* ]];then
+        conf_path=`echo ${para#*=}`
+    elif [[ $para == --server_index* ]];then
+        server_index=`echo ${para#*=}`
     fi
 done
+
+one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+linux_num=`find $conf_path -name "server_*.info" |wc -l`
 
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -81,19 +97,31 @@ sed -i "s|./coco/testdev2017.txt|$data_path/../coco_txl/COCO2017/testdev2017.txt
 sed -i "s|./coco/annotations/instances_val|$data_path/../coco_txl/COCO2017/annotations/instances_val|g" test.py
 sed -i "s|opt.notest or final_epoch:|opt.notest:|g" train_8p.py
 
+export HCCL_IF_IP=$fix_node_ip
+export MASTER_ADDR=$one_node_ip
+export MASTER_PORT=29501
+export HCCL_WHITELIST_DISABLE=1
+device_num=${#devicesnum}
+devices_num=`awk 'BEGIN{printf "%.0f\n",'${device_num}'-1}'`
+
+NPUS=($(seq 0 $devices_num))
+rank_server=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${server_index}'}'`
+export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'}'`
+
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-
+rank=0
 KERNEL_NUM=$(($(nproc)/8))
 for i in $(seq 0 7)
 do
     export NPU_CALCULATE_DEVICE=$i
+    rankid=`awk 'BEGIN{printf "%.0f\n",'${rank}'+'${rank_server}'}'`
     if [ $(uname -m) = "aarch64" ]
     then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 train_8p.py --img $image_size $image_size \
+    taskset -c $PID_START-$PID_END python3.7 train_16p.py --img $image_size $image_size \
                                           --data coco.yaml \
                                           --cfg cfg/yolov4_8p.cfg \
                                           --weights '' \
@@ -105,16 +133,16 @@ do
                                           --loss_scale 128 \
                                           --multiprocessing_distributed \
                                           --device 'npu' \
-                                          --global_rank $i \
+                                          --global_rank $rankid \
                                           --device_list 0,1,2,3,4,5,6,7 \
-                                          --world_size 1 \
-                                          --addr $(hostname -I |awk '{print $1}') \
+                                          --world_size 2 \
+                                          --addr $one_node_ip \
                                           --dist_url 'tcp://127.0.0.1:41111' \
                                           --dist_backend 'hccl' \
                                           --stop_step_num 100 \
                                           --notest > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 train_8p.py --img $image_size $image_size \
+        python3.7 train_16p.py --img $image_size $image_size \
                    --data coco.yaml \
                    --cfg cfg/yolov4_8p.cfg \
                    --weights '' \
@@ -126,15 +154,16 @@ do
                    --loss_scale 128 \
                    --multiprocessing_distributed \
                    --device 'npu' \
-                   --global_rank $i \
+                   --global_rank $rankid \
                    --device_list 0,1,2,3,4,5,6,7 \
-                   --world_size 1 \
-                   --addr $(hostname -I |awk '{print $1}') \
+                   --world_size 2 \
+                   --addr $one_node_ip \
                    --dist_url 'tcp://127.0.0.1:41111' \
                    --dist_backend 'hccl' \
                    --stop_step_num 100 \
                    --notest > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
+    let rank++
 done
 
 
