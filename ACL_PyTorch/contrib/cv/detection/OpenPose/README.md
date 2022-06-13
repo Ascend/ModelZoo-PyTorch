@@ -30,8 +30,9 @@ pip3.7 install -r requirements.txt
 ```
 ### 3 数据准备
 ### 3.1 获取数据集  
-服务器上可能已经下载好该数据集，若无，参考以下方法下载。
-[coco2017官网](https://cocodataset.org/#download)  
+本模型支持coco2017 5000张图片的验证集。请用户需自行获取coco val2017验证集，上传数据集到服务器任意目录并解压（如：/root/datasets/coco）。本模型将使用到val2017.zip验证集及annotations_trainval2017.zip中的person_keypoints_val2017.json数据标签。
+
+数据集文件夹结构如下：
 下载其中val2017图片及其标注文件，使用5000张验证集进行测试，图片与标注文件分别存放在/root/datasets/coco/val2017与/root/datasets/coco/annotations/person_keypoints_val2017.json。
 文件目录结构如下，
 ```
