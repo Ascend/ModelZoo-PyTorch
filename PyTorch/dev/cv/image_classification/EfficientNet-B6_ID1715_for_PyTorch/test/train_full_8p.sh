@@ -20,7 +20,7 @@ data_path=""
 #网络名称，同目录名称
 Network="EfficientNet-B6_ID1715_for_PyTorch"
 #训练epoch
-train_epochs=100
+train_epochs=90
 #训练batch_size
 batch_size=128
 #训练step
