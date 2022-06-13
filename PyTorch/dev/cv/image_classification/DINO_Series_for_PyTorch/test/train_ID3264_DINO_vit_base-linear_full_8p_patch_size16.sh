@@ -20,7 +20,7 @@ Network="DINO_vit_base-linear_ID3264_for_PyTorch"
 #训练epoch
 train_epochs=100
 #训练batch_size
-batch_size=1024
+batch_size=128
 #训练step
 train_steps=
 #学习率

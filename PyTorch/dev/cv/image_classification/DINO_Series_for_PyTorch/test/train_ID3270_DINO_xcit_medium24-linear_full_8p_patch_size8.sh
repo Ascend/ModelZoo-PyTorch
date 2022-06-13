@@ -20,7 +20,7 @@ Network="DINO_xcit_medium24-linear_ID3270_for_PyTorch"
 #训练epoch
 train_epochs=50
 #训练batch_size
-batch_size=1024
+batch_size=128
 #训练step
 train_steps=
 #学习率
@@ -127,7 +127,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 Time=`grep Epoch $cur_path/output/0/train_0.log|grep eta|awk -F 'time: ' '{print $2}'|awk '{print $1}'|tail -n +3|awk '{sum+=$1} END {print sum/NR}'|sed s/[[:space:]]//g`
-FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${Time}'}'`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*8/'${Time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 #输出训练精度,需要模型审视修改

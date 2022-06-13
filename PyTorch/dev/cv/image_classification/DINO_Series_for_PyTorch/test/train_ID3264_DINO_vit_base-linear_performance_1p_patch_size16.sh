@@ -107,7 +107,7 @@ fi
 
 DISTRIBUTED="-m torch.distributed.launch --nproc_per_node=1"
 
-nohup python3 ${DISTRIBUTED}  ${cur_path}/../eval_linear.py \
+nohup python3  ${cur_path}/../eval_linear.py \
     --pretrained_weights $ckpt_path/dino_vitbase16_pretrain.pth \
     --arch vit_base \
     --patch_size 16 \

@@ -106,7 +106,7 @@ fi
 
 DISTRIBUTED="-m torch.distributed.launch --nproc_per_node=${RANK_SIZE}"
 
-nohup python3 ${DISTRIBUTED}  ${cur_path}/../eval_linear.py \
+nohup python3  ${cur_path}/../eval_linear.py \
     --pretrained_weights $ckpt_path/dino_xcit_small_12_p16_pretrain.pth \
     --arch xcit_small_12_p16 \
     --patch_size 16 \
