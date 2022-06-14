@@ -17,7 +17,9 @@ import math
 import torch.utils.model_zoo as model_zoo
 import torch
 import torch.nn.functional as F
-
+if torch.__version__ >= "1.8.1":
+    import torch_npu
+    
 __all__ = ['Res2Net', 'res2net50_v1b', 'res2net101_v1b', 'res2net50_v1b_26w_4s']
 
 model_urls = {
