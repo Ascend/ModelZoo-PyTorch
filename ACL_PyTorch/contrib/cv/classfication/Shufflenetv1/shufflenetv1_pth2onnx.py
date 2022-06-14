@@ -17,21 +17,23 @@ from collections import OrderedDict
 sys.path.append(r"./ShuffleNet-Series/ShuffleNetV1")
 from network  import ShuffleNetV1
 
-def pth2onnx(input_file, output_file):
+def pth2onnx(input_file, output_file,batch_size):
     model = ShuffleNetV1(model_size="1.0x", group=3)
     checkpoint = torch.load(input_file, map_location="cpu")
     new_state_dict = OrderedDict()
     for k, v in checkpoint['state_dict'].items():
-        name = k[7: ]
+        name = k[7:]
         new_state_dict[name] = v
     model.load_state_dict(new_state_dict)
     model.eval()
     input_names = ["image"]
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
-    dummy_input = torch.rand(16, 3, 224, 224)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names,
-                      dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=True)
+    batch_size=int(batch_size)
+    dummy_input = torch.rand(batch_size, 3, 224, 224)
+    torch.onnx.export(model, dummy_input, output_file,
+                      input_names = input_names, dynamic_axes = dynamic_axes,
+                      output_names = output_names, opset_version=11, verbose=True)
 
-if __name__ == "__main__":
-    pth2onnx(sys.argv[1], sys.argv[2])
+if __name__=="__main__":
+    pth2onnx(sys.argv[1], sys.argv[2],sys.argv[3])
