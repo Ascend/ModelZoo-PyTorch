@@ -127,8 +127,10 @@ https://gitee.com/ascend/cann-benchmark/tree/master/infer
 4. 执行ATC命令，生成om文件
 
    ```
-   atc --framework=5 --model=csnln_x4_perf.onnx --output=csnln_x4_bs1 --input_format=NCHW --input_shape="input.1:1,3,56,56" --log=debug --soc_version=Ascend310
+   atc --framework=5 --model=csnln_x4_perf.onnx --output=csnln_x4_bs1 --input_format=NCHW --input_shape="input.1:1,3,56,56" --log=debug --soc_version=Ascend310p
    ```
+
+   ​	--soc_version：根据npu-smi info 填写。
 
 #### 推理验证
 
