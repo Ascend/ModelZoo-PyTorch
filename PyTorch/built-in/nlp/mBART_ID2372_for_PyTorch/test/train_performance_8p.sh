@@ -105,7 +105,7 @@ do
 			let a=0+RANK_ID*24
 			let b=23+RANK_ID*24
 			taskset -c $a-$b nohup python3.7 ${cur_path}/train.py $data_path/ --fp16 --distributed-world-size 8 --npu \
-							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 300 \
+							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 50 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
 							  --task translation_from_pretrained_bart \
@@ -124,7 +124,7 @@ do
 							  --ddp-backend no_c10d > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
 	else
 		nohup python3.7 ${cur_path}/train.py $data_path/ --fp16 --distributed-world-size 8 --npu \
-							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 300 \
+							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 50 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
 							  --task translation_from_pretrained_bart \
