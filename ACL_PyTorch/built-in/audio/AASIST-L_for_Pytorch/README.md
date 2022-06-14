@@ -39,7 +39,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 ${chip_name}可通过`npu-smi info`指令查看
 
-   ![Image](https://gitee.com/Ronnie_zheng/ascend-pytorch-crowdintelligence-doc/raw/master/Ascend-PyTorch%E7%A6%BB%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8C%87%E5%AF%BC/images/310P3.png)
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 ```shell
 bash pth2om.sh --model=aasist_bs1 --bs=1 --output_dir=output --soc_version=Ascend${chip_name} # Ascend310P3
 ```

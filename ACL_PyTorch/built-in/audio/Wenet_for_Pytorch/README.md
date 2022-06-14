@@ -91,7 +91,7 @@ bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt
 
    ${chip_name}可通过`npu-smi info`指令查看
 
-   ![Image](https://gitee.com/Ronnie_zheng/ascend-pytorch-crowdintelligence-doc/raw/master/Ascend-PyTorch%E7%A6%BB%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8C%87%E5%AF%BC/images/310P3.png)
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
 cd ${code_path}
