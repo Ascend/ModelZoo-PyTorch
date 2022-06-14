@@ -71,17 +71,17 @@ bash make.sh
 
 - [x] 用onnx-simplifier简化模型
 
-```shell
-python3.7.5 -m onnxsim pelee_dynamic_bs.onnx pelee_dynamic_bs_sim.onnx --input-shape 1,3,304,304
-```
+  ```shell
+  python3.7.5 -m onnxsim pelee_dynamic_bs.onnx pelee_dynamic_bs_sim.onnx --input-shape 1,3,304,304
+  ```
 
 - [x] 改图优化
 
 ​	修改softmax节点，在softmax前插入transpose
 
-```shell
-python3.7.5 softmax.py pelee_dynamic_bs_sim.onnx pelee_dynamic_bs_modify.onnx
-```
+  ```shell
+  python3.7.5 softmax.py pelee_dynamic_bs_sim.onnx pelee_dynamic_bs_modify.onnx
+  ```
 
 ![img](file:///C:\Users\C00444~1\AppData\Local\Temp\ksohtml124560\wps2.jpg) 
 
@@ -91,24 +91,29 @@ python3.7.5 softmax.py pelee_dynamic_bs_sim.onnx pelee_dynamic_bs_modify.onnx
 
  
 
+
 - [x] 使用ATC工具将ONNX模型转OM模型。
 
   a. 修改atc.sh脚本，通过ATC工具使用脚本完成转换，具体的脚本示例如下：
 
-```shell
-# 配置环境变量 
-export install_path=/usr/local/Ascend/ascend-toolkit/latest 
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH 
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH 
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH 
-export ASCEND_OPP_PATH=${install_path}/opp 
- 
-# 使用二进制输入时，执行如下命令。不开启aipp，用于精度测试
-${install_path}/atc/bin/atc --model=./pelee_dynamic_bs_modify.onnx --framework=5 --output=pelee_bs1 --input_format=NCHW --input_shape="image:1,3,304,304" --log=info --soc_version=Ascend710 --enable_small_channel=1
- 
-# 使用二进制输入时，执行如下命令。开启aipp，用于性能测试
-${install_path}/atc/bin/atc --model=./pelee_dynamic_bs_modify.onnx --framework=5 --output=pelee_bs32 --input_format=NCHW --input_shape="image:32,3,304,304" --log=info --soc_version=Ascend710 --insert_op_conf=aipp.config --enable_small_channel=1
-```
+  ${chip_name}可通过`npu-smi info`指令查看
+     
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+  
+  ```shell
+  # 配置环境变量 
+  export install_path=/usr/local/Ascend/ascend-toolkit/latest 
+  export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH 
+  export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH 
+  export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH 
+  export ASCEND_OPP_PATH=${install_path}/opp 
+  
+  # 使用二进制输入时，执行如下命令。不开启aipp，用于精度测试
+  ${install_path}/atc/bin/atc --model=./pelee_dynamic_bs_modify.onnx --framework=5 --output=pelee_bs1 --input_format=NCHW --input_shape="image:1,3,304,304" --log=info --soc_version=Ascend${chip_name} --enable_small_channel=1 # Ascend310P3
+  
+  # 使用二进制输入时，执行如下命令。开启aipp，用于性能测试
+  ${install_path}/atc/bin/atc --model=./pelee_dynamic_bs_modify.onnx --framework=5 --output=pelee_bs32 --input_format=NCHW --input_shape="image:32,3,304,304" --log=info --soc_version=Ascend${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1 # Ascend310P3
+  ```
 
 
 

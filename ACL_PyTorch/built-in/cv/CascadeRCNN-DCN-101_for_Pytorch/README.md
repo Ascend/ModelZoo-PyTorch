@@ -46,9 +46,14 @@ cp ./pytorch_code_change/deform_conv.py /root/anaconda3/envs/dcn/lib/python3.7/s
 
 7. 运行atc.sh脚本，完成onnx到om模型的转换，注意输出节点可能需要根据实际的onnx修改，若设备为310，则需要修改atc.sh脚本中的--soc_version为Ascend310
 
+   ${chip_name}可通过`npu-smi info`指令查看
+   
+    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
    ```
-   bash atc.sh cascadeRCNNDCN.onnx cascadeRCNNDCN
+   bash atc.sh cascadeRCNNDCN.onnx cascadeRCNNDCN Ascend${chip_name} # Ascend310P3
    ```
+   
 
    
 
@@ -89,7 +94,7 @@ python3.7 mmdetection_coco_postprocess.py --bin_data_path=result/dumpOutput_devi
 
 **评测结果：**   
 
-|        模型         | 官网pth精度 | 310离线推理精度 | gpu性能 |     310性能/710性能     |
+|        模型         | 官网pth精度 | 310离线推理精度 | gpu性能 |     310性能/310P性能     |
 | :-----------------: | :---------: | :-------------: | :-----: | :---------------------: |
 | CascadedRCNNDCN bs1 |  map:0.45   |    map:0.45     | 4.6fps  | 1.9258fps/fps/2.9534fps |
 

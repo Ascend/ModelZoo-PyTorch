@@ -38,16 +38,19 @@ cd ..
 
 1. 模型转换
 
-```
-# convert onnx
-python3.7 pth2onnx.py --batch_size 1 --input_path ./FlowNet2_checkpoint.pth.tar --out_path ./models/flownet2_bs1.onnx --batch_size 1
-# optimize onnx
-python3.7 -m onnxsim ./models/flownet2_bs1.onnx ./models/flownet2_bs1_sim.onnx
-python3.7 fix_onnx.py ./models/flownet2_bs1_sim.onnx ./models/flownet2_bs1_sim_fix.onnx
-# 310需要采用混合精度，否则有精度问题；710上采用FP16精度正常
-atc --framework=5 --model=models/flownet2_bs1_sim_fix.onnx --output=models/flownet2_bs1_sim_fix --input_format=NCHW --input_shape="x1:1,3,448,1024;x2:1,3,448,1024" --log=debug --soc_version=Ascend310 --precision_mode=allow_mix_precision
-atc --framework=5 --model=models/flownet2_bs1_sim_fix.onnx --output=models/flownet2_bs1_sim_fix_710 --input_format=NCHW --input_shape="x1:1,3,448,1024;x2:1,3,448,1024" --log=debug --soc_version=Ascend710
-```
+    ${chip_name}可通过`npu-smi info`指令查看
+    
+    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+    ```
+    # convert onnx
+    python3.7 pth2onnx.py --batch_size 1 --input_path ./FlowNet2_checkpoint.pth.tar --out_path ./models/flownet2_bs1.onnx --batch_size 1
+    # optimize onnx
+    python3.7 -m onnxsim ./models/flownet2_bs1.onnx ./models/flownet2_bs1_sim.onnx
+    python3.7 fix_onnx.py ./models/flownet2_bs1_sim.onnx ./models/flownet2_bs1_sim_fix.onnx
+    # 310需要采用混合精度，否则有精度问题；310P上采用FP16精度正常
+    atc --framework=5 --model=models/flownet2_bs1_sim_fix.onnx --output=models/flownet2_bs1_sim_fix --input_format=NCHW --input_shape="x1:1,3,448,1024;x2:1,3,448,1024" --log=debug --soc_version=Ascend310 --precision_mode=allow_mix_precision
+    atc --framework=5 --model=models/flownet2_bs1_sim_fix.onnx --output=models/flownet2_bs1_sim_fix_310P --input_format=NCHW --input_shape="x1:1,3,448,1024;x2:1,3,448,1024" --log=debug --soc_version=Ascend${chip_name} # Ascend310P3
+    ```
 
 2. 数据预处理
 
@@ -73,6 +76,6 @@ python3.7 evaluate.py --gt_path ./data_preprocessed_bs1/gt --output_path ./outpu
 
  bs16占据内存过大，无法导出
 
-|     模型     |      pth精度       |  310离线推理精度   |   710离线推理精度   | 基准性能  | 310性能 | 710性能  |
+|     模型     |      pth精度       |  310离线推理精度   |   310P离线推理精度   | 基准性能  | 310性能 | 310P性能  |
 | :----------: | :----------------: | :----------------: | :-----------------: | :-------: | :-----: | :------: |
 | flownet2 bs1 | Average EPE: 2.150 | Average EPE: 2.184 | Average EPE: 2.1578 | 11.65fps | 3.07fps | 16.81fps |

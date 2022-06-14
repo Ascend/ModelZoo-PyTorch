@@ -49,19 +49,19 @@ pip3.7 install efficientnet_pytorch==0.7.1
 
 2. 将onnx转为om模型
 
-   1. 安装mindx-toolbox工具
-        
-        前往https://support.huawei.com/enterprise/zh/ascend-computing/mindx-pid-252501207/software，根据自己的环境下载对应的mindx-toolbox安装包
-
-   2. 配置环境变量
+   1. 配置环境变量
         ```
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         ```
 
-   3. 使用ATC工具将onnx模型转om模型
+   2. 使用ATC工具将onnx模型转om模型
+
+        ${chip_name}可通过`npu-smi info`指令查看
+
+        ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
         ```
-        bash atc.sh efficientnet_b7_dym_600_sim.onnx efficientnet_b7_32_600_sim
+        bash atc.sh efficientnet_b7_dym_600_sim.onnx efficientnet_b7_32_600_sim Ascend${chip_name} # Asecend310P3
         ```
         运行成功后生成efficientnet_b7_32_600_sim.om模型文件
 
