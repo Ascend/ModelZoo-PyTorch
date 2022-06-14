@@ -49,16 +49,16 @@ commit id:d584e7f617a4d0f1a0b4838227bd1f8852dfa236
 ```
 CANN 5.0.2.alpha003
 
-pytorch = 1.8.0
-torchvision = 0.9.0
-onnx = 1.9.0
+pytorch = 1.5.0
+torchvision = 0.6.0
+onnx = 1.11.1
 ```
 ### 2.2 python第三方库
 
 ```
-numpy == 1.20.3
-Pillow == 8.2.0
-opencv-python == 4.5.2.54
+numpy == 1.22.3
+Pillow == 8.3.2
+opencv-python == 4.5.3.56
 ```
 **说明：** 
 >   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
@@ -119,14 +119,14 @@ atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="i
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt。
+该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imageNet/val_label.txt。
 
 ### 4.2 数据集预处理
 1.预处理脚本imagenet_torch_preprocess.py
 
 2.执行预处理脚本，生成数据集预处理后的bin文件
 ```
-python3.7 cspresnext_torch_preprocess.py /opt/npu/imagenet/val ./prep_dataset
+python3.7 cspresnext_torch_preprocess.py /opt/npu/imageNet/val ./prep_dataset
 ```
 ### 4.3 生成数据集信息文件
 1.生成数据集信息文件脚本get_info.py
@@ -168,13 +168,12 @@ source env.sh
 
 调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 ```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /opt/npu/imagenet/val_label.txt ./ result.json
+python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /opt/npu/imageNet/val_label.txt ./ result.json
 ```
 第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
 查看输出结果：
 ```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value
-": "80.05%"}, {"key": "Top2 accuracy", "value": "89.18%"}, {"key": "Top3 accuracy", "value": "92.34%"}, {"key": "Top4 accuracy", "value": "93.98%"}, {"key": "Top5 accuracy", "value": "94.94%"}]}
+{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "80.06%"}, {"key": "Top2 accuracy", "value": "89.18%"}, {"key": "Top3 accuracy", "value": "92.33%"}, {"key": "Top4 accuracy", "value": "93.98%"}, {"key": "Top5 accuracy", "value": "94.94%"}]}
 ```
 经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上   
 
