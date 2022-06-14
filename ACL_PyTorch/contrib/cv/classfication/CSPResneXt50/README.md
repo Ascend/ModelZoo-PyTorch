@@ -119,7 +119,7 @@ atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="i
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用(http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imageNet/val_label.txt。
+图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imageNet/val_label.txt。
 
 ### 4.2 数据集预处理
 1.预处理脚本imagenet_torch_preprocess.py
