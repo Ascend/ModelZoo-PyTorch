@@ -16,11 +16,11 @@ https://github.com/LeeJunHyun/Image_Segmentation
 
 数据集下载路径 [ISIC 2018 dataset](https://challenge2018.isic-archive.com/task1/training/). 注意，仅仅需要下载2018年的Training Data和Training Ground Truth。下载完成并解压，修改路径参数后运行dataset.py将数据集划分为三部分，分别用于training, validation, and test, 三部分的比例是70%, 10% and 20%。数据集总共包含2594张图片， 其中1815用于training, 259 用于validation，剩下的520用于testing.
 
-### Step 2: Traing && Validation
 
-脚本提供了单卡/8卡的训练脚本和test脚本。修改数据集路径参数后，运行train_1p.sh 和 train_8p.sh即可。其中数据集路径设置到train和test的父目录即可。训练完成后后，会在当前目录下生成训练日志和结果，单卡和8卡分别对应result_1p,result_8p. 文件下保存着最终训练完成的模型pkl文件。 修改test.sh的配置参数可以完成test过程。
+### Step 2: Training process
 
-### Step 3: Training process
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision 
+建议：Pillow版本是9.1.0 torchvision版本是0.6.0
 
 单卡训练流程：
 
@@ -38,7 +38,7 @@ https://github.com/LeeJunHyun/Image_Segmentation
         bash ./test/train_full_8p.sh  --data_path=数据集路径  --epochs='训练次数'       # 精度训练
         bash ./test/train_performance_8p.sh  --data_path=数据集路径 --epochs='训练次数' # 性能训练
 
-### Step 4: Training Results
+### Step 3: Training Results
 
 训练日志路径：网络脚本test下output文件夹内。例如：
       test/output/devie_id/train_${device_id}.log          # 训练脚本原生日志
