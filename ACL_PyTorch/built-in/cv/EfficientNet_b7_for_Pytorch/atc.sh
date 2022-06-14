@@ -1,9 +1,7 @@
-source /usr/local/Ascend/toolbox/set_env.sh
-soc_version=`ascend-dmi -i -dt | grep -m 1 'Chip Name' | awk -F ': ' '{print $2}' | sed 's/ //g'`
-
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
 onnx_model=$1
 output_model=$2
+soc_version=$3
+
 atc --model=$onnx_model \
     --framework=5 \
     --input_format=NCHW \

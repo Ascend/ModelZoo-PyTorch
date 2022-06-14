@@ -1,70 +1,94 @@
-文件作用说明：
+# Resnet50模型PyTorch离线推理指导
 
-1.auto_tune.sh：模型转换脚本，集成了auto tune功能，可以手动关闭
+## 1 准备数据集
 
-2.pth2onnx.py：用于转换pth文件到onnx文件
+1. 获取原始数据集
+   
+   本模型使用ImageNet 50000张图片的验证集，请前往[ImageNet官网](https://image-net.org/)下载数据集
 
-3.pthtar2onnx.py：用于转换pth.tar文件到onnx文件
+    ```
+    ├── ImageNet
+    |   ├── val
+    |   |    ├── ILSVRC2012_val_00000001.JPEG
+    │   |    ├── ILSVRC2012_val_00000002.JPEG
+    │   |    ├── ......
+    |   ├── val_label.txt
+    ```
 
-4.BinaryImageNet.info：ImageNet数据集信息，用于benchmark推理获取数据集
+2. 数据预处理
 
-5.PytorchTransfer.py：数据集预处理脚本，通过均值方差处理归一化图片
+    1. 将原始数据集转换为模型输入的数据
 
-6.val_label.txt：ImageNet数据集标签，用于验证推理结果
+        ```
+        python3.7.5 imagenet_torch_preprocess.py resnet ./ImageNet/val ./prep_dataset
+        ```
 
-7.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+        每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成prep_dataset二进制文件夹
 
-8.benchmark工具源码地址：https://gitee.com/ascend/cann-benchmark/tree/master/infer
+    2. 获取benchmark推理工具所需的数据集info文件
 
-710增加文件说明：
+        ```
+        python3.7.5 gen_dataset_info.py bin ./prep_dataset ./resnet50_prep_bin.info 256 256
+        ```
 
-1.pthtar2onx_dynamic.py：用于转换pth.tar文件到动态onnx文件；
-
-2.imagenet_torch_preprocess.py：imagenet数据集预处理；
-
-3.gen_dataset_info.py：获取imagenet数据集信息info文件脚本；
-
-4.gen_resnet50_64bs_bin.py：基于数据预处理结果合成量化所需的64bs输入；
-
-5.aipp_resnet50_710.aippconfig：aipp配置文件
-
-推理端到端步骤：
-
-（1） 从Torchvision下载resnet50模型或者指定自己训练好的pth文件路径，通过pth2onnx.py脚本转化为onnx模型
-
-
-
-（2）运行auto_tune.sh脚本转换om模型，也可以选择手动关闭auto_tune
-
-本demo已提供调优完成的om模型
+        运行成功后，在当前目录下生成resnet50_prep_bin.info文件
 
 
+## 3 模型生成
 
-（3）用PytorchTransfer.py脚本处理数据集，参考BinaryImageNet.Info配置处理后的二进制数据集路径
+1. 生成onnx模型
 
+   1. 获取权重文件
 
+        前往[Pytorch官方文档](https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html#resnet50)下载
+    
+   2. 导出onnx文件
 
-（4）./benchmark.x86_64 -model_type=vision -batch_size=16 -device_id=0 -input_text_path=./BinaryImageNet.info -input_width=224 -input_height=224 -om_path=./resnet50_pytorch.om -useDvpp=False
+        ```
+        python3.7.5 pth2onnx.py ./resnet50-0676ba61.pth
+        ```
 
-运行benchmark推理，结果保存在 ./result 目录下
+2. 将onnx转为om模型
 
+   1. 配置环境变量
+        ```
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        ```
 
+   2. 使用ATC工具将onnx模型转om模型
 
-（5）python3.7 vision_metric_ImageNet.py result/dumpOutput/ ./val_label.txt ./ result.json
+        ${chip_name}可通过`npu-smi info`指令查看
 
-验证推理结果
+        ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
-710精度验证步骤：
+        ```
+        # Ascend310 or Ascend310P[1-4]
+        atc --model=resnet50_official.onnx --framework=5 --output=resnet50_bs16 --input_format=NCHW --input_shape="actual_input_1:16,3,224,224" --enable_small_channel=1 --log=error --soc_version=Ascend${chip_name} --insert_op_conf=aipp_resnet50.aippconfig
+        ```
 
-（1）python3.7.5 imagenet_torch_preprocess.py resnet ./ImageNet/val_union ./prep_dataset
-数据集处理；
+        运行成功后生成resnet50_bs16.om模型文件
 
-（2）python3.7.5 gen_dataset_info.py ./prep_dataset ./resnet50_prep_bin.info 256 256
-获取数据集信息info文件；
+## 4 离线推理 
 
-（3）./benchmark.x86_64 -model_type=vision -batch_size=16 -device_id=0 -input_text_path=./resnet50_prep_bin.info -input_width=256 -input_height=256 -om_path=./resnet50_pytorch.om -output_binary=False -useDvpp=False
-数据集信息输入，调用benchmark完成推理OM模型；
+1. 安装benchmark工具
 
-（4）python3.7.5 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result_prep.json
-查看result_prep.json中精度结果。
+    参考[benchmark工具源码地址](https://gitee.com/ascend/cann-benchmark/tree/master/infer)安装
+   
+2. 模型推理
 
+    ```
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    ./benchmark.x86_64 -model_type=vision -batch_size=16 -device_id=0 -input_text_path=resnet50_prep_bin.info -input_width=256 -input_height=256 -om_path=./resnet50_bs16.om -useDvpp=False -output_binary=False
+    ```
+
+    运行成功后会在result/dumpOutput_device0下生成推理输出的txt文件
+
+3. 精度验证
+
+    统计推理输出的Top 1-5 Accuracy
+
+    ```
+    python3.7.5 vision_metric_ImageNet.py result/dumpOutput_device0/ ./ImageNet/val_label.txt ./ result_prep.json
+    ```
+
+    运行成功后再当前目录下生成记录精度结果的result_prep.json

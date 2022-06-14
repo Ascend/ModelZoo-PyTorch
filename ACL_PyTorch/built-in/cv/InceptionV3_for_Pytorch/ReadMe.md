@@ -46,6 +46,14 @@
 
 3. 运行inceptionv3_atc.sh脚本转换om模型
 
+   ${chip_name}可通过`npu-smi info`指令查看
+   
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
+   ```
+   bash inceptionv3_atc.sh Ascend${chip_name} # Ascend310P3
+   ```
+
 4. 用imagenet_torch_preprocess.py脚本处理数据集   
 
 ```

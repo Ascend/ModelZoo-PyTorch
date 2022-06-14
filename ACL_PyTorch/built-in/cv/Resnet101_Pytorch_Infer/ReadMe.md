@@ -1,29 +1,30 @@
 # ResNet101 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx模型量化](#32-onnx模型量化)
-	-   [3.3 onnx转om模型](#33-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 T4性能数据](#72-T4性能数据)
-	-   [7.3 性能对比](#73-性能对比)
+- [ResNet101 Onnx模型端到端推理指导](#resnet101-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx模型量化](#32-onnx模型量化)
+		- [3.3 onnx转om模型](#33-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
+		- [6.2 开源TopN精度](#62-开源topn精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
+		- [7.2 T4性能数据](#72-t4性能数据)
+		- [7.3 性能对比](#73-性能对比)
 
 
 
@@ -131,20 +132,21 @@ amct_onnx calibration --model resnet101.onnx  --save_path ./result/resnet101  --
 
 ### 3.3 onnx转om模型
 
-1.设置环境变量
+1. 设置环境变量
 
-```
-source env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南  01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》中的ATC工具使用指南章节
+	```
+	source env.sh
+	```
+2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南  01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》中的ATC工具使用指南章节
 
-```
-atc --framework=5 --model=./resnet101.onnx --output=resnet101_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310 --insert_op_conf=aipp.config
-```
+	```
+	atc --framework=5 --model=./resnet101.onnx --output=resnet101_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310 --insert_op_conf=aipp.config
+	```
 
 **说明：**  
 
-> 若设备类型为Ascend710，设置soc_version==Ascend710即可；
+> 若设备类型为Ascend310P，设置--soc_version=Ascend${chip_name}（Ascend310P3）， ${chip_name}可通过`npu-smi info`指令查看；
+> ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 >
 > aipp.config是AIPP工具数据集预处理配置文件，详细说明可参考"ATC工具使用指南"中的"AIPP配置"章节。
 
@@ -183,7 +185,7 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./resnet101_prep_bin.info 224 2
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310、710上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考《[CANN 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310、310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考《[CANN 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》
 ### 5.2 离线推理
 1.设置环境变量
 ```
@@ -285,7 +287,7 @@ Interface throughputRate: 370.456，370.456x4=1481.82既是batch32 310单卡吞�
 
  **说明：**  
 
-> 注意如果设备为Ascend710，则Interface throughputRate的值就是710的单卡吞吐率，不需要像310那样x4
+> 注意如果设备为Ascend310P，则Interface throughputRate的值就是310P的单卡吞吐率，不需要像310那样x4
 
 ### 7.2 T4性能数据
 在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
@@ -377,5 +379,5 @@ batch4,8,32的npu性能也都大于T4
 310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率大，故310性能高于T4性能，性能达标。  
 对于batch1的310性能高于T4性能2.08倍，batch16的310性能高于T4性能1.46倍，对于batch1与batch16，310性能均高于T4性能1.2倍，该模型放在Benchmark/cv/classification目录下。 
 
-710单卡吞吐率要求最优batchsize情况下为310的1.5倍，当前已符合要求，具体数据不在此赘述。
+310P单卡吞吐率要求最优batchsize情况下为310的1.5倍，当前已符合要求，具体数据不在此赘述。
 

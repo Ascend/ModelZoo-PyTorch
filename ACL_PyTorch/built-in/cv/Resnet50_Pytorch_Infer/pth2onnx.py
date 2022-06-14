@@ -1,11 +1,12 @@
+import sys
+
 import torch
 import torch.onnx
 import torchvision.models as models
 
 
-def convert():
+def convert(pthfile):
     model = models.resnet50(pretrained=False)
-    pthfile = './resnet50-19c8e357.pth'
     resnet50 = torch.load(pthfile, map_location='cpu')
     model.load_state_dict(resnet50)
     print(model)
@@ -23,5 +24,6 @@ def convert():
 
 
 if __name__ == "__main__":
-    convert()
+    pth_path = sys.argv[1]
+    convert(pth_path)
 

@@ -44,9 +44,13 @@ pip3.7 install -r requirements.txt
 
 7. 运行 bash craft_atc.sh生成离线om模型， craft.om
 
+   ${chip_name}可通过`npu-smi info`指令查看
+   
+    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
    ```
    cp craft_atc.sh CRAFT-pytorch/
-   bash craft_atc.sh
+   bash craft_atc.sh Ascend${chip_name} # Ascend310P3
    ```
 
    
@@ -79,7 +83,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
    
 
-|     模型      | 官网pth精度 | 710离线推理精度 | gpu性能 | 710性能 |
+|     模型      | 官网pth精度 | 310P离线推理精度 | gpu性能 | 310P性能 |
 | :-----------: | :---------: | :-------------: | :-----: | :-----: |
 | CRAFT_General |             |                 |         | 148fps  |
 

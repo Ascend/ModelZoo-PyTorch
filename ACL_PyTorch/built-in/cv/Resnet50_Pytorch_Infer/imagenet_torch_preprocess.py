@@ -85,7 +85,7 @@ def preprocess_s(mode_type, src_path, save_path):
     files = os.listdir(src_path)
     i = 0
     for file in files:
-        if not file.endswith(".jpeg"):
+        if not file.lower().endswith(".jpeg"):
             continue
         print("start to process image {}....".format(file))
         i = i + 1
