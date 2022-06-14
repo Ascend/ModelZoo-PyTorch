@@ -4,7 +4,7 @@
 
 1. 获取原始数据集
    
-   本模型使用ImageNet 50000张图片的验证集，请前往[ImageNet官网](https://image-net.org/)下载数据集
+   本模型使用ImageNet 50000张图片的验证集，请前往ImageNet官网下载数据集
 
     ```
     ├── ImageNet

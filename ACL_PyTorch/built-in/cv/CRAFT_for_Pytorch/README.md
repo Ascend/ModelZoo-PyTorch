@@ -26,8 +26,6 @@ pip3.7 install -r requirements.txt
 
 4. 下载网络权重文件craft_mlt_25k.pth
 
-   下载路径：https://drive.google.com/open?id=1Jk4eGD7crsqCCg9C9VjCLkMN3ze8kutZ
-
 5. 数据集下载：
 
    使用随机数据测试余弦相似度
