@@ -3,12 +3,12 @@ cur_path=`pwd`/../
 
 #Batch Size
 batch_size=1
-export RANK_ID=0
-export RANKSIZE=1
 #网络名称，同目录名称
 Network="CycleGAN_ID0521_for_PyTorch"
+export RANKSIZE=8
+RANK_ID_START=0
 #Device数量，单卡默认为1
-RankSize=1
+RankSize=8
 #训练epoch，可选
 train_epochs=200
 #训练step
@@ -35,24 +35,34 @@ if [[ $data_path  == "" ]];then
         echo "[Error] para \"data_path\" must be config"
         exit 1
 fi
-
+start=$(date +%s)
 ##############执行训练##########
 cd $cur_path
+for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANKSIZE+RANK_ID_START));RANK_ID++));
+do
+    #设置环境变量，不需要修改
+    export ASCEND_DEVICE_ID=$RANK_ID
+    echo "Device ID: $ASCEND_DEVICE_ID"
+    export RANK_ID=$RANK_ID
+    export LOCAL_RANK=$RANK_ID
+    export MASTER_ADDR=127.0.0.1
+    export MASTER_PORT=29688
+    mkdir -p ./outputs/$data_path
+    mkdir -p ./weights/$data_path/horse2zebra
+    #创建DeviceID输出目录，不需要修改
+    if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ];then
+        rm -rf ${cur_path}/test//output/${ASCEND_DEVICE_ID}
+        mkdir -p ${cur_path}/test//output/$ASCEND_DEVICE_ID/ckpt
+    else
+        mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/ckpt
+    fi
 
-mkdir -p ./outputs/$data_path
-mkdir -p ./weights/$data_path/horse2zebra
 
-if [ -d $cur_path/test/output ];then
-        rm -rf $cur_path/test/output/*
-        mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
-else
-        mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
-fi
-wait
 
-start=$(date +%s)
+
 #--decay_epochs 5 --apex
-nohup python3 train.py --dataset $data_path/horse2zebra --npu --epochs $train_epochs --batch-size $batch_size --apex > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1
+    nohup python3 train.py --dataset $data_path/horse2zebra --npu --epochs $train_epochs --batch-size $batch_size --apex --lr 0.0016 --device_id ${ASCEND_DEVICE_ID} > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+done
 wait
 
 end=$(date +%s)
@@ -102,4 +112,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2etime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
