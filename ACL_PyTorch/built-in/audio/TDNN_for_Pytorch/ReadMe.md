@@ -34,6 +34,11 @@ python3 tdnn_preprocess.py
 ```
 
 ## 2 模型转换
+
+${chip_name}可通过`npu-smi info`指令查看
+
+![Image](https://gitee.com/Ronnie_zheng/ascend-pytorch-crowdintelligence-doc/raw/master/Ascend-PyTorch%E7%A6%BB%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8C%87%E5%AF%BC/images/310P3.png)
+
 ```shell
 # 生成tdnn_bs64.onnx
 python3 tdnn_pth2onnx.py 64
@@ -41,8 +46,9 @@ python3 tdnn_pth2onnx.py 64
 python3 -m onnxsim tdnn_bs64.onnx tdnn_bs64s.onnx
 python3 modify_onnx.py tdnn_bs64s.onnx
 # 生成om模型
-bash atc.sh tdnn_bs64s.onnx
+bash atc.sh tdnn_bs64s.onnx Ascend${chip_name} # Ascend310P3
 ```
+
 
 ## 3 离线推理
 
@@ -53,7 +59,7 @@ python3 tdnn_postprocess.py
 **评测结果：**
 
 由于TensorRT不支持原模型，故只能对比修改后的模型性能。
-| 模型              | pth精度        | 710离线推理精度      | 基准性能      | 710性能  |
+| 模型              | pth精度        | 310P离线推理精度      | 基准性能      | 310P性能  |
 | :------:          | :------:       | :------:            | :------:     | :------: |
 | TDNN bs64         | 99.93%         | 99.93%              | -            |  2467fps  |
 | TDNN修改 bs64     | -              | -                   | 2345.179 fps |  3815.886fps  |

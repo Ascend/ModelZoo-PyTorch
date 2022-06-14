@@ -89,18 +89,20 @@ bash export_onnx.sh exp/conformer_u2/train.yaml exp/conformer_u2/final.pt
 
    om_gener工具修改onnx模型，生成decoder_final.onnx、encoder_revise.onnx、no_flash_encoder_revise.onnx，并运行相应脚本生成om模型，注意配置环境变量
 
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/Ronnie_zheng/ascend-pytorch-crowdintelligence-doc/raw/master/Ascend-PyTorch%E7%A6%BB%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8C%87%E5%AF%BC/images/310P3.png)
+
 ```
 cd ${code_path}
 cp ${wenet_path}/examples/aishell/s0/onnx/* ${code_path}/
 python3 adaptdecoder.py
 python3 adaptencoder.py
 python3 adaptnoflashencoder.py
-bash encoder.sh
-bash decoder.sh
-bash no_flash_encoder.sh
+bash encoder.sh Ascend${chip_name} 
+bash decoder.sh Ascend${chip_name}
+bash no_flash_encoder.sh Ascend${chip_name} # Ascend310P3
 ```
-
-若设备为710设备，修改sh脚本中的--soc_version=Ascend710即可
 
 ## 3 离线推理 
 
@@ -193,7 +195,7 @@ bash run_attention_rescoring.sh --model_path ./decoder_final.om --json_path  enc
 
 ### **评测结果：**   
 
-| 模型  |          官网pth精度           |     710/310离线推理精度     | gpu性能 | 710性能 | 310性能 |
+| 模型  |          官网pth精度           |     310P/310离线推理精度     | gpu性能 | 310P性能 | 310性能 |
 | :---: | :----------------------------: | :-------------------------: | :-----: | :-----: | ------- |
 | wenet | GPU流式：5.94%， 非流式：4.64% | 流式：5.66%， 非流式：4.78% |         |  7.69   | 11.6fps |
 
