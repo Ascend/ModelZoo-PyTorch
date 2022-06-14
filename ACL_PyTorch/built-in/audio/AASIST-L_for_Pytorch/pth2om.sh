@@ -7,6 +7,7 @@ do
         --model) model=$2; shift 2;;
         --bs) bs=$2; shift 2;;
         --output_dir) output_dir=$2; shift 2;;
+        --soc_version) soc_version=$2; shift 2;;
         --) break ;;
     esac
 done
@@ -26,7 +27,7 @@ echo "Starting 修改onnx模型"
 python3 util/modify_onnx.py --input=${output_dir}/${model}.onnx --output=${output_dir}/${model}.onnx || exit 1
 
 echo "Starting atc转模型"
-bash util/atc.sh ${output_dir}/${model} ${output_dir}/${model} ${bs} || exit 1
+bash util/atc.sh ${output_dir}/${model} ${output_dir}/${model} ${bs} ${soc_version} || exit 1
 
 echo -e "pth导出om模型 Success \n"
 
