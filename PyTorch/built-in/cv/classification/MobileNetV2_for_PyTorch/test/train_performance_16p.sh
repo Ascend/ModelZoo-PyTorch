@@ -1,17 +1,11 @@
 #!/bin/bash
-export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1
-
 
 #当前路径,不需要修改
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
-export RANK_SIZE=8
+export RANK_SIZE=16
 export JOB_ID=10087
 RANK_ID_START=0
 # source env.sh

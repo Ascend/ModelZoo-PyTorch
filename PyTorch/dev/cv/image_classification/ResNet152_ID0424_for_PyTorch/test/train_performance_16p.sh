@@ -5,7 +5,7 @@ cur_path=`pwd`
 #source env.sh
 #集合通信参数,不需要修改
 
-export RANK_SIZE=8
+export RANK_SIZE=16
 export JOB_ID=10087
 RANK_ID_START=0
 

@@ -121,7 +121,7 @@ do
     then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 train_16p.py --img $image_size $image_size \
+    taskset -c $PID_START-$PID_END python3.7 train_8p.py --img $image_size $image_size \
                                           --data coco.yaml \
                                           --cfg cfg/yolov4_8p.cfg \
                                           --weights '' \
