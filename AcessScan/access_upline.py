@@ -915,7 +915,8 @@ def main():
     # TODO 兼容train*full*.sh形式
     # file_word_check(fram_str, modelzoo_dir, path_pr_list, train_full_keyword, train_performance_keyword)
     print('=================Start to Check core_binding&Device Id status =================')
-    scan_core_binding(path_pr_list, fram_str, modelzoo_dir)
+    # TODO 没有必要进行绑核检查
+    # scan_core_binding(path_pr_list, fram_str, modelzoo_dir)
 
 
 if __name__ == '__main__':
