@@ -42,12 +42,12 @@ if [[ $1 == --help || $1 == -h ]];then
     echo " "
     echo "parameter explain:
     --precision_mode         precision mode(allow_fp32_to_fp16/force_fp16/must_keep_origin_dtype/allow_mix_precision)
-    --over_dump		         if or not over detection, default is False
-    --data_dump_flag	     data dump flag, default is False
-    --data_dump_step		 data dump step, default is 10
-    --profiling		         if or not profiling for performance debug, default is False
-    --data_path		         source data of training
-    -h/--help		         show help message
+    --over_dump                 if or not over detection, default is False
+    --data_dump_flag         data dump flag, default is False
+    --data_dump_step         data dump step, default is 10
+    --profiling                 if or not profiling for performance debug, default is False
+    --data_path                 source data of training
+    -h/--help                 show help message
     "
     exit 1
 fi
@@ -57,11 +57,11 @@ for para in $*
 do
     if [[ $para == --precision_mode* ]];then
         apex_opt_level=`echo ${para#*=}`
-	    if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
-		    echo "[Error] para \"precision_mode\" must be config O1 or O2 or O3"
-		    exit 1
-	    fi
-	    PREC="--apex --apex-opt-level "$apex_opt_level
+        if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
+            echo "[Error] para \"precision_mode\" must be config O1 or O2 or O3"
+            exit 1
+        fi
+        PREC="--apex --apex-opt-level "$apex_opt_level
     elif [[ $para == --over_dump* ]];then
         over_dump=`echo ${para#*=}`
         over_dump_path=${cur_path}/output/overflow_dump
@@ -97,27 +97,46 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-#创建DeviceID输出目录，不需要修改
-if [ -d ${cur_path}/output/0 ];then
-    rm -rf ${cur_path}/output/0
-    mkdir -p ${cur_path}/output/0/ckpt
-else
-    mkdir -p ${cur_path}/output/0/ckpt
-fi
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=23456
+export WORLD_SIZE=$RANK_SIZE
 
-DISTRIBUTED="-m torch.distributed.launch --nproc_per_node=${RANK_SIZE}"
+for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+do
+    #设置环境变量，不需要修改
+    echo "Device ID: $ASCEND_DEVICE_ID"
+    export RANK=$RANK_ID
+    export ASCEND_DEVICE_ID=$RANK_ID
+    export LOCAL_RANK=$RANK_ID
 
-nohup python3 ${DISTRIBUTED}  ${cur_path}/../eval_linear.py \
-    --pretrained_weights $ckpt_path/dino_resnet50_pretrain.pth \
-    --arch resnet50 \
-    --checkpoint_key teacher \
-    --data_path $data_path \
-    --epochs $train_epochs \
-    $PREC \
-    --apex \
-    --num_workers 25 \
-    --output_dir ${cur_path}/output/0/ckpt \
-    --max_steps $train_steps > ${cur_path}/output/0/train_0.log 2>&1 &
+    #创建DeviceID输出目录，不需要修改
+    if [ -d ${cur_path}/output/$ASCEND_DEVICE_ID ];then
+        rm -rf ${cur_path}/output/$ASCEND_DEVICE_ID
+        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+    else
+        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+    fi
+
+    #绑核，不需要绑核的模型删除，需要绑核的模型根据实际修改
+    cpucount=`lscpu | grep "CPU(s):" | head -n 1 | awk '{print $2}'`
+    cpustep=`expr $cpucount / 8`
+    echo "taskset c steps:" $cpustep
+    let a=RANK_ID*$cpustep
+    let b=RANK_ID+1
+    let c=b*$cpustep-1
+
+    nohup taskset -c $a-$c python3 ${cur_path}/../eval_linear.py \
+        --pretrained_weights $ckpt_path/dino_resnet50_pretrain.pth \
+        --arch resnet50 \
+        --checkpoint_key teacher \
+        --data_path $data_path \
+        --epochs $train_epochs \
+        $PREC \
+        --apex \
+        --num_workers 24 \
+        --output_dir ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt \
+        --max_steps $train_steps > ${cur_path}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+done
 wait
 
 #conda deactivate
