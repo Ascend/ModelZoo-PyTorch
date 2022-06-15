@@ -81,7 +81,7 @@ class Logger(Configurable):
         if not os.path.exists(self.log_dir):
             try:
                 os.symlink(storage_dir, self.log_dir)
-            except FileExitsError as e:
+            except FileExistsError as e:
                 # it happened when multi-processing build symlink at the same time
                 # no need to new one when file exists
                 pass
