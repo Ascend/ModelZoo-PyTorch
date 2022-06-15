@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datasets_path="/root/datasets/"
+datasets_path="./datasets/"
 
 for para in $*
 do

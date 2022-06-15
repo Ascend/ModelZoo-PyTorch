@@ -134,7 +134,10 @@ if __name__ == '__main__':
     results = []
     image_ids = []
 
+    cnt = 0
     for bin_file in sorted(total_img):
+        cnt = cnt + 1
+        print(cnt)
         path_base = os.path.join(bin_path, bin_file)
         res_buff = []
         for num in range(1, flags.net_out_num + 1):
@@ -143,7 +146,7 @@ if __name__ == '__main__':
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     boxes = np.reshape(buf, [100, 4])
                 elif num == 2:
-                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int32")
+                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     labels = np.reshape(buf, [100, 1])
                 elif num == 3:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
