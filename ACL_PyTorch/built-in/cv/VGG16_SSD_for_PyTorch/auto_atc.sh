@@ -8,7 +8,7 @@ export ASCEND_AICPU_PATH=${install_path}
 # modify model_name run_model soc_version
 model_name="ssd_vgg16"
 run_model=(vgg16_ssd.onnx result_amct/vgg16_ssd_deploy_model.onnx)     ## FP16  INT8   
-soc_version="Ascend710"                      ## 710
+soc_version=$1                      ## 310P
 
 batch_sizes="1 4 8 16 32 64"
 format_types=(fp16, int8)

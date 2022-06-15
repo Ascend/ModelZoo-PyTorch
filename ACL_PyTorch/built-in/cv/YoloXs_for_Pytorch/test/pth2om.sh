@@ -15,7 +15,7 @@ fi
 rm -rf models/*.om
 
 atc --model=yolox.onnx --framework=5 --output=./models/yolox --input_format=NCHW --optypelist_for_implmode="Sigmoid" \
- --op_select_implmode=high_performance --input_shape='images:4,3,640,640'  --log=info --soc_version=Ascend710
+ --op_select_implmode=high_performance --input_shape='images:4,3,640,640'  --log=info --soc_version=$1
 
 if [ -f "models/yolox.om" ]; then
     echo "success"
