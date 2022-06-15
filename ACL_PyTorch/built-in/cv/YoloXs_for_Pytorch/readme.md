@@ -23,7 +23,7 @@ pip3 install -v -e .
 
 4. 数据集
 
-   使用coco2017数据集，请到https://cocodataset.org自行下载coco2017，放到/root/datasets目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，目录下包含val2017及annotations目录
+   使用coco2017数据集，请到coco官网自行下载coco2017，放到/root/datasets目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，目录下包含val2017及annotations目录
 
 5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
