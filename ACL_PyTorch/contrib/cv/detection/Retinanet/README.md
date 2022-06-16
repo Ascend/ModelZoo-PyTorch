@@ -149,10 +149,11 @@ ${chip_name}可通过npu-smi info指令查看，例：310P3
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```shell
-atc --model=model.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344"  --log=debug --soc_version=Ascend${chip_name}
+atc --model=model.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" 
+--out_nodes="Cast_1229:0;Reshape_1223:0;Gather_1231:0" --log=debug --soc_version=Ascend${chip_name}
 ```
     --input_shape：输入数据的shape。  
-    --output：输出的OM模型。  
+    --output：输出的OM模型，为了防止CANN版本中的输出顺序发生变化，多个输出的模型--out_nodes 固定输出顺序。
     --log：日志级别。  
     --soc_version：处理器型号，Ascend310或Ascend710。  
     --soc_version：处理器型号。  
