@@ -13,4 +13,4 @@ mkdir om
 
 chmod 777 ./aoe_result_bs4
 
-atc --framework=5 --model=ecapa_tdnn_sim.onnx --output=./om/ecapa_tdnn_bs4 --input_format=ND --input_shape="mel:4,80,200" --log=debug  --soc_version=Ascend710
+atc --framework=5 --model=ecapa_tdnn_sim.onnx --output=./om/ecapa_tdnn_bs4 --input_format=ND --input_shape="mel:4,80,200" --log=debug  --soc_version=$1

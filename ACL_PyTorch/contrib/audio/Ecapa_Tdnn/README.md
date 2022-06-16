@@ -100,13 +100,17 @@ python fix_conv1d.py ecapa_tdnn.onnx ecapa_tdnn_sim.onnx
 ```
 
 ### 2.2 onnx模型转om模型，以batch_size=16为例
-在710环境下，运行to_om.sh脚本，其中--model和--output参数自行修改，下面仅作参考
+在310P环境下，运行to_om.sh脚本，其中--model和--output参数自行修改，下面仅作参考
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
 sudo apt install dos2unix
 dos2unix ./*.sh
 chmod +x *.sh
-./to_om.sh
+./to_om.sh Ascend${chip_name}
 ```
 
 ## 3.数据集预处理
@@ -117,11 +121,11 @@ chmod +x *.sh
 python preprocess.py VoxCeleb input_bs4/ speaker_bs4/ 4
 ```
 
-执行完成后将Ecapa_Tdnn/input_bs4/下内容传至710环境中
+执行完成后将Ecapa_Tdnn/input_bs4/下内容310P环境中
 
 ## 4.模型推理
 
-在710环境中，cd至msame文件夹下含.masame文件的路径下
+在310P环境中，cd至msame文件夹下含.masame文件的路径下
 
 执行推理，其中--model为之前转化好的bs为4的om模型，--input为第三步中得到的前处理后的数据路径
 
@@ -177,7 +181,7 @@ trtexec --onnx=ecapa_tdnn.onnx --fp16 --shapes=mel:4x80x200
  ./msame --model "om/ecapa_tdnn_bs4.om" --output "result" --outfmt TXT --loop 100
 ```
 
-| Model      | batch_size | T4Throughput/Card | 710Throughput/Card |
+| Model      | batch_size | T4Throughput/Card | 310PThroughput/Card |
 |------------|------------|-------------------|--------------------|
 | ECAPA-TDNN | 1          | 485.43            | 764.52             |
 | ECAPA-TDNN | 4          | 705.46            | 1408.45            |
