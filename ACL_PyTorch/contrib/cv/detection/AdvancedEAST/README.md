@@ -51,7 +51,7 @@ cd ..
 		source /usr/local/Ascend/ascend-toolkit/set_env.sh
 	
 	3)将.onnx文件转为离线推理模型文件.om文件
-		atc --framework=5 --model=AdvancedEAST_dybs.onnx --output=AdvancedEAST_bs1 --input_format=NCHW --input_shape='input_1:1,3,736,736' --log=debug --soc_version=Ascend310P
+		atc --framework=5 --model=AdvancedEAST_dybs.onnx --output=AdvancedEAST_bs1 --input_format=NCHW --input_shape='input_1:1,3,736,736' --log=debug --soc_version=Ascend${chip_name}
 		参数说明：
 		--model：为ONNX模型文件。
 		--framework：5代表ONNX模型。
