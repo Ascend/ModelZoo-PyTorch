@@ -907,7 +907,8 @@ def main():
     #         onelink = onelink.strip('\n')
     #         check_link(path_pr_list, fram_str, modelzoo_dir, onelink)
     print('=================Start to Check Sensitive Information =================')
-    check_Sensitive_content(path_pr_list, fram_str, modelzoo_dir)
+    # TODO 黑名单不合理，需要check
+    # check_Sensitive_content(path_pr_list, fram_str, modelzoo_dir)
     print('=================Start to Check Modelzoo Level =================')
     # TODO official已删，不需要再检查放哪了，modelzoo_level检查可以继续保留
     # modelzoo_level_check(path_pr_list, fram_str, modelzoo_dir)
