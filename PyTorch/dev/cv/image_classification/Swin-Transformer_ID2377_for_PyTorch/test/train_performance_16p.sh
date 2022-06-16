@@ -3,7 +3,7 @@
 #当前路径,不需要修改
 cur_path=`pwd`
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
-#export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
+
 #集合通信参数,不需要修改
 
 export HCCL_WHITELIST_DISABLE=1
@@ -15,26 +15,14 @@ export JOB_ID=10087
 RANK_ID_START=0
 
 
-export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1
 
 
 
 
-#进入到conda环境
-#export PATH=/usr/local/python3.7.5/bin:/home/anaconda3/bin:$PATH
-#source activate py8
+
+
+
+
 
 
 
@@ -236,10 +224,10 @@ grep "INFO Train" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-
+RANK_SIZE_NEW=`awk 'BEGIN{printf "%.0f\n",'${RANK_SIZE}'*'${linux_num}'}'`
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE_NEW}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "BatchSize = ${BatchSize}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

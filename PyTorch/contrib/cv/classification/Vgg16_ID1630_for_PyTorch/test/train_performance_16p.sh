@@ -1,12 +1,5 @@
 #!/bin/bash
 
-
-
-export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1
 ##################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
@@ -162,10 +155,10 @@ grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.lo
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-
+RANK_SIZE_NEW=`awk 'BEGIN{printf "%.0f\n",'${RANK_SIZE}'*'${linux_num}'}'`
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE_NEW}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "BatchSize = ${BatchSize}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "DeviceType = ${DeviceType}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
