@@ -27,13 +27,9 @@ def convert(args):
         config = json.loads(f_json.read())
     model_config = config["model_config"]
 
-    # set device
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("Device: {}".format(device))
-
     # define model architecture
-    model = get_model(model_config, device)
-    model.load_state_dict(torch.load(config["model_path"], map_location=device))
+    model = get_model(model_config, "cpu")
+    model.load_state_dict(torch.load(config["model_path"], map_location="cpu"))
     model.eval()
 
     input_names = ["input"]
