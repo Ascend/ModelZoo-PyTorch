@@ -2,17 +2,16 @@
 
 ## 1 环境准备
 
-1.安装必要的依赖，测试的base环境可能已经安装其中的一些不同版本的库了，故手动测试时需要使用conda创建一个虚拟环境，并使用该命令安装基础依赖
+1.源码获取：根据[ATC X3D(FP16)-昇腾社区 (hiascend.com)](https://www.hiascend.com/zh/software/modelzoo/detail/1/1f626937bdac487087bd2debb16c6d7d)中快速上手->获取源码来下载源码。然后，需要安装必要的依赖，测试的base环境可能已经安装其中的一些不同版本的库了，故手动测试时需要使用conda创建一个虚拟环境，并安装这些基础依赖。
 
-CANN版本为5.1.RC1
-
-| 依赖名称    |  版本  |
-| ----------- | :----: |
-| onnx        | 1.9.0  |
-| torch       | 1.8.0  |
-| torchvision | 0.9.0  |
-| numpy       | 1.20.3 |
-| pillow      | 8.2.0  |
+| 依赖名称    |  版本   |
+| ----------- | :-----: |
+| onnx        |  1.9.0  |
+| torch       |  1.8.0  |
+| torchvision |  0.9.0  |
+| numpy       | 1.20.3  |
+| pillow      |  8.2.0  |
+| CANN        | 5.1.RC1 |
 
 ```
 conda create -n 环境名 python=3.8
@@ -46,6 +45,7 @@ cd ..
 脚本下载:    
 获取验证集列表文件[val_link.list](https://ai-rank.bj.bcebos.com/Kinetics400/val_link.list)与验证集标签文件[val.list](https://videotag.bj.bcebos.com/PaddleVideo/Data/Kinetic400/val.list)，并将val.list重命名为test.csv
 下载验证集：
+
 ```
 download.sh:
 file=$1
@@ -55,7 +55,7 @@ do
     wget "$line"
 done <$file
 
-download.sh val_link.list
+bash download.sh val_link.list
 ```
 将下载的val_part1,val_part2,val_part3里的400个文件夹放到/root/datasets/Knetics-400/val，将test.csv放到X3D/Kinetics-400。
 
@@ -68,19 +68,14 @@ download.sh val_link.list
 
 ## 2 离线推理
 
-310上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310上执行，执行时使npu-smi info查看设备状态，确保device空闲，并执行以下命令
+
+310P上执行和310上执行一样，只需要把--soc_version参数改为Ascend310P，然后执行以下命令
 
 ```
 bash test/pth2om.sh  
 bash test/eval_acc_pref.sh --datasets_path=X3D/Kinetics-400
 ```
-310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
-
-```
-bash test310P/pth2om.sh
-bash test310P/eval_acc_perf.sh --datasets_path=X3D/Kinetics-400
-```
-
 备注：存在fp16算子溢出，精度不达标，因此atc模型转换需要添加--precision_mode allow_mix_precision
 
 **评测结果：**
