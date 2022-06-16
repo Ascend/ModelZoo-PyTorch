@@ -129,10 +129,10 @@ cd ..
 在当前目录按结构构造数据集：datasets/coco目录下有annotations与val2017，annotations目录存放coco数据集的instances_val2017.json，val2017目录存放coco数据集的5000张验证图片。  
 或者修改detectron2/detectron2/data/datasets/builtin.py为_root = os.getenv("DETECTRON2_DATASETS", "/root/datasets/")指定coco数据集所在的目录/root/datasets/。
 
-6.运行如下命令，生成model_py1.8.onnx
+6.运行如下命令，生成model.onnx
 ```shell
-python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-Detection/retinanet_R_50_FPN_3x.yaml --output ./output --export-method tracing --format onnx MODEL.WEIGHTS model_final.pkl MODEL.DEVICE cpu
-mv output/model.onnx model_py1.8.onnx
+python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-Detection/retinanet_R_50_FPN_3x.yaml
+ --output ./ --export-method tracing --format onnx MODEL.WEIGHTS model_final.pkl MODEL.DEVICE cpu
 ```
 
 ### 3.2 onnx转om模型
@@ -143,12 +143,18 @@ mv output/model.onnx model_py1.8.onnx
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
-2. 使用atc将onnx模型（包括量化模型和非量化模型）转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-针对不同的芯片(310/310P)，需修改参数--soc_version，分别为Ascend310、Ascend710;
+2. 使用atc将onnx模型
+${chip_name}可通过npu-smi info指令查看，例：310P3
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```shell
-atc --model=model_py1.8.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344"  --log=debug --soc_version=Ascend310
+atc --model=model.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344"  --log=debug --soc_version=Ascend${chip_name}
 ```
+    --input_shape：输入数据的shape。  
+    --output：输出的OM模型。  
+    --log：日志级别。  
+    --soc_version：处理器型号，Ascend310或Ascend710。  
+    --soc_version：处理器型号。  
 
 ## 4 数据集预处理
 
