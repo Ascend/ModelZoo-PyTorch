@@ -49,6 +49,7 @@ commit_id:60fd4885d7cfd52d4267d1da9ebb6b2b9a3fc937
 
 ### 2.1 深度学习框架
 ```
+CANN 5.1.RC1
 pytorch == 1.8.0
 torchvision == 0.9.0
 onnx == 1.9.0
