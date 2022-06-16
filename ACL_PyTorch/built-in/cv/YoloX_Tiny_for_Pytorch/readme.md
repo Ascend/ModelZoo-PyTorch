@@ -28,11 +28,13 @@ pip3 install -v -e .
 mmdeploy_path=$(pwd)
 ```
 
-3. 点击链接https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth  下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。放到mmdeploy_path目录下
+3. 点击链接https://github.com/open-mmlab/mmdetection/tree/master/configs/yolox  下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。放到mmdeploy_path目录下
+   
+   ![yolox_tiny_download](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/built-in/cv/YoloX_Tiny_for_Pytorch/yolox_tiny.png)
 
 4. 数据集
 
-   使用coco2017数据集，请到https://cocodataset.org  自行下载coco2017，放到/root/datasets/coco目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，目录下包含val2017及annotations目录：
+   使用coco2017数据集，请到coco官网自行下载coco2017，放到/root/datasets/coco目录(该目录与test/eval-acc-perf.sh脚本中的路径对应即可)，目录下包含val2017及annotations目录：
 
    ```
    |---- val2017
@@ -45,13 +47,17 @@ mmdeploy_path=$(pwd)
 
 ### 2. 离线推理
 
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```bash
 cp -r YoloX_Tiny_for_Pytorch ${mmdeploy_path}
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/pth2onnx.sh ${mmdetection_path} ${mmdeploy_path}
-bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yoloxint8.onnx Ascend710
+bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yoloxint8.onnx Ascend${chip_name} # Ascend310P3
 bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=64 --mmdetection_path=${mmdetection_path}
 ```
 
@@ -61,7 +67,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=64 -
 
 性能和精度保存在result.txt文件中
 
-| 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
+| 模型        | pth精度   | 310P离线推理精度 | 性能基准  | 310P性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
 | YOLOX bs64 | box AP:0.337 | box AP:0.331 | fps 741 | fps 890 |
 

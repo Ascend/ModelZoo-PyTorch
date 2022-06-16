@@ -27,18 +27,23 @@ python3.7 dy_resize.py yolov4_-1_3_608_608_dynamic.onnx
 
 （3）配置环境变量转换om模型
 
+${chip_name}可通过`npu-smi info`指令查看
+
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
 source env.sh
 
-# soc_version：支持Ascend310和Ascend710
+# soc_version：支持Ascend310和Ascend310P[1-4]
 
 # 二进制输入
-atc --model=yolov4_-1_3_608_608_dynamic_dbs.onnx --framework=5 --output=yolov4_bs1 --input_format=NCHW --log=info --soc_version=Ascend310 --input_shape="input:1,3,608,608" --insert_op_conf=aipp.config --enable_small_channel=1
+atc --model=yolov4_-1_3_608_608_dynamic_dbs.onnx --framework=5 --output=yolov4_bs1 --input_format=NCHW --log=info --soc_version=Ascend${chip_name} --input_shape="input:1,3,608,608" --insert_op_conf=aipp.config --enable_small_channel=1
 
 # 二进制输入 int8量化
-atc --model=yolov4_deploy_model.onnx --framework=5 --output=yolov4_bs1 --input_format=NCHW --log=info --soc_version=Ascend310 --input_shape="input:1,3,608,608" --insert_op_conf=aipp.config --enable_small_channel=1
+atc --model=yolov4_deploy_model.onnx --framework=5 --output=yolov4_bs1 --input_format=NCHW --log=info --soc_version=Ascend${chip_name} --input_shape="input:1,3,608,608" --insert_op_conf=aipp.config --enable_small_channel=1
 
 ```
+
 
 （4）解析数据集
 

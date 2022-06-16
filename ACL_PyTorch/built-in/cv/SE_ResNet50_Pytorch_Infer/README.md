@@ -1,25 +1,26 @@
 # SE_ResNet50 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 推理硬件设备](#21-推理硬件设备)
-	-   [2.2 深度学习框架](#22-深度学习框架)
-	-   [2.3 Python第三方库](#23-Python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 获取pth权重文件](#31-获取pth权重文件)
-	-   [3.2 获取pth权重文件](#32-pth转onnx模型)
-	-   [3.3 pth转om模型](#33-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
-	-   [5.3 性能验证](#53-性能验证)
--   [6 评测结果](#6-评测结果)
--   [7 test目录说明](#7-test目录说明)
+- [SE_ResNet50 Onnx模型端到端推理指导](#se_resnet50-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 推理硬件设备](#21-推理硬件设备)
+		- [2.2 深度学习框架](#22-深度学习框架)
+		- [2.3 Python第三方库](#23-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 获取pth权重文件](#31-获取pth权重文件)
+		- [3.2 pth转onnx模型](#32-pth转onnx模型)
+		- [3.3 onnx转om模型](#33-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+		- [5.3 性能验证](#53-性能验证)
+	- [6 评测结果](#6-评测结果)
+	- [6 test目录说明](#6-test目录说明)
 
 ## 1 模型概述
 
@@ -43,7 +44,7 @@
 
 ### 2.1 推理硬件设备
 ```
-Ascend710
+Ascend310P
 ```
 
 ### 2.2 深度学习框架
@@ -106,8 +107,12 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 b.执行atc模型转换命令：
 
+${chip_name}可通过`npu-smi info`指令查看，例：310P3
+
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
-atc --model=./se_resnet50_dynamic_bs.onnx --framework=5 --input_format=NCHW --input_shape="image:32,3,224,224" --output=./se_resnet50_fp16_bs32 --log=error --soc_version=Ascend710 --insert_op_conf=./aipp_SE_ResNet50_pth.config --enable_small_channel=1
+atc --model=./se_resnet50_dynamic_bs.onnx --framework=5 --input_format=NCHW --input_shape="image:32,3,224,224" --output=./se_resnet50_fp16_bs32 --log=error --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_SE_ResNet50_pth.config --enable_small_channel=1
 ```
 
 参数说明：
@@ -117,7 +122,7 @@ atc --model=./se_resnet50_dynamic_bs.onnx --framework=5 --input_format=NCHW --in
     --input_shape：输入数据的shape。  
     --output：输出的OM模型。  
     --log：日志级别。  
-    --soc_version：处理器型号，Ascend310或Ascend710。  
+    --soc_version：处理器型号。  
     --insert_op_config：插入算子的配置文件路径与文件名，例如aipp预处理算子。  
     --enable_small_channel：Set enable small channel. 0(default): disable; 1: enable  
 
@@ -166,7 +171,7 @@ python3 ./gen_dataset_info.py bin ./data/ImageNet_bin ./data/ImageNet_bin.info 2
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend710上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ### 5.2 离线推理
 1.设置环境变量：
 
@@ -210,7 +215,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ## 6 评测结果
 
 评测结果
-| 模型            | pth精度                | 710精度                   | 性能基准     | 710性能     |
+| 模型            | pth精度                | 310P精度                   | 性能基准     | 310P性能     |
 | --------------- | ---------------------- | ------------------------- | ------------ | ----------- |
 | SE_ResNet50 bs32 | Acc@1 77.63,Acc@5 93.64| Acc@1 77.36,Acc@5 93.76   | 1554.726fps  | 2690.43fps  |
 
@@ -220,7 +225,7 @@ test目录下存放的为测试脚本，其中：
 1.pth2om.sh为pth模型转om模型脚本，使用命令为：
 
 ```
-bash ./test/pth2om.sh /usr/local/Ascend
+bash ./test/pth2om.sh /usr/local/Ascend Ascend${chip_name}
 ```
 
 其中/usr/local/Ascend为cann包默认安装路径，执行后在当前目录下生成om模型: se_resnet50_fp16_bs32.om。  

@@ -41,9 +41,14 @@ cp -r ECSSD ./datasets/
 
 ## 2 离线推理
 
-710上执行,执行时使npu-smi info查看设备状态，确保device空闲：
+310P上执行, 执行时使npu-smi info查看设备状态，确保device空闲：
+
+${chip_name}可通过`npu-smi info`指令查看
+
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
-bash test/pth2om.sh
+bash test/pth2om.sh Ascend${chip_name} # Ascend310P3
 bash test/eval_acc_perf.sh
 ```
 
@@ -56,7 +61,7 @@ bash perf_g.sh
  **评测结果：**
 
 
-| 模型        | pth精度              | 710离线推理精度      | 基准性能    | 710性能  |
+| 模型        | pth精度              | 310P离线推理精度      | 基准性能    | 310P性能  |
 | :------:    | :------:             | :------:             | :------:    | :------: |
 | U2-Net bs1  | maxF:95.1% MAE:0.033 | maxF:94.8% MAE:0.033 | 111.147 fps | 254 fps  |
 | U2-Net bs16 | maxF:95.1% MAE:0.033 | maxF:94.8% MAE:0.033 | 141.465 fps | 227 fps  |
@@ -67,4 +72,4 @@ bash perf_g.sh
 |-------------|----------------------|----------------------|-------------|----------|
 
 最优bs比较：
-710/T4=254/141.465=1.795，符合要求
+310P/T4=254/141.465=1.795，符合要求
