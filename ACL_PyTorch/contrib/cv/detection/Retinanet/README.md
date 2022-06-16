@@ -229,7 +229,7 @@ output3    100 * 1               FP32       scores
 
 调用retinanet_pth_postprocess_detectron2.py评测map精度：
 ```shell
-python3.7 Fsaf_postprocess.py --bin_data_path=./result/dumpOutput_device0/ --test_annotation=fsaf_jpeg.info --det_results_path=./ret_npuinfer/ --net_out_num=3 --net_input_height==800 --net_input_width=1216 --ifShowDetObj --annotations_path=./datasets/coco/annotations/instances_val2017.json
+python3.7 retinanet_pth_postprocess_detectron2.py --bin_data_path=./result/dumpOutput_device0/ --val2017_path=./datasets/coco --test_annotation=origin_image.info --det_results_path=./ret_npuinfer/ --net_out_num=3 --net_input_height=1344 --net_input_width=1344 
 ```
 --bin_data_path为benchmark推理结果，
 
