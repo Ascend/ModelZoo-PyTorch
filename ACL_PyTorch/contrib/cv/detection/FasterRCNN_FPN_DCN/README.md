@@ -65,7 +65,13 @@ FasterRCNN-FPN-DCN
 
 获取faster_rcnn_r50_fpn_dconv_c3-c5_1x_coco_20200130-d68aed1e.pth权重文件，放在1.3创建的目录下。依次执行下面两条sh命令可以完成整个推理流程。
 
-注：详细的步骤细节，请参考推理指导书的对应内容。
+注1：详细的步骤细节，请参考推理指导书的对应内容。
+
+注2：该sh脚本里生成om模型的ATC语句调用的NPU设备的代码为：
+
+--soc_version=Ascend${chip_name}
+
+${chip_name}为用户当前设备的NPU型号，需要用户自己设置。可以通过"npu-smi info”查看。
 ```
 # 1：pth转om模型
 bash pth2om.sh
@@ -79,7 +85,7 @@ bash eval_acc.sh
 **评测结果：**
 
 
-|模型|batch_size|官网pth精度|T4基准性能|310理线推理精度|310性能|710离线推理精度|710性能|
+|模型|batch_size|官网pth精度|T4基准性能|310理线推理精度|310性能|310P离线推理精度|310P性能|
 |---|---|---|---|---|---|---|---|
 |faster_rcnn_r50_fpn_dcn|1|[box AP:41.3%](https://github.com/open-mmlab/mmdetection/tree/master/configs/dcn)|5.40FPS|box AP:41.2%|4.61FPS|box AP:41.1%|7.41FPS|
 |faster_rcnn_r50_fpn_dcn|4|-|4.00FPS|-|6.68FPS|-|8.81FPS|
