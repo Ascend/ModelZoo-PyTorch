@@ -5,7 +5,7 @@ cur_path=`pwd`/../
 
 #集合通信参数,不需要修改
 
-export RANK_SIZE=1
+export RANK_SIZE=8
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -18,7 +18,7 @@ Network="ArcFace_ID0852_for_PyTorch"
 #训练epoch
 train_epochs=18
 #训练batch_size
-batch_size=32
+batch_size=256
 #训练step
 train_steps=null
 #学习率
@@ -87,6 +87,31 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+#备份自定义知识库
+if [ -d "/usr/local/Ascend/opp/data/rl/Ascend910/custom" ]; then
+    echo "Backup old rl autotune lib."
+    mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/backup
+    mv /usr/local/Ascend/opp/data/rl/Ascend910/custom ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/backup
+else
+    echo "No RL autotune lib exist."   
+fi
+
+if [ -d "/usr/local/Ascend/opp/data/tiling/ascend910/custom" ]; then
+    echo "Backup old tiling autotune lib."
+    mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune_bak/tiling
+    mv /usr/local/Ascend/opp/data/tiling/ascend910/custom ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/backup
+else
+    echo "No tiling autotune lib exist."
+fi
+
+
+# dump离线调优数据
+# mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/tune_dump
+# chmod +777 ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune
+
+# export ENABLE_TUNE_DUMP=True
+# export TUNE_DUMP_PATH=${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/tune_dump
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -94,12 +119,18 @@ start_time=$(date +%s)
 cd $cur_path
 mkdir -p ${cur_path}/result
 touch ${cur_path}/result/cur_agedb30_result.mat ${cur_path}/result/cur_cfpfp_result.mat ${cur_path}/result/cur_lfw_result.mat
-
+# 修改性能训练steps，训练时长小于15分钟
+#sed -i "s|if total_iters == 700: pass|if total_iters == 700: break|g" train.py
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
+    export ASCEND_DEVICE_ID=$RANK_ID
     echo "Device ID: $ASCEND_DEVICE_ID"
     export RANK_ID=$RANK_ID
+    export LOCAL_RANK=$RANK_ID
+    export MASTER_ADDR=127.0.0.1
+    export MASTER_PORT=29688
+
 
     #创建DeviceID输出目录，不需要修改
     if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ];then
@@ -126,10 +157,28 @@ do
         --cfpfp_file_list $data_path/CFP-FP/cfp_fp_pair.txt \
         --total_epoch $train_epochs \
         --batch_size $batch_size \
+        --gpu 0,1,2,3 \
         $PREC \
         --device_id ${ASCEND_DEVICE_ID} > ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
+sed -i "s|if total_iters == 700: break|if total_iters == 700: pass|g" train.py
+#备份新生成的知识库文件
+if [ -d "/usr/local/Ascend/opp/data/rl/Ascend910/custom" ]; then
+    echo "Backup new rl autotune lib."
+    mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/rl
+    mv /usr/local/Ascend/opp/data/rl/Ascend910/custom ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/rl
+else
+    echo "No RL autotune lib generated."
+fi
+
+if [ -d "/usr/local/Ascend/opp/data/tiling/ascend910/custom" ]; then
+    echo "Backup new tiling autotune lib."
+    mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/tiling
+    mv /usr/local/Ascend/opp/data/tiling/ascend910/custom ${cur_path}/test/output/$ASCEND_DEVICE_ID/autotune/tiling
+else
+    echo "No tiling autotune lib generated."
+fi
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -175,4 +224,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "train_accuracy = ${train_accuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
