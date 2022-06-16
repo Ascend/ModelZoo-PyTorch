@@ -23,6 +23,7 @@ from pycocotools.coco import COCO
 import json
 import pickle
 import logging
+from tqdm import tqdm
 
 class CocoDataset:
     """Coco dataset."""
@@ -134,10 +135,7 @@ if __name__ == '__main__':
     results = []
     image_ids = []
 
-    cnt = 0
-    for bin_file in sorted(total_img):
-        cnt = cnt + 1
-        print(cnt)
+    for bin_file in tqdm(sorted(total_img)):
         path_base = os.path.join(bin_path, bin_file)
         res_buff = []
         for num in range(1, flags.net_out_num + 1):
