@@ -67,7 +67,7 @@ FasterRCNN-FPN-DCN
 
 注1：详细的步骤细节，请参考推理指导书的对应内容。
 
-注2：该sh脚本里生成om模型的ATC语句调用的NPU设备的代码为：
+注2：pth2om.sh脚本里生成om模型的ATC语句调用的NPU设备的代码为：
 
 --soc_version=Ascend${chip_name}
 
