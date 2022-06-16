@@ -1,14 +1,14 @@
-model=${1:-"aasist_bs1"}
-bs=${2:-"1"}
-output_dir=${3:-"output"}
-mode=${4:-"infer"}
-install_path=${5:-"/usr/local/Ascend/ascend-toolkit"}
+soc=${1}
+if [[ -z $soc ]]; then echo "error: missing 1 required argument: 'soc'"; exit 1 ; fi
+model=${2:-"aasist_bs1"}
+bs=${3:-"1"}
+output_dir=${4:-"output"}
+mode=${5:-"infer"}
+install_path=${6:-"/usr/local/Ascend/ascend-toolkit"}
 
-## 设置环境变量
-source ${install_path}/set_env.sh
 
 ## pth导出om模型
-bash pth2om.sh --model=${model} --bs=${bs} --output_dir=${output_dir}
+bash pth2om.sh --model=${model} --bs=${bs} --output_dir=${output_dir} --soc=${soc}
 
 if [ $? -ne 0 ]; then
     echo -e "pth导出om模型 Failed \n" 
