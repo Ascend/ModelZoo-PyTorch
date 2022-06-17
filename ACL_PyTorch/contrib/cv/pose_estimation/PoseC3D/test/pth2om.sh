@@ -4,6 +4,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 batch_size=1
 not_skip_onnx=true
+chip_name=310P3
 
 for para in $*
 do
@@ -12,6 +13,9 @@ do
     fi
     if [[ $para == --not_skip_onnx* ]]; then
         not_skip_onnx=`echo ${para#*=}`
+    fi
+    if [[ $para == --chip_name* ]]; then
+        chip_name=`echo ${para#*=}`
     fi
 done
 
@@ -39,7 +43,7 @@ export TUNE_BANK_PATH="./aoe_result_bs1"
 atc --framework=5 --model=./posec3d_bs${batch_size}.onnx \
     --output=./posec3d_bs${batch_size} \
     --input_format=ND --input_shape="invals:${batch_size},20,17,48,56,56" \
-    --log=debug --soc_version=Ascend710
+    --log=debug --soc_version=Ascend${chip_name}
 if [ -f "posec3d_bs${batch_size}.om" ] ; then
   echo "==> 2. creating om model successfully."
 else
