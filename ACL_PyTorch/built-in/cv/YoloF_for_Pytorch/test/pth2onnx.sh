@@ -6,6 +6,7 @@ mmdetection_path=$1
 mmdeploy_path=$2
 cp yolof_r50_c5_8x8_1x_coco.py ${mmdetection_path}/configs/yolof
 cp bbox_nms.py ${mmdeploy_path}/mmdeploy/codebase/mmdet/core/post_processing/bbox_nms.py
+cp pytorch2onnx.py ${mmdeploy_path}/mmdeploy/apis/pytorch2onnx.py
 cd ${mmdeploy_path}
 python tools/deploy.py \
 configs/mmdet/detection/detection_onnxruntime_dynamic.py \
