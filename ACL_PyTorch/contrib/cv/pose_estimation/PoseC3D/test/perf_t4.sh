@@ -1,5 +1,4 @@
 #!/bin/bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf perf_bs1.log
 trtexec --onnx=posec3d_bs1.onnx --fp16 --threads > perf_bs1.log
