@@ -49,7 +49,7 @@ source env.sh
 ```
 #### 3.2.2 使用atc将onnx模型转换为om模型
 ```shell
-atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape="image:1,10,3,16,112,112" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape="image:1,10,3,16,112,112" --log=debug --soc_version=${chip_name}
 ```
 参数说明：
 
@@ -57,8 +57,8 @@ atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape=
 - `--output`:输出的文件名。 
 - `--input_format`: 输入形状的格式。
 - `--input_shape`: 模型输入的形状。
-- `--log`: 设置ATC模型转换过程中日志的级别
-- `--soc_version`:soc版本
+- `--log`: 设置ATC模型转换过程中日志的级别。
+- `--soc_version`: ${chip_name}可通过`npu-smi info`指令查看 。
 
 ## 4.数据预处理
 ### 4.1 数据集获取
@@ -90,7 +90,7 @@ bash generate_rawframes_filelist.sh
 
 ```shell
 cd $tools/data/ucf101
-bash check_rawframes_filelist.py
+bash check_rawframes_filelist.sh
 ```
 
 #### 4.1.5 检查目录结构
@@ -155,9 +155,10 @@ python get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
 - `参数3、4`：分别表示每张图片的宽和高
 ## 5. 离线推理
 ### 5.1 benchmark工具概述
-benchmark工具为华为自研的模型推理工具，支 持多种模型的离线推理，能够迅速统计出模型在 Ascend310上的性能，支持真实数据和
+benchmark工具为华为自研的模型推理工具，支 持多种模型的离线推理，能够迅速统计出模型在芯片上的性能，支持真实数据和
 纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理
 benchmark工具用户指南 01 将获取的工具包并解压，将benchmark工具放在当前目录下
+
 ### 5.2 离线推理
 #### 5.2.1 设置环境变量
 ```shell
