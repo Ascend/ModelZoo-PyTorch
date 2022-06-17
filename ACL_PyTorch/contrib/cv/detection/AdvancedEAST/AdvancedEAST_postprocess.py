@@ -17,6 +17,7 @@ import os
 import multiprocessing
 import torch
 import numpy as np
+from tqdm import tqdm
 
 sys.path.append('./AdvancedEAST-PyTorch')
 
@@ -36,14 +37,16 @@ def eval(data_dir, result_dir):
     img_list = os.listdir(result_dir)
     thread_pool = multiprocessing.Pool(multiprocessing.cpu_count())
     i = 0
+    pbar = tqdm(total=len(img_list))
+    update = lambda *args: pbar.update()
     for img_file in img_list:
         gt_xy_list = [np.load(os.path.join(train_label_dir, img_file[:-6] + '.npy'))]
         out = np.fromfile(os.path.join(result_dir, img_file), dtype=np.float32)
         size = 736 // 4
         out.shape = (1, 7, size, size)
         out = torch.from_numpy(out)
-        thread_pool.apply_async(eval_func, args=(i, out, gt_xy_list))
-        i += 1
+        thread_pool.apply_async(eval_func, args=(i, out, gt_xy_list), callback=update)
+        i += 1      
     thread_pool.close()
     thread_pool.join()
 
