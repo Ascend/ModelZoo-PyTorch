@@ -3,4 +3,4 @@ QuantStatus:OK
 FuncStatus:OK
 PrecisionStatus:OK
 AutoTune:OK
-PerfStatus:OK
+PerfStatus:PERFECT
