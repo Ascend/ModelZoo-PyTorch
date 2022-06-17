@@ -28,7 +28,7 @@ cd ../../../..
 # ======================= generate prep_dataset ==============================
 rm -rf ./prep_hmdb51_bs${batch_size}
 chmod u+x msame
-python posec3d_preprocess.py \
+python3 posec3d_preprocess.py \
     --batch_size ${batch_size} \
     --data_root ${datasets_path}/rawframes/ \
     --ann_file ./hmdb51.pkl \
@@ -47,7 +47,7 @@ rm -rf ./result/outputs_bs${batch_size}_om
 ./msame --model "./posec3d_bs${batch_size}.om" \
         --input "/opt/npu/hmdb51/prep_hmdb51_bs${batch_size}" \
         --output "./result/outputs_bs${batch_size}_om" \
-        --outfmt BIN > ./msame_bs${batch_size}.txt
+        --outfmt TXT > ./msame_bs${batch_size}.txt
 if [ $? != 0 ]; then
     echo "msame bs${batch_size} fail!"
     exit -1
@@ -56,7 +56,7 @@ echo "==> 2. conducting hmdb51_bs${batch_size}.om successfully."
 
 
 # ============================ evaluate ======================================
-python posec3d_postprocess.py \
+python3 posec3d_postprocess.py \
     --result_path ./result/outputs_bs${batch_size}_om/20220612_142755 \
     --info_path ./hmdb51.info
 
