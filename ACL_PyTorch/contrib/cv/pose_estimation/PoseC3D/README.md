@@ -23,7 +23,16 @@
 [posec3d代码](https://github.com/open-mmlab/mmaction2/tree/master/configs/skeleton/posec3d)
 
 ```bash
-git clone https://github.com/open-mmlab/mmaction2/tree/master/configs/skeleton/posec3d.git
+conda create -n {your-envname} python=3.8 pytorch=1.10 cudatoolkit=11.3 torchvision
+conda activate {your-envname}
+pip3 install openmim
+pip3 install tqdm
+pip3 install mmcv-full
+pip3 install mmdet  # optional
+pip3 install mmpose  # optional
+git clone https://github.com/open-mmlab/mmaction2.git
+cd mmaction2
+pip3 install -e .
 ```
 > **说明：**   
 > 本离线推理项目中posec3d模型对应论文中PoseConv3D，以下说明中将PoseConv3D简称为posec3d
@@ -50,7 +59,8 @@ mmcv==1.4.0
 ## <a name="3">3. 模型转换</a>
 一步式从pth权重文件转om模型的脚本，能够由pth权重文件生成bacth为1的om模型：
 ```bash
-bash ./test/pth2om.sh --batch_size=1 --not_skip_onnx=true
+bash ./test/pth2om.sh --batch_size=1 --not_skip_onnx=true --chip_name==${chip_name}
+#注： ${chip_name}可以根据 npu-smi info命令查看
 ```
 运行后会生成如下文件：
 ```bash
@@ -79,7 +89,7 @@ python ./posec3d_pytorch2onnx.py ./mmaction2/configs/skeleton/posec3d/slowonly_k
 ```bash
 # 将知识库文件夹通过scp -r指令复制到当前目录
 export TUNE_BANK_PATH="./aoe_result_bs1"
-atc --framework=5 --model=./posec3d_bs1.onnx --output=./posec3d_bs1 --input_format=ND --input_shape="invals:1,20,17,48,56,56" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=./posec3d_bs1.onnx --output=./posec3d_bs1 --input_format=ND --input_shape="invals:1,20,17,48,56,56" --log=debug --soc_version=Ascend${chip_name}
 ```
 
 ## <a name="4">4. 数据预处理</a>
@@ -109,7 +119,7 @@ cd ../../../..
 
 3. 执行输入数据的生成脚本，生成模型输入的bin文件
 ```bash
-python3.7 posec3d_preprocess.py --batch_size 1 --data_root /opt/npu/hmdb51/rawframes/  --ann_file hmdb51.pkl --name /opt/npu/hmdb51/prep_hmdb51_bs1
+python3 posec3d_preprocess.py --batch_size 1 --data_root /opt/npu/hmdb51/rawframes/  --ann_file hmdb51.pkl --name /opt/npu/hmdb51/prep_hmdb51_bs1
 ```
 其中"batch_size"表示生成数据集对应的batch size,data_root表示处理前原数据集的地址，ann_file表示对应的标注文件，"name"表示生成数据集的文件夹名称。
 运行后，将会得到如下形式的文件夹：
@@ -145,12 +155,13 @@ msame模型推理工具，其输入是om模型以及模型所需要的输入bin�
 1. 设置环境变量
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
+chmod u+x msame
 ```
 
 2. 执行离线推理
 运行如下命令进行离线推理：
 ```bash
-./msame --model "./posec3d_bs1.om" --input "/opt/npu/hmdb51/prep_hmdb51_bs1" --output "./result/outputs_bs1_om" --outfmt BIN > msame_bs1.txt
+./msame --model "./posec3d_bs1.om" --input "/opt/npu/hmdb51/prep_hmdb51_bs1" --output "./result/outputs_bs1_om" --outfmt TXT > msame_bs1.txt
 ```
 模型输出格式是txt，输出保存在"output"参数指定的文件夹中，同时会生成推理的日志文件msame_bs1.txt
 
@@ -165,13 +176,13 @@ python3.7 test/parse.py --result-file ./msame_bs1.txt --batch-size 1
 2. 精度数据的计算
 精度计算利用posec3d_postprocess.py脚本
 ```
- python3.7 posec3d_postprocess.py --result_path ./result/outputs_bs1_om/{实际文件夹名}
+ python3 posec3d_postprocess.py --result_path ./result/outputs_bs1_om/{实际文件夹名} --info_path ./hmdb51.info
 ```
 其中result_path表示离线推理输出所在的文件夹，info_path（默认为"./hmdb51.info"）表示hmdb51验证集标签的地址和名称。
 
 | 模型      | 参考精度  | 310P精度  | 性能基准    | 310P性能    |
 | :------: | :------: | :------: | :------:  | :------:  |
-| posec3d_hmdb51_bs1  | top1:69.3%  | top1:69.2%  | 15.385fps | 24.699fps |
+| posec3d_hmdb51_bs1  | top1:69.3%  | top1:69.2%  | 9.988fps | 22.021fps |
 
 > **说明：**  
 > Top1表示预测结果中概率最大的类别与真实类别一致的概率，其值越大说明分类模型的效果越优 
