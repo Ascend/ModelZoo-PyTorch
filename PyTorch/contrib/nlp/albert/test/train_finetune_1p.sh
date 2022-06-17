@@ -39,7 +39,7 @@ export OUTPUR_DIR=./outputs
 export PYTHONPATH=./:$PYTHONPATH
 export DEVICE=npu
 TASK_NAME="STS-B"
-nohup python3.7 ./run_classifier.py \
+python3.7 ./run_classifier.py \
   --device=$DEVICE \
   --model_type=$BERT_MODEL \
   --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \
