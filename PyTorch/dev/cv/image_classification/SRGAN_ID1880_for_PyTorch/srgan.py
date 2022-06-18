@@ -103,6 +103,12 @@ cuda = torch.npu.is_available()
 
 hr_shape = (opt.hr_height, opt.hr_width)
 
+distributed = int(os.environ['RANK_SIZE']) > 1
+if distributed:
+    world_size = int(os.environ['RANK_SIZE'])
+    rank_id = int(os.environ['RANK_ID'])
+    torch.distributed.init_process_group("hccl", rank=rank_id, world_size=world_size)
+
 # Initialize generator and discriminator
 generator = GeneratorResNet()
 discriminator = Discriminator(input_shape=(opt.channels, *hr_shape))
@@ -132,18 +138,22 @@ optimizer_G = apex.optimizers.NpuFusedAdam(generator.parameters(), lr=opt.lr, be
 optimizer_D = apex.optimizers.NpuFusedAdam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
 
 if opt.apex:
-    #generator, optimizer_G = amp.initialize(generator, optimizer_G, opt_level =opt.apex_opt_level, loss_scale = 128.0, combine_grad=True)
-    generator, optimizer_G = amp.initialize(generator, optimizer_G, opt_level =opt.apex_opt_level, combine_grad=True)
-    #discriminator, optimizer_D = amp.initialize(discriminator, optimizer_D, opt_level =opt.apex_opt_level, loss_scale = 128.0, combine_grad=True)
-    discriminator, optimizer_D = amp.initialize(discriminator, optimizer_D, opt_level =opt.apex_opt_level, combine_grad=True)
+    [generator, discriminator], [optimizer_G, optimizer_D] = amp.initialize([generator, discriminator], [optimizer_G, optimizer_D],
+                                                                            opt_level=opt.apex_opt_level, combine_grad=True)
 Tensor = torch.npu.FloatTensor if cuda else torch.Tensor
+#DDP
+if distributed:
+    generator = torch.nn.parallel.DistributedDataParallel(generator, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False, find_unused_parameters=True)
+    discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False, find_unused_parameters=True)
 
+train_dataset = ImageDataset('./data/%s' % opt.dataset_name, hr_shape=hr_shape)
+train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if distributed else None
 dataloader = DataLoader(
-    #ImageDataset("../../data/%s" % opt.dataset_name, hr_shape=hr_shape),
-    ImageDataset("./data/%s" % opt.dataset_name, hr_shape=hr_shape),
+    train_dataset,
     batch_size=opt.batch_size,
-    shuffle=True,
+    shuffle=(train_sampler is None),
     num_workers=opt.n_cpu,
+    sampler=train_sampler
 )
 
 # ----------
@@ -152,6 +162,8 @@ dataloader = DataLoader(
 
 for epoch in range(opt.epoch, opt.n_epochs):
     for i, imgs in enumerate(dataloader):
+        if distributed:
+            train_sampler.set_epoch(epoch)
         if opt.max_steps and i >= opt.max_steps:
             break
         st_time = time.time()
@@ -161,8 +173,12 @@ for epoch in range(opt.epoch, opt.n_epochs):
         imgs_hr = Variable(imgs["hr"].type(Tensor))
 
         # Adversarial ground truths
-        valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
-        fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
+        if distributed:
+            valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.module.output_shape))), requires_grad=False)
+            fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.module.output_shape))), requires_grad=False)
+        else:
+            valid = Variable(Tensor(np.ones((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
+            fake = Variable(Tensor(np.zeros((imgs_lr.size(0), *discriminator.output_shape))), requires_grad=False)
 
         # ------------------
         #  Train Generators
@@ -188,7 +204,6 @@ for epoch in range(opt.epoch, opt.n_epochs):
                 scaled_loss.backward()
         else:
             loss_G.backward()
-        #loss_G.backward()
         optimizer_G.step()
 
         # ---------------------
@@ -205,17 +220,16 @@ for epoch in range(opt.epoch, opt.n_epochs):
         loss_D = (loss_real + loss_fake) / 2
         if opt.apex:
             with amp.scale_loss(loss_D,optimizer_D) as scaled_loss:
-                scaled_loss.backward() 
+                scaled_loss.backward()
         else:
             loss_D.backward()
-        #loss_D.backward()
         optimizer_D.step()
 
         # --------------
         #  Log Progress
         # --------------
         step_time = time.time()-st_time
-        fps = opt.batch_size / step_time
+        fps = (opt.batch_size if not distributed else opt.batch_size * world_size) / step_time
 
         sys.stdout.write(
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f] [step_time: %f] [fps: %f]\n"
