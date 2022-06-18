@@ -1,26 +1,27 @@
 # 基于detectron2训练的retinanet Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 开源精度](#62-开源精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+- [基于detectron2训练的retinanet Onnx模型端到端推理指导](#基于detectron2训练的retinanet-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成预处理数据集信息文件](#43-生成预处理数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理精度统计](#61-离线推理精度统计)
+		- [6.2 开源精度](#62-开源精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
 
 ## 1 模型概述
 
@@ -168,16 +169,20 @@ export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
 
    4. 生成的retinanet_revise.onnx和retinanet_int8_revise.onnx即为用于转om离线模型的onnx文件
 
-3. 使用atc将onnx模型（包括量化模型和非量化模型）转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，使用netron开源可视化工具查看具体的输出节点名，如使用的设备是710，则将--soc_version设置为Ascend710：
+4. 使用atc将onnx模型（包括量化模型和非量化模型）转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，使用netron开源可视化工具查看具体的输出节点名
+
+	${chip_name}可通过`npu-smi info`指令查看
+
+	![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```shell
-atc --model=retinanet_revise.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" --out_nodes="Cast_1224:0;Reshape_1218:0;Gather_1226:0" --log=info --soc_version=Ascend310
+atc --model=retinanet_revise.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" --out_nodes="Cast_1224:0;Reshape_1218:0;Gather_1226:0" --log=info --soc_version=Ascend${chip_name}
 ```
 
 量化模型转om(注意输出节点名字已改变，使用netron打开后手动修改)
 
 ```
-atc --model=retinanet_int8_revise.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" --out_nodes="Cast_1229_sg2:0;Reshape_1223_sg2:0;Gather_1231_sg2:0" --log=info --soc_version=Ascend310
+atc --model=retinanet_int8_revise.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" --out_nodes="Cast_1229_sg2:0;Reshape_1223_sg2:0;Gather_1231_sg2:0" --log=info --soc_version=Ascend${chip_name}
 ```
 
 
@@ -340,7 +345,7 @@ AP,AP50,AP75,APs,APm,APl
 
 ### 6.3 精度对比
 
-310上om推理box map精度为0.384，官方开源pth推理box map精度为0.387，精度下降在1个点之内，因此可视为精度达标，710上fp16精度0.383, int8 0.382，可视为精度达标
+310上om推理box map精度为0.384，官方开源pth推理box map精度为0.387，精度下降在1个点之内，因此可视为精度达标，310P上fp16精度0.383, int8 0.382，可视为精度达标
 
 ## 7 性能对比
 
@@ -349,7 +354,7 @@ AP,AP50,AP75,APs,APm,APl
 ### 7.1 npu性能数据
 batch1的性能：
 
-5.2步骤中，离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，710只有一颗芯片，FPS为该值本身
+5.2步骤中，离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，310P只有一颗芯片，FPS为该值本身
 
 retinanet detectron2不支持多batch
 

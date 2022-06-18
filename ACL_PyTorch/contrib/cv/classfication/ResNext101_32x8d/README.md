@@ -1,27 +1,28 @@
 # ResNext101_32x8d Onnx模型端到端推理指导
 
--   [1 模型概述](#1-模型概述)
-    -   [1.1 论文地址](#11-论文地址)
-    -   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-    -   [2.1 深度学习框架](#21-深度学习框架)
-    -   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-    -   [3.1 pth转onnx模型](#31-pth转onnx模型)
-    -   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-    -   [4.1 数据集获取](#41-数据集获取)
-    -   [4.2 数据集预处理](#42-数据集预处理)
-    -   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-    -   [5.1 benchmark工具概述](#51-benchmark工具概述)
-    -   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-    -   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-    -   [6.2 开源TopN精度](#62-开源TopN精度)
-    -   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-    -   [7.1 npu性能数据](#71-npu性能数据)
+- [ResNext101_32x8d Onnx模型端到端推理指导](#resnext101_32x8d-onnx模型端到端推理指导)
+  - [1 模型概述](#1-模型概述)
+    - [1.1 论文地址](#11-论文地址)
+    - [1.2 代码地址](#12-代码地址)
+  - [2 环境说明](#2-环境说明)
+    - [2.1 深度学习框架](#21-深度学习框架)
+    - [2.2 python第三方库](#22-python第三方库)
+  - [3 模型转换](#3-模型转换)
+    - [3.1 pth转onnx模型](#31-pth转onnx模型)
+    - [3.2 onnx转om模型](#32-onnx转om模型)
+  - [4 数据集预处理](#4-数据集预处理)
+    - [4.1 数据集获取](#41-数据集获取)
+    - [4.2 数据集预处理](#42-数据集预处理)
+    - [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+  - [5 离线推理](#5-离线推理)
+    - [5.1 benchmark工具概述](#51-benchmark工具概述)
+    - [5.2 离线推理](#52-离线推理)
+  - [6 精度对比](#6-精度对比)
+    - [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
+    - [6.2 开源TopN精度](#62-开源topn精度)
+    - [6.3 精度对比](#63-精度对比)
+  - [7 性能对比](#7-性能对比)
+    - [7.1 npu性能数据](#71-npu性能数据)
 
 
 
@@ -118,11 +119,14 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
+${chip_name}可通过`npu-smi info`指令查看
+
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```shell
-atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name}
 ```
 
-* 其中在710（310p)机器上应该将处理器型号修改为```--soc_version=Ascend710```
 * 修改```input_shape```可以修改的导出的om模型对应batch size， 例如```input_shape="image:4, 3, 224, 224"```导出的模型适配batch size为4。同时需注意```--output```参数需要改名防止命名冲突。
 
 ## 4 数据集预处理
@@ -137,7 +141,7 @@ atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 
 
 该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
 
-> 710(310p)和310机器上无需额外下载数据集合，在/opt/npu/imageNet/下已有现成数据集和label
+> 310p和310机器上无需额外下载数据集合，在/opt/npu/imageNet/下已有现成数据集和label
 
 ### 4.2 数据集预处理
 
@@ -303,7 +307,7 @@ ave_throughputRate: 108.28，108.28x4=433.12既是batch32 310单卡吞吐率
 
  **性能优化：**  
 
-| ThroughoutRate | 710(310p)     | 310       | T4 | 710(310p)/310 | 710(310p)/T4 |
+| ThroughoutRate | 310p     | 310       | T4 | 310p/310 | 310p/T4 |
 |----------------|---------|-----------|----|---------|--------|
 | bs1            | 594.884 | 594.696 |  248.576  | 1.000  | 2.393   |
 | bs4            | 566.742 | 674.64  |  458.576  | 0.840  | 1.236  |
@@ -314,4 +318,4 @@ ave_throughputRate: 108.28，108.28x4=433.12既是batch32 310单卡吞吐率
 | 最优batch       | 1191.32 | 674.64  |  573.050  | 1.766  | 2.079  |
 
 
-由以上性能对比表格可知，710(310p)最优batch高于310最优batch1.2倍，高于T4最优batch的1.6倍，故性能合格，无需优化。
+由以上性能对比表格可知，310p最优batch高于310最优batch1.2倍，高于T4最优batch的1.6倍，故性能合格，无需优化。
