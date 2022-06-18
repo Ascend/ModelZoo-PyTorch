@@ -15,6 +15,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 
 import numpy as np
 
@@ -23,6 +25,9 @@ IMG_MEAN = np.array([0.485, 0.456, 0.406]).reshape((1, 1, 3))
 IMG_STD = np.array([0.229, 0.224, 0.225]).reshape((1, 1, 3))
 
 def maybe_download(model_name, model_url, model_dir=None, map_location=None):
+    """ model_name: 101_imagenet
+        model_url: the downloading address of pretrained model 'resnet-101'
+    """
     import os, sys
     from six.moves import urllib
     if model_dir is None:
