@@ -19,10 +19,13 @@ import datetime
 import time
 import math
 import json
+import ssl
+
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
+import apex
 import torch
 import torch.nn as nn
 import torch.distributed as dist
@@ -30,23 +33,29 @@ import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torchvision import models as torchvision_models
+from apex.contrib.combine_tensors import combine_npu
+from apex import amp
 
 import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
 
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
 torchvision_archs = sorted(name for name in torchvision_models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(torchvision_models.__dict__[name]))
+                           if name.islower() and not name.startswith("__")
+                           and callable(torchvision_models.__dict__[name]))
+
 
 def get_args_parser():
     parser = argparse.ArgumentParser('DINO', add_help=False)
 
     # Model parameters
     parser.add_argument('--arch', default='vit_small', type=str,
-        choices=['vit_tiny', 'vit_small', 'vit_base', 'xcit', 'deit_tiny', 'deit_small'] \
-                + torchvision_archs + torch.hub.list("facebookresearch/xcit:main"),
-        help="""Name of architecture to train. For quick experiments with ViTs,
+                        choices=['vit_tiny', 'vit_small', 'vit_base', 'xcit', 'deit_tiny', 'deit_small'] \
+                                + torchvision_archs + torch.hub.list("facebookresearch/xcit:main"),
+                        help="""Name of architecture to train. For quick experiments with ViTs,
         we recommend using vit_tiny or vit_small.""")
     parser.add_argument('--patch_size', default=16, type=int, help="""Size in pixels
         of input square patches - default 16 (for 16x16 patches). Using smaller
@@ -56,24 +65,24 @@ def get_args_parser():
     parser.add_argument('--out_dim', default=65536, type=int, help="""Dimensionality of
         the DINO head output. For complex and large datasets large values (like 65k) work well.""")
     parser.add_argument('--norm_last_layer', default=True, type=utils.bool_flag,
-        help="""Whether or not to weight normalize the last layer of the DINO head.
+                        help="""Whether or not to weight normalize the last layer of the DINO head.
         Not normalizing leads to better performance but can make the training unstable.
         In our experiments, we typically set this paramater to False with vit_small and True with vit_base.""")
     parser.add_argument('--momentum_teacher', default=0.996, type=float, help="""Base EMA
         parameter for teacher update. The value is increased to 1 during training with cosine schedule.
         We recommend setting a higher value with small batches: for example use 0.9995 with batch size of 256.""")
     parser.add_argument('--use_bn_in_head', default=False, type=utils.bool_flag,
-        help="Whether to use batch normalizations in projection head (Default: False)")
+                        help="Whether to use batch normalizations in projection head (Default: False)")
 
     # Temperature teacher parameters
     parser.add_argument('--warmup_teacher_temp', default=0.04, type=float,
-        help="""Initial value for the teacher temperature: 0.04 works well in most cases.
+                        help="""Initial value for the teacher temperature: 0.04 works well in most cases.
         Try decreasing it if the training loss does not decrease.""")
     parser.add_argument('--teacher_temp', default=0.04, type=float, help="""Final value (after linear warmup)
         of the teacher temperature. For most experiments, anything above 0.07 is unstable. We recommend
         starting with the default value of 0.04 and increase this slightly if needed.""")
     parser.add_argument('--warmup_teacher_temp_epochs', default=0, type=int,
-        help='Number of warmup epochs for the teacher temperature (Default: 30).')
+                        help='Number of warmup epochs for the teacher temperature (Default: 30).')
 
     # Training/Optimization parameters
     parser.add_argument('--use_fp16', type=utils.bool_flag, default=True, help="""Whether or not
@@ -89,7 +98,7 @@ def get_args_parser():
         gradient norm if using gradient clipping. Clipping with norm .3 ~ 1.0 can
         help optimization for larger ViT architectures. 0 for disabling.""")
     parser.add_argument('--batch_size_per_gpu', default=64, type=int,
-        help='Per-GPU batch-size : number of distinct images loaded on one GPU.')
+                        help='Per-GPU batch-size : number of distinct images loaded on one GPU.')
     parser.add_argument('--epochs', default=100, type=int, help='Number of epochs of training.')
     parser.add_argument('--freeze_last_layer', default=1, type=int, help="""Number of epochs
         during which we keep the output layer fixed. Typically doing so during
@@ -98,35 +107,40 @@ def get_args_parser():
         linear warmup (highest LR used during training). The learning rate is linearly scaled
         with the batch size, and specified here for a reference batch size of 256.""")
     parser.add_argument("--warmup_epochs", default=10, type=int,
-        help="Number of epochs for the linear learning-rate warm up.")
+                        help="Number of epochs for the linear learning-rate warm up.")
     parser.add_argument('--min_lr', type=float, default=1e-6, help="""Target LR at the
         end of optimization. We use a cosine LR schedule with linear warmup.""")
     parser.add_argument('--optimizer', default='adamw', type=str,
-        choices=['adamw', 'sgd', 'lars'], help="""Type of optimizer. We recommend using adamw with ViTs.""")
+                        choices=['adamw', 'sgd', 'lars', 'npufusedadamw'],
+                        help="""Type of optimizer. We recommend using adamw with ViTs.""")
     parser.add_argument('--drop_path_rate', type=float, default=0.1, help="stochastic depth rate")
 
     # Multi-crop parameters
     parser.add_argument('--global_crops_scale', type=float, nargs='+', default=(0.4, 1.),
-        help="""Scale range of the cropped image before resizing, relatively to the origin image.
+                        help="""Scale range of the cropped image before resizing, relatively to the origin image.
         Used for large global view cropping. When disabling multi-crop (--local_crops_number 0), we
         recommand using a wider range of scale ("--global_crops_scale 0.14 1." for example)""")
     parser.add_argument('--local_crops_number', type=int, default=8, help="""Number of small
         local views to generate. Set this parameter to 0 to disable multi-crop training.
         When disabling multi-crop we recommend to use "--global_crops_scale 0.14 1." """)
     parser.add_argument('--local_crops_scale', type=float, nargs='+', default=(0.05, 0.4),
-        help="""Scale range of the cropped image before resizing, relatively to the origin image.
+                        help="""Scale range of the cropped image before resizing, relatively to the origin image.
         Used for small local view cropping of multi-crop.""")
 
     # Misc
     parser.add_argument('--data_path', default='/path/to/imagenet/train/', type=str,
-        help='Please specify path to the ImageNet training data.')
+                        help='Please specify path to the ImageNet training data.')
     parser.add_argument('--output_dir', default=".", type=str, help='Path to save logs and checkpoints.')
     parser.add_argument('--saveckp_freq', default=20, type=int, help='Save checkpoint every x epochs.')
     parser.add_argument('--seed', default=0, type=int, help='Random seed.')
     parser.add_argument('--num_workers', default=10, type=int, help='Number of data loading workers per GPU.')
-    parser.add_argument("--dist_url", default="env://", type=str, help="""url used to set up
+    parser.add_argument('--dist_url', default="env://", type=str, help="""url used to set up
         distributed training; see https://pytorch.org/docs/stable/distributed.html""")
-    parser.add_argument("--local_rank", default=0, type=int, help="Please ignore and do not set this argument.")
+    parser.add_argument('--local_rank', default=0, type=int, help="Please ignore and do not set this argument.")
+    parser.add_argument('--amp', action='store_true', help='use apex')
+    parser.add_argument('--use_color_jitter_opti', action='store_true',
+                        help='use color jitter optimize, it is an approximate implementation of algorithm. '
+                             'Helps performance when CPU is weak')
     return parser
 
 
@@ -142,6 +156,7 @@ def train_dino(args):
         args.global_crops_scale,
         args.local_crops_scale,
         args.local_crops_number,
+        args.use_color_jitter_opti
     )
     dataset = datasets.ImageFolder(args.data_path, transform=transform)
     sampler = torch.utils.data.DistributedSampler(dataset, shuffle=True)
@@ -192,7 +207,27 @@ def train_dino(args):
         DINOHead(embed_dim, args.out_dim, args.use_bn_in_head),
     )
     # move networks to gpu
-    student, teacher = student.cuda(), teacher.cuda()
+    student, teacher = student.npu(), teacher.npu()
+    vits.NpuDropPath.enable_droppath_ensemble(student)
+    vits.NpuDropPath.enable_droppath_ensemble(teacher)
+
+    # ============ preparing optimizer ... ============
+    params_groups = utils.get_params_groups(student)
+    if args.optimizer == "adamw":
+        optimizer = torch.optim.AdamW(params_groups)  # to use with ViTs
+    elif args.optimizer == "npufusedadamw":
+        optimizer = apex.optimizers.NpuFusedAdamW(params_groups)  # to use with ViTs
+    elif args.optimizer == "sgd":
+        optimizer = torch.optim.SGD(params_groups, lr=0, momentum=0.9)  # lr is set by scheduler
+    elif args.optimizer == "lars":
+        optimizer = utils.LARS(params_groups)  # to use with convnet and large batches
+
+    amp.register_half_function(torch, "softmax")
+    amp.register_half_function(torch, "npu_linear")
+
+    if args.amp:
+        [student, teacher], optimizer = amp.initialize([student, teacher], optimizer, opt_level="O1", combine_grad=True)
+
     # synchronize batch norms (if any)
     if utils.has_batchnorms(student):
         student = nn.SyncBatchNorm.convert_sync_batchnorm(student)
@@ -220,20 +255,7 @@ def train_dino(args):
         args.teacher_temp,
         args.warmup_teacher_temp_epochs,
         args.epochs,
-    ).cuda()
-
-    # ============ preparing optimizer ... ============
-    params_groups = utils.get_params_groups(student)
-    if args.optimizer == "adamw":
-        optimizer = torch.optim.AdamW(params_groups)  # to use with ViTs
-    elif args.optimizer == "sgd":
-        optimizer = torch.optim.SGD(params_groups, lr=0, momentum=0.9)  # lr is set by scheduler
-    elif args.optimizer == "lars":
-        optimizer = utils.LARS(params_groups)  # to use with convnet and large batches
-    # for mixed precision training
-    fp16_scaler = None
-    if args.use_fp16:
-        fp16_scaler = torch.cuda.amp.GradScaler()
+    ).npu()
 
     # ============ init schedulers ... ============
     lr_schedule = utils.cosine_scheduler(
@@ -260,9 +282,11 @@ def train_dino(args):
         student=student,
         teacher=teacher,
         optimizer=optimizer,
-        fp16_scaler=fp16_scaler,
+        amp=amp if args.amp else None,
         dino_loss=dino_loss,
     )
+    ema = ModelEMA()
+
     start_epoch = to_restore["epoch"]
 
     start_time = time.time()
@@ -272,8 +296,8 @@ def train_dino(args):
 
         # ============ training one epoch of DINO ... ============
         train_stats = train_one_epoch(student, teacher, teacher_without_ddp, dino_loss,
-            data_loader, optimizer, lr_schedule, wd_schedule, momentum_schedule,
-            epoch, fp16_scaler, args)
+                                      data_loader, optimizer, lr_schedule, wd_schedule, momentum_schedule,
+                                      epoch, ema, args)
 
         # ============ writing logs ... ============
         save_dict = {
@@ -284,8 +308,8 @@ def train_dino(args):
             'args': args,
             'dino_loss': dino_loss.state_dict(),
         }
-        if fp16_scaler is not None:
-            save_dict['fp16_scaler'] = fp16_scaler.state_dict()
+        if args.amp:
+            save_dict['amp'] = amp.state_dict()
         utils.save_on_master(save_dict, os.path.join(args.output_dir, 'checkpoint.pth'))
         if args.saveckp_freq and epoch % args.saveckp_freq == 0:
             utils.save_on_master(save_dict, os.path.join(args.output_dir, f'checkpoint{epoch:04}.pth'))
@@ -299,9 +323,42 @@ def train_dino(args):
     print('Training time {}'.format(total_time_str))
 
 
+class ModelEMA:
+    """
+    Model Exponential Moving Average from https://github.com/rwightman/pytorch-image-models
+    Keep a moving average of everything in the model state_dict (parameters and buffers).
+    """
+    def __init__(self):
+        self.need_fused = True
+
+    def update(self, model, params_fp32_fused, md=0):
+        """
+        :param model: The target object to which ema is applied
+        :param params_fp32_fused: The fused model parameters, derived from the optimizer
+        :param md: coefficient for moving average
+        """
+        with torch.no_grad():
+            d_inv = 1. - md
+            if self.need_fused:
+                tch_all_params = []
+                regl = []
+                not_regl = []
+                for name, param in model.state_dict().items():
+                    if name == "head.last_layer.weight_g":
+                        continue
+                    if name.endswith(".bias") or len(param.shape) == 1:  # according to optimizer
+                        not_regl.append(param)
+                    else:
+                        regl.append(param)
+                tch_all_params = regl + not_regl
+                self.tch_params_fused = combine_npu(tch_all_params)
+                self.need_fused = False
+        self.tch_params_fused.mul_(md).add_(params_fp32_fused, alpha=d_inv)
+
+
 def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loader,
-                    optimizer, lr_schedule, wd_schedule, momentum_schedule,epoch,
-                    fp16_scaler, args):
+                    optimizer, lr_schedule, wd_schedule, momentum_schedule, epoch,
+                    ema, args):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
     for it, (images, _) in enumerate(metric_logger.log_every(data_loader, 10, header)):
@@ -313,45 +370,49 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                 param_group["weight_decay"] = wd_schedule[it]
 
         # move images to gpu
-        images = [im.cuda(non_blocking=True) for im in images]
+        images = [im.npu(non_blocking=True) for im in images]
         # teacher and student forward passes + compute dino loss
-        with torch.cuda.amp.autocast(fp16_scaler is not None):
-            teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
-            student_output = student(images)
-            loss = dino_loss(student_output, teacher_output, epoch)
 
-        if not math.isfinite(loss.item()):
-            print("Loss is {}, stopping training".format(loss.item()), force=True)
-            sys.exit(1)
+        teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
+        student_output = student(images)
+        loss = dino_loss(student_output, teacher_output, epoch)
 
         # student update
         optimizer.zero_grad()
         param_norms = None
-        if fp16_scaler is None:
+        if not args.amp:
             loss.backward()
             if args.clip_grad:
                 param_norms = utils.clip_gradients(student, args.clip_grad)
             utils.cancel_gradients_last_layer(epoch, student,
                                               args.freeze_last_layer)
             optimizer.step()
+            utils.patch_gradients_last_layer(epoch, student, args.freeze_last_layer)
         else:
-            fp16_scaler.scale(loss).backward()
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
             if args.clip_grad:
-                fp16_scaler.unscale_(optimizer)  # unscale the gradients of optimizer's assigned params in-place
                 param_norms = utils.clip_gradients(student, args.clip_grad)
             utils.cancel_gradients_last_layer(epoch, student,
                                               args.freeze_last_layer)
-            fp16_scaler.step(optimizer)
-            fp16_scaler.update()
+            optimizer.step()
+            utils.patch_gradients_last_layer(epoch, student, args.freeze_last_layer)
 
         # EMA update for the teacher
         with torch.no_grad():
             m = momentum_schedule[it]  # momentum parameter
-            for param_q, param_k in zip(student.module.parameters(), teacher_without_ddp.parameters()):
-                param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
+            if ema is not None:
+                params_fp32_fused = optimizer.get_optimizer_combined_params()
+                ema.update(teacher_without_ddp, params_fp32_fused[0], m)
+                param_tch = teacher_without_ddp.state_dict()["head.last_layer.weight_g"]
+                param_stu = student.state_dict()["module.head.last_layer.weight_g"]
+                param_tch.data.mul_(m).add_((1 - m) * param_stu.detach().data)
+            else:
+                for param_q, param_k in zip(student.module.parameters(), teacher_without_ddp.parameters()):
+                    param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
 
         # logging
-        torch.cuda.synchronize()
+        torch.npu.synchronize()
         metric_logger.update(loss=loss.item())
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
         metric_logger.update(wd=optimizer.param_groups[0]["weight_decay"])
@@ -359,6 +420,36 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+
+
+class NpuSumImpl(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input, dim):
+        ctx.input_shape = input.shape
+        ctx.dim = dim
+        return torch.sum(input, dim=dim)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        re_shape = grad_output.shape + (1,)
+        expand_shape = (1,) * len(grad_output.shape) + (ctx.input_shape[-1],)
+        return grad_output.view(re_shape).repeat(expand_shape), None
+
+
+def npu_sum(input, dim=-1):
+    return NpuSumImpl.apply(input, dim)
+
+
+def parallel_ts(teacher, student, ncrops=10):
+    chunk = teacher.shape[0] // 2
+    loss1 = npu_sum(-teacher[0:chunk, :] * F.log_softmax(student[chunk:, :].view(ncrops - 1, chunk, -1),
+                                                         dim=-1), dim=-1)
+    loss2 = npu_sum(-teacher[chunk:, :] * F.log_softmax(student[0:chunk, :], dim=-1), dim=-1)
+    loss3 = npu_sum(-teacher[chunk:, :] * F.log_softmax(student[chunk * 2:, :].view(ncrops - 2, chunk, -1),
+                                                        dim=-1), dim=-1)
+    coef = 1.0 / (ncrops - 1)
+    t1_loss = (loss2.mean() + loss3.mean() * (ncrops - 2)) * coef
+    return (loss1.mean() + t1_loss) * 0.5
 
 
 class DINOLoss(nn.Module):
@@ -383,24 +474,10 @@ class DINOLoss(nn.Module):
         Cross-entropy between softmax outputs of the teacher and student networks.
         """
         student_out = student_output / self.student_temp
-        student_out = student_out.chunk(self.ncrops)
-
-        # teacher centering and sharpening
         temp = self.teacher_temp_schedule[epoch]
         teacher_out = F.softmax((teacher_output - self.center) / temp, dim=-1)
+        total_loss = parallel_ts(teacher_out, student_out)
         teacher_out = teacher_out.detach().chunk(2)
-
-        total_loss = 0
-        n_loss_terms = 0
-        for iq, q in enumerate(teacher_out):
-            for v in range(len(student_out)):
-                if v == iq:
-                    # we skip cases where student and teacher operate on the same view
-                    continue
-                loss = torch.sum(-q * F.log_softmax(student_out[v], dim=-1), dim=-1)
-                total_loss += loss.mean()
-                n_loss_terms += 1
-        total_loss /= n_loss_terms
         self.update_center(teacher_output)
         return total_loss
 
@@ -418,11 +495,14 @@ class DINOLoss(nn.Module):
 
 
 class DataAugmentationDINO(object):
-    def __init__(self, global_crops_scale, local_crops_scale, local_crops_number):
+    def __init__(self, global_crops_scale, local_crops_scale, local_crops_number, use_color_jitter_opti=False):
         flip_and_color_jitter = transforms.Compose([
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomApply(
-                [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)],
+                [utils.FusedColorJitterApply(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1) if
+                 use_color_jitter_opti else transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2,
+                                                                   hue=0.1)
+                 ],
                 p=0.8
             ),
             transforms.RandomGrayscale(p=0.2),

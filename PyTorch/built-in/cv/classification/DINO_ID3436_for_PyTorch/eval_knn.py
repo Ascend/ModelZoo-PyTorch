@@ -26,7 +26,7 @@ from torchvision import models as torchvision_models
 
 import utils
 import vision_transformer as vits
-
+from apex import amp
 
 def extract_feature_pipeline(args):
     # ============ preparing data ... ============
@@ -68,8 +68,10 @@ def extract_feature_pipeline(args):
     else:
         print(f"Architecture {args.arch} non supported")
         sys.exit(1)
-    model.cuda()
+    model.npu()
     utils.load_pretrained_weights(model, args.pretrained_weights, args.checkpoint_key, args.arch, args.patch_size)
+    amp.register_half_function(torch, "npu_linear")
+    model = amp.initialize(model, opt_level="O1", loss_scale="32")
     model.eval()
 
     # ============ extract features ... ============
@@ -82,8 +84,8 @@ def extract_feature_pipeline(args):
         train_features = nn.functional.normalize(train_features, dim=1, p=2)
         test_features = nn.functional.normalize(test_features, dim=1, p=2)
 
-    train_labels = torch.tensor([s[-1] for s in dataset_train.samples]).long()
-    test_labels = torch.tensor([s[-1] for s in dataset_val.samples]).long()
+    train_labels = torch.tensor([s[-1] for s in dataset_train.samples]).int()
+    test_labels = torch.tensor([s[-1] for s in dataset_val.samples]).int()
     # save features and labels
     if args.dump_features and dist.get_rank() == 0:
         torch.save(train_features.cpu(), os.path.join(args.dump_features, "trainfeat.pth"))
@@ -98,8 +100,8 @@ def extract_features(model, data_loader, use_cuda=True, multiscale=False):
     metric_logger = utils.MetricLogger(delimiter="  ")
     features = None
     for samples, index in metric_logger.log_every(data_loader, 10):
-        samples = samples.cuda(non_blocking=True)
-        index = index.cuda(non_blocking=True)
+        samples = samples.npu(non_blocking=True)
+        index = index.npu(non_blocking=True)
         if multiscale:
             feats = utils.multi_scale(samples, model)
         else:
@@ -109,7 +111,7 @@ def extract_features(model, data_loader, use_cuda=True, multiscale=False):
         if dist.get_rank() == 0 and features is None:
             features = torch.zeros(len(data_loader.dataset), feats.shape[-1])
             if use_cuda:
-                features = features.cuda(non_blocking=True)
+                features = features.npu(non_blocking=True)
             print(f"Storing features into tensor of shape {features.shape}")
 
         # get indexes from all processes
@@ -156,8 +158,9 @@ def knn_classifier(train_features, train_labels, test_features, test_labels, k, 
         batch_size = targets.shape[0]
 
         # calculate the dot product and compute top-k neighbors
-        similarity = torch.mm(features, train_features)
+        similarity = torch.mm(features.half(), train_features.half()).float().cpu()
         distances, indices = similarity.topk(k, largest=True, sorted=True)
+        distances, indices = distances.npu(), indices.npu()
         candidates = train_labels.view(1, -1).expand(batch_size, -1)
         retrieved_neighbors = torch.gather(candidates, 1, indices)
 
@@ -171,10 +174,10 @@ def knn_classifier(train_features, train_labels, test_features, test_labels, k, 
             ),
             1,
         )
-        _, predictions = probs.sort(1, True)
+        _, predictions = probs.cpu().sort(1, True)
 
         # find the predictions that match the target
-        correct = predictions.eq(targets.data.view(-1, 1))
+        correct = predictions.npu().eq(targets.data.view(-1, 1))
         top1 = top1 + correct.narrow(1, 0, 1).sum().item()
         top5 = top5 + correct.narrow(1, 0, min(5, k)).sum().item()  # top5 does not make sense if k < 5
         total += targets.size(0)
@@ -230,10 +233,10 @@ if __name__ == '__main__':
 
     if utils.get_rank() == 0:
         if args.use_cuda:
-            train_features = train_features.cuda()
-            test_features = test_features.cuda()
-            train_labels = train_labels.cuda()
-            test_labels = test_labels.cuda()
+            train_features = train_features.npu()
+            test_features = test_features.npu()
+            train_labels = train_labels.npu()
+            test_labels = test_labels.npu()
 
         print("Features are ready!\nStart the k-NN classification.")
         for k in args.nb_knn:

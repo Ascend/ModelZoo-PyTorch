@@ -4,7 +4,7 @@
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
-export RANK_SIZE=8
+export RANK_SIZE=1
 export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='80002'
 
@@ -75,30 +75,40 @@ fi
 start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-export WORLD_SIZE=8
-KERNEL_NUM=$(($(nproc)/8))
+export WORLD_SIZE=1
+PID_NUM=$(($(nproc)/8))
+export RANK=$RANK_ID
 
-for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
-do
-  export OMP_NUM_THREADS=1
-  export RANK=$RANK_ID
-  export LOCAL_RANK=$RANK_ID
-  PID_START=$((KERNEL_NUM * RANK_ID))
-  PID_END=$((PID_START + KERNEL_NUM - 1))
-  nohup taskset -c $PID_START-$PID_END python3.7 -u main_dino.py \
-    --arch vit_small \
-    --data_path $data_path \
-    --output_dir ./output \
-    --amp \
-    --optimizer npufusedadamw \
+if [ $(uname -m) = "aarch64" ]
+then
+	taskset -c 0-$PID_NUM nohup python3.7 -u -m torch.distributed.launch \
+		--nproc_per_node=1 main_dino.py \
+		--arch vit_small \
+		--data_path $data_path \
+		--output_dir ./output \
+		--amp \
+		--optimizer npufusedadamw \
     --warmup_epochs 0 \
-    --epochs $epochs \
-    --batch_size $batch_size \
-    --use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log 2>&1 &
-done
+		--epochs $epochs \
+		--batch_size $batch_size \
+		--use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
+else
+	nohup python3.7 -u -m torch.distributed.launch \
+		--nproc_per_node=1 main_dino.py \
+		--arch vit_small \
+		--data_path $data_path \
+		--output_dir ./output \
+		--amp \
+		--optimizer npufusedadamw \
+		--warmup_epochs 0 \
+		--epochs $epochs \
+		--batch_size $batch_size \
+		--use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
+fi
+
 wait
 
-#8p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
+#1p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
 ASCEND_DEVICE_ID=0
 
 #训练结束时间，不需要修改
@@ -109,7 +119,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`tail -n 50 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log|grep -a 'eta'|head -n 30|awk -F " " '{print $16}'|awk '{sum+=$1} END {print sum/NR}'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'*8}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 echo "E2E Training Duration sec : $e2e_time"

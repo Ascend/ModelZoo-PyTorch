@@ -25,6 +25,126 @@ import torch.nn as nn
 from utils import trunc_normal_
 
 
+def npu_drop_path(x, random_tensor, keep_prob: float = 0.):
+    """
+    Less ops than timm version.
+    Async generating and applying of random tensor for accelerating.
+    """
+    random_tensor += keep_prob
+    random_tensor.floor_()
+    output = x.div(keep_prob) * random_tensor
+    return output
+
+
+class DropPathTask:
+    def __init__(self, shape, device, dtype, ndim, drop_prob):
+        self.shape = shape
+        self.device = device
+        self.dtype = dtype
+        self.ndim = ndim
+        self.drop_prob = drop_prob
+        self.request_count = 0
+        self.rand_queue = []
+
+
+class NpuDropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks.)
+    """
+    task_dict = {}
+    droppath_stream = None
+
+    def __init__(self, drop_prob=None):
+        super(NpuDropPath, self).__init__()
+        self.drop_prob = drop_prob
+        self.keep_prob = 1 - drop_prob
+
+    def forward(self, x):
+        if self.drop_prob == 0. or not self.training:
+            return x
+
+        if isinstance(x, torch.Tensor):
+            shape = x.shape
+            dtype = x.dtype
+            device = x.device
+            ndim = x.ndim
+        else:
+            raise RuntimeError("input type error!")
+
+        key = (shape, device, dtype, ndim)
+        if key not in NpuDropPath.task_dict:
+            droppath_task = DropPathTask(shape, device, dtype, ndim, self.drop_prob)
+            droppath_task.request_count += 1
+            NpuDropPath.task_dict[key] = droppath_task
+        elif not NpuDropPath.task_dict[key].rand_queue:
+            NpuDropPath.task_dict[key].request_count += 1
+        else:
+            random_tensor = NpuDropPath.task_dict[key].rand_queue.pop(0)
+            return npu_drop_path(x, random_tensor, self.keep_prob)
+
+        return x
+
+    @classmethod
+    def enable_droppath_ensemble(cls, model):
+        if cls.droppath_stream is None:
+            cls.droppath_stream = torch.npu.Stream()
+
+        def wait_stream_hook():
+            def hook_function(module, inputs):
+                torch.npu.current_stream().wait_stream(cls.droppath_stream)
+
+            return hook_function
+
+        model.register_forward_pre_hook(wait_stream_hook())
+
+        def random_tensor_gen_hook():
+            def hook_function(module, inputs):
+                with torch.npu.stream(cls.droppath_stream):
+                    with torch.no_grad():
+                        for _, task in cls.task_dict.items():
+                            if len(task.rand_queue) >= task.request_count:
+                                continue
+                            for i in range(task.request_count - len(task.rand_queue)):
+                                shape = (task.shape[0],) + (1,) * (
+                                        task.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+                                random_tensor = torch.rand(shape, dtype=task.dtype, device=task.device)
+                                task.rand_queue.append(random_tensor)
+
+            return hook_function
+
+        model.register_forward_pre_hook(random_tensor_gen_hook())
+
+
+class MatmulApply(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, self, mat2):
+        # y: a * b^T
+        ctx.save_for_backward(self, mat2)
+        result = torch.matmul(self, mat2.transpose(-2, -1))
+        return result
+
+    @staticmethod
+    def backward(ctx, grad):
+        # da: grad * b
+        # db: grad^T * a
+        self, mat2 = ctx.saved_tensors
+        self_grad = torch.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        return self_grad, mat2_grad
+
+
+matmul_transpose = MatmulApply.apply
+
+
+class FastGelu(nn.Module):
+    def forward(self, input):
+        return torch.fast_gelu(input)
+
+
+class NpuLinear(nn.Linear):
+    def forward(self, input):
+        return torch.npu_linear(input, self.weight, self.bias)
+
+
 def drop_path(x, drop_prob: float = 0., training: bool = False):
     if drop_prob == 0. or not training:
         return x
@@ -39,6 +159,7 @@ def drop_path(x, drop_prob: float = 0., training: bool = False):
 class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
     """
+
     def __init__(self, drop_prob=None):
         super(DropPath, self).__init__()
         self.drop_prob = drop_prob
@@ -48,13 +169,13 @@ class DropPath(nn.Module):
 
 
 class Mlp(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
+    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FastGelu, drop=0.):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features)
+        self.fc1 = NpuLinear(in_features, hidden_features)
         self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features)
+        self.fc2 = NpuLinear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
@@ -70,24 +191,38 @@ class Attention(nn.Module):
     def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
         super().__init__()
         self.num_heads = num_heads
-        head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.head_dim = dim // num_heads
+        self.dim = dim
+        self.scale = qk_scale or self.head_dim ** -0.5
 
-        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
+        self.query = NpuLinear(dim, dim, bias=qkv_bias)
+        self.key = NpuLinear(dim, dim, bias=qkv_bias)
+        self.value = NpuLinear(dim, dim, bias=qkv_bias)
+
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim)
+        self.proj = NpuLinear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def forward(self, x):
-        B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]
+    def transpose_for_qkv(self, x):
+        new_shape = [self.B, self.N, self.num_heads, self.head_dim]
+        return x.npu_confusion_transpose((0, 2, 1, 3), new_shape, False)
 
-        attn = (q @ k.transpose(-2, -1)) * self.scale
+    def forward(self, x, x_shape):
+        self.B, self.N, self.C = x_shape
+
+        mixed_query_layer = self.query(x)
+        mixed_key_layer = self.key(x)
+        mixed_value_layer = self.value(x)
+
+        q = self.transpose_for_qkv(mixed_query_layer)
+        k = self.transpose_for_qkv(mixed_key_layer)
+        v = self.transpose_for_qkv(mixed_value_layer)
+
+        attn = matmul_transpose(q, k) * self.scale
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
+        x = (attn @ v).transpose(1, 2).reshape(self.B * self.N, self.C)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x, attn
@@ -95,18 +230,18 @@ class Attention(nn.Module):
 
 class Block(nn.Module):
     def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
-                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+                 drop_path=0., act_layer=FastGelu, norm_layer=nn.LayerNorm):
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
             dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = NpuDropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
-    def forward(self, x, return_attention=False):
-        y, attn = self.attn(self.norm1(x))
+    def forward(self, x, x_shape, return_attention=False):
+        y, attn = self.attn(self.norm1(x), x_shape)
         if return_attention:
             return attn
         x = x + self.drop_path(y)
@@ -117,6 +252,7 @@ class Block(nn.Module):
 class PatchEmbed(nn.Module):
     """ Image to Patch Embedding
     """
+
     def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()
         num_patches = (img_size // patch_size) * (img_size // patch_size)
@@ -134,6 +270,7 @@ class PatchEmbed(nn.Module):
 
 class VisionTransformer(nn.Module):
     """ Vision Transformer """
+
     def __init__(self, img_size=[224], patch_size=16, in_chans=3, num_classes=0, embed_dim=768, depth=12,
                  num_heads=12, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
                  drop_path_rate=0., norm_layer=nn.LayerNorm, **kwargs):
@@ -157,7 +294,7 @@ class VisionTransformer(nn.Module):
         self.norm = norm_layer(embed_dim)
 
         # Classifier head
-        self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = NpuLinear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
         trunc_normal_(self.pos_embed, std=.02)
         trunc_normal_(self.cls_token, std=.02)
@@ -209,9 +346,12 @@ class VisionTransformer(nn.Module):
 
     def forward(self, x):
         x = self.prepare_tokens(x)
+        x_shape = x.shape
+        x = x.view(-1, x_shape[-1])
         for blk in self.blocks:
-            x = blk(x)
+            x = blk(x, x_shape)
         x = self.norm(x)
+        x = x.view(x_shape)
         return x[:, 0]
 
     def get_last_selfattention(self, x):
@@ -256,25 +396,26 @@ def vit_base(patch_size=16, **kwargs):
 
 
 class DINOHead(nn.Module):
-    def __init__(self, in_dim, out_dim, use_bn=False, norm_last_layer=True, nlayers=3, hidden_dim=2048, bottleneck_dim=256):
+    def __init__(self, in_dim, out_dim, use_bn=False, norm_last_layer=True, nlayers=3, hidden_dim=2048,
+                 bottleneck_dim=256):
         super().__init__()
         nlayers = max(nlayers, 1)
         if nlayers == 1:
-            self.mlp = nn.Linear(in_dim, bottleneck_dim)
+            self.mlp = NpuLinear(in_dim, bottleneck_dim)
         else:
-            layers = [nn.Linear(in_dim, hidden_dim)]
+            layers = [NpuLinear(in_dim, hidden_dim)]
             if use_bn:
                 layers.append(nn.BatchNorm1d(hidden_dim))
-            layers.append(nn.GELU())
+            layers.append(FastGelu())
             for _ in range(nlayers - 2):
-                layers.append(nn.Linear(hidden_dim, hidden_dim))
+                layers.append(NpuLinear(hidden_dim, hidden_dim))
                 if use_bn:
                     layers.append(nn.BatchNorm1d(hidden_dim))
-                layers.append(nn.GELU())
-            layers.append(nn.Linear(hidden_dim, bottleneck_dim))
+                layers.append(FastGelu())
+            layers.append(NpuLinear(hidden_dim, bottleneck_dim))
             self.mlp = nn.Sequential(*layers)
         self.apply(self._init_weights)
-        self.last_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
+        self.last_layer = nn.utils.weight_norm(NpuLinear(bottleneck_dim, out_dim, bias=False))
         self.last_layer.weight_g.data.fill_(1)
         if norm_last_layer:
             self.last_layer.weight_g.requires_grad = False

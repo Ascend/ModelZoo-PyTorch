@@ -31,7 +31,7 @@ import numpy as np
 import torch
 from torch import nn
 import torch.distributed as dist
-from PIL import ImageFilter, ImageOps
+from PIL import ImageFilter, ImageOps, Image
 
 
 class GaussianBlur(object):
@@ -133,12 +133,16 @@ def load_pretrained_linear_weights(linear_classifier, model_name, patch_size):
 def clip_gradients(model, clip):
     norms = []
     for name, p in model.named_parameters():
-        if p.grad is not None:
-            param_norm = p.grad.data.norm(2)
-            norms.append(param_norm.item())
-            clip_coef = clip / (param_norm + 1e-6)
-            if clip_coef < 1:
-                p.grad.data.mul_(clip_coef)
+        if p.grad is None:
+            norms.append(norms[-1])
+        else:
+            norms.append(p.grad.data.norm(2))
+    all_norms = torch.stack(norms)
+    clip_coef = clip / (all_norms + 1e-6)
+    clip_coef = clip_coef.cpu().numpy()
+    for i, (name, p) in enumerate(model.named_parameters()):
+        if p.grad is not None and clip_coef[i] < 1:
+            p.grad.data.mul_(clip_coef[i])
     return norms
 
 
@@ -147,7 +151,17 @@ def cancel_gradients_last_layer(epoch, model, freeze_last_layer):
         return
     for n, p in model.named_parameters():
         if "last_layer" in n:
-            p.grad = None
+            if p.grad is not None:
+                global p_grad_buffer
+                p_grad_buffer = p.data.detach().clone()
+
+def patch_gradients_last_layer(epoch, model, freeze_last_layer):
+    if epoch >= freeze_last_layer:
+        return
+    for n, p in model.named_parameters():
+        if "last_layer" in n:
+            if p.grad is not  None:
+                p.data.copy_(p_grad_buffer.data)
 
 
 def restart_from_checkpoint(ckp_path, run_variables=None, **kwargs):
@@ -218,7 +232,7 @@ def fix_random_seeds(seed=31):
     Fix random seeds.
     """
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    torch.npu.manual_seed_all(seed)
     np.random.seed(seed)
 
 
@@ -246,7 +260,7 @@ class SmoothedValue(object):
         """
         if not is_dist_avail_and_initialized():
             return
-        t = torch.tensor([self.count, self.total], dtype=torch.float64, device='cuda')
+        t = torch.tensor([self.count, self.total], dtype=torch.float32, device='npu')
         dist.barrier()
         dist.all_reduce(t)
         t = t.tolist()
@@ -355,7 +369,7 @@ class MetricLogger(object):
         iter_time = SmoothedValue(fmt='{avg:.6f}')
         data_time = SmoothedValue(fmt='{avg:.6f}')
         space_fmt = ':' + str(len(str(len(iterable)))) + 'd'
-        if torch.cuda.is_available():
+        if torch.npu.is_available():
             log_msg = self.delimiter.join([
                 header,
                 '[{0' + space_fmt + '}/{1}]',
@@ -382,12 +396,12 @@ class MetricLogger(object):
             if i % print_freq == 0 or i == len(iterable) - 1:
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
-                if torch.cuda.is_available():
+                if torch.npu.is_available():
                     print(log_msg.format(
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time),
-                        memory=torch.cuda.max_memory_allocated() / MB))
+                        memory=torch.npu.max_memory_allocated() / MB))
                 else:
                     print(log_msg.format(
                         i, len(iterable), eta=eta_string,
@@ -474,26 +488,26 @@ def init_distributed_mode(args):
     # launched with submitit on a slurm cluster
     elif 'SLURM_PROCID' in os.environ:
         args.rank = int(os.environ['SLURM_PROCID'])
-        args.gpu = args.rank % torch.cuda.device_count()
+        args.gpu = args.rank % torch.npu.device_count()
     # launched naively with `python main_dino.py`
     # we manually add MASTER_ADDR and MASTER_PORT to env variables
-    elif torch.cuda.is_available():
-        print('Will run the code on one GPU.')
+    elif torch.npu.is_available():
+        print('Will run the code on one NPU.')
         args.rank, args.gpu, args.world_size = 0, 0, 1
         os.environ['MASTER_ADDR'] = '127.0.0.1'
         os.environ['MASTER_PORT'] = '29500'
     else:
-        print('Does not support training without GPU.')
+        print('Does not support training without NPU.')
         sys.exit(1)
 
     dist.init_process_group(
-        backend="nccl",
+        backend="hccl",
         init_method=args.dist_url,
         world_size=args.world_size,
         rank=args.rank,
     )
 
-    torch.cuda.set_device(args.gpu)
+    torch.npu.set_device(args.gpu)
     print('| distributed init (rank {}): {}'.format(
         args.rank, args.dist_url), flush=True)
     dist.barrier()
@@ -613,10 +627,10 @@ class MultiCropWrapper(nn.Module):
         if not isinstance(x, list):
             x = [x]
         idx_crops = torch.cumsum(torch.unique_consecutive(
-            torch.tensor([inp.shape[-1] for inp in x]),
+            torch.tensor([inp.shape[-1] for inp in x]).cpu(),
             return_counts=True,
         )[1], 0)
-        start_idx, output = 0, torch.empty(0).to(x[0].device)
+        start_idx, output = 0, torch.empty(0).to(x[0].device).half()
         for end_idx in idx_crops:
             _out = self.backbone(torch.cat(x[start_idx: end_idx]))
             # The output is a tuple with XCiT model. See:
@@ -695,10 +709,10 @@ class PCA():
             return np.dot(self.dvt, x.T).T
 
         # input is from torch and is on GPU
-        if x.is_cuda:
+        if x.is_npu:
             if self.mean is not None:
-                x -= torch.cuda.FloatTensor(self.mean)
-            return torch.mm(torch.cuda.FloatTensor(self.dvt), x.transpose(0, 1)).transpose(0, 1)
+                x -= torch.npu.FloatTensor(self.mean)
+            return torch.mm(torch.npu.FloatTensor(self.dvt), x.transpose(0, 1)).transpose(0, 1)
 
         # input if from torch, on CPU
         if self.mean is not None:
@@ -828,3 +842,73 @@ def multi_scale(samples, model):
     v /= 3
     v /= v.norm()
     return v
+
+
+class FusedColorJitterApply(object):
+    def __init__(self, brightness=0.0, contrast=0.0, saturation=0.0, hue=0.0,
+                 is_normalized=False, force_return_array=False):
+        print('Use FusedColorJitter process image')
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.hue = hue
+
+        self.is_normalized = is_normalized
+        self.force_return_array = force_return_array
+        self.half_range = 128 if not is_normalized else 0.5
+
+    def hue_saturation_matrix(self, hue, saturation):
+        """
+        Single matrix transform for both hue and saturation change.
+        Matrix taken from https://beesbuzz.biz/code/16-hsv-color-transforms.
+        Derived by transforming first to YIQ, then do the modification, and transform back to RGB.
+        """
+        CONST_MAT = np.array([[.299, .299, .299],
+                              [.587, .587, .587],
+                              [.114, .114, .114]], dtype=np.float32)
+        SCH_MAT = np.array([[.701, -.299, -.300],
+                            [-.587, .413, -.588],
+                            [-.114, -.114, .886]], dtype=np.float32)
+        SSH_MAT = np.array([[.168, -.328, 1.25],
+                            [.330, .035, -1.05],
+                            [-.497, .292, -.203]], dtype=np.float32)
+        sch = saturation * math.cos(hue * 255. * math.pi / 180.0)
+        ssh = saturation * math.sin(hue * 255. * math.pi / 180.0)
+        m = CONST_MAT + sch * SCH_MAT + ssh * SSH_MAT
+        return m
+
+    def get_random_transform_matrix(self, brightness=0, contrast=0, saturation=0, hue=0):
+        brightness = random.uniform(max(0, 1. - brightness), 1 + brightness)
+        contrast = random.uniform(max(0, 1. - contrast), 1 + contrast)
+        saturation = random.uniform(max(0, 1. - saturation), 1 + saturation)
+        hue = random.uniform(-hue, hue)
+
+        transform_matrix = self.hue_saturation_matrix(hue, saturation)
+        transform_matrix = transform_matrix * brightness * contrast
+
+        transform_offset = (1. - contrast) * brightness * self.half_range
+        return transform_matrix, transform_offset
+
+    def apply_image_transform(self, img, transform_matrix, transform_offset):
+        H, W, C = img.shape
+        img = np.matmul(img.reshape(-1, 3), transform_matrix) + transform_offset
+        return img.reshape(H, W, C)
+
+    def __call__(self, img):
+        transform_matrix, transform_offset = self.get_random_transform_matrix(
+            self.brightness, self.contrast, self.saturation, self.hue)
+
+        if isinstance(img, Image.Image):
+            img = np.asarray(img, dtype=np.float32)
+            return_img = True
+            self.raw_type = np.uint8
+        else:
+            self.raw_type = img.dtype
+            return_img = False
+        img = self.apply_image_transform(img, transform_matrix, transform_offset)
+
+        img = img.clip(0., 1. if self.is_normalized else 255.).astype(self.raw_type)
+
+        if return_img and not self.force_return_array:
+            return Image.fromarray(img, mode='RGB')
+        return img
