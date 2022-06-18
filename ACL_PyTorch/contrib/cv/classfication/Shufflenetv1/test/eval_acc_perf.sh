@@ -53,7 +53,7 @@ if [ $? != 0 ]; then
 	echo "fail!"
 	exit -1
 fi
-echo "====710 performance data===="
+echo "====310P performance data===="
 python3.7 test/parse.py result/perf_vision_batchsize_1_device_0.txt
 if [ $? != 0 ]; then
 	echo "fail!"

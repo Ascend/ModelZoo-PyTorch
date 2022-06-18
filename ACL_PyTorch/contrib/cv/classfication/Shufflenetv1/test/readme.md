@@ -16,6 +16,6 @@ git clone https://github.com/megvii-model/ShuffleNet-Series.git
 5.获取benchmark工具  
 将benchmark.x86_64 benchmark.aarch64放在当前目录  
 
-6.710上执行，执行时确保device空闲  
+6.310P上执行，执行时确保device空闲  
 bash test/pth2om.sh  
 bash test/eval_acc_perf.sh --datasets_path=/opt/npu

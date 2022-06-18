@@ -96,15 +96,9 @@ opencv-python == 4.5.3.56
 
 1. 下载pth权重文件  
 
-[wrn101_2权重文件下载](https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth)
+前往pytorch官网下载[wrn101_2权重文件]
 
 文件md5sum:  5961435974bb43104b5a3180fea7c2c4 
-
-```
-wget https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth
-```
-
-
 
 2. 下载模型代码
 
@@ -140,12 +134,13 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 
-```shell
-#310:
-atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310
+${chip_name}可通过`npu-smi info`指令查看
 
-#310p:
-atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend710
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
+```shell
+# Ascend310 or Ascend310P[1-4]
+atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend${chip_name}
 ```
 
 
@@ -159,7 +154,7 @@ atc --framework=5 --model=wrn101_2_pth.onnx --output=wrn101_2_bs16 --input_forma
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt
+该模型使用[ImageNet官网]的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt
 
 ### 4.2 数据集预处理
 

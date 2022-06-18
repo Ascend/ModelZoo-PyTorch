@@ -52,9 +52,14 @@ Pillow==9.0.1
 > 其他第三方库: 可以通过 pip3.7 install -r requirements.txt 进行安装
 
 ## <a name="3">3. 模型转换</a>
-一步式从pth.tar权重文件转om模型的脚本，能够由pth.tar权重文件生成bacth为1的om模型：
+一步式从pth.tar权重文件转om模型的脚本，能够由pth.tar权重文件生成bacth为1的om模型
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```bash
-bash ./test/pth2om.sh --batch_size=1 --not_skip_onnx=true
+bash ./test/pth2om.sh --batch_size=1 --not_skip_onnx=true --soc_version=Ascend${chip_name}
 ```
 运行后会生成如下文件：
 ```bash
@@ -78,10 +83,15 @@ python3.7 convmixer_pth2onnx.py --source "./convmixer_1536_20_ks9_p7.pth.tar" --
 其中"source"表示模型加载权重的地址和名称，"target"表示转换后生成的onnx模型的存储地址和名称  
 
 ### <a name="32">3.2 onnx转om模型</a>
+
 1. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/51RC2alpha002/infacldevg/atctool)
 
+    ${chip_name}可通过`npu-smi info`指令查看
+
+![Image](https://gitee.com/Ronnie_zheng/ascend-pytorch-crowdintelligence-doc/raw/master/Ascend-PyTorch%E7%A6%BB%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8C%87%E5%AF%BC/images/310P3.png)
+
 ```bash
-atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend710 --op_select_implmode=high_performance --optypelist_for_implmode="Gelu"
+atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend${chip_name} --op_select_implmode=high_performance --optypelist_for_implmode="Gelu" # Ascend310P3
 ```
 
 ## <a name="4">4. 数据预处理</a>

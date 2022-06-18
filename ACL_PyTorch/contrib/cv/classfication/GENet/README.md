@@ -25,7 +25,7 @@ pip3.7 install -r requirements.txt
 ```
 ## <a name="1">3. 数据集准备</a>
 ### 3.1 下载数据集
-在官方[链接](http://www.cs.toronto.edu/~kriz/cifar.html)下载cifar10数据集
+在官方下载cifar10数据集
 ### 3.2 数据预处理
 准备Bin文件  
 ```
@@ -56,8 +56,13 @@ python3.7 pthtar2onnx.py ${model_path}
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```
-bash test/onnx2om.sh
+bash test/onnx2om.sh Ascend${chip_name} # Ascend310P3
 ```
 该指令会生成genet_bs16_tuned，genet_bs1_tuned两个模型，可在onnx2om.sh文件中修改以生成不同bs值的om模型
 >  **说明**
@@ -127,8 +132,8 @@ Interface throughputRate: 809.813，809.813x4=3239.252 fps。即是batch1 310单
 > `./benchmark.x86_64 -device_id=0 -om_path=genet_bs4_tuned.om -round=30 -batch_size=4`
 > 
 计算bs4,8,32的吞吐率时，计算方法也同样为Interface throughputRate乘4
-### 7.2 710性能数据
-710的推理过程与310相似，可以参考前面310的步骤。不同的是710的吞吐率即为Interface throughputRate的值，无需乘4
+### 7.2 310P性能数据
+310P的推理过程与310相似，可以参考前面310的步骤。不同的是310P的吞吐率即为Interface throughputRate的值，无需乘4
 ### 7.3 T4性能数据
 在运行5.2的gpu推理指令时，我们会获得相关的性能信息，以T4的bs1为例：
 ```
@@ -144,7 +149,7 @@ batch1 t4单卡吞吐率：1000/(0.55392/1)=1805.315 fps
 计算方法为1000/(GPU Compute mean/batch)
 ### 7.4 性能对比
 性能对比结果参考如下：
-|         | 310      | 710     | T4       | 710/310     | 710/T4      |
+|         | 310      | 310P     | T4       | 310P/310     | 310P/T4      |
 |---------|----------|---------|----------|-------------|-------------|
 | bs1     | 3239.252 | 2580.59 | 1805.315 | 0.796662316 | 1.429440292 |
 | bs4     | 6923.88  | 6962.42 | 3258.019 | 1.005566243 | 2.137010251 |
@@ -153,4 +158,4 @@ batch1 t4单卡吞吐率：1000/(0.55392/1)=1805.315 fps
 | bs32    | 7295.48  | 11005.9 | 5898.248 | 1.508591621 | 1.865960875 |
 | bs64    | 6611.72  | 11256.5 | 6105.938 | 1.702507063 | 1.843533295 |
 | 最优batch | 7796.88  | 11256.5 | 6105.938 | 1.443718513 | 1.843533295 |
-取310、710与T4的最优batch进行对比，当710的最优batch性能不低于310最优batch的1.2倍以及T4最优batch的1.6倍时，性能达标
+取310、310P与T4的最优batch进行对比，当310P的最优batch性能不低于310最优batch的1.2倍以及T4最优batch的1.6倍时，性能达标

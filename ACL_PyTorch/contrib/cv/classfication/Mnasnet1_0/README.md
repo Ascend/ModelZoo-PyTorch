@@ -1,28 +1,29 @@
 # Mnasnet1.0 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 T4性能数据](#72-T4性能数据)
-	-   [7.3 性能对比](#73-性能对比)
+- [Mnasnet1.0 Onnx模型端到端推理指导](#mnasnet10-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 工具概述](#51-工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
+		- [6.2 开源TopN精度](#62-开源topn精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
+		- [7.2 T4性能数据](#72-t4性能数据)
+		- [7.3 性能对比](#73-性能对比)
 
 
 
@@ -51,7 +52,7 @@ torch == 1.5.0
 torchvision == 0.6.0
 onnx == 1.7.0
 
-pip install torch==1.5.0 torchvision==0.6.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch==1.5.0 torchvision==0.6.0
 pip install onnx=1.7.0
 ```
 
@@ -81,10 +82,8 @@ pip install nopencv-python==4.5.2.54
 ### 3.1 pth转onnx模型
 
 1.下载pth权重文件  
-[Mnasnet1.0预训练pth权重文件](https://download.pytorch.org/models/mnasnet1.0_top1_73.512-f206786ef8.pth)  
-```
-wget https://download.pytorch.org/models/mnasnet1.0_top1_73.512-f206786ef8.pth
-```
+前往pytroch官网下载[Mnasnet1.0预训练pth权重文件]
+
 文件MD5sum：02d9eb9b304e14cfe0e7ea057be465f0
 
 2.Mnasnet1.0模型代码在torchvision里，安装torchvision，arm下需源码安装，参考torchvision官网，若安装过程报错请百度解决
@@ -116,8 +115,12 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
-./onnx2om.sh
+./onnx2om.sh Ascend${chip_name} # Ascend310P3
 ```
 
 ## 4 数据集预处理
@@ -132,7 +135,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 userDatasetPath=/home/zhx/datasets/imagenet
 
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在 $userDatasetPath/val 与$userDatasetPath/val_label.txt。
+该模型使用[ImageNet官网]的5万张验证集进行测试，图片与标签分别存放在 $userDatasetPath/val 与 $userDatasetPath/val_label.txt。
 
 ### 4.2 数据集预处理
 1.预处理脚本imagenet_torch_preprocess.py

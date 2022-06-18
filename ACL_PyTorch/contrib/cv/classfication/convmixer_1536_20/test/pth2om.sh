@@ -13,6 +13,9 @@ do
     if [[ $para == --not_skip_onnx* ]]; then
         not_skip_onnx=`echo ${para#*=}`
     fi
+    if [[ $para == --soc_version* ]]; then
+        soc_version=`echo ${para#*=}`
+    fi
 done
 
 # ======================= convert onnx =======================================
@@ -35,7 +38,7 @@ rm -rf convmixer_1536_20_bs${batch_size}.om
 atc --framework=5 --model=./convmixer_1536_20.onnx \
     --output=./convmixer_1536_20_bs${batch_size} \
     --input_format=NCHW --input_shape="image:${batch_size},3,224,224" \
-    --log=error --soc_version=Ascend710 \
+    --log=error --soc_version=${soc_version} \
     --op_select_implmode=high_performance --optypelist_for_implmode="Gelu"
 if [ -f "convmixer_1536_20_bs${batch_size}.om" ] ; then
   echo "==> 2. creating om model successfully."

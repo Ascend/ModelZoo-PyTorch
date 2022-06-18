@@ -1,28 +1,29 @@
  # Shufflenetv1 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 T4性能数据](#72-T4性能数据)
-	-   [7.3 性能对比](#73-性能对比)
+- [Shufflenetv1 Onnx模型端到端推理指导](#shufflenetv1-onnx模型端到端推理指导)
+  - [1 模型概述](#1-模型概述)
+    - [1.1 论文地址](#11-论文地址)
+    - [1.2 代码地址](#12-代码地址)
+  - [2 环境说明](#2-环境说明)
+    - [2.1 深度学习框架](#21-深度学习框架)
+    - [2.2 python第三方库](#22-python第三方库)
+  - [3 模型转换](#3-模型转换)
+    - [3.1 pth转onnx模型](#31-pth转onnx模型)
+    - [3.2 onnx转om模型](#32-onnx转om模型)
+  - [4 数据集预处理](#4-数据集预处理)
+    - [4.1 数据集获取](#41-数据集获取)
+    - [4.2 数据集预处理](#42-数据集预处理)
+    - [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+  - [5 离线推理](#5-离线推理)
+    - [5.1 benchmark工具概述](#51-benchmark工具概述)
+    - [5.2 离线推理](#52-离线推理)
+  - [6 精度对比](#6-精度对比)
+    - [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
+    - [6.2 开源TopN精度](#62-开源topn精度)
+    - [6.3 精度对比](#63-精度对比)
+  - [7 性能对比](#7-性能对比)
+    - [7.1 npu性能数据](#71-npu性能数据)
+    - [7.2 T4性能数据](#72-t4性能数据)
+    - [7.3 性能对比](#73-性能对比)
 
 
 
@@ -104,11 +105,14 @@
  
  ```
  2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.1.RC1 开发辅助工具指南 (推理) 01
+
+ ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
  ```
- Ascend 310:
- atc --framework=5 --model=./shufflenetv1_bs1.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=shufflenetv1_bs1 --log=debug --soc_version=Ascend310
- Ascend 710: 
- atc --framework=5 --model=./shufflenetv1_bs1.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=shufflenetv1_bs1 --log=debug --soc_version=Ascend710
+ # Ascend310 or Ascend310P[1-4]
+ atc --framework=5 --model=./shufflenetv1_bs1.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=shufflenetv1_bs1 --log=debug --soc_version=Ascend${chip_name}
  ```
 
  ## 4 数据集预处理
@@ -119,7 +123,7 @@
 
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
  ### 4.1 数据集获取
- 该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt，标签需要做重映射。
+ 该模型使用[ImageNet官网]的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt，标签需要做重映射。
 
 ### 4.2 数据集预处理
  1.预处理脚本shufflenetv1_torch_preprocess.py
@@ -230,29 +234,29 @@
 
   batch64 310单卡吞吐率： 1418.08x4=5672.32fps 
    
-   710性能数据
+   310P性能数据
 
  batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 
- Interface throughputRate: 2013.05fps，即710上的吞吐率。
+ Interface throughputRate: 2013.05fps，即310P上的吞吐率。
 
  batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
 
- Interface throughputRate: 8418.82fps，即710上的吞吐率。
+ Interface throughputRate: 8418.82fps，即310P上的吞吐率。
  
   batch4性能：  
   ./benchmark.x86_64 -round=20 -om_path=shufflenetv1_bs4.om -device_id=3 -batch_size=4
   
-  batch4，5769.56fps，即710上的吞吐率。
+  batch4，5769.56fps，即310P上的吞吐率。
  
   batch8性能：
-  batch8 710吞吐率：8186.85fps  
+  batch8 310P吞吐率：8186.85fps  
  
   batch32性能：
-  batch32 710吞吐率：7181.14fps  
+  batch32 310P吞吐率：7181.14fps  
 
   batch64性能：
-  batch64 710吞吐率：5501.23fps 
+  batch64 310P吞吐率：5501.23fps 
    ### 7.2 T4性能数据
   在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2 
  batch1性能：
@@ -280,13 +284,13 @@ gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是b
  batch64性能：
  batch64 t4单卡吞吐率：1000/(21.9956/64)=2909.672fps 
  ### 7.3 性能对比
-  bs1；710上性能--2013.05fps，310上性能--1298.24fps，T4上性能--789.266fps
+  bs1；310P上性能--2013.05fps，310上性能--1298.24fps，T4上性能--789.266fps
   2013.05>1298.24×1.2    2013.05>789.266×1.6
-  bs1：710上性能达到了310上的1.2倍，710上的性能达到了T4上的1.6倍。
+  bs1：310P上性能达到了310上的1.2倍，310P上的性能达到了T4上的1.6倍。
   
-  bs16:710上性能--8608.68fps, 310上性能--6501.52fps，T4上性能--2881.263fps
+  bs16:310P上性能--8608.68fps, 310上性能--6501.52fps，T4上性能--2881.263fps
   8608.68>6501.52×1.2    8608.68>2881.263×1.6
-  bs16：710上性能达到了310上的1.2倍，710上的性能达到了T4性能的1.6倍。
+  bs16：310P上性能达到了310上的1.2倍，310P上的性能达到了T4性能的1.6倍。
   
  **性能优化：**  
   性能已达标，不需要再优化。
