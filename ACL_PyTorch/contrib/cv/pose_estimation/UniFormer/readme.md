@@ -34,16 +34,20 @@ cd ../..
 
 ### 2. 离线推理
 
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```bash
-bash test/pth2om.sh --batch_size=1
+bash test/pth2om.sh --batch_size=1 --soc_version=Ascend${chip_name}
 bash test/eval_acc_perf.sh --datasets_path=data/coco --batch_size=1
 ```
 
 **评测结果：**
 
-| 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
+| 模型        | pth精度   | 310P离线推理精度 | 性能基准  | 310P性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
 | UniFormer bs1 | AP50=93.6 | AP50=93.5 | 88.914 fps | 162.601 fps |
 | UniFormer bs16 | AP50=93.6 | AP50=93.5 | 116.939 fps | 277.441 fps |

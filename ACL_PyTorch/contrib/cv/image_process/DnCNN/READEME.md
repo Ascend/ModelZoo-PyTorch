@@ -1,26 +1,27 @@
 # DnCNN ONNX模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+- [DnCNN ONNX模型端到端推理指导](#dncnn-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 推理数据集获取](#41-推理数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
+		- [6.2 开源PSNR精度](#62-开源psnr精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
 
 
 
@@ -117,10 +118,15 @@ chmod u+x benchmark.x86_64
 ```
 atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend310
 ```
-(710) for循环分别执行bs1和bs16
+(310P) for循环分别执行bs1和bs16
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```
 for i in 1 16;do
-atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:"$i",1,481,481" --output=DnCNN-S-15_bs"$i" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:"$i",1,481,481" --output=DnCNN-S-15_bs"$i" --log=debug --soc_version=Ascend${chip_name}
 done
 ```
 

@@ -122,14 +122,13 @@ scipy == 1.7.3
    | bs1  |            0.7245             |         9.3220          |
 
 3. 使用atc工具将onnx模型转换为om模型，命令参考
-   310:
-   ```bash
-   atc --framework=5 --model=rcan.onnx --output=rcan_1bs --input_format=NCHW --input_shape="image:1,3,256,256" --fusion_switch_file=switch.cfg --log=debug --soc_version=Ascend310
-   ```
 
-   310p:
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
    ```bash
-   atc --framework=5 --model=rcan.onnx --output=rcan_1bs --input_format=NCHW --input_shape="image:1,3,256,256" --fusion_switch_file=switch.cfg --log=debug --soc_version=Ascend710
+   atc --framework=5 --model=rcan.onnx --output=rcan_1bs --input_format=NCHW --input_shape="image:1,3,256,256" --fusion_switch_file=switch.cfg --log=debug --soc_version=Ascend${chip_name}
    ```
 
    此命令将在运行路径下生成一个rcan_1bs.om文件，此文件即为目标om模型文件

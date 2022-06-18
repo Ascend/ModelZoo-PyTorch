@@ -5,6 +5,9 @@ do
     if [[ $para == --batch_size* ]]; then
         batch_size=`echo ${para#*=}`
     fi
+    if [[ $para == --soc_version* ]]; then
+        soc_version=`echo ${para#*=}`
+    fi
 done
 
 if [ -f "fcenet_dynamicbs.onnx" ]; then
@@ -28,7 +31,7 @@ rm -f fcenet.om
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --framework=5 --model=./fcenet_dynamicbs.onnx --output=./fcenet_bs$batch_size  --input_format=NCHW \
---input_shape="input:$batch_size,3,1280,2272" --log=error --soc_version=Ascend710
+--input_shape="input:$batch_size,3,1280,2272" --log=error --soc_version=${soc_version}
 
 if [ -f "fcenet_bs$batch_size.om" ]; then
     echo "success"

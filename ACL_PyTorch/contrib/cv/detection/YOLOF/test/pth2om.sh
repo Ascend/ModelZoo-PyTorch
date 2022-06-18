@@ -8,6 +8,9 @@ do
     if [[ $para == --batch_size* ]]; then
         batch_size=`echo ${para#*=}`
     fi
+    if [[ $para == --soc_version* ]]; then
+        soc_version=`echo ${para#*=}`
+    fi
 done
 
 
@@ -28,7 +31,7 @@ rm -f yolof.om
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --framework=5 --model=yolof.onnx --output=yolof  --input_format=NCHW \
---input_shape="input:$batch_size,3,608,608" --log=error --soc_version=Ascend710
+--input_shape="input:$batch_size,3,608,608" --log=error --soc_version=${soc_version}
 
 if [ -f "yolof.om" ]; then
     echo "success"

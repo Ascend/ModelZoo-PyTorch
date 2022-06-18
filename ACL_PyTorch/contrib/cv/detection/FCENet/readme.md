@@ -31,14 +31,18 @@ cd ..
    将msame工具放到当前工作目录下。
 
 ###  **2. 离线推理**
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```
-bash test/pth2om.sh --batch_size=1 #转onnx、om模型
+bash test/pth2om.sh --batch_size=1 --soc_version=Ascend${chip_name} #转onnx、om模型
 bash test/eval_acc_perf.sh #精度统计
 ```
  **评测结果** 
-| 模型          | pth精度 | 710离线推理精度 | 710性能      |
+| 模型          | pth精度 | 310P离线推理精度 | 310P性能      |
 |-------------|-------|-----------|------------|
 | FCENet bs1  | 0.880 | 0.872     | fps 39.404 |
 

@@ -24,7 +24,7 @@ rm -f uniformer_bs1.om
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --framework=5 --model=uniformer_bs1.onnx --output=uniformer_bs1 --input_format=NCHW \
-    --input_shape="input:1,3,$height,$width" --log=error --soc_version=Ascend710
+    --input_shape="input:1,3,$height,$width" --log=error --soc_version=$1
 
 if [ -f "uniformer_bs1.om" ]; then
     echo "success"

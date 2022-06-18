@@ -128,20 +128,15 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 b.  执行命令得到om模型
 
-Ascend710：
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
 atc --framework=5 --out_nodes="Reshape_239:0;Softmax_246:0;Reshape_226:0;Softmax_233:0" --model=RefineDet320_VOC_final_no_nms.onnx 
---output=refinedet_voc_320_non_nms_bs1_710 --input_format=NCHW --input_shape="image:1,3,320,320" --log=debug 
---soc_version=Ascend710 --precision_mode allow_fp32_to_fp16 
+--output=refinedet_voc_320_non_nms_bs1 --input_format=NCHW --input_shape="image:1,3,320,320" --log=debug 
+--soc_version=Ascend${chip_name} --precision_mode allow_fp32_to_fp16 
 ```
-
-Ascend310：
-
-```
-atc --framework=5 --out_nodes="Reshape_239:0;Softmax_246:0;Reshape_226:0;Softmax_233:0" --model=RefineDet320_VOC_final_no_nms.onnx 
---output=refinedet_voc_320_non_nms_bs1_310 --input_format=NCHW --input_shape="image:1,3,320,320" --log=debug 
---soc_version=Ascend310 --precision_mode allow_fp32_to_fp16 
 ```
 
 提示：切换不同batchsize时需要修改参数--output中的文件名"和--input_shape="batchsize,3,320,320"
@@ -159,7 +154,7 @@ atc --framework=5 --out_nodes="Reshape_239:0;Softmax_246:0;Reshape_226:0;Softmax
 若atc执行出错，错误代码为E10016，请使用Netron工具查看对应Reshape节点和Softmax节点，并修改代码。
 ```
 
-3. 开始推理验证
+1. 开始推理验证
 
 a.  使用Benchmark工具进行推理
 
@@ -176,12 +171,11 @@ benchmark.${arch}：选择对应操作系统的benchmark工具，如benchmark.x8
 b.  执行推理
 
 ```
-./benchmark.x86_64  -model_type=vision  -device_id=0  -batch_size=1  -om_path=./refinedet_voc_320_non_nms_bs1_710.om  
+./benchmark.x86_64  -model_type=vision  -device_id=0  -batch_size=1  -om_path=./refinedet_voc_320_non_nms_bs1.om  
  -input_text_path=./voc07test.info  -input_width=320 -input_height=320  -output_binary=True  -useDvpp=False
 ```
 
 - 切换不同batchsize时需要修改参数 -batch_size=<batchsize>和对应的om文件名即参数 -om_path
-- 默认推理的是Ascend710处理器下转换的om文件，如要推理Ascend310处理器下转换的om文件，应当修改对应参数"--om_path="的后缀为310
 
 推理后的输出默认在当前目录result下。
 
@@ -225,7 +219,7 @@ python3.7 RefineDet_postprocess.py --datasets_path '/root/datasets/VOCdevkit/' -
 
 **评测结果：**
 
-|       模型       | pth精度  | 310精度  |310性能  |710精度  |710性能
+|       模型       | pth精度  | 310精度  |310性能  |310P精度  |310P性能
 |:--------------:| :------: | :------: | :------:  | :------:  |  :------:  |
 | RefineDet bs1  | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) | mAP:79.56%|166.06fps|mAP:79.58%|269.125fps
 | RefineDet bs32 | [mAP:79.81%](https://github.com/luuuyi/RefineDet.PyTorch) |mAP:79.56% | 232.18fps|mAP:79.58%|374.522fps

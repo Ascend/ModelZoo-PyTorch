@@ -37,8 +37,12 @@ cd ../..
 
 310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```bash
-bash test/pth2om.sh
+bash test/pth2om.sh Ascend${chip_name}
 bash test/eval_acc_perf.sh --datasets_path=data/coco
 ```
 

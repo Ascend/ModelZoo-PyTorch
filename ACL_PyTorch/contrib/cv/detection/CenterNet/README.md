@@ -98,9 +98,13 @@ python3.7 CenterNet_pth2onnx.py ctdet_coco_dla_2x.pth CenterNet.onnx
 ```
 执行ATC脚本完成onnx模型到om模型的转换
 
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=CenterNet.onnx  --output=CenterNet_bs1 --input_format=NCHW --input_shape="actual_input:1,3,512,512" --out_nodes="Conv_1120:0;Conv_1123:0;Conv_1126:0" --log=info --soc_version=Ascend710
+atc --framework=5 --model=CenterNet.onnx  --output=CenterNet_bs1 --input_format=NCHW --input_shape="actual_input:1,3,512,512" --out_nodes="Conv_1120:0;Conv_1123:0;Conv_1126:0" --log=info --soc_version=Ascend${chip_name}
 ```
 5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)
 将benchmark.x86_64放到当前目录
@@ -115,7 +119,7 @@ chmod u+x benchmark.x86_64
 **1.pth转om：**
 
 ```
-bash test/pth2om.sh
+bash test/pth2om.sh Ascend${chip_name}
 ```
 成功执行后会生成bs1和bs16对应的.om文件
 

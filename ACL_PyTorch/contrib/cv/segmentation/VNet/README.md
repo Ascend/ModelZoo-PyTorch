@@ -22,8 +22,8 @@
 		- [6.3 精度对比](#63-精度对比)
 	- [7 性能对比](#7-性能对比)
 		- [7.1 310性能数据](#71-310性能数据)
-		- [7.2 710性能数据](#72-710性能数据)
-		- [7.3 T4性能数据](#73-T4性能数据)
+		- [7.2 310P性能数据](#72-310p性能数据)
+		- [7.3 T4性能数据](#73-t4性能数据)
 		- [7.4 性能对比](#74-性能对比)
 
 
@@ -191,7 +191,7 @@ python3.7 vnet_postprocess.py result/dumpOutput_device0 ./vnet.pytorch/luna16/no
 ```
 Test set: Error: 2497889/439091200 (0.5689%)
 ```
-710精度测试结果：
+310P精度测试结果：
 ```
 Test set: Error: 2485695/439091200 (0.5661%)
 ```
@@ -211,7 +211,7 @@ VNet    0.355%
 ## 7 性能对比
 
 -   **[310性能数据](#71-310性能数据)**  
--   **[710性能数据](#72-710性能数据)**  
+-   **[310P性能数据](#72-310P性能数据)**  
 -   **[T4性能数据](#73-T4性能数据)**  
 -   **[性能对比](#74-性能对比)**  
 
@@ -235,16 +235,16 @@ batch8_310吞吐率为32.02776fps
 batch16_310吞吐率为32.4406fps
 batch32_310吞吐率为31.65764fps
 
-### 7.2 710性能数据
+### 7.2 310P性能数据
 
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 
-batch1：Interface throughputRate: 65.5303 ,710吞吐率为65.5303fps
-batch4：Interface throughputRate: 64.5802 ,710吞吐率为64.5802fps
-batch8：Interface throughputRate: 64.3861 ,710吞吐率为64.3861fps
-batch16：Interface throughputRate: 63.617 ,710吞吐率为63.617fps
-batch32：Interface throughputRate: 59.7592 ,710吞吐率为59.7592fps
-batch64：Interface throughputRate: 61.1219 ,710吞吐率为61.1219fps
+batch1：Interface throughputRate: 65.5303 ,310P吞吐率为65.5303fps
+batch4：Interface throughputRate: 64.5802 ,310P吞吐率为64.5802fps
+batch8：Interface throughputRate: 64.3861 ,310P吞吐率为64.3861fps
+batch16：Interface throughputRate: 63.617 ,310P吞吐率为63.617fps
+batch32：Interface throughputRate: 59.7592 ,310P吞吐率为59.7592fps
+batch64：Interface throughputRate: 61.1219 ,310P吞吐率为61.1219fps
 
 ### 7.3 T4性能数据
 在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
@@ -262,8 +262,8 @@ batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
 
 ### 7.4 性能对比
 
-310 710 T4性能对比如下(benchmark推理工具)
-| batch | 310      | 710     | T4       | 710/310 | 710/T4   |
+310 310P T4性能对比如下(benchmark推理工具)
+| batch | 310      | 310P     | T4       | 310P/310 | 310P/T4   |
 |-------|----------|---------|----------|---------|----------|
 | 1     | 31.6686  | 65.5303 | 10.90667 | 2.06925 | 6.00828  |
 | 4     | 34.0032  | 64.5802 | 11.08082 | 1.89924 | 5.82811  |
@@ -274,7 +274,7 @@ batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
 |       |          |         |          |         |          |
 | 最优  | 34.0032  | 65.5303 | 11.08082 |         |          |
 		
-对于所有batchsize，710性能均高于310性能1.2倍，同时710性能均高于T4性能1.6倍，性能达标。  
+对于所有batchsize，310P性能均高于310性能1.2倍，同时310P性能均高于T4性能1.6倍，性能达标。  
  **性能优化：**  
 >没有遇到性能不达标的问题，故不需要进行性能优化
 
