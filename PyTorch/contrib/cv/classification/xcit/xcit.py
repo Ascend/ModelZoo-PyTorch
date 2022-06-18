@@ -53,8 +53,8 @@ class PositionalEncodingFourier(nn.Module):
         x_embed = not_mask.cumsum(2, dtype=torch.float32)
 
         eps = 1e-6
-        y_embed = y_embed / (y_embed[:, -1:, :] + eps) * self.scale
-        x_embed = x_embed / (x_embed[:, :, -1:] + eps) * self.scale
+        y_embed = y_embed / (y_embed[:, -1:, :] + torch.tensor(eps).npu()) * self.scale
+        x_embed = x_embed / (x_embed[:, :, -1:] + torch.tensor(eps).npu()) * self.scale
 
         dim_t = torch.arange(self.hidden_dim,dtype=torch.float32,device=mask.device)
         dim_t = self.temperature ** (2 * (dim_t // 2) / self.hidden_dim)
