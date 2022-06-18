@@ -15,6 +15,11 @@ As of the current date, Ascend-Pytorch is still inefficient for contiguous opera
 - pip install git+https://github.com/rwightman/pytorch-image-models.git
 - Download the ImageNet dataset from http://www.image-net.org/
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
+## 软件包
+- 910版本
+- CANN toolkit_5.1.RC1.alpha001
+- torch 1.8.1.rc2.20220505
+- 固件驱动 22.0.0
 
 ## Training 
 
@@ -48,8 +53,8 @@ python3.7 demo.py --model-path /path/to/model_best.pth.tar
 
 |  Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type |
 | :-----: | :------: | :------: | :----: | :------: |
-|    -    |    358      |    1     |  3   |    O2    |
-| 74.9557 | 7600 |    8     |  600   |    O2    |
+|    -    |    616      |    1     |  3   |    O2    |
+| 74.9339 | 9638 |    8     |  600   |    O2    |
 
 
 
