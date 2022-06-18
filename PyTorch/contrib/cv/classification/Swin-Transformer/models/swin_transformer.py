@@ -1,39 +1,165 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # --------------------------------------------------------
 # Swin Transformer
 # Copyright (c) 2021 Microsoft
 # Licensed under The MIT License [see LICENSE for details]
 # Written by Ze Liu
+# Modified by Zhenda Xie
 # --------------------------------------------------------
 
+from unittest import result
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from apex import amp
 
+
+"""
+LayerNorm is able to run on CUBE in some cases for high-performance.
+To avoid unnecessary format transformation, a blacklist is set here.
+
+TODO: create blacklist automatically
+"""
+_LAYERNORM_FORMAT_NZ = False # To accelerate if layernorm in fp16, but acc not ok here
+_LAYERNORM_FORMAT_NZ_BLACKLIST = {192, 384, 768, 1536}
+
+class FastGELU(nn.Module):
+    """fast version of nn.GELU()"""
+
+    @staticmethod
+    def forward(x):
+        return torch.fast_gelu(x)
+
+
+def npu_drop_path(x, random_tensor, keep_prob: float = 0.):
+    """
+    Less ops than timm version.
+    Async generating and applying of random tensor for accelerating.
+    """
+    random_tensor += keep_prob
+    random_tensor.floor_()  # binarize
+    output = x.div(keep_prob) * random_tensor
+    return output
+
+
+class DropPathTask:
+    def __init__(self, shape, device, dtype, ndim, drop_prob):
+        self.shape = shape
+        self.device = device
+        self.dtype = dtype
+        self.ndim = ndim
+        self.drop_prob = drop_prob
+
+        self.request_count = 0
+        self.rand_queue = []
+
+
+class NpuDropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks.)
+    """
+    task_dict = {}
+    droppath_stream = None
+
+    def __init__(self, drop_prob=None):
+        super(NpuDropPath, self).__init__()
+        self.drop_prob = drop_prob
+        self.keep_prob = 1 - drop_prob
+
+    def forward(self, x):
+        if self.drop_prob == 0. or not self.training:
+            return x
+
+        if isinstance(x, torch.Tensor):
+            shape = x.shape
+            dtype = x.dtype
+            device = x.device
+            ndim = x.ndim
+        else:
+            raise RuntimeError("input type error!")
+
+        key = (shape, device, dtype, ndim)
+        if key not in NpuDropPath.task_dict:
+            droppath_task = DropPathTask(shape, device, dtype, ndim, self.drop_prob)
+            droppath_task.request_count += 1
+            NpuDropPath.task_dict[key] = droppath_task
+        elif not NpuDropPath.task_dict[key].rand_queue:
+            NpuDropPath.task_dict[key].request_count += 1
+        else:
+            random_tensor = NpuDropPath.task_dict[key].rand_queue.pop(0)
+            return npu_drop_path(x, random_tensor, self.keep_prob)
+
+        return x
+
+    @classmethod
+    def enable_droppath_ensemble(cls, model):
+        if cls.droppath_stream is None:
+            cls.droppath_stream = torch.npu.Stream()
+
+        def wait_stream_hook():
+            def hook_function(module, inputs):
+                torch.npu.current_stream().wait_stream(cls.droppath_stream)
+            return hook_function
+        model.register_forward_pre_hook(wait_stream_hook())
+
+        def random_tensor_gen_hook():
+            def hook_function(module, inputs):
+                with torch.npu.stream(cls.droppath_stream):
+                    with torch.no_grad():
+                        for _, task in cls.task_dict.items():
+                            if len(task.rand_queue) >= task.request_count:
+                                continue
+                            for i in range(task.request_count - len(task.rand_queue)):
+                                shape = (task.shape[0],) + (1,) * (task.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+                                random_tensor = torch.rand(shape, dtype=task.dtype, device=task.device)
+                                task.rand_queue.append(random_tensor)
+            return hook_function
+        model.register_forward_pre_hook(random_tensor_gen_hook())
+
+class MatmulApply(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, self, mat2):
+        # y = a * b^T
+        ctx.save_for_backward(self, mat2)
+        result = torch.matmul(self, mat2.transpose(-2, -1))
+        return result
+    @staticmethod
+    def backward(ctx, grad):
+        # da: grad * b
+        # db: grad^T * a
+        self, mat2 = ctx.saved_tensors
+        self_grad = torch.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        return self_grad, mat2_grad
+
+matmul_transpose = MatmulApply.apply
+
+class RollIndexSelect(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input, index_fp, index_bp):
+        N, H, W, C = input.shape
+        ctx.input = input
+        ctx.index_bp = index_bp
+        result = input.reshape(N, H * W, C).index_select(1, index_fp).reshape(N, H, W, C)
+        return result
+    @staticmethod
+    def backward(ctx, grad):
+        input = ctx.input
+        N, H, W, C = input.shape
+        index_bp = ctx.index_bp
+        grad_input = grad.reshape(N, H * W, C).index_select(1, index_bp).reshape(N, H, W, C)
+        return grad_input, None, None
+
+roll_index_select = RollIndexSelect.apply
 
 class Mlp(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
+    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FastGELU, drop=0.):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = nn.Linear(in_features, hidden_features)
         self.act = act_layer()
         self.fc2 = nn.Linear(hidden_features, out_features)
-        self.drop = nn.Dropout(drop)
+        self.drop = nn.Dropout(drop) if drop > 0. else nn.Identity()
 
     def forward(self, x):
         x = self.fc1(x)
@@ -54,16 +180,12 @@ def window_partition(x, window_size):
         windows: (num_windows*B, window_size, window_size, C)
     """
     B, H, W, C = x.shape
-    B = int(B)
-    H = int(H)
-    W = int(W)
-    C = int(C)
     x = x.view(B, H // window_size, window_size, W // window_size, window_size, C)
     windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, window_size, window_size, C)
     return windows
 
 
-def window_reverse(windows, window_size, H, W, B):
+def window_reverse(windows, window_size, H, W):
     """
     Args:
         windows: (num_windows*B, window_size, window_size, C)
@@ -74,9 +196,15 @@ def window_reverse(windows, window_size, H, W, B):
     Returns:
         x: (B, H, W, C)
     """
-    # B = torch.tensor(int(windows.shape[0] / (H * W / window_size / window_size)),requires_grad=False)
+    B_, H_, W_, C_ = windows.shape
+
+    B = int(windows.shape[0] / (H * W / window_size / window_size))
     x = windows.view(B, H // window_size, W // window_size, window_size, window_size, -1)
-    x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
+
+    # x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
+    C = int((B_ * H_ * W_ * C_) / (B * H * W))
+    x = x.npu_confusion_transpose([0, 1, 3, 2, 4, 5], (B, H, W, C), True)
+
     return x
 
 
@@ -101,7 +229,7 @@ class WindowAttention(nn.Module):
         self.window_size = window_size  # Wh, Ww
         self.num_heads = num_heads
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = torch.tensor(qk_scale) if qk_scale else torch.tensor(head_dim ** -0.5)
 
         # define a parameter table of relative position bias
         self.relative_position_bias_table = nn.Parameter(
@@ -117,29 +245,18 @@ class WindowAttention(nn.Module):
         relative_coords[:, :, 0] += self.window_size[0] - 1  # shift to start from 0
         relative_coords[:, :, 1] += self.window_size[1] - 1
         relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
-        relative_position_index = relative_coords.sum(-1)  # Wh*Ww, Wh*Ww
+        relative_position_index = relative_coords.sum(-1).view(-1).clone()  # Wh*Ww, Wh*Ww
         self.register_buffer("relative_position_index", relative_position_index)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.attn_drop = nn.Dropout(attn_drop)
+        self.attn_drop = nn.Dropout(attn_drop) if attn_drop > 0. else nn.Identity()
         self.proj = nn.Linear(dim, dim)
-        self.proj_drop = nn.Dropout(proj_drop)
+        self.proj_drop = nn.Dropout(proj_drop) if proj_drop > 0. else nn.Identity()
 
         trunc_normal_(self.relative_position_bias_table, std=.02)
         self.softmax = nn.Softmax(dim=-1)
 
-    def bmm_replace(self, q, k):
-        B, num_heads, N, D1 = q.shape
-        B = int(B)
-        num_heads = int(num_heads)
-        N = int(N)
-        D1 = int(D1)
-        D2 = int(k.shape[3])
-        q_r = q.reshape(B * num_heads, N, D1)
-        k_r = k.reshape(B * num_heads, D1, D2)
-        attn = torch.bmm(q_r, k_r)
-        return attn.reshape(B, num_heads, N, D2)
-
+    @amp.half_function
     def forward(self, x, mask=None):
         """
         Args:
@@ -147,25 +264,25 @@ class WindowAttention(nn.Module):
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
         """
         B_, N, C = x.shape
-        B_ = int(B_)
-        N = int(N)
-        C = int(C)
-        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous()
-        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
-        q = self.scale * q
+        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous().npu_format_cast(2)
+        q, k, v = qkv[0].clone(), qkv[1].clone(), qkv[2].clone()  # make torchscript happy (cannot use tensor as tuple)
+
+        if not self.scale.device == q.device:
+            self.scale = self.scale.to(q.device).to(q.dtype)
+
+        q = q * self.scale
         # attn = (q @ k.transpose(-2, -1))
-        attn = self.bmm_replace(q, k.transpose(-2, -1))  # (q @ k.transpose(-2, -1))
-        relative_index = self.relative_position_index.view(-1)
-        relative_position_bias = self.relative_position_bias_table.index_select(0, relative_index.long())
-        # relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)]
-        relative_position_bias = relative_position_bias.view(self.window_size[0] * self.window_size[1],
-                                                             self.window_size[0] * self.window_size[1],
-                                                             -1)  # Wh*Ww,Wh*Ww,nH
+        attn = matmul_transpose(q, k)
+
+        # relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)].view(
+        #     self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)  # Wh*Ww,Wh*Ww,nH
+        relative_position_bias = torch.index_select(self.relative_position_bias_table, 0, self.relative_position_index).view(
+            self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wh*Ww, Wh*Ww
-        attn = attn + relative_position_bias.unsqueeze(0)
+        attn = attn + relative_position_bias.unsqueeze(0).half()
 
         if mask is not None:
-            nW = int(mask.shape[0])
+            nW = mask.shape[0]
             attn = attn.view(B_ // nW, nW, self.num_heads, N, N) + mask.unsqueeze(1).unsqueeze(0)
             attn = attn.view(-1, self.num_heads, N, N)
             attn = self.softmax(attn)
@@ -173,10 +290,9 @@ class WindowAttention(nn.Module):
             attn = self.softmax(attn)
 
         attn = self.attn_drop(attn)
+
         # x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
-        # attn = attn.type(torch.float16)
-        # v = v.type(torch.float16)
-        x = self.bmm_replace(attn, v).transpose(1, 2).reshape(B_, N, C)  # (attn @ v).transpose(1, 2).reshape(B_, N, C)
+        x = (attn @ v).npu_format_cast(2).npu_confusion_transpose([0, 2, 1, 3], (B_, N, C), True)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -197,6 +313,14 @@ class WindowAttention(nn.Module):
         flops += N * self.dim * self.dim
         return flops
 
+
+def get_roll_index(H, W, shifts):
+    index = torch.arange(0, H * W).reshape(H, W)
+    index_fp = torch.roll(index, shifts=(shifts, shifts), dims=(0, 1)).reshape(-1).long()
+    index_bp = {i:idx for idx, i in enumerate(index_fp.numpy().tolist())}
+    index_bp = [index_bp[i] for i in range(H * W)]
+    index_bp = torch.LongTensor(index_bp)
+    return [index_fp, index_bp]
 
 class SwinTransformerBlock(nn.Module):
     r""" Swin Transformer Block.
@@ -219,7 +343,7 @@ class SwinTransformerBlock(nn.Module):
 
     def __init__(self, dim, input_resolution, num_heads, window_size=7, shift_size=0,
                  mlp_ratio=4., qkv_bias=True, qk_scale=None, drop=0., attn_drop=0., drop_path=0.,
-                 act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+                 act_layer=FastGELU, norm_layer=nn.LayerNorm, norm_before_mlp='ln'):
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -227,19 +351,25 @@ class SwinTransformerBlock(nn.Module):
         self.window_size = window_size
         self.shift_size = shift_size
         self.mlp_ratio = mlp_ratio
+        self.norm_before_mlp = norm_before_mlp
         if min(self.input_resolution) <= self.window_size:
             # if window size is larger than input resolution, we don't partition windows
             self.shift_size = 0
             self.window_size = min(self.input_resolution)
-        # assert 0 <= self.shift_size < self.window_size, "shift_size must in 0-window_size"
+        assert 0 <= self.shift_size < self.window_size, "shift_size must in 0-window_size"
 
         self.norm1 = norm_layer(dim)
         self.attn = WindowAttention(
             dim, window_size=to_2tuple(self.window_size), num_heads=num_heads,
             qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
 
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        self.norm2 = norm_layer(dim)
+        self.drop_path = NpuDropPath(drop_path) if drop_path > 0. else nn.Identity()
+        if self.norm_before_mlp == 'ln':
+            self.norm2 = nn.LayerNorm(dim)
+        elif self.norm_before_mlp == 'bn':
+            self.norm2 = lambda x: nn.BatchNorm1d(dim)(x.transpose(1, 2)).transpose(1, 2)
+        else:
+            raise NotImplementedError
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
@@ -268,65 +398,41 @@ class SwinTransformerBlock(nn.Module):
 
         self.register_buffer("attn_mask", attn_mask)
 
-    def roll_re2(self, x, shifts):
-        if shifts > 0:
-            block_a = x[:, -shifts:, -shifts:, :]  # block A
-            block_b = x[:, 0:-shifts, -shifts:, :]  # block B
-            block_c = x[:, -shifts:, 0:-shifts, :]  # block C
-            block_d = x[:, :-shifts, :-shifts, :]  # block D
-            patch_ab = torch.cat((block_a, block_b), dim=1)
-            patch_cd = torch.cat((block_c, block_d), dim=1)
-            patch = torch.cat((patch_ab, patch_cd), dim=2)
-        else:
-            shifts = shifts * -1
-            block_a = x[:, :shifts, :shifts, :]
-            block_b = x[:, shifts:, :shifts, :]
-            block_c = x[:, :shifts, shifts:, :]
-            block_d = x[:, shifts:, shifts:, :]
-            patch_ba = torch.cat((block_b, block_a), dim=1)
-            patch_dc = torch.cat((block_d, block_c), dim=1)
-            patch = torch.cat((patch_dc, patch_ba), dim=2)
-        return patch
+        self.index_dict = {}
+        self.index_device = torch.device('cpu')
+        hw_list = [56, 28, 14, 7] # H/W of feature maps
+        for hw in hw_list:
+            H, W = hw, hw
+            self.index_dict[(H, W, self.shift_size)] = get_roll_index(H, W, self.shift_size)
+            self.index_dict[(H, W, -self.shift_size)] = get_roll_index(H, W, -self.shift_size)
 
-    def roll_replaced(self, x, shifts):
-        # use slice to replace torch.roll operation (Only for Swin)
-        # In swin , such operations are from top to bottom with same shifts
-        x_cp = torch.zeros_like(x)
-        if shifts < 0:  # shift #x_cp[shifts:-1,]
-            # print(shifts)
-            shifts = int(shifts * int(-1))
-            x_cp[:, -shifts:, -shifts:, :] = x[:, :shifts, :shifts, :]  # block A
-            x_cp[:, 0:-shifts, -shifts:, :] = x[:, shifts:, :shifts, :]  # block B
-            x_cp[:, -shifts:, 0:-shifts, :] = x[:, :shifts, shifts:, :]  # block C
-            x_cp[:, :-shifts, :-shifts, :] = x[:, shifts:, shifts:, :]  # block D
-            return x_cp
-        else:  # shifts recover
-            x_cp[:, :shifts, :shifts, :] = x[:, -shifts:, -shifts:, :]  # block A
-            x_cp[:, shifts:, :shifts, :] = x[:, 0:-shifts, -shifts:, :]  # block B
-            x_cp[:, :shifts, shifts:, :] = x[:, -shifts:, 0:-shifts, :]  # block C
-            x_cp[:, shifts:, shifts:, :] = x[:, :-shifts, :-shifts, :]  # block D
-            return x_cp
+    def cast_index_device(self, device):
+        for v in self.index_dict.values():
+            v[0] = v[0].to(device)
+            v[1] = v[1].to(device)
 
+    @amp.half_function
     def forward(self, x):
+        if not self.index_device == x.device:
+            self.cast_index_device(x.device)
+            self.index_device = x.device
+
         H, W = self.input_resolution
         B, L, C = x.shape
-        B = int(B)
-        L = int(L)
-        C = int(C)
-        # assert L == H * W, "input feature has wrong size"
+        assert L == H * W, "input feature has wrong size"
 
         shortcut = x
+        if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
+            x = x.npu_format_cast(29)
         x = self.norm1(x)
-        x = x.view(B, H, W, C)
+        x = x.view(B, H, W, C).npu_format_cast(2)
 
         # cyclic shift
-        # print("roll goal is ",x.shape)
         if self.shift_size > 0:
             # shifted_x = torch.roll(x, shifts=(-self.shift_size, -self.shift_size), dims=(1, 2))
-            # shifted_x = self.roll_replaced(x, -self.shift_size)
-            shifted_x = self.roll_re2(x, -self.shift_size)
-            # print("roll diff is",(shifted_x-rx).sum())
-            # print(shifted_x[1,:,:,1],rx[1,:,:,1])
+            index_fp = self.index_dict[(H, W, -self.shift_size)][0]
+            index_bp = self.index_dict[(H, W, -self.shift_size)][1]
+            shifted_x = roll_index_select(x, index_fp, index_bp)
         else:
             shifted_x = x
 
@@ -339,22 +445,26 @@ class SwinTransformerBlock(nn.Module):
 
         # merge windows
         attn_windows = attn_windows.view(-1, self.window_size, self.window_size, C)
-        shifted_x = window_reverse(attn_windows, self.window_size, H, W, B)  # B H' W' C
+        shifted_x = window_reverse(attn_windows, self.window_size, H, W)  # B H' W' C
 
         # reverse cyclic shift
         if self.shift_size > 0:
             # x = torch.roll(shifted_x, shifts=(self.shift_size, self.shift_size), dims=(1, 2))
-            # x = self.roll_replaced(shifted_x, self.shift_size)
-            x = self.roll_re2(shifted_x, self.shift_size)
-            # print("roll diff is", (x - rx).sum())
+            index_fp = self.index_dict[(H, W, self.shift_size)][0]
+            index_bp = self.index_dict[(H, W, self.shift_size)][1]
+            x = roll_index_select(shifted_x, index_fp, index_bp)
         else:
             x = shifted_x
         x = x.view(B, H * W, C)
 
         # FFN
         x = shortcut + self.drop_path(x)
-        x = x + self.drop_path(self.mlp(self.norm2(x)))
 
+        # x = x + self.drop_path(self.mlp(self.norm2(x)))
+        if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
+            x = x + self.drop_path(self.mlp(self.norm2(x.npu_format_cast(29))))
+        else:
+            x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
 
     def extra_repr(self) -> str:
@@ -392,26 +502,30 @@ class PatchMerging(nn.Module):
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
         self.norm = norm_layer(4 * dim)
 
+    @amp.half_function
     def forward(self, x):
         """
         x: B, H*W, C
+
+        A depth-wise conv2d version with save semantics of following op
+        # x0 = x[:, 0::2, 0::2, :]  # B H/2 W/2 C
+        # x1 = x[:, 1::2, 0::2, :]  # B H/2 W/2 C
+        # x2 = x[:, 0::2, 1::2, :]  # B H/2 W/2 C
+        # x3 = x[:, 1::2, 1::2, :]  # B H/2 W/2 C
+        # x = torch.cat([x0, x1, x2, x3], -1)  # B H/2 W/2 4*C
         """
+
         H, W = self.input_resolution
         B, L, C = x.shape
-        B = int(B)
-        L = int(L)
-        C = int(C)
-        # assert L == H * W, "input feature has wrong size"
-        # assert H % 2 == 0 and W % 2 == 0, f"x size ({H}*{W}) are not even."
+        assert L == H * W, "input feature has wrong size"
+        assert H % 2 == 0 and W % 2 == 0, f"x size ({H}*{W}) are not even."
 
-        x = x.view(B, H, W, C)
+        x = x.reshape(B, int(H / 2), 2, int(W / 2), 2, C)
+        x = x.permute(0, 1, 3, 4, 2, 5)
+        x = x.reshape(B, int(H * W / 4), C * 4)
 
-        x0 = x[:, 0::2, 0::2, :]  # B H/2 W/2 C
-        x1 = x[:, 1::2, 0::2, :]  # B H/2 W/2 C
-        x2 = x[:, 0::2, 1::2, :]  # B H/2 W/2 C
-        x3 = x[:, 1::2, 1::2, :]  # B H/2 W/2 C
-        x = torch.cat([x0, x1, x2, x3], -1)  # B H/2 W/2 4*C
-        x = x.view(B, -1, 4 * C)  # B H/2*W/2 4*C
+        if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
+            x = x.npu_format_cast(2).npu_format_cast(29).contiguous()
 
         x = self.norm(x)
         x = self.reduction(x)
@@ -450,7 +564,8 @@ class BasicLayer(nn.Module):
 
     def __init__(self, dim, input_resolution, depth, num_heads, window_size,
                  mlp_ratio=4., qkv_bias=True, qk_scale=None, drop=0., attn_drop=0.,
-                 drop_path=0., norm_layer=nn.LayerNorm, downsample=None, use_checkpoint=False):
+                 drop_path=0., norm_layer=nn.LayerNorm, downsample=None, use_checkpoint=False,
+                 norm_before_mlp='ln'):
 
         super().__init__()
         self.dim = dim
@@ -467,7 +582,7 @@ class BasicLayer(nn.Module):
                                  qkv_bias=qkv_bias, qk_scale=qk_scale,
                                  drop=drop, attn_drop=attn_drop,
                                  drop_path=drop_path[i] if isinstance(drop_path, list) else drop_path,
-                                 norm_layer=norm_layer)
+                                 norm_layer=norm_layer, norm_before_mlp=norm_before_mlp)
             for i in range(depth)])
 
         # patch merging layer
@@ -529,12 +644,14 @@ class PatchEmbed(nn.Module):
             self.norm = None
 
     def forward(self, x):
-        # B, C, H, W = x.shape
+        B, C, H, W = x.shape
         # FIXME look at relaxing size constraints
-        # assert H == self.img_size[0] and W == self.img_size[1], \
-        #    f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
-        x = self.proj(x).flatten(2).transpose(1, 2)  # B Ph*Pw C
+        assert H == self.img_size[0] and W == self.img_size[1], \
+            f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
+        x = self.proj(x).flatten(2).transpose(1, 2).contiguous()  # B Ph*Pw C
         if self.norm is not None:
+            if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
+                x = x.npu_format_cast(2).npu_format_cast(29)
             x = self.norm(x)
         return x
 
@@ -577,7 +694,7 @@ class SwinTransformer(nn.Module):
                  window_size=7, mlp_ratio=4., qkv_bias=True, qk_scale=None,
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0.1,
                  norm_layer=nn.LayerNorm, ape=False, patch_norm=True,
-                 use_checkpoint=False, **kwargs):
+                 use_checkpoint=False, norm_before_mlp='ln', **kwargs):
         super().__init__()
 
         self.num_classes = num_classes
@@ -601,7 +718,7 @@ class SwinTransformer(nn.Module):
             self.absolute_pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim))
             trunc_normal_(self.absolute_pos_embed, std=.02)
 
-        self.pos_drop = nn.Dropout(p=drop_rate)
+        self.pos_drop = nn.Dropout(p=drop_rate) if drop_rate > 0. else nn.Identity()
 
         # stochastic depth
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]  # stochastic depth decay rule
@@ -621,7 +738,8 @@ class SwinTransformer(nn.Module):
                                drop_path=dpr[sum(depths[:i_layer]):sum(depths[:i_layer + 1])],
                                norm_layer=norm_layer,
                                downsample=PatchMerging if (i_layer < self.num_layers - 1) else None,
-                               use_checkpoint=use_checkpoint)
+                               use_checkpoint=use_checkpoint,
+                               norm_before_mlp=norm_before_mlp)
             self.layers.append(layer)
 
         self.norm = norm_layer(self.num_features)
@@ -647,6 +765,7 @@ class SwinTransformer(nn.Module):
     def no_weight_decay_keywords(self):
         return {'relative_position_bias_table'}
 
+    @amp.half_function
     def forward_features(self, x):
         x = self.patch_embed(x)
         if self.ape:
@@ -661,8 +780,8 @@ class SwinTransformer(nn.Module):
         x = torch.flatten(x, 1)
         return x
 
+    @amp.half_function
     def forward(self, x):
-        # print(x.shape)
         x = self.forward_features(x)
         x = self.head(x)
         return x
