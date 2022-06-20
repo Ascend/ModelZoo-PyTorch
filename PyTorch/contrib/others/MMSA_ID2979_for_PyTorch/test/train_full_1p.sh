@@ -110,29 +110,27 @@ start_time=$(date +%s)
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
 batch_size=24
 
-pip install face-recognition
-pip install pynvml
-pip install facenet_pytorch
-pip install transformers
-pip install pytorch_transformers
-pip install torchvision
-pip install scikit-learn
 
 if [ x"${modelarts_flag}" != x ];
 then
+    ./${data_path}/dataset/pretrained_model/bert_cn/pytorch_model.bin
+    ./${data_path}/dataset/pretrained_model/bert_en/pytorch_model.bin
     python3.7 ./run.py --data_path=${data_path} --model_save_dir=${output_path} --res_save_dir=${output_path}
 else
-    python3.7 ./run.py --data_path=${data_path} --model_save_dir=${output_path} --res_save_dir=${output_path} 1>${print_log} 2>&1
+    ./${data_path}/dataset/pretrained_model/bert_cn/pytorch_model.bin
+    ./${data_path}/dataset/pretrained_model/bert_en/pytorch_model.bin
+    python3.7 ./run.py --data_path=${data_path}/dataset --model_save_dir=${output_path} --res_save_dir=${output_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
-StepTime=`grep "sec/step :" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
+Time=`grep "cost" ${print_log} | tail -n 10 | awk '{print $4}' | awk '{sum+=$1} END {print sum/NR}'`
+Trainingtime=`awk 'BEGIN{printf "%.2f\n", '${Time}'/43}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${Trainingtime}'}'`
 
 # 精度相关数据计算
-train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
+train_accuracy=`grep "F1_score" ${print_log} | awk '{print $10}' | awk 'END {print $NF}'`
 # 提取所有loss打印信息
-grep "loss :" ${print_log} | awk -F ":" '{print $4}' | awk -F "-" '{print $1}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+grep "VAL-(self_mm)" ${print_log} | awk '{print $4}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 
 ###########################################################
@@ -187,7 +185,7 @@ echo "BatchSize = ${batch_size}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseNam
 echo "DeviceType = `uname -m`" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${FPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainingTime = ${StepTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${Trainingtime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
