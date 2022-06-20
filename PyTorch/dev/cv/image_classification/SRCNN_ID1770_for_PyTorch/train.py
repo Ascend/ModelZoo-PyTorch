@@ -87,6 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-epochs', type=int, default=400)
     parser.add_argument('--num-workers', type=int, default=128)
     parser.add_argument('--seed', type=int, default=123)
+    parser.add_argument('--ddp', action='store_true', help='default Fasle')
 
     # 使能混合精度
     parser.add_argument('--apex', action='store_true',
@@ -99,6 +100,16 @@ if __name__ == '__main__':
                         help='loss scale using in amp, default -1 means dynamic')
     # 使能混合精度
     args = parser.parse_args()
+
+    if args.ddp:
+        NPU_CALCULATE_DEVICE = 0
+        if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+            NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+        if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+            torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
+        NPU_WORLD_SIZE = int(os.getenv('NPU_WORLD_SIZE'))
+        RANK = int(os.getenv('RANK'))
+        torch.distributed.init_process_group('hccl', rank=RANK, world_size=NPU_WORLD_SIZE)
 
     args.outputs_dir = os.path.join(args.outputs_dir, 'x{}'.format(args.scale))
 
@@ -143,13 +154,29 @@ if __name__ == '__main__':
                                            combine_grad=True)
     #使能混合精度
 
+    if args.ddp:
+        model = model.to(f'npu:{NPU_CALCULATE_DEVICE}')
+        if not isinstance(model, torch.nn.parallel.DistributedDataParallel):
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[NPU_CALCULATE_DEVICE],
+                                                              broadcast_buffers=False)
+
     train_dataset = TrainDataset(args.train_file)
-    train_dataloader = DataLoader(dataset=train_dataset,
-                                  batch_size=args.batch_size,
-                                  shuffle=True,
-                                  num_workers=args.num_workers,
-                                  pin_memory=True,
-                                  drop_last=True)
+    if args.ddp:
+        train_dataloader_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+        train_dataloader_batch_size = args.batch_size
+        train_dataloader = DataLoader(dataset=train_dataset,
+                                      batch_size=train_dataloader_batch_size,
+                                      shuffle=False,
+                                      num_workers=args.num_workers,
+                                      pin_memory=True,
+                                      drop_last=True, sampler=train_dataloader_sampler)
+    else:
+        train_dataloader = DataLoader(dataset=train_dataset,
+                                    batch_size=args.batch_size,
+                                    shuffle=True,
+                                    num_workers=args.num_workers,
+                                    pin_memory=True,
+                                    drop_last=True)
     eval_dataset = EvalDataset(args.eval_file)
     eval_dataloader = DataLoader(dataset=eval_dataset, batch_size=1)
 
@@ -158,6 +185,8 @@ if __name__ == '__main__':
     best_psnr = 0.0
 
     for epoch in range(args.num_epochs):
+        if args.ddp:
+            train_dataloader.sampler.set_epoch(epoch)
         model.train()
         epoch_losses = AverageMeter()
 

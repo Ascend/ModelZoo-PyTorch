@@ -8,7 +8,7 @@ TRAIN:
     CROP_SIZE: (1024, 2048)
 TEST:
     BATCH_SIZE: 4
-    TEST_MODEL_PATH: 'runs/checkpoints/FastSCNN__cityscape_2021-08-18-12-07/best_model.pth'
+    TEST_MODEL_PATH: 'runs/checkpoints/FastSCNN__cityscape/best_model.pth'
 
 SOLVER:
     LR: 0.045

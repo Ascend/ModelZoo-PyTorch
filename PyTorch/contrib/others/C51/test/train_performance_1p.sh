@@ -49,7 +49,7 @@ source test/env_npu.sh
 
 python3 train_c51.py --use_device='use_npu' \
             --device_id=0 \
-            --max_step=4000000 \
+            --max_step=400000 \
             --log_interval=1000 \
             --tag='train_performance_1p' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait

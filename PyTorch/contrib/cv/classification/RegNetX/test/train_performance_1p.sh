@@ -89,7 +89,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
+taskset -c $PID_START-$PID_END python3.7 -u imagenet_fast.py \
   --data ${data_path} \
   --epochs ${train_epochs} \
   --cos \
@@ -102,7 +102,7 @@ taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
   --label-smoothing 0.1 \
   --warmup 5 \
   --device-list ${ASCEND_DEVICE_ID} \
-  --loss-scale 16.0 \
+  --loss-scale 'dynamic' \
   --rank ${RANK_ID} \
   --world-size 1\
   --local_rank $RANK_ID \

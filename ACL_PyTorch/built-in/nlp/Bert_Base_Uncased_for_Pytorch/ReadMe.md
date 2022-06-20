@@ -180,7 +180,7 @@
          export ASCEND_OPP_PATH=${install_path}/opp
          
          # 使用二进制输入时，执行如下命令
-         atc --input_format=ND --framework=5 --model=bert_base_batch_8.onnx --input_shape="input_ids:8,512;token_type_ids:8,512;attention_mask:8,512" --output=bert_base_batch_8_auto --log=info --soc_version=Ascend710 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_fp16_nodes="attention_mask"
+         atc --input_format=ND --framework=5 --model=bert_base_batch_8.onnx --input_shape="input_ids:8,512;token_type_ids:8,512;attention_mask:8,512" --output=bert_base_batch_8_auto --log=info --soc_version=$1 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_fp16_nodes="attention_mask"
          ```
 
          ![img](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/img/public_sys-resources/note_3.0-zh-cn.png)
@@ -200,8 +200,12 @@
 
       2. 执行atc转换脚本，将.onnx文件转为离线推理模型文件.om文件。
 
+         ${chip_name}可通过`npu-smi info`指令查看
+         
+         ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
          ```
-         bash atc_bert_base_uncased.sh
+         bash atc_bert_base_uncased.sh Ascend${chip_name} # Ascend310P3
          ```
 
          运行成功后生成bert_base_batch_8_auto.om用于二进制输入推理的模型文件。
@@ -264,4 +268,4 @@
 
       第一个参数为原始推理数据文本，第二个参数为生成推理结果文本。
 
-      获得**模型精度：“f1”: 47.3825**
+      获得**模型精度：“f1”: 88.7402**

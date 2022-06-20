@@ -35,6 +35,9 @@ data_dump_flag=False
 data_dump_step="10"
 profiling=False
 autotune=False
+#二进制开关
+bin_mode=False
+bin_analysis=False
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -84,6 +87,10 @@ do
         cp -rf $install_path/fwkacllib/data/rl/Ascend910/custom ${autotune_dump_path}/RL/
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
     fi
 done
 
@@ -91,6 +98,23 @@ done
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
+fi
+
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    sed -i "46itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../8p_main_med.py
+    line=`grep "torch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../8p_main_med.py -n | awk -F ':' '{print $1}'`
+    line=$[ $line+1 ]
+    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/../8p_main_med.py
+    sed -i "${line}ioption['NPU_FUZZY_COMPILE_BLACKLIST'] = 'Slice'" ${cur_path}/../8p_main_med.py
+    sed -i "${line}ioption = {}" ${cur_path}/../8p_main_med.py
+fi
+
+#设置二进制变量
+if [ $bin_analysis == "True" ];then
+    #增加编译缓存设置
+    line=`grep "torch.npu.set_option(option)" ${cur_path}/../8p_main_med.py -n | awk -F ':' '{print $1}'`
+    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../8p_main_med.py
 fi
 
 #训练开始时间，不需要修改 
@@ -156,6 +180,15 @@ echo "E2E Training Duration sec : $e2e_time"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
+
+#二进制支持算子
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
 
 ##获取性能数据
 FPS=`grep "FPS@all" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}'|tr -d ,| sed s/[[:space:]]//g`

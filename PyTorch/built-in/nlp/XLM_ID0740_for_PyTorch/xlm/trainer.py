@@ -26,6 +26,8 @@ from logging import getLogger
 from collections import OrderedDict
 import numpy as np
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from torch import nn
 from torch.nn import functional as F
 #from torch.nn.utils import clip_grad_norm_
@@ -37,6 +39,7 @@ from .utils import to_cuda, concat_batches, find_modules
 from .utils import parse_lambda_config, update_lambdas
 from .model.memory import HashingMemory
 from .model.transformer import TransformerFFN
+import torch.distributed as dist
 
 
 logger = getLogger()
@@ -622,7 +625,16 @@ class Trainer(object):
                 logger.info("Not a better validation score (%i / %i)."
                             % (self.decrease_counts, self.decrease_counts_max))
                 self.decrease_counts += 1
-            if self.decrease_counts > self.decrease_counts_max:
+                
+            if self.params.multi_npu:
+                decrease_counts = torch.from_numpy(np.array(self.decrease_counts)).npu().half()
+                dist.all_reduce(decrease_counts, op=dist.ReduceOp.MAX)
+                dist.barrier()
+                decrease_counts = decrease_counts.int().item()
+            else:
+                decrease_counts = self.decrease_counts
+
+            if decrease_counts > self.decrease_counts_max:
                 logger.info("Stopping criterion has been below its best value for more "
                             "than %i epochs. Ending the experiment..." % self.decrease_counts_max)
                 if self.params.multi_npu and 'SLURM_JOB_ID' in os.environ:

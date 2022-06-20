@@ -17,6 +17,7 @@ import platform
 import shutil
 import time
 import warnings
+import os
 
 import torch
 
@@ -57,6 +58,7 @@ class EpochBasedRunner(BaseRunner):
         self._max_iters = self._max_epochs * len(self.data_loader)
         self.call_hook('before_train_epoch')
         time.sleep(2)  # Prevent possible deadlock during epoch transition
+        PERF_MAX_STEPS = os.environ.get("PERF_MAX_STEPS", None)
         for i, data_batch in enumerate(self.data_loader):
             self._inner_iter = i
             # if i == 500:
@@ -71,8 +73,11 @@ class EpochBasedRunner(BaseRunner):
             self.run_iter(data_batch, train_mode=True)
             self.call_hook('after_train_iter')
             self._iter += 1
+            if PERF_MAX_STEPS and i == int(PERF_MAX_STEPS):
+                break
 
-        self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_timer_hook.time_all * (len(self.data_loader) - 5)))
+        self.logger.info('FPS: ' + str(
+            self.samples_per_gpu * self.num_of_gpus / self.iter_timer_hook.time_all * (len(self.data_loader) - 5)))
         self.call_hook('after_train_epoch')
         self._epoch += 1
 

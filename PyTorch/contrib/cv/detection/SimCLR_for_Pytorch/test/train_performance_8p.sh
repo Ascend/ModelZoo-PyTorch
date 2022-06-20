@@ -14,7 +14,7 @@ data_path=""
 # 训练epoch
 train_epochs=1
 # 指定训练所使用的npu device卡id
-device_id=0,1,2,3,4,5,6,7
+device_id=0
 # 加载数据进程数
 workers=9
 
@@ -92,7 +92,7 @@ python3.7 ./main_8p.py \
     --epochs=${train_epochs} \
     --npu=0 \
     --distributed \
-    --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --batch_size=${batch_size}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

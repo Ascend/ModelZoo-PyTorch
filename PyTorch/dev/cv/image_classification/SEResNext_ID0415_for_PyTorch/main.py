@@ -84,7 +84,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
 try:
-    from apex.parallel import DistributedDataParallel as DDP
     from apex.fp16_utils import *
     from apex import amp
 except ImportError:
@@ -350,7 +349,9 @@ def main(args):
         #args.gpu = args.local_rank % torch.cuda.device_count()
         args.npu = args.local_rank % torch.npu.device_count()
         torch.npu.set_device(args.npu)
-        dist.init_process_group(backend="nccl", init_method="env://")
+        rank_size = int(os.environ['RANK_SIZE'])
+        rank_id = int(os.environ['RANK_ID'])
+        dist.init_process_group(backend="hccl", rank=rank_id, world_size=rank_size)
         args.world_size = torch.distributed.get_world_size()
     else:
         args.npu = args.device_id

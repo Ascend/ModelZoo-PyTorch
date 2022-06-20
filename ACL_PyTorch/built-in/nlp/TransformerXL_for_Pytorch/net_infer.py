@@ -32,10 +32,25 @@ ACL_MEMCPY_HOST_TO_DEVICE = 1
 ACL_MEMCPY_DEVICE_TO_HOST = 2
 ACL_MEMCPY_DEVICE_TO_DEVICE = 3
 
-ACL_DTYPE = {0: 'float32', 1: 'float16', 2: 'int8', 3: 'int32', 4: 'uint8', 6: 'int16', 7: 'uint16', 8: 'uint32',
-             9: 'int64', 10: 'uint64', 11: 'float64', 12: 'bool', }
+ACL_DTYPE = {
+    0: 'float32',
+    1: 'float16',
+    2: 'int8',
+    3: 'int32',
+    4: 'uint8',
+    6: 'int16',
+    7: 'uint16',
+    8: 'uint32',
+    9: 'int64',
+    10: 'uint64',
+    11: 'float64',
+    12: 'bool',
+}
 
-buffer_method = {"in": acl.mdl.get_input_size_by_index, "out": acl.mdl.get_output_size_by_index}
+buffer_method = {
+    "in": acl.mdl.get_input_size_by_index,
+    "out": acl.mdl.get_output_size_by_index
+}
 
 
 def check_ret(message, ret):
@@ -187,14 +202,22 @@ class Net(object):
 
     def _copy_data_to_device(self, data):
         item = self.input_data[0]
-        ptr = acl.util.numpy_to_ptr(data)
+        if 'bytes_to_ptr' in dir(acl.util):
+            bytes_in = data.tobytes()
+            ptr = acl.util.bytes_to_ptr(bytes_in)
+        else:
+            ptr = acl.util.numpy_to_ptr(data)
         ret = acl.rt.memcpy(item["buffer"], item["size"], ptr, item["size"], ACL_MEMCPY_DEVICE_TO_HOST)
         check_ret("acl.rt.memcpy", ret)
 
     def _copy_mems_to_device(self, mems):
         temp_data_buffer = self.input_data[1:]
         for i, item in enumerate(temp_data_buffer):
-            ptr = acl.util.numpy_to_ptr(mems[i])
+            if 'bytes_to_ptr' in dir(acl.util):
+                bytes_in = mems[i].tobytes()
+                ptr = acl.util.bytes_to_ptr(bytes_in)
+            else:
+                ptr = acl.util.numpy_to_ptr(mems[i])
             ret = acl.rt.memcpy(item["buffer"], item["size"], ptr, item["size"], ACL_MEMCPY_HOST_TO_DEVICE)
             check_ret("acl.rt.memcpy", ret)
 
@@ -224,8 +247,13 @@ class Net(object):
 
             size = output_data[i]["size"]
             ptr = output_data[i]["buffer"]
-            data = acl.util.ptr_to_numpy(ptr, (size,), 1)
-            np_arr = np.frombuffer(bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
+            if 'ptr_to_bytes' in dir(acl.util):
+                data = acl.util.ptr_to_bytes(ptr, size)
+                np_arr = np.frombuffer(data, dtype=ftype, count=data_len)
+            else:
+                data = acl.util.ptr_to_numpy(ptr, (size,), 1)
+                np_arr = np.frombuffer(
+                    bytearray(data[:data_len * ftype.itemsize]), dtype=ftype, count=data_len)
             np_arr = np_arr.reshape(data_shape)
             dataset.append(np_arr)
         return dataset

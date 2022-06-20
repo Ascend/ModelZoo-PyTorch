@@ -46,6 +46,7 @@ from utils.general import (
 from utils.google_utils import attempt_download
 from utils.torch_utils import init_seeds, ModelEMA, select_device, intersect_dicts
 
+NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE',0))
 
 def train(hyp, opt, device, tb_writer=None):
     print(f'Hyperparameters {hyp}')
@@ -157,7 +158,7 @@ def train(hyp, opt, device, tb_writer=None):
 
     # DDP mode
     if npu and rank != -1:
-        model = DDP(model, device_ids=[rank], broadcast_buffers=False)
+        model = DDP(model, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False)
 
     # Trainloader
     dataloader, dataset = create_dataloader(train_path, imgsz, batch_size, gs, opt, hyp=hyp, augment=True,
@@ -415,7 +416,7 @@ def device_id_to_process_device_map(device_list):
 
     return process_device_map
 def main_worker(opt):
-    device_id = opt.global_rank
+    device_id = int(os.getenv('NPU_CALCULATE_DEVICE'))
     loc = 'npu:{}'.format(device_id)
     if opt.device == 'npu':
         torch.npu.set_device(loc)

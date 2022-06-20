@@ -38,7 +38,7 @@ import copy
 import logging
 import os
 import sys
-
+import numpy as np
 import torch
 import yaml
 from torch.utils.data import DataLoader
@@ -48,12 +48,13 @@ from wenet.transformer.asr_model import init_asr_model
 from wenet.utils.checkpoint import load_checkpoint
 #from wenet.transformer.acl_init import decoder_model, device_id
 import acl
+from wenet.transformer.acl_net import Net
 import json
 import os
 
 def dic2json(input_dict, json_path):
     json_str = json.dumps(input_dict)
-    with open(json_path, 'a') as json_file:
+    with open(json_path, 'w+') as json_file:
         json_file.write(json_str)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='recognize with your model')
@@ -97,6 +98,7 @@ if __name__ == '__main__':
                         action='store_true',
                         help='simulate streaming inference')
     parser.add_argument('--bin_path', type=str, default="./encoder_data", help='encoder bin images dir')
+    parser.add_argument('--model_path', type=str, default="./encoder_revise.om", help='encoder bin images dir')
     parser.add_argument('--json_path', type=str, default="encoder.json", help='encoder bin images dir')
     parser.add_argument('--reverse_weight',
                         type=float,
@@ -109,11 +111,23 @@ if __name__ == '__main__':
                         format='%(asctime)s %(levelname)s %(message)s')
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 
+
+    if not os.path.exists(args.bin_path):
+        os.mkdir(args.bin_path)
     #init acl
     ret = acl.init()
     device_id = 0
     ret = acl.rt.set_device(device_id)
     context, ret = acl.rt.create_context(device_id)
+    output_shape = 4233000
+    encoder_model = Net(model_path = args.model_path, output_data_shape = output_shape, device_id = device_id)
+    x = torch.randn(1, 131, 80)
+    offset = torch.tensor(1)
+    subsampling_cache = torch.randn(1, 1, 256)
+    elayers_cache = torch.randn(12, 1, 1, 256)
+    conformer_cnn_cache = torch.randn(12, 1, 256, 7)
+    y, _ = encoder_model([x.numpy(), offset.numpy(), subsampling_cache.numpy(), elayers_cache.numpy(), conformer_cnn_cache.numpy()])
+
     with open(args.config, 'r') as fin:
         configs = yaml.load(fin, Loader=yaml.FullLoader)
     raw_wav = configs['raw_wav']
@@ -177,12 +191,13 @@ if __name__ == '__main__':
             num_decoding_left_chunks=args.num_decoding_left_chunks,
             ctc_weight=args.ctc_weight,
             simulate_streaming=args.simulate_streaming,
-            reverse_weight=args.reverse_weight)
+            reverse_weight=args.reverse_weight,
+            encoder_model=encoder_model)
 
         encoder_dic["encoder_out_"+ str(batch_idx)] = [encoder_out.shape[0], encoder_out.shape[1],encoder_out.shape[2]]
         encoder_dic["encoder_mask_"+ str(batch_idx)] = [encoder_mask.shape[0], encoder_mask.shape[1],encoder_mask.shape[2]]
         encoder_out.numpy().tofile(os.path.join(args.bin_path, "encoder_out_{}.bin".format(batch_idx)))
         encoder_mask.numpy().tofile(os.path.join(args.bin_path, "encoder_mask_{}.bin".format(batch_idx)))
     dic2json(encoder_dic, args.json_path)
-
+    del encoder_model
 

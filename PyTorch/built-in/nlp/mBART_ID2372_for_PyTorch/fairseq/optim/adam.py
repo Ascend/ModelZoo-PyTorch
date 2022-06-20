@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from typing import List
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.distributed as dist
 import torch.optim
 from fairseq.dataclass import FairseqDataclass
@@ -200,10 +202,11 @@ class Adam(torch.optim.Optimizer):
                 step_size = group["lr"] * math.sqrt(bias_correction2) / bias_correction1
                 # Decay the first and second moment running average coefficient
                 p_data_fp32, exp_avg, exp_avg_sq = \
-                    torch.npu_bert_apply_adam(p_data_fp32, exp_avg,
-                                              exp_avg_sq, group["lr"], beta1,
+                    torch.npu_bert_apply_adam(group["lr"], beta1,
                                               beta2, group["eps"], grad, 0.0, 0.0,
-                                              group["weight_decay"], step_size, adam_mode=1)
+                                              group["weight_decay"], step_size, adam_mode=1,
+                                              out = (p_data_fp32, exp_avg,exp_avg_sq)
+                                              )
 
                 if p.data.dtype in {torch.float16, torch.bfloat16}:
                     p.data.copy_(p_data_fp32)

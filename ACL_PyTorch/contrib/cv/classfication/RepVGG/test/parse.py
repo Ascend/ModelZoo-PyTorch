@@ -27,5 +27,8 @@ if __name__ == '__main__':
         with open(result_txt, 'r') as f:
             content = f.read()
         txt_data_list = [i.strip() for i in re.findall(r':(.*?),', content.replace('\n', ',') + ',')]
-        fps = float(txt_data_list[7].replace('samples/s', '')) * 4
-        print('310 bs{} fps:{}'.format(result_txt.split('_')[3], fps))
+        fps = float(txt_data_list[7].replace('samples/s', ''))
+        if sys.argv[2] == '310P':
+            print('310P bs{} fps:{}'.format(result_txt.split('_')[3], fps))
+        if sys.argv[2] == '310':
+            print('310 bs{} fps:{}'.format(result_txt.split('_')[3], fps * 4))

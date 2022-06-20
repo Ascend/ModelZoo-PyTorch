@@ -139,7 +139,9 @@ sed -i "s|${data_path}|data|g" ${data_path}/test/fbank.scp
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep "Epoch:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $11}'|sed 's/,$//'`
+#fps=`grep "Epoch:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $11}'|sed 's/,$//'`
+fps=`grep "Epoch:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $11}'|sed 's/,$//'|tail -n +5|awk '{sum+=$1} END {print sum/NR}'`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${fps}'*8}'`
 #打印，不需要修改
 echo "Final Performance item/sec : $FPS"
 

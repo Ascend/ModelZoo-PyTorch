@@ -16,10 +16,10 @@ python3.7 ./main.py --teacher_model ./bert_base_uncased_ft_sst \
                  --student_model ./general_tinybert \
                  --data_dir ./glue_dir/SST-2 \
                  --task_name SST-2 \
-                 --output_dir ./tmp_tinybert_dir \
+                 --output_dir ./tmp_tinybert_performance \
                  --max_seq_length 64 \
                  --train_batch_size 32 \
-                 --num_train_epochs 10 \
+                 --num_train_epochs 1 \
                  --aug_train \
                  --do_lower_case \
 	               --device 'npu' \

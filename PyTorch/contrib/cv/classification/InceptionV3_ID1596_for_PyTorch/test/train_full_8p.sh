@@ -59,31 +59,67 @@ fi
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 
-python3 ./main-8p.py \
-    -a inception_v3 \
-    --amp \
-    --loss-scale 128 \
-    --data ${data_path} \
-    --addr=$(hostname -I |awk '{print $1}') \
-    --seed=49 \
-    --workers=128 \
-    --learning-rate=${learning_rate} \
-    --mom=0.9 \
-    --weight-decay=1.0e-04  \
-    --print-freq=30 \
-    --dist-url='tcp://127.0.0.1:50000' \
-    --dist-backend='hccl' \
-    --multiprocessing-distributed \
-    --world-size=1 \
-    --rank=0 \
-    --device='npu' \
-    --epochs=${train_epochs} \
-    --checkpoint-freq=-1 \
-    --label-smoothing=0.1 \
-    --batch-size=${batch_size} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
-
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+  if [ $(uname -m) = "aarch64" ]
+  then
+    PID_START=$((KERNEL_NUM*i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END python3 ./main-8p.py \
+      -a inception_v3 \
+      --amp \
+      --loss-scale 128 \
+      --data ${data_path} \
+      --addr=$(hostname -I |awk '{print $1}') \
+      --seed=49 \
+      --workers=128 \
+      --learning-rate=${learning_rate} \
+      --mom=0.9 \
+      --weight-decay=1.0e-04  \
+      --print-freq=30 \
+      --dist-url='tcp://127.0.0.1:50000' \
+      --dist-backend='hccl' \
+      --multiprocessing-distributed \
+      --world-size=1 \
+      --rank=0 \
+      --device='npu' \
+      --gpu=${i}  \
+      --epochs=${train_epochs} \
+      --label-smoothing=0.1 \
+      --batch-size=${batch_size} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+  else
+    python3 ./main-8p.py \
+      -a inception_v3 \
+      --amp \
+      --loss-scale 128 \
+      --data ${data_path} \
+      --addr=$(hostname -I |awk '{print $1}') \
+      --seed=49 \
+      --workers=128 \
+      --learning-rate=${learning_rate} \
+      --mom=0.9 \
+      --weight-decay=1.0e-04  \
+      --print-freq=30 \
+      --dist-url='tcp://127.0.0.1:50000' \
+      --dist-backend='hccl' \
+      --multiprocessing-distributed \
+      --world-size=1 \
+      --rank=0 \
+      --device='npu' \
+      --gpu=${i}  \
+      --epochs=${train_epochs} \
+      --label-smoothing=0.1 \
+      --batch-size=${batch_size} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+  fi
+done
 wait
 
 # 训练结束时间，不需要修改
@@ -93,7 +129,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "FPS" '{print $2}'|awk -F " " '{print $1}' | tail -n +2|awk '{sum+=$1} END {print sum/NR}' | sed s/[[]:space:]//g `
+FPS=`grep "FPS@all" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk '{print $7}' | tail -1`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

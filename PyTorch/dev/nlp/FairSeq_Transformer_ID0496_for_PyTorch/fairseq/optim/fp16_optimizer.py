@@ -41,7 +41,12 @@ from itertools import chain
 import torch
 
 from fairseq import optim, utils
-
+import os
+NPU_CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 
 class DynamicLossScaler(object):
 
@@ -87,7 +92,7 @@ class DynamicLossScaler(object):
                 return True
             return False
         else:
-            a = torch.randn([8]).npu().fill_(2)
+            a = torch.randn([8], device=f'npu:{NPU_CALCULATE_DEVICE}').fill_(2)
             float_status = torch.npu_alloc_float_status(a)
             local_float_status = torch.npu_get_float_status(float_status)
             if (float_status.cpu()[0] != 0):

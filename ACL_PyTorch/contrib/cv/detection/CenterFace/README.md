@@ -24,7 +24,7 @@
   - [7.1 npu性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#71-npu性能数据)
   - [7.2 T4性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#72-T4性能数据)
   - [7.3 性能对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#73-性能对比)
-- 8 710增加文件介绍
+- 8 310P增加文件介绍
 
 ## 1 模型概述
 
@@ -294,7 +294,7 @@ batch16 t4单卡吞吐率：359.999
 batch1：91.86x4=367.44 > 337.544
 batch16：80.3537x4=321.4148 < 359.999
 
-## 8 710增加文件介绍
+## 8 310P增加文件介绍
 
 1.aipp_centerface.aippconfig ONNX模型转OM模型时所配置aipp
 2.calibration_bin.py 量化模型时输入真实数据的组件脚本 

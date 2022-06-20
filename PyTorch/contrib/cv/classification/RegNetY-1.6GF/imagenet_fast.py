@@ -26,7 +26,8 @@ import random
 import numpy as np
 
 import torch
-import torch.npu
+if torch.__version__>= '1.8.1':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.nn.functional as F
@@ -181,7 +182,8 @@ parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
 # Optimization options
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='O2 is mixed FP16/32 training, see more in https://github.com/NVIDIA/apex/tree/f5cd5ae937f168c763985f627bbf850648ea5f3f/examples/imagenet')
-parser.add_argument('--loss-scale', type=float, default=None)
+# 0519: delete type
+parser.add_argument('--loss-scale', default=None)
 
 parser.add_argument('--label-smoothing', '--ls', default=0.1, type=float)
 
@@ -318,7 +320,8 @@ class data_prefetcher():
 def main():
     global best_acc
     start_epoch = args.start_epoch  # start from epoch 0 or last checkpoint epoch
-
+    
+    #if not os.path.isdir(args.checkpoint):
     if not os.path.isdir(args.checkpoint) and args.local_rank == 0:
         mkdir_p(args.checkpoint)
 
@@ -361,7 +364,6 @@ def main():
                                       loss_scale=args.loss_scale,
                                       combine_grad=True
                                       )
-
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     # Data loading code

@@ -116,6 +116,7 @@ python3.7 -u ./main_npu_1p.py \
     --opt-level='O2' \
     --device='npu' \
     --world-size=1 \
+    --npu=${ASCEND_DEVICE_ID} \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

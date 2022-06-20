@@ -360,7 +360,7 @@ if __name__ == '__main__':
 
 2.执行后处理脚本，获取精度
 ```shell
-python tsm_ucf101_postprocess.py --result_path ./output/out_bs1/20210727_143344/ --info_path /opt/npu/ucf101/ucf101.info
+python tsm_ucf101_postprocess.py --result_path ./output/out_bs1 --info_path /opt/npu/ucf101/ucf101.info
 ```
 第一个参数为预测结果所在路径（需根据实际输出路径进行修改），第二个参数为数据集info文件路径
 
@@ -522,6 +522,9 @@ batch_size=32时，T4的单卡吞吐率: 1000/(288.588/32)=110.885fps
 ```
 
 ### 7.3 性能对比
+
+Ascend310/GPU基准:
+
 batch_size=1: 310/t4=67.967/100.325=0.68倍
 
 batch_size=4: 310/t4=60.960/106.671=0.57倍
@@ -533,3 +536,19 @@ batch_size=16: 310/t4=58.622/110.577=0.53倍
 batch_size=32: 310/t4=58.102/110.885=0.52倍
 
 由于模型并没有性能要求，bs1、bs4、bs8、bs16、bs32时npu的性能高于T4性能的0.5倍，性能达标
+
+Ascend310P/GPU基准:
+
+batch_size=1: 310P/t4=186/100=1.86倍
+
+batch_size=4: 310P/t4=157/109=1.44倍
+
+batch_size=8: 310P/t4=153/111=1.37倍
+
+batch_size=16: 310P/t4=151/112=1.35倍
+
+batch_size=32: 310P/t4=139/113=1.23倍
+
+batch_size=64: 310P/t4=131/115=1.14倍
+
+最优吞吐率对比：186/115=1.62倍

@@ -17,7 +17,7 @@ url=https://github.com/kaituoxu/Speech-Transformer
 - Python3 (recommend Anaconda)
 
 ## Training # 
-
+If the script has no execution permission, you need to add the permission to the script before training
 ```bash
 cd test(be sure to run the following shell scripts in the test directory)
 # 1p train perf

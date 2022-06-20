@@ -10,6 +10,8 @@ batch_size=128
 data_path=""
 # 总epoch
 total_epochs=2
+# 衰减epoch
+exp_decay_at_epoch=151
 # 学习率
 base_lr=5e-4
 # 加载数据进程数
@@ -100,12 +102,13 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $5}'|awk 'END {print}'`
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $5}'|awk -F "," '{print $1}'|awk 'END {print}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'cmc1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $4}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a 'cmc1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $4}'|awk -F "," '{print $1}'`
+train_accuracy=${train_accuracy%\%*}
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "AlignedReID Training Duration sec : $e2e_time"

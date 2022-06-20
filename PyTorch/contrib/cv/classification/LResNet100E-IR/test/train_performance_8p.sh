@@ -150,6 +150,7 @@ echo "------------------ Final result ------------------"
 # 输出性能FPS，
 cat ${LOG_ROOT}/train.log | grep "fps:" >> ${LOG_ROOT}/train_${CaseName}_fps.log
 FPS=`cat ${LOG_ROOT}/train_${CaseName}_fps.log |grep 'fps:'| tail -n 1 | awk '{print $2}'`
+FPS=`echo "${FPS} * ${RANK_SIZE}" |bc`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

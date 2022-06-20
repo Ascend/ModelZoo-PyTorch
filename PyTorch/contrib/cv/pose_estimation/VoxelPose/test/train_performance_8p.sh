@@ -62,6 +62,10 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
+
+for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++));
+do
+export RANK_ID=$RANK_ID
 python3.7 run/train_3d.py \
     --cfg configs/shelf/prn64_cpn80x80x20.yaml \
     --data_path ${data_path} \
@@ -69,6 +73,7 @@ python3.7 run/train_3d.py \
     --num_epochs ${num_epochs} \
     --apex \
     --addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
 
 wait
 
@@ -82,7 +87,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $11}'|awk 'END {print}'`
+FPS=`grep -a 'FPS@all' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS@all " '{print $2}'| awk -F "," '{print $1}'| awk 'END {print}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

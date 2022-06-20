@@ -36,7 +36,7 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=1
 
 echo "====TEM onnx2om bs1===="
 
-atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs1 --input_format=NCHW --input_shape="video:1,400,100" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs1 --input_format=ND --input_shape="video:1,400,100" --log=debug --soc_version=Ascend310
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
@@ -44,7 +44,7 @@ fi
 echo "====TPM onnx2om bs1 finished===="
 echo "====TEM onnx2om bs16===="
 
-atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs16 --input_format=NCHW --input_shape="video:16,400,100" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs16 --input_format=ND--input_shape="video:16,400,100" --log=debug --soc_version=Ascend310
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
@@ -53,7 +53,7 @@ echo "====TPM onnx2om bs16 finished===="
 
 echo "====PEM onnx2om bs1===="
 
-atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs1 --input_format=NCHW --input_shape="video_feature:1,1000,32" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs1 --input_format=ND --input_shape="video_feature:1,1000,32" --log=debug --soc_version=Ascend310
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
@@ -61,7 +61,7 @@ fi
 echo "====PPM onnx2om bs1 finished===="
 echo "====PEM onnx2om bs16===="
 
-atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs16 --input_format=NCHW --input_shape="video_feature:16,1000,32" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs16 --input_format=ND --input_shape="video_feature:16,1000,32" --log=debug --soc_version=Ascend310
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

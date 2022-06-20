@@ -48,7 +48,10 @@ average_checkpoint=false
 decode_checkpoint=$dir/final.pt
 average_num=30
 decode_modes="attention_rescoring"
-
+bin_path=./encoder_data_noflash
+model_path=./no_flash_encoder_revise.om
+json_path=./encoder_noflash.json
+perf_json=./t1.json
 . tools/parse_options.sh || exit 1;
 
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
@@ -78,6 +81,10 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
         --batch_size 1 \
         --penalty 0.0 \
         --dict $dict \
+        --bin_path ${bin_path} \
+        --model_path ${model_path} \
+        --json_path ${json_path} \
+        --perf_json ${perf_json} \
         --ctc_weight $ctc_weight \
         --reverse_weight $reverse_weight \
         --result_file $test_dir/text \

@@ -214,7 +214,6 @@ def main(args):
 
     if args.is_master_node:
         print("Creating model")
-        print(torchvision.models.__dict__)
     model = torchvision.models.__dict__[args.model](num_classes=args.num_classes)
     if args.pretrained:
         checkpoint = torch.load(args.pretrained_weight_path, map_location='cpu')

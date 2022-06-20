@@ -12,8 +12,8 @@
 
 ## 环境准备
 
-* 执行本样例前，请确保已安装有昇腾AI处理器的硬件环境，CANN包版本5.0.2
-* 该目录下的实现是基于PyTorch框架，其中torch版本为1.5.0+ascend.post3，使用的混合精度apex版本为0.1+ascend
+* 执行本样例前，请确保已安装有昇腾910处理器的硬件环境，CANN包版本CANN toolkit_5.1.RC1.alpha001
+* 该目录下的实现是基于PyTorch框架，其中torch版本为torch 1.8.1+ascend.rc2.20220505，使用的混合精度apex版本apex 0.1+ascend.20220505，固件驱动版本22.0.0
 * pip install -r requirements.txt
 
 ## 训练准备
@@ -30,9 +30,7 @@ wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8
 ```shell
 python3.7.5 scripts/prepare_train_labels.py --labels <coco_home>/annotations/person_keypoints_train2017.json
 ```
-* [可选的操作]从完整的5000样本数量的验证集中随机生成一个样本量250的子集。在主目录下生成文件`val_subset.json`。
-
-(注：强烈建议此操作，可以极大的缩短训练时间，完整的5000数量样本仅在模型训练完成后的精度验证使用)
+* 从完整的5000样本数量的验证集中随机生成一个样本量250的子集。在主目录下生成文件`val_subset.json`。
 ```shell
 python3.7.5 scripts/make_val_subset.py --labels <coco_home>/annotations/person_keypoints_val2017.json
 ```
@@ -81,13 +79,13 @@ bash test/eval.sh --data_path=<coco_home> --step=3 --device_id=2 --checkpoint_pa
 
 | Acc@1    | step       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
-| 0.3926        | 1      | 8        | 280      | O1       |
-| 0.3992     | 2     | 8        | 280      | O1      |
-| 0.4089     | 3     | 8        | 280      | O1      |
+| 0.3973        | 1      | 8        | 280      | O1       |
+| 0.4132     | 2     | 8        | 280      | O1      |
+| 0.4289     | 3     | 8        | 280      | O1      |
 
 1p-NPU和8P-NPU训练的step-3结果
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
 | -        | 216.209      | 1        | 1      | O1       |
-| 0.4089     | 1660.909     | 8        | 280      | O1      |
+| 0.4289     | 1800.749     | 8        | 280      | O1      |

@@ -395,8 +395,8 @@ def main():
                         required=True,
                         help="NPU benchmark infer result path")
     args = parser.parse_args()
-    test_num = 10649
     npu_path = args.npu_result
+    test_num = len(os.listdir(npu_path)) // 2
     tokenizer = BertTokenizer(args.vocab_file, do_lower_case=args.do_lower_case, max_len=512) # for bert large
     eval_examples = read_squad_examples(
         input_file=args.predict_file, is_training=False)
@@ -421,8 +421,8 @@ def main():
     batch_start_logits_ = []
     batch_end_logits_ = []      
     for i in range(test_num):       
-        batch_end_logit = np.fromfile('{}Bert_{}_1.bin'.format(npu_path, i), dtype='float32')
-        batch_start_logit = np.fromfile('{}Bert_{}_2.bin'.format(npu_path, i), dtype='float32')       
+        batch_end_logit = np.fromfile('{}Bert_{}_2.bin'.format(npu_path, i), dtype='float32')
+        batch_start_logit = np.fromfile('{}Bert_{}_1.bin'.format(npu_path, i), dtype='float32')       
         batch_start_logits = torch.from_numpy(batch_start_logit) 
         batch_end_logits = torch.from_numpy(batch_end_logit)   
         start_logits = batch_start_logits.cpu().tolist()
@@ -432,7 +432,6 @@ def main():
         all_results.append(RawResult(unique_id=unique_id,
                                      start_logits=start_logits,
                                      end_logits=end_logits))
-        print(" [INFO] i == ", i)
     time_to_infer = time.time() - infer_start
     output_prediction_file = os.path.join("./", "predictions.json")
     output_nbest_file = os.path.join("./", "nbest_predictions.json")
@@ -442,7 +441,8 @@ def main():
         f.write(json.dumps(answers, indent=4) + "\n")
     with open(output_nbest_file, "w") as f:
         f.write(json.dumps(nbest_answers, indent=4) + "\n")
-    
+    print("Completed")
+
 if __name__ == '__main__':
    main() 
     

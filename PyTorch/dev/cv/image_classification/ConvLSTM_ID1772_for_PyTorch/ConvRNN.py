@@ -88,7 +88,7 @@ class CGRU_cell(nn.Module):
             if inputs is None:
                 x = torch.zeros(htprev.size(0), self.input_channels,
                                 #self.shape[0], self.shape[1]).cuda()
-                                self.shape[0], self.shape[1]).npu()
+                                self.shape[0], self.shape[1], device=f'npu:{NPU_CALCULATE_DEVICE}')
             else:
                 x = inputs[index, ...]
 

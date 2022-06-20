@@ -17,6 +17,9 @@ train_epochs=2
 train_steps=1000
 #学习率
 learning_rate=0.495
+#二进制开关
+bin_mode=False
+bin_analysis=False
 
 #参数配置
 data_path=""
@@ -39,13 +42,23 @@ do
 			    exit 1
 		    fi
         PREC="--apex --apex-opt-level "$apex_opt_level
-	fi
+	elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
+    fi
 done
 
 if [[ $data_path  == "" ]];then
 	echo "[Error] para \"data_path\" must be config"
 	exit 1
 fi
+
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    sed -i "49itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/solver.py
+fi
+
 ##############执行训练##########
 cd $cur_path
 if [ -d $cur_path/test/output ];then
@@ -102,6 +115,15 @@ echo "E2E Training Duration sec : $e2e_time"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
+
+#二进制支持算子
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量

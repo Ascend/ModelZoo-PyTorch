@@ -52,22 +52,19 @@ bash tokenize_en_zh.sh
 
 ## Train MODEL
 
-### 导入环境变量(若安装mmcv时已导入，这步可跳过)
-```
-source ./test/env.sh
-```
-
 ### 单卡（由于XLM模型在单卡训练时，loss不收敛，故不采用单卡训练）
+       bash ./test/train_full_1p.sh  --data_path=数据集路径                 # 精度训练
+       bash ./test/train_performance_1p.sh  --data_path=数据集路径     # 性能训练
+        [ 数据集路径写到XLM_en_zh这一级 ]
 
 ### 8卡
-1. 运行 train_8p.sh
-```
-sh train_8p.sh
-```
+       bash ./test/train_full_8p.sh  --data_path=数据集路径           # 精度训练
+       bash ./test/train_performance_8p.sh  --data_path=数据集路径     # 性能训练
+        [ 数据集路径写到XLM_en_zh这一级 ]
 
 ## 单卡训练时，如何指定使用第几张卡进行训练
 1. 修改 xlm/slurm.py脚本
- 将154行，torch.npu.set_device(params.local_rank) 注释掉
+ 将168行，torch.npu.set_device(params.local_rank) 注释掉
  同时在其后添加如下一行
  torch.npu.set_device("npu:id") # id可以设置为自己想指定的卡
 

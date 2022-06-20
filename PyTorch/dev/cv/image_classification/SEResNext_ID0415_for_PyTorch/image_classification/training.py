@@ -77,7 +77,6 @@ import dllogger
 import apex
 
 try:
-    from apex.parallel import DistributedDataParallel as DDP
     from apex.fp16_utils import *
     from apex import amp
 except ImportError:
@@ -136,7 +135,8 @@ class ModelAndLoss(nn.Module):
         return loss, output
 
     def distributed(self):
-        self.model = DDP(self.model)
+        rank_id = int(os.environ['RANK_ID'])
+        self.model = torch.nn.parallel.DistributedDataParallel(self.model, device_ids=[rank_id])
 
     def load_model_state(self, state):
         if not state is None:

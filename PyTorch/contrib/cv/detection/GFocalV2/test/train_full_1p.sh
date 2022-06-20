@@ -25,6 +25,9 @@ data_path=""
 #网络名称,同目录名称,需要模型审视修改
 Network="GFocal"
 
+#设置最多训练步数
+export PERF_MAX_STEPS=2000
+
 #训练batch_size,,需要模型审视修改
 batch_size=8
 device_id=0

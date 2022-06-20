@@ -18,6 +18,8 @@ import shutil
 import time
 import cv2
 import torch
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -161,10 +163,7 @@ def main():
     args.world_size = ngpus_per_node * args.world_size
     args.distributed = args.world_size > 1
 
-    if args.distributed:
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
-    else:
-        main_worker(args.gpu, ngpus_per_node, args)
+    main_worker(args.gpu, ngpus_per_node, args)
 
 
 def main_worker(gpu, ngpus_per_node, args):

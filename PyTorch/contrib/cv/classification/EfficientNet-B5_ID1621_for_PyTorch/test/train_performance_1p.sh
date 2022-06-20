@@ -12,6 +12,8 @@ export RANK_SIZE=1
 # 指定训练所使用的npu device卡id
 device_id=0
 
+#设置最多训练步数
+export PERF_MAX_STEPS=2000
 
 data_path_info=$1
 data_path=`echo ${data_path_info#*=}`

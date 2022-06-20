@@ -64,6 +64,7 @@ def main():
                 line = batch.split(' ')[:-1]
                 line = np.array([float(x) for x in line])
                 results.append(line)
+                break
     results = results[:len(gt_labels)]
 
     metrics = ['top_k_accuracy']

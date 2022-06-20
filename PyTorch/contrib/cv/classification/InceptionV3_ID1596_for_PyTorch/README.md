@@ -21,16 +21,16 @@ To train a model, run `main.py`or `main-8p.py` with the desired model architectu
 
 
 # 1p prefomance training 1p
-bash test/train_performance_1p.sh
+bash test/train_performance_1p.sh  --data_path=/data/imagenet
 
 # 8p prefomance training 8p
-bash test/train_performance_8p.sh
+bash test/train_performance_8p.sh --data_path=/data/imagenet
 
 # 1p full training 1p
-bash test/train_performance_1p.sh
+bash test/train_full_1p.sh --data_path=/data/imagenet
 
 # 8p full training 8p
-bash test/train_performance_8p.sh
+bash test/train_full_8p.sh --data_path=/data/imagenet
 
 # online inference demo 
 python3.7.5 demo.py

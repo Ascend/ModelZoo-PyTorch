@@ -18,9 +18,9 @@ data_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="EfficientNet-B6_ID1715_for_PyTorch"
+Network="EfficientNet-B7_ID1716_for_PyTorch"
 #训练epoch
-train_epochs=100
+train_epochs=90
 #训练batch_size
 batch_size=128
 #训练step

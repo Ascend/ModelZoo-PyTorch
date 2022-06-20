@@ -58,11 +58,11 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
     metric_logger.add_meter('img/s', utils.SmoothedValue(window_size=10, fmt='{value}'))
 
     header = 'Epoch: [{}]'.format(epoch)
+    rank_size = int(os.environ["RANK_SIZE"])
     cnt = 0
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
         start_time = time.time()
-        #image, target = image.to(device), target.to(device)
-        image, target = image.to(device), target.to(torch.int).to(device)
+        image, target = image.to(device, non_blocking=True), target.to(torch.int).to(device, non_blocking=True)
         output = model(image)
         loss = criterion(output, target)
 
@@ -79,7 +79,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
-        metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
+        metric_logger.meters['img/s'].update(batch_size * rank_size / (time.time() - start_time))
         cnt = cnt + 1
 
         if args.max_steps and cnt > args.max_steps:
@@ -93,7 +93,6 @@ def evaluate(model, criterion, data_loader, device):
     with torch.no_grad():
         for image, target in metric_logger.log_every(data_loader, 100, header):
             image = image.to(device, non_blocking=True)
-            #target = target.to(device, non_blocking=True)
             target = target.to(torch.int).to(device, non_blocking=True)
             output = model(image)
             loss = criterion(output, target)

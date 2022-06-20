@@ -21,6 +21,8 @@ import time
 import crnn
 import utils
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn.parallel
 from torch.utils.data import DataLoader
 from apex import amp
@@ -85,7 +87,10 @@ def main():
 
     # DistributedDataParallel, we need to divide the batch size
     # ourselves based on the total number of NPUs we have
-    config.TRAIN.BATCH_SIZE_PER_GPU = int(config.TRAIN.BATCH_SIZE_PER_GPU / npus_per_node)
+    if config.DISTRIBUTED.WORLD_SIZE == 16:
+        config.TRAIN.BATCH_SIZE_PER_GPU = int(config.TRAIN.BATCH_SIZE_PER_GPU / config.DISTRIBUTED.WORLD_SIZE)
+    else:
+        config.TRAIN.BATCH_SIZE_PER_GPU = int(config.TRAIN.BATCH_SIZE_PER_GPU / npus_per_node)
     config.WORKERS = int((config.WORKERS + npus_per_node - 1) / npus_per_node)
     print("batchsize:", config.TRAIN.BATCH_SIZE_PER_GPU)
     print("workers:", config.WORKERS)

@@ -1,0 +1,152 @@
+diff --git a/configs/yolox/yolox_s_8x8_300e_coco.py b/configs/yolox/yolox_s_8x8_300e_coco.py
+index cc73051..db1551f 100644
+--- a/configs/yolox/yolox_s_8x8_300e_coco.py
++++ b/configs/yolox/yolox_s_8x8_300e_coco.py
+@@ -19,7 +19,7 @@ model = dict(
+     train_cfg=dict(assigner=dict(type='SimOTAAssigner', center_radius=2.5)),
+     # In order to align the source code, the threshold of the val phase is
+     # 0.01, and the threshold of the test phase is 0.001.
+-    test_cfg=dict(score_thr=0.01, nms=dict(type='nms', iou_threshold=0.65)))
++    test_cfg=dict(score_thr=0.001, nms=dict(type='nms', iou_threshold=0.65)))
+ 
+ # dataset settings
+ data_root = 'data/coco/'
+diff --git a/mmdet/models/dense_heads/yolox_head.py b/mmdet/models/dense_heads/yolox_head.py
+index a1811c9..5adcf4f 100644
+--- a/mmdet/models/dense_heads/yolox_head.py
++++ b/mmdet/models/dense_heads/yolox_head.py
+@@ -17,6 +17,54 @@ from .base_dense_head import BaseDenseHead
+ from .dense_test_mixins import BBoxTestMixin
+ 
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (batch, N, 4)
++            nmsed_scores: (batch, N)
++            nmsed_classes: (batch, N)
++            nmsed_num: (batch,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.arange(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++                                                                   bboxes, scores, score_threshold_f=score_thr,
++                                                                   iou_threshold_f=iou_thr,
++                                                                   max_size_per_class_i=max_size_p_class,
++                                                                   max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.half()
++        scores = scores.half()
++    bboxes = bboxes.reshape(-1, bboxes.shape[1].numpy(), 1, 4)
++    scores = scores.reshape(-1, scores.shape[1].numpy(), 80)
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,
++                                                                           score_threshold, iou_threshold,
++                                                                           max_size_per_class, max_total_size)
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat((nmsed_boxes, nmsed_scores.unsqueeze(-1)), -1)
++    labels = nmsed_classes.reshape((-1, max_total_size))
++    return dets, labels
++
++
+ @HEADS.register_module()
+ class YOLOXHead(BaseDenseHead, BBoxTestMixin):
+     """YOLOXHead head used in `YOLOX <https://arxiv.org/abs/2107.08430>`_.
+@@ -248,9 +296,8 @@ class YOLOXHead(BaseDenseHead, BBoxTestMixin):
+         """
+         assert len(cls_scores) == len(bbox_preds) == len(objectnesses)
+         cfg = self.test_cfg if cfg is None else cfg
+-        scale_factors = [img_meta['scale_factor'] for img_meta in img_metas]
+ 
+-        num_imgs = len(img_metas)
++        num_imgs = cls_scores[0].shape[0]
+         featmap_sizes = [cls_score.shape[2:] for cls_score in cls_scores]
+         mlvl_priors = self.prior_generator.grid_priors(
+             featmap_sizes,
+@@ -280,20 +327,11 @@ class YOLOXHead(BaseDenseHead, BBoxTestMixin):
+ 
+         flatten_bboxes = self._bbox_decode(flatten_priors, flatten_bbox_preds)
+ 
+-        if rescale:
+-            flatten_bboxes[..., :4] /= flatten_bboxes.new_tensor(
+-                scale_factors).unsqueeze(1)
+-
+-        result_list = []
+-        for img_id in range(len(img_metas)):
+-            cls_scores = flatten_cls_scores[img_id]
+-            score_factor = flatten_objectness[img_id]
+-            bboxes = flatten_bboxes[img_id]
+-
+-            result_list.append(
+-                self._bboxes_nms(cls_scores, bboxes, score_factor, cfg))
+-
+-        return result_list
++        score_factors = flatten_objectness.unsqueeze(2).expand(-1, flatten_cls_scores.shape[1],
++                                                               flatten_cls_scores.shape[2])
++        scores = torch.mul(score_factors, flatten_cls_scores)
++        max_size = 200
++        return batch_nms_op(flatten_bboxes, scores, cfg.score_thr, cfg.nms.iou_threshold, max_size, max_size)
+ 
+     def _bbox_decode(self, priors, bbox_preds):
+         xys = (bbox_preds[..., :2] * priors[:, 2:]) + priors[:, :2]
+diff --git a/mmdet/models/detectors/yolox.py b/mmdet/models/detectors/yolox.py
+index 2aba93f..4b35710 100644
+--- a/mmdet/models/detectors/yolox.py
++++ b/mmdet/models/detectors/yolox.py
+@@ -132,3 +132,13 @@ class YOLOX(SingleStageDetector):
+ 
+         input_size = (tensor[0].item(), tensor[1].item())
+         return input_size
++
++    def onnx_export(self, img, img_metas=None, **kwargs):
++        return self.simple_test(img, img_metas, **kwargs)
++
++    def simple_test(self, img, img_metas, **kwargs):
++        if torch.onnx.is_in_onnx_export():
++            feat = self.extract_feat(img)
++            return self.bbox_head.simple_test(feat, img_metas, **kwargs)
++        else:
++            return super().simple_test(img, img_metas, **kwargs)
+diff --git a/tools/deployment/pytorch2onnx.py b/tools/deployment/pytorch2onnx.py
+index 5c786f8..2d0b89d 100644
+--- a/tools/deployment/pytorch2onnx.py
++++ b/tools/deployment/pytorch2onnx.py
+@@ -97,7 +97,8 @@ def pytorch2onnx(model,
+         do_constant_folding=True,
+         verbose=show,
+         opset_version=opset_version,
+-        dynamic_axes=dynamic_axes)
++        dynamic_axes=dynamic_axes,
++        enable_onnx_checker=False)
+ 
+     model.forward = origin_forward
+ 
+@@ -215,8 +216,8 @@ def parse_normalize_cfg(test_pipeline):
+             break
+     assert transforms is not None, 'Failed to find `transforms`'
+     norm_config_li = [_ for _ in transforms if _['type'] == 'Normalize']
+-    assert len(norm_config_li) == 1, '`norm_config` should only have one'
+-    norm_config = norm_config_li[0]
++    assert len(norm_config_li) <= 1, '`norm_config` should less than or equal to one'
++    norm_config = norm_config_li[0] if len(norm_config_li) > 0 else dict(mean=0.0, std=1.0)
+     return norm_config
+ 
+ 

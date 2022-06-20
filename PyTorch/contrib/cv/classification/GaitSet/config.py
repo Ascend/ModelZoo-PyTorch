@@ -1,6 +1,6 @@
 conf_1p = {
     # please change to your own path
-    "WORK_PATH": "work",
+    "WORK_PATH": ".",
     "ASCEND_VISIBLE_DEVICES": "0",
     "data": {
         'dataset_path': "../../CASIA-B-Pre/",
@@ -29,7 +29,7 @@ conf_1p = {
 
 conf_8p = {
     # please change to your own path
-    "WORK_PATH": "work",
+    "WORK_PATH": ".",
     "ASCEND_VISIBLE_DEVICES": "0,1,2,3,4,5,6,7",
     "data": {
         'dataset_path': "../../CASIA-B-Pre/",

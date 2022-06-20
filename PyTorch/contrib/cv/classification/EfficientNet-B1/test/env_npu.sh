@@ -54,6 +54,8 @@ export DYNAMIC_OP="ADD#MUL"
 export HCCL_WHITELIST_DISABLE=1
 # HCCL默认超时时间120s较少，修改为1800s对齐PyTorch默认设置
 export HCCL_CONNECT_TIMEOUT=1800
+# 对算子add和mul优化，不加可能导致模型性能降低
+export SCALAR_TO_HOST_MEM=1
 
 ulimit -SHn 512000
 

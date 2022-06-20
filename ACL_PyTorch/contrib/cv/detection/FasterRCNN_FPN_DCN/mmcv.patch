@@ -63,7 +63,7 @@ index 250e096..8c878f9 100644
 +                offset.shape[0], offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy())
 +            offset_x = offset.reshape(offset.shape[0], -1, 2, offset.shape[2].numpy(), offset.shape[3].numpy())[:, :, 1, ...].reshape(
 +                offset.shape[0], offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy())
-+            mask = torch.ones(offset.shape[0].numpy(), offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy(), dtype=torch.int32)
++            mask = torch.ones(offset.shape[0].numpy(), offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy(), dtype=torch.float)
 +            offset = torch.cat((offset_x, offset_y, mask), 1)
 +        return deform_conv2d(x, self.weight, offset, self.stride, self.padding,
                               self.dilation, self.groups, self.deform_groups)

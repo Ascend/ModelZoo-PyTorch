@@ -4,21 +4,22 @@
 
 ```
 	1.安装环境
-	2.修改run_1p.sh字段"save_dir"为当前磁盘的数据集路径
-	3.修改run_1p.sh字段"traintest_split_file"为数据集路径/peta_partition.pkl
-	4.修改字段device_id（单卡训练所使用的device id），为训练配置device_id，比如device_id=0
-	5.cd到run_1p.sh文件的目录，执行bash run_1p.sh单卡脚本， 进行单卡训练
+    2.开始训练
+        bash ./test/train_full_1p.sh  --data_path=数据集路径            # 精度训练
+        bash ./test/train_performance_1p.sh  --data_path=数据集路径 　   # 性能训练
 ```
 
 多卡训练流程
 
 ```
 	1.安装环境
-	2.修改run_8p.sh字段"save_dir"为当前磁盘的数据集路径
-	3.修改run_8p.sh字段"traintest_split_file"为数据集路径/peta_partition.pkl
-	4.修改run_8p.sh字段"addr"为当前主机ip地址
-	5.cd到run_8p.sh文件的目录，执行bash run_8p.sh等多卡脚本， 进行多卡训练	
+    2.开始训练
+        bash ./test/train_full_8p.sh  --data_path=数据集路径            # 精度训练
+        bash ./test/train_performance_8p.sh  --data_path=数据集路径    　# 性能训练
 ```
+
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision
+    建议：Pillow版本是9.1.0  torchvision版本是0.6.0
 
 ### 二、Docker容器训练
 
@@ -38,9 +39,8 @@
 
 三、测试结果
 
-训练日志路径：在训练脚本的同目录下result文件夹里，如：
 
 ```
-    /home/DeepMar/result/training_8p_job_20201121023601
+    /home/DeepMar/test/output/0
 ```
 

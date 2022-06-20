@@ -127,9 +127,9 @@ export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$L
 export ASCEND_OPP_PATH=${install_path}/opp
 export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 
-atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs1 --input_format=NCHW --input_shape="video:1,400,100" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs1 --input_format=ND --input_shape="video:1,400,100" --log=debug --soc_version=Ascend310
 
-atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs1 --input_format=NCHW --input_shape="video_feature:1,1000,32" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs1 --input_format=ND --input_shape="video_feature:1,1000,32" --log=debug --soc_version=Ascend310
 ```
 
 
@@ -154,17 +154,17 @@ python gen_dataset_info.py tem /home/wch/BSN/BSN-TEM-preprocess/feature TEM-vide
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=BSN_tem_bs1.om -input_text_path=./TEM-video-feature.info -input_width=400 -input_height=100 -output_binary=True -useDvpp=False
 ```
 
-使用BSN_tem_postprocess.py进行tem后处理
+使用BSN_tem_postprocess.py进行tem后处理(tem的后处理与pem的前处理有关请按照顺序执行)
 
 ```
-python BSN_tem_postprocess.py
+python BSN_tem_postprocess.py  --TEM_out_path ./result/dumpOutput_device0
 ```
 
 
 
 4、PEM推理
 
-运行pem预处理脚本
+运行pem预处理脚本(pem的前处理与tem的后处理有关请按照顺序执行)
 
 ```
 python BSN_pem_preprocess.py
@@ -185,7 +185,7 @@ python get_info.py pem output/BSN-PEM-preprocess/feature PEM-video-feature 1000 
 运行后处理脚本,会在output目录下生成结果文件
 
 ```
-python BSN_pem_postprocess.py
+python BSN_pem_postprocess.py --PEM_out_path result/dumpOutput_device1
 ```
 
 

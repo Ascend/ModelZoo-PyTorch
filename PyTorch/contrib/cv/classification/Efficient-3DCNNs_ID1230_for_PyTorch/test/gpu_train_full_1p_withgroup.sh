@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 root_path=$1
 
-nohup python ../main.py \
+nohup python3.7 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu gpu \
     --use_prof 1 \
@@ -16,7 +16,7 @@ nohup python ../main.py \
 	  --n_threads 16 \
 	  --pretrain_path pretrain/kinetics_mobilenetv2_1.0x_RGB_16_best.pth \
 	  --ft_portion last_layer \
-	  > ${root_path}results/gpu_train_full_1p_withgroup.log 2>&1 &
+	  > ${root_path}/results/gpu_train_full_1p_withgroup.log 2>&1 &
 
 
 

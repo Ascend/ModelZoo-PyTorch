@@ -98,7 +98,16 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7.5 train.py \
+RANK_ID_START=0
+RANK_SIZE=8
+
+for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+do
+
+KERNEL_NUM=$(($(nproc)/8))
+PID_START=$((KERNEL_NUM * RANK_ID))
+PID_END=$((PID_START + KERNEL_NUM - 1))
+taskset -c $PID_START-$PID_END python3.7.5 train.py \
     --train-images-folder ${data_path}/train2017/ \
     --prepared-train-labels ./prepared_train_annotation.pkl \
     --val-labels ./val_subset.json \
@@ -118,12 +127,13 @@ python3.7.5 train.py \
     --world-size=1 \
     --dist-backend 'hccl' \
     --amp \
+    --gpu=${RANK_ID} \
     --loss-scale=16 \
     --opt-level O1 \
     --device-list '0,1,2,3,4,5,6,7' \
     --device="npu" \
       > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
+done
 wait
 
 # save best model per step

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-PYTHON=${PYTHON:-"python3.7.5"}
+PYTHON=${PYTHON:-"python3.7"}
 
 CONFIG=configs/cityscapes_fast_scnn.yaml
 GPUS=8

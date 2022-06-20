@@ -63,7 +63,7 @@ start_time=$(date +%s)
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/env.sh
+    source ${test_path_dir}/env_npu.sh
 fi
 
 RANK_ID_START=0
@@ -81,6 +81,7 @@ taskset -c $PID_START-$PID_END python3.7 -u train_8p.py   \
 	  --model mobilenetv3_large_100 \
     --sched cosine \
     --epochs=${train_epochs} \
+    --cooldown-epochs 0 \
     -j $(($(nproc)/8)) \
     --warmup-lr 1e-6 \
     --weight-decay 1e-5  \
@@ -91,7 +92,7 @@ taskset -c $PID_START-$PID_END python3.7 -u train_8p.py   \
     --reprob 0.2  \
     --remode pixel \
     --amp \
-    --opt sgd \
+    --opt npufusedsgd \
     --world_size 8  \
     --distributed \
     --loss-scale 64 \

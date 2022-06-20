@@ -123,7 +123,7 @@ do
     #let c=b*$cpustep-1
     
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3 train.py -m Tacotron2 -o ${cur_path}/output --amp -lr $learning_rate --epochs $train_epochs -bs $batch_size --device $ASCEND_DEVICE_ID --dataset-path  $data_path  --weight-decay 1e-6 --grad-clip-thresh 1.0 --cudnn-enabled --log-file nvlog.json --anneal-steps 500 1000 1500 --anneal-factor 0.1 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 train.py -m Tacotron2 -o ${cur_path}/output --amp -lr $learning_rate --epochs $train_epochs -bs $batch_size --device $ASCEND_DEVICE_ID --dataset-path  $data_path --training-files $data_path/filelists/ljs_audio_text_train_filelist.txt --validation-files $data_path/filelists/ljs_audio_text_val_filelist.txt  --weight-decay 1e-6 --grad-clip-thresh 1.0 --cudnn-enabled --log-file nvlog.json --anneal-steps 500 1000 1500 --anneal-factor 0.1 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
 

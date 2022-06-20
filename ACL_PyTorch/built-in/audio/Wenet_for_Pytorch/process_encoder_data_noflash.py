@@ -38,7 +38,7 @@ import copy
 import logging
 import os
 import sys
-
+import numpy as np
 import torch
 import yaml
 from torch.utils.data import DataLoader
@@ -53,7 +53,7 @@ import acl
 from wenet.transformer.acl_net import Net
 def dic2json(input_dict, json_path):
     json_str = json.dumps(input_dict)
-    with open(json_path, 'a') as json_file:
+    with open(json_path, 'w+') as json_file:
         json_file.write(json_str)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='recognize with your model')
@@ -77,6 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--bin_path', type=str, default="./encoder_data_noflash", help='encoder bin images dir')
     parser.add_argument('--model_path', type=str, default="no_flash_encoder_revise.om", help='encoder bin images dir')
     parser.add_argument('--json_path', type=str, default="encoder_noflash_all.json", help='encoder bin images dir')
+    parser.add_argument('--perf_json', type=str, default="t1.json", help='no flash encoder time')
     parser.add_argument('--batch_size',
                         type=int,
                         default=16,
@@ -125,6 +126,10 @@ if __name__ == '__main__':
         output_data_shape=decoder_output_data_shape,
         device_id=device_id, )
 
+    input_1 = np.random.random((1,200,80)).astype("float32")
+    lenth = np.array([200])
+    y, _ = encoder_model_noflash([input_1, lenth])
+
     with open(args.config, 'r') as fin:
         configs = yaml.load(fin, Loader=yaml.FullLoader)
 
@@ -170,7 +175,8 @@ if __name__ == '__main__':
     model = model.to(device)
 
     model.eval()
-
+    if not os.path.exists(args.bin_path):
+        os.mkdir(args.bin_path)
     #init acl
     if os.path.exists(args.json_path):
         os.remove(args.json_path)
@@ -204,6 +210,6 @@ if __name__ == '__main__':
     ave_t = total_t / (batch_idx + 1)
     dic_perf = {}
     dic_perf["t1"] = ave_t
-    dic2json(dic_perf, "t1.json")
+    dic2json(dic_perf, args.perf_json)
     dic2json(encoder_dic, args.json_path)
-
+    del encoder_model_noflash

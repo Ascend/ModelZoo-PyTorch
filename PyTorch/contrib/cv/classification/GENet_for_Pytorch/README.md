@@ -51,9 +51,9 @@ All bash instructions output log files correctly.
 
 ## GENET training result
 
-| Acc@1    | FPS       | Device Type| Device Nums | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: | :------: |:------:
-|   94.73     | 1894.827   |   NPU | 1        | 300        | O2       |
-| 95.23   | 7858.025     |NPU  |8       | 300      | O2       |
-| 94.76    |  1350.074  |GPU  |1       | 300      | O2       |
-| 94.81    |  6536.289  |GPU  |8       | 300      | O2       |
+| Acc@1 |    FPS    | Device Type | Device Nums | Epochs | AMP_Type |
+|:-----:|:---------:|:-----------:|:-----------:|:------:|:--------:|
+| 94.73 | 2900.000  |     NPU     |      1      |  300   |    O2    |
+| 95.23 | 16912.437 |     NPU     |      8      |  300   |    O2    |
+| 94.76 | 1350.074  |     GPU     |      1      |  300   |    O2    |
+| 94.81 | 6536.289  |     GPU     |      8      |  300   |    O2    |

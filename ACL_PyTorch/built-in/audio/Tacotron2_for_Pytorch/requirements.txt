@@ -1,0 +1,7 @@
+librosa==0.8.0
+scipy==1.6.2
+torch==1.5.0
+onnxruntime==1.7.0
+numpy==1.19.5
+onnx=1.7.0
+wave=0.0.2

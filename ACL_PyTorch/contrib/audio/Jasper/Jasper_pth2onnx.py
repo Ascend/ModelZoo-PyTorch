@@ -44,7 +44,7 @@ def pth2onnx(ckpt_path,out_path,bs):
 
 
 if __name__ == '__main__':
-    ckpt_pth = sys.argv[1]
+    ckpt_path = sys.argv[1]
     out_path = sys.argv[2]
     bs = sys.argv[3]
     pth2onnx(ckpt_path,out_path,bs)

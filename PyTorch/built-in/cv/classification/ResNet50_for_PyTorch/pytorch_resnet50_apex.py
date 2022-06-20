@@ -23,6 +23,8 @@ import math
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -181,10 +183,14 @@ parser.add_argument('-t',
                     '--fine-tuning',
                     action='store_true',
                     help='transfer learning + fine tuning - train only the last FC layer.')
+# 图模式
+parser.add_argument('--graph_mode',
+                    action='store_true',
+                    help='whether to enable graph mode.')
 best_acc1 = 0
-
+args = parser.parse_args()
 def main():
-    args = parser.parse_args()
+    
     if args.npu is None:
         args.npu = 0
     global CALCULATE_DEVICE
@@ -428,6 +434,11 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     optimizer.zero_grad()
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
+        # 图模式
+        if args.graph_mode:
+            print("args.graph_mode")
+            torch.npu.enable_graph_mode()
+
         if i > 100:
             pass
         # measure data loading time
@@ -438,20 +449,34 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         images = images.to(CALCULATE_DEVICE, non_blocking=True)
         if args.label_smoothing == 0.0:
-            target = target.to(torch.int32).to(CALCULATE_DEVICE, non_blocking=True)
-
+        # 图模式
+            if args.graph_mode:
+                print("args.graph_mode")
+                target = target.to(CALCULATE_DEVICE, non_blocking=True).to(torch.int32)
+            else:
+                target = target.to(torch.int32).to(CALCULATE_DEVICE, non_blocking=True)
         # compute output
         output = model(images)
         loss = criterion(output, target)
 
         if args.label_smoothing > 0.0:
-            target = target.to(torch.int32).to(CALCULATE_DEVICE, non_blocking=True)
+        # 图模式
+            if args.graph_mode:
+                print("args.graph_mode")
+                target = target.to(CALCULATE_DEVICE, non_blocking=True).to(torch.int32)
+            else:
+                target = target.to(torch.int32).to(CALCULATE_DEVICE, non_blocking=True)
+        
+        
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images.size(0))
-        top1.update(acc1[0], images.size(0))
-        top5.update(acc5[0], images.size(0))
+        # 图模式
+        if not args.graph_mode:
+            # print("args.graph_mode====================")
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
         # compute gradient and do SGD step
         with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -464,6 +489,13 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
                         param.grad /= batch_size_multiplier
             optimizer.step()
             optimizer.zero_grad()
+        
+        # 图模式
+        if args.graph_mode:
+            print("args.graph_mode")
+            torch.npu.launch_graph()
+            if i == 100:
+                torch.npu.synchronize()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -474,6 +506,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         if i == TRAIN_STEP:
             break
+    # 图模式
+    if args.graph_mode:
+        print("args.graph_mode")
+        torch.npu.disable_graph_mode()
 
     print("batch_size:", args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
             args.batch_size/batch_time.avg))
@@ -615,12 +651,20 @@ class LabelSmoothing(nn.Module):
         self.smoothing = smoothing
 
     def forward(self, x, target):
-        logprobs = torch.nn.functional.log_softmax(x, dim=-1).to("cpu")
+        # 图模式
+        if args.graph_mode:
+            logprobs = torch.nn.functional.log_softmax(x, dim=-1)
+        else:
+            logprobs = torch.nn.functional.log_softmax(x, dim=-1).to("cpu")
         nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1))
         nll_loss = nll_loss.squeeze(1)
         smooth_loss = -logprobs.mean(dim=-1)
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
-        return loss.mean().to(CALCULATE_DEVICE)
+        # 图模式
+        if args.graph_mode:
+            return loss.mean()
+        else:
+            return loss.mean().to(CALCULATE_DEVICE)
 
 def lr_policy(lr_fn, logger=None):
     if logger is not None:

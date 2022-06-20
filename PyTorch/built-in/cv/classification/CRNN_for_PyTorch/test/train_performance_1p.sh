@@ -16,7 +16,7 @@ batch_size=2560
 #训练epoch，不需要修改
 epochs=2
 # 指定训练所使用的npu device卡id
-#device_id=0
+device_id=0
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do

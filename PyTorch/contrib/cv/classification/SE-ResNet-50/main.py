@@ -553,11 +553,8 @@ def validate(val_loader, model, criterion, args, ngpus_per_node):
                                                             and args.rank % ngpus_per_node == 0):
                     progress.display(i)
 
-        if i % args.print_freq == 0:
-            if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                                                        and args.rank % ngpus_per_node == 0):
-                print("[gpu id:", args.gpu, "]", '[AVG-ACC] * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-                      .format(top1=top1, top5=top5))
+                    print("[gpu id:", args.gpu, "]", '[AVG-ACC] * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+                          .format(top1=top1, top5=top5))
 
     return top1.avg
 

@@ -16,9 +16,8 @@ batch_size=$2
 ${install_path}/atc/bin/atc --framework=5 --output=./output/encoder_static  --input_format=ND  --soc_version=${SOC_VERSION} \
     --model=./output/encoder_modify.onnx \
     --input_shape="sequences:${batch_size},${seq_len};sequence_lengths:${batch_size}"  \
-    --out_nodes="Transpose_34:0;MatMul_37:0;Mul_36:0" \
-    --output_type="Transpose_34:0:FP16;MatMul_37:0:FP16"
-
+    --out_nodes="PartitionedCall_Transpose_34_Transpose_21:0;MatMul_37:0;Mul_36:0" \
+    --output_type="PartitionedCall_Transpose_34_Transpose_21:0:FP16;MatMul_37:0:FP16"
 
 ${install_path}/atc/bin/atc --framework=5 --output=./output/decoder_static  --input_format=ND  --soc_version=${SOC_VERSION} \
     --model=./output/decoder_iter_modify.onnx \

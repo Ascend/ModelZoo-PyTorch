@@ -29,6 +29,9 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 
+if torch.__version__ >= '1.8.1':
+    import torch_npu
+
 from collections import OrderedDict
 
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
@@ -332,7 +335,12 @@ def throughput(data_loader, model, logger):
 
 if __name__ == '__main__':
     _, config = parse_option()
-
+    
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    print("option:",option)
+    torch.npu.set_option(option)
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
 

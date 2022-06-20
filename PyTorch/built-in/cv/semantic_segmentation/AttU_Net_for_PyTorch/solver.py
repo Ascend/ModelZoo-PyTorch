@@ -191,8 +191,8 @@ class Solver(object):
                 # GT : Ground Truth
                 if i == 5:
                     start_time = time.time()
-                images = images.to(self.device)
-                GT = GT.to(self.device)
+                images = images.to(self.device,non_blocking=True)
+                GT = GT.to(self.device,non_blocking=True)
 
                 # SR : Segmentation Result
                 SR = self.unet(images)

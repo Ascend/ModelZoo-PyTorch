@@ -352,7 +352,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # Data loading code
     train_loader, train_loader_len, train_sampler = get_pytorch_train_loader(args.data, args.batch_size,
-                                                                       workers=128, distributed=args.distributed)
+                                                                       workers=args.workers, distributed=args.distributed)
     
     val_loader = get_pytorch_val_loader(args.data, args.batch_size, args.workers, distributed=False)
 

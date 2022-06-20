@@ -83,7 +83,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env.sh
-python3.7  validate_ghostnet.py  \
+nohup python3.7  validate_ghostnet.py  \
          ${data_path}  \
         --model GhostNet  \
         -b ${batch_size}   \
@@ -92,4 +92,4 @@ python3.7  validate_ghostnet.py  \
         --amp  \
         --num-classes 1000 \
         --checkpoint ${checkpoint} \
-        --pretrained
+        --pretrained > ${test_path_dir}/output/$ASCEND_DEVICE_ID/eval_$ASCEND_DEVICE_ID.log 2>&1 &

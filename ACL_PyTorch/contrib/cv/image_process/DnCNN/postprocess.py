@@ -20,7 +20,7 @@ import cv2
 import torch
 import torch.nn as nn
 import struct
-from skimage.measure.simple_metrics import compare_psnr
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 
 
 def batch_PSNR(img, imclean, data_range):

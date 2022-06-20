@@ -48,6 +48,9 @@ average_checkpoint=false
 decode_checkpoint=$dir/final.pt
 average_num=30
 decode_modes="attention_rescoring"
+bin_path=./encoder_data
+model_path=./encoder_revise.om
+json_path=./encoder.json
 
 . tools/parse_options.sh || exit 1;
 
@@ -80,6 +83,9 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
             --penalty 0.0 \
             --dict $dict \
             --ctc_weight $ctc_weight \
+            --bin_path ${bin_path} \
+            --model_path ${model_path} \
+            --json_path ${json_path} \
             --reverse_weight $reverse_weight \
             --result_file $test_dir/text \
             --simulate_streaming \

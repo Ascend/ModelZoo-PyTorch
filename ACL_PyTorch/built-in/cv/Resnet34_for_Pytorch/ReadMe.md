@@ -34,8 +34,12 @@
    ```
 
 4. 支持脚本将.onnx文件转为离线推理模型文件.om文件
+
+   ${chip_name}可通过`npu-smi info`指令查看
+   
+    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
    ```shell
-   bash resnet34_atc.sh
+   bash resnet34_atc.sh Ascend${chip_name} # Ascend310P3
    ```
 
 5. 使用Benchmark工具进行推理

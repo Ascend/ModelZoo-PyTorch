@@ -81,6 +81,7 @@ echo "end_time: ${end_time}"
 e2e_time=$(( $end_time - $start_time ))
 
 FPS=`grep -a 'fps: '  $cur_path/output/${Network}/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "fps: " '{print $NF}'|awk -F "," '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+FPS=`echo "${FPS} * ${RANK_SIZE}" |bc`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改

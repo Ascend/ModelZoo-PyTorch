@@ -91,7 +91,7 @@ if [[ $data_path == "" ]];then
 fi
 
 sed -i "s|./data/|${data_path}/|g" ${cur_path}/train.py
-
+sed -i "s|total_epoch = 1|total_epoch = 3|g" ${cur_path}/train.py
 cd ${cur_path}
 
 #训练开始时间，不需要修改
@@ -133,7 +133,7 @@ sed -i "s|${data_path}/|./data/|g" ${cur_path}/train.py
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-temp=`grep "takes time:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F " " '{print $5}'`
+temp=`grep "takes time:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F " " 'END {print $5}'`
 #TrainingTime=`echo "scale=2;${temp} * 1000 / ${train_steps}"|bc`
 TrainingTime=`python3 -c "print(${temp}*1000/${train_steps})"`
 FPS=`python3 -c "print(${batch_size}/(${temp}/${train_steps}))"`

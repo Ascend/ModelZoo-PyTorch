@@ -80,6 +80,7 @@ start_time=$(date +%s)
 
 mkdir -p $cur_path/../data
 ln -snf $data_path/coco $cur_path/../data/
+cp train_retinanet_8p.sh $cur_path/../
 
 #进入训练脚本目录
 cd $cur_path/../

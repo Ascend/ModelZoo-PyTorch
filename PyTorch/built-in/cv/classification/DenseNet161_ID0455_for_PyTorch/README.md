@@ -1,4 +1,15 @@
-## 一、训练流程
+## 一、依赖
+* NPU配套的run包安装
+* Python 3.7.5
+* PyTorch(NPU版本)
+* apex(NPU版本)
+* torch(NPU版本)
+* torchvision
+
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision
+    建议：Pillow版本是9.1.0  torchvision版本是0.6.0
+
+## 二、训练流程
 
 单卡训练流程：
 
@@ -16,7 +27,7 @@
         bash ./test/train_full_8p.sh  --data_path=数据集路径  --epochs=训练周期数         # 精度训练
         bash ./test/train_performance_8p.sh  --data_path=数据集路径  --epochs=训练周期数  # 性能训练
 
-## 二、Docker容器训练
+## 三、Docker容器训练
 
 1.导入镜像二进制包docker import ubuntuarmpytorch.tar REPOSITORY:TAG, 比如:
 
@@ -25,11 +36,11 @@
 2.执行docker_start.sh后带三个参数：步骤1生成的REPOSITORY:TAG；数据集路径；模型执行路径；比如：
 
 
-    ./docker_start.sh pytorch:b020 /train/peta /home/DeepMar
+    ./docker_start.sh pytorch:b020 /train/peta /home/DenseNet161
 
 3.执行步骤一训练流程（环境安装除外）
 
-### 三、测试结果
+### 四、测试结果
 
 训练日志路径：网络脚本test下output文件夹内。例如：
       test/output/devie_id/train_${device_id}.log          # 训练脚本原生日志

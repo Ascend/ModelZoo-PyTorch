@@ -44,6 +44,8 @@ from utils import is_main_process, format_step
 import dllogger, time
 from apex.optimizers import npu_fused_bert_adam, NpuFusedBertAdam
 
+RANK = int(os.getenv('RANK'))
+
 # torch._C._jit_set_profiling_mode(False)
 # torch._C._jit_set_profiling_executor(False)
 
@@ -507,7 +509,7 @@ def get_answers(examples, features, results, args):
 
         # In very rare edge cases we could only have single null prediction.
         # So we just create a nonce prediction in this case to avoid failure.
-        if not nbest:                                                    
+        if not nbest:
             nbest.append(Prediction(text="empty", start_logit=0.0, end_logit=0.0))
 
         total_scores = []
@@ -555,7 +557,7 @@ def get_answer_text(example, feature, pred, args):
     return final_text
 
 def get_valid_prelim_predictions(start_indices, end_indices, feature, result, args):
-    
+
     _PrelimPrediction = collections.namedtuple(
         "PrelimPrediction",
         ["start_index", "end_index", "start_logit", "end_logit"])
@@ -733,7 +735,7 @@ def _compute_softmax(scores):
 # from apex.multi_tensor_apply import multi_tensor_applier
 # class GradientClipper:
 #     """
-#     Clips gradient norm of an iterable of parameters. 
+#     Clips gradient norm of an iterable of parameters.
 #     """
 #     def __init__(self, max_grad_norm):
 #         self.max_norm = max_grad_norm
@@ -895,9 +897,11 @@ def main():
                         default=None,
                         type=str,
                         help="addr used for distributed training")
-
+    parser.add_argument('--graph_mode',
+                        action='store_true',
+                        help='whether to enable graph mode.')
     args = parser.parse_args()
-    args.fp16 = args.fp16 or args.amp    
+    args.fp16 = args.fp16 or args.amp
 
     if args.local_rank == -1 or args.no_cuda:
         if args.use_npu:
@@ -913,7 +917,8 @@ def main():
             os.environ['MASTER_PORT'] = '29668'
             torch.npu.set_device("npu:%d" % args.local_rank)
             device = torch.device("npu:%d" % args.local_rank)
-            torch.distributed.init_process_group(backend='hccl', world_size=8, rank=args.local_rank)
+            print("the RANK is :", RANK)
+            torch.distributed.init_process_group(backend='hccl', world_size=args.num_npu, rank=RANK)
             n_npu = 1
         else:
             torch.cuda.set_device(args.local_rank)
@@ -928,7 +933,7 @@ def main():
                                 dllogger.StdOutBackend(verbosity=dllogger.Verbosity.VERBOSE, step_format=format_step)])
     else:
         dllogger.init(backends=[])
-        
+
     # print("device: {} n_npu: {}, distributed training: {}, 16-bits training: {}".format(
     #                             device, n_npu, bool(args.local_rank != -1), args.fp16))
     print("train on device {}, rank {}".format(device, args.local_rank))
@@ -1116,12 +1121,20 @@ def main():
             step_start_time = time.time()
             for step, batch in enumerate(train_iter):
                 # Terminate early for benchmarking
+                # 图模式
+                if args.graph_mode:
+                    print("graph mode on")
+                    torch.npu.enable_graph_mode()
                 data_time = time.time() - step_start_time
                 if args.max_steps > 0 and global_step > args.max_steps:
                     break
 
                 if n_npu == 1:
-                    batch = tuple(t.to(device) for t in batch)  # multi-gpu does scattering it-self
+                    # 图模式
+                    if args.graph_mode:
+                        batch = tuple(t.to(device, non_blocking=True) for t in batch)
+                    else:
+                        batch = tuple(t.to(device) for t in batch)  # multi-gpu does scattering it-self
                 input_ids, input_mask, segment_ids, start_positions, end_positions = batch
                 start_logits, end_logits = model(input_ids, segment_ids, input_mask)
                 # If we are on multi-GPU, split add a dimension
@@ -1148,7 +1161,7 @@ def main():
                 else:
                     loss.backward()
 
- 
+
                 if (step + 1) % args.gradient_accumulation_steps == 0:
                     if args.fp16 :
                         # modify learning rate with special warm up for BERT which FusedAdam doesn't do
@@ -1156,8 +1169,17 @@ def main():
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
-
-                final_loss = loss.item()
+                # 图模式
+                if args.graph_mode:
+                    final_loss = 0
+                else: 
+                    final_loss = loss.item()
+                # 图模式
+                if args.graph_mode:
+                    print("graph mode launch")
+                    torch.npu.launch_graph()
+                    if step == len(train_iter):
+                        torch.npu.synchronize()
                 step_time = time.time() - step_start_time
                 if step % args.log_freq == 0:
                     # dllogger.log(step=(epoch, global_step,), data={"step_loss": final_loss,
@@ -1168,7 +1190,10 @@ def main():
                                        "step_loss": round(final_loss, 4), "iter/s": round(1 / step_time, 4),
                                        "learning_rate": round(optimizer.param_groups[0]['lr'], 10)})
                 step_start_time = time.time()
-
+            # 图模式
+            if args.graph_mode:
+                print("graph mode off")
+                torch.npu.disable_graph_mode() 
         time_to_train = time.time() - train_start
 
     if args.do_train and is_main_process() and not args.skip_checkpoint:

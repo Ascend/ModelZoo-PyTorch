@@ -53,5 +53,6 @@ def set_args():
     parser.add_argument('--learning_rate', type=float, default=0.005, help="learning rate")
     parser.add_argument('--weight_decay', type=float, default=0.001, help="weight_decay")
     parser.add_argument('--n_gpu', type=int, default=0, help="n gpu")
+    parser.add_argument('--graph_mode', action='store_true', help='whether to enable graph mode.')
     args = parser.parse_args()
     return args

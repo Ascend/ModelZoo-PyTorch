@@ -1,0 +1,119 @@
+diff --git a/pose_estimation/exp/top_down_256x192_global_base/config.py b/pose_estimation/exp/top_down_256x192_global_base/config.py
+index 93a237c..ba81854 100644
+--- a/pose_estimation/exp/top_down_256x192_global_base/config.py
++++ b/pose_estimation/exp/top_down_256x192_global_base/config.py
+@@ -65,7 +65,7 @@ model = dict(
+         loss_keypoint=dict(type='JointsMSELoss', use_target_weight=True)),
+     train_cfg=dict(),
+     test_cfg=dict(
+-        flip_test=True,
++        flip_test=False,
+         post_process='default',
+         shift_heatmap=True,
+         modulate_kernel=11))
+@@ -82,7 +82,7 @@ data_cfg = dict(
+     nms_thr=1.0,
+     oks_thr=0.9,
+     vis_thr=0.2,
+-    use_gt_bbox=False,
++    use_gt_bbox=True,
+     det_bbox_thr=0.0,
+     bbox_file=f'data/coco/person_detection_results/COCO_val2017_detections_AP_H_56_person.json',
+ )
+diff --git a/pose_estimation/mmpose/datasets/__init__.py b/pose_estimation/mmpose/datasets/__init__.py
+index 6c1f409..a0fc424 100644
+--- a/pose_estimation/mmpose/datasets/__init__.py
++++ b/pose_estimation/mmpose/datasets/__init__.py
+@@ -14,7 +14,7 @@ from .datasets import (  # isort:skip
+     TopDownFreiHandDataset, TopDownJhmdbDataset, TopDownMhpDataset,
+     TopDownMpiiDataset, TopDownMpiiTrbDataset, TopDownOCHumanDataset,
+     TopDownOneHand10KDataset, TopDownPanopticDataset,
+-    TopDownPoseTrack18Dataset)
++    )
+ 
+ __all__ = [
+     'AnimalATRWDataset', 'TopDownCocoDataset', 'BottomUpCocoDataset',
+@@ -25,7 +25,7 @@ __all__ = [
+     'MeshMixDataset', 'MoshDataset', 'MeshAdversarialDataset',
+     'TopDownCrowdPoseDataset', 'BottomUpCrowdPoseDataset',
+     'TopDownFreiHandDataset', 'TopDownOneHand10KDataset',
+-    'TopDownPanopticDataset', 'TopDownPoseTrack18Dataset',
++    'TopDownPanopticDataset',
+     'TopDownJhmdbDataset', 'TopDownMhpDataset', 'Face300WDataset',
+     'AnimalHorse10Dataset', 'AnimalMacaqueDataset', 'AnimalFlyDataset',
+     'AnimalLocustDataset', 'AnimalZebraDataset', 'build_dataloader',
+diff --git a/pose_estimation/mmpose/datasets/datasets/__init__.py b/pose_estimation/mmpose/datasets/datasets/__init__.py
+index df787f0..e4d23e8 100644
+--- a/pose_estimation/mmpose/datasets/datasets/__init__.py
++++ b/pose_estimation/mmpose/datasets/datasets/__init__.py
+@@ -17,7 +17,7 @@ from .top_down import (TopDownAicDataset, TopDownCocoDataset,
+                        TopDownCocoWholeBodyDataset, TopDownCrowdPoseDataset,
+                        TopDownJhmdbDataset, TopDownMhpDataset,
+                        TopDownMpiiDataset, TopDownMpiiTrbDataset,
+-                       TopDownOCHumanDataset, TopDownPoseTrack18Dataset)
++                       TopDownOCHumanDataset)
+ 
+ __all__ = [
+     'TopDownCocoDataset', 'BottomUpCocoDataset', 'BottomUpMhpDataset',
+@@ -28,7 +28,7 @@ __all__ = [
+     'MeshMixDataset', 'MoshDataset', 'MeshAdversarialDataset',
+     'TopDownCrowdPoseDataset', 'BottomUpCrowdPoseDataset',
+     'TopDownFreiHandDataset', 'TopDownOneHand10KDataset',
+-    'TopDownPanopticDataset', 'TopDownPoseTrack18Dataset',
++    'TopDownPanopticDataset',
+     'TopDownJhmdbDataset', 'TopDownMhpDataset', 'DeepFashionDataset',
+     'Face300WDataset', 'FaceAFLWDataset', 'FaceWFLWDataset', 'FaceCOFWDataset',
+     'Body3DH36MDataset', 'AnimalHorse10Dataset', 'AnimalMacaqueDataset',
+diff --git a/pose_estimation/mmpose/datasets/datasets/top_down/__init__.py b/pose_estimation/mmpose/datasets/datasets/top_down/__init__.py
+index 7342291..d9a80a5 100644
+--- a/pose_estimation/mmpose/datasets/datasets/top_down/__init__.py
++++ b/pose_estimation/mmpose/datasets/datasets/top_down/__init__.py
+@@ -7,11 +7,11 @@ from .topdown_mhp_dataset import TopDownMhpDataset
+ from .topdown_mpii_dataset import TopDownMpiiDataset
+ from .topdown_mpii_trb_dataset import TopDownMpiiTrbDataset
+ from .topdown_ochuman_dataset import TopDownOCHumanDataset
+-from .topdown_posetrack18_dataset import TopDownPoseTrack18Dataset
++# from .topdown_posetrack18_dataset import TopDownPoseTrack18Dataset
+ 
+ __all__ = [
+     'TopDownAicDataset', 'TopDownCocoDataset', 'TopDownCocoWholeBodyDataset',
+     'TopDownCrowdPoseDataset', 'TopDownMpiiDataset', 'TopDownMpiiTrbDataset',
+-    'TopDownOCHumanDataset', 'TopDownPoseTrack18Dataset',
++    'TopDownOCHumanDataset',
+     'TopDownJhmdbDataset', 'TopDownMhpDataset'
+ ]
+diff --git a/pose_estimation/mmpose/models/backbones/__init__.py b/pose_estimation/mmpose/models/backbones/__init__.py
+index e7ced1d..19dff10 100644
+--- a/pose_estimation/mmpose/models/backbones/__init__.py
++++ b/pose_estimation/mmpose/models/backbones/__init__.py
+@@ -42,6 +42,6 @@ __all__ = [
+     "VGG",
+     "TCN",
+     "HRT",
+-    "VisionTransformer",
++    # "VisionTransformer",
+     "UniFormer"
+ ]
+diff --git a/pose_estimation/tools/pytorch2onnx.py b/pose_estimation/tools/pytorch2onnx.py
+index 9ebd3fe..35b7d59 100644
+--- a/pose_estimation/tools/pytorch2onnx.py
++++ b/pose_estimation/tools/pytorch2onnx.py
+@@ -63,11 +63,18 @@ def pytorch2onnx(model,
+ 
+     one_img = torch.randn(input_shape)
+ 
++    input_names = ["input"]
++    output_names = ["heatmap"]
++    dynamic_axes = {'input': {0: '-1'}, 'heatmap': {0: '-1'}}
++
+     register_extra_symbolics(opset_version)
+     torch.onnx.export(
+         model,
+         one_img,
+         output_file,
++        input_names=input_names,
++        output_names=output_names,
++        dynamic_axes = dynamic_axes,
+         export_params=True,
+         keep_initializers_as_inputs=True,
+         verbose=show,

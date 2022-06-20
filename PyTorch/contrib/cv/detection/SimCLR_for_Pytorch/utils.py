@@ -21,6 +21,8 @@
 # ============================================================================
 import os
 import torch
+if torch.__version__ >= "1.8.1":
+	import torch_npu
 import yaml
 
 

@@ -23,7 +23,16 @@
    注意：脚本中导入sys.path.append(r"./pytorch-ssd")即是下载的源码
 
 3. 运行vgg16_ssd_atc.sh脚本转换om模型
-  可将--input_shape="actual_input_1:1,3,300,300" 改成想测试的shape，如 （16，3，300，300）测试16batch的onnx
+   
+   可将--input_shape="actual_input_1:1,3,300,300" 改成想测试的shape，如 （16，3，300，300）测试16batch的onnx
+   
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
+   ```
+   bash vgg16_ssd_atc.sh Ascend${chip_name} # Ascend310P3
+   ```
 
 4. 用ssd_pth_preprocess.py脚本处理数据集， 
    

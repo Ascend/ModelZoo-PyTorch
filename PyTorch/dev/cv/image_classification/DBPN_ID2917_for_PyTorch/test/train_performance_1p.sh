@@ -125,7 +125,8 @@ do
     #let c=b*$cpustep-1
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3 main.py --data_dir $data_path --batchSize $batch_size --nEpochs $train_epochs --input_dir $data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 main.py --data_dir $data_path --batchSize $batch_size --nEpochs $train_epochs --input_dir $data_path \
+    --device_id=$ASCEND_DEVICE_ID > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 done 
 wait

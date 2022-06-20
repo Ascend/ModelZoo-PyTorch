@@ -12,7 +12,7 @@ export RANK_SIZE=1
 data_path=""
 
 # 训练epoch
-train_epochs=1
+train_epochs=90
 # 指定训练所使用的npu device卡id
 device_id=0
 # 学习率
@@ -85,7 +85,7 @@ python3.7 mobilenet.py \
         --epochs=${train_epochs} \
         -j $(($(nproc))) \
         --lr=${learning_rate} \
-        --device_id={ASCEND_DEVICE_ID}  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --device_id=${ASCEND_DEVICE_ID}  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

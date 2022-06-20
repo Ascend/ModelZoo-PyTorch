@@ -18,7 +18,8 @@ import torchvision.models as models
 import torch.nn.functional as F
 from .ResNet import ResNet
 import math
-
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 
 class BasicConv2d(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_size, stride=1, padding=0, dilation=1):

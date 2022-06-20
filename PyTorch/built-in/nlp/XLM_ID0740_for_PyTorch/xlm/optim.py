@@ -63,9 +63,10 @@ class NpuFusedAdamV2(NpuFusedAdam):
 
             step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
             combined_param.data, exp_avg, exp_avg_sq = torch.npu_bert_apply_adam(
-                combined_param.data, exp_avg, exp_avg_sq, group['lr'], beta1,
+                group['lr'], beta1,
                 beta2, group['eps'], combined_grad, 0.0, 0.0, group['weight_decay'],
-                step_size, adam_mode=1
+                step_size, adam_mode=1,
+                out = (combined_param.data, exp_avg, exp_avg_sq)
             )
 
 

@@ -349,18 +349,16 @@ class DeformConv(nn.Module):
             nn.BatchNorm2d(cho, momentum=BN_MOMENTUM),
             nn.ReLU(inplace=True)
         )
-        #self.conv = DCN(chi, cho, kernel_size=(3,3), stride=1, groups=1, padding=1, dilation=1, deformable_groups=1)
-        self.conv = DCN(chi, cho, kernel_size=(3,3), stride=1,  padding=1, dilation=1, deformable_groups=1)
+        self.conv = DCN(chi, cho, kernel_size=(3, 3), stride=1, padding=1, dilation=1, deformable_groups=1)
 
     def forward(self, x):
-        
-        x = x.cuda().float()
-        x = x.to(torch.float32).cuda()
-        #print(x.type())
+        """
+        DeformConv
+        """
+        x = x.float()
+        x = x.to(torch.float32)
         x = self.conv(x)
-        #print(x.shape)
-        x = x.to(torch.float32).cuda()
-        #import pdb;pdb.set_trace()
+        x = x.to(torch.float32)
         x = self.actf(x)
         return x
 
@@ -494,7 +492,7 @@ class DLASeg(nn.Module):
 
 def get_pose_net(num_layers, heads, head_conv=256, down_ratio=4):
   model = DLASeg('dla{}'.format(num_layers), heads,
-                 pretrained=True,
+                 pretrained=False,
                  down_ratio=down_ratio,
                  final_kernel=1,
                  last_level=5,

@@ -32,12 +32,16 @@ python3 TextCNN_pth2onnx.py --weight_path ./TextCNN_9045_seed460473.pth --onnx_p
 
 3. 转om
 
-```
-cd ..
-bash onnxsim.sh
-bash onnx2mgonnx.sh
-bash onnx2om.sh
-```
+    ${chip_name}可通过`npu-smi info`指令查看
+   
+    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+    
+    ```
+    cd ..
+    bash onnxsim.sh
+    bash onnx2mgonnx.sh
+    bash onnx2om.sh Ascend${chip_name} # Ascend310P3
+    ```
 
 4. 后处理得到精度
 
@@ -56,7 +60,7 @@ python3 ascend-textcnn/TextCNN_postprocess.py result/dumpOutput_device0 >result_
 ```
 
 ## 3 自验
-| 模型           | 官网精度   | 710离线推理精度 | 710性能 |
+| 模型           | 官网精度   | 310P离线推理精度 | 310P性能 |
 |--------------|--------|-----------|-------|
 | Textcnn 64bs | [91.22%](https://gitee.com/huangyd8/Chinese-Text-Classification-Pytorch) | 90.47%    |  27242.83     |
 

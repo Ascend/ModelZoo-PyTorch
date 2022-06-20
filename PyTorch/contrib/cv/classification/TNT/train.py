@@ -146,6 +146,8 @@ parser.add_argument('--min-lr', type=float, default=1e-5, metavar='LR',
                     help='lower lr bound for cyclic schedulers that hit 0 (1e-5)')
 parser.add_argument('--epochs', type=int, default=200, metavar='N',
                     help='number of epochs to train (default: 2)')
+parser.add_argument('--performance_step', type=int, default=None, metavar='N',
+                    help='number of step to train for performance training')
 parser.add_argument('--start-epoch', default=None, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('--decay-epochs', type=float, default=30, metavar='N',
@@ -781,6 +783,8 @@ def train_epoch(
     epoch_fps = []
     prof_list = []
     for batch_idx, (input, target) in enumerate(loader):
+        if args.performance_step and batch_idx > args.performance_step:
+            break
         last_batch = batch_idx == last_idx
         data_time_m.update(time.time() - end)
         if not args.prefetcher:

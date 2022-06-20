@@ -2,8 +2,6 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-source env.sh
-
 #集合通信参数,不需要修改
 
 export RANK_SIZE=8
@@ -13,20 +11,66 @@ export RANK_SIZE=8
 Network="mBART_for_PyTorch"
 #训练batch_size
 token_size=1024
+# 数据集路径,保持为空,不需要修改
+data_path=""
 
-#训练开始时间，不需要修改
-start_time=$(date +%s)
-
-#进入训练脚本目录，需要模型审视修改
-cd $cur_path/../
-
-# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
-DATA_PATH=train_data/en_ro
-PRETRAIN=mbart.cc25/model.pt
-BPE_PATH=mbart.cc25/sentence.bpe.model
+# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练       
+PRETRAIN=./mbart.cc25/model.pt
+BPE_PATH=./mbart.cc25/sentence.bpe.model
 model_dir=checkpoints/checkpoint_best.pt
 SCRIPTS=mosesdecoder/scripts
 WMT16_SCRIPTS=wmt16-scripts
+
+# 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
+for para in $*
+do
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    elif [[ $para == --ckpt* ]];then
+        PRETRAIN=`echo ${para#*=}`
+        BPE_PATH=${PRETRAIN%/*}/sentence.bpe.model
+    fi
+done
+
+#校验是否传入data_path,不需要修改
+if [[ $data_path  == "" ]];then
+	echo "[Error] para \"data_path\" must be config"
+	exit 1
+fi
+
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ]; then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
+
+##################创建日志输出目录，根据模型审视##################
+# 模型采用非循环方式启动多卡训练，创建日志输出目录如下；采用循环方式启动多卡训练的模型，在循环中创建日志输出目录，可参考CRNN模型
+# 非循环方式下8卡训练日志输出路径中的ASCEND_DEVICE_ID默认为0，只是人为指定文件夹名称， 不涉及训练业务
+ASCEND_DEVICE_ID=0
+if [ -d ${test_path_dir}/output/$ASCEND_DEVICE_ID ];then
+    rm -rf ${test_path_dir}/output/*
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
+
+##############执行训练##########
+#训练开始时间，不需要修改
+start_time=$(date +%s)
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+
 
 REPLACE_UNICODE_PUNCT=$SCRIPTS/tokenizer/replace-unicode-punctuation.perl
 TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
@@ -44,17 +88,17 @@ export RANK_SIZE=8
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
     export RANK=$RANK_ID
-      if [ -d ${cur_path}/output/${RANK_ID} ];then
-        rm -rf ${cur_path}/output/${RANK_ID}
-        mkdir -p ${cur_path}/output/$RANK_ID
+      if [ -d ${test_path_dir}/output/${RANK_ID} ];then
+        rm -rf ${test_path_dir}/output/${RANK_ID}
+        mkdir -p ${test_path_dir}/output/$RANK_ID
       else
-            mkdir -p ${cur_path}/output/$RANK_ID
+            mkdir -p ${test_path_dir}/output/$RANK_ID
       fi
 	if [ $(uname -m) = 'aarch64' ]
 		then
 			let a=0+RANK_ID*24
 			let b=23+RANK_ID*24
-			taskset -c $a-$b fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
+			nohup taskset -c $a-$b fairseq-train $data_path --fp16 --distributed-world-size 8 --npu \
 							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 40000 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
@@ -70,9 +114,9 @@ do
 							  --restore-file $PRETRAIN \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
-							  --ddp-backend no_c10d > ${cur_path}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
+							  --ddp-backend no_c10d > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	else
-		fairseq-train $DATA_PATH --fp16 --distributed-world-size 8 --npu \
+		nohup fairseq-train $data_path --fp16 --distributed-world-size 8 --npu \
 							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 40000 \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
@@ -88,7 +132,7 @@ do
 							  --restore-file $PRETRAIN \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
-							  --ddp-backend no_c10d > ${cur_path}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
+							  --ddp-backend no_c10d > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	fi
 done
 wait
@@ -97,7 +141,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 
-fairseq-generate $DATA_PATH \
+nohup fairseq-generate $data_path \
   --fp16 --path $model_dir --max-tokens 4096 \
   --task translation_from_pretrained_bart \
   --gen-subset test \
@@ -116,8 +160,8 @@ for f in $HYP $REF
 	perl $REPLACE_UNICODE_PUNCT | \
 	perl $NORM_PUNC -l ro | \
 	perl $REM_NON_PRINT_CHAR | \
-	python3 $NORMALIZE_ROMANIAN | \
-	python3 $REMOVE_DIACRITICS | \
+	python3.7 $NORMALIZE_ROMANIAN | \
+	python3.7 $REMOVE_DIACRITICS | \
 	perl $TOKENIZER -no-escape -threads 16 -a -l ro >"en_ro."$f
 	done
 sacrebleu -tok 'none' -s 'none' en_ro.ref < en_ro.hyp > res.log
@@ -128,10 +172,13 @@ ASCEND_DEVICE_ID=0
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-WPS=`grep 'train_inner ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "wps=" '{print $NF}'|awk -F "wps" '{print $1}'|awk -F "," '{print $1}'|awk 'END {print}'`
-train_wall=`grep 'train_inner ' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk 'NR==1{min=$1;next}{min=min<$1?min:$1}END{print min}'`
+WPS=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "wps=" '{print $NF}'|awk -F "wps" '{print $1}'|awk -F "," '{print $1}'|awk 'END {print}'`
+train_wall=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk 'NR==1{min=$1;next}{min=min<$1?min:$1}END{print min}'`
+TRAIN_WALL=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk -F "," '{print $1}'|tail -n  20|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $WPS"
+echo "train_wall : $TRAIN_WALL"
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep 'version.1.5.1 = ' res.log |awk '{print $3}'`
@@ -152,19 +199,19 @@ ActualWPS=${WPS}
 TrainingTime=${train_wall}
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep -r "step_loss :" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk '{print $19}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep -r "step_loss :" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk '{print $19}' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
-ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TokenSize = ${TokenSize}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualWPS = ${ActualWPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}">> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "Network = ${Network}" > ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TokenSize = ${TokenSize}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualWPS = ${ActualWPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}">> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

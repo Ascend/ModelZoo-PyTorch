@@ -66,7 +66,7 @@ def main(data_root='', seqs=('',), args=""):
         result_filename = os.path.join(args.save_path, 'results.txt')
         video_path = data_root+"/"+seq+"/img1/video.mp4"
 
-        with VideoTracker(cfg, args, video_path, result_filename) as vdo_trk:
+        with VideoTracker(cfg, args, video_path) as vdo_trk:
             vdo_trk.run()
 
         # eval
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     assert ret == 0
     ret = acl.rt.set_device(0)
     assert ret == 0
-    context, ret = acl.rt.create_context(1)
+    context, ret = acl.rt.create_context(0)
     assert  ret == 0
     args = parse_args()
 

@@ -47,6 +47,7 @@ from dbpn_v1 import Net as DBPNLL
 from dbpns import Net as DBPNS
 from dbpn_iterative import Net as DBPNITER
 from data import get_training_set
+import torch.distributed as dist
 import pdb
 import socket
 import time
@@ -85,6 +86,23 @@ parser.add_argument('--save_folder', default='weights/', help='Location to save 
 parser.add_argument('--prefix', default='tpami_residual_filter8', help='Location to save checkpoint models')
 parser.add_argument('--input_dir', type=str, default='Input')
 parser.add_argument('--test_dataset', type=str, default='Set5_LR_x8')
+parser.add_argument('--device_id', default=0, type=int, help='device id')
+parser.add_argument('--world-size', default=1, type=int,
+                    help='number of distributed processes')
+parser.add_argument('--dist-url', default='env://',
+                    help='url used to set up distributed training')
+parser.add_argument('--dist-backend', default='hccl', type=str,
+                    help='distributed backend')
+parser.add_argument('--dist-rank',
+                    default=0,
+                    type=int,
+                    help='node rank for distributed training')
+parser.add_argument('--distributed',
+                    action='store_true',
+                    help='Use multi-processing distributed training to launch '
+                         'N processes per node, which has N GPUs.')
+
+
 
 opt = parser.parse_args()
 gpus_list = range(opt.gpus)
@@ -92,7 +110,11 @@ hostname = str(socket.gethostname())
 cudnn.benchmark = True
 print(opt)
 
+
 def train(epoch):
+
+
+
     epoch_loss = 0
     model.train()
     for iteration, batch in enumerate(training_data_loader, 1):
@@ -118,7 +140,10 @@ def train(epoch):
             scaled_loss.backward()
         optimizer.step()
         step_time = time.time() - start_time
-        FPS = opt.batchSize / step_time
+        if opt.distributed:
+            FPS = (opt.batchSize* opt.rank_size) / step_time
+        else:
+            FPS = opt.batchSize / step_time
         print("===> Epoch[{}]({}/{}): Loss: {:.4f} || Timer: {:.4f} sec, time/step(s):{:.4f}, FPS:{:.3f}".format(epoch, iteration, len(training_data_loader), loss.data, (t1 - t0),step_time,FPS))
 
     print("===> Epoch {} Complete: Avg. Loss: {:.4f}".format(epoch, epoch_loss / len(training_data_loader)))
@@ -159,10 +184,28 @@ if cuda and not torch.npu.is_available():
 torch.manual_seed(opt.seed)
 if cuda:
     torch.npu.manual_seed(opt.seed)
-
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
+    if opt.distributed:
+        if 'RANK_SIZE' in os.environ and 'RANK_ID' in os.environ:
+            opt.rank_size = int(os.environ['RANK_SIZE'])
+            opt.rank_id = int(os.environ['RANK_ID'])
+            opt.rank = opt.dist_rank * opt.rank_size + opt.rank_id
+            opt.world_size = opt.world_size * opt.rank_size
+            opt.device_id = opt.rank_id
+            dist.init_process_group(backend=opt.dist_backend,
+                                    world_size=opt.world_size, rank=opt.rank)
+        else:
+            raise RuntimeError("Please set RANK_SIZE and RANK_ID for .")
+    device = torch.device(f'npu:{opt.device_id}')
+    torch.npu.set_device(device)
 print('===> Loading datasets')
 train_set = get_training_set(opt.data_dir, opt.hr_train_dataset, opt.upscale_factor, opt.patch_size, opt.data_augmentation)
-training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
+if opt.distributed:
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_set)
+else:
+    train_sampler = None
+training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize,sampler=train_sampler,shuffle=(train_sampler is None))
 test_set = get_eval_set(os.path.join(opt.input_dir,opt.test_dataset), opt.upscale_factor)
 testing_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=False)
 
@@ -195,8 +238,11 @@ if cuda:
 
 optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999), eps=1e-8)
 model, optimizer = amp.initialize(model, optimizer, opt_level="O2",loss_scale=128.0,combine_grad=True)
-
+if opt.distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[opt.device_id])
 for epoch in range(opt.start_iter, opt.nEpochs + 1):
+    if opt.distributed:
+        train_sampler.set_epoch(epoch)
     train(epoch)
     test()
 

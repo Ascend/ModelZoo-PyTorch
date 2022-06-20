@@ -61,7 +61,7 @@ precision=${5:-"fp16"}
 num_npu=${6:-"8"}
 seed=${7:-"1"}
 squad_dir=${8:-"`${data_path}/squad/v1.1`"}
-vocab_file=${9:-"data/uncased_L-24_H-1024_A-16/vocab.txt"}
+vocab_file=${9:-"${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt"}
 OUT_DIR=${10:-"results/SQuAD"}
 mode=${11:-"train eval"}
 CONFIG_FILE=${12:-"bert_base_config.json"}
@@ -130,6 +130,7 @@ then
   do
   let p_start=0+24*i
   let p_end=23+24*i
+  export RANK=${i}
   if [ -d ${cur_path}/output/${i} ];then
         rm -rf ${cur_path}/output/${i}
         mkdir -p ${cur_path}/output/$i
@@ -141,6 +142,7 @@ then
 else
   for i in $(seq 0 7)
   do
+  export RANK=${i}
   if [ -d ${cur_path}/output/${i} ];then
         rm -rf ${cur_path}/output/${i}
         mkdir -p ${cur_path}/output/$i

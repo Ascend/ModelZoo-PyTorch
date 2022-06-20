@@ -82,7 +82,7 @@ do
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     rm -rf ./models
-    python3 main.py  \
+    nohup python3.7 main.py  \
         --model_type R2U_Net \
         --data_path=$data_path \
         --batch_size $batch_size \
