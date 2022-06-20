@@ -48,21 +48,19 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-rm -rf result.txt
-echo "====performance data===="
-python test/parse.py result/perf_vision_batchsize_${batch_size}_device_0.txt
-
-if [ $? != 0 ]; then
-    echo "fail!"
-    exit -1
-fi
-
+rm -rf results.txt
 python YOLOX_postprocess.py --dataset_path ${datasets_path} --model_config ${mmdetection_path}/configs/yolox/yolox_tiny_8x8_300e_coco.py
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
 
+python test/parse.py result/perf_vision_batchsize_${batch_size}_device_0.txt
+
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
 
 
 echo "success"

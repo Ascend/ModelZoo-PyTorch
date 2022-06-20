@@ -65,7 +65,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=16 -
 
 **评测结果：**
 
-性能和精度保存在result.txt文件中
+性能和精度保存在results.txt文件中
 
 | 模型        | pth精度   | 310P离线推理精度 | 性能基准  | 310P性能 |
 | ----------- | --------- | --------------- | --------- | ------- |

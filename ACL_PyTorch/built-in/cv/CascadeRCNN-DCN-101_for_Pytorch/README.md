@@ -26,6 +26,8 @@ cp ./pytorch_code_change/rpn_head.py ./mmdetection/mmdet/models/dense_heads/rpn_
 cp ./pytorch_code_change/single_level_roi_extractor.py ./mmdetection/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 cp ./pytorch_code_change/delta_xywh_bbox_coder.py ./mmdetection/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
 cp ./pytorch_code_change/deform_conv.py /root/anaconda3/envs/dcn/lib/python3.7/site-packages/mmcv/ops/deform_conv.py
+#以上为DCNV1版本，若需要使用DCNV2,则需要
+cp ./pytorch_code_change/modulated_deform_conv.py /root/anaconda3/envs/dcn/lib/python3.7/site-packages/mmcv/ops/modulated_deform_conv.py
 ```
 
 3. 获取权重文件  

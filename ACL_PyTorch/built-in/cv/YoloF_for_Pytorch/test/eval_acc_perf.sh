@@ -48,7 +48,13 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-rm -rf result.txt
+rm -rf results.txt
+python YOLOF_postprocess.py --dataset_path ${datasets_path} --model_config ${mmdetection_path}/configs/yolof/yolof_r50_c5_8x8_1x_coco.py
+if [ $? != 0 ]; then
+    echo "fail!"
+    exit -1
+fi
+
 echo "====performance data===="
 python test/parse.py result/perf_vision_batchsize_${batch_size}_device_0.txt
 
@@ -56,13 +62,6 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-
-python YOLOF_postprocess.py --dataset_path ${datasets_path} --model_config ${mmdetection_path}/configs/yolof/yolof_r50_c5_8x8_1x_coco.py
-if [ $? != 0 ]; then
-    echo "fail!"
-    exit -1
-fi
-
 
 
 echo "success"
