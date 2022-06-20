@@ -118,6 +118,7 @@ class I3d():
             result = torch.from_numpy(np.array(result))
             batch_size = result.shape[1]
             result = result.view(result.shape[0], batch_size, -1)
+            result = result.float()
             result = F.softmax(result, dim=2).mean(dim=1)
             result = result.numpy()
             results.extend(result)
