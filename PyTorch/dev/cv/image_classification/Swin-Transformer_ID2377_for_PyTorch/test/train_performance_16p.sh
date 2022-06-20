@@ -206,12 +206,12 @@ train_accuracy=`grep "Max accuracy" $cur_path/output/$ASCEND_DEVICE_ID/train_$AS
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
-
+RANK_SIZE_NEW=`awk 'BEGIN{printf "%.0f\n",'${RANK_SIZE}'*'${linux_num}'}'`
 #稳定性精度看护结果汇总
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE_NEW}'p'_'perf'
 
 ##获取性能数据
 #吞吐量，不需要修改
@@ -224,7 +224,7 @@ grep "INFO Train" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-RANK_SIZE_NEW=`awk 'BEGIN{printf "%.0f\n",'${RANK_SIZE}'*'${linux_num}'}'`
+
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "RankSize = ${RANK_SIZE_NEW}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

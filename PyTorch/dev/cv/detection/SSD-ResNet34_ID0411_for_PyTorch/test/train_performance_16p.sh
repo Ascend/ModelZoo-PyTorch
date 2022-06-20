@@ -1,9 +1,5 @@
 #!/bin/bash
-export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1
+
 #当前路径,不需要修改
 cur_path=`pwd`
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
@@ -195,12 +191,12 @@ echo "Final Performance images/sec : $FPS"
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
 #echo "E2E Training Duration sec : $e2e_time"
-
+RANK_SIZE_NEW=`awk 'BEGIN{printf "%.0f\n",'${RANK_SIZE}'*'${linux_num}'}'`
 #稳定性精度看护结果汇总
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE_NEW}'p'_'perf'
 
 ##获取性能数据
 #吞吐量，不需要修改
@@ -216,7 +212,7 @@ ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseNam
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE_NEW}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "BatchSize = ${BatchSize}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
