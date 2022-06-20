@@ -28,7 +28,7 @@ from mmaction.datasets.builder import build_dataset
 import sys
 
 
-@DATASETS.register_module()
+@DATASETS.register_module(force=True)
 class RawframeDataset(BaseDataset):
     """Rawframe dataset for action recognition.
 
