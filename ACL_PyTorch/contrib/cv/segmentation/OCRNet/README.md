@@ -90,8 +90,12 @@ mv main ../../../msame
 将步骤1.5中得到的pdparams模型权重保存在当前工作目录后，调用pth2om.sh脚本，即可将模型转为batch_size=1,4,8,16的om模型：
 
 ```sh
-./test/pth2om.sh
+./test/pth2om.sh Ascend${chip_name}
 ```
+
+其中${chip_name}可通过`npu-smi info`指令查看：
+
+![输入图片说明](imagesimage.png)
 
 得到的om模型保存在om目录中。
 
