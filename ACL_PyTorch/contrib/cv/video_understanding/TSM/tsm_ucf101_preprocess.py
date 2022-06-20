@@ -82,7 +82,7 @@ def main():
 
         for batch in range(imgs.shape[0]):
             l = label.cpu().numpy()[batch]
-            file_.write(str(args.batch_size * i + batch) + ' ' + str(l))
+            file_.write(str(i) + ' ' + str(l))
             file_.write('\n')
 
         if imgs.shape[0] != args.batch_size:
