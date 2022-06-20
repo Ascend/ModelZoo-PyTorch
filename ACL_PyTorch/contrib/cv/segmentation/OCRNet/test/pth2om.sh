@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # variables for transition from .pdparams to .onnx
 config_path=PaddleSeg/configs/ocrnet/ocrnet_hrnetw18_cityscapes_1024x512_160k.yml
 pd_model=pd_model
@@ -26,8 +27,8 @@ done
 
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-
-atc --framework=5 --model=onnx/ocrnet_optimize_bs1.onnx --output=om/ocrnet_optimize_bs1 --input_format=NCHW --input_shape="x:1,3,1024,2048" --soc_version=Ascend710 --log=debug
-atc --framework=5 --model=onnx/ocrnet_optimize_bs4.onnx --output=om/ocrnet_optimize_bs4 --input_format=NCHW --input_shape="x:4,3,1024,2048" --soc_version=Ascend710 --log=debug
-atc --framework=5 --model=onnx/ocrnet_optimize_bs8.onnx --output=om/ocrnet_optimize_bs8 --input_format=NCHW --input_shape="x:8,3,1024,2048" --soc_version=Ascend710 --log=debug
-atc --framework=5 --model=onnx/ocrnet_optimize_bs16.onnx --output=om/ocrnet_optimize_bs16 --input_format=NCHW --input_shape="x:16,3,1024,2048" --soc_version=Ascend710 --log=debug
+chip_name=$1
+atc --framework=5 --model=onnx/ocrnet_optimize_bs1.onnx --output=om/ocrnet_optimize_bs1 --input_format=NCHW --input_shape="x:1,3,1024,2048" --soc_version=${chip_name} --log=debug
+atc --framework=5 --model=onnx/ocrnet_optimize_bs4.onnx --output=om/ocrnet_optimize_bs4 --input_format=NCHW --input_shape="x:4,3,1024,2048" --soc_version=${chip_name} --log=debug
+atc --framework=5 --model=onnx/ocrnet_optimize_bs8.onnx --output=om/ocrnet_optimize_bs8 --input_format=NCHW --input_shape="x:8,3,1024,2048" --soc_version=${chip_name} --log=debug
+atc --framework=5 --model=onnx/ocrnet_optimize_bs16.onnx --output=om/ocrnet_optimize_bs16 --input_format=NCHW --input_shape="x:16,3,1024,2048" --soc_version=${chip_name} --log=debug
