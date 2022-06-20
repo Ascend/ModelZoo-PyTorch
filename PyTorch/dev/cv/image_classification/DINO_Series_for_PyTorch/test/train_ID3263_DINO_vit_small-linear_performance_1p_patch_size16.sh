@@ -23,7 +23,7 @@ train_epochs=1
 batch_size=128
 patch_size=16
 #训练step
-train_steps=81
+train_steps=501
 #学习率
 learning_rate=
 
