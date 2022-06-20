@@ -86,7 +86,7 @@ python generate_labels.py
 source env.sh
 ```
 
-本节采用的模型输入为:1x10x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件。由于本模型较大，batch_size只能设置为1，若大于1则会因为 Ascend 310 内存不足而报错。
+本节采用的模型输入为:1x10x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件。由于本模型较大，选择Ascend310的话batch_size只能设置为1，若大于1则会因为 Ascend310 内存不足而报错;选择Ascend310P3的话batch_size可以设置为1，4，8。
 
 首先在mmaction2目录下创建新目录checkpoints
 
@@ -105,10 +105,10 @@ bash i3d_pth2onnx.sh
 将onnx文件转换为om文件：
 
 ```shell
-bash i3d_onnx2om.sh
+bash i3d_onnx2om.sh Ascend310
 ```
 
-得到i3d_nl_dot_bs1.om。模型转换完成。
+得到i3d_nl_dot_bs1.om。模型转换完成。可选 Ascend310 或 Ascend310P3
 
 ## 6、离线推理
 
@@ -122,7 +122,7 @@ bash i3d_infer.sh
 
 ## 7、性能检测
 
-Ascend 310：需要om文件。执行脚本。
+Ascend：需要om文件。执行脚本。
 
 ```shell
 xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_nl_dot_bs1.om -round=30 -batch_size=1
