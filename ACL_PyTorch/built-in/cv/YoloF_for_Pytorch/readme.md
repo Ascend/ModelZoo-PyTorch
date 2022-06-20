@@ -17,7 +17,7 @@ pip install -r requirements.txt
 ```
 git clone https://github.com/open-mmlab/mmdetection.git
 cd mmdetection
-git reset 3e2693151add9b5d6db944da020cba837266b --hard
+git reset 3e2693151add9b5d6db99b944da020cba837266b --hard
 pip3 install -v -e .
 mmdetection_path=$(pwd)
 cd ..
