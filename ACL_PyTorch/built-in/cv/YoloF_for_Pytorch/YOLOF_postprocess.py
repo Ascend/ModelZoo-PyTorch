@@ -52,6 +52,6 @@ if __name__ == '__main__':
             outputs.append(bbox_result)
     eval_kwargs = {'metric': ['bbox']}
     res = dataset.evaluate(outputs, **eval_kwargs)
-    resstr = "precision:{}\n".format(res['bbox_mAP'])
-    with open("result.txt", "a") as resfile:
+    resstr = "acc: {}\n".format(res['bbox_mAP'])
+    with open("results.txt", "a") as resfile:
         resfile.write(resstr)
