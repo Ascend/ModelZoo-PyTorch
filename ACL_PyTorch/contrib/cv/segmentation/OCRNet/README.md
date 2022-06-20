@@ -73,7 +73,7 @@ cityscapes
 
 将msame文件放到当前工作目录。
 
-```
+```sh
 git clone https://gitee.com/ascend/tools.git
 export DDK_PATH=/usr/local/Ascend/ascend-toolkit/latest
 export NPU_HOST_LIB=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/stub
@@ -99,7 +99,7 @@ mv main ../../../msame
 
 在当前工作目录下，执行以下命令：
 
-```
+```sh
 python3 OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1_bin --batch_size 1
 ```
 
@@ -113,7 +113,7 @@ python3 OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1
 
 在当前工作目录下对om模型执行推理，其中--model为之前转化好的bs为1的om模型，--input为步骤3中得到的预处理结果所在目录，--output为推理结果输出目录。
 
-```
+```sh
 ./msame --model "/home/lzh/om_model/final/ocrnet_bs1.om" --input "/home/lzh/bs1_bin/imgs" --output "/home/lzh/out/" --outfmt TXT 
 ```
 
@@ -121,7 +121,7 @@ python3 OCRNet_preprocess.py --src_path /opt/npu/cityscapes/ --bin_file_path bs1
 
 在当前工作目录下，使用后处理脚本，计算得到模型的推理精度：
 
-```
+```sh
 python3 OCRNet_postprocess.py --bin_file_path bs1_bin --pred_path /home/lzh/out
 ```
 
@@ -150,7 +150,7 @@ python3 OCRNet_postprocess.py --bin_file_path bs1_bin --pred_path /home/lzh/out
 
 以bs=1为例，这里的ocrnet_bs1.onnx为优化前onnx模型
 
-```
+```sh
 trtexec --onnx=ocrnet_bs1.onnx --fp16 --threads --workspace=15000
 ```
 
@@ -158,11 +158,11 @@ trtexec --onnx=ocrnet_bs1.onnx --fp16 --threads --workspace=15000
 
 以bs=1为例，利用msame进行纯推理：
 
-```
+```sh
 ./msame --model "om/ocrnet_optimize_bs1.om.om" --output "result/" --outfmt TXT  --loop 100
 ```
 
-| Model  | batch_size | T4Throughput/Card | 710Throughput/Card |
+| Model  | batch_size | 基准性能 | 310P性能 |
 | ------ | ---------- | ----------------- | ------------------ |
 | OCRNet | 1          | 11.918            | 15.223             |
 | OCRNet | 4          | 11.971            | 11.116             |
