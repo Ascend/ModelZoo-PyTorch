@@ -29,6 +29,6 @@ if __name__ == '__main__':
             content = f.read()
         txt_data_list = [i.strip() for i in re.findall(r':(.*?),', content.replace('\n', ',') + ',')]
         fps = float(txt_data_list[7])
-        resstr = "performance:{}\n".format(fps)
-        with open("result.txt", "a") as resfile:
+        resstr = "perf: {}\n".format(fps)
+        with open("results.txt", "a") as resfile:
             resfile.write(resstr)
