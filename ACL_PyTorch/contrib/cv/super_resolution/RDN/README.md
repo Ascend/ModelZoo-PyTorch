@@ -234,7 +234,7 @@ bs1 310单卡吞吐率：7.41332x4=29.653fps/card
 运行
 
 ```
-atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend310P
+atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --input_shape="image:1,3,114,114" --log=debug --soc_version=Ascend710
 ```
 
 得到size为114的om模型
@@ -246,15 +246,15 @@ atc --framework=5 --model=rdn_x2.onnx --output=rdn_x2_bs1 --input_format=NCHW --
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
 
 ```
-[e2e] throughputRate: 3.29436, latency: 1517.74
-[data read] throughputRate: 3700.96, moduleLatency: 0.2702
-[preprocess] throughputRate: 28.5571, moduleLatency: 35.0176
-[inference] throughputRate: 39.8584, Interface throughputRate: 49.4688, moduleLatency: 24.9406
-[postprocess] throughputRate: 18.6048, moduleLatency: 53.7495
+[e2e] throughputRate: 2.63637, latency: 1896.55
+[data read] throughputRate: 571.102, moduleLatency: 1.751
+[preprocess] throughputRate: 8.56546, moduleLatency: 116.748
+[inference] throughputRate: 30.2376, Interface throughputRate: 47.3451, moduleLatency: 30.1382
+[postprocess] throughputRate: 10.5238, moduleLatency: 95.0225
 ```
 
-Interface throughputRate: 49.4688
-bs1 310P单卡吞吐率：49.469fps/card
+Interface throughputRate: 47.3451
+bs1 310P单卡吞吐率：47.345fps/card
 
 
 
@@ -287,7 +287,7 @@ batch1 t4单卡吞吐率：1000/(44.9095/1)=22.267fps
 #### 7.3 性能对比
 
 batch1：
-310P/310 = 49.469fps/29.653fps = 1.668 > 1.2
-310P/T4 = 49.469fps/22.267fps = 2.222 > 1.6
+310P/310 = 47.345fps/29.653fps = 1.597 > 1.2
+310P/T4 = 47.345fps/22.267fps = 2.126 > 1.6
 
 310P单卡吞吐率大于1.2倍310单卡吞吐率，且大于1.6倍T4单卡吞吐率，故性能达标。
