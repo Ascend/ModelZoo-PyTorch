@@ -90,12 +90,12 @@ mv main ../../../msame
 将步骤1.5中得到的pdparams模型权重保存在当前工作目录后，调用pth2om.sh脚本，即可将模型转为batch_size=1,4,8,16的om模型：
 
 ```sh
-./test/pth2om.sh Ascend${chip_name}
+./test/pth2om.sh Ascend${chip_name} # Ascend310P3
 ```
 
 其中${chip_name}可通过`npu-smi info`指令查看：
 
-![输入图片说明](imagesimage.png)
+![Image](https://gitee.com/Ronnie_zheng/ascend-pytorch-crowdintelligence-doc/raw/master/Ascend-PyTorch%E7%A6%BB%E7%BA%BF%E6%8E%A8%E7%90%86%E6%8C%87%E5%AF%BC/images/310P3.png)
 
 得到的om模型保存在om目录中。
 
