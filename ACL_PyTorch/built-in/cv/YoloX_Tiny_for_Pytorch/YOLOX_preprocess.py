@@ -27,27 +27,27 @@ flags = None
 def gen_input_bin(file_batches, batch):
     i = 0
     for file in file_batches[batch]:
-        i = i + 1
         print("batch", batch, file, "===", i)
+        if file.endswith("jpg"):
+            i = i + 1
+            image = mmcv.imread(os.path.join(flags.image_src_path, file))
+            # ori_shape = image.shape
+            image, scalar = mmcv.imrescale(image, (flags.model_input_height, flags.model_input_width), return_scale=True)
+            # img_shape = image.shape
+            image = mmcv.impad(image, shape=(flags.model_input_height, flags.model_input_width),
+                               pad_val=(flags.model_pad_val, flags.model_pad_val, flags.model_pad_val))
 
-        image = mmcv.imread(os.path.join(flags.image_src_path, file))
-        # ori_shape = image.shape
-        image, scalar = mmcv.imrescale(image, (flags.model_input_height, flags.model_input_width), return_scale=True)
-        # img_shape = image.shape
-        image = mmcv.impad(image, shape=(flags.model_input_height, flags.model_input_width),
-                           pad_val=(flags.model_pad_val, flags.model_pad_val, flags.model_pad_val))
-
-        image = image.transpose(2, 0, 1)
-        image = image.astype(np.float32)
-        image.tofile(os.path.join(flags.bin_file_path, file.split('.')[0] + ".bin"))
-        image_meta = {'scalar': scalar}
-        with open(os.path.join(flags.meta_file_path, file.split('.')[0] + ".pk"), "wb") as fp:
-            pk.dump(image_meta, fp)
+            image = image.transpose(2, 0, 1)
+            image = image.astype(np.float32)
+            image.tofile(os.path.join(flags.bin_file_path, file.split('.')[0] + ".bin"))
+            image_meta = {'scalar': scalar}
+            with open(os.path.join(flags.meta_file_path, file.split('.')[0] + ".pk"), "wb") as fp:
+                pk.dump(image_meta, fp)
 
 
 def preprocess():
     files = os.listdir(flags.image_src_path)
-    file_batches = [files[i:i + 100] for i in range(0, 5000, 100) if files[i:i + 100] != []]
+    file_batches = [files[i:i + 100] for i in range(0, len(files), 100) if files[i:i + 100] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
         thread_pool.apply_async(gen_input_bin, args=(file_batches, batch))
