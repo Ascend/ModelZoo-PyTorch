@@ -69,8 +69,6 @@ class ModulatedDeformConv2dFunction(Function):
         output = input.new_empty(
             ModulatedDeformConv2dFunction._output_size(ctx, input, weight))
         if torch.onnx.is_in_onnx_export():
-            print("output:", output.shape)
-            print("input.device:", input.device)
             return torch.rand(output.shape).to(input.device)
         ctx._bufs = [input.new_empty(0), input.new_empty(0)]
         ext_module.modulated_deform_conv_forward(
@@ -202,7 +200,6 @@ class ModulatedDeformConv2d(nn.Module):
             self.bias.data.zero_()
 
     def forward(self, x, offset, mask):
-        print("11111111111111111111111")
         return modulated_deform_conv2d(x, offset, mask, self.weight, self.bias,
                                        self.stride, self.padding,
                                        self.dilation, self.groups,
@@ -248,7 +245,6 @@ class ModulatedDeformConv2dPack(ModulatedDeformConv2d):
             self.conv_offset.bias.data.zero_()
 
     def forward(self, x):
-        print("222222222222222222222")
         out = self.conv_offset(x)
         o1, o2, mask = torch.chunk(out, 3, dim=1)
         offset = torch.cat((o1, o2), dim=1)
@@ -260,7 +256,6 @@ class ModulatedDeformConv2dPack(ModulatedDeformConv2d):
                          [:, :, 0, ...].reshape(offset.shape[0], offset.shape[1].numpy() // 2,
                                                 offset.shape[2].numpy(), offset.shape[3].numpy())
         offset = torch.cat((offset_x, offset_y, mask), 1)
-        print("self.bias:", self.bias)        
         return modulated_deform_conv2d(x, self.weight, offset,
                                        self.stride, self.padding,
                                        self.dilation, self.groups,
