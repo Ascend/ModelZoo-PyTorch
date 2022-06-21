@@ -47,7 +47,7 @@ def gen_input_bin(file_batches, batch):
 
 def preprocess():
     files = os.listdir(flags.image_src_path)
-    file_batches = [files[i:i + 100] for i in range(0, 5000, 100) if files[i:i + 100] != []]
+    file_batches = [files[i:i + 100] for i in range(0, len(files), 100) if files[i:i + 100] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
         thread_pool.apply_async(gen_input_bin, args=(file_batches, batch))
