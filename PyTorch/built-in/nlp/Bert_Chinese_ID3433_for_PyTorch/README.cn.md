@@ -125,8 +125,9 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
 ```
    export HCCL_CONNECT_TIMEOUT=7200
  ```
-   
-   
+2. Q:如果训练报wandb.error.UsageError:api_key not configured (no-tty)的错误该怎么办?
+  
+   A:export WANDB_DISABLED=1
 
 
 
