@@ -57,7 +57,7 @@ bash SpanBERT/code/download_finetuned.sh model_dir squad1
 
 一步式从pth权重文件转om模型的脚本，能够由bin权重文件以及config文件生成动态Batch的onnx模型和指定bacth_size的om模型，以下代码batch_size设为1：
 ```bash
-bash ./test/pth2om.sh --batch_size=1 --config_file="./model_dir/squad1/config.json" --checkpoint="./model_dir/squad1/pytorch_model.bin"
+bash ./test/pth2om.sh --batch_size=1 --config_file="./model_dir/squad1/config.json" --checkpoint="./model_dir/squad1/pytorch_model.bin" --chip_name="310P3"
 ```
 运行后会生成如下文件：
 ```bash
@@ -90,8 +90,10 @@ python spanBert_pth2onnx.py  \
 ### <a name="32">3.2 onnx转om模型</a>
 1. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/51RC2alpha002/infacldevg/atctool)
 
+   chip_name可以通过npu-smi info指令查看，运行指令后显示的Name_device即为要输入的参数:
+
 ```bash
-atc --framework=5 --model=./spanBert_dynamicbs.onnx --output=./spanBert_bs1 --input_format=ND --input_shape="input_ids:1,512;token_type_ids:1,512;attention_mask:1,512" --log=error --soc_version=Ascend710
+atc --framework=5 --model=./spanBert_dynamicbs.onnx --output=./spanBert_bs1 --input_format=ND --input_shape="input_ids:1,512;token_type_ids:1,512;attention_mask:1,512" --log=error --soc_version=Ascend${chip_name}
 ```
 
 此处为batch_size为1的情况，若batch_size不为1，则需要将"output"中的bs1替换为新的batch_size，通过"input_shape"中的1也需要替换为batch_size
