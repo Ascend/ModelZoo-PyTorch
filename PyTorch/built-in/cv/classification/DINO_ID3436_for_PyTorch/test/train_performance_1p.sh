@@ -19,6 +19,7 @@ batch_size=64
 
 #训练epoch数
 epochs=1
+num_steps=200
 
 #参数校验，不需要修改
 for para in $*
@@ -76,35 +77,22 @@ start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export WORLD_SIZE=1
-PID_NUM=$(($(nproc)/8))
 export RANK=$RANK_ID
+export OMP_NUM_THREADS=1
 
-if [ $(uname -m) = "aarch64" ]
-then
-	taskset -c 0-$PID_NUM nohup python3.7 -u -m torch.distributed.launch \
-		--nproc_per_node=1 main_dino.py \
-		--arch vit_small \
-		--data_path $data_path \
-		--output_dir ./output \
-		--amp \
-		--optimizer npufusedadamw \
-    --warmup_epochs 0 \
-		--epochs $epochs \
-		--batch_size $batch_size \
-		--use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
-else
-	nohup python3.7 -u -m torch.distributed.launch \
-		--nproc_per_node=1 main_dino.py \
-		--arch vit_small \
-		--data_path $data_path \
-		--output_dir ./output \
-		--amp \
-		--optimizer npufusedadamw \
-		--warmup_epochs 0 \
-		--epochs $epochs \
-		--batch_size $batch_size \
-		--use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
-fi
+nohup python3.7 -u -m torch.distributed.launch \
+	--nproc_per_node=1 main_dino.py \
+	--arch vit_small \
+	--data_path $data_path \
+	--output_dir ./output \
+	--amp \
+	--optimizer npufusedadamw \
+	--warmup_epochs 0 \
+	--num_workers 32 \
+	--epochs $epochs \
+	--num_steps $num_steps \
+	--batch_size $batch_size \
+	--use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
 
 wait
 
@@ -118,7 +106,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`tail -n 50 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log|grep -a 'eta'|head -n 30|awk -F " " '{print $16}'|awk '{sum+=$1} END {print sum/NR}'`
+time=`tail -n 10 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log|grep -a 'eta'|head -n 30|awk -F " " '{print $17}'|awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -137,7 +125,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${time}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep 'eta' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}_8p.log|awk -F "loss:" '{print $2}' |awk -F " " '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep 'eta' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}_1p.log|awk -F "loss:" '{print $2}' |awk -F " " '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt|sed 's/.//'|sed 's/.$//'`
 
