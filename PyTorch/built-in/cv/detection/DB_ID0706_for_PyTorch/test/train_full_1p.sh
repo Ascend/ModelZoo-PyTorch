@@ -77,17 +77,23 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+sed -i "s|.*datasets|        - '$data_path|g" experiments/seg_detector/base_ic15.yaml
 
-taskset -c 0-23 python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+taskset -c 0-23 nohup python3.7 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
         --data_path ${data_path}/icdar2015 \
-        --resume ${data_path}/db_ckpt/MLT-Pretrain-ResNet50 \
+        --resume ./path-to-model-directory/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --amp \
         --epochs ${train_epochs} \
         --device_list "${ASCEND_DEVICE_ID}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
-python3 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+nohup python3.7 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
     --resume outputs/workspace/${PWD##*/}/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/final \
     --box_thresh 0.6 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait

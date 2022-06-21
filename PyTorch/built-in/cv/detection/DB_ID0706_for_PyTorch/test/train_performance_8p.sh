@@ -65,6 +65,12 @@ fi
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
 
 kernel_num=$(nproc)
@@ -75,9 +81,9 @@ else
     cpu_number=95
 fi
 
-taskset -c 0-${cpu_number} python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+taskset -c 0-${cpu_number} nohup python3.7 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
     --data_path ${data_path}/icdar2015 \
-    --resume ${data_path}/db_ckpt/MLT-Pretrain-ResNet50 \
+    --resume ./path-to-model-directory/MLT-Pretrain-ResNet50 \
     --seed=515 \
     --distributed \
     --device_list "0,1,2,3,4,5,6,7" \
