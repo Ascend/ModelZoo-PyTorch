@@ -133,7 +133,7 @@ do
 	
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3 main.py --data-set CIFAR --data-path $data_path/data/ --batch-size $batch_size --epochs $train_epochs $PREC > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 main.py --data-set CIFAR --data-path $data_path/data/ --batch-size $batch_size --epochs $train_epochs $PREC --ob_compilation > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
 

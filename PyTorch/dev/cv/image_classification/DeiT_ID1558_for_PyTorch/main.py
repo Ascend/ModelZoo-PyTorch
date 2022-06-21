@@ -215,13 +215,21 @@ def get_args_parser():
                              'O0 for FP32 training, O1 for mixed precison training.')
     parser.add_argument('--loss-scale-value', default=1024., type=float,
                         help='loss scale using in amp, default -1 means dynamic')
+    
+    # 模糊编译开关
+    parser.add_argument('--ob_compilation', action='store_true', default=False,
+                        help='Obfuscated compile switch')
+
     return parser
 
 
 def main(args):
     #模糊編譯
-    #torch.npu.global_step_inc()
-    torch.npu.set_start_fuzz_compile_step(3)
+    if args.ob_compilation == True:
+        torch.npu.global_step_inc()
+    else:
+        #torch.npu.global_step_inc()
+        torch.npu.set_start_fuzz_compile_step(3)
     utils.init_distributed_mode(args)
 
     print(args)
