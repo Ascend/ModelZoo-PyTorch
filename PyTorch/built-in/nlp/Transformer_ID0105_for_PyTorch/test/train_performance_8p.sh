@@ -140,11 +140,11 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=` grep -rns "Time" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep -v "all" |awk -F "Time" '{print$2}' |awk -F "(" '{print$1}'|tail -n +5|awk '{sum+=$1} END {print"",8*128*NR/sum}'|sed s/[[:space:]]//g`
-FPS=`python3 -c "print(${time}*96)"`
+fps=` grep -rns "Time" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep -v "all" |awk -F "Time" '{print$2}' |awk -F "(" '{print$1}'|tail -n +5|awk '{sum+=$1} END {print"",8*128*NR/sum}'|sed s/[[:space:]]//g`
+FPS=`python3 -c "print(${fps}*96)"`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
-
+echo "Final Performance Sentence/s : $fps"
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
 
