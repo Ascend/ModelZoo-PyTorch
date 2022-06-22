@@ -50,8 +50,8 @@ dist_url="127.0.0.1:13256"
 use_amp=1
 # "apex amp level, [O1, O2]"
 opt_level="O2"
-# "apex amp loss scale, [128.0, None]"
-loss_scale=128.0
+# "apex amp loss scale, [128.0, None, dynamic]"
+loss_scale=dynamic
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -127,7 +127,7 @@ for((i=0;i<$((RANK_SIZE));i++));
             --dist_rank ${dist_rank} \
             --use_amp ${use_amp} \
             --opt_level ${opt_level} \
-            --loss_scale ${loss_scale} >> ${LOG_ROOT}/train.log 2>&1 &
+            --loss_scale ${loss_scale} >> ${LOG_ROOT}/train.log 2>&1 &     # &符号必须要有，否则8卡跑不起来
   done
 
 wait

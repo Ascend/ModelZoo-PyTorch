@@ -71,12 +71,12 @@ if __name__ == '__main__':
     paras_only_bn, paras_wo_bn = separate_bn_paras(model.backbone)
     if 'npu' in args.device and args.amp:
         optimizer = apex.optimizers.NpuFusedSGD([
-                    {'params': paras_wo_bn + [self.head.kernel], 'weight_decay': 5e-4},
+                    {'params': paras_wo_bn + [model.head.kernel], 'weight_decay': 5e-4},
                     {'params': paras_only_bn}
                 ], lr=0.001, momentum=0.9)
     else:
         optimizer = optim.SGD([
-                    {'params': paras_wo_bn + [self.head.kernel], 'weight_decay': 5e-4},
+                    {'params': paras_wo_bn + [model.head.kernel], 'weight_decay': 5e-4},
                     {'params': paras_only_bn}
                 ], lr=0.001, momentum=0.9)
     print('optimizer create over')
@@ -133,5 +133,5 @@ if __name__ == '__main__':
 
         optimizer.step()
 
-    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+   # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
     prof.export_chrome_trace("output.prof")  # "output.prof"为输出文件地址

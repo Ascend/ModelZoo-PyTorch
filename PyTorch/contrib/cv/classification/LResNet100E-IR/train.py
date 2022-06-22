@@ -19,6 +19,8 @@ from pathlib import Path
 
 import numpy as np
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.distributed as dist
 
 from config import get_config
@@ -88,7 +90,7 @@ if __name__ == '__main__':
     # apex amp
     parser.add_argument("--use_amp", help="if use amp", default=1, type=int)
     parser.add_argument("--opt_level", help="apex amp level, [O1, O2]", default='O2', type=str)
-    parser.add_argument("--loss_scale", help="apex amp loss scale, [128.0, None]", default=128.0, type=float)
+    parser.add_argument("--loss_scale", help="apex amp loss scale, [128.0, None]", default=128.0)
 
     # init config
     args = parser.parse_args()
