@@ -61,7 +61,7 @@ bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2e
 bash test/eval_acc_perf.sh --datasets_path=/root/datasets/coco --batch_size=64 --mmdetection_path=${mmdetection_path}
 ```
 
-注意：量化要求使用onnxruntime版本为1.6.0
+注意：量化要求使用onnxruntime版本为1.6.0；bbox_nms.py文件添加了BatchNMS自定义符号；deploy.py文件修改了headless参数为True，避免onnxruntime对onnx的推理；pytorch2onnx.py增加了enable_onnx_checker参数为false，避免对自定义算子的校验
 
 **评测结果：**
 
