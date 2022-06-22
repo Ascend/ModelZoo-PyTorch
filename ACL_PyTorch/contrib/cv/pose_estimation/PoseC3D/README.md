@@ -23,16 +23,16 @@
 [posec3d代码](https://github.com/open-mmlab/mmaction2/tree/master/configs/skeleton/posec3d)
 
 ```bash
-conda create -n {your-envname} python=3.8 pytorch=1.10 cudatoolkit=11.3 torchvision
+conda create -n {your-envname} python=3.7.5 pytorch=1.10 cudatoolkit=11.3 torchvision
 conda activate {your-envname}
-pip3 install openmim
-pip3 install tqdm
-pip3 install mmcv-full
-pip3 install mmdet  # optional
-pip3 install mmpose  # optional
+pip install openmim
+pip install tqdm
+pip install mmcv-full
+pip install mmdet  # optional
+pip install mmpose  # optional
 git clone https://github.com/open-mmlab/mmaction2.git
 cd mmaction2
-pip3 install -e .
+pip install -e .
 ```
 > **说明：**   
 > 本离线推理项目中posec3d模型对应论文中PoseConv3D，以下说明中将PoseConv3D简称为posec3d
@@ -42,15 +42,16 @@ pip3 install -e .
 ```
 CANN 5.1.RC1
 torch==1.11.0
-torchvision==0.12.0
+torchvision==0.12.0a0+76b4a42
+onnxruntime==1.11.1
 onnx==1.11.0
 ```
 
 ### <a name="22">2.2 python第三方库</a>
 ```
-numpy==1.21.6
-pillow==9.1.1
-mmcv==1.4.0
+protobuf==3.20.1
+tqdm==4.63.1
+sympy==1.10.1
 ```
 > **说明：**  
 > pytorch，torchvision和onnx:(X86架构)可以通过pip方式安装或官方下载whl包安装; (Arm架构)可以通过源码编译安装   
