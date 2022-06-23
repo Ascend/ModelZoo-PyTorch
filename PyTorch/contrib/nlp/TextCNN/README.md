@@ -6,7 +6,7 @@
 
 ## Requirements
 
-- 安装ascend pytorch 1.5
+- 安装 1.8.1+ascend.rc2.20220505
 - 安装 requirement.txt
 - fork 本仓库
 
@@ -30,8 +30,6 @@ bash ./test/train_performance_8p.sh --data_path=real_data_path
 #test 8p accuracy
 bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=real_pre_train_model_path
 
-# finetuning 1p 
-bash test/train_finetune_1p.sh --data_path=real_data_path --pth_path=real_pre_train_model_path
 ```
 
 Log path:
@@ -42,5 +40,5 @@ Log path:
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type | Loss_Scale |
 | :------: | :------:  | :------: | :------: | :------: | :--------: |
-|     -    | 5600      | 1        | 1        | O1       | 16.0       |
-|  91.40   | 56500     | 8        | 20       | O1       | 16.0       |
+|     -    | 8230      | 1        | 1        | O2       | dynamic    |
+|  91.00   | 59200     | 8        | 20       | O2       | dynamic    |
