@@ -1,24 +1,24 @@
 #!/bin/bash
 
-################åŸºç¡€é…ç½®å‚æ•°ï¼Œéœ€è¦æ¨¡å‹å®¡è§†ä¿®æ”¹##################
-# å¿…é€‰å­—æ®µ(å¿…é¡»åœ¨æ­¤å¤„å®šä¹‰çš„å‚æ•°): Network batch_size RANK_SIZE
-# ç½‘ç»œåç§°ï¼ŒåŒç›®å½•åç§°
+################»ù´¡ÅäÖÃ²ÎÊı£¬ĞèÒªÄ£ĞÍÉóÊÓĞŞ¸Ä##################
+# ±ØÑ¡×Ö¶Î(±ØĞëÔÚ´Ë´¦¶¨ÒåµÄ²ÎÊı): Network batch_size RANK_SIZE
+# ÍøÂçÃû³Æ£¬Í¬Ä¿Â¼Ãû³Æ
 Network="SRGAN"
-# è®­ç»ƒbatch_size
+# ÑµÁ·batch_size
 batch_size=64
-# è®­ç»ƒä½¿ç”¨çš„npuå¡æ•°
+# ÑµÁ·Ê¹ÓÃµÄnpu¿¨Êı
 export RANK_SIZE=1
-# æ•°æ®é›†è·¯å¾„,ä¿æŒä¸ºç©º,ä¸éœ€è¦ä¿®æ”¹
+# Êı¾İ¼¯Â·¾¶,±£³ÖÎª¿Õ,²»ĞèÒªĞŞ¸Ä
 data_path=""
 
-# è®­ç»ƒepoch
+# ÑµÁ·epoch
 train_epochs=100
-# æŒ‡å®šè®­ç»ƒæ‰€ä½¿ç”¨çš„npu deviceå¡id
+# Ö¸¶¨ÑµÁ·ËùÊ¹ÓÃµÄnpu device¿¨id
 device_id=0
-# åŠ è½½æ•°æ®è¿›ç¨‹æ•°
+# ¼ÓÔØÊı¾İ½ø³ÌÊı
 workers=8
 
-# å‚æ•°æ ¡éªŒï¼Œdata_pathä¸ºå¿…ä¼ å‚æ•°ï¼Œå…¶ä»–å‚æ•°çš„å¢åˆ ç”±æ¨¡å‹è‡ªèº«å†³å®šï¼›æ­¤å¤„æ–°å¢å‚æ•°éœ€åœ¨ä¸Šé¢æœ‰å®šä¹‰å¹¶èµ‹å€¼
+# ²ÎÊıĞ£Ñé£¬data_pathÎª±Ø´«²ÎÊı£¬ÆäËû²ÎÊıµÄÔöÉ¾ÓÉÄ£ĞÍ×ÔÉí¾ö¶¨£»´Ë´¦ĞÂÔö²ÎÊıĞèÔÚÉÏÃæÓĞ¶¨Òå²¢¸³Öµ
 for para in $*
 do
     if [[ $para == --device_id* ]];then
@@ -28,12 +28,12 @@ do
     fi
 done
 
-# æ ¡éªŒæ˜¯å¦ä¼ å…¥data_path,ä¸éœ€è¦ä¿®æ”¹
+# Ğ£ÑéÊÇ·ñ´«Èëdata_path,²»ĞèÒªĞŞ¸Ä
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-# æ ¡éªŒæ˜¯å¦æŒ‡å®šäº†device_id,åˆ†åŠ¨æ€åˆ†é…device_idä¸æ‰‹åŠ¨æŒ‡å®šdevice_id,æ­¤å¤„ä¸éœ€è¦ä¿®æ”¹
+# Ğ£ÑéÊÇ·ñÖ¸¶¨ÁËdevice_id,·Ö¶¯Ì¬·ÖÅädevice_idÓëÊÖ¶¯Ö¸¶¨device_id,´Ë´¦²»ĞèÒªĞŞ¸Ä
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
@@ -44,8 +44,8 @@ else
     exit 1
 fi
 
-###############æŒ‡å®šè®­ç»ƒè„šæœ¬æ‰§è¡Œè·¯å¾„###############
-# cdåˆ°ä¸testæ–‡ä»¶å¤¹åŒå±‚çº§ç›®å½•ä¸‹æ‰§è¡Œè„šæœ¬ï¼Œæé«˜å…¼å®¹æ€§ï¼›test_path_dirä¸ºåŒ…å«testæ–‡ä»¶å¤¹çš„è·¯å¾„
+###############Ö¸¶¨ÑµÁ·½Å±¾Ö´ĞĞÂ·¾¶###############
+# cdµ½ÓëtestÎÄ¼ş¼ĞÍ¬²ã¼¶Ä¿Â¼ÏÂÖ´ĞĞ½Å±¾£¬Ìá¸ß¼æÈİĞÔ£»test_path_dirÎª°üº¬testÎÄ¼ş¼ĞµÄÂ·¾¶
 cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ];then
@@ -57,16 +57,16 @@ else
 fi
 
 
-#################åˆ›å»ºæ—¥å¿—è¾“å‡ºç›®å½•ï¼Œä¸éœ€è¦ä¿®æ”¹#################
+#################´´½¨ÈÕÖ¾Êä³öÄ¿Â¼£¬²»ĞèÒªĞŞ¸Ä#################
 if [ ! -d ${test_path_dir}/output ];then
     mkdir -p ${test_path_dir}/output
 fi
 
 
-#################å¯åŠ¨è®­ç»ƒè„šæœ¬#################
-#è®­ç»ƒå¼€å§‹æ—¶é—´ï¼Œä¸éœ€è¦ä¿®æ”¹
+#################Æô¶¯ÑµÁ·½Å±¾#################
+#ÑµÁ·¿ªÊ¼Ê±¼ä£¬²»ĞèÒªĞŞ¸Ä
 start_time=$(date +%s)
-# éå¹³å°åœºæ™¯æ—¶source ç¯å¢ƒå˜é‡
+# ·ÇÆ½Ì¨³¡¾°Ê±source »·¾³±äÁ¿
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
@@ -76,22 +76,27 @@ echo "=============start training==================="
 python3.7 ./train1p.py \
     --nproc=${workers} \
     --use_npu=True \
-    --train_data_path=${data_path}/DIV2K_train_HR \
-    --val_data_path=${data_path}/DIV2K_valid_HR \
+    --train_data_path=${data_path}/VOC2012/train \
+    --val_data_path=${data_path}/VOC2012/val \
     --output_dir=${test_path_dir}/output \
     --num_epochs=${train_epochs} \
     --amp_level='O1' \
     --amp=True \
+    --loss_scale_g=128 \
+	--loss_scale_d=128 \
     --performance=True \
     --batch_size=${batch_size} > ${test_path_dir}/output/train_performance_1p.log
 
 wait
 
 
-##################è·å–è®­ç»ƒæ•°æ®################
-#è®­ç»ƒç»“æŸæ—¶é—´ï¼Œä¸éœ€è¦ä¿®æ”¹
+##################»ñÈ¡ÑµÁ·Êı¾İ################
+#ÑµÁ·½áÊøÊ±¼ä£¬²»ĞèÒªĞŞ¸Ä
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-
-#ç»“æœæ‰“å°ï¼Œä¸éœ€è¦ä¿®æ”¹
+# Êä³öĞÔÄÜFPS£¬ĞèÒªÄ£ĞÍÉóÊÓĞŞ¸Ä
+fps=`grep -a 'Fps:'  ${test_path_dir}/output/train_performance_1p.log|awk -F " " '{print $NF}'|awk 'END {print}'`
+FPS=${fps%%[*}
+#½á¹û´òÓ¡£¬²»ĞèÒªĞŞ¸Ä
 echo "E2E Training Duration sec : $e2e_time"
+echo "Final Performance images/sec : $FPS"

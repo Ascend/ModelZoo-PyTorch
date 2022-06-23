@@ -19,6 +19,9 @@ from math import log10
 
 import numpy as np
 import torch
+if torch.__version__>= "1.8.1":
+    print("import torch_npu")
+    import torch_npu
 import torchvision.utils as utils
 from torch.utils.data import DataLoader
 
@@ -51,13 +54,13 @@ MODEL_NAME = opt.model_name
 
 results = {'Set5': {'psnr': [], 'ssim': []}, 'Set14': {'psnr': [], 'ssim': []}, 'BSD100': {'psnr': [], 'ssim': []},
            'Urban100': {'psnr': [], 'ssim': []}, 'SunHays80': {'psnr': [], 'ssim': []}}
-# åˆ›å»ºæ¨¡å‹
+# ´´½¨Ä£ĞÍ
 if opt.use_test_code:
     from model_test import Generator
 else:
     from model import Generator
 model = Generator(UPSCALE_FACTOR).eval()
-# é€‰æ‹©æ¨¡å‹ä»¥åŠè®­ç»ƒè®¾å¤‡
+# Ñ¡ÔñÄ£ĞÍÒÔ¼°ÑµÁ·Éè±¸
 if opt.use_npu:
     import torch.npu
     if torch.npu.is_available():
@@ -70,7 +73,7 @@ else:
 print(f'use {device} to run benchmark.')
 
 model.to(device)
-# è·å–æ¨¡å‹çš„è·¯å¾„
+# »ñÈ¡Ä£ĞÍµÄÂ·¾¶
 root_dir = opt.output_dir
 if not root_dir.endswith('/'):
     root_dir = root_dir + '/'
@@ -78,7 +81,7 @@ model_path = root_dir + 'epochs/' + MODEL_NAME
 print(f'Load model from: {model_path}')
 model.load_state_dict(torch.load(root_dir + 'epochs/' + MODEL_NAME))
 
-test_set = TestDatasetFromFolder('../data/test', upscale_factor=UPSCALE_FACTOR)
+test_set = TestDatasetFromFolder('./data/test', upscale_factor=UPSCALE_FACTOR)
 test_loader = DataLoader(dataset=test_set, num_workers=2, batch_size=1, shuffle=False)
 # test_loader = DataLoader(dataset=test_set, batch_size=1, shuffle=False)
 
@@ -88,7 +91,7 @@ if not os.path.exists(out_path):
 with torch.no_grad():
     for image_name, lr_image, hr_restore_img, hr_image in test_loader:
         image_name = image_name[0]
-        # åˆ¤æ–­æ˜¯å¦è·³è¿‡æœ¬æ¬¡å¾ªç¯
+        # ÅĞ¶ÏÊÇ·ñÌø¹ı±¾´ÎÑ­»·
         if opt.only_set5 and image_name.split('_')[0] != 'Set5':
             continue
         # lr_image = Variable(lr_image, volatile=True)
@@ -99,7 +102,7 @@ with torch.no_grad():
         sr_image = model(lr_image)
         mse = ((hr_image - sr_image) ** 2).data.mean()
         psnr = 10 * log10(1 / mse)
-        ssim = pytorch_ssim.ssim(sr_image, hr_image).item()   # å°†æŸå¤±çš„tensorç±»å‹è½¬æ¢ä¸ºå€¼ç±»å‹
+        ssim = pytorch_ssim.ssim(sr_image, hr_image).item()   # ½«ËğÊ§µÄtensorÀàĞÍ×ª»»ÎªÖµÀàĞÍ
 
         test_images = torch.stack(
             [display_transform()(hr_restore_img.squeeze(0)), display_transform()(hr_image.data.cpu().squeeze(0)),
