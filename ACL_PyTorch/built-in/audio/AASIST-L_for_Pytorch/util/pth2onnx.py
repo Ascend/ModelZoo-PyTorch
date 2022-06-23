@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import argparse
 import json
 from importlib import import_module
@@ -20,6 +21,10 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import onnx
+
+ROOT = './'
+if ROOT not in sys.path:
+    sys.path.append(ROOT)  # add ROOT to PATH
 
 def convert(args):
     # load experiment configurations
