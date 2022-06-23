@@ -20,13 +20,13 @@ data_path=""
 #网络名称，同目录名称
 Network="EfficientNet-B7_ID1716_for_PyTorch"
 #训练epoch
-train_epochs=90
+train_epochs=5
 #训练batch_size
 batch_size=128
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=1.6
+learning_rate=0.08
 
 #TF2.X独有，需要模型审视修改
 #export NPU_LOOP_SIZE=${train_steps}
@@ -109,7 +109,7 @@ python3 ${test_path_dir}/../examples/imagenet/main.py \
         --epochs=${train_epochs}  \
         --autoaug \
         --amp \
-        --pm=O2 \
+        --pm=O1 \
         --loss_scale=32 \
         --val_feq=10 \
 		--addr=$(hostname -I |awk '{print $1}') \
@@ -141,7 +141,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量
