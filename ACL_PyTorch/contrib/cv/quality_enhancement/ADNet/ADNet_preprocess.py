@@ -26,7 +26,7 @@ import sys
 def normalize(data):
     return data/255.
 
-def preprocess(data_path = './data/BSD68',save_path='./prep_dataset'):
+def preprocess(data_path = './dataset/BSD68',save_path='./prep_dataset'):
     files_source = glob.glob(os.path.join(data_path, '*.png'))
     files_source.sort()
     # process data
