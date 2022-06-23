@@ -98,8 +98,8 @@ md5sum：5bd44e2eaaabb0e1877c1c91f37ce513
 
 ```shell
 git clone https://github.com/facebookresearch/detectron2
-git reset 60fd4885d7cfd52d4267d1da9ebb6b2b9a3fc937 --hard
 cd detectron2
+git reset 60fd4885d7cfd52d4267d1da9ebb6b2b9a3fc937 --hard
 python3.7 -m pip install -e .
 ```
 
