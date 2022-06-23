@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 import numpy as np
 
@@ -69,8 +71,10 @@ class DropoutV2(nn.Module):
 
         if not self.checked:
             self.check_self(x)
-
-        x, mask, _ = torch.npu_dropoutV2(x, self.seed, p=self.p)
+        if torch.__version__ >= "1.8.1":
+            x = nn.functional.dropout(x, p=self.p)
+        else:
+            x, mask, _ = torch.npu_dropoutV2(x, self.seed, p=self.p)
         return x
 
 

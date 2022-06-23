@@ -20,14 +20,15 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import os
 import glob
-import torch_npu
+
 import numpy as np
 import apex
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
-if torch.__version__ >= '1.8.1':
-    import torch_npu
+
 from callback.optimization.lamb import Lamb
 from model.modeling_albert import AlbertConfig, AlbertForSequenceClassification
 from model import tokenization_albert

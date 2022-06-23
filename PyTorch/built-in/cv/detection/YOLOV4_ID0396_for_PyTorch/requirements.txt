@@ -4,4 +4,4 @@ matplotlib
 pycocotools == 2.0.2
 tqdm
 pillow
-tensorboard == 1.14
+tensorboard == 1.15.0

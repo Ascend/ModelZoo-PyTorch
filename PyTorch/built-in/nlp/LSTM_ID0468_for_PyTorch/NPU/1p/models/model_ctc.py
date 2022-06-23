@@ -17,6 +17,8 @@
 
 import math
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 import editdistance as ed
 from collections import OrderedDict
@@ -56,7 +58,10 @@ class BatchRNN(nn.Module):
         x = torch.cat((x_post, x_reverse), 2)
 
         if self.training:
-            x, _, _ = torch.npu_dropoutV2(x, self.seed, p=self.prob)
+            if torch.__version__ >= "1.8.1":
+                x = nn.functional.dropout(x, p=self.prob)
+            else:
+                x, _, _ = torch.npu_dropoutV2(x, self.seed, p=self.prob)
         return x
 
 
@@ -93,7 +98,10 @@ class LayerCNN(nn.Module):
         if self.pooling is not None:
             x = self.pooling(x)
         if self.training:
-            x, _, _ = torch.npu_dropoutV2(x, self.seed, p=self.prob)
+            if torch.__version__ >= "1.8.1":
+                x = nn.functional.dropout(x, p=self.prob)
+            else:
+                x, _, _ = torch.npu_dropoutV2(x, self.seed, p=self.prob)
 
         return x
 
