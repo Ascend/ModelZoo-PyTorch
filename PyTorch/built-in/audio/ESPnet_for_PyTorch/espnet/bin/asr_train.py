@@ -514,6 +514,7 @@ def get_parser(parser=None, required=True):
     parser.add_argument("--fbank-fmax", type=float, default=None, help="")
     parser.add_argument("--local-rank", type=int, default=-1, help="")
     parser.add_argument("--gpu", type=int, default=0, help="")
+    parser.add_argument("--test-epochs", type=int, default=-1, help="")
     return parser
 
 
@@ -605,6 +606,9 @@ def main(cmd_args):
 
     if args.local_rank != -1:
         args.gpu = args.local_rank
+
+    if args.test_epochs != -1:
+        args.epochs = args.test_epochs
 
     # set random seed
     logging.info("random seed = %d" % args.seed)

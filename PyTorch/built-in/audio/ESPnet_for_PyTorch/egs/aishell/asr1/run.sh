@@ -6,7 +6,7 @@
 . ./path.sh || exit 1;
 . ./cmd.sh || exit 1;
 
-source env_npu.sh
+source ../../../test/env_npu.sh
 
 # general configuration
 backend=pytorch
@@ -20,6 +20,8 @@ verbose=0      # verbose option
 resume=        # Resume the training from snapshot
 lm_train_dtype=O1
 asr_train_dtype=O1
+test_output_dir=
+asr_test_epochs=-1 # used in test scripts. "-1" means not used.
 
 # feature configuration
 do_delta=false
@@ -180,7 +182,14 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     text2token.py -s 1 -n 1 data/${train_dev}/text | cut -f 2- -d" " \
         > ${lmdatadir}/valid.txt
 
-    ${cuda_cmd} --gpu 1 ${lmexpdir}/train.log \
+    if [ -z ${test_output_dir} ]; then
+        log_path=${lmexpdir}/train.log
+    else
+        mkdir -p ${test_output_dir}/0/
+        log_path=${test_output_dir}/0/lm_train_0.log
+    fi
+
+    ${cuda_cmd} --gpu 1 ${log_path} \
         lm_train.py \
         --config ${lm_config} \
         --ngpu 1 \
@@ -223,6 +232,13 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
 
         for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
         do
+            if [ -z ${test_output_dir} ]; then
+                log_path=${expdir}/train_$RANK_ID.log
+            else
+                mkdir -p ${test_output_dir}/${RANK_ID}/
+                log_path=${test_output_dir}/${RANK_ID}/asr_train_$RANK_ID.log
+            fi
+
             PID_START=$((KERNEL_NUM * RANK_ID))
             PID_END=$((PID_START + KERNEL_NUM - 1))
             taskset -c $PID_START-$PID_END python3.7 ../../../espnet/bin/asr_train.py \
@@ -241,11 +257,19 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
                 --valid-json ${feat_dt_dir}/data.json \
                 --train-dtype ${asr_train_dtype} \
                 --n-iter-processes $(($(nproc)/8)) \
-                --local-rank $RANK_ID > ${expdir}/train_$RANK_ID.log 2>&1 &
+                --test-epochs ${asr_test_epochs} \
+                --local-rank $RANK_ID > ${log_path} 2>&1 &
         done
         export OMP_NUM_THREADS=1
     else
-        ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log \
+        if [ -z ${test_output_dir} ]; then
+            log_path=${expdir}/train.log
+        else
+            mkdir -p ${test_output_dir}/0/
+            log_path=${test_output_dir}/0/asr_train_0.log
+        fi
+
+        ${cuda_cmd} --gpu ${ngpu} ${log_path} \
             asr_train.py \
             --config ${train_config} \
             --preprocess-conf ${preprocess_config} \
@@ -260,7 +284,8 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
             --resume ${resume} \
             --train-json ${feat_tr_dir}/data.json \
             --valid-json ${feat_dt_dir}/data.json \
-            --train-dtype ${asr_train_dtype}
+            --train-dtype ${asr_train_dtype} \
+            --test-epochs ${asr_test_epochs}
     fi
 fi
 
