@@ -117,6 +117,7 @@ nohup python3  ${cur_path}/../eval_linear.py \
     --epochs $train_epochs \
     $PREC \
     --apex \
+    --num_workers 20 \
     --output_dir ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt \
     --max_steps $train_steps > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
