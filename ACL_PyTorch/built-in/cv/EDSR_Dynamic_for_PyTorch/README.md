@@ -29,7 +29,7 @@ cd ../..
 
 ```shell
 mkdir -p benchmark
-mv B100 .benchmark
+mv B100 ./benchmark/
 ```
 
 目录结构如下：
