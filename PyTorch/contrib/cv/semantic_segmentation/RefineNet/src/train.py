@@ -24,7 +24,7 @@ import numpy as np
 
 # pytorch libs
 import torch
-if torch.__version__.startswith>="1.8.1":
+if torch.__version__ >= "1.8.1":
     import torch_npu
     import ctypes
     libgcc_s = ctypes.CDLL("libgcc_s.so.1")
