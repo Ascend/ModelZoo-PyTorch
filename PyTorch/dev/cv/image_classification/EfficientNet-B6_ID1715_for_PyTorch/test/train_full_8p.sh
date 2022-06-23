@@ -13,20 +13,17 @@ RANK_ID_START=0
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
-#设置默认日志级别,不需要修改
-#export ASCEND_GLOBAL_LOG_LEVEL=3
-
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
 Network="EfficientNet-B6_ID1715_for_PyTorch"
 #训练epoch
-train_epochs=90
+train_epochs=5
 #训练batch_size
 batch_size=128
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=1.6
+learning_rate=0.8
 
 #TF2.X独有，需要模型审视修改
 #export NPU_LOOP_SIZE=${train_steps}
@@ -109,7 +106,7 @@ python3 ${test_path_dir}/../examples/imagenet/main.py \
         --epochs=${train_epochs}  \
         --autoaug \
         --amp \
-        --pm=O2 \
+        --pm=O1 \
         --loss_scale=32 \
         --val_feq=10 \
 		--addr=$(hostname -I |awk '{print $1}') \
