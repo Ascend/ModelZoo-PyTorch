@@ -89,54 +89,6 @@ class sub_strucure(object):
         return add_node
 
 
-class sub_gather_strucure(object):
-    def __init__(self, mod):
-        self.mod = mod
-    
-    def create_slice_node(self, sub_axis, gather_n, input_n):
-        begin = sub_axis
-        end = sub_axis + 1
-        begin_node = self.mod.add_const_node(f"const_begin_s{sub_axis}_g{gather_n}_i{input_n}", np.array([begin], np.int32))
-        end_node = self.mod.add_const_node(f"const_end_s{sub_axis}_g{gather_n}_i{input_n}", np.array([end], np.int32))
-        axes_node = self.mod.add_const_node(f"const_axes_s{sub_axis}_g{gather_n}_i{input_n}", np.array([0], np.int32))
-        step_node = self.mod.add_const_node(f"const_step_s{sub_axis}_g{gather_n}_i{input_n}", np.array([1], np.int32))
-        s_node = self.mod.add_new_node(f"Slice_s{sub_axis}_g{gather_n}_i{input_n}", "Slice")
-        return s_node, begin_node, end_node, axes_node, step_node
-    
-    def create_cast_node(self, sub_axis, gather_n):
-        c_node = self.mod.add_new_node(f"Cast_a{sub_axis}_g{gather_n}", "Cast",
-                                       {"to": (AT.LIST_INT, 6)})
-        return c_node
-
-    def create_flatten_node(self, sub_axis, gather_n):
-        f_node = self.mod.add_new_node(f"Flatten_a{sub_axis}_g{gather_n}", "Flatten",
-                                       {"axis": (AT.INT, 1)})
-        return f_node
-
-    def create_gather_node(self, sub_axis, gather_n):
-        g_node = self.mod.add_new_node(f"Gather_a{sub_axis}_g{gather_n}", "Gather",
-                                       {"axis": (AT.INT, 1)})
-        return g_node
-
-    def create_sub_structure(self, x1_node, x2_node, sub_axis, gather_n):
-        slice_node1, begin_node, end_node, axes_node, step_node = self.create_slice_node(sub_axis, gather_n, 1)
-        slice_node1.set_input_node(0, [x1_node, begin_node, end_node, axes_node, step_node])
-
-        cast_node = self.create_cast_node(sub_axis, gather_n)
-        cast_node.set_input_node(0, [slice_node1])
-
-        slice_node2, begin_node, end_node, axes_node, step_node = self.create_slice_node(sub_axis, gather_n, 2)
-        slice_node2.set_input_node(0, [x2_node, begin_node, end_node, axes_node, step_node])
-
-        flatten_node = self.create_flatten_node(sub_axis, gather_n)
-        flatten_node.set_input_node(0, [cast_node])
-    
-        gather_node = self.create_gather_node(sub_axis, gather_n)
-        gather_node.set_input_node(0, [slice_node2, flatten_node])
-
-        return gather_node
-
-
 def data_slice(mod):
     conv1_node = mod.get_node("Conv_8")
     selu_node = mod.get_node("Selu_9")
@@ -165,38 +117,6 @@ def data_slice(mod):
 
     # remove ori node
     mod.node_remove([conv1_node.name, selu_node.name, conv2_node.name, conv3_node.name, add_node.name])
-    
-
-def split_conv(mod):
-    unsqueeze1_node = mod.get_node("Unsqueeze_0")
-    conv_node = mod.get_node("Conv_2")
-    unsqueeze2_node = mod.get_node("Unsqueeze_3")
-    abs_node = mod.get_node("Abs_4")
-    c_node = mod.add_new_node(f"{conv_node.name}_0", "Conv",
-                              {"dilations": (AT.LIST_INT, [1, 1]),
-                              "group": (AT.INT, 1),
-                              "kernel_shape": (AT.LIST_INT, [70, 129]),
-                              "pads": (AT.LIST_INT, [0, 0, 0, 0]),
-                              "strides": (AT.LIST_INT, [1, 1])})
-    x_node = mod.get_node(unsqueeze1_node.input_name[0])
-    input_node = mod.add_placeholder_node("input_0", "float32", [1, 1, 70, 64600])
-    weight_node = mod.get_node(conv_node.input_name[1])
-    weight_value = np.array(weight_node.const_value).reshape(1,1,70,129)
-    print(weight_value)
-    w_node = mod.add_const_node("const_weight_0", np.array(weight_value, np.float32))
-    c_node.set_input_node(0, [input_node, w_node])
-    abs_node.set_input_node(0, [c_node])
-    mod.node_remove([x_node.name, unsqueeze1_node.name, conv_node.name, weight_node.name, unsqueeze2_node.name])
-
-
-def exchange_unsqueeze(mod):
-    conv_node = mod.get_node("Conv_2")
-    unsqueeze_node = mod.get_node("Unsqueeze_3")
-    abs_node = mod.get_node("Abs_4")
-    maxpool_node = mod.get_node("MaxPool_5")
-    abs_node.set_input_node(0, [conv_node])
-    unsqueeze_node.set_input_node(0, [abs_node])
-    maxpool_node.set_input_node(0, [unsqueeze_node])
 
 
 def extend_conv(mod, batch_sizes):
@@ -314,38 +234,6 @@ def replace_gather(mod, io_map):
         mod.node_remove([expand_node.name, g_node.name])
 
 
-def replace_gather_bsn(mod, io_map, batch_sizes):
-    gather_nodes = mod.get_nodes_by_optype("GatherElements")
-    for i, gather_node in enumerate(gather_nodes):
-        expand_node = mod.get_node(gather_node.input_name[1])
-
-        sub_s = sub_gather_strucure(mod)
-        x1_node = mod.get_node(expand_node.input_name[0])
-        x2_node = mod.get_node(gather_node.input_name[0])
-        g_nodes = []
-        for batch in range(batch_sizes):
-            g_node = sub_s.create_sub_structure(x1_node, x2_node, batch, i)
-            g_nodes.append(g_node)
-
-        concat_node = mod.add_new_node(f"Concat_{np.random.randint(0, 7393)}", "Concat",
-                                    {"axis": (AT.INT, 0)})
-        concat_node.set_input_node(0, g_nodes)
-
-        squeeze_node2 = mod.add_new_node(f"Squeeze2_{i}", "Squeeze",
-                                  {"axes": (AT.LIST_INT, [1])})
-        squeeze_node2.set_input_node(0, [concat_node])
-
-        matmul1_node = mod.get_node(io_map.get(gather_node.name)[0])
-        m1_node = mod.get_node(matmul1_node.input_name[1])
-        matmul1_node.set_input_node(0, [squeeze_node2, m1_node])
-
-        matmul2_node = mod.get_node(io_map.get(gather_node.name)[1])
-        m2_node = mod.get_node(matmul2_node.input_name[1])
-        matmul2_node.set_input_node(0, [squeeze_node2, m2_node])
-
-        mod.node_remove([expand_node.name, gather_node.name])
-
-
 def replace_scatternd(mod, io_map):
     scatternd_nodes = mod.get_nodes_by_optype("ScatterND")
     for i, scatternd_node in enumerate(scatternd_nodes):
@@ -400,12 +288,9 @@ def make_model(input_onnx, output_onnx, batch_sizes):
     mod = OXGraph(input_onnx)
     io_map = mod.get_net_in_out_map()
 
-    # split_conv(mod)
-    # exchange_unsqueeze(mod)
     extend_conv(mod, batch_sizes)
     data_slice(mod)
     replace_gather(mod, io_map)
-    # replace_gather_bsn(mod, io_map, batch_sizes)
     replace_scatternd(mod, io_map)
     reduce_softmax(mod, io_map)
     
