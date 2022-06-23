@@ -54,6 +54,10 @@ def preprocess(src_path, save_path):
 
         lr_image.tofile(os.path.join(
             save_path, "bin", image_file.split('.')[0] + ".bin"))
+        np.save(
+            os.path.join(save_path, "npy", image_file.split('.')[0] + ".npy"),
+            lr_image
+        )
 
         count += 1
         print("OK, count = ", count)

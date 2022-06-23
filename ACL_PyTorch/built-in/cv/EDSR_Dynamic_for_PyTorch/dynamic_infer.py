@@ -46,7 +46,7 @@ def main():
     input_list = generate_data()
     for idx, pack in tqdm(enumerate(input_list)):
         data_name, input_data = pack
-        input_data = np.expand_dims(input_data, 0)
+        input_data = np.expand_dims(input_data, 0).astype("float16")
         output_data, time = om_model.forward(input_data, input_data.shape)
         save_path = os.path.join(save_dir, "{}.npy".format(
             os.path.splitext(data_name)[0]))

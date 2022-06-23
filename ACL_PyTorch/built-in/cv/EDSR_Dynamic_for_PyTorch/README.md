@@ -18,11 +18,10 @@ cd ../..
 
 3.获取权重文件
 
-获取[EDSR_x2预训练pth权重文件](https://cv.snu.ac.kr/research/EDSR/models/edsr_baseline_x2-1bc95232.pt)
+获取[EDSR_x2预训练pth权重文件](https://cv.snu.ac.kr/research/EDSR/model_pytorch.tar)
 
-文件名：edsr_baseline_x2-1bc95232.pt
+解压压缩包后获取x2的pt文件，文件名：EDSR_x2.pt
 
-md5sum：e0a9e64cf1f9016d7013e0b01f613f68
 
 4.数据集
 
@@ -55,7 +54,8 @@ bash test/pth2om.sh edsr_baseline_x2-1bc95232.pt ./Ascend${chip_name} # Ascend31
 # 测试精度
 bash test/eval_acc_perf.sh
 # 测试性能
-bash test/speed_test.sh
+python3 build_input_data.py
+bash test/speed_test.sh models/om/EDSR_x2.om
 ```
 
 GPU机器上执行，执行时使用nvidia-smi查看设备状态，确保device空闲：

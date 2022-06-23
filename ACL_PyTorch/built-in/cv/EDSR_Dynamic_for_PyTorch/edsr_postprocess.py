@@ -41,7 +41,7 @@ def postprocess(img_src_path, src_path, save_path):
     for idx, file_name in enumerate(os.listdir(src_path)):
         array = np.load(
             os.path.join(src_path, file_name), allow_pickle=True).transpose(1, 2, 0)
-        img = torch.from_numpy(array)
+        img = torch.from_numpy(array.astype("float32"))
         img = quantize(img, 255)
 
         img_path = os.path.join(
