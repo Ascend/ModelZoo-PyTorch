@@ -13,6 +13,7 @@ import datetime
 import numpy as np
 
 import torch
+import random
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 from timm.utils import AverageMeter
@@ -24,10 +25,13 @@ from lr_scheduler import build_scheduler
 from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper
+from models.swin_transformer import NpuDropPath
 
 try:
     # noinspection PyUnresolvedReferences
     from apex import amp
+    amp.register_half_function(torch.nn.functional, 'softmax')
+    amp.register_half_function(torch, 'fast_gelu')
 except ImportError:
     amp = None
 
@@ -51,6 +55,7 @@ def parse_option():
                         help="whether to use gradient checkpointing to save memory")
     parser.add_argument('--amp-opt-level', type=str, default='O1', choices=['O0', 'O1', 'O2'],
                         help='mixed precision opt level, if O0, no amp is used')
+    parser.add_argument('--loss-scale-value', type=int, help='set loss scale value')
     parser.add_argument('--output', default='output', type=str, metavar='PATH',
                         help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
     parser.add_argument('--tag', help='tag of experiment')
@@ -70,12 +75,13 @@ def main(config):
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_model(config, is_pretrain=True)
-    model.cuda()
+    model.npu()
     logger.info(str(model))
+    NpuDropPath.enable_droppath_ensemble(model)
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=True)
     if config.AMP_OPT_LEVEL != "O0":
-        model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL, combine_grad=True, user_cast_preferred=True)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
     model_without_ddp = model.module
 
@@ -128,8 +134,8 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
     start = time.time()
     end = time.time()
     for idx, (img, mask, _) in enumerate(data_loader):
-        img = img.cuda(non_blocking=True)
-        mask = mask.cuda(non_blocking=True)
+        img = img.npu(non_blocking=True)
+        mask = mask.npu(non_blocking=True)
 
         loss = model(img, mask)
 
@@ -170,16 +176,19 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
             optimizer.step()
             lr_scheduler.step_update(epoch * num_steps + idx)
 
-        torch.cuda.synchronize()
+        torch.npu.synchronize()
 
         loss_meter.update(loss.item(), img.size(0))
         norm_meter.update(grad_norm)
         batch_time.update(time.time() - end)
         end = time.time()
 
+        if idx < 10:
+            batch_time.reset()
+
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
-            memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+            memory_used = torch.npu.max_memory_allocated() / (1024.0 * 1024.0)
             etas = batch_time.avg * (num_steps - idx)
             logger.info(
                 f'Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t'
@@ -193,7 +202,15 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
 
 
 if __name__ == '__main__':
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
+
     _, config = parse_option()
+
+    random.seed(1234)
+    np.random.seed(1234)
+    torch.manual_seed(1234)
+    os.environ['PYTHONHASHSEED'] = str(1234)
 
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
@@ -205,8 +222,8 @@ if __name__ == '__main__':
     else:
         rank = -1
         world_size = -1
-    torch.cuda.set_device(config.LOCAL_RANK)
-    torch.distributed.init_process_group(backend='nccl', init_method='env://', world_size=world_size, rank=rank)
+    torch.npu.set_device(config.LOCAL_RANK)
+    torch.distributed.init_process_group(backend='hccl', init_method='env://', world_size=world_size, rank=rank)
     torch.distributed.barrier()
 
     seed = config.SEED + dist.get_rank()

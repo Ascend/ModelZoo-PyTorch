@@ -236,6 +236,8 @@ def update_config(config, args):
         config.TRAIN.USE_CHECKPOINT = True
     if _check_args('amp_opt_level'):
         config.AMP_OPT_LEVEL = args.amp_opt_level
+    if _check_args('loss_scale_value'):
+        config.LOSS_SCALE_VALUE = args.loss_scale_value
     if _check_args('output'):
         config.OUTPUT = args.output
     if _check_args('tag'):

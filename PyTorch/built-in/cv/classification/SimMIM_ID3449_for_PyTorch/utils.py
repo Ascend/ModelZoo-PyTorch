@@ -42,7 +42,7 @@ def load_checkpoint(config, model, optimizer, lr_scheduler, logger):
             max_accuracy = checkpoint['max_accuracy']
 
     del checkpoint
-    torch.cuda.empty_cache()
+    torch.npu.empty_cache()
     return max_accuracy
 
 
@@ -119,7 +119,7 @@ def load_pretrained(config, model, logger):
     logger.info(msg)
     
     del checkpoint
-    torch.cuda.empty_cache()
+    torch.npu.empty_cache()
     logger.info(f">>>>>>>>>> loaded successfully '{config.PRETRAINED}'")
     
 

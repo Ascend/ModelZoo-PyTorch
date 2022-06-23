@@ -18,6 +18,6 @@ TRAIN:
   WARMUP_LR: 1e-6
   MIN_LR: 1e-5
   WEIGHT_DECAY: 0.05
-PRINT_FREQ: 100
+PRINT_FREQ: 1
 SAVE_FREQ: 5
 TAG: simmim_pretrain__swin_base__img192_window6__100ep

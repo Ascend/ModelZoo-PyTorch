@@ -5,22 +5,149 @@
 # Written by Ze Liu
 # Modified by Zhenda Xie
 # --------------------------------------------------------
-
+from unittest import result
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from apex import amp
 
+class NpuLinear(nn.Linear):
+    def forward(self, input):
+        return torch.npu_linear(input, self.weight, self.bias)
+
+class FastGELU(nn.Module):
+    """fast version of nn.GELU()"""
+    @staticmethod
+    def forward(x):
+        return torch.fast_gelu(x)
+
+def npu_drop_path(x, random_tensor, keep_prob: float = 0.):
+    """
+    Less ops than timm version.
+    Async generating and applying of random tensor for accelerating.
+    """
+    random_tensor += keep_prob
+    random_tensor.floor_()  # binarize
+    output = x.div(keep_prob) * random_tensor
+    return output
+
+
+class DropPathTask:
+    def __init__(self, shape, device, dtype, ndim, drop_prob):
+        self.shape = shape
+        self.device = device
+        self.dtype = dtype
+        self.ndim = ndim
+        self.drop_prob = drop_prob
+
+        self.request_count = 0
+        self.rand_queue = []
+
+
+class NpuDropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks.)
+    """
+    task_dict = {}
+    droppath_stream = None
+
+    def __init__(self, drop_prob=None):
+        super(NpuDropPath, self).__init__()
+        self.drop_prob = drop_prob
+        self.keep_prob = 1 - drop_prob
+
+    def forward(self, x):
+        if self.drop_prob == 0. or not self.training:
+            return x
+
+        if isinstance(x, torch.Tensor):
+            shape = x.shape
+            dtype = x.dtype
+            device = x.device
+            ndim = x.ndim
+        else:
+            raise RuntimeError("input type error!")
+
+        key = (shape, device, dtype, ndim)
+        if key not in NpuDropPath.task_dict:
+            droppath_task = DropPathTask(shape, device, dtype, ndim, self.drop_prob)
+            droppath_task.request_count += 1
+            NpuDropPath.task_dict[key] = droppath_task
+        elif not NpuDropPath.task_dict[key].rand_queue:
+            NpuDropPath.task_dict[key].request_count += 1
+        else:
+            random_tensor = NpuDropPath.task_dict[key].rand_queue.pop(0)
+            return npu_drop_path(x, random_tensor, self.keep_prob)
+
+        return x
+
+    @classmethod
+    def enable_droppath_ensemble(cls, model):
+        if cls.droppath_stream is None:
+            cls.droppath_stream = torch.npu.Stream()
+
+        def wait_stream_hook():
+            def hook_function(module, inputs):
+                torch.npu.current_stream().wait_stream(cls.droppath_stream)
+            return hook_function
+        model.register_forward_pre_hook(wait_stream_hook())
+
+        def random_tensor_gen_hook():
+            def hook_function(module, inputs):
+                with torch.npu.stream(cls.droppath_stream):
+                    with torch.no_grad():
+                        for _, task in cls.task_dict.items():
+                            if len(task.rand_queue) >= task.request_count:
+                                continue
+                            for i in range(task.request_count - len(task.rand_queue)):
+                                shape = (task.shape[0],) + (1,) * (task.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+                                random_tensor = torch.rand(shape, dtype=task.dtype, device=task.device)
+                                task.rand_queue.append(random_tensor)
+            return hook_function
+        model.register_forward_pre_hook(random_tensor_gen_hook())
+
+class MatmulApply(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, self, mat2):
+        ctx.save_for_backward(self, mat2)
+        result = torch.matmul(self, mat2.transpose(-2, -1))
+        return result
+    @staticmethod
+    def backward(ctx, grad):
+        self, mat2 = ctx.saved_tensors
+        self_grad = torch.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        return self_grad, mat2_grad
+
+matmul_transpose = MatmulApply.apply
+
+class RollIndexSelect(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input, index_fp, index_bp):
+        N, H, W, C = input.shape
+        ctx.input = input
+        ctx.index_bp = index_bp
+        result = input.reshape(N, H * W, C).index_select(1, index_fp).reshape(N, H, W, C)
+        return result
+    @staticmethod
+    def backward(ctx, grad):
+        input = ctx.input
+        N, H, W, C = input.shape
+        index_bp = ctx.index_bp
+        grad_input = grad.reshape(N, H * W, C).index_select(1, index_bp).reshape(N, H, W, C)
+        return grad_input, None, None
+
+roll_index_select = RollIndexSelect.apply
 
 class Mlp(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
+    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FastGELU, drop=0.):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = nn.Linear(in_features, hidden_features)
         self.act = act_layer()
         self.fc2 = nn.Linear(hidden_features, out_features)
-        self.drop = nn.Dropout(drop)
+        self.drop = nn.Dropout(drop) if drop > 0. else nn.Identity()
 
     def forward(self, x):
         x = self.fc1(x)
@@ -57,9 +184,11 @@ def window_reverse(windows, window_size, H, W):
     Returns:
         x: (B, H, W, C)
     """
+    B_, H_, W_, C_ = windows.shape
     B = int(windows.shape[0] / (H * W / window_size / window_size))
     x = windows.view(B, H // window_size, W // window_size, window_size, window_size, -1)
-    x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
+    C = int((B_ * H_ * W_ * C_) / (B * H * W))
+    x = x.npu_confusion_transpose([0, 1, 3, 2, 4, 5], (B, H, W, C), True)
     return x
 
 
@@ -84,7 +213,7 @@ class WindowAttention(nn.Module):
         self.window_size = window_size  # Wh, Ww
         self.num_heads = num_heads
         head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = torch.tensor(qk_scale) if qk_scale else torch.tensor(head_dim ** -0.5)
 
         # define a parameter table of relative position bias
         self.relative_position_bias_table = nn.Parameter(
@@ -100,17 +229,18 @@ class WindowAttention(nn.Module):
         relative_coords[:, :, 0] += self.window_size[0] - 1  # shift to start from 0
         relative_coords[:, :, 1] += self.window_size[1] - 1
         relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
-        relative_position_index = relative_coords.sum(-1)  # Wh*Ww, Wh*Ww
+        relative_position_index = relative_coords.sum(-1).view(-1).clone()  # Wh*Ww, Wh*Ww
         self.register_buffer("relative_position_index", relative_position_index)
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.attn_drop = nn.Dropout(attn_drop)
+        self.attn_drop = nn.Dropout(attn_drop) if attn_drop > 0. else nn.Identity()
         self.proj = nn.Linear(dim, dim)
-        self.proj_drop = nn.Dropout(proj_drop)
+        self.proj_drop = nn.Dropout(proj_drop) if proj_drop > 0. else nn.Identity()
 
         trunc_normal_(self.relative_position_bias_table, std=.02)
         self.softmax = nn.Softmax(dim=-1)
 
+    @amp.half_function
     def forward(self, x, mask=None):
         """
         Args:
@@ -118,16 +248,18 @@ class WindowAttention(nn.Module):
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
         """
         B_, N, C = x.shape
-        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
+        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous().npu_format_cast(2)
+        q, k, v = qkv[0].clone(), qkv[1].clone(), qkv[2].clone()  # make torchscript happy (cannot use tensor as tuple)
 
+        if not self.scale.device == q.device:
+            self.scale = self.scale.to(q.device).to(q.dtype)
         q = q * self.scale
-        attn = (q @ k.transpose(-2, -1))
+        attn = matmul_transpose(q, k)
 
-        relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)].view(
-            self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)  # Wh*Ww,Wh*Ww,nH
+        relative_position_bias = torch.index_select(self.relative_position_bias_table, 0, self.relative_position_index).view(
+            self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wh*Ww, Wh*Ww
-        attn = attn + relative_position_bias.unsqueeze(0)
+        attn = attn + relative_position_bias.unsqueeze(0).half()
 
         if mask is not None:
             nW = mask.shape[0]
@@ -139,7 +271,7 @@ class WindowAttention(nn.Module):
 
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
+        x = (attn @ v).npu_format_cast(2).npu_confusion_transpose([0, 2, 1, 3], (B_, N, C), True)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -160,6 +292,13 @@ class WindowAttention(nn.Module):
         flops += N * self.dim * self.dim
         return flops
 
+def get_roll_index(H, W, shifts):
+    index = torch.arange(0, H * W).reshape(H, W)
+    index_fp = torch.roll(index, shifts=(shifts, shifts), dims=(0, 1)).reshape(-1).long()
+    index_bp = {i:idx for idx, i in enumerate(index_fp.numpy().tolist())}
+    index_bp = [index_bp[i] for i in range(H * W)]
+    index_bp = torch.LongTensor(index_bp)
+    return [index_fp, index_bp]
 
 class SwinTransformerBlock(nn.Module):
     r""" Swin Transformer Block.
@@ -182,7 +321,7 @@ class SwinTransformerBlock(nn.Module):
 
     def __init__(self, dim, input_resolution, num_heads, window_size=7, shift_size=0,
                  mlp_ratio=4., qkv_bias=True, qk_scale=None, drop=0., attn_drop=0., drop_path=0.,
-                 act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+                 act_layer=FastGELU, norm_layer=nn.LayerNorm):
         super().__init__()
         self.dim = dim
         self.input_resolution = input_resolution
@@ -201,7 +340,7 @@ class SwinTransformerBlock(nn.Module):
             dim, window_size=to_2tuple(self.window_size), num_heads=num_heads,
             qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
 
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = NpuDropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
@@ -231,18 +370,39 @@ class SwinTransformerBlock(nn.Module):
 
         self.register_buffer("attn_mask", attn_mask)
 
+        self.index_dict = {}
+        self.index_device = torch.device('cpu')
+        hw_list = [48, 24, 12] # H/W of feature maps
+        for hw in hw_list:
+            H, W = hw, hw
+            self.index_dict[(H, W, self.shift_size)] = get_roll_index(H, W, self.shift_size)
+            self.index_dict[(H, W, -self.shift_size)] = get_roll_index(H, W, -self.shift_size)
+
+    def cast_index_device(self, device):
+        for v in self.index_dict.values():
+            v[0] = v[0].to(device)
+            v[1] = v[1].to(device)
+
+    @amp.half_function
     def forward(self, x):
+        if not self.index_device == x.device:
+            self.cast_index_device(x.device)
+            self.index_device = x.device
+
         H, W = self.input_resolution
         B, L, C = x.shape
         assert L == H * W, "input feature has wrong size"
 
         shortcut = x
+        x = x.npu_format_cast(29)
         x = self.norm1(x)
-        x = x.view(B, H, W, C)
+        x = x.view(B, H, W, C).npu_format_cast(2)
 
         # cyclic shift
         if self.shift_size > 0:
-            shifted_x = torch.roll(x, shifts=(-self.shift_size, -self.shift_size), dims=(1, 2))
+            index_fp = self.index_dict[(H, W, -self.shift_size)][0]
+            index_bp = self.index_dict[(H, W, -self.shift_size)][1]
+            shifted_x = roll_index_select(x, index_fp, index_bp)
         else:
             shifted_x = x
 
@@ -259,14 +419,16 @@ class SwinTransformerBlock(nn.Module):
 
         # reverse cyclic shift
         if self.shift_size > 0:
-            x = torch.roll(shifted_x, shifts=(self.shift_size, self.shift_size), dims=(1, 2))
+            index_fp = self.index_dict[(H, W, self.shift_size)][0]
+            index_bp = self.index_dict[(H, W, self.shift_size)][1]
+            x = roll_index_select(shifted_x, index_fp, index_bp)
         else:
             x = shifted_x
         x = x.view(B, H * W, C)
 
         # FFN
         x = shortcut + self.drop_path(x)
-        x = x + self.drop_path(self.mlp(self.norm2(x)))
+        x = x + self.drop_path(self.mlp(self.norm2(x.npu_format_cast(29))))
 
         return x
 
@@ -305,6 +467,7 @@ class PatchMerging(nn.Module):
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
         self.norm = norm_layer(4 * dim)
 
+    @amp.half_function
     def forward(self, x):
         """
         x: B, H*W, C
@@ -314,14 +477,10 @@ class PatchMerging(nn.Module):
         assert L == H * W, "input feature has wrong size"
         assert H % 2 == 0 and W % 2 == 0, f"x size ({H}*{W}) are not even."
 
-        x = x.view(B, H, W, C)
-
-        x0 = x[:, 0::2, 0::2, :]  # B H/2 W/2 C
-        x1 = x[:, 1::2, 0::2, :]  # B H/2 W/2 C
-        x2 = x[:, 0::2, 1::2, :]  # B H/2 W/2 C
-        x3 = x[:, 1::2, 1::2, :]  # B H/2 W/2 C
-        x = torch.cat([x0, x1, x2, x3], -1)  # B H/2 W/2 4*C
-        x = x.view(B, -1, 4 * C)  # B H/2*W/2 4*C
+        x = x.reshape(B, int(H / 2), 2, int(W / 2), 2, C)
+        x = x.permute(0, 1, 3, 4, 2, 5)
+        x = x.reshape(B, int(H * W / 4), C * 4)
+        x = x.npu_format_cast(2).npu_format_cast(29).contiguous()
 
         x = self.norm(x)
         x = self.reduction(x)
@@ -443,8 +602,9 @@ class PatchEmbed(nn.Module):
         # FIXME look at relaxing size constraints
         assert H == self.img_size[0] and W == self.img_size[1], \
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
-        x = self.proj(x).flatten(2).transpose(1, 2)  # B Ph*Pw C
+        x = self.proj(x).flatten(2).transpose(1, 2).contiguous()  # B Ph*Pw C
         if self.norm is not None:
+            x = x.npu_format_cast(2).npu_format_cast(29)
             x = self.norm(x)
         return x
 
@@ -515,7 +675,7 @@ class SwinTransformer(nn.Module):
             self.absolute_pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim))
             trunc_normal_(self.absolute_pos_embed, std=.02)
 
-        self.pos_drop = nn.Dropout(p=drop_rate)
+        self.pos_drop = nn.Dropout(p=drop_rate) if drop_rate > 0. else nn.Identity()
 
         # stochastic depth
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]  # stochastic depth decay rule
@@ -561,6 +721,7 @@ class SwinTransformer(nn.Module):
     def no_weight_decay_keywords(self):
         return {'relative_position_bias_table'}
 
+    @amp.half_function
     def forward_features(self, x):
         x = self.patch_embed(x)
         if self.ape:
@@ -575,6 +736,7 @@ class SwinTransformer(nn.Module):
         x = torch.flatten(x, 1)
         return x
 
+    @amp.half_function
     def forward(self, x):
         x = self.forward_features(x)
         x = self.head(x)

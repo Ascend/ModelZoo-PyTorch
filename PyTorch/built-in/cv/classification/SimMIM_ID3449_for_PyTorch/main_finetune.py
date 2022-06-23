@@ -13,6 +13,7 @@ import datetime
 import numpy as np
 
 import torch
+import random
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 
@@ -26,10 +27,13 @@ from lr_scheduler import build_scheduler
 from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, load_pretrained, save_checkpoint, get_grad_norm, auto_resume_helper, reduce_tensor
+from models.swin_transformer import NpuDropPath
 
 try:
     # noinspection PyUnresolvedReferences
     from apex import amp
+    amp.register_half_function(torch.nn.functional, 'softmax')
+    amp.register_half_function(torch, 'fast_gelu')
 except ImportError:
     amp = None
 
@@ -54,6 +58,7 @@ def parse_option():
                         help="whether to use gradient checkpointing to save memory")
     parser.add_argument('--amp-opt-level', type=str, default='O1', choices=['O0', 'O1', 'O2'],
                         help='mixed precision opt level, if O0, no amp is used')
+    parser.add_argument('--loss-scale-value', type=int, help='set loss scale value')
     parser.add_argument('--output', default='output', type=str, metavar='PATH',
                         help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
     parser.add_argument('--tag', help='tag of experiment')
@@ -75,12 +80,13 @@ def main(config):
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_model(config, is_pretrain=False)
-    model.cuda()
+    model.npu()
     logger.info(str(model))
+    NpuDropPath.enable_droppath_ensemble(model)
 
     optimizer = build_optimizer(config, model, logger, is_pretrain=False)
     if config.AMP_OPT_LEVEL != "O0":
-        model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL, combine_grad=True, user_cast_preferred=True)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
     model_without_ddp = model.module
 
@@ -160,8 +166,8 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
     start = time.time()
     end = time.time()
     for idx, (samples, targets) in enumerate(data_loader):
-        samples = samples.cuda(non_blocking=True)
-        targets = targets.cuda(non_blocking=True)
+        samples = samples.npu(non_blocking=True)
+        targets = targets.npu(non_blocking=True)
 
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
@@ -207,16 +213,19 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
             optimizer.step()
             lr_scheduler.step_update(epoch * num_steps + idx)
 
-        torch.cuda.synchronize()
+        torch.npu.synchronize()
 
         loss_meter.update(loss.item(), targets.size(0))
         norm_meter.update(grad_norm)
         batch_time.update(time.time() - end)
         end = time.time()
 
+        if idx < 10:
+            batch_time.reset()
+
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[-1]['lr']
-            memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+            memory_used = torch.npu.max_memory_allocated() / (1024.0 * 1024.0)
             etas = batch_time.avg * (num_steps - idx)
             logger.info(
                 f'Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{num_steps}]\t'
@@ -241,8 +250,8 @@ def validate(config, data_loader, model):
 
     end = time.time()
     for idx, (images, target) in enumerate(data_loader):
-        images = images.cuda(non_blocking=True)
-        target = target.cuda(non_blocking=True)
+        images = images.npu(non_blocking=True)
+        target = target.npu(non_blocking=True)
 
         # compute output
         output = model(images)
@@ -264,7 +273,7 @@ def validate(config, data_loader, model):
         end = time.time()
 
         if idx % config.PRINT_FREQ == 0:
-            memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
+            memory_used = torch.npu.max_memory_allocated() / (1024.0 * 1024.0)
             logger.info(
                 f'Test: [{idx}/{len(data_loader)}]\t'
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -281,23 +290,31 @@ def throughput(data_loader, model, logger):
     model.eval()
 
     for idx, (images, _) in enumerate(data_loader):
-        images = images.cuda(non_blocking=True)
+        images = images.npu(non_blocking=True)
         batch_size = images.shape[0]
         for i in range(50):
             model(images)
-        torch.cuda.synchronize()
+        torch.npu.synchronize()
         logger.info(f"throughput averaged with 30 times")
         tic1 = time.time()
         for i in range(30):
             model(images)
-        torch.cuda.synchronize()
+        torch.npu.synchronize()
         tic2 = time.time()
         logger.info(f"batch_size {batch_size} throughput {30 * batch_size / (tic2 - tic1)}")
         return
 
 
 if __name__ == '__main__':
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
+
     _, config = parse_option()
+
+    random.seed(1234)
+    np.random.seed(1234)
+    torch.manual_seed(1234)
+    os.environ['PYTHONHASHSEED'] = str(1234)
 
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
@@ -309,8 +326,8 @@ if __name__ == '__main__':
     else:
         rank = -1
         world_size = -1
-    torch.cuda.set_device(config.LOCAL_RANK)
-    torch.distributed.init_process_group(backend='nccl', init_method='env://', world_size=world_size, rank=rank)
+    torch.npu.set_device(config.LOCAL_RANK)
+    torch.distributed.init_process_group(backend='hccl', init_method='env://', world_size=world_size, rank=rank)
     torch.distributed.barrier()
 
     seed = config.SEED + dist.get_rank()

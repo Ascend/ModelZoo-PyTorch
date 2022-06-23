@@ -9,6 +9,7 @@
 import json
 from functools import partial
 from torch import optim as optim
+import apex
 
 
 def build_optimizer(config, model, logger, is_pretrain):
@@ -34,10 +35,10 @@ def build_pretrain_optimizer(config, model, logger):
     opt_lower = config.TRAIN.OPTIMIZER.NAME.lower()
     optimizer = None
     if opt_lower == 'sgd':
-        optimizer = optim.SGD(parameters, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True,
+        optimizer = apex.optimizers.NpuFusedSGD(parameters, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True,
                               lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
     elif opt_lower == 'adamw':
-        optimizer = optim.AdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
+        optimizer = apex.optimizers.NpuFusedAdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
                                 lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
 
     logger.info(optimizer)
@@ -96,10 +97,10 @@ def build_finetune_optimizer(config, model, logger):
     opt_lower = config.TRAIN.OPTIMIZER.NAME.lower()
     optimizer = None
     if opt_lower == 'sgd':
-        optimizer = optim.SGD(parameters, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True,
+        optimizer = apex.optimizers.NpuFusedSGD(parameters, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True,
                               lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
     elif opt_lower == 'adamw':
-        optimizer = optim.AdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
+        optimizer = apex.optimizers.NpuFusedAdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
                                 lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
 
     logger.info(optimizer)
