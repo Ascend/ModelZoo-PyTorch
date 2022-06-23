@@ -104,14 +104,16 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 |   |── video_accuracy.py
 ├── test # 测试脚本
 |   |── env_npu.sh
-|   |── gpu_train_full_1p.sh      # GPU 1P（包含了精度和性能）
-|   |── gpu_train_full_1p_withgroup.sh # GPU 1P（包含了精度和性能）注：这里使用了预训练文件
-|   |── gpu_train_full_8p.sh      # GPU 8P（包含了精度和性能）
-|   |── gpu_train_full_8p_withgroup.sh # GPU 8P（包含了精度和性能）注：这里使用了预训练文件
-|   |── npu_train_full_1p.sh      # NPU 1P完整训练（精度）
-|   |── npu_train_full_8p.sh      # NPU 8P完整训练（精度）
-|   |── npu_train_performance_1p.sh # NPU 1P训练（性能）
-|   |── npu_train_performance_8p.sh # NPU 8P训练（性能）
+|   |── gpu 
+|   |   |── gpu_train_full_1p.sh      # GPU 1P（包含了精度和性能）
+|   |   |── gpu_train_full_1p_withgroup.sh # GPU 1P（包含了精度和性能）注：这里使用了预训练文件
+|   |   |── gpu_train_full_8p.sh      # GPU 8P（包含了精度和性能）
+|   |   |── gpu_train_full_8p_withgroup.sh # GPU 8P（包含了精度和性能）注：这里使用了预训练文件
+|   |── env_npu.sh
+|   |── train_full_1p.sh      # NPU 1P完整训练（精度）
+|   |── train_full_8p.sh      # NPU 8P完整训练（精度）
+|   |── train_performance_1p.sh # NPU 1P训练（性能）
+|   |── train_performance_8p.sh # NPU 8P训练（性能）
 ├── utils # 视频数据转化代码
 |   |── __init__.py
 |   |── n_frames_ucf101_hmdb51.py
@@ -165,7 +167,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh 
-    bash gpu_train_full_1p_withgroup.sh root_path
+    bash gpu/gpu_train_full_1p_withgroup.sh root_path
 ```
 
 执行日志保存在'results/gpu_train_full_1p_withgroup.log'中
@@ -177,7 +179,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh
-    bash gpu_train_full_8p_withgroup.sh root_path
+    bash gpu/gpu_train_full_8p_withgroup.sh root_path
 ```
 
 执行日志保存在'results/gpu_train_full_8p_withgroup.log'中
@@ -187,7 +189,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test
     source set_npu_env.sh 
-    bash gpu_train_full_1p.sh  root_path
+    bash gpu/gpu_train_full_1p.sh  root_path
 ```
 
 执行日志保存在'results/gpu_train_full_1p.log'中
@@ -198,7 +200,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh 
-    bash gpu_train_full_8p.sh root_path
+    bash gpu/gpu_train_full_8p.sh root_path
 ```
 
 执行日志保存在'results/gpu_train_full_8p.log'中
@@ -209,7 +211,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh 
-    bash npu_train_full_1p.sh root_path
+    bash train_full_1p.sh root_path
 ```
 
 执行日志保存在'results/npu_train_full_1p.log'中
@@ -219,7 +221,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh 
-    bash npu_train_performance_1p.sh root_path
+    bash train_performance_1p.sh root_path
 ```
 
 执行日志保存在'results/npu_train_performance_1p.log'中
@@ -229,7 +231,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh 
-    bash npu_train_full_8p.sh root_path
+    bash train_full_8p.sh root_path
 ```
 
 执行日志保存在'results/npu_train_full_8p.log'中
@@ -239,7 +241,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 ```python
     cd test 
     source set_npu_env.sh 
-    bash npu_train_performance_8p.sh root_path
+    bash train_performance_8p.sh root_path
 ```
 
 执行日志保存在'results/npu_train_performance_8p.log'中

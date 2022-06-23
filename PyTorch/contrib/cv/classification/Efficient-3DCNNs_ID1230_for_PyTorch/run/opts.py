@@ -41,7 +41,7 @@ def parse_opts():
     parser.add_argument('--use_prof', default=1, type=int, help='use_prof')
     parser.add_argument('--use_apex', default=0, type=int, help='use_apex')
     parser.add_argument('--opt_level', default='O2', type=str, help='Initial opt_level')
-    parser.add_argument('--loss_scale', default=128, type=float, help='Initial loss_scale')
+    parser.add_argument('--loss_scale', default='dynamic', help='Initial loss_scale')
 
     parser.add_argument('--batch_size', default=8, type=int, help='Batch Size')
     parser.add_argument('--n_epochs', default=2, type=int, help='Number of total epochs to run')
