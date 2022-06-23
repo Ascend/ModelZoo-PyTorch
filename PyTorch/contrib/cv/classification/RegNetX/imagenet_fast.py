@@ -26,9 +26,10 @@ import random
 import numpy as np
 
 import torch
-import torch.npu
-if torch.__version__ >="1.8.1":
+if torch.__version__ >= "1.8.1":
     import torch_npu
+else:
+    import torch.npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.nn.functional as F
