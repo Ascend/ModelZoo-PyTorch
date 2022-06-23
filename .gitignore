@@ -140,5 +140,9 @@ fusion_result.json
 *.doc
 *.x86_64
 unsupported_op.csv
+*.zip
+*.rar
+*.7z
+*.csv
 
-
+kernel_meta*/
