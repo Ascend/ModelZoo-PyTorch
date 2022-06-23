@@ -50,7 +50,7 @@ ${chip_name}可通过`npu-smi info`指令查看
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
-bash test/pth2om.sh edsr_baseline_x2-1bc95232.pt ./Ascend${chip_name} # Ascend310P3
+bash test/pth2om.sh EDSR_x2.pt Ascend${chip_name} # Ascend310P3
 # 测试精度
 bash test/eval_acc_perf.sh
 # 测试性能
