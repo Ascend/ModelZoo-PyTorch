@@ -22,6 +22,8 @@ import argparse
 import os
 import sys
 import torch
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 from torch.backends import cudnn
 import torch.distributed as dist#lmm
 import torch.multiprocessing as mp
@@ -74,7 +76,7 @@ def train(rank, cfg, args):
         arguments = {}
 
         if "npu" in cfg.MODEL.DEVICE:
-            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale=64.0)
+            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale='dynamic')
         
         do_train_with_center(
             cfg,
