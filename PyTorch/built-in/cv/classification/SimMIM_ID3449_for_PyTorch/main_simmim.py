@@ -59,6 +59,7 @@ def parse_option():
     parser.add_argument('--output', default='output', type=str, metavar='PATH',
                         help='root of output folder, the full path is <output>/<model_name>/<tag> (default: output)')
     parser.add_argument('--tag', help='tag of experiment')
+    parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
 
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
@@ -202,10 +203,9 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
 
 
 if __name__ == '__main__':
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    args, config = parse_option()
+    os.environ['MASTER_ADDR'] = args.addr
     os.environ['MASTER_PORT'] = '29688'
-
-    _, config = parse_option()
 
     random.seed(1234)
     np.random.seed(1234)
