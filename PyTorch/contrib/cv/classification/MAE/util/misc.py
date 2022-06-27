@@ -248,8 +248,14 @@ def init_distributed_mode(args):
     args.dist_backend = 'hccl'
     print('| distributed init (rank {}): {}, npu {}'.format(
         args.rank, args.dist_url, args.npu), flush=True)
-    torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                         world_size=args.world_size, rank=args.rank)
+    if int(os.getenv("RANK_SIZE", 0)) > 8:
+        args.rank = int(os.getenv("NODE_RANK", 0)) * 8 + args.rank
+        print("the global_rank is :", args.rank)
+        dist.init_process_group(backend=args.dist_backend,
+                                world_size=args.world_size, rank=args.rank)
+    else:
+        dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
+                                world_size=args.world_size, rank=args.rank)
     torch.distributed.barrier()
     setup_for_distributed(args.rank == 0)
 
