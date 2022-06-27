@@ -17,7 +17,7 @@ train_epochs=2
 device_id=0
 # 加载数据进程数
 workers=64
-device_id=0
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -78,13 +78,13 @@ fi
 cd utils
 sh make.sh
 cd ..
-python3.7 prepare_data.py --data_file_path ${data_path}
+nohup python3.7 ${cur_path}/prepare_data.py --data_file_path ${data_path}
 pth_save_path=/root/.cache/torch/checkpoints/
 if [ ! -d ${pth_save_path} ];then
     mkdir -p ${pth_save_path}
 fi
 cp ${data_path}/resnet101-5d3b4d8f.pth ${pth_save_path}
-python3.7 main_train.py \
+nohup python3.7 ${cur_path}/main_train.py \
     --backbone res101 \
     --opt_level O1 \
     --dataset UCAS_AOD \
@@ -105,7 +105,7 @@ python3.7 main_train.py \
 
 wait
 
-python3.7 init_data.py --data_file_path ${data_path}
+nohup python3.7 ${cur_path}/init_data.py --data_file_path ${data_path}
 ##################获取训练数据################
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
