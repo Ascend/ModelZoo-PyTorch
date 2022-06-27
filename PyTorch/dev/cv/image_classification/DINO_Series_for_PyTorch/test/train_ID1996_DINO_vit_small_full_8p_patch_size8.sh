@@ -26,7 +26,7 @@ ckpt_path=""
 #网络名称，同目录名称
 Network="DINO_vit_small_ID1996_for_PyTorch"
 #训练epoch
-train_epochs=100
+train_epochs=25
 #训练batch_size
 batch_size=16
 #训练step
@@ -128,11 +128,14 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../main_dino.py \
         --batch_size_per_gpu $batch_size \
         --lr $learning_rate \
         --min_lr 1.25e-7 \
-        $PREC > ${cur_path}/output/0/train_0.log 2>&1 &
+        $PREC \
+        --warmup_teacher_temp_epochs 1 \
+        --use_fp16 true > ${cur_path}/output/0/train_0.log 2>&1 &
 wait
 
 python3 ${cur_path}/../eval_knn.py \
-      --data_path $data_path/
+      --data_path $data_path/ \
+      --patch_size 8 \
       --pretrained_weights ${cur_path}/output/0/ckpt/checkpoint.pth \
       --checkpoint_key teacher > ${cur_path}/output/0/test.log 2>&1 &
 wait

@@ -26,7 +26,7 @@ ckpt_path=""
 #网络名称，同目录名称
 Network="DINO_xcit_medium24_ID3265_for_PyTorch"
 #训练epoch
-train_epochs=300
+train_epochs=10
 #训练batch_size
 batch_size=8
 #训练step
@@ -128,14 +128,15 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../main_dino.py \
         --epochs $train_epochs \
         --batch_size_per_gpu $batch_size \
         --lr $learning_rate \
-        --min_lr 6.25e-7 \
-        --is_debug \
-        $PREC \
-        --max_steps $train_steps > ${cur_path}/output/0/train_0.log 2>&1 &       
+        $PREC  \
+        --min_lr 2.5e-7 \
+        --warmup_teacher_temp_epochs 1 \
+        --use_fp16 true > ${cur_path}/output/0/train_0.log 2>&1 &       
 
 wait
 python3 ${cur_path}/../eval_knn.py \
-      --data_path $data_path/
+      --data_path $data_path/ \
+      --arch xcit_medium_24_p8 \
       --pretrained_weights ${cur_path}/output/0/ckpt/checkpoint.pth \
       --checkpoint_key teacher > ${cur_path}/output/0/test.log 2>&1 &
 wait
