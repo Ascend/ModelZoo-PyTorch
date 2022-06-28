@@ -11,14 +11,13 @@
 ```
 pip install -r requirements.txt
 ```
-
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision 建议Pillow版本是9.1.0 torchvision版本是0.6.0
 ## Dataset
 1. 下载coco数据集，包含图片、annotations、labels图片、annotations:
 	```
 	cd yolor
 	bash scripts/get_coco.sh
 	```
-2. 将coco数据集放于工程根目录下
     coco目录结构如下：
 	```
    coco
@@ -40,48 +39,26 @@ pip install -r requirements.txt
    |-- train2017.txt
    |-- val2017.cache
    `-- val2017.txt
-	```	  
+	```
 
-注：数据集路径在./yolor/data/coco.yaml中设定，训练前请确认路径无误，如果路径不一致需要修改。
-原coco.yaml文件如图：
-![coco_yaml](./figure/coco_yaml.png)
-
-## Train Model
-### GPU 1P：在目录yolor下，运行 ./test/train_gpu_1p.sh
-```
-chmod +x ./test/train_gpu_1p.sh
-bash ./test/train_gpu_1p.sh
-```
-若需要指定训练使用的卡号, 可修改train_gpu_1p.sh文件 "--device 0"配置项,其中卡号为0-7
-
-### GPU 8P：在目录yolor下，运行 ./test/train_gpu_8p.sh
-```
-chmod +x ./test/train_gpu_8p.sh
-bash ./test/train_gpu_8p.sh
-```
-
-### NPU 1P：在目录yolor下，运行 train_performance_1p.sh
+### NPU 1P：在目录yolor下，运行 train_performance_1p.sh  data_path为coco数据集的路径
 ```
 chmod +x ./test/train_performance_1p.sh
-bash ./test/train_performance_1p.sh
+bash ./test/train_performance_1p.sh  --data_path=/data/coco   #性能训练
 ```
 若需要指定训练使用的卡号, 可修改train_performance_1p.sh文件 "--npu 0"配置项,其中卡号为0-7
 
-### NPU 8P：在目录yolor下，运行 train_performance_8p.sh
+### NPU 8P：在目录yolor下，运行 train_performance_8p.sh  data_path为coco数据集的路径
 ```
 chmod +x ./test/train_performance_8p.sh
-bash ./test/train_performance_8p.sh
+bash ./test/train_performance_8p.sh  --data_path=/data/coco   #性能训练
 ```
 
-注：在模型训练结束时，程序默认会将save的最后一个模型去除optimizer以减少模型大小，这会load模型，而在8P训练中，save和load的进程可能会不同步导致先load后save而报错，所以train_performance_8p.sh默认训练3个epoch（只要大于1个epoch即可）。
-如果用户只想要训练一个epoch并且保留模型的optimizer，在train_mp.py中注释掉如下部分代码即可：
-![strip_optimizer](./figure/strip_optimizer.jpg)
 
-
-### NPU 8P Full：在目录yolor下，运行 train_full_8p.sh
+### NPU 8P Full：在目录yolor下，运行 train_full_8p.sh  data_path为coco数据集的路径
 ```
 chmod +x ./test/train_full_8p.sh
-bash ./test/train_full_8p.sh
+bash ./test/train_full_8p.sh  --data_path=/data/coco        #精度训练
 ```
 
 ## Evaluation
