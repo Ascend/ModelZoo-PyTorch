@@ -39,29 +39,27 @@
 
 二、训练流程：
 
-1、下载预训练模型MLT-Pretrain-Resnet50, [ Google Drive ]( https://drive.google.com/open?id=1T9n0HTP3X3Y_nJ0D1ekMhCQRHntORLJG )，并将MLT-Pretrain-Resnet50 放在当前DB模型路径下 path-to-model-directory 文件夹中;
-
-```
-__ path-to-model-directory
-  |__ MLT-Pretrain-ResNet50
-```
-
-
-2、 下载icdar2015数据集，放在文件夹datasets下;
+1、 下载icdar2015数据集，放在文件夹datasets下;
 
 ```
 __ datasets
   |__icdar2015
 ```
+2、下载预训练模型MLT-Pretrain-Resnet50, [ Google Drive ]( https://drive.google.com/open?id=1T9n0HTP3X3Y_nJ0D1ekMhCQRHntORLJG )，放置到path-to-model-directory文件夹中;
 
+```
+__path-to-model-directory
+   |__ MLT-Pretrain-ResNet50
+```
 
 3、开始训练：
 单卡训练流程：
 
 ```
-	1.安装环境
+	1.安装环境，确认预训练模型放置路径，若该路径路径与model_path默认值相同，可不传参，否则执行训练脚本时必须传入model_path参数；
 	2.开始训练
-              bash ./test/train_full_1p.sh  --data_path=./datasets            [ data_path为数据集路径，写到datasets，即data_path路径不包含icdar2015 ]
+              bash ./test/train_full_1p.sh  --data_path=./datasets  --model_path=预训练模型路径
+              [ data_path为数据集路径，写到datasets，即data_path路径不包含icdar2015 ]   
 ```
 
 **注意**：如果发现打屏日志有报checkpoint not found的warning，请再次检查第二章节预训练模型MLT-Pretrain-Resnet50的配置，以免影响精度。
@@ -69,12 +67,11 @@ __ datasets
 多卡训练流程：
 
 ```
-	1.安装环境
+	1.安装环境，确认预训练模型放置路径，若该路径路径与model_path默认值相同，可不传参，否则执行训练脚本时必须传入model_path参数；
                 2.开始训练
-              bash ./test/train_full_8p.sh  --data_path=./datasets             [ data_path为数据集路径，写到datasets，即data_path路径不包含icdar2015 ]
+              bash ./test/train_full_8p.sh  --data_path=./datasets         --model_path=预训练模型路径
+              [ data_path为数据集路径，写到datasets，即data_path路径不包含icdar2015 ]    
 ```
-
-
 
 模型评估：
 
