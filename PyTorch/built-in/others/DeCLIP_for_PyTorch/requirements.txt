@@ -1,0 +1,10 @@
+torchvision==0.9.1
+timm
+ftfy
+regex
+kestrel
+yacs
+sklearn
+easydict
+tensorboardX
+textaugment
