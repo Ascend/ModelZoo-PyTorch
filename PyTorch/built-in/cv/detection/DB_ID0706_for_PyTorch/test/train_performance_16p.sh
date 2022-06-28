@@ -18,7 +18,7 @@ server_index=""
 fix_node_ip=""
 devicesnum=""
 # 检验预训练模型的路径
-model_path = /npu/traindata/ICDAR2015/db_ckpt
+model_path=/npu/traindata/ICDAR2015/db_ckpt
 
 # 训练epoch
 train_epochs=1

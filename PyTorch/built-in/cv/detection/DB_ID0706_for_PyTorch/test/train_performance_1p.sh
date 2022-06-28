@@ -19,7 +19,7 @@ export DYNAMIC_OP="ADD"
 # 数据集路径,保持为空,不需要修改
 data_path=""
 # 检验预训练模型的路径
-model_path = /npu/traindata/ICDAR2015/db_ckpt
+model_path=/npu/traindata/ICDAR2015/db_ckpt
 
 # 训练epoch
 train_epochs=1
