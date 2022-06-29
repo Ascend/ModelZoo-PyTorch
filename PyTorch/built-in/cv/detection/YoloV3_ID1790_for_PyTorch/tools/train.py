@@ -18,7 +18,8 @@ import os
 import os.path as osp
 import time
 import warnings
-
+import cv2
+cv2.setNumThreads(0)
 import mmcv
 import torch
 if torch.__version__ >= "1.8.1":
