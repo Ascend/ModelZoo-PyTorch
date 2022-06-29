@@ -113,7 +113,7 @@ batch size为4、8、16、32、64的同上
 2. 执行预处理脚本，生成数据集预处理后的bin文件
 
 ```
-python3.7 preprocess.py -–data_dir ${dataset_path} --out_dir ${prep_output_dir} –gt_path ${groundtruth_path}
+python3.7 preprocess.py -–data-dir ${dataset_path} --out-dir ${prep_output_dir} –-gt-path ${groundtruth_path}
 ```
 
 ## 1.5. 离线推理
@@ -148,7 +148,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 调用postprocess.py脚本与gt_bs1.npy比对，可以获得Accuracy Top1，Top5数据。
 
 ```
-python3.7 postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt_path}
+python3.7 postprocess.py –-result-dir ${msame_bin_path} –-gt-path ${gt_path}
 ```
 
 查看输出的结果：
