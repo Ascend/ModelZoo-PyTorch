@@ -95,18 +95,9 @@ def pre_process(loader, output_dir, gt_path, args):
         last_batch = batch_idx == last_idx
         if args.channels_last:
             input = input.contiguous(memory_format=torch.channels_last)
-        if num == 0:
-            bin_data = input.numpy()
-            num += 1
-        elif num > 0 and num < 64:
-            bin_data = np.concatenate((bin_data,input.numpy()),axis=0)
-            num += 1
-        elif num == 64:
-            print(bin_data.shape)
-            num = 1
-            save_path = output_dir / f"{batch_idx-1:0>5d}.bin"
-            bin_data.tofile(save_path)
-            bin_data = input.numpy()
+        bin_data = input.numpy()
+        save_path = output_dir / f"{batch_idx-1:0>5d}.bin"
+        bin_data.tofile(save_path)
         labels.append(target)
 
     np.save(gt_path, np.vstack(labels))
