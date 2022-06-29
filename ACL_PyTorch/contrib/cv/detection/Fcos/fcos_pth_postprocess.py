@@ -128,10 +128,10 @@ if __name__ == '__main__':
         cls_segms = []
 
         if os.path.exists(path_base + "_" + "1" + ".bin") and os.path.exists(path_base + "_" + "2" + ".bin"):
-            bboxes = np.fromfile(path_base + "_" + str(flags.net_out_num - 1) + ".bin", dtype="float32")
+            bboxes = np.fromfile(path_base + "_" + str(flags.net_out_num - 2) + ".bin", dtype="float32")
             bboxes = np.reshape(bboxes, [100, 5])
             bboxes = torch.from_numpy(bboxes)
-            labels = np.fromfile(path_base + "_" + str(flags.net_out_num - 2) + ".bin", dtype="int64")
+            labels = np.fromfile(path_base + "_" + str(flags.net_out_num - 1) + ".bin", dtype="int64")
             labels = np.reshape(labels, [100, 1])
             labels = torch.from_numpy(labels)
 
