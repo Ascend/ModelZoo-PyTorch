@@ -51,7 +51,7 @@ def _parse_args():
     args.model_ema_force_cpu = False
     args.model_ema_decay = 0.99996
     args.seed = 42
-    args.batch_size = 64
+    args.batch_size = 1
     args.num_classes = 1000
 
     return args
