@@ -35,7 +35,7 @@
 
 
 ```
-CANN 5.0.4
+CANN 5.1.RC1
 torch==1.5.0+ascend.post5.20220315
 torchvision==0.6.0
 timm==0.3.2
