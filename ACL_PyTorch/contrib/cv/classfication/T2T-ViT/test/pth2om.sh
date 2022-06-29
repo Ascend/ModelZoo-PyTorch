@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 生成onnx文件
-python3.7 pth2onnx.py
+python3.7 T2T_ViT_pth2onnx.py
 
 # 配置环境变量
 source env.sh
