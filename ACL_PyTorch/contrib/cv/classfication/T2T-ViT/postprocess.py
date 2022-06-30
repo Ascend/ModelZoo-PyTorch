@@ -42,7 +42,7 @@ _logger = logging.getLogger('train')
 
 def _parse_args():
 
-    parser = argparse.ArgumentParser(description='T2T-ViT preprocess.')
+    parser = argparse.ArgumentParser(description='T2T-ViT postprocess.')
     parser.add_argument('--result-dir', type=str, metavar='DIR', help='path to model output')
     parser.add_argument('--gt-path', type=str, metavar='PATH', help='path to groundtruth')
     args = parser.parse_args()
