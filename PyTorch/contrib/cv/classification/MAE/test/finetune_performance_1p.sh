@@ -82,7 +82,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python -u main_finetune.py \
+nohup python3 -u main_finetune.py \
              --data_path ${data_path} \
              --finetune ${finetune_pth} \
              --output_dir ${output_dir} \

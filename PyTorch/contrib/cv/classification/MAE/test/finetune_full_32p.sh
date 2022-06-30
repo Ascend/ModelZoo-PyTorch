@@ -79,7 +79,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python -u -m torch.distributed.launch --nnodes=4 --node_rank=$NODE_RANK --nproc_per_node=8 --master_addr ${master_addr} --master_port 7164 main_finetune.py \
+nohup python3 -u -m torch.distributed.launch --nnodes=4 --node_rank=$NODE_RANK --nproc_per_node=8 --master_addr ${master_addr} --master_port 7164 main_finetune.py \
              --addr ${master_addr} \
              --data_path ${data_path} \
              --finetune ${finetune_pth} \
