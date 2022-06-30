@@ -130,6 +130,7 @@ dmypy.json
 *.mp4
 *.pkl
 *.npy
+*.npz
 *.bin
 *.wav
 *.bmp
