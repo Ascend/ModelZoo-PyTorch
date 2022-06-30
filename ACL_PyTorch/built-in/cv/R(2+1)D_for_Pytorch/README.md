@@ -97,13 +97,13 @@ python3.7 r2plus1d_preprocess.py --config=./mmaction2/configs/recognition/r2plus
 
 - **2.4 模型性能测试**
 ```
-python3.7.5 ./aclruntime-XXX/frontend/main.py --model ./r2plus1d_bs4.om --loop 50
+python3.7.5 ./ais_infer_x86_64/ais_infer.py --model ./r2plus1d_bs4.om --loop 50
 ```
 
 - **2.5 模型精度测试**
 模型推理数据集
 ```
-python3.7.5 ./aclruntime-XXX/frontend/main.py --model ./r2plus1d_bs4.om --input ./predata_bts1/ --output ./lcmout/ --outfmt NPY
+python3.7.5 ./ais_infer_x86_64/ais_infer.py --model ./r2plus1d_bs4.om --input ./predata_bts1/ --output ./lcmout/ --outfmt NPY
 --model：模型地址
 --input：预处理完的数据集文件夹
 --output：推理结果保存地址
