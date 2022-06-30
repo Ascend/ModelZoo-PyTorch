@@ -50,15 +50,12 @@ timm==0.3.2
 
 ## 1.3. 模型转换
 
-- [T2T-ViT预训练pth、onnx、om权重文件，提取码：y3b2](https://pan.baidu.com/s/1PPRgM_UQlOoG9twagTjBEA)
 
 ### 1.3.1. pth转onnx模型
 
 1. 下载pth权重文件
-   [T2T-ViT预训练pth、onnx、om权重文件，提取码：y3b2](https://pan.baidu.com/s/1PPRgM_UQlOoG9twagTjBEA)
-
-2. T2T-ViT模型代码在models文件里
-4. 执行pth2onnx.py脚本，生成onnx模型文件
+   [T2T-ViT预训练pth权重文件](https://github.com/yitu-opensource/T2T-ViT)
+2. 执行pth2onnx.py脚本，生成onnx模型文件
 
 ```
 python3.7 pth2onnx.py
