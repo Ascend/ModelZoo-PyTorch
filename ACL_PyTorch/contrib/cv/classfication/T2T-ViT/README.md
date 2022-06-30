@@ -29,7 +29,7 @@
 ### 1.1.2. 代码地址
 
 [T2T-ViT代码](https://github.com/yitu-opensource/T2T-ViT)
-
+commit_id=143df41f2e372364188027d826393cdff99a37fd
 
 ## 1.2. 环境说明
 
