@@ -74,13 +74,7 @@ source env.sh
 2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
 ```
-# CANN安装目录
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+
 # 将atc日志打印到屏幕
 #export ASCEND_SLOG_PRINT_TO_STDOUT=1
 # 设置日志级别
@@ -88,13 +82,13 @@ export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 # 开启ge dump图
 #export DUMP_GE_GRAPH=2
 # 参考命令
-atc --framework=5 --model=T2T_ViT_14.onnx --output=T2T_ViT_14_bs1_test --input_format=NCHW --input_shape="input:1,3,224,224" --soc_version=Ascend710 --keep_dtype=keep_dtype.cfg
+atc --framework=5 --model=T2T_ViT_14.onnx --output=T2T_ViT_14_bs1_test --input_format=NCHW --input_shape="input:1,3,224,224" --soc_version=Ascend310 --keep_dtype=keep_dtype.cfg
 ```
 
 若生成batch size为1的om模型，对应的命令为：
 
 ```
-atc --framework=5 --model=T2T_ViT_14.onnx --output=T2T_ViT_14_bs1_test --input_format=NCHW --input_shape="input:1,3,224,224" --soc_version=Ascend710 --keep_dtype=keep_dtype.cfg
+atc --framework=5 --model=T2T_ViT_14.onnx --output=T2T_ViT_14_bs1_test --input_format=NCHW --input_shape="input:1,3,224,224" --soc_version=Ascend310 --keep_dtype=keep_dtype.cfg
 ```
 
 batch size为4、8、16、32、64的同上
@@ -171,7 +165,7 @@ Top-1 accuracy of the model is: 81.5%
 
 ### 1.6.3. 对比结果
 
-|    模型     |                        官网pth精度                        | 310离线推理精度 | 基准性能 | 710性能 |
+|    模型     |                        官网pth精度                        | 310离线推理精度 | 基准性能 | 310P性能 |
 | :---------: | :-------------------------------------------------------: | :-------------: | :------: | :-----: |
 | T2T-ViT bs1 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%   |  24fps   | 153fps  |
 | T2T-ViT bs8 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%   |  39fps   | 270fps  |
