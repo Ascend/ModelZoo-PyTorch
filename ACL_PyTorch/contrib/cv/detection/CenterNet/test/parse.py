@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import sys
-import re
+
 
 if __name__ == '__main__':
     if sys.argv[1].endswith('.txt'):
         result_txt = sys.argv[1]
         with open(result_txt, 'r') as f:
             content = f.read()
-        txt_data_list = [i.strip() for i in re.findall(r':(.*?),', content.replace('\n', ',') + ',')]
-        fps = float(txt_data_list[7].replace('samples/s', '')) * 4
-        print('310 bs{} fps:{}'.format(result_txt.split('_')[3], fps))
+        fps = content.split('\n')[-2].split(',')[1].split(':')[-1] # 解析310P的结果
+        # fps = float(content.split('\n')[-2].split(',')[1].split(':')[-1])*4 # 解析310的结果
+        print('310P bs{} fps:{}'.format(result_txt.split('_')[3], fps))

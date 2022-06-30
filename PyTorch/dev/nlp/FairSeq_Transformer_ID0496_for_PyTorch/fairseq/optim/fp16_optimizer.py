@@ -95,7 +95,7 @@ class DynamicLossScaler(object):
             a = torch.randn([8], device=f'npu:{NPU_CALCULATE_DEVICE}').fill_(2)
             float_status = torch.npu_alloc_float_status(a)
             local_float_status = torch.npu_get_float_status(float_status)
-            if (float_status[0] != 0):
+            if (float_status.cpu()[0] != 0):
                 cleared_float_status = torch.npu_clear_float_status(local_float_status)
                 return True
             else:

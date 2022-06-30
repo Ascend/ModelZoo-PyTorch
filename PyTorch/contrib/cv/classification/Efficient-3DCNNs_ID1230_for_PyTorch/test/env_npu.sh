@@ -34,8 +34,7 @@ ${install_path}/driver/tools/msnpureport -g error -d 5
 ${install_path}/driver/tools/msnpureport -g error -d 6
 ${install_path}/driver/tools/msnpureport -g error -d 7
 
-export DUMP_GRAPH_LEVEL=0
-export DUMP_GE_GRAPH=0
+
 
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0

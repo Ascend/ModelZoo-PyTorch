@@ -15,6 +15,8 @@
 import os
 import json
 import torch
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 from torch import nn
 from torch import optim
 from torch.optim import lr_scheduler
@@ -112,11 +114,7 @@ if __name__ == '__main__':
 
     if opt.use_apex == 1:
         from apex import amp
-        if opt.loss_scale < 0:
-            model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level, loss_scale=None)
-        else:
-            # model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level, loss_scale=opt.loss_scale, combine_grad=True)
-            model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level, loss_scale=opt.loss_scale)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level, loss_scale=opt.loss_scale)
 
     # resume model
     best_pre1 = 0

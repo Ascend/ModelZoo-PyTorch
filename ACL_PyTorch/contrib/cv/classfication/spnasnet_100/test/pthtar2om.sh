@@ -4,7 +4,7 @@ rm -rf spnasnet_100.onnx
 
 python3.7 pthtar2onnx.py model_best.pth.tar spnasnet_100.onnx
 
-source set_env.sh
+source /usr/local/Ascend/ascend-lastest/set_env.sh
 
 rm -rf spnasnet_100_bs1.om spnasnet_100_bs16.om
 

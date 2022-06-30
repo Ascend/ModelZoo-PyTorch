@@ -18,6 +18,7 @@ import logging
 import os 
 import sys 
 import time 
+import random
 import torch 
 import torch.autograd as autograd
 import torch.backends.cudnn as cudnn
@@ -104,7 +105,8 @@ def main_worker(args):
     model, optimizer = apex.amp.initialize(
         model, optimizer, 
         opt_level=args.opt_level, 
-        loss_scale=args.loss_scale
+        loss_scale=args.loss_scale,
+        combine_grad=True
     )
     if args.distributed:
         model = par.DistributedDataParallel(model, device_ids=[args.local_rank])
@@ -436,8 +438,8 @@ def parse_args():
     parser.add_argument('--opt-level', default='O2', type=str, choices=['O1', 'O2'],
                         help='optimization level of amp.initialize (default: \'O2\')')
 
-    parser.add_argument('--loss-scale', default=128, type=int,
-                        help='loss scale of amp.initialize (default: 128)')
+    parser.add_argument('--loss-scale', default='dynamic', type=str,
+                        help='loss scale of amp.initialize (default: dynamic)')
 
     parser.add_argument('--num-classes', default=1000, type=int, 
                         help='number of classification classes (default: 1000)')
@@ -502,6 +504,8 @@ def parse_args():
                         action='store_false',
                         help='do not preserve the aspect ratio when resizing an image')
 
+    parser.add_argument('--manualSeed', type=int, default=3407, help='manual seed')
+
     parser.set_defaults(preserve_aspect_ratio=True)
 
     args = parser.parse_args()
@@ -515,8 +519,13 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    random.seed(args.manualSeed)
+    torch.manual_seed(args.manualSeed)
     if 'npu' in args.device:
+        if torch.__version__ >= '1.8.1':
+            import torch_npu
         import torch.npu 
+        torch.npu.manual_seed_all(args.manualSeed)
         if args.distributed:
             os.environ['MASTER_ADDR'] = '127.0.0.1'
             os.environ['MASTER_PORT'] = '23333'

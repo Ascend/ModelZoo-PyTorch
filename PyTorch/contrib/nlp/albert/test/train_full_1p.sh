@@ -1,4 +1,4 @@
-# encoding=utf-8
+encoding=utf-8
 
 source ./test/env_npu.sh
 
@@ -40,7 +40,7 @@ export OUTPUR_DIR=./outputs
 export PYTHONPATH=./:$PYTHONPATH
 export DEVICE=npu
 TASK_NAME="SST-2"
-nohup python3.7 ./run_classifier.py \
+python3.7 ./run_classifier.py \
   --device=$DEVICE \
   --model_type=$BERT_MODEL \
   --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \
@@ -60,7 +60,7 @@ nohup python3.7 ./run_classifier.py \
   --overwrite_output_dir \
   --seed=42 \
   --fp16 \
-  --fp16_opt_level=O2
+  --fp16_opt_level=O2 
 
 rm -rf ./test/output
 mkdir ./test/output

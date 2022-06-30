@@ -6,7 +6,7 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 
-export RANK_SIZE=8
+export RANK_SIZE=16
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -110,7 +110,7 @@ sed -i "s|'epoch_num': 200|'epoch_num': $train_epochs|g" $cur_path/../task/pose.
 sed -i "s|'train_iters': 1000|'train_iters': $train_steps|g" $cur_path/../task/pose.py
 sed -i "s|annot_dir = 'data/MPII/annot'|annot_dir = '$data_path/data/MPII/annot'|g" $cur_path/../datat/MPII/ref.py
 sed -i "s|img_dir = 'data/MPII/images'|img_dir = '$data_path/data/MPII/images'|g" $cur_path/../datat/MPII/ref.py
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+for((RANK_ID=$RANK_ID_START;RANK_ID<8;RANK_ID++));
 do
     #设置环境变量，不需要修改
     echo "Device ID: $ASCEND_DEVICE_ID"

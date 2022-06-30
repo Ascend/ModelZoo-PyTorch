@@ -14,7 +14,7 @@ data_path=""
 # 训练epoch
 train_epochs=100
 # 指定训练所使用的npu device卡id
-device_id=0,1,2,3,4,5,6,7
+device_id=0
 # 加载数据进程数
 workers=9
 

@@ -27,6 +27,9 @@ batch_size=64
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
 learning_rate=0.1
+#二进制开关
+bin_mode=False
+bin_analysis=False
 
 #维持参数，以下不需要修改
 over_dump=False
@@ -52,6 +55,10 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
     fi
 done
 
@@ -65,7 +72,23 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-   
+
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    sed -i "45itorch.npu.global_step_inc()" ${cur_path}/../train.py
+fi
+
+#设置二进制变量
+if [ $bin_analysis == "True" ];then
+    #增加编译缓存设置
+    line=`grep "    main()" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption = {}" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+fi  
 cd $cur_path
 #设置环境变量，不需要修改
 echo "Device ID: $ASCEND_DEVICE_ID"
@@ -121,6 +144,16 @@ echo "E2E Training Duration sec : $e2e_time"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+#修改二进制用例名称
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
+
+#获取二进制支持算子
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量

@@ -1,0 +1,11 @@
+decord == 0.6.0
+einops == 0.4.1
+matplotlib ==  3.5.1
+numpy == 1.21.2
+onnx == 1.10.2
+onnxruntime == 1.11.0
+opencv-contrib-python == 4.5.5.64
+Pillow == 9.0.1
+scipy == 1.7.3
+torch == 1.11.0
+yapf == 0.32.0

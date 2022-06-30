@@ -14,6 +14,8 @@
 
 import sklearn  # sklearn一定要在torch前面import否则会报错
 import torch, os
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from model.model import parsingNet
 from utils.common import merge_config
 from utils.dist_utils import dist_print

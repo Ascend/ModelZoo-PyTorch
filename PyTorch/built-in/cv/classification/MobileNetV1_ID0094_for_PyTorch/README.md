@@ -1,81 +1,40 @@
-Implementation of MobileNet, modified from https://github.com/pytorch/examples/tree/master/imagenet.
-imagenet data is processed [as described here](https://github.com/facebook/fb.resnet.torch/blob/master/INSTALL.md#download-the-imagenet-dataset)
+## 一、依赖
 
+    NPU配套的run包安装
+    Python 3.7.5
+    PyTorch(NPU版本)
+    apex(NPU版本)
+    torch(NPU版本)
+    torchvision
+    pillow
 
-nohup python main.py -a mobilenet ImageNet-Folder  > log.txt &
+## 二、训练流程：
+注意：data_path为数据集imagenet所在的路径；
+     pillow建议安装较新版本，与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision，建议Pillow版本是9.1.0 torchvision版本是0.6.0
+   
+### 单卡训练流程：
 
-Results
-- sgd :                    top1 68.848 top5 88.740 [download](https://pan.baidu.com/s/1nuRcK3Z)
-- rmsprop:                top1 0.104  top5 0.494
-- rmsprop init from sgd :  top1 69.526 top5 88.978 [donwload](https://pan.baidu.com/s/1eRCxYKU)
-- paper:                  top1 70.6
-
-Benchmark:
-
-Titan-X, batchsize = 16
-```
-  resnet18 : 0.004030
-   alexnet : 0.001395
-     vgg16 : 0.002310
-squeezenet : 0.009848
- mobilenet : 0.073611
-```
-Titan-X, batchsize = 1
-```
-  resnet18 : 0.003688
-   alexnet : 0.001179
-     vgg16 : 0.002055
-squeezenet : 0.003385
- mobilenet : 0.076977
+```shell
+	1. 安装环境
+	2. 开始训练
+	    bash test/train_full_1p.sh  --data_path=/data/imagenet
 ```
 
----------
+	
+### 多卡训练流程
 
+```shell
+	1. 安装环境
+	2. 开始训练
+	    bash test/train_full_8p.sh  --data_path=/data/imagenet
 ```
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
 
-        def conv_bn(inp, oup, stride):
-            return nn.Sequential(
-                nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
-                nn.BatchNorm2d(oup),
-                nn.ReLU(inplace=True)
-            )
 
-        def conv_dw(inp, oup, stride):
-            return nn.Sequential(
-                nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
-                nn.BatchNorm2d(inp),
-                nn.ReLU(inplace=True),
+
+	
+## 三、测试结果
     
-                nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(oup),
-                nn.ReLU(inplace=True),
-            )
+- 训练日志路径：在训练脚本的同目录下result文件夹里，如：
 
-        self.model = nn.Sequential(
-            conv_bn(  3,  32, 2), 
-            conv_dw( 32,  64, 1),
-            conv_dw( 64, 128, 2),
-            conv_dw(128, 128, 1),
-            conv_dw(128, 256, 2),
-            conv_dw(256, 256, 1),
-            conv_dw(256, 512, 2),
-            conv_dw(512, 512, 1),
-            conv_dw(512, 512, 1),
-            conv_dw(512, 512, 1),
-            conv_dw(512, 512, 1),
-            conv_dw(512, 512, 1),
-            conv_dw(512, 1024, 2),
-            conv_dw(1024, 1024, 1),
-            nn.AvgPool2d(7),
-        )
-        self.fc = nn.Linear(1024, 1000)
-
-    def forward(self, x):
-        x = self.model(x)
-        x = x.view(-1, 1024)
-        x = self.fc(x)
-        return x
-```
+        /home/MobileNet/test/output/
+        

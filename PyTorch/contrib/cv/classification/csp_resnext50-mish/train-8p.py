@@ -37,6 +37,8 @@ from contextlib import suppress
 from datetime import datetime
 
 import torch
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -273,7 +275,7 @@ parser.add_argument('--distributed',action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')   
 parser.add_argument("--world_size", default=1, type=int)
-parser.add_argument("--loss-scale", default=1024, type=int)
+parser.add_argument("--loss-scale", default='dynamic', type=str)
 parser.add_argument('--reprob', type=float, default=0., metavar='PCT',
                     help='Random erase prob (default: 0.)')
 parser.add_argument('--remode', type=str, default='const',

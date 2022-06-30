@@ -40,7 +40,7 @@ def pth2onnx(input_file, output_file):
         output_names=output_names,
         dynamic_axes = dynamic_axes,
         verbose=True,
-        opset_version=11)
+        opset_version=10)
 
 
 if __name__ == "__main__":

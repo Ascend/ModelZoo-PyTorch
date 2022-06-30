@@ -5,10 +5,13 @@
 # 网络名称，同目录名称
 Network="XCIT"
 # 训练batch_size
-batch_size=256
+# batch_size=256
+batch_size=200
 # 训练使用的npu卡数
 export RANK_SIZE=1
 export WORLD_SIZE=1
+export MASTER_ADDR=localhost
+export MASTER_PORT=12345
 data_path_info=$1
 data_path=`echo ${data_path_info#*=}`
 
@@ -61,13 +64,14 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345 \
-          main.py \
-          --model xcit_small_12_p16 \
-          --input-size 224 \
-          --data-path ${data_path} \
-          --epoch 1 \
-          --batch-size ${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
+#python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345 \
+python3.7 main.py \
+        --model xcit_small_12_p16 \
+        --input-size 224 \
+        --data-path ${data_path} \
+        --epoch 1 \
+        --local_rank 0 \
+        --batch-size ${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 
 wait
 

@@ -24,6 +24,8 @@
 
 from typing import Dict, Optional
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from torch import nn, Tensor
 from torch.nn import Parameter
 import torch.nn.functional as F

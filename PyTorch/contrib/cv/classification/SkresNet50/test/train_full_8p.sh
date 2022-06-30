@@ -74,7 +74,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
 
-    taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
+    taskset -c $PID_START-$PID_END python -u imagenet_fast.py \
         --data $data_path \
         --epochs 100 \
         --schedule 30 60 90 \
@@ -82,17 +82,17 @@ do
         --gamma 0.1 \
         -c checkpoints/ \
         --lr 0.2 \
-        --train-batch $batch_size \
-        --opt-level O2 \
-        --wd-all \
-        --label-smoothing 0. \
+        --train_batch $batch_size \
+        --opt_level O2 \
+        --wd_all \
+        --label_smoothing 0. \
         --warmup 0 \
-        --device-list 0,1,2,3,4,5,6,7 \
-        --loss-scale 16.0 \
+        --device_list 0,1,2,3,4,5,6,7 \
+        --loss_scale  'dynamic'\
         --rank 0 \
-        --world-size 1\
+        --world_size 1\
         --local_rank $RANK_ID \
-        --log-name 'train_8p.log' \
+        --log_name 'train_8p.log' \
         -j $(($(nproc)/8)) > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait

@@ -1,0 +1,92 @@
+2022-02-10 06:05:35 [INFO] MsFmkTransplt start working now, please wait for a moment.
+2022-02-10 06:05:35 [INFO] Input path: /data/cwx689420/research_PT/GTN/msFmkTransplt/SRGAN-master.
+2022-02-10 06:05:35 [INFO] Output path: output/SRGAN-master_msft.
+2022-02-10 06:05:35 [INFO] Analysis start...
+2022-02-10 06:05:35 [INFO] output/SRGAN-master_msft/LICENSE is not a python script, skip.
+2022-02-10 06:05:35 [INFO] Start analysis output/SRGAN-master_msft/test_image.py.
+2022-02-10 06:05:35 [INFO] OperatorType.INSERT in line 10 ~ 11, import and init statement of torch.npu
+2022-02-10 06:05:35 [INFO] OperatorType.INSERT in line 11 ~ 12, import and init statement of torch.npu
+2022-02-10 06:05:35 [INFO] OperatorType.MODIFY in line 25 ~ 25, change function cuda to npu
+2022-02-10 06:05:35 [INFO] OperatorType.MODIFY in line 33 ~ 33, change function cuda to npu
+2022-02-10 06:05:35 [INFO] Analysis output/SRGAN-master_msft/test_image.py complete.
+2022-02-10 06:05:35 [INFO] Start analysis output/SRGAN-master_msft/loss.py.
+2022-02-10 06:05:35 [INFO] OperatorType.INSERT in line 5 ~ 6, import and init statement of torch.npu
+2022-02-10 06:05:35 [INFO] OperatorType.INSERT in line 28 ~ 29, import and init statement of torch.npu
+2022-02-10 06:05:35 [INFO] Analysis output/SRGAN-master_msft/loss.py complete.
+2022-02-10 06:05:35 [INFO] Start analysis output/SRGAN-master_msft/train.py.
+2022-02-10 06:05:36 [INFO] OperatorType.INSERT in line 17 ~ 18, import and init statement of torch.npu
+2022-02-10 06:05:36 [INFO] OperatorType.INSERT in line 18 ~ 19, import and init statement of torch.npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 45 ~ 45, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 46 ~ 46, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 47 ~ 47, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 70 ~ 70, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 73 ~ 73, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 127 ~ 127, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 128 ~ 128, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 44 ~ 44, change module cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 69 ~ 69, change module cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 72 ~ 72, change module cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 126 ~ 126, change module cuda to npu
+2022-02-10 06:05:36 [INFO] Analysis output/SRGAN-master_msft/train.py complete.
+2022-02-10 06:05:36 [INFO] Start analysis output/SRGAN-master_msft/test_benchmark.py.
+2022-02-10 06:05:36 [INFO] OperatorType.INSERT in line 16 ~ 17, import and init statement of torch.npu
+2022-02-10 06:05:36 [INFO] OperatorType.INSERT in line 17 ~ 18, import and init statement of torch.npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 30 ~ 30, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 46 ~ 46, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 47 ~ 47, change function cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 29 ~ 29, change module cuda to npu
+2022-02-10 06:05:36 [INFO] OperatorType.MODIFY in line 45 ~ 45, change module cuda to npu
+2022-02-10 06:05:36 [INFO] Analysis output/SRGAN-master_msft/test_benchmark.py complete.
+2022-02-10 06:05:36 [INFO] output/SRGAN-master_msft/README.md is not a python script, skip.
+2022-02-10 06:05:36 [INFO] Start analysis output/SRGAN-master_msft/data_utils.py.
+2022-02-10 06:05:37 [INFO] OperatorType.INSERT in line 8 ~ 9, import and init statement of torch.npu
+2022-02-10 06:05:37 [INFO] OperatorType.INSERT in line 12 ~ 13, import and init statement of torch.npu
+2022-02-10 06:05:37 [INFO] Analysis output/SRGAN-master_msft/data_utils.py complete.
+2022-02-10 06:05:37 [INFO] Start analysis output/SRGAN-master_msft/model.py.
+2022-02-10 06:05:37 [WARNING] torch.nn.PReLU in line 13 ~ 13 is not supported
+2022-02-10 06:05:37 [WARNING] torch.nn.PReLU in line 92 ~ 92 is not supported
+2022-02-10 06:05:37 [WARNING] torch.nn.PReLU in line 111 ~ 111 is not supported
+2022-02-10 06:05:37 [INFO] OperatorType.INSERT in line 5 ~ 6, import and init statement of torch.npu
+2022-02-10 06:05:37 [INFO] OperatorType.INSERT in line 40 ~ 41, import and init statement of torch.npu
+2022-02-10 06:05:37 [INFO] Analysis output/SRGAN-master_msft/model.py complete.
+2022-02-10 06:05:37 [INFO] Start analysis output/SRGAN-master_msft/test_video.py.
+2022-02-10 06:05:38 [INFO] OperatorType.INSERT in line 13 ~ 14, import and init statement of torch.npu
+2022-02-10 06:05:38 [INFO] OperatorType.INSERT in line 13 ~ 14, import and init statement of torch.npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 27 ~ 27, change function cuda to npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 55 ~ 55, change function cuda to npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 26 ~ 26, change module cuda to npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 54 ~ 54, change module cuda to npu
+2022-02-10 06:05:38 [INFO] Analysis output/SRGAN-master_msft/test_video.py complete.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/msFmkTranspltlog.txt is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/data/.gitkeep is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/benchmark_results/.gitkeep is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/test/train_performance_1p.sh is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/statistics/.gitkeep is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/8.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/10.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/5.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/3.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/4.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/11.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/12.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/video_SRF_4.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/6.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/2.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/9.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/7.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/video_SRF_8.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/1.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/images/video_SRF_2.png is not a python script, skip.
+2022-02-10 06:05:38 [INFO] Start analysis output/SRGAN-master_msft/pytorch_ssim/__init__.py.
+2022-02-10 06:05:38 [INFO] OperatorType.INSERT in line 7 ~ 8, import and init statement of torch.npu
+2022-02-10 06:05:38 [INFO] OperatorType.INSERT in line 12 ~ 13, import and init statement of torch.npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 60 ~ 60, change the arg at position 0 of function cuda to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 74 ~ 74, change the arg at position 0 of function cuda to f'npu:{NPU_CALCULATE_DEVICE}'
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 60 ~ 60, change function cuda to npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 74 ~ 74, change function cuda to npu
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 59 ~ 59, replace attribute "img1.is_cuda" with "img1.is_npu"
+2022-02-10 06:05:38 [INFO] OperatorType.MODIFY in line 73 ~ 73, replace attribute "img1.is_cuda" with "img1.is_npu"
+2022-02-10 06:05:38 [INFO] Analysis output/SRGAN-master_msft/pytorch_ssim/__init__.py complete.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/training_results/.gitkeep is not a python script, skip.
+2022-02-10 06:05:38 [INFO] output/SRGAN-master_msft/epochs/.gitkeep is not a python script, skip.
+2022-02-10 06:05:38 [INFO] MsFmkTransplt run success, welcome to the next use.

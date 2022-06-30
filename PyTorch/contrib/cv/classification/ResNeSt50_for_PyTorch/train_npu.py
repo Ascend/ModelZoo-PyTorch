@@ -33,6 +33,8 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.backends.cudnn as cudnn
 from torch.nn.parallel import DistributedDataParallel
+if torch.__version__ >="1.8.1":
+    import torch_npu
 
 import apex
 from apex import amp
@@ -85,8 +87,8 @@ class Options():
         # apex
         parser.add_argument('--amp', default=False, action='store_true',
                             help='use amp to train the model')
-        parser.add_argument('--loss-scale', default=64., type=float,
-                            help='loss scale using in amp, default -1 means dynamic')
+        parser.add_argument('--loss-scale', default="dynamic",
+                            help='loss scale using in amp, default is dynamic')
         parser.add_argument('--opt-level', default='O2', type=str,
                             help='train mode in amp', choices=['O0', 'O1', 'O2', 'O3'])
 
@@ -147,8 +149,7 @@ def profiling(data_loader, model, criterion, optimizer, args):
         else:
             with torch.autograd.profiler.profile(use_npu=True) as prof:
                 update(model, images, target, optimizer)
-
-    prof.export_chrome_trace("output.prof")
+            prof.export_chrome_trace("output.prof")
 
 
 def main():
@@ -175,6 +176,7 @@ def main():
     args.gpu = args.rank
 
     # init device
+    print(torch.__version__)
     device_loc = 'npu:%d' % args.rank
 
     if args.gpu == 0 or args.world_size == 1:

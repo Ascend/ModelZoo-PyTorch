@@ -143,7 +143,7 @@ FPS=`grep "Train:"  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_I
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep "Test:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "(" '{print $4}'|awk -F ")" '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'|sed s/[[:space:]]//g`
+train_accuracy=`grep "*** Best metric:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $4}' `
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

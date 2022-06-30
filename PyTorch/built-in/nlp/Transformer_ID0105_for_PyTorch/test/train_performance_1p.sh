@@ -27,6 +27,8 @@ batch_size=128
 #训练epoch，不需要修改
 epochs=1
 
+# 指定训练所使用的npu device卡id
+device_id=0
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -44,8 +46,16 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-
-ASCEND_DEVICE_ID=0
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
 
 #创建DeviceID输出目录，不需要修改
 if [ -d $test_path_dir/output/${ASCEND_DEVICE_ID} ];then
@@ -65,8 +75,8 @@ MODELDIR="./checkpoints/"
 mkdir -p "$MODELDIR"
 LOGFILE="$MODELDIR/log"
 STAT_FILE="log.txt"
-sed -i "s|if i>100:pass|if i>100:break|g" train_1p.py
-sed -i "s|if m >=2:pass|if m >=2:break|g" train_1p.py
+sed  -i "/if i > 100/{N;s/.*/        if i > 100:\n            break/}" train_1p.py
+sed  -i "/if m >= 2/{N;s/.*/        if m >= 2:\n            break/}" train_1p.py
 
 # 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
@@ -116,8 +126,8 @@ nohup python3.7 -u train_1p.py \
   --amp-level O2  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     
 wait
-sed -i "s|if i>100:break|if i>100:pass|g" train_1p.py
-sed -i "s|if m >=2:break|if m>=2:pass|g" train_1p.py
+sed  -i "/if i > 100/{N;s/.*/        if i > 100:\n            pass/}" train_1p.py
+sed  -i "/if m >= 2/{N;s/.*/        if m >= 2:\n            pass/}" train_1p.py
 ##################获取训练数据################
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -126,10 +136,11 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=` grep -rns "Time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep -v "all" |awk -F "Time" '{print$2}' |awk -F "(" '{print$1}'|tail -n +5|awk '{sum+=$1} END {print"",128*NR/sum}'|sed s/[[:space:]]//g`
-FPS=`python3 -c "print(${time}*96)"`
+fps=` grep -rns "Time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep -v "all" |awk -F "Time" '{print$2}' |awk -F "(" '{print$1}'|tail -n +5|awk '{sum+=$1} END {print"",128*NR/sum}'|sed s/[[:space:]]//g`
+FPS=`python3 -c "print(${fps}*96)"`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+echo "Final Performance Sentence/s : $fps"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"

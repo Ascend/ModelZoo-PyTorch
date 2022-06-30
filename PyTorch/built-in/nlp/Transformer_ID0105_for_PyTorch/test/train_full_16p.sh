@@ -120,7 +120,7 @@ do
       --min-lr 0.0 \
       --dropout 0.1 \
       --weight-decay 0.0 \
-      --criterion label_smoothed_cross_entropy \
+      --criterion cross_entropy \
       --label-smoothing 0.1 \
       --max-sentences 128\
       --max-tokens 102400 \

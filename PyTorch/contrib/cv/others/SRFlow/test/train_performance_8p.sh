@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="SRFlow"
 # 训练batch_size
-batch_size=32
+batch_size=24
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改

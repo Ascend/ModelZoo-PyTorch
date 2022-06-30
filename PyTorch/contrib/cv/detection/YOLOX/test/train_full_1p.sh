@@ -83,6 +83,9 @@ fi
 
 wait
 
+nohup python3.7 tools/eval.py -n yolox-x -d 1 -b ${batch_size} --cf YOLOX_outputs/yolox_x/ --conf 0.001 >> ${test_path_dir}/output/0/train_0.log 2>&1 &
+
+wait
 
 ##################获取训练数据################
 #训练结束时间，不需要修改
@@ -97,7 +100,7 @@ FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'best' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $18}'`
+train_accuracy=`cat ${test_path_dir}/output/0/train_0.log |grep 'Average Precision' | grep '0.50:0.95' | grep all | grep -v small | awk 'END {print}' | awk '{print $13}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

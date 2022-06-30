@@ -23,6 +23,8 @@ import warnings
 
 import numpy as np
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.multiprocessing as mp

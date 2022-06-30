@@ -77,7 +77,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 main.py  \
+nohup python3.7 main.py  \
         --model_type R2U_Net \
         --data_path=$data_path \
         --batch_size $batch_size \

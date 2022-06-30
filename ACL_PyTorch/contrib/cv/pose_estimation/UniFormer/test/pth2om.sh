@@ -8,6 +8,9 @@ do
     if [[ $para == --batch_size* ]]; then
         batch_size=`echo ${para#*=}`
     fi
+    if [[ $para == --soc_version* ]]; then
+        soc_version=`echo ${para#*=}`
+    fi
 done
 
 rm -f uniformer_dybs.onnx
@@ -29,7 +32,7 @@ rm -f uniformer_bs$batch_size.om
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --framework=5 --model=uniformer_dybs.onnx --output=uniformer_bs$batch_size --input_format=NCHW \
-    --input_shape="input:$batch_size,3,256,192" --log=error --soc_version=Ascend710
+    --input_shape="input:$batch_size,3,256,192" --log=error --soc_version=${soc_version}
 
 if [ -f "uniformer_bs$batch_size.om" ]; then
     echo "success"

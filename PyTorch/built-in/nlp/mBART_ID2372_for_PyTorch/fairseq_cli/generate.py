@@ -56,7 +56,7 @@ def _main(args, output_file):
         stream=output_file,
     )
     logger = logging.getLogger("fairseq_cli.generate")
-    torch.npu.global_step_inc()
+    torch.npu.set_compile_mode(jit_compile=False)
     option={}
     option['ACL_OP_SELECT_IMPL_MODE'] = 'high_performance'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'LayerNorm'

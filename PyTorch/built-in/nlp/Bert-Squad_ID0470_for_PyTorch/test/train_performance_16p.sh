@@ -1,9 +1,5 @@
 #!/bin/bash
-export PATH=/usr/local/hdf5/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=/usr/local/hdf5/lib:$LIBRARY_PATH
-export CPATH=/usr/local/hdf5/include:$CPATH
-export HDF5_DISABLE_VERSION_CHECK=1
+
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -18,7 +14,7 @@ else
 fi
 
 #集合通信参数,不需要修改
-export RANK_SIZE=8
+export RANK_SIZE=16
 RANK_ID_START=0
 
 #非平台场景时source 环境变量
@@ -134,7 +130,7 @@ export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'
 cd $cur_path
 mkdir -p results/SQUAD
 rank=0
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+for((RANK_ID=$RANK_ID_START;RANK_ID<8;RANK_ID++));
 do
     #设置环境变量，不需要修改
     export ASCEND_DEVICE_ID=$RANK_ID
@@ -170,7 +166,7 @@ do
 		  --max_steps 100 \
 		  --use_npu \
 		  --loss_scale 4096 \
-		  --vocab_file "data/uncased_L-24_H-1024_A-16/vocab.txt" \
+		  --vocab_file ${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt \
 		  --do_eval \
           --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \

@@ -22,6 +22,8 @@ import PIL
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.distributed as dist

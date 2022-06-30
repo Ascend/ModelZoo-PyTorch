@@ -25,7 +25,7 @@ from torch.nn import CrossEntropyLoss
 from .modeling_utils import PreTrainedModel, prune_linear_layer
 from .configuration_albert import AlbertConfig
 from .file_utils import add_start_docstrings
-from tools.common import logger  # get args via logger
+from ..tools.common import logger  # get args via logger
 
 ALBERT_PRETRAINED_MODEL_ARCHIVE_MAP = {
     'albert-base': "",

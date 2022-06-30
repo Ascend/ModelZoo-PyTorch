@@ -32,8 +32,8 @@ import logging
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
-
 import torch
+import torch_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -397,7 +397,7 @@ def main():
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if use_amp == 'apex':
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale=args.loss_scale)
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale=args.loss_scale,combine_grad=True)
         loss_scaler = ApexScaler()
         if args.local_rank == 0:
             _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')
@@ -488,7 +488,8 @@ def main():
         num_workers=args.workers,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
-        use_multi_epochs_loader=args.use_multi_epochs_loader
+        use_multi_epochs_loader=args.use_multi_epochs_loader,
+        persistent_workers=False
     )
 
     loader_eval = create_loader(
@@ -503,6 +504,7 @@ def main():
         num_workers=args.workers,
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
+        persistent_workers=False
     )
 
     # setup loss function
@@ -541,7 +543,6 @@ def main():
 
     try:
         for epoch in range(start_epoch, num_epochs):
-
             train_metrics = train_one_epoch(
                 epoch, model, loader_train, optimizer, train_loss_fn, args,
                 lr_scheduler=lr_scheduler, saver=saver, output_dir=output_dir,
@@ -734,3 +735,6 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 
 if __name__ == '__main__':
     main()
+
+
+

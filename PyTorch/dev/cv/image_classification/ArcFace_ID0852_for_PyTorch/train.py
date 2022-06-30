@@ -75,6 +75,13 @@ import apex
 # 使能混合精度
 
 def train(args):
+    rank_size = int(os.environ['RANK_SIZE'])
+    rank_id = int(os.environ['RANK_ID'])
+    distributed = rank_size > 1
+    # gpu init
+    if distributed:
+        args.batch_size=int(args.batch_size/rank_size)
+        torch.distributed.init_process_group('hccl', rank=rank_id, world_size=rank_size)
     # gpu init
     multi_gpus = False
     if len(args.gpus.split(',')) > 1:
@@ -88,7 +95,10 @@ def train(args):
     # 使能混合精度
 
     # log init
-    save_dir = os.path.join(args.save_dir, args.model_pre + args.backbone.upper() + '_' + datetime.now().strftime('%Y%m%d_%H%M%S'))
+    if distributed:
+        save_dir = os.path.join(args.save_dir,str(args.device_id), args.model_pre + args.backbone.upper() + '_' + datetime.now().strftime('%Y%m%d_%H%M%S'))
+    else:
+        save_dir = os.path.join(args.save_dir, args.model_pre + args.backbone.upper() + '_' + datetime.now().strftime('%Y%m%d_%H%M%S'))
     if os.path.exists(save_dir):
         raise NameError('model dir exists!')
     os.makedirs(save_dir)
@@ -102,10 +112,16 @@ def train(args):
     ])
     # validation dataset
     trainset = CASIAWebFace(args.train_root, args.train_file_list, transform=transform)
+    if distributed:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(trainset)
+    else:
+        train_sampler = None
+
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
-                                              shuffle=True, num_workers=8, drop_last=False)
-    # test dataset
-    '''
+                                              shuffle=(train_sampler is None), num_workers=8, drop_last=False,sampler=train_sampler)
+
+        # test dataset
+
     lfwdataset = LFW(args.lfw_test_root, args.lfw_file_list, transform=transform)
     lfwloader = torch.utils.data.DataLoader(lfwdataset, batch_size=128,
                                              shuffle=False, num_workers=4, drop_last=False)
@@ -115,7 +131,7 @@ def train(args):
     cfpfpdataset = CFP_FP(args.cfpfp_test_root, args.cfpfp_file_list, transform=transform)
     cfpfploader = torch.utils.data.DataLoader(cfpfpdataset, batch_size=128,
                                               shuffle=False, num_workers=4, drop_last=False)
-    '''
+
     # define backbone and margin layer
     if args.backbone == 'MobileFace':
         net = MobileFaceNet()
@@ -162,11 +178,13 @@ def train(args):
     optimizer_ft = apex.optimizers.NpuFusedSGD([
         {'params': net.parameters(), 'weight_decay': 5e-4},
         {'params': margin.parameters(), 'weight_decay': 5e-4}
-    ], lr=0.1, momentum=0.9, nesterov=True)
+    ], lr=0.1 if not distributed else (0.1*rank_size), momentum=0.9, nesterov=True)
     exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer_ft, milestones=[6, 11, 16], gamma=0.1)
 
     # 使能混合精度
     net.npu()
+    if distributed:
+        margin.npu()
     if args.apex:
         net, optimizer_ft = amp.initialize(net, optimizer_ft,
                                            opt_level=args.apex_opt_level,
@@ -175,8 +193,8 @@ def train(args):
     # 使能混合精度
 
     if multi_gpus:
-        net = DataParallel(net).to(device)
-        margin = DataParallel(margin).to(device)
+        net = torch.nn.parallel.DistributedDataParallel(net,device_ids=[args.device_id],broadcast_buffers=False,find_unused_parameters=True)
+        margin = torch.nn.parallel.DistributedDataParallel(margin,device_ids=[args.device_id],output_device=args.device_id,broadcast_buffers=False,find_unused_parameters=True)
     else:
         net = net.to(device)
         margin = margin.to(device)
@@ -191,6 +209,8 @@ def train(args):
     total_iters = 0
     #vis = Visualizer(env=args.model_pre + args.backbone)
     for epoch in range(1, args.total_epoch + 1):
+        if distributed:
+            train_sampler.set_epoch(epoch)
         exp_lr_scheduler.step()
         # train model
         _print('Train Epoch: {}/{} ...'.format(epoch, args.total_epoch))
@@ -258,43 +278,41 @@ def train(args):
                     os.path.join(save_dir, 'Iter_%06d_margin.ckpt' % total_iters))
 
             # test accuracy
-            '''
-            if total_iters % args.test_freq == 0:
+            
+        # test model on lfw
+    net.eval()
+    getFeatureFromTorch('./result/cur_lfw_result.mat', net, device, lfwdataset, lfwloader)
+    lfw_accs = evaluation_10_fold('./result/cur_lfw_result.mat')
+    _print('LFW Ave Accuracy: {:.4f}'.format(np.mean(lfw_accs) * 100))
+    if best_lfw_acc <= np.mean(lfw_accs) * 100:
+        best_lfw_acc = np.mean(lfw_accs) * 100
+        best_lfw_iters = total_iters
 
-                # test model on lfw
-                net.eval()
-                getFeatureFromTorch('./result/cur_lfw_result.mat', net, device, lfwdataset, lfwloader)
-                lfw_accs = evaluation_10_fold('./result/cur_lfw_result.mat')
-                _print('LFW Ave Accuracy: {:.4f}'.format(np.mean(lfw_accs) * 100))
-                if best_lfw_acc <= np.mean(lfw_accs) * 100:
-                    best_lfw_acc = np.mean(lfw_accs) * 100
-                    best_lfw_iters = total_iters
+    # test model on AgeDB30
+    getFeatureFromTorch('./result/cur_agedb30_result.mat', net, device, agedbdataset, agedbloader)
+    age_accs = evaluation_10_fold('./result/cur_agedb30_result.mat')
+    _print('AgeDB-30 Ave Accuracy: {:.4f}'.format(np.mean(age_accs) * 100))
+    if best_agedb30_acc <= np.mean(age_accs) * 100:
+        best_agedb30_acc = np.mean(age_accs) * 100
+        best_agedb30_iters = total_iters
 
-                # test model on AgeDB30
-                getFeatureFromTorch('./result/cur_agedb30_result.mat', net, device, agedbdataset, agedbloader)
-                age_accs = evaluation_10_fold('./result/cur_agedb30_result.mat')
-                _print('AgeDB-30 Ave Accuracy: {:.4f}'.format(np.mean(age_accs) * 100))
-                if best_agedb30_acc <= np.mean(age_accs) * 100:
-                    best_agedb30_acc = np.mean(age_accs) * 100
-                    best_agedb30_iters = total_iters
+    # test model on CFP-FP
+    getFeatureFromTorch('./result/cur_cfpfp_result.mat', net, device, cfpfpdataset, cfpfploader)
+    cfp_accs = evaluation_10_fold('./result/cur_cfpfp_result.mat')
+    _print('CFP-FP Ave Accuracy: {:.4f}'.format(np.mean(cfp_accs) * 100))
+    if best_cfp_fp_acc <= np.mean(cfp_accs) * 100:
+        best_cfp_fp_acc = np.mean(cfp_accs) * 100
+        best_cfp_fp_iters = total_iters
+    _print('Current Best Accuracy: LFW: {:.4f} in iters: {}, AgeDB-30: {:.4f} in iters: {} and CFP-FP: {:.4f} in iters: {}'.format(
+        best_lfw_acc, best_lfw_iters, best_agedb30_acc, best_agedb30_iters, best_cfp_fp_acc, best_cfp_fp_iters))
 
-                # test model on CFP-FP
-                getFeatureFromTorch('./result/cur_cfpfp_result.mat', net, device, cfpfpdataset, cfpfploader)
-                cfp_accs = evaluation_10_fold('./result/cur_cfpfp_result.mat')
-                _print('CFP-FP Ave Accuracy: {:.4f}'.format(np.mean(cfp_accs) * 100))
-                if best_cfp_fp_acc <= np.mean(cfp_accs) * 100:
-                    best_cfp_fp_acc = np.mean(cfp_accs) * 100
-                    best_cfp_fp_iters = total_iters
-                _print('Current Best Accuracy: LFW: {:.4f} in iters: {}, AgeDB-30: {:.4f} in iters: {} and CFP-FP: {:.4f} in iters: {}'.format(
-                    best_lfw_acc, best_lfw_iters, best_agedb30_acc, best_agedb30_iters, best_cfp_fp_acc, best_cfp_fp_iters))
-
-                vis.plot_curves({'lfw': np.mean(lfw_accs), 'agedb-30': np.mean(age_accs), 'cfp-fp': np.mean(cfp_accs)}, iters=total_iters,
-                                title='test accuracy', xlabel='iters', ylabel='test accuracy')
-                net.train()
+    # vis.plot_curves({'lfw': np.mean(lfw_accs), 'agedb-30': np.mean(age_accs), 'cfp-fp': np.mean(cfp_accs)}, iters=total_iters,
+    #                 title='test accuracy', xlabel='iters', ylabel='test accuracy')
+    net.train()
 
     _print('Finally Best Accuracy: LFW: {:.4f} in iters: {}, AgeDB-30: {:.4f} in iters: {} and CFP-FP: {:.4f} in iters: {}'.format(
         best_lfw_acc, best_lfw_iters, best_agedb30_acc, best_agedb30_iters, best_cfp_fp_acc, best_cfp_fp_iters))
-    '''
+
     print('finishing training')
 
 
@@ -326,6 +344,12 @@ if __name__ == '__main__':
     #parser.add_argument('--gpus', type=str, default='0,1,2,3', help='model prefix')
     parser.add_argument('--gpus', type=str, default='1', help='model prefix')
 
+    parser.add_argument('--world-size', default=1, type=int,
+                        help='number of distributed processes')
+    parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+                        help='url used to set up distributed training')
+    parser.add_argument('--dist-backend', default='hccl', type=str,
+                        help='distributed backend')
 
     # 使能混合精度
     parser.add_argument('--apex', action='store_true',

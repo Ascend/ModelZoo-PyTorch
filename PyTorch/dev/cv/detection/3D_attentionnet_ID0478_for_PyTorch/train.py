@@ -59,8 +59,30 @@ parser.add_argument('--apex-opt-level', default='O2', type=str,
                                        help='For apex mixed precision training'
                                                   'O0 for FP32 training, O1 for mixed precison training.')
 
+# 分布式
+parser.add_argument('--world-size', default=1, type=int,
+                    help='number of distributed processes')
+parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+                    help='url used to set up distributed training')
+parser.add_argument('--dist-backend', default='hccl', type=str,
+                    help='distributed backend')
+
+## for ascend 910
+parser.add_argument('--device_id', default=5, type=int, help='device id')
+
 args = parser.parse_args()
 print(args)
+
+# 分布式
+rank_size = int(os.environ['RANK_SIZE'])
+rank_id = int(os.environ['RANK_ID'])
+distributed = rank_size > 1
+
+device = torch.device(f'npu:{args.device_id}')
+torch.npu.set_device(device)
+
+if distributed:
+    torch.distributed.init_process_group('hccl', rank= rank_id, world_size= rank_size)
 
 # for test
 def test(model, test_loader, btrain=False, model_file='model_92.pkl'):
@@ -123,10 +145,17 @@ test_dataset = datasets.CIFAR10(root='./data/',
                               train=False,
                               transform=test_transform)
 
+# 分布式 数据切分
+if distributed:
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+else:
+    train_sampler = None
+
+
 # Data Loader (Input Pipeline)
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=64, # 64
-                                           shuffle=True, num_workers=8)
+                                           shuffle=(train_sampler is None), num_workers=8,sampler=train_sampler)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
                                           batch_size=20,
                                           shuffle=False)
@@ -137,7 +166,11 @@ classes = ('plane', 'car', 'bird', 'cat',
 model = ResidualAttentionModel().npu()
 print(model)
 
-lr = 0.1  # 0.1
+
+if distributed:
+    lr = 0.88  
+else:
+    lr = 0.1  # 0.1
 criterion = nn.CrossEntropyLoss()
 
 if args.apex:
@@ -145,6 +178,10 @@ if args.apex:
     model, optimizer = amp.initialize(model, optimizer, opt_level=args.apex_opt_level, loss_scale=128, combine_grad=True)
 else:
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0001)
+
+if distributed:
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.device_id],find_unused_parameters=True)
+
 is_train = True
 is_pretrain = False
 acc_best = 0
@@ -155,6 +192,8 @@ if is_train is True:
         model.load_state_dict((torch.load(model_file)))
     # Training
     for epoch in range(total_epoch):
+        if distributed:
+            train_sampler.set_epoch(epoch)
         model.train()
         tims = time.time()
         for i, (images, labels) in enumerate(train_loader):

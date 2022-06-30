@@ -3,6 +3,7 @@ source ./test/env.sh
 KERNEL_NUM=$(($(nproc)/8))
 for i in $(seq 0 7)
 do
+    export NPU_CALCULATE_DEVICE=$i
     if [ $(uname -m) = "aarch64" ]
     then
     PID_START=$((KERNEL_NUM * i))

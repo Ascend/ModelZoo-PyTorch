@@ -10,7 +10,7 @@ export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='80002'
 
 # 训练batch_size
-batch_size=128
+batch_size=400
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改

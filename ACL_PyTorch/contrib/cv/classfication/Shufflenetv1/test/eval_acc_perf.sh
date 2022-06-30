@@ -19,7 +19,7 @@ if [ $? != 0 ]; then
 	echo "fail!"
 	exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=shufflenetv1_bs1.om -input_text_path=./shufflenetv1_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 if [ $? != 0 ]; then
@@ -53,13 +53,13 @@ if [ $? != 0 ]; then
 	echo "fail!"
 	exit -1
 fi
-echo "====310 performance data===="
+echo "====310P performance data===="
 python3.7 test/parse.py result/perf_vision_batchsize_1_device_0.txt
 if [ $? != 0 ]; then
 	echo "fail!"
 	exit -1
 fi
-python3.7 test/parse.py result/perf_vision_batchsize_16_device_1.txt
+python3.7 test/parse.py result/perf_vision_batchsize_16_device_0.txt
 if [ $? != 0 ]; then
 	echo "fail!"
 	exit -1

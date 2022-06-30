@@ -1,0 +1,2 @@
+numpy
+Pillow==9.0.1

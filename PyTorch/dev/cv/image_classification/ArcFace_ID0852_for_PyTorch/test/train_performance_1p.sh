@@ -117,6 +117,9 @@ start_time=$(date +%s)
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
+mkdir -p ${cur_path}/result
+touch ${cur_path}/result/cur_agedb30_result.mat ${cur_path}/result/cur_cfpfp_result.mat ${cur_path}/result/cur_lfw_result.mat
+
 # 修改性能训练steps，训练时长小于15分钟
 sed -i "s|if total_iters == 700: pass|if total_iters == 700: break|g" train.py 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
@@ -142,6 +145,12 @@ do
     nohup python3 train.py \
         --train_root $data_path/webface_align_112 \
         --train_file_list $data_path/casia_align_train.list \
+        --lfw_test_root $data_path/LFW/lfw_align_112 \
+        --lfw_file_list $data_path/LFW/pairs.txt \
+        --agedb_test_root $data_path/AgeDB-30/agedb30_align_112 \
+        --agedb_file_list $data_path/AgeDB-30/agedb_30_pair.txt \
+        --cfpfp_test_root $data_path/CFP-FP/CFP_FP_aligned_112 \
+        --cfpfp_file_list $data_path/CFP-FP/cfp_fp_pair.txt \
         --total_epoch $train_epochs \
         --batch_size $batch_size \
         $PREC \
@@ -174,7 +183,7 @@ e2e_time=$(( $end_time - $start_time ))
 time_per_iter=`grep "time:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $8}'`
 FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${time_per_iter}'}'`
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep "train_accuracy:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $6}'|cut -c 1-6`
+train_accuracy=`grep "LFW Ave" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Accuracy: " '{print $2}'`
 
 #打印，不需要修改
 echo "------------------ Final result ------------------"

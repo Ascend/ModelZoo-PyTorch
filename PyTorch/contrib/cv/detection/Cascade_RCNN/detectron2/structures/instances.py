@@ -170,7 +170,7 @@ class Instances:
             assert i.image_size == image_size
         ret = Instances(image_size)
         for k in instance_lists[0]._fields.keys():
-            values = [i.get(k) for i in instance_lists]
+            values = [i.get(k).to(torch.float) for i in instance_lists]
             v0 = values[0]
             if isinstance(v0, torch.Tensor):
                 values = torch.cat(values, dim=0)

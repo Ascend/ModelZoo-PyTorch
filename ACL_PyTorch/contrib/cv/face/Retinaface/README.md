@@ -1,28 +1,29 @@
 # Retinface Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 开源精度](#62-开源精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 T4性能数据](#72-T4性能数据)
-	-   [7.3 性能对比](#73-性能对比)
+- [Retinface Onnx模型端到端推理指导](#retinface-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理精度统计](#61-离线推理精度统计)
+		- [6.2 开源精度](#62-开源精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
+		- [7.2 T4性能数据](#72-t4性能数据)
+		- [7.3 性能对比](#73-性能对比)
 
 
 
@@ -106,8 +107,13 @@ python3.7 pth2onnx.py -m mobilenet0.25_Final.pth
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc工具将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```
-atc --framework 5 --model retinaface.onnx --input_shape "image:16,3,1000,1000" --soc_version Ascend710 --output retinaface_bs16 --log error --out-nodes="Concat_205:0;Softmax_206:0;Concat_155:0" --enable_small_channel=1 --insert_op_conf=./aipp.cfg
+atc --framework 5 --model retinaface.onnx --input_shape "image:16,3,1000,1000" --soc_version Ascend${chip_name} --output retinaface_bs16 --log error --out-nodes="Concat_205:0;Softmax_206:0;Concat_155:0" --enable_small_channel=1 --insert_op_conf=./aipp.cfg
 ```
 
 ## 4 数据集预处理

@@ -99,7 +99,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`awk '/Av/{print $NF}' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'NR==2'`
+train_accuracy=`cat ${test_path_dir}/output/0/train_0.log |grep 'Average Precision' | grep '0.50:0.95' | grep all | grep -v small | awk 'END {print}' | awk '{print $13}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

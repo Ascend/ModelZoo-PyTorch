@@ -1,7 +1,4 @@
 #!/bin/bash
-#source env_npu.sh
-#当前路径,不需要修改
-cur_path=`pwd`
 
 #集合通信参数,不需要修改
 
@@ -86,6 +83,12 @@ else
     test_path_dir=${cur_path}/test
 fi
 
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
+fi
 
 ##################创建日志输出目录，根据模型审视##################
 # 模型采用非循环方式启动多卡训练，创建日志输出目录如下；采用循环方式启动多卡训练的模型，在循环中创建日志输出目录，可参考CRNN模型
@@ -101,9 +104,8 @@ fi
 ##################启动训练脚本##################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-#source ${test_path_dir}/env.sh
-python3 ${test_path_dir}/../examples/imagenet/main.py \
+
+nohup python3.7 ${test_path_dir}/../examples/imagenet/main.py \
         --data=${data_path} \
         --arch=efficientnet-b5 \
         --batch-size=${batch_size} \

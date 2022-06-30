@@ -621,4 +621,4 @@ def measure_time(enter_msg):
   st = time.time()
   print(enter_msg)
   yield
-  print('Done, {:.2f}s'.format(time.time() - st))`
+  print('Done, {:.2f}s'.format(time.time() - st))

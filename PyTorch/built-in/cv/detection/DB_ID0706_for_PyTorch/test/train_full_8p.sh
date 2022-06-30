@@ -16,6 +16,8 @@ batch_size=128
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
+# 检验预训练模型的路径
+model_path=/npu/traindata/ICDAR2015/db_ckpt
 
 # 训练epoch
 train_epochs=1200
@@ -27,8 +29,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --resume* ]];then
-        resume=`echo ${para#*=}`
+    elif [[ $para == --model_path* ]];then
+        model_path=`echo ${para#*=}`
     fi
 done
 
@@ -37,7 +39,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -65,7 +66,13 @@ fi
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+sed -i "s|.*datasets|        - '$data_path|g" experiments/seg_detector/base_ic15.yaml
 
 kernel_num=$(nproc)
 
@@ -75,9 +82,9 @@ else
     cpu_number=95
 fi
 
-taskset -c 0-${cpu_number} python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+taskset -c 0-${cpu_number} nohup python3.7 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
     --data_path ${data_path}/icdar2015 \
-    --resume ${data_path}/db_ckpt/MLT-Pretrain-ResNet50 \
+    --resume ${model_path}/MLT-Pretrain-ResNet50 \
     --seed=515 \
     --distributed \
     --device_list "0,1,2,3,4,5,6,7" \
@@ -92,7 +99,7 @@ taskset -c 0-${cpu_number} python3 -W ignore train.py experiments/seg_detector/i
     --epochs ${train_epochs} \
     --Port 29502 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
-python3 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+nohup python3.7 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
     --resume outputs/workspace/${PWD##*/}/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/final \
     --box_thresh 0.6 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait

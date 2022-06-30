@@ -333,9 +333,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
 
     # switch to train mode
     # 替换Swish API
-    model.set_swish(memory_efficient=False)
-    # 替换Swish API
-    
+    if args.distributed:
+        model.module.set_swish(memory_efficient=False)
+    else:
+        model.set_swish(memory_efficient=False)
     model.train()
 
     end = time.time()
@@ -373,7 +374,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
             loss.backward()
         start_step_time = time.time()
         optimizer.step()
-        print("========step_time: ", time.time() - start_step_time)
 
         # measure elapsed time
         fps_time.update(total_batch_size / (time.time() - end))

@@ -211,7 +211,7 @@ done
 
 wait
 
-
+ASCEND_DEVICE_ID=0
 
 #恢复参数
 #sed -i "s|break|pass|g" train.py
@@ -222,7 +222,7 @@ e2e_time=$(( $end_time - $start_time ))
 
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "sent/s -" '{print $2}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 FPS=`awk 'BEGIN{printf "%.2f\n",'${FPS}'*'8'}'`
 
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`
@@ -233,7 +233,7 @@ echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep eval_accuracy ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v mlp_log|awk 'END {print $5}'| sed 's/,//g' |cut -c 1-5`
-train_accuracy=`grep "vaild_en_mlm_acc" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "vaild_en_mlm_acc ->" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+train_accuracy=`grep "test_mlm_acc" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "test_mlm_acc ->" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

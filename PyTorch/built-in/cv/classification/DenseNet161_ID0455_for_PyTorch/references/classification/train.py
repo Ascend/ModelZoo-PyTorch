@@ -37,6 +37,8 @@ import time
 import sys
 
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 import torch.utils.data
 from torch import nn
 import torchvision
@@ -214,7 +216,6 @@ def main(args):
 
     if args.is_master_node:
         print("Creating model")
-        print(torchvision.models.__dict__)
     model = torchvision.models.__dict__[args.model](num_classes=args.num_classes)
     if args.pretrained:
         checkpoint = torch.load(args.pretrained_weight_path, map_location='cpu')

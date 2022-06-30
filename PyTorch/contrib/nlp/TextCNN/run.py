@@ -23,6 +23,9 @@ import os
 from apex import amp
 import apex
 
+if torch.__version__ >= '1.8.1':
+    import torch_npu
+    
 parser = argparse.ArgumentParser(description='Chinese Text Classification')
 parser.add_argument('--model', type=str, required=True, help='choose a model: TextCNN, TextRNN, FastText, TextRCNN, TextRNN_Att, DPCNN, Transformer')
 parser.add_argument('--embedding', default='pre_trained', type=str, help='random or pre_trained')
@@ -102,7 +105,7 @@ def main():
 
     optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=config.learning_rate)
 
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O1", loss_scale=16, combine_grad=True)
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale="dynamic", combine_grad=True,master_weights=True)
  
 
     if config.distributed:

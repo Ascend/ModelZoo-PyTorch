@@ -67,22 +67,25 @@ def run(result_list, index, meta, dataset, filename):
     wh = output['wh']
     reg = output['reg']
     dets = ctdet_decode(hm, wh, reg) 
-    dets = post_process(dets,meta)
+    dets = post_process(dets, meta)
     detections.append(dets)
     results = merge_outputs(detections)
     return results
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='CenterNet')
-    parser.add_argument('--bin_data_path', default='./result/dumpOutput_device0', type=str, help='infer out path') 
+    parser.add_argument('--bin_data_path', default='./result/dumpOutput_device0', type=str, help='infer out path')
+    parser.add_argument('--dataset', default='/opt/npu', type=str, help='dataset')
     parser.add_argument('--resultfolder', default='./run_eval_result', type=str, help='Dir to save results')
     args = parser.parse_args()
+    new_datapath = args.dataset
     if not os.path.exists(args.resultfolder):
         os.makedirs(args.resultfolder)
  
     opt = opts().parse('{} --load_model {}'.format('ctdet', './ctdet_coco_dla_2x.pth').split(' '))
     Dataset = get_dataset(opt.dataset, opt.task)
     opt = opts().update_dataset_info_and_set_heads(opt, Dataset)
+    opt.data_dir = new_datapath
     Detector = detector_factory[opt.task]
     dataset = Dataset(opt, 'val')
     opt.gpus[0] = -1 

@@ -20,6 +20,8 @@ import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 from torch import optim
 from torch.nn.parallel import DistributedDataParallel
 from torchvision import transforms as trans

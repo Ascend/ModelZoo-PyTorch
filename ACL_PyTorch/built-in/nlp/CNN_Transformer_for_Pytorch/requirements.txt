@@ -1,0 +1,5 @@
+torch==1.6.0
+transformers==4.3.3
+numpy==1.19.5
+datasets==1.6.2
+jiwer==2.2.0

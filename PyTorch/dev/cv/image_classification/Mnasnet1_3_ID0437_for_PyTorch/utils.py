@@ -65,7 +65,7 @@ class SmoothedValue(object):
         """
         if not is_dist_avail_and_initialized():
             return
-        t = torch.tensor([self.count, self.total], dtype=torch.float64, device='npu')
+        t = torch.tensor([self.count, self.total], dtype=torch.float32, device='npu')
         dist.barrier()
         dist.all_reduce(t)
         t = t.tolist()
@@ -267,6 +267,7 @@ def init_distributed_mode(args):
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ['WORLD_SIZE'])
         args.gpu = int(os.environ['LOCAL_RANK'])
+        args.batch_size = int(args.batch_size / args.world_size)
     elif 'SLURM_PROCID' in os.environ:
         args.rank = int(os.environ['SLURM_PROCID'])
         args.gpu = args.rank % torch.cuda.device_count()
@@ -280,7 +281,7 @@ def init_distributed_mode(args):
     args.distributed = True
 
     torch.npu.set_device(args.gpu)
-    args.dist_backend = 'nccl'
+    args.dist_backend = 'hccl'
     print('| distributed init (rank {}): {}'.format(
         args.rank, args.dist_url), flush=True)
     torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,

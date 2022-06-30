@@ -285,7 +285,7 @@ def main(params):
         trainer.n_sentences = 0
 
         while trainer.n_sentences < trainer.epoch_size:
-            if trainer.n_sentences > 1280:
+            if trainer.n_sentences > 32000:
               pass
             # CLM steps
             for lang1, lang2 in shuf_order(params.clm_steps, params):

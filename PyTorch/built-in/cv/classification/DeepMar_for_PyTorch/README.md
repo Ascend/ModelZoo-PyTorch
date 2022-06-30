@@ -18,6 +18,9 @@
         bash ./test/train_performance_8p.sh  --data_path=数据集路径    　# 性能训练
 ```
 
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision
+    建议：Pillow版本是9.1.0  torchvision版本是0.6.0
+
 ### 二、Docker容器训练
 
 1.导入镜像二进制包docker import ubuntuarmpytorch.tar REPOSITORY:TAG, 比如:

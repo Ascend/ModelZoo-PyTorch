@@ -34,23 +34,24 @@ ${install_path}/driver/tools/msnpureport -g error -d 5
 ${install_path}/driver/tools/msnpureport -g error -d 6
 ${install_path}/driver/tools/msnpureport -g error -d 7
 
-#å°†Hostæ—¥å¿—è¾“å‡ºåˆ°ä¸²å£,0-å…³é—­/1-å¼€å¯
+#½«HostÈÕÖ¾Êä³öµ½´®¿Ú,0-¹Ø±Õ/1-¿ªÆô
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
-#è®¾ç½®é»˜è®¤æ—¥å¿—çº§åˆ«,0-debug/1-info/2-warning/3-error
-export ASCEND_GLOBAL_LOG_LEVEL=3
-#è®¾ç½®Eventæ—¥å¿—å¼€å¯æ ‡å¿—,0-å…³é—­/1-å¼€å¯
+#ÉèÖÃÄ¬ÈÏÈÕÖ¾¼¶±ğ,0-debug/1-info/2-warning/3-error
+export ASCEND_GLOBAL_LOG_LEVEL==3
+#ÉèÖÃEventÈÕÖ¾¿ªÆô±êÖ¾,0-¹Ø±Õ/1-¿ªÆô
 export ASCEND_GLOBAL_EVENT_ENABLE=0
-#è®¾ç½®æ˜¯å¦å¼€å¯taskque,0-å…³é—­/1-å¼€å¯
+#ÉèÖÃÊÇ·ñ¿ªÆôtaskque,0-¹Ø±Õ/1-¿ªÆô
 export TASK_QUEUE_ENABLE=1
-#è®¾ç½®æ˜¯å¦å¼€å¯PTCopy,0-å…³é—­/1-å¼€å¯
+#ÉèÖÃÊÇ·ñ¿ªÆôPTCopy,0-¹Ø±Õ/1-¿ªÆô
 export PTCOPY_ENABLE=1
-#è®¾ç½®æ˜¯å¦å¼€å¯combinedæ ‡å¿—,0-å…³é—­/1-å¼€å¯
-export COMBINED_ENABLE=0
-#è®¾ç½®ç‰¹æ®Šåœºæ™¯æ˜¯å¦éœ€è¦é‡æ–°ç¼–è¯‘,ä¸éœ€è¦ä¿®æ”¹
+#ÉèÖÃÊÇ·ñ¿ªÆô2¸ö·ÇÁ¬Ğøcombined±êÖ¾,0-¹Ø±Õ/1-¿ªÆô
+export COMBINED_ENABLE=1
+#ÉèÖÃÌØÊâ³¡¾°ÊÇ·ñĞèÒªÖØĞÂ±àÒë,²»ĞèÒªĞŞ¸Ä
 export DYNAMIC_OP="ADD#MUL"
-#HCCLç™½åå•å¼€å…³,1-å…³é—­/0-å¼€å¯
+# HCCL°×Ãûµ¥¿ª¹Ø,1-¹Ø±Õ/0-¿ªÆô
 export HCCL_WHITELIST_DISABLE=1
-export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+# HCCLÄ¬ÈÏ³¬Ê±Ê±¼ä120s½ÏÉÙ£¬ĞŞ¸ÄÎª1800s¶ÔÆëPyTorchÄ¬ÈÏÉèÖÃ
+export HCCL_CONNECT_TIMEOUT=1800
 
 ulimit -SHn 512000
 
@@ -74,4 +75,3 @@ print(result)"""
 echo ${path_lib}
 
 export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
-export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'

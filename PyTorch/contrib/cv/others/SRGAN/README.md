@@ -29,8 +29,9 @@ data
 |   |-- SRF_2
 |   |   |-- target
 |   |   |-- data
-|-- DIV2K_valid_HR
-|-- DIV2K_train_HR
+|-- VOC2012
+|   |-- train
+|   |-- val
 ```
 
 ## Train
@@ -38,6 +39,10 @@ data
 ### 单p训练
 
 注：若脚本不能正常运行，可以尝试使用 `dos2unix test/*` 命令转换后运行。
+
+注：data_path可以是绝对路径，或者相对路径，由于脚本内会cd到test目录下，故相对路径为相对test目录的路径
+
+注：性能日志、训练日志、精度结果都在SRGAN/test/output目录下
 
 性能脚本
 
@@ -69,12 +74,14 @@ bash ./test/train_full_8p.sh --data_path=../data
 
 ## SRGAN training result
 
-| Device | FPS  | Epochs | AMP_Type | PSNR    | SSIM   |
-| ------ | ---- | ------ | -------- | ------- | ------ |
-| NPU 1p | 270  | 100    | O1       | 33.0558 | 0.9226 |
-| NPU 8P | 1200 | 100    | O1       | 32.1882 | 0.9172 |
-| GPU 1p | 360  | 100    | O1       | 33.4604 | 0.9308 |
-| GPU 8P | 1400 | 100    | O1       | 31.0824 | 0.9191 |
+| Device     | FPS  | Epochs | AMP_Type | PSNR    | SSIM   |
+| ---------- | ---- | ------ | -------- | ------- | ------ |
+| NPU 1p_1.5 | 270  | 100    | O1       | 33.0558 | 0.9226 |
+| NPU 8P_1.5 | 1200 | 100    | O1       | 32.1882 | 0.9172 |
+| GPU 1p     | 360  | 100    | O1       | 33.4604 | 0.9308 |
+| GPU 8P     | 1400 | 100    | O1       | 31.0824 | 0.9191 |
+| NPU 1p_1.8 | 180  | 100    | O1       | 33.3234 | 0.9302 |
+| NPU 8p_1.8 | 1200 | 100    | O1       | 33.2284 | 0.9312 |
 
 ### 训练结果示例 （npu_1p）
 
@@ -97,6 +104,4 @@ bash ./test/train_full_8p.sh --data_path=../data
 - **Set5_005.jpg**
 
   ![Set5_005.jpg](https://i.imgur.com/g7oJ9VI.png)
-
-  
 

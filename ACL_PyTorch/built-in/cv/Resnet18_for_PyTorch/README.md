@@ -114,21 +114,25 @@ python3.7.5 calibration_bin.py prep_dataset calibration_bin 64
 
 ### 4.3 onnx转om模型
 
-1.设置环境变量
-```
-source env.sh
-```
+1. 设置环境变量
+    ```
+    source env.sh
+    ```
 **说明**
 >此脚本中环境变量只供参考，请以实际安装环境配置环境变量
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 开发辅助工具指南 (推理)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-```
-atc --framework=5 --model=./resnet18.onnx --output=resnet18_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend310 --insert_op_conf=aipp.config --enable_small_channel=1
+2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 开发辅助工具指南 (推理)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
+   
+   ${chip_name}可通过`npu-smi info`指令查看，例：310P3
+
+    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+    ```
+    atc --framework=5 --model=./resnet18.onnx --output=resnet18_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1 # Ascend310P3
 
 
-## Int8量化（可选）
-atc --framework=5 --model=./result/resnet18_deploy_model.onnx --output=resnet18_bs1_int8 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend710 --insert_op_conf=aipp.config --enable_small_channel=1
-```
+    ## Int8量化（可选）
+    atc --framework=5 --model=./result/resnet18_deploy_model.onnx --output=resnet18_bs1_int8 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1 # Ascend310P3
+    ```
 
 ### 4.4 模型离线推理
 

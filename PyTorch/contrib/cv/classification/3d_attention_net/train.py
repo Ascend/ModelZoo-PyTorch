@@ -16,6 +16,10 @@ from __future__ import print_function, division
 from apex import amp
 from apex.optimizers import NpuFusedSGD
 import torch
+if torch.__version__ >= "1.8.1":
+    import torch_npu
+else:
+    import torch.npu
 import argparse
 import torch.nn as nn
 import torch.optim as optim
@@ -27,7 +31,6 @@ from torchvision import transforms, datasets, models
 import os
 import cv2
 import time
-import torch.npu
 import torch.utils.data.distributed
 from collections import OrderedDict
 from torch.nn.parallel import DistributedDataParallel
@@ -142,7 +145,7 @@ def main():
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0001)
     else:
         optimizer = NpuFusedSGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0001)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale="dynamic")
     if distribute:
         if args.device_type == "GPU":
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.device_id])
@@ -183,7 +186,6 @@ def main():
                     tims = time.time()
                 images = Variable(images.to(device))
                 labels = Variable(labels.to(device))
-    
                 # Forward + Backward + Optimize
                 optimizer.zero_grad()
                 outputs = model(images)

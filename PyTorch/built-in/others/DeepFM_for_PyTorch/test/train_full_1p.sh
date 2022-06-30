@@ -38,6 +38,8 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
 
+ASCEND_DEVICE_ID=0
+
 #创建DeviceID输出目录，不需要修改
 if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}

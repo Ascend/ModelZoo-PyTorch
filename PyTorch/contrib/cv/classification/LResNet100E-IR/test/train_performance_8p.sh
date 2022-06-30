@@ -51,7 +51,7 @@ use_amp=1
 # "apex amp level, [O1, O2]"
 opt_level="O2"
 # "apex amp loss scale, [128.0, None]"
-loss_scale=128.0
+loss_scale=dynamic
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值

@@ -1,0 +1,14 @@
+onnx
+
+paddlepaddle == 2.3.0
+paddle2onnx
+onnx-simplifier
+opencv-python
+numpy
+tqdm
+protobuf==3.20.1
+sympy
+pyyaml >= 5.1
+filelock
+
+

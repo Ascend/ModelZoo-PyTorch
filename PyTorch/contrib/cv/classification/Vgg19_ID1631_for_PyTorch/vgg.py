@@ -87,13 +87,11 @@ class VGG(nn.Module):
         x = self.fc1(x)
         x = self.relu(x)
         if self.training:
-            x = x.cpu()
-            x = self.drop(x).npu()
+            x = self.drop(x)
         x = self.fc2(x)
         x = self.relu(x)
         if self.training:
-            x = x.cpu()
-            x = self.drop(x).npu()
+            x = self.drop(x)
         x = self.fc3(x)
         return x
 
