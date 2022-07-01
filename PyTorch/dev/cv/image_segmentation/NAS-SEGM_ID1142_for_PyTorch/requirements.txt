@@ -1,0 +1,9 @@
+pip3
+Cython
+cv2
+jupyter-notebook
+matplotlib
+numpy
+Pillow
+torch>=1.0
+torchvision
