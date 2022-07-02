@@ -33,8 +33,6 @@ datasets/icdar2015/
 5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)  
 将benchmark.x86_64或benchmark.aarch64放到DB/  
 
-6.因包含dcn自定义算子，去除对onnx的检查  
-将/usr/local/python3.7.5/lib/python3.7/site-packages/torch/onnx/utils.py的_check_onnx_proto(proto)改为pass  
 
 ## 2 离线推理 
 
@@ -43,7 +41,7 @@ npu上执行，执行时使npu-smi info查看设备状态，确保device空闲
 bash test/pth2om.sh  Your_Soc_Version
 bash test/eval_acc_perf.sh --datasets_path=`pwd`/DB/datasets  
 ```
-Your_Soc_version是你的npu型号，目前可选值为Ascend310和Ascend310P
+Your_Soc_version是你的npu型号，可以用 npu-smi info 查看，例如Ascend310和Ascend310P3
 
  **评测结果：**   
 | 模型      | 官网pth精度  | 310离线推理精度  | gpu性能    | 310性能    | 310P |
