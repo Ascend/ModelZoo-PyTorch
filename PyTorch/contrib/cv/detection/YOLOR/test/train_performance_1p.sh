@@ -30,6 +30,8 @@ data_dump_flag=False
 data_dump_step="10"
 profiling=False
 autotune=False
+# 训练epoch
+train_epochs=1
 
 #参数校验，不需要修改
 for para in $*
@@ -115,6 +117,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
+    train_epochs=3
 fi
 
 #训练开始时间，不需要修改
@@ -129,7 +132,7 @@ taskset -c 0-23 python3.7 train.py \
     --img 1280 1280 \
     --device npu \
     --npu 0 \
-    --epochs 1  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --epochs $train_epochs  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改

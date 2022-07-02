@@ -10,6 +10,9 @@ if [ x"${cur_path_last_dirname}" == x"test" ];then
 else
     test_path_dir=${cur_path}/test
 fi
+
+#HCCL白名单开关,1-关闭/0-开启
+export HCCL_WHITELIST_DISABLE=1
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL=3
 export RANK_SIZE=8
@@ -30,6 +33,8 @@ data_dump_flag=False
 data_dump_step="10"
 profiling=False
 autotune=False
+# 训练epoch
+train_epochs=1
 
 #参数校验，不需要修改
 for para in $*
@@ -113,7 +118,8 @@ over_dump_path=${test_path_dir}/output/overflow_dump
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source  ${test_path_dir}/env_npu.sh
+    source  ${test_path_dir}/env_npu.sh 
+    train_epochs=3
 fi
 
 #训练开始时间，不需要修改
@@ -136,7 +142,7 @@ then
         --local_rank $i \
         --device npu \
         --device-num 8 \
-        --epochs 1  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --epochs $train_epochs  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	done
 else
    python3.7 train.py \
@@ -149,7 +155,7 @@ else
         --local_rank 0 \
         --device npu \
         --device-num 8 \
-        --epochs 1  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --epochs $train_epochs  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 wait
 
