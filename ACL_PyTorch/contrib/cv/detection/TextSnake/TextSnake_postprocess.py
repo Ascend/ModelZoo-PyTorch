@@ -120,7 +120,7 @@ def main():
     detector = Detector(model, tr_thresh=cfg.tr_thresh, tcl_thresh=cfg.tcl_thresh)
 
     print('Start testing TextSnake.')
-    output_dir = os.path.join(cfg.output_dir, cfg.exp_name)
+    output_dir = os.path.join(cfg.save_dir, cfg.exp_name)
     inference(detector, test_loader, output_dir, testset.image_list)
 
     print('Computing DetEval in {}/{}'.format(cfg.output_dir, cfg.exp_name))
