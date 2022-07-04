@@ -31,7 +31,8 @@ def pth2onnx(input_file, output_file):
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 224, 224)
     # verbose=True，支持打印onnx节点和对应的PyTorch代码行
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=12, verbose=True, enable_onnx_checker=False)
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, 
+                        output_names = output_names, opset_version=12, verbose=True, enable_onnx_checker=False)
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     pth2onnx('81.5_T2T_ViT_14.pth.tar','T2T_ViT_14.onnx')
