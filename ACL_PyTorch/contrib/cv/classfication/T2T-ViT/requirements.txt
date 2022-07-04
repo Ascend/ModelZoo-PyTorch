@@ -6,3 +6,4 @@ Pillow == 9.1.1
 timm == 0.3.4
 onnxruntime == 1.11.1
 onnx-simplifier == 0.3.10
+pyyaml == 6.0
