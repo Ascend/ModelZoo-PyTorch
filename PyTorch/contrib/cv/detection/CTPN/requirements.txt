@@ -1,4 +1,5 @@
--r requirements/runtime.txt
--r requirements/optional.txt
--r requirements/tests.txt
--r requirements/build.txt
+visdom
+numpy
+tqdm
+importlib
+opencv-python

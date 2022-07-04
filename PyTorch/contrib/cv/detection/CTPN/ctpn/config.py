@@ -15,16 +15,11 @@
 #-*- coding:utf-8 -*-
 import os
 
-#img_dir = '../imagedata/image/'
-#label_dir = '../imagedata/xml/'
-
-img_dir = '/home/dockerHome/ctpn/ctpn_8p/imagedata/Challenge2_Training_Task12_Images/'
-label_dir = '/home/dockerHome/ctpn/ctpn_8p/imagedata/Challenge2_Training_Task1_GT/'
+img_dir = '../imagedata/image/'
+label_dir = '../imagedata/xml/'
 
 num_workers = 0
 pretrained_weights = ''
-#pretrained_weights = './checkpoints/gpu_ctpn_ep98_0.2615_0.0333_0.2948.pth'
-
 
 anchor_scale = 16
 IOU_NEGATIVE = 0.3
