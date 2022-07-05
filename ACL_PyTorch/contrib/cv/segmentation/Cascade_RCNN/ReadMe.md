@@ -148,7 +148,7 @@ atc --model=model_py1.8.onnx --framework=5 --output=cascadercnn_detectron2_npu -
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用[COCO官网](https://cocodataset.org/#download)的coco2017的5千张验证集进行测试，图片与标签分别存放在/root/datasets/coco/val2017/与/root/datasets/coco/annotations/instances_val2017.json。
+该模型使用COCO官网的coco2017的5千张验证集进行测试，图片与标签分别存放在/root/datasets/coco/val2017/与/root/datasets/coco/annotations/instances_val2017.json。
 
 ### 4.2 数据集预处理
 1.预处理脚本cascadercnn_pth_preprocess_detectron2.py
