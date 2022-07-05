@@ -109,7 +109,7 @@ taskset -c $PID_START-$PID_END python3.7.5 -u ./imagenet_fast.py \
     --workers ${workers} \
     --lr ${learning_rate} \
     --print-freq 10 \
-    --loss_scale 32 \
+    --loss_scale 'dynamic' \
     --use_aux \
     --local_rank $RANK_ID >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/nohup.out & \
 done
