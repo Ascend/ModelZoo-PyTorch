@@ -40,7 +40,7 @@ class IOUloss(nn.Module):
         area_p = pred[:, 2] * pred[:, 3]
         area_g = target[:, 2] * target[:, 3]
 
-        en_tmp = (tl < br).type(tl.type())
+        en_tmp = (tl < br)
         en = en_tmp[:, 0] * en_tmp[:, 1]
 
         brtl = br - tl

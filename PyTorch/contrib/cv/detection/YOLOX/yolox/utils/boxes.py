@@ -246,7 +246,7 @@ def bboxes_iou(bboxes_a, bboxes_b, tensor2, xyxy=True):
 
     # en = (tl < br).type(tl.type()).prod(dim=2)
     # area_i = torch.prod(br - tl, 2) * en  # * ((tl < br).all())
-    en_tmp = (tl < br).type(tl.type())
+    en_tmp = (tl < br)
     en = en_tmp[:, :, 0] * en_tmp[:, :, 1]
     brtl = br - tl
     area_i = brtl[:, :, 0] * brtl[:, :, 1] * en

@@ -259,7 +259,7 @@ class Trainer:
     def after_epoch(self):
         if (self.epoch + 1) % 10 == 0 and (self.epoch + 1) < 285 or (self.epoch + 1) >= 285:
             self.save_ckpt(ckpt_name="latest_" + str(self.epoch))
-
+            
     def before_iter(self):
         pass
 

@@ -300,6 +300,12 @@ def main(exp, args, num_gpu):
             
 
 if __name__ == "__main__":
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = 'enable'
+    option["ACL_OP_COMPILER_CACHE_DIR"] = './cache'
+    
+    print('option', option)
+    torch.npu.set_option(option)
     args = make_parser().parse_args()
     exp = get_exp(args.exp_file, args.name)
     exp.merge(args.opts)
