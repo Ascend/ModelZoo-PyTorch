@@ -39,9 +39,15 @@ commit_id = 143df41f2e372364188027d826393cdff99a37fd
 
 ```
 CANN 5.1.RC1
-torch==1.5.0+ascend.post5.20220315
-torchvision==0.6.0
-timm==0.3.2
+torch == 1.5.0
+torchvision == 0.6.0
+onnx == 1.12.0
+numpy==1.21.6
+Pillow == 9.1.1
+timm == 0.3.4
+onnxruntime == 1.11.1
+onnx-simplifier == 0.3.10
+pyyaml == 6.0
 ```
 
  **说明：**
