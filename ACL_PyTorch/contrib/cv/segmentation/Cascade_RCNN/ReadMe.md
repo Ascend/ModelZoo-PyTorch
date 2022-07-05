@@ -1,26 +1,28 @@
 # 基于detectron2的Cascade-Mask-Rcnn Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 开源精度](#62-开源精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+- [基于detectron2的Cascade-Mask-Rcnn Onnx模型端到端推理指导](#基于detectron2的cascade-mask-rcnn-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pkl转onnx模型](#31-pkl转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理精度统计](#61-离线推理精度统计)
+		- [6.2 开源精度](#62-开源精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
+			- [性能优化](#性能优化)
 
 
 
@@ -46,6 +48,7 @@ commit_id:13afb035142734a309b20634dadbba0504d7eefe
 
 ### 2.1 深度学习框架
 ```
+CANN 5.1.RC1
 pytorch == 1.8.0
 torchvision == 0.9.0
 onnx == 1.8.0
@@ -58,7 +61,7 @@ onnx == 1.8.0
 ### 2.2 python第三方库
 
 ```
-numpy == 1.18.5
+numpy == 1.22.4
 opencv-python == 4.2.0.34
 ```
 
@@ -125,16 +128,15 @@ mv output/model.onnx model_py1.8.onnx
 
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
+该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，使用netron开源可视化工具查看具体的输出节点名：
+${chip_name}可通过npu-smi info指令查看，例：310P3
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 ```shell
-atc --model=model_py1.8.onnx --framework=5 --output=cascadercnn_detectron2_npu --input_format=NCHW --input_shape="0:1,3,1344,1344" --out_nodes="Cast_1853:0;Gather_1856:0;Reshape_1847:0;Slice_1886:0" --log=debug --soc_version=Ascend310
+atc --model=model_py1.8.onnx --framework=5 --output=cascadercnn_detectron2_npu --input_format=NCHW --input_shape="0:1,3,1344,1344" --out_nodes="Cast_1853:0;Gather_1856:0;Reshape_1847:0;Slice_1886:0" --log=debug --soc_version=Ascend${chip_name}
 ```
 
 ## 4 数据集预处理
@@ -169,17 +171,14 @@ python3.7 get_info.py bin val2017_bin cascadercnn.info 1344 1344
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ### 5.2 离线推理
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
+该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+
 2.执行离线推理
 ```shell
 ./benchmark.x86_64 -model_type=vision -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=cascadercnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
@@ -305,15 +304,15 @@ om推理box map精度为0.439，GPU推理box map精度为0.430，精度下降在
 batch1的性能：
  测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
 ```shell
-./benchmark.x86_64 -round=20 -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1
+./benchmark.x86_64 -model_type=vision -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=cascadercnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
 ```
-执行20次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_cascadercnn_detectron2_npu_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 1.32574samples/s, ave_latency: 755.75ms
-----------------------------------------------------------------
-```
+统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
+310上Interface throughputRate: ，1.10543*4=4.42172即batch1 310单卡吞吐率为4.42172。
+
+310P上Interface throughputRate: 9.80704 ，即是batch1 310P单卡吞吐率为9.80704。
+
+T4单卡吞吐率为6.116843953。
+
 cascadercnn不支持多batch，故只测试batch1的性能  
 
 #### 性能优化
