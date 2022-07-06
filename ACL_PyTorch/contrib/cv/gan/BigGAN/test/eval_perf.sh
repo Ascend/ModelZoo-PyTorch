@@ -21,7 +21,7 @@ echo '==> 2. creating ./prep_noise_bs16 ./prep_label_bs16 successfully.'
 
 # msame bs1
 rm -rf ./outputs_bs1_om
-./msame --model "./biggan_sim_bs1.om" \
+./main --model "./biggan_sim_bs1.om" \
         --input "./prep_noise_bs1,./prep_label_bs1" \
         --output "./outputs_bs1_om" \
         --outfmt BIN > ./msame_bs1.txt
@@ -33,7 +33,7 @@ echo '==> 3. conducting biggan_sim_bs1.om successfully.'
 
 # msame bs16
 rm -rf ./outputs_bs16_om
-./msame --model "./biggan_sim_bs16.om" \
+./main --model "./biggan_sim_bs16.om" \
         --input "./prep_noise_bs16,./prep_label_bs16" \
         --output "./outputs_bs16_om" \
         --outfmt BIN > ./msame_bs16.txt

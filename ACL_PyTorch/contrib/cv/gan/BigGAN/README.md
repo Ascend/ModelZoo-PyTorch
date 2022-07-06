@@ -60,6 +60,7 @@ onnxoptimizer==0.2.6
 > 其他第三方库: 可以通过 pip3.7 install -r requirements.txt 进行安装
 
 ## <a name="3">3. 模型转换</a>
+尽量不要使用一步式脚本进行转换
 一步式从pth权重文件转om模型的脚本，能够由pth权重文件生成bacth分别为1和16的om模型：
 ```bash
 bash ./test/pth2om.sh
@@ -119,9 +120,13 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 3. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-
+310
 ```bash
 atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend310
+```
+710
+```bash
+atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend710
 ```
 
 ## <a name="4">4. 数据预处理</a>
@@ -148,6 +153,7 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 
 ## <a name="5">5. 离线推理</a>
 执行一步式推理前，请先按照5.1节所示准备msame离线推理工具  
+尽量不使用一步式脚本
 一步式进行输入数据的准备，模型离线推理和NPU性能数据的获取(针对batch1和batch16)：
 ```bash
 bash ./test/eval_perf.sh
@@ -169,16 +175,51 @@ bash ./test/eval_perf.sh
 ```
 ### <a name="51">5.1 msame工具概述</a>
 msame模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。获取工具及使用方法可以参考[msame模型推理工具指南](https://gitee.com/ascend/tools/tree/master/msame)
+a.推理模型使用msame工具
+```bash
+git clone https://gitee.com/ascend/tools.git
+```
+   i.设置环境变量
+   ```bash
+   export DDK_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest
+   export NPU_HOST_LIB=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/acllib/lib64/stub
+   ```
+   以上为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
+   ii.进入tools/msame文件夹，设置文件权限，运行编译脚本。
+   ```bash
+   cd tools/msame
+   dos2unix *.sh
+   chmod u+x  build.sh
+   ./build.sh g++  ./msame/out   
+   cp ./out/main   ../../   #本步骤要在“/tools/msame”文件夹目录下执行
+   cd ../..
+   ```
+   ```bash
+   ./build.sh g++  ./msame/out
+   ```
+   ERRO：mv: cannot move ‘main’ to ‘./msame/out/msame’: No such file or directory
+   执行上述代码后报错由于没有创建msame文件夹，不影响main文件生成，用户可进入“./msame/out/”文件夹查看是否生成main文件。
 ### <a name="52">5.2 离线推理</a>
 1. 设置环境变量
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2. 执行离线推理
+设置文件权限。
+ ```bash
+chmod u+x main
+```
 运行如下命令进行离线推理：
 ```bash
-./msame --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN > ./msame_bs1.txt
+./main --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN > ./msame_bs1.txt
 ```
+--model ：输入的om文件。
+
+--input：输入的bin数据文件。
+
+--device：NPU设备编号。
+
+-outfmt：输出数据的格式。
 模型输出格式是bin，输出保存在"output"参数指定的文件夹中，同时会生成推理的日志文件msame_bs1.txt
 3. 性能数据的获取
 通过给test/parser.py指定推理后的日志文件，可以得到离线推理的性能数据
@@ -191,6 +232,7 @@ python3.7 ./test/parse.py --txt-file "./msame_bs1.txt" --batch-size 1 > bs1_perf
 |BigGAN bs16|344.900fps|282.898fps|
 
 ## <a name="6">6. 精度对比</a>
+尽量不使用一步式脚本 
 一步式进行输出数据的后处理和生成图像的评价指标(针对batch1和batch16)：
 ```bash
 bash ./test/eval_acc.sh
