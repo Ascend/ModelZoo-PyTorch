@@ -55,7 +55,7 @@ rm UCF101TrainTestSplits-RecognitionTask.zip
 
 PYTHONPATH=. python3.7 ./mmaction2/tools/data/build_file_list.py ucf101 data/ucf101/rawframes/ --level 2 --format rawframes --shuffle
 ```
-- **1.5 获取[inference_tools工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/inference_tools)**
+- **1.5 获取[ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)**
 
 将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
