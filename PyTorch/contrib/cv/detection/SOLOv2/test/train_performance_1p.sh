@@ -14,7 +14,7 @@ Network="SOLOv2"
 
 #训练batch_size,,需要模型审视修改
 batch_size=2
-device_id=1
+device_id=0
 
 #参数校验，不需要修改
 for para in $*
@@ -68,10 +68,7 @@ fi
 export NPUID=0
 export RANK=0
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 \
-      --data_root=$data_path --gpu-ids 0 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-wait
-python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
-      --out  results_solo.pkl --eval segm --data_root=$data_path >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --data_root=$data_path --gpu-ids 0 --train_performance=True > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改

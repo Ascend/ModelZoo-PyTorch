@@ -18,6 +18,7 @@ from torch.autograd import Function
 from torch.nn.modules.utils import _pair, _single
 import math
 
+
 class ModulatedDeformConv2dFunction(Function):
 
     @staticmethod
@@ -198,10 +199,11 @@ class ModulatedDeformConvPack(ModulatedDeformConv2d):
                                                    self.stride, self.padding, self.dilation,
                                                    self.groups, self.deformable_groups)
 
+
 DCNv2 = ModulatedDeformConvPack
 
 if __name__ == "__main__":
-    x = torch.randn(2,32,4,4)
+    x = torch.randn(2, 32, 4, 4)
     model = DCNv2(32, 32, 1)
 
     torch.npu.set_device(0)

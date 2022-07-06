@@ -102,4 +102,3 @@ class MMDataParallel(DataParallel):
     #
     #     inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
     #     return self.module.val_step(*inputs[0], **kwargs[0])
-

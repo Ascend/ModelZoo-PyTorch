@@ -108,32 +108,32 @@ class GuidedAnchorHead(AnchorHead):
     """
 
     def __init__(
-        self,
-        num_classes,
-        in_channels,
-        feat_channels=256,
-        octave_base_scale=8,
-        scales_per_octave=3,
-        octave_ratios=[0.5, 1.0, 2.0],
-        anchor_strides=[4, 8, 16, 32, 64],
-        anchor_base_sizes=None,
-        anchoring_means=(.0, .0, .0, .0),
-        anchoring_stds=(1.0, 1.0, 1.0, 1.0),
-        target_means=(.0, .0, .0, .0),
-        target_stds=(1.0, 1.0, 1.0, 1.0),
-        deformable_groups=4,
-        loc_filter_thr=0.01,
-        loss_loc=dict(
-            type='FocalLoss',
-            use_sigmoid=True,
-            gamma=2.0,
-            alpha=0.25,
-            loss_weight=1.0),
-        loss_shape=dict(type='BoundedIoULoss', beta=0.2, loss_weight=1.0),
-        loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                       loss_weight=1.0)):  # yapf: disable
+            self,
+            num_classes,
+            in_channels,
+            feat_channels=256,
+            octave_base_scale=8,
+            scales_per_octave=3,
+            octave_ratios=[0.5, 1.0, 2.0],
+            anchor_strides=[4, 8, 16, 32, 64],
+            anchor_base_sizes=None,
+            anchoring_means=(.0, .0, .0, .0),
+            anchoring_stds=(1.0, 1.0, 1.0, 1.0),
+            target_means=(.0, .0, .0, .0),
+            target_stds=(1.0, 1.0, 1.0, 1.0),
+            deformable_groups=4,
+            loc_filter_thr=0.01,
+            loss_loc=dict(
+                type='FocalLoss',
+                use_sigmoid=True,
+                gamma=2.0,
+                alpha=0.25,
+                loss_weight=1.0),
+            loss_shape=dict(type='BoundedIoULoss', beta=0.2, loss_weight=1.0),
+            loss_cls=dict(
+                type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
+                           loss_weight=1.0)):  # yapf: disable
         super(AnchorHead, self).__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes
@@ -141,7 +141,7 @@ class GuidedAnchorHead(AnchorHead):
         self.octave_base_scale = octave_base_scale
         self.scales_per_octave = scales_per_octave
         self.octave_scales = octave_base_scale * np.array(
-            [2**(i / scales_per_octave) for i in range(scales_per_octave)])
+            [2 ** (i / scales_per_octave) for i in range(scales_per_octave)])
         self.approxs_per_octave = len(self.octave_scales) * len(octave_ratios)
         self.octave_ratios = octave_ratios
         self.anchor_strides = anchor_strides
@@ -277,7 +277,7 @@ class GuidedAnchorHead(AnchorHead):
                 # inside_flag for a position is true if any anchor in this
                 # position is true
                 inside_flags = (
-                    torch.stack(inside_flags_list, 0).sum(dim=0) > 0)
+                        torch.stack(inside_flags_list, 0).sum(dim=0) > 0)
                 multi_level_flags.append(inside_flags)
             inside_flag_list.append(multi_level_flags)
         return approxs_list, inside_flag_list
@@ -483,7 +483,7 @@ class GuidedAnchorHead(AnchorHead):
          num_total_pos, num_total_neg) = cls_reg_targets
         num_total_samples = (
             num_total_pos if self.cls_focal_loss else num_total_pos +
-            num_total_neg)
+                                                      num_total_neg)
 
         # get classification and bbox regression losses
         losses_cls, losses_bbox = multi_apply(

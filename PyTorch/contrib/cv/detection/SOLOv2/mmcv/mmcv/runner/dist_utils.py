@@ -18,6 +18,9 @@ import os
 import subprocess
 
 import torch
+
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
@@ -87,7 +90,6 @@ def get_dist_info():
 
 
 def master_only(func):
-
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         rank, _ = get_dist_info()

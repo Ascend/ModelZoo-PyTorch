@@ -32,7 +32,7 @@ def test_iter_cast():
 
 def test_is_seq_of():
     assert mmcv.is_seq_of([1.0, 2.0, 3.0], float)
-    assert mmcv.is_seq_of([(1, ), (2, ), (3, )], tuple)
+    assert mmcv.is_seq_of([(1,), (2,), (3,)], tuple)
     assert mmcv.is_seq_of((1.0, 2.0, 3.0), float)
     assert mmcv.is_list_of([1.0, 2.0, 3.0], float)
     assert not mmcv.is_seq_of((1.0, 2.0, 3.0), float, seq_type=list)
@@ -57,7 +57,6 @@ def test_concat_list():
 
 
 def test_requires_package(capsys):
-
     @mmcv.requires_package('nnn')
     def func_a():
         pass
@@ -87,7 +86,6 @@ def test_requires_package(capsys):
 
 
 def test_requires_executable(capsys):
-
     @mmcv.requires_executable('nnn')
     def func_a():
         pass

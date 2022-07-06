@@ -54,7 +54,7 @@ def flowread(flow_or_path, quantize=False, concat_axis=0, *args, **kwargs):
                 if header != 'PIEH':
                     raise IOError(
                         'Invalid flow file: {}, header does not contain PIEH'.
-                        format(flow_or_path))
+                            format(flow_or_path))
 
             w = np.fromfile(f, np.int32, 1).squeeze()
             h = np.fromfile(f, np.int32, 1).squeeze()
@@ -65,7 +65,7 @@ def flowread(flow_or_path, quantize=False, concat_axis=0, *args, **kwargs):
         if cat_flow.ndim != 2:
             raise IOError(
                 '{} is not a valid quantized flow file, its dimension is {}.'.
-                format(flow_or_path, cat_flow.ndim))
+                    format(flow_or_path, cat_flow.ndim))
         assert cat_flow.shape[concat_axis] % 2 == 0
         dx, dy = np.split(cat_flow, 2, axis=concat_axis)
         flow = dequantize_flow(dx, dy, *args, **kwargs)
