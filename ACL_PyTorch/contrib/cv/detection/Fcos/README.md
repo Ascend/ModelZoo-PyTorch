@@ -168,7 +168,7 @@ atc --framework=5 --model=./fcos.onnx --output=fcos_bs1_310p --input_format=NCHW
   - --input_format：输入数据的格式。
   - --input_shape：输入数据的shape。
   - --log：日志级别。
-  - --soc_version：处理器型号，Ascend310或Ascend710。
+  - --soc_version：处理器型号，Ascend310或Ascend310P。
 
 运行成功后生成生成的fcos_bs1_310p.om用于图片输入推理的模型文件。
 

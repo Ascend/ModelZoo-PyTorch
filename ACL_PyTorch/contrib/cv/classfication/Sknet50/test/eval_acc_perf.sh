@@ -36,7 +36,7 @@ fi
 echo "bs1"
 echo "====performance data===="
 rm -rf result/dumpOutput_device0
-./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=sk_resnet50_bs1_710.om -input_text_path=sknet_prep_bin_lsl.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=sk_resnet50_bs1_310P.om -input_text_path=sknet_prep_bin_lsl.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
@@ -52,7 +52,7 @@ fi
 echo "bs8"
 echo "====performance data===="
 rm -rf result/dumpOutput_device1
-./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=8 -om_path=sk_resnet50_bs8_710.om -input_text_path=sknet_prep_bin_lsl.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=8 -om_path=sk_resnet50_bs8_310P.om -input_text_path=sknet_prep_bin_lsl.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

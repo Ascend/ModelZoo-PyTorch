@@ -1,5 +1,5 @@
 # RefineNet Onnx模型端到端推理指导
-- [RefineNet Onnx模型端到端推理指导](#RefineNet onnx模型端到端推理指导)
+- [RefineNet Onnx模型端到端推理指导](#refinenet-onnx模型端到端推理指导)
 	- [1 模型概述](#1-模型概述)
 		- [1.1 论文地址](#11-论文地址)
 		- [1.2 代码地址](#12-代码地址)
@@ -130,8 +130,12 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.1.RC1 开发辅助工具指南 (推理) 01
 
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```BASH
-atc --framework=5 --model=model/RefineNet_910.onnx --output=model/RefineNet_910_bs1 --input_format=NCHW --input_shape="input:1,3,500,500" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=model/RefineNet_910.onnx --output=model/RefineNet_910_bs1 --input_format=NCHW --input_shape="input:1,3,500,500" --log=debug --soc_version=Ascend${chip_name}
 ```
 
 ## 4 数据集预处理
@@ -230,13 +234,13 @@ batch1的性能，benchmark工具在整个数据集上推理后生成result/perf
 ```
 [inference] throughputRate: 60.5672, Interface throughputRate: 91.434, moduleLatency: 16.1848
 ```
-Interface throughputRate: 91.434是batch1 710单卡吞吐率  
+Interface throughputRate: 91.434是batch1 310P单卡吞吐率  
 batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
 
 ```
 [inference] throughputRate: 56.6365, Interface throughputRate: 77.7378, moduleLatency: 17.4284
 ```
-Interface throughputRate: 77.7378是batch16 710单卡吞吐率 
+Interface throughputRate: 77.7378是batch16 310P单卡吞吐率 
 
 
 2.npu纯推理性能

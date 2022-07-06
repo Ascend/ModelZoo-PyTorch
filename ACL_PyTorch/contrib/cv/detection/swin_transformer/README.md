@@ -36,7 +36,7 @@ cd ..
 
 ### 2. 离线推理
 
-710上执行，执行时使npu-smi info查看设备状态，确保device空闲
+310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
 ```bash
 bash test/pth2om.sh --batch_size=1
@@ -45,7 +45,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets --batch_size=1
 
 **评测结果：**
 
-| 模型        | pth精度   | 710离线推理精度 | 性能基准  | 710性能 |
+| 模型        | pth精度   | 310P离线推理精度 | 性能基准  | 310P性能 |
 | ----------- | --------- | --------------- | --------- | ------- |
 | YOLOX bs1 | box AP:48.2 | box AP:47.9 | fps 5.5 | fps 4.47 |
 | YOLOX bs8 | box AP:48.2 | box AP:47.9 | fps - | fps 5.9 |

@@ -119,9 +119,13 @@ pip install opencv-python
 
 2. 使用atc工具将onnx模型转换为om模型，命令参考
 
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
    ```bash
    1batch命令:
-   atc --framework=5 --model=sk_resnet50.onnx --output=sk_resnet50_bs1_310p --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend710
+   atc --framework=5 --model=sk_resnet50.onnx --output=sk_resnet50_bs1_310p --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name}
    ```
    
    1batch命令将在运行路径下生成一个Sk_resnet50_bs1_310p.om文件，此文件即为1batch的om模型文件，其他batch同理
