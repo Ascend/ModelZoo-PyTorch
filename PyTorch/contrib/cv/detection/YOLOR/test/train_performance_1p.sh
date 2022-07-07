@@ -118,6 +118,9 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
     train_epochs=3
+elif [ x"${etp_flag}" == x"true" ];then
+    #设置最多训练步数
+    export PERF_MAX_STEPS=170
 fi
 
 #训练开始时间，不需要修改

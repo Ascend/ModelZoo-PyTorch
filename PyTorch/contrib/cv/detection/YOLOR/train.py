@@ -261,7 +261,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         print('Image sizes %g train, %g test\n'
                     'Using %g dataloader workers\nLogging results to %s\n'
                     'Starting training for %g epochs...' % (imgsz, imgsz_test, dataloader.num_workers, save_dir, epochs))
-    
+
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
 
@@ -290,7 +290,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         optimizer.zero_grad()
         start_time = time.time()
         d_1 = time.time()
-        
+        PERF_MAX_STEPS = os.environ.get("PERF_MAX_STEPS", None)
         for i, (imgs, targets, paths, _) in enumerate(dataloader):  # batch -------------------------------------------------------------
             t_time = time.time()
             d_time = t_time - d_1
@@ -372,8 +372,8 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                     #     tb_writer.add_graph(model, imgs)  # add model to tensorboard
                 elif plots and ni == 3 and wandb:
                     wandb.log({"Mosaics": [wandb.Image(str(x), caption=x.name) for x in save_dir.glob('train*.jpg')]})
-            if i > 170:
-                break  
+            if PERF_MAX_STEPS and i > int(PERF_MAX_STEPS):
+                break
             d_1 = time.time()
             # end batch ------------------------------------------------------------------------------------------------
         # end epoch ----------------------------------------------------------------------------------------------------
