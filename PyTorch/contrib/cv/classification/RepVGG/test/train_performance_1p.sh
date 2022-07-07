@@ -26,4 +26,4 @@ nohup python3.7.5 -u train.py \
     --amp \
     --custom-weight-decay \
     --opt-level "O2" \
-    --loss-scale-value 128 > repvgg_1p_perf.log 2>&1 &
+    --loss-scale-value "dynamic" > repvgg_1p_perf.log 2>&1 &

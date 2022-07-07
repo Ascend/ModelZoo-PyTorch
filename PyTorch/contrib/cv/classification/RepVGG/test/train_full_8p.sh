@@ -42,5 +42,5 @@ nohup taskset -c $PID_START-$PID_END python3.7.5 -u train.py \
 --custom-weight-decay \
 --amp \
 --opt-level "O2" \
---loss-scale-value 32 > repvgg_8p.log 2>&1 &
+--loss-scale-value "dynamic" > repvgg_8p.log 2>&1 &
 done
