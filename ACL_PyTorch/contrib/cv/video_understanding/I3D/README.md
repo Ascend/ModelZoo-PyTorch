@@ -108,16 +108,10 @@ mkdir checkpoints
 
 然后下载预训练模型：[i3d_nl_not_product_r50](https://github.com/open-mmlab/mmaction2/tree/master/configs/recognition/i3d)，在README里选择i3d_nl_dot_product_r50_32x2x1_100e_kinetics400_rgb配置，下载权重文件，并将该权重文件重命名为i3d_nl_dot_product_r50.pth，并保存在checkpoints目录下。
 
-将pth文件转换为om文件：
-
-310:
+将pth文件转换为om文件。其中，${chip_name}通过npu-smi info获取。
 ```shell
-bash i3d_pth2om.sh
-```
-
-310P:
-```shell
-bash i3d_pth2om_310P.sh
+python3 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
+/usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
 ```
 
 
