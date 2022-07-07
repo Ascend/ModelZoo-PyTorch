@@ -57,7 +57,7 @@
 
 5. #### 获取benchmark工具和msame工具
 
-   将benchmark.x86_64或benchmark.aarch64放到当前目录。
+   将benchmark.x86_64或benchmark.aarch64放到当前的目录。
 
    获取[msame](https://gitee.com/ascend/tools/tree/master/msame#https://gitee.com/ascend/tools.git)并编译出可执行文件，放到当前目录。
 
