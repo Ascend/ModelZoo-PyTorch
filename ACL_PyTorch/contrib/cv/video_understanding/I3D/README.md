@@ -10,12 +10,16 @@
 
 ​		[代码链接](https://github.com/open-mmlab/mmaction2)
 
+branch=master
+
+commit_id=529f4543cb49e7b5b61972653935369bc9c92e70
+
+
 ## 2、环境说明
 
 无明确要求，以下环境仅供参考：
 
 
-vbn
 
 
 CANN:5.1.RC1
