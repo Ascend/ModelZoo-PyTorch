@@ -163,7 +163,7 @@ grep -E "^\[Training\]" $cur_path/output/0/train_0.log|awk -F 'loss=' '{print$2}
 ActualLoss=`awk 'END {print}' $cur_path/output/0/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" >> $cur_path/output/0/${CaseName}.log
+echo "Network = ${Network}" > $cur_path/output/0/${CaseName}.log
 echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/0/${CaseName}.log
 echo "BatchSize = ${BatchSize}" >> $cur_path/output/0/${CaseName}.log
 echo "DeviceType = ${DeviceType}" >> $cur_path/output/0/${CaseName}.log
