@@ -212,7 +212,7 @@ class ResNeXt(ResNet):
             dilation = self.dilations[i]
             dcn = self.dcn if self.stage_with_dcn[i] else None
             gcb = self.gcb if self.stage_with_gcb[i] else None
-            planes = 64 * 2**i
+            planes = 64 * 2 ** i
             res_layer = make_res_layer(
                 self.block,
                 self.inplanes,

@@ -16,7 +16,7 @@ FixRes first trains a ResNet50 model with 224x224 input images. Then 384x384 inp
 
 ## Training
 
-To train a model, run `main_resnet50_scratch.py` with the desired model architecture and the path to the ImageNet dataset:
+To train a model, run `main_resnet50_scratch.py` with the desired model architecture and the path to the ImageNet dataset.Before training, you need to create a 'train_cache' folder under the model directory:
 
 ```bash
 # training 1p accuracy

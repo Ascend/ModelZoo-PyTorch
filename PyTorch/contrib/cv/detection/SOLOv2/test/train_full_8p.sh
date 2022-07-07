@@ -14,7 +14,7 @@ Network="SOLOv2"
 
 #训练batch_size,,需要模型审视修改
 batch_size=16
-device_id=1
+device_id=0
 
 #参数校验，不需要修改
 for para in $*

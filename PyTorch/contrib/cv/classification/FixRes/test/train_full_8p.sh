@@ -72,13 +72,12 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 main_resnet50_scr
 	--num_tasks 8 \
 	--batch 64 \
     --learning_rate 0.02 \
-	--addr $(hostname -I |awk '{print $1}') > train_full_8p.log 2>&1 &
+	--addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 # mv nohup.out ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 wait
 
-cp train_full_8p.log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 
 ##################获取训练数据################

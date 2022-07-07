@@ -123,7 +123,7 @@ data = dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_train2017.json',
         proposal_file=data_root +
-        'libra_proposals/rpn_r50_fpn_1x_train2017.pkl',
+                      'libra_proposals/rpn_r50_fpn_1x_train2017.pkl',
         img_prefix=data_root + 'train2017/',
         pipeline=train_pipeline),
     val=dict(

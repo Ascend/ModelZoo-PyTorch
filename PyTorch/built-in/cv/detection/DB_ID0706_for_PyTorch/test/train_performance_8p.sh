@@ -16,6 +16,8 @@ batch_size=128
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
+# 检验预训练模型的路径
+model_path=/npu/traindata/ICDAR2015/db_ckpt
 
 # 训练epoch
 train_epochs=1
@@ -27,8 +29,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --resume* ]];then
-        resume=`echo ${para#*=}`
+    elif [[ $para == --model_path* ]];then
+        model_path=`echo ${para#*=}`
     fi
 done
 
@@ -37,7 +39,11 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-
+# 校验是否传入model_path不需要修改
+if [[ $model_path == "" ]];then
+    echo "[Error] para \"model_path\" must be confing"
+    exit 1
+fi
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -83,7 +89,7 @@ fi
 
 taskset -c 0-${cpu_number} nohup python3.7 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
     --data_path ${data_path}/icdar2015 \
-    --resume ./path-to-model-directory/MLT-Pretrain-ResNet50 \
+    --resume ${model_path}/MLT-Pretrain-ResNet50 \
     --seed=515 \
     --distributed \
     --device_list "0,1,2,3,4,5,6,7" \

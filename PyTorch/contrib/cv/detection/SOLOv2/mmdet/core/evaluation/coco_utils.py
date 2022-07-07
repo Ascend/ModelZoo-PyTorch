@@ -105,7 +105,7 @@ def fast_eval_recall(results,
     elif not isinstance(results, list):
         raise TypeError(
             'results must be a list of numpy arrays or a filename, not {}'.
-            format(type(results)))
+                format(type(results)))
 
     gt_bboxes = []
     img_ids = coco.getImgIds()

@@ -11,7 +11,7 @@ batch_size=1
 # 训练使用的npu卡数
 export RANK_SIZE=1
 data_path=""
-MODEL="./work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth"
+MODEL="./work_dirs/solov2_release_r50_fpn_8gpu_1x/epoch_12.pth"
 device_id=0
 
 #参数校验，不需要修改
@@ -70,7 +70,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 # 输出训练精度,需要模型审视修改 # eval.log | awk -F ',' '{print $1}' | awk '{print $2}' | awk ' END {print}'
-train_accuracy=`grep -a 'maxDets' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $13}'|head -n 1`
+train_accuracy=`grep -a 'maxDets' $cur_path/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $13}'|head -n 1`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

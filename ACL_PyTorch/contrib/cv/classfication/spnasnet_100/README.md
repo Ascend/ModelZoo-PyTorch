@@ -1,30 +1,31 @@
 # spnasnet_net Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 310离线推理TopN精度统计](#61-310离线推理TopN精度统计)
-	-   [6.2 310P离线推理TopN精度统计](#62-310P离线推理TopN精度统计)
-	-   [6.3 开源TopN精度](#63-开源TopN精度)
-	-   [6.4 精度对比](#64-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 310性能数据](#71-310性能数据)
-	-   [7.2 310P性能数据](#72-310P性能数据)
-	-   [7.3 T4性能数据](#73-T4性能数据)
-	-   [7.4 性能对比](#74-性能对比)
+- [spnasnet_net Onnx模型端到端推理指导](#spnasnet_net-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 310离线推理TopN精度统计](#61-310离线推理topn精度统计)
+		- [6.2 310P离线推理TopN精度统计](#62-310p离线推理topn精度统计)
+		- [6.3 开源TopN精度](#63-开源topn精度)
+		- [6.4 精度对比](#64-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 310性能数据](#71-310性能数据)
+		- [7.2 310P性能数据](#72-310p性能数据)
+		- [7.3 T4性能数据](#73-t4性能数据)
+		- [7.4 性能对比](#74-性能对比)
 
 
 
@@ -108,14 +109,12 @@ source /usr/local/Ascend/ascend-lastest/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
-310:
-```
-atc --model=./spnasnet_100.onnx --framework=5 --output=spnasnet_100_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=info --soc_version=Ascend310
-```
+${chip_name}可通过`npu-smi info`指令查看
 
-310P:
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
-atc --model=./spnasnet_100.onnx --framework=5 --output=spnasnet_100_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=info --soc_version=Ascend710
+atc --model=./spnasnet_100.onnx --framework=5 --output=spnasnet_100_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=info --soc_version=Ascend${chip_name}
 ```
 
 ## 4 数据集预处理

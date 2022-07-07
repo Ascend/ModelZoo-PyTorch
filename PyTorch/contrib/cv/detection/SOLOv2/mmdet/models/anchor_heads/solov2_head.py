@@ -23,7 +23,9 @@ from ..builder import build_loss
 from ..registry import HEADS
 from ..utils import bias_init_with_prob, ConvModule
 import numpy as np
+
 INF = 1e8
+
 
 def center_of_mass(bitmasks):
     _, h, w = bitmasks.size()
@@ -37,12 +39,14 @@ def center_of_mass(bitmasks):
     center_y = m01 / m00
     return center_x, center_y
 
+
 def points_nms(heat, kernel=2):
     # kernel must be 2
     hmax = nn.functional.max_pool2d(
         heat, (kernel, kernel), stride=1, padding=1)
     keep = (hmax[:, :, :-1, :-1] == heat).float()
     return heat * keep
+
 
 def dice_loss(input, target):
     input = input.contiguous().view(input.size()[0], -1)
@@ -52,7 +56,8 @@ def dice_loss(input, target):
     b = torch.sum(input * input, 1) + 0.001
     c = torch.sum(target * target, 1) + 0.001
     d = (2 * a) / (b + c)
-    return 1-d
+    return 1 - d
+
 
 @HEADS.register_module
 class SOLOv2Head(nn.Module):
@@ -150,8 +155,8 @@ class SOLOv2Head(nn.Module):
         featmap_sizes = [featmap.size()[-2:] for featmap in new_feats]
         upsampled_size = (featmap_sizes[0][0] * 2, featmap_sizes[0][1] * 2)
         cate_pred, kernel_pred = multi_apply(self.forward_single, new_feats,
-                                                       list(range(len(self.seg_num_grids))),
-                                                       eval=eval, upsampled_size=upsampled_size)
+                                             list(range(len(self.seg_num_grids))),
+                                             eval=eval, upsampled_size=upsampled_size)
         return cate_pred, kernel_pred
 
     def split_feats(self, feats):
@@ -172,7 +177,7 @@ class SOLOv2Head(nn.Module):
         x = x.expand([ins_kernel_feat.shape[0], 1, -1, -1])
         coord_feat = torch.cat([x, y], 1)
         ins_kernel_feat = torch.cat([ins_kernel_feat, coord_feat], 1)
-        
+
         # kernel branch
         kernel_feat = ins_kernel_feat
         seg_num_grid = self.seg_num_grids[idx]
@@ -195,7 +200,7 @@ class SOLOv2Head(nn.Module):
         return cate_pred, kernel_pred
 
     def loss(self,
-             cate_preds, 
+             cate_preds,
              kernel_preds,
              ins_pred,
              gt_bbox_list,
@@ -203,7 +208,7 @@ class SOLOv2Head(nn.Module):
              gt_mask_list,
              img_metas,
              cfg,
-             gt_bboxes_ignore=None):         
+             gt_bboxes_ignore=None):
 
         # diff
         MAX_LEN = 90
@@ -258,9 +263,9 @@ class SOLOv2Head(nn.Module):
                     continue
                 cur_ins_pred = ins_pred[idx, ...]  # this img‘s pred
                 H, W = cur_ins_pred.shape[-2:]
-                N, I = kernel_pred.shape  
+                N, I = kernel_pred.shape
                 cur_ins_pred = cur_ins_pred.unsqueeze(0)  # [1, c, msk_pre_h, msk_pre_w]     c = N
-                kernel_pred = kernel_pred.permute(1, 0).view(I, -1, 1, 1)  
+                kernel_pred = kernel_pred.permute(1, 0).view(I, -1, 1, 1)
                 cur_ins_pred = F.conv2d(cur_ins_pred, kernel_pred, stride=1).view(-1, H, W)  # (n, msk_pre_h, msk_pre_w)
                 b_mask_pred.append(cur_ins_pred)
             if len(b_mask_pred) == 0:
@@ -420,7 +425,7 @@ class SOLOv2Head(nn.Module):
             seg_pred_list = seg_pred[img_id, ...].unsqueeze(0).float().cpu()
             kernel_pred_list = [
                 kernel_preds[i][img_id].permute(1, 2, 0).view(-1, self.kernel_out_channels).detach()
-                                for i in range(num_levels)
+                for i in range(num_levels)
             ]
             img_shape = img_metas[img_id]['img_shape']
             scale_factor = img_metas[img_id]['scale_factor']
@@ -467,13 +472,18 @@ class SOLOv2Head(nn.Module):
         n_stage = len(self.seg_num_grids)
         strides[:size_trans[0]] *= self.strides[0]
         for ind_ in range(1, n_stage):
-            strides[size_trans[ind_-1]:size_trans[ind_]] *= self.strides[ind_]
+            strides[size_trans[ind_ - 1]:size_trans[ind_]] *= self.strides[ind_]
         strides = strides[inds[:, 0]]
 
         # mask encoding.
         I, N = kernel_preds.shape
         kernel_preds = kernel_preds.view(I, N, 1, 1)
-        seg_preds = F.conv2d(seg_preds, kernel_preds, stride=1).squeeze(0).sigmoid()
+        new_I = ((I // 100) + 1) * 100
+
+        new_kernel_preds = torch.zeros(new_I, N, 1, 1)
+        new_kernel_preds[:I] = kernel_preds
+        seg_preds = F.conv2d(seg_preds.npu().half(), new_kernel_preds.npu().half(), stride=1).squeeze(
+            0).sigmoid().cpu().float()[:I, :, :]
         # mask.
         seg_masks = seg_preds > cfg.mask_thr
         sum_masks = seg_masks.sum((1, 2)).float()
@@ -505,7 +515,7 @@ class SOLOv2Head(nn.Module):
 
         # Matrix NMS
         cate_scores = matrix_nms(seg_masks, cate_labels, cate_scores,
-                                    kernel=cfg.kernel,sigma=cfg.sigma, sum_masks=sum_masks)
+                                 kernel=cfg.kernel, sigma=cfg.sigma, sum_masks=sum_masks)
 
         # filter.
         keep = cate_scores >= cfg.update_thr
@@ -524,10 +534,10 @@ class SOLOv2Head(nn.Module):
         cate_labels = cate_labels[sort_inds]
 
         seg_preds = F.interpolate(seg_preds.unsqueeze(0),
-                                    size=upsampled_size_out,
-                                    mode='bilinear')[:, :, :h, :w]
+                                  size=upsampled_size_out,
+                                  mode='bilinear')[:, :, :h, :w]
         seg_masks = F.interpolate(seg_preds,
-                               size=ori_shape[:2],
-                               mode='bilinear').squeeze(0)
+                                  size=ori_shape[:2],
+                                  mode='bilinear').squeeze(0)
         seg_masks = seg_masks > cfg.mask_thr
         return seg_masks, cate_labels, cate_scores

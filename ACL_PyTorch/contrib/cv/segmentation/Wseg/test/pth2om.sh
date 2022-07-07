@@ -13,9 +13,9 @@ python3.7 fix_softmax_transpose.py ./wideresnet_dybs.onnx ./wideresnet_dybs_fix.
 rm -rf wideresnet_bs1.om wideresnet_bs4.om
 source env.sh
 echo 'onnx -> om batch1'
-atc --model=./wideresnet_dybs_fix.onnx --framework=5 --output=wideresnet_bs1 --input_format=NCHW --input_shape="image:1,3,1024,1024" --log=debug --soc_version=Ascend310
+atc --model=./wideresnet_dybs_fix.onnx --framework=5 --output=wideresnet_bs1 --input_format=NCHW --input_shape="image:1,3,1024,1024" --log=debug --soc_version=Ascend${chip_name}
 echo 'onnx -> om batch4'
-atc --model=./wideresnet_dybs_fix.onnx --framework=5 --output=wideresnet_bs4 --input_format=NCHW --input_shape="image:4,3,1024,1024" --log=debug --soc_version=Ascend310
+atc --model=./wideresnet_dybs_fix.onnx --framework=5 --output=wideresnet_bs4 --input_format=NCHW --input_shape="image:4,3,1024,1024" --log=debug --soc_version=Ascend${chip_name}
 if [ -f "wideresnet_bs1.om" ] && [ -f "wideresnet_bs4.om" ]; then
     echo "success"
 else

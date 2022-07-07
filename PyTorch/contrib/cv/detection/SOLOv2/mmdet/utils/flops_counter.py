@@ -82,21 +82,21 @@ def get_model_complexity_info(model,
 
 def flops_to_string(flops, units='GMac', precision=2):
     if units is None:
-        if flops // 10**9 > 0:
-            return str(round(flops / 10.**9, precision)) + ' GMac'
-        elif flops // 10**6 > 0:
-            return str(round(flops / 10.**6, precision)) + ' MMac'
-        elif flops // 10**3 > 0:
-            return str(round(flops / 10.**3, precision)) + ' KMac'
+        if flops // 10 ** 9 > 0:
+            return str(round(flops / 10. ** 9, precision)) + ' GMac'
+        elif flops // 10 ** 6 > 0:
+            return str(round(flops / 10. ** 6, precision)) + ' MMac'
+        elif flops // 10 ** 3 > 0:
+            return str(round(flops / 10. ** 3, precision)) + ' KMac'
         else:
             return str(flops) + ' Mac'
     else:
         if units == 'GMac':
-            return str(round(flops / 10.**9, precision)) + ' ' + units
+            return str(round(flops / 10. ** 9, precision)) + ' ' + units
         elif units == 'MMac':
-            return str(round(flops / 10.**6, precision)) + ' ' + units
+            return str(round(flops / 10. ** 6, precision)) + ' ' + units
         elif units == 'KMac':
-            return str(round(flops / 10.**3, precision)) + ' ' + units
+            return str(round(flops / 10. ** 3, precision)) + ' ' + units
         else:
             return str(flops) + ' Mac'
 
@@ -114,10 +114,10 @@ def params_to_string(params_num):
     >>> params_to_string(3e-9)
     '3e-09'
     """
-    if params_num // 10**6 > 0:
-        return str(round(params_num / 10**6, 2)) + ' M'
-    elif params_num // 10**3:
-        return str(round(params_num / 10**3, 2)) + ' k'
+    if params_num // 10 ** 6 > 0:
+        return str(round(params_num / 10 ** 6, 2)) + ' M'
+    elif params_num // 10 ** 3:
+        return str(round(params_num / 10 ** 3, 2)) + ' k'
     else:
         return str(params_num)
 
@@ -237,7 +237,6 @@ def reset_flops_count(self):
 
 
 def add_flops_mask(module, mask):
-
     def add_flops_mask_func(module):
         if isinstance(module, torch.nn.Conv2d):
             module.__mask__ = mask
@@ -319,7 +318,7 @@ def deconv_flops_counter_hook(conv_module, input, output):
 
     filters_per_channel = out_channels // groups
     conv_per_position_flops = (
-        kernel_height * kernel_width * in_channels * filters_per_channel)
+            kernel_height * kernel_width * in_channels * filters_per_channel)
 
     active_elements_count = batch_size * input_height * input_width
     overall_conv_flops = conv_per_position_flops * active_elements_count
@@ -362,7 +361,6 @@ def conv_flops_counter_hook(conv_module, input, output):
     bias_flops = 0
 
     if conv_module.bias is not None:
-
         bias_flops = out_channels * active_elements_count
 
     overall_flops = overall_conv_flops + bias_flops

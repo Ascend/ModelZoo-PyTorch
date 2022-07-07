@@ -175,7 +175,7 @@ class HybridTaskCascade(CascadeRCNN):
         # rpn
         if self.with_rpn:
             rpn_outs = self.rpn_head(x)
-            outs = outs + (rpn_outs, )
+            outs = outs + (rpn_outs,)
         proposals = torch.randn(1000, 4).cuda()
         # semantic head
         if self.with_semantic:
@@ -205,7 +205,7 @@ class HybridTaskCascade(CascadeRCNN):
                     mask_pred, last_feat = mask_head(mask_feats, last_feat)
                 else:
                     mask_pred = mask_head(mask_feats)
-                outs = outs + (mask_pred, )
+                outs = outs + (mask_pred,)
         return outs
 
     def forward_train(self,
@@ -499,7 +499,7 @@ class HybridTaskCascade(CascadeRCNN):
                         mask_semantic_feat = self.semantic_roi_extractor(
                             [semantic_feat], mask_rois)
                         if mask_semantic_feat.shape[-2:] != mask_feats.shape[
-                                -2:]:
+                                                            -2:]:
                             mask_semantic_feat = F.adaptive_avg_pool2d(
                                 mask_semantic_feat, mask_feats.shape[-2:])
                         mask_feats += mask_semantic_feat

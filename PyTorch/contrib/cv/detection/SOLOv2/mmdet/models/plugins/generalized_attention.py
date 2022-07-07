@@ -135,15 +135,15 @@ class GeneralizedAttention(nn.Module):
             for iy in range(max_len):
                 for ix in range(max_len):
                     local_constraint_map[
-                        iy, ix,
-                        max((iy - self.spatial_range) //
-                            self.kv_stride, 0):min((iy + self.spatial_range +
-                                                    1) // self.kv_stride +
-                                                   1, max_len),
-                        max((ix - self.spatial_range) //
-                            self.kv_stride, 0):min((ix + self.spatial_range +
-                                                    1) // self.kv_stride +
-                                                   1, max_len)] = 0
+                    iy, ix,
+                    max((iy - self.spatial_range) //
+                        self.kv_stride, 0):min((iy + self.spatial_range +
+                                                1) // self.kv_stride +
+                                               1, max_len),
+                    max((ix - self.spatial_range) //
+                        self.kv_stride, 0):min((ix + self.spatial_range +
+                                                1) // self.kv_stride +
+                                               1, max_len)] = 0
 
             self.local_constraint_map = nn.Parameter(
                 torch.from_numpy(local_constraint_map).byte(),
@@ -196,7 +196,7 @@ class GeneralizedAttention(nn.Module):
         feat_range = torch.arange(0, feat_dim / 4).cuda(device)
 
         dim_mat = torch.Tensor([wave_length]).cuda(device)
-        dim_mat = dim_mat**((4. / feat_dim) * feat_range)
+        dim_mat = dim_mat ** ((4. / feat_dim) * feat_range)
         dim_mat = dim_mat.view((1, 1, -1))
 
         embedding_x = torch.cat(
@@ -237,15 +237,15 @@ class GeneralizedAttention(nn.Module):
                 h, w, h_kv, w_kv, self.q_stride, self.kv_stride,
                 x_input.device, self.position_embedding_dim)
             # (n, num_heads, w, w_kv, dim)
-            position_feat_x = self.appr_geom_fc_x(position_embed_x).\
-                view(1, w, w_kv, num_heads, self.qk_embed_dim).\
-                permute(0, 3, 1, 2, 4).\
+            position_feat_x = self.appr_geom_fc_x(position_embed_x). \
+                view(1, w, w_kv, num_heads, self.qk_embed_dim). \
+                permute(0, 3, 1, 2, 4). \
                 repeat(n, 1, 1, 1, 1)
 
             # (n, num_heads, h, h_kv, dim)
-            position_feat_y = self.appr_geom_fc_y(position_embed_y).\
-                view(1, h, h_kv, num_heads, self.qk_embed_dim).\
-                permute(0, 3, 1, 2, 4).\
+            position_feat_y = self.appr_geom_fc_y(position_embed_y). \
+                view(1, h, h_kv, num_heads, self.qk_embed_dim). \
+                permute(0, 3, 1, 2, 4). \
                 repeat(n, 1, 1, 1, 1)
 
             position_feat_x /= math.sqrt(2)
@@ -253,11 +253,11 @@ class GeneralizedAttention(nn.Module):
 
         # accelerate for saliency only
         if (np.sum(self.attention_type) == 1) and self.attention_type[2]:
-            appr_bias = self.appr_bias.\
-                view(1, num_heads, 1, self.qk_embed_dim).\
+            appr_bias = self.appr_bias. \
+                view(1, num_heads, 1, self.qk_embed_dim). \
                 repeat(n, 1, 1, 1)
 
-            energy = torch.matmul(appr_bias, proj_key).\
+            energy = torch.matmul(appr_bias, proj_key). \
                 view(n, num_heads, 1, h_kv * w_kv)
 
             h = 1
@@ -281,35 +281,35 @@ class GeneralizedAttention(nn.Module):
             # attention_type[3]: bias - position
             if self.attention_type[0] or self.attention_type[2]:
                 if self.attention_type[0] and self.attention_type[2]:
-                    appr_bias = self.appr_bias.\
+                    appr_bias = self.appr_bias. \
                         view(1, num_heads, 1, self.qk_embed_dim)
-                    energy = torch.matmul(proj_query + appr_bias, proj_key).\
+                    energy = torch.matmul(proj_query + appr_bias, proj_key). \
                         view(n, num_heads, h, w, h_kv, w_kv)
 
                 elif self.attention_type[0]:
-                    energy = torch.matmul(proj_query, proj_key).\
+                    energy = torch.matmul(proj_query, proj_key). \
                         view(n, num_heads, h, w, h_kv, w_kv)
 
                 elif self.attention_type[2]:
-                    appr_bias = self.appr_bias.\
-                        view(1, num_heads, 1, self.qk_embed_dim).\
+                    appr_bias = self.appr_bias. \
+                        view(1, num_heads, 1, self.qk_embed_dim). \
                         repeat(n, 1, 1, 1)
 
-                    energy += torch.matmul(appr_bias, proj_key).\
+                    energy += torch.matmul(appr_bias, proj_key). \
                         view(n, num_heads, 1, 1, h_kv, w_kv)
 
             if self.attention_type[1] or self.attention_type[3]:
                 if self.attention_type[1] and self.attention_type[3]:
-                    geom_bias = self.geom_bias.\
+                    geom_bias = self.geom_bias. \
                         view(1, num_heads, 1, self.qk_embed_dim)
 
-                    proj_query_reshape = (proj_query + geom_bias).\
+                    proj_query_reshape = (proj_query + geom_bias). \
                         view(n, num_heads, h, w, self.qk_embed_dim)
 
                     energy_x = torch.matmul(
                         proj_query_reshape.permute(0, 1, 3, 2, 4),
                         position_feat_x.permute(0, 1, 2, 4, 3))
-                    energy_x = energy_x.\
+                    energy_x = energy_x. \
                         permute(0, 1, 3, 2, 4).unsqueeze(4)
 
                     energy_y = torch.matmul(
@@ -320,13 +320,13 @@ class GeneralizedAttention(nn.Module):
                     energy += energy_x + energy_y
 
                 elif self.attention_type[1]:
-                    proj_query_reshape = proj_query.\
+                    proj_query_reshape = proj_query. \
                         view(n, num_heads, h, w, self.qk_embed_dim)
-                    proj_query_reshape = proj_query_reshape.\
+                    proj_query_reshape = proj_query_reshape. \
                         permute(0, 1, 3, 2, 4)
-                    position_feat_x_reshape = position_feat_x.\
+                    position_feat_x_reshape = position_feat_x. \
                         permute(0, 1, 2, 4, 3)
-                    position_feat_y_reshape = position_feat_y.\
+                    position_feat_y_reshape = position_feat_y. \
                         permute(0, 1, 2, 4, 3)
 
                     energy_x = torch.matmul(proj_query_reshape,
@@ -340,14 +340,14 @@ class GeneralizedAttention(nn.Module):
                     energy += energy_x + energy_y
 
                 elif self.attention_type[3]:
-                    geom_bias = self.geom_bias.\
-                        view(1, num_heads, self.qk_embed_dim, 1).\
+                    geom_bias = self.geom_bias. \
+                        view(1, num_heads, self.qk_embed_dim, 1). \
                         repeat(n, 1, 1, 1)
 
-                    position_feat_x_reshape = position_feat_x.\
-                        view(n, num_heads, w*w_kv, self.qk_embed_dim)
+                    position_feat_x_reshape = position_feat_x. \
+                        view(n, num_heads, w * w_kv, self.qk_embed_dim)
 
-                    position_feat_y_reshape = position_feat_y.\
+                    position_feat_y_reshape = position_feat_y. \
                         view(n, num_heads, h * h_kv, self.qk_embed_dim)
 
                     energy_x = torch.matmul(position_feat_x_reshape, geom_bias)
@@ -362,9 +362,9 @@ class GeneralizedAttention(nn.Module):
 
         if self.spatial_range >= 0:
             cur_local_constraint_map = \
-                self.local_constraint_map[:h, :w, :h_kv, :w_kv].\
-                contiguous().\
-                view(1, 1, h*w, h_kv*w_kv)
+                self.local_constraint_map[:h, :w, :h_kv, :w_kv]. \
+                    contiguous(). \
+                    view(1, 1, h * w, h_kv * w_kv)
 
             energy = energy.masked_fill_(cur_local_constraint_map,
                                          float('-inf'))
@@ -372,13 +372,13 @@ class GeneralizedAttention(nn.Module):
         attention = F.softmax(energy, 3)
 
         proj_value = self.value_conv(x_kv)
-        proj_value_reshape = proj_value.\
-            view((n, num_heads, self.v_dim, h_kv * w_kv)).\
+        proj_value_reshape = proj_value. \
+            view((n, num_heads, self.v_dim, h_kv * w_kv)). \
             permute(0, 1, 3, 2)
 
-        out = torch.matmul(attention, proj_value_reshape).\
-            permute(0, 1, 3, 2).\
-            contiguous().\
+        out = torch.matmul(attention, proj_value_reshape). \
+            permute(0, 1, 3, 2). \
+            contiguous(). \
             view(n, self.v_dim * self.num_heads, h, w)
 
         out = self.proj_conv(out)

@@ -267,7 +267,7 @@ class GridHead(nn.Module):
                             1 - y_idx / (self.grid_size - 1)))
 
         radius = rcnn_train_cfg.pos_radius
-        radius2 = radius**2
+        radius2 = radius ** 2
         for i in range(num_rois):
             # ignore small bboxes
             if (pos_bbox_ws[i] <= self.grid_size
@@ -277,9 +277,9 @@ class GridHead(nn.Module):
             for j in range(self.grid_points):
                 factor_x, factor_y = factors[j]
                 gridpoint_x = factor_x * pos_gt_bboxes[i, 0] + (
-                    1 - factor_x) * pos_gt_bboxes[i, 2]
+                        1 - factor_x) * pos_gt_bboxes[i, 2]
                 gridpoint_y = factor_y * pos_gt_bboxes[i, 1] + (
-                    1 - factor_y) * pos_gt_bboxes[i, 3]
+                        1 - factor_y) * pos_gt_bboxes[i, 3]
 
                 cx = int((gridpoint_x - pos_bboxes[i, 0]) / pos_bbox_ws[i] *
                          map_size)
@@ -289,7 +289,7 @@ class GridHead(nn.Module):
                 for x in range(cx - radius, cx + radius + 1):
                     for y in range(cy - radius, cy + radius + 1):
                         if x >= 0 and x < map_size and y >= 0 and y < map_size:
-                            if (x - cx)**2 + (y - cy)**2 <= radius2:
+                            if (x - cx) ** 2 + (y - cy) ** 2 <= radius2:
                                 targets[i, j, y, x] = 1
         # reduce the target heatmap size by a half
         # proposed in Grid R-CNN Plus (https://arxiv.org/abs/1906.05688).
@@ -356,16 +356,16 @@ class GridHead(nn.Module):
         # voting of all grid points on some boundary
         bboxes_x1 = (abs_xs[:, x1_inds] * pred_scores[:, x1_inds]).sum(
             dim=1, keepdim=True) / (
-                pred_scores[:, x1_inds].sum(dim=1, keepdim=True))
+                        pred_scores[:, x1_inds].sum(dim=1, keepdim=True))
         bboxes_y1 = (abs_ys[:, y1_inds] * pred_scores[:, y1_inds]).sum(
             dim=1, keepdim=True) / (
-                pred_scores[:, y1_inds].sum(dim=1, keepdim=True))
+                        pred_scores[:, y1_inds].sum(dim=1, keepdim=True))
         bboxes_x2 = (abs_xs[:, x2_inds] * pred_scores[:, x2_inds]).sum(
             dim=1, keepdim=True) / (
-                pred_scores[:, x2_inds].sum(dim=1, keepdim=True))
+                        pred_scores[:, x2_inds].sum(dim=1, keepdim=True))
         bboxes_y2 = (abs_ys[:, y2_inds] * pred_scores[:, y2_inds]).sum(
             dim=1, keepdim=True) / (
-                pred_scores[:, y2_inds].sum(dim=1, keepdim=True))
+                        pred_scores[:, y2_inds].sum(dim=1, keepdim=True))
 
         bbox_res = torch.cat(
             [bboxes_x1, bboxes_y1, bboxes_x2, bboxes_y2, cls_scores], dim=1)

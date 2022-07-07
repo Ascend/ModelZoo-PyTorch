@@ -488,7 +488,8 @@ def main():
         num_workers=args.workers,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
-        use_multi_epochs_loader=args.use_multi_epochs_loader
+        use_multi_epochs_loader=args.use_multi_epochs_loader,
+        persistent_workers=False
     )
 
     loader_eval = create_loader(
@@ -503,6 +504,7 @@ def main():
         num_workers=args.workers,
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
+        persistent_workers=False
     )
 
     # setup loss function

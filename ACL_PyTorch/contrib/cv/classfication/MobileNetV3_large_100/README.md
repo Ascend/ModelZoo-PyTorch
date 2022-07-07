@@ -21,6 +21,8 @@
 	-   [6.3 精度对比](#63-精度对比)
 -   [7 性能对比](#7-性能对比)
 	-   [7.1 npu性能数据](#71-npu性能数据)
+	-   [7.2 T4性能数据](#72-T4性能数据)
+	-   [7.3 性能对比](#73-性能对比)
 
 
 
@@ -44,7 +46,7 @@
 
 ### 2.1 深度学习框架
 ```
-CANN 5.0.1
+CANN 5.0.2
 
 torch >= 1.5.0
 torchvision >= 0.6.0
@@ -54,8 +56,8 @@ onnx >= 1.7.0
 ### 2.2 python第三方库
 
 ```
-numpy == 1.18.5
-Pillow == 7.2.0
+numpy == 1.21.6
+Pillow == 9.1.1
 opencv-python == 4.5.2.54
 ```
 
@@ -105,12 +107,12 @@ python3.7 MobileNetV3_pth2onnx.py mobilenetv3_large_100_ra-f55367f5.pth mobilene
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
 ```
-atc --framework=5 --model=./mobilenetv3_100.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=mobilenetv3_100_bs16 --log=debug --soc_version=Ascend310
+atc --framework=5  --enable_small_channel=1 --insert_op_conf=aipp.config --model=./mobilenetv3_100.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=mobilenetv3_100_bs16 --log=debug --soc_version=Ascend${chip name}
 ```
 
 ## 4 数据集预处理
@@ -120,7 +122,7 @@ atc --framework=5 --model=./mobilenetv3_100.onnx --input_format=NCHW --input_sha
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-对于图像分类任务，该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt
+对于图像分类任务，该模型使用[ImageNet官网]的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt
 
 ### 4.2 数据集预处理
 1.预处理脚本img_preprocess.py
@@ -153,7 +155,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -198,6 +200,8 @@ mobilenetv3_large_100		75.766	  92.542
 ## 7 性能对比
 
 -   **[npu性能数据](#71-npu性能数据)**  
+-   **[T4性能数据](#72-T4性能数据)**  
+-   **[性能对比](#73-性能对比)**  
 
 ### 7.1 npu性能数据
 benchmark工具在整个数据集上推理时会统计性能数据，存储于result/perf_vision_batchsize_bs_device_0.txt中。但是推理整个数据集较慢，如此测性能时需要确保benchmark独占device，使用npu-smi info可以查看device是否空闲。
@@ -250,7 +254,40 @@ ave_throughputRate = 823.648samples/s, ave_latency = 1.21733ms
 ```
 batch32 310单卡吞吐率：823.648x4=3294.592 fps
 
+### 7.2 T4性能数据
+在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2   
+
+
+<table border="1px" align="center" bordercolor="black" width="80%" height="100px">
+    <tr align="center">
+        <td></td>
+        <td>bs1</td>
+        <td>bs4</td>
+        <td>bs8</td>
+        <td>bs16</td>
+        <td>bs32</td>
+        <td>bs64</td>
+    </tr>
+    <tr align="center">
+        <td>单卡吞吐率</td>
+        <td>1478.24</td>
+        <td>3386.12</td>
+        <td>3986.86</td>
+        <td>4396.53</td>
+        <td>4390.71</td>
+        <td>3775.76</td>
+    </tr>
+</table>
+
+### 7.3 性能对比
+batch1：1532.636 > 1529.856  
+batch16：3828.304< 4070.345  
+batch1时310性能高于T4, batch16时310性能略低于T4，该模型放在Research/cv/classification目录下。
+
  **性能优化：**  
 >profiling工具分析，Conv2D、Add和TransData三个算子耗时最长
 >
 >未做性能优化
+
+
+

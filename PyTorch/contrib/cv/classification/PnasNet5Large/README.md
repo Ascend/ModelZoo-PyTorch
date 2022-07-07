@@ -54,9 +54,16 @@ bash ./test/train_eval_8p.sh --data_path=real_data_path
 ```
 
 
-## PnasNet5Large 训练结果
+## PnasNet5Large1.5 训练结果
 
 | Acc@1    | FPS       | Npu_nums | Epochs     | AMP_Type |
 | :------: | :------:  | :------: | :------:   | :------: |
 | -        | 45       | 1        | 1(1000step) | O2       |
 | 78.842   | 353      | 8        | 90          | O2       |
+
+## PnasNet5Large1.8 训练结果
+
+| Acc@1    | FPS       | Npu_nums | Epochs     | AMP_Type |
+| :------: | :------:  | :------: | :------:   | :------: |
+| -        | 69       | 1        | 1(1000step) | O2       |
+| 79.625   | 353      | 8        | 90          | O2       |

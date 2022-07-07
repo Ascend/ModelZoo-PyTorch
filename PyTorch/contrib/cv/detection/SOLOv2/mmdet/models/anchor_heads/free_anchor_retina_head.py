@@ -79,7 +79,7 @@ class FreeAnchorRetinaHead(RetinaHead):
         positive_losses = []
         for _, (anchors_, gt_labels_, gt_bboxes_, cls_prob_,
                 bbox_preds_) in enumerate(
-                    zip(anchors, gt_labels, gt_bboxes, cls_prob, bbox_preds)):
+            zip(anchors, gt_labels, gt_bboxes, cls_prob, bbox_preds)):
             gt_labels_ -= 1
 
             with torch.no_grad():
@@ -197,6 +197,6 @@ class FreeAnchorRetinaHead(RetinaHead):
 
     def negative_bag_loss(self, cls_prob, box_prob):
         prob = cls_prob * (1 - box_prob)
-        negative_bag_loss = prob**self.gamma * F.binary_cross_entropy(
+        negative_bag_loss = prob ** self.gamma * F.binary_cross_entropy(
             prob, torch.zeros_like(prob), reduction='none')
         return (1 - self.alpha) * negative_bag_loss

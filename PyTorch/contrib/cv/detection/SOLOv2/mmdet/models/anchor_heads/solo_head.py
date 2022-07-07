@@ -25,6 +25,7 @@ from ..utils import bias_init_with_prob, ConvModule
 
 INF = 1e8
 
+
 def center_of_mass(bitmasks):
     _, h, w = bitmasks.size()
     ys = torch.arange(0, h, dtype=torch.float32, device=bitmasks.device)
@@ -37,12 +38,14 @@ def center_of_mass(bitmasks):
     center_y = m01 / m00
     return center_x, center_y
 
+
 def points_nms(heat, kernel=2):
     # kernel must be 2
     hmax = nn.functional.max_pool2d(
         heat, (kernel, kernel), stride=1, padding=1)
     keep = (hmax[:, :, :-1, :-1] == heat).float()
     return heat * keep
+
 
 def dice_loss(input, target):
     input = input.contiguous().view(input.size()[0], -1)
@@ -52,7 +55,8 @@ def dice_loss(input, target):
     b = torch.sum(input * input, 1) + 0.001
     c = torch.sum(target * target, 1) + 0.001
     d = (2 * a) / (b + c)
-    return 1-d
+    return 1 - d
+
 
 @HEADS.register_module
 class SOLOHead(nn.Module):
@@ -123,7 +127,7 @@ class SOLOHead(nn.Module):
         for seg_num_grid in self.seg_num_grids:
             self.solo_ins_list.append(
                 nn.Conv2d(
-                    self.seg_feat_channels, seg_num_grid**2, 1))
+                    self.seg_feat_channels, seg_num_grid ** 2, 1))
 
         self.solo_cate = nn.Conv2d(
             self.seg_feat_channels, self.cate_out_channels, 3, padding=1)
@@ -134,7 +138,7 @@ class SOLOHead(nn.Module):
         for m in self.cate_convs:
             normal_init(m.conv, std=0.01)
         bias_ins = bias_init_with_prob(0.01)
-        for m in self.solo_ins_list: 
+        for m in self.solo_ins_list:
             normal_init(m, std=0.01, bias=bias_ins)
         bias_cate = bias_init_with_prob(0.01)
         normal_init(self.solo_cate, std=0.01, bias=bias_cate)
@@ -143,16 +147,16 @@ class SOLOHead(nn.Module):
         new_feats = self.split_feats(feats)
         featmap_sizes = [featmap.size()[-2:] for featmap in new_feats]
         upsampled_size = (featmap_sizes[0][0] * 2, featmap_sizes[0][1] * 2)
-        ins_pred, cate_pred = multi_apply(self.forward_single, new_feats, 
+        ins_pred, cate_pred = multi_apply(self.forward_single, new_feats,
                                           list(range(len(self.seg_num_grids))),
                                           eval=eval, upsampled_size=upsampled_size)
         return ins_pred, cate_pred
 
     def split_feats(self, feats):
-        return (F.interpolate(feats[0], scale_factor=0.5, mode='bilinear'), 
-                feats[1], 
-                feats[2], 
-                feats[3], 
+        return (F.interpolate(feats[0], scale_factor=0.5, mode='bilinear'),
+                feats[1],
+                feats[2],
+                feats[3],
                 F.interpolate(feats[4], size=feats[3].shape[-2:], mode='bilinear'))
 
     def forward_single(self, x, idx, eval=False, upsampled_size=None):
@@ -216,7 +220,6 @@ class SOLOHead(nn.Module):
                                 zip(ins_preds_level, ins_ind_labels_level)], 0)
                      for ins_preds_level, ins_ind_labels_level in zip(ins_preds, zip(*ins_ind_label_list))]
 
-
         ins_ind_labels = [
             torch.cat([ins_ind_labels_level_img.flatten()
                        for ins_ind_labels_level_img in ins_ind_labels_level])
@@ -256,10 +259,10 @@ class SOLOHead(nn.Module):
             loss_cate=loss_cate)
 
     def solo_target_single(self,
-                               gt_bboxes_raw,
-                               gt_labels_raw,
-                               gt_masks_raw,
-                               featmap_sizes=None):
+                           gt_bboxes_raw,
+                           gt_labels_raw,
+                           gt_masks_raw,
+                           featmap_sizes=None):
 
         device = gt_labels_raw[0].device
 
@@ -296,9 +299,12 @@ class SOLOHead(nn.Module):
             valid_mask_flags = gt_masks_pt.sum(dim=-1).sum(dim=-1) > 0
 
             output_stride = stride / 2
-            for seg_mask, gt_label, half_h, half_w, center_h, center_w, valid_mask_flag in zip(gt_masks, gt_labels, half_hs, half_ws, center_hs, center_ws, valid_mask_flags):
+            for seg_mask, gt_label, half_h, half_w, center_h, center_w, valid_mask_flag in zip(gt_masks, gt_labels,
+                                                                                               half_hs, half_ws,
+                                                                                               center_hs, center_ws,
+                                                                                               valid_mask_flags):
                 if not valid_mask_flag:
-                   continue
+                    continue
                 upsampled_size = (featmap_sizes[0][0] * 4, featmap_sizes[0][1] * 4)
                 coord_w = int((center_w / upsampled_size[1]) // (1. / num_grid))
                 coord_h = int((center_h / upsampled_size[0]) // (1. / num_grid))
@@ -309,17 +315,17 @@ class SOLOHead(nn.Module):
                 left_box = max(0, int(((center_w - half_w) / upsampled_size[1]) // (1. / num_grid)))
                 right_box = min(num_grid - 1, int(((center_w + half_w) / upsampled_size[1]) // (1. / num_grid)))
 
-                top = max(top_box, coord_h-1)
-                down = min(down_box, coord_h+1)
-                left = max(coord_w-1, left_box)
-                right = min(right_box, coord_w+1)
+                top = max(top_box, coord_h - 1)
+                down = min(down_box, coord_h + 1)
+                left = max(coord_w - 1, left_box)
+                right = min(right_box, coord_w + 1)
 
-                cate_label[top:(down+1), left:(right+1)] = gt_label
+                cate_label[top:(down + 1), left:(right + 1)] = gt_label
                 # ins
                 seg_mask = mmcv.imrescale(seg_mask, scale=1. / output_stride)
                 seg_mask = torch.from_numpy(seg_mask).to(device=device)
-                for i in range(top, down+1):
-                    for j in range(left, right+1):
+                for i in range(top, down + 1):
+                    for j in range(left, right + 1):
                         label = int(i * num_grid + j)
                         ins_label[label, :seg_mask.shape[0], :seg_mask.shape[1]] = seg_mask
                         ins_ind_label[label] = True

@@ -1,0 +1,8 @@
+<<<<<<< HEAD
+FuncStatus:OK
+PerfStatus:OK
+=======
+FuncStatus:OK
+PerfStatus:OK
+>>>>>>> 42481b123dc5d31799889ff3e4566e38db0df579
+PrecisionStatus:POK

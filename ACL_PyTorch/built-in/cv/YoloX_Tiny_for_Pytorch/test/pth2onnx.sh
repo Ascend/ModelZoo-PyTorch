@@ -8,6 +8,7 @@ cp yolox_tiny_8x8_300e_coco.py ${mmdetection_path}/configs/yolox
 cp bbox_nms.py ${mmdeploy_path}/mmdeploy/codebase/mmdet/core/post_processing/bbox_nms.py
 cp pytorch2onnx.py ${mmdeploy_path}/mmdeploy/apis/pytorch2onnx.py
 cp deploy.py ${mmdeploy_path}/tools/deploy.py
+cp yolox_head.py ${mmdetection_path}/mmdet/models/dense_heads/yolox_head.py
 cd ${mmdeploy_path}
 python tools/deploy.py \
 configs/mmdet/detection/detection_onnxruntime_dynamic.py \

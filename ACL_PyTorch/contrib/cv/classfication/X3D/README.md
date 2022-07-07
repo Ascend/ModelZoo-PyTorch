@@ -85,7 +85,7 @@ bash test/eval_acc_pref.sh --datasets_path=X3D/Kinetics-400
 | X3d bs1 |  [Top1:73.1%](https://github.com/facebookresearch/SlowFast/blob/master/MODEL_ZOO.md)  | Top1:73.75%   Top5:90.25% | 95.07fps   | 173.66fps |
 | X3d bs16|  [Top1:73.1%](https://github.com/facebookresearch/SlowFast/blob/master/MODEL_ZOO.md)  | Top1:73.75%   Top5:90.25% | 103.82fps  | 125.29fps |
 
-| 模型     | 710精度                   | 710性能   |
+| 模型     | 310P精度                   | 310P性能   |
 | -------- | ------------------------- | --------- |
 | X3d bs1  | Top1:73.75%   Top5:90.25% | 313.10fps |
 | X3d bs16 | Top1:73.75%   Top5:90.25% | 399.68fps |

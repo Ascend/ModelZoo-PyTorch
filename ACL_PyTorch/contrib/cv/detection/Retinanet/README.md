@@ -156,7 +156,7 @@ atc --model=model.onnx --framework=5 --output=retinanet_detectron2_npu --input_f
     --input_shape：输入数据的shape。  
     --output：输出的OM模型，为了防止CANN版本中的输出顺序发生变化，多个输出的模型--out_nodes 固定输出顺序。
     --log：日志级别。  
-    --soc_version：处理器型号，Ascend310或Ascend710。  
+    --soc_version：处理器型号，Ascend310或Ascend310P。  
     --soc_version：处理器型号。  
 
 ## 4 数据集预处理
@@ -289,14 +289,14 @@ AP,AP50,AP75,APs,APm,APl
 
 ### 6.3 精度对比
 
-310上om推理box map精度为0.383，官方开源pth推理box map精度为0.387，精度下降在1个点之内，因此可视为精度达标，710上fp16精度0.383, 可视为精度达标
+310上om推理box map精度为0.383，官方开源pth推理box map精度为0.387，精度下降在1个点之内，因此可视为精度达标，310P上fp16精度0.383, 可视为精度达标
 
 ## 7 性能对比
 
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，710只有一颗芯片，FPS为该值本身
+离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，310P只有一颗芯片，FPS为该值本身
 
 batch1的性能：
 310上Interface throughputRate: 2.2465，2.2465*4=8.98617即是batch1 310单卡吞吐率

@@ -37,7 +37,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
     @property
     def with_mask_feat_head(self):
         return hasattr(self, 'mask_feat_head') and \
-            self.mask_feat_head is not None
+               self.mask_feat_head is not None
 
     @property
     def with_shared_head(self):
@@ -147,7 +147,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         else:
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    @auto_fp16(apply_to=('img', ))
+    @auto_fp16(apply_to=('img',))
     def forward(self, img, img_meta, return_loss=True, **kwargs):
         """
         Calls either forward_train or forward_test depending on whether

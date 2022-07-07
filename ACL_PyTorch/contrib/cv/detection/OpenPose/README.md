@@ -89,8 +89,13 @@ python3.7 OpenPose_pth2onnx.py --checkpoint_path='./checkpoint_iter_370000.pth' 
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
-atc --framework=5 --model=./human-pose-estimation.onnx --output=./human-pose-estimation_bs1 --input_format=NCHW --input_shape="data:1, 3, 368, 640" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=./human-pose-estimation.onnx --output=./human-pose-estimation_bs1 --input_format=NCHW --input_shape="data:1, 3, 368, 640" --log=debug --soc_version=Ascend${chip_name}
 ```
 >  **说明**
 > 注意目前ATC支持的onnx算子版本为11
