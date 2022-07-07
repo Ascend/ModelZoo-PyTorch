@@ -10,15 +10,11 @@
 
 5.get_info.py：生成推理输入的数据集二进制info文件或jpg info文件
 
-6.resnext50_val.info：ImageNet验证集二进制info文件，用于benchmark推理获取数据集
+6.val_label.txt：ImageNet数据集标签，用于验证推理结果
 
-7.ImageNet.info：ImageNet验证集jpg info文件，用于benchmark推理获取数据集
+7.benchmark：离线推理工具
 
-8.val_label.txt：ImageNet数据集标签，用于验证推理结果
-
-9.benchmark：离线推理工具
-
-10.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+8.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
 
 
 
