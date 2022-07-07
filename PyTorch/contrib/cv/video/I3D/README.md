@@ -99,8 +99,6 @@ python3.7 demo.py
 |    -     | 20.68 |   1    |    O1    | 1p Gpu |
 |  53.78   | 74.84 |   40   |    O1    | 8p Gpu |
 
-
-
 ## FAQ
 
 1.在安装decord库的时候apt_pak报错
