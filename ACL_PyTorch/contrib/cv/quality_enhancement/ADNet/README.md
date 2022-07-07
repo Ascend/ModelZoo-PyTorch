@@ -70,16 +70,29 @@ cd ./contrib/ACL_PyTorch/Research/cv/quality_enhancement/ADnet
 
 pth模型转onnx模型
 ```
-python3.7.5 ADNet_pth2onnx.py model_70.pth ADNet.onnx
+python3.7 ADNet_pth2onnx.py model_70.pth ADNet.onnx
 ```
 onnx转出om
 ```
 source env.sh（注意，latest是一个软连接，请将服务器中的/usr/local/Ascend/ascend-toolkit/latest 指向5.0.2版本的CANN包）
-# bs1
-atc --framework=5 --model=ADNet.onnx --output=ADNet_bs1 --input_format=NCHW --input_shape="image:1,1,321,481" --log=debug --soc_version=Ascend310 
-#bs16
-atc --framework=5 --model=ADNet.onnx --output=ADNet_bs16 --input_format=NCHW --input_shape="image:16,1,321,481" --log=debug --soc_version=Ascend310 
+# bs16
+atc --framework=5 --model=ADNet.onnx --output=ADNet_bs16 --input_format=NCHW --input_shape="image:16,1,321,481" --log=debug --soc_version=Ascend${chip_name}
 ```
+- model：为ONNX模型文件。
+
+- framework：5代表ONNX模型。
+
+- output：输出的OM模型。
+
+- input_format：输入数据的格式。
+
+- input_shape：输入数据的shape。
+
+- log：日志级别。
+
+- soc_version：处理器型号。
+
+  运行成功后生成ADNet_bs16.om模型文件。
 
 ## 4 数据集预处理
 
@@ -122,7 +135,7 @@ atc --framework=5 --model=ADNet.onnx --output=ADNet_bs16 --input_format=NCHW --i
 
 运行ADNet_preprocess.py
 ```
-python3.7.5  ADNet_preprocess.py ./dataset/BSD68 ./prep_dataset
+python3.7  ADNet_preprocess.py ./dataset/BSD68 ./prep_dataset
 ```
 二进制文件将保存在./prep_dataset目录下
 
@@ -131,7 +144,7 @@ python3.7.5  ADNet_preprocess.py ./dataset/BSD68 ./prep_dataset
 1.执行生成数据集信息脚本gen_dataset_info.py，生成数据集信息文件
 
 ```
-python3.7.5 gen_dataset_info.py ./prep_dataset/INoisy ADNet_prep_bin.info 481 321  
+python3.7 gen_dataset_info.py ./prep_dataset/INoisy ADNet_prep_bin.info 481 321  
 ```
 
 ## 5 离线推理
@@ -148,19 +161,17 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.执行离线推理
 
 ```
-bs1:
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./ADNet_bs1.om -input_text_path=./ADNet_prep_bin.info -input_width=481 -input_height=321 -output_binary=True -useDvpp=False
 bs16:
 ./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=16 -om_path=./ADNet_bs16.om -input_text_path=./ADNet_prep_bin.info -input_width=481 -input_height=321 -output_binary=True -useDvpp=False
 ```
 
-输出结果分别保存在当前目录result/dumpOutput_device0和result/dumpOutput_device1中，模型的输出有三个，其中需要的是名为output1的输出，shape为(1,19,1024,2048)(NCHW)，数据类型为FP16，每个输入对应的输出对应三个_x.bin(x代表1,2,3）文件。
+输出结果保存在目录result中，模型的输出有三个，其中需要的是名为output1的输出，shape为(1,19,1024,2048)(NCHW)，数据类型为FP16，每个输入对应的输出对应三个_x.bin(x代表1,2,3）文件。
 
 ## 6 精度对比
 
@@ -170,22 +181,26 @@ bs16:
 
 ### 6.1 离线推理精度统计
 
-后处理统计PSNR精度
-
-调用ADNet_postprocess.py脚本推理结果与label比对，获取PSNRj精度数据，结果保存在ADNet_bs1.log和ADNet_bs4.log
+调用ADNet_postprocess.py脚本推理结果与label比对，获取PSNR精度数据，结果直接输出
 
 ```
-python3.7.5 -u ADNet_postprocess.py ./result/dumpOutput_device0 ./prep_dataset/ISoure ./out >ADNet_bs1.log
-python3.7.5 -u ADNet_postprocess.py ./result/dumpOutput_device1 ./prep_dataset/ISoure ./out >ADNet_bs16.log
+python3.7 ADNet_postprocess.py ./result/dumpOutput_device0/ ./prep_dataset/ISoure/
 ```
 
 第一个为benchmark输出目录，第二个标签目录，第三个为重定向输出目录
 
 ```
-PSNR：29.68
+average psnr_val: 29.245188707184248
 ```
 
-经过对bs1与bs6的om测试，本模型batch1的精度与batch4的精度一致，精度数据如上
+经过对比所有bs的om测试，在310上本模型batch1的精度与所有bs的精度一致，精度数据如上
+
+```
+average psnr_val: 29.245187698134
+```
+
+经过对比所有bs的om测试，在310P上本模型batch1的精度与所有bs的精度一致，精度数据如上
+
 ### 6.2 开源精度
 
 pth精度
@@ -197,15 +212,17 @@ ADNet   29.27     29.25
 
 ### 6.3 精度对比
 
-将得到的om模型离线推理精度与pth精度作比较，om模型精度高于pth模型精度，精度达标。
+将得到的om模型在 310 离线推理精度与pth精度作比较，om模型精度基本等于pth模型精度，精度达标。
+
+将得到的om模型在 310 和 310P 上分别验证推理精度，310P 上bachsize1和性能最优batchsize的精度一致且大于310（或论文精度）的99%
 
 ## 7 性能对比
 
-- NPU性能数据
-- T4性能数据
+- NPU性能数据（310）
+- NPU性能数据（310P）
 - 性能对比
 
-### 7.1 npu性能数据
+### 7.1 npu性能数据（310）
 
 1.benchmark工具在整个数据集上推理获得性能数据。
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
@@ -238,59 +255,47 @@ batch16的性能，benchmark工具在整个数据集上推理后生成result/per
 
 Interface throughputRate: 29.3584，29.3584x4=117.4336即是batch16 310单卡吞吐率
 
+### 7.2 npu性能数据（310P）
 
-### 7.2 T4性能数据
-
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2
-batch1性能：
-
-```
-trtexec --onnx=ADNet.onnx --fp16 --shapes=image:1x1x321x481 --threads
-```
+1.benchmark工具在整个数据集上推理获得性能数据。
+batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
 
 ```
-[09/27/2021-11:20:55] [I] GPU Compute
-[09/27/2021-11:20:55] [I] min: 7.94897 ms
-[09/27/2021-11:20:55] [I] max: 12.2207 ms
-[09/27/2021-11:20:55] [I] mean: 8.39391 ms
-[09/27/2021-11:20:55] [I] median: 8.30371 ms
-[09/27/2021-11:20:55] [I] percentile: 11.1882 ms at 99%
-[09/27/2021-11:20:55] [I] total compute time: 3.01341 s
-```
-batch1 t4单卡吞吐率：1000/(8.39391/1)=119.134fps
+-----------------Performance Summary------------------
+[e2e] throughputRate: 49.0305, latency: 1407.29
+[data read] throughputRate: 170.656, moduleLatency: 5.85975
+[preprocess] throughputRate: 162.816, moduleLatency: 6.1419
+[inference] throughputRate: 145.715, Interface throughputRate: 172.516, moduleLatency: 6.58854
+[postprocess] throughputRate: 89.2291, moduleLatency: 11.2071
 
-batch16性能：
-
-```
-trtexec --onnx=ADNet.onnx --fp16 --shapes=image:16x1x321x481 --threads
+-----------------------------------------------------------
 ```
 
-```
-[09/27/2021-11:28:53] [I] GPU Compute
-[09/27/2021-11:28:53] [I] min: 125.424 ms
-[09/27/2021-11:28:53] [I] max: 138.322 ms
-[09/27/2021-11:28:53] [I] mean: 128.206 ms
-[09/27/2021-11:28:53] [I] median: 126.907 ms
-[09/27/2021-11:28:53] [I] percentile: 138.322 ms at 99%
-[09/27/2021-11:28:53] [I] total compute time: 3.33335 s
-```
+Interface throughputRate: 172.516 即是batch1 310P单卡吞吐率
 
-batch4 t4单卡吞吐率：1000/(128.206/16)=124.799fps
-
-### 7.3 性能对比
-
-batch1：35.7852x4  > 1000/(8.39391/1)
-batch16：29.3584x4  < 000/(128.206/16)
-310单个device的吞吐率乘4即单卡吞吐率与比T4单卡相比，batch1的性能：310高于T4，batch16的性能：310是T4的0.954倍，略低于T4。该模型放在contrib/ACL_PyTorch/Research目录下。
-
-310与T4同时使用纯推理对batch16进行性能测试，310性能如下：
+batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
 
 ```
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 36.1295samples/s, ave_latency: 27.6788ms
-----------------------------------------------------------------
+-----------------Performance Summary------------------
+[e2e] throughputRate: 48.9669, latency: 1409.11
+[data read] throughputRate: 2623.08, moduleLatency: 0.381232
+[preprocess] throughputRate: 713.068, moduleLatency: 1.40239
+[inference] throughputRate: 136.066, Interface throughputRate: 182.893, moduleLatency: 6.66077
+[postprocess] throughputRate: 11.4454, moduleLatency: 87.3713
+
+-----------------------------------------------------------
 ```
 
-batch16纯推理的性能为：36.1295x4=144.518fps
+Interface throughputRate: 182.893 即是batch16 310P单卡吞吐率
 
-144.518>124.799，在纯推理测试性能的情况下，310性能优于T4性能。
+### 7.4 性能对比
+
+#### 310P 与 310 性能对比
+
+310P best 为bs16，吞吐率为 216.098 fps
+
+310 best 为bs1， 吞吐率为 142.394fps
+
+310P/310 = 1.495322837 > 1.2
+
+即310P 对比 310 性能达标
