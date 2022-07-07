@@ -16,8 +16,8 @@ fi
 
 rm PAMTRI_bs1.om PAMTRI_bs16.om
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=PAMTRI_bs1.onnx --output=PAMTRI_bs1 --input_format=NCHW --input_shape="input.1:1,3,256,256" --log=debug --soc_version=Ascend710
-atc --framework=5 --model=PAMTRI_bs16.onnx --output=PAMTRI_bs16 --input_format=NCHW --input_shape="input.1:16,3,256,256" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=PAMTRI_bs1.onnx --output=PAMTRI_bs1 --input_format=NCHW --input_shape="input.1:1,3,256,256" --log=debug --soc_version=Ascend${chip_name}
+atc --framework=5 --model=PAMTRI_bs16.onnx --output=PAMTRI_bs16 --input_format=NCHW --input_shape="input.1:16,3,256,256" --log=debug --soc_version=Ascend${chip_name}
 
 if [ -f "PAMTRI_bs1.om" ] && [ -f "PAMTRI_bs16.om" ]; then
     echo "success"
