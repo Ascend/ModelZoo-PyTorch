@@ -230,7 +230,7 @@ python3.7 ./test/parse.py --txt-file "./msame_bs1.txt" --batch-size 1 > bs1_perf
 |BigGAN bs16|344.900fps|282.898fps|
 
 ## <a name="6">6. 精度对比</a>
-尽量不使用一步式脚本 
+尽量不要使用一步式脚本 
 一步式进行输出数据的后处理和生成图像的评价指标(针对batch1和batch16)：
 ```bash
 bash ./test/eval_acc.sh
