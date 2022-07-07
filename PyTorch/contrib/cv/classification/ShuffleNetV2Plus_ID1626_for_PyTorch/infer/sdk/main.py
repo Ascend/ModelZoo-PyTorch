@@ -25,7 +25,16 @@ from StreamManagerApi import StreamManagerApi, MxDataInput, InProtobufVector, \
 import MxpiDataType_pb2 as MxpiDataType
 
 def resize(img, size, interpolation=Image.BILINEAR):
-    return img.resize(size[::-1], interpolation)
+    if img.height <= img.width:
+        ratio = size / img.height
+        w_size = int(img.width * ratio)
+        img = img.resize((w_size, size), interpolation)
+    else:
+        ratio = size / img.width
+        h_size = int(img.height * ratio)
+        img = img.resize((size, h_size), interpolation)
+
+    return img
 
 
 def center_crop(img, out_height, out_width):
@@ -40,10 +49,11 @@ def center_crop(img, out_height, out_width):
 
 def tranform(in_file):
 
-    input_size = (256, 256)
+    input_size = 256
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
     img = Image.open(in_file).convert('RGB')
+
     img = resize(img, input_size)  # transforms.Resize(256)
     img = np.array(img, dtype=np.float32)
     img = center_crop(img, 224, 224)   # transforms.CenterCrop(224)

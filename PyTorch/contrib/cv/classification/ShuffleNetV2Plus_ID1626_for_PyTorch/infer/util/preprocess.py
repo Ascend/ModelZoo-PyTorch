@@ -21,20 +21,16 @@ import numpy as np
 
 
 def resize(img, size, interpolation=Image.BILINEAR):
-    if isinstance(size, int):
-        w, h = img.size
-        if (w <= h and w == size) or (h <= w and h == size):
-            return img
-        if w < h:
-            ow = size
-            oh = int(size * h / w)
-            return img.resize((ow, oh), interpolation)
-        else:
-            oh = size
-            ow = int(size * w / h)
-            return img.resize((ow, oh), interpolation)
+    if img.height <= img.width:
+        ratio = size / img.height
+        w_size = int(img.width * ratio)
+        img = img.resize((w_size, size), interpolation)
     else:
-        return img.resize(size[::-1], interpolation)
+        ratio = size / img.width
+        h_size = int(img.height * ratio)
+        img = img.resize((size, h_size), interpolation)
+
+    return img
 
 
 def center_crop(img, out_height, out_width):
@@ -48,7 +44,7 @@ def center_crop(img, out_height, out_width):
 
 
 def transform(in_file):
-    input_size = (256, 256)
+    input_size = 256
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
 
