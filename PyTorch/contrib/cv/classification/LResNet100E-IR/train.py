@@ -128,7 +128,7 @@ if __name__ == '__main__':
         conf.device = torch.device(f"cuda:{args.device_id}")
         torch.cuda.set_device(conf.device)
     elif args.device_type == 'npu':
-        conf.device = torch.device(f"npu:{args.device_id}")
+        conf.device = f"npu:{args.device_id}"
         torch.npu.set_device(conf.device)
     else:
         raise ValueError('device type error,please choice in ["gpu","npu"]')
