@@ -111,17 +111,13 @@ python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext
 - 修改se_resnext50_32x4d_atc.sh脚本，通过ATC工具使用脚本完成转换，具体的脚本示例如下：
 ```shell
 # 配置环境变量
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # 使用二进制输入时，执行如下命令
-atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=info --soc_version= Ascend710
+atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:${batch_size},3,224,224" --log=info --soc_version= Ascend${chip_name}
 
 # 使用JPEG输入时，执行如下命令
-atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_aipp_16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=info --insert_op_conf=aipp_TorchVision.config -soc_version=Ascend710 
+atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_aipp_16 --input_format=NCHW --input_shape="image:${batch_size},3,224,224" --log=info --insert_op_conf=aipp_TorchVision.config -soc_version=Ascend${chip_name}
 
 # 参数说明
 --model：为ONNX模型文件。
