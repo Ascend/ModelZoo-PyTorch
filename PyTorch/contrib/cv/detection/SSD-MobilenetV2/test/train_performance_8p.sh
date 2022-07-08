@@ -99,7 +99,7 @@ do
           --stay_lr 1\
           --device_list '0,1,2,3,4,5,6,7' \
           --dist_backend 'hccl' \
-          --device npu  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --device npu  >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${RANK_ID}.log 2>&1 &
     else
         python3.7 -u train_ssd.py \
          --dataset_type voc  \
@@ -123,12 +123,11 @@ do
           --stay_lr 1 \
           --device_list '0,1,2,3,4,5,6,7' \
           --dist_backend 'hccl' \
-          --device npu > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --device npu >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${RANK_ID}.log 2>&1 &
     fi
 done
 
 wait
-
 
 
 ##################获取训练数据################
@@ -144,7 +143,7 @@ FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a '* Acc@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a 'accuracy: '  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "accuracy" '{print $NF}'|awk -F " " '{print $2}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
