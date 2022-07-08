@@ -10,17 +10,29 @@
 
 ​		[代码链接](https://github.com/open-mmlab/mmaction2)
 
+branch=master
+
+commit_id=529f4543cb49e7b5b61972653935369bc9c92e70
+
+
 ## 2、环境说明
 
 无明确要求，以下环境仅供参考：
 
+
+
+
+CANN:5.1.RC1
+
+python:3.8.0
 ```shell
-onnx==1.9.0
-torch==1.5.0
-torchvision==0.6.0
-numpy==1.21.0
-opencv-python==4.5.3.56
-mmcv==1.3.9
+onnx==1.7.0
+torch==1.8.0
+torchvision==0.9.0
+numpy==1.22.3
+Pillow==7.2.0
+mmcv==1.4.0
+scipy==1.8.1
 ```
 
 ## 3、获取数据集
@@ -83,7 +95,7 @@ python generate_labels.py
 首先配置环境变量：
 
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 本节采用的模型输入为:1x10x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件。由于本模型较大，选择Ascend310的话batch_size只能设置为1，若大于1则会因为 Ascend310 内存不足而报错;选择Ascend310P3的话batch_size可以设置为1，4，8。
@@ -96,19 +108,14 @@ mkdir checkpoints
 
 然后下载预训练模型：[i3d_nl_not_product_r50](https://github.com/open-mmlab/mmaction2/tree/master/configs/recognition/i3d)，在README里选择i3d_nl_dot_product_r50_32x2x1_100e_kinetics400_rgb配置，下载权重文件，并将该权重文件重命名为i3d_nl_dot_product_r50.pth，并保存在checkpoints目录下。
 
-将pth文件转换为onnx文件：
-
+将pth文件转换为om文件。其中，${chip_name}通过npu-smi info获取。
 ```shell
-bash i3d_pth2onnx.sh
+python3 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
+/usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
 ```
 
-将onnx文件转换为om文件：
 
-```shell
-bash i3d_onnx2om.sh Ascend310
-```
-
-得到i3d_nl_dot_bs1.om。模型转换完成。可选 Ascend310 或 Ascend310P3
+得到i3d_bs1.om。模型转换完成。
 
 ## 6、离线推理
 
@@ -120,15 +127,30 @@ bash i3d_infer.sh
 
 即可获取top1_acc，top5_acc和mean_acc。
 
-## 7、性能检测
 
-Ascend：需要om文件。执行脚本。
+
+## 7、精度统计
+|        | TOP1 | TOP5 | 
+| :----: | :---: | :----:|
+| 310精度  | 71.18% |   90.21%   |
+| 310P精度 |71.19% |   90.21%   |
+
+## 8、性能对比
+
+Ascend 310：需要om文件。执行命令
 
 ```shell
-xx/benchmark.x86_64 -device_id=0 -om_path=./i3d_nl_dot_bs1.om -round=30 -batch_size=1
+./benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
 ```
 
-需要先确定benchmark工具所在的绝对路径将上述命令中的xx替换。
+
+
+
+Ascend 310P: 需要om文件。执行命令
+
+```shell
+./benchmark.x86_64 -device_id=0 -om_path=./i3d_bs1.om -round=30 -batch_size=1
+```
 
 GPU：只需要onnx文件。执行脚本。
 
@@ -136,3 +158,11 @@ GPU：只需要onnx文件。执行脚本。
 trtexec --onnx=i3d_nl_dot.onnx --fp16 --shapes=0:1x30x3x32x256x256 --threads
 ```
 
+|          |  310   | 310P      | 310P_aoe        | t4         |310P_aoe/310|310P_aoe/t4|
+| :------: | :---:  | :----:    | :------:        | :----:     |:----:      |:----:     |
+|    bs1   | 3.03   |   4.45    |    6.15         | 3.38       |2.03        |1.82       |
+|    top1  | 0.7118 |           |    0.7119       |            |            |           |
+|    top5  | 0.9021 |           |    0.9021       |            |            |           |
+
+
+最优batch：310P大于310的1.2；310P大于t4的1.6倍，性能达标。
