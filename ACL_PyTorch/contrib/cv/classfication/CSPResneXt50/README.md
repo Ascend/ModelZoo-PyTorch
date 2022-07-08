@@ -109,6 +109,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=cspresnext_bs1 --log=debug --soc_version=Ascend${chip_name}
 ```
+${chip_name}可通过npu-smi-info指令查看
 
 ## 4 数据集预处理
 
