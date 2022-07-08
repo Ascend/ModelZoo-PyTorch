@@ -133,31 +133,19 @@ bash SE_ResNeXt50_32x4d_atc.sh
 运行成功后生成seresnext50_32x4d_16.om用于二进制输入推理的模型文件，生成的seresnext50_32x4d_aipp_16.om用于图片输入推理的模型文件。
 ```
 
-### 步骤2 开始推理验证。
-1. 使用Benchmark工具进行推理。
+### 步骤 2 开始推理验证。
+1. 使用ais_infer工具进行推理
 ```shell
-# 增加执行权限
-chmod u+x benchmark.x86_64
-# 二进制输入执行
-./benchmark.x86_64 -model_type=vision -om_path=seresnext50_32x4d_16.om -device_id=0 -batch_size=16 -input_text_path=seresnext50_val.info -input_width=224 -input_height=224 -output_binary=false -useDvpp=false
-seresnext50_val.info为处理后的数据集信息。
-# 图片输入执行
-./benchmark.x86_64 -model_type=vision -om_path=seresnext50_32x4d_aipp_16.om -device_id=0 -batch_size=16 -input_text_path=ImageNet.info -input_width=256 -input_height=256 -useDvpp=true -output_binary=false
-# ImageNet.info为图片信息。输入参数中的“input_height”和“input_weight”与AIPP节点输入一致，值为256因为AIPP中做了裁剪。benchmark.{arch}请根据运行环境架构选择，如运行环境为x86_64，需执行./benchmark.x86_64。参数详情请参见《CANN V100R020C20 推理benchmark工具用户指南》。推理后的输出默认在当前目录result下。
+python3 ais_infer.py –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt NPY
 ```
-
-2. 精度验证。
+2. 精度验证
 ```shell
-# 调用vision_metric_ImageNet.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
+# 调用ais_verify.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+python3.7 ais_verify.py ${ais_output} ./val_label.txt ./ result.json
 # 第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件。
 ```
 
- ### b． 310P：
-推理验证：
-```shell
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
-```
+
 
 
 ## 6. 结果
