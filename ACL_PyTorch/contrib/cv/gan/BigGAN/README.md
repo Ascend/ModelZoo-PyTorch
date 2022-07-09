@@ -60,23 +60,6 @@ onnxoptimizer==0.2.6
 > 其他第三方库: 可以通过 pip3.7 install -r requirements.txt 进行安装
 
 ## <a name="3">3. 模型转换</a>
-尽量不要使用一步式脚本进行转换
-一步式从pth权重文件转om模型的脚本，能够由pth权重文件生成bacth分别为1和16的om模型：
-```bash
-bash ./test/pth2om.sh
-```
- **说明：**
-> pth2om.sh中的6-14行: 完成pth转原始onnx模型  
-> pth2om.sh中的18-29行: 完成onnx模型的简化，以及简化的onnx模型转om模型   
-
-运行后会生成如下文件：
-```bash
-├── biggan.onnx
-├── biggan_sim_bs1.onnx
-├── biggan_sim_bs16.onnx
-├── biggan_sim_bs1.om
-├── biggan_sim_bs16.om
-```
 
 ### <a name="31">3.1 pth转onnx模型</a>
 1. 下载pth权重文件
@@ -120,13 +103,23 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 3. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-
 ${chip_name}可通过npu-smi info指令查看，例：310P3
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```bash
 atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend310
 ```
+
+运行后会生成如下文件：
+```bash
+├── biggan.onnx
+├── biggan_sim_bs1.onnx
+├── biggan_sim_bs16.onnx
+├── biggan_sim_bs1.om
+├── biggan_sim_bs16.om
+```
+
+
 ## <a name="4">4. 数据预处理</a>
 - [输入数据生成](#41)
 ### <a name="41">4.1 数据生成</a>
@@ -150,27 +143,7 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 ```
 
 ## <a name="5">5. 离线推理</a>
-执行一步式推理前，请先按照5.1节所示准备msame离线推理工具  
-尽量不使用一步式脚本
-一步式进行输入数据的准备，模型离线推理和NPU性能数据的获取(针对batch1和batch16)：
-```bash
-bash ./test/eval_perf.sh
-```
-运行后会生成如下文件/文件夹：
-```bash
-├── prep_label_bs1    # 模型的标签输入(文件夹)
-├── prep_label_bs16
-├── prep_noise_bs1    # 模型的噪声输入(文件夹)
-├── prep_noise_bs16
-├── outputs_bs1_om    # 模型的输出(文件夹)
-├── outputs_bs16_om
-├── gen_y_bs1.npz     # 类别采样的npz数据
-├── gen_y_bs16.npz
-├── msame_bs1.txt     # msame推理过程的输出
-├── msame_bs16.txt
-├── bs1_perf.log      # 性能数据
-├── bs16_perf.log
-```
+
 ### <a name="51">5.1 msame工具概述</a>
 msame模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。获取工具及使用方法可以参考[msame模型推理工具指南](https://gitee.com/ascend/tools/tree/master/msame)
 a.推理模型使用msame工具
@@ -209,7 +182,7 @@ chmod u+x main
 ```
 运行如下命令进行离线推理：
 ```bash
-./main --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN > ./msame_bs1.txt
+./msame --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN > ./msame_bs1.txt
 ```
 --model ：输入的om文件。
 
@@ -224,25 +197,30 @@ chmod u+x main
 ```bash
 python3.7 ./test/parse.py --txt-file "./msame_bs1.txt" --batch-size 1 > bs1_perf.log
 ```
+
+运行后会生成如下文件/文件夹：
+```bash
+├── prep_label_bs1    # 模型的标签输入(文件夹)
+├── prep_label_bs16
+├── prep_noise_bs1    # 模型的噪声输入(文件夹)
+├── prep_noise_bs16
+├── outputs_bs1_om    # 模型的输出(文件夹)
+├── outputs_bs16_om
+├── gen_y_bs1.npz     # 类别采样的npz数据
+├── gen_y_bs16.npz
+├── msame_bs1.txt     # msame推理过程的输出
+├── msame_bs16.txt
+├── bs1_perf.log      # 性能数据
+├── bs16_perf.log
+```
+
 |模型|t4性能|310性能|
 |----|----|----|
 |BigGAN bs1|239.249fps|227.144fps|
 |BigGAN bs16|344.900fps|282.898fps|
 
 ## <a name="6">6. 精度对比</a>
-尽量不要使用一步式脚本 
-一步式进行输出数据的后处理和生成图像的评价指标(针对batch1和batch16)：
-```bash
-bash ./test/eval_acc.sh
-```
-运行后会生成如下文件/文件夹：
-```bash
-├── postprocess_img           # 转换后的模型输出(文件夹)
-├── gen_img_bs1.npz           # 模型输出的npz数据
-├── gen_img_bs16.npz
-├── biggan_acc_eval_bs1.log   # 精度测量结果
-├── biggan_acc_eval_bs16.log
-```
+
 ### <a name="61">6.1 模型后处理</a>
 模型后处理将离线推理得到的bin文件转换为jpg图像文件，并将原始输出保存至npz文件中，用于精度数据的获取
 ```
@@ -254,6 +232,15 @@ python3.7 biggan_postprocess.py --result-path "./outputs_bs1_om" --save-path "./
 ```bash
 python3.7 biggan_eval_acc.py --num-inception-images 50000 --batch-size 1 --dataset 'I128' > biggan_acc_eval_bs1.log
 ```
+运行后会生成如下文件/文件夹：
+```bash
+├── postprocess_img           # 转换后的模型输出(文件夹)
+├── gen_img_bs1.npz           # 模型输出的npz数据
+├── gen_img_bs16.npz
+├── biggan_acc_eval_bs1.log   # 精度测量结果
+├── biggan_acc_eval_bs16.log
+```
+
 其中"num-inception-images"表示用于进行精度测量的输出数量，"dataset"指定用于对比分布所采用的数据集，I128表示ImageNet数据集在train上的采样
 >  **说明**  
 > IS是生成图像的清晰度和多样性指标，其值越大说明越优  
