@@ -63,12 +63,16 @@ fi
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-source ${test_path_dir}/env_npu.sh
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
+fi
 
 for i in $(seq 0 7)
 do
-    python3 train.py \
+    nohup python3 train.py \
         ${data_path} \
         -b ${batch_size} \
         --model gluon_resnet50_v1b \
