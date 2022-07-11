@@ -124,8 +124,8 @@ fi
 
 # 性能相关数据计算
 #StepTime=`grep "" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
-#StepTime=`grep "each_step_time" ${print_log} | tail -n 3 | awk '{print $NF}'`
-#FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
+StepTime=`grep "each_step_time" ${print_log} | tail -n 10 | awk -F "=" '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
 
 # 精度相关数据计算
@@ -133,7 +133,7 @@ fi
 train_accuracy=`grep "best epoch" ${print_log}  | awk '{print $NF}'`
 #train_accuracy=`grep "acc" ${print_log}  | awk '{print $NF}'`
 # 提取所有loss打印信息
-grep "loss :" ${print_log} | awk -F ":" '{print $4}' | awk -F "-" '{print $1}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+grep "loss" ${print_log} | awk '{print $3}' | tr -d "loss=" | tr -d "," > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 
 ###########################################################
