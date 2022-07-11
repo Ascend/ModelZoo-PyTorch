@@ -114,10 +114,7 @@ python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # 使用二进制输入时，执行如下命令
-atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:${batch_size},3,224,224" --log=info --soc_version= Ascend${chip_name}
-
-# 使用JPEG输入时，执行如下命令
-atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_aipp_16 --input_format=NCHW --input_shape="image:${batch_size},3,224,224" --log=info --insert_op_conf=aipp_TorchVision.config -soc_version=Ascend${chip_name}
+atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:32,3,224,224" --log=info --soc_version= Ascend${chip_name}
 
 # 参数说明
 --model：为ONNX模型文件。
@@ -128,9 +125,6 @@ atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_a
 --log：日志等级。
 --soc_version：部署芯片类型。
 --insert_op_conf=aipp_TorchVision.config: AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
-−	执行atc转换脚本，将.onnx文件转为离线推理模型文件.om文件。
-bash SE_ResNeXt50_32x4d_atc.sh
-运行成功后生成seresnext50_32x4d_16.om用于二进制输入推理的模型文件，生成的seresnext50_32x4d_aipp_16.om用于图片输入推理的模型文件。
 ```
 
 ### 步骤 2 开始推理验证。
@@ -141,7 +135,7 @@ python3 ais_infer.py –model seresnext50_32x4d.om --input prep_bin/ --output ./
 2. 精度验证
 ```shell
 # 调用ais_verify.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-python3.7 ais_verify.py ${ais_output} ./val_label.txt ./ result.json
+python3.7 vision_metric_ImageNet.py ${ais_output} ./val_label.txt ./ result.json
 # 第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件。
 ```
 
