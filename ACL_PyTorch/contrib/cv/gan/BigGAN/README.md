@@ -103,13 +103,24 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 3. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+
 ${chip_name}可通过npu-smi info指令查看，例：310P3
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```bash
-atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend310
+atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend710
+atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend${chip_name}
 ```
 
+参数说明：
+    --input_shape：输入数据的shape。  
+    --output：输出的OM模型。  
+    --log：日志级别。 
+    --soc_version：处理器型号，Ascend310或Ascend710。  
+    --soc_version：处理器型号。  
+    --input_format：输入数据格式。
+    --input_shape：模型输入数据的shape。
+   
 运行后会生成如下文件：
 ```bash
 ├── biggan.onnx
