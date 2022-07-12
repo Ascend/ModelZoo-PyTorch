@@ -23,6 +23,8 @@ import shutil
 import time
 import warnings
 import torch
+if torch.__version__>= '1.8.1':
+    import torch_npu
 import numpy as np
 import apex
 from apex import amp
