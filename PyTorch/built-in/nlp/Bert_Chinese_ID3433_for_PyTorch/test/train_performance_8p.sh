@@ -101,6 +101,7 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --do_eval \
         --eval_accumulation_steps 100 \
         --fp16 \
+        --dataloader_drop_last true \
         --fp16_opt_level O2 \
         --loss_scale 8192 \
         --use_combine_grad \

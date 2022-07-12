@@ -99,6 +99,7 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --per_device_train_batch_size ${batch_size} \
         --per_device_eval_batch_size ${batch_size} \
         --do_train \
+        --dataloader_drop_last true \
         --do_eval \
         --eval_accumulation_steps 100 \
         --fp16 \

@@ -101,6 +101,7 @@ nohup python3.7 run_mlm.py \
         --per_device_eval_batch_size ${batch_size} \
         --do_train \
         --do_eval \
+        --dataloader_drop_last true \
         --eval_accumulation_steps 100 \
         --fp16 \
         --fp16_opt_level O2 \
