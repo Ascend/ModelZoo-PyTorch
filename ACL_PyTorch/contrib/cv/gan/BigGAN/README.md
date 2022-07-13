@@ -167,8 +167,13 @@ git clone https://gitee.com/ascend/tools.git
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，设置文件权限，运行编译脚本。
-
+2. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，生成推理后端whl包，进行离线推理。
+   ```
+   cd tools/ais-bench_workload/tool/ais_infer/backend/
+    pip3.7 wheel ./
+    cd ..
+   ```
+执行离线推理
 ·执行命令
 ```
     python3.7 ais_infer.py --model "/home/ylz/BigGAN/biggan_sim_bs1.om" --input "/home/ylz/BigGAN/prep_noise_bs1,/home/ylz/BigGAN/prep_label_bs1"  --output "/home/ylz/BigGAN/outputs_bs1_om" --outfmt BIN --batchsize 1 > /home/ylz/BigGAN/result1.txt
