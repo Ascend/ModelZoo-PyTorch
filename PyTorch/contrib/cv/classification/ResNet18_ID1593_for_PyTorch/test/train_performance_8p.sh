@@ -73,43 +73,80 @@ else
 fi
 
 
-##################创建日志输出目录，根据模型审视##################
-# 模型采用非循环方式启动多卡训练，创建日志输出目录如下；采用循环方式启动多卡训练的模型，在循环中创建日志输出目录，可参考CRNN模型
-# 非循环方式下8卡训练日志输出路径中的ASCEND_DEVICE_ID默认为0，只是人为指定文件夹名称， 不涉及训练业务
-ASCEND_DEVICE_ID=0
-if [ -d ${test_path_dir}/output/$ASCEND_DEVICE_ID ];then
-    rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
-else
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
-fi
-
-##################启动训练脚本##################
+#################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-python3 ./main.py \
-	${data_path} \
-	-a resnet18 \
-	--addr=$(hostname -I |awk '{print $1}') \
-	--seed=49 \
-	--workers=128 \
-	--learning-rate=${learning_rate} \
-	--mom=0.9 \
-	--weight-decay=1.0e-04  \
-	--print-freq=1 \
-	--dist-url='tcp://127.0.0.1:41111' \
-	--dist-backend 'hccl' \
-	--multiprocessing-distributed \
-	--world-size=1 \
-	--rank=0 \
-	--device='npu' \
-	--epochs=${train_epochs} \
-	--amp \
-	--stop-step-num=128 \
-	--batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-wait
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+    ASCEND_DEVICE_ID=$i
+    #创建DeviceID输出目录，不需要修改
+    if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+        rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
+        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+    else
+        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+    fi
+
+if [ $(uname -m) = "aarch64" ]
+then
+        PID_START=$((KERNEL_NUM * i))
+        PID_END=$((PID_START + KERNEL_NUM - 1))
+        nohup taskset -c $PID_START-$PID_END nohup python3.7 ./main.py \
+            ${data_path} \
+            -a resnet18 \
+            --addr=$(hostname -I |awk '{print $1}') \
+            --seed=49 \
+            --workers=128 \
+            --learning-rate=${learning_rate} \
+            --mom=0.9 \
+            --weight-decay=1.0e-04  \
+            --print-freq=1 \
+            --dist-url='tcp://127.0.0.1:41111' \
+            --dist-backend 'hccl' \
+            --world-size=1 \
+            --rank=0 \
+            --device='npu' \
+            --multiprocessing-distributed \
+            --gpu=${ASCEND_DEVICE_ID} \
+            --epochs=${train_epochs} \
+            --amp \
+            --stop-step-num=128 \
+            --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+else
+    nohup python3.7 ./main.py \
+        ${data_path} \
+        -a resnet18 \
+        --addr=$(hostname -I |awk '{print $1}') \
+        --seed=49 \
+        --workers=128 \
+        --learning-rate=${learning_rate} \
+        --mom=0.9 \
+        --weight-decay=1.0e-04  \
+        --print-freq=1 \
+        --dist-url='tcp://127.0.0.1:41111' \
+        --dist-backend 'hccl' \
+        --world-size=1 \
+        --rank=0 \
+        --device='npu' \
+        --multiprocessing-distributed \
+        --gpu=${ASCEND_DEVICE_ID} \
+        --epochs=${train_epochs} \
+        --amp \
+        --stop-step-num=128 \
+        --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
+done
+
+wait
+ASCEND_DEVICE_ID=0
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
