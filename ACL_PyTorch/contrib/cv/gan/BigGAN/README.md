@@ -39,7 +39,7 @@ cd ..
 ### <a name="21">2.1 深度学习框架</a>
 
 ```
-CANN 5.0.3
+CANN 5.1.RC1
 torch==1.8.0
 torchvision==0.9.0
 onnx==1.9.0
@@ -167,14 +167,14 @@ git clone https://gitee.com/ascend/tools.git
 1. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，生成推理后端whl包，进行离线推理。
    ```
    cd tools/ais-bench_workload/tool/ais_infer/backend/
-    pip3.7 wheel ./
-    cd ..
+   pip3.7 wheel ./
+   cd ..
    ```
 2.执行离线推理
 
 ·执行命令
 ```
-    python3.7 ais_infer.py --model "/home/ylz/BigGAN/biggan_sim_bs1.om" --input "/home/ylz/BigGAN/prep_noise_bs1,/home/ylz/BigGAN/prep_label_bs1"  --output "/home/ylz/BigGAN/outputs_bs1_om" --outfmt BIN --batchsize 1 > /home/ylz/BigGAN/result1.txt
+    python3.7 ais_infer.py --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 >./result1.txt
 ```
 
     --model ：输入的om文件。
