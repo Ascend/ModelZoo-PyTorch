@@ -30,7 +30,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_path              # dataset of training
     --output_path            # output of training
     --train_steps            # max_step for training
-	  --train_epochs           # max_epoch for training
+    --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -46,7 +46,7 @@ do
         output_path=`echo ${para#*=}`
     elif [[ $para == --train_steps* ]];then
         train_steps=`echo ${para#*=}`
-	elif [[ $para == --train_epochs* ]];then
+    elif [[ $para == --train_epochs* ]];then
         train_epochs=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
@@ -58,7 +58,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be config"
     exit 1
 fi
-
 # 校验是否传入output_path,不需要修改
 if [[ $output_path == "" ]];then
     output_path="test/output/${ASCEND_DEVICE_ID}"
@@ -91,6 +90,7 @@ cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
 
+cp -r ${data_path}/dataset/bert ${PWD}
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -112,11 +112,9 @@ batch_size=256
 
 if [ x"${modelarts_flag}" != x ];
 then
-    export ASCEND_GLOBAL_LOG_LEVEL=3
     python multimodal_driver.py --data_path=${data_path} --output_path=${output_path}
 else
-    export ASCEND_GLOBAL_LOG_LEVEL=3
-    python multimodal_driver.py --data_path=${data_path} --output_path=${output_path} 1>${print_log} 2>&1
+    python multimodal_driver.py --data_path=${data_path}/dataset --output_path=${output_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
@@ -124,8 +122,8 @@ StepTime=`grep "27/27" ${print_log} | awk '{print$NF}' | awk -F"s" '{print $1}' 
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
 # 精度相关数据计算
-train_accuracy=`grep "test_acc" ${print_log}  | awk -F":" '{print $NF}'`
-
+train_accuracy=`grep "test_acc" ${print_log}  | awk -F":" 'END {print $NF}'`
+train_accuracy=`awk 'BEGIN{printf "%.4f\n",'${train_accuracy}'}'`
 # 提取所有loss打印信息
 grep "train_loss" ${print_log} | awk -F"," '{print $2}' | awk -F":" '{print $NF}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
@@ -167,9 +165,8 @@ echo "------------------ Final result ------------------"
 echo "Final Performance images/sec : $FPS"
 echo "Final Performance sec/step : $StepTime"
 echo "E2E Training Duration sec : $e2e_time"
-
 # 输出训练精度
-echo "Final Train Accuracy : ${train_accuracy}d"
+echo "Final Train Accuracy : ${train_accuracy}"
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=(`awk 'END {print $NF}' ./test/output/${ASCEND_DEVICE_ID}/${CaseName}_loss.txt`)

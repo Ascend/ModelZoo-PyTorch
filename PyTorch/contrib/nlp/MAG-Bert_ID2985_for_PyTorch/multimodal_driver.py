@@ -23,9 +23,6 @@ import sys
 import numpy as np
 from typing import *
 
-os.system("pip install wandb")
-os.system("pip install transformers")
-
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support
