@@ -167,47 +167,22 @@ git clone https://gitee.com/ascend/tools.git
    export NPU_HOST_LIB=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/acllib/lib64/stub
    ```
    以上为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
-   ii.进入tools/msame文件夹，设置文件权限，运行编译脚本。
-   ```bash
-   cd tools/msame
-   dos2unix *.sh
-   chmod u+x  build.sh
-   ./build.sh g++  ./msame/out   
-   cp ./out/main   ../../   #本步骤要在“/tools/msame”文件夹目录下执行
-   cd ../..
-   ```
-   ```bash
-   ./build.sh g++  ./msame/out
-   ```
-   ERRO：mv: cannot move ‘main’ to ‘./msame/out/msame’: No such file or directory
-   执行上述代码后报错由于没有创建msame文件夹，不影响main文件生成，用户可进入“./msame/out/”文件夹查看是否生成main文件。
 ### <a name="52">5.2 离线推理</a>
 1. 设置环境变量
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2. 执行离线推理
-设置文件权限。
- ```bash
-chmod u+x main
-```
-运行如下命令进行离线推理：
-```bash
-./msame --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN > ./msame_bs1.txt
-```
---model ：输入的om文件。
+2. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，设置文件权限，运行编译脚本。
 
---input：输入的bin数据文件。
-
---device：NPU设备编号。
-
--outfmt：输出数据的格式。
-模型输出格式是bin，输出保存在"output"参数指定的文件夹中，同时会生成推理的日志文件msame_bs1.txt
-3. 性能数据的获取
-通过给test/parser.py指定推理后的日志文件，可以得到离线推理的性能数据
-```bash
-python3.7 ./test/parse.py --txt-file "./msame_bs1.txt" --batch-size 1 > bs1_perf.log
-```
+·执行命令
+    python3.7 ais_infer.py --model "/home/ylz/BigGAN/biggan_sim_bs1.om" --input "/home/ylz/BigGAN/prep_noise_bs1,/home/ylz/BigGAN/prep_label_bs1"  --output "/home/ylz/BigGAN/outputs_bs1_om" --outfmt BIN --batchsize 1 > /home/ylz/BigGAN/result1.txt
+    --model ：输入的om文件。
+    --input：输入的bin数据文件。
+    --output：推理数据输出路径。
+    --outfmt：输出数据的格式。
+    --batchsize：模型batch size。
+    
+模型输出格式是bin，输出保存在"output"参数指定的文件夹中，同时会生成文件result1.txt
 
 运行后会生成如下文件/文件夹：
 ```bash
