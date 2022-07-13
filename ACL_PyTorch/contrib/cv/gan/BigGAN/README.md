@@ -163,17 +163,15 @@ git clone https://gitee.com/ascend/tools.git
    ```
    以上为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
 ### <a name="52">5.2 离线推理</a>
-1. 设置环境变量
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，生成推理后端whl包，进行离线推理。
+
+1. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，生成推理后端whl包，进行离线推理。
    ```
    cd tools/ais-bench_workload/tool/ais_infer/backend/
     pip3.7 wheel ./
     cd ..
    ```
-执行离线推理
+2.执行离线推理
+
 ·执行命令
 ```
     python3.7 ais_infer.py --model "/home/ylz/BigGAN/biggan_sim_bs1.om" --input "/home/ylz/BigGAN/prep_noise_bs1,/home/ylz/BigGAN/prep_label_bs1"  --output "/home/ylz/BigGAN/outputs_bs1_om" --outfmt BIN --batchsize 1 > /home/ylz/BigGAN/result1.txt
