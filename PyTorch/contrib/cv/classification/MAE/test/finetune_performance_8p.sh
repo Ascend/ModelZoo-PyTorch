@@ -70,7 +70,19 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3 -u -m torch.distributed.launch --nproc_per_node=8 --master_port 7164 main_finetune.py \
+export WORLD_SIZE=8
+KERNEL_NUM=$(($(nproc)/8))
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=23333
+
+for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
+do
+export RANK=$RANK_ID
+export LOCAL_RANK=$RANK_ID
+PID_START=$((KERNEL_NUM * RANK_ID))
+PID_END=$((PID_START + KERNEL_NUM -1))
+nohup taskset -c $PID_START-$PID_END python3.7 -u  main_finetune.py \
+             --local_rank ${RANK} \
              --data_path ${data_path} \
              --finetune ${finetune_pth} \
              --output_dir ${output_dir} \
@@ -78,7 +90,7 @@ nohup python3 -u -m torch.distributed.launch --nproc_per_node=8 --master_port 71
              --epochs ${train_epochs} \
              --world_size 8 \
              --batch_size ${batch_size} \
-             --num_workers ${workers} \
+             --num_workers ${KERNEL_NUM} \
              --blr 10e-4 \
              --layer_decay 0.65 \
              --weight_decay 0.05 \
@@ -89,7 +101,7 @@ nohup python3 -u -m torch.distributed.launch --nproc_per_node=8 --master_port 71
              --dist_eval \
              --amp \
              > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
+done
 wait
 
 
