@@ -11,7 +11,7 @@
 - [4. 输入数据生成](#4)
     - [数据生成](#41)
 - [5. 离线推理](#5)
-    - [msame工具概述](#51)
+    - [ais_infer工具概述](#51)
     - [离线推理](#52)
 - [6. 精度对比](#6)
     - [模型后处理](#61)
@@ -113,11 +113,10 @@ atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --inpu
 ```
 
 参数说明：
-    --input_shape：输入数据的shape。  
+
     --output：输出的OM模型。  
     --log：日志级别。 
-    --soc_version：处理器型号，Ascend310或Ascend710。  
-    --soc_version：处理器型号。  
+    --soc_version：处理器型号，通过npu-smi info查询。  
     --input_format：输入数据格式。
     --input_shape：模型输入数据的shape。
    
@@ -125,9 +124,7 @@ atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --inpu
 ```bash
 ├── biggan.onnx
 ├── biggan_sim_bs1.onnx
-├── biggan_sim_bs16.onnx
 ├── biggan_sim_bs1.om
-├── biggan_sim_bs16.om
 ```
 
 
@@ -155,9 +152,8 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 
 ## <a name="5">5. 离线推理</a>
 
-### <a name="51">5.1 msame工具概述</a>
-msame模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。获取工具及使用方法可以参考[msame模型推理工具指南](https://gitee.com/ascend/tools/tree/master/msame)
-a.推理模型使用msame工具
+### <a name="51">5.1 ais_infer工具概述</a>
+a.推理模型使用ais_infer工具
 ```bash
 git clone https://gitee.com/ascend/tools.git
 ```
@@ -175,9 +171,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 2. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，设置文件权限，运行编译脚本。
 
 ·执行命令
-```
     python3.7 ais_infer.py --model "/home/ylz/BigGAN/biggan_sim_bs1.om" --input "/home/ylz/BigGAN/prep_noise_bs1,/home/ylz/BigGAN/prep_label_bs1"  --output "/home/ylz/BigGAN/outputs_bs1_om" --outfmt BIN --batchsize 1 > /home/ylz/BigGAN/result1.txt
-```
     --model ：输入的om文件。
     --input：输入的bin数据文件。
     --output：推理数据输出路径。
@@ -189,17 +183,11 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 运行后会生成如下文件/文件夹：
 ```bash
 ├── prep_label_bs1    # 模型的标签输入(文件夹)
-├── prep_label_bs16
 ├── prep_noise_bs1    # 模型的噪声输入(文件夹)
-├── prep_noise_bs16
 ├── outputs_bs1_om    # 模型的输出(文件夹)
-├── outputs_bs16_om
 ├── gen_y_bs1.npz     # 类别采样的npz数据
-├── gen_y_bs16.npz
-├── msame_bs1.txt     # msame推理过程的输出
-├── msame_bs16.txt
+├── result1.txt     # ais_infer推理过程的输出
 ├── bs1_perf.log      # 性能数据
-├── bs16_perf.log
 ```
 
 |模型|t4性能|310性能|
@@ -224,9 +212,7 @@ python3.7 biggan_eval_acc.py --num-inception-images 50000 --batch-size 1 --datas
 ```bash
 ├── postprocess_img           # 转换后的模型输出(文件夹)
 ├── gen_img_bs1.npz           # 模型输出的npz数据
-├── gen_img_bs16.npz
 ├── biggan_acc_eval_bs1.log   # 精度测量结果
-├── biggan_acc_eval_bs16.log
 ```
 
 其中"num-inception-images"表示用于进行精度测量的输出数量，"dataset"指定用于对比分布所采用的数据集，I128表示ImageNet数据集在train上的采样
