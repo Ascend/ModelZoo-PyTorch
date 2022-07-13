@@ -22,6 +22,37 @@ cd ..
 
 ### 3.训练
 
+#### （可选）数据集准备
+
+以开源的中文数据集zhwiki为例，说明如何将原始数据集转为模型所需的单个txt文件。如果训练数据已经符合要求，可跳过这一步。
+
+下载zhwiki
+
+```
+wget https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2 --no-check-certificate
+```
+
+解压得到zhwiki-latest-pages-articles.xml
+
+```
+bzip2 -dk zhwiki-latest-pages-articles.xml.bz2
+```
+
+安装wikiextractor并提取文本，其中extracted/wiki_zh为保存路径，不要修改
+
+```
+pip3 install wikiextractor
+python3 -m wikiextractor.WikiExtractor zhwiki-latest-pages-articles.xml -b 100M -o extracted/wiki_zh
+```
+
+将多个文档整合为一个txt文件，在本工程根目录下执行
+
+```
+python3 WikicorpusTextFormatting.py --extracted_files_path extracted/wiki_zh --output_file zhwiki-latest-pages-articles.txt
+```
+
+最终生成的文件名为zhwiki-latest-pages-articles.txt
+
 #### Bert-base
 
 下载配置模型和分词文件
@@ -119,12 +150,12 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
 ```
     --distributed_process_group_timeout 7200
 ```
-   
+
    （2）设置HCCL的建链时间为更大的值，修改env.sh中环境变量HCCL_CONNECT_TIMEOUT（单位秒）的值：
-   
+
 ```
    export HCCL_CONNECT_TIMEOUT=7200
- ```
+```
 2. Q:如果训练报wandb.error.UsageError:api_key not configured (no-tty)的错误该怎么办?
   
    A:export WANDB_DISABLED=1
