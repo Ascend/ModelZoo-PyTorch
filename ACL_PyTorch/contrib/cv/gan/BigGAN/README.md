@@ -175,7 +175,9 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 2. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，设置文件权限，运行编译脚本。
 
 ·执行命令
+```
     python3.7 ais_infer.py --model "/home/ylz/BigGAN/biggan_sim_bs1.om" --input "/home/ylz/BigGAN/prep_noise_bs1,/home/ylz/BigGAN/prep_label_bs1"  --output "/home/ylz/BigGAN/outputs_bs1_om" --outfmt BIN --batchsize 1 > /home/ylz/BigGAN/result1.txt
+```
     --model ：输入的om文件。
     --input：输入的bin数据文件。
     --output：推理数据输出路径。
