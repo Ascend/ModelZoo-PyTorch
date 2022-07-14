@@ -57,7 +57,7 @@ def cre_groundtruth_dict_fromtxt(gtfile_path):
             img_gt_dict[imgName] = imgLab
     return img_gt_dict
 
-class Get_result:
+class Get_Result:
     def __init__(self, data_vec, n_label, in_type, color): 
         self.data_vec = data_vec
         self.n_label = n_label
@@ -90,7 +90,7 @@ def load_statistical_predict_result(filepath):
         else:
             for ind, prob in enumerate(temp):
                 data_vec[ind] = np.float32(prob)
-    r = Get_result(data_vec, n_label, in_type, color)
+    r = Get_Result(data_vec, n_label, in_type, color)
     return r
     #return data_vec, n_label, in_type, color
     
