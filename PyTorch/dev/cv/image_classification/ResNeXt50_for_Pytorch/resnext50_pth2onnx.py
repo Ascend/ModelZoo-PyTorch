@@ -34,7 +34,8 @@ def convert():
 
     dummy_input = torch.randn(1, 3, 224, 224)
 
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11)
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, 
+    dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11)
 
 if __name__ == "__main__":
     if (len(sys.argv) == 3):
