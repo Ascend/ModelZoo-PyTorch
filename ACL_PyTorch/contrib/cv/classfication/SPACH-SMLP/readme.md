@@ -110,7 +110,7 @@ atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch1-high --input_
 atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch16-high --input_format=NCHW --input_shape="input:16,3,224,224" --soc_version=Ascend710 --op_precision_mode=op_precision.ini
 ```
 
-batch size为4、8、32的同上
+[可以直接下载，已生成的，batch size为1、4、8、16、32、64的om模型](https://pan.baidu.com/s/1UaEXR0EEhUEu-UUll3Ywew?pwd=s3m6)
 
 ## 1.4. 数据预处理
 
