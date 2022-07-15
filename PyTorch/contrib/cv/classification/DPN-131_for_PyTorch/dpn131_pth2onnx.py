@@ -18,7 +18,7 @@ import torch.onnx
 from dpn import dpn131
 
 def pth2onnx(input_file, output_file):
-    model = dpn131(pretrained=False)
+    model = dpn131(pretrained=False, not_to_onnx=False)
     checkpoint = torch.load(input_file, map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint, strict=False)
 

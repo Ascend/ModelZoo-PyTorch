@@ -199,11 +199,11 @@ def dpn98(num_classes=1000, pretrained='imagenet'):
         model.std = settings['std']
     return model
 
-def dpn131(num_classes=1000, pretrained='imagenet'):
+def dpn131(num_classes=1000, pretrained='imagenet', *args, **kwargs):
     model = DPN(
         num_init_features=128, k_r=160, groups=40,
         k_sec=(4, 8, 28, 3), inc_sec=(16, 32, 32, 128),
-        num_classes=num_classes, test_time_pool=True)
+        num_classes=num_classes, test_time_pool=True, *args, **kwargs)
     if pretrained:
         settings = pretrained_settings['dpn131'][pretrained]
         assert num_classes == settings['num_classes'], \
@@ -344,11 +344,11 @@ class DualPathBlock(nn.Module):
 class DPN(nn.Module):
     def __init__(self, small=False, num_init_features=64, k_r=96, groups=32,
                  b=False, k_sec=(3, 4, 20, 3), inc_sec=(16, 32, 24, 128),
-                 num_classes=1000, test_time_pool=False):
+                 num_classes=1000, test_time_pool=False, not_to_onnx=True):
         super(DPN, self).__init__()
         self.test_time_pool = test_time_pool
         self.b = b
-        self.not_to_onnx = False
+        self.not_to_onnx = not_to_onnx
         bw_factor = 1 if small else 4
 
         blocks = OrderedDict()
