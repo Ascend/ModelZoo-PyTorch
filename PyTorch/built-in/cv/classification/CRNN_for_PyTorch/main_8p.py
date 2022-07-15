@@ -87,7 +87,7 @@ def main():
 
     # DistributedDataParallel, we need to divide the batch size
     # ourselves based on the total number of NPUs we have
-    if config.DISTRIBUTED.WORLD_SIZE == 16:
+    if config.DISTRIBUTED.WORLD_SIZE >= 16:
         config.TRAIN.BATCH_SIZE_PER_GPU = int(config.TRAIN.BATCH_SIZE_PER_GPU / config.DISTRIBUTED.WORLD_SIZE)
     else:
         config.TRAIN.BATCH_SIZE_PER_GPU = int(config.TRAIN.BATCH_SIZE_PER_GPU / npus_per_node)
