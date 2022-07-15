@@ -348,6 +348,7 @@ class DPN(nn.Module):
         super(DPN, self).__init__()
         self.test_time_pool = test_time_pool
         self.b = b
+        self.not_to_onnx = False
         bw_factor = 1 if small else 4
 
         blocks = OrderedDict()
@@ -405,7 +406,7 @@ class DPN(nn.Module):
         self.last_linear = nn.Conv2d(in_chs, num_classes, kernel_size=1, bias=True)
 
     def logits(self, features):
-        if not self.training and self.test_time_pool:
+        if not self.training and self.test_time_pool and self.not_to_onnx:
             x = F.avg_pool2d(features, kernel_size=7, stride=1)
             out = self.last_linear(x)
             # The extra test time pool should be pooling an img_size//32 - 6 size patch
@@ -455,8 +456,7 @@ def adaptive_avgmax_pool2d(x, pool_type='avg', padding=0, count_include_pad=Fals
     else:
         if pool_type != 'avg':
             print('Invalid pool type %s specified. Defaulting to average pooling.' % pool_type)
-        x = F.avg_pool2d(
-            x, kernel_size=(x.size(2), x.size(3)), padding=padding, count_include_pad=count_include_pad)
+        x = F.adaptive_avg_pool2d(x, (1, 1))
     return x
 
 
