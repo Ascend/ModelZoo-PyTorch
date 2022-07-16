@@ -195,10 +195,10 @@ git clone https://gitee.com/ascend/tools.git
 ├── bs1_perf.log      # 性能数据
 ```
 
-|模型|t4性能|310性能|
+|模型|t4性能|310性能|310P性能|
 |----|----|----|
-|BigGAN bs1|239.249fps|227.144fps|
-|BigGAN bs16|344.900fps|282.898fps|
+|BigGAN bs1|236fps|242fps|443fps|
+|BigGAN bs16|334fps|333fps|544fps|
 
 ## <a name="6">6. 精度对比</a>
 
