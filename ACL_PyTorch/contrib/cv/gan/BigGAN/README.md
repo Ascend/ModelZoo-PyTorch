@@ -196,7 +196,7 @@ git clone https://gitee.com/ascend/tools.git
 ```
 
 |模型|t4性能|310性能|310P性能|
-|----|----|----|
+|----|----|----|----|
 |BigGAN bs1|236fps|242fps|443fps|
 |BigGAN bs16|334fps|333fps|544fps|
 
