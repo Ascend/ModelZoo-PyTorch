@@ -9,7 +9,7 @@
 		- [1.3.2. onnx转om模型](#132-onnx转om模型)
 	- [1.4. 数据预处理](#14-数据预处理)
 		- [1.4.1. 数据集获取](#141-数据集获取)
-		- [1.4.2. 1.4.2.数据集预处理](#142-142数据集预处理)
+		- [1.4.2. 数据集预处理](#142-数据集预处理)
 	- [1.5. 离线推理](#15-离线推理)
 		- [1.5.1. ais_infer工具概述](#151-ais_infer工具概述)
 		- [1.5.2.  离线推理](#152--离线推理)
@@ -130,7 +130,7 @@ atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch1-high --input_
 > 该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集进行测试，
 > 如果放在其余位置，请修改smlp_preprocess.py文件中args的data_path参数。
 
-### 1.4.2. 1.4.2.数据集预处理
+### 1.4.2. 数据集预处理
 
 1. 调用预处理脚本smlp_preprocess.py
    需要先调用该脚本，仿照[SPACH-sMLP官方训练预处理方法处理数据](https://github.com/microsoft/SPACH)，以获得最佳精度；
