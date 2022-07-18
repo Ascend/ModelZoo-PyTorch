@@ -191,7 +191,9 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.pretrained:
         model = dpn131(pretrained=False)
         checkpoint = torch.load(args.resume, map_location='cpu')
-        model.load_state_dict(checkpoint,strict=False)
+        if 'module.' in list(checkpoint['state_dict'].keys())[0]:
+            checkpoint['state_dict'] = {k.replace('module.', ''): v for k, v in checkpoint['state_dict'].items()}
+        model.load_state_dict(checkpoint['state_dict'], strict=False)
     else:
         model = dpn131(pretrained=False)
 
