@@ -4,7 +4,7 @@ onnx==1.7.0
 onnx-simplifier == 0.3.6
 scipy==1.1.0
 pillow==8.2.0
-opencv-python==4.5.3
+opencv-python==4.5.3.56
 tqdm
 easydict
 pyyaml
