@@ -133,20 +133,6 @@ grep "train_loss" ${print_log} | awk -F"," '{print $2}' | awk -F":" '{print $NF}
 #########后面的所有内容请不要修改###########################
 ###########################################################
 
-# 判断本次执行是否正确使用Ascend NPU
-tf_flag=`echo ${Network} | grep TensorFlow | wc -l`
-use_npu_flag=`grep "The model has been compiled on the Ascend AI processor" ${print_log} | wc -l`
-if [ x"${use_npu_flag}" == x0 -a x"${tf_flag}" == x1 ];
-then
-    echo "------------------ ERROR NOTICE START ------------------"
-    echo "ERROR, your task haven't used Ascend NPU, please check your npu Migration."
-    echo "------------------ ERROR NOTICE END------------------"
-else
-    echo "------------------ INFO NOTICE START------------------"
-    echo "INFO, your task have used Ascend NPU, please check your result."
-    echo "------------------ INFO NOTICE END------------------"
-fi
-
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename
 
