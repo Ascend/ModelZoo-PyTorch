@@ -10,11 +10,9 @@
 
 5.get_info.py：生成推理输入的数据集二进制info文件或jpg info文件
 
-6.val_label.txt：ImageNet数据集标签，用于验证推理结果
+6.benchmark：离线推理工具
 
-7.benchmark：离线推理工具
-
-8.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+7.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
 
 
 
@@ -36,9 +34,8 @@
 
 
 
-（4）生成推理输入的数据集二进制info文件或jpg info文件
+（4）生成推理输入的数据集二进制info文件
     python3 get_info.py bin pre_bin resnext50_val.info 224 224
-    python3 get_info.py jpg dataset/ImageNet/val_union ImageNet.info
 
 
 
@@ -47,9 +44,8 @@
 	
 （6）使用benchmark离线推理
 	./benchmark -model_type=vision -om_path=resnext50_bs16.om -device_id=0 -batch_size=16 -input_text_path=resnext50_val.info -input_width=224 -input_height=224 -useDvpp=false
-	或者
-	./benchmark -model_type=vision -om_path=resnext50_bs1.om -device_id=0 -batch_size=1 -input_text_path=ImageNet.info -input_width=256 -input_height=256 -useDvpp=true
-
+	
+	
 （7）验证推理结果，运行benchmark推理，结果保存在 ./result 目录下
 	python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
 	
