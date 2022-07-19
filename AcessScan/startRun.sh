@@ -3,6 +3,7 @@
 echo "####################################################################"
 echo "#                   Start Modelzoo Network Test....                 "
 echo "####################################################################"
+
 top_dir=`pwd`
 
 hostname="worker-121-36-69-71"
@@ -41,6 +42,7 @@ echo "=================Modified files in this PR: ================="
 cat $1/pr_filelist.txt
 
 
+
 #如果PR只涉及到.MD文件的修改，则无需执行用例，直接返回OK
 if [[ `grep -ciE ".MD|.txt|.doc|.docx|LICENSE" "$1/pr_filelist.txt"` -ne '0' && `grep -cE ".py|.sh|.cpp" "$1/pr_filelist.txt"` -eq '0' ]] ;then
    echo "Only .MD|.txt|.doc|.docx|LICENSE in pr_filelist, No need to run testcases!"
@@ -52,7 +54,6 @@ fi
 #3、首层目录必要文件检查：LINCENSE,README.md,requirements.txt
 #4、文件大小检查，不超过2M
 #5、内部链接扫描
-starttime=`date +'%Y-%m-%d %H:%M:%S'`
 file_log='log1/py_train.log'
 dir_log='log1'
 if [ -d $dir_log ];
@@ -65,44 +66,14 @@ else
   mkdir $dir_log
 fi
 python3 access_upline.py --pr_filelist_dir=$1/pr_filelist.txt >$file_log 2>&1
-#docs文件检查
-echo "=================Start to Check Type of File ================="
-while read line
-do
-  dir2=`echo $line | sed "s/\// /g"`
-  for i in $dir2;
-  do
-    if [[ $i == 'test' ]];then
-      #echo "=========666";
-      result=$(echo $line | grep -E "\.py|\.cpp" | grep -v "__init__.py")
-      if [ -n "$result" ];
-      then
-        if [ ! -f "$1/modelzoo/$line" ];then
-          docs_nums=`grep -a $'\r' $1/modelzoo/$line | wc -l`
-          if [[ $docs_nums -eq 0 ]];then
-            continue
-          else
-            echo "$line ,This is a docs file,please check and delete it!"
-            let UNIX_check=1
-          fi
-        fi
-      fi
-    fi
-  done
-done < $1/pr_filelist.txt
-
 license_check=`grep -ri  "license_check=1" ${file_log} | wc -l`
 filesize_check=`grep -ri  "filesize_check=1" ${file_log} | wc -l`
 firstlevel_check=`grep -ri  "firstlevel_check=1" ${file_log} | wc -l`
 funkfile_check=`grep -ri  "funkfile_check=1" ${file_log} | wc -l`
 internal_link_check=`grep -ri  "internal_link_check=1" ${file_log} | wc -l`
 sensitive_check=`grep -ri  "sensitive_check=1" ${file_log} | wc -l`
-modelzoo_level_check=`grep -ri  "modelzoo_level_check=1" ${file_log} | wc -l`
-file_word_check=`grep -ri  "file_word_check=1" ${file_log} | wc -l`
-core_binding_check=`grep -ri  "core_binding_check=1" ${file_log} | wc -l`
-cat $file_log | grep -a -v "check=1" | grep -a -v "check=0"
-if [[ $license_check -ge 1 || $filesize_check -ge 1 || $firstlevel_check -ge 1 || $funkfile_check -ge 1 ||  $internal_link_check -ge 1
-|| $sensitive_check -ge 1 || $modelzoo_level_check -ge 1 || file_word_check -ge 1 || UNIX_check -ge 1 || core_binding_check -ge 1 ]];
+cat $file_log | grep -v "check=1" | grep -v "check=0"
+if [[ $license_check -ge 1 || $filesize_check -ge 1 || $firstlevel_check -ge 1 || $funkfile_check -ge 1 ||  $internal_link_check -ge 1 || sensitive_check -ge 1 ]];
 then
   echo "check fail"
   exit 1 
@@ -111,81 +82,83 @@ else
 fi
 #exit $status
 
-#echo "=================Start to Check License ================="
-##license检查
-#lincense_check=0
-#while read line
-#do
-#    a=`echo $line |awk -F "_for_" '{print $1}' | awk -F "/" '{print $NF}'`
-#    b=`echo $line |awk -F "_for_" '{print $2}' | awk -F "/" '{print $1}'`
-#    result=`echo $a`_for_`echo $b`
-#    lise_dir=$(echo ${line%$result*}/$result/LICENSE)
-#	  directory=$(echo ${line%$result*}/$result/)
-#    if [ -n "$b" ] && [ -d $1/modelzoo/$directory ];
-#    then
-#        if [ -f $1/modelzoo/$lise_dir ];
-#        then
-#            true
-#        else
-#            echo "$result license is not exist!"
-#			let lincense_check=1
-#        fi
-#     else
-#	    true
-#        #echo "$result name -ERROR"
-#    fi
-#done < $1/pr_filelist.txt
+
+echo "=================Start to Check License ================="
+#license检查
+lincense_check=0
+while read line
+do
+    a=`echo $line |awk -F "_for_" '{print $1}' | awk -F "/" '{print $NF}'`
+    b=`echo $line |awk -F "_for_" '{print $2}' | awk -F "/" '{print $1}'`
+    result=`echo $a`_for_`echo $b`
+    lise_dir=$(echo ${line%$result*}/$result/LICENSE)
+	directory=$(echo ${line%$result*}/$result/)
+    if [ -n "$b" ] && [ -d $1/modelzoo/$directory ];
+    then
+        if [ -f $1/modelzoo/$lise_dir ];
+        then
+            true
+        else
+            echo "$result license is not exist!"
+			let lincense_check=1
+        fi
+     else
+	    true
+        #echo "$result name -ERROR"
+    fi
+done < $1/pr_filelist.txt
 
 
 #py/cpp文件检查
-#while read line
-#do
-#    function checkfile()
-#    {
-#     result=$(echo $1 | grep -E "\.py|\.cpp" | grep -v "__init__.py")
-#     if [ -n "$result" ];
-#     then
-#         Hw_result=`cat $1 | grep -i "License"`
-#         if [ -n "$Hw_result" ];
-#          then
-#              true
-#          else
-#               echo "$1 license check fail!"
-#			   let lincense_check=1
-#          fi
-#      else
-#          #echo "$1 no need check"
-#		  true
-#      fi
-#    }
-#    function getAllFiles()
-#    {
-#        for fileName in `ls $1`;
-#        do
-#           dir_or_file=$1"/"$fileName
-#           if [ -d $dir_or_file ]
-#           then
-#              getAllFiles $dir_or_file
-#           else
-#              checkfile $dir_or_file
-#           fi
-#         done
-#    }
-#    if [ -f "$1/modelzoo/$line" ];
-#    then
-#       #echo $line
-#       checkfile $1/modelzoo/$line
-#    else
-#       getAllFiles $1/modelzoo/$line
-#    fi
-#
-#done < $1/pr_filelist.txt
-#
-#if [ $lincense_check -eq '1' ] ;then
-#   echo "License check failed, Please follow the guide to add License:"
-#   echo "https://gitee.com/ascend/modelzoo/blob/master/contrib/CONTRIBUTING.md"
-#   exit 1
-#fi
+while read line
+do
+    function checkfile()
+    {
+     result=$(echo $1 | grep -E "\.py|\.cpp" | grep -v "__init__.py")
+     if [ -n "$result" ];
+     then
+         Hw_result=`cat $1 | grep -i "License"`
+         if [ -n "$Hw_result" ];
+          then
+              true
+          else
+               echo "$1 license check fail!"
+			   let lincense_check=1
+          fi
+      else
+          #echo "$1 no need check"
+		  true
+      fi
+    }
+    function getAllFiles()
+    {
+        for fileName in `ls $1`;
+        do
+           dir_or_file=$1"/"$fileName
+           if [ -d $dir_or_file ]
+           then
+              getAllFiles $dir_or_file
+           else
+              checkfile $dir_or_file
+           fi
+         done
+    }
+    if [ -f $1/modelzoo/$line ];
+    then
+       #echo $line
+       checkfile $1/modelzoo/$line
+    else
+       getAllFiles $1/modelzoo/$line
+    fi
+
+done < $1/pr_filelist.txt
+
+if [ $lincense_check -eq '1' ] ;then
+   echo "License check failed, Please follow the guide to add License:"
+   echo "https://gitee.com/ascend/modelzoo/blob/master/contrib/CONTRIBUTING.md"
+   exit 1
+fi
+
 #如果新增的都是目录，则无需执行用例，直接返回OK
 check_res=0
 while read line
@@ -200,6 +173,7 @@ if [ $check_res -eq '0' ] ;then
    echo "Add directorys in contrib/Research, No need to run testcases!"
    exit 0
 fi
+
 #代码安全检查模块
 while read line
 do 
@@ -224,11 +198,6 @@ do
     fi
 done < $1/pr_filelist.txt
 
-endtime=`date +'%Y-%m-%d %H:%M:%S'`
-start_seconds=$(date --date="$starttime" +%s);
-end_seconds=$(date --date="$endtime" +%s);
-echo "本次运行时间： "$((end_seconds-start_seconds))"s"
-:<<BLOCK
 #文件大小检查模块，超过10M则报错
 filesize_check=0
 maxsize=$((1024*1024*2))
@@ -252,13 +221,13 @@ if [ $filesize_check -eq '1' ] ;then
    echo "File size check failed, exit!"
    exit 1
 fi
-:<<BLOCK
-cases_str=$(date +%s)
+
 #如果PR不涉及contrib/TensorFlow/Research目录，则无需执行用例，直接返回OK
 if [ `grep -c "contrib/TensorFlow/Research" "$1/pr_filelist.txt"` -eq '0' ] ;then
    echo "This pr dosn't have changes in contrib/TensorFlow/Research, No need to run testcases!"
    exit 0
 fi
+
 date_time=`date +%Y%m%d`"."`date +%H%M%S`
 echo "===================================================================="
 echo "$date_time : start run test case , please wait ..."
@@ -289,9 +258,7 @@ echo "===================================================================="
 echo "$date_time : cat testcase info"
 echo "===================================================================="
 cat cases.txt 
-cases_end=$(date +%s)
-echo "run cases check takes $((cases_end - cases_str)) sec."
-echo "run all fuctions times takes $((cases_end - py_str)) sec."
+
 echo "===================================================================="
 num=1
 cat cases.txt | while read line
@@ -342,4 +309,3 @@ if [ `grep -c "fail" "$top_dir/result.txt"` -ne '0' ] ;then
 else
   exit 0
 fi
-BLOCK
