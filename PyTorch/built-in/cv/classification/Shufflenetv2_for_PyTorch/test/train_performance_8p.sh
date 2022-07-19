@@ -6,7 +6,7 @@ cur_path=`pwd`
 #集合通信参数,不需要修改
 #保证rank table file 文件rank_table_8p.json存放在和test同级的configs目录下
 export RANK_SIZE=8
-batch_size=1024
+batch_size=8192
 #RANK_TABLE_FILE=${cur_path}/../configs/rank_table_8p.json
 RANK_ID_START=0
 
@@ -21,7 +21,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 Network="Shufflenetv2_ID0099_for_PyTorch"
 #训练epoch
 train_epochs=2
-#device_id_list=0,1,2,3,4,5,6,7
+device_id_list=0,1,2,3,4,5,6,7
 #TF2.X独有，不需要修改
 #export NPU_LOOP_SIZE=${train_steps}
 
@@ -120,9 +120,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-
-export SIll=1
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((SIll+RANK_ID_START));RANK_ID++));
+for((RANK_ID=$RANK_ID_START;RANK_ID<RANK_SIZE;RANK_ID++));
 do
     #设置环境变量，不需要修改
     export RANK_ID=$RANK_ID
@@ -132,25 +130,26 @@ do
         --data=$data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49  \
-        --workers=128 \
-        --learning-rate=0.75 \
-        --print-freq=10 \
+        --workers=$(nproc) \
+        --learning-rate=4 \
+        --print-freq=1 \
         --eval-freq=5 \
         --arch=shufflenet_v2_x1_0  \
         --dist-url='tcp://127.0.0.1:50000' \
         --dist-backend='hccl' \
         --multiprocessing-distributed \
         --world-size=1 \
-        --batch-size=1024 \
-        --epochs=2 \
+        --batch-size=${batch_size} \
+        --epochs=${train_epochs} \
         --warm_up_epochs=1 \
+        --device_num=8 \
         --rank=0 \
         --amp \
         --momentum=0 \
-        --wd=3.0517578125e-05 \
-        --device-list=0 \
+        --device-list=${device_id_list} \
+        --local_rank=${RANK_ID} \
         --benchmark 0 \
-		> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
         
 done 
 wait
@@ -158,7 +157,6 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-echo "E2E Training Duration sec : $e2e_time"
 
 #稳定性精度看护结果汇总
 #训练用例信息，不需要修改
@@ -169,9 +167,12 @@ CaseName=${Network}${name_bind}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 ##获取性能数据
 
 FPS=`grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}'|tr -d ,`
-ActualFPS=`echo "8 * ${FPS}"|bc`
-temp1=`echo "8 * ${batch_size}"|bc`
-TrainingTime=`echo "scale=2;${temp1} / ${ActualFPS}"|bc`
+ActualFPS=`echo "${FPS}"|bc`
+
+# 打印，不需要修改
+echo "Final Performance images/sec : $FPS"
+echo "E2E Training Duration sec : $e2e_time"
+TrainingTime=`echo "scale=2;${batch_size} / ${ActualFPS}"|bc`
 
 ActualLoss=`grep "Loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $12}'`
 

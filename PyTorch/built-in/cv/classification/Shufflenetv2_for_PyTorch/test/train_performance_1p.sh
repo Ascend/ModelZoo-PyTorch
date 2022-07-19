@@ -171,7 +171,6 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-echo "E2E Training Duration sec : $e2e_time"
 
 #cp -r ${cur_path}/train.log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
@@ -184,11 +183,13 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 FPS=`grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}'|tr -d ,| sed s/[[:space:]]//g`
 ActualFPS=${FPS}
 
+# 打印，不需要修改
+echo "Final Performance images/sec : $FPS"
 temp1=`echo "1 * ${batch_size}"|bc`
 TrainingTime=`echo "scale=2;${temp1} / ${ActualFPS}"|bc`
 
 ActualLoss=`grep "Loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $12}'`
-
+echo "E2E Training Duration sec : $e2e_time"
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "RankSize = ${RANK_SIZE}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

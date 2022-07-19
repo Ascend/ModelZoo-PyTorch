@@ -22,7 +22,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 #网络名称，同目录名称
 Network="Shufflenetv2_ID0099_for_PyTorch"
 #训练epoch
-train_epochs=2
+train_epochs=240
 #训练batch_size
 batch_size=1536
 
@@ -155,7 +155,7 @@ do
         --multiprocessing-distributed \
         --world-size=1 \
         --batch-size=1536 \
-        --epochs=2 \
+        --epochs=${train_epochs} \
         --warm_up_epochs=1 \
         --rank=0 \
         --amp \
@@ -183,9 +183,17 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 ##获取性能数据
 FPS=`grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}'|tr -d ,| sed s/[[:space:]]//g`
 ActualFPS=${FPS}
+# 打印，不需要修改
+echo "Final Performance images/sec : $FPS"
 
 temp1=`echo "1 * ${batch_size}"|bc`
 TrainingTime=`echo "scale=2;${temp1} / ${ActualFPS}"|bc`
+#输出训练精度,需要模型审视修改
+train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
+
+#打印，不需要修改
+echo "Final Train Accuracy : ${train_accuracy}"
+echo "E2E Training Duration sec : $e2e_time"
 
 ActualLoss=`grep "Loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $12}'`
 
@@ -199,3 +207,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
