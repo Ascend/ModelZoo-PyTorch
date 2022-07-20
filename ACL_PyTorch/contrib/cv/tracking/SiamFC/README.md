@@ -34,8 +34,8 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
 pip install sympy decorator
 
-atc --model=./onnx/exemplar.onnx --framework=5 --output=./om/exemplar_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,127,127" --log=debug --soc_version=Ascend310P
-atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_format=NCHW --input_shape="actual_input_1:1,9,255,255" --log=debug --soc_version=Ascend310P
+atc --model=./onnx/exemplar.onnx --framework=5 --output=./om/exemplar_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,127,127" --log=debug --soc_version=Ascend${chip_name}
+atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_format=NCHW --input_shape="actual_input_1:1,9,255,255" --log=debug --soc_version=Ascend${chip_name}
 
 ```
 2.离线推理
