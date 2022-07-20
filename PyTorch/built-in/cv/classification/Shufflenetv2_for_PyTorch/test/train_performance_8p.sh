@@ -20,7 +20,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 #网络名称，同目录名称
 Network="Shufflenetv2_ID0099_for_PyTorch"
 #训练epoch
-train_epochs=2
+train_epochs=1
 device_id_list=0,1,2,3,4,5,6,7
 #TF2.X独有，不需要修改
 #export NPU_LOOP_SIZE=${train_steps}
@@ -120,13 +120,17 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
+
+KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=$RANK_ID_START;RANK_ID<RANK_SIZE;RANK_ID++));
 do
-    #设置环境变量，不需要修改
+if [ $(uname -m) = "aarch64" ]
+then
+    PID_START=$((KERNEL_NUM * RANK_ID))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
     export RANK_ID=$RANK_ID
     export DEVICE_ID=$RANK_ID
-    #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3.7 8p_main_med.py \
+    nohup taskset -c $PID_START-$PID_END python3.7 -u ./8p_main_med.py \
         --data=$data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49  \
@@ -141,16 +145,43 @@ do
         --world-size=1 \
         --batch-size=${batch_size} \
         --epochs=${train_epochs} \
-        --warm_up_epochs=1 \
+        --warm_up_epochs=5 \
         --device_num=8 \
         --rank=0 \
         --amp \
         --momentum=0 \
         --device-list=${device_id_list} \
         --local_rank=${RANK_ID} \
+        --num-classes=1000 \
         --benchmark 0 \
         > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-        
+else
+    nohup python3.7 -u ./8p_main_med.py \
+        --data=$data_path \
+        --addr=$(hostname -I |awk '{print $1}') \
+        --seed=49  \
+        --workers=$(nproc) \
+        --learning-rate=4 \
+        --print-freq=1 \
+        --eval-freq=5 \
+        --arch=shufflenet_v2_x1_0  \
+        --dist-url='tcp://127.0.0.1:50000' \
+        --dist-backend='hccl' \
+        --multiprocessing-distributed \
+        --world-size=1 \
+        --batch-size=${batch_size} \
+        --epochs=${train_epochs} \
+        --warm_up_epochs=5 \
+        --device_num=8 \
+        --rank=0 \
+        --amp \
+        --momentum=0 \
+        --device-list=${device_id_list} \
+        --local_rank=${RANK_ID} \
+        --num-classes=1000 \
+        --benchmark 0 \
+        > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
 done 
 wait
 
