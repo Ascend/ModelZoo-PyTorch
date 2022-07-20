@@ -244,19 +244,14 @@ class ExperimentOTB(object):
                     file1.write(content)
                     file1.write('\n')
                 # infer
-                # os.system('./benchmark.%s -model_type=vision -device_id=%d -batch_size=1 '
-                #           '-om_path=./om/exemplar_bs1.om -input_text_path=%s '
-                #           '-input_width=127 -input_height=127 -output_binary=True -useDvpp=False >/dev/null 2>&1'
-                #           % (arch, deviceid, infopath))
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om '
                  '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_prefix %s >/dev/null 2>&1'
                  %(idx, seq_name))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
-                # filename = img_file.replace('/', '-').split('.')[0] + '_1.bin'
                 filename = 'sample_id_0_output_0.bin'
                 filename = 'OTB100/'+ seq_name+ '/' + filename
-                exemplar_feature = prepostpro.file2tensor(filename, (3, 256, 6, 6))
+                exemplar_feature = prepostpro.file2tensor(filename,(3, 256, 6, 6))
                 os.system('rm -rf ./pre_dataset/%s/%s' %(idx,img_file.replace('/', '-').replace('.jpg', '.bin')))
             else:
                 # Pre-process and generate bin
@@ -267,20 +262,14 @@ class ExperimentOTB(object):
                     file2.write(content)
                     file2.write('\n')
                 # infer
-                # os.system('./benchmark.%s -model_type=vision -device_id=%d -batch_size=1 '
-                #           '-om_path=./om/search_bs1.om -input_text_path=%s '
-                #           '-input_width=255 -input_height=255 -output_binary=True -useDvpp=False >/dev/null 2>&1'
-                #           % (arch, deviceid, infopath))
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om '
                     '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_prefix %s >/dev/null 2>&1'
                     %(idx, seq_name))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
-                # filename = img_file.replace('/', '-').split('.')[0] + '_1.bin'
-                # filename = 'result/dumpOutput_device' + str(deviceid) + '/' + filename
                 filename = 'sample_id_0_output_0.bin'
                 filename = 'OTB100/'+ seq_name+ '/' + filename
-                search_feature = prepostpro.file2tensor(filename, (1, 768, 22, 22))
+                search_feature = prepostpro.file2tensor(filename,(1, 768, 22, 22))
                 # Post-process
                 boxes[f, :] = prepostpro.postprocess(search_feature, exemplar_feature)
                 times[f] = 1
@@ -428,7 +417,7 @@ if __name__ == "__main__":
     totallen = e.getlendataset()
     pool = multiprocessing.Pool(processes=12)
     for i in range(totallen):
-        pool.apply_async(e.run, (save_path, info_path, i, ))
+        pool.apply_async(e.run,(save_path, info_path, i,))
     pool.close()
     pool.join()
     prec_score, succ_score, succ_rate = e.report(['siamfc'])
