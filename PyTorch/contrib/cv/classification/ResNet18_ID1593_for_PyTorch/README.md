@@ -8,6 +8,7 @@ This implements training of ResNet18_ID1593_for_PyTorch  on the ImageNet dataset
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+- Suggesting the version of Pillow is 9.1.0 and the version of torchvision is 0.6.0.Torchvision can be installed from its source code https://github.com/pytorch/vision
 - Download the ImageNet dataset from http://www.image-net.org/
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 
