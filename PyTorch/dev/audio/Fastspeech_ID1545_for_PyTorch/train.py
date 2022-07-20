@@ -228,7 +228,6 @@ def main(args):
                 # with open(os.path.join("logger", "duration_loss.txt"), "a") as f_d_loss:
                 #     f_d_loss.write(str(d_l)+"\n")
                 # Backward
-                print("type:",type(optimizer),"optimizer:",optimizer,flush=True)
                 # compute gradient and do SGD step
                 if args.apex:
                     with amp.scale_loss(total_loss, optimizer) as scaled_loss:
@@ -250,7 +249,7 @@ def main(args):
 
                 # Print
                 step_time = time.time() - start
-                FPS = (hp.batch_expand_size * hp.batch_size) / step_time
+                FPS = (hp.batch_expand_size * hp.batch_size if not distributed else hp.batch_expand_size * hp.batch_size * world_size) / step_time
                 if current_step % hp.log_step == 0:
                     Now = time.perf_counter()
 
