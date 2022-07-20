@@ -301,7 +301,6 @@ class ExperimentOTB(object):
             succ_curve = np.zeros((seq_num, self.nbins_iou))
             prec_curve = np.zeros((seq_num, self.nbins_ce))
             speeds = np.zeros(seq_num)
-            #
             performance.update({name: {'overall': {}, 'seq_wise': {}}})
 
             for s, (_, anno) in enumerate(self.dataset):
