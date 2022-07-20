@@ -54,21 +54,20 @@ einops==0.3.2
 
 ## 1.3. 模型转换
 
-- [sMLP预训练pth、onnx权重文件](https://pan.baidu.com/s/1Na-LHL3ueS2V2ChB694Ztg?pwd=xpo4)
 
 ### 1.3.1. pth转onnx模型[可选]
 
 1. 下载pth权重文件
-   [sMLP预训练pth、onnx权重文件](https://pan.baidu.com/s/1Na-LHL3ueS2V2ChB694Ztg?pwd=xpo4)
+   sMLP预训练[pth](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)、[onnx权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
 
 > **说明** pth文件的md5sum值为：061415304F38317C3850A587EF709D45 
 > 文件下载后，放置与代码同一目录下。
 
-2. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
-3. 调用smlp_pth2onnx脚本，生成onnx文件
+1. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
+2. 调用smlp_pth2onnx脚本，生成onnx文件
 
 
-4. 执行smlp_pth2onnx.py脚本，生成onnx模型文件
+3. 执行smlp_pth2onnx.py脚本，生成onnx模型文件
 
 ```
 python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
@@ -120,7 +119,7 @@ atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch1-high --input_
 
 执行后在当前目录下生成om模型文件：sMLPNet-T-batch1-high.om。
 
-[点击这里可以直接下载，已生成的，batch size为1、4、8、16、32、64的om模型](https://pan.baidu.com/s/1UaEXR0EEhUEu-UUll3Ywew?pwd=s3m6)
+点击这里可以直接下载，已生成的，batch size为[1](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch1-high.om)、[4](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch4-high.om)、[8](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch8-high.om)、[16](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch16-high.om)、[32](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch32-high.om)、[64](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch64-high.om)的om模型
 
 ## 1.4. 数据预处理
 
@@ -206,7 +205,7 @@ acc1:0.8125, acc5:0.9549
 
 ### 1.6.2. 开源TopN精度
 
-GPU上使用[原仓库代码](https://github.com/microsoft/SPACH)对pth文件进行推理，参考连接：[推理pth](https://pan.baidu.com/s/1Na-LHL3ueS2V2ChB694Ztg?pwd=xpo4)
+GPU上使用[原仓库代码](https://github.com/microsoft/SPACH)对pth文件进行推理
 
 得到的结果是：
 
