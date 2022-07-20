@@ -20,9 +20,7 @@ import time
 import math
 import json
 import ssl
-
 from pathlib import Path
-
 import numpy as np
 from PIL import Image
 import apex
@@ -35,10 +33,11 @@ from torchvision import datasets, transforms
 from torchvision import models as torchvision_models
 from apex.contrib.combine_tensors import combine_npu
 from apex import amp
-
 import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
+if torch.__version__ >= "1.8.1":
+    import torch_npu
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
