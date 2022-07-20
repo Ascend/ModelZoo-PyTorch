@@ -14,7 +14,7 @@ source env.sh
 rm -rf ./result/*
 
 echo "====conducting preprocess, inferrence and postprocess===="
-python3.7 wholeprocess.py ${datasets_path}/OTB/ ./pre_dataset ./dataset_info $(arch) 0 ./benchmark.${arch} ./om/
+python3.7 wholeprocess.py ${datasets_path}/OTB/ ./pre_dataset ./dataset_info $(arch) 0
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
