@@ -21,7 +21,7 @@ pip3.7 install -r requirements.txt
 [获取OTB2015数据集]([Visual Tracker Benchmark (hanyang.ac.kr)](http://cvlab.hanyang.ac.kr/tracker_benchmark/datasets.html))，并重命名为OTB，默认存放在/opt/npu目录下
 
 5.[获取ais_infer工具]( https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
-将ais_infer文件夹放到当前目录，并将./ais_infer.py替换文件夹中./ais_infer/ais_infer.py
+将ais_infer文件夹放到当前目录，并将./ais_infer.py替换文件夹中./ais_infer/ais_infer.py。由于需要一直调用ais_infer.py并使用输出结果，而源代码仅支持以时间戳作为输出文件夹名字，不方便多线程调度，所以添加了一个自定义名字的参数，不影响正常使用。
 
 ## 2 离线推理 
 
