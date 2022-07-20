@@ -250,9 +250,9 @@ class ExperimentOTB(object):
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
                 filename = 'sample_id_0_output_0.bin'
-                filename = 'OTB100/'+ seq_name+ '/' + filename
-                exemplar_feature = prepostpro.file2tensor(filename,(3, 256, 6, 6))
-                os.system('rm -rf ./pre_dataset/%s/%s' %(idx,img_file.replace('/', '-').replace('.jpg', '.bin')))
+                filename = 'OTB100/' + seq_name + '/' + filename
+                exemplar_feature = prepostpro.file2tensor(filename, (3, 256, 6, 6))
+                os.system('rm -rf ./pre_dataset/%s/%s' % (idx,img_file.replace('/', '-').replace('.jpg', '.bin')))
             else:
                 # Pre-process and generate bin
                 search_path = prepostpro.cropsearch(img, savepath, img_file)
@@ -268,8 +268,8 @@ class ExperimentOTB(object):
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
                 filename = 'sample_id_0_output_0.bin'
-                filename = 'OTB100/'+ seq_name+ '/' + filename
-                search_feature = prepostpro.file2tensor(filename,(1, 768, 22, 22))
+                filename = 'OTB100/' + seq_name + '/' + filename
+                search_feature = prepostpro.file2tensor(filename, (1, 768, 22, 22))
                 # Post-process
                 boxes[f, :] = prepostpro.postprocess(search_feature, exemplar_feature)
                 times[f] = 1
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     totallen = e.getlendataset()
     pool = multiprocessing.Pool(processes=12)
     for i in range(totallen):
-        pool.apply_async(e.run,(save_path, info_path, i,))
+        pool.apply_async(e.run, (save_path, info_path, i,))
     pool.close()
     pool.join()
     prec_score, succ_score, succ_rate = e.report(['siamfc'])
