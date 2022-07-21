@@ -57,7 +57,8 @@ def setup_model(device_type="npu"):
         #assert cfg.NUM_GPUS <= torch.cuda.device_count(), err_str
         assert cfg.NUM_GPUS <= torch.npu.device_count(), err_str   
         cur_device = torch.npu.current_device()
-        model = model.to(cur_device)
+        loc = "npu:{}".format(cur_device)
+        model = model.to(loc)
     elif device_type == "gpu":
         err_str = "Cannot use more GPU devices than available"
         #assert cfg.NUM_GPUS <= torch.cuda.device_count(), err_str
