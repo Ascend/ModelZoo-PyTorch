@@ -24,7 +24,7 @@
 import math
 import torch
 import torch.nn as nn
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.nn.functional as F
 from torch import Tensor

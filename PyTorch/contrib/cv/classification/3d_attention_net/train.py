@@ -16,7 +16,7 @@ from __future__ import print_function, division
 from apex import amp
 from apex.optimizers import NpuFusedSGD
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 else:
     import torch.npu

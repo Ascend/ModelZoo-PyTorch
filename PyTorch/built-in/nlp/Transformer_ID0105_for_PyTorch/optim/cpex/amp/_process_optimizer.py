@@ -19,7 +19,7 @@ from apex.fp16_utils import master_params_to_model_params
 from apex.multi_tensor_apply import multi_tensor_applier
 from ._amp_state import maybe_print
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from apex.optimizers import FusedSGD, NpuFusedAdam, NpuFusedSGD, NpuFusedAdadelta
 from change_data_ptr import change_data_ptr

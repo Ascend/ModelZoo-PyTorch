@@ -21,7 +21,7 @@ import time
 import mmcv
 import torch
 
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 from mmcv import Config
 from mmcv.runner import init_dist, load_state_dict

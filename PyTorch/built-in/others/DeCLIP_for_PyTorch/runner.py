@@ -25,7 +25,7 @@ import torch
 import apex
 from apex import amp
 
-if torch.__version__ >= '1.8.0':
+if torch.__version__ >= '1.8':
     import torch_npu
     from torch_npu.contrib import auto_cast_gpu
 else:

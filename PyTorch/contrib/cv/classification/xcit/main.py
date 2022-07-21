@@ -43,7 +43,7 @@ import utils
 from apex import amp
 import xcit
 
-if torch.__version__ >="1.8.1":
+if torch.__version__ >="1.8":
     import torch_npu
 
 print(torch.__version__)

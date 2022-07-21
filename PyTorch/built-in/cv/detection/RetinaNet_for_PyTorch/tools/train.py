@@ -21,7 +21,7 @@ import warnings
 
 import mmcv
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist

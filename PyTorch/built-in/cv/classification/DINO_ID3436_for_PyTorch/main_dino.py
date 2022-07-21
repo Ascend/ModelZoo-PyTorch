@@ -36,7 +36,7 @@ from apex import amp
 import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 
 

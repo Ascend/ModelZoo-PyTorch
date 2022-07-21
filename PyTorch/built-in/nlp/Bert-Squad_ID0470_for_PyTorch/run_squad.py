@@ -29,7 +29,7 @@ from io import open
 
 import numpy as np
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)

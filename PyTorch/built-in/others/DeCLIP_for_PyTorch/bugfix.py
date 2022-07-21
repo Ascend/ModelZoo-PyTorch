@@ -13,7 +13,8 @@
 # limitations under the License.
 
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 import apex
 
 from prototype.data.datasets import clip_dataset

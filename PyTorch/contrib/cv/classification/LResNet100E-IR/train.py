@@ -19,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.distributed as dist
 
