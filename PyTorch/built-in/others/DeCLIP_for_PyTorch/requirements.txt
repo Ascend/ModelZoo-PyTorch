@@ -8,3 +8,5 @@ sklearn
 easydict
 tensorboardX
 textaugment
+requests
+ipdb
