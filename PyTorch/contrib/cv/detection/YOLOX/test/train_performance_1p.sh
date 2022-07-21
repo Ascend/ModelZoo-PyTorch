@@ -79,7 +79,10 @@ fi
     if  [ ! -d  "./datasets/COCO"  ]; then
         ln -s ${data_path} ./datasets/COCO
     fi
-    taskset -c 0-23 python3.7 tools/train.py -n yolox-x -d 1 -b ${batch_size} --maxx_epoch ${train_epochs}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    taskset -c 0-23 python3.7 tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
+        -d 1 -b ${batch_size} \
+        --maxx_epoch ${train_epochs}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

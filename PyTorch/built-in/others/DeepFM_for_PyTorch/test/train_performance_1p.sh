@@ -52,6 +52,8 @@ cd $cur_path
 
 ASCEND_DEVICE_ID=0
 
+ASCEND_DEVICE_ID=0
+
 #创建DeviceID输出目录，不需要修改
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}

@@ -4,9 +4,9 @@ opencv_python
 loguru
 scikit-image
 tqdm
-torchvision
-Pillow
+torchvision==0.6.0
+Pillow==9.1.0
 thop
 ninja
 tabulate
-tensorboard
+# tensorboard

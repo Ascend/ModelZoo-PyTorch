@@ -41,7 +41,7 @@ class Exp(BaseExp):
         # Actual multiscale ranges: [640-5*32, 640+5*32].
         # To disable multiscale training, set the
         # self.multiscale_range to 0.
-        self.multiscale_range = 0
+        self.multiscale_range = 5.
         # You can uncomment this line to specify a multiscale range
         # self.random_size = (14, 26)
         self.data_dir = None
@@ -72,9 +72,8 @@ class Exp(BaseExp):
 
         self.weight_decay = 5e-4
         self.momentum = 0.9
-        ### self.print_interval = 10
-        self.print_interval = 1
-        self.eval_interval = 300
+        self.print_interval = 10
+        self.eval_interval = 10
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
         # -----------------  testing config ------------------ #

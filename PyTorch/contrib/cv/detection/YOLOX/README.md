@@ -13,11 +13,10 @@ pip install 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonA
 
 ### Training
 
-模型存在动态Shape，为提升性能，固定shape使用分档策略，故第一个epoch前期持续有算子编译，现象为iter_time抖动。性能数据请关注第一个epoch后期或第二个epoch之后。精度测试须300epoch，第一个epoch性能波动对整体影响较小。
+模型存在动态Shape，为提升性能，固定shape使用分档策略，同时模型默认开启多尺度，故训练前期持续有算子编译，现象为iter_time抖动。性能数据请关注性能稳定之后（400step之后很少有算子编译）。精度测试须300epoch，前期性能波动对整体影响较小。
 
-shell脚本会将传入的`data_path`软连接到`./datasets/COCO`，默认只支持coco数据集，这里与原仓一致，使用自己的数据集需首先将数据转为coco格式。
+shell脚本会将传入的`data_path`软连接到`./datasets`目录下，默认使用VOC2012数据集，使用其它数据集须自行修改配置文件并将数据转为COCO格式。
 
-训练完成会对会对最后15个epoch的权重做测试（模型最后15个epoch关闭马赛克增强并增加l1loss），选取最高的MAP值，因此须在训练完成后单独执行测试脚本，测试最后15个epoch的所有权重取最高精度值，并将该权重保存为`best_ckpt.pth`。
 
 ```bash
 # training 1p performance
@@ -31,12 +30,29 @@ bash ./test/train_performance_8p.sh --data_path=real_data_path
 ```
 
 
-### Yolox-x Result
+### Result
+默认配置（yolox-s + VOC2012）
 
 | 名称   | 精度 | 性能    |
 | ------ | ---- | ------- |
-| GPU-1p | -    | 20fps   |
-| NPU-1p | -    | 20.5fps |
-| GPU-8p | 50.7 | 106fps  |
-| NPU-8p | 50.5 | 140fps  |
+| A40-1p | -    | 37.62 fps |
+| 910A-1p | -    | 54.05 fps |
+| A40-8p | 0.410 | 285.85 fps|
+| 910A-8p | 0.407 | 320 fps  |
 
+可选配置（yolox-x + COCO 众智交付）
+
+| 名称   | 精度 | 性能    |
+| ------ | ---- | ------- |
+| V00-1p | -    | 20 fps   |
+| 910A-1p | -    | 20.5 fps |
+| V100-8p | 50.7 | 106 fps  |
+| 910A-8p | 50.5 | 140 fps  |
+
+### Reference
+
+url=https://github.com/Megvii-BaseDetection/YOLOX
+
+branch=main
+
+commit_id=dd5700c24693e1852b55ce0cb170342c19943d8b

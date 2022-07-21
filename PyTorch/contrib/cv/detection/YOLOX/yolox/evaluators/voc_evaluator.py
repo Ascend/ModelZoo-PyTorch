@@ -80,7 +80,7 @@ class VOCEvaluator:
             summary (sr): summary info of evaluation.
         """
         # TODO half to amp_test
-        tensor_type = torch.npu.HalfTensor if half else torch.npu.FloatTensor
+        tensor_type = torch.float16 if half else torch.float32
         model = model.eval()
         if half:
             model = model.half()
@@ -106,7 +106,7 @@ class VOCEvaluator:
             progress_bar(self.dataloader)
         ):
             with torch.no_grad():
-                imgs = imgs.type(tensor_type)
+                imgs = imgs.to(tensor_type).npu()
 
                 # skip the the last iters since batchsize might be not enough for batch inference
                 is_time_record = cur_iter < len(self.dataloader) - 1
@@ -115,7 +115,7 @@ class VOCEvaluator:
 
                 outputs = model(imgs)
                 if decoder is not None:
-                    outputs = decoder(outputs, dtype=outputs.type())
+                    outputs = decoder(outputs, dtype=outputs.dtype)
 
                 if is_time_record:
                     infer_end = time_synchronized()
@@ -134,7 +134,7 @@ class VOCEvaluator:
         if distributed:
             data_list = gather(data_list, dst=0)
             data_list = ChainMap(*data_list)
-            torch.distributed.reduce(statistics, dst=0)
+            torch.distributed.all_reduce(statistics)
 
         eval_results = self.evaluate_prediction(data_list, statistics)
         synchronize()
