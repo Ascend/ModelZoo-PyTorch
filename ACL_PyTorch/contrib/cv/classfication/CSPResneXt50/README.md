@@ -107,7 +107,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 ```
-atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=cspresnext_bs1 --log=debug --soc_version=Ascend${chip_name}
+atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=cspresnext_bs1 --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_cspresnext.config --enable_small_channel=1
 ```
 ${chip_name}可通过npu-smi-info指令查看
 
