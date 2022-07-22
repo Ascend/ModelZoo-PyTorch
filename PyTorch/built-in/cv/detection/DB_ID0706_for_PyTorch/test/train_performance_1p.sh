@@ -1,5 +1,15 @@
 #!/bin/bash
-
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE WORLD_SIZE MASTER_ADDR MASTER_PORT
 # 网络名称，同目录名称
@@ -19,7 +29,7 @@ export DYNAMIC_OP="ADD"
 # 数据集路径,保持为空,不需要修改
 data_path=""
 # 检验预训练模型的路径
-model_path=/npu/traindata/ICDAR2015/db_ckpt
+model_path=$cur_path/path-to-model-directory
 
 # 训练epoch
 train_epochs=1
@@ -58,18 +68,6 @@ elif [ ${device_id} ];then
 else
     "[Error] device id must be config"
     exit 1
-fi
-
-###############指定训练脚本执行路径###############
-# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
-cur_path=`pwd`
-cur_path_last_dirname=${cur_path##*/}
-if [ x"${cur_path_last_dirname}" == x"test" ];then
-    test_path_dir=${cur_path}
-    cd ..
-    cur_path=`pwd`
-else
-    test_path_dir=${cur_path}/test
 fi
 
 #################创建日志输出目录，不需要修改#################
