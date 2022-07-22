@@ -93,7 +93,7 @@ nohup python3.7 train.py  \
      --weight-decay 1e-4 \
      --apex \
      --apex-opt-level O2 \
-     --loss_scale_value 1024 \
+     --loss_scale_value dynamic \
      --seed 1234 \
      --device_id=$ASCEND_DEVICE_ID \
      --print-freq 10 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
