@@ -141,13 +141,12 @@
 
 **（7）验证推理结果**
 
-因为使用ais\_infer推理，生成的txt文件名字（假设保存在2022\_07\_19-10\_39\_38 文件夹中）与输入二进制文件的名字不同，其对应关系保存在sumary.json文件中，故需要先使用rename\_result.py对txt文件进行重命名，再将sumary.json文件删除，便可调用vision_metric_ImageNet.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。具体步骤如下
+因为使用ais\_infer推理，生成的txt文件和sumary.json文件中，故需要将sumary.json文件删除，便可调用vision_metric_ImageNet.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。具体步骤如下
 
-	（a）先使用rename_result.py对结果进行重命名
-	python3 rename_result.py ./ais_infer_txt_result/2022_07_19-10_39_38/
-	（b）删除由ais_infer离线推理生成的sumary.json文件
+	
+	（a）删除由ais_infer离线推理生成的sumary.json文件
      rm -rf ./ais_infer_txt_result/2022_07_19-10_39_38/sumary.json
-    （c）使用vision_metric_ImageNet.py 验证推理结果
+    （b）使用vision_metric_ImageNet.py 验证推理结果
     python3.7 vision_metric_ImageNet.py ./ais_infer_txt_result/2022_07_19-10_39_38/ ./val_label.txt ./ result.json
    
 
