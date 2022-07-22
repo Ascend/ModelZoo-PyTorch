@@ -15,7 +15,7 @@
 print("+-" * 50)
 import torch, os, datetime
 
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import numpy as np
 

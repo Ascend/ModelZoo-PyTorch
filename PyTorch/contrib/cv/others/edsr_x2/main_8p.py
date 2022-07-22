@@ -37,7 +37,7 @@ from apex import amp
 from tqdm import tqdm
 
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch import nn
 import torch.multiprocessing as mp

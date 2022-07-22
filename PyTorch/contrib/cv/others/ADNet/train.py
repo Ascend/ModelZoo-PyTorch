@@ -31,7 +31,7 @@ from models import ADNet
 from dataset import prepare_data, Dataset
 from collections import OrderedDict
 from utils import *
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 
 parser = argparse.ArgumentParser(description="DnCNN")

@@ -23,7 +23,7 @@ import tempfile
 import math
 
 import torch
-if torch.__version__>= "1.8.1":
+if torch.__version__>= "1.8":
     #print("import torch_npu")
     import torch_npu
 import torch.nn.parallel

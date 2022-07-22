@@ -27,7 +27,7 @@ import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
 from skimage.metrics import peak_signal_noise_ratio
 
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 import torch.npu
 import random

@@ -24,7 +24,7 @@ import glob
 import numpy as np
 import apex
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
