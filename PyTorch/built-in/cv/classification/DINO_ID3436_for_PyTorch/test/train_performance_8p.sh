@@ -79,6 +79,10 @@ start_time=$(date +%s)
 export WORLD_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
 
+arch=vit_small
+python3.7 preparation.py --arch ${arch}
+echo "Preparation completed, start to train"
+
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
   export OMP_NUM_THREADS=1
@@ -87,7 +91,7 @@ do
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
   nohup taskset -c $PID_START-$PID_END python3.7 -u main_dino.py \
-    --arch vit_small \
+    --arch ${arch} \
     --data_path $data_path \
     --output_dir ./output \
     --amp \

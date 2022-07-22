@@ -76,13 +76,17 @@ fi
 start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
+arch=vit_small
+python3.7 preparation.py --arch ${arch}
+echo "Preparation completed, start to train"
+
 export WORLD_SIZE=1
 export RANK=$RANK_ID
 export OMP_NUM_THREADS=1
 
 nohup python3.7 -u -m torch.distributed.launch \
 	--nproc_per_node=1 main_dino.py \
-	--arch vit_small \
+	--arch ${arch} \
 	--data_path $data_path \
 	--output_dir ./output \
 	--amp \
