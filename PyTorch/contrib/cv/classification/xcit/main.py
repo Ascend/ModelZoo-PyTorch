@@ -319,7 +319,7 @@ def main(args):
             device='cpu' if args.model_ema_force_cpu else '',
             resume='')
     #1.8版本由于内存激增，需要在这里限制batch size，如果跟随我们的设置进行变化会导致lr异常
-    if torch.__version__ >="1.8.1":
+    if torch.__version__ >="1.8":
         linear_scaled_lr = args.lr * 256 * utils.get_world_size() / 512.0
     else:
         linear_scaled_lr = args.lr * args.batch_size * utils.get_world_size() / 512.0
