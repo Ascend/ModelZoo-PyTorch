@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ def pth2onnx(input_file, output_file):
     dummy_input = torch.randn(1, 3, 224, 224)
     # verbose=True，支持打印onnx节点和对应的PyTorch代码行
     torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, 
-                        output_names = output_names, opset_version=12, verbose=True, enable_onnx_checker=False)
+                        output_names = output_names, opset_version=12, verbose=False, enable_onnx_checker=False)
 
 if __name__ == '__main__': 
     pth2onnx('81.5_T2T_ViT_14.pth.tar','T2T_ViT_14.onnx')
