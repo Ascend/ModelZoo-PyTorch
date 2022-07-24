@@ -90,7 +90,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=T2T_ViT_14.onnx --output=T2T_ViT_14_bs1 --input_format=NCHW --input_shape="input:1,3,224,224" --log=error --soc_version=Ascend${chip_name} --keep_dtype=keep_dtype.cfg
 ```
 
-batch size为4、8、16、32、64的同上
+不同batchsize需要修改输出的OM模型名称以及input_shape中冒号后第一个参数。
 
 执行后在当前目录下生成om模型文件：T2T_ViT_14_bs1.om。
 
