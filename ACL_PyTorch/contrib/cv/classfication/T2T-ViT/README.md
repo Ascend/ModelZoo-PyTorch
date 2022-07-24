@@ -148,7 +148,7 @@ python3.7 T2T_ViT_postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt
 查看输出的结果：
 
 ```
-acc1:0.8051, acc5:0.9522
+acc1:0.81414, acc5:0.9566
 ```
 
 
@@ -167,9 +167,9 @@ Top-1 accuracy of the model is: 81.5%
 
 |     模型     |                        官网pth精度                        | 310P离线推理精度 | 基准性能 | 310P性能 |
 | :----------: | :-------------------------------------------------------: | :--------------: | :------: | :------: |
-| T2T-ViT bs1  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%    |  24fps   |  153fps  |
-| T2T-ViT bs4  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%    |  32fps   |  237fps  |
-| T2T-ViT bs8  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%    |  39fps   |  270fps  |
-| T2T-ViT bs16 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%    |  35fps   |  259fps  |
-| T2T-ViT bs32 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%    |  34fps   |  258fps  |
-| T2T-ViT bs64 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:80.5%    |  36fps   |  247fps  |
+| T2T-ViT bs1  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  24fps   |  142fps  |
+| T2T-ViT bs4  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  32fps   |  179fps  |
+| T2T-ViT bs8  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  39fps   |  212fps  |
+| T2T-ViT bs16 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  35fps   |  210fps  |
+| T2T-ViT bs32 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  34fps   |  203fps  |
+| T2T-ViT bs64 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  36fps   |  198fps  |
