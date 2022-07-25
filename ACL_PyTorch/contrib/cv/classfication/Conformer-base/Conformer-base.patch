@@ -1,0 +1,27 @@
+diff --git a/mmcls/models/utils/attention.py b/mmcls/models/utils/attention.py
+index 155127f..754edb1 100644
+--- a/mmcls/models/utils/attention.py
++++ b/mmcls/models/utils/attention.py
+@@ -370,7 +370,8 @@ class MultiheadAttention(BaseModule):
+         B, N, _ = x.shape
+         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads,
+                                   self.head_dims).permute(2, 0, 3, 1, 4)
+-        q, k, v = qkv[0], qkv[1], qkv[2]
++        # q, k, v = qkv[0], qkv[1], qkv[2]
++        q, k, v = torch.split(qkv, 1, dim=0)
+ 
+         attn = (q @ k.transpose(-2, -1)) * self.scale
+         attn = attn.softmax(dim=-1)
+diff --git a/tools/deployment/pytorch2onnx.py b/tools/deployment/pytorch2onnx.py
+index 1da9594..1135186 100644
+--- a/tools/deployment/pytorch2onnx.py
++++ b/tools/deployment/pytorch2onnx.py
+@@ -84,8 +84,6 @@ def pytorch2onnx(model,
+         dynamic_axes = {
+             'input': {
+                 0: 'batch',
+-                2: 'width',
+-                3: 'height'
+             },
+             'probs': {
+                 0: 'batch'
