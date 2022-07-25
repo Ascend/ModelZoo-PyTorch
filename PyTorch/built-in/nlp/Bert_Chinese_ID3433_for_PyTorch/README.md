@@ -22,9 +22,17 @@ cd ..
 
 ### 3.训练
 
-#### （可选）数据集准备
+#### 数据集下载
 
-以开源的中文数据集zhwiki为例，说明如何将原始数据集转为模型所需的单个txt文件。如果训练数据已经符合要求，可跳过这一步。
+你可以直接下载已经预处理完的数据，进行训练，无需进一步处理：
+
+```
+wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/temp/sasa/data/zhwiki-20220401-pages-articles-ok.txt --no-check-certificate
+```
+
+#### （可选）数据集预处理
+
+如果你想重新处理zhwiki的原始数据，可按照以下步骤操作。
 
 下载zhwiki
 
@@ -38,11 +46,10 @@ wget https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.
 bzip2 -dk zhwiki-latest-pages-articles.xml.bz2
 ```
 
-安装wikiextractor并提取文本，其中extracted/wiki_zh为保存路径，不要修改
+使用工程目录的WikiExtractor.py提取文本，其中extracted/wiki_zh为保存路径，不要修改
 
 ```
-pip3 install wikiextractor
-python3 -m wikiextractor.WikiExtractor zhwiki-latest-pages-articles.xml -b 100M -o extracted/wiki_zh
+python3 WikiExtractor.py zhwiki-latest-pages-articles.xml -b 100M -o extracted/wiki_zh
 ```
 
 将多个文档整合为一个txt文件，在本工程根目录下执行
