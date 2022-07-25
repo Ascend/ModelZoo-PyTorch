@@ -53,9 +53,9 @@ We use standard ImageNet dataset.
  
   ```
 
-### Self-Supervised Pre-training
+### Accuracy Test
 
-To train `MoBY` with `Swin Transformer Tiny` on ImageNet, run:
+To pretrain `MoBY` with `Swin Transformer Tiny` on ImageNet-1K for 100 epochs and do linear evaluation, run:
 
 ```bash
 bash ./test/train_full_8p.sh --data_path=<data_path>
@@ -75,13 +75,6 @@ For performance test on 8 NPU, run:
 bash ./test/train_performance_8p.sh --data_path=<data_path>
 ```
 
-### Linear Evaluation (for accuracy test)
-
-To pretrain `MoBY` with `Swin Transformer Tiny` on ImageNet-1K for 100 epochs and do linear evaluation, run:
-
-```bash
-bash ./test/eval_8p.sh --data_path=<data_path>
-```
 
 ### Training result for `MoBY Swin-T`
 
