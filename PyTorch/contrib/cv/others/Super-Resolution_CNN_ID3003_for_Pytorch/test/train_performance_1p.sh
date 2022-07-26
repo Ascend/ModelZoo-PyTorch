@@ -17,7 +17,7 @@ Network=`echo $(cd $(dirname $0);pwd) | awk -F"/" '{print $(NF-1)}'`
 export RANK_SIZE=1
 export RANK_ID=0
 export JOB_ID=10087
-
+export NPU_CALCULATE_DEVICE=ASCEND_DEVICE_ID
 # 路径参数初始化
 data_path=""
 output_path=""
@@ -132,7 +132,7 @@ FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 #train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
 #train_accuracy=`grep "best epoch" ${print_log}  | awk '{print $NF}'`
 # 提取所有loss打印信息
-grep "loss" ${print_log} | awk '{print $3}' | tr -d "loss=" | tr -d ","  > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+grep "loss=" ${print_log} | awk -F 'loss=' '{print $2}'|awk -F ',' '{print $1}'  > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 
 ###########################################################
