@@ -18,7 +18,8 @@ device_id=0
 learning_rate=0.008
 # 加载数据进程数
 workers=0
-
+#预训练模型路径
+pretrained_model_path="/npu/rfcn_pretrained_model/"
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -83,18 +84,26 @@ else
 fi
 
 # 新建数据集及与训练权重放置目录，并建立软连接
-pretrained_model_path="/npu/rfcn_pretrained_model/"
-mkdir data
+mkdir -p data
 cd data
-ln -s ${data_path}/VOCdevkit2007 VOCdevkit2007
-ln -s ${data_path} pretrained_model
+ln -nsf ${data_path}/VOCdevkit2007 VOCdevkit2007
 cd ..
+
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
+    ln -nsf ${data_path}/pretrained_model  ${cur_path}/data/
+else
+    ln -nsf ${data_path} ${cur_path}/data/pretrained_model
+fi
 
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-taskset -c 0-19 python3.7 ./trainval_net_8p.py \
+nohup taskset -c 0-19 python3.7 ./trainval_net_8p.py \
     --net=res101 \
     --nw=${workers} \
     --lr=${learning_rate} \
@@ -110,7 +119,7 @@ taskset -c 0-19 python3.7 ./trainval_net_8p.py \
     --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
-python3.7 ./test_net.py \
+nohup python3.7 ./test_net.py \
     --net=res101 \
     --cfg=cfg/res101.yml \
     --checksession 1 \
