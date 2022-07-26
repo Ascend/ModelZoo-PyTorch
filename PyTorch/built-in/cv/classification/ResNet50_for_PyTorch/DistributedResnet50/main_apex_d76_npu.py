@@ -407,7 +407,7 @@ def main_worker(gpu, ngpus_per_node, args):
     args.gpu = args.process_device_map[gpu]
 
     if args.gpu is not None:
-        print("[gpu id:",args.gpu,"]","Use GPU: {} for training".format(args.gpu))
+        print("[npu id:",args.gpu,"]","Use NPU: {} for training".format(args.gpu))
 
     if args.distributed:
         if args.dist_url == "env://" and args.rank == -1:
@@ -435,7 +435,7 @@ def main_worker(gpu, ngpus_per_node, args):
         pretrained_dict.pop('module.fc.bias')
         model.load_state_dict(pretrained_dict, strict=False)
     else:
-        print("[gpu id:",args.gpu,"]","=> creating model '{}'".format(args.arch))
+        print("[npu id:",args.gpu,"]","=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch](num_classes=args.num_classes)
 
     if args.fine_tuning:
@@ -450,9 +450,9 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         model.parameters()
 
-    print("[gpu id:",args.gpu,"]","===============main_worker()=================")
-    print("[gpu id:",args.gpu,"]",args)
-    print("[gpu id:",args.gpu,"]","===============main_worker()=================")
+    print("[npu id:",args.gpu,"]","===============main_worker()=================")
+    print("[npu id:",args.gpu,"]",args)
+    print("[npu id:",args.gpu,"]","===============main_worker()=================")
     nvidia_logger_init(args)
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -481,7 +481,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
             # available GPUs if device_ids are not set
-            print("[gpu id:",args.gpu,"]","============================test   args.gpu is not None   else==========================")
+            print("[npu id:",args.gpu,"]","============================test   args.gpu is not None   else==========================")
     elif args.gpu is not None:
         print("[gpu id:",args.gpu,"]","============================test   elif args.gpu is not None:==========================")
         if args.device == 'npu':
@@ -535,7 +535,7 @@ def main_worker(gpu, ngpus_per_node, args):
             else:
                 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
         else:
-            print("[gpu id:",args.gpu,"]","======================test   args.gpu is not None   else==================")
+            print("[npu id:",args.gpu,"]","======================test   args.gpu is not None   else==================")
             model = torch.nn.parallel.DistributedDataParallel(model)
 
     elif args.gpu is not None:
@@ -567,7 +567,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
-            print("[gpu id:",args.gpu,"]","=> loading checkpoint '{}'".format(args.resume))
+            print("[npu id:",args.gpu,"]","=> loading checkpoint '{}'".format(args.resume))
             if args.gpu is None:
                 checkpoint = torch.load(args.resume)
             else:
@@ -584,10 +584,10 @@ def main_worker(gpu, ngpus_per_node, args):
                 best_acc1 = best_acc1.to(args.gpu)
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            print("[gpu id:",args.gpu,"]","=> loaded checkpoint '{}' (epoch {})"
+            print("[npu id:",args.gpu,"]","=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
-            print("[gpu id:",args.gpu,"]","=> no checkpoint found at '{}'".format(args.resume))
+            print("[npu id:",args.gpu,"]","=> no checkpoint found at '{}'".format(args.resume))
 
     cudnn.benchmark = True
 
@@ -831,7 +831,7 @@ def validate(val_loader, model, criterion, args,ngpus_per_node):
         if i % args.print_freq == 0:
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                     and args.rank % ngpus_per_node == 0):
-                print("[gpu id:",args.gpu,"]",'[AVG-ACC] * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+                print("[npu id:",args.gpu,"]",'[AVG-ACC] * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
                         .format(top1=top1, top5=top5))
     return top1.avg
 
@@ -878,7 +878,7 @@ class ProgressMeter(object):
     def display(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
-        print("[gpu id:","0","]",'\t'.join(entries))
+        print("[npu id:","0","]",'\t'.join(entries))
 
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
