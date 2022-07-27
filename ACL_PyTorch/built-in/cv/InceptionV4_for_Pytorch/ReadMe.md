@@ -84,7 +84,7 @@
 
 	# 配置环境变量
 	source /usr/local/Ascend/ascend-toolkit/set_env.sh
-        export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
+	export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
 	batch_size=$1
 	chip_name=$2
 	# 使用二进制输入时，执行如下命令
