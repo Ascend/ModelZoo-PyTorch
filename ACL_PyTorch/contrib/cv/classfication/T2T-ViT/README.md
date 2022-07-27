@@ -54,6 +54,7 @@ pyyaml == 6.0
 
 ```
 conda create -n ${env_name} python=3.7.5
+conda activate ${env_name}
 pip install -r requirements.txt 
 ```
 
