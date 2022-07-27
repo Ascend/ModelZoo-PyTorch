@@ -61,8 +61,8 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-if [ ! -d  "./datasets/COCO"  ]; then
-    ln -s ${data_path} ./datasets/COCO
+if [ ! -d  "./datasets/VOCdevkit"  ]; then
+    ln -s ${data_path} ./datasets/VOCdevkit
 fi
 
 KERNEL_NUM=$(($(nproc)/8))
@@ -90,7 +90,7 @@ then
         --use_npu \
         --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
 else
-    nohup python3.7 -u tools/train.py -n yolox-x \
+    nohup python3.7 -u tools/train.py -n yolox-s \
         -f exps/example/yolox_voc/yolox_voc_s.py \
         -b ${batch_size} \
         -d 8 \
