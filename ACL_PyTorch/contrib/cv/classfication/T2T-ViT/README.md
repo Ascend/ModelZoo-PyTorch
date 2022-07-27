@@ -22,6 +22,7 @@ conda create -n ${env_name} python=3.7.5
 conda activate ${env_name}
 pip install -r requirements.txt 
 ```
+env_name为虚拟环境的名称
 
 ### 2.2 获取开源仓代码
 ```shell
@@ -32,14 +33,11 @@ git reset --hard 0f63dc9558f4d192de926504dbddfa1b3f5db6ca
 ```
 
 ## 3 源码改动
-1.pytorch在1.8版本之后container_abcs就已经被移除，因此在使用timm时会出现错误
-
-因此需要修改timm包内models/layers文件夹中的helpers.py文件第6行：
+1.pytorch在1.8版本之后container_abcs就已经被移除，因此在使用timm时会出现错误，因此需要修改timm包内models/layers文件夹中的helpers.py文件第6行：
 ```
 import collections.abc as container_abcs
 ```
-2.由于310P上无GPU，因此在使用timm时会出现错误
-因此需要修改timm包内data文件夹中的loader.py文件第66、67行和第78行的__iter__：
+2.由于310P上无GPU，因此在使用timm时会出现错误，因此需要修改timm包内data文件夹中的loader.py文件第66、67行和第78行的__iter__：
 ```
 self.mean = torch.tensor([x * 255 for x in mean]).view(1, 3, 1, 1) 
 self.std = torch.tensor([x * 255 for x in std]).view(1, 3, 1, 1)
@@ -63,8 +61,7 @@ def __iter__(self):
 
         yield input, target 
 ```
-3.由于onnx模型中的add算子输入的一个常量数值非常小，在float32情况下可以正常表示，但float16无法正常表示这个常量，导致推理出现精度问题
-因此需要修改models文件夹内token_performer.py文件：
+3.由于torch.einsum算子出现精度问题，因此需要修改models文件夹内token_performer.py文件：
 添加一个函数forgr_einsum：
 ```
 def forge_einsum(equation, a, b):
