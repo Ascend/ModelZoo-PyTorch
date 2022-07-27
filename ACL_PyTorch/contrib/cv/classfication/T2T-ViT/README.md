@@ -32,7 +32,6 @@ git reset --hard 0f63dc9558f4d192de926504dbddfa1b3f5db6ca
 ```
 
 ## 3 源码改动
-为什么改动，怎样改动？
 1.pytorch在1.8版本之后container_abcs就已经被移除，因此在使用timm时会出现错误
 
 因此需要修改timm包内models/layers文件夹中的helpers.py文件第6行：
@@ -156,15 +155,13 @@ chip_name可通过`npu-smi info`指令查看，例：310P3<br>
 
 ### 5.2 数据集预处理
 
-1.备份一份开源仓的main.py文件，并命名为main_copy.py，用于生成前后处理文件。
-
+1.备份一份开源仓的main.py文件，并命名为main_copy.py，用于生成前后处理文件。<br>
 2. 生成预处理脚本T2T_ViT_preprocess.py
 ```shell
 patch -p1 main.py T2T_ViT_preprocess.patch
 ```
-得到的main.py重命名为T2T_ViT_preprocess.py。
-
-2. 执行预处理脚本，生成数据集预处理后的bin文件
+得到的main.py重命名为T2T_ViT_preprocess.py。<br>
+3. 执行预处理脚本，生成数据集预处理后的bin文件
 
 ```shell
 python3.7 T2T_ViT_preprocess.py -–data-dir ${dataset_path} --out-dir ${prep_output_dir} –gt-path ${groundtruth_path} -–batch-size ${batchsize}
@@ -241,7 +238,7 @@ $$ 吞吐率 = \frac {bs * 1000} {mean}$$
 
 总结：
  1. 310P上离线推理的精度(81.414%)与Pytorch在线推理精度(81.5%)基本持平；
- 2. 性能最优的batch_size为16，310P性能/性能基准=6倍，已通过性能评审。
+ 2. 性能最优的batch_size为16，310P性能/性能基准=6倍。
 
 各batchsize对比结果如下：
 
