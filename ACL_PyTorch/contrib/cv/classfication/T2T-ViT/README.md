@@ -39,15 +39,22 @@ commit_id = 143df41f2e372364188027d826393cdff99a37fd
 
 ```
 CANN 5.1.RC1
-torch == 1.5.0
-torchvision == 0.6.0
+python 
+torch == 1.9.0
+torchvision == 0.10.0
 onnx == 1.12.0
 numpy==1.21.6
-Pillow == 9.1.1
+Pillow == 9.2.0
 timm == 0.3.4
 onnxruntime == 1.11.1
-onnx-simplifier == 0.3.10
+onnx-simplifier == 0.4.0
 pyyaml == 6.0
+```
+创建虚拟环境并安装依赖
+
+```
+conda create -n ${env_name} python=3.7.5
+pip install -r requirements.txt 
 ```
 
  **说明：**
