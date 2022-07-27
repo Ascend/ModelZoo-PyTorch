@@ -22,14 +22,6 @@ cd ..
 
 ### 3.训练
 
-#### 数据集下载
-
-你可以直接下载已经预处理完的数据，进行训练，无需进一步处理：
-
-```
-wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/temp/sasa/data/zhwiki-20220401-pages-articles-ok.txt --no-check-certificate
-```
-
 #### （可选）数据集预处理
 
 如果你想重新处理zhwiki的原始数据，可按照以下步骤操作。
@@ -83,12 +75,29 @@ bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=32 
 bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡精度训练
 bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡性能训练
 ```
-
+```
 训练脚本参数说明：
-    --data_path：  数据集路径
+	--data_path：  数据集路径
 	--model_size： 训练model是base或者是large
-    --device_id：  单卡训练时所使用的device_id
+	--device_id：  单卡训练时所使用的device_id
 
+双机16卡训练
+```
+
+```
+bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练    # 8卡精度训练
+bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练   # 8卡性能训练
+```
+
+```
+训练脚本参数说明：
+	--data_path：  数据集路径
+	--model_size： 训练model是base或者是large
+	--device_id：  单卡训练时所使用的device_id
+	--node_rank:   集群节点序号，master节点是0， 其余节点依次加1
+	--master_addr：master节点服务器的ip
+	--master_port: 分布式训练中,master节点使用的端口
+```
 
 #### Bert-large
 
@@ -114,11 +123,29 @@ bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model
 bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡性能训练
 ```
 
+```
 训练脚本参数说明：
-    --data_path：  数据集路径
+	--data_path：  数据集路径
 	--model_size： 训练model是base或者是large
-    --device_id：  单卡训练时所使用的device_id
+	--device_id：  单卡训练时所使用的device_id
+```
 
+双机16卡训练
+
+```
+bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练    # 8卡精度训练
+bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练   # 8卡性能训练
+```
+
+```
+训练脚本参数说明：
+	--data_path：  数据集路径
+	--model_size： 训练model是base或者是large
+	--device_id：  单卡训练时所使用的device_id
+	--node_rank:   集群节点序号，master节点是0， 其余节点依次加1
+	--master_addr：master节点服务器的ip
+	--master_port: 分布式训练中,master节点使用的端口
+```
 
 ### 附录：单机8卡训练脚本参数说明
 
