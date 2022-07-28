@@ -78,7 +78,7 @@ python3.7 -u ./main.py \
         --weight-decay=1e-4 \
         --amp \
         --opt-level O2 \
-        --loss-scale-value 1024.0 \
+        --loss-scale-value 1024 \
         --ddp \
         --combine-grad \
         --nodes 1 \

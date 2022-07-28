@@ -21,6 +21,8 @@ import time
 import random
 import warnings
 import torch
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.multiprocessing as mp
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -139,7 +141,7 @@ def main_worker(process_id, ngpus_per_node, args):
 
     # each process npu/gpu device id
     deviceid = args.process_device_map[process_id]
-    loc = "npu: {}".format(deviceid)
+    loc = "npu:{}".format(deviceid)
     if deviceid is not None:
         print("Use NPU: {} for training".format(deviceid))
 
@@ -197,7 +199,7 @@ def main_worker(process_id, ngpus_per_node, args):
                                         optimizer, 
                                         opt_level = args.opt_level, 
                                         combine_grad = args.combine_grad, 
-                                        loss_scale = args.loss_scale_value)
+                                        loss_scale = 'dynamic')
     if args.distributed: 
         if args.pretrained:
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids = [deviceid], broadcast_buffers = False,

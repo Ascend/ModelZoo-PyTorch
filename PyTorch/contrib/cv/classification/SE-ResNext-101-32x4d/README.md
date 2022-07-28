@@ -54,4 +54,4 @@ test/output/devie_id/Se-ResNext101_bs1024_8p_acc.log   # 8p training accuracy re
 |  -       |  221      | GPU     | 1          |   1      | O2       |
 |  -       |  395      | NPU     | 1          |   1      | O2       |
 |  78.34  |  1480    | GPU     | 8          | 100      | O2       |
-|  78.08  |  2671     | NPU     | 8          | 100      | O2       |
+|  77.75  |  1978     | NPU     | 8          | 100      | O2       |
