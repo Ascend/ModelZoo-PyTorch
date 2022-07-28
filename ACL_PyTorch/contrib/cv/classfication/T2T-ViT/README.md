@@ -35,63 +35,28 @@ git reset --hard 0f63dc9558f4d192de926504dbddfa1b3f5db6ca
 ```
 
 ## 3 源码改动
-1. torch在1.8版本之后container_abcs已经被移除，使用timm包内的models/layers/helpers.py时会报错，因此需要修改此文件第6行：
+1. models/token_performer.py文件打补丁：
+```shell
+patch -p1 models/token_performer.py token_performer.patch
 ```
-import collections.abc as container_abcs
-```
-2. 由于310P上无GPU，使用timm包内的data/loader.py时会报错，因此需要修改此文件第66、67行和第78行的__iter__方法：
-```
-# 第66、67行改为：
-self.mean = torch.tensor([x * 255 for x in mean]).view(1, 3, 1, 1) 
-self.std = torch.tensor([x * 255 for x in std]).view(1, 3, 1, 1)
+改动原因：<br>
+由于OM模型中Einsum算子低精度计算（float16）会放大误差，导致精度问题。在转OM时使用--keep_dtype参数，尝试让Einsum算子保持原精度(float32)计算，但Einsum算子前面的TransData算子又会使此操作失效。所以定位到Einsum算子在模型源码中的位置，对其进行等价替换后，重新转ONNX，转OM时再使用--keep_dtype参数，TransData算子被消除，--keep_dtype参数生效。<br>
 
-# 第78行__iter__方法替换如下：
-def __iter__(self):
-        first = True
-        for next_input, next_target in self.loader:
-            if self.fp16:
-                next_input = next_input.half().sub_(self.mean).div_(self.std)
-            else:
-                next_input = next_input.float().sub_(self.mean).div_(self.std)
-            if self.random_erasing is not None:
-                next_input = self.random_erasing(next_input)
+2. 进入虚拟环境中 timm/models/layers/文件夹内：
+```shell
+patch -p1 helpers.py ${patch_path}
+```
+patch_path为helpers.patch文件路径。<br>
+改动原因：<br>
+torch在1.8版本之后container_abcs已经被移除，使用timm包内的models/layers/helpers.py时会报错。<br>
 
-            if not first:
-                yield input, target
-            else:
-                first = False
-            input = next_input
-            target = next_target
-
-        yield input, target 
+3. 进入虚拟环境中timm/data文件夹内：
+```shell
+patch -p1 loader.py ${patch_path}
 ```
-3. 由于OM模型中Einsum算子低精度计算（float16）会放大误差，导致精度问题。在转OM时使用--keep_dtype参数，尝试让Einsum算子保持原精度(float32)计算，但Einsum算子前面的TransData算子又会使此操作失效。所以定位到Einsum算子在模型源码中的位置，对其进行等价替换后，重新转ONNX，转OM时再使用--keep_dtype参数，TransData算子被消除，--keep_dtype参数生效。对源码的具体修改如下：<br>
-在models/token_performer.py文件中添加一个方法forge_einsum：
-```
-def forge_einsum(equation, a, b):
-    if equation == 'bti,bi->bt':
-        return torch.sum(a * b.unsqueeze(1), dim=2)
-    elif equation == 'bti,bni->btn':
-        return torch.sum(a.unsqueeze(2) * b.unsqueeze(1), dim=3)
-    elif equation == 'bti,mi->btm':
-        return torch.sum(a.unsqueeze(2) * b.unsqueeze(0), dim=3)
-    elif equation == 'bin,bim->bnm':
-        return torch.sum(a.unsqueeze(3) * b.unsqueeze(2), dim=1)
-    else:
-        raise Exception('Unkown equation')
-```
-并修改第41、48、49、50行：
-```
-# 第41行
-wtx = forge_einsum('bti,mi->btm', x.float(), self.w)
-# 第48行
-D = forge_einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)
-# 第49行
-kptv = forge_einsum('bin,bim->bnm', v.float(), kp)
-# 第50行
-y = forge_einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)
-```
-
+patch_path为loaders.patch文件路径。<br>
+改动原因：<br>
+由于310P上无GPU，使用timm包内的data/loader.py时会报错。<br>
 
 ## 4 模型转换
 
