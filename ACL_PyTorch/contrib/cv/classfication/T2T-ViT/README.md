@@ -105,11 +105,11 @@ wget https://github.com/yitu-opensource/T2T-ViT/releases/download/main/81.5_T2T_
 2. 执行T2T_ViT_pth2onnx.py脚本，生成ONNX模型文件
 
 ```shell
-python3.7 T2T_ViT_pth2onnx.py --pth-dir ${pth_dir} --onnx-dir ${onnx_dir}
+python3.7 T2T_ViT_pth2onnx.py --pth-dir ${pth_path} --onnx-dir ${onnx_path}
 ```
 参数说明：<br>
---pth-dir: Pytorch模型文件路径<br>
---onnx-dir: ONNX模型文件保存路径（包括文件名）<br>
+--pth-path: Pytorch模型文件路径<br>
+--onnx-path: ONNX模型文件保存路径（包括文件名）<br>
 
 ### 4.2 ONNX转OM模型
 
