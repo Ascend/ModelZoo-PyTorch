@@ -78,7 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 kernel_num=$(($(nproc) / 8))
-python3.7.5 -u train.py "$@" \
+python3.7 -u train.py "$@" \
     --num-workers $kernel_num \
     --data $data_path \
     --device npu:$ASCEND_DEVICE_ID \
@@ -87,7 +87,7 @@ python3.7.5 -u train.py "$@" \
     --scheduler cosine \
     --label-smoothing-epsilon 0.1 \
     --batch-size $batch_size \
-    --print-freq 10  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --print-freq 10 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

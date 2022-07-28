@@ -12,7 +12,7 @@ export RANK_SIZE=8
 data_path=""
 
 # 训练epoch
-train_epochs=120
+train_epochs=3
 # 学习率
 learning_rate=0.6
 
@@ -74,7 +74,7 @@ kernel_num=$(($(nproc) / 8))
 pid_start=$((kernel_num * rank))
 pid_end=$((pid_start + kernel_num - 1))
 
-taskset -c $pid_start-$pid_end python3.7.5 -u train.py "$@" \
+taskset -c $pid_start-$pid_end python3.7 -u train.py "$@" \
     --distributed \
     --num-devices 8 \
     --local-rank $rank \
