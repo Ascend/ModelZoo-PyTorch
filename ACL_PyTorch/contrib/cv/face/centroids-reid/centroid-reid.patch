@@ -1,0 +1,69 @@
+diff --git a/losses/center_loss.py b/losses/center_loss.py
+index 555f575..5a579e9 100644
+--- a/losses/center_loss.py
++++ b/losses/center_loss.py
+@@ -17,11 +17,7 @@ class CenterLoss(nn.Module):
+         self.num_classes = num_classes
+         self.feat_dim = feat_dim
+         self.use_gpu = use_gpu
+-
+-        if self.use_gpu:
+-            self.centers = nn.Parameter(torch.randn(self.num_classes, self.feat_dim).cuda())
+-        else:
+-            self.centers = nn.Parameter(torch.randn(self.num_classes, self.feat_dim))
++        self.centers = nn.Parameter(torch.randn(self.num_classes, self.feat_dim))
+ 
+     def forward(self, x, labels):
+         """
+diff --git a/modelling/bases.py b/modelling/bases.py
+index 40ba360..21cada8 100644
+--- a/modelling/bases.py
++++ b/modelling/bases.py
+@@ -170,11 +170,11 @@ class ModelBase(pl.LightningModule):
+     def validation_step(self, batch, batch_idx):
+         self.backbone.eval()
+         self.bn.eval()
+-        x, class_labels, camid, idx = batch
++        x = batch
+         with torch.no_grad():
+             _, emb = self.backbone(x)
+             emb = self.bn(emb)
+-        return {"emb": emb, "labels": class_labels, "camid": camid, "idx": idx}
++        return emb
+ 
+     @rank_zero_only
+     def validation_create_centroids(
+@@ -384,7 +384,7 @@ class ModelBase(pl.LightningModule):
+         return masks, labels_list_copy
+ 
+     @rank_zero_only
+-    def test_step(self, batch, batch_idx):
++    def test_step(self, batch, batch_idx=1):
+         ret = self.validation_step(batch, batch_idx)
+         return ret
+ 
+diff --git a/utils/reid_metric.py b/utils/reid_metric.py
+index 74743c1..547919e 100644
+--- a/utils/reid_metric.py
++++ b/utils/reid_metric.py
+@@ -74,20 +74,11 @@ class R1_mAP:
+         self.num_query = num_query
+         self.max_rank = max_rank
+         self.feat_norm = feat_norm
+-        self.current_epoch = pl_module.trainer.current_epoch
+         self.hparms = pl_module.hparams
+         self.dist_func = get_dist_func(self.hparms.SOLVER.DISTANCE_FUNC)
+         self.pl_module = pl_module
+ 
+-        try:
+-            self.save_root_dir = pl_module.trainer.logger.log_dir
+-        except:
+-            self.save_root_dir = pl_module.trainer.logger[0].log_dir
+ 
+-        try:
+-            self.dataset = pl_module.trainer.val_dataloaders[0].dataset.samples
+-        except:
+-            self.dataset = pl_module.trainer.test_dataloaders[0].dataset.samples
+ 
+     # @staticmethod
+     def _commpute_batches_double(self, qf, gf):
