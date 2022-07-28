@@ -1,7 +1,17 @@
 #!/bin/bash
 
-#当前路径,不需要修改
+
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
@@ -11,7 +21,6 @@ RANK_ID_START=0
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
-test_path_dir=""
 
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
@@ -86,19 +95,31 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+# 指定训练所使用的npu device卡id
+device_id=0
 
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
 if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
-        rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+        rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     else
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
+        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
 fi
 
 
 #修改参数
-sed -i "s|\"coco_2017_train\": (\"coco/train2017\", \"coco/annotations/instances_train2017.json\")|\"coco_2017_train\": (\"$data_path/coco/train2017\", \"$data_path/coco/annotations/instances_train2017.json\")|g" $cur_path/../detectron2/data/datasets/builtin.py
-sed -i "s|\"coco_2017_val\": (\"coco/val2017\", \"coco/annotations/instances_val2017.json\")|\"coco_2017_val\": (\"$data_path/coco/val2017\", \"$data_path/coco/annotations/instances_val2017.json\")|g" $cur_path/../detectron2/data/datasets/builtin.py
-sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \"$data_path/R-101.pkl\"|g" $cur_path/../configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
+sed -i "s|\"coco_2017_train\": (\"coco/train2017\", \"coco/annotations/instances_train2017.json\")|\"coco_2017_train\": (\"$data_path/coco/train2017\", \"$data_path/coco/annotations/instances_train2017.json\")|g" $cur_path/detectron2/data/datasets/builtin.py
+sed -i "s|\"coco_2017_val\": (\"coco/val2017\", \"coco/annotations/instances_val2017.json\")|\"coco_2017_val\": (\"$data_path/coco/val2017\", \"$data_path/coco/annotations/instances_val2017.json\")|g" $cur_path/detectron2/data/datasets/builtin.py
+sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \"$data_path/R-101.pkl\"|g" $cur_path/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
 wait
 
 check_etp_flag=`env | grep etp_running_flag`
@@ -109,13 +130,13 @@ else
     source ${test_path_dir}/env_npu.sh
 fi
 
-cd $cur_path/../
+cd $cur_path
 
-python3 setup.py build develop > $cur_path/../log.txt
+python3.7 setup.py build develop > $cur_path/log.txt
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3 tools/train_net.py \
+nohup python3.7 tools/train_net.py \
         --config-file  configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml \
         AMP 1 \
         OPT_LEVEL O2 \
@@ -128,9 +149,13 @@ nohup python3 tools/train_net.py \
         MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
         MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
         DATALOADER.NUM_WORKERS 4 \
-        SOLVER.BASE_LR 0.0025 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        SOLVER.BASE_LR 0.0025 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
-
+#修改参数
+sed -i "s|\"coco_2017_train\": (\"$data_path/coco/train2017\", \"$data_path/coco/annotations/instances_train2017.json\")|\"coco_2017_train\": (\"coco/train2017\", \"coco/annotations/instances_train2017.json\")|g" $cur_path/detectron2/data/datasets/builtin.py
+sed -i "s|\"coco_2017_val\": (\"$data_path/coco/val2017\", \"$data_path/coco/annotations/instances_val2017.json\")|\"coco_2017_val\": (\"coco/val2017\", \"coco/annotations/instances_val2017.json\")|g" $cur_path/detectron2/data/datasets/builtin.py
+sed -i "s|WEIGHTS: \"$data_path/R-101.pkl\"|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|g" $cur_path/configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml
+wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
@@ -140,7 +165,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 #Time=`grep total_loss $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F 'time: ' '{print $2}'|awk '{print $1}'|awk 'NR>1'|awk '{sum+=$1} END {print sum/NR}'|sed s/[[:space:]]//g`
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${Time}'}'`
-FPS=`grep FPS $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
+FPS=`grep FPS $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -164,19 +189,19 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep total_loss $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F 'total_loss: ' '{print $2}'|awk '{print $1}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep total_loss $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F 'total_loss: ' '{print $2}'|awk '{print $1}' > $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
-ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-#echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "Network = ${Network}" > $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+#echo "TrainAccuracy = ${train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
