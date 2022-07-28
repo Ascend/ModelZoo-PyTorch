@@ -129,9 +129,9 @@ atc --framework=5 --model=${onnx-path} --output=${om-path} --input_format=NCHW -
 ```
 参数说明：<br>
 --model：ONNX模型文件路径<br>
---output 生成OM模型的保存路径（含文件名）<br>
-执行命令前，需设置--input_shape参数中bs的数值，例如：1、4、8、16、32、64 <br> 
-chip_name可通过`npu-smi info`指令查看，例：310P3<br>
+--output：生成OM模型的保存路径（含文件名）<br>
+执行命令前，需设置--input_shape参数中bs的数值，例如：1、4、8、16、32、64。<br> 
+chip_name可通过`npu-smi info`指令查看，例：310P3。<br>
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ## 5 数据预处理
