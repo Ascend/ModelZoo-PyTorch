@@ -1,0 +1,48 @@
+--- token_performer.py	2022-07-28 16:56:45.768925093 +0800
++++ token_performer.py	2022-07-28 16:55:58.772924517 +0800
+@@ -5,6 +5,20 @@
+ import torch
+ import torch.nn as nn
+ 
++
++def forge_einsum(equation, a, b):
++    if equation == 'bti,bi->bt':
++        return torch.sum(a * b.unsqueeze(1), dim=2)
++    elif equation == 'bti,bni->btn':
++        return torch.sum(a.unsqueeze(2) * b.unsqueeze(1), dim=3)
++    elif equation == 'bti,mi->btm':
++        return torch.sum(a.unsqueeze(2) * b.unsqueeze(0), dim=3)
++    elif equation == 'bin,bim->bnm':
++        return torch.sum(a.unsqueeze(3) * b.unsqueeze(2), dim=1)
++    else:
++        raise Exception('Unkown equation')
++
++
+ class Token_performer(nn.Module):
+     def __init__(self, dim, in_dim, head_cnt=1, kernel_ratio=0.5, dp1=0.1, dp2 = 0.1):
+         super().__init__()
+@@ -38,16 +52,20 @@
+         # SM(x, y) = E_w[exp(w^T x - |x|/2) exp(w^T y - |y|/2)]
+         # therefore return exp(w^Tx - |x|/2)/sqrt(m)
+         xd = ((x * x).sum(dim=-1, keepdim=True)).repeat(1, 1, self.m) / 2
+-        wtx = torch.einsum('bti,mi->btm', x.float(), self.w)
++        # wtx = torch.einsum('bti,mi->btm', x.float(), self.w)
++        wtx = forge_einsum('bti,mi->btm', x.float(), self.w)
+ 
+         return torch.exp(wtx - xd) / math.sqrt(self.m)
+ 
+     def single_attn(self, x):
+         k, q, v = torch.split(self.kqv(x), self.emb, dim=-1)
+         kp, qp = self.prm_exp(k), self.prm_exp(q)  # (B, T, m), (B, T, m)
+-        D = torch.einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)  # (B, T, m) * (B, m) -> (B, T, 1)
+-        kptv = torch.einsum('bin,bim->bnm', v.float(), kp)  # (B, emb, m)
+-        y = torch.einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)  # (B, T, emb)/Diag
++        # D = torch.einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)  # (B, T, m) * (B, m) -> (B, T, 1)
++        D = forge_einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)
++        # kptv = torch.einsum('bin,bim->bnm', v.float(), kp)  # (B, emb, m)
++        kptv = forge_einsum('bin,bim->bnm', v.float(), kp)  # (B, emb, m)
++        # y = torch.einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)  # (B, T, emb)/Diag
++        y = forge_einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)
+         # skip connection
+         y = v + self.dp(self.proj(y))  # same as token_transformer in T2T layer, use v as skip connection
+ 
