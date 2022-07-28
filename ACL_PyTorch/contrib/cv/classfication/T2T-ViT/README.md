@@ -13,6 +13,8 @@
 branch：main<br>
 commit_id：0f63dc9558f4d192de926504dbddfa1b3f5db6ca<br>
 
+本离线推理项目实现的模型为开源仓中的T2T-ViT-14模型。
+
 ## 2 环境说明
 
 该模型离线推理使用 Atlas 300I Pro 推理卡，所有步骤都在 [CANN 5.1.RC1](https://www.hiascend.com/software/cann/commercial) 环境下进行，CANN包以及相关驱动、固件的安装请参考 [软件安装](https://www.hiascend.com/document/detail/zh/canncommercial/51RC1/envdeployment/instg)。
@@ -33,15 +35,17 @@ git reset --hard 0f63dc9558f4d192de926504dbddfa1b3f5db6ca
 ```
 
 ## 3 源码改动
-1.pytorch在1.8版本之后container_abcs就已经被移除，因此在使用timm时会出现错误，因此需要修改timm包内models/layers文件夹中的helpers.py文件第6行：
+1. torch在1.8版本之后container_abcs已经被移除，使用timm包内的models/layers/helpers.py时会报错，因此需要修改此文件第6行：
 ```
 import collections.abc as container_abcs
 ```
-2.由于310P上无GPU，因此在使用timm时会出现错误，因此需要修改timm包内data文件夹中的loader.py文件第66、67行和第78行的__iter__：
+2. 由于310P上无GPU，使用timm包内的data/loader.py时会报错，因此需要修改此文件第66、67行和第78行的__iter__方法：
 ```
+# 第66、67行改为：
 self.mean = torch.tensor([x * 255 for x in mean]).view(1, 3, 1, 1) 
 self.std = torch.tensor([x * 255 for x in std]).view(1, 3, 1, 1)
 
+# 第78行__iter__方法替换如下：
 def __iter__(self):
         first = True
         for next_input, next_target in self.loader:
@@ -61,8 +65,8 @@ def __iter__(self):
 
         yield input, target 
 ```
-3.由于torch.einsum算子出现精度问题，因此需要修改models文件夹内token_performer.py文件：
-添加一个函数forgr_einsum：
+3. 由于OM模型中Einsum算子低精度计算（float16）会放大误差，导致精度问题。在转OM时使用--keep_dtype参数，尝试让Einsum算子保持原精度(float32)计算，但Einsum算子前面的TransData算子又会使此操作失效。所以定位到Einsum算子在模型源码中的位置，对其进行等价替换后，重新转ONNX，转OM时再使用--keep_dtype参数，TransData算子被消除，--keep_dtype参数生效。对源码的具体修改如下：<br>
+在models/token_performer.py文件中添加一个方法forge_einsum：
 ```
 def forge_einsum(equation, a, b):
     if equation == 'bti,bi->bt':
@@ -78,10 +82,13 @@ def forge_einsum(equation, a, b):
 ```
 并修改第41、48、49、50行：
 ```
+# 第41行
 wtx = forge_einsum('bti,mi->btm', x.float(), self.w)
-
+# 第48行
 D = forge_einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)
+# 第49行
 kptv = forge_einsum('bin,bim->bnm', v.float(), kp)
+# 第50行
 y = forge_einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)
 ```
 
@@ -132,7 +139,7 @@ chip_name可通过`npu-smi info`指令查看，例：310P3<br>
 
 ### 5.1 数据集获取
 
-该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集进行测试
+该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集图片进行测试。<br>
 数据集结构如下：
 ```
 │imagenet/
@@ -161,13 +168,13 @@ patch -p1 main.py T2T_ViT_preprocess.patch
 3. 执行预处理脚本，生成数据集预处理后的bin文件
 
 ```shell
-python3.7 T2T_ViT_preprocess.py -–data-dir ${dataset_path} --out-dir ${prep_output_dir} –gt-path ${groundtruth_path} -–batch-size ${batchsize}
+python3.7 T2T_ViT_preprocess.py -–data-dir ${dataset_path} --out-dir ${prep_output_dir} –gt-path ${groundtruth_path} -–batch-size ${batch_size}
 ```
 参数说明：<br>
 --data-dir：数据集路径<br>
 --out-dir：保存bin文件路径<br>
 --gt-path：保存标签文件路径<br>
---batch-size：需要测试的batchsize<br>
+--batch-size：需要测试的batch_size<br>
 
 
 ## 6 离线推理
@@ -207,15 +214,16 @@ patch -p1 main_copy.py T2T_ViT_postprocess.patch
 2.运行T2T_ViT_postprocess.py脚本并与npy文件比对，可以获得Accuracy Top1数据
 
 ```shell
-python3.7 T2T_ViT_postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt_path} --batch-size ${batchsize}
+python3.7 T2T_ViT_postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt_path} --batch-size ${batch_size}
 ```
 参数说明：<br>
 --result-dir：生成推理结果所在路径<br>
 --gt-path：标签数据文件路径<br>
---batch-size：需要测试的batchsize<br>
+--batch-size：需要测试的batch_size<br>
 
 
 ### 6.4 性能验证
+需注意：性能测试前使用`npu-smi info`命令查看 NPU 设备的状态，确认空闲后再进行测试。<br>
 用msame工具进行纯推理100次，然后根据平均耗时计算出吞吐率。
 ```shell
 ./msame --model ${om_path} --output ${output_path} --outfmt TXT --loop 100
@@ -224,10 +232,8 @@ python3.7 T2T_ViT_postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt
 --model：为om模型文件路径<br>
 --output：保存推理结果路径<br>
 
-说明：性能测试前使用`npu-smi info`命令查看 NPU 设备的状态，确认空闲后再进行测试。
-
-执行上述脚本后，日志中会记录的除去第一次推理时间的平均时间，即为NPU计算的平均耗时(ms)。以此计算出模型在对应 batch_size 下的吞吐率：
-$$ 吞吐率 = \frac {bs * 1000} {mean}$$
+执行上述命令后，日志中会记录Inference average time without first time，即为NPU计算的平均耗时(ms)。以此计算出模型在对应 batch_size 下的吞吐率：
+$$ 吞吐率 = \frac {bs * 1000} {time}$$
 
 
 
@@ -235,9 +241,9 @@ $$ 吞吐率 = \frac {bs * 1000} {mean}$$
 
 总结：
  1. 310P上离线推理的精度(81.414%)与Pytorch在线推理精度(81.5%)基本持平；
- 2. 性能最优的batch_size为16，310P性能/性能基准=6倍。
+ 2. 性能最优的batch_size为8，310P性能/性能基准=5.44倍。
 
-各batchsize对比结果如下：
+各batch_size对比结果如下：
 
 |     模型     |                        开源仓Pytorch精度                        | 310P离线推理精度 | 基准性能 | 310P性能 |
 | :----------: | :-------------------------------------------------------: | :--------------: | :------: | :------: |
