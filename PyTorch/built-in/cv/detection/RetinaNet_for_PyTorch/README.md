@@ -57,23 +57,19 @@ pip3.7 list | grep mm
 
 ## Train MODEL
 
-### 导入环境变量(若安装mmcv时已导入，这步可跳过)
-```
-source pt_set_env.sh
-```
 
 ### 单卡
-1. 运行 train_retinanet_1p.sh
+
 ```
 chmod +x ./tools/dist_train.sh
-bash train_retinanet_1p.sh
+bash ./test/train_full_1p.sh  --data_path=数据集路径       #精度训练
 ```
-若需要指定训练使用的卡号, 可修改train_retinanet_1p.sh文件 "--gpu-ids 0"配置项,其中卡号为0-7
+
 
 ### 8卡
-1. 运行 train_retinanet_8p.sh
+
 ```
 chmod +x ./tools/dist_train.sh
-bash train_retinanet_8p.sh
+bash ./test/train_full_1p.sh  --data_path=数据集路径       #精度训练
 ```
 
