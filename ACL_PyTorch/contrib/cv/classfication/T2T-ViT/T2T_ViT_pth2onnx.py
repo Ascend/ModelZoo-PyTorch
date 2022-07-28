@@ -33,4 +33,4 @@ if __name__ == '__main__':
     parser.add_argument("--pth-dir", default="")
     parser.add_argument("--onnx-dir", default="")
     args = parser.parse_args()
-    pth2onnx(args.pth_dir,agrs.onnx_dir)
+    pth2onnx(args.pth_dir,args.onnx_dir)
