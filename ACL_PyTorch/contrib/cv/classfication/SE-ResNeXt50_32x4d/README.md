@@ -8,7 +8,7 @@ branch:master
 commit_id:021d97897c9aa76ec759deff43d341c4fd45d7ba 
   
 ## 2 环境说明
-使用CANN版本为CANN:5.0.1
+使用CANN版本为CANN:5.1.RC1
 
 深度学习框架与第三方库
 ```
@@ -83,7 +83,6 @@ python3.7 get_info.py jpg ../dataset/ImageNet/ILSVRC2012_img_val ./ImageNet.info
 运行成功后，在当前目录中生成seresnext50_val.info。
 ```
 ## 5. 模型推理
-### a． 310：
 ### 步骤1 模型转换
 本模型基于开源框架PyTorch训练的SE_ResNeXt50_32x4d进行模型转换。
 使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
@@ -163,5 +162,5 @@ python3.7 vision_metric_ImageNet.py ${ais_output} ./val_label.txt ./ result.json
 | bs64 | 953.8  | 1198.41   | 1054.064  | 1.2565  | 	1.1369 |
 | 最优bs | 1113.52| 	2001.78	 | 1054.064  | 	1.7977 | 	1.8991 |
 ```text
-最优atch： 710 大于310的1.2倍；710大于T4的1.6倍，性能达标
+最优batch： 710 大于310的1.2倍；710大于T4的1.6倍，性能达标
 ```
