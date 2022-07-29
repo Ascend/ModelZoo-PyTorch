@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 # Copyright 2022 Huawei Technologies Co., Ltd
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 3.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-3.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,87 +13,208 @@
 # limitations under the License.
 # ============================================================================
 
-import datetime
+import argparse
+import glob
 import json
 import os
-import sys
+from contextlib import ExitStack
+from PIL import Image
+import numpy as np
+from StreamManagerApi import StreamManagerApi, MxDataInput, InProtobufVector, \
+        MxProtobufIn
+import MxpiDataType_pb2 as MxpiDataType
 
-from StreamManagerApi import StreamManagerApi
-from StreamManagerApi import MxDataInput
-
-
-def run():
-    # init stream manager
-    stream_manager_api = StreamManagerApi()
-    ret = stream_manager_api.InitManager()
-    if ret != 0:
-        print("Failed to init Stream manager, ret=%s" % str(ret))
-        exit()
-
-    # create streams by pipeline config file
-    with open("../data/config/DPN-131.pipeline", 'rb') as f:
-        pipelineStr = f.read()
-    ret = stream_manager_api.CreateMultipleStreams(pipelineStr)
-
-    if ret != 0:
-        print("Failed to create Stream, ret=%s" % str(ret))
-        exit()
-
-    # Construct the input of the stream
-    data_input = MxDataInput()
-    if len(sys.argv) == 3:
-        dir_name = sys.argv[1]
-        res_dir_name = sys.argv[2]
+def resize(img, size, interpolation=Image.BILINEAR):
+    if img.height <= img.width:
+        ratio = size / img.height
+        w_size = int(img.width * ratio)
+        img = img.resize((w_size, size), interpolation)
     else:
-        print("Please enter Dataset path| Inference result path "
-              "such as ../cifar10 ./result")
-        exit(1)
-    if not os.path.exists(dir_name):
-        print("Dataset path does not exist.")
-        exit(1)
-    if not os.path.exists(res_dir_name):
-        os.makedirs(res_dir_name)
-        print("Inference result path does not exist.")
-    file_list = os.listdir(dir_name)
+        ratio = size / img.width
+        h_size = int(img.height * ratio)
+        img = img.resize((size, h_size), interpolation)
 
-    for file_name in file_list:
-        file_path = os.path.join(dir_name, file_name)
-        if not (file_name.lower().endswith(".jpg") or file_name.lower().endswith(".jpeg")):
-            continue
-        with open(file_path, 'rb') as f:
-            data_input.data = f.read()
-        stream_name = b'im_DPN_131'
-        in_plugin_id = 0
-        unique_id = stream_manager_api.SendData(stream_name, in_plugin_id, data_input)
+    return img
+
+
+def center_crop(img, out_height, out_width):
+    height, width, _ = img.shape
+    left = int((width - out_width) / 2)
+    right = int((width + out_width) / 2)
+    top = int((height - out_height) / 2)
+    bottom = int((height + out_height) / 2)
+    img = img[top:bottom, left:right]
+    return img
+
+
+def tranform(in_file):
+
+    input_size = 256
+    mean = [0.485, 0.456, 0.406]
+    std = [0.229, 0.224, 0.225]
+    img = Image.open(in_file).convert('RGB')
+
+    img = resize(img, input_size)  # transforms.Resize(256)
+    img = np.array(img, dtype=np.float32)
+    img = center_crop(img, 224, 224)   # transforms.CenterCrop(224)
+    img = img / 255.  # transforms.ToTensor()
+
+    img[..., 0] = (img[..., 0] - mean[0]) / std[0]
+    img[..., 1] = (img[..., 1] - mean[1]) / std[1]
+    img[..., 2] = (img[..., 2] - mean[2]) / std[2]
+
+    img = img.transpose(2, 0, 1)   # HWC -> CHW
+    return img
+
+
+class GlobDataLoader():
+    def __init__(self, glob_pattern, limit=None):
+        self.glob_pattern = glob_pattern
+        self.limit = limit
+        self.file_list = self.get_file_list()
+        self.cur_index = 0
+
+    def get_file_list(self):
+        return glob.iglob(self.glob_pattern)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.cur_index == self.limit:
+            raise StopIteration()
+        label = None
+        file_path = next(self.file_list)
+        with open(file_path, 'rb') as fd:
+            data = fd.read()
+
+        self.cur_index += 1
+        return get_file_name(file_path), label, data
+
+
+class Predictor():
+    def __init__(self, pipeline_conf, stream_name):
+        self.pipeline_conf = pipeline_conf
+        self.stream_name = stream_name
+
+    def __enter__(self):
+        self.stream_manager_api = StreamManagerApi()
+        ret = self.stream_manager_api.InitManager()
+        if ret != 0:
+            raise Exception(f"Failed to init Stream manager, ret={ret}")
+
+        # create streams by pipeline config file
+        with open(self.pipeline_conf, 'rb') as f:
+            pipeline_str = f.read()
+        ret = self.stream_manager_api.CreateMultipleStreams(pipeline_str)
+        if ret != 0:
+            raise Exception(f"Failed to create Stream, ret={ret}")
+        self.data_input = MxDataInput()
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # destroy streams
+        self.stream_manager_api.DestroyAllStreams()
+
+    def predict(self, dataset):
+        print("Start predict........")
+        print('>' * 30)
+        for name, _, data in dataset:
+            self.data_input.data = data
+            yield self._predict(name, self.data_input)
+        print("predict end.")
+        print('<' * 30)
+
+    def _predict(self, name, data):
+        protobuf_data = self._predict_gen_protobuf(name)
+        self._predict_send_protobuf(self.stream_name, 0, protobuf_data)
+        result = self._predict_get_result(self.stream_name, 0)
+        return name, json.loads(result.data.decode())
+
+    def _predict_gen_protobuf(self, name):
+        args = parse_args()
+        file_path = f"{args.glob}" + name + ".JPEG"
+
+        img_np = tranform(file_path)
+        print("*********file_path is: ", file_path)
+
+        vision_list = MxpiDataType.MxpiVisionList()
+        vision_vec = vision_list.visionVec.add()
+        vision_vec.visionInfo.format = 0
+        vision_vec.visionInfo.width = 224
+        vision_vec.visionInfo.height = 224
+        vision_vec.visionInfo.widthAligned = 224
+        vision_vec.visionInfo.heightAligned = 224
+
+        vision_vec.visionData.memType = 0
+        vision_vec.visionData.dataStr = img_np.tobytes()
+        vision_vec.visionData.dataSize = len(img_np)
+
+        protobuf = MxProtobufIn()
+        protobuf.key = b"appsrc0"
+        protobuf.type = b'MxTools.MxpiVisionList'
+        protobuf.protobuf = vision_list.SerializeToString()
+        protobuf_vec = InProtobufVector()
+
+        protobuf_vec.push_back(protobuf)
+        return protobuf_vec
+
+    def _predict_send_protobuf(self, stream_name, in_plugin_id, data):
+        self.stream_manager_api.SendProtobuf(stream_name, in_plugin_id, data)
+
+    def _predict_send_data(self, stream_name, in_plugin_id, data_input):
+        unique_id = self.stream_manager_api.SendData(stream_name, in_plugin_id,
+                                                     data_input)
         if unique_id < 0:
-            print("Failed to send data to stream.")
-            exit()
-        # Obtain the inference result by specifying streamName and uniqueId.
-        start_time = datetime.datetime.now()
-        infer_result = stream_manager_api.GetResult(stream_name, unique_id)
-        end_time = datetime.datetime.now()
-        print('sdk run time: {}'.format((end_time - start_time).microseconds))
-        if infer_result.errorCode != 0:
-            print("GetResultWithUniqueId error. errorCode=%d, errorMsg=%s" % (
-                infer_result.errorCode, infer_result.data.decode()))
-            exit()
-        # print the infer result
-        infer_res = infer_result.data.decode()
-        print("process img: {}, infer result: {}".format(file_name, infer_res))
-        load_dict = json.loads(infer_result.data.decode())
-        if load_dict.get('MxpiClass') is None:
-            with open(res_dir_name + "/" + file_name[:-5] + '.txt', 'w') as f_write:
-                f_write.write("")
-            continue
-        res_vec = load_dict.get('MxpiClass')
-        res_name = os.path.join(res_dir_name, '{}_1.txt'.format(file_name[:-5]))
-        with open(res_name, 'w') as f_write:
-            res_list = [str(item.get("classId"))+ " " for item in res_vec]
-            f_write.writelines(res_list)
-            f_write.write('\n')
+            raise Exception("Failed to send data to stream")
+        return unique_id
 
-    # destroy streams
-    stream_manager_api.DestroyAllStreams()
+    def _predict_get_result(self, stream_name, unique_id):
+        result = self.stream_manager_api.GetResult(stream_name, unique_id)
+        if result.errorCode != 0:
+            raise Exception(
+                f"GetResultWithUniqueId error."
+                f"errorCode={result.errorCode}, msg={result.data.decode()}")
+        return result
 
-if __name__ == '__main__':
-    run()
+
+def get_file_name(file_path):
+    return os.path.splitext(os.path.basename(file_path.rstrip('/')))[0]
+
+
+def result_encode(file_name, result):
+    sep = ','
+    pred_class_ids = sep.join(
+        str(i.get('classId')) for i in result.get("MxpiClass", []))
+    return f"{file_name} {pred_class_ids}\n"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('glob', help='img pth glob pattern.')
+    parser.add_argument('result_file', help='result file')
+    return parser.parse_args()
+
+
+def main():
+    pipeline_conf = "../data/config/DPN-131.pipeline"
+    stream_name = b'im_DPN-131'
+
+    args = parse_args()
+    result_fname = get_file_name(args.result_file)
+    pred_result_file = f"{result_fname}.txt"
+    dataset = GlobDataLoader(f"{args.glob}*", limit=50000)
+    print("dataset = ", dataset)
+    with ExitStack() as stack:
+        predictor = stack.enter_context(Predictor(pipeline_conf, stream_name))
+        result_fd = stack.enter_context(open(pred_result_file, 'w'))
+        for fname, pred_result in predictor.predict(dataset):
+            result_fd.write(result_encode(fname, pred_result))
+
+    print(f"success, result in {pred_result_file}")
+
+
+if __name__ == "__main__":
+    main()
