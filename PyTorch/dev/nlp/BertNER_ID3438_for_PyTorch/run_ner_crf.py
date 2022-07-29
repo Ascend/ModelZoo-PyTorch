@@ -55,9 +55,6 @@ from metrics.ner_metrics import SeqEntityScore
 from tools.finetuning_argparse import get_argparse
 import apex
 torch.npu.set_compile_mode(jit_compile=False)
-option = {}
-option["MM_BMM_ND_ENABLE"] = "enable"
-torch.npu.set_option(option)
 
 MODEL_CLASSES = {
     ## bert ernie bert_wwm bert_wwwm_ext
