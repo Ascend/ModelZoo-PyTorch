@@ -18,6 +18,8 @@ export TASK_QUEUE_ENABLE=1
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+#HCCL白名单开关,1-关闭/0-开启
+export HCCL_WHITELIST_DISABLE=1
 
 path_lib=$(python3.7 -c """
 import sys
