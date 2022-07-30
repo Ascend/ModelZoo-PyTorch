@@ -340,7 +340,7 @@ class Solver(object):
                 JS += get_JS(SR,GT)
                 DC += get_DC(SR,GT)
 
-                length += images.size(0)
+                length += 1
 
             acc = acc/length
             SE = SE/length
