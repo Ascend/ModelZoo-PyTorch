@@ -1,5 +1,10 @@
+onnx==1.11.0
+torch==1.11.0
+numpy==1.21.6
 ascii-graph==1.5.1
-ipdb
+ipdb==0.13.9
+unidecode==1.3.4
+inflect==5.6.0
 librosa==0.8.0
 pandas==1.1.4
 #pycuda==2020.1

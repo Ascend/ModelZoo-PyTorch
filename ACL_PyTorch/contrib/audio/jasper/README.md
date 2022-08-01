@@ -107,7 +107,7 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 ```bash
 # Jasper_pth2onnx.py需要三个参数，第一个为pth模型路径，第二个为转换后的模型，第三个为模型的batch size
 # 生成batch size为1的onnx模型
-python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper_1batch.onnx 1
+python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper.onnx
 ```
 
 因为atc工具目前对动态shape场景支持度不高，官方提供的onnx模型给模型调测带来较大困难，所以需要使用pth2onnx脚本重新生成带feat_lens的模型。
@@ -117,14 +117,14 @@ python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper_1batch.onnx 1
 1. 设置环境变量
 
    ```bash
-   source env.sh		
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh	
    ```
 
 2. 使用atc将onnx模型转换为om模型文件
 
    ```bash
    # 将jasper_1batch.onnx模型转换为jasper_1batch.om，对于不同batch size的onnx模型，需要修改input_shape参数重feats的第一维
-   atc --model=jasper_1batch.onnx \
+   atc --model=jasper.onnx \
        --framework=5 \
        --input_format=ND \
        --input_shape="feats:1,64,4000;feat_lens:1" \
@@ -168,7 +168,7 @@ python3.7 om_infer_acl.py \
 使用benchmark纯推理测试模型性能
 
 ``````shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 arch=`uname -m`
 chmod u+x benchmark.${arch}
@@ -180,11 +180,3 @@ chmod u+x benchmark.${arch}
 ```bash
 tail result/PureInfer_perf_of_jasper_1batch_in_device_0.txt
 ```
-
-显示结果为
-
-```
-ave_throughputRate = 5.20623samples/s, ave_latency = 192.894ms
-```
-
-batch1 310单卡吞吐率：5.20623x4=20.8fps 
