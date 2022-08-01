@@ -67,7 +67,7 @@ def setup_model(device_type="npu"):
         model = model.to(cur_device)
     ema = deepcopy(model)
     optimizer = optim.construct_optimizer(model)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale='dynamic')
     if cfg.NUM_GPUS > 1:
         #Make model replica operate on the current device
         ddp = torch.nn.parallel.DistributedDataParallel
