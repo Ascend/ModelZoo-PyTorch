@@ -124,13 +124,7 @@ chip_name可通过`npu-smi info`指令查看，例：310P3。<br>
 
 ### 5.2 数据集预处理
 
-1.备份一份开源仓的main.py文件，并命名为main_copy.py，用于生成前后处理文件。<br>
-2. 生成预处理脚本T2T_ViT_preprocess.py。
-```shell
-patch -p1 main.py T2T_ViT_preprocess.patch
-```
-得到的main.py重命名为T2T_ViT_preprocess.py。<br>
-3. 执行预处理脚本，生成数据集预处理后的bin文件。
+运行T2T_ViT_preprocess.py预处理脚本，生成数据集预处理后的bin文件。
 
 ```shell
 python3.7 T2T_ViT_preprocess.py -–data-dir ${dataset_path} --out-dir ${prep_output_dir} –gt-path ${groundtruth_path} -–batch-size ${batch_size}
@@ -170,13 +164,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 ### 6.3 精度验证
 
-1.生成后处理脚本T2T_ViT_postprocess.py脚本
-```shell
-patch -p1 main_copy.py T2T_ViT_postprocess.patch
-```
-得到的main_copy.py重命名为T2T_ViT_postprocess.py。
-
-2.运行T2T_ViT_postprocess.py脚本并与npy文件比对，可以获得Accuracy Top1数据
+运行T2T_ViT_postprocess.py脚本并与npy文件比对，可以获得Accuracy Top1数据。
 
 ```shell
 python3.7 T2T_ViT_postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt_path} --batch-size ${batch_size}
