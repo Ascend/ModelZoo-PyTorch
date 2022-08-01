@@ -123,7 +123,15 @@ python3.7 ./dataset_make.py --input_zip_path path1 --dataset_path path2
 
 `path2` is your path want to store the final augmented dataset. 
 
+3、模型评测使用Set5数据集，数据集请用户自行获取。
+
 ## 模型训练与测试
+- 安装环境
+  
+   ```
+    pip3.7 install -r requirements.txt
+   ```
+   注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 
 - 启动训练之前，首先要配置程序运行相关环境变量。
 
@@ -133,14 +141,14 @@ python3.7 ./dataset_make.py --input_zip_path path1 --dataset_path path2
 
 - 1P训练
 
-  进入`test`目录后，运行脚本`train_full_1p.sh`中，配置所需变量
+  运行脚本`train_full_1p.sh`中，配置所需变量
 
   + 训练数据文件夹路径`real_traindata_path`
   + 测试数据文件夹路径`real_testdata_path`
   + 输出文件夹的路径`real_output_path`
 
   ```shell
-  ./train_full_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
+  ./test/train_full_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
   # 选择设备 将如下设备变量加入命令（默认选择npu，如果需要使用gpu的话需要使用参数重新制定，npu可以不加）
   --device=npu
   --device=gpu
@@ -148,14 +156,14 @@ python3.7 ./dataset_make.py --input_zip_path path1 --dataset_path path2
 
 + 1P性能
 
-  进入`test`目录后，运行脚本`train_performance_1p.sh`中，配置所需变量
+  运行脚本`train_performance_1p.sh`中，配置所需变量
 
   + 训练数据文件夹路径`real_traindata_path`
   + 测试数据文件夹路径`real_testdata_path`
   + 输出文件夹的路径`real_output_path`
 
     ```shell
-    ./train_performance_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
+    ./test/train_performance_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
     # 选择设备 将如下设备变量加入命令（默认选择npu，如果需要使用gpu的话需要使用参数重新制定，npu可以不加）
     --device=npu
     --device=gpu
@@ -163,14 +171,14 @@ python3.7 ./dataset_make.py --input_zip_path path1 --dataset_path path2
 
 + 8P训练
 
-  进入`test`目录后，运行脚本`train_full_1p.sh`中，配置所需变量
+  运行脚本`train_full_8p.sh`中，配置所需变量
 
   + 训练数据文件夹路径`real_traindata_path`
   + 测试数据文件夹路径`real_testdata_path`
   + 输出文件夹的路径`real_output_path`
 
   ```shell
-  ./train_full_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
+  ./test/train_full_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
   # 选择设备 将如下设备变量加入命令
   --device=npu
   --device=gpu
@@ -178,14 +186,14 @@ python3.7 ./dataset_make.py --input_zip_path path1 --dataset_path path2
 
 + 8P性能
 
-  进入`test`目录后，运行脚本`train_performance_8p.sh`中，配置所需变量
+  运行脚本`train_performance_8p.sh`中，配置所需变量
 
   + 训练数据文件夹路径`real_traindata_path`
   + 测试数据文件夹路径`real_testdata_path`
   + 输出文件夹的路径`real_output_path`
 
     ```shell
-    ./train_performance_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
+    ./test/train_performance_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
     # 选择设备 将如下设备变量加入命令
     --device=npu
     --device=gpu
@@ -193,12 +201,12 @@ python3.7 ./dataset_make.py --input_zip_path path1 --dataset_path path2
 
 + 断点继续训练
 
-  在训练指令`train_full_Xp.sh`中对如下参数进行修改
+  在训练指令`train_full_8p.sh`中对如下参数进行修改
 
   ```shell
   --ifcontinue 
   # 举例如下
-  ./train_full_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path --ifcontinue 
+  ./test/train_full_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path --ifcontinue 
   ```
 
 + 验证
