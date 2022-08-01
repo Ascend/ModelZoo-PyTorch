@@ -41,8 +41,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
         input = input.npu()
         output = model(input)
         target = target.npu(non_blocking=True)
-        output = output.cpu()
-        target = target.cpu()
+       
         loss = criterion(output, target)
         loss = loss.npu()
 
@@ -120,8 +119,7 @@ def validate(config, val_loader, model, criterion, output_dir, tb_log_dir,
             input = input.npu()
             output = model(input)
             target = target.npu(non_blocking=True)
-            output = output.cpu() 
-            target = target.cpu()
+          
             loss = criterion(output, target)
             loss = loss.npu()
             
