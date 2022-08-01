@@ -26,7 +26,6 @@
          # therefore return exp(w^Tx - |x|/2)/sqrt(m)
          xd = ((x * x).sum(dim=-1, keepdim=True)).repeat(1, 1, self.m) / 2
 -        wtx = torch.einsum('bti,mi->btm', x.float(), self.w)
-+        # wtx = torch.einsum('bti,mi->btm', x.float(), self.w)
 +        wtx = forge_einsum('bti,mi->btm', x.float(), self.w)
  
          return torch.exp(wtx - xd) / math.sqrt(self.m)
