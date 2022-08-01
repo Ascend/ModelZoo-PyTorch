@@ -97,10 +97,10 @@ class Decoder(nn.Module):
         ys_out = [torch.cat([y, eos], dim=0) for y in ys]
         # padding for ys with -1
         # pys: utt x olen
-        ys_in_pad = pad_list(ys_in, self.eos_id, max_len = 48)
-        ys_out_pad = pad_list(ys_out, IGNORE_ID, max_len = 48)
-        # ys_in_pad = pad_list(ys_in, self.eos_id)
-        # ys_out_pad = pad_list(ys_out, IGNORE_ID)
+        ys_in_pad = pad_list(ys_in, self.eos_id, max_len = 48) #固定
+        ys_out_pad = pad_list(ys_out, IGNORE_ID, max_len = 48) #固定
+        # ys_in_pad = pad_list(ys_in, self.eos_id)  #动态 raw
+        # ys_out_pad = pad_list(ys_out, IGNORE_ID)  #动态 raw
         assert ys_in_pad.size() == ys_out_pad.size()
         return ys_in_pad, ys_out_pad
 

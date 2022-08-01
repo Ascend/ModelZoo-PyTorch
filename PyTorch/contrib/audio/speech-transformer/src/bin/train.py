@@ -31,6 +31,8 @@
 # ============================================================================
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 from collections import OrderedDict
 from data import AudioDataLoader, AudioDataset
@@ -256,7 +258,7 @@ def main(args):
         model.npu()
         model, optimizer = amp.initialize(model, 
                             optimizer,
-                            opt_level="O2",loss_scale=128.0, combine_grad=True)
+                            opt_level="O2",loss_scale='dynamic', combine_grad=True)
     else:
         model.cuda()
         model, optimizer = amp.initialize(model, 
