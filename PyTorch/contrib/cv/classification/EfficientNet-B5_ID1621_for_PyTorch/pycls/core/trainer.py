@@ -33,13 +33,12 @@ import pycls.core.optimizer as optim
 import pycls.datasets.loader as data_loader
 import torch
 import torch.npu
-
+if torch.__version__>= '1.8':
+      import torch_npu
 from apex import amp 
 from pycls.core.config import cfg
 from pycls.core.cuda import ApexScaler
 import os
-
-
 logger = logging.get_logger(__name__)
 
 
@@ -58,7 +57,7 @@ def setup_model():
     cur_device = torch.npu.current_device()
     model = model.to(cur_device)
     optimizer = optim.construct_optimizer(model)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale="dynamic")
     if cfg.NUM_GPUS > 1:
         #Make model replica operate on the current device
         ddp = torch.nn.parallel.DistributedDataParallel
