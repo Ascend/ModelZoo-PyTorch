@@ -17,6 +17,8 @@ pip install 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonA
 
 shell脚本会将传入的`data_path`软连接到`./datasets`目录下，默认使用VOC2012数据集，使用其它数据集须自行修改配置文件并将数据转为COCO格式。
 
+注：压测后发现模型对随机种子敏感，使用不同种子最终精度会有明显抖动，甚至会有低概率mAP有20%以上抖动（竞品上有类似现象）。当前针对默认配置（VOC2012/yolox-s）固定了随机种子，保证结果可复现，若更换了模型配置或数据集，请自行修改相关参数。随机种子设置在`yolox/exp/base_exp.py`中设置。
+
 
 ```bash
 # training 1p performance
