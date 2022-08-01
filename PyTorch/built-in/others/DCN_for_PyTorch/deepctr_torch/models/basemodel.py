@@ -232,7 +232,7 @@ class BaseModel(nn.Module):
 
         if use_fp16:
             from apex import amp
-            model, optimizer = amp.initialize(model, optim, opt_level='O1', loss_scale=64, combine_grad=True)
+            model, optimizer = amp.initialize(model, optim, opt_level='O1', loss_scale='dynamic', combine_grad=True)
 
         num_rank = 1
         if self.dist:
