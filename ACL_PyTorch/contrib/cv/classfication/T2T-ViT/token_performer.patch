@@ -37,12 +37,8 @@
 -        D = torch.einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)  # (B, T, m) * (B, m) -> (B, T, 1)
 -        kptv = torch.einsum('bin,bim->bnm', v.float(), kp)  # (B, emb, m)
 -        y = torch.einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)  # (B, T, emb)/Diag
-+        # D = torch.einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)  # (B, T, m) * (B, m) -> (B, T, 1)
 +        D = forge_einsum('bti,bi->bt', qp, kp.sum(dim=1)).unsqueeze(dim=2)
-+        # kptv = torch.einsum('bin,bim->bnm', v.float(), kp)  # (B, emb, m)
 +        kptv = forge_einsum('bin,bim->bnm', v.float(), kp)  # (B, emb, m)
-+        # y = torch.einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)  # (B, T, emb)/Diag
 +        y = forge_einsum('bti,bni->btn', qp, kptv) / (D.repeat(1, 1, self.emb) + self.epsilon)
          # skip connection
          y = v + self.dp(self.proj(y))  # same as token_transformer in T2T layer, use v as skip connection
- 
