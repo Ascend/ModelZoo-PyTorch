@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ from tqdm import tqdm
 try:
 	infer_result_dir = sys.argv[1]
 except:
-	infer_result_dir = "~/spach-smlp/ais_infer/2022_07_09-17_36_18"
+	infer_result_dir = ""
 try:
 	n = int(sys.argv[2])
 except:
@@ -32,7 +32,6 @@ top_k = 5
 acc_cnt = 0
 acc_cnt_top5 = 0
 
-# "/home/infname63/spach-smlp/ais_infer/2022_07_09-17_36_18/sample_id_0_output_0.bin"
 for i in tqdm(range(n)):
 	infer_result_path = os.path.join(infer_result_dir, f"sample_id_{i}_output_0.npy")	
 	arr = np.load(infer_result_path)[0]
