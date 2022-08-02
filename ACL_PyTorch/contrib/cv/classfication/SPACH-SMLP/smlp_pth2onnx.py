@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import argparse
 import torch
 from timm.models import create_model
-# 需要导入https://github.com/microsoft/SPACH，以register_model
 import models
 
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--pth_path', default="smlp_t.pth", type=str,
                         help='path to checkpoint')
     parser.add_argument('--onnx_path', default="sMLPNet-T.onnx", type=str,
-                        help='path to checkpoint')
+                        help='path to ONNX model')
     parser.add_argument('--opset_version', default=11, type=int,
                         help='opset version')
     args = parser.parse_args()
