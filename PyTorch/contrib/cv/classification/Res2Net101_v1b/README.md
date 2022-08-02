@@ -40,8 +40,8 @@ python3.7.5 pthtar2onnx.py
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
-| -        | 290       | 1        | 1        | O2       |
-| 79.675   | 2385      | 8        | 100      | O2       |
+| -        | 383.472   | 1        | 1        | O2       |
+| 79.034   | 2611.314  | 8        | 100      | O2       |
 
 
 # Copyright 2020 Huawei Technologies Co., Ltd
