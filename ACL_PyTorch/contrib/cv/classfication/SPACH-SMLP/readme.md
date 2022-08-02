@@ -1,12 +1,12 @@
 
-- [ SPACH sMLP Onnx模型端到端推理指导](#1-spach-smlp-onnx模型端到端推理指导)
+- [SPACH sMLP Onnx模型端到端推理指导](#1-spach-smlp-onnx模型端到端推理指导)
 	- [1.1. 模型概述](#11-模型概述)
 		- [1.1.1. 论文地址](#111-论文地址)
 		- [1.1.2. 代码地址](#112-代码地址)
 	- [1.2. 环境说明](#12-环境说明)
 	- [1.3. 模型转换](#13-模型转换)
-		- [1.3.1. pth转onnx模型[可选]](#131-pth转onnx模型可选)
-		- [1.3.2. onnx转om模型](#132-onnx转om模型)
+		- [1.3.1. PyTorch模型转ONNX模型](#131-pytorch模型转onnx模型)
+		- [1.3.2. ONNX转OM模型](#132-onnx转om模型)
 	- [1.4. 数据预处理](#14-数据预处理)
 		- [1.4.1. 数据集获取](#141-数据集获取)
 		- [1.4.2. 数据集预处理](#142-数据集预处理)
@@ -40,8 +40,9 @@
 
 ```
 CANN 5.1.RC1
+python==3.7.5
 torch==1.5.0+ascend.post5.20220315
-torchvision==0.8.1
+torchvision==0.2.2.post3
 timm==0.3.2
 einops==0.3.2
 ```
@@ -53,26 +54,32 @@ einops==0.3.2
 ## 1.3. 模型转换
 
 
-### 1.3.1. PyTorch模型转ONNX模型[可选]
+### 1.3.1. PyTorch模型转ONNX模型
+
 
 1. 下载pth权重文件
-   sMLP预训练[PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)、[ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
+
+   sMLP预训练
+   
+   [PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)
+   
+   [ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
 
 > **说明** pth文件的md5sum值为：061415304F38317C3850A587EF709D45 
 > 文件下载后，放置与代码同一目录下。
-
-1. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
+   
+2. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
 
 ```
 git clone https://github.com/microsoft/SPACH
 cd SPACH
-git checkout main
+git checkout b11b098970978677b7d33cc3424970152462032d
 ```
 
-2. 调用smlp_pth2onnx脚本，生成ONNX文件
+3. 调用smlp_pth2onnx脚本，生成ONNX文件
 
 
-3. 执行smlp_pth2onnx.py脚本，生成ONNX模型文件
+4. 执行smlp_pth2onnx.py脚本，生成ONNX模型文件
 
 ```
 python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
@@ -285,3 +292,5 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-h
 
 > **说明：**
 > NPU和GPU的推理性能（吞吐率）对比为： 0.805    
+
+性能不达标但是已通过评审。
