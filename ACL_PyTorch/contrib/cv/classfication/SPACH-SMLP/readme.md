@@ -28,7 +28,7 @@
 
 ### 1.1.1. 论文地址
 
-[sMLP论文](https://arxiv.org/abs/2109.05422)
+[Sparse MLP for Image Recognition: Is Self-Attention Really Necessary?](https://arxiv.org/abs/2109.05422)
 
 ### 1.1.2. 代码地址
 
@@ -39,35 +39,33 @@
 
 
 ```
-CANN 5.0.4
+CANN 5.1.RC1
 torch==1.5.0+ascend.post5.20220315
-torchvision
+torchvision==0.8.1
 timm==0.3.2
 einops==0.3.2
 ```
 
  **说明：**
 
-- X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
-- Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
 - smlp_preprocess.py、smlp_pth2onnx.py内部引用的datasets、models等模块需要配合[原仓库代码](https://github.com/microsoft/SPACH)一起使用。
 
 ## 1.3. 模型转换
 
 
-### 1.3.1. pth转onnx模型[可选]
+### 1.3.1. PyTorch模型转ONNX模型[可选]
 
 1. 下载pth权重文件
-   sMLP预训练[pth](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)、[onnx权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
+   sMLP预训练[PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)、[ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
 
 > **说明** pth文件的md5sum值为：061415304F38317C3850A587EF709D45 
 > 文件下载后，放置与代码同一目录下。
 
 1. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
-2. 调用smlp_pth2onnx脚本，生成onnx文件
+2. 调用smlp_pth2onnx脚本，生成ONNX文件
 
 
-3. 执行smlp_pth2onnx.py脚本，生成onnx模型文件
+3. 执行smlp_pth2onnx.py脚本，生成ONNX模型文件
 
 ```
 python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
@@ -86,7 +84,7 @@ python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
 	--opset_version OPSET_VERSION
 							opset version
 
-### 1.3.2. onnx转om模型
+### 1.3.2. ONNX转OM模型
 
 1. 设置环境变量
 
@@ -94,7 +92,7 @@ python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
 source /usr/local/Ascend/ascend-toolkit/set_env.sh 
 ```
 
-2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/canncommercial/51RC1/inferapplicationdev/atctool)
 
 
 ${chip_name}可通过`npu-smi info`指令查看，例：310P3
@@ -132,7 +130,6 @@ atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch1-high --input_
 ### 1.4.2. 数据集预处理
 
 1. 调用预处理脚本smlp_preprocess.py
-   需要先调用该脚本，仿照[SPACH-sMLP官方训练预处理方法处理数据](https://github.com/microsoft/SPACH)，以获得最佳精度；
 2. 执行预处理脚本，生成数据集预处理后的bin文件
 
 ```
@@ -172,6 +169,8 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100 
 ```
 
+
+
 输出结果默认保存在当前目录中，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个BIN文件。
 
 ## 1.6. 精度对比
@@ -182,6 +181,13 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 ```
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om --output ./ --input "/opt/npu/imagenet/val-bin-of-spach/" --outfmt NPY
 ```
+参数说明
+| 参数名      | 说明                                    |
+|----------|---------------------------------------|
+| --model  | 需要进行推理的om模型                           |
+| --input  | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
+| --output | 推理数据输出路径                              |
+| --outfmt | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”  |
 
 - 精度统计
 调用imagenet_acc_eval_ais_infer.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
@@ -194,7 +200,7 @@ python imagenet_acc_eval_ais_infer.py ${result_dir_path}
     ${result_dir_path}参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
 
     
-	
+
 
 查看输出的结果：
 
