@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import argparse
 import tqdm
 from pathlib import Path
@@ -64,7 +65,7 @@ def image2bin(data_root, save_dir, batch_size, data_cfg):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser('validate model')
+    parser = argparse.ArgumentParser('test model')
     parser.add_argument('--batch_size', default=1, type=int)
     parser.add_argument('--data_root', default='/opt/npu/imagenet/', type=str,
                         help='dataset path')
