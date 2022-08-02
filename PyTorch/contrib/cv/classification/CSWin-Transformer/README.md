@@ -12,6 +12,7 @@ commit_id=2cec9d71ad910f441899a472331a61fc8f82ef36
 - install requirement
 
   ```
+  apt-get install -y numactl
   pip install bcolz mxnet tensorboardX matplotlib easydict opencv-python einops
   pip install scikit-image imgaug PyTurboJPEG
   pip install scikit-learn
@@ -24,9 +25,8 @@ commit_id=2cec9d71ad910f441899a472331a61fc8f82ef36
   # 卸载已安装的timm库
   pip3 uninstall timm
   
-  # 安装修改过的timm库
-  cd pytorch-image-models-0.3.4
-  python3 setup.py install
+  # 安装官方timm==0.3.4
+  pip3 install timm==0.3.4
   ```
   
   torch 和 apex要固定为ascend20220315版本，之后的版本会变慢。
@@ -64,8 +64,4 @@ bash test/train_full_1p.sh --data_path=real_data_path
 bash test/train_full_8p.sh --data_path=real_data_path
 # 验收结果： OK 
 
-# 8p eval
-# 是否正确输出了性能精度log文件
-bash test/train_eval_8p.sh --data_path=real_data_path 
-# 验收结果： OK 
 ```
