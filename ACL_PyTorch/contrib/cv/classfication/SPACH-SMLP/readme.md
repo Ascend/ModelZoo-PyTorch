@@ -62,6 +62,13 @@ einops==0.3.2
 > 文件下载后，放置与代码同一目录下。
 
 1. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
+
+```
+git clone https://github.com/microsoft/SPACH
+cd SPACH
+git checkout main
+```
+
 2. 调用smlp_pth2onnx脚本，生成ONNX文件
 
 
