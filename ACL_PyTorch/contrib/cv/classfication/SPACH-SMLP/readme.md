@@ -1,5 +1,5 @@
 
-- [1. SPACH sMLP Onnx模型端到端推理指导](#1-spach-smlp-onnx模型端到端推理指导)
+- [ SPACH sMLP Onnx模型端到端推理指导](#1-spach-smlp-onnx模型端到端推理指导)
 	- [1.1. 模型概述](#11-模型概述)
 		- [1.1.1. 论文地址](#111-论文地址)
 		- [1.1.2. 代码地址](#112-代码地址)
@@ -73,16 +73,12 @@ python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
 
 参数说明：
 
-	usage: pytorch pth convert to onnx [-h] [--model_name MODEL] [--pth_path PTH_PATH] [--onnx_path ONNX_PATH] [--opset_version OPSET_VERSION]
 
-	options:
-	-h, --help            show this help message and exit
-	--model_name MODEL    Name of model to convert
-	--pth_path PTH_PATH   path to checkpoint
-	--onnx_path ONNX_PATH
-							path to checkpoint
-	--opset_version OPSET_VERSION
-							opset version
+	--model_name MODEL    模型名称
+	--pth_path PTH_PATH    pytorh模型路径
+	--onnx_path ONNX_PATH    ONNX模型路径
+	--opset_version OPSET_VERSION   opset版本
+						
 
 ### 1.3.2. ONNX转OM模型
 
@@ -138,14 +134,11 @@ python3.7 smlp_preprocess.py --save_dir imagenet-val-bin --data_root /opt/npu/im
 
 参数说明：
 
-	usage: validate model [-h] [--batch_size BATCH_SIZE] [--data_root DATA_ROOT] --save_dir SAVE_DIR
 
 	options:
-	-h, --help            show this help message and exit
-	--batch_size BATCH_SIZE
-	--data_root DATA_ROOT
-							dataset path
-	--save_dir SAVE_DIR   dir path to save bin
+	--batch_size BATCH_SIZE     批处理大小，
+	--data_root DATA_ROOT    数据集路径
+	--save_dir SAVE_DIR   处理后的数据集路径
 
 ## 1.5. 离线推理
 
@@ -168,7 +161,15 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100 
 ```
-
+参数说明
+| 参数名      | 说明                                    |
+|----------|---------------------------------------|
+| --model  | 需要进行推理的om模型                           |
+| --input  | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
+| --output | 推理数据输出路径                              |
+| --outfmt | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”  |
+| --loop  | 循环次数                                  |
+| --batchsize  | 批处理大小                               |
 
 
 输出结果默认保存在当前目录中，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个BIN文件。
