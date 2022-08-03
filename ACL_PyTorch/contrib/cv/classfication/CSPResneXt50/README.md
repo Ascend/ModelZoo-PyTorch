@@ -47,18 +47,18 @@ commit id:d584e7f617a4d0f1a0b4838227bd1f8852dfa236
 
 ### 2.1 深度学习框架
 ```
-CANN 5.0.2.alpha003
+CANN 5.1.RC2
 
-pytorch = 1.5.0
-torchvision = 0.6.0
-onnx = 1.11.1
+pytorch = 1.10.2
+torchvision = 0.11.3
+onnx =  1.12.0
 ```
 ### 2.2 python第三方库
 
 ```
 numpy == 1.22.3
-Pillow == 8.3.2
-opencv-python == 4.5.3.56
+Pillow ==  9.2.0
+opencv-python ==  4.6.0.66
 ```
 **说明：** 
 >   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
