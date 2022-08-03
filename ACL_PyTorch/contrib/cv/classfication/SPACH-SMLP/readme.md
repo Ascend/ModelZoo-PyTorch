@@ -57,13 +57,7 @@ einops==0.3.2
 ### 1.3.1. PyTorch模型转ONNX模型
 
 
-1. 下载pth权重文件
-
-   sMLP预训练
-   
-   [PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)
-   
-   [ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
+1. 下载pth权重文件：sMLP预训练 [PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)、[ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
 
 > **说明** pth文件的md5sum值为：061415304F38317C3850A587EF709D45 
 > 文件下载后，放置与代码同一目录下。
@@ -181,7 +175,7 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 | --model  | 需要进行推理的om模型                           |
 | --input  | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
 | --output | 推理数据输出路径                              |
-| --outfmt | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”  |
+| --outfmt | 输出数据的格式，默认“BIN”，可取值“NPY”、“BIN”、“TXT”  |
 | --loop  | 循环次数                                  |
 | --batchsize  | 批处理大小                               |
 
@@ -202,7 +196,7 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 | --model  | 需要进行推理的om模型                           |
 | --input  | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
 | --output | 推理数据输出路径                              |
-| --outfmt | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”  |
+| --outfmt | 输出数据的格式，默认“BIN”，可取值“NPY”、“BIN”、“TXT”  |
 
 - 精度统计
 调用imagenet_acc_eval_ais_infer.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
@@ -253,7 +247,7 @@ Acc@5 95.79
 对于使用ais_infer工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
  **ais_infer工具在整个数据集上推理获得性能数据:**
 
-1. batch1的性能，ais_infer工具在整个数据集上推理日志如下
+1. batch-size为1的性能，ais_infer工具在整个数据集上推理日志如下
 
 ```
 infname63@d0c3e5f6b93c:~/spach-smlp/ais_infer$ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100  --output test
@@ -263,9 +257,9 @@ infname63@d0c3e5f6b93c:~/spach-smlp/ais_infer$ python3.7.5 ais_infer.py  --model
 [INFO] D2H_latency (ms): min = 0.08606910705566406, max = 0.08606910705566406, mean = 0.08606910705566406, median = 0.08606910705566406, percentile(99%) = 0.08606910705566406
 [INFO] throughput (1000*batchsize/NPU_compute_time): 171.5691219234638
 ```
-即是batch1 310p单卡吞吐率为171.569
+即是batch-size为1时，310p单卡吞吐率为171.569
 
-2. batch16的性能，ais_infer工具在整个数据集上推理日志如下
+2. batch-size为16的性能，ais_infer工具在整个数据集上推理日志如下
    
 ```
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-high.om  --batchsize 16 --output ./ --outfmt BIN --loop 100  --output test
@@ -276,7 +270,7 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-h
 [INFO] throughput (1000*batchsize/NPU_compute_time): 289.95613988090815
 ```
 
-即是batch16 310p单卡吞吐率为289.95613988090815
+即是batch-size为16时，310p单卡吞吐率为289.95613988090815
 
 ### 1.7.2. gpu，npu推理性能对比
 
@@ -290,7 +284,6 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-h
 | 64        | 257.5      | 359.1  |
 | best      | 298.7      | 371.0  |
 
-> **说明：**
+> **说明：** <br>
 > NPU和GPU的推理性能（吞吐率）对比为： 0.805    
-
-性能不达标但是已通过评审。
+> 性能不达标但是已通过评审。
