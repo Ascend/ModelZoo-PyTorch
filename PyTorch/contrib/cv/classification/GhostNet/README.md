@@ -40,10 +40,10 @@ python3.7 demo.py
 
 ## GhostNet 1.0× training result 
 
-|  Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type |
-| :-----: | :------: | :------: | :----: | :------: |
-|    -    | 2117.7   |    1     |  10    |    O2    |
-| 73.129  | 9559.2   |    8     |  400   |    O2    |
+|  Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type |  Device_Type   |
+| :-----: | :------: | :------: | :----: | :------: |  :---------:   |
+|    -    | 1378.8   |    1     |  10    |    O2    | 910B_Pro_aarch |
+| 73.129  | 9559.2   |    8     |  400   |    O2    | 910B_Pro_aarch |
 
 
 
