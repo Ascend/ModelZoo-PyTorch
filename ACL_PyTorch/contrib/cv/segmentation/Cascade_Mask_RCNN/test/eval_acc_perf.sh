@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datasets_path="/opt/npu/datasets"
+datasets_path="/opt/npu"
 
 for para in $*
 do
@@ -24,7 +24,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -model_type=vision -om_path=output/cascade_maskrcnn_bs1.om -device_id=0 -batch_size=1 -input_text_path=cascade_maskrcnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
 if [ $? != 0 ]; then
     echo "fail!"
