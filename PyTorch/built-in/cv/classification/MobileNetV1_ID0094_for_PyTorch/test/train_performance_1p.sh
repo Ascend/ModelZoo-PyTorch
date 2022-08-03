@@ -20,6 +20,8 @@ RANK_ID_START=0
 
 RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
+data_path=""
+ASCEND_DEVICE_ID=0
 data_path="/npu/traindata/imagenet_pytorch/"
 # 指定训练所使用的npu device卡id
 device_id=0
@@ -107,13 +109,13 @@ nohup python3.7 ${cur_path}/main.py \
     --batch_size=${batch_size} \
     --learning-rate=${learning_rate} \
     --epochs=$train_epochs \
-    --max_steps=2000 \
     --device_id=$ASCEND_DEVICE_ID \
     --apex \
     --apex-opt-level='O2' \
     --workers=128 \
     --print-freq=10  > $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
+#    --max_steps=2000 \
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -139,7 +141,7 @@ BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
-##获取性能数据，不需要修改
+#获取性能数据，不需要修改
 #吞吐量
 ActualFPS=${FPS}
 #单迭代训练时长

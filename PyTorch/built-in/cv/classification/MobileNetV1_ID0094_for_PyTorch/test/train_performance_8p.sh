@@ -20,7 +20,7 @@ RANK_ID_START=0
 
 RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
-data_path="/npu/traindata/imagenet_pytorch/"
+data_path=""
 
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL=3
