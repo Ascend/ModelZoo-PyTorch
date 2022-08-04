@@ -6,15 +6,30 @@ cur_path=`pwd`
 #集合通信参数,不需要修改
 export RANK_SIZE=8
 RANK_ID_START=0
+export WORLD_SIZE=16
+
+# 多机时主节点IP，需要设置
+MASTER_ADDR=''
+MASTER_PORT=29680
+# 多机时主节点ID，需要设置，如主节点为0，次节点为1
+NODE_RANK=0
+
+
+export MASTER_ADDR=$MASTER_ADDR
+export MASTER_PORT=$MASTER_PORT
+export NODE_RANK=$NODE_RANK
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
 #网络名称,同目录名称,需要模型审视修改
-Network="Transformer-SSL_ID3434_for_PyTorch"
+Network="Transformer-SSL_for_PyTorch"
 
-#训练batch_size,,需要模型审视修改
-batch_size=128
+#训练batch_size,需要模型审视修改
+batch_size=64
+
+#训练epoch数
+epochs=100
 
 #参数校验，不需要修改
 for para in $*
@@ -47,13 +62,6 @@ if [ x"${cur_path_last_dirname}" == x"test" ]; then
 else
     test_path_dir=${cur_path}/test
 fi
-
-
-#进入训练脚本目录，需要模型审视修改
-cd $cur_path/
-
-#训练开始时间，不需要修改
-start_time=$(date +%s)
 # 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
@@ -61,10 +69,13 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
+#进入训练脚本目录，需要模型审视修改
+cd $cur_path/
+
 #设置环境变量，不需要修改
 RANK_ID=0
 ASCEND_DEVICE_ID=0
-echo "Decive ID: $RANK_ID"
+echo "Device ID: $RANK_ID"
 export RANK_ID=$RANK_ID
 export ASCEND_DEVICE_ID=$RANK_ID
 ASCEND_DEVICE_ID=$RANK_ID
@@ -77,17 +88,16 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 fi
 
-#执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-export RANK_SIZE=8
-export WORLD_SIZE=8
 
-export MASTER_ADDR=127.0.0.1
-export MASTER_PORT=29680
+#训练开始时间，不需要修改
+start_time=$(date +%s)
+
+#执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 
 KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
-    export RANK=$RANK_ID
+    export RANK=$(($RANK_ID+$NODE_RANK*8))
 
     if [ $(uname -m) = "aarch64" ]
     then
@@ -96,20 +106,31 @@ do
         taskset -c $PID_START-$PID_END nohup python3.7 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
-            --epochs 2 \
             --local_rank $RANK_ID \
+            --max_epochs $epochs \
             --batch-size $batch_size > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         nohup python3.7 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
-            --epochs 2 \
             --local_rank $RANK_ID \
+            --max_epochs $epochs \
             --batch-size $batch_size > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 
 wait
+
+nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 \
+    --nnodes=2 \
+    --node_rank=$NODE_RANK \
+    --master_addr=$MASTER_ADDR \
+    --master_port 12345 moby_linear.py \
+    --cfg configs/moby_swin_tiny.yaml \
+    --data-path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
+
+wait
+
 
 #8p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
 ASCEND_DEVICE_ID=0
@@ -126,14 +147,16 @@ FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'*8}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-#打印，不需要修改
+#输出训练精度,需要模型审视修改
+train_accuracy=`grep -a 'Max accuracy' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " 'END {print $8}'|sed 's/%//g'`
+echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
-#性能看护结果汇总
+#稳定性精度看护结果汇总
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量
@@ -142,10 +165,9 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${time}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep 'INFO Train' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss " '{print $NF}' | awk -F " " '{print $1}'|awk -F " " '{print $1}'|awk 'NR>1{print line}{line=$0}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
-
+grep 'INFO Train' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss " '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
-ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt|sed 's/.$//'`
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -155,6 +177,7 @@ echo "DeviceType = ${DeviceType}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/$
 echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #退出anaconda环境

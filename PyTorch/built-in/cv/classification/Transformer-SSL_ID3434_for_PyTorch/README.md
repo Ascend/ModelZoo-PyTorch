@@ -83,3 +83,4 @@ bash ./test/train_performance_8p.sh --data_path=<data_path>
 | -        | 140       | 1        | 1        | O1       | ARM |
 | 67.48    | 1150      | 8        | 100      | O1       | ARM |
 | 74.14    | 1150      | 8        | 300      | O1       | ARM |
+| 68.47    | 1845      | 16       | 100      | O1       | ARM |

@@ -82,8 +82,10 @@ start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export RANK_SIZE=8
-
 export WORLD_SIZE=8
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=29680
+
 KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
