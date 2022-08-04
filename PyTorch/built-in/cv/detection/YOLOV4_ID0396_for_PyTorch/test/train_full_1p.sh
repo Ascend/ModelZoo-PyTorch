@@ -1,7 +1,7 @@
 #!/bin/bash
 cur_path=`pwd`
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
-if [ x"${etp_flag}" = x"true" ];then
+if [ x"${etp_running_flag}" = x"true" ];then
     ls /npu/traindata/coco_txl >1.txt
     ls /npu/traindata/coco_txt/images >2.txt
     ls /npu/traindata/coco_txl/images/train2017 >3.txt
@@ -68,7 +68,7 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-if [ x"${etp_flag}" != x"true" ];then
+if [ x"${etp_running_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
     sed -i 's#train: .*#train: '${data_path}'/train2017.txt#' ${cur_path}/data/coco.yaml
     sed -i 's#val: .*#val: '${data_path}'/val2017.txt#' ${cur_path}/data/coco.yaml
@@ -112,14 +112,14 @@ wait
 
 
 #评测
-if [ x"${etp_flag}" != x"true" ];then
+if [ x"${etp_running_flag}" != x"true" ];then
     cp ./runs/evolve/weights/best_yolov4.pt ./weights/
     nohup taskset -c 0-23  python3.7 test.py --img-size $image_size --conf 0.001 --batch ${batch_size} --device ${ASCEND_DEVICE_ID} --data coco.yaml --cfg cfg/yolov4.cfg --weights weights/best_yolov4.pt >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 wait
 
 #参数复原
-if [ x"${etp_flag}" = x"true" ];then
+if [ x"${etp_running_flag}" = x"true" ];then
     sed -i "s|$data_path/../coco_txl/COCO2017/train2017.txt|./coco/train2017.txt|g" data/coco.yaml
     sed -i "s|$data_path/../coco_txl/COCO2017/val2017.txt|./coco/val2017.txt|g" data/coco.yaml
     sed -i "s|$data_path/../coco_txl/COCO2017/testdev2017.txt|./coco/testdev2017.txt|g" data/coco.yaml
