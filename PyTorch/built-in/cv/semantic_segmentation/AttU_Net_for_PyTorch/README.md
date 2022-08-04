@@ -42,8 +42,8 @@ https://github.com/LeeJunHyun/Image_Segmentation
 
 训练日志路径：网络脚本test下output文件夹内。例如：
       test/output/devie_id/train_${device_id}.log          # 训练脚本原生日志
-      test/output/devie_id/AttU_Net_for_PyTorch_bs1024_8p_perf.log  # 8p性能训练结果日志
-      test/output/devie_id/AttU_Net_for_PyTorch_bs1024_8p_acc.log   # 8p精度训练结果日志
+      test/output/devie_id/AttU_Net_for_PyTorch_bs128_8p_perf.log  # 8p性能训练结果日志
+      test/output/devie_id/AttU_Net_for_PyTorch_bs128_8p_acc.log   # 8p精度训练结果日志
 
 模型权重文件：训练生成的权重文件会保存到models文件夹下，以.pkl为作为后缀保存。
 
