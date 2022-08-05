@@ -122,13 +122,15 @@ sed -i "s|\"coco_2017_val\": (\"coco/val2017\", \"coco/annotations/instances_val
 sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \"$data_path/R-101.pkl\"|g" $cur_path/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
 wait
 
+#性能脚本取消评测，缩短训练时间
+export PERF_ONLY=True
+#非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
-if [ x"${etp_flag}" == x"true"  ];then
-    sed -i "s|ret.append(hooks.EvalHook(cfg.TEST.EVAL_PERIOD, test_and_save_results))|#ret.append(hooks.EvalHook(cfg.TEST.EVAL_PERIOD, test_and_save_results))|g" $cur_path/../detectron2/engine/defaults.py
-else
-    source ${test_path_dir}/env_npu.sh
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
 fi
+
 
 cd $cur_path
 

@@ -122,6 +122,9 @@ sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \
 wait
 
 cd $cur_path/
+#性能脚本取消评测，缩短训练时间
+export PERF_ONLY=True
+
 #非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
