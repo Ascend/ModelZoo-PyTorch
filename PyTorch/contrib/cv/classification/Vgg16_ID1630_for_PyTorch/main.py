@@ -54,6 +54,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.parallel
@@ -221,7 +223,11 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.device == 'npu':
         loc = 'npu:{}'.format(args.gpu)
-        torch.npu.set_device(loc)
+        #torch.npu.set_device(loc)
+        if torch.__version__ >= "1.8":
+            torch_npu.npu.set_device(loc)
+        else:
+            torch.npu.set_device(loc)
     else:
         loc = 'cuda:{}'.format(args.gpu)
         torch.cuda.set_device(loc)
