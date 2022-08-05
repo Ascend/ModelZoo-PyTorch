@@ -110,6 +110,8 @@ nohup python3.7 ${cur_path}/main.py \
     --learning-rate=${learning_rate} \
     --epochs=$train_epochs \
     --device_id=$ASCEND_DEVICE_ID \
+    --max_steps=2000 \
+    --loss-scale-value=1024 \    
     --apex \
     --apex-opt-level='O2' \
     --workers=128 \
