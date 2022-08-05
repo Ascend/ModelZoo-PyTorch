@@ -42,5 +42,5 @@ test/output/devie_id/Vgg19_${device_id}_bs_8p_acc.log             # 8p training 
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
-| -        | 290       | 1        | 240      | O2       |
-| 73.796   | 1900      | 8        | 240      | O2       |
+| -        | 600       | 1        | 240      | O2       |
+| 75.553   | 3238      | 8        | 240      | O2       |
