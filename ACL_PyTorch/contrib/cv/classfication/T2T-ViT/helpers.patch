@@ -1,0 +1,11 @@
+--- helpers.py	2022-07-28 16:37:20.712910818 +0800
++++ helpers.py	2022-07-28 16:36:38.160910297 +0800
+@@ -3,7 +3,8 @@
+ Hacked together by / Copyright 2020 Ross Wightman
+ """
+ from itertools import repeat
+-from torch._six import container_abcs
++import collections.abc as container_abcs
+ 
+ 
+ # From PyTorch internals
