@@ -104,7 +104,8 @@ python3.7 cspresnext_pth2onnx.py cspresnext50_ra_224-648b4713.pth cspresnext.onn
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
-```${chip_name}可通过`npu-smi info`指令查看，例：310P3
+${chip_name}可通过`npu-smi info`指令查看，例：310P3
+```
 atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=cspresnext_bs1 --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_cspresnext.config --enable_small_channel=1
 ```
 参数说明：
