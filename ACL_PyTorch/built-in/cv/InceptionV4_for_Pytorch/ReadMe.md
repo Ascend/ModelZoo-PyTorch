@@ -2,15 +2,17 @@
 
 1.onnx==1.7.0
 
-2.pytorch==1.5.0
+2.pytorch==1.6.0
 
-3.torchvision==0.6.0
+3.torchvision==0.7.0
 
 4.numpy==1.18.5
 
 5.pillow==7.2.0
 
 6.python==3.7.5
+
+7.decorator==5.1.1
 
 
 
@@ -58,7 +60,7 @@
 	（c） 将pretrainedmodels代码拉下来后，需要将pretrained-models.pytorch/pretrainedmodels/models/inception4.py 中的
 		adaptiveAvgPoolWidth = features.shape[2] 
 	修改为
-		adaptiveAvgPoolWidth = features.shape[2].item
+		adaptiveAvgPoolWidth = features.shape[2].item()
 	（d）安装pretrainedmodels，命令如下
   		cd pretrained-models.pytorch
  		python3 setup.py install
