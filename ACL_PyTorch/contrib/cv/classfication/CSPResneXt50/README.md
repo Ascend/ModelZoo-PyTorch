@@ -22,8 +22,6 @@
 -   [7 性能对比](#7-性能对比)
 	-   [7.1 npu性能数据](#71-npu性能数据)
 
-
-
 ## 1 模型概述
 
 -   **[论文地址](#11-论文地址)**  
@@ -207,51 +205,20 @@ benchmark工具在整个数据集上推理时也会统计性能数据，但是�
 1.benchmark工具在整个数据集上推理获得性能数据  
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 
-```
-[e2e] throughputRate: 203.598, latency: 245582
-[data read] throughputRate: 216.393, moduleLatency: 4.62122
-[preprocess] throughputRate: 216.18, moduleLatency: 4.62577
-[infer] throughputRate: 204.451, Interface throughputRate: 304.088, moduleLatency: 4.24378
-[post] throughputRate: 204.451, moduleLatency: 4.89115
-```
 Interface throughputRate: 304.088，304.088x4既是batch1 310单卡吞吐率  
 batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
 
-```
-[e2e] throughputRate: 130.345, latency: 383598
-[data read] throughputRate: 130.66, moduleLatency: 7.65348
-[preprocess] throughputRate: 130.564, moduleLatency: 7.65911
-[infer] throughputRate: 130.561, Interface throughputRate: 421.719, moduleLatency: 3.85317
-[post] throughputRate: 8.15993, moduleLatency: 122.55
-```
 Interface throughputRate: 421.719，421.719x4既是batch16 310单卡吞吐率  
 batch4性能：  
  ./benchmark.x86_64 -round=20 -batch_size=4 -device_id=0 -om_path=cspresnext_bs4.om
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_cspresnext_bs4_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 440.606samples/s, ave_latency: 2.304ms
-----------------------------------------------------------------
 
-```
 batch4 310单卡吞吐率：440.606x4=1762.424 fps  
 batch8性能：
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_cspresnext_bs8_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 464.07samples/s, ave_latency: 2.16864ms
-----------------------------------------------------------------
 
-```
 batch8 310单卡吞吐率：464.07x4=1856.28fps  
 batch32性能：
 
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_cspresnext_bs32_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 369.97samples/s, ave_latency: 2.7061ms
-----------------------------------------------------------------
-```
+
 batch32 310单卡吞吐率：369.97x4=1479.88fps  
   
  **性能优化：**  
