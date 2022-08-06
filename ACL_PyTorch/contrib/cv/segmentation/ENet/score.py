@@ -161,7 +161,7 @@ def hist_info(pred, label, num_cls):
     correct = np.sum((pred[k] == label[k]))
 
     return np.bincount(num_cls * label[k].astype(int) + pred[k], minlength=num_cls ** 2).reshape(num_cls,
-                                                                                                 num_cls), labeled, correct
+                        num_cls), labeled, correct
 
 
 def compute_score(hist, correct, labeled):
@@ -172,4 +172,4 @@ def compute_score(hist, correct, labeled):
     freq_IU = (iu[freq > 0] * freq[freq > 0]).sum()
     mean_pixel_acc = correct / labeled
 
-    return iu, mean_IU, mean_IU_no_back, mean_pixel_acc
+    return (iu, mean_IU, mean_IU_no_back, mean_pixel_acc)
