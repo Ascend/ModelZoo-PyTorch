@@ -14,7 +14,7 @@
 
 # DATA
 dataset = 'Tusimple'
-data_root = '/opt/npu/TUSIMPLEROOT'
+data_root = './tusimple'
 # TRAIN
 epoch = 100
 batch_size = 128
@@ -42,7 +42,7 @@ shp_loss_w = 0.0
 # EXP
 note = ''
 
-log_path = '/home/UFLD/UFLD_LOG'
+log_path = './'
 
 # FINETUNE or RESUME MODEL PATH
 finetune = None
