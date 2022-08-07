@@ -105,11 +105,11 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 ${chip_name}可通过`npu-smi info`指令查看，例：310P3
+![输入图片说明](../../../../../image.png)
 ```
 atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=cspresnext_bs1 --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_cspresnext.config --enable_small_channel=1
 ```
-参数说明：
---input_shape：输入数据的shape。  
+参数说明：--input_shape：输入数据的shape。  
     --output：输出的OM模型。  
     --log：日志级别。  
     --soc_version：处理器型号，Ascend310或Ascend710。  
@@ -205,10 +205,9 @@ CSPResNeXt-50		     77.9      94.0
 benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
 1.benchmark工具在整个数据集上推理获得性能数据  
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-
-Interface throughputRate: 304.088，304.088x4既是batch1 310单卡吞吐率  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
-
+  
+batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
+  
 Interface throughputRate: 421.719，421.719x4既是batch16 310单卡吞吐率  
 batch4性能：  
  ./benchmark.x86_64 -round=20 -batch_size=4 -device_id=0 -om_path=cspresnext_bs4.om
@@ -221,7 +220,10 @@ batch32性能：
 
 
 batch32 310单卡吞吐率：369.97x4=1479.88fps  
-  
+|          |          |          |          |          |          |
+|----------|----------|----------|----------|----------|----------|
+| 1667.012 | 2230.544 | 2103.338 | 2066.584 | 1722.096 | 1646.824 |
+
  **性能优化：**  
 
 1.从profiling数据的op_statistic_0_1.csv看出影响性能的是TransData，StridedSliceD，Conv2D算子，Conv2D算子不存在问题，由于格式转换om模型StridedSliceD前后需要有TransData算子，从op_summary_0_1.csv可以看出单个TransData或Transpose算子aicore耗时，确定是否可以优化  
