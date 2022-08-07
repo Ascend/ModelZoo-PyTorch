@@ -208,7 +208,7 @@ batch1的性能，benchmark工具在整个数据集上推理后生成result/perf
   
 batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
   
-Interface throughputRate: 421.719，421.719x4既是batch16 310单卡吞吐率  
+Interface throughputRate: 516.646，516.646x4既是batch16 310单卡吞吐率  
 batch4性能：  
  ./benchmark.x86_64 -round=20 -batch_size=4 -device_id=0 -om_path=cspresnext_bs4.om
 
