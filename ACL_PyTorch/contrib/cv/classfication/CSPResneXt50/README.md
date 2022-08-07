@@ -212,17 +212,17 @@ Interface throughputRate: 421.719，421.719x4既是batch16 310单卡吞吐率
 batch4性能：  
  ./benchmark.x86_64 -round=20 -batch_size=4 -device_id=0 -om_path=cspresnext_bs4.om
 
-batch4 310单卡吞吐率：440.606x4=1762.424 fps  
 batch8性能：
+./benchmark.x86_64 -round=20 -batch_size=8 -device_id=0 -om_path=cspresnext_bs8.om
 
-batch8 310单卡吞吐率：464.07x4=1856.28fps  
 batch32性能：
+./benchmark.x86_64 -round=20 -batch_size=32 -device_id=0 -om_path=cspresnext_bs32.om
+|        | bs1      | bs4      | bs8      | bs16     | bs32     |
+|--------|----------|----------|----------|----------|----------|
+| 单卡     | 416.753  | 557.636  | 525.834  | 516.646  | 430.524  |
+| 单卡性能x4 | 1667.012 | 2230.544 | 2103.338 | 2066.584 | 1722.096 |
 
 
-batch32 310单卡吞吐率：369.97x4=1479.88fps  
-|          |          |          |          |          |          |
-|----------|----------|----------|----------|----------|----------|
-| 1667.012 | 2230.544 | 2103.338 | 2066.584 | 1722.096 | 1646.824 |
 
  **性能优化：**  
 
