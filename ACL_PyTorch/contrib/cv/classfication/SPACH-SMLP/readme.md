@@ -199,10 +199,10 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 | --outfmt | 输出数据的格式，默认“BIN”，可取值“NPY”、“BIN”、“TXT”  |
 
 - 精度统计
-调用imagenet_acc_eval_ais_infer.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
+调用smlp_postproces.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
 
 ```
-python imagenet_acc_eval_ais_infer.py ${result_dir_path}
+python smlp_postproces.py --result_dir_path ${result_dir_path}
 ```
 
 参数说明：
