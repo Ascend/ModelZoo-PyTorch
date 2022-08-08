@@ -24,6 +24,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -137,7 +139,7 @@ parser.add_argument('-t',
 parser.add_argument('--amp', action='store_true', help='use apex')
 parser.add_argument('--pm', '--precision-mode', default='O2', type=str,
                     help='precision mode to use for mix precision, only support O1, O2')
-parser.add_argument('--loss_scale', default=1024, type=int, help='loss_scale for amp')
+parser.add_argument('--loss_scale', default='dynamic', help='loss_scale for amp')
 
 best_acc1 = 0
 
