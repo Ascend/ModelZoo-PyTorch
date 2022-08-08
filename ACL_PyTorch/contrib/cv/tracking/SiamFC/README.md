@@ -35,11 +35,11 @@ python3.7 pth2onnx.py siamfc.pth onnx/exemplar.onnx onnx/search.onnx
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
 pip install sympy decorator
-'''
+```
 
 onnx-om, ${chip_name}可通过npu-smi info指令查看
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-'''
+```
 atc --model=./onnx/exemplar.onnx --framework=5 --output=./om/exemplar_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,127,127" --log=debug --soc_version=Ascend${chip_name}
 atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_format=NCHW --input_shape="actual_input_1:1,9,255,255" --log=debug --soc_version=Ascend${chip_name}
 ```
@@ -63,10 +63,15 @@ python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om --input pre_dat
 python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om --input pre_dataset2/ --device_id 0
 ```
 
-| 模型      | t4性能 | 310性能  | 310P性能 | 310P(AOE)性能 |
-| :------: | :------: | :------: | :------: | :------: |
-| exemplar_bs1 | 4240fps | 5677fps | 2641fps | 6720fps |
-| search_bs1 | 738fps | 862fps | 932fps | 1404fps |
+| 模型 | T4性能 | 310性能 | 310P性能 | 310P(aoe)性能 | 310P/310 | 310P/T4 | 310P(aoe)/310 | 310P(aoe)/T4 |
+| :------: | :------: | :------: | :------: | :------: | :------: | :------: |:------: | :------: |
+| search_batch1| 95.16 | 862 | 932 | 1404 | 1.0812 | 9.7840| 1.6287 | 14.7541 |
+| exemplar_batch1 | 1013 | 5677 | 2641 | 6982 | 0.4652 | 2.6071 | 1.2298| 6.8924|
+| exemplar_batch4 | 378 | 3008| 2759| 3386| 0.9172| 7.2989| 1.1257| 8.9576|
+| exemplar_batch8 | 194 | 1660| 2375|  | 1.4307| 12.2423| | |
+| exemplar_batch16 | 97.8 | 860| 951|  | 1.1058| 9.7239| | |
+| exemplar_batch32 | 56.6 | 440| 461|  | 1.0477| 8.1449| | |
+| exemplar_batch64 | 26.1 | 220| 234|  | 1.0636| 8.9655| | |
 
 > 由于该模型无法进行常规的离线测试，因而改为对测试集的每一帧进行测试，exemplar_bs1和search_bs1分别对应模型中的两个分支，它们所进行的操作不同。
 >
