@@ -17,16 +17,16 @@ import os
 import os
 import numpy as np
 import sys
+from tqdm import tqdm, trange
 
 '''
 sys.argv[1]: om_output
 sys.argv[2]: ground_truth
 '''
 om_output_files = sorted(os.listdir(sys.argv[1]))
-
 output_labels = []
 # 读取om输出
-for file in om_output_files:
+for file in tqdm(om_output_files):
     with open(sys.argv[1] + file, mode='r') as f:
         content = f.read().split(' ')[:-1]
         content = list(map(lambda x: float(x), content))
@@ -38,10 +38,9 @@ with open(sys.argv[2], mode='r') as f:
     ground_truth = list(map(lambda x: int(x.rstrip('\n').split(' ')[1]), f.readlines()))
 
 count = 0
-for i in range(len(output_labels)):
+for i in trange(len(output_labels)):
     if ground_truth[i] == output_labels[i]:
         count += 1
         
+
 print(f"accuracy: {count / len(output_labels)}")
-# print(count, len(output_labels))
-# print(output_labels)
