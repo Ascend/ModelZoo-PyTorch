@@ -160,8 +160,10 @@ def train_segmentor(model,
     # optimizer = build_optimizer(model, cfg.optimizer)
     # weik comment end
 
+
     if cfg.get('runner') is None:
         cfg.runner = {'type': 'IterBasedRunner', 'max_iters': cfg.total_iters}
+
         warnings.warn(
             'config is now expected to have a `runner` section, '
             'please set `runner` in your config.', UserWarning)

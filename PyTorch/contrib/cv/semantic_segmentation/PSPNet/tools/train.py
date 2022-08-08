@@ -35,6 +35,9 @@ import copy
 import os
 import os.path as osp
 import time
+import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 import mmcv
 import torch

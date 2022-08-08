@@ -10,7 +10,7 @@ This implements training of PSPNet on the PASCAL VOC Aug dataset, mainly modifie
 
 ## Environment  preparation
 
-The latest Ascend-Pytorch version is 1.5.0. MMSegmentation 0.10.0 and mmcv 1.2.7 are chosen as they support pytorch1.5.0.
+The latest Ascend-Pytorch version is 1.8.1. MMSegmentation 0.10.0 and mmcv 1.2.7 are chosen as they support pytorch1.8.1.
 
 1. Install the latest Ascend-Pytorch.
 
@@ -30,7 +30,7 @@ Denot `$PSPNET` as the path of `$YOURMODELZOO/contrib/PyTorch/Research/cv/semant
 
 Firstly, download [mmcv1.2.7](https://github.com/open-mmlab/mmcv/tree/v1.2.7) to the path `$YOURMMVCPATH`. Then, copy the `mmcv_replace` to `$YOURMMVCPATH/mmcv`.
 
-Check the numpy version is 1.21.2.
+Check the numpy version is 1.21.6.
 
 ```
 # configure
@@ -139,11 +139,11 @@ Log and checkpoit path:
 
 ### PSPNET with 8p
 
-| device | fps |  aAcc |  mIoU | mAcc |
-| :------: | :------: | :------: | :------: | :------: |
-|mmsegmentaion| |-- | 76.78| -- |
-|GPU-8p| 82.296| 94.92 | 77.13 | 85.7 |
-|NPU-8p| 117.808 | 94.71 | 77.04 | 86.52 |
+| device |  fps   | aAcc  | mIoU  | mAcc  |
+| :------: |:------:|:-----:|:-----:|:-----:|
+|mmsegmentaion|        |  --   | 76.78 |  --   |
+|GPU-8p| 82.296 | 94.92 | 77.13 | 85.7  |
+|NPU-8p| 129.94 | 94.74 | 77.31 | 85.91 |
 
 ps: 2x training data are used for training on NPU (`bs*#NPU*#iter=16*8*10000`) v.s. GPU (`bs*#GPU*#iter=4*8*20000`)
 
