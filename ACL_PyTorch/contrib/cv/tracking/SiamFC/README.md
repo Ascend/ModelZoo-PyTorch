@@ -26,6 +26,8 @@ pip3.7 install -r requirements.txt
 ## 2 离线推理 
 
 1.模型转化(pth-onnx-om)
+
+pth-onnx
 ```
 mkdir onnx
 python3.7 pth2onnx.py siamfc.pth onnx/exemplar.onnx onnx/search.onnx
@@ -33,10 +35,13 @@ python3.7 pth2onnx.py siamfc.pth onnx/exemplar.onnx onnx/search.onnx
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
 pip install sympy decorator
+'''
 
+onnx-om, ${chip_name}可通过npu-smi info指令查看
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+'''
 atc --model=./onnx/exemplar.onnx --framework=5 --output=./om/exemplar_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,127,127" --log=debug --soc_version=Ascend${chip_name}
 atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_format=NCHW --input_shape="actual_input_1:1,9,255,255" --log=debug --soc_version=Ascend${chip_name}
-
 ```
 2.离线推理
 310P上执行，执行时使npu-smi info查看设备状态，确保device空闲  
