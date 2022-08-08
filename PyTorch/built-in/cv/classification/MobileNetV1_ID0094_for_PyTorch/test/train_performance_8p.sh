@@ -107,6 +107,7 @@ do
         --learning-rate=${learning_rate} \
         --epochs=$train_epochs \
         --apex \
+        --loss-scale-value=1024 \
         --apex-opt-level='O2' \
         --workers=128 \
         --print-freq=10 \
