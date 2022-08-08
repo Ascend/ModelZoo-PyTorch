@@ -202,14 +202,12 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 调用smlp_postproces.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
 
 ```
-python smlp_postproces.py --result_dir_path ${result_dir_path}
+python smlp_postproces.py --infer_result_dir ${infer_result_dir}
 ```
 
 参数说明：
-    ${result_dir_path}参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
-
-    
-
+    ${infer_result_dir}参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
+   
 
 查看输出的结果：
 
