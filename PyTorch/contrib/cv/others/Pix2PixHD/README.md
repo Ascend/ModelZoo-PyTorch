@@ -25,7 +25,7 @@
 ```
 pip install -r requirements.txt
 ```
-
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 ## 3.Dataset
 
 (1) 下载[cityscapes](https://www.cityscapes-dataset.com/downloads/)数据集，本项目只需要下载cityscapes数据集中的gtFine_trainvaltest.zip和leftImg8bit_trainvaltest.zip两个压缩包；

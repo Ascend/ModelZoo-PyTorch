@@ -8,9 +8,9 @@ As of the current date, Ascend-Pytorch is still inefficient for contiguous opera
 
 ## Requirements
 
--   install Ascend-Pytorch `1.5.0+ascend.post201`
+-   install Ascend-Pytorch 
 
--   install apex `0.1+ascend`
+-   install apex 
 
 -   install related lib
       ```

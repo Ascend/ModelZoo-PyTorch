@@ -16,6 +16,7 @@ commit_id=a199d50be5b0a9ba348679ad4d010130535a631d
 
 - 安装 PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+  注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 - 训练数据集是MuCo和MPII，评估数据集是MuPoTS，数据集较大，请在下载和解压时确保硬盘空间充足。
 - 请在`data`文件夹中遵循以下的目录结构，如果连接到了已经准备好的数据文件夹，就不需要再构建下面的目录。
 ```

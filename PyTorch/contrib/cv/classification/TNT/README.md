@@ -11,6 +11,7 @@ TNT divides the image patches into sub-patches. With the structure of visual sen
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+  Note:Install the torchvision that corresponds to the torch version
 - Download the ImageNet dataset
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 - Please add the following shapes into /usr/local/Ascend/ascend-toolkit/5.0.3/arm64-linux/opp/op_impl/built-in/ai_core/tbe/impl/dynamic/transpose.py for better performance.

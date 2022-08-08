@@ -17,7 +17,6 @@ commit_id=f5e4c452bba854b8ed14a7240f51720ca7857e91
 
 - CANN 5.0.2及对应版本的PyTorch
 - `pip3.7 install -r requirements.txt`
-依赖里有torchvision==0.6.0,如果在arm64上运行，需要手动安装
 
 安装完其他依赖后，请使用代码仓中的源码编译安装detectron2：
 ```

@@ -11,6 +11,7 @@ As of the current date, Ascend-Pytorch is still have some bug in nn.Dropout(), F
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+  Note:Install the torchvision that corresponds to the torch version
 - Download the ImageNet dataset from http://www.image-net.org/
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 

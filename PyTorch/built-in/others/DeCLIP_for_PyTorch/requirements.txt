@@ -1,4 +1,4 @@
-torchvision==0.9.1
+torchvision
 timm
 ftfy
 regex

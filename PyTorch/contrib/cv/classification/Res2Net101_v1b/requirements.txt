@@ -1,4 +1,2 @@
-torch==1.8.1
-apex
-torchvision==0.9.1
+torchvision
 onnx

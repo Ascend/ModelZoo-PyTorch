@@ -11,7 +11,8 @@ As of the current date, Ascend-Pytorch is still inefficient for contiguous opera
 - pytorch_ascend, apex_ascend, tochvision
 - Download the ImageNet dataset from http://www.image-net.org/
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
-
+  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 ## Training
 
 To train a model, run `mobilenet.py` with the desired model architecture and the path to the ImageNet dataset:
