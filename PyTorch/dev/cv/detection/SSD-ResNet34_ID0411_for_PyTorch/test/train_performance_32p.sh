@@ -17,6 +17,9 @@ conf_path=""
 server_index=""
 fix_node_ip=""
 devicesnum=""
+one_node_ip=""
+linux_num=""
+
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
 Network="SSD-ResNet34_ID0411_for_PyTorch"
@@ -87,10 +90,21 @@ do
             conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
             server_index=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
     fi
 done
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
+
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"

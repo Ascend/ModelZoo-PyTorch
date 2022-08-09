@@ -5,7 +5,7 @@ cur_path=`pwd`
 
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
-export RANK_SIZE=16
+export RANK_SIZE=64
 export JOB_ID=10087
 RANK_ID_START=0
 # source env.sh
@@ -138,7 +138,7 @@ python3.7 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
     --dist-url 'tcp://127.0.0.1:50002' \
     --dist-backend 'hccl' \
     --multiprocessing-distributed \
-    --world-size 2 \
+    --world-size ${linux_num} \
     --class-nums 1000 \
     --batch-size $batch_size \
     --epochs $train_epochs \
@@ -161,7 +161,7 @@ wait
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep FPS ${cur_path}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
-FPS=`awk 'BEGIN{printf "%.0f\n",'${FPS}'*'2'}'`
+FPS=`awk 'BEGIN{printf "%.0f\n",'${FPS}'*'8'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

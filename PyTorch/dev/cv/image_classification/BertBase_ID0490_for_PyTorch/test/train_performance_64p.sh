@@ -8,6 +8,9 @@ data_path=""
 conf_path=""
 server_index=""
 fix_node_ip=""
+one_node_ip=""
+linux_num=""
+
 #集合通信参数,不需要修改
 
 export RANK_SIZE=64
@@ -43,11 +46,15 @@ do
     elif [[ $para == --ckpt_path* ]];then
         ckpt_path=`echo ${para#*=}`
     elif [[ $para == --conf_path* ]];then
-            conf_path=`echo ${para#*=}`
+        conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
-            server_index=`echo ${para#*=}`
+        server_index=`echo ${para#*=}`
     elif [[ $para == --fix_node_ip* ]];then
-            fix_node_ip=`echo ${para#*=}`
+        fix_node_ip=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
     fi
 done
 
@@ -57,12 +64,17 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 export HCCL_IF_IP=$fix_node_ip
 export MASTER_ADDR=$one_node_ip
-
+export HCCL_WHITELIST_DISABLE=1
 rank_server=`awk 'BEGIN{printf "%.0f\n",8*'${server_index}'}'`
 export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",8*'${linux_num}'}'`
 
@@ -75,19 +87,22 @@ cur_1=${1:-"1"}
 cur_2=${2:-"2"}
 cur_3=${3:-"3"}
 cur_4=${4:-"4"}
-init_checkpoint=${5:-"`${data_path}/pretrained/bert_base_pretrain.pt`"}
-epochs=${6:-"1.0"}
-batch_size=${7:-"80"}
-learning_rate=${8:-"2e-4"}
-precision=${9:-"fp16"}
-num_npu=${10:-"64"}
-seed=${11:-"1"}
-squad_dir=${12:-"`${data_path}/squad/v1.1`"}
-vocab_file=${13:-"${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt"}
-OUT_DIR=${14:-"results/SQuAD"}
-mode=${15:-"train eval"}
-CONFIG_FILE=${16:-"bert_base_config.json"}
-max_steps=${17:-"-1"}
+cur_5=${5:-"5"}
+cur_6=${6:-"6"}
+cur_7=${7:-"7"}
+init_checkpoint=${8:-"${data_path}/pretrained/bert_base_pretrain.pt"}
+epochs=${9:-"1.0"}
+batch_size=${10:-"80"}
+learning_rate=${11:-"2e-4"}
+precision=${12:-"fp16"}
+num_npu=${13:-"64"}
+seed=${14:-"1"}
+squad_dir=${15:-"${data_path}/squad/v1.1"}
+vocab_file=${16:-"${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt"}
+OUT_DIR=${17:-"results/SQuAD"}
+mode=${18:-"train eval"}
+CONFIG_FILE=${19:-"bert_base_config.json"}
+max_steps=${20:-"-1"}
 
 echo "out dir is $OUT_DIR"
 mkdir -p $OUT_DIR

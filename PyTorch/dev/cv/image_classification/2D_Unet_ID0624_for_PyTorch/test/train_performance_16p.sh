@@ -29,6 +29,8 @@ data_path=""
 conf_path=""
 server_index=""
 fix_node_ip=""
+one_node_ip=""
+linux_num=""
 
 if [[ $1 == --help || $1 == --h ]];then
         echo "usage:./train_performance_1p.sh "
@@ -37,15 +39,19 @@ fi
 
 for para in $*
 do
-        if [[ $para == --data_path* ]];then
-                data_path=`echo ${para#*=}`
-        elif [[ $para == --conf_path* ]];then
-          conf_path=`echo ${para#*=}`
-  elif [[ $para == --server_index* ]];then
-          server_index=`echo ${para#*=}`
-  elif [[ $para == --fix_node_ip* ]];then
-          fix_node_ip=`echo ${para#*=}`
-        fi
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    elif [[ $para == --conf_path* ]];then
+        conf_path=`echo ${para#*=}`
+    elif [[ $para == --server_index* ]];then
+        server_index=`echo ${para#*=}`
+    elif [[ $para == --fix_node_ip* ]];then
+        fix_node_ip=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
+    fi
 done
 
 if [[ $data_path  == "" ]];then
@@ -53,8 +59,13 @@ if [[ $data_path  == "" ]];then
         exit 1
 fi
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else   
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 export HCCL_IF_IP=$fix_node_ip
 export MASTER_ADDR=$one_node_ip
