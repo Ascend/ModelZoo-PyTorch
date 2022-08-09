@@ -29,17 +29,18 @@
       
             pip3.7 install --upgrade torch-*.whl  
             pip3.7 install --upgrade apex-*.whl   
-            pip3.7 install --upgrade torchvision==0.6.0 # 对应当前torch==1.5.0的版本，arm请使用0.2.2  
+            pip3.7 install --upgrade torchvision 
     - 其他依赖包 pip install -r requirements.txt  
       
             torchsummary==1.5.1
-            Pillow==6.0.0  
+            Pillow==9.1.0  
             PyYAML==5.1.2  
             requests==2.22.0  
             tqdm==4.19.9  
             numpy  
             sympy  
             decorator  
+      注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 
 ##Training
 

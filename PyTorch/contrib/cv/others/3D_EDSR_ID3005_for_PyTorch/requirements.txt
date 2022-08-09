@@ -1,2 +1,0 @@
-Python 3.7.4
-Pytorch 1.8.1

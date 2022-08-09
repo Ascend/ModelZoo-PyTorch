@@ -9,6 +9,7 @@ This implements training of SRGAN on  [VOC2012](http://cvlab.postech.ac.kr/~mooy
 - apex @20210930
 - torch @20210930
 - `pip install -r requirements.txt` （若以安装高版本的对应的库，可跳过）
+  注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 - CANN @5.0.3
 
 ## 数据集准备

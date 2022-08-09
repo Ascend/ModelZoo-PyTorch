@@ -1,5 +1,5 @@
 numpy
-pillow==5.4.1
+pillow==9.1.0
 pyyaml==3.13
 tqdm==4.31.1
 tensorboardX==1.6

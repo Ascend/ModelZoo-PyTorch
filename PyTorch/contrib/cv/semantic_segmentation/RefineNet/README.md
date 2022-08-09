@@ -8,15 +8,17 @@ This repository is an NPU implementation of the ["RefineNet: Multi-Path Refineme
 
 See requirements.txt
 
-- PyTorch 1.5.0
-- torchvision 0.6.0
+- PyTorch 
+- torchvision 
 - Numpy 1.15.1
-- Pillow 5.3.0
+- Pillow 9.1.0
 - h5py 2.8.0
 - tqdm 4.28.1
 - h5py 3.4.0
 - opencv-python 3.4.4.19
 - albumentations 0.4.5
+  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 - install densetorch as follow:
 
 ```bash

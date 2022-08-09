@@ -15,7 +15,7 @@
 - 执行本样例前，请确保已安装有昇腾AI处理器的硬件环境，CANN包版本5.0.2
 - 该目录下的实现是基于PyTorch框架，其中torch版本为1.5.0+ascend.post3，使用的混合精度apex版本为0.1+ascend
 - `pip install -r requirements.txt`
-
+  注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 ## 训练前准备
 
 - 采用ImageNet(ILSVRC2012)数据集，数据集获取请参考：[PyTorch/ImageNet](https://github.com/pytorch/examples/tree/master/imagenet)

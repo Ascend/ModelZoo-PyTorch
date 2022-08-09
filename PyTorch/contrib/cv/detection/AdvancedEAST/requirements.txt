@@ -1,7 +1,5 @@
-torch
 torchvision
-apex
 onnx
-Pillow
+Pillow==9.1.0
 opencv-python
 Shapely

@@ -1,4 +1,3 @@
-apex @ file:///home/packages/pt1.8/apex-0.1%2Bascend.20220505-cp37-cp37m-linux_aarch64.whl
 collections
 h5py==3.2.1
 idna==2.10
@@ -25,7 +24,7 @@ parso==0.8.3
 pathlib2==2.3.5
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==8.1.2
+Pillow==9.1.0
 python-dateutil==2.8.2
 requests==2.25.1
 requests-oauthlib==1.3.0
@@ -36,7 +35,7 @@ scikit-video==1.1.11
 scipy==1.7.3
 sklearn==0.0
 tabulate==0.8.9
-tensor-fused-plugin @ file:///home/330/tensor_fused_plugin-0.1%2Bascend-cp37-cp37m-linux_aarch64.whl
+tensor-fused-plugin
 tensorboard==2.7.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.0
@@ -47,9 +46,7 @@ terminaltables==3.1.0
 threadpoolctl==3.0.0
 tifffile==2021.11.2
 tinycss2==1.1.1
-torch @ file:///home/packages/torch-1.8.1%2Bascend.rc2.20220505-cp37-cp37m-linux_aarch64.whl
-torch-npu @ file:///home/packages/torch_npu-1.8.1rc2.20220505-cp37-cp37m-linux_aarch64.whl
-torchvision==0.2.1
+torchvision
 tornado==6.1
 tqdm==4.62.3
 traitlets==5.2.1.post0

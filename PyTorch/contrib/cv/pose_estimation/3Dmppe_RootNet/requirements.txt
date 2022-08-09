@@ -1,12 +1,10 @@
-torch==1.5.0+ascend.post3.20210930
-apex==0.1+ascend.20210930
-torchvision==0.2.2.post3
+torchvision
 cycler==0.10.0
 Cpython==0.29.24
 matplotlib==3.4.3
 numpy==1.21.1
 opencv-python==4.5.3.56
-Pillow==8.2.0
+Pillow==9.1.0
 pycocotools==2.0.2
 future==0.18.2
 scikit-learn==1.0

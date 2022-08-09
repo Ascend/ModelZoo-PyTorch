@@ -11,6 +11,7 @@
 ### 2.1 软件环境准备
     1. 安装 NPU 运行所需的driver，firmware，cann包，安装ascend—torch-1.8(当前模型仅在1.8上跑过), torch_npu, ascend-apex
     2. pip install -r requirements.txt
+        提示：安装与torch版本相对应的torchvision
     3. 运行需要用到nltk的一些语料库，如果可以连接公网的话可以自动下载，如无法链接公网则需要下载以下三个链接并解压到 ~/nltk_data/corpora 
         1. https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/omw-1.4.zip
         2. https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/stopwords.zip

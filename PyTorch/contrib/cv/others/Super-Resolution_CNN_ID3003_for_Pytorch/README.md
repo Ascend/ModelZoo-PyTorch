@@ -7,9 +7,9 @@ This repository is implementation of the ["Image Super-Resolution Using Deep Con
 
 ## Requirements
 
-- PyTorch 1.4
+- PyTorch 
 - Numpy 1.17.0
-- Pillow 6.2.0
+- Pillow 9.1.0
 - h5py 3.6.0
 - tqdm 4.64.0
 
