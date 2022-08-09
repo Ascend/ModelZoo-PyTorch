@@ -99,12 +99,12 @@ https://www.hiascend.com/zh/software/modelzoo/models/detail/1/1d97da1320994a16b0
 git clone https://github.com/qijiezhao/M2Det 
 cd M2Det
 git reset --hard de4a6241bf22f7e7f46cb5cb1eb95615fd0a5e12
-patch -p1 < ../M2Det.patch #通过打补丁的方式修改M2Det.patch
+patch -p1 < ../M2Det.patch
 sh make.sh
 mkdir weights
 mkdir logs
 mkdir eval
-Cd ..
+cd ..
 mkdir result
 
 ```
@@ -229,7 +229,9 @@ python3.7 gen_dataset_info.py jpg ${coco_imgs_path}/val2014 coco_images.info
 ### 5.1 获取ais_infer工具
 
 [获取ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+将工具编译后的压缩包放置在当前目录；
+解压工具包，安装工具压缩包中的whl文件；
+pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
 
 ### 5.2 离线推理
 1.设置环境变量
@@ -314,8 +316,7 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 | 最优bs | 34.32 | 54.707 | 64.602 | 1.594026807 | 0.846831367 |
 
 310P的最优batchsize为：bs4。
-最优batch：310P大于310的1.2；310P小于T4的1.6，性能不达标
-
+最优batch：310P大于310的1.2；310P小于T4的1.6
 **性能优化：**  
 
 >具体详见PyTorch离线推理-M2Det模型测试报告
