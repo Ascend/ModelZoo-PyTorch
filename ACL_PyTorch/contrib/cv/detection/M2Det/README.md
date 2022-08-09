@@ -230,7 +230,9 @@ python3.7 gen_dataset_info.py jpg ${coco_imgs_path}/val2014 coco_images.info
 
 [获取ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 将工具编译后的压缩包放置在当前目录；
+
 解压工具包，安装工具压缩包中的whl文件；
+
 pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
 
 ### 5.2 离线推理
