@@ -319,6 +319,7 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 
 310P的最优batchsize为：bs4。
 最优batch：310P大于310的1.2；310P小于T4的1.6
+
 **性能优化：**  
 
 >具体详见PyTorch离线推理-M2Det模型测试报告
