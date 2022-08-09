@@ -144,24 +144,24 @@ ${chip_name}可通过npu-smi info指令查看，例：310P3
 
 执行ATC命令：
 ```shell
-atc --framework=5 \
---model=m2det512.onnx \
---input_format=NCHW \
---input_shape="image:1,3,512,512" \
---output=m2det512_bs1
---log=debug \
---soc_version=Ascend${chip_name} \
---out-nodes="Softmax_1234:0;Reshape_1231:0" \
+atc --framework=5 --model=m2det512.onnx --input_format=NCHW --input_shape="image:1,3,512,512" --output=m2det512_bs1 --log=debug --soc_version=Ascend${chip_name} --out-nodes="Softmax_1234:0;Reshape_1231:0"
 ```
 
 参数说明：
 --model：为ONNX模型文件。
+
 --framework：5代表ONNX模型。
+
 --input_format：输入数据的格式。
+
 --input_shape：输入数据的shape。
+
 --output：输出模型文件名称
+
 --log：日志级别。
+
 --soc_version：处理器型号。
+
 --out-nodes：参数为指定输出节点，当选择的torch版本不同是可能会改变算子序号，如果torch不同请查看对应onnx文件算子进行相应的修改。
 
 ## 4 数据集预处理
@@ -243,9 +243,11 @@ python3.7  ais_infer.py --model /home/zzl/M2Det/m2det_bs1.om  --input /home/zzl/
 ```
 参数说明：
 
---model：输入的模型
---input：数据集预处理后的路径
---output：推理结果输出路径
+--model：输入的模型。
+
+--input：数据集预处理后的路径。
+
+--output：推理结果输出路径。
 
 ## 6 精度对比
 
@@ -263,21 +265,21 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 ```
 参数说明：
 
---bin_data_path：推理结果所在路径（根据具体的推理结果进行修改）
+--bin_data_path：推理结果所在路径（根据具体的推理结果进行修改）。
 
---test_annotation：验证集数据信息
+--test_annotation：验证集数据信息。
 
---det_results_path=：生成结果文件
+--det_results_path=：生成结果文件。
 
---net_out_num：网络输出类型个数（此处为score,box，2个）
+--net_out_num：网络输出类型个数（此处为score,box，2个）。
 
---prob_thres：参数阈值、
+--prob_thres：参数阈值。
 
---COCO_imgs：coco数据集images路径
+--COCO_imgs：coco数据集images路径。
 
---COCO_anns：coco数据集annotations路径
+--COCO_anns：coco数据集annotations路径。
 
---is_ais_infer：使用ais_infer推理工具
+--is_ais_infer：使用ais_infer推理工具。
 
 执行完后得到310P上的精度：
 ```
