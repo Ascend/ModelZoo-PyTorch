@@ -73,7 +73,7 @@ python3 ./main-8p.py \
     --evaluate \
     --resume=${resume} \
     --amp \
-    --loss-scale 128 \
+    --loss_scale='dynamic' \
     --data ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
