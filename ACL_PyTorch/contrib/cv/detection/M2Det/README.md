@@ -286,7 +286,7 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 --is_ais_infer：使用ais_infer推理工具。
 
 执行完后得到310P上的精度：
-```
+
 ｜batchsize｜  Acc   ｜
 | ------ | -------- |
 ｜    1    ｜ IoU=[0.50,0.95]:37.8% ｜
@@ -294,7 +294,7 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 ｜    8    ｜ IoU=[0.50,0.95]:37.8% ｜
 ｜    16   ｜ IoU=[0.50,0.95]:37.8% ｜
 ｜    32   ｜ IoU=[0.50,0.95]:37.8% ｜
-```
+
 
 ### 6.2 精度对比
 将得到的om离线模型推理Acc精度与该模型github代码仓上公布的精度对比，精度相同，故精度达标。
