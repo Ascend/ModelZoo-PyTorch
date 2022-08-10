@@ -117,15 +117,15 @@ mkdir result
    使用m2det512_vgg.pth导出onnx文件，注意需要有预训练权重weights/vgg16_reducedfc.pth文件。
    运行“M2Det_pth2onnx.py”脚本：
 ```
-python3.7 M2Det_pth2onnx.py -c=M2Det/configs/m2det512_vgg.py -pth=M2Det/weights/m2det512_vgg.pth -onnx=m2det512.onnx
+python3.7 M2Det_pth2onnx.py --c=M2Det/configs/m2det512_vgg.py --pth=M2Det/weights/m2det512_vgg.pth --onnx=m2det512.onnx
 ```
 参数说明：
 
--c：配置文件。
+--c：配置文件。
 
--pth：权重文件。
+--pth：权重文件。
 
--onnx：输出文件名称。
+--onnx：输出文件名称。
 
 获得“m2det512.onnx”文件。
 
@@ -199,6 +199,8 @@ python3.7 M2Det_preprocess.py --config=configs/m2det512_vgg.py --save_folder=pre
 ```shell
 python3.7 gen_dataset_info.py bin pre_dataset coco_prep_bin.info 512 512
 ```
+参数说明：
+
 “bin”：生成的数据集文件格式。
 
 “pre_dataset”：预处理后的数据文件的**相对路径**。
@@ -214,6 +216,8 @@ python3.7 gen_dataset_info.py bin pre_dataset coco_prep_bin.info 512 512
 ```shell
 python3.7 gen_dataset_info.py jpg ${coco_imgs_path}/val2014 coco_images.info
 ```
+参数说明：
+
 “jpg”：生成的数据集文件格式。
 
 “${coco_imgs_path}/val2014”：验证集路径。
