@@ -245,7 +245,7 @@ class ExperimentOTB(object):
                     file1.write('\n')
                 # infer
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om '
-                 '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_prefix %s >/dev/null 2>&1'
+                 '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
                  %(idx, seq_name))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
@@ -263,7 +263,7 @@ class ExperimentOTB(object):
                     file2.write('\n')
                 # infer
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om '
-                    '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_prefix %s >/dev/null 2>&1'
+                    '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
                     %(idx, seq_name))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
