@@ -10,7 +10,7 @@ pip3.7 install -r requirements.txt
 
 2.获取，修改与安装开源模型代码  
 ```
-代码地址：https://github.com/HonglinChu/SiamTrackers/tree/master/2-SiamFC/SiamFC-VID   
+代码地址：https://github.com/HonglinChu/SiamTrackers/tree/master/SiamFC/SiamFC   
 论文地址：https://arxiv.org/pdf/1606.09549.pdf
 ```
 3.获取权重文件  
