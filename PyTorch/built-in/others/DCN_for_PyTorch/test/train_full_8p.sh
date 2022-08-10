@@ -128,7 +128,7 @@ FPS=`grep "ave_sample_per_sec" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_$
 echo "Final Performance samples/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep "test LogLoss" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F "test LogLoss " '{print $NF}'`
+train_accuracy=`grep "test AUC" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F "test AUC " '{print $NF}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
