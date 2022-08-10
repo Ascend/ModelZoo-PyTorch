@@ -88,10 +88,7 @@ astropy==4.3.1
 ### 3.1 pth转onnx模型
 
 1. 准备pth权重文件  
-从源码包中获取m2det512_vgg.pth、vgg16_reducedfc.pth文件，放在目录M2Det/weights下。
-
-下载路径：
-https://www.hiascend.com/zh/software/modelzoo/models/detail/1/1d97da1320994a16b0b8921e58000657
+从[ModelZoo源码包](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/1d97da1320994a16b0b8921e58000657)中获取m2det512_vgg.pth、vgg16_reducedfc.pth文件，放在目录M2Det/weights下。
 
 2. 下载PAMTRI源码并安装
 
@@ -123,13 +120,14 @@ mkdir result
 python3.7 M2Det_pth2onnx.py -c=M2Det/configs/m2det512_vgg.py -pth=M2Det/weights/m2det512_vgg.pth -onnx=m2det512.onnx
 ```
 
-   -c：配置文件。
+参数说明：
+-c：配置文件。
 
-   -pth：权重文件。
+-pth：权重文件。
 
-   -onnx：输出文件名称。
+-onnx：输出文件名称。
 
-   获得“m2det512.onnx”文件。
+获得“m2det512.onnx”文件。
 
 ### 3.2 onnx转om模型
 
