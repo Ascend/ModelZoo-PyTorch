@@ -80,7 +80,7 @@ do
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     rm -rf ./models
-    nohup python3.7 main.py  \
+    nohup python3 main.py  \
         --model_type R2U_Net \
         --data_path=$data_path \
         --batch_size $batch_size \
@@ -88,7 +88,7 @@ do
         --num_workers 128 \
         --apex 1 \
         --apex-opt-level O2 \
-        --loss_scale_value 1024 \
+        --loss_scale_value dynamic \
         --distributed \
         --npu_idx ${ASCEND_DEVICE_ID}\
         --num_epochs $epochs > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
