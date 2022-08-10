@@ -119,8 +119,8 @@ mkdir result
 ```
 python3.7 M2Det_pth2onnx.py -c=M2Det/configs/m2det512_vgg.py -pth=M2Det/weights/m2det512_vgg.pth -onnx=m2det512.onnx
 ```
-
 参数说明：
+
 -c：配置文件。
 
 -pth：权重文件。
@@ -144,8 +144,8 @@ ${chip_name}可通过npu-smi info指令查看，例：310P3
 ```shell
 atc --framework=5 --model=m2det512.onnx --input_format=NCHW --input_shape="image:1,3,512,512" --output=m2det512_bs1 --log=debug --soc_version=Ascend${chip_name} --out-nodes="Softmax_1234:0;Reshape_1231:0"
 ```
-
 参数说明：
+
 --model：为ONNX模型文件。
 
 --framework：5代表ONNX模型。
@@ -181,6 +181,8 @@ atc --framework=5 --model=m2det512.onnx --input_format=NCHW --input_shape="image
 ```shell
 python3.7 M2Det_preprocess.py --config=configs/m2det512_vgg.py --save_folder=pre_dataset --COCO_imgs=coco_imgs_path --COCO_anns=coco_anns_path
 ```
+参数说明：
+
 --config：模型配置文件。
 
 --save_folder：预处理后的数据文件保存路径。
