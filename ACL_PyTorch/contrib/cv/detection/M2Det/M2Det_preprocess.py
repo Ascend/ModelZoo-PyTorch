@@ -45,7 +45,6 @@ if __name__ == '__main__':
     testset = get_dataloader(args, cfg, args.dataset, _set)
 
     _preprocess = BaseTransform(cfg.model.input_size, cfg.model.rgb_means, (2, 0, 1))
-   # _preprocess = BaseTransform(cfg.model.input_size, cfg.model.rgb_means, (0,1,2))
     num_images = len(testset)
     print_info('=> Total {} images to test.'.format(num_images), ['yellow', 'bold'])
 
@@ -55,6 +54,5 @@ if __name__ == '__main__':
         print(img_name, "===", i)
         input_tensor = _preprocess(input_image).unsqueeze(0)
         img = np.array(input_tensor).astype(np.float32)
-    #    img = np.array(input_tensor).astype(np.uint8)
         img.tofile(os.path.join(args.save_folder, img_name.split('.')[0] + ".bin"))
         
