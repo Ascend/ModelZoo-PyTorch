@@ -89,7 +89,6 @@ if __name__ == '__main__':
             img_height = int(temp[3])
             img_size_dict[img_name] = (img_width, img_height, img_file_path)
         # convert ais_infer result name to original bin_file name
-        #edit1
     if args.is_ais_infer:
         name_dic = dict()
         with open(os.path.join(bin_path, "sumary.json"), 'r') as f:
@@ -105,7 +104,6 @@ if __name__ == '__main__':
             name_dic[out_name_1] = img_name
             name_dic[out_name_0] = img_name
             print(out_name_0, ", ", out_name_1, ",", img_name)
-        #edit1
 
     total_img = set([name[:name.rfind('_')] for name in os.listdir(bin_path) if "bin" in name])
     num_images = len(total_img)
@@ -126,7 +124,6 @@ if __name__ == '__main__':
             if args.is_ais_infer:
                     num -= 1
             if os.path.exists(path_base + "_" + str(num) + ".bin"):  
-            #edit3
                 if args.is_ais_infer and num==0 or not args.is_ais_infer and num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")#int64 boxes
                     box = np.reshape(buf, [1, 32760, 4])       
@@ -139,10 +136,8 @@ if __name__ == '__main__':
         out = (torch.from_numpy(box), torch.from_numpy(score))
         boxes, scores = detector.forward(out, priors)
         
-        #edit2
         if args.is_ais_infer:
             bin_file = name_dic[bin_file]
-        #edit2
         current_img_size = img_size_dict[bin_file]
         w = current_img_size[0]
         h = current_img_size[1]
