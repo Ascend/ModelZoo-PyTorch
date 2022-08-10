@@ -287,8 +287,8 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 
 执行完后得到310P上的精度：
 
-| batchsize | Acc    | 
-| ------ | -------- |
+| batchsize | Acc  | 
+| ------ | ------ |
 ｜ 1    ｜ IoU=[0.50,0.95]:37.8% ｜
 ｜ 4    ｜ IoU=[0.50,0.95]:37.8% ｜
 ｜ 8    ｜ IoU=[0.50,0.95]:37.8% ｜
