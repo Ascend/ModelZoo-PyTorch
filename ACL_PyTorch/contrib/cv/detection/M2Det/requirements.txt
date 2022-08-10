@@ -1,6 +1,6 @@
 onnx==1.12.0
-Torch==1.8.1
-TorchVision==0.9.1
+torch==1.8.1
+torchVision==0.9.1
 numpy==1.21.6
 absl-py==0.13.0
 Cython==0.29.24
@@ -9,7 +9,7 @@ setuptools==41.2.0
 matplotlib==2.2.5
 addict==2.4.0
 alabaster==0.7.12
-Antlr4-python3-runtime==4.8
+antlr4-python3-runtime==4.8
 appdirs==1.4.4
 asnlcryto==1.4.0
 astroid==2.7.3
