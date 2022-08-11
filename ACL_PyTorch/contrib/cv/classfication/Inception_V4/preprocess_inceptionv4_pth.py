@@ -16,7 +16,7 @@ import os
 import sys
 import numpy as np
 from PIL import Image
-
+from tqdm import tqdm
 
 def resize(img, size, interpolation=Image.BILINEAR):
     r"""Resize the input PIL Image to the given size.
@@ -71,9 +71,7 @@ def preprocess(file_path, bin_path):
     mean = [0.5, 0.5, 0.5]
     std = [0.5, 0.5, 0.5]
 
-    for file in in_files:
-        i = i + 1
-        print(file, "===", i)
+    for file in tqdm(in_files):
 
         img = Image.open(os.path.join(file_path, file)).convert('RGB')
 
