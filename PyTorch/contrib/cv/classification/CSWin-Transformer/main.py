@@ -41,7 +41,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, JsdCro
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
-from timm.utils.checkpoint_saver import CheckpointSaver
+from timm_difference.utils.checkpoint_saver import CheckpointSaver
 from timm.utils.log import setup_default_logging
 from labeled_memcached_dataset import McDataset
 
