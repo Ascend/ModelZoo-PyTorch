@@ -56,6 +56,7 @@
 
 	（b）clone pretrainedmodels代码库
 	git clone https://github.com/Cadene/pretrained-models.pytorch.git
+        commit_id=8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0
 
 	（c） 将pretrainedmodels代码拉下来后，需要将pretrained-models.pytorch/pretrainedmodels/models/inception4.py 中的
 		adaptiveAvgPoolWidth = features.shape[2] 
