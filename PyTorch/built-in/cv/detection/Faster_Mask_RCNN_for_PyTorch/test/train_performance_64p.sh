@@ -4,7 +4,7 @@
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
-export RANK_SIZE=16
+export RANK_SIZE=64
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -26,9 +26,9 @@ Network="Faster_Mask_RCNN_ID0101_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
-batch_size=128
+batch_size=512
 #训练step
-train_steps=100
+train_steps=800
 #学习率
 learning_rate=0.01
 

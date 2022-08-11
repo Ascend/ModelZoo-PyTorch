@@ -4,7 +4,7 @@
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
-export RANK_SIZE=16
+export RANK_SIZE=32
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -208,7 +208,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep "sent/s"  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "sent/s -" '{print $2}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
-FPS=`awk 'BEGIN{printf "%.2f\n",'${FPS}'*'16'}'`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${FPS}'*'32'}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
