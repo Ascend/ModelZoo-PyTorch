@@ -58,10 +58,9 @@
 	git clone https://github.com/Cadene/pretrained-models.pytorch.git
         commit_id=8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0
 
-	（c） 将pretrainedmodels代码拉下来后，需要将pretrained-models.pytorch/pretrainedmodels/models/inception4.py 中的
-		adaptiveAvgPoolWidth = features.shape[2] 
-	修改为
-		adaptiveAvgPoolWidth = features.shape[2].item()
+	（c） 将pretrainedmodels代码拉下来后，需要使用inceptionv4.patch补丁文件对pretrained-models.pytorch/pretrainedmodels/models/inception4.py 进行修改，命令如下：
+	 patch ./pretrained-models.pytorch/pretrainedmodels/models/inceptionv4.py inceptionv4.patch
+		
 	（d）安装pretrainedmodels，命令如下
   		cd pretrained-models.pytorch
  		python3 setup.py install
