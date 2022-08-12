@@ -68,8 +68,7 @@ def inceptionv4(num_classes=1000, pretrained='imagenet', localpath=None):
         model.input_range = settings['input_range']
         model.mean = settings['mean']
         model.std = settings['std']
-    else:
-        model = InceptionV4(num_classes=num_classes)
+
     return model
 
 def convert():
