@@ -26,6 +26,14 @@ from StreamManagerApi import StreamManagerApi, InProtobufVector, \
     MxProtobufIn, StringVector
 
 
+def w2txt(file_path, filename_list, data):
+    with open(file_path, "w") as file:
+        for i in range(data.shape[0]):
+            s = filename_list[i].split('.')[0] + ' '
+            s += ' '.join(str(format(num, '.7f')) for num in data[i])
+            file.write(s+"\n")
+
+
 def send_source_data(appsrc_id, tensor, stream_name, stream_manager):
     """
     Construct the input of the stream,
@@ -168,6 +176,8 @@ def run():
     count = 0
     resCnt = 0
     n_labels = 0
+    res_sents = []
+    filename_list = []
     for file in file_list:
         print(file, "====", count)
         count += 1
@@ -204,6 +214,8 @@ def run():
         result = MxpiDataType.MxpiTensorPackageList()
         result.ParseFromString(infer_result[0].messageBuf)
         res = np.frombuffer(result.tensorPackageVec[0].tensorVec[0].dataStr, dtype='<f4')
+        res_sents.append(res)
+        filename_list.append(file.split('.')[0])
 
         # postprocess
         prediction = res
@@ -223,6 +235,10 @@ def run():
             if (str(realLabel) == str(sort_index[i])):
                 count_hit[i] += 1
                 break
+
+    file_path = "sdk_prediction_result.txt"
+    res_sents = np.array(res_sents).astype(np.float32)
+    w2txt(file_path, filename_list, res_sents)
 
     if 'value' not in table_dict.keys():
         print("the item value does not exist!")
