@@ -41,8 +41,8 @@
 ```
 CANN 5.1.RC1
 python==3.7.5
-torch==1.5.0+ascend.post5.20220315
-torchvision==0.2.2.post3
+torch==1.5.0
+torchvision==0.2.2
 timm==0.3.2
 einops==0.3.2
 ```
@@ -57,7 +57,13 @@ einops==0.3.2
 ### 1.3.1. PyTorch模型转ONNX模型
 
 
-1. 下载pth权重文件：sMLP预训练 [PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)、[ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
+1. 下载pth权重文件
+
+   sMLP预训练
+   
+   [PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)
+   
+   [ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
 
 > **说明** pth文件的md5sum值为：061415304F38317C3850A587EF709D45 
 > 文件下载后，放置与代码同一目录下。
@@ -76,7 +82,7 @@ git checkout b11b098970978677b7d33cc3424970152462032d
 4. 执行smlp_pth2onnx.py脚本，生成ONNX模型文件
 
 ```
-python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
+python smlp_pth2onnx.py --onnx_path sMLPNet-T.onnx --model_name smlpnet_tiny  --pth_path smlp_t.pth  --opset_version 11
 ```
 
 参数说明：
@@ -85,7 +91,7 @@ python3.7 smlp_pth2onnx.py --pth_path smlp_t.pth --onnx_path sMLPNet-T.onnx
 	--model_name MODEL    模型名称
 	--pth_path PTH_PATH    pytorh模型路径
 	--onnx_path ONNX_PATH    ONNX模型路径
-	--opset_version OPSET_VERSION   opset版本
+	--opset_version OPSET_VERSION  ONNX opset版本，默认11
 						
 
 ### 1.3.2. ONNX转OM模型
@@ -104,7 +110,7 @@ ${chip_name}可通过`npu-smi info`指令查看，例：310P3
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
-atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch1-high --input_format=NCHW --input_shape="input:1,3,224,224" --soc_version=Ascend${chip_name} --op_precision_mode=op_precision.ini
+atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch8-high --input_format=NCHW --input_shape="input:8,3,224,224" --soc_version=Ascend${chip_name} --op_precision_mode=op_precision.ini
 ```
 
 参数说明：
@@ -170,14 +176,14 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100 
 ```
 参数说明
-| 参数名      | 说明                                    |
-|----------|---------------------------------------|
-| --model  | 需要进行推理的om模型                           |
-| --input  | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
-| --output | 推理数据输出路径                              |
-| --outfmt | 输出数据的格式，默认“BIN”，可取值“NPY”、“BIN”、“TXT”  |
-| --loop  | 循环次数                                  |
-| --batchsize  | 批处理大小                               |
+| 参数名      | 说明                                                                   |
+| ----------- | ---------------------------------------------------------------------- |
+| --model     | 需要进行推理的om模型                                                   |
+| --input     | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
+| --output    | 推理数据输出路径                                                       |
+| --outfmt    | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”                   |
+| --loop      | 循环次数                                                               |
+| --batchsize | 批处理大小                                                             |
 
 
 输出结果默认保存在当前目录中，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个BIN文件。
@@ -188,26 +194,29 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 
 - 离线推理，input目录放着转换为bin文件的imagenet val数据。
 ```
-python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om --output ./ --input "/opt/npu/imagenet/val-bin-of-spach/" --outfmt NPY
+python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch8-high.om --output ./ --input "/opt/npu/imagenet/val-bin-of-spach/" --outfmt NPY -–batchsize 8
 ```
 参数说明
-| 参数名      | 说明                                    |
-|----------|---------------------------------------|
-| --model  | 需要进行推理的om模型                           |
-| --input  | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
-| --output | 推理数据输出路径                              |
-| --outfmt | 输出数据的格式，默认“BIN”，可取值“NPY”、“BIN”、“TXT”  |
+| 参数名      | 说明                                                                   |
+| ----------- | ---------------------------------------------------------------------- |
+| --model     | 需要进行推理的om模型                                                   |
+| --input     | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
+| --output    | 推理数据输出路径                                                       |
+| --outfmt    | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”                   |
+| -–batchsize | 批处理大小，需要与OM模型一致。                                         |
 
 - 精度统计
-调用smlp_postproces.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
+调用imagenet_acc_eval_ais_infer.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
 
 ```
-python smlp_postproces.py --infer_result_dir ${infer_result_dir}
+python imagenet_acc_eval_ais_infer.py ${result_dir_path}
 ```
 
 参数说明：
-    ${infer_result_dir}参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
-   
+    ${result_dir_path}参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
+
+    
+
 
 查看输出的结果：
 
@@ -232,10 +241,10 @@ Acc@5 95.79
 
 将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，如下表所示，精度下降在1%范围之内，故精度达标。
 
-| 模型                    | Acc@1  | Acc@5  |
-| ----------------------- | ------ | ------ |
+| 模型                                             | Acc@1 | Acc@5 |
+| ------------------------------------------------ | ----- | ----- |
 | pth模型推理结果（官方未提供acc@5，因此自行复现） | 81.74 | 95.79 |
-| om模型离线推理结果      | 81.25 | 95.49 |
+| om模型离线推理结果                               | 81.25 | 95.49 |
 
 ## 1.7. 性能对比
 
@@ -245,7 +254,7 @@ Acc@5 95.79
 对于使用ais_infer工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
  **ais_infer工具在整个数据集上推理获得性能数据:**
 
-1. batch-size为1的性能，ais_infer工具在整个数据集上推理日志如下
+1. batch1的性能，ais_infer工具在整个数据集上推理日志如下
 
 ```
 infname63@d0c3e5f6b93c:~/spach-smlp/ais_infer$ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100  --output test
@@ -255,9 +264,9 @@ infname63@d0c3e5f6b93c:~/spach-smlp/ais_infer$ python3.7.5 ais_infer.py  --model
 [INFO] D2H_latency (ms): min = 0.08606910705566406, max = 0.08606910705566406, mean = 0.08606910705566406, median = 0.08606910705566406, percentile(99%) = 0.08606910705566406
 [INFO] throughput (1000*batchsize/NPU_compute_time): 171.5691219234638
 ```
-即是batch-size为1时，310p单卡吞吐率为171.569
+即是batch1 310p单卡吞吐率为171.569
 
-2. batch-size为16的性能，ais_infer工具在整个数据集上推理日志如下
+2. batch16的性能，ais_infer工具在整个数据集上推理日志如下
    
 ```
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-high.om  --batchsize 16 --output ./ --outfmt BIN --loop 100  --output test
@@ -268,20 +277,19 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-h
 [INFO] throughput (1000*batchsize/NPU_compute_time): 289.95613988090815
 ```
 
-即是batch-size为16时，310p单卡吞吐率为289.95613988090815
+即是batch16 310p单卡吞吐率为289.95613988090815
 
 ### 1.7.2. gpu，npu推理性能对比
 
 | batchsize | ascend-310p | GPU-t4 |
-|-----------|------------|--------|
-| 1         | 171.6      | 177.7  |
-| 4         | 273.5      | 341.5  |
-| 8         | 298.7      | 359.0  |
-| 16        | 290.0      | 363.7  |
-| 32        | 273.0      | 371.0  |
-| 64        | 257.5      | 359.1  |
-| best      | 298.7      | 371.0  |
+| --------- | ----------- | ------ |
+| 1         | 171.6       | 177.7  |
+| 4         | 273.5       | 341.5  |
+| 8         | 298.7       | 359.0  |
+| 16        | 290.0       | 363.7  |
+| 32        | 273.0       | 371.0  |
+| 64        | 257.5       | 359.1  |
+| best      | 298.7       | 371.0  |
 
-> **说明：** <br>
+> **说明：**
 > NPU和GPU的推理性能（吞吐率）对比为： 0.805    
-> 性能不达标但是已通过评审。
