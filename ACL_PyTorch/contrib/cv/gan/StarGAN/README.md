@@ -125,8 +125,8 @@ rm ./bin/attr/158.bin
 rm ./bin/img/159.bin
 rm ./bin/attr/159.bin
 
-bash ./test/eval_bs32_perf.sh
-bash ./test/eval_bs64_perf.sh
+bash ./test_710/eval_bs32_perf.sh
+bash ./test_710/eval_bs64_perf.sh
 ```
 
 
