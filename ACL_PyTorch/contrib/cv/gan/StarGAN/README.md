@@ -55,7 +55,7 @@ bash ./test_710/pth2om.sh './models/200000-G.pth'
 
 ### 4 生成输入数据并保存为.bin文件
 
-- 数据集默认路径为 `./celeba.zip` ，使用脚本 `unzip_dataset.sh` 解压数据集。
+- 数据集默认路径为 `./data/celeba.zip` ，使用脚本 `unzip_dataset.sh` 解压数据集。
 
 ```
 bash unzip_dataset.sh
@@ -114,9 +114,21 @@ python3.7 StarGAN_pre_processing_32_64.py --mode test  --selected_attrs Black_Ha
                   --attr_path './data/celeba/list_attr_celeba.txt' --celeba_image_dir './data/celeba/images'
 ```
 ```
+rm ./bin/img/155.bin
+rm ./bin/attr/155.bin
+rm ./bin/img/156.bin
+rm ./bin/attr/156.bin
+rm ./bin/img/157.bin
+rm ./bin/attr/157.bin
+rm ./bin/img/158.bin
+rm ./bin/attr/158.bin
+rm ./bin/img/159.bin
+rm ./bin/attr/159.bin
+
 bash ./test/eval_bs32_perf.sh
 bash ./test/eval_bs64_perf.sh
 ```
+
 
 输出数据默认保存在根目录的 `./StarGAN_[yourBatchSize].log` 中，可以看到时延和 FPS。输出图片默认保存在当前目录 `output_[yourBatchSize]/` 下，为保存模型输入高维张量数据的 txt 文件。
 
