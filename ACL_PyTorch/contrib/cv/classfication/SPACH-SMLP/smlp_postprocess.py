@@ -26,8 +26,9 @@ def get_args():
                         help='ais_infer工具推理输出文件路径，会根据日期变动，请按照实际情况修改')
     parser.add_argument('--n', default="50000", type=int,
                         help='验证数据集大小，默认验证imagenet-val全部50000张图片')
+
     args = parser.parse_args()
-    return args
+    return args 
 
 
 def postprocess(args):
@@ -39,7 +40,7 @@ def postprocess(args):
 
     for i in tqdm(range(n)):
         infer_result_path = os.path.join(
-            infer_result_dir, f"sample_id_{i}_output_0.npy")
+            infer_result_dir, f"batch-{i:05d}_0.npy")
         arr = np.load(infer_result_path)[0]
 
         infer_label = np.argmax(arr)
