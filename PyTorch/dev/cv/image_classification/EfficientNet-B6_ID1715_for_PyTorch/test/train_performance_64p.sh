@@ -15,6 +15,8 @@ data_path=""
 conf_path=""
 server_index=""
 fix_node_ip=""
+one_node_ip=""
+linux_num=""
 
 #设置默认日志级别,不需要修改
 #export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
@@ -71,6 +73,10 @@ do
         server_index=`echo ${para#*=}`
     elif [[ $para == --fix_node_ip* ]];then
         fix_node_ip=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
     fi
 done
 
@@ -104,8 +110,13 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else 
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 export HCCL_IF_IP=$fix_node_ip
 export MASTER_ADDR=$one_node_ip
