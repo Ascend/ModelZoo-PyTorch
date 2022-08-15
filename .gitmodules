@@ -1,0 +1,4 @@
+[submodule "PyTorch/dev/cv/detection/Faster_R-CNN_FP16"]
+	url  = https://gitee.com/engineer_mj/ModelZoo-PyTorch
+	path = PyTorch/dev/cv/detection/Faster_R-CNN_FP16
+
