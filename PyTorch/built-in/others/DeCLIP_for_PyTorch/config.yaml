@@ -80,7 +80,7 @@ data:
 #read_from: fs
     use_dali: False
     batch_size: 128
-    num_workers: 20
+    num_workers: 9
     pin_memory: True
     input_size: 224
     test_resize: 256
@@ -107,7 +107,7 @@ data:
         read_from: fs
         use_dali: True
         batch_size: 128
-        num_workers: 4
+        num_workers: 9
         pin_memory: False
         input_size: 224
         test_resize: 256

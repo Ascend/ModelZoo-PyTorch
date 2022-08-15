@@ -40,24 +40,30 @@
 
 ## 3. 配置
 - config.yaml来自 [link](https://github.com/Sense-GVT/DeCLIP/blob/main/experiments/declip_experiments/yfcc15m/yfcc15m_vit_declip/config.yaml)
-- 数据集默认放在```./dataset```，需要修改的话，需要修改config.yaml中对应的路径
+    - 数据集默认放在```./dataset```，需要修改的话，需要修改config.yaml中对应的路径
+    - woker参数建议设置为nproc//8，默认设置为9匹配当前测试集群环境
+- 对于多机多卡训练，如32卡，需要先确认多级多卡软硬件环境正确，然后正确修改`ez_script/32p.sh`中MASTER_IP和NNODE变量，最后4机依次拉起脚本即可
   
 ## 4. 执行训练脚本
-- 单卡性能训练执行 `bash test/train_performance_1p.sh`
-- 单卡精度训练执行 `bash test/train_full_1p.sh`
-- 8卡性能训练执行 `bash test/train_performance_8p.sh`
-- 8卡精度训练执行 `bash test/train_full_8p.sh`
+- 用于日常看护的脚本
+    - 单卡性能训练执行 `bash test/train_performance_1p.sh`
+    - 单卡精度训练执行 `bash test/train_full_1p.sh`
+    - 8卡性能训练执行 `bash test/train_performance_8p.sh`
+    - 8卡精度训练执行 `bash test/train_full_8p.sh`
+- 简易执行脚本
+    - 单卡训练 `bash ez_script/1p.sh`
+    - 8卡训练 `bash ez_script/8p.sh`
+    - 8卡eval `bash ez_script/8p_eval.sh`
+    - 32卡训练 `bash ez_script/32p.sh`
 
 ## 5. 结果
 
 ### yfcc15m_vit_declip
 
-#### 单机
-
 | Eval top1 | FPS       | Npu_nums  | Steps       |
 | :------:  | :------:  | :------:  | :------:    |
-| -         | 85       | 1          | 100         |
-| 32.91     | 680      | 8          | 128000      |
-
+| -         | 85        | 1         | 100         |
+| 32.91     | 550       | 8         | 128000      |
+| 43.195    | 2000      | 32        | 128000      |
 
 
