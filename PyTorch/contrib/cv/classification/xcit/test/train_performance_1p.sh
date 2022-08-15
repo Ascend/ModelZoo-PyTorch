@@ -5,8 +5,8 @@
 # 网络名称，同目录名称
 Network="XCIT"
 # 训练batch_size
-# batch_size=256
-batch_size=200
+# Temporary modifications to avoid pytorch1.8 oom
+batch_size=192
 # 训练使用的npu卡数
 export RANK_SIZE=1
 export WORLD_SIZE=1
