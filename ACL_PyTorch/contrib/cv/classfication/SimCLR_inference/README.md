@@ -129,8 +129,10 @@ python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --
 throughput: 吞吐率。吞吐率计算公式：1000 *batchsize/npu_compute_time.mean
 
 e.获取精度数据（写入log文件）
+```
 python3.7 Simclr_postprocess.py  ./ais_infer/re/2022_07_25-10_41_40/ > result_bs1.log
-    
+```
+精度结果存储在生成的log文件中 
 
 
  **评测结果：**   
