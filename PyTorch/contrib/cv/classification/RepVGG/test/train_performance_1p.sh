@@ -72,7 +72,7 @@ nohup python3.7 -u train.py \
     --amp \
     --custom-weight-decay \
     --opt-level "O2" \
-    --loss-scale-value "dynamic" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --loss-scale-value 32 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
