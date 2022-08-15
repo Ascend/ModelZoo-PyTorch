@@ -23,7 +23,6 @@ from PIL import Image
 import sys
 import pickle
 
-
 class GaussianBlur(object):
     """blur a single image on CPU"""
     def __init__(self, kernel_size):
@@ -92,15 +91,15 @@ def preprocess(srcfile_path, savefile_path):
             file_path = os.path.join(savefile_path, "Simclr_prep_" + str(file_num) + ".bin")
             file_num = file_num + 1
             print(i)
-            image_file = np.array(image[0]).astype(np.float32)
+            image_file = np.array(image[0]).astype(np.int8)
             image_file.tofile(file_path)
             file_path = os.path.join(savefile_path, "Simclr_prep_" + str(file_num) + ".bin")
-            image_file = np.array(image[1]).astype(np.float32)
+            image_file = np.array(image[1]).astype(np.int8)
             image_file.tofile(file_path)
             file_num = file_num + 1
 
 
 if __name__ == "__main__":
-    src_path = sys.argv[1]
+    src_path = './cifar-10-batches-py/test_batch'
     save_path = sys.argv[2]
     preprocess(src_path, save_path)
