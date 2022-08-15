@@ -80,9 +80,10 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
+else
+   #修改参数
+    sed -i "s|pass|break|g"  $cur_path/references/classification/utils.py
 fi
-#冒烟添加步数控制逻辑
-sed -i "s|pass|break|g" $cur_path/references/classification/utils.py
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 nohup python3.7 train.py  \
@@ -114,7 +115,7 @@ sed -i "s|break|pass|g" $cur_path/references/classification/utils.py
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|tail -n+2|awk -F "img/s: " '{print $2}'|awk '{sum+=$1} END {print sum/(NR-1)}'`
+FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{if (NR > 3){print $2}}'|awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
