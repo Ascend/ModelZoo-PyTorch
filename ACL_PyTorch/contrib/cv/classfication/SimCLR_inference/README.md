@@ -21,7 +21,6 @@ conda activate simclr
 pip install -r requirements.txt 
 pip install decorator
 pip install sympy
-pip install 
 python run.py
 ```
 
