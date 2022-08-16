@@ -64,25 +64,22 @@
     
     - test/output/devie_id/ResNet101_${device_id}_bs_8p_acc.log # 8p training accuracy result    
 
-    
 - 在线推理流程  
     - 进入代码目录
     - 将configs/icnet_eval.yaml中的参数"cityscapes_root"、"ckpt_dir"和"ckpt_path"修改为实际路径    
     - 执行bash scripts/eval.sh开始推理，代码默认单卡  
- 
-   
+
+
 - demo测试
     - 进入代码目录
     - 将configs/icnet_eval.yaml中的参数"cityscapes_root"、"ckpt_dir"和"ckpt_path"修改为实际路径    
     - 执行python3.7.5 demo.py进行demo测试
     
-
 - pth转onnx
     - 进入代码目录
     - 修改pth_file参数为实际转换的pth文件名
     - 执行python3.7.5 pth2onnx.py进行onnx转换，转换成功后，目录下生成ICNet.onnx文件  
     
-
 - 测试指令合集  
     - 1p train  
         bash scripts/train_1p.sh
@@ -99,14 +96,16 @@
 
 | 名称         | mIoU      | FPS       |
 | :---------:  | :------: | :------:  |
-| 官方源码     | 68.4     | -         |  
-| GPU-1p      | -        | 9.3       | 
-| GPU-8p      | 68.3     | 83        | 
-| NPU-1p      | -        | 9.3       | 
-| NPU-8p      | 68.1     | 83        | 
+| 官方源码     | 68.4     | -         |
+| GPU-1p      | -        | 9.3       |
+| GPU-8p      | 68.3     | 83        |
+| NPU-1p（pytorch==1.5） | -        | 9.3       |
+| NPU-8p（pytorch==1.5） | 68.1     | 83        |
+| NPU-1p（pytorch==1.8） | - | 3.7 |
+| NPU-8p（pytorch==1.8） | 68.7 | 103 |
 
 - 说明  
-    
+  
     - 官网中，模型指标标注的是mIoU 71%，但是实测结果只有68.4%，无法达到官网指标。  
       官网参考Base version of the model from [the paper author's code on Github](https://github.com/liminn/ICNet-pytorch).
     - GPU-8p精度对齐过程，通过调整超参，最终精度和最优精度分别如下：  
@@ -117,7 +116,7 @@
     | 16           | 0.08     | 128        |  O1        | 68.3        |  68.6       |  
     | 16           | 0.1      | 128        |  O1        | 67.7        |  68.6       |  
     | 16           | 0.08     | 128        |  O2        | 67.7        |  68.0       |
-      
+    
     - NPU-8p精度对齐过程，通过调整超参，最终精度和最优精度分别如下：
     
     | batch_size   | lr       | loss_scale | opt_level  | final mIoU  | best mIoU   |    

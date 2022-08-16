@@ -20,6 +20,8 @@ import datetime
 import yaml
 import sys
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.utils.data as data
@@ -140,7 +142,7 @@ class Trainer(object):
         #                                  momentum=cfg["optimizer"]["momentum"],
         #                                  weight_decay=cfg["optimizer"]["weight_decay"])
         
-        self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", loss_scale=32.0)
+        self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", loss_scale="dynamic")
 
         # lr scheduler
         self.lr_scheduler = IterationPolyLR(self.optimizer,
@@ -336,7 +338,7 @@ class Trainer(object):
         self.current_mIoU = average_mIoU
 
         logger.info(
-            "RankID[{}] Validation: Average loss: {:.3f}, Average mIoU: {:.3f}, Average pixAcc: {:.3f}, FPS: {:.3f}".format(
+            "RankID[{}] Validation: Average loss: {:.3f}, Average mIoU: {:.3f} Average pixAcc: {:.3f}, FPS: {:.3f}".format(
                 self.rank_id, average_loss, average_mIoU, average_pixAcc, FPS))
 
         if self.current_mIoU > self.best_mIoU:

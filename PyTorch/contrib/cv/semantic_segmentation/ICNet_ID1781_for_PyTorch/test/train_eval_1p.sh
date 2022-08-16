@@ -19,6 +19,8 @@ data_path=""
 train_epochs=1
 # 学习率
 learning_rate=0.01
+# 预训练模型路径
+more_path1='./pretrained'
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -96,7 +98,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Average mIoU'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $8}'|awk 'END {print}'`
+train_accuracy=`grep -a 'Average mIoU'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
