@@ -29,7 +29,7 @@ from apex import amp
 
 if torch.__version__ >= '1.8':
     import torch_npu
-    from torch_npu.contrib import auto_cast_gpu
+    from torch_npu.contrib import transfer_to_npu
 else:
     warnings.warn('This model Only test with pt-1.8, please update torch and torch_npu')
 import bugfix
