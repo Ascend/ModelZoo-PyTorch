@@ -36,9 +36,11 @@
 [论文](https://arxiv.org/pdf/1703.06870.pdf)  
 
 ### 1.2 代码地址
-[代码](https://github.com/facebookresearch/detectron2)  
-      branch=master
-      commit_id=068a93a
+[代码](https://github.com/facebookresearch/detectron2) 
+``` 
+branch=master
+commit_id=068a93a
+```
 ## 2 环境说明
 
 -   **[深度学习框架](#21-深度学习框架)**  
