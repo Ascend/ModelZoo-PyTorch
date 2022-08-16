@@ -99,8 +99,8 @@
 | 官方源码     | 68.4     | -         |
 | GPU-1p      | -        | 9.3       |
 | GPU-8p      | 68.3     | 83        |
-| NPU-1p（pytorch==1.5） | -        | 9.3       |
-| NPU-8p（pytorch==1.5） | 68.1     | 83        |
+| NPU-1p（pytorch==1.5） | -        | 6.01      |
+| NPU-8p（pytorch==1.5） | 68.1     | 81.34        |
 | NPU-1p（pytorch==1.8） | - | 3.7 |
 | NPU-8p（pytorch==1.8） | 68.7 | 103 |
 
