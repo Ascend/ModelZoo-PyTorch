@@ -1,18 +1,19 @@
 # Jasper Onnx模型端到端推理指导
 
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境准备](#2-环境准备)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 端到端推理及验证](#4-端到端推理及验证)
-  -   [4.1 离线推理](#41-离线推理)
-  -   [4.2 精度验证](#42-精度验证)
-  -   [4.3 性能验证](#43-性能验证)
+- [Jasper Onnx模型端到端推理指导](#jasper-onnx模型端到端推理指导)
+  - [1. 模型概述](#1-模型概述)
+    - [1.1 论文地址](#11-论文地址)
+    - [1.2 代码地址](#12-代码地址)
+  - [2. 环境准备](#2-环境准备)
+    - [2.1 文件说明](#21-文件说明)
+    - [2.2 环境依赖准备](#22-环境依赖准备)
+  - [3. 模型转换](#3-模型转换)
+    - [3.1 pth转onnx模型](#31-pth转onnx模型)
+    - [3.2 onnx转om模型](#32-onnx转om模型)
+  - [4. 端到端推理及验证](#4-端到端推理及验证)
+    - [4.1 离线推理](#41-离线推理)
+    - [4.2 精度验证](#42-精度验证)
+    - [4.3 性能验证](#43-性能验证)
 
 
 
@@ -95,7 +96,24 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
      ```bash
      git apply Jasper.patch
      ```
-
+- 安装依赖
+  ```
+  pip3 install ONNX==1.7.0
+  pip3 install librosa==0.8.0
+  pip3 install Pytorch==1.5.0
+  pip3 install numpy==1.18.5
+  pip3 install ascii-graph==1.5.1
+  pip3 install ipdb
+  pip3 install pandas==1.1.4
+  pip3 install pyyaml
+  pip3 install soundfile
+  apt-get install sox
+  pip3 install sox==1.4.1
+  pip3 install tqdm==4.53.0
+  pip3 install wrapt==1.10.11
+  pip3 install unidecode==1.2.0
+  pip3 install inflect==5.3.0
+  ```
 ## 3. 模型转换
 
 - **[pth转onnx模型](#31-pth转onnx模型)** 
@@ -107,7 +125,7 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 ```bash
 # Jasper_pth2onnx.py需要三个参数，第一个为pth模型路径，第二个为转换后的模型，第三个为模型的batch size
 # 生成batch size为1的onnx模型
-python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper.onnx
+python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper.onnx 1
 ```
 
 因为atc工具目前对动态shape场景支持度不高，官方提供的onnx模型给模型调测带来较大困难，所以需要使用pth2onnx脚本重新生成带feat_lens的模型。
@@ -121,6 +139,10 @@ python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper.onnx
    ```
 
 2. 使用atc将onnx模型转换为om模型文件
+  
+    ${chip_name}可通过`npu-smi info`指令查看
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 
    ```bash
    # 将jasper_1batch.onnx模型转换为jasper_1batch.om，对于不同batch size的onnx模型，需要修改input_shape参数重feats的第一维
@@ -129,7 +151,7 @@ python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper.onnx
        --input_format=ND \
        --input_shape="feats:1,64,4000;feat_lens:1" \
        --output=jasper_1batch \
-       --soc_version=Ascend310 \
+       --soc_version=${chip_name} \
        --log=error
    ```
 
@@ -163,16 +185,29 @@ python3.7 om_infer_acl.py \
 
 执行离线推理后会输出wer值，与参考精度值3.20比较，保证精度差异在1%以内即可。
 
+| 模型      | pth精度 | 310精度   | 310P精度
+| -------- | ------- | ------- |-----|
+| Jasper   | 3.20    | 3.198| 3.202   
 ### 4.3 性能验证
 
-使用benchmark纯推理测试模型性能
+使用ais_infer.py推理测试模型性能
 
 ``````shell
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-arch=`uname -m`
-chmod u+x benchmark.${arch}
-./benchmark.${arch} -batch_size=1 -om_path=./jasper_1batch.om -round=50 -device_id=0 
+获取ais_infer
+pip3 install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+git clone https://gitee.com/ascend/tools.git
+
+
+推理
+python3 {ais_infer_path}/ais_infer.py --model {jasper_path}/jasper_batch_1.om --output ./ --outfmt BIN --loop 5 --batchsize 1
+
+--model：模型地址
+--input：预处理完的数据集文件夹
+--output：推理结果保存地址
+--outfmt：推理结果保存格式
+--batchsize: batchsize的值
 ``````
 
 纯推理后性能结果保存在```result/PureInfer_perf_of_jasper_1batch_in_device_0.txt```，使用tail命令查看性能数据
@@ -180,3 +215,12 @@ chmod u+x benchmark.${arch}
 ```bash
 tail result/PureInfer_perf_of_jasper_1batch_in_device_0.txt
 ```
+性能结果
+|batch_size|310       |310P        |
+|----------|----------|------------|
+|bs1       |17.9528057|23.9646092  |
+|bs4       |19.6234026|20.59439543 |
+|bs8       |19.44036742|21.2358747 |
+|bs16      |19.74849299|28.21203738|
+|bs32      |19.80529607|28.21540613|
+|bs64      |19.79865766|26.20766411|

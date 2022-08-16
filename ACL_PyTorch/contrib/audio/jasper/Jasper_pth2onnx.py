@@ -20,7 +20,7 @@ from common import helpers
 from jasper.model import Jasper
 
 
-def pth2onnx(ckpt_path,out_path):
+def pth2onnx(ckpt_path,out_path,bs):
     cfg = config.load('configs/jasper10x5dr_speedp-online_speca.yaml')
     model = Jasper(encoder_kw=config.encoder(cfg),
                    decoder_kw=config.decoder(cfg, n_classes=29))
@@ -29,9 +29,11 @@ def pth2onnx(ckpt_path,out_path):
     model.load_state_dict(state_dict, strict=True)
     model.eval()
 
-    feats = torch.randn([16, 64, 4000], dtype=torch.float32)
+    # feats = torch.randn([4, 64, 4000], dtype=torch.float32)
+    bs = int(bs)
+    feats = torch.randn([bs, 64, 4000], dtype=torch.float32)
     feat_lens = torch.tensor([1000], dtype=torch.int32)
-    dynamic_axes = {'feats': {0: '-1',2: '-1'}, 'output': {1: '-1'}}
+    dynamic_axes = {'feats': {2: '-1'}, 'output': {1: '-1'}}
     torch.onnx.export(model,
                       (feats, feat_lens),
                       out_path,
@@ -45,4 +47,5 @@ def pth2onnx(ckpt_path,out_path):
 if __name__ == '__main__':
     ckpt_path = sys.argv[1]
     out_path = sys.argv[2]
-    pth2onnx(ckpt_path,out_path)
+    bs = sys.argv[3]
+    pth2onnx(ckpt_path,out_path,bs)
