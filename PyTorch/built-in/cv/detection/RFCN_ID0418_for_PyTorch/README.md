@@ -13,6 +13,7 @@ note
 * (可选)参考《Pytorch 网络模型移植&训练指南》6.4.2章节，配置cpu为性能模式，以达到模型最佳性能；不开启不影响功能。
 * 安装依赖包
 ```
+$ apt-get install -y numactl
 $ pip install -r requirements.txt
 ```
 

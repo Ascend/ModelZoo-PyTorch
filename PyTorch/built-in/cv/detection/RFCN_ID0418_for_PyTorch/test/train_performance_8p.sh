@@ -100,10 +100,31 @@ else
 fi
 
 #################启动训练脚本#################
+get_lscpu_value() {
+    awk -F: "(\$1 == \"${1}\"){gsub(/ /, \"\", \$2); print \$2; found=1} END{exit found!=1}"
+}
+
+lscpu_out=$(lscpu)
+n_sockets=$(get_lscpu_value 'Socket(s)' <<< "${lscpu_out}")
+n_cores_per_socket=$(get_lscpu_value 'Core(s) per socket' <<< "${lscpu_out}")
+echo "num_sockets = ${n_sockets} cores_per_socket=${n_cores_per_socket}"
+
+EXIT_STATUS=0
+check_status()
+{
+    if ((${PIPESTATUS[0]} != 0)); then
+        EXIT_STATUS=1
+    fi
+}
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup taskset -c 0-19 python3.7 ./trainval_net_8p.py \
+nohup python3.7 -u -m bind_pyt \
+    --nsockets_per_node ${n_sockets} \
+    --ncores_per_socket ${n_cores_per_socket} \
+    --master_addr $(hostname -I |awk '{print $1}') \
+    --no_hyperthreads \
+    --no_membind "$@" ./trainval_net_8p.py \
     --net=res101 \
     --nw=${workers} \
     --lr=${learning_rate} \
