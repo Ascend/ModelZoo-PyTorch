@@ -107,7 +107,8 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{if (NR > 3){print $2}}'|awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`#打印，不需要修改
+FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{if (NR > 3){print $2}}'|awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`
+#打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
