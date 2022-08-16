@@ -255,8 +255,9 @@ class Trainer(object):
                 eta_seconds = ((time.time() - start_time) / self.current_iteration) * (max_iters - self.current_iteration)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-                batch_time.update(time.time() - end)
-                end = time.time()
+                if epoch > 0 or i > 30:
+                    batch_time.update(time.time() - end)
+                    end = time.time()
 
                 if batch_time.avg > 0:
                     FPS = train_batch_size * num_devices / batch_time.avg
