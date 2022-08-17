@@ -65,7 +65,7 @@ def preprocess(file_path, bin_path):
     in_files = os.listdir(file_path)
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
-    i = 0
+    
 
     resize_size = 342
     mean = [0.5, 0.5, 0.5]
