@@ -7,6 +7,7 @@ Network="Ultra-Fast-Lane-Detection"
 batch_size=128
 # 训练使用的npu卡数
 export RANK_SIZE=1
+export WORLD_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 

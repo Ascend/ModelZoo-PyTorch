@@ -7,6 +7,7 @@ Network="Ultra-Fast-Lane-Detection"
 batch_size=128
 # 训练使用的npu卡数
 export RANK_SIZE=8
+export WORLD_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -68,12 +69,31 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -u -m torch.distributed.launch --nproc_per_node 8 train.py \
-       configs/tusimple.py \
-      --epoch=$train_epochs \
-      --batch_size=$batch_size \
-      --learning_rate=16e-4 \
-      --data_root=$data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+KERNEL_NUM=$(($(nproc)/8))
+for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
+do
+    export LOCAL_RANK=$RANK_ID
+
+    if [ $(uname -m) = "aarch64" ]
+    then
+        PID_START=$((KERNEL_NUM * RANK_ID))
+        PID_END=$((PID_START + KERNEL_NUM - 1))
+        taskset -c $PID_START-$PID_END nohup python3.7 train.py \
+            configs/tusimple.py \
+            --epoch=$train_epochs \
+            --batch_size=$batch_size \
+            --learning_rate=16e-4 \
+            --data_root=$data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+
+    else
+        nohup python3.7 -u train.py \
+            configs/tusimple.py \
+            --epoch=$train_epochs \
+            --batch_size=$batch_size \
+            --learning_rate=16e-4 \
+            --data_root=$data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+	fi
+done
 wait
 ##################获取训练数据################
 # 训练结束时间，不需要修改
@@ -92,7 +112,7 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 # 获取性能数据，不需要修改
 # 吞吐量
