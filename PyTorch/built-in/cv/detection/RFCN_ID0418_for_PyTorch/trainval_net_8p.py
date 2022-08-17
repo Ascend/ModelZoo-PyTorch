@@ -271,7 +271,11 @@ def main():
     elif args.arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
 
-    args.rank = args.local_rank
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
+    os.environ['WORLD_SIZE'] = '8'
+
+    args.rank = int(args.local_rank)
     npus_per_node = int(os.environ['WORLD_SIZE'])
     calculate_device = f'npu:{str(args.local_rank)}'
     dist.init_process_group(backend=args.dist_backend,  # init_method=cfg.dist_url,
@@ -307,7 +311,7 @@ def main():
                              imdb.num_classes, training=True)
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(
-        dataset, num_replicas=args.world_size, rank=args.rank)
+        dataset, num_replicas=int(os.environ['WORLD_SIZE']), rank=args.rank)
     if torch.distributed.get_rank() == 0:
         print("args.batch_size:", args.batch_size)
 

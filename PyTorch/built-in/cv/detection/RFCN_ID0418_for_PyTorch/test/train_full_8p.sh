@@ -60,8 +60,6 @@ else
     exit 1
 fi
 
-
-
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -72,15 +70,6 @@ if [ x"${cur_path_last_dirname}" == x"test" ];then
     cur_path=`pwd`
 else
     test_path_dir=${cur_path}/test
-fi
-
-
-#################创建日志输出目录，不需要修改#################
-if [ -d ${test_path_dir}/output/$ASCEND_DEVICE_ID ];then
-    rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
-else
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
 # 新建数据集及与训练权重放置目录，并建立软连接
@@ -99,45 +88,62 @@ else
     ln -nsf ${data_path} ${cur_path}/data/pretrained_model
 fi
 
+#################创建日志输出目录，不需要修改#################
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+ASCEND_DEVICE_ID=$i
+if [ -d ${test_path_dir}/output/$ASCEND_DEVICE_ID ];then
+    rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
 #################启动训练脚本#################
-get_lscpu_value() {
-    awk -F: "(\$1 == \"${1}\"){gsub(/ /, \"\", \$2); print \$2; found=1} END{exit found!=1}"
-}
-
-lscpu_out=$(lscpu)
-n_sockets=$(get_lscpu_value 'Socket(s)' <<< "${lscpu_out}")
-n_cores_per_socket=$(get_lscpu_value 'Core(s) per socket' <<< "${lscpu_out}")
-echo "num_sockets = ${n_sockets} cores_per_socket=${n_cores_per_socket}"
-
-EXIT_STATUS=0
-check_status()
-{
-    if ((${PIPESTATUS[0]} != 0)); then
-        EXIT_STATUS=1
-    fi
-}
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 -u -m bind_pyt \
-    --nsockets_per_node ${n_sockets} \
-    --ncores_per_socket ${n_cores_per_socket} \
-    --master_addr $(hostname -I |awk '{print $1}') \
-    --no_hyperthreads \
-    --no_membind "$@" ./trainval_net_8p.py \
-    --net=res101 \
-    --nw=${workers} \
-    --lr=${learning_rate} \
-    --lr_decay_step=8  \
-    --disp_interval=1 \
-    --device=npu \
-    --epochs=${train_epochs} \
-    --bs=${batch_size} \
-    --npu_id="npu:${ASCEND_DEVICE_ID}" \
-    --amp \
-    --opt_level=O1 \
-    --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+PID_START=$((KERNEL_NUM * i))
+PID_END=$((PID_START + KERNEL_NUM - 1))
+
+if [ $(uname -m) = "aarch64" ]
+then
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END nohup python3.7 -u ./trainval_net_8p.py \
+        --net=res101 \
+        --nw=${workers} \
+        --lr=${learning_rate} \
+        --lr_decay_step=8  \
+        --disp_interval=1 \
+        --device=npu \
+        --epochs=${train_epochs} \
+        --bs=${batch_size} \
+        --npu_id="npu:${ASCEND_DEVICE_ID}" \
+        --local_rank=${ASCEND_DEVICE_ID} \
+        --amp \
+        --opt_level=O1 \
+        --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+else
+    nohup python3.7 -u ./trainval_net_8p.py \
+        --net=res101 \
+        --nw=${workers} \
+        --lr=${learning_rate} \
+        --lr_decay_step=8  \
+        --disp_interval=1 \
+        --device=npu \
+        --epochs=${train_epochs} \
+        --bs=${batch_size} \
+        --npu_id="npu:${ASCEND_DEVICE_ID}" \
+        --local_rank=${ASCEND_DEVICE_ID} \
+        --amp \
+        --opt_level=O1 \
+        --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
+done
 wait
+
+ASCEND_DEVICE_ID=0
 
 nohup python3.7 ./test_net.py \
     --net=res101 \
