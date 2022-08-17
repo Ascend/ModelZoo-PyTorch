@@ -26,7 +26,8 @@ ${install_path}/driver/tools/msnpureport -g error -d 6
 ${install_path}/driver/tools/msnpureport -g error -d 7
 #关闭Device侧Event日志
 ${install_path}/driver/tools/msnpureport -e disable
-
+#HCCL白名单开关,1-关闭/0-开启
+export HCCL_WHITELIST_DISABLE=1
 path_lib=$(python3.7 -c """
 import sys
 import re
