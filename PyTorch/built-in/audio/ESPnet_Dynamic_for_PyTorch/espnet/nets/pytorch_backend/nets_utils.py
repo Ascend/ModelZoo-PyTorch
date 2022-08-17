@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # -*- coding: utf-8 -*-
 
 """Network related utility tools."""
@@ -7,6 +21,100 @@ from typing import Dict
 
 import numpy as np
 import torch
+
+
+class NpuLinear(torch.nn.Linear):
+    def forward(self, input):
+        if input.is_npu == False:
+            return super(NpuLinear, self).forward(input)
+        
+        input_shape = input.size()
+        if input.dim() == 3:
+            input = input.view(-1, self.in_features)
+            return torch.npu_linear(input, self.weight, self.bias).view(input_shape[0],
+                                                                        input_shape[1],
+                                                                        self.out_features)
+        elif input.dim() == 2:
+            return torch.npu_linear(input, self.weight, self.bias)
+        else:
+            raise RuntimeError('not support this dim')
+
+
+class DropOutTask:
+    def __init__(self, shape, dtype, device, p):
+        self.shape = shape
+        self.dtype = dtype
+        self.device = device
+        self.p = p
+        self.request_count = 0
+        self.mask_queue = []
+
+
+class NpuDropout(torch.nn.Dropout):
+    task_dict = {}
+    dropout_stream = None
+
+    def __init__(self, p, module_name=None):
+        super().__init__(p)
+        self.module_name = module_name
+
+    def forward(self, x):
+        if isinstance(x, torch.Tensor):
+            shape = x.shape
+            dtype = x.dtype
+            device = x.device
+            do_mask_flag = True
+            return_obj = x
+        elif isinstance(x, list):
+            shape, dtype, device = x
+            do_mask_flag = False
+            return_obj = None
+        else:
+            raise RuntimeError("input type error!")
+
+        if self.p == 0:
+            return return_obj
+        key = (shape, dtype, device, self.p)
+        if key not in NpuDropout.task_dict:
+            dropout_task = DropOutTask(shape, dtype, device, self.p)
+            dropout_task.request_count += 1
+            NpuDropout.task_dict[key] = dropout_task
+            return return_obj
+        elif not NpuDropout.task_dict[key].mask_queue:
+            NpuDropout.task_dict[key].request_count += 1
+            return return_obj
+        else:
+            mask, event = NpuDropout.task_dict[key].mask_queue.pop(0)
+            if do_mask_flag:
+                return torch.npu_dropout_do_mask(x, mask, self.p)[0]
+            else:
+                return mask
+
+    @classmethod
+    def enable_dropout_ensemble(cls, model):
+        if cls.dropout_stream is None:
+            cls.dropout_stream = torch.npu.Stream()
+
+        def wait_stream_hook_func():
+            def hook_function(module, inputs):
+                torch.npu.current_stream().wait_stream(cls.dropout_stream)
+            return hook_function
+        model.register_forward_pre_hook(wait_stream_hook_func())
+
+        def mask_gen_hook_func():
+            def hook_function(module, inputs, outputs):
+                with torch.npu.stream(cls.dropout_stream):
+                    with torch.no_grad():
+                        for _, task in cls.task_dict.items():
+                            if len(task.mask_queue) < task.request_count:
+                                for j in range(task.request_count - len(task.mask_queue)):
+                                    mask = torch.npu_dropout_gen_mask(task.shape, p=task.p, dtype=task.dtype,
+                                                                      device=task.device)
+                                    event = None
+                                    task.mask_queue.append((mask, event))
+            return hook_function
+
+        model.register_forward_hook(mask_gen_hook_func())
 
 
 def to_device(m, x):
@@ -29,7 +137,6 @@ def to_device(m, x):
             "Expected torch.nn.Module or torch.tensor, " f"bot got: {type(m)}"
         )
     return x.to(device)
-
 
 def pad_list(xs, pad_value):
     """Perform padding for the list of tensors.
@@ -317,7 +424,7 @@ def th_accuracy(pad_outputs, pad_targets, ignore_label):
     ).argmax(2)
     mask = pad_targets != ignore_label
     numerator = torch.sum(
-        pad_pred.masked_select(mask) == pad_targets.masked_select(mask)
+        ((pad_pred * mask.float()) == (pad_targets * mask.float())) * mask
     )
     denominator = torch.sum(mask)
     return float(numerator) / float(denominator)

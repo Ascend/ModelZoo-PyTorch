@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2019 Shigeki Karita
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Subsampling layer definition."""
@@ -9,7 +10,7 @@
 import torch
 
 from espnet.nets.pytorch_backend.transformer.embedding import PositionalEncoding
-
+from espnet.nets.pytorch_backend.nets_utils import NpuLinear
 
 class TooShortUttError(Exception):
     """Raised when the utt is too short for subsampling.
@@ -62,7 +63,7 @@ class Conv2dSubsampling(torch.nn.Module):
             torch.nn.ReLU(),
         )
         self.out = torch.nn.Sequential(
-            torch.nn.Linear(odim * (((idim - 1) // 2 - 1) // 2), odim),
+            NpuLinear(odim * (((idim - 1) // 2 - 1) // 2), odim),
             pos_enc if pos_enc is not None else PositionalEncoding(odim, dropout_rate),
         )
 
@@ -121,7 +122,7 @@ class Conv2dSubsampling2(torch.nn.Module):
             torch.nn.ReLU(),
         )
         self.out = torch.nn.Sequential(
-            torch.nn.Linear(odim * (((idim - 1) // 2 - 2)), odim),
+            NpuLinear(odim * (((idim - 1) // 2 - 2)), odim),
             pos_enc if pos_enc is not None else PositionalEncoding(odim, dropout_rate),
         )
 
@@ -180,7 +181,7 @@ class Conv2dSubsampling6(torch.nn.Module):
             torch.nn.ReLU(),
         )
         self.out = torch.nn.Sequential(
-            torch.nn.Linear(odim * (((idim - 1) // 2 - 2) // 3), odim),
+            NpuLinear(odim * (((idim - 1) // 2 - 2) // 3), odim),
             pos_enc if pos_enc is not None else PositionalEncoding(odim, dropout_rate),
         )
 
@@ -230,7 +231,7 @@ class Conv2dSubsampling8(torch.nn.Module):
             torch.nn.ReLU(),
         )
         self.out = torch.nn.Sequential(
-            torch.nn.Linear(odim * ((((idim - 1) // 2 - 1) // 2 - 1) // 2), odim),
+            NpuLinear(odim * ((((idim - 1) // 2 - 1) // 2 - 1) // 2), odim),
             pos_enc if pos_enc is not None else PositionalEncoding(odim, dropout_rate),
         )
 

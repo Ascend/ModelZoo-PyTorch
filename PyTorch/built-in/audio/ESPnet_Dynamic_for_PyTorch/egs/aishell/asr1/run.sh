@@ -6,16 +6,22 @@
 . ./path.sh || exit 1;
 . ./cmd.sh || exit 1;
 
+source ../../../test/env_npu.sh
+
 # general configuration
 backend=pytorch
 stage=0        # start from 0 if you need to start from data preparation
 stop_stage=100
-ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
+ngpu=8         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
 dumpdir=dump   # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
 resume=        # Resume the training from snapshot
+lm_train_dtype=O1
+asr_train_dtype=O2
+test_output_dir=
+asr_test_epochs=-1 # used in test scripts. "-1" means not used.
 
 # feature configuration
 do_delta=false
@@ -176,18 +182,25 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     text2token.py -s 1 -n 1 data/${train_dev}/text | cut -f 2- -d" " \
         > ${lmdatadir}/valid.txt
 
-    ${cuda_cmd} --gpu ${ngpu} ${lmexpdir}/train.log \
+    if [ -z ${test_output_dir} ]; then
+        log_path=${lmexpdir}/train.log
+    else
+        mkdir -p ${test_output_dir}/0/
+        log_path=${test_output_dir}/0/lm_train_0.log
+    fi
+
+    ${cuda_cmd} --gpu 1 ${log_path} \
         lm_train.py \
         --config ${lm_config} \
-        --ngpu ${ngpu} \
+        --ngpu 1 \
         --backend ${backend} \
         --verbose 1 \
         --outdir ${lmexpdir} \
-        --tensorboard-dir tensorboard/${lmexpname} \
         --train-label ${lmdatadir}/train.txt \
         --valid-label ${lmdatadir}/valid.txt \
         --resume ${lm_resume} \
-        --dict ${dict}
+        --dict ${dict} \
+        --train-dtype ${lm_train_dtype}
     
     lmplz --discount_fallback -o ${n_gram} <${lmdatadir}/train.txt > ${ngramexpdir}/${n_gram}gram.arpa
     build_binary -s ${ngramexpdir}/${n_gram}gram.arpa ${ngramexpdir}/${n_gram}gram.bin
@@ -210,27 +223,77 @@ mkdir -p ${expdir}
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "stage 4: Network Training"
-    ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log \
-        asr_train.py \
-        --config ${train_config} \
-        --preprocess-conf ${preprocess_config} \
-        --ngpu ${ngpu} \
-        --backend ${backend} \
-        --outdir ${expdir}/results \
-        --tensorboard-dir tensorboard/${expname} \
-        --debugmode ${debugmode} \
-        --dict ${dict} \
-        --debugdir ${expdir} \
-        --minibatches ${N} \
-        --verbose ${verbose} \
-        --resume ${resume} \
-        --train-json ${feat_tr_dir}/data.json \
-        --valid-json ${feat_dt_dir}/data.json
+
+    if [ ${ngpu} -gt 1 ]; then
+        unset OMP_NUM_THREADS
+        RANK_ID_START=0
+        RANK_SIZE=${ngpu}
+        KERNEL_NUM=$(($(nproc)/8))
+
+        for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+        do
+            if [ -z ${test_output_dir} ]; then
+                log_path=${expdir}/train_$RANK_ID.log
+            else
+                mkdir -p ${test_output_dir}/${RANK_ID}/
+                log_path=${test_output_dir}/${RANK_ID}/asr_train_$RANK_ID.log
+            fi
+
+            PID_START=$((KERNEL_NUM * RANK_ID))
+            PID_END=$((PID_START + KERNEL_NUM - 1))
+            taskset -c $PID_START-$PID_END python3.7 ../../../espnet/bin/asr_train.py \
+                --config ${train_config} \
+                --preprocess-conf ${preprocess_config} \
+                --ngpu ${ngpu} \
+                --backend ${backend} \
+                --outdir ${expdir}/results \
+                --debugmode ${debugmode} \
+                --dict ${dict} \
+                --debugdir ${expdir} \
+                --minibatches ${N} \
+                --verbose ${verbose} \
+                --resume ${resume} \
+                --train-json ${feat_tr_dir}/data.json \
+                --valid-json ${feat_dt_dir}/data.json \
+                --train-dtype ${asr_train_dtype} \
+                --n-iter-processes $(($(nproc)/8)) \
+                --test-epochs ${asr_test_epochs} \
+                --local-rank $RANK_ID > ${log_path} 2>&1 &
+        done
+        export OMP_NUM_THREADS=1
+    else
+        if [ -z ${test_output_dir} ]; then
+            log_path=${expdir}/train.log
+        else
+            mkdir -p ${test_output_dir}/0/
+            log_path=${test_output_dir}/0/asr_train_0.log
+        fi
+
+        ${cuda_cmd} --gpu ${ngpu} ${log_path} \
+            asr_train.py \
+            --config ${train_config} \
+            --preprocess-conf ${preprocess_config} \
+            --ngpu ${ngpu} \
+            --backend ${backend} \
+            --outdir ${expdir}/results \
+            --debugmode ${debugmode} \
+            --dict ${dict} \
+            --debugdir ${expdir} \
+            --minibatches ${N} \
+            --verbose ${verbose} \
+            --resume ${resume} \
+            --train-json ${feat_tr_dir}/data.json \
+            --valid-json ${feat_dt_dir}/data.json \
+            --train-dtype ${asr_train_dtype} \
+            --test-epochs ${asr_test_epochs}
+    fi
 fi
+
+wait
 
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding"
-    nj=32
+    nj=64
     if [[ $(get_yaml.py ${train_config} model-module) = *transformer* ]] || \
            [[ $(get_yaml.py ${train_config} model-module) = *conformer* ]] || \
            [[ $(get_yaml.py ${train_config} etype) = custom ]] || \

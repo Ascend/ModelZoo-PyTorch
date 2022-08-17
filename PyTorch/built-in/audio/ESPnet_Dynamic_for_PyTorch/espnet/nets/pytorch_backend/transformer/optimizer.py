@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2019 Shigeki Karita
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Optimizer module."""
 
 import torch
+import apex
 
 
 class NoamOpt(object):
@@ -71,5 +73,5 @@ class NoamOpt(object):
 
 def get_std_opt(model_params, d_model, warmup, factor):
     """Get standard NoamOpt."""
-    base = torch.optim.Adam(model_params, lr=0, betas=(0.9, 0.98), eps=1e-9)
+    base = apex.optimizers.NpuFusedAdam(model_params, lr=0, betas=(0.9, 0.98), eps=1e-9)
     return NoamOpt(d_model, factor, warmup, base)

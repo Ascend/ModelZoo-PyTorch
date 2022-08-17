@@ -1,4 +1,5 @@
 # Copyright 2017 Johns Hopkins University (Shinji Watanabe)
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Training/decoding definition for the speech recognition task."""
@@ -61,6 +62,8 @@ def _recursive_to(xs, device):
         return xs.to(device)
     if isinstance(xs, tuple):
         return tuple(_recursive_to(x, device) for x in xs)
+    if isinstance(xs, list):
+        return list(_recursive_to(x, device) for x in xs)
     return xs
 
 
@@ -116,11 +119,7 @@ class CustomEvaluator(BaseEvaluator):
                     # read scp files
                     # x: original json with loaded features
                     #    will be converted to chainer variable later
-                    if self.ngpu == 0:
-                        self.model(*x)
-                    else:
-                        # apex does not support torch.nn.DataParallel
-                        data_parallel(self.model, x, range(self.ngpu))
+                    self.model(*x)
 
                 summary.add(observation)
         self.model.train()
@@ -187,13 +186,7 @@ class CustomUpdater(StandardUpdater):
         # see details in https://github.com/espnet/espnet/pull/1388
 
         # Compute the loss at this time step and accumulate it
-        if self.ngpu == 0:
-            loss = self.model(*x).mean() / self.accum_grad
-        else:
-            # apex does not support torch.nn.DataParallel
-            loss = (
-                data_parallel(self.model, x, range(self.ngpu)).mean() / self.accum_grad
-            )
+        loss = self.model(*x).mean() / self.accum_grad
         if self.use_apex:
             from apex import amp
 
@@ -217,9 +210,13 @@ class CustomUpdater(StandardUpdater):
             return
         self.forward_count = 0
         # compute the gradient norm to check if it is normal or not
-        grad_norm = torch.nn.utils.clip_grad_norm_(
-            self.model.parameters(), self.grad_clip_threshold
-        )
+        if self.use_apex:
+            opt = optimizer.optimizer if hasattr(optimizer, "optimizer") else optimizer
+            grad_norm = opt.clip_optimizer_grad_norm_fused(self.grad_clip_threshold)
+        else:
+            grad_norm = torch.nn.utils.clip_grad_norm_(
+                self.model.parameters(), self.grad_clip_threshold
+            )
         logging.info("grad norm={}".format(grad_norm))
         if math.isnan(grad_norm):
             logging.warning("grad norm is nan. Do not update model.")
@@ -385,9 +382,9 @@ def train(args):
     if args.num_encs > 1:
         args = format_mulenc_args(args)
 
-    # check cuda availability
-    if not torch.cuda.is_available():
-        logging.warning("cuda is not available")
+    # check npu availability
+    if not torch.npu.is_available():
+        logging.warning("npu is not available")
 
     # get input and output dimension info
     with open(args.valid_json, "rb") as f:
@@ -465,20 +462,25 @@ def train(args):
 
     # check the use of multi-gpu
     if args.ngpu > 1:
-        if args.batch_size != 0:
-            logging.warning(
-                "batch size is automatically increased (%d -> %d)"
-                % (args.batch_size, args.batch_size * args.ngpu)
-            )
-            args.batch_size *= args.ngpu
         if args.num_encs > 1:
             # TODO(ruizhili): implement data parallel for multi-encoder setup.
             raise NotImplementedError(
                 "Data parallel is not supported for multi-encoder setup."
             )
 
+        torch.distributed.init_process_group(backend='hccl', world_size=args.ngpu, rank=args.local_rank)
+
     # set torch device
-    device = torch.device("cuda" if args.ngpu > 0 else "cpu")
+    loc = 'npu:{}'.format(args.gpu)
+    torch.npu.set_device(loc)
+    device = torch.device(loc if args.ngpu > 0 else "cpu")
+
+    #开启模糊编译
+    torch.npu.set_compile_mode(jit_compile=False)
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = ""
+    torch.npu.set_option(option)
+
     if args.train_dtype in ("float16", "float32", "float64"):
         dtype = getattr(torch, args.train_dtype)
     else:
@@ -540,23 +542,37 @@ def train(args):
                 "See https://github.com/NVIDIA/apex#linux"
             )
             raise e
+        
+        if args.ngpu > 1:
+            combine_ddp = True
+        else:
+            combine_ddp = False
+        
+        from espnet.nets.pytorch_backend.ctc import CTC
+        if args.train_dtype == "O1":
+            amp.register_float_function(CTC, "loss_fn")
+            amp.register_half_function(torch, 'npu_linear')
+
         if args.opt == "noam":
             model, optimizer.optimizer = amp.initialize(
-                model, optimizer.optimizer, opt_level=args.train_dtype
+                model, optimizer.optimizer, opt_level=args.train_dtype, loss_scale=512, 
+                combine_grad=True, combine_ddp=combine_ddp
             )
         else:
             model, optimizer = amp.initialize(
-                model, optimizer, opt_level=args.train_dtype
+                model, optimizer, opt_level=args.train_dtype, loss_scale=512, 
+                combine_grad=True, combine_ddp=combine_ddp
             )
         use_apex = True
 
-        from espnet.nets.pytorch_backend.ctc import CTC
-
-        amp.register_float_function(CTC, "loss_fn")
-        amp.init()
+        if args.train_dtype != "O1":
+            amp.register_float_function(CTC, "loss_fn")
+            amp.register_half_function(torch, 'npu_linear')
+            amp.init()
         logging.warning("register ctc as float function")
     else:
         use_apex = False
+
 
     # FIXME: TOO DIRTY HACK
     setattr(optimizer, "target", reporter)
@@ -626,12 +642,24 @@ def train(args):
     # actual bathsize is included in a list
     # default collate function converts numpy array to pytorch tensor
     # we used an empty collate function instead which returns list
+
+    train_dataset = TransformDataset(train, lambda data: converter([load_tr(data)]))
+
+    if args.ngpu > 1:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+        shuffle = False
+    else:
+        train_sampler = None
+        shuffle = not use_sortagrad
+
     train_iter = ChainerDataLoader(
-        dataset=TransformDataset(train, lambda data: converter([load_tr(data)])),
+        dataset=train_dataset,
         batch_size=1,
         num_workers=args.n_iter_processes,
-        shuffle=not use_sortagrad,
+        shuffle=shuffle,
         collate_fn=lambda x: x[0],
+        sampler=train_sampler,
+        pin_memory=True
     )
     valid_iter = ChainerDataLoader(
         dataset=TransformDataset(valid, lambda data: converter([load_cv(data)])),
@@ -639,6 +667,7 @@ def train(args):
         shuffle=False,
         collate_fn=lambda x: x[0],
         num_workers=args.n_iter_processes,
+        pin_memory=True
     )
 
     # Set up a trainer
@@ -677,175 +706,176 @@ def train(args):
             CustomEvaluator(model, {"main": valid_iter}, reporter, device, args.ngpu)
         )
 
-    # Save attention weight each epoch
-    is_attn_plot = (
-        "transformer" in args.model_module
-        or "conformer" in args.model_module
-        or mtl_mode in ["att", "mtl", "custom_transducer"]
-    )
-
-    if args.num_save_attention > 0 and is_attn_plot:
-        data = sorted(
-            list(valid_json.items())[: args.num_save_attention],
-            key=lambda x: int(x[1]["input"][0]["shape"][1]),
-            reverse=True,
+    if args.local_rank in [-1, 0]:
+        # Save attention weight each epoch
+        is_attn_plot = (
+            "transformer" in args.model_module
+            or "conformer" in args.model_module
+            or mtl_mode in ["att", "mtl", "custom_transducer"]
         )
-        if hasattr(model, "module"):
-            att_vis_fn = model.module.calculate_all_attentions
-            plot_class = model.module.attention_plot_class
+
+        if args.num_save_attention > 0 and is_attn_plot:
+            data = sorted(
+                list(valid_json.items())[: args.num_save_attention],
+                key=lambda x: int(x[1]["input"][0]["shape"][1]),
+                reverse=True,
+            )
+            if hasattr(model, "module"):
+                att_vis_fn = model.module.calculate_all_attentions
+                plot_class = model.module.attention_plot_class
+            else:
+                att_vis_fn = model.calculate_all_attentions
+                plot_class = model.attention_plot_class
+            att_reporter = plot_class(
+                att_vis_fn,
+                data,
+                args.outdir + "/att_ws",
+                converter=converter,
+                transform=load_cv,
+                device=device,
+                subsampling_factor=total_subsampling_factor,
+            )
+            trainer.extend(att_reporter, trigger=(1, "epoch"))
         else:
-            att_vis_fn = model.calculate_all_attentions
-            plot_class = model.attention_plot_class
-        att_reporter = plot_class(
-            att_vis_fn,
-            data,
-            args.outdir + "/att_ws",
-            converter=converter,
-            transform=load_cv,
-            device=device,
-            subsampling_factor=total_subsampling_factor,
-        )
-        trainer.extend(att_reporter, trigger=(1, "epoch"))
-    else:
-        att_reporter = None
+            att_reporter = None
 
-    # Save CTC prob at each epoch
-    if mtl_mode in ["ctc", "mtl"] and args.num_save_ctc > 0:
-        # NOTE: sort it by output lengths
-        data = sorted(
-            list(valid_json.items())[: args.num_save_ctc],
-            key=lambda x: int(x[1]["output"][0]["shape"][0]),
-            reverse=True,
-        )
-        if hasattr(model, "module"):
-            ctc_vis_fn = model.module.calculate_all_ctc_probs
-            plot_class = model.module.ctc_plot_class
+        # Save CTC prob at each epoch
+        if mtl_mode in ["ctc", "mtl"] and args.num_save_ctc > 0:
+            # NOTE: sort it by output lengths
+            data = sorted(
+                list(valid_json.items())[: args.num_save_ctc],
+                key=lambda x: int(x[1]["output"][0]["shape"][0]),
+                reverse=True,
+            )
+            if hasattr(model, "module"):
+                ctc_vis_fn = model.module.calculate_all_ctc_probs
+                plot_class = model.module.ctc_plot_class
+            else:
+                ctc_vis_fn = model.calculate_all_ctc_probs
+                plot_class = model.ctc_plot_class
+            ctc_reporter = plot_class(
+                ctc_vis_fn,
+                data,
+                args.outdir + "/ctc_prob",
+                converter=converter,
+                transform=load_cv,
+                device=device,
+                subsampling_factor=total_subsampling_factor,
+            )
+            trainer.extend(ctc_reporter, trigger=(1, "epoch"))
         else:
-            ctc_vis_fn = model.calculate_all_ctc_probs
-            plot_class = model.ctc_plot_class
-        ctc_reporter = plot_class(
-            ctc_vis_fn,
-            data,
-            args.outdir + "/ctc_prob",
-            converter=converter,
-            transform=load_cv,
-            device=device,
-            subsampling_factor=total_subsampling_factor,
-        )
-        trainer.extend(ctc_reporter, trigger=(1, "epoch"))
-    else:
-        ctc_reporter = None
+            ctc_reporter = None
 
-    # Make a plot for training and validation values
-    if args.num_encs > 1:
-        report_keys_loss_ctc = [
-            "main/loss_ctc{}".format(i + 1) for i in range(model.num_encs)
-        ] + ["validation/main/loss_ctc{}".format(i + 1) for i in range(model.num_encs)]
-        report_keys_cer_ctc = [
-            "main/cer_ctc{}".format(i + 1) for i in range(model.num_encs)
-        ] + ["validation/main/cer_ctc{}".format(i + 1) for i in range(model.num_encs)]
+        # Make a plot for training and validation values
+        if args.num_encs > 1:
+            report_keys_loss_ctc = [
+                "main/loss_ctc{}".format(i + 1) for i in range(model.num_encs)
+            ] + ["validation/main/loss_ctc{}".format(i + 1) for i in range(model.num_encs)]
+            report_keys_cer_ctc = [
+                "main/cer_ctc{}".format(i + 1) for i in range(model.num_encs)
+            ] + ["validation/main/cer_ctc{}".format(i + 1) for i in range(model.num_encs)]
 
-    if hasattr(model, "is_transducer"):
-        trans_keys = [
-            "main/loss",
-            "validation/main/loss",
-            "main/loss_trans",
-            "validation/main/loss_trans",
-        ]
-
-        ctc_keys = (
-            ["main/loss_ctc", "validation/main/loss_ctc"] if args.use_ctc_loss else []
-        )
-
-        aux_trans_keys = (
-            [
-                "main/loss_aux_trans",
-                "validation/main/loss_aux_trans",
+        if hasattr(model, "is_transducer"):
+            trans_keys = [
+                "main/loss",
+                "validation/main/loss",
+                "main/loss_trans",
+                "validation/main/loss_trans",
             ]
-            if args.use_aux_transducer_loss
-            else []
-        )
 
-        symm_kl_div_keys = (
-            [
-                "main/loss_symm_kl_div",
-                "validation/main/loss_symm_kl_div",
-            ]
-            if args.use_symm_kl_div_loss
-            else []
-        )
+            ctc_keys = (
+                ["main/loss_ctc", "validation/main/loss_ctc"] if args.use_ctc_loss else []
+            )
 
-        lm_keys = (
-            [
-                "main/loss_lm",
-                "validation/main/loss_lm",
-            ]
-            if args.use_lm_loss
-            else []
-        )
+            aux_trans_keys = (
+                [
+                    "main/loss_aux_trans",
+                    "validation/main/loss_aux_trans",
+                ]
+                if args.use_aux_transducer_loss
+                else []
+            )
 
-        transducer_keys = (
-            trans_keys + ctc_keys + aux_trans_keys + symm_kl_div_keys + lm_keys
-        )
+            symm_kl_div_keys = (
+                [
+                    "main/loss_symm_kl_div",
+                    "validation/main/loss_symm_kl_div",
+                ]
+                if args.use_symm_kl_div_loss
+                else []
+            )
+
+            lm_keys = (
+                [
+                    "main/loss_lm",
+                    "validation/main/loss_lm",
+                ]
+                if args.use_lm_loss
+                else []
+            )
+
+            transducer_keys = (
+                trans_keys + ctc_keys + aux_trans_keys + symm_kl_div_keys + lm_keys
+            )
+
+            trainer.extend(
+                extensions.PlotReport(
+                    transducer_keys,
+                    "epoch",
+                    file_name="loss.png",
+                )
+            )
+        else:
+            trainer.extend(
+                extensions.PlotReport(
+                    [
+                        "main/loss",
+                        "validation/main/loss",
+                        "main/loss_ctc",
+                        "validation/main/loss_ctc",
+                        "main/loss_att",
+                        "validation/main/loss_att",
+                    ]
+                    + ([] if args.num_encs == 1 else report_keys_loss_ctc),
+                    "epoch",
+                    file_name="loss.png",
+                )
+            )
 
         trainer.extend(
             extensions.PlotReport(
-                transducer_keys,
-                "epoch",
-                file_name="loss.png",
+                ["main/acc", "validation/main/acc"], "epoch", file_name="acc.png"
             )
         )
-    else:
         trainer.extend(
             extensions.PlotReport(
-                [
-                    "main/loss",
-                    "validation/main/loss",
-                    "main/loss_ctc",
-                    "validation/main/loss_ctc",
-                    "main/loss_att",
-                    "validation/main/loss_att",
-                ]
+                ["main/cer_ctc", "validation/main/cer_ctc"]
                 + ([] if args.num_encs == 1 else report_keys_loss_ctc),
                 "epoch",
-                file_name="loss.png",
+                file_name="cer.png",
             )
         )
 
-    trainer.extend(
-        extensions.PlotReport(
-            ["main/acc", "validation/main/acc"], "epoch", file_name="acc.png"
-        )
-    )
-    trainer.extend(
-        extensions.PlotReport(
-            ["main/cer_ctc", "validation/main/cer_ctc"]
-            + ([] if args.num_encs == 1 else report_keys_loss_ctc),
-            "epoch",
-            file_name="cer.png",
-        )
-    )
-
-    # Save best models
-    trainer.extend(
-        snapshot_object(model, "model.loss.best"),
-        trigger=training.triggers.MinValueTrigger("validation/main/loss"),
-    )
-    if mtl_mode not in ["ctc", "transducer", "custom_transducer"]:
+        # Save best models
         trainer.extend(
-            snapshot_object(model, "model.acc.best"),
-            trigger=training.triggers.MaxValueTrigger("validation/main/acc"),
+            snapshot_object(model, "model.loss.best"),
+            trigger=training.triggers.MinValueTrigger("validation/main/loss"),
         )
+        if mtl_mode not in ["ctc", "transducer", "custom_transducer"]:
+            trainer.extend(
+                snapshot_object(model, "model.acc.best"),
+                trigger=training.triggers.MaxValueTrigger("validation/main/acc"),
+            )
 
-    # save snapshot which contains model and optimizer states
-    if args.save_interval_iters > 0:
-        trainer.extend(
-            torch_snapshot(filename="snapshot.iter.{.updater.iteration}"),
-            trigger=(args.save_interval_iters, "iteration"),
-        )
+        # save snapshot which contains model and optimizer states
+        if args.save_interval_iters > 0:
+            trainer.extend(
+                torch_snapshot(filename="snapshot.iter.{.updater.iteration}"),
+                trigger=(args.save_interval_iters, "iteration"),
+            )
 
-    # save snapshot at every epoch - for model averaging
-    trainer.extend(torch_snapshot(), trigger=(1, "epoch"))
+        # save snapshot at every epoch - for model averaging
+        trainer.extend(torch_snapshot(), trigger=(1, "epoch"))
 
     # epsilon decay in the optimizer
     if args.opt == "adadelta":
@@ -1071,11 +1101,12 @@ def recog(args):
 
     # gpu
     if args.ngpu == 1:
-        gpu_id = list(range(args.ngpu))
+        gpu_id = [args.gpu]
         logging.info("gpu id: " + str(gpu_id))
-        model.cuda()
+        torch.npu.set_device(gpu_id[0])
+        model.npu()
         if rnnlm:
-            rnnlm.cuda()
+            rnnlm.npu()
 
     # read json data
     with open(args.recog_json, "rb") as f:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Copyright 2017 Johns Hopkins University (Shinji Watanabe)
+# Copyright 2022 Huawei Technologies Co., Ltd
 # Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """pytorch dataset and dataloader implementation for chainer training."""
@@ -44,7 +45,7 @@ class ChainerDataLoader(object):
     def __init__(self, **kwargs):
         """Init function."""
         self.loader = torch.utils.data.dataloader.DataLoader(**kwargs)
-        self.len = len(kwargs["dataset"])
+        self.len = len(self.loader)
         self.current_position = 0
         self.epoch = 0
         self.iter = None
@@ -53,6 +54,11 @@ class ChainerDataLoader(object):
     def next(self):
         """Implement next function."""
         if self.iter is None:
+            train_sampler = self.kwargs["sampler"]
+            if train_sampler is not None:
+                torch.distributed.barrier()
+                train_sampler.set_epoch(self.epoch)
+
             self.iter = iter(self.loader)
         try:
             ret = next(self.iter)

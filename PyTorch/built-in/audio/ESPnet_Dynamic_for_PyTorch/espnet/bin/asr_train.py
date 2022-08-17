@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 # Copyright 2017 Tomoki Hayashi (Nagoya University)
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Automatic speech recognition model training script."""
@@ -14,6 +15,7 @@ import sys
 
 import configargparse
 import numpy as np
+import torch
 
 from espnet import __version__
 from espnet.utils.cli_utils import strtobool
@@ -510,10 +512,16 @@ def get_parser(parser=None, required=True):
     )
     parser.add_argument("--fbank-fmin", type=float, default=0.0, help="")
     parser.add_argument("--fbank-fmax", type=float, default=None, help="")
+    parser.add_argument("--local-rank", type=int, default=-1, help="")
+    parser.add_argument("--gpu", type=int, default=0, help="")
+    parser.add_argument("--test-epochs", type=int, default=-1, help="")
     return parser
 
 
 def main(cmd_args):
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
+
     """Run the main training function."""
     parser = get_parser()
     args, _ = parser.parse_known_args(cmd_args)
@@ -591,6 +599,12 @@ def main(cmd_args):
 
     # display PYTHONPATH
     logging.info("python path = " + os.environ.get("PYTHONPATH", "(None)"))
+
+    if args.local_rank != -1:
+        args.gpu = args.local_rank
+
+    if args.test_epochs != -1:
+        args.epochs = args.test_epochs
 
     # set random seed
     logging.info("random seed = %d" % args.seed)

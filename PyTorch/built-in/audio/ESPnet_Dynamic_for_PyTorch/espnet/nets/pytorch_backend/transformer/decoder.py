@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2019 Shigeki Karita
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Decoder definition."""
@@ -29,6 +30,7 @@ from espnet.nets.pytorch_backend.transformer.positionwise_feed_forward import (
 )
 from espnet.nets.pytorch_backend.transformer.repeat import repeat
 from espnet.nets.scorer_interface import BatchScorerInterface
+from espnet.nets.pytorch_backend.nets_utils import NpuLinear
 
 
 def _pre_hook(
@@ -108,7 +110,7 @@ class Decoder(BatchScorerInterface, torch.nn.Module):
             )
         elif input_layer == "linear":
             self.embed = torch.nn.Sequential(
-                torch.nn.Linear(odim, attention_dim),
+                NpuLinear(odim, attention_dim),
                 torch.nn.LayerNorm(attention_dim),
                 torch.nn.Dropout(dropout_rate),
                 torch.nn.ReLU(),
@@ -213,7 +215,7 @@ class Decoder(BatchScorerInterface, torch.nn.Module):
         if self.normalize_before:
             self.after_norm = LayerNorm(attention_dim)
         if use_output_layer:
-            self.output_layer = torch.nn.Linear(attention_dim, odim)
+            self.output_layer = NpuLinear(attention_dim, odim)
         else:
             self.output_layer = None
 

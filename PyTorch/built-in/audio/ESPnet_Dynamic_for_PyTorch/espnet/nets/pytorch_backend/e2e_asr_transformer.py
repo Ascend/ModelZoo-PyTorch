@@ -1,4 +1,5 @@
 # Copyright 2019 Shigeki Karita
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Transformer speech recognition model (pytorch)."""
@@ -21,7 +22,7 @@ from espnet.nets.pytorch_backend.nets_utils import get_subsample
 from espnet.nets.pytorch_backend.nets_utils import make_non_pad_mask
 from espnet.nets.pytorch_backend.nets_utils import th_accuracy
 from espnet.nets.pytorch_backend.rnn.decoders import CTC_SCORING_RATIO
-from espnet.nets.pytorch_backend.transformer.add_sos_eos import add_sos_eos
+from espnet.nets.pytorch_backend.transformer.add_sos_eos import npu_add_sos_eos
 from espnet.nets.pytorch_backend.transformer.argument import (
     add_arguments_transformer_common,  # noqa: H301
 )
@@ -188,16 +189,17 @@ class E2E(ASRInterface, torch.nn.Module):
         :rtype: float
         """
         # 1. forward encoder
-        xs_pad = xs_pad[:, : max(ilens)]  # for data parallel
+        xs_pad = xs_pad[:, :max(ilens)]
         src_mask = make_non_pad_mask(ilens.tolist()).to(xs_pad.device).unsqueeze(-2)
         hs_pad, hs_mask, hs_intermediates = self.encoder(xs_pad, src_mask)
         self.hs_pad = hs_pad
 
         # 2. forward decoder
         if self.decoder is not None:
-            ys_in_pad, ys_out_pad = add_sos_eos(
+            ys_in_pad, ys_out_pad = npu_add_sos_eos(
                 ys_pad, self.sos, self.eos, self.ignore_id
             )
+
             ys_mask = target_mask(ys_in_pad, self.ignore_id)
             pred_pad, pred_mask = self.decoder(ys_in_pad, ys_mask, hs_pad, hs_mask)
             self.pred_pad = pred_pad

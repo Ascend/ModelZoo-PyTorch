@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright 2017 Johns Hopkins University (Shinji Watanabe)
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 # This code is ported from the following implementation written in Torch.
 # https://github.com/chainer/chainer/blob/master/examples/ptb/train_ptb_custom_loop.py
@@ -28,6 +29,7 @@ from espnet.lm.lm_utils import ParallelSentenceIterator
 from espnet.lm.lm_utils import read_tokens
 from espnet.nets.lm_interface import dynamic_import_lm
 from espnet.nets.lm_interface import LMInterface
+from espnet.nets.pytorch_backend.nets_utils import NpuDropout
 from espnet.optimizer.factory import dynamic_import_optimizer
 from espnet.scheduler.pytorch import PyTorchScheduler
 from espnet.scheduler.scheduler import dynamic_import_scheduler
@@ -80,8 +82,8 @@ def concat_examples(batch, device=None, padding=None):
     x = torch.from_numpy(x)
     t = torch.from_numpy(t)
     if device is not None and device >= 0:
-        x = x.cuda(device)
-        t = t.cuda(device)
+        x = x.npu(device)
+        t = t.npu(device)
     return x, t
 
 
@@ -129,19 +131,15 @@ class BPTTUpdater(training.StandardUpdater):
         train_iter = self.get_iterator("main")
         optimizer = self.get_optimizer("main")
         # Progress the dataset iterator for sentences at each iteration.
-        self.model.zero_grad()  # Clear the parameter gradients
+        optimizer.zero_grad()  # Clear the parameter gradients
         accum = {"loss": 0.0, "nll": 0.0, "count": 0}
         for _ in range(self.accum_grad):
             batch = train_iter.__next__()
             # Concatenate the token IDs to matrices and send them to the device
             # self.converter does this job
             # (it is chainer.dataset.concat_examples by default)
-            x, t = concat_examples(batch, device=self.device[0], padding=(0, -100))
-            if self.device[0] == -1:
-                loss, nll, count = self.model(x, t)
-            else:
-                # apex does not support torch.nn.DataParallel
-                loss, nll, count = data_parallel(self.model, (x, t), self.device)
+            x, t = concat_examples(batch, device=self.device[0], padding=(0, -1))
+            loss, nll, count = self.model(x, t)
 
             # backward
             loss = loss.mean() / self.accum_grad
@@ -160,7 +158,10 @@ class BPTTUpdater(training.StandardUpdater):
         for k, v in accum.items():
             reporter.report({k: v}, optimizer.target)
         if self.gradclip is not None:
-            nn.utils.clip_grad_norm_(self.model.parameters(), self.gradclip)
+            if self.use_apex:
+                optimizer.clip_model_grad_norm_fused(self.gradclip)
+            else:
+                nn.utils.clip_grad_norm_(self.model.parameters(), self.gradclip)
         optimizer.step()  # Update the parameters
         self.scheduler.step(n_iter=self.iteration)
 
@@ -190,12 +191,8 @@ class LMEvaluator(BaseEvaluator):
         self.model.eval()
         with torch.no_grad():
             for batch in copy.copy(val_iter):
-                x, t = concat_examples(batch, device=self.device[0], padding=(0, -100))
-                if self.device[0] == -1:
-                    l, n, c = self.model(x, t)
-                else:
-                    # apex does not support torch.nn.DataParallel
-                    l, n, c = data_parallel(self.model, (x, t), self.device)
+                x, t = concat_examples(batch, device=self.device[0], padding=(0, -1))
+                l, n, c = self.model(x, t)
                 loss += float(l.sum())
                 nll += float(n.sum())
                 count += int(c.sum())
@@ -222,9 +219,9 @@ def train(args):
 
     set_deterministic_pytorch(args)
 
-    # check cuda and cudnn availability
-    if not torch.cuda.is_available():
-        logging.warning("cuda is not available")
+    # check npu availability
+    if not torch.npu.is_available():
+        logging.warning("npu is not available")
 
     # get special label ids
     unk = args.char_list_dict["<unk>"]
@@ -278,10 +275,17 @@ def train(args):
         dtype = torch.float32
     model = model_class(args.n_vocab, args).to(dtype=dtype)
     if args.ngpu > 0:
-        model.to("cuda")
-        gpu_id = list(range(args.ngpu))
+        torch.npu.set_device("npu:0")
+        model.to("npu")
+        gpu_id = [0]
     else:
         gpu_id = [-1]
+
+    #开启模糊编译
+    torch.npu.set_compile_mode(jit_compile=False)
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = ""
+    torch.npu.set_option(option)
 
     # Save model conf to json
     model_conf = args.outdir + "/model.json"
@@ -321,7 +325,8 @@ def train(args):
                 "See https://github.com/NVIDIA/apex#linux"
             )
             raise e
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.train_dtype)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.train_dtype, 
+                                          loss_scale=2048, combine_grad=True)
         use_apex = True
     else:
         use_apex = False
@@ -331,6 +336,8 @@ def train(args):
     setattr(model, "reporter", reporter)
     setattr(optimizer, "target", reporter)
     setattr(optimizer, "serialize", lambda s: reporter.serialize(s))
+
+    NpuDropout.enable_dropout_ensemble(model)
 
     updater = BPTTUpdater(
         train_iter,

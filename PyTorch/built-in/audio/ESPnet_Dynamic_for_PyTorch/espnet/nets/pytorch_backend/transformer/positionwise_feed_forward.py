@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2019 Shigeki Karita
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 """Positionwise feed forward layer definition."""
 
 import torch
+
+from espnet.nets.pytorch_backend.nets_utils import NpuLinear
 
 
 class PositionwiseFeedForward(torch.nn.Module):
@@ -22,8 +25,8 @@ class PositionwiseFeedForward(torch.nn.Module):
     def __init__(self, idim, hidden_units, dropout_rate, activation=torch.nn.ReLU()):
         """Construct an PositionwiseFeedForward object."""
         super(PositionwiseFeedForward, self).__init__()
-        self.w_1 = torch.nn.Linear(idim, hidden_units)
-        self.w_2 = torch.nn.Linear(hidden_units, idim)
+        self.w_1 = NpuLinear(idim, hidden_units)
+        self.w_2 = NpuLinear(hidden_units, idim)
         self.dropout = torch.nn.Dropout(dropout_rate)
         self.activation = activation
 

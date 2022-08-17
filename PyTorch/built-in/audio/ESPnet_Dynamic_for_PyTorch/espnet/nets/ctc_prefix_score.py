@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Copyright 2018 Mitsubishi Electric Research Labs (Takaaki Hori)
+# Copyright 2022 Huawei Technologies Co., Ltd
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
 import torch
@@ -39,8 +40,8 @@ class CTCPrefixScoreTH(object):
         self.odim = x.size(2)
         self.dtype = x.dtype
         self.device = (
-            torch.device("cuda:%d" % x.get_device())
-            if x.is_cuda
+            torch.device("npu:%d" % x.get_device())
+            if x.is_npu
             else torch.device("cpu")
         )
         # Pad the rest of posteriors in the batch

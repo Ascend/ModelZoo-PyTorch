@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from distutils.version import LooseVersion
 import logging
 
@@ -6,8 +20,7 @@ import six
 import torch
 import torch.nn.functional as F
 
-from espnet.nets.pytorch_backend.nets_utils import to_device
-
+from espnet.nets.pytorch_backend.nets_utils import to_device, NpuLinear
 
 class CTC(torch.nn.Module):
     """CTC module
@@ -23,7 +36,7 @@ class CTC(torch.nn.Module):
         super().__init__()
         self.dropout_rate = dropout_rate
         self.loss = None
-        self.ctc_lo = torch.nn.Linear(eprojs, odim)
+        self.ctc_lo = NpuLinear(eprojs, odim)
         self.dropout = torch.nn.Dropout(dropout_rate)
         self.probs = None  # for visualization
 
@@ -34,6 +47,7 @@ class CTC(torch.nn.Module):
             else "builtin"
         )
 
+        self.ctc_type = "builtin"
         if ctc_type != self.ctc_type:
             logging.warning(f"CTC was set to {self.ctc_type} due to PyTorch version.")
 
@@ -80,6 +94,13 @@ class CTC(torch.nn.Module):
         else:
             raise NotImplementedError
 
+    def padd_targets(self, targets):
+        n = targets.shape[0]
+        new_n = (n // 512 + 1) * 512
+        padd_targets = torch.zeros((new_n), dtype=targets.dtype, device=targets.device)
+        padd_targets[:n] = targets
+        return padd_targets
+
     def forward(self, hs_pad, hlens, ys_pad):
         """CTC forward
 
@@ -90,20 +111,23 @@ class CTC(torch.nn.Module):
         :return: ctc loss value
         :rtype: torch.Tensor
         """
-        # TODO(kan-bayashi): need to make more smart way
-        ys = [y[y != self.ignore_id] for y in ys_pad]  # parse padded ys
-
+        
         # zero padding for hs
         ys_hat = self.ctc_lo(self.dropout(hs_pad))
         if self.ctc_type != "gtnctc":
             ys_hat = ys_hat.transpose(0, 1)
 
         if self.ctc_type == "builtin":
-            olens = to_device(ys_hat, torch.LongTensor([len(s) for s in ys]))
+            mask = ys_pad != self.ignore_id
+            olens = mask.sum(dim=1)
             hlens = hlens.long()
-            ys_pad = torch.cat(ys)  # without this the code breaks for asr_mix
+            ys_pad = ys_pad.masked_select(mask)
+            ys_pad = self.padd_targets(ys_pad)
             self.loss = self.loss_fn(ys_hat, ys_pad, hlens, olens)
         else:
+            # TODO(kan-bayashi): need to make more smart way
+            ys = [y[y != self.ignore_id] for y in ys_pad]  # parse padded ys
+
             self.loss = None
             hlens = torch.from_numpy(np.fromiter(hlens, dtype=np.int32))
             olens = torch.from_numpy(
@@ -144,7 +168,10 @@ class CTC(torch.nn.Module):
             # NOTE: sum() is needed to keep consistency
             # since warpctc return as tensor w/ shape (1,)
             # but builtin return as tensor w/o shape (scalar).
-            self.loss = self.loss.sum()
+            if self.loss.shape == torch.Size([]):
+                pass
+            else:
+                self.loss = self.loss.sum()
             logging.info("ctc loss:" + str(float(self.loss)))
 
         return self.loss

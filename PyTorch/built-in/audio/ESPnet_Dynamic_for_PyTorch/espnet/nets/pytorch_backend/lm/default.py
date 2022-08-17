@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Default Recurrent Neural Network Languge Model in `lm_train.py`."""
 
 from typing import Any
@@ -13,6 +27,7 @@ from espnet.nets.lm_interface import LMInterface
 from espnet.nets.pytorch_backend.e2e_asr import to_device
 from espnet.nets.scorer_interface import BatchScorerInterface
 from espnet.utils.cli_utils import strtobool
+from espnet.nets.pytorch_backend.nets_utils import NpuDropout
 
 
 class DefaultRNNLM(BatchScorerInterface, LMInterface, nn.Module):
@@ -219,7 +234,7 @@ class ClassifierWithState(nn.Module):
     """A wrapper for pytorch RNNLM."""
 
     def __init__(
-        self, predictor, lossfun=nn.CrossEntropyLoss(reduction="none"), label_key=-1
+        self, predictor, lossfun=nn.CrossEntropyLoss(ignore_index=-1, reduction="none"), label_key=-1
     ):
         """Initialize class.
 
@@ -355,7 +370,7 @@ class RNNLM(nn.Module):
         if emb_dropout_rate == 0.0:
             self.embed_drop = None
         else:
-            self.embed_drop = nn.Dropout(emb_dropout_rate)
+            self.embed_drop = NpuDropout(emb_dropout_rate)
 
         if typ == "lstm":
             self.rnn = nn.ModuleList(
@@ -369,7 +384,7 @@ class RNNLM(nn.Module):
             )
 
         self.dropout = nn.ModuleList(
-            [nn.Dropout(dropout_rate) for _ in range(n_layers + 1)]
+            [NpuDropout(dropout_rate) for _ in range(n_layers + 1)]
         )
         self.lo = nn.Linear(n_units, n_vocab)
         self.n_layers = n_layers
