@@ -72,9 +72,15 @@ PraNet是一个新的网络结构，用于从结肠镜图像中自动分割息�
         ├── images
         └── masks
    ```
+    构建软链接
+    ```
+    mkdir data
+    cd data
+    ln -s train_path/TestDataset
+    ```
 
    > **说明：** 
-   >数据集路径以用户自行定义的路径为准
+   >数据集路径'train_path'以用户自行定义的路径为准
 
 2. 数据预处理（按需处理所需要的数据集）。
 
