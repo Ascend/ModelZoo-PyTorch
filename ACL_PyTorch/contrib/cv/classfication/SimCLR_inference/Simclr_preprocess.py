@@ -100,6 +100,6 @@ def preprocess(srcfile_path, savefile_path):
 
 
 if __name__ == "__main__":
-    src_path = './cifar-10-batches-py/test_batch'
+    src_path = sys.argv[1]
     save_path = sys.argv[2]
     preprocess(src_path, save_path)

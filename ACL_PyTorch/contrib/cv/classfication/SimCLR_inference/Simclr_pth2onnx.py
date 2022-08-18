@@ -69,7 +69,8 @@ def pth2onnx(input_file, output_file):
     output_name = ["output"]
 
     dummy_input = torch.randn(1, 3, 32, 32)
-    torch.onnx.export(model, dummy_input, output_file, input_names=input_name, dynamic_axes = dynamic_axes, output_names=output_name, verbose=False, opset_version=11)
+    torch.onnx.export(model, dummy_input, output_file, input_names=input_name,
+                      dynamic_axes = dynamic_axes, output_names=output_name, verbose=False, opset_version=11)
 
 
 if __name__ == "__main__":
