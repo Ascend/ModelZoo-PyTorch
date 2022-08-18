@@ -54,7 +54,9 @@ root
 
 310p上执行，执行时使npu-smi info查看设备状态，确保device空闲  
 1.数据预处理
+
 数据预处理将原始数据集转换为模型输入的数据。
+
 执行“Simclr_preprocess.py”脚本，完成预处理。
 示例：
 ```
@@ -65,18 +67,25 @@ python3.7 Simclr_preprocess.py ./cifar-10-batches-py/test_batch ./prep_data
 “./prep_data”：输出的二进制文件（.bin）所在路径。
 
 2.生成数据集info文件
-使用“gen_dataset_info.py” 脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“gen_dataset_info.py” 脚本。
+
+使用“gen_dataset_info.py” 脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。
+
+运行“gen_dataset_info.py” 脚本。
 ```
 python3.7 gen_dataset_info.py bin ./prep_data ./Simclr_model.info 32 32
 ```
 bin：生成的数据集文件格式。
+
 ./prep_data：预处理后的数据文件的相对路径。
 
 ./Simclr_model.info”：生成的数据集文件保存的路径。
+
 32：图片的宽与高。
+
 运行成功后，在当前目录中生成“Simclr_model.info”。
 
 3.模型转换
+
 使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
 a.获取权重文件
