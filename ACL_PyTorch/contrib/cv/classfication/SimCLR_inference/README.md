@@ -137,7 +137,9 @@ atc --framework=5 --model=Simclr_model1.onnx --output=Simclr_model_bs1 --input_f
 
 
 4.开始推理验证
+
 a.安装工具
+
 推理工具：https://gitee.com/ascend/tools.git
 
 ```
