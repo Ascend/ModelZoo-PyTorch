@@ -61,6 +61,7 @@ root
 python3.7 Simclr_preprocess.py ./cifar-10-batches-py/test_batch ./prep_data
 ```
 每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_data”二进制文件夹。
+
 “./prep_data”：输出的二进制文件（.bin）所在路径。
 
 2.生成数据集info文件
@@ -77,10 +78,15 @@ bin：生成的数据集文件格式。
 
 3.模型转换
 使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
 a.获取权重文件
+
 从源码包中获取权重文件：simclr.pth。
+
 b.导出onnx文件
+
 运行 Simclr_pth2onnx.py脚本。
+
 ```
 python3.7 Simclr_pth2onnx.py ./simclr.pth Simclr_model.onnx
 ```
@@ -103,14 +109,23 @@ atc --framework=5 --model=Simclr_model1.onnx --output=Simclr_model_bs1 --input_f
 ·参数说明：
 
 --model：为ONNX模型文件。
+
 --framework：5代表ONNX模型。
+
 --output：输出的OM模型。
+
 --input_format：输入数据的格式。
+
 --input_shape：输入数据的shape。
+
 --log：日志级别。
+
 --soc_version：处理器型号，通过npu-smi info 查询。
+
 --insert_op_config：插入算子的配置文件路径与文件名，例如aipp预处理算子。
+
 --enable_small_channel：Set enable small channel. 0(default): disable; 1: enable。
+
 
 4.开始推理验证
 a.安装工具
