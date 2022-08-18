@@ -91,6 +91,7 @@ do
 		--config_file='configs/8P_tri_with_cen.yml' \
 		--local_rank=$RANK_ID \
 		--npus=8 \
+		--loss_scale="128" \
 		MODEL.DEVICE_ID "('0')" \
 		DATASETS.NAMES "('market1501')" \
 		DATASETS.ROOT_DIR "('${data_path}')" \
