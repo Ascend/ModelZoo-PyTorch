@@ -31,7 +31,7 @@ train_epochs=1
 #训练batch_size
 batch_size=64
 #训练step
-train_steps=200
+train_steps=1500
 #学习率
 learning_rate=0.01
 
