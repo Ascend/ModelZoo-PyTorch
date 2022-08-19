@@ -58,6 +58,7 @@ pytorch >= 1.5.0
 torchvision >= 0.6.0
 onnx >= 1.7.0
 ```
+本实验环境中Torch版本为1.5.0
 
 ### 2.2 python第三方库
 
@@ -130,18 +131,6 @@ atc --framework=5 --model=./enet_citys.onnx --output=./enet_citys_bs1 --input_fo
 ```bash
 python3.7 ENet_preprocess.py --src-path=$datasets_path --save_path ./prep_dataset
 ```
-
-### 4.3 生成数据集信息文件
-
-1.生成数据集信息文件脚本get_info.py 。
-
-2.执行生成数据集信息脚本，生成数据集信息文件。
-
-```bash
-python3.7 get_info.py bin ./prep_dataset ./enet_prep_bin.info 480 480
-```
-
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息。  
 
 ## 5 离线推理
 
