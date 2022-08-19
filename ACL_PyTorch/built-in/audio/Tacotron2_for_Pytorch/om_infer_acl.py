@@ -234,7 +234,10 @@ def main():
         num_mels = mel.shape[0] * mel.shape[2]
         all_mels += num_mels
         all_time += measurements["tacotron2_latency"]
-    print("tacotron2_items_per_sec: {}".format(all_mels/all_time))
+    perf = all_mels/all_time
+    resstr = "perf: {}\n".format(perf)
+    with open("results.txt", "a") as resfile:
+        resfile.write(resstr)
 
 
 if __name__ == "__main__":

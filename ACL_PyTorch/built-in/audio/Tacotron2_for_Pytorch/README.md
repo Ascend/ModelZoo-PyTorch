@@ -53,7 +53,7 @@
 
 ### 推理端到端步骤
 
-首先需侵入式修改onnx文件，修改/usr/local/python3.7.5/lib/python3.7/site-packages/onnx/__init__.py， 在load_model函数中函数首添加load_external_data=False
+首先需侵入式修改onnx文件，修改/usr/local/python3.7.5/lib/python3.7/site-packages/onnx/__init__.py， 在load_model函数中函数首添加load_external_data=False，并且在/usr/local/python3.7.5/lib/python3.7/site-packages/onnx/checker.py中的check_model中C.check_model(protobuf_string)注释掉，以上文件路径可能与描述不同，在自己安装的onnx路径下查找即可
 
 1. pth导出onnx
     ①生成权重并将权重备份
@@ -109,7 +109,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
     #参数分别为芯片类型，模型batchsize, seq_len
 
 4. pyACL推理
-    
+   
 
     ```
     python3.7 om_infer_acl.py -i filelists/ljs_audio_text_test_filelist.txt -bs 4 -max_inputlen 128 -max_decode_iter 20 --device_id 0
