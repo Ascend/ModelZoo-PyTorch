@@ -109,7 +109,7 @@
 
      ./inceptionv4_atc.sh ${batch_size} ${chip_name}
 	
-	如果chip_name为710，batchsize为16，则命令为./inceptionv4_atc.sh 16 710，运行成功后在生成inceptionv4_bs16.om
+	如果chip_name为310P3，batchsize为16，则命令为./inceptionv4_atc.sh 16 310P3，运行成功后在生成inceptionv4_bs16.om
 	如果chip_name为310，batchsize为8，则命令为./inceptionv4_atc.sh 8 310，运行成功后在生成inceptionv4_bs8.om
 注意，${batch\_size}为批大小 ${chip_name}可通过命令 npu-smi info得到，如下图所示
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
