@@ -57,9 +57,13 @@ fi
 # 数据集软链到脚本工程内部
 cur_path=`pwd`
 default_data_path=${cur_path}/inputs/
-mkdir -p ${cur_path}/inputs/
-rm -rf ${default_data_path}/dsb2018_96
-ln -s ${data_path} ${default_data_path}/dsb2018_96
+if [ -d ${default_data_path}/dsb2018_96 ]; then
+    echo "data set has exists"
+else
+    mkdir -p ${cur_path}/inputs/
+    rm -rf ${default_data_path}/dsb2018_96
+    ln -s ${data_path} ${default_data_path}/dsb2018_96
+fi
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
@@ -82,7 +86,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     
-    taskset -c $PID_START-$PID_END python -u train.py \
+    taskset -c $PID_START-$PID_END python3.7 -u train.py \
         --batch_size $batch_size \
         --epochs 2 \
         --optimizer Adam \
