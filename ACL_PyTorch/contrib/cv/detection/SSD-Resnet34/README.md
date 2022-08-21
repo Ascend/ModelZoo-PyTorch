@@ -1,4 +1,4 @@
-#  SSD-Resnet34模型PyTorch离线推理
+#  SSD-Resnet34模型PyTorch离线推理(cann==5.1.RC1)
 
 ## 一. 环境准备
 
@@ -84,9 +84,9 @@ apt install libgl1-mesa-glx
 
 之后再运行如上3条命令，本代码所需环境即安装完毕。
 
-### 2. 获取开源模型代码及开源权重
+### 2. 从昇腾网站获取开源权重
 
-加载开源仓库：
+<!-- 加载开源仓库：
 
 ```
 git clone https://github.com/mlcommons/training_results_v0.7.git
@@ -109,9 +109,11 @@ wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8
 
 ```
 wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/detection/SSD-Resnet34/resnet34-333f7ec4.pth
-```
+``` -->
+获取权重文件
+- 浏览 [昇腾ModelZoo](https://www.hiascend.com/zh/software/modelzoo/models/detail/2/4845219a98e5426199b59b149d3a9a56) 网站，点击`立即下载`，并解压得到权重文件。
 
-对于pth权重文件，统一放在新建models文件夹下。
+对于pth权重文件，统一放在新建models文件夹下，并将models文件夹放在当前文件夹下。
 
 ```
 ├── models
@@ -199,14 +201,14 @@ bash test/ssd_eval_acc_perf.sh --data_path=/home/yzc
 
 42-48行是生成info文件
 
-50-67行是使用benchmark进行离线推理的部分
+50-67行是使用ais_infer进行离线推理的部分
 
 70-84行是数据后处理评估精度部分
 
 请用户在运行代码前，必须要先激活环境变量才能运行代码：
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 如果在运行代码的过程中，出现缺少.so库的问题，则需要再运行一遍上面输入的命令，再激活一次环境变量，即可解决问题。
@@ -264,13 +266,13 @@ export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 生成batchsize为1的om模型的命令如下。
 
 ```
-atc --framework=5 --model=./ssd_bs1.onnx --output=./ssd_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --log=error --soc_version=Ascend310
+atc --framework=5 --model=./ssd_bs1.onnx --output=./ssd_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --log=error --soc_version=ChipName
 ```
 
 生成batchsize为16的om模型的命令如下。
 
 ```
-atc --framework=5 --model=./ssd_bs16.onnx --output=./ssd_bs16 --input_format=NCHW --input_shape="image:16,3,300,300" --log=error --soc_version=Ascend310
+atc --framework=5 --model=./ssd_bs16.onnx --output=./ssd_bs16 --input_format=NCHW --input_shape="image:16,3,300,300" --log=error --soc_version=ChipName
 ```
 
 --framework：5代表ONNX模型。
@@ -300,11 +302,11 @@ atc --framework=5 --model=./ssd_bs16.onnx --output=./ssd_bs16 --input_format=NCH
 
 在进行数据预处理时，虽然coco2017的val2017验证集有5000张图片，但是实际上输出的只有4952张图片，因为在这过程中代码会剔除其中的48张图片。这一点请用户注意。
 
-在数据预处理之前先要声明mlperf_logging包的调用问题：
+<!-- 在数据预处理之前先要声明mlperf_logging包的调用问题：
 
 ```
 PYTHONPATH=../../../../../SIAT/benchmarks/resnet/implementations/tensorflow_open_src:$PYTHONPATH
-```
+``` -->
 
 具体命令讲解：
 
@@ -327,7 +329,7 @@ ${data_path}：coco2017数据集的路径
 │    ├── tensor([581781]).bin
 ```
 
-### 4.生成数据集info文件
+<!-- ### 4.生成数据集info文件
 
 使用benchmark推理需要输入二进制数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。
 
@@ -349,72 +351,63 @@ python3.7 get_info.py bin ./ssd_bin ssd.info 300 300
 
 ```
 ├── ssd.info
-```
+``` -->
 
-### 5.使用Benchmark工具进行推理
+### 5.使用Ais_Infer工具进行推理
 
-Benchmark模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。
+Ais_Infer模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。
 
 先后步骤顺序为：
 
-−     增加执行权限
+
+− 由对batchsize=1的om模型进行ais_infer推理：
 
 ```
-chmod u+x benchmark.x86_64
+python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
 ```
 
-−    由对batchsize=1的om模型进行benchmark推理：
+− 由对batchsize=16的om模型进行ais_infer推理：
 
 ```
-./benchmark.x86_64 -model_type=vision -batch_size=1 -device_id=0 -input_text_path=./ssd.info -input_width=300 -input_height=300 -useDvpp=False -output_binary=true -om_path=./ssd_bs1.om
+python ais_infer.py --model ${om_path}/ssd_bs16.om  --input /path/to/ssd_bin/ --output ${out_path}
 ```
 
-−     由对batchsize=16的om模型进行benchmark推理：
+- model：为om文件的路径
 
-```
-./benchmark.x86_64 -model_type=vision -batch_size=16 -device_id=1 -input_text_path=./ssd.info -input_width=300 -input_height=300 -useDvpp=False -output_binary=true -om_path=./ssd_bs16.om
-```
+- input：为导出的数据集二进制文件ssd_bin/的路径
 
--model_type：为benchmark支持的模型类型，目前支持的有vision，nmt，widedeep，nlp，yolocaffe，bert，deepfm。ssd模型属于vision，所以选vision。
+- output：为推理产生的结果的位置，注意这里的路径要填写一个已经存在的目录，会自动在这个目录中生成一个以日期命名的文件夹如`2022_08040-16_00_52`
 
--batch_size：om模型的batch大小，该值应与om模型的batch大小相同，否则报输入大小不一致的错误。
+${om_path}：om文件保存的目录
+${out_path}：推理结果保存的目录
 
--device_id：指运行在ascend 310的哪个device上，每张ascend 310卡有4个device。
-
-input_text_path：包含数据集每个样本的路径与其相关信息的数据集信息文件路径。即之前生成的info文件路径。
-
--input_width：输入宽度
-
--input_height：输入高度
+<!-- -input_height：输入高度
 
 -useDvpp：为是否使用aipp进行数据集预处理，我这里不用
 
--output_binary：以预处理后的数据集为输入，benchmark工具推理om模型的输出数据保存为二进制还是txt。true为生成二进制bin文件，false为生成txt文件。
+-output_binary：以预处理后的数据集为输入，benchmark工具推理om模型的输出数据保存为二进制还是txt。true为生成二进制bin文件，false为生成txt文件。 -->
 
--om_path：om模型文件路径。
+<!-- -om_path：om模型文件路径。 -->
 
-执行./benchmark.x86_64工具请选择与运行环境架构相同的命令。参数详情请参见《 CANN 推理benchmark工具用户指南 》。 推理后的输出默认在当前目录result下。
+<!-- 执行./benchmark.x86_64工具请选择与运行环境架构相同的命令。参数详情请参见《 CANN 推理benchmark工具用户指南 》。 推理后的输出默认在当前目录result下。 -->
 
-batchsize=1的om模型进行benchmark推理得到的bin文件输出结果默认保存在当前目录result/dumpOutput_device0；性能数据默认保存在result/ perf_vision_batchsize_1_device_0.txt。
+<!-- batchsize=1的om模型进行benchmark推理得到的bin文件输出结果默认保存在当前目录result/dumpOutput_device0；性能数据默认保存在result/ perf_vision_batchsize_1_device_0.txt。
 
-batchsize=16的om模型进行benchmark推理得到的bin文件输出结果默认保存在当前目录result/dumpOutput_device1；性能数据默认保存在result/ perf_vision_batchsize_16_device_1.txt。
+batchsize=16的om模型进行benchmark推理得到的bin文件输出结果默认保存在当前目录result/dumpOutput_device1；性能数据默认保存在result/ perf_vision_batchsize_16_device_1.txt。 -->
 
-该模型一个输入会对应两个输出，_1代表ploc的输出，_2代表plabel的输出。
+该模型一个输入会对应两个输出，_0代表ploc的输出，_1代表plabel的输出。
 
 执行以上命令后的输出：
 
 ```
-├── result
-│    ├── dumpOutput_device0
-│    │    ├── tensor([139])_1.bin
-│    │    ├── tensor([139])_2.bin
-│    │    ├── ……
-│    ├── dumpOutput_device1
-│    │    ├── tensor([139])_1.bin
-│    │    ├── tensor([139])_2.bin
-│    │    ├── ……
-│    ├── perf_vision_batchsize_1_device_0.txt
-│    ├── perf_vision_batchsize_16_device_1.txt
+├── 2022_08040-16_00_52
+│    ├── tensor([139])_0.bin
+│    ├── tensor([139])_1.bin
+│    ├── ……
+│    ├── tensor([139])_0.bin
+│    ├── tensor([139])_1.bin
+│    ├── ……
+
 ```
 
 ### 6.数据后处理
@@ -426,13 +419,13 @@ batchsize=16的om模型进行benchmark推理得到的bin文件输出结果默认
 batchsize=1的测试：
 
 ```
-python ssd_postprocess.py --data=${data_path}/coco --bin-input=./result/dumpOutput_device0
+python ssd_postprocess.py --data=${data_path}/coco --bin-input=${output_path}
 ```
 
 batchsize=16的测试：
 
 ```
-python ssd_postprocess.py --data=${data_path}/coco --bin-input=./result/dumpOutput_device1
+python ssd_postprocess.py --data=${data_path}/coco --bin-input=${output_path}
 ```
 
 --data：coco2017数据集的路径
@@ -440,11 +433,27 @@ python ssd_postprocess.py --data=${data_path}/coco --bin-input=./result/dumpOutp
 --bin-input：数据预处理得到的bin文件。
 
 ${data_path}：coco2017数据集的路径
+${output_path}：推理结果保存的路径，如`/xx/xx/2022_08040-16_00_52/`
 
 ### 7.评测结果：
 
 | 模型              | 官网pth精度 | 310离线推理精度 | 性能基准   | 310性能    |
 | ----------------- | ----------- | --------------- | ---------- | ---------- |
-| SSD-Resnet34 bs1  | 23.000%     | 23.030%         | 482.627fps | 634.576fps |
-| SSD-Resnet34 bs16 | 23.000%     | 23.030%         | 774.477fps | 863.748fps |
+| SSD-Resnet34 bs1  | 23.000%     | 23.030%         | 482.627fps | 711.356fps |
+| SSD-Resnet34 bs4 | 23.000%     | 23.030%         | 482.627fps | 825.516fps |
+| SSD-Resnet34 bs8 | 23.000%     | 23.030%         | 482.627fps | 849.156fps |
+| SSD-Resnet34 bs16 | 23.000%     | 23.030%         | 482.627fps |  862.468fps |
+| SSD-Resnet34 bs32 | 23.000%     | 23.030%         | 482.627fps | 812.836fps |
+| SSD-Resnet34 bs64 | 23.000%     | 23.030%         | 482.627fps | 810.368fps |
+| Max(bs16) | 23.000%     | 23.030%         | - | 863.748fps |
 
+
+| 模型              | 官网pth精度 | 310P离线推理精度 | 性能基准   | 310P性能    |
+| ----------------- | ----------- | --------------- | ---------- | ---------- |
+| SSD-Resnet34 bs1  | 23.000%     | 23.030%         | 482.627fps | 925.091fps |
+| SSD-Resnet34 bs4 | 23.000%     | 23.030%         | 482.627fps | 1302.783fps |
+| SSD-Resnet34 bs8 | 23.000%     | 23.030%         | 482.627fps | 1406.351fps |
+| SSD-Resnet34 bs16 | 23.000%     | 23.030%         | 482.627fps | 1358.895fps |
+| SSD-Resnet34 bs32 | 23.000%     | 23.030%         | 482.627fps |  1370.644fps |
+| SSD-Resnet34 bs64 | 23.000%     | 23.030%         | 482.627fps | 914.474fps |
+| Max(bs8) | 23.000%     | 23.030%         | - |  1406.351fps |
