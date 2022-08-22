@@ -167,7 +167,7 @@ source set_env.sh
 #### 5.2.2 执行离线推理
 - 使用ais-infer工具进行推理。
 
-  python3 ais_infer.py -–model ./C3D_16.om --input=./prep_ datasets/ --output ./result –outfmt TXT --batchsize=16 --infer_queue_count 1
+  python ais_infer.py -–model ./C3D_16.om --input=./prep_ datasets/ --output ./result –outfmt TXT --batchsize=16 --infer_queue_count 1
 
   \-  参数说明：
 
