@@ -245,14 +245,14 @@ class ExperimentOTB(object):
                     file1.write('\n')
                 # infer
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om '
-                 '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
-                 %(idx, seq_name))
+                 '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN >/dev/null 2>&1'
+                 %(idx))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
                 filename = 'sample_id_0_output_0.bin'
-                filename = 'OTB100/' + seq_name + '/' + filename
+                filename = 'OTB100/'+ seq_name+ '/' + filename
                 exemplar_feature = prepostpro.file2tensor(filename, (3, 256, 6, 6))
-                os.system('rm -rf ./pre_dataset/%s/%s' % (idx,img_file.replace('/', '-').replace('.jpg', '.bin')))
+                os.system('rm -rf ./pre_dataset/%s/%s' %(idx, img_file.replace('/', '-').replace('.jpg', '.bin')))
             else:
                 # Pre-process and generate bin
                 search_path = prepostpro.cropsearch(img, savepath, img_file)
@@ -263,12 +263,12 @@ class ExperimentOTB(object):
                     file2.write('\n')
                 # infer
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om '
-                    '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
-                    %(idx, seq_name))
+                    '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN >/dev/null 2>&1'
+                    %(idx))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
                 filename = 'sample_id_0_output_0.bin'
-                filename = 'OTB100/' + seq_name + '/' + filename
+                filename = 'OTB100/'+ seq_name+ '/' + filename
                 search_feature = prepostpro.file2tensor(filename, (1, 768, 22, 22))
                 # Post-process
                 boxes[f, :] = prepostpro.postprocess(search_feature, exemplar_feature)
@@ -301,6 +301,7 @@ class ExperimentOTB(object):
             succ_curve = np.zeros((seq_num, self.nbins_iou))
             prec_curve = np.zeros((seq_num, self.nbins_ce))
             speeds = np.zeros(seq_num)
+            #
             performance.update({name: {'overall': {}, 'seq_wise': {}}})
 
             for s, (_, anno) in enumerate(self.dataset):
@@ -416,7 +417,7 @@ if __name__ == "__main__":
     totallen = e.getlendataset()
     pool = multiprocessing.Pool(processes=12)
     for i in range(totallen):
-        pool.apply_async(e.run, (save_path, info_path, i,))
+        pool.apply_async(e.run, (save_path, info_path, i, ))
     pool.close()
     pool.join()
     prec_score, succ_score, succ_rate = e.report(['siamfc'])
