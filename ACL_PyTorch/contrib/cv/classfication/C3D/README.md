@@ -13,7 +13,7 @@ https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/c3d/READ
 ## 2. 环境说明
 ### 2.1 深度学习框架
 ```shell
-CANN 5.0.2
+CANN 5.1.RC1
 torch==1.6.0
 torchvision==0.7.0
 onnx==1.10.2
@@ -45,7 +45,7 @@ python tools/deployment/pytorch2onnx.py configs/recognition/c3d/c3d_sports1m_16x
 ### 3.2 onnx转om模型
 #### 5.2.1 设置环境变量
 ```shell
-source env.sh
+source set_env.sh
 ```
 #### 3.2.2 使用atc将onnx模型转换为om模型
 ```shell
@@ -162,25 +162,36 @@ benchmark工具用户指南 01 将获取的工具包并解压，将benchmark工�
 ### 5.2 离线推理
 #### 5.2.1 设置环境变量
 ```shell
-source env.sh
+source set_env.sh
 ```
 #### 5.2.2 执行离线推理
-运行如下脚本执行离线推理
-```shell
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=C3D.om -input_text_path=./c3d_prep_bin.info -input_width=112 -input_height=112 -output_binary=False -useDvpp=False
-```
-输出结果保存在当前目录`result/dumpOutput_device0/`里；性能数据保存在`result/perf_vision_batchsize_1_device_0.txt`中
+- 使用ais-infer工具进行推理。
 
-参数说明：
-- `-model_type`:benchmark支持的模型类型，目前支持的有vision，nmt，widedeep，nlp，yolocaffe，bert，deepfm
-- `-device_id`:运行在ascend 310或ascend 310P的哪个device上，每张ascend 310卡有4个device，每张ascend 310P卡有1个device
-- `-batch_size`:om模型的batch大小，该值应与om模型的batch大小相同，否则报输入大小不一致的错误
-- `-om_path`:om模型文件路径
-- `-input_text_path`:包含数据集每个样本的路径与其相关信息的数据集信息文件路径
-- `-input_height`:输入高度
-- `-input_width`:输入宽度
-- `-output_binary`:以预处理后的数据集为输入，benchmark工具推理om模型的输出数据保存为二进制还是txt，但对于输出是int64类型的节点时，指定输出为txt时会将float类型的小数转换为0而出错
-- `-useDvpp`:是否使用aipp进行数据集预处理
+  python3 ais_infer.py -–model ./C3D_16.om --input=./prep_ datasets/ --output ./result –outfmt TXT --batchsize=16 --infer_queue_count 1
+
+  \-  参数说明：
+
+   
+
+    \-  model：需要进行推理的om模型。
+
+    \-  input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
+
+  \-  output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。。
+
+  \-  outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+
+  \-  batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
+
+  \-  infer_queue_count：推理队列的数据最大数 可选参数，默认20。如果推理输入输出数据内存比较大，可能超过内存容量时，需要调小该值。
+
+   
+
+    推理后的输出默认在当前目录result下。
+
+    \>**说明：** 
+
+    \>执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer。
 ## 6. 精度对比
 ### 6.1 离线推理Top1精度
 将result文件夹、标注文件和精度统计代码放在同一个文件夹内，运行如下脚本评测精度：
@@ -194,7 +205,7 @@ python C3D_postprocess.py ./result/dumpOutput_device0 ./mmaction2-master/data/uc
 
 运行之后会在result文件夹中生成`top1_acc.json`文件，在310上得到精度数据为：
 ```shell
-{"top1_acc": 0.818205874569992}
+{"top1_acc": 0.8189997353797301}
 ```
 在310P上得到精度数据为：
 ```shell
@@ -204,33 +215,45 @@ python C3D_postprocess.py ./result/dumpOutput_device0 ./mmaction2-master/data/uc
 |       模型        | Top1精度 |
 | :---------------: | :------: |
 | pth预训练模型(T4) |  82.24   |
-|    om模型(310)    |  81.82   |
+|    om模型(310)    |  81.89   |
 |   om模型(310P)    |  81.89   |
 
-说明：可以看到om模型在310上精度达到了pth模型精度的99.49%，可以看到om模型在310P上的精度达到了pth模型精度的99.57%，精度达标，故不需要进行调试。\
+说明：可以看到om模型在310上精度达到了pth模型精度的99.57%，可以看到om模型在310P上的精度达到了pth模型精度的99.57%，精度达标，故不需要进行调试。\
 备注：源码仓Top1精度为83.27。
 
 ## 7. 性能对比
 ### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。 benchmark工具在整个数据集上推理获得性能数据:
-1.batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt:
+
+1.batch1的性能:
 
 ```shell
-[e2e] throughputRate: 5.43018, latency: 695926
-[data read] throughputRate: 5.6839, moduleLatency: 175.935
-[preprocess] throughputRate: 5.52475, moduleLatency: 181.004
-[infer] throughputRate: 5.43899, Interface throughputRate: 7.67659, moduleLatency: 181.881
-[post] throughputRate: 5.43898, moduleLatency: 183.858
+[e2e] throughputRate: 4.28779, latency: 881339
+[data read] throughputRate: 4.5526, moduleLatency: 219.655
+[preprocess] throughputRate: 4.39146, moduleLatency: 227.715
+[inference] throughputRate: 4.29808, Interface throughputRate: 7.59556, moduleLatency: 229.201
+[postprocess] throughputRate: 4.2992, moduleLatency: 232.602
+fps=7.59556*4 = 30.38224 
 ```
-Interface throughputRate: 7.67659，7.67659x4=30.70636fps。即是batch1 310单卡吞吐率。
+Interface throughputRate: 7.59556，7.59556x4=30.38224fps。即是batch1 310单卡吞吐率。
 ```shell
-[e2e] throughputRate: 19.108, latency: 197770
-[data read] throughputRate: 20.0524, moduleLatency: 49.8694
-[preprocess] throughputRate: 19.4161, moduleLatency: 51.5036
-[inference] throughputRate: 19.1976, Interface throughputRate: 56.9776, moduleLatency: 50.9636
-[postprocess] throughputRate: 19.2025, moduleLatency: 52.0767
+[INFO] load model /home/ys/C3D/C3D_1.om success
+[INFO] create model description success
+[INFO] output path:/home/ys/C3D/ais_result/2022_08_08-03_56_49
+[INFO] warm up 5 times done
+[INFO] get filesperbatch files0 size:24084480 tensor0size:24084480 filesperbatch:1 runcount:3779
+Inference Processing task: 100%|███████████████████████████████| 3779/3779 [08:36<00:00,  7.31it/s]
+[INFO] -----------------Performance Summary------------------
+[INFO] H2D_latency (ms): min = 3.576040267944336, max = 25.34198760986328, mean = 4.1277097564236955, median = 3.843069076538086, percentile(99%) = 14.916601181030234
+[INFO] NPU_compute_time (ms): min = 18.80500030517578, max = 33.78099822998047, mean = 19.04405264540241, median = 18.972999572753906, percentile(99%) = 19.706099739074705
+[INFO] D2H_latency (ms): min = 0.0286102294921875, max = 13.07225227355957, mean = 0.10634862925521152, median = 0.05269050598144531, percentile(99%) = 0.43358325958251764
+[INFO] throughput 1000*batchsize(1)/NPU_compute_time.mean(19.04405264540241): 52.50983173696586
+[INFO] ------------------------------------------------------
+[INFO] unload model success, model Id is 1
+DestroyDevices begindestory device:0
+aclrtDestroyContext successfully!
+DestroyDevices successfully
 ```
-Interface throughputRate: 56.9776fps。即是batch1 310P单卡吞吐率。
+Interface throughputRate: 52.50983fps。即是batch1 310P单卡吞吐率。
 ### 7.2 gpu性能数据
 将C3D.onnx文件上传至208服务器，运行如下脚本：
 ```shell
@@ -238,14 +261,14 @@ trtexec --onnx=C3D.onnx --fp16 --shapes=image:1x10x3x16x112x112
 ```
 得到
 ```shell
-mean = 37.3741 ms
+mean = 26.10020 ms
 ```
 计算batch 1 gpu单卡吞吐率：1000/(37.3741/1)=26.75650
 ### 7.3 性能对比
-|                             设备                             | 单卡吞吐率 |
-| :----------------------------------------------------------: | :--------: |
-|                             gpu                              |  26.75650  |
-|                           npu(310)                           |  30.70636  |
-|                          npu(310P)                           |  56.97760  |
+|   设备    | 单卡吞吐率 |
+| :-------: | :--------: |
+|    gpu    |  26.10020  |
+| npu(310)  |  30.38224  |
+| npu(310P) |  52.50983  |
 
-说明：可以看到npu(310)上的性能达到了gpu性能的1.148倍，npu(310P)上的性能达到了gpu性能的2.129倍，性能达标，故不需要进行调试。           
+说明：可以看到npu(310)上的性能达到了gpu性能的1.164倍，npu(310P)上的性能达到了gpu性能的2.011倍，性能达标，故不需要进行调试。           
