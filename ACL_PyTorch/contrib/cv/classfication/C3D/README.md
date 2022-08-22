@@ -1,274 +1,338 @@
-# C3D模型 Onnx端到端推理指导
-## 1. 模型概述
-### 1.1 论文地址
-```shell
-https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Tran_Learning_Spatiotemporal_Features_ICCV_2015_paper.pdf
-```
-### 1.2 代码地址
-- 进行推理之前先下载代码仓代码
-- branch: master commit id : 6d6685632f28344e98cf34a14d1226cd6c008391
-```shell
-https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/c3d/README.md
-```
-## 2. 环境说明
-### 2.1 深度学习框架
-```shell
-CANN 5.1.RC1
-torch==1.6.0
-torchvision==0.7.0
-onnx==1.10.2
-onnxruntime==1.9.0
-mmcv==1.3.17
-```
-### 2.2 python第三方库
-```shell
-opencv-python==4.5.4.58
-numpy==1.21.2
-pillow==8.4.0
-```
-## 3. 模型转换
-### 3.1 pth转onnx模型
-#### 3.1.1 下载pth权重文件
-pth文件使用310训练得到的权重文件，下载后放在`$mmaction2-master/checkpoints/`下
-#### 3.1.2 执行pth2onnx.py脚本，生成onnx模型文件
-在导出onnx文件前，请确保命令行当前路径为 `$mmaction2-master/`。\
-并用交附件中的`pytorch2onnx.py`替换`tools/deployment/pytorch2onnx.py`文件，运行如下脚本:
-```shell
-python tools/deployment/pytorch2onnx.py configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py checkpoints/C3D.pth --shape 1 10 3 16 112 112 --verify --softmax --output-file=C3D.onnx
-```
-参数说明：
-- `--shape`: 模型输入张量的形状。对于C3D模型，输入形状为 `$batch $clip $channel $time $height $width`。
-- `--verify`: 决定是否对导出模型进行验证，验证项包括是否可运行，数值是否正确等。如果没有被指定，它将被置为 `False`。
-- `--show`: 决定是否打印导出模型的结构。如果没有被指定，它将被置为 `False`。
-- `--softmax`: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 `False`。目前仅支持行为识别器，不支持时序动作检测器。
-- `--output-file`: 如果没有指定，将被置为 `tmp.onnx`。
-### 3.2 onnx转om模型
-#### 5.2.1 设置环境变量
-```shell
-source set_env.sh
-```
-#### 3.2.2 使用atc将onnx模型转换为om模型
-```shell
-atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape="image:1,10,3,16,112,112" --log=debug --soc_version=${chip_name}
-```
-参数说明：
+# C3D模型-推理指导
 
-- `--model`: 输入的onnx模型路径。
-- `--output`:输出的文件名。 
-- `--input_format`: 输入形状的格式。
-- `--input_shape`: 模型输入的形状。
-- `--log`: 设置ATC模型转换过程中日志的级别。
-- `--soc_version`: ${chip_name}可通过`npu-smi info`指令查看 。
 
-## 4.数据预处理
-### 4.1 数据集获取
-用户可参考该数据集的 [官网](https://www.crcv.ucf.edu/research/data-sets/ucf101/)，以获取数据集相关的基本信息。
-在数据集准备前，请确保命令行当前路径为 `$mmaction2-master/tools/data/ucf101/`。
-#### 4.1.1 下载数据集
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-下载标注文件；下载视频文件，将下载好的视频数据放在`$mmaction2-master/data/videos/`下。
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-```shell
-cd $tools/data/ucf101
-bash download_annotations.sh
-bash download_videos.sh
-```
-#### 4.1.2 提取RGB原始帧
-```shell
-cd $tools/data/ucf101
-bash extract_rgb_frames_opencv.sh
-```
-提取出来的原始帧放在`$mmaction2-master/data/ucf101/`路径下。
-#### 4.1.3 生成标注文件
-```shell
-cd $tools/data/ucf101
-bash generate_rawframes_filelist.sh
-```
-#### 4.1.4 检查标注文件
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-将交付件中的`check_rawframes_filelist.sh`放在`$tools/data/ucf101`目录下，并在该目录下运行，剔除问题样本（数据集中的v_PommelHorse_g05序列会生成大小不符合的帧样本）。
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-```shell
-cd $tools/data/ucf101
-bash check_rawframes_filelist.sh
-```
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-#### 4.1.5 检查目录结构
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-确认最终的目录结构是否是如下格式。
-```
-mmaction2-master
-├── mmaction
-├── tools
-├── configs
-├── data
-│   ├── ucf101
-│   │   ├── ucf101_{train,val}_split_{1,2,3}_rawframes.txt
-│   │   ├── ucf101_{train,val}_split_{1,2,3}_videos.txt #可以没有
-│   │   ├── annotations
-│   │   ├── videos
-│   │   │   ├── ApplyEyeMakeup
-│   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
+  ******
 
-│   │   │   ├── YoYo
-│   │   │   │   ├── v_YoYo_g25_c05.avi
-│   │   ├── rawframes
-│   │   │   ├── ApplyEyeMakeup
-│   │   │   │   ├── v_ApplyEyeMakeup_g01_c01
-│   │   │   │   │   ├── img_00001.jpg
-│   │   │   │   │   ├── img_00002.jpg
-│   │   │   │   │   ├── ...
-│   │   │   │   │   ├── flow_x_00001.jpg
-│   │   │   │   │   ├── flow_x_00002.jpg
-│   │   │   │   │   ├── ...
-│   │   │   │   │   ├── flow_y_00001.jpg
-│   │   │   │   │   ├── flow_y_00002.jpg
-│   │   │   ├── ...
-│   │   │   ├── YoYo
-│   │   │   │   ├── v_YoYo_g01_c01
-│   │   │   │   ├── ...
-│   │   │   │   ├── v_YoYo_g25_c05
-```
-### 4.2 数据集预处理
-将交附件中的`rawframe_dataset.py`替换代码仓中`$mmaction2-master/mmaction/datasets`路径下的`rawframe_dataset.py`文件。\
-确保当前工作目录为：`$mmaction2-master/`
-运行：
+  
 
-```shell
-python ./mmaction/datasets/rawframe_dataset.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py --output_path ./data/prep_datasets
-```
-将原始帧（rawframes）处理为bin文件。\
-注意：在处理之前，需要提前在对应路径下创建好prep_datasets文件夹。\
-参数说明：
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-- 参数1：config文件的路径
-- 参数2：输出文件夹的位置
-### 4.3 生成数据集信息文件
-将处理好的数据，生成对应的info文件，作为benchmark工具推理的输入。
-参考代码：
-```shell
+C3D一种简单而有效的方法，用于使用在大规模监督视频数据集上训练的深层三维卷积网络（3D ConvNets）进行时空特征学习。该网络有三个方面的优势：1）与 2D ConvNets 相比，3D ConvNets 更适合于时空特征学习；2）所有层级的 3×3×3 小卷积核心 的均匀架构是 3D ConvNets 中性能最好的架构之一；3）使用简单的线性分类器学习的 特征，即 C3D（卷积 3D），在 4 个不同的基准上优于最先进的方法，并且与其他 2 个基准 上的当前最佳方法相当。另外，特征非常紧凑：仅使用 10 维的 UCF101 数据集的精度达到 52.8％，由于 ConvNets 的快速推理能力，其计算效率也非常高。最后，它们在概念上很简单，易于训练和使用。
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/openmmlab/mmaction2/blob/master/configs/recognition/c3d
+  branch=master
+  commit_id=6d6685632f28344e98cf34a14d1226cd6c008391
+  model_name=c3d
+  ```
+  
+
+
+  通过Git获取对应commit\_id的代码方法如下：
+
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                               | 数据排布格式 |
+  | -------- | -------- | ---------------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 10 x 3 x16 x 112 x 112 | NDCTHW       |
+
+
+- 输出数据
+
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | 10 x 101 | FLOAT32  | ND           |
+
+
+
+
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC1 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.6.0   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+1. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   下载代码：https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/c3d/README.md
+
+   解压代码：
+
+   ```
+   unzip mmaction2-master.zip
+   ```
+
+   安装依赖：
+
+   ```
+   pip3 install -r mmaction2-master/requirements.txt
+   ```
+
+   下载视频，视频目录：mmaction2-master/data/ucf101/videos/
+
+   ```
+   bash mmaction2-master/tools/data/ucf101/download_videos.sh
+   ```
+
+   提取RGB原始帧，提取好的原始帧目录：mmaction2-master/data/ucf101/rawframes
+
+   ```
+   bash mmaction2-master/tools/data/ucf101/extract_rgb_frames_opencv.sh
+   ```
+
+   mmaction2-master的目录结构
+
+   ```
+   mmaction2-master
+   ├── mmaction
+   ├── tools
+   ├── configs
+   ├── data
+   │   ├── ucf101
+   │   │   ├── ucf101_{train,val}_split_{1,2,3}_rawframes.txt
+   │   │   ├── ucf101_{train,val}_split_{1,2,3}_videos.txt
+   │   │   ├── annotations
+   │   │   ├── videos
+   │   │   │   ├── ApplyEyeMakeup
+   │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
+   
+   │   │   │   ├── YoYo
+   │   │   │   │   ├── v_YoYo_g25_c05.avi
+   │   │   ├── rawframes
+   │   │   │   ├── ApplyEyeMakeup
+   │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01
+   │   │   │   │   │   ├── img_00001.jpg
+   │   │   │   │   │   ├── img_00002.jpg
+   │   │   │   │   │   ├── ...
+   │   │   │   │   │   ├── flow_x_00001.jpg
+   │   │   │   │   │   ├── flow_x_00002.jpg
+   │   │   │   │   │   ├── ...
+   │   │   │   │   │   ├── flow_y_00001.jpg
+   │   │   │   │   │   ├── flow_y_00002.jpg
+   │   │   │   ├── ...
+   │   │   │   ├── YoYo
+   │   │   │   │   ├── v_YoYo_g01_c01
+   │   │   │   │   ├── ...
+   │   │   │   │   ├── v_YoYo_g25_c05
+   ```
+
+2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+
+   数据预处理将原始数据集转换为模型输入的数据。
+
+   执行rawframe_dataset.py脚本，将原始帧（rawframes）处理为bin文件。
+
+   ```
+   python mmaction2-master/mmaction/datasets/rawframe_dataset.py mmaction2-master/configs/recognition/c3d/c3d_sports_sports1m_16x1x1_45e_ucf101_rgb.py --output_path ./prep_datasets
+   ```
+
+​	 注意：在处理之前，需要提前在对应路径下创建好prep_datasets文件夹。
+
+​	 参数说明：
+
+​	 \- 参数1：config文件的路径
+
+​	 \- 参数2：输出文件夹的位置
+
+​     执行get_info.py脚步，生成数据集info文件。
+
+```python
 python get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
 ```
-参数说明：
-- `参数1`：bin文件所在的文件夹的路径
-- `参数2`：为输出的info文件的名称
-- `参数3、4`：分别表示每张图片的宽和高
-## 5. 离线推理
-### 5.1 benchmark工具概述
-benchmark工具为华为自研的模型推理工具，支 持多种模型的离线推理，能够迅速统计出模型在芯片上的性能，支持真实数据和
-纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理
-benchmark工具用户指南 01 将获取的工具包并解压，将benchmark工具放在当前目录下
 
-### 5.2 离线推理
-#### 5.2.1 设置环境变量
-```shell
-source set_env.sh
-```
-#### 5.2.2 执行离线推理
-- 使用ais-infer工具进行推理。
+​	参数说明：
 
-  python ais_infer.py -–model ./C3D_16.om --input=./prep_ datasets/ --output ./result –outfmt TXT --batchsize=16 --infer_queue_count 1
+​	\- 参数1：bin文件所在的文件夹的路径
 
-  \-  参数说明：
+​	\- 参数2：为输出的info文件的名称
 
+​	\- 参数3、4：分别表示每张图片的宽和高
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       本模型基于开源框架PyTorch训练的C3D进行模型转换。
+
+       使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文  件转为离线推理模型文件.om文件。
+
+       获取权重文件。
+
+       pth文件使用310训练得到的权重文件，下载后放在mmaction2-master/checkpoints/下
+
+       ```
+       cp ./C3D.pth mmaction2-master/checkpoints
+       ```
+
+   2. 导出onnx文件。
+
+      1. 使用pth2onnx.py导出onnx文件。
+
+         运行pth2onnx.py脚本。
    
-
-    \-  model：需要进行推理的om模型。
-
-    \-  input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
-
-  \-  output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。。
-
-  \-  outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
-
-  \-  batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
-
-  \-  infer_queue_count：推理队列的数据最大数 可选参数，默认20。如果推理输入输出数据内存比较大，可能超过内存容量时，需要调小该值。
-
+         ```
+         cp ./pth2onnx.py mmaction2-master/tools/pytorch2onnx.py
+         python mmaction2-master/tools/pytorch2onnx.py configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py mmaction2-master/checkpoints/C3D.pth --shape 1 10 3 16 112 112 --verify --softmax
+         ```
    
+         获得C3D.onnx文件。
+   
+         参数说明：
+   
+         --shape: 模型输入张量的形状。对于C3D模型，输入形状为 $batch $ $clip$ $channel $ $time$ $height $ $width$。
+   
+         --verify: 决定是否对导出模型进行验证，验证项包括是否可运行，数值是否正确等。如果没有被指定，它将被置为 False。
+   
+         --show: 决定是否打印导出模型的结构。如果没有被指定，它将被置为 False。
 
-    推理后的输出默认在当前目录result下。
+         --softmax: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 False。目前仅支持行为识别器，不支持时序动作检测器。
 
-    \>**说明：** 
+   3. 使用ATC工具将ONNX模型转OM模型。
+   
+      1. 配置环境变量。
+   
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+   
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+   
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+   
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+   
+      3. 执行ATC命令。
+   
+         ```
+         atc --framework=5 --model=C3D.onnx --output=C3D --input_format=ND --input_shape="image:1,10,3,16,112,112" --log=debug --soc_version=Ascend${chip_name} --auto_tune_mode="RL,GA"
+         ```
+   
+         - 参数说明：
+   
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+           -   --auto_tune-mode:是否开启auto-tune
+           
+           运行成功后生成<u>***C3D.om***</u>模型文件。
 
-    \>执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer。
-## 6. 精度对比
-### 6.1 离线推理Top1精度
-将result文件夹、标注文件和精度统计代码放在同一个文件夹内，运行如下脚本评测精度：
-```shell
-python C3D_postprocess.py ./result/dumpOutput_device0 ./mmaction2-master/data/ucf101/ucf101_val_split_1_rawframes.txt ./result/top1_acc.json
-```
+
+
+2. 开始推理验证。
+
+a.  使用ais-infer工具进行推理。
+
+   执行命令增加工具可执行权限，并根据OS架构选择工具
+
+   ```
+   chmod u+x 
+   ```
+
+b.  执行推理。
+
+    python tools-master/ais-bench_workload/tool/ais_infer/ais_infer.py --model mmaction2-master/C3D.om --batchsize=1 --input=./prep_datasets/ --output ./ais_result --output_dirname result --outfmt TXT
+
 参数说明：
-- `参数1`:离线推理得到的结果文件夹所在的路径
-- `参数2`:标注文件所在的路径
-- `参数3`:输出的json文件保存路径，json文件中保存了精度数据
 
-运行之后会在result文件夹中生成`top1_acc.json`文件，在310上得到精度数据为：
-```shell
-{"top1_acc": 0.8189997353797301}
-```
-在310P上得到精度数据为：
-```shell
+​	\- model：需要进行推理的om模型。
+
+​	\- input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
+
+​	\- output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
+
+​	\- outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+
+​	\- batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
+
+​	\- output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中。
+
+推理后的输出在当前目录ais_result/result下。
+
+>**说明：** 
+>执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见:
+>https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+
+c.  精度验证。
+
+    python C3D_postprocess.py ./ais_result/result/ ./mmaction2-master/data/ucf101/ucf101_val_split_1_rawframes.txt ./result/top1_acc.json
+
+参数说明：
+
+​	\- 参数1:离线推理得到的结果文件夹所在的路径
+
+​	\- 参数2:标注文件所在的路径
+
+​	\- 参数3:输出的json文件保存路径，json文件中保存了精度数据
+
+运行之后会在result文件夹中生成top1_acc.json文件,得到精度数据为：
 {'top1_acc': 0.8189997353797301}
-```
-### 6.2 精度对比
-|       模型        | Top1精度 |
-| :---------------: | :------: |
-| pth预训练模型(T4) |  82.24   |
-|    om模型(310)    |  81.89   |
-|   om模型(310P)    |  81.89   |
 
-说明：可以看到om模型在310上精度达到了pth模型精度的99.57%，可以看到om模型在310P上的精度达到了pth模型精度的99.57%，精度达标，故不需要进行调试。\
-备注：源码仓Top1精度为83.27。
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-## 7. 性能对比
-### 7.1 npu性能数据
+调用ACL接口推理计算，性能参考下列数据。
 
-1.batch1的性能:
-
-```shell
-[e2e] throughputRate: 4.28779, latency: 881339
-[data read] throughputRate: 4.5526, moduleLatency: 219.655
-[preprocess] throughputRate: 4.39146, moduleLatency: 227.715
-[inference] throughputRate: 4.29808, Interface throughputRate: 7.59556, moduleLatency: 229.201
-[postprocess] throughputRate: 4.2992, moduleLatency: 232.602
-fps=7.59556*4 = 30.38224 
-```
-Interface throughputRate: 7.59556，7.59556x4=30.38224fps。即是batch1 310单卡吞吐率。
-```shell
-[INFO] load model /home/ys/C3D/C3D_1.om success
-[INFO] create model description success
-[INFO] output path:/home/ys/C3D/ais_result/2022_08_08-03_56_49
-[INFO] warm up 5 times done
-[INFO] get filesperbatch files0 size:24084480 tensor0size:24084480 filesperbatch:1 runcount:3779
-Inference Processing task: 100%|███████████████████████████████| 3779/3779 [08:36<00:00,  7.31it/s]
-[INFO] -----------------Performance Summary------------------
-[INFO] H2D_latency (ms): min = 3.576040267944336, max = 25.34198760986328, mean = 4.1277097564236955, median = 3.843069076538086, percentile(99%) = 14.916601181030234
-[INFO] NPU_compute_time (ms): min = 18.80500030517578, max = 33.78099822998047, mean = 19.04405264540241, median = 18.972999572753906, percentile(99%) = 19.706099739074705
-[INFO] D2H_latency (ms): min = 0.0286102294921875, max = 13.07225227355957, mean = 0.10634862925521152, median = 0.05269050598144531, percentile(99%) = 0.43358325958251764
-[INFO] throughput 1000*batchsize(1)/NPU_compute_time.mean(19.04405264540241): 52.50983173696586
-[INFO] ------------------------------------------------------
-[INFO] unload model success, model Id is 1
-DestroyDevices begindestory device:0
-aclrtDestroyContext successfully!
-DestroyDevices successfully
-```
-Interface throughputRate: 52.50983fps。即是batch1 310P单卡吞吐率。
-### 7.2 gpu性能数据
-将C3D.onnx文件上传至208服务器，运行如下脚本：
-```shell
-trtexec --onnx=C3D.onnx --fp16 --shapes=image:1x10x3x16x112x112
-```
-得到
-```shell
-mean = 26.10020 ms
-```
-计算batch 1 gpu单卡吞吐率：1000/(37.3741/1)=26.75650
-### 7.3 性能对比
-|   设备    | 单卡吞吐率 |
-| :-------: | :--------: |
-|    gpu    |  26.10020  |
-| npu(310)  |  30.38224  |
-| npu(310P) |  52.50983  |
-
-说明：可以看到npu(310)上的性能达到了gpu性能的1.164倍，npu(310P)上的性能达到了gpu性能的2.011倍，性能达标，故不需要进行调试。           
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+| 310P | 1 | UCF101 | 81.89% | 52.50983173696586 |
