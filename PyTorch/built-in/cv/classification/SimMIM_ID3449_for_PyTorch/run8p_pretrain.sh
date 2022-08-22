@@ -10,7 +10,6 @@ do
         --cfg configs/swin_base__100ep/simmim_pretrain__swin_base__img192_window6__100ep.yaml \
         --batch-size 128 \
         --amp-opt-level O1 \
-        --loss-scale-value 128 \
         --local_rank $RANK_ID \
         --data-path /data/imagenet/train &
 done

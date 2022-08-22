@@ -22,7 +22,6 @@ do
         --pretrained ./output/simmim_pretrain/simmim_pretrain__swin_base__img192_window6__100ep/ckpt_epoch_99.pth \
         --batch-size 128 \
         --amp-opt-level O1 \
-        --loss-scale-value 128 \
         --local_rank ${local_rank} \
         --data-path /data/imagenet &
 done
