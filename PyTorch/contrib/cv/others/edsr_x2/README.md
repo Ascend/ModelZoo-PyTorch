@@ -36,8 +36,8 @@ EDSR是一种增强的深度超分辨率网络，通过从传统的ResNet架构�
 
     |    配套   |    版本   |
     |----------|---------- |
-    | 固件与驱动 |  [1.0.15](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fhardware%2Ffirmware-drivers%3Ftag%3Dcommercial)  |
-    |   CANN    |  [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |
+    | 固件与驱动 |  [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
+    |   CANN    |  [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
     |  PyTorch  |  [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)   |
 
 - 环境准备指导。
