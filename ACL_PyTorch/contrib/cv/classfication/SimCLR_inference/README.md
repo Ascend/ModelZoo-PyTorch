@@ -15,11 +15,8 @@
 
 - [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-  ******
 
-  ***<u>斜体带下划线且加粗内容为备注，写作时请删除</u>***
 
-  ***<u>标题请删除模板字眼</u>***
 
 
 
@@ -33,20 +30,20 @@ SimCLR：一个简单的视觉表示对比学习框架，不仅比以前的工�
 - 参考实现：
 
   ```
-url=https://github.com/google-research/simclr
-branch=master 
-commit_id=2fc637bdd6a723130db91b377ac15151e01e4fc2
+   url=https://github.com/google-research/simclr
+   branch=master 
+   commit_id=2fc637bdd6a723130db91b377ac15151e01e4fc2
   ```
 
   
   通过Git获取对应commit\_id的代码方法如下：
 
   ```
-git clone {repository_url}        # 克隆仓库的代码 
-cd {repository_name}              # 切换到模型的代码仓目录 
-git checkout {branch}             # 切换到对应分支 
-git reset --hard {commit_id}      # 代码设置到对应的commit_id 
-cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+   git clone {repository_url}        # 克隆仓库的代码 
+   cd {repository_name}              # 切换到模型的代码仓目录 
+   git checkout {branch}             # 切换到对应分支 
+   git reset --hard {commit_id}      # 代码设置到对应的commit_id 
+   cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
 
 
