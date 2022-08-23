@@ -128,7 +128,7 @@ parser.add_argument('--device', default='npu', type=str, help='npu or gpu')
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
 parser.add_argument('--opt-level', default=None, type=str, help='apex optimize level')
-parser.add_argument('--loss-scale-value', default='1024', type=int, help='static loss scale value')
+parser.add_argument('--loss-scale-value', default='1024', help='static loss scale value')
 
 parser.add_argument('--stop-step-num', default=None, type=int, help='after the stop-step, killing the training task')
 parser.add_argument('--eval-freq', default=10, type=int, help='test interval')
