@@ -1,32 +1,11 @@
 # VGG16 for PyTorch
 
--   [交付件基本信息](交付件基本信息.md)
 -   [概述](概述.md)
 -   [准备训练环境](准备训练环境.md)
 -   [开始训练](开始训练.md)
 -   [训练结果展示](训练结果展示.md)
 -   [版本说明](版本说明.md)
 
-# 交付件基本信息
-应用领域（Application Domain）：Image Classification
-
-模型版本（Model Version）：1.1
-
-修改时间（Modified）：2020.10.14
-
-大小（Size）：1054.72MB
-
-框架（Framework）：PyTorch_1.5.0
-
-模型格式（Model Format）：pth
-
-精度（Precision）：Mixed
-
-处理器（Processor）：Ascend910
-
-应用级别（Categories）：Research
-
-描述（Description）：基于Pytorch框架的VGG-16图像分类网络训练
 
 
 # 概述
@@ -131,7 +110,7 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 1. 进入解压后的源码包根目录。
 
    ```
-   cd /VGG16
+   cd /ModelZoo-PyTorch/PyTorch/contrib/cv/classification/Vgg16_ID1630_for_PyTorch/
    ```
 
 2. 运行训练脚本。
