@@ -112,7 +112,7 @@ parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str, help='
 # apex
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
-parser.add_argument('--loss_scale', default='dynamic',
+parser.add_argument('--loss_scale', default=1024,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
