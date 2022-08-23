@@ -69,7 +69,7 @@ fi
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-
+KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     # 设置环境变量，不需要修改
@@ -91,8 +91,9 @@ do
     if [ x"${etp_flag}" != x"true" ];then
         source ${test_path_dir}/env_npu.sh
     fi
-
-    nohup python3.7 train.py \
+    PID_START=$((KERNEL_NUM * RANK_ID))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END nohup python3.7 train.py \
         --backbone resnet \
         --lr ${learning_rate} \
         --workers 64 \
