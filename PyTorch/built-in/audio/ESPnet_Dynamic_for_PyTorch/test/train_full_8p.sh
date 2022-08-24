@@ -18,7 +18,7 @@ export RANK_SIZE=8
 data_path=""
 
 #网络名称,同目录名称,需要模型审视修改
-Network="ESPnet_for_PyTorch"
+Network="ESPnet_Dynamic_for_PyTorch"
 
 #训练起始stage
 stage=-1
@@ -81,12 +81,20 @@ e2e_time=$(( $end_time - $start_time ))
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
+#输出编译时间，需要模型审视修改
+compiling_time = `cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/asr_train_${ASCEND_DEVICE_ID}.log |awk 'NR==38'|awk '{print $NF}'`
+#输出第一个Epoch时间，需要模型审视修改
+first_epoch = `cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/asr_train_${ASCEND_DEVICE_ID}.log |awk 'NR==38'|awk '{print $NF}'`
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a "iters/sec" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/asr_train_${ASCEND_DEVICE_ID}.log |awk 'END {print$1}'`
 #输出训练精度,需要模型审视修改
 test_accuracy=`grep "Sum/Avg" ${test_result} |awk '{print$10}'`
 dev_accuracy=`grep "Sum/Avg" ${dev_result} |awk '{print$9}'`
 train_accuracy=${test_accuracy}' '${dev_accuracy}
+
+#打印，不需要修改
+echo "Compiling time : $compiling_time"
+echo "First epoch training time : $first_epoch"
 
 #打印，不需要修改
 echo "Final Performance iters/sec : $FPS"
