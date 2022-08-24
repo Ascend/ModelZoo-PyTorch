@@ -2,32 +2,21 @@
 
 datasets_path="./data/Challenge2_Test_Task12_Images"
 
-for para in $*
-do
-    if [[ $para == --datasets_path* ]]; then
-        datasets_path=`echo ${para#*=}`
-    fi
-done
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-arch=`uname -m`
-python3.7 task_process.py --mode='preprocess' --src_dir=${datasets_path}
-if [ $? != 0 ]; then
-    echo "preprocess fail!"
-    exit -1
-fi
-python3.7 task_process.py --mode='gen_dataset_info'
-if [ $? != 0 ]; then
-    echo "gen dataset info fail!"
-    exit -1
-fi
-source env.sh
-rm -rf result/dumpOutput_device0
-chmod +x benchmark.${arch}
-python3.7 task_process.py --mode='benchmark.x86_64'
+rm -r result
+mkdir result
+cd result
+mkdir inf_output
+mkdir dumpOutput_device0
+cd ..
+
+python3.7 task_process.py --mode='ais_inf' --machine='310'
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
+
 cd data
 rm -rf predict_txt
 mkdir predict_txt

@@ -21,8 +21,6 @@ if __name__ == '__main__':
         result_json = sys.argv[1]
         with open(result_json, 'r') as f:
             content = f.read()
-        #tops = [i.get('value') for i in json.loads(content).get('value') if 'Top' in i.get('key')]
-        #print('om {} top1:{} top5:{}'.format(result_json.split('_')[1].split('.')[0], tops[0], tops[4]))
         print(content)
     elif sys.argv[1].endswith('.txt'):
         result_txt = sys.argv[1]
@@ -30,4 +28,4 @@ if __name__ == '__main__':
             content = f.read()
         txt_data_list = [i.strip() for i in re.findall(r':(.*?),', content.replace('\n', ',') + ',')]
         fps = float(txt_data_list[7].replace('samples/s', '')) * 4
-        print('310 bs{} fps:{}'.format(result_txt.split('_')[3], fps))
+        print('710 bs{} fps:{}'.format(result_txt.split('_')[3], fps))

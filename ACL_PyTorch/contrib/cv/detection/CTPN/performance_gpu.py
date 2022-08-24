@@ -26,16 +26,16 @@ def performance(args):
     """
     time_total = 0
     mean_time_list = []
-    for i in range(config.center_len): 
+    for i in range(config.center_len):
         h, w = config.center_list[i][0], config.center_list[i][1]
         f = os.popen('trtexec --onnx={}_{}x{}.onnx --fp16 --shapes=image:1x3x{}x{} --workspace=1024'.format(args.onnx_path, h, w, h, w))
         gpu_get = f.readlines()[-8:] # 出现GPU Compute是从-8开始 mean time是-5
         for j in range(len(gpu_get)):
             output = gpu_get[j].strip('\n')
             print(output)
-        mean = gpu_get[-5] # 出现GPU Compute是从-8开始 mean time是-5
-        mean_list = mean.split(' ')
-        mean_time = float(mean_list[-2]) # 示例 mean: 3.34409 ms\n 单位是ms
+        mean = gpu_get[-8] # 出现GPU Compute mean time是第-8行
+        mean_list = mean.split(',')[-3].split(' ')  # 获取mean: *** 字符串
+        mean_time = float(mean_list[-2])  # 获取mean后面的数字, 示例 mean: 3.34409  单位是ms
         mean_time_list.append(mean_time)
         time_total = time_total + mean_time * config.center_count[i] # 加和从而后续进行相应的加权平均
     for i in range(len(mean_time_list)):
