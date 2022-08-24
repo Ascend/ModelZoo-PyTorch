@@ -18,6 +18,7 @@ from tqdm import tqdm
 from collections import OrderedDict
 
 import torch
+from torch.nn import functional as F
 import numpy as np
 
 from mobilenetv3 import MobileNetV3_Small
@@ -67,19 +68,21 @@ def main(args):
     # infer and compute accuracy
     top1 = AverageMeter()
     top5 = AverageMeter()
-    for i, (input, target) in enumerate(tqdm(loader)):
+    for i, (input_data, target) in enumerate(tqdm(loader)):
         if flag == 'pth':
-            output = model(input)
+            output = model(input_data)
         elif flag == 'om':
-            output = model(input.numpy().astype(np.float16))[0][0]
+            if i == len(loader) - 1:
+                input_data = F.pad(input_data, (0, 0, 0, 0, 0, 0, 0, args.batch_size-len(target)), "constant", 0)
+            output = model(input_data.numpy().astype(np.float16))[0][0]
             if i == len(loader) - 1:
                 output = output[:len(target)]
             output = torch.Tensor(output)
 
         # measure accuracy and record loss
         prec1, prec5 = compute_accuracy(output, target, topk=(1, 5))
-        top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
+        top1.update(prec1.item(), input_data.size(0))
+        top5.update(prec5.item(), input_data.size(0))
 
     print(f'ACC: Top1@ {top1.avg:.3f} | Top5@ {top5.avg:.3f}')
     
