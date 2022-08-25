@@ -135,7 +135,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    数据预处理将原始数据集转换为模型输入的数据。因为该模型根据图片输入形状采用分档输入，一共分为了10档，因此需要生成不同分辨率的预处理文件，为简化步骤、避免浪费不必要的时间，直接将相应的预处理程序放在任务处理的“task_process.py”脚本中，该脚本会自动删除和创建数据预处理的文件夹，以及调用预处理“ctpn_preprocess.py”程序。
 
    ```
-   python3.7 task_process.py --mode='preprocess' --src_dir='./data/Challenge2_Test_Task12_Images'
+   python3 task_process.py --mode='preprocess' --src_dir='./data/Challenge2_Test_Task12_Images'
    
    --mode：执行的模块。
    --src_dir：数据集路径。
@@ -160,7 +160,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          运行ctpn_pth2onnx.py脚本。
 
          ```
-         python3.7 ctpn_pth2onnx.py --pth_path='./ctpn.pytorch/weights/ctpn.pth'
+         python3 ctpn_pth2onnx.py --pth_path='./ctpn.pytorch/weights/ctpn.pth'
          --onnx_path='ctpn.onnx'
       
          --pth_path：pth权重路径。
@@ -172,7 +172,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       2. 使用task_process.py优化ONNX文件。
 
          ```
-         python3.7 task_process.py --mode='change model'
+         python3 task_process.py --mode='change model'
          
          --mode：执行的模块。
          ```
@@ -337,7 +337,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 3. 执行推理。
 
    ```
-   python3.7 ctpn_postprocess.py --model=pth --imgs_dir=data/Challenge2_Test_Task12_Images  --pth_txt=data/pth_txt
+   python3 ctpn_postprocess.py --model=pth --imgs_dir=data/Challenge2_Test_Task12_Images  --pth_txt=data/pth_txt
    
    --model：模型文件类型。
    --imgs_dir：数据集路径。
@@ -363,7 +363,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    2. 计算精度数据。
 
       ```
-      python3.7 script/script.py -g=script/gt.zip –s=script/pth_txt.zip
+      python3 script/script.py -g=script/gt.zip –s=script/pth_txt.zip
       
       -g：label的路径。
       -s：模型预测数据压缩包路径。
