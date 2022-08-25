@@ -172,7 +172,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          --onnx_path='ctpn.onnx'
       
          --pth_path：pth权重路径。
-      --onnx_path：onnx路径。
+         --onnx_path：onnx路径。
          ```
 
          获得ctpn_248x360.onnx, ctpn_280x550.onnx, ctpn_319x973.onnx, ctpn_458x440.onnx, ctpn_477x636.onnx, ctpn_631x471.onnx, ctpn_650x997.onnx, ctpn_753x1000.onnx, ctpn_997x744.onnx, ctpn_1000x462.onnx文件。
@@ -180,7 +180,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       2. 使用task_process.py优化ONNX文件。
 
          ```
-      python3.7 task_process.py --mode='change model'
+         python3.7 task_process.py --mode='change model'
          
          --mode：执行的模块。
          ```
@@ -209,9 +209,9 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
          +===================+=================+======================================================+
-      | 0       310P3     | OK              | 16.6         57                0    / 0              |
+         | 0       310P3     | OK              | 16.6         57                0    / 0              |
          | 0       0         | 0000:3B:00.0    | 0            928  / 21534                            |
-      +===================+=================+======================================================+
+         +===================+=================+======================================================+
          ```
          
       3. 执行ATC命令。
@@ -284,10 +284,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       --mode：执行的模块。
       ```
 
-      在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。
-
-      上述命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件。在310上--machine=‘310’。
-
+      在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件。在310上--machine=‘310’。
    5. 精度验证。
 
       1. 创建输出目录。
@@ -296,7 +293,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          cd data
          rm -rf predict_txt
          mkdir predict_txt
-      cd ..
+         cd ..
          ```
 
       2. 执行后处理脚本“ctpn_postprocess.py”计算精度并形成数据压缩包。
@@ -315,7 +312,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          cd data/predict_txt
          zip -rq predict_txt.zip ./*
          mv predict_txt.zip ../../script/
-      cd ../..
+         cd ../..
          ```
 
          执行上述命令后，会在./script目录下生成一个数据压缩包predict_txt.zip。
@@ -326,7 +323,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          python3.7 script/script.py -g=script/gt.zip –s=script/predict_txt.zip > data/result.json
          
          -g：label的路径。
-      -s：数据压缩包路径。
+         -s：数据压缩包路径。
          ```
    
          精度结果存放在data/result.json文件中。
