@@ -29,7 +29,7 @@ def performance(args):
     for i in range(config.center_len):
         h, w = config.center_list[i][0], config.center_list[i][1]
         f = os.popen('trtexec --onnx={}_{}x{}.onnx --fp16 --shapes=image:1x3x{}x{} --workspace=1024'.format(args.onnx_path, h, w, h, w))
-        gpu_get = f.readlines()[-8:] # 出现GPU Compute是从-8开始 mean time是-5
+        gpu_get = f.readlines()[-8:] # 获取后8行的输出。
         for j in range(len(gpu_get)):
             output = gpu_get[j].strip('\n')
             print(output)

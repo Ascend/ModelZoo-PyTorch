@@ -15,7 +15,7 @@ fi
 
 rm -rf ctpn_bs1_710.om
 source env.sh
-atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1_310 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=Ascend710
+atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1_710 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=Ascend710
 
 if [ -f "ctpn_bs1_710.om" ]; then
     echo "onnx to om success"

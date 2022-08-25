@@ -2,7 +2,18 @@
 
 datasets_path="./data/Challenge2_Test_Task12_Images"
 
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
+for para in $*
+do
+    if [[ $para == --datasets_path* ]]; then
+        datasets_path=`echo ${para#*=}`
+    fi
+done
+
+python3.7 task_process.py --mode='preprocess' --src_dir=${datasets_path}
+if [ $? != 0 ]; then
+    echo "preprocess fail!"
+    exit -1
+fi
 
 rm -r result
 mkdir result
@@ -11,7 +22,7 @@ mkdir inf_output
 mkdir dumpOutput_device0
 cd ..
 
-python3.7 task_process.py --mode='ais_inf' --machine='710'
+python3.7 task_process.py --mode='ais_infer' --machine='710'
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

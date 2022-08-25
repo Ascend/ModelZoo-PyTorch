@@ -9,8 +9,6 @@ do
     fi
 done
 
-arch=`uname -m`
-
 cd data
 rm -rf pth_txt
 mkdir pth_txt
