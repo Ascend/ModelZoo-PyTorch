@@ -55,7 +55,7 @@ def task_process(args):
             os.system('rm -f {}'.format(sumary_path))
         os.system('mv ./result/inf_output/*/*.bin ./result/dumpOutput_device0/')
         fps_all = fps_all / config.imgs_len
-        if args.machine == '310':
+        if args.machine == 'Ascend310':
             fps_all = fps_all * 4  # 在310上性能要乘以4
         print("===={} performance data====".format(args.machine))
         print('{} bs1 fps:{}'.format(args.machine, fps_all))
@@ -67,7 +67,7 @@ if __name__ == "__main__":
                         type=str, help='which mode to use')
     parser.add_argument('--src_dir', default='data/Challenge2_Test_Task12_Images',
                         type=str, help='src data dir')
-    parser.add_argument('--machine', default='710',
-                        type=str, help='machine type 310 or 710')
+    parser.add_argument('--machine', default='Ascend310P',
+                        type=str, help='machine type Ascend310 or Ascend310P')
     args = parser.parse_args()
     task_process(args)
