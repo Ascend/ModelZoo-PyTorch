@@ -1,53 +1,341 @@
-# CTPN模型PyTorch离线推理指导
+# CTPN模型-推理指导
 
-## 1 环境准备 
 
-1.安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装  
-```
-pip3.7 install -r requirements.txt  
-```
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-2.获取，修改与安装开源模型代码  
-```
-git clone https://github.com/CrazySummerday/ctpn.pytorch -b master   
-cd ctpn.pytorch  
-git reset 99f6baf2780e550d7b4656ac7a7b90af9ade468f --hard
-cd ..  
-```
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-3.获取权重文件  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-在git clone的代码仓ctpn.pytorch中的weight文件夹中自带相应的ctpn.pth权重文件
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-4.获取数据集及相应评测方法代码 
-在本目录新建data文件夹
-获取ICDAR2013，获取链接见指导书，解压为Challenge2_Test_Task12_Images文件夹，并放入本目录data文件夹下
-获取评测方法代码，获取链接见指导书，并解压为script文件夹放入本目录下
-以上数据集以及代码的获取如果无法直接下载则需要注册
+- [模型推理性能和精度](#ZH-CN_TOPIC_0000001172201573)
 
-5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)  
-将benchmark.x86_64或benchmark.aarch64放到当前目录  
+  
 
-## 2 离线推理 
 
-### 2.1 310精度及性能
-310上执行，执行时使用npu-smi info查看设备状态，确保device空闲，输出310相应的精度和性能
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效的检测出复杂场景的横向分布的文字CTPN。作者开发了一种垂直锚定机制，可以联合预测每个固定宽度提议的位置和文本/非文本得分，大大提高了定位精度。序列提议通过循环神经网络自然连接，并与卷积网络无缝结合，形成一个端到端的可训练模型，这使得CTPN可以探索丰富的图像上下文信息，使其强大的检测极其模糊的文本。CTPN可以在多尺度和多语言文本上可靠地工作，而无需进一步的后处理，这与以前自下而上的方法需要多步后处理不同。CTPN只预测文本的竖直方向上的位置，水平方向的位置不预测，从而检测出长度不固定的文本。
+
+
+- 参考实现：
+
+  ```
+  url= git clone https://github.com/CrazySummerday/ctpn.pytorch.git
+  branch=master 
+  commit_id=99f6baf2780e550d7b4656ac7a7b90af9ade468f
+  ```
+
+
+  通过Git获取对应commit\_id的代码方法如下：
+
 ```
-bash test/pth2om.sh  
-bash test/eval_acc_perf.sh --datasets_path=./data/Challenge2_Test_Task12_Images  
-```
-### 2.2 T4精度及性能
-T4上执行，执行时使用nvidia-smi查看设备状态，确保device空闲
-- 输出T4精度
-```
-bash test/eval_acc_gpu.sh
-```
-- 输出T4性能
-```
-bash test/perf_gpu.sh
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
 ```
 
- **评测结果：**   
-| 模型      | pth精度  | 310离线推理精度  | 基准性能    | 310性能    |
-| :------: | :------: | :------: | :------:  | :------:  |
-| CTPN bs1  | precision:87.41% recall:75.60% hmean:81.08% | precision:86.84% recall:75.05% hmean:80.52% |  70.12fps | 91.26fps |
+
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                  | 数据排布格式 |
+  | -------- | -------- | --------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x h x w | NCHW         |
+
+​       其中h,w分为10组：248x360, 280x550, 319x973, 458x440, 477x636, 631x471, 650x997, 753x1000, 997x744, 1000x462。
+
+
+- 输出数据
+
+  | 输出数据   | 大小                               | 数据类型 | 数据排布格式 |
+  | ---------- | ---------------------------------- | -------- | ------------ |
+  | class      | batchsize x (h//16) x (w//16) x 20 | FLOAT32  | ND           |
+  | regression | batchsize x (h//16) x (w//16) x 20 | FLOAT32  | ND           |
+
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件、驱动和依赖
+
+  **表 1**  版本配套表
+
+| 配套           | 版本     | 环境准备指导                                                 |
+| -------------- | -------- | ------------------------------------------------------------ |
+| 固件与驱动     | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN           | 5.1.RC2  | -                                                            |
+| Python         | 3.7.13   | -                                                            |
+| torch          | 1.5.0    | -                                                            |
+| torchvision    | 0.6.0    | -                                                            |
+| onnx           | 1.7.0    | -                                                            |
+| numpy          | 1.20.3   | -                                                            |
+| Pillow         | 8.2.0    | -                                                            |
+| opencv-python  | 4.5.2.54 | -                                                            |
+| yacs           | 0.1.8    | -                                                            |
+| pytorch-ignite | 0.4.5    | -                                                            |
+| protobuf       | 3.13.0.1 | -                                                            |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+
+
+1. 安装依赖。
+
+   ```
+   pip3 install -r requirment.txt
+   ```
+
+## 获取源码
+
+1. 上传源码包到服务器任意目录并解压（如：/home/HwHiAiUser/CTPN）。文件结构如下：
+
+   ```
+   ├── change_model.py           //onnx模型修改代码
+   ├── config.py                 //确定的分档的分辨率大小以及每个档位的个数
+   ├── ctpn_postprocess.py       //ctpn后处理文件
+   ├── ctpn_preprocess.py        //ctpn前处理文件
+   ├── ctpn_pth2onnx.py          //用于转换pth文件到onnx文件
+   ├── image_kmeans.py           //确定相应的分档分辨率的聚类中心
+   ├── performance_gpu.py        //计算gpu性能文件
+   ├── README.md                //readme文档
+   ├── requirements.txt          //安装包信息
+   ├── task_process.py           //任务处理文件，根据输入的不同模型完成相应的任务
+   ```
+   
+2.  安装开源仓代码（在/home/HwHiAiUser/CTPN目录下）。
+
+   ```
+   git clone https://github.com/CrazySummerday/ctpn.pytorch.git -b master
+   cd ctpn.pytorch
+   git reset 99f6baf2780e550d7b4656ac7a7b90af9ade468f –hard
+   cd ..
+   ```
+
+   
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。
+
+   本模型使用ICDAR2013数据，获取[数据集](https://rrc.cvc.uab.es/?ch=2)及相应[评测方法代码](https://rrc.cvc.uab.es/standalones/script_test_ch2_t1_e2-1577983067.zip)。在本目录（如/home/HwHiAiUser/CTPN）新建data和script文件夹。将数据集解压为Challenge2_Test_Task12_Images文件夹，并放入data文件夹下。将测评方法代码解压放入script文件夹。目录结构如下：
+
+   ```
+   data
+   ├──Challenge2_Test_Task12_Images
+   script
+   ├──gt.zip
+   ├──readme.txt
+   ├──rrc_evaluation_funcs_1_1.py
+   ├──script.py
+   ```
+
+2. 数据预处理。
+
+   数据预处理将原始数据集转换为模型输入的数据。因为该模型根据图片输入形状采用分档输入，一共分为了10档，因此需要生成不同分辨率的预处理文件，为简化步骤、避免浪费不必要的时间，直接将相应的预处理程序放在任务处理的“task_process.py”脚本中，该脚本会自动删除和创建数据预处理的文件夹，以及调用预处理“ctpn_preprocess.py”程序。
+
+   ```
+   python3.7 task_process.py --mode='preprocess' --src_dir='./data/Challenge2_Test_Task12_Images'
+   
+   --mode：执行的模块。
+   --src_dir：数据集路径。
+   ```
+
+   运行上述命令后会在data目录下生成10个目录：images_bin_248x360, images_bin_280x550, images_bin_319x973, images_bin_458x440, images_bin_477x636, images_bin_631x471, images_bin_650x997, images_bin_753x1000, images_bin_997x744, images_bin_1000x462。每个目录下含有相同形状的图片对应的数据文件，比如images_bin_248x360目录下存放形状为248x360的经过预处理的图片数据。
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       权重文件在./ctpn.pytorch/weights/ 目录下，文件名称为ctpn.pth。
+
+   2. 导出onnx文件。
+
+      1. 使用ctpn_pth2onnx.py导出onnx文件。
+
+         运行ctpn_pth2onnx.py脚本。
+
+         ```
+         python3.7 ctpn_pth2onnx.py --pth_path='./ctpn.pytorch/weights/ctpn.pth'
+         --onnx_path='ctpn.onnx'
+      
+         --pth_path：pth权重路径。
+      --onnx_path：onnx路径。
+         ```
+
+         获得ctpn_248x360.onnx, ctpn_280x550.onnx, ctpn_319x973.onnx, ctpn_458x440.onnx, ctpn_477x636.onnx, ctpn_631x471.onnx, ctpn_650x997.onnx, ctpn_753x1000.onnx, ctpn_997x744.onnx, ctpn_1000x462.onnx文件。
+
+      2. 使用task_process.py优化ONNX文件。
+
+         ```
+      python3.7 task_process.py --mode='change model'
+         
+         --mode：执行的模块。
+         ```
+         
+         获得ctpn_change_248x360.onnx, ctpn_change_280x550.onnx, ctpn_change_319x973.onnx, ctpn_change_458x440.onnx, ctpn_change_477x636.onnx, ctpn_change_631x471.onnx, ctpn_change_650x997.onnx, ctpn_change_753x1000.onnx, ctpn_change_997x744.onnx, ctpn_change_1000x462.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+      ```
+      source /usr/local/Ascend/ascend-toolkit/set_env.sh
+      ```
+
+         > **说明：** 
+         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+      2. 执行命令查看芯片名称。
+
+         ```
+         npu-smi info
+         回显如下：
+         +--------------------------------------------------------------------------------------------+
+         | npu-smi 22.0.0                       Version: 22.0.2                                       |
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+      | 0       310P3     | OK              | 16.6         57                0    / 0              |
+         | 0       0         | 0000:3B:00.0    | 0            928  / 21534                            |
+      +===================+=================+======================================================+
+         ```
+         
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1_710 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=Ascend710
+         
+         ```
+
+         - 参数说明：
+           - --framework：5代表ONNX模型。
+           - --model：为ONNX模型文件。
+           - --output：输出模型文件名称。
+           - --input_format：输入数据格式。
+           - --input_shape：模型输入数据的shape。
+           - --dynamic_image_size：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
+           - --log：设置ATC模型转换过程中显示日志的级别。
+           - --soc_version：模型转换时指定芯片版本。
+
+         运行成功后生成ctpn_bs1_710.om模型文件。在310上--output=ctpn_bs1_310，--soc_version=Ascend310，获得ctpn_bs1_310.om。
+
+2. 开始推理验证。
+
+   1. 执行命令增加工具可执行权限。
+
+      ```
+      chmod u+x
+      ```
+
+   2. 安装推理工具ais_infer。
+
+      在当前目录下（如/home/HwHiAiUser/CTPN）执行以下命令
+
+      ```
+      git clone https://gitee.com/ascend/tools.git
+      cd tools/ais-bench_workload/tool/ais_infer/backend/
+      pip3 wheel ./
+      pip3 install ./ aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+      ```
+
+      然后返回到/home/HwHiAiUser/CTPN目录。
+
+   3. 创建结果输出目录。
+
+      在当前目录下（如/home/HwHiAiUser/CTPN）执行以下命令
+
+      ```
+      mkdir result
+      cd result
+      mkdir inf_output
+      mkdir dumpOutput_device0
+      cd ..
+      ```
+
+      输出目录的结构如下：
+
+      ```
+      result
+      ├──inf_output
+      ├──dumpOutput_device0
+      ```
+
+      ais_infer的推理结果会输出到result/inf_output/目录下，由于模型是按照输入图片形状进行分档处理的，result/inf_output/下会有多个输出目录，这些目录都是以日期命名，为了方便处理，后面需要将这些目录下的模型推理结果文件都移动到result/dumpOutput_device0/目录下。
+
+   4. 执行推理。
+
+      ```
+      python3.7 task_process.py --mode='ais_infer' --machine='710'
+      
+      --mode：执行的模块。
+      ```
+
+      在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。
+
+      上述命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件。在310上--machine=‘310’。
+
+   5. 精度验证。
+
+      1. 创建输出目录。
+   
+         ```
+         cd data
+         rm -rf predict_txt
+         mkdir predict_txt
+      cd ..
+         ```
+
+      2. 执行后处理脚本“ctpn_postprocess.py”计算精度并形成数据压缩包。
+   
+         ```
+         python3.7 ctpn_postprocess.py 
+         --imgs_dir=data/Challenge2_Test_Task12_Images 
+         --bin_dir=result/dumpOutput_device0
+         --predict_txt=data/predict_txt
+         
+         --imgs_dir：数据集路径。
+         --bin_dir：精度数据路径。
+         --predict_txt：后处理输出文件路径。
+         
+         rm -rf script/predict_txt.zip
+         cd data/predict_txt
+         zip -rq predict_txt.zip ./*
+         mv predict_txt.zip ../../script/
+      cd ../..
+         ```
+
+         执行上述命令后，会在./script目录下生成一个数据压缩包predict_txt.zip。
+
+      3. 处理精度数据写入json文件。
+   
+         ```
+         python3.7 script/script.py -g=script/gt.zip –s=script/predict_txt.zip > data/result.json
+         
+         -g：label的路径。
+      -s：数据压缩包路径。
+         ```
+   
+         精度结果存放在data/result.json文件中。
+
+# 模型推理性能和精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+| 芯片型号   | Batch Size | 数据集    | 精度                                              | 性能          |
+| ---------- | ---------- | --------- | ------------------------------------------------- | ------------- |
+| Ascend310P | 1          | ICDAR2013 | precision: 86.84%   recall: 75.05%  hmean: 80.51% | 146.4820 fps  |
+| Ascend310  | 1          | ICDAR2013 | precision: 86.84%   recall: 75.05%  hmean: 80.51% | 93.7594   fps |
+| T4         | 1          | ICDAR2013 | precision: 87.41%   recall: 75.60%  hmean: 81.08% | 73.6914   fps |
+
