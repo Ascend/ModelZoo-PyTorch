@@ -33,7 +33,7 @@ train_epochs=1
 #训练batch_size
 batch_size=8
 #训练step
-train_steps=1800
+train_steps=400
 #学习率
 learning_rate=0.01
 
@@ -79,6 +79,8 @@ do
         mkdir -p ${data_dump_path}
     elif [[ $para == --data_dump_step* ]];then
         data_dump_step=`echo ${para#*=}`
+    elif [[ $para == --train_steps* ]];then
+        train_steps=`echo ${para#*=}`
     elif [[ $para == --profiling* ]];then
         profiling=`echo ${para#*=}`
         profiling_dump_path=${cur_path}/test/output/profiling
