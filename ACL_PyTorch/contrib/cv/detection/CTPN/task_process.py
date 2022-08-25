@@ -44,8 +44,8 @@ def task_process(args):
             h, w = config.center_list[i][0], config.center_list[i][1]
 
             os.system('python tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
-            --model=./ctpn_bs1_{}.om --input=./data/images_bin_{}x{} --dymHW {},{} \
-            --batchsize=1 --output=./result/inf_output'.format(args.machine, h, w, h, w))
+            --model=./ctpn_bs1.om --input=./data/images_bin_{}x{} --dymHW {},{} \
+            --batchsize=1 --output=./result/inf_output'.format(h, w, h, w))
 
             sumary_path = glob.glob('./result/inf_output/*/sumary.json')[0]
             with open(sumary_path, 'r') as f:
