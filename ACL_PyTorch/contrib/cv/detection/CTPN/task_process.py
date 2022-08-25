@@ -15,7 +15,6 @@ import glob
 import os
 import config
 import argparse
-import re
 import json
 
 
