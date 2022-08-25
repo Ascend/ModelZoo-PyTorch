@@ -1,4 +1,4 @@
-# {TSM}模型-推理指导
+# TSM模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -66,25 +66,29 @@
 | PyTorch                                                      | 1.9.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
+
+
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 
 
 1. 安装依赖。
 
-    深度学习框架
-    ```
-    onnx==1.9.0
-    torch==1.9.0
-    torchvision==0.10.0
-    ```
+    | 依赖名 | 版本号 |
+    | :------: | :------: |
+    | CANN  | 5.1.RC2 |
+    | CANN（仅在atc转换OM时）  | 5.0.3 / 5.1.RC2 |
+    | CANN（除了使用atc以外的实验步骤时）  | 5.0.3 / 5.0.4 / 5.1.RC2 |
+    | python  | ==3.7.5 |
+    | torch   | ==1.9.0 (cpu版本即可) |
+    | onnx  | ==1.9.0 |
+    | torchvision | ==0.10.0 |
+    | numpy  | ==1.21.0 |
+    | mmcv  | ==1.3.9 |
+    | opencv-python  | ==4.5.3.56 |    
 
-    python第三方库
-    ```
-    numpy==1.21.0
-    opencv-python==4.5.3.56
-    mmcv==1.3.9
-    ```
+
+
 
     **说明：** 
     >   X86架构：opencv,pytorch,torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
@@ -107,8 +111,9 @@
     ```
     （可选）本项目默认将数据集存放于/opt/npu/
     ```
-    cd ..
-    mv /ucf101 /opt/npu/
+    opt
+    └── npu
+        └── ucf101
     ```
 
 2. 数据预处理。
@@ -117,13 +122,13 @@
 
     执行预处理脚本，生成数据集预处理后的bin文件以及相应的info文件
     ```shell
-    python tsm_ucf101_preprocess.py --batch_size 1 --data_root /opt/npu/ucf101/rawframes/ --ann_file /opt/npu/ucf101/ucf101_val_split_1_rawframes.txt --name out_bin_1
+    python TSM_preprocess.py --batch_size 1 --data_root /opt/npu/ucf101/rawframes/ --ann_file /opt/npu/ucf101/ucf101_val_split_1_rawframes.txt --name out_bin_1
     ```
     第一个参数为batch_size，第二个参数为图片所在路径，第三个参数为图片对应的信息（由bash generate_rawframes_filelist.sh生成），第四个参数为保存的bin文件和info文件所在目录的名称。
 
     下面的命令可生成batch_size=16的数据文件以及相应的info文件
     ```shell
-    python tsm_ucf101_preprocess.py --batch_size 16 --data_root /opt/npu/ucf101/rawframes/ --ann_file /opt/npu/ucf101/ucf101_val_split_1_rawframes.txt --name out_bin_16
+    python TSM_preprocess.py --batch_size 16 --data_root /opt/npu/ucf101/rawframes/ --ann_file /opt/npu/ucf101/ucf101_val_split_1_rawframes.txt --name out_bin_16
     ```
 
     若数据集下载位置不同，请将数据集目录（/opt/npu/ucf101）替换为相应的目录，若按照上述步骤下载数据集至./mmaction2/tools/data/ucf101，则无需指定这两个目录参数。
@@ -159,7 +164,7 @@
 
     3. 转换onnx
         ```shell
-        python pytorch2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
+        python TSM_pytorch2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
         ```
 
     4. 简化onnx
@@ -286,7 +291,7 @@ c.  精度验证。
     执行后处理脚本，获取精度
 
     ```shell
-    python tsm_ucf101_postprocess.py --result_path ./output/out_bs1 --info_path /opt/npu/ucf101/ucf101.info
+    python TSM_postprocess.py --result_path ./output/out_bs1 --info_path /opt/npu/ucf101/ucf101.info
     ```
     第一个参数为预测结果所在路径（需根据实际输出路径进行修改），第二个参数为数据集info文件路径
 
@@ -300,7 +305,7 @@ c.  精度验证。
 
     下面的命令可以针对batch_size=16的情况计算精度
     ```shell
-    python tsm_ucf101_postprocess.py --result_path ./output/out_bs16/20210727_143344/ --info_path /opt/npu/ucf101/ucf101.info
+    python TSM_postprocess.py --result_path ./output/out_bs16/20210727_143344/ --info_path /opt/npu/ucf101/ucf101.info
     ```
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
