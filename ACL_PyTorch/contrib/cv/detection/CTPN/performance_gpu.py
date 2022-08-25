@@ -35,7 +35,7 @@ def performance(args):
             print(output)
         mean = gpu_get[-8] # 出现GPU Compute mean time是第-8行
         mean_list = mean.split(',')[-3].split(' ')  # 获取mean: *** 字符串
-        mean_time = float(mean_list[-2])  # 获取mean后面的数字, 示例 mean: 3.34409  单位是ms
+        mean_time = float(mean_list[-2])  # 获取mean后面的数字, 示例字符串 mean: 3.34409 单位 ms
         mean_time_list.append(mean_time)
         time_total = time_total + mean_time * config.center_count[i] # 加和从而后续进行相应的加权平均
     for i in range(len(mean_time_list)):
