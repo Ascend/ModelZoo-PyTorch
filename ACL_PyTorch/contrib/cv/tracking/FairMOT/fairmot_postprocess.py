@@ -100,8 +100,8 @@ def process(opt,
     print(strsummary)
     Evaluator.save_summary(summary, os.path.join(result_root, 'summary_{}.xlsx'.format(exp_name)))
 
-def eval_seq(opt, dataloader, data_type, result_filename, seq,  save_dir=None, show_image=True, frame_rate=30, use_cuda=True):
-    
+def eval_seq(opt, dataloader, data_type, result_filename, seq, save_dir=None, 
+                show_image=True, frame_rate=30, use_cuda=True):
     if save_dir:
         mkdir_if_missing(save_dir)
     tracker = JDETracker(opt, frame_rate=frame_rate)
@@ -113,9 +113,9 @@ def eval_seq(opt, dataloader, data_type, result_filename, seq,  save_dir=None, s
         # logger.info("{}, {}, {}, {}".format(dataloader[i + 3],dataloader[i + 2],dataloader[i + 1], dataloader[i]))
 
         hm_eval = torch.from_numpy(np.fromfile(dataloader[i], dtype='float32').reshape(1, 1, 152, 272))
-        wh_eval = torch.from_numpy(np.fromfile(dataloader[i + 1],dtype='float32').reshape(1, 4, 152, 272))
-        id_eval = torch.from_numpy(np.fromfile(dataloader[i + 2],dtype='float32').reshape(1, 128, 152, 272))
-        reg_eval = torch.from_numpy(np.fromfile(dataloader[i+ 3],dtype='float32').reshape(1, 2, 152, 272))
+        wh_eval = torch.from_numpy(np.fromfile(dataloader[i + 1], dtype='float32').reshape(1, 4, 152, 272))
+        id_eval = torch.from_numpy(np.fromfile(dataloader[i + 2], dtype='float32').reshape(1, 128, 152, 272))
+        reg_eval = torch.from_numpy(np.fromfile(dataloader[i+ 3], dtype='float32').reshape(1, 2, 152, 272))
     
         timer.tic()
         if seq == "MOT17-05-SDP":

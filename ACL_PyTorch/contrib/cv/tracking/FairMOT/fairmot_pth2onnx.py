@@ -41,7 +41,7 @@ def pth2onnx(input_file, output_file):
                         output_file,
                         dynamic_axes=dynamic_axes,
                         input_names=input_names,
-                        output_names=['hm', 'wh', 'id','reg'], 
+                        output_names=['hm', 'wh', 'id', 'reg'], 
                         opset_version=11, 
                         verbose=True,
                         enable_onnx_checker=False)
