@@ -69,7 +69,6 @@
 
    ```
       pip3 install -r requirment.txt # 需先注释掉 cython-bbox和yacs,等cython安装成功后再次安装
-      
    ```
 2. 安装DCN
    ```
