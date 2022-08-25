@@ -3,13 +3,12 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
-- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
-
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
   - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
+  - [GPU上模型推理](#section741711594518)
 
 - [模型推理性能和精度](#ZH-CN_TOPIC_0000001172201573)
 
@@ -25,21 +24,20 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 - 参考实现：
 
   ```
-  url= git clone https://github.com/CrazySummerday/ctpn.pytorch.git
+  url = git clone https://github.com/CrazySummerday/ctpn.pytorch.git
   branch=master 
   commit_id=99f6baf2780e550d7b4656ac7a7b90af9ade468f
   ```
 
+-   通过Git获取对应commit\_id的代码方法如下：
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-```
+  ```
   git clone {repository_url}        # 克隆仓库的代码
   cd {repository_name}              # 切换到模型的代码仓目录
   git checkout {branch/tag}         # 切换到对应分支
   git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
   cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-```
+  ```
 
 
 
@@ -62,36 +60,32 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
   | class      | batchsize x (h//16) x (w//16) x 20 | FLOAT32  | ND           |
   | regression | batchsize x (h//16) x (w//16) x 20 | FLOAT32  | ND           |
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-- 该模型需要以下插件、驱动和依赖
-
-  **表 1**  版本配套表
-
-| 配套           | 版本     | 环境准备指导                                                 |
-| -------------- | -------- | ------------------------------------------------------------ |
-| 固件与驱动     | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN           | 5.1.RC2  | -                                                            |
-| Python         | 3.7.13   | -                                                            |
-| torch          | 1.5.0    | -                                                            |
-| torchvision    | 0.6.0    | -                                                            |
-| onnx           | 1.7.0    | -                                                            |
-| numpy          | 1.20.3   | -                                                            |
-| Pillow         | 8.2.0    | -                                                            |
-| opencv-python  | 4.5.2.54 | -                                                            |
-| yacs           | 0.1.8    | -                                                            |
-| pytorch-ignite | 0.4.5    | -                                                            |
-| protobuf       | 3.13.0.1 | -                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+## 环境准备
 
-
-1. 安装依赖。
-
-   ```
-   pip3 install -r requirment.txt
-   ```
+1. 该模型需要以下插件、驱动和依赖
+    
+    **表 1**  版本配套表	
+    
+    | 配套           | 版本     | 环境准备指导                                                 |
+    | -------------- | -------- | ------------------------------------------------------------ |
+    | 固件与驱动     | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN           | 5.1.RC2  | -                                                            |
+    | Python         | 3.7.13   | -                                                            |
+    | torch          | 1.5.0    | -                                                            |
+    | torchvision    | 0.6.0    | -                                                            |
+    | onnx           | 1.7.0    | -                                                            |
+    | numpy          | 1.20.3   | -                                                            |
+    | Pillow         | 8.2.0    | -                                                            |
+    | opencv-python  | 4.5.2.54 | -                                                            |
+    | yacs           | 0.1.8    | -                                                            |
+    | pytorch-ignite | 0.4.5    | -                                                            |
+    | protobuf       | 3.13.0.1 | -                                                            |
+    
+    
 
 ## 获取源码
 
@@ -105,7 +99,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    ├── ctpn_pth2onnx.py          //用于转换pth文件到onnx文件
    ├── image_kmeans.py           //确定相应的分档分辨率的聚类中心
    ├── performance_gpu.py        //计算gpu性能文件
-   ├── README.md                //readme文档
+   ├── README.md                 //readme文档
    ├── requirements.txt          //安装包信息
    ├── task_process.py           //任务处理文件，根据输入的不同模型完成相应的任务
    ```
@@ -148,8 +142,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    --src_dir：数据集路径。
    ```
 
-   运行上述命令后会在data目录下生成10个目录：images_bin_248x360, images_bin_280x550, images_bin_319x973, images_bin_458x440, images_bin_477x636, images_bin_631x471, images_bin_650x997, images_bin_753x1000, images_bin_997x744, images_bin_1000x462。每个目录下含有相同形状的图片对应的数据文件，比如images_bin_248x360目录下存放形状为248x360的经过预处理的图片数据。
-
+   运行上述命令后会在data目录下生成10个目录：images_bin_248x360, images_bin_280x550, images_bin_319x973, images_bin_458x440, images_bin_477x636, images_bin_631x471, images_bin_650x997, images_bin_753x1000, images_bin_997x744, images_bin_1000x462。每个目录下含有相同形状的图片对应的数据文件，例如images_bin_248x360目录下存放形状为248x360的经过预处理的图片数据。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -175,7 +168,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          --onnx_path：onnx路径。
          ```
 
-         获得ctpn_248x360.onnx, ctpn_280x550.onnx, ctpn_319x973.onnx, ctpn_458x440.onnx, ctpn_477x636.onnx, ctpn_631x471.onnx, ctpn_650x997.onnx, ctpn_753x1000.onnx, ctpn_997x744.onnx, ctpn_1000x462.onnx文件。
+         执行成功后获得ctpn_248x360.onnx, ctpn_280x550.onnx, ctpn_319x973.onnx, ctpn_458x440.onnx, ctpn_477x636.onnx, ctpn_631x471.onnx, ctpn_650x997.onnx, ctpn_753x1000.onnx, ctpn_997x744.onnx, ctpn_1000x462.onnx文件。
 
       2. 使用task_process.py优化ONNX文件。
 
@@ -185,7 +178,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          --mode：执行的模块。
          ```
          
-         获得ctpn_change_248x360.onnx, ctpn_change_280x550.onnx, ctpn_change_319x973.onnx, ctpn_change_458x440.onnx, ctpn_change_477x636.onnx, ctpn_change_631x471.onnx, ctpn_change_650x997.onnx, ctpn_change_753x1000.onnx, ctpn_change_997x744.onnx, ctpn_change_1000x462.onnx文件。
+         执行成功后获得ctpn_change_248x360.onnx, ctpn_change_280x550.onnx, ctpn_change_319x973.onnx, ctpn_change_458x440.onnx, ctpn_change_477x636.onnx, ctpn_change_631x471.onnx, ctpn_change_650x997.onnx, ctpn_change_753x1000.onnx, ctpn_change_997x744.onnx, ctpn_change_1000x462.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -217,11 +210,10 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1_710 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=Ascend710
-         
+         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1_310P --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=${chip_name}
          ```
-
-         - 参数说明：
+         
+- 参数说明：
            - --framework：5代表ONNX模型。
            - --model：为ONNX模型文件。
            - --output：输出模型文件名称。
@@ -230,16 +222,10 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
            - --dynamic_image_size：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
            - --log：设置ATC模型转换过程中显示日志的级别。
            - --soc_version：模型转换时指定芯片版本。
-
-         运行成功后生成ctpn_bs1_710.om模型文件。在310上--output=ctpn_bs1_310，--soc_version=Ascend310，获得ctpn_bs1_310.om。
-
+         
+运行成功后生成对应芯片版本的.om模型文件。
+   
 2. 开始推理验证。
-
-   1. 执行命令增加工具可执行权限。
-
-      ```
-      chmod u+x
-      ```
 
    2. 安装推理工具ais_infer。
 
@@ -276,19 +262,28 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
       ais_infer的推理结果会输出到result/inf_output/目录下，由于模型是按照输入图片形状进行分档处理的，result/inf_output/下会有多个输出目录，这些目录都是以日期命名，为了方便处理，后面需要将这些目录下的模型推理结果文件都移动到result/dumpOutput_device0/目录下。
 
-   4. 执行推理。
+   3. 执行推理。
 
       ```
-      python3.7 task_process.py --mode='ais_infer' --machine='710'
+      python3 task_process.py --mode='ais_infer' --machine='Ascend310P'
       
       --mode：执行的模块。
+      --machine：芯片名称。
       ```
 
-      在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件。在310上--machine=‘310’。
+      在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件，并且在屏幕上输出性能数据。
+
+      性能计算方式：
+
+      设输入数据根据宽高的不同分为 $n$ 组，第 $i$ 组的性能为 $f_i$，第 $i$ 组的数据集大小为 $s_i$，则模型的综合性能的计算公式为：
+      $$
+      performance = \frac{\sum_i^n f_i*s_i}{\sum_i^ns_i}
+      $$
+
    5. 精度验证。
 
       1. 创建输出目录。
-   
+
          ```
          cd data
          rm -rf predict_txt
@@ -297,9 +292,9 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          ```
 
       2. 执行后处理脚本“ctpn_postprocess.py”计算精度并形成数据压缩包。
-   
+
          ```
-         python3.7 ctpn_postprocess.py 
+         python3 ctpn_postprocess.py 
          --imgs_dir=data/Challenge2_Test_Task12_Images 
          --bin_dir=result/dumpOutput_device0
          --predict_txt=data/predict_txt
@@ -317,16 +312,68 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
          执行上述命令后，会在./script目录下生成一个数据压缩包predict_txt.zip。
 
-      3. 处理精度数据写入json文件。
-   
+      3. 计算精度数据。
+
          ```
-         python3.7 script/script.py -g=script/gt.zip –s=script/predict_txt.zip > data/result.json
+         python3 script/script.py -g=script/gt.zip –s=script/predict_txt.zip
          
          -g：label的路径。
-         -s：数据压缩包路径。
+         -s：模型预测数据压缩包路径。
          ```
+
+         执行成功后会在屏幕上输出模型精度数据。
+
+## GPU上模型推理<a name="section741711594518"></a>
+
+1. 执行上述环境准备、获取源码和获取数据集（不用进行数据预处理）步骤。
+
+2. 创建输出目录。
+
+   ```
+   cd data
+   rm -rf predict_txt
+   mkdir predict_txt
+   cd ..
+   ```
+
+3. 执行推理。
+
+   ```
+   python3.7 ctpn_postprocess.py --model=pth --imgs_dir=data/Challenge2_Test_Task12_Images  --pth_txt=data/pth_txt
    
-         精度结果存放在data/result.json文件中。
+   --model：模型文件类型。
+   --imgs_dir：数据集路径。
+   --pth_tx：输出文件路径
+   ```
+
+   执行成功后会在输出文件路径上生成模型输出文件，在屏幕上会输出性能数据。
+
+4. 精度验证。
+
+   1. 形成数据压缩包
+
+      ```
+      rm -rf script/pth_txt.zip
+      cd data/pth_txt
+      zip -rq pth_txt.zip ./*
+      mv pth_txt.zip ../../script/
+      cd ../..
+      ```
+
+      执行成功后会将模型输出文件压缩并移动到script目录下。
+
+   2. 计算精度数据。
+
+      ```
+      python3.7 script/script.py -g=script/gt.zip –s=script/pth_txt.zip
+      
+      -g：label的路径。
+      -s：模型预测数据压缩包路径。
+      ```
+
+      执行成功后会在屏幕上输出模型精度数据。
+
+   
 
 # 模型推理性能和精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
