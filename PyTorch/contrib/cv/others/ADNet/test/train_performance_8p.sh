@@ -43,19 +43,26 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -m torch.distributed.launch --nproc_per_node=8 train.py \
-    --is_distributed 1 \
-    --DeviceID 0,1,2,3,4,5,6,7 \
-    --num_gpus 8  \
-    --world_size 8 \
-    --loss_scale 8 \
-    --num_of_layers 17 \
-    --mode S \
-    --noiseL 25 \
-    --val_noiseL 25 \
-    --epochs 1 \
-    --lr 1e-3 \
-    --batchSize 128 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+    export RANK_ID=$i
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    nohup taskset -c $PID_START-$PID_END python3.7 -u train.py \
+        --is_distributed 1 \
+        --DeviceID 0,1,2,3,4,5,6,7 \
+        --num_gpus 8  \
+        --world_size 8 \
+        --loss_scale 8 \
+        --num_of_layers 17 \
+        --mode S \
+        --noiseL 25 \
+        --val_noiseL 25 \
+        --epochs 1 \
+        --lr 1e-3 \
+        --batchSize 128 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
 
 wait
 

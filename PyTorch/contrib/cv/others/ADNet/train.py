@@ -91,7 +91,7 @@ def main():
     else:
         os.environ['MASTER_ADDR'] = '127.0.0.1'         #can change to real ip
         os.environ['MASTER_PORT'] = '29688'         #set port can be change
-        os.environ['RANK'] = str(opt.local_rank)
+        opt.local_rank = int(os.environ['RANK_ID'])
         local_device = torch.device(f'npu:{opt.local_rank}')
         torch.npu.set_device(local_device)
         if opt.local_rank == 0:
@@ -99,7 +99,7 @@ def main():
         dist.init_process_group(backend='hccl',world_size=opt.world_size, rank=opt.local_rank)
 
     #set direction for saving model 
-    save_dir = opt.outf + 'sigma' + str(opt.noiseL) + '_' + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + '/'
+    save_dir = opt.outf + 'sigma' + str(opt.noiseL) + '/'
     # save_dir = opt.outf + '_' + str(opt.noiseL) + '_'+str(opt.num_gpus) + 'full' + '_' + 'lossscale8'
 
     #create direction
@@ -242,19 +242,20 @@ def main():
         #set model name
         model_name = 'model'+ '_' + str(opt.resume)+ '_' + str(epoch+1) + '.pth'
         #save checkpoint
-        checkpoint = {"model_state_dict": net.state_dict(),
-                      "optimizer_state_dic": optimizer.state_dict(),
-                      "loss": loss,
-                      "epoch": epoch}
-        torch.save(checkpoint, os.path.join(save_dir, model_name))
-        # torch.save(model.state_dict(), os.path.join(save_dir, model_name))
-        if best_psnr < psnr_val:
-            # torch.save(model.state_dict(), os.path.join(save_dir, 'best_model.pth'))    #.pth
+        if opt.local_rank == 0:
             checkpoint = {"model_state_dict": net.state_dict(),
                           "optimizer_state_dic": optimizer.state_dict(),
                           "loss": loss,
                           "epoch": epoch}
-            torch.save(checkpoint, os.path.join(save_dir, 'best_model.pth'))
+            torch.save(checkpoint, os.path.join(save_dir, model_name))
+            # torch.save(model.state_dict(), os.path.join(save_dir, model_name))
+            if best_psnr < psnr_val:
+                # torch.save(model.state_dict(), os.path.join(save_dir, 'best_model.pth'))    #.pth
+                checkpoint = {"model_state_dict": net.state_dict(),
+                              "optimizer_state_dic": optimizer.state_dict(),
+                              "loss": loss,
+                              "epoch": epoch}
+                torch.save(checkpoint, os.path.join(save_dir, 'best_model.pth'))
     filename = save_dir + 'psnr.txt'            #保存训练过程中的验证集PSNR
     f = open(filename,'w') 
     for line in psnr_list:  
