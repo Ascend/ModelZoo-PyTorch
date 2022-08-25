@@ -29,7 +29,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
   commit_id=99f6baf2780e550d7b4656ac7a7b90af9ade468f
   ```
 
--   通过Git获取对应commit\_id的代码方法如下：
+- 通过Git获取对应commit\_id的代码方法如下：
 
   ```
   git clone {repository_url}        # 克隆仓库的代码
@@ -183,10 +183,10 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
-
-      ```
-      source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      ```
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+      
+         ```
 
          > **说明：** 
          > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
