@@ -4,6 +4,7 @@
 # MIT License
 #
 # Copyright (c) 2016 David Sandberg
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +33,8 @@ import mxnet as mx
 import numpy as np
 import sklearn
 import torch
+import torch_npu
+
 from mxnet import ndarray as nd
 from scipy import interpolate
 from sklearn.decomposition import PCA
@@ -240,7 +243,7 @@ def test(data_set, backbone, batch_size, nfolds=10):
             _data = data[bb - batch_size: bb]
             time0 = datetime.datetime.now()
             img = ((_data / 255) - 0.5) / 0.5
-            net_out: torch.Tensor = backbone(img)
+            net_out: torch.Tensor = backbone(img.npu())
             _embeddings = net_out.detach().cpu().numpy()
             time_now = datetime.datetime.now()
             diff = time_now - time0

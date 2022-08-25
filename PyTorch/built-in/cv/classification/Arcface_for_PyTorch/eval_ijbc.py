@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # coding: utf-8
 
 import os
@@ -56,7 +70,7 @@ class Embedding(object):
         image_size = (112, 112)
         self.image_size = image_size
         weight = torch.load(prefix)
-        resnet = get_model(args.network, dropout=0, fp16=False).cuda()
+        resnet = get_model(args.network, dropout=0, fp16=False).npu()
         resnet.load_state_dict(weight)
         model = torch.nn.DataParallel(resnet)
         self.model = model
@@ -102,7 +116,7 @@ class Embedding(object):
 
     @torch.no_grad()
     def forward_db(self, batch_data):
-        imgs = torch.Tensor(batch_data).cuda()
+        imgs = torch.Tensor(batch_data).npu()
         imgs.div_(255).sub_(0.5).div_(0.5)
         feat = self.model(imgs)
         feat = feat.reshape([self.batch_size, 2 * feat.shape[1]])
