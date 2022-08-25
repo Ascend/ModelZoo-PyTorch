@@ -49,7 +49,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
   | 输入数据 | 数据类型 | 大小                  | 数据排布格式 |
   | -------- | -------- | --------------------- | ------------ |
   | input    | RGB_FP32 | batchsize x 3 x h x w | NCHW         |
- 
+
     其中h,w分为10组：248x360, 280x550, 319x973, 458x440, 477x636, 631x471, 650x997, 753x1000, 997x744, 1000x462。
 
 
@@ -62,14 +62,11 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 
 
-# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281700"></a>
+- 该模型需要以下插件、驱动和依赖
 
-## 环境准备
+  **表 1**  版本配套表	
 
-1. 该模型需要以下插件、驱动和依赖
-   
-    **表 1**  版本配套表	
-    
     | 配套           | 版本     | 环境准备指导                                                 |
     | -------------- | -------- | ------------------------------------------------------------ |
     | 固件与驱动     | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
@@ -84,8 +81,15 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
     | yacs           | 0.1.8    | -                                                            |
     | pytorch-ignite | 0.4.5    | -                                                            |
     | protobuf       | 3.13.0.1 | -                                                            |
-    
-    
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+1. 安装依赖
+    ```
+   pip3 install -r requirment.txt
+    ```
+
+
 
 ## 获取源码
 
@@ -110,7 +114,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    cd ctpn.pytorch
    git reset 99f6baf2780e550d7b4656ac7a7b90af9ade468f –hard
    cd ..
-    ```
+   ```
 
    
 
@@ -160,8 +164,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
          运行ctpn_pth2onnx.py脚本。
 
          ```
-         python3 ctpn_pth2onnx.py --pth_path='./ctpn.pytorch/weights/ctpn.pth'
-         --onnx_path='ctpn.onnx'
+         python3 ctpn_pth2onnx.py --pth_path='./ctpn.pytorch/weights/ctpn.pth' --onnx_path='ctpn.onnx'
       
          --pth_path：pth权重路径。
          --onnx_path：onnx路径。
@@ -220,7 +223,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
            - --dynamic_image_size：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
            - --log：设置ATC模型转换过程中显示日志的级别。
            - --soc_version：模型转换时指定芯片版本。
-       
+      
          运行成功后生成对应芯片版本的.om模型文件。
 
 2. 开始推理验证。
