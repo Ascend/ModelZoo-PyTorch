@@ -52,7 +52,6 @@ def main():
 
     name = args.result_path.split('_')[1]
     subdir = os.listdir(args.result_path)[0]
-    # args.result_path = os.path.join(args.result_path, subdir)
 
     # load inference result
     results = []
