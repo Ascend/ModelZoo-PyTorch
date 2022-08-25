@@ -234,7 +234,7 @@ class DistributedSampler(Sampler):
         return iter(indices)
 
     def __len__(self):
-        return self.num_samples
+        return 0 if self.num_samples <0 else self.num_samples
 
     def set_epoch(self, epoch):
         self.epoch = epoch
