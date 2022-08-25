@@ -1,4 +1,4 @@
-# {FairMOT}模型-推理指导
+# FairMOT模型-推理指导
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
@@ -68,8 +68,8 @@
 1. 安装依赖。
 
    ```
-      pip3 install -r requirment.txt
-      需先注释掉 cython-bbox和yacs,等cython安装成功后再次安装
+      pip3 install -r requirment.txt # 需先注释掉 cython-bbox和yacs,等cython安装成功后再次安装
+      
    ```
 2. 安装DCN
    ```
@@ -108,7 +108,7 @@
    创建数据目录
    目录如下:
    ```
-   dataset│
+   dataset
    ├── MOT17
    │   ├──images
    │   │   ├── train
@@ -163,7 +163,6 @@
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
-          export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
          ```
 
          > **说明: ** 
@@ -190,7 +189,7 @@
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=./fairmot.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,608,1088" --output=./fairmot_bs1 --log=debug --soc_version=Ascend710 
+         atc --framework=5 --model=./fairmot.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,608,1088" --output=./fairmot_bs1 --log=debug --soc_version=Ascend310P3
          ```
 
          - 参数说明: 
@@ -215,9 +214,7 @@ a.  使用ais-infer工具进行推理。
 
 b.  执行推理。
 
-    ```
-     python3.7 ./ais_infer/ais_infer.py  --model fairmot_bs1.om --input pre_dataset --device_id 0 -o ./ --outfmt BIN
-    ```
+    python3.7 ./ais_infer/ais_infer.py  --model fairmot_bs1.om --input pre_dataset --device_id 0 -o ./ --outfmt BIN
 
    - 参数说明: 
       -   --model: om文件路径。
@@ -232,12 +229,9 @@ b.  执行推理。
 
 c.  精度验证。
 
-    调用脚本与数据集标签比对,可以获得MOTA指标,结果保存在bs_1_result.log中。
-
-    ```
-    python3.7 ./fairmot_postprocess.py --data_dir=./dataset  --input_root=./2022xxx > bs_1_result.log
+    python3.7 ./fairmot_postprocess.py --data_dir=./dataset  --input_root=./2022xxx > bs_1_result.log  # 调用脚本与数据集标签比对,可以获得MOTA指标,结果保存在bs_1_result.log中。
     python3.7 test/parse.py bs_1_result.log
-    ```
+
    - 参数说明: 
       -   --data_dir: 数据路径。
       -   --input_root: 上一步生成的结果文件。
