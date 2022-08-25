@@ -104,14 +104,13 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    ├── task_process.py           //任务处理文件，根据输入的不同模型完成相应的任务
    ```
    
-2.  安装开源仓代码（在/home/HwHiAiUser/CTPN目录下）。
-
+2. 安装开源仓代码（在/home/HwHiAiUser/CTPN目录下）。
    ```
    git clone https://github.com/CrazySummerday/ctpn.pytorch.git -b master
    cd ctpn.pytorch
    git reset 99f6baf2780e550d7b4656ac7a7b90af9ade468f –hard
    cd ..
-   ```
+    ```
 
    
 
