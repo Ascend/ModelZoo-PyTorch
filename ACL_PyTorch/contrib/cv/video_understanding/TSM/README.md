@@ -150,7 +150,7 @@
 
     3. 转换onnx
         ```shell
-        python TSM_pytorch2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
+        python TSM_pth2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
         ```
 
     4. 简化onnx
