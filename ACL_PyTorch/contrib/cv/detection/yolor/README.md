@@ -43,6 +43,13 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
   git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
   cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
+   打patch：
+
+  ```
+    cd yolor
+    git am --signoff < ../yolor.patch
+    cd ..                 # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
