@@ -269,7 +269,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       python3 task_process.py --mode='ais_infer' --machine='Ascend310P'
       
       --mode：执行的模块。
-      --machine：芯片名称。
+      --machine：芯片名称。'Ascend310P' 或 'Ascend310'
       ```
 
       在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件，并且在屏幕上输出性能数据。
