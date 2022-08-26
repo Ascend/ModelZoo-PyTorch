@@ -54,11 +54,7 @@ sympy==1.10.1
     git reset dab9007b6f61c9c8dce04d61669a04922bbcd148 --hard
     patch -p1 < ../TransPose.patch 
     cd ..
-    
-    # 将开源代码仓加入环境变量
-    export xxxx=xxxx
     ```
-说明： 请根据实际情况，将开源代码仓路径加入环境变量。
 
 ## 3. 模型转换
 
