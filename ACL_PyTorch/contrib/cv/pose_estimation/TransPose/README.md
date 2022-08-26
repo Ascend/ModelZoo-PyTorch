@@ -1,4 +1,4 @@
-# Transpose模型离线推理指导
+# TransPose模型离线推理指导
 
 ## 1. 模型概述
 
