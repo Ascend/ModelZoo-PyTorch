@@ -2,7 +2,7 @@
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
-- [推理环境准备[所有版本]](#ZH-CN_TOPIC_0000001126281699)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281699)
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
   - [获取源码](#section4622531142816)
@@ -62,7 +62,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 
 
-# 推理环境准备[所有版本]<a name="ZH-CN_TOPIC_0000001126281699"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281699"></a>
 - 该模型需要以下插件、驱动和依赖
 
   **表 1**  版本配套表	
@@ -212,7 +212,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=Ascend${chip_name}
          ```
          - 参数说明：
            - --framework：5代表ONNX模型。
