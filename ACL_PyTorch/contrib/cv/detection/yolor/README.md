@@ -29,7 +29,7 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 
   ```
   url=https://github.com/WongKinYiu/yolor
-  branch=master 
+  branch=main 
   commit_id=b168a4dd0fe22068bb6f43724e22013705413afb
   model_name=yolor_p6
   ```
@@ -47,7 +47,7 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 
   ```
     cd yolor
-    git am --signoff < ../yolor.patch
+    git apply < ../yolor.patch
     cd ..                 # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
 
