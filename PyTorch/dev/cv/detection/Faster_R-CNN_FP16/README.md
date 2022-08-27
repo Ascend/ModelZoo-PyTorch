@@ -86,18 +86,13 @@ mmpycocotools == 12.0.3
    cd mmdetection
    git reset --hard a21eb25535f31634cef332b09fc27d28956fb24b
    pip3.7 install -v -e .
-   cd ..
    ```
    
 3. 修改mmdetection源码适配Ascend NPU。使用mmdetection（v2.8.0）导出onnx前, 
-需要对源码做一定的改动，以适配Ascend NPU。具体的代码改动请参考Modelzoo源码包中的
-Faster_RCNN修改实现.md文档，修改后的同名文件已在源码包中提供，
-用户可以直接在相应目录中备份原文件并替换。
+需要对源码做一定的改动，以适配Ascend NPU。
    ```
-    cp ./pytorch_code_change/bbox_nms.py ./mmdetection/mmdet/core//post_processing/bbox_nms.py
-    cp ./pytorch_code_change/rpn_head.py ./mmdetection/mmdet/models/dense_heads/rpn_head.py
-    cp ./pytorch_code_change/single_level_roi_extractor.py ./mmdetection/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
-    cp ./pytorch_code_change/delta_xywh_bbox_coder.py ./mmdetection/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
+   patch -p1 < ../mmdet.patch
+   cd ..
    ```
 
 4. 屏蔽掉torch.onnx中的model_check相关代码。
