@@ -204,7 +204,20 @@ a.  使用ais-infer工具进行推理。
    ```
    chmod u+x 
    ``` -->
+    ```
+        python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
+    ```
 
+    -   参数说明：
+
+        -   --model：为.OM模型文件路径。
+        -   --input：为.OM模型文件路径。
+        -   --output：模型推理结果存放的路径。
+
+        推理后的输出在 ${out_path}目录下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 b.  执行推理。
 
 
