@@ -200,18 +200,18 @@ a.  使用ais-infer工具进行推理。
 
 
    执行命令增加工具可执行权限，并根据OS架构选择工具
-
+<!-- 
    ```
    chmod u+x 
-   ```
+   ``` -->
 
 b.  执行推理。
 
 
 
-    ```
+    <!-- ```
         python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
-    ```
+    ``` -->
 
     -   参数说明：
 
