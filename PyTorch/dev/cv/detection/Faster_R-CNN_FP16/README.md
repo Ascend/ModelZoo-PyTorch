@@ -10,7 +10,7 @@
 
 #### 1.2 代码地址
 
-[Faster-R-CNN代码](https://github.com/open-mmlab/mmdetection/tree/master/configs/faster_rcnn)
+[Faster-R-CNN代码](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/model/ATC%20Faster%20R-CNN%20(FP16)%20from%20Pytorch%20-%20Ascend310/zh/1.1/Faster_RCNN.zip)
 
 
 
