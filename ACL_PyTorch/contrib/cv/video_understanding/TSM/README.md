@@ -26,7 +26,31 @@
     [TSM论文](https://arxiv.org/abs/1811.08383)  
     TSM是一种通用且有效的时间偏移模块，它具有高效率和高性能，可以在达到3D CNN性能的同时，保持2D CNN的复杂性。TSM沿时间维度移动部分通道，从而促进相邻帧之间的信息交换。TSM可以插入到2D CNN中以实现零计算和零参数的时间建模。TSM可以扩展到在线设置，从而实现实时低延迟在线视频识别和视频对象检测。
 
+- 参考实现：
 
+  ```
+  url=https://github.com/open-mmlab/mmaction2.git
+  branch=master
+  commit_id=5fa8faa
+  model_name=configs/recognition/tsm
+  ```
+
+  *<u>**url=参考的模型源代码git地址，强烈建议使用release分支版本的地址**</u>*
+
+  *<u>**commit\_id例如：291f7e20339510cfa956b5782741697eb8e6d554**</u>*
+  
+  *<u>**model\_name: 子模型名，开源仓往往会提供很多子模型，需说明推理的是哪一个子模型，比如[Segmenter](https://github.com/rstrudel/segmenter)下的Seg-L-Mask/16模型**</u>*
+
+
+  通过Git获取对应commit\_id的代码方法如下：
+
+  ```
+  git clone https://github.com/open-mmlab/mmaction2.git       # 克隆仓库的代码
+  cd /mmaction2              # 切换到模型的代码仓目录
+  git checkout master         # 切换到对应分支
+  git reset --hard 5fa8faa      # 代码设置到对应的commit_id（可选）
+  cd /configs/recognition/tsm                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
 - 参考实现：
 
@@ -76,10 +100,9 @@
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 
-    **说明：** 
-    >   X86架构：opencv,pytorch,torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
-    >
-    >   Arm架构：opencv,pytorch,torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+    ```shell
+    pip install -r requirement.txt
+    ```
 
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -168,7 +191,7 @@
       1. 配置环境变量。
 
             ```
-            source /usr/local/Ascend/ascend-toolkit/set_env.sh
+            source /usr/local/Ascend/......   
             ```
 
          > **说明：** 
@@ -220,80 +243,66 @@
 
 
 
-2. 开始推理验证。<u>***根据实际推理工具编写***</u>
+2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+    1. 使用ais_infer工具进行离线推理.
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
+        ```
+        python3.7 ais_infer.py --model cascade_rcnn_r50_fpn_aoe.om --input data/val2017_bin/  --output ais_infer_result --outfmt BIN --batchsize 1
+        ```
+        **参数说明:**
+        - --mode：om模型路径。
+        - --input：二进制数据集文件夹路径。
+        - --output：输出文件夹路径。
+        - --outfmt：后处理输出格式。
+        - --batchsize：推理的batchsize大小。
 
-    下载ais_infer 推理工具代码
+    2. 推理结果展示。
 
-    ```
-    git clone https://gitee.com/ascend/tools.git
-    ```
-    
-    进入ais-bench/tool/ais_infer目录下执行如下命令进行编译，即可生成推理后端whl包
+        本模型提供后处理脚本，将二进制数据转化为txt文件，同时生成画出检测框后的图片，直观展示推理结果。
+        执行脚本。
+        ```
+        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./tsm_bs1.om --input "./ucf101/out_bin_1" --batchsize 1 --output ./output/out_bs1/
+        ```
+        **参数说明:**
+        - --model：om文件路径。。
+        - --input：数据集路径。
+        - --batchsize：1。
+        - --output:输出路径
 
-    ```
-    cd tools/ais-bench_workload/tool/ais_infer/backend/
-    pip3 wheel ./
-    ```
-    在运行设备上执行如下命令，进行安装
-
-    pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-
-    如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
+    3. 精度验证
 
 
-b.  执行推理。
+        执行后处理脚本，获取精度
+        ```
+        python TSM_postprocess.py --result_path ./output/out_bs1 --info_path /opt/npu/ucf101/ucf101.info
+        ```
+        第一个参数为预测结果所在路径（需根据实际输出路径进行修改），第二个参数为数据集info文件路径
 
-    ```
-     python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./tsm_bs1.om --input "./ucf101/out_bin_1" --batchsize 1 --output ./output/out_bs1/
-    ```
+        当batch_size=1时，执行完成后，程序会打印出精度：
+        ```
+        Evaluating top_k_accuracy ...
 
-    -   参数说明：
+        top1_acc	0.9448
+        top5_acc	0.9963
+        ```
 
-        -   model：om文件路径。
-        -   input：数据集路径。
-        -   batchsize：1。
-        -   output:输出路径
-		...
+        下面的命令可以针对batch_size=16的情况计算精度
+        ```shell
+        python TSM_postprocess.py --result_path ./output/out_bs16/20210727_143344/ --info_path /opt/npu/ucf101/ucf101.info
+        ```
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-
-c.  精度验证。
-
-    执行后处理脚本，获取精度
-
-    ```shell
-    python TSM_postprocess.py --result_path ./output/out_bs1 --info_path /opt/npu/ucf101/ucf101.info
-    ```
-    第一个参数为预测结果所在路径（需根据实际输出路径进行修改），第二个参数为数据集info文件路径
-
-    当batch_size=1时，执行完成后，程序会打印出精度：
-    ```
-    Evaluating top_k_accuracy ...
-
-    top1_acc	0.9448
-    top5_acc	0.9963
-    ```
-
-    下面的命令可以针对batch_size=16的情况计算精度
-    ```shell
-    python TSM_postprocess.py --result_path ./output/out_bs16/20210727_143344/ --info_path /opt/npu/ucf101/ucf101.info
-    ```
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+    调用ACL接口推理计算，性能参考下列数据。
 
-| Throughput | 310     | 310P    | T4     | 310P/310    | 310P/T4     |
-| ---------- | ------- | ------- | ------ | ----------- | ----------- |
-| bs1        |24.8 | 171.04 | 98.01	| 7.16|1.81|
-| bs4        |22.48|132.23|107.90|5.88|1.22|
-| bs8        |20.25|123.814|100.0|6.11|1.23|
-| bs16       | 19.86|119.71|101.89|6.02|1.17|
-| bs32       | 18.90|99.78|100.91|5.27|0.98|
-|            |         |         |        |             |             |
-| 最优batch 1  | 24.8|177.79|107.90|7.16|1.64 |
+    | Throughput | 310     | 310P    | T4     | 310P/310    | 310P/T4     |
+    | ---------- | ------- | ------- | ------ | ----------- | ----------- |
+    | bs1        |24.8 | 171.04 | 98.01	| 7.16|1.81|
+    | bs4        |22.48|132.23|107.90|5.88|1.22|
+    | bs8        |20.25|123.814|100.0|6.11|1.23|
+    | bs16       | 19.86|119.71|101.89|6.02|1.17|
+    | bs32       | 18.90|99.78|100.91|5.27|0.98|
+    |            |         |         |        |             |             |
+    | 最优batch 1  | 24.8|177.79|107.90|7.16|1.64 |
