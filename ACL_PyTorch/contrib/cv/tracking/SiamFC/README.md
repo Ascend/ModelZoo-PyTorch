@@ -60,7 +60,7 @@ atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_fo
 
 3.性能测试
 ```
-python3.7 get_perf_data.py ./pre_dataset1 ./pre_dataset2 ./dataset1.info ./dataset2.info
+python3.7 get_perf_data.py ./pre_dataset1 ./pre_dataset2
 python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om --input pre_dataset1/ --device_id 0
 python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om --input pre_dataset2/ --device_id 0
 ```
