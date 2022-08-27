@@ -20,7 +20,6 @@ import motmetrics as mm
 import json
 import numpy as np
 import glob
-import torch
 import sys
 
 sys.path.insert(0, "./FairMOT/src")
