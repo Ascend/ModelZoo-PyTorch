@@ -198,6 +198,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
 a.  使用ais-infer工具进行推理。
 
+
    执行命令增加工具可执行权限，并根据OS架构选择工具
 
    ```
@@ -205,6 +206,8 @@ a.  使用ais-infer工具进行推理。
    ```
 
 b.  执行推理。
+
+
 
     ```
         python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
