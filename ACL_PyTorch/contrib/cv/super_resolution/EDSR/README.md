@@ -112,7 +112,7 @@ python3.7 edsr_pth2onnx.py --pth edsr_x2.pt --onnx edsr_x2.onnx --size 1020
 1.设置环境变量
 
 ```
-source /usr/local/Ascend/ascend-toolkit/set_env.s
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.提升OM模型性能
