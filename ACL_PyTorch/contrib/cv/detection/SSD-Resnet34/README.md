@@ -17,9 +17,6 @@
 
   ******
 
-  ***<u>斜体带下划线且加粗内容为备注，写作时请删除</u>***
-
-  ***<u>标题请删除模板字眼</u>***
 
 
 
@@ -196,36 +193,20 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+    1.  使用ais-infer工具进行推理。
 
 
    执行命令增加工具可执行权限，并根据OS架构选择工具
-<!-- 
-   ```
-   chmod u+x 
-   ``` -->
+    ```
+        chmod u+x 
+    ```
+
+    2.  执行推理。
+
+
     ```
         python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
     ```
-
-    -   参数说明：
-
-        -   --model：为.OM模型文件路径。
-        -   --input：为.OM模型文件路径。
-        -   --output：模型推理结果存放的路径。
-
-        推理后的输出在 ${out_path}目录下。
-
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-b.  执行推理。
-
-
-
-    <!-- ```
-        python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
-    ``` -->
-
     -   参数说明：
 
         -   --model：为.OM模型文件路径。
@@ -237,7 +218,7 @@ b.  执行推理。
         >**说明：** 
         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-c.  精度验证。
+    3. 精度验证。
 
     调用“ssd_postprocess.py”评测模型的精度。
 
