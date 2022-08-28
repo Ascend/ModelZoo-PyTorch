@@ -84,6 +84,8 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
    ```
    pip3 install -r requirment.txt
+   patch -p1 <../ssd.patch           # 通过补丁修改仓库代码
+
    ```
 
 
