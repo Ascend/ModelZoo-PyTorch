@@ -224,9 +224,11 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
     ```
         python ssd_postprocess.py --data=${data_path}/coco --bin-input=${output_path}
-        --bin-input：生成推理结果所在路径。
-        --data：数据集路径。
+
     ```
+    -   参数说明：
+        -   --bin-input：生成推理结果所在路径。
+        -   --data：数据集路径。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
