@@ -1,0 +1,10 @@
+torch==1.8.0
+tensorflow==1.15
+matplotlib
+numpy
+inflect==0.2.5
+librosa==0.6.0
+scipy
+tensorboardX==1.1
+Unidecode==1.0.22
+pillow
