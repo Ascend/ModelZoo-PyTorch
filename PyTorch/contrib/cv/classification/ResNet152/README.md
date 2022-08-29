@@ -5,7 +5,7 @@
 -   [开始训练](#开始训练)
 -   [训练结果展示](#训练结果展示表)
 -   [版本说明](#-版本说明)
-
+<span id="jump">概述</span>
 # 概述
 
 ## 简述
@@ -93,6 +93,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 
 请参考原始仓库上的README.md进行预训练模型获取。将获取的bert\_base\_uncased预训练模型放至在源码包根目录下新建的“temp/“目录下。
 
+<span id="jump">开始训练</span>
 # 开始训练
 
 ## 训练模型
@@ -144,6 +145,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
     --print-freq                        //打印频率
     --data                              //数据集路径
 
+<span id="jump">训练结果展示表</span>
 **表 2**  训练结果展示表
 
 | NAME     | Acc@1    | FPS       | Epochs   | AMP_Type | Torch  |
@@ -153,6 +155,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 | NPU-1P   | 79.102   | 587.359   | 137      | O2       | 1.8    |
 | NPU-8P   | 78.212   | 3470.902  | 137      | O2       | 1.8    |
 
+<span id="jump">版本说明</span>
 # 版本说明
 
 ## 变更
