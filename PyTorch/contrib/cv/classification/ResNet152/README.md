@@ -3,7 +3,7 @@
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
 -   [开始训练](#开始训练)
--   [训练结果展示](#训练结果展示表)
+-   [训练结果展示](#训练结果展示)
 -   [版本说明](#版本说明)
 
 # 概述
@@ -145,7 +145,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
     --print-freq                        //打印频率
     --data                              //数据集路径
 
-<span id="jump">训练结果展示表</span>
+<span id="jump">训练结果展示</span>
 **表 2**  训练结果展示表
 
 | NAME     | Acc@1    | FPS       | Epochs   | AMP_Type | Torch  |
