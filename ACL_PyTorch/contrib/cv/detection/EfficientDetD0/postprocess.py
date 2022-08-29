@@ -71,11 +71,15 @@ end = time.time()
 last_idx = len(loader) - 1
 
 om_data = args.omfile
-files = list(set([file.split('_')[0] for file in os.listdir(om_data)]))
+result_file_name = list(os.listdir(om_data))[0]
+om_data = f"{om_data}/{result_file_name}/"
+om_files = list(os.listdir(om_data))
+om_files.remove("sumary.json")
+files = list(set([file.split('_')[0] for file in om_files]))
 files.sort()
 
-box_list = [i for i in range(1, 10, 2)]
-class_list = [i for i in range(2, 11, 2)]
+box_list = [i for i in range(5, 10)]
+class_list = [i for i in range(0, 5)]
 print(args)
 
 with torch.no_grad():
@@ -85,8 +89,8 @@ with torch.no_grad():
         box_out, class_out = [], []
         for box, class_ in zip(box_list, class_list):
             size /= 2
-            box_file = om_data + '/' + str(file) + '_' + str(box) + '.bin'
-            class_file = om_data + '/' + str(file) + '_' + str(class_) + '.bin'
+            box_file = om_data + '/' + str(file) + "_"+ str(box) + '.bin'
+            class_file = om_data + '/' + str(file) + "_"+ str(class_) + '.bin'
             box_data = np.fromfile(box_file, dtype=np.float32)
             class_data = np.fromfile(class_file, dtype=np.float32)
             box_data.shape = 1, 36, int(size), int(size)

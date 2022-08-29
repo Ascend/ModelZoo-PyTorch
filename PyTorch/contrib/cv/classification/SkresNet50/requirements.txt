@@ -1,2 +1,3 @@
-torchvision>=0.6.0
+torchvision
 numpy
+pillow==9.1.0

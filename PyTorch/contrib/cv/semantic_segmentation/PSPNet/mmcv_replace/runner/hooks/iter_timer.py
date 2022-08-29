@@ -34,27 +34,39 @@
 import time
 
 from .hook import HOOKS, Hook
+import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 
 @HOOKS.register_module()
 class IterTimerHook(Hook):
 
     def before_epoch(self, runner):
+        torch.npu.synchronize()
+
         self.t = time.time()
         # NPU - zhouzhou
         self.skip_step = 0
         self.time_all = 0
 
     def before_iter(self, runner):
+        torch.npu.synchronize()
+
         runner.log_buffer.update({'data_time': time.time() - self.t})
 
     def after_iter(self, runner):
         # NPU - zhouzhou
         # runner.log_buffer.update({'time': time.time() - self.t})
+
+        torch.npu.synchronize()
+
         cur_time = time.time()
         runner.log_buffer.update({'time': cur_time - self.t})
         if self.skip_step >= 5:
             self.time_all += cur_time - self.t
         self.skip_step += 1
+
+        torch.npu.synchronize()
 
         self.t = time.time()

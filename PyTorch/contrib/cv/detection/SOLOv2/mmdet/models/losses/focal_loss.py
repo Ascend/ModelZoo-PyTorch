@@ -15,7 +15,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-#from mmcv.ops import sigmoid_focal_loss as _sigmoid_focal_loss
+# from mmcv.ops import sigmoid_focal_loss as _sigmoid_focal_loss
 
 from ..builder import LOSSES
 from .utils import weight_reduce_loss
@@ -54,6 +54,7 @@ def py_sigmoid_focal_loss(pred,
         pred, target, reduction='none') * focal_weight
     loss = weight_reduce_loss(loss, weight, reduction, avg_factor)
     return loss
+
 
 def sigmoid_focal_loss(pred,
                        target,

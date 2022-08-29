@@ -17,6 +17,8 @@ import os
 import argparse
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.npu
 import torch.nn as nn
 import torch.optim as optim
@@ -93,7 +95,7 @@ def main():
     # 优化函数搭建
     optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=opt.lr)
 
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0)  # apex add
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale="dynamic", combine_grad=True)  # apex add
 
     # # 多进程初始化,初始化通信环境
     # os.environ['MASTER_ADDR'] = '127.0.0.1'

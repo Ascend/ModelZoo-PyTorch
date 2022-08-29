@@ -22,6 +22,8 @@ import argparse
 import os
 import sys
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.backends import cudnn
 import torch.distributed as dist#lmm
 import torch.multiprocessing as mp
@@ -39,7 +41,7 @@ from utils.logger import setup_logger
 from apex.parallel import DistributedDataParallel as DDP#lmm
 from apex import amp
 
-def train(cfg, num_npus):
+def train(cfg, num_npus, args):
     # prepare dataset
     train_loader, val_loader, num_query, num_classes = make_data_loader(cfg)
 
@@ -53,8 +55,6 @@ def train(cfg, num_npus):
         print('Train without center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
         loss_func = make_loss(cfg, num_classes)     # modified by gu
         optimizer = make_optimizer(cfg, model)
-        # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-        #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
 
         # Add for using self trained model
         if cfg.MODEL.PRETRAIN_CHOICE == 'self':
@@ -73,11 +73,8 @@ def train(cfg, num_npus):
         else:
             print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
 
-        arguments = {}
-
-
         if "npu" in cfg.MODEL.DEVICE:
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=64)
+            model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=args.loss_scale)
 
         do_train(
             cfg,
@@ -95,8 +92,6 @@ def train(cfg, num_npus):
         loss_func, center_criterion = make_loss_with_center(cfg, num_classes)  # modified by gu
         optimizer, optimizer_center = make_optimizer_with_center(cfg, model, center_criterion)
         rank = 0
-        # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-        #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
 
         # Add for using self trained model
         if cfg.MODEL.PRETRAIN_CHOICE == 'self':
@@ -121,10 +116,8 @@ def train(cfg, num_npus):
         else:
             print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
         
-        arguments = {}
-
         if "npu" in cfg.MODEL.DEVICE:
-            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale=64.0, combine_grad=True)
+            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale=args.loss_scale, combine_grad=True)
         
         do_train_with_center(
             cfg,
@@ -150,6 +143,7 @@ def main():
     parser.add_argument(
         "--config_file", default="", help="path to config file", type=str
     )
+    parser.add_argument('--loss_scale', default="dynamic", type=str)
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,
                         nargs=argparse.REMAINDER)
 
@@ -184,7 +178,8 @@ def main():
         torch.npu.set_device('npu:{}'.format(cfg.MODEL.DEVICE_ID))
 
     cudnn.benchmark = True
-    train(cfg, num_npus)
+    train(cfg, num_npus, args)
+
 
 if __name__ == '__main__':
     main()

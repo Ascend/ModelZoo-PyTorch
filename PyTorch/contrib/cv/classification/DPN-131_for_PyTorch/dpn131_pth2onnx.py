@@ -18,9 +18,11 @@ import torch.onnx
 from dpn import dpn131
 
 def pth2onnx(input_file, output_file):
-    model = dpn131(pretrained=False)
+    model = dpn131(pretrained=False, not_to_onnx=False)
     checkpoint = torch.load(input_file, map_location=torch.device('cpu'))
-    model.load_state_dict(checkpoint)
+    if 'module.' in list(checkpoint['state_dict'].keys())[0]:
+        checkpoint['state_dict'] = {k.replace('module.', ''): v for k, v in checkpoint['state_dict'].items()}
+    model.load_state_dict(checkpoint['state_dict'], strict=False)
 
     model.eval()
     input_names = ["image"]

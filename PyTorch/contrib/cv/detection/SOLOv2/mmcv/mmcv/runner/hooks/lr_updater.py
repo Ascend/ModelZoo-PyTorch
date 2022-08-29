@@ -64,7 +64,7 @@ class LrUpdaterHook(Hook):
             k = (1 - cur_iters / self.warmup_iters) * (1 - self.warmup_ratio)
             warmup_lr = [_lr * (1 - k) for _lr in self.regular_lr]
         elif self.warmup == 'exp':
-            k = self.warmup_ratio**(1 - cur_iters / self.warmup_iters)
+            k = self.warmup_ratio ** (1 - cur_iters / self.warmup_iters)
             warmup_lr = [_lr * k for _lr in self.regular_lr]
         return warmup_lr
 
@@ -130,14 +130,14 @@ class StepLrUpdaterHook(LrUpdaterHook):
         progress = runner.epoch if self.by_epoch else runner.iter
 
         if isinstance(self.step, int):
-            return base_lr * (self.gamma**(progress // self.step))
+            return base_lr * (self.gamma ** (progress // self.step))
 
         exp = len(self.step)
         for i, s in enumerate(self.step):
             if progress < s:
                 exp = i
                 break
-        return base_lr * self.gamma**exp
+        return base_lr * self.gamma ** exp
 
 
 class ExpLrUpdaterHook(LrUpdaterHook):
@@ -148,7 +148,7 @@ class ExpLrUpdaterHook(LrUpdaterHook):
 
     def get_lr(self, runner, base_lr):
         progress = runner.epoch if self.by_epoch else runner.iter
-        return base_lr * self.gamma**progress
+        return base_lr * self.gamma ** progress
 
 
 class PolyLrUpdaterHook(LrUpdaterHook):
@@ -165,7 +165,7 @@ class PolyLrUpdaterHook(LrUpdaterHook):
         else:
             progress = runner.iter
             max_progress = runner.max_iters
-        coeff = (1 - progress / max_progress)**self.power
+        coeff = (1 - progress / max_progress) ** self.power
         return (base_lr - self.min_lr) * coeff + self.min_lr
 
 
@@ -178,7 +178,7 @@ class InvLrUpdaterHook(LrUpdaterHook):
 
     def get_lr(self, runner, base_lr):
         progress = runner.epoch if self.by_epoch else runner.iter
-        return base_lr * (1 + self.gamma * progress)**(-self.power)
+        return base_lr * (1 + self.gamma * progress) ** (-self.power)
 
 
 class CosineLrUpdaterHook(LrUpdaterHook):
@@ -195,4 +195,4 @@ class CosineLrUpdaterHook(LrUpdaterHook):
             progress = runner.iter
             max_progress = runner.max_iters
         return self.target_lr + 0.5 * (base_lr - self.target_lr) * \
-            (1 + cos(pi * (progress / max_progress)))
+               (1 + cos(pi * (progress / max_progress)))

@@ -68,6 +68,10 @@ loader = create_loader(
 )
 pic=os.listdir(os.path.join(args.root,'val2017'))
 pic.sort()
+
+if not os.path.exists(args.bin_save):
+    os.makedirs(args.bin_save)
+
 for i, file in zip(loader, pic):
     img = i[0].numpy()
     print(file)

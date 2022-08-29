@@ -91,7 +91,7 @@ class SingleStageInsDetector(BaseDetector):
         if self.with_mask_feat_head:
             mask_feat_pred = self.mask_feat_head(
                 x[self.mask_feat_head.
-                  start_level:self.mask_feat_head.end_level + 1])
+                      start_level:self.mask_feat_head.end_level + 1])
             loss_inputs = outs + (mask_feat_pred, gt_bboxes, gt_labels, gt_masks, img_metas, self.train_cfg)
         else:
             loss_inputs = outs + (gt_bboxes, gt_labels, gt_masks, img_metas, self.train_cfg)
@@ -102,19 +102,18 @@ class SingleStageInsDetector(BaseDetector):
     def simple_test(self, img, img_meta, rescale=False):
         # diff
         img = img.npu()
-        
         x = self.extract_feat(img)
         outs = self.bbox_head(x, eval=True)
         if self.with_mask_feat_head:
             mask_feat_pred = self.mask_feat_head(
                 x[self.mask_feat_head.
-                  start_level:self.mask_feat_head.end_level + 1])
+                      start_level:self.mask_feat_head.end_level + 1])
             seg_inputs = outs + (mask_feat_pred, img_meta, self.test_cfg, rescale)
         else:
             seg_inputs = outs + (img_meta, self.test_cfg, rescale)
 
         seg_result = self.bbox_head.get_seg(*seg_inputs)
-        return seg_result  
+        return seg_result
 
     def aug_test(self, imgs, img_metas, rescale=False):
         raise NotImplementedError

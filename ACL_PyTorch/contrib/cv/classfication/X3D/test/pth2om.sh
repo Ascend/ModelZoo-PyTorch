@@ -1,6 +1,6 @@
 rm x3d_s.onnx
 sed -i 's/ENABLE: True/ENABLE: False/g' SlowFast/configs/Kinetics/X3D_S.yaml
-python3.7 X3d_pth2onnx.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml X3D_PTH2ONNX.ENABLE True TEST.BATCH_SIZE 1 TEST.CHECKPOINT_FILE_PATH "x3d_s.pyth" X3D_PTH2ONNX.ONNX_OUTPUT_PATH "x3d_s.onnx"
+python3 X3d_pth2onnx.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml X3D_PTH2ONNX.ENABLE True TEST.BATCH_SIZE 1 TEST.CHECKPOINT_FILE_PATH "x3d_s.pyth" X3D_PTH2ONNX.ONNX_OUTPUT_PATH "x3d_s.onnx"
 
 rm x3d_s.om
 source env.sh

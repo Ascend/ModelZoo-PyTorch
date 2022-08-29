@@ -1,0 +1,25 @@
+_BASE_: "Base-CenterMask-VoVNet_AMP.yaml"
+MODEL:
+  WEIGHTS: "vovnet39_ese_detectron2.pth"
+  VOVNET:
+    CONV_BODY : "V-39-eSE"
+SOLVER:
+  STEPS: (210000, 250000)
+  MAX_ITER: 250000
+OUTPUT_DIR: "output/centermask/zsclzy_model_output_0329"
+DATASETS:
+  TRAIN: ("coco_2017_train",)
+  TEST: ("coco_2017_val",)
+SOLVER:
+  CHECKPOINT_PERIOD: 100
+  IMS_PER_BATCH: 32
+  BASE_LR: 0.01  # Note that RetinaNet uses a different default learning rate
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+INPUT:
+  # MIN_SIZE_TRAIN: (640, 672, 704, 736, 768, 800)
+  MIN_SIZE_TRAIN:  (800,)
+AMP: 1
+OPT_LEVEL: O1
+LOSS_SCALE_VALUE: None
+

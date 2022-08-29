@@ -5,7 +5,7 @@ This model is one of open-source models by rwightman. See the source code at htt
 The whole model has achieved the requirement of accuracy and performance.<br>
 ## requirement<br>
 Install PyTorch<br>
-```pip install timm```<br>
+```pip install timm==0.4.12```<br>
 ```torchvision==0.5.0(x86) && torchvision==0.2.0(arm)```
 Please prepare the dataset by yourself, including training set and verification set. The optional dataset includes imagenet2012, including train and val.
 ## Training<br>

@@ -50,6 +50,8 @@ def parse_args(parser):
                         help='Export with half precision to ONNX')
     parser.add_argument('-bs', '--batch_size', type=int, default=4,
                         help='Batch size')
+    parser.add_argument('-t', '--iter', type=int, default=1,
+                        help='layers of one decoder net')
 
     return parser
 
@@ -81,11 +83,120 @@ class Encoder(torch.nn.Module):
         self.tacotron2.encoder.lstm.flatten_parameters()
         self.infer = encoder_infer
 
-    def forward(self, sequence, sequence_lengths):
+        # for the first decoder step
+        dec = tacotron2.decoder
+
+        self.p_attention_dropout = dec.p_attention_dropout
+        self.p_decoder_dropout = dec.p_decoder_dropout
+        self.prenet = dec.prenet
+
+        self.prenet.infer = prenet_infer
+
+        self.attention_rnn = nn.LSTM(dec.prenet_dim + dec.encoder_embedding_dim,
+                                     dec.attention_rnn_dim, 1)
+        lstmcell2lstm_params(self.attention_rnn, dec.attention_rnn)
+        self.attention_rnn.flatten_parameters()
+
+        self.attention_layer = dec.attention_layer
+
+        self.decoder_rnn = nn.LSTM(dec.attention_rnn_dim + dec.encoder_embedding_dim,
+                                   dec.decoder_rnn_dim, 1)
+        lstmcell2lstm_params(self.decoder_rnn, dec.decoder_rnn)
+        self.decoder_rnn.flatten_parameters()
+
+        self.linear_projection = dec.linear_projection
+        self.gate_layer = dec.gate_layer
+
+
+    # put the first decoder step in the encoder
+    def decode(self, decoder_input, in_attention_hidden, in_attention_cell,
+               in_decoder_hidden, in_decoder_cell, in_attention_weights,
+               in_attention_weights_cum, in_attention_context, memory,
+               processed_memory, mask):
+
+        cell_input = torch.cat((decoder_input, in_attention_context), -1)
+
+        _, (out_attention_hidden, out_attention_cell) = self.attention_rnn(
+            cell_input.unsqueeze(0), (in_attention_hidden.unsqueeze(0),
+                                      in_attention_cell.unsqueeze(0)))
+        out_attention_hidden = out_attention_hidden.squeeze(0)
+        out_attention_cell = out_attention_cell.squeeze(0)
+
+        out_attention_hidden = F.dropout(
+            out_attention_hidden, self.p_attention_dropout, False)
+
+        attention_weights_cat = torch.cat(
+            (in_attention_weights.unsqueeze(1),
+             in_attention_weights_cum.unsqueeze(1)), dim=1)
+        out_attention_context, out_attention_weights = self.attention_layer(
+            out_attention_hidden, memory, processed_memory,
+            attention_weights_cat, mask)
+
+        out_attention_weights_cum = in_attention_weights_cum + out_attention_weights
+        decoder_input_tmp = torch.cat(
+            (out_attention_hidden, out_attention_context), -1)
+
+        _, (out_decoder_hidden, out_decoder_cell) = self.decoder_rnn(
+            decoder_input_tmp.unsqueeze(0), (in_decoder_hidden.unsqueeze(0),
+                                             in_decoder_cell.unsqueeze(0)))
+        out_decoder_hidden = out_decoder_hidden.squeeze(0)
+        out_decoder_cell = out_decoder_cell.squeeze(0)
+
+        out_decoder_hidden = F.dropout(
+            out_decoder_hidden, self.p_decoder_dropout, False)
+
+        decoder_hidden_attention_context = torch.cat(
+            (out_decoder_hidden, out_attention_context), 1)
+
+        decoder_output = self.linear_projection(
+            decoder_hidden_attention_context)
+
+        gate_prediction = self.gate_layer(decoder_hidden_attention_context)
+
+        return (decoder_output, gate_prediction, out_attention_hidden,
+                out_attention_cell, out_decoder_hidden, out_decoder_cell,
+                out_attention_weights, out_attention_weights_cum, out_attention_context)
+
+
+    def forward(self, sequence,
+                sequence_lengths,
+                decoder_input,
+                attention_hidden,
+                attention_cell,
+                decoder_hidden,
+                decoder_cell,
+                attention_weights,
+                attention_weights_cum,
+                attention_context,
+                mask,
+                not_finished,
+                mel_lengths):
         embedded_inputs = self.tacotron2.embedding(sequence).transpose(1, 2)
         memory, lens = self.infer(self.tacotron2.encoder, embedded_inputs, sequence_lengths)
         processed_memory = self.tacotron2.decoder.attention_layer.memory_layer(memory)
-        return memory, processed_memory, lens
+
+        gate_threshold = 0.5
+        decoder_input_pr = self.prenet.infer(self.prenet, decoder_input)
+        (mel_output, gate_output,
+         attention_hidden, attention_cell,
+         decoder_hidden, decoder_cell,
+         attention_weights, attention_weights_cum,
+         attention_context) = self.decode(decoder_input_pr, attention_hidden, attention_cell, decoder_hidden,
+                                           decoder_cell, attention_weights, attention_weights_cum,
+                                           attention_context, memory, processed_memory, mask)
+        mel_outputs = mel_output.unsqueeze(2)
+        gate_outputs = gate_output.unsqueeze(2)
+        t = torch.sigmoid(gate_output)
+        dec = torch.le(t, gate_threshold).to(torch.int32).squeeze(1)
+        not_finished = not_finished * dec
+        mel_lengths += not_finished
+
+        decoder_input = mel_output
+
+        return (mel_output, attention_hidden,
+                attention_cell, decoder_hidden, decoder_cell,
+                attention_weights, attention_weights_cum, attention_context, memory,
+                processed_memory, mask, mel_outputs, gate_outputs, not_finished, mel_lengths)
 
 class Postnet(torch.nn.Module):
     def __init__(self, tacotron2):
@@ -117,12 +228,12 @@ def prenet_infer(self, x):
     return x1
 
 class DecoderIter(torch.nn.Module):
-    def __init__(self, tacotron2):
+    def __init__(self, tacotron2, iter):
         super(DecoderIter, self).__init__()
 
         self.tacotron2 = tacotron2
         dec = tacotron2.decoder
-
+        self.max_decoder_steps = iter
         self.p_attention_dropout = dec.p_attention_dropout
         self.p_decoder_dropout = dec.p_decoder_dropout
         self.prenet = dec.prenet
@@ -205,20 +316,55 @@ class DecoderIter(torch.nn.Module):
                 attention_context,
                 memory,
                 processed_memory,
-                mask):
-        decoder_input1 = self.prenet.infer(self.prenet, decoder_input)
-        outputs = self.decode(decoder_input1,
-                              attention_hidden,
-                              attention_cell,
-                              decoder_hidden,
-                              decoder_cell,
-                              attention_weights,
-                              attention_weights_cum,
-                              attention_context,
-                              memory,
-                              processed_memory,
-                              mask)
-        return outputs
+                mask,
+                mel_output_input,
+                gate_output_input,
+                not_finished,
+                mel_lengths):
+        i = 0
+        gate_threshold = 0.5
+        while i < self.max_decoder_steps:
+            decoder_input_pr = self.prenet.infer(self.prenet, decoder_input)
+            (mel_output,
+             gate_output,
+             attention_hidden,
+             attention_cell,
+             decoder_hidden,
+             decoder_cell,
+             attention_weights,
+             attention_weights_cum,
+             attention_context) = self.decode(decoder_input_pr,
+                                  attention_hidden,
+                                  attention_cell,
+                                  decoder_hidden,
+                                  decoder_cell,
+                                  attention_weights,
+                                  attention_weights_cum,
+                                  attention_context,
+                                  memory,
+                                  processed_memory,
+                                  mask)
+            mel_output_input = torch.cat(
+                (mel_output_input, mel_output.unsqueeze(2)), dim = 2)
+            gate_output_input = torch.cat(
+                (gate_output_input, gate_output.unsqueeze(2)), dim = 2)
+            t = torch.sigmoid(gate_output)
+            dec = torch.le(t, gate_threshold).to(torch.int32).squeeze(1)
+            not_finished = not_finished * dec
+            mel_lengths += not_finished
+            decoder_input = mel_output
+            i = i + 1
+        return (decoder_input,
+                attention_hidden,
+                attention_cell,
+                decoder_hidden,
+                decoder_cell,
+                attention_weights,
+                attention_weights_cum,
+                attention_context,
+                memory,
+                processed_memory, mask,
+                mel_output_input[:, :, 1:], gate_output_input[:, :, 1:], not_finished, mel_lengths)
 
 
 def test_inference(encoder, decoder_iter, postnet):
@@ -279,7 +425,7 @@ def test_inference(encoder, decoder_iter, postnet):
         mel_lengths += not_finished
 
         if torch.sum(not_finished) == 0:
-            print("Stopping after ",mel_outputs.size(2)," decoder steps")
+            print("Stopping after ", mel_outputs.size(2), " decoder steps")
             break
         if mel_outputs.size(2) == max_decoder_steps:
             print("Warning! Reached max decoder steps")
@@ -303,32 +449,15 @@ def main():
 
     tacotron2 = load_and_setup_model('Tacotron2', parser, args.tacotron2,
                                      fp16_run=args.fp16, cpu_run=True)
-
+    iter = args.iter
     opset_version = 11
 
     batch_size = args.batch_size
     sequences = torch.randint(low=0, high=148, size=(batch_size, 50),
                              dtype=torch.long)
     sequence_lengths = torch.IntTensor([sequences.size(1)] * batch_size).int()
-    dummy_input = (sequences, sequence_lengths)
 
-    encoder = Encoder(tacotron2)
-    encoder.eval()
-    with torch.no_grad():
-        encoder(*dummy_input)
-
-    torch.onnx.export(encoder, dummy_input, args.output+"/"+"encoder.onnx",
-                      opset_version=opset_version,
-                      do_constant_folding=True,
-                      input_names=["sequences", "sequence_lengths"],
-                      output_names=["memory", "processed_memory", "lens"],
-                      dynamic_axes={"sequences": {1: "text_seq"},
-                                    "memory": {1: "mem_seq"},
-                                    "processed_memory": {1: "mem_seq"}
-                      })
-
-    decoder_iter = DecoderIter(tacotron2)
-    memory = torch.randn((batch_size,sequence_lengths[0],512)) #encoder_outputs
+    memory = torch.randn((batch_size, sequence_lengths[0], 512)) #encoder_outputs
     if args.fp16:
         memory = memory.half()
     memory_lengths = sequence_lengths
@@ -343,6 +472,104 @@ def main():
      attention_weights_cum,
      attention_context,
      processed_memory) = tacotron2.decoder.initialize_decoder_states(memory)
+    not_finished = torch.ones([batch_size], dtype=torch.int32)
+    mel_lengths = torch.zeros([batch_size], dtype=torch.int32)
+    dummy_input = (sequences,
+                   sequence_lengths,
+                   decoder_input,
+                   attention_hidden,
+                   attention_cell,
+                   decoder_hidden,
+                   decoder_cell,
+                   attention_weights,
+                   attention_weights_cum,
+                   attention_context,
+                   mask,
+                   not_finished,
+                   mel_lengths)
+
+    encoder = Encoder(tacotron2)
+    encoder.eval()
+    with torch.no_grad():
+        encoder(*dummy_input)
+
+    torch.onnx.export(encoder, dummy_input, args.output+"/"+"encoder.onnx",
+                      opset_version=opset_version,
+                      do_constant_folding=True,
+                      input_names=["sequences",
+                                   "sequence_lengths",
+                                   "decoder_input",
+                                   "attention_hidden",
+                                   "attention_cell",
+                                   "decoder_hidden",
+                                   "decoder_cell",
+                                   "attention_weights",
+                                   "attention_weights_cum",
+                                   "attention_context",
+                                   "mask",
+                                   "not_finished_input",
+                                   "mel_lengths_input"],
+                      output_names=["decoder_output",
+                                    "out_attention_hidden",
+                                    "out_attention_cell",
+                                    "out_decoder_hidden",
+                                    "out_decoder_cell",
+                                    "out_attention_weights",
+                                    "out_attention_weights_cum",
+                                    "out_attention_context",
+                                    "memory",
+                                    "processed_memory",
+                                    "mask",
+                                    "mel_outputs",
+                                    "gate_outputs",
+                                    "not_finished_output",
+                                    "mel_lengths_output"],
+                      dynamic_axes={"sequences": {1: "text_seq"},
+                                    "memory": {1: "mem_seq"},
+                                    "processed_memory": {1: "mem_seq"},
+                                    "attention_weights": {1: "seq_len"},
+                                    "attention_weights_cum": {1: "seq_len"},
+                                    "mask": {1: "seq_len"},
+                                    "out_attention_weights": {1: "seq_len"},
+                                    "out_attention_weights_cum": {1: "seq_len"}
+                      })
+
+# export decoder
+    (mel_output, attention_hidden,
+                attention_cell, decoder_hidden, decoder_cell,
+                attention_weights, attention_weights_cum, attention_context, memory,
+                processed_memory, mask, mel_outputs, gate_outputs, not_finished, mel_lengths) = encoder(sequences,
+                   sequence_lengths,
+                   decoder_input,
+                   attention_hidden,
+                   attention_cell,
+                   decoder_hidden,
+                   decoder_cell,
+                   attention_weights,
+                   attention_weights_cum,
+                   attention_context,
+                   mask,
+                   not_finished,
+                   mel_lengths)
+    decoder_input = mel_output
+    decoder_iter = DecoderIter(tacotron2, iter)
+    memory = torch.randn((batch_size, sequence_lengths[0], 512)) #encoder_outputs
+    if args.fp16:
+        memory = memory.half()
+    memory_lengths = sequence_lengths
+    # initialize decoder states for dummy_input
+    mask = get_mask_from_lengths(memory_lengths)
+    (attention_hidden_t,
+     attention_cell_t,
+     decoder_hidden_t,
+     decoder_cell_t,
+     attention_weights_t,
+     attention_weights_cum_t,
+     attention_context_t,
+     processed_memory) = tacotron2.decoder.initialize_decoder_states(memory)
+
+    mel_output_input = torch.randn((batch_size, 80, 1))
+    gate_output_input = torch.randn((batch_size, 1, 1))
     dummy_input = (decoder_input,
                    attention_hidden,
                    attention_cell,
@@ -353,9 +580,13 @@ def main():
                    attention_context,
                    memory,
                    processed_memory,
-                   mask)
+                   mask,
+                   mel_output_input,
+                   gate_output_input,
+                   not_finished,
+                   mel_lengths)
 
-    decoder_iter = DecoderIter(tacotron2)
+    decoder_iter = DecoderIter(tacotron2, iter)
     decoder_iter.eval()
     with torch.no_grad():
         decoder_iter(*dummy_input)
@@ -363,6 +594,7 @@ def main():
     torch.onnx.export(decoder_iter, dummy_input, args.output+"/"+"decoder_iter.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
+                      use_external_data_format=True,
                       input_names=["decoder_input",
                                    "attention_hidden",
                                    "attention_cell",
@@ -373,27 +605,35 @@ def main():
                                    "attention_context",
                                    "memory",
                                    "processed_memory",
-                                   "mask"],
-                      output_names=["decoder_output",
-                                    "gate_prediction",
-                                    "out_attention_hidden",
-                                    "out_attention_cell",
-                                    "out_decoder_hidden",
-                                    "out_decoder_cell",
-                                    "out_attention_weights",
-                                    "out_attention_weights_cum",
-                                    "out_attention_context"],
-                      dynamic_axes={"attention_weights" : {1: "seq_len"},
-                                    "attention_weights_cum" : {1: "seq_len"},
-                                    "memory" : {1: "seq_len"},
-                                    "processed_memory" : {1: "seq_len"},
-                                    "mask" : {1: "seq_len"},
-                                    "out_attention_weights" : {1: "seq_len"},
-                                    "out_attention_weights_cum" : {1: "seq_len"}
+                                   "mask",
+                                   "mel_output_input",
+                                   "gate_output_input",
+                                   "not_finished_input",
+                                   "mel_lengths_input"],
+                      output_names=["decoder_input_out",
+                                    "attention_hidden_out",
+                                    "attention_cell_out",
+                                    "decoder_hidden_out",
+                                    "decoder_cell_out",
+                                    "attention_weights_out",
+                                    "attention_weights_cum_out",
+                                    "attention_context_out",
+                                    "memory_out",
+                                    "processed_memory_out",
+                                    "mask_out",
+                                    "mel_output_cat",
+                                    "gate_output_cat",
+                                    "not_finished_out",
+                                    "mel_lengths_out"],
+                      dynamic_axes={"attention_weights":{1:"seq_len"},
+                                    "attention_weights_cum":{1:"seq_len"},
+                                    "memory":{1:"seq_len"},
+                                    "processed_memory":{1:"seq_len"},
+                                    "mask" : {1:"seq_len"}
                       })
 
     postnet = Postnet(tacotron2)
-    dummy_input = torch.randn((batch_size,80,620))
+    dummy_input = torch.randn((batch_size, 80, 620))
     if args.fp16:
         dummy_input = dummy_input.half()
     torch.onnx.export(postnet, dummy_input, args.output+"/"+"postnet.onnx",

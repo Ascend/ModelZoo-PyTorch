@@ -23,7 +23,7 @@ import os
 from apex import amp
 import apex
 
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
     
 parser = argparse.ArgumentParser(description='Chinese Text Classification')

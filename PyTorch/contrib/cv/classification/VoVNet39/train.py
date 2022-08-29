@@ -522,7 +522,7 @@ if __name__ == '__main__':
     random.seed(args.manualSeed)
     torch.manual_seed(args.manualSeed)
     if 'npu' in args.device:
-        if torch.__version__ >= '1.8.1':
+        if torch.__version__ >= '1.8':
             import torch_npu
         import torch.npu 
         torch.npu.manual_seed_all(args.manualSeed)

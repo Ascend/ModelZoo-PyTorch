@@ -232,7 +232,15 @@ def data_main():
                         action='store_true',
                         help="Set this flag if you are using an uncased model.")
     parser.add_argument("--inference_tool", type = str,
-                        help = "inference tool:benchmark or msame")
+                        help = "inference tool:benchmark or msame or ais_infer")
+    parser.add_argument("--bin_path",
+                        default="./bert_bin",
+                        type=str,
+                        help="The path to bin file.")
+    parser.add_argument("--output_mode",
+                        default='classification',
+                        type=str,
+                        help="The mode of output.")
     args = parser.parse_args()
     processor = Sst2Processor()
     tokenizer = BertTokenizer.from_pretrained(args.model, do_lower_case=args.do_lower_case)  # for TinyBERT
@@ -242,18 +250,29 @@ def data_main():
     eval_features = convert_examples_to_features(eval_examples, label_list, args.max_seq_length,
                                                  tokenizer, output_mode = "classification")
 
-    bin_path = "./bert_bin"
-    output_mode = 'classification'
-    eval_data, eval_labels = get_tensor_data(output_mode, eval_features)
+
+    eval_data, eval_labels = get_tensor_data(args.output_mode, eval_features)
     print("eval_labels")
     # Run prediction for full data
     eval_sampler = SequentialSampler(eval_data)
     eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, drop_last = True,
                                  batch_size = args.eval_batch_size, shuffle = False)
 
-    if not os.path.exists(bin_path):
-        os.makedirs(bin_path)
+    if not os.path.exists(args.bin_path):
+        os.makedirs(args.bin_path)
     i = -1
+
+    if args.inference_tool == "msame" or "ais_infer":
+        path1 = args.bin_path + "/input_ids"
+        path2 = args.bin_path + "/segment_ids"
+        path3 = args.bin_path + "/input_mask"
+        if not os.path.exists(path1):
+            os.mkdir(path1)
+        if not os.path.exists(path2):
+            os.mkdir(path2)
+        if not os.path.exists(path3):
+            os.mkdir(path3)
+
     for input_ids, input_mask, segment_ids, label_ids, seq_lengths in eval_dataloader:
         i = i + 1
         print("[info] file", "===", i)
@@ -261,16 +280,17 @@ def data_main():
         input_mask_np = input_mask.numpy()
         segment_ids_np = segment_ids.numpy()
         if args.inference_tool == "msame":
-            path1 = bin_path + "/input_ids"
-            path2 = bin_path + "/segment_ids"
-            path3 = bin_path + "/input_mask"
             input_ids_np.tofile(os.path.join(path1, "input" + str(i) + '.bin'))
             segment_ids_np.tofile(os.path.join(path2, "input" + str(i) + '.bin'))
             input_mask_np.tofile(os.path.join(path3, "input" + str(i) + '.bin'))
         elif args.inference_tool == "benchmark":
-            input_ids_np.tofile(os.path.join(bin_path, "input_ids_" + str(i) + '.bin'))
-            segment_ids_np.tofile(os.path.join(bin_path, "segment_ids_" + str(i) + '.bin'))
-            input_mask_np.tofile(os.path.join(bin_path, "input_mask_" + str(i) + '.bin'))
+            input_ids_np.tofile(os.path.join(args.bin_path, "input_ids_" + str(i) + '.bin'))
+            segment_ids_np.tofile(os.path.join(args.bin_path, "segment_ids_" + str(i) + '.bin'))
+            input_mask_np.tofile(os.path.join(args.bin_path, "input_mask_" + str(i) + '.bin'))
+        elif args.inference_tool == "ais_infer":
+            input_ids_np.tofile(os.path.join(path1, "input" + str(i) + '.bin'))
+            segment_ids_np.tofile(os.path.join(path2, "input" + str(i) + '.bin'))
+            input_mask_np.tofile(os.path.join(path3, "input" + str(i) + '.bin'))
 
 if __name__ == "__main__":
     data_main()

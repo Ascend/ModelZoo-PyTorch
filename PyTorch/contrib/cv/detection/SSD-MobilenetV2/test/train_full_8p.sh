@@ -99,7 +99,7 @@ do
           --stay_lr 1 \
           --device_list '0,1,2,3,4,5,6,7' \
           --dist_backend 'hccl' \
-          --device npu  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --device npu  >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${RANK_ID}.log 2>&1 &
     else
         python3.7 -u train_ssd.py \
           --dataset_type voc  \
@@ -123,7 +123,7 @@ do
           --stay_lr 1 \
           --device_list '0,1,2,3,4,5,6,7' \
           --dist_backend 'hccl' \
-          --device npu > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --device npu >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${RANK_ID}.log 2>&1 &
     fi
 done
 

@@ -61,8 +61,8 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-if [ ! -d  "./datasets/COCO"  ]; then
-    ln -s ${data_path} ./datasets/COCO
+if [ ! -d  "./datasets/VOCdevkit"  ]; then
+    ln -s ${data_path} ./datasets/VOCdevkit
 fi
 
 KERNEL_NUM=$(($(nproc)/8))
@@ -82,25 +82,23 @@ if [ $(uname -m) = "aarch64" ]
 then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END nohup python3.7 -u tools/train.py -n yolox-x \
+    taskset -c $PID_START-$PID_END nohup python3.7 -u tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
         -b ${batch_size} \
         -d 8 \
         --maxx_epoch ${train_epochs} \
         --use_npu \
-        --device_id $i >> ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
+        --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
 else
-    nohup python3.7 -u tools/train.py -n yolox-x \
+    nohup python3.7 -u tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
         -b ${batch_size} \
         -d 8 \
         --maxx_epoch ${train_epochs} \
         --use_npu \
-        --device_id $i >> ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
+        --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
 fi
 done
-
-wait
-
-nohup python3.7 tools/eval.py -n yolox-x -d 1 -b ${batch_size} --cf YOLOX_outputs/yolox_x/ --conf 0.001 >> ${test_path_dir}/output/0/train_0.log 2>&1 &
 
 wait
 
@@ -117,7 +115,7 @@ FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`cat ${test_path_dir}/output/0/train_0.log |grep 'Average Precision' | grep '0.50:0.95' | grep all | grep -v small | awk 'END {print}' | awk '{print $13}'`
+train_accuracy=`cat ${test_path_dir}/output/0/train_0.log |grep 'map_5095' | awk 'END {print}' | awk '{print $2}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

@@ -37,7 +37,7 @@ import time
 import sys
 
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.utils.data
 from torch import nn
@@ -243,7 +243,7 @@ def main(args):
 
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.device_id])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.device_id], broadcast_buffers=False)
         model_without_ddp = model.module
 
     if args.resume:
@@ -347,8 +347,7 @@ def parse_args():
                              'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet'
                         )
     parser.add_argument('--loss_scale_value',
-                        default=1024,
-                        type=int,
+                        default='dynamic',
                         help='set loss scale value.')
 
     # distributed training parameters

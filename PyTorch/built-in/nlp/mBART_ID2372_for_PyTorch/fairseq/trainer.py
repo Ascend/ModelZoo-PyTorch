@@ -15,7 +15,7 @@ from itertools import chain
 from typing import Any, Dict, List
 
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.distributed as dist
 from fairseq import checkpoint_utils, distributed_utils, models, optim, utils

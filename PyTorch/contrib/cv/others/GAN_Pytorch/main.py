@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 import torch
-if torch.version>="1.8.0":
+if torch.__version__ >= "1.8":
     try:
         import torch_npu
     except:

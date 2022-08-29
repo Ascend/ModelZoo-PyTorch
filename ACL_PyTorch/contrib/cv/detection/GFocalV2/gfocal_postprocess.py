@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,20 +60,20 @@ if __name__ == '__main__':
     cnt = 0
     for ids in coco_dataset.img_ids:
         cnt = cnt + 1
-        bin_file = glob.glob(bin_path + '/*0' + str(ids) + '_1.bin')[0]
+        bin_file = glob.glob(bin_path + '/*0' + str(ids) + '_output_0.txt')[0]
         bin_file = bin_file[bin_file.rfind('/') + 1:]
-        bin_file = bin_file[:bin_file.rfind('_')]
+        bin_file = bin_file[:bin_file.find('_')]
         print(cnt - 1, bin_file)
         path_base = os.path.join(bin_path, bin_file)
 
         res_buff = []
         bbox_results = []
         cls_segms = []
-        if os.path.exists(path_base + "_" + "1" + ".bin") and os.path.exists(path_base + "_" + "2" + ".bin"):
-            bboxes = np.fromfile(path_base + "_" + str(flags.net_out_num - 1) + ".bin", dtype="float32")
+        if os.path.exists(path_base + "_" + "output_0" + ".txt") and os.path.exists(path_base + "_" + "output_1" + ".txt"):
+            bboxes = np.loadtxt(path_base + "_output_" + str(flags.net_out_num - 3) + ".txt", dtype="float32")
             bboxes = np.reshape(bboxes, [100, 5])
             bboxes = torch.from_numpy(bboxes)
-            labels = np.fromfile(path_base + "_" + str(flags.net_out_num - 2) + ".bin", dtype="int64")
+            labels = np.loadtxt(path_base + "_output_" + str(flags.net_out_num - 2) + ".txt", dtype="int64")
             labels = np.reshape(labels, [100, 1])
             labels = torch.from_numpy(labels)
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
             bboxes = postprocess_bboxes(bboxes, img_size_dict[bin_file], flags.net_input_width, flags.net_input_height)
             bbox_results = [bbox2result(bboxes, labels[:, 0], 80)]
         else:
-            print("[ERROR] file not exist", path_base + "_" + str(1) + ".bin",path_base + "_" + str(2) + ".bin")
+            print("[ERROR] file not exist", path_base + "_output_" + str(0) + ".txt",path_base + "_output_" + str(1) + ".txt")
 
         result = bbox_results
         results.extend(result)

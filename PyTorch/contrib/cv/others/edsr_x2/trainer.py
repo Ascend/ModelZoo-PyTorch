@@ -31,7 +31,6 @@
 # ============================================================================
 import os
 from decimal import Decimal
-
 import utility
 
 import torch
@@ -42,6 +41,7 @@ from apex import amp
 import shutil
 
 import numpy as np
+
 
 
 class Trainer:
@@ -88,6 +88,7 @@ class Trainer:
         self.loader_train.dataset.set_scale(0)
         print("epoch num ", epoch)
 
+
         for batch, (lr, hr, _,) in enumerate(self.loader_train):
             epoch_timer = utility.AverageMeter()
             lr, hr = self.prepare(lr, hr)
@@ -95,55 +96,24 @@ class Trainer:
             timer_model.tic()
 
             self.optimizer.zero_grad()
-            if epoch == 5:
-                if self.args.use_npu:
-                    with torch.autograd.profiler.profile(use_npu=True) as prof:
-                        sr = self.model(lr, 0)
-                        loss = self.loss(sr, hr)
-                        if self.args.amp:
-                            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
-                        if self.args.gclip > 0:
-                            utils.clip_grad_value_(
-                                self.model.parameters(), self.args.gclip)
-                        self.optimizer.step()
-                    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-                    prof.export_chrome_trace("npu_output.prof")                    
-                else:
-                    prof = torch.autograd.profiler.profile(use_cuda=True)
-                    with torch.autograd.profiler.profile(use_cuda=True) as prof:
-                        sr = self.model(lr, 0)
-                        loss = self.loss(sr, hr)
-                        if self.args.amp:
-                            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
-                        if self.args.gclip > 0:
-                            utils.clip_grad_value_(
-                                self.model.parameters(), self.args.gclip)
-                        self.optimizer.step()
-                    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-                    prof.export_chrome_trace("cuda_output.prof")
+            sr = self.model(lr, 0)
+            loss = self.loss(sr, hr)
+            if self.args.amp:
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
             else:
-                sr = self.model(lr, 0)
-                loss = self.loss(sr, hr)
-                if self.args.amp:
-                    with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                else:
-                    loss.backward()
-                if self.args.gclip > 0:
-                    utils.clip_grad_value_(
-                        self.model.parameters(), self.args.gclip)
-                self.optimizer.step()
+                loss.backward()
+            if self.args.gclip > 0:
+                utils.clip_grad_value_(
+                    self.model.parameters(), self.args.gclip)
+            self.optimizer.step()
+
 
             if self.args.use_npu:
                 torch.npu.synchronize()
             timer_model.hold()
             epoch_timer.update(timer_model.acc)
+
 
             if (batch + 1) % self.args.print_every == 0:
                 self.ckp.write_log(
@@ -155,6 +125,7 @@ class Trainer:
                         timer_data.release(),
                     )
                 )
+
 
             timer_data.tic()
         print("FPS:", 1000  / epoch_timer.avg)
@@ -182,7 +153,6 @@ class Trainer:
                     lr, hr = self.prepare(lr, hr)
                     sr = self.model(lr, idx_scale)
                     sr = utility.quantize(sr, self.args.rgb_range)
-
                     save_list = [sr]
                     self.ckp.log[-1, idx_data, idx_scale] += utility.calc_psnr(
                         sr, hr, scale, self.args.rgb_range, dataset=d
@@ -193,7 +163,10 @@ class Trainer:
                     if self.args.save_results:
                         self.ckp.save_results(d, filename[0], save_list, scale)
 
+
                 self.ckp.log[-1, idx_data, idx_scale] /= len(d)
+
+
                 best = self.ckp.log.max(0)
                 self.ckp.write_log(
                     "[{} x{}]\tPSNR: {:.3f} (Best: {:.3f} @epoch {})".format(

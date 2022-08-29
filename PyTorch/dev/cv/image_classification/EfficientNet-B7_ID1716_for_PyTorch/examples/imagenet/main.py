@@ -333,8 +333,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
 
     # switch to train mode
     # 替换Swish API
-    model.set_swish(memory_efficient=False)
-    # 替换Swish API
     if args.distributed:
         model.module.set_swish(memory_efficient=False)
     else:

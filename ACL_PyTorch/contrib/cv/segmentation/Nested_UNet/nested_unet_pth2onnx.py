@@ -25,13 +25,15 @@ def convert():
     model.load_state_dict(checkpoint)
 
     model.eval()
+
     input_names = ["actual_input_1"]
     output_names = ["output1"]
     dynamic_axes = {'actual_input_1': {0: '-1'}, 'output1': {0: '-1'}}
 
     dummy_input = torch.randn(1, 3, 96, 96)
 
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11)
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, 
+                      output_names = output_names, opset_version=11, verbose=True)
 
 if __name__ == "__main__":
     input_file = sys.argv[1]

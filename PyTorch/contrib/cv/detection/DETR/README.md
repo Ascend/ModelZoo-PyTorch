@@ -15,6 +15,8 @@ Install pycocotools (for evaluation on COCO) and scipy (for training):
 ```
 pip3 install -r requirements.txt
 ```
+Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 That's it, should be good to train and evaluate detection models.
 
 ## Data preparation

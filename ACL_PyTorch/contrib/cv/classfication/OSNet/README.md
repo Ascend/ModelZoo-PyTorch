@@ -38,30 +38,33 @@ branch:master
 commit_id:e580b699c34b6f753a9a06223d840317546c98aa   
   
 ## 2 环境说明
+使用CANN版本为CANN:5.1.RC1
 
 深度学习框架与第三方库
 ```
 pytorch == 1.8.1
 torchvision == 0.9.1
 onnx == 1.7.0
-protobuf==3.13.0
-onnx-simplifier==0.3.6
-isort==4.3.21
-numpy 
-Cython
-h5py
-Pillow
-six
-scipy
-matplotlib
-opencv-python
-tb-nightly
-future
-yacs
-gdown
-flake8
-yapf
-imageio 
+protobu == 3.13.0
+onnx-simplifier == 0.3.6
+isort == 4.3.21
+numpy == 1.18.5
+Cython == 0.29.30
+h5py == 3.7.0
+Pillow == 7.2.0
+six == 1.16.0
+scipy == 1.7.3
+matplotlib == 3.5.2
+opencv-python == 4.2.0.34
+tb-nightly == 2.10.0a20220527
+future == 0.18.2
+yacs == 0.1.8
+gdown == 4.4.0
+flake8 == 4.0.1
+yapf == 0.32.0
+imageio == 2.19.2
+onnxruntime == 1.11.1
+onnxoptimizer == 0.2.7
 ```
 
 **说明：** 
@@ -77,40 +80,40 @@ imageio
 
 ### 3.1 pth转onnx模型
 
-1.下载pth权重文件  
-[OSNet训练pth权重文件(google下载)](https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view?usp=sharing)  
+#### 1.下载pth权重文件  
+ 
 [OSNet训练pth权重文件(百度网盘下载，提取码：gcfe)](https://pan.baidu.com/s/1Xkwa9TCZss_ygkC8obsEMg)  
 osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pth
 
-2.下载OSNet源码：
+#### 2.下载OSNet源码：
 ```
 git clone https://github.com/KaiyangZhou/deep-person-reid.git
 cd deep-person-reid/
 # install dependencies
 pip install -r requirements.txt
 # install torchreid (don't need to re-build it if you modify the source code)
-python3.7 setup.py develop
+python setup.py develop
 ```
-3.编写pth2onnx脚本pth2onnx.py
-4.执行pth2onnx脚本，生成onnx模型文件
+#### 3.编写pth2onnx脚本pth2onnx.py，执行pth2onnx脚本，生成onnx模型文件
+
 ```
-python3.7 pth2onnx.py osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pth osnet_x1_0.onnx    # 生成onnx模型文件
+python pth2onnx.py osnet_x1_0_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pth osnet_x1_0.onnx    # 生成onnx模型文件
 ```
-5.对onnx模型进行简化
+#### 4.对onnx模型进行简化
 ```
-python3.7 -m onnxsim osnet_x1_0.onnx osnet_x1_0_bs1_sim.onnx --input-shape 1,3,256,128     # batch_size = 1
-python3.7 -m onnxsim osnet_x1_0.onnx osnet_x1_0_bs16_sim.onnx --input-shape 16,3,256,128     # batch_size = 16  
+python -m onnxsim osnet_x1_0.onnx osnet_x1_0_bs1_sim.onnx --input-shape 1,3,256,128     # batch_size = 1
+python -m onnxsim osnet_x1_0.onnx osnet_x1_0_bs16_sim.onnx --input-shape 16,3,256,128     # batch_size = 16  
 ```
 ### 3.2 onnx转om模型
 
-1.设置环境变量
+#### 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+#### 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ```
-atc --framework=5 --model=./osnet_x1_0_bs1_sim.onnx --input_format=NCHW --input_shape="image:1,3,256,128" --output=osnet_x1_0_bs1 --log=debug --soc_version=Ascend310      # batch_size = 1
-atc --framework=5 --model=./osnet_x1_0_bs16_sim.onnx --input_format=NCHW --input_shape="image:16,3,256,128" --output=osnet_x1_0_bs16 --log=debug --soc_version=Ascend310      # batch_size = 16
+atc --framework=5 --model=./osnet_x1_0_bs1_sim.onnx --input_format=NCHW --input_shape="image:1,3,256,128" --output=osnet_x1_0_bs1 --log=debug --soc_version=Ascend310p     # batch_size = 1
+atc --framework=5 --model=./osnet_x1_0_bs16_sim.onnx --input_format=NCHW --input_shape="image:16,3,256,128" --output=osnet_x1_0_bs16 --log=debug --soc_version=Ascend310p      # batch_size = 16
 ```
 
 ## 4 数据集预处理
@@ -126,24 +129,22 @@ atc --framework=5 --model=./osnet_x1_0_bs16_sim.onnx --input_format=NCHW --input
 训练集bounding_box_train有751人，包含12,936张图像，平均每个人有17.2张训练数据；
 测试集bounding_box_test有750人，包含19,732张图像，平均每个人有26.3张测试数据;
 查询集query有3368张查询图像。  
-[Market1501数据集(百度网盘下载，提取码：me3q)](https://pan.baidu.com/s/1Nl8tMEvq-MwNGd1pG4_6bg)  
+
 Market1501数据集放在/root/datasets/，并将数据集文件夹命名为market1501。
 
 ### 4.2 数据集预处理
-1.预处理脚本market1501_torch_preprocess.py
-2.执行预处理脚本，生成数据集预处理后的bin文件
+#### 预处理脚本market1501_torch_preprocess.py，执行预处理脚本，生成数据集预处理后的bin文件
 ```
 # 处理gallery数据集，即bounding_box_test测试集
-python3.7 market1501_torch_preprocess.py /root/datasets/market1501/bounding_box_test ./gallery_prep_dataset/
+python market1501_torch_preprocess.py /root/datasets/market1501/bounding_box_test ./gallery_prep_dataset/
 # 处理query数据集
-python3.7 market1501_torch_preprocess.py /root/datasets/market1501/query ./query_prep_dataset/
+python market1501_torch_preprocess.py /root/datasets/market1501/query ./query_prep_dataset/
 ```
 ### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py   
-2.执行生成数据集信息脚本，生成gallery和query数据集信息文件
+#### 生成数据集信息文件脚本gen_dataset_info.py   ，执行生成数据集信息脚本，生成gallery和query数据集信息文件
 ```
-python3.7 gen_dataset_info.py bin ./gallery_prep_dataset ./gallery_prep_bin.info 128 256
-python3.7 gen_dataset_info.py bin ./query_prep_dataset ./query_prep_bin.info 128 256
+python gen_dataset_info.py bin ./gallery_prep_dataset ./gallery_prep_bin.info 128 256
+python gen_dataset_info.py bin ./query_prep_dataset ./query_prep_bin.info 128 256
 ```
 第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
 ## 5 离线推理
@@ -177,7 +178,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 6.1 离线推理精度统计
 调用osnet_metrics_market1501_bs1.py脚本，可以获得rank1和mAP数据，结果保存在result_bs1.json中。
 ```
-python3.7 osnet_x1_0_metrics_market1501.py result/dumpOutput_device0/ result/dumpOutput_device1/ ./ result_bs1.json
+python osnet_x1_0_metrics_market1501.py result/dumpOutput_device0/ result/dumpOutput_device1/ ./ result_bs1.json
 ```
 第一个为benchmark输出目录，第二个为query数据集配套标签，第三个为gallery数据集配套标签，第四个是生成的文件名。  
 查看输出结果：
@@ -197,52 +198,13 @@ python3.7 osnet_x1_0_metrics_market1501.py result/dumpOutput_device0/ result/dum
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-batch1的性能：
- 测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
-```
-./benchmark.x86_64 -round=50 -om_path=osnet_x1_0_bs1.om -device_id=0 -batch_size=1
-```
-执行50次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
-```
-[INFO] Dataset number: 49 finished cost 4.174ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_osnet_x1_0_bs1_sim_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 240.622samples/s, ave_latency: 4.24716ms
-```
-batch1 310单卡吞吐率：240.622×4=962.488fps  
-batch16的性能：
-```
-./benchmark.x86_64 -round=50 -om_path=osnet_x1_0_bs16.om -device_id=2 -batch_size=16
-```
-得到batch16的性能为：
-```
-[INFO] Dataset number: 49 finished cost 24.885ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_osnet_x1_0_bs16_sim_in_device_2.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 643.052samples/s, ave_latency: 1.55994ms
-```
-batch16 310单卡吞吐率：643.052×4=2572.208fps  
-batch4的性能：
-```
-[INFO] Dataset number: 49 finished cost 6.434ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_osnet_x1_0_bs4_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 604.718samples/s, ave_latency: 1.68188ms
-```
-batch4 310单卡吞吐率：604.718×4=2418.872fps  
-batch8的性能：
-```
-[INFO] Dataset number: 49 finished cost 11.107ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_osnet_x1_0_bs8_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 715.699samples/s, ave_latency: 1.41114ms
-```
-batch8 310单卡吞吐率：715.699×4=2862.796fps  
-batch32的性能：
-```
-[INFO] Dataset number: 49 finished cost 50.178ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_osnet_x1_0_bs32_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 632.875samples/s, ave_latency: 1.58384ms
-```
-batch32 310单卡吞吐率：632.875×4=2531.5fps  
+|         | 310      | 310p    | 310p_aoe | T4       | 310p_aoe/310 | 310p_aoe/T4 |
+|---------|----------|---------|----------|----------|--------------|-------------|
+| bs1     | 1034.756 | 1131.98 | 1597.88  | 426.803  | 1.544        | 3.743834    |
+| bs4     | 2570.48  | 3136.56 | 3176     | 940.291  | 1.234        | 3.284802    |
+| bs8     | 2306.576 | 3723.82 | 3729.67  | 1407.707 | 1.263        | 1.606165    |
+| bs16    | 2483.052 | 3555.71 | 3759.88  | 2261.484 | 3.515        | 1.482646    |
+| bs32    | 2457.256 | 3229.45 | 3511.31  | 1906.577 | 1.439        | 1.578819    |
+| bs64    | 2386.584 | 2986.71 | 3157.91  | 1303.749 | 1.332        | 2.422257    |
+| 最优batch | 2483.052 | 3723.82 | 3759.88  | 2655.71  | 1.499        | 1.6625      |
+

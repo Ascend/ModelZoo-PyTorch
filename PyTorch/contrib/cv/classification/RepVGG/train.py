@@ -37,6 +37,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= "1.8":
+	import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -103,7 +105,7 @@ parser.add_argument("--num_gpus", default=1, type=int)
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
 parser.add_argument('--opt-level', default=None, type=str, help='apex optimize level')
-parser.add_argument('--loss-scale-value', default='1024', type=int, help='static loss scale value')
+parser.add_argument('--loss-scale-value', default='dynamic', type=str, help='static loss scale value')
 
 # other settings
 parser.add_argument('-p', '--print-freq', default=10, type=int,

@@ -55,7 +55,7 @@ if __name__ == '__main__':
         input_width = sys.argv[4]
         input_height = sys.argv[5]
         assert len(sys.argv) == 6, 'The number of input parameters must be equal to 5'
-        get_bin_info(input_type, input_name, input_width, input_height)
+        get_bin_info(input_path, input_name, input_width, input_height)
     elif input_type == 'jpg':
         assert len(sys.argv) == 4, 'The number of input parameters must be equal to 3'
         get_jpg_info(input_path, input_name)

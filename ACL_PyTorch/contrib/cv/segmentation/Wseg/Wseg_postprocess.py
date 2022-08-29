@@ -269,8 +269,8 @@ def bintonp(name,bin_path):
     mask = []
     cls = []
     for i in range(8):
-        msk_name = bin_path + '/' + str(name) + '_' + str(i) + "_1.bin"
-        cls_name = bin_path + '/' + str(name) + '_' + str(i) + "_2.bin"
+        msk_name = bin_path + '/' + str(name) + '_' + str(i) + '_1.bin'
+        cls_name = bin_path + '/' + str(name) + '_' + str(i) + '_2.bin'
         mask_i = np.fromfile(msk_name, dtype=np.float32)
         mask_i.shape = 21,1024,1024
         cls_i = np.fromfile(cls_name, dtype=np.float32)

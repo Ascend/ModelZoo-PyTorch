@@ -1,5 +1,4 @@
-torch==1.5.0+ascend.post2
 torchvision
 numpy
 opencv-python
-Pillow
+Pillow==9.1.0

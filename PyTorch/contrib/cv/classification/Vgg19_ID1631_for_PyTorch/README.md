@@ -11,6 +11,7 @@ As of the current date, Ascend-Pytorch is still have some bug in nn.Dropout(), F
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+  Note:Install the torchvision that corresponds to the torch version
 - Download the ImageNet dataset from http://www.image-net.org/
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 
@@ -42,5 +43,5 @@ test/output/devie_id/Vgg19_${device_id}_bs_8p_acc.log             # 8p training 
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
-| -        | 290       | 1        | 240      | O2       |
-| 73.796   | 1900      | 8        | 240      | O2       |
+| -        | 600       | 1        | 240      | O2       |
+| 75.553   | 3238      | 8        | 240      | O2       |

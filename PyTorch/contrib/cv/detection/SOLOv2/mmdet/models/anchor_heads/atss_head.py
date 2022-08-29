@@ -67,7 +67,7 @@ class ATSSHead(AnchorHead):
         self.norm_cfg = norm_cfg
 
         octave_scales = np.array(
-            [2**(i / scales_per_octave) for i in range(scales_per_octave)])
+            [2 ** (i / scales_per_octave) for i in range(scales_per_octave)])
         anchor_scales = octave_scales * octave_base_scale
         super(ATSSHead, self).__init__(
             num_classes, in_channels, anchor_scales=anchor_scales, **kwargs)
@@ -226,18 +226,18 @@ class ATSSHead(AnchorHead):
             torch.tensor(num_total_pos).cuda()).item()
         num_total_samples = max(num_total_samples, 1.0)
 
-        losses_cls, losses_bbox, loss_centerness,\
-            bbox_avg_factor = multi_apply(
-                self.loss_single,
-                anchor_list,
-                cls_scores,
-                bbox_preds,
-                centernesses,
-                labels_list,
-                label_weights_list,
-                bbox_targets_list,
-                num_total_samples=num_total_samples,
-                cfg=cfg)
+        losses_cls, losses_bbox, loss_centerness, \
+        bbox_avg_factor = multi_apply(
+            self.loss_single,
+            anchor_list,
+            cls_scores,
+            bbox_preds,
+            centernesses,
+            labels_list,
+            label_weights_list,
+            bbox_targets_list,
+            num_total_samples=num_total_samples,
+            cfg=cfg)
 
         bbox_avg_factor = sum(bbox_avg_factor)
         bbox_avg_factor = reduce_mean(bbox_avg_factor).item()
@@ -394,17 +394,17 @@ class ATSSHead(AnchorHead):
             gt_labels_list = [None for _ in range(num_imgs)]
         (all_anchors, all_labels, all_label_weights, all_bbox_targets,
          all_bbox_weights, pos_inds_list, neg_inds_list) = multi_apply(
-             self.atss_target_single,
-             anchor_list,
-             valid_flag_list,
-             num_level_anchors_list,
-             gt_bboxes_list,
-             gt_bboxes_ignore_list,
-             gt_labels_list,
-             img_metas,
-             cfg=cfg,
-             label_channels=label_channels,
-             unmap_outputs=unmap_outputs)
+            self.atss_target_single,
+            anchor_list,
+            valid_flag_list,
+            num_level_anchors_list,
+            gt_bboxes_list,
+            gt_bboxes_ignore_list,
+            gt_labels_list,
+            img_metas,
+            cfg=cfg,
+            label_channels=label_channels,
+            unmap_outputs=unmap_outputs)
         # no valid anchors
         if any([labels is None for labels in all_labels]):
             return None
@@ -439,7 +439,7 @@ class ATSSHead(AnchorHead):
                                            img_meta['img_shape'][:2],
                                            cfg.allowed_border)
         if not inside_flags.any():
-            return (None, ) * 6
+            return (None,) * 6
         # assign gt and sample anchors
         anchors = flat_anchors[inside_flags, :]
 

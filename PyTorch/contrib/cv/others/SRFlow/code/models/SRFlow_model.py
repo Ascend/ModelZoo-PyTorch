@@ -51,7 +51,7 @@ class SRFlowModel(BaseModel):
             self.log_dict = OrderedDict()
             if self.use_amp:
                 self.netG, self.optimizer_G = amp.initialize(self.netG, self.optimizer_G,
-                                                             opt_level="O1", loss_scale='32', combine_grad=True
+                                                             opt_level="O1", loss_scale='dynamic', combine_grad=True
                                                              )
 
         if opt['dist']:

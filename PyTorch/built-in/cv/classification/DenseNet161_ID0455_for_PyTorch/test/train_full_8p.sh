@@ -60,6 +60,14 @@ start_time=$(date +%s)
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/references/classification
+
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
@@ -74,13 +82,6 @@ do
         mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     else
         mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-    fi
-
-    # 非平台场景时source 环境变量
-    check_etp_flag=`env | grep etp_running_flag`
-    etp_flag=`echo ${check_etp_flag#*=}`
-    if [ x"${etp_flag}" != x"true" ];then
-        source ${test_path_dir}/env_npu.sh
     fi
 
     # 绑核，不需要的绑核的模型删除，需要的模型审视修改
@@ -101,7 +102,7 @@ do
         --weight-decay 1e-4 \
         --apex \
         --apex-opt-level O2 \
-        --loss_scale_value 1024 \
+        --loss_scale_value dynamic \
         --seed 1234 \
         --print-freq 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
@@ -117,8 +118,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-
+FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{if (NR > 3){print $2}}'|awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 #打印，不需要修改

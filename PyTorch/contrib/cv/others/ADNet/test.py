@@ -24,7 +24,7 @@ from models import ADNet
 from utils import *
 from collections import OrderedDict
 import torch.distributed as dist
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 
 parser = argparse.ArgumentParser(description="ADNet_Test")

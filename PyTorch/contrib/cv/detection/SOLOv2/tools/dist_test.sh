@@ -14,7 +14,7 @@
 
 #!/usr/bin/env bash
 
-PYTHON=${PYTHON:-"python"}
+PYTHON=${PYTHON:-"python3.7"}
 
 CONFIG=$1
 CHECKPOINT=$2

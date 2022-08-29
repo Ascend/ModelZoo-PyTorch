@@ -11,8 +11,9 @@ For details, see (https://github.com/DingXiaoH/RepVGG)
 
 - Download the ImageNet dataset refet(https://github.com/DingXiaoH/RepVGG)
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
-- pip install -r requirements.txt
-
+- pip3.7 install -r requirements.txt
+    - Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision
+Suggestion: the pillow is 9.1.0 and the torchvision is 0.6.0
 ## Training
 
 To train a model, run `train.py` with the desired model architecture and the path to the imagenet dataset:

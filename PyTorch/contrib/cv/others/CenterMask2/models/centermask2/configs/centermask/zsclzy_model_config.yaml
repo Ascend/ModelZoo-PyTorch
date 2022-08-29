@@ -1,0 +1,9 @@
+_BASE_: "Base-CenterMask-VoVNet.yaml"
+MODEL:
+  WEIGHTS: "/home/zsclzy/centermask_npu/vovnet39_ese_detectron2.pth"
+  VOVNET:
+    CONV_BODY : "V-39-eSE"
+SOLVER:
+  STEPS: (210000, 250000)
+  MAX_ITER: 270000
+OUTPUT_DIR: "output/centermask/zsclzy_model_output"

@@ -74,7 +74,7 @@ kernel_num=$(($(nproc) / 8))
 pid_start=$((kernel_num * rank))
 pid_end=$((pid_start + kernel_num - 1))
 
-taskset -c $pid_start-$pid_end python3.7.5 -u train.py "$@" \
+taskset -c $pid_start-$pid_end python3.7 -u train.py "$@" \
     --distributed \
     --num-devices 8 \
     --local-rank $rank \
@@ -97,12 +97,12 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
+FPS=`grep -a 'Training Epoch'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a 'Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1: " '{print $NF}'|awk -F " " '{print $1}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

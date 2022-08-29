@@ -1,5 +1,5 @@
 matplotlib==3.4.1
 pillow==9.1.0
-tensorboardX==2.2
+tensorboardX==1.8
 tqdm==4.60.0
 pycocotools==2.0.2

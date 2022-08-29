@@ -8,6 +8,8 @@ This implements training of Res2Net101_v1b on the ImageNet dataset, mainly modif
 
 Install PyTorch (pytorch.org)
 pip install -r requirements.txt
+Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 Download the ImageNet dataset from http://www.image-net.org/
 Then, and move validation images to labeled subfolders, using [the following shell script]
 
@@ -40,8 +42,8 @@ python3.7.5 pthtar2onnx.py
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
-| -        | 290       | 1        | 1        | O2       |
-| 79.675   | 2385      | 8        | 100      | O2       |
+| -        | 383.472   | 1        | 1        | O2       |
+| 79.034   | 2611.314  | 8        | 100      | O2       |
 
 
 # Copyright 2020 Huawei Technologies Co., Ltd

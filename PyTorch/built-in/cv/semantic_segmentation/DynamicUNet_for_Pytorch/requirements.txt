@@ -1,0 +1,3 @@
+fastai
+ninja
+tqdm

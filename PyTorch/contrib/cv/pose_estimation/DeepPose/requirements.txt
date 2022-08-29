@@ -1,7 +1,5 @@
 numpy
-torch
 torchvision
-apex
 tqdm
 PyYaml
 addict

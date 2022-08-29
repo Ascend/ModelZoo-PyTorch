@@ -1,18 +1,3 @@
-# ShuffleNetV2
-
-- [ShuffleNetV2](#shufflenetv2)
-  - [Abstract](#abstract)
-  - [Details](#details)
-  - [Requirements](#requirements)
-  - [Installing Pillow from source](#installing-pillow-from-source)
-  - [Training](#training)
-    - [1p training](#1p-training)
-    - [8p training](#8p-training)
-    - [Docker training](#docker-training)
-  - [Result](#result)
-    - [Training result](#training-result)
-  - [Note](#note)
-
 ## Abstract
 
 This implements training of ShuffleNetV2 on the ImageNet dataset, mainly modified from [pytorch/examples](https://github.com/pytorch/examples/tree/master/imagenet).
@@ -33,13 +18,13 @@ Therefore, ShufflenetV2 is re-implemented using semantics such as custom OP. For
 
 ## Installing Pillow from source
 
-It is recommended to install pillow 8.4.0 from source following the steps below:
+It is recommended to install pillow 9.1.0 from source following the steps below:
 
 ```
 git clone https://github.com/python-pillow/Pillow.git
 cd Pillow 
-git checkout 8.4.0
-python3 setup.py install
+git checkout 9.1.0 
+python3.7 setup.py install
 ```
 
 If you are prompted that some dependencies are missing, please install them following https://pillow.readthedocs.io/en/stable/installation.html
@@ -49,16 +34,15 @@ If you are prompted that some dependencies are missing, please install them foll
 ### 1p training
 
 ```
-# Please modify data path and device_id according to the specific path 
-bash scripts/run_1p.sh
+# Please checkout data path,for example: /data/imagenet/ 
+ bash ./test/train_full_1p.sh  --data_path=/data/imagenet/
 ```
 
 ### 8p training
 
 ```
-# Please modify data path and device_id_list according to the specific path 
-# device_id_list is set to 8p by default: 0，1，2，3，4，5，6，7
-bash scripts/run_8p.sh
+# Please checkout data path,for example: /data/imagenet/ 
+bash ./test/train_full_8p.sh  --data_path=/data/imagenet/
 ```
 
 ### Docker training

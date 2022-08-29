@@ -26,7 +26,7 @@ ckpt_path=""
 #网络名称，同目录名称
 Network="DINO_resnet50_ID3267_for_PyTorch"
 #训练epoch
-train_epochs=800
+train_epochs=150
 #训练batch_size
 batch_size=51
 #训练step
@@ -139,11 +139,12 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../main_dino.py \
         --lr $learning_rate \
         --min_lr 0.00048 \
         $PREC \
-        --max_steps $train_steps > ${cur_path}/output/0/train_0.log 2>&1 &
+        --use_fp16 true > ${cur_path}/output/0/train_0.log 2>&1 &
 	 
 wait
 python3 ${cur_path}/../eval_knn.py \
-      --data_path $data_path/
+      --data_path $data_path/ \
+      --arch resnet50 \
       --pretrained_weights ${cur_path}/output/0/ckpt/checkpoint.pth \
       --checkpoint_key teacher > ${cur_path}/output/0/test.log 2>&1 &
 wait

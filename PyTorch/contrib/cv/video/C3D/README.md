@@ -6,9 +6,11 @@ note
 ## Requirements
 安装NPU配套的run包、apex（version：ascend）、torch（version:ascend）外，另需执行以下shell
 ```shell
-pip3 install torchvision==0.2.2.post3
+pip3 install torchvision
 cd $mmaction2
 pip3 install -r requirements.txt
+    Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 ```
 安装 mmcv
 ```

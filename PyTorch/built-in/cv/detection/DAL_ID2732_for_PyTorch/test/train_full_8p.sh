@@ -15,7 +15,7 @@ data_path=""
 train_epochs=100
 # 加载数据进程数
 workers=64
-device_id=0
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -27,16 +27,6 @@ done
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
-    exit 1
-fi
-# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
-if [ $ASCEND_DEVICE_ID ];then
-    echo "device id is ${ASCEND_DEVICE_ID}"
-elif [ ${device_id} ];then
-    export ASCEND_DEVICE_ID=${device_id}
-    echo "device id is ${ASCEND_DEVICE_ID}"
-else
-    "[Error] device id must be config"
     exit 1
 fi
 
@@ -74,13 +64,13 @@ fi
 cd utils
 sh make.sh
 cd ..
-python3.7 prepare_data.py --data_file_path ${data_path}
+nohup python3.7 prepare_data.py --data_file_path ${data_path}
 pth_save_path=/root/.cache/torch/checkpoints/
 if [ ! -d ${pth_save_path} ];then
     mkdir -p ${pth_save_path}
 fi
 cp ${data_path}/resnet101-5d3b4d8f.pth ${pth_save_path}
-python3.7 main_train.py \
+nohup python3.7 main_train.py \
     --backbone res101 \
     --opt_level O1 \
     --dataset UCAS_AOD \
@@ -101,7 +91,7 @@ python3.7 main_train.py \
     --inference 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-python3.7 init_data.py --data_file_path ${data_path}
+nohup python3.7 init_data.py --data_file_path ${data_path}
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))

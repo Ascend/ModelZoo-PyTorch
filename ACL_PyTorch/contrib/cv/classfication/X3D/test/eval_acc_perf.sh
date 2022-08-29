@@ -18,11 +18,11 @@ mkdir data_bin_bs1
 mkdir data_bin_bs16
 
 sed -i 's/ENABLE: True/ENABLE: False/g' SlowFast/configs/Kinetics/X3D_S.yaml
-python3.7 X3d_preprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml DATA.PATH_TO_DATA_DIR ${datasets_path} DATA.PATH_PREFIX "${datasets_path}/val" TEST.BATCH_SIZE 1 X3D_PREPROCESS.ENABLE True X3D_PREPROCESS.DATA_OUTPUT_PATH "data_bin_bs1/"
+python3 X3d_preprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml DATA.PATH_TO_DATA_DIR ${datasets_path} DATA.PATH_PREFIX "${datasets_path}/val" TEST.BATCH_SIZE 1 X3D_PREPROCESS.ENABLE True X3D_PREPROCESS.DATA_OUTPUT_PATH "data_bin_bs1/"
 if [ $? != 0 ]; then
     echo "fail preprocess"
 fi
-python3.7 X3d_preprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml DATA.PATH_TO_DATA_DIR ${datasets_path} DATA.PATH_PREFIX "${datasets_path}/val" TEST.BATCH_SIZE 16 X3D_PREPROCESS.ENABLE True X3D_PREPROCESS.DATA_OUTPUT_PATH "data_bin_bs16/"
+python3 X3d_preprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml DATA.PATH_TO_DATA_DIR ${datasets_path} DATA.PATH_PREFIX "${datasets_path}/val" TEST.BATCH_SIZE 16 X3D_PREPROCESS.ENABLE True X3D_PREPROCESS.DATA_OUTPUT_PATH "data_bin_bs16/"
 if [ $? != 0 ]; then
     echo "fail preprocess"
 else
@@ -52,7 +52,7 @@ fi
 #om精度判断
 
 sed -i 's/ENABLE: True/ENABLE: False/g' SlowFast/configs/Kinetics/X3D_S.yaml
-python3.7 X3d_postprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml TEST.BATCH_SIZE 1 X3D_POSTPROCESS.ENABLE True X3D_POSTPROCESS.OM_OUTPUT_PATH "om_res_bs1/"
+python3 X3d_postprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml TEST.BATCH_SIZE 1 X3D_POSTPROCESS.ENABLE True X3D_POSTPROCESS.OM_OUTPUT_PATH "om_res_bs1/"
 
 if [ $? != 0 ]; then
     echo "fail!"
@@ -60,7 +60,7 @@ else
     echo "success"
 fi
 
-python3.7 X3d_postprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml TEST.BATCH_SIZE 16 X3D_POSTPROCESS.ENABLE True X3D_POSTPROCESS.OM_OUTPUT_PATH "om_res_bs16/"
+python3 X3d_postprocess.py --cfg SlowFast/configs/Kinetics/X3D_S.yaml TEST.BATCH_SIZE 16 X3D_POSTPROCESS.ENABLE True X3D_POSTPROCESS.OM_OUTPUT_PATH "om_res_bs16/"
 
 if [ $? != 0 ]; then
     echo "fail!"
@@ -71,13 +71,3 @@ fi
 arch=`uname -m`
 ./benchmark.${arch} -round=10 -om_path=x3d_s1.om -device_id=0 -batch_size=1
 ./benchmark.${arch} -round=10 -om_path=x3d_s16.om -device_id=0 -batch_size=16
-python3.7 test/parse.py result/PureInfer_perf_of_x3d_s1_in_device_0.txt
-if [ $? != 0 ]; then
-    echo "fail!"
-    exit -1
-fi
-python3.7 test/parse.py result/PureInfer_perf_of_x3d_s16_in_device_0.txt
-if [ $? != 0 ]; then
-    echo "fail!"
-    exit -1
-fi

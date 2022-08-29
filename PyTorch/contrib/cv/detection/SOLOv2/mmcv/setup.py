@@ -79,17 +79,6 @@ else:
     extra_link_args = []
 
 EXT_MODULES = [
-    Extension(
-        name='mmcv._ext',
-        sources=[
-            './mmcv/video/optflow_warp/flow_warp.cpp',
-            './mmcv/video/optflow_warp/flow_warp_module.pyx'
-        ],
-        include_dirs=[numpy.get_include()],
-        language='c++',
-        extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args,
-    ),
 ]
 
 setup(

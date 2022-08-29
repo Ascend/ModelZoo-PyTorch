@@ -44,20 +44,22 @@
 
 ### 2.1 深度学习框架
 ```
-CANN 5.0.1
-python = 3.7.5
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
+CANN 5.1.RC1
+python == 3.7.5
+pytorch >= 1.8.1
+torchvision >= 0.8.1
+onnx >= 1.9.0
 ```
 
 ### 2.2 python第三方库
 
 ```
-numpy == 1.20.3
+numpy == 1.19.2
 Pillow == 8.2.0
 opencv-python == 4.5.2.54
-albumentations == 0.5.2
+skl2onnx == 1.8.0
+scikit-learn == 0.24.1
+h5py == 3.3.0
 ```
 **说明：** 
 >   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
@@ -99,19 +101,15 @@ python3.7 ./pth2onnx.py ./model/model.pt ./model/model_mkt1501_bs1.onnx 1
 
 1.设置环境变量
 ```
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-
-export ASCEND_OPP_PATH=${install_path}/opp
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
+2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.1.RC1 开发辅助工具指南 (推理) 01
+${chip_name}可使用 npu-smi info 查看(对应name属性)，例：310p3
+
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
 ```
-atc --framework=5 --model=./model/model_mkt1501.onnx --input_format=NCHW --input_shape="image:1,3,284,128" --output=mgn_mkt1501_bs1 --log=debug --soc_version=Ascend310
+atc --framework=5 --model=./model/model_mkt1501_bs1.onnx --input_format=NCHW --input_shape="image:1,3,384,128" --output=mgn_mkt1501_bs1 --log=debug --soc_version=Ascend${chip_name}
 ```
 
 ## 4 数据集预处理
@@ -157,15 +155,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-
-export ASCEND_OPP_PATH=${install_path}/opp
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -194,7 +184,7 @@ python3.7 ./postprocess_MGN.py  --mode evaluate_om --data_path ./data/market1501
 第一个参数为main函数运行模式，第二个为原始数据目录，第三个为模型所在目录。  
 查看输出结果：
 ```
-mAP: 0.9433
+mAP: 0.9423
 ```
 经过对bs8的om测试，本模型batch8的精度没有差别，精度数据均如上。
 
@@ -216,79 +206,14 @@ MGN         0.9433
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-1.benchmark工具在整个数据集上推理获得性能数据  
-
-batch1初始性能：
-```
-[e2e] throughputRate: 84.5598, latency: 39829.8
-[data read] throughputRate: 473.148, moduleLatency: 2.1135
-[preprocess] throughputRate: 393.066, moduleLatency: 2.5441
-[infer] throughputRate: 88.2882, Interface throughputRate: 111.277, moduleLatency: 10.4851
-[post] throughputRate: 88.2756, moduleLatency: 11.3282
-```
-batch1 310单卡吞吐率：111.277 * 4 = 445.108fps
-
-batch1优化后性能：
-[e2e] throughputRate: 96.8416, latency: 34778.5
-[data read] throughputRate: 446.222, moduleLatency: 2.24104
-[preprocess] throughputRate: 422.735, moduleLatency: 2.36555
-[infer] throughputRate: 99.7554, Interface throughputRate: 128.15, moduleLatency: 9.25689
-[post] throughputRate: 99.7383, moduleLatency: 10.0262
-
-batch1 310单卡吞吐率：128.15 * 4 = 512.6fps
-
-batch4性能：
-```
-[e2e] throughputRate: 106.025, latency: 31766.1
-[data read] throughputRate: 500.107, moduleLatency: 1.99957
-[preprocess] throughputRate: 471.221, moduleLatency: 2.12215
-[infer] throughputRate: 108.979, Interface throughputRate: 153.797, moduleLatency: 8.03481
-[post] throughputRate: 27.2346, moduleLatency: 36.7181
-```
-batch4 310单卡吞吐率：153.797 * 4 = 615.188fps
-
-batch8性能：
-```
-[e2e] throughputRate: 106.324, latency: 149665
-[data read] throughputRate: 121.058, moduleLatency: 8.2605
-[preprocess] throughputRate: 120.662, moduleLatency: 8.28762
-[infer] throughputRate: 107.422, Interface throughputRate: 149.297, moduleLatency: 8.18964
-[post] throughputRate: 13.4334, moduleLatency: 74.4414
-```
-batch8 310单卡吞吐率：149.297 * 4 = 597.188fps  
-
-batch16初始性能：
-```
-[e2e] throughputRate: 103.095, latency: 32668.8
-[data read] throughputRate: 138.066, moduleLatency: 7.24292
-[preprocess] throughputRate: 135.594, moduleLatency: 7.37498
-[infer] throughputRate: 107.451, Interface throughputRate: 147.867, moduleLatency: 8.19638
-[post] throughputRate: 6.72704, moduleLatency: 148.654
-```
-batch16 310单卡吞吐率：147.867 * 4 = 591.468fps
-
-batch16优化后性能：
-```
-[e2e] throughputRate: 121.183, latency: 27792.7
-[data read] throughputRate: 138.209, moduleLatency: 7.23544
-[preprocess] throughputRate: 135.553, moduleLatency: 7.37721
-[infer] throughputRate: 125.617, Interface throughputRate: 184.74, moduleLatency: 6.86643
-[post] throughputRate: 7.86374, moduleLatency: 127.166
-```
-batch16 310单卡吞吐率：184.74 * 4 = 738.96fps
-
-batch32性能：
-```
-[e2e] throughputRate: 109.639, latency: 30719.1
-[data read] throughputRate: 144.87, moduleLatency: 6.90276
-[preprocess] throughputRate: 141.787, moduleLatency: 7.05281
-[infer] throughputRate: 112.348, Interface throughputRate: 159.033, moduleLatency: 7.70075
-[post] throughputRate: 3.53321, moduleLatency: 283.029
-```
-batch32 310单卡吞吐率：159.033 * 4 = 636.132fps
+1.benchmark工具在整个数据集上推理获得性能数据(优化在310p上产生，故对比数据采用310p的初始数据 )  
 
  ``` 
-MGN模型	未任何优化前310（单卡吞吐率）	优化transdata、transpose后310（单卡吞吐率）
-bs1	      445.108fps	                512.6fps
-bs16	  591.468fps	                738.96fps
+MGN模型	未任何优化前310p（单卡吞吐率）	优化后310p（单卡吞吐率）
+bs1	      362.752 fps	                640.829 fps
+bs4	      2156.73 fps	                1453.49 fps
+bs8	      1281.93 fps	                1519.17 fps
+bs16	  1167.81 fps	                1388.27 fps
+bs32	  1096.42 fps	                1367.63 fps
+bs64	  1107.77 fps	                1364.84 fps
 ```

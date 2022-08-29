@@ -62,19 +62,19 @@ def anchor_target(anchor_list,
         gt_labels_list = [None for _ in range(num_imgs)]
     (all_labels, all_label_weights, all_bbox_targets, all_bbox_weights,
      pos_inds_list, neg_inds_list) = multi_apply(
-         anchor_target_single,
-         anchor_list,
-         valid_flag_list,
-         gt_bboxes_list,
-         gt_bboxes_ignore_list,
-         gt_labels_list,
-         img_metas,
-         target_means=target_means,
-         target_stds=target_stds,
-         cfg=cfg,
-         label_channels=label_channels,
-         sampling=sampling,
-         unmap_outputs=unmap_outputs)
+        anchor_target_single,
+        anchor_list,
+        valid_flag_list,
+        gt_bboxes_list,
+        gt_bboxes_ignore_list,
+        gt_labels_list,
+        img_metas,
+        target_means=target_means,
+        target_stds=target_stds,
+        cfg=cfg,
+        label_channels=label_channels,
+        sampling=sampling,
+        unmap_outputs=unmap_outputs)
     # no valid anchors
     if any([labels is None for labels in all_labels]):
         return None
@@ -121,7 +121,7 @@ def anchor_target_single(flat_anchors,
                                        img_meta['img_shape'][:2],
                                        cfg.allowed_border)
     if not inside_flags.any():
-        return (None, ) * 6
+        return (None,) * 6
     # assign gt and sample anchors
     anchors = flat_anchors[inside_flags, :]
 
@@ -180,10 +180,10 @@ def anchor_inside_flags(flat_anchors,
     img_h, img_w = img_shape[:2]
     if allowed_border >= 0:
         inside_flags = valid_flags & \
-            (flat_anchors[:, 0] >= -allowed_border).type(torch.uint8) & \
-            (flat_anchors[:, 1] >= -allowed_border).type(torch.uint8) & \
-            (flat_anchors[:, 2] < img_w + allowed_border).type(torch.uint8) & \
-            (flat_anchors[:, 3] < img_h + allowed_border).type(torch.uint8)
+                       (flat_anchors[:, 0] >= -allowed_border).type(torch.uint8) & \
+                       (flat_anchors[:, 1] >= -allowed_border).type(torch.uint8) & \
+                       (flat_anchors[:, 2] < img_w + allowed_border).type(torch.uint8) & \
+                       (flat_anchors[:, 3] < img_h + allowed_border).type(torch.uint8)
     else:
         inside_flags = valid_flags
     return inside_flags
@@ -193,10 +193,10 @@ def unmap(data, count, inds, fill=0):
     """ Unmap a subset of item (data) back to the original set of items (of
     size count) """
     if data.dim() == 1:
-        ret = data.new_full((count, ), fill)
+        ret = data.new_full((count,), fill)
         ret[inds] = data
     else:
-        new_size = (count, ) + data.size()[1:]
+        new_size = (count,) + data.size()[1:]
         ret = data.new_full(new_size, fill)
         ret[inds, :] = data
     return ret

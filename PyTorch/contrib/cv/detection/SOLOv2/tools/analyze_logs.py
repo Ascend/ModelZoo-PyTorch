@@ -146,7 +146,7 @@ def add_time_parser(subparsers):
         '--include-outliers',
         action='store_true',
         help='include the first value of every epoch when computing '
-        'the average time')
+             'the average time')
 
 
 def parse_args():

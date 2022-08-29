@@ -4,6 +4,9 @@
 * requirements.txt下的包
 * torch-warmup-lr
 
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision
+    建议：Pillow版本是9.1.0  torchvision版本是0.6.0
+
 二、训练流程：
 
 训练流程：
@@ -13,7 +16,6 @@
 	2.UCAS-AOD数据集获取：
 	    下载地址：https://hyper.ai/datasets/5419
 	    下载解压后把数据集改名为UCAS_AOD,存储位置为UCAS_AOD_PATH
-	    export UCAS_AOD_PATH=数据集路径
 	3.安装requirements.txt
 	    安装依赖库
 	    apt-get install libgl1 libgeos-dev
@@ -28,18 +30,11 @@
 	    cd torch-warmup-lr
 	    python3.7 setup.py install
 	    cd ..
-	5.编译hostcpu算子
-	    cd utils
-	    sh make.sh
-	    cd ..
-	6.数据预处理
-	    bash ./prepare.sh
-	7.开始训练
-	    训练启动脚本：run_8p.sh run_1p.sh
-	    1p训练：bash ./run_1p.sh
-	    8p训练：bash ./run_8p.sh
+	5.开始训练
+	    单卡训练：bash ./test/train_full_1p.sh --data_path=UCAS_AOD_PATH
+	    多卡训练：bash ./test/train_full_8p.sh --data_path=UCAS_AOD_PATH
 	    第一次训练如果预训练模型下载失败，可以查看下载日志，获取下载地址和存放路径，手动下载后放到对应位置
-	8.获得推理结果
+	6.获得推理结果
 	    推理启动脚本：eval.sh
 	    bash ./eval.sh
 ```

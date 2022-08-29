@@ -19,7 +19,12 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
   commit_id=49e1a8847c8c4d8d3c576479cb2fe2fd2ac583de
   ```
 
-- 通过Git获取代码方法如下：
+- Install PyTorch ([pytorch.org](http://pytorch.org))
+- `pip install -r requirements.txt`
+  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
+- Download the ImageNet dataset from http://www.image-net.org/
+    - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 
   ```
   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git    

@@ -79,6 +79,10 @@ start_time=$(date +%s)
 export WORLD_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
 
+arch=vit_small
+python3.7 preparation.py --arch ${arch}
+echo "Preparation completed, start to train"
+
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
   export OMP_NUM_THREADS=1
@@ -87,7 +91,7 @@ do
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
   nohup taskset -c $PID_START-$PID_END python3.7 -u main_dino.py \
-    --arch vit_small \
+    --arch ${arch} \
     --data_path $data_path \
     --output_dir ./output \
     --amp \
@@ -111,7 +115,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`tail -n 10 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log|grep -a 'eta'|head -n 30|awk -F " " '{print $17}'|awk '{sum+=$1} END {print sum/NR}'`
+time=`tail -n 10 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log|grep -a 'eta'|head -n 30|awk -F "time:" '{print $2}'|awk -F " " '{print $1}'|awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'*8}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

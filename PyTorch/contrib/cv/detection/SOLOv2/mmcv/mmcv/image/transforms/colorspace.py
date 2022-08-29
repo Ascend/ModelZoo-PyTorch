@@ -120,7 +120,6 @@ def gray2rgb(img):
 
 
 def convert_color_factory(src, dst):
-
     code = getattr(cv2, 'COLOR_{}2{}'.format(src.upper(), dst.upper()))
 
     def convert_color(img):

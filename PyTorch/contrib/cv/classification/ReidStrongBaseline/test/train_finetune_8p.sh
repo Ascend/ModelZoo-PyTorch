@@ -18,6 +18,7 @@ fi
 python3.7 tools/finetune.py \
 	--config_file='configs/softmax_triplet_with_center.yml' \
 	--npus=8 \
+	--loss_scale="64.0" \
 	DATASETS.NAMES "('market1501')" \
 	DATASETS.ROOT_DIR "('${data_path}')" \
 	TEST.RE_RANKING "('yes')" \

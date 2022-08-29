@@ -19,7 +19,6 @@ import torch
 
 
 def assert_tensor_type(func):
-
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if not isinstance(args[0].data, torch.Tensor):

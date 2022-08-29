@@ -26,7 +26,7 @@ import argparse
 import numpy as np
 import random
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.nn as nn
 import torch.backends.cudnn as cudnn

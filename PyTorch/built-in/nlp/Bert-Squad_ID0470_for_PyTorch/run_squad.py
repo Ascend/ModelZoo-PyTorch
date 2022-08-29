@@ -29,7 +29,7 @@ from io import open
 
 import numpy as np
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
@@ -82,7 +82,7 @@ class NpuFusedBertAdamV2(NpuFusedBertAdam):
                                                            group['warmup'])
             else:
                 lr_scheduled = group['lr']
-            if torch.__version__ >= "1.8.1":
+            if torch.__version__ >= "1.8":
                 combined_param.data, exp_avg, exp_avg_sq = torch.npu_bert_apply_adam(lr_scheduled, beta1, beta2,
                                                                                  group['e'], combined_grad.data,
                                                                                  group['max_grad_norm'], 0,

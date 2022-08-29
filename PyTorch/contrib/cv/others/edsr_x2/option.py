@@ -35,7 +35,7 @@ parser = argparse.ArgumentParser(description="EDSR and MDSR")
 
 parser.add_argument("--arch", type=str, default="EDSR_x2")
 parser.add_argument("--workers", type=int, default=8)
-parser.add_argument("--device", type=str, default="gpu", help="npu or gpu")
+parser.add_argument("--device", type=str, default="npu", help="npu or gpu")
 parser.add_argument("--device_list", type=str, default="0,1,2,3,4,5,6,7")
 parser.add_argument(
     "--world_size", type=int, default=1, help="number of nodes for distributed training"
@@ -54,8 +54,8 @@ parser.add_argument("--dist-backend", type=str)
 # amp setting
 parser.add_argument("--amp", action="store_true",
                     help="Use amp to train the model")
-parser.add_argument("--loss_scale",    default=128.0,
-                    type=float,    help="amp setting: loss scale, default 128.0")
+parser.add_argument("--loss_scale",    default="dynamic",
+                    type=str,    help="amp setting: loss scale, default 128.0")
 parser.add_argument("--opt_level", default="O2", type=str,
                     help="amp setting: opt level, default O2")
 

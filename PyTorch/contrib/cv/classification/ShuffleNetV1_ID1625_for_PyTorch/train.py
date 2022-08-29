@@ -247,7 +247,7 @@ def main_worker(gpu, ngpus_per_node, args):
     model = model.to(loc)
 
     # define loss function (criterion) and optimizer
-    criterion = LabelSmoothingCrossEntropy(1000, 0.1).to(loc)
+    criterion = LabelSmoothingCrossEntropy(0.1, 1000).to(loc)
     optimizer = torch.optim.SGD(get_parameters(model), lr=args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)

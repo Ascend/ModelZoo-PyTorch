@@ -38,6 +38,7 @@ export TASK_QUEUE_ENABLE=1
 export PTCOPY_ENABLE=1
 #设置是否开启combined标志,0-关闭/1-开启
 export COMBINED_ENABLE=1
+export TRI_COMBINED_ENABLE=1
 #设置特殊场景是否需要重新编译,不需要修改
 export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启

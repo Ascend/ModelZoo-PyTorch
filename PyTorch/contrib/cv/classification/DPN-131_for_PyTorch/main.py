@@ -21,6 +21,9 @@ import shutil
 import time
 import warnings
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+print(torch.__version__)
 import numpy as np
 import apex
 from apex import amp
@@ -91,7 +94,7 @@ parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7',
                     type=str, help='device id list')
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
-parser.add_argument('--loss-scale', default=1024., type=float,
+parser.add_argument('--loss-scale', default="dynamic",
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
@@ -188,10 +191,13 @@ def main_worker(gpu, ngpus_per_node, args):
                                     world_size=args.world_size, rank=args.rank)
         print('Rank[{}] init group success'.format(args.rank))
     # create model
+    
     if args.pretrained:
         model = dpn131(pretrained=False)
         checkpoint = torch.load(args.resume, map_location='cpu')
-        model.load_state_dict(checkpoint,strict=False)
+        if 'module.' in list(checkpoint['state_dict'].keys())[0]:
+            checkpoint['state_dict'] = {k.replace('module.', ''): v for k, v in checkpoint['state_dict'].items()}
+        model.load_state_dict(checkpoint['state_dict'], strict=False)
     else:
         model = dpn131(pretrained=False)
 
@@ -253,7 +259,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.amp:
         model, optimizer = amp.initialize(
-            model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
+            model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -629,4 +635,10 @@ def accuracy(output, target, topk=(1,)):
 
 
 if __name__ == '__main__':
+    option={}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    print("option:", option)
+    torch.npu.set_option(option)
     main()
+

@@ -1,9 +1,12 @@
 #!/bin/bash
 cur_path=`pwd`
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
-ls /npu/traindata/coco_txl >1.txt
-ls /npu/traindata/coco_txt/images >2.txt
-ls /npu/traindata/coco_txl/images/train2017 >3.txt
+if [ x"${etp_running_flag}" = x"true" ];then
+    ls /npu/traindata/coco_txl >1.txt
+    ls /npu/traindata/coco_txt/images >2.txt
+    ls /npu/traindata/coco_txl/images/train2017 >3.txt
+fi
+
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
@@ -66,25 +69,32 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-if [ -d $data_path/../coco_txl/COCO2017/images/train2017/000000000009.jpg ];then
-        echo "NO NEED UNTAR"
+if [ x"${etp_running_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+    sed -i 's#train: .*#train: '${data_path}'/train2017.txt#' ${cur_path}/data/coco.yaml
+    sed -i 's#val: .*#val: '${data_path}'/val2017.txt#' ${cur_path}/data/coco.yaml
+    sed -i 's#test: .*#test: '${data_path}'/test2017.txt#' ${cur_path}/data/coco.yaml
 else
-    mkdir -p $data_path/../coco_txl
-        tar -zxvf $data_path/COCO2017.tar.gz -C  $data_path/../coco_txl/
-rm -rf $data_path/../coco_txl/COCO2017/labels/*.cache
-fi
-wait
+    if [ -d $data_path/../coco_txl/COCO2017/images/train2017/000000000009.jpg ];then
+        echo "NO NEED UNTAR"
+    else
+        mkdir -p $data_path/../coco_txl
+         tar -zxvf $data_path/COCO2017.tar.gz -C  $data_path/../coco_txl/
+    rm -rf $data_path/../coco_txl/COCO2017/labels/*.cache
+    fi
+    wait
 
-sed -i "s|./coco/train2017.txt|$data_path/../coco_txl/COCO2017/train2017.txt|g" data/coco.yaml
-sed -i "s|./coco/val2017.txt|$data_path/../coco_txl/COCO2017/val2017.txt|g" data/coco.yaml
-sed -i "s|./coco/testdev2017.txt|$data_path/../coco_txl/COCO2017/testdev2017.txt|g" data/coco.yaml
-sed -i "s|./coco/annotations/instances_val|$data_path/../coco_txl/COCO2017/annotations/instances_val|g" test.py
+    sed -i "s|./coco/train2017.txt|$data_path/../coco_txl/COCO2017/train2017.txt|g" data/coco.yaml
+    sed -i "s|./coco/val2017.txt|$data_path/../coco_txl/COCO2017/val2017.txt|g" data/coco.yaml
+    sed -i "s|./coco/testdev2017.txt|$data_path/../coco_txl/COCO2017/testdev2017.txt|g" data/coco.yaml
+    sed -i "s|./coco/annotations/instances_val|$data_path/../coco_txl/COCO2017/annotations/instances_val|g" test.py
+fi
 
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 
-taskset -c 0-47 python3.7 train.py \
+nohup taskset -c 0-47 python3.7 train.py \
                 --device_id ${ASCEND_DEVICE_ID} \
                 --img $image_size $image_size \
                 --data coco.yaml \
@@ -106,10 +116,12 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #参数复原
-sed -i "s|$data_path/../coco_txl/COCO2017/train2017.txt|./coco/train2017.txt|g" data/coco.yaml
-sed -i "s|$data_path/../coco_txl/COCO2017/val2017.txt|./coco/val2017.txt|g" data/coco.yaml
-sed -i "s|$data_path/../coco_txl/COCO2017/testdev2017.txt|./coco/testdev2017.txt|g" data/coco.yaml
-sed -i "s|$data_path/../coco_txl/COCO2017/annotations/instances_val|./coco/annotations/instances_val|g" test.py
+if [ x"${etp_running_flag}" = x"true" ];then
+    sed -i "s|$data_path/../coco_txl/COCO2017/train2017.txt|./coco/train2017.txt|g" data/coco.yaml
+    sed -i "s|$data_path/../coco_txl/COCO2017/val2017.txt|./coco/val2017.txt|g" data/coco.yaml
+    sed -i "s|$data_path/../coco_txl/COCO2017/testdev2017.txt|./coco/testdev2017.txt|g" data/coco.yaml
+    sed -i "s|$data_path/../coco_txl/COCO2017/annotations/instances_val|./coco/annotations/instances_val|g" test.py
+fi
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"

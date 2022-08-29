@@ -1,44 +1,18 @@
 {
-    "im_DPN_131": {
+    "im_DPN-131": {
         "stream_config": {
             "deviceId": "0"
         },
-        "appsrc1": {
+        "appsrc0": {
             "props": {
                 "blocksize": "409600"
             },
             "factory": "appsrc",
-            "next": "mxpi_imagedecoder0"
-        },
-        "mxpi_imagedecoder0": {
-            "props": {
-                "handleMethod": "opencv"
-            },
-            "factory": "mxpi_imagedecoder",
-            "next": "mxpi_imageresize0"
-        },
-        "mxpi_imageresize0": {
-            "props": {
-                "handleMethod": "opencv",
-                "resizeType": "Resizer_Stretch",
-                "resizeHeight": "262",
-                "resizeWidth": "262"
-            },
-            "factory": "mxpi_imageresize",
-            "next": "mxpi_opencvcentercrop0"
-        },
-        "mxpi_opencvcentercrop0": {
-            "props": {
-                "dataSource": "mxpi_imageresize0",
-                "cropHeight": "224",
-                "cropWidth": "224"
-            },
-            "factory": "mxpi_opencvcentercrop",
             "next": "mxpi_tensorinfer0"
         },
         "mxpi_tensorinfer0": {
             "props": {
-                "dataSource": "mxpi_opencvcentercrop0",
+                "dataSource": "appsrc0",
                 "modelPath": "../data/model/DPN-131.om",
                 "waitingTime": "2000",
                 "outputDeviceId": "-1"

@@ -1,5 +1,5 @@
 # RefineNet Onnx模型端到端推理指导
-- [RefineNet Onnx模型端到端推理指导](#RefineNet onnx模型端到端推理指导)
+- [RefineNet Onnx模型端到端推理指导](#refinenet-onnx模型端到端推理指导)
 	- [1 模型概述](#1-模型概述)
 		- [1.1 论文地址](#11-论文地址)
 		- [1.2 代码地址](#12-代码地址)
@@ -56,7 +56,7 @@ commit_id: 8f25c076016e61a835551493aae303e81cf36c53
 
 ### 2.1 深度学习框架
 ```
-CANN 5.0.1
+CANN 5.1.RC1
 pytorch >= 1.5.0
 torchvision >= 0.6.0
 onnx >= 1.7.0
@@ -65,10 +65,10 @@ onnx >= 1.7.0
 ### 2.2 python第三方库
 
 ```
-numpy == 1.21.2
-Pillow == 8.3.1
-opencv-python == 3.4.4.19
-albumentations == 0.4.5
+numpy == 1.21.6
+Pillow == 9.1.0
+opencv-python == 4.1.0.25
+albumentations == 1.1.0
 densetorch == 0.0.2
 ```
 
@@ -97,7 +97,7 @@ git clone https://github.com/DrSleep/refinenet-pytorch.git RefineNet_pytorch
 
 ```
 cd RefineNet_pytorch
-git am --signoff < ../RefineNet.patch
+git apply ../RefineNet.patch
 cd ..
 ```
 
@@ -106,7 +106,16 @@ cd ..
  **说明：**  
 >注意目前ATC支持的onnx算子版本为11
 
-4.执行pth2onnx脚本，生成onnx模型文件
+
+4.通过将densetorch包下载到本地安装
+
+```bash
+git clone https://github.com/drsleep/densetorch.git
+cd densetorch
+pip install -e .
+```
+
+5.执行pth2onnx脚本，生成onnx模型文件
 
 ```bash
 python3.7 RefineNet_pth2onnx.py --input-file model/RefineNet_910.pth.tar --output-file model/RefineNet_910.onnx
@@ -117,12 +126,16 @@ python3.7 RefineNet_pth2onnx.py --input-file model/RefineNet_910.pth.tar --outpu
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
+2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.1.RC1 开发辅助工具指南 (推理) 01
+
+${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```BASH
-atc --framework=5 --model=model/RefineNet_910.onnx --output=model/RefineNet_910_bs1 --input_format=NCHW --input_shape="input:1,3,500,500" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=model/RefineNet_910.onnx --output=model/RefineNet_910_bs1 --input_format=NCHW --input_shape="input:1,3,500,500" --log=debug --soc_version=Ascend${chip_name}
 ```
 
 ## 4 数据集预处理
@@ -164,17 +177,18 @@ python3.7 get_info.py bin prepare_dataset ./refinenet_prep_bin.info 500 500
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.1.RC1 推理benchmark工具用户指南 01
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```bash
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=model/RefineNet_910_bs1.om \
     -input_text_path=./refinenet_prep_bin.info -input_width=500 -input_height=500 -output_binary=False -useDvpp=False
 ```
+
 输出结果默认保存在当前目录result/dumpOutput_deviceX(X为对应的device_id)，每个输入对应一个_X.bin文件的输出。
 
 ## 6 精度对比
@@ -189,13 +203,13 @@ source env.sh
 调用RefineNet_postprocess.py脚本推理结果与语义分割真值进行比对，可以获得IoU精度数据。
 ```bash
 ulimit -n 10240
-python3.7 RefineNet_postprocess.py --val-dir /opt/npu/VOCdevkit/VOC2012 --result-dir result/dumpOutput_device0
+python3.7 RefineNet_postprocess.py --val-dir /opt/npu --result-dir result/dumpOutput_device0
 ```
 第一个为真值所在目录，第二个为benchmark输出目录。  
 查看输出结果：
 
 ```
-miou: 0.786147
+miou: 0.786359
 ```
 经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
 
@@ -212,28 +226,22 @@ light-weight-refinenet开源代码仓库给出的精度是~76%，但使用的是
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
+benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32，64的性能数据在README.md中如下作记录即可。  
+
 1.benchmark工具在整个数据集上推理获得性能数据  
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 
 ```
-[e2e] throughputRate: 11.0237, latency: 131444
-[data read] throughputRate: 22.5381, moduleLatency: 44.3693
-[preprocess] throughputRate: 19.9412, moduleLatency: 50.1475
-[infer] throughputRate: 12.9423, Interface throughputRate: 14.4054, moduleLatency: 76.9069
-[post] throughputRate: 11.2069, moduleLatency: 89.231
+[inference] throughputRate: 60.5672, Interface throughputRate: 91.434, moduleLatency: 16.1848
 ```
-Interface throughputRate: 14.4054，14.4054x4=57.6216既是batch1 310单卡吞吐率  
+Interface throughputRate: 91.434是batch1 310P单卡吞吐率  
 batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
 
 ```
-[e2e] throughputRate: 10.9856, latency: 131900
-[data read] throughputRate: 22.1641, moduleLatency: 45.1179
-[preprocess] throughputRate: 19.98, moduleLatency: 50.05
-[infer] throughputRate: 12.6673, Interface throughputRate: 13.9533, moduleLatency: 78.5275
-[post] throughputRate: 0.696184, moduleLatency: 1436.4
+[inference] throughputRate: 56.6365, Interface throughputRate: 77.7378, moduleLatency: 17.4284
 ```
-Interface throughputRate: 13.9533，13.9533x4=55.8132既是batch16 310单卡吞吐率  
+Interface throughputRate: 77.7378是batch16 310P单卡吞吐率 
+
 
 2.npu纯推理性能
 
@@ -244,7 +252,7 @@ batch1的性能，执行20次纯推理取均值，统计吞吐率与其倒数时
 
 [INFO] PureInfer result saved in ./result/PureInfer_perf_of_RefineNet_910_bs1_in_device_0.txt
 -----------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 14.4137samples/s, ave_latency: 69.5644ms
+[INFO] ave_throughputRate: 92.2434samples/s, ave_latency: 11.171ms
 ----------------------------------------------------------------
 ```
 
@@ -255,7 +263,7 @@ batch4的性能，执行20次纯推理取均值，统计吞吐率与其倒数时
 
 [INFO] PureInfer result saved in ./result/PureInfer_perf_of_RefineNet_910_bs4_in_device_0.txt
 -----------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 14.136samples/s, ave_latency: 70.7773ms
+[INFO] ave_throughputRate: 88.0568samples/s, ave_latency: 11.4838ms
 ----------------------------------------------------------------
 ```
 
@@ -266,7 +274,7 @@ batch8的性能，执行20次纯推理取均值，统计吞吐率与其倒数时
 
 [INFO] PureInfer result saved in ./result/PureInfer_perf_of_RefineNet_910_bs8_in_device_0.txt
 -----------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 13.9813samples/s, ave_latency: 71.5408ms
+[INFO] ave_throughputRate: 84.4253samples/s, ave_latency: 11.8672ms
 ----------------------------------------------------------------
 ```
 
@@ -277,7 +285,7 @@ batch16的性能，执行20次纯推理取均值，统计吞吐率与其倒数�
 
 [INFO] PureInfer result saved in ./result/PureInfer_perf_of_RefineNet_910_bs16_in_device_0.txt
 -----------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 14.0079samples/s, ave_latency: 71.3959ms
+[INFO] ave_throughputRate: 80.3815samples/s, ave_latency: 12.4635ms
 ----------------------------------------------------------------
 ```
 
@@ -288,7 +296,16 @@ batch32的性能，执行20次纯推理取均值，统计吞吐率与其倒数�
 
 [INFO] PureInfer result saved in ./result/PureInfer_perf_of_RefineNet_910_bs32_in_device_0.txt
 -----------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 14.0264samples/s, ave_latency: 71.3015ms
+[INFO] ave_throughputRate: 79.9769samples/s, ave_latency: 12.5081ms
+----------------------------------------------------------------
+```
+
+batch64的性能，执行20次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
+
+```bash
+[INFO] PureInfer result saved in ./result/PureInfer_perf_of_RefineNet_910_bs64_in_device_0.txt
+-----------------PureInfer Performance Summary------------------
+[INFO] ave_throughputRate: 79.1814samples/s, ave_latency: 12.6375ms
 ----------------------------------------------------------------
 ```
 

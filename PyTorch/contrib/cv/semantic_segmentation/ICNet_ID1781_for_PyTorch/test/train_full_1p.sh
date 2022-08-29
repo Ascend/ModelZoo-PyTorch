@@ -19,6 +19,8 @@ train_epochs=200
 device_id=0
 # 学习率
 learning_rate=0.01
+# 预训练模型路径
+more_path1='./pretrained'
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*

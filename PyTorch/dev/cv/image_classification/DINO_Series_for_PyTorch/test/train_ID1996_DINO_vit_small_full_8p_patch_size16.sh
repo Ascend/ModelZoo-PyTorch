@@ -130,11 +130,13 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../main_dino.py \
         --batch_size_per_gpu $batch_size \
         --lr $learning_rate \
         --min_lr 5e-6 \
-        $PREC > ${cur_path}/output/0/train_0.log 2>&1 &
+        $PREC \
+        --warmup_teacher_temp_epochs 1 \
+        --use_fp16 true > ${cur_path}/output/0/train_0.log 2>&1 &
 wait
 
 python3 ${cur_path}/../eval_knn.py \
-      --data_path $data_path/
+      --data_path $data_path/ \
       --pretrained_weights ${cur_path}/output/0/ckpt/checkpoint.pth \
       --checkpoint_key teacher > ${cur_path}/output/0/test.log 2>&1 &
 wait

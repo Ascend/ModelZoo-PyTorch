@@ -94,6 +94,8 @@ def compute_average_precision_per_class(num_true_cases, gt_boxes, difficult_case
         scores = []
         for line in f:
             t = line.rstrip().split(" ")
+            if len(t) != 6:
+                continue
             image_ids.append(t[0])
             scores.append(float(t[1]))
             box = torch.tensor([float(v) for v in t[2:]]).unsqueeze(0)

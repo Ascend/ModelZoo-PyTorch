@@ -14,7 +14,7 @@ https://github.com/LeeJunHyun/Image_Segmentation
 
 ### Step 1: Download DataSet
 
-数据集下载路径 [ISIC 2018 dataset](https://challenge2018.isic-archive.com/task1/training/). 注意，仅仅需要下载2018年的Training Data和Training Ground Truth。下载完成并解压，修改路径参数后运行dataset.py将数据集划分为三部分，分别用于training, validation, and test, 三部分的比例是70%, 10% and 20%。数据集总共包含2594张图片， 其中1815用于training, 259 用于validation，剩下的520用于testing.
+数据集下载路径 [ISIC 2018 dataset](https://challenge2018.isic-archive.com/task1/training/). 注意，仅仅需要下载2018年的Training Data和Training Ground Truth。下载完成并解压，修改路径参数后运行dataset.py将数据集划分为三部分，分别用于training, validation, and test, 三部分的比例是60%, 20% and 20%。数据集总共包含2594张图片， 其中1556用于training, 519用于validation，剩下519用于testing.
 
 
 ### Step 2: Training process
@@ -42,10 +42,10 @@ https://github.com/LeeJunHyun/Image_Segmentation
 
 训练日志路径：网络脚本test下output文件夹内。例如：
       test/output/devie_id/train_${device_id}.log          # 训练脚本原生日志
-      test/output/devie_id/AttU_Net_bs1024_8p_perf.log  # 8p性能训练结果日志
-      test/output/devie_id/AttU_Net_bs1024_8p_acc.log   # 8p精度训练结果日志
+      test/output/devie_id/AttU_Net_for_PyTorch_bs128_8p_perf.log  # 8p性能训练结果日志
+      test/output/devie_id/AttU_Net_for_PyTorch_bs128_8p_acc.log   # 8p精度训练结果日志
 
-训练模型：训练生成的模型默认会写入到和test文件同一目录下。当训练正常结束时，checkpoint.pth.tar为最终结果。
+模型权重文件：训练生成的权重文件会保存到models文件夹下，以.pkl为作为后缀保存。
 
 | DEVICE | FPS  | Npu_nums | Epochs | BatchSize | AMP  | ACC   |
 | ------ | ---- | -------- | ------ | --------- | ---- | ----- |

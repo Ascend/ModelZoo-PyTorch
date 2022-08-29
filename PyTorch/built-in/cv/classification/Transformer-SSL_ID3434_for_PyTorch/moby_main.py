@@ -13,7 +13,7 @@ import datetime
 import numpy as np
 
 import torch
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -137,7 +137,7 @@ def main(config, args):
         data_loader_train.sampler.set_epoch(epoch)
 
         train_one_epoch(config, model, data_loader_train, optimizer, epoch, lr_scheduler, args)
-        if dist.get_rank() == 0 and (epoch % config.SAVE_FREQ == 0 or epoch == (config.TRAIN.EPOCHS - 1)):
+        if dist.get_rank() % 8 == 0 and (epoch % config.SAVE_FREQ == 0 or epoch == (config.TRAIN.EPOCHS - 1)):
             save_checkpoint(config, epoch, model_without_ddp, 0.0, optimizer, lr_scheduler, logger)
 
     total_time = time.time() - start_time
@@ -235,8 +235,7 @@ if __name__ == '__main__':
         rank = -1
         world_size = -1
     torch.npu.set_device(config.LOCAL_RANK)
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29680'
+
     torch.distributed.init_process_group(backend='hccl', init_method='env://', world_size=world_size, rank=rank)
     torch.distributed.barrier()
 

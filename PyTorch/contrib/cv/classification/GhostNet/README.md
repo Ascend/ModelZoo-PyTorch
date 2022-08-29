@@ -15,7 +15,7 @@ Therefore, GhostNet 1.0× is re-implemented using semantics such as custom OP. F
 - pip install git+https://github.com/rwightman/pytorch-image-models.git
 - Download the ImageNet dataset from http://www.image-net.org/
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
-
+`Note:Install the torchvision that corresponds to the torch version`
 ## Training 
 
 
@@ -40,10 +40,10 @@ python3.7 demo.py
 
 ## GhostNet 1.0× training result 
 
-|  Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type |
-| :-----: | :------: | :------: | :----: | :------: |
-|    -    |          |    1     |  210   |    O2    |
-| 72.713  | 4329.137 |    8     |  410   |    O2    |
+|  Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type |  Device_Type   |
+| :-----: | :------: | :------: | :----: | :------: |  :---------:   |
+|    -    | 1378.8   |    1     |  10    |    O2    | 910B_Pro_aarch |
+| 73.129  | 9559.2   |    8     |  400   |    O2    | 910B_Pro_aarch |
 
 
 

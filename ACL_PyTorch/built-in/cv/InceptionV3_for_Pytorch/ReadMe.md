@@ -95,9 +95,9 @@ python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ /root/dataset/Ima
 
 Pytorch：
 ```
-wget https://modelzoo-train-atc.obs.cn-north-4.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inception_v3.pth
+wget https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inception_v3.pth
 ```
 ONNX：
 ```
-wget https://modelzoo-train-atc.obs.cn-north-4.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inceptionv3.onnx
+wget https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inceptionv3.onnx
 ```

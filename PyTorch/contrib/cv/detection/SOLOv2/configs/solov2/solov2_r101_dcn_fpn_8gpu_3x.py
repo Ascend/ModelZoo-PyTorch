@@ -20,7 +20,7 @@ model = dict(
         type='ResNet',
         depth=101,
         num_stages=4,
-        out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
+        out_indices=(0, 1, 2, 3),  # C2, C3, C4, C5
         frozen_stages=1,
         style='pytorch',
         dcn=dict(
@@ -58,15 +58,15 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0)),
     mask_feat_head=dict(
-            type='MaskFeatHead',
-            in_channels=256,
-            out_channels=128,
-            start_level=0,
-            end_level=3,
-            num_classes=256,
-            conv_cfg=dict(type='DCNv2'),
-            norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)),
-    )
+        type='MaskFeatHead',
+        in_channels=256,
+        out_channels=128,
+        start_level=0,
+        end_level=3,
+        num_classes=256,
+        conv_cfg=dict(type='DCNv2'),
+        norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)),
+)
 # training and testing settings
 train_cfg = dict()
 test_cfg = dict(

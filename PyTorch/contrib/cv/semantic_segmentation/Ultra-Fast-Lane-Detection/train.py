@@ -15,7 +15,7 @@
 print("+-" * 50)
 import torch, os, datetime
 
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import numpy as np
 
@@ -203,8 +203,11 @@ if __name__ == "__main__":
         distributed = int(os.environ['WORLD_SIZE']) > 1
 
     if distributed:
+        args.local_rank = int(os.environ['LOCAL_RANK'])
         torch.npu.set_device(args.local_rank)
-        torch.distributed.init_process_group(backend='hccl')
+        os.environ['MASTER_ADDR'] = '127.0.0.1'
+        os.environ['MASTER_PORT'] = '29680'
+        torch.distributed.init_process_group(backend='hccl', world_size=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
     dist_print(datetime.datetime.now().strftime('[%Y/%m/%d %H:%M:%S]') + ' start training...')
     dist_print(cfg)
     assert cfg.backbone in ['18', '34', '50', '101', '152', '50next', '101next', '50wide', '101wide']

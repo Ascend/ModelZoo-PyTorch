@@ -86,7 +86,7 @@ FPS=${FPS%,*}
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-top1_err=`grep 'train_epoch' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $25}'|awk 'END {print}'`
+top1_err=`grep 'test_ema_epoch' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $23}'|awk 'END {print}'`
 top1_err=`echo ${top1_err%,*}`
 train_accuracy=$(echo "100-${top1_err}"|bc)
 # 打印，不需要修改

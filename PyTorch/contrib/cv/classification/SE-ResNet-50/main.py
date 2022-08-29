@@ -14,6 +14,7 @@
 # limitations under the License.
 # ============================================================================
 import warnings
+
 warnings.filterwarnings('ignore')
 import argparse
 import os
@@ -61,7 +62,7 @@ parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                     dest='weight_decay')
 parser.add_argument('-p', '--print-freq', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--resume', default='./checkpoint.pth.tar', type=str, metavar='PATH',
+parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
@@ -157,8 +158,7 @@ def main():
         args.world_size = ngpus_per_node * args.world_size
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
-        mp.spawn(main_worker, nprocs=ngpus_per_node,
-                 args=(ngpus_per_node, args))
+        main_worker(args.gpu, ngpus_per_node, args)
     else:
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
@@ -243,8 +243,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # define loss function (criterion) and optimizer
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+                                            momentum=args.momentum,
+                                            weight_decay=args.weight_decay)
 
     if args.amp:
         model, optimizer = amp.initialize(
@@ -304,7 +304,7 @@ def main_worker(gpu, ngpus_per_node, args):
             if args.gpu is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
                 best_acc1 = best_acc1.to(args.gpu)
-            model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict(checkpoint['state_dict'], strict=False)
             optimizer.load_state_dict(checkpoint['optimizer'])
             if args.amp:
                 amp.load_state_dict(checkpoint['amp'])
@@ -354,11 +354,11 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.evaluate:
         validate(val_loader, model, criterion, args, ngpus_per_node)
         return
-        
+
     if args.prof:
         profiling(train_loader, model, criterion, optimizer, args)
         return
-    
+
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
@@ -425,7 +425,7 @@ def profiling(data_loader, model, criterion, optimizer, args):
         else:
             images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
-            
+
         if step < 5:
             update(model, images, target, optimizer)
         else:
@@ -563,8 +563,8 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, 'model_best.pth.tar')
-        
-        
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 

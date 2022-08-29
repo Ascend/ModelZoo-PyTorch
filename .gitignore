@@ -8,7 +8,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-.idea
+.idea/
+.vscode/
 build/
 develop-eggs/
 dist/
@@ -130,6 +131,7 @@ dmypy.json
 *.mp4
 *.pkl
 *.npy
+*.npz
 *.bin
 *.wav
 *.bmp

@@ -28,7 +28,9 @@ NVIDIA npu specific speedups adopted from NVIDIA Apex examples
 
 Hacked together by / Copyright 2020 Ross Wightman (https://github.com/rwightman)
 """
-import torch.npu
+import torch
+if torch.__version__>= '1.8':
+      import torch_npu
 import argparse
 import time
 import yaml
@@ -38,7 +40,6 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
 
-import torch
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -436,7 +437,7 @@ def main():
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if use_amp == 'apex':
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O1')
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O1', loss_scale="dynamic")
         loss_scaler = ApexScaler()
         if args.local_rank == 0:
             _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')

@@ -37,6 +37,8 @@ import numpy as np
 import numpy.random as nprnd
 import os
 import torch
+if torch.__version__>= '1.8':
+      import torch_npu
 import torch.utils.data
 import tqdm
 
@@ -91,43 +93,11 @@ class AverageMeter(object):
         return fmtstr.format(**self.__dict__)
 
 # profiling
-'''
 def profiling(dl, model, loss_func, optimizer, max_batches_per_iter_cnt, batch_per_iter_cnt):
     # switch to train mode
     model.train()
 
     def update(model, prediction, optimizer):
-    #   output = model(images)
-    #   loss = criterion(output, target)
-        loss = loss_func(prediction, (classification, regression, thetas, training_mask)) / max_batches_per_iter_cnt
-        
-        with amp.scale_loss(loss, optimizer) as scaled_loss:
-            scaled_loss.backward()
-        
-            
-        optimizer.zero_grad()
-        optimizer.step()
-    
-    pbar = tqdm.tqdm(dl, 'Epoch ' + str(epoch), ncols=80)
-    # for step, (images, target) in enumerate(dl):
-    for cropped, classification, regression, thetas, training_mask in pbar:
-        if batch_per_iter_cnt == 0:
-                optimizer.zero_grad()
-        prediction = model(cropped.to('npu'))
-        with torch.autograd.profiler.profile(use_npu=True) as prof:
-            update(model, prediction, optimizer)
-        break
-
-    prof.export_chrome_trace("output_pretrain2.prof")
-'''
-
-def profiling(dl, model, loss_func, optimizer, max_batches_per_iter_cnt, batch_per_iter_cnt):
-    # switch to train mode
-    model.train()
-
-    def update(model, prediction, optimizer):
-    #   output = model(images)
-    #   loss = criterion(output, target)
         loss = loss_func(prediction, (classification, regression, thetas, training_mask)) / max_batches_per_iter_cnt
         
         optimizer.zero_grad()
@@ -138,7 +108,6 @@ def profiling(dl, model, loss_func, optimizer, max_batches_per_iter_cnt, batch_p
         optimizer.step()
     
     pbar = tqdm.tqdm(dl, 'Epoch ' + str(epoch), ncols=80)
-    # for step, (images, target) in enumerate(dl):
     idx = 0 
     for cropped, classification, regression, thetas, training_mask in pbar:
         if idx == 5:
@@ -156,16 +125,10 @@ def profiling(dl, model, loss_func, optimizer, max_batches_per_iter_cnt, batch_p
 
 def restore_checkpoint(folder, contunue):
     model = FOTSModel().to(f'npu:{NPU_CALCULATE_DEVICE}')
-  # model = model.to(f'npu:{NPU_CALCULATE_DEVICE}')
-  
-  # optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
     optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=0.001, weight_decay=1e-5)
-    
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale = 128.0, combine_grad=True)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale = "dynamic", combine_grad=True)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False, find_unused_parameters=True)
-    
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=32, verbose=True, threshold=0.05, threshold_mode='rel')
-
     checkppoint_name = os.path.join(folder, 'epoch_8_checkpoint.pt')
     if os.path.isfile(checkppoint_name) and contunue:
         checkpoint = torch.load(checkppoint_name, map_location="cpu")
@@ -173,6 +136,8 @@ def restore_checkpoint(folder, contunue):
         # return 0, model, optimizer, lr_scheduler, +math.inf
         epoch = checkpoint['epoch'] + 1
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        checkpoint['lr_scheduler_state_dict']['mode'] = 'min'
+        checkpoint['lr_scheduler_state_dict']['threshold_mode'] = 'rel'
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
         best_score = checkpoint['best_score']
         return epoch, model, optimizer, lr_scheduler, best_score

@@ -1,26 +1,27 @@
-# 基于detectron2的Cascade-Mask-Rcnn Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 开源精度](#62-开源精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+# 基于detectron2的Cascade-Mask-Rcnn ONNX模型端到端推理指导
+- [基于detectron2的Cascade-Mask-Rcnn ONNX模型端到端推理指导](#基于detectron2的cascade-mask-rcnn-onnx模型端到端推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pkl转onnx模型](#31-pkl转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 benchmark工具概述](#51-benchmark工具概述)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理精度统计](#61-离线推理精度统计)
+		- [6.2 开源精度](#62-开源精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
 
 
 
@@ -36,7 +37,7 @@
 
 ### 1.2 代码地址
 [cpu,gpu版detectron2框架cascadercnn代码](https://github.com/facebookresearch/detectron2/blob/master/MODEL_ZOO.md)   
-branch:master
+branch:master   
 commit_id:13afb035142734a309b20634dadbba0504d7eefe
 ## 2 环境说明
 
@@ -46,6 +47,7 @@ commit_id:13afb035142734a309b20634dadbba0504d7eefe
 
 ### 2.1 深度学习框架
 ```
+CANN 5.1.RC1
 pytorch == 1.8.0
 torchvision == 0.9.0
 onnx == 1.8.0
@@ -58,7 +60,7 @@ onnx == 1.8.0
 ### 2.2 python第三方库
 
 ```
-numpy == 1.18.5
+numpy == 1.22.4
 opencv-python == 4.2.0.34
 ```
 
@@ -125,16 +127,15 @@ mv output/model.onnx model_py1.8.onnx
 
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
+该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，使用netron开源可视化工具查看具体的输出节点名：
+${chip_name}可通过npu-smi info指令查看，例：310P3
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 ```shell
-atc --model=model_py1.8.onnx --framework=5 --output=cascadercnn_detectron2_npu --input_format=NCHW --input_shape="0:1,3,1344,1344" --out_nodes="Cast_1853:0;Gather_1856:0;Reshape_1847:0;Slice_1886:0" --log=debug --soc_version=Ascend310
+atc --model=model_py1.8.onnx --framework=5 --output=cascadercnn_detectron2_npu --input_format=NCHW --input_shape="0:1,3,1344,1344" --out_nodes="Cast_1853:0;Gather_1856:0;Reshape_1847:0;Slice_1886:0" --log=debug --soc_version=Ascend${chip_name}
 ```
 
 ## 4 数据集预处理
@@ -146,7 +147,7 @@ atc --model=model_py1.8.onnx --framework=5 --output=cascadercnn_detectron2_npu -
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用[COCO官网](https://cocodataset.org/#download)的coco2017的5千张验证集进行测试，图片与标签分别存放在/root/datasets/coco/val2017/与/root/datasets/coco/annotations/instances_val2017.json。
+该模型使用COCO官网的coco2017的5千张验证集进行测试，图片与标签分别存放在/root/datasets/coco/val2017/与/root/datasets/coco/annotations/instances_val2017.json。
 
 ### 4.2 数据集预处理
 1.预处理脚本cascadercnn_pth_preprocess_detectron2.py
@@ -169,17 +170,14 @@ python3.7 get_info.py bin val2017_bin cascadercnn.info 1344 1344
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ### 5.2 离线推理
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
+该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+
 2.执行离线推理
 ```shell
 ./benchmark.x86_64 -model_type=vision -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=cascadercnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
@@ -268,27 +266,7 @@ INFO:detectron2.evaluation.coco_evaluation:Per-category bbox AP:
 | vase          | 41.650 | scissors     | 29.540 | teddy bear     | 48.781 |
 | hair drier    | 1.733  | toothbrush   | 28.883 |                |        |
 
-```
-
- **精度调试：**  
-> 1.根据代码语义RoiExtractor参数finest_scale不是224而是56  
-> 2.因gather算子处理-1会导致每张图的第一个score为0，故maskrcnn_detectron2.diff中已将dets[:, -1]改为dets[:, 4]  
-> 3.单张图调试  
-> ```
-> demo.py分数改为0.05，defaults.py MIN_SIZE_TEST与MAX_SIZE_TEST改为1344：
-> python3.7 demo.py --config-file ../configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml --input 000000252219_1344x1344.jpg --opts MODEL.WEIGHTS ../../cascadercnn.pkl MODEL.DEVICE cpu
-> 说明：
-> 精度最初只达到38%，经排查是aligned未生效，将参数aligned设置为1后，精度达标
-> ```
-> 4.精度调试  
-> ```
-> 对开源代码预处理与参数修改，使得cpu,gpu版的pkl推理达到npu版代码的pkl推理精度，参见pth的diff文件与执行精度测评的命令。
-> 说明：
-> 1.查看npu固定1344,1344的前处理方式（缩放加pad）
-> from torchvision import utils as vutils
-> vutils.save_image(images.tensor, 'test.jpg')
-> FIX_SHAPE->./detectron2/data/dataset_mapper.py->ResizeShortestEdge，最短边800最大1333。
-> ```
+``` 
 
 
 ### 6.2 开源精度
@@ -305,35 +283,13 @@ om推理box map精度为0.439，GPU推理box map精度为0.430，精度下降在
 batch1的性能：
  测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
 ```shell
-./benchmark.x86_64 -round=20 -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1
+./benchmark.x86_64 -model_type=vision -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=cascadercnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
 ```
-执行20次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_cascadercnn_detectron2_npu_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 1.32574samples/s, ave_latency: 755.75ms
-----------------------------------------------------------------
-```
+统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
+310上Interface throughputRate: ，1.10543*4=4.42172即batch1 310单卡吞吐率为4.42172。
+
+310P上Interface throughputRate: 9.80704 ，即是batch1 310P单卡吞吐率为9.80704。
+
+T4单卡吞吐率为6.116843953。
+
 cascadercnn不支持多batch，故只测试batch1的性能  
-
-#### 性能优化
-查看profiling导出的op_statistic_0_1.csv算子总体耗时统计发现gather算子耗时最多，然后查看profiling导出的task_time_0_1.csv找到具体哪些gather算子耗时最多，通过导出onnx的verbose打印找到具体算子对应的代码，因gather算子计算最后一个轴会很耗时，因此通过转置后计算0轴规避，比如cascadercnn_detectron2.diff文件中的如下修改：
-```
-boxes_prof = boxes.permute(1, 0)
-widths = boxes_prof[2, :] - boxes_prof[0, :]
-```
-
-依据npu版代码修改cpu,gpu版detectron2，参见cascadercnn_pth_npu.diff，测评pth精度与性能：
-```shell
-git clone https://github.com/facebookresearch/detectron2
-python3.7 -m pip install -e detectron2
-cd detectron2
-patch -p1 < ../cascadercnn_pth_npu.diff
-cd tools
-mkdir datasets
-cp -rf ../../datasets/coco datasets/（数据集构造参考本文第三章第一节步骤五）
-python3.7 train_net.py --config-file ../configs/Misc/cascade_mask_rcnn_R_50_FPN_3x.yaml --eval-only MODEL.WEIGHTS ../../cascadercnn.pkl MODEL.DEVICE cuda:0
-```
-```
-Inference done 4999/5000. 0.2339 s / img.
-```

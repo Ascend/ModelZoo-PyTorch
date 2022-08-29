@@ -15,12 +15,13 @@ import math
 import torch
 import torch.nn as nn
 import numpy as np
-from skimage.measure.simple_metrics import compare_psnr
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 import os
 import struct
 from torch.autograd import Variable
 import glob
 import sys
+from tqdm import tqdm
 
 def batch_PSNR(img, imclean, data_range):
     Img = img.data.cpu().numpy().astype(np.float32)
@@ -74,18 +75,16 @@ def file2tensor(output_bin,target_bin):
 def post_process(result_path,target_path):
     output_path, target_path= get_output_path(bin_folder=result_path,label_path=label_path)
     psnr_val = 0
-    for i in range(len(output_path)):
+    for i in tqdm(range(len(output_path))):
         output,target = file2tensor(output_path[i],target_path[i])
         Out = torch.clamp(output, 0., 1.)
         psnr = batch_PSNR(Out, target, 1.)
-        name = (output_path[i].split('/')[3]).split('_')[0]
-        print(name,batch_PSNR(output, target, 1.))
+        name = (output_path[i].split('/')[-1]).split('_')[0]
         psnr_val += psnr
-    psnr_val /= i
+    psnr_val /= len(output_path)
     print('average psnr_val:',psnr_val)
 
 if __name__ == "__main__":
     result_path = sys.argv[1]
     label_path = sys.argv[2]
     post_process(result_path = result_path, target_path = label_path)
-    #get_output_path(bin_folder = 'result/dumpOutput_device0')

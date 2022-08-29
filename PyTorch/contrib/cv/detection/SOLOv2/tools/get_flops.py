@@ -34,13 +34,12 @@ def parse_args():
 
 
 def main():
-
     args = parse_args()
 
     if len(args.shape) == 1:
         input_shape = (3, args.shape[0], args.shape[0])
     elif len(args.shape) == 2:
-        input_shape = (3, ) + tuple(args.shape)
+        input_shape = (3,) + tuple(args.shape)
     else:
         raise ValueError('invalid input shape')
 
@@ -54,7 +53,7 @@ def main():
     else:
         raise NotImplementedError(
             'FLOPs counter is currently not currently supported with {}'.
-            format(model.__class__.__name__))
+                format(model.__class__.__name__))
 
     flops, params = get_model_complexity_info(model, input_shape)
     split_line = '=' * 30

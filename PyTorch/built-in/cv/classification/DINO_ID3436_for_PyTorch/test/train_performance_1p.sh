@@ -76,13 +76,17 @@ fi
 start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
+arch=vit_small
+python3.7 preparation.py --arch ${arch}
+echo "Preparation completed, start to train"
+
 export WORLD_SIZE=1
 export RANK=$RANK_ID
 export OMP_NUM_THREADS=1
 
 nohup python3.7 -u -m torch.distributed.launch \
 	--nproc_per_node=1 main_dino.py \
-	--arch vit_small \
+	--arch ${arch} \
 	--data_path $data_path \
 	--output_dir ./output \
 	--amp \
@@ -106,7 +110,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`tail -n 10 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log|grep -a 'eta'|head -n 30|awk -F " " '{print $17}'|awk '{sum+=$1} END {print sum/NR}'`
+time=`tail -n 10 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log|grep -a 'eta'|head -n 30|awk -F "time:" '{print $2}'|awk -F " " '{print $1}'|awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

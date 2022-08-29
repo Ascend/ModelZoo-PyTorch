@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# """ Image to Patch Embedding using Conv2d
+""" Image to Patch Embedding using Conv2d
 
 A convolution based approach to patchifying a 2D image w/ embedding projection.
 

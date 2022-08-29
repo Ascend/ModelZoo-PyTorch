@@ -236,7 +236,7 @@ def main(args):
                                           loss_scale=args.loss_scale_value,
                                           combine_grad=True)
 
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_step_size, gamma=args.lr_gamma)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs)
 
     model_without_ddp = model
     if args.distributed:
