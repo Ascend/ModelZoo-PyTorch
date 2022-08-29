@@ -33,9 +33,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 
 - 通过单击“立即下载”，下载源码包。
 
-<span id="jump">准备训练环境</span>
-# 准备训练环境
-
+##<span id="jump">准备训练环境</span>
 ## 准备环境
 
 - 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
