@@ -110,10 +110,10 @@ pip install -r requirment.txt
    # 测试集为LJSpeech-1.1数据集中前10条数据
    ls ./${data_path}/LJSpeech-1.1/wavs/*.wav | head -n10 > test_list.txt
    # 运行我方提供的数据预处理python文件
-   python WaveGlow_preprocess.py -f test_list.txt -c config.json -o ../infer/data/
+   python WaveGlow_preprocess.py -f test_list.txt -c config.json -o ../infer/prep_data/
    ```
 
-获得数据处理结果``../infer/data/LJSpeech-1.1/wavs/*.bin``和``../infer/data/LJSpeech-1.1/wavs/*.txt``
+获得数据处理结果``../infer/prep_data/*.bin``和``../infer/prep_data/*.txt``
 
 ### 3.模型推理
 
@@ -123,34 +123,34 @@ pip install -r requirment.txt
 
    1. 获取权重文件。
 
-       ```
-       # 获取pt文件，保存到waveglow目录中
-       wget https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view 
-       ```
-   
+      ```
+      # 获取pt文件，保存到waveglow目录中
+      wget https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view 
+      ```
+
    2. 导出onnx文件。
-   
+
       1. 使用WaveGlow_pth2onnx.py导出onnx文件
-   
+
          ```
          python WaveGlow_pth2onnx.py -i ./waveglow_256channels_universal_v5.pt -o ../infer/
          ```
-         
+
          获得WaveGlow_onnx.onnx文件
-   
+
    3. 使用ATC工具将ONNX模型转OM模型。
-   
+
       1. 配置环境变量。
-   
+
          ```
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-   
+
          > **说明：** 
          > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
       2. 执行命令查看芯片名称型号（$\{chip\_name\}）。
-   
+
          ```
          npu-smi info
          #该设备芯片名(${chip_name}=Ascend310P3)
@@ -165,9 +165,9 @@ pip install -r requirment.txt
          | 0       0         | 0000:5E:00.0    | 0            931  / 21534                            |
          +===================+=================+======================================================+
          ```
-      
+
       3. 执行ATC命令
-      
+
          ```
          # 切换到onnx的保存目录
          cd ../infer/
@@ -181,9 +181,9 @@ pip install -r requirment.txt
              --log=debug \
              --dynamic_dims="154;164;443;490;651;699;723;760;832;833"
          ```
-      
+
          - 参数说明：
-      
+
            -   --model：为ONNX模型文件。
            -   --framework：5代表ONNX模型。
            -   --output：输出的OM模型。
@@ -192,63 +192,59 @@ pip install -r requirment.txt
            -   --log：日志级别。
            -   --soc\_version：上述命令查找得到的处理器型号。
            -   --dynamic_dims：设为10条测试集数据的shape
-           
-         
+
          运行成功后生成WaveGlow_om.om模型文件。
 
 2.开始推理验证
 
- 1. 查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_infer工具安装：
+a. 查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_infer工具安装：
 
-    ```
-    git https://gitee.com/ascend/tools.git
-    cd ./tools/ais-bench_workload/tool/ais_infer/backend
-    pip3.7 wheel ./
-    pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-    ```
+```
+git https://gitee.com/ascend/tools.git
+cd ./tools/ais-bench_workload/tool/ais_infer/backend
+pip3.7 wheel ./
+pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+```
 
- 2. 执行推理
+b. 执行推理
 
-    ```
-    # 设置环境变量
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    
-    # 推理前使用 'npu-smi info' 命令查看 device 是否在运行其它推理任务，确保 device 空闲
-    npu-smi info
-    
-    # 执行离线推理
-    rm -rf result/
-    mkdir result
-    python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model "./WaveGlow_om.om" --input ./data/LJ001-0001.wav.bin --dymDims mel:1,80,832 --output "./result" --outfmt BIN --batchsize 1
-    ```
+运行 WaveGlow_ais_infer 脚本。
+
+```
+# 设置环境变量
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+# 推理前使用 'npu-smi info' 命令查看 device 是否在运行其它推理任务，确保 device 空闲
+npu-smi info
+
+# 执行离线推理
+rm -rf out/
+mkdir out
+python3 WaveGlow_ais_infer.py --ais_infer_path ./tools/ais-bench_workload/tool/ais_infer --bs 1
+```
 
 - 参数说明：
 
   -   ${ais_infer_path}/ais_infer.py：推理脚本路径。
-  -   model：om 模型路径。
-  -   input：预处理后的 bin 文件存放路径。
-  -   dymDims：指定推理的shape
-  -   output：输出文件存放路径
-  -   outfmt：输出文件格式
 
-  推理后的输出默认在当前目录result下。
+  推理后的输出默认在当前目录out下。
 
   >**说明：** 
   >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
- 3. 数据后处理
+c. 数据后处理
 
-    执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
+执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
 
-    ```
-    python WaveGlow_postprocess.py -f result/2022_08_26-09_40_18/LJ001-0001_0.bin -o final/1/
-    ```
+```
+python WaveGlow_postprocess.py -f result/2022_08_26-09_40_18/LJ001-0001_0.bin -o final/1/
+```
 
-    **参数说明：**
+**参数说明：**
 
-    > -f 推理结果路径
-    > -o 后处理结果存放路径
-    > ./result/2022_xx_xx-xx_xx_xx/LJ001-0001_0.bin 中的 2022_xx_xx-xx_xx_xx 为 ais_infer 自动生成的目录名
+> -f 推理结果路径
+> -o 后处理结果存放路径
+> ./result/2022_xx_xx-xx_xx_xx/LJ001-0001_0.bin 中的 2022_xx_xx-xx_xx_xx 为 ais_infer 自动生成的目录名
 
 ## 模型推理性能
 
@@ -256,12 +252,8 @@ pip install -r requirment.txt
 
 不同batch下各设备的吞吐率性能（fps）
 
-|           | 310P3 | T4    | 310P/T4 |
-| --------- | ----- | ----- | ------- |
-| batch1    | 0.59  | 0.037 | 15.946  |
-| batch4    | 2.34  | 0.057 | 41.053  |
-| batch8    | 4.68  | 0.061 | 76.721  |
-| batch16   | 9.35  | 0.076 | 123.026 |
-| 最优batch | 9.35  | 0.076 | 123.026 |
+|        | 310P3 | T4    | 310P/T4 |
+| ------ | ----- | ----- | ------- |
+| batch1 | 0.54  | 0.037 | 14.59   |
 
-最优的310P3性能达到最优的T4性能的123.026倍。
+310P3性能达到T4性能的14.59倍。
