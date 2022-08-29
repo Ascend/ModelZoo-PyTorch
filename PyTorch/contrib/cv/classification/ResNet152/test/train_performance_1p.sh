@@ -21,7 +21,7 @@ data_path=""
 over_dump=False
 data_dump_flag=False
 data_dump_step="10"
-profiling=False
+profiling=True
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -111,6 +111,7 @@ python3.7 ./main.py \
     --epochs=${train_epochs} \
     --world-size=1 \
     --amp \
+    --prof \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
