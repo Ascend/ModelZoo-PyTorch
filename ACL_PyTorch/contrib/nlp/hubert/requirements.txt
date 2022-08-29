@@ -1,0 +1,12 @@
+soundfile==0.10.3.post1
+numpy==1.21.6
+torch==1.11.0
+omegaconf==2.0.6
+hydra-core==1.0.7
+bitarray==2.5.1
+sacrebleu==2.1.0
+omegaconf==2.0.6
+decorator==5.1.1
+sympy==1.10.1
+editdistance==0.6.0
+tqdm==4.64.0
