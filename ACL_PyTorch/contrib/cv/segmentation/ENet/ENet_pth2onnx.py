@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,22 +39,6 @@ def proc_nodes_module(checkpoint, AttrName):
         new_state_dict[name] = v
     return new_state_dict
 
-'''
-def convert(pth_file_path, onnx_file_path, class_num):
-    checkpoint = torch.load(pth_file_path, map_location='cpu')
-    checkpoint['state_dict'] = proc_nodes_module(checkpoint, 'state_dict')
-    model = densenet121(pretrained=False, num_classes=class_num)
-    model.load_state_dict(checkpoint['state_dict'])
-    model.eval()
-    print(model)
-
-    input_names = ["actual_input_1"]
-    output_names = ["output1"]
-    dummy_input = torch.randn(16, 3, 224, 224)
-    torch.onnx.export(model, dummy_input, onnx_file_path, input_names=input_names, output_names=output_names,
-                      opset_version=11)
-'''
-
 def pth2onnx(input_file, output_file, batch_size=1):
     model = get_enet(model='enet', dataset='citys', aux=False, norm_layer=nn.BatchNorm2d)
     checkpoint = {}
@@ -69,7 +53,8 @@ def pth2onnx(input_file, output_file, batch_size=1):
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(batch_size, 3, 480, 480)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=True)
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, 
+                        output_names = output_names, opset_version=11, verbose=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

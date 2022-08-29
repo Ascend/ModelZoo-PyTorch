@@ -16,11 +16,12 @@ import sys
 import os
 import shutil
 from PIL import Image
-
 import numpy as np
 from torchvision.transforms import Compose, Resize, ToTensor
+from tqdm import tqdm
 
-def getFileList(dir,Filelist, ext=None):
+
+def getFileList(dir, Filelist, ext=None):
     newDir = dir
     if os.path.isfile(dir):
         if ext is None:
@@ -28,38 +29,54 @@ def getFileList(dir,Filelist, ext=None):
         else:
             if ext in dir[-3:]:
                 Filelist.append(dir)
-    
+
     elif os.path.isdir(dir):
         for s in os.listdir(dir):
-            newDir=os.path.join(dir,s)
+            newDir = os.path.join(dir, s)
             getFileList(newDir, Filelist, ext)
- 
+
     return Filelist
 
+
 def main():
+    if os.path.isdir(output_dir1):
+        shutil.rmtree(output_dir1)
+        os.makedirs(output_dir1)
+    if not os.path.isdir(output_dir1):
+        os.makedirs(output_dir1)
 
-    if os.path.isdir(output_dir):
-        shutil.rmtree(output_dir)
-        os.makedirs(output_dir)
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
- 
-    img_list = getFileList(input_dir, [], 'png')    
-
+    img_list = getFileList(input_dir1, [], 'png')
     val_transform = Compose([
         Resize(512, Image.BILINEAR),
         ToTensor(),
     ])
-
-    for img_id in img_list:
-        if len(img_id) == 0: continue
-        img_name = os.path.splitext(os.path.basename(img_id))[0]
-        input_img = Image.open(img_id).convert('RGB')
+    for i in tqdm(range(len(img_list))):
+        if len(img_list[i]) == 0: continue
+        img_name = os.path.splitext(os.path.basename(img_list[i]))[0]
+        input_img = Image.open(img_list[i]).convert('RGB')
         img_tensor = val_transform(input_img)
-        img = np.array(img_tensor).astype(np.float32)
-        img.tofile(os.path.join(output_dir, img_name + ".bin"))
+        img = np.array(img_tensor, dtype=np.float32)
+        img.tofile(os.path.join(output_dir1, img_name + ".bin"))
+    print("测试集处理完成")
+
+    source_path = os.path.abspath(input_dir2)
+    target_path = os.path.abspath(output_dir2)
+
+    if not os.path.exists(target_path):
+        os.makedirs(target_path)
+
+    if os.path.exists(source_path):
+        for root, dirs, files in os.walk(source_path):
+            for i in tqdm(range(len(files))):
+                src_file = os.path.join(root, files[i])
+                shutil.copy(src_file, target_path)
+
+    print('验证集处理完成')
+
 
 if __name__ == "__main__":
-    input_dir = sys.argv[1] # '/home/common/jyf/cityscapes/leftImg8bit/val'
-    output_dir = sys.argv[2] # './prep_dataset''
+    input_dir1 = sys.argv[1]  # /opt/npu/cityscapes/leftImg8bit/val
+    output_dir1 = sys.argv[2]  # ./prep_dataset
+    input_dir2 = sys.argv[3]  # /opt/npu/cityscapes/gtFine/val
+    output_dir2 = sys.argv[4]  # ./gt_label/
     main()

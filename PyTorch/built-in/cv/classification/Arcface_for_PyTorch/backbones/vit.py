@@ -1,7 +1,22 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
 import torch.nn as nn
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from typing import Optional, Callable
+from apex import amp
 
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.ReLU6, drop=0.):
@@ -52,21 +67,20 @@ class Attention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x):
+        batch_size, num_token, embed_dim = x.shape
+        #qkv is [3,batch_size,num_heads,num_token, embed_dim//num_heads]
+        qkv = self.qkv(x).reshape(
+            batch_size, num_token, 3, self.num_heads, embed_dim // self.num_heads).permute(2, 0, 3, 1, 4)
         
-        with torch.cuda.amp.autocast(True):
-            batch_size, num_token, embed_dim = x.shape
-            #qkv is [3,batch_size,num_heads,num_token, embed_dim//num_heads]
-            qkv = self.qkv(x).reshape(
-                batch_size, num_token, 3, self.num_heads, embed_dim // self.num_heads).permute(2, 0, 3, 1, 4)
-        with torch.cuda.amp.autocast(False):
+        with amp.disable_casts():
             q, k, v = qkv[0].float(), qkv[1].float(), qkv[2].float()
             attn = (q @ k.transpose(-2, -1)) * self.scale
             attn = attn.softmax(dim=-1)
             attn = self.attn_drop(attn)
             x = (attn @ v).transpose(1, 2).reshape(batch_size, num_token, embed_dim)
-        with torch.cuda.amp.autocast(True):
-            x = self.proj(x)
-            x = self.proj_drop(x)
+
+        x = self.proj(x)
+        x = self.proj_drop(x)
         return x
 
 
@@ -106,8 +120,7 @@ class Block(nn.Module):
 
     def forward(self, x):
         x = x + self.drop_path(self.attn(self.norm1(x)))
-        with torch.cuda.amp.autocast(True):
-            x = x + self.drop_path(self.mlp(self.norm2(x)))
+        x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
 
 

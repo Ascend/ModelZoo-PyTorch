@@ -1,5 +1,20 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
 from torch import nn
+from apex import amp
 
 assert torch.__version__ >= "1.8.1"
 from torch.utils.checkpoint import checkpoint_sequential
@@ -149,19 +164,20 @@ class IResNet(nn.Module):
             return func(x)
 
     def forward(self, x):
-        with torch.cuda.amp.autocast(self.fp16):
-            x = self.conv1(x)
-            x = self.bn1(x)
-            x = self.prelu(x)
-            x = self.layer1(x)
-            x = self.checkpoint(self.layer2, 20, x)
-            x = self.checkpoint(self.layer3, 100, x)
-            x = self.layer4(x)
-            x = self.bn2(x)
-            x = torch.flatten(x, 1)
-            x = self.dropout(x)
-        x = self.fc(x.float() if self.fp16 else x)
-        x = self.features(x)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.prelu(x)
+        x = self.layer1(x)
+        x = self.checkpoint(self.layer2, 20, x)
+        x = self.checkpoint(self.layer3, 100, x)
+        x = self.layer4(x)
+        x = self.bn2(x)
+        x = torch.flatten(x, 1)
+        x = self.dropout(x)
+
+        with amp.disable_casts():
+            x = self.fc(x.float() if self.fp16 else x)
+            x = self.features(x)
         return x
 
 

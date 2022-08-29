@@ -1,9 +1,26 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import collections
 from typing import Callable
 
 import torch
 from torch import distributed
 from torch.nn.functional import linear, normalize
+import torch.nn.functional as functional
+
+from utils.utils_npu import npu_clamp
 
 
 class PartialFC(torch.nn.Module):
@@ -110,12 +127,12 @@ class PartialFC(torch.nn.Module):
         optimizer: torch.optim.Optimizer
             pass
         """
-        positive = torch.unique(labels[index_positive], sorted=True).cuda()
+        positive = torch.unique(labels[index_positive], sorted=True).npu()
         if self.num_sample - positive.size(0) >= 0:
-            perm = torch.rand(size=[self.num_local]).cuda()
+            perm = torch.rand(size=[self.num_local]).npu()
             perm[positive] = 2.0
-            index = torch.topk(perm, k=self.num_sample)[1].cuda()
-            index = index.sort()[0].cuda()
+            index = torch.topk(perm, k=self.num_sample)[1].npu()
+            index = index.sort()[0].npu()
         else:
             index = positive
         self.weight_index = index
@@ -124,11 +141,13 @@ class PartialFC(torch.nn.Module):
         
         self.weight_activated = torch.nn.Parameter(self.weight[self.weight_index])
         self.weight_activated_mom = self.weight_mom[self.weight_index]
-        
+
         if isinstance(optimizer, torch.optim.SGD):
             # TODO the params of partial fc must be last in the params list
             optimizer.state.pop(optimizer.param_groups[-1]["params"][0], None)
             optimizer.param_groups[-1]["params"][0] = self.weight_activated
+            if hasattr(optimizer._amp_stash, "all_fp32_params"):
+                optimizer._amp_stash.all_fp32_params[-1] = self.weight_activated
             optimizer.state[self.weight_activated][
                 "momentum_buffer"
             ] = self.weight_activated_mom
@@ -178,12 +197,13 @@ class PartialFC(torch.nn.Module):
             "last batch size do not equal current batch size: {} vs {}".format(
             self.last_batch_size, batch_size))
 
+        device = local_embeddings.device
         _gather_embeddings = [
-            torch.zeros((batch_size, self.embedding_size)).cuda()
+            torch.zeros((batch_size, self.embedding_size), device=device)
             for _ in range(self.world_size)
         ]
         _gather_labels = [
-            torch.zeros(batch_size).long().cuda() for _ in range(self.world_size)
+            torch.zeros(batch_size, dtype=torch.long, device=device) for _ in range(self.world_size)
         ]
         _list_embeddings = AllGather(local_embeddings, *_gather_embeddings)
         distributed.all_gather(_gather_labels, local_labels)
@@ -201,13 +221,12 @@ class PartialFC(torch.nn.Module):
         if self.sample_rate < 1:
             self.sample(labels, index_positive, optimizer)
 
-        with torch.cuda.amp.autocast(self.fp16):
-            norm_embeddings = normalize(embeddings)
-            norm_weight_activated = normalize(self.weight_activated)
-            logits = linear(norm_embeddings, norm_weight_activated)
+        norm_embeddings = normalize(embeddings)
+        norm_weight_activated = normalize(self.weight_activated)
+        logits = functional.linear(norm_embeddings, norm_weight_activated).npu_format_cast(2)
         if self.fp16:
             logits = logits.float()
-        logits = logits.clamp(-1, 1)
+        logits = npu_clamp(logits, -1, 1)
 
         logits = self.margin_softmax(logits, labels)
         loss = self.dist_cross_entropy(logits, labels)
@@ -311,12 +330,12 @@ class PartialFCAdamW(torch.nn.Module):
     @torch.no_grad()
     def sample(self, labels, index_positive, optimizer):
         self.step += 1
-        positive = torch.unique(labels[index_positive], sorted=True).cuda()
+        positive = torch.unique(labels[index_positive], sorted=True).npu()
         if self.num_sample - positive.size(0) >= 0:
-            perm = torch.rand(size=[self.num_local]).cuda()
+            perm = torch.rand(size=[self.num_local]).npu()
             perm[positive] = 2.0
-            index = torch.topk(perm, k=self.num_sample)[1].cuda()
-            index = index.sort()[0].cuda()
+            index = torch.topk(perm, k=self.num_sample)[1].npu()
+            index = index.sort()[0].npu()
         else:
             index = positive
         self.weight_index = index
@@ -329,6 +348,8 @@ class PartialFCAdamW(torch.nn.Module):
             # TODO the params of partial fc must be last in the params list
             optimizer.state.pop(optimizer.param_groups[-1]["params"][0], None)
             optimizer.param_groups[-1]["params"][0] = self.weight_activated
+            if hasattr(optimizer._amp_stash, "all_fp32_params"):
+                optimizer._amp_stash.all_fp32_params[-1] = self.weight_activated
             optimizer.state[self.weight_activated]["exp_avg"] = self.weight_activated_exp_avg
             optimizer.state[self.weight_activated]["exp_avg_sq"] = self.weight_activated_exp_avg_sq
             optimizer.state[self.weight_activated]["step"] = self.step
@@ -378,12 +399,13 @@ class PartialFCAdamW(torch.nn.Module):
             "last batch size do not equal current batch size: {} vs {}".format(
             self.last_batch_size, batch_size))
 
+        device = local_embeddings.device
         _gather_embeddings = [
-            torch.zeros((batch_size, self.embedding_size)).cuda()
+            torch.zeros((batch_size, self.embedding_size), device=device)
             for _ in range(self.world_size)
         ]
         _gather_labels = [
-            torch.zeros(batch_size).long().cuda() for _ in range(self.world_size)
+            torch.zeros(batch_size, dtype=torch.long, device=device) for _ in range(self.world_size)
         ]
         _list_embeddings = AllGather(local_embeddings, *_gather_embeddings)
         distributed.all_gather(_gather_labels, local_labels)
@@ -401,13 +423,12 @@ class PartialFCAdamW(torch.nn.Module):
         if self.sample_rate < 1:
             self.sample(labels, index_positive, optimizer)
 
-        with torch.cuda.amp.autocast(self.fp16):
-            norm_embeddings = normalize(embeddings)
-            norm_weight_activated = normalize(self.weight_activated)
-            logits = linear(norm_embeddings, norm_weight_activated)
+        norm_embeddings = normalize(embeddings)
+        norm_weight_activated = normalize(self.weight_activated)
+        logits = functional.linear(norm_embeddings, norm_weight_activated).npu_format_cast(2)
         if self.fp16:
             logits = logits.float()
-        logits = logits.clamp(-1, 1)
+        logits = npu_clamp(logits, -1, 1)
 
         logits = self.margin_softmax(logits, labels)
         loss = self.dist_cross_entropy(logits, labels)
@@ -511,18 +532,23 @@ class AllGatherFunc(torch.autograd.Function):
     def backward(ctx, *grads):
         grad_list = list(grads)
         rank = distributed.get_rank()
-        grad_out = grad_list[rank]
+        grad_list_tmp = [grad.clone() for grad in grad_list]
+        grad_out = grad_list_tmp[rank]
 
         dist_ops = [
-            distributed.reduce(grad_out, rank, distributed.ReduceOp.SUM, async_op=True)
+            distributed.all_reduce(grad_out, distributed.ReduceOp.SUM, async_op=True)
             if i == rank
-            else distributed.reduce(
-                grad_list[i], i, distributed.ReduceOp.SUM, async_op=True
+            else distributed.all_reduce(
+                grad_list_tmp[i], distributed.ReduceOp.SUM, async_op=True
             )
             for i in range(distributed.get_world_size())
         ]
+
         for _op in dist_ops:
             _op.wait()
+
+        grad_list[rank].copy_(grad_out)
+        grad_out = grad_list[rank]
 
         grad_out *= len(grad_list)  # cooperate with distributed loss function
         return (grad_out, *[None for _ in range(len(grad_list))])

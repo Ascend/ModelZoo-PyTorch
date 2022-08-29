@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''
 Adapted from https://github.com/cavalleria/cavaface.pytorch/blob/master/backbone/mobilefacenet.py
 Original author cavalleria
@@ -6,6 +20,7 @@ Original author cavalleria
 import torch.nn as nn
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, Sequential, Module
 import torch
+from apex import amp
 
 
 class Flatten(Module):
@@ -132,11 +147,12 @@ class MobileFaceNet(Module):
                     m.bias.data.zero_()
 
     def forward(self, x):
-        with torch.cuda.amp.autocast(self.fp16):
-            for func in self.layers:
-                x = func(x)
-        x = self.conv_sep(x.float() if self.fp16 else x)
-        x = self.features(x)
+        for func in self.layers:
+            x = func(x)
+        
+        with amp.disable_casts():
+            x = self.conv_sep(x.float() if self.fp16 else x)
+            x = self.features(x)
         return x
 
 
