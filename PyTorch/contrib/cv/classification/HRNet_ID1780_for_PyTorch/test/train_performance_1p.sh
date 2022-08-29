@@ -29,7 +29,7 @@ train_epochs=1
 device_id=0
 # 学习率
 learning_rate=0.1
-
+stop_step=TRUE
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -97,6 +97,7 @@ python3.7 ./tools/train.py \
       --addr=$(hostname -I |awk '{print $1}') \
       --nproc=$(nproc) \
       --lr=${learning_rate} \
+      --stop_step=${stop_step} \
       --bs=${batch_size} \
       --device_id=${ASCEND_DEVICE_ID} \
       --train_epochs=${train_epochs} \
