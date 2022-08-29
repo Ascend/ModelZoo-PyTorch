@@ -46,8 +46,9 @@ numpy=1.18.5
 ├── val
 ```
 ### 步骤2 数据预处理
-预处理将原始数据集转换为模型输入的数据。模型输入数据有两种格式，分别为二进制输入和jpeg图像输入。
-1. 二进制输入
+预处理将原始数据集转换为模型输入的数据。
+
+ 二进制输入
 ```text
 将原始数据（.jpeg）转化为二进制文件（.bin）。转化方法参考Trochvision训练预处理方法处理数据，以获得最佳精度。通过缩放、均值方差手段归一化，输出为二进制文件。
 执行preprocess_se_resnext50_32x4d_pth.py脚本:
@@ -56,32 +57,17 @@ python3.7 preprocess_se_resnext50_32x4d_pth.py /opt/npu/imageNet/val ./prep_bin
 
 第一个参数为原始数据验证集（.jpeg）所在路径，第二个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
 ```
-2. JPEG图片输入
-```text
-以JPEG图片作为输入时，需准备输入数据及AIPP配置文件。
-a. 输入数据为原始数据（.jpeg）文件。
-b. AIPP配置文件aipp_se_resnext50_32x4d_pth.config在源码包中已经提供。
-输入数据通过DVPP工具实现解码、缩放并输出YUV数据，再通过AIPP进行色域转换及裁剪，最后输入网络模型中进行推理，方便快捷。AIPP配置文件在ATC工具进行模型转换的过程中插入AIPP算子，即可与DVPP处理后的数据无缝对接。但该输入方式和二进制输入方式相比模型精度下降了0.7%左右。
-本模型使用Benchmark集成的DVPP，若用户需自己配置AIPP文件请参见以下指导。
-DVPP使用指导请参见《CANN V100R020C20 应用软件开发指南 (C&C++)》。
-AIPP参数配置请参见《CANN V100R020C20 开发辅助工具指南 (推理)》。
-```
+
 ### 步骤 3 生成数据集info文件
 
-#### 1. 二进制输入info文件生成
+####  二进制输入info文件生成
 ```text
 使用benchmark推理需要输入二进制数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。运行get_info.py脚本。
 python3.7 get_info.py bin ./prep_bin ./seresnext50_val.info 224 224
 第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件路径，第三个参数为生成的数据集文件保存的路径，第四个和第五个参数分别为模型输入的宽度和高度。
 运行成功后，在当前目录中生成seresnext50_val.info。
 ```
-#### 2. JPEG图片输入info文件生成
-```text
-使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行get_info.py脚本。
-python3.7 get_info.py jpg ../dataset/ImageNet/ILSVRC2012_img_val ./ImageNet.info
-第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件的相对路径，第三个参数为生成的数据集文件保存的路径。
-运行成功后，在当前目录中生成seresnext50_val.info。
-```
+
 ## 5. 模型推理
 ### 步骤1 模型转换
 本模型基于开源框架PyTorch训练的SE_ResNeXt50_32x4d进行模型转换。

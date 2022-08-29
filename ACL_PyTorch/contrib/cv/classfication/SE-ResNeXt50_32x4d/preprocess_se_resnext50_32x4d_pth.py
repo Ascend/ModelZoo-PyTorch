@@ -1,3 +1,4 @@
+# coding=gbk
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
@@ -80,7 +81,6 @@ def preprocess(file_path, bin_path):
         img = np.array(img, dtype=np.float32)
         img = center_crop(img, 224, 224) # transforms.CenterCrop(224)
         img = img / 255. # transforms.ToTensor()
-        # ¾ùÖµ·½²î
         img[..., 0] -= mean[0]
         img[..., 1] -= mean[1]
         img[..., 2] -= mean[2]
