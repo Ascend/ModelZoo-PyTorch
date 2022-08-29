@@ -16,7 +16,7 @@ train_epochs=5
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数
-workers=16
+workers=64
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值

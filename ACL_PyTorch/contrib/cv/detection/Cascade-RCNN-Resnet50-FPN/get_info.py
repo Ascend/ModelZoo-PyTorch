@@ -1,4 +1,5 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+'''
+# Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -10,7 +11,8 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.s
+# limitations under the License.
+'''
 
 import os
 import sys
@@ -58,5 +60,3 @@ if __name__ == '__main__':
     elif file_type == 'jpg':
         assert len(sys.argv) == 4, 'The number of input parameters must be equal to 3'
         get_jpg_info(file_path, info_name)
-
-# python get_info.py bin ./prep_dataset ./enet_prep_bin.info 304 200

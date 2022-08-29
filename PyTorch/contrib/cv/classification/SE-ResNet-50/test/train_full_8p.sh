@@ -64,8 +64,12 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-
-nohup python3.7 ./main.py \
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    nohup taskset -c $PID_START-$PID_END python3.7 ./main.py \
 	      $data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49 \
@@ -79,10 +83,12 @@ nohup python3.7 ./main.py \
         --multiprocessing-distributed \
         --world-size=1 \
         --rank=0 \
+        --gpu=${i} \
         --device='npu' \
         --epochs=${train_epochs}\
         --amp \
         --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
 wait
 
 ##################获取训练数据################

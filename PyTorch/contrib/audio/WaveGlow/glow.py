@@ -192,14 +192,14 @@ class ConvTranse1D(torch.nn.ConvTranspose1d):
 
         output_padding = self._output_padding(input, output_size, self.stride, 
                                               self.padding, self.kernel_size)
-        return F.conv_transpose1d(input.cpu().float(), 
-                                  self.weight.cpu().float(), 
-                                  self.bias.cpu().float(), 
-                                  self.stride, 
+        return F.conv_transpose1d(input,
+                                  self.weight,
+                                  self.bias,
+                                  self.stride,
                                   self.padding,
-                                  output_padding, 
-                                  self.groups, 
-                                  self.dilation).npu().half()
+                                  output_padding,
+                                  self.groups,
+                                  self.dilation)
 
 
 class WaveGlow(torch.nn.Module):

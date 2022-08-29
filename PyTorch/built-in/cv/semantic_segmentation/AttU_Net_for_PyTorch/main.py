@@ -36,7 +36,9 @@ from data_loader import get_loader, get_dist_loader
 import numpy as np
 import random
 import torch
-
+if torch.__version__ >= "1.8":
+    import torch_npu
+ 
 def main(config):
     os.environ['MASTER_ADDR'] = '127.0.0.1'
     os.environ['MASTER_PORT'] = '29688'

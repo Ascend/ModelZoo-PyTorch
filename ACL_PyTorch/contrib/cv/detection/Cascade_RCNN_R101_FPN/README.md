@@ -130,7 +130,7 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
 
    1. 获取权重文件。
 
-      [Cascade_RCNN_R101预训练pth权重文件](https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_1x_coco/cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth）
+      [Cascade_RCNN_R101预训练pth权重文件](https://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r101_fpn_1x_coco/cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth )
       下载经过训练的Cascade-RCNN-R101-FPN-1X-COCO模型权重文件，并移动到Modelzoo源码包中。
 
    2. mmdetection代码下载和迁移，执行命令。
