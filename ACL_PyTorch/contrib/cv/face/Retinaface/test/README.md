@@ -27,18 +27,29 @@ cd weights
 cd .. 
 pip install -r requirements.txt
 ```
-5.310上执行，执行时确保device空闲 ,生成om文件
+
+5.310P3上执行，执行时确保device空闲, 生成om文件
 ```
-bash test/pth2om.sh
+bash test/pth2om.sh {soc_version}
 ```
-6.获取benchmark工具  
-将benchmark.x86_64 benchmark.aarch64放在根目录下
+通过`npu-smi info`命令查看并指定 {soc_version} 参数。
+
+6.获取ais_infer工具  
+根据文档安装[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)工具，复制 ais_infer 目录到当前工作目录下。
+编译安装 aclruntime的 whl 文件。
 ```
-cp xxx/benchmark ./
+git clone https://gitee.com/ascend/tools.git 或下载tools项目压缩包并解压
+cp  tools/ais-bench_workload/tool/ais_infer ./
+cd ais_infer/backend
+pip3.7 wheel ./
+ls
+pip3 install --force-reinstall ./aclruntime*.whl
+cd ../..
 ```
+
 7.评估精度
 ```
-bash test/eval_acc.sh
+bash test/eval_acc_pref.sh
 ```
 
 8.在t4环境上将onnx文件与perf_t4.sh放在同一目录  
