@@ -33,6 +33,8 @@
 #import os
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 

@@ -31,6 +31,8 @@
 # ============================================================================
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os

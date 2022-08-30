@@ -45,6 +45,8 @@ from FLAlgorithms.servers.serverperavg import PerAvg
 from FLAlgorithms.trainmodel.models import *
 from utils.plot_utils import *
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 torch.manual_seed(0)
 
 def main(dataset, algorithm, model, batch_size, learning_rate, beta, lamda, num_glob_iters,

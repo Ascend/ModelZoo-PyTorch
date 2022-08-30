@@ -36,6 +36,8 @@ import json
 import logging
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from model.model import *
 from model.loss import *
 from model.metric import *

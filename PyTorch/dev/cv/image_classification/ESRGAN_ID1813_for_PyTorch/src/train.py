@@ -32,6 +32,8 @@
 # ============================================================================
 #
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import apex
 from torch.optim.adam import Adam
 from model.ESRGAN import ESRGAN

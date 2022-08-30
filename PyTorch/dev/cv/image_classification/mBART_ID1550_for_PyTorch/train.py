@@ -49,6 +49,8 @@ from models.utils.model_utils import load_model_state, save_state, get_perplexit
 
 """Train models."""
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 import onmt.opts as opts
 

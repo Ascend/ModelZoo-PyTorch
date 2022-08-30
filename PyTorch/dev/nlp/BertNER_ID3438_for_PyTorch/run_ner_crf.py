@@ -34,6 +34,8 @@ import json
 import time
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler

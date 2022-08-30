@@ -47,6 +47,8 @@ import time
 from apex import amp
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 import torch.distributed as dist
 from fairseq import checkpoint_utils, distributed_utils, options, progress_bar, tasks, utils
