@@ -22,20 +22,11 @@ protobuf=3.19.0
 **说明：** 
 请用户根据自己的运行环境自行安装所需依赖。
 ## 3. 获取源码
-[源码](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/model/ATC%20SE-ResNeXt50(32x4d)%20(FP16)%20from%20Pytorch%20Ascend310/zh/1.1/SE_ResNeXt50_32x4d.zip)
 ```text
-├── aipp_se_resnext50_32x4d_pth.config          //aipp工具数据集预处理配置文件
 ├── get_info.py                      //生成推理输入的数据集二进制info文件或jpg info文件
-├── ImageNet.info                    // ImageNet验证集jpg info文件，用于benchmark推理获取数据集
 ├── preprocess_se_resnext50_32x4d_pth.py   //数据集预处理脚本，通过均值方差处理归一化图片，生成图片二进制文件
 ├── ReadMe.md
-├── SE_ResNeXt50_32x4d_atc.sh           //onnx模型转换om模型脚本
-├── se_resnext50_32x4d-a260b3a4.pth      //训练后的权重文件
-├── se_resnext50_32x4d_16.om            //batchsize为16的离线模型
-├── se_resnext50_32x4d.onnx             //onnx格式的模型文件
 ├── seresnext50_pth2onnx.py             //用于转换pth模型文件到onnx模型文件
-├── seresnext50_val.info                //ImageNet验证集二进制info文件，用于benchmark推理获取数据集
-├── val_label.txt                       //ImageNet数据集标签，用于验证推理结果
 └── vision_metric_ImageNet.py           //验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
 ```
 ## 4. 准备数据集
