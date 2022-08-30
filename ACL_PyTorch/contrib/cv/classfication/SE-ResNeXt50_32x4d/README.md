@@ -8,7 +8,7 @@ branch:master
 commit_id:8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0 
   
 ## 2 环境说明
-使用CANN版本为CANN:5.1.RC1
+使用CANN版本为CANN:5.1.RC2
 
 深度学习框架与第三方库
 ```
@@ -25,8 +25,6 @@ protobuf=3.19.0
 [源码](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/model/ATC%20SE-ResNeXt50(32x4d)%20(FP16)%20from%20Pytorch%20Ascend310/zh/1.1/SE_ResNeXt50_32x4d.zip)
 ```text
 ├── aipp_se_resnext50_32x4d_pth.config          //aipp工具数据集预处理配置文件
-├── benchmark.aarch64                //离线推理工具（适用ARM架构）
-├── benchmark.x86_64                 //离线推理工具（适用x86架构）
 ├── get_info.py                      //生成推理输入的数据集二进制info文件或jpg info文件
 ├── ImageNet.info                    // ImageNet验证集jpg info文件，用于benchmark推理获取数据集
 ├── preprocess_se_resnext50_32x4d_pth.py   //数据集预处理脚本，通过均值方差处理归一化图片，生成图片二进制文件
@@ -77,6 +75,8 @@ python3.7 get_info.py bin ./prep_bin ./seresnext50_val.info 224 224
 1. 获取权重文件方法。
 ```text
 − 从源码中获取se_resnext50_32x4d-a260b3a4.pth文件
+− 根据 http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth 
+在PyTorch开源框架中获取se_resnext50_32x4d-a260b3a4.pth文件。
 ```
 2.	导出.onnx文件。
 ```text
@@ -86,7 +86,7 @@ git clone https://github.com/Cadene/pretrained-models.pytorch.git
 commit_id:8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0
 b. 将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
 c. 进入代码仓目录并将seresnext50_pth2onnx.py和se_resnext50_32x4d-a260b3a4.pth移到pretrained-models.pytorch目录下。
-d. 进入models目录下，执行seresnext50_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
+d. 进入pretrained-models.pytorch目录下，执行seresnext50_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
 python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext50_32x4d.onnx
 第一个参数为输入权重文件路径，第二个参数为输出onnx文件路径。
 运行成功后，在当前目录生成se_resnext50_32x4d.onnx模型文件。然后将生成onnx文件移到源码包中。
@@ -95,7 +95,6 @@ python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext
 ```
 
 3.	使用ATC工具将ONNX模型转OM模型。
-- 修改se_resnext50_32x4d_atc.sh脚本，通过ATC工具使用脚本完成转换，具体的脚本示例如下：
 ```shell
 # 配置环境变量
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -111,13 +110,14 @@ atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_1
 --input_shape：输入数据的shape。
 --log：日志等级。
 --soc_version：部署芯片类型。
+--chip_name: 部署芯片类型。
 --insert_op_conf=aipp_TorchVision.config: AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 ```
 
 ### 步骤 2 开始推理验证。
 1. 使用ais_infer工具进行推理
 ```shell
-python3 ais_infer.py –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt NPY
+python3 ais_infer.py –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt TXT
 ```
 2. 精度验证
 ```shell
