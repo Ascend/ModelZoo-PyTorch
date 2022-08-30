@@ -110,7 +110,7 @@ atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_1
 --input_shape：输入数据的shape。
 --log：日志等级。
 --soc_version：部署芯片类型。
---chip_name: 部署芯片类型。
+--chip_name: 部署芯片类型，利用 npu-smi info 查看芯片类型
 --insert_op_conf=aipp_TorchVision.config: AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 ```
 
@@ -125,8 +125,6 @@ python3 ais_infer.py –model seresnext50_32x4d.om --input prep_bin/ --output ./
 python3.7 vision_metric_ImageNet.py ${ais_output} ./val_label.txt ./ result.json
 # 第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件。
 ```
-
-
 
 
 ## 6. 结果
