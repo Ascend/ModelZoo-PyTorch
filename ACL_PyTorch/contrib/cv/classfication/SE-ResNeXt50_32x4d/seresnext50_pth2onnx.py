@@ -12,24 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import os
 import sys
 import torch
 import onnx
-from pretrainedmodels.models.senet import se_resnext50_32x4d
+from pretrainedmodels.models.senet import se_resnext50_32x4d, initialize_pretrained_model
+
+pretrained_settings = {
+    'se_resnext50_32x4d': {
+        'imagenet': {
+            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+            'input_space': 'RGB',
+            'input_size': [3, 224, 224],
+            'input_range': [0, 1],
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225],
+            'num_classes': 1000
+        }
+    },
+
+}
+
 
 def pth2onnx(input_file, output_file):
-    model = se_resnext50_32x4d(num_classes=1000, pretrained='imagenet')
-    model.load_state_dict(torch.load(input_file))
+    num_classes = 1000
+    model = se_resnext50_32x4d(num_classes, pretrained=None)
+    settings = pretrained_settings['se_resnext50_32x4d']['imagenet']
+    cur_path = os.getcwd()
+    settings['url'] = "file://" + os.path.join(cur_path, input_file)
+    initialize_pretrained_model(model, num_classes, settings)
     model.eval()
     input_names = ["image"]
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 224, 224)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11)
-    
+    torch.onnx.export(model, dummy_input, output_file, input_names=input_names, dynamic_axes=dynamic_axes,
+                      output_names=output_names, opset_version=11)
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         raise Exception("usage: python seresnext50_pth2onnx.py <input_file> <output_file>")
-    input_file = sys.argv[1] 
+    input_file = sys.argv[1]
     output_file = sys.argv[2]
     pth2onnx(input_file, output_file)

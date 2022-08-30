@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
 import sys
 import json
@@ -70,26 +69,19 @@ def load_statistical_predict_result(filepath):
     data_vec: the probabilitie of prediction in the 1000
     :return: probabilities, numble of label, in_type, color
     """
-    data = np.load(filepath)[0]
-    n_label = data.shape[0]
-    data_vec = np.zeros((n_label), dtype=np.float32)
-    in_type = ''
-    color = ''
-    for ind, prob in enumerate(data):
-        data_vec[ind] = np.float32(prob)
-    # with open(filepath, 'r')as f:
-    #     data = f.readline()
-    #     temp = data.strip().split(" ")
-    #     n_label = len(temp)
-    #     data_vec = np.zeros((n_label), dtype=np.float32)
-    #     in_type = ''
-    #     color = ''
-    #     if n_label == 0:
-    #         in_type = f.readline()
-    #         color = f.readline()
-    #     else:
-    #         for ind, prob in enumerate(temp):
-    #             data_vec[ind] = np.float32(prob)
+    with open(filepath, 'r')as f:
+        data = f.readline()
+        temp = data.strip().split(" ")
+        n_label = len(temp)
+        data_vec = np.zeros((n_label), dtype=np.float32)
+        in_type = ''
+        color = ''
+        if n_label == 0:
+            in_type = f.readline()
+            color = f.readline()
+        else:
+            for ind, prob in enumerate(temp):
+                data_vec[ind] = np.float32(prob)
     return data_vec, n_label, in_type, color
 
 
@@ -114,7 +106,7 @@ def create_visualization_statistical_result(prediction_file_path,
     n_labels = 0
     count_hit = np.zeros(topn)
     for tfile_name in os.listdir(prediction_file_path):
-        if ".npy" not in tfile_name:
+        if '.txt' not in tfile_name:
             continue
         count += 1
         temp = tfile_name.split('.')[0]
@@ -125,7 +117,6 @@ def create_visualization_statistical_result(prediction_file_path,
         prediction = ret[0]
         n_labels = ret[1]
         sort_index = np.argsort(-prediction)
-        img_name = "ILSVRC2012_val_" + str(int(img_name.split("_")[2]) + 1).zfill(8)
         gt = img_gt_dict[img_name]
         if (n_labels == 1000):
             realLabel = int(gt)
@@ -189,5 +180,4 @@ if __name__ == '__main__':
 
     elapsed = (time.time() - start)
     print("Time used:", elapsed)
-
 

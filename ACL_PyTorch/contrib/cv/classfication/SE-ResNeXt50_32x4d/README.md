@@ -3,19 +3,21 @@
 [SE_ResNeXt50](https://arxiv.org/abs/1611.05431)  
 SE_ResNeXt50_32x4d是一种用于图像分类的卷积神经网络，这个模型的默认输入尺寸是224×224，有三个通道。通过利用多路分支的特征提取方法，提出了一种新的基于ResNet残差模块的网络组成模块，并且引入了一个新的维度cardinality。该网络模型可以在于对应的ResNet相同的复杂度下，提升模型的精度（相对于最新的ResNet和Inception-ResNet)）同时，还通过实验证明，可以在不增加复杂度的同时，通过增加维度cardinality来提升模型精度，比更深或者更宽的ResNet网络更加高效。
 ### 1.2 代码地址
-[SE_ResNeXt50](https://github.com/Cadene/pretrained-models.pytorch/blob/master/pretrainedmodels/models/senet.py)  
+[SE_ResNeXt50](git clone https://github.com/Cadene/pretrained-models.pytorch.git)  
 branch:master   
-commit_id:021d97897c9aa76ec759deff43d341c4fd45d7ba 
+commit_id:8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0 
   
 ## 2 环境说明
 使用CANN版本为CANN:5.1.RC1
 
 深度学习框架与第三方库
 ```
-ONNX=1.7.0
-Pytorch=1.8.0
-TorchVision=0.7.0
+onnx=1.7.0
+pytorch=1.6.0
+torchVision=0.7.0
 numpy=1.18.5
+opencv-python=4.5.5.64
+protobuf=3.19.0
 ```
 **说明：** 
 请用户根据自己的运行环境自行安装所需依赖。
@@ -72,18 +74,18 @@ python3.7 get_info.py bin ./prep_bin ./seresnext50_val.info 224 224
 ### 步骤1 模型转换
 本模型基于开源框架PyTorch训练的SE_ResNeXt50_32x4d进行模型转换。
 使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
-1. 两种获取权重文件方法。
+1. 获取权重文件方法。
 ```text
 − 从源码中获取se_resnext50_32x4d-a260b3a4.pth文件
-− 单击Link在PyTorch开源框架中获取se_resnext50_32x4d-a260b3a4.pth文件。
 ```
 2.	导出.onnx文件。
 ```text
 将模型权重文件.pt转换为.onnx文件。
 a. 下载代码仓。
 git clone https://github.com/Cadene/pretrained-models.pytorch.git
+commit_id:8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0
 b. 将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
-c. 进入代码仓目录并将se_resnext50_32x4d-a260b3a4.pth与seresnext50_pth2onnx.py移到pretrained-models.pytorch-master/pretrainedmodels/models/目录下。
+c. 进入代码仓目录并将seresnext50_pth2onnx.py和se_resnext50_32x4d-a260b3a4.pth移到pretrained-models.pytorch目录下。
 d. 进入models目录下，执行seresnext50_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
 python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext50_32x4d.onnx
 第一个参数为输入权重文件路径，第二个参数为输出onnx文件路径。
@@ -99,7 +101,7 @@ python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # 使用二进制输入时，执行如下命令
-atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:32,3,224,224" --log=info --soc_version= Ascend${chip_name}
+atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=info --soc_version= Ascend${chip_name}
 
 # 参数说明
 --model：为ONNX模型文件。
