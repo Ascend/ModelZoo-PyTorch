@@ -80,8 +80,6 @@ d. 进入pretrained-models.pytorch目录下，执行seresnext50_pth2onnx.py脚�
 python3.7 seresnext50_pth2onnx.py ../se_resnext50_32x4d-a260b3a4.pth ../se_resnext50_32x4d.onnx
 第一个参数为输入权重文件路径，第二个参数为输出onnx文件路径。
 运行成功后，在当前目录生成se_resnext50_32x4d.onnx模型文件。然后将生成onnx文件移到源码包中。
- 
-使用ATC工具将.onnx文件转换为.om文件，需要.onnx算子版本需为11。在seresnext50_pth2onnx.py脚本中torch.onnx.export方法中的输入参数opset_version的值需为11，请勿修改。
 ```
 
 3.	使用ATC工具将ONNX模型转OM模型。
