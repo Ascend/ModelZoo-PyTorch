@@ -73,12 +73,11 @@ python3.7 get_info.py bin ./prep_bin ./seresnext50_val.info 224 224
 ```text
 将模型权重文件.pt转换为.onnx文件。
 a. 下载代码仓。
-git clone https://github.com/Cadene/pretrained-models.pytorch.git
-commit_id:8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0
+git clone https://github.com/Cadene/pretrained-models.pytorch.git (commit_id:8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0)
 b. 将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
-c. 进入代码仓目录并将seresnext50_pth2onnx.py和se_resnext50_32x4d-a260b3a4.pth移到pretrained-models.pytorch目录下。
+c. 进入代码仓目录并将seresnext50_pth2onnx.py和se_resnext50_32x4d-a260b3a4.pth移到pretrained-models.pytorch上级目录。
 d. 进入pretrained-models.pytorch目录下，执行seresnext50_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
-python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext50_32x4d.onnx
+python3.7 seresnext50_pth2onnx.py ../se_resnext50_32x4d-a260b3a4.pth ../se_resnext50_32x4d.onnx
 第一个参数为输入权重文件路径，第二个参数为输出onnx文件路径。
 运行成功后，在当前目录生成se_resnext50_32x4d.onnx模型文件。然后将生成onnx文件移到源码包中。
  
@@ -91,7 +90,7 @@ python3.7 seresnext50_pth2onnx.py ./se_resnext50_32x4d-a260b3a4.pth ./se_resnext
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # 使用二进制输入时，执行如下命令
-atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=info --soc_version= Ascend${chip_name}
+atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=info --soc_version=Ascend${chip_name}
 
 # 参数说明
 --model：为ONNX模型文件。
