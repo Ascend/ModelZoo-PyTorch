@@ -1,8 +1,23 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import json
 import os
 import sys
-import json
-import numpy as np
 import time
+
+import numpy as np
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -36,7 +51,7 @@ def cre_groundtruth_dict_fromtxt(gtfile_path):
     :return: dictionary key imagename, value is label number
     """
     img_gt_dict = {}
-    with open(gtfile_path, 'r')as f:
+    with open(gtfile_path, 'r') as f:
         for line in f.readlines():
             temp = line.strip().split(" ")
             imgName = temp[0].split(".")[0]
@@ -52,11 +67,11 @@ def load_statistical_predict_result(filepath):
     input:
     result file:filepath
     output:
-    n_label:numble of label
-    data_vec: the probabilitie of prediction in the 1000
-    :return: probabilities, numble of label, in_type, color
+    n_label:number of label
+    data_vec: the probabilities of prediction in the 1000
+    :return: probabilities, number of label, in_type, color
     """
-    with open(filepath, 'r')as f:
+    with open(filepath, 'r') as f:
         data = f.readline()
         temp = data.strip().split(" ")
         n_label = len(temp)
@@ -167,4 +182,3 @@ if __name__ == '__main__':
 
     elapsed = (time.time() - start)
     print("Time used:", elapsed)
-
