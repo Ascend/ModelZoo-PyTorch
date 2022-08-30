@@ -35,7 +35,7 @@ def evaluate(args):
     predict_result = dict()
     predict_files = os.listdir(input_dir)
     predict_files = list(
-        filter(lambda x: os.path.splitext(x)[1] == ".bin" , predict_files))
+        filter(lambda x:os.path.splitext(x)[1] == ".bin" , predict_files))
     for predict_name in predict_files:
         predict_path = os.path.join(input_dir, predict_name)
         predict_data = np.argsort(-1 * np.fromfile(predict_path, dtype=dtype))
