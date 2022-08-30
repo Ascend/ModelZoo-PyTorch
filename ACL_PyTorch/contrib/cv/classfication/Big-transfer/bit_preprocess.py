@@ -42,7 +42,6 @@ def preprocess(dataset_path, data_bin_path, batch_size):
             f.write(label+'\n')
             save_file_name = "{}.bin".format(i)
             save_path = os.path.join(data_bin_path, save_file_name)
-            # save_path = "{}{}" .format(data_bin_path, save_file_name)
             if images.shape[0] != batch_size:
                 images = F.pad(input=images, pad=(0, 0, 0, 0, 0, 0, 0, batch_size-images.shape[0]), mode='constant', value=0)
             images.numpy().tofile(save_path)
