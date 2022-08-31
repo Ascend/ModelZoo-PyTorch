@@ -118,4 +118,3 @@ index 20c8b3e..0bcf609 100644
 +attrs
 +psutil
 +torchvision==0.9.0
-+tqdm
