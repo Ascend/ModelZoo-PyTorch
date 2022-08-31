@@ -144,7 +144,7 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
          python3 WaveGlow_pth2onnx.py -i ./waveglow_256channels_universal_v5.pt -o ./
          ```
 
-         获得WaveGlow_onnx.onnx文件
+         获得WaveGlow.onnx文件
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
