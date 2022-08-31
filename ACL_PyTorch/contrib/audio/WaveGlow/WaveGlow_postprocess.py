@@ -28,7 +28,7 @@ def main(file_dir, output_dir, sampling_rate):
     for root, subDirs, files in os.walk(file_dir):
         for fileName in files:
             if fileName.endswith("bin"):
-                file_list.append(os.path.join(root,fileName))
+                file_list.append(os.path.join(root, fileName))
     for file_dir in file_list:
         if os.path.exists(file_dir):
             audio = np.fromfile(file_dir, dtype=np.float32)
