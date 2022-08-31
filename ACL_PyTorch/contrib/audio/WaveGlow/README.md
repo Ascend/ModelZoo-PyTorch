@@ -202,7 +202,7 @@ a. 查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/too
 ```
 git https://gitee.com/ascend/tools.git
 cd ./tools/ais-bench_workload/tool/ais_infer/backend
-pip3.7 wheel ./
+pip3 wheel ./
 pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
 ```
 
