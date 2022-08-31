@@ -199,57 +199,58 @@ pip3 install -r requirements.txt
 
 2.开始推理验证
 
-   a.  使用ais-infer工具进行推理。
-
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+a. 使用ais-infer工具进行推理。
 
 
-   b.  执行推理。
-
-      ```
-        
-      ```
-
-      -   参数说明：
-
-           -   xxx：模型类型。
-           -   xxx：om文件路径。
-           -   xxx：NPU设备编号。
-		...
-
-      推理后的输出默认在当前目录result下。
-
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-
-   c.  精度验证。
-
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-
-      ```
-       python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
-      ```
-
-      result/dumpOutput_device0/：为生成推理结果所在路径  <u>***参数解释***</u>
-    
-      val_label.txt：为标签数据
-    
-      result.json：为生成结果文件
+ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
-   d.  性能验证。
+b. 执行推理
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+运行 WaveGlow_ais_infer 脚本。
 
-      ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
-      ```
+```
+mkdir out
+python3 WaveGlow_ais_infer.py --ais_infer_path ${ais_infer_path} --bs 1
+```
+
+- 参数说明：
+
+  -   --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer/”。
+
+  推理后的输出默认在当前目录out下。
+
+  >**说明：** 
+  >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+
+c. 精度验证
+
+通过主观听生成'.wav'音频文件验证模型的精度。
+
+执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件。
+
+```
+#10个文件同时转成音频，保存在./wav目录中
+python WaveGlow_postprocess.py -f ./out -o ./wav
+```
+
+d.  性能验证
+
+可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+```
+python3 ${ais_infer_path}/ais_infer.py --model=./WaveGlow.om --dymDims=mel:1,80,699 --loop=300 --batchsize=1
+```
 
 
-# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+## 模型推理性能
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-|           |                  |            |            |                 |
+不同设备的吞吐率性能（fps）
+
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+| batch1   | 0.65       | 0.23   |      | 2.82 |
+
+310P3性能达到T4性能的2.82倍。
