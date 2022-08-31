@@ -9,9 +9,9 @@ tensorboardX==1.1
 Unidecode==1.0.22
 pillow
 tqdm
-numba==0.43.0
+numba==0.45.1
 llvmlite==0.32.1
-resampy==0.2.0
+resampy==0.2.2
 attrs
 psutil
 torchvision==0.9.0
