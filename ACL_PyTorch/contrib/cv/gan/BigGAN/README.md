@@ -20,6 +20,12 @@
 ## <a name="1">1. 模型概述</a>
 ### <a name="11">1.1 论文地址</a>
 [BigGAN论文](https://arxiv.org/pdf/1809.11096.pdf)
+### <a name="11">1.2 参考实现</a>
+```
+url=https://github.com/ajbrock/BigGAN-PyTorch	
+branch=master 
+commit_id=98459431a5d618d644d54cd1e9fceb1e5045648d
+```
 ### <a name="12">1.2 代码地址</a>
 [BigGAN代码](https://github.com/ajbrock/BigGAN-PyTorch)
 
@@ -28,10 +34,11 @@
 git clone https://github.com/ajbrock/BigGAN-PyTorch.git
 mv biggan.patch BigGAN-PyTorch
 cd BigGAN-PyTorch
+dos2unix biggan.patch
 git apply biggan.patch
-scp BigGAN.py ..
-scp layers.py ..
-scp inception_utils.py ..
+cp BigGAN.py ..
+cp layers.py ..
+cp inception_utils.py ..
 cd ..
 ```
 
@@ -164,16 +171,18 @@ git clone https://gitee.com/ascend/tools.git
    以上为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
 ### <a name="52">5.2 离线推理</a>
 
-1. 进入tools/ais-bench_workload/tool/ais_infer/文件夹，生成推理后端whl包，进行离线推理。
-   ```
-   cd tools/ais-bench_workload/tool/ais_infer/backend/
-   pip3.7 wheel ./
-   cd ..
-   ```
+1. 安装ais_infer推理工具
+   安装链接: https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+   
 2.执行离线推理
-
+·设置环境变量
+```
+    export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
+```
 ·执行命令
 ```
+    cd tools/ais-bench_workload/tool/ais_infer
+    mkdir -p /home/ylz/BigGAN/outputs_bs1_om
     python3.7 ais_infer.py --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 >./result1.txt
 ```
 
@@ -205,7 +214,8 @@ git clone https://gitee.com/ascend/tools.git
 ### <a name="61">6.1 模型后处理</a>
 模型后处理将离线推理得到的bin文件转换为jpg图像文件，并将原始输出保存至npz文件中，用于精度数据的获取
 ```
-python3.7 biggan_postprocess.py --result-path "./outputs_bs1_om" --save-path "./postprocess_img" --batch-size 1 --save-img --save-npz
+cd /home/ylz/BigGAN
+python3.7 biggan_postprocess.py --result-path "./outputs_bs1_om/2022_08_29-16_54_31" --save-path "./postprocess_img" --batch-size 1 --save-img --save-npz
 ```
 其中"result-path"表示离线推理输出所在的文件夹，"save-path"表示转换后图像文件的存储地址
 ### <a name="62">6.2 精度计算</a>
