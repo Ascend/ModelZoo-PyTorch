@@ -146,8 +146,8 @@
    # 输入参数：${model_dir} ${output_path} ${seq_length} 
    python3 pth2onnx.py ./bert-base-chinese ./bert_base_chinese.onnx 384
    # 修改优化模型：${bs}:[1, 4, 8, 16, 32, 64],${seq_len}:384
-   python -m onnxsim ./bert_base_chinese.onnx ./bert_base_chinese_bs${bs}.onnx --input-shape "input_ids:${bs},${seq_len}" "attention_mask:${bs},${seq_len}" "token_type_ids:${bs},${seq_len}"
-   python fix_onnx.py bert_base_chinese_bs${bs}.onnx bert_base_chinese_bs${bs}_fix.onnx
+   python3 -m onnxsim ./bert_base_chinese.onnx ./bert_base_chinese_bs${bs}.onnx --input-shape "input_ids:${bs},${seq_len}" "attention_mask:${bs},${seq_len}" "token_type_ids:${bs},${seq_len}"
+   python3 fix_onnx.py bert_base_chinese_bs${bs}.onnx bert_base_chinese_bs${bs}_fix.onnx
    ```
 
 3. 使用ATC工具将ONNX模型转OM模型
@@ -194,7 +194,7 @@
    ```shell
    # 以bs1模型推理为例
    mkdir -p ./output_data/bs1
-   python3 ais_infer.py --model ./bert_base_chinese_bs1.om --input ./input_data/input_ids,./input_data/attention_mask,./input_data/token_type_ids --output ./output_data/bs1 --device 1
+   python3 ais_infer.py --model ./bert_base_chinese_bs1.om --input ./input_data/input_ids,./input_data/attention_mask,./input_data/token_type_ids --output ./output_data/bs1 --batchsize 1 --device 1
    ```
 
 6. 精度验证
