@@ -94,11 +94,12 @@ diff --git a/requirements.txt b/requirements.txt
 index 20c8b3e..0bcf609 100644
 --- a/requirements.txt
 +++ b/requirements.txt
-@@ -1,10 +1,10 @@
+@@ -1,10 +1,17 @@
 -torch==1.0
 +torch==1.8.0
 +tensorflow==1.15
- matplotlib==2.1.0
+-matplotlib==2.1.0
++matplotlib
 -tensorflow
 -numpy==1.13.3
 +numpy
@@ -109,4 +110,11 @@ index 20c8b3e..0bcf609 100644
  tensorboardX==1.1
  Unidecode==1.0.22
  pillow
++tqdm
++numba==0.43.0
++llvmlite==0.32.1
++resampy==0.2.0
++attrs
++psutil
++torchvision==0.9.0
 
