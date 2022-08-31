@@ -18,7 +18,12 @@ import torch.onnx
 import argparse
 import os
 import sys
+
 sys.path.append('./')
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(__dir__)
+sys.path.append(os.path.abspath(os.path.join(__dir__, 'waveglow')))
+sys.path.append(os.path.abspath(os.path.join(__dir__, 'waveglow/tacotron2')))
 
 
 def parse_args(parser):
@@ -40,7 +45,7 @@ def export_onnx(parser, args):
     model = model.remove_weightnorm(model)
     model.eval()
 
-    onnx_path = os.path.join(args.output, "WaveGlow_onnx.onnx")
+    onnx_path = os.path.join(args.output, "WaveGlow.onnx")
     mel = torch.randn(1, 80, 1)
 
     with torch.no_grad():
@@ -52,7 +57,7 @@ def export_onnx(parser, args):
         dynamic_axes = {'mel': {2:'mel_seq'},
                         'output_audio': {1: 'audio_seq'}}
         torch.onnx.export(model, forward_input, onnx_path, input_names=input_names,
-                        export_params=True, verbose=True, opset_version=opset_version, 
+                        export_params=True, verbose=False, opset_version=opset_version, 
                         output_names=['output_audio'], dynamic_axes = dynamic_axes)
 
 
