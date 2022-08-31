@@ -141,7 +141,7 @@ ResNeXt50是一种用于图像分类的卷积神经网络，这个模型的默�
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/......
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 
