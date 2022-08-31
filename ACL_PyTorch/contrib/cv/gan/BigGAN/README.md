@@ -158,24 +158,12 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 
 ## <a name="5">5. 离线推理</a>
 
-### <a name="51">5.1 ais_infer工具概述</a>
-a.推理模型使用ais_infer工具
-```bash
-git clone https://gitee.com/ascend/tools.git
-```
-   i.设置环境变量
-   ```bash
-   export DDK_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest
-   export NPU_HOST_LIB=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/acllib/lib64/stub
-   ```
-   以上为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
-### <a name="52">5.2 离线推理</a>
-
-1. 安装ais_infer推理工具
+1.安装ais_infer推理工具
 
    安装链接: https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
    
 2.执行离线推理
+
 ·设置环境变量
 ```
     export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
