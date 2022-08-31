@@ -19,13 +19,13 @@ scale_list = [['LJ001-0001.wav.bin', 832], ['LJ001-0002.wav.bin', 164], ['LJ001-
     ['LJ001-0005.wav.bin', 699], ['LJ001-0006.wav.bin', 490], ['LJ001-0007.wav.bin', 723], ['LJ001-0008.wav.bin', 154],\
      ['LJ001-0009.wav.bin', 651], ['LJ001-0010.wav.bin', 760]]
 
-def ais_infer(bs, ais_infer_path):
+def ais_infer(bs, ais_infer_path, om_model):
     for i in range(len(scale_list)):
         file_path, scale = scale_list[i][0], scale_list[i][1]
         path = f"out"
         if not os.path.exists(path):
             os.makedirs(path)
-        os.system(f'python3 {ais_infer_path}/ais_infer.py --input prep_data/{file_path} --dymDims mel:1,80,{scale} --model WaveGlow_om.om --output {path} --outfmt BIN --batchsize {bs}')
+        os.system(f'python3 {ais_infer_path}/ais_infer.py --input prep_data/{file_path} --dymDims mel:1,80,{scale} --model {om_model} --output {path} --outfmt BIN --batchsize {bs}')
         for j in os.listdir(path):
             p = os.path.join(path, j)
             if os.path.isdir(p):
@@ -38,5 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('--ais_infer_path', default='ais_infer', type=str)
     parser.add_argument('--bs', default=1,
                         type=int, help='batchsize')
+    parser.add_argument('--om_model', default='WaveGlow.om',
+                        type=str, help='om file')
     args = parser.parse_args()
-    ais_infer(args.bs, args.ais_infer_path)
+    ais_infer(args.bs, args.ais_infer_path, args.om_model)
