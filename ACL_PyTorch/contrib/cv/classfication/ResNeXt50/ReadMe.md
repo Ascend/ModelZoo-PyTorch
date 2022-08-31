@@ -180,7 +180,7 @@ ResNeXt50是一种用于图像分类的卷积神经网络，这个模型的默�
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+        
 
            运行成功后生成<u>***XX.om***</u>模型文件。
 
