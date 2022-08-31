@@ -68,7 +68,7 @@ detectron2 == 0.4
 **说明：** 
 >   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
 >   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
+>   pycocotools库通过 pip3.7 install "git+https://gitee.com/ztdztd/cocoapi.git#subdirectory=pycocotools"  安装
 
 
 ## 3 数据集预处理
@@ -105,7 +105,7 @@ python3.7 get_info.py jpg ./datasets/coco/val2017 maskrcnn_jpeg.info
 
 ## 3 模型转换
 
--   **[安装detectrin2库](#41-安装detectrin2库)**  
+-   **[安装detectrin2库](#41-安装detectrin2库)**  图像灰度化，去噪
 -   **[生成onnx模型](#42-生成onnx模型)**
 -   **[onnx转om模型](#43-onnx转om模型)**  
 
@@ -120,7 +120,7 @@ git reset --hard 068a93a
 2.安装detectron2。
 ```
 rm -rf detectron2/build/ **/*.so
-python3.7 -m pip install -e detectron2
+pip install -e .
 ```
 
 3.修改源代码
@@ -139,7 +139,7 @@ pass
 
 ### 4.2 生成onnx模型
 
-1.运行命令，在outpu文件夹下生成model.onnx文件
+1.运行命令，在outpu文件夹下生成model.onnx文件，从源码包中获取训练后的权重文件maskrcnn.pth。
 ```
 python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml --output ./output --export-method tracing --format onnx MODEL.WEIGHTS maskrcnn.pth MODEL.DEVICE cpu
 ```
