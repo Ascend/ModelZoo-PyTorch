@@ -31,14 +31,12 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
   通过Git获取对应commit\_id的代码方法如下：
 
   ```
-  git clone https://github.com/NVIDIA/waveglow.git
-  cd waveglow
-  git submodule init
-  git submodule update
-  git apply ../WaveGlow.patch
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
-
-​		注意最后需应用我方提供的WaveGlow.patch文件
 
 ### 输入输出数据
 
@@ -74,11 +72,13 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
 ### 1.安装依赖
 
 ```
-# 创建conda环境
-conda create --name WaveGlow python=3.7.5
-conda activate WaveGlow
+git clone https://github.com/NVIDIA/waveglow.git
+cd waveglow
+git submodule init
+git submodule update
+git apply ../WaveGlow.patch
 # 安装依赖
-pip install -r requirment.txt
+pip3 install -r requirment.txt
 ```
 
 ### 2.准备数据集
@@ -110,7 +110,7 @@ pip install -r requirment.txt
    # 测试集为LJSpeech-1.1数据集中前10条数据
    ls ./${data_path}/LJSpeech-1.1/wavs/*.wav | head -n10 > test_list.txt
    # 运行我方提供的数据预处理python文件
-   python WaveGlow_preprocess.py -f test_list.txt -c config.json -o ../infer/prep_data/
+   python3 WaveGlow_preprocess.py -f test_list.txt -c config.json -o ../infer/prep_data/
    ```
 
 获得数据处理结果``../infer/prep_data/*.bin``和``../infer/prep_data/*.txt``
@@ -133,7 +133,7 @@ pip install -r requirment.txt
       1. 使用WaveGlow_pth2onnx.py导出onnx文件
 
          ```
-         python WaveGlow_pth2onnx.py -i ./waveglow_256channels_universal_v5.pt -o ../infer/
+         python3 WaveGlow_pth2onnx.py -i ./waveglow_256channels_universal_v5.pt -o ../infer/
          ```
 
          获得WaveGlow_onnx.onnx文件
@@ -245,7 +245,7 @@ d. 数据后处理. 数据后处理
 执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
 
 ```
-python WaveGlow_postprocess.py -f result/2022_08_26-09_40_18/LJ001-0001_0.bin -o final/1/
+python3 WaveGlow_postprocess.py -f result/2022_08_26-09_40_18/LJ001-0001_0.bin -o final/1/
 ```
 
 **参数说明：**
