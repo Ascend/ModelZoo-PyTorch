@@ -26,8 +26,15 @@ pip install -r requirements.txt
 
 
 
-5.获取msame工具
-将msame放到当前工作目录
+5.获取ais-infer工具
+
+参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
+
+```
+pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+```
+
+将ais-infer工具完整目录放到当前工作目录
 
 
 
