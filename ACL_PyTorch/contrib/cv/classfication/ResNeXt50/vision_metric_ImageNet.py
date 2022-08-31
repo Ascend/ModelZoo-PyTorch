@@ -57,13 +57,6 @@ def cre_groundtruth_dict_fromtxt(gtfile_path):
             img_gt_dict[imgName] = imgLab
     return img_gt_dict
 
-class GetResult:
-    def __init__(self, data_vec, n_label, in_type, color): 
-        self.data_vec = data_vec
-        self.n_label = n_label
-        self.in_type = in_type
-        self.color = color
-
 def load_statistical_predict_result(filepath):
     """
     function:
@@ -90,9 +83,7 @@ def load_statistical_predict_result(filepath):
         else:
             for ind, prob in enumerate(temp):
                 data_vec[ind] = np.float32(prob)
-    r = GetResult(data_vec, n_label, in_type, color)
-    return r
-    #return data_vec, n_label, in_type, color
+    return data_vec, n_label, in_type, color
     
 
 
@@ -118,6 +109,8 @@ def create_visualization_statistical_result(prediction_file_path,
     n_labels = 0
     count_hit = np.zeros(topn)
     for tfile_name in os.listdir(prediction_file_path):
+            if not tfile_name.endswith(".txt"):
+            continue
         count += 1
         temp = tfile_name.split('.')[0]
         index = temp.rfind('_')
