@@ -109,7 +109,7 @@ def create_visualization_statistical_result(prediction_file_path,
     n_labels = 0
     count_hit = np.zeros(topn)
     for tfile_name in os.listdir(prediction_file_path):
-            if not tfile_name.endswith(".txt"):
+        if not tfile_name.endswith(".txt"):
             continue
         count += 1
         temp = tfile_name.split('.')[0]
