@@ -177,8 +177,6 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
       3. 执行ATC命令
 
          ```
-         # 切换到onnx的保存目录
-         cd ../infer/
          # 执行atc命令
          atc --model=WaveGlow.onnx \
              --output=WaveGlow \
