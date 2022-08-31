@@ -232,7 +232,15 @@ python3 WaveGlow_ais_infer.py --ais_infer_path ./tools/ais-bench_workload/tool/a
   >**说明：** 
   >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
-c. 数据后处理
+c. 性能验证
+
+可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+```
+python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model WaveGlow_om.om --dymDims mel:1,80,699 --output out --outfmt BIN --batchsize 1 --loop 300
+```
+
+d. 数据后处理. 数据后处理
 
 执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
 
