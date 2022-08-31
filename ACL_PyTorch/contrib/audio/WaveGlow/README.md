@@ -229,6 +229,8 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
    执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件。
 
    ```
+   #创建wav目录
+   mkdir wav
    #10个文件同时转成音频，保存在./wav目录中
    python WaveGlow_postprocess.py -f ./out -o ./wav
    ```
