@@ -172,6 +172,7 @@ git clone https://gitee.com/ascend/tools.git
 ### <a name="52">5.2 离线推理</a>
 
 1. 安装ais_infer推理工具
+
    安装链接: https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
    
 2.执行离线推理
