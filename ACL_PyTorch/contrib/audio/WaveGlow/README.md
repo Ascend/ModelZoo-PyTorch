@@ -69,20 +69,26 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
 
 ## 快速上手
 
-### 1.安装依赖
+### 安装依赖
 
-```
-git clone https://github.com/NVIDIA/waveglow.git
-cd waveglow
-git submodule init
-git submodule update
-git apply ../WaveGlow.patch
-cd ..
-# 安装依赖
-pip3 install -r requirements.txt
-```
+1. 获取源码。
 
-### 2.准备数据集
+   ```
+   git clone https://github.com/NVIDIA/waveglow.git
+   cd waveglow
+   git submodule init
+   git submodule update
+   git apply ../WaveGlow.patch
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+### 准备数据集
 
 1. 下载[LJSpeech-1.1数据集](https://gitee.com/link?target=https%3A%2F%2Fdata.keithito.com%2Fdata%2Fspeech%2FLJSpeech-1.1.tar.bz2)，解压至data目录
 
@@ -115,9 +121,9 @@ pip3 install -r requirements.txt
    python3 WaveGlow_preprocess.py -f test_files.txt -c waveglow/config.json -o ./prep_data/
    ```
 
-获得数据处理结果``./prep_data/*.bin``和``./prep_data/*.txt``
+​		获得数据处理结果``./prep_data/*.bin``和``./prep_data/*.txt``
 
-### 3.模型推理
+### 模型推理
 
 1. 模型转换
 
@@ -197,50 +203,45 @@ pip3 install -r requirements.txt
 
          运行成功后生成WaveGlow.om模型文件。
 
-2.开始推理验证
+2. 开始推理验证
 
-a. 使用ais-infer工具进行推理。
+   a. 使用ais-infer工具进行推理。
 
+   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   b. 执行推理。
 
+   运行 WaveGlow_ais_infer 脚本。
 
-b. 执行推理
+   ```
+   mkdir out
+   python3 WaveGlow_ais_infer.py --ais_infer_path ${ais_infer_path} --bs 1
+   ```
 
-运行 WaveGlow_ais_infer 脚本。
+   * 参数说明:
+     * --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer/”。
 
-```
-mkdir out
-python3 WaveGlow_ais_infer.py --ais_infer_path ${ais_infer_path} --bs 1
-```
+   推理后的输出默认在当前目录out下。
 
-- 参数说明：
+   >**说明：** 
+   >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
-  -   --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer/”。
+   通过主观听生成'.wav'音频文件验证模型的精度。
 
-  推理后的输出默认在当前目录out下。
+   执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件。
 
-  >**说明：** 
-  >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+   ```
+   #10个文件同时转成音频，保存在./wav目录中
+   python WaveGlow_postprocess.py -f ./out -o ./wav
+   ```
 
-c. 精度验证
+   d.  性能验证。
 
-通过主观听生成'.wav'音频文件验证模型的精度。
+   可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件。
-
-```
-#10个文件同时转成音频，保存在./wav目录中
-python WaveGlow_postprocess.py -f ./out -o ./wav
-```
-
-d.  性能验证
-
-可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-```
-python3 ${ais_infer_path}/ais_infer.py --model=./WaveGlow.om --dymDims=mel:1,80,699 --loop=300 --batchsize=1
-```
+   ```
+   python3 ${ais_infer_path}/ais_infer.py --model=./WaveGlow.om --dymDims=mel:1,80,699 --loop=300 --batchsize=1
+   ```
 
 
 ## 模型推理性能
