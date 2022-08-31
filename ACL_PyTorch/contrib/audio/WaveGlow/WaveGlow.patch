@@ -91,7 +91,7 @@ index 7a76964..aca5a83 100644
  
      @staticmethod
 diff --git a/requirements.txt b/requirements.txt
-index 20c8b3e..6180adf 100644
+index 20c8b3e..411f22a 100644
 --- a/requirements.txt
 +++ b/requirements.txt
 @@ -1,10 +1,17 @@
@@ -112,9 +112,9 @@ index 20c8b3e..6180adf 100644
  Unidecode==1.0.22
  pillow
 +tqdm
-+numba==0.43.0
++numba==0.45.1
 +llvmlite==0.32.1
-+resampy==0.2.0
++resampy==0.2.2
 +attrs
 +psutil
 +torchvision==0.9.0
