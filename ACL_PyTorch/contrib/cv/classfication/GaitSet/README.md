@@ -1,4 +1,4 @@
-# {GaitSet}模型-推理指导
+# GaitSet模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -113,15 +113,15 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
    a.执行命令编辑脚本。
 
    ```
-   vim config_1p.py 
-   #修改dataset_path为b命令pretreatment.py中output_path所用的路径
+   vim GaitSet_config_1p.py 
+   #修改dataset_path为b命令GaitSet_pretreatment.py中output_path所用的路径
    执行:wq保存退出编辑。
    ```
 
    b.执行命令，完成数据集预处理。
 
    ```
-   python pretreatment.py --input_path='root_path_of_raw_dataset' --output_path='root_path_for_output'
+   python GaitSet_pretreatment.py --input_path='root_path_of_raw_dataset' --output_path='root_path_for_output'
    ```
 
    第一个参数是数据集所在目录，第二个参数是预处理后的文件名
@@ -130,22 +130,18 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
    ```
    mkdir CASIA-B-bin
-   python -u test.py --iter=-1 --batch_size 1 --cache=True --pre_process=True
+   python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --pre_process=True
    ```
 
-   d.执行命令生成info文件。
+   
 
-   ```
-   python gen_dataset_info.py bin CASIA-B-bin CASIA-B-bin.info 64 64
-   ```
+> **说明：** 
 
-**说明：** 
+> - 预处理过程中提示大量`WARNING`属于正常现象。如果出现`ERROR`错误提示则可能路径设置有误、或要求中的库文件没有安装。由于`ERROR`提示等重新导出时，建议删除导出有误的文件后再导出。
 
-预处理过程中提示大量`WARNING`属于正常现象。如果出现`ERROR`错误提示则可能路径设置有误、或要求中的库文件没有安装。由于`ERROR`提示等重新导出时，建议删除导出有误的文件后再导出。
+> - 运行时，首先初步处理后的数据集会在导出路径下生成。
 
-运行时，首先初步处理后的数据集会在导出路径下生成。
-
-随后，脚本会使用生成的数据集，在当前根目录下生成`CASIA-B-bin`文件夹，里面含有处理好的二进制格式的图片。之后，脚本会在当前根目录下生成以`.info`结尾的图片列表文件，用于推理。
+> - 随后，脚本会使用生成的数据集，在当前根目录下生成`CASIA-B-bin`文件夹，里面含有处理好的二进制格式的图片。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -165,17 +161,17 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
          a.执行命令编辑脚本。
 
          ```
-         vim pth2onnx.py 
+         vim GaitSet_pth2onnx.py 
          #修改dummy_input = torch.randn((1, align_size, 64, 44)) 中第一个参数为需要的batchsize
          执行:wq保存退出编辑。
          ```
 
-      2. 使用pth2onnx.py导出onnx文件。
+      2. 使用GaitSet_pth2onnx.py导出onnx文件。
 
-         运行pth2onnx.py脚本，获得gaitset_submit.onnx文件。
+         运行GaitSet_pth2onnx.py脚本，获得gaitset_submit.onnx文件。
 
          ```
-         python pth2onnx.py –-input_path=’${权重文件路径}’
+         python GaitSet_pth2onnx.py –-input_path=’${权重文件路径}’
          ```
       
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -183,13 +179,14 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
       1. 配置环境变量。
 
          ```
-         bash env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
    
          > **说明：** 
-   >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
-   
-      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+         
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+      
+      4. 执行命令查看芯片名称（$\{chip\_name\}）。
    
       ```
    npu-smi info
@@ -210,7 +207,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
       3. 执行ATC命令。
    
          ```
-         atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=Ascend310P3
+         atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=${chip_name}
          ```
    
          - 参数说明：
@@ -247,23 +244,23 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
     ```
     python ais_infer.py --model /home/trc/GaitSet/gaitset_submit_bs1_310P.om --batchsize 8 --loop 10
     ```
-    
+   
     -   参数说明：
-    
+   
         -   batchsize：batchsize大小。
         -   loop：推理次数，可选参数，默认1，profiler为true时，推荐为1。
     	...
-    	
+   
     真实数据推理：
     ```
      python ais_infer.py --model gaitset_submit_bs1_310P3.om --input "CASIA-B-bin"
     ```
-    
+   
     -   参数说明：
-    
+   
         -   model：om文件路径。
         -   input：输入数据。
-    	
+   
 
  
 
@@ -278,7 +275,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
     或者在配置好了环境的前提下直接运行：
     
     ```bash
-    python -u test.py --iter=-1 --batch_size 1 --cache=True --post_process=True
+    python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --post_process=True
     ```
     
     参数`--iter`、`--cache`、`--post_process`为模型后处理固定参数不需修改。
