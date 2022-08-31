@@ -78,7 +78,7 @@ git submodule init
 git submodule update
 git apply ../WaveGlow.patch
 # 安装依赖
-pip3 install -r requirment.txt
+pip3 install -r requirments.txt
 ```
 
 ### 2.准备数据集
