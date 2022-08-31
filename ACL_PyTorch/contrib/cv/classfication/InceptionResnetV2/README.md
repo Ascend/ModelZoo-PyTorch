@@ -167,7 +167,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
          使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为1的om模型的命令如下，对于其他的batch size，可作相应的修改。
          ```
-         atc --framework=5 --model=inceptionresnetv2_dynamic_bs.onnx --output=inceptionresnetv2_bs1 --input_format=NCHW --input_shape="image:1,3,299,299" --log=debug --soc_version=Ascend310P3
+         atc --framework=5 --model=inceptionresnetv2_dynamic_bs.onnx --output=inceptionresnetv2_bs1 --input_format=NCHW --input_shape="image:1,3,299,299" --log=debug --soc_version=$\{chip\_name\}
          ```
 
          参数说明：
