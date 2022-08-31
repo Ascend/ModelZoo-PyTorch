@@ -207,30 +207,34 @@ pip3 install -r requirements.txt
    b.  执行推理。
 
       ```
-        mkdir out
-        python3 WaveGlow_ais_infer.py --ais_infer_path ${ais_infer_path} --bs 1
+        
       ```
 
       -   参数说明：
 
-           -   --ais_infer_path：ais-infer推理脚本ais_infer.py所在路径，如“./tools/ais-bench_workload/tool/ais_infer/”。
-      ...
+           -   xxx：模型类型。
+           -   xxx：om文件路径。
+           -   xxx：NPU设备编号。
+		...
 
-      推理后的输出默认在当前目录out下。
+      推理后的输出默认在当前目录result下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见《ais_infer 推理工具使用文档》。
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
-      通过主观听生成'.wav'音频文件验证模型的精度。
-      执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件。
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-       python WaveGlow_postprocess.py -f ./out -o ./wav
+       python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
       ```
 
-      ./wav：为生成推理结果（wav音频文件）所在路径
+      result/dumpOutput_device0/：为生成推理结果所在路径  <u>***参数解释***</u>
+    
+      val_label.txt：为标签数据
+    
+      result.json：为生成结果文件
 
 
    d.  性能验证。
@@ -238,7 +242,7 @@ pip3 install -r requirements.txt
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-       python3 ${ais_infer_path}/ais_infer.py --model=./WaveGlow.om --dymDims=mel:1,80,699 --loop=300 --batchsize=1
+       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
       ```
 
 
@@ -246,8 +250,6 @@ pip3 install -r requirements.txt
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
-| -------- | ---------- | ------ | ---- | ---- |
-| batch1   | 0.65       | 0.23   |      | 2.82 |
-
-310P3性能达到T4性能的2.82倍。
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|           |                  |            |            |                 |
