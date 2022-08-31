@@ -95,7 +95,7 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
    ```0
    wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
    mkdir data
-   tar jxvf LJSpeech-1.1.tar.bz2 ./data/
+   tar jxvf LJSpeech-1.1.tar.bz2 -C ./data/
    ```
 
    解压后数据集目录结构如下:
