@@ -24,28 +24,28 @@ MAX_WAV_VALUE = 32768.0
 
 
 def main(file_dir, output_dir, sampling_rate):
-    if os.path.exists(file_dir):
-        audio = np.fromfile(file_dir, dtype=np.float32)
-        with torch.no_grad():
-            audio = audio * MAX_WAV_VALUE
-        audio = audio.squeeze()
-        audio = audio.astype('int16')
-        audio_path = os.path.join(
-            output_dir, "{}_syn.wav".format(os.path.basename(os.path.splitext(file_dir)[0])))
-        write(audio_path, sampling_rate, audio)
-        print(audio_path)
-    else:
-        raise ValueError("Dir {} not exists!".format(file_dir))
+    file_list=[]    
+    for root, subDirs, files in os.walk(file_dir):
+        for fileName in files:
+            if fileName.endswith("bin"):
+                file_list.append(os.path.join(root,fileName))
+    for file_dir in file_list:
+        if os.path.exists(file_dir):
+            audio = np.fromfile(file_dir, dtype=np.float32)
+            with torch.no_grad():
+                audio = audio * MAX_WAV_VALUE
+            audio = audio.squeeze()
+            audio = audio.astype('int16')
+            audio_path = os.path.join(
+                output_dir, "{}_syn.wav".format(os.path.basename(os.path.splitext(file_dir)[0])))
+            write(audio_path, sampling_rate, audio)
+            print(audio_path)
+        else:
+            raise ValueError("Dir {} not exists!".format(file_dir))
         
 
 
 if __name__ == "__main__":
-    '''
-    Example:
-        python3.7 Waveglow_postprocess.py \
-            -f ./result/2022_08_26-09_40_18/LJLJ001-0001_0.bin
-            -o ./syn_wavs
-    '''
     import argparse
 
     parser = argparse.ArgumentParser(description='Postprocess of ais_infer result')
