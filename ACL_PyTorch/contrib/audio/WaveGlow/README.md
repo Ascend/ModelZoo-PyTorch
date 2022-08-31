@@ -234,7 +234,7 @@ python3 WaveGlow_ais_infer.py --ais_infer_path ./tools/ais-bench_workload/tool/a
 
 c. 性能验证
 
-可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+可使用ais_infer推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
 ```
 python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model WaveGlow_om.om --dymDims mel:1,80,699 --output out --outfmt BIN --batchsize 1 --loop 300
