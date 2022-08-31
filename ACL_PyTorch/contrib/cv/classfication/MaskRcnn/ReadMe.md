@@ -105,7 +105,7 @@ python3.7 get_info.py jpg ./datasets/coco/val2017 maskrcnn_jpeg.info
 
 ## 3 模型转换
 
--   **[安装detectrin2库](#41-安装detectrin2库)**  图像灰度化，去噪
+-   **[安装detectrin2库](#41-安装detectrin2库)**  
 -   **[生成onnx模型](#42-生成onnx模型)**
 -   **[onnx转om模型](#43-onnx转om模型)**  
 
