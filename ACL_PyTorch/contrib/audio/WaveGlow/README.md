@@ -77,8 +77,9 @@ cd waveglow
 git submodule init
 git submodule update
 git apply ../WaveGlow.patch
+cd ..
 # 安装依赖
-pip3 install -r requirments.txt
+pip3 install -r requirements.txt
 ```
 
 ### 2.准备数据集
@@ -87,13 +88,14 @@ pip3 install -r requirments.txt
 
    ```0
    wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
-   tar jxvf LJSpeech-1.1.tar.bz2 ./${data_path}/
+   mkdir data
+   tar jxvf LJSpeech-1.1.tar.bz2 ./data/
    ```
 
    解压后数据集目录结构如下:
 
    ```
-   ${data_path}
+       data
        |-- LJSpeech-1.1
            |-- wavs
            |    |-- LJ001-0001.wav
@@ -108,12 +110,12 @@ pip3 install -r requirments.txt
 
    ```
    # 测试集为LJSpeech-1.1数据集中前10条数据
-   ls ./${data_path}/LJSpeech-1.1/wavs/*.wav | head -n10 > test_list.txt
+   ls ./data/LJSpeech-1.1/wavs/*.wav | head -n10 > test_files.txt
    # 运行我方提供的数据预处理python文件
-   python3 WaveGlow_preprocess.py -f test_list.txt -c config.json -o ../infer/prep_data/
+   python3 WaveGlow_preprocess.py -f test_files.txt -c waveglow/config.json -o ./prep_data/
    ```
 
-获得数据处理结果``../infer/prep_data/*.bin``和``../infer/prep_data/*.txt``
+获得数据处理结果``./prep_data/*.bin``和``./prep_data/*.txt``
 
 ### 3.模型推理
 
@@ -124,7 +126,7 @@ pip3 install -r requirments.txt
    1. 获取权重文件。
 
       ```
-      # 获取pt文件，保存到waveglow目录中
+      # 获取pt文件，保存到当前目录中
       wget https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view 
       ```
 
@@ -133,7 +135,7 @@ pip3 install -r requirments.txt
       1. 使用WaveGlow_pth2onnx.py导出onnx文件
 
          ```
-         python3 WaveGlow_pth2onnx.py -i ./waveglow_256channels_universal_v5.pt -o ../infer/
+         python3 WaveGlow_pth2onnx.py -i ./waveglow_256channels_universal_v5.pt -o ./
          ```
 
          获得WaveGlow_onnx.onnx文件
@@ -172,12 +174,12 @@ pip3 install -r requirments.txt
          # 切换到onnx的保存目录
          cd ../infer/
          # 执行atc命令
-         atc --model=WaveGlow_onnx.onnx \
-             --output=WaveGlow_om \
+         atc --model=WaveGlow.onnx \
+             --output=WaveGlow \
              --input_shape="mel:1,80,-1" \
              --framework=5 \
              --input_format=ND \
-             --soc_version=${chip_name} \
+             --soc_version=Ascend${chip_name} \
              --log=debug \
              --dynamic_dims="154;164;443;490;651;699;723;760;832;833"
          ```
@@ -191,68 +193,55 @@ pip3 install -r requirments.txt
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：上述命令查找得到的处理器型号。
-           -   --dynamic_dims：设为10条测试集数据的shape
+           -   --dynamic_dims：ND格式下动态维度的档位。
 
-         运行成功后生成WaveGlow_om.om模型文件。
+         运行成功后生成WaveGlow.om模型文件。
 
 2.开始推理验证
 
-a. 查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_infer工具安装：
+a. 使用ais-infer工具进行推理。
 
-```
-git https://gitee.com/ascend/tools.git
-cd ./tools/ais-bench_workload/tool/ais_infer/backend
-pip3 wheel ./
-pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-```
+
+ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
 
 b. 执行推理
 
 运行 WaveGlow_ais_infer 脚本。
 
 ```
-# 设置环境变量
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-
-# 推理前使用 'npu-smi info' 命令查看 device 是否在运行其它推理任务，确保 device 空闲
-npu-smi info
-
-# 执行离线推理
-rm -rf out/
 mkdir out
-python3 WaveGlow_ais_infer.py --ais_infer_path ./tools/ais-bench_workload/tool/ais_infer --bs 1
+python3 WaveGlow_ais_infer.py --ais_infer_path ${ais_infer_path} --bs 1
 ```
 
 - 参数说明：
 
-  -   ${ais_infer_path}/ais_infer.py：推理脚本路径。
+  -   --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer/”。
 
   推理后的输出默认在当前目录out下。
 
   >**说明：** 
   >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
-c. 性能验证
+c. 精度验证
 
-可使用ais_infer推理工具的纯推理模式验证om模型的性能，参考命令如下：
+通过主观听生成'.wav'音频文件验证模型的精度。
 
-```
-python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model WaveGlow_om.om --dymDims mel:1,80,699 --output out --outfmt BIN --batchsize 1 --loop 300
-```
-
-d. 数据后处理. 数据后处理
-
-执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
+执行WaveGlow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件。
 
 ```
-python3 WaveGlow_postprocess.py -f result/2022_08_26-09_40_18/LJ001-0001_0.bin -o final/1/
+#10个文件同时转成音频，保存在./wav目录中
+python WaveGlow_postprocess.py -f ./out -o ./wavs
 ```
 
-**参数说明：**
+d.  性能验证
 
-> -f 推理结果路径
-> -o 后处理结果存放路径
-> ./result/2022_xx_xx-xx_xx_xx/LJ001-0001_0.bin 中的 2022_xx_xx-xx_xx_xx 为 ais_infer 自动生成的目录名
+可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+       python3 ${ais_infer_path}/ais_infer.py --model=./WaveGlow.om --dymDims=mel:1,80,699 --loop=300 --batchsize=1
+      ```
+
 
 ## 模型推理性能
 
@@ -260,8 +249,8 @@ python3 WaveGlow_postprocess.py -f result/2022_08_26-09_40_18/LJ001-0001_0.bin -
 
 不同设备的吞吐率性能（fps）
 
-|        | 310P3 | T4   | 310P/T4 |
-| ------ | ----- | ---- | ------- |
-| batch1 | 0.65  | 0.23 | 2.82    |
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+| batch1   | 0.65       | 0.23   |      | 2.82 |
 
 310P3性能达到T4性能的2.82倍。
