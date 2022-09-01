@@ -7,4 +7,5 @@ torch==1.8.1
 torchvision==0.9.1
 opencv-python==4.5.4.60
 matplotlib>=2.1.0
-onnx==1.8.0
+onnx==1.8.1
+onnxruntime==1.9.0
