@@ -105,16 +105,16 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
    数据预处理将原始数据集转换为模型输入的数据。
 
    执行imagenet_torch_preprocess.py脚本，完成预处理。
-
+   
    ```
-  python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val/ ./prep_dataset 
+   python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val/ ./prep_dataset 
    ```
    预处理结果存放在prep_dataset里
 
    执行gen_dataset_info.py脚本，生成数据集info文件。
 
    ```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./resnest_prep_bin.info 224 224
+   python3.7 gen_dataset_info.py bin ./prep_dataset ./resnest_prep_bin.info 224 224
    ```
 
 
@@ -129,19 +129,17 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./resnest_prep_bin.info 224 224
 
        [ResNeSt预训练pth权重文件](https://github.com/zhanghang1989/ResNeSt/releases/download/weights_step1/resnest50-528c19ca.pth)
 
-```
-wget https://github.com/zhanghang1989/ResNeSt/releases/download/weights_step1/resnest50-528c19ca.pth
-```
+        ```
+           wget https://github.com/zhanghang1989/ResNeSt/releases/download/weights_step1/resnest50-528c19ca.pth
+        ```
 
    2. 导出onnx文件。
 
-      1. 使用resnest_pth2onnx.py导出onnx文件。<u>***请用脚本名称替换xxx***</u>
+      1. 使用resnest_pth2onnx.py导出onnx文件。
 
          运行resnest_pth2onnx.py脚本。
-
          ```
          python3.7 resnest_pth2onnx.py --source="./resnest50.pth" --target="resnest50.onnx"
-
          ```
          --source：权重文件路径。
          --target：onnx文件。
@@ -150,16 +148,14 @@ wget https://github.com/zhanghang1989/ResNeSt/releases/download/weights_step1/re
       2. 优化ONNX文件。
 
          ```
-        python3.7 -m onnxsim --input-shape="1,3,224,224" --dynamic-input-shape resnest50.onnx resnesst50_sim.onnx
- 
+         python3.7 -m onnxsim --input-shape="1,3,224,224" --dynamic-input-shape resnest50.onnx resnesst50_sim.onnx
          ```
 
          获得resnest50_sim.onnx文件。
 
-   3. 使用ATC工具将ONNX模型转OM模型。
+     3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
-
          ```
           source  /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
