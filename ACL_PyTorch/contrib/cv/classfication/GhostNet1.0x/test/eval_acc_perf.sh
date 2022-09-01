@@ -1,6 +1,7 @@
 #!/bin/bash
 
 datasets_path="/opt/npu/"
+ais_infer_path = "/home/HwHiAiUser/ais_infer"
 
 for para in $*
 do
@@ -17,12 +18,12 @@ if [ $? != 0 ]; then
     exit -1
 fi
 source env.sh
-python /home/infname46/ais_infer/ais_infer.py --model ./ghostnet_bs1.om --input ./prep_dataset/ --output ./ --outfmt NPY --batchsize 1
+python ${ais_infer_path}/ais_infer.py --model ./ghostnet_bs1.om --input ./prep_dataset/ --output ./ --outfmt NPY --batchsize 1
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-python /home/infname46/ais_infer/ais_infer.py --model ./ghostnet_bs16.om --input ./prep_dataset/ --output ./ --outfmt NPY --batchsize 16
+python ${ais_infer_path}/ais_infer.py --model ./ghostnet_bs16.om --input ./prep_dataset/ --output ./ --outfmt NPY --batchsize 16
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
