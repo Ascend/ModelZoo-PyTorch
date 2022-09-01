@@ -174,13 +174,10 @@ def main():
         if opt.local_rank == 0:
             print('learning rate %f' % current_lr)
         # train
-        endtime = time.time()
         fps_s = 0
         for i, data in enumerate(loader_train, 0):
             # training step
             start_time = time.time()
-            if i == 10:
-                time_step2 = time.time()
             model.train()
             img_train = data
             if opt.mode == 'S':
@@ -202,7 +199,7 @@ def main():
                 scaled_loss.backward()
             optimizer.step()
             #steptime counting
-            steptime = time.time() - endtime
+            steptime = time.time() - start_time
             #eval
             model.eval()
             out_train = torch.clamp(model(imgn_train), 0., 1.)
@@ -216,7 +213,6 @@ def main():
                           (epoch + 1, i + 1, len(loader_train), fps_s / (len(loader_train)-10), time_all))
                 print("[epoch %d][%d/%d] loss: %.4f PSNR_train: %.4f scaled_loss: %.4f " %
                       (epoch+1, i+1, len(loader_train), loss.item(), psnr_train, scaled_loss.item()))
-            endtime = time.time()
         model.eval()
 
         # computing PSNR
