@@ -15,16 +15,14 @@
 
 - [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-  ******
-
+  <!-- ****** -->
 
 
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-    [TSM论文](https://arxiv.org/abs/1811.08383)  
-    TSM是一种通用且有效的时间偏移模块，它具有高效率和高性能，可以在达到3D CNN性能的同时，保持2D CNN的复杂性。TSM沿时间维度移动部分通道，从而促进相邻帧之间的信息交换。TSM可以插入到2D CNN中以实现零计算和零参数的时间建模。TSM可以扩展到在线设置，从而实现实时低延迟在线视频识别和视频对象检测。
+  TSM是一种通用且有效的时间偏移模块，它具有高效率和高性能，可以在达到3D CNN性能的同时，保持2D CNN的复杂性。TSM沿时间维度移动部分通道，从而促进相邻帧之间的信息交换。TSM可以插入到2D CNN中以实现零计算和零参数的时间建模。TSM可以扩展到在线设置，从而实现实时低延迟在线视频识别和视频对象检测。
 
 - 参考实现：
 
@@ -35,11 +33,7 @@
   model_name=configs/recognition/tsm
   ```
 
-  *<u>**url=参考的模型源代码git地址，强烈建议使用release分支版本的地址**</u>*
 
-  *<u>**commit\_id例如：291f7e20339510cfa956b5782741697eb8e6d554**</u>*
-  
-  *<u>**model\_name: 子模型名，开源仓往往会提供很多子模型，需说明推理的是哪一个子模型，比如[Segmenter](https://github.com/rstrudel/segmenter)下的Seg-L-Mask/16模型**</u>*
 
 
   通过Git获取对应commit\_id的代码方法如下：
@@ -52,9 +46,7 @@
   cd /configs/recognition/tsm                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
 
-- 参考实现：
 
-    [mmaction2框架TSM代码](https://github.com/open-mmlab/mmaction2/tree/master/configs/recognition/tsm)
 
 
 
@@ -98,11 +90,6 @@
 | opencv-python  | ==4.5.3.56 |-|
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
-
-
-    ```shell
-    pip install -r requirement.txt
-    ```
 
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -191,7 +178,7 @@
       1. 配置环境变量。
 
             ```
-            source /usr/local/Ascend/......   
+            source /usr/local/Ascend/ascend-toolkit/set_env.sh   
             ```
 
          > **说明：** 
@@ -220,13 +207,13 @@
       3. 执行ATC命令。
 
             ```shell
-            atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=om/tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
+            atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=om/tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
             ```
 
             若需要获取不同batch_size输入的om模型，则可以通过设定input_shape进行指定。下面的命令可生成batch_size=16的模型。
 
             ```shell
-            atc --model=onnx_sim/tsm_bs16.onnx --framework=5 --output=om/tsm_bs16 --input_format=NCDHW --input_shape="video:16,8,3,224,224" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
+            atc --model=onnx_sim/tsm_bs16.onnx --framework=5 --output=om/tsm_bs16 --input_format=NCDHW --input_shape="video:16,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
             ```  
 
          - 参数说明：
@@ -295,14 +282,21 @@
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-    调用ACL接口推理计算，性能参考下列数据。
+  调用ACL接口推理计算，性能参考下列数据。
 
-    | Throughput | 310     | 310P    | T4     | 310P/310    | 310P/T4     |
-    | ---------- | ------- | ------- | ------ | ----------- | ----------- |
-    | bs1        |24.8 | 171.04 | 98.01	| 7.16|1.81|
-    | bs4        |22.48|132.23|107.90|5.88|1.22|
-    | bs8        |20.25|123.814|100.0|6.11|1.23|
-    | bs16       | 19.86|119.71|101.89|6.02|1.17|
-    | bs32       | 18.90|99.78|100.91|5.27|0.98|
-    |            |         |         |        |             |             |
-    | 最优batch 1  | 24.8|177.79|107.90|7.16|1.64 |
+## 性能
+| Model     | Batch Size | 310 (FPS/Card) | 710 (FPS/Card) | T4 (FPS/Card) | 710/310   | 710/T4      |
+| --------- | ---------- | -------------- | -------------- | ------------- | --------- | ----------- |
+| TSM   | 1          | 24.80 | 171.04 | 98.01	| 7.16|1.81|
+| TSM   | 4          | 22.48|132.23|107.90|5.88|1.22|
+| TSM   | 8          | 20.25|123.814|100.0|6.11|1.23|
+| TSM   | 16         | 19.86|119.71|101.89|6.02|1.17|
+| TSM   | 32         | 18.90|99.78|100.91|5.27|0.98|
+| 最优batch |    1      | 24.8|177.79|107.90|7.16|1.64 |
+
+## 精度
+
+|Batch_size	| Framework	| Atlas NPU Model |	Server	| Container	| Precision |	Dataset |	Accuracy |	Ascend AI Processor | NPU Version|
+| --------- | ---------- | -------------- | -------------- | ------------- | --------- | ----------- |------------- | --------- | ----------- |
+| 1 |	PyTorch	| Atlas 300-3010 |	Atlas 800-3010 |	NA |	fp16 |	UCF101 |	top1:0.9402 top5:0.9958 |	Ascend 310 |	Atlas 300-3010-32GB|
+| 1 |	PyTorch	| Atlas 300-3010 |	Atlas 800-3010 |	NA |	fp16 |	UCF101 |	top1:0.9402 top5:0.9958 |	Ascend 310P |	Atlas 300-3010-32GB|
