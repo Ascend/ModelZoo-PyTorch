@@ -14,9 +14,7 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
 - 参考实现：
 
   ```
-  url=https://github.com/pytorch/examples.git
-  branch=master
-  commit_id=49e1a8847c8c4d8d3c576479cb2fe2fd2ac583de
+  url=https://github.com/tensorflow/models/tree/r2.1.0/official/r1/resnet
   ```
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
