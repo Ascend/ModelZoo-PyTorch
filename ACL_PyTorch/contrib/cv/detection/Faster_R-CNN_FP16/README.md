@@ -256,50 +256,55 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
    b.  执行推理。
 
 ```
-  ```
 python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model faster_rcnn_r50_fpn.om --input=val2017_bin --output=result
-  ```
-
+```
   -   参数说明：
        -   model：om文件路径。
        -   input：输入文件。
        -   output：输出文件所存目录。
-	...
 
   推理后的输出默认在当前目录result下。
 
   >**说明：** 
   >之后会在--output指定的文件夹result生成保存推理结果的文件夹，将其重命名为infer_result
   >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-```
 
    c.  精度验证。
 
-      本模型提供后处理脚本，将二进制数据转化为txt文件，同时生成画出检测框后的图片，直观展示推理结果。执行脚本。
-    ```
-    python3.7 mmdetection_coco_postprocess.py --bin_data_path=result/infer_result --prob_thres=0.05 --det_results_path=detection-results
-    ```
-    bin_data_path是推理输出目录。prob_thres是框的置信度阈值，低于阈值的框将被舍弃。det_results为后处理输出目录。
-    
-      评测结果的mAP值需要使用官方的pycocotools工具，首先将后处理输出的txt文件转化为coco数据集评测精度的标准json格式。
-    执行转换脚本。
-    ```
-    python3.7 txt_to_json.py
-    ```
-    运行成功后，生成json文件。
-    调用coco_eval.py脚本，输出推理结果的详细评测报告。
-    ```
-    python3.7 coco_eval.py
-    ```
+ 本模型提供后处理脚本，将二进制数据转化为txt文件，执行脚本。
 
+```
+python3.7 mmdetection_coco_postprocess.py --bin_data_path=result/infer_result --prob_thres=0.05 --det_results_path=detection-results
+```
 
-   d.  性能验证。
+- 参数说明：
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-    
-      ```
-       python3.7 tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model=faster_rcnn_r50_fpn.om --loop=20 --batchsize=1
-      ```
+   -   bin_data_path：推理输出目录。
+
+   -   prob_thres：框的置信度阈值。
+
+   -   det_results：后处理输出目录。
+
+评测结果的mAP值需要使用官方的pycocotools工具，首先将后处理输出的txt文件转化为coco数据集评测精度的标准json格式。
+执行转换脚本。
+
+```
+python3.7 txt_to_json.py
+```
+运行成功后，生成json文件。
+调用coco_eval.py脚本，输出推理结果的详细评测报告。
+
+```
+python3.7 coco_eval.py
+```
+
+d.  性能验证。
+
+可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+```
+python3.7 tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model=faster_rcnn_r50_fpn.om --loop=20 --batchsize=1
+```
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
