@@ -1,111 +1,126 @@
+# SPACH_SMLP模型PyTorch离线推理指导
 
-- [SPACH sMLP Onnx模型端到端推理指导](#1-spach-smlp-onnx模型端到端推理指导)
-	- [1.1. 模型概述](#11-模型概述)
-		- [1.1.1. 论文地址](#111-论文地址)
-		- [1.1.2. 代码地址](#112-代码地址)
-	- [1.2. 环境说明](#12-环境说明)
-	- [1.3. 模型转换](#13-模型转换)
-		- [1.3.1. PyTorch模型转ONNX模型](#131-pytorch模型转onnx模型)
-		- [1.3.2. ONNX转OM模型](#132-onnx转om模型)
-	- [1.4. 数据预处理](#14-数据预处理)
-		- [1.4.1. 数据集获取](#141-数据集获取)
-		- [1.4.2. 数据集预处理](#142-数据集预处理)
-	- [1.5. 离线推理](#15-离线推理)
-		- [1.5.1. ais_infer工具概述](#151-ais_infer工具概述)
-		- [1.5.2.  离线推理](#152--离线推理)
-	- [1.6. 精度对比](#16-精度对比)
-		- [1.6.1. 离线推理TopN精度](#161-离线推理topn精度)
-		- [1.6.2. 开源TopN精度](#162-开源topn精度)
-		- [1.6.3. 精度对比](#163-精度对比)
-	- [1.7. 性能对比](#17-性能对比)
-		- [1.7.1. npu性能数据](#171-npu性能数据)
-		- [1.7.2. gpu，npu推理性能对比](#172-gpunpu推理性能对比)
-
-# 1. SPACH sMLP Onnx模型端到端推理指导
-
-## 1.1. 模型概述
-
-
-### 1.1.1. 论文地址
-
-[Sparse MLP for Image Recognition: Is Self-Attention Really Necessary?](https://arxiv.org/abs/2109.05422)
-
-### 1.1.2. 代码地址
-
-[sMLP代码](https://github.com/microsoft/SPACH)
+- [SPACH_SMLP模型PyTorch离线推理指导](#spach_smlp模型pytorch离线推理指导)
+  - [1 模型概述](#1-模型概述)
+    - [1.1 论文地址](#11-论文地址)
+    - [1.2 代码地址](#12-代码地址)
+  - [2 环境说明](#2-环境说明)
+    - [2.1 深度学习框架](#21-深度学习框架)
+    - [2.2 python第三方库](#22-python第三方库)
+  - [3 模型转换](#3-模型转换)
+    - [3.1 pth转onnx模型](#31-pth转onnx模型)
+    - [3.2 onnx转om模型](#32-onnx转om模型)
+  - [4 数据集预处理](#4-数据集预处理)
+    - [4.1 数据集获取](#41-数据集获取)
+    - [4.2 数据集预处理](#42-数据集预处理)
+  - [5 离线推理](#5-离线推理)
+    - [5.1 获取ais_infer推理工具](#51-获取ais_infer推理工具)
+    - [5.2 离线推理](#52-离线推理)
+  - [6 精度对比](#6-精度对比)
+    - [6.1 离线推理精度统计](#61-离线推理精度统计)
+    - [6.2 开源精度](#62-开源精度)
+    - [6.3 精度对比](#63-精度对比)
+  - [7 性能对比](#7-性能对比)
+    - [7.1 npu性能数据](#71-npu性能数据)
+    - [7.2 gpu，npu推理性能对比](#72-gpunpu推理性能对比)
 
 
-## 1.2. 环境说明
 
+## 1 模型概述
 
+-   **[论文地址](#11-论文地址)**  
+
+-   **[代码地址](#12-代码地址)**  
+
+### 1.1 论文地址
+[SPACH_SMLP论文](https://arxiv.org/abs/2109.05422)  
+
+### 1.2 代码地址
+[SPACH_SMLP代码](https://github.com/microsoft/SPACH)  
+branch:master  
+commit_id:b11b098970978677b7d33cc3424970152462032d
+
+## 2 环境说明
+
+-   **[深度学习框架](#21-深度学习框架)**  
+
+-   **[python第三方库](#22-python第三方库)**  
+
+### 2.1 深度学习框架
 ```
 CANN 5.1.RC1
-python==3.7.5
 torch==1.5.0
 torchvision==0.2.2
+onnx==1.8.0
+onnxruntime==1.9.0
+```
+
+### 2.2 python第三方库
+
+```
 timm==0.3.2
 einops==0.3.2
 ```
 
- **说明：**
+**说明：** 
+>   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
+>
+>   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
 
-- smlp_preprocess.py、smlp_pth2onnx.py内部引用的datasets、models等模块需要配合[原仓库代码](https://github.com/microsoft/SPACH)一起使用。
+## 3 模型转换
 
-## 1.3. 模型转换
+-   **[pth转onnx模型](#31-pth转onnx模型)**  
 
+-   **[onnx转om模型](#32-onnx转om模型)**  
 
-### 1.3.1. PyTorch模型转ONNX模型
+### 3.1 pth转onnx模型
 
+1.准备pth权重文件  
+使用训练好的pth权重文件
 
-1. 下载pth权重文件
-
-   sMLP预训练
-   
-   [PyTorch权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth)
-   
-   [ONNX模型](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
-
-> **说明** pth文件的md5sum值为：061415304F38317C3850A587EF709D45 
-> 文件下载后，放置与代码同一目录下。
-   
-2. sMLP模型代码在[sMLP代码](https://github.com/microsoft/SPACH)里，需要下载。
+2.使用开源仓，获取开源命令
 
 ```
-git clone https://github.com/microsoft/SPACH
-cd SPACH
-git checkout b11b098970978677b7d33cc3424970152462032d
+git clone git@github.com:microsoft/SPACH.git
+cd SPACH  
+git reset b11b098970978677b7d33cc3424970152462032d --hard
+```
+3.SPACH代码迁移，执行命令。
+```
+git clone https://gitee.com/ascend/ModelZoo-PyTorch
+cd ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/classfication/SPACH-SMLP  
 ```
 
-3. 调用smlp_pth2onnx脚本，生成ONNX文件
+4.调用“SPACH-SMLP”目录中的“smlp_pth2onnx.py”脚本导出ONNX模型。
 
-
-4. 执行smlp_pth2onnx.py脚本，生成ONNX模型文件
+sMLP预训练[PyTorch模型权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/smlp_t.pth),[ONNX模型文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T.onnx)
 
 ```
 python smlp_pth2onnx.py --onnx_path sMLPNet-T.onnx --model_name smlpnet_tiny  --pth_path smlp_t.pth  --opset_version 11
 ```
-
 参数说明：
 
+--model_name MODEL    模型名称
 
-	--model_name MODEL    模型名称
-	--pth_path PTH_PATH    pytorh模型路径
-	--onnx_path ONNX_PATH    ONNX模型路径
-	--opset_version OPSET_VERSION  ONNX opset版本，默认11
-						
+--pth_path PTH_PATH    pytorh模型路径
 
-### 1.3.2. ONNX转OM模型
+--onnx_path ONNX_PATH    ONNX模型路径
 
-1. 设置环境变量
+--opset_version OPSET_VERSION  ONNX opset版本，默认11
 
+ **说明：**  
+>注意目前ATC支持的onnx算子版本为11
+
+
+### 3.2 onnx转om模型
+
+1.设置环境变量
 ```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh 
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
-2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/canncommercial/51RC1/inferapplicationdev/atctool)
-
-
-${chip_name}可通过`npu-smi info`指令查看，例：310P3
+2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/canncommercial/51RC1/inferapplicationdev/atctool) 
+${chip_name}可通过npu-smi info指令查看，例：310P3
 
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
@@ -113,34 +128,68 @@ ${chip_name}可通过`npu-smi info`指令查看，例：310P3
 atc --framework=5 --model=sMLPNet-T.onnx --output=sMLPNet-T-batch8-high --input_format=NCHW --input_shape="input:8,3,224,224" --soc_version=Ascend${chip_name} --op_precision_mode=op_precision.ini
 ```
 
+
 参数说明：
 
-	--model：为ONNX模型文件。  
-	--framework：5代表ONNX模型。  
-	--input_format：输入数据的格式。  
-	--input_shape：输入数据的shape。  
-	--output：输出的OM模型。  
-	--log：日志级别。  
-	--soc_version：处理器型号。  
-	--insert_op_config：插入算子的配置文件路径与文件名，例如aipp预处理算子。  
-	--enable_small_channel：Set enable small channel. 0(default): disable; 1: enable  
+--model：为ONNX模型文件。  
 
-执行后在当前目录下生成om模型文件：sMLPNet-T-batch1-high.om。
+--framework：5代表ONNX模型。  
 
-点击这里可以直接下载，已生成的，batch size为[1](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch1-high.om)、[4](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch4-high.om)、[8](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch8-high.om)、[16](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch16-high.om)、[32](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch32-high.om)、[64](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch64-high.om)的om模型
+--input_format：输入数据的格式。  
 
-## 1.4. 数据预处理
+--input_shape：输入数据的shape。  
 
+--output：输出的OM模型。  
 
-### 1.4.1. 数据集获取
+--log：日志级别。  
 
-> 该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集进行测试，
-> 如果放在其余位置，请修改smlp_preprocess.py文件中args的data_path参数。
+--soc_version：处理器型号。 
 
-### 1.4.2. 数据集预处理
+--op_precision_mode：转换模式，开启GELU高性能模式。
 
-1. 调用预处理脚本smlp_preprocess.py
-2. 执行预处理脚本，生成数据集预处理后的bin文件
+运行成功后生成“sMLPNet-T-batch8-high.om”模型文件。
+
+> 可从OBS处直接下载batch size为[1](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch1-high.om)、[4](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch4-high.om)、[8](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch8-high.om)、[16](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch16-high.om)、[32](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch32-high.om)、[64](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/sMLP/sMLPNet-T-batch64-high.om)的om模型
+## 4 数据集预处理
+
+-   **[数据集获取](#41-数据集获取)**  
+
+-   **[数据集预处理](#42-数据集预处理)**  
+
+-   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+
+### 4.1 数据集获取
+ 用户自行获取原始数据集，可选用的开源数据集包括ImageNet201，将数据集上传到服务器任意路径下并解压。
+
+   以ImageNet2012数据集为例，数据集目录结构参考如下所示。
+
+   ```
+   ├── ImageNet2012
+         ├──train
+              ├──类别1
+                    │──图片1
+                    │──图片2
+                    │   ...       
+              ├──类别2
+                    │──图片1
+                    │──图片2
+                    │   ...   
+              ├──...                     
+         ├──val  
+              ├──类别1
+                    │──图片1
+                    │──图片2
+                    │   ...       
+              ├──类别2
+                    │──图片1
+                    │──图片2
+                    │   ...              
+   ```
+
+### 4.2 数据集预处理
+将原始数据（.jpg）转化为二进制文件（.bin）。转化方法参考mmdetection预处理方法，以获得最佳精度。以coco_2017数据集为例，通过缩放、均值方差手段归一化，输出为二进制文件。
+
+执行“smlp_preprocess.py”脚本。
 
 ```
 python3.7 smlp_preprocess.py --save_dir imagenet-val-bin --data_root /opt/npu/imagenet/
@@ -148,138 +197,104 @@ python3.7 smlp_preprocess.py --save_dir imagenet-val-bin --data_root /opt/npu/im
 
 参数说明：
 
+--batch_size BATCH_SIZE     批处理大小，
 
-	options:
-	--batch_size BATCH_SIZE     批处理大小，
-	--data_root DATA_ROOT    数据集路径
-	--save_dir SAVE_DIR   处理后的数据集路径
+--data_root DATA_ROOT    数据集路径
 
-## 1.5. 离线推理
+--save_dir SAVE_DIR   处理后的数据集路径
 
-### 1.5.1. ais_infer工具概述
+每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“imagenet-val-bin”二进制文件夹。
 
-ais_infer工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310p上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[tools: Ascend tools - ais_infer 推理工具使用文档 - Gitee.com](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95)
-将获取的工具包并解压，将ais_infer工具放在当前目录下
+## 5 离线推理
 
-### 1.5.2.  离线推理
+-   **[获取ais_infer推理工具](#51-获取ais_infer推理工具)**  
 
-1. 设置环境变量
+-   **[离线推理](#52-离线推理)**  
 
-``` 
-source /usr/local/Ascend/ascend-toolkit/set_env.sh 
+### 5.1 获取ais_infer推理工具
+
+https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+
+将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件； pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+
+### 5.2 离线推理
+昇腾芯片上执行，执行时使npu-smi info查看设备状态，确保device空闲
+
+1.设置环境变量
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+```
+2.执行离线推理
 
-2. 执行离线推理
-   运行如下命令进行离线推理：
-   
+执行推理
 ```
 python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100 
 ```
-参数说明
-| 参数名      | 说明                                                                   |
-| ----------- | ---------------------------------------------------------------------- |
-| --model     | 需要进行推理的om模型                                                   |
-| --input     | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
-| --output    | 推理数据输出路径                                                       |
-| --outfmt    | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”                   |
-| --loop      | 循环次数                                                               |
-| --batchsize | 批处理大小                                                             |
+参数说明:
+
+--model：模型地址
+
+--input：预处理完的数据集文件夹
+
+--output：推理结果保存地址
 
 
-输出结果默认保存在当前目录中，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个BIN文件。
+## 6 精度对比
 
-## 1.6. 精度对比
+-   **[离线推理mAP精度](#61-离线推理mAP精度)**  
+-   **[开源mAP精度](#62-开源mAP精度)**  
+-   **[精度对比](#63-精度对比)**  
 
-### 1.6.1. 离线推理TopN精度
+### 6.1 离线推理精度统计
 
-- 离线推理，input目录放着转换为bin文件的imagenet val数据。
-```
-python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch8-high.om --output ./ --input "/opt/npu/imagenet/val-bin-of-spach/" --outfmt NPY -–batchsize 8
-```
-参数说明
-| 参数名      | 说明                                                                   |
-| ----------- | ---------------------------------------------------------------------- |
-| --model     | 需要进行推理的om模型                                                   |
-| --input     | 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据 |
-| --output    | 推理数据输出路径                                                       |
-| --outfmt    | 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”                   |
-| -–batchsize | 批处理大小，需要与OM模型一致。                                         |
+后处理统计精度
 
-- 精度统计
-调用imagenet_acc_eval_ais_infer.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
+调用smlp_postprocess.py脚本与label比对，可以获得Accuracy Top1，Top5 准确率数据。
 
 ```
-python imagenet_acc_eval_ais_infer.py ${result_dir_path}
+python smlp_postproces.py --infer_result_dir ${infer_result_dir}
 ```
 
-参数说明：
-    ${result_dir_path}参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
+参数说明:
+	
+--infer_result_dir参数：为ais_infer.py运行后生成的存放推理结果的目录的路径。 例如本例中为~/spach-smlp/ais_infer/2022_07_09-18_05_40/
 
-    
-
-
-查看输出的结果：
+NPU精度如下：
 
 ```
-acc1:0.8125, acc5:0.9549
+Model         top1 acc     
+SPACH_SMLP        81.25
 ```
-
-
-### 1.6.2. 开源TopN精度
-
-GPU上使用[原仓库代码](https://github.com/microsoft/SPACH)对pth文件进行推理
-
-得到的结果是：
+### 6.2 开源精度
+[开源代码仓精度](https://github.com/microsoft/SPACH)
 
 ```
-python main.py --eval --resume smlp_t.pth --model smlpnet_tiny --data-path /opt/gpu/imagenet/
-Acc@1 81.74
-Acc@5 95.79
+Model         top1 acc     
+SPACH_SMLP        81.9  
 ```
+### 6.3 精度对比
+将得到的om离线模型推理精度与该模型github代码仓上公布的Top1 acc对比，精度下降在1%范围之内，故精度达标。  
+ **精度调试：**  
+>没有遇到精度不达标的问题，故不需要进行精度调试
 
-### 1.6.3. 精度对比
+## 7 性能对比
 
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，如下表所示，精度下降在1%范围之内，故精度达标。
+-   **[npu性能数据](#71-npu性能数据)**  
 
-| 模型                                             | Acc@1 | Acc@5 |
-| ------------------------------------------------ | ----- | ----- |
-| pth模型推理结果（官方未提供acc@5，因此自行复现） | 81.74 | 95.79 |
-| om模型离线推理结果                               | 81.25 | 95.49 |
-
-## 1.7. 性能对比
-
-
-### 1.7.1. npu性能数据
-
-对于使用ais_infer工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
- **ais_infer工具在整个数据集上推理获得性能数据:**
-
-1. batch1的性能，ais_infer工具在整个数据集上推理日志如下
-
+### 7.1 npu性能数据
+1.ais_infer工具在整个数据集上推理获得性能数据  
+batch1的性能，ais_infer工具在整个数据集上推理后生成result/sumary.json：  
 ```
-infname63@d0c3e5f6b93c:~/spach-smlp/ais_infer$ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100  --output test
-[INFO] -----------------Performance Summary------------------
-[INFO] H2D_latency (ms): min = 0.2384185791015625, max = 0.2384185791015625, mean = 0.2384185791015625, median = 0.2384185791015625, percentile(99%) = 0.2384185791015625
-[INFO] NPU_compute_time (ms): min = 5.828554630279541, max = 5.828554630279541, mean = 5.828554630279541, median = 5.828554630279541, percentile(99%) = 5.828554630279541
-[INFO] D2H_latency (ms): min = 0.08606910705566406, max = 0.08606910705566406, mean = 0.08606910705566406, median = 0.08606910705566406, percentile(99%) = 0.08606910705566406
-[INFO] throughput (1000*batchsize/NPU_compute_time): 171.5691219234638
+"NPU_compute_time": {
+   "min": 55.18075942993164, 
+   "max": 55.18075942993164, 
+   "mean": 55.18075942993164, 
+   "median": 55.18075942993164, 
+   "percentile(99%)": 55.18075942993164}
 ```
-即是batch1 310p单卡吞吐率为171.569
+Interface throughputRate:1000 * batchsize/npu_compute_time.mean= 290.0 既是batch1 310P单卡吞吐率
 
-2. batch16的性能，ais_infer工具在整个数据集上推理日志如下
-   
-```
-python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-high.om  --batchsize 16 --output ./ --outfmt BIN --loop 100  --output test
-[INFO] -----------------Performance Summary------------------
-[INFO] H2D_latency (ms): min = 1.8732547760009766, max = 1.8732547760009766, mean = 1.8732547760009766, median = 1.8732547760009766, percentile(99%) = 1.8732547760009766
-[INFO] NPU_compute_time (ms): min = 55.18075942993164, max = 55.18075942993164, mean = 55.18075942993164, median = 55.18075942993164, percentile(99%) = 55.18075942993164
-[INFO] D2H_latency (ms): min = 0.10800361633300781, max = 0.10800361633300781, mean = 0.10800361633300781, median = 0.10800361633300781, percentile(99%) = 0.10800361633300781
-[INFO] throughput (1000*batchsize/NPU_compute_time): 289.95613988090815
-```
-
-即是batch16 310p单卡吞吐率为289.95613988090815
-
-### 1.7.2. gpu，npu推理性能对比
+### 7.2 gpu，npu推理性能对比
 
 | batchsize | ascend-310p | GPU-t4 |
 | --------- | ----------- | ------ |
@@ -291,5 +306,7 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch16-h
 | 64        | 257.5       | 359.1  |
 | best      | 298.7       | 371.0  |
 
-> **说明：**
-> NPU和GPU的推理性能（吞吐率）对比为： 0.805    
+sMLP模型在NPU上的性能是GPU上最优性能的0.805倍
+
+> 注：已通过性能评审
+
