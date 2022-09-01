@@ -296,7 +296,7 @@
 
 ## 精度
 
-|Batch_size	| Framework	| Atlas NPU Model |	Server	| Container	| Precision |	Dataset |	Accuracy |	Ascend AI Processor | NPU Version|
-| --------- | ---------- | -------------- | -------------- | ------------- | --------- | ----------- |------------- | --------- | ----------- |
-| 1 |	PyTorch	| Atlas 300-3010 |	Atlas 800-3010 |	NA |	fp16 |	UCF101 |	top1:0.9402 top5:0.9958 |	Ascend 310 |	Atlas 300-3010-32GB|
-| 1 |	PyTorch	| Atlas 300-3010 |	Atlas 800-3010 |	NA |	fp16 |	UCF101 |	top1:0.9402 top5:0.9958 |	Ascend 310P |	Atlas 300-3010-32GB|
+|Batch_size	| Framework	|  Container	| Precision |	Dataset |	Accuracy |	Ascend AI Processor |
+| --------- | ---------- |  ------------- | --------- | ----------- |------------- | --------- |
+| 1 |	PyTorch	| 	NA |	fp16 |	UCF101 |	top1:0.9402 top5:0.9958 |	Ascend 310 |
+| 1 |	PyTorch	| 	NA |	fp16 |	UCF101 |	top1:0.9402 top5:0.9958 |	Ascend 310P |
