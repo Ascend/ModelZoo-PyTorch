@@ -2,7 +2,7 @@
 ## 1 获取开源代码
 
 ```
-https://gitee.com/zhang_kaiqi/ascend-textcnn.git
+git clone https://gitee.com/zhang_kaiqi/ascend-textcnn.git
 cd  ascend-textcnn
 git checkout 7cd94c509dc3f615a5d8f4b3816e43ad837a649e
 cd -
@@ -45,18 +45,21 @@ python3 TextCNN_pth2onnx.py --weight_path ./TextCNN_9045_seed460473.pth --onnx_p
 
 4. 后处理得到精度
 
-精度结果保存在result_bs*.json中。*代表具体的batch_size值（从4开始）
+推理模型使用ais_infer工具，安装过程可参考：[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+
+以bs1为例 
 
 ```
-./benchmark.x86_64 -batch_size=* -om_path=mg_om_dir/textcnn_*bs_mg.om -output_binary=True -input_text_path=ascend-textcnn/info -useDvpp=False -model_type=nlp
-python3 ascend-textcnn/TextCNN_postprocess.py result/dumpOutput_device0 >result_bs*.json
+mkdir -p ./output_data/bs1
+python3 ais_infer.py --model mg_om_dir/textcnn_1bs.om --input ./input_data --output ./output_data/bs1 --batchsize 1 --device 0
+python3 TextCNN_postprocess.py ./output_data/bs1/ > result_bs1.json
 ```
 5. 性能数据
 
-推理结果打屏显示
+推理结果打屏显示，以1bs为例
 
 ```
-./msame --model mg_om_dir/trextcnn_*bs_mg.om --loop 100
+python3 ais_infer.py --model mg_om_dir/textcnn_1bs.om --output ./output_data/bs1 --outfmt BIN --loop 100 --device 0
 ```
 
 ## 3 自验
