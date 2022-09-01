@@ -246,7 +246,6 @@ def main(args):
         from torch2onnx import convert_onnx
         convert_onnx(module_backbone.cpu().eval(), path_module, os.path.join(cfg.output, "model.onnx"))
 
-    distributed.destroy_process_group()
 
 
 if __name__ == "__main__":
