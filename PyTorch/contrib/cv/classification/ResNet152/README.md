@@ -121,7 +121,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
    --data\_path参数填写数据集根目录
 
    模型训练脚本参数说明如下。
-
+    ```
     --addr                              //主机地址
     --workers                           //加载数据进程数 
     --learning-rate                     //初始学习率
@@ -138,7 +138,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
     --device                            //使用设备为GPU或者是NPU
     --print-freq                        //打印频率
     --data                              //数据集路径
-
+    ```
 # 训练结果展示
 
 | NAME     | Acc@1    | FPS       | Epochs   | AMP_Type | Torch  |
