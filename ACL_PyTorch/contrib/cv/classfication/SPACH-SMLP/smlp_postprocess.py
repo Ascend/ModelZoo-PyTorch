@@ -21,11 +21,11 @@ from tqdm import tqdm
 
 def get_args():
     parser = argparse.ArgumentParser(
-        '验证SMLP模型推理Top1 Top5准确度', add_help=True)
-    parser.add_argument('--infer_result_dir', default='~/spach-smlp/ais_infer/2022_07_09-17_36_18', type=str, metavar='MODEL',
-                        help='ais_infer工具推理输出文件路径，会根据日期变动，请按照实际情况修改')
+        'Verify SMLP model top1 top5 accuracy', add_help=True)
+    parser.add_argument('--infer_result_dir', default='~/spach-smlp/ais_infer/2022_07_09-17_36_18', type=str, metavar='PATH',
+                        help='ais_infer tool reasoning output file path, will change according to the date, please modify it according to the actual situation')
     parser.add_argument('--n', default="50000", type=int,
-                        help='验证数据集大小，默认验证imagenet-val全部50000张图片')
+                        help='Verify the size of the dataset, the default verification ImageNet-Val all 50,000 pictures')
 
     args = parser.parse_args()
     return args 
