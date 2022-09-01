@@ -217,7 +217,7 @@ WaveGlow是一款用于语音合成的基于流的生成网络，是一种基于
    ```
 
    * 参数说明:
-     * --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer/”。
+     * --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer”。
 
    推理后的输出默认在当前目录out下。
 
