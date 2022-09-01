@@ -228,7 +228,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 执行推理
 ```
-python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-high.om  --batchsize 1 --output ./ --outfmt BIN --loop 100 
+python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch8-high.om --output ./ --input "./imagenet-val-bin" --outfmt NPY -–batchsize 8
 ```
 参数说明:
 
@@ -238,6 +238,10 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 
 --output：推理结果保存地址
 
+--outfmt：模型输出格式
+
+-–batchsize：批处理大小
+
 
 ## 6 精度对比
 
@@ -246,6 +250,8 @@ python3.7.5 ais_infer.py  --model /home/infname63/spach-smlp/sMLPNet-T-batch1-hi
 -   **[精度对比](#63-精度对比)**  
 
 ### 6.1 离线推理精度统计
+
+
 
 后处理统计精度
 
