@@ -1,244 +1,183 @@
-# GhostNet1.0x Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+# GhostNet1.0x模型-推理指导
+-   [概述](#jump1)
+-   [推理环境准备](#jump2)
+-   [快速上手](#jump3)
+    - [获取源码](#jump4)
+    - [准备数据集](#jump5)
+    - [模型推理](#jump6)
+-   [模型推理性能](#jump7)
 
 
 
-## 1 模型概述
+## <span id = "jump1">概述</span>
 
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)**  
-
-### 1.1 论文地址
-[GhostNet论文](https://arxiv.org/abs/1911.11907)  
-
-### 1.2 代码地址
-[GhostNet代码](https://github.com/huawei-noah/CV-Backbones/tree/master/ghostnet_pytorch)
-branch:master
-commit_id:5a06c87a8c659feb2d18d3d4179f344b9defaceb
-
-## 2 环境说明
-
--   **[深度学习框架](#21-深度学习框架)**  
-
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
+GhostNet基于Ghost模块，这个特点是不改变卷积的输出特征图的尺寸和通道大小，但是可以让整个计算量和参数数量大幅度降低。简单的说，GhostNet的主要贡献就是减低计算量、提高运行速度的同时，精准度降低的更少了，而且这种改变，适用于任意的卷积网络，因为它不改变输出特征图的尺寸
+- 参考实现：
 ```
-CANN 5.0.1
-
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
+url=https://github.com/huawei-noah/CV-Backbones.git
+branch=master
+commit_id=5a06c87a8c659feb2d18d3d4179f344b9defaceb
+model_name=GhostNet
 ```
 
-### 2.2 python第三方库
+##  输入输出数据
 
+- 输入数据
+
+| 输入数据 | 数据类型 | 大小 | 数据排布格式 |
+| :-----| ----: |:---:|:------:|
+| input | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW|
+
+- 输出数据
+
+| 输出数据  | 数据类型 | 大小 | 数据排布格式 |
+|:------| ----: |:---:|:------:|
+| output1 | FLOAT32 | 1 x 1000 | ND|
+
+## <span id = "jump2">推理环境准备[所有版本]</span>
+
+- 该模型需要以下插件与驱动  
+
+    表 1 版本配套表
+
+| 配套  |   版本    |                                                    环境准备指导                                                     |
+|:------|:-------:|:-------------------------------------------------------------------------------------------------------------:|
+| 固件与驱动 | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies/pies_00001.html) |
+| CANN | 5.1.RC1 |                                                       -                                                       |
+| Python |  3.7.5  |                                                       -                                                       |
+| PyTorch |  1.8.0  |                                                       -                                                       |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |    \    |                                                       \                                                       |
+
+## <span id = "jump3">快速上手</span>
+1.安装依赖
 ```
-numpy == 1.18.5
-Pillow == 7.2.0
-opencv-python == 4.5.1.48
+pip3 install -r requirment.txt
 ```
-
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
-
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
-[GhostNet预训练pth权重文件](https://github.com/huawei-noah/CV-Backbones/raw/master/ghostnet_pytorch/models/state_dict_73.98.pth)   
-文件md5sum:   F7241350B4486BF00ACCBF9C3A192331
-
+### <span id = "">获取源码</span>
+1.下载开源仓
 ```
-wget http://github.com/huawei-noah/CV-Backbones/raw/master/ghostnet_pytorch/models/state_dict_73.98.pth
+git clone https://github.com/huawei-noah/CV-Backbones.git
+cd CV-Backbones
+git reset --hard 5a06c87a8c659feb2d18d3d4179f344b9defaceb
+cd ..
 ```
+### <span id = "jump5">准备数据集</span>
+1.获取原始数据集
 
-2.GhostNet模型代码从如下代码仓中下载
-https://github.com/huawei-noah/CV-Backbones/tree/master/ghostnet_pytorch
+本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。
 
-3.编写pth2onnx脚本ghostnet_pth2onnx.py
+2.数据预处理
 
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
+将原始数据（.jpeg）转化为二进制文件（.bin）。
+执行imagenet_torch_preprocess.py脚本。
+```
+python3.7 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset
+```
+第一个参数为模型类型，第二个参数为原始数据验证集（.jpeg）所在路径，第三个参数为输出的二进制文件（.bin）所在路径。
+### <span id = "jump6">模型推理</span>
+1.模型转换
 
-4.执行pth2onnx脚本，生成onnx模型文件
+使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+a.获取权重文件
+
+通过链接：http://github.com/huawei-noah/CV-Backbones/raw/master/ghostnet_pytorch/models/state_dict_73.98.pth
+获取GhostNet1.0x权重文件state_dict_73.98.pth。
+
+b.导出onnx文件
 ```
 python3.7 ghostnet_pth2onnx.py state_dict_73.98.pth ghostnet.onnx
 ```
+运行成功后生成ghostnet.onnx模型文件。
 
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
+c.使用ATC工具将ONNX模型转OM模型
 
-### 3.2 onnx转om模型
-
-1.设置环境变量
+i.设置环境变量
 ```
 source env.sh
 ```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+ii.使用atc将onnx模型转换为om模型文件
 ```
-atc --framework=5 --model=./ghostnet.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=ghostnet_bs16 --log=debug --soc_version=Ascend310
+atc --framework=5 --model=./ghostnet.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=ghostnet_bs1 --log=debug --soc_version=Ascend${chip_name}
 ```
+参数说明： 
 
-## 4 数据集预处理
+--model：为ONNX模型文件
 
--   **[数据集获取](#41-数据集获取)**  
+--framework：5代表ONNX模型
 
--   **[数据集预处理](#42-数据集预处理)**  
+--output：输出的OM模型
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+--input_format：输入数据的格式
 
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
+--input_shape：输入数据的shape
 
-### 4.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
+--log：日志级别
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 imagenet_torch_preprocess.py ghostnet /root/datasets/imagenet/val ./prep_dataset
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
+--soc_version：处理器型号
 
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./ghostnet_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-## 5 离线推理
+运行成功后生成ghostnet_bs1.om模型文件
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+2.开始推理验证
 
--   **[离线推理](#52-离线推理)**  
+a.使用ais_infer工具进行推理
 
-### 5.1 benchmark工具概述
+i.安装包和对应安装方法参考链接：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 离线推理
-1.设置环境变量
+ii.设置环境变量
 ```
 source env.sh
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
 ```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=ghostnet_bs16.om -input_text_path=./ghostnet_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_devicex，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
 
-## 6 精度对比
+iii.将对应的ais_infer下载到相应目录下，执行ais_infer.py即可进行模型推理
+```
+python /home/infname46/ais_infer/ais_infer.py --model ./ghostnet_bs1.om --input ./prep_dataset/ --output ./ --outfmt NPY --batchsize 1
+```
+参数说明： 
 
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
+--model：为OM模型文件
 
-### 6.1 离线推理TopN精度统计
+--input：为数据路径
 
-后处理统计TopN精度
+--output：输出推理结果
 
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-查看输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "73.99%"}, {"key": "Top2 accuracy", "value": "84.0%"}, {"key": "Top3 accuracy", "value": "87.99%"}, {"key": "Top4 accuracy", "value": "90.11%"}, {"key": "Top5 accuracy", "value": "91.46%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上
+--outfmt：输出结果的格式
 
-### 6.2 开源TopN精度
-[ghostnet代码仓公开模型精度](https://github.com/huawei-noah/CV-Backbones/tree/master/ghostnet_pytorch)
-```
-Model           Acc@1     Acc@5
-ghostnet    	73.98     91.46
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
+--input_shape：输入数据的shape
 
-## 7 性能对比
+--batchsize：模型接受的bs大小
 
--   **[npu性能数据](#71-npu性能数据)**  
+### <span id = "jump7">模型推理性能</span>
+1.精度验证
 
-### 7.1 npu性能数据  
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device。为快速获取性能数据，也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准。这里给出两种方式，模型的测试脚本使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准。  
-1.benchmark工具在整个数据集上推理获得性能数据  
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
+调用imagenet_acc_eval.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中
 ```
-[e2e] throughputRate: 143.597, latency: 348197
-[data read] throughputRate: 153.562, moduleLatency: 6.51203
-[preprocess] throughputRate: 152.982, moduleLatency: 6.5367
-[infer] throughputRate: 144.973, Interface throughputRate: 196.934, moduleLatency: 6.25397
-[post] throughputRate: 144.972, moduleLatency: 6.89786
+python3.7 imagenet_acc_eval.py ./lcmout/2022_xx_xx-xx_xx_xx/sumary.json /home/HwHiAiUser/dataset/imageNet/val_label.txt
 ```
-Interface throughputRate: 196.934，196.934x4=787.736既是310单卡吞吐率  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
-```
-[e2e] throughputRate: 111.245, latency: 449458
-[data read] throughputRate: 116.28, moduleLatency: 8.59991
-[preprocess] throughputRate: 116.21, moduleLatency: 8.60509
-[infer] throughputRate: 112.088, Interface throughputRate: 272.671, moduleLatency: 6.92789
-[post] throughputRate: 7.00539, moduleLatency: 142.747
-```
-Interface throughputRate: 272.671，272.671x4=1090.564既是310单卡吞吐率
-batch4性能：  
-```
-[e2e] throughputRate: 152.599, latency: 327655
-[data read] throughputRate: 158.671, moduleLatency: 6.30235
-[preprocess] throughputRate: 158.538, moduleLatency: 6.30765
-[infer] throughputRate: 153.329, Interface throughputRate: 249.801, moduleLatency: 5.61484
-[post] throughputRate: 38.332, moduleLatency: 26.0879
-```
-Interface throughputRate: 249.801，249.801x4=999.204既是310单卡吞吐率  
-batch8性能：  
-```
-[e2e] throughputRate: 164.588, latency: 303789
-[data read] throughputRate: 170.932, moduleLatency: 5.85027
-[preprocess] throughputRate: 170.715, moduleLatency: 5.8577
-[infer] throughputRate: 165.168, Interface throughputRate: 266.985, moduleLatency: 5.32678
-[post] throughputRate: 20.6456, moduleLatency: 48.4364
-```
-Interface throughputRate: 266.985，266.985x4=1067.94既是310单卡吞吐率  
-batch32性能：  
-```
-[e2e] throughputRate: 151.619, latency: 329774
-[data read] throughputRate: 152.371, moduleLatency: 6.56292
-[preprocess] throughputRate: 152.171, moduleLatency: 6.57154
-[infer] throughputRate: 152.123, Interface throughputRate: 283.402, moduleLatency: 5.03802
-[post] throughputRate: 4.75527, moduleLatency: 210.293
-```
-Interface throughputRate: 283.402，283.402x4=1133.608既是310单卡吞吐率  
+参数说明：
 
- **性能优化：**  
-从profiling性能数据op_statistic_0_1.csv看出，耗时最多的算子主要是TransData,Conv2D与StridedSliceD，而Conv2D算子不存在性能问题，由于格式转换om模型StridedSliceD前后需要有TransData算子，从op_summary_0_1.csv看出，单个TransData算子aicore耗时不大，单个StridedSliceD算子aicoe耗时也不大，该算子对应的源码也不存在问题，如果优化就需要优化掉过多的TransData算子
+第一项参数为推理结果中的sumary.json文件，第二项为gt标签文件
+
+2.验证结果
+
+GhostNet在310上的精度复现与性能表现如下表1，表2
+
+表1-精度对比
+
+| 芯片型号 | top1 | top5 |
+|:------|:---:|:------:|
+| 310 | 0.7398 | 0.9146 |
+| 310P | 0.7398 | 0.9146 |
+
+表2-性能对比
+
+| Batch Size | 310 | 310P | t4 | 310P/310| 310P/t4|
+|:------|:------:|:------:|:------:|:------:|:------:|
+| 1 | 	1348.024 | 1502.4291 | 219.2172| 1.1145 | 6.8536|
+| 4 | 2233.9991 | 2317.6152 | 701.0072 | 1.0374| 3.3061|
+| 8 | 2463.9302 | 3739.9555| 1032.52| 1.5179 | 3.6222|
+| 16 | 2624.8900 | 3438.7936| 924.992| 1.3101| 3.7176|
+| 32 | 2689.0490 | 3020.9916| 447.872| 1.1234| 6.7452|
+
+目前性能和精度都已达标，310P/310的最优batch为bs8，310P/t4最优为bs32
