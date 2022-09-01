@@ -130,7 +130,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
          python3.7 inceptionresnetv2_pth2onnx.py inceptionresnetv2-520b38e4.pth inceptionresnetv2_dynamic_bs.onnx
          ```
 
-         获得XXX.onnx文件。
+         运行成功后生成inceptionresnetv2_dynamic_bs.onnx文件。
 
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -167,7 +167,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
          使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为1的om模型的命令如下，对于其他的batch size，可作相应的修改。
          ```
-         atc --framework=5 --model=inceptionresnetv2_dynamic_bs.onnx --output=inceptionresnetv2_bs1 --input_format=NCHW --input_shape="image:1,3,299,299" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=inceptionresnetv2_dynamic_bs.onnx --output=inceptionresnetv2_bs1 --input_format=NCHW --input_shape="image:1,3,299,299" --log=debug --soc_version=Ascend${chip_name}
          ```
 
          参数说明：
