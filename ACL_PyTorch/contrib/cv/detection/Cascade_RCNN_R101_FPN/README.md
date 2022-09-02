@@ -106,9 +106,10 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
     ```
     python3.7 Cascade_RCNN_R101_preprocess.py --image_folder_path ./data/val2017 --bin_folder_path ./data/val2017_bin
     ```
-    **说明：**
-    * --image_folder_path：原始数据验证集（.jpg）所在路径。
-    * --bin_folder_path：输出的二进制文件（.bin）所在路径。
+    - 参数说明：
+      - --image_folder_path：原始数据验证集（.jpg）所在路径。
+      - --bin_folder_path：输出的二进制文件（.bin）所在路径。
+
     每个图像对应生成一个二进制文件。
 
    3.二进制输入info文件生成
@@ -169,8 +170,9 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         ```
 
-         > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+        > 说明：
+        > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+        
 
       2. 执行命令查看芯片名称（$\{chip\_name\}），确保device空闲  。
 
@@ -180,10 +182,11 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
         回显如下：
         ```
         ![device](./static/device.png)
+
       3. 执行ATC命令。
 
         ```
-        atc --framework=5 --model=./cascade_rcnn_r101.onnx --output=cascade_rcnn_r101 --input_format=NCHW --input_shape="input:1,3,1216,1216" --soc_version=Ascend310P3 --out_nodes="Concat_947:0;Reshape_949:0" --log info
+        atc --framework=5 --model=./cascade_rcnn_r101.onnx --output=cascade_rcnn_r101 --input_format=NCHW --input_shape="input:1,3,1216,1216" --soc_version=$\{chip\_name\} --out_nodes="Concat_947:0;Reshape_949:0" --log info
         ```
 
          - 参数说明：
@@ -197,20 +200,6 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
            -   --soc\_version：处理器型号。
 
            运行成功后生成cascade_rcnn_r101.om模型文件。
-
-    5. 使用ATC工具将ONNX模型转OM模型。
-      1. 设置环境变量
-      ```
-      source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/tools/aoe/lib64:$LD_LIBRARY_PATH 
-      export TUNE_BANK_PATH=知识库保存路径
-      ```
-      2. 执行aoe命令
-      ```
-      aoe --framework 5 --model cascade_rcnn_r101.onnx --job_type 2 --output 
-      cascade_rcnn_r101_aoe --input_shape "input:1,3,1216,1216" --log warning
-      ```
-      运行成功后生成cascade\_rcnn\_r101\_aoe.om模型文件。
 
 
 2. 开始推理验证。
@@ -227,16 +216,17 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
         python3.7 ais_infer.py --model cascade_rcnn_r101_aoe.om --input data/val2017_bin/ --output ais_infer_result --outfmt BIN --batchsize 1
         ```
 
-      **参数说明：**
-      --input：bin数据目录。
-      --model：om文件路径。
-      --output：输出结果的目录。
-      --outfmt：输出结果的格式。
-      --batchsize：推理batchsize大小，只支持batchsize=1。
+      - 参数说明：
+        - --input：bin数据目录。
+        - --model：om文件路径。
+        - --output：输出结果的目录。
+        - --outfmt：输出结果的格式。
+        - --batchsize：推理batchsize大小，只支持batchsize=1。
+      
       注意模型和数据集路径，可以用绝对路径，推理结果保存到了ais\_infer\_result下自动创建的日期文件夹中。
       
-      **说明：** 
-        执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+    > **说明：** 
+    > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
     c.  精度验证。
    
@@ -246,12 +236,12 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
       python3 Cascade_RCNN_R101_postprocess.py --bin_data_path=ais_infer_result/日期文件夹 --prob_thres=0.05 --ifShowDetObj --det_results_path=ais_infer_detection_results --test_annotation=coco2017_jpg.info --json_output_file ais_infer_detection_result --detection_result ais_infer_detection_result.json 
       ```
 
-**参数说明：**
+- 参数说明：
 
-- ais_infer_result/日期文件夹： 推理输出的bin文件路径
-- coco2017_jpg.info：测试图片信息
-- ais_infer_detection_results：生成推理结果所在路径
-- ais_infer_detection_result.json：生成结果文件
+  + --ais_infer_result/日期文件夹： 推理输出的bin文件路径
+  + --coco2017_jpg.info：测试图片信息
+  + --ais_infer_detection_results：生成推理结果所在路径
+  + --ais_infer_detection_result.json：生成结果文件
     
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
