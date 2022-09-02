@@ -102,9 +102,9 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
 
     将原始数据（.jpg）转化为二进制文件（.bin）。转化方法参考mmdetection预处理方法，以获得最佳精度。以coco_2017数据集为例，通过缩放、均值方差手段归一化，输出为二进制文件。
     
-   2.执行mmdetection_coco_preprocess.py脚本。
+   2.执行Cascade_RCNN_R101_preprocess.py脚本。
     ```
-    python3.7 mmdetection_coco_preprocess.py --image_folder_path ./data/val2017 --bin_folder_path ./data/val2017_bin
+    python3.7 Cascade_RCNN_R101_preprocess.py --image_folder_path ./data/val2017 --bin_folder_path ./data/val2017_bin
     ```
     **说明：**
     * --image_folder_path：原始数据验证集（.jpg）所在路径。
@@ -142,11 +142,11 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
       pip install -v -e .
       ```
 
-     运用补丁修改代码。
-     ```
-     patch -p1 < ../Cascade_RCNN_R101.patch
-     cd ..
-     ```
+      运用补丁修改代码。
+      ```
+      patch -p1 < ../Cascade_RCNN_R101.patch
+      cd ..
+      ```
 
 
    3. 导出onnx文件。
@@ -165,36 +165,26 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
 
       1. 配置环境变量。
 
-         ```
-          source /usr/local/Ascend/ascend-toolkit/set_env.sh
-         ```
+        ```
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        ```
 
          > **说明：** 
          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
       2. 执行命令查看芯片名称（$\{chip\_name\}），确保device空闲  。
 
-         ```
-         npu-smi info
-         #该设备芯片名为Ascend310P3 （自行替换）
-         回显如下：
-+--------------------------------------------------------------------------------------------+
-| npu-smi 22.0.0                       Version: 22.0.2                                       |
-+-------------------+-----------------+------------------------------------------------------+
-| NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-| Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-+===================+=================+======================================================+
-| 0       310P3     | OK              | 16.7         57                0    / 0              |
-| 0       0         | 0000:5E:00.0    | 0            932  / 21534                            |
-+===================+=================+======================================================+
-
-         ```
-
+        ```
+        npu-smi info
+        #该设备芯片名为Ascend310P3 （自行替换）
+        回显如下：
+        ```
+        ![device](./static/device.png)
       3. 执行ATC命令。
 
-         ```
-         atc --framework=5 --model=./cascade_rcnn_r101.onnx --output=cascade_rcnn_r101 --input_format=NCHW --input_shape="input:1,3,1216,1216" --soc_version=Ascend310P3 --out_nodes="Concat_947:0;Reshape_949:0" --log info
-         ```
+        ```
+        atc --framework=5 --model=./cascade_rcnn_r101.onnx --output=cascade_rcnn_r101 --input_format=NCHW --input_shape="input:1,3,1216,1216" --soc_version=Ascend310P3 --out_nodes="Concat_947:0;Reshape_949:0" --log info
+        ```
 
          - 参数说明：
 
@@ -237,35 +227,31 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
         python3.7 ais_infer.py --model cascade_rcnn_r101_aoe.om --input data/val2017_bin/ --output ais_infer_result --outfmt BIN --batchsize 1
         ```
 
-  **参数说明：**
-  
-      + --input：bin数据目录。
-      + --model：om文件路径。
-      + --output：输出结果的目录。
-      + --outfmt：输出结果的格式。
-      + --batchsize：推理batchsize大小，只支持batchsize=1。
-  
+      **参数说明：**
+      --input：bin数据目录。
+      --model：om文件路径。
+      --output：输出结果的目录。
+      --outfmt：输出结果的格式。
+      --batchsize：推理batchsize大小，只支持batchsize=1。
       注意模型和数据集路径，可以用绝对路径，推理结果保存到了ais\_infer\_result下自动创建的日期文件夹中。
-  
+      
       **说明：** 
         执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-
 
     c.  精度验证。
    
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在ais_infer_detection_result.json中，可视化结果保存在ais_infer_detection_result中。
 
-       ```
-      python3 mmdetection_coco_postprocess.py --bin_data_path=ais_infer_result/日期文件夹 --prob_thres=0.05 --ifShowDetObj --det_results_path=ais_infer_detection_results --test_annotation=coco2017_jpg.info --json_output_file ais_infer_detection_result --detection_result ais_infer_detection_result.json 
       ```
-        
-        ais_infer_result/日期文件夹： 推理输出的bin文件路径
+      python3 Cascade_RCNN_R101_postprocess.py --bin_data_path=ais_infer_result/日期文件夹 --prob_thres=0.05 --ifShowDetObj --det_results_path=ais_infer_detection_results --test_annotation=coco2017_jpg.info --json_output_file ais_infer_detection_result --detection_result ais_infer_detection_result.json 
+      ```
 
-        coco2017_jpg.info：测试图片信息
+**参数说明：**
 
-        ais_infer_detection_results：生成推理结果所在路径
-        
-        ais_infer_detection_result.json：生成结果文件
+- ais_infer_result/日期文件夹： 推理输出的bin文件路径
+- coco2017_jpg.info：测试图片信息
+- ais_infer_detection_results：生成推理结果所在路径
+- ais_infer_detection_result.json：生成结果文件
     
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
