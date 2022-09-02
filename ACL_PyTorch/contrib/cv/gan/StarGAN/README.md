@@ -17,9 +17,7 @@
 
   ******
 
-  ***<u>斜体带下划线且加粗内容为备注，写作时请删除</u>***
-
-  ***<u>标题请删除模板字眼</u>***
+  
 
 
 
@@ -27,7 +25,7 @@
 
 StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可以实现 图像的多域间的迁移（作者在论文中具体应用于人脸属性的转换）。在 starGAN 之前，也有很多 GAN模型 可以用于 image-to-image，比如 pix2pix（训练需要成对的图像输入），UNIT（本质上是coGAN），cycleGAN（单域迁移）和 DiscoGAN。而 starGAN 使用 一个模型 实现 多个域 的迁移，这在其他模型中是没有的，这提高了图像域迁移的可拓展性和鲁棒性。
 
-<u>***简单描述模型的结构、应用、优点等信息。***</u>
+
 
 
 - 参考实现：
@@ -38,11 +36,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
   model_name=StarGAN
   ```
 
-  *<u>**url=参考的模型源代码git地址，强烈建议使用release分支版本的地址**</u>*
-
-  *<u>**commit\_id例如：291f7e20339510cfa956b5782741697eb8e6d554**</u>*
   
-  *<u>**model\_name: 子模型名，开源仓往往会提供很多子模型，需说明推理的是哪一个子模型，比如[Segmenter](https://github.com/rstrudel/segmenter)下的Seg-L-Mask/16模型**</u>*
 
 
   通过Git获取对应commit\_id的代码方法如下：
@@ -72,7 +66,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
   | -------- | -------- | -------- | ------------ |
   | output1  | batchsize x 3 x 128 x 128 | RGB_FP32  | NCHW           |
 
-<u>***请按照如上表格描述输入/输出数据的大小、数据类型、数据排布格式，若有多条输入请添加多条数据。若只有一条数据，则只有一行描述即可***</u>
+
 
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -99,7 +93,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 1. 获取源码。
 
    ```
-   
+   git clone https://gitee.com/Hu1GM/ModelZoo-PyTorch.git
    ```
 
 2. 安装依赖。
@@ -119,7 +113,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 bash unzip_dataset.sh
 ```
 
-   <u>***写清楚原始数据集名称、下载链接、所用到的文件、存放路径、目录结构。***</u>
+   
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
