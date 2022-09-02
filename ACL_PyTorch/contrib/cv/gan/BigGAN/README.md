@@ -1,7 +1,8 @@
 # BigGAN ONNX模型端到端推理指导
 - [1. 模型概述](#1)
     - [论文地址](#11)
-    - [代码地址](#12)
+    - [参考实现](#12)
+    - [代码地址](#13)
 - [2. 环境说明](#2)
     - [深度学习框架](#21)
     - [python第三方库](#22)
@@ -11,8 +12,6 @@
 - [4. 输入数据生成](#4)
     - [数据生成](#41)
 - [5. 离线推理](#5)
-    - [ais_infer工具概述](#51)
-    - [离线推理](#52)
 - [6. 精度对比](#6)
     - [模型后处理](#61)
     - [精度计算](#62)
@@ -26,7 +25,7 @@ url=https://github.com/ajbrock/BigGAN-PyTorch
 branch=master 
 commit_id=98459431a5d618d644d54cd1e9fceb1e5045648d
 ```
-### <a name="12">1.2 代码地址</a>
+### <a name="12">1.3 代码地址</a>
 [BigGAN代码](https://github.com/ajbrock/BigGAN-PyTorch)
 
 修改源码中的BigGAN.py、layers.py和inception_utils.py，并移至本项目中：
@@ -125,14 +124,6 @@ atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --inpu
     --soc_version：处理器型号，通过npu-smi info查询。  
     --input_format：输入数据格式。
     --input_shape：模型输入数据的shape。
-   
-运行后会生成如下文件：
-```bash
-├── biggan.onnx
-├── biggan_sim_bs1.onnx
-├── biggan_sim_bs1.om
-```
-
 
 ## <a name="4">4. 数据预处理</a>
 - [输入数据生成](#41)
@@ -143,17 +134,6 @@ atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --inpu
 ```bash
 #注：针对不同batch size的om模型需要生成不同的输入数据
 python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
-```
-运行后，将会得到如下形式的文件夹：
-
-```
-├── prep_label_bs1
-│    ├──input_00000.bin
-│    ├──......
-│
-├── prep_noise_bs1
-│    ├──input_00000.bin
-│    ├──......         	 
 ```
 
 ## <a name="5">5. 离线推理</a>
@@ -183,15 +163,6 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
     
 模型输出格式是bin，输出保存在"output"参数指定的文件夹中，同时会生成文件result1.txt
 
-运行后会生成如下文件/文件夹：
-```bash
-├── prep_label_bs1    # 模型的标签输入(文件夹)
-├── prep_noise_bs1    # 模型的噪声输入(文件夹)
-├── outputs_bs1_om    # 模型的输出(文件夹)
-├── gen_y_bs1.npz     # 类别采样的npz数据
-├── result1.txt     # ais_infer推理过程的输出
-├── bs1_perf.log      # 性能数据
-```
 
 |模型|t4性能|310性能|310P性能|
 |----|----|----|----|
@@ -212,12 +183,7 @@ python3.7 biggan_postprocess.py --result-path "./outputs_bs1_om/2022_08_29-16_54
 ```bash
 python3.7 biggan_eval_acc.py --num-inception-images 50000 --batch-size 1 --dataset 'I128' > biggan_acc_eval_bs1.log
 ```
-运行后会生成如下文件/文件夹：
-```bash
-├── postprocess_img           # 转换后的模型输出(文件夹)
-├── gen_img_bs1.npz           # 模型输出的npz数据
-├── biggan_acc_eval_bs1.log   # 精度测量结果
-```
+
 
 其中"num-inception-images"表示用于进行精度测量的输出数量，"dataset"指定用于对比分布所采用的数据集，I128表示ImageNet数据集在train上的采样
 >  **说明**  
