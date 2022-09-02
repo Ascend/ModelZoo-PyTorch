@@ -69,70 +69,62 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
   **表 1**  版本配套表
 
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-c3ow{border-color:inherit;text-align:center;vertical-align:top}
-</style>
-<table class="tg">
+<table>
 <thead>
   <tr>
-    <th class="tg-c3ow">配套</th>
-    <th class="tg-c3ow">版本</th>
-    <th class="tg-c3ow">环境准备指导</th>
+    <th>配套</th>
+    <th>版本</th>
+    <th>环境准备指导</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td class="tg-c3ow">固件与驱动</td>
-    <td class="tg-c3ow">1.0.15</td>
-    <td class="tg-c3ow"><a href="https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies" target="_blank" rel="noopener noreferrer">Pytorch框架推理环境准备</a></td>
+    <td>固件与驱动</td>
+    <td>1.0.15</td>
+    <td><a href="https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies" target="_blank" rel="noopener noreferrer">Pytorch框架推理环境准备</a></td>
   </tr>
   <tr>
-    <td class="tg-c3ow">CANN</td>
-    <td class="tg-c3ow">5.1.RC1</td>
-    <td class="tg-c3ow">-</td>
+    <td>CANN</td>
+    <td>5.1.RC1</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">Python</td>
-    <td class="tg-c3ow">3.7.5</td>
-    <td class="tg-c3ow">-</td>
+    <td>Python</td>
+    <td>3.7.5</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">PyTorch</td>
-    <td class="tg-c3ow">1.5.0及以上</td>
-    <td class="tg-c3ow">-</td>
+    <td>PyTorch</td>
+    <td>1.5.0及以上</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">onnx</td>
-    <td class="tg-c3ow">1.7.0及以上</td>
-    <td class="tg-c3ow">-</td>
+    <td>onnx</td>
+    <td>1.7.0及以上</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">torchvision</td>
-    <td class="tg-c3ow">0.6.0及以上</td>
-    <td class="tg-c3ow">-</td>
+    <td>torchvision</td>
+    <td>0.6.0及以上</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">numpy</td>
-    <td class="tg-c3ow">1.20.3及以上</td>
-    <td class="tg-c3ow">-</td>
+    <td>numpy</td>
+    <td>1.20.3及以上</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">Pillow</td>
-    <td class="tg-c3ow">8.2.0及以上</td>
-    <td class="tg-c3ow">-</td>
+    <td>Pillow</td>
+    <td>8.2.0及以上</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow">opencv-python</td>
-    <td class="tg-c3ow">4.5.2.54及以上</td>
-    <td class="tg-c3ow">-</td>
+    <td>opencv-python</td>
+    <td>4.5.2.54及以上</td>
+    <td>-</td>
   </tr>
   <tr>
-    <td class="tg-c3ow" colspan="3">说明：请用户根据自己的运行环境自行安装所需依赖。 x86架构：PyTorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install *包名* 安装。Arm架构：PyTorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install *包名* 安装。</td>
+    <td colspan="3">说明：请用户根据自己的运行环境自行安装所需依赖。 x86架构：PyTorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install *包名* 安装。Arm架构：PyTorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install *包名* 安装。</td>
   </tr>
 </tbody>
 </table>
