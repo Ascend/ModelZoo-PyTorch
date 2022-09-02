@@ -228,7 +228,7 @@ bash unzip_dataset.sh
    b.  执行推理。
 
       ```
-      python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 1
+      python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 4
     python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
       ```
 
