@@ -181,7 +181,7 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
         #该设备芯片名为Ascend310P3 （自行替换）
         回显如下：
         ```
-        ![device](./static/device.png)
+        ![device](./image/device.png)
 
       3. 执行ATC命令。
 
