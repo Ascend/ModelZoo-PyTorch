@@ -1,223 +1,307 @@
-## StarGAN Onnx 模型 PyTorch 端到端推理指导
-
-### 1 模型概述
-
-- 论文地址
-
-```
-https://arxiv.org/abs/1711.09020
-```
-
-- 代码地址
-
-```
-https://github.com/yunjey/stargan
-```
-
-- 数据集地址
-
-```
-wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/dataset/celeba.zip
-```
+# {模型名称}模型-推理指导
 
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-### 2 环境说明
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-```
-CANN = 5.0.2
-pytorch = 1.5.0
-torchvision = 0.6.0
-onnx = 1.8.0
-numpy = 1.21.1
-```
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-> X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
-> Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+
+  ******
+
+  ***<u>斜体带下划线且加粗内容为备注，写作时请删除</u>***
+
+  ***<u>标题请删除模板字眼</u>***
 
 
 
-### 3 pth 转 om 模型
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-- pth 权重文件默认路径为  `./models/200000-G.pth`
-- 进入根目录 `./` 执行 `./test/pth2om` 脚本，自动生成生成 onnx 模型文件和om文件
-- 310:
-```py
-bash ./test/pth2om.sh './models/200000-G.pth'
-```
+StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可以实现 图像的多域间的迁移（作者在论文中具体应用于人脸属性的转换）。在 starGAN 之前，也有很多 GAN模型 可以用于 image-to-image，比如 pix2pix（训练需要成对的图像输入），UNIT（本质上是coGAN），cycleGAN（单域迁移）和 DiscoGAN。而 starGAN 使用 一个模型 实现 多个域 的迁移，这在其他模型中是没有的，这提高了图像域迁移的可拓展性和鲁棒性。
 
-- 710:
-```py
-bash ./test_710/pth2om.sh './models/200000-G.pth'
-```
+<u>***简单描述模型的结构、应用、优点等信息。***</u>
 
 
-### 4 生成输入数据并保存为.bin文件
+- 参考实现：
 
-- 数据集默认路径为 `./data/celeba.zip` ，使用脚本 `unzip_dataset.sh` 解压数据集。
+  ```
+  url=https://github.com/yunjey/stargan
+  commit_id=94dd002e93a2863d9b987a937b85925b80f7a19f
+  model_name=StarGAN
+  ```
+
+  *<u>**url=参考的模型源代码git地址，强烈建议使用release分支版本的地址**</u>*
+
+  *<u>**commit\_id例如：291f7e20339510cfa956b5782741697eb8e6d554**</u>*
+  
+  *<u>**model\_name: 子模型名，开源仓往往会提供很多子模型，需说明推理的是哪一个子模型，比如[Segmenter](https://github.com/rstrudel/segmenter)下的Seg-L-Mask/16模型**</u>*
+
+
+  通过Git获取对应commit\_id的代码方法如下：
+
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | img    | RGB_FP32 | batchsize x  3 x 128 x 128| NCHW         |
+   | Attr    | INT | batchsize x 5| NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | batchsize x 3 x 128 x 128 | RGB_FP32  | NCHW           |
+
+<u>***请按照如上表格描述输入/输出数据的大小、数据类型、数据排布格式，若有多条输入请添加多条数据。若只有一条数据，则只有一行描述即可***</u>
+
+
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | RC2 | -                                                            |
+| ONNX                                                         | 1.8.0 | -                                                            |
+| Numpy                                                         | 1.21.1 | -                                                            |
+| TorchVision                                                         | 0.6.0 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.5.0   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   
+   ```
+
+2. 安装依赖。
+
+   ```
+   source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh
+   pip install --force-reinstall  aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+   pip3 install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   数据集默认路径为 `./data/celeba.zip` ，使用脚本 `unzip_dataset.sh` 解压数据集。
 
 ```
 bash unzip_dataset.sh
 ```
 
-- 使用脚本 `StarGAN_pre_processing.py` 获得二进制 bin 文件和基准的图片结果。
+   <u>***写清楚原始数据集名称、下载链接、所用到的文件、存放路径、目录结构。***</u>
 
-```
-source ./test/env_npu.sh
-python3.7 StarGAN_pre_processing.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
+2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+
+   数据预处理将原始数据集转换为模型输入的数据。
+   使用脚本 `StarGAN_pre_processing_32_64.py` 获得二进制 bin 文件和基准的图片结果。
+
+  
+
+   ```
+   source ./test/env_npu.sh
+    python3.7 StarGAN_pre_processing_32_64.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
                   --model_save_dir './models' --result_dir './result_baseline' \
                   --attr_path './data/celeba/list_attr_celeba.txt' --celeba_image_dir './data/celeba/images'
-```
+   
+   ```
+    ```
+    rm ./bin/img/155.bin
+    rm ./bin/attr/155.bin
+    rm ./bin/img/156.bin
+    rm ./bin/attr/156.bin
+    rm ./bin/img/157.bin
+    rm ./bin/attr/157.bin
+    rm ./bin/img/158.bin
+    rm ./bin/attr/158.bin
+    rm ./bin/img/159.bin
+    rm ./bin/attr/159.bin
+    ```
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       pth 权重文件默认路径为  ./models/200000-G.pth
+
+   2. 导出onnx文件。
+
+      1. 使用XXX导出onnx文件。
+
+         运行XXX脚本。
+
+            ```
+            bash ./test_710/pth2om.sh './models/200000-G.pth'
+            ```
+
+         获得StarGAN.onnx文件。
+
+   
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+            ```
+            source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh
+            ```
+        上一步已经生成OM模型
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+        ```
+        npu-smi info
+        ```
+        ```
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+         ```
+          atc --framework=5 --model=StarGAN.onnx --output=StarGAN_bs1 --input_format=NCHW \
+            --input_shape="real_img:1,3,128,128;attr:1,5" --log=debug --soc_version=Ascend710 
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+
+        运行成功后生成StarGAN_bs1.om模型文件。
 
 
 
-### 5 离线推理
+2. 开始推理验证。
 
-####  5.1 msame工具概述
+   a.  使用ais-infer工具进行推理。
 
-msame 工具为华为自研的模型推理工具，输入 om 模型和模型所需要的输入 bin 文件，输出模型的输出数据文件。模型必须是通过 atc 工具转换的 om 模型，输入 bin 文件需要符合模型的输入要求，且支持模型多输入。
-```
-git clone https://gitee.com/ascend/tools.git
-
-export DDK_PATH=/usr/local/Ascend/ascend-toolkit/latest
-export NPU_HOST_LIB=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/stub
-
-cd tools/msame
-dos2unix *.sh
-chmod u+x  build.sh
-./build.sh g++  ./msame/out   
-cp ./out/main   ../../   #本步骤要在“/tools/msame”文件夹目录下执行
-cd ../..
-
-```
-
-```
-chmod 777 main
-mv main msame
-```
-
-####  5.2 离线推理
-
-```
-bash ./test/eval_bs1_perf.sh
-bash ./test/eval_bs4_perf.sh
-bash ./test/eval_bs8_perf.sh
-bash ./test/eval_bs16_perf.sh
-```
-
-- 使用脚本 `StarGAN_pre_processing_32_64.py` 获得二进制 bin 文件和基准的图片结果。
-```
-source ./test/env_npu.sh
-python3.7 StarGAN_pre_processing_32_64.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
-                  --model_save_dir './models' --result_dir './result_baseline' \
-                  --attr_path './data/celeba/list_attr_celeba.txt' --celeba_image_dir './data/celeba/images'
-```
-```
-rm ./bin/img/155.bin
-rm ./bin/attr/155.bin
-rm ./bin/img/156.bin
-rm ./bin/attr/156.bin
-rm ./bin/img/157.bin
-rm ./bin/attr/157.bin
-rm ./bin/img/158.bin
-rm ./bin/attr/158.bin
-rm ./bin/img/159.bin
-rm ./bin/attr/159.bin
-
-bash ./test_710/eval_bs32_perf.sh
-bash ./test_710/eval_bs64_perf.sh
-```
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
-输出数据默认保存在根目录的 `./StarGAN_[yourBatchSize].log` 中，可以看到时延和 FPS。输出图片默认保存在当前目录 `output_[yourBatchSize]/` 下，为保存模型输入高维张量数据的 txt 文件。
+   b.  执行推理。
+
+      ```
+      python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 1
+    python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
+      ```
+
+      -   参数说明：
+
+           -   StarGAN：模型类型。
+           -   --model ./StarGAN_bs64.om：om文件路径。
+           
+		
+
+      推理后的输出默认在当前目录result下。
+
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   c.  精度验证。
+    msame 工具为华为自研的模型推理工具，输入 om 模型和模型所需要的输入 bin 文件，输出模型的输出数据文件。模型必须是通过 atc 工具转换的 om 模型，输入 bin 文件需要符合模型的输入要求，且支持模型多输入。
+    ```
+    git clone https://gitee.com/ascend/tools.git
+
+    export DDK_PATH=/usr/local/Ascend/ascend-toolkit/latest
+    export NPU_HOST_LIB=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/stub
+
+    cd tools/msame
+    dos2unix *.sh
+    chmod u+x  build.sh
+    ./build.sh g++  ./msame/out   
+    cp ./out/main   ../../   #本步骤要在“/tools/msame”文件夹目录下执行
+    cd ../..
+
+    ```
+
+    ```
+    chmod 777 main
+    mv main msame
+    bash ./test_710/eval_bs32_perf.sh
+    bash ./test_710/eval_bs64_perf.sh
+    ```
+      调用 ` StarGAN_post_processing.py` 来进行后处理，把输出的 txt 文件转换为输出图像。
+      ```
+      python3.7 StarGAN_post_processing.py --folder_path './output_bs1/[YYYYMMDD_HHMMSS]' --batch_size 1
+      python3.7 StarGAN_post_processing.py --folder_path './output_bs16/[YYYYMMDD_HHMMSS]' --batch_size 16
+      ```
+
+     详细的结果输出在 `./output_[yourBatchSize]/jpg` 文件夹中，可以和 `result_baseline` 文件夹下的在线推理结果做对比。可以发现各个 batchsize 的离线推理生成的图片与基准基本一致。
 
 
+   d.  性能验证。
 
-### 6 精度对比
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-调用 ` StarGAN_post_processing.py` 来进行后处理，把输出的 txt 文件转换为输出图像。
-
-```python
-python3.7 StarGAN_post_processing.py --folder_path './output_bs1/[YYYYMMDD_HHMMSS]' --batch_size 1
-python3.7 StarGAN_post_processing.py --folder_path './output_bs16/[YYYYMMDD_HHMMSS]' --batch_size 16
-```
-
-详细的结果输出在 `./output_[yourBatchSize]/jpg` 文件夹中，可以和 `result_baseline` 文件夹下的在线推理结果做对比。可以发现各个 batchsize 的离线推理生成的图片与基准基本一致。
+      ```
+      python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 1
+    python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
+      ```
 
 
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-### 7 性能对比
+调用ACL接口推理计算，性能参考下列数据。
 
-#### 7.1 NPU 310 性能数据
-```
-(310 bs1) Inference average time: 318.90 ms
-(310 bs1) FPS:200.690
-```
 
-根据时延和核心数，计算得到 Batchsize = 1 时单卡吞吐率 190.114 FPS
-
-```
-(310 bs16) Inference average time: 313.39 ms
-(310 bs16) FPS:204.218
-```
-
-根据时延和核心数，计算得到 Batchsize = 16 时单卡吞吐率 204.218 FPS
-
-#### 7.2 GPU T4 性能数据
-
-```
-&&&& RUNNING TensorRT.trtexec # trtexec --onnx=StarGAN.onnx --shapes=real_img:1x3x128x128,attr:1x5
-...
-[11/10/2021-07:45:57] [I] GPU Compute
-[11/10/2021-07:45:57] [I] min: 4.5766 ms
-[11/10/2021-07:45:57] [I] max: 8.12921 ms
-[11/10/2021-07:45:57] [I] mean: 5.34373 ms
-[11/10/2021-07:45:57] [I] median: 5.32825 ms
-[11/10/2021-07:45:57] [I] percentile: 6.91772 ms at 99%
-[11/10/2021-07:45:57] [I] total compute time: 2.93371 s
-```
-
-根据时延和核心数，计算得到 Batchsize = 1 时单卡吞吐率 187.135 FPS
-
-```
-&&&& RUNNING TensorRT.trtexec # trtexec --onnx=StarGAN.onnx --shapes=real_img:16x3x128x128,attr:16x5
-...
-[11/10/2021-08:03:49] [I] GPU Compute
-[11/10/2021-08:03:49] [I] min: 65.5917 ms
-[11/10/2021-08:03:49] [I] max: 76.011 ms
-[11/10/2021-08:03:49] [I] mean: 67.8021 ms
-[11/10/2021-08:03:49] [I] median: 67.15 ms
-[11/10/2021-08:03:49] [I] percentile: 76.011 ms at 99%
-[11/10/2021-08:03:49] [I] total compute time: 3.1189 s
-```
-
-根据时延和核心数，计算得到 Batchsize = 16 时单卡吞吐率 235.980 FPS
-
-#### 7.3 NPU 710 性能数据
-```
-(710 bs1) Inference average time: 1.32 ms
-(710 bs1) FPS:757.576
-```
-
-根据时延和核心数，计算得到 Batchsize = 1 时单卡吞吐率 757.576 FPS
-
-```
-(710 bs16) Inference average time: 27.00 ms
-(710 bs16) FPS:592.593
-```
-
-根据时延和核心数，计算得到 Batchsize = 16 时单卡吞吐率 592.593 FPS
-
-#### 7.4 性能对比
-
-| Batch Size | 310 (FPS/Card) | 710 (FPS/Card)| T4 (FPS/Card) | 310/T4   | 710/310  |  710/T4  | 
+| Batch Size | 310 (FPS/Card) | 310P (FPS/Card)| T4 (FPS/Card) | 310/T4   | 310P/310  |  310P/T4  | 
 | ---------- | -------------- | ------------- | ------------- | -------- | -------- | -------- |
 | 1          | *189.753*      | *757.576*     | *187.135*     | *101.4%* | *396.8%* | *375.0%* |
 | 4          | *201.207*      | *923.788*     | *203.666*     | *98.80%* | *458.3%* | *451.9%* |
 | 8          | *199.913*      | *984.010*     | *219.700*     | *91.00%* | *491.3%* | *457.2%* |
-| 16         | *200.986*      | *592.593*     | *235.980*     | *85.17%* | *295.2%* | *261.3%* |
+| 16         | *200.986*      | *1015.911*     | *235.980*     | *85.17%* | *506.2%* | *448.3%* |
 | 32         | *200.986*      | *991.633*     | *202.280*     | *99.36%* | *493.3%* | *490.2%* |
 | 64         | *201.307*      | *1040.31*     | *195.670*     | *102.8%* | *516.7%* | *531.6%* |
-
-
