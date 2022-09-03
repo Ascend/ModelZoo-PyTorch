@@ -236,7 +236,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
     纯推理模式：
     ```
-    python ais_infer.py --model gaitset_submit_bs1_310P.om --batchsize 8 --loop 10
+    python ais_infer.py --model gaitset_submit_bs1_310P.om --batchsize 1 --loop 10
     ```
    
     -   参数说明：
