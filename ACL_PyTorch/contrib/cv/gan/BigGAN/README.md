@@ -99,7 +99,7 @@ python3.7 clip_edit.py
 1. 使用onnx-simplifier简化onnx模型  
 生成batch size为1的简化onnx模型，对应的命令为：
 ```bash
-python3.7 -m onnxsim './biggan.onnx' './biggan_sim_bs1.onnx' --input-shape "noise:1,1,20" "label:1,5,148"
+python3.7 -m onnxsim './biggan.onnx' './biggan_sim_bs{batchsize}.onnx' --input-shape "noise:{batchsize},1,20" "label:{batchsize},5,148"
 ```
 
 2. 设置环境变量
@@ -115,7 +115,7 @@ ${chip_name}可通过npu-smi info指令查看，例：310P3
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```bash
-atc --framework=5 --model=./biggan_sim_bs1.onnx --output=./biggan_sim_bs1 --input_format=ND --input_shape="noise:1,1,20;label:1,5,148" --log=error --soc_version=Ascend${chip_name}
+atc --framework=5 --model=./biggan_sim_bs{batchsize}.onnx --output=./biggan_sim_bs{batchsize} --input_format=ND --input_shape="noise:{batchsize},1,20;label:{batchsize},5,148" --log=error --soc_version=Ascend${chip_name}
 ```
 
 参数说明：
