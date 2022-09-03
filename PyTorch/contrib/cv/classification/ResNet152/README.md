@@ -39,9 +39,9 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.15](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)或[1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
+  | 固件与驱动  | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)      |
 
 - 环境准备指导。
 
