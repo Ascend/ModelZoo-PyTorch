@@ -106,6 +106,7 @@ python3.7 -m onnxsim './biggan.onnx' './biggan_sim_bs1.onnx' --input-shape "nois
 
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
+export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
 ```
 
 3. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
@@ -144,15 +145,11 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
    
 2.执行离线推理
 
-·设置环境变量
-```
-    export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
-```
 ·执行命令
 ```
     cd tools/ais-bench_workload/tool/ais_infer
     mkdir -p /home/ylz/BigGAN/outputs_bs1_om
-    python3.7 ais_infer.py --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 >./result1.txt
+    python3.7 ais_infer.py --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 
 ```
 
     --model ：输入的om文件。
@@ -181,7 +178,7 @@ python3.7 biggan_postprocess.py --result-path "./outputs_bs1_om/2022_08_29-16_54
 ### <a name="62">6.2 精度计算</a>
 精度计算利用biggan_eval_acc.py脚本：
 ```bash
-python3.7 biggan_eval_acc.py --num-inception-images 50000 --batch-size 1 --dataset 'I128' > biggan_acc_eval_bs1.log
+python3.7 biggan_eval_acc.py --num-inception-images 50000 --batch-size 1 --dataset 'I128' 
 ```
 
 
