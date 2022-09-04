@@ -203,8 +203,6 @@
          +===================+=================+======================================================+
          ```
       2. 使用atc将onnx模型转换为om模型文件
-       
-      3. 执行ATC命令。
 
             ```shell
             atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=om/tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
