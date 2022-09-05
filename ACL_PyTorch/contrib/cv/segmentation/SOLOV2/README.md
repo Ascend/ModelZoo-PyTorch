@@ -147,10 +147,13 @@ cd ..
    ├── customize_dtypes.cfg //算子调优文件
    ```
    
+   
 
 > **说明：**
 >
 > benchmark离线推理工具使用请参见《[CANN 推理benchmark工具用户指南](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+>
+> 
 
 3. 获取开源代码仓。
 
@@ -162,6 +165,8 @@ git clone https://github.com/WXinlong/SOLO.git -b master
    git reset --hard 95f3732d5fbb0d7c7044c7dd074f439d48a72ce5
    cd ..
    ```
+   
+   
 
 ## 准备数据集
 
@@ -177,6 +182,8 @@ git clone https://github.com/WXinlong/SOLO.git -b master
               └──val2017
    ```
 
+   
+
 2. 数据预处理。
 
    数据预处理将原始数据集转换为模型输入的数据。
@@ -186,6 +193,8 @@ git clone https://github.com/WXinlong/SOLO.git -b master
    ```
    python3 solov2_preprocess.py --image_src_path=/root/dataset/coco/val2017  --bin_file_path=val2017_bin --meta_file_path=val2017_bin_meta --model_input_height=800  --model_input_width=1216
    ```
+
+   
 
    * --image_src_path：数据集路径
 
@@ -203,6 +212,8 @@ git clone https://github.com/WXinlong/SOLO.git -b master
    python3 get_info.py /root/dataset/coco/  SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solov2.info  solov2_meta.info  1216 800
    ```
 
+   
+
    * “/root/dataset/coco/”：数据集路径。
 
    * “SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py”：模型配置文件。
@@ -218,7 +229,7 @@ git clone https://github.com/WXinlong/SOLO.git -b master
    * “1216”：图片宽。
 
    * “800”：图片高。
-
+   
    运行成功后，在当前目录中生成“solo.info”和“solov2_meta.info”。
 
 
