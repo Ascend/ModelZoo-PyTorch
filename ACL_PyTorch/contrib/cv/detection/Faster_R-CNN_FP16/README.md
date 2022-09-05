@@ -1,4 +1,4 @@
-# {Faster R-CNN-FP16}模型-推理指导
+# Faster R-CNN-FP16模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
