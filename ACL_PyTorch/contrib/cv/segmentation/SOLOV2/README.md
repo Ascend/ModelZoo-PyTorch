@@ -1,4 +1,4 @@
-# {SOLOV2}模型-推理指导
+# SOLOV2模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -86,13 +86,49 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    ```
    pip3 install -r requirment.txt
    ```
+   
+   其中mmcv需要用以下方式安装。
+   
+   ```
+   git clone https://github.com/open-mmlab/mmcv -b v0.2.16
+   cd mmcv
+   python setup.py build_ext
+   python setup.py develop
+   cd ..
+   ```
+   
+   获取开源代码仓。
+   
+   在已下载的源码包根目录下，执行如下命令。
+   
+   ```
+   git clone https://github.com/WXinlong/SOLO.git -b master
+   cd SOLO
+   git reset --hard 95f3732d5fbb0d7c7044c7dd074f439d48a72ce5
+   cd ..
+   ```
+   
+   其中mmdet需要用以下方式安装。
+   
+   ```
+   cd SOLO
+   patch -p1 < ../MMDET.diff
+   patch -p1 < ../SOLOV2.diff
+   pip install -r requirements/build.txt # 可以不用执行这句话
+   pip install -v -e .
+   cd ..
+   ```
+   
+   
 
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型需要coco2017数据集，数据集下载地址https://cocodataset.org/。请将val2017图片及其标注文件放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
+   本模型需要coco2017数据集，数据集下载地址https://cocodataset.org/
+
+   请将val2017图片及其标注文件放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
 
    ```
    ├──root
@@ -124,7 +160,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    
 3. 生成数据集info文件。
 
-   执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solov2_meta.info”用于后处理。
+   执行“get_info.py”，会生成“solov2_meta.info”用于后处理。
 
    ```
    python3 get_info.py /root/dataset/coco/  SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solov2.info  solov2_meta.info  1216 800
@@ -146,7 +182,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
    * “800”：图片高。
 
-   运行成功后，在当前目录中生成“solo.info”和“solov2_meta.info”。
+   运行成功后，在当前目录中生成“solov2_meta.info”。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -261,7 +297,9 @@ b.  执行推理。
         >**说明：** 
         >执行ais-infer工具请选择与运行环境架构相同的命令。
 
-c.  精度验证。
+c.  后处理。
+
+ 执行solov2_preprocess.py文件，脚本执行完毕后即可生成精度结果。
 
     ```
     python3 solov2_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_02-17_04_20/  --meta_info=solov2_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
