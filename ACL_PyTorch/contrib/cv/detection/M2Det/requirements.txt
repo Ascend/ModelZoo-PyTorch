@@ -11,6 +11,6 @@ addict==2.4.0
 alabaster==0.7.12
 antlr4-python3-runtime==4.8
 appdirs==1.4.4
-asnlcryto==1.4.0
+asn1crpyto==1.4.0
 astroid==2.7.3
 astropy==4.3.1
