@@ -94,11 +94,15 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
    本模型需要coco2017数据集，数据集下载地址https://cocodataset.org/。请将val2017图片及其标注文件放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
 
+   ```
    ├──root
        └──dataset
            └──coco
               └──annotations
               └──val2017
+   ```
+
+   
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
@@ -229,7 +233,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
            -   --customize_dtypes：自定义算子的计算精度。
-         -   --precision_mode：其余算子的精度模式。
+           -   --precision_mode：其余算子的精度模式。
            
            运行成功后生成<u>***solov2.om***</u>模型文件。
 
@@ -248,17 +252,14 @@ b.  执行推理。
     ```
     
     -   参数说明：
-    
         * --model 	需要进行推理的om模型
-    
     	* --input		图片bin文件路径
     	* --output 	推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname	的子文件夹下。
     	* --outfmt 	输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
     	* --loop 	推理次数，可选参数，默认1，profiler为true时，推荐为1	
      	 推理后的输出默认在当前目录result下。
-    
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais-infer工具请选择与运行环境架构相同的命令。
 
 c.  精度验证。
 
