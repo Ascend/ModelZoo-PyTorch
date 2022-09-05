@@ -146,12 +146,12 @@ cd ..
    ├── SOLOv2_R50_1x.pth  //pth文件
    ├── customize_dtypes.cfg //算子调优文件
    ```
+   
 
 > **说明：**
 >
 > benchmark离线推理工具使用请参见《[CANN 推理benchmark工具用户指南](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 >
-> 
 
 3. 获取开源代码仓。
 
