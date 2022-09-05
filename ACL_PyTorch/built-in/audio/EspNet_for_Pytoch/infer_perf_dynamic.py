@@ -26,13 +26,12 @@ if __name__ == '__main__':
     shape_t = []
     RES = 0
     FPS = 0
-    net = AclNet(model_path="encoder_262_1478.om", device_id=DEVICE)
+    net = AclNet(model_path="encoder.om", device_id=DEVICE)
     for shape in shapes:
         TEMP = 0
         memory = np.random.random((shape, 83)).astype("float32")
-        dims = {'dimCount': 2, 'name': '', 'dims': [shape, 83]}
         for i in range(20):
-            output_data, exe_time = net([memory], dims=dims)
+            output_data, exe_time = net([memory])
             TEMP += exe_time
         shape_t.append(TEMP / 20)
     RES = np.multiply(np.array(shape_t), np.array(shape_num))
