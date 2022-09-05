@@ -146,8 +146,6 @@ cd ..
    ├── SOLOv2_R50_1x.pth  //pth文件
    ├── customize_dtypes.cfg //算子调优文件
    ```
-   
-   
 
 > **说明：**
 >
