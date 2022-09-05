@@ -1,59 +1,72 @@
 
 # SE-ResNeXt101 模型推理指导
 
+- [概述](#概述)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [安装依赖](#安装依赖)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [精度&性能](#精度性能)
 
-## 1 模型概述
+----
+# 概述
 
 卷积神经网络CNN的核心是卷积操作，它通过融合局部感受野内的空间与通道信息来提取特征。大量已有的研究结果表明，提升特征层次结构中空间信息的编码，可以增强 CNN 的表示能力。在这项工作中，我们转而关注通道关系并提出了一种新颖的架构单元，我们将其称为 "Squeeze-and-Excitation"（SE）块，它通过显式构建通道之间的相互依赖关系来自适应地重新校准通道特征响应。将SE块堆叠形成 SENet 架构，可以有效地泛化不同的数据集。我们进一步证明，SE 块以很低的计算成本为现有最先进的 CNN 带来了显著的性能提升。以 Squeeze-and-Excitation Networks 为基础，我们在 ILSVRC 2017 分类竞赛中赢得冠军，并将 Top5 的错误率降低到 2.251%，相比 2016 年的获胜成绩提升了 25%。
 
-**论文地址**：[Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507)  
++ 论文  
+    [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507)  
+    [Jie Hu](https://arxiv.org/search/cs?searchtype=author&query=Hu%2C+J), [Li Shen](https://arxiv.org/search/cs?searchtype=author&query=Shen%2C+L), [Samuel Albanie](https://arxiv.org/search/cs?searchtype=author&query=Albanie%2C+S), [Gang Sun](https://arxiv.org/search/cs?searchtype=author&query=Sun%2C+G), [Enhua Wu](https://arxiv.org/search/cs?searchtype=author&query=Wu%2C+E)
 
-**参考实现**：
-+ 代码地址：[mmclassification: SE-ResNext101](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fopen-mmlab%2Fmmclassification%2Fblob%2Fmaster%2Fconfigs%2F_base_%2Fmodels%2Fseresnext101_32x4d.py)
-+ tag：v0.23.0
++ 参考实现  
+    ```
+    url = https://github.com/open-mmlab/mmclassification/blob/master/configs/_base_/models/seresnext101_32x4d.py
+    tag = v0.23.0
+    ```
 
-**模型输入**：
++ 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | image      |  RGB_FP32 | NCHW        |batchsize x 3 x 224 x 224 |
 
-| input-name | input-shape | data-type   | data-format |
-| -------- | -------- | ---------- | ------------ |
-| image | batchsize x 3 x 224 x 224 | RGB_FP32 | NCHW         |
-
-**模型输出**：
-
-| output-name | output-shape     | data-type | data-format |
-| -------- | -------- | -------- | ------------ |
-| class | 1 x 1000 | FLOAT32  | ND           |
-
-
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | class       |  FLOAT32   | ND          |batchsize x 1000 |
 
 
-## 2 环境说明
-该模型离线推理使用 Atlas 300I Pro 推理卡，所有步骤都在 [CANN 5.1.RC2](https://www.hiascend.com/software/cann/commercial) 、Python 3.7.5 、PyTorch 1.12.1 环境下进行，CANN 包以及对应驱动、固件的安装请参考 [软件安装](https://www.hiascend.com/document/detail/zh/canncommercial/51RC2/envdeployment/instg)。所需的 Python 第三方依赖如下：
 
-| 依赖库 | 版本|
-| ---- | ----|
-| torch | 1.12.1 |
-| torchvision | 0.13.0 |
-| numpy | 1.23.2 |
-| mmcls | 0.23.2 |
-| onnx | 1.12.0 |
-| onnx-simplifier | 0.4.7 |
-| Pillow | 9.2.0 |
+----
+# 推理环境
 
-## 3 快速上手
+- 该模型离线推理使用 Atlas 300I Pro 推理卡，推理所需配套的软件如下：
 
-### 3.1 安装依赖
-```shell
-conda create -n senet python=3.7.5
-conda activate senet
-pip install -r requirements.txt
-```
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | firmware  | 1.82.22.2.220 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | driver    | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 5.1.RC2 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | Python    | 3.7.5   | -          |
+    | PyTorch   | 1.12.0  | -          |
 
-### 3.2 数据集预处理
 
-1.  获取原始数据集
-    
-    本模型推理项目使用 ILSVRC2012 数据集验证模型精度，请在 [ImageNet官网](http://image-net.org/) 自行下载ILSVRC2012数据集并解压，本模型将用到 ILSVRC2012_img_val.tar 验证集及 ILSVRC2012_devkit_t12.gz 中的val_label.txt数据标签。
+----
+# 快速上手
+
+## 安装依赖
+
++ 执行以下命令创建 Python 虚拟环境并安装所需的依赖
+    ```shell
+    conda create -n senet python=3.7.5
+    conda activate senet
+    pip install -r requirements.txt
+    ```
+
+## 准备数据集
+
+1. 获取原始数据集  
+    本模型推理项目使用 ILSVRC2012 数据集验证模型精度，请在 [ImageNet官网](http://image-net.org/) 自行下载ILSVRC2012数据集并解压，本模型将用到 ILSVRC2012_img_val.tar 验证集及 ILSVRC2012_devkit_t12.gz 中的 val_label.txt 标签文件。
     
     请按以下的目录结构存放数据：
     ```
@@ -65,59 +78,52 @@ pip install -r requirements.txt
         ├──ILSVRC2012_devkit_t12/
             ├──val_label.txt
     ```
-2. 数据预处理
-    ```python
+2. 数据预处理  
+    执行前处理脚本将原始数据集中的 JPEG 图片转换为模型输入需要的 bin 文件。
+    ```shell
     python3.7 Se_Resnext101_preprocess.py resnet /opt/npu/imageNet/val/ ./prep_dataset/
     ```
     参数说明：
     + resnet 该模型数据预处理方式同 ResNet 网络，所以此处设置为resnet。（脚本还支持inceptionv3和inceptionv4）
-    + /opt/npu/imagenet/val/ 原始测试图片（.jpeg）所在目录的路径。
-    + ./prep_dataset/ 指定一个目录用于存放生成的二进制（.bin）文件。
+    + /opt/npu/imagenet/val/ 原始测试图片 jpeg 所在目录的路径。
+    + ./prep_dataset/ 指定一个目录用于存放生成的二进制 bin 文件。
     
-    运行成功后，每个图像对应生成一个二进制文件，存放于当前目录下的 prep_dataset 目录中。
+    运行成功后，每张图像对应生成一个二进制 bin 文件，存放于当前目录下的 prep_dataset 目录中。
 
 
-### 3.3 模型转换
+## 模型转换
 
+1. PyTroch 模型转 ONNX 模型  
 
-#### 3.3.1 PyTroch 模型转 ONNX 模型
-
-1. 下载pth权重文件  
-    - pth权重：[SE-ResNext101预训练pth权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E8%AE%AD%E7%BB%83/cv/image_classification/SE-resnext101/state_dict.pth) 
-    - md5sum: 0C94EA7067268CB66D74001D8B01F7F8
+    step1: 下载pth权重文件  
+    由于开源仓未提供预训练 pth，所以本推理项目使用自己训练的 [pth 权重文件](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E8%AE%AD%E7%BB%83/cv/image_classification/SE-resnext101/state_dict.pth)，将其下载到当前目录。
     ```shell
     wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E8%AE%AD%E7%BB%83/cv/image_classification/SE-resnext101/state_dict.pth
+    # md5sum: 0C94EA7067268CB66D74001D8B01F7F8
     ```
 
-2. 生成 ONNX 模型
+    step2: 生成 ONNX 模型并简化
     ```shell
     python3 Se_Resnext101_pth2onnx.py state_dict.pth se-resnext101.onnx
     ```
 
-3. ONNX模型简化 
+    step3: ONNX模型简化 
     ```shell
     python -m onnxsim se-resnext101.onnx se-resnext101-sim.onnx --overwrite-input-shape=16,3,224,224
     ```
-    + 参数说明
-      + --overwrite-input-shape：输入数据的排布格式
+    参数说明
+    + --overwrite-input-shape：为输出的 ONNX 模型固定输入 shape
     
-    至此，当前目录下会生成最终的ONNX模型： se-resnext101-sim.onnx 文件。
+    运行成功后，当前目录下会生成最终的ONNX模型： se-resnext101-sim.onnx 文件。
 
-#### 3.3.2 ONNX 模型转 OM 模型
+2. ONNX 模型转 OM 模型  
 
-1. 设置环境变量
+    step1: 查看NPU芯片名称 ${chip_name}
     ```shell
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
-    ```
-    说明：该脚本中环境变量仅供参考，请以实际安装路径配置环境变量。
-
-2. 查看芯片名称（${chip_name}）
-    ```
     npu-smi info
-    # 该设备芯片名为Ascend310P3 （自行替换）
-    
-    回显如下：
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
     +-------------------+-----------------+------------------------------------------------------+
     | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
     | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
@@ -130,8 +136,13 @@ pip install -r requirements.txt
     +===================+=================+======================================================+
     ```
 
-3. ONNX 模型转 OM 模型
+    step2: ONNX 模型转 OM 模型
     ```shell
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
+    
+    # 执行 ATC 进行模型转换
     atc --framework=5 \
         --model=se-resnext101-sim.onnx \
         --output=se-resnext_bs16 \
@@ -140,77 +151,80 @@ pip install -r requirements.txt
         --log=error \
         --soc_version=Ascend${chip_name}
     ```
-    
    参数说明：
-   
-    - --model：为ONNX模型文件。
-    - --framework：5代表ONNX模型。
-    - --output：输出的OM模型。
-    - --input_format：输入数据的排布格式。
-    - --input_shape：输入数据的shape。
-    - --log：日志级别。
-    - --soc_version：处理器型号。
+    + --model：为ONNX模型文件。
+    + --framework：5代表ONNX模型。
+    + --output：输出的OM模型。
+    + --input_format：输入数据的排布格式。
+    + --input_shape：输入数据的shape。
+    + --log：日志级别。
+    + --soc_version：处理器型号。
+    
+    运行成功后，在当前目录下会生成OM模型: se-resnext_bs16.om
 
-### 3.4 离线推理
 
+## 推理验证
 
-#### 3.4.1 准备推理工具
+1. 准备推理工具  
 
-+ 推理工具使用ais_infer，须自己拉取源码，打包并安装。
+    推理工具使用ais_infer，须自己拉取源码，打包并安装。
     ```shell
     # 指定CANN包的安装路径
     export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-    # 获取源码
+
+    # 获取推理工具源码
     git clone https://gitee.com/ascend/tools.git
     cd tools/ais-bench_workload/tool/ais_infer/backend/
-    # 打包，会在当前目录下生成 aclruntime-xxx.whl
+    
+    # 打包
     pip3 install --upgrade pip
-    pip3 wheel ./
+    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
+    
     # 安装
     pip3 install --force-reinstall aclruntime-xxx.whl
+
+    # 获取推理脚本
+    cd -
+    cp -r tools/ais-bench_workload/tool/ais_infer .
     ```
     参考：[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
 
-#### 3.4.2 执行推理
-1. 需进入 ais_infer.py 所在目录执行以下代码
+2. 离线推理  
+
+    需进入 ais_infer.py 所在目录执行以下代码
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
     
     # 对预处理后的数据进行推理
-    python3 ais_infer.py --model ./se-resnext_bs16.om --input ./preprocess/ --output ./result/ --outfmt TXT
+    cd ais_infer
+    mkdir ../result/
+    python3 ais_infer.py --model ../se-resnext_bs16.om --input ../prep_dataset/ --output ../result/ --outfmt TXT
+    cd ..
     ```
     参数说明：
+    + --model：OM模型路径。
+    + --input：存放预处理bin文件的目录路径
+    + --output：存放推理结果的目录路径
+    + --outfmt：推理输出文件的格式
     
-    - --model：om模型路径。
-    - --input：图片预处理结果路径。
-    - --output：指定保存推理结果的目录
-    - --outfmt：执行推理结果的文件格式
-    
-    运行成功后，每个预处理（.bin）文件会对应生成一个推理结果（.bin）文件。
-    
-2. 推理结束后需回到推理前所在的工作目录
+    运行成功后，在--output指定的目录下，会生成一个根据执行开始时间来命名的子目录，用于存放推理结果文件。
+  
+3. 精度验证  
 
-
-#### 3.4.3  计算推理精度
-
-1. 后处理计算精度
+    执行后处理脚本，计算模型在 top1 到 top5 上的准确率。
     ```shell
     python3.7 Se_Resnext101_postprocess.py \
         result/2022xxxxx/ \
         /opt/npu/imageNet/val_label.txt \
         ./result.json
     ```
-    
     参数说明：
-    
     +  result/2022xxxxx/：生成推理结果所在路径。
-    +  /opt/npu/imageNet/val_label.txt：标签数据路径。
+    +  /opt/npu/imageNet/val_label.txt：图片标签文件路径。
     +  ./result.json：结果文件保存路径。
     
-2. 结果解读
-   
     运行成功后，在当前目录下找到 result.json 文件，其内容为 top1 到 top5 的分类正确率：
     ```json
     {
@@ -227,18 +241,22 @@ pip install -r requirements.txt
     }
     ```
 
-#### 3.4.4  获取推理性能
+4. 性能验证  
 
-1. 获取性能数据
-  
-    对于性能的测试，需要注意以下两点：
+    对于性能的测试，需要注意以下三点：
     + 测试前，请通过 npu-smi info  命令查看 NPU 设备状态，请务必在 NPU 设备空闲的状态下进行性能测试。
     + 为避免因测试持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标。
+
+    > 吞吐率（throughput）：模型在单位时间（1秒）内处理的数据样本数。
     
-    纯推理命令：
+    执行纯推理：
     ```shell
-    python3 ais_infer.py --model ./se-resnext_bs16.om --batchsize 16 --loop 100
+    cd ais_infer
+    python3 ais_infer.py --model ../se-resnext_bs16.om --batchsize 16 --loop 100
+    cd ..
     ```
+
     执行完纯推理命令，程序会打印出跟性能先关的指标：
     ```log
     [INFO] -----------------Performance Summary------------------
@@ -248,19 +266,14 @@ pip install -r requirements.txt
     [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(21.94005001068115): 729.2599603105127
     [INFO] ------------------------------------------------------
     ```
-
-2. 计算性能
-
-    使用吞吐率作为性能指标。
-    > 吞吐率（throughput）： 模型在单位时间（1秒）内处理的数据样本数。
     
     计算吞吐率：
     + 执行纯推理时若指定了 batchsize，则找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率，本例中的吞吐率为 729.2599603105127
     + 若没有指定 batchsize，则可以通过 **NPU_compute_time** 中的 **mean** 来计算：
     $$throughput =\frac{batchsize}{mean} * 1000 =729.26(fps)$$
 
-
-## 4 精度与性能对比
+----
+# 精度&性能
 
 1. 精度对比
 
@@ -278,7 +291,7 @@ pip install -r requirements.txt
     <td>1</td>
     <td rowspan="2">78.24%</td>
     <td rowspan="2"><a href="https://github.com/open-mmlab/mmclassification/tree/master/configs/seresnet">78.26%</a></td>
-    <td rowspan="2"> $$ \frac {|78.24-78.26|} {78.26}= 0.0003$$ </td>
+    <td rowspan="2"> $$ \frac {|0.7824-0.7826|} {0.7826}= 0.0003$$ </td>
     </tr>
     <tr>
     <td>16</td>
