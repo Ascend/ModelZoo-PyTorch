@@ -22,8 +22,8 @@ import sys
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
+    from torch_npu.contrib import transfer_to_npu
 import apex
-from torch_npu.contrib import auto_cast_gpu
 import bugfix
 
 import torch.nn as nn
