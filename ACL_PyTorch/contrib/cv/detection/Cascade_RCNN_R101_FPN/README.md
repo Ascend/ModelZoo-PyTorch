@@ -200,17 +200,16 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
         atc --framework=5 --model=./cascade_rcnn_r101.onnx --output=cascade_rcnn_r101 --input_format=NCHW --input_shape="input:1,3,1216,1216" --soc_version=$\{chip\_name\} --out_nodes="Concat_947:0;Reshape_949:0" --log info
         ```
 
-         - 参数说明：
+        - 参数说明：
+          -   --model：为ONNX模型文件。
+          -   --framework：5代表ONNX模型。
+          -   --output：输出的OM模型。
+          -   --input\_format：输入数据的格式。
+          -   --input\_shape：输入数据的shape。
+          -   --log：日志级别。
+          -   --soc\_version：处理器型号。
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-
-           运行成功后生成cascade_rcnn_r101.om模型文件。
+        运行成功后生成cascade_rcnn_r101.om模型文件。
 
 
 2. 开始推理验证。
@@ -247,12 +246,11 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
       python3 Cascade_RCNN_R101_postprocess.py --bin_data_path=ais_infer_result/日期文件夹 --prob_thres=0.05 --ifShowDetObj --det_results_path=ais_infer_detection_results --test_annotation=coco2017_jpg.info --json_output_file ais_infer_detection_result --detection_result ais_infer_detection_result.json 
       ```
 
-- 参数说明：
-
-  + --ais_infer_result/日期文件夹： 推理输出的bin文件路径
-  + --coco2017_jpg.info：测试图片信息
-  + --ais_infer_detection_results：生成推理结果所在路径
-  + --ais_infer_detection_result.json：生成结果文件
+      - 参数说明：
+        - --ais_infer_result/日期文件夹： 推理输出的bin文件路径
+        - --coco2017_jpg.info：测试图片信息
+        - --ais_infer_detection_results：生成推理结果所在路径
+        - --ais_infer_detection_result.json：生成结果文件
     
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
