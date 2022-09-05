@@ -882,7 +882,7 @@ class Trainer(
 
             self.fit(test_model)
         else:
-            self.run_evaluation(test_mode=True)
+            self.run_evaluation(test_mode=False)
 
         self.testing = False
 
