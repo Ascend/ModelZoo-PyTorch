@@ -204,6 +204,8 @@ class ExperimentOTB(object):
         self.dataset = OTB(root_dir, version)
         self.result_dir = os.path.join(result_dir, 'OTB' + str(version))
         self.report_dir = os.path.join(report_dir, 'OTB' + str(version))
+        if not os.path.exists(self.result_dir):
+            os.makedirs(self.result_dir)
         # as nbins_iou increases, the success score
         # converges to the average overlap (AO)
         self.nbins_iou = 21
@@ -245,14 +247,15 @@ class ExperimentOTB(object):
                     file1.write('\n')
                 # infer
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om '
-                 '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN >/dev/null 2>&1'
-                 %(idx))
+                 '--input pre_dataset/%s --device 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
+                 %(idx, seq_name))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
-                filename = 'sample_id_0_output_0.bin'
-                filename = 'OTB100/'+ seq_name+ '/' + filename
+                filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name, str(f+1).zfill(4))
+                filename = 'OTB100/'+ seq_name + '/' + filename
                 exemplar_feature = prepostpro.file2tensor(filename, (3, 256, 6, 6))
                 os.system('rm -rf ./pre_dataset/%s/%s' %(idx, img_file.replace('/', '-').replace('.jpg', '.bin')))
+                os.system('rm -rf OTB100/{}'.format(seq_name))
             else:
                 # Pre-process and generate bin
                 search_path = prepostpro.cropsearch(img, savepath, img_file)
@@ -263,17 +266,18 @@ class ExperimentOTB(object):
                     file2.write('\n')
                 # infer
                 os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om '
-                    '--input pre_dataset/%s --device_id 0 -o ./OTB100 --outfmt BIN >/dev/null 2>&1'
-                    %(idx))
+                    '--input pre_dataset/%s --device 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
+                    %(idx, seq_name))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
-                filename = 'sample_id_0_output_0.bin'
-                filename = 'OTB100/'+ seq_name+ '/' + filename
+                filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name, str(f+1).zfill(4))
+                filename = 'OTB100/'+ seq_name + '/' + filename
                 search_feature = prepostpro.file2tensor(filename, (1, 768, 22, 22))
                 # Post-process
                 boxes[f, :] = prepostpro.postprocess(search_feature, exemplar_feature)
                 times[f] = 1
                 os.system('rm -rf ./pre_dataset/%s/%s' %(idx, img_file.replace('/', '-').replace('.jpg', '.bin')))
+                os.system('rm -rf OTB100/{}'.format(seq_name))
 
         assert len(boxes) == len(anno)
         # record results
@@ -407,6 +411,8 @@ if __name__ == "__main__":
     info_path = sys.argv[3]
     deviceid = int(sys.argv[4])
     os.system('rm -rf %s' % save_path)
+    os.system('rm -rf OTB100')
+    os.system('mkdir OTB100')
     os.system('rm -rf %s' % info_path)
     os.system('rm -rf ./result/dumpOutput_device%d' % deviceid)
     if not os.path.exists(save_path):

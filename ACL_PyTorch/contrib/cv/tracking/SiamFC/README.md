@@ -46,7 +46,7 @@ atc --model=./onnx/exemplar.onnx --framework=5 --output=./om/exemplar_bs1 --inpu
 atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_format=NCHW --input_shape="actual_input_1:1,9,255,255" --log=debug --soc_version=Ascend${chip_name}
 ```
 2.离线推理
-310P上执行，执行时使npu-smi info查看设备状态，确保device空闲  
+310P3上执行，执行时使npu-smi info查看设备状态，确保device空闲  
 ```python3.7 wholeprocess.py datasets_path ./pre_dataset ./dataset_info 0```
 
 > datasets_path参数根据数据集实际的存放位置而定，例如：OTB数据集存放位置为/opt/npu/OTB，则应设置参数--datasets_path=/opt/npu
