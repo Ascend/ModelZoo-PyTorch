@@ -59,6 +59,10 @@
   ```
   pip install -r requirements.txt
   ```
+  
+- nltk_data准备(可选)
+  - 该模型依赖nltk及其相关语料库(omw-1.4, stopwords, wordnet)
+  - 若服务不可连公网，则需要手动下载，放至```~/nltk_data```，手动下载[链接](https://www.nltk.org/nltk_data/)
 
 
 ## 准备数据集
