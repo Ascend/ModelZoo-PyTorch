@@ -1,4 +1,4 @@
-# {模型名称}模型-推理指导
+# StarGAN模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -15,7 +15,7 @@
 
 - [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-  ******
+ 
 
   
 
@@ -109,38 +109,28 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
    数据集默认路径为 `./data/celeba.zip` ，使用脚本 `unzip_dataset.sh` 解压数据集。
 
-```
-bash unzip_dataset.sh
-```
+   ```
+   bash unzip_dataset.sh
+   ```
 
    
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
    数据预处理将原始数据集转换为模型输入的数据。
-   使用脚本 `StarGAN_pre_processing_32_64.py` 获得二进制 bin 文件和基准的图片结果。
+   使用脚本 `StarGAN_pre_processing.py` 获得二进制 bin 文件和基准的图片结果。
 
   
 
    ```
    source ./test/env_npu.sh
-    python3.7 StarGAN_pre_processing_32_64.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
+    python3.7 StarGAN_pre_processing.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
                   --model_save_dir './models' --result_dir './result_baseline' \
-                  --attr_path './data/celeba/list_attr_celeba.txt' --celeba_image_dir './data/celeba/images'
+                  --attr_path './data/celeba/list_attr_celeba.txt' --celeba_image_dir './data/celeba/images'  --batch_size 16
    
    ```
-    ```
-    rm ./bin/img/155.bin
-    rm ./bin/attr/155.bin
-    rm ./bin/img/156.bin
-    rm ./bin/attr/156.bin
-    rm ./bin/img/157.bin
-    rm ./bin/attr/157.bin
-    rm ./bin/img/158.bin
-    rm ./bin/attr/158.bin
-    rm ./bin/img/159.bin
-    rm ./bin/attr/159.bin
-    ```
+   > 本处以--batch_size 16为例，其他batchsize再此修改
+
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -154,9 +144,9 @@ bash unzip_dataset.sh
 
    2. 导出onnx文件。
 
-      1. 使用XXX导出onnx文件。
+      1. 使用pth2om.sh导出onnx文件。
 
-         运行XXX脚本。
+         运行pth2om.sh脚本。
 
             ```
             bash ./test_710/pth2om.sh './models/200000-G.pth'
@@ -171,19 +161,19 @@ bash unzip_dataset.sh
       1. 配置环境变量。
 
             ```
-            source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh
+            source /user/local/Ascend/ascend-toolkit/set_env.sh
             ```
         上一步已经生成OM模型
          > **说明：** 
          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+      2. 执行命令查看芯片名称（Ascend710）。
 
-        ```
-        npu-smi info
-        ```
-        ```
-         #该设备芯片名为Ascend310P3 （自行替换）
+         ```
+         npu-smi info
+         ```
+         ```
+         #该设备芯片名为Ascend310P3 
          回显如下：
          +-------------------+-----------------+------------------------------------------------------+
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
@@ -195,7 +185,7 @@ bash unzip_dataset.sh
          | 1       310P3     | OK              | 15.4         43                0    / 0              |
          | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
          +===================+=================+======================================================+
-         ```
+            ```
 
       3. 执行ATC命令。
          ```
@@ -226,10 +216,9 @@ bash unzip_dataset.sh
 
 
    b.  执行推理。
-
+      以batchsize=16 为例子
       ```
-      python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 4
-    python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
+      python3  ais_infer.py --model ./StarGAN_bs16.om  --input ./bin/img,./bin/attr --output ./op  --outfmt TXT  --batchsize 16
       ```
 
       -   参数说明：
@@ -245,32 +234,10 @@ bash unzip_dataset.sh
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
-    msame 工具为华为自研的模型推理工具，输入 om 模型和模型所需要的输入 bin 文件，输出模型的输出数据文件。模型必须是通过 atc 工具转换的 om 模型，输入 bin 文件需要符合模型的输入要求，且支持模型多输入。
-    ```
-    git clone https://gitee.com/ascend/tools.git
-
-    export DDK_PATH=/usr/local/Ascend/ascend-toolkit/latest
-    export NPU_HOST_LIB=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/stub
-
-    cd tools/msame
-    dos2unix *.sh
-    chmod u+x  build.sh
-    ./build.sh g++  ./msame/out   
-    cp ./out/main   ../../   #本步骤要在“/tools/msame”文件夹目录下执行
-    cd ../..
-
-    ```
-
-    ```
-    chmod 777 main
-    mv main msame
-    bash ./test_710/eval_bs32_perf.sh
-    bash ./test_710/eval_bs64_perf.sh
-    ```
+   
       调用 ` StarGAN_post_processing.py` 来进行后处理，把输出的 txt 文件转换为输出图像。
       ```
-      python3.7 StarGAN_post_processing.py --folder_path './output_bs1/[YYYYMMDD_HHMMSS]' --batch_size 1
-      python3.7 StarGAN_post_processing.py --folder_path './output_bs16/[YYYYMMDD_HHMMSS]' --batch_size 16
+      python3.7 StarGAN_post_processing.py --folder_path './op/2022_09_05-07_37_38' --batch_size 16
       ```
 
      详细的结果输出在 `./output_[yourBatchSize]/jpg` 文件夹中，可以和 `result_baseline` 文件夹下的在线推理结果做对比。可以发现各个 batchsize 的离线推理生成的图片与基准基本一致。
@@ -282,7 +249,7 @@ bash unzip_dataset.sh
 
       ```
       python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 1
-    python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
+      python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
       ```
 
 
