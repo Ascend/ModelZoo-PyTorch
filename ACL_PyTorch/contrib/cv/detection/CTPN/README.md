@@ -235,8 +235,8 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       ```
       git clone https://gitee.com/ascend/tools.git
       cd tools/ais-bench_workload/tool/ais_infer/backend/
-      pip3 wheel ./
-      pip3 install ./ aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+      pip wheel ./
+      pip install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
       ```
 
       然后返回到/home/HwHiAiUser/CTPN目录。
@@ -295,10 +295,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       2. 执行后处理脚本“ctpn_postprocess.py”计算精度并形成数据压缩包。
 
          ```
-         python3 ctpn_postprocess.py 
-         --imgs_dir=data/Challenge2_Test_Task12_Images 
-         --bin_dir=result/dumpOutput_device0
-         --predict_txt=data/predict_txt
+         python3 ctpn_postprocess.py --imgs_dir=data/Challenge2_Test_Task12_Images --bin_dir=result/dumpOutput_device0 --predict_txt=data/predict_txt
          
          --imgs_dir：数据集路径。
          --bin_dir：精度数据路径。
