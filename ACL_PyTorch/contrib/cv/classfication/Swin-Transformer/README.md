@@ -128,7 +128,7 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件“swin_tiny_patch4_window7_224.pth”，放到“./resume”目录下。
+       获取权重文件“swin_tiny_patch4_window7_224.pth”，放到“./resume”目录下。[[权重文件下载链接](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth)]
 
    2. 导出onnx文件。
 
@@ -229,8 +229,9 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
       注：需把ais-infer工具推理完成后推理结果保存地址中的sumary.json文件删除，否则运行精度验证脚本会报错
 
       ```
-       python3.7 swin_postprocess.py --result_path=result_bs16/2022_09_01-18_51_23/ --target_file=target.json --save_path=./result_bs16.json
+      python3.7 swin_postprocess.py --result_path=result_bs16/2022_09_01-18_51_23/ --target_file=target.json --save_path=./result_bs16.json
       ```
+      注：--result_path指定的result_bs16/2022_09_01-18_51_23/路径不是固定，具体路径为ais-infer工具推理命令中，--output指定目录下的生成推理结果所在路径
 
       --result_path：生成推理结果所在路径
     
