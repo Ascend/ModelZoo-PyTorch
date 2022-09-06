@@ -106,7 +106,7 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 
    ```
    mkdir prep_dataset
-   python3.7 xcit_preprocess.py --data-path=${dataset_path} ./prep_dataset
+   python3.7 xcit_preprocess.py --data-path=${dataset_path} --resume=./prep_dataset
    ```
 --data-path：原始数据验证集（.jpeg）所在路径。
 
@@ -170,7 +170,7 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=onnx_models/xcit_b16.onnx  --output=xcit_b16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=onnx_models/xcit_b16.onnx  --output=xcit_b16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -200,7 +200,7 @@ a.  使用ais-infer工具进行推理。
 b.  执行推理。
 
     ```
-    python3 ais_infer.py --model onnx_models/xcit_b16.om --input ./prep_dataset --outfmt TXT
+    python3 ais_infer.py --model onnx_models/xcit_b16.om --input ./prep_dataset --output ./ --outfmt TXT
     ```
 
 
