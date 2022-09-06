@@ -126,10 +126,8 @@ if __name__ == '__main__':
             if os.path.exists(path_base + "_" + str(num) + ".bin"):  
                 if args.is_ais_infer and num==0 or not args.is_ais_infer and num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")#scores
-                    score = np.reshape(buf, [32760, 81])     
-                    
-                elif args.is_ais_infer and num==1 or not args.is_ais_infer and num == 2:
-                    
+                    score = np.reshape(buf, [32760, 81])             
+                elif args.is_ais_infer and num==1 or not args.is_ais_infer and num == 2:            
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")#int64 boxes
                     box = np.reshape(buf, [1, 32760, 4])   
             else:
