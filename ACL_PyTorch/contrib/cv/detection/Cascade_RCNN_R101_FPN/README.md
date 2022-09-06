@@ -160,7 +160,7 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
        python mmdetection/tools/pytorch2onnx.py mmdetection/configs/cascade_rcnn/cascade_rcnn_r101_fpn_1x_coco.py ./cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth --output-file=cascade_rcnn_r101.onnx --shape 1216 --show
        ```
 
-       获得XXX.onnx文件。
+       获得cascade_rcnn_r101.onnx文件。
 
    4. 使用ATC工具将ONNX模型转OM模型。
 
