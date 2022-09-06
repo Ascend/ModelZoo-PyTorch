@@ -24,7 +24,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 - 参考实现：
 
   ```
-  url = git clone https://github.com/CrazySummerday/ctpn.pytorch.git
+  url = https://github.com/CrazySummerday/ctpn.pytorch.git
   branch=master 
   commit_id=99f6baf2780e550d7b4656ac7a7b90af9ade468f
   ```
