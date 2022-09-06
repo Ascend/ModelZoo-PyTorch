@@ -151,7 +151,7 @@ fi
     --amp_cfg \
     --n_epochs ${train_epochs} \
     --opt_level O2 \
-    --loss_scale_value 1024 \
+    --loss_scale_value 'dynamic' \
     --distributed \
     --ngpus_per_node 8 \
     --device_list '0,1,2,3,4,5,6,7' \

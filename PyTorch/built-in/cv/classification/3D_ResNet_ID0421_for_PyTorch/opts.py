@@ -296,7 +296,7 @@ def parse_opts():
                         help='set opt level.')
     parser.add_argument('--loss_scale_value',
                         default=1024,
-                        type=int,
+                        type=str,
                         help='set loss scale value.')
     parser.add_argument('--device_list',
                         default='0,1,2,3,4,5,6,7',
