@@ -221,7 +221,8 @@ c.  精度验证。
     调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
     ```
-    python3.7 xcit_postprocess.py  {your_result_path}  ./target.json  ./ result.json
+    rm -rf {your_result_path}/summary.json
+    python3.7 xcit_postprocess.py    --result_path {your_result_path}  --target_file ./target.json   --save_file ./result.json
     ```
 
     {your_result_path}：为生成推理结果所在路径 
