@@ -17,8 +17,8 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 - 参考实现：
 
   ```
-  url=https://github.com/pytorch/vision.git
-  commit_id=605a67ad07e5d228bfc365fcb1317a553a3330e4
+  url=https://github.com/pytorch/examples.git
+  commit_id=507493d7b5fab51d55af88c5df9eadceb144fb67
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -31,8 +31,8 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 - 通过Git获取代码方法如下：
 
   ```
-  git clone https://gitee.com/leng-xiongjin/ModelZoo-PyTorch.git       # 克隆仓库的代码
-  cd PyTorch/contrib/cv/classification/Vgg16_ID1630_for_PyTorch       # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  git clone {url}        # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
   
 - 通过单击“立即下载”，下载源码包。
@@ -48,15 +48,15 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.15](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |
+  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)或[1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
 
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-- 安装依赖（根据模型需求，按需添加所需依赖）。
+- 安装依赖。
 
   ```
   pip install -r requirements.txt
@@ -69,7 +69,7 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 
    用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。
 
-   Resnet18迁移使用到的ImageNet2012数据集目录结构参考如下所示。
+   VGG16迁移使用到的ImageNet2012数据集目录结构参考如下所示。
 
    ```
    ├── ImageNet2012
@@ -97,11 +97,6 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
 
-2. 数据预处理（按需处理所需要的数据集）。
-
-## 获取预训练模型（可选）
-
-请参考原始仓库上的README.md进行预训练模型获取。将获取的bert\_base\_uncased预训练模型放至在源码包根目录下新建的“temp/“目录下。
 
 # 开始训练
 
@@ -110,7 +105,7 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 1. 进入解压后的源码包根目录。
 
    ```
-   cd /ModelZoo-PyTorch/PyTorch/contrib/cv/classification/Vgg16_ID1630_for_PyTorch/
+   cd /${模型文件夹名称}
    ```
 
 2. 运行训练脚本。
@@ -182,14 +177,14 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 **表 2**  训练结果展示表
 | NAME  | Acc@1  | FPS  | Epochs  | AMP_Type  | Torch  |
 |---|---|---|---|---|---|
-| 1p-竞品  | -  |  - | -  | -  | -  |
-| 1p-竞品  | -  | -  | -  | -  | -  |
-| 1p-NPU  | 60.349  | 3527.840  | 120  | O2  | 1.5  |
-| 1p-NPU  | 61.423  | 3450.014  | 120  | O2  | 1.8  |
-| 8p-竞品  | -  | -  | -  | -  | -  |
-| 8p-竞品  | -  | -  | -  | -  | -  |
-| 8p-NPU   | 70.169  | 13898.131  | 120  | O2  | 1.5  |
-| 8p-NPU   | 70.134  | 13187.129  | 120  | O2  | 1.8  |
+| 1p-竞品  | -  |  - | -  | -  | 1.5 |
+| 1p-竞品  | 73.468  | 530.782  | -  | -  | 1.8 |
+| 1p-NPU  |   |   |   | O1  | 1.5  |
+| 1p-NPU  |   | 695.085  |   | O1  | 1.8  |
+| 8p-竞品  | -  | -  | -  | -  | 1.5 |
+| 8p-竞品  | 75.065  | 4467.225  | -  | -  | 1.8 |
+| 8p-NPU   |   |   |   | O1 | 1.5  |
+| 8p-NPU   |   | 4932.327  |   | O1 | 1.8  |
 
 备注：一定要有竞品和NPU。
 
@@ -203,4 +198,4 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 
 ## 已知问题
 
-**_当前发行版本中存在的问题描述。_**
+**_无_**
