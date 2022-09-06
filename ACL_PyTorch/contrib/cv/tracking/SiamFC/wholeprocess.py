@@ -251,7 +251,11 @@ class ExperimentOTB(object):
                  %(idx, seq_name))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
-                filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name, str(f+1).zfill(4))
+                for file_name in os.listdir('OTB100/'+ seq_name):
+                    if file_name.split('.')[-1] == 'bin':
+                        filename = file_name
+                        break
+                # filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name.split('.')[0], str(f+1).zfill(4))
                 filename = 'OTB100/'+ seq_name + '/' + filename
                 exemplar_feature = prepostpro.file2tensor(filename, (3, 256, 6, 6))
                 os.system('rm -rf ./pre_dataset/%s/%s' %(idx, img_file.replace('/', '-').replace('.jpg', '.bin')))
@@ -270,7 +274,11 @@ class ExperimentOTB(object):
                     %(idx, seq_name))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
-                filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name, str(f+1).zfill(4))
+                for file_name in os.listdir('OTB100/'+ seq_name):
+                    if file_name.split('.')[-1] == 'bin':
+                        filename = file_name
+                        break
+                # filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name.split('.')[0], str(f+1).zfill(4))
                 filename = 'OTB100/'+ seq_name + '/' + filename
                 search_feature = prepostpro.file2tensor(filename, (1, 768, 22, 22))
                 # Post-process
