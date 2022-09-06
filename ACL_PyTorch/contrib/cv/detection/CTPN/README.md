@@ -122,7 +122,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 1. 获取原始数据集。
 
-   本模型使用ICDAR2013数据，获取[数据集](https://rrc.cvc.uab.es/?ch=2)及相应[评测方法代码](https://rrc.cvc.uab.es/standalones/script_test_ch2_t1_e2-1577983067.zip)。在本目录（如/home/HwHiAiUser/CTPN）新建data和script文件夹。将数据集解压为Challenge2_Test_Task12_Images文件夹，并放入data文件夹下。将测评方法代码解压放入script文件夹。目录结构如下：
+   本模型使用ICDAR2013数据，获取[数据集](https://rrc.cvc.uab.es/?ch=2)及相应[评测方法代码](https://rrc.cvc.uab.es/standalones/script_test_ch2_t1_e2-1577983067.zip)。在本目录（如/home/HwHiAiUser/CTPN）**新建data和script文件夹**。将数据集解压为Challenge2_Test_Task12_Images文件夹，并放入data文件夹下。将测评方法代码解压放入script文件夹。目录结构如下：
 
    ```
    data
