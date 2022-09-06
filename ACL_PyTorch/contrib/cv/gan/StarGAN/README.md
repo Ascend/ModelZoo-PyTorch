@@ -167,7 +167,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
          > **说明：** 
          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-      2. 执行命令查看芯片名称。
+      2. 执行命令查看芯片名称($\{chip\_name\})，确保device空闲。
 
          ```
          npu-smi info
