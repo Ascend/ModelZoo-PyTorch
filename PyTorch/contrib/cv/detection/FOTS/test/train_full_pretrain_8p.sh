@@ -98,7 +98,7 @@ do
     PID_END=$((PID_START + KERNEL_NUM - 1))
 
     time taskset -c $PID_START-$PID_END python3 ./train_8p.py --train-folder ${data_path} --batch-size ${batch_size} --batches-before-train 2\
-    --num-workers $KERNEL_NUM > ${test_path_dir}/output/train_${i}.log 2>&1 &
+    --num-workers $KERNEL_NUM > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     let rank++
 done
 
