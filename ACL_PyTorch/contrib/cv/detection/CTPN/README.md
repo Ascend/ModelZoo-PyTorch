@@ -67,27 +67,36 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
   **表 1**  版本配套表	
 
-    | 配套           | 版本     | 环境准备指导                                                 |
-    | -------------- | -------- | ------------------------------------------------------------ |
-    | 固件与驱动     | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-    | CANN           | 5.1.RC2  | -                                                            |
-    | Python         | 3.7.13   | -                                                            |
-    | torch          | 1.5.0    | -                                                            |
-    | torchvision    | 0.6.0    | -                                                            |
-    | onnx           | 1.7.0    | -                                                            |
-    | numpy          | 1.20.3   | -                                                            |
-    | Pillow         | 8.2.0    | -                                                            |
-    | opencv-python  | 4.5.2.54 | -                                                            |
-    | yacs           | 0.1.8    | -                                                            |
-    | pytorch-ignite | 0.4.5    | -                                                            |
-    | protobuf       | 3.13.0.1 | -                                                            |
+  | 配套           | 版本     | 环境准备指导                                                 |
+  |--------| -------- | ------------------------------------------------------------ |
+  | 固件与驱动     | 1.0.15 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN           | 5.1.RC2 | -                                                            |
+  | Python         | 3.7.5 | -                                                            |
+  | attrs | 22.1.0 | - |
+  | psutil | 5.9.2 | - |
+  | matplotlib | 3.5.3 | - |
+  | tensorflow | 2.10.0 | - |
+  | decorator | 5.1.1 | - |
+  | mmaction2 | 0.15.0 | - |
+  | sympy | 1.10.1 | - |
+  | tqdm | 4.64.1 | - |
+  | torch          | 1.5.0  | -                                                            |
+  | torchvision    | 0.6.0  | -                                                            |
+  | onnx           | 1.7.0  | -                                                            |
+  | numpy          | 1.20.3 | -                                                            |
+  | Pillow         | 8.2.0  | -                                                            |
+  | opencv-python  | 4.5.2.54 | -                                                            |
+  | yacs           | 0.1.8  | -                                                            |
+  | pytorch-ignite | 0.4.5  | -                                                            |
+  | protobuf       | 3.12.0 | -                                                            |
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 1. 安装依赖
     ```
    pip3 install -r requirment.txt
-    ```
+   ```
 
 
 
@@ -187,7 +196,6 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       1. 配置环境变量。
          ```
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      
          ```
 
          > **说明：** 
@@ -212,7 +220,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=debug --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=error --soc_version=Ascend${chip_name}
          ```
          - 参数说明：
            - --framework：5代表ONNX模型。
