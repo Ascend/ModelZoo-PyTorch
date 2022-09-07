@@ -24,7 +24,7 @@ output_names = ['seg_preds', 'cate_labels', 'cate_scores']
 def pth2onnx(args, fake_input):
     model = init_detector(args.config, args.pth_path, device='cpu')
     model.forward = model.simple_test
-    torch.onnx.export(model, fake_input, args.out, input_names=input_names, output_names=output_names, verbose=True,
+    torch.onnx.export(model, fake_input, args.out, input_names=input_names, output_names=output_names, verbose=False,
                       opset_version=11)
 
 

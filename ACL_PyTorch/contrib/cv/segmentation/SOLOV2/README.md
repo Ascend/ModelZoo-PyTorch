@@ -81,14 +81,27 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
 
 
-1. 安装依赖。
+## 获取源码
+
+2. 获取开源代码仓。
+
+   在已下载的源码包根目录下，执行如下命令。
+
+   ```
+   git clone https://github.com/WXinlong/SOLO.git -b master
+   cd SOLO
+   git reset --hard 95f3732d5fbb0d7c7044c7dd074f439d48a72ce5
+   cd ..
+   ```
+
+3. 安装依赖。
 
    ```
    pip3 install -r requirment.txt
    ```
-   
+
    其中mmcv需要用以下方式安装。
-   
+
    ```
    git clone https://github.com/open-mmlab/mmcv -b v0.2.16
    cd mmcv
@@ -96,20 +109,9 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    python setup.py develop
    cd ..
    ```
-   
-   获取开源代码仓。
-   
-   在已下载的源码包根目录下，执行如下命令。
-   
-   ```
-   git clone https://github.com/WXinlong/SOLO.git -b master
-   cd SOLO
-   git reset --hard 95f3732d5fbb0d7c7044c7dd074f439d48a72ce5
-   cd ..
-   ```
-   
+
    其中mmdet需要用以下方式安装。
-   
+
    ```
    cd SOLO
    patch -p1 < ../MMDET.diff
@@ -118,7 +120,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    pip install -v -e .
    cd ..
    ```
-   
+
    
 
 
@@ -271,47 +273,49 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
            -   --customize_dtypes：自定义算子的计算精度。
            -   --precision_mode：其余算子的精度模式。
            
-           运行成功后生成<u>***solov2.om***</u>模型文件。
-
-
+           运行成功后生成solov2.om模型文件。
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+   a.  使用ais-infer工具进行推理。
 
-​    ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-b.  执行推理。
+   b.  执行推理。
 
-    ```
-     python3 ais_infer.py --model "/home/ysl/SOLOV2/solov2.om" --input "/home/ysl/SOLOV2/val2017_bin/" --output "/home/ysl/SOLOV2/result/" --outfmt BIN --loop 1
-    ```
-    
-    -   参数说明：
-        * --model 	需要进行推理的om模型
-    	* --input		图片bin文件路径
-    	* --output 	推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname	的子文件夹下。
-    	* --outfmt 	输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
-    	* --loop 	推理次数，可选参数，默认1，profiler为true时，推荐为1	
-     	 推理后的输出默认在当前目录result下。
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。
+   推理完成后即可输出性能结果。
 
-c.  后处理。
+   ```
+   python3 ais_infer.py --model ../solov2.om --input ../val2017_bin/ --output ./result/ --outfmt BIN --loop 1
+   ```
 
- 执行solov2_preprocess.py文件，脚本执行完毕后即可生成精度结果。
+   * 参数说明：
+   * --model 	需要进行推理的om模型
+   * --input		图片bin文件路径
+   * --output 	推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname	的子文件夹下。
+   * --outfmt 	输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
+   * --loop 	推理次数，可选参数，默认1，profiler为true时，推荐为1	
+      推理后的输出默认在当前目录result下。
 
-    ```
-    python3 solov2_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_02-17_04_20/  --meta_info=solov2_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
-    ```
-    参数说明：
-    - -dataset_path：数据集路径。
-    - --model_config：模型配置文件。
-    - --bin_data_path：执行推理后的数据文件的**相对路径**。
-    - --meta_info：生成的数据集文件保存的路径。
-    - --net_out_num：输出节点数。
-    - --model_input_height：图片高。
-    - --model_input_width ：图片宽。
+   > **说明：** 
+   > 执行ais-infer工具请选择与运行环境架构相同的命令。
+
+   c.  后处理。
+
+    执行solov2_preprocess.py文件，脚本执行完毕后即可生成精度结果。
+
+   ```
+   python3 solov2_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_02-17_04_20/  --meta_info=solov2_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
+   ```
+
+   * 参数说明：
+   * -dataset_path：数据集路径。
+   * --model_config：模型配置文件。
+   * --bin_data_path：执行推理后的数据文件的**相对路径**。
+   * --meta_info：生成的数据集文件保存的路径。
+   * --net_out_num：输出节点数。
+   * --model_input_height：图片高。
+   * --model_input_width ：图片宽。
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
