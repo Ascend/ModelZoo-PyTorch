@@ -91,7 +91,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   下载代码：https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/c3d/README.md
+   下载代码：https://github.com/open-mmlab/mmaction2
 
    解压代码：
 
@@ -108,13 +108,15 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
    下载视频，视频目录：mmaction2-master/data/ucf101/videos/
 
    ```
-   bash mmaction2-master/tools/data/ucf101/download_videos.sh
+   cd mmaction2-master/tools/data/ucf101/
+   bash download_videos.sh
    ```
 
    提取RGB原始帧，提取好的原始帧目录：mmaction2-master/data/ucf101/rawframes
 
    ```
-   bash mmaction2-master/tools/data/ucf101/extract_rgb_frames_opencv.sh
+   cd mmaction2-master/tools/data/ucf101/
+   bash extract_rgb_frames_opencv.sh
    ```
 
    mmaction2-master的目录结构
