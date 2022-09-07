@@ -141,8 +141,9 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
          ```
          python3.7 resnest_pth2onnx.py --source="./resnest50.pth" --target="resnest50.onnx"
          ```
-         --source：权重文件路径。
-         --target：onnx文件。
+         --source：权重文件（.path）所在路径。
+
+         --target：输出的onnx文件（.onnx）所在路径。
         获得“resnest50.onnx”文件。
 
       2. 优化ONNX文件。
@@ -184,7 +185,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=./resnest50_sim.onnx --output=resnest50_b1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=debug --soc_version=Ascend310 --input_fp16_nodes="actual_input_1"
+         atc --framework=5 --model=./resnest50_sim.onnx --output=resnest50_b1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} --input_fp16_nodes="actual_input_1"
          ```
 
          - 参数说明：
@@ -204,15 +205,9 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+  使用ais-infer工具进行推理。
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
-
-   ```
-   chmod u+x 
-   ```
-
-b.  执行推理。
+  a.  执行推理。
 
     ```
      python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./new_resnest50_b4.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
