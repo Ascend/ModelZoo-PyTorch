@@ -83,7 +83,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
 ## 获取源码
 
-2. 获取开源代码仓。
+1. 获取开源代码仓。
 
    在已下载的源码包根目录下，执行如下命令。
 
@@ -94,7 +94,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    cd ..
    ```
 
-3. 安装依赖。
+2. 安装依赖。
 
    ```
    pip3 install -r requirment.txt
