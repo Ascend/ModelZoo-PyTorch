@@ -29,21 +29,10 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
   ```
   url=https://github.com/openmmlab/mmaction2/blob/master/configs/recognition/c3d
   branch=master
-  commit_id=6d6685632f28344e98cf34a14d1226cd6c008391
+  commit_id=3e9e99ff7413b2b5c105586000dc0cc793ce00b5
   model_name=c3d
   ```
   
-
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -91,38 +80,33 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   下载代码：https://github.com/open-mmlab/mmaction2
-
-   解压代码：
+   安装依赖和下载代码：
 
    ```
-   unzip mmaction2-master.zip
+   pip3 install openmim
+   mim install mmcv-full
+   
+   git clone https://github.com/open-mmlab/mmaction2.git        # 克隆仓库的代码
+   cd mmaction2              # 切换到模型的代码仓目录
+   git checkout 3e9e99ff7413b2b5c105586000dc0cc793ce00b5         # 切换到对应分支
+   pip3 install -r requirements/build.txt
+   pip3 install -v -e .
    ```
 
-   安装依赖：
+   下载视频，视频目录：mmaction2/data/ucf101/videos/，提取RGB原始帧，提取好的原始帧目录：mmaction2/data/ucf101/rawframes
 
    ```
-   pip3 install -r mmaction2-master/requirements.txt
-   ```
-
-   下载视频，视频目录：mmaction2-master/data/ucf101/videos/
-
-   ```
-   cd mmaction2-master/tools/data/ucf101/
+   cd mmaction2/tools/data/ucf101/
    bash download_videos.sh
-   ```
-
-   提取RGB原始帧，提取好的原始帧目录：mmaction2-master/data/ucf101/rawframes
-
-   ```
-   cd mmaction2-master/tools/data/ucf101/
    bash extract_rgb_frames_opencv.sh
    ```
 
-   mmaction2-master的目录结构
+   C3D和mmaction2的目录结构
 
    ```
-   mmaction2-master
+   C3D
+   tools-master
+   mmaction2
    ├── mmaction
    ├── tools
    ├── configs
@@ -162,10 +146,12 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
    执行rawframe_dataset.py脚本，将原始帧（rawframes）处理为bin文件。
 
    ```
-   python mmaction2-master/mmaction/datasets/rawframe_dataset.py mmaction2-master/configs/recognition/c3d/c3d_sports_sports1m_16x1x1_45e_ucf101_rgb.py --output_path ./prep_datasets
+   cd mmaction2
+   mkdir ./prep_datasets
+   python3 ./mmaction/datasets/rawframe_dataset.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py --output_path ./prep_datasets
+   mv ./prep_datasets ../C3D
+   cd C3D
    ```
-
-​	 注意：在处理之前，需要提前在对应路径下创建好prep_datasets文件夹。
 
 ​	 参数说明：
 
@@ -176,7 +162,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 ​     执行get_info.py脚步，生成数据集info文件。
 
 ```python
-python get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
+python3 ./get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
 ```
 
 ​	参数说明：
@@ -205,7 +191,7 @@ python get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
        pth文件使用310训练得到的权重文件，下载后放在mmaction2-master/checkpoints/下
 
        ```
-       cp ./C3D.pth mmaction2-master/checkpoints
+       cp ./C3D.pth ../mmaction2/checkpoints
        ```
 
    2. 导出onnx文件。
@@ -215,22 +201,23 @@ python get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
          运行pth2onnx.py脚本。
    
          ```
-         cp ./pth2onnx.py mmaction2-master/tools/pytorch2onnx.py
-         python mmaction2-master/tools/pytorch2onnx.py configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py mmaction2-master/checkpoints/C3D.pth --shape 1 10 3 16 112 112 --verify --softmax
+         cp ./pth2onnx.py ../mmaction2/tools/pytorch2onnx.py
+         cd ../mmaction2
+         python3 ./tools/pytorch2onnx.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py ./checkpoints/C3D.pth --shape 1 10 3 16 112 112 --verify --softmax
          ```
-   
+         
          获得C3D.onnx文件。
-   
+         
          参数说明：
-   
+         
          --shape: 模型输入张量的形状。对于C3D模型，输入形状为 $batch $ $clip$ $channel $ $time$ $height $ $width$。
-   
+         
          --verify: 决定是否对导出模型进行验证，验证项包括是否可运行，数值是否正确等。如果没有被指定，它将被置为 False。
-   
+         
          --show: 决定是否打印导出模型的结构。如果没有被指定，它将被置为 False。
-
+         
          --softmax: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 False。目前仅支持行为识别器，不支持时序动作检测器。
-
+   
    3. 使用ATC工具将ONNX模型转OM模型。
    
       1. 配置环境变量。
@@ -294,7 +281,9 @@ a.  使用ais-infer工具进行推理。
 
 b.  执行推理。
 
-    python tools-master/ais-bench_workload/tool/ais_infer/ais_infer.py --model mmaction2-master/C3D.om --batchsize=1 --input=./prep_datasets/ --output ./ais_result --output_dirname result --outfmt TXT
+    mv C3D.om ../C3D
+    cd ../C3D
+    python3 ../tools-master/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./C3D.om --batchsize=1 --input=./prep_datasets/ --output ./ais_result --output_dirname result --outfmt TXT
 
 参数说明：
 
@@ -318,7 +307,7 @@ b.  执行推理。
 
 c.  精度验证。
 
-    python C3D_postprocess.py ./ais_result/result/ ./mmaction2-master/data/ucf101/ucf101_val_split_1_rawframes.txt ./result/top1_acc.json
+    python3 ./C3D_postprocess.py ./ais_result/result/ ../mmaction2/data/ucf101/ucf101_val_split_1_rawframes.txt ./result/top1_acc.json
 
 参数说明：
 
