@@ -50,7 +50,7 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
   | ---------- | ------------------------------------------------------------ |
   | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)或[1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
 - 环境准备指导。
 
@@ -135,34 +135,30 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
    ```
    公共参数：
    --data                              //数据集路径
+   --j                                 //加载数据进程数
+   --epochs                            //重复训练次数
    --start-epoch                       //开始的轮数
    --batch-size                        //批大小
-   --print-freq                        //打印频率
-   --evaluate                          //是否在验证集上的评估模型
-   --a                                 //使用模型，默认：resnet18
-   --addr                              //主机地址
-   --seed                              //使用随机数种子，默认：49
-   --workers                           //加载数据进程数，默认：128
-   --learning-rate                     //学习率
-   --mom                               //动量，默认：0.9
+   --lr                                //学习率
+   --momentum                          //动量，默认：0.9
+   --wd                                //权重衰减，默认：0.0001
+   --p                                 //打印频率
    --resume                            //checkpoint的路径
-   --weight-decay                      //权重衰减，默认：0.0001
-   --seed                              //使用随机数种子，默认：49
-   --workers                           //加载数据进程数，默认：4
-   --learning-rate                     //学习率
-   --epoch                             //重复训练次数
-   --dist-backend                      //分布式后端
+   --e                                 //是否在验证集上的评估模型
+   --a                                 //使用模型，默认：vgg16
+   --seed                              //使用随机数种子初始化，默认：49
+   --gup                               //使用GPU的ID
    --world-size                        //分布式训练节点数
    --rank                              //进程编号，默认：-1
-   --multiprocessing-distributed       //是否使用多进程在多GPU节点上进行分布式训练
-   --pretrained                        //是否使用预训练模型，默认True
    --dist-url                          //用于设置分布式训练的url
+   --dist-backend                      //分布式后端
+   --addr                              //主机地址
    --amp                               //是否使用混合精度
-   --loss-scale                        //混合精度lossscale大小
    --opt-level                         //混合精度类型
+   --loss-scale-value                  //混合精度lossscale大小
    --device                            //使用设备为GPU或者是NPU
-   --prof                              //是否使用profiling来评估模型的性能
    --stop-step-num                     //在指定stop-step数后终止训练任务
+   --eval-freq                         //测试打印间隔
    
           
    多卡训练参数：
@@ -194,4 +190,4 @@ VGG由5层卷积层、3层全连接层、softmax输出层构成，层与层之�
 
 ## 已知问题
 
-**_无_**
+无。
