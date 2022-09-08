@@ -98,45 +98,48 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
    ```
    cd tools/data/ucf101/
    bash download_videos.sh
+   bash download_annotations.sh
    bash extract_rgb_frames_opencv.sh
+   bash generate_rawframes_filelist.sh
+   bash generate_videos_filelist.sh
    ```
 
-   C3D和mmaction2的目录结构
+   下载的C3D代码、ais_infer工具tools-master和mmaction2的目录结构
 
    ```
    C3D
-   tools-master
-   mmaction2
-   ├── mmaction
-   ├── tools
-   ├── configs
-   ├── data
-   │   ├── ucf101
-   │   │   ├── ucf101_{train,val}_split_{1,2,3}_rawframes.txt
-   │   │   ├── ucf101_{train,val}_split_{1,2,3}_videos.txt
-   │   │   ├── annotations
-   │   │   ├── videos
-   │   │   │   ├── ApplyEyeMakeup
-   │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
+   ├── tools-master #ais_infer工具
+   ├── mmaction2 #mmaction2的目录结构
+       ├── mmaction
+       ├── tools
+       ├── configs
+       ├── data
+       │   ├── ucf101
+       │   │   ├── ucf101_{train,val}_split_{1,2,3}_rawframes.txt
+       │   │   ├── ucf101_{train,val}_split_{1,2,3}_videos.txt
+       │   │   ├── annotations
+       │   │   ├── videos
+       │   │   │   ├── ApplyEyeMakeup
+       │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
    
-   │   │   │   ├── YoYo
-   │   │   │   │   ├── v_YoYo_g25_c05.avi
-   │   │   ├── rawframes
-   │   │   │   ├── ApplyEyeMakeup
-   │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01
-   │   │   │   │   │   ├── img_00001.jpg
-   │   │   │   │   │   ├── img_00002.jpg
-   │   │   │   │   │   ├── ...
-   │   │   │   │   │   ├── flow_x_00001.jpg
-   │   │   │   │   │   ├── flow_x_00002.jpg
-   │   │   │   │   │   ├── ...
-   │   │   │   │   │   ├── flow_y_00001.jpg
-   │   │   │   │   │   ├── flow_y_00002.jpg
-   │   │   │   ├── ...
-   │   │   │   ├── YoYo
-   │   │   │   │   ├── v_YoYo_g01_c01
-   │   │   │   │   ├── ...
-   │   │   │   │   ├── v_YoYo_g25_c05
+       │   │   │   ├── YoYo
+       │   │   │   │   ├── v_YoYo_g25_c05.avi
+       │   │   ├── rawframes
+       │   │   │   ├── ApplyEyeMakeup
+       │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01
+       │   │   │   │   │   ├── img_00001.jpg
+       │   │   │   │   │   ├── img_00002.jpg
+       │   │   │   │   │   ├── ...
+       │   │   │   │   │   ├── flow_x_00001.jpg
+       │   │   │   │   │   ├── flow_x_00002.jpg
+       │   │   │   │   │   ├── ...
+       │   │   │   │   │   ├── flow_y_00001.jpg
+       │   │   │   │   │   ├── flow_y_00002.jpg
+       │   │   │   ├── ...
+       │   │   │   ├── YoYo
+       │   │   │   │   ├── v_YoYo_g01_c01
+       │   │   │   │   ├── ...
+       │   │   │   │   ├── v_YoYo_g25_c05
    ```
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
@@ -147,11 +150,9 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 
    ```
    cd ../../../
-   cp ../C3D/rawframe_dataset.py mmaction/datasets
+   cp ../rawframe_dataset.py mmaction/datasets
    mkdir ./prep_datasets
    python3 ./mmaction/datasets/rawframe_dataset.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py --output_path ./prep_datasets
-   mv ./prep_datasets ../C3D
-   cd ../C3D
    ```
 
 ​	 参数说明：
@@ -163,7 +164,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 ​     执行get_info.py脚步，生成数据集info文件。
 
 ```python
-python3 ./get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
+python3 ../get_info.py bin ./prep_datasets ../c3d_prep_bin.info 112 112
 ```
 
 ​	参数说明：
@@ -192,7 +193,7 @@ python3 ./get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
        pth文件使用310训练得到的权重文件，下载后放在mmaction2-master/checkpoints/下
 
        ```
-       cp ./C3D.pth ../mmaction2/checkpoints
+       cp ../C3D.pth ./checkpoints
        ```
 
    2. 导出onnx文件。
@@ -202,23 +203,22 @@ python3 ./get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
          运行pth2onnx.py脚本。
    
          ```
-         cp ./pth2onnx.py ../mmaction2/tools/pytorch2onnx.py
-         cd ../mmaction2
+         cp ../pytorch2onnx.py ./tools/pytorch2onnx.py
          python3 ./tools/pytorch2onnx.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py ./checkpoints/C3D.pth --shape 1 10 3 16 112 112 --verify --softmax
          ```
-         
-         获得C3D.onnx文件。
-         
-         参数说明：
-         
-         --shape: 模型输入张量的形状。对于C3D模型，输入形状为 $batch $ $clip$ $channel $ $time$ $height $ $width$。
-         
-         --verify: 决定是否对导出模型进行验证，验证项包括是否可运行，数值是否正确等。如果没有被指定，它将被置为 False。
-         
-         --show: 决定是否打印导出模型的结构。如果没有被指定，它将被置为 False。
-         
-         --softmax: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 False。目前仅支持行为识别器，不支持时序动作检测器。
    
+         获得C3D.onnx文件。
+   
+         参数说明：
+   
+         --shape: 模型输入张量的形状。对于C3D模型，输入形状为 $batch $ $clip$ $channel $ $time$ $height $ $width$。
+   
+         --verify: 决定是否对导出模型进行验证，验证项包括是否可运行，数值是否正确等。如果没有被指定，它将被置为 False。
+   
+         --show: 决定是否打印导出模型的结构。如果没有被指定，它将被置为 False。
+
+         --softmax: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 False。目前仅支持行为识别器，不支持时序动作检测器。
+
    3. 使用ATC工具将ONNX模型转OM模型。
    
       1. 配置环境变量。
@@ -272,19 +272,10 @@ python3 ./get_info.py bin ./prep_datasets ./c3d_prep_bin.info 112 112
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+a.  执行推理。
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
-
-   ```
-   chmod u+x 
-   ```
-
-b.  执行推理。
-
-    mv C3D.om ../C3D
-    cd ../C3D
-    python3 ../tools-master/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./C3D.om --batchsize=1 --input=./prep_datasets/ --output ./ais_result --output_dirname result --outfmt TXT
+    cd ..
+    python3 tools-master/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./mmaction2/C3D.om --batchsize=1 --input=./mmaction2/prep_datasets/ --output ./ais_result --output_dirname result --outfmt TXT
 
 参数说明：
 
@@ -308,7 +299,7 @@ b.  执行推理。
 
 c.  精度验证。
 
-    python3 ./C3D_postprocess.py ./ais_result/result/ ../mmaction2/data/ucf101/ucf101_val_split_1_rawframes.txt ./result/top1_acc.json
+    python3 ./C3D_postprocess.py ./ais_result/result/ ./mmaction2/data/ucf101/ucf101_val_split_1_rawframes.txt ./result/top1_acc.json
 
 参数说明：
 
