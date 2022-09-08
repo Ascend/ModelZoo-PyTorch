@@ -75,6 +75,9 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+
+## 获取源码<a name="section4622531142816"></a>
+
 1.获取开源代码仓
   ```
     git clone https://github.com/facebookresearch/xcit.git
