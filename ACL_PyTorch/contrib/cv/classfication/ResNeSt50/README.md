@@ -207,8 +207,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
      python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./new_resnest50_b4.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
     ```
 
-    -   参数说明：
-
+        - 参数说明：
         - outfmt：推理结果数据类型。
         - model：om文件路径。
         
