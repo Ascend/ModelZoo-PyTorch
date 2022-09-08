@@ -59,12 +59,12 @@ def main():
 
     # build the dataloader
     dataset = build_dataset(cfg.data.test, dict(test_mode=True))
-    dataloader_setting = dict(
-        videos_per_gpu=args.batch_size,
-        workers_per_gpu=args.num_worker,
-        dist=False,
-        shuffle=False)
-    dataloader_setting = dict(dataloader_setting, **cfg.data.get('test_dataloader', {}))
+    dataloader_setting = dict(**cfg.data.get('test_dataloader', {}))
+    dataloader_setting['videos_per_gpu'] = args.batch_size
+    dataloader_setting['workers_per_gpu'] = args.num_worker
+    dataloader_setting['dist'] = False
+    dataloader_setting['shuffle'] = False
+    
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
     root_path = './ucf101'
@@ -87,6 +87,7 @@ def main():
 
         if imgs.shape[0] != args.batch_size:
             imgs = F.pad(imgs, (0, 0, 0, 0, 0, 0, 0, 0, 0, args.batch_size - imgs.shape[0]))
+            print(imgs.shape[0] != args.batch_size)
 
         bin_ = imgs.cpu().numpy()
         bin_.tofile(out_path + '/' + str(i) + '.bin')

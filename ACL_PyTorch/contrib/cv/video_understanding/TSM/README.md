@@ -111,9 +111,22 @@
     └── npu
         └── ucf101
     ```
+2. 安装必要环境
+    ```shell
+    pip install -r requirements.txt  
+    ```  
+    mmaction2源码安装
+    ```shell
+    git clone https://github.com/open-mmlab/mmaction2.git
+    cd mmaction2
+    pip install -r requirements/build.txt
+    pip install -v -e .
+    cd ..
+    ```
 
-2. 数据预处理。
-
+    **说明：**  
+    > 安装所需的依赖说明请参考mmaction2/docs/install.md
+3. 数据预处理。
 
 
     执行预处理脚本，生成数据集预处理后的bin文件以及相应的info文件
@@ -146,84 +159,76 @@
         wget https://download.openmmlab.com/mmaction/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth
         ```
 
-    2. mmaction2源码安装
+
+
+    2. 转换onnx
         ```shell
-        git clone https://github.com/open-mmlab/mmaction2.git
-        cd mmaction2
-        pip install -r requirements/build.txt
-        pip install -v -e .
-        cd ..
+        python TSM_pytorch2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
         ```
 
-    **说明：**  
-    > 安装所需的依赖说明请参考mmaction2/docs/install.md
-
-    3. 转换onnx
-        ```shell
-        python TSM_pth2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
-        ```
-
-    4. 简化onnx
+    3. 简化onnx
         使用onnxsim去除atc工具不支持的pad动态shape
         ```shell
+        mkdir onnx_sim
         python3.7 -m onnxsim --input-shape="1,8,3,224,224" tsm.onnx onnx_sim/tsm_bs1.onnx
         ```
         若要获得不同batch_size的简化模型，只需要修改--input-shape参数，例如batch_size=16
         ```shell
+        mkdir onnx_sim
         python3.7 -m onnxsim --input-shape="16,8,3,224,224" tsm.onnx onnx_sim/tsm_bs16.onnx
         ```
 
-   5. 使用ATC工具将ONNX模型转OM模型。
+    4. 使用ATC工具将ONNX模型转OM模型。
 
-      1. 配置环境变量。
+        1. 配置环境变量。
 
-            ```
-            source /usr/local/Ascend/ascend-toolkit/set_env.sh   
-            ```
+              ```
+              source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh  
+              ```
 
-         > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+          > **说明：** 
+          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
 
-      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+        2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-         ```
-         npu-smi info
-         #该设备芯片名为Ascend310P3 （自行替换）
-         回显如下：
-         +-------------------+-----------------+------------------------------------------------------+
-         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-         +===================+=================+======================================================+
-         | 0       310P3     | OK              | 15.8         42                0    / 0              |
-         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
-         +===================+=================+======================================================+
-         | 1       310P3     | OK              | 15.4         43                0    / 0              |
-         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
-         +===================+=================+======================================================+
-         ```
-      2. 使用atc将onnx模型转换为om模型文件
+          ```
+          npu-smi info
+          #该设备芯片名为Ascend310P3 （自行替换）
+          回显如下：
+          +-------------------+-----------------+------------------------------------------------------+
+          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+          +===================+=================+======================================================+
+          | 0       310P3     | OK              | 15.8         42                0    / 0              |
+          | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+          +===================+=================+======================================================+
+          | 1       310P3     | OK              | 15.4         43                0    / 0              |
+          | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+          +===================+=================+======================================================+
+          ```
+        3. 使用atc将onnx模型转换为om模型文件
 
-            ```shell
-            atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=om/tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
-            ```
+              ```shell
+              atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
+              ```
 
-            若需要获取不同batch_size输入的om模型，则可以通过设定input_shape进行指定。下面的命令可生成batch_size=16的模型。
+              若需要获取不同batch_size输入的om模型，则可以通过设定input_shape进行指定。下面的命令可生成batch_size=16的模型。
 
-            ```shell
-            atc --model=onnx_sim/tsm_bs16.onnx --framework=5 --output=om/tsm_bs16 --input_format=NCDHW --input_shape="video:16,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
-            ```  
+              ```shell
+              atc --model=onnx_sim/tsm_bs16.onnx --framework=5 --output=tsm_bs16 --input_format=NCDHW --input_shape="video:16,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
+              ```  
 
-         - 参数说明：
+          - 参数说明：
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+            -   --model：为ONNX模型文件。
+            -   --framework：5代表ONNX模型。
+            -   --output：输出的OM模型。
+            -   --input\_format：输入数据的格式。
+            -   --input\_shape：输入数据的shape。
+            -   --log：日志级别。
+            -   --soc\_version：处理器型号。
+            -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 
 
 
@@ -233,7 +238,11 @@
     1. 使用ais_infer工具进行离线推理.
 
         ```
-        python3.7 ais_infer.py --model cascade_rcnn_r50_fpn_aoe.om --input data/val2017_bin/  --output ais_infer_result --outfmt BIN --batchsize 1
+        mkdir output
+        cd output
+        mkdir out_bs1
+        cd ../
+        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./om/tsm_bs1.om --input "./ucf101/out_bin_1" --batchsize 1 --output ./output/out_bs1/ --outfmt TXT
         ```
         **参数说明:**
         - --mode：om模型路径。
@@ -242,25 +251,12 @@
         - --outfmt：后处理输出格式。
         - --batchsize：推理的batchsize大小。
 
-    2. 推理结果展示。
-
-        本模型提供后处理脚本，将二进制数据转化为txt文件，同时生成画出检测框后的图片，直观展示推理结果。
-        执行脚本。
-        ```
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./tsm_bs1.om --input "./ucf101/out_bin_1" --batchsize 1 --output ./output/out_bs1/
-        ```
-        **参数说明:**
-        - --model：om文件路径。。
-        - --input：数据集路径。
-        - --batchsize：1。
-        - --output:输出路径
-
-    3. 精度验证
+    2. 精度验证
 
 
         执行后处理脚本，获取精度
         ```
-        python TSM_postprocess.py --result_path ./output/out_bs1 --info_path /opt/npu/ucf101/ucf101.info
+        python TSM_postprocess.py --result_path ./output/out_bs1/{result_name} --info_path ./ucf101/ucf101.info
         ```
         第一个参数为预测结果所在路径（需根据实际输出路径进行修改），第二个参数为数据集info文件路径
 
@@ -274,7 +270,7 @@
 
         下面的命令可以针对batch_size=16的情况计算精度
         ```shell
-        python TSM_postprocess.py --result_path ./output/out_bs16/20210727_143344/ --info_path /opt/npu/ucf101/ucf101.info
+        python TSM_postprocess.py --result_path ./output/out_bs16/20210727_143344/ --info_path ./ucf101/ucf101.info
         ```
 
 
