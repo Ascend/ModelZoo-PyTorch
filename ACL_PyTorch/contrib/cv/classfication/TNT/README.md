@@ -103,12 +103,13 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集，请自行下载验证需要的标签文件“imagenet_labels_tnt.json”。
-   数据目录结构请参考：
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集，请自行下载验证需要的标签文件“imagenet_labels_tnt.json”。   
+   数据目录结构请参考：   
+    ```
     ├──ImageNet
         ├──ILSVRC2012_img_val
         ├──imagenet_labels_tnt.json
-
+    ```
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
    数据预处理将原始数据集转换为模型输入的数据。
@@ -161,7 +162,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
-
+        
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
