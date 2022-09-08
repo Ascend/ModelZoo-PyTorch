@@ -155,7 +155,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
          python3.7 -m onnxsim tnt_s_patch16_224_bs16_cast.onnx tnt_s_patch16_224_bs16_cast_sim.onnx --input-shape "16,196,16,24"
 
          ```
-         bs1不需要进行onnxsim优化，否则会存在精度问题。
+         bs1不需要进行onnxsim优化，否则会存在精度问题。   
          获得“tnt_s_patch16_224_bs16_cast_sim.onnx”文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -217,7 +217,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
    b.  执行推理。
 
       ```
-        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om
+        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT 
       ```
 
       -   参数说明：
@@ -225,6 +225,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
            -   model：模型路径。
            -   input：预处理文件路径。
            -   output：输出路径。
+           -   outfmt：输出文件格式。
 		...
 
       推理后的输出默认在当前目录result下。
@@ -253,7 +254,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} --outfmt TXT 
+       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
       ```
 
 
