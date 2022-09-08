@@ -111,13 +111,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
    ```
    预处理结果存放在prep_dataset里
 
-   执行gen_dataset_info.py脚本，生成数据集info文件。
-
-   ```
-   python3.7 gen_dataset_info.py bin ./prep_dataset ./resnest_prep_bin.info 224 224
-   ```
-
-
+   
 
 ## 模型推理<a name="section741711594517"></a>
 
