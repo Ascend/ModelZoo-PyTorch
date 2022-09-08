@@ -94,7 +94,7 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
    需要对源码做一定的改动，以适配Ascend NPU。
 
    ```
-   patch -p1 < ../mmdet.patch
+   patch -p1 < ../mmdetection.patch
    cd ..
    ```
 
@@ -230,7 +230,7 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
    
       3. 执行ATC命令。
          ```
-         atc --framework=5 --model=faster_rcnn_r50_fpn.onnx --output=faster_rcnn_r50_fpn --input_format=NCHW --input_shape="image:1,3,1216,1216" --log=debug --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=faster_rcnn_r50_fpn.onnx --output=faster_rcnn_r50_fpn --input_format=NCHW --input_shape="input:1,3,1216,1216" --log=debug --soc_version=Ascend${chip_name}
          ```
    
          - 参数说明：
