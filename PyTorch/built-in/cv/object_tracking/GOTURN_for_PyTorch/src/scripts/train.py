@@ -354,6 +354,8 @@ def get_args():
                     type=int, help='number of total epochs to run')
     ap.add_argument('--batch_size', default=3,
                     type=int, help='number of images per batch')
+    ap.add_argument('--max_steps', default=None,
+                    type=int, help='number of total steps to run')
 
     # Optimizer settings
     ap.add_argument('--lr', default=1e-6, type=float,
@@ -420,6 +422,7 @@ def main(hparams):
         distributed_backend = 'ddp'
     trainer = Trainer(default_save_path=hparams.save_path,
                       gpus=hparams.npus, max_epochs=hparams.epochs,
+                      max_steps=hparams.max_steps,
                       accumulate_grad_batches=1,
                       train_percent_check=1,
                       # resume_from_checkpoint=ckpt_resume_path,
