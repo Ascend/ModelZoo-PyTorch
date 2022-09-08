@@ -122,6 +122,18 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
 ### 3.1 pth转onnx模型
 
+```
+#导入pth模型。
+mkdir checkpoints
+mv  nvidia_jasper_210205  checkpoints/jasper_fp16.pt。
+```
+
+```
+注释所有apex依赖和源工程代码修改。
+将源码中diff.patch文件移动到代码仓“DeepLearningExamples”目录下，根据diff.path内容，手动调整/PyTorch/SpeechRecognition/Jasper/common/features.py /PyTorch/SpeechRecognition/Jasper/common/helpers.py /PyTorch/SpeechRecognition/Jasper/jasper/model.py三个文件
+```
+
+
 ```bash
 # Jasper_pth2onnx.py需要三个参数，第一个为pth模型路径，第二个为转换后的模型，第三个为模型的batch size
 # 生成batch size为1的onnx模型
@@ -183,14 +195,15 @@ python3.7 om_infer_acl.py \
 
 ### 4.2 精度验证
 
-执行离线推理后会输出wer值，与参考精度值3.20比较，保证精度差异在1%以内即可。
+执行离线推理后会输出wer值，与参考精度值9.66比较，保证精度差异在1%以内即可。
 
 | 模型      | pth精度 | 310精度   | 310P精度
 | -------- | ------- | ------- |-----|
-| Jasper   | 3.20    | 3.198| 3.202   
+| Jasper   | 9.66   | 9.730| 9.726   
 ### 4.3 性能验证
 
-使用ais_infer.py推理测试模型性能
+使用ais_infer.py推理测试模型性能 [ais_infer具体参考](http://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+
 
 ``````shell
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -201,7 +214,7 @@ git clone https://gitee.com/ascend/tools.git
 
 
 推理
-python3 {ais_infer_path}/ais_infer.py --model {jasper_path}/jasper_batch_1.om --output ./ --outfmt BIN --loop 5 --batchsize 1
+python3 {ais_infer_path}/ais_infer.py --model {jasper_path}/jasper_batch_1.om --output ./ --outfmt BIN --batchsize 1
 
 --model：模型地址
 --input：预处理完的数据集文件夹
