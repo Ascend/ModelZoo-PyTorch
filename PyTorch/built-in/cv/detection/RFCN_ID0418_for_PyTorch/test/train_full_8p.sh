@@ -75,8 +75,8 @@ fi
 # 新建数据集及与训练权重放置目录，并建立软连接
 mkdir -p data
 cd data
-ln -nsf ${data_path}/VOCdevkit2007 VOCdevkit2007
-ln -nsf ${data_path} pretrained_model
+ln -s ${data_path}/VOCdevkit2007 VOCdevkit2007
+ln -s ${data_path} pretrained_model
 cd ..
 
 #非平台场景时source 环境变量
