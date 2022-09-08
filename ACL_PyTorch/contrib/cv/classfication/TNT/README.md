@@ -17,9 +17,6 @@
 
   ******
 
-  ***<u>斜体带下划线且加粗内容为备注，写作时请删除</u>***
-
-  ***<u>标题请删除模板字眼</u>***
 
 
 
@@ -27,7 +24,6 @@
 
 TNT是针对图像分类的模型，该模型将图像的patch进一步划分为sub-patch，通过visual sentences和visual words在获得全局信息的同时更好的捕捉细节信息，提升分类效果。
 
-<u>***简单描述模型的结构、应用、优点等信息。***</u>
 
 
 - 参考实现：
@@ -120,15 +116,15 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
     使用“TNT_preprocess.py”对JPEG图片文件进行预处理并将其转换为bin文件。
 
 
-   ```
-   python3.7 TNT_preprocess.py --src-path /home/HwHiAiUser/dataset/imagenet/val --save-path ./prep_dataset
-   ```
+       ```
+       python3.7 TNT_preprocess.py --src-path /home/HwHiAiUser/dataset/imagenet/val --save-path ./prep_dataset
+       ```
 
-  --src-path：原始数据验证集（.jpeg）所在路径。
+      --src-path：原始数据验证集（.jpeg）所在路径。
 
-  --save-path：输出的二进制文件（.bin）所在路径。
+      --save-path：输出的二进制文件（.bin）所在路径。
 
-  每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_dataset”二进制文件夹。
+      每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_dataset”二进制文件夹。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -153,13 +149,13 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
          获得tnt_s_patch16_224_bs1_cast.onnx文件。
 
-      2. 优化ONNX文件。<u>***不存在此步骤可删除***</u>
+      2. 优化ONNX文件。
 
          ```
          python3.7 -m onnxsim tnt_s_patch16_224_bs16_cast.onnx tnt_s_patch16_224_bs16_cast_sim.onnx --input-shape "16,196,16,24"
 
          ```
-
+         bs1不需要进行onnxsim优化，否则会存在精度问题。
          获得“tnt_s_patch16_224_bs16_cast_sim.onnx”文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -211,7 +207,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
 
 
-2. 开始推理验证。<u>***根据实际推理工具编写***</u>
+2. 开始推理验证。
 
    a.  使用ais-infer工具进行推理。
 
@@ -241,10 +237,11 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-       python3.7 TNT_postprocess.py --label_file=/home/HwHiAiUser/dataset/imagenet/imagenet_labels_tnt.json --pred_dir=./result/dumpOutput_device0 > result.json
+       rm -rf {your_result_path}
+       python3.7 TNT_postprocess.py --label_file=/home/HwHiAiUser/dataset/imagenet/imagenet_labels_tnt.json --pred_dir=./${your_result_path} > result.json
       ```
 
-      result/dumpOutput_device0/：为生成推理结果所在路径  <u>***参数解释***</u>
+      ${your_result_path}：为生成推理结果所在路径 
     
       val_label.txt：为标签数据
     
@@ -256,7 +253,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} --outfmt TXT 
       ```
 
 
