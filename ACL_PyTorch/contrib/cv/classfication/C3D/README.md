@@ -276,6 +276,8 @@ python3 ../get_info.py bin ./prep_datasets ../c3d_prep_bin.info 112 112
 a.  执行推理。
 
     cd ..
+    mkdir ./ais_result
+    mkdir ./result
     python3 tools-master/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./mmaction2/C3D.om --batchsize=1 --input=./mmaction2/prep_datasets/ --output ./ais_result --output_dirname result --outfmt TXT
 
 参数说明：
