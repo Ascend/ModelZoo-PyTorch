@@ -96,7 +96,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
    下载视频，视频目录：mmaction2/data/ucf101/videos/，提取RGB原始帧，提取好的原始帧目录：mmaction2/data/ucf101/rawframes
 
    ```
-   cd mmaction2/tools/data/ucf101/
+   cd tools/data/ucf101/
    bash download_videos.sh
    bash extract_rgb_frames_opencv.sh
    ```
@@ -146,11 +146,12 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
    执行rawframe_dataset.py脚本，将原始帧（rawframes）处理为bin文件。
 
    ```
-   cd mmaction2
+   cd ../../../
+   cp ../C3D/rawframe_dataset.py mmaction/datasets
    mkdir ./prep_datasets
    python3 ./mmaction/datasets/rawframe_dataset.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py --output_path ./prep_datasets
    mv ./prep_datasets ../C3D
-   cd C3D
+   cd ../C3D
    ```
 
 ​	 参数说明：
