@@ -84,7 +84,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 
    ```
    pip3 install openmim
-   mim install mmcv-full
+   mim install mmcv-full==1.6.0
    
    git clone https://github.com/open-mmlab/mmaction2.git        # 克隆仓库的代码
    cd mmaction2              # 切换到模型的代码仓目录
@@ -204,21 +204,22 @@ python3 ../get_info.py bin ./prep_datasets ../c3d_prep_bin.info 112 112
    
          ```
          cp ../pytorch2onnx.py ./tools/pytorch2onnx.py
-         python3 ./tools/pytorch2onnx.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py ./checkpoints/C3D.pth --shape 1 10 3 16 112 112 --verify --softmax
+         python3 ../pytorch2onnx.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py ../C3D.pth --shape 1 10 3 16 112 112 --verify --softmax
+         mv ./tmp.onnx ./C3D.onnx
          ```
-   
+         
          获得C3D.onnx文件。
-   
+         
          参数说明：
-   
+         
          --shape: 模型输入张量的形状。对于C3D模型，输入形状为 $batch $ $clip$ $channel $ $time$ $height $ $width$。
-   
+         
          --verify: 决定是否对导出模型进行验证，验证项包括是否可运行，数值是否正确等。如果没有被指定，它将被置为 False。
-   
+         
          --show: 决定是否打印导出模型的结构。如果没有被指定，它将被置为 False。
-
+         
          --softmax: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 False。目前仅支持行为识别器，不支持时序动作检测器。
-
+   
    3. 使用ATC工具将ONNX模型转OM模型。
    
       1. 配置环境变量。
