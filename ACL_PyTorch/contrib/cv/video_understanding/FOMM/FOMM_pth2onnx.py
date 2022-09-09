@@ -16,6 +16,7 @@ from utils import load_checkpoints
 from argparse import ArgumentParser
 from torch import onnx
 
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")

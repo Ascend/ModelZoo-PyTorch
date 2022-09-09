@@ -20,6 +20,7 @@ import numpy as np
 from sync_batchnorm import DataParallelWithCallback
 from my_utils import mkdir
 
+
 def pre_processing(config, generator, kp_detector, checkpoint, log_dir, dataset, data_type, out_dir="pre_data/"):
 
     png_dir = os.path.join(log_dir, 'reconstruction/png')

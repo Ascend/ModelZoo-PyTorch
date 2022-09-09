@@ -16,6 +16,7 @@ import shutil
 from my_utils import mkdir
 from argparse import ArgumentParser
 
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--type", default="npy", help="data type", choices=["npy", "bin"])
