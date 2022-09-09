@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datasets_path="/root/datasets/"
+datasets_path="/opt/npu/ILSVRC2012/"
 
 for para in $*
 do
@@ -9,17 +9,17 @@ do
     fi
 done
 rm -rf ./pre_dataset
-python3.7 dino_resnet50_preprocess.py resnet ${datasets_path}/imagenet/val ./pre_dataset
+python3.7 dino_resnet50_preprocess.py dino ${datasets_path}/val ./pre_dataset
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
  fi
-python3.7  get_info.py bin ./pre_dataset  ./pre_dataset_bin 224 224
+python3.7 get_info.py bin ./pre_dataset ./pre_dataset_bin 224 224
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./dino_resnet50_bs1.om -input_text_path=./pre_dataset_bin -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 if [ $? != 0 ]; then
@@ -31,12 +31,12 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-python3.7  dino_resnet50_postprocess.py --anno_file ${datasets_path}/imagenet/val_label.txt --benchmark_out ./result/dumpOutput_device0 --result_file ./result.json
+python3.7 dino_resnet50_postprocess.py --anno_file ${datasets_path}/val_label.txt --benchmark_out ./result/dumpOutput_device0 --result_file ./result.json
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-python3.7  dino_resnet50_postprocess.py --anno_file ${datasets_path}/imagenet/val_label.txt --benchmark_out ./result/dumpOutput_device1 --result_file ./result16.json
+python3.7 dino_resnet50_postprocess.py --anno_file ${datasets_path}/val_label.txt --benchmark_out ./result/dumpOutput_device1 --result_file ./result16.json
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
