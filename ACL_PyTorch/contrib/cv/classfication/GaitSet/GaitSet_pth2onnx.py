@@ -77,8 +77,8 @@ def convert(input_path, output_path, restore_iter, hidden_dim):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    from config_1p import conf_1p
-    from config_8p import conf_8p
+    from GaitSet_config_1p import conf_1p
+    from GaitSet_config_8p import conf_8p
     
     work_abspath = osp.abspath(conf_8p['WORK_PATH'])
     conf_model = conf_8p['model']

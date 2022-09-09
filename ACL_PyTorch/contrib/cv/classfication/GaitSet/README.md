@@ -79,6 +79,8 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
   | wheel                                                        | 0.37.1   | -                                                            |
   | decorator                                                    | 5.1.1    | -                                                            |
   | mpmath                                                       | 1.2.1    | -                                                            |
+  | tqdm                                                         | 4.46.1   | -                                                            |
+  | aclruntime                                                   | 0.0.1    | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \        | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -88,7 +90,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 1. 安装依赖。
 
    ```
-   pip3 install -r requirment.txt
+   pip3 install -r requirements.txt
    ```
 
 
@@ -165,7 +167,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
          运行GaitSet_pth2onnx.py脚本，获得gaitset_submit.onnx文件。
 
          ```
-         python GaitSet_pth2onnx.py –-input_path=’${权重文件路径}’
+         python GaitSet_pth2onnx.py --input_path=’${权重文件路径}’
          ```
       
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -239,34 +241,31 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
     python ais_infer.py --model gaitset_submit_bs1_310P.om --batchsize 1 --loop 10
     ```
    
-    -   参数说明：
+    - 参数说明：
    
-        -   batchsize：batchsize大小。
-        -   loop：推理次数，可选参数，默认1，profiler为true时，推荐为1。
-    	...
+      - batchsize：batchsize大小。
+   
+      - loop：推理次数，可选参数，默认1，profiler为true时，推荐为1。
+   
+        
    
     真实数据推理：
     ```
-     python ais_infer.py --model gaitset_submit_bs1_310P3.om --input "CASIA-B-bin"
+   python ais_infer.py --model gaitset_submit_bs1.om --input "CASIA-B-bin" --output "result" --output_dirname "dumpOutput_device0"
     ```
    
     -   参数说明：
    
         -   model：om文件路径。
         -   input：输入数据。
+        -   output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
+        -   output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中。
    
 
  
 
    c.  精度验证。
 
-    执行`eval_acc_perf.sh`：
-    
-    ```bash
-    bash test/eval_acc_perf.sh
-    ```
-    
-    或者在配置好了环境的前提下直接运行：
     
     ```bash
     python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --post_process=True
