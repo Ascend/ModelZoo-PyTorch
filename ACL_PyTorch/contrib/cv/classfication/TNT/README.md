@@ -218,7 +218,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
    b.  执行推理。
 
       ```
-        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT 
+        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT --batch_size 1
       ```
 
       -   参数说明：
@@ -239,7 +239,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-       rm -rf {your_result_path}
+       rm -rf {your_result_path}/summary.json
        python3.7 TNT_postprocess.py --label_file=/home/HwHiAiUser/dataset/imagenet/imagenet_labels_tnt.json --pred_dir=./${your_result_path} > result.json
       ```
 
