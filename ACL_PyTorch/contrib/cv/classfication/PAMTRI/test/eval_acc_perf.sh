@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datasets_path="./data/veri"
+datasets_path="/opt/npu/veri"
 
 for para in $*
 do
