@@ -27,15 +27,21 @@ if __name__ == "__main__":
     opt = parser.parse_args()
 
     data_root = opt.data_root
+    driving_dir = opt.driving_dir
+    source_dir = opt.source_dir
     if not data_root.__contains__('/'):
         data_root += "/"
+    if not driving_dir.__contains__('/'):
+        driving_dir += "/"
+    if not source_dir.__contains__('/'):
+        source_dir += "/"
 
-    kpd_dir = data_root + opt.driving_dir
-    kps_dir = data_root + opt.source_dir
-    if not kpd_dir.__contains__('/'):
-        kpd_dir += "/"
-    if not kps_dir.__contains__('/'):
-        kps_dir += "/"
+    kpd_dir = data_root + driving_dir
+    kps_dir = data_root + source_dir
+    # if not kpd_dir.__contains__('/'):
+    #     kpd_dir += "/"
+    # if not kps_dir.__contains__('/'):
+    #     kps_dir += "/"
 
     kp_driving_value_dir = data_root + "kpdv/"
     kp_driving_jac_dir = data_root + "kpdj/"
