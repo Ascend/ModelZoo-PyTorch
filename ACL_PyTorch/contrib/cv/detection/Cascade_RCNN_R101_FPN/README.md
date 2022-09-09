@@ -118,7 +118,7 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
     
     运行get_info.py脚本。
     ```
-    python3.7 get_info.py jpg ../data/val2017 coco2017_jpg.info
+    python3.7 get_info.py jpg ./data/val2017 coco2017_jpg.info
     ```
     第一个参数为生成的数据集文件格式，第二个参数为coco图片数据文件的相对路径，第三个参数为生成的数据集信息文件保存的路径。运行成功后，在当前目录中生成coco2017_jpg.info。
 
