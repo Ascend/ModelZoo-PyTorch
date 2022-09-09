@@ -43,7 +43,7 @@
     mkdir checkpoints
     2. 文件替换及新增
     拷贝ModelZoo上下载的Tacotron2_for_Pytorch目录下的文件到$tacotron_path路径：
-    cp acl_net.py onnx_infer.py addweight.py om_infer_acl.py onnx_infer.py data_process.py atc_static.sh onnxsim.sh $tacotron_path
+    cp acl_net.py onnx_infer.py addweight.py om_infer_acl.py data_process.py atc_static.sh onnxsim.sh $tacotron_path
     cp get_out_node.py get_out_type.py $tacotron_path/output
     cp convert_tacotron22onnx.py convert_waveglow2onnx.py $tacotron_path/tensorrt
     权重下载链接
