@@ -53,7 +53,7 @@ def reconstruction(config, generator, kp_detector, checkpoint, log_dir, dataset,
                 break
         num = x['video'].shape[2]
         del x['video']
-        file_num_file = np.load(data_dir + "frame_num.npy")
+        file_num_file = np.load(pre_data + "frame_num.npy")
         file_num = file_num_file[it]
         if num != file_num:
             raise ValueError("{}:file num != num, num is {}, but file num is {}".format(it, num, file_num))

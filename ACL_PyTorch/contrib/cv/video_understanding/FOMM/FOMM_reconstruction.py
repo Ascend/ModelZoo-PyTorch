@@ -23,13 +23,7 @@ from modules.generator import OcclusionAwareGenerator
 from modules.discriminator import MultiScaleDiscriminator
 from modules.keypoint_detector import KPDetector
 import torch
-from train import train
 from reconstruction import reconstruction
-from animate import animate
-from data_pre_processing import pre_processing
-from online_infer import infer
-from ori_reconstruction import ori_reconstruction
-from L1 import L1
 
 
 if __name__ == "__main__":
