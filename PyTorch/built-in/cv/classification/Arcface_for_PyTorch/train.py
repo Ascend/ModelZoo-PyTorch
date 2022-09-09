@@ -193,6 +193,9 @@ def main(args):
             train_loader.sampler.set_epoch(epoch)
         for _, (img, local_labels) in enumerate(train_loader):
             global_step += 1
+            if args.perf_only and global_step > 10000:
+                exit()
+
             local_embeddings = backbone(img)
             loss: torch.Tensor = module_partial_fc(local_embeddings, local_labels, opt_pfc)
 
@@ -254,4 +257,5 @@ if __name__ == "__main__":
         description="Distributed Arcface Training in Pytorch")
     parser.add_argument("config", type=str, help="py config file")
     parser.add_argument("--local_rank", type=int, default=0, help="local_rank")
+    parser.add_argument("--perf_only", action="store_true", default=False, help="enable perf mode")
     main(parser.parse_args())

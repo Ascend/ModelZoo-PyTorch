@@ -41,7 +41,7 @@ export SLURM_NODELIST="        127.0.0.1"
 export MASTER_PORT="23333"
 export SLURM_PROCID=0
 
-nohup python -u runner.py --config config.yaml --perf_only >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 -u runner.py --config config.yaml --perf_only >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -52,7 +52,7 @@ e2e_time=$(($end_time - $start_time))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F "(" '{print $3}' | awk -F ")" '{print $1}')
+FPS=$(grep "CRITICAL:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 50 | awk '{print $7}' | awk '{sum+=$1} END {print sum/NR}' )
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

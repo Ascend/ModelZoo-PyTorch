@@ -22,13 +22,13 @@ RANK_ID_START=0
 
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
         source activate $conda_name
-	fi
+    fi
 done
 
 #pip3 uninstall timm -y
@@ -63,6 +63,7 @@ data_dump_flag=False
 data_dump_step="10"
 profiling=False
 autotune=False
+bin_mode=False
 PREC=""
 
 # 帮助信息，不h需要修改
@@ -71,12 +72,12 @@ if [[ $1 == --help || $1 == -h ]];then
     echo " "
     echo "parameter explain:
     --precision_mode         precision mode(allow_fp32_to_fp16/force_fp16/must_keep_origin_dtype/allow_mix_precision)
-    --over_dump		         if or not over detection, default is False
-    --data_dump_flag	     data dump flag, default is False
-    --data_dump_step		 data dump step, default is 10
-    --profiling		         if or not profiling for performance debug, default is False
-    --data_path		         source data of training
-    -h/--help		         show help message
+    --over_dump                 if or not over detection, default is False
+    --data_dump_flag         data dump flag, default is False
+    --data_dump_step         data dump step, default is 10
+    --profiling                 if or not profiling for performance debug, default is False
+    --data_path                 source data of training
+    -h/--help                 show help message
     "
     exit 1
 fi
@@ -108,6 +109,8 @@ elif [[ $para == --over_dump* ]];then
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
     fi
 done
 
@@ -123,6 +126,10 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
 
+#新增模糊编译接口
+if [ $bin_mode == "True" ];then
+    sed -i "67itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/main.py
+fi
 #kill残余的此网络进程
 #ps -ef | grep moby | awk '{print $2}' | xargs kill -9
 

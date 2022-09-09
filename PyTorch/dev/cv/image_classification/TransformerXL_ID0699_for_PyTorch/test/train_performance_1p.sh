@@ -53,7 +53,7 @@ if [ $bin_mode == "True" ];then
     sed -i "${step_line}s/^/#/" ${cur_path}/pytorch/train.py
     inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
     sed -i "${inc_line}s/^/#/" ${cur_path}/pytorch/train.py
-    sed -i "76itorch.npu.global_step_inc()" ${cur_path}/pytorch/train.py
+    sed -i "76itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/pytorch/train.py
 fi
 
 #设置二进制变量

@@ -19,6 +19,8 @@ IMAGENET_PATH=${data_path}/ILSVRC2014_Det/
 ALOV_PATH=${data_path}/ALOV/
 SAVE_PATH='./caffenet/'
 PRETRAINED_MODEL_PATH='../goturn/models/pretrained/caffenet_weights.npy'
+echo "$SAVE_PATH will be deleted before training"
+rm -rf $SAVE_PATH
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径

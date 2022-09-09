@@ -119,6 +119,7 @@ Arcface-Torch可以高效快速地训练大规模人脸识别训练集。本模�
      也可使用模型原生方式启动训练
    
      ```
+     source ./test/env_npu.sh
      python3 -m torch.distributed.launch --nproc_per_node=8 --nnodes=1 --node_rank=0 --master_addr="127.0.0.1" --master_port=12581 train.py configs/glint360k_r100.py
      ```
      

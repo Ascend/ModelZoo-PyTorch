@@ -50,19 +50,12 @@ fi
 
 #修改模糊编译写法
 if [ $bin_mode == "True" ];then
-    sed -i "61itorch.npu.global_step_inc()" ${cur_path}/../train.py
-fi
-
-#设置二进制变量
-if [ $bin_analysis == "True" ];then
-    #增加编译缓存设置
-    line=`grep "    main(args)" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
-    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/../train.py
-    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "61itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py
+    line=`grep "torch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
+    line=$[ $line+1 ]
+    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/train.py
     sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../train.py
-    sed -i "${line}s/^/    /" ${cur_path}/../train.py
-    sed -i "${line}ioption = {}" ${cur_path}/../train.py
-    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption = {}" ${cur_path}/train.py
 fi
 
 if [ -d $data_path/VOCdevkit ];then

@@ -41,6 +41,8 @@ pip3.7 install -r requirements.txt
 
 6. 导出onnx，生成om离线文件
 
+   ①静态shape
+
    将export_onnx.diff放在espnet根目录下，
 
    ```
@@ -51,16 +53,26 @@ pip3.7 install -r requirements.txt
 
    生成encoder.onnx，运行python3.7.5 adaptespnet.py生成encoder_revise.onnx
 
+   ②动态shape
+
+   将export_onnx_dynamic.diff放在espnet根目录下，运行脚本生成encoder.onnx
+
+   ```
+   patch -p1 < export_onnx_dynamic.diff
+   cd ./egs/aishell/asr1/
+   bash export_onnx.sh
+   ```
+
 7. 运行encoder.sh生成离线om模型， encoder_262_1478.om
-   
+
    ${chip_name}可通过`npu-smi info`指令查看
 
    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-   
+
    ```
    bash encoder.sh Ascend${chip_name} # Ascend310P3
    ```
-   
+
 
 ## 2 离线推理 
 
@@ -75,11 +87,24 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
 2. 获取精度
 
+   ①静态shape
+
    首先修改acc.diff文件中的om模型路径（约162行）为生成的om路径
 
    ```
    cd espnet
    patch -p1 < acc.diff
+   cd espnet/egs/aishell/asr1
+   bash acc.sh
+   ```
+
+   ②动态shape
+
+   首先修改acc_dynamic.diff文件中的om模型路径（约162行）为生成的om路径
+
+   ```
+   cd espnet
+   patch -p1 < acc_dynamic.diff
    cd espnet/egs/aishell/asr1
    bash acc.sh
    ```
@@ -104,4 +129,4 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
 |       模型       | 官网pth精度 | 310P离线推理精度 | gpu性能 | 310P性能 |
 | :--------------: | :---------: | :-------------: | :-----: | :-----: |
-| espnet_conformer |    5.1%     |      5.4%       | 261fps  | 430fps  |
+| espnet_conformer |    5.1%     |      分档5.4%；动态：5.1%      | 261fps  | 分档：430fps；动态：25fps |
