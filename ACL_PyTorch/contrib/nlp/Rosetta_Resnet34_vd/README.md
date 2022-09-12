@@ -180,7 +180,7 @@
       1. 配置环境变量。
 
          ```
-         source /usr/local/Ascend/......
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 

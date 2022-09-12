@@ -44,7 +44,8 @@ def main(config, device, logger, vdl_writer):
             leave=True)
             
     for idx, batch in enumerate(valid_dataloader):
-            result = config['results'] + '/img_' + str(idx) + '_0.bin'
+            result_name = 'img_{}_0.bin'.format(idx)
+            result = os.path.join(config['results'], result_name)
             
             preds = paddle.to_tensor(np.fromfile(result, dtype=np.float32).reshape(1, 25, 37))
                         

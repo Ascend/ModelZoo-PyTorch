@@ -35,8 +35,9 @@ def main(config, device, logger, vdl_writer, data_path):
             leave=True)
     
     for idx, batch in enumerate(valid_dataloader):
-        img_name = 'img_' + str(idx) + '.bin'
-        batch[0].numpy().tofile(data_path + img_name)
+        img_name = 'img_{}.bin'.format(idx)
+
+        batch[0].numpy().tofile(os.path.join(data_path, img_name))
         
         pbar.update(1)
     
@@ -46,7 +47,7 @@ def main(config, device, logger, vdl_writer, data_path):
 if __name__ == "__main__":
     config, device, logger, vdl_writer = program.preprocess()
     
-    data_path = config['bin_data'] + '/'
+    data_path = os.path.join(config['bin_data'])
     
     if not os.path.exists(data_path):
         os.makedirs(data_path)
