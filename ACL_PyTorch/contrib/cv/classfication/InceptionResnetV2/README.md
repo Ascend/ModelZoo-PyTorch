@@ -137,9 +137,8 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 1. 安装依赖包。
 
    ```
-   pip3 install -r requirment.txt
+   pip install -r requirements.txt
    ```
-
 
 ### 准备数据集
 
@@ -151,7 +150,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
    执行预处理脚本，将原始数据集转换为模型输入的bin文件，存放在当前目录下的prep_dataset文件夹中
    ```
-   python3.7 imagenet_torch_preprocess.py inceptionresnetv2 /root/datasets/imagenet/val ./prep_dataset
+   python imagenet_torch_preprocess.py inceptionresnetv2 /root/datasets/imagenet/val ./prep_dataset
    ```
 
 ### 模型推理
@@ -168,13 +167,20 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
        ```
 
    2. 导出onnx文件。
+      a. 下载开源模型仓库
+         ```
+         git clone https://github.com/Cadene/pretrained-models.pytorch
+         cd pretrained-models.pytorch
+         git reset --hard 3c92fbda001b6369968e7cb1a5706ee6bf6c9fd7
+         cd ..
+         ```
 
-      1. 使用inceptionresnetv2_pth2onnx.py导出onnx文件。
+      b. 使用inceptionresnetv2_pth2onnx.py导出onnx文件。
 
          执行inceptionresnetv2_pth2onnx.py脚本，生成onnx模型文件
 
          ```
-         python3.7 inceptionresnetv2_pth2onnx.py inceptionresnetv2-520b38e4.pth inceptionresnetv2_dynamic_bs.onnx
+         python inceptionresnetv2_pth2onnx.py inceptionresnetv2-520b38e4.pth inceptionresnetv2_dynamic_bs.onnx
          ```
 
          运行成功后生成inceptionresnetv2_dynamic_bs.onnx文件。
@@ -243,7 +249,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
       使用batch size为1的om模型文件进行推理，其他batch size可作相应的修改
       ```
-      python3.7 ais_infer.py --model ./inceptionresnetv2_bs1.om --batchsize 1 --input ./prep_dataset --output ./result --outfmt TXT --device 0
+      python ais_infer.py --model ./inceptionresnetv2_bs1.om --batchsize 1 --input ./prep_dataset --output ./result --outfmt TXT --device 0
       ```
 
       参数说明：
@@ -273,7 +279,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
       ```
       rm ./result/2022_08_26-20_40_22/sumary.json
 
-      python3.7 imagenet_acc_eval.py ./result/2022_08_26-20_40_22/  /home/DATASET/imagenet/val_label.txt ./perf perf_bs1.json
+      python imagenet_acc_eval.py ./result/2022_08_26-20_40_22/  /home/DATASET/imagenet/val_label.txt ./perf perf_bs1.json
       ```
 
       参数说明：
