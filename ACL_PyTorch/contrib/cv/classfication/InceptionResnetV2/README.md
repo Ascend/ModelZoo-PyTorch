@@ -95,32 +95,22 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
   </tr>
   <tr>
     <td>PyTorch</td>
-    <td>1.5.0及以上</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>onnx</td>
-    <td>1.7.0及以上</td>
+    <td>1.12.0及以上</td>
     <td>-</td>
   </tr>
   <tr>
     <td>torchvision</td>
-    <td>0.6.0及以上</td>
+    <td>0.13.0及以上</td>
     <td>-</td>
   </tr>
   <tr>
     <td>numpy</td>
-    <td>1.20.3及以上</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>Pillow</td>
-    <td>8.2.0及以上</td>
+    <td>1.21.6及以上</td>
     <td>-</td>
   </tr>
   <tr>
     <td>opencv-python</td>
-    <td>4.5.2.54及以上</td>
+    <td>4.6.0.66及以上</td>
     <td>-</td>
   </tr>
   <tr>
