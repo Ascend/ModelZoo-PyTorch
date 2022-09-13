@@ -90,10 +90,15 @@ class DownTransition(nn.Module):
         if dropout:
             self.do1 = nn.Dropout3d()
         self.ops = _make_nConv(outChans, nConvs, elu)
+        self.dropout = dropout
 
     def forward(self, x):
         down = self.relu1(self.bn1(self.down_conv(x)))
-        out = self.do1(down)
+        if self.dropout:
+            torch.npu.synchronize()
+            out = self.do1(down)
+        else:
+            out = self.do1(down)
         out = self.ops(out)
         out = self.relu2(torch.add(out, down))
         return out
@@ -111,8 +116,10 @@ class UpTransition(nn.Module):
         if dropout:
             self.do1 = nn.Dropout3d()
         self.ops = _make_nConv(outChans, nConvs, elu)
+        self.dropout = dropout
 
     def forward(self, x, skipx):
+        torch.npu.synchronize()
         out = self.do1(x)
         skipxdo = self.do2(skipx)
         out = self.relu1(self.bn1(self.up_conv(out)))
