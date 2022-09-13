@@ -16,20 +16,25 @@
 
 - [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-## 概述
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
 YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv3采用了一个新的backbnone——Darknet-53来进行特征提取工作，这个新网络比Darknet-19更加强大也比ResNet-101或者ResNet-152更加高效。同时，对于一张输入图片，YOLOv3可以在3个不同的尺度上预测物体框，每个尺度预测三种大小的边界框。通过这种多尺度联合预测的方式有效提升了小目标的检测精度。
 
 `参考论文：Redmon, Joseph, and Ali Farhadi. "Yolov3: An incremental improvement. arXiv 2018." arXiv preprint arXiv:1804.02767 (2018): 1-6.`
 
     
+
+- 参考实现：
+
+    
 ```
-参考实现：
-    url=https://github.com/ultralytics/yolov3.git
+url=https://github.com/ultralytics/yolov3.git
     branch=master
     commit_id=166a4d590f08b55cadfebc57a11a52ff2fc2b7d3
     model_name=yolov3
 ```
+
+
 
     
 通过Git获取对应commit_id的代码方法如下：
@@ -44,7 +49,7 @@ git clone {repository_url}        # 克隆仓库的代码
 ```
 
 
-### 输入输出数据
+## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
@@ -60,11 +65,11 @@ git clone {repository_url}        # 克隆仓库的代码
   | Reshape_203  | 3x85x26x26 | FLOAT32      | NCHW           |
   | Reshape_187  | 3x85x52x52 | FLOAT32      | NCHW           |
 
-## 推理环境准备
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-该模型需要以下插件与驱动
+- 该模型需要以下插件与驱动
 
-- **表 1**  版本配套表
+  **表 1**  版本配套表
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
@@ -74,9 +79,9 @@ git clone {repository_url}        # 克隆仓库的代码
 | PyTorch                                                      | 1.6.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \          |
 
-## 快速上手
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-### 安装依赖
+## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
 
@@ -92,7 +97,7 @@ git clone {repository_url}        # 克隆仓库的代码
    pip3 install -r requirements.txt
    ```
    
-### 准备数据集
+## 准备数据集<a name="section183221994411"></a>
 
 1.获取原始数据集。
 
@@ -145,17 +150,19 @@ git clone {repository_url}        # 克隆仓库的代码
    
     第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
-### 模型推理
+## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
     a. 获取权重文件。
+
     从源码包中获取训练后的权重文件yolov3.pt。
     源码包下载链接(https://www.hiascend.com/zh/software/modelzoo/models/detail/1/36ea401e0d844f549da2693c6289ad89)
 
     b. 导出onnx文件。
+
         将模型权重文件.pt转换为.onnx文件。 
 
       1).将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
@@ -171,9 +178,9 @@ git clone {repository_url}        # 克隆仓库的代码
                                 do_constant_folding=True,
                                 output_names=['classes', 'boxes'] if y is None else ['output'])
 
-            ##原代码verbose=False修改为True，
-                   opset_version=12修改为11，
-                   添加参数do_constant_folding=True。
+                         ##原代码verbose=False修改为True，
+                                opset_version=12修改为11，
+                         添加参数do_constant_folding=True。
          ```
 
 
@@ -196,16 +203,17 @@ git clone {repository_url}        # 克隆仓库的代码
     
      1). 配置环境变量。
 
-        
-         `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
+            `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
          
 
          说明：该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
        2). 执行命令查看芯片名称型号（$\{chip\_name\}）。
 
-         ```
-         npu-smi info
+         
+         
+```
+npu-smi info
          #该设备芯片名(${chip_name}=Ascend310P3)
          回显如下：
          +--------------------------------------------------------------------------------------------+
@@ -217,7 +225,9 @@ git clone {repository_url}        # 克隆仓库的代码
          | 0       310P3     | OK              | 16.5         55                0    / 0              |
          | 0       0         | 0000:5E:00.0    | 0            931  / 21534                            |
          +===================+=================+======================================================+
-         ```
+```
+
+         
 
        3). 执行ATC命令。
        
