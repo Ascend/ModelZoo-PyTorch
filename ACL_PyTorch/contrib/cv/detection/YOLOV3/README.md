@@ -28,7 +28,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
     
 ```
-url=https://github.com/ultralytics/yolov3.git
+    url=https://github.com/ultralytics/yolov3.git
     branch=master
     commit_id=166a4d590f08b55cadfebc57a11a52ff2fc2b7d3
     model_name=yolov3
@@ -41,7 +41,7 @@ url=https://github.com/ultralytics/yolov3.git
 
     
 ```
-git clone {repository_url}        # 克隆仓库的代码
+    git clone {repository_url}        # 克隆仓库的代码
     cd {repository_name}              # 切换到模型的代码仓目录
     git checkout {branch/tag}         # 切换到对应分支
     git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
@@ -84,12 +84,6 @@ git clone {repository_url}        # 克隆仓库的代码
 ## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
-
-   ```
-    git clone https://github.com/ultralytics/yolov3.git
-    cd yolov3
-    git reset --hard 166a4d590f08b55cadfebc57a11a52ff2fc2b7d3
-    ```
        
 2. 安装依赖。
 
@@ -104,24 +98,24 @@ git clone {repository_url}        # 克隆仓库的代码
     本模型支持coco2014验证集。用户需自行获取数据集，将instances_val2014.json文件和val2014文件夹解压并上传数据集到源码包路径下。
     coco2014验证集所需文件目录参考（只列出该模型需要的目录）。
     数据集下载链接(http://images.cocodataset.org/zips/val2014.zip)
+    
+    数据集目录结构如下:
 
-   数据集目录结构如下:
-
-   ```
+    ```
        |-- coco2014                // 验证数据集
            |-- instances_val2014.json    //验证集标注信息  
            |-- val2014             // 验证集文件夹
-   ```
+    ```
    
 2. 数据预处理。
 
     a.生成coco_2014.info数据集信息文件，使用parse_json.py脚本解析coco数据集中的json文件。
     创建ground-truth-split目录并执行parse_json.py脚本。
 
-   ```
-    mkdir ground-truth-split
-    python3.7 parse_json.py
-   ```
+    ```
+        mkdir ground-truth-split
+        python3.7 parse_json.py
+    ```
    
     执行成功后，在当前目录下生成coco2014.names和coco_2014.info文件以及标签文件夹ground-truth-split。
     
@@ -139,15 +133,13 @@ git clone {repository_url}        # 克隆仓库的代码
         yolov3_bin生成的二进制文件路径。
 
 3.生成数据集info文件。
-
+    
     二进制输入info文件生成。
     使用get_coco_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。
-    运行get_coco_info.py脚本。 
-
-   ```
-    python3.7 get_coco_info.py yolov3_bin ./coco_2014.info 
-   ```
-   
+    运行get_coco_info.py脚本。
+ 
+    `python3.7 get_coco_info.py yolov3_bin ./coco_2014.info` 
+       
     第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
 ## 模型推理<a name="section741711594517"></a>
