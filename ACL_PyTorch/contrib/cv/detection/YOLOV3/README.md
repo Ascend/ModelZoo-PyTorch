@@ -164,7 +164,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
       
       3).  修改models/export.py脚本，将转化的onnx算子版本设置为11。
 
-            ```
+            
             torch.onnx.export(model, img, f, verbose=True, 
                                             opset_version=11, 
                                             input_names=['images'],
@@ -173,14 +173,14 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
                                      ##原代码verbose=False修改为True，
                                             opset_version=12修改为11，
                                      添加参数do_constant_folding=True。
-            ```
+            
 
       4).  运行脚本：
             
-        ```
+        
             python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
 
-        ```
+        
 
       参数介绍：                                                         
           --weights：权重模型文件。                                   
@@ -193,7 +193,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     
      1).  配置环境变量。
                                      
-          `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          
        说明：该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。
 
@@ -251,14 +251,14 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
    运行 ais_infer 脚本。
 
-   ```
+   
        mkdir ais_infer_result
        python3 ais_infer.py --ais_infer_path ${ais_infer_path} 
                             --model yolov3_bs1.om 
                             --input yolov3_bin 
                             --batchsize=1 
                             --output ais_infer_result
-   ```
+   
       推理后的输出默认在当前目录result下。
 
       参数说明:
@@ -272,14 +272,14 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
    解析输出特征图。
    解析ais_infer输出文件，经过阈值过滤，nms，坐标转换等输出坐标信息和类别信息txt文件。
        
-        ```
+        
             python3.7 bin_to_predict_yolo_pytorch.py  
                 --bin_data_path result/dumpOutput_device0/  
                 --det_results_path  detection-results/ 
                 --origin_jpg_path val2014/ 
                 --coco_class_names coco2014.names 
                 --model_type yolov3 --net_input_size 416
-        ```
+        
 
     参数说明：
 
