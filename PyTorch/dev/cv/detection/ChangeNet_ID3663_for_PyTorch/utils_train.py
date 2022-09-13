@@ -159,7 +159,11 @@ def train_model(model, dataloaders, criterion, optimizer, sc_plt, writer, device
                 curr_learning_rate = param_group['lr']
                 writer.add_scalar('epoch/learning_rate_train', curr_learning_rate, epoch)
 
+            # DTS2022071810333
+            save_pre_require_forward_param_sync_flag = model.require_forward_param_sync
+            model.require_forward_param_sync = False
             val_epoch_acc = validation(model, val_loader, criterion, epoch, writer, device)
+            model.require_forward_param_sync = save_pre_require_forward_param_sync_flag
             # deep copy the model and save if accuracy is better
             if val_epoch_acc > best_acc:
                 best_acc = val_epoch_acc
