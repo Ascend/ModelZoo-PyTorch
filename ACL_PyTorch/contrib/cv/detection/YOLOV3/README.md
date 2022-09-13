@@ -92,14 +92,12 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
    ```
    
 ## 准备数据集<a name="section183221994411"></a>
-
-1.获取原始数据集。
-
-    本模型支持coco2014验证集。
-    用户需自行获取数据集，将instances_val2014.json文件和val2014文件夹解压并上传数据集到源码包路径下。
-    coco2014验证集所需文件目录参考（只列出该模型需要的目录）。数据集下载链接(http://images.cocodataset.org/zips/val2014.zip)
+1. 获取原始数据集。
+   本模型支持coco2014验证集。
+   用户需自行获取数据集，将instances_val2014.json文件和val2014文件夹解压并上传数据集到源码包路径下。
+   coco2014验证集所需文件目录参考（只列出该模型需要的目录）。数据集下载链接(http://images.cocodataset.org/zips/val2014.zip)
     
-    数据集目录结构如下:
+   数据集目录结构如下:
 
     ```
        |-- coco2014                // 验证数据集
@@ -133,73 +131,77 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
         coco_2014.info数据集信息。
         yolov3_bin生成的二进制文件路径。
 
-3.生成数据集info文件。
+3. 生成数据集info文件。
     
     二进制输入info文件生成。
     使用get_coco_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。
+    
     运行get_coco_info.py脚本。
  
-    `python3.7 get_coco_info.py yolov3_bin ./coco_2014.info` 
+    `python3.7 get_coco_info.py yolov3_bin ./coco_2014.info       `  
        
     第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
 ## 模型推理<a name="section741711594517"></a>
 
-1. 模型转换
+1.  模型转换
 
-   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-    a. 获取权重文件。
-
-    从源码包中获取训练后的权重文件yolov3.pt。
-    源码包下载链接(https://www.hiascend.com/zh/software/modelzoo/models/detail/1/36ea401e0d844f549da2693c6289ad89)
+    a.  获取权重文件。
+     
+     从源码包中获取训练后的权重文件yolov3.pt。
+     
+     源码包下载链接(https://www.hiascend.com/zh/software/modelzoo/models/detail/1/36ea401e0d844f549da2693c6289ad89)
 
     b. 导出onnx文件。
 
-        将模型权重文件.pt转换为.onnx文件。 
+      将模型权重文件.pt转换为.onnx文件。 
 
-      1).将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
+      1).  将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
       
-      2).进入代码仓目录并将yolov3.pt移到当前目录下。
+      2).  进入代码仓目录并将yolov3.pt移到当前目录下。
       
-      3).修改models/export.py脚本，将转化的onnx算子版本设置为11。
-                    
+      3).  修改models/export.py脚本，将转化的onnx算子版本设置为11。
+
             ```
             torch.onnx.export(model, img, f, verbose=True, 
                                             opset_version=11, 
                                             input_names=['images'],
                                             do_constant_folding=True,
                                             output_names=['classes', 'boxes'] if y is None else ['output'])
-            
                                      ##原代码verbose=False修改为True，
                                             opset_version=12修改为11，
                                      添加参数do_constant_folding=True。
             ```
 
-      4).运行脚本：
-         
-            `python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1`
-         
-         参数介绍：
-            --weights：权重模型文件。
-            --img：图片大小。
-            --batch：batchsize大小。
+      4).  运行脚本：
+            
+        ```
+            python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
 
-        运行成功后，在当前目录生成yolov3.onnx模型文件。
+        ```
 
+      参数介绍：                                                         
+          --weights：权重模型文件。                                   
+          --img：图片大小。                                 
+          --batch：batchsize大小。                              
+        运行成功后，在当前目录生成yolov3.onnx模型文件。                                                 
         说明：models/export.py为yolov3官方github代码仓提供。 
 
     c.使用ATC工具将ONNX模型转OM模型。
     
-     1). 配置环境变量。
-
-            `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
+     1).  配置环境变量。
+                                     
+          `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
          
-         说明：该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+       说明：该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。
 
-       2). 执行命令查看芯片名称型号（$\{chip\_name\}）。
-```
-npu-smi info
+       详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+     2).  执行命令查看芯片名称型号（$\{chip\_name\}）。
+        
+        npu-smi info
          #该设备芯片名(${chip_name}=Ascend310P3)
          回显如下：
          +--------------------------------------------------------------------------------------------+
@@ -211,11 +213,10 @@ npu-smi info
          | 0       310P3     | OK              | 16.5         55                0    / 0              |
          | 0       0         | 0000:5E:00.0    | 0            931  / 21534                            |
          +===================+=================+======================================================+
-```        
+               
 
-       3). 执行ATC命令。
-       
-         ```
+     3).  执行ATC命令。
+         
          atc --model=yolov3.onnx 
              --framework=5 
              --output=yolov3_bs1 
@@ -224,21 +225,21 @@ npu-smi info
              --soc_version=${chip_name} 
              --input_shape="images:1,3,416,416" 
              --out_nodes="Reshape_219:0;Reshape_203:0;Reshape_187:0"
-         ```
+         
+       说明：out_nodes为onnx模型输出节点，可能会因为pytorch版本的不同和github源码的改动导致变化，需要使用者参考本模型压缩包中提供的onnx模型和上述atc命令做一定修改，保证输出节点的位置和顺序正确。
 
-            说明：out_nodes为onnx模型输出节点，可能会因为pytorch版本的不同和github源码的改动导致变化，需要使用者参考本模型压缩包中提供的onnx模型和上述atc命令做一定修改，保证输出节点的位置和顺序正确。
+       参数说明：
 
-             参数说明：
-                --model：为ONNX模型文件。
-                --framework：5代表ONNX模型。
-                --output：输出的OM模型。
-                --input_format：输入数据的格式。
-                --log：日志等级。
-                --soc_version：部署芯片类型。
-                --input_shape：输入数据的shape。
-                --out_nodes：输出节点名称。
+       --model：为ONNX模型文件。                                  
+       --framework：5代表ONNX模型。                                   
+       --output：输出的OM模型。                                               
+       --input_format：输入数据的格式。                            
+       --log：日志等级。                                        
+       --soc_version：部署芯片类型。                                
+       --input_shape：输入数据的shape。                    
+       --out_nodes：输出节点名称。                        
 
-            运行成功后生成yolov3_bs1.om文件。
+       运行成功后生成yolov3_bs1.om文件。
 
 2. 开始推理验证
 
@@ -271,22 +272,22 @@ npu-smi info
    解析输出特征图。
    解析ais_infer输出文件，经过阈值过滤，nms，坐标转换等输出坐标信息和类别信息txt文件。
        
-```
-python3.7 bin_to_predict_yolo_pytorch.py  
-        --bin_data_path result/dumpOutput_device0/  
-        --det_results_path  detection-results/ 
-        --origin_jpg_path val2014/ 
-        --coco_class_names coco2014.names 
-        --model_type yolov3 --net_input_size 416
-```
+        ```
+            python3.7 bin_to_predict_yolo_pytorch.py  
+                --bin_data_path result/dumpOutput_device0/  
+                --det_results_path  detection-results/ 
+                --origin_jpg_path val2014/ 
+                --coco_class_names coco2014.names 
+                --model_type yolov3 --net_input_size 416
+        ```
 
     参数说明：
 
-    --bin_data_path：benchmark的输出路径。
-    --det_results_path：解析后的txt文件路径，若不存在则创建。
-    --origin_jpg_path：原始图片路径。
-    --coco_class_name：coco数据集类型信息。
-    --model_type：默认为yolov5，这里选择yolov3。
+    --bin_data_path：benchmark的输出路径。                                            
+    --det_results_path：解析后的txt文件路径，若不存在则创建。                                                    
+    --origin_jpg_path：原始图片路径。                                                
+    --coco_class_name：coco数据集类型信息。                                            
+    --model_type：默认为yolov5，这里选择yolov3。                                                    
     --net_input_size 416：网络输入大小，默认为640。
 
    d.精度验证。
@@ -299,7 +300,7 @@ python3.7 bin_to_predict_yolo_pytorch.py
 
     参数说明：
 
-    --label_path：coco数据集标签。
+    --label_path：coco数据集标签。                                                                                    
     --npu_txt_path：上一步解析的txt文件路径。
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
