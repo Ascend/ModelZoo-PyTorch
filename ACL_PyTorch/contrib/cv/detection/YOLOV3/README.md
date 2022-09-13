@@ -95,9 +95,9 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
 1.获取原始数据集。
 
-    本模型支持coco2014验证集。用户需自行获取数据集，将instances_val2014.json文件和val2014文件夹解压并上传数据集到源码包路径下。
-    coco2014验证集所需文件目录参考（只列出该模型需要的目录）。
-    数据集下载链接(http://images.cocodataset.org/zips/val2014.zip)
+    本模型支持coco2014验证集。
+    用户需自行获取数据集，将instances_val2014.json文件和val2014文件夹解压并上传数据集到源码包路径下。
+    coco2014验证集所需文件目录参考（只列出该模型需要的目录）。数据集下载链接(http://images.cocodataset.org/zips/val2014.zip)
     
     数据集目录结构如下:
 
@@ -106,6 +106,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
            |-- instances_val2014.json    //验证集标注信息  
            |-- val2014             // 验证集文件夹
     ```
+
    
 2. 数据预处理。
 
