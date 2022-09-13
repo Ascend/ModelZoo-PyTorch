@@ -170,19 +170,18 @@ git clone {repository_url}        # 克隆仓库的代码
       2).进入代码仓目录并将yolov3.pt移到当前目录下。
       
       3).修改models/export.py脚本，将转化的onnx算子版本设置为11。
+                    
+            ```
+            torch.onnx.export(model, img, f, verbose=True, 
+                                            opset_version=11, 
+                                            input_names=['images'],
+                                            do_constant_folding=True,
+                                            output_names=['classes', 'boxes'] if y is None else ['output'])
             
-```
-torch.onnx.export(model, img, f, verbose=True, 
-                                opset_version=11, 
-                                input_names=['images'],
-                                do_constant_folding=True,
-                                output_names=['classes', 'boxes'] if y is None else ['output'])
-
-                         ##原代码verbose=False修改为True，
-                                opset_version=12修改为11，
-                         添加参数do_constant_folding=True。
-```
-
+                                     ##原代码verbose=False修改为True，
+                                            opset_version=12修改为11，
+                                     添加参数do_constant_folding=True。
+            ```
 
       4).运行脚本：
          
@@ -310,7 +309,7 @@ python3.7 bin_to_predict_yolo_pytorch.py
     --label_path：coco数据集标签。
     --npu_txt_path：上一步解析的txt文件路径。
 
-## 模型推理性能
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
 
