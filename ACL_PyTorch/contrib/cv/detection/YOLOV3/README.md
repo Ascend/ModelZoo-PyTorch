@@ -170,9 +170,9 @@ git clone {repository_url}        # 克隆仓库的代码
       2).进入代码仓目录并将yolov3.pt移到当前目录下。
       
       3).修改models/export.py脚本，将转化的onnx算子版本设置为11。
-      
-         ```
-            torch.onnx.export(model, img, f, verbose=True, 
+            
+```
+torch.onnx.export(model, img, f, verbose=True, 
                                 opset_version=11, 
                                 input_names=['images'],
                                 do_constant_folding=True,
@@ -181,14 +181,12 @@ git clone {repository_url}        # 克隆仓库的代码
                          ##原代码verbose=False修改为True，
                                 opset_version=12修改为11，
                          添加参数do_constant_folding=True。
-         ```
+```
 
 
       4).运行脚本：
-      
-         ```
-            python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
-         ```
+         
+            `python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1`
          
          参数介绍：
             --weights：权重模型文件。
@@ -205,13 +203,9 @@ git clone {repository_url}        # 克隆仓库的代码
 
             `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
          
-
          说明：该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
        2). 执行命令查看芯片名称型号（$\{chip\_name\}）。
-
-         
-         
 ```
 npu-smi info
          #该设备芯片名(${chip_name}=Ascend310P3)
@@ -225,9 +219,7 @@ npu-smi info
          | 0       310P3     | OK              | 16.5         55                0    / 0              |
          | 0       0         | 0000:5E:00.0    | 0            931  / 21534                            |
          +===================+=================+======================================================+
-```
-
-         
+```        
 
        3). 执行ATC命令。
        
@@ -260,7 +252,7 @@ npu-smi info
 
    a. 使用ais-infer工具进行推理。
 
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    b. 执行推理。
 
@@ -268,27 +260,33 @@ npu-smi info
 
    ```
        mkdir ais_infer_result
-       python3 ais_infer.py --ais_infer_path ${ais_infer_path} --model yolov3_bs1.om --input yolov3_bin --batchsize=1 --output ais_infer_result
+       python3 ais_infer.py --ais_infer_path ${ais_infer_path} 
+                            --model yolov3_bs1.om 
+                            --input yolov3_bin 
+                            --batchsize=1 
+                            --output ais_infer_result
    ```
+      推理后的输出默认在当前目录result下。
 
-    参数说明:
-      --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer”。
+      参数说明:
+          --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer”。
 
-   说明： 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      >**说明：**
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    c. 模型后处理。
    
    解析输出特征图。
    解析ais_infer输出文件，经过阈值过滤，nms，坐标转换等输出坐标信息和类别信息txt文件。
-
-   ```
-       python3.7 bin_to_predict_yolo_pytorch.py  
+       
+```
+python3.7 bin_to_predict_yolo_pytorch.py  
         --bin_data_path result/dumpOutput_device0/  
         --det_results_path  detection-results/ 
         --origin_jpg_path val2014/ 
         --coco_class_names coco2014.names 
         --model_type yolov3 --net_input_size 416
-   ```
+```
 
     参数说明：
 
