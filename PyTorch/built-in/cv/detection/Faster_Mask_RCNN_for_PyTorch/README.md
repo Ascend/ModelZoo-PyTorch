@@ -47,8 +47,8 @@ FasterRCNN是一个业界领先的目标检测网络，他继承了FastRCNN的�
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.15](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |
+  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
 - 环境准备指导。
@@ -175,9 +175,9 @@ python3.7 -m pip install -e Faster_Mask_RCNN_for_PyTorch
 | NAME    | Acc@1 |  FPS | Epochs | AMP_Type |
 | ------- | ----- | ---: | ------ | -------: |
 | 1p-NPU1.5 | -     |  10.735 | -      |        O2 |
-| 1p-NPU1.8  | -     |  8.23 | -      |       O2 |
+| 1p-NPU1.8  | -     |  11.05 | -      |       O2 |
 | 8p-NPU1.5 | 26.773 | 76.5 | -    |        O2 |
-| 8p-NPU1.8  | 32.3 | 58.8 | -    |       O2 |
+| 8p-NPU1.8  | 27 | 86.3 | -    |       O2 |
 
 # 版本说明
 
