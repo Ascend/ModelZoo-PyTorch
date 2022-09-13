@@ -1,37 +1,48 @@
-YoloV3模型-推理指导
+
+{YoloV3}模型-推理指导
+
+
 概述
 
-- 推理环境准备
+推理环境准备
 
-- 快速上手
+快速上手
 
-  - 获取源码
-  - 准备数据集
-  - 模型推理
+    获取源码
+    准备数据集
+    模型推理
 
-- 模型推理性能
+模型推理性能
 
-- 配套环境
+配套环境
 
 ## 概述
 
 YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv3采用了一个新的backbnone——Darknet-53来进行特征提取工作，这个新网络比Darknet-19更加强大也比ResNet-101或者ResNet-152更加高效。同时，对于一张输入图片，YOLOv3可以在3个不同的尺度上预测物体框，每个尺度预测三种大小的边界框。通过这种多尺度联合预测的方式有效提升了小目标的检测精度。
 
-- 参考论文：Redmon, Joseph, and Ali Farhadi. "Yolov3: An incremental improvement. arXiv 2018." arXiv preprint arXiv:1804.02767 (2018): 1-6.
+`参考论文：Redmon, Joseph, and Ali Farhadi. "Yolov3: An incremental improvement. arXiv 2018." arXiv preprint arXiv:1804.02767 (2018): 1-6.`
 
-- 参考实现：
+    
+```
+参考实现：
     url=https://github.com/ultralytics/yolov3.git
     branch=master
     commit_id=166a4d590f08b55cadfebc57a11a52ff2fc2b7d3
     model_name=yolov3
+```
+
     
 通过Git获取对应commit_id的代码方法如下：
 
-    git clone {repository_url}        # 克隆仓库的代码
+    
+```
+git clone {repository_url}        # 克隆仓库的代码
     cd {repository_name}              # 切换到模型的代码仓目录
     git checkout {branch/tag}         # 切换到对应分支
     git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
     cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+```
+
 
 ### 输入输出数据
 
@@ -125,16 +136,14 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 3.生成数据集info文件。
 
     二进制输入info文件生成。
-    使用ais_infer推理需要输入二进制数据集的info文件，用于获取数据集。
     使用get_coco_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。
     运行get_coco_info.py脚本。 
 
    ```
-    python3.7 get_coco_info.py yolov3_bin ./coco_2014.info ./yolov3.info
+    python3.7 get_coco_info.py yolov3_bin ./coco_2014.info 
    ```
    
-    第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件，第三个参数为生成的数据集二进制info文件。
-    运行成功后，在当前目录中生成yolov3.info。
+    第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
 ### 模型推理
 
@@ -148,26 +157,27 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
     b. 导出onnx文件。
         将模型权重文件.pt转换为.onnx文件。 
-        
-      1). 下载代码仓。
 
+      1).将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
+      
+      2).进入代码仓目录并将yolov3.pt移到当前目录下。
+      
+      3).修改models/export.py脚本，将转化的onnx算子版本设置为11。
+      
          ```
-            git clone https://github.com/ultralytics/yolov3.git
-            cd yolov3
-            git reset --hard 166a4d590f08b55cadfebc57a11a52ff2fc2b7d3
+            torch.onnx.export(model, img, f, verbose=True, 
+                                opset_version=11, 
+                                input_names=['images'],
+                                do_constant_folding=True,
+                                output_names=['classes', 'boxes'] if y is None else ['output'])
+
+            ##原代码verbose=False修改为True，
+                   opset_version=12修改为11，
+                   添加参数do_constant_folding=True。
          ```
 
-      2).将代码仓上传至服务器任意路径下如（如：/home/HwHiAiUser）。
-      
-      3).进入代码仓目录并将yolov3.pt移到当前目录下。
-      
-      4).修改models/export.py脚本，将转化的onnx算子版本设置为11。
-      
-         ```
-            torch.onnx.export(model, img, f, verbose=True, opset_version=11, input_names=['images'],do_constant_folding=True,output_names=['classes', 'boxes'] if y is None else ['output'])
-         ```
-         
-      5).运行脚本：
+
+      4).运行脚本：
       
          ```
             python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
@@ -186,12 +196,11 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     
      1). 配置环境变量。
 
-         ```
-         source /usr/local/Ascend/ascend-toolkit/set_env.sh
-         ```
+        
+         `source /usr/local/Ascend/ascend-toolkit/set_env.sh`
+         
 
-         > **说明：** 
-         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+         说明：该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
        2). 执行命令查看芯片名称型号（$\{chip\_name\}）。
 
@@ -224,6 +233,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
          ```
 
             说明：out_nodes为onnx模型输出节点，可能会因为pytorch版本的不同和github源码的改动导致变化，需要使用者参考本模型压缩包中提供的onnx模型和上述atc命令做一定修改，保证输出节点的位置和顺序正确。
+
              参数说明：
                 --model：为ONNX模型文件。
                 --framework：5代表ONNX模型。
