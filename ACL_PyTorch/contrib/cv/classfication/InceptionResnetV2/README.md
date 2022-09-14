@@ -134,13 +134,13 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
 1. 获取原始数据集。
 
-   该模型使用ImageNet官网的5万张验证集进行测试，图片与标签分别存放在/home/DATASETS/imagenet/val与/home/DATASETS/imagenet/val_label.txt
+   该模型使用ImageNet官网的5万张验证集进行测试，图片与标签分别存放在/home/DATASET/imagenet/ILSVRC2012_img_val/与/home/DATASET/imagenet/val_label.txt
 
 2. 数据预处理。
 
    执行预处理脚本，将原始数据集转换为模型输入的bin文件，存放在当前目录下的prep_dataset文件夹中
    ```
-   python imagenet_torch_preprocess.py inceptionresnetv2 /root/datasets/imagenet/val ./prep_dataset
+   python imagenet_torch_preprocess.py /home/DATASET/imagenet/ILSVRC2012_img_val ./prep_dataset
    ```
 
 ### 模型推理
@@ -153,16 +153,14 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
       下载权重文件，[链接](https://gitee.com/link?target=http%3A%2F%2Fdata.lip6.fr%2Fcadene%2Fpretrainedmodels%2Finceptionresnetv2-520b38e4.pth)
        ```
-       wget http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth
+       wget -c -t 0 http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth --no-check-certificate
        ```
 
    2. 导出onnx文件。
+   
       a. 下载开源模型仓库
          ```
          git clone https://github.com/Cadene/pretrained-models.pytorch
-         cd pretrained-models.pytorch
-         git reset --hard 3c92fbda001b6369968e7cb1a5706ee6bf6c9fd7
-         cd ..
          ```
 
       b. 使用inceptionresnetv2_pth2onnx.py导出onnx文件。
@@ -227,18 +225,30 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a. 安装ais-infer工具, 参考《[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》
+
+   ```
+   git clone https://gitee.com/ascend/tools.git
+   cd tools/ais-bench_workload/tool/ais_infer/backend
+   pip wheel ./
+   ls
+   pip install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl --force-reinstall
+   cd ../../../../../
+   ```
+
+   b. 使用ais-infer工具进行推理。
 
       执行命令增加工具可执行权限，并根据OS架构选择工具
 
       ```
-      chmod u+x ais_infer.py
+      chmod u+x tools/ais-bench_workload/tool/ais_infer/ais_infer.py
       ```
 
-   b.  执行推理。
+   c. 执行推理。
 
       使用batch size为1的om模型文件进行推理，其他batch size可作相应的修改
       ```
+      mkdir ./result
       python ais_infer.py --model ./inceptionresnetv2_bs1.om --batchsize 1 --input ./prep_dataset --output ./result --outfmt TXT --device 0
       ```
 
@@ -256,7 +266,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
       >**说明：** 
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见《[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
 
-   c.  精度验证。
+   d.  精度验证。
 
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在当前目录下perf文件夹中的perf_bs1.json文件中。
 
