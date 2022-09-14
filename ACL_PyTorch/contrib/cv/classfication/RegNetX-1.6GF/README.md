@@ -27,8 +27,6 @@
 
 RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这样的扩展的网络家族。它是一个被量化的线性规则限制的设计空间，期望包含好的模型。
 
-<u>***简单描述模型的结构、应用、优点等信息。***</u>
-
 
 - 参考实现：
 
@@ -37,7 +35,6 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
   commit_id=742c2d524726d426ea2745055a5b217c020ccc72
   model_name=RegNetX-1.6GF
   ```
-
 
   通过Git获取对应commit\_id的代码方法如下：
 
@@ -65,7 +62,6 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
   | -------- | -------- | -------- | ------------ |
   | output1  | 1 x 1000 | FLOAT32  | ND           |
 
-<u>***请按照如上表格描述输入/输出数据的大小、数据类型、数据排布格式，若有多条输入请添加多条数据。若只有一条数据，则只有一行描述即可***</u>
 
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -117,7 +113,7 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
    数据预处理将原始数据集转换为模型输入的数据。
 
-   执行XXX脚本，完成预处理。
+   执行imagenet_torch_preprocess.py脚本，完成预处理。
 
    ```
    执行imagenet_torch_preprocess.py脚本。
@@ -130,20 +126,15 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
    运行成功后，在当前目录中生成RegNetX-1.6GF_prep_bin.info。
    ```
 
-  <u>***需写明预处理执行命令，包括命令代码、参数说明、运行成功后生成文件，有其他说明请单独写出。***</u>
-
-
 ## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 导出onnx文件。
+   1. 使用RegNetX_onnx.py导出onnx文件。
 
-      1. 使用XXX导出onnx文件。<u>***请用脚本名称替换xxx***</u>
-
-         运行XXX脚本。
+         运行RegNetX_onnx.py脚本。
 
          ```
          −下载代码仓，到ModleZoo获取的源码包根目录下。
@@ -156,10 +147,10 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
          运行成功后生成RegNetX-1.6GF.onnx模型文件
          ```
 
-         获得XXX.onnx文件。
+         获得RegNetX-1.6GF.onnx文件。
 
 
-   3. 使用ATC工具将ONNX模型转OM模型。
+   2. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
@@ -205,7 +196,7 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
 
 
-2. 开始推理验证。<u>***根据实际推理工具编写***</u>
+2. 开始推理验证。
 
    a.  使用ais-infer工具进行推理。
 
@@ -228,9 +219,6 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
       推理后的输出默认在当前目录result下。
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-
    c.  精度验证。
 
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
@@ -239,7 +227,7 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
        python3.7 vision_metric_ImageNet.py result/output_dirname/ ./val_label.txt ./ result.json
       ```
 
-      result/output_dirname/：为生成推理结果所在路径  <u>***参数解释***</u>
+      result/output_dirname/：为生成推理结果所在路径  
     
       val_label.txt：为标签数据
     
