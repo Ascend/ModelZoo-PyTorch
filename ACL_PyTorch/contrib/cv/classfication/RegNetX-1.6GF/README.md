@@ -1,4 +1,4 @@
-# {模型名称}模型-推理指导
+# {RegNetX-1.6GF}模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -25,7 +25,7 @@
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网络将MobileNetV1和ResNet的残差单元结合，相比MobileNetV1网络，一是在Depth-wise卷积之前加入了一个Point-wise卷积，二是将最后输出的ReLU6去掉，直接线性输出，避免特征信息的损失；相比ResNet，采用倒置残差，先升维（6倍）再卷积最后降维。
+RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这样的扩展的网络家族。它是一个被量化的线性规则限制的设计空间，期望包含好的模型。
 
 <u>***简单描述模型的结构、应用、优点等信息。***</u>
 
@@ -37,12 +37,6 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
   commit_id=742c2d524726d426ea2745055a5b217c020ccc72
   model_name=RegNetX-1.6GF
   ```
-
-  *<u>**url=参考的模型源代码git地址，强烈建议使用release分支版本的地址**</u>*
-
-  *<u>**commit\_id例如：291f7e20339510cfa956b5782741697eb8e6d554**</u>*
-  
-  *<u>**model\_name: 子模型名，开源仓往往会提供很多子模型，需说明推理的是哪一个子模型，比如[Segmenter](https://github.com/rstrudel/segmenter)下的Seg-L-Mask/16模型**</u>*
 
 
   通过Git获取对应commit\_id的代码方法如下：
@@ -164,13 +158,6 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 
          获得XXX.onnx文件。
 
-      2. 优化ONNX文件。<u>***不存在此步骤可删除***</u>
-
-         ```
-         
-         ```
-
-         获得xxx.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -228,14 +215,15 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
    b.  执行推理。
 
       ```
-        
+        python3.7 ais_infer.py --model /home/tangxiao/file/RegNetX-1.6GF_bs1.om --input “/home/tangxiao/RegNetX-1.6GF/prep_dataset” --output “/home/tangxiao/RegNetX-1.6GF/result” --outfmt TXT
       ```
 
       -   参数说明：
 
-           -   xxx：模型类型。
-           -   xxx：om文件路径。
-           -   xxx：NPU设备编号。
+           -   model：om文件路径。
+           -   input：数据集预处理后的文件。
+           -   output:推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
+           -   outfmt:输出结果的格式，指定为txt格式。
 		...
 
       推理后的输出默认在当前目录result下。
@@ -248,10 +236,10 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-       python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
+       python3.7 vision_metric_ImageNet.py result/output_dirname/ ./val_label.txt ./ result.json
       ```
 
-      result/dumpOutput_device0/：为生成推理结果所在路径  <u>***参数解释***</u>
+      result/output_dirname/：为生成推理结果所在路径  <u>***参数解释***</u>
     
       val_label.txt：为标签数据
     
