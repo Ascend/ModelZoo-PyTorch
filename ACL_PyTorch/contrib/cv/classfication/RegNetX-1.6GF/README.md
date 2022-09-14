@@ -33,9 +33,9 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 - 参考实现：
 
   ```
-  url=branch=master
-  commit_id=
-  model_name=
+  url=https://github.com/rwightman/pytorch-image-models.git
+  commit_id=742c2d524726d426ea2745055a5b217c020ccc72
+  model_name=RegNetX-1.6GF
   ```
 
   *<u>**url=参考的模型源代码git地址，强烈建议使用release分支版本的地址**</u>*
@@ -50,7 +50,7 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
   ```
   git clone {repository_url}        # 克隆仓库的代码
   cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
+  git checkout {branch}         # 切换到对应分支
   git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
   cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
@@ -85,7 +85,7 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.6.0   | -                                                            |
+| PyTorch                                                      | 1.8.1   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -95,7 +95,16 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 1. 获取源码。
 
    ```
-   
+   步骤1 单击“立即下载”，下载源码包。
+   步骤2 上传源码包到服务器任意目录并解压
+         ├── README.md
+         ├── RegNetX_onnx.py                  //转onnx脚本
+         ├── imagenet_torch_preprocess.py     //数据集预处理脚本，生成图片二进制文件
+         ├── RegNetX-1.6GF_prep_bin.info      //数据集info文件，用于benchmark推理获取数据集
+         ├── get_info.py                      //生成推理输入的数据集二进制info文件或jpg info文件
+         ├── vision_metric_ImageNet.py        //精度验证脚本
+         ├── requirements.txt
+          ----结束
    ```
 
 2. 安装依赖。
@@ -108,7 +117,7 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   <u>***写清楚原始数据集名称、下载链接、所用到的文件、存放路径、目录结构。***</u>
+   <u>***本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。***</u>
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
@@ -117,7 +126,14 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
    执行XXX脚本，完成预处理。
 
    ```
+   执行imagenet_torch_preprocess.py脚本。
+   python3.7 imagenet_torch_preprocess.py /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset
+   第一个参数为原始数据验证集（.jpeg）所在路径，第二个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
    
+   使用ais推理需要输入二进制数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。运行get_info.py脚本。
+   python3.7 get_info.py bin ./prep_dataset ./RegNetX-1.6GF_prep_bin.info 224 224
+   第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件路径，第三个参数为生成的数据集文件保存的路径，第四个和第五个参数分别为模型输入的宽度和高度。
+   运行成功后，在当前目录中生成RegNetX-1.6GF_prep_bin.info。
    ```
 
   <u>***需写明预处理执行命令，包括命令代码、参数说明、运行成功后生成文件，有其他说明请单独写出。***</u>
@@ -129,18 +145,21 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。
-
-       <u>***写清楚权重文件的获取方式：下载链接***</u>
-
-   2. 导出onnx文件。
+   1. 导出onnx文件。
 
       1. 使用XXX导出onnx文件。<u>***请用脚本名称替换xxx***</u>
 
          运行XXX脚本。
 
          ```
-         
+         −下载代码仓，到ModleZoo获取的源码包根目录下。
+         git clone https://github.com/rwightman/pytorch-image-models
+         cd pytorch-image-models
+         python3.7 setup.py install
+         cd ..
+         −执行脚本。 
+         python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
+         运行成功后生成RegNetX-1.6GF.onnx模型文件
          ```
 
          获得XXX.onnx文件。
@@ -158,7 +177,7 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/......
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 
@@ -184,21 +203,18 @@ MobileNetV2是针对移动端专门定制的轻量级卷积神经网络，该网
 
       3. 执行ATC命令。
          ```
-          
+          atc --framework=5 --model=./RegNetX-1.6GF.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=RegNetX-1.6GF_bs1 --log=debug --soc_version=Ascend${chip_name}
          ```
 
-         - 参数说明：
-
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
-
-           运行成功后生成<u>***XX.om***</u>模型文件。
+         参数说明： 
+                 --model：为ONNX模型文件。
+                 --framework：5代表ONNX模型。
+                 --output：输出的OM模型。
+                 --input_format：输入数据的格式。
+                 --input_shape：输入数据的shape。
+                 --log：日志级别。
+                 --soc_version：处理器型号。
+             运行成功后生成RegNetX-1.6GF_bs1.om模型文件。
 
 
 
