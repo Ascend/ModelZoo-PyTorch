@@ -13,7 +13,7 @@
 	-   [4.2 数据集预处理](#42-数据集预处理)
 	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
 -   [5 离线推理](#5-离线推理)
-	-   [5.1 ais工具概述](#51-benchmark工具概述)
+	-   [5.1 ais_infer工具概述](#51-ais_infer工具概述)
 	-   [5.2 离线推理](#52-离线推理)
 -   [6 精度对比](#6-精度对比)
 	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
@@ -102,7 +102,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ```
-atc --framework=5 --model=./RegNetX-1.6GF.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=RegNetX-1.6GF_bs1 --log=debug --soc_version=Ascend710
+atc --framework=5 --model=./RegNetX-1.6GF.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=RegNetX-1.6GF_bs1 --log=debug --soc_version=Asend{chip_name}
 
 ```
 
@@ -134,13 +134,13 @@ python3.7 get_info.py bin ./prep_dataset ./RegNetX-1.6GF_prep_bin.info 224 224
 第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
 ## 5 离线推理
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+-   **[ais工具概述](#51-ais工具概述)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 benchmark工具概述
+### 5.1 ais_infer工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+ais_infer工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
 ### 5.2 离线推理
 1.设置环境变量
 ```
@@ -148,9 +148,9 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=RegNetX-1.6GF_bs1.om -input_text_path=./RegNetX-1.6GF_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+python3.7.5 ais_infer.py --model /home/tangxiao/file/RegNetX-1.6GF_bs1.om --input "/home/tangxiao/RegNetX-1.6GF/prep_datase" --output "/home/tangxiao/RegNetX-1.6GF/result" --outfmt TXT
 ```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
+输出结果默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
 
 ## 6 精度对比
 
@@ -164,9 +164,9 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 调用vision_metric_ImageNet.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 ```
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ root/datasets/imagenet/val_label.txt ./ result_bs1.json
+python3.7 vision_metric_ImageNet.py ./result/output_dirname/ opt/npu/val_label.txt ./ result_bs.json
 ```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
+第一个为ais_infer输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
 查看输出结果：
 ```
 {"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "76.93%"}, {"key": "Top2 accuracy", "value": "86.72%"}, {"key": "Top3 accuracy", "value": "90.25%"}, {"key": "Top4 accuracy", "value": "92.16%"}, {"key": "Top5 accuracy", "value": "93.42%"}]}
@@ -191,7 +191,7 @@ regnetx_016	76.950	23.050	    93.420	6.580	    9.19	     224	    0.875	     bicu
 -   **[性能对比](#73-性能对比)**  
 
 ### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
+ais_infer工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用ais_infer纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准。模型的性能以使用ais_infer工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用ais_infer工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
 1.benchmark工具在整个数据集上推理获得性能数据,在310上的性能
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 
@@ -215,22 +215,22 @@ batch64 310吞吐率：3186.384fps
 2.在310p上的性能
 
 batch1性能：
-batch1 310p吞吐率：1398.37fps 
+batch1 310p吞吐率：1677.04fps 
 
 batch4性能：
-batch4 310p吞吐率：3482.89fps
+batch4 310p吞吐率：4372.53fps
 
 batch8性能：
-batch8 310p吞吐率：4539.23fps
+batch8 310p吞吐率：5486.04fps
 
 batch16性能：
-batch16 310p吞吐率：4165.26fps
+batch16 310p吞吐率：3934.81fps
 
 batch32性能：
-batch32 310p吞吐率：3885.52fps
+batch32 310p吞吐率：3752.48fps
 
 batch64性能：
-batch64 310p吞吐率：3751.23fps
+batch64 310p吞吐率：3623.42fps
 
 ### 7.2 T4性能数据
 在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
@@ -262,15 +262,4 @@ batch64 t4吞吐率：2276.486fps
 
 ### 7.3 性能对比
 模型的所有batch_size都能满足在310p上的性能高于在310上的性能，同时在310p上的性能也能达到在t4性能的1.6倍以上
- **性能优化：**  
-最初的bs1和bs8并没有达到性能要求，bs1做的优化如下：
-
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
-export PATH=/usr/local/python3.7.5/bin:$PATH
-export TUNE_BANK_PATH=保存aoe知识库的路径
-
-aoe --framework 5 --model RegNetX-1.6GF_bs1.onnx --job_type 2 --output RegNetX-1.6GF_bs1 --input_shape"image:1,3,224,224" --log error
-
-bs8做的优化如下：
-
-aoe --framework 5 --model RegNetX-1.6GF_bs8.onnx --job_type 1 --output RegNetX-1.6GF_bs8 --input_shape"image:8,3,224,224" --log error
+ 
