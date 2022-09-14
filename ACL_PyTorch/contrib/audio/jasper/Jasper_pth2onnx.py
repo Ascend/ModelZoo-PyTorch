@@ -29,7 +29,6 @@ def pth2onnx(ckpt_path,out_path,bs):
     model.load_state_dict(state_dict, strict=True)
     model.eval()
 
-    # feats = torch.randn([4, 64, 4000], dtype=torch.float32)
     bs = int(bs)
     feats = torch.randn([bs, 64, 4000], dtype=torch.float32)
     feat_lens = torch.tensor([1000], dtype=torch.int32)
