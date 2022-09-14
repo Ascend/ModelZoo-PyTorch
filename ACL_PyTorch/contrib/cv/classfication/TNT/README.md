@@ -218,7 +218,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
    b.  执行推理。
 
       ```
-        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT --batch_size 1
+        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT --batchsize 1
       ```
 
       -   参数说明：
