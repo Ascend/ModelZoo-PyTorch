@@ -7,4 +7,5 @@ opencv-python == 4.5.2.54
 yacs == 0.1.8
 pytorch-ignite == 0.4.5
 timm=0.4.12
+protobuf=3.20.1
 onnx-simplifier
