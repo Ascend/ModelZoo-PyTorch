@@ -97,7 +97,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 2. 安装依赖。
 
    ```
-   pip3 install -r requirment.txt
+   pip3 install -r requirements.txt
    ```
 
    其中mmcv需要用以下方式安装。
