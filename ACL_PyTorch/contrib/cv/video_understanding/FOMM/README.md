@@ -29,7 +29,7 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 ```
 url=https://github.com/AliaksandrSiarohin/first-order-model.git
 branch=master
-commit_id=
+commit_id=0b04120d53abadf50cc283349e1bb8c6ae693ebc
 model_name=FOMM
 ```
 
