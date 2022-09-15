@@ -87,7 +87,7 @@ model_name=FOMM
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC1 | -                                                            |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.11.0  | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -98,57 +98,93 @@ model_name=FOMM
 
 1. 获取源码。
 
+   在`FOMM/`下执行如下命令：
+
    ```shell
    git clone https://github.com/AliaksandrSiarohin/first-order-model.git
    ```
 
-2. 安装依赖。
+2. 整理目录
+
+   由于在进行模型转换的时候，FOMM中使用的某些算子是onnx所不支持的，所以需要对FOMM中的某些代码进行一定的改动，所以在PR中的FOMM/my_script/目录下我们提供了修改后的python程序，用以替换github源码仓拉去下来的源码中的部分程序。除此之外，该目录下还有一些其他脚本和环境依赖requirements文件。所以我们需要先整理一下项目目录，以满足后续开发使用需求。
+
+   执行以下命令整理项目目录：
+
+   ```shell
+   cd first-order-model
+   mv * ../
+   cd ..
+   rm -rf first-order-model
+   cd my_script
+   mv modules/generator.py ../modules/generator.py
+   mv modules/dense_motion.py ../modules/dense_motion.py
+   
+   mv reconstruction.py ../
+   mv requirements.txt ../
+   mv taichi-256.yaml ../config/
+   mv logger.py ../
+   
+   cd ..
+   ```
+
+3. 安装依赖。
 
    ```shell
    pip3 install -r requirements.txt
    ```
 
-3. 安装其他依赖
+4. 安装其他依赖
 
-   在项目目录下安装以下依赖：
+   在`FOMM/`下安装以下依赖：
 
    maskrcnn-benchmark：
 
    ```shell
    git clone https://github.com/facebookresearch/maskrcnn-benchmark.git
-   pip install requirements.txt
+   cd maskrcnn-benchmark
    python setup.py install
+   cd ..
    ```
 
    pose-evaluation：
 
-   首先下载pose_model.pth，保存到项目目录下，下载链接为：https://yadi.sk/d/0L-PgAaGRKgkJA
+   首先下载pose_model.pth，保存到`FOMM/`下，下载链接为：https://yadi.sk/d/0L-PgAaGRKgkJA
 
-   然后依次执行如下命令
+   然后在`FOMM/`下依次执行如下命令
 
    ```shell
    git clone --recursive https://github.com/AliaksandrSiarohin/pose-evaluation
-   mkdir pose-evaluation/pose_estimation/weight/
-   mv pose_model.pth pose-evaluation/pose_estimation/weight/
+   mkdir pose-evaluation/pose_estimation/network/weight/
+   mv pose_model.pth pose-evaluation/pose_estimation/network/weight/
    ```
 
    ascend tools：
 
-   执行如下命令安装ascend tools推理工具包：
+   在`FOMM/`下执行如下命令安装ascend tools推理工具包：
 
    ```shell
    git clone https://gitee.com/Ascend/tools.git
    ```
 
-4. 替换个别脚本
+   编译并安装aclruntime工具，依次执行如下命令：
 
-   由于在实验过程中，有算子不支持的情况出现，源码中的某些内容需要进行略微改动，这里提供了修改后的版本，可直接下载使用PR中的版本，也可从下方链接中下载，替换源码仓中的文件。
-
-   下载链接：https://pan.baidu.com/s/1etIgrlEj18GYJD-ZGH09tg
-
-   提取码：1234
-
-   将PR上或者链接里的modules文件夹下载下来以后，用文件夹里的dense_motion.py和generator.py替换源码仓中的modules/dense_motion.py和modules/generator.py。
+   ```shell
+   cd ./tools/ais-bench_workload/tool/ais_infer/backend/
+   pip wheel ./
+   pip install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+   cd /home/.../FOMM/
+   ```
+   
+   magiconnx:
+   
+   在`FOMM/`下依次执行如下命令安装该包：
+   
+   ```shell
+   git clone https://gitee.com/Ronnie_zheng/MagicONNX.git
+   cd MagicONNX
+   pip install .
+   cd ..
+   ```
 
 ## 准备数据集
 
@@ -160,7 +196,7 @@ model_name=FOMM
 
    提取码：1234
 
-   下载下来以后放在./data/目录下。
+   下载下来以后放在`FOMM/data/`目录下。
 
    保存好后目录结构大致如下：
 
@@ -174,27 +210,47 @@ model_name=FOMM
           |   `-- ...
           `-- train
    ```
-   
-2. 数据预处理。
+
+2. 获取权重文件。
+
+   下载链接：https://drive.google.com/open?id=1PyQJmkdCsAkOYwUyaj_l-l0as-iLDgeH
+
+   打开链接后只下载云盘里的taichi-cpk.pth.tar即可
+
+   然后在`FOMM/`下执行如下命令：
+
+   ```shell
+   mkdir checkpoint
+   ```
+
+   将下载后的权重文件保存在`FOMM/checkpoint/`下
+
+   ```
+   checkpoint
+      |-- taichi-cpk.pth.tar
+      |-- ...
+   ```
+
+3. 数据预处理。
 
    数据预处理将原始数据集转换为模型输入的数据。
 
-   执行FOMM/FOMM_preprocess.py脚本，完成数据预处理。
+   执行`FOMM_preprocess.py`脚本，完成数据预处理。
 
    ```shell
    python FOMM_preprocess.py --config config/taichi-256.yaml --checkpoint checkpoint/taichi-cpk.pth.tar --data_type npy --out_dir pre_data/
    ```
-   
+
    参数说明
-   
+
    * config：配置文件的相对路径
-   
+
    * checkpoint：检查点文件（.pth.tar文件）的相对路径
    * data_type：输出的数据的格式，npy或bin（建议使用npy格式）
    * out_dir：输出的数据保存的位置，默认为”./pre_data/“。（建议使用默认值）
-   
-   运行成功后，分别在**./pre_data/driving/和./pre_data/source/**两个文件夹下生成对应的npy数据文件
-   
+
+   运行成功后，分别在**FOMM/pre_data/driving/和FOMM/pre_data/source/**两个文件夹下生成对应的npy数据文件
+
    ```
    pre_data
       |-- driving
@@ -216,29 +272,16 @@ model_name=FOMM
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。
+   （1）导出onnx文件。
 
-   下载链接：https://drive.google.com/open?id=1PyQJmkdCsAkOYwUyaj_l-l0as-iLDgeH
+   使用FOMM_pth2onnx.py导出onnx文件。
 
-   打开链接后只下载云盘里的taichi-cpk.pth.tar即可
+   在`FOMM/`下执行如下命令：
 
-   将下载后的权重文件保存在./checkpoint/下
-
+   ```shell
+   mkdir taichi-onnx
+   python FOMM_pth2onnx.py --config config/taichi-256.yaml --checkpoint checkpoint/taichi-cpk.pth.tar --outdir taichi-onnx --genname taichi-gen-bs1 --kpname taichi-kp-bs1
    ```
-   checkpoint
-      |-- taichi-cpk.pth.tar
-      |-- ...
-   ```
-
-   2. 导出onnx文件。
-
-      使用FOMM_pth2onnx.py导出onnx文件。
-
-      运行FOMM_pth2onnx.py脚本。
-
-      ```shell
-      python FOMM_pth2onnx.py --config config/taichi-256.yaml --checkpoint checkpoint/taichi-cpk.pth.tar --outdir taichi-onnx --genname taichi-gen-bs1 --kpname taichi-kp-bs1
-      ```
 
    参数说明：
 
@@ -252,7 +295,7 @@ model_name=FOMM
 
    * kpname：导出的kp detector模型的文件名；
 
-   获得./taichi-onnx/taichi-kp-bs1.onnx、./taichi-onnx/taichi-gen-bs1.onnx文件。
+   获得`./taichi-onnx/taichi-kp-bs1.onnx`、`./taichi-onnx/taichi-gen-bs1.onnx`文件。
 
    ```
    taichi-onnx
@@ -260,7 +303,22 @@ model_name=FOMM
       |-- taichi-gen-bs1.onnx
    ```
 
-   （3）使用ATC工具将ONNX模型转OM模型。
+   然后需要对输出的taichi-gen-bs1.onnx进行算子优化，依次执行如下命令即可：
+
+   ```shell
+   mv expand_int32.py taichi-onnx/
+   cd taichi-onnx
+   python expand_int32.py
+   cd ..
+   ```
+
+   （2）使用ATC工具将ONNX模型转OM模型。
+
+   首先在`FOMM/`下创建`./taichi-onnx/oms`文件夹：
+
+   ```shell
+   mkdir taichi-onnx/oms
+   ```
 
    a. 配置环境变量。
 
@@ -293,13 +351,13 @@ model_name=FOMM
    generator
 
    ```shell
-   atc --framework=5 --model=taichi-gen-bs1.onnx --output=oms/taichi-gen-bs1 --input_format=NCHW --input_shape="source_imgs:1,3,256,256;kp_driving_value:1,10,2;kp_driving_jac:1,10,2,2;kp_source_value:1,10,2;kp_source_jac:1,10,2,2" --log=debug --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize
+   atc --framework=5 --model=taichi-onnx/new_expand_taichi_gen_bs1.onnx --output=taichi-onnx/oms/taichi-gen-bs1 --input_format=NCHW --input_shape="source_imgs:1,3,256,256;kp_driving_value:1,10,2;kp_driving_jac:1,10,2,2;kp_source_value:1,10,2;kp_source_jac:1,10,2,2" --log=debug --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize
    ```
 
    kp detector
 
    ```shell
-   atc --framework=5 --model=taichi-kp-bs1.onnx --output=oms/taichi-kp-bs1 --input_format=NCHW --input_shape="input:1,3,256,256" --log=debug --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize
+   atc --framework=5 --model=taichi-onnx/taichi-kp-bs1.onnx --output=taichi-onnx/oms/taichi-kp-bs1 --input_format=NCHW --input_shape="input:1,3,256,256" --log=debug --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize
    ```
 
    参数说明：
@@ -343,11 +401,12 @@ model_name=FOMM
    * kp driving:
 
    ```shell
+   mkdir infer_out
    python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-kp-bs1.om --input pre_data/driving/ --output infer_out/ --outfmt NPY --output_dirname kpd
    ```
-
+   
    * kp source
-
+   
    ```shell
    python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-kp-bs1.om --input pre_data/source/ --output infer_out/ --outfmt NPY --output_dirname kps
    ```
@@ -432,7 +491,8 @@ model_name=FOMM
    现在，一切数据都准备好了，执行如下命令，推理generator模型：
    
    ```shell
-   python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-gen-bs1.om --input infer_out/source/,infer_out/kpdv/,infer_out/kpdj/,infer_out/kpsv/,infer_out/kpsj/ --output infer_out/out/ --outfmt NPY
+   mkdir infer_out/out/
+   python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-gen-bs1.om --input pre_data/source/,infer_out/kpdv/,infer_out/kpdj/,infer_out/kpsv/,infer_out/kpsj/ --output infer_out/ --outfmt NPY --output_dirname out/
    ```
    
    至此，模型推理部分就完成了。
@@ -472,8 +532,10 @@ model_name=FOMM
    
    ```shell
    cd pose-evaluation/
-   python extract.py --in_folder /data/taichi/test/ --out_file pose_gt.pkl --is_video --type body_pose --image_shape 256,256
-   python extract.py --in_folder /checkpoint/reconstruction/png --out_file pose_gen.pkl --is_video --type body_pose --image_shape 256,256
+   mv ../my_script/coco_eval.py pose_estimation/evaluate/
+   mv ../my_script/extract.py ./
+   python extract.py --in_folder ../data/taichi/test/ --out_file pose_gt.pkl --is_video --type body_pose --image_shape 256,256
+   python extract.py --in_folder ../checkpoint/reconstruction/png --out_file pose_gen.pkl --is_video --type body_pose --image_shape 256,256
    ```
    
    参数说明：
