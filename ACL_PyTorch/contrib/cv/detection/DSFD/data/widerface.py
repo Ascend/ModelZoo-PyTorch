@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,11 +73,9 @@ class WIDERDetection(data.Dataset):
         while True:
             image_path = self.fnames[index]
             img = Image.open(image_path)
-            #img = cv2.imread(image_path)
 
             img = img.convert('RGB')
             im_width, im_height = img.size
-            #im_width, im_height = img.shape[0],img.shape[1]
             boxes = self.annotransform(
                 np.array(self.boxes[index]), im_width, im_height)
             label = np.array(self.labels[index])
