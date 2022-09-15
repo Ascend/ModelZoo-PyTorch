@@ -121,11 +121,6 @@
    mkdir dataset
    cd dataset
    cp -r ../MOT17/ .
-   cd MOT17
-   mkdir images
-   mv train/ images/
-   mv test/ images/
-   cd ../..
    python3.7 FairMOT/src/gen_labels_16.py    # 用于生成label_with_ids,需修改路径为数据地址
    ```
 
