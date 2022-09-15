@@ -78,17 +78,15 @@
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.9.0   | -                                                            |
-| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 | python  | 3.7.5 |-|
-| torch   | ==1.9.0 (cpu版本即可) |-|
-| onnx  | ==1.9.0 |-|
-| torchvision | ==0.10.0 |-|
-| numpy  | ==1.21.0 |-|
-| mmcv  | ==1.3.9 |-|
-| opencv-python  | ==4.5.3.56 |-|
-
+| pytorch   | 1.9.0|-|
+| pytorch   | 1.9.0|-|
+| onnx  | 1.9.0 |-|
+| torchvision | 0.10.0 |-|
+| numpy  | 1.21.0 |-|
+| mmcv  | 1.3.9 |-|
+| opencv-python  | 4.5.3.56 |-|
+| 操作系统  | 18.04.1 |-|
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 
