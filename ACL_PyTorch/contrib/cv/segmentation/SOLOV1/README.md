@@ -134,16 +134,15 @@ root
    - --bin_file_path：生成的图片bin文件路径
 
    - --meta_file_path：生成的图片附加信息路径（临时信息，get_info.py需要用到）
-
    每个图像对应生成一个二进制bin文件，一个附加信息文件。
-   ```
+
 
 3.生成数据集info文件。
-  生成数据集info文件，执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
-   ```
-   python3 get_info.py /root/dataset/coco/  SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solo.info  solo_meta.info  1216 800
+      生成数据集info文件，执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
+      ```
+      python3 get_info.py /root/dataset/coco/  SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solo.info  solo_meta.info  1216 800
 
-   ```
+ ``` 
    - --“/root/dataset/coco/”：数据集路径。
 
    - --“SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py”：模型配置文件。
