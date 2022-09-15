@@ -79,34 +79,33 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 ## 获取源码<a name="section4622531142816"></a>
 
 1.获取开源代码仓
-  ```
+ ```
     git clone https://github.com/facebookresearch/xcit.git
     cd xcit
     git checkout 82f5291f412604970c39a912586e008ec009cdca
     patch -p1 < ../xcit.patch
     cd ..
-  ```
+```
 
 2. 安装依赖。
-
-   ```
-   pip3 install -r requirment.txt
-   ```
+```
+    pip3 install -r requirment.txt
+```
 注：如遇报错优先查看依赖是否安装正确的版本。
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-  本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到预处理后的“target.json”文件作为最后的比对标签。
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到预处理后的“target.json”文件作为最后的比对标签。
 
-数据目录结构请参考：
+    数据目录结构请参考：
 
     
-    ├──ImageNet
-        ├──val2017
-        ├──result
-              ├──target.json
+        ├──ImageNet
+            ├──val2017
+            ├──result
+                  ├──target.json
     
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
@@ -118,11 +117,11 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
    mkdir prep_dataset
    python3.7 xcit_preprocess.py --data-path=${dataset_path} --resume=./prep_dataset
    ```
---data-path：原始数据验证集（.jpeg）所在路径。
+    --data-path：原始数据验证集（.jpeg）所在路径。
 
-“./prep_dataset”：输出的二进制文件（.bin）所在路径。
+    './prep_dataset'：输出的二进制文件（.bin）所在路径。
 
-每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_dataset”二进制文件夹。
+    每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_dataset”二进制文件夹。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -199,7 +198,7 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+    a.  使用ais-infer工具进行推理。
 
    执行命令增加工具可执行权限，并根据OS架构选择工具
 
@@ -207,12 +206,10 @@ a.  使用ais-infer工具进行推理。
    chmod u+x 
    ```
 
-b.  执行推理。
-
-    ```
-    python3 ais_infer.py --model onnx_models/xcit_b16.om --input ./prep_dataset --output ./ --outfmt TXT
-    ```
-
+    b.  执行推理。   
+   ```
+        python3 ais_infer.py --model onnx_models/xcit_b16.om --input ./prep_dataset --output ./ --outfmt TXT
+   ```
 
     -   参数说明：
 
@@ -226,7 +223,7 @@ b.  执行推理。
         >**说明：** 
         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-c.  精度验证。
+    c.  精度验证。
 
     调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
