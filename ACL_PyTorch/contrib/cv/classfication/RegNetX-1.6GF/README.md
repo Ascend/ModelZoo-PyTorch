@@ -86,10 +86,10 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压。本模型将使用到的ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。                                                          
-                           ├── ImageNet                                                                                                               
-                                  ├── ILSVRC2012_img_val                                                                                              
-                                  ├── val_label.txt 
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。                                                          
+                                          ├── ImageNet                                                                                                               
+                                                  ├── ILSVRC2012_img_val                                                                                              
+                                                  ├── val_label.txt 
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
