@@ -1,4 +1,4 @@
-# {SOLOV1}模型-推理指导
+# SOLOV1模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -87,6 +87,27 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    pip3 install -r requirment.txt
    ```
 
+2.获取，修改与安装开源模型代码  
+安装mmcv
+```
+git clone https://github.com/open-mmlab/mmcv -b v0.2.16
+cd mmcv
+python setup.py build_ext
+python setup.py develop
+cd ..
+```
+获取SOLOv1代码
+```
+git clone https://github.com/WXinlong/SOLO.git -b master
+cd SOLO
+git reset --hard 95f3732d5fbb0d7c7044c7dd074f439d48a72ce5
+patch -p1 < ../MMDET.diff
+patch -p1 < ../SOLOV1.diff
+pip install -r requirements/build.txt
+pip install -v -e .
+cd ..
+```
+
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -172,7 +193,7 @@ root
 
          ```
 
-         获得xxx.onnx文件。
+         获得SOLOv1_sim.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -207,7 +228,7 @@ root
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=SOLOv1_sim.onnx --output=solo  --input_format=NCHW --input_shape="input:1,3,800,1216" --log=error --soc_version=Ascend310P3
+         atc --framework=5 --model=SOLOv1_sim.onnx --output=solo  --input_format=NCHW --input_shape="input:1,3,800,1216" --log=error --soc_version=Ascend${chip_name}
 
          ```
 
@@ -230,26 +251,20 @@ root
 
 a.  使用ais-infer工具进行推理。
 
-   执行命令增加工具可执行权限
+   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-   ```
-   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
-
-   ```
 
 b.  执行推理。
 
-    ```
+    
      python3 ais_infer.py --model "/home/cc/SOLOV1/soloc.om" --input "/home/cc/SOLOV1/val2017_bin/" --output "/home/cc/SOLOV1/result/" --outfmt BIN --device 0 --batchsize 1 --loop 1
 
-    ```
+    
 
-    -   参数说明：
-
+-   参数说明：
         -   --model：om文件路径。
         -   --input:输入路径
         -   --output：输出路径。
-		...
 
         推理后的输出默认在当前目录result下。
 
@@ -277,3 +292,4 @@ c.  精度验证。
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 |  310P3    |   bs1               |    val2017        |    32.1%        |     10.3064   |
+该离线模型不支持多batch
