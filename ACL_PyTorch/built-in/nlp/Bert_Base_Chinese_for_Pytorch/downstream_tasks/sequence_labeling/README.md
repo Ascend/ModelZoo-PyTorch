@@ -1,4 +1,4 @@
-# Bert_Base_Chinese模型-推理指导
+# Bert_Base_Chinese模型下游任务-Sequence_Labeling-推理指导
 
 ## 概述
 
@@ -188,16 +188,15 @@
 | :---------------: | :--------:                                 | :-------------:                            |
 | Bert-Base-Chinese | f1:0.9724 precision: 0.9684 recall: 0.9765 | f1:0.9600 precision: 0.9569 recall: 0.9632 |
 | 模型              | NPU精度(val-token level)                   | NPU精度(val-entity level)                  |
-| :---------------: | :--------:                                 | :-------------:                            |
 | Bert-Base-Chinese | f1:0.9720 precision: 0.9669 recall: 0.9772 | f1:0.9594 precision: 0.9559 recall: 0.9630 |
 
 性能：
 
-| 模型              | BatchSize | NPU性能 | 基准性能  |
+| 模型              | BatchSize | NPU性能 |  基准性能 |
 | :---------------: | :-------: | :-----: | :-------: |
-| Bert-Base-Chinese |         1 |         |           |
-| Bert-Base-Chinese |         4 |         |           |
-| Bert-Base-Chinese |         8 |         |           |
-| Bert-Base-Chinese |        16 |         |           |
-| Bert-Base-Chinese |        32 |         |           |
-| Bert-Base-Chinese |        64 |         |           |
+| Bert-Base-Chinese |         1 | 299     |       701 |
+| Bert-Base-Chinese |         4 | 539     |      1227 |
+| Bert-Base-Chinese |         8 | 592     |      1360 |
+| Bert-Base-Chinese |        16 | 572     |      1429 |
+| Bert-Base-Chinese |        32 | 564     |      1480 |
+| Bert-Base-Chinese |        64 | 545     |      1468 |
