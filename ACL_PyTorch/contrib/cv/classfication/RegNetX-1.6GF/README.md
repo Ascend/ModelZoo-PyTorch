@@ -1,4 +1,4 @@
-# {RegNetX-1.6GF}模型-推理指导
+# RegNetX-1.6GF模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -7,7 +7,7 @@
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-  - [获取源码](#section4622531142816)
+  - [安装依赖](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
@@ -74,24 +74,9 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-## 获取源码<a name="section4622531142816"></a>
+## 安装依赖<a name="section4622531142816"></a>
 
-1. 获取源码。
-
-   ```
-   步骤1 单击“立即下载”，下载源码包。
-   步骤2 上传源码包到服务器任意目录并解压
-         ├── README.md
-         ├── RegNetX_onnx.py                  //转onnx脚本
-         ├── imagenet_torch_preprocess.py     //数据集预处理脚本，生成图片二进制文件
-         ├── RegNetX-1.6GF_prep_bin.info      //数据集info文件，用于benchmark推理获取数据集
-         ├── get_info.py                      //生成推理输入的数据集二进制info文件或jpg info文件
-         ├── vision_metric_ImageNet.py        //精度验证脚本
-         ├── requirements.txt
-          ----结束
-   ```
-
-2. 安装依赖。
+1. 安装依赖。
 
    ```
    pip3 install -r requirements.txt
@@ -101,7 +86,10 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   <u>***本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。***</u>
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。
+                              ├── ImageNet
+                                  ├── ILSVRC2012_img_val
+                                  ├── val_label.txt 
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
@@ -110,12 +98,18 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
    执行imagenet_torch_preprocess.py脚本，完成预处理。
 
    ```
-   执行imagenet_torch_preprocess.py脚本。
    python3.7 imagenet_torch_preprocess.py /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset
-   第一个参数为原始数据验证集（.jpeg）所在路径，第二个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
+   ```
+         参数说明： 
+                 --/home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val：原始数据验证集（.jpeg）所在路径。
+                 --./prep_dataset：输出的二进制文件（.bin）所在路径。
+             每个图像对应生成一个二进制文件。
    
    使用ais推理需要输入二进制数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。运行get_info.py脚本。
+   ```
    python3.7 get_info.py bin ./prep_dataset ./RegNetX-1.6GF_prep_bin.info 224 224
+   ```
+   
    第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件路径，第三个参数为生成的数据集文件保存的路径，第四个和第五个参数分别为模型输入的宽度和高度。
    运行成功后，在当前目录中生成RegNetX-1.6GF_prep_bin.info。
    ```
