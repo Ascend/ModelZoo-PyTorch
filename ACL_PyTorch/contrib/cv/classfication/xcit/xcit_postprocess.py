@@ -38,7 +38,7 @@ def postprocess(result_path, target_file, save_file):
     for file in re_files:
         result = np.loadtxt(os.path.join(result_path, file))
         img_name = file.split('.')[0].split('_')
-        img_name = img_name[0] + "_" + img_name[1] + "_" + img_name[2] + "_1"
+        img_name = '{}_{}_{}_1'.format(img_name[0], img_name[1], img_name[2])
         ans = labels[img_name]
         if ans == result.argmax():
             top1_cnt = top1_cnt + 1
