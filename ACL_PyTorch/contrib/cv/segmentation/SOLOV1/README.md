@@ -279,9 +279,9 @@ c.  精度验证。
     python3 solov1_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_03-10_09_16/  --meta_info=solo_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
     ```
 
-    result/2022_09_03-10_09_16/：为生成推理结果所在路径  
+   result/2022_09_03-10_09_16/：为生成推理结果所在路径  
     
-    val2017：为标签数据
+   val2017：为标签数据
     
 
 
@@ -292,4 +292,3 @@ c.  精度验证。
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 |  310P3    |   bs1               |    val2017        |    32.1%        |     10.3064   |
-该离线模型不支持多batch
