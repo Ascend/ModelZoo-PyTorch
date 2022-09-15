@@ -100,7 +100,8 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
    ```
    python3.7 imagenet_torch_preprocess.py /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset
    ```
-         -   参数说明：
+         
+      -   参数说明：
 
                     -   /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val：原始数据验证集（.jpeg）所在路径。
                     -   ./prep_dataset：输出的二进制文件（.bin）所在路径。
