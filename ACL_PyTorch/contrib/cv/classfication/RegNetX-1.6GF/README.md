@@ -103,9 +103,9 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
          
       -   参数说明：
 
-                    -   /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val：原始数据验证集（.jpeg）所在路径。
-                    -   ./prep_dataset：输出的二进制文件（.bin）所在路径。
-                  每个图像对应生成一个二进制文件。
+           -   /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val：原始数据验证集（.jpeg）所在路径。
+           -   ./prep_dataset：输出的二进制文件（.bin）所在路径。
+       每个图像对应生成一个二进制文件。
 		...
    
    使用ais推理需要输入二进制数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。运行get_info.py脚本。
