@@ -36,13 +36,23 @@ export ASCEND_GLOBAL_EVENT_ENABLE=0
 export TASK_QUEUE_ENABLE=1
 #设置是否开启PTCopy,0-关闭/1-开启
 export PTCOPY_ENABLE=1
-#设置是否开启combined标志,0-关闭/1-开启
-export COMBINED_ENABLE=1
 #设置特殊场景是否需要重新编译,不需要修改
 export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+
+#设置device侧日志登记为error
+${install_path}/driver/tools/msnpureport -g error -d 0
+${install_path}/driver/tools/msnpureport -g error -d 1
+${install_path}/driver/tools/msnpureport -g error -d 2
+${install_path}/driver/tools/msnpureport -g error -d 3
+${install_path}/driver/tools/msnpureport -g error -d 4
+${install_path}/driver/tools/msnpureport -g error -d 5
+${install_path}/driver/tools/msnpureport -g error -d 6
+${install_path}/driver/tools/msnpureport -g error -d 7
+#关闭Device侧Event日志
+${install_path}/driver/tools/msnpureport -e disable
 
 path_lib=$(python3.7 -c """
 import sys

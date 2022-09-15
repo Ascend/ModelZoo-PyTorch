@@ -13,13 +13,11 @@ data_path=""
 
 # 训练epoch
 train_epochs=240
-# 指定8卡训练所使用的device_id_list
-device_id_list=0,1,2,3,4,5,6,7
 # 学习率
 learning_rate=1
 # 加载数据进程数
-workers=184
-
+workers=24
+device_num=8
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -60,36 +58,50 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-
 #################启动训练脚本#################
-#训练开始时间，不需要修改
+# 训练开始时间，不需要修改
 start_time=$(date +%s)
-#非平台场景时source 环境变量
+# 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source  ${test_path_dir}/env_npu.sh
+    source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -u ./train.py \
-    --data=${data_path} \
-    --addr=$(hostname -I |awk '{print $1}') \
-    --workers=${workers} \
-    --print-freq=1 \
-    --eval-freq=5 \
-    --dist-url='tcp://127.0.0.1:50000' \
-    --dist-backend='hccl' \
-    --multiprocessing-distributed \
-    --world-size=1 \
-    --rank=0 \
-    --amp \
-    --loss-scale 64 \
-    --batch-size ${batch_size} \
-    --epochs=${train_epochs} \
-    --learning-rate ${learning_rate} \
-    --wd 8e-5 \
-    --device-list=${device_id_list} \
-    --device_num 8 \
-    --benchmark 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+
+
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+if [ $(uname -m) = "aarch64" ]
+then
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END nohup python3.7 -u train.py \
+        --model-size 1.0x \
+        --epochs ${train_epochs} \
+        --batch-size ${batch_size} \
+        --workers ${workers} \
+        --opt-level O2 \
+        --local-rank ${i} \
+        --device-num ${device_num} \
+        --train-dir ${data_path} \
+        --world-size 1 \
+        --val-dir  ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+else
+    nohup python3.7 -u train.py \
+        --model-size 1.0x \
+        --epochs ${train_epochs} \
+        --batch-size ${batch_size} \
+        --opt-level O2 \
+        --workers ${workers} \
+        --local-rank ${i} \
+        --device-num ${device_num} \
+        --train-dir ${data_path} \
+        --world-size 1 \
+        --val-dir  ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
+done
+
 
 wait
 

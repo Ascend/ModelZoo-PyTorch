@@ -32,8 +32,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 多卡训练流程
 
     1.安装环境
-    2.修改参数device_id_list（多卡训练所使用的device id列表），为训练配置device_id，例如device_id=0,1,2,3,4,5,6,7
-    3.执行train_full_8p.sh开始训练
+    2.执行train_full_8p.sh开始训练
         bash ./test/train_full_8p.sh  --data_path=数据集路径         # 精度训练
         bash ./test/train_performance_8p.sh  --data_path=数据集路径  # 性能训练
             
