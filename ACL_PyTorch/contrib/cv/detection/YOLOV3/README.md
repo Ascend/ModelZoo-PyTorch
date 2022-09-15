@@ -270,10 +270,10 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
       推理后的输出默认在当前目录result下。
 
       参数说明:
-          --ais_infer_path：ais-infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer”。
+          --ais_infer_path：ais_infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer”。
 
       >**说明：**
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      >执行ais_infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    c. 模型后处理。
    
