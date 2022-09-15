@@ -201,7 +201,6 @@ def post_process(flags):
             yolo_shape = [[1, 3, 85, 13, 13], [1, 3, 85, 26, 26], [1, 3, 85, 52, 52]]
 
         for num in range(flags.net_out_num):
-            #print(path_base + "_" + str(num) + ".bin")
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
                 buf = np.fromfile(path_base + "_" +
                                   str(num) + ".bin", dtype="float32")
