@@ -106,16 +106,18 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
            -   /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val：原始数据验证集（.jpeg）所在路径。
            -   ./prep_dataset：输出的二进制文件（.bin）所在路径。
        每个图像对应生成一个二进制文件。
-		...
    
    使用ais推理需要输入二进制数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。运行get_info.py脚本。
    ```
    python3.7 get_info.py bin ./prep_dataset ./RegNetX-1.6GF_prep_bin.info 224 224
    ```
-   
-   第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件路径，第三个参数为生成的数据集文件保存的路径，第四个和第五个参数分别为模型输入的宽度和高度。
-   运行成功后，在当前目录中生成RegNetX-1.6GF_prep_bin.info。
-   ```
+      -   参数说明：
+
+           -   bin：生成的数据集文件格式。
+           -   ./prep_dataset：预处理后的数据文件路径。
+           -   ./RegNetX-1.6GF_prep_bin.info：生成的数据集文件保存的路径
+           -   224：模型输入的宽度和高度。
+       运行成功后，在当前目录中生成RegNetX-1.6GF_prep_bin.info。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -127,19 +129,18 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
          运行RegNetX_onnx.py脚本。
 
-         ```
          −下载代码仓，到ModleZoo获取的源码包根目录下。
+         ```
          git clone https://github.com/rwightman/pytorch-image-models
          cd pytorch-image-models
          python3.7 setup.py install
          cd ..
-         −执行脚本。 
-         python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
-         运行成功后生成RegNetX-1.6GF.onnx模型文件
          ```
-
-         获得RegNetX-1.6GF.onnx文件。
-
+         −执行脚本。 
+         ```
+         python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
+         ```
+         运行成功后生成RegNetX-1.6GF.onnx模型文件
 
    2. 使用ATC工具将ONNX模型转OM模型。
 
@@ -174,18 +175,16 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
          ```
           atc --framework=5 --model=./RegNetX-1.6GF.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=RegNetX-1.6GF_bs1 --log=debug --soc_version=Ascend${chip_name}
          ```
+      -   参数说明：
 
-         参数说明： 
-                 --model：为ONNX模型文件。
-                 --framework：5代表ONNX模型。
-                 --output：输出的OM模型。
-                 --input_format：输入数据的格式。
-                 --input_shape：输入数据的shape。
-                 --log：日志级别。
-                 --soc_version：处理器型号。
-             运行成功后生成RegNetX-1.6GF_bs1.om模型文件。
-
-
+           -   model：为ONNX模型文件。
+           -   framework：5代表ONNX模型。
+           -   output:输出的OM模型。
+           -   input_format:输入数据的格式。
+           -   input_shape：输入数据的shape。
+           -   log：日志级别。
+           -   soc_version：处理器型号。
+              运行成功后生成RegNetX-1.6GF_bs1.om模型文件。
 
 2. 开始推理验证。
 
