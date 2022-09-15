@@ -242,31 +242,31 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
 
 2.开始推理验证。
-      a. 使用ais-infer工具进行推理。
-         ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+    a. 使用ais-infer工具进行推理。
+    ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
-      b. 执行推理。
-         ```
-         python3 ais_infer.py --model "/home/cc/SOLOV1/soloc.om" --input "/home/cc/SOLOV1/val2017_bin/" --output "/home/cc/SOLOV1/result/" --outfmt BIN --device 0 --batchsize 1 --loop 1
-         ```
-         -   参数说明：
-         -   --model：om文件路径。
-         -   --input:输入路径
-         -   --output：输出路径。
+    b. 执行推理。
+      ```
+      python3 ais_infer.py --model "/home/cc/SOLOV1/soloc.om" --input "/home/cc/SOLOV1/val2017_bin/" --output "/home/cc/SOLOV1/result/" --outfmt BIN --device 0 --batchsize 1 --loop 1
+      ```
+      -   参数说明：
+      -   --model：om文件路径。
+      -   --input:输入路径
+      -   --output：输出路径。
 
-         推理后的输出默认在当前目录result下。
+      推理后的输出默认在当前目录result下。
 
-         >**说明：** 
-         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-      c. 精度验证。
-         调用脚本与数据集val2017标签比对
-         ```
-         python3 solov1_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_03-10_09_16/  --meta_info=solo_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
-         ```
-         - --result/2022_09_03-10_09_16/：为生成推理结果所在路径  
-         - --val2017：为标签数据
+    c. 精度验证。
+      调用脚本与数据集val2017标签比对
+      ```
+      python3 solov1_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_03-10_09_16/  --meta_info=solo_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
+      ```
+      - --result/2022_09_03-10_09_16/：为生成推理结果所在路径  
+       - --val2017：为标签数据
     
 
 
