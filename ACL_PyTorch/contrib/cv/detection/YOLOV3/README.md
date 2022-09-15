@@ -132,7 +132,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     执行preprocess_yolov3_pytorch.py脚本。
 
    ```
-        python3.7 preprocess_yolov3_pytorch.py coco_2014.info yolov3_bin
+        python3.7 preprocess_yolov3_pytorch.py yolov3_bin
    ```
    
     参数说明：
@@ -146,7 +146,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     
     运行get_coco_info.py脚本。
  
-            python3.7 get_coco_info.py yolov3_bin ./coco_2014.info
+            python3.7 get_coco_info.py yolov3_bin 
        
     第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
