@@ -84,7 +84,9 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 0. 获取源码
-git clone https://github.com/microsoft/unilm.git
+    ```
+    git clone https://github.com/microsoft/unilm.git   
+   ```
 
 1. 安装依赖。
 
@@ -99,13 +101,14 @@ git clone https://github.com/microsoft/unilm.git
 
    数据集选择使用imagenet数据集中的val数据集（ILSVRC2012_img_val.tar）以及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。
    [下载链接]( https://www.image-net.org)
-   数据结构：
-```
-├── ImageNet
-	├── ILSVRC2012_img_val
-		├── val_label.txt  
-```
 
+   数据结构如下：
+
+    ```
+    ├── ImageNet
+        ├── ILSVRC2012_img_val
+            ├── val_label.txt
+    ```
 
 2. 数据预处理。
 
@@ -117,7 +120,7 @@ git clone https://github.com/microsoft/unilm.git
    python3 beit_preprocess.py --image_path="/opt/npu/imageNet/val" --prep_image="./prep_image_bs8" --batch_size=8
    ```
 
-​			 其中三个参数为：imageNet/val数据集路径、预处理结果输出路径、batch size
+    其中三个参数为：imageNet/val数据集路径、预处理结果输出路径、batch size
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -134,7 +137,7 @@ git clone https://github.com/microsoft/unilm.git
 
    2. 导出onnx文件。
 
-      a. 使用beit_pth2onnx.py出onnx文件。
+      1. 使用beit_pth2onnx.py出onnx文件。
 
          运行beit_pth2onnx.py脚本。
 
@@ -144,7 +147,7 @@ git clone https://github.com/microsoft/unilm.git
 
          获得beit_base_patch16_224.onnx文件。
 
-      b. 使用onnxsim优化ONNX文件。
+      2. 使用onnxsim优化ONNX文件。
 
          ```
          python3 -m onnxsim --input-shape="8,3,224,224" beit_base_patch16_224.onnx beit_onnxsim_bs8.onnx
@@ -154,7 +157,7 @@ git clone https://github.com/microsoft/unilm.git
 
          其中，input-shape需要根据所使用的batch size进行修改 第二个参数为onnx模型，第三个参数为输出模型名称
 
-      c. 使用magiconnx优化onnx文件。
+      3. 使用magiconnx优化onnx文件。
 
          - 获取magiconnx
 
@@ -176,7 +179,7 @@ git clone https://github.com/microsoft/unilm.git
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
-      a. 配置环境变量。
+      1. 配置环境变量。
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -186,7 +189,7 @@ git clone https://github.com/microsoft/unilm.git
          > **说明：** 
          > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-      b. 执行命令查看芯片名称（$\{chip\_name\}）。
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
          ```
          npu-smi info
@@ -204,7 +207,7 @@ git clone https://github.com/microsoft/unilm.git
          +===================+=================+======================================================+
          ```
 
-      c. 执行ATC命令。
+      3. 执行ATC命令。
 
          ```
          atc --framework=5 --model=beit_mg_bs8.onnx \
@@ -245,7 +248,7 @@ git clone https://github.com/microsoft/unilm.git
 
 2. 执行推理。 
 
-    a. 测试性能数据
+    1. 测试性能数据
     ```
     python3 ais_infer.py --model "beit_mg_bs8.om"  --loop 10 --batchsize 8
     ```
@@ -256,23 +259,22 @@ git clone https://github.com/microsoft/unilm.git
      - loop：循环次数
      - batchsize：om模型batch size大小
 
-   b. 测试精度数据
-
-    ```
-    python3 ais_infer.py --model "beit_mg_bs8.om" \
-    --input "./prep_image_bs8" \
-    --output ./ais_out/ \
-    --outfmt TXT  
-    ```
+    2. 测试精度数据
+        ```
+        python3 ais_infer.py --model "beit_mg_bs8.om" \
+        --input "./prep_image_bs8" \
+        --output ./ais_out/ \
+        --outfmt TXT  
+       ```
    
-   - 参数说明：
+       - 参数说明：
             
-     - model：om模型路径。
-     - input：数据集路径。
-     - outfmt：输出数据格式。
-     - output：输出路径
-   > **说明：** 
-    > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见
+         - model：om模型路径。
+         - input：数据集路径。
+         - outfmt：输出数据格式。
+         - output：输出路径
+       > **说明：** 
+        > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见
 
 
 3. 精度验证。
@@ -298,39 +300,40 @@ git clone https://github.com/microsoft/unilm.git
 
 调用ACL接口推理计算，性能参考下列数据。
 
-1.精度
-
-| om model | Acc@1  |
-| :------: | :----: |
-|  office  | 85.27% |
-|   BS1    | 84.68% |
-|   BS4    | 84.68% |
-|   BS8    | 84.68% |
-|   BS16   | 84.68% |
-|   BS32   | 84.67% |
-|   BS64   | 84.68% |
-
-84.67% / 85.27% = 99.30%
-精度误差保持在1%以内，精度达标
-
-2.性能
-
-| gpu  | batch size |   fps    |
-| :--: | :--------: | :------: |
-|  T4  |    bs1     | 188.917  |
-|  T4  |    bs4     | 267.900  |
-|  T4  |    *bs8    | *290.474 |
-|  T4  |    bs16    | 287.486  |
+1. 精度
+   
+    | om model | Acc@1  |
+    | :------: | :----: |
+    |  office  | 85.27% |
+    |   BS1    | 84.68% |
+    |   BS4    | 84.68% |
+    |   BS8    | 84.68% |
+    |   BS16   | 84.68% |
+    |   BS32   | 84.67% |
+    |   BS64   | 84.68% |
+    
+    84.67% / 85.27% = 99.30%
+    精度误差保持在1%以内，精度达标
 
 
-| npu  | batch size |   fps    |
-| :--: | :--------: | :------: |
-| 310P |    bs1     | 292.397  |
-| 310P |    bs4     | 350.877  |
-| 310P |    bs8     | 460.299  |
-| 310P |   *bs16    | *463.284 |
-| 310P |    bs32    | 412.211  |
-| 310P |    bs64    | 408.137  |
+2. 性能
 
-npu在bs为16时性能最佳，gpu在bs为8时性能最佳，两者对比：
-Ascend 310P/ gpu t4 = 463.284 / 290.474 = 1.595
+    | gpu | batch size |   fps    |
+    |:----------:| :---------: | :------: |
+    |  T4  |    bs1     | 188.917  |
+    |  T4  |    bs4     | 267.900  |
+    |  T4  |    *bs8    | *290.474 |
+    |  T4  |    bs16    | 287.486  |
+
+    | npu  | batch size |   fps    |
+    |:----------:| :--------: | :------: |
+    | 310P |    bs1     | 292.397  |
+    | 310P |    bs4     | 350.877  |
+    | 310P |    bs8     | 460.299  |
+    | 310P |   *bs16    | *463.284 |
+    | 310P |    bs32    | 412.211  |
+    | 310P |    bs64    | 408.137  |
+    
+    npu在bs为16时性能最佳，gpu在bs为8时性能最佳，两者对比：
+
+    Ascend 310P/ gpu t4 = 463.284 / 290.474 = 1.595
