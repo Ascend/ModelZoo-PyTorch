@@ -210,13 +210,13 @@
         3. 使用atc将onnx模型转换为om模型文件
 
               ```shell
-              atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
+              atc --model=onnx_sim/tsm_bs1.onnx --framework=5 --output=tsm_bs1 --input_format=NCDHW --input_shape="video:1,8,3,224,224" --log=debug --soc_version=${chip_name}
               ```
 
               若需要获取不同batch_size输入的om模型，则可以通过设定input_shape进行指定。下面的命令可生成batch_size=16的模型。
 
               ```shell
-              atc --model=onnx_sim/tsm_bs16.onnx --framework=5 --output=tsm_bs16 --input_format=NCDHW --input_shape="video:16,8,3,224,224" --log=debug --soc_version=${chip_name} --auto_tune_mode="RL,GA"
+              atc --model=onnx_sim/tsm_bs16.onnx --framework=5 --output=tsm_bs16 --input_format=NCDHW --input_shape="video:16,8,3,224,224" --log=debug --soc_version=${chip_name}
               ```  
 
           - 参数说明：
@@ -228,7 +228,6 @@
             -   --input\_shape：输入数据的shape。
             -   --log：日志级别。
             -   --soc\_version：处理器型号。
-            -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 
 
 
