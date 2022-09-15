@@ -115,13 +115,13 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
   数据集的获取请参考[原始开源代码仓](https://github.com/WXinlong/SOLO)的方式获取。请将val2017图片及其标注文件放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
    ```
-   root
-   ├── dataset
-   │   ├── coco
-   │   │   ├── annotations
-   │   │   ├── val2017
+root
+├── dataset
+│   ├── coco
+│   │   ├── annotations
+│   │   ├── val2017
 
-```
+   ```
 
 2. 数据预处理。
    将原始数据集转换为模型输入的二进制数据。执行“solov1_preprocess.py”脚本。
@@ -136,7 +136,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    - --meta_file_path：生成的图片附加信息路径（临时信息，get_info.py需要用到）
 
    每个图像对应生成一个二进制bin文件，一个附加信息文件。
-
+   ```
 
 3.生成数据集info文件。
   生成数据集info文件，执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
