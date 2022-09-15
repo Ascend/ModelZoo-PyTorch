@@ -226,3 +226,7 @@
 | Bert-Base-Chinese |    32     | 246 fps | 42.32 fps |331 fps |
 | Bert-Base-Chinese |    64     | 251 fps | 44.31 fps |336 fps |
 
+## 其他下游任务
+
++ [序列标注(Sequence Labeling)](downstream_tasks/sequence_labeling/README.md)
+
