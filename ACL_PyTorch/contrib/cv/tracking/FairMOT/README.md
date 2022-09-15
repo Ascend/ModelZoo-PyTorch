@@ -59,7 +59,7 @@
 | CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.5.0   | -                                                            |
-| 说明: Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+| 说明: Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本，torch版本仅可使用1.5.0（方便dcn的编译）。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -188,7 +188,7 @@
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=./fairmot.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,608,1088" --output=./fairmot_bs1 --log=debug --soc_version=Ascend310P3
+         atc --framework=5 --model=./fairmot.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,608,1088" --output=./fairmot_bs1 --log=debug --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明: 
@@ -199,7 +199,7 @@
            -   --input\_format: 输入数据的格式。
            -   --input\_shape: 输入数据的shape。
            -   --log: 日志级别。
-           -   --soc\_version: 处理器型号。
+           -   --soc\_version: 处理器型号，  ${chip_name}可通过npu-smi info指令查看。
 
            运行成功后生成<u>***fairmot_bs1.om***</u>模型文件。
 
@@ -213,11 +213,11 @@ a.  使用ais-infer工具进行推理。
 
 b.  执行推理。
 
-    python3.7 ./ais_infer/ais_infer.py  --model fairmot_bs1.om --input pre_dataset --device_id 0 -o ./ --outfmt BIN
+    python3.7 ./ais_infer/ais_infer.py  --model fairmot_bs1.om --input pre_dataset --device 0 -o ./ --outfmt BIN --batchsize 1
 
    - 参数说明: 
       -   --model: om文件路径。
-      -   --device_id: NPU设备编号。
+      -   --device: NPU设备编号。
       -   --input: 输入数据地址。
       -   -o: 输出地址,默认会使用时间信息作为名字
       -   --outfmt: 输出格式(后续脚本只支持bin格式)
