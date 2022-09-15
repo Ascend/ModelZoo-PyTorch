@@ -29,6 +29,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
   url=git clone https://github.com/microsoft/unilm.git
   branch=master
   model_name=beit
+  commit_id=35d21904a9b5beca074b085869d06b9583db2e81
   ```
 
   通过Git获取对应commit\_id的代码方法如下：
