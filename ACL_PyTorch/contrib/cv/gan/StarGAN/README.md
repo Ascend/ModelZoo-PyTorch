@@ -151,6 +151,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
          运行pth2om.sh脚本。
 
             ```
+            source /usr/local/Ascend/ascend-toolkit/set_env.sh
             bash ./test_710/pth2om.sh './models/200000-G.pth'
             ```
 
@@ -163,7 +164,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
       1. 配置环境变量。
 
             ```
-            source /user/local/Ascend/ascend-toolkit/set_env.sh
+            source /usr/local/Ascend/ascend-toolkit/set_env.sh
             ```
         上一步已经生成OM模型
          > **说明：** 
@@ -220,6 +221,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
    b.  执行推理。
       以batchsize=16 为例子
       ```
+      source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh
       python3  ais_infer.py --model ./StarGAN_bs16.om  --input ./bin/img,./bin/attr --output ./op  --outfmt TXT  --batchsize 16
       ```
 
@@ -250,7 +252,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ais_infer.py --model ./StarGAN_bs4.om  --output ./ --outfmt BIN --loop 5 --batchsize 1
+      python3 ais_infer.py --model ./StarGAN_bs1.om  --output ./ --outfmt BIN --loop 5 --batchsize 1
       python3 ais_infer.py --model ./StarGAN_bs64.om  --output ./ --outfmt BIN --loop 5 --batchsize 64
       ```
 

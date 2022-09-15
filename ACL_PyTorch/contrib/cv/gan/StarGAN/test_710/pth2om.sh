@@ -2,7 +2,7 @@
 PTH_FILE=$1
 
 export ASCEND_AICPU_PATH=${install_path}/{arch}-linux
-python3.7 pth2onnx.py --input_file $PTH_FILE --output_file './StarGAN.onnx'
+python3.7 StarGAN_pth2onnx.py --input_file $PTH_FILE --output_file './StarGAN.onnx'
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
