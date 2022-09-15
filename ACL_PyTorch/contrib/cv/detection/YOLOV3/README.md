@@ -84,11 +84,19 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 ## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
+
+    
+    ```
+        git clone https://github.com/ultralytics/yolov3.git
+        cd yolov3
+        git reset --hard 166a4d590f08b55cadfebc57a11a52ff2fc2b7d3
+    ```
+
        
 2. 安装依赖。
 
    ```
-   pip3 install -r requirements.txt
+       pip3 install -r requirements.txt
    ```
    
 ## 准备数据集<a name="section183221994411"></a>
@@ -124,7 +132,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     执行preprocess_yolov3_pytorch.py脚本。
 
    ```
-    python3.7 preprocess_yolov3_pytorch.py coco_2014.info yolov3_bin
+        python3.7 preprocess_yolov3_pytorch.py coco_2014.info yolov3_bin
    ```
    
     参数说明：
@@ -138,7 +146,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     
     运行get_coco_info.py脚本。
  
-    `python3.7 get_coco_info.py yolov3_bin ./coco_2014.info       `  
+            python3.7 get_coco_info.py yolov3_bin ./coco_2014.info
        
     第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
