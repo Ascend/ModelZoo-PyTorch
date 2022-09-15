@@ -135,7 +135,7 @@ root
 
    - --meta_file_path：生成的图片附加信息路径（临时信息，get_info.py需要用到）
    每个图像对应生成一个二进制bin文件，一个附加信息文件。
-   ```
+   
 
 3.生成数据集info文件。
   生成数据集info文件，执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
