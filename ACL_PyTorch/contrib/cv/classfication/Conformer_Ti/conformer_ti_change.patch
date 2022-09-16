@@ -1,0 +1,8 @@
+--- conformer.py	2021-11-01 01:24:54.000000000 +0800
++++ conformer_new.py	2022-06-20 15:56:42.106723233 +0800
+@@ -442,4 +442,4 @@
+         x_t = self.trans_norm(x_t)
+         tran_cls = self.trans_cls_head(x_t[:, 0])
+ 
+-        return [conv_cls, tran_cls]
++        return [conv_cls + tran_cls]
