@@ -259,11 +259,9 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
       -   参数说明：
 
-        -  --model：om文件路径。
-
-        -  --input:输入路径
-
-        -  --output：输出路径。
+        - --model：om文件路径。
+        - --input:输入路径
+        - --output：输出路径。
 
          推理后的输出默认在当前目录result下。
 
