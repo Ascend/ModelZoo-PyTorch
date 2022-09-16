@@ -88,6 +88,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
 2. 获取，修改与安装开源模型代码  
    安装mmcv
+
    ```
    git clone https://github.com/open-mmlab/mmcv -b v0.2.16
    cd mmcv
@@ -96,6 +97,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    cd ..
    ```
    获取SOLOv1代码
+
    ```
    git clone https://github.com/WXinlong/SOLO.git -b master
    cd SOLO
