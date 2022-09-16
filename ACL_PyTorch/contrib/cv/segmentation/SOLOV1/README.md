@@ -253,9 +253,8 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
       b.  执行推理。
 
-      ```
       python3 ais_infer.py --model "/home/cc/SOLOV1/soloc.om" --input "/home/cc/SOLOV1/val2017_bin/" --output "/home/cc/SOLOV1/result/" --outfmt BIN --device 0 --batchsize 1 --loop 1
-      ```
+      
       -   参数说明：
 
         - --model：om文件路径。
