@@ -20,7 +20,7 @@ from config import model_config as config
 from utils import load_data, evaluate, load_word_embeddings, plot_confusion_matrix
 
 import time
-
+from apex import amp
 import pandas as pd
 import numpy as np
 import pickle
@@ -85,7 +85,9 @@ if __name__ == '__main__':
     model = LSTMClassifier(config)
     model = model.to(CALCULATE_DEVICE)
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+    import apex
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=config['learning_rate'])
+    model, optimizer = amp.initialize(model,optimizer,opt_level='O2',loss_scale=32.0,combine_grad=True)
 
     train_batches = load_data()
     test_batch = load_data(test=True)
@@ -111,16 +113,19 @@ if __name__ == '__main__':
             predictions = model(inputs, input_lengths)
             predictions = predictions.to(CALCULATE_DEVICE)
 
+
             loss = criterion(predictions, targets)
-            loss.backward()
+            with amp.scale_loss(loss,optimizer) as scaled_loss:
+                scaled_loss.backward()
             optimizer.step()
             losses.append(loss.item())
+
 
             end = time.time()
             runtime += (end - start)
             i += 1
         if epoch % 100 == 0 :  #否则输出太多了
-            print("epoch = " + str(epoch) + "; steptime = " + str(runtime/i))
+            print("epoch = " + str(epoch) + "; steptime = {:.3f}; loss = {:.3f}".format(runtime/i, loss.data))
         ##sum_runtime += runtime/i
         # evaluate
         with torch.no_grad():
