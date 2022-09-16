@@ -1,0 +1,8 @@
+torch==1.9.0
+torchvision==0.10.0
+numpy==1.21.6
+Pillow==9.2.0
+h5py==3.7.0
+decorator==5.1.1
+sympy==1.10.1
+tqdm==4.64.1
