@@ -53,7 +53,7 @@ def preprocess(args):
     for file_name in val_files:
         file_path = os.path.join(dataset_dir, file_name)
         if os.path.isdir(file_path):
-            image_infos = [(image_name, os.path.join(file_path, image_name)) \
+            image_infos += [(image_name, os.path.join(file_path, image_name)) \
                            for image_name in os.listdir(file_path)]
         else:
             image_infos.append((file_name, file_path))
