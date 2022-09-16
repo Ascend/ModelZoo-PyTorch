@@ -110,7 +110,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+1.获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
   数据集的获取请参考[原始开源代码仓](https://github.com/WXinlong/SOLO)的方式获取。请将val2017图片及其标注文件放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
    ```
@@ -122,7 +122,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
    ```
 
-2. 数据预处理。
+2.数据预处理。
    将原始数据集转换为模型输入的二进制数据。执行“solov1_preprocess.py”脚本。
    ```
    python3 solov1_preprocess.py --image_src_path=/root/dataset/coco/val2017  --bin_file_path=val2017_bin --meta_file_path=val2017_bin_meta --model_input_height=800  --model_input_width=1216
@@ -136,7 +136,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    每个图像对应生成一个二进制bin文件，一个附加信息文件。
    
 
-3. 生成数据集info文件。
+3.生成数据集info文件。
    生成数据集info文件，执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
    ```
    python3 get_info.py /root/dataset/coco/  SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solo.info  solo_meta.info  1216 800
@@ -159,17 +159,17 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
 ## 模型推理<a name="section741711594517"></a>
 
-1. 模型转换。
+1.模型转换。
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。
+   1.获取权重文件。
 
        从源码包中获取权重文件：“SOLO_R50_1x.pth”，请将其放在与“pth2onnx.py”文件同一目录内。从（https://github.com/WXinlong/SOLO）下载
 
-   2. 导出onnx文件。
+   2.导出onnx文件。
 
-      1. 使用“SOLO_R50_1x.pth”导出onnx文件。
+      1.使用“SOLO_R50_1x.pth”导出onnx文件。
 
          运行“pth2onnx.py”脚本。
 
@@ -180,7 +180,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
          获得“SOLOv1.onnx”文件。
 
-      2. 优化ONNX模型。
+      2.优化ONNX模型。
 
          ```
          python3 -m onnxsim SOLOv1.onnx SOLOv1_sim.onnx
@@ -189,9 +189,9 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
          获得SOLOv1_sim.onnx文件。
 
-   3. 使用ATC工具将ONNX模型转OM模型。
+   3.使用ATC工具将ONNX模型转OM模型。
 
-      1. 配置环境变量。
+      1.配置环境变量。
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -201,7 +201,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
          > **说明：** 
          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+      2.执行命令查看芯片名称（$\{chip\_name\}）。
 
          ```
          npu-smi info
@@ -219,7 +219,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
          +===================+=================+======================================================+
          ```
 
-      3. 执行ATC命令。
+      3.执行ATC命令。
 
          ```
          atc --framework=5 --model=SOLOv1_sim.onnx --output=solo  --input_format=NCHW --input_shape="input:1,3,800,1216" --log=error --soc_version=Ascend${chip_name}
@@ -241,7 +241,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
 
 
-   2. 开始推理验证。
+2.开始推理验证。
 
       a.  使用ais-infer工具进行推理。
       ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
