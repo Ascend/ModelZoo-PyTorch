@@ -132,7 +132,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     执行preprocess_yolov3_pytorch.py脚本。
 
    ```
-        python3.7 preprocess_yolov3_pytorch.py yolov3_bin
+        python3.7 preprocess_yolov3_pytorch.py coco_2014.info yolov3_bin
    ```
    
     参数说明：
@@ -146,7 +146,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
     
     运行get_coco_info.py脚本。
  
-            python3.7 get_coco_info.py yolov3_bin 
+            python3.7 get_coco_info.py yolov3_bin ./coco_2014.info ./yolov3.info
        
     第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
 
@@ -186,15 +186,19 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
       4).  运行脚本：
             
         
-            python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
+            cd yolov3/
+            python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch n
+            mv yolov3.onnx yolov3_bsn.onnx
+            
 
         
 
       参数介绍：                                                         
           --weights：权重模型文件。                                   
           --img：图片大小。                                 
-          --batch：batchsize大小。                              
-        运行成功后，在当前目录生成yolov3.onnx模型文件。                                                 
+          --batch：batchsize大小。 
+          --n：batchsize取值(1,4,8,16,32,64)                             
+        运行成功后，在当前目录生成yolov3_bsn.onnx模型文件。                                                 
         说明：models/export.py为yolov3官方github代码仓提供。 
 
     c.使用ATC工具将ONNX模型转OM模型。
@@ -225,13 +229,13 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
      3).  执行ATC命令。
          
-         atc --model=yolov3.onnx 
+         atc --model=yolov3_bsn.onnx 
              --framework=5 
-             --output=yolov3_bs1 
+             --output=yolov3_bsn 
              --input_format=NCHW 
              --log=info 
              --soc_version=${chip_name} 
-             --input_shape="images:1,3,416,416" 
+             --input_shape="images:n,3,416,416" 
              --out_nodes="Reshape_219:0;Reshape_203:0;Reshape_187:0"
          
        说明：out_nodes为onnx模型输出节点，可能会因为pytorch版本的不同和github源码的改动导致变化，需要使用者参考本模型压缩包中提供的onnx模型和上述atc命令做一定修改，保证输出节点的位置和顺序正确。
@@ -247,7 +251,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
        --input_shape：输入数据的shape。                    
        --out_nodes：输出节点名称。                        
 
-       运行成功后生成yolov3_bs1.om文件。
+       运行成功后生成yolov3_bsn.om文件。
 
 2. 开始推理验证
 
@@ -259,12 +263,12 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
    运行 ais_infer 脚本。
 
-   
+       cd ${上一级目录} 
        mkdir ais_infer_result
        python3 ais_infer.py --ais_infer_path ${ais_infer_path} 
-                            --model yolov3_bs1.om 
+                            --model yolov3_bsn.om 
                             --input yolov3_bin 
-                            --batchsize=1 
+                            --batchsize=n 
                             --output ais_infer_result
    
       推理后的输出默认在当前目录result下。
@@ -282,7 +286,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
        
         
             python3.7 bin_to_predict_yolo_pytorch.py  
-                --bin_data_path result/dumpOutput_device0/  
+                --bin_data_path ais_infer_result/${ais_infer输出的结果}/  
                 --det_results_path  detection-results/ 
                 --origin_jpg_path val2014/ 
                 --coco_class_names coco2014.names 
