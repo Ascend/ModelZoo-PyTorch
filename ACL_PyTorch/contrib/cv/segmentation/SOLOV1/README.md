@@ -248,13 +248,15 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 2. 开始推理验证。
 
       a.  使用ais-infer工具进行推理。
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
       b.  执行推理。
 
+      ```
       python3 ais_infer.py --model "/home/cc/SOLOV1/soloc.om" --input "/home/cc/SOLOV1/val2017_bin/" --output "/home/cc/SOLOV1/result/" --outfmt BIN --device 0 --batchsize 1 --loop 1
-
+      ```
+      
       -   参数说明：
         -   --model：om文件路径。
         -   --input:输入路径
