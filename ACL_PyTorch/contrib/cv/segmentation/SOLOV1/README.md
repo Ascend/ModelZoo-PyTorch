@@ -123,6 +123,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    ```
 
 2. 数据预处理。
+
    将原始数据集转换为模型输入的二进制数据。执行“solov1_preprocess.py”脚本。
    ```
    python3 solov1_preprocess.py --image_src_path=/root/dataset/coco/val2017  --bin_file_path=val2017_bin --meta_file_path=val2017_bin_meta --model_input_height=800  --model_input_width=1216
@@ -137,6 +138,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    
 
 3. 生成数据集info文件。
+
    生成数据集info文件，执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
    ```
    python3 get_info.py /root/dataset/coco/  SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solo.info  solo_meta.info  1216 800
