@@ -11,9 +11,8 @@ categroies = content.get('categories')
 
 with open('./coco2014.names', 'w') as f:
     for categroie in categroies:
-        f.write(categroie.get('name'))
+        f.write(categroie.get('name').replace(' ', '_'))
         f.write('\n')
-
 file_names = [image.get('file_name') for image in images]
 widths = [image.get('width') for image in images]
 heights = [image.get('height') for image in images]
