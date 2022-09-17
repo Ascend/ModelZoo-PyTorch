@@ -130,6 +130,11 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
 
        获取权重文件“swin_tiny_patch4_window7_224.pth”，放到“./resume”目录下。[[权重文件下载链接](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth)]
 
+      ```
+      mkdir resume
+      mv swin_tiny_patch4_window7_224.pth ./resume/
+      ```
+
    2. 导出onnx文件。
 
       使用“swin_pth2onnx.py”导出onnx文件。
@@ -174,7 +179,7 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
 
       3. 执行ATC命令。
          ```
-         atc --framework=5 --model=onnx_models/swin_b16_fix.onnx  --output=swin_b16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=onnx_models/swin_b16.onnx  --output=swin_b16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=${chip_name}
          ```
 
          - 参数说明：
