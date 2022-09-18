@@ -80,7 +80,7 @@ MobileNet网络是由google团队在2017年提出的，专注于移动端或者�
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC1 | -                                                            |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.6.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -111,12 +111,6 @@ MobileNet网络是由google团队在2017年提出的，专注于移动端或者�
    这里使用VOC2007的测试集作为测试数据集
    URL：https://pjreddie.com/media/files/VOCtest_06-Nov-2007.tar
    解压后获得VOCdevkit文件，并以VOCdevkit其作为数据集路径.
-   
-   预训练权重：
-   ```bash
-   wget https://storage.googleapis.com/models-hao/mobilenet-v1-ssd-mp-0_675.pth
-   ```
-   下载后重命名为mobilenet-v1-ssd.pth
 
    数据标签：
    ```bash
@@ -144,7 +138,10 @@ MobileNet网络是由google团队在2017年提出的，专注于移动端或者�
 
    1. 获取权重文件。
 
-       <u>***写清楚权重文件的获取方式：下载链接***</u>
+       ```
+       wget https://storage.googleapis.com/models-hao/mobilenet-v1-ssd-mp-0_675.pth
+       ```
+   下载后重命名为mobilenet-v1-ssd.pth
 
    2. 导出onnx文件。
 
@@ -246,15 +243,8 @@ MobileNet网络是由google团队在2017年提出的，专注于移动端或者�
 
         -   --voc-model-labels.txt：为标签数据
         -   --eval_results1：为生成结果文件夹
-
-
-   d.  性能验证。
-
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-      ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
-      ```
+        -   --/VOCdevkit/VOC2007：为数据集文件夹
+        -   --/lmcout/bs1/xxxx：为推理结果保存文件夹
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
