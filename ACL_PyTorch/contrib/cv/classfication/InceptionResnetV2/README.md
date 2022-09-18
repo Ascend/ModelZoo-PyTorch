@@ -249,7 +249,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
       使用batch size为1的om模型文件进行推理，其他batch size可作相应的修改
       ```
       mkdir ./result
-      python ais_infer.py --model ./inceptionresnetv2_bs1.om --batchsize 1 --input ./prep_dataset --output ./result --outfmt TXT --device 0
+      python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./inceptionresnetv2_bs1.om --batchsize 1 --input ./prep_dataset --output ./result --outfmt TXT --device 0
       ```
 
       参数说明：
