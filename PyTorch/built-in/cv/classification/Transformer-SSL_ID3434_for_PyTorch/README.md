@@ -6,12 +6,12 @@ This folder contains the implementation of the `MoBY` with `Swin Transformer` fo
 
 ### Install
 
-- Install ASCEND-CANN, ASCEND-pytorch-1.5 and apex.
+- Install ASCEND-CANN, ASCEND-pytorch and apex.
 
 - Install `timm==0.3.2`:
 
 ```bash
-pip3.7 install timm==0.3.2
+pip3.7 install timm==0.3.2 --no-dependencies
 ```
 
 - Install other requirements:
