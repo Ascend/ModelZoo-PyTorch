@@ -324,4 +324,4 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
 | 芯片型号 | Batch Size | 数据集       |  精度 | 性能 |
 | -------- | ---------- | ------------ | ------- | ---- |
-| 310P3    | 1          | coco2014 | 59.28% | throughputrate:637.604 |
+| 310P3    | 4          | coco2014 | 59.28% | throughputrate:637.604 |
