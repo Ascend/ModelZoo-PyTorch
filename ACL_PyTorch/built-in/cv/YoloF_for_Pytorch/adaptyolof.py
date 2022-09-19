@@ -50,6 +50,8 @@ def revise_model(src_path, save_path):
     onnx1 = mod1.node_remove(nodes_behind)
     new_1750 = mod1.add_output_node("1131", "float16")
     new_1753 = mod1.add_output_node("1144", "float16")
+    cnt = mod1.get_nodes_by_optype("Constant")
+    mod1.node_remove(cnt)
     mod1.save_new_model("o1.onnx")
 
     cmd = "amct_onnx calibration --model ./o1.onnx --save_path ./result --input_shape " \
