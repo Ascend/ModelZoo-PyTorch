@@ -74,7 +74,7 @@ nohup python3.7 -u train.py \
     --batch-size ${batch_size} \
     --opt-level O2 \
     --workers ${workers} \
-    --local-rank ${i} \
+    --local-rank ${ASCEND_DEVICE_ID} \
     --world-size 1 \
     --device-num ${device_num} \
     --train-dir ${data_path} \
