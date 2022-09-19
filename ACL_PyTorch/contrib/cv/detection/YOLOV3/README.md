@@ -135,8 +135,8 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
         python3.7 preprocess_yolov3_pytorch.py coco_2014.info yolov3_bin
    ```
    
-    参数说明：
-        coco_2014.info数据集信息。
+    参数说明：                    
+        coco_2014.info数据集信息。                    
         yolov3_bin生成的二进制文件路径。
 
 3. 生成数据集info文件。
