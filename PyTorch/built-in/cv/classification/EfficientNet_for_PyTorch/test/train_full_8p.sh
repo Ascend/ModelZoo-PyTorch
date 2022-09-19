@@ -156,7 +156,7 @@ echo "Final Performance images/sec : $FPS"
 train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 
 #打印，不需要修改
-#echo "Final Train Accuracy : ${train_accuracy}"
+echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总
