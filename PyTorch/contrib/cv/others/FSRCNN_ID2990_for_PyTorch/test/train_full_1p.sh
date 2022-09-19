@@ -91,9 +91,6 @@ cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
 
-# 修改参数
-sed -i 's/nEpochs = 1000/nEpochs = 250/' train.py
-
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -111,28 +108,37 @@ start_time=$(date +%s)
 # 您的训练数据集在${data_path}路径下，请直接使用这个变量获取
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
-train_epochs=20
+train_epochs=200
 batch_size=16
 
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 train.py --datapath=${data_path}
+    python3.7 train.py \
+        --train-file=${data_path}/data/91-image_x3.h5 \
+        --eval-file=${data_path}/data/Set5_x3.h5 \
+        --num-epochs=${train_epochs} \
+        --outputs-dir=${output_path} 1>${print_log} 2>&1
+
 else
-    python3.7 train.py --datapath=${data_path} 1>${print_log} 2>&1
+    python3.7 train.py \
+	    --train-file=${data_path}/91-image_x3.h5 \
+	    --eval-file=${data_path}/Set5_x3.h5 \
+	    --num-epochs=${train_epochs} \
+	    --outputs-dir=${output_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
-EpochTime=`grep -A 1 "loss" ${print_log} | grep -v "loss" | awk '{sum+=$1} END {print sum/NR}'`
-StepTime=`awk 'BEGIN{printf "%.2f\n", '${EpochTime}'/ '113'}'`
+Ittime=`cat ${print_log} | tr -d '\b\r'| grep -Eo "[0-9]*\.[0-9]*it/s" | tr -d "it/s" | awk '{sum+=$1} END {print sum/NR}'`
+StepTime=`awk 'BEGIN{printf "%.4f\n", '1'/ '${Ittime}'}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
 
 # 精度相关数据计算
-train_accuracy=`grep "eval psnr" ${print_log} | awk '{print $4}' | awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+train_accuracy=`grep "psnr" ${print_log} | grep -v "eval" | awk '{print $5}'`
 
 # 提取所有loss打印信息
-grep "Avg. Loss" ${print_log} | awk '{print $7}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+cat ${print_log} |tr -d '\b\r'| grep -Eo "loss=[0-9]*\.[0-9]*" | awk -F "=" '{print $2}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 
 ###########################################################
@@ -141,18 +147,6 @@ grep "Avg. Loss" ${print_log} | awk '{print $7}' > ./test/output/${ASCEND_DEVICE
 #########后面的所有内容请不要修改###########################
 ###########################################################
 
-# 判断本次执行是否正确使用Ascend NPU
-use_npu_flag=`grep "The model has been compiled on the Ascend AI processor" ${print_log} | wc -l`
-if [ x"${use_npu_flag}" == x0 ];
-then
-    echo "------------------ ERROR NOTICE START ------------------"
-    echo "ERROR, your task haven't used Ascend NPU, please check your npu Migration."
-    echo "------------------ ERROR NOTICE END------------------"
-else
-    echo "------------------ INFO NOTICE START------------------"
-    echo "INFO, your task have used Ascend NPU, please check your result."
-    echo "------------------ INFO NOTICE END------------------"
-fi
 
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename
