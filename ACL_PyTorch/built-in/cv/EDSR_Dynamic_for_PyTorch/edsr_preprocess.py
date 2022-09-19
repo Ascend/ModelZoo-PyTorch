@@ -19,10 +19,12 @@ import numpy as np
 
 
 parser = argparse.ArgumentParser(description='EDSR preprocess script')
-parser.add_argument('-s', default='', type=str, metavar='PATH',
-                    help='path of source image files (default: none)')
-parser.add_argument('-d', default='', type=str, metavar='PATH',
-                    help='path of output (default: none)')
+parser.add_argument('-s', required=True, type=str, metavar='PATH',
+                    help='path of source image files')
+parser.add_argument('-d', required=True, type=str, metavar='PATH',
+                    help='path of output')
+parser.add_argument('-t', '--data_type', default='float16', type=str,
+                    help='data dtype for preprocessed data')
 parser.add_argument('--save_img', action='store_true',
                     help='save image')
 args = parser.parse_args()
@@ -50,7 +52,7 @@ def preprocess(src_path, save_path):
                 lr_image).astype(np.uint8).transpose(1, 2, 0))
 
         lr_image = np.array(lr_image).astype(np.uint8)
-        lr_image = lr_image.astype(np.float32)
+        lr_image = lr_image.astype(args.data_type)
 
         lr_image.tofile(os.path.join(
             save_path, "bin", image_file.split('.')[0] + ".bin"))
