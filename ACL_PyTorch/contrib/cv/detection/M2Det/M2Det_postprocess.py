@@ -93,8 +93,6 @@ if __name__ == '__main__':
         name_dic = dict()
         with open(os.path.join(bin_path, "sumary.json"), 'r') as f:
             sumary = json.load(f)
-            print(type(sumary))
-            print(type(sumary["filesinfo"]))
         for value in sumary["filesinfo"].values():
             img_name = value["infiles"][0].split("/")[-1].split(".")[0]
             out_name_0 = value["outfiles"][0].split("/")[-1]
