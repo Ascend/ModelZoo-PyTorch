@@ -148,7 +148,10 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
  
             python3.7 get_coco_info.py yolov3_bin ./coco_2014.info ./yolov3.info
        
-    第一个参数为生成的数据集bin文件夹路径，第二个参数为数据集图片info文件。
+    
+    yolov3_bin:生成的数据集bin文件夹路径。                
+    coco_2014.info:数据集图片info文件。                        
+    yolov3.info:生成的数据集二进制info文件。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -196,7 +199,7 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
       参数介绍：                                                         
           --weights：权重模型文件。                                   
           --img：图片大小。                                 
-          --batch：batchsize大小。 
+          --batch：batchsize大小。                         
           --n：batchsize取值(1,4,8,16,32,64)                             
         运行成功后，在当前目录生成yolov3_bsn.onnx模型文件。                                                 
         说明：models/export.py为yolov3官方github代码仓提供。 
@@ -321,4 +324,4 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
 | 芯片型号 | Batch Size | 数据集       |  精度 | 性能 |
 | -------- | ---------- | ------------ | ------- | ---- |
-| 310P3    | 1          | coco2014 | 59.28% | throughputrate:418.0131 |
+| 310P3    | 1          | coco2014 | 59.28% | throughputrate:637.604 |
