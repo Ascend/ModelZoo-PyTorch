@@ -226,15 +226,15 @@ python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --
 ```
 -   参数说明：
      
-   -   --input：输入文件夹。
+ -   --input：输入文件夹。
    
-     -   --model：om文件路径。
+ -   --model：om文件路径。
    
-     -   --output：输出文件夹。
+ -   --output：输出文件夹。
 
-     -   --outfmt：输出格式。
+ -   --outfmt：输出格式。
 
-     -   --batchsize：batchsize.
+ -   --batchsize：batchsize.
 
 
   c.精度验证
