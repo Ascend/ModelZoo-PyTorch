@@ -124,13 +124,12 @@ MobileNet网络是由google团队在2017年提出的，专注于移动端或者�
    执行"SSD_MobileNet_preprocess.py"脚本，完成预处理。
 
    ```
-   python3.7 SSD_MobileNet_preprocess.py --test_batch_size=X --output_path='bin-bsX/'
+   python3.7 SSD_MobileNet_preprocess.py /datasets_path/VOC2007/JPEGImages ./pre_dataset
    ```
    
    - 参数说明：
 
-      -   --X：为Batchsize的大小。
-      -   --bin-bsX/：为结果输出的路径文件夹。
+      -   --datasets_path：为数据集文件的路径。
 
 
 ## 模型推理<a name="section741711594517"></a>
