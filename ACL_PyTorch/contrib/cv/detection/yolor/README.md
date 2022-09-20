@@ -252,7 +252,7 @@ c.  精度验证。
 调用yolor_postprocess.py，可以获得Accuracy数据。修改yolor_postprocess.py第109行output_path为ais_infer推理的output路径。
 
 ```
-    python3 yolor_postprocess.py --data ./coco.yaml --img 1344 --batch 1 --conf 0.001 --iou 0.65 --npu 0 --name yolor_p6_val --names ./yolor/data/coco.names
+ python3 yolor_postprocess.py --data ./coco.yaml --img 1344 --batch 1 --conf 0.001 --iou 0.65 --npu 0 --name yolor_p6_val --names ./yolor/data/coco.names
 ```
 
    -  参数说明：
