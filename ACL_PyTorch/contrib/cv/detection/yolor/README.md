@@ -98,7 +98,7 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
    该模型使用coco数据集，该模型使用coco数据集，可根据https://github.com/WongKinYiu/yolor/blob/main/scripts/get_coco.sh 获取，
-   **修改解压目录或者解压完成后移动coco置于此readme的上一级目录**。目录结构如下：
+   **修改解压目录或者解压完成后移动coco置于此readme同级目录**。目录结构如下：
    ```
     ├── coco
     │    ├── images   
@@ -200,10 +200,10 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
       3. 执行ATC命令。
          使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN V100R020C10 开发辅助工具指南 (推理) 01，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名。
 
-         这里只保留模型的output(type: float32[1,112455,85])一个输出，其前一个算子为Concat_2575：
+         这里只保留模型的output(type: float32[1,112455,85])一个输出，其前一个算子为Concat_1059：
 
          ```
-         atc --model=yolor_bs1_sim.onnx --framework=5 --output=yolor_bs1 --input_format=NCHW --input_shape="image:1,3,1344,1344" --log=info --soc_version=Ascend${chip_name} --out_nodes="Concat_2575:0" --buffer_optimize=off_optimize
+         atc --model=yolor_bs1_sim.onnx --framework=5 --output=yolor_bs1 --input_format=NCHW --input_shape="image:1,3,1344,1344" --log=info --soc_version=Ascend${chip_name} --out_nodes="Concat_1059:0" --buffer_optimize=off_optimize
          ```
 
          - 参数说明：
@@ -223,8 +223,8 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 
 
 2. 开始推理验证。
-  >**说明：**
-  > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer。
+  >** 说明：**
+  > 执行ais-infer工具请选择与运行环境架构相同的命令，获取tools于此readme同级目录。参数详情请参见[ais_infer推理工具使用文档(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 a.  使用ais-infer工具进行推理。
 
@@ -237,22 +237,22 @@ a.  使用ais-infer工具进行推理。
 b.  执行推理。
 
 ```
- python3 ais_infer.py  --model /home/yolor/yolor_bs1.om --output ./ --outfmt BIN --loop 5
+ python3 ais_infer.py  --model /home/yolor/yolor_bs1.om --input /home/yolor/val2017_bin/ --output ./ --batchsize 1
 ```
 
   -  参数说明：
      -  --model：输入om文件路径。
-     -  --output：推理结果输出路径。
-     -  --outfmt：输出文件格式。
-     -  --loop：推理次数。
+     -  --input：输入bin文件的文件夹路径。
+     -  --output：推理结果输出路径(如下精度验证输入)。
+     -  --batchsize：默认为1。
              
 c.  精度验证。
 
-调用yolor_postprocess.py，可以获得Accuracy数据。
+调用yolor_postprocess.py，可以获得Accuracy数据。修改yolor_postprocess.py第109行output_path为ais_infer推理的output路径。
 
-    ```
+     ```
     python3 yolor_postprocess.py --data ./coco.yaml --img 1344 --batch 1 --conf 0.001 --iou 0.65 --npu 0 --name yolor_p6_val --names ./yolor/data/coco.names
-    ```
+     ```
 
    -  参数说明：
         -  --data：输入数据路径。
