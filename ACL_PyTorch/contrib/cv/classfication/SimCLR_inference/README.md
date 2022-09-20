@@ -82,17 +82,15 @@ SimCLR：一个简单的视觉表示对比学习框架，不仅比以前的工�
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 
+1. 获取源码
+    ```
+    git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
+    ```
 
-1. 安装依赖。
+2. 安装依赖。
 
    ```
-   cd SimCLR
-   conda create -n simclr python=3.7
-
-   conda activate simclr
    pip install -r requirements.txt 
-   pip install decorator
-   pip install sympy
    ```
 
 
@@ -134,7 +132,7 @@ root
 
 ## 模型推理<a name="section741711594517"></a>
 
-1. 模型转换。
+  1. 模型转换。
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
@@ -147,12 +145,7 @@ root
 
    2. 导出onnx文件。
 
-      1. 使用gen_dataset_info.py生成info文件
-         运行脚本
-          ```
-          python3.7 gen_dataset_info.py bin ./prep_data ./Simclr_model.info 32 32
-          ```
-      2. 使用Simclr_pth2onnx.py导出onnx文件。
+      1. 使用Simclr_pth2onnx.py导出onnx文件。
          运行Simclr_pth2onnx.py脚本。
 
          ```
@@ -195,77 +188,70 @@ root
 
       3. 执行ATC命令。
 
-         ```
-         atc --framework=5 --model=Simclr_model.onnx --output=Simclr_model_bs1 --input_format=NCHW --input_shape="input:1,3,32,32" --log=info --soc_version=${chip_name} --insert_op_conf=aipp.cfg --enable_small_channel=1 --keep_dtype=execeptionlist.cfg
-         ```
+       ```
+       atc --framework=5 --model=Simclr_model.onnx --output=Simclr_model_bs1 --input_format=NCHW --input_shape="input:1,3,32,32" --log=info -- 
+       soc_version=Ascend${chip_name} --insert_op_conf=aipp.cfg --enable_small_channel=1 --keep_dtype=execeptionlist.cfg
+       ```
+        - 参数说明:
+        
+        --model：为ONNX模型文件。
+               
+        --framework：5代表ONNX模型。
+        
+        --output：输出的OM模型。
+        
+        --input\_format：输入数据的格式。
+        
+        --input\_shape：输入数据的shape。
+        
+        --log：日志级别。
+        
+        --soc\_version：处理器型号。
+        
+        --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 
-         - 参数说明：
+        --enable_small_channel：Set enable small channel. 0(default): disable; 1: enable。
+           
+        运行成功后生成Simclr_model_bs1.om模型文件。
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
-           -   --enable_small_channel：Set enable small channel. 0(default): disable; 1: enable。
+  2.开始推理验证  
+   a.使用ais-infer工具进行推理
 
-           运行成功后生成<u>***Simclr_model_bs1.om***</u>模型文件。
+   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+  
+   b.执行推理。
+
+```
+python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/
+```
+-   参数说明：
+     
+   -   --input：输入文件夹。
+   
+     -   --model：om文件路径。
+   
+     -   --output：输出文件夹
 
 
+  c.精度验证
+     
+调用脚本Simclr_postprocess.py获取，可以获得Accuracy数据，结果保存在log文件中。
 
-2. 开始推理验证。
-
-a.  使用ais-infer工具进行推理。
-
-   执行命令增加工具可执行权限，并根据OS架构选择工具
-
-   ```
-   chmod u+x ais_infer.py
-   ```
-
-b.  执行推理。
-
-    ```
-     python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/
-    ```
-
-    -   参数说明：
-
-        -   --input：输入文件夹。
-        -   --model：om文件路径。
-        -   --output：输出文件夹
-		...
-
-        推理后的输出默认在当前目录result下。
-
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-
-c.  精度验证。
-
-    调用脚本Simclr_postprocess.py获取，可以获得Accuracy数据，结果保存在log文件中。
-
-    ```
-    python3.7 Simclr_postprocess.py  ./ais_infer/result/2022_07_25-10_41_40/ > result_bs1.log
-    ```
-
-    result/2022_07_25-10_41_40/：为生成推理结果所在路径  
+```
+ python3.7 Simclr_postprocess.py  ./ais_infer/result/2022_07_25-10_41_40/ > result_bs1.log
+```
+result/2022_07_25-10_41_40/：为生成推理结果所在路径  
     
-    result_bs1.log：为生成结果文件
+result_bs1.log：为生成结果文件
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 模型        |  在线推理精度  | 310离线推理精度 | 310性能    | 310p离线推理精度| 310p性能   |
-| :------:    | :------:      | :------:      | :------:   | :------:     | :------:   |
-| SimCLR bs1  |   65.625%    |    65.014%     | 4210.00fps |  65.870%      | 3571fps    |
-| SimCLR bs4  |   65.625%    |    65.334%     | 7920.84fps |  65.199%      | 12903fps   |
-| SimCLR bs8  |   65.625%    |    65.194%     | 11859.0fps |  65.154%      | 17391fps   |
-| SimCLR bs16 |   65.625%    |    65.099%     | 11015.4fps |  65.329%      | 23529fps   |
-| SimCLR bs32 |   65.625%    |    65.424%     | 11594.0fps |  65.559%      | 28070fps   |
-| SimCLR bs64 |   65.625%    |    65.409%     | 11884.1fps |  66.080%      | 27586fps   |
+| 芯片型号        |  Batch Size  | 数据集 | 精度   | 性能 |
+| :------:    | :------:      | :------: | :------:| :------: |
+|   310       |    64        |  CIFAR-10 | 65.39   |11884fps |
+|   310p      |    32        |  CIFAR-10 | 65.55   |28070fps |
+
 
 310p最优batch为:bs32。
