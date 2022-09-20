@@ -105,7 +105,9 @@ def test(data,
     p, r, f1, mp, mr, map50, map, t0, t1 = 0., 0., 0., 0., 0., 0., 0., 0., 0.
     loss = torch.zeros(3, device=device)
     jdict, stats, ap, ap_class, wandb_images = [], [], [], [], []
-    output_path = './result/dumpOutput_device0'
+#    output_path = './result/dumpOutput_device0'
+    output_path = './tools/ais-bench_workload/tool/ais_infer/2022_09_20-09_55_08'
+
     pbar = tqdm(dataloader)
     # ort_session = ort.InferenceSession('yolor_bs1simp.onnx')
     for batch_i, (img, targets, paths, shapes) in enumerate(pbar):
@@ -118,7 +120,7 @@ def test(data,
 
         file_name = paths[0].split('/')[-1]
         file_name = file_name.split('.')[0]
-        file_name = file_name + '_1.bin'
+        file_name = file_name + '_0.bin'
         data_path = os.path.join(output_path, file_name)
         inf_data = np.fromfile(data_path, dtype=np.float32)
         inf_data = inf_data.reshape(1, 112455, 85)
@@ -266,7 +268,7 @@ def test(data,
     # Save JSON
     if save_json and len(jdict):
         w = Path(weights[0] if isinstance(weights, list) else weights).stem if weights is not None else ''  # weights
-        anno_json = glob.glob('../coco/annotations/instances_val*.json')[0]  # annotations json
+        anno_json = glob.glob('./coco/annotations/instances_val*.json')[0]  # annotations json
         pred_json = str(save_dir / f"{w}_predictions.json")  # predictions json
         print('\nEvaluating pycocotools mAP... saving %s...' % pred_json)
         with open(pred_json, 'w') as f:
