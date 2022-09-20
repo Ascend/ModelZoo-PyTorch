@@ -224,9 +224,7 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 
 2. 开始推理验证。
 
-      
-         > **说明：** 
-         该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
+> **说明：** 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
 
 
 a.  使用ais-infer工具进行推理。
@@ -253,9 +251,9 @@ c.  精度验证。
 
 调用yolor_postprocess.py，可以获得Accuracy数据。修改yolor_postprocess.py第109行output_path为ais_infer推理的output路径。
 
-     ```
+```
     python3 yolor_postprocess.py --data ./coco.yaml --img 1344 --batch 1 --conf 0.001 --iou 0.65 --npu 0 --name yolor_p6_val --names ./yolor/data/coco.names
-     ```
+```
 
    -  参数说明：
         -  --data：输入数据路径。
