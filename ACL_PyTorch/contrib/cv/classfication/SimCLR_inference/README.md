@@ -222,7 +222,7 @@ root
    b.执行推理。
 
 ```
-python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/
+python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/ --outfmt "TXT" --batchsize 1
 ```
 -   参数说明：
      
@@ -230,7 +230,11 @@ python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --
    
      -   --model：om文件路径。
    
-     -   --output：输出文件夹
+     -   --output：输出文件夹。
+
+     -   --outfmt：输出格式。
+
+     -   --batchsize：batchsize.
 
 
   c.精度验证
