@@ -75,7 +75,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC1 | -                                                            |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.5.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -143,7 +143,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
       2. 优化ONNX文件。
 
          ```
-         python3.7 -m onnxsim --input-shape="1,3,224,224" --dynamic-input-shape resnest50.onnx resnesst50_sim.onnx
+         python3.7 -m onnxsim --input-shape="1,3,224,224" --dynamic-input-shape resnest50.onnx resnest50_sim.onnx
          ```
 
          获得resnest50_sim.onnx文件。
@@ -204,7 +204,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
   a.  执行推理。
 
     ```
-     python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./new_resnest50_b4.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
+     python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./new_resnest50_b4.om --input ./prep_dataset/ --output ./result/ --outfmt TXT --batchsize bs4
     ```
 
         - 参数说明：
