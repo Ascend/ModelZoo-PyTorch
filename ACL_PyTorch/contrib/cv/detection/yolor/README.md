@@ -224,8 +224,10 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 
 2. 开始推理验证。
 
+      
          > **说明：** 
          该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
+
 
 a.  使用ais-infer工具进行推理。
 
