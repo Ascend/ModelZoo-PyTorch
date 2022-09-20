@@ -90,7 +90,6 @@ def preprocess(srcfile_path, savefile_path):
             image = [data_transforms(Image.fromarray(images[i])) for j in range(n_views)]
             file_path = os.path.join(savefile_path, "Simclr_prep_" + str(file_num) + ".bin")
             file_num = file_num + 1
-            print(i)
             image_file = np.array(image[0]).astype(np.int8)
             image_file.tofile(file_path)
             file_path = os.path.join(savefile_path, "Simclr_prep_" + str(file_num) + ".bin")
