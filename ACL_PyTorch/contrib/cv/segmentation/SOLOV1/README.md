@@ -147,19 +147,20 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    python3 get_info.py /root/dataset/coco/  SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  val2017_bin  val2017_bin_meta  solo.info  solo_meta.info  1216 800
 
    ```
-   - --“/root/dataset/coco/”：数据集路径。
+   - 参数说明
+      - --“/root/dataset/coco/”：数据集路径。
 
-   - --“SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py”：模型配置文件。
+      - --“SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py”：模型配置文件。
 
-   - --“val2017_bin”：预处理后的数据文件的相对路径。
+      - --“val2017_bin”：预处理后的数据文件的相对路径。
 
-   - --“val2017_bin_meta”：预处理后的数据文件的相对路径。
+      - --“val2017_bin_meta”：预处理后的数据文件的相对路径。
 
-   - --“1216”：图片宽。
+      - --“1216”：图片宽。
 
-   - --“800”：图片高。
+      - --“800”：图片高。
 
-   运行成功后，在当前目录中生成“solo.info”和“solo_meta.info”。
+      运行成功后，在当前目录中生成“solo.info”和“solo_meta.info”。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -259,9 +260,9 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
       -   参数说明：
 
-      - --model：om文件路径。
-      - --input:输入路径
-      - --output：输出路径。
+         - --model：om文件路径。
+         - --input:输入路径
+         - --output：输出路径。
 
       推理后的输出默认在当前目录result下。
 
@@ -275,10 +276,10 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
       ```
       python3 solov1_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  --bin_data_path=./2022_09_03-10_09_16/  --meta_info=solo_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
       ```
-
-      - --./2022_09_03-10_09_16/：为生成推理结果所在路径  
-      - --model_config 是当前目录下
-      - --val2017：为标签数据
+      - 参数说明
+         - --./2022_09_03-10_09_16/：为生成推理结果所在路径  
+         - --model_config 是当前目录下
+         - --val2017：为标签数据
     
 
 
