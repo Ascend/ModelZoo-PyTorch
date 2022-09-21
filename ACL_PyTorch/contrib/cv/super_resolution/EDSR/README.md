@@ -162,7 +162,7 @@ atc --model=edsr_x2.onnx --framework=5 --output=edsr_x2 --input_format=NCHW --in
 --input_format：输入数据的格式。 \
 --input_shape：输入数据的shape。 \
 --log：日志级别。 \
---soc_version：处理器型号。 \
+--soc_version：处理器型号。 
 
 
 
