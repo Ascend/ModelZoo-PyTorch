@@ -105,7 +105,7 @@ wait
 # 添加二进制代码
 line=`grep "import torch" ${test_path_dir}/../densenet121_1p_main.py -n | tail -1|awk -F ':' '{print $1}'`
 sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${test_path_dir}/../densenet121_1p_main.py
-sed -i "$[line+2]ioption = {}" ${curtest_path_dir_path}/../densenet121_1p_main.py
+sed -i "$[line+2]ioption = {}" ${test_path_dir}/../densenet121_1p_main.py
 sed -i "$[line+3]ioption[\"NPU_FUZZY_COMPILE_BLACKLIST\"] = \"AvgPoolV2Grad\"" ${test_path_dir}/../densenet121_1p_main.py
 sed -i "$[line+4]itorch.npu.set_option(option)" ${test_path_dir}/../densenet121_1p_main.py
 
