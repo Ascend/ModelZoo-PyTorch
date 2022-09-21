@@ -83,7 +83,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 1. 安装依赖。
 
    ```
-   pip3 install -r requirment.txt
+   pip3 install -r requirements.txt
    ```
 
 2. 获取，修改与安装开源模型代码  
@@ -131,12 +131,13 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
    python3 solov1_preprocess.py --image_src_path=/root/dataset/coco/val2017  --bin_file_path=val2017_bin --meta_file_path=val2017_bin_meta --model_input_height=800  --model_input_width=1216
    
    ```
-   - --image_src_path：数据集路径
+   - 参数说明
+      - --image_src_path：数据集路径
 
-   - --bin_file_path：生成的图片bin文件路径
+      - --bin_file_path：生成的图片bin文件路径
 
-   - --meta_file_path：生成的图片附加信息路径（临时信息，get_info.py需要用到）
-   每个图像对应生成一个二进制bin文件，一个附加信息文件。
+      - --meta_file_path：生成的图片附加信息路径（临时信息，get_info.py需要用到）
+      每个图像对应生成一个二进制bin文件，一个附加信息文件。
    
 
 3. 生成数据集info文件。
@@ -169,7 +170,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件：“SOLO_R50_1x.pth”，请将其放在与“pth2onnx.py”文件同一目录内。从（https://github.com/WXinlong/SOLO）下载
+       从源码包中获取权重文件：“SOLO_R50_1x.pth”，请将其放在与“pth2onnx.py”文件同一目录内。从（https://github.com/WXinlong/SOLO）
 
    2. 导出onnx文件。
 
@@ -226,7 +227,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=SOLOv1_sim.onnx --output=solo  --input_format=NCHW --input_shape="input:1,3,800,1216" --log=error --soc_version=Ascend${chip_name} --customize_dtypes=/home/cc/SOLOV1/customize_dtypes.cfg --precision_mode=force_fp16
+         atc --framework=5 --model=SOLOv1_sim.onnx --output=solo  --input_format=NCHW --input_shape="input:1,3,800,1216" --log=error --soc_version=Ascend${chip_name} --customize_dtypes=./customize_dtypes.cfg --precision_mode=force_fp16
          ```
 
          - 参数说明：
@@ -253,7 +254,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
       b.  执行推理。
 
       ```
-      python3 ais_infer.py --model "/home/cc/SOLOV1/solo.om" --input "/home/cc/SOLOV1/val2017_bin/" --output "/home/cc/SOLOV1/result/" --outfmt BIN --device 0 --batchsize 1 --loop 1
+      python3 ais_infer.py --model "./solo.om" --input "./val2017_bin/" --output "./" --outfmt BIN --device 0 --batchsize 1 --loop 1
       ```
 
       -   参数说明：
@@ -272,11 +273,11 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
       调用脚本与数据集val2017标签比对
 
       ```
-      python3 solov1_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  --bin_data_path=./result/2022_09_03-10_09_16/  --meta_info=solo_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
+      python3 solov1_postprocess.py  --dataset_path=/root/dataset/coco/   --model_config=SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  --bin_data_path=./2022_09_03-10_09_16/  --meta_info=solo_meta.info  --net_out_num=3  --model_input_height 800  --model_input_width 1216
       ```
 
-      - --result/2022_09_03-10_09_16/：为生成推理结果所在路径  
-    
+      - --./2022_09_03-10_09_16/：为生成推理结果所在路径  
+      - --model_config 是当前目录下
       - --val2017：为标签数据
     
 
