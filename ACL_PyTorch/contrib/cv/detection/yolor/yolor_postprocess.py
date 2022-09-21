@@ -118,12 +118,24 @@ def test(data,
         nb, _, height, width = img.shape  # batch size, channels, height, width
         whwh = torch.Tensor([width, height, width, height])
 
-        file_name = paths[0].split('/')[-1]
-        file_name = file_name.split('.')[0]
-        file_name = file_name + '_0.bin'
-        data_path = os.path.join(output_path, file_name)
-        inf_data = np.fromfile(data_path, dtype=np.float32)
-        inf_data = inf_data.reshape(1, 112455, 85)
+        for i in range(batch_size):
+            file_name = paths[i].split('/')[-1]
+            file_name = file_name.split('.')[0]
+            file_name = file_name + '_0.bin'
+            data_path = os.path.join(output_path, file_name)
+            per_data = np.fromfile(data_path, dtype=np.float32)
+            per_data =per_data.reshape(1, 112455, 85)
+            if i == 0 :
+                inf_data = per_data
+            else:
+                inf_data = np.concatenate((inf_data,per_data),axis=0)
+                
+#        file_name = paths[0].split('/')[-1]
+#        file_name = file_name.split('.')[0]
+#        file_name = file_name + '_0.bin'
+#        data_path = os.path.join(output_path, file_name)
+#        inf_data = np.fromfile(data_path, dtype=np.float32)
+#        inf_data = inf_data.reshape(1, 112455, 85)
 
         # file_name = file_name + '.bin'
         # data_path = os.path.join('./val2017_10', file_name)
