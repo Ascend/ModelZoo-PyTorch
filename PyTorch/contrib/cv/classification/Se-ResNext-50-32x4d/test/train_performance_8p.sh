@@ -87,7 +87,7 @@ python3.7 -u main.py \
     --eval-freq 1 \
     --loss-scale-value 16 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
-wai
+wait
 
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
