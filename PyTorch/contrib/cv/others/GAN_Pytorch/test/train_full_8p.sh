@@ -70,18 +70,19 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export WORLD_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
-for i in $(seq 0 7)
+for((RANK_ID=0;RANK_ID<WORLD_SIZE;RANK_ID++));
 do
-    PID_START=$((KERNEL_NUM * i))
+
+    PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 -u  ${currentDir}/main.py \
+    taskset -c $PID_START-$PID_END python3.7 ./main.py \
         --distributed \
-        --lr 0.0008 \
+        --lr 0.0015 \
         --batch_size ${batch_size} \
         --n_epochs 200 \
         --workers 16 \
         --apex \
-        --local_rank ${i} \
+        --local_rank $RANK_ID \
         --data_path ${data_path} > ${cur_path}/output/train_full_8p.log 2>&1 &
 done
 wait
@@ -95,11 +96,12 @@ e2e_time=$(( $end_time - $start_time ))
 FPS=`grep -a 'FPS:'  ${cur_path}/output/train_full_8p.log|awk -F "FPS:" '{print $NF}'|awk 'END {print}'`
 
 #最后一个迭代loss值
-loss=`grep -a 'D loss:'  ${cur_path}/output/train_full_8p.log | awk -F "D loss:" '{print $NF}'| awk 'END {print}' | awk -F "]" '{print $1}'`
+D_loss=`grep -a 'D loss:'  ${cur_path}/output/train_full_8p.log | awk -F "D loss:" '{print $NF}'| awk 'END {print}' | awk -F "]" '{print $1}'`
+G_loss=`grep -a 'G loss:'  ${cur_path}/output/train_full_8p.log | awk -F "G loss:" '{print $NF}'| awk 'END {print}' | awk -F "]" '{print $1}'`
 
 #打印，不需要修改
 echo "ActualFPS : $FPS"
-echo "ActualLoss : ${loss}"
+echo "ActualLoss : D loss:${D_loss}, G loss:${G_loss}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #稳定性精度看护结果汇总

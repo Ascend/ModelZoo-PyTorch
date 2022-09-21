@@ -70,20 +70,24 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export WORLD_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
-for i in $(seq 0 7)
+for((RANK_ID=0;RANK_ID<WORLD_SIZE;RANK_ID++));
 do
-    PID_START=$((KERNEL_NUM * i))
+
+    PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 -u ${currentDir}/main.py \
+
+    taskset -c $PID_START-$PID_END python3.7 ./main.py \
         --distributed \
-        --lr 0.0008 \
+        --lr 0.001 \
         --batch_size ${batch_size} \
-        --n_epochs 3 \
+        --n_epochs 10 \
         --workers 16 \
         --apex \
-        --local_rank ${i} \
-        --data_path ${data_path} > ${cur_path}/output/train_perf_8p.log 2>&1 &
+        --local_rank $RANK_ID \
+        --data_path ${data_path} > ${cur_path}/output/train_full_8p.log 2>&1 &
+
 done
+
 wait
 
 #训练结束时间，不需要修改
