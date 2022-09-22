@@ -135,7 +135,7 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
    2. 使用RegNetX_onnx.py导出onnx文件。
 
-     运行RegNetX_onnx.py脚本。
+      运行RegNetX_onnx.py脚本。
  
    ```
    python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
