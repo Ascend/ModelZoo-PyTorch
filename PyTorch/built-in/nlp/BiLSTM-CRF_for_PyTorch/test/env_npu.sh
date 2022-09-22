@@ -78,4 +78,4 @@ echo ${path_lib}
 
 export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
 
-export PYTHONPATH=$PYTHONPATH:./BiLstm
+export PYTHONPATH=$PYTHONPATH:./named_entity_recognition
