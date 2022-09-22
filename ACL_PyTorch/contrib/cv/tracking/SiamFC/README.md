@@ -45,7 +45,7 @@ onnx-om, ${chip_name}可通过npu-smi info指令查看
 atc --model=./onnx/exemplar.onnx --framework=5 --output=./om/exemplar_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,127,127" --log=debug --soc_version=Ascend${chip_name}
 atc --model=./onnx/search.onnx --framework=5 --output=./om/search_bs1 --input_format=NCHW --input_shape="actual_input_1:1,9,255,255" --log=debug --soc_version=Ascend${chip_name}
 ```
-2.离线推理
+2.离线推理(精度测试，由于此模型为单目标跟踪模型，精度测试需每一帧需要前一帧信息，所以精度测试仅支持bs=1)
 310P3上执行，执行时使npu-smi info查看设备状态，确保device空闲  
 ```python3.7 wholeprocess.py datasets_path ./pre_dataset ./dataset_info 0```
 
