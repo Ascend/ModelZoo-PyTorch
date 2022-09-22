@@ -58,7 +58,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.9.1   | -                                                            |
+| PyTorch                                                      | 1.8.1   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
