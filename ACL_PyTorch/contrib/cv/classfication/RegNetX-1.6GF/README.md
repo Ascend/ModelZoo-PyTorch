@@ -21,7 +21,6 @@
 
 RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这样的扩展的网络家族。它是一个被量化的线性规则限制的设计空间，期望包含好的模型。
 
-
 - 参考实现：
 
   ```
@@ -127,11 +126,12 @@ RegNetX-1.6GF模型代码在timm里，安装timm，arm下需源码安装，参�
    
    1.获取权重文件。
      [RegNetX-1.6GF预训练pth权重文件](wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth )
+        
          ```
          wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth 
          ```
 
-   2. 使用RegNetX_onnx.py导出onnx文件。
+   2.使用RegNetX_onnx.py导出onnx文件。
 
          运行RegNetX_onnx.py脚本。
  
@@ -203,7 +203,7 @@ RegNetX-1.6GF模型代码在timm里，安装timm，arm下需源码安装，参�
            -   input：数据集预处理后的文件。
            -   output:推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
            -   outfmt:输出结果的格式，指定为txt格式。
-           -   batchsize:指定输入模型的batchsize
+           -   batchsize:输入模型的batchsize
 
       推理后的输出默认在建立日期+时间的子文件夹中，除了图片信息的txt文件外，还有一个.json文件，需手动删除。
 
