@@ -1,4 +1,4 @@
-# {ELMo}模型-推理指导
+# ELMo模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -80,6 +80,11 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
    ```
    pip3 install -r requirements.txt
+   git clone https://gitee.com/Ronnie_zheng/MagicONNX.git
+   cd MagicONNX/
+   git checkout dev
+   pip3 install .
+   cd ..
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -161,13 +166,14 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
   
          获得elmo.onnx文件。
 
-      1. 优化ONNX文件。
+      2. 优化ONNX文件。
 
          ```
          python3 -m onnxsim elmo.onnx elmo_sim.onnx
+         python3 opt_onnx.py elmo_sim.onnx elmo_sim_opt.onnx
          ```
 
-         获得elmo_sim.onnx文件。
+         获得elmo_sim_opt.onnx文件。
 
    2. 使用ATC工具将ONNX模型转OM模型。
 
@@ -200,7 +206,12 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
       3. 执行ATC命令。
          ```
-         atc --framework=5 --model=elmo_sim.onnx --output=elmo_sim --input_format=ND --input_shape="input:1,8,50" --log=error --soc_version=Ascend310P3
+         atc --framework=5 \
+             --model=elmo_sim_opt.onnx \
+             --output=elmo_sim_opt\
+             --input_format=ND \
+             --input_shape="input:1,8,50" \
+             --log=error --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -211,9 +222,9 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
            -   --input\_format：输入数据的格式。
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
-           -   --soc\_version：处理器型号。
+           -   --soc\_version：处理器型号，${chip_name}表示通过`npu-smi info`命令查询的设备名称。
 
-           运行成功后生成elmo_sim.om模型文件。
+           运行成功后生成elmo_sim_opt.om模型文件。
 
 
 
@@ -227,7 +238,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
        ```
        python3 ${path_to_ais-infer}/ais_infer.py \
-           --model ./elmo_sim.om \
+           --model ./elmo_sim_opt.om \
            --input ./bin_path \
            --output ./ 
        ```
@@ -249,7 +260,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
          ```
          python3 elmo_postprocess.py \
-             --onnx_model elmo_sim.onnx  \
+             --onnx_model elmo_sim_opt.onnx  \
              --onnx_input "bin_path/" \
              --om_out ${output_path}
          ```
@@ -268,7 +279,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
        可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
        ```
-       python3 ${path_to_ais-infer}/ais_infer.py --model ./elmo_sim.om --loop=20 
+       python3 ${path_to_ais-infer}/ais_infer.py --model ./elmo_sim_opt.om --loop=20 
        ```
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -277,4 +288,4 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|       Ascend 310P3    |     1             |     1 Billion Word Language Model Benchmark R13 Output       |     cosine similarity:99.99%       |       41.78fps          |
+|       Ascend 310P3    |     1             |     1 Billion Word Language Model Benchmark R13 Output       |     cosine similarity:99.60%       |       41.78fps          |
