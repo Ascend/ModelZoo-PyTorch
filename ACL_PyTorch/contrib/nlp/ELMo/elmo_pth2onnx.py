@@ -31,7 +31,7 @@ def pth2onnx(opt):
     elmo = Elmo(options_file, weight_file, 1)
     elmo.eval()
     dummy_input = torch.randint(1, 10, (batch_size, opt.word_len, 50), dtype=torch.int32)
-    torch.onnx.export(elmo, dummy_input, opt.output_file, input_names=["input"], output_names=["output"], opset_version=11, verbose=True)
+    torch.onnx.export(elmo, dummy_input, opt.output_file, input_names=["input"], output_names=["output"], opset_version=11, verbose=False)
 
 
 if __name__ == '__main__':

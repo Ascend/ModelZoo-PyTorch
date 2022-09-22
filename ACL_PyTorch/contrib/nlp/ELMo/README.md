@@ -65,7 +65,10 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
 1. 获取源码。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   下载当前目录下的文件并解压。
+   ```
+   git clone https://github.com/allenai/allennlp.git
+   cd allennlp
+   ```
 
 2. 安装依赖。
 
@@ -77,7 +80,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
 1. 获取原始数据集。
 
-   当前目录下文件夹1-billion-word-language-modeling-benchmark-r13output
+   该模型使用`1 Billion Word Language Model Benchmark`数据集进行推理，[下戴链接](https://www.statmt.org/lm-benchmark/),该数据集包含训练集和测试集，下载后解压在当前目录下。文件夹名称为`1-billion-word-language-modeling-benchmark-r13output`。
 
 2. 数据预处理。
 
@@ -86,7 +89,12 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
    执行elmo_preprocess.py脚本，完成预处理。
 
    ```
-   python3 elmo_preprocess.py --file_path 1-billion-word-language-modeling-benchmark-r13output/heldout-monolingual.tokenized.shuffled/ --save_path data.txt --bin_path bin_path --file_num 50 --word_len 8
+   python3 elmo_preprocess.py \
+       --file_path ./1-billion-word-language-modeling-benchmark-r13output/heldout-monolingual.tokenized.shuffled/ \
+       --save_path ./data.txt \
+       --bin_path ./bin_path \
+       --file_num 50 \
+       --word_len 8
    ```
 
    - 参数说明：
@@ -108,7 +116,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
    
    下载链接：https://allenai.org/allennlp/software/elmo
 
-   选择Pre-trained ELMo Models中的Original模型
+   选择Pre-trained ELMo Models中的Original模型，并下载对应的`weights`和`options`放在当前目录下，文件名称分别为`elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5`，`elmo_2x4096_512_2048cnn_2xhighway_options.json`。
        
 2. 模型修改
    
@@ -148,23 +156,8 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
       1. 配置环境变量。
 
          ```
-         # CANN安装目录
-         export install_path=/usr/local/Ascend/ascend-toolkit/latest
-         export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-         export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-         export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-         export ASCEND_OPP_PATH=${install_path}/opp
-         export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
-         export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/:${LD_LIBRARY_PATH}
-         # 将atc日志打印到屏幕
-         export ASCEND_SLOG_PRINT_TO_STDOUT=0
-         # 设置日志级别
-         export ASCEND_GLOBAL_LOG_LEVEL=0 #debug 0 --> info 1 --> warning 2 --> error 3
-         export PATH=/usr/local/python3.7.5/bin:$PATH
-         . /usr/local/Ascend/ascend-toolkit/set_env.sh  
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-
-         
 
          > **说明：** 
          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
@@ -212,19 +205,13 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
        ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-       ```
-       cd ais-bench_workload/tool/ais_infer/backend
-       pip3 install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-       ```
-
-      如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
-
-
    2.  执行推理。
 
        ```
-       cd ..
-       python3 ais_infer.py --model /home/elmo/elmo_sim.om --input /home/elmo/bin_path --output /home/elmo/om_out 
+       python3 ${path_to_ais-infer}/ais_infer.py \
+           --model ./elmo_sim.om \
+           --input ./bin_path \
+           --output ./ 
        ```
 
       -   参数说明：
@@ -233,7 +220,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
            -   --input：数据集文件夹路径
            -   --output：输出路径
 
-      推理后的输出默认在当前目录out_data下。
+      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径，推理完成后在当前工作目录生成推理结果，命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
 
       >**说明：** 
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
@@ -243,16 +230,19 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
        1. 调用脚本将onnx推理结果和om推理结果比对，计算余弦相似度，相似度大于99%即为达标。
 
          ```
-         python3 elmo_postprocess.py --onnx_model elmo_sim.onnx  --onnx_input "bin_path/" --om_out "./om_out/2022_09_17-01_26_57/"
+         python3 elmo_postprocess.py \
+             --onnx_model elmo_sim.onnx  \
+             --onnx_input "bin_path/" \
+             --om_out ${output_path}
          ```
 
        -  参数说明：
 
-          - --onnx_model：onnx模型路径
-          - --onnx_input：onnx模型输入路径
-          - --om_out：om模型推理结果
+          - --onnx_model：onnx模型路径。
+          - --onnx_input：onnx模型输入路径。
+          - --om_out：om模型推理结果。
        
-       余弦相似度为99.99%，精度达标。
+       ${output_path}为推理结果的保存路径，与onnx推理结果比对余弦相似度为99.99%，精度达标。
 
 
    4.  性能对比。
@@ -260,20 +250,8 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
        可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
        ```
-       python3 ais_infer.py --model /home/elmo/elmo_sim.om --loop=20 
+       python3 ${path_to_ais-infer}/ais_infer.py --model ./elmo_sim.om --loop=20 
        ```
-
-       使用如下命令验证onnx模型的性能：
-       ```
-       python3 elmo_onnx_infer.py --model 'elmo_sim.onnx' --loop 20
-       ```
-
-       310P:41.78
-
-       T4:26.74
-
-       310P性能为T4性能的1.75倍，性能达标
-
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
