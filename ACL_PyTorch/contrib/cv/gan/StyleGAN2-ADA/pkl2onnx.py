@@ -78,9 +78,12 @@ def pkl2onnx(args):
     else:
         onnx = onnx_file
     # export onnx
-    torch.onnx.export(G, dummy_input, onnx, \
-                      input_names=input_names, \
-                      output_names=output_names, opset_version=11, verbose=True)
+    torch.onnx.export(G, dummy_input, onnx,
+                      input_names=input_names,
+                      output_names=output_names,
+                      do_constant_folding=False,
+                      opset_version=11, 
+                      verbose=True)
 
 
 #
