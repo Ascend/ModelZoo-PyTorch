@@ -1,0 +1,4 @@
+allennlp==2.7.0
+allennlp-models==2.7.0
+onnx-simplifier
+onnxruntime
