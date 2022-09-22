@@ -135,12 +135,13 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
    2.使用RegNetX_onnx.py导出onnx文件。
 
-         运行RegNetX_onnx.py脚本。
+     运行RegNetX_onnx.py脚本。
  
    ```
    python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
    ```
-         运行成功后生成RegNetX-1.6GF.onnx模型文件，生成不同batch_size的onnx时，需修改参数。在RegNetX_onnx.py脚本中的dummy_input = torch.randn(1, 3, 224, 224)，如需生成batch_size=4的onnx，即将torch.randn(1,3,224,224)中的1改为4即可。
+         
+     运行成功后生成RegNetX-1.6GF.onnx模型文件，生成不同batch_size的onnx时，需修改参数。在RegNetX_onnx.py脚本中的dummy_input = torch.randn(1, 3, 224, 224)，如需生成batch_size=4的onnx，即将torch.randn(1,3,224,224)中的1改为4即可。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
