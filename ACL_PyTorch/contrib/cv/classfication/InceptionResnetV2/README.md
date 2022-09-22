@@ -146,23 +146,12 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
    ```
    /opt/npu/imageNet/
    |-- val
-   |   |-- n01440764
-   |   |   |-- ILSVRC2012_val_00000293.JPEG
-   |   |   |-- ILSVRC2012_val_00002138.JPEG
-   |   |   |-- ......
-   |   |   `-- ILSVRC2012_val_00048969.JPEG
-   |   |-- n01443537
-   |   |   |-- ILSVRC2012_val_00000236.JPEG
-   |   |   |-- ILSVRC2012_val_00000262.JPEG
-   |   |   |-- ......
-   |   |   `-- ILSVRC2012_val_00049712.JPEG
+   |   |-- ILSVRC2012_val_00000001.JPEG
+   |   |-- ILSVRC2012_val_00000002.JPEG
    |   |-- ......
-   |   `-- n15075141
-   |       |-- ILSVRC2012_val_00001079.JPEG
-   |       |-- ILSVRC2012_val_00002663.JPEG
-   |       |-- ......
-   |       `-- ILSVRC2012_val_00049174.JPEG
+   |   `-- ILSVRC2012_val_00050000.JPEG
    `-- val_label.txt
+
    ```
 
 2. 数据预处理。
