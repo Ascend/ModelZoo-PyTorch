@@ -288,4 +288,6 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|       Ascend 310P3    |     1             |     1 Billion Word Language Model Benchmark R13 Output       |     cosine similarity:99.60%       |       60.91 fps          |
+|       Ascend 310P3    |     1             |     1 Billion Word Language Model Benchmark R13 Output       |     cosine similarity:99.60%       |       62.91 fps          |
+
+注：该模型只支持batchsize为1。
