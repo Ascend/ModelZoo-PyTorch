@@ -23,4 +23,4 @@ RUN pip3.7 install -r requirements/build.txt
 RUN pip3.7 install -r requirements/optional.txt
 RUN pip3.7 install -r requirements/runtime.txt
 # torchvision
-git clone -b v0.6.0 --depth=1 https://github.com/pytorch/vision.git
+RUN git clone -b v0.6.0 --depth=1 https://github.com/pytorch/vision.git
