@@ -92,7 +92,7 @@ python3.7 ./main.py \
     --dist-backend 'hccl' \
     --epochs=${train_epochs} \
     --warm_up_epochs=5 \
-    --loss-scale=32 \
+    --loss-scale='dynamic' \
     --amp \
     --pretrained \
     --num-classes=1200 \
