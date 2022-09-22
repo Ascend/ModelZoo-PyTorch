@@ -74,15 +74,17 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 ## 获取源码<a name="section4622531142816"></a>
+
 1.获取源码。
+
 RegNetX-1.6GF模型代码在timm里，安装timm，arm下需源码安装，参考https://github.com/rwightman/pytorch-image-models ，若安装过程报错请百度解决。
          
-         ```
-         git clone https://github.com/rwightman/pytorch-image-models
-         cd pytorch-image-models
-         python3.7 setup.py install
-         cd ..
-         ```
+   ```
+   git clone https://github.com/rwightman/pytorch-image-models
+   cd pytorch-image-models
+   python3.7 setup.py install
+   cd ..
+   ```
 
 2. 安装依赖。
 
