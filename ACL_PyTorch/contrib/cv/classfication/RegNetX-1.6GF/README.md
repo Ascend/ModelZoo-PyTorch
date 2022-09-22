@@ -215,11 +215,11 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-       python3.7 vision_metric_ImageNet.py ./result/output_dirname/ ./val_label.txt ./ result.json
+       python3.7 vision_metric_ImageNet.py ./output_dirname/ ./val_label.txt ./ result.json
       ```
       -   参数说明：
 
-           -   ./result/output_dirname/：生成推理结果所在路径。
+           -   ./output_dirname/：生成推理结果所在路径。
            -   val_label.txt：为标签数据。
            -   result.json:为生成结果文件。
 
