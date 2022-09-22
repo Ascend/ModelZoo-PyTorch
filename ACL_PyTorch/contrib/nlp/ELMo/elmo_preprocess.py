@@ -23,7 +23,8 @@ import torch
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path', 
-                        default='1-billion-word-language-modeling-benchmark-r13output/heldout-monolingual.tokenized.shuffled/',
+                        default='1-billion-word-language-modeling-benchmark-r13output/\
+                        heldout-monolingual.tokenized.shuffled/',
                         help='path to dataset')
     parser.add_argument('--save_path', default='data.txt',
                         help='preprocess file')
@@ -40,7 +41,7 @@ def main():
 
 
 def read_news(fr):
-    with open(fr, 'r',  encoding='utf-8') as f:
+    with open(fr, 'r', encoding='utf-8') as f:
         lines = f.readlines()
         return [line for line in lines]
 
@@ -59,7 +60,7 @@ def save_file(opt):
 
 
 def read_file(opt):
-    with open(opt.save_path, 'r',  encoding='utf-8') as f:
+    with open(opt.save_path, 'r', encoding='utf-8') as f:
         contexts = []
         lines = f.readlines()
         for line in lines:
