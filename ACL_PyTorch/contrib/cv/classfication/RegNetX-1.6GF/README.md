@@ -126,14 +126,14 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
    
-   1.获取权重文件。
+   1. 获取权重文件。
      [RegNetX-1.6GF预训练pth权重文件](wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth )
         
    ```
    wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth 
    ```
 
-   2.使用RegNetX_onnx.py导出onnx文件。
+   2. 使用RegNetX_onnx.py导出onnx文件。
 
      运行RegNetX_onnx.py脚本。
  
