@@ -12,17 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from allennlp.modules.elmo import Elmo
+import os
+import sys
+
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(__dir__)
+
+from my_allennlp.allennlp.modules.elmo import Elmo
 import torch
 import argparse
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('output_file', default='elmo.onnx')
-    parser.add_argument('word_len', default=8, type=int)
+    parser.add_argument('--output_file', default='elmo.onnx')
+    parser.add_argument('--word_len', default=8, type=int)
     opt = parser.parse_args()
     pth2onnx(opt)
-    
+
 
 def pth2onnx(opt):
     batch_size = 1
@@ -35,4 +42,4 @@ def pth2onnx(opt):
 
 
 if __name__ == '__main__':
-        main()
+    main()

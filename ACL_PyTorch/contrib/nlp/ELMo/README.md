@@ -25,7 +25,9 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 - 参考实现：
 
   ```
-  url=https://github.com/allenai/allennlp/blob/main/allennlp/modules/elmo.py
+  url=https://github.com/allenai/allennlp.git
+  branch=main
+  commit_id=b2eb036e06fbf4e293abb126552aaabc3df91aa1
   model_name=elmo
   ```
 
@@ -67,7 +69,11 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
    ```
    git clone https://github.com/allenai/allennlp.git
-   cd allennlp
+   cd allennlp 
+   git reset --hard b2eb036e06fbf4e293abb126552aaabc3df91aa1
+   git apply ../elmo.patch
+   cd ..
+   mv allennlp my_allennlp
    ```
 
 2. 安装依赖。
@@ -80,7 +86,27 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
 1. 获取原始数据集。
 
-   该模型使用`1 Billion Word Language Model Benchmark`数据集进行推理，[下戴链接](https://www.statmt.org/lm-benchmark/),该数据集包含训练集和测试集，下载后解压在当前目录下。文件夹名称为`1-billion-word-language-modeling-benchmark-r13output`。
+   该模型使用`1 Billion Word Language Model Benchmark`数据集进行推理，[下戴链接](https://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz),该数据集包含训练集和测试集，下载后解压在当前目录下。文件夹名称为`1-billion-word-language-modeling-benchmark-r13output`，命令如下：
+
+   ```
+   wget https://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
+   tar -xvf 1-billion-word-language-modeling-benchmark-r13output.tar.gz
+   ```
+   
+   数据集目录结构如下：
+   
+   ```
+    1-billion-word-language-modeling-benchmark-r13output
+    ├── heldout-monolingual.tokenized.shuffled
+    |   ├── news.en.heldout-00000-of-00050
+    |   ├── news.en.heldout-00001-of-00050
+    |   ...
+    ├── t.raining-monolingual.tokenized.shuffled
+    |   ├── news.en-00001-of-00100
+    |   ├── news.en-00002-of-00100
+    |   ...
+    └── README
+   ```
 
 2. 数据预处理。
 
@@ -105,7 +131,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
      - --file_num：测试数据集数量
      - --word_len：取句子长度
    
-   运行成功之后产生的data.txt文件为从原始测试集中筛选的符合模型输入的数据（即句子长度小于等于8的句子）；bin_path下为处理好的每个句子的二进制文件
+   运行成功之后产生的data.txt文件为从原始测试集中筛选的符合模型输入的数据（即句子长度小于等于8的句子）；bin_path下为处理好的每个句子的二进制文件。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -114,17 +140,9 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
    
-   下载链接：https://allenai.org/allennlp/software/elmo
+   下载链接为：https://allenai.org/allennlp/software/elmo。选择Pre-trained ELMo Models中的Original模型，并下载对应的`weights`和`options`放在当前目录下，文件名称分别为`elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5`，`elmo_2x4096_512_2048cnn_2xhighway_options.json`。
 
-   选择Pre-trained ELMo Models中的Original模型，并下载对应的`weights`和`options`放在当前目录下，文件名称分别为`elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5`，`elmo_2x4096_512_2048cnn_2xhighway_options.json`。
-       
-2. 模型修改
-   
-   修改环境allennlp库下elmo.py文件，示例路径：/root/anaconda3/envs/elmo/lib/python3.7/site-packages/allennlp/modules/elmo.py
-
-   将609行的torch.chunk函数修改为torch.split函数，原因：onnx opset version11 不再支持chunk函数，可以换成支持的split函数。
-
-3. 模型转换
+2. 模型转换
 
    1. 导出onnx文件。
 
