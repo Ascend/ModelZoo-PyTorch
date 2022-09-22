@@ -8,7 +8,7 @@
 
 - [快速上手](#快速上手)
 
-   - [安装依赖包](#安装依赖包)
+   - [获取源码](#获取源码)
    - [准备数据集](#准备数据集)
    - [模型推理](#模型推理)
 
@@ -29,7 +29,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
   ```
   url=https://github.com/Cadene/pretrained-models.pytorch.git
   branch=master
-  ommit_id=3c92fbda001b6369968e7cb1a5706ee6bf6c9fd7
+  commit_id=3c92fbda001b6369968e7cb1a5706ee6bf6c9fd7
   model_name=inceptionresnetv2
   ```
 
@@ -85,7 +85,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
   </tr>
   <tr>
     <td>CANN</td>
-    <td>5.1.RC1</td>
+    <td>5.1.RC2</td>
     <td>-</td>
   </tr>
   <tr>
@@ -122,9 +122,15 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
 ## 快速上手
 
-### 安装依赖包
+### 获取源码
 
-1. 安装依赖包。
+1. 获取源码。
+
+   ```
+   git clone https://github.com/Cadene/pretrained-models.pytorch
+   ```
+
+2. 安装依赖。
 
    ```
    pip install -r requirements.txt
@@ -134,13 +140,36 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
 1. 获取原始数据集。
 
-   该模型使用ImageNet官网的5万张验证集进行测试，图片与标签分别存放在/home/DATASET/imagenet/ILSVRC2012_img_val/与/home/DATASET/imagenet/val_label.txt
+   该模型使用ImageNet官网的5万张验证集进行测试，图片存放在/opt/npu/imageNet/val目录中，标签存放在/opt/npu/imageNet/val_label.txt文件中
+
+   /opt/npu/imageNet/文件夹目录结构如下：
+   ```
+   /opt/npu/imageNet/
+   |-- val
+   |   |-- n01440764
+   |   |   |-- ILSVRC2012_val_00000293.JPEG
+   |   |   |-- ILSVRC2012_val_00002138.JPEG
+   |   |   |-- ......
+   |   |   `-- ILSVRC2012_val_00048969.JPEG
+   |   |-- n01443537
+   |   |   |-- ILSVRC2012_val_00000236.JPEG
+   |   |   |-- ILSVRC2012_val_00000262.JPEG
+   |   |   |-- ......
+   |   |   `-- ILSVRC2012_val_00049712.JPEG
+   |   |-- ......
+   |   `-- n15075141
+   |       |-- ILSVRC2012_val_00001079.JPEG
+   |       |-- ILSVRC2012_val_00002663.JPEG
+   |       |-- ......
+   |       `-- ILSVRC2012_val_00049174.JPEG
+   `-- val_label.txt
+   ```
 
 2. 数据预处理。
 
    执行预处理脚本，将原始数据集转换为模型输入的bin文件，存放在当前目录下的prep_dataset文件夹中
    ```
-   python imagenet_torch_preprocess.py /home/DATASET/imagenet/ILSVRC2012_img_val ./prep_dataset
+   python imagenet_torch_preprocess.py /opt/npu/imageNet/val ./prep_dataset
    ```
 
 ### 模型推理
@@ -157,21 +186,14 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
        ```
 
    2. 导出onnx文件。
-   
-      a. 下载开源模型仓库
-         ```
-         git clone https://github.com/Cadene/pretrained-models.pytorch
-         ```
 
-      b. 使用inceptionresnetv2_pth2onnx.py导出onnx文件。
+        执行inceptionresnetv2_pth2onnx.py脚本，生成onnx模型文件
 
-         执行inceptionresnetv2_pth2onnx.py脚本，生成onnx模型文件
+        ```
+        python inceptionresnetv2_pth2onnx.py inceptionresnetv2-520b38e4.pth inceptionresnetv2_dynamic_bs.onnx
+        ```
 
-         ```
-         python inceptionresnetv2_pth2onnx.py inceptionresnetv2-520b38e4.pth inceptionresnetv2_dynamic_bs.onnx
-         ```
-
-         运行成功后生成inceptionresnetv2_dynamic_bs.onnx文件。
+        运行成功后生成inceptionresnetv2_dynamic_bs.onnx文件。
 
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -225,26 +247,11 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
 2. 开始推理验证。
 
-   a. 安装ais-infer工具, 参考《[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》
+   a. 使用ais-infer工具进行推理.
 
-   ```
-   git clone https://gitee.com/ascend/tools.git
-   cd tools/ais-bench_workload/tool/ais_infer/backend
-   pip wheel ./
-   ls
-   pip install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl --force-reinstall
-   cd ../../../../../
-   ```
+   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-   b. 使用ais-infer工具进行推理。
-
-      执行命令增加工具可执行权限，并根据OS架构选择工具
-
-      ```
-      chmod u+x tools/ais-bench_workload/tool/ais_infer/ais_infer.py
-      ```
-
-   c. 执行推理。
+   b. 执行推理。
 
       使用batch size为1的om模型文件进行推理，其他batch size可作相应的修改
       ```
@@ -252,14 +259,14 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
       python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./inceptionresnetv2_bs1.om --batchsize 1 --input ./prep_dataset --output ./result --outfmt TXT --device 0
       ```
 
-      参数说明：
+      - 参数说明：
 
-         --model：需要进行推理的om模型路径
-         --batchsize：om模型文件的batch size大小，用于结果吞吐率计算
-         --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据
-         --output：推理数据输出路径
-         --outfmt：输出数据的格式，默认为“BIN”，可取值“NPY”、“BIN”、“TXT”
-         --device：NPU设备编号
+        - --model：需要进行推理的om模型路径
+        - --batchsize：om模型文件的batch size大小，用于结果吞吐率计算
+        - --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据
+        - --output：推理数据输出路径
+        - --outfmt：输出数据的格式，默认为“BIN”，可取值“NPY”、“BIN”、“TXT”
+        - --device：NPU设备编号
 
       推理后的输出在当前目录的result文件夹下。
 
@@ -279,52 +286,23 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
       ```
       rm ./result/2022_08_26-20_40_22/sumary.json
 
-      python imagenet_acc_eval.py ./result/2022_08_26-20_40_22/  /home/DATASET/imagenet/val_label.txt ./perf perf_bs1.json
+      python imagenet_acc_eval.py ./result/2022_08_26-20_40_22/  /opt/npu/imageNet/val_label.txt ./perf perf_bs1.json
       ```
 
-      参数说明：
+      - 参数说明：
 
-         ./result/2022_08_26-20_40_22/：为生成推理结果所在路径，2022_08_26-20_40_22为ais-infer工具自动生成的目录名
+        - ./result/2022_08_26-20_40_22/：为生成推理结果所在路径，2022_08_26-20_40_22为ais-infer工具自动生成的目录名
     
-         val_label.txt：为标签数据
+        - val_label.txt：为标签数据
 
-         ./perf：为生成结果文件所在目录
+        - ./perf：为生成结果文件所在目录
     
-         perf_bs1.json：为生成结果文件名
+        - perf_bs1.json：为生成结果文件名
 
-## 模型推理性能和精度
+## 模型推理性能&精度
 
-调用ACL接口推理计算，精度和性能参考下列数据。
+调用ACL接口推理计算，性能参考下列数据。
 
-### 精度对比
-|           | Top1 Accuracy (%) | Top5 Accuracy (%) |
-|:---------:|:-----------------:|:-----------------:|
-|  310精度  |       80.15       |       95.24       |
-| 310P3精度 |       80.15       |       95.24       |
-
-将得到的om离线模型推理在310P3上的TopN精度与310上的TopN精度对比(此处为最优batch的精度，其他batch的精度与最优batch的精度无差别)，310P3上的TopN精度与310上的TopN精度无差别，精度达标。
-
-### 性能对比
-
-|           |   310   |   310P3  |    T4   | 310P3/310 | 310P3/T4 |
-|:---------:|:-------:|:--------:|:-------:|:---------:|:--------:|
-|    bs1    | 429.888 |  452.827 | 319.489 |  1.05336  | 1.417348 |
-|    bs4    | 571.456 |  1187.48 | 550.808 |  2.07799  | 2.155887 |
-|    bs8    | 676.092 | 1286.369 |  618.31 |  1.902654 |  2.08046 |
-|    bs16   | 696.308 | 1065.154 | 667.735 |  1.529717 | 1.595175 |
-|    bs32   | 693.756 |  851.128 | 677.696 |  1.226841 | 1.255914 |
-|    bs64   |  692.02 |  756.475 | 672.078 |  1.09314  | 1.125576 |
-| 最优batch | 696.308 | 1286.369 | 677.696 |  1.847414 |  1.89815 |
-
-310最优batch为：bs16
-
-310P3最优batch为：bs8
-
-T4最优batch为：bs32
-
-
-最优性能比(310P3 / 310)为1286.369 / 696.308 = 1.847倍
-
-最优性能比(310P3 / T4)为1286.369 / 677.696 = 1.898倍
-
-最优batch：310P3大于310的1.2倍，310P3大于T4的1.6倍，性能达标
+|   芯片型号  | Batch Size |  数据集  | Top1精度（%） | Top5精度（%） | 性能（FPS） |
+|:-----------:|:----------:|:--------:|:-------------:|---------------|:-----------:|
+| Ascend310P3 |      8     | ImageNet |     80.15%    | 95.24%        |   1286.369  |
