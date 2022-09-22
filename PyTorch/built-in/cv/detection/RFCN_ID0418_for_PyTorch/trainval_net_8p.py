@@ -408,7 +408,7 @@ def main():
         batch_time_sum = 0
         batch_time_mean = 0
         for step, (data0, data1, data2, data3) in enumerate(dataloader):
-            if args.etp_performance_mode and step >= 100:
+            if args.etp_performance_mode and step >= 300:
                 break
             data_time = (time.time() - data_start) * 1000
             im_data = data0.to(calculate_device, non_blocking=True)
@@ -441,9 +441,9 @@ def main():
             
             batch_time = (time.time() - start) * 1000
             start = time.time()
-            if step > 1:
+            if step > 10:
                 batch_time_sum += batch_time
-                batch_time_mean = batch_time_sum / (step - 1)
+                batch_time_mean = batch_time_sum / (step - 10)
 
             if step > iters_per_epoch:
                 break
@@ -474,7 +474,7 @@ def main():
                     print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
                         % (args.session, epoch, step, iters_per_epoch, loss_temp, lr))
                     # print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end-start))
-                    if step > 1:
+                    if step > 10:
                         print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f, FPS: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean, args.batch_size*npus_per_node/(batch_time_mean/1000)))
                     else:
                         print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean))
