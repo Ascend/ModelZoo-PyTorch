@@ -227,8 +227,9 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 
 a.  使用ais-infer工具进行推理。
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
+ 
    ais_infer工具获取及使用方式请点击查看《[ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
+
 
 b.  执行推理。
 
