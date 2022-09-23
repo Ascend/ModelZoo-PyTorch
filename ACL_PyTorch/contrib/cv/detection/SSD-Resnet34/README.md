@@ -84,6 +84,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
    git clone https://github.com/mlcommons/training_results_v0.7.git
    cd training_results_v0.7/NVIDIA/benchmarks/ssd/implementations/pytorch/ 
    patch -p1 <../../../../../../ssd.patch       # 通过补丁修改仓库代码
+   mv * ../../../../../../../SSD-Resnet34/      # 移动到模型所在路径
    ```
 
 2. 安装依赖。
@@ -192,7 +193,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
       3. 执行ATC命令。
 
          ```
-            atc --framework=5 --model=./ssd_bs1.onnx --output=./ssd_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --log=error --soc_version=AscendChipName
+            atc --framework=5 --model=./ssd_bs1.onnx --output=./ssd_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --log=error --soc_version=Ascend${ChipName}
          ```
 
          - 参数说明：
