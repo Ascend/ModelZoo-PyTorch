@@ -109,6 +109,12 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
    数据预处理将原始数据集转换为模型输入的数据。
 
+   执行prepare-json.py脚本，得到bbox_only_instances_val2017.json文件
+
+   ```
+   python3 prepare-json.py --keep-keys ${data_path}/coco/annotations/instances_val2017.json ${data_path}/coco/annotations/bbox_only_instances_val2017.json
+   ```
+
    执行ssd_preprocess.py脚本，完成预处理。
 
    ```
