@@ -71,21 +71,28 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC1 | -                                                            |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.5.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+## 获取源码<a name="section4622531142816"></a>
 
+1. 获取源码。
 
+   ```
+   git clone https://github.com/mlcommons/training_results_v0.7.git
+   cd training_results_v0.7/NVIDIA/benchmarks/ssd/implementations/pytorch/ 
+   patch -p1 <../../../../../../ssd.patch       # 通过补丁修改仓库代码
+   ```
 
-1. 安装依赖。
+2. 安装依赖。
 
    ```
    pip3 install -r requirment.txt
-   patch -p1 <../ssd.patch           # 通过补丁修改仓库代码
-
+   git clone https://github.com/mlperf/logging.git mlperf-logging
+   pip install -e mlperf-logging
+   
    ```
 
 
@@ -119,9 +126,12 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
    ```
    python3 ssd_preprocess.py --data=${data_path}/coco --bin-output=./ssd_bin
-    --data：数据集路径。
-    --bin-output：预处理后的数据文件的相对路径。
    ```
+   - 参数说明：
+      -  --data：数据集路径。
+      -  --bin-output：预处理后的数据文件的相对路径。
+
+
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -141,11 +151,12 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
          ```
             python3 ssd_pth2onnx.py --bs=1 --resnet34-model=./models/resnet34-333f7ec4.pth --pth-path=./models/iter_183250.pt --onnx-path=./ssd_bs1.onnx
-            --resnet34-model : resnet34 骨干网络权重路径
-            --pth-path: SSD-ResNet34 权重路径
-            --onnx-path: onnx文件路径
 
          ```
+         - 参数说明：
+            -  --resnet34-model : resnet34 骨干网络权重路径
+            -  --pth-path: SSD-ResNet34 权重路径
+            -  --onnx-path: onnx文件路径
 
          获得ssd_bs1.onnx文件（默认为动态导出）。
 
@@ -181,7 +192,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
       3. 执行ATC命令。
 
          ```
-            atc --framework=5 --model=./ssd_bs1.onnx --output=./ssd_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --log=error --soc_version=ChipName
+            atc --framework=5 --model=./ssd_bs1.onnx --output=./ssd_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --log=error --soc_version=AscendChipName
          ```
 
          - 参数说明：
@@ -201,25 +212,22 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
 2. 开始推理验证。
 
-    1.  使用ais-infer工具进行推理。
+    1. 使用ais-infer工具进行推理。
 
-
-   执行命令增加工具可执行权限，并根据OS架构选择工具
-    ```
-        chmod u+x 
-    ```
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
     2.  执行推理。
 
 
     ```
-        python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path}
+        python ais_infer.py --model ${om_path}/ssd_bs1.om  --input /path/to/ssd_bin/ --output ${out_path} --batchsize ${n}
     ```
     -   参数说明：
 
         -   --model：为.OM模型文件路径。
         -   --input：为输入图片导出到二进制文件路径。
         -   --output：模型推理结果存放的路径。
+        -   --batchsize：输入batch size
 
         推理后的输出在 ${out_path}目录下。
 
