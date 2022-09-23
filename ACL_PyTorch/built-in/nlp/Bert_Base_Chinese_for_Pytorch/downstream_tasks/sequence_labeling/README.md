@@ -118,7 +118,7 @@
 2. 导出onnx文件
 
    ```shell
-   python3 pth2onnx.py --input_path best_model.pt --out_path ./models/onnx/bert_base_chinese_sequence_labeling.onnx
+   python3 pth2onnx.py --input_path best_model.pt --out_path ./models/onnx/bert_base_chinese_sequence_labeling.onnx --config_path ./bert-base-chinese/config.json
    # 修改优化模型：以bs64为例
    python3 -m onnxsim ./models/onnx/bert_base_chinese_sequence_labeling.onnx ./models/onnx/bert_base_chinese_bs64.onnx --input-shape "token_ids:64,256"
    python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs64.onnx ./models/onnx/bert_base_chinese_bs64_fix.onnx
@@ -168,14 +168,14 @@
    ```shell
    # 以bs64模型推理为例
    mkdir -p ./output_data/bs64
-   python3 ais_infer.py --model ./models/om/bert_base_chinese_bs64.om --input ./preprocessed_data/input_data --output ./output_data/bs64 --batchsize 64 --device 0
+   python3 ais_infer.py --model ./models/om/bert_base_chinese_bs64.om --input ./preprocessed_data/input_data --output ./output_data/bs64 --outfmt NPY --batchsize 64 --device 0
    ```
 
 6. 精度验证
 
    ```shell
    # 以bs64模型推理为例
-   python3 postprocess.py --result_dir output/bs64/${timestamp} --out_path eval.json --label_dir preprocessed_data/label
+   python3 postprocess.py --result_dir output/bs64/${timestamp} --out_path eval.json --label_dir preprocessed_data/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
    ```
 
 ## 模型推理性能&精度
@@ -188,7 +188,7 @@
 | :---------------: | :--------:                                 | :-------------:                            |
 | Bert-Base-Chinese | f1:0.9724 precision: 0.9684 recall: 0.9765 | f1:0.9600 precision: 0.9569 recall: 0.9632 |
 | 模型              | NPU精度(val-token level)                   | NPU精度(val-entity level)                  |
-| Bert-Base-Chinese | f1:0.9720 precision: 0.9669 recall: 0.9772 | f1:0.9594 precision: 0.9559 recall: 0.9630 |
+| Bert-Base-Chinese | f1:0.9723 precision: 0.9684 recall: 0.9763 | f1:0.9603 precision: 0.9571 recall: 0.9635 |
 
 性能：
 
