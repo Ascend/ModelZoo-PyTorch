@@ -52,19 +52,18 @@ def main():
 
     name = args.result_path.split('_')[1]
     subdir = os.listdir(args.result_path)[0]
-    args.result_path = os.path.join(args.result_path, subdir)
 
     # load inference result
     results = []
-    num_file = len(os.listdir(args.result_path))
+    num_file = len(os.listdir(args.result_path))-1
     for idx in range(num_file):
-        file_ = os.path.join(args.result_path, str(idx) + '_output_0.txt')
+        file_ = os.path.join(args.result_path, str(idx) + '_0.txt')
         with open(file_, 'r') as f:
             for batch in f.readlines():
                 line = batch.split(' ')[:-1]
                 line = np.array([float(x) for x in line])
                 results.append(line)
-                break
+                # break
     results = results[:len(gt_labels)]
 
     metrics = ['top_k_accuracy']
