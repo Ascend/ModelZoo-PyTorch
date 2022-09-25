@@ -91,7 +91,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
 1. 获取原始数据集。
 
-   该模型使用`1 Billion Word Language Model Benchmark`数据集进行推理，[下戴链接](https://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz),该数据集包含训练集和测试集，下载后解压在当前目录下。文件夹名称为`1-billion-word-language-modeling-benchmark-r13output`，命令如下：
+   该模型使用`1 Billion Word Language Model Benchmark`数据集进行推理，[下载链接](https://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz),该数据集包含训练集和测试集，下载后解压在当前目录下。文件夹名称为`1-billion-word-language-modeling-benchmark-r13output`，命令如下：
 
    ```
    wget https://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz
