@@ -40,12 +40,6 @@ def main():
     process_file(opt)
 
 
-def read_news(fr):
-    with open(fr, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        return [line for line in lines]
-
-
 def save_file(opt):
     with open(opt.save_path, 'w', encoding='utf-8') as f:
         for i in range(opt.file_num):
@@ -53,8 +47,7 @@ def save_file(opt):
                 fr = '{}news.en.heldout-0000{}-of-00050'.format(opt.file_path, i)
             else:
                 fr = '{}news.en.heldout-000{}-of-00050'.format(opt.file_path, i)
-            lines = read_news(fr)
-            for line in lines:
+            for line in fr.readlines():
                 if len(line.strip().split()) <= opt.word_len:
                     f.write(line)
 
@@ -62,8 +55,7 @@ def save_file(opt):
 def read_file(opt):
     with open(opt.save_path, 'r', encoding='utf-8') as f:
         contexts = []
-        lines = f.readlines()
-        for line in lines:
+        for line in f.readlines():
             context = line.strip().split(' ')
             contexts.append(context)
         return contexts
@@ -89,7 +81,7 @@ def process_file(opt):
             for _ in range(gap):
                 ids = torch.cat((ids, pad), 1)
 
-        ids_np = np.asarray(ids, dtype=np.int32)
+        ids_np = np.asarray(ids, dtype='int32')
         bin_file_path = os.path.join(opt.bin_path, '{}.bin'.format(i))
         ids_np.tofile(bin_file_path)
         pbar.update(1)
