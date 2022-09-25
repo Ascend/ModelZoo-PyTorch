@@ -156,13 +156,19 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
          运行elmo_pth2onnx.py脚本。
 
          ```
-         python3 elmo_pth2onnx.py --output_file elmo.onnx --word_len 8
+         python3 elmo_pth2onnx.py \
+             --output_file elmo.onnx \
+             --word_len 8 \
+             --option_file ./elmo_2x4096_512_2048cnn_2xhighway_options.json \
+             --weight_file ./elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5
          ```
 
       - 参数说明:
 
-        - output_file：导出onnx文件路径
-        - word_len：模型输出句子长度
+        - --output_file：导出onnx文件路径
+        - --word_len：模型输出句子长度
+        - --option_file: 模型option文件路径
+        - --weight_file: 模型weight文件路径
   
          获得elmo.onnx文件。
 
@@ -260,16 +266,18 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
          ```
          python3 elmo_postprocess.py \
-             --onnx_model elmo_sim_opt.onnx  \
              --onnx_input "bin_path/" \
-             --om_out ${output_path}
+             --om_out ${output_path} \
+             --option_file ./elmo_2x4096_512_2048cnn_2xhighway_options.json \
+             --weight_file ./elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5
          ```
 
        -  参数说明：
 
-          - --onnx_model：onnx模型路径。
-          - --onnx_input：onnx模型输入路径。
+          - --onnx_input：模型输入路径。
           - --om_out：om模型推理结果。
+          - --option_file: 模型option文件路径
+          - --weight_file: 模型weight文件路径
        
        ${output_path}为推理结果的保存路径，与onnx推理结果比对余弦相似度为99.99%，精度达标。
 
