@@ -25,8 +25,8 @@ import numpy as np
 
 
 def cosine_similarity(x, y):
-    x1 = x.flatten().astype(np.float64)
-    y1 = y.flatten().astype(np.float64)
+    x1 = x.flatten().astype(dtype='float64')
+    y1 = y.flatten().astype(dtype='float64')
     dot = np.dot(x1, y1)
     lx = np.linalg.norm(x1)
     ly = np.linalg.norm(y1)
@@ -38,17 +38,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--inputs', default='bin_path/')
     parser.add_argument('--om_output')
+    parser.add_argument('--option_file', default="elmo_2x4096_512_2048cnn_2xhighway_options.json")
+    parser.add_argument('--weight_file', default="elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5")
     opt = parser.parse_args()
     
-    options_file = "elmo_2x4096_512_2048cnn_2xhighway_options.json"
-    weight_file = "elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"
-    elmo = Elmo(options_file, weight_file, 1)
+    elmo = Elmo(opt.option_file, opt.weight_file, 1)
     elmo.eval()
     
     om_output_path = opt.om_output
 
     similarity = 0
-    for i in range(15947):
+    nums = len(os.listdir(opt.inputs))
+    for i in range(nums):
         input_file = np.fromfile(opt.inputs + '{0}.bin'.format(i), dtype='int32').reshape((1, 8, 50))
         input_file = torch.from_numpy(input_file)
         
@@ -59,9 +60,8 @@ def main():
         output = output['elmo_representations'][0].detach().numpy()
 
         cosine_sim = cosine_similarity(om_output_file, output)
-        print(i, "  cosine_similarity: ", cosine_sim)
         similarity += cosine_sim
-    print('average similarity: ', similarity / 15947)
+    print('average similarity: ', similarity / nums)
 
 
 if __name__ == '__main__':
