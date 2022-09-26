@@ -84,7 +84,7 @@ do
         --workers 16 \
         --apex \
         --local_rank $RANK_ID \
-        --data_path ${data_path} > ${cur_path}/output/train_full_8p.log 2>&1 &
+        --data_path ${data_path} > ${cur_path}/output/train_perf_8p.log 2>&1 &
 
 done
 
