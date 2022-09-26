@@ -23,7 +23,7 @@ import torch
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path', 
-                        default='1-billion-word-language-modeling-benchmark-r13output/\
+                        default='1-billion-word-language-modeling-benchmark-r13output/ \
                         heldout-monolingual.tokenized.shuffled/',
                         help='path to dataset')
     parser.add_argument('--save_path', default='data.txt',
@@ -47,9 +47,10 @@ def save_file(opt):
                 fr = '{}news.en.heldout-0000{}-of-00050'.format(opt.file_path, i)
             else:
                 fr = '{}news.en.heldout-000{}-of-00050'.format(opt.file_path, i)
-            for line in fr.readlines():
-                if len(line.strip().split()) <= opt.word_len:
-                    f.write(line)
+            with open(fr, 'r', encoding='utf-8') as file:
+                for line in file.readlines():
+                    if len(line.strip().split()) <= opt.word_len:
+                        f.write(line)
 
 
 def read_file(opt):
