@@ -1,4 +1,4 @@
-# ResNet152 for PyTorch\_Owner
+# ResNet152 for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -9,13 +9,29 @@
 # 概述
 
 ## 简述
-ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差学习的概念，通过增加直连通道来保护信息的完整性，解决信息丢失、梯度消失、梯度爆炸等问题，让很深的网络也得以训练。ResNet有不同的网络层数，常用的有18-layer、34-layer、50-layer、101-layer、152-layer。ResNet152的含义是指网络中有152-layer。本文档描述的ResNet152是基于Pytorch实现的版本。
+
+残差神经网络（ResNet）由微软研究院何凯明等五位华人提出，通过ResNet单元，成功训练152层神经网络，赢得了ILSVRC2015冠军。ResNet前五项的误差率为3.57%，参数量低于VGGNet，因此效果非常显著。传统的卷积网络或全连接网络或多或少存在信息丢失的问题，还会造成梯度消失或爆炸，导致深度网络训练失败，ResNet则在一定程度上解决了这个问题。通过将输入信息传递给输出，确保信息完整性。整个网络只需要学习输入和输出的差异部分，简化了学习目标和难度。ResNet的结构大幅提高了神经网络训练的速度，并且大大提高了模型的准确率。正因如此，ResNet十分受欢迎，甚至可以直接用于ConceptNet网络。
 
 - 参考实现：
 
   ```
-  url=https://github.com/tensorflow/models/tree/r2.1.0/official/r1/resnet
+  url=https://github.com/pytorch/examples.git
+  commit_id=49e1a8847c8c4d8d3c576479cb2fe2fd2ac583de
   ```
+
+- 适配昇腾 AI 处理器的实现
+
+    ```
+    url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+    code_path=PyTorch/contrib/cv/classification
+    ```
+
+- 通过Git获取代码方法如下
+  
+    ```
+    git clone {url}        # 克隆仓库的代码   
+    cd {code_path}         # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+    ```
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
@@ -47,7 +63,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-- 安装依赖（根据模型需求，按需添加所需依赖）。
+- 安装依赖。
 
   ```
   pip install -r requirements.txt
@@ -82,12 +98,6 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
                     │   ...              
    ```
 
-2. 数据预处理（按需处理所需要的数据集）。
-
-## 获取预训练模型（可选）
-
-请参考原始仓库上的README.md进行预训练模型获取。将获取的bert\_base\_uncased预训练模型放至在源码包根目录下新建的“temp/“目录下。
-
 # 开始训练
 
 ## 训练模型
@@ -95,7 +105,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 1. 进入解压后的源码包根目录。
 
    ```
-   cd ModelZoo-PyTorch/PyTorch/contrib/cv/classification/ResNet152
+   cd cd /${模型文件夹名称}
    ```
 
 2. 运行训练脚本。
@@ -139,23 +149,22 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
     --print-freq                        //打印频率
     --data                              //数据集路径
     ```
-# 训练结果展示
+# 表2 训练结果展示
 
 | NAME     | Acc@1    | FPS       | Epochs   | AMP_Type | Torch  |
 | :------: | :------: | :------:  | :------: | :------: |:------:|
 | NPU-1P   |  -       | 319.265   |  1       | 02       | 1.5    |
 | NPU-8P   | 78.259   | 3651.900  | 140      | O2       | 1.5    |
-| NPU-1P   | 79.102   | 587.359   | 137      | O2       | 1.8    |
-| NPU-8P   | 78.212   | 3470.902  | 137      | O2       | 1.8    |
+| NPU-1P   | 79.102   | 623.887   | 137      | O2       | 1.8    |
+| NPU-8P   | 78.038   | 4464.079  | 137      | O2       | 1.8    |
 
 # 版本说明
 
 ## 变更
 
-2022.8.29：更新内容，重新发布。
+2021.12.14：首次发布
+2022.08.29：更新pytorch1.8版本，重新发布。                                                               
 
 ## 已知问题
-
-**_当前发行版本中存在的问题描述。_**
 
 无。
