@@ -19,31 +19,19 @@
   commit_id=49e1a8847c8c4d8d3c576479cb2fe2fd2ac583de
   ```
 
-- 适配昇腾 AI 处理器的实现
+- 适配昇腾 AI 处理器的实现：
 
     ```
     url=https://gitee.com/ascend/ModelZoo-PyTorch.git
     code_path=PyTorch/contrib/cv/classification
     ```
 
-- 通过Git获取代码方法如下
+- 通过Git获取代码方法如下：
   
     ```
     git clone {url}        # 克隆仓库的代码   
     cd {code_path}         # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
     ```
-
-- Install PyTorch ([pytorch.org](http://pytorch.org))
-- `pip install -r requirements.txt`
-  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
-Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
-- Download the ImageNet dataset from http://www.image-net.org/
-    - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
-
-  ```
-  git clone https://gitee.com/ascend/ModelZoo-PyTorch.git    
-  cd  ModelZoo-PyTorch/PyTorch/contrib/cv/classification/ResNet152
-  ```
 
 - 通过单击“立即下载”，下载源码包。
 
@@ -74,6 +62,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 1. 获取数据集。
 
    用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。
+   数据集目录结构如下所示：
 
    ```
    ├── ImageNet2012
@@ -149,21 +138,26 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
     --print-freq                        //打印频率
     --data                              //数据集路径
     ```
-# 表2 训练结果展示
 
-| NAME     | Acc@1    | FPS       | Epochs   | AMP_Type | Torch  |
-| :------: | :------: | :------:  | :------: | :------: |:------:|
-| NPU-1P   |  -       | 319.265   |  1       | 02       | 1.5    |
-| NPU-8P   | 78.259   | 3651.900  | 140      | O2       | 1.5    |
-| NPU-1P   | 79.102   | 623.887   | 137      | O2       | 1.8    |
-| NPU-8P   | 78.038   | 4464.079  | 137      | O2       | 1.8    |
+**表 2**  训练结果展示表
+
+|  DEVICE  | PT版本 | Acc@1 |  FPS   | Epochs | AMP_Type |
+| :------: | :----: | :---: | :----: | :----: | :------: |
+| 1p-竞品V |  1.5   |  NA   |   NA   |  NA   |    O2    |
+|  1p-NPU  |  1.5   |  NA   |   319.265   |  1   |    O2    |
+|  1p-NPU  |  1.8   | 79.102  | 623.887  |  137   |    O2    |
+| 8p-竞品V |  1.5   | NA |  NA   |  NA   |    O2    |
+|  8p-NPU  |  1.5   | 78.259 |  3651.900   |  140   |    O2    |
+|  8p-NPU  |  1.8   | 78.038 | 4464.079 |  137   |    O2    |
+
 
 # 版本说明
 
 ## 变更
 
 2021.12.14：首次发布
-2022.08.29：更新pytorch1.8版本，重新发布。                                                               
+
+2022.08.29：更新pytorch1.8版本，重新发布。     
 
 ## 已知问题
 
