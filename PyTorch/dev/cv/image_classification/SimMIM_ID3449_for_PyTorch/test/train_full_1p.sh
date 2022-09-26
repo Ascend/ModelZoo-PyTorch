@@ -34,7 +34,7 @@ mkdir $output_dir/${ASCEND_DEVICE_ID} -p
 python3 -m torch.distributed.launch \
     --nproc_per_node $RANK_SIZE \
     $cur_path/../main_simmim.py \
-    --cfg $cur_path/../configs/swin_base__5ep/simmim_pretrain__swin_base__img192_window6__5ep.yaml \
+    --cfg $cur_path/../configs/swin_base__800ep/simmim_pretrain__swin_base__img192_window6__800ep.yaml \
     --batch-size $batch_size \
     --data-path $data_path/train > $output_dir/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
@@ -47,7 +47,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-EpochTime=`grep "4 training takes" $output_dir/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F " " '{print $10}'|sed s/[[:space:]]//g`
+EpochTime=`grep "400 training takes" $output_dir/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F " " '{print $10}'|sed s/[[:space:]]//g`
 hour=${EpochTime%%:*}
 tmp=${EpochTime#*:}
 minute=${tmp%%:*}
