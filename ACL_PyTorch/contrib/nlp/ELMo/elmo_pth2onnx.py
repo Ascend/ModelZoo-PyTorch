@@ -27,8 +27,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output_file', default='elmo.onnx')
     parser.add_argument('--word_len', default=8, type=int)
-    parser.add_argument('--option_file', default="elmo_2x4096_512_2048cnn_2xhighway_options.json")
-    parser.add_argument('--weight_file', default="elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5")
+    parser.add_argument('--option_file', default='elmo_2x4096_512_2048cnn_2xhighway_options.json')
+    parser.add_argument('--weight_file', default='elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5')
     opt = parser.parse_args()
     pth2onnx(opt)
 
