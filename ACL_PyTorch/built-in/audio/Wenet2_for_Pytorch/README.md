@@ -37,7 +37,16 @@ ${wenet_path}表示wenet开源模型代码的路径
 
 ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code_path=/home/ModelZoo-PyTorch/ACL_PyTorch/built-in/audio/Wenet_for_Pytorch
 
-4. 下载网络权重文件并导出onnx
+4. 数据集预处理
+
+   cd ${wenet_path}/examples/aishell/s0/
+   bash run.sh --stage -1 --stop_stage -1 # 下载数据集
+   bash run.sh --stage 0 --stop_stage 0 # 处理数据集
+   bash run.sh --stage 1 --stop_stage 1 # 处理数据集
+   bash run.sh --stage 2 --stop_stage 2 # 处理数据集
+   bash run.sh --stage 3 --stop_stage 3 # 处理数据集
+
+5. 下载网络权重文件并导出onnx
 
 下载链接：https://github.com/wenet-e2e/wenet/blob/main/docs/pretrained_models.md
 
@@ -46,11 +55,14 @@ ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code
 下载压缩文件，将文件解压，将文件夹内的文件放置到wenet/examples/aishell/s0/exp/20210601_u2++_conformer_exp文件夹下，若没有该文件夹，则创建该文件夹
 
 ```
-tar -zvxf 20210601_u2pp_conformer_exp.tar.gz
+tar -zvxf 20210601_u2++_conformer_exp.tar.gz
 mkdir -p ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp
+mkdir -p ${wenet_path}/exp/20210601_u2++_conformer_exp
+mkdir -p ${wenet_path}/examples/aishell/s0/onnx/
 cp -r 20210601_u2pp_conformer_exp/20210601_u2++_conformer_exp/* ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp
-cp -r examples/aishell/s0/data/test/data.list exp/20210601_u2++_conformer_exp/
-cp -r examples/aishell/s0/data/test/text exp/20210601_u2++_conformer_exp/
+cp -r examples/aishell/s0/data/test/data.list ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/
+cp -r examples/aishell/s0/data/test/text ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/
+cp -r ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/global_cmvn ${wenet_path}/exp/20210601_u2++_conformer_exp
 ```
 
 5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
@@ -70,20 +82,8 @@ cp -r examples/aishell/s0/data/test/text exp/20210601_u2++_conformer_exp/
    cp -r *.sh ${wenet_path}/examples/aishell/s0/ 
    ```
 
-7. 数据集下载
+   
 
-   ```
-   cd ${wenet_path}/examples/aishell/s0/
-   bash run.sh --stage -1 --stop_stage -1 # 下载数据集
-   bash run.sh --stage 0 --stop_stage 0 # 处理数据集
-   bash run.sh --stage 1 --stop_stage 1 # 处理数据集
-   bash run.sh --stage 2 --stop_stage 2 # 处理数据集
-   bash run.sh --stage 3 --stop_stage 3 # 处理数据集
-   ```
-
-8. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
-
-​       将benchmark.x86_64或benchmark.aarch64放到${wenet_path}/examples/aishell/s0/
 
 ## 2 模型转换
 
@@ -119,7 +119,9 @@ bash static_decoder.sh Ascend${chip_name}
 
 ## 3 离线推理 
 
-run.sh脚本封装了ctc_greedy_search场景的动态shape和动态分档的推理，并将性能和精度分别保存在了offline_test_result.txt online_test_result.txt以及static_test_result.txt中
+run.sh脚本封装了ctc_greedy_search场景的动态shape和动态分档的推理，并将性能和精度分别保存在了offline_test_result.txt online_test_result.txt以及static_test_result.txt中，
+
+运行bash run.sh Ascend310P3即可
 
 ### 	动态shape场景：
 
