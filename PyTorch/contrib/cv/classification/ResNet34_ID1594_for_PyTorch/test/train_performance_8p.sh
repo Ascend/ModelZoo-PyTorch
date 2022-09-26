@@ -71,7 +71,7 @@ python3 ./main.py \
     -a resnet34 \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
-    --workers=$(nproc) \
+    --workers=1024 \
     --learning-rate=${learning_rate} \
     --mom=0.9 \
     --weight-decay=1.0e-04  \
