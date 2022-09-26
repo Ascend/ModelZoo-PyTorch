@@ -50,9 +50,8 @@ def main():
         
         output = output['elmo_representations'][0].detach().flatten()
 
-        cosine_sim = cos(om_output_file, output)
+        cosine_sim = float(cos(om_output_file, output))
         similarity += cosine_sim
-        print(cosine_sim)
     print('average similarity: ', similarity / nums)
 
 if __name__ == '__main__':
