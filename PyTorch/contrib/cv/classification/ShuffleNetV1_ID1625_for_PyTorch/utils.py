@@ -21,12 +21,14 @@
 
 import os
 import re
+import shutil
 import torch
 import torch.nn as nn
 import numpy as np
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from multi_epochs_dataloader import MultiEpochsDataLoader
+
 
 class CrossEntropyLabelSmooth(nn.Module):
 
@@ -191,3 +193,9 @@ def adjust_learning_rate(optimizer, epoch, args):
     print("=> Epoch[%d] Setting lr: %.4f" % (epoch, lr))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
+
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, 'model_best_acc%.4f_epoch%d.pth.tar' % (state['best_acc1'], state['epoch']))

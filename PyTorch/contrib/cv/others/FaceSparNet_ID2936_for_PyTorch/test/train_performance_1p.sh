@@ -30,7 +30,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_path              # dataset of training
     --output_path            # output of training
     --train_steps            # max_step for training
-	  --train_epochs           # max_epoch for training
+    --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -46,10 +46,14 @@ do
         output_path=`echo ${para#*=}`
     elif [[ $para == --train_steps* ]];then
         train_steps=`echo ${para#*=}`
-	elif [[ $para == --train_epochs* ]];then
+    elif [[ $para == --train_epochs* ]];then
         train_epochs=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 
@@ -108,27 +112,23 @@ start_time=$(date +%s)
 # 您的训练数据集在${data_path}路径下，请直接使用这个变量获取
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
-train_epochs=20
-train_steps=1e3
 batch_size=32
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./newtrain.py --data_path=${data_path} --output_path=${output_path} --train_epochs=${train_epochs}
+    python3.7 ./newtrain.py --data_url=${data_path} --train_url=${output_path}/ --total_epochs=1
 else
-    python3.7 ./newtrain.py --data_path=${data_path} --output_path=${output_path} --train_epochs=${train_epochs} 1>${print_log} 2>&1
+    python3.7 ./newtrain.py --data_url=${data_path} --train_url=${output_path}/ --total_epochs=1 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
-StepTime=`grep "" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
-#FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '3074'/'${batch_size}'}'`
+StepTime=`grep "IterTotal:" ${print_log} | awk '{print $8}' | tail -n 10 | tr -d "s" | awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
+FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
 # 精度相关数据计算
-#train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
-train_accuracy=`grep "acc" ${print_log}  | awk '{print $NF}'`
+train_accuracy=`grep "SPARNet_S16_V4_Attn2D" ${print_log}  | awk '{print $2}' | tr -d "(" | tr -d ","`
 # 提取所有loss打印信息
-grep "loss :" ${print_log} | awk -F ":" '{print $4}' | awk -F "-" '{print $1}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+grep "Loss_Pix:" ${print_log} | awk '{print $4}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 
 ###########################################################
@@ -184,4 +184,8 @@ echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.
 echo "ActualFPS = ${FPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${StepTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+
+#退出conda环境
+conda deactivate

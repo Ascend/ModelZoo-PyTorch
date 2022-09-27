@@ -152,7 +152,7 @@ do
     --checkpoint 5 \
     --amp_cfg \
     --opt_level O2 \
-    --loss_scale_value 'dynamic' \
+    --loss_scale_value 1024 \
     --device_list ${ASCEND_DEVICE_ID} \
     --manual_seed 1234 \
     --learning_rate 0.01 \

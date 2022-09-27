@@ -394,7 +394,7 @@ def export_online_encoder(model, configs, args, logger, encoder_onnx_path):
                       input_tensors,
                       encoder_onnx_path,
                       export_params=True,
-                      opset_version=14,
+                      opset_version=11,
                       do_constant_folding=True,
                       input_names=input_names,
                       output_names=output_names,

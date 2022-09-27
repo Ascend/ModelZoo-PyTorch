@@ -20,79 +20,53 @@ train_epochs=2
 train_steps=5
 #学习率
 learning_rate=0.495
-bin_mode=False
-bin_analysis=False
 
 #参数配置
 data_path=""
 
 if [[ $1 == --help || $1 == --h ]];then
-	echo "usage:./train_performance_1p.sh "
-	exit 1
+    echo "usage:./train_performance_1p.sh "
+    exit 1
 fi
 
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
-    elif [[ $para == --bin_mode* ]];then
-        bin_mode="True"
-    elif [[ $para == --bin_analysis* ]];then
-        bin_analysis="True"
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
     fi
 done
 
 if [[ $data_path  == "" ]];then
-	echo "[Error] para \"data_path\" must be config"
-	exit 1
+    echo "[Error] para \"data_path\" must be config"
+    exit 1
 fi
 
-#修改模糊编译写法
-if [ $bin_mode == "True" ];then
-    step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
-    sed -i "${step_line}s/^/#/" ${cur_path}/pytorch/train.py
-    inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
-    sed -i "${inc_line}s/^/#/" ${cur_path}/pytorch/train.py
-    sed -i "76itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/pytorch/train.py
-fi
-
-#设置二进制变量
-if [ $bin_analysis == "True" ];then
-    #增加编译缓存设置
-    line=`grep "    main()" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
-    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/pytorch/train.py
-    sed -i "${line}s/^/    /" ${cur_path}/pytorch/train.py
-    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/pytorch/train.py
-    sed -i "${line}s/^/    /" ${cur_path}/pytorch/train.py
-    sed -i "${line}ioption = {}" ${cur_path}/pytorch/train.py
-    sed -i "${line}s/^/    /" ${cur_path}/pytorch/train.py
-fi
 
 ##############执行训练##########
 cd $cur_path
 if [ -d $cur_path/test/output ];then
-	rm -rf $cur_path/test/output/*
-	mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
+    rm -rf $cur_path/test/output/*
+    mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
 else
-	mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
+    mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
 fi
 wait
 
 
 start=$(date +%s)
 nohup python3 -m torch.distributed.launch \
-	--nproc_per_node=1 \
-	$cur_path/pytorch/train.py \
-	--affinity='disabled' \
+    --nproc_per_node=1 \
+    $cur_path/pytorch/train.py \
+    --affinity='disabled' \
     --config_file pytorch/wt103_base.yaml \
     --config aiserver_1npu_fp32 \
-	--work_dir=$cur_path/test/output/$ASCEND_DEVICE_ID \
-	--batch_size=$batch_size \
+    --work_dir=$cur_path/test/output/$ASCEND_DEVICE_ID \
+    --batch_size=$batch_size \
     --batch_chunk=16 \
-	--fp16 \
-	--data=$data_path \
+    --fp16 \
+    --data=$data_path \
     --log_interval=1 \
-	--max_step=$train_steps > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    --max_step=$train_steps > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
 e2e_time=$(( $end - $start ))
@@ -107,11 +81,7 @@ CaseName=${Network}_bs${BatchSize}_${RankSize}'p'_'perf'
 if [ $bin_mode == "True" ];then
     CaseName=$CaseName"_binary"
 fi
-#获取二进制支持算子
-if [ $bin_analysis == "True" ];then
-    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
-    echo "cmd1=$cmd1" >> ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
-fi
+
 #结果打印，不需要修改
 echo "-------------------- Final result --------------------"
 #输出性能FPS，需要模型审视修改

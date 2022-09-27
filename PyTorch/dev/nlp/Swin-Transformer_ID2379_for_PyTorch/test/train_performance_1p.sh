@@ -1,4 +1,5 @@
 #!/bin/bash
+source /usr/local/Ascend/latest/bin/setenv.bash
 #当前路径,不需要修改
 cur_path=`pwd`
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
