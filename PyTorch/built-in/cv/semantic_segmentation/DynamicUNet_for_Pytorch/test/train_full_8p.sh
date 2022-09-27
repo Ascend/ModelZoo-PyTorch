@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #网络名称，同目录名称
-Network="DynamicUNet_for_Pytorch"
+Network="DynamicUNet_ID4080_for_Pytorch"
 batch_size=32
 
 ###############指定训练脚本执行路径###############
