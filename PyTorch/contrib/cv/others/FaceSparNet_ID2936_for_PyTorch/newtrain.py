@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-os.system('pip install tensorboardX')
 from utils.timer import Timer
 from utils.logger import Logger
 from utils import utils
