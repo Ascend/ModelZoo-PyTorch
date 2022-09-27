@@ -1,0 +1,18 @@
+diff -uprN a/configs/rec/rec_mv3_none_none_ctc.yml b/configs/rec/rec_mv3_none_none_ctc.yml
+--- a/configs/rec/rec_mv3_none_none_ctc.yml	2022-09-26 14:11:35.140784112 +0000
++++ b/configs/rec/rec_mv3_none_none_ctc.yml	2022-09-26 14:14:10.580789671 +0000
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: True
++  use_gpu: False
+   epoch_num: 72
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -90,5 +90,5 @@ Eval:
+   loader:
+     shuffle: False
+     drop_last: False
+-    batch_size_per_card: 256
+-    num_workers: 8
++    batch_size_per_card: 1
++    num_workers: 0
