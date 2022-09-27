@@ -88,12 +88,31 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
    ```
 
 2. 安装依赖。
+   1. 获取torch-1.5.0+ascend.post3.20210930-cp37-cp37m-linux_x86_64.whl
 
+   ```
+   wget https://ascend-pytorch-release.obs.cn-north-4.myhuaweicloud.com/run_pkg/20211018_FrameworkPTAdapter2.0.T308/torch-1.5.0%2Bascend.post3.20210930-cp37-cp37m-linux_x86_64.whl
+   ```
+
+   2. 获取tensor_fused_plugin-0.1+ascend-cp37-cp37m-linux_x86_64.whl
+
+   ```
+   wget https://ascend-pytorch-release.obs.cn-north-4.myhuaweicloud.com/run_pkg/20210423_TR5/whl_0423/tensor_fused_plugin-0.1%2Bascend-cp37-cp37m-linux_x86_64.whl
+   ```
+
+   3. 获取apex-0.1+ascend.20210930-cp37-cp37m-linux_x86_64.whl
+
+   ```
+   wget https://ascend-pytorch-release.obs.cn-north-4.myhuaweicloud.com/run_pkg/20211018_FrameworkPTAdapter2.0.T308/apex-0.1%2Bascend.20210930-cp37-cp37m-linux_x86_64.whl
+   ```
+   4. 安装环境
    ```
    pip3 install -r requirment.txt
    git clone https://github.com/mlperf/logging.git mlperf-logging
    pip install -e mlperf-logging
-
+   pip install torch-1.5.0+ascend.post3.20210930-cp37-cp37m-linux_x86_64.whl
+   pip install apex-0.1+ascend.20210930-cp37-cp37m-linux_x86_64.whl
+   pip install tensor_fused_plugin-0.1+ascend-cp37-cp37m-linux_x86_64.whl
    ```
 
 
@@ -252,6 +271,18 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-| Ascend310P3|      8          |   COCO2017         |     23.0%       |      1406.351           |
+| Precision | mAP   |
+|-----------|-------|
+| 310精度   | 23.0% |
+| 310P精度  | 23.0% |
+
+
+| Throughput | 310 | 310P | T4 | 310P/310 | 310P/T4 |
+|------------|-----|------|----|----------|---------|
+| bs1        | 711.356    |  925.091    | 483.38   |     1.30     |    1.913     |
+| bs4        |  825.516   |  1302.783    | 666.23   |     1.578     |     1.9554    |
+| bs8        |   849.156  |  1406.351   | 735.327   |     1.656     |     1.912   |
+| bs16       |  862.468   |   1358.895   |  774.908  |    1.575      |    1.753     |
+| bs32       |   812.368  |   1370.644   |  784.2675  |      1.687    |    1.747     |
+| bs64       | 810.368    |   914.474   |  823.365  |   1.060       |   1.11      |
+| 最优batch        |  862.468   |   1406.351   | 823.365   |    1.630      |    1.708     |
