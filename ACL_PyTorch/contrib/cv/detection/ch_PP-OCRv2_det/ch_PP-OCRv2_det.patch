@@ -1,0 +1,20 @@
+diff --git a/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml b/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml
+index 3833cb0b..d0daadbf 100644
+--- a/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml
++++ b/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 1200
+   log_smooth_window: 20
+   print_batch_step: 2
+@@ -120,7 +120,7 @@ Optimizer:
+ 
+ PostProcess:
+   name: DistillationDBPostProcess
+-  model_name: ["Student", "Student2", "Teacher"]
++  model_name: ["Teacher"]
+   # key: maps
+   thresh: 0.3
+   box_thresh: 0.6
