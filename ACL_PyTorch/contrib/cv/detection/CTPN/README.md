@@ -72,23 +72,6 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
   | 固件与驱动     | 1.0.15 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN           | 5.1.RC2 | -                                                            |
   | Python         | 3.7.5 | -                                                            |
-  | attrs | 22.1.0 | - |
-  | psutil | 5.9.2 | - |
-  | matplotlib | 3.5.3 | - |
-  | tensorflow | 2.10.0 | - |
-  | decorator | 5.1.1 | - |
-  | mmaction2 | 0.15.0 | - |
-  | sympy | 1.10.1 | - |
-  | tqdm | 4.64.1 | - |
-  | torch          | 1.5.0  | -                                                            |
-  | torchvision    | 0.6.0  | -                                                            |
-  | onnx           | 1.7.0  | -                                                            |
-  | numpy          | 1.20.3 | -                                                            |
-  | Pillow         | 8.2.0  | -                                                            |
-  | opencv-python  | 4.5.2.54 | -                                                            |
-  | yacs           | 0.1.8  | -                                                            |
-  | pytorch-ignite | 0.4.5  | -                                                            |
-  | protobuf       | 3.12.0 | -                                                            |
 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
