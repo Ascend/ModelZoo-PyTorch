@@ -205,7 +205,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
          ```
          atc --framework=5 \
              --model=./ch_PP-OCRv2_det.onnx \
-             -output=./ch_PP-OCRv2_det_bs${batchsize} \
+             --output=./ch_PP-OCRv2_det_bs${batchsize} \
              --input_format=NCHW \
              --input_shape="x:${batchsize},3,-1,-1" \
              --soc_version=Ascend${chip_name} \
