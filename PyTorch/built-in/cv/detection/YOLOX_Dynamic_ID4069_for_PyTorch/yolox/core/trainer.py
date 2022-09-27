@@ -105,6 +105,7 @@ class Trainer:
 
     def train_in_iter(self):
         for self.iter in range(self.max_iter):
+            if self.iter >= 10:pass
             self.before_iter()
             self.train_one_iter()
             self.after_iter()
