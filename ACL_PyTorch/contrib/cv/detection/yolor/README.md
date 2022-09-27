@@ -324,6 +324,7 @@ trtexec --onnx=yolor_bs1.onnx --fp16 --threads --workspace=50000
 |     最优batch      |       32.333892            |      40.973069      |    36.14153         |      1.288041           | 1.219773  |
 
 最优batch：310P的最优batch性能 >=1.2倍310最优batch性能 ，性能达标
+
 batch_size超过8，由于模型过大无法推理。
 
 
