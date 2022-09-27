@@ -99,7 +99,6 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
    wget https://ascend-pytorch-release.obs.cn-north-4.myhuaweicloud.com/run_pkg/20210423_TR5/whl_0423/tensor_fused_plugin-0.1%2Bascend-cp37-cp37m-linux_x86_64.whl
 
-
    获取apex-0.1+ascend.20210930-cp37-cp37m-linux_x86_64.whl
 
    wget https://ascend-pytorch-release.obs.cn-north-4.myhuaweicloud.com/run_pkg/20211018_FrameworkPTAdapter2.0.T308/apex-0.1%2Bascend.20210930-cp37-cp37m-linux_x86_64.whl
