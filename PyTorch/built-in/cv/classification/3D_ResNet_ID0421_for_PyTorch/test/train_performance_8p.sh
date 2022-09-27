@@ -153,7 +153,7 @@ nohup python3 main.py \
   --no_val \
   --n_epochs ${train_epochs} \
   --opt_level O2 \
-  --loss_scale_value 'dynamic' \
+  --loss_scale_value 1024 \
   --distributed \
   --ngpus_per_node 8 \
   --device_list '0,1,2,3,4,5,6,7' \
