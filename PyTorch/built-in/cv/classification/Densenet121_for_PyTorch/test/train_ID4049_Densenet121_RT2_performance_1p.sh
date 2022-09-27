@@ -22,7 +22,7 @@ echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
 #网络名称，同目录名称
 Network="Densenet121_RT2_ID4049_for_PyTorch"
 #训练epoch
-train_epochs=90
+train_epochs=1
 #训练batch_size
 batch_size=256
 #训练step
