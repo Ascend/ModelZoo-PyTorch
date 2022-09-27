@@ -274,10 +274,11 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    3. 执行推理。
 
       ```
-      python3 task_process.py --mode='ais_infer' --machine='Ascend310P'
+      python3 task_process.py  --mode='ais_infer' --machine='Ascend310P' --interpreter='python'
       
       --mode：执行的模块。
       --machine：芯片名称。'Ascend310P' 或 'Ascend310'
+      --interpreter: 执行推理命令的解释器
       ```
 
       在推理之前，删除./result/inf_output/和./result/dumpOutput_device0/里的文件和文件夹，防止受到上次推理的影响。task_process.py会将分散在./result/inf_output/里的模型输出文件移动到./result/dumpOutput_device0/目录下。命令执行成功后会在./result/dumpOutput_device0/目录下获得模型的输出文件，并且在屏幕上输出性能数据。
@@ -385,7 +386,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 | 芯片型号   | Batch Size | 数据集    | 精度                                              | 性能            |
 | ---------- | ---------- | --------- | ------------------------------------------------- |---------------|
-| Ascend310P | 1          | ICDAR2013 | precision: 86.84%   recall: 75.05%  hmean: 80.51% | 146.3098 fps  |
+| Ascend310P | 1          | ICDAR2013 | precision: 86.84%   recall: 75.05%  hmean: 80.51% | 148.3098 fps  |
 | Ascend310  | 1          | ICDAR2013 | precision: 86.84%   recall: 75.05%  hmean: 80.51% | 93.4589   fps |
 | T4         | 1          | ICDAR2013 | precision: 87.41%   recall: 75.60%  hmean: 81.08% | 73.6914   fps |
 

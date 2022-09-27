@@ -30,20 +30,20 @@ def task_process(args):
             os.system('rm -rf ctpn_change_{}x{}.onnx'.format(h, w))
         for i in range(config.center_len):
             h, w = config.center_list[i][0], config.center_list[i][1]
-            os.system('python3 change_model.py --input_path=ctpn_{}x{}.onnx \
+            os.system('python change_model.py --input_path=ctpn_{}x{}.onnx \
             --output_path=ctpn_change_{}x{}.onnx'.format(h, w, h, w))
     if args.mode == 'preprocess':
         for i in range(config.center_len):
             os.system('rm -rf data/images_bin_{}x{}'.format(config.center_list[i][0], config.center_list[i][1]))
         for i in range(config.center_len):
             os.system('mkdir data/images_bin_{}x{}'.format(config.center_list[i][0], config.center_list[i][1]))
-        os.system('python3 ctpn_preprocess.py --src_dir={} --save_path=./data/images_bin'.format(args.src_dir))
+        os.system('python ctpn_preprocess.py --src_dir={} --save_path=./data/images_bin'.format(args.src_dir))
     if args.mode == 'ais_infer':
         fps_all = 0
         for i in range(config.center_len):
             h, w = config.center_list[i][0], config.center_list[i][1]
 
-            os.system('python tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+            os.system(args.interpreter + ' tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
             --model=./ctpn_bs1.om --input=./data/images_bin_{}x{} --dymHW {},{} \
             --batchsize=1 --output=./result/inf_output'.format(h, w, h, w))
 
@@ -63,6 +63,8 @@ def task_process(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='task process')  # task process paramater
+    parser.add_argument('--interpreter', default='python3',
+                        type=str, help='which interpreter to use')
     parser.add_argument('--mode', default='ais_infer',
                         type=str, help='which mode to use')
     parser.add_argument('--src_dir', default='data/Challenge2_Test_Task12_Images',
