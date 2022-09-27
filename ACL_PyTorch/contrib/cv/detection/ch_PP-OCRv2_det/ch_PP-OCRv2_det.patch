@@ -1,0 +1,33 @@
+diff --git a/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml b/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml
+index 6167b6e1..488b8df7 100644
+--- a/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml
++++ b/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 1200
+   log_smooth_window: 20
+   print_batch_step: 2
+@@ -120,7 +120,7 @@ Optimizer:
+ 
+ PostProcess:
+   name: DistillationDBPostProcess
+-  model_name: ["Student", "Student2", "Teacher"]
++  model_name: ["Teacher"]
+   # key: maps
+   thresh: 0.3
+   box_thresh: 0.6
+diff --git a/tools/infer_det.py b/tools/infer_det.py
+index f253e8f2..66f5fa2a 100755
+--- a/tools/infer_det.py
++++ b/tools/infer_det.py
+@@ -50,7 +50,7 @@ def draw_det_res(dt_boxes, config, img, img_name, save_path):
+             os.makedirs(save_path)
+         save_path = os.path.join(save_path, os.path.basename(img_name))
+         cv2.imwrite(save_path, src_im)
+-        logger.info("The detected Image saved in {}".format(save_path))
++        # logger.info("The detected Image saved in {}".format(save_path))
+ 
+ 
+ @paddle.no_grad()
