@@ -89,6 +89,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
 2. 安装依赖。
    1. 获取昇腾版本工具安装包
+   - 通过 wget 下载
    ```
    获取torch-1.5.0+ascend.post3.20210930-cp37-cp37m-linux_x86_64.whl
 
@@ -103,7 +104,12 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
    wget https://ascend-pytorch-release.obs.cn-north-4.myhuaweicloud.com/run_pkg/20211018_FrameworkPTAdapter2.0.T308/apex-0.1%2Bascend.20210930-cp37-cp37m-linux_x86_64.whl
    ```
-   2. 安装环境
+   - 若安装包无法通过wget下载，则可通过下述百度云网盘下载
+   ```
+   链接：https://pan.baidu.com/s/1xH3ZSP63NRukAPMlI4ePNw 
+   提取码：rcof
+   ```
+   1. 安装环境
    ```
    pip3 install -r requirment.txt
    git clone https://github.com/mlperf/logging.git mlperf-logging
