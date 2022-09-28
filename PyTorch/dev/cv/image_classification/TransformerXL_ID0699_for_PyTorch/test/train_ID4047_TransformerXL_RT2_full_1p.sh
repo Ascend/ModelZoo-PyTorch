@@ -8,7 +8,7 @@ RANK_ID_START=0
 #基础参数，需要模型审视修改
 batch_size=256
 #网络名称，同目录名称
-Network="TransformerXL_ID4047_for_PyTorch"
+Network="TransformerXL_RT2_ID4047_for_PyTorch"
 #Device数量，单卡默认为1
 RankSize=1
 #训练epoch，可选
@@ -45,7 +45,6 @@ sed -i "${step_line}s/^/#/" ${cur_path}/pytorch/train.py
 inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
 sed -i "${inc_line}s/^/#/" ${cur_path}/pytorch/train.py
 sed -i "78itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/pytorch/train.py
-fi
 
 ##############执行训练##########
 cd $cur_path

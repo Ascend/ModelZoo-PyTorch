@@ -2,7 +2,7 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-export ASCEND_GLOBAL_LOG_LEVEL=1
+# export ASCEND_GLOBAL_LOG_LEVEL=1
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 export RANK_SIZE=1

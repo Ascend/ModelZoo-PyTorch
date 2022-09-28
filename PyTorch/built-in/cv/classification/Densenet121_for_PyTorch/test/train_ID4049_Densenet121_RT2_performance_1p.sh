@@ -17,7 +17,6 @@ device_id=0
 export ENABLE_RUNTIME_V2=1
 echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
 
-
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
 Network="Densenet121_RT2_ID4049_for_PyTorch"
@@ -67,6 +66,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
@@ -112,7 +112,8 @@ sed -i "$[line+4]itorch.npu.set_option(option)" ${test_path_dir}/../densenet121_
 
 
 #修改参数
-#sed -i "s|pass|break|g" ${cur_path}/../densenet121_1p_main.py
+sed -i "s|pass|break|g" ${cur_path}/densenet121_1p_main.py
+
 wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -136,6 +137,7 @@ nohup python3.7 ${cur_path}/densenet121_1p_main.py  \
       --eval-freq 5 \
       --batch-size $batch_size \
       --epochs $train_epochs \
+      --stop-step-num 50 \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
@@ -143,7 +145,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 #参数改回
-#sed -i "s|break|pass|g" ${cur_path}/densenet121_1p_main.py
+sed -i "s|break|pass|g" ${cur_path}/densenet121_1p_main.py
 wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
@@ -155,8 +157,7 @@ FPS=`grep FPS ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Acc@1" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-`
+#train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
@@ -166,7 +167,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 ##获取性能数据，不需要修改
 #吞吐量
@@ -189,4 +190,3 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

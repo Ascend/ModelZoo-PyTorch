@@ -5,7 +5,7 @@ ls /npu/traindata/VOC2012/ImageSets >2.txt
 ls /npu/traindata/VOCdevkit/VOC2012/ImageSets/Main >3.txt
 #当前路径,不需要修改
 cur_path=`pwd`
-export ASCEND_GLOBAL_LOG_LEVEL=1
+# export ASCEND_GLOBAL_LOG_LEVEL=1
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 export RANK_SIZE=1
