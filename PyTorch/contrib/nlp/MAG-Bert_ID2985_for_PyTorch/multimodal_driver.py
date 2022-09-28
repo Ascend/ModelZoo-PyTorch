@@ -16,8 +16,6 @@ from __future__ import absolute_import, division, print_function
 
 
 import os
-os.system("pip install transformers")
-os.system("pip install wandb")
 import argparse
 import csv
 import random
@@ -72,16 +70,12 @@ parser.add_argument("--learning_rate", type=float, default=1e-5)
 parser.add_argument("--gradient_accumulation_step", type=int, default=1)
 parser.add_argument("--warmup_proportion", type=float, default=0.1)
 parser.add_argument("--seed", type=seed, default="random")
-
-
+parser.add_argument("--output_path", type=str, default="./outputs/train_url")
+parser.add_argument("--data_path", type=str, default="./data_url")
 args = parser.parse_args()
-
-
-
 
 def return_unk():
     return 0
-
 
 class InputFeatures(object):
     """A single set of features of data."""
@@ -194,51 +188,15 @@ def prepare_bert_input(tokens, visual, acoustic, tokenizer):
 
     return input_ids, visual, acoustic, input_mask, segment_ids
 
-
-# def prepare_xlnet_input(tokens, visual, acoustic, tokenizer):
-#     CLS = tokenizer.cls_token
-#     SEP = tokenizer.sep_token
-#     PAD_ID = tokenizer.pad_token_id
-#
-#     # PAD special tokens
-#     tokens = tokens + [SEP] + [CLS]
-#     audio_zero = np.zeros((1, ACOUSTIC_DIM))
-#     acoustic = np.concatenate((acoustic, audio_zero, audio_zero))
-#     visual_zero = np.zeros((1, VISUAL_DIM))
-#     visual = np.concatenate((visual, visual_zero, visual_zero))
-#
-#     input_ids = tokenizer.convert_tokens_to_ids(tokens)
-#     input_mask = [1] * len(input_ids)
-#     segment_ids = [0] * (len(tokens) - 1) + [2]
-#
-#     pad_length = (args.max_seq_length - len(segment_ids))
-#
-#     # then zero pad the visual and acoustic
-#     audio_padding = np.zeros((pad_length, ACOUSTIC_DIM))
-#     acoustic = np.concatenate((audio_padding, acoustic))
-#
-#     video_padding = np.zeros((pad_length, VISUAL_DIM))
-#     visual = np.concatenate((video_padding, visual))
-#
-#     input_ids = [PAD_ID] * pad_length + input_ids
-#     input_mask = [0] * pad_length + input_mask
-#     segment_ids = [3] * pad_length + segment_ids
-#
-#     return input_ids, visual, acoustic, input_mask, segment_ids
-
-
 def get_tokenizer(model):
     if model == "bert-base-uncased":
         return BertTokenizer.from_pretrained('bert')
-    # elif model == "xlnet-base-cased":
-    #     return XLNetTokenizer.from_pretrained(model,mirror = 'tuna')
     else:
         raise ValueError(
             "Expected 'bert-base-uncased' or 'xlnet-base-cased, but received {}".format(
                 model
             )
         )
-
 
 def get_appropriate_dataset(data):
 
@@ -267,9 +225,8 @@ def get_appropriate_dataset(data):
     )
     return dataset
 
-
 def set_up_data_loader():
-    with open(f"datasets/{args.dataset}.pkl", "rb") as handle:
+    with open(f"{args.data_path}/{args.dataset}.pkl", "rb") as handle:
         data = pickle.load(handle)
 
     train_data = data["train"]
@@ -340,10 +297,6 @@ def prep_for_training(num_train_optimization_steps: int):
         model = MAG_BertForSequenceClassification.from_pretrained(
             "bert", multimodal_config=multimodal_config, num_labels=1,
         )
-    # elif args.model == "xlnet-base-cased":
-    #     model = MAG_XLNetForSequenceClassification.from_pretrained(
-    #         args.model, multimodal_config=multimodal_config, num_labels=1
-    #     )
 
     model.to(DEVICE)
 
@@ -384,41 +337,6 @@ def train_epoch(model: nn.Module, train_dataloader: DataLoader, optimizer, sched
     cann_profiling_path = './cann_profiling'
     for step, batch in enumerate(train_dataloader):
         start_time = time.time()
-
-        '''
-        if step == 5:
-            with torch.npu.profile(cann_profiling_path):
-                batch = tuple(t.to(DEVICE) for t in batch)
-                input_ids, visual, acoustic, input_mask, segment_ids, label_ids = batch
-                visual = torch.squeeze(visual, 1)
-                acoustic = torch.squeeze(acoustic, 1)
-                outputs = model(
-                    input_ids,
-                    visual,
-                    acoustic,
-                    token_type_ids=segment_ids,
-                    attention_mask=input_mask,
-                    labels=None,
-                )
-                logits = outputs[0]
-                loss_fct = MSELoss()
-                loss = loss_fct(logits.view(-1), label_ids.view(-1))
-		        
-                if args.gradient_accumulation_step > 1:
-                    loss = loss / args.gradient_accumulation_step
-		        
-                with amp.scale_loss(loss, optimizer) as scaled_loss: ###
-                    scaled_loss.backward()
-		        
-                tr_loss += loss.item()
-                nb_tr_steps += 1
-		        
-                if (step + 1) % args.gradient_accumulation_step == 0:
-                    optimizer.step()
-                    scheduler.step()
-                    optimizer.zero_grad()
-                torch.npu.synchronize()
-        '''
         batch = tuple(t.to(DEVICE) for t in batch)
         input_ids, visual, acoustic, input_mask, segment_ids, label_ids = batch
         visual = torch.squeeze(visual, 1)
@@ -452,7 +370,6 @@ def train_epoch(model: nn.Module, train_dataloader: DataLoader, optimizer, sched
         end_time = time.time()
         print("step_num = %d, step_loss = %.8f, step_time = %s" % (step, loss.item(), (end_time - start_time)))
     return tr_loss / nb_tr_steps
-
 
 def eval_epoch(model: nn.Module, dev_dataloader: DataLoader, optimizer):
     model.eval()
@@ -557,8 +474,6 @@ def train(
     valid_losses = []
     test_accuracies = []
 
-    #amp.register_float_function(torch, 'tanh')
-    #amp.register_float_function(torch.nn.functional, 'linear')
     model, optimizer = amp.initialize(model, optimizer, opt_level="O1", combine_grad=True, user_cast_preferred=True, loss_scale=128.0)
     row = []
     col = []
@@ -586,28 +501,9 @@ def train(
         test_accuracies.append(test_acc)
         best_test_acc = max(test_accuracies)
         print(best_test_acc)
-'''
-        wandb.log(
-            (
-                {
-                    "train_loss": train_loss,
-                    "valid_loss": valid_loss,
-                    "test_acc": test_acc,
-                    "test_mae": test_mae,
-                    "test_corr": test_corr,
-                    "test_f_score": test_f_score,
-                    "best_valid_loss": min(valid_losses),
-                    "best_test_acc": max(test_accuracies),
-                }
-            )
-        )
 
-'''
 def main():
-   # wandb.init(project="MAG")
-   # wandb.config.update(args)
     set_random_seed(args.seed)
-
 
     torch.backends.cudnn.enabled = True
     (
@@ -628,7 +524,6 @@ def main():
         optimizer,
         scheduler,
     )
-
 
 if __name__ == "__main__":
     main()

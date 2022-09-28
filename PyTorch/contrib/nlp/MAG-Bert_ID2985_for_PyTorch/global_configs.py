@@ -14,20 +14,17 @@
 import os
 import torch
 
-# os.environ["cuda_VISIBLE_DEVICES"] = "0"
 os.environ["WANDB_PROGRAM"] = "multimodal_driver.py"
-
-DEVICE = 'npu:{}'.format(1)
-torch.npu.set_device(DEVICE)
+DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != DEVICE:
+    torch.npu.set_device(f'npu:{DEVICE}')
+print(DEVICE)
 
 # MOSI SETTING
 ACOUSTIC_DIM = 74
 VISUAL_DIM = 47
 TEXT_DIM = 768
-
-# MOSEI SETTING
-# ACOUSTIC_DIM = 74
-# VISUAL_DIM = 35
-# TEXT_DIM = 768
 
 XLNET_INJECTION_INDEX = 1
