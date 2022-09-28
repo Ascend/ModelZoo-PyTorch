@@ -33,11 +33,11 @@ import glob
 import numpy as np
 import onnxruntime
 import torch
+from tqdm import tqdm
 from PIL import Image
 from torchvision import transforms
 import parse
 import PIL.Image as pil
-import matplotlib.pyplot as plt
 
 
 def make_power(img, base, method=Image.BICUBIC):
@@ -72,38 +72,51 @@ def bin2img_tensor(bin_src):
         imageBin = f.read()
     # What is stored in the bin file is a half-precision file, so we need to convert
     # the binary to half-precision, and restore the model output shape 1*3*256*256
-    img_tensor = torch.tensor(np.reshape(np.frombuffer(imageBin, 'f4'), (1, 3, 256, 256)))
+    img_tensor = torch.tensor(np.reshape(np.frombuffer(imageBin, 'f4'), (1, 3, 256, 256)).copy())
     return img_tensor
 
 
 def main():
     opt = parse.parse_args().initialize()
-    if (os.path.exists(opt.bin2img_fie) == False):
-        os.makedirs(opt.bin2img_fie)
+    bin2img_fie = os.path.join(opt.npu_bin_file, 'om')
+    bin2img_onnx = os.path.join(opt.npu_bin_file, 'onnx')
+    if (os.path.exists(bin2img_fie) == False):
+        os.makedirs(bin2img_fie)
+    if (os.path.exists(bin2img_onnx) == False):
+        os.makedirs(bin2img_onnx)
     npu_bin = glob.glob(opt.npu_bin_file + '*.bin')
-    onnxTestImage_path = glob.glob(opt.dataroot + '/testA/*.*')
-    model_Ga = onnxruntime.InferenceSession(opt.onnx_path + opt.model_ga_onnx_name)
+    onnxTestImage_path = glob.glob(opt.dataroot + '/*.*')
+    model_ab =  onnxTestImage_path[0].split('/')[-1].split('.')[0].split('_')[1]
+    if model_ab == "A":
+        model = onnxruntime.InferenceSession(opt.onnx_path + opt.model_ga_onnx_name)
+        inputs_node = "img_sat_maps"
+        out_node = "maps"
+    else:
+        model = onnxruntime.InferenceSession(opt.onnx_path + opt.model_gb_onnx_name)
+        inputs_node = "img_maps_sat"
+        out_node = "sat"
     cossimis = []
-    for i in onnxTestImage_path:
-        temp = i.split('/')[4].split('.')[0]
-        bin_name = temp + '_1.bin'
+    for i in tqdm(onnxTestImage_path):
+        jpg_name = i.split('/')[-1].split('.')[0].split('_')[0]
+        bin_name = f"{jpg_name}_{model_ab}_0.bin"
         bin_path = opt.npu_bin_file + bin_name
         check = os.path.exists(bin_path)
         if check == True:
             b2imtensor = bin2img_tensor(bin_path)
+            if opt.om_save == True:
+                b2imimage = postprocess(b2imtensor)
+                b2imimage.save(os.path.join(bin2img_fie, f"{jpg_name}_{model_ab}.jpg"))
             pil_image = pil.open(i).convert('RGB')
             tensorData = preprocess(pil_image, 256)
-            outputs = model_Ga.run(['maps'], {'img_sat_maps': tensorData.numpy()})
+            outputs = model.run([out_node], {inputs_node: tensorData.numpy()})
             outputs = torch.tensor(outputs[0])
+            if opt.onnx_save == True:
+                 b2imonnx = postprocess(outputs)
+                 b2imonnx.save(os.path.join(bin2img_onnx, f"{jpg_name}_{model_ab}.jpg"))
             cosSimi = torch.mean(torch.cosine_similarity(outputs, b2imtensor))
             cossimis.append(cosSimi.numpy())
     print('average cosine_similarity:')
     print(np.mean(cossimis))
-    plt.plot(cossimis)
-    plt.xlabel("samples")
-    plt.ylabel("cosine_similarity")
-    plt.savefig('cosine_similarity.jpg')
-    plt.show()
 
 
 if __name__ == '__main__':

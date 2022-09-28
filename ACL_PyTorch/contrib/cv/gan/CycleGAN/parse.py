@@ -100,9 +100,12 @@ class parse_args():
         parser.add_argument('--npu_bin_file', type=str,
                             default='./result/dumpOutput_device0/',
                             help='npu bin ')
-        parser.add_argument('--bin2img_fie', type=str,
-                            default='./bin2imgfile/',
-                            help='save bin2img  ')
+        parser.add_argument('--om_save',
+                             action="store_true",
+                             help='save om results ')
+        parser.add_argument('--onnx_save',
+                             action="store_true",
+                             help='save onnx results  ')
         # rewrite devalue values
         parser.set_defaults(model='test')
         # To avoid cropping, the load_size should be the same as crop_size

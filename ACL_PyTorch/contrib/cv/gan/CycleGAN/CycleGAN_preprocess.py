@@ -32,7 +32,9 @@
 import argparse
 import os
 from PIL import Image
-
+import numpy as np
+from torchvision import transforms
+from tqdm import tqdm
 
 def parse():
     """Define the common options that are used in both training and test."""
@@ -42,13 +44,10 @@ def parse():
                         help='path to images testA)')
     parser.add_argument('--save_pathTestA_dst', required=False, default='datasetsDst/maps/testA/',
                         help='path to images testA)')
-    parser.add_argument('--dataTestA_infoName', default='testA_prep.info', help='name of the ..')
-
     parser.add_argument('--src_path_testB', required=False, default='datasets/maps/testB/',
                         help='path to images testB)')
     parser.add_argument('--save_pathTestB_dst', required=False, default='datasetsDst/maps/testB/',
                         help='path to images testA)')
-    parser.add_argument('--dataTestB_infoName', required=False, default='testB_prep.info', help='name of the ..')
     opt = parser.parse_args()
     if (os.path.exists(opt.save_pathTestA_dst) == False):
         os.makedirs(opt.save_pathTestA_dst)
@@ -56,31 +55,40 @@ def parse():
         os.makedirs(opt.save_pathTestB_dst)
     return opt
 
+def make_power(img, base, method=Image.BICUBIC):
+    ow, oh = img.size
+    h = int(round(oh / base) * base)
+    w = int(round(ow / base) * base)
+    if h == oh and w == ow:
+        return img
+    return img.resize((w, h), method)
 
-def rs_img_bin(src_path, savepath, data_list_path):
-    i = 0
+
+def preprocess(PIL_img, image_shape):
+    process = transforms.Compose([
+        transforms.Lambda(lambda img: make_power(img, base=4, method=Image.BICUBIC)),
+        transforms.Resize(image_shape),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+    return process(PIL_img).unsqueeze(dim=0)  # (batch_size, 3, H, W)
+
+
+def rs_img_bin(src_path, savepath):
     in_files = os.listdir(src_path)
-    listfile = open(data_list_path, 'w')
-    for file in in_files:
-        # print(file, "===", i)
+    for file in tqdm(in_files):
         image_path = src_path + '/' + file
-        input_image = Image.open(image_path)
-        imgsavepath = savepath + str(file).split('.')[0] + '.jpeg'
-        input_image.thumbnail((512, 512), Image.ANTIALIAS)
-        input_image.save(imgsavepath)
-        w, h = input_image.size
-        temp = str(i) + ' ' + savepath + '/' + str(file).split('.')[0] + \
-               '.jpeg' + ' ' + str(w) + ' ' + str(h) + '\n'
-        listfile.write(temp)
-        i = i + 1
-    listfile.close()
+        input_image = Image.open(image_path).convert('RGB')
+        tensorData = preprocess(input_image, 256)
+        image = np.array(tensorData).astype(np.float32)
+        image.tofile(os.path.join(savepath, str(file).split('.')[0] + ".bin"))
+
 
 
 def main(opt):
     # deal testA and save img data to bin
-    rs_img_bin(opt.src_path_testA, opt.save_pathTestA_dst, opt.dataTestA_infoName)
+    rs_img_bin(opt.src_path_testA, opt.save_pathTestA_dst)
     # deal testB and save img data to bin
-    rs_img_bin(opt.src_path_testB, opt.save_pathTestB_dst, opt.dataTestB_infoName)
+    rs_img_bin(opt.src_path_testB, opt.save_pathTestB_dst)
     return 0
 
 
