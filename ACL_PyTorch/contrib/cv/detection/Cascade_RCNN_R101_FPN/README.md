@@ -65,7 +65,7 @@ Cascade R-CNN是目标检测two-stage算法的代表之一，使用cascade回归
 | ------------------------------------------------------------ | ------- |------------|
 | 固件与驱动                                                    |22.0.2|-|
 | CANN                                                         | 5.1.RC2 |-|
-| PyTorch                                                      | 1.8.0   |[Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies/pies_00001.html)|
+| PyTorch                                                      | 1.7.0   |[Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies/pies_00001.html)|
 
 
 **表 2**  环境依赖表
