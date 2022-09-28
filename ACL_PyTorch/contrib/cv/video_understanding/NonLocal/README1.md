@@ -141,9 +141,9 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
    若已经预先准备好数据集和文件列表，则需在 mmaction2 文件夹中的相应位置处，软链接到已有文件。
 
    ```
-  mkdir -p ./mmaction2/data/kinetics400
-  ln -s ${已有数据集路径}  mmaction2/data/kinetics400/videos_val
-  ln -s ${已有数据集路径}  mmaction2/data/kinetics400/kinetics400_val_list_videos.txt
+   mkdir -p ./mmaction2/data/kinetics400
+   ln -s ${已有数据集路径}  mmaction2/data/kinetics400/videos_val
+   ln -s ${已有数据集路径}  mmaction2/data/kinetics400/kinetics400_val_list_videos.txt
    ```
   
   数据目录结构请参考：
