@@ -47,7 +47,7 @@ pandocfilters==1.4.3
 parso==0.7.1
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==8.0.1
+Pillow==9.1.0
 prometheus-client==0.8.0
 prompt-toolkit==3.0.8
 ptyprocess==0.6.0
@@ -70,8 +70,7 @@ terminado==0.9.1
 tensorboard==2.4.0
 testpath==0.4.4
 tifffile==2020.10.1
-torch==1.5.0
-torchvision==0.6.0
+torchvision
 tornado==6.1
 tqdm==4.51.0
 traitlets==5.0.5

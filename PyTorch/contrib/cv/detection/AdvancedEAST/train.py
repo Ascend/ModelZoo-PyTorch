@@ -15,6 +15,8 @@
 import time
 
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import torch.utils.data
 import torch.optim as optim
 from torch import distributed as dist
@@ -83,7 +85,7 @@ def train():
     if cfg.amp:
         import apex
         optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=cfg.lr, weight_decay=cfg.decay)
-        model, optimizer = apex.amp.initialize(model, optimizer, opt_level="O1", loss_scale=128.0, combine_grad=True)
+        model, optimizer = apex.amp.initialize(model, optimizer, opt_level="O1", loss_scale="dynamic", combine_grad=True)
 
     if cfg.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[cfg.local_rank], broadcast_buffers=False)

@@ -50,6 +50,8 @@ import json
 from pathlib import Path
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn

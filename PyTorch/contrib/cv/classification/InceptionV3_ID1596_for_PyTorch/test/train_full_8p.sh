@@ -14,7 +14,7 @@ data_path=""
 # 训练epoch
 train_epochs=240
 # 学习率
-learning_rate=0.045
+learning_rate=1.2
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -76,7 +76,7 @@ do
     taskset -c $PID_START-$PID_END python3 ./main-8p.py \
       -a inception_v3 \
       --amp \
-      --loss-scale 128 \
+      --loss_scale=128 \
       --data ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \
@@ -99,7 +99,7 @@ do
     python3 ./main-8p.py \
       -a inception_v3 \
       --amp \
-      --loss-scale 128 \
+      --loss_scale=128 \
       --data ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \

@@ -16,7 +16,7 @@ pip3.7 install -r requirements.txt
    pip3 install .
    ```
 
- 其他需要安装的请自行安装
+其他需要安装的请自行安装
 
 3. 获取开源模型代码  
 

@@ -36,7 +36,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.nn as nn
 import numpy as np
@@ -64,7 +64,7 @@ class DroupoutV2(nn.Module):
 
         if not self.checked:
             self.check_self(x)
-        if torch.__version__ >= "1.8.1":
+        if torch.__version__ >= "1.8":
             x = nn.functional.dropout(x, p=self.p)
         else:
             x, mask, _ = torch.npu_dropoutV2(x, self.seed, p=self.p)

@@ -34,7 +34,7 @@ def performance(bs):
     for i in range(len(scale_list)):
         h, w = scale_list[i][0], scale_list[i][1]
         print(h, w)
-        os.system('python test/parse.py result/perf_vision_batchsize_{0}_device_0_{1}x{2}.txt'.
+        os.system('python ./parse.py result/perf_vision_batchsize_{0}_device_0_{1}x{2}.txt'.
                   format(bs, h, w))
 
 

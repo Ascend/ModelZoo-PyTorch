@@ -90,13 +90,12 @@ nohup python3.7 main_finetune.py \
     --resnet_weight_path ${pth_path} \
 	--addr $(hostname -I |awk '{print $1}') \
     --learning_rate 1e-3 \
-	--local_rank ${ASCEND_DEVICE_ID} > finetune_performance_1p.log 2>&1 &
+	--local_rank ${ASCEND_DEVICE_ID} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/finetune_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 # mv nohup.out ${test_path_dir}/output/${ASCEND_DEVICE_ID}/finetune_${ASCEND_DEVICE_ID}.log
 
 wait
 
-cp finetune_performance_1p.log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/finetune_${ASCEND_DEVICE_ID}.log
 
 
 ##################获取训练数据################

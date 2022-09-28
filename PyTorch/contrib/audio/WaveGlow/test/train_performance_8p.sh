@@ -85,12 +85,14 @@ RANK_SIZE=8
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 
+mkdir -p ${test_path_dir}/output/${RANK_ID}
+
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup taskset -c $PID_START-$PID_END \
-    python3.7 train.py \
+    python3.7 -u train.py \
     -fp16_run true \
     -output_directory ${output_directory} \
     -epochs ${train_epochs} \
@@ -103,7 +105,7 @@ nohup taskset -c $PID_START-$PID_END \
     -c config.json \
     -g group_name \
     -r $RANK_ID \
-    > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
 done
 wait
 ##################获取训练数据################

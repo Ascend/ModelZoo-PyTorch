@@ -47,6 +47,8 @@ import time
 from apex import amp
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 import torch.distributed as dist
 from fairseq import checkpoint_utils, distributed_utils, options, progress_bar, tasks, utils
@@ -225,7 +227,7 @@ def train(args, trainer, task, epoch_itr):
     input18 = torch.randn([1000, 1000, 300]).npu()
     '''
 
-    torch.npu.global_step_inc()
+    # torch.npu.global_step_inc()
     for i, samples in enumerate(progress, start=epoch_itr.iterations_in_epoch):
 
         #if i == 60:
@@ -420,7 +422,7 @@ def get_valid_stats(trainer, args, extra_meters=None):
 
 
 def distributed_main(i, args, start_rank=0):
-    args.device_id = i
+    args.device_id = args.distributed_rank = i
     if args.distributed_rank is None:  # torch.multiprocessing.spawn
         args.distributed_rank = start_rank + i
     main(args, init_distributed=True)
@@ -458,8 +460,8 @@ def cli_main():
         #     args=(args, ),
         #     nprocs=args.distributed_world_size,
         # )
-        os.environ['MASTER_ADDR'] = '10.136.181.51'
-        os.environ['MASTER_PORT'] = '29501'
+        os.environ['MASTER_ADDR'] = '127.0.0.1'
+        os.environ['MASTER_PORT'] = '23456'
         assert args.distributed_world_size <= torch.npu.device_count()
         args.distributed_rank = args.device_id
         torch.npu.set_device(args.device_id)

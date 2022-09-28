@@ -85,13 +85,12 @@ nohup python3.7 main_resnet50_scratch.py \
 	--batch ${batch_size} \
 	--addr $(hostname -I |awk '{print $1}') \
     --learning_rate 0.02 \
-	--local_rank ${ASCEND_DEVICE_ID} > train_full_1p.log 2>&1 &
+	--local_rank ${ASCEND_DEVICE_ID} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 # mv nohup.out ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 wait
 
-cp train_full_1p.log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 
 ##################获取训练数据################

@@ -82,8 +82,10 @@ start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export RANK_SIZE=8
-
 export WORLD_SIZE=8
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=29680
+
 KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
@@ -111,6 +113,12 @@ done
 
 wait
 
+nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 --master_port 12345 moby_linear.py \
+--cfg configs/moby_swin_tiny.yaml --data-path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
+
+wait
+
+
 #8p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
 ASCEND_DEVICE_ID=0
 
@@ -127,8 +135,7 @@ FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'*8}'`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Precision' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|head -1`
-#打印，不需要修改
+train_accuracy=`grep -a 'Max accuracy' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " 'END {print $8}'|sed 's/%//g'`
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 

@@ -106,15 +106,17 @@ class CondAffineSeparatedAndCond(nn.Module):
     def feature_extract(self, z, f):
         h = f(z)
         shift, scale = thops.split_feature(h, "cross")
-        scale = (torch.sigmoid(scale + 2.) + self.affine_eps)
-        return scale, shift
+        # To solve the problem that 'adding a discontiguous Tensor and a number leads to segmentation fault' in pytorch1.8
+        scale = (torch.sigmoid(scale.float() + torch.Tensor([2.]).npu()) + self.affine_eps)
+        return scale.half(), shift
 
     def feature_extract_aff(self, z1, ft, f):
         z = torch.cat([z1, ft], dim=1)
         h = f(z)
         shift, scale = thops.split_feature(h, "cross")
-        scale = (torch.sigmoid(scale + 2.) + self.affine_eps)
-        return scale, shift
+        # To solve the problem that 'adding a discontiguous Tensor and a number leads to segmentation fault' in pytorch1.8
+        scale = (torch.sigmoid(scale.float() + torch.Tensor([2.]).npu()) + self.affine_eps)
+        return scale.half(), shift
 
     def split(self, z):
         z1 = z[:, :self.channels_for_nn]

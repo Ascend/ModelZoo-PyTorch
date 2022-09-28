@@ -1,3 +1,4 @@
+
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,9 +92,9 @@ if __name__ == '__main__':
         result = []
         for idx in range(args.net_out_num):
             if idx == 1:
-                result.append(np.fromfile("%s%s_%d.bin" % (args.bin_data_path, file_name, idx + 1), dtype=np.int32))
+                result.append(np.fromfile("%s%s_%d.bin" % (args.bin_data_path, file_name, idx + 0), dtype=np.int32))
             else:
-                result.append(np.fromfile("%s%s_%d.bin" % (args.bin_data_path, file_name, idx + 1), dtype=np.float32))
+                result.append(np.fromfile("%s%s_%d.bin" % (args.bin_data_path, file_name, idx + 0), dtype=np.float32))
         result[0].shape = (100, args.model_input_height // 4, args.model_input_width // 4)
         result[0] = handle_seg(result[0], (img_h, img_w), (ori_h, ori_w),
                                (args.model_input_height, args.model_input_width))
@@ -102,3 +103,4 @@ if __name__ == '__main__':
     fp.close()
     result_files = results2json_segm(dataset, results, "results_solo.pkl")
     coco_eval(result_files, ["segm"], dataset.coco)
+

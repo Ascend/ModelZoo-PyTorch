@@ -20,7 +20,8 @@ RANK_ID_START=0
 
 RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
-data_path="/npu/traindata/imagenet_pytorch/"
+data_path=""
+ASCEND_DEVICE_ID=7
 
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL=3
@@ -118,15 +119,15 @@ nohup python3.7 ${cur_path}/main.py \
     --workers=128 \
     --print-freq=10   > $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
-# end=$(date +%s)
-# e2etime=$(( $end - $start ))
+ end=$(date +%s)
+ e2etime=$(( $end - $start ))
 
-# fps=`grep -a 'FPS' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 'END {print $7}'`
-# step_time=`awk 'BEGIN{printf "%.2f\n",'1000'*'${batch_size}'/'$fps'}'`
+ fps=`grep -a 'FPS' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 'END {print $7}'`
+ step_time=`awk 'BEGIN{printf "%.2f\n",'1000'*'${batch_size}'/'$fps'}'`
 
-# echo "Final Performance image/s : $fps"
-# echo "Final Performance ms/step : $step_time"
-# echo "Final Training Duration sec : $e2etime"
+ echo "Final Performance image/s : $fps"
+ echo "Final Performance ms/step : $step_time"
+ echo "Final Training Duration sec : $e2etime"
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)

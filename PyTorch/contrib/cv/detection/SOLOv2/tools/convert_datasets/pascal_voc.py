@@ -54,13 +54,13 @@ def parse_xml(args):
             labels.append(label)
     if not bboxes:
         bboxes = np.zeros((0, 4))
-        labels = np.zeros((0, ))
+        labels = np.zeros((0,))
     else:
         bboxes = np.array(bboxes, ndmin=2) - 1
         labels = np.array(labels)
     if not bboxes_ignore:
         bboxes_ignore = np.zeros((0, 4))
-        labels_ignore = np.zeros((0, ))
+        labels_ignore = np.zeros((0,))
     else:
         bboxes_ignore = np.array(bboxes_ignore, ndmin=2) - 1
         labels_ignore = np.array(labels_ignore)

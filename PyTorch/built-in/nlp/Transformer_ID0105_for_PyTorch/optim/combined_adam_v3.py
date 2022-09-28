@@ -56,7 +56,9 @@ def recombine_tensor(size, combined_tensor, index=0):
 
 
 class CombinedAdam(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0, amsgrad=False, combine_grad=False):
+    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=0, amsgrad=False, combine_grad=True):
+        if torch.__version__ >= "1.8":
+            combine_grad = False
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:

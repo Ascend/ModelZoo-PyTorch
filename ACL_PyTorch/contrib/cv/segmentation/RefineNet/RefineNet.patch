@@ -122,12 +122,12 @@ index be7a9e7..64eafea 100644
 +            top = getattr(self, '{}_{}'.format(i + 1, 'outvar_dimred'))(top)
 +            x = top + x
 +        return x
-+    
++
 +stages_suffixes = {0 : '_conv',
 +                   1 : '_conv_relu_varout_dimred'}
-+    
++
 +class RCUBlock(nn.Module):
-+    
++
 +    def __init__(self, in_planes, out_planes, n_blocks, n_stages):
 +        super(RCUBlock, self).__init__()
 +        for i in range(n_blocks):
@@ -139,7 +139,7 @@ index be7a9e7..64eafea 100644
 +        self.stride = 1
 +        self.n_blocks = n_blocks
 +        self.n_stages = n_stages
-+    
++
 +    def forward(self, x):
 +        for i in range(self.n_blocks):
 +            residual = x
@@ -187,7 +187,7 @@ index be7a9e7..64eafea 100644
          x1 = self.adapt_stage4_b2_joint_varout_dimred(x1)
          x1 = x1 + x2
          x1 = F.relu(x1)
-+        
++
          x1 = self.mflow_conv_g4_pool(x1)
          x1 = self.mflow_conv_g4_b(x1)
          x1 = self.do(x1)

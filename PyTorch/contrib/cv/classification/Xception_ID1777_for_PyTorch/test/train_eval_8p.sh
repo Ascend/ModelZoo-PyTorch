@@ -9,7 +9,7 @@ batch_size=1240
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # ckpt文件路径
-resume=/home/checkpoint.pth.tar
+resume_pth=""
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -25,12 +25,20 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --resume_pth* ]];then
+        resume_pth=`echo ${para#*=}`
     fi
 done
 
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
+    exit 1
+fi
+
+# 校验是否传入resume_pth,不需要修改
+if [[ $resume_pth == "" ]];then
+    echo "[Error] para \"resume_pth\" must be confing"
     exit 1
 fi
 
@@ -88,7 +96,7 @@ python3.7 main-8p.py \
     --device='npu' \
     --epochs=${train_epochs} \
 	--evaluate \
-	--resume=${resume} \
+	--resume=${resume_pth} \
     --batch-size=${batch_size}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

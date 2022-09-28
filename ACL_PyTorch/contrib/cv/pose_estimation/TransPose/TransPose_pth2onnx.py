@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import torch.onnx
 
 from collections import OrderedDict
 sys.path.append('./TransPose')
-from lib.models import transpose_r
+import transpose_r
 from lib.config import cfg
 from lib.config import update_config
 import argparse

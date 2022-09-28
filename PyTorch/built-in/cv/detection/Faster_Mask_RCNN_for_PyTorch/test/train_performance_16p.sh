@@ -14,6 +14,8 @@ conf_path=""
 server_index=""
 fix_node_ip=""
 devicesnum=""
+one_node_ip=""
+linux_num=""
 
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
@@ -86,11 +88,20 @@ do
         conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
         server_index=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
     fi
 done
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else 
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -127,15 +138,15 @@ wait
 
 cd $cur_path/../
 
-python3 setup.py build develop > $cur_path/../log.txt
+python3 setup.py build develop > $cur_path/log.txt
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3 tools/train_net.py \
+nohup python3.7 tools/train_net.py \
         --config-file  configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml \
         --device-ids 0 1 2 3 4 5 6 7 \
         --num-gpus 8 \
-        --num-machines 2 \
+        --num-machines ${linux_num} \
         --machine-rank ${server_index} \
         AMP 1 \
         OPT_LEVEL O2 \

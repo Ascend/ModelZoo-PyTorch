@@ -14,6 +14,7 @@ commit_id=25564bbebd3ccf11d853a345522e2d8c221b275d
 # Requirements
 - CANN 5.0.2及对应版本的PyTorch
 - pip install -r requirements.txt
+  注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 - 下载[VeRi数据集](https://pan.baidu.com/s/1gYBNQI0_MZLB0ANW8qnYGw)，密码：zqk4
 - 下载[数据集的label文件](https://github.com/NVlabs/PAMTRI.git)，在PAMTRI/MultiTaskNet/data/veri/下获取label.csv文件。
   <br>将数据集解压在./data/veri/目录下，应包含image_train、image_test、image_query三个数据集文件以及相应的.csv文件。

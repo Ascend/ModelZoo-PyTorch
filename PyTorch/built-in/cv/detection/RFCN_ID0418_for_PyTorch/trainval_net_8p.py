@@ -149,6 +149,8 @@ def parse_args():
                         help='number of nodes for distributed training')
     parser.add_argument('--rank', default=0, type=int,
                         help='node rank for distributed training')
+    parser.add_argument('--local_rank', default=0, type=int,
+                        help='node local rank for distributed training')
     parser.add_argument('--dist_backend', default='hccl', type=str,
                             help='distributed backend')
     
@@ -261,23 +263,6 @@ def main():
         args.imdbval_name = "vg_150-50-50_minival"
         args.set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
 
-    # 8p, 指定训练服务器的ip和端口
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'
-
-    # 8p，创建由device_id到process_id的映射参数，获取单节点昇腾910 AI处理器数量。
-    args.process_device_map = device_id_to_process_device_map(args.device_list)
-    if args.device == 'npu':
-        npus_per_node = len(args.process_device_map)
-    else:
-        npus_per_node = torch.cuda.device_count()
-
-    args.world_size = npus_per_node
-    print(args)
-
-    mp.spawn(main_worker, nprocs=npus_per_node, args=(npus_per_node, args))
-
-def main_worker(npu, npus_per_node, args):
     if args.arch == 'rcnn':
         from model.faster_rcnn.vgg16 import vgg16
         from model.faster_rcnn.resnet import resnet
@@ -285,15 +270,16 @@ def main_worker(npu, npus_per_node, args):
         from model.rfcn.resnet_atrous import resnet
     elif args.arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
-    
-    process_device_map = device_id_to_process_device_map(args.device_list)
-    args.npu = process_device_map[npu]
 
-    args.rank = args.rank * npus_per_node + npu
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
+    os.environ['WORLD_SIZE'] = '8'
+
+    args.rank = int(args.local_rank)
+    npus_per_node = int(os.environ['WORLD_SIZE'])
+    calculate_device = f'npu:{str(args.local_rank)}'
     dist.init_process_group(backend=args.dist_backend,  # init_method=cfg.dist_url,
-                            world_size=args.world_size, rank=args.rank)
-    
-    calculate_device = 'npu:{}'.format(npu)
+                            world_size=int(os.environ['WORLD_SIZE']), rank=args.rank)
     print(calculate_device)
     torch.npu.set_device(calculate_device)
 
@@ -310,7 +296,8 @@ def main_worker(npu, npus_per_node, args):
     imdb, roidb, ratio_list, ratio_index = combined_roidb(args.imdb_name)
     train_size = len(roidb)
 
-    print('{:d} roidb entries'.format(len(roidb)))
+    if torch.distributed.get_rank() == 0:
+        print('{:d} roidb entries'.format(len(roidb)))
 
     output_dir = os.path.join(args.save_dir, args.arch, args.net, args.dataset)
     try:
@@ -324,34 +311,12 @@ def main_worker(npu, npus_per_node, args):
                              imdb.num_classes, training=True)
     
     train_sampler = torch.utils.data.distributed.DistributedSampler(
-        dataset, num_replicas=args.world_size, rank=args.rank)
-    print("args.batch_size:", args.batch_size)
+        dataset, num_replicas=int(os.environ['WORLD_SIZE']), rank=args.rank)
+    if torch.distributed.get_rank() == 0:
+        print("args.batch_size:", args.batch_size)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, collate_fn=padding_collate,
-                                             sampler=train_sampler, num_workers=args.workers, pin_memory=False, drop_last=True)
-
-    # initilize the tensor holder here.
-    im_data = torch.FloatTensor(1)
-    im_info = torch.FloatTensor(1)
-    num_boxes = torch.LongTensor(1)
-    gt_boxes = torch.FloatTensor(1)
-
-    if args.device == 'npu':
-        im_data = im_data.npu()
-        im_info = im_info.npu()
-        num_boxes = num_boxes.npu()
-        gt_boxes = gt_boxes.npu()
-    elif args.device == 'cuda':
-        im_data = im_data.cuda()
-        im_info = im_info.cuda()
-        num_boxes = num_boxes.cuda()
-        gt_boxes = gt_boxes.cuda()
-
-    # make variable
-    im_data = Variable(im_data)
-    im_info = Variable(im_info)
-    num_boxes = Variable(num_boxes)
-    gt_boxes = Variable(gt_boxes)
+                                             sampler=train_sampler, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
     if args.cuda:
         cfg.CUDA = True
@@ -407,7 +372,7 @@ def main_worker(npu, npus_per_node, args):
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
         print("=> Using amp mode.")
     
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.npu], broadcast_buffers=False)
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.rank], broadcast_buffers=False)
     
     if args.resume:
         load_name = os.path.join(output_dir,
@@ -423,7 +388,7 @@ def main_worker(npu, npus_per_node, args):
             cfg.POOLING_MODE = checkpoint['pooling_mode']
         print("loaded checkpoint %s" % (load_name))
 
-    iters_per_epoch = int(train_size / args.batch_size) / 8
+    iters_per_epoch = int(train_size / args.batch_size) / int(os.environ['WORLD_SIZE'])
 
     for epoch in range(args.start_epoch, args.max_epochs + 1):
         train_sampler.set_epoch(epoch)
@@ -432,33 +397,24 @@ def main_worker(npu, npus_per_node, args):
         # setting to train mode
         model.train()
         loss_temp = 0
-        # start = time.time()
-        torch.npu.synchronize()
         epoch_start = time.time()
 
         if epoch % (args.lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, args.lr_decay_gamma)
             lr *= args.lr_decay_gamma
         
-        torch.npu.synchronize()
         start = time.time()
+        data_start = time.time()
         batch_time_sum = 0
         batch_time_mean = 0
-        data_iter = iter(dataloader)
         for step, (data0, data1, data2, data3) in enumerate(dataloader):
-            if args.etp_performance_mode and step >= 100:
+            if args.etp_performance_mode and step >= 300:
                 break
-
-            torch.npu.synchronize()
-            start = time.time()
-            # data = next(data_iter)
-            data_time = (time.time() - start) * 1000
-            
-            with torch.no_grad():
-                im_data.resize_(data0.size()).copy_(data0)
-                im_info.resize_(data1.size()).copy_(data1)
-                gt_boxes.resize_(data2.size()).copy_(data2)
-                num_boxes.resize_(data3.size()).copy_(data3)
+            data_time = (time.time() - data_start) * 1000
+            im_data = data0.to(calculate_device, non_blocking=True)
+            im_info = data1.to(calculate_device, non_blocking=True)
+            gt_boxes = data2.to(calculate_device, non_blocking=True)
+            num_boxes = data3.to(calculate_device, non_blocking=True)
 
             model.zero_grad()
             rois, cls_prob, bbox_pred, \
@@ -468,29 +424,27 @@ def main_worker(npu, npus_per_node, args):
 
             loss = rpn_loss_cls.mean() + rpn_loss_box.mean() \
                    + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
-            # loss_temp += loss.data[0]
             loss_temp += loss.item()
 
             # backward
             optimizer.zero_grad()
-            # loss.backward()
             if args.amp:
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
             else:
                 loss.backward()
             if args.net == "vgg16":
-                clip_gradient(optimizer, 10.)
-            if args.net == "res01":
-                clip_gradient(optimizer, 4.)
+                optimizer.clip_optimizer_grad_norm_fused(10.)
+            if args.net == "res101":
+                optimizer.clip_optimizer_grad_norm_fused(4.)
             optimizer.step()
-
-            torch.npu.synchronize()
-            batch_time = (time.time() - start) * 1000
-            if step > 1:
-                batch_time_sum += batch_time
-                batch_time_mean = batch_time_sum / (step - 1)
             
+            batch_time = (time.time() - start) * 1000
+            start = time.time()
+            if step > 10:
+                batch_time_sum += batch_time
+                batch_time_mean = batch_time_sum / (step - 10)
+
             if step > iters_per_epoch:
                 break
 
@@ -516,15 +470,16 @@ def main_worker(npu, npus_per_node, args):
                     fg_cnt = torch.sum(rois_label.data.int().ne(0))
                     bg_cnt = rois_label.data.numel() - fg_cnt
 
-                print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
-                      % (args.session, epoch, step, iters_per_epoch, loss_temp, lr))
-                # print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end-start))
-                if step > 1:
-                    print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f, FPS: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean, args.batch_size*npus_per_node/(batch_time_mean/1000)))
-                else:
-                    print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean))
-                print("\t\t\trpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f" \
-                      % (loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box))
+                if torch.distributed.get_rank() == 0:
+                    print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
+                        % (args.session, epoch, step, iters_per_epoch, loss_temp, lr))
+                    # print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end-start))
+                    if step > 10:
+                        print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f, FPS: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean, args.batch_size*npus_per_node/(batch_time_mean/1000)))
+                    else:
+                        print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean))
+                    print("\t\t\trpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f" \
+                        % (loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box))
                 if args.use_tfboard:
                     info = {
                         'loss': loss_temp,
@@ -537,7 +492,9 @@ def main_worker(npu, npus_per_node, args):
                         logger.scalar_summary(tag, value, step)
 
                 loss_temp = 0
-                # start = time.time()
+                data_start = time.time()
+                
+
         # 每十次保存一次模型
         if epoch % 10 == 0 or epoch == args.max_epochs:
             if args.rank % npus_per_node == 0:
@@ -561,4 +518,3 @@ def main_worker(npu, npus_per_node, args):
 
 if __name__ == '__main__':
     main()
-    

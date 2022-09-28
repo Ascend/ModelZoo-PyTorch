@@ -58,3 +58,4 @@ if __name__ == '__main__':
     elif file_type == 'jpg':
         assert len(sys.argv) == 4, 'The number of input parameters must be equal to 3'
         get_jpg_info(file_path, info_name)
+

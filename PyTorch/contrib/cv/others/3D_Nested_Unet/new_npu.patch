@@ -1,0 +1,2338 @@
+diff --git a/pytorch/nnunet/network_architecture/generic_UNetPlusPlus.py b/pytorch/nnunet/network_architecture/generic_UNetPlusPlus.py
+index 5c2f816..4efcbac 100644
+--- a/pytorch/nnunet/network_architecture/generic_UNetPlusPlus.py
++++ b/pytorch/nnunet/network_architecture/generic_UNetPlusPlus.py
+@@ -21,7 +21,8 @@ import numpy as np
+ from nnunet.network_architecture.initialization import InitWeights_He
+ from nnunet.network_architecture.neural_network import SegmentationNetwork
+ import torch.nn.functional
+-
++import pdb
++# pdb.set_trace()
+ 
+ class ConvDropoutNormNonlin(nn.Module):
+     """
+@@ -391,9 +392,37 @@ class Generic_UNetPlusPlus(SegmentationNetwork):
+             self.apply(self.weightInitializer)
+             # self.apply(print_module_training_status)
+ 
++    def hyp_move(self, tensor_names=None, id=None, tensor=None, init=False):
++        if init is True:
++            self.hyp_name = []  # 记录张量名字
++            self.hyp_tensor = []  # 记录张量
++            self.hyp_flag = []  # 记录所在设备，0-cpu，else-npu
++            return
++        else:
++            pass
++        if tensor is None:
++            for name in tensor_names:
++                for i in range(len(self.hyp_name)):
++                    if name == self.hyp_name[i]:
++                        self.hyp_tensor[i] = self.hyp_tensor[i].npu()
++                        self.hyp_flag[i] = id
++                        return self.hyp_tensor[i]
++                    else:
++                        if self.hyp_flag[i] >= 0 and self.hyp_flag[i] != id:
++                            self.hyp_tensor[i] = self.hyp_tensor[i].cpu()
++                            self.hyp_flag[i] = 0
++        else:
++            self.hyp_name.append(tensor_names)
++            self.hyp_tensor.append(tensor)
++            self.hyp_flag.append(1)
++            return
++        torch.npu.empty_cache()
++        return None
++
+     def forward(self, x):
+         # skips = []
+         seg_outputs = []
++        # pdb.set_trace()
+         x0_0 = self.conv_blocks_context[0](x)
+         x1_0 = self.conv_blocks_context[1](x0_0)
+         x0_1 = self.loc4[0](torch.cat([x0_0, self.up4[0](x1_0)], 1))
+@@ -431,6 +460,112 @@ class Generic_UNetPlusPlus(SegmentationNetwork):
+         else:
+             return seg_outputs[-1]
+ 
++    def forward2(self, x):
++        # skips = []
++        self.hyp_move(init=True)
++        pdb.set_trace()
++        seg_outputs = []
++        # self.hyp_move('x0_0', tensor=self.conv_blocks_context[0](x))
++        # self.hyp_move('x1_0', tensor=self.conv_blocks_context[1](self.hyp_move('x0_0', 10)))
++        # self.hyp_move('x0_1', tensor=self.loc4[0](torch.cat([self.hyp_move('x0_0', 11), self.up4[0](self.hyp_move('x1_0', 11))], 1)))
++        # seg_outputs.append(self.final_nonlin(self.seg_outputs[-1](self.hyp_move('x0_1', 12))))
++        # torch.npu.empty_cache()
++        x0_0 = self.conv_blocks_context[0](x)
++        x1_0 = self.conv_blocks_context[1](x0_0)
++        x0_1 = self.loc4[0](torch.cat([x0_0, self.up4[0](x1_0)], 1))
++        temp = self.final_nonlin(self.seg_outputs[-1](x0_1)).cpu()
++        seg_outputs.append(temp)
++        x0_0, x1_0, x0_1 = x0_0.cpu(), x1_0.cpu(), x0_1.cpu()
++        torch.npu.empty_cache()
++
++        x0_0, x1_0, x0_1 = x0_0.npu(), x1_0.npu(), x0_1.npu()
++        x2_0 = self.conv_blocks_context[2](x1_0)
++        x1_1 = self.loc3[0](torch.cat([x1_0, self.up3[0](x2_0)], 1))
++        x0_2 = self.loc3[1](torch.cat([x0_0, x0_1, self.up3[1](x1_1)], 1))
++        temp = self.final_nonlin(self.seg_outputs[-2](x0_2)).cpu()
++        seg_outputs.append(temp)
++        x0_0, x1_0, x0_1 = x0_0.cpu(), x1_0.cpu(), x0_1.cpu()
++        x2_0, x1_1, x0_2 = x2_0.cpu(), x1_1.cpu(), x0_2.cpu()
++        torch.npu.empty_cache()
++
++        x0_0, x1_0, x0_1 = x0_0.npu(), x1_0.npu(), x0_1.npu()
++        x2_0, x1_1, x0_2 = x2_0.npu(), x1_1.npu(), x0_2.npu()
++        x3_0 = self.conv_blocks_context[3](x2_0)
++        x2_1 = self.loc2[0](torch.cat([x2_0, self.up2[0](x3_0)], 1))
++        x1_2 = self.loc2[1](torch.cat([x1_0, x1_1, self.up2[1](x2_1)], 1))
++        torch_cat = torch.cat([x0_0, x0_1, x0_2, self.up2[2](x1_2)], 1)
++        x0_0, x1_0, x0_1 = x0_0.cpu(), x1_0.cpu(), x0_1.cpu()
++        x2_0, x1_1, x0_2 = x2_0.cpu(), x1_1.cpu(), x0_2.cpu()
++        x3_0, x2_1, x1_2 = x3_0.cpu(), x2_1.cpu(), x1_2.cpu()
++        torch.npu.empty_cache()
++        x0_3 = self.loc2[2](torch_cat)
++        temp = self.final_nonlin(self.seg_outputs[-3](x0_3)).cpu()
++        seg_outputs.append(temp)
++        del torch_cat
++        x0_3 = x0_3.cpu()
++        torch.npu.empty_cache()
++
++        x3_0 = x3_0.npu()
++        x4_0 = self.conv_blocks_context[4](x3_0)
++        x3_1 = self.loc1[0](torch.cat([x3_0, self.up1[0](x4_0)], 1))
++        x3_0, x4_0 = x3_0.cpu(), x4_0.cpu()
++        torch.npu.empty_cache()
++        x2_0, x2_1 = x2_0.npu(), x2_1.npu()
++        x2_2 = self.loc1[1](torch.cat([x2_0, x2_1, self.up1[1](x3_1)], 1))
++        x2_0, x2_1, x3_1 = x2_0.cpu(), x2_1.cpu(), x3_1.cpu()
++        torch.npu.empty_cache()
++        x1_0, x1_1, x1_2 = x1_0.npu(), x1_1.npu(), x1_2.npu()
++        x1_3 = self.loc1[2](torch.cat([x1_0, x1_1, x1_2, self.up1[2](x2_2)], 1))
++        x1_0, x1_1, x1_2, x2_2 = x1_0.cpu(), x1_1.cpu(), x1_2.cpu(), x2_2.cpu()
++        torch.npu.empty_cache()
++        pdb.set_trace()
++        x0_0, x0_1, x0_2, x0_3 = x0_0.npu(), x0_1.npu(), x0_2.npu(), x0_3.npu()
++        torch_cat = torch.cat([x0_0, x0_1, x0_2, x0_3, self.up1[3](x1_3)], 1)
++        torch_cat = torch_cat.half()  # half
++        x0_0, x0_1, x0_2, x0_3, x1_3 = x0_0.cpu(), x0_1.cpu(), x0_2.cpu(), x0_3.cpu(), x1_3.cpu()
++        torch.npu.empty_cache()
++        x0_4 = self.loc1[3](torch_cat)  # 在这爆
++        del torch_cat
++        temp = self.final_nonlin(self.seg_outputs[-4](x0_4)).cpu()
++        seg_outputs.append(temp)
++        x0_4 = x0_4.cpu()
++        torch.npu.empty_cache()
++
++        x4_0 = x4_0.npu()
++        x5_0 = self.conv_blocks_context[5](x4_0)
++        x4_1 = self.loc0[0](torch.cat([x4_0, self.up0[0](x5_0)], 1))
++        x4_0, x5_0 = x4_0.cpu(), x5_0.cpu()
++        torch.npu.empty_cache()
++        x3_0, x3_1 = x3_0.npu(), x3_1.npu()
++        x3_2 = self.loc0[1](torch.cat([x3_0, x3_1, self.up0[1](x4_1)], 1))
++        x3_0, x3_1, x4_1 = x3_0.cpu(), x3_1.cpu(), x4_1.cpu()
++        torch.npu.empty_cache()
++        x2_0, x2_1, x2_2 = x2_0.npu(), x2_1.npu(), x2_2.npu()
++        x2_3 = self.loc0[2](torch.cat([x2_0, x2_1, x2_2, self.up0[2](x3_2)], 1))
++        x2_0, x2_1, x2_2, x3_2 = x2_0.cpu(), x2_1.cpu(), x2_2.cpu(), x3_2.cpu()
++        torch.npu.empty_cache()
++        x1_0, x1_1, x1_2, x1_3 = x1_0.npu(), x1_1.npu(), x1_2.npu(), x1_3.npu()
++        torch_cat = torch.cat([x1_0, x1_1, x1_2, x1_3, self.up0[3](x2_3)], 1)
++        x1_0, x1_1, x1_2, x1_3, x2_3 = x1_0.cpu(), x1_1.cpu(), x1_2.cpu(), x1_3.cpu(), x2_3.cpu()
++        pdb.set_trace()
++        torch_cat = torch_cat.npu()
++        x1_4 = self.loc0[3](torch_cat)
++        del torch_cat
++        x0_0, x0_1, x0_2, x0_3, x0_4 = x0_0.npu(), x0_1.npu(), x0_2.npu(), x0_3.npu(), x0_4.npu()
++        torch_cat = torch.cat([x0_0, x0_1, x0_2, x0_3, x0_4, self.up0[4](x1_4)], 1)
++        x0_0, x0_1, x0_2, x0_3, x0_4, x1_4 = x0_0.cpu(), x0_1.cpu(), x0_2.cpu(), x0_3.cpu(), x0_4.cpu(), x1_4.cpu()
++        pdb.set_trace()
++        x0_5 = self.loc0[4](torch_cat)
++        del torch_cat
++        temp = self.final_nonlin(self.seg_outputs[-5](x0_5)).cpu()
++        seg_outputs.append(temp)
++
++        if self._deep_supervision and self.do_ds:
++            return tuple([seg_outputs[-1]] + [i(j) for i, j in
++                                              zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
++        else:
++            return seg_outputs[-1]
++
+     # now lets build the localization pathway BACK_UP
+     def create_nest(self, z, num_pool, final_num_features, num_conv_per_stage, basic_block, transpconv):
+         # print(final_num_features)
+diff --git a/pytorch/nnunet/network_architecture/generic_UNetPlusPlus2.py b/pytorch/nnunet/network_architecture/generic_UNetPlusPlus2.py
+new file mode 100644
+index 0000000..37454c5
+--- /dev/null
++++ b/pytorch/nnunet/network_architecture/generic_UNetPlusPlus2.py
+@@ -0,0 +1,517 @@
++#    Copyright 2020 Division of Medical Image Computing, German Cancer Research Center (DKFZ), Heidelberg, Germany
++#
++#    Licensed under the Apache License, Version 2.0 (the "License");
++#    you may not use this file except in compliance with the License.
++#    You may obtain a copy of the License at
++#
++#        http://www.apache.org/licenses/LICENSE-2.0
++#
++#    Unless required by applicable law or agreed to in writing, software
++#    distributed under the License is distributed on an "AS IS" BASIS,
++#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++#    See the License for the specific language governing permissions and
++#    limitations under the License.
++
++
++from copy import deepcopy
++from nnunet.utilities.nd_softmax import softmax_helper
++from torch import nn
++import torch
++import numpy as np
++from nnunet.network_architecture.initialization import InitWeights_He
++from nnunet.network_architecture.neural_network import SegmentationNetwork
++import torch.nn.functional
++
++
++class ConvDropoutNormNonlin(nn.Module):
++    """
++    fixes a bug in ConvDropoutNormNonlin where lrelu was used regardless of nonlin. Bad.
++    """
++
++    def __init__(self, input_channels, output_channels,
++                 conv_op=nn.Conv2d, conv_kwargs=None,
++                 norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
++                 dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
++                 nonlin=nn.LeakyReLU, nonlin_kwargs=None):
++        super(ConvDropoutNormNonlin, self).__init__()
++        if nonlin_kwargs is None:
++            nonlin_kwargs = {'negative_slope': 1e-2, 'inplace': True}
++        if dropout_op_kwargs is None:
++            dropout_op_kwargs = {'p': 0.5, 'inplace': True}
++        if norm_op_kwargs is None:
++            norm_op_kwargs = {'eps': 1e-5, 'affine': True, 'momentum': 0.1}
++        if conv_kwargs is None:
++            conv_kwargs = {'kernel_size': 3, 'stride': 1, 'padding': 1, 'dilation': 1, 'bias': True}
++
++        self.nonlin_kwargs = nonlin_kwargs
++        self.nonlin = nonlin
++        self.dropout_op = dropout_op
++        self.dropout_op_kwargs = dropout_op_kwargs
++        self.norm_op_kwargs = norm_op_kwargs
++        self.conv_kwargs = conv_kwargs
++        self.conv_op = conv_op
++        self.norm_op = norm_op
++
++        self.conv = self.conv_op(input_channels, output_channels, **self.conv_kwargs)
++        if self.dropout_op is not None and self.dropout_op_kwargs['p'] is not None and self.dropout_op_kwargs[
++            'p'] > 0:
++            self.dropout = self.dropout_op(**self.dropout_op_kwargs)
++        else:
++            self.dropout = None
++        self.instnorm = self.norm_op(output_channels, **self.norm_op_kwargs)
++        self.lrelu = self.nonlin(**self.nonlin_kwargs)
++
++    def forward(self, x):
++        x = self.conv(x)
++        if self.dropout is not None:
++            x = self.dropout(x)
++        return self.lrelu(self.instnorm(x))
++
++
++class ConvDropoutNonlinNorm(ConvDropoutNormNonlin):
++    def forward(self, x):
++        x = self.conv(x)
++        if self.dropout is not None:
++            x = self.dropout(x)
++        return self.instnorm(self.lrelu(x))
++
++
++class StackedConvLayers(nn.Module):
++    def __init__(self, input_feature_channels, output_feature_channels, num_convs,
++                 conv_op=nn.Conv2d, conv_kwargs=None,
++                 norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
++                 dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
++                 nonlin=nn.LeakyReLU, nonlin_kwargs=None, first_stride=None, basic_block=ConvDropoutNormNonlin):
++        '''
++        stacks ConvDropoutNormLReLU layers. initial_stride will only be applied to first layer in the stack. The other parameters affect all layers
++        :param input_feature_channels:
++        :param output_feature_channels:
++        :param num_convs:
++        :param dilation:
++        :param kernel_size:
++        :param padding:
++        :param dropout:
++        :param initial_stride:
++        :param conv_op:
++        :param norm_op:
++        :param dropout_op:
++        :param inplace:
++        :param neg_slope:
++        :param norm_affine:
++        :param conv_bias:
++        '''
++        self.input_channels = input_feature_channels
++        self.output_channels = output_feature_channels
++
++        if nonlin_kwargs is None:
++            nonlin_kwargs = {'negative_slope': 1e-2, 'inplace': True}
++        if dropout_op_kwargs is None:
++            dropout_op_kwargs = {'p': 0.5, 'inplace': True}
++        if norm_op_kwargs is None:
++            norm_op_kwargs = {'eps': 1e-5, 'affine': True, 'momentum': 0.1}
++        if conv_kwargs is None:
++            conv_kwargs = {'kernel_size': 3, 'stride': 1, 'padding': 1, 'dilation': 1, 'bias': True}
++
++        self.nonlin_kwargs = nonlin_kwargs
++        self.nonlin = nonlin
++        self.dropout_op = dropout_op
++        self.dropout_op_kwargs = dropout_op_kwargs
++        self.norm_op_kwargs = norm_op_kwargs
++        self.conv_kwargs = conv_kwargs
++        self.conv_op = conv_op
++        self.norm_op = norm_op
++
++        if first_stride is not None:
++            self.conv_kwargs_first_conv = deepcopy(conv_kwargs)
++            self.conv_kwargs_first_conv['stride'] = first_stride
++        else:
++            self.conv_kwargs_first_conv = conv_kwargs
++
++        super(StackedConvLayers, self).__init__()
++        self.blocks = nn.Sequential(
++            *([basic_block(input_feature_channels, output_feature_channels, self.conv_op,
++                           self.conv_kwargs_first_conv,
++                           self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs,
++                           self.nonlin, self.nonlin_kwargs)] +
++              [basic_block(output_feature_channels, output_feature_channels, self.conv_op,
++                           self.conv_kwargs,
++                           self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs,
++                           self.nonlin, self.nonlin_kwargs) for _ in range(num_convs - 1)]))
++
++    def forward(self, x):
++        return self.blocks(x)
++
++
++def print_module_training_status(module):
++    if isinstance(module, nn.Conv2d) or isinstance(module, nn.Conv3d) or isinstance(module, nn.Dropout3d) or \
++            isinstance(module, nn.Dropout2d) or isinstance(module, nn.Dropout) or isinstance(module, nn.InstanceNorm3d) \
++            or isinstance(module, nn.InstanceNorm2d) or isinstance(module, nn.InstanceNorm1d) \
++            or isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm3d) or isinstance(module,
++                                                                                                      nn.BatchNorm1d):
++        print(str(module), module.training)
++
++
++class Upsample(nn.Module):
++    def __init__(self, size=None, scale_factor=None, mode='nearest', align_corners=False):
++        super(Upsample, self).__init__()
++        self.align_corners = align_corners
++        self.mode = mode
++        self.scale_factor = scale_factor
++        self.size = size
++
++    def forward(self, x):
++        return nn.functional.interpolate(x, size=self.size, scale_factor=self.scale_factor, mode=self.mode,
++                                         align_corners=self.align_corners)
++
++
++class Generic_UNetPlusPlus(SegmentationNetwork):
++    DEFAULT_BATCH_SIZE_3D = 2
++    DEFAULT_PATCH_SIZE_3D = (64, 192, 160)
++    SPACING_FACTOR_BETWEEN_STAGES = 2
++    BASE_NUM_FEATURES_3D = 30
++    MAX_NUMPOOL_3D = 999
++    MAX_NUM_FILTERS_3D = 320
++
++    DEFAULT_PATCH_SIZE_2D = (256, 256)
++    BASE_NUM_FEATURES_2D = 30
++    DEFAULT_BATCH_SIZE_2D = 50
++    MAX_NUMPOOL_2D = 999
++    MAX_FILTERS_2D = 480
++
++    use_this_for_batch_size_computation_2D = 19739648
++    use_this_for_batch_size_computation_3D = 520000000 * 2  # 505789440
++
++    def __init__(self, input_channels, base_num_features, num_classes, num_pool, num_conv_per_stage=2,
++                 feat_map_mul_on_downscale=2, conv_op=nn.Conv2d,
++                 norm_op=nn.BatchNorm2d, norm_op_kwargs=None,
++                 dropout_op=nn.Dropout2d, dropout_op_kwargs=None,
++                 nonlin=nn.LeakyReLU, nonlin_kwargs=None, deep_supervision=True, dropout_in_localization=False,
++                 final_nonlin=softmax_helper, weightInitializer=InitWeights_He(1e-2), pool_op_kernel_sizes=None,
++                 conv_kernel_sizes=None,
++                 upscale_logits=False, convolutional_pooling=False, convolutional_upsampling=False,
++                 max_num_features=None, basic_block=ConvDropoutNormNonlin,
++                 seg_output_use_bias=False):
++        """
++        basically more flexible than v1, architecture is the same
++
++        Does this look complicated? Nah bro. Functionality > usability
++
++        This does everything you need, including world peace.
++
++        Questions? -> f.isensee@dkfz.de
++        """
++        super(Generic_UNetPlusPlus, self).__init__()
++        self.convolutional_upsampling = convolutional_upsampling
++        self.convolutional_pooling = convolutional_pooling
++        self.upscale_logits = upscale_logits
++        if nonlin_kwargs is None:
++            nonlin_kwargs = {'negative_slope': 1e-2, 'inplace': True}
++        if dropout_op_kwargs is None:
++            dropout_op_kwargs = {'p': 0.5, 'inplace': True}
++        if norm_op_kwargs is None:
++            norm_op_kwargs = {'eps': 1e-5, 'affine': True, 'momentum': 0.1}
++
++        self.conv_kwargs = {'stride': 1, 'dilation': 1, 'bias': True}
++
++        self.nonlin = nonlin
++        self.nonlin_kwargs = nonlin_kwargs
++        self.dropout_op_kwargs = dropout_op_kwargs
++        self.norm_op_kwargs = norm_op_kwargs
++        self.weightInitializer = weightInitializer
++        self.conv_op = conv_op
++        self.norm_op = norm_op
++        self.dropout_op = dropout_op
++        self.num_classes = num_classes
++        self.final_nonlin = final_nonlin
++        self._deep_supervision = deep_supervision
++        self.do_ds = deep_supervision
++
++        if conv_op == nn.Conv2d:
++            upsample_mode = 'bilinear'
++            pool_op = nn.MaxPool2d
++            transpconv = nn.ConvTranspose2d
++            if pool_op_kernel_sizes is None:
++                pool_op_kernel_sizes = [(2, 2)] * num_pool
++            if conv_kernel_sizes is None:
++                conv_kernel_sizes = [(3, 3)] * (num_pool + 1)
++        elif conv_op == nn.Conv3d:
++            upsample_mode = 'trilinear'
++            pool_op = nn.MaxPool3d
++            transpconv = nn.ConvTranspose3d
++            if pool_op_kernel_sizes is None:
++                pool_op_kernel_sizes = [(2, 2, 2)] * num_pool
++            if conv_kernel_sizes is None:
++                conv_kernel_sizes = [(3, 3, 3)] * (num_pool + 1)
++        else:
++            raise ValueError("unknown convolution dimensionality, conv op: %s" % str(conv_op))
++
++        self.input_shape_must_be_divisible_by = np.prod(pool_op_kernel_sizes, 0, dtype=np.int64)
++        self.pool_op_kernel_sizes = pool_op_kernel_sizes
++        self.conv_kernel_sizes = conv_kernel_sizes
++
++        self.conv_pad_sizes = []
++        for krnl in self.conv_kernel_sizes:
++            self.conv_pad_sizes.append([1 if i == 3 else 0 for i in krnl])
++
++        if max_num_features is None:
++            if self.conv_op == nn.Conv3d:
++                self.max_num_features = self.MAX_NUM_FILTERS_3D
++            else:
++                self.max_num_features = self.MAX_FILTERS_2D
++        else:
++            self.max_num_features = max_num_features
++
++        self.conv_blocks_context = []
++        # self.conv_blocks_localization = []
++        self.loc0 = []
++        self.loc1 = []
++        self.loc2 = []
++        self.loc3 = []
++        self.loc4 = []
++        self.td = []
++        self.up0 = []
++        self.up1 = []
++        self.up2 = []
++        self.up3 = []
++        self.up4 = []
++        # self.tu = []
++        self.seg_outputs = []
++
++        output_features = base_num_features
++        input_features = input_channels
++
++        for d in range(num_pool):
++            # determine the first stride
++            if d != 0 and self.convolutional_pooling:
++                first_stride = pool_op_kernel_sizes[d - 1]
++            else:
++                first_stride = None
++
++            self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[d]
++            self.conv_kwargs['padding'] = self.conv_pad_sizes[d]
++            # add convolutions
++            self.conv_blocks_context.append(StackedConvLayers(input_features, output_features, num_conv_per_stage,
++                                                              self.conv_op, self.conv_kwargs, self.norm_op,
++                                                              self.norm_op_kwargs, self.dropout_op,
++                                                              self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs,
++                                                              first_stride, basic_block=basic_block))
++            if not self.convolutional_pooling:
++                self.td.append(pool_op(pool_op_kernel_sizes[d]))
++            input_features = output_features
++            output_features = int(np.round(output_features * feat_map_mul_on_downscale))
++
++            output_features = min(output_features, self.max_num_features)
++
++        # now the bottleneck.
++        # determine the first stride
++        if self.convolutional_pooling:
++            first_stride = pool_op_kernel_sizes[-1]
++        else:
++            first_stride = None
++
++        # the output of the last conv must match the number of features from the skip connection if we are not using
++        # convolutional upsampling. If we use convolutional upsampling then the reduction in feature maps will be
++        # done by the transposed conv
++        if self.convolutional_upsampling:
++            final_num_features = output_features
++        else:
++            final_num_features = self.conv_blocks_context[-1].output_channels
++
++        self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[num_pool]
++        self.conv_kwargs['padding'] = self.conv_pad_sizes[num_pool]
++        self.conv_blocks_context.append(nn.Sequential(
++            StackedConvLayers(input_features, output_features, num_conv_per_stage - 1, self.conv_op, self.conv_kwargs,
++                              self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
++                              self.nonlin_kwargs, first_stride, basic_block=basic_block),
++            StackedConvLayers(output_features, final_num_features, 1, self.conv_op, self.conv_kwargs,
++                              self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs, self.nonlin,
++                              self.nonlin_kwargs, basic_block=basic_block)))
++
++        # if we don't want to do dropout in the localization pathway then we set the dropout prob to zero here
++        if not dropout_in_localization:
++            old_dropout_p = self.dropout_op_kwargs['p']
++            self.dropout_op_kwargs['p'] = 0.0
++
++        # now lets build the localization pathway
++        encoder_features = final_num_features
++        self.loc0, self.up0, encoder_features = self.create_nest(0, num_pool, final_num_features, num_conv_per_stage,
++                                                                 basic_block, transpconv)
++        self.loc1, self.up1, encoder_features1 = self.create_nest(1, num_pool, encoder_features, num_conv_per_stage,
++                                                                  basic_block, transpconv)
++        self.loc2, self.up2, encoder_features2 = self.create_nest(2, num_pool, encoder_features1, num_conv_per_stage,
++                                                                  basic_block, transpconv)
++        self.loc3, self.up3, encoder_features3 = self.create_nest(3, num_pool, encoder_features2, num_conv_per_stage,
++                                                                  basic_block, transpconv)
++        self.loc4, self.up4, encoder_features4 = self.create_nest(4, num_pool, encoder_features3, num_conv_per_stage,
++                                                                  basic_block, transpconv)
++
++        self.seg_outputs.append(conv_op(self.loc0[-1][-1].output_channels, num_classes,
++                                        1, 1, 0, 1, 1, seg_output_use_bias))
++        self.seg_outputs.append(conv_op(self.loc1[-1][-1].output_channels, num_classes,
++                                        1, 1, 0, 1, 1, seg_output_use_bias))
++        self.seg_outputs.append(conv_op(self.loc2[-1][-1].output_channels, num_classes,
++                                        1, 1, 0, 1, 1, seg_output_use_bias))
++        self.seg_outputs.append(conv_op(self.loc3[-1][-1].output_channels, num_classes,
++                                        1, 1, 0, 1, 1, seg_output_use_bias))
++        self.seg_outputs.append(conv_op(self.loc4[-1][-1].output_channels, num_classes,
++                                        1, 1, 0, 1, 1, seg_output_use_bias))
++
++        self.upscale_logits_ops = []
++        cum_upsample = np.cumprod(np.vstack(pool_op_kernel_sizes), axis=0)[::-1]
++        for usl in range(num_pool):
++            if self.upscale_logits:
++                self.upscale_logits_ops.append(Upsample(scale_factor=tuple([int(i) for i in cum_upsample[usl + 1]]),
++                                                        mode=upsample_mode))
++            else:
++                self.upscale_logits_ops.append(lambda x: x)
++
++        if not dropout_in_localization:
++            self.dropout_op_kwargs['p'] = old_dropout_p
++
++        # register all modules properly
++        # self.conv_blocks_localization = nn.ModuleList(self.conv_blocks_localization)
++        self.loc0 = nn.ModuleList(self.loc0)
++        self.loc1 = nn.ModuleList(self.loc1)
++        self.loc2 = nn.ModuleList(self.loc2)
++        self.loc3 = nn.ModuleList(self.loc3)
++        self.loc4 = nn.ModuleList(self.loc4)
++        self.conv_blocks_context = nn.ModuleList(self.conv_blocks_context)
++        self.td = nn.ModuleList(self.td)
++        self.up0 = nn.ModuleList(self.up0)
++        self.up1 = nn.ModuleList(self.up1)
++        self.up2 = nn.ModuleList(self.up2)
++        self.up3 = nn.ModuleList(self.up3)
++        self.up4 = nn.ModuleList(self.up4)
++        self.seg_outputs = nn.ModuleList(self.seg_outputs)
++        if self.upscale_logits:
++            self.upscale_logits_ops = nn.ModuleList(
++                self.upscale_logits_ops)  # lambda x:x is not a Module so we need to distinguish here
++
++        if self.weightInitializer is not None:
++            self.apply(self.weightInitializer)
++            # self.apply(print_module_training_status)
++
++    def forward(self, x):
++        # skips = []
++        seg_outputs = []
++        x0_0 = self.conv_blocks_context[0](x)
++        x1_0 = self.conv_blocks_context[1](x0_0)
++        x0_1 = self.loc4[0](torch.cat([x0_0, self.up4[0](x1_0)], 1))
++        seg_outputs.append(self.final_nonlin(self.seg_outputs[-1](x0_1)))
++
++        x2_0 = self.conv_blocks_context[2](x1_0)
++        x1_1 = self.loc3[0](torch.cat([x1_0, self.up3[0](x2_0)], 1))
++        x0_2 = self.loc3[1](torch.cat([x0_0, x0_1, self.up3[1](x1_1)], 1))
++        seg_outputs.append(self.final_nonlin(self.seg_outputs[-2](x0_2)))
++
++        x3_0 = self.conv_blocks_context[3](x2_0)
++        x2_1 = self.loc2[0](torch.cat([x2_0, self.up2[0](x3_0)], 1))
++        x1_2 = self.loc2[1](torch.cat([x1_0, x1_1, self.up2[1](x2_1)], 1))
++        x0_3 = self.loc2[2](torch.cat([x0_0, x0_1, x0_2, self.up2[2](x1_2)], 1))
++        seg_outputs.append(self.final_nonlin(self.seg_outputs[-3](x0_3)))
++
++        x4_0 = self.conv_blocks_context[4](x3_0)
++        x3_1 = self.loc1[0](torch.cat([x3_0, self.up1[0](x4_0)], 1))
++        x2_2 = self.loc1[1](torch.cat([x2_0, x2_1, self.up1[1](x3_1)], 1))
++        x1_3 = self.loc1[2](torch.cat([x1_0, x1_1, x1_2, self.up1[2](x2_2)], 1))
++        x0_4 = self.loc1[3](torch.cat([x0_0, x0_1, x0_2, x0_3, self.up1[3](x1_3)], 1))
++        seg_outputs.append(self.final_nonlin(self.seg_outputs[-4](x0_4)))
++
++        x5_0 = self.conv_blocks_context[5](x4_0)
++        x4_1 = self.loc0[0](torch.cat([x4_0, self.up0[0](x5_0)], 1))
++        x3_2 = self.loc0[1](torch.cat([x3_0, x3_1, self.up0[1](x4_1)], 1))
++        x2_3 = self.loc0[2](torch.cat([x2_0, x2_1, x2_2, self.up0[2](x3_2)], 1))
++        x1_4 = self.loc0[3](torch.cat([x1_0, x1_1, x1_2, x1_3, self.up0[3](x2_3)], 1))
++        x0_5 = self.loc0[4](torch.cat([x0_0, x0_1, x0_2, x0_3, x0_4, self.up0[4](x1_4)], 1))
++        seg_outputs.append(self.final_nonlin(self.seg_outputs[-5](x0_5)))
++
++        if self._deep_supervision and self.do_ds:
++            return tuple([seg_outputs[-1]] + [i(j) for i, j in
++                                              zip(list(self.upscale_logits_ops)[::-1], seg_outputs[:-1][::-1])])
++        else:
++            return seg_outputs[-1]
++
++    # now lets build the localization pathway BACK_UP
++    def create_nest(self, z, num_pool, final_num_features, num_conv_per_stage, basic_block, transpconv):
++        # print(final_num_features)
++        conv_blocks_localization = []
++        tu = []
++        i = 0
++        # seg_outputs = []
++        for u in range(z, num_pool):
++            nfeatures_from_down = final_num_features
++            nfeatures_from_skip = self.conv_blocks_context[
++                -(2 + u)].output_channels  # self.conv_blocks_context[-1] is bottleneck, so start with -2
++            n_features_after_tu_and_concat = nfeatures_from_skip * (2 + u - z)
++            if i == 0:
++                unet_final_features = nfeatures_from_skip
++                i += 1
++            # the first conv reduces the number of features to match those of skip
++            # the following convs work on that number of features
++            # if not convolutional upsampling then the final conv reduces the num of features again
++            if u != num_pool - 1 and not self.convolutional_upsampling:
++                final_num_features = self.conv_blocks_context[-(3 + u)].output_channels
++            else:
++                final_num_features = nfeatures_from_skip
++
++            if not self.convolutional_upsampling:
++                tu.append(Upsample(scale_factor=self.pool_op_kernel_sizes[-(u + 1)], mode=self.upsample_mode))
++            else:
++                tu.append(transpconv(nfeatures_from_down, nfeatures_from_skip, self.pool_op_kernel_sizes[-(u + 1)],
++                          self.pool_op_kernel_sizes[-(u + 1)], bias=False))
++
++            self.conv_kwargs['kernel_size'] = self.conv_kernel_sizes[- (u + 1)]
++            self.conv_kwargs['padding'] = self.conv_pad_sizes[- (u + 1)]
++            conv_blocks_localization.append(nn.Sequential(
++                StackedConvLayers(n_features_after_tu_and_concat, nfeatures_from_skip, num_conv_per_stage - 1,
++                                  self.conv_op, self.conv_kwargs, self.norm_op, self.norm_op_kwargs, self.dropout_op,
++                                  self.dropout_op_kwargs, self.nonlin, self.nonlin_kwargs, basic_block=basic_block),
++                StackedConvLayers(nfeatures_from_skip, final_num_features, 1, self.conv_op, self.conv_kwargs,
++                                  self.norm_op, self.norm_op_kwargs, self.dropout_op, self.dropout_op_kwargs,
++                                  self.nonlin, self.nonlin_kwargs, basic_block=basic_block)
++            ))
++            # print(final_num_features)
++        # print('hello')
++        return conv_blocks_localization, tu, unet_final_features
++
++    @staticmethod
++    def compute_approx_vram_consumption(patch_size, num_pool_per_axis, base_num_features, max_num_features,
++                                        num_modalities, num_classes, pool_op_kernel_sizes, deep_supervision=False,
++                                        conv_per_stage=2):
++        """
++        This only applies for num_conv_per_stage and convolutional_upsampling=True
++        not real vram consumption. just a constant term to which the vram consumption will be approx proportional
++        (+ offset for parameter storage)
++        :param deep_supervision:
++        :param patch_size:
++        :param num_pool_per_axis:
++        :param base_num_features:
++        :param max_num_features:
++        :param num_modalities:
++        :param num_classes:
++        :param pool_op_kernel_sizes:
++        :return:
++        """
++        if not isinstance(num_pool_per_axis, np.ndarray):
++            num_pool_per_axis = np.array(num_pool_per_axis)
++
++        npool = len(pool_op_kernel_sizes)
++
++        map_size = np.array(patch_size)
++        tmp = np.int64((conv_per_stage * 2 + 1) * np.prod(map_size, dtype=np.int64) * base_num_features +
++                       num_modalities * np.prod(map_size, dtype=np.int64) +
++                       num_classes * np.prod(map_size, dtype=np.int64))
++
++        num_feat = base_num_features
++
++        for p in range(npool):
++            for pi in range(len(num_pool_per_axis)):
++                map_size[pi] /= pool_op_kernel_sizes[p][pi]
++            num_feat = min(num_feat * 2, max_num_features)
++            num_blocks = (conv_per_stage * 2 + 1) if p < (npool - 1) else conv_per_stage  # conv_per_stage + conv_per_stage for the convs of encode/decode and 1 for transposed conv
++            tmp += num_blocks * np.prod(map_size, dtype=np.int64) * num_feat
++            if deep_supervision and p < (npool - 2):
++                tmp += np.prod(map_size, dtype=np.int64) * num_classes
++            # print(p, map_size, num_feat, tmp)
++        return tmp
++
+diff --git a/pytorch/nnunet/network_architecture/neural_network.py b/pytorch/nnunet/network_architecture/neural_network.py
+index baa8a05..41f4c03 100644
+--- a/pytorch/nnunet/network_architecture/neural_network.py
++++ b/pytorch/nnunet/network_architecture/neural_network.py
+@@ -16,14 +16,14 @@
+ import numpy as np
+ from batchgenerators.augmentations.utils import pad_nd_image
+ from nnunet.utilities.random_stuff import no_op
+-from nnunet.utilities.to_torch import to_cuda, maybe_to_torch
++from nnunet.utilities.to_torch import to_npu, maybe_to_torch
+ from torch import nn
+ import torch
+ from scipy.ndimage.filters import gaussian_filter
+ from typing import Union, Tuple, List
+-
+-from torch.cuda.amp import autocast
+-
++# npu add 注释了autocast
++# from torch.cuda.amp import autocast  # 原来的
++# from apex.amp import autocast  # 前一阵子尝试改NPU单卡的，会报错
+ 
+ class NeuralNetwork(nn.Module):
+     def __init__(self):
+@@ -132,9 +132,10 @@ class SegmentationNetwork(NeuralNetwork):
+             print('WARNING! Network is in train mode during inference. This may be intended, or not...')
+ 
+         assert len(x.shape) == 4, "data must have shape (c,x,y,z)"
+-
++        mixed_precision = False  # 2022.05.05 add to debug
+         if mixed_precision:
+-            context = autocast
++            # context = autocast
++            raise Exception('NPU code is wrong. ----he yu pen')
+         else:
+             context = no_op
+ 
+@@ -223,7 +224,8 @@ class SegmentationNetwork(NeuralNetwork):
+         assert len(x.shape) == 3, "data must have shape (c,x,y)"
+ 
+         if mixed_precision:
+-            context = autocast
++            # context = autocast
++            raise Exception('NPU code is wrong. ----he yu pen')
+         else:
+             context = no_op
+ 
+@@ -327,9 +329,9 @@ class SegmentationNetwork(NeuralNetwork):
+                 if verbose: print("using precomputed Gaussian")
+                 gaussian_importance_map = self._gaussian_3d
+ 
+-            gaussian_importance_map = torch.from_numpy(gaussian_importance_map).cuda(self.get_device(),
+-                                                                                     non_blocking=True)
+-
++            # gaussian_importance_map = torch.from_numpy(gaussian_importance_map).cuda(self.get_device(),
++            #                                                                          non_blocking=True)
++            gaussian_importance_map = torch.from_numpy(gaussian_importance_map)
+         else:
+             gaussian_importance_map = None
+ 
+@@ -505,12 +507,13 @@ class SegmentationNetwork(NeuralNetwork):
+         # everything in here takes place on the GPU. If x and mult are not yet on GPU this will be taken care of here
+         # we now return a cuda tensor! Not numpy array!
+ 
+-        x = to_cuda(maybe_to_torch(x), gpu_id=self.get_device())
++        x = to_npu(maybe_to_torch(x), gpu_id=self.get_device())
++        # result_torch = torch.zeros([1, self.num_classes] + list(x.shape[2:]),
++        #                            dtype=torch.float).cuda(self.get_device(), non_blocking=True)
+         result_torch = torch.zeros([1, self.num_classes] + list(x.shape[2:]),
+-                                   dtype=torch.float).cuda(self.get_device(), non_blocking=True)
+-
++                                   dtype=torch.float).npu(self.get_device(), non_blocking=True)
+         if mult is not None:
+-            mult = to_cuda(maybe_to_torch(mult), gpu_id=self.get_device())
++            mult = to_npu(maybe_to_torch(mult), gpu_id=self.get_device())
+ 
+         if do_mirroring:
+             mirror_idx = 8
+@@ -563,12 +566,12 @@ class SegmentationNetwork(NeuralNetwork):
+         # we now return a cuda tensor! Not numpy array!
+         assert len(x.shape) == 4, 'x must be (b, c, x, y)'
+ 
+-        x = to_cuda(maybe_to_torch(x), gpu_id=self.get_device())
++        x = to_npu(maybe_to_torch(x), gpu_id=self.get_device())
+         result_torch = torch.zeros([x.shape[0], self.num_classes] + list(x.shape[2:]),
+                                    dtype=torch.float).cuda(self.get_device(), non_blocking=True)
+ 
+         if mult is not None:
+-            mult = to_cuda(maybe_to_torch(mult), gpu_id=self.get_device())
++            mult = to_npu(maybe_to_torch(mult), gpu_id=self.get_device())
+ 
+         if do_mirroring:
+             mirror_idx = 4
+diff --git a/pytorch/nnunet/run/run_training.py b/pytorch/nnunet/run/run_training.py
+index eb7ca2f..957d241 100644
+--- a/pytorch/nnunet/run/run_training.py
++++ b/pytorch/nnunet/run/run_training.py
+@@ -11,29 +11,33 @@
+ #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ #    See the License for the specific language governing permissions and
+ #    limitations under the License.
+-
++import os
+ import sys
+ import argparse
+ from batchgenerators.utilities.file_and_folder_operations import *
+ from nnunet.run.default_configuration import get_default_configuration
+ from nnunet.paths import default_plans_identifier
+ from nnunet.training.cascade_stuff.predict_next_stage import predict_next_stage
+-from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
+-from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
+-from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
+ from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
+-
+-
++from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
++# npu add, no use for CascadeFullres
++# from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
++# from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
++# npu add
++import torch.npu
++CALCULATE_DEVICE = "npu:0"
++# import pdb
++# pdb.set_trace()
+ def main():
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("network")
+-    parser.add_argument("network_trainer")
+-    parser.add_argument("task", help="can be task name or task id")
+-    parser.add_argument("fold", help='0, 1, ..., 5 or \'all\'')
+-    parser.add_argument("-val", "--validation_only", help="use this if you want to only run the validation",
++    parser.add_argument("network", default="3d_fullres")
++    parser.add_argument("network_trainer", default="nnUNetPlusPlusTrainerV2")
++    parser.add_argument("task", default="003", help="can be task name or task id")
++    parser.add_argument("fold", default="0", help='0, 1, ..., 5 or \'all\'')
++    parser.add_argument("-val", "--validation_only", default=False, help="use this if you want to only run the validation",
+                         action="store_true")
+     parser.add_argument("-w", required=False, default=None, help="Load pre-trained Models Genesis")
+-    parser.add_argument("-c", "--continue_training", help="use this if you want to continue a training",
++    parser.add_argument("-c", "--continue_training", default=False, help="use this if you want to continue a training",
+                         action="store_true")
+     parser.add_argument("-p", help="plans identifier. Only change this if you created a custom experiment planner",
+                         default=default_plans_identifier, required=False)
+@@ -62,6 +66,8 @@ def main():
+                         help="disable mixed precision training and run old school fp32")
+     parser.add_argument("--val_folder", required=False, default="validation_raw",
+                         help="name of the validation folder. No need to use this for most people")
++    parser.add_argument("--other_use", required=False, default="none",
++                        help="some special use")
+     # parser.add_argument("--interp_order", required=False, default=3, type=int,
+     #                     help="order of interpolation for segmentations. Testing purpose only. Hands off")
+     # parser.add_argument("--interp_order_z", required=False, default=0, type=int,
+@@ -71,6 +77,7 @@ def main():
+     #                     help="force_separate_z resampling. Can be None, True or False. Testing purpose only. Hands off")
+ 
+     args = parser.parse_args()
++    print(args)
+ 
+     task = args.task
+     fold = args.fold
+@@ -94,6 +101,7 @@ def main():
+     # interp_order = args.interp_order
+     # interp_order_z = args.interp_order_z
+     # force_separate_z = args.force_separate_z
++    other_use = args.other_use  # 特殊控制器
+ 
+     if not task.startswith("Task"):
+         task_id = int(task)
+@@ -119,14 +127,16 @@ def main():
+     if trainer_class is None:
+         raise RuntimeError("Could not find trainer class in nnunet.training.network_training")
+ 
+-    if network == "3d_cascade_fullres":
+-        assert issubclass(trainer_class, (nnUNetTrainerCascadeFullRes, nnUNetTrainerV2CascadeFullRes)), \
+-            "If running 3d_cascade_fullres then your " \
+-            "trainer class must be derived from " \
+-            "nnUNetTrainerCascadeFullRes"
+-    else:
+-        assert issubclass(trainer_class,
+-                          nnUNetTrainer), "network_trainer was found but is not derived from nnUNetTrainer"
++    # npu add, no use for CascadeFullres
++    assert issubclass(trainer_class, nnUNetTrainer), "network_trainer was found but is not derived from nnUNetTrainer"
++    # if network == "3d_cascade_fullres":
++    #     assert issubclass(trainer_class, (nnUNetTrainerCascadeFullRes, nnUNetTrainerV2CascadeFullRes)), \
++    #         "If running 3d_cascade_fullres then your " \
++    #         "trainer class must be derived from " \
++    #         "nnUNetTrainerCascadeFullRes"
++    # else:
++    #     assert issubclass(trainer_class,
++    #                       nnUNetTrainer), "network_trainer was found but is not derived from nnUNetTrainer"
+ 
+     trainer = trainer_class(plans_file, fold, output_folder=output_folder_name, dataset_directory=dataset_directory,
+                             batch_dice=batch_dice, stage=stage, unpack_data=decompress_data,
+@@ -145,7 +155,7 @@ def main():
+         if not validation_only:
+             if args.continue_training:
+                 trainer.load_latest_checkpoint()
+-            trainer.run_training()
++            trainer.run_training(other_use)
+         else:
+             if valbest:
+                 trainer.load_best_checkpoint(train=False)
+@@ -164,4 +174,8 @@ def main():
+ 
+ 
+ if __name__ == "__main__":
++    print('main start')
++    if 'npu' in CALCULATE_DEVICE:
++        torch.npu.set_device(CALCULATE_DEVICE)
+     main()
++    print('main end')
+diff --git a/pytorch/nnunet/run/run_training_DDP.py b/pytorch/nnunet/run/run_training_DDP.py
+index 5ffcdcf..574dda1 100644
+--- a/pytorch/nnunet/run/run_training_DDP.py
++++ b/pytorch/nnunet/run/run_training_DDP.py
+@@ -14,23 +14,34 @@
+ 
+ 
+ import argparse
+-
++import sys
+ from batchgenerators.utilities.file_and_folder_operations import *
+ from nnunet.run.default_configuration import get_default_configuration
+ from nnunet.paths import default_plans_identifier
+ from nnunet.training.cascade_stuff.predict_next_stage import predict_next_stage
+ from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
+-from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
+-from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
++# npu add, no use for CascadeFullres
++# from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
++# from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
+ from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
+ 
+ 
++def device_id_to_process_device_map(device_list):
++    devices = device_list.split(",")
++    devices = [int(x) for x in devices]
++    devices.sort()
++    process_device_map = dict()
++    for process_id, device_id in enumerate(devices):
++        process_device_map[process_id] = device_id
++    return process_device_map
++
++
+ def main():
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("network")
+-    parser.add_argument("network_trainer")
+-    parser.add_argument("task", help="can be task name or task id")
+-    parser.add_argument("fold", help='0, 1, ..., 5 or \'all\'')
++    parser.add_argument("network", default='3d_fullres')
++    parser.add_argument("network_trainer", default='nnUNetPlusPlusTrainerV2_hypDDP')
++    parser.add_argument("task", help="can be task name or task id", default='003')
++    parser.add_argument("fold", help='0, 1, ..., 5 or \'all\'', default='0')
+     parser.add_argument("-val", "--validation_only", help="use this if you want to only run the validation",
+                         action="store_true")
+     parser.add_argument("-c", "--continue_training", help="use this if you want to continue a training",
+@@ -49,7 +60,7 @@ def main():
+     parser.add_argument("--local_rank", default=0, type=int)
+     parser.add_argument("--fp32", required=False, default=False, action="store_true",
+                         help="disable mixed precision training and run old school fp32")
+-    parser.add_argument("--dbs", required=False, default=False, action="store_true", help="distribute batch size. If "
++    parser.add_argument("--dbs", required=False, default=True, action="store_true", help="distribute batch size. If "
+                                                                                           "True then whatever "
+                                                                                           "batch_size is in plans will "
+                                                                                           "be distributed over DDP "
+@@ -69,6 +80,8 @@ def main():
+     parser.add_argument("--find_lr", required=False, default=False, action="store_true", help="")
+     parser.add_argument("--val_folder", required=False, default="validation_raw",
+                         help="name of the validation folder. No need to use this for most people")
++    parser.add_argument("--other_use", required=False, default="none",
++                        help="some special use")
+     # parser.add_argument("--interp_order", required=False, default=3, type=int,
+     #                     help="order of interpolation for segmentations. Testing purpose only. Hands off")
+     # parser.add_argument("--interp_order_z", required=False, default=0, type=int,
+@@ -76,8 +89,28 @@ def main():
+     #                          "Hands off")
+     # parser.add_argument("--force_separate_z", required=False, default="None", type=str,
+     #                     help="force_separate_z resampling. Can be None, True or False. Testing purpose only. Hands off")
++    # npu add
++    parser.add_argument('--device', default='npu', type=str, help='npu or gpu')                        
++    parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')                        
++    parser.add_argument('--device-list', default='0,1', type=str, help='device id list')
++    parser.add_argument('--amp', default=False, action='store_true', help='use amp to train the model')                    
++    parser.add_argument('--loss-scale', default=1024., type=float,
++                    help='loss scale using in amp, default -1 means dynamic')
++    parser.add_argument('--opt-level', default='O2', type=str,
++                    help='loss scale using in amp, default -1 means dynamic')
++
+ 
+     args = parser.parse_args()
++    print('args = ', args)
++    # npu add
++    os.environ['MASTER_ADDR'] = args.addr 
++    os.environ['MASTER_PORT'] = '1234'
++    args.process_device_map = device_id_to_process_device_map(args.device_list)
++    if args.device == 'npu':
++        ngpus_per_node = len(args.process_device_map)
++    else:
++        ngpus_per_node = torch.cuda.device_count()
++
+ 
+     task = args.task
+     fold = args.fold
+@@ -94,6 +127,7 @@ def main():
+     # interp_order = args.interp_order
+     # interp_order_z = args.interp_order_z
+     # force_separate_z = args.force_separate_z
++    other_use = args.other_use  # 特殊控制器
+     fp32 = args.fp32
+ 
+     if not task.startswith("Task"):
+@@ -115,34 +149,32 @@ def main():
+     #     raise ValueError("force_separate_z must be None, True or False. Given: %s" % force_separate_z)
+ 
+     plans_file, output_folder_name, dataset_directory, batch_dice, stage, \
+-        trainer_class = get_default_configuration(network, task, network_trainer, plans_identifier)
++        trainer_class, _ = get_default_configuration(network, task, network_trainer, plans_identifier)
+ 
+     if trainer_class is None:
+         raise RuntimeError("Could not find trainer class in meddec.model_training")
+ 
+     if network == "3d_cascade_fullres":
+-        assert issubclass(trainer_class, (nnUNetTrainerCascadeFullRes, nnUNetTrainerV2CascadeFullRes)), \
+-            "If running 3d_cascade_fullres then your " \
+-            "trainer class must be derived from " \
+-            "nnUNetTrainerCascadeFullRes"
++        # assert issubclass(trainer_class, (nnUNetTrainerCascadeFullRes, nnUNetTrainerV2CascadeFullRes)), \
++        #     "If running 3d_cascade_fullres then your " \
++        #     "trainer class must be derived from " \
++        #     "nnUNetTrainerCascadeFullRes"
++        pass
+     else:
+         assert issubclass(trainer_class,
+                           nnUNetTrainer), "network_trainer was found but is not derived from nnUNetTrainer"
+-
+     trainer = trainer_class(plans_file, fold, local_rank=args.local_rank, output_folder=output_folder_name,
+                             dataset_directory=dataset_directory, batch_dice=batch_dice, stage=stage,
+                             unpack_data=decompress_data, deterministic=deterministic, fp16=not fp32,
+-                            distribute_batch_size=args.dbs)
+-
++                            distribute_batch_size=args.dbs, args=args)
+     trainer.initialize(not validation_only)
+-
+     if find_lr:
+         trainer.find_lr()
+     else:
+         if not validation_only:
+             if args.continue_training:
+                 trainer.load_latest_checkpoint()
+-            trainer.run_training()
++            trainer.run_training(other_use)
+         else:
+             if valbest:
+                 trainer.load_best_checkpoint(train=False)
+diff --git a/pytorch/nnunet/run/run_training_mem.py b/pytorch/nnunet/run/run_training_mem.py
+new file mode 100644
+index 0000000..3384def
+--- /dev/null
++++ b/pytorch/nnunet/run/run_training_mem.py
+@@ -0,0 +1,233 @@
++#    Copyright 2020 Division of Medical Image Computing, German Cancer Research Center (DKFZ), Heidelberg, Germany
++#
++#    Licensed under the Apache License, Version 2.0 (the "License");
++#    you may not use this file except in compliance with the License.
++#    You may obtain a copy of the License at
++#
++#        http://www.apache.org/licenses/LICENSE-2.0
++#
++#    Unless required by applicable law or agreed to in writing, software
++#    distributed under the License is distributed on an "AS IS" BASIS,
++#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++#    See the License for the specific language governing permissions and
++#    limitations under the License.
++import os
++import sys
++import argparse
++from batchgenerators.utilities.file_and_folder_operations import *
++from nnunet.run.default_configuration import get_default_configuration
++from nnunet.paths import default_plans_identifier
++from nnunet.training.cascade_stuff.predict_next_stage import predict_next_stage
++from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
++from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
++# npu add, no use for CascadeFullres
++# from nnunet.training.network_training.nnUNetTrainerCascadeFullRes import nnUNetTrainerCascadeFullRes
++# from nnunet.training.network_training.nnUNetTrainerV2_CascadeFullRes import nnUNetTrainerV2CascadeFullRes
++# npu add
++import torch.npu
++from apex import amp
++from nnunet.utilities.to_torch import maybe_to_torch, to_npu
++CALCULATE_DEVICE = "npu:0"
++
++
++# import pdb
++# pdb.set_trace()
++
++def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False):
++    """
++    gradient clipping improves training stability
++
++    :param data_generator:
++    :param do_backprop:
++    :param run_online_evaluation:
++    :return:
++    """
++    import time
++    print('heyupeng stop: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
++    iiii = 0
++    while True:
++        iiii += 1
++        if iiii % 10 == 1:
++            print(iiii)
++        data_dict = next(data_generator)
++        data = data_dict['data']
++        target = data_dict['target']
++
++        data = maybe_to_torch(data)
++        target = maybe_to_torch(target)
++
++        # npu add
++        if torch.npu.is_available():
++            data = to_npu(data)
++            target = to_npu(target)
++
++        self.optimizer.zero_grad()
++
++        if self.fp16:
++            # npu add
++            for i in range(1):
++                # with autocast():
++                output = self.network(data)
++                del data
++                l = self.loss(output, target)
++            if do_backprop:
++                with amp.scale_loss(l, self.optimizer) as scaled_loss:
++                    scaled_loss.backward()
++                torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
++                self.optimizer.step()
++        if run_online_evaluation:
++            self.run_online_evaluation(output, target)
++        del target  # must
++    return l.detach().cpu().numpy()
++
++
++def main():
++    # 所有参数都写好了默认参数，不需要额外给定参数就可以运行了
++    parser = argparse.ArgumentParser()
++    parser.add_argument("-network", default="3d_fullres")
++    parser.add_argument("-network_trainer", default="nnUNetPlusPlusTrainerV2")
++    parser.add_argument("-task", default="003", help="can be task name or task id")
++    parser.add_argument("-fold", default="0", help='0, 1, ..., 5 or \'all\'')
++    parser.add_argument("-val", "--validation_only", default=False,
++                        help="use this if you want to only run the validation",
++                        action="store_true")
++    parser.add_argument("-w", required=False, default=None, help="Load pre-trained Models Genesis")
++    parser.add_argument("-c", "--continue_training", default=False, help="use this if you want to continue a training",
++                        action="store_true")
++    parser.add_argument("-p", help="plans identifier. Only change this if you created a custom experiment planner",
++                        default=default_plans_identifier, required=False)
++    parser.add_argument("--use_compressed_data", default=False, action="store_true",
++                        help="If you set use_compressed_data, the training cases will not be decompressed. Reading compressed data "
++                             "is much more CPU and RAM intensive and should only be used if you know what you are "
++                             "doing", required=False)
++    parser.add_argument("--deterministic",
++                        help="Makes training deterministic, but reduces training speed substantially. I (Fabian) think "
++                             "this is not necessary. Deterministic training will make you overfit to some random seed. "
++                             "Don't use that.",
++                        required=False, default=False, action="store_true")
++    parser.add_argument("--npz", required=False, default=False, action="store_true", help="if set then nnUNet will "
++                                                                                          "export npz files of "
++                                                                                          "predicted segmentations "
++                                                                                          "in the validation as well. "
++                                                                                          "This is needed to run the "
++                                                                                          "ensembling step so unless "
++                                                                                          "you are developing nnUNet "
++                                                                                          "you should enable this")
++    parser.add_argument("--find_lr", required=False, default=False, action="store_true",
++                        help="not used here, just for fun")
++    parser.add_argument("--valbest", required=False, default=False, action="store_true",
++                        help="hands off. This is not intended to be used")
++    parser.add_argument("--fp32", required=False, default=False, action="store_true",
++                        help="disable mixed precision training and run old school fp32")
++    parser.add_argument("--val_folder", required=False, default="validation_raw",
++                        help="name of the validation folder. No need to use this for most people")
++    # parser.add_argument("--interp_order", required=False, default=3, type=int,
++    #                     help="order of interpolation for segmentations. Testing purpose only. Hands off")
++    # parser.add_argument("--interp_order_z", required=False, default=0, type=int,
++    #                     help="order of interpolation along z if z is resampled separately. Testing purpose only. "
++    #                          "Hands off")
++    # parser.add_argument("--force_separate_z", required=False, default="None", type=str,
++    #                     help="force_separate_z resampling. Can be None, True or False. Testing purpose only. Hands off")
++
++    args = parser.parse_args()
++    print(args)
++
++    task = args.task
++    fold = args.fold
++    network = args.network
++    network_trainer = args.network_trainer
++    weights = args.w
++    validation_only = args.validation_only
++    plans_identifier = args.p
++    find_lr = args.find_lr
++
++    use_compressed_data = args.use_compressed_data
++    decompress_data = not use_compressed_data
++
++    deterministic = args.deterministic
++    valbest = args.valbest
++
++    fp32 = args.fp32
++    run_mixed_precision = not fp32
++
++    val_folder = args.val_folder
++    # interp_order = args.interp_order
++    # interp_order_z = args.interp_order_z
++    # force_separate_z = args.force_separate_z
++
++    if not task.startswith("Task"):
++        task_id = int(task)
++        task = convert_id_to_task_name(task_id)
++
++    if fold == 'all':
++        pass
++    else:
++        fold = int(fold)
++
++    # if force_separate_z == "None":
++    #     force_separate_z = None
++    # elif force_separate_z == "False":
++    #     force_separate_z = False
++    # elif force_separate_z == "True":
++    #     force_separate_z = True
++    # else:
++    #     raise ValueError("force_separate_z must be None, True or False. Given: %s" % force_separate_z)
++
++    plans_file, output_folder_name, dataset_directory, batch_dice, stage, \
++    trainer_class, domain = get_default_configuration(network, task, network_trainer, plans_identifier)
++
++    if trainer_class is None:
++        raise RuntimeError("Could not find trainer class in nnunet.training.network_training")
++
++    # npu add, no use for CascadeFullres
++    assert issubclass(trainer_class, nnUNetTrainer), "network_trainer was found but is not derived from nnUNetTrainer"
++    # if network == "3d_cascade_fullres":
++    #     assert issubclass(trainer_class, (nnUNetTrainerCascadeFullRes, nnUNetTrainerV2CascadeFullRes)), \
++    #         "If running 3d_cascade_fullres then your " \
++    #         "trainer class must be derived from " \
++    #         "nnUNetTrainerCascadeFullRes"
++    # else:
++    #     assert issubclass(trainer_class,
++    #                       nnUNetTrainer), "network_trainer was found but is not derived from nnUNetTrainer"
++
++    trainer = trainer_class(plans_file, fold, output_folder=output_folder_name, dataset_directory=dataset_directory,
++                            batch_dice=batch_dice, stage=stage, unpack_data=decompress_data,
++                            deterministic=deterministic,
++                            fp16=run_mixed_precision)
++
++    trainer.initialize(not validation_only)
++
++    if weights != None:
++        trainer.load_pretrained_encoder_weights(weights)
++    sys.stdout.flush()
++
++    if find_lr:
++        trainer.find_lr()
++    else:
++        if not validation_only:
++            if args.continue_training:
++                trainer.load_latest_checkpoint()
++            trainer.run_training()
++        else:
++            if valbest:
++                trainer.load_best_checkpoint(train=False)
++            else:
++                trainer.load_latest_checkpoint(train=False)
++
++        trainer.network.eval()
++
++        # predict validation
++        trainer.validate(save_softmax=args.npz, validation_folder_name=val_folder)
++
++        if network == '3d_lowres':
++            trainer.load_best_checkpoint(False)
++            print("predicting segmentations for the next stage of the cascade")
++            predict_next_stage(trainer, join(dataset_directory, trainer.plans['data_identifier'] + "_stage%d" % 1))
++
++
++if __name__ == "__main__":
++    print('main start')
++    if 'npu' in CALCULATE_DEVICE:
++        torch.npu.set_device(CALCULATE_DEVICE)
++    main()
++    print('main end')
+diff --git a/pytorch/nnunet/training/loss_functions/dice_loss.py b/pytorch/nnunet/training/loss_functions/dice_loss.py
+index 4e92f2d..dca866c 100644
+--- a/pytorch/nnunet/training/loss_functions/dice_loss.py
++++ b/pytorch/nnunet/training/loss_functions/dice_loss.py
+@@ -127,6 +127,10 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
+             y_onehot = torch.zeros(shp_x)
+             if net_output.device.type == "cuda":
+                 y_onehot = y_onehot.cuda(net_output.device.index)
++            # import pdb
++            # pdb.set_trace()
++            # npu add
++            y_onehot = y_onehot.npu()
+             y_onehot.scatter_(1, gt, 1)
+ 
+     tp = net_output * y_onehot
+diff --git a/pytorch/nnunet/training/network_training/network_trainer.py b/pytorch/nnunet/training/network_training/network_trainer.py
+index e920158..4dea08d 100644
+--- a/pytorch/nnunet/training/network_training/network_trainer.py
++++ b/pytorch/nnunet/training/network_training/network_trainer.py
+@@ -21,11 +21,13 @@ from batchgenerators.utilities.file_and_folder_operations import *
+ from nnunet.network_architecture.neural_network import SegmentationNetwork
+ from sklearn.model_selection import KFold
+ from torch import nn
+-from torch.cuda.amp import GradScaler, autocast
++# npu add
++# from torch.cuda.amp import GradScaler, autocast
++from torch.cuda.amp import GradScaler
+ from torch.optim.lr_scheduler import _LRScheduler
+ 
+ matplotlib.use("agg")
+-from time import time, sleep
++from time import time, sleep, strftime, localtime
+ import torch
+ import numpy as np
+ from torch.optim import lr_scheduler
+@@ -36,8 +38,44 @@ import torch.backends.cudnn as cudnn
+ from abc import abstractmethod
+ from datetime import datetime
+ from tqdm import trange
+-from nnunet.utilities.to_torch import maybe_to_torch, to_cuda
+-
++from nnunet.utilities.to_torch import maybe_to_torch, to_npu
++import pdb
++import os
++
++
++class AverageMeter(object):
++    """Computes and stores the average and current value"""
++    def __init__(self, name, fmt=':f'):
++        self.name = name
++        self.fmt = fmt
++        self.reset()
++        self.skip = 0
++
++    def reset(self):
++        self.val = 0
++        self.avg = 0
++        self.sum = 0
++        self.count = 0
++        self.skip = 0
++
++    def update(self, val, n=1):
++        self.val = val
++        # the first 5 value are not accumulated in the average stats
++        self.skip += 1
++        if self.skip < 5:
++            return
++        self.sum += val * n
++        self.count += n
++        self.avg = self.sum / self.count
++    def __str__(self):
++        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
++        return fmtstr.format(**self.__dict__)
++    def get_self(self):
++        s = str('{' + self.fmt + '}')
++        fmtstr = self.name + s.format(self.avg)
++        # return fmtstr.format(**self.__dict__)
++        return fmtstr
++        
+ 
+ class NetworkTrainer(object):
+     def __init__(self, deterministic=True, fp16=False):
+@@ -95,7 +133,7 @@ class NetworkTrainer(object):
+         self.train_loss_MA_alpha = 0.93  # alpha * old + (1-alpha) * new
+         self.train_loss_MA_eps = 5e-4  # new MA must be at least this much better (smaller)
+         self.max_num_epochs = 1000
+-        self.num_batches_per_epoch = 250
++        self.num_batches_per_epoch = 250  # 250
+         self.num_val_batches_per_epoch = 50
+         self.also_val_in_tr_mode = False
+         self.lr_threshold = 1e-6  # the network will not terminate training if the lr is still above this threshold
+@@ -438,8 +476,10 @@ class NetworkTrainer(object):
+         self._maybe_init_amp()
+ 
+     def _maybe_init_amp(self):
+-        if self.fp16 and self.amp_grad_scaler is None and torch.cuda.is_available():
+-                self.amp_grad_scaler = GradScaler()
++        #npu add
++        # if self.fp16 and self.amp_grad_scaler is None and torch.cuda.is_available():
++        if self.fp16 and self.amp_grad_scaler is None and torch.npu.is_available():
++                self.amp_grad_scaler = GradScaler()  # from torch.cuda.amp import GradScaler
+ 
+     def plot_network_architecture(self):
+         """
+@@ -449,12 +489,15 @@ class NetworkTrainer(object):
+         """
+         pass
+ 
+-    def run_training(self):
++    def run_training(self, other_use=None):
+         _ = self.tr_gen.next()
+         _ = self.val_gen.next()
+ 
+-        if torch.cuda.is_available():
+-            torch.cuda.empty_cache()
++        # npu add
++        if torch.npu.is_available():
++             torch.npu.empty_cache()
++        # if torch.cuda.is_available():
++        #    torch.cuda.empty_cache()
+ 
+         self._maybe_init_amp()
+ 
+@@ -468,32 +511,107 @@ class NetworkTrainer(object):
+ 
+         if not self.was_initialized:
+             self.initialize(True)
+-
++        # -----对other_use的简化信号-----
++        other_use = str(other_use).lower()
++        if other_use is None or other_use == 'none':
++            other_use = -1
++        elif other_use == 'prof':
++            other_use = 1
++        elif other_use == 'fps':
++            other_use = 2
++        else:
++            raise Exception('the --other_use get wrong input, please check the --other_use. error position: network_trainer: run_training')
++        # ----------
++        # self.num_batches_per_epoch = 25  # 修改了最大次数。以前这个值应该默认为250
+         while self.epoch < self.max_num_epochs:
+             self.print_to_log_file("\nepoch: ", self.epoch)
+             epoch_start_time = time()
+             train_losses_epoch = []
+-
+             # train one epoch
+             self.network.train()
+-
+-            if self.use_progress_bar:
++            # -----对other_use的控制-----
++            if other_use == -1:
++                pass
++            elif other_use == 1:  # prof
++                print('run_training (prof)：先运行5个step，以保证结果正确')
++                for i in range(5):
++                    print('step start (prof): ', i + 1, strftime("%Y-%m-%d %H:%M:%S", localtime(time())))
++                    l = self.run_iteration(self.tr_gen, True)
++                    train_losses_epoch.append(l)
++                    print('step end (prof):   ', i + 1, strftime("%Y-%m-%d %H:%M:%S", localtime(time())))
++                l = self.run_iteration_get_prof(self.tr_gen, True)
++                print('即将退出程序')
++                sys.exit()
++            elif other_use == 2:  # fps
++                print('run_training (fps)：先运行10个step，以保证结果正确')
++                for i in range(10):
++                    print('step start (fps): ', i + 1, strftime("%Y-%m-%d %H:%M:%S", localtime(time())))
++                    l = self.run_iteration(self.tr_gen, True)
++                    train_losses_epoch.append(l)
++                    print('step end (fps):   ', i + 1, strftime("%Y-%m-%d %H:%M:%S", localtime(time())))
++                print('run_training (fps)：即将开始100个step的fps计算，预计1-3分钟，运行期间请耐心等待。。。')
++                time_list = []
++                for i in range(100):
++                    start_time = time()
++                    l = self.run_iteration(self.tr_gen, True)
++                    train_losses_epoch.append(l)
++                    time_list.append(time() - start_time)
++                print('run_training (fps)：100个step运行结束')
++                time_mean = np.mean(time_list)
++                time_min = np.min(time_list)
++                time_max = np.max(time_list)
++                print('平均运行时间(s)：', time_mean)
++                print('最小运行时间(s)：', time_min)
++                print('最大运行时间(s)：', time_max)
++                data_dict = next(self.tr_gen)
++                batchsize = len(data_dict['data'])
++                world_size = 1
++                try:
++                    world_size = int(os.environ['WORLD_SIZE'])
++                except Exception as e:
++                    pass
++                print('batchsize：', batchsize)
++                print('FPS = batchsize/平均运行时间 =', 1.0 * batchsize / time_mean * world_size)
++                print('即将退出程序')
++                sys.exit()
++            else:
++                pass
++            # ----------
++            if self.use_progress_bar:  # False
+                 with trange(self.num_batches_per_epoch) as tbar:
+                     for b in tbar:
+                         tbar.set_description("Epoch {}/{}".format(self.epoch+1, self.max_num_epochs))
+-
+                         l = self.run_iteration(self.tr_gen, True)
+ 
+                         tbar.set_postfix(loss=l)
+                         train_losses_epoch.append(l)
+             else:
++                # print('self.num_batches_per_epoch = ', self.num_batches_per_epoch)
++                hyp_count = 0  # 记录一个epoch的进度。num_batches_per_epoch=250，计数器从1开始计。下面是平均时间器
++                data_time = AverageMeter('Data', ':6.3d')
++                data_npu_time = AverageMeter('Data_to_npu', ':6.3f')
++                network_time = AverageMeter('Network', ':6.3f')
++                loss_time = AverageMeter('Loss', ':6.3f')
++                backprop_time = AverageMeter('Backprop', ':6.3f')
++                batch_time = AverageMeter('Batch', ':6.3f')
++                time_meters = [data_time, data_npu_time, network_time, loss_time, backprop_time, batch_time]
+                 for _ in range(self.num_batches_per_epoch):
+-                    l = self.run_iteration(self.tr_gen, True)
++                    hyp_count = hyp_count + 1
++                    # if hyp_count <= 8:
++                    #     continue
++                    # elif hyp_count >= 10:
++                    #     import sys
++                    #     print('ready to finish')
++                    #     sys.exit(0)
++                    l = self.run_iteration(self.tr_gen, True)  # 把计时器扔进去之后，还要接受回来
+                     train_losses_epoch.append(l)
+-
++                    # if hyp_count % 10 == 0:  # 每10次输出一次
++                    #     for time_meter in time_meters:
++                    #         print(time_meter.get_self(), end='|')
++                    # print('\n----------')
++            # print('one epoch done')
+             self.all_tr_losses.append(np.mean(train_losses_epoch))
+             self.print_to_log_file("train loss : %.4f" % self.all_tr_losses[-1])
+-
+             with torch.no_grad():
+                 # validation with train=False
+                 self.network.eval()
+@@ -503,7 +621,7 @@ class NetworkTrainer(object):
+                     val_losses.append(l)
+                 self.all_val_losses.append(np.mean(val_losses))
+                 self.print_to_log_file("validation loss: %.4f" % self.all_val_losses[-1])
+-
++            
+                 if self.also_val_in_tr_mode:
+                     self.network.train()
+                     # validation with train=True
+@@ -553,9 +671,13 @@ class NetworkTrainer(object):
+         Saves a checkpoint every save_ever epochs.
+         :return:
+         """
++        # self.save_every = 1  # 每个epoch都存
++        # self.save_intermediate_checkpoints = True  # 每个epoch都存
++        # self.save_latest_only = False  # 每个epoch都存
+         if self.save_intermediate_checkpoints and (self.epoch % self.save_every == (self.save_every - 1)):
+             self.print_to_log_file("saving scheduled checkpoint file...")
+             if not self.save_latest_only:
++                print('saveing!!!')
+                 self.save_checkpoint(join(self.output_folder, "model_ep_%03.0d.model" % (self.epoch + 1)))
+             self.save_checkpoint(join(self.output_folder, "model_latest.model"))
+             self.print_to_log_file("done")
+@@ -667,15 +789,20 @@ class NetworkTrainer(object):
+         data = maybe_to_torch(data)
+         target = maybe_to_torch(target)
+ 
+-        if torch.cuda.is_available():
+-            data = to_cuda(data)
+-            target = to_cuda(target)
++        # npu add
++        if torch.npu.is_available():
++        # if torch.cuda.is_available():
++            data = to_npu(data)
++            target = to_npu(target)
+ 
+         self.optimizer.zero_grad()
+ 
+         if self.fp16:
+-            with autocast():
++            # npu add 实际上这部分代码不会被运行到，这是父类，子类复写了这个函数
++            for i in range(1):
++            # with autocast():
+                 output = self.network(data)
++                print('\nnetwork_trainer.py run_iteration one step\n')
+                 del data
+                 l = self.loss(output, target)
+ 
+diff --git a/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2.py b/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2.py
+index e9aa611..3c519b2 100644
+--- a/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2.py
++++ b/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2.py
+@@ -19,7 +19,7 @@ import sys
+ import numpy as np
+ import torch
+ from nnunet.training.loss_functions.deep_supervision import MultipleOutputLoss2
+-from nnunet.utilities.to_torch import maybe_to_torch, to_cuda
++from nnunet.utilities.to_torch import maybe_to_torch, to_npu
+ from nnunet.training.data_augmentation.default_data_augmentation import get_moreDA_augmentation
+ from nnunet.network_architecture.generic_UNetPlusPlus import Generic_UNetPlusPlus
+ from nnunet.network_architecture.initialization import InitWeights_He
+@@ -31,10 +31,18 @@ from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
+ from nnunet.utilities.nd_softmax import softmax_helper
+ from sklearn.model_selection import KFold
+ from torch import nn
+-from torch.cuda.amp import autocast
++# npu add
++# from torch.cuda.amp import autocast
+ from nnunet.training.learning_rate.poly_lr import poly_lr
+ from batchgenerators.utilities.file_and_folder_operations import *
+-
++from apex import amp
++import time
++# npu add
++CALCULATE_DEVICE = "npu:0"
++# loc = 'npu:{}'.format(args.gpu)
++# torch.npu.set_device(loc)
++import pdb
++# pdb.set_trace()
+ 
+ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+     """
+@@ -42,14 +50,14 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+     """
+ 
+     def __init__(self, plans_file, fold, output_folder=None, dataset_directory=None, batch_dice=True, stage=None,
+-                 unpack_data=True, deterministic=True, fp16=False):
++                 unpack_data=True, deterministic=True, fp16=False, loc=None):
+         super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
+                          deterministic, fp16)
+         self.max_num_epochs = 1000
+         self.initial_lr = 1e-2
+         self.deep_supervision_scales = None
+         self.ds_loss_weights = None
+-
++        self.loc = loc
+         self.pin_memory = True
+ 
+     def initialize(self, training=True, force_load_plans=False):
+@@ -87,7 +95,9 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+             #self.ds_loss_weights = weights
+             self.ds_loss_weights = None
+             # now wrap the loss
+-            self.loss = MultipleOutputLoss2(self.loss, self.ds_loss_weights)
++            # self.loss = MultipleOutputLoss2(self.loss, self.ds_loss_weights)
++            # npu add
++            self.loss = MultipleOutputLoss2(self.loss, self.ds_loss_weights).to(self.loc)
+             ################# END ###################
+ 
+             self.folder_with_preprocessed_data = join(self.dataset_directory, self.plans['data_identifier'] +
+@@ -156,8 +166,13 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+                                     dropout_op_kwargs,
+                                     net_nonlin, net_nonlin_kwargs, True, False, lambda x: x, InitWeights_He(1e-2),
+                                     self.net_num_pool_op_kernel_sizes, self.net_conv_kernel_sizes, False, True, True)
+-        if torch.cuda.is_available():
+-            self.network.cuda()
++        
++        # npu add
++        # if torch.cuda.is_available():
++        #     self.network.cuda()
++        if self.loc is None:
++            self.loc = 'npu:0'
++        self.network = self.network.to(self.loc)
+         self.network.inference_apply_nonlin = softmax_helper
+ 
+     def initialize_optimizer_and_scheduler(self):
+@@ -167,6 +182,8 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+         self.optimizer = torch.optim.SGD(self.network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
+                                          momentum=0.99, nesterov=True)
+         self.lr_scheduler = None
++        # npu add
++        self.network, self.optimizer = amp.initialize(self.network, self.optimizer, opt_level="O1")
+ 
+     def run_online_evaluation(self, output, target):
+         """
+@@ -213,7 +230,55 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+         self.network.do_ds = ds
+         return ret
+ 
+-    def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False):
++
++    def run_iteration_get_prof(self, data_generator, do_backprop=True, run_online_evaluation=False):
++        """
++        使用这个来获取GPU prof或者NPU prof
++        请确保以下环境变量：
++        export ASCEND_GLOBAL_LOG_LEVEL=3
++        export TASK_QUEUE_ENABLE=1
++        """
++        import time
++        print('run_iteration_get_prof: 即将准备获取chrome_trace文件（prof），self.fp16=', self.fp16,
++              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
++        data_dict = next(data_generator)
++        data = data_dict['data']
++        target = data_dict['target']
++        data = maybe_to_torch(data)
++        target = maybe_to_torch(target)
++        # npu add
++        if torch.npu.is_available():
++            data = to_npu(data)
++            target = to_npu(target)
++        with torch.autograd.profiler.profile(use_npu=True) as prof:
++            self.optimizer.zero_grad()
++            if self.fp16:
++                # npu add
++                for i in range(1):
++                # with autocast():
++                    output = self.network(data)
++                    del data
++                    l = self.loss(output, target)
++                if do_backprop:  # True
++                    with amp.scale_loss(l, self.optimizer) as scaled_loss:
++                        scaled_loss.backward()
++                    torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
++                    self.optimizer.step()
++            else:
++                raise Exception('self.fp16 is False!!! Please check the nnUNetPlusPlusTrainerV2.py run_iteration_get_prof()')
++        print(prof.key_averages().table(sort_by="self_cpu_time_total"))
++        prof.export_chrome_trace("output.prof")  # "output.prof"为输出文件地址
++        print('run_iteration_get_prof：结束，输出文件位于:', "output.prof",
++              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
++        print('控制台的输出表格，如有需要请自行保存。')
++        time.sleep(1)
++        if run_online_evaluation:
++            self.run_online_evaluation(output, target)
++        del target
++        return None
++
++
++    def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False, count=None, time_meter=None):
+         """
+         gradient clipping improves training stability
+ 
+@@ -222,47 +287,39 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+         :param run_online_evaluation:
+         :return:
+         """
++        # import time
++        # print('heyupeng run_iteration test: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
+         data_dict = next(data_generator)
+         data = data_dict['data']
+         target = data_dict['target']
+-
+         data = maybe_to_torch(data)
+         target = maybe_to_torch(target)
+-
+-        if torch.cuda.is_available():
+-            data = to_cuda(data)
+-            target = to_cuda(target)
+-
++        # npu add
++        if torch.npu.is_available():
++            data = to_npu(data)
++            target = to_npu(target)
+         self.optimizer.zero_grad()
+-
+         if self.fp16:
+-            with autocast():
++            # npu add
++            for i in range(1):
++            # with autocast():
+                 output = self.network(data)
+                 del data
+                 l = self.loss(output, target)
+-
+-            if do_backprop:
+-                self.amp_grad_scaler.scale(l).backward()
+-                self.amp_grad_scaler.unscale_(self.optimizer)
+-                torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
+-                self.amp_grad_scaler.step(self.optimizer)
+-                self.amp_grad_scaler.update()
+-        else:
+-            output = self.network(data)
+-            del data
+-            l = self.loss(output, target)
+-
+-            if do_backprop:
+-                l.backward()
++            if do_backprop:  # True
++                with amp.scale_loss(l, self.optimizer) as scaled_loss:
++                    scaled_loss.backward()
+                 torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
+                 self.optimizer.step()
+-
+-        if run_online_evaluation:
++        else:
++           raise Exception('self.fp16 is False!!! Please check the nnUNetPlusPlusTrainerV2.py run_iteration()')
++        # print('one step---: ', time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
++        if run_online_evaluation:  # False
+             self.run_online_evaluation(output, target)
+-
+         del target
++        # return l.detach().cpu().numpy()
++        return l.cpu().detach().numpy()
+ 
+-        return l.detach().cpu().numpy()
+ 
+     def do_split(self):
+         """
+@@ -407,7 +464,7 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+                                        "0.95 and network weights have been reinitialized")
+         return continue_training
+ 
+-    def run_training(self):
++    def run_training(self, other_use=None):
+         """
+         if we run with -c then we need to set the correct lr for the first epoch, otherwise it will run the first
+         continued epoch with self.initial_lr
+@@ -419,6 +476,6 @@ class nnUNetPlusPlusTrainerV2(nnUNetTrainer):
+         # want at the start of the training
+         ds = self.network.do_ds
+         self.network.do_ds = True
+-        ret = super().run_training()
++        ret = super().run_training(other_use)
+         self.network.do_ds = ds
+         return ret
+diff --git a/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2_hypDDP.py b/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2_hypDDP.py
+new file mode 100644
+index 0000000..2ac055f
+--- /dev/null
++++ b/pytorch/nnunet/training/network_training/nnUNetPlusPlusTrainerV2_hypDDP.py
+@@ -0,0 +1,450 @@
++#    Copyright 2020 Division of Medical Image Computing, German Cancer Research Center (DKFZ), Heidelberg, Germany
++#
++#    Licensed under the Apache License, Version 2.0 (the "License");
++#    you may not use this file except in compliance with the License.
++#    You may obtain a copy of the License at
++#
++#        http://www.apache.org/licenses/LICENSE-2.0
++#
++#    Unless required by applicable law or agreed to in writing, software
++#    distributed under the License is distributed on an "AS IS" BASIS,
++#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++#    See the License for the specific language governing permissions and
++#    limitations under the License.
++
++from collections import OrderedDict
++from time import sleep
++from typing import Tuple
++import time
++import numpy as np
++import torch
++import torch.distributed as dist
++# from torch.cuda.amp import autocast
++from torch.nn.parallel import DistributedDataParallel as DDP
++from batchgenerators.utilities.file_and_folder_operations import maybe_mkdir_p, join, subfiles, isfile
++from nnunet.network_architecture.neural_network import SegmentationNetwork
++from nnunet.training.data_augmentation.default_data_augmentation import get_moreDA_augmentation
++from nnunet.training.dataloading.dataset_loading import unpack_dataset
++from nnunet.training.loss_functions.crossentropy import RobustCrossEntropyLoss
++from nnunet.training.loss_functions.dice_loss import get_tp_fp_fn_tn
++from nnunet.training.network_training.nnUNetTrainer import nnUNetTrainer
++from nnunet.training.network_training.nnUNetPlusPlusTrainerV2 import nnUNetPlusPlusTrainerV2
++from nnunet.utilities.distributed import awesome_allgather_function
++from nnunet.utilities.nd_softmax import softmax_helper
++from nnunet.utilities.tensor_utilities import sum_tensor
++from nnunet.utilities.to_torch import to_npu, maybe_to_torch
++from torch import nn
++from torch.nn.utils import clip_grad_norm_
++from torch.optim.lr_scheduler import _LRScheduler
++from apex import amp
++import pdb
++# loc = 'npu:{}'.format(args.gpu)
++# torch.npu.set_device(loc)
++
++
++class nnUNetPlusPlusTrainerV2_hypDDP(nnUNetPlusPlusTrainerV2):
++    def __init__(self, plans_file, fold, local_rank, output_folder=None, dataset_directory=None, batch_dice=True,
++                 stage=None,
++                 unpack_data=True, deterministic=True, distribute_batch_size=False, fp16=False, args=None):
++        super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage,
++                         unpack_data, deterministic, fp16, 'npu:'+str(local_rank))
++        self.init_args = (
++            plans_file, fold, local_rank, output_folder, dataset_directory, batch_dice, stage, unpack_data,
++            deterministic, distribute_batch_size, fp16)
++        self.arge = args
++        self.pin_memory = False  # npu add step 10.
++        self.loc = 'npu:' + str(local_rank)  # npu add step 8.
++        torch.npu.set_device(self.loc)
++        self.distribute_batch_size = distribute_batch_size
++        np.random.seed(local_rank)
++        torch.manual_seed(local_rank)
++        if torch.npu.is_available():
++            torch.npu.manual_seed_all(local_rank)
++        self.local_rank = local_rank
++        if torch.npu.is_available():
++            torch.npu.set_device(local_rank)
++        # print('[[stun]] local_rank=', local_rank)
++        # dist.init_process_group(backend='hccl', init_method='env://', world_size=2, rank=local_rank)
++        dist.init_process_group(backend='hccl', world_size=8, rank=local_rank)
++        self.val_loss_ma_alpha = 0.95
++        self.val_loss_MA = None
++
++        self.loss = None
++        self.ce_loss = RobustCrossEntropyLoss().to(self.loc)
++
++        self.global_batch_size = None  # we need to know this to properly steer oversample
++
++    def set_batch_size_and_oversample(self):
++        batch_sizes = []
++        oversample_percents = []
++
++        world_size = dist.get_world_size()
++        my_rank = dist.get_rank()
++
++        if self.distribute_batch_size:
++            self.global_batch_size = self.batch_size
++        else:
++            self.global_batch_size = self.batch_size * world_size
++
++        batch_size_per_GPU = np.ceil(self.batch_size / world_size).astype(int)
++
++        for rank in range(world_size):
++            if self.distribute_batch_size:
++                if (rank + 1) * batch_size_per_GPU > self.batch_size:
++                    batch_size = batch_size_per_GPU - ((rank + 1) * batch_size_per_GPU - self.batch_size)
++                else:
++                    batch_size = batch_size_per_GPU
++            else:
++                batch_size = self.batch_size
++
++            batch_sizes.append(batch_size)
++
++            sample_id_low = 0 if len(batch_sizes) == 0 else np.sum(batch_sizes[:-1])
++            sample_id_high = np.sum(batch_sizes)
++
++            if sample_id_high / self.global_batch_size < (1 - self.oversample_foreground_percent):
++                oversample_percents.append(0.0)
++            elif sample_id_low / self.global_batch_size > (1 - self.oversample_foreground_percent):
++                oversample_percents.append(1.0)
++            else:
++                percent_covered_by_this_rank = sample_id_high / self.global_batch_size - sample_id_low / self.global_batch_size
++                oversample_percent_here = 1 - (((1 - self.oversample_foreground_percent) -
++                                                sample_id_low / self.global_batch_size) / percent_covered_by_this_rank)
++                oversample_percents.append(oversample_percent_here)
++
++        print("worker", my_rank, "oversample", oversample_percents[my_rank])
++        print("worker", my_rank, "batch_size", batch_sizes[my_rank])
++
++        self.batch_size = batch_sizes[my_rank]
++        self.oversample_foreground_percent = oversample_percents[my_rank]
++
++    def save_checkpoint(self, fname, save_optimizer=True):
++        if self.local_rank == 0:
++            super().save_checkpoint(fname, save_optimizer)
++
++    def plot_progress(self):
++        if self.local_rank == 0:
++            super().plot_progress()
++
++    def print_to_log_file(self, *args, also_print_to_console=True):
++        if self.local_rank == 0:
++            super().print_to_log_file(*args, also_print_to_console=also_print_to_console)
++
++    def process_plans(self, plans):
++        super().process_plans(plans)
++        self.set_batch_size_and_oversample()
++
++    def initialize(self, training=True, force_load_plans=False):
++        """
++        For prediction of test cases just set training=False, this will prevent loading of training data and
++        training batchgenerator initialization
++        :param training:
++        :return:
++        """
++        if not self.was_initialized:
++            maybe_mkdir_p(self.output_folder)
++
++            if force_load_plans or (self.plans is None):
++                self.load_plans_file()
++
++            self.process_plans(self.plans)
++
++            self.setup_DA_params()
++
++            self.folder_with_preprocessed_data = join(self.dataset_directory, self.plans['data_identifier'] +
++                                                      "_stage%d" % self.stage)
++            if training:
++                self.dl_tr, self.dl_val = self.get_basic_generators()
++                if self.unpack_data:
++                    if self.local_rank == 0:
++                        print("unpacking dataset")
++                        unpack_dataset(self.folder_with_preprocessed_data)
++                        print("done")
++                    else:
++                        # we need to wait until worker 0 has finished unpacking
++                        npz_files = subfiles(self.folder_with_preprocessed_data, suffix=".npz", join=False)
++                        case_ids = [i[:-4] for i in npz_files]
++                        all_present = all(
++                            [isfile(join(self.folder_with_preprocessed_data, i + ".npy")) for i in case_ids])
++                        while not all_present:
++                            print("worker", self.local_rank, "is waiting for unpacking")
++                            sleep(3)
++                            all_present = all(
++                                [isfile(join(self.folder_with_preprocessed_data, i + ".npy")) for i in case_ids])
++                        # there is some slight chance that there may arise some error because dataloader are loading a file
++                        # that is still being written by worker 0. We ignore this for now an address it only if it becomes
++                        # relevant
++                        # (this can occur because while worker 0 writes the file is technically present so the other workers
++                        # will proceed and eventually try to read it)
++                else:
++                    print(
++                        "INFO: Not unpacking data! Training may be slow due to that. Pray you are not using 2d or you "
++                        "will wait all winter for your model to finish!")
++
++                # setting weights for deep supervision losses
++                net_numpool = len(self.net_num_pool_op_kernel_sizes)
++
++                # we give each output a weight which decreases exponentially (division by 2) as the resolution decreases
++                # this gives higher resolution outputs more weight in the loss
++                weights = np.array([1 / (2 ** i) for i in range(net_numpool)])
++
++                # we don't use the lowest 2 outputs. Normalize weights so that they sum to 1
++                mask = np.array([True if i < net_numpool - 1 else False for i in range(net_numpool)])
++                weights[~mask] = 0
++                weights = weights / weights.sum()
++                self.ds_loss_weights = weights
++
++                seeds_train = np.random.random_integers(0, 99999, self.data_aug_params.get('num_threads'))
++                seeds_val = np.random.random_integers(0, 99999, max(self.data_aug_params.get('num_threads') // 2, 1))
++                print("seeds train", seeds_train)
++                print("seeds_val", seeds_val)
++                self.tr_gen, self.val_gen = get_moreDA_augmentation(self.dl_tr, self.dl_val,
++                                                                    self.data_aug_params[
++                                                                        'patch_size_for_spatialtransform'],
++                                                                    self.data_aug_params,
++                                                                    deep_supervision_scales=self.deep_supervision_scales,
++                                                                    seeds_train=seeds_train,
++                                                                    seeds_val=seeds_val,
++                                                                    pin_memory=self.pin_memory)
++                self.print_to_log_file("TRAINING KEYS:\n %s" % (str(self.dataset_tr.keys())),
++                                       also_print_to_console=False)
++                self.print_to_log_file("VALIDATION KEYS:\n %s" % (str(self.dataset_val.keys())),
++                                       also_print_to_console=False)
++            else:
++                pass
++
++            self.initialize_network()
++            self.initialize_optimizer_and_scheduler()
++            self.network = DDP(self.network, device_ids=[self.local_rank])
++            # self.network = DDP(self.network, device_ids=[self.local_rank], broadcast_buffers=False)
++
++        else:
++            self.print_to_log_file('self.was_initialized is True, not running self.initialize again')
++        self.was_initialized = True
++
++
++    def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False, count=None, time_meter=None):
++        data_dict = next(data_generator)
++        data = data_dict['data']
++        target = data_dict['target']
++        data = maybe_to_torch(data)
++        target = maybe_to_torch(target)
++        # npu add
++        if torch.npu.is_available():
++            data = to_npu(data, gpu_id=self.local_rank)
++            target = to_npu(target, gpu_id=self.local_rank)
++        self.optimizer.zero_grad()
++        if self.fp16:
++            # npu add
++            for i in range(1):
++                output = self.network(data)
++                del data
++                l = self.compute_loss(output, target)
++            if do_backprop:
++                with amp.scale_loss(l, self.optimizer) as scaled_loss:
++                    scaled_loss.backward()
++                torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
++                self.optimizer.step()
++        else:
++            raise Exception('self.fp16 is False!!! Please check the nnUNetPlusPlusTrainerV2.py run_iteration()')
++        # if self.local_rank == 0 or self.local_rank == '0':
++        #     print('one step over--:', self.local_rank, ', count=', str(count), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
++        if run_online_evaluation:  # False
++            self.run_online_evaluation(output, target)
++        del target
++        return l.cpu().detach().numpy()
++
++    def compute_loss(self, output, target):
++        total_loss = None
++        length = len(output)
++        # length = 1
++        for i in range(length):
++            # Starting here it gets spicy!
++            axes = tuple(range(2, len(output[i].size())))
++
++            # network does not do softmax. We need to do softmax for dice
++            output_softmax = softmax_helper(output[i])
++
++            # get the tp, fp and fn terms we need
++            tp, fp, fn, _ = get_tp_fp_fn_tn(output_softmax, target[0], axes, mask=None)
++            # for dice, compute nominator and denominator so that we have to accumulate only 2 instead of 3 variables
++            # do_bg=False in nnUNetTrainer -> [:, 1:]
++            nominator = 2 * tp[:, 1:]
++            denominator = 2 * tp[:, 1:] + fp[:, 1:] + fn[:, 1:]
++
++            if self.batch_dice:
++                # for DDP we need to gather all nominator and denominator terms from all GPUS to do proper batch dice
++                nominator = awesome_allgather_function.apply(nominator)
++                denominator = awesome_allgather_function.apply(denominator)
++                nominator = nominator.sum(0)
++                denominator = denominator.sum(0)
++            else:
++                pass
++
++            ce_loss = self.ce_loss(output[i], target[0][:, 0].long())
++
++            # we smooth by 1e-5 to penalize false positives if tp is 0
++            dice_loss = (- (nominator + 1e-5) / (denominator + 1e-5)).mean()
++            if total_loss is None:
++                total_loss = self.ds_loss_weights[i] * (ce_loss + dice_loss)
++            else:
++                total_loss += self.ds_loss_weights[i] * (ce_loss + dice_loss)
++        return total_loss
++
++    def run_online_evaluation(self, output, target):
++        with torch.no_grad():
++            num_classes = output[0].shape[1]
++            output_seg = output[0].argmax(1)
++            target = target[0][:, 0]
++            axes = tuple(range(1, len(target.shape)))
++            tp_hard = torch.zeros((target.shape[0], num_classes - 1)).to(output_seg.device.index)
++            fp_hard = torch.zeros((target.shape[0], num_classes - 1)).to(output_seg.device.index)
++            fn_hard = torch.zeros((target.shape[0], num_classes - 1)).to(output_seg.device.index)
++            for c in range(1, num_classes):
++                tp_hard[:, c - 1] = sum_tensor((output_seg == c).float() * (target == c).float(), axes=axes)
++                fp_hard[:, c - 1] = sum_tensor((output_seg == c).float() * (target != c).float(), axes=axes)
++                fn_hard[:, c - 1] = sum_tensor((output_seg != c).float() * (target == c).float(), axes=axes)
++
++            # tp_hard, fp_hard, fn_hard = get_tp_fp_fn((output_softmax > (1 / num_classes)).float(), target,
++            #                                         axes, None)
++            # print_if_rank0("before allgather", tp_hard.shape)
++            tp_hard = tp_hard.sum(0, keepdim=False)[None]
++            fp_hard = fp_hard.sum(0, keepdim=False)[None]
++            fn_hard = fn_hard.sum(0, keepdim=False)[None]
++
++            tp_hard = awesome_allgather_function.apply(tp_hard)
++            fp_hard = awesome_allgather_function.apply(fp_hard)
++            fn_hard = awesome_allgather_function.apply(fn_hard)
++
++        tp_hard = tp_hard.detach().cpu().numpy().sum(0)
++        fp_hard = fp_hard.detach().cpu().numpy().sum(0)
++        fn_hard = fn_hard.detach().cpu().numpy().sum(0)
++        self.online_eval_foreground_dc.append(list((2 * tp_hard) / (2 * tp_hard + fp_hard + fn_hard + 1e-8)))
++        self.online_eval_tp.append(list(tp_hard))
++        self.online_eval_fp.append(list(fp_hard))
++        self.online_eval_fn.append(list(fn_hard))
++
++    def run_training(self, other_use=None):
++        """
++        if we run with -c then we need to set the correct lr for the first epoch, otherwise it will run the first
++        continued epoch with self.initial_lr
++
++        we also need to make sure deep supervision in the network is enabled for training, thus the wrapper
++        :return:
++        """
++        self.maybe_update_lr(self.epoch)  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
++        # want at the start of the training
++        if isinstance(self.network, DDP):
++            net = self.network.module
++        else:
++            net = self.network
++        ds = net.do_ds
++        net.do_ds = True
++        ret = nnUNetTrainer.run_training(self, other_use)
++        net.do_ds = ds
++        return ret
++
++    def validate(self, do_mirroring: bool = True, use_sliding_window: bool = True,
++                 step_size: float = 0.5, save_softmax: bool = True, use_gaussian: bool = True, overwrite: bool = True,
++                 validation_folder_name: str = 'validation_raw', debug: bool = False, all_in_gpu: bool = False,
++                 segmentation_export_kwargs: dict = None):
++        if self.local_rank == 0:
++            if isinstance(self.network, DDP):
++                net = self.network.module
++            else:
++                net = self.network
++            ds = net.do_ds
++            net.do_ds = False
++
++            ret = nnUNetTrainer.validate(self, do_mirroring, use_sliding_window, step_size, save_softmax,
++                                         use_gaussian, overwrite, validation_folder_name, debug, all_in_gpu,
++                                         segmentation_export_kwargs)
++            net.do_ds = ds
++            return ret
++
++    def predict_preprocessed_data_return_seg_and_softmax(self, data: np.ndarray, do_mirroring: bool = True,
++                                                         mirror_axes: Tuple[int] = None,
++                                                         use_sliding_window: bool = True, step_size: float = 0.5,
++                                                         use_gaussian: bool = True, pad_border_mode: str = 'constant',
++                                                         pad_kwargs: dict = None, all_in_gpu: bool = True,
++                                                         verbose: bool = True, mixed_precision=True) -> Tuple[np.ndarray, np.ndarray]:
++        if pad_border_mode == 'constant' and pad_kwargs is None:
++            pad_kwargs = {'constant_values': 0}
++
++        if do_mirroring and mirror_axes is None:
++            mirror_axes = self.data_aug_params['mirror_axes']
++
++        if do_mirroring:
++            assert self.data_aug_params["do_mirror"], "Cannot do mirroring as test time augmentation when training " \
++                                                      "was done without mirroring"
++
++        valid = list((SegmentationNetwork, nn.DataParallel, DDP))
++        assert isinstance(self.network, tuple(valid))
++        if isinstance(self.network, DDP):
++            net = self.network.module
++        else:
++            net = self.network
++        ds = net.do_ds
++        net.do_ds = False
++        ret = net.predict_3D(data, do_mirroring, mirror_axes, use_sliding_window, step_size, self.patch_size,
++                             self.regions_class_order, use_gaussian, pad_border_mode, pad_kwargs,
++                             all_in_gpu, verbose, mixed_precision=mixed_precision)
++        net.do_ds = ds
++        return ret
++
++    def load_checkpoint_ram(self, checkpoint, train=True):
++        """
++        used for if the checkpoint is already in ram
++        :param checkpoint:
++        :param train:
++        :return:
++        """
++        if not self.was_initialized:
++            self.initialize(train)
++
++        new_state_dict = OrderedDict()
++        curr_state_dict_keys = list(self.network.state_dict().keys())
++        # if state dict comes form nn.DataParallel but we use non-parallel model here then the state dict keys do not
++        # match. Use heuristic to make it match
++        for k, value in checkpoint['state_dict'].items():
++            key = k
++            if key not in curr_state_dict_keys:
++                print("duh")
++                key = key[7:]
++            new_state_dict[key] = value
++
++        if self.fp16:
++            self._maybe_init_amp()
++            if 'amp_grad_scaler' in checkpoint.keys():
++                self.amp_grad_scaler.load_state_dict(checkpoint['amp_grad_scaler'])
++
++        self.network.load_state_dict(new_state_dict)
++        self.epoch = checkpoint['epoch']
++        if train:
++            optimizer_state_dict = checkpoint['optimizer_state_dict']
++            if optimizer_state_dict is not None:
++                self.optimizer.load_state_dict(optimizer_state_dict)
++
++            if self.lr_scheduler is not None and hasattr(self.lr_scheduler, 'load_state_dict') and checkpoint[
++                'lr_scheduler_state_dict'] is not None:
++                self.lr_scheduler.load_state_dict(checkpoint['lr_scheduler_state_dict'])
++
++            if issubclass(self.lr_scheduler.__class__, _LRScheduler):
++                self.lr_scheduler.step(self.epoch)
++
++        self.all_tr_losses, self.all_val_losses, self.all_val_losses_tr_mode, self.all_val_eval_metrics = checkpoint[
++            'plot_stuff']
++
++        # after the training is done, the epoch is incremented one more time in my old code. This results in
++        # self.epoch = 1001 for old trained models when the epoch is actually 1000. This causes issues because
++        # len(self.all_tr_losses) = 1000 and the plot function will fail. We can easily detect and correct that here
++        if self.epoch != len(self.all_tr_losses):
++            self.print_to_log_file("WARNING in loading checkpoint: self.epoch != len(self.all_tr_losses). This is "
++                                   "due to an old bug and should only appear when you are loading old models. New "
++                                   "models should have this fixed! self.epoch is now set to len(self.all_tr_losses)")
++            self.epoch = len(self.all_tr_losses)
++            self.all_tr_losses = self.all_tr_losses[:self.epoch]
++            self.all_val_losses = self.all_val_losses[:self.epoch]
++            self.all_val_losses_tr_mode = self.all_val_losses_tr_mode[:self.epoch]
++            self.all_val_eval_metrics = self.all_val_eval_metrics[:self.epoch]
++
+diff --git a/pytorch/nnunet/training/network_training/nnUNetTrainer.py b/pytorch/nnunet/training/network_training/nnUNetTrainer.py
+index 2dbf815..456a88d 100644
+--- a/pytorch/nnunet/training/network_training/nnUNetTrainer.py
++++ b/pytorch/nnunet/training/network_training/nnUNetTrainer.py
+@@ -296,7 +296,7 @@ class nnUNetTrainer(NetworkTrainer):
+             if torch.cuda.is_available():
+                 torch.cuda.empty_cache()
+ 
+-    def run_training(self):
++    def run_training(self, other_use=None):
+         dct = OrderedDict()
+         for k in self.__dir__():
+             if not k.startswith("__"):
+@@ -313,7 +313,7 @@ class nnUNetTrainer(NetworkTrainer):
+ 
+         shutil.copy(self.plans_file, join(self.output_folder_base, "plans.pkl"))
+ 
+-        super(nnUNetTrainer, self).run_training()
++        super(nnUNetTrainer, self).run_training(other_use)
+ 
+     def load_plans_file(self):
+         """
+diff --git a/pytorch/nnunet/utilities/tensor_utilities.py b/pytorch/nnunet/utilities/tensor_utilities.py
+index daded59..ecd1277 100644
+--- a/pytorch/nnunet/utilities/tensor_utilities.py
++++ b/pytorch/nnunet/utilities/tensor_utilities.py
+@@ -23,6 +23,7 @@ def sum_tensor(inp, axes, keepdim=False):
+         for ax in axes:
+             inp = inp.sum(int(ax), keepdim=True)
+     else:
++        inp = inp.npu_format_cast(2)
+         for ax in sorted(axes, reverse=True):
+             inp = inp.sum(int(ax))
+     return inp
+diff --git a/pytorch/nnunet/utilities/to_torch.py b/pytorch/nnunet/utilities/to_torch.py
+index ab49d72..3e39dcc 100644
+--- a/pytorch/nnunet/utilities/to_torch.py
++++ b/pytorch/nnunet/utilities/to_torch.py
+@@ -14,7 +14,6 @@
+ 
+ import torch
+ 
+-
+ def maybe_to_torch(d):
+     if isinstance(d, list):
+         d = [maybe_to_torch(i) if not isinstance(i, torch.Tensor) else i for i in d]
+@@ -22,10 +21,18 @@ def maybe_to_torch(d):
+         d = torch.from_numpy(d).float()
+     return d
+ 
+-
+ def to_cuda(data, non_blocking=True, gpu_id=0):
++    raise Exception('heyupeng: wrong')
+     if isinstance(data, list):
+         data = [i.cuda(gpu_id, non_blocking=non_blocking) for i in data]
+     else:
+         data = data.cuda(gpu_id, non_blocking=True)
+     return data
++
++# npu add
++def to_npu(data, non_blocking=False, gpu_id=0):
++    if isinstance(data, list):
++        data = [i.npu(gpu_id, non_blocking=non_blocking) for i in data]
++    else:
++        data = data.npu(gpu_id, non_blocking=False)
++    return data
+\ No newline at end of file
+diff --git a/pytorch/setup.py b/pytorch/setup.py
+index 590a453..565c3a5 100644
+--- a/pytorch/setup.py
++++ b/pytorch/setup.py
+@@ -9,13 +9,13 @@ setup(name='nnunet',
+       author_email='f.isensee@dkfz-heidelberg.de',
+       license='Apache License Version 2.0, January 2004',
+       install_requires=[
+-            "torch>=1.6.0a",
++            "torch==1.5.0",
+             "tqdm",
+             "dicom2nifti",
+             "scikit-image>=0.14",
+             "medpy",
+             "scipy",
+-            "batchgenerators>=0.21",
++            "batchgenerators==0.21",
+             "numpy",
+             "sklearn",
+             "SimpleITK",

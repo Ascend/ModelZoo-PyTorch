@@ -1,5 +1,4 @@
-pytorch==1.5.0+ascend.post3
-torchvision==0.6.0
+torchvision
 cityscapesscripts
 opencv-python
 fvcore==0.1.5.post20210825

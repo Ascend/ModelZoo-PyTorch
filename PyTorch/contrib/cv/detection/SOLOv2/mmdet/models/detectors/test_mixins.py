@@ -27,9 +27,7 @@ if sys.version_info >= (3, 7):
 
 
 class RPNTestMixin(object):
-
     if sys.version_info >= (3, 7):
-
         async def async_test_rpn(self, x, img_meta, rpn_test_cfg):
             sleep_interval = rpn_test_cfg.pop("async_sleep_interval", 0.025)
             async with completed(
@@ -72,7 +70,6 @@ class RPNTestMixin(object):
 
 
 class BBoxTestMixin(object):
-
     if sys.version_info >= (3, 7):
 
         async def async_test_bboxes(self,
@@ -172,7 +169,6 @@ class BBoxTestMixin(object):
 
 
 class MaskTestMixin(object):
-
     if sys.version_info >= (3, 7):
 
         async def async_test_mask(self,

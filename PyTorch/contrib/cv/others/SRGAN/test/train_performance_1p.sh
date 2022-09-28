@@ -95,7 +95,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 # 输出性能FPS，需要模型审视修改
-fps=`grep -a 'Fps:'  ${test_path_dir}/output/train_performance_1p.log|awk -F " " '{print $NF}'|awk 'END {print}'`
+fps=`grep -a 'Fps:'  ${test_path_dir}/output/train_performance_1p.log|awk -F " " '{print $NF}'|tail -n 10 |awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 FPS=${fps%%[*}
 #结果打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"

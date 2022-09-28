@@ -5,8 +5,8 @@ loguru
 scikit-image
 tqdm
 torchvision
-Pillow
+Pillow==9.1.0
 thop
 ninja
 tabulate
-tensorboard
+# tensorboard

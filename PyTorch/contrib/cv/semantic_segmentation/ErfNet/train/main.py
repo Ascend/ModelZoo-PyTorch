@@ -38,6 +38,8 @@ import random
 import time
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import math
 
 from PIL import Image, ImageOps
@@ -246,6 +248,7 @@ def train(args, model, enc=False, profile=False):
     lambda1 = lambda epoch: pow((1-((epoch-1)/args.num_epochs)),0.9)  ## scheduler 2
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)                             ## scheduler 2
 
+    start_epoch = 1
     if args.resume:
         #Must load weights, optimizer, epoch and best value. 
         if enc:
@@ -302,7 +305,6 @@ def train(args, model, enc=False, profile=False):
         print("----- Done PROFILE -----")
         return
 
-    start_epoch = 1
     for epoch in range(start_epoch, args.num_epochs+1):
         if (args.num_gpus == 1 or (args.num_gpus > 1
             and args.rank_id % args.num_gpus == 0)):
@@ -640,7 +642,7 @@ if __name__ == '__main__':
     parser.add_argument('--amp', default=False, action='store_true',
                         help='use amp to train the model')
     parser.add_argument('--opt-level', default="O2", type=str, help='apex optimize level')
-    parser.add_argument('--loss-scale-value', default='128', type=int, help='static loss scale value')
+    parser.add_argument('--loss-scale-value', default='dynamic', help='static loss scale value')
 
     # device setting
     parser.add_argument("--device", default="npu", type=str)    

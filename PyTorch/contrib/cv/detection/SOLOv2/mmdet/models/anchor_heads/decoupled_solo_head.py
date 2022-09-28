@@ -25,6 +25,7 @@ from ..utils import bias_init_with_prob, ConvModule
 
 INF = 1e8
 
+
 def center_of_mass(bitmasks):
     _, h, w = bitmasks.size()
     ys = torch.arange(0, h, dtype=torch.float32, device=bitmasks.device)
@@ -37,12 +38,14 @@ def center_of_mass(bitmasks):
     center_y = m01 / m00
     return center_x, center_y
 
+
 def points_nms(heat, kernel=2):
     # kernel must be 2
     hmax = nn.functional.max_pool2d(
         heat, (kernel, kernel), stride=1, padding=1)
     keep = (hmax[:, :, :-1, :-1] == heat).float()
     return heat * keep
+
 
 def dice_loss(input, target):
     input = input.contiguous().view(input.size()[0], -1)
@@ -52,7 +55,8 @@ def dice_loss(input, target):
     b = torch.sum(input * input, 1) + 0.001
     c = torch.sum(target * target, 1) + 0.001
     d = (2 * a) / (b + c)
-    return 1-d
+    return 1 - d
+
 
 @HEADS.register_module
 class DecoupledSOLOHead(nn.Module):
@@ -166,10 +170,10 @@ class DecoupledSOLOHead(nn.Module):
         return ins_pred_x, ins_pred_y, cate_pred
 
     def split_feats(self, feats):
-        return (F.interpolate(feats[0], scale_factor=0.5, mode='bilinear'), 
-                feats[1], 
-                feats[2], 
-                feats[3], 
+        return (F.interpolate(feats[0], scale_factor=0.5, mode='bilinear'),
+                feats[1],
+                feats[2],
+                feats[3],
                 F.interpolate(feats[4], size=feats[3].shape[-2:], mode='bilinear'))
 
     def forward_single(self, x, idx, eval=False, upsampled_size=None):
@@ -198,7 +202,7 @@ class DecoupledSOLOHead(nn.Module):
         # cate branch
         for i, cate_layer in enumerate(self.cate_convs):
             if i == self.cate_down_pos:
-                seg_num_grid = self.seg_num_grids[idx] 
+                seg_num_grid = self.seg_num_grids[idx]
                 cate_feat = F.interpolate(cate_feat, size=seg_num_grid, mode='bilinear')
             cate_feat = cate_layer(cate_feat)
 
@@ -236,16 +240,16 @@ class DecoupledSOLOHead(nn.Module):
                       for ins_labels_level, ins_ind_labels_level in zip(zip(*ins_label_list), zip(*ins_ind_label_list))]
 
         ins_preds_x_final = [torch.cat([ins_preds_level_img_x[ins_ind_labels_level_img[:, 1], ...]
-                                for ins_preds_level_img_x, ins_ind_labels_level_img in
-                                zip(ins_preds_level_x, ins_ind_labels_level)], 0)
-                     for ins_preds_level_x, ins_ind_labels_level in
-                     zip(ins_preds_x, zip(*ins_ind_label_list_xy))]
+                                        for ins_preds_level_img_x, ins_ind_labels_level_img in
+                                        zip(ins_preds_level_x, ins_ind_labels_level)], 0)
+                             for ins_preds_level_x, ins_ind_labels_level in
+                             zip(ins_preds_x, zip(*ins_ind_label_list_xy))]
 
         ins_preds_y_final = [torch.cat([ins_preds_level_img_y[ins_ind_labels_level_img[:, 0], ...]
-                                  for ins_preds_level_img_y, ins_ind_labels_level_img in
-                                  zip(ins_preds_level_y, ins_ind_labels_level)], 0)
-                       for ins_preds_level_y, ins_ind_labels_level in
-                       zip(ins_preds_y, zip(*ins_ind_label_list_xy))]
+                                        for ins_preds_level_img_y, ins_ind_labels_level_img in
+                                        zip(ins_preds_level_y, ins_ind_labels_level)], 0)
+                             for ins_preds_level_y, ins_ind_labels_level in
+                             zip(ins_preds_y, zip(*ins_ind_label_list_xy))]
 
         num_ins = 0.
         # dice loss
@@ -255,7 +259,7 @@ class DecoupledSOLOHead(nn.Module):
             if mask_n == 0:
                 continue
             num_ins += mask_n
-            input = (input_x.sigmoid())*(input_y.sigmoid())
+            input = (input_x.sigmoid()) * (input_y.sigmoid())
             loss_ins.append(dice_loss(input, target))
 
         loss_ins = torch.cat(loss_ins).mean() * self.ins_loss_weight
@@ -280,10 +284,10 @@ class DecoupledSOLOHead(nn.Module):
             loss_cate=loss_cate)
 
     def solo_target_single(self,
-                               gt_bboxes_raw,
-                               gt_labels_raw,
-                               gt_masks_raw,
-                               featmap_sizes=None):
+                           gt_bboxes_raw,
+                           gt_labels_raw,
+                           gt_masks_raw,
+                           featmap_sizes=None):
 
         device = gt_labels_raw[0].device
         # ins
@@ -296,9 +300,9 @@ class DecoupledSOLOHead(nn.Module):
         for (lower_bound, upper_bound), stride, featmap_size, num_grid \
                 in zip(self.scale_ranges, self.strides, featmap_sizes, self.seg_num_grids):
 
-            ins_label = torch.zeros([num_grid**2, featmap_size[0], featmap_size[1]], dtype=torch.uint8, device=device)
+            ins_label = torch.zeros([num_grid ** 2, featmap_size[0], featmap_size[1]], dtype=torch.uint8, device=device)
             cate_label = torch.zeros([num_grid, num_grid], dtype=torch.int64, device=device)
-            ins_ind_label = torch.zeros([num_grid**2], dtype=torch.bool, device=device)
+            ins_ind_label = torch.zeros([num_grid ** 2], dtype=torch.bool, device=device)
 
             hit_indices = ((gt_areas >= lower_bound) & (gt_areas <= upper_bound)).nonzero().flatten()
 
@@ -324,9 +328,12 @@ class DecoupledSOLOHead(nn.Module):
             valid_mask_flags = gt_masks_pt.sum(dim=-1).sum(dim=-1) > 0
 
             output_stride = stride / 2
-            for seg_mask, gt_label, half_h, half_w, center_h, center_w, valid_mask_flag in zip(gt_masks, gt_labels, half_hs, half_ws, center_hs, center_ws, valid_mask_flags):
+            for seg_mask, gt_label, half_h, half_w, center_h, center_w, valid_mask_flag in zip(gt_masks, gt_labels,
+                                                                                               half_hs, half_ws,
+                                                                                               center_hs, center_ws,
+                                                                                               valid_mask_flags):
                 if not valid_mask_flag:
-                   continue
+                    continue
                 upsampled_size = (featmap_sizes[0][0] * 4, featmap_sizes[0][1] * 4)
                 coord_w = int((center_w / upsampled_size[1]) // (1. / num_grid))
                 coord_h = int((center_h / upsampled_size[0]) // (1. / num_grid))
@@ -337,18 +344,18 @@ class DecoupledSOLOHead(nn.Module):
                 left_box = max(0, int(((center_w - half_w) / upsampled_size[1]) // (1. / num_grid)))
                 right_box = min(num_grid - 1, int(((center_w + half_w) / upsampled_size[1]) // (1. / num_grid)))
 
-                top = max(top_box, coord_h-1)
-                down = min(down_box, coord_h+1)
-                left = max(coord_w-1, left_box)
-                right = min(right_box, coord_w+1)
+                top = max(top_box, coord_h - 1)
+                down = min(down_box, coord_h + 1)
+                left = max(coord_w - 1, left_box)
+                right = min(right_box, coord_w + 1)
 
                 # squared
-                cate_label[top:(down+1), left:(right+1)] = gt_label
+                cate_label[top:(down + 1), left:(right + 1)] = gt_label
                 # ins
                 seg_mask = mmcv.imrescale(seg_mask, scale=1. / output_stride)
                 seg_mask = torch.from_numpy(seg_mask).to(device=device)
-                for i in range(top, down+1):
-                    for j in range(left, right+1):
+                for i in range(top, down + 1):
+                    for j in range(left, right + 1):
                         label = int(i * num_grid + j)
                         ins_label[label, :seg_mask.shape[0], :seg_mask.shape[1]] = seg_mask
                         ins_ind_label[label] = True
@@ -403,7 +410,6 @@ class DecoupledSOLOHead(nn.Module):
                        scale_factor,
                        cfg,
                        rescale=False, debug=False):
-
 
         # overall info.
         h, w, _ = img_shape
@@ -489,10 +495,10 @@ class DecoupledSOLOHead(nn.Module):
         cate_labels = cate_labels[sort_inds]
 
         seg_masks_soft = F.interpolate(seg_masks_soft.unsqueeze(0),
-                                    size=upsampled_size_out,
-                                    mode='bilinear')[:, :, :h, :w]
+                                       size=upsampled_size_out,
+                                       mode='bilinear')[:, :, :h, :w]
         seg_masks = F.interpolate(seg_masks_soft,
-                               size=ori_shape[:2],
-                               mode='bilinear').squeeze(0)
+                                  size=ori_shape[:2],
+                                  mode='bilinear').squeeze(0)
         seg_masks = seg_masks > cfg.mask_thr
         return seg_masks, cate_labels, cate_scores

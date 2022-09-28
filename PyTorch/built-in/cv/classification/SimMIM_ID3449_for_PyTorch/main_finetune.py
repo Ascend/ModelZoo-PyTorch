@@ -13,6 +13,8 @@ import datetime
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import random
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -64,6 +66,7 @@ def parse_option():
     parser.add_argument('--tag', help='tag of experiment')
     parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
+    parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
 
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
@@ -306,10 +309,9 @@ def throughput(data_loader, model, logger):
 
 
 if __name__ == '__main__':
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    args, config = parse_option()
+    os.environ['MASTER_ADDR'] = args.addr
     os.environ['MASTER_PORT'] = '29688'
-
-    _, config = parse_option()
 
     random.seed(1234)
     np.random.seed(1234)

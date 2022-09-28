@@ -42,6 +42,8 @@ from datetime import datetime
 
 import torch
 import torch.nn as nn
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
@@ -675,7 +677,7 @@ def train_one_epoch(
                 input, target = mixup_fn(input, target)
         if args.channels_last:
             input = input.contiguous(memory_format=torch.channels_last)
-
+              
         with amp_autocast():
             output = model(input)
             loss = loss_fn(output, target)
@@ -697,7 +699,7 @@ def train_one_epoch(
                     model_parameters(model, exclude_head='agc' in args.clip_mode),
                     value=args.clip_grad, mode=args.clip_mode)
             optimizer.step()
-
+                                
         if model_ema is not None:
             model_ema.update(model)
 

@@ -21,13 +21,10 @@ yum install numactl # for CentOS
 ```
 + install requirement
 ```
-pip3 install torchvision==0.6.0
+pip3 install torchvision
 pip3 install einops==0.4.1
 pip3 install --no-deps timm==0.4.5
-
-# other recommended requirements
-apex==0.1+ascend.20220315
-torch==1.5.0+ascend.post5.20220315
+Note:Install the torchvision that corresponds to the torch version
 ```
 - source env and build：
 

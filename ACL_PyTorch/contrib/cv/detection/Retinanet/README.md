@@ -50,9 +50,10 @@ commit_id:60fd4885d7cfd52d4267d1da9ebb6b2b9a3fc937
 
 ### 2.1 深度学习框架
 ```
+CANN 5.1.RC1
 pytorch == 1.8.0
 torchvision == 0.9.0
-onnx == 1.8.1
+onnx == 1.9.0
 ```
 
 **注意：** 
@@ -63,10 +64,8 @@ onnx == 1.8.1
 ### 2.2 python第三方库
 
 ```
-numpy == 1.18.5
-opencv-python == 4.2.0.34
-sclblonnx == 0.1.9
-om_gener
+numpy == 1.21.2
+opencv-python == 4.6.0.66
 ```
 
 **说明：** 
@@ -74,7 +73,7 @@ om_gener
 >
 >   Arm架构：opencv,pytorch,torchvision和onnx可以通过源码编译安装，其它可以通过pip install 包名 安装
 >
->   另外需要从https://gitee.com/liurf_hw/om_gener 安装om_gener
+
 
 ## 3 模型转换
 
@@ -99,8 +98,9 @@ md5sum：5bd44e2eaaabb0e1877c1c91f37ce513
 
 ```shell
 git clone https://github.com/facebookresearch/detectron2
+cd detectron2
 git reset 60fd4885d7cfd52d4267d1da9ebb6b2b9a3fc937 --hard
-python -m pip install -e detectron2
+python3.7 -m pip install -e .
 ```
 
  **说明：**  
@@ -121,7 +121,6 @@ python -m pip install -e detectron2
 
 通过打补丁的方式修改detectron2：
 ```shell
-cd detectron2
 patch -p1 < ../retinanet_detectron2.diff
 cd ..
 ```
@@ -132,11 +131,10 @@ cd ..
 在当前目录按结构构造数据集：datasets/coco目录下有annotations与val2017，annotations目录存放coco数据集的instances_val2017.json，val2017目录存放coco数据集的5000张验证图片。  
 或者修改detectron2/detectron2/data/datasets/builtin.py为_root = os.getenv("DETECTRON2_DATASETS", "/root/datasets/")指定coco数据集所在的目录/root/datasets/。
 
-6.运行如下命令，在output目录生成model.onnx
+6.运行如下命令，生成model.onnx
 ```shell
-python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-Detection/retinanet_R_50_FPN_3x.yaml --output ./output --export-method tracing --format onnx MODEL.WEIGHTS model_final.pkl MODEL.DEVICE cpu
-
-mv output/model.onnx retinanet.onnx
+python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-Detection/retinanet_R_50_FPN_3x.yaml
+ --output ./ --export-method tracing --format onnx MODEL.WEIGHTS model_final.pkl MODEL.DEVICE cpu
 ```
 
 ### 3.2 onnx转om模型
@@ -144,48 +142,22 @@ mv output/model.onnx retinanet.onnx
 1. 设置环境变量
 
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2. 量化工具安装
 
-   参考链接：support.huawei.com/enterprise/zh/doc/EDOC1100219269/805ec438
-
-3. 修改并量化onnx
-
-   onnx中部分cast算子会走到aicpu上，我们修改数据类型使其走到aicore上，并且由于onnx中有自定义算子，我们先拆分onnx，量化部分onnx，再merge两个onnx。
-
-   1. 首先创建文件夹int8data，用于存放量化矫正数据，矫正数据为4.2数据集预处理中16张生成的bin文件，最好将其合并成一个bin文件（310上内存可能会出现不够的现象），在Linux环境下合成命令：cat 000000397133.bin 000000037777.bin 000000252219.bin 000000087038.bin 000000174482.bin 000000403385.bin 000000006818.bin 000000480985.bin 000000458054.bin 000000331352.bin 000000296649.bin 000000386912.bin 000000502136.bin 000000491497.bin 000000184791.bin 000000348881.bin 000000289393.bin > quant.bin
-
-   2. mv quant.bin ./int8data
-
-   3. 运行 python3.7.5 adaptretinanet.py
-
-      若遇到类似onnx校验不通过的情况，则将对应报错的check代码注释掉即可
-
-   4. 生成的retinanet_revise.onnx和retinanet_int8_revise.onnx即为用于转om离线模型的onnx文件
-
-4. 使用atc将onnx模型（包括量化模型和非量化模型）转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，使用netron开源可视化工具查看具体的输出节点名
-
-	${chip_name}可通过`npu-smi info`指令查看
-
-	![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+2. 使用atc将onnx模型
+${chip_name}可通过npu-smi info指令查看，例：310P3
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```shell
-atc --model=retinanet_revise.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" --out_nodes="Cast_1224:0;Reshape_1218:0;Gather_1226:0" --log=info --soc_version=Ascend${chip_name}
+atc --model=model.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" 
+--out_nodes="Cast_1229:0;Reshape_1223:0;Gather_1231:0" --log=debug --soc_version=Ascend${chip_name}
 ```
-
-量化模型转om(注意输出节点名字已改变，使用netron打开后手动修改)
-
-```
-atc --model=retinanet_int8_revise.onnx --framework=5 --output=retinanet_detectron2_npu --input_format=NCHW --input_shape="input0:1,3,1344,1344" --out_nodes="Cast_1229_sg2:0;Reshape_1223_sg2:0;Gather_1231_sg2:0" --log=info --soc_version=Ascend${chip_name}
-```
-
-
+    --input_shape：输入数据的shape。  
+    --output：输出的OM模型，为了防止CANN版本中的输出顺序发生变化，多个输出的模型--out_nodes 固定输出顺序。
+    --log：日志级别。  
+    --soc_version：处理器型号，Ascend310或Ascend310P。  
+    --soc_version：处理器型号。  
 
 ## 4 数据集预处理
 
@@ -196,7 +168,7 @@ atc --model=retinanet_int8_revise.onnx --framework=5 --output=retinanet_detectro
 -   **[生成数据集信息文件](#43-生成数据集信息文件)**  
 
 ### 4.1 数据集获取
-该模型使用coco2017的5千张验证集进行测试，图片与标签分别存放在/opt/npu/dataset/coco/val2017/与/opt/npu/dataset/coco/annotations/instances_val2017.json。
+该模型使用coco2017的5千张验证集进行测试，图片与标签分别存放在./datasets/coco/val2017与./datasets/coco/annotations/instances_val2017.json。
 
 ### 4.2 数据集预处理
 1.预处理脚本retinanet_pth_preprocess_detectron2.py
@@ -204,7 +176,7 @@ atc --model=retinanet_int8_revise.onnx --framework=5 --output=retinanet_detectro
 
 2.执行预处理脚本，生成数据集预处理后的bin文件
 ```shell
-python3.7 retinanet_pth_preprocess_detectron2.py --image_src_path=/root/datasets/coco/val2017 --bin_file_path=val2017_bin --model_input_height=1344 --model_input_width=1344
+python3.7 retinanet_pth_preprocess_detectron2.py --image_src_path= ./datasets/coco/val2017 --bin_file_path=val2017_bin --model_input_height=1344 --model_input_width=1344
 ```
 
 ### 4.3 生成预处理数据集信息文件
@@ -213,7 +185,7 @@ python3.7 retinanet_pth_preprocess_detectron2.py --image_src_path=/root/datasets
 2.执行生成数据集信息脚本，生成数据集信息文件
 
 ```shell
-python3.7 get_info.py bin val2017_bin retinanet.info 1344 1344
+python3.7 get_info.py bin ./val2017_bin retinanet.info 1344 1344
 ```
 第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
 
@@ -231,23 +203,18 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```shell
 ./benchmark.x86_64 -model_type=vision -om_path=retinanet_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=retinanet.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
 ```
-输出结果默认保存在当前目录result/dumpOutput_device0，模型有四个输出，每个输入对应的输出对应四个_x.bin文件
+输出结果默认保存在当前目录result/dumpOutput_device0，模型有三个输出，每个输入对应的输出对应三个_x.bin文件
 ```
 输出       shape                 数据类型    数据含义
 output1    100 * 4               FP32       boxes
 output2    100 * 1               Int32       labels
-output2    100 * 1               FP32       scores
+output3    100 * 1               FP32       scores
 ```
 
 ## 6 精度对比
@@ -263,9 +230,7 @@ output2    100 * 1               FP32       scores
 
 调用retinanet_pth_postprocess_detectron2.py评测map精度：
 ```shell
-python3.7 get_info.py jpg /opt/npu/dataset/coco/val2017 origin_image.info
-
-python3.7 retinanet_pth_postprocess_detectron2.py --bin_data_path=./result/dumpOutput_device0/ --val2017_path=${datasets_path}/coco --test_annotation=origin_image.info --det_results_path=./ret_npuinfer/ --net_out_num=3 --net_input_height=1344 --net_input_width=1344 
+python3.7 retinanet_pth_postprocess_detectron2.py --bin_data_path=./result/dumpOutput_device0/ --val2017_path=./datasets/coco --test_annotation=origin_image.info --det_results_path=./ret_npuinfer/ --net_out_num=3 --net_input_height=1344 --net_input_width=1344 
 ```
 --bin_data_path为benchmark推理结果，
 
@@ -290,7 +255,7 @@ Evaluate annotation type *bbox*
 DONE (t=75.71s).
 Accumulating evaluation results...
 DONE (t=16.46s).
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.384
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.383
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.576
  Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.412
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.227
@@ -302,28 +267,8 @@ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.384
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.367
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.582
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.700
-
 ```
- **精度调试：**  
-> 1.当NMS前选取各类的TOPK过小时，会使精度下降一个点，调为各类保留200较为合适
-> 2.因gather算子处理-1会导致每张图的第一个score为0，故maskrcnn_detectron2.diff中已将dets[:, -1]改为dets[:, 4]  
-> 3.单张图调试  
->
-> ```
-> demo.py分数改为0.05，defaults.py MIN_SIZE_TEST与MAX_SIZE_TEST改为1344：
-> python3.7 demo.py --config-file ./detectron2/configs/COCO-Detection/retinanet_R_101_FPN_3x.yaml --input 000000252219_1344x1344.jpg --opts MODEL.WEIGHTS ./model_final.pkl MODEL.DEVICE cpu
-> 说明：
-> 比较pth的retinanet与om的retinanet输出前提是detectron2/config/defaults.py的_C.INPUT.MIN_SIZE_TEST与_C.INPUT.MAX_SIZE_TEST要改为1344，并且注意因为000000252219_1344x1344.jpg 是等比例缩放四边加pad的处理结果，因此pth推理时等价于先进行了pad然后再进行标准化的，因此图片tensor边缘是负均值。开始误认为预处理与mmdetection相同因此SIZE_TEST的值与000000252219_1344x1344.jpg缩放是按上述方式处理的，经此与后面的调试步骤发现预处理与mmdetection不同。om算子输出与开源pth推理时变量的打印值对比，找到输出不对的算子，发现前处理均值方差不同于mmdetection框架，且是BGR序。
-> 发现做topk筛选时，发现每个类保留200个性能和精度最佳。
-> ```
-> 4.精度调试  
->
-> ```
-> 对开源代码预处理与参数修改，使得cpu,gpu版的pth公开推理精度，参见pth的diff文件与执行精度测评的命令。
-> 说明：
-> 1.GPU固定1344,1344的前处理方式（缩放加pad）
-> FIX_SHAPE->./detectron2/data/dataset_mapper.py->ResizeShortestEdge，最短边800最大1333。
-> ```
+
 ### 6.2 开源精度
 [官网精度](https://github.com/facebookresearch/detectron2/blob/master/MODEL_ZOO.md)
 
@@ -339,22 +284,24 @@ python3.7 train_net.py --eval-only --config-file ./detectron2/configs/COCO-Detec
 
 ```
 AP,AP50,AP75,APs,APm,APl
-38.679,57.998,41.489,23.348,42.303, 50.316
+38.680,57.996,41.497,23.348,42.304, 50.318
 ```
-
 
 ### 6.3 精度对比
 
-310上om推理box map精度为0.384，官方开源pth推理box map精度为0.387，精度下降在1个点之内，因此可视为精度达标，310P上fp16精度0.383, int8 0.382，可视为精度达标
+310上om推理box map精度为0.383，官方开源pth推理box map精度为0.387，精度下降在1个点之内，因此可视为精度达标，310P上fp16精度0.383, 可视为精度达标
 
 ## 7 性能对比
 
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-batch1的性能：
+离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，310P只有一颗芯片，FPS为该值本身
 
-5.2步骤中，离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，310P只有一颗芯片，FPS为该值本身
+batch1的性能：
+310上Interface throughputRate: 2.2465，2.2465*4=8.98617即是batch1 310单卡吞吐率
+310P上Interface throughputRate: 15.3104，15.3104即是batch1 310P单卡吞吐率
+T4单卡吞吐率为8.63557
 
 retinanet detectron2不支持多batch
 

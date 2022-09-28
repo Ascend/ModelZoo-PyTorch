@@ -76,13 +76,12 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 main_finetune.py 
 	--batch 64 \
     --resnet_weight_path ${pth_path} \
 	--learning_rate 1e-3 \
-	--addr $(hostname -I |awk '{print $1}') > finetune_full_8p.log 2>&1 &
+	--addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/finetune_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 # mv nohup.out ${test_path_dir}/output/${ASCEND_DEVICE_ID}/finetune_${ASCEND_DEVICE_ID}.log
 
 wait
 
-cp finetune_full_8p.log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/finetune_${ASCEND_DEVICE_ID}.log
 
 
 ##################获取训练数据################

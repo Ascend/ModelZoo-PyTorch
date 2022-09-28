@@ -17,8 +17,9 @@ device_id=0
 # 学习率
 learning_rate=0.008
 # 加载数据进程数
-workers=0
-
+workers=8
+#预训练模型路径
+pretrained_model_path="/npu/rfcn_pretrained_model/"
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -73,28 +74,40 @@ else
     test_path_dir=${cur_path}/test
 fi
 
+# 新建数据集及与训练权重放置目录，并建立软连接
+mkdir -p data
+cd data
+ln -nsf ${data_path}/VOCdevkit2007 VOCdevkit2007
+cd ..
+
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
+    ln -nsf ${data_path}/pretrained_model  ${cur_path}/data/
+else
+    ln -nsf ${data_path} ${cur_path}/data/pretrained_model
+fi
 
 #################创建日志输出目录，不需要修改#################
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+ASCEND_DEVICE_ID=$i
 if [ -d ${test_path_dir}/output/$ASCEND_DEVICE_ID ];then
     rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
-
-# 新建数据集及与训练权重放置目录，并建立软连接
-pretrained_model_path="/npu/rfcn_pretrained_model/"
-mkdir data
-cd data
-ln -s ${data_path}/VOCdevkit2007 VOCdevkit2007
-ln -s ${data_path} pretrained_model
-cd ..
-
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-taskset -c 0-19 python3.7 ./trainval_net_8p.py \
+PID_START=$((KERNEL_NUM * i))
+PID_END=$((PID_START + KERNEL_NUM - 1))
+taskset -c $PID_START-$PID_END nohup python3.7 -u ./trainval_net_8p.py \
     --net=res101 \
     --nw=${workers} \
     --lr=${learning_rate} \
@@ -105,12 +118,16 @@ taskset -c 0-19 python3.7 ./trainval_net_8p.py \
     --bs=${batch_size} \
     --npu_id="npu:${ASCEND_DEVICE_ID}" \
     --etp_performance_mode \
+    --local_rank=${ASCEND_DEVICE_ID} \
     --amp \
     --opt_level=O1 \
     --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
 wait
 
-python3.7 ./test_net.py \
+ASCEND_DEVICE_ID=0
+
+nohup python3.7 ./test_net.py \
     --net=res101 \
     --cfg=cfg/res101.yml \
     --checksession 1 \
@@ -155,7 +172,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -a 'session'|awk -F "loss: " '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -a 'session'|awk -F "loss: " '{print $NF}' | awk -F " " '{print $1}' |awk -F ',' '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`

@@ -18,7 +18,7 @@ import torch.nn as nn
 def accuracy(pred, target, topk=1):
     assert isinstance(topk, (int, tuple))
     if isinstance(topk, int):
-        topk = (topk, )
+        topk = (topk,)
         return_single = True
     else:
         return_single = False
@@ -37,7 +37,7 @@ def accuracy(pred, target, topk=1):
 
 class Accuracy(nn.Module):
 
-    def __init__(self, topk=(1, )):
+    def __init__(self, topk=(1,)):
         super().__init__()
         self.topk = topk
 

@@ -64,7 +64,8 @@ def cal_loss(pred, gold, smoothing=0.0):
         non_pad_mask = gold.ne(IGNORE_ID)
         n_word = non_pad_mask.sum().item()
         loss = -(one_hot * log_prb).sum(dim=1)
-        loss = (loss * non_pad_mask.float()).sum() / n_word
+        loss = (loss * non_pad_mask.float()).sum() / n_word #固定
+        # loss = loss.masked_select(non_pad_mask).sum() / n_word  #raw（动态）
     else:
         loss = F.cross_entropy(pred, gold,
                                ignore_index=IGNORE_ID,

@@ -67,7 +67,8 @@ if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
 else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
-
+#数据集处理
+ln -nsf ${train_path} ./data
 
 #################启动训练脚本#################
 #训练开始时间，不需要修改
@@ -78,8 +79,9 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./Train.py \
-    --train_path=${train_path} \
+
+nohup python3.7 ./Train.py \
+    --train_path=./data/TrainDataset \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
     --workers=${workers} \
@@ -95,13 +97,6 @@ python3.7 ./Train.py \
     --batchsize=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-python3.7 ./Test.py \
-    --device=npu \
-    --pth_path=./snapshots/PraNet_Res2Net/PraNet-19.pth &
-wait
-
-python3.7 ./Eval.py &
-wait
 
 ##################获取训练数据################
 #训练结束时间，不需要修改
@@ -115,10 +110,7 @@ FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-#输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'PraNet' EvaluateResults/result_Kvasir.csv|awk 'END {print}'|awk -F "," '{print $2}'`
 # #打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总
@@ -137,7 +129,6 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "lateral-2" '{print $NF}' | awk -F " " '{print $2}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-echo "train_accuracy: ${train_accuracy}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 
 
@@ -149,6 +140,6 @@ echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+#echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

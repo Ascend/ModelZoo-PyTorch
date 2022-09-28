@@ -3,5 +3,5 @@ opencv-python >= 4.1
 matplotlib
 pycocotools == 2.0.2
 tqdm
-pillow
+pillow == 9.1.0
 tensorboard == 1.15.0

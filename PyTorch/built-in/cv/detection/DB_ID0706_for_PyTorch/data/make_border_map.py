@@ -114,11 +114,11 @@ class MakeBorderMap(Configurable):
             point_1[0] - point_2[0]) + np.square(point_1[1] - point_2[1])
 
         cosin = (square_distance - square_distance_1 - square_distance_2) / \
-            (2 * np.sqrt(square_distance_1 * square_distance_2))
+            (2 * np.sqrt(np.absolute(square_distance_1 * square_distance_2 + 0.000001)))
         square_sin = 1 - np.square(cosin)
         square_sin = np.nan_to_num(square_sin)
-        result = np.sqrt(square_distance_1 * square_distance_2 *
-                         square_sin / square_distance)
+        result = np.sqrt(np.absolute(square_distance_1 * square_distance_2 *
+                         square_sin + 0.000001) / square_distance)
 
         result[cosin < 0] = np.sqrt(np.fmin(
             square_distance_1, square_distance_2))[cosin < 0]

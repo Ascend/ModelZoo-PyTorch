@@ -38,6 +38,8 @@ import copy
 from tqdm import tqdm
 from argparse import ArgumentParser
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from utils import AverageMeter, calculate_psnr

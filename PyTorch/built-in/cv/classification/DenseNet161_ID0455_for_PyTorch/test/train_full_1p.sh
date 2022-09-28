@@ -93,7 +93,7 @@ nohup python3.7 train.py  \
      --weight-decay 1e-4 \
      --apex \
      --apex-opt-level O2 \
-     --loss_scale_value 1024 \
+     --loss_scale_value dynamic \
      --seed 1234 \
      --device_id=$ASCEND_DEVICE_ID \
      --print-freq 10 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -107,7 +107,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|tail -n+2|awk -F "img/s: " '{print $2}'|awk '{sum+=$1} END {print sum/(NR-1)}'`
+FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{if (NR > 3){print $2}}'|awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

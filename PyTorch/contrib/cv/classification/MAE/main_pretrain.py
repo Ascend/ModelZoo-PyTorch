@@ -20,7 +20,7 @@ from contextlib import suppress
 
 import apex
 import torch
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 
 import torch.backends.cudnn as cudnn
@@ -112,6 +112,8 @@ def get_args_parser():
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
+    parser.add_argument('--addr', default='127.0.0.1', type=str, 
+                        help='master addr')
 
     # True: Apex AMP or False: Native AMP
     parser.add_argument('--amp', action='store_true', default=False,
@@ -271,6 +273,8 @@ def main(args):
 if __name__ == '__main__':
     args = get_args_parser()
     args = args.parse_args()
+    os.environ['MASTER_ADDR'] = args.addr
+    os.environ['MASTER_PORT'] = '7164'
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)

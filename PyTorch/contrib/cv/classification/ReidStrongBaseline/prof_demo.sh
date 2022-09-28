@@ -1,1 +1,1 @@
-python prof_demo.py --device='npu:0' --amp --config_file='configs/prof_demo.yml'
+python prof_demo.py --device='npu:0' --amp --config_file='configs/prof_demo.yml' --loss_scale="64"

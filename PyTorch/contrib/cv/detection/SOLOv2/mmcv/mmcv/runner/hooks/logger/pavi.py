@@ -47,7 +47,7 @@ class PaviClient(object):
         if not var:
             raise ValueError(
                 '"{}" is neither specified nor defined as env variables'.
-                format(env_var))
+                    format(env_var))
         return var
 
     def _print_log(self, msg, level=logging.INFO, *args, **kwargs):
@@ -129,7 +129,7 @@ class PaviClient(object):
                         else:
                             self._print_log(
                                 'unexpected status code: {}, err msg: {}'.
-                                format(status_code, response.reason),
+                                    format(status_code, response.reason),
                                 level=logging.ERROR)
                             retry += 1
                 if retry == max_retry:

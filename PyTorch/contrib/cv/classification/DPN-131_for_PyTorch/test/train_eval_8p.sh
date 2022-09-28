@@ -74,6 +74,7 @@ fi
 python3.7 ./main.py \
           ${data_path} \
           --evaluate \
+          --pretrained \
           --resume checkpoint.pth.tar \
           --addr=$(hostname -I |awk '{print $1}') \
           --seed=49 \

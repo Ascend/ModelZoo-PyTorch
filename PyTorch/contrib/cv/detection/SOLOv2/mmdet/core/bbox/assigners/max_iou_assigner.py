@@ -98,7 +98,7 @@ class MaxIoUAssigner(BaseAssigner):
             >>> assert torch.all(assign_result.gt_inds == expected_gt_inds)
         """
         assign_on_cpu = True if (self.gpu_assign_thr > 0) and (
-            gt_bboxes.shape[0] > self.gpu_assign_thr) else False
+                gt_bboxes.shape[0] > self.gpu_assign_thr) else False
         # compute overlap and assign gt on CPU when number of GT is large
         if assign_on_cpu:
             device = bboxes.device
@@ -146,20 +146,20 @@ class MaxIoUAssigner(BaseAssigner):
         num_gts, num_bboxes = overlaps.size(0), overlaps.size(1)
 
         # 1. assign -1 by default
-        assigned_gt_inds = overlaps.new_full((num_bboxes, ),
+        assigned_gt_inds = overlaps.new_full((num_bboxes,),
                                              -1,
                                              dtype=torch.long)
 
         if num_gts == 0 or num_bboxes == 0:
             # No ground truth or boxes, return empty assignment
-            max_overlaps = overlaps.new_zeros((num_bboxes, ))
+            max_overlaps = overlaps.new_zeros((num_bboxes,))
             if num_gts == 0:
                 # No truth, assign everything to background
                 assigned_gt_inds[:] = 0
             if gt_labels is None:
                 assigned_labels = None
             else:
-                assigned_labels = overlaps.new_zeros((num_bboxes, ),
+                assigned_labels = overlaps.new_zeros((num_bboxes,),
                                                      dtype=torch.long)
             return AssignResult(
                 num_gts,
@@ -197,7 +197,7 @@ class MaxIoUAssigner(BaseAssigner):
                     assigned_gt_inds[gt_argmax_overlaps[i]] = i + 1
 
         if gt_labels is not None:
-            assigned_labels = assigned_gt_inds.new_zeros((num_bboxes, ))
+            assigned_labels = assigned_gt_inds.new_zeros((num_bboxes,))
             pos_inds = torch.nonzero(assigned_gt_inds > 0).squeeze()
             if pos_inds.numel() > 0:
                 assigned_labels[pos_inds] = gt_labels[

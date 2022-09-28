@@ -12,10 +12,10 @@
 
 ## 3. 安装依赖
 - NPU环境首先安装run包，以及NPU版本的torch与apex
-- `pip install -r requirements.txt`
+- `pip3.7 install -r requirements.txt`
 
 ## 4. 导入环境变量
-- `source test/env.sh`
+- `source test/env_npu.sh`
 
 ## 5. 配置数据集路径
 - 进入test目录，路径下脚本包括：

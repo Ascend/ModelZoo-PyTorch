@@ -119,7 +119,7 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin,
         # rpn
         if self.with_rpn:
             rpn_outs = self.rpn_head(x)
-            outs = outs + (rpn_outs, )
+            outs = outs + (rpn_outs,)
         proposals = torch.randn(1000, 4).cuda()
         # bbox head
         rois = bbox2roi([proposals])
@@ -138,7 +138,7 @@ class TwoStageDetector(BaseDetector, RPNTestMixin, BBoxTestMixin,
             if self.with_shared_head:
                 mask_feats = self.shared_head(mask_feats)
             mask_pred = self.mask_head(mask_feats)
-            outs = outs + (mask_pred, )
+            outs = outs + (mask_pred,)
         return outs
 
     def forward_train(self,

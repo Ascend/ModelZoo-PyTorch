@@ -101,7 +101,7 @@ class GridRCNN(TwoStageDetector):
         # rpn
         if self.with_rpn:
             rpn_outs = self.rpn_head(x)
-            outs = outs + (rpn_outs, )
+            outs = outs + (rpn_outs,)
         proposals = torch.randn(1000, 4).cuda()
         # bbox head
         rois = bbox2roi([proposals])

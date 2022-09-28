@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 import torch
-if torch.version>="1.8.0":
+if torch.__version__ >= "1.8":
     try:
         import torch_npu
     except:
@@ -217,10 +217,10 @@ def main(args):
         amp.register_float_function(torch, 'sigmoid')
         amp.register_half_function(torch, 'addmm')
         generator, optimizer_G = amp.initialize(generator, optimizer_G,
-                                                opt_level='O1', loss_scale=128,combine_grad=True)
+                                                opt_level='O1', loss_scale="dynamic",combine_grad=True)
 
         discriminator, optimizer_D = amp.initialize(discriminator, optimizer_D,
-                                                    opt_level='O1', loss_scale=128,combine_grad=True)
+                                                    opt_level='O1', loss_scale="dynamic",combine_grad=True)
 
     if args.distributed:
         generator = DDP(generator, device_ids=[args.local_rank], broadcast_buffers=False)

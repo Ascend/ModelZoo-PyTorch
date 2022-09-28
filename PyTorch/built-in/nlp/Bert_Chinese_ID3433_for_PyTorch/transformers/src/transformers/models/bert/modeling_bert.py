@@ -703,7 +703,7 @@ class BertPooler(nn.Module):
 class BertPredictionHeadTransform(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.dense = NpuLinear(config.hidden_size, config.hidden_size)
         if isinstance(config.hidden_act, str):
             self.transform_act_fn = ACT2FN[config.hidden_act]
         else:
@@ -724,7 +724,7 @@ class BertLMPredictionHead(nn.Module):
 
         # The output weights are the same as the input embeddings, but there is
         # an output-only bias for each token.
-        self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.decoder = NpuLinear(config.hidden_size, config.vocab_size, bias=False)
 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
         self.decoder.weight.data = self.decoder.weight.data.npu()
@@ -734,8 +734,10 @@ class BertLMPredictionHead(nn.Module):
         self.decoder.bias = self.bias
 
     def forward(self, hidden_states):
-        hidden_states = self.transform(hidden_states)
+        b, s, c = hidden_states.shape
+        hidden_states = self.transform(hidden_states.view(b * s, c))
         hidden_states = self.decoder(hidden_states)
+        hidden_states = hidden_states.view(b, s, -1)
         return hidden_states
 
 

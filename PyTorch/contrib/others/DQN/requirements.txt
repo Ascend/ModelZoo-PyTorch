@@ -8,7 +8,7 @@ pathlib==1.0.1
 seaborn==0.9.0
 roboschool==1.0.49
 torchmeta==1.7.0
-torchvision==0.6.0
+torchvision
 numpy==1.21.2
 mpi4py==3.0.0
 mujoco-py==1.50.1.68

@@ -23,4 +23,4 @@ git clone https://github.com/implus/PytorchInsight
 
 8.310上执行，执行时确保device空闲  
 bash test/pth2om.sh  
-bash test/eval_acc_perf.sh --datasets_path=/root/datasets  
+bash test/eval_acc_perf.sh --datasets_path=/opt/npu  

@@ -91,6 +91,9 @@ cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
 
+# 移动数据
+sed -i "s#./dataset#${data_path}#" option.py
+
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################

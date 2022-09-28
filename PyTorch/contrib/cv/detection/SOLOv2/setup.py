@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
 import platform
@@ -48,7 +48,6 @@ version_file = 'mmdet/version.py'
 
 
 def get_git_hash():
-
     def _minimal_ext_cmd(cmd):
         # construct minimal environment
         env = {}
@@ -130,7 +129,6 @@ def make_cuda_ext(name, module, sources):
         sources=[os.path.join(*module.split('.'), p) for p in sources],
         define_macros=define_macros,
         extra_compile_args=extra_compile_args)
-
 
     # define_macros = []
     # extra_compile_args = {'cxx': []}

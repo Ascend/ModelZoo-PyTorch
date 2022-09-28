@@ -1,4 +1,4 @@
-torchvision == 0.2.2.post2
+torchvision
 numpy == 1.21.2
 Cython == 0.29.24
 opencv-python ==  4.5.3.56

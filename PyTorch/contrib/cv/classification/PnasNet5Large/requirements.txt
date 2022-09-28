@@ -1,2 +1,5 @@
-torchvision==0.2.2.post2
-onnx
+torchvision
+pillow==9.1.0
+matplotlib
+decorator
+sympy

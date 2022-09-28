@@ -20,7 +20,6 @@ import numpy as np
 
 
 def print_coco_results(results):
-
     def _print(result, ap=1, iouThr=None, areaRng='all', maxDets=100):
         iStr = ' {:<18} {} @[ IoU={:<9} | \
         area={:>6s} | maxDets={:>3d} ] = {:0.3f}'
@@ -31,7 +30,7 @@ def print_coco_results(results):
             if iouThr is None else '{:0.2f}'.format(iouThr)
         print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, result))
 
-    stats = np.zeros((12, ))
+    stats = np.zeros((12,))
     stats[0] = _print(results[0], 1)
     stats[1] = _print(results[1], 1, iouThr=.5)
     stats[2] = _print(results[2], 1, iouThr=.75)
@@ -51,7 +50,6 @@ def get_coco_style_results(filename,
                            metric=None,
                            prints='mPC',
                            aggregate='benchmark'):
-
     assert aggregate in ['benchmark', 'all']
 
     if prints == 'all':
@@ -127,7 +125,6 @@ def get_coco_style_results(filename,
 
 
 def get_voc_style_results(filename, prints='mPC', aggregate='benchmark'):
-
     assert aggregate in ['benchmark', 'all']
 
     if prints == 'all':
@@ -201,7 +198,6 @@ def get_results(filename,
 
 
 def get_distortions_from_file(filename):
-
     eval_output = mmcv.load(filename)
 
     return get_distortions_from_results(eval_output)

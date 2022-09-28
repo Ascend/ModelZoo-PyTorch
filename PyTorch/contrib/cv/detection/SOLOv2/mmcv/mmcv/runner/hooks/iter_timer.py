@@ -24,12 +24,13 @@ class IterTimerHook(Hook):
         self.t = time.time()
         self.skip_step = 0
         self.time_all = 0
+
     def before_iter(self, runner):
         runner.log_buffer.update({'data_time': time.time() - self.t})
 
     def after_iter(self, runner):
         ## npu diff
-        #runner.log_buffer.update({'time': time.time() - self.t})
+        # runner.log_buffer.update({'time': time.time() - self.t})
         cur_time = time.time()
         runner.log_buffer.update({'time': time.time() - self.t})
         if self.skip_step >= 5:

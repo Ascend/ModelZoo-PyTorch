@@ -16,6 +16,8 @@ As of the current date, Ascend-Pytorch is still inefficient for contiguous opera
     ~~~
 
 - `pip install -r requirements.txt`
+  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 
 - Download the Market-1501 dataset from https://paperswithcode.com/dataset/market-1501
 

@@ -33,6 +33,8 @@
 #
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import time
 import torch.nn as nn
 import argparse

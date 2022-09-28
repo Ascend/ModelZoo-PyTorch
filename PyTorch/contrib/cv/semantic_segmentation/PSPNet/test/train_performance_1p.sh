@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7.5 ./tools/train.py configs/pspnet/pspnet_r50-d8_512x512_20k_voc12aug.py \
+python3 ./tools/train.py configs/pspnet/pspnet_r50-d8_512x512_20k_voc12aug.py \
     --work-dir=${cur_path}/output/${Network}/$ASCEND_DEVICE_ID/ckpt \
     --device="npu" \
     --amp \

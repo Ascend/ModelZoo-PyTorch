@@ -28,6 +28,9 @@ PRETRAIN=./mbart.cc25/model.pt
 #参数配置
 data_path=""
 
+#训练步数
+train_steps=50
+
 if [[ $1 == --help || $1 == --h ]];then
 	echo "usage:./train_performance_1p.sh "
 	exit 1
@@ -88,6 +91,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+    train_steps=300
 fi
 
 export RANK_SIZE=8
@@ -105,7 +109,7 @@ do
 			let a=0+RANK_ID*24
 			let b=23+RANK_ID*24
 			taskset -c $a-$b nohup python3.7 ${cur_path}/train.py $data_path/ --fp16 --distributed-world-size 8 --npu \
-							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 50 \
+							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update $train_steps \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
 							  --task translation_from_pretrained_bart \
@@ -124,7 +128,7 @@ do
 							  --ddp-backend no_c10d > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
 	else
 		nohup python3.7 ${cur_path}/train.py $data_path/ --fp16 --distributed-world-size 8 --npu \
-							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 50 \
+							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update $train_steps \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
 							  --task translation_from_pretrained_bart \

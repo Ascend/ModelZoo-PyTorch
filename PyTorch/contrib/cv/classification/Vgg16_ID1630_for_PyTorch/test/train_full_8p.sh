@@ -88,7 +88,7 @@ python3.7 ./main.py \
     --amp \
     --opt-level 'O1' \
     --dist-backend 'hccl' \
-    --loss-scale-value 8 \
+    --loss-scale-value 'dynamic' \
     --momentum 0.9 \
     --weight-decay 1e-4 \
     --data=${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

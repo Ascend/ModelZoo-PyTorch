@@ -19,9 +19,7 @@
 	-   [6.1 开源TopN精度](#62-开源TopN精度)
 	-   [6.2 精度对比](#63-精度对比)
 -   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-
-
+ 
 
 ## 1 模型概述
 
@@ -40,12 +38,17 @@ commit ID : e29cf54486427d1423277d4c793e39ac0eeff87c
 [PCB开源仓代码](https://github.com/syfafterzy/PCB_RPP_for_reID)
 
 ## 2 环境说明
-
+```
+CANN:5.1.RC1
+cuda:11.0
+cudnn:8.2
+TensoRT:7.2.3.4
+```
 -   **[深度学习框架](#21-深度学习框架)**  
 
 ### 2.1 深度学习框架
 ```
-python==3.6.7
+python==3.7.5
 pytorch==1.8.1
 torchvision==0.2.1
 ```
@@ -53,7 +56,7 @@ torchvision==0.2.1
 ### 2.2 python第三方库
 
 ```
-numpy == 1.19.2
+numpy == 1.21.6
 scikit-learn == 0.24.1
 opencv-python == 4.5.2.54
 pillow == 8.2.0
@@ -80,7 +83,6 @@ h5py == 3.3.0
 [PCB预训练pth权重文件](https://ascend-model-file.obs.cn-north-4.myhuaweicloud.com/%E4%BA%A4%E4%BB%98%E4%BB%B6/cv/face/PCB/PCB_3_7.pt)  
 ```
 wget https://ascend-model-file.obs.cn-north-4.myhuaweicloud.com/%E4%BA%A4%E4%BB%98%E4%BB%B6/cv/face/PCB/PCB_3_7.pt
-
 ```
  **说明：模型文件名为：PCB_3_7.pt  其md5sum值为：c5bc5ddabcbcc45f127ead797fe8cb35  PCB_3_7.pt**  
 >获取的预训练模型放在本仓根目录下
@@ -103,13 +105,14 @@ python3.7 pth2onnx.py           #将PCB_3_7.pt模型转为PCB.onnx模型
 
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ```
-atc --framework=5 --model=PCB.onnx --output=PCB --input_format=NCHW --input_shape="input_1:1,3,384,128" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=./models/PCB.onnx --output=PCB_bs1 --input_format=NCHW --input_shape="input_1:1,3,384,128" --log=debug --soc_version=Ascend${chip_name}
 ```
-
+${chip_name}可通过`npu-smi info`查看，例如310P3
+![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 ## 4 数据集预处理
 
 -   **[数据集获取](#41-数据集获取)**  
@@ -148,7 +151,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -190,96 +193,116 @@ CMC Scores  market1501
 
 ## 7 性能对比
 
--   **[npu性能数据](#71-npu性能数据)**  
+-   **[310性能数据](#71-310性能数据)**  
+-   **[310P性能数据](#72-310P性能数据)**  
+-   **[T4性能数据](#73-T4性能数据)**  
+-   **[性能对比](#74-性能对比)**  
 
-### 7.1 npu性能数据
+### 7.1 310性能数据
 benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准。  
 
 1.benchmark工具在整个数据集上推理获得性能数据  
+
+    ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=/home/zhouyc/original/PCB_bs1.om -input_text_path=./query_preproc_data_Ascend310.info -input_width=128 -input_height=384 -output_binary=True -useDvpp=False
 batch1的性能，benchmark工具在整个数据集上推理后生成result/query_perf_vision_batchsize_1_device_0.txt.txt：
 ```
 -----------------Performance Summary------------------
-[e2e] throughputRate: 164.729, latency: 20445.7
-[data read] throughputRate: 184.812, moduleLatency: 5.41092
-[preprocess] throughputRate: 182.347, moduleLatency: 5.48405
-[infer] throughputRate: 175.577, Interface throughputRate: 253.855, moduleLatency: 4.91128
-[post] throughputRate: 175.573, moduleLatency: 5.69565
+[e2e] throughputRate: 104.078, latency: 32360.4
+[data read] throughputRate: 441.807, moduleLatency: 2.26343
+[preprocess] throughputRate: 431.498, moduleLatency: 2.31751
+[infer] throughputRate: 106.343, Interface throughputRate: 137.422 moduleLatency: 8.68511
+[post] throughputRate: 106.341, moduleLatency: 9.40375
 ```
-Interface throughputRate: 253.855，253.855* 4 = 1015.42既是batch1 310单卡吞吐率
+Interface throughputRate: 137.422，137.422*4=549.688即是batch1 310单卡吞吐率
 
-
-batch4的性能，benchmark工具在整个数据集上推理后生成result/query_perf_vision_batchsize_4_device_0.txt.txt：
+2.310P上各batch的吞吐率：
 ```
------------------Performance Summary------------------
-[e2e] throughputRate: 157.081, latency: 21441.2
-[data read] throughputRate: 173.63, moduleLatency: 5.75937
-[preprocess] throughputRate: 171.283, moduleLatency: 5.83829
-[infer] throughputRate: 167.102, Interface throughputRate: 353.841, moduleLatency: 4.32693
-[post] throughputRate: 41.7725, moduleLatency: 23.9392
+batch1 310单卡吞吐率：549.688 fps
+
+batch4 310单卡吞吐率：1296.72 fps
+
+batch8 310单卡吞吐率：1375.24 fps
+
+batch16 310单卡吞吐率：1411.96 fps
+
+batch32 310单卡吞吐率：1212.25 fps
+
+batch64 310单卡吞吐率：1188.12 fps
 ```
-Interface throughputRate: 353.841，353.841* 4 = 1415.364既是batch4 310单卡吞吐率
 
+### 7.2 310P性能数据
+同310，使用benchmark工具在整个数据集上推理获得性能数据：
 
-batch8的性能，benchmark工具在整个数据集上推理后生成result/query_perf_vision_batchsize_8_device_0.txt.txt：
+310P上各batch的吞吐率：
 ```
------------------Performance Summary------------------
-[e2e] throughputRate: 132.514, latency: 25416.1
-[data read] throughputRate: 139.993, moduleLatency: 7.14319
-[preprocess] throughputRate: 139.054, moduleLatency: 7.19145
-[infer] throughputRate: 139.615, Interface throughputRate: 366.98, moduleLatency: 4.21507
-[post] throughputRate: 17.4505, moduleLatency: 57.305
+batch1 310P单卡吞吐率：352.617 fps
+
+batch4 310P单卡吞吐率：1512.1 fps
+
+batch8 310P单卡吞吐率：1897.91 fps
+
+batch16 310P单卡吞吐率：1492.53 fps
+
+batch32 310P单卡吞吐率：1706.04 fps
+
+batch64 310P单卡吞吐率：1857.43 fps
 ```
-Interface throughputRate: 366.98，366.98 * 4 = 1467.92既是batch8 310单卡吞吐率
-
-batch16的性能，benchmark工具在整个数据集上推理后生成result/query_perf_vision_batchsize_16_device_0.txt.txt：  
+310P_aoe上各batch的吞吐率：
 ```
------------------Performance Summary------------------
-[e2e] throughputRate: 143.582, latency: 23457
-[data read] throughputRate: 150.172, moduleLatency: 6.65904
-[preprocess] throughputRate: 148.372, moduleLatency: 6.73981
-[infer] throughputRate: 147.201, Interface throughputRate: 362.414, moduleLatency: 4.28791
-[post] throughputRate: 9.22071, moduleLatency: 108.452
+batch1 310P单卡吞吐率：1033.16 fps
+
+batch4 310P单卡吞吐率：2364.58 fps
+
+batch8 310P单卡吞吐率：2228.24 fps
+
+batch16 310P单卡吞吐率：1999.29 fps
+
+batch32 310P单卡吞吐率：2002.7 fps
+
+batch64 310P单卡吞吐率：2039.35 fps
 ```
-Interface throughputRate: 362.414,362.414 * 4 = 1449.656既是batch16 310单卡吞吐率  
+### 7.3 T4性能数据
+在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2
 
+使用benchmark工具在整个数据集上推理获得性能数据：
 
-batch32的性能，benchmark工具在整个数据集上推理后生成result/query_perf_vision_batchsize_32_device_0.txt.txt：
+    trtexec --onnx=./models/PCB.onnx --shapes=input_1:64x3x384x128 --threads --fp16
+
+gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch
 ```
------------------Performance Summary------------------
-[e2e] throughputRate: 118.266, latency: 28478.2
-[data read] throughputRate: 126.885, moduleLatency: 7.88113
-[preprocess] throughputRate: 125.442, moduleLatency: 7.97179
-[infer] throughputRate: 124.065, Interface throughputRate: 354.632, moduleLatency: 4.30699
-[post] throughputRate: 3.90409, moduleLatency: 256.141
+[06/18/2022-21:13:40] [I] GPU Compute
+[06/18/2022-21:13:40] [I] min: 37.9453 ms
+[06/18/2022-21:13:40] [I] max: 46.219 ms
+[06/18/2022-21:13:40] [I] mean: 40.5553 ms
+[06/18/2022-21:13:40] [I] median: 40.0248 ms
+[06/18/2022-21:13:40] [I] percentile: 46.219 ms at 99%
+[06/18/2022-21:13:40] [I] total compute time: 3.822 s
 ```
-Interface throughputRate: 354.632，354.632 * 4 = 1418.528既是batch32 310单卡吞吐率
+batch64 t4单卡吞吐率：1000x1/(40.5553 /64)= 1578.09fps
 
-### 7.2 性能优化
-原始模型性能不达标原因分析：
-根据profiling性能分析的表格，OM模型完成一次离线推理的总耗时中卷积计算（54次）、数据下采样（1次）和数据上采样（1次）这三类操作占总耗时的71%（36%+21%+19%）左右。再往细分，Task ID 95~101总耗时的53.6%，及7%的任务数占了一半以上的耗时。查看对应任务的算子类型，大多为数据转换类：向量尺寸变换和数据类型转换，推测与npu中的算子硬件实现相关。(详见性能分析报告)
+T4上各batch的吞吐率：
+```
+batch4 T1单卡吞吐率：749.002 fps
 
-原始模型性能与优化后模型性能对比：
-batch1：441.128fps(Ascend310) < 1015.42fps(Ascend310)  
-batch16：1024.56(Ascend310) < 1449.656fps(Ascend310)  
+batch4 T4单卡吞吐率：1209.63 fps
 
+batch8 T4单卡吞吐率：1383.09 fps
 
-#### 7.2.1固定模型输入的batch size，并结合onnxsim工具对onnx模型进行优化
-优化动机：通过Netron查看onnx的模型结构图发现有一些常量算子可以折叠
+batch16 T4单卡吞吐率：1495.91 fps
 
-优化样例：
+batch32 T4单卡吞吐率：1554.99 fps
 
-    python -m onnxsim --input-shape="16,3,384,128" ./PCB.onnx ./PCB_sim_bs16.onnx
+batch32 T4单卡吞吐率：1578.09 fps
+```
 
-#### 7.42.2.把ReduceL2算子拆分为mul+sum+sqrt算子（无损）
-优化动机：Profilingdata可以看到ReduceL2这个算子耗时占比较大，原因是ReduceL2这个算子缺少优化，但是拆分后的算子是经过优化的，且拆分算子后模型的精度保持不变，因此选择拆分ReduceL2算子
-
-优化样例：
-
-    python ../scripts/split_reducelp.py ./PCB_sim_bs16.onnx ./PCB_sim_split_bs16.onnx
-
-#### 7.2.3.atc自动优化选项——autotune
-优化动机：atc工具提供的自动优化选项
-
-优化样例：
-
-    atc --framework=5 --model=./PCB_sim_bs4.onnx --output=./PCB_sim_autotune_bs4 --input_format=NCHW --input_shape="input_1:4,3,384,128" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
+### 7.4 性能对比
+|     |  310  | 310P  | 310P_aoe |T4  |310P_aoe/310  |310P_aoe/T4  |
+|  ----  |  ----  | ----  | ----  |----  |----  |----  |
+|bs1| 549.688  | 352.617 |1033.16  |749.002  |1.879538938  |1.37938224  |
+|bs4|1296.72|	1512.1|	2364.58|	1209.63|	1.82350292	|	1.95479237|
+|bs8|1375.24|	1897.91|	2228.24|	1383.09	|1.620260086|	1.61106487|
+|bs16|1411.96	|1492.53|	1999.29	|1495.91|	1.415967874	|1.33650037|
+|bs32|1212.25|	1706.04|	2002.7|	1554.99	|1.652054695|	1.28791759|
+|bs64|1188.12	|1857.43	|2039.35|	1578.09	|1.71644542	|1.29228829|
+| | | | | | |
+|最优bs|	1411.96|	1897.91|	2364.58	|1578.09	|1.67468|	1.49838|

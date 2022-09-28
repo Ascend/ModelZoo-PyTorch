@@ -1,0 +1,11 @@
+ NOTICES
+
+ This repository incorporates material as listed below or described in the code.
+ 
+ Component:
+ main.py, losses.py, datasets.py, engine.py, utils.py, logger.py, samplers.py
+ 
+ Open Source License/Copyright Notice:
+ MIT License
+ Copyright (c) 2015-present, Facebook, Inc.
+ All rights reserved.

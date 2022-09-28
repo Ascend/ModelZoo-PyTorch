@@ -22,7 +22,7 @@ import numpy as np
 import torchvision
 from torchvision import transforms, datasets, models
 import os
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 else:
     import torch.npu

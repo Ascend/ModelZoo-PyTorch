@@ -95,7 +95,6 @@ taskset -c $PID_START-$PID_END python3.7 -u train_8p.py   \
     --world_size 8  \
     --distributed \
     --loss-scale 64 \
-    --use-multi-epochs-loader  \
     --no-prefetcher \
     --local_rank $RANK_ID  \
     --lr=${learning_rate}  \

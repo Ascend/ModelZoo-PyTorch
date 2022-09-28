@@ -66,6 +66,10 @@ do
     echo "Device ID: $RANK_ID"
     export RANK_ID=$RANK_ID
     export ASCEND_DEVICE_ID=$RANK_ID
+    #HCCL白名单开关，1-关闭/0-开启
+    export HCCL_WHITELIST_DISABLE=1
+    export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+    export HCCL_CONNECT_TIMEOUT=1800
     ASCEND_DEVICE_ID=$RANK_ID
 
     #创建DeviceID输出目录，不需要修改
@@ -89,7 +93,7 @@ do
         --weight-decay 1e-4 \
         --apex \
         --apex-opt-level O2 \
-        --loss_scale_value 1024 \
+        --loss_scale_value dynamic \
         --seed 1234 \
         --print-freq 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done

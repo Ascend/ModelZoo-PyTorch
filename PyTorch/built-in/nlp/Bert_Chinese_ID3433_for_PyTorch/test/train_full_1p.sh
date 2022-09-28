@@ -15,6 +15,8 @@ train_epochs=3
 batch_size=16
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
+warmup_ratio=0.0
+weight_decay=0.0
 
 #获取外部传参，可扩展
 for para in $*
@@ -25,6 +27,10 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --model_size* ]];then
       model_size=`echo ${para#*=}`
+    elif [[ $para == --warmup_ratio* ]];then
+      warmup_ratio=`echo ${para#*=}`
+    elif [[ $para == --weight_decay* ]];then
+      weight_decay=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
       device_id=`echo ${para#*=}`
     fi
@@ -83,6 +89,7 @@ nohup python3.7 run_mlm.py \
         --train_file ${data_path} \
         --eval_metric_path ./accuracy.py \
         --line_by_line \
+        --dataloader_drop_last true \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
@@ -94,6 +101,8 @@ nohup python3.7 run_mlm.py \
         --do_eval \
         --eval_accumulation_steps 100 \
         --fp16 \
+        --warmup_ratio ${warmup_ratio} \
+        --weight_decay ${weight_decay} \
         --fp16_opt_level O2 \
         --loss_scale 8192 \
         --use_combine_grad \

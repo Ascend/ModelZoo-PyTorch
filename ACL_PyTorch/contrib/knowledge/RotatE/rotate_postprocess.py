@@ -16,6 +16,7 @@ import pdb
 import torch
 import os
 import numpy as np
+from tqdm import tqdm
 
 def postProcesss(result_path, data_head, data_tail):
 
@@ -41,9 +42,9 @@ def postProcesss(result_path, data_head, data_tail):
     tail_pos_list.sort(key=lambda x: int(x.split('-')[0][3:]))
 
     logs = []
-    for i in range(len(bin_head_list)):
+    for i in tqdm(range(len(bin_head_list))):
         bin_path = os.path.join(head_mulu_path, bin_head_list[i])
-        score = np.loadtxt(bin_path)
+        score = np.load(bin_path)
         score = torch.from_numpy(score)
         ite_path = os.path.join(data_head+'/post', head_ite_list[i])
         filter_bias = np.loadtxt(ite_path)
@@ -70,9 +71,9 @@ def postProcesss(result_path, data_head, data_tail):
                 'HITS@3': 1.0 if ranking <= 3 else 0.0,
                 'HITS@10': 1.0 if ranking <= 10 else 0.0,
             })
-    for i in range(len(bin_tail_list)):
+    for i in tqdm(range(len(bin_tail_list))):
         bin_path = os.path.join(tail_mulu_path, bin_tail_list[i])
-        score = np.loadtxt(bin_path)
+        score = np.load(bin_path)
         score = torch.from_numpy(score)
         ite_path = os.path.join(data_tail + '/post', tail_ite_list[i])
         filter_bias = np.loadtxt(ite_path)

@@ -30,7 +30,7 @@ class ContextBlock(nn.Module):
                  inplanes,
                  ratio,
                  pooling_type='att',
-                 fusion_types=('channel_add', )):
+                 fusion_types=('channel_add',)):
         super(ContextBlock, self).__init__()
         assert pooling_type in ['avg', 'att']
         assert isinstance(fusion_types, (list, tuple))

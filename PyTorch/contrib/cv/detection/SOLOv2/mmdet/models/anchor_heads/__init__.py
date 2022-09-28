@@ -27,6 +27,7 @@
 # from .ssd_head import SSDHead
 from .solo_head import SOLOHead
 from .solov2_head import SOLOv2Head
+
 # from .solov2_light_head import SOLOv2LightHead
 # from .decoupled_solo_head import DecoupledSOLOHead
 # from .decoupled_solo_light_head import DecoupledSOLOLightHead

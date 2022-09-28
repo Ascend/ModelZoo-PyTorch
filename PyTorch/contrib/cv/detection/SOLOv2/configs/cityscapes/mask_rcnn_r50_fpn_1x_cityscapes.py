@@ -165,19 +165,19 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             ann_file=data_root +
-            'annotations/instancesonly_filtered_gtFine_train.json',
+                     'annotations/instancesonly_filtered_gtFine_train.json',
             img_prefix=data_root + 'train/',
             pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         ann_file=data_root +
-        'annotations/instancesonly_filtered_gtFine_val.json',
+                 'annotations/instancesonly_filtered_gtFine_val.json',
         img_prefix=data_root + 'val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        'annotations/instancesonly_filtered_gtFine_val.json',
+                 'annotations/instancesonly_filtered_gtFine_val.json',
         img_prefix=data_root + 'val/',
         pipeline=test_pipeline))
 # optimizer

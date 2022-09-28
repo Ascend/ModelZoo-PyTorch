@@ -33,10 +33,11 @@ import argparse
 import os
 import shutil
 import time
-
 import torch
-import torch.nn as nn
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 import torch.nn.parallel
+import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
@@ -49,21 +50,20 @@ import torch.distributed as dist
 import apex
 from apex import amp
 
-
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 model_names.append('mobilenet')
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('--data', metavar='DIR', default = "/home/jcwang/dataset/imagenet-data",
+parser.add_argument('--data', metavar='DIR', default="/opt/npu/imagenet",
                     help='path to dataset')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='mobilenet',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
+                         ' | '.join(model_names) +
+                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--max_steps', default=None, type=int, metavar='N',
@@ -85,10 +85,12 @@ parser.add_argument('--print-freq', '-p', default=10, type=int,
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                    default = 0,
+                    default=0,
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
+parser.add_argument('--prof', action='store_true',
+                    help='use profiling to evaluate the performance of model')
 
 # Mixed precision training parameters
 parser.add_argument('--apex', action='store_true',
@@ -103,9 +105,9 @@ parser.add_argument('--seed',
                     default=1,
                     type=int,
                     help='Manually set random seed')
-## for ascend 910
-parser.add_argument('--device_id', default=5, type=int, help='device id')
-
+# for ascend 910
+parser.add_argument('--device_id', default=4, type=int, help='device id')
+CALCULATE_DEVICE = "npu:4"
 
 # distributed training parameters
 parser.add_argument('--world-size', default=1, type=int,
@@ -123,8 +125,8 @@ parser.add_argument('--distributed',
                     help='Use multi-processing distributed training to launch '
                          'N processes per node, which has N GPUs.')
 
-
 best_prec1 = 0
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -142,16 +144,16 @@ class Net(nn.Module):
                 nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
                 nn.BatchNorm2d(inp),
                 nn.ReLU(inplace=True),
-    
+
                 nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
                 nn.BatchNorm2d(oup),
                 nn.ReLU(inplace=True),
             )
 
         self.model = nn.Sequential(
-            conv_bn(  3,  32, 2), 
-            conv_dw( 32,  64, 1),
-            conv_dw( 64, 128, 2),
+            conv_bn(3, 32, 2),
+            conv_dw(32, 64, 1),
+            conv_dw(64, 128, 2),
             conv_dw(128, 128, 1),
             conv_dw(128, 256, 2),
             conv_dw(256, 256, 1),
@@ -173,6 +175,7 @@ class Net(nn.Module):
         x = self.fc(x)
         return x
 
+
 def mobilenet(path="./checkpoint.pth.tar"):
     net = Net()
     state_dict = torch.load(path)
@@ -187,7 +190,7 @@ def main():
     os.environ['MASTER_ADDR'] = '127.0.0.1'
     os.environ['MASTER_PORT'] = '29688'
 
-    #设置seed
+    # 设置seed
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -230,14 +233,13 @@ def main():
 
     model = model.to(device)
 
-
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
 
-    #optimizer = torch.optim.SGD(model.parameters(), args.lr,
+    # optimizer = torch.optim.SGD(model.parameters(), args.lr,
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+                                            momentum=args.momentum,
+                                            weight_decay=args.weight_decay)
 
     if args.apex:
         model, optimizer = amp.initialize(model, optimizer,
@@ -248,7 +250,7 @@ def main():
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.device_id])
 
-   # optionally resume from a checkpoint
+    # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
             print("=> loading checkpoint '{}'".format(args.resume))
@@ -287,7 +289,6 @@ def main():
         batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=False, sampler=train_sampler, drop_last=True)
 
-
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
             transforms.Resize(256),
@@ -302,6 +303,9 @@ def main():
         validate(val_loader, model, criterion, args)
         return
 
+    if args.prof:
+        profiling(train_loader, model, criterion, optimizer, args)
+        return
 
     for epoch in range(args.start_epoch, args.epochs):
 
@@ -324,8 +328,36 @@ def main():
             'arch': args.arch,
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
-            'optimizer' : optimizer.state_dict(),
+            'optimizer': optimizer.state_dict(),
         }, is_best)
+
+
+def profiling(data_loader, model, criterion, optimizer, args):
+    # switch to train mode
+    model.train()
+
+    def update(model, images, target, optimizer):
+        output = model(images)
+        loss = criterion(output, target)
+        print(args.apex)
+        with amp.scale_loss(loss, optimizer) as scaled_loss:
+            scaled_loss.backward()
+        optimizer.zero_grad()
+        optimizer.step()
+
+    for step, (images, target) in enumerate(data_loader):
+        # loc = 'npu:{}'.format(args.gpu)
+        loc = CALCULATE_DEVICE
+        images = images.to(loc, non_blocking=True).to(torch.float)
+        target = target.to(torch.int32).to(loc, non_blocking=True)
+        if step < 5:
+            update(model, images, target, optimizer)
+        else:
+            with torch.autograd.profiler.profile(use_npu=True) as prof:
+                update(model, images, target, optimizer)
+            break
+
+    prof.export_chrome_trace("output.prof")
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args, device, apex=False):
@@ -381,8 +413,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, device, apex=F
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                   epoch, i, len(train_loader), batch_time=batch_time, img_per_s=img_per_s,
-                   data_time=data_time, loss=losses, top1=top1, top5=top5))
+                epoch, i, len(train_loader), batch_time=batch_time, img_per_s=img_per_s,
+                data_time=data_time, loss=losses, top1=top1, top5=top5))
         if args.max_steps and i > args.max_steps:
             break
 
@@ -398,7 +430,7 @@ def validate(val_loader, model, criterion, device, args):
     end = time.time()
     for i, (input, target) in enumerate(val_loader):
         target = target.to(device)
-        input_var  = input.to(device)
+        input_var = input.to(device)
         target_var = target
 
         # compute output
@@ -421,8 +453,8 @@ def validate(val_loader, model, criterion, device, args):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses,
-                   top1=top1, top5=top5))
+                i, len(val_loader), batch_time=batch_time, loss=losses,
+                top1=top1, top5=top5))
 
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
           .format(top1=top1, top5=top5))
@@ -438,6 +470,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 

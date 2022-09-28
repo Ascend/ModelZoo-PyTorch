@@ -38,6 +38,8 @@ import datetime
 import numpy as np
 import time
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import json
 

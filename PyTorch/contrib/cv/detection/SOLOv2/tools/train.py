@@ -20,6 +20,9 @@ import time
 
 import mmcv
 import torch
+
+if torch.__version__ >= '1.8':
+    import torch_npu
 from mmcv import Config
 from mmcv.runner import init_dist, load_state_dict
 
@@ -28,6 +31,7 @@ from mmdet.apis import set_random_seed, train_detector
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.utils import get_root_logger
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -44,7 +48,7 @@ def parse_args():
         type=int,
         default=1,
         help='number of gpus to use '
-        '(only applicable to non-distributed training)')
+             '(only applicable to non-distributed training)')
     parser.add_argument(
         '--data_root',
         help='the path of dataset',
@@ -61,6 +65,7 @@ def parse_args():
         action='store_true',
         help='whether fine-tune model, change class num + 1')
     parser.add_argument('--total_epochs', type=int, default=12, help='random seed')
+    parser.add_argument('--train_performance', type=bool, default=False, help='train performace')
     parser.add_argument(
         '--deterministic',
         action='store_true',
@@ -88,6 +93,14 @@ def parse_args():
 
 
 def main():
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = 'enable'
+    option["ACL_OP_COMPILER_CACHE_DIR"] = './cache'
+
+    option["ACL_OP_SELECT_IMPL_MODE"] = 'high_precision'
+    option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
+    print('option', option)
+    torch.npu.set_option(option)
     os.environ['MASTER_ADDR'] = '127.0.0.1'
     os.environ['MASTER_PORT'] = '29688'
     args = parse_args()
@@ -177,7 +190,8 @@ def main():
         cfg,
         distributed=distributed,
         validate=args.validate,
-        timestamp=timestamp)
+        timestamp=timestamp,
+        train_performance=args.train_performance)
 
 
 if __name__ == '__main__':

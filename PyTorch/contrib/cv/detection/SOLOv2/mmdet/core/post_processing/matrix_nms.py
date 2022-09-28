@@ -58,7 +58,7 @@ def matrix_nms(seg_masks, cate_labels, cate_scores, kernel='gaussian', sigma=2.0
         compensate_matrix = torch.exp(-1 * sigma * (compensate_iou ** 2))
         decay_coefficient, _ = (decay_matrix / compensate_matrix).min(0)
     elif kernel == 'linear':
-        decay_matrix = (1-decay_iou)/(1-compensate_iou)
+        decay_matrix = (1 - decay_iou) / (1 - compensate_iou)
         decay_coefficient, _ = decay_matrix.min(0)
     else:
         raise NotImplementedError
@@ -111,7 +111,7 @@ def multiclass_nms(multi_bboxes,
             _scores *= score_factors[cls_inds]
         cls_dets = torch.cat([_bboxes, _scores[:, None]], dim=1)
         cls_dets, _ = nms_op(cls_dets, **nms_cfg_)
-        cls_labels = multi_bboxes.new_full((cls_dets.shape[0], ),
+        cls_labels = multi_bboxes.new_full((cls_dets.shape[0],),
                                            i - 1,
                                            dtype=torch.long)
         bboxes.append(cls_dets)
@@ -126,6 +126,6 @@ def multiclass_nms(multi_bboxes,
             labels = labels[inds]
     else:
         bboxes = multi_bboxes.new_zeros((0, 5))
-        labels = multi_bboxes.new_zeros((0, ), dtype=torch.long)
+        labels = multi_bboxes.new_zeros((0,), dtype=torch.long)
 
     return bboxes, labels

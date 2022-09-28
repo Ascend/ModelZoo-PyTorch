@@ -28,8 +28,9 @@ import random
 import signal
 import threading
 import traceback
-import torch.npu
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from pycls.core.config import cfg
 
 

@@ -36,7 +36,7 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
 import torch
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 import torch.nn as nn
 import torchvision.utils
@@ -528,7 +528,8 @@ def main():
         distributed=args.distributed,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
-        use_multi_epochs_loader=args.use_multi_epochs_loader
+        use_multi_epochs_loader=args.use_multi_epochs_loader,
+        persistent_workers=False
     )
 
     loader_eval = create_loader(
@@ -544,6 +545,7 @@ def main():
         distributed=args.distributed,
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
+        persistent_workers=False
     )
 
     # setup loss function

@@ -19,7 +19,7 @@ from math import log10
 
 import numpy as np
 import torch
-if torch.__version__>= "1.8.1":
+if torch.__version__>= "1.8":
     print("import torch_npu")
     import torch_npu
 import torchvision.utils as utils

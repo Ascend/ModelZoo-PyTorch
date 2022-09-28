@@ -1,0 +1,11 @@
+packaging
+regex
+requests
+sentencepiece
+six
+sklearn
+tqdm
+transformers 
+protobuf==3.19.0
+decorator
+sympy 

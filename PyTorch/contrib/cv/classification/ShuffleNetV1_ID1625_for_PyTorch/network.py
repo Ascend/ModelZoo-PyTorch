@@ -21,10 +21,7 @@
 
 import torch
 import torch.nn as nn
-import torch.npu
-from apex import amp
 from blocks import ShuffleV1Block
-from utils import get_parameters, CrossEntropyLabelSmooth
 
 class ShuffleNetV1(nn.Module):
     def __init__(self, input_size=224, n_class=1000, model_size='2.0x', group=None):
@@ -88,12 +85,10 @@ class ShuffleNetV1(nn.Module):
         self._initialize_weights()
 
     def forward(self, x):
-        #print('****1')
         x = self.first_conv(x)
         x = self.maxpool(x)
         x = self.features(x)
 
-        #x = self.globalpool(x.float().cpu()).npu().half()
         x = self.globalpool(x)
         x = x.contiguous().view(-1, self.stage_out_channels[-1])
         x = self.classifier(x)
@@ -124,52 +119,9 @@ class ShuffleNetV1(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
 if __name__ == "__main__":
-    print('**1')
-    model = ShuffleNetV1(group=3, model_size='1.0x')
+    model = ShuffleNetV1(group=3)
+    # print(model)
 
-    # add hook
-    def hook_func(name, module):
-        def hook_function(module, inputs, outputs):
-            print(name+' inputs')
-            print(name+' outputs')
-        return hook_function
-
-    for name, module in model.named_modules():
-        module.register_forward_hook(hook_func('[forward]: '+name, module))
-        module.register_backward_hook(hook_func('[backward]: '+name, module))
-
-    print('**2')
-    device = "npu:0"
-    torch.npu.set_device(device)
-    criterion_smooth = CrossEntropyLabelSmooth(1000, 0.1)
-    loss_function = criterion_smooth.to(device)
-    print('**2.5')
-    model = model.npu()
-    print("model to npu ok ")
-    optimizer = torch.optim.SGD(get_parameters(model),
-                            lr=0.5,
-                            momentum=0.9,
-                            weight_decay=4e-5)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2")
-
-    print('**3')
-    bs = 5
-    test_data = torch.rand(bs, 3, 224, 224, requires_grad=True)
-    target = torch.randint(1,10,(bs,))
-    target = target.type(torch.LongTensor)
-    target = target.to(torch.int32)
-    target = target.npu()
-    test_data = test_data.npu()
-    print('**4')
+    test_data = torch.rand(5, 3, 224, 224)
     test_outputs = model(test_data)
-    print('**5')
     print(test_outputs.size())
-
-    #loss = test_outputs.sum()
-    loss = loss_function(test_outputs, target)
-    optimizer.zero_grad()
-    print(loss.size())
-    with amp.scale_loss(loss, optimizer) as scaled_loss:
-        scaled_loss.backward()
-    optimizer.step()
-    print('**OK')

@@ -102,7 +102,7 @@ class MaskIoUHead(nn.Module):
         mask_iou = self.fc_mask_iou(x)
         return mask_iou
 
-    @force_fp32(apply_to=('mask_iou_pred', ))
+    @force_fp32(apply_to=('mask_iou_pred',))
     def loss(self, mask_iou_pred, mask_iou_targets):
         pos_inds = mask_iou_targets > 0
         if pos_inds.sum() > 0:
@@ -112,7 +112,7 @@ class MaskIoUHead(nn.Module):
             loss_mask_iou = mask_iou_pred * 0
         return dict(loss_mask_iou=loss_mask_iou)
 
-    @force_fp32(apply_to=('mask_pred', ))
+    @force_fp32(apply_to=('mask_pred',))
     def get_target(self, sampling_results, gt_masks, mask_pred, mask_targets,
                    rcnn_train_cfg):
         """Compute target of mask IoU.
@@ -159,7 +159,7 @@ class MaskIoUHead(nn.Module):
         gt_full_areas = mask_targets.sum((-1, -2)) / (area_ratios + 1e-7)
 
         mask_iou_targets = overlap_areas / (
-            mask_pred_areas + gt_full_areas - overlap_areas)
+                mask_pred_areas + gt_full_areas - overlap_areas)
         return mask_iou_targets
 
     def _get_area_ratio(self, pos_proposals, pos_assigned_gt_inds, gt_masks):
@@ -180,15 +180,15 @@ class MaskIoUHead(nn.Module):
                 gt_mask_in_proposal = gt_mask[y1:y2 + 1, x1:x2 + 1]
 
                 ratio = gt_mask_in_proposal.sum() / (
-                    gt_instance_mask_area[pos_assigned_gt_inds[i]] + 1e-7)
+                        gt_instance_mask_area[pos_assigned_gt_inds[i]] + 1e-7)
                 area_ratios.append(ratio)
             area_ratios = torch.from_numpy(np.stack(area_ratios)).float().to(
                 pos_proposals.device)
         else:
-            area_ratios = pos_proposals.new_zeros((0, ))
+            area_ratios = pos_proposals.new_zeros((0,))
         return area_ratios
 
-    @force_fp32(apply_to=('mask_iou_pred', ))
+    @force_fp32(apply_to=('mask_iou_pred',))
     def get_mask_scores(self, mask_iou_pred, det_bboxes, det_labels):
         """Get the mask scores.
 

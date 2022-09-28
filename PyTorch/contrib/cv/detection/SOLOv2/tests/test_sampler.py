@@ -124,7 +124,6 @@ def _context_for_ohem():
 
 
 def test_ohem_sampler():
-
     assigner = MaxIoUAssigner(
         pos_iou_thr=0.5,
         neg_iou_thr=0.5,
@@ -160,7 +159,7 @@ def test_ohem_sampler():
         neg_pos_ub=-1,
         add_gt_as_proposals=True)
 
-    feats = [torch.rand(1, 256, int(2**i), int(2**i)) for i in [6, 5, 4, 3, 2]]
+    feats = [torch.rand(1, 256, int(2 ** i), int(2 ** i)) for i in [6, 5, 4, 3, 2]]
     sample_result = sampler.sample(
         assign_result, bboxes, gt_bboxes, gt_labels, feats=feats)
 
@@ -169,7 +168,6 @@ def test_ohem_sampler():
 
 
 def test_ohem_sampler_empty_gt():
-
     assigner = MaxIoUAssigner(
         pos_iou_thr=0.5,
         neg_iou_thr=0.5,
@@ -200,7 +198,7 @@ def test_ohem_sampler_empty_gt():
         neg_pos_ub=-1,
         add_gt_as_proposals=True)
 
-    feats = [torch.rand(1, 256, int(2**i), int(2**i)) for i in [6, 5, 4, 3, 2]]
+    feats = [torch.rand(1, 256, int(2 ** i), int(2 ** i)) for i in [6, 5, 4, 3, 2]]
 
     sample_result = sampler.sample(
         assign_result, bboxes, gt_bboxes, gt_labels, feats=feats)
@@ -240,7 +238,7 @@ def test_ohem_sampler_empty_pred():
         neg_pos_ub=-1,
         add_gt_as_proposals=True)
 
-    feats = [torch.rand(1, 256, int(2**i), int(2**i)) for i in [6, 5, 4, 3, 2]]
+    feats = [torch.rand(1, 256, int(2 ** i), int(2 ** i)) for i in [6, 5, 4, 3, 2]]
 
     sample_result = sampler.sample(
         assign_result, bboxes, gt_bboxes, gt_labels, feats=feats)

@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch.autograd import Variable
 import os
@@ -349,7 +349,7 @@ def main_worker(gpu, ngpus_per_node, args):
         if args.device == 'npu':
             loc = 'npu:{}'.format(args.gpu)
             torch.npu.set_device(loc)
-            model = model.to(args.gpu)
+            model = model.to(loc)
         else:
             torch.cuda.set_device(args.gpu)
             model = model.cuda(args.gpu)

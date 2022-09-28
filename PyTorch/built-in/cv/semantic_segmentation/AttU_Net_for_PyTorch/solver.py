@@ -34,6 +34,8 @@ import numpy as np
 import time
 import datetime
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torchvision
 from torch import optim
 from torch.autograd import Variable
@@ -114,7 +116,9 @@ class Solver(object):
         self.optimizer = apex.optimizers.NpuFusedAdam(list(self.unet.parameters()), self.lr, [self.beta1, self.beta2])
 
         if self.config.apex:
-            self.unet, self.optimizer = amp.initialize(self.unet, self.optimizer,opt_level=self.config.apex_opt_level, loss_scale=self.config.loss_scale_value,combine_grad=True)
+            self.unet, self.optimizer = amp.initialize(self.unet,
+                                                       self.optimizer,
+                                                       opt_level=self.config.apex_opt_level, loss_scale="dynamic",combine_grad=True)
 
         if self.config.distributed:
             self.unet = torch.nn.parallel.DistributedDataParallel(self.unet, device_ids=[self.config.npu_idx])
@@ -188,6 +192,7 @@ class Solver(object):
             start_time = 0
             steps = len(self.train_loader)
             for i, (images, GT) in enumerate(self.train_loader):
+            
                 # GT : Ground Truth
                 if i == 5:
                     start_time = time.time()
@@ -340,7 +345,7 @@ class Solver(object):
                 JS += get_JS(SR,GT)
                 DC += get_DC(SR,GT)
 
-                length += images.size(0)
+                length += 1
 
             acc = acc/length
             SE = SE/length

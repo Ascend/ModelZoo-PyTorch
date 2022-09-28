@@ -126,7 +126,7 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, opt,
         if i >= 2:
             tot_time.update(current_batch_time)
 
-        if device_ids == 0:  # distributed master or 1p
+        if (device_ids == 0) or (opt.device_num == 1):  # distributed master or 1p
             batch_logger.log({
                 'date': time.strftime('%Y%m%d%H%M%S', time.localtime(time.time())),
                 'epoch': epoch,
@@ -159,7 +159,7 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, opt,
 
     epoch_fps = opt.batch_size * opt.device_num / tot_time.avg
 
-    if device_ids == 0:  # distributed master or 1p
+    if (device_ids == 0) or (opt.device_num == 1):   # distributed master or 1p
         epochlog = {
             'date': time.strftime('%Y%m%d%H%M%S', time.localtime(time.time())),
             'epoch': epoch,

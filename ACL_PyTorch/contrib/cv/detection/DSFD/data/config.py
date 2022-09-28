@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ class Config(object):
     filter_min_face = True
 
     # train config
-    LR_STEPS = (80000,100000,120000)
+    LR_STEPS = (80000, 100000, 120000)
     MAX_STEPS = 150000
     EPOCHES = 100
 

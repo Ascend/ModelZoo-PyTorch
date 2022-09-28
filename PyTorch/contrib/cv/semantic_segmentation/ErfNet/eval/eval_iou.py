@@ -35,6 +35,8 @@
 # ============================================================================
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn.functional as F
 import os
 import importlib
@@ -233,7 +235,7 @@ if __name__ == '__main__':
     parser.add_argument('--amp', default=False, action='store_true',
                         help='use amp to train the model')
     parser.add_argument('--opt-level', default="O2", type=str, help='apex optimize level')
-    parser.add_argument('--loss-scale-value', default='128', type=int, help='static loss scale value')
+    parser.add_argument('--loss-scale-value', default='128', help='static loss scale value')
 
     # device setting
     parser.add_argument("--device", default="npu", type=str)    

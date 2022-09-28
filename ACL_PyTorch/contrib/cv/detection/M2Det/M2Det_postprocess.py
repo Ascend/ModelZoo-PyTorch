@@ -24,6 +24,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import torch
 import pickle
+import json
 from utils.timer import Timer
 from layers.functions import Detect, PriorBox
 from data import BaseTransform
@@ -49,6 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('--test', action='store_true', help='to submit a test file')
     parser.add_argument('--COCO_imgs', default="~/data/coco/images", help='COCO images root')
     parser.add_argument('--COCO_anns', default="~/data/coco/annotations", help='COCO annotations root')
+    parser.add_argument("--is_ais_infer", action="store_true")
     args = parser.parse_args()
     
     logr = set_train_log()
@@ -86,6 +88,20 @@ if __name__ == '__main__':
             img_width = int(temp[2])
             img_height = int(temp[3])
             img_size_dict[img_name] = (img_width, img_height, img_file_path)
+        # convert ais_infer result name to original bin_file name
+    if args.is_ais_infer:
+        name_dic = dict()
+        with open(os.path.join(bin_path, "sumary.json"), 'r') as f:
+            sumary = json.load(f)
+        for value in sumary["filesinfo"].values():
+            img_name = value["infiles"][0].split("/")[-1].split(".")[0]
+            out_name_0 = value["outfiles"][0].split("/")[-1]
+            out_name_0 = out_name_0[:out_name_0.rfind('_')]
+            out_name_1 = value["outfiles"][1].split("/")[-1]
+            out_name_1 = out_name_1[:out_name_1.rfind('_')]
+            name_dic[out_name_1] = img_name
+            name_dic[out_name_0] = img_name
+            print(out_name_0, ", ", out_name_1, ",", img_name)
 
     total_img = set([name[:name.rfind('_')] for name in os.listdir(bin_path) if "bin" in name])
     num_images = len(total_img)
@@ -103,21 +119,23 @@ if __name__ == '__main__':
         # load all detected output tensor
         _t['im_detect'].tic()
         for num in range(1, args.net_out_num + 1):
-            if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if num == 1:
+            if args.is_ais_infer:
+                    num -= 1
+            if os.path.exists(path_base + "_" + str(num) + ".bin"):  
+                if args.is_ais_infer and num==0 or not args.is_ais_infer and num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")#scores
-                    score = np.reshape(buf, [32760, 81])
-                    
-                elif num == 2:
+                    score = np.reshape(buf, [32760, 81])             
+                elif args.is_ais_infer and num==1 or not args.is_ais_infer and num == 2:            
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")#int64 boxes
-                    box = np.reshape(buf, [1, 32760, 4])
-    
+                    box = np.reshape(buf, [1, 32760, 4])   
             else:
                 print("[ERROR] file not exist", path_base + "_" + str(num) + ".bin")
         
         out = (torch.from_numpy(box), torch.from_numpy(score))
         boxes, scores = detector.forward(out, priors)
         
+        if args.is_ais_infer:
+            bin_file = name_dic[bin_file]
         current_img_size = img_size_dict[bin_file]
         w = current_img_size[0]
         h = current_img_size[1]

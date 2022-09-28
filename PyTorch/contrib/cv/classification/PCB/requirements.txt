@@ -1,4 +1,3 @@
-apex
 tensor-fused-plugin
 torchvision
 scikit-learn

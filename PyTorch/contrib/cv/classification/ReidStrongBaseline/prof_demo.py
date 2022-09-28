@@ -18,6 +18,8 @@
 """
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.optim as optim
 import time
@@ -91,7 +93,7 @@ if __name__ == '__main__':
                         help='set which type of device used. Support cpu, cuda:0(device_id), npu:0(device_id).')
     parser.add_argument('--amp', default=False, action='store_true',
                         help='use amp during prof')
-    parser.add_argument('--loss-scale', default=64.0, type=float,
+    parser.add_argument('--loss-scale', default='dynamic',
                         help='loss scale using in amp, default 64.0, -1 means dynamic')
     parser.add_argument('--opt-level', default='O2', type=str,
                         help='opt-level using in amp, default O2')
@@ -159,5 +161,5 @@ if __name__ == '__main__':
     # 4. profiling
     with torch.autograd.profiler.profile(**prof_kwargs) as prof:
         run(loss_func, center_criterion)
-    print(prof.key_averages().table())
+    # print(prof.key_averages().table())
     prof.export_chrome_trace("pytorch_prof_%s.prof" % args.device + ('_amp' if args.amp else ''))

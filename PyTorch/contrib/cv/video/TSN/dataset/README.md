@@ -14,7 +14,7 @@ For basic dataset information, you can refer to the dataset [website](https://ww
 
 Before we start, please make sure that you have set environment constants. If not, you can run the following script.
 ```
-source ../test/env.sh
+source ../test/env_npu.sh
 ```
 
 ## Step 1. Prepare Annotations

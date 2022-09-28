@@ -12,7 +12,7 @@ export RANK_SIZE=8
 data_path=""
 
 # 训练epoch
-train_epochs=300
+train_epochs=100
 # 学习率
 learning_rate=1e-4
 # 加载数据进程数

@@ -31,7 +31,7 @@ from models import ADNet
 from dataset import prepare_data, Dataset
 from collections import OrderedDict
 from utils import *
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 
 parser = argparse.ArgumentParser(description="DnCNN")
@@ -91,7 +91,7 @@ def main():
     else:
         os.environ['MASTER_ADDR'] = '127.0.0.1'         #can change to real ip
         os.environ['MASTER_PORT'] = '29688'         #set port can be change
-        os.environ['RANK'] = str(opt.local_rank)
+        opt.local_rank = int(os.environ['RANK_ID'])
         local_device = torch.device(f'npu:{opt.local_rank}')
         torch.npu.set_device(local_device)
         if opt.local_rank == 0:
@@ -99,7 +99,7 @@ def main():
         dist.init_process_group(backend='hccl',world_size=opt.world_size, rank=opt.local_rank)
 
     #set direction for saving model 
-    save_dir = opt.outf + 'sigma' + str(opt.noiseL) + '_' + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + '/'
+    save_dir = opt.outf + 'sigma' + str(opt.noiseL) + '/'
     # save_dir = opt.outf + '_' + str(opt.noiseL) + '_'+str(opt.num_gpus) + 'full' + '_' + 'lossscale8'
 
     #create direction
@@ -174,10 +174,10 @@ def main():
         if opt.local_rank == 0:
             print('learning rate %f' % current_lr)
         # train
+        fps_s = 0
         for i, data in enumerate(loader_train, 0):
             # training step
-            if i == 2:
-                time_step2 = time.time()
+            start_time = time.time()
             model.train()
             img_train = data
             if opt.mode == 'S':
@@ -188,40 +188,31 @@ def main():
                 for n in range(noise.size()[0]):
                     sizeN = noise[0,:,:,:].size()
                     noise[n,:,:,:] = torch.FloatTensor(sizeN).normal_(mean=0, std=stdN[n]/255.) 
-            if opt.is_distributed == 0 and epoch == 0 and i == 6:
-                with torch.autograd.profiler.profile(use_npu=True) as prof:
-                    imgn_train = img_train + noise
-                    img_train, imgn_train = Variable(img_train.npu()), Variable(imgn_train.npu())
-                    noise = Variable(noise.npu())
-                    out_train = model(imgn_train)
-                    loss = (criterion(out_train.cpu(), img_train.cpu()) / (imgn_train.size()[0] * 2)).npu()
-                    optimizer.zero_grad()
-                    with amp.scale_loss(loss, optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                    optimizer.step()
-                prof.export_chrome_trace("output.prof")         # "output.prof"
-            else:
-                imgn_train = img_train + noise
-                img_train, imgn_train = Variable(img_train.npu()), Variable(imgn_train.npu())
-                noise = Variable(noise.npu())
-                out_train = model(imgn_train)
-                loss = (criterion(out_train.cpu(), img_train.cpu()) / (imgn_train.size()[0] * 2)).npu()
-                optimizer.zero_grad()
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-                optimizer.step()
+            #train
+            imgn_train = img_train + noise
+            img_train, imgn_train = Variable(img_train.npu()), Variable(imgn_train.npu())
+            noise = Variable(noise.npu())
+            out_train = model(imgn_train)
+            loss = (criterion(out_train.cpu(), img_train.cpu()) / (imgn_train.size()[0] * 2)).npu()
+            optimizer.zero_grad()
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+            optimizer.step()
+            #steptime counting
+            steptime = time.time() - start_time
             #eval
             model.eval()
             out_train = torch.clamp(model(imgn_train), 0., 1.)
             psnr_train = batch_PSNR(out_train, img_train, 1.)
             if opt.local_rank == 0:
+                if i >= 10:
+                    fps_s = opt.num_gpus * opt.batchSize / steptime + fps_s
                 if (i + 1) == len(loader_train):
-                    time_avg = time.time() - time_step2
-                    fps = opt.num_gpus * opt.batchSize * len(loader_train) / time_avg
-                    print("[epoch %d][%d/%d] fps: %.4f time_avg: %.4f" %
-                          (epoch + 1, i + 1, len(loader_train), fps, time_avg))
+                    time_all = time.time() - start_time
+                    print("[epoch %d][%d/%d] fps: %.4f time: %.4f" %
+                          (epoch + 1, i + 1, len(loader_train), fps_s / (len(loader_train)-10), time_all))
                 print("[epoch %d][%d/%d] loss: %.4f PSNR_train: %.4f scaled_loss: %.4f " %
-                (epoch+1, i+1, len(loader_train), loss.item(), psnr_train, scaled_loss.item()))
+                      (epoch+1, i+1, len(loader_train), loss.item(), psnr_train, scaled_loss.item()))
         model.eval()
 
         # computing PSNR
@@ -247,19 +238,20 @@ def main():
         #set model name
         model_name = 'model'+ '_' + str(opt.resume)+ '_' + str(epoch+1) + '.pth'
         #save checkpoint
-        checkpoint = {"model_state_dict": net.state_dict(),
-                      "optimizer_state_dic": optimizer.state_dict(),
-                      "loss": loss,
-                      "epoch": epoch}
-        torch.save(checkpoint, os.path.join(save_dir, model_name))
-        # torch.save(model.state_dict(), os.path.join(save_dir, model_name))
-        if best_psnr < psnr_val:
-            # torch.save(model.state_dict(), os.path.join(save_dir, 'best_model.pth'))    #.pth
+        if opt.local_rank == 0:
             checkpoint = {"model_state_dict": net.state_dict(),
                           "optimizer_state_dic": optimizer.state_dict(),
                           "loss": loss,
                           "epoch": epoch}
-            torch.save(checkpoint, os.path.join(save_dir, 'best_model.pth'))
+            torch.save(checkpoint, os.path.join(save_dir, model_name))
+            # torch.save(model.state_dict(), os.path.join(save_dir, model_name))
+            if best_psnr < psnr_val:
+                # torch.save(model.state_dict(), os.path.join(save_dir, 'best_model.pth'))    #.pth
+                checkpoint = {"model_state_dict": net.state_dict(),
+                              "optimizer_state_dic": optimizer.state_dict(),
+                              "loss": loss,
+                              "epoch": epoch}
+                torch.save(checkpoint, os.path.join(save_dir, 'best_model.pth'))
     filename = save_dir + 'psnr.txt'            #保存训练过程中的验证集PSNR
     f = open(filename,'w') 
     for line in psnr_list:  

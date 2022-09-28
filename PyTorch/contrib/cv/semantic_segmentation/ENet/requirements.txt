@@ -1,11 +1,9 @@
-apex==0.1+ascend.20210930
 numpy==1.21.3
-Pillow==8.4.0
+Pillow==9.1.0
 pip==21.3.1
 pycocotools==2.0.3
 requests==2.26.0
 scipy==1.7.1
 six==1.16.0
-torch==1.5.0+ascend.post3.20210930
-torchvision==0.6.0
+torchvision
 tqdm==4.62.3

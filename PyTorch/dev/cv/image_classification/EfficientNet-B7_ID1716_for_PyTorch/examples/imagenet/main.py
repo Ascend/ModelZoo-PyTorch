@@ -22,6 +22,8 @@ import PIL
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.distributed as dist
@@ -332,8 +334,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
                              top5, prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
-    # 替换Swish API
-    model.set_swish(memory_efficient=False)
     # 替换Swish API
     if args.distributed:
         model.module.set_swish(memory_efficient=False)

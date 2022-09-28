@@ -220,7 +220,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
     return output
 
 
-def bboxes_iou(bboxes_a, bboxes_b, tensor2, xyxy=True):
+def bboxes_iou_old(bboxes_a, bboxes_b, xyxy=True):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
         raise IndexError
 
@@ -231,26 +231,61 @@ def bboxes_iou(bboxes_a, bboxes_b, tensor2, xyxy=True):
         area_b = torch.prod(bboxes_b[:, 2:] - bboxes_b[:, :2], 1)
     else:
         tl = torch.max(
-            (bboxes_a[:, None, :2] - bboxes_a[:, None, 2:] / tensor2),
-            (bboxes_b[:, :2] - bboxes_b[:, 2:] / tensor2),
+            (bboxes_a[:, None, :2] - bboxes_a[:, None, 2:] / 2.),
+            (bboxes_b[:, :2] - bboxes_b[:, 2:] / 2.),
         )
         br = torch.min(
-            (bboxes_a[:, None, :2] + bboxes_a[:, None, 2:] / tensor2),
-            (bboxes_b[:, :2] + bboxes_b[:, 2:] / tensor2),
+            (bboxes_a[:, None, :2] + bboxes_a[:, None, 2:] / 2.),
+            (bboxes_b[:, :2] + bboxes_b[:, 2:] / 2.),
         )
 
-        # area_a = torch.prod(bboxes_a[:, 2:], 1)
-        # area_b = torch.prod(bboxes_b[:, 2:], 1)
         area_a = bboxes_a[:, 2] * bboxes_a[:, 3]
         area_b = bboxes_b[:, 2] * bboxes_b[:, 3]
 
-    # en = (tl < br).type(tl.type()).prod(dim=2)
-    # area_i = torch.prod(br - tl, 2) * en  # * ((tl < br).all())
-    en_tmp = (tl < br).type(tl.type())
+    en_tmp = (tl < br)
     en = en_tmp[:, :, 0] * en_tmp[:, :, 1]
     brtl = br - tl
     area_i = brtl[:, :, 0] * brtl[:, :, 1] * en
 
+    return area_i / (area_a[:, None] + area_b - area_i + 1e-12)
+
+
+def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
+    if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
+        raise IndexError
+
+    if xyxy:
+        tl = torch.max(bboxes_a[:, None, :2], bboxes_b[:, :2])
+        br = torch.min(bboxes_a[:, None, 2:], bboxes_b[:, 2:])
+        area_a = torch.prod(bboxes_a[:, 2:] - bboxes_a[:, :2], 1)
+        area_b = torch.prod(bboxes_b[:, 2:] - bboxes_b[:, :2], 1)
+    else:
+        bboxes_a = bboxes_a.permute(1, 0).contiguous()
+        bboxes_b = bboxes_b.permute(1, 0).contiguous()
+
+        bboxes_a_xy = bboxes_a[:2].unsqueeze(1)
+        bboxes_a_hw = bboxes_a[2:].unsqueeze(1)
+        bboxes_b_xy = bboxes_b[:2].unsqueeze(-1)
+        bboxes_b_hw = bboxes_b[2:].unsqueeze(-1)
+
+        tl = torch.max(
+            (bboxes_a_xy - bboxes_a_hw / 2.),
+            (bboxes_b_xy - bboxes_b_hw / 2.),
+        )
+        br = torch.min(
+            (bboxes_a_xy + bboxes_a_hw / 2.),
+            (bboxes_b_xy + bboxes_b_hw / 2.),
+        )
+
+        area_a = bboxes_a[2, :] * bboxes_a[3, :]
+        area_b = bboxes_b[2, :] * bboxes_b[3, :]
+    
+    en_tmp = (tl < br)
+    en = en_tmp[0, :, :] * en_tmp[1, :, :]
+    brtl = br - tl
+    area_i = brtl[0, :, :] * brtl[1, :, :] * en
+
+    area_i = area_i.transpose(0, 1).contiguous()
     return area_i / (area_a[:, None] + area_b - area_i + 1e-12)
 
 

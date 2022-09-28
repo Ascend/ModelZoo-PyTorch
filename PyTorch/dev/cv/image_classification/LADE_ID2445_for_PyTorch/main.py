@@ -93,6 +93,8 @@ Path(output_dir).mkdir(parents=True, exist_ok=True)
 # ============================================================================
 # Random Seed
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import random
 if args.seed is not None:
     print('=======> Using Fixed Random Seed <========')

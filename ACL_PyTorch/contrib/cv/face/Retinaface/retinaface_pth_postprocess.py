@@ -13,15 +13,16 @@
 # limitations under the License.
 
 from __future__ import print_function
-import os
+
 import argparse
-import torch
 import os
-import argparse
-import numpy as np
-from glob import glob
 import sys
+from glob import glob
+
+import numpy as np
+import torch
 from tqdm import tqdm
+
 sys.path.append("./Pytorch_Retinaface")
 from utils.box_utils import decode, decode_landm
 from layers.functions.prior_box import PriorBox
@@ -29,33 +30,31 @@ from data import cfg_mnet
 from utils.nms.py_cpu_nms import py_cpu_nms
 
 
-
-
-def post_process(result_list, info_list):
+def post_process(result_list, info_list, save_path, threshold):
     bin_images = glob(os.path.join(result_list, r"*.bin"))
     bin_images.sort()
     assert (len(bin_images) == 9678)
     cnt = 0
     i = 0
     loc, conf, landms = None, None, None
-    scale = torch.ones(4,).fill_(1000)
+    scale = torch.ones(4, ).fill_(1000)
     for img in tqdm(bin_images):
         buf = np.fromfile(img, dtype="float32")
-        if "_1.bin" in img:
+        if "_0.bin" in img:
             landms = np.reshape(buf, [1, 41236, 10])
             cnt = cnt + 1
-        if "_2.bin" in img:
+        if "_1.bin" in img:
             conf = np.reshape(buf, [1, 41236, 2])
             cnt = cnt + 1
-        if "_3.bin" in img:
+        if "_2.bin" in img:
             loc = np.reshape(buf, [1, 41236, 4])
             cnt = cnt + 1
         if cnt == 3:
             loc = torch.Tensor(loc)
             conf = torch.Tensor(conf)
             landms = torch.Tensor(landms)
-            info_image = glob(os.path.join(info_list, '*/'+ os.path.basename(img)[:-6]+'.bin'))
-            resize = np.fromfile(info_image[0],dtype=np.float32)
+            info_image = glob(os.path.join(info_list, '*/' + os.path.basename(img)[:-6] + '.bin'))
+            resize = np.fromfile(info_image[0], dtype=np.float32)
             img_name = info_image[0]
             assert len(info_image) == 1
             i = i + 1
@@ -68,12 +67,12 @@ def post_process(result_list, info_list):
             boxes = boxes.numpy()
             scores = conf.squeeze(0).data.numpy()[:, 1]
             landms = decode_landm(landms.data.squeeze(0), prior_data, [0.1, 0.2])
-            scale1 = torch.ones(10,).fill_(1000)
+            scale1 = torch.ones(10, ).fill_(1000)
 
             landms = landms * scale1 / resize
             landms = landms.numpy()
 
-            inds = np.where(scores > args.confidence_threshold)[0]
+            inds = np.where(scores > threshold)[0]
             boxes = boxes[inds]
             landms = landms[inds]
             scores = scores[inds]
@@ -90,7 +89,8 @@ def post_process(result_list, info_list):
             landms = landms[keep]
 
             dets = np.concatenate((dets, landms), axis=1)
-            save_name = os.path.join(args.result_folder,os.path.dirname(img_name).split('/')[-1],os.path.basename(img_name)[:-4] + ".txt")
+            save_name = os.path.join(save_path, os.path.dirname(img_name).split('/')[-1],
+                                     os.path.basename(img_name)[:-4] + ".txt")
             dirname = os.path.dirname(save_name)
             if not os.path.isdir(dirname):
                 os.makedirs(dirname)
@@ -111,11 +111,11 @@ def post_process(result_list, info_list):
                     fd.write(line)
 
 
-if __name__ =='__main__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Retinaface')
-    parser.add_argument('--result-folder',default='./widerface_result/', type=str, help='Dir to save txt results')
-    parser.add_argument('--out-folder', default='./result/dumpOutput_device0', type=str, help='infer out path')
+    parser.add_argument('--prediction-folder', type=str, help='infer prediction result path')
     parser.add_argument('--info-folder', default='./widerface/prep_info', type=str, help='input info path')
-    parser.add_argument('--confidence-threshold', default=0.02, type=float, help='confidence_threshold')
+    parser.add_argument('--output-folder', default='./widerface_result/', type=str, help='Dir to save txt results')
+    parser.add_argument('--confidence-threshold', default=0.02, type=float, help='confidence threshold')
     args = parser.parse_args()
-    post_process(args.out_folder, args.info_folder)
+    post_process(args.prediction_folder, args.info_folder, args.output_folder, args.confidence_threshold)

@@ -100,7 +100,7 @@ class SingleRoIExtractor(nn.Module):
         new_rois = torch.stack((rois[:, 0], x1, y1, x2, y2), dim=-1)
         return new_rois
 
-    @force_fp32(apply_to=('feats', ), out_fp16=True)
+    @force_fp32(apply_to=('feats',), out_fp16=True)
     def forward(self, feats, rois, roi_scale_factor=None):
         if len(feats) == 1:
             return self.roi_layers[0](feats[0], rois)

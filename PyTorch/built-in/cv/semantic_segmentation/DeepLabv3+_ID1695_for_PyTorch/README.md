@@ -18,7 +18,7 @@ Deeplabv3+ is an end-2-end semantic segmentation model. This implements training
 ```
 ## Training
 Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision.
-Suggestion: the pillow is 9.1.0 and the torchvision is 0.6.0
+Suggestion: the pillow is 9.1.0 and the torchvision is 0.6.0 when torch version is 1.5; torchvision version is 0.9.1 when torch version is 1.8;
 
 To train a model, run "train_NPU_fp32.py" or "train_NPU_fp32_8p.py"with the desired model architecture and the other hyper-parameters.
 For testing, use "train_NPU.py" or "train_NPU_8p.py" (have to modify env.sh).

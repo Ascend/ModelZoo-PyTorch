@@ -114,10 +114,9 @@ def create_visualization_statistical_result(prediction_file_path,
             real_label = int(img_gt) + 1
         else:
             real_label = int(img_gt)
-
         res_cnt = min(len(sort_index), topn)
         for i in range(res_cnt):
-            if str(real_label) == str(sort_index[i]):
+            if str(real_label) == str(sort_index[-(i+1)]):
                 count_hit[i] += 1
                 break
 

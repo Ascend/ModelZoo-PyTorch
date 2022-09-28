@@ -70,11 +70,11 @@ def get_bin(queryloader, galleryloader):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--query_dir", default="./data/veri/image_query")
-    parser.add_argument("--gallery_dir", default="./data/veri/image_test")
+    parser.add_argument("--query_dir", default="/opt/npu/veri/image_query")
+    parser.add_argument("--gallery_dir", default="/opt/npu/veri/image_test")
     parser.add_argument("--save_path1", default="./prep_dataset_query")
     parser.add_argument("--save_path2", default="./prep_dataset_gallery")
-    parser.add_argument('--root', type=str, default='data',
+    parser.add_argument('--root', type=str, default='/opt/npu/',
                         help="root path to data directory")
     parser.add_argument('-d', '--dataset', type=str, default='veri',
                         help="name of the dataset")

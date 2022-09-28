@@ -1,1 +1,4 @@
+torchvision
+pip
+numpy
 pillow==9.1.0

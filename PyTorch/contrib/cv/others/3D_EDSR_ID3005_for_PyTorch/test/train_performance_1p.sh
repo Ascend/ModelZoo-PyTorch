@@ -91,6 +91,9 @@ cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
 
+# 移动数据
+sed -i "s#./dataset#${data_path}#" option.py
+
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -109,7 +112,7 @@ start_time=$(date +%s)
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
 batch_size=1
-train_epochs=2
+train_epochs=1
 
 python3.7 ./dataset_generator.py --dir_data=${data_path}
 
