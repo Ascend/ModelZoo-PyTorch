@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from distutils.log import info
 import os
 import glob
 import numpy as np
@@ -203,6 +204,8 @@ class ExperimentOTB(object):
         self.dataset = OTB(root_dir, version)
         self.result_dir = os.path.join(result_dir, 'OTB' + str(version))
         self.report_dir = os.path.join(report_dir, 'OTB' + str(version))
+        if not os.path.exists(self.result_dir):
+            os.makedirs(self.result_dir)
         # as nbins_iou increases, the success score
         # converges to the average overlap (AO)
         self.nbins_iou = 21
@@ -211,7 +214,7 @@ class ExperimentOTB(object):
     def getlendataset(self):
         return len(self.dataset)
 
-    def run(self, savepath, infopath, arch, idx):
+    def run(self, savepath, infopath, idx):
         # get the seq_name and information of files
         img_files, anno = self.dataset[idx]
         seq_name = self.dataset.seq_names[idx]
@@ -232,6 +235,7 @@ class ExperimentOTB(object):
 
         prepostpro = PrePostProcess()
         for f, img_file in enumerate(img_files):
+            print(seq_name + "  %s/%s" %(f, frame_num))
             img = cv2.imread(img_file, cv2.IMREAD_COLOR)
             if f == 0:
                 # Pre-process and generate bin
@@ -242,15 +246,20 @@ class ExperimentOTB(object):
                     file1.write(content)
                     file1.write('\n')
                 # infer
-                os.system('%s -model_type=vision -device_id=%d -batch_size=1 '
-                          '-om_path=s%/exemplar_bs1.om -input_text_path=%s '
-                          '-input_width=127 -input_height=127 -output_binary=True -useDvpp=False >/dev/null 2>&1'
-                          % (benchmark_path, deviceid, om_path, infopath))
+                os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om '
+                 '--input pre_dataset/%s --device 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
+                 %(idx, seq_name))
                 # the exemplar has a result of 3*256*6*6 tensor
                 # read tensor from bin
-                filename = img_file.replace('/', '-').split('.')[0] + '_1.bin'
-                filename = 'result/dumpOutput_device' + str(deviceid) + '/' + filename
+                for file_name in os.listdir('OTB100/'+ seq_name):
+                    if file_name.split('.')[-1] == 'bin':
+                        filename = file_name
+                        break
+                # filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name.split('.')[0], str(f+1).zfill(4))
+                filename = 'OTB100/'+ seq_name + '/' + filename
                 exemplar_feature = prepostpro.file2tensor(filename, (3, 256, 6, 6))
+                os.system('rm -rf ./pre_dataset/%s/%s' %(idx, img_file.replace('/', '-').replace('.jpg', '.bin')))
+                os.system('rm -rf OTB100/{}'.format(seq_name))
             else:
                 # Pre-process and generate bin
                 search_path = prepostpro.cropsearch(img, savepath, img_file)
@@ -260,18 +269,24 @@ class ExperimentOTB(object):
                     file2.write(content)
                     file2.write('\n')
                 # infer
-                os.system('%s -model_type=vision -device_id=%d -batch_size=1 '
-                          '-om_path=%s/search_bs1.om -input_text_path=%s '
-                          '-input_width=255 -input_height=255 -output_binary=True -useDvpp=False >/dev/null 2>&1'
-                          % (benchmark_path, deviceid, om_path, infopath))
+                os.system('python3.7 ./ais_infer/ais_infer.py  --model ./om/search_bs1.om '
+                    '--input pre_dataset/%s --device 0 -o ./OTB100 --outfmt BIN --output_dirname %s >/dev/null 2>&1'
+                    %(idx, seq_name))
                 # the exemplar has a result of 1*768*22*22 tensor
                 # read tensor from bin
-                filename = img_file.replace('/', '-').split('.')[0] + '_1.bin'
-                filename = 'result/dumpOutput_device' + str(deviceid) + '/' + filename
+                for file_name in os.listdir('OTB100/'+ seq_name):
+                    if file_name.split('.')[-1] == 'bin':
+                        filename = file_name
+                        break
+                # filename = '-opt-npu-OTB100-{}-img-{}_0.bin'.format(seq_name.split('.')[0], str(f+1).zfill(4))
+                filename = 'OTB100/'+ seq_name + '/' + filename
                 search_feature = prepostpro.file2tensor(filename, (1, 768, 22, 22))
                 # Post-process
                 boxes[f, :] = prepostpro.postprocess(search_feature, exemplar_feature)
                 times[f] = 1
+                os.system('rm -rf ./pre_dataset/%s/%s' %(idx, img_file.replace('/', '-').replace('.jpg', '.bin')))
+                os.system('rm -rf OTB100/{}'.format(seq_name))
+
         assert len(boxes) == len(anno)
         # record results
         self._record(record_file, boxes, times)
@@ -402,11 +417,10 @@ if __name__ == "__main__":
     data_path = sys.argv[1]
     save_path = sys.argv[2]
     info_path = sys.argv[3]
-    arch = sys.argv[4]
-    deviceid = int(sys.argv[5])
-    benchmark_path = sys.argv[6]
-    om_path = sys.argv[7]
+    deviceid = int(sys.argv[4])
     os.system('rm -rf %s' % save_path)
+    os.system('rm -rf OTB100')
+    os.system('mkdir OTB100')
     os.system('rm -rf %s' % info_path)
     os.system('rm -rf ./result/dumpOutput_device%d' % deviceid)
     if not os.path.exists(save_path):
@@ -417,10 +431,11 @@ if __name__ == "__main__":
     totallen = e.getlendataset()
     pool = multiprocessing.Pool(processes=12)
     for i in range(totallen):
-        pool.apply_async(e.run, (save_path, info_path, arch, i, ))
+        pool.apply_async(e.run, (save_path, info_path, i, ))
     pool.close()
     pool.join()
     prec_score, succ_score, succ_rate = e.report(['siamfc'])
     ss = '-prec_score:%.3f -succ_score:%.3f -succ_rate:%.3f' % (float(prec_score), float(succ_score), float(succ_rate))
     print("====accuracy data====")
     print(ss)
+
