@@ -7,13 +7,13 @@ Network="ResNet101_ID1595_for_PyTorch"
 #训练epoch
 train_epochs=2
 #训练batch_size
-batch_size=8192
+batch_size=16384
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
 learning_rate=0.5
 # 训练使用的npu卡数
-export RANK_SIZE=32
+export RANK_SIZE=64
 # 数据集路径,保持为空,不需要修改
 data_path=""
 ckpt_path=""
@@ -68,7 +68,7 @@ do
     elif [[ $para == --one_node_ip* ]];then
         one_node_ip=`echo ${para#*=}`
     elif [[ $para == --linux_num* ]];then
-        linux_num=`echo ${para#*=
+        linux_num=`echo ${para#*=}`
     fi
 done
 if [[ $conf_path == "" ]];then
@@ -157,7 +157,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
-FPS=`awk 'BEGIN{printf "%.0f\n",'${FPS}'*4}'`
+FPS=`awk 'BEGIN{printf "%.0f\n",'${FPS}'*8}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
