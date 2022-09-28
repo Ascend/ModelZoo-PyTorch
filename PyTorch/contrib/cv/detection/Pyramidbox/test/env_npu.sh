@@ -23,12 +23,16 @@ export ASCEND_GLOBAL_EVENT_ENABLE=0
 export TASK_QUEUE_ENABLE=1
 #设置是否开启PTCopy,0-关闭/1-开启
 export PTCOPY_ENABLE=1
-#设置是否开启combined标志,0-关闭/1-开启
+#设置是否开启2个非连续combined标志,0-关闭/1-开启
 export COMBINED_ENABLE=0
+#设置是否开启3个非连续combined标志,0-关闭/1-开启
+export TRI_COMBINED_ENABLE=0
 #设置特殊场景是否需要重新编译,不需要修改
 export DYNAMIC_OP="ADD#MUL"
-#HCCL白名单开关,1-关闭/0-开启
+# HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
+# HCCL默认超时时间120s较少，修改为1800s对齐PyTorch默认设置
+export HCCL_CONNECT_TIMEOUT=1800
 
 #设置device侧日志登记为error
 msnpureport -g error -d 0
@@ -64,3 +68,4 @@ print(result)"""
 echo ${path_lib}
 
 export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
+
