@@ -59,27 +59,30 @@ Cascade R-CNN是目标检测two-stage算法的代表之一，使用cascade回归
 
 - 该模型需要以下插件与驱动
 
-  **表 1**  版本配套表
+**表 1**  版本配套表
 
-| 配套                                                         | 版本    |
-| ------------------------------------------------------------ | ------- |
-| CANN                                                         | 5.1.RC2 |
-
-  **表 2**  环境依赖表
-
-| 依赖                                                         | 版本    | 环境准备指导 |
+| 配套                                                         | 版本    | 环境准备指导 |
 | ------------------------------------------------------------ | ------- |------------|
-| Python                                                       | 3.7.5   |[Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies/pies_00001.html)
-| PyTorch                                                      | 1.7.0   |-|
-| torchvision                                                  | 0.8.0   |-|
-| mmcv-full                                                    | 1.2.5   |-|
-| mmpycocotools                                                | 12.0.3  |-|
-| onnx                                                         | 1.12.0  |-|
-| protobuf                                                     | 3.20.1  |-|
-| onnxoptimizer                                                | 0.3.0   |-|
-| onnxruntime                                                  | 1.5.2   |-|
-| opencv-python                                                | 4.4.0.46|-|
-| numpy                                                        | 1.21.5  |-|
+| 固件与驱动                                                    |22.0.2|-|
+| CANN                                                         | 5.1.RC2 |-|
+| PyTorch                                                      | 1.8.0   |[Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies/pies_00001.html)|
+
+
+**表 2**  环境依赖表
+
+| 依赖                                                         | 版本    |
+| ------------------------------------------------------------ | ------- |
+| Python                                                       | 3.7.5   |
+| PyTorch                                                      | 1.7.0   |
+| torchvision                                                  | 0.8.0   |
+| mmcv-full                                                    | 1.2.5   |
+| mmpycocotools                                                | 12.0.3  |
+| onnx                                                         | 1.12.0  |
+| protobuf                                                     | 3.20.1  |
+| onnxoptimizer                                                | 0.3.0   |
+| onnxruntime                                                  | 1.5.2   |
+| opencv-python                                                | 4.4.0.46|
+| numpy                                                        | 1.21.5  |
 
 特殊安装：
 - pycocotools安装
