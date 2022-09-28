@@ -2,16 +2,15 @@
 CANN_INSTALL_PATH_CONF='/etc/Ascend/ascend_cann_install.info'
 
 if [ -f $CANN_INSTALL_PATH_CONF ]; then
-    DEFAULT_CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
+    CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
 else
-    DEFAULT_CANN_INSTALL_PATH="/usr/local/Ascend"
+    CANN_INSTALL_PATH="/usr/local/Ascend"
 fi
 
-
-if [ -d ${DEFAULT_CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
-    source ${DEFAULT_CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
+if [ -d ${CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
+    source ${CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
 else
-    source ${DEFAULT_CANN_INSTALL_PATH}/nnae/set_env.sh
+    source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
 
@@ -27,16 +26,16 @@ export TASK_QUEUE_ENABLE=1
 export HCCL_WHITELIST_DISABLE=1
 
 #设置device侧日志登记为error
-${install_path}/driver/tools/msnpureport -g error -d 0
-${install_path}/driver/tools/msnpureport -g error -d 1
-${install_path}/driver/tools/msnpureport -g error -d 2
-${install_path}/driver/tools/msnpureport -g error -d 3
-${install_path}/driver/tools/msnpureport -g error -d 4
-${install_path}/driver/tools/msnpureport -g error -d 5
-${install_path}/driver/tools/msnpureport -g error -d 6
-${install_path}/driver/tools/msnpureport -g error -d 7
+msnpureport -g error -d 0
+msnpureport -g error -d 1
+msnpureport -g error -d 2
+msnpureport -g error -d 3
+msnpureport -g error -d 4
+msnpureport -g error -d 5
+msnpureport -g error -d 6
+msnpureport -g error -d 7
 #关闭Device侧Event日志
-${install_path}/driver/tools/msnpureport -e disable
+msnpureport -e disable
 
 path_lib=$(python3.7 -c """
 import sys

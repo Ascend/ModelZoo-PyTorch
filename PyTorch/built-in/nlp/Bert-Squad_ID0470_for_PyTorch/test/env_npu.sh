@@ -1,21 +1,29 @@
-/usr/local/Ascend/driver/tools/msnpureport -g error -d 0
-/usr/local/Ascend/driver/tools/msnpureport -g error -d 4
-
 export LD_LIBRARY_PATH=/usr/include/hdf5/lib/:$LD_LIBRARY_PATH
 CANN_INSTALL_PATH_CONF='/etc/Ascend/ascend_cann_install.info'
 
 if [ -f $CANN_INSTALL_PATH_CONF ]; then
-    DEFAULT_CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
+    CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
 else
-    DEFAULT_CANN_INSTALL_PATH="/usr/local/Ascend"
+    CANN_INSTALL_PATH="/usr/local/Ascend"
 fi
 
-if [ -d ${DEFAULT_CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
-    source ${DEFAULT_CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
+if [ -d ${CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
+    source ${CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
 else
-    source ${DEFAULT_CANN_INSTALL_PATH}/nnae/set_env.sh
+    source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
+#设置device侧日志登记为error
+msnpureport -g error -d 0
+msnpureport -g error -d 1
+msnpureport -g error -d 2
+msnpureport -g error -d 3
+msnpureport -g error -d 4
+msnpureport -g error -d 5
+msnpureport -g error -d 6
+msnpureport -g error -d 7
+#关闭Device侧Event日志
+/msnpureport -e disable
 
 export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_GLOBAL_EVENT_ENABLE=0
