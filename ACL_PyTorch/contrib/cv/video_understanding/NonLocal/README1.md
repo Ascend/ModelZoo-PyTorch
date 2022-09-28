@@ -217,7 +217,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/......
+          source /usr/local/Ascend/set_env.sh
          ```
 
          > **说明：** 
