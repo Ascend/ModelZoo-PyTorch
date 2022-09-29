@@ -23,8 +23,8 @@ import torch.nn.functional as F
 from fastai.torch_basics import Module, nn, SequentialEx, ConvLayer, PixelShuffle_ICNR, BatchNorm, SelfAttention, \
     apply_init, MergeLayer, in_channels, ResBlock, ToTensorBase, SigmoidRange
 from fastai.callback.hook import delegates, defaults, model_sizes, hook_outputs, dummy_eval
-from fastai.vision.models import resnet50
 from core.data.dataloader import datasets
+from resnet import resnet50
 
 __all__ = ['UnetBlock', 'ResizeToOrig', 'DynamicUnet']
 
@@ -129,7 +129,7 @@ class DynamicUnet(SequentialEx):
 
 
 def get_dynamicunet(args=None, dataset='pascal_voc'):
-    m = resnet50(pretrained=True)
+    m = resnet50(model_path=args.pretrained, pretrained=True)
     m = nn.Sequential(*list(m.children())[:-2])
     classes = datasets[dataset].NUM_CLASS
     model = DynamicUnet(m, classes, (128, 128), norm_type=None)
