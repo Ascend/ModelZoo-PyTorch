@@ -99,7 +99,8 @@
    ```shell
    # bs:[1, 4, 8, 16, 32, 64]
    python3 pth2onnx.py -input_path swin_base_patch4_window12_384_22kto1k.pth --out_path models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx --output_type=FP16 --model_name swin_base_patch4_window12_384 --batch_size ${bs}
-   python3 merge_add.py -i models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx -o models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx
+   python3 -m onnxsim models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx
+   python3 opt_onnx.py -i models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx -o models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx
    ```
 
 3. 使用ATC工具将ONNX模型转OM模型

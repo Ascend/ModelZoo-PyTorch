@@ -17,6 +17,7 @@ import os
 import argparse
 import numpy as np
 from magiconnx import OnnxGraph
+from magiconnx.optimize.optimizer_manager import OptimizerManager
 
 
 def get_value_info(graph, out_name):
@@ -55,10 +56,11 @@ def merge_add(graph):
         add_value1 = graph[add_node1.inputs[1]].value
         add_value2 = graph[add_node2.inputs[1]].value
         broad_dim0 = input_shape[0]
-        broad_dim1 = add_value1.shape[1]
-        broad_dim2 = add_value2.shape[1]
+        broad_dim1 = add_value2.shape[0]
+        broad_dim2 = add_value2.shape[2]
+        target_shape1 = graph[reshape_node1.inputs[1]].value
         add_value1 = np.tile(add_value1, (broad_dim0, 1, 1, 1))
-        add_value2 = np.tile(add_value2, (broad_dim0//broad_dim1, 1, broad_dim2, 1, 1))
+        add_value2 = np.tile(add_value2, (target_shape1[0]//broad_dim1, 1, target_shape1[2]//broad_dim2, 1, 1))
         out_shape = add_value1.shape
         graph[add_node1.inputs[1]].value = add_value1 + add_value2.reshape(out_shape)
 
@@ -82,5 +84,7 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     onnx_graph = OnnxGraph(args.input_path)
+    optimize_manager_base = OptimizerManager(onnx_graph)
+    optimize_manager_base.apply()
     merge_add(onnx_graph)
     onnx_graph.save(args.out_path)
