@@ -1,236 +1,285 @@
-# MobileNet-v1 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+# MobileNetV1模型-推理指导
+
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+
+  ******
+
+  
+
+# 概述
+
+MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建的轻量级神经网络，它是将标准卷积拆分为了两个操作：深度卷积（depthwise convolution）和逐点卷积（pointwise convolution），同时提出了两个超参数，分别是宽度乘子和分辨率乘子，用于快速调节模型适配到特定环境。MobileNetV1在尺寸、计算量、速度上的有一定优越性。
+
+- 参考论文：[MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861)
+
+- 参考实现：
+
+  ```
+  url=https://github.com/wjc852456/pytorch-mobilenet-v1.git
+  branch=master
+  commit_id=8b3bde3e525ba6d17b9cabb5feb8ee49a9e1e8e0
+  ```
+
+  通过Git获取对应commit\_id的代码方法如下：
+
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+
+## 输入输出数据
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | 1 x 1000 | FLOAT32  | ND           |
 
 
 
-## 1 模型概述
 
--   **[论文地址](#11-论文地址)**  
--   **[代码地址](#12-代码地址)**  
+# 推理环境准备
 
-### 1.1 论文地址
-[MobileNet-v1论文](https://arxiv.org/abs/1704.04861)
-本文提出了一种轻量化的卷积神经网络模型MobileNet-v1。三维卷积同时工作在图像的宽、高与通道三个维度，所需的参数量与计算量较大，并不适用于内存与算力都较弱的移动端设备上。本文将三维卷积分解为逐通道卷积（depth-wise conv）与逐点卷积（point-wise conv），在保证模型精度的前提下大大降低了模型的参数量与计算量。实验表明，MobileNet-v1在图像分类任务上能够达到与AlexNet及VGG16等经典模型不相上下的精度，同时其参数量仅为后者的八分之一左右，在CPU上的训练与推理时间也明显降低。
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.5.0   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |         |                                                              |
 
 
-### 1.2 代码地址
-[MobileNet-v1代码](https://github.com/wjc852456/pytorch-mobilenet-v1/blob/master/main.py) 
-branch: master
-commit id: 8b3bde3e525ba6d17b9cabb5feb8ee49a9e1e8e0
+
+# 快速上手
+
+## 安装依赖包
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/wjc852456/pytorch-mobilenet-v1.git
+   cd pytorch-mobilenet-v1
+   git reset --hard 8b3bde3e525ba6d17b9cabb5feb8ee49a9e1e8e0
+   cd ..	
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt	
+   ```
+
+​		
 
 
-## 2 环境说明
+## 准备数据集
 
--   **[深度学习框架](#21-深度学习框架)**  
--   **[python第三方库](#22-python第三方库)**  
+1. 获取原始数据集。
 
-### 2.1 深度学习框架
-```
-CANN 5.0.2.alpha003
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。解压后数据集目录结构：
 
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
+   ```
+   └─imagenet
+       ├─val               # 评估数据集
+       └─val_label.txt 	# 评估数据标签
+   ```
 
-### 2.2 python第三方库
+2. 数据预处理。
 
-```
-numpy == 1.18.5
-Pillow == 7.2.0
-opencv-python == 4.2.0.34
-```
+   将原始数据（.jpeg）转化为二进制文件（.bin）。
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+   执行imagenet_torch_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的prep_dataset文件夹中。
 
-## 3 模型转换
+   ```
+   python3.7 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset	
+   ```
+   
+   - 参数说明
+     - 第一个参数指定了图片的预处理方式（不需要修改）。
+     - 第二个参数为原始数据验证集（.jpeg）所在路径。
+     - 第三个参数为输出的二进制文件（.bin）所在路径，每个图像对应生成一个二进制文件。
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
--   **[onnx转om模型](#32-onnx转om模型)**  
 
-### 3.1 pth转onnx模型
 
-1.下载pth.tar权重文件  
-[MobileNet-v1预训练pth.tar权重文件](https://pan.baidu.com/s/1eRCxYKU)  
-文件md5sum: 205c493b6582a3e6c3daa66e539eae54   
+## 模型推理
 
-该权重文件托管于百度云，暂无其他资源。文件名格式为mobilenet_sgd_rmsprop_69.526.tar
+- 模型转换。
 
-2.编写pth2onnx脚本mobilenet-v1_pth2onnx.py
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
- **说明：**  
->目前ATC支持的onnx算子版本为11
+   1. 获取权重文件。
 
-3.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 mobilenet-v1_pth2onnx.py mobilenet_sgd_rmsprop_69.526.tar mobilenet-v1.onnx
-```
+       从ModelZoo的源码包中获取MobileNet-v1权重文件[mobilenet_sgd_rmsprop_69.526.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/ATC%20MobileNetV1%28FP16%29%20from%20Pytorch%20-%20Ascend310/zh/1.1/ATC%20MobileNetV1%28FP16%29%20from%20Pytorch%20-%20Ascend310.zip)。
 
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
+   2. 导出onnx文件。
 
-### 3.2 onnx转om模型
+      1. 执行脚本。
 
-1.设置环境变量
-```
-source env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-```
-atc --framework=5 --model=./mobilenet-v1.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=mobilenet-v1_bs16 --log=debug --soc_version=Ascend310
-```
+         ```
+         python3.7 mobilenet-v1_pth2onnx.py mobilenet_sgd_rmsprop_69.526.tar mobilenet-v1.onnx
+         ```
+         
+         获得mobilenet-v1.onnx文件。
+         
 
-## 4 数据集预处理
+   3. 使用ATC工具将ONNX模型转OM模型。
 
--   **[数据集获取](#41-数据集获取)**  
--   **[数据集预处理](#42-数据集预处理)**  
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+      1. 配置环境变量。
 
-### 4.1 数据集获取
-对于图像分类任务，该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
+         ```
+      
+         > **说明：** 
+         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+      
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+      
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+      
+      3. 执行ATC命令。
+      
+         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
+         
+         ```
+         atc --framework=5 --model=./mobilenet-v1.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=mobilenet-v1_bs16 --log=debug --soc_version=Ascend{chip_name}
+         ```
+      
+         - 参数说明：
+         
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+         
 
-### 4.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
+- 开始推理验证。
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val ./prep_dataset
-```
-第一个参数指定了图片的预处理方式（不需要修改），第二个参数为验证集路径，第三个参数为预处理后生成的二进制文件的存储路径
+   a.  使用ais-infer工具进行推理。
 
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
+     ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./mobilenet-v1_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
+   b.  执行推理。
 
-## 5 离线推理
+   使用batch size为16的om模型文件进行推理，其他batch size可作相应的修改，推理后的输出在当前目录的result文件夹下。
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
--   **[离线推理](#52-离线推理)**  
+   ```
+   mkdir ./result
+   python ais_infer/ais_infer.py --model ./mobilenet-v1_bs16.om --input ./prep_dataset --batchsize 16 --output ./result --outfmt "TXT" --device 0
+   ```
 
-### 5.1 benchmark工具概述
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+   - 参数说明：
 
-### 5.2 离线推理
-1.设置环境变量
-```
-source env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=mobilenet-v1_bs16.om -input_text_path=./mobilenet-v1_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_devicex，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
+     -   --model：需要进行推理的om模型。
 
-## 6 精度对比
+     -   --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
 
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
+     -   --batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。--input\_format：输入数据的格式。
 
-### 6.1 离线推理TopN精度统计
+     -   --output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
 
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据。
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
-```
-第一个参数为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名，其中存有推理的Top5精度。
-对batch1和batch16的模型分别调用benchmark进行推理，并统计其Top5的精度。查看其输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "69.55%"}, {"key": "Top2 accuracy", "value": "80.51%"}, {"key": "Top3 accuracy", "value": "84.85%"}, {"key": "Top4 accuracy", "value": "87.33%"}, {"key": "Top5 accuracy", "value": "89.05%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1与batch16的精度没有差别，精度数据均如上。
+     -   --outfmt：输出数据的格式,应为"TXT"。
 
-### 6.2 开源TopN精度
-[github开源代码仓精度](https://github.com/wjc852456/pytorch-mobilenet-v1/blob/master/README.md)
-```
-Model               Acc@1     Acc@5
-MobileNet-v1		69.526	  88.978
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，Top1与Top5精度均略有上升，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
+     -    --device：NPU设备编号。
 
-## 7 性能对比
 
--   **[npu性能数据](#71-npu性能数据)**  
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见《[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
 
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时会统计性能数据，存储于result/perf_vision_batchsize_bs_device_0.txt中。但是推理整个数据集较慢，如此测性能时需要确保benchmark独占device，使用npu-smi info可以查看device是否空闲。
-除此之外，也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。
-模型的性能以使用benchmark工具推理得到bs1与bs16的性能数据为准；对于使用benchmark工具测试的batch4，8，32的性能数据仅在README.md中作如下记录。  
-1.benchmark工具推理获得性能数据  
-使用benchmark工具的纯推理功能测试模型的推理性能，命令如下：
-```
-./benchmark.x86_64 -round=20 -om_path=mobilenet-v1_bs$x.om -device_id=0 -batch_size=$x
-```
-benchmark工具进行纯推理后测得的性能数据存储于result/PureInfer_perf_of_mobilenet-v1_bsx_in_device_0.txt，其中x为模型的batch_size。
+   c.  精度验证。
 
-batch1性能：  
-```
------------------PureInfer Performance Summary-----------------
-[INFO] ave_throughputRate: 953.503samples/s, ave_latency: 1.09295ms
-```
-ave_throughputRate是npu单核的平均吞吐率，乘以4即为310单卡的吞吐率。即：batch1的310单卡吞吐率为953.503x4=3814.012fps
+   调用脚本与数据集标签val\_label.txt比对，生成精度验证结果文件，注意需要首先删除存放推理结果的文件夹中的sumary.json文件，否则会出现错误。结果保存在result.json中。
 
-batch16性能：
-```
------------------PureInfer Performance Summary-----------------
-[INFO] ave_throughputRate: 1679.95samples/s, ave_latency: 0.597547ms
-```
-batch16 310单卡吞吐率 ：1679.95x4=6719.8fps
+   ```
+   rm -rf ./result/2022_08_21-23_31_47/sumary.json
+   python3.7 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ ./val_label.txt ./ result.json
+   ```
 
-batch4性能：
-```
------------------PureInfer Performance Summary-----------------
-[INFO] ave_throughputRate: 1578.61samples/s, ave_latency: 0.64255ms
-```
-batch4 310单卡吞吐率：1578.61x4=6314.44fps  
+   - 参数说明：
+     - ./result/2022_08_21-23_31_47/：为生成推理结果所在路径,请根据ais-infer工具自动生成的目录名进行更改。
+     - val_label.txt：为标签数据。
+     - result.json：为生成结果文件。
 
-batch8性能：
-```
------------------PureInfer Performance Summary-----------------
-[INFO] ave_throughputRate: 1695.87samples/s, ave_latency: 0.600069ms
-```
-batch8 310单卡吞吐率：1695.87x4=6783.48fps  
+   ​	
 
-batch32性能：
-```
------------------PureInfer Performance Summary-----------------
-[INFO] ave_throughputRate: 1509.78samples/s, ave_latency: 0.663383ms
-```
-batch32 310单卡吞吐率：1509.78x4=6039.12fps  
+# 模型推理性能&精度
 
- **性能优化：**  
->问题：初次转换后的om模型在性能上并未达标，经过profiling工具的分析，拉低模型推理性能的主要原因如下：在最后做平均池化avgpool前，对特征图进行加边操作的pad算子不能直接应用于NC1HWC0格式的特征图，需要将其转换为NCHW格式。做完padding之后还要将数据格式再转换回来，一来一去浪费了较多时间。
->解决方法：CANN 5.0.2.alpha003版本将PadV3D算子与AvgPoolV2算子融合，避免了重复数据转换的问题，提高了性能。
->另：对于batch32，从profiling性能数据op_statistic_0_1.csv看出，耗时多的算子主要是Conv2D、TransData与AvgPoolV2，而Conv2D与AvgPoolV2算子不存在性能问题，从op_summary_0_1.csv看出，第一个TransData算子aicore耗时最大1.5ms，分析后已没有优化空间。
+调用ACL接口推理计算，精度和性能参考下列数据。
+
+## 精度对比
+
+|           | Top1 Accuracy (%) | Top5 Accuracy (%) |
+| :-------: | :---------------: | :---------------: |
+| 310精度  |       69.52       |       89.05       |
+| 310P3精度 |       69.52       |       89.05       |
+
+
+
+## 性能对比
+
+| Throughput |   310   |   310P    |    T4   | 310P/310 | 310P/T4 |
+|:---------:|:-------:|:---------:|:-------:|:--------:|:-------:|
+| bs1        | 4550.44 | 4241.54 | 3723.37 | 0.932   | 1.139 |
+| bs4        |   6736 | 8313.37 | 5615.17 | 1.234   | 1.481 |
+| bs8        | 7116.32 | 10430.75 | 6067.96 | 1.466   | 1.719 |
+| bs16       |   6938 | 12259.18 | 6337.39 | 1.767   | 1.934 |
+| bs32       | 6176.84 | 13274.92 | 6457.18 | 2.149   | 2.056 |
+| bs64       | 5899.52 | 14515.69 | 6657.6 | 2.460   | 2.180 |
+| 最优batch  | 7116.32 | 14515.69 | 6657.6 | 2.040   | 2.180 |
+
+310最优batch为：bs8
+
+310P3最优batch为：bs64
+
+T4最优batch为：bs64
+
+
+最优性能比(310P3 / 310)为14132.2 / 7116.32 = 2.040倍
+
+最优性能比(310P3 / T4)为14132.2 / 6657.6 = 2.180倍
