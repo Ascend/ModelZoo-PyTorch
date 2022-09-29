@@ -7,7 +7,6 @@
 
 - [快速上手](#快速上手)
 
-  - [获取源码](#获取源码)
   - [准备数据集](#准备数据集)
   - [模型推理](#模型推理)
 
@@ -21,7 +20,8 @@
 - 参考实现：
 
   ```
-  url=branch=master
+  url=https://github.com/huawei-noah/CV-Backbones.git
+  branch=master
   commit_id=5a06c87a8c659feb2d18d3d4179f344b9defaceb
   model_name=GhostNet1.0x
   ```
@@ -68,16 +68,8 @@
 
 # 快速上手<a name="快速上手"></a>
 
-## 获取源码<a name="获取源码"></a>
 
-1. 获取源码。
-
-   从下网站获取GhostNet1.0x源码包，进入网站点击立即下载解压即可。
-   ```
-   https://www.hiascend.com/zh/software/modelzoo/models/detail/1/66b3b9134c0d42b99b5c9d8f26cbb19a
-   ```
-
-2. 安装依赖。
+1. 安装依赖。
 
    ```
    pip3 install -r requirements.txt
@@ -228,7 +220,17 @@
 # 模型推理性能&精度<a name="模型推理性能"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
-以下为不同芯片型号和bs下的精度表现
+以下为不同芯片型号和bs下的精度和性能表现
+GhostNet在310上的精度复现与性能表现如下表1，表2
+
+表1-精度对比
+
+| 芯片型号 | top1 | top5 |
+|:------|:---:|:------:|
+| 310 | 0.7398 | 0.9146 |
+| 310P | 0.7398 | 0.9146 |
+
+表1-性能对比
 
 | Batch Size | 310 | 310P | t4 | 310P/310| 310P/t4|
 |:------|:------:|:------:|:------:|:------:|:------:|
