@@ -47,7 +47,9 @@ class BaseModel(ABC):
         self.isTrain = opt.isTrain
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         #self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
-        self.device = torch.npu.set_device("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        self.device = torch.npu.set_device(CALCULATE_DEVICE)
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
@@ -177,7 +179,9 @@ class BaseModel(ABC):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
-                torch.save(net.to("npu:0").state_dict(), self.opt.train_url + 'sparnet-best_model.pth')
+                device_id=int(os.environ['ASCEND_DEVICE_ID'])
+                CALCULATE_DEVICE = "npu:{}".format(device_id)
+                torch.save(net.to(CALCULATE_DEVICE).state_dict(), '/home/test_user08/SparNet/Face-SPARNet/weight/sparnet-best_model.pth')
         #         if len(self.gpu_ids) > 0 and torch.cuda.is_available():
         #             torch.save(net.module.cpu().state_dict(), save_path)
         #             net.cuda(self.gpu_ids[0])

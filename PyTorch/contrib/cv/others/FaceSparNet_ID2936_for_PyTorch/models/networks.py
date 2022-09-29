@@ -19,6 +19,7 @@ from torch.nn import init
 from torch.optim import lr_scheduler
 
 import torch.nn.utils as tutils
+import os
 
 def apply_norm(net, weight_norm_type):
     for m in net.modules():
@@ -81,7 +82,9 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     #     net.to(gpu_ids[0])
     #     net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
     # net.to(opt.device)
-    net.to("npu:0")
+    device_id=int(os.environ['ASCEND_DEVICE_ID'])
+    CALCULATE_DEVICE = "npu:{}".format(device_id)
+    net.to(CALCULATE_DEVICE)
     init_weights(net, init_type, init_gain=init_gain)
     return net 
 
@@ -121,7 +124,9 @@ def define_network(opt, net, isTrain=True, use_norm='none', init_network=True):
     #     assert(torch.cuda.is_available())
     #     net.to(opt.device)
     #     net = torch.nn.DataParallel(net, opt.gpu_ids, output_device=opt.data_device)
-    net.to("npu:0")
+    device_id=int(os.environ['ASCEND_DEVICE_ID'])
+    CALCULATE_DEVICE = "npu:{}".format(device_id)
+    net.to(CALCULATE_DEVICE)
 
     if init_network:
         init_weights(net, init_type='normal', init_gain=0.02)

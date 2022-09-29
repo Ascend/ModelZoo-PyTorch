@@ -16,7 +16,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from apex import amp
-import apex
 from models import loss 
 from models import networks
 from .base_model import BaseModel
@@ -24,6 +23,7 @@ from utils import utils
 from models.sparnet import SPARNet
 
 import apex
+import os
 
 class SPARNetModel(BaseModel):
 
@@ -45,7 +45,9 @@ class SPARNetModel(BaseModel):
 
         if self.isTrain:
             # self.criterionL1 = nn.L1Loss().to(opt.device)
-            self.criterionL1 = nn.L1Loss().to("npu:0")
+            device_id=int(os.environ['ASCEND_DEVICE_ID'])
+            CALCULATE_DEVICE = "npu:{}".format(device_id)
+            self.criterionL1 = nn.L1Loss().to(CALCULATE_DEVICE)
             # self.optimizer_G = optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.99))
             self.optimizer_G = apex.optimizers.NpuFusedAdam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.99))
             self.optimizers = [self.optimizer_G]
@@ -60,8 +62,10 @@ class SPARNetModel(BaseModel):
         self.cur_iters = cur_iters
         # self.img_LR = input['LR'].to(self.opt.device)
         # self.img_HR = input['HR'].to(self.opt.device)
-        self.img_LR = input['LR'].to("npu:0")
-        self.img_HR = input['HR'].to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        self.img_LR = input['LR'].to(CALCULATE_DEVICE)
+        self.img_HR = input['HR'].to(CALCULATE_DEVICE)
 
     def forward(self):
         # self.img_SR = self.netG(self.img_LR).to(self.opt.device)
@@ -70,7 +74,9 @@ class SPARNetModel(BaseModel):
     def backward_G(self):
         # Pix loss
         self.loss_Pix = self.criterionL1(self.img_SR, self.img_HR) * self.opt.lambda_pix
-        self.loss_Pix = self.loss_Pix.to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        self.loss_Pix = self.loss_Pix.to(CALCULATE_DEVICE)
         #self.loss_Pix.backward()
         with amp.scale_loss(self.loss_Pix, self.optimizer_G) as scaled_loss:
             scaled_loss.backward()

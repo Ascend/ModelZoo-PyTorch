@@ -1,3 +1,17 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the BSD 3-Clause License  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://opensource.org/licenses/BSD-3-Clause
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #!/bin/bash
 
 ##########################################################
@@ -30,7 +44,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_path              # dataset of training
     --output_path            # output of training
     --train_steps            # max_step for training
-    --train_epochs           # max_epoch for training
+	  --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -46,14 +60,10 @@ do
         output_path=`echo ${para#*=}`
     elif [[ $para == --train_steps* ]];then
         train_steps=`echo ${para#*=}`
-    elif [[ $para == --train_epochs* ]];then
+	elif [[ $para == --train_epochs* ]];then
         train_epochs=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
-    elif [[ $para == --conda_name* ]];then
-        conda_name=`echo ${para#*=}`
-        source set_conda.sh
-        source activate $conda_name
     fi
 done
 
@@ -65,15 +75,15 @@ fi
 
 # 校验是否传入output_path,不需要修改
 if [[ $output_path == "" ]];then
-    output_path="./test/output/${ASCEND_DEVICE_ID}"
+    output_path="test/output/${ASCEND_DEVICE_ID}"
 fi
 
 # 设置打屏日志文件名，请保留，文件名为${print_log}
-print_log="./test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log"
+print_log="test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log"
 modelarts_flag=${MODELARTS_MODEL_PATH}
 if [ x"${modelarts_flag}" != x ];
 then
-    echo "running with modelarts..."
+    echo "running without etp..."
     print_log_name=`ls /home/ma-user/modelarts/log/ | grep proc-rank`
     print_log="/home/ma-user/modelarts/log/${print_log_name}"
 fi
@@ -116,19 +126,23 @@ batch_size=32
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./newtrain.py --data_url=${data_path} --train_url=${output_path}/ 
+    python3.7  newtrain.py --data_path=${data_path} --output_path=${output_path}
 else
-    python3.7 ./newtrain.py --data_url=${data_path} --train_url=${output_path}/ 1>${print_log} 2>&1
+    python3.7  newtrain.py --data_path=${data_path} --output_path=${output_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
-StepTime=`grep "IterTotal:" ${print_log} | awk '{print $8}' | tail -n 10 | tr -d "s" | awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
-FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
+StepTime=`grep "" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
+#FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '3074'/'${batch_size}'}'`
+
 
 # 精度相关数据计算
-train_accuracy=`grep "results_helen/SPARNet_S16_V4_Attn2D" ${print_log}  | tail -n 1 | awk '{print $2}' | tr -d "(" | tr -d ","`
+#train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
+train_accuracy=`grep "acc" ${print_log}  | awk '{print $NF}'`
+
 # 提取所有loss打印信息
-grep "Loss_Pix:" ${print_log} | awk '{print $4}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+grep "loss :" ${print_log} | awk -F ":" '{print $4}' | awk -F "-" '{print $1}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 
 ###########################################################
@@ -154,9 +168,9 @@ fi
 get_casename
 
 # 重命名loss文件
-if [ -f test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt ];
+if [ -f ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt ];
 then
-    mv test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt test/output/${ASCEND_DEVICE_ID}/${CaseName}_loss.txt
+    mv ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt ./test/output/${ASCEND_DEVICE_ID}/${CaseName}_loss.txt
 fi
 
 # 训练端到端耗时
@@ -184,8 +198,5 @@ echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.
 echo "ActualFPS = ${FPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${StepTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
-#退出conda环境
-conda deactivate
+echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log

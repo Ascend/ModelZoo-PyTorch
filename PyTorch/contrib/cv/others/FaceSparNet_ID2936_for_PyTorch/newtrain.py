@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+os.system('pip install tensorboardX')
 from utils.timer import Timer
 from utils.logger import Logger
 from utils import utils
@@ -91,10 +92,13 @@ def psnr_ssim_dir(gt_dir, test_dir):
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
-    t = opt.data_url
-    opt.data_url = opt.data_url + "/img_align_celeba"
+    opt.data_url = "/home/test_user08/SparNet/img_align_celeba"
     flag = False
-    CALCULATE_DEVICE = "npu:0"
+    device_id=int(os.environ['ASCEND_DEVICE_ID'])
+    CALCULATE_DEVICE = "npu:{}".format(device_id)
+    #CALCULATE_DEVICE = "npu:4"
+    print("use ", CALCULATE_DEVICE)
+    #CALCULATE_DEVICE = "npu:5"
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     dataset_size = len(dataset)    # get the number of images in the dataset.
     print('The number of training images = %d' % dataset_size)
@@ -157,9 +161,9 @@ if __name__ == '__main__':
 
 # test
     opt.dataset_name = "single"
-    opt.data_url = t + "/test_dirs/Helen_test_DIC/LR"
-    opt.pretrain_model_path = opt.train_url + 'sparnet-best_model.pth'
-    opt.save_as_dir = opt.train_url + "results_helen/SPARNet_S16_V4_Attn2D/"
+    opt.data_url = "/home/test_user08/SparNet/test_dirs/Helen_test_DIC/LR"
+    opt.pretrain_model_path = '/home/test_user08/SparNet/Face-SPARNet/weight/sparnet-best_model.pth'
+    opt.save_as_dir = "/home/test_user08/SparNet/Face-SPARNet/SPARNet_S16_V4_Attn2D/"
     opt.num_threads = 0  # test code only supports num_threads = 1
     opt.batch_size = 1  # test code only supports batch_size = 1
     opt.serial_batches = True  # disable data shuffling; comment this line if results on randomly chosen images are needed.
@@ -197,9 +201,9 @@ if __name__ == '__main__':
         save_img.save(save_path)
 
     # python psnr_ssim.py
-    gt_dir = t + '/test_dirs/Helen_test_DIC/HR'
+    gt_dir = '/home/test_user08/SparNet/test_dirs/Helen_test_DIC/HR'
     test_dirs = [
-            opt.train_url + '/results_helen/SPARNet_S16_V4_Attn2D',
+            '/home/test_user08/SparNet/Face-SPARNet/SPARNet_S16_V4_Attn2D/',
             ]
     for td in test_dirs:
         result = psnr_ssim_dir(td, gt_dir)

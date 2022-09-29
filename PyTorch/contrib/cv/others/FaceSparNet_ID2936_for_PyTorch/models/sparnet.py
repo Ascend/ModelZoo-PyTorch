@@ -16,6 +16,7 @@ from models.blocks import *
 import torch
 from torch import nn
 import numpy as np
+import os
 
 
 class SPARNet(nn.Module):
@@ -61,7 +62,9 @@ class SPARNet(nn.Module):
             hg_depth = hg_depth - 1
         hg_depth = hg_depth + 1
         self.encoder = nn.Sequential(*self.encoder)
-        self.encoder = self.encoder.to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        self.encoder = self.encoder.to(CALCULATE_DEVICE)
 
         # ------------ define residual layers --------------------
         self.res_layers = []
@@ -69,7 +72,9 @@ class SPARNet(nn.Module):
             channels = ch_clip(n_ch)
             self.res_layers.append(ResidualBlock(channels, channels, hg_depth=hg_depth, att_name=att_name, **nrargs))
         self.res_layers = nn.Sequential(*self.res_layers)
-        self.res_layers = self.res_layers.to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        self.res_layers = self.res_layers.to(CALCULATE_DEVICE)
 
         # ------------ define decoder --------------------
         self.decoder = []
@@ -80,14 +85,18 @@ class SPARNet(nn.Module):
             n_ch = n_ch // 2
 
         self.decoder = nn.Sequential(*self.decoder)
-        self.decoder = self.decoder.to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        self.decoder = self.decoder.to(CALCULATE_DEVICE)
         self.out_conv = ConvLayer(ch_clip(n_ch), 3, 3, 1)
-        self.out_conv = self.out_conv.to("npu:0")
+        self.out_conv = self.out_conv.to(CALCULATE_DEVICE)
     
     def forward(self, input_img):
-        out = self.encoder(input_img).to("npu:0")
-        out = self.res_layers(out).to("npu:0")
-        out = self.decoder(out).to("npu:0")
-        out_img = self.out_conv(out).to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        out = self.encoder(input_img).to(CALCULATE_DEVICE)
+        out = self.res_layers(out).to(CALCULATE_DEVICE)
+        out = self.decoder(out).to(CALCULATE_DEVICE)
+        out_img = self.out_conv(out).to(CALCULATE_DEVICE)
         return out_img
 
