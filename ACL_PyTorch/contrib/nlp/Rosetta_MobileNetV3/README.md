@@ -42,15 +42,15 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
 ----
 # 推理环境
 
-- 该模型离线推理使用 Atlas 300I Pro 推理卡，推理所需配套的软件如下：
+- 该模型推理所需配套的软件如下：
 
     | 配套      | 版本    | 环境准备指导 |
     | --------- | ------- | ---------- |
-    | firmware  | 1.82.22.2.220 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-    | driver    | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-    | CANN      | 5.1.RC2 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | 固件与驱动 | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 5.1.RC2 | -          |
     | Python    | 3.7.5   | -          |
-    | PaddleOCR | release/2.6 | -          |
+    
+    说明：该模型离线推理使用 Atlas 300I Pro 推理卡，Atlas 300I Duo 推理卡请以 CANN 版本选择实际固件与驱动版本。
 
 
 ----
@@ -58,27 +58,25 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
 
 ## 获取源码
 
-1. 克隆开源仓源码
+1. 克隆开源仓源码。
     ```shell
     git clone -b release/2.6 https://github.com/PaddlePaddle/PaddleOCR.git
     cd PaddleOCR
     git reset --hard 76fefd56f86f2809a6e8f719220746442fbab9f3
     ```
 
-2. 下载本仓，将该模型目录下的Python脚本、requirements.txt与补丁文件复制到当前目录，并对配置文件作修改
+2. 下载本仓，将该模型目录下的Python脚本、requirements.txt与补丁文件复制到当前目录，并修改源码。
     ```shell
     patch -p1 < rosetta.patch
     ```
 
-3. 执行以下命令创建 Python 虚拟环境并安装所需的依赖
+3. 执行以下命令安装所需的依赖。
     ```shell
-    conda create -n rosetta python=3.7.5
-    conda activate rosetta
     pip install -r requirements.txt
     python setup.py install
     ```
 
-4. 创建一个目录，用于存放整个推理过程中所需文件与生成文件
+4. 创建一个目录，用于存放整个推理过程中所需文件与生成文件。
     ```shell
     mkdir rosetta
     ```
@@ -125,7 +123,7 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
     执行前处理脚本将原始数据转换为 OM 模型输入需要的 bin 文件。
     ```shell
     python rosetta_preprocess.py \
-        --config configs/rec/rec_mv3_none_none_ctc.yml 
+        --config configs/rec/rec_mv3_none_none_ctc.yml \
         --opt data_dir=rosetta/lmdb/ bin_dir=rosetta/bin_list info_dir=rosetta/info_list
     ```
     参数说明：
@@ -142,7 +140,7 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
 1. PyTroch 模型转 ONNX 模型  
 
     step1: 下载 paddle 预训练模型
-    下载 PaddleOCR 提供的 [预训练模型](https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/rec_mv3_none_none_ctc_v2.0_train.tar) 到 rosetta 目录下，然后解压到当前目录。
+    下载 PaddleOCR 提供的 [预训练模型](https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/rec_mv3_none_none_ctc_v2.0_train.tar) 到 rosetta 目录下，然后解压。
     ```shell
     cd rosetta
     wget https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/rec_mv3_none_none_ctc_v2.0_train.tar
@@ -306,12 +304,12 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
 
     执行完纯推理命令，程序会打印出与性能相关的指标：
     ```
-[INFO] -----------------Performance Summary------------------
-[INFO] H2D_latency (ms): min = 0.10275840759277344, max = 0.10275840759277344, mean = 0.10275840759277344, median = 0.10275840759277344, percentile(99%) = 0.10275840759277344
-[INFO] NPU_compute_time (ms): min = 0.40299999713897705, max = 3.2839999198913574, mean = 0.4343369999527931, median = 0.42399999499320984, percentile(99%) = 0.5660099846124649
-[INFO] D2H_latency (ms): min = 0.07843971252441406, max = 0.07843971252441406, mean = 0.07843971252441406, median = 0.07843971252441406, percentile(99%) = 0.07843971252441406
-[INFO] throughput 1000*batchsize(1)/NPU_compute_time.mean(0.4343369999527931): 2302.359688694924
-[INFO] ------------------------------------------------------
+    [INFO] -----------------Performance Summary------------------
+    [INFO] H2D_latency (ms): min = 0.10275840759277344, max = 0.10275840759277344, mean = 0.10275840759277344, median = 0.10275840759277344, percentile(99%) = 0.10275840759277344
+    [INFO] NPU_compute_time (ms): min = 0.40299999713897705, max = 3.2839999198913574, mean = 0.4343369999527931, median = 0.42399999499320984, percentile(99%) = 0.5660099846124649
+    [INFO] D2H_latency (ms): min = 0.07843971252441406, max = 0.07843971252441406, mean = 0.07843971252441406, median = 0.07843971252441406, percentile(99%) = 0.07843971252441406
+    [INFO] throughput 1000*batchsize(1)/NPU_compute_time.mean(0.4343369999527931): 2302.359688694924
+    [INFO] ------------------------------------------------------
 
     ```
     
