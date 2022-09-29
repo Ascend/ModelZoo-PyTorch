@@ -104,7 +104,7 @@
 2. 数据预处理
 
    ```shell
-   python3 preprocess.py --input-path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data --dict_path ./bert-base-chinese/vocab.txt
+   python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data --dict_path ./bert-base-chinese/vocab.txt
    ```
 
 
@@ -167,8 +167,13 @@
 
    ```shell
    # 以bs64模型推理为例
+   # ${root_dir}: 当前模型工作路径
+   # ${infer_dir}: ais_infer.py所在推理环境路径
+   cd ${root_dir}
    mkdir -p ./output_data/bs64
-   python3 ais_infer.py --model ./models/om/bert_base_chinese_bs64.om --input ./preprocessed_data/input_data --output ./output_data/bs64 --outfmt NPY --batchsize 64 --device 0
+   cd ${infer_dir}
+   python3 ais_infer.py --model ${root_dir}/models/om/bert_base_chinese_bs64.om --input ${root_dir}/preprocessed_data/input_data --output ${root_dir}/output_data/bs64 --batchsize 64 --device 0
+   cd ${root_dir}
    ```
 
 6. 精度验证

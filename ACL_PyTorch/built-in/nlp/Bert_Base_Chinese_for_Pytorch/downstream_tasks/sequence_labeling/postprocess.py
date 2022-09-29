@@ -35,7 +35,7 @@ class Model(BaseModel):
         self.crf = CRF(7)
 
 
-def load_bin_file(path, shape, dtype="float16"):
+def load_bin_file(path, shape, dtype="float32"):
     data = np.fromfile(path, dtype).reshape(shape)
     return torch.tensor(data)
 
@@ -56,7 +56,7 @@ def evaluate(result_dir, label_dir):
         emission_score = torch.Tensor(
             load_bin_file(emission_score_path, [1, 256, 7]))
         attention_mask = torch.Tensor(
-            load_bin_file(attention_mask_path, [1, 256]))
+            load_bin_file(attention_mask_path, [1, 256], dtype="int64"))
         scores = crf.decode(emission_score, attention_mask)
         true_labels += [[categories_id2label[int(l)] for
                          l in label if l != -100] for label in labels]
