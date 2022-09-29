@@ -19,6 +19,7 @@ import argparse
 import json
 import math
 import imageio
+from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser(description='EDSR post process script')
@@ -40,35 +41,46 @@ size = 1020
 
 def postprocess(img_src_path, src_path, save_path):
     data = []
-    count = 0
     # create dir
     if not os.path.isdir(save_path) and args.save:
         os.makedirs(save_path)
-    for file in os.listdir(src_path):
-        array = np.fromfile(os.path.join(src_path, file), dtype=np.float32).reshape(
-            3, size*scale, size*scale).transpose((1, 2, 0))
-        img = torch.from_numpy(array)
-        img = quantize(img, 255)
-        img = crop(file, img, pad_info)
-        for img_file in os.listdir(img_src_path):
-            if img_file[0:4] in file:
-                hr = imageio.imread(os.path.join(img_src_path, img_file))
-                hr = torch.from_numpy(hr)
-                psnr = calc_psnr(img, hr, scale, 255)
-                data.append({"file": file, "psnr": psnr})
-                break
+    for file in tqdm(os.listdir(src_path)):
+        if file.endswith(".bin"):
+            array = np.fromfile(os.path.join(src_path, file), dtype=np.float32).reshape(
+                3, size*scale, size*scale).transpose((1, 2, 0))
+            img = torch.from_numpy(array)
+            img = quantize(img, 255)
+            img = crop(file, img, pad_info)
+            for img_file in os.listdir(img_src_path):
+                if img_file[0:4] in file:
+                    hr = imageio.imread(os.path.join(img_src_path, img_file))
+                    hr = torch.from_numpy(hr)
+                    psnr = calc_psnr(img, hr, scale, 255)
+                    data.append({"file": file, "psnr": psnr})
+                    break
 
-        img = img.byte().cpu()
-        if args.save:
-            imageio.imwrite(os.path.join(save_path+file)+".png", img.numpy())
-        count += 1
-        print("OK, count = ", count)
+            img = img.byte().cpu()
+            if args.save:
+                imageio.imwrite(os.path.join(save_path+file)+".png", img.numpy())
+        pass
 
     data = eval_acc(data)
     json_data = json.dumps(
         data, indent=4, separators=(',', ': '))
     with open("result.json", 'w') as f:
         f.write(json_data)
+
+def replcaeFileName(src_path):
+    binlist = os.listdir(src_path)
+    for bin in binlist:
+        if bin.endswith(".bin"):
+            bin_split = bin.split('_')
+            bin_num = bin_split[0]
+            bin_num = bin_num[5:]
+            old_path = os.path.join(os.path.abspath(src_path), bin)
+            new_path = os.path.join(os.path.abspath(src_path), '0' + str(800 + (int(bin_num)) + 1) + '.bin')
+
+            os.renames(old_path, new_path)
 
 def crop(file, img, pad_info):
     for pad_meta in pad_info:
@@ -89,10 +101,11 @@ def crop(file, img, pad_info):
 
 def eval_acc(data):
     acc = 0
+    print(len(data))
     for item in data:
         acc += item["psnr"]
     acc /= len(data)
-    print("accuracy: ",acc)
+    print("accuracy: ", acc)
     return {
         "accuracy": acc,
         "data": data
@@ -119,4 +132,5 @@ def calc_psnr(sr, hr, scale, rgb_range):
     return -10 * math.log10(mse)
 
 if __name__ == '__main__':
+    # replcaeFileName(args.res)
     postprocess(args.HR, args.res, args.save_path)
