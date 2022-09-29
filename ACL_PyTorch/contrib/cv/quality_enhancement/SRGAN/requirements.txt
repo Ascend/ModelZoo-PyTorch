@@ -12,3 +12,7 @@ requests >= 2.26.0
 scikit-learn >= 0.24.2
 scipy >= 1.5.4
 skl2onnx >= 1.10.3
+torch >=1.12.1
+torchvision >=0.13.1
+decorator >=5.1.1
+tqdm >=4.64.1

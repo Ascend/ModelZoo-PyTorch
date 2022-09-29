@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from magiconnx import OnnxGraph
+import json
+import os  
 import sys
+def file_name(file_dir):   
+    L=[]
+    s = 0
+    for dirpath, dirnames, filenames in os.walk(file_dir):  
+        for file in filenames:  
+            if os.path.splitext(file)[1] == '.json':  
+                with open(os.path.join(dirpath, file), 'r') as f:
+                    result = json.load(f)
+                    s = s+result["throughput"]
+    return s 
 
-def fix(graph):
-    nodes = graph.get_nodes(op_type='PRelu')
-    for node in nodes:
-        slope_node = graph[node.inputs[1]]
-        slope_node_value = slope_node.value
-        slope_node.value = np.tile(slope_node_value, (64, 1, 1))
-
-
-if __name__ == '__main__':
-    onnx_path = sys.argv[1]
-    batch_size = sys.argv[2]
-    onnx_graph = OnnxGraph(onnx_path)
-    fix(onnx_graph)
-    onnx_graph.save('srgan_fix_bs{}.onnx'.format(batch_size))
+s = file_name("result")
+print("====310P performance data====")
+print('310P bs{} fps:{}'.format(sys.argv[1], s/5))
