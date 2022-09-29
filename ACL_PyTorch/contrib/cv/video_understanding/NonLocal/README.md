@@ -98,15 +98,8 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+1. 获取mmaction源码。
    ```
-   git clone https://gitee.com/congee524/modelzoo.git  # 克隆仓库的代码
-   cd modelzoo                                                 # 切换到模型的代码仓目录
-   git checkout nonlocal_infer                              # 切换到对应分支
-   git reset --hard a2efc86                                 # 代码设置到对应的commit_id 
-   cp -r contrib/ACL_PyTorch/Research/cv/video_understanding/NonLocal ../ # 复制源码
-   cd ..
-   git clone https://github.com/open-mmlab/mmaction2.git
    cd mmaction2
    git checkout 92e5517f1b3cbf937078d66c0dc5c4ba7abf7a08
    git am --signoff < ../nonlocal.patch
