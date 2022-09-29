@@ -75,7 +75,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 | onnxoptimizer                                                | 0.3.1   | -                                                  
 | onnxruntime                                                  | 1.21.1  | -                                                  
 | decord                                                       | 0.6.0   | -                                                  
-| CANN                                                         | 5.1.RC1 | -                                                            |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | scipy                                                        | 1.7.0   | -                                                            |
 | opencv-contrib-python                                        | 4.5.3.56| -                                                  
@@ -186,6 +186,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
    1. 获取权重文件。
 
        从源码包中获取权重文件：“tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb_20200724-d8ad84d2.pth”
+       链接为：https://www.hiascend.com/zh/software/modelzoo/models/detail/1/7012c3ff0cc745e38cad3019d41b830d
 
    2. 导出onnx文件。
 
@@ -245,7 +246,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
          atc --model=tsm_nl_bs1.onnx \
          --framework=5 --output=tsm_nl_bs1 \
          --input_format=ND --input_shape="video:1,8,3,224,224" \
-         --log=debug --soc_version=Ascend310P3 
+         --log=debug --soc_version=Ascend${chip_name} 
          ```
 
          - 参数说明：
@@ -292,7 +293,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
       调用脚本与数据集标签kinetics400_val_list_videos.txt比对，可以获得Accuracy数据。
 
       ```
-       python3.7 tsm_k400_postprocess.py --result_path ./out/out_1/2022_09_27-13_33_22 --info_path ./mmaction2/data/kinetics400/k400_1.info
+       python3.7 tsm_k400_postprocess.py --result_path ./out/out_1/xxxx_xx_xx-xx_xx_xx --info_path ./mmaction2/data/kinetics400/k400_1.info
       ```
 
       result_path：为生成推理结果所在路径 
