@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+#Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import os
-os.system('pip install tensorboardX')
 from utils.timer import Timer
 from utils.logger import Logger
 from utils import utils
+import time
 import torch
 from options.train_options import TrainOptions
 from data import create_dataset
@@ -28,16 +28,6 @@ import numpy as np
 from skimage.measure import compare_ssim
 
 def rgb2y_matlab(x):
-    """Convert RGB image to illumination Y in Ycbcr space in matlab way.
-    -------------
-    # Args
-        - Input: x, byte RGB image, value range [0, 255]
-        - Ouput: byte gray image, value range [16, 235]
-
-    # Shape
-        - Input: (H, W, C)
-        - Output: (H, W)
-    """
     K = np.array([65.481, 128.553, 24.966]) / 255.0
     Y = 16 + np.matmul(x, K)
     return Y.astype(np.uint8)
@@ -77,7 +67,6 @@ def SSIM(gt_img, noise_img):
 def psnr_ssim_dir(gt_dir, test_dir):
     gt_img_list = sorted([x for x in sorted(os.listdir(gt_dir))])
     test_img_list = sorted([x for x in sorted(os.listdir(test_dir))])
-    #  assert gt_img_list == test_img_list, 'Test image names are different from gt images.'
 
     psnr_score = 0
     ssim_score = 0
@@ -92,15 +81,14 @@ def psnr_ssim_dir(gt_dir, test_dir):
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
-    opt.data_url = "/home/test_user08/SparNet/img_align_celeba"
+    t = opt.data_url
+    opt.data_url = opt.data_url + "/img_align_celeba"
     flag = False
     device_id=int(os.environ['ASCEND_DEVICE_ID'])
     CALCULATE_DEVICE = "npu:{}".format(device_id)
-    #CALCULATE_DEVICE = "npu:4"
     print("use ", CALCULATE_DEVICE)
-    #CALCULATE_DEVICE = "npu:5"
-    dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
-    dataset_size = len(dataset)    # get the number of images in the dataset.
+    dataset = create_dataset(opt)
+    dataset_size = len(dataset)
     print('The number of training images = %d' % dataset_size)
 
     model = create_model(opt)
@@ -137,10 +125,6 @@ if __name__ == '__main__':
                 logger.record_images(visual_imgs)
 
             info = {'resume_epoch': epoch, 'resume_iter': i+1}
-            # if cur_iters % opt.save_iter_freq == 0:
-            #     print('saving current model (epoch %d, iters %d)' % (epoch, cur_iters))
-            #     save_suffix = 'iter_%d' % cur_iters
-            #     model.save_networks(save_suffix, info)
             if cur_iters == 126600:
                 save_suffix = 'iter_%d' % cur_iters
                 print('saving current model (epoch %d, iters %d)' % (epoch, cur_iters))
@@ -149,21 +133,15 @@ if __name__ == '__main__':
                 break
         if flag:
             break
-
-            # if cur_iters % opt.save_latest_freq == 0:
-            #     print('saving the latest model (epoch %d, iters %d)' % (epoch, cur_iters))
-            #     model.save_networks('latest', info)
-
             if opt.debug: break
-        if opt.debug and epoch > 5: exit() 
-        #  model.update_learning_rate()
+        if opt.debug and epoch > 5: exit()
     logger.close()
 
 # test
     opt.dataset_name = "single"
-    opt.data_url = "/home/test_user08/SparNet/test_dirs/Helen_test_DIC/LR"
-    opt.pretrain_model_path = '/home/test_user08/SparNet/Face-SPARNet/weight/sparnet-best_model.pth'
-    opt.save_as_dir = "/home/test_user08/SparNet/Face-SPARNet/SPARNet_S16_V4_Attn2D/"
+    opt.data_url = t + "/test_dirs/Helen_test_DIC/LR"
+    opt.pretrain_model_path = opt.train_url + 'sparnet-best_model.pth'
+    opt.save_as_dir = opt.train_url + "Face-SPARNet/SPARNet_S16_V4_Attn2D/"
     opt.num_threads = 0  # test code only supports num_threads = 1
     opt.batch_size = 1  # test code only supports batch_size = 1
     opt.serial_batches = True  # disable data shuffling; comment this line if results on randomly chosen images are needed.
@@ -201,9 +179,9 @@ if __name__ == '__main__':
         save_img.save(save_path)
 
     # python psnr_ssim.py
-    gt_dir = '/home/test_user08/SparNet/test_dirs/Helen_test_DIC/HR'
+    gt_dir = t + '/test_dirs/Helen_test_DIC/HR'
     test_dirs = [
-            '/home/test_user08/SparNet/Face-SPARNet/SPARNet_S16_V4_Attn2D/',
+            opt.train_url + '/results_helen/SPARNet_S16_V4_Attn2D',
             ]
     for td in test_dirs:
         result = psnr_ssim_dir(td, gt_dir)

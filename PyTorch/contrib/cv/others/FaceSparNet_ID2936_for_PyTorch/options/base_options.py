@@ -37,12 +37,8 @@ class BaseOptions():
 
     def initialize(self, parser):
         """Define the common options that are used in both training and test."""
-        # basic parameters
-        #parser.add_argument('--dataroot', required=False, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        # parser.add_argument('--data_path')
-        # parser.add_argument('--output_path')
-        parser.add_argument("--data_url", type=str, default="/home/test_user06/SparNet/")
-        parser.add_argument("--train_url", type=str, default="/home/ma-user/modelarts/outputs/train_url_0/")
+        parser.add_argument("--data_url", type=str, default="./SparNet/")
+        parser.add_argument("--train_url", type=str, default="./outputs/train_url_0/")
         parser.add_argument('--name', type=str, default='SPARNet_S16_V4_Attn2D', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpus', type=int, default=1, help='how many gpus to use')
         parser.add_argument('--seed', type=int, default=123, help='Random seed for training')
@@ -142,20 +138,6 @@ class BaseOptions():
         """Parse our options, create checkpoints directory suffix, and set up gpu device."""
         opt = self.gather_options()
         opt.isTrain = self.isTrain   # train or test
-
-
-       # Find avaliable GPUs automatically
-       #  if opt.gpus > 0:
-       #      opt.gpu_ids = utils.get_gpu_memory_map()[1][:opt.gpus]
-       #      if not isinstance(opt.gpu_ids, list):
-       #          opt.gpu_ids = [opt.gpu_ids]
-       #      torch.cuda.set_device(opt.gpu_ids[0])
-       #      opt.device = torch.device('cuda:{}'.format(opt.gpu_ids[0 % opt.gpus]))
-       #      opt.data_device = torch.device('cuda:{}'.format(opt.gpu_ids[1 % opt.gpus]))
-       #  else:
-       #      opt.gpu_ids = []
-       #      #opt.device = torch.device('cpu')
-       #      opt.device = torch.npu.set_device('npu:0')
         opt.gpu_ids = []
         device_id=int(os.environ['ASCEND_DEVICE_ID'])
         CALCULATE_DEVICE = "npu:{}".format(device_id)

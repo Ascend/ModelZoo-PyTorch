@@ -18,6 +18,12 @@ from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks
 
+CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != CALCULATE_DEVICE:
+    CALCULATE_DEVICE = f'npu:{CALCULATE_DEVICE}'
+
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
@@ -46,9 +52,6 @@ class BaseModel(ABC):
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
-        #self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
-        device_id=int(os.environ['ASCEND_DEVICE_ID'])
-        CALCULATE_DEVICE = "npu:{}".format(device_id)
         self.device = torch.npu.set_device(CALCULATE_DEVICE)
         self.loss_names = []
         self.model_names = []
@@ -179,22 +182,7 @@ class BaseModel(ABC):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
-                device_id=int(os.environ['ASCEND_DEVICE_ID'])
-                CALCULATE_DEVICE = "npu:{}".format(device_id)
-                torch.save(net.to(CALCULATE_DEVICE).state_dict(), '/home/test_user08/SparNet/Face-SPARNet/weight/sparnet-best_model.pth')
-        #         if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-        #             torch.save(net.module.cpu().state_dict(), save_path)
-        #             net.cuda(self.gpu_ids[0])
-        #         else:
-        #             torch.save(net.cpu().state_dict(), save_path)
-        # opts = []
-        # for opt in self.optimizers:
-        #     opts.append(opt.state_dict())
-        # torch.save(opts, os.path.join(self.save_dir, '%s_opts.pth' % epoch))
-        #
-        # if info is not None:
-        #     torch.save(info, os.path.join(self.save_dir, '%s.info' % epoch))
-
+                torch.save(net.to(CALCULATE_DEVICE).state_dict(), self.opt.train_url + 'sparnet-best_model.pth')
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
@@ -230,17 +218,7 @@ class BaseModel(ABC):
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
                 print('loading the model from %s' % load_path)
-                # if you are using PyTorch newer than 0.4 (e.g., built from
-                # GitHub source), you can remove str() on self.device
                 state_dict = torch.load(load_path, map_location=str(self.device))
-                #  if hasattr(state_dict, '_metadata'):
-                    #  del state_dict._metadata
-
-                # patch InstanceNorm checkpoints prior to 0.4
-                #  for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
-                    #  self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                #  net.load_state_dict(state_dict)
-                #  Load partial weights
                 model_dict = net.state_dict()
                 pretrained_dict = {k: v for k, v in state_dict.items() if k in model_dict}
                 model_dict.update(pretrained_dict)
