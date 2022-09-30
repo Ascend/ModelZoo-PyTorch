@@ -123,7 +123,7 @@ python3.7 -m onnxsim --input-shape="image:16,3,240,240" ./Efficient-b1.onnx bs16
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
+1.设置环境变量，请以实际安装环境配置。
 
 ```sh
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -213,7 +213,7 @@ ais_infer工具包含前端和后端两部分。 后端基于c+开发，实现�
 
 ### 5.2 离线推理
 
-1.设置环境变量
+1.设置环境变量，请以实际安装环境配置。
 
 ```sh
 source /usr/local/Ascend/ascend-toolkit/set_env.sh

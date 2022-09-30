@@ -35,7 +35,11 @@ cd ..
 
 2.eval_acc_perf.sh脚本逐步完成数据前处理bin文件输出、bs1和bs16模型推理、bs1和bs16精度测试，以及bs1和bs16benchmark的性能测试
 
+3.该脚本中环境变量仅供参考，请以实际安装环境配置环境变量
+
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 bash test/pth2om.sh  
 
 bash test/eval_acc_perf.sh --datasets_path=/root/datasets/VoxCeleb1/

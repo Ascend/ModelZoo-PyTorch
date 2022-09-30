@@ -78,6 +78,8 @@ export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 python pth2onnx.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch pretrained_models/fastpitch/nvidia_fastpitch_210824.pt --waveglow pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt --wn-channels 256 --energy-conditioning --batch-size 1
 # 简化onnx
 python -m onnxsim ./test/models/FastPitch_bs1.onnx ./test/models/FastPitch_bs1_sim.onnx
+# 根据实际情况设置环境变量
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 # 转出om
 atc --framework=5 --model=./test/models/FastPitch_bs1_sim.onnx --output=./test/models/FastPitch_bs1 --input_format=ND --input_shape="input:1,200" --out_nodes='Transpose_2044:0' --log=debug --soc_version=Ascend310
 ```

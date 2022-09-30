@@ -17,7 +17,8 @@ git apply ../Waveglow.patch
 conda create --name waveglow python=3.7.5
 conda activate waveglow
 ```
-#### 3.安装依赖包```
+#### 3.安装依赖包
+```
 pip3 install -r requirements.txt --no-deps
 ```
 ### 二、模型转换
@@ -58,7 +59,8 @@ atc --model=waveglow.onnx \
 
 
 ### 三、数据集预处理
-#### 1. 获取数据集下载[LJSpeech-1.1数据集](https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2)，解压至当前目录
+#### 1. 获取数据集
+下载[LJSpeech-1.1数据集](https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2)，解压至当前目录
 ```
 wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
 tar jxvf LJSpeech-1.1.tar.bz2
@@ -70,12 +72,15 @@ ${data_path}
         |-- wavs
         |    |-- LJ001-0001.wav
         |    |-- LJ001-0002.wav
-        |    |-- …        |    |-- LJ050-0278
+        |    |-- …
+        |    |-- LJ050-0278
         |-- metadata.csv
     |-- README
 ```
-#### 2. 数据前处理```
-# 测试集为LJSpeech-1.1数据集中前10条数据ls LJSpeech-1.1/wavs/*.wav | head -n10 > test_files.txt
+#### 2. 数据前处理
+```
+# 测试集为LJSpeech-1.1数据集中前10条数据
+ls LJSpeech-1.1/wavs/*.wav | head -n10 > test_files.txt
 rm -rf ./data
 mkdir data
 python3 ../Waveglow_preprocess.py -f ./test_files.txt -c ./config.json -o ./data/
@@ -83,13 +88,14 @@ python3 ../Waveglow_preprocess.py -f ./test_files.txt -c ./config.json -o ./data
 **参数说明：**
 > -f 测试集数据名  
 > -c 模型配置json文件  
-> -o 前处理结果存放路径### 四、 离线推理
+> -o 前处理结果存放路径
+### 四、 离线推理
 #### 1. ais_infer工具概述
 查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_infer工具安装
 
 #### 2. 离线推理
 ```
-# 设置环境变量
+# 设置环境变量，请以实际安装环境配置环境变量
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # 推理前使用 'npu-smi info' 命令查看 device 是否在运行其它推理任务，确保 device 空闲
@@ -105,7 +111,8 @@ sh ../Waveglow_inference.sh ./tools/ais-bench_workload/tool/ais_infer ./data/
 >第二个参数为前处理结果存放路径  
 
 
-### 五、 后处理#### 1. 推理结果 
+### 五、 后处理
+#### 1. 推理结果 
 执行Waveglow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
 ```
 rm -rf ./synwavs
@@ -117,14 +124,16 @@ python3 ../Waveglow_postprocess.py -f ./result/ -o ./synwavs/
 > -o 后处理结果存放路径  
 
 #### 2. 性能数据
-使用ais_infer工具获得性能数据：```
+使用ais_infer工具获得性能数据：
+```
 python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model "./waveglow.om" --output "./output/" --outfmt BIN --dymDims mel:1,80,832 --batchsize 1
 ```
 Interface throughput Rate:0.59fps，即是batch1 310P单卡吞吐率  
 
 ### 3. 性能对比
 
-性能对比表格如下：|           |  310P    | T4        |  310P/T4  |
+性能对比表格如下：
+|           |  310P    | T4        |  310P/T4  |
 | --------- | -------- | -------   | --------- | 
 | bs1       | 0.59 | 0.037  |  15.946   |
 

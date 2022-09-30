@@ -89,9 +89,11 @@ python3.7 3d_attention_net_pkl2onnx.py
 python3.7 resize_optimize.py
 ```
 
-3. 通过ATC将onnx模型转换为om模型（以bs1、bs4为例）
+3. 通过ATC将onnx模型转换为om模型（以bs1、bs4为例），该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。
 
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 atc --framework=5 --model=3d_attention_net_resize_optimized.onnx --output=3d_attention_net_resize_autotune_optimized_bs1 --input_format=NCHW --input_shape="image:1,3,32,32" --log=debug -soc_version=Ascend${chip_name}
 
 atc --framework=5 --model=3d_attention_net_resize_optimized.onnx --output=3d_attention_net_resize_autotune_optimized_bs4 --input_format=NCHW --input_shape="image:4,3,32,32" --log=debug -soc_version=Ascend${chip_name}
