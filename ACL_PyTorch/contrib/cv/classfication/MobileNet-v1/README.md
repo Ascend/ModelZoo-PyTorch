@@ -156,7 +156,6 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
          ```
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
-         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
          ```
       
          > **说明：** 
@@ -168,7 +167,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
          npu-smi info
          #该设备芯片名为Ascend310P3 （自行替换）
          回显如下：
-         +-------------------+-----------------+------------------------------------------------------+
+         +-------------------|-----------------|------------------------------------------------------+
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
          +===================+=================+======================================================+

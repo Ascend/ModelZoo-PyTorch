@@ -191,7 +191,6 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 
          ```
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
-         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
          ```
 
          > **说明：** 
@@ -205,7 +204,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
          回显如下：
          +--------------------------------------------------------------------------------------------+
          | npu-smi 22.0.0                       Version: 22.0.2                                       |
-         +-------------------+-----------------+------------------------------------------------------+
+         +-------------------|-----------------|------------------------------------------------------+
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
          +===================+=================+======================================================+
