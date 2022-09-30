@@ -31,12 +31,15 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
   model_name=beit
   commit_id=35d21904a9b5beca074b085869d06b9583db2e81
   ```
-
+  
   通过Git获取对应commit\_id的代码方法如下：
 
   ```
   git clone {repository_url}        # 克隆仓库的代码
-  cd {model_name}                    # 切换到模型代码所在路径
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -250,7 +253,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
     1. 测试性能数据
     ```
-    python3 ais_infer.py --model "beit_mg_bs8.om"  --loop 10 --batchsize 8
+    python3 ais_infer.py --model "beit_mg_bs8.om"  --loop 100 --batchsize 8
     ```
         
    - 参数说明：
@@ -265,6 +268,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
         --input "./prep_image_bs8" \
         --output ./ais_out/ \
         --outfmt TXT  
+        --batchsize 8
        ```
    
        - 参数说明：
@@ -273,6 +277,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
          - input：数据集路径。
          - outfmt：输出数据格式。
          - output：输出路径
+         - batchsize: om模型batch size大小
        > **说明：** 
         > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见
 
@@ -286,7 +291,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
         --annotation_file_path="/opt/npu/imageNet/val_label.txt" \
         --result_json_path="./" \
         --json_file_name="acc_bs8.json" \
-        --batch_size=8
+        --batchsize=8
     ```
     
    - 参数说明：
@@ -310,7 +315,6 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
     |   BS8    | 84.68% |
     |   BS16   | 84.68% |
     |   BS32   | 84.67% |
-    |   BS64   | 84.68% |
     
     84.67% / 85.27% = 99.30%
     精度误差保持在1%以内，精度达标
@@ -318,22 +322,21 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
 2. 性能
 
-    | gpu | batch size |   fps    |
-    |:----------:| :---------: | :------: |
-    |  T4  |    bs1     | 188.917  |
-    |  T4  |    bs4     | 267.900  |
-    |  T4  |    *bs8    | *290.474 |
-    |  T4  |    bs16    | 287.486  |
+    | gpu | batch size |   fps   |
+    |:----------:|:-------:| :------: |
+    |  T4  |    bs1     | 188.917 |
+    |  T4  |    bs4     | 267.900 |
+    |  T4  |    bs8     | 290.474 |
+    |  T4  |    bs16    | 287.486 |
 
     | npu  | batch size |   fps    |
-    |:----------:| :--------: | :------: |
-    | 310P |    bs1     | 292.397  |
-    | 310P |    bs4     | 350.877  |
-    | 310P |    bs8     | 460.299  |
-    | 310P |   *bs16    | *463.284 |
-    | 310P |    bs32    | 412.211  |
-    | 310P |    bs64    | 408.137  |
+    |:----------:|:--------:| :------: |
+    | 310P |    bs1     | 294.039  |
+    | 310P |    bs4     | 345.984  |
+    | 310P |    bs8     | 512.137  |
+    | 310P |    bs16    | 389.163  |
+    | 310P |    bs32    | 362.796  |
     
-    npu在bs为16时性能最佳，gpu在bs为8时性能最佳，两者对比：
+    npu在bs=8时性能最佳，gpu在bs=8时性能最佳，两者对比：
 
-    Ascend 310P/ gpu t4 = 463.284 / 290.474 = 1.595
+    Ascend 310P/ gpu t4 = 512.137 / 290.474 = 1.763
