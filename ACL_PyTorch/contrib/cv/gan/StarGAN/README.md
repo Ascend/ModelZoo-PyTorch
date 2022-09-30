@@ -95,9 +95,27 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
 ## 获取源码<a name="section4622531142816"></a>
 
+1. 获取源码
+   源码目录结构：
+   ```
+   ├── env_npu.sh                     //环境变量
+   ├── unzip_dataset.sh             //解压数据集
+   ├── test/eval_bs1_perf.sh       //310bs1验收脚本
+   ├── test/eval_bs16_perf.sh      //310bs16验收脚本
+   ├── test/pth2om.sh                //310生成om文件
+   ├── test_710/eval_bs1_perf.sh       //310Pbs1验收脚本
+   ├── test_710/eval_bs16_perf.sh      //310Pbs16验收脚本
+   ├── test_710/pth2om.sh                //310P生成om文件
+   ├── StarGAN_pre_processing.py  //预处理
+   ├── StarGAN_pth2onnx.py          //用于转换pth文件到onnx文件
+   ├── StarGAN_post_processing.py //用于转换txt文件到jpg文件
+   ├── model.py                        //定义模型的文件
+   ├── solver.py                      //定义模型的文件
+   ├── data_loader.py                //定义模型的文件
+   ├── ReadMe.md 
+   ```
 
-
-1. 安装依赖。
+2. 安装依赖。
 
    ```
    source ${CANN_INSTALL_PATH}/set_env.sh
