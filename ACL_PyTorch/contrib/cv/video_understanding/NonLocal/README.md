@@ -67,16 +67,22 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| Onnx                                                         | 1.7.0   | -                                                  
 | Pytorch                                                      | 1.7.0   | -                                                  
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |                     
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+  **表 2**  版本依赖表
+
+| 依赖                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| Onnx                                                         | 1.7.0   | -                                                  
 | torchvision                                                  | 0.8.0   | -                                                  
 | numpy                                                        | 1.21.6  | -                                                  
 | onnx-simplifier                                              | 0.3.6   | -                                                  
 | onnxoptimizer                                                | 0.3.1   | -                                                  
 | onnxruntime                                                  | 1.21.1  | -                                                  
 | decord                                                       | 0.6.0   | -                                                  
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
 | scipy                                                        | 1.7.0   | -                                                            |
 | opencv-contrib-python                                        | 4.5.3.56| -                                                  
 | opencv-python                                                | 4.5.3.56|-                                                  
@@ -91,8 +97,10 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 | psutil                                                       | 5.9.2   | -                                                  
 | absl-py                                                      | 1.2.0   | -                                                  
 | tensorflow                                                   | 2.10.0  | -                                                  
-| tqdm                                                         | 4.64.1  | -                                                                                                  
-| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+| tqdm                                                         | 4.64.1  | -                                                                            
+
+
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -179,7 +187,6 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
    1. 获取权重文件。
 
        从源码包中获取权重文件：“tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb_20200724-d8ad84d2.pth”
-       链接为：https://www.hiascend.com/zh/software/modelzoo/models/detail/1/7012c3ff0cc745e38cad3019d41b830d
 
    2. 导出onnx文件。
 
