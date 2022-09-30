@@ -86,16 +86,6 @@ do
         profiling=`echo ${para#*=}`
         profiling_dump_path=${cur_path}/output/profiling
         mkdir -p ${profiling_dump_path}
-    elif [[ $para == --autotune* ]];then
-        autotune=`echo ${para#*=}`
-		export autotune=$autotune
-        mv $install_path/fwkacllib/data/rl/Ascend910/custom $install_path/fwkacllib/data/rl/Ascend910/custom_bak
-        mv $install_path/fwkacllib/data/tiling/Ascend910/custom $install_path/fwkacllib/data/tiling/Ascend910/custom_bak
-        autotune_dump_path=${cur_path}/output/autotune_dump
-        mkdir -p ${autotune_dump_path}/GA
-        mkdir -p ${autotune_dump_path}/rl
-        cp -rf $install_path/fwkacllib/data/tiling/Ascend910/custom ${autotune_dump_path}/GA/
-        cp -rf $install_path/fwkacllib/data/rl/Ascend910/custom ${autotune_dump_path}/RL/
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     elif [[ $para == --bind_core* ]]; then
