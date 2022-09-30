@@ -25,7 +25,6 @@ export SCALAR_TO_HOST_MEM=1
 export HCCL_WHITELIST_DISABLE=1
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export ASCEND_GLOBAL_LOG_LEVEL=3
-export ASCEND_AICPU_PATH=$ASCEND_HOME
 export MM_BMM_ND_ENABLE=1
 export bmmv2_enable=1
 export BMMV2_ENABLE=1
@@ -45,4 +44,4 @@ for index in range(len(sys.path)):
         result+=sys.path[index] + '/torch/lib:'
 print(result)"""
 )
-export LD_LIBRARY_PATH=${path_lib}:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
