@@ -186,7 +186,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
-          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/5.1.RC2/atc/lib64/:/usr/local/Ascend/driver/lib64/driver/:$LD_LIBRARY_PATH
+   
          ```
 
          > **说明：** 
@@ -328,7 +328,8 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
     |  T4  |    bs4     | 267.900 |
     |  T4  |    bs8     | 290.474 |
     |  T4  |    bs16    | 287.486 |
-
+    |  T4  |    bs32    |  285.54  |
+    
     | npu  | batch size |   fps    |
     |:----------:|:--------:| :------: |
     | 310P |    bs1     | 294.039  |
