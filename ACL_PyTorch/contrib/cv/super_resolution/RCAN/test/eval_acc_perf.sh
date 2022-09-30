@@ -33,7 +33,7 @@ if [ $? != 0 ]; then
 fi
 
 # config environment
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 # run om
 if [ -d "result" ]
 then

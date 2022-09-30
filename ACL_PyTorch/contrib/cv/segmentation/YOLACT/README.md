@@ -63,7 +63,6 @@ pip3 install -r requirements.txt
   │   ├── coco.py
   │   ├── config.py
   │   └── __init__.py
-  ├── env.sh
   ├── layers
   │   ├── box_utils.py
   │   ├── functions

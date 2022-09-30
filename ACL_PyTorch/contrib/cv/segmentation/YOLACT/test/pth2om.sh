@@ -24,8 +24,8 @@ fi
 
 python ../weights/pth2onnx.py --trained_model=$pth_path --outputName=$onnx_name --dynamic=$dynamic --cann_version=$cann_version
 
-source ../env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 onnx_full_name=$2".onnx"
 
-${install_path}/atc/bin/atc --framework=5 --output=$om_name  --input_format=NCHW  --soc_version=Ascend310 --model=$onnx_full_name --input_shape="input.1:$batch_size,3,550,550"
+atc --framework=5 --output=$om_name  --input_format=NCHW  --soc_version=Ascend310 --model=$onnx_full_name --input_shape="input.1:$batch_size,3,550,550"

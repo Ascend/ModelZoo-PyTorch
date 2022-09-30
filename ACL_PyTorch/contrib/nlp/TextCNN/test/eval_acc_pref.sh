@@ -21,17 +21,12 @@ if [ $? != 0 ]; then
 	exit -1
 fi
 
+# 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量
 source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 rm -rf result/dumpOutput_device0_bs1
 rm -rf result/dumpOutput_device0_bs16
-
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
 
 ./benchmark.x86_64 -model_type=nlp -device_id=0 -batch_size=1 -om_path=TextCNN_bs1.om -output_binary=True -input_text_path=dataset.info -useDvpp=False
 if [ $? != 0 ]; then
