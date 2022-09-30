@@ -1,9 +1,3 @@
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-
 atc --model=decoder.onnx --framework=5 --output=decoder_static --input_format=ND \
 --input_shape="encoder_out:32,-1,256;encoder_out_lens:32;hyps_pad_sos_eos:32,10,-1;hyps_lens_sos:32,10;r_hyps_pad_sos_eos:32,10,-1;ctc_score:32,10" --log=error \
 --dynamic_dims="96,5,5;96,6,6;96,7,7;96,8,8;96,9,9;96,10,10;96,11,11;96,12,12;96,13,13;96,14,14;96,15,15;96,16,16;96,17,17;96,18,18;96,19,19;96,20,20;144,5,5;\

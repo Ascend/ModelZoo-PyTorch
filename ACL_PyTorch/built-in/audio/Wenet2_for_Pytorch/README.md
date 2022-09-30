@@ -140,7 +140,7 @@ cp ${code_path}/offline_encoder.om ${wenet_path}/examples/aishell/s0/
 
 
 ```
-python3 wenet/bin/recognize_om.py --config=train.yaml --test_data=data.list --dict=units.txt --mode=ctc_greedy_search --result_file=offline_res_result.txt --encoder_om=encoder_offline.om --decoder_om=xx.om --batch_size=1 --device_id=0 --test_file=offline_test_result.txt
+python3 wenet/bin/recognize_om.py --config=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/train.yaml --test_data=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/data.list --dict=units.txt --mode=ctc_greedy_search --result_file=offline_res_result.txt --encoder_om=encoder_offline.om --decoder_om=xx.om --batch_size=1 --device_id=0 --test_file=offline_test_result.txt
 ```
 
 - 计算并查看overall精度
@@ -175,7 +175,7 @@ python3 wenet/bin/recognize_om.py --config=train.yaml --test_data=data.list --di
 
 
 ```
-python3 wenet/bin/recognize_om.py --config=train.yaml --test_data=data.list --dict=units.txt --mode=ctc_greedy_search --result_file=static_res_result.txt --encoder_om=encoder_static.om --decoder_om=decoder_static.om --batch_size=32--device_id=0 --static --test_file=static_test_result.txt
+python3 wenet/bin/recognize_om.py --config=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/train.yaml --test_data=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/data.list --dict=units.txt --mode=ctc_greedy_search --result_file=static_res_result.txt --encoder_om=encoder_static.om --decoder_om=decoder_static.om --batch_size=32--device_id=0 --static --test_file=static_test_result.txt
 ```
 
 - 查看性能和精度：

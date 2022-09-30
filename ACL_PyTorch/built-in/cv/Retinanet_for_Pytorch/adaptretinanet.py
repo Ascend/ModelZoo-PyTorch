@@ -49,8 +49,6 @@ mod1.mod.graph.output.remove(mod1.mod.graph.output[0])
 onnx1 = mod1.node_remove(nodes_behind)
 new_1750 = mod1.add_output_node("1750", "float16")
 new_1753 = mod1.add_output_node("1753", "float16")
-cnt = mod1.get_nodes_by_optype("Constant")
-mod1.node_remove(cnt)
 mod1.save_new_model("o1.onnx")
 
 cmd = "amct_onnx calibration --model ./o1.onnx --save_path ./result --input_shape " \
