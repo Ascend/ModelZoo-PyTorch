@@ -113,7 +113,7 @@ parser.add_argument('--device-list', default='0,1,2,3,4,5,6,7',
                     type=str, help='device id list')
 parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
-parser.add_argument('--loss-scale', default='dynamic', type=str,
+parser.add_argument('--loss-scale', default=1024, type=str,
                     help='loss scale using in amp, default -1 means dynamic')
 
 warnings.filterwarnings('ignore')
