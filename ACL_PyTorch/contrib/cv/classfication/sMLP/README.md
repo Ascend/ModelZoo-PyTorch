@@ -155,7 +155,6 @@
     ```shell
     # 配置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
     
     # 执行 ATC 进行模型转换
     atc --framework=5 \
@@ -204,7 +203,6 @@
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
 
     # 创建目录存放推理结果
     mkdir </path/to>/SPACH/infer_results/

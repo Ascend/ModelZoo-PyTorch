@@ -83,7 +83,6 @@ patch -p0 path/to/envs/spach/lib/python3.7/site-packages/timm/models/layers/help
 - step1 设置环境变量
     ```shell
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
     ```
     说明：该命令中使用 CANN 默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
 
@@ -160,7 +159,6 @@ pip3 install --force-reinstall aclruntime-xxx.whl
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
     
     # 提前创建推理结果的保存目录
     mkdir path/to/shiftvit/val-out/

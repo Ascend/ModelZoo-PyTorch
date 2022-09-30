@@ -161,7 +161,6 @@ root
       1. 配置环境变量。
 
          ```
-          export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/driver/:${LD_LIBRARY_PATH}
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 

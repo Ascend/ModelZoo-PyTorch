@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 mkdir onnx_models
 python swin_pth2onnx.py --resume=resume/swin_tiny_patch4_window7_224.pth --cfg=Swin-Transformer/configs/swin_tiny_patch4_window7_224.yaml --batch-size=1
 python swin_pth2onnx.py --resume=resume/swin_tiny_patch4_window7_224.pth --cfg=Swin-Transformer/configs/swin_tiny_patch4_window7_224.yaml --batch-size=16
