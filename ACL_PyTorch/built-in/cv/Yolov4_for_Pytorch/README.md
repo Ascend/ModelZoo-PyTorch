@@ -32,7 +32,7 @@ ${chip_name}可通过`npu-smi info`指令查看
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # soc_version：支持Ascend310和Ascend310P[1-4]
 

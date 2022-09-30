@@ -12,20 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from mel2samp import Mel2Samp, load_wav_to_torch, files_to_list
 import os
-import sys
 import argparse
 import json
 import numpy as np
-
-__dir__ = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(__dir__)
-sys.path.append(os.path.abspath(os.path.join(__dir__, 'waveglow')))
-sys.path.append(os.path.abspath(os.path.join(__dir__, 'waveglow/tacotron2')))
-
-from waveglow.mel2samp import Mel2Samp, load_wav_to_torch, files_to_list
-
 
 if __name__ == "__main__":
     # Get defaults so it can work with no Sacred

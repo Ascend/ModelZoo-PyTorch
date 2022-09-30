@@ -21,7 +21,7 @@ python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
 （2）配置环境变量转换om模型
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --model=yolov3.onnx --framework=5 --output=yolov3_bs1 --input_format=NCHW --log=info --soc_version=Ascend310 --input_shape="images:1,3,416,416" --out_nodes="Reshape_219:0;Reshape_203:0;Reshape_187:0"
 ```
 

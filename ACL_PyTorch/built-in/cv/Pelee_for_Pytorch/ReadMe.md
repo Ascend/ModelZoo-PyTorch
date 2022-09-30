@@ -102,11 +102,7 @@ bash make.sh
   
   ```shell
   # 配置环境变量 
-  export install_path=/usr/local/Ascend/ascend-toolkit/latest 
-  export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH 
-  export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH 
-  export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH 
-  export ASCEND_OPP_PATH=${install_path}/opp 
+  source /usr/local/Ascend/ascend-toolkit/set_env.sh
   
   # 使用二进制输入时，执行如下命令。不开启aipp，用于精度测试
   ${install_path}/atc/bin/atc --model=./pelee_dynamic_bs_modify.onnx --framework=5 --output=pelee_bs1 --input_format=NCHW --input_shape="image:1,3,304,304" --log=info --soc_version=Ascend${chip_name} --enable_small_channel=1 # Ascend310P3
@@ -154,9 +150,7 @@ bash atc.sh
   设置pyACL环境变量
 
 ```shell
-export PYTHONUNBUFFERED=1
-export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/pyACL/python/site-packages/acl:$PYTHONPATH
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64/:$LD_LIBRARY_PATH
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
  

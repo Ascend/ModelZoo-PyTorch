@@ -1,3 +1,4 @@
+
 # Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,32 +21,42 @@ import math
 import numpy as np
 from scipy.io.wavfile import write
 import torch
+
 MAX_WAV_VALUE = 32768.0
 
 
 def main(file_dir, output_dir, sampling_rate):
-    file_list=[]    
-    for root, subDirs, files in os.walk(file_dir):
-        for fileName in files:
-            if fileName.endswith("bin"):
-                file_list.append(os.path.join(root, fileName))
-    for file_dir in file_list:
-        if os.path.exists(file_dir):
-            audio = np.fromfile(file_dir, dtype=np.float32)
-            with torch.no_grad():
-                audio = audio * MAX_WAV_VALUE
-            audio = audio.squeeze()
-            audio = audio.astype('int16')
-            audio_path = os.path.join(
-                output_dir, "{}_syn.wav".format(os.path.basename(os.path.splitext(file_dir)[0])))
-            write(audio_path, sampling_rate, audio)
-            print(audio_path)
-        else:
-            raise ValueError("Dir {} not exists!".format(file_dir))
-        
+    bin_list = []
+    if os.path.exists(file_dir):
+        sec_dirs = os.listdir(file_dir)
+        for sec_dir in sec_dirs:
+            sec_dir_ = os.path.join(file_dir, sec_dir)
+            thd_dirs = os.listdir(sec_dir_)
+            for thd_dir in thd_dirs:
+                file_name = os.path.join(sec_dir_, thd_dir)
+                file_type = os.path.splitext(file_name)[1]
+                if file_type in ['.bin']:
+                    bin_list.append(file_name)
+                    audio = np.fromfile(file_name, dtype=np.float32)
+                    with torch.no_grad():
+                        audio = audio * MAX_WAV_VALUE
+                    audio = audio.squeeze()
+                    audio = audio.astype('int16')
+                    audio_path = os.path.join(
+                        output_dir, "{}_syn.wav".format(os.path.basename(os.path.splitext(file_name)[0])))
+                    write(audio_path, sampling_rate, audio)
+                    print(audio_path)
+    else:
+        raise ValueError("Dir {} not exists!".format(file_dir))
 
 
 if __name__ == "__main__":
+    '''
+    Example:
+        python3.7 Waveglow_postprocess.py \
+            -f ./result/LJLJ001-0001_0.bin
+            -o ./syn_wavs
+    '''
     import argparse
 
     parser = argparse.ArgumentParser(description='Postprocess of ais_infer result')

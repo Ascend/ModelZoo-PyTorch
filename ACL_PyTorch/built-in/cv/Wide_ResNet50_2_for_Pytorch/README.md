@@ -54,7 +54,7 @@ python3.7 pth2onnx.py ./wide_resnet50_2-95faca4d.pth ./wide_resnet50_2.onnx
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考<<CANN 5.0.1 开发辅助工具指南 (推理) 01>>
 使用二进制输入时，执行如下命令
@@ -103,7 +103,7 @@ python3.7 get_info.py jpg ../dataset/ImageNet/ILSVRC2012_img_val ./ImageNet.info
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.增加benchmark可执行权限

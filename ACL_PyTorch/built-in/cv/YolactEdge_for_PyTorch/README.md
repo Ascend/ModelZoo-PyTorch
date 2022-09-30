@@ -72,7 +72,7 @@ pip install git+https://github.com/haotian-liu/cocoapi.git#"egg=pycocotools&subd
 
 ### 2.4 设置环境变量
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 ## 3 端到端推理步骤
