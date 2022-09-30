@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf biggan.onnx
 python3.7 biggan_pth2onnx.py --source 'G_ema.pth' --target './biggan.onnx'

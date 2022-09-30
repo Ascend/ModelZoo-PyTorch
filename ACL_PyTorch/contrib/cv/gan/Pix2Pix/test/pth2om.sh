@@ -1,5 +1,5 @@
 #!/bin/bash
-source env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # bash ./test/pth2om.sh  --pth_path=./checkpoints/facades_label2photo_pretrained
 

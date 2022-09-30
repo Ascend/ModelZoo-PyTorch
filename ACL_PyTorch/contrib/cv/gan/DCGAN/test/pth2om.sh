@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf dcgan.onnx
 python3.7 dcgan_pth2onnx.py checkpoint-amp-epoch_200.pth dcgan.onnx

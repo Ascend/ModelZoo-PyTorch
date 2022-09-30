@@ -1,7 +1,7 @@
 #!/bin/bash
 PTH_FILE=$1
 
-source ./test/env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 python3.7 pth2onnx.py --input_file $PTH_FILE --output_file './StarGAN.onnx'
 if [ $? != 0 ]; then

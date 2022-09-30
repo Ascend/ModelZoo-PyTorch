@@ -15,7 +15,7 @@ if [ $? != 0 ]; then
   exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 if [ -d "./dump" ]; then
   rm -r ./dump
 fi
