@@ -1,4 +1,4 @@
-source env_npu.sh
+source test/env_npu.sh
 export WORLD_SIZE=32
 export NUMS=8
 # 集群中当前节点的节点序号
@@ -16,12 +16,11 @@ do
     local_rank=$RANK_ID
     export RANK=$((RANK_ID + NUMS * node_rank))
 
-    nohup python3 main_finetune.py  \
+    nohup python3 main_simmim.py  \
         --addr ${master_addr} \
-        --cfg configs/swin_base__100ep/simmim_finetune__swin_base__img192_window6__100ep.yaml \
-        --pretrained ./output/simmim_pretrain/simmim_pretrain__swin_base__img192_window6__100ep/ckpt_epoch_99.pth \
+        --cfg configs/swin_base__100ep/simmim_pretrain__swin_base__img192_window6__100ep.yaml \
         --batch-size 128 \
         --amp-opt-level O1 \
         --local_rank ${local_rank} \
-        --data-path /data/imagenet &
+        --data-path /data/imagenet/train &
 done
