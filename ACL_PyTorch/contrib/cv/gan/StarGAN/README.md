@@ -77,14 +77,14 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | RC2 | -                                                            |
-| ONNX                                                         | 1.8.0 | -                                                            |
+| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | PyTorch                                                      | 1.5.0   | -                                                            |
 
   **表 2**  环境依赖表
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| ONNX                                                         | 1.8.0 | -                                                            |
 | Numpy                                                         | 1.21.1 | -                                                            |
 | TorchVision                                                         | 0.6.0 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
@@ -98,7 +98,6 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 1. 获取源码
    源码目录结构：
    ```
-   ├── env_npu.sh                     //环境变量
    ├── unzip_dataset.sh             //解压数据集
    ├── test/eval_bs1_perf.sh       //310bs1验收脚本
    ├── test/eval_bs16_perf.sh      //310bs16验收脚本
@@ -145,8 +144,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
   
 
    ```
-   source ./test/env_npu.sh
-    python3.7 StarGAN_pre_processing.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
+   python3.7 StarGAN_pre_processing.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
                   --model_save_dir './models' --result_dir './result_baseline' \
                   --attr_path './data/celeba/list_attr_celeba.txt' --celeba_image_dir './data/celeba/images'  --batch_size 16
    
