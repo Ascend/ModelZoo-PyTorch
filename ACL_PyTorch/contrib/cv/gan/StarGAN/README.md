@@ -73,13 +73,18 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
 - 该模型需要以下插件与驱动
 
-  **表 1**  版本配套表
+**表 1**  版本配套表
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | RC2 | -                                                            |
 | ONNX                                                         | 1.8.0 | -                                                            |
+| PyTorch                                                      | 1.5.0   | -                                                            |
+
+  **表 2**  环境依赖表
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | Numpy                                                         | 1.21.1 | -                                                            |
 | TorchVision                                                         | 0.6.0 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
@@ -90,18 +95,14 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+
+
+1. 安装依赖。
 
    ```
-   git clone https://gitee.com/Hu1GM/ModelZoo-PyTorch.git
-   ```
-
-2. 安装依赖。
-
-   ```
-   source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh
+   source ${CANN_INSTALL_PATH}/set_env.sh
    pip install --force-reinstall  aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-   pip3 install -r requirements.txt
+   pip install -r requirements.txt
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -112,9 +113,12 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
    ```
    bash unzip_dataset.sh
    ```
-
-   
-
+   数据目录结构请参考：
+   ```
+   ├──celeba
+    ├──images
+    ├──list_attr_celeba.txt
+   ```
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
    数据预处理将原始数据集转换为模型输入的数据。
@@ -142,8 +146,6 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
        pth 权重文件默认路径为  ./models/200000-G.pth
 
-       > 可以从这里下载 https://www.hiascend.com/zh/software/modelzoo/models/detail/1/66fa6ed93178416eaf9dc2546718e860
-
    2. 导出onnx文件。
 
       1. 使用pth2om.sh导出onnx文件。
@@ -151,7 +153,6 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
          运行pth2om.sh脚本。
 
             ```
-            source /usr/local/Ascend/ascend-toolkit/set_env.sh
             bash ./test_710/pth2om.sh './models/200000-G.pth'
             ```
 
@@ -221,7 +222,6 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
    b.  执行推理。
       以batchsize=16 为例子
       ```
-      source /opt/npu/CANN-RC2/ascend-toolkit/set_env.sh
       python3  ais_infer.py --model ./StarGAN_bs16.om  --input ./bin/img,./bin/attr --output ./op  --outfmt TXT  --batchsize 16
       ```
 
