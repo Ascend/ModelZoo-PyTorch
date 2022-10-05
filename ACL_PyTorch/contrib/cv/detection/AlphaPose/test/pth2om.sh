@@ -14,7 +14,7 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf models/*.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --framework=5 --model=models/fast_res50_256x192_bs1.onnx --output=models/fast_res50_256x192_bs1 --input_format=NCHW --input_shape="image:1,3,256,192" --log=debug --soc_version=Ascend310
 atc --framework=5 --model=models/fast_res50_256x192_bs16.onnx --output=models/fast_res50_256x192_bs16 --input_format=NCHW --input_shape="image:16,3,256,192" --log=debug --soc_version=Ascend310

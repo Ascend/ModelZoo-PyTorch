@@ -24,7 +24,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 echo "benchmark.x86_64"
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=mb1-ssd_bs1.om -input_text_path=mb-ssd_prep_bin.info -input_width=300 -input_height=300 -output_binary=true -useDvpp=False

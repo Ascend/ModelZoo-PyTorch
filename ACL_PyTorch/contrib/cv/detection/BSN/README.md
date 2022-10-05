@@ -121,8 +121,6 @@ code_path=ACL_PyTorch/contrib/cv/detection
 2. 上传源码包到服务器任意目录并解压（如：/home/HwHiAiUser）。
 
    ```
-   ├── benchmark.aarch64            //离线推理工具（适用ARM架构） 
-   ├── benchmark.x86_64             //离线推理工具（适用x86架构） 
    ├──test
         ├──eval_acc_perf.sh     //验证精度、性能脚本
         ├──pth2om.sh                //模型转换脚本
@@ -135,12 +133,6 @@ code_path=ACL_PyTorch/contrib/cv/detection
    ├── BSN_tem_preprocess.py       //tem前处理文件
    ├── BSN_tem_pth2onnx.py     //tem pth 转换为onnx文件
    ├── BSN_pem_pth2onnx.py     //pem pth 转换为onnx文件
-   ├── pem_best.pth.tar       //训练后的权重文件 
-   ├── tem_best.pth.tar       //训练后的权重文件
-   ├── BSN_tem_bs1.om       //om模型文件
-   ├── BSN_pem_bs1.om       //om模型文件
-   ├── BSN_tem.onnx       //onnx文件
-   ├── BSN_pem.onnx       //onnx文件
    ├── REAME.md 
    ```
 

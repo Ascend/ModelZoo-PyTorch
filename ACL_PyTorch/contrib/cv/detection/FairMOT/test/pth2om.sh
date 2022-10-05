@@ -6,7 +6,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf fairmot_bs1.om fairmot_bs8.om
 atc --framework=5 --model=./fairmot.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,608,1088" --output=./fairmot_bs1 --log=debug --soc_version=Ascend310 
 atc --framework=5 --model=./fairmot.onnx --input_format=NCHW --input_shape="actual_input_1:8,3,608,1088" --output=./fairmot_bs8 --log=debug --soc_version=Ascend310 

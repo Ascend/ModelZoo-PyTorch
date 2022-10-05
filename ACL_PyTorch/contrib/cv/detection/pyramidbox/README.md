@@ -104,7 +104,7 @@ python3.7 pyramidbox_pth2onnx.py  ./pyramidbox_1000.onnx ./pyramidbox_120000_99.
 1.设置环境变量
 
 ```
-source atc.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01

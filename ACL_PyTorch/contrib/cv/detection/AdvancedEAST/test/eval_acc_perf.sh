@@ -23,7 +23,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision -batch_size=1 -device_id=0 -om_path=AdvancedEAST_bs1.om -input_text_path=prep_bin.info -input_width=736 -input_height=736 -useDvpp=false -output_binary=true
 if [ $? != 0 ]; then

@@ -228,7 +228,7 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
          设置环境变量：
          ```
-         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/lib64/plugin/nnengine:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
          执行atc命令

@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 echo "====TEM pth2onnx===="
 
 python BSN_tem_pth2onnx.py --pth_path './tem_best.pth.tar' --onnx_path './BSN_tem.onnx'
