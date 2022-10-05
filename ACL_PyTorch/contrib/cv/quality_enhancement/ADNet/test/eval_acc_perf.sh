@@ -30,7 +30,7 @@ echo "====creating info file done===="
 
 
 echo "====bs1 benchmark start===="
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=./ADNet_bs1.om -input_text_path=./ADNet_prep_bin.info -input_width=481 -input_height=321 -output_binary=True -useDvpp=False
 if [ $? != 0 ]; then
@@ -41,7 +41,7 @@ echo "====bs1 benchmark finished===="
 
 
 echo "====bs16 benchmark start===="
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device1
 ./benchmark.${arch} -model_type=vision -device_id=1 -batch_size=16 -om_path=./ADNet_bs16.om -input_text_path=./ADNet_prep_bin.info -input_width=481 -input_height=321 -output_binary=True -useDvpp=False
 if [ $? != 0 ]; then

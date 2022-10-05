@@ -105,7 +105,6 @@ atc --framework=5 --model=CGAN_sim.onnx --output=CGAN_bs1 --input_format=ND --ou
 |     |--util.py
 |     |--CGAN.py
 |     |--gen_dataset_info.py
-|     |--env.sh
 |     |--CGAN_pth2onnx.py
 |     |--CGAN_preprocess.py
 |     |--CGAN_postprocess.py

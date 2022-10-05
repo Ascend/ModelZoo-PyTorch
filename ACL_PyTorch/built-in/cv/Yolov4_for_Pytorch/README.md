@@ -1,14 +1,13 @@
 文件作用说明：
 
 1.  dy_resize.py：onnx算子修改脚本 
-2.  env.sh：ATC工具环境变量配置脚本
-3.  parse_json.py： coco数据集标签json文件解析脚本 
-4.  preprocess_yolov4_pytorch.py： 二进制数据集预处理脚本
-5.  get_coco_info.py： yolov4.info生成脚本 
-6.  bin_to_predict_yolov4_pytorch.py： benchmark输出bin文件解析脚本
-7.  map_calculate.py： 精度统计脚本
-8.  aipp.config 配置文件
-9.  require.txt：脚本运行所需的第三方库
+2.  parse_json.py： coco数据集标签json文件解析脚本 
+3.  preprocess_yolov4_pytorch.py： 二进制数据集预处理脚本
+4.  get_coco_info.py： yolov4.info生成脚本 
+5.  bin_to_predict_yolov4_pytorch.py： benchmark输出bin文件解析脚本
+6.  map_calculate.py： 精度统计脚本
+7.  aipp.config 配置文件
+8.  require.txt：脚本运行所需的第三方库
 
 推理端到端步骤：
 

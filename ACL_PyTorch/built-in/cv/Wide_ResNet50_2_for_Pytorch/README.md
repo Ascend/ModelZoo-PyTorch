@@ -5,8 +5,7 @@
 2.get_info.py：  生成推理输入的数据集二进制info文件或jpg info文件
 3.preprocess.py：数据集预处理脚本，通过均值方差处理归一化图片，生成图片二进制文件
 4.pth2onnx.py:   用于转换pth模型文件到onnx模型文件
-5.env.sh：       用于设定设备推理执行所需环境变量
-6.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+5.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
 
 
 ## 2 环境说明

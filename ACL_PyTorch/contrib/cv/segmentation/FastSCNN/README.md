@@ -106,17 +106,17 @@ onnx转出om
 
 bs1：
 ```
-source env.sh（注意，latest是一个软连接，请将服务器中的/usr/local/Ascend/ascend-toolkit/latest 指向5.0.2版本的CANN包）
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=fast_scnn_bs1.onnx --output=fast_scnn_bs1  --output_type=FP16 --input_format=NCHW --input_shape="image:1,3,1024,2048" --log=debug --soc_version=Ascend310
 ```
 bs16：
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=fast_scnn_bs16.onnx --output=fast_scnn_bs16  --output_type=FP16 --input_format=NCHW --input_shape="image:16,3,1024,2048" --log=debug --soc_version=Ascend310
 ```
 bs4:（bs16无法离线推理时使用）
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=fast_scnn_bs4.onnx --output=fast_scnn_bs4  --output_type=FP16 --input_format=NCHW --input_shape="image:4,3,1024,2048" --log=debug --soc_version=Ascend310
 ```
 
@@ -193,7 +193,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.执行离线推理

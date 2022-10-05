@@ -1,6 +1,6 @@
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-/usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc \
+atc \
 --model=$1 \
 --framework=5 \
 --output=$2 \

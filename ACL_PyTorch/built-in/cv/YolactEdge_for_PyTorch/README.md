@@ -19,7 +19,6 @@
 ## 1 文件说明
 ```
 yolact_edge_for_Pytorch
-  ├── env.sh            设置环境变量
   ├── pth2onnx.py       pytorch模型导出onnx模型
   ├── atc.sh            onnx模型转om
   ├── yolact_edge.diff  补丁文件
