@@ -8,13 +8,13 @@ batch_size=32
 data_path=""
 
 # 预训练模型路径
-ckpt_path=""
+more_path1=""
 
 #参数校验，不需要修改
 for para in $*
 do
-    if [[ $para == --ckpt_path* ]];then
-        ckpt_path=`echo ${para#*=}`
+    if [[ $para == --more_path1* ]];then
+        more_path1=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     fi
@@ -26,10 +26,10 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-if [[ $ckpt_path == "" ]];then
+if [[ $more_path1 == "" ]];then
 	pretrained_model="./"
 else
-	pretrained_model=${ckpt_path}/resnet50-19c8e357.pth 
+	pretrained_model=${more_path1}/resnet50-19c8e357.pth 
 fi 
 
 ###############指定训练脚本执行路径###############
