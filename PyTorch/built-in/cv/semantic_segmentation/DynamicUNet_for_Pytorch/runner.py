@@ -71,7 +71,7 @@ def parse_args():
                         help='dataset name (default: pascal_voc)')
     parser.add_argument('--dataset-path', type=str, default='./',
                         help='dataset path')
-    parser.add_argument('--pretrained', type=str, default='./',
+    parser.add_argument('--pretrained', type=str, default='',
                         help='pretrained model path')
     parser.add_argument('--base-size', type=int, default=520,
                         help='base image size')

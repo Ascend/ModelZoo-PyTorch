@@ -2,6 +2,7 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
+from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
@@ -259,7 +260,12 @@ def _resnet(
 ) -> ResNet:
     model = ResNet(block, layers, **kwargs)
     if pretrained:
-        model.load_state_dict(torch.load(model_path))
+        if model_path != './':
+            model.load_state_dict(torch.load(model_path))
+        else:
+            state_dict = load_state_dict_from_url(model_urls[arch],
+                                                progress=progress)
+            model.load_state_dict(state_dict)
     return model
 
 
@@ -287,7 +293,7 @@ def resnet34(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> 
                    **kwargs)
 
 
-def resnet50(model_path='./', pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnet50(model_path='', pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
 

@@ -8,13 +8,13 @@ batch_size=32
 data_path=""
 
 # 预训练模型路径
-pretrained_model=""
+ckpt_path=""
 
 #参数校验，不需要修改
 for para in $*
 do
-    if [[ $para == --pretrained_model* ]];then
-        pretrained_model=`echo ${para#*=}`
+    if [[ $para == --ckpt_path* ]];then
+        ckpt_path=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     fi
@@ -25,6 +25,13 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
+if [[ $ckpt_path == "" ]];then
+	pretrained_model="./"
+else
+	pretrained_model=${ckpt_path}/resnet50-19c8e357.pth 
+fi 
+
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
