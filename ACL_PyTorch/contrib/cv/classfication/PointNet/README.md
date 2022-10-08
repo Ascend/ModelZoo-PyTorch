@@ -33,7 +33,7 @@ cd ..
 ### 3.1 pth转onnx模型
 1. 设置环境变量
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2. pth权重文件下载：
 链接：https://pan.baidu.com/s/168Vk3C60iZOWrgGIBNAkjw 

@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 export PYTHONUNBUFFERED=1
-export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/pyACL/python/site-packages/acl:$PYTHONPATH
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64:$LD_LIBRARY_PAT
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 source path.sh
 source cmd.sh

@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 echo "batch_size=1时:"
 python3.7 pointnet_preprocess.py data/shapenetcore_partanno_segmentation_benchmark_v0 ./bin_file batch_size=1

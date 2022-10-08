@@ -129,7 +129,7 @@ nohup taskset -c $a-$c python3.7 ${cur_path}/train_deepmar_resnet50_8p.py \
       --finetuned_params_lr=0.016 \
       --total_epochs=150 \
       --steps_per_log=1 \
-      --loss_scale 512 \
+      --loss_scale -1 \
       --amp \
       --opt_level O2 \
       --dist_url 'tcp://127.0.0.1:50000' \

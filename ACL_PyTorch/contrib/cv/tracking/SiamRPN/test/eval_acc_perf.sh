@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export PYTHONPATH=/root/anaconda3/envs/test/lib/python3.7/site-packages/yacs:$PYTHONPATH
-export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/pyACL/python/site-packages/acl:$PYTHONPATH
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/acllib/lib64:$LD_LIBRARY_PAT
-export PYTHONPATH=/home/SiamRPN/pysot:$PYTHONPATH
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # test
 python pysot/tools/test.py

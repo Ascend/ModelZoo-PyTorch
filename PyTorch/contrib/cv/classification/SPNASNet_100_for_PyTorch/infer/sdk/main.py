@@ -30,7 +30,7 @@ def w2txt(file_path, filename_list, data):
     with open(file_path, "w") as file:
         for i in range(data.shape[0]):
             s = filename_list[i].split('.')[0] + ' '
-            s += ' '.join(str(format(num, '.7f')) for num in data[i])
+            s += ' '.join(str(int(num)) for num in data[i])
             file.write(s+"\n")
 
 
@@ -176,8 +176,8 @@ def run():
     count = 0
     resCnt = 0
     n_labels = 0
-    res_sents = []
     filename_list = []
+    sort_index_sents = []
     for file in file_list:
         print(file, "====", count)
         count += 1
@@ -214,7 +214,6 @@ def run():
         result = MxpiDataType.MxpiTensorPackageList()
         result.ParseFromString(infer_result[0].messageBuf)
         res = np.frombuffer(result.tensorPackageVec[0].tensorVec[0].dataStr, dtype='<f4')
-        res_sents.append(res)
         filename_list.append(file.split('.')[0])
 
         # postprocess
@@ -235,10 +234,12 @@ def run():
             if (str(realLabel) == str(sort_index[i])):
                 count_hit[i] += 1
                 break
-
-    file_path = "sdk_prediction_result.txt"
-    res_sents = np.array(res_sents).astype(np.float32)
-    w2txt(file_path, filename_list, res_sents)
+        sort_index_sents.append(sort_index[:5])
+    file_path = "sdk_postprocess_result.txt"
+    sort_index_sents = np.array(sort_index_sents).astype(np.int32)
+    if(os.path.exists(file_path)):
+        os.remove(file_path)
+    w2txt(file_path, filename_list, sort_index_sents)
 
     if 'value' not in table_dict.keys():
         print("the item value does not exist!")

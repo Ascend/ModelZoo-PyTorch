@@ -93,7 +93,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep "ave_sample_per_sec" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F "ave_sample_per_sec=" '{print $NF}'`
 #打印，不需要修改
-echo "Final Performance images/sec : $FPS"
+echo "Final Performance samples/sec : $FPS"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"

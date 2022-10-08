@@ -109,7 +109,7 @@ python3 preprocess.py
 
 3. 获取精度
 
-   将acl_net.py拷贝到3d-unet目录下，运行source acl_env_x86.sh或source acl_env_arm.sh设置环境变量。运行如下命令获取精度：
+   将acl_net.py拷贝到3d-unet目录下，运行source /usr/local/Ascend/ascend-toolkit/set_env.sh设置环境变量。运行如下命令获取精度：
 
    ```
    python3 run.py --accuracy --backend onnxruntime --model ./build/model/3DUnet.om

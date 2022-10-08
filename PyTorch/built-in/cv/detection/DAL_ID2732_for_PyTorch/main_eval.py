@@ -15,6 +15,8 @@
 import os
 import cv2
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import codecs
 import shutil
 

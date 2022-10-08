@@ -6,7 +6,6 @@
 - run.sh                           // 用于精度测试脚本
 - acl_net.py                     // ACL接口脚本
 - atc.sh                             // 转om模型脚本
-- env.sh                            // 设置atc环境变量脚本
 - export_onnx.py           // 导出模型脚本
 - vqa-vilbert_bs1.om     // om模型文件
 - vilbert-vqa-pretrained.2021-03-15.tar.gz                 // VilBert预训练权重
@@ -77,9 +76,10 @@ pip3.7 install .
 python3.7 modify_vbt.py models/vqa-vilbert_bs1_sim.onnx
 ```
 
-#### 7. 执行atc.sh脚本，将.onnx文件转为离线推理模型文件.om文件。
+#### 7. 执行atc.sh脚本，将.onnx文件转为离线推理模型文件.om文件。请以实际安装环境配置环境变量。
 
 ```shell
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash atc.sh
 ```
 

@@ -20,6 +20,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from apex import amp
 
 import torchvision
@@ -101,8 +103,8 @@ parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7',
                     type=str, help='device id list')
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
-parser.add_argument('--loss-scale', default=1024., type=float,
-                    help='loss scale using in amp, default -1 means dynamic')
+parser.add_argument('--loss-scale', default='dynamic', 
+                    help='loss scale using in amp')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--prof', default=False, action='store_true',

@@ -75,7 +75,7 @@ fi
 
 #修改模糊编译写法
 if [ $bin_mode == "True" ];then
-    sed -i "45itorch.npu.global_step_inc()" ${cur_path}/../train.py
+    sed -i "45itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../train.py
 fi
 
 #设置二进制变量

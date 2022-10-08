@@ -20,7 +20,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 mkdir -p output/out_bs1
 rm -rf output/out_bs1/*

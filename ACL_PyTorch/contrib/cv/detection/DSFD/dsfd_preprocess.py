@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ from torchvision import datasets, transforms
 import argparse
 
 parser = argparse.ArgumentParser(description="trans pth to onnx usage")
-parser.add_argument( '--src_path', type=str, default='/home/datasets/WIDERFace/WIDER_val/images/', help='Default val data location(default: %(default)s)')
+parser.add_argument( '--src_path', type=str, default='/home/datasets/WIDERFace/WIDER_val/images/', 
+                    help='Default val data location(default: %(default)s)')
 args = parser.parse_args()
 
 def img2bin(src_path, save_path):
@@ -37,7 +38,7 @@ def img2bin(src_path, save_path):
   in_files = os.listdir(src_path)
   for file in in_files:
       i = i + 1
-      print(file, "===",i)
+      print(file, "===", i)
       files = os.listdir(src_path + '/' + file)
       for re_file in files:
           img_file = src_path + "/" + file + "/" + re_file
@@ -50,7 +51,7 @@ def bin2info(bin_dir, info_data, width, height):
     bin_images = glob(os.path.join(bin_dir, '*.bin'))
     with open(info_data, 'w') as file:
         for index, img in enumerate(bin_images):
-            print('str(index)',str(index), 'img', img)
+            print('str(index)', str(index), 'img', img)
             img = "./bin_out" + img.split("bin_out")[1]
             content = ' '.join([str(index), img, str(width), str(height)])
             file.write(content)
@@ -61,4 +62,4 @@ if __name__ == "__main__":
     bin_path = "./bin_out/"
     info_path = "info_result.info"
     img2bin(args.src_path, bin_path)
-    bin2info(bin_path, info_path,224,224)
+    bin2info(bin_path, info_path, 224, 224)

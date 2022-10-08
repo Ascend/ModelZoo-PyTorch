@@ -46,6 +46,8 @@ from utils import ext_transforms as et
 from metrics import StreamSegMetrics
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from utils.visualizer import Visualizer
 

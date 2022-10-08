@@ -18,12 +18,14 @@ generate accuracy value by comparing 'om result' with 'pth result'.
 
 import argparse
 import os
+
 import numpy as np
 
 
 def get_array(pth_bin_path, om_bin_path):
     pth_array = np.fromfile(pth_bin_path, dtype=np.float32)
     om_array = np.fromfile(om_bin_path, dtype=np.float32)
+
     assert pth_array.shape == om_array.shape, (
             "pth_array(%s) != om_array(%s)" % (str(pth_array.shape), str(om_array.shape)))
 
@@ -78,7 +80,7 @@ def main(pth_result_path, om_result_path, log_save_name):
     final_cos = all_cos / samples_len
 
     res_str = "mean : {:.4f}, cosine : {:.4f}, acc : {:.2f}%".format(
-                      final_mean, final_cos, 100 * (final_cos + 1) / 2)
+        final_mean, final_cos, 100 * (final_cos + 1) / 2)
     print(res_str)
     with open(log_save_name, "w") as f:
         f.write("all_mean : {:.4f} all_cos : {:.4f}\n".format(all_mean, all_cos))

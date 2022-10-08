@@ -14,13 +14,14 @@
 
 import os
 import sys
-from PIL import Image
 import numpy as np
 import multiprocessing
+from PIL import Image
+from tqdm import tqdm
 
 
 model_config = {
-    'resnet': {
+    'dino': {
         'resize': 256,
         'centercrop': 224,
         'mean': [0.485, 0.456, 0.406],
@@ -68,32 +69,44 @@ def resize(img, size, interpolation=Image.BILINEAR):
         return img.resize(size[::-1], interpolation)
 
 
-def gen_input_bin(mode_type, file_batches, batch):
+def gen_input_bin(mode_type, file_batches, src_path, save_path):
     i = 0
-    for file in file_batches[batch]:
-        i =i + 1
-        print("batch", batch, file, "===", i)
-
-        # RGBA to RGB
-        image = Image.open(os.path.join(src_path, file)).convert('RGB')
-        image = resize(image, model_config[mode_type]['resize']) # Resize
-        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
-        img = np.array(image, dtype=np.float32)
+    for filename in tqdm(file_batches[0]):
+        i = i + 1
+        if filename.endswith('.JPEG'):
+            imgname = filename.strip('.JPEG')
+        elif filename.endswith('.jpeg'):
+            imgname = filename.strip('.jpeg')
+        else:
+            raise ValueError('Invalid image name:', filename)
+        
+        input_image = Image.open(os.path.join(src_path, filename)).convert('RGB')
+        if '/' in imgname:
+            _, imgname = imgname.split('/')
+        input_image = resize(input_image, model_config[mode_type]['resize']) # Resize
+        input_image = center_crop(input_image, model_config[mode_type]['centercrop']) # CenterCrop
+        img = np.array(input_image, dtype=np.float32)
         img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
         img = img / 255. # ToTensor: div 255
         img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
         img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+        img.tofile(os.path.join(save_path, imgname + ".bin"))
 
 
 def preprocess(mode_type, src_path, save_path):
-    files = os.listdir(src_path)
-    file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
-    thread_pool = multiprocessing.Pool(len(file_batches))
-    for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch))
-    thread_pool.close()
-    thread_pool.join()
+    folder_list = os.listdir(src_path)
+    if folder_list[0].endswith('.JPEG'):
+        # val/xxxx.JPEG
+        files = folder_list
+    else:
+        # val/xxxx/xxxx.JPEG
+        files = []
+        for folder in folder_list:
+            file_list = os.listdir(os.path.join(src_path, folder))
+            for filename in file_list:
+                files.append(os.path.join(folder, filename))
+    file_batches = [files]
+    gen_input_bin(mode_type, file_batches, src_path, save_path)
 
 
 if __name__ == '__main__':

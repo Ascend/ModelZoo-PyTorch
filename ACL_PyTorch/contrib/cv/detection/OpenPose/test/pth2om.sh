@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 python3.7 OpenPose_pth2onnx.py --checkpoint_path='./weights/checkpoint_iter_370000.pth' --output_name="./output/human-pose-estimation.onnx"
 

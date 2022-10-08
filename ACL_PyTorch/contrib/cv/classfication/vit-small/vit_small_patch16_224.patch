@@ -14,82 +14,28 @@ Binary files pytorch-image-models/timm/data/__pycache__/real_labels.cpython-37.p
 Binary files pytorch-image-models/timm/data/__pycache__/transforms.cpython-37.pyc and vit/timm/data/__pycache__/transforms.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/data/__pycache__/transforms_factory.cpython-37.pyc and vit/timm/data/__pycache__/transforms_factory.cpython-37.pyc differ
 diff -urN pytorch-image-models/timm/data/dataset.py vit/timm/data/dataset.py
---- pytorch-image-models/timm/data/dataset.py	2021-11-25 07:21:38.774569449 +0000
-+++ vit/timm/data/dataset.py	2021-11-25 06:26:53.829894625 +0000
-@@ -23,21 +23,19 @@
-             self,
-             root,
-             parser=None,
--            class_map=None,
-+            class_map='',
-             load_bytes=False,
-             transform=None,
--            target_transform=None,
-     ):
-         if parser is None or isinstance(parser, str):
-             parser = create_parser(parser or '', root=root, class_map=class_map)
-         self.parser = parser
-         self.load_bytes = load_bytes
-         self.transform = transform
--        self.target_transform = target_transform
-         self._consecutive_errors = 0
--
+--- pytorch-image-models/timm/data/dataset.py	2022-08-12 02:06:46.083435767 +0000
++++ vit/timm/data/dataset.py	2022-08-08 07:54:45.035012213 +0000
+@@ -36,6 +36,7 @@
+ 
      def __getitem__(self, index):
          img, target = self.parser[index]
 +        path = img.name
          try:
              img = img.read() if self.load_bytes else Image.open(img).convert('RGB')
          except Exception as e:
-@@ -51,10 +49,8 @@
-         if self.transform is not None:
+@@ -50,7 +51,7 @@
              img = self.transform(img)
          if target is None:
--            target = -1
--        elif self.target_transform is not None:
--            target = self.target_transform(target)
+             target = torch.tensor(-1, dtype=torch.long)
 -        return img, target
-+            target = torch.tensor(-1, dtype=torch.long)
 +        return (img, target, path)
  
      def __len__(self):
          return len(self.parser)
-@@ -75,28 +71,26 @@
-             split='train',
-             is_training=False,
-             batch_size=None,
-+            class_map='',
-+            load_bytes=False,
-             repeats=0,
--            download=False,
-             transform=None,
--            target_transform=None,
-     ):
-         assert parser is not None
-         if isinstance(parser, str):
-             self.parser = create_parser(
--                parser, root=root, split=split, is_training=is_training,
--                batch_size=batch_size, repeats=repeats, download=download)
-+                parser, root=root, split=split, is_training=is_training, batch_size=batch_size, repeats=repeats)
-         else:
-             self.parser = parser
-         self.transform = transform
--        self.target_transform = target_transform
-         self._consecutive_errors = 0
- 
-     def __iter__(self):
-         for img, target in self.parser:
-             if self.transform is not None:
-                 img = self.transform(img)
--            if self.target_transform is not None:
--                target = self.target_transform(target)
-+            if target is None:
-+                target = torch.tensor(-1, dtype=torch.long)
-             yield img, target
- 
-     def __len__(self):
 diff -urN pytorch-image-models/timm/data/loader.py vit/timm/data/loader.py
---- pytorch-image-models/timm/data/loader.py	2021-11-25 07:21:38.774569449 +0000
-+++ vit/timm/data/loader.py	2021-11-25 06:24:02.277020481 +0000
+--- pytorch-image-models/timm/data/loader.py	2022-08-12 02:06:46.083435767 +0000
++++ vit/timm/data/loader.py	2022-08-08 07:54:45.035012213 +0000
 @@ -3,20 +3,18 @@
  Prefetcher and Fast Collate inspired by NVIDIA APEX example at
  https://github.com/NVIDIA/apex/commit/d5e2bb4bdeedd27b1dfaf5bb2b24d6c000dee9be#diff-cf86c282ff7fba81fad27a559379d5bf
@@ -319,7 +265,6 @@ Binary files pytorch-image-models/timm/models/__pycache__/efficientnet_blocks.cp
 Binary files pytorch-image-models/timm/models/__pycache__/efficientnet_builder.cpython-37.pyc and vit/timm/models/__pycache__/efficientnet_builder.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/__pycache__/factory.cpython-37.pyc and vit/timm/models/__pycache__/factory.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/__pycache__/features.cpython-37.pyc and vit/timm/models/__pycache__/features.cpython-37.pyc differ
-Binary files pytorch-image-models/timm/models/__pycache__/fx_features.cpython-37.pyc and vit/timm/models/__pycache__/fx_features.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/__pycache__/ghostnet.cpython-37.pyc and vit/timm/models/__pycache__/ghostnet.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/__pycache__/gluon_resnet.cpython-37.pyc and vit/timm/models/__pycache__/gluon_resnet.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/__pycache__/gluon_xception.cpython-37.pyc and vit/timm/models/__pycache__/gluon_xception.cpython-37.pyc differ
@@ -405,6 +350,46 @@ Binary files pytorch-image-models/timm/models/layers/__pycache__/std_conv.cpytho
 Binary files pytorch-image-models/timm/models/layers/__pycache__/test_time_pool.cpython-37.pyc and vit/timm/models/layers/__pycache__/test_time_pool.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/layers/__pycache__/trace_utils.cpython-37.pyc and vit/timm/models/layers/__pycache__/trace_utils.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/models/layers/__pycache__/weight_init.cpython-37.pyc and vit/timm/models/layers/__pycache__/weight_init.cpython-37.pyc differ
+diff -urN pytorch-image-models/timm/models/layers/patch_embed.py vit/timm/models/layers/patch_embed.py
+--- pytorch-image-models/timm/models/layers/patch_embed.py	2022-08-12 02:06:46.091435767 +0000
++++ vit/timm/models/layers/patch_embed.py	2022-08-08 07:54:45.059012213 +0000
+@@ -10,7 +10,7 @@
+ from torch import nn as nn
+ 
+ from .helpers import to_2tuple
+-
++from .trace_utils import _assert
+ 
+ class PatchEmbed(nn.Module):
+     """ 2D Image to Patch Embedding
+@@ -30,8 +30,8 @@
+ 
+     def forward(self, x):
+         B, C, H, W = x.shape
+-        torch._assert(H == self.img_size[0], f"Input image height ({H}) doesn't match model ({self.img_size[0]}).")
+-        torch._assert(W == self.img_size[1], f"Input image width ({W}) doesn't match model ({self.img_size[1]}).")
++        _assert(H == self.img_size[0], f"Input image height ({H}) doesn't match model ({self.img_size[0]}).")
++        _assert(W == self.img_size[1], f"Input image width ({W}) doesn't match model ({self.img_size[1]}).")
+         x = self.proj(x)
+         if self.flatten:
+             x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC
+diff -urN pytorch-image-models/timm/models/layers/trace_utils.py vit/timm/models/layers/trace_utils.py
+--- pytorch-image-models/timm/models/layers/trace_utils.py	1970-01-01 00:00:00.000000000 +0000
++++ vit/timm/models/layers/trace_utils.py	2022-08-08 07:54:45.059012213 +0000
+@@ -0,0 +1,13 @@
++try:
++    from torch import _assert
++except ImportError:
++    def _assert(condition: bool, message: str):
++        assert condition, message
++
++
++def _float_to_int(x: float) -> int:
++    """
++    Symbolic tracing helper to substitute for inbuilt `int`.
++    Hint: Inbuilt `int` can't accept an argument of type `Proxy`
++    """
++    return int(x)
 Binary files pytorch-image-models/timm/utils/__pycache__/__init__.cpython-37.pyc and vit/timm/utils/__pycache__/__init__.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/utils/__pycache__/agc.cpython-37.pyc and vit/timm/utils/__pycache__/agc.cpython-37.pyc differ
 Binary files pytorch-image-models/timm/utils/__pycache__/checkpoint_saver.cpython-37.pyc and vit/timm/utils/__pycache__/checkpoint_saver.cpython-37.pyc differ

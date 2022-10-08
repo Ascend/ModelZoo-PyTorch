@@ -37,6 +37,8 @@
 # This code is made available under the Apache v2.0 licence, see LICENSE.txt for details
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F

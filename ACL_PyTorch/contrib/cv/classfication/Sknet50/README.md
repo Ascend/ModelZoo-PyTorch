@@ -114,7 +114,7 @@ pip install opencv-python
 1. 设置 atc 工作所需要的环境变量
 
    ```bash
-   source set_env.sh
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
    ```
 
 2. 使用atc工具将onnx模型转换为om模型，命令参考

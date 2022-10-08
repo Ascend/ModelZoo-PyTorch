@@ -18,8 +18,11 @@ import numpy as np
 import sys
 result_root = sys.argv[1]
 correct, total = 0, 0
+result_root += os.listdir(result_root)[0]
 
 for result_path in os.listdir(result_root):
+    if result_path == 'sumary.json':
+        continue
     label = int(result_path.split('.')[0].split('_')[1])
     
     data_raw = np.fromfile(os.path.join(result_root, result_path), dtype=np.float16)

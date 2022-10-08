@@ -12,7 +12,6 @@
 |------ lfw.bin					# lfw数据集
 |—— model
 |——---- model_ir_se100.pth		# 模型权重
-|—— env.sh						# NPU环境变量脚本
 |—— LResNet_postprocess.py		# 后处理脚本
 |—— LResNet_preprocess.py		# 预处理脚本
 |—— LResNet_pth2onnx.py			# pth转onnx脚本

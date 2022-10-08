@@ -69,7 +69,7 @@ def postprocess(ranks=range(1, 51)):
             truefile1 = file.split('_')[1]
             if truefile1 == "4.bin": #将benckmark推理出的第四个输出"features"读入，features为计算mAP值的特征
                 file_path = os.path.join(root, file)
-                with open(file_path,'rb') as f:
+                with open(file_path, 'rb') as f:
                     featuresq = np.fromfile(f, dtype="float32")
                     featuresq = torch.from_numpy(featuresq)
                     featuresq = featuresq.unsqueeze(0)
@@ -94,7 +94,7 @@ def postprocess(ranks=range(1, 51)):
             truefile2 = file.split('_')[1]
             if truefile2== "4.bin": #将benckmark推理出的第四个输出"features"读入，features为计算mAP值的特征
                 file_path = os.path.join(root, file)
-                with open(file_path,'rb') as f:
+                with open(file_path, 'rb') as f:
                     featuresg = np.fromfile(f, dtype="float32")
                     featuresg = torch.from_numpy(featuresg)
                     featuresg = featuresg.unsqueeze(0)
@@ -122,11 +122,11 @@ def postprocess(ranks=range(1, 51)):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--query_dir", default="./data/veri/image_query")
-    parser.add_argument("--gallery_dir", default="./data/veri/image_test")
+    parser.add_argument("--query_dir", default="/opt/npu/veri/image_query")
+    parser.add_argument("--gallery_dir", default="/opt/npu/veri/image_test")
     parser.add_argument("--queryfeature_path", default="./result/dumpOutput_device0_query")
     parser.add_argument("--galleryfeature_path", default="./result/dumpOutput_device0_gallery")
-    parser.add_argument('--root', type=str, default='data',
+    parser.add_argument('--root', type=str, default='/opt/npu/',
                         help="root path to data directory")
     parser.add_argument('-d', '--dataset', type=str, default='veri',
                         help="name of the dataset")

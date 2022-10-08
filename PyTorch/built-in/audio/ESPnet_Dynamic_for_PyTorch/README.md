@@ -82,6 +82,17 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
 
   - boost: ubuntu上可使用 apt install libboost-all-dev命令安装，其它系统请选择合适命令安装
   - kenlm：进入<espnet-root>/tools目录，执行make kenlm.done
+  
+  4）(option)更新软连接：
+
+  - cd <espnet-root>/egs/aishell/asr1
+    - rm -f utils steps
+    - ln -s ../../../tools/kaldi/egs/wsj/s5/utils utils
+    - ln -s ../../../tools/kaldi/egs/wsj/s5/steps steps
+  - cd <espnet-root>/egs/aishell/asr1/conf
+    - rm -f train.yaml decode.yaml
+    - ln -s tuning/train_pytorch_conformer_kernel15.yaml train.yaml
+    - ln -s tuning/decode_pytorch_transformer.yaml decode.yaml
 
 
 ## 准备数据集

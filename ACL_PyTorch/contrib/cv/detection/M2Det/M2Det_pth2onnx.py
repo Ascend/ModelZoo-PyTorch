@@ -29,12 +29,12 @@ from utils.core import init_net
 
 
 parser = argparse.ArgumentParser(description='pth2onnx')
-parser.add_argument('-c', '--config', default='M2Det/configs/m2det512_vgg16.py')
-parser.add_argument('-d', '--dataset', default='COCO', help='VOC or COCO dataset')
+parser.add_argument('--c', '--config', default='M2Det/configs/m2det512_vgg16.py')
+parser.add_argument('--d', '--dataset', default='COCO', help='VOC or COCO dataset')
 parser.add_argument('--resume_net', default=None, help='resume net for retraining')
 parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for retraining')
-parser.add_argument('-pth', '--pth_path', default='weights/m2det512_vgg.pth')
-parser.add_argument('-onnx', '--onnx_path', default='m2det512.onnx')
+parser.add_argument('--pth', '--pth_path', default='weights/m2det512_vgg.pth')
+parser.add_argument('--onnx', '--onnx_path', default='m2det512.onnx')
 Args = parser.parse_args()
 
 def proc_nodes_module(checkpoint):

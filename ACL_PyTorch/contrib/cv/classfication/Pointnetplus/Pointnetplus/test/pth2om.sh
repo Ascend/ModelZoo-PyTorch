@@ -3,7 +3,7 @@
 set -eu
 # set -x
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 python pointnetplus_pth2onnx.py --target_model 1 --pth_dir './models/log/classification/pointnet2_ssg_wo_normals/checkpoints' --batch_size 1
 python pointnetplus_pth2onnx.py --target_model 2 --pth_dir './models/log/classification/pointnet2_ssg_wo_normals/checkpoints' --batch_size 1

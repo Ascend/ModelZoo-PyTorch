@@ -14,7 +14,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 rm -rf SSD-MobileNetV2_bs1.om SSD-MobileNetV2_bs16.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=SSD-MobileNetV2_adapt.onnx --output=SSD-MobileNetV2_bs1 --input_format=NCHW --input_shape="image:1,3,300,300" --auto_tune_mode="RL,GA" --log=debug --soc_version=Ascend310
 atc --framework=5 --model=SSD-MobileNetV2_adapt.onnx --output=SSD-MobileNetV2_bs16 --input_format=NCHW --input_shape="image:16,3,300,300" --auto_tune_mode="RL,GA" --log=debug --soc_version=Ascend310
 

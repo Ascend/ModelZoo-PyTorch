@@ -96,6 +96,7 @@ python3.7 dlrm_s_pytorch.py --arch-sparse-feature-size=16 \
              --print-freq=100 \
              --step=1000 \
              --print-time \
+             --nepochs=${train_epochs} \
              --test-mini-batch-size=16384 \
              --test-num-workers=16 \
              --local_rank=${device_id} \

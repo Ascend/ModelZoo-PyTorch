@@ -12,7 +12,7 @@ else
 fi
 
 echo "====om transform begin===="
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf c51_bs1.om
 atc --framework=5 --model=c51.onnx --output=c51_bs1 --input_format=NCHW --input_shape="input:1,4,84,84" --auto_tune_mode="RL,GA" --log=error --soc_version=Ascend310  --op_select_implmode=high_performance
 

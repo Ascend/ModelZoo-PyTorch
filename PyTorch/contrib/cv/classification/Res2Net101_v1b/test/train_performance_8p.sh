@@ -5,7 +5,7 @@
 #网络名称，同目录名称
 Network="Res2Net101_v1b"
 #训练epoch
-train_epochs=100
+train_epochs=3
 #训练batch_size
 batch_size=2048
 #学习率

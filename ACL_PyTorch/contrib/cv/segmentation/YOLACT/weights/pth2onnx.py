@@ -46,6 +46,8 @@ def str2bool(v):
 
 parser_pth2onnx = argparse.ArgumentParser(description='Turn YOLACT .pth module to .onnx module')
 
+parser_pth2onnx.add_argument('--cann_version', type=str, 
+        default='6', help='choose cann_version')
 parser_pth2onnx.add_argument('--trained_model', type=str, 
         default='yolact_base_55_410000.pth', help='choose .pth module')
 
@@ -151,7 +153,9 @@ if __name__ == '__main__':
     pthPath = os.getcwd() + '/' + args_pth2onnx.trained_model
     convert(path, pthPath)
     import onnx
-    model = onnx.load('./' + args_pth2onnx.outputName + '.onnx')
-    removeAdd240Node(model)
-    optimSoftmax(model)
-    onnx.save_model(model, args_pth2onnx.outputName + '.onnx')
+    if args_pth2onnx.cann_version == '5':
+        model = onnx.load('./' + args_pth2onnx.outputName + '.onnx')
+        removeAdd240Node(model)
+        optimSoftmax(model)
+        onnx.save_model(model, args_pth2onnx.outputName + '.onnx')
+

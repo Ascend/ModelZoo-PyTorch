@@ -104,12 +104,12 @@ class Trainer:
                     self.model.module.save_checkpoint(self.args.save,
                                             epoch, val_loss,
                                             optimizer=self.optimizer)
-                    dist.barrier()
                 else:
                     self.model.save_checkpoint(self.args.save,
                             epoch, val_loss,
                             optimizer=self.optimizer)
-
+            if self.args.world_size > 1:
+                dist.barrier()
             self.writer.write_end_of_epoch(epoch)
             # Max = max(Max, MAX)
             # print("\nDsc MAX{} ".format(Max))

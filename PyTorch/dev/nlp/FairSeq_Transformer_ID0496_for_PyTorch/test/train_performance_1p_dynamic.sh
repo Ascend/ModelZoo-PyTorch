@@ -13,8 +13,6 @@ RANK_ID_START=0
 #进入到conda环境
 #source activate py8
 
-
-
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -87,7 +85,12 @@ elif [[ $para == --over_dump* ]];then
         bin_analysis="True"
     fi
 done
-
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${inc_line}s/^/#/" ${cur_path}/train.py
+    sed -i "58itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py
+fi
 #设置二进制变量
 if [ $bin_analysis == "True" ];then
     line=`grep "torch.npu.set_option" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`

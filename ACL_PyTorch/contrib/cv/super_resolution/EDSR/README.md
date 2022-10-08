@@ -1,287 +1,322 @@
-# EDSR Onnx 模型端到端推理指导
+# EDSR模型-推理指导
 
-- [1. 模型概述](#1)
-  - [论文地址](#11)
-  - [代码地址](#12)
-- [2. 环境说明](#2)
-  - [深度学习框架](#21)
-  - [python第三方库](#22)
-- [3. 模型转换](#3)
-  - [pth转onnx模型](#31)
-  - [onnx转om模型](#32)
-  - [om模型性能提升](#33)
-- [4. 数据预处理](#4)
-  - [数据集获取](#41)
-  - [数据集预处理](#42)
-  - [生成数据集信息文件](#43)
-- [5. 离线推理](#5)
-  - [benchmark工具概述](#51)
-  - [离线推理](#52)
-- [6. 精度对比](#6)
-  - [离线推理精度](#61)
-  - [精度对比](#62)
-- [7. 性能对比](#7)
-  - [npu性能数据](#71)
-  - [T4性能数据](#72)
-  - [性能对比](#73)
+-   [概述](#概述)
+-   [推理环境准备](#推理环境准备)
+-   [快速上手](#快速上手)
+	-   [准备数据集](#准备数据集)
+	-   [模型推理](#模型推理)
+-   [模型推理性能&精度](#模型推理性能&精度)
 
-## <a name="1">1. 模型概述</a>
 
-### <a name="11">1.1 论文地址</a>
+******
 
-[EDSR 论文](https://arxiv.org/abs/1707.02921) 
+# 概述
 
-### <a name="12">1.2 代码地址</a>
+论文通过提出EDSR模型移除卷积网络中不重要的模块并且扩大模型的规模，使网络的性能得到提升。
 
-[EDSR 代码](https://github.com/sanghyun-son/EDSR-PyTorch)
 
-branch: master
+- 参考实现：
 
-commit_id: 9d3bb0ec620ea2ac1b5e5e7a32b0133fbba66fd2
+  ```
+  url=https://github.com/sanghyun-son/EDSR-PyTorch.git
+  branch=master
+  commit_id=9d3bb0ec620ea2ac1b5e5e7a32b0133fbba66fd2
+  ```
+  
+  通过Git获取对应commit\_id的代码方法如下：
+  
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
-## <a name="2">2. 环境说明</a>
 
-### <a name="21">2.1 深度学习框架</a>
+
+## 输入输出数据
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                        | 数据排布格式 |
+  | -------- | -------- | --------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 1020 x 1020 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 大小                        | 数据类型 | 数据排布格式 |
+  | -------- | --------------------------- | -------- | ------------ |
+  | output   | batchsize x 3 x 1020 x 1020 | RGB_FP32 | NCHW         |
+
+
+
+## 文件结构
 
 ```
-pytorch == 1.5.0
-torchvision == 0.6.0
-onnx == 1.9.0
+EDSR
+├── edsr_postprocess.py    //验证推理结果脚本，给出Accuracy 
+├── edsr_pth2onnx.py       //用于转换模型文件到onnx文件 
+├── edsr_preprocess.py.py  //数据集预处理脚本，通过均值方差处理归一化图片
+├── edsr.diff   		   //模型补丁 
+├── requirements.txt       //模型安装需求
+├── README.md              //模型推理指导      
 ```
 
-### <a name="22">2.2 python第三方库</a>
+
+
+# 推理环境准备
+
+- 该模型需要以下插件与驱动
+
+
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.7.0   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手
+
+1.获取源代码
 
 ```
-numpy == 1.19.2
-Pillow == 8.2.0
-opencv-python == 4.5.2
+git clone https://github.com/sanghyun-son/EDSR-PyTorch.git
 ```
 
-> **说明：**
->
-> X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装 
->
-> Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+2.安装依赖。
 
-## <a name="3">3. 模型转换</a>
+```
+pip install -r requirements.txt
+```
 
-### <a name="31">3.1 pth转onnx模型</a>
 
-1. 下载 pth 权重文件
 
-   [EDSR_x2预训练pth权重文件](https://cv.snu.ac.kr/research/EDSR/models/edsr_baseline_x2-1bc95232.pt)
+## 准备数据集
 
-   文件名：edsr_baseline_x2-1bc95232.pt
+1. 获取数据集。
 
-   md5sum：e0a9e64cf1f9016d7013e0b01f613f68
+   用户自行获取原始数据集，该模型使用[DIV2K官网](https://data.vision.ee.ethz.ch/cvl/DIV2K/)的100张验证集进行测试
+   其中，低分辨率图像(LR)采用bicubic x2处理(Validation Data Track 1 bicubic downscaling x2 (LR images))，高分辨率图像(HR)采用原图验证集(Validation Data (HR images))。
 
-2. 克隆代码仓库代码
+   DIV2K验证集目录结构参考如下所示。
 
-   ```bash
-   git clone https://github.com/sanghyun-son/EDSR-PyTorch
    ```
-   EDSR的github仓库重写了Model的forward方法，并给forward添加了一个idx_scale的参数，这会使得PyTorch官方转换onnx的API失效，运行如下命令，将onnx.diff打包到原仓库中，使得在不影响原仓库功能的前提下实现对官方转换api的支持。
-
-   ```bash
-   patch -p1 < ../edsr.diff
+   ├── DIV2K              
+         ├──HR  
+              │──图片1
+              │──图片2
+              │   ...       
    ```
 
-3. 确定onnx输入输出的尺寸
-   为了增加精度，本指导采用对于不满足尺寸大小要求的图像的右侧和下方填充0的方式来使其输入图像达到尺寸大小要求。因此首先要获得需要的尺寸大小，通过命令行中运行如下脚本：
-
-   ```bash
-   python3.7 get_max_size.py --dir /root/datasets/div2k/LR
+2. 数据预处理。
+   执行预处理脚本，生成数据集预处理后的bin文件
+   ```
+   python3.7 edsr_preprocess.py -s /root/datasets/div2k/LR -d ./prep_data --save_img
    ```
 
-   对于div2k数据集中scale为2的缩放，尺寸大小应为1020。
+   **说明**
+   
+   >第一个参数为数据集文件位置，第二个为输出bin文件位置
 
-4. 使用 edsr_pth2onnx.py 转换pth为onnx文件，在命令行运行如下指令：
 
-   ```bash
+
+## 模型推理
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1.获取权重文件。
+
+   下载地址[pth权重文件](https://cv.snu.ac.kr/research/EDSR/model_pytorch.tar) 
+   
+   
+
+   2.修改模型。
+   
+   ​	在不影响原仓库功能的前提下实现对官方转换api的支持
+   
+       cd..
+       patch -p1 < ./edsr.diff
+       在File to patch一行输入路径：
+       ./EDSR-PyTorch/src/model/__init__.py
+   
+   
+   
+   3.导出onnx文件。
+   
+   ​	使用pth2onnx.py导出onnx文件。
+   
+   ​	运行pth2onnx.py。
+   
+   ```
    python3.7 edsr_pth2onnx.py --pth edsr_x2.pt --onnx edsr_x2.onnx --size 1020
    ```
    
-   edsr_x2.pt文件为步骤1中下载的预训练权重文件，该条指令将在运行处生成一个edsr_x2.onnx文件，此文件即为目标onnx文件
+   ​	 **说明**  
+   
+    >第一个参数为pth文件权重位置，第二个参数为输出onnx文件位置及命名，第三个为数据大小
+   
+   
+   
+   
+   
+   5.使用ATC工具将ONNX模型转OM模型。
+   
+   1. 配置环境变量。
+   
+      ```
+       source /usr/local/Ascend/ascend-toolkit/set_env.sh
+      ```
+   
+      > **说明：** 
+      >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+   
+      
+   
+   2. 执行命令查看芯片名称（$\{chip\_name\}）。
+   
+      ```
+      npu-smi info
+      #该设备芯片名为Ascend310P3 （自行替换）
+      回显如下：
+      +-------------------+-----------------+------------------------------------------------------+
+      | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+      | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+      +===================+=================+======================================================+
+      | 0       310P3     | OK              | 15.8         42                0    / 0              |
+      | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+      +===================+=================+======================================================+
+      | 1       310P3     | OK              | 15.4         43                0    / 0              |
+      | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+      +===================+=================+======================================================+
+      ```
+   
+      
+   
+   3. 执行ATC命令。
+   
+      ```
+      atc --model=edsr_x2.onnx --framework=5 --output=edsr_x2 --input_format=NCHW --input_shape="input.1:1,3,1020,1020" --log=debug --soc_version=Ascend${chip_name} --fusion_switch_file=switch.cfg
+      ```
+   
+      - 参数说明：
+   
+        - --model：为ONNX模型文件。
+        
+        - --framework：5代表ONNX模型。
+        
+        - --output：输出的OM模型。
+        
+        - --input_format：输入数据的格式。
+   
+        - --input_shape：输入数据的shape。
+        
+        - --log：日志级别。
+        
+        - --soc_version：处理器型号。
+        
+          
+        
 
-### <a name="32">3.2 onnx转om模型</a>
+​			运行成功后生成模型文件。
 
-下列需要在具备华为Ascend系列芯片的机器上执行：
 
-1. 设置 atc 工作所需要的环境变量
 
-   ```bash
-   export install_path=/usr/local/Ascend/ascend-toolkit/latest
-   export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-   export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-   export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-   export ASCEND_OPP_PATH=${install_path}/opp
-   ```
+2. 开始推理验证。
 
-2. 使用atc工具将onnx模型转换为om模型，命令参考
+​	a. 使用ais-infer工具进行推理。
 
-   ```bash
-   atc --framework=5 --model=edsr_x2.onnx --output=edsr_x2 --input_format=NCHW --input_shape="input.1:1,3,1020,1020" --log=debug --soc_version=Ascend310
-   ```
+ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-   此命令将在运行路径下生成一个edsr_x2.om文件，此文件即为目标om模型文件
 
-### <a name="33">3.3 om模型性能提升</a>
-   直接使用atc工具转换会将Transpose算子翻译为TransposeD，而TransposeD在一些输入形状下会有很差的性能。因此首先需要将Transpose的输入形状加入atc转换的白名单中。
 
-1. 获取onnx模型各个节点的输入输出shape
+​	b.  执行推理。
 
-   onnx模型默认并不带有输入输出的shape信息，可以使用 infer_onnx_shape.py将输入输出的shape信息添加到onnx中。
-
-   ```bash
-   python3.7 infer_onnx_shape.py --onnx edsr_x2.onnx
-   ```
-
-   运行之后从服务器上下载edsr_x2.onnx，并用netron打开，可以得到Transpose算子的输入为 [1, 64, 2, 2, 1020, 1020]。
-2. 将输入shape添加到白名单中
-
-   打开 /usr/local/Ascend/ascend-toolkit/5.0.2.alpha005/x86_64-linux/opp/op_impl/built-in/ai_core/tbe/impl/dynamic/transpose.py 文件，在函数 _by_dynamic_static_union_version 的 white_list_shape 列表中加入Transpose的输入shape。
-
-   ```python
-   def _by_dynamic_static_union_version(shape, core_num):
-   ...
-      white_list_shape = [
-         ...
-         [1, 64, 2, 2, 1020, 1020]
-      ]
-   ```
-3. 关闭TransposeReshapeFusionPass
-
-   在atc转换命令中加入 --fusion_switch_file=switch.cfg，关闭TransposeReshapeFusionPass。
-
-   ```bash
-   atc --framework=5 --model=edsr_x2.onnx --output=edsr_x2 --input_format=NCHW --input_shape="input.1:1,3,1020,1020" --log=debug --soc_version=Ascend310 --fusion_switch_file=switch.cfg
-   ```
-
-## <a name="4">4. 数据预处理</a>
-
-### <a name="41">4.1 数据集获取</a>
-
-该模型使用[DIV2K官网](https://data.vision.ee.ethz.ch/cvl/DIV2K/)的100张验证集进行测试，图片存放在/root/dataset/div2k下面。
-
-其中，低分辨率图像(LR)采用bicubic x2处理(Validation Data Track 1 bicubic downscaling x2 (LR images))，高分辨率图像(HR)采用原图验证集(Validation Data (HR images))。
-
-### <a name="42">4.2 数据集预处理</a>
-
-使用 edsr_preprocess.py 脚本进行数据预处理，脚本执行命令：
-
-```bash
-python3.7 edsr_preprocess.py -s /root/datasets/div2k/LR -d ./prep_data --save_img
+```
+python3.7 ais_infer.py --model ./edsr_x2.om --input ./prep_data/bin --output ./out --batchsize 1
 ```
 
-预处理脚本会在./prep_data/png/下保存填充为1020x1020的预处理图片，并将bin文件保存至./prep_data/bin/下面。
+​	推理后的输出默认在当前目录下。
 
-### <a name="43">4.3 生成数据集信息文件</a>
+**说明**
 
-1. 生成数据集信息文件脚本 get_info.py
+>执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见使用文档。
 
-2. 执行生成数据集信息脚本，生成数据集信息文件
 
-   ```bash
-    python3.7 get_info.py bin ./prep_data/bin ./edsr_prep_bin.info 1020 1020
-   ```
 
-   第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
+​	c.  精度验证。
 
-## <a name="5">5. 离线推理</a>
+    python3.7 edsr_postprocess.py --res ./out --HR /root/datasets/div2k/HR
 
-### <a name="51">5.1 benchmark工具概述</a>
+**说明**
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理benchmark工具用户指南 01
+>第一个参数为ais-infer输出目录，第二个为数据集配套标签
 
-### <a name="52">5.2 离线推理</a>
 
-```bash
-./benchmark -model_type=vision -device_id=0 -batch_size=1 -om_path=edsr_x2.om -input_text_path=./edsr_prep_bin.info -input_width=1020 -input_height=1020 -output_binary=True -useDvpp=False
+
+​	d. 性能验证。
+
+由于T4服务器上的显卡显存有限，性能比较时选择的是size为256的onnx与om模型。
+
+d-1 onnx模型转换
+
+size：256的onnx模型生成命令
+
 ```
-
-输出结果默认保存在当前目录result/dumpOutput_device{0}，对应了DIV2K中每张图片的超分输出结果。
-
-## <a name="6">6. 精度对比</a>
-
-### <a name="61">6.1 离线推理精度</a>
-
-后处理输出每一张图片在经过EDSR处理之后的PSRN的值，同时将处理后的图片保存在./result/save目录下。调用edsr_postprocess.py来进行后处理，结果输出在控制台上。
-
-```bash
-python3.7 edsr_postprocess.py --res ./result/dumpOutput_device0/ --HR /root/datasets/div2k/HR
-```
-
-精度计算结果保存在result.json里面
-
-```json
-{
-    "accuracy": 34.606869807078574,
-    "data": [
-       ...
-       ]
-}
-```
-
-### <a name="62">6.2 精度对比</a>
-
-github仓库中给出的官方精度为34.61dB，npu离线推理的精度为34.60dB。
-
-将得到的om离线模型推理精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。
-
-## <a name="7">7. 性能对比</a>
-
-### <a name="71">7.1 npu性能数据</a>
-
-由于T4服务器上的显卡显存有限，对于输入为1x3x1020x1020的onnx模型没法正常得到推理结果。因此本指导选择size为256的onnx与om模型作为性能比较的参考对象。通过如下命令获得对应尺寸的onnx和om模型。
-
-```bash
 python3.7 edsr_pth2onnx.py --pth edsr_x2.pt --onnx edsr_x2_256.onnx --size 256
 ```
 
-参照3.3所描述的方法，将Transpose的输入[1, 64, 2, 2, 256, 256]加入优化白名单。随后运行
 
-```bash
-source env.sh
-atc --framework=5 --model=edsr_x2_256.onnx --output=edsr_x2_256 --input_format=NCHW --input_shape="input.1:1,3,256,256" --log=debug --soc_version=Ascend310 --fusion_switch_file=switch.cfg
+
+d-2 om模型转换
+
+size：256的om模型生成命令示例如下
+
 ```
-得到size为256的om模型。
-
-benchmark工具作纯推理测试性能使用的命令参考如下：
-
-```bash
-./benchmark -round=20 -om_path=./edsr_x2_256.om -device_id=0 -batch_size=1
+atc --model=edsr_x2_256.onnx --framework=5 --output=edsr_x2_bs1 --input_format=NCHW --input_shape="input.1:1,3,256,256" --log=debug --soc_version=Ascend${chip_name} --fusion_switch_file=switch.cfg
 ```
 
-纯推理的运行结果如下：
 
-   ave_throughputRate = 22.3706samples/s, ave_latency = 44.7073ms
 
-   Interface throughputRate: 22.3706 * 4 = 89.4824 即是batch1 310单卡吞吐率
+d-3 性能测试
 
-### <a name="72">7.2 T4性能数据</a>
+npu测试命令示例如下：
 
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2
-
-```bash
-trtexec --onnx=edsr_x2_256.onnx --fp16 --shapes=image:1x3x256x256 --threads
+```
+python3.7 ais_infer.py --model /edsr_x2_256_bs1.om --output ./out --batchsize 1 --loop 20
 ```
 
-gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch。其中--fp16是算子精度，目前算子精度只测--fp16的。
 
-   ```
-   [07/28/2021-06:56:34] [I] GPU Compute
-   [07/28/2021-06:56:34] [I] min: 11.1594 ms
-   [07/28/2021-06:56:34] [I] max: 16.341 ms
-   [07/28/2021-06:56:34] [I] mean: 11.7199 ms
-   [07/28/2021-06:56:34] [I] median: 11.6487 ms
-   [07/28/2021-06:56:34] [I] percentile: 15.5259 ms at 99%
-   [07/28/2021-06:56:34] [I] total compute time: 3.02374 s
-   ```
-   
-   batch1 t4单卡吞吐率：1000/(11.6487/1)=85.8465fps
-   
-### <a name="73">7.3 性能对比</a>
 
-batch1：89.4824fps > 85.8465fps
+# 模型推理性能&精度
 
-310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率大，故310性能高于T4性能，性能达标。
+1.精度对比。
+
+|          | Acc   |
+| -------- | ----- |
+| 310      | 34.6% |
+| 310P     | 34.6% |
+| 标杆精度 | 34.6% |
+
+精度达标
+
+
+
+2.性能参考下列数据。
+
+|      | 310    | 310P    | T4     | 310P/310 | 310P/T4 |
+| ---- | ------ | ------- | ------ | -------- | ------- |
+| bs1  | 87.543 | 121.239 | 90.272 | 1.384    | 1.343   |
+| bs4  | 83.437 | 109.006 | 91.070 | 1.306    | 1.196   |
+| bs8  | 83.219 | 113.254 | 92.413 | 1.360    | 1.225   |
+| bs16 | 83.504 | 111.150 | 94.146 | 1.331    | 1.180   |
+| bs32 | 83.930 | 108.931 | 92.935 | 1.297    | 1.172   |
+| bs64 | 83.503 | 107.451 | 91.255 | 1.286    | 1.177   |
+

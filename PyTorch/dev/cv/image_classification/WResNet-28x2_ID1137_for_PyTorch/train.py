@@ -38,6 +38,8 @@ import os
 from collections import OrderedDict
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn, optim
 from torch.nn.functional import kl_div, softmax, log_softmax
 

@@ -23,7 +23,7 @@ from torchreid.data_manager import DatasetManager
 
 parser = argparse.ArgumentParser(description='Train image model with cross entropy loss and hard triplet loss')
 # Datasets
-parser.add_argument('--root', type=str, default='data',
+parser.add_argument('--root', type=str, default='/opt/npu/',
                     help="root path to data directory")
 parser.add_argument('-d', '--dataset', type=str, default='veri',
                     help="name of the dataset")
@@ -56,7 +56,7 @@ def _main():
                               num_vtypes=dataset.num_train_vtypes, keyptaware=args.keyptaware,
                               heatmapaware=args.heatmapaware, segmentaware=args.segmentaware,
                               multitask=args.multitask)
-    checkpoint = torch.load(args.load_weights,map_location=torch.device('cpu'))
+    checkpoint = torch.load(args.load_weights, map_location=torch.device('cpu'))
     pretrain_dict = checkpoint['state_dict']
     model_dict = model.state_dict()
     pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in model_dict and model_dict[k].size() == v.size()}

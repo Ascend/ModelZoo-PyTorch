@@ -20,13 +20,12 @@ import numpy as np
 import onnx
 import torchvision.models as models
 
-config_parser = parser = argparse.ArgumentParser(description="TNT Baseline Inference")
+parser = argparse.ArgumentParser(description="FixRes pth2onnx")
 parser.add_argument('--model', default='FixRes', type=str, metavar='MODEL',
                         help='Name of model to train (default: "countception"')
 parser.add_argument("--pretrain_path", default="./ResNetFinetune.pth", type=str)
-parser.add_argument("--output_name", default="./ResNet.onnx", type=str)
-args_config, remaining = config_parser.parse_known_args()
-args = parser.parse_args(remaining)
+parser.add_argument("--output_name", default="./FixRes.onnx", type=str)
+args = parser.parse_args()
 
 def pth2onnx(model, onnx_name):
     """Export onnx from pytorch model

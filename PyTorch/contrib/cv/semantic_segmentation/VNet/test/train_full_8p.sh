@@ -77,15 +77,16 @@ python3.7 ./train.py \
     --lr_decay=0.3 \
     --distributed \
     --world_size=1 \
-    --weight_decay=1e-8 \
+    --weight_decay=1e-5 \
     --device='npu' \
     --dist_backend='hccl' \
     --device_num=8 \
     --device_id=${ASCEND_DEVICE_ID} \
     --nEpochs=${train_epochs} \
-    --loss_scale=128 \
+    --loss_scale='dynamic' \
     --opt_level=O2 \
     --amp \
+    --print 1\
     --save=model_8p \
     --batchSz=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
@@ -100,12 +101,12 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+FPS=`grep -a 'FPS:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS: " '{print $NF}'|awk -F ")" '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Train Epoch:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "%" '{print $2}'|awk -F " " '{print $NF}'|awk 'NR==1{min=$1;next}{min=min<$1?min:$1}END{print 1-0.01*min}'`
+train_accuracy=`grep -a 'Test set:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "(" '{print $2}'|awk -F "%" '{print $1}'|awk 'END {print $1}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

@@ -17,7 +17,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 export GIT_SSL_NO_VERIFY=1
 git config --global http.sslVerify false
 git clone -b v1.3.9 --depth=1 https://github.com/open-mmlab/mmcv.git
-source ./env_npu.sh; cd ${curPath}/mmcv; python3.7 setup.py build_ext; python3.7 setup.py develop
+source ./test/env_npu.sh; cd ${curPath}/mmcv; python3.7 setup.py build_ext; python3.7 setup.py develop
 ```
 ## 修改mmcv及apex底层依赖环境
 apex修改地址 `${package_dir}=../lib/python3.7/site-packages/apex/amp/` \

@@ -116,7 +116,7 @@ python3.7.5 calibration_bin.py prep_dataset calibration_bin 64
 
 1. 设置环境变量
     ```
-    source env.sh
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
     ```
 **说明**
 >此脚本中环境变量只供参考，请以实际安装环境配置环境变量
@@ -138,7 +138,7 @@ python3.7.5 calibration_bin.py prep_dataset calibration_bin 64
 
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 **说明**
 >此脚本中环境变量只供参考，请以实际安装环境配置环境变量

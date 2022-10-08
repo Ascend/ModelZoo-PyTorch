@@ -5,7 +5,7 @@ regex
 kestrel
 yacs
 sklearn
-easydict
+easydict==1.9
 tensorboardX
 textaugment
 requests

@@ -22,8 +22,8 @@ import sys
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
+    from torch_npu.contrib import transfer_to_npu
 import apex
-from torch_npu.contrib import auto_cast_gpu
 import bugfix
 
 import torch.nn as nn
@@ -71,6 +71,8 @@ def parse_args():
                         help='dataset name (default: pascal_voc)')
     parser.add_argument('--dataset-path', type=str, default='./',
                         help='dataset path')
+    parser.add_argument('--pretrained', type=str, default='',
+                        help='pretrained model path')
     parser.add_argument('--base-size', type=int, default=520,
                         help='base image size')
     parser.add_argument('--crop-size', type=int, default=480,
@@ -198,7 +200,7 @@ class Trainer(object):
         BatchNorm2d = nn.SyncBatchNorm if args.distributed else nn.BatchNorm2d
 
         if args.model == 'dynamicunet':
-            self.model = get_dynamicunet(dataset=args.dataset).to(self.device)
+            self.model = get_dynamicunet(args=args, dataset=args.dataset).to(self.device)
         else:
             self.model = get_segmentation_model(model=args.model, dataset=args.dataset, backbone=args.backbone,
                                                 aux=args.aux, jpu=args.jpu, norm_layer=BatchNorm2d).to(self.device)

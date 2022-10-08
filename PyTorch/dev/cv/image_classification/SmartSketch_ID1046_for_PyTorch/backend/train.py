@@ -44,6 +44,8 @@ from util.iter_counter import IterationCounter
 from util.visualizer import Visualizer
 from trainers.pix2pix_trainer import Pix2PixTrainer
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 # parse options
 opt = TrainOptions().parse()
 print("========device_id:",opt.gpu_ids[0])

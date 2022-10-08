@@ -5,8 +5,7 @@
 2.get_info.py：  生成推理输入的数据集二进制info文件或jpg info文件
 3.preprocess.py：数据集预处理脚本，通过均值方差处理归一化图片，生成图片二进制文件
 4.pth2onnx.py:   用于转换pth模型文件到onnx模型文件
-5.env.sh：       用于设定设备推理执行所需环境变量
-6.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+5.vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
 
 
 ## 2 环境说明
@@ -54,7 +53,7 @@ python3.7 pth2onnx.py ./wide_resnet50_2-95faca4d.pth ./wide_resnet50_2.onnx
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考<<CANN 5.0.1 开发辅助工具指南 (推理) 01>>
 使用二进制输入时，执行如下命令
@@ -103,7 +102,7 @@ python3.7 get_info.py jpg ../dataset/ImageNet/ILSVRC2012_img_val ./ImageNet.info
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.增加benchmark可执行权限
