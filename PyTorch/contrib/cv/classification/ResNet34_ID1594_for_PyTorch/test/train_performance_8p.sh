@@ -64,6 +64,9 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
+    workers=$(nproc)
+else
+    workers=1024
 fi
 
 python3 ./main.py \
@@ -71,7 +74,7 @@ python3 ./main.py \
     -a resnet34 \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
-    --workers=1024 \
+    --workers=${workers} \
     --learning-rate=${learning_rate} \
     --mom=0.9 \
     --weight-decay=1.0e-04  \
