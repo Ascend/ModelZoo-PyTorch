@@ -13,7 +13,7 @@ Label smoothing is required for qualified model accuracy.
 ## Requirements
 - pytorch_ascend, apex_ascend
 - munch package, which can be installed via `pip install munch`
-- Download the ImageNet dataset from http://www.image-net.org/
+- Download the ImageNet dataset 
     - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 
 ## Training
@@ -42,8 +42,8 @@ Label smoothing is required for qualified model accuracy.
     4. `--batch-size N`：分配个每个设备的batch大小
 3. 开始训练
    ```
-   bash ./test/train_full_1p.sh  --data_path=数据集路径    # 精度训练
-   bash ./test/train_performance_1p.sh  --data_path=数据集路径  # 性能训练
+   bash ./test/train_full_8p.sh  --data_path=数据集路径    # 精度训练
+   bash ./test/train_performance_8p.sh  --data_path=数据集路径  # 性能训练
    ```
 
 ### 训练结果
@@ -67,5 +67,4 @@ $E$为当前一轮的Epoch序号，从0开始
 ### NPU 8p
 |Epochs|Learning rate                         |Optimization type|FPS     |Acc@1 |Acc@5 |
 |:----:|:------------------------------------:|:---------------:|:------:|:----:|:----:|
-|120   |$0.6\times 0.1^{\lfloor E/30 \rfloor}$|O2               |1524.537|78.599|93.849|
-|120   |$0.3\times (1+\cos{\frac{E\pi}{120}})$|O2               |1522.120|80.048|94.799|
+|120   |$0.3\times (1+\cos{\frac{E\pi}{120}})$|O2               |1022.920|80.564|94.428|

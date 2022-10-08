@@ -34,6 +34,8 @@ import json
 import time
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
@@ -55,9 +57,6 @@ from metrics.ner_metrics import SeqEntityScore
 from tools.finetuning_argparse import get_argparse
 import apex
 torch.npu.set_compile_mode(jit_compile=False)
-option = {}
-option["MM_BMM_ND_ENABLE"] = "enable"
-torch.npu.set_option(option)
 
 MODEL_CLASSES = {
     ## bert ernie bert_wwm bert_wwwm_ext

@@ -30,7 +30,7 @@ from itertools import chain
 from typing import Optional
 import torch
 option = {}
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
     option['ACL_OP_COMPILER_CACHE_MODE'] = "enable"  # cache功能启用
     option['ACL_OP_COMPILER_CACHE_DIR'] = "./cache"  # cache所在的文件夹

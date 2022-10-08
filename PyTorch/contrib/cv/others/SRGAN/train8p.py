@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding:GBK
 # Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ import tempfile
 import math
 
 import torch
-if torch.__version__>= "1.8.1":
+if torch.__version__>= "1.8":
     #print("import torch_npu")
     import torch_npu
 import torch.nn.parallel

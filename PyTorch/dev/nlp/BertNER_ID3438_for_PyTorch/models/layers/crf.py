@@ -217,7 +217,7 @@ class CRF(nn.Module):
 
         # End transition score
         # shape: (batch_size,)
-        seq_ends = mask.long().sum(dim=0) - 1
+        seq_ends = mask.long().sum(dim=0).long() - 1
         # shape: (batch_size,) DTS2022062509691
         last_tags = tags[seq_ends, bs_index]
         # shape: (batch_size,)

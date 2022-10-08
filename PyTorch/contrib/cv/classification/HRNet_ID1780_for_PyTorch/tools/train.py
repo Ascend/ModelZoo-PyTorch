@@ -26,6 +26,10 @@ import shutil
 import sys
 
 import torch
+
+if torch.__version__>= '1.8':
+    import torch_npu
+
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
@@ -123,6 +127,10 @@ def parse_args():
                         help='train epochs',
                         type=int,
                         default='')
+    parser.add_argument('--stop_step',
+                        help='stop_step',
+                        type=bool,
+                        default=False)
 
     args = parser.parse_args()
     update_config(config, args)
@@ -270,7 +278,7 @@ def main():
         lr_scheduler.step()
         # train for one epoch
         train(config, train_loader, model, criterion, optimizer, epoch,
-              final_output_dir, tb_log_dir, writer_dict, device_num, bs)
+              final_output_dir, tb_log_dir, writer_dict, device_num, bs, args.stop_step)
         # evaluate on validation set
         perf_indicator = validate(config, valid_loader, model, criterion,
                                   final_output_dir, tb_log_dir, writer_dict)

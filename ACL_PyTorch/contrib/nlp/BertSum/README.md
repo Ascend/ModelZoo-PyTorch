@@ -131,7 +131,7 @@ python -m onnxsim ./bertsum_13000_9_bs1.onnx ./bertsum_13000_9_sim_bs1.onnx
 1.设置环境变量
 
 ```
-source atc.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.3 开发辅助工具指南 (推理) 01
@@ -188,7 +188,7 @@ python BertSum_pth_preprocess.py -mode test -bert_data_path ../bert_data/cnndm -
 benchmark工具暂不支持多输入，因此改用msame，首先要source环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用msame将onnx模型转换为om模型文件，工具使用方法可以参考CANN 

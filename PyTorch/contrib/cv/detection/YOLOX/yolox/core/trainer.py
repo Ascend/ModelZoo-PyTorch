@@ -146,14 +146,12 @@ class Trainer:
         data_end_time = time.time()
 
         outputs = self.model(inps, targets)
-        torch.npu.synchronize()
 
         loss = outputs["total_loss"]
 
         self.optimizer.zero_grad()
         with amp.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
-        torch.npu.synchronize()
         self.optimizer.step()
 
         if self.use_model_ema:
@@ -187,7 +185,6 @@ class Trainer:
         logger.info(
             "Model Summary: {}".format(get_model_info(model, self.exp.test_size))
         )
-        ### model.to(self.device)
         model.npu()
 
         # solver related init
@@ -197,8 +194,7 @@ class Trainer:
         model = self.resume_train(model)
 
         ### init amp
-        model, self.optimizer = amp.initialize(model, self.optimizer, opt_level="O1", combine_grad=True)
-        # model, self.optimizer = amp.initialize(model, self.optimizer, opt_level="O0")
+        model, self.optimizer = amp.initialize(model, self.optimizer, opt_level="O1", loss_scale=1024, combine_grad=True)
 
         # data related init
         self.no_aug = self.start_epoch >= self.max_epoch - self.exp.no_aug_epochs
@@ -252,13 +248,16 @@ class Trainer:
                 self.model.module.head.use_l1 = True
             else:
                 self.model.head.use_l1 = True
-            # self.exp.eval_interval = 1
+            self.exp.eval_interval = 1
             if not self.no_aug:
                 self.save_ckpt(ckpt_name="last_mosaic_epoch")
 
     def after_epoch(self):
-        if (self.epoch + 1) % 10 == 0 and (self.epoch + 1) < 285 or (self.epoch + 1) >= 285:
-            self.save_ckpt(ckpt_name="latest_" + str(self.epoch))
+        self.save_ckpt(ckpt_name="latest")
+
+        if (self.epoch + 1) % self.exp.eval_interval == 0:
+            all_reduce_norm(self.model)
+            self.evaluate_and_save_model()
             
     def before_iter(self):
         pass
@@ -356,7 +355,6 @@ class Trainer:
         ap50_95, ap50, summary = self.exp.eval(
             evalmodel, self.evaluator, self.is_distributed
         )
-        print('Model mode set to `train`')
         self.model.train()
         if self.rank == 0:
             logger.info("\n" + summary)

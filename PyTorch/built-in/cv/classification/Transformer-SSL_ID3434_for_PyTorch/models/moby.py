@@ -88,14 +88,13 @@ class MoBY(nn.Module):
             param_k.data.copy_(param_q.data)
             param_k.requires_grad = False
 
-        if not torch.__version__ >= '1.8.1': # syncbn not supported yet in torch-1.8
-            if self.cfg.MODEL.SWIN.NORM_BEFORE_MLP == 'bn':
-                nn.SyncBatchNorm.convert_sync_batchnorm(self.encoder)
-                nn.SyncBatchNorm.convert_sync_batchnorm(self.encoder_k)
+        if self.cfg.MODEL.SWIN.NORM_BEFORE_MLP == 'bn':
+            nn.SyncBatchNorm.convert_sync_batchnorm(self.encoder)
+            nn.SyncBatchNorm.convert_sync_batchnorm(self.encoder_k)
 
-            nn.SyncBatchNorm.convert_sync_batchnorm(self.projector)
-            nn.SyncBatchNorm.convert_sync_batchnorm(self.projector_k)
-            nn.SyncBatchNorm.convert_sync_batchnorm(self.predictor)
+        nn.SyncBatchNorm.convert_sync_batchnorm(self.projector)
+        nn.SyncBatchNorm.convert_sync_batchnorm(self.projector_k)
+        nn.SyncBatchNorm.convert_sync_batchnorm(self.predictor)
 
         self.K = int(self.cfg.DATA.TRAINING_IMAGES * 1. / dist.get_world_size() / self.cfg.DATA.BATCH_SIZE) * self.cfg.TRAIN.EPOCHS
         self.k = int(self.cfg.DATA.TRAINING_IMAGES * 1. / dist.get_world_size() / self.cfg.DATA.BATCH_SIZE) * self.cfg.TRAIN.START_EPOCH

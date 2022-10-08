@@ -38,6 +38,8 @@ import random
 import numpy as np
 from tqdm import tqdm
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.autograd import Variable

@@ -11,7 +11,7 @@ export RANK_SIZE=8
 data_path=""
 
 # 训练epoch
-train_epochs=1
+train_epochs=5
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -61,8 +61,8 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-if [ ! -d  "./datasets/COCO"  ]; then
-    ln -s ${data_path} ./datasets/COCO
+if [ ! -d  "./datasets/VOCdevkit"  ]; then
+    ln -s ${data_path} ./datasets/VOCdevkit
 fi
 
 KERNEL_NUM=$(($(nproc)/8))
@@ -82,19 +82,21 @@ if [ $(uname -m) = "aarch64" ]
 then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END nohup python3.7 -u tools/train.py -n yolox-x \
+    taskset -c $PID_START-$PID_END nohup python3.7 -u tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
         -b ${batch_size} \
         -d 8 \
         --maxx_epoch ${train_epochs} \
         --use_npu \
-        --device_id $i >> ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
+        --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
 else
-    nohup python3.7 -u tools/train.py -n yolox-x \
+    nohup python3.7 -u tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
         -b ${batch_size} \
         -d 8 \
         --maxx_epoch ${train_epochs} \
         --use_npu \
-        --device_id $i >> ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
+        --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
 fi
 done
 

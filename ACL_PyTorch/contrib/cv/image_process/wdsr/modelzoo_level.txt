@@ -1,3 +1,6 @@
 FuncStatus:OK
 PrecisionStatus:OK
-PerfStatus:POK
+AutoTune:POK
+PerfStatus:PERFECT OK
+ModelConvert:OK
+QuantStatus:OK

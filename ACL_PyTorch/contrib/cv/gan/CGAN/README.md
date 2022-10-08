@@ -80,7 +80,7 @@ python3.7 -m onnxsim --input-shape="100,72" CGAN.onnx CGAN_sim.onnx
 onnx转出om,并使用autotune优化om模型，这将耗费大量时间
 
 ```
-source env.sh（注意，latest是一个软连接，请将服务器中的/usr/local/Ascend/ascend-toolkit/latest 指向5.0.3版本的CANN包）
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 # 生成器一次只能生成一张图，由于模型输入是两维的，不是常用的NCHW格式，input_format采用ND形式
 atc --framework=5 --model=CGAN_sim.onnx --output=CGAN_bs1 --input_format=ND --output_type=FP32 --input_shape="image:100,72" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
 ```
@@ -105,7 +105,6 @@ atc --framework=5 --model=CGAN_sim.onnx --output=CGAN_bs1 --input_format=ND --ou
 |     |--util.py
 |     |--CGAN.py
 |     |--gen_dataset_info.py
-|     |--env.sh
 |     |--CGAN_pth2onnx.py
 |     |--CGAN_preprocess.py
 |     |--CGAN_postprocess.py
@@ -148,7 +147,7 @@ msame工具为华为自研的模型推理工具，支持多种模型的离线推
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.执行离线推理

@@ -1,0 +1,7 @@
+{
+    "black-list":{
+        "to-add":[
+            "ReduceMeanD"
+        ]
+    }
+}

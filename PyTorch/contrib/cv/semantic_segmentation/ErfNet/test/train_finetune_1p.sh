@@ -14,7 +14,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-nohup python3.7.5 -u train/main.py \
+nohup python3.7 -u train/main.py \
     --datadir ${data_path} \
     --finetune \
     --fnum 20 \
@@ -24,4 +24,4 @@ nohup python3.7.5 -u train/main.py \
     --num-epochs 1 \
     --amp \
     --opt-level "O2" \
-    --loss-scale-value 128 > erfnet_finetune.log 2>&1 &
+    --loss-scale-value "dynamic" > erfnet_finetune.log 2>&1 &

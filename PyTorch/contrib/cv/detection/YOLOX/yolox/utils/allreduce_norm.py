@@ -45,6 +45,8 @@ def get_async_norm_states(module):
     for name, child in module.named_modules():
         if isinstance(child, ASYNC_NORM):
             for k, v in child.state_dict().items():
+                if 'num_batches_tracked' in str(k):
+                    continue
                 async_norm_states[".".join([name, k])] = v
     return async_norm_states
 
@@ -93,7 +95,7 @@ def all_reduce(py_dict, op="sum", group=None):
     tensor_shapes = [py_dict[k].shape for k in py_key]
     tensor_numels = [py_dict[k].numel() for k in py_key]
 
-    flatten_tensor = torch.cat([py_dict[k].flatten() for k in py_key])
+    flatten_tensor = torch.cat([py_dict[k].flatten().float() for k in py_key])
     dist.all_reduce(flatten_tensor, op=_get_reduce_op(op))
     if op == "mean":
         flatten_tensor /= world_size

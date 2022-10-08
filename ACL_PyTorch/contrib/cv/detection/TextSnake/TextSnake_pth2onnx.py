@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from network.textnet import TextNet
 import torch
 import argparse
 import sys
 sys.path.append('./TextSnake.pytorch')
-from network.textnet import TextNet
 
 
 def pth2onnx(args):
@@ -28,7 +28,7 @@ def pth2onnx(args):
     #     'lr': ,
     #     'epoch': ,
     #     'model': model.state_dict(),
-    #     'optimizer': 
+    #     'optimizer':
     # for n, p in torch.load(args.input_file, map_location=lambda storage, loc: storage)['model'].items():
     #    if n in state_dict.keys():
     #        state_dict[n].copy_(p)
@@ -41,7 +41,9 @@ def pth2onnx(args):
     output_names = ["output"]
     dynamic_axes = {'image': {0: '-1'}, 'output': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 512, 512)
-    torch.onnx.export(model, dummy_input, args.output_file, input_names=input_names, dynamic_axes=dynamic_axes, output_names=output_names, verbose=True)
+    torch.onnx.export(model, dummy_input, args.output_file, input_names=input_names,
+                      dynamic_axes=dynamic_axes, output_names=output_names, verbose=True)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

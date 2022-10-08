@@ -2,7 +2,6 @@ absl-py==0.13.0
 addict==2.4.0
 antlr4-python3-runtime==4.8
 anykeystore==0.2
-apex @ file:///home/zhangjunyi/20210617_5.0.T205/apex-0.1%2Bascend-cp37-cp37m-linux_aarch64.whl
 argon2-cffi==20.1.0
 astroid==2.5.5
 async-generator==1.10
@@ -25,7 +24,6 @@ debugpy==1.3.0
 decorator==4.4.2
 defusedxml==0.7.1
 # Editable install with no version control (detectron2==0.3)
--e /root/rjr/centermask2/detectron2-0.3
 distro==1.5.0
 dnspython==2.1.0
 easydict==1.9
@@ -80,7 +78,6 @@ mccabe==0.6.1
 mistune==0.8.4
 -e git://github.com/open-mmlab/mmcv.git@ca47ae1f87d16a9b8a9bd6cd910fef3ce5d0306b#egg=mmcv_full
 # Editable install with no version control (mmdet==2.6.0)
--e /home/xinghui/SSD
 mmpycocotools==12.0.3
 motmetrics==1.2.0
 mpmath==1.2.1
@@ -106,7 +103,7 @@ PasteDeploy==2.1.1
 pbkdf2==1.3
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==8.2.0
+Pillow==9.1.0
 pkgconfig==1.5.2
 plaster==1.0
 plaster-pastedeploy==0.7
@@ -154,7 +151,6 @@ scikit-image==0.18.2
 scikit-learn==0.24.2
 scipy==1.6.2
 # Editable install with no version control (segmentron==0.1)
--e /home/wcj_NPU/code
 Send2Trash==1.7.1
 Shapely==1.5.9
 six==1.15.0
@@ -182,10 +178,9 @@ timm @ git+https://github.com/rwightman/pytorch-image-models.git@5aca7c01e53e4a2
 toml==0.10.2
 tools==0.1.9
 toolz==0.11.1
-torch @ file:///home/zhangjunyi/code/npu8p/pytorch-develop/dist/torch-1.5.0%2Bascend.post2-cp37-cp37m-linux_aarch64.whl
 torch-summary==1.4.5
 torchelastic==0.2.0
-torchvision==0.6.0
+torchvision
 tornado==6.1
 tqdm==4.61.0
 traitlets==5.0.5

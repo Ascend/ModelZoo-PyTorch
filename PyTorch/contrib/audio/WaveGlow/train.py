@@ -19,6 +19,8 @@ import argparse
 import json
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import time
 
 #=====START: ADDED FOR DISTRIBUTED======
@@ -37,7 +39,7 @@ def load_checkpoint(checkpoint_path, model, optimizer):
     iteration = checkpoint_dict['iteration']
     optimizer.load_state_dict(checkpoint_dict['optimizer'])
     model_for_loading = checkpoint_dict['model']
-    model.load_state_dict(model_for_loading.state_dict())
+    model.load_state_dict(model_for_loading)
     print("Loaded checkpoint '{}' (iteration {})" .format(
           checkpoint_path, iteration))
     return model, optimizer, iteration
@@ -47,7 +49,7 @@ def save_checkpoint(model, optimizer, learning_rate, iteration, filepath):
           iteration, filepath))
     model_for_saving = WaveGlow(**waveglow_config).to("npu:0")
     model_for_saving.load_state_dict(model.state_dict())
-    torch.save({'model': model_for_saving,
+    torch.save({'model': model_for_saving.state_dict(),
                 'iteration': iteration,
                 'optimizer': optimizer.state_dict(),
                 'learning_rate': learning_rate}, filepath)

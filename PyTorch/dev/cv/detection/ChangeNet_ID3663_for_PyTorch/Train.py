@@ -164,7 +164,7 @@ def main():
 
     if args.fp16:
         change_net, optimizer = apex.amp.initialize(change_net, optimizer, opt_level=args.fp16_opt_level,
-                                                    loss_scale="dynamic",
+                                                    loss_scale=65536,
                                                     combine_grad=True)
 
     if args.local_rank != -1:

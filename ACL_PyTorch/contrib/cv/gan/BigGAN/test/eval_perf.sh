@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # generate prep_dataset
 rm -rf ./prep_noise_bs1 ./prep_label_bs1 gen_y_bs1.npz

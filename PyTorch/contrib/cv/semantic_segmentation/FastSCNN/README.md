@@ -15,9 +15,11 @@ use pytorch, you can use pip or conda to install the requirements
 ```
 # for pip
 cd $project
-pip install -r requirements.txt
+pip3.7 install -r requirements.txt
+Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 CANN 20210617_5.0.T205
-torchvision==0.6.0
+torchvision
 ```
 
 

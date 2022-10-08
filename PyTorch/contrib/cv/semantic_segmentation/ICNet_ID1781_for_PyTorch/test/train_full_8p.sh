@@ -17,6 +17,8 @@ train_epochs=200
 device_id=0
 # 学习率
 learning_rate=0.01
+# 预训练模型路径
+more_path1='./pretrained'
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -43,6 +45,13 @@ if [ -f ${more_path1}/resnet50-25c4b509.pth ];then
     mkdir -p /root/.torch/models
     cp ${more_path1}/resnet50-25c4b509.pth /root/.torch/models/
 fi
+
+# 获取pth文件传入使用服务器对应路径下
+#if [ -f ${more_path1}/resnet50-0676ba61.pth ];then
+#    echo "pth file exists"
+#    mkdir -p /root/.torch/models
+#    cp ${more_path1}/resnet50-0676ba61.pth /root/.torch/models/
+#fi
 
 
 ###############指定训练脚本执行路径###############
@@ -85,7 +94,7 @@ RANK_SIZE=8
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 ADDR=$(hostname -I|awk '{print $1}')
-KERNEL_NUM=$(($(nproc)/$RANK_SIZE)
+KERNEL_NUM=$(($(nproc)/$RANK_SIZE))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PIN_END=$((PID_START + KERNEL_NUM - 1))
 WORKERS_NUM=$((KERNEL_NUM - 1))
@@ -116,7 +125,7 @@ FPS=`grep -a 'Epochs'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEN
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Average mIoU' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk 'END {print}'`
+train_accuracy=`grep -a 'Average mIoU' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $8}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -131,7 +140,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 # 吞吐量
 ActualFPS=${FPS}
 # 单迭代训练时长
-TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
+#TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep Iters: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt

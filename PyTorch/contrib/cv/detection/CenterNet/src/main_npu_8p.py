@@ -45,7 +45,7 @@ from opts import opts
 from models.model import create_model, load_model, save_model
 from models.data_parallel import DataParallel
 from logger import Logger
-from datasets.dataset_factory import get_dataset
+from lib.datasets.dataset_factory import get_dataset
 from trains.train_factory import train_factory
 from apex import amp
 import torch.distributed as dist

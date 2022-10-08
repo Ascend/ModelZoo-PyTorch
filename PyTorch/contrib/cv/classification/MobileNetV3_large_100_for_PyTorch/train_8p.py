@@ -36,7 +36,7 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
 import torch
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 import torch.nn as nn
 import torchvision.utils

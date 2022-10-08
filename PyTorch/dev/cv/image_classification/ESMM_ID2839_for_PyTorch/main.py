@@ -44,6 +44,8 @@ from model_train import train_model
 from esmm import ESMM
 from mmoe import MMOE
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.npu
 import os

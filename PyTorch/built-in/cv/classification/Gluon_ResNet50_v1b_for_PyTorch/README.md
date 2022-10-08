@@ -7,7 +7,7 @@
     torch(NPU版本)
     torchvision
     pillow
-
+    提示：安装与torch版本相对应的torchvision
 ## 二、训练流程：
     data_path为数据集imagenet所在的路径
    

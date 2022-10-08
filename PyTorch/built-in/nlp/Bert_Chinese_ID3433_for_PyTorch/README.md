@@ -22,9 +22,9 @@ cd ..
 
 ### 3.训练
 
-#### （可选）数据集准备
+#### （可选）数据集预处理
 
-以开源的中文数据集zhwiki为例，说明如何将原始数据集转为模型所需的单个txt文件。如果训练数据已经符合要求，可跳过这一步。
+如果你想重新处理zhwiki的原始数据，可按照以下步骤操作。
 
 下载zhwiki
 
@@ -38,11 +38,10 @@ wget https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.
 bzip2 -dk zhwiki-latest-pages-articles.xml.bz2
 ```
 
-安装wikiextractor并提取文本，其中extracted/wiki_zh为保存路径，不要修改
+使用工程目录的WikiExtractor.py提取文本，其中extracted/wiki_zh为保存路径，不要修改
 
 ```
-pip3 install wikiextractor
-python3 -m wikiextractor.WikiExtractor zhwiki-latest-pages-articles.xml -b 100M -o extracted/wiki_zh
+python3 WikiExtractor.py zhwiki-latest-pages-articles.xml -b 100M -o extracted/wiki_zh
 ```
 
 将多个文档整合为一个txt文件，在本工程根目录下执行
@@ -76,12 +75,29 @@ bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=32 
 bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡精度训练
 bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡性能训练
 ```
-
+```
 训练脚本参数说明：
-    --data_path：  数据集路径
+	--data_path：  数据集路径
 	--model_size： 训练model是base或者是large
-    --device_id：  单卡训练时所使用的device_id
+	--device_id：  单卡训练时所使用的device_id
 
+双机16卡训练
+```
+
+```
+bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练    # 8卡精度训练
+bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练   # 8卡性能训练
+```
+
+```
+训练脚本参数说明：
+	--data_path：  数据集路径
+	--model_size： 训练model是base或者是large
+	--device_id：  单卡训练时所使用的device_id
+	--node_rank:   集群节点序号，master节点是0， 其余节点依次加1
+	--master_addr：master节点服务器的ip
+	--master_port: 分布式训练中,master节点使用的端口
+```
 
 #### Bert-large
 
@@ -96,22 +112,40 @@ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/algolet/bert-large-chines
 单卡训练
 
 ```
-bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large  --device_id=0   # 单卡精度训练
-bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 单卡性能训练
+bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large  --device_id=0 --warmup_ratio=0.1 --weight_decay=0.00001 # 单卡精度训练
+bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 单卡性能训练
 ```
 
 单机8卡训练
 
 ```
-bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡精度训练
-bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡性能训练
+bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡精度训练
+bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡性能训练
 ```
 
+```
 训练脚本参数说明：
-    --data_path：  数据集路径
+	--data_path：  数据集路径
 	--model_size： 训练model是base或者是large
-    --device_id：  单卡训练时所使用的device_id
+	--device_id：  单卡训练时所使用的device_id
+```
 
+双机16卡训练
+
+```
+bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 8卡精度训练    # 8卡精度训练
+bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 8卡精度训练   # 8卡性能训练
+```
+
+```
+训练脚本参数说明：
+	--data_path：  数据集路径
+	--model_size： 训练model是base或者是large
+	--device_id：  单卡训练时所使用的device_id
+	--node_rank:   集群节点序号，master节点是0， 其余节点依次加1
+	--master_addr：master节点服务器的ip
+	--master_port: 分布式训练中,master节点使用的端口
+```
 
 ### 附录：单机8卡训练脚本参数说明
 

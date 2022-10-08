@@ -35,13 +35,13 @@ from timm.data import Dataset, resolve_data_config
 from timm_difference.data.loader import create_loader
 from timm_difference.data.mixup import Mixup, FastCollateMixup
 from timm.models import load_checkpoint, create_model, resume_checkpoint, convert_splitbn_model
-# from timm.utils import *
+from timm.utils import AverageMeter, accuracy, get_outdir, update_summary
 from timm_difference.utils.model_ema import ModelEma
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy, JsdCrossEntropy
 from timm.optim import create_optimizer
 from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
-from timm.utils.checkpoint_saver import CheckpointSaver
+from timm_difference.utils.checkpoint_saver import CheckpointSaver
 from timm.utils.log import setup_default_logging
 from labeled_memcached_dataset import McDataset
 

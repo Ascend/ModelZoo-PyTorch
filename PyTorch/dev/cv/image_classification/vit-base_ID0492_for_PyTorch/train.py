@@ -29,6 +29,8 @@ import time
 from datetime import timedelta
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.distributed as dist
 
 from tqdm import tqdm

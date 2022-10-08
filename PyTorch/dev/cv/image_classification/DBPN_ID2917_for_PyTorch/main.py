@@ -37,6 +37,8 @@ from math import log10
 
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn

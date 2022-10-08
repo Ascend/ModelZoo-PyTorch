@@ -2,8 +2,7 @@
 
 python3.7 ./pth2onnx.py ./model/model.pt ./model/model_mkt1501_bs1.onnx 1
 python3.7 ./pth2onnx.py ./model/model.pt ./model/model_mkt1501_bs16.onnx 16
-#env.sh
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf ./mgn_mkt1501_bs1.om ./mgn_mkt1501_bs16.om
 

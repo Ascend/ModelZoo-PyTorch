@@ -53,6 +53,9 @@ from mobilev2ssd import SSD
 import argparse
 import torch.npu
 import os
+if torch.__version__ >= "1.8":
+    import torch_npu
+
 try:
     from apex import amp
 except ImportError:

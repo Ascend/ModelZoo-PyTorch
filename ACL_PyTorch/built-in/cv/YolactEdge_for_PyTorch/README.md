@@ -19,7 +19,6 @@
 ## 1 文件说明
 ```
 yolact_edge_for_Pytorch
-  ├── env.sh            设置环境变量
   ├── pth2onnx.py       pytorch模型导出onnx模型
   ├── atc.sh            onnx模型转om
   ├── yolact_edge.diff  补丁文件
@@ -72,7 +71,7 @@ pip install git+https://github.com/haotian-liu/cocoapi.git#"egg=pycocotools&subd
 
 ### 2.4 设置环境变量
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 ## 3 端到端推理步骤

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.nn as nn
 
@@ -34,7 +34,7 @@ class Encoder(nn.Module):
         embedded = self.embedding(src)
 
         if self.training:
-            if torch.__version__ >= "1.8.1":
+            if torch.__version__ >= "1.8":
                 embedded = nn.functional.dropout(embedded, p=self.prob)
             else:
                 embedded, _, _ = torch.npu_dropoutV2(embedded, self.seed, p=self.prob)

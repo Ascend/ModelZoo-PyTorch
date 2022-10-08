@@ -150,6 +150,7 @@ nohup python3 main.py \
   --n_threads 128 \
   --checkpoint 5 \
   --amp_cfg \
+  --no_val \
   --n_epochs ${train_epochs} \
   --opt_level O2 \
   --loss_scale_value 1024 \

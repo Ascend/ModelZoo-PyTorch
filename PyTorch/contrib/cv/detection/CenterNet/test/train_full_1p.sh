@@ -68,7 +68,8 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-
+#数据集处理
+ln -nsf ${data_path} $cur_path/data
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
@@ -81,7 +82,7 @@ for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list='0' --dataset pascal --num_epochs 90 --lr_step 45,60,75 --port='34578' --world_size 1  --batch_size $batch_size --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_performence_8p_${ASCEND_DEVICE_ID}.log 2>&1 &
+taskset -c $PID_START-$PID_END python3.7  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list='0' --dataset pascal --num_epochs 90 --lr_step 45,60,75 --port='34578' --world_size 1  --batch_size $batch_size --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
    
 wait

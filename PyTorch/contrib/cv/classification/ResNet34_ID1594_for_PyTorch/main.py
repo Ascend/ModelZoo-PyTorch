@@ -20,12 +20,17 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from apex import amp
 import apex
 from models import resnet
 
 import torch.nn as nn
 import torch.nn.parallel
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.optim

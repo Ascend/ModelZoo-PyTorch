@@ -23,7 +23,7 @@ def main():
     i = 0
     with open(output_file, mode='w') as f:
         for file in in_files:
-            f.write(str(i) + ' ' + src_path + file + ' 224 224\n')
+            f.write(str(i) + ' ' + src_path + '/' + file + ' 224 224\n')
             i += 1
 
 

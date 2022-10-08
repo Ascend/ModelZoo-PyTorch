@@ -1,28 +1,31 @@
 /*
-* Copyright 2022 Huawei Technologies Co., Ltd
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-* ============================================================================
-*/
+ * Copyright 2022 Huawei Technologies Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 3.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-3.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ============================================================================
+ */
 
+#include <unistd.h>
+#include <sys/stat.h>
+#include <iostream>
+#include <fstream>
 #include <map>
 #include <memory>
-#include <string>
 #include <vector>
+#include <string>
 #include "DPN131.h"
 #include "MxBase/DeviceManager/DeviceManager.h"
 #include "MxBase/Log/Log.h"
-
 
 APP_ERROR DPN131::Init(const InitParam &initParam) {
     deviceId_ = initParam.deviceId;
@@ -36,13 +39,20 @@ APP_ERROR DPN131::Init(const InitParam &initParam) {
         LogError << "Set context failed, ret=" << ret << ".";
         return ret;
     }
-
     model_ = std::make_shared<MxBase::ModelInferenceProcessor>();
     ret = model_->Init(initParam.modelPath, modelDesc_);
     if (ret != APP_ERR_OK) {
         LogError << "ModelInferenceProcessor init failed, ret=" << ret << ".";
         return ret;
     }
+
+    uint32_t input_data_size = 1;
+    for (size_t j = 0; j < this->modelDesc_.inputTensors[0].tensorDims.size(); ++j) {
+        this->inputDataShape_[j] = (uint32_t)this->modelDesc_.inputTensors[0].tensorDims[j];
+        input_data_size *= this->inputDataShape_[j];
+    }
+    this->inputDataSize_ = input_data_size;
+
     MxBase::ConfigData configData;
     const std::string softmax = initParam.softmax ? "true" : "false";
     const std::string checkTensor = initParam.checkTensor ? "true" : "false";
@@ -60,10 +70,14 @@ APP_ERROR DPN131::Init(const InitParam &initParam) {
     post_ = std::make_shared<MxBase::Resnet50PostProcess>();
     ret = post_->Init(config);
     if (ret != APP_ERR_OK) {
-        LogError << "DPN131PostProcess init failed, ret=" << ret << ".";
+        LogError << "Resnet50PostProcess init failed, ret=" << ret << ".";
         return ret;
     }
-
+    tfile_.open("mx_pred_result.txt");
+    if (!tfile_) {
+        LogError << "Open result file failed.";
+        return APP_ERR_COMM_OPEN_FAIL;
+    }
     return APP_ERR_OK;
 }
 
@@ -71,51 +85,19 @@ APP_ERROR DPN131::DeInit() {
     model_->DeInit();
     post_->DeInit();
     MxBase::DeviceManager::GetInstance()->DestroyDevices();
-    return APP_ERR_OK;
-}
-
-APP_ERROR DPN131::ReadImage(const std::string &imgPath, cv::Mat &imageMat) {
-    imageMat = cv::imread(imgPath, cv::IMREAD_COLOR);
-    LogInfo << "data" << imageMat.size();
-    return APP_ERR_OK;
-}
-
-void DPN131::ResizeImage(const cv::Mat &srcImageMat, cv::Mat &dstImageMat) {
-    static constexpr uint32_t resizeHeight = 262;
-    static constexpr uint32_t resizeWidth = 262;
-    cv::resize(srcImageMat, dstImageMat, cv::Size(resizeWidth, resizeHeight));
-}
-
-void DPN131::CropImage(const cv::Mat &srcImageMat, cv::Mat &dstImageMat) {
-    static cv::Rect centerCrop((262 - 224)/2, (262 - 224)/2, 224, 224);
-    dstImageMat = srcImageMat(centerCrop).clone();
-}
-
-APP_ERROR DPN131::CVMatToTensorBase(const cv::Mat &imageMat, MxBase::TensorBase &tensorBase) {
-    const uint32_t dataSize =  imageMat.cols *  imageMat.rows * MxBase::YUV444_RGB_WIDTH_NU;
-    LogInfo << "image size after crop" << imageMat.cols << " " << imageMat.rows;
-    MxBase::MemoryData memoryDataDst(dataSize, MxBase::MemoryData::MEMORY_DEVICE, deviceId_);
-    MxBase::MemoryData memoryDataSrc(imageMat.data, dataSize, MxBase::MemoryData::MEMORY_HOST_MALLOC);
-
-    APP_ERROR ret = MxBase::MemoryHelper::MxbsMallocAndCopy(memoryDataDst, memoryDataSrc);
-    if (ret != APP_ERR_OK) {
-        LogError << GetError(ret) << "Memory malloc failed.";
-        return ret;
-    }
-    std::vector<uint32_t> shape = {imageMat.rows * MxBase::YUV444_RGB_WIDTH_NU, static_cast<uint32_t>(imageMat.cols)};
-    tensorBase = MxBase::TensorBase(memoryDataDst, false, shape, MxBase::TENSOR_DTYPE_UINT8);
+    tfile_.close();
     return APP_ERR_OK;
 }
 
 APP_ERROR DPN131::Inference(const std::vector<MxBase::TensorBase> &inputs,
-                                      std::vector<MxBase::TensorBase> &outputs) {
+                                             std::vector<MxBase::TensorBase> &outputs) {
     auto dtypes = model_->GetOutputDataType();
     for (size_t i = 0; i < modelDesc_.outputTensors.size(); ++i) {
         std::vector<uint32_t> shape = {};
         for (size_t j = 0; j < modelDesc_.outputTensors[i].tensorDims.size(); ++j) {
             shape.push_back((uint32_t)modelDesc_.outputTensors[i].tensorDims[j]);
         }
-        MxBase::TensorBase tensor(shape, dtypes[i],  MxBase::MemoryData::MemoryType::MEMORY_DEVICE, deviceId_);
+        MxBase::TensorBase tensor(shape, dtypes[i], MxBase::MemoryData::MemoryType::MEMORY_DEVICE, deviceId_);
         APP_ERROR ret = MxBase::TensorBase::TensorBaseMalloc(tensor);
         if (ret != APP_ERR_OK) {
             LogError << "TensorBaseMalloc failed, ret=" << ret << ".";
@@ -129,7 +111,7 @@ APP_ERROR DPN131::Inference(const std::vector<MxBase::TensorBase> &inputs,
     APP_ERROR ret = model_->ModelInference(inputs, outputs, dynamicInfo);
     auto endTime = std::chrono::high_resolution_clock::now();
     double costMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
-    inferCostTimeMilliSec += costMs;
+    g_inferCost.push_back(costMs);
     if (ret != APP_ERR_OK) {
         LogError << "ModelInference failed, ret=" << ret << ".";
         return ret;
@@ -138,7 +120,7 @@ APP_ERROR DPN131::Inference(const std::vector<MxBase::TensorBase> &inputs,
 }
 
 APP_ERROR DPN131::PostProcess(const std::vector<MxBase::TensorBase> &inputs,
-                                        std::vector<std::vector<MxBase::ClassInfo>> &clsInfos) {
+                                               std::vector<std::vector<MxBase::ClassInfo>> &clsInfos) {
     APP_ERROR ret = post_->Process(inputs, clsInfos);
     if (ret != APP_ERR_OK) {
         LogError << "Process failed, ret=" << ret << ".";
@@ -147,62 +129,60 @@ APP_ERROR DPN131::PostProcess(const std::vector<MxBase::TensorBase> &inputs,
     return APP_ERR_OK;
 }
 
-APP_ERROR DPN131::SaveResult(const std::string &imgPath,
-const std::vector<std::vector<MxBase::ClassInfo>> &batchClsInfos) {
-    LogInfo << "image path" << imgPath;
-    std::string fileName = imgPath.substr(imgPath.find_last_of("/") + 1);
-    size_t dot = fileName.find_last_of(".");
-    std::string resFileName = "./result/" + fileName.substr(0, dot) + "._1.txt";
-    LogInfo << "file path for saving result" << resFileName;
-    std::ofstream outfile(resFileName);
-    if (outfile.fail()) {
-        LogError << "Failed to open result file: ";
-        return APP_ERR_COMM_FAILURE;
+APP_ERROR DPN131::ReadTensorFromFile(const std::string &file, float *data) {
+    if (data == NULL) {
+        LogError << "input data is invalid.";
+        return APP_ERR_COMM_INVALID_POINTER;
     }
-    uint32_t batchIndex = 0;
-    for (auto clsInfos : batchClsInfos) {
-        std::string resultStr;
-        for (auto clsInfo : clsInfos) {
-            LogDebug << " className:" << clsInfo.className << " confidence:" << clsInfo.confidence <<
-            " classIndex:" <<  clsInfo.classId;
-            resultStr += std::to_string(clsInfo.classId) + " ";
-        }
-        outfile << resultStr << std::endl;
-        batchIndex++;
+
+    std::ifstream infile;
+    infile.open(file, std::ios_base::in | std::ios_base::binary);
+    if (infile.fail()) {
+        LogError << "Failed to open data file: " << file << ".";
+        return APP_ERR_COMM_OPEN_FAIL;
     }
-    outfile.close();
+    infile.read(reinterpret_cast<char*>(data), sizeof(float) * this->inputDataSize_);
+    infile.close();
+    return APP_ERR_OK;
+}
+
+APP_ERROR DPN131::ReadInputTensor(const std::string &fileName, std::vector<MxBase::TensorBase> *inputs) {
+    float data[this->inputDataSize_] = {0};
+    APP_ERROR ret = ReadTensorFromFile(fileName, data);
+    if (ret != APP_ERR_OK) {
+        LogError << "ReadTensorFromFile failed.";
+        return ret;
+    }
+    const uint32_t dataSize = this->modelDesc_.inputTensors[0].tensorSize;
+    MxBase::MemoryData memoryDataDst(dataSize, MxBase::MemoryData::MEMORY_DEVICE, this->deviceId_);
+    MxBase::MemoryData memoryDataSrc(reinterpret_cast<void*>(data), dataSize, MxBase::MemoryData::MEMORY_HOST_MALLOC);
+
+    ret = MxBase::MemoryHelper::MxbsMallocAndCopy(memoryDataDst, memoryDataSrc);
+    if (ret != APP_ERR_OK) {
+        LogError << GetError(ret) << "Memory malloc and copy failed.";
+        return ret;
+    }
+
+    inputs->push_back(MxBase::TensorBase(memoryDataDst, false, this->inputDataShape_, MxBase::TENSOR_DTYPE_FLOAT32));
     return APP_ERR_OK;
 }
 
 APP_ERROR DPN131::Process(const std::string &imgPath) {
-    cv::Mat imageMat;
-    APP_ERROR ret = ReadImage(imgPath, imageMat);
-    if (ret != APP_ERR_OK) {
-        LogError << "ReadImage failed, ret=" << ret << ".";
-        return ret;
-    }
-    ResizeImage(imageMat, imageMat);
-    CropImage(imageMat, imageMat);
     std::vector<MxBase::TensorBase> inputs = {};
-    std::vector<MxBase::TensorBase> outputs = {};
-    MxBase::TensorBase tensorBase;
-    ret = CVMatToTensorBase(imageMat, tensorBase);
+    std::string inputIdsFile = imgPath;
+    APP_ERROR ret = ReadInputTensor(inputIdsFile, &inputs);
     if (ret != APP_ERR_OK) {
-        LogError << "CVMatToTensorBase failed, ret=" << ret << ".";
+        LogError << "Read input ids failed, ret=" << ret << ".";
         return ret;
     }
-    inputs.push_back(tensorBase);
-    auto startTime = std::chrono::high_resolution_clock::now();
+    std::vector<MxBase::TensorBase> outputs = {};
+
     ret = Inference(inputs, outputs);
-    auto endTime = std::chrono::high_resolution_clock::now();
-    double costMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
-    inferCostTimeMilliSec += costMs;
     if (ret != APP_ERR_OK) {
         LogError << "Inference failed, ret=" << ret << ".";
         return ret;
     }
     std::vector<std::vector<MxBase::ClassInfo>> BatchClsInfos = {};
-    LogError << "postprocess output=" << outputs.size();
     ret = PostProcess(outputs, BatchClsInfos);
     if (ret != APP_ERR_OK) {
         LogError << "PostProcess failed, ret=" << ret << ".";
@@ -210,8 +190,28 @@ APP_ERROR DPN131::Process(const std::string &imgPath) {
     }
     ret = SaveResult(imgPath, BatchClsInfos);
     if (ret != APP_ERR_OK) {
-        LogError << "Save infer results into file failed. ret = " << ret << ".";
+        LogError << "Export result to file failed, ret=" << ret << ".";
         return ret;
+    }
+    return APP_ERR_OK;
+}
+
+APP_ERROR DPN131::SaveResult(const std::string &imgPath, std::vector<std::vector<MxBase::ClassInfo>> \
+                                              &BatchClsInfos) {
+    uint32_t batchIndex = 0;
+    std::string fileName = imgPath.substr(imgPath.find_last_of("/") + 1);
+    size_t dot = fileName.find_last_of(".");
+    for (const auto &clsInfos : BatchClsInfos) {
+        std::string resultStr;
+        for (const auto &clsInfo : clsInfos) {
+            resultStr += std::to_string(clsInfo.classId) + ",";
+        }
+        tfile_ << fileName.substr(0, dot) << " " << resultStr.substr(0, resultStr.length() - 1) << std::endl;
+        if (tfile_.fail()) {
+            LogError << "Failed to write the result to file.";
+            return APP_ERR_COMM_WRITE_FAIL;
+        }
+        batchIndex++;
     }
     return APP_ERR_OK;
 }

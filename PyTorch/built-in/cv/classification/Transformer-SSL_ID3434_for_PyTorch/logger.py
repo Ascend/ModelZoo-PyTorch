@@ -25,7 +25,7 @@ def create_logger(output_dir, dist_rank=0, name=''):
                 colored('(%(filename)s %(lineno)d)', 'yellow') + ': %(levelname)s %(message)s'
 
     # create console handlers for master process
-    if dist_rank == 0:
+    if dist_rank % 8 == 0:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(

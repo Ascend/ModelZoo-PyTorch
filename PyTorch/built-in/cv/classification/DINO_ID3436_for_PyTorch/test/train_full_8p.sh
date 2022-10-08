@@ -25,6 +25,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --more_path1* ]];then
+        more_path1=`echo ${para#*=}`
     fi
 done
 
@@ -33,6 +35,7 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
 ##################指定训练脚本执行路径##################
 # cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -49,6 +52,14 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    xcit_main_dirname=$(basename ${more_path1})
+    if [ -f /root/.cache/torch/hub/${xcit_main_dirname} ]; then
+        echo "${xcit_main_dirname} file exists"
+    else
+        mkdir -p /root/.cache/torch/hub/
+        cp -r ${more_path1} /root/.cache/torch/hub/
+    fi
 fi
 
 #进入训练脚本目录，需要模型审视修改
@@ -78,6 +89,10 @@ start_time=$(date +%s)
 export WORLD_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
 
+arch=vit_small
+python3.7 preparation.py --arch ${arch}
+echo "Preparation completed, start to train"
+
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
   export OMP_NUM_THREADS=1
@@ -86,7 +101,7 @@ do
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
   nohup taskset -c $PID_START-$PID_END python3.7 -u main_dino.py \
-    --arch vit_small \
+    --arch ${arch} \
     --data_path $data_path \
     --output_dir ./output \
     --amp \
@@ -99,11 +114,11 @@ done
 wait
 
 nohup python3.7 -u -m torch.distributed.launch \
-	--nproc_per_node=1 eval_knn.py \
-	--num_workers 32 \
-	--pretrained_weights ./output/checkpoint.pth \
-	--checkpoint_key teacher \
-	--data_path $data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}_8p.log 2>&1 &
+    --nproc_per_node=1 eval_knn.py \
+    --num_workers 32 \
+    --pretrained_weights ./output/checkpoint.pth \
+    --checkpoint_key teacher \
+    --data_path $data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}_8p.log 2>&1 &
 
 wait
 

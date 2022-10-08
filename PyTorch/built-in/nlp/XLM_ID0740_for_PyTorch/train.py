@@ -24,6 +24,8 @@ import json
 import random
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import numpy as np
 from xlm.slurm import init_signal_handler, init_distributed_mode
 from xlm.data.loader import check_data_params, load_data

@@ -39,6 +39,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torchvision
 import apex

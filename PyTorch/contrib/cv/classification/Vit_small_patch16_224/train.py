@@ -72,8 +72,8 @@ import torch
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
-if torch.__version__ >="1.8.1":
-	import torch_npu
+if torch.__version__ >="1.8":
+    import torch_npu
 else:
     import torch.npu
 print(torch.__version__)

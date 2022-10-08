@@ -135,7 +135,7 @@ python3.7 ICNet_pth2onnx.py rankid0_icnet_resnet50_192_0.687_best_model.pth ICNe
 ##### i. 设置环境变量 
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 (推理)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。 
@@ -173,7 +173,7 @@ ${chip_name}可通过npu-smi info 指令查看
 ##### i. 设置环境变量。 
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
  脚本中环境变量install_path请修改为CANN toolkit包的实际安装路径。 
@@ -316,11 +316,7 @@ GPU Compute Time: min = 13.0369 ms， max = 14.425 ms，mean = 13.5858 ms, media
 		CANN C20及以后的版本profiling使用方法
 		新建/home/HwHiAiUser/test/run文件，内容如下：
 		#! /bin/bash
-		export install_path=/usr/local/Ascend/ascend-toolkit/latest
-		export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-		export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-		export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-		export ASCEND_OPP_PATH=${install_path}/opp
+		source /usr/local/Ascend/ascend-toolkit/set_env.sh
 		./benchmark -round=50 -om_path=/home/HwHiAiUser/test/efficientnet-b0_bs1.om -device_id=0 -batch_size=1
 		
 		然后执行如下命令：
@@ -350,11 +346,7 @@ ave_throughputRate:20.7127samples/s, ave_latency:48.5689ms
 
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascendtoolkit/5.1.RC1/tools/aoe/lib64:$LD_LIBRARY_PATH
-
 export TUNE_BANK_PATH=/home/zsl/icnet/aoe
-
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
 
 export PATH=/usr/local/python3.7.5/bin:$PATH
 ```

@@ -1,8 +1,37 @@
 #!/bin/bash
 
 #网络名称，同目录名称
-Network="DynamicUNet_for_Pytorch"
+Network="DynamicUNet_ID4080_for_Pytorch"
 batch_size=32
+
+# 数据集路径,保持为空,不需要修改
+data_path=""
+
+# 预训练模型路径
+more_path1=""
+
+#参数校验，不需要修改
+for para in $*
+do
+    if [[ $para == --more_path1* ]];then
+        more_path1=`echo ${para#*=}`
+    elif [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    fi
+done
+
+#校验是否传入data_path,不需要修改
+if [[ $data_path == "" ]];then
+    echo "[Error] para \"data_path\" must be confing"
+    exit 1
+fi
+
+if [[ $more_path1 == "" ]];then
+	pretrained_model="./"
+else
+	pretrained_model=${more_path1}/resnet50-19c8e357.pth 
+fi 
+
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -40,9 +69,10 @@ export PYTHONPATH=./awesome-semantic-segmentation-pytorch:$PYTHONPATH
 
 nohup python3 -u runner.py \
 --model dynamicunet --amp \
---dataset pascal_voc --dataset-path ./VOCdevkit \
+--dataset pascal_voc --dataset-path ${data_path} \
 --lr 0.0001 --epochs 50 --worker 8 \
 --log-iter 1 --val-epoch 5 --perf-only \
+--pretrained ${pretrained_model} \
 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

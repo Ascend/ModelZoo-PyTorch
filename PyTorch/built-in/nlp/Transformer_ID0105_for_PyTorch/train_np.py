@@ -26,7 +26,7 @@ import itertools
 import os
 import math
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import time
 import ctypes

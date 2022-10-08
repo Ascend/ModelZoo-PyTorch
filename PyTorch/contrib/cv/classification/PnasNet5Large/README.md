@@ -14,6 +14,7 @@
 
 - 安装 PyTorch ([pytorch.org](http://pytorch.org))
   * `pip3 install -r requirements.txt`
+  注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 - 下载ImageNet数据集， 下载地址： http://www.image-net.org/
   * 然后使用该脚本将验证集的图片移动到带有标签的子文件夹中： [valprep.sh](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)
 

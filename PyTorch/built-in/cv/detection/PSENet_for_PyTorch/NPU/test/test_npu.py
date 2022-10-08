@@ -23,7 +23,7 @@ import time
 import cv2
 import numpy as np
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch.utils import data
 

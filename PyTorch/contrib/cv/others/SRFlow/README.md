@@ -12,6 +12,8 @@ Details, see code/models/SRFlow_model.py
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+   Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 - Download the DIV2K dataset from http://data.vision.ee.ethz.ch/alugmayr/SRFlow/datasets.zip (~10.7 GB)，Unzip to any directory.
 - Download the pretrained_models from http://data.vision.ee.ethz.ch/alugmayr/SRFlow/pretrained_models.zip, Unzip to the SRFlow directory.
 

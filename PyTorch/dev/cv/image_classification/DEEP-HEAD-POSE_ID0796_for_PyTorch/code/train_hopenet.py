@@ -38,6 +38,8 @@ import cv2
 import matplotlib.pyplot as plt
 import time
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader

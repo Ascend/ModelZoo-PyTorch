@@ -107,7 +107,7 @@ then
         --addr=$(hostname -I |awk '{print $1}') \
         --data-dir $data_path \
         --seed 123456 \
-        --workers 20 \
+        --workers 80 \
         --print-freq 1 \
         --dist-url 'tcp://127.0.0.1:50000' \
         --dist-backend 'hccl' \

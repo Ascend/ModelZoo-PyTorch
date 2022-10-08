@@ -1,0 +1,7 @@
+decorator==5.1.1
+dominate==2.6.0
+numpy==1.21.6
+pillow==9.1.0
+scipy==1.7.3
+sympy==1.10.1
+torchvision

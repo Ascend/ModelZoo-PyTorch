@@ -6,7 +6,7 @@ bs=$3
 device_id=$4
 val_label=$5
 
-source ${install_path}/ascend-toolkit/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 chmod +x benchmark.*
 
 echo "eval accuracy"

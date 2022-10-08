@@ -6,12 +6,12 @@ This folder contains the implementation of the `MoBY` with `Swin Transformer` fo
 
 ### Install
 
-- Install ASCEND-CANN, ASCEND-pytorch-1.5 and apex.
+- Install ASCEND-CANN, ASCEND-pytorch and apex.
 
 - Install `timm==0.3.2`:
 
 ```bash
-pip3.7 install timm==0.3.2
+pip3.7 install timm==0.3.2 --no-dependencies
 ```
 
 - Install other requirements:
@@ -53,9 +53,9 @@ We use standard ImageNet dataset.
  
   ```
 
-### Self-Supervised Pre-training
+### Accuracy Test
 
-To train `MoBY` with `Swin Transformer Tiny` on ImageNet, run:
+To pretrain `MoBY` with `Swin Transformer Tiny` on ImageNet-1K for 100 epochs and do linear evaluation, run:
 
 ```bash
 bash ./test/train_full_8p.sh --data_path=<data_path>
@@ -75,13 +75,6 @@ For performance test on 8 NPU, run:
 bash ./test/train_performance_8p.sh --data_path=<data_path>
 ```
 
-### Linear Evaluation (for accuracy test)
-
-To pretrain `MoBY` with `Swin Transformer Tiny` on ImageNet-1K for 100 epochs and do linear evaluation, run:
-
-```bash
-bash ./test/eval_8p.sh --data_path=<data_path>
-```
 
 ### Training result for `MoBY Swin-T`
 
@@ -90,3 +83,4 @@ bash ./test/eval_8p.sh --data_path=<data_path>
 | -        | 140       | 1        | 1        | O1       | ARM |
 | 67.48    | 1150      | 8        | 100      | O1       | ARM |
 | 74.14    | 1150      | 8        | 300      | O1       | ARM |
+| 68.47    | 1845      | 16       | 100      | O1       | ARM |

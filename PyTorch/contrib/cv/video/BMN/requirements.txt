@@ -1,34 +1,32 @@
 absl-py==1.0.0
-apex @ file:///home/package/20211018_FrameworkPTAdapter2.0.T308/apex-0.1%2Bascend.20210930-cp37-cp37m-linux_aarch64.whl
 attrs==21.2.0
-auto-tune @ file:///root/selfgz488582477/compiler/lib64/auto_tune-0.1.0-py3-none-any.whl
+auto-tune
 certifi==2018.10.15
 cycler==0.11.0
 decorator==5.1.0
 decord==0.6.0
 fonttools==4.28.1
 future==0.18.2
-hccl @ file:///root/selfgz488582477/compiler/lib64/hccl-0.1.0-py3-none-any.whl
+hccl
 kiwisolver==1.3.2
 matplotlib==3.5.0
 mpmath==1.2.1
 numpy==1.21.4
 packaging==21.2
 pandas==1.3.4
-Pillow==8.4.0
+Pillow==9.1.0
 psutil==5.8.0
 pyparsing==2.4.7
 python-dateutil==2.8.2
 pytz==2021.3
-schedule-search @ file:///root/selfgz488582477/compiler/lib64/schedule_search-0.1.0-py3-none-any.whl
+schedule-search
 scipy==1.7.2
 setuptools-scm==6.3.2
 six==1.16.0
 sympy==1.9
 te==0.4.0
-tensor-fused-plugin @ file:///home/package/20211018_FrameworkPTAdapter2.0.T308/tensor_fused_plugin-0.1%2Bascend-cp37-cp37m-linux_aarch64.whl
+tensor-fused-plugin
 tomli==1.2.2
 topi==0.4.0
-torch @ file:///home/package/20211018_FrameworkPTAdapter2.0.T308/torch-1.5.0%2Bascend.post3.20210930-cp37-cp37m-linux_aarch64.whl
-torchvision==0.2.2
+torchvision
 tqdm==4.19.9

@@ -23,6 +23,21 @@ TODO: create blacklist automatically
 _LAYERNORM_FORMAT_NZ = False # To accelerate if layernorm in fp16, but acc not ok here
 _LAYERNORM_FORMAT_NZ_BLACKLIST = {192, 384, 768, 1536}
 
+
+class NpuLinear(nn.Linear):
+    def forward(self, input):
+        input_shape = input.size()
+        if input.dim() == 3:
+            input = input.view(-1, self.in_features)
+            return torch.npu_linear(input,self.weight, self.bias).view(input_shape[0],
+                                                                       input_shape[1],
+                                                                       self.out_features)
+        elif input.dim() == 2:
+            return torch.npu_linear(input, self.weight,self.bias)
+        else:
+            raise RuntimeError('not support this dim')
+
+
 class FastGELU(nn.Module):
     """fast version of nn.GELU()"""
 
@@ -248,7 +263,7 @@ class WindowAttention(nn.Module):
         relative_position_index = relative_coords.sum(-1).view(-1).clone()  # Wh*Ww, Wh*Ww
         self.register_buffer("relative_position_index", relative_position_index)
 
-        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
+        self.qkv = NpuLinear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop) if attn_drop > 0. else nn.Identity()
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop) if proj_drop > 0. else nn.Identity()

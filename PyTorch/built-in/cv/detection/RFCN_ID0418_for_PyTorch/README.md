@@ -37,10 +37,6 @@ tar xvf VOCtest_06-Nov-2007.tar
 tar xvf VOCdevkit_08-Jun-2007.tar
 ```
 
-* 创建数据集软链接
-```
-ln -s /RFCN模型工程目录/data/VOCdevkit VOCdevkit2007
-```
 
 * 新建预训练权重放置目录
 ```
@@ -48,10 +44,7 @@ mkdir pretrained_model
 cd pretrained_model
 ```
 
-* 将预训练权重resnet101_rcnn.pth放入当前目录，然后返回RFCN一级目录
-```
-cd ../..
-```
+* 将预训练权重resnet101_rcnn.pth放入当前目录
 
 ## 开启训练
 * 设置device日志等级为error，确保性能最佳
@@ -66,29 +59,15 @@ cd ../..
 /usr/local/Ascend/driver/tools/msnpureport -d 7 -g error
 ```
 
-* 导入环境变量
-```
-source env.sh
-```
 
 * 单p训练
-在train_1p.sh中修改训练超参（参数npu_id可指定device id），然后运行该脚本
-```
-sh train_1p.sh
-```
 
-训练完成后，根据训练保存的模型权重pth文件，在test.sh中修改checksession，checkepoch，checkpoint等参数后运行该脚本验证精度
-```
-sh test.sh
-```
+	1.安装环境
+	2.开始训练
+              bash ./test/train_full_1p.sh  --data_path=数据集路径 
 
 * 8p训练
-在train_8p.sh中修改训练超参，然后运行该脚本
-```
-sh train_8p.sh
-```
-
-训练完成后，根据训练保存的模型权重pth文件，在test.sh中修改checksession，checkepoch，checkpoint等参数后运行该脚本验证精度
-```
-sh test.sh
-```
+  
+	1.安装环境
+	2.开始训练
+              bash ./test/train_full_8p.sh  --data_path=数据集路径 

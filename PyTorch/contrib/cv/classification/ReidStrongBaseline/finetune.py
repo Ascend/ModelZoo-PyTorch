@@ -22,7 +22,7 @@ import argparse
 import os
 import sys
 import torch
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 from torch.backends import cudnn
 import torch.distributed as dist#lmm
@@ -73,10 +73,8 @@ def train(rank, cfg, args):
         scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
                                           cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
         
-        arguments = {}
-
         if "npu" in cfg.MODEL.DEVICE:
-            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale='dynamic')
+            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale=args.loss_scale)
         
         do_train_with_center(
             cfg,
@@ -100,6 +98,7 @@ def main():
     parser.add_argument(
         "--config_file", default="", help="path to config file", type=str
     )
+    parser.add_argument('--loss_scale', default="dynamic", type=str)
     parser.add_argument('-g', '--npus', default=1, type=int,
                         help='number of gpus per node')#lmm
     parser.add_argument('-r', '--local_rank', default=0, type=int,
@@ -134,6 +133,7 @@ def main():
     logger.info("Running with config:\n{}".format(cfg))
 
     train(args.local_rank, cfg, args)
+
 
 if __name__ == '__main__':
     main()

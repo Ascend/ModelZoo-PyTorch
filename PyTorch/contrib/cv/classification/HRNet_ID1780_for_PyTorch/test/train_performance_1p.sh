@@ -18,7 +18,7 @@
 # 网络名称，同目录名称
 Network="HRNet_ID1780_for_PyTorch"
 # 训练batch_size
-batch_size=256
+batch_size=32
 # 训练使用的npu卡数
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
@@ -29,7 +29,7 @@ train_epochs=1
 device_id=0
 # 学习率
 learning_rate=0.1
-
+stop_step=TRUE
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -97,6 +97,7 @@ python3.7 ./tools/train.py \
       --addr=$(hostname -I |awk '{print $1}') \
       --nproc=$(nproc) \
       --lr=${learning_rate} \
+      --stop_step=${stop_step} \
       --bs=${batch_size} \
       --device_id=${ASCEND_DEVICE_ID} \
       --train_epochs=${train_epochs} \
@@ -116,7 +117,7 @@ FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Accuracy@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $11}'|awk 'END {print}'`
+train_accuracy=`grep -a 'Accuracy@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

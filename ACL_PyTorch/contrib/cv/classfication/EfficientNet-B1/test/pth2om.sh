@@ -8,7 +8,7 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf Efficient-b1_bs1.om Efficient-b1_bs16.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=efficientnetB1.onnx  --output=Efficient-b1_bs1 --input_format=NCHW --input_shape="image:1,3,240,240" --log=debug --soc_version=Ascend310
 atc --framework=5 --model=efficientnetB1.onnx  --output=Efficient-b1_bs16 --input_format=NCHW --input_shape="image:16,3,240,240" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
 

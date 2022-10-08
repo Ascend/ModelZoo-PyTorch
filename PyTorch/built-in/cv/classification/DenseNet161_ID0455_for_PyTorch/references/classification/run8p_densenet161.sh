@@ -17,7 +17,7 @@ do
         --momentum 0.9 \
         --apex \
         --apex-opt-level O2 \
-        --loss_scale_value 1024 \
+        --loss_scale_value dynamic \
         --weight-decay 1e-4 \
         --print-freq 1 &
 done

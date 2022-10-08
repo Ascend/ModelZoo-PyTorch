@@ -1,7 +1,7 @@
 
 This implements training of  spnasnet_100 ImageNet dataset, mainly modified from https://github.com/pytorch/examples/blob/master/imagenet/main.py
 
-## Inception V4 Detail 
+## SPNASNet Detail 
 
 As of the current date, Ascend-Pytorch is still inefficient for contiguous operations. 
 For details, see https://github.com/rwightman/pytorch-image-models
@@ -47,9 +47,9 @@ python3.7 pthtar2onnx.py
 
 ```
 
-## Inception V4 training result 
+## SPNASNet training result 
 
 |  Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type |
 | :-----: | :------: | :------: | :----: | :------: |
-|    -    |  337.452 |    1     |  1     |    O1    |
-| 74.571  | 2908.835 |    8     |  150   |    O1    |
+|    -    |  387.452 |    1     |  1     |    O1    |
+| 74.571  | 2988.835 |    8     |  150   |    O1    |

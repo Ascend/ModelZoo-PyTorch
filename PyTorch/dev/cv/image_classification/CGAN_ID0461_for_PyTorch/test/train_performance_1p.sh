@@ -60,7 +60,7 @@ wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-TrainingTime=`grep Iteration $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F 'time elapsed:' '{print $2}'|awk 'NR>3'| awk '{sum+=$1} END {print  sum/NR*1000/100}'`
+TrainingTime=`grep Iteration $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F 'time elapsed:' '{print $2}'|awk 'NR>3'| awk '{sum+=$1} END {print  sum/NR*1000/10}'`
 #单迭代训练时长
 FPS=`awk 'BEGIN{printf "%.2f\n",'1000'*'${batch_size}'/'${TrainingTime}'}'`
 #打印，不需要修改

@@ -68,10 +68,13 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++));
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
 do
-    export RANK_ID=$RANK_ID
-    nohup python3.7.5 -u ./train.py \
+    export RANK_ID=$i
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    nohup taskset -c $PID_START-$PID_END python3.7 -u ./train.py \
         --train-file ${data_path}/91-image_x2.h5 \
         --eval-file ${data_path}/Set5_x2.h5 \
         --outputs-dir ${test_path_dir}/npu_8p \

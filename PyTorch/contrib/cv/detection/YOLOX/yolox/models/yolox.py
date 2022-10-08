@@ -40,10 +40,6 @@ class YOLOX(nn.Module):
         # fpn output content features of [dark3, dark4, dark5]
         fpn_outs = self.backbone(x)
 
-        if targets is None and self.training:
-            print('Model mode set to `eval` in forward function.')
-            self.eval()
-
         if self.training:
             assert targets is not None
             loss, iou_loss, conf_loss, cls_loss, l1_loss, num_fg = self.head(

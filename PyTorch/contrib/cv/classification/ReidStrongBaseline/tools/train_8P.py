@@ -22,7 +22,7 @@ import argparse
 import os
 import sys
 import torch
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 from torch.backends import cudnn
 import torch.nn as nn
@@ -44,7 +44,6 @@ def train(rank, cfg, args):#lmm
     	backend='hccl',
     	world_size=args.world_size,
     	rank=rank) 
-    #torch.npu.manual_seed_all(cfg.train.seed)
     torch.npu.set_device('npu:{}'.format(rank))
     # prepare dataset
     train_loader, val_loader, num_query, num_classes = make_data_loader_dist(cfg, args, rank)
@@ -59,8 +58,6 @@ def train(rank, cfg, args):#lmm
         print('Train without center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
         loss_func = make_loss(cfg, num_classes)     # modified by gu
         optimizer = make_optimizer(cfg, model)
-        # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-        #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
 
         # Add for using self trained model
         if cfg.MODEL.PRETRAIN_CHOICE == 'self':
@@ -79,11 +76,8 @@ def train(rank, cfg, args):#lmm
         else:
             print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
 
-        arguments = {}
-
-
         if "npu" in cfg.MODEL.DEVICE:
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale='dynamic')
+            model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=args.loss_scale)
 
         do_train(
             cfg,
@@ -100,8 +94,6 @@ def train(rank, cfg, args):#lmm
         print('Train with center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
         loss_func, center_criterion = make_loss_with_center(cfg, num_classes)  # modified by gu
         optimizer, optimizer_center = make_optimizer_with_center(cfg, model, center_criterion)
-        # scheduler = WarmupMultiStepLR(optimizer, cfg.SOLVER.STEPS, cfg.SOLVER.GAMMA, cfg.SOLVER.WARMUP_FACTOR,
-        #                               cfg.SOLVER.WARMUP_ITERS, cfg.SOLVER.WARMUP_METHOD)
 
         # Add for using self trained model
         if cfg.MODEL.PRETRAIN_CHOICE == 'self':
@@ -126,10 +118,9 @@ def train(rank, cfg, args):#lmm
         else:
             print('Only support pretrain_choice for imagenet and self, but got {}'.format(cfg.MODEL.PRETRAIN_CHOICE))
         
-        arguments = {}
 
         if "npu" in cfg.MODEL.DEVICE:
-            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale='dynamic', combine_grad=True)
+            model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale=args.loss_scale, combine_grad=True)
             model = nn.parallel.DistributedDataParallel(model, device_ids=[rank])
         do_train_with_center(
             cfg,
@@ -155,6 +146,7 @@ def main():
     parser.add_argument(
         "--config_file", default="", help="path to config file", type=str
     )
+    parser.add_argument('--loss_scale', default="dynamic", type=str)
     parser.add_argument('-g', '--npus', default=1, type=int,
                         help='number of gpus per node')#lmm
     parser.add_argument('-r', '--local_rank', default=0, type=int,
@@ -167,8 +159,6 @@ def main():
     args.world_size = args.npus
     os.environ['MASTER_ADDR'] = '127.0.0.1'
     os.environ['MASTER_PORT'] = '22222'
-
-    # num_npus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
 
     if args.config_file != "":
         cfg.merge_from_file(args.config_file)
@@ -191,6 +181,7 @@ def main():
     logger.info("Running with config:\n{}".format(cfg))
 
     train(args.local_rank, cfg, args)
+    dist.destroy_process_group()
 
 if __name__ == '__main__':
     main()

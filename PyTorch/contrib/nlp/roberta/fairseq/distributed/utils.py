@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional
 
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import torch.distributed as dist
 from fairseq.dataclass.configs import DistributedTrainingConfig, FairseqConfig

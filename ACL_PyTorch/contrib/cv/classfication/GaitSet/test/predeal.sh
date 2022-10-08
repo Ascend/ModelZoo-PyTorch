@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-currentDir=$(cd "$(dirname "$0")";pwd)/..
-# echo $currentDir
-source $currentDir'/test/env.sh'
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 python3.7.5 pretreatment.py --input_path='/home/CASIA-B' --output_path='/root/CASIA-B-Pre/'
 echo 'Step 1 finished!'

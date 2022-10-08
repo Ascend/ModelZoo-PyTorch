@@ -42,6 +42,8 @@ from utils.dataset import get_loader
 from utils.misc import seed_everything, count_params, get_model, calc_step, log
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 import numpy as np
 #import wandb

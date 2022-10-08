@@ -35,6 +35,8 @@ import argparse
 import collections
 import pprint
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import numpy as np
 import data_loader.data_loaders as module_data
 import model.loss as module_loss

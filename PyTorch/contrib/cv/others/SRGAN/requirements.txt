@@ -5,7 +5,7 @@ decorator==5.1.0
 future==0.18.2
 mpmath==1.2.1
 numpy==1.21.4
-Pillow==8.3.2
+Pillow==9.1.0
 psutil==5.8.0
 sympy==1.9
-torchvision==0.6.0
+torchvision

@@ -37,64 +37,14 @@ python3 criteo_preprocess.py train.txt
 
 # 3.1p训练
 
-修改run_dcn_1p_local.sh的数据集路径参数和npu id，按照如下注释中所示
-
-```
-python3.7 -u run_classification_criteo_dcn.py \
---npu_id=0 \ # 修改为需要运行的npu设备
---trainval_path='path/to/criteo_trainval.txt' \ # 修改为train_after_preprocess_trainval_0.93.txt的绝对路径
---test_path='path/to/criteo_test.txt' \ # 修改为train_after_preprocess_test_0.07.txt的绝对路径
---lr=0.0001 \
---use_fp16
-```
-
-启动训练
-
-```
-bash run_dcn_1p_local.sh > 1p.log &
-```
+    bash test/train_full_1p.sh   --data_path=数据集路径
 
 训练日志会被重定向到1p.log中
 
 # 4.8p训练
 
-修改run_dcn_8p_local.sh的数据集路径参数，按照如下注释中所示
+    bash test/train_full_8p.sh   --data_path=数据集路径
 
-```
-if [ $(uname -m) = "aarch64" ]
-then
-	for i in $(seq 0 7)
-	do 
-	let p_start=0+24*i
-	let p_end=23+24*i
-	taskset -c $p_start-$p_end python3.7 -u run_classification_criteo_dcn.py \
-	--npu_id $i \
-	--device_num 8 \
-	--trainval_path='path/to/criteo_trainval.txt' \ # 修改为train_after_preprocess_trainval_0.93.txt的绝对路径
-	--test_path='path/to/criteo_test.txt' \ # 修改为train_after_preprocess_test_0.07.txt的绝对路径
-	--dist \
-	--lr=0.0006 \
-	--use_fp16 &
-	done
-else
-   for i in $(seq 0 7)
-   do
-   python3.7 -u run_classification_criteo_dcn.py \
-   --npu_id $i \
-   --device_num 8 \
-   --trainval_path='path/to/criteo_trainval.txt' \ # 修改为train_after_preprocess_trainval_0.93.txt的绝对路径
-   --test_path='path/to/criteo_test.txt' \ # 修改为train_after_preprocess_test_0.07.txt的绝对路径
-   --dist \
-   --lr=0.0006 \
-   --use_fp16 &
-   done
-fi
-```
-
-启动训练
-
-```
-bash run_dcn_8p_local.sh > 8p.log &
-```
-
-训练日志会被重定向到8p.log中
+# 5.训练结果
+    
+    ./test/output/0

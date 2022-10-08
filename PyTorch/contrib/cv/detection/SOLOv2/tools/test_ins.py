@@ -25,7 +25,7 @@ import time
 from apex import amp
 import torch
 
-if torch.__version__ >= '1.8.1':
+if torch.__version__ >= '1.8':
     import torch_npu
 import torch.nn.functional as F
 import torch.distributed as dist

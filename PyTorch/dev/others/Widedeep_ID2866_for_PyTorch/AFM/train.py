@@ -37,6 +37,8 @@
 # LICENSE file in the root directory of this source tree.
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import time
 from torch import nn
 import numpy as np

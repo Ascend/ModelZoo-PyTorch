@@ -42,11 +42,11 @@ def coco_eval(args,coco, cocoGt, encoder, inv_map, epoch, evaluator=None):
     
     for nbatch, (img, img_id, img_size) in enumerate(coco):
         with torch.no_grad():
-            ploc = np.fromfile(bin_input + '/' + str(img_id) + '_1.bin', np.float32)
+            ploc = np.fromfile(bin_input + '/' + str(img_id) + '_0.bin', np.float32)
             ploc = np.reshape(ploc, (1,4,8732))
             ploc=torch.from_numpy(ploc).cpu()
 
-            plabel = np.fromfile(bin_input + '/' + str(img_id) + '_2.bin', np.float32)
+            plabel = np.fromfile(bin_input + '/' + str(img_id) + '_1.bin', np.float32)
             plabel = np.reshape(plabel, (1,81,8732))
             plabel = torch.from_numpy(plabel).cpu()
 

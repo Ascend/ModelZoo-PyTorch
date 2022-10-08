@@ -3,5 +3,5 @@ python3.7 TinyBERT_postprocess_data.py \
 --do_lower_case \
 --max_seq_length 64 \
 --data_dir ./glue_dir/SST-2 \
---result_dir ./result/dumpOutput_device0 \
---inference_tool "benchmark"
+--result_dir ./result/$1 \
+--inference_tool "ais_infer"

@@ -57,6 +57,8 @@ from baseline.utils.utils import seed_everything
 import apex
 from apex import amp
 import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 
 class Config(object):

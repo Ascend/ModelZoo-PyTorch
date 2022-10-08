@@ -6,16 +6,18 @@ note
 ## Requirements
 安装NPU配套的run包、apex（version：ascend）、torch（version:ascend）外，另需执行以下shell
 ```shell
-pip3 install torchvision==0.2.2.post3
+pip3 install torchvision
 cd $mmaction2
 pip3 install -r requirements.txt
+    Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 ```
 安装 mmcv
 ```
 export GIT_SSL_NO_VERIFY=1
 git config --global http.sslVerify false
 git clone -b v1.3.9 --depth=1 https://github.com/open-mmlab/mmcv.git
-source ./env_npu.sh; cd ${curPath}/mmcv; python3.7 setup.py build_ext; python3.7 setup.py develop
+source ./test/env_npu.sh; cd ${curPath}/mmcv; python3.7 setup.py build_ext; python3.7 setup.py develop
 ```
 ## 修改mmcv及apex底层依赖环境
 apex修改地址 `${package_dir}=../lib/python3.7/site-packages/apex/amp/` \

@@ -1,0 +1,555 @@
+From 65d4c4bc3111f1d906e05acf8d2a358a1939ed45 Mon Sep 17 00:00:00 2001
+From: xuxuxu0519 <1207822497@qq.com>
+Date: Wed, 24 Aug 2022 15:28:16 +0000
+Subject: [PATCH] add patch
+
+---
+ pytorch/eval.py                        |  25 +++-
+ pytorch/mem_transformer.py             | 195 ++++++++++++++++++++++---
+ pytorch/run_enwik8_base.sh             |  47 ++++--
+ pytorch/utils/proj_adaptive_softmax.py |   8 +-
+ 4 files changed, 239 insertions(+), 36 deletions(-)
+
+diff --git a/pytorch/eval.py b/pytorch/eval.py
+index eff3618..5d1d91f 100644
+--- a/pytorch/eval.py
++++ b/pytorch/eval.py
+@@ -9,6 +9,8 @@ import torch
+ from data_utils import get_lm_corpus
+ from mem_transformer import MemTransformerLM
+ from utils.exp_utils import get_logger
++import pdb
++from tqdm import tqdm
+ 
+ parser = argparse.ArgumentParser(description='PyTorch Transformer Language Model')
+ parser.add_argument('--data', type=str, default='../data/wikitext-103',
+@@ -17,7 +19,7 @@ parser.add_argument('--dataset', type=str, default='wt103',
+                     choices=['wt103', 'lm1b', 'enwik8', 'text8'],
+                     help='dataset name')
+ parser.add_argument('--split', type=str, default='all',
+-                    choices=['all', 'valid', 'test'],
++                    choices=['all', 'valid', 'test', 'onnx'],
+                     help='which split to evaluate')
+ parser.add_argument('--batch_size', type=int, default=10,
+                     help='batch size')
+@@ -57,7 +59,7 @@ te_iter = corpus.get_iterator('test', args.batch_size, args.tgt_len,
+ 
+ # Load the best saved model.
+ with open(os.path.join(args.work_dir, 'model.pt'), 'rb') as f:
+-    model = torch.load(f)
++    model = torch.load(f, map_location=device)
+ model.backward_compatible()
+ model = model.to(device)
+ 
+@@ -70,6 +72,7 @@ if args.clamp_len > 0:
+ if args.same_length:
+     model.same_length = True
+ 
++
+ ###############################################################################
+ # Evaluation code
+ ###############################################################################
+@@ -80,17 +83,33 @@ def evaluate(eval_iter):
+     start_time = time.time()
+     with torch.no_grad():
+         mems = tuple()
+-        for idx, (data, target, seq_len) in enumerate(eval_iter):
++        for idx, (data, target, seq_len) in tqdm(enumerate(eval_iter)):
+             ret = model(data, target, *mems)
+             loss, mems = ret[0], ret[1:]
+             loss = loss.mean()
+             total_loss += seq_len * loss.item()
+             total_len += seq_len
++            if idx % 10 == 0:
++                print(' loss = {:.2f}'.format(total_loss / total_len))
+         total_time = time.time() - start_time
+     logging('Time : {:.2f}s, {:.2f}ms/segment'.format(
+             total_time, 1000 * total_time / (idx+1)))
+     return total_loss / total_len
+ 
++# export onnx model
++if args.split == 'onnx':
++    data = torch.ones(args.tgt_len, args.batch_size, dtype=torch.int64).to(device)
++    target = torch.ones(args.tgt_len, args.batch_size, dtype=torch.int64).to(device)
++    model.eval()
++    mems = list()
++    for i in range(13):
++        mems.append(torch.zeros(args.mem_len, args.batch_size, 512).to(device))
++    print(len(mems))
++    torch.onnx.export(model, (data, target, *mems), "model.onnx", input_names=['data'], output_names=['output'],
++                      do_constant_folding=True, keep_initializers_as_inputs=True, opset_version=11)
++    print("export onnx model success")
++    sys.exit()
++
+ # Run on test data.
+ if args.split == 'all':
+     test_loss = evaluate(te_iter)
+diff --git a/pytorch/mem_transformer.py b/pytorch/mem_transformer.py
+index 45147df..62f3093 100644
+--- a/pytorch/mem_transformer.py
++++ b/pytorch/mem_transformer.py
+@@ -11,6 +11,127 @@ import torch.nn.functional as F
+ sys.path.append('utils')
+ from proj_adaptive_softmax import ProjectedAdaptiveLogSoftmax
+ from log_uniform_sampler import LogUniformSampler, sample_logits
++import pdb
++import traceback
++pdb.set_trace = lambda: 1
++
++def einsum1(eq, opand):
++    """
++    ibnd,jbnd->ijbn
++    """
++    tmp = torch.einsum(eq, opand)
++    if not torch.onnx.is_in_onnx_export():
++        return tmp
++    try:
++        x0, y0 = opand
++        assert len(x0.shape) == 4
++        assert x0.shape[1:] == y0.shape[1:], "bad shape {}, {}".format(x0.shape, y0.shape)
++        i, b, n, d = x0.shape
++        j, _, _, _ = y0.shape
++        x = x0.clone()
++        y = y0.clone()
++        x = x.reshape(i, b * n, d).permute(1, 0, 2)
++        y = y.reshape(j, b * n, d).permute(1, 2, 0)
++        z = torch.bmm(x, y)
++        z = z.permute(1, 2, 0).reshape(i, j, b, n)
++        assert tmp.equal(z)
++        return z
++    except Exception as e:
++        print('str(e):\t\t', str(e))  
++        print('repr(e):\t', repr(e))
++        print('traceback.print_exc():', traceback.print_exc())
++        print('traceback.format_exc():\n%s' % traceback.format_exc())
++        pdb.set_trace()
++
++
++def einsum2(eq, opand):
++    """
++    ibnd,jnd->ijbn
++    """
++    tmp = torch.einsum(eq, opand)
++    if not torch.onnx.is_in_onnx_export():
++        return tmp
++    try:
++        x0, y0 = opand
++        assert len(y0.shape) == 3
++        i, b, n, d = x0.shape
++        j, _, _ = y0.shape
++        x = x0.clone()
++        y = y0.clone()
++        y = y.unsqueeze(1).expand(j, b, n, d)
++        x = x.reshape(i, b * n, d).permute(1, 0, 2)
++        y = y.reshape(j, b * n, d).permute(1, 2, 0)
++        z = torch.bmm(x, y)
++        z = z.permute(1, 2, 0).reshape(i, j, b, n)
++        assert tmp.equal(z)
++        return z
++    except:
++        pdb.set_trace()
++
++
++def einsum3(eq, opand):
++    """
++    ijbn,jbnd->ibnd
++    """
++    tmp = torch.einsum(eq, opand)
++    if not torch.onnx.is_in_onnx_export():
++        return tmp
++    try:
++        x0, y0 = opand
++        assert len(x0.shape) == 4
++        assert x0.shape[2:] == y0.shape[1:3], "bad shape {}, {}".format(x0.shape, y0.shape)
++        i, j, b, n = x0.shape
++        j, _, _, d = y0.shape
++        x = x0.clone()
++        y = y0.clone()
++        x = x.reshape(i, j, b * n).permute(2, 0, 1)
++        y = y.reshape(j, b * n, d).permute(1, 0, 2)
++        z = torch.bmm(x, y)
++        z = z.permute(1, 0, 2).reshape(i, b, n, d)
++        assert tmp.equal(z)
++        return z
++    except:
++        pdb.set_trace()
++
++
++#def triu_onnx(x, diagonal=0):
++#    pdb.set_trace()
++#    l = x.shape[0]
++#    arange = torch.arange(l, device=x.device)
++#    mask = arange.expand(l, l)
++#    arange = arange.unsqueeze(-1)
++#    if diagonal:
++#        arange = arange + diagonal
++#    mask = mask >= arange
++#    try:
++#        mask * x
++#    except:
++#        pdb.set_trace()
++#    return x.masked_fill(mask==0, 0)
++#    return mask * x
++#    return x-torch.tril(x, diagonal-1)
++
++
++def triu_onnx(x, diagonal=0):
++    assert len(x.shape) == 2
++    m, l = x.shape
++    mask = torch.arange(l, device=x.device).expand(m, l)
++    arange = torch.arange(m, device=x.device)
++    arange = arange.unsqueeze(-1)
++    if diagonal:
++        arange = arange + diagonal
++    mask = mask >= arange
++    return x.masked_fill(mask==0, 0)
++
++
++def tril_onnx(x, diagonal=0):
++    return x - triu_onnx(x, diagonal)
++
++
++#if torch.onnx.is_in_onnx_export():
++torch.triu = triu_onnx
++torch.tril = tril_onnx
++
+ 
+ class PositionalEmbedding(nn.Module):
+     def __init__(self, demb):
+@@ -22,7 +143,9 @@ class PositionalEmbedding(nn.Module):
+         self.register_buffer('inv_freq', inv_freq)
+ 
+     def forward(self, pos_seq, bsz=None):
+-        sinusoid_inp = torch.ger(pos_seq, self.inv_freq)
++        #sinusoid_inp = torch.ger(pos_seq, self.inv_freq)
++        #sinusoid_inp = torch.einsum('i,j->ij',[pos_seq, self.inv_freq])
++        sinusoid_inp = torch.mul(pos_seq.unsqueeze(-1), self.inv_freq)
+         pos_emb = torch.cat([sinusoid_inp.sin(), sinusoid_inp.cos()], dim=-1)
+ 
+         if bsz is not None:
+@@ -93,6 +216,7 @@ class MultiHeadAttn(nn.Module):
+         ##### multihead attention
+         # [hlen x bsz x n_head x d_head]
+ 
++
+         if mems is not None:
+             c = torch.cat([mems, h], 0)
+         else:
+@@ -109,21 +233,25 @@ class MultiHeadAttn(nn.Module):
+         head_k = head_k.view(c.size(0), c.size(1), self.n_head, self.d_head)
+         head_v = head_v.view(c.size(0), c.size(1), self.n_head, self.d_head)
+ 
++        #pdb.set_trace()
+         # [qlen x klen x bsz x n_head]
+-        attn_score = torch.einsum('ibnd,jbnd->ijbn', (head_q, head_k))
++        #attn_score = torch.einsum('ibnd,jbnd->ijbn', (head_q, head_k))
++        attn_score = einsum1('ibnd,jbnd->ijbn', (head_q, head_k))
+         attn_score.mul_(self.scale)
+         if attn_mask is not None and attn_mask.any().item():
+             if attn_mask.dim() == 2:
+-                attn_score.masked_fill_(attn_mask[None,:,:,None], -float('inf'))
++                attn_score.masked_fill_(attn_mask[None,:,:,None].bool(), -float('inf'))
+             elif attn_mask.dim() == 3:
+-                attn_score.masked_fill_(attn_mask[:,:,:,None], -float('inf'))
++                attn_score.masked_fill_(attn_mask[:,:,:,None].bool(), -float('inf'))
+ 
+         # [qlen x klen x bsz x n_head]
+         attn_prob = F.softmax(attn_score, dim=1)
+         attn_prob = self.dropatt(attn_prob)
+ 
+         # [qlen x klen x bsz x n_head] + [klen x bsz x n_head x d_head] -> [qlen x bsz x n_head x d_head]
+-        attn_vec = torch.einsum('ijbn,jbnd->ibnd', (attn_prob, head_v))
++        #pdb.set_trace()
++        #attn_vec = torch.einsum('ijbn,jbnd->ibnd', (attn_prob, head_v))
++        attn_vec = einsum3('ijbn,jbnd->ibnd', (attn_prob, head_v))
+         attn_vec = attn_vec.contiguous().view(
+             attn_vec.size(0), attn_vec.size(1), self.n_head * self.d_head)
+ 
+@@ -166,6 +294,7 @@ class RelMultiHeadAttn(nn.Module):
+         mask = torch.ones((h, w)).byte()
+         m = min(h, w)
+         mask[:m,:m] = torch.triu(mask[:m,:m])
++#        mask[:m,:m] = triu_onnx(mask[:m,:m])
+         mask[-m:,-m:] = torch.tril(mask[-m:,-m:])
+ 
+         if left:
+@@ -198,7 +327,8 @@ class RelMultiHeadAttn(nn.Module):
+ 
+         x_padded = x_padded.view(x.size(1) + 1, x.size(0), *x.size()[2:])
+ 
+-        x = x_padded[1:].view_as(x)
++        #x = x_padded[1:].view_as(x)
++        x = x_padded[1:].view(x.shape)
+ 
+         if zero_triu:
+             ones = torch.ones((x.size(0), x.size(1)))
+@@ -218,7 +348,8 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
+     def forward(self, w, r, r_w_bias, r_r_bias, attn_mask=None, mems=None):
+         qlen, rlen, bsz = w.size(0), r.size(0), w.size(1)
+ 
+-        if mems is not None:
++        pdb.set_trace()
++        if mems is not None and mems.numel():
+             cat = torch.cat([mems, w], 0)
+             if self.pre_lnorm:
+                 w_heads = self.qkv_net(self.layer_norm(cat))
+@@ -245,12 +376,16 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
+ 
+         r_head_k = r_head_k.view(rlen, self.n_head, self.d_head)                # qlen x n_head x d_head
+ 
++
++        #pdb.set_trace()
+         #### compute attention score
+         rw_head_q = w_head_q + r_w_bias                                         # qlen x bsz x n_head x d_head
+-        AC = torch.einsum('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
++        #AC = torch.einsum('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
++        AC = einsum1('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
+ 
+         rr_head_q = w_head_q + r_r_bias
+-        BD = torch.einsum('ibnd,jnd->ijbn', (rr_head_q, r_head_k))              # qlen x klen x bsz x n_head
++        #BD = torch.einsum('ibnd,jnd->ijbn', (rr_head_q, r_head_k))              # qlen x klen x bsz x n_head
++        BD = einsum2('ibnd,jnd->ijbn', (rr_head_q, r_head_k))              # qlen x klen x bsz x n_head
+         BD = self._rel_shift(BD)
+ 
+         # [qlen x klen x bsz x n_head]
+@@ -261,17 +396,18 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
+         if attn_mask is not None and attn_mask.any().item():
+             if attn_mask.dim() == 2:
+                 attn_score = attn_score.float().masked_fill(
+-                    attn_mask[None,:,:,None], -float('inf')).type_as(attn_score)
++                    attn_mask[None,:,:,None].bool(), -float('inf')).type_as(attn_score)
+             elif attn_mask.dim() == 3:
+                 attn_score = attn_score.float().masked_fill(
+-                    attn_mask[:,:,:,None], -float('inf')).type_as(attn_score)
++                    attn_mask[:,:,:,None].bool(), -float('inf')).type_as(attn_score)
+ 
+         # [qlen x klen x bsz x n_head]
+         attn_prob = F.softmax(attn_score, dim=1)
+         attn_prob = self.dropatt(attn_prob)
+ 
+         #### compute attention vector
+-        attn_vec = torch.einsum('ijbn,jbnd->ibnd', (attn_prob, w_head_v))
++        #attn_vec = torch.einsum('ijbn,jbnd->ibnd', (attn_prob, w_head_v))
++        attn_vec = einsum3('ijbn,jbnd->ibnd', (attn_prob, w_head_v))
+ 
+         # [qlen x bsz x n_head x d_head]
+         attn_vec = attn_vec.contiguous().view(
+@@ -335,8 +471,11 @@ class RelLearnableMultiHeadAttn(RelMultiHeadAttn):
+         #### compute attention score
+         rw_head_q = w_head_q + r_w_bias[None]                                   # qlen x bsz x n_head x d_head
+ 
+-        AC = torch.einsum('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
+-        B_ = torch.einsum('ibnd,jnd->ijbn', (w_head_q, r_emb))                  # qlen x klen x bsz x n_head
++        #pdb.set_trace()
++        #AC = torch.einsum('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
++        AC = einsum1('ibnd,jbnd->ijbn', (rw_head_q, w_head_k))             # qlen x klen x bsz x n_head
++        #B_ = torch.einsum('ibnd,jnd->ijbn', (w_head_q, r_emb))                  # qlen x klen x bsz x n_head
++        B_ = einsum2('ibnd,jnd->ijbn', (w_head_q, r_emb))                  # qlen x klen x bsz x n_head
+         D_ = r_bias[None, :, None]                                              # 1    x klen x 1   x n_head
+         BD = self._rel_shift(B_ + D_)
+ 
+@@ -347,16 +486,17 @@ class RelLearnableMultiHeadAttn(RelMultiHeadAttn):
+         #### compute attention probability
+         if attn_mask is not None and attn_mask.any().item():
+             if attn_mask.dim() == 2:
+-                attn_score.masked_fill_(attn_mask[None,:,:,None], -float('inf'))
++                attn_score.masked_fill_(attn_mask[None,:,:,None].bool(), -float('inf'))
+             elif attn_mask.dim() == 3:
+-                attn_score.masked_fill_(attn_mask[:,:,:,None], -float('inf'))
++                attn_score.masked_fill_(attn_mask[:,:,:,None].bool(), -float('inf'))
+ 
+         # [qlen x klen x bsz x n_head]
+         attn_prob = F.softmax(attn_score, dim=1)
+         attn_prob = self.dropatt(attn_prob)
+ 
+         #### compute attention vector
+-        attn_vec = torch.einsum('ijbn,jbnd->ibnd', (attn_prob, w_head_v))
++        #attn_vec = torch.einsum('ijbn,jbnd->ibnd', (attn_prob, w_head_v))
++        attn_vec = einsum3('ijbn,jbnd->ibnd', (attn_prob, w_head_v))
+ 
+         # [qlen x bsz x n_head x d_head]
+         attn_vec = attn_vec.contiguous().view(
+@@ -421,6 +561,7 @@ class RelPartialLearnableDecoderLayer(nn.Module):
+                                      pre_lnorm=kwargs.get('pre_lnorm'))
+ 
+     def forward(self, dec_inp, r, r_w_bias, r_r_bias, dec_attn_mask=None, mems=None):
++        #print(dec_inp.shape, r.shape, r_w_bias.shape, r_r_bias.shape, dec_attn_mask.shape)
+ 
+         output = self.dec_attn(dec_inp, r, r_w_bias, r_r_bias,
+                                attn_mask=dec_attn_mask,
+@@ -654,9 +795,11 @@ class MemTransformerLM(nn.Module):
+             else:
+                 mask_shift_len = qlen
+             dec_attn_mask = (torch.triu(all_ones, 1+mlen)
++#            dec_attn_mask = (triu_onnx(all_ones, 1+mlen)
+                     + torch.tril(all_ones, -mask_shift_len)).byte()[:, :, None] # -1
+         else:
+             dec_attn_mask = torch.triu(
++#            dec_attn_mask = triu_onnx(
+                 word_emb.new_ones(qlen, klen), diagonal=1+mlen).byte()[:,:,None]
+ 
+         hids = []
+@@ -664,7 +807,7 @@ class MemTransformerLM(nn.Module):
+             pos_seq = torch.arange(klen-1, -1, -1.0, device=word_emb.device, 
+                                    dtype=word_emb.dtype)
+             if self.clamp_len > 0:
+-                pos_seq.clamp_(max=self.clamp_len)
++                pos_seq.clamp_(min=-100000, max=self.clamp_len)
+             pos_emb = self.pos_emb(pos_seq)
+ 
+             core_out = self.drop(word_emb)
+@@ -728,20 +871,26 @@ class MemTransformerLM(nn.Module):
+                                  mems=mems_i)
+                 hids.append(core_out)
+ 
++        pdb.set_trace()
+         core_out = self.drop(core_out)
+ 
+         new_mems = self._update_mems(hids, mems, mlen, qlen)
+ 
+         return core_out, new_mems
+ 
++
+     def forward(self, data, target, *mems):
+         # nn.DataParallel does not allow size(0) tensors to be broadcasted.
+         # So, have to initialize size(0) mems inside the model forward.
+         # Moreover, have to return new_mems to allow nn.DataParallel to piece
+         # them together.
++
+         if not mems: mems = self.init_mems()
+ 
+-        tgt_len = target.size(0)
++        if torch.onnx.is_in_onnx_export():
++            tgt_len = target.size(0).numpy()
++        else:
++            tgt_len = target.size(0) #.numpy()
+         hidden, new_mems = self._forward(data, mems=mems)
+ 
+         pred_hid = hidden[-tgt_len:]
+@@ -751,8 +900,12 @@ class MemTransformerLM(nn.Module):
+                 self.out_layer.bias, target, pred_hid, self.sampler)
+             loss = -F.log_softmax(logit, -1)[:, :, 0]
+         else:
+-            loss = self.crit(pred_hid.view(-1, pred_hid.size(-1)), target.view(-1))
+-            loss = loss.view(tgt_len, -1)
++            if torch.onnx.is_in_onnx_export():
++                # inference progress, actual loss is output
++                loss = self.crit(pred_hid.view(-1, pred_hid.size(-1)), target.view(-1))
++            else:
++                loss = self.crit(pred_hid.view(-1, pred_hid.size(-1)), target.view(-1))
++                loss = loss.view(tgt_len, -1)
+ 
+         if new_mems is None:
+             return [loss]
+diff --git a/pytorch/run_enwik8_base.sh b/pytorch/run_enwik8_base.sh
+index db542a8..829894f 100644
+--- a/pytorch/run_enwik8_base.sh
++++ b/pytorch/run_enwik8_base.sh
+@@ -2,7 +2,7 @@
+ 
+ if [[ $1 == 'train' ]]; then
+     echo 'Run training...'
+-    python train.py \
++    python3.7 train.py \
+         --cuda \
+         --data ../data/enwik8/ \
+         --dataset enwik8 \
+@@ -14,28 +14,55 @@ if [[ $1 == 'train' ]]; then
+         --dropout 0.1 \
+         --dropatt 0.0 \
+         --optim adam \
+-        --lr 0.00025 \
++        --lr 0.00000001 \
+         --warmup_step 0 \
+-        --max_step 400000 \
++        --eval-interval 500\
++        --max_step 10000 \
+         --tgt_len 512 \
+         --mem_len 512 \
+         --eval_tgt_len 128 \
+-        --batch_size 22 \
+-        --multi_gpu \
++        --batch_size 11 \
++        --log-interval 10 \
+         --gpu0_bsz 4 \
++        --restart \
++        --restart_dir workdir0-enwik8/check_point \
+         ${@:2}
+ elif [[ $1 == 'eval' ]]; then
+     echo 'Run evaluation...'
+-    python eval.py \
+-        --cuda \
+-        --data ../data/enwik8/ \
++    python3.8 eval.py \
++        --data ./data/enwik8/ \
+         --dataset enwik8 \
+         --tgt_len 80 \
+-        --mem_len 2100 \
+-        --clamp_len 820 \
++        --mem_len 160 \
++        --clamp_len 80 \
+         --same_length \
++        --batch_size 1 \
+         --split test \
+         ${@:2}
++elif [[ $1 == 'om_eval' ]]; then
++    echo 'Run evaluation...'
++    python3.8 om_eval.py \
++        --data ./data/enwik8/ \
++        --dataset enwik8 \
++        --tgt_len 80 \
++        --mem_len 160 \
++        --clamp_len 80 \
++        --same_length \
++        --batch_size 1 \
++        --split test \
++        ${@:2}
++elif [[ $1 == 'onnx' ]]; then
++    echo 'Run evaluation...'
++    python3.8 eval.py \
++        --data ./data/enwik8/ \
++        --dataset enwik8 \
++        --tgt_len 80 \
++        --mem_len 160 \
++        --clamp_len 80 \
++        --same_length \
++        --batch_size 1 \
++        --split onnx \
++        ${@:2}
+ else
+     echo 'unknown argment 1'
+ fi
+diff --git a/pytorch/utils/proj_adaptive_softmax.py b/pytorch/utils/proj_adaptive_softmax.py
+index a0fbfeb..c4acd95 100644
+--- a/pytorch/utils/proj_adaptive_softmax.py
++++ b/pytorch/utils/proj_adaptive_softmax.py
+@@ -6,8 +6,8 @@ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
+ 
+-CUDA_MAJOR = int(torch.version.cuda.split('.')[0])
+-CUDA_MINOR = int(torch.version.cuda.split('.')[1])
++# CUDA_MAJOR = int(torch.version.cuda.split('.')[0])
++# CUDA_MINOR = int(torch.version.cuda.split('.')[1])
+ 
+ class ProjectedAdaptiveLogSoftmax(nn.Module):
+     def __init__(self, n_token, d_embed, d_proj, cutoffs, div_val=1,
+@@ -81,11 +81,15 @@ class ProjectedAdaptiveLogSoftmax(nn.Module):
+                                'in the batch dimension.')
+ 
+         if self.n_clusters == 0:
++#            print("n_clusters == 0")
+             logit = self._compute_logit(hidden, self.out_layers[0].weight,
+                                         self.out_layers[0].bias, self.out_projs[0])
++            if torch.onnx.is_in_onnx_export():
++                return logit
+             nll = -F.log_softmax(logit, dim=-1) \
+                     .gather(1, target.unsqueeze(1)).squeeze(1)
+         else:
++            print("n_clusters != 0, need check!")
+             # construct weights and biases
+             weights, biases = [], []
+             for i in range(len(self.cutoffs)):
+-- 
+2.17.1
+

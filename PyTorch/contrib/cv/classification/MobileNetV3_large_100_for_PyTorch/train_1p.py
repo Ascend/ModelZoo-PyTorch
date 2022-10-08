@@ -33,7 +33,8 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -47,7 +48,6 @@ from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
 from timm.models.layers import Linear
 
-import torch.npu
 
 CALCULATE_DEVICE = "npu:0"
 

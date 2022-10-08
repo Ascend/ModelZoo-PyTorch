@@ -19,6 +19,8 @@ batch_size=64
 
 #训练epoch数
 epochs=1
+# 指定训练所使用的npu device卡id
+device_id=0
 num_steps=200
 
 #参数校验，不需要修改
@@ -26,6 +28,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --more_path1* ]];then
+        more_path1=`echo ${para#*=}`
     fi
 done
 
@@ -34,6 +38,19 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
+
+
 ##################指定训练脚本执行路径##################
 # cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -50,6 +67,14 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    xcit_main_dirname=$(basename ${more_path1})
+    if [ -f /root/.cache/torch/hub/${xcit_main_dirname} ]; then
+        echo "${xcit_main_dirname} file exists"
+    else
+        mkdir -p /root/.cache/torch/hub/
+        cp -r ${more_path1} /root/.cache/torch/hub/
+    fi
 fi
 
 #进入训练脚本目录，需要模型审视修改
@@ -76,23 +101,27 @@ fi
 start_time=$(date +%s)
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
+arch=vit_small
+python3.7 preparation.py --arch ${arch}
+echo "Preparation completed, start to train"
+
 export WORLD_SIZE=1
 export RANK=$RANK_ID
 export OMP_NUM_THREADS=1
 
 nohup python3.7 -u -m torch.distributed.launch \
-	--nproc_per_node=1 main_dino.py \
-	--arch vit_small \
-	--data_path $data_path \
-	--output_dir ./output \
-	--amp \
-	--optimizer npufusedadamw \
-	--warmup_epochs 0 \
-	--num_workers 32 \
-	--epochs $epochs \
-	--num_steps $num_steps \
-	--batch_size $batch_size \
-	--use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
+    --nproc_per_node=1 main_dino.py \
+    --arch ${arch} \
+    --data_path $data_path \
+    --output_dir ./output \
+    --amp \
+    --optimizer npufusedadamw \
+    --warmup_epochs 0 \
+    --num_workers 32 \
+    --epochs $epochs \
+    --num_steps $num_steps \
+    --batch_size $batch_size \
+    --use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_1p.log 2>&1 &
 
 wait
 

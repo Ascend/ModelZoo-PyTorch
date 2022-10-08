@@ -41,8 +41,8 @@ import os
 import copy
 
 import torch
-# if torch.__version__>= '1.8.1':
-#       import torch_npu
+if torch.__version__>= '1.8':
+       import torch_npu
 from torch import nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
@@ -57,6 +57,12 @@ from datasets import TrainDataset, EvalDataset
 from utils import AverageMeter, calc_psnr
 
 import time
+
+NPU_CALCULATE_DEVICE=0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu_set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -93,26 +99,18 @@ if __name__ == '__main__':
         os.makedirs(args.outputs_dir)
 
     cudnn.benchmark = True
-    # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    device = torch.npu.set_device('npu:0')
 
     torch.manual_seed(args.seed)
 
     # model = SRCNN().to(device)
     model = SRCNN().npu()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam([
+    optimizer = apex.optimizers.NpuFusedAdam([
         {'params': model.conv1.parameters()},
         {'params': model.conv2.parameters()},
         {'params': model.conv3.parameters(), 'lr': args.lr*0.1}
     ], lr=args.lr)
-    # optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), lr=args.lr, momentum=0.9)
-    # optimizer = apex.optimizers.NpuFusedAdam(model.parameters(),
-    #                                          [{'params': model.conv1.parameters()},
-    #                                           {'params': model.conv2.parameters()},
-    #                                           {'params': model.conv3.parameters(), 'lr': args.lr*0.1}],
-    #                                          lr=args.lr)
-    # optimizer = apex.optimizers.NpuFusedAdam(model.parameters(),lr=args.lr)
+
     model, optimizer = amp.initialize(model,optimizer,opt_level='O2',loss_scale=32.0,combine_grad=True)
     amp.register_half_function(torch, 'bmm')  # bmm会强制使用half进行计算
     # amp.register_float_function(torch, 'bmm')  # bmm会强制使用float进行计算
@@ -153,24 +151,8 @@ if __name__ == '__main__':
             start = time.time()
             inputs, labels = data
 
-            # inputs = inputs.to(device)
-            # labels = labels.to(device)
-
-            inputs = inputs.npu()
-            labels = labels.npu()
-
-            # with torch.autograd.profiler.profile(use_npu=True) as prof:
-            #     preds = model(inputs)
-            #     loss = criterion(preds, labels)
-            #     optimizer.zero_grad()
-            #     # if amp_mode:
-            #     with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #         scaled_loss.backward()
-            #     # else:
-            #     #     loss.backward()
-            #     optimizer.step()
-            # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-            # prof.export_chrome_trace("output.prof")  # "output.prof"为输出文件地址
+            inputs = inputs.to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
+            labels = labels.to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
 
             preds = model(inputs)
             loss = criterion(preds, labels)

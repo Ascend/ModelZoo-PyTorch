@@ -30,7 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 import sys
 import os
@@ -69,7 +69,7 @@ def parse_opts():
                              ' (default: resnet18)')
     parser.add_argument('--fine_tuning', action='store_true',
                         help='use fine-tuning model')
-    parser.add_argument('--loss_scale_value', default=1024, type=int,
+    parser.add_argument('--loss_scale_value', default="dynamic", type=str,
                         help='set loss scale value.')
     parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str,
                         help='device id list')
