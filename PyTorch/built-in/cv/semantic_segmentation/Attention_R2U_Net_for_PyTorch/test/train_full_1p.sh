@@ -80,6 +80,7 @@ nohup python3.7 train.py  \
      --data_path=$data_path \
      --batch_size=$batch_size \
      --num_workers 16 \
+     --loss-scale="dynamic" \
      --device_id=$ASCEND_DEVICE_ID  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

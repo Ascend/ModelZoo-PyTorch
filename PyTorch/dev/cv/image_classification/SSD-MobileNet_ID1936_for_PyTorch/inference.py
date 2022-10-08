@@ -48,6 +48,9 @@ import torch.nn.functional as F
 from utils import detect_objects
 import torch.npu
 import os
+if torch.__version__ >= "1.8":
+    import torch_npu
+
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))

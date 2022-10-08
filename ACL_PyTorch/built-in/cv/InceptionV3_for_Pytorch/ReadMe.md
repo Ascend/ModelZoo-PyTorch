@@ -9,9 +9,8 @@
 3. inceptionv3_atc.sh：onnx模型转换om模型脚本
 4. imagenet_torch_preprocess.py：数据集预处理脚本，对图片进行缩放裁剪，生成图片二进制文件
 5. aipp_inceptionv3_pth.config：数据集aipp预处理配置文件
-6. env.sh：环境变量文件
-7. ais_infer工具源码地址：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
-8. vision_metric_ImageNet.py：验证推理结果脚本，比对ais_infer输出的分类结果和标签，给出Accuracy
+6. ais_infer工具源码地址：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+7. vision_metric_ImageNet.py：验证推理结果脚本，比对ais_infer输出的分类结果和标签，给出Accuracy
 
 
 
@@ -70,7 +69,7 @@
 5. 设置环境变量   
 
    ```
-   source env.sh
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
    ```
 
 6. 使用ais_infer离线推理

@@ -1,13 +1,12 @@
 文件作用说明：
 
-1.  env.sh：ATC工具环境变量配置脚本
-2.  require.txt：脚本运行所需的第三方库
-3.  parse_json.py： coco数据集标签json文件解析脚本 
-4.  preprocess_yolov3_pytorch.py： 二进制数据集预处理脚本
-5.  get_coco_info.py： yolov3.info生成脚本 
-6.  bin_to_predict_yolo_pytorch.py： benchmark输出bin文件解析脚本
-7.  map_calculate.py： 精度统计脚本
-8.  benchmark工具源码地址：https://gitee.com/ascend/cann-benchmark/tree/master/infer
+1.  require.txt：脚本运行所需的第三方库
+2.  parse_json.py： coco数据集标签json文件解析脚本 
+3.  preprocess_yolov3_pytorch.py： 二进制数据集预处理脚本
+4.  get_coco_info.py： yolov3.info生成脚本 
+5.  bin_to_predict_yolo_pytorch.py： benchmark输出bin文件解析脚本
+6.  map_calculate.py： 精度统计脚本
+7.  benchmark工具源码地址：https://gitee.com/ascend/cann-benchmark/tree/master/infer
 
 推理端到端步骤：
 
@@ -21,7 +20,7 @@ python3.7 models/export.py --weights ./yolov3.pt --img 416 --batch 1
 （2）配置环境变量转换om模型
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --model=yolov3.onnx --framework=5 --output=yolov3_bs1 --input_format=NCHW --log=info --soc_version=Ascend310 --input_shape="images:1,3,416,416" --out_nodes="Reshape_219:0;Reshape_203:0;Reshape_187:0"
 ```
 

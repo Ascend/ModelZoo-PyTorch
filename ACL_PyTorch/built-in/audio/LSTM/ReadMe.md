@@ -150,11 +150,7 @@ python3.7 ./steps/LSTM_pth2onnx.py --batchsize=16
 1.修改lstm_atc.sh脚本，通过ATC工具使用脚本完成转换，具体的脚本示例如下：
 ```
 # 配置环境变量
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 ```
@@ -243,11 +239,7 @@ python3.7 LSTM_get_info.py --batchsize=16
 ## 5 离线推理
 1.配置pyacl推理环境变量
 ```
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:${install_path}/pyACL/python/site-packages/acl:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行pyacl离线推理
 ```

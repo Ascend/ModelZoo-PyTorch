@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 
+import argparse
 import sys
 import torch
 import numpy as np
@@ -21,7 +22,7 @@ import torchvision
 from torchvision import transforms, datasets, models
 
 
-def acc_eval(data_path = "./data/", pred_res_path = "./result/dumpOutput_device"+str(sys.argv[1]), output_path = "./result/acc_eval_res"):
+def acc_eval(pred_res_path, data_path = "./data/", output_path = "./result/acc_eval_res"):
     test_transform = transforms.Compose([
         transforms.ToTensor()
     ])
@@ -41,7 +42,7 @@ def acc_eval(data_path = "./data/", pred_res_path = "./result/dumpOutput_device"
             image = images[i]
             label = labels[i]
             
-            file_path = f"{pred_res_path}/image_{cnt}_1.txt"
+            file_path = f"{pred_res_path}/image_{cnt}_0.txt"
             with open(file_path, "r") as f:
                 data = f.readline()
                 temp = data.strip().split(" ")
@@ -65,5 +66,8 @@ def acc_eval(data_path = "./data/", pred_res_path = "./result/dumpOutput_device"
         f.close()
             
 if __name__ == "__main__":
-    acc_eval()
+    parser = argparse.ArgumentParser(description='output path of the inference result')
+    parser.add_argument('--pred_res_path')
+    opt = parser.parse_args()
+    acc_eval(opt.pred_res_path)
 

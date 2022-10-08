@@ -272,7 +272,7 @@ def PGM_feature_generation():
         p.join()
 
 if __name__ == '__main__':
-    out_files = os.listdir(args.TEM_out_path)
+    out_files = [ file  for file in os.listdir(args.TEM_out_path) if file.endswith(".bin") ]
     if not os.path.exists("output/TEM_results"):
             os.makedirs("output/TEM_results") 
     print("processing...")

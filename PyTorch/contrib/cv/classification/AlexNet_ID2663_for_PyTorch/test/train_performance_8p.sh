@@ -9,7 +9,7 @@ batch_size=1024
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,修改为本地数据集路径
-data_path="/opt/npu/imagenet"
+data_path=""
 
 # 训练epoch
 train_epochs=1

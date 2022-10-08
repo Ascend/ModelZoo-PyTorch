@@ -98,7 +98,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量
-ActualFPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${FPS}'}'`
+ActualFPS=`awk 'BEGIN{printf "%.2f\n", '${FPS}'}'`
 #单迭代训练时长
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 

@@ -37,7 +37,7 @@ if [ $? != 0 ]; then
 fi
 
 chmod +x ben*
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision \
                     -om_path=setr_naive_768x768_bs1.om \

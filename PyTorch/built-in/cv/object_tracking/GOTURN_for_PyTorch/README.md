@@ -63,6 +63,7 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
 
   ```
   # 配置适配NPU的pytorch-lightning
+  cd ${模型文件夹名称}/src/scripts/
   bash pytorch_lightning_tonpu.sh
   # 配置依赖文件路径
   cd ../
@@ -153,7 +154,7 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
 1. 进入解压后的源码包根目录。
 
    ```
-   cd /${模型文件夹名称} 
+   cd ${模型文件夹名称}/src/scripts/ 
    ```
 
 2. 运行训练脚本。
@@ -185,6 +186,7 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
    --alov_path ../data/ALOV/  //ALOV数据集路径
    --save_path ../caffenet/  //训练模型保存路径
    --epochs 20  //迭代的最大次数
+   --max_steps 8000  //最大的steps次数
    --npus 8  //使用的
    --batch_size 3  
    --pretrained_model ../goturn/models/pretrained/caffenet_weights.npy  //预训练模型

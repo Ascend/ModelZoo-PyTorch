@@ -90,7 +90,7 @@ do
             --seed 12345 \
             --amp_cfg \
             --opt_level O2 \
-            --loss_scale_value 1024 \
+            --loss_scale_value "dynamic" \
             --device_list '0,1,2,3,4,5,6,7' \
             --batch_size $batch_size \
             --epochs $train_epochs \

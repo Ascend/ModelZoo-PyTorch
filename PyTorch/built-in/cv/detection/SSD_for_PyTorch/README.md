@@ -94,14 +94,13 @@ SSD 是利用不同尺度的特征图进行目标的检测的模型
 ## 训练
 
 ### 1.训练方法
-
 1p
 ```
-bash run_1p.sh
+bash ./test/train_performance_1p.sh
 ```
 8p
 ```
-bash run_8p.sh
+bash ./test/train_full_8p.sh
 ```  
    
 

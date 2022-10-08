@@ -92,7 +92,7 @@ python3.7 ./main.py \
     --dist-backend 'hccl' \
     --epochs=${train_epochs} \
     --warm_up_epochs=5 \
-    --loss-scale=32 \
+    --loss-scale='dynamic' \
     --amp \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

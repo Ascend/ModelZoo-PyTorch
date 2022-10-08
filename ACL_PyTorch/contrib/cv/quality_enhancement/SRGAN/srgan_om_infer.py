@@ -88,10 +88,32 @@ if __name__ == '__main__':
         sys.exit()
 
     # 读取推理结果
-    bin_file_names = [os.path.join(bin_path, x) for x in os.listdir(bin_path) if x.endswith('.bin')]
+    bin_file_names = []
+    bin_reduce = []
+    fileDir = "result"
+    fileList = os.listdir(fileDir)
+    for file in fileList:
+        bin_dir = os.path.join(fileDir, file)
+        bin_file_names.append([os.path.join(bin_dir, x) for x in os.listdir(bin_dir) if x.endswith('.bin')])
+    for i in range(len(bin_file_names)):
+        bin_reduce.append(bin_file_names[i])
+        
+    bin_file_names = []
+    for _ in bin_reduce:
+        bin_file_names += _
+        
+    tmp = []
+    
+    for i,_ in enumerate(bin_file_names):
+        if _.find("fake_file") < 0:
+            tmp.append(_)
+
+    bin_file_names = tmp
+    
     if len(bin_file_names) < 1:
         print('Input result path have no result!')
         sys.exit()
+        
 
     psnr_l = []
     ssim_l = []

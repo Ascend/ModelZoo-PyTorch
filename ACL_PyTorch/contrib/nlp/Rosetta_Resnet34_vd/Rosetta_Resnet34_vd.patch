@@ -1,0 +1,28 @@
+diff --git a/configs/rec/rec_r34_vd_none_none_ctc.yml b/configs/rec/rec_r34_vd_none_none_ctc.yml
+index 0af2b2ff..2265f5b3 100644
+--- a/configs/rec/rec_r34_vd_none_none_ctc.yml
++++ b/configs/rec/rec_r34_vd_none_none_ctc.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 72
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -75,7 +75,7 @@ Train:
+ Eval:
+   dataset:
+     name: LMDBDataSet
+-    data_dir: ./train_data/data_lmdb_release/validation/
++    data_dir: ./train_data/data_lmdb_release/evaluation/
+     transforms:
+       - DecodeImage: # load image
+           img_mode: BGR
+@@ -88,5 +88,5 @@ Eval:
+   loader:
+     shuffle: False
+     drop_last: False
+-    batch_size_per_card: 256
+-    num_workers: 4
++    batch_size_per_card: 1
++    num_workers: 1

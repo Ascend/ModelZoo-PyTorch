@@ -14,8 +14,8 @@
 
 import os
 import scipy
-import sys
 import shutil
+import sys
 from scipy import io
 
 def move_valimg(val_dir='./val', devkit_dir='./ILSVRC2012_devkit_t12'):
@@ -57,6 +57,6 @@ def main(val_path, devkit_path):
 	move_valimg(val_path, devkit_path)
 
 if __name__ == '__main__':
-	val_path = sys.argv[1]
-	devkit_path = sys.argv[2]
-	main(val_path, devkit_path)
+    val_path = sys.argv[1]
+    devkit_path = sys.argv[2]
+    main(val_path, devkit_path)

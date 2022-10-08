@@ -27,38 +27,28 @@ class ExperimentPerformance(object):
     def __init__(self):
         super(ExperimentPerformance, self).__init__()
 
-    def run(self, savepath_e, savepath_s, infopath_e, infopath_s):
+    def run(self, savepath_e, savepath_s):
         for i in range(total):
             exemplar_input = torch.randn(exemplar_size)
             exemplar_input = np.array(exemplar_input).astype(np.float32)
             exemplar_name = "exemplar{}".format(i)
             exemplar_path = os.path.join(savepath_e, exemplar_name + ".bin")
             exemplar_input.tofile(exemplar_path)
-            with open(infopath_e, 'a') as file:
-                content = ' '.join([str(i), exemplar_path, str(127), str(127)])
-                file.write(content)
-                file.write('\n')
 
             search_input = torch.randn(search_size)
             search_input = np.array(search_input).astype(np.float32)
             search_name = "search{}".format(i)
             search_path = os.path.join(savepath_s, search_name + ".bin")
             search_input.tofile(search_path)
-            with open(infopath_s, 'a') as file:
-                content = ' '.join([str(i), search_path, str(255), str(255)])
-                file.write(content)
-                file.write('\n')
 
 
 if __name__ == "__main__":
     save_path_e = sys.argv[1]
     save_path_s = sys.argv[2]
-    info_path_e = sys.argv[3]
-    info_path_s = sys.argv[4]
     if not os.path.exists(save_path_e):
         os.makedirs(save_path_e)
     if not os.path.exists(save_path_s):
         os.makedirs(save_path_s)
     e = ExperimentPerformance()
-    e.run(save_path_e, save_path_s, info_path_e, info_path_s)
+    e.run(save_path_e, save_path_s)
     print("Data For Performance Ready.")

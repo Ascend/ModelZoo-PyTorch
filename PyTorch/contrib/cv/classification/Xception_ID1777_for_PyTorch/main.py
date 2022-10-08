@@ -26,7 +26,8 @@ import warnings
 
 import torch
 import numpy as np
-# import torch.npu
+if torch.__version__ >= '1.8':
+    import torch_npu
 from apex import amp
 
 import torch.nn as nn
@@ -39,14 +40,12 @@ import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-#import models
 from xception import xception
 
 
-
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('data', metavar='DIR',
-                    help='path to dataset')
+parser.add_argument('--data_path', default='/forDocker/dataset/ImageNet/', type=str,
+                    help='dataset path')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='xception')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
@@ -78,7 +77,7 @@ parser.add_argument('--world-size', default=-1, type=int,
                     help='number of nodes for distributed training')
 parser.add_argument('--rank', default=-1, type=int,
                     help='node rank for distributed training')
-parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+parser.add_argument('--dist-url', default='env://', type=str,
                     help='url used to set up distributed training')
 parser.add_argument('--dist-backend', default='nccl', type=str,
                     help='distributed backend')
@@ -91,9 +90,9 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'N processes per node, which has N GPUs. This is the '
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
-## for ascend 910
+# for ascend 910
 parser.add_argument('--device', default='npu', type=str, help='npu or gpu')
-parser.add_argument('--addr', default='10.136.181.115',
+parser.add_argument('--addr', default='127.0.0.1',
                     type=str, help='master addr')
 parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7',
                     type=str, help='device id list')
@@ -101,7 +100,7 @@ parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
-parser.add_argument('--loss-scale', default=1024., type=float,
+parser.add_argument('--loss-scale', default='dynamic', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
@@ -130,6 +129,7 @@ def device_id_to_process_device_map(device_list):
 def main():
     args = parser.parse_args()
     print(args.device_list)
+    print("{}".format(args).replace(', ', ',\n'))
 
     os.environ['MASTER_ADDR'] = args.addr
     os.environ['MASTER_PORT'] = '29688'
@@ -162,7 +162,7 @@ def main():
             ngpus_per_node = torch.cuda.device_count()
         else:
             ngpus_per_node = 1
-    print('ngpus_per_node:',ngpus_per_node)
+    print('ngpus_per_node:', ngpus_per_node)
     if args.multiprocessing_distributed:
         # Since we have ngpus_per_node processes per node, the total world_size
         # needs to be adjusted accordingly
@@ -202,12 +202,13 @@ def main_worker(gpu, ngpus_per_node, args):
         print("=> using pre-trained model '{}'".format(args.arch))
         model = xception()
         print("load the model by yourself")
-        pretrained_dict = torch.load("./model_best.pth.tar", map_location="cpu")["state_dict"]
+        pretrained_dict = torch.load(
+            "./model_best.pth.tar", map_location="cpu")["state_dict"]
         if "fc.weight" in pretrained_dict:
             pretrained_dict.pop("fc.weight")
             pretrained_dict.pop("fc.bias")
         model.load_state_dict(pretrained_dict, strict=False)
-        
+
     else:
         print("=> creating model '{}'".format(args.arch))
         model = xception()
@@ -229,7 +230,8 @@ def main_worker(gpu, ngpus_per_node, args):
             # DistributedDataParallel, we need to divide the batch size
             # ourselves based on the total number of GPUs we have
             args.batch_size = int(args.batch_size / args.world_size)
-            args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
+            args.workers = int(
+                (args.workers + ngpus_per_node - 1) / ngpus_per_node)
         else:
             if args.device == 'npu':
                 loc = 'npu:{}'.format(args.gpu)
@@ -251,7 +253,7 @@ def main_worker(gpu, ngpus_per_node, args):
         if args.device == 'npu':
             loc = 'npu:{}'.format(args.gpu)
         else:
-            print("before : model = torch.nn.DataParallel(model).cuda()")    
+            print("before : model = torch.nn.DataParallel(model).cuda()")
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
@@ -274,7 +276,8 @@ def main_worker(gpu, ngpus_per_node, args):
                 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False,
                                                                   find_unused_parameters=True)
             else:
-                model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
+                model = torch.nn.parallel.DistributedDataParallel(
+                    model, device_ids=[args.gpu], broadcast_buffers=False)
         else:
             model = torch.nn.parallel.DistributedDataParallel(model)
     elif args.gpu is not None:
@@ -283,11 +286,11 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
-            
+
             model.features = torch.nn.DataParallel(model.features)
             model.cuda()
         else:
-            
+
             if args.device == 'npu':
                 loc = 'npu:{}'.format(args.gpu)
                 model = torch.nn.DataParallel(model).to(loc)
@@ -296,10 +299,10 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.device == 'npu':
         loc = 'npu:{}'.format(args.gpu)
-        loss = nn.CrossEntropyLoss() 
-        if args.label_smoothing > 0.0: 
-            loss = lambda: LabelSmoothing(loc, args.label_smoothing)
-    
+        loss = nn.CrossEntropyLoss()
+        if args.label_smoothing > 0.0:
+            def loss(): return LabelSmoothing(loc, args.label_smoothing)
+
         criterion = loss.to(loc)
         #criterion = nn.CrossEntropyLoss().to(loc)
     else:
@@ -335,8 +338,8 @@ def main_worker(gpu, ngpus_per_node, args):
     cudnn.benchmark = True
 
     # Data loading code
-    traindir = os.path.join(args.data, 'train')
-    valdir = os.path.join(args.data, 'val')
+    traindir = os.path.join(args.data_path, 'train')
+    valdir = os.path.join(args.data_path, 'val')
     normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
                                      std=[0.5, 0.5, 0.5])
 
@@ -357,7 +360,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(
-                train_sampler is None),
+            train_sampler is None),
         num_workers=args.workers, pin_memory=False, sampler=train_sampler, drop_last=True)
 
     val_loader = torch.utils.data.DataLoader(
@@ -373,11 +376,11 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.evaluate:
         validate(val_loader, model, criterion, args, ngpus_per_node)
         return
-        
+
     if args.prof:
         profiling(train_loader, model, criterion, optimizer, args)
         return
-    
+
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
@@ -386,7 +389,8 @@ def main_worker(gpu, ngpus_per_node, args):
         adjust_learning_rate(optimizer, epoch, args)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node)
+        train(train_loader, model, criterion,
+              optimizer, epoch, args, ngpus_per_node)
 
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args, ngpus_per_node)
@@ -394,7 +398,11 @@ def main_worker(gpu, ngpus_per_node, args):
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
-  
+
+        if args.device == 'npu' and args.gpu == 0 and epoch == args.epochs - 1:
+            print("Complete epoch training, take time:{}h".format(
+                round((time.time() - start_time) / 3600.0, 2)))
+
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                     and args.rank % ngpus_per_node == 0):
             if args.amp:
@@ -414,6 +422,44 @@ def main_worker(gpu, ngpus_per_node, args):
                     'best_acc1': best_acc1,
                     'optimizer': optimizer.state_dict(),
                 }, is_best)
+
+
+def profiling(data_loader, model, criterion, optimizer, args):
+    # switch to train mode
+    model.train()
+
+    def update(model, images, target, optimizer):
+        output = model(images)
+        loss = criterion(output, target)
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        optimizer.zero_grad()
+        optimizer.step()
+
+    for step, (images, target) in enumerate(data_loader):
+        if args.device == 'npu':
+            loc = 'npu:{}'.format(args.gpu)
+            images = images.to(loc, non_blocking=True).to(torch.float)
+            target = target.to(torch.int32).to(loc, non_blocking=True)
+        else:
+            images = images.cuda(args.gpu, non_blocking=True)
+            target = target.cuda(args.gpu, non_blocking=True)
+
+        if step < 5:
+            update(model, images, target, optimizer)
+        else:
+            if args.device == 'npu':
+                with torch.autograd.profiler.profile(use_npu=True) as prof:
+                    update(model, images, target, optimizer)
+            else:
+                with torch.autograd.profiler.profile(use_cuda=True) as prof:
+                    update(model, images, target, optimizer)
+            break
+    prof.export_chrome_trace("output.prof")
+
 
 def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -468,7 +514,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         batch_time.update(cost_time)
         end = time.time()
 
-        if i % args.print_freq == 0:
+        if i % args.print_freq == 0 or i == len(train_loader) - 1:
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                         and args.rank % ngpus_per_node == 0):
                 progress.display(i)
@@ -478,7 +524,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         if batch_time.avg:
             print("[npu id:", args.gpu, "]", "batch_size:", args.world_size * args.batch_size,
                   'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
-                    args.batch_size * args.world_size / batch_time.avg))
+                      args.batch_size * args.world_size / batch_time.avg))
 
 
 def validate(val_loader, model, criterion, args, ngpus_per_node):
@@ -524,7 +570,7 @@ def validate(val_loader, model, criterion, args, ngpus_per_node):
             batch_time.update(cost_time)
             end = time.time()
 
-            if i % args.print_freq == 0:
+            if i % args.print_freq == 0 or i == len(val_loader) - 1:
                 if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                             and args.rank % ngpus_per_node == 0):
                     progress.display(i)
@@ -542,8 +588,8 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
     if is_best:
         shutil.copyfile(filename, 'model_best.pth.tar')
-        
-        
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -567,11 +613,13 @@ class AverageMeter(object):
         self.count += n
         if self.count > (self.start_count_index * self.N):
             self.sum += val * n
-            self.avg = self.sum / (self.count - self.start_count_index * self.N)
+            self.avg = self.sum / \
+                (self.count - self.start_count_index * self.N)
 
     def __str__(self):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.__dict__)
+
 
 class ProgressMeter(object):
     def __init__(self, num_batches, meters, prefix=""):
@@ -599,7 +647,7 @@ def adjust_learning_rate(optimizer, epoch, args):
     else:
         alpha = 0
         cosine_decay = 0.5 * (
-                1 + np.cos(np.pi * (epoch - args.warm_up_epochs) / (args.epochs - args.warm_up_epochs)))
+            1 + np.cos(np.pi * (epoch - args.warm_up_epochs) / (args.epochs - args.warm_up_epochs)))
         decayed = (1 - alpha) * cosine_decay + alpha
         lr = args.lr * decayed
 
@@ -623,10 +671,13 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+
 class LabelSmoothing(nn.Module):
     """
     NLL loss with label smoothing.
     """
+
     def __init__(self, loc, smoothing=0.0):
         """
         Constructor for the LabelSmoothing module.
@@ -642,11 +693,13 @@ class LabelSmoothing(nn.Module):
         target = target.to(torch.int64)
 
         logprobs = torch.nn.functional.log_softmax(x, dim=-1)
-        nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1).to(torch.int64))
+        nll_loss = -logprobs.gather(dim=-1,
+                                    index=target.unsqueeze(1).to(torch.int64))
         nll_loss = nll_loss.squeeze(1)
         smooth_loss = -logprobs.mean(dim=-1)
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         return loss.mean()
+
 
 if __name__ == '__main__':
     main()

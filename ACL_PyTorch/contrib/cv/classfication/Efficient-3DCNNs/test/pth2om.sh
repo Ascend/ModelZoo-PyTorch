@@ -9,7 +9,9 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf Efficient-3DCNNs_bs1.om Efficient-3DCNNs_bs16.om
-source env.sh
+
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 atc --framework=5 --model=Efficient-3DCNNs_sim.onnx --output=Efficient-3DCNNs_bs1 --input_format=NCHW --input_shape="image:1,3,16,112,112" --log=error --soc_version=Ascend310
 atc --framework=5 --model=Efficient-3DCNNs_sim.onnx --output=Efficient-3DCNNs_bs16 --input_format=NCHW --input_shape="image:16,3,16,112,112" --log=error --soc_version=Ascend310
 

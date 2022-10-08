@@ -58,6 +58,7 @@ python3.7 -u train.py \
   --epochs 3 \
   --npus 1 \
   --batch_size $batch_size \
+  --max_steps 8000 \
   --pretrained_model $PRETRAINED_MODEL_PATH >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

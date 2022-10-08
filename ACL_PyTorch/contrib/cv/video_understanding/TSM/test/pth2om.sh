@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python3.7 pytorch2onnx.py mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth --output-file=tsm.onnx --softmax --verify --show --shape 1 8 3 224 224
 
 mkdir -p onnx_sim

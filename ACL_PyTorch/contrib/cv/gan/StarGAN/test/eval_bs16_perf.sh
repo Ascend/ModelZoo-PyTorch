@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./test/env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 ./msame --model "./StarGAN_bs16.om"  --input "./bin/img",'./bin/attr' --output "./output_bs16" --outfmt TXT > StarGAN_bs16.log
 

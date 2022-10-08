@@ -100,17 +100,7 @@ python3.7 -m onnxsim --input-shape="1,3,224,224" --dynamic-input-shape faceboxes
 
 1.设置环境变量
 ```
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-
-export ASCEND_OPP_PATH=${install_path}/opp
-
-export REPEAT_TUNE=True
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.2 开发辅助工具指南 (推理) 01，ii.	注意先通过https://netron.app/ 查看onnx的输出节点名称，对应的进行更改--out_nodes里的参数
 ```
@@ -157,15 +147,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-export install_path=/home/package/5.0.2.alpha005/ascend-toolkit/latest
-
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-
-export ASCEND_OPP_PATH=${install_path}/opp
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```

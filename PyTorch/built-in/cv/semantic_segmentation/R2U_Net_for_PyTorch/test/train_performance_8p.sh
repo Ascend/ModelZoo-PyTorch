@@ -108,8 +108,9 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep FPS|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+FinalFPS = `awk -v x="$FPS" -v y="$RANK_SIZE" 'BEGIN{printf "%.3f\n", x*y}'`
 #打印，不需要修改
-echo "Final Performance images/sec : $FPS"
+echo "Final Performance images/sec : $FinalFPS"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"

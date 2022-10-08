@@ -12,7 +12,6 @@
 |------ val.txt                 # imagenet 纯验证集标签
 |—— model
 |——---- model_best.pth.tar		# 模型权重
-|—— env.sh						# NPU环境变量脚本
 |—— LV_Vit_postprocess.py		# 后处理脚本
 |—— LV_Vit_preprocess.py		# 预处理脚本
 |—— LV_Vit_pth2onnx.py			# pth转onnx脚本

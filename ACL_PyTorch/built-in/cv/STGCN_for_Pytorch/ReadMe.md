@@ -42,7 +42,7 @@
 ### 离线推理测试
     设置环境变量
 		```
-		source env.sh
+		source /usr/local/Ascend/ascend-toolkit/set_env.sh
 		```    
 
     转换离线模型

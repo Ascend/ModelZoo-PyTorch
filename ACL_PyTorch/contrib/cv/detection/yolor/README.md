@@ -1,252 +1,282 @@
-# YOLOR Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 精度对比](#62-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 T4性能数据](#72-T4性能数据)
-	-   [7.3 性能对比](#73-性能对比)
-
-## 1 模型概述
-
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)**  
-
-### 1.1 论文地址
-[YOLOR论文](https://arxiv.org/abs/2105.04206)
+# YOLOR模型-推理指导
 
 
-### 1.2 代码地址
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-[YOLOR实现代码](https://github.com/WongKinYiu/yolor)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-## 2 环境说明
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
--   **[深度学习框架](#21-深度学习框架)**  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
--   **[python第三方库](#22-python第三方库)**  
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-### 2.1 深度学习框架
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+
+  ******
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit knowledge)编码在一起，该网络可以生成一个统一的表征(representation)同时用于多个任务。可以利用模型学习的隐式知识来执行目标检测之外的广泛任务，且隐式知识有助于所有任务的性能提升。
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/WongKinYiu/yolor
+  branch=main 
+  commit_id=b168a4dd0fe22068bb6f43724e22013705413afb
+  model_name=yolor_p6
+  ```
+
+  通过Git获取对应commit\_id的代码方法如下：
+
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 1344 x 1344 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | batchsize x 112455 x 85 | FLOAT32  | ND           |
+
+
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                     | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.7.0   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+1. 获取源码：
+
+  ```
+    git clone https://github.com/WongKinYiu/yolor
+    cd yolor
+    git apply < ../yolor.patch
+    cd ..                 # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   该模型使用coco数据集，该模型使用coco数据集，可根据https://github.com/WongKinYiu/yolor/blob/main/scripts/get_coco.sh 获取，
+   **修改解压目录或者解压完成后移动coco置于此readme同级目录**。目录结构如下：
+   ```
+    ├── coco
+    │    ├── images   
+    │         ├── val2017   
+    │    ├── labels
+    │         ├── val2017
+    ```
+
+2. 数据预处理。
+
+   数据预处理将原始数据集转换为模型输入的数据。
+
+   执行yolor_preprocess.py脚本，完成预处理。在本目录val2017_bin文件夹下生成bin文件。
+
+   ```
+   python3 yolor_preprocess.py --save_path ./val2017_bin --data ./coco.yaml --img_size 1344 --batch_size 1
+
+   ```
+   - 参数说明：
+       -   --save_path：预处理后数据保存路径。
+       -   --data：输入数据路径。
+       -   --img_size：图像大小。
+       -   --batch_size：batch大小。 
+   
+    获得val2017_bin下的bin文件。
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       从源码包中获取权重文件：“yolor_p6.pt”。
+       或者从此处下载https://drive.google.com/u/0/uc?id=1Tdn3yqpZ79X7R1Ql0zNlNScB1Dv9Fp76&export=download
+
+   2. 导出onnx文件。
+
+      1. 使用yolor_p6.pt导出onnx文件。
+
+         运行yolor_pth2onnx.py脚本。
+
+         ```
+         python3 yolor_pth2onnx.py --cfg ./yolor_p6_swish.cfg --weights ./yolor_p6.pt --output_file ./yolor_bs1.onnx --batch_size 1 --img_size 1344
+         ```
+         - 参数说明：
+        
+           -   --cfg：配置文件。
+           -   --weights：模型权重文件。
+           -   --output_file：输出的onnx模型。
+           -   --batch_size：batch大小。 
+           -   --img_size：图像大小。
+         
+          获得yolor_bs1.onnx文件。
+
+      2. 优化ONNX文件。
+
+         ```
+         python3 -m onnxsim --input-shape='1,3,1344,1344' yolor_bs1.onnx yolor_bs1_sim.onnx
+         ```
+         - 参数说明：
+        
+           -   --input-shape：输入数据的shape。
+           -   yolor_bs1.onnx：输入模型。
+           -   yolor_bs1_sim.onnx：输出优化后的模型。
+          
+         获得yolor_bs1_sim.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+         > **说明：** 
+         该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN V100R020C10 开发辅助工具指南 (推理) 01，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名。
+
+         这里只保留模型的output(type: float32[1,112455,85])一个输出，其前一个算子为Concat_1059：
+
+         ```
+         atc --model=yolor_bs1_sim.onnx --framework=5 --output=yolor_bs1 --input_format=NCHW --input_shape="image:1,3,1344,1344" --log=info --soc_version=Ascend${chip_name} --out_nodes="Concat_1059:0" --buffer_optimize=off_optimize
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --out\_nodes=输出节点。
+           -   --buffer\_optimize=是否开启buffer优化。
+
+           运行成功后生成<u>***yolor_bs1.om***</u>模型文件。
+
+
+
+2. 开始推理验证。
+
+
+a.  使用ais-infer工具进行推理。
+
+ 
+   ais_infer工具获取及使用方式请点击查看《[ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
+
+
+b.  执行推理。
+
 ```
-pytorch == 1.7.0
-torchvision == 0.8.1
-onnx == 1.7.0
+ python3 ais_infer.py  --model /home/yolor/yolor_bs1.om --input /home/yolor/val2017_bin/ --output ./ --batchsize 1
 ```
 
-### 2.2 python第三方库
+  -  参数说明：
+     -  --model：输入om文件路径。
+     -  --input：输入bin文件的文件夹路径。
+     -  --output：推理结果输出路径(如下精度验证输入)。
+     -  --batchsize：默认为1。
+             
+c.  精度验证。
+
+调用yolor_postprocess.py，可以获得Accuracy数据。修改yolor_postprocess.py第109行output_path为ais_infer推理的output路径。
 
 ```
-Cython==0.29.24
-matplotlib==3.4.3
-numpy==1.21.4
-opencv-python==4.5.4.58
-Pillow==8.4.0
-PyYAML==6.0
-scipy==1.7.2
-tensorboard==2.7.0
-tqdm==4.62.3
-seaborn==0.11.2
-thop==0.0.31.post2005241907  # FLOPS computation
-pycocotools==2.0.2  # COCO mAP
-onnx-simplifier==0.3.6
+ python3 yolor_postprocess.py --data ./coco.yaml --img 1344 --batch 1 --conf 0.001 --iou 0.65 --npu 0 --name yolor_p6_val --names ./yolor/data/coco.names
 ```
 
-安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装
-
+   -  参数说明：
+        -  --data：输入数据路径。
+         -  --img：图像大小。
+         -  --batch：batch大小。
+         -  --conf：置信度。
+         -  --iou：交并比。
+         -  --npu：npu。
+         -  --name：保存路径。
+         -  --names：数据集标签名。
+    
+执行完后会打印出精度:
 ```
-pip install -r requirements.txt  
-```
-
-
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
-
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-
-### 3.1 pth转onnx模型
-
-1.获取pth权重文件  
-
-权重文件从github中提供的链接中获取
-
-2.获取yolor源码
-
-```shell
-git clone https://github.com/WongKinYiu/yolor
-```
-
-在npu上推理需要修改模型代码，把代码移植到开源模型代码中：
-
-```
-cd yolor
-git am --signoff < ../yolor.patch
-cd ..
-```
-
-3.使用yolor_pth2onnx.py进行onnx的转换，在目录下生成yolor_bs1.onnx
-
-```
-python yolor_pth2onnx.py --cfg ./yolor_p6_swish.cfg --weights ./yolor_p6.pt --output_file ./yolor_bs1.onnx
-```
-
-要生成其他batchsize大小的，在后面加上--batch_size参数，如：
-
-```
-python yolor_pth2onnx.py --cfg ./yolor_p6_swish.cfg --weights ./yolor_p6.pt --output_file ./yolor_bs4.onnx --batch_size 4
-```
-
-4.使用onnxsim，生成onnx_sim模型文件
-
-```
-python -m onnxsim --input-shape='1,3,1344,1344' yolor_bs1.onnx yolor_bs1_sim.onnx
-```
-
-
-
-### 3.2 onnx转om模型
-
-1.设置环境变量
-
-```
-source env.sh
-```
-
-或
-
-```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名。
-
-这里只保留模型的output(type: float32[1,112455,85])一个输出，其前一个算子为Concat_2575：
-
-```shell
-atc --model=yolor_bs1_sim.onnx --framework=5 --output=yolor_bs1 --input_format=NCHW --input_shape="image:1,3,1344,1344" --log=info --soc_version=Ascend310 --out_nodes="Concat_2575:0" --buffer_optimize=off_optimize
-```
-
-
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用coco数据集，Label文件根据github提供链接下载并解压得到coco文件夹，**coco文件夹需在上一级目录**。图像github提供链接下载并解压得到val2017文件夹，**并将其移动至coco/images文件夹下**。
-
-### 4.2 数据集预处理
-1.预处理脚本yolor_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-
-```shell
-python yolor_preprocess.py --save_path ./val2017_bin --data ./coco.yaml
-```
-
-### 4.3 生成预处理数据集信息文件
-1.生成数据集信息文件脚本get_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-
-```shell
-python get_info.py bin ./val2017_bin ./yolor_prep_bin.info 1344 1344
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-
-
-
-
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-
-### 5.2 离线推理
-1.设置环境变量
-
-```
-source env.sh
-```
-
-或
-
-```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
-```
-2.将benchmark.x86_64放到当前目录下，执行离线推理，执行时使npu-smi info查看设备状态，确保device空闲
-
-```shell
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=yolor_bs1.om -input_text_path=./yolor_prep_bin.info -input_width=1344 -input_height=1344 -output_binary=true -useDvpp=False
-```
-## 6 评测结果
-
--   **[离线推理精度](#61-离线推理精度)**   
--   **[精度对比](#62-精度对比)**  
-
-### 6.1 离线推理精度
-
-
-调用yolor_postprocess.py：
-```shell
-python yolor_postprocess.py --data ./coco.yaml --img 1280 --batch 1 --conf 0.001 --iou 0.65 --npu 0 --name yolor_p6_val --names ./yolor/data/coco.names
-```
-最后一个参数为本次测试的名字，执行完后会打印出精度：
-
-```
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.526
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.709
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.577
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.521
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.705
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.573
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.370
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.571
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.659
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.392
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.655
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.714
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.577
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.754
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.839
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.568
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.648
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.388
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.649
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.711
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.579
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.748
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.830
 ```
-### 6.2 精度对比
-[官网精度](https://github.com/WongKinYiu/yolor/blob/main/README.md)
-
+对比官网精度：
 ```
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.52510
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.70718
@@ -261,50 +291,40 @@ python yolor_postprocess.py --data ./coco.yaml --img 1280 --batch 1 --conf 0.001
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.75337
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.84013
 ```
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-比较离线推理精读可知，精度下降在1个点之内，因此可视为精度达标
-
-
-
-## 7 性能对比
-
--   **[npu性能数据](#71-npu性能数据)**  
--   **[T4性能数据](#72-T4性能数据)** 
--   **[性能对比](#73-性能对比)**  
-
-### 7.1 npu性能数据
-
-batch1的性能：
- 测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
-
+T4执行推理。
 ```
-./benchmark.x86_64 -round=20 -om_path=yolor_bs1.om -device_id=0 -batch_size=1
+trtexec --onnx=yolor_bs1.onnx --fp16 --threads --workspace=50000
 ```
-执行20次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
-```
-[INFO] Dataset number: 19 finished cost 597.914ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_yolor_bs1_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 1.67129samples/s, ave_latency: 599.028ms
-----------------------------------------------------------------
-```
-Interface throughputRate: 1.6713 * 4 = 6.6852 即是batch1 310单卡吞吐率
+ -  参数说明：
+    -  --onnx：输入onnx模型。
+     -  --fp16：fp16 精度。
+     -  --threads： 启用多线程。
+     -  --workspace：工作区大小。 
+        
+获得T4推理性能。
 
-### 7.2 T4性能数据
+调用ACL接口推理计算，性能参考下列数据。
 
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务
+精度：
 
-batch1性能
+| Precision  | 310 |310P   |源码仓精度   |
+| --------- | ---------------- |---------------- |---------------- |
+|     AP      |      0.521            | 0.521 |    0.525 |
 
-```
-python onnx_infer.py yolor_bs1_sim.onnx
-```
 
-batch1 t4单卡吞吐率：6.24fps
+性能：
 
-### 7.3 性能对比
+| Throughput |310   | 310P | T4 | 310P/310 | 310P/T4 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |--------------- |
+|     bs1      |      32.333892           |      39.767756      |    32.60260        |        1.229909         | 1.219773  |
+|     bs4      |       31.728015           |      40.488616      |   36.14153         |       1.276116          | 1.120280  |
+|     bs8      |        31.810378          |     40.973069       |      34.11863      |         1.288041        | 1.200900  |
+|     最优batch      |       32.333892            |      40.973069      |    36.14153         |      1.288041           | 1.219773  |
 
-batch1：6.6852fps > 6.24fps
+最优batch：310P的最优batch性能 >=1.2倍310最优batch性能 ，性能达标
 
-310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率大，故310性能高于T4性能，性能达标。
+batch_size超过8，由于模型过大无法推理。
+
 

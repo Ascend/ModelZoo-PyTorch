@@ -212,7 +212,6 @@ pip install "git+https://github.com/open-mmlab/cocoapi.git#subdirectory=pycocoto
       1. 设置环境变量
       ```
       source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      export LD_LIBRARY_PATH=${ASCEND_HOME_PATH}/tools/aoe/lib64:$LD_LIBRARY_PATH 
       export TUNE_BANK_PATH=知识库保存路径
       ```
       2. 执行aoe命令

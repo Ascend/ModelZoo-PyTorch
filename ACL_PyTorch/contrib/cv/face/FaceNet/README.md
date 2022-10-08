@@ -40,7 +40,6 @@ facenet_for_ACL
 ├── FaceNet_preprocess.py         生成FaceNet预处理所需要的bin文件
 ├── FaceNet_postprocess.py        FaceNet推理结果后处理，计算预测精度
 ├── gen_dataset_info.py           生成info文件
-├── env.sh                   	  环境变量脚本文件
 ├── requirements.txt              项目依赖包清单
 ├── data                          数据集与网络结果输出		
 │   └── ..                        

@@ -47,6 +47,8 @@ import warnings
 import dllogger
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.optim as optim
 import yaml

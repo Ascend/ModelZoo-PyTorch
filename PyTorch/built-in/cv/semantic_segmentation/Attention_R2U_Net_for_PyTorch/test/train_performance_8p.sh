@@ -81,6 +81,7 @@ do
         --batch_size=$batch_size \
         --world_size=$RANK_SIZE \
         --result_path=$ckpt_path \
+        --loss-scale="dynamic" \
         --num_workers 128 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
@@ -97,7 +98,8 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep FPS|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 #打印，不需要修改
-echo "Final Performance images/sec : $FPS"
+FPS_8=`awk 'BEGIN{printf "%.2f\n", '${FPS}'*8}'`
+echo "Final Performance images/sec : $FPS_8"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"

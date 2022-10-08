@@ -1,450 +1,430 @@
-# 				BSN推理说明
+# BSN模型-推理指导
 
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-## 1、 环境说明
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-1、安装必要的依赖
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-```
-apex              0.1+ascend.20210930
-certifi           2021.10.8
-cycler            0.11.0
-decorator         5.1.0
-docutils          0.18
-flatbuffers       2.0
-future            0.18.2
-Geohash           1.0
-Hydra             2.5
-kiwisolver        1.3.2
-matplotlib        3.4.3
-mpmath            1.2.1
-numpy             1.21.0
-onnx              1.10.2
-onnxruntime       1.9.0
-pandas            1.3.4
-Pillow            8.4.0
-pip               21.3.1
-protobuf          3.19.1
-pyparsing         3.0.6
-python-dateutil   2.8.2
-pytz              2021.3
-scipy             1.7.2
-setuptools        58.0.4
-six               1.16.0
-sympy             1.9
-torch             1.5.0+ascend.post3.20210930
-typing-extensions 3.10.0.2
-wheel             0.37.0
-```
-
-2、获取开源代码
-
-直接从githup上git clone 可能无法clone成功，建议先把githup上的仓先导入到git,再clone
-
-```
-git clone https://github.com/wzmsltw/BSN-boundary-sensitive-network.pytorch
-```
-
-
-
-3、获取onnx_tools,优化TEM的onnx模型
-
-```
-git clone https://gitee.com/zheng-wengang1/onnx_tools
-```
-
-
-
-4、下载视频特征数据集
-
-请参考源代码仓
-
-5、代码目录
-
-```
-BSN                     #模型名称命名的文件夹 
-├── BSN-boundary-sensitive-network.pytorch   #BSN开源代码
-	└── data
-			├── activitynet_feature_cuhk
-				├── csv_mean_100			#下载数据特征集
-├── env.sh                      			#环境变量   
-├── BSN_tem_pth2onnx.py     				#tem模型转换脚本
-├── BSN_pem_pth2onnx.py     				#pem模型转换脚本
-├── BSN_tem_preprocess.py   				#tem模型前处理脚本
-├── BSN_pem_preprocess.py   				#pem模型前处理脚本
-├── gen_dataset_info.py         			#生成数据集info文件   
-├── BSN_tem_postprocess.py  				#tem模型后处理脚本
-├── BSN_pem_postprocess.py  				#pem模型后处理脚本
-├── BSN_eval.py  							#测试精度脚本
-├── TEM_onnx_conv1d2conv2d.py  				#tem模型onnx，conv1d算子转conv2d算子优化脚本
-├── requirements.txt            			#模型离线推理用到的所有且必要的依赖库  
-├── README.md                   			#模型离线推理说明README     
-├── modelzoo_level.txt          			#模型精度性能结果
-└── test  
-    ├── pth2om.sh  
-    ├── eval_acc_perf.sh  
-    ├── parse.py    
-```
-
-
-
-## 2、离线推理
-
-1、pth权重转onnx
-
-
-
-TEM的pth权重转onnx,参数pth_path为TEM模型权重文件所在位置，onnx_path为输出的onnx模型位置
-
-```
-python BSN_tem_pth2onnx.py --pth_path './tem_best.pth.tar' --onnx_path './BSN_tem.onnx'
-```
-
-tem-onnx模型优化,第一个参数为原本onnx模型位置，第二个参数为输出onnx模型
-
-```
-python TEM_onnx_conv1d2conv2d.py './BSN_tem.onnx' './BSN_tem1.onnx'
-```
-
-PEM的pth权重转onnx,参数pth_path为PEM模型权重文件所在位置，onnx_path为输出的onnx模型位置
-
-```
-python BSN_pem_pth2onnx.py --pth_path './pem_best.pth.tar' --onnx_path './BSN_pem.onnx'
-```
-
-
-
-2、onnx模型转om
-
-使用atc工具将onnx模型转为om模型，注意应当先设置环境变量
-
-```
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
-
-atc --framework=5 --model=BSN_tem1.onnx --output=BSN_tem_bs1 --input_format=ND --input_shape="video:1,400,100" --log=debug --soc_version=Ascend310
-
-atc --framework=5 --model=BSN_pem.onnx --output=BSN_pem_bs1 --input_format=ND --input_shape="video_feature:1,1000,32" --log=debug --soc_version=Ascend310
-```
-
-
-
-3、TEM推理
-
-运行预处理脚本,运行前确保你已经clone了开源代码，并下载数据特征集
-
-```
-python BSN_tem_preprocess.py
-```
-
-获取处理数据集信息，第一个参数为模型类型，第二个参数为特征文件位置，第三个参数为输出文件名，第四、五个参数为特征形状（400*100）
-
-```
-python gen_dataset_info.py tem /home/wch/BSN/BSN-TEM-preprocess/feature TEM-video-feature 400 100
-```
-
-使用benchmark工具进行推理,生成的数据文件会放在当前路径的result/dumpOutput_device0目录下
-
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=BSN_tem_bs1.om -input_text_path=./TEM-video-feature.info -input_width=400 -input_height=100 -output_binary=True -useDvpp=False
-```
-
-使用BSN_tem_postprocess.py进行tem后处理(tem的后处理与pem的前处理有关请按照顺序执行)
-
-```
-python BSN_tem_postprocess.py  --TEM_out_path ./result/dumpOutput_device0
-```
-
-
-
-4、PEM推理
-
-运行pem预处理脚本(pem的前处理与tem的后处理有关请按照顺序执行)
-
-```
-python BSN_pem_preprocess.py
-```
-
-获取处理数据集信息，第一个参数为模型类型，第二个参数为特征文件位置，第三个参数为输出文件名，第四、五个参数为特征形状（1000*32）
-
-```
-python get_info.py pem output/BSN-PEM-preprocess/feature PEM-video-feature 1000 32
-```
-
-使用benchmark工具进行推理,生成的数据文件会放在当前路径的result/dumpOutput_device1目录下
-
-```
-./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=1 -om_path=BSN_pem_bs1.om -input_text_path=./PEM-video-feature.info -input_width=1000 -input_height=32 -output_binary=True -useDvpp=False
-```
-
-运行后处理脚本,会在output目录下生成结果文件
-
-```
-python BSN_pem_postprocess.py --PEM_out_path result/dumpOutput_device1
-```
-
-
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-5、精度测试
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-原本代码仓的代码是python2的代码，在在使用前需要转为python3
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-```
-2to3 -w ./BSN-boundary-sensitive-network.pytorch/Evaluation/eval_proposal.py
-
-```
-
-精度测试
-
-```
-python BSN_eval.py
-```
-
-
-
-6、整体测试
-
-运行脚本，直接转om模型
-
-```
-bash ./test/pth2om.sh
-```
-
-运行脚本，进行离线推理,运行脚本前，请确保已经将源代码中使用的文件，转为python3
-
-```
-bash ./test/eval_acc_perf.sh
-```
-
-
-
-## 3 精度性能对比
-
-### 1、精度对比
-
-​	pth精度
-
-```
-Model   论文    			开源pth文件			离线推理精度
-BSN   	AR100：72.42      74.34				74.34
-```
-
-### 2、性能对比
-
-#### 2.1 npu性能数据
-
-tem bs1性能数据
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 180.879, latency: 106303
-[data read] throughputRate: 182.039, moduleLatency: 5.49332
-[preprocess] throughputRate: 181.865, moduleLatency: 5.49859
-[inference] throughputRate: 182, Interface throughputRate: 3275.55, moduleLatency: 0.561457
-[postprocess] throughputRate: 182.009, moduleLatency: 5.49425
-
------------------------------------------------------------
-```
-
-pem bs1性能数据
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 616.804, latency: 7665.32
-[data read] throughputRate: 1840.06, moduleLatency: 0.54346
-[preprocess] throughputRate: 1817.62, moduleLatency: 0.550169
-[inference] throughputRate: 1839.62, Interface throughputRate: 3874.46, moduleLatency: 0.469866
-[postprocess] throughputRate: 1839.86, moduleLatency: 0.543521
-
------------------------------------------------------------
-```
-
-tem单卡吞吐率：3275.55x4=13102.2
-
-pem单卡吞吐率：3874.46x4=15497.84
-
-BSN整体吞吐率为：1/（1/13102.2+1/15497.84）=7099.87
-
-
-
-tem bs16性能数据
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 143.161, latency: 134310
-[data read] throughputRate: 144.544, moduleLatency: 6.91832
-[preprocess] throughputRate: 144.393, moduleLatency: 6.92554
-[inference] throughputRate: 144.476, Interface throughputRate: 12277.9, moduleLatency: 0.570148
-[postprocess] throughputRate: 9.03906, moduleLatency: 110.631
-
------------------------------------------------------------
-```
-
-pem bs16性能数据
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 141.751, latency: 33354.2
-[data read] throughputRate: 145.216, moduleLatency: 6.88627
-[preprocess] throughputRate: 144.936, moduleLatency: 6.89961
-[inference] throughputRate: 145.023, Interface throughputRate: 18564.9, moduleLatency: 0.483157
-[postprocess] throughputRate: 9.10977, moduleLatency: 109.772
-
------------------------------------------------------------
-```
-
-tem单卡吞吐率：12277.9x4=49111.6
-
-pem单卡吞吐率：18564.9x4=74259.6
-
-BSN整体吞吐率为：1/（1/49111.6+1/74259.6）=29560.95
-
-#### 2.2 T4性能数据
-
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2 
-
-batch1性能：
-
-tem:
-
-```
-trtexec --onnx=BSN_tem.onnx --fp16 --shapes=video:1*400*100 --threads
-```
-
-
-
-```
-[11/23/2021-06:45:38] [I] GPU Compute
-[11/23/2021-06:45:38] [I] min: 0.045166 ms
-[11/23/2021-06:45:38] [I] max: 2.00708 ms
-[11/23/2021-06:45:38] [I] mean: 0.0565804 ms
-[11/23/2021-06:45:38] [I] median: 0.0568848 ms
-[11/23/2021-06:45:38] [I] percentile: 0.0620117 ms at 99%
-[11/23/2021-06:45:38] [I] total compute time: 2.47115 s
-```
-
-pem:
+  
 
-```
-trtexec --onnx=BSN_pem.onnx --fp16 --shapes=video:1*1000*32 --threads
-```
-
-
-
-```
-[11/19/2021-06:40:06] [I] GPU Compute
-[11/19/2021-06:40:06] [I] min: 0.0185547 ms
-[11/19/2021-06:40:06] [I] max: 1.26123 ms
-[11/19/2021-06:40:06] [I] mean: 0.0205523 ms
-[11/19/2021-06:40:06] [I] median: 0.0201416 ms
-[11/19/2021-06:40:06] [I] percentile: 0.0458527 ms at 99%
-[11/19/2021-06:40:06] [I] total compute time: 0.793032 s
-```
-
-
-
-tem单卡吞吐率：1000/0.215458=17674
-
-pem单卡吞吐率：1000/0.0205523=48656
 
-BSN单卡吞吐率：1000/（0.215458+0.0205523）=12965
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
+在视频局部，BSN 首先以高概率定位时间边界，然后直接将这些边界组合为提议。 在整体范围内，通过边界敏感提案功能，BSN 通过评估提案是否包含其区域内的动作的置信度来检索提案。
 
+- 参考论文：[Lin, Tianwei, et al. "Bsn: Boundary sensitive network for temporal action proposal generation." Proceedings of the European Conference on Computer Vision (ECCV). 2018.](http://arxiv.org/abs/1806.02964)
 
+参考实现：
 
-
-batch16性能：
-
-tem:
-
-```
-trtexec --onnx=BSN_tem.onnx --fp16 --shapes=video:16*400*100 --threads
-```
-
-
-
 ```
-[11/19/2021-06:37:12] [I] GPU Compute
-[11/19/2021-06:37:12] [I] min: 0.182129 ms
-[11/19/2021-06:37:12] [I] max: 0.252548 ms
-[11/19/2021-06:37:12] [I] mean: 0.219561 ms
-[11/19/2021-06:37:12] [I] median: 0.218262 ms
-[11/19/2021-06:37:12] [I] percentile: 0.245422 ms at 99%
-[11/19/2021-06:37:12] [I] total compute time: 1.5714 s
+url=https://github.com/wzmsltw/BSN-boundary-sensitive-network.pytorch
+branch=master
+commit_id=e50d12953ec51c128360181afe69db37298f30d2
 ```
 
-pem:
+适配昇腾 AI 处理器的实现：
 
 ```
-trtexec --onnx=BSN_pem.onnx --fp16 --shapes=video:16*1000*32 --threads
+url=https://gitee.com/ascend/ModelZoo-PyTorch
+tag=v.0.4.0
+code_path=ACL_PyTorch/contrib/cv/detection
 ```
 
+通过Git获取对应commit\_id的代码方法如下：
 
-
 ```
-[11/23/2021-06:51:29] [I] GPU Compute
-[11/23/2021-06:51:29] [I] min: 0.21167 ms
-[11/23/2021-06:51:29] [I] max: 2.40039 ms
-[11/23/2021-06:51:29] [I] mean: 0.24159 ms
-[11/23/2021-06:51:29] [I] median: 0.240479 ms
-[11/23/2021-06:51:29] [I] percentile: 0.25769 ms at 99%
-[11/23/2021-06:51:29] [I] total compute time: 2.08734 s
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
 ```
-
-tem单卡吞吐率：1000/（0.219561/16）=72872
-
-pem单卡吞吐率：1000/（0.24159/16）=66228
 
-BSN单卡吞吐率：1000/（（0.219561+0.0210533）/16）=34696
 
 
 
-#### 2.3 性能对比
+## 输入输出数据<a name="section540883920406"></a>
 
-batch1 :
+- 输入数据
 
-​	TEM
+  | 输入数据  | 数据类型 | 大小                  | 数据排布格式 |
+  | --------- | -------- | --------------------- | ------------ |
+  | TEM model | FLOAT32  | batchsize x 400 x 100 | NCHW         |
+  | PEM model | FLOAT32  | batchsize x 3 x 100   | ND           |
+  
+- 输出数据
 
-​		310:13102
+  | 输出数据  | 数据类型 | 大小                 | 数据排布格式 |
+  | --------- | -------- | -------------------- | ------------ |
+  | TEM model | FLOAT32  | batchsize x 3 x 100  | ND           |
+  | PEM model | FLOAT32  | batchsize x 1000 x 1 | ND           |
 
-​		T4:17674
 
-​	PEM:
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-​		310:15498
+- 该模型需要以下插件与驱动
 
-​		T4:48656
+  **表 1**  版本配套表
+  
+  | 配套                                                         | 版本                | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------------------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.15              | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2             | -                                                            |
+  | Python                                                       | 3.7.5               | -                                                            |
+  | PyTorch                                                      | 1.5.0               | -                                                            |
+  | apex                                                         | 0.1+ascend.20210930 | -                                                            |
+  | certifi                                                      | 2021.10.8           | -                                                            |
+  | cycler                                                       | 0.11.0              | -                                                            |
+  | decorator                                                    | 5.1.0               | -                                                            |
+  | docutils                                                     | 0.18                | -                                                            |
+  | flatbuffers                                                  | 2.0                 | -                                                            |
+  | future                                                       | 0.18.2              | -                                                            |
+  | Geohash                                                      | 1.0                 | -                                                            |
+  | Hydra                                                        | 2.5                 | -                                                            |
+  | kiwisolver                                                   | 1.3.2               | -                                                            |
+  | matplotlib                                                   | 3.4.3               | -                                                            |
+  | mpmath                                                       | 1.2.1               | -                                                            |
+  | numpy                                                        | 1.21.0              | -                                                            |
+  | onnx                                                         | 1.10.2              | -                                                            |
+  | onnxruntime                                                  | 1.9.0               | -                                                            |
+  | pandas                                                       | 1.3.4               | -                                                            |
+  | Pillow                                                       | 8.4.0               | -                                                            |
+  | pip                                                          | 21.3.1              | -                                                            |
+  | protobuf                                                     | 3.19.1              | -                                                            |
+  | pyparsing                                                    | 3.0.6               | -                                                            |
+  | python-dateutil                                              | 2.8.2               | -                                                            |
+  | pytz                                                         | 2021.3              | -                                                            |
+  | scipy                                                        | 1.7.2               | -                                                            |
+  | setuptools                                                   | 58.0.4              | -                                                            |
+  | six                                                          | 1.16.0              | -                                                            |
+  | sympy                                                        | 1.9                 | -                                                            |
+  | typing-extensions                                            | 3.10.0.2            | -                                                            |
+  | wheel                                                        | 0.37.0              | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |                     |                                                              |
 
-​	BSN:
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-​		7099.87<12965
+## 获取源码<a name="section4622531142816"></a>
 
-​		7099.87/12965=0.548
+1. 单击“立即下载”，下载源码包。
 
-batch16:
+2. 上传源码包到服务器任意目录并解压（如：/home/HwHiAiUser）。
 
-​	TEM:
+   ```
+   ├──test
+        ├──eval_acc_perf.sh     //验证精度、性能脚本
+        ├──pth2om.sh                //模型转换脚本
+        ├──parse.py             //输出保存的性能信息 
+   ├── gen_dataset_info.py         //用于获取二进制数据集信息的脚本 
+   ├── BSN_eval.py             //测试精度文件 
+   ├── BSN_pem_postprocess.py      //pem后处理文件
+   ├── BSN_tem_postprocess.py      //tem后处理文件
+   ├── BSN_pem_preprocess.py       //pem前处理文件
+   ├── BSN_tem_preprocess.py       //tem前处理文件
+   ├── BSN_tem_pth2onnx.py     //tem pth 转换为onnx文件
+   ├── BSN_pem_pth2onnx.py     //pem pth 转换为onnx文件
+   ├── REAME.md 
+   ```
 
-​			310: 49111.6
+3. 获取开源代码仓。
 
-​			t4:	72872
+   在已下载的源码包根目录下，执行如下命令。
 
-​	PEM:
+   ```
+   git clone https://github.com/wzmsltw/BSN-boundary-sensitive-network.pytorch   #获取开源代码仓
+   git clone https://gitee.com/zheng-wengang1/onnx_tools     #获取优化工具
+   ```
 
-​			310: 74259.6
 
-​			T4： 66228
 
-​	BSN:
+## 准备数据集<a name="section183221994411"></a>
 
-​		29560.95<34696
+1. 获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
 
-​		29560.95/34696=0.85
+   本模型支持csv_mean_100图片的验证集。请用户需自行获取csv_mean_100数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。
 
-在batch1，310性能是0.548倍T4性能；在batch16,310性能是0.85倍T4性能。
+   下载后将csv_mean_100放到开源仓代码目录，“./data/activitynet_feature_cuhk/”下
 
+   ```
+   ├── data
+         ├── activitynet_feature_cuhk
+               |--  csv_mean_100
+   ```
+
+   
+
+2. 数据预处理。
+
+   由于tem的后处理与pem的前处理有关，故pem的前处理置后执行。
+
+   ```
+   python3 BSN_tem_preprocess.py
+   ```
+
+   
+
+3. 生成数据集info文件。
+
+   生成bin文件的输入info文件。
+
+   使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用“gen_dataset_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“gen_dataset_info.py”脚本。
+
+   ```
+   python3 gen_dataset_info.py  tem ./output/BSN-TEM-preprocess/feature ./TEM-video-feature.info  400 100
+   ```
+
+   “tem”：生成的数据集文件格式。
+
+   “./output/BSN-TEM-preprocess/feature”：预处理后的数据文件的**相对路径**。
+
+   “./TEM-video-feature.info”：生成的数据集文件保存的路径。
+
+   运行成功后，在当前目录中生成“TEM-video-feature.info”。
+
+
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      从源码包中获取权重文件：“model_final_f10217.pkl”。
+
+   2. 导出onnx文件
+
+      1. 代码转换为静态的onnx，需在代码中修改batchsize大小。
+
+         a.执行命令编辑脚本。
+
+         ```
+         BSN_tem_pth2onnx.py
+         #修改dummy_input = torch.randn(align_size,400,100) 中第一个参数为需要的batchsize
+         执行:wq保存退出编辑。
+         BSN_pem_pth2onnx.py
+         #修改dummy_input = torch.randn(align_size,1000,32) 中第一个参数为需要的batchsize
+         执行:wq保存退出编辑。
+         
+         ```
+      
+      2. 使用“pem_best.pth.tar”和“tem_best.pth.tar”导出onnx文件
+      
+         运行“BSN_tem_pth2onnx.py”脚本。
+      
+         ```
+         python3 BSN_tem_pth2onnx.py --pth_path='${权重文件路径}' --onnx_path='${onnx文件的存放路径}'
+         ```
+      
+      3. 优化onnx文件
+      
+         ```
+         python3 TEM_onnx_conv1d2conv2d.py '${onnx文件的存放路径}' '${优化后的onnx文件存放路径}'
+         ```
+      
+      4. 运行“BSN_pem_pth2onnx.py”脚本。
+      
+         ```
+         python3 BSN_pem_pth2onnx.py --pth_path='${权重文件路径}' --onnx_path='${onnx文件的存放路径}'
+         ```
+      
+      5. 使用ATC工具将ONNX模型转OM模型。
+      
+         1. 配置环境变量。
+      
+            ```
+            source /usr/local/Ascend/ascend-toolkit/set_env.sh
+            ```
+      
+            > **说明：** 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 (推理)](https://gitee.com/link?target=https%3A%2F%2Fsupport.huawei.com%2Fenterprise%2Fzh%2Fascend-computing%2Fcann-pid-251168373%3Fcategory%3Ddeveloper-documents%26subcategory%3Dauxiliary-development-tools)》。
+      
+         2. 执行命令查看芯片名称（${chip_name}）。
+      
+            ```
+            npu-smi info
+            #该设备芯片名为Ascend310P3 （自行替换）
+            回显如下：
+            +-------------------+-----------------+------------------------------------------------------+
+            | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+            | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+            +===================+=================+======================================================+
+            | 0       310P3     | OK              | 15.8         42                0    / 0              |
+            | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+            +===================+=================+======================================================+
+            | 1       310P3     | OK              | 15.4         43                0    / 0              |
+            | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+            +===================+=================+======================================================+
+            ```
+      
+            
+      
+         3. 执行ACT命令
+         
+            
+         
+            ```
+            atc --model=BSN_tem1_bs1.onnx --framework=5 --output=BSN_tem_bs1 --input_format=ND --input_shape="video:1,400,100"  --log=debug --soc_version=${chip_name}
+            atc --model=BSN_pem_bs1.onnx --framework=5 --output=BSN_pem_bs1 --input_format=ND --input_shape="video_feature:1,1000,32"  --log=debug --soc_version=${chip_name}
+            ```
+         
+            - 参数说明：
+              
+                 - --model：为ONNX模型文件。
+                 - --framework：5代表ONNX模型。
+                 - --output：输出的OM模型。
+                 - --input_format：输入数据的格式。
+                 - --input_shape：输入数据的shape。
+                 - --log：日志级别。
+              - --soc_version：处理器型号。
+              
+              运行成功后生成“BSN_tem_bs1.om”和“BSN_pem_bs1.om”模型文件。
+
+2. 开始推理验证
+
+   a. 使用ais-infer工具进行推理。
+
+   执行命令增加工具可执行权限，并根据OS架构选择工具
+
+   ```
+   chmod u+x 
+   ```
+
+   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   b. 执行推理。
+
+   真实数据推理：
+   
+   ```
+    python3.7 /home/wt/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model BSN_tem_bs1.om --batchsize 1 --input="./output/BSN-TEM-preprocess/feature/"  --output ./ais_result --output_dirname result_tem_bs1 
+   ```
+   
+   
+   
+   - 参数说明：
+     - model：om文件路径。
+     - input：输入数据。
+     - batchsize：batchsize大小。
+     - output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
+     - --output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中
+   
+   推理后的输出默认在当前目录result下。
+   
+   > **说明：** 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+   
+   c. 数据后处理。
+   
+   运行“BSN_tem_postprocess.py”脚本进行TEM模型后处理
+   
+   ```
+    python3.7 BSN_tem_postprocess.py --TEM_out_path ./ais_result/result_tem_bs1/
+   ```
+   
+   由于tem的后处理与pem的前处理有关，故pem的前处理置后执行。
+   
+   ```
+    python3 BSN_pem_preprocess.py
+   ```
+   
+   使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用“gen_dataset_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“gen_dataset_info.py”脚本。
+   
+   ```
+   python3 gen_dataset_info.py  pem ./output/BSN-PEM-preprocess/feature ./PEM-video-feature.info  1000 32
+   ```
+   
+   “pem”：生成的数据集文件格式。
+   
+   “./output/BSN-PEM-preprocess/feature”：预处理后的数据文件的**相对路径**。
+   
+   “./PEM-video-feature.info”：生成的数据集文件保存的路径。
+   
+   运行成功后，在当前目录中生成“PEM-video-feature.info”。
+   
+   真实数据推理：
+   
+   ```
+   python3.7 /home/wt/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./ais_result --output_dirname result_pem_bs1 
+   ```
+   
+   - 参数说明：
+     - model：om文件路径。
+     - input：输入数据。
+     - batchsize：batchsize大小。
+     - output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
+     - --output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中
+   
+   运行“BSN_pem_postprocess.py”脚本进行PEM模型后处理
+   
+   ```
+     python3.7 BSN_pem_postprocess.py --PEM_out_path ./ais_result/result_pem_bs1/
+   ```
+   
+   d. 精度验证。
+   
+   将python2的代码，使用前转为python3转换脚本。
+   
+   ```
+      2to3 -w ./BSN-boundary-sensitive-network.pytorch/Evaluation/eval_proposal.py
+   ```
+   
+      ​	运行“BSN_eval.py”脚本，测试模型精度。
+   
+   ```
+      python3 BSN_eval.py
+   ```
+   
+      原模型精度74.34%
+
+
+
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集       | 精度          | 性能     |
+| -------- | ---------- | ------------ | ------------- | -------- |
+| 310      | 1          | csv_mean_100 | AR100：74.34% | 6962.63  |
+| 310      | 4          | csv_mean_100 | AR100：74.34% | 20458.91 |
+| 310      | 8          | csv_mean_100 | AR100：74.34% | 30193.26 |
+| 310      | 16         | csv_mean_100 | AR100：74.34% | 36202.23 |
+| 310      | 32         | csv_mean_100 | AR100：74.34% | 35252.63 |
+| 310      | 64         | csv_mean_100 | AR100：74.34% | 37288.98 |
+| 310P     | 1          | csv_mean_100 | AR100：74.36% | 4009.57  |
+| 310P     | 4          | csv_mean_100 | AR100：74.36% | 11429.75 |
+| 310P     | 8          | csv_mean_100 | AR100：74.36% | 18465.52 |
+| 310P     | 16         | csv_mean_100 | AR100：74.36% | 24868.53 |
+| 310P     | 32         | csv_mean_100 | AR100：74.36% | 26183.07 |
+| 310P     | 64         | csv_mean_100 | AR100：74.36% | 27213.25 |
+| T4       | 1          | csv_mean_100 |               | 11439.02 |
+| T4       | 4          | csv_mean_100 |               | 24649.47 |
+| T4       | 8          | csv_mean_100 |               | 30594.96 |
+| T4       | 16         | csv_mean_100 |               | 34840.02 |
+| T4       | 32         | csv_mean_100 |               | 37340.3  |
+| T4       | 64         | csv_mean_100 |               | 41073.45 |
+
+**310P吞吐率计算公式（以bs1为例）**
+
+TEM性能数据：6049.12
+
+PEM性能数据：9152.86
+
+TEM吞吐率：6049.12
+
+PEM吞吐率：9152.86
+
+BSN整体吞吐率为：1/(1/6049.12+1/9152.86)=3642.08

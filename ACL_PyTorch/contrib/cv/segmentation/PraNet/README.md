@@ -64,7 +64,7 @@ bash test/eval_acc_perf.sh --datasets_path=/root/datasets/Kvasir
    1. 配置环境变量
 
       ```
-      set env.sh 
+      source /usr/local/Ascend/ascend-toolkit/set_env.sh
       ```
       
    2. 执行ATC命令。

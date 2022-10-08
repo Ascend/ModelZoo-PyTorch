@@ -117,6 +117,7 @@ def train_p(net, data_loader, loss_dict, optimizer, scheduler, logger, epoch, me
             print("Epoch: " + str(epoch) + " FPS = " + str(a / (count - 5)))
     else:
         for b_idx, data_label in enumerate(progress_bar):
+            t_data_0 = time.time()        
             reset_metrics(metric_dict)
             global_step = epoch * len(data_loader) + b_idx
 
@@ -142,7 +143,6 @@ def train_p(net, data_loader, loss_dict, optimizer, scheduler, logger, epoch, me
             if hasattr(progress_bar, 'set_postfix'):
                 kwargs = {me_name: '%.3f' % me_op.get() for me_name, me_op in zip(metric_dict['name'], metric_dict['op'])}
                 progress_bar.set_postfix(loss='%.3f' % float(loss), **kwargs)
-            t_data_0 = time.time()
         if epoch > 0:
             print("Epoch: " + str(epoch) + " FPS = " + str(a / (count - 4)))
 

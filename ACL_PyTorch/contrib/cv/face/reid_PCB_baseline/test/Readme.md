@@ -62,8 +62,6 @@
 10.310上执行，执行时确保device空闲 
 
     cd modelzoo/contrib/ACL_PyTorch/Research/cv/face/reid_PCB_baseline/test
-    dos2unix *.sh
-    dos2unix ../env.sh
-    source ../env.sh
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
     sudo sh pth2om.sh 
     sudo sh eval_acc_perf.sh 

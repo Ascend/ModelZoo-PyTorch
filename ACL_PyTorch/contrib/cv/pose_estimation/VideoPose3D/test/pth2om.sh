@@ -18,7 +18,7 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf vp3d_seq6115.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=vp3d.onnx --output=vp3d_seq6115 --input_format=NCHW --input_shape="2d_poses:2,6115,17,2" --log=debug --soc_version=Ascend310
 
 if [ -f "vp3d_seq6115.om" ]; then

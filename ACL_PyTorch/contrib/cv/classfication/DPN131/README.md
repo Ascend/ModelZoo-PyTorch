@@ -104,9 +104,9 @@ python3.7 dpn131_pth2onnx.py ./dpn131-7af84be88.pth dpn131.onnx
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
+1.设置环境变量，请以实际安装环境配置环境变量。
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ```
@@ -150,9 +150,9 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./dpn131_prep_bin.info 224 224
 
 benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ### 5.2 离线推理
-1.设置环境变量
+1.设置环境变量，请以实际安装环境配置环境变量。
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```

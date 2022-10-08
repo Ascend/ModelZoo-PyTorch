@@ -99,7 +99,7 @@ parser.add_argument('--apex-opt-level', default='O1', type=str,
                     help='For apex mixed precision training'
                          'O0 for FP32 training, O1 for mixed precision training.'
                          'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet')
-parser.add_argument('--loss-scale-value', default='dynamic', type=str,
+parser.add_argument('--loss-scale-value', default=1024., type=float,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--seed',
                     default=1,
@@ -287,7 +287,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
+        num_workers=args.workers, pin_memory=False, sampler=train_sampler, drop_last=True)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
