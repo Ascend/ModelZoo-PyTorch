@@ -55,7 +55,8 @@ def setup_model():
     #assert cfg.NUM_GPUS <= torch.cuda.device_count(), err_str
     assert cfg.NUM_GPUS <= torch.npu.device_count(), err_str   
     cur_device = torch.npu.current_device()
-    model = model.to(cur_device)
+    loc = "npu:{}".format(cur_device)
+    model = model.to(loc)
     optimizer = optim.construct_optimizer(model)
     model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale="dynamic")
     if cfg.NUM_GPUS > 1:

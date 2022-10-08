@@ -107,7 +107,7 @@ def get_Acc(bin_path, label, batch_size):
     for index in range(total_img):
         index += 1
 
-        preds = np.fromfile('{}/test_{}_1.bin'.format(bin_path, index), np.float32).reshape(26, -1, 37)
+        preds = np.fromfile('{}/test_{}_0.bin'.format(bin_path, index), np.float32).reshape(26, -1, 37)
         preds = torch.from_numpy(preds)
         # print("preds.shape:", preds.shape)
         preds_size = torch.LongTensor([preds.size(0)] * batch_size)
@@ -133,6 +133,6 @@ def get_Acc(bin_path, label, batch_size):
 
 
 if __name__ == '__main__':
-    bin_path = 'result/dumpOutput_device1/'
+    bin_path = './result'
     label = './label.txt'
     get_Acc(bin_path, label, 1)

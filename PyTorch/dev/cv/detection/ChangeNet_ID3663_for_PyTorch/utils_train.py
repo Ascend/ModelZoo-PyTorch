@@ -38,7 +38,6 @@ def validation(model, val_loader, criterion, epoch, writer, device):
     model.eval()
 
     running_loss = 0.0
-    # running_corrects = 0
     list_dice_val = []
 
     # Iterate over data.
@@ -66,10 +65,8 @@ def validation(model, val_loader, criterion, epoch, writer, device):
 
         # statistics
         running_loss += loss.item()
-        # running_corrects += torch.sum(preds == labels.data)
 
     epoch_loss = running_loss / len(val_loader)
-    # epoch_acc = running_corrects.double() / len(val_loader.dataset)
     epoch_acc = np.mean(list_dice_val)
 
     print('val Loss: {:.4f} Acc: {:.4f}'.format(epoch_loss, epoch_acc))
@@ -135,7 +132,6 @@ def train_model(model, dataloaders, criterion, optimizer, sc_plt, writer, device
             end_time = time.perf_counter()
             # statistics
             running_loss += loss.item()
-            # running_corrects += torch.sum(preds == labels.data)
             iterations += 1
             if args.local_rank in [0, -1] and iterations == len(train_loader) * (epoch+1) -1:
                 step_time = end_time - start_time
@@ -147,7 +143,7 @@ def train_model(model, dataloaders, criterion, optimizer, sc_plt, writer, device
                 writer.add_images('/run/labels', labels[0:num_imgs].unsqueeze(1), iterations)
 
         epoch_loss = running_loss / len(train_loader)
-        # epoch_acc = running_corrects.double() / len(train_loader)
+        
 
         # Update Scheduler if training loss doesn't change for patience(2) epochs
         sc_plt.step(epoch_loss)
@@ -159,7 +155,14 @@ def train_model(model, dataloaders, criterion, optimizer, sc_plt, writer, device
                 curr_learning_rate = param_group['lr']
                 writer.add_scalar('epoch/learning_rate_train', curr_learning_rate, epoch)
 
-            val_epoch_acc = validation(model, val_loader, criterion, epoch, writer, device)
+            # DTS2022071810333
+            if args.local_rank == -1:
+                val_epoch_acc = validation(model, val_loader, criterion, epoch, writer, device)
+            else:
+                save_pre_require_forward_param_sync_flag = model.require_forward_param_sync
+                model.require_forward_param_sync = False
+                val_epoch_acc = validation(model, val_loader, criterion, epoch, writer, device)
+                model.require_forward_param_sync = save_pre_require_forward_param_sync_flag
             # deep copy the model and save if accuracy is better
             if val_epoch_acc > best_acc:
                 best_acc = val_epoch_acc

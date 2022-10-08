@@ -1,4 +1,6 @@
+onnx==1.10.2
 torch==1.7.0
 torchvision==0.8.0
-tqdm
-onnx-simplifier
+scipy==1.7.2
+numpy==1.21.4
+tqdm==4.64.1

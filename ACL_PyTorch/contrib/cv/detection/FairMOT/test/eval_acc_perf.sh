@@ -24,7 +24,6 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-# source ../env.sh
 rm -rf result
 ./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=fairmot_bs1.om -input_text_path=seq.info -input_width=1088 -input_height=608 -output_binary=True -useDvpp=False
 mv result/dumpOutput_device0 result/dumpOutput_device0_bs1

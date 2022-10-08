@@ -97,7 +97,7 @@ python3 RepVGG_pth2onnx.py PepVGG-A0-train.pth RepVGG.onnx
 #### 4.2.1 设置环境变量
 
 ```shell
-source ${HOME}/ascend-toolkit/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 说明
@@ -133,8 +133,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 设置环境变量
 
 ```shell
-source ${HOME}/ascend-toolkit/set_env.sh
-
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 说明

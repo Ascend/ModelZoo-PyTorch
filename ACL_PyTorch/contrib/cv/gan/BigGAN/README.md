@@ -115,7 +115,7 @@ python3.7 -m onnxsim './biggan.onnx' './biggan_sim_bs1.onnx' --input-shape "nois
 2. 设置环境变量
 
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 3. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
@@ -172,7 +172,7 @@ msame模型推理工具，其输入是om模型以及模型所需要的输入bin�
 ### <a name="52">5.2 离线推理</a>
 1. 设置环境变量
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2. 执行离线推理
 运行如下命令进行离线推理：

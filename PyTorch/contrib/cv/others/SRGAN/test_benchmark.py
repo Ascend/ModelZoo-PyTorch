@@ -54,13 +54,13 @@ MODEL_NAME = opt.model_name
 
 results = {'Set5': {'psnr': [], 'ssim': []}, 'Set14': {'psnr': [], 'ssim': []}, 'BSD100': {'psnr': [], 'ssim': []},
            'Urban100': {'psnr': [], 'ssim': []}, 'SunHays80': {'psnr': [], 'ssim': []}}
-# ´´½¨Ä£ĞÍ
+# åˆ›å»ºæ¨¡å‹
 if opt.use_test_code:
     from model_test import Generator
 else:
     from model import Generator
 model = Generator(UPSCALE_FACTOR).eval()
-# Ñ¡ÔñÄ£ĞÍÒÔ¼°ÑµÁ·Éè±¸
+# é€‰æ‹©æ¨¡å‹ä»¥åŠè®­ç»ƒè®¾å¤‡
 if opt.use_npu:
     import torch.npu
     if torch.npu.is_available():
@@ -73,7 +73,7 @@ else:
 print(f'use {device} to run benchmark.')
 
 model.to(device)
-# »ñÈ¡Ä£ĞÍµÄÂ·¾¶
+# è·å–æ¨¡å‹çš„è·¯å¾„
 root_dir = opt.output_dir
 if not root_dir.endswith('/'):
     root_dir = root_dir + '/'
@@ -91,7 +91,7 @@ if not os.path.exists(out_path):
 with torch.no_grad():
     for image_name, lr_image, hr_restore_img, hr_image in test_loader:
         image_name = image_name[0]
-        # ÅĞ¶ÏÊÇ·ñÌø¹ı±¾´ÎÑ­»·
+        # åˆ¤æ–­æ˜¯å¦è·³è¿‡æœ¬æ¬¡å¾ªç¯
         if opt.only_set5 and image_name.split('_')[0] != 'Set5':
             continue
         # lr_image = Variable(lr_image, volatile=True)
@@ -102,7 +102,7 @@ with torch.no_grad():
         sr_image = model(lr_image)
         mse = ((hr_image - sr_image) ** 2).data.mean()
         psnr = 10 * log10(1 / mse)
-        ssim = pytorch_ssim.ssim(sr_image, hr_image).item()   # ½«ËğÊ§µÄtensorÀàĞÍ×ª»»ÎªÖµÀàĞÍ
+        ssim = pytorch_ssim.ssim(sr_image, hr_image).item()   # å°†æŸå¤±çš„tensorç±»å‹è½¬æ¢ä¸ºå€¼ç±»å‹
 
         test_images = torch.stack(
             [display_transform()(hr_restore_img.squeeze(0)), display_transform()(hr_image.data.cpu().squeeze(0)),

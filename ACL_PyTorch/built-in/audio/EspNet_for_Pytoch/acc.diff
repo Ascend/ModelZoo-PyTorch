@@ -31,7 +31,7 @@ index d487380bd..951d04a89 100644
                      else [feat[idx][0] for idx in range(model.num_encs)]
                  )
                  if args.streaming_mode == "window" and args.num_encs == 1:
-+                    print("wwwww")
++                    #
                      logging.info(
                          "Using streaming recognizer with window size %d frames",
                          args.streaming_window,
@@ -39,7 +39,7 @@ index d487380bd..951d04a89 100644
                      logging.info("Offline attention decoder finished")
                      nbest_hyps = se2e.retrieve_recognition()
                  elif args.streaming_mode == "segment" and args.num_encs == 1:
-+                    print("kkkkkk")
++                    #
                      logging.info(
                          "Using streaming recognizer with threshold value %d",
                          args.streaming_min_blank_dur,
@@ -47,10 +47,10 @@ index d487380bd..951d04a89 100644
                                  nbest_hyps[n]["yseq"].extend(hyps[n]["yseq"])
                                  nbest_hyps[n]["score"] += hyps[n]["score"]
                  elif hasattr(model, "is_transducer"):
-+                    print("is_transducer")
++                    #
                      nbest_hyps = model.recognize(feat, beam_search_transducer)
                  else:
-+                    print("no_is_transducer")
++                    #
                      nbest_hyps = model.recognize(
                          feat, args, train_args.char_list, rnnlm
                      )
@@ -65,13 +65,13 @@ index d487380bd..951d04a89 100644
                                  nbest_hyps[n]["yseq"].extend(hyps[n]["yseq"])
                                  nbest_hyps[n]["score"] += hyps[n]["score"]
                      nbest_hyps = [nbest_hyps]
-+                    print("gggg")
++                    #
                  else:
                      nbest_hyps = model.recognize_batch(
                          feats, args, train_args.char_list, rnnlm=rnnlm
                      )
 -
-+                    print("hhhh")
++                    #
                  for i, nbest_hyp in enumerate(nbest_hyps):
                      name = names[i]
                      new_js[name] = add_results_to_json(
@@ -186,8 +186,8 @@ index 6c6d4ce11..dc150b4a5 100644
 +            total_t += exe_t
 +            enc = torch.from_numpy(enc[0]).squeeze(0)
 +            enc = enc[:real_shape[str(ori_length)], :]
-+            print("enc.shape:", enc.shape)
-+            print("exe_t:", exe_t)
++            #print("enc.shape:", enc.shape)
++            #print("exe_t:", exe_t)
 +
 +            #enc = model.encode(torch.as_tensor(feat).to(device=device, dtype=dtype))
              nbest_hyps = beam_search(
@@ -210,7 +210,7 @@ index 3275ecf22..5d32a5066 100755
          if args.backend == "chainer":
              from espnet.asr.chainer_backend.asr import recog
 -
-+            print(11111)
++            #
              recog(args)
          elif args.backend == "pytorch":
              if args.num_encs == 1:
@@ -219,7 +219,7 @@ index 3275ecf22..5d32a5066 100755
 -                    from espnet.asr.pytorch_backend.recog import recog_v2
  
 +                    from espnet.asr.pytorch_backend.recog import recog_v2
-+                    print(222222)
++                    #
                      recog_v2(args)
                  else:
                      from espnet.asr.pytorch_backend.asr import recog
@@ -227,7 +227,7 @@ index 3275ecf22..5d32a5066 100755
                          raise NotImplementedError(
                              f"`--dtype {args.dtype}` is only available with `--api v2`"
                          )
-+                    print(3333)
++                    #
                      recog(args)
              else:
                  if args.api == "v2":
@@ -236,7 +236,7 @@ index 3275ecf22..5d32a5066 100755
                  else:
                      from espnet.asr.pytorch_backend.asr import recog
 -
-+                    print(44444)
++                    #
                      recog(args)
          else:
              raise ValueError("Only chainer and pytorch are supported.")
@@ -244,7 +244,7 @@ index 3275ecf22..5d32a5066 100755
          if args.backend == "pytorch":
              from espnet.asr.pytorch_backend.asr_mix import recog
 -
-+            print(555555)
++            #
              recog(args)
          else:
              raise ValueError("Only pytorch is supported.")

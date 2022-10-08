@@ -113,7 +113,7 @@ parser.add_argument('--dist-backend', default='hccl', type=str,
                     help='distributed backend')
 
 ## for ascend 910
-parser.add_argument('--device_id', default=5, type=int, help='device id')
+parser.add_argument('--device_id', default=0, type=int, help='device id')
 
 args = parser.parse_args()
 print(args)

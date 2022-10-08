@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import math
 import os
 import random
@@ -10,7 +24,7 @@ from torch.utils.data import DistributedSampler as _DistributedSampler
 
 def setup_seed(seed, cuda_deterministic=True):
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    torch.npu.manual_seed_all(seed)
     np.random.seed(seed)
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -42,7 +56,7 @@ def get_dist_info():
     return rank, world_size
 
 
-def sync_random_seed(seed=None, device="cuda"):
+def sync_random_seed(seed=None, device="npu"):
     """Make sure different ranks share the same seed.
     All workers must call this function, otherwise it will deadlock.
     This method is generally used in `DistributedSampler`,
@@ -56,7 +70,7 @@ def sync_random_seed(seed=None, device="cuda"):
     Args:
         seed (int, Optional): The seed. Default to None.
         device (str): The device where the seed will be put on.
-            Default to 'cuda'.
+            Default to 'npu'.
     Returns:
         int: Seed to be used.
     """

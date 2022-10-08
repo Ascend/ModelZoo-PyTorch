@@ -23,7 +23,7 @@ def postProcesss(result_path):
     labels = []
     for i in range(len(bin_list)):
         bin_path = os.path.join(mulu_result_path, bin_list[i])
-        label = bin_list[i].split('_')[1:-2]
+        label = bin_list[i].split('_')[1:-1]
 
         if len(label)==1:
             output = np.loadtxt(bin_path)

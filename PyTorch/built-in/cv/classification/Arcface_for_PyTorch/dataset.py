@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numbers
 import os
 import queue as Queue
@@ -84,7 +98,7 @@ class BackgroundGenerator(threading.Thread):
         self.start()
 
     def run(self):
-        torch.cuda.set_device(self.local_rank)
+        torch.npu.set_device(self.local_rank)
         for item in self.generator:
             self.queue.put(item)
         self.queue.put(None)
@@ -106,7 +120,7 @@ class DataLoaderX(DataLoader):
 
     def __init__(self, local_rank, **kwargs):
         super(DataLoaderX, self).__init__(**kwargs)
-        self.stream = torch.cuda.Stream(local_rank)
+        self.stream = torch.npu.Stream(local_rank)
         self.local_rank = local_rank
 
     def __iter__(self):
@@ -119,12 +133,12 @@ class DataLoaderX(DataLoader):
         self.batch = next(self.iter, None)
         if self.batch is None:
             return None
-        with torch.cuda.stream(self.stream):
+        with torch.npu.stream(self.stream):
             for k in range(len(self.batch)):
                 self.batch[k] = self.batch[k].to(device=self.local_rank, non_blocking=True)
 
     def __next__(self):
-        torch.cuda.current_stream().wait_stream(self.stream)
+        torch.npu.current_stream().wait_stream(self.stream)
         batch = self.batch
         if batch is None:
             raise StopIteration
@@ -232,8 +246,8 @@ class DALIWarper(object):
 
     def __next__(self):
         data_dict = self.iter.__next__()[0]
-        tensor_data = data_dict['data'].cuda()
-        tensor_label: torch.Tensor = data_dict['label'].cuda().long()
+        tensor_data = data_dict['data'].npu()
+        tensor_label: torch.Tensor = data_dict['label'].npu().long()
         tensor_label.squeeze_()
         return tensor_data, tensor_label
 

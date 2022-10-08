@@ -57,6 +57,8 @@ from model import ED
 from net_params import convlstm_encoder_params, convlstm_decoder_params, convgru_encoder_params, convgru_decoder_params
 from data.mm import MovingMNIST
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 from torch.optim import lr_scheduler
 import torch.optim as optim

@@ -60,7 +60,7 @@ def accuracy(output, target, topk=1):
 
 def file_tensor(file_num):
     """txt_file data to tensor"""
-    filename = "Simclr_prep_" + str(file_num) + "_1.txt"
+    filename = "Simclr_prep_" + str(file_num) + "_0.txt"
     filepath = os.path.join(datadir, filename)
     l = np.loadtxt(filepath, dtype=np.float32)
     dim_res = np.array(l)

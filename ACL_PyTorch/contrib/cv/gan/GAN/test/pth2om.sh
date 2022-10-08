@@ -8,7 +8,7 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf GAN_bs1.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export REPEAT_TUNE=True
 atc --model=GAN.onnx --framework=5 --output=GAN_bs1 --input_format=NCHW --input_shape="Z:1,100" --log=error --soc_version=Ascend310 --auto_tune_mode="RL,GA"
 

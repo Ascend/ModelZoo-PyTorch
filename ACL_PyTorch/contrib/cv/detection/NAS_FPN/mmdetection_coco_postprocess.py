@@ -14,6 +14,7 @@
 
 import os
 import numpy as np
+import json
 import argparse
 import cv2
 
@@ -32,7 +33,7 @@ CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
             'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
             'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
-def coco_postprocess(bbox: np.ndarray, image_size, 
+def coco_postprocess(bbox: np.ndarray, image_size,
                         net_input_width, net_input_height):
     """
     This function is postprocessing for FasterRCNN output.
@@ -84,8 +85,8 @@ if __name__ == '__main__':
     parser.add_argument("--net_input_height", default=640)
     parser.add_argument("--prob_thres", default=0.05)
     parser.add_argument("--ifShowDetObj", action="store_true", help="if input the para means True, neither False.")
+    parser.add_argument("--is_ais_infer", action="store_true")
     flags = parser.parse_args()
-    print(flags.ifShowDetObj, type(flags.ifShowDetObj))
     # generate dict according to annotation file for query resolution
     # load width and height of input images
     img_size_dict = dict()
@@ -105,22 +106,44 @@ if __name__ == '__main__':
     os.makedirs(det_results_path, exist_ok=True)
     total_img = set([name[:name.rfind('_')]
                      for name in os.listdir(bin_path) if "bin" in name])
+
+    # convert ais_infer result name to original bin_file name
+    if flags.is_ais_infer:
+        name_dic = dict()
+        with open(os.path.join(bin_path, "sumary.json"), 'r') as f:
+            sumary = json.load(f)
+            print(type(sumary))
+            print(type(sumary["filesinfo"]))
+        for value in sumary["filesinfo"].values():
+            img_name = value["infiles"][0].split("/")[-1].split(".")[0]
+            out_name_0 = value["outfiles"][0].split("/")[-1]
+            out_name_0 = out_name_0[:out_name_0.rfind('_')]
+            out_name_1 = value["outfiles"][1].split("/")[-1]
+            out_name_1 = out_name_1[:out_name_1.rfind('_')]
+            name_dic[out_name_1] = img_name
+            name_dic[out_name_0] = img_name
+            print(out_name_0, ", ", out_name_1, ",", img_name)
+
     for bin_file in sorted(total_img):
         path_base = os.path.join(bin_path, bin_file)
         # load all detected output tensor
         res_buff = []
         for num in range(1, flags.net_out_num + 1):
+            if flags.is_ais_infer:
+                    num -= 1
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if num == 1:
+                if flags.is_ais_infer and num==0 or not flags.is_ais_infer and num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
-                elif num == 2:
+                elif flags.is_ais_infer and num==1 or not flags.is_ais_infer and num == 2:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     buf = np.reshape(buf, [100, 1])
                 res_buff.append(buf)
             else:
                 print("[ERROR] file not exist", path_base + "_" + str(num) + ".bin")
         res_tensor = np.concatenate(res_buff, axis=1)
+        if flags.is_ais_infer:
+            bin_file = name_dic[bin_file]
         current_img_size = img_size_dict[bin_file]
         print("[TEST]---------------------------concat{} imgsize{}".format(len(res_tensor), current_img_size))
         predbox = coco_postprocess(res_tensor, current_img_size, flags.net_input_width, flags.net_input_height)
@@ -141,12 +164,11 @@ if __name__ == '__main__':
             det_results_str += "{} {} {} {} {} {}\n".format(class_name, str(predbox[idx][4]), predbox[idx][0],
                                                             predbox[idx][1], predbox[idx][2], predbox[idx][3])
             if flags.ifShowDetObj == True:
-                imgCur=cv2.rectangle(imgCur, (int(predbox[idx][0]), int(predbox[idx][1])), 
+                imgCur=cv2.rectangle(imgCur, (int(predbox[idx][0]), int(predbox[idx][1])),
                                     (int(predbox[idx][2]), int(predbox[idx][3])), (0,255,0), 1)
-                imgCur = cv2.putText(imgCur, class_name+'|'+str(predbox[idx][4]), 
+                imgCur = cv2.putText(imgCur, class_name+'|'+str(predbox[idx][4]),
                                     (int(predbox[idx][0]), int(predbox[idx][1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-                  # 图像，文字内容， 坐标 ，字体，大小，颜色，字体厚度
-            
+
         if flags.ifShowDetObj == True:
             print(os.path.join(det_results_path, bin_file +'.jpg'))
             cv2.imwrite(os.path.join(det_results_path, bin_file +'.jpg'), imgCur, [int(cv2.IMWRITE_JPEG_QUALITY),70])

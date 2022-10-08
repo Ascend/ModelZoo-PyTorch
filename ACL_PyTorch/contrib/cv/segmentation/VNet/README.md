@@ -164,7 +164,7 @@ Ascend-cann-benchmark_{version}_Linux-{arch}.zip
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```

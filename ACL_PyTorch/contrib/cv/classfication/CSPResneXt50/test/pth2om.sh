@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf cspresnext.onnx
 python3.7 cspresnext_pth2onnx.py cspresnext50_ra_224-648b4713.pth cspresnext.onnx
 rm -rf cspresnext_bs1.om cspresnext_bs16.om

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding:GBK
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ parser.add_argument('--use_gpu', default=False, type=bool,
                     help='If use gpu for training.')
 parser.add_argument('--only_keep_best', default=True, type=bool,
                     help='Only keep best training result.')
-parser.add_argument('--save_prof', default=True, type=bool,
+parser.add_argument('--save_prof', default=False, type=bool,
                     help='If save training prof.')
 parser.add_argument('--loss_scale_g', default=128.0, help='netG amp loss_scale: dynamic, 128.0')
 parser.add_argument('--loss_scale_d', default=128.0, help='netD amp loss_scale: dynamic, 128.0')

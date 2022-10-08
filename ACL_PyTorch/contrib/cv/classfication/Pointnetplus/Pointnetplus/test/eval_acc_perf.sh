@@ -11,7 +11,7 @@ do
 done
 
 # env
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 chmod a+x msame
 
 # bs1 part1 preprocess

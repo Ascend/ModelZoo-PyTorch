@@ -39,6 +39,8 @@
 import numpy as np
 import pprint
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from fvcore.nn.precise_bn import get_bn_modules, update_bn_stats
 
 import slowfast.models.losses as losses

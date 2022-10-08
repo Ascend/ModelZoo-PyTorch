@@ -111,7 +111,7 @@ mkdir checkpoints
 将pth文件转换为om文件。其中，${chip_name}通过npu-smi info获取。
 ```shell
 python3 tools/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50_32x2x1_100e_kinetics400_rgb_20200614-c25ef9a4.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
-/usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
+atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
 ```
 
 

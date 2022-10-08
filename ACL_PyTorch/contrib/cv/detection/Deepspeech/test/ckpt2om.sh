@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source test/env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 currentDir=$(cd "$(dirname "$0")";pwd)/..
 rm -rf deepspeech.onnx

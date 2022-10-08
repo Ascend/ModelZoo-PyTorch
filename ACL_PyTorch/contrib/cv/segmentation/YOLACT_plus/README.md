@@ -62,7 +62,6 @@ patch -p1 < ../dcnv2.diff
   │   ├── coco.py
   │   ├── config.py
   │   └── __init__.py
-  ├── env.sh
   ├── dcnv2.diff
   ├── DCNv2
   ├── layers

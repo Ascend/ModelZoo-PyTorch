@@ -1,3 +1,5 @@
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 cd ..
 python pytorch2onnx.py checkpoint ecapa_tdnn.onnx 
 
@@ -24,13 +26,6 @@ atc --framework=5 --model=ecapa_tdnn_sim.onnx --output=om/ecapa_tdnn_bs64 --inpu
 echo om_bs=4
 rm -rf ./om_aoe
 mkdir om_aoe
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
-export PATH=/usr/local/python3.7.5/bin:$PATH
-
-export ASCEND_DEVICE_ID=0
-export TUNE_BANK_PATH=./aoe_result_bs4
-export TE_PARALLEL_COMPILER=8
-export REPEAT_TUNE=False
 
 mkdir ./aoe_result_bs4
 chmod 777 ./aoe_result_bs4

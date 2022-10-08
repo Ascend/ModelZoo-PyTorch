@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python3.7 pointnet_pth2onnx.py
 python3.7 -m onnxsim pointnet.onnx pointnet_bs1_sim.onnx --input-shape="1, 3, 2500" --dynamic-input-shape
 python3.7 fix_conv1d.py pointnet_bs1_sim.onnx pointnet_bs1_sim_fixed.onnx

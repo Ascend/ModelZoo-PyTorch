@@ -101,7 +101,7 @@ nohup taskset -c $PID_START-$PID_END python3.7 -u  main_finetune.py \
              --dist_eval \
              --amp \
              > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
+done
 wait
 
 

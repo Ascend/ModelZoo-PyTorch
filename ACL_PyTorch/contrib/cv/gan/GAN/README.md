@@ -69,7 +69,7 @@ numpy == 1.21.1
 1. 设置环境变量
 
    ```
-   source set_env.sh
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
    ```
 
 2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
@@ -134,7 +134,7 @@ python3.7 GAN_txt2jpg.py --txt_path=out --infer_results_path=genimg
 运行下列命令
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --model=GAN.onnx --framework=5 --output=GAN_bs1 --input_format=NCHW --input_shape="Z:1,100" --log=error --soc_version=Ascend310
 ```
 

@@ -29,7 +29,7 @@ class Config(object):
         self.local_conv_out_channels = 128
 
 
-def main(pth_path, out_name, bs):
+def main(pth_path, out_name):
     cfg = Config()
 
     ##############
@@ -45,8 +45,8 @@ def main(pth_path, out_name, bs):
     input_names = ["image"]
     output_names = ["global_feat", "local_feat", "logits"]
 
-    dynamic_axes = {'image': {0: bs}, 'class': {0: bs}}
-    dummy_input = torch.randn(int(bs), 3, 256, 128)
+    dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
+    dummy_input = torch.randn(1, 3, 256, 128)
 
     torch.onnx.export(
         model, dummy_input, out_name, input_names=input_names, output_names=output_names, verbose=True,
@@ -56,5 +56,4 @@ def main(pth_path, out_name, bs):
 if __name__ == '__main__':
     pth_path = sys.argv[1]
     out_name = sys.argv[2]
-    bs = sys.argv[3]
-    main(pth_path, out_name, bs)
+    main(pth_path, out_name)

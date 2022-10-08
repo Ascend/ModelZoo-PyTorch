@@ -31,6 +31,8 @@
 # ============================================================================
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
@@ -104,6 +106,7 @@ def train_gan(config, dataloader, device):
     dis.train()
     for epoch in range(config['epochs']):
         ################################ modify by npu ##########################################
+        torch.npu.synchronize()
         start_time = time.time()
         ################################ modify by npu ##########################################
         iterator = iter(dataloader)
@@ -160,10 +163,9 @@ def train_gan(config, dataloader, device):
             iteration+=1
             
             #log and save variable, losses and generated images
-            if(iteration%100)==0:
+            if(iteration%10)==0:
+                torch.npu.synchronize()
                 elapsed_time = time.time()-start_time
-                ################################ modify by npu ##########################################
-                start_time = time.time()
                 ################################ modify by npu ##########################################
                 dis_loss.append(total_error.mean().item())
                 gen_loss.append(loss_gen.mean().item())
@@ -181,6 +183,8 @@ def train_gan(config, dataloader, device):
                     torch.save(dis_optimizer.state_dict(), "./dis_optimizer_state.pth.tar")
                     torch.save(gen_optimizer.state_dict(), "./gen_optimizer_state.pth.tar")
                     print("saved params.")
+                torch.npu.synchronize()
+                start_time = time.time()
 
     #plot errors
     utils.save_loss_plot(gen_loss,dis_loss)

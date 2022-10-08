@@ -62,7 +62,7 @@ bash test/perf_gpu.sh
 310上执行，执行时使用npu-smi info查看设备状态，确保device空闲，输出310相应的精度和性能
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/onnx2om.sh 
 bash test/eval_acc_perf.sh datasets_path data/BSR/BSDS500/data/images/test batch_size 1 device_id 0
 ```

@@ -110,12 +110,7 @@ python3.7 -m onnxsim  --input-shape="1,3,500,500" pspnet_r50-d8_512x512_20k_voc1
 
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.2 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)，如果存在多余输出节点,需要指定输出节点以去除无用输出，节点序号可能会因网络结构不同而不同，使用netron开源可视化工具查看具体的输出节点名：
 生成bs1的om模型:
@@ -169,12 +164,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 
 1.设置环境变量
 ```shell
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```shell

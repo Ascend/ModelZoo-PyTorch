@@ -79,6 +79,8 @@ do
         mkdir -p ${data_dump_path}
     elif [[ $para == --data_dump_step* ]];then
         data_dump_step=`echo ${para#*=}`
+    elif [[ $para == --train_steps* ]];then
+        train_steps=`echo ${para#*=}`
     elif [[ $para == --profiling* ]];then
         profiling=`echo ${para#*=}`
         profiling_dump_path=${cur_path}/test/output/profiling

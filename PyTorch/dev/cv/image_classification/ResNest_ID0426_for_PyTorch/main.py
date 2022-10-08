@@ -37,6 +37,8 @@ Created on Sat Mar 6 2021
 @author: Kuan-Lin Chen
 """
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import argparse
 from data import data_dict
 from models import model_dict

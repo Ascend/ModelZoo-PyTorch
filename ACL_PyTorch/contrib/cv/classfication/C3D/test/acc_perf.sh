@@ -23,7 +23,7 @@ if [ $? != 0 ]; then
 fi
 echo '==> 2. creating ./C3D_prep_bin.info successfully.'
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf ./result/*
 
 ./benchmark.${arch} -model_type=vision -batch_size=1 -device_id=0 -om_path=./C3D.om -input_text_path=./C3D_prep_bin.info -input_width=112 -input_height=112 -useDvpp=false -output_binary=false

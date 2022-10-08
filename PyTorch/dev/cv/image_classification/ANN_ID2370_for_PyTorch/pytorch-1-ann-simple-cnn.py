@@ -48,6 +48,8 @@
 
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.autograd import Variable
@@ -131,6 +133,8 @@ plt.show()
 
 # Import Libraries
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.autograd import Variable

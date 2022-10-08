@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # convert onnx
 python3.7 pth2onnx.py --batch_size 1 --input_path ./FlowNet2_checkpoint.pth.tar --out_path ./models/flownet2_bs1.onnx --batch_size 1

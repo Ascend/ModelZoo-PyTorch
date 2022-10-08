@@ -74,6 +74,8 @@ import numpy as np
 
 # pytorch libs
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 
 # custom libs

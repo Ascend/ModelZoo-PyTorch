@@ -1,0 +1,71 @@
+diff --git a/mmcv/ops/deform_conv.py b/mmcv/ops/deform_conv.py
+index 250e096..8c878f9 100644
+--- a/mmcv/ops/deform_conv.py
++++ b/mmcv/ops/deform_conv.py
+@@ -22,8 +22,8 @@ class DeformConv2dFunction(Function):
+     @staticmethod
+     def symbolic(g,
+                  input,
+-                 offset,
+                  weight,
++                 offset,
+                  stride,
+                  padding,
+                  dilation,
+@@ -32,23 +32,24 @@ class DeformConv2dFunction(Function):
+                  bias=False,
+                  im2col_step=32):
+         return g.op(
+-            'MMCVDeformConv2d',
++            'DeformableConv2D',
+             input,
+-            offset,
+             weight,
+-            stride_i=stride,
+-            padding_i=padding,
+-            dilation_i=dilation,
++            offset,
++            strides_i=stride,
++            pads_i=padding,
++            dilations_i=dilation,
+             groups_i=groups,
+-            deform_groups_i=deform_groups,
++            deformable_groups_i=deform_groups,
+             bias_i=bias,
++            data_format_s="NCHW",
+             im2col_step_i=im2col_step)
+ 
+     @staticmethod
+     def forward(ctx,
+                 input,
+-                offset,
+                 weight,
++                offset,
+                 stride=1,
+                 padding=0,
+                 dilation=1,
+@@ -78,6 +79,8 @@ class DeformConv2dFunction(Function):
+         cur_im2col_step = min(ctx.im2col_step, input.size(0))
+         assert (input.size(0) %
+                 cur_im2col_step) == 0, 'im2col step must divide batchsize'
++        if torch.onnx.is_in_onnx_export():
++            return torch.rand(output.shape)
+         ext_module.deform_conv_forward(
+             input,
+             weight,
+@@ -293,7 +296,14 @@ class DeformConv2dPack(DeformConv2d):
+ 
+     def forward(self, x):
+         offset = self.conv_offset(x)
+-        return deform_conv2d(x, offset, self.weight, self.stride, self.padding,
++        if torch.onnx.is_in_onnx_export():
++            offset_y = offset.reshape(offset.shape[0], -1, 2, offset.shape[2].numpy(), offset.shape[3].numpy())[:, :, 0, ...].reshape(
++                offset.shape[0], offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy())
++            offset_x = offset.reshape(offset.shape[0], -1, 2, offset.shape[2].numpy(), offset.shape[3].numpy())[:, :, 1, ...].reshape(
++                offset.shape[0], offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy())
++            mask = torch.ones(offset.shape[0].numpy(), offset.shape[1].numpy() // 2, offset.shape[2].numpy(), offset.shape[3].numpy(), dtype=torch.int32)
++            offset = torch.cat((offset_x, offset_y, mask), 1)
++        return deform_conv2d(x, self.weight, offset, self.stride, self.padding,
+                              self.dilation, self.groups, self.deform_groups)
+ 
+     def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict,

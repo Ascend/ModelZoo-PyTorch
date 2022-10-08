@@ -16,6 +16,9 @@ train_epochs=3
 batch_size=32
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
+warmup_ratio=0.0
+weight_decay=0.0
+
 
 #获取外部传参，可扩展
 for para in $*
@@ -32,6 +35,10 @@ do
       master_port=`echo ${para#*=}`
     elif [[ $para == --model_size* ]];then
       model_size=`echo ${para#*=}`
+    elif [[ $para == --warmup_ratio* ]];then
+      warmup_ratio=`echo ${para#*=}`
+    elif [[ $para == --weight_decay* ]];then
+      weight_decay=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
@@ -111,6 +118,8 @@ nohup python3.7 -m torch.distributed.launch --nnodes=2 --node_rank=${node_rank} 
         --do_eval \
         --eval_accumulation_steps 100 \
         --fp16 \
+        --warmup_ratio ${warmup_ratio} \
+        --weight_decay ${weight_decay} \
         --fp16_opt_level O2 \
         --loss_scale 8192 \
         --use_combine_grad \

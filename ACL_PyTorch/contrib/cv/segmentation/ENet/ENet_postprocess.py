@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ sys.path.append(root_path)
 
 import numpy as np
 import argparse
+import json
 
 import torch
 import torch.utils.data as data
@@ -31,28 +32,43 @@ from cityscapes import CitySegmentation
 from score import SegmentationMetric
 from distributed import *
 
-def get_res(res_dir):
-
-    output = []
-    with open(res_dir) as res_f:
-        for line in res_f:
-            num_list = line.split()
-            for num in num_list:
-                output.append(float(num))
-        output = torch.from_numpy(np.array(output).reshape((1, 19, 480, 480)))
+def read_info_from_json(json_path):
     '''
-    with open(res_dir, 'rb') as res_f:
-        output = np.frombuffer(res_f.read(), np.float16)
-        output = torch.from_numpy(output.reshape((1, 19, 480, 480)))
+    此函数用于读取inference_tools生成的json文件
+    input: json文件地址
+    output: dict结构: 为原始的json转换出来的结构
     '''
-    return output
+    if os.path.exists(json_path) is False:
+        print(json_path, 'is not exist')
+    with open(json_path, 'r') as f:
+        load_data = json.load(f)
+        file_info = load_data['filesinfo']
+        return file_info
 
+def get_mask_name_maping(json_info):
+
+    mask_name_mapping = {}
+
+    for i in json_info.items():
+        res_path = i[1]['outfiles'][0]
+        # 获取对应的标签
+        label_name = os.path.splitext(os.path.basename(i[1]['infiles'][0]))[0]
+
+        mask_name_mapping[label_name] = res_path
+    
+    return mask_name_mapping
 
 def postprocess(args):
     input_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
     ])
+
+    result_dir_path = os.path.dirname(args.result_dir)
+    file_info = read_info_from_json(args.result_dir)
+
+    mask_name_mapping = get_mask_name_maping(file_info)
+
     # dataset and dataloader
     data_kwargs = {'transform': input_transform, 'base_size': 520, 'crop_size': 480}
     val_dataset = CitySegmentation(root = args.src_path, split='val', mode='val', **data_kwargs)
@@ -67,16 +83,29 @@ def postprocess(args):
 
     metric = SegmentationMetric(19)
     for i, (image, target, filename) in enumerate(val_loader):
-        res_name = os.path.splitext(os.path.basename(filename[0]))[0]
-        res_dir = os.path.join(args.result_dir, res_name + '_1.txt')
-        #res_dir = os.path.join(args.result_dir, res_name + '_1.bin')
-        res = get_res(res_dir)
+        mask_name = os.path.splitext(os.path.basename(filename[0]))[0]
+        
+        if mask_name in mask_name_mapping:
+            # 获取预测文件名
+            result_file_name = os.path.basename(mask_name_mapping[mask_name])
+            # 使用result_dir的路径作为结果文件的路径，可以使得运行该脚本的路径更通用
+            res_path = os.path.join(result_dir_path, result_file_name)
+
+        else:
+            print("{} does not exist in eval_dir".format(res_name))
+            continue
+
+        res = np.fromfile(res_path, np.float32)
+        res = np.reshape(res, (1, 19, data_kwargs['crop_size'], data_kwargs['crop_size']))
+        res = torch.from_numpy(res)
+
         metric.update(res, target)
         pixAcc, mIoU = metric.get()
         print("Sample: {:d}, validation pixAcc: {:.3f}, mIoU: {:.3f}".format(
             i + 1, pixAcc * 100, mIoU * 100))
-
-
+    print('############################################################')
+    pixAcc, mIoU = metric.get()
+    print("\tvalidation pixAcc: {:.3f}, mIoU: {:.3f}".format(pixAcc * 100, mIoU * 100))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

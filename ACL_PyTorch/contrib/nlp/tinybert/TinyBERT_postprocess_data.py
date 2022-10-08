@@ -229,6 +229,23 @@ def txt2predlabel(test_num, args):
     return pred_label
 
 
+def txt2predlabel_ais_infer(test_num, args):
+    """(adapt to msame inference):change the txt files into logits"""
+    logit1 = []
+    logit2 = []
+    for i in range(test_num):
+        txtname = "input" + str(i) + "_0.txt"
+        dir = os.path.join(args.result_dir, txtname)
+        with open(dir, "r") as f:
+            line = f.readline()
+        n1, n2 = [float(i) for i in line.split()]
+        logit1.append(n1)
+        logit2.append(n2)
+    logit = np.concatenate((np.array(logit1).reshape(1, -1), np.array(logit2).reshape(1, -1)), axis = 0)
+    pred_label = np.argmax(logit, axis = 0)
+    return pred_label
+
+
 def main():
     """postprocess the data and calculate the accuracy"""
     parser = argparse.ArgumentParser()
@@ -270,6 +287,8 @@ def main():
     eval_labels = get_label_ids(eval_features).numpy()
     if args.inference_tool == "benchmark":
         pred_labels = bin2predlabel(test_num, args)
+    elif args.inference_tool == "ais_infer":
+        pred_labels = txt2predlabel_ais_infer(test_num, args)
     elif args.inference_tool == "msame":
         pred_labels = txt2predlabel(test_num, args)
     result = simple_accuracy(pred_labels, eval_labels)
