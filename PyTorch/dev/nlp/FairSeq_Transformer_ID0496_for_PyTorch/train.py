@@ -227,7 +227,7 @@ def train(args, trainer, task, epoch_itr):
     input18 = torch.randn([1000, 1000, 300]).npu()
     '''
 
-    # torch.npu.global_step_inc()
+    torch.npu.global_step_inc()
     for i, samples in enumerate(progress, start=epoch_itr.iterations_in_epoch):
 
         #if i == 60:
