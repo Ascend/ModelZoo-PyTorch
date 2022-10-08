@@ -21,7 +21,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision -om_path=cascadercnn_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=cascadercnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
 if [ $? != 0 ]; then

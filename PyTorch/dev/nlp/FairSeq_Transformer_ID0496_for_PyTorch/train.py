@@ -47,6 +47,8 @@ import time
 from apex import amp
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 import torch.distributed as dist
 from fairseq import checkpoint_utils, distributed_utils, options, progress_bar, tasks, utils
@@ -225,7 +227,7 @@ def train(args, trainer, task, epoch_itr):
     input18 = torch.randn([1000, 1000, 300]).npu()
     '''
 
-    torch.npu.global_step_inc()
+    # torch.npu.global_step_inc()
     for i, samples in enumerate(progress, start=epoch_itr.iterations_in_epoch):
 
         #if i == 60:

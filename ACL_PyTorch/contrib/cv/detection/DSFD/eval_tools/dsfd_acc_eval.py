@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ from scipy.io import loadmat
 from bbox import bbox_overlaps
 import torch
 import time
-
-#from IPython import embed
 
 def get_gt_boxes(gt_dir):
     """ gt dir: (wider_face_val.mat, wider_easy_val.mat, wider_medium_val.mat, wider_hard_val.mat)"""
@@ -95,7 +93,6 @@ def read_pred_file(filepath):
         try:
             lines = f.readlines()
             img_file = filepath.split('/')[-1] #改写
-            #lines = lines[2:]
         except Exception as e:
             print(str(e))
 
@@ -104,10 +101,8 @@ def read_pred_file(filepath):
         line = line.rstrip('\r\n').split(' ')
         if line[0] is '':
             continue
-        # a = float(line[4])
         boxes.append([float(line[0]), float(line[1]), float(line[2]), float(line[3]), float(line[4])])
     boxes = np.array(boxes)
-    # boxes = np.array(list(map(lambda x: [float(a) for a in x.rstrip('\r\n').split(' ')], lines))).astype('float')
     return img_file.split('.')[0], boxes
 
 def get_preds(pred_dir):
@@ -159,7 +154,7 @@ def image_eval(pred, gt, ignore, iou_thresh):
     _gt = gt.copy()
     pred_recall = []
     recall_list = np.zeros(_gt.shape[0])
-    proposal_list = np.ones((1,5))
+    proposal_list = np.ones((1, 5))
 
     _pred[:2] = _pred[:2] + _pred[:0]
     _pred[:3] = _pred[:3] + _pred[:1]
@@ -279,7 +274,7 @@ def tensor2txt(det, called_file):
     fout = os.path.join(args.save_path, called_file.split('/')[-1])
     if not os.path.exists(fout):
         os.system(r"touch {}".format(fout))
-    fout = open(fout ,'w')
+    fout = open(fout, 'w')
 
     for i in range(dets.shape[0]):
         xmin = dets[i][0]
@@ -287,7 +282,8 @@ def tensor2txt(det, called_file):
         xmax = dets[i][2]
         ymax = dets[i][3]
         score = dets[i][4]
-        fout.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (xmax - xmin + 1), (ymax - ymin + 1), score))
+        fout.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'
+        .format(xmin, ymin, (xmax - xmin + 1), (ymax - ymin + 1), score))
 
 
 def file2tensor(annotation_file):
@@ -296,7 +292,7 @@ def file2tensor(annotation_file):
         if annfile.endswith('_1.txt'):
             print("process:", annfile)
             called_file = annfile
-            annfile = os.path.join(annotation_file,annfile)
+            annfile = os.path.join(annotation_file, annfile)
             size = os.path.getsize(annfile)
             res = []
             L = int(size / 4)
@@ -312,7 +308,7 @@ def file2tensor(annotation_file):
             dim_res = np.array(res).reshape(1, 2, -1, 5)
             tensor_res = torch.tensor(dim_res, dtype=torch.float32)
             detections = tensor_res
-            img = torch.randn([640,640])
+            img = torch.randn([640, 640])
             det_conf = detections[0, 1, :, 0]
             shrink = 1
             det_xmin = img.shape[1] * detections[0, 1, :, 1] / shrink
@@ -370,7 +366,7 @@ def evaluation(pred, gt_path, iou_thresh=0.5):
 
         recall = pr_curve[:, 1]
         propose = pr_curve[:, 0]
-        tmp_inf.append([recall,propose])
+        tmp_inf.append([recall, propose])
         repr.append(tmp_inf)
     aps = voc_ap(repr)
 

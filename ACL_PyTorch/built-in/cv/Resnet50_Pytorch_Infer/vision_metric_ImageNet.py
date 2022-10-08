@@ -21,47 +21,28 @@ import time
 
 np.set_printoptions(threshold=sys.maxsize)
 
-LABEL_FILE = "HiAI_label.json"
 
 
-def gen_file_name(img_name):
-    full_name = img_name.split('/')[-1]
-    index = full_name.rfind('.')
-    return full_name[:index]
-
-
-def cre_groundtruth_dict(gtfile_path):
+def cre_groundtruth_dict_fromtxt(val_label_path):
     """
-    :param filename: file contains the imagename and label number
-    :return: dictionary key imagename, value is label number
+    读取标签文件信息
+    :输入：标签文件地址
+    :输出: dict结构，key：图片名称，value：图片分类
     """
-    img_gt_dict = {}
-    for gtfile in os.listdir(gtfile_path):
-        if (gtfile != LABEL_FILE):
-            with open(os.path.join(gtfile_path, gtfile), 'r') as f:
-                gt = json.load(f)
-                ret = gt["image"]["annotations"][0]["category_id"]
-                img_gt_dict[gen_file_name(gtfile)] = ret
-    return img_gt_dict
-
-def cre_groundtruth_dict_fromtxt(gtfile_path):
-    """
-    :param filename: file contains the imagename and label number
-    :return: dictionary key imagename, value is label number
-    """
-    img_gt_dict = {}
-    with open(gtfile_path, 'r')as f:
+    img_label_dict = {}
+    with open(val_label_path, 'r')as f:
         for line in f.readlines():
             temp = line.strip().split(" ")
             imgName = temp[0].split(".")[0]
             imgLab = temp[1]
-            img_gt_dict[imgName] = imgLab
-    return img_gt_dict
+            img_label_dict[imgName] = imgLab
+    return img_label_dict
+
 
 def load_statistical_predict_result(filepath):
     """
     function:
-    the prediction esult file data extraction
+    the prediction result file data extraction
     input:
     result file:filepath
     output:
@@ -86,23 +67,23 @@ def load_statistical_predict_result(filepath):
 
 
 def create_visualization_statistical_result(prediction_file_path,
-                                            result_store_path, json_file_name,
-                                            img_gt_dict, topn=5):
+                                            result_json_path, json_file_name,
+                                            img_label_dict, topn=5):
     """
-    :param prediction_file_path:
-    :param result_store_path:
-    :param json_file_name:
-    :param img_gt_dict:
-    :param topn:
-    :return:
+    :param prediction_file_path: 推理结果路径
+    :param result_json_path: 后处理结果保存的json文件路径
+    :param json_file_name: 结果文件的名字
+    :param img_label_dict: 真实标签结果，dict形式，key为图片名称，value是标签
+    :param topn: 1~5
+    :return: NA
     """
-    writer = open(os.path.join(result_store_path, json_file_name), 'w')
+    writer = open(os.path.join(result_json_path, json_file_name), 'w')
     table_dict = {}
     table_dict["title"] = "Overall statistical evaluation"
     table_dict["value"] = []
 
     count = 0
-    resCnt = 0
+    res_count = 0
     n_labels = ""
     count_hit = np.zeros(topn)
     for tfile_name in os.listdir(prediction_file_path):
@@ -111,30 +92,25 @@ def create_visualization_statistical_result(prediction_file_path,
         index = temp.rfind('_')
         img_name = temp[:index]
         filepath = os.path.join(prediction_file_path, tfile_name)
-        #print(filepath)
         ret = load_statistical_predict_result(filepath)
         prediction = ret[0]
         n_labels = ret[1]
         sort_index = np.argsort(-prediction)
-        #print(img_gt_dict)
-        gt = img_gt_dict[img_name]
+        gt = img_label_dict[img_name]
         if (n_labels == 1000):
             realLabel = int(gt)
         elif (n_labels == 1001):
             realLabel = int(gt) + 1
         else:
             realLabel = int(gt)
-        # print(img_name)
-        #print(n_labels)
-        # print(gt)
 
-        resCnt = min(len(sort_index), topn)
-        # print(sort_index[:5])
-        for i in range(resCnt):
+
+        res_count = min(len(sort_index), topn)
+        for i in range(res_count):
             if (str(realLabel) == str(sort_index[i])):
                 count_hit[i] += 1
                 break
-        #print("***************")
+
     if 'value' not in table_dict.keys():
         print("the item value does not exist!")
     else:
@@ -145,11 +121,10 @@ def create_visualization_statistical_result(prediction_file_path,
             accuracy = 0
         else:
             accuracy = np.cumsum(count_hit) / count
-        for i in range(resCnt):
+        for i in range(res_count):
             table_dict["value"].append({"key": "Top" + str(i + 1) + " accuracy",
-                                        "value": str(
-                                            round(accuracy[i] * 100, 2)) + '%'})
-            #print("Top" + str(i + 1) + " accuracy" + ": " + str(round(accuracy[i] * 100, 2)) + '%')
+                                        "value": str(round(accuracy[i] * 100, 2)) + '%'})
+
         json.dump(table_dict, writer)
     writer.close()
 
@@ -157,20 +132,23 @@ def create_visualization_statistical_result(prediction_file_path,
 if __name__ == '__main__':
     start = time.time()
     try:
-        # txt file path
-        folder_davinci_target = sys.argv[1]       
+        # infer result file path
+        infer_result_path = sys.argv[1] 
+
         # annotation files path, "val_label.txt"
-        annotation_file_path = sys.argv[2]                
+        annotation_file_path = sys.argv[2]
+
         # the path to store the results json path
         result_json_path = sys.argv[3]
+
         # result json file name
         json_file_name = sys.argv[4]
     except IndexError:
         print("Stopped!")
         exit(1)
 
-    if not (os.path.exists(folder_davinci_target)):
-        print("target file folder does not exist.")
+    if not (os.path.exists(infer_result_path)):
+        print("infer result path does not exist.")
 
     if not (os.path.exists(annotation_file_path)):
         print("Ground truth file does not exist.")
@@ -179,7 +157,7 @@ if __name__ == '__main__':
         print("Result folder doesn't exist.")
 
     img_label_dict = cre_groundtruth_dict_fromtxt(annotation_file_path)
-    create_visualization_statistical_result(folder_davinci_target,
+    create_visualization_statistical_result(infer_result_path,
                                             result_json_path, json_file_name,
                                             img_label_dict, topn=5)
 

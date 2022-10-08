@@ -1,9 +1,24 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 import os
 import time
 from typing import List
 
 import torch
+import apex
 
 from eval import verification
 from utils.utils_logging import AverageMeter
@@ -28,7 +43,7 @@ class CallBackVerification(object):
         results = []
         for i in range(len(self.ver_list)):
             acc1, std1, acc2, std2, xnorm, embeddings_list = verification.test(
-                self.ver_list[i], backbone, 10, 10)
+                self.ver_list[i], backbone, 128, 10)
             logging.info('[%s][%d]XNorm: %f' % (self.ver_name_list[i], global_step, xnorm))
             logging.info('[%s][%d]Accuracy-Flip: %1.5f+-%1.5f' % (self.ver_name_list[i], global_step, acc2, std2))
 
@@ -76,7 +91,7 @@ class CallBackLogging(object):
                  epoch: int,
                  fp16: bool,
                  learning_rate: float,
-                 grad_scaler: torch.cuda.amp.GradScaler):
+                 grad_scaler: apex.amp.scaler.LossScaler):
         if self.rank == 0 and global_step > 0 and global_step % self.frequent == 0:
             if self.init:
                 try:
@@ -101,7 +116,7 @@ class CallBackLogging(object):
                     msg = "Speed %.2f samples/sec   Loss %.4f   LearningRate %.6f   Epoch: %d   Global Step: %d   " \
                           "Fp16 Grad Scale: %2.f   Required: %1.f hours" % (
                               speed_total, loss.avg, learning_rate, epoch, global_step,
-                              grad_scaler.get_scale(), time_for_end
+                              grad_scaler.loss_scale(), time_for_end
                           )
                 else:
                     msg = "Speed %.2f samples/sec   Loss %.4f   LearningRate %.6f   Epoch: %d   Global Step: %d   " \

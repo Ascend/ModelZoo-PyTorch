@@ -83,6 +83,7 @@ fi
 mkdir -p data
 cd data
 ln -nsf ${data_path}/VOCdevkit2007 VOCdevkit2007
+ln -nsf ${data_path} pretrained_model
 cd ..
 
 #非平台场景时source 环境变量
@@ -90,9 +91,6 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
-    ln -nsf ${data_path}/pretrained_model  ${cur_path}/data/
-else
-    ln -nsf ${data_path} ${cur_path}/data/pretrained_model
 fi
 
 #################启动训练脚本#################

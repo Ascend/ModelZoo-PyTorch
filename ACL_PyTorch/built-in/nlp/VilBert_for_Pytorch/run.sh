@@ -1,4 +1,4 @@
-export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/pyACL/python/site-packages/acl:$PYTHONPATH
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export OM_PATH=`pwd`/vqa-vilbert_bs1.om
 export OM_EVAL=True
 export OM_DEVICE=3

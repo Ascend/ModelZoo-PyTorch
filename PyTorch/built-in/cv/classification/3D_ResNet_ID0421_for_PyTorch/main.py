@@ -19,6 +19,8 @@ import os
 #from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import apex
 from torch.nn import CrossEntropyLoss
 from torch.optim import lr_scheduler
@@ -102,7 +104,7 @@ def get_opt():
 def resume_model(resume_path, arch, model):
     print('loading checkpoint {} model'.format(resume_path))
     checkpoint = torch.load(resume_path, map_location='cpu')
-    assert arch == checkpoint['arch']
+    #assert arch == checkpoint['arch']
 
     if hasattr(model, 'module'):
         model.module.load_state_dict(checkpoint['state_dict'])

@@ -46,6 +46,8 @@ from apex import amp
 import torch
 import torch.nn as nn
 import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 sys.path.append('./')
 from models.model_ctc import *

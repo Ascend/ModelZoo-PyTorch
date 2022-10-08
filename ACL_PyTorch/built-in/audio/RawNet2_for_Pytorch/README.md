@@ -17,7 +17,6 @@
 ## 1 文件说明
 ```
 RawNet2_for_Pytorch  
-  ├── env.sh            设置环境变量
   ├── pth2onnx.py       pytorch模型导出onnx模型  
   ├── modify_onnx.py    修改导出的onnx模型  
   ├── atc.sh            onnx模型转om  
@@ -38,7 +37,7 @@ RawNet2_for_Pytorch
   om推理采用ASVspoof2019数据集的验证集进行精度评估。
 
 ### 2.2 文件拷贝
-拷贝env.sh，pth2onnx.py，modify_onnx.py，atc.sh，om_infer.py，acl_net.py文件到2021/LA/Baseline-RawNet2/目录下。  
+拷贝pth2onnx.py，modify_onnx.py，atc.sh，om_infer.py，acl_net.py文件到2021/LA/Baseline-RawNet2/目录下。  
 将下载的权重文件pre_trained_DF_RawNet2.pth放在和代码同一目录下。  
 在同一目录下创建data目录并将下载的数据集放入，data目录中的文件结构如下所示。
 ```
@@ -54,7 +53,7 @@ data
 
 ### 2.3 设置环境变量
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 ## 3 端到端推理步骤

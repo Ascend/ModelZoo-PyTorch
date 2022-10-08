@@ -4,4 +4,8 @@ TorchVision==0.6.0
 numpy==1.18.1
 Pillow==6.2.0
 onnxruntime==1.6.0
-
+tqdm==4.64.0
+decorator==5.1.1
+matplotlib==3.5.2
+six==1.16.0
+sympy==1.10.1

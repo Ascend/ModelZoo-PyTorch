@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="XCIT"
 # 训练batch_size
-batch_size=200
+batch_size=192
 # 训练使用的npu卡数
 export RANK_SIZE=8
 export WORLD_SIZE=$RANK_SIZE
@@ -72,7 +72,7 @@ do
     PID_END=$((PID_START + KERNEL_NUM - 1))
     nohup \
     taskset -c $PID_START-$PID_END python3.7 main.py  \
-            --model xcit_small_12_p16 --batch-size 200 \
+            --model xcit_small_12_p16 --batch-size ${batch_size} \
             --data-path ${data_path}      \
             --drop-path 0.05 --output_dir experiments/xcit_small_12_p16/  \
             --epochs 1 --local_rank $RANK_ID  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &

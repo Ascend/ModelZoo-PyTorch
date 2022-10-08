@@ -58,6 +58,8 @@ import numpy as np
 from losses import simple_contrstive_loss
 from dataloader import get_dataloaders
 import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):

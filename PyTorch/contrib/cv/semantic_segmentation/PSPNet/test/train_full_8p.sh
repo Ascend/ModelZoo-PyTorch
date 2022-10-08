@@ -38,7 +38,7 @@ elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}
     echo "device id is ${ASCEND_DEVICE_ID}"
 else
-    export ASCEND_DEVICE_ID=0,1,2,3,4,5,6,7
+    export ASCEND_DEVICE_ID=8
     echo "device id is ${ASCEND_DEVICE_ID}"
 fi
 
@@ -81,7 +81,9 @@ echo "end_time: ${end_time}"
 e2e_time=$(( $end_time - $start_time ))
 
 FPS=`grep -a 'fps: '  $cur_path/output/${Network}/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "fps: " '{print $NF}'|awk -F "," '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-echo "Final Performance images/sec : $FPS"
+#吞吐量
+ActualFPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${FPS}'}'`
+echo "Final Performance images/sec : $ActualFPS"
 
 #输出训练精度,需要模型审视修改
 mIoU=`grep -a 'mIoU: ' $cur_path/output/${Network}/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "mIoU: " '{print $NF}'|awk -F "," '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
@@ -96,8 +98,6 @@ DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
-#吞吐量
-ActualFPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${FPS}'}'`
 #单迭代训练时长
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 

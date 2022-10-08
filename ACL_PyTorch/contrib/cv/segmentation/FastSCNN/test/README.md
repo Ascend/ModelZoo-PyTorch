@@ -100,7 +100,7 @@ ascend-toolkit版本：5.0.2
 onnx转出om
 
 ```
-source env.sh（注意，latest是一个软连接，请将服务器中的/usr/local/Ascend/ascend-toolkit/latest 指向5.0.2版本的CANN包）
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/pth2om.sh
 成功运行会生成fast_scnn_bs1.onnx，fast_scnn_bs4.onnx，fast_scnn_bs8.onnx，fast_scnn_bs16.onnx，fast_scnn_bs32.onnx;
 fast_scnn_bs1.om，fast_scnn_bs4.om，fast_scnn_bs8.om，fast_scnn_bs16.om，fast_scnn_bs32.om文件。

@@ -45,8 +45,7 @@
     设置pyACL环境变量：
     ```
     export PYTHONUNBUFFERED=1
-    export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/pyACL/python/site-packages/acl:$PYTHONPATH
-    export LD_LIBRARY_PATH=/usr/local/Ascend/ascendtoolkit/latest/acllib/lib64/:$LD_LIBRARY_PAT
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
     ```
 
     ```

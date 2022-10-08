@@ -20,6 +20,8 @@ import json
 import math
 import warnings
 from easydict import EasyDict
+from tensorboardX import SummaryWriter
+import pprint
 
 import torch
 import apex
@@ -27,16 +29,17 @@ from apex import amp
 
 if torch.__version__ >= '1.8':
     import torch_npu
-    from torch_npu.contrib import auto_cast_gpu
+    from torch_npu.contrib import transfer_to_npu
 else:
     warnings.warn('This model Only test with pt-1.8, please update torch and torch_npu')
 import bugfix
-from bugfix import broadcast_object, optim_entry
+from bugfix import broadcast_object, optim_entry, makedir
 
 import linklink as link
 import torch.nn.functional as F
 from prototype.utils.dist import link_dist, DistModule
-from prototype.utils.misc import param_group_all, accuracy, load_state_model, load_state_optimizer, AverageMeter
+from prototype.utils.misc import param_group_all, accuracy, load_state_model, load_state_optimizer, AverageMeter, \
+    create_logger, get_logger, modify_state
 from prototype.utils.ema import EMA
 from prototype.model import model_entry
 from prototype.loss_functions import LabelSmoothCELoss, ClipInfoCELoss, SimsiamLoss, NTXentLoss
@@ -53,6 +56,7 @@ torch.npu.set_option(option)
 class ClsSolver(ClsSolverRaw):
     def __init__(self, config_file, perf_only=False):
         super(ClsSolver, self).__init__(config_file)
+
         self.fp16 = False
         self.fused_fp16 = False
 
@@ -66,6 +70,69 @@ class ClsSolver(ClsSolverRaw):
         self.model = DistModule(self.model, self.config.dist.sync)
         if 'model' in self.state:
             load_state_model(self.model, self.state['model'])
+
+    def setup_env(self):
+        # dist
+        self.dist = EasyDict()
+        self.dist.rank, self.dist.world_size = link.get_rank(), link.get_world_size()
+        self.prototype_info.world_size = self.dist.world_size
+        # directories
+        self.path = EasyDict()
+        self.path.root_path = os.path.dirname(self.config_file)
+        self.path.save_path = os.path.join(self.path.root_path, 'checkpoints')
+        self.path.event_path = os.path.join(self.path.root_path, 'events')
+        self.path.result_path = os.path.join(self.path.root_path, 'results')
+        makedir(self.path.save_path)
+        makedir(self.path.event_path)
+        makedir(self.path.result_path)
+        # tb_logger
+        if self.dist.rank % 8 == 0:
+            self.tb_logger = SummaryWriter(self.path.event_path)
+        # logger
+        create_logger(os.path.join(self.path.root_path, 'log.txt'))
+        self.logger = get_logger(__name__)
+        self.logger.critical(f'config: {pprint.pformat(self.config)}')
+        if 'SLURM_NODELIST' in os.environ:
+            self.logger.critical(f"hostnames: {os.environ['SLURM_NODELIST']}")
+        # load pretrain checkpoint
+        if hasattr(self.config.saver, 'pretrain'):
+            if self.config.saver.pretrain.auto_resume:
+                last_checkpoint = self.find_last_checkpoint()
+                if last_checkpoint:
+                    self.config.saver.pretrain.path = last_checkpoint
+            if self.config.saver.pretrain.get("path", None):
+                self.state = torch.load(self.config.saver.pretrain.path, 'cpu')
+                self.logger.info(
+                    f"Recovering from {self.config.saver.pretrain.path}, keys={list(self.state.keys())}")
+            else:
+                self.state = {}
+                self.state['last_iter'] = 0
+            # pretrain from moco
+            if self.config.saver.pretrain.get('pretrain_from', None) == 'moco':
+                encoder_state = {}
+                for key, value in self.state['model'].items():
+                    if 'encoder_q' in key and 'fc' not in key and 'attnpool' not in key:
+                        new_key = key.replace('encoder_q', 'visual')
+                        encoder_state[new_key] = value
+                self.state = {'model': encoder_state, 'last_iter': 0, 'optimizer': None}
+            # pretrain from supervised
+            if self.config.saver.pretrain.get('pretrain_from', None) == 'supervised':
+                encoder_state = {}
+                for key, value in self.state['model'].items():
+                    if 'fc' not in key:
+                        new_key = key.replace('module', 'module.visual')
+                        encoder_state[new_key] = value
+                self.state = {'model': encoder_state, 'last_iter': 0, 'optimizer': None}
+
+            if hasattr(self.config.saver.pretrain, 'ignore'):
+                self.state = modify_state(
+                    self.state, self.config.saver.pretrain.ignore)
+
+        else:
+            self.state = {}
+            self.state['last_iter'] = 0
+        # others
+        torch.backends.cudnn.benchmark = True
 
     def build_model(self):
         if hasattr(self.config, 'lms'):
@@ -364,7 +431,7 @@ class ClsSolver(ClsSolverRaw):
             if curr_step % self.config.saver.print_freq == 0:
                 last_checkpoint_step = ((curr_step - 1) // 200 - 5) * 200
                 pretrain_path = f'{self.path.save_path}/ckpt_{last_checkpoint_step}.pth.tar'
-                if self.dist.rank == 0:
+                if self.dist.rank % 8 == 0:
                     if os.path.exists(pretrain_path):  # remove
                         cmd_ckpt = f'rm {pretrain_path}'
                         os.system(cmd_ckpt)
@@ -400,7 +467,7 @@ class ClsSolver(ClsSolverRaw):
                     self.build_lr_scheduler()
                     # start_step = last_checkpoint_step -i + 11
                     start_step = last_checkpoint_step - i
-                    if self.dist.rank == 0:
+                    if self.dist.rank % 8 == 0:
                         self.logger.info(f'[ERROR] Training Loss Crashed,lr:{current_lr},start_step:{start_step}')
                         self.logger.info(f'[ERROR] recover from {self.config.saver.pretrain.path}')
 
@@ -506,7 +573,7 @@ class ClsSolver(ClsSolverRaw):
             # measure elapsed time
             self.meters.batch_time.update(time.time() - end)
             # training logger
-            if curr_step % self.config.saver.print_freq == 0 and self.dist.rank == 0:
+            if curr_step % self.config.saver.print_freq == 0 and self.dist.rank % 8 == 0:
                 self.tb_logger.add_scalar(
                     'loss_train', self.meters.losses.avg, curr_step)
                 self.tb_logger.add_scalar(
@@ -564,9 +631,10 @@ class ClsSolver(ClsSolverRaw):
                           f'Remaining Time {remain_time} ({finish_time})'
                 self.logger.critical(log_msg)
             last_logit_scale = self.model.module.logit_scale.clone()
+            link.barrier()
 
             # testing during training
-            if curr_step > 0 and curr_step % self.config.saver.val_freq == 0:
+            if curr_step > 0 and curr_step % self.config.saver.val_freq == 0 and self.dist.rank < 8:
                 for id, val_data in enumerate(self.val_data):
                     metrics = self.evaluate(val_data)
                     if self.ema is not None:
@@ -587,9 +655,11 @@ class ClsSolver(ClsSolverRaw):
                             'dataset_{}_acc1_val'.format(id), metrics.metric['top1'], curr_step)
                         self.tb_logger.add_scalar(
                             'dataset_{}_acc5_val'.format(id), metrics.metric[metric_key], curr_step)
+            link.barrier()
+
             if curr_step > 0 and curr_step % self.config.saver.save_freq == 0:
                 # save ckpt
-                if self.dist.rank == 0:
+                if self.dist.rank % 8 == 0:
                     if self.config.saver.save_many:
                         ckpt_name = f'{self.path.save_path}/ckpt_{curr_step}.pth.tar'
                     else:
@@ -658,15 +728,13 @@ class ClsSolver(ClsSolverRaw):
             val_data['loader'].dataset.dump(writer, batch)
 
         writer.close()
-        link.barrier()
+        torch.cuda.synchronize()
         if self.dist.rank == 0:
             metrics = val_data['loader'].dataset.evaluate(res_file)
             self.logger.critical(json.dumps(metrics.metric, indent=2))
         else:
             metrics = {}
-        link.barrier()
-        # broadcast metrics to other process
-        metrics = broadcast_object(metrics)
+        torch.cuda.synchronize()
         self.model.train()
         return metrics
 

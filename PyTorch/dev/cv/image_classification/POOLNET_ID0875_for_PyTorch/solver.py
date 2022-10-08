@@ -32,6 +32,8 @@
 # ============================================================================
 #
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from collections import OrderedDict
 from torch.nn import utils, functional as F
 from torch.optim import Adam

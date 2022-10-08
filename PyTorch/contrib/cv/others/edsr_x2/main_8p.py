@@ -74,6 +74,7 @@ def save_checkpoint(
             checkpoint_path,
             os.path.join(opt.save, "model_best.pth"),
         )
+    print("\n")
     print("Best:", opt.best, "This Time:", checkpoint_performance[-1][0])
 
 

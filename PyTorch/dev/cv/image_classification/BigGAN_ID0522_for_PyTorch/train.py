@@ -48,6 +48,8 @@ from tqdm import tqdm, trange
 
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from torch.nn import init
 import torch.optim as optim

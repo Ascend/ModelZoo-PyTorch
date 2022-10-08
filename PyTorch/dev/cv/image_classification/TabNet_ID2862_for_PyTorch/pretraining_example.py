@@ -47,6 +47,8 @@
 from py_tabnet.tab_model import TabNetClassifier
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import roc_auc_score
 

@@ -31,7 +31,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result
 chmod +x benchmark.${arch}
 ./benchmark.x86_64 -model_type=vision -device_id=${device_id} -batch_size=${batch_size} -om_path=rcf_bs${batch_size}_321x481.om \
@@ -56,7 +56,7 @@ fi
 
 cd edge_eval_python
 cd cxx/src
-source build.sh
+# source build.sh
 cd ../..
 rm -rf ../data/examples_om/rcf_eval_result
 mkdir -p ../data/examples_om/rcf_eval_result

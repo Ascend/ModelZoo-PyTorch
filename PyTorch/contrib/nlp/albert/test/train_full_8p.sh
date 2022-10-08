@@ -72,10 +72,12 @@ export DEVICE=npu
 TASK_NAME="SST-2"
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-
+KERNEL_NUM=$(($(nproc)/8))
 for i in $(seq 7 -1 0)
     do
-      nohup python3.7 ./run_classifier.py \
+        PID_START=$((KERNEL_NUM * i))
+        PID_END=$((PID_START + KERNEL_NUM - 1))
+        nohup taskset -c $PID_START-$PID_END  python3.7 ./run_classifier.py \
         --device=$DEVICE \
         --model_type=$BERT_MODEL \
         --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \

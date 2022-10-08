@@ -45,7 +45,12 @@ import torch
 from utils import *
 import torch.npu
 import os
-from torch.contrib.npu.optimized_lib import function as nF
+# from torch.contrib.npu.optimized_lib import function as nF
+if torch.__version__ >= "1.8":
+    from torch_npu.contrib import function as nF
+    import torch_npu
+else:
+    from torch.contrib.npu.optimized_lib import function as nF
 
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):

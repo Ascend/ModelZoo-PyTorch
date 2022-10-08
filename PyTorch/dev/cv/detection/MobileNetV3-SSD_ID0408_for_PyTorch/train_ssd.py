@@ -1,3 +1,4 @@
+
 #
 # BSD 3-Clause License
 #
@@ -38,6 +39,8 @@ import sys
 import itertools
 import time
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 

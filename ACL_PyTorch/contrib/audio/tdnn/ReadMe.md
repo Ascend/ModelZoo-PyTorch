@@ -167,8 +167,9 @@ python Tdnn_pth2onnx.py
 
 以下步骤在npu环境进行。  
 1.生成om模型文件  
-将atc.sh脚本放到speechbrain/templates/speaker_id目录下，并在该目录下执行  
+将atc.sh脚本放到speechbrain/templates/speaker_id目录下，并在该目录下执行。请以实际安装环境配置环境变量。
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash atc.sh tdnn.onnx tdnn
 ```
 运行成功后，将生成tdnn.om模型  
@@ -203,6 +204,7 @@ python Tdnn_preprocess.py
 2.执行pyacl离线推理  
 在speechbrain/templates/speaker_id目录下执行  
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash om_infer.sh
 ```
 推理结果将会输出到result目录下  

@@ -37,14 +37,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    with open(args.info_path,"r") as f:
-        l = list(map(lambda x:int(x.strip()), f.readlines()))
+    with open(args.info_path, "r") as f:
+        l = list(map(lambda x: int(x.strip()), f.readlines()))
 
     num_samples = len(l) // args.batch_size
     i = 0
     acc = 0
     while i < num_samples:
-        with open(args.result_path+str(i)+'_output_0.txt', 'r') as f:
+        with open(args.result_path+str(i)+'_0.txt', 'r') as f:
             lines = f.readlines()
             lines = list(map(lambda x:x.strip().split(), lines))
             lines = np.array([[float(lines[m][n]) for n in range(101)]for m in range(args.batch_size)]).argmax(1)

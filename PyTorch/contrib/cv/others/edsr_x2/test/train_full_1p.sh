@@ -12,7 +12,7 @@ export RANK_SIZE=1
 data_path=""
 
 # 训练epoch
-train_epochs=300
+train_epochs=100
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数

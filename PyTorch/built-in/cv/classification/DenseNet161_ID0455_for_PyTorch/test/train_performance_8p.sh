@@ -70,10 +70,12 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     echo "source"
     source ${test_path_dir}/env_npu.sh
+else
+   #修改参数
+    sed -i "s|pass|break|g"  $cur_path/references/classification/utils.py
 fi
 
-#修改参数
-sed -i "s|pass|break|g"  $cur_path/references/classification/utils.py
+
 wait
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
@@ -130,7 +132,7 @@ wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{if (NR > 3){print $2}}'|awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"

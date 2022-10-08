@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf vovnet39.onnx
 python3.7 vovnet39_pth2onnx.py vovnet39_torchvision.pth vovnet39.onnx
 rm -rf vovnet39_bs1.om vovnet39_bs16.om

@@ -20,6 +20,8 @@ conf_path=""
 server_index=""
 fix_node_ip=""
 devicesnum=""
+one_node_ip=""
+linux_num=""
 
 # 参数校验，data_path为必传参数， 其他参数的增删由模型自身决定；此处若新增参数需在上面有定义并赋值
 for para in $*
@@ -38,11 +40,20 @@ do
         conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
         server_index=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
     fi
 done
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else 
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 PREC=""
 if [[ $precision_mode == "amp" ]];then

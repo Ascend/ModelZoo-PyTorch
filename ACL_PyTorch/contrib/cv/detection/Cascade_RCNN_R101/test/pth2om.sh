@@ -15,7 +15,7 @@
 
 rm -rf cascade_rcnn_r101.onnx
 python mmdetection/tools/pytorch2onnx.py mmdetection/configs/cascade_rcnn/cascade_rcnn_r101_fpn_1x_coco.py ./cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth --output-file=cascade_rcnn_r101.onnx --shape 1216 --verify --show
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf cascade_rcnn_r101_1.om
 atc --framework=5 --model=./cascade_rcnn_r101.onnx --output=cascade_rcnn_r101_1 --input_format=NCHW --input_shape="input:1,3,1216,1216" --soc_version=Ascend310 --out_nodes="Concat_947:0;Reshape_949:0"
 

@@ -159,7 +159,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
-Train_accuracy=`grep -a 'Average Precision' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|head -1`
+Train_accuracy=`grep -a 'Epoch(val)' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP: " '{print $2}'|awk -F "," '{print $1}'|tail -1`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 echo "Final Train Accuracy : ${Train_accuracy}"

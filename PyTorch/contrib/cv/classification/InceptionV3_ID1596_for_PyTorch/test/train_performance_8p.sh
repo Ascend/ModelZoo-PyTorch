@@ -76,7 +76,7 @@ do
     taskset -c $PID_START-$PID_END python3 ./main-8p.py \
       -a inception_v3 \
       --amp \
-      --loss_scale='dynamic' \
+      --loss_scale=128 \
       --data ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \
@@ -99,7 +99,7 @@ do
     python3 ./main-8p.py \
       -a inception_v3 \
       --amp \
-      --loss_scale='dynamic' \
+      --loss_scale=128 \
       --data ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \

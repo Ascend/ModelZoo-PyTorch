@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf images
 rm -rf vectors
 

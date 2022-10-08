@@ -24,7 +24,7 @@ pip3 install -r requirements.txt
 
 - 安装依赖的软件包时，当前模型可以只安装cmake/sox/sndfile ；
 
-- 安装kaldi是，当前模型调测选择了OpenBLAS作为BLAS库，在compile kaldi & install阶段，使用如下命令安装：
+- 安装kaldi时，当前模型调测选择了OpenBLAS作为BLAS库，在compile kaldi & install阶段，使用如下命令安装：
 
   ```
   $ cd <kaldi-root>/src

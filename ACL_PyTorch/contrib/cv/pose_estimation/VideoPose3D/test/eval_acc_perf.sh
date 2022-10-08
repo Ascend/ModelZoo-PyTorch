@@ -21,7 +21,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 ./msame --model "vp3d_seq6115.om" --input "./preprocessed_data/inputs" --output "./preprocessed_data/outputs" --outfmt BIN > inference.log
 

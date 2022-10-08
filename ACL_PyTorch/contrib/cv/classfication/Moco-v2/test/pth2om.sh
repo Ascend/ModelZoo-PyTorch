@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 # bs1
 python3.7.5 pthtar2onnx.py 1 model_lincls_best.pth.tar
 # bs16

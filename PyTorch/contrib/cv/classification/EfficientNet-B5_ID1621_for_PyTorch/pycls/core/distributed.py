@@ -27,7 +27,6 @@ import random
 import signal
 import threading
 import traceback
-import torch.npu
 import torch
 from pycls.core.config import cfg
 

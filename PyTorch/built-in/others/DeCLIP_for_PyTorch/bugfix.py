@@ -12,15 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import torch
+
 if torch.__version__ >= "1.8":
     import torch_npu
 import apex
 
+
+# base_dataset limit world_size up to 8 to avoid eval errors during multi-level multi-card training
+from prototype.data.datasets import base_dataset
+
+
+def merge(self, prefix):
+    """
+    Merge results into one file.
+
+    Arguments:
+        - prefix (:obj:`str`): dir/results.rank
+    """
+    world_size = min(link.get_world_size(), 8)
+    merged_file = prefix.rsplit('.', 1)[0] + '.all'
+    merged_fd = open(merged_file, 'w')
+    for rank in range(world_size):
+        res_file = prefix + str(rank)
+        assert os.path.exists(res_file), f'No such file or directory: {res_file}'
+        with open(res_file, 'r') as fin:
+            for line_idx, line in enumerate(fin):
+                merged_fd.write(line)
+    merged_fd.close()
+    return merged_file
+
+
+base_dataset.BaseDataset.merge = merge
+
+# _get_label_text ....-->./DeCLIP
 from prototype.data.datasets import clip_dataset
 
 
-# _get_label_text ....-->./DeCLIP
 def _get_label_text(self, text):
     # label_text = ['a photo of ' + text + '.']
     if self.label_texts_ensemble == 'prompt6':
@@ -46,16 +75,12 @@ def _get_label_text(self, text):
 
 clip_dataset.ClipDataset._get_label_text = _get_label_text
 
-# DECLIP.forward all_gather
-from declip import DECLIP
-from prototype.model import declip
-declip.DECLIP = DECLIP
-
 
 # broadcast uint8 --> int32
 from prototype.utils.dist import _serialize_to_tensor
 import linklink as link
 import pickle
+
 
 def broadcast_object(obj, group=None):
     """make suare obj is picklable
@@ -83,6 +108,45 @@ def broadcast_object(obj, group=None):
     deserialized_obj = pickle.loads(serialized_bytes)
     return deserialized_obj
 
+# makedir
+def makedir(path):
+    if link.get_rank() % 8 == 0 and not os.path.exists(path):
+        os.makedirs(path)
+    link.barrier()
+
+# initialize bugfixed when backend='nccl'
+import torch.distributed as dist
+
+
+def initialize(backend='nccl'):
+    port = "12345"
+    proc_id = int(os.environ['SLURM_PROCID'])
+    ntasks = int(os.environ['SLURM_NTASKS'])
+    node_list = os.environ['SLURM_NODELIST']
+    if '[' in node_list:
+        beg = node_list.find('[')
+        pos1 = node_list.find('-', beg)
+        if pos1 < 0:
+            pos1 = 1000
+        pos2 = node_list.find(',', beg)
+        if pos2 < 0:
+            pos2 = 1000
+        node_list = node_list[:min(pos1, pos2)].replace('[', '')
+    addr = node_list[8:].replace('-', '.')
+    os.environ['MASTER_PORT'] = port
+    os.environ['MASTER_ADDR'] = addr
+    os.environ['WORLD_SIZE'] = str(ntasks)
+    os.environ['RANK'] = str(proc_id)
+    if backend == 'nccl':
+        dist.init_process_group(backend='nccl', rank=proc_id, world_size=ntasks)
+    else:
+        dist.init_process_group(backend='gloo', rank=proc_id, world_size=ntasks)
+    rank = dist.get_rank()
+    device = rank % torch.cuda.device_count()
+    torch.cuda.set_device(device)
+
+
+link.initialize = initialize
 
 # optim_entry add npu fused optimizers
 from prototype.optimizer import optim_entry as optim_entry_raw
@@ -99,3 +163,10 @@ def optim_entry(config):
         return npu_fused_optims[config['type']](**config['kwargs'])
 
     return optim_entry_raw(config)
+
+# DECLIP.forward all_gather
+from declip import DECLIP
+from prototype.model import declip
+
+declip.DECLIP = DECLIP
+

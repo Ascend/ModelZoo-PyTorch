@@ -21,11 +21,12 @@ def fix(graph):
     for node in nodes:
         slope_node = graph[node.inputs[1]]
         slope_node_value = slope_node.value
-        slope_node.value = np.tile(slope_node_value, (64,1,1))
+        slope_node.value = np.tile(slope_node_value, (64, 1, 1))
 
 
 if __name__ == '__main__':
     onnx_path = sys.argv[1]
+    batch_size = sys.argv[2]
     onnx_graph = OnnxGraph(onnx_path)
     fix(onnx_graph)
-    onnx_graph.save('srgan_fix.onnx')
+    onnx_graph.save('srgan_fix_bs{}.onnx'.format(batch_size))

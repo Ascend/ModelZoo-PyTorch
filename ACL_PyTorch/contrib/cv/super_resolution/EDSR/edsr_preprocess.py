@@ -15,11 +15,12 @@
 
 import torchvision.transforms as transforms
 import torch
-import imageio
+import imageio.v2 as imageio
 import numpy as np
 import os
 import json
 import argparse
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='EDSR preprocess script')
 parser.add_argument('-s', default='', type=str, metavar='PATH',
@@ -43,7 +44,7 @@ def preprocess(src_path, save_path):
         os.makedirs(os.path.join(save_path, "bin"))
     count = 0
     pad_info = []
-    for image_file in os.listdir(src_path):
+    for image_file in tqdm(os.listdir(src_path)):
         image = imageio.imread(os.path.join(
             src_path, image_file))
         image = np2Tensor(image)
@@ -62,7 +63,7 @@ def preprocess(src_path, save_path):
             save_path, "bin", image_file.split('.')[0] + ".bin"))
 
         count += 1
-        print("OK, count = ", count)
+        # print("OK, count = ", count)
 
     with open("pad_info.json", "w") as f:
         f.write(json.dumps(pad_info, indent=4, separators=(',', ': ')))

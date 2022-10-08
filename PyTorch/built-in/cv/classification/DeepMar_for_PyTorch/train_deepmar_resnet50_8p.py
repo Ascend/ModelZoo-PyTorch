@@ -18,6 +18,8 @@ import random
 import math
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.optim as optim
 import torchvision.transforms as transforms
 import torch.nn.functional as F
@@ -516,9 +518,9 @@ def main_worker(npu, npus_per_node, cfg):
 
             # do not include data load time
             if (step + 1) % cfg.steps_per_log == 0 or (step + 1) % len(train_loader) == 0:
-                log = '{}, Step {}/{} in Ep {}, {:.2f}s, datatime:{:.6f}, batchtime:{:.6f}, FPS:{:.2f}, loss:{:.4f}'.format( \
-                    time_str(), step + 1, dataset_L, epoch + 1, time.time() - step_st, data_time, batch_time.val, fps,
-                    loss_meter.val)
+                log = '{}, Step {}/{} in Ep {}, {:.2f}s, datatime:{:.6f}, batchtime:{:.6f}, FPS:{:.2f}, loss:{:.4f}'\
+                .format(time_str(), step + 1, dataset_L, epoch + 1, time.time() - step_st, data_time, batch_time.val,\
+                fps, loss_meter.val)
                 print(log)
 
         ##############

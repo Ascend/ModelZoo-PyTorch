@@ -103,7 +103,7 @@ python3.7 dpn131_pth2onnx.py ./dpn131-7af84be88.pth dpn131.onnx
 
 1. 设置环境变量
 	```
-	source env.sh
+	source /usr/local/Ascend/ascend-toolkit/set_env.sh
 	```
 2. 使用atc将onnx模型转换为om模型文件
 
@@ -153,7 +153,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```

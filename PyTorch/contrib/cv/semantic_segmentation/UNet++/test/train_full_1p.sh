@@ -75,12 +75,16 @@ fi
 # 数据集软链到脚本工程内部
 cur_path=`pwd`
 default_data_path=${cur_path}/inputs/
-mkdir -p ${cur_path}/inputs/
-rm -rf ${default_data_path}/dsb2018_96
-ln -s ${data_path} ${default_data_path}/dsb2018_96
+if [ -d ${default_data_path}/dsb2018_96 ]; then
+    echo "data set has exists"
+else
+    mkdir -p ${cur_path}/inputs/
+    rm -rf ${default_data_path}/dsb2018_96
+    ln -s ${data_path} ${default_data_path}/dsb2018_96
+fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7.5 -u train.py \
+python3.7 -u train.py \
     --optimizer Adam \
     --epochs 100 \
     --batch_size $batch_size \

@@ -14,7 +14,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./msame --model pointnetcnn_bs1.om --input "prep_dataset,prep_dataset" --output ./output --outfmt TXT
 if [ $? != 0 ]; then
     echo "fail!"

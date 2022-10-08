@@ -9,7 +9,7 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf MSPN_bs1.om MSPN_bs16.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=MSPN.onnx --output=MSPN_bs1 --input_format=NCHW --input_shape="input:1,3,256,192" --log=debug --soc_version=Ascend310
 atc --framework=5 --model=MSPN.onnx --output=MSPN_bs16 --input_format=NCHW --input_shape="input:16,3,256,192" --log=debug --soc_version=Ascend310 
 

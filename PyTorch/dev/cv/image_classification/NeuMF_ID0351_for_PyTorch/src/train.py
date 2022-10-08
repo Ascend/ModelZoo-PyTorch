@@ -39,6 +39,8 @@ from neumf import NeuMFEngine
 from data import SampleGenerator
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 device_id = os.environ['RANK_ID']
 device = torch.device(f'npu:{device_id}')

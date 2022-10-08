@@ -112,15 +112,15 @@ GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/algolet/bert-large-chines
 单卡训练
 
 ```
-bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large  --device_id=0   # 单卡精度训练
-bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 单卡性能训练
+bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large  --device_id=0 --warmup_ratio=0.1 --weight_decay=0.00001 # 单卡精度训练
+bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 单卡性能训练
 ```
 
 单机8卡训练
 
 ```
-bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡精度训练
-bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large    # 8卡性能训练
+bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡精度训练
+bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡性能训练
 ```
 
 ```
@@ -133,8 +133,8 @@ bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 
 双机16卡训练
 
 ```
-bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练    # 8卡精度训练
-bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx # 8卡精度训练   # 8卡性能训练
+bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 8卡精度训练    # 8卡精度训练
+bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 8卡精度训练   # 8卡性能训练
 ```
 
 ```

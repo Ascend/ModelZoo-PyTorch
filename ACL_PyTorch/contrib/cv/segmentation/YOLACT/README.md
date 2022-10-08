@@ -63,7 +63,6 @@ pip3 install -r requirements.txt
   │   ├── coco.py
   │   ├── config.py
   │   └── __init__.py
-  ├── env.sh
   ├── layers
   │   ├── box_utils.py
   │   ├── functions
@@ -123,7 +122,7 @@ npu-smi info
 
 ```bash
 cd test
-./pth2om.sh pth权重文件的路径 生成onnx的文件名 生成om的文件名 输入batch_size
+./pth2om.sh pth权重文件的路径 生成onnx的文件名 生成om的文件名 输入batch_size 输入CANN版本号
 ```
 
 注意：此处pth权重文件的路径应设为相对路径

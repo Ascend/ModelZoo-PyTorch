@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # generate prep_dataset
 rm -rf ./postprocess_img gen_img_bs1.npz gen_img_bs16.npz

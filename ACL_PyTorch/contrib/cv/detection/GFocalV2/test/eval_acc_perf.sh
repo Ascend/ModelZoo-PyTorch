@@ -13,7 +13,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-python3.7 get_info.py bin val2017_bin gfocal.info 1216 800
+python3.7 get_info.py bin ${datasets_path}/coco/val2017_bin gfocal.info 1216 800
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
@@ -23,14 +23,15 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
-rm -rf result/dumpOutput_device0
-./benchmark.${arch} -model_type=vision -om_path=gfocal_bs1.om -device_id=0 -batch_size=1 -input_text_path=gfocal.info -input_width=1216 -input_height=800 -useDvpp=false -output_binary=true
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+rm -rf ./out/
+./tools/msame/out/msame --model "./gfocal_bs1.om" --input "./val2017_bin" --output "./out/" --outfmt TXT
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-python3.7 gfocal_postprocess.py --bin_data_path=./result/dumpOutput_device0/ --test_annotation=gfocal_jpeg.info --net_out_num=3 --net_input_height=800 --net_input_width=1216
+
+python3.7 gfocal_postprocess.py --bin_data_path=./out/2* --test_annotation=gfocal_jpeg.info --net_out_num=3 --net_input_height=800 --net_input_width=1216
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

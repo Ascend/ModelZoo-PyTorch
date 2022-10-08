@@ -37,6 +37,8 @@
 import numpy as np
 import time
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import tqdm
 
 from slowfast.utils import logging

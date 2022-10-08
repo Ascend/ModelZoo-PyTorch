@@ -73,6 +73,8 @@ import torchvision.transforms as transforms
 from models import *
 from utils import *
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from apex import amp
 import apex
 

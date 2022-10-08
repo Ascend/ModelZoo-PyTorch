@@ -19,7 +19,7 @@ from torch import nn
 
 from model import Generator
 
-def pth2onnx(input_file, upscale_factor):
+def pth2onnx(input_file, batch_size, upscale_factor):
     device = torch.device('cpu')
     # 创建模型
     netG = Generator(scale_factor=upscale_factor)
@@ -30,11 +30,12 @@ def pth2onnx(input_file, upscale_factor):
     output_names = ["hrImage"]
     
     model_name ='SRGAN'
-    dummy_input = torch.randn(1, 3, 400, 400)
-    export_name = 'srgan.onnx'
+    bs = int(batch_size)
+    dummy_input = torch.randn(bs, 3, 400, 400)
+    export_name = 'srgan_bs{}.onnx'.format(batch_size)
     torch.onnx.export(netG, dummy_input, export_name,
                       input_names=input_names, output_names=output_names,
                       opset_version=11)
 
 if __name__ == '__main__':
-    pth2onnx(sys.argv[1], 2)
+    pth2onnx(sys.argv[1], sys.argv[2], 2)

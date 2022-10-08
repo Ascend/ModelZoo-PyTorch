@@ -480,9 +480,9 @@ if __name__ == '__main__':
     args.process_device_map = device_id_to_process_device_map(args.device_list)
 
     if not os.path.exists(args.eval_dir):
-        os.makedirs(args.eval_dir)
+        os.makedirs(args.eval_dir, exist_ok=True)
     if not os.path.exists(args.checkpoint_folder):
-        os.makedirs(args.checkpoint_folder)
+        os.makedirs(args.checkpoint_folder, exist_ok=True)
     args.datasets = [os.path.join(args.data_path, 'VOC2007_trainval'), os.path.join(args.data_path, 'VOC2012_trainval')]
     args.validation_dataset = os.path.join(args.data_path, 'VOC2007_test')
     if args.distributed:

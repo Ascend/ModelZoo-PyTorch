@@ -5,18 +5,20 @@
 # 网络名称，同目录名称
 Network="ICNet_ID1781_for_PyTorch"
 # 训练batch_size
-batch_size=1024
+batch_size=128
 # 训练使用的npu卡数
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
 # 训练epoch
-train_epochs=5
+train_epochs=2
 # 指定训练所使用的npu device卡id
 device_id=0
 # 学习率
 learning_rate=0.01
+# 预训练模型路径
+more_path1='./pretrained'
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -116,7 +118,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 # 吞吐量
 ActualFPS=${FPS}
 # 单迭代训练时长
-TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
+# TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep Iters: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt

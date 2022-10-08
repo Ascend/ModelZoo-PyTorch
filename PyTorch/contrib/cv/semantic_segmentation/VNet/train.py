@@ -15,7 +15,9 @@
 import time
 import argparse
 import torch
-
+if torch.__version__ >= "1.8":
+    import torch_npu
+#print(torch.__version__)
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
@@ -84,7 +86,7 @@ def main():
                         metavar='W', help='weight decay (default: 1e-8)')
     parser.add_argument('--save', help='save path')
     parser.add_argument('--amp', action='store_true')
-    parser.add_argument('--loss_scale', type=int, default=128)
+    parser.add_argument('--loss_scale', type=str, default='dynamic')
     parser.add_argument('--opt_level',type=str, default='O2')
     parser.add_argument('--distributed', action='store_true')
     parser.add_argument('--dist_backend', type=str, default='nccl',
@@ -142,7 +144,7 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         model.apply(weights_init)
 
-    if args.print:
+    if args.rank == 0 and args.print:
         if os.path.exists(args.save):
             shutil.rmtree(args.save)
         os.makedirs(args.save, exist_ok=True)
@@ -180,7 +182,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     model = model.to(args.device_idx)
     if args.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.rank], broadcast_buffers=False)
 
@@ -216,7 +218,7 @@ def main_worker(gpu, ngpus_per_node, args):
             is_best = True
             best_prec = err
             
-        if args.print:
+        if args.print and epoch % 50 == 0:
             if args.distributed:
                 state = model.module.state_dict()
             else:
@@ -261,7 +263,7 @@ def train(args, epoch, model, trainLoader, optimizer, trainF, weights):
         partialEpoch = epoch + batch_idx / len(trainLoader) - 1
         if args.print:
             fps = 1 / (time.time()-start_time) * data.size(0) * args.device_num
-            print('Train Epoch: {:.2f} [{}/{} ({:.0f}%)] Loss: {:.4f} Error: {:.4f}% Lr: {:.4f} FPS: {:.4f}'.format(
+            print('Train Epoch: {:.2f} [{}/{} ({:.0f}%)] Loss: {:.4f} Error: {:.4f}% Lr: {:.4f} FPS: {:.4f})'.format(
             partialEpoch, nProcessed, nTrain, 100. * batch_idx / len(trainLoader),
             loss.item(), err, optimizer.state_dict()['param_groups'][0]['lr'], fps))
             trainF.write('{:.2f},{:.4f},{:.4f},{:.4f}\n'.format(partialEpoch, loss.item(), err, fps))
