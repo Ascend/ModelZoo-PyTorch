@@ -54,7 +54,7 @@
 
 ```bash
 #设置环境
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # pth转换为om
 bash ./test/pth2om.sh

@@ -4,8 +4,8 @@
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
 Network="ResNet50_for_PyTorch"
-# 训练batch_size
-batch_size=4096
+# 训练batch_size，网络中对bs做了除以机器数量的计算，故32p脚本此处扩大为8p的4倍
+batch_size=16384
 # 训练使用的npu卡数
 export RANK_SIZE=32
 export RANK_ID_START=0
@@ -101,7 +101,7 @@ nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --addr=$one_node_ip \
         --seed=49 \
         --workers=${workers} \
-        --learning-rate=1.6 \
+        --learning-rate=4.9 \
         --warmup=8 \
         --label-smoothing=0.1 \
         --mom=0.9 \
@@ -126,6 +126,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
+batch_size=4096
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`

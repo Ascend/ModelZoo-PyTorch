@@ -16,7 +16,6 @@
 ├── CSNLN_pth2onnx.py       //pth转onnx脚本
 ├── csnln_x4_bs1.om              //onnx转化的om文件
 ├── model_x4.pt              //权重文件 
-├── env.sh                         //环境变量  
 ├── get_info.py                   //用于获取二进制数据集信息的脚本 
 ```
 

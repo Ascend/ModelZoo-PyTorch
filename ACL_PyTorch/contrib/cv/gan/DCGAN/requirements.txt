@@ -1,6 +1,7 @@
-numpy
-pillow
-opencv-python
-onnx-simplifier
+numpy==1.18.5
+pillow==7.2.0
+opencv-python==4.5.2.52
+onnx-simplifier==0.3.5
 torchvision==0.6.0
 torch==1.5.0
+onnx==1.7.0

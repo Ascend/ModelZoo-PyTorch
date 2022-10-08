@@ -142,8 +142,9 @@ class _AnchorTargetLayer(nn.Module):
 
         num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
 
-        sum_fg = torch.sum((labels == 1).int(), 1)
-        sum_bg = torch.sum((labels == 0).int(), 1)
+        sum_fg = torch.sum((labels == 1).int(), 1).cpu()
+        sum_bg = torch.sum((labels == 0).int(), 1).cpu()
+        labels = labels.cpu()
 
         for i in range(batch_size):
             # subsample positive labels if we have too many
@@ -172,7 +173,7 @@ class _AnchorTargetLayer(nn.Module):
                 rand_num = torch.from_numpy(np.random.permutation(bg_inds.size(0))).type_as(bg_inds)
                 disable_inds = bg_inds[rand_num[:bg_inds.size(0)-num_bg]]
                 labels[i][disable_inds] = -1
-
+        labels = labels.npu()
         offset = torch.arange(0, batch_size)*gt_boxes.size(1)
 
         argmax_overlaps = argmax_overlaps + offset.view(batch_size, 1).type_as(argmax_overlaps)

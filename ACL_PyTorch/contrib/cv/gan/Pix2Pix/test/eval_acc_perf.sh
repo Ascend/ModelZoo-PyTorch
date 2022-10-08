@@ -1,7 +1,7 @@
 #!/bin/bash
 #  bash ./test/eval_acc_perf.sh --datasets_path='./datasets/facades'
 
-source env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 for para in $*
 do
     if [[ $para == --datasets_path* ]];then

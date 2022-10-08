@@ -306,7 +306,7 @@ python gen_dataset_info.py bin ./environment/input_bins nnunetplusplus_prep_bin.
 ### 2.5 使用benchmark工具进行推理
 确保device空闲，将benchmark工具与上节生成的.info文件放于同一目录下，使用benchmark工具同步开启一个或四个进程进行推理。参数-device_id指代了使用的设备编号，-om_path指代了使用的om模型，-input_text_path指代了采用的info文件，-output_binary=True指代了将结果保存为.bin。
 ```
-source set_env.sh  # 激活NPU环境
+source /usr/local/Ascend/ascend-toolkit/set_env.sh # 激活NPU环境
 # 方法一：使用总的nnunetplusplus_prep_bin.info，使用1个310进行推理
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./environment/nnunetplusplus.om -input_text_path=nnunetplusplus_prep_bin.info -input_width=128 -input_height=128 -output_binary=True -useDvpp=False
 
@@ -393,7 +393,7 @@ python onnx_infer.py nnunetplusplus.onnx 1,1,128,128,128
 ```
 NPU上的性能使用benchmark工具来计算，需要在310服务器上执行。使用benchmark前需要激活set_env.sh环境变量。您也可以在前面benchmark的输出文件夹result/下找到perf_vision_batchsize_1_device_0.txt文件，该文件由benchmark默认生成，在backup中我们也提供了一份实测样本，该结果与以下命令得到的结果几乎相同。
 ```
-source set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -round=20 -om_path=nnunetplusplus.om -device_id=0 -batch_size=1
 ```
 以下是实测结果，可供参考：

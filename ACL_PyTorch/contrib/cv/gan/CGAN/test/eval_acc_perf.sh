@@ -30,7 +30,7 @@ echo "====creating info file done===="
 
 
 echo "==== msame start===="
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf ./out
 ./msame --model "./CGAN_bs1.om" --input "./prep_dataset/input.bin" --output "./out" --outfmt BIN --loop 1 >>perf.txt
 if [ $? != 0 ]; then

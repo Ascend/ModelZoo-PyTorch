@@ -3,7 +3,7 @@
 rm -rf DnCNN-S-15.onnx
 python3.7 DnCNN_pth2onnx.py net.pth DnCNN-S-15.onnx
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf DnCNN-S-15_bs1.om DnCNN-S-15_bs16.om
 atc --framework=5 --model=DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend310

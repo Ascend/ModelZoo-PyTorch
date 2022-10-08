@@ -1082,7 +1082,7 @@ def run():
             device = torch.device("npu", ext_dist.my_local_rank)
         else:
             ngpus = args.world_size
-            device = torch.device("npu", 0)
+            device = torch.device("npu", args.local_rank)
         print("Using {} NPU(s)...".format(ngpus))
     else:
         device = torch.device("cpu")

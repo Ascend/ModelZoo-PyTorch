@@ -12,14 +12,8 @@ fi
 
 rm -rf TextCNN_bs1.om TextCNN_bs16.om
 
-source env.sh
-
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+# 该脚本中环境变量仅供参考，请以实际安装环境配置比环境变量
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --framework=5 --model=TextCNN.onnx --output=TextCNN_bs1 --input_format=ND --input_shape="sentence:1,32" --log=error --soc_version=Ascend310
 

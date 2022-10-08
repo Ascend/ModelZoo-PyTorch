@@ -13,7 +13,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 echo "./benchmark.x86_64 bs1"
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=yolor_bs1.om -input_text_path=./yolor_prep_bin.info -input_width=1344 -input_height=1344 -output_binary=true -useDvpp=False

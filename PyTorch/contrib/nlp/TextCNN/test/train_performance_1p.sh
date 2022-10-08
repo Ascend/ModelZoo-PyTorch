@@ -94,6 +94,7 @@ echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 FPS=`grep -a 'fps_tmp' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' |awk '{print $18}'|  awk -F '[[]' '{print $2}' |awk -F '[]]' '{print $1}'`
 FPS=${FPS#* }  # 去除前面的空格字符
+FPS=`echo $FPS|awk '{printf("%.2f",$0)}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

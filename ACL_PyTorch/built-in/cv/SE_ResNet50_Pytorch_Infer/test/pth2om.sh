@@ -1,7 +1,7 @@
 #!/bin/bash
 
 install_path=$1
-source ${install_path}/ascend-toolkit/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 echo 'pth -> onnx'
 rm -rf ./se_resnet50_dynamic_bs.onnx

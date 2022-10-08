@@ -38,10 +38,8 @@ import logging
 
 from scipy.io.wavfile import write
 from scipy.special import expit
-
 from torch import jit
 from inference import MeasureTime
-
 from onnx_infer import Waveglow
 from data_process import *
 from acl_net import Net
@@ -78,7 +76,7 @@ class Tacotron2():
     def __init__(self, device_id):
         self.max_decoder_steps = 2000
         self.random = np.random.rand(self.max_decoder_steps+1, 256)
-        self.random = self.random.astype(np.float16)
+        self.random = self.random.astype(np.float32)
 
         self.input_random = np.random.randint(1, self.max_decoder_steps, size=(self.max_decoder_steps))
 
@@ -97,7 +95,6 @@ class Tacotron2():
         self.postnet_context = Net(context, device_id=self.device_id, 
                                 model_path="output/postnet_static.om", first=False)
 
-
     def __del__(self):
         del self.encoder_context
         del self.decoder_context
@@ -112,27 +109,24 @@ class Tacotron2():
         ret = acl.finalize()
         assert ret == 0
 
-
-    
     def infer(self, batch_size, sequences, sequence_lengths, max_decode_iter):
 
         print("Running Tacotron2 Encoder")
-
-        mask = get_mask_from_lengths(sequence_lengths)
+        mask = get_mask_from_lengths(sequence_lengths) 
         mask = mask.numpy()
-        decoder_input = np.zeros((batch_size, 80), dtype=np.float16)
-        attention_hidden = np.zeros((batch_size, 1024), dtype=np.float16)
-        attention_cell = np.zeros((batch_size, 1024), dtype=np.float16)
-        decoder_hidden = np.zeros((batch_size, 1024), dtype=np.float16)
-        decoder_cell = np.zeros((batch_size, 1024), dtype=np.float16)
-        attention_weights = np.zeros((batch_size, sequence_lengths[0]), dtype=np.float16)
-        attention_weights_cum = np.zeros((batch_size, sequence_lengths[0]), dtype=np.float16)
-        attention_context = np.zeros((batch_size, 512), dtype=np.float16)
+        decoder_input = np.zeros((batch_size, 80), dtype=np.float32)
+        attention_hidden = np.zeros((batch_size, 1024), dtype=np.float32)
+        attention_cell = np.zeros((batch_size, 1024), dtype=np.float32)
+        decoder_hidden = np.zeros((batch_size, 1024), dtype=np.float32)
+        decoder_cell = np.zeros((batch_size, 1024), dtype=np.float32)
+        attention_weights = np.zeros((batch_size, sequence_lengths[0]), dtype=np.float32)
+        attention_weights_cum = np.zeros((batch_size, sequence_lengths[0]), dtype=np.float32)
+        attention_context = np.zeros((batch_size, 512), dtype=np.float32)
 
         not_finished = np.ones((batch_size,), dtype=np.int32)
         mel_lengths = np.zeros((batch_size,), dtype=np.int32)
-        mel_output_input = np.zeros((batch_size, 80, 1), dtype=np.float16)
-        gate_output_input = np.zeros((batch_size, 1, 1), dtype=np.float16)
+        mel_output_input = np.zeros((batch_size, 80, 1), dtype=np.float32)
+        gate_output_input = np.zeros((batch_size, 1, 1), dtype=np.float32)
         encoder_output = self.encoder_context([sequences, sequence_lengths, decoder_input, attention_hidden,
                                                attention_cell, decoder_hidden, decoder_cell, attention_weights,
                                                attention_weights_cum, attention_context, mask, not_finished,
@@ -140,7 +134,6 @@ class Tacotron2():
 
         gate_threshold = 0.5
         max_decoder_steps = 2000
-
 
         print("Running Tacotron2 Decoder")
         mel_output_0 = encoder_output[-4]
@@ -161,9 +154,8 @@ class Tacotron2():
             if np.sum(not_finished) == 0:
                 break
 
-
         mel_outputs_length = mel_outputs.shape[2]
-        mel_outputs_padded = np.zeros((batch_size, 80, max_decoder_steps), dtype=np.float16)
+        mel_outputs_padded = np.zeros((batch_size, 80, max_decoder_steps), dtype=np.float32)
         mel_outputs_padded[:, :, :mel_outputs_length] = mel_outputs
 
         mel_outputs_postnet = self.postnet_context(mel_outputs_padded)

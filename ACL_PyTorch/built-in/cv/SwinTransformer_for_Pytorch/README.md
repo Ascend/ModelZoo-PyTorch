@@ -17,7 +17,7 @@
   git clone https://gitee.com/ascend/ModelZoo-PyTorch
   cd ModelZoo-PyTorch
   git checkout master
-  cd ACL_PyTorch/built-in/cv/SwinTransformer_timm_for_Pytorch
+  cd ACL_PyTorch/built-in/cv/SwinTransformer_for_Pytorch
   ```
 
 
@@ -85,7 +85,7 @@
 2. 数据预处理
 
    ```shell
-   python3 preprocess.py --img_size 384 --data_dir /opt/npu/imagenet/val --out_dir ./preprocessed_data
+   python3 preprocess.py --img_size 384 --input_dir /opt/npu/imagenet/val --out_dir ./preprocessed_data
    ```
 
 ## 模型推理
@@ -99,7 +99,8 @@
    ```shell
    # bs:[1, 4, 8, 16, 32, 64]
    python3 pth2onnx.py -input_path swin_base_patch4_window12_384_22kto1k.pth --out_path models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx --output_type=FP16 --model_name swin_base_patch4_window12_384 --batch_size ${bs}
-   python3 merge_add.py -i models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx -o models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx
+   python3 -m onnxsim models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx
+   python3 opt_onnx.py -i models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx -o models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx
    ```
 
 3. 使用ATC工具将ONNX模型转OM模型
@@ -121,7 +122,7 @@
       ```shell
       # bs:[1, 4, 8, 16, 32, 64]
       # 以bs8模型为例
-      atc --model=models/onnx/swin_base_patch4_window12_384_bs8.onnx --framework=5 --output=models/om/swin_base_patch4_window12_384_bs8 --input_format=NCHW --log=debug --soc_version=${chip_name} --output_type=FP16 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+      atc --model=models/onnx/swin_base_patch4_window12_384_bs8.onnx --framework=5 --output=models/om/swin_base_patch4_window12_384_bs8 --input_format=NCHW --log=debug --soc_version=${chip_name} --output_type=FP16 --input_fp16_nodes="image" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
    ```
       
    + 参数说明：

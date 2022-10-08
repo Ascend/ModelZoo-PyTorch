@@ -8,7 +8,7 @@ if [ $? != 0 ]; then
 fi
 
 rm -rf ReID_bs1.om ReID_bs16.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=ReID.onnx --output=ReID_bs1 --input_format=NCHW --input_shape="image:1,3,256,128" --log=debug --soc_version=Ascend310
 atc --framework=5 --model=ReID.onnx --output=ReID_bs16 --input_format=NCHW --input_shape="image:16,3,256,128" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
 

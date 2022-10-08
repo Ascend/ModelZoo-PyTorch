@@ -1,0 +1,4 @@
+torch=0.3.1
+sklearn
+numpy
+apex=0.1

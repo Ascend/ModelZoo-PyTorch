@@ -13,7 +13,7 @@ done
 python LResNet_preprocess.py 'jpg' ${data_path} './data/lfw';
 python LResNet_preprocess.py 'bin' './data/lfw' './lfw.info' 112 112;
 
-source ./env.sh;
+source /usr/local/Ascend/ascend-toolkit/set_env.sh;
 
 rm -rf result/dumpOutput_device0;
 rm -rf result/dumpOutput_device0_bs1;

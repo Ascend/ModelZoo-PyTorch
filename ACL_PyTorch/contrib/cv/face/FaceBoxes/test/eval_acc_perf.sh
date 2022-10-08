@@ -25,7 +25,7 @@ rm -rf prep
 cp -a ../prep ./
 
 echo "====bs1 benchmark推理===="
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=../faceboxes-b0_bs1.om -input_text_path=../faceboxes_prep_bin.info -input_width=1024 -input_height=1024 -output_binary=True -useDvpp=False
 if [ $? != 0 ]; then
     echo "fail!"
@@ -49,7 +49,7 @@ echo "====bs1 精度后处理完成===="
 
 echo "====bs16 benchmark推理===="
 cd ../benchmark_tools/
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=1 -om_path=../faceboxes-b0_bs1.om -input_text_path=../faceboxes_prep_bin.info -input_width=1024 -input_height=1024 -output_binary=True -useDvpp=False
 if [ $? != 0 ]; then
     echo "fail!"

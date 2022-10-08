@@ -45,7 +45,7 @@ cp ${model.pt} ./model
 
 7.310上执行，执行时确保device空闲
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 apt install dos2unix
 dos2unix test/pth2om.sh
 bash test/pth2om.sh

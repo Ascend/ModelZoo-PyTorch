@@ -31,6 +31,8 @@ data_path=""
 train_epochs=1
 # 指定训练所使用的npu device卡id
 device_id=0
+# 加载数据进程数
+workers=64
 # 学习率
 learning_rate=0.1
 
@@ -95,32 +97,36 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-taskset -c 0-47 python3.7 -u ./main.py \
-	${data_path} \
+nohup python3 -u main.py \
+       --data_path ${data_path} \
         --addr=$(hostname -I |awk '{print $1}') \
-	--seed=49 \
-        --workers=48 \
+	    --seed=49 \
+        --workers=${workers} \
         --learning-rate=${learning_rate} \
         --mom=0.9 \
         --weight-decay=1.0e-04  \
         --print-freq=30 \
         --dist-backend 'hccl' \
         --rank=0 \
+       --world-size=1 \
         --device='npu' \
-        --world-size=1 \
-        --gpu=0 \
-        --epochs=${train_epochs}\
+       --epochs=${train_epochs}\
+        --gpu=${ASCEND_DEVICE_ID} \
         --amp \
         --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
 
-
-
+##################获取训练数据################
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
+
+# 训练用例信息，不需要修改
+BatchSize=${batch_size}
+DeviceType=`uname -m`
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
@@ -136,11 +142,6 @@ echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 # 性能看护结果汇总
-# 训练用例信息，不需要修改
-BatchSize=${batch_size}
-DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
-
 # 获取性能数据，不需要修改
 # 吞吐量
 ActualFPS=${FPS}

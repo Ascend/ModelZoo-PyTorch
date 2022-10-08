@@ -1,5 +1,5 @@
 #!/bin/bash
-source test/env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 git clone --branch v0.4.5 https://github.com/rwightman/pytorch-image-models.git
 cd pytorch-image-models  
 patch -p1 < ../TResNet.patch

@@ -112,7 +112,6 @@ python3.7 ./main.py \
     --epochs=${train_epochs} \
     --world-size=1 \
     --amp \
-    --loss-scale="dynamic" \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

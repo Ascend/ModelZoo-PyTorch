@@ -38,7 +38,7 @@ import random
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
- 
+
 def main(config):
     os.environ['MASTER_ADDR'] = '127.0.0.1'
     os.environ['MASTER_PORT'] = '29688'

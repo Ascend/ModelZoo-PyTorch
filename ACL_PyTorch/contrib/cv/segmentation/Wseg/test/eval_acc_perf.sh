@@ -23,7 +23,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 echo "===========  start benchmark  =============="
 echo "benchmark batch1"
 rm -rf result/dumpOutput_device1

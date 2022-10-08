@@ -116,7 +116,6 @@ nohup taskset -c $PID_START-$PID_END  python3.7 ./main.py \
       --epochs=${train_epochs} \
       --world-size=8 \
       --amp \
-      --loss-scale="dynamic" \
       --rank=${RANK_ID} \
       --batch-size=${batch_size} > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
       

@@ -13,7 +13,7 @@ done
 python LV_Vit_preprocess.py --src_path ${datasets_path} --save_path ./data/prep_dataset;
 python gen_dataset_info.py ./data/prep_dataset/ ./lvvit_prep_bin.info;
 
-source ./env.sh;
+source /usr/local/Ascend/ascend-toolkit/set_env.sh;
 
 rm -rf result/dumpOutput_device0;
 rm -rf result/dumpOutput_device0_bs1;

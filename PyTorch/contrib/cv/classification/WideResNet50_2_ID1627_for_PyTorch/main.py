@@ -96,7 +96,7 @@ parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
-parser.add_argument('--loss-scale', default=1024., type=float,
+parser.add_argument('--loss-scale', default='dynamic',
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')

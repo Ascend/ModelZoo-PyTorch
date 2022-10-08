@@ -1,0 +1,7 @@
+ONNX==1.7.0
+torch==1.8.0
+torchvision==0.9.1
+numpy==1.19.2
+opencv-python == 4.2.0.34
+pandas
+Pillow == 7.2.0

@@ -13,6 +13,8 @@ import datetime
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import random
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist

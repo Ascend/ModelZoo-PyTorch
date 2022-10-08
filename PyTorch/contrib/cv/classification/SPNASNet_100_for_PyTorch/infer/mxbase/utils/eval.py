@@ -17,6 +17,13 @@ import sys
 import os
 import json
 
+def w2txt(file_path, filename_list, data):
+    with open(file_path, "w") as file:
+        for i in range(data.shape[0]):
+            s = filename_list[i].split('.')[0] + ' '
+            s += ' '.join(str(int(num)) for num in data[i])
+            file.write(s+"\n")
+
 def cre_groundtruth_dict_fromtxt(gtfile_path):
     """
     :param filename: file contains the imagename and label number
@@ -45,11 +52,14 @@ def run():
     table_dict["title"] = "Overall statistical evaluation"
     table_dict["value"] = []
     count = 0
+    filename_list = []
+    sort_index_sents = []
     with open(infer_reault, 'r')as f:
         for line in f.readlines():
             prediction = []
             temp = line.strip().split(" ")
             img_name = temp[0]
+            filename_list.append(img_name.split('.')[0])
             print(img_name, "====", count)
             count += 1
             prediction = np.array([float(temp[i]) for i in range(1, len(temp))])
@@ -67,6 +77,13 @@ def run():
                 if (str(realLabel) == str(sort_index[i])):
                     count_hit[i] += 1
                     break
+            sort_index_sents.append(sort_index[:5])
+        file_path = "../mxbase_postprocess_result.txt"
+        sort_index_sents = np.array(sort_index_sents).astype(np.int32)
+        if(os.path.exists(file_path)):
+            os.remove(file_path)
+        w2txt(file_path, filename_list, sort_index_sents)
+
         print(count)
         if 'value' not in table_dict.keys():
             print("the item value does not exist!")
