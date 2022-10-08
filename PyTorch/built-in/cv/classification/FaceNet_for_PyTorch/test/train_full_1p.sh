@@ -67,7 +67,7 @@ nohup python3.7 fine_tune_new.py \
     --seed 12345 \
     --amp_cfg \
     --opt_level O2 \
-    --loss_scale_value 1024 \
+    --loss_scale_value "dynamic" \
     --device_list '0' \
     --batch_size 512 \
     --epochs 1 \

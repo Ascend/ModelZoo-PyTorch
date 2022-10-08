@@ -37,7 +37,7 @@ def preprocess(src_path, save_path):
             crop_pct=0.9)
 
 
-        for batch_idx, (input, target, path) in enumerate(loader):
+        for batch_idx, (input, target, path) in tqdm(enumerate(loader), total=len(loader)):
             base_index = batch_idx * 64
             for idx, (img, p) in enumerate(zip(input, path)):
                 index = base_index + idx

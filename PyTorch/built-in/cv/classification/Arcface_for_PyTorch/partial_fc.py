@@ -16,6 +16,7 @@ import collections
 from typing import Callable
 
 import torch
+import apex_C
 from torch import distributed
 from torch.nn.functional import linear, normalize
 import torch.nn.functional as functional
@@ -532,21 +533,12 @@ class AllGatherFunc(torch.autograd.Function):
     def backward(ctx, *grads):
         grad_list = list(grads)
         rank = distributed.get_rank()
-        grad_list_tmp = [grad.clone() for grad in grad_list]
+
+        grads_flatten = apex_C.flatten(grad_list)
+        distributed.all_reduce(grads_flatten, distributed.ReduceOp.SUM, async_op=False)
+        grad_list_tmp = apex_C.unflatten(grads_flatten, grad_list)
+
         grad_out = grad_list_tmp[rank]
-
-        dist_ops = [
-            distributed.all_reduce(grad_out, distributed.ReduceOp.SUM, async_op=True)
-            if i == rank
-            else distributed.all_reduce(
-                grad_list_tmp[i], distributed.ReduceOp.SUM, async_op=True
-            )
-            for i in range(distributed.get_world_size())
-        ]
-
-        for _op in dist_ops:
-            _op.wait()
-
         grad_list[rank].copy_(grad_out)
         grad_out = grad_list[rank]
 

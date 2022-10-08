@@ -50,9 +50,10 @@ python3 adaptnoflashencoder.py生成no_flash_encoder_revise.onnx
 ## 2 离线推理 
 
 onnx转om:
-将static_encoder.sh和static_decoder.sh放到s0/onnx文件下
+将static_encoder.sh和static_decoder.sh放到s0/onnx文件下，请以实际安装环境配置环境变量。
 
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash static_encoder.sh
 bash static_decoder.sh
 ```

@@ -18,7 +18,7 @@ device_id=0
 # 训练使用的npu卡数
 export RANK_SIZE=1
 # 数据集路径,修改为本地数据集路径
-data_path="/opt/npu/imagenet"
+data_path=""
 
 #TF2.X独有，需要模型审视修改
 #export NPU_LOOP_SIZE=${train_steps}

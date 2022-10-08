@@ -92,6 +92,7 @@ python3.7 dlrm_s_pytorch.py --arch-sparse-feature-size=16 \
              --loss-function=bce \
              --round-targets=True \
              --learning-rate=0.1 \
+             --nepochs=${train_epochs} \
              --mini-batch-size=${batch_size} \
              --print-freq=100 \
              --print-time \

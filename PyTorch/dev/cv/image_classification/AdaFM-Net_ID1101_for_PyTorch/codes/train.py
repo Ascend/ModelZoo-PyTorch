@@ -38,6 +38,8 @@ import random
 import logging
 import time
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 import options.options as option
 from utils import util

@@ -5,7 +5,6 @@
 ```
 .
 ├── LICENSE
-├── env.sh
 ├── modelzoo_level.txt
 ├── SiamMask.patch
 ├── SiamMask_eval.py

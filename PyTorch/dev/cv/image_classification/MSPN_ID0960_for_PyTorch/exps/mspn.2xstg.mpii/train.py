@@ -40,6 +40,8 @@ import argparse
 import time
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from tensorboardX import SummaryWriter
 
 from cvpack.torch_modeling.engine.engine import Engine

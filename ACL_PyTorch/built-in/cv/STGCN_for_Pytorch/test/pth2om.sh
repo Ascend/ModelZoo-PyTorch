@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf st_gcn_bs1.onnx
 Python3.7 st_gcn_export.py –ckpt=./checkpoints/st_gcn.kinetics-6fa43f73.pth –onnx=./st_gcn_bs1.onnx –batch_size=1

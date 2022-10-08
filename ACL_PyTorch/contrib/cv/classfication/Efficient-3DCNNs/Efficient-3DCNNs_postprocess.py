@@ -62,10 +62,9 @@ def evaluate(result_path, class_names, info_path, annotation_path, acc_file):
     print('postprocessing')
     f = open(info_path, 'r')
     ucf101_info = f.readlines()
-    bin_path = os.listdir(result_path)[0]
-    result_path = os.path.join(result_path, bin_path)
     bin_list = os.listdir(result_path)
-    bin_list.sort(key= lambda x:int(x[:-13]))
+    bin_list.remove('sumary.json')
+    bin_list.sort(key= lambda x:int(x[:-6]))
     output_buffer = []
     previous_video_id = ''
     test_results = {'results': {}}
@@ -76,6 +75,7 @@ def evaluate(result_path, class_names, info_path, annotation_path, acc_file):
         outputs = np.fromfile(bin_path, dtype=np.float32).reshape(-1, 101)
         outputs = torch.from_numpy(outputs)
         outputs = F.softmax(outputs, dim=1).cpu()
+        
         for j in range(outputs.size(0)):
             if not (i == 0 and j == 0) and targets[j] != previous_video_id:
                 calculate_video_results(output_buffer, previous_video_id,
@@ -83,6 +83,8 @@ def evaluate(result_path, class_names, info_path, annotation_path, acc_file):
                 output_buffer = []
             output_buffer.append(outputs[j].data.cpu())
             previous_video_id = targets[j]
+
+
 
         if (i % 100) == 0:
             with open('val.json', 'w') as f:

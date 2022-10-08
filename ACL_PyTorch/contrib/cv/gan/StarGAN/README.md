@@ -60,7 +60,7 @@ bash unzip_dataset.sh
 - 使用脚本 `StarGAN_pre_processing.py` 获得二进制 bin 文件和基准的图片结果。
 
 ```
-source ./test/env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python3.7 StarGAN_pre_processing.py --mode test  --selected_attrs Black_Hair Blond_Hair Brown_Hair Male Young \
                   --model_save_dir './models' --result_dir './result_baseline' \
                   --attr_path './data/celeba/images' --celeba_image_dir './data/celeba/list_attr_celeba.txt'

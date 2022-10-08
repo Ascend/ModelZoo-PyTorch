@@ -100,8 +100,8 @@ class Trainer(object):
             self._criterion = self._criterion.to(dtype=torch.bfloat16)
             self._model = self._model.to(dtype=torch.bfloat16)
         if not args.pipeline_model_parallel:
-            self._criterion = self._criterion.to(device=self.device)
-            self._model = self._model.to(device=self.device)
+            self._criterion = self._criterion.to(self.device)
+            self._model = self._model.to(self.device)
 
         self._model.encoder.embed_positions.weight.data = self._model.encoder.embed_positions.weight.data.npu_format_cast(29)
         self._model.decoder.embed_positions.weight.data = self._model.decoder.embed_positions.weight.data.npu_format_cast(29)

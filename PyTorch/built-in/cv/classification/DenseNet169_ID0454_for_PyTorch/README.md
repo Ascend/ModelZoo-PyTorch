@@ -25,7 +25,7 @@ DenseNet-169是一个经典的图像分类网络，对于一个L层的网络，D
 
   ```
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
-  code_path=PyTorch/contrib/cv/classification
+  code_path=PyTorch/built-in/cv/classification
   ```
 
 - 通过Git获取代码方法如下：

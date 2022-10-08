@@ -27,7 +27,7 @@ fi
 
 chmod +x benchmark.x86_64
 chmod +x benchmark.aarch64
-source set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1

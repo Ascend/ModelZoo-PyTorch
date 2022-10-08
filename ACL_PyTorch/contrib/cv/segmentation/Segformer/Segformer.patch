@@ -1,0 +1,93 @@
+Binary files mmsegmentation/.git/index and mmsegmentation_t/.git/index differ
+diff -ru mmsegmentation/.git/logs/HEAD mmsegmentation_t/.git/logs/HEAD
+--- mmsegmentation/.git/logs/HEAD	2022-07-15 16:24:17.498042261 +0800
++++ mmsegmentation_t/.git/logs/HEAD	2022-07-15 16:22:06.002040650 +0800
+@@ -1 +1 @@
+-0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873457 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
++0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873326 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
+diff -ru mmsegmentation/.git/logs/refs/heads/master mmsegmentation_t/.git/logs/refs/heads/master
+--- mmsegmentation/.git/logs/refs/heads/master	2022-07-15 16:24:17.498042261 +0800
++++ mmsegmentation_t/.git/logs/refs/heads/master	2022-07-15 16:22:06.002040650 +0800
+@@ -1 +1 @@
+-0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873457 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
++0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873326 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
+diff -ru mmsegmentation/.git/logs/refs/remotes/origin/HEAD mmsegmentation_t/.git/logs/refs/remotes/origin/HEAD
+--- mmsegmentation/.git/logs/refs/remotes/origin/HEAD	2022-07-15 16:24:17.498042261 +0800
++++ mmsegmentation_t/.git/logs/refs/remotes/origin/HEAD	2022-07-15 16:22:06.002040650 +0800
+@@ -1 +1 @@
+-0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873457 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
++0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873326 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
+Only in mmsegmentation/.git/objects/pack: pack-676410b3c10967716089214d105e726500708b5d.idx
+Only in mmsegmentation/.git/objects/pack: pack-676410b3c10967716089214d105e726500708b5d.pack
+Only in mmsegmentation_t/.git/objects/pack: pack-79dd6f6dce3e643e16a8b285f78f6c1b48a91c92.idx
+Only in mmsegmentation_t/.git/objects/pack: pack-79dd6f6dce3e643e16a8b285f78f6c1b48a91c92.pack
+diff -ru mmsegmentation/mmseg/models/segmentors/encoder_decoder.py mmsegmentation_t/mmseg/models/segmentors/encoder_decoder.py
+--- mmsegmentation/mmseg/models/segmentors/encoder_decoder.py	2022-07-15 16:24:17.578042262 +0800
++++ mmsegmentation_t/mmseg/models/segmentors/encoder_decoder.py	2022-07-15 16:27:48.142044842 +0800
+@@ -159,45 +159,44 @@
+         decode without padding.
+         """
+ 
+-        h_stride, w_stride = self.test_cfg.stride
+-        h_crop, w_crop = self.test_cfg.crop_size
+         batch_size, _, h_img, w_img = img.size()
+         num_classes = self.num_classes
+-        h_grids = max(h_img - h_crop + h_stride - 1, 0) // h_stride + 1
+-        w_grids = max(w_img - w_crop + w_stride - 1, 0) // w_stride + 1
+         preds = img.new_zeros((batch_size, num_classes, h_img, w_img))
+         count_mat = img.new_zeros((batch_size, 1, h_img, w_img))
+-        for h_idx in range(h_grids):
+-            for w_idx in range(w_grids):
+-                y1 = h_idx * h_stride
+-                x1 = w_idx * w_stride
+-                y2 = min(y1 + h_crop, h_img)
+-                x2 = min(x1 + w_crop, w_img)
+-                y1 = max(y2 - h_crop, 0)
+-                x1 = max(x2 - w_crop, 0)
+-                crop_img = img[:, :, y1:y2, x1:x2]
+-                crop_seg_logit = self.encode_decode(crop_img, img_meta)
+-                preds += F.pad(crop_seg_logit,
+-                               (int(x1), int(preds.shape[3] - x2), int(y1),
+-                                int(preds.shape[2] - y2)))
+-
+-                count_mat[:, :, y1:y2, x1:x2] += 1
++        
++        crops = torch.split(img, 256, dim=3)
++        crop1 = torch.cat(crops[0:4], dim=3)
++        crop2 = torch.cat(crops[3:7], dim=3)
++        crop3 = torch.cat(crops[4:8], dim=3)
++        
++        crop_seg_logit1 = self.encode_decode(crop1, img_meta)
++        crop_seg_logit2 = self.encode_decode(crop2, img_meta)
++        crop_seg_logit3 = self.encode_decode(crop3, img_meta)
++        
++        preds += F.pad(crop_seg_logit1, (0, 1024, 0, 0))
++        preds += F.pad(crop_seg_logit2, (768, 256, 0, 0))
++        preds += F.pad(crop_seg_logit3, (1024, 0, 0, 0))
++        
++        count_mat += F.pad(img.new_ones((1, 1, 1024, 1024)), (0, 1024, 0, 0))
++        count_mat += F.pad(img.new_ones((1, 1, 1024, 1024)), (768, 256, 0, 0))
++        count_mat += F.pad(img.new_ones((1, 1, 1024, 1024)), (1024, 0, 0, 0))
++        
+         assert (count_mat == 0).sum() == 0
+         if torch.onnx.is_in_onnx_export():
+             # cast count_mat to constant while exporting to ONNX
+             count_mat = torch.from_numpy(
+                 count_mat.cpu().detach().numpy()).to(device=img.device)
+         preds = preds / count_mat
++        
++        
+         if rescale:
+-            # remove padding area
+-            resize_shape = img_meta[0]['img_shape'][:2]
+-            preds = preds[:, :, :resize_shape[0], :resize_shape[1]]
+             preds = resize(
+                 preds,
+                 size=img_meta[0]['ori_shape'][:2],
+                 mode='bilinear',
+                 align_corners=self.align_corners,
+                 warning=False)
++        
+         return preds
+ 
+     def whole_inference(self, img, img_meta, rescale):

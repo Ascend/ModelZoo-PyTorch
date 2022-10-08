@@ -1,0 +1,15 @@
+torch==1.12.0
+torchvision==0.13.0
+timm==0.4.5
+natsort
+tensorboard
+nltk
+h5py
+numpy
+fastwer
+requests==2.28.0
+sentencepiece
+onnx==1.11.0
+onnxsim
+onnxruntime
+decorator

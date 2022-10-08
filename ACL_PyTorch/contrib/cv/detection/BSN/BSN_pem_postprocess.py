@@ -152,7 +152,7 @@ def BSN_post_processing():
 if __name__ == '__main__':
     if not os.path.exists("output/PEM_results"):
             os.makedirs("output/PEM_results") 
-    out_files = os.listdir(args.PEM_out_path)
+    out_files = [ file  for file in os.listdir(args.PEM_out_path) if file.endswith(".bin") ]
     print("processing...")
     for i in range(len(out_files)):
         video_name = str(out_files[i])

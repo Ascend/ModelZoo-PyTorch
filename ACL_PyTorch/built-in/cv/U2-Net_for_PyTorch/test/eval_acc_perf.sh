@@ -8,7 +8,7 @@ python3.7 preprocess.py --image_dir './datasets/ECSSD/images' --save_dir './test
 python3.7 gen_dataset_info.py bin ./test_data_ECSSD ECSSD.info 320 320
 
 # infer process
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 chmod a+x benchmark.${arch}
 device_id=0
 ./benchmark.${arch} -model_type=vision -device_id=$device_id -batch_size=1 -om_path=./models/u2net_sim_bs1_fixv2.om -input_text_path=./ECSSD.info -input_width=320 -input_height=320 -output_binary=True -useDvpp=False

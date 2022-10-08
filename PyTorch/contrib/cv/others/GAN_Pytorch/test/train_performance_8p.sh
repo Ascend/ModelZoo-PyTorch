@@ -68,14 +68,25 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7 -u -m torch.distributed.launch --nproc_per_node=8 ${currentDir}/main.py \
+export WORLD_SIZE=8
+KERNEL_NUM=$(($(nproc)/8))
+for((RANK_ID=0;RANK_ID<WORLD_SIZE;RANK_ID++));
+do
+
+    PID_START=$((KERNEL_NUM * RANK_ID))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+
+    taskset -c $PID_START-$PID_END python3.7 ./main.py \
         --distributed \
-        --lr 0.0008 \
+        --lr 0.001 \
         --batch_size ${batch_size} \
-        --n_epochs 3 \
+        --n_epochs 10 \
         --workers 16 \
         --apex \
+        --local_rank $RANK_ID \
         --data_path ${data_path} > ${cur_path}/output/train_perf_8p.log 2>&1 &
+
+done
 
 wait
 

@@ -55,7 +55,8 @@ bash run.sh
 ```shell
 # 转成onnx
 bash test/pth2onnx.sh
-# 转成om
+# 转成om，请以实际安装环境配置环境变量
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash test/onnx2om.sh
 # 28-36 行得到精度数据
 # 38-41 行得到性能数据

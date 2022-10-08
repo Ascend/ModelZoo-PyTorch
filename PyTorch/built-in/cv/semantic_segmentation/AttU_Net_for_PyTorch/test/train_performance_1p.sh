@@ -88,7 +88,6 @@ nohup python3.7 main.py  \
         --seed 12345 \
         --apex \
         --apex_opt_level O2 \
-        --loss_scale_value 1024 \
         --result_path ./result_1p/ \
         --lr 0.0002 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
         

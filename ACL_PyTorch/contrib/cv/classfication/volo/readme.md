@@ -28,9 +28,11 @@ File "python3.8/site-packages/torch/onnx/utils.py", line 785, in _export
     ```
 - compile msame
     reference from https://gitee.com/ascend/tools/tree/master/msame
-```bash
+```bash   
     git clone https://gitee.com/ascend/tools.git
-    #如下为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
+    # 请根据实际情况设置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    # 如下为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。
     export DDK_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest
     export NPU_HOST_LIB=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/acllib/lib64/stub
 

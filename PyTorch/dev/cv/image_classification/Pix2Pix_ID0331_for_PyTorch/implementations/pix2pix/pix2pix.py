@@ -53,6 +53,8 @@ from datasets import *
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 #娣峰悎绮惧害
 import apex
 from apex import amp

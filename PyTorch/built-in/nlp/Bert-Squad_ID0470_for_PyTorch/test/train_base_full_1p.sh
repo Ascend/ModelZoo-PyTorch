@@ -91,7 +91,7 @@ do
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
     nohup python3.7 run_squad.py \
-          --init_checkpoint ${ckpt_path}/bert_base_pretrained_amp.pt \
+          --init_checkpoint ${ckpt_path}/bert_base.pt \
           --bert_model bert-base-uncased \
 		  --do_train \
 		  --train_file ${data_path}/train-v1.1.json \
@@ -110,7 +110,7 @@ do
 		  --loss_scale 4096 \
 		  --vocab_file ${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt \
 		  --do_eval \
-      --eval_script ${data_path}/evaluate-v1.1.py \
+          --eval_script ${data_path}/evaluate-v1.1.py \
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
 		  --output_dir results/SQUAD \

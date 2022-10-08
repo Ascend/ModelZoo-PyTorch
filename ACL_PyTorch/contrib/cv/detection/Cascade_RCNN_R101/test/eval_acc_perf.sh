@@ -40,7 +40,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 chmod u+x ben*
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device2
 ./benchmark.${arch}  -model_type=vision -batch_size=1 -device_id=2 -input_text_path=./coco2017.info -input_width=1216 -input_height=1216 -useDvpp=False -output_binary=true -om_path=cascade_rcnn_r101_1.om
 if [ $? != 0 ]; then

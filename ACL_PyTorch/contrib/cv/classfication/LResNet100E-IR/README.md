@@ -141,12 +141,7 @@ python -m onnxsim --input-shape="16,3,112,112" ./model/model_ir_se100_bs16.onnx 
 1.设置环境变量
 
 ```bash
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用 atc 将 onnx 模型转换为 om 模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
@@ -213,12 +208,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 1.设置环境变量
 
 ```bash
-export install_path=/usr/local/Ascend/ascend-toolkit/latest
-export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-export ASCEND_OPP_PATH=${install_path}/opp
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest/
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.执行离线推理, 输出结果默认保存在当前目录result/dumpOutput_device0

@@ -50,6 +50,7 @@ def pth2onnx(input_file, output_file):
 
 
 if __name__ == "__main__":
-    # sys.argv[1]:输入的pth模型的路径
-    # sys.argv[2]:期望输出的onnx模型的路径
+    # sys.argv[1]:input pth path
+    # sys.argv[2]:output onnx path
     pth2onnx(sys.argv[1], sys.argv[2])
+    print('done! convert success!')

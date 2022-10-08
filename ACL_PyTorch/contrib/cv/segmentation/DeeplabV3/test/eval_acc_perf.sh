@@ -21,7 +21,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 rm -rf result/dumpOutput_device0_bs1
 ./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=1 -om_path=./deeplabv3_bs1.om -input_text_path=./deeplabv3_prep_bin.info -input_width=1024 -input_height=2048 -output_binary=True -useDvpp=False

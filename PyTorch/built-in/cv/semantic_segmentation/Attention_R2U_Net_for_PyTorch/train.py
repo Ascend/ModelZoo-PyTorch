@@ -37,6 +37,8 @@ import time
 import sys
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.utils.data
 from torch import nn
 import random
@@ -320,7 +322,8 @@ def parse_args():
     parser.add_argument('--device_id', type=int, default=0)
     parser.add_argument('--use_apex', type=int, default=1)
     parser.add_argument('--apex_level', type=str, default="O2")
-    parser.add_argument('--loss_scale', type=float, default=128.)
+    parser.add_argument('--loss-scale', default="1024.0", type=str,
+                    help='loss scale using in amp, default -1 means dynamic')
 
     parser.add_argument('--world_size', type=int, default=8)
     parser.add_argument('--distributed', type=int, default=0,

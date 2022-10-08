@@ -66,8 +66,7 @@ python3.7 pth2onnx.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.p
 
 ```bash
 # 设置环境变量, 用户需使用自定义安装路径，指定为：
-source /opt/npu/cann_5.1.rc2/ascend-toolkit/set_env.sh
-
+source /usr/local/Ascend/ascend_toolkit/set_env.sh
 # 执行ATC参考命令
 atc --framework=5 \
 --model=hubert.onnx \

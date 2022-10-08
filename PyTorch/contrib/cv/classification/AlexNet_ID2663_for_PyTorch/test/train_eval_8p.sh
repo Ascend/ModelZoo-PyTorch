@@ -11,7 +11,7 @@ export RANK_SIZE=8
 # ckpt文件路径
 resume="./checkpoints/model_best.pth.tar"
 # 数据集路径,修改为本地数据集路径
-data_path="/opt/npu/imagenet"
+data_path=""
 
 # 训练epoch
 train_epochs=1

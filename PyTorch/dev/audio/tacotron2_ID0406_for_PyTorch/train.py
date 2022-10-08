@@ -64,6 +64,8 @@ import numpy as np
 from contextlib import contextmanager
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.nn.parameter import Parameter

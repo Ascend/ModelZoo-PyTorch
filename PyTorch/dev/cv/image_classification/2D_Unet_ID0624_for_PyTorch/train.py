@@ -42,6 +42,8 @@ except:
 import apex
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from torch import optim
 from tqdm import tqdm

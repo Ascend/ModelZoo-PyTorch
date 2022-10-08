@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import SGD

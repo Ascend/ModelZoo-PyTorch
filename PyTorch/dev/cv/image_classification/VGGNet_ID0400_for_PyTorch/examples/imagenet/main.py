@@ -58,6 +58,8 @@ import warnings
 
 import PIL.Image
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.multiprocessing as mp

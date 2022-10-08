@@ -316,7 +316,7 @@ def main():
         print("args.batch_size:", args.batch_size)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, collate_fn=padding_collate,
-                                             sampler=train_sampler, num_workers=args.workers, pin_memory=True, drop_last=True)
+                                             sampler=train_sampler, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
     if args.cuda:
         cfg.CUDA = True
@@ -404,15 +404,13 @@ def main():
             lr *= args.lr_decay_gamma
         
         start = time.time()
+        data_start = time.time()
         batch_time_sum = 0
         batch_time_mean = 0
         for step, (data0, data1, data2, data3) in enumerate(dataloader):
-            if args.etp_performance_mode and step >= 100:
+            if args.etp_performance_mode and step >= 300:
                 break
-
-            start = time.time()
-            data_time = (time.time() - start) * 1000
-            
+            data_time = (time.time() - data_start) * 1000
             im_data = data0.to(calculate_device, non_blocking=True)
             im_info = data1.to(calculate_device, non_blocking=True)
             gt_boxes = data2.to(calculate_device, non_blocking=True)
@@ -436,16 +434,17 @@ def main():
             else:
                 loss.backward()
             if args.net == "vgg16":
-                clip_gradient(optimizer, 10.)
-            if args.net == "res01":
-                clip_gradient(optimizer, 4.)
+                optimizer.clip_optimizer_grad_norm_fused(10.)
+            if args.net == "res101":
+                optimizer.clip_optimizer_grad_norm_fused(4.)
             optimizer.step()
-
-            batch_time = (time.time() - start) * 1000
-            if step > 1:
-                batch_time_sum += batch_time
-                batch_time_mean = batch_time_sum / (step - 1)
             
+            batch_time = (time.time() - start) * 1000
+            start = time.time()
+            if step > 10:
+                batch_time_sum += batch_time
+                batch_time_mean = batch_time_sum / (step - 10)
+
             if step > iters_per_epoch:
                 break
 
@@ -475,7 +474,7 @@ def main():
                     print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
                         % (args.session, epoch, step, iters_per_epoch, loss_temp, lr))
                     # print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end-start))
-                    if step > 1:
+                    if step > 10:
                         print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f, FPS: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean, args.batch_size*npus_per_node/(batch_time_mean/1000)))
                     else:
                         print("\t\t\tfg/bg=(%d/%d), batch time: %f, data time: %f, mean batch time: %f" % (fg_cnt, bg_cnt, batch_time, data_time, batch_time_mean))
@@ -493,7 +492,9 @@ def main():
                         logger.scalar_summary(tag, value, step)
 
                 loss_temp = 0
-                # start = time.time()
+                data_start = time.time()
+                
+
         # 每十次保存一次模型
         if epoch % 10 == 0 or epoch == args.max_epochs:
             if args.rank % npus_per_node == 0:
@@ -517,4 +518,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

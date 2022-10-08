@@ -98,7 +98,7 @@ python3.7 hrnet_pth2onnx.py --cfg ./HRNet-Image-Classification/experiments/cls_h
 
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
@@ -148,7 +148,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
