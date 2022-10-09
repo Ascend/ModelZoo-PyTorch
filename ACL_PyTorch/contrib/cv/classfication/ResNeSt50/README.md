@@ -191,8 +191,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
-
+          
            运行成功后生成resnest50_b1 模型文件。
 
 
@@ -204,7 +203,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
   a.  执行推理。
 
     ```
-     python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./new_resnest50_b4.om --input ./prep_dataset/ --output ./result/ --outfmt TXT --batchsize bs4
+     python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./new_resnest50_b1.om --input ./prep_dataset/ --output ./result/ --outfmt TXT --batchsize bs1
     ```
 
         - 参数说明：
@@ -216,8 +215,9 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
         推理后的输出默认在当前目录result下。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见：
 
+    https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
 c.  精度验证。
 
     调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
