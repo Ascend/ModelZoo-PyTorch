@@ -22,7 +22,7 @@ def read_info_from_json(json_path):
     输入：json文件地址
     输出：dict结构；为原始的json转换出来的结构
     '''
-    if os.path.exists(json_path) is False:
+    if not os.path.exists(json_path):
         print(json_path, 'is not exist')
     with open(json_path, 'r') as f:
         load_data = json.load(f)
