@@ -147,11 +147,11 @@ Pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
        
           > **说明：** 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 (推理)](https://gitee.com/link?target=https%3A%2F%2Fsupport.huawei.com%2Fenterprise%2Fzh%2Fascend-computing%2Fcann-pid-251168373%3Fcategory%3Ddeveloper-documents%26subcategory%3Dauxiliary-development-tools)》。
        
-       2. 执行命令查看芯片名称
+       2. 执行命令查看芯片名称($\{chip\_name\})
        
           ```bash
           npu-smi info
-          #该设备芯片名为Ascend310P3
+          #该设备芯片名为Ascend310P3(自行替换)
           结果如下：
           +--------------------------------------------------------------------------------------------+
           | npu-smi 22.0.0                       Version: 22.0.2                                       |
@@ -167,7 +167,7 @@ Pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
        3. 执行ATC命令
        
           ```bash
-          atc --framework=5 --model=./checkpoints/facades_label2photo_pretrained/netG_onnx.onnx --output=./checkpoints/facades_label2photo_pretrained/netG_om_bs1 --input_format=NCHW --input_shape="inputs:1,3,256,256" --log=debug --soc_version=Ascend310P3
+          atc --framework=5 --model=./checkpoints/facades_label2photo_pretrained/netG_onnx.onnx --output=./checkpoints/facades_label2photo_pretrained/netG_om_bs1 --input_format=NCHW --input_shape="inputs:1,3,256,256" --log=debug --soc_version=Ascend{chip_name}
           ```
        
           - 参数说明：
@@ -178,7 +178,7 @@ Pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
             - --input_format：输入数据的格式。
             - --input_shape：输入数据的shape。
             - --log：日志级别。
-            - --soc_version：处理器型号。
+            - --soc_version：处理器型号。{chip_name}请自行替换为上述的芯片名称。
        
             运行成功后生成netG_om_bs1.om模型文件。
 
@@ -269,4 +269,6 @@ Pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 ![pth处理结果](https://foruda.gitee.com/images/1660789926632865129/2_fake_b.png "2_fake_B.png") | ![om模型batchsize=1处理结果](https://foruda.gitee.com/images/1660789949522235347/2_0.jpeg "2_0.jpg") | ![om模型batchsize=16处理结果](https://foruda.gitee.com/images/1660789966155300818/2_0.jpeg "2_0.jpg")
 ---|---|---
 pth处理结果 | om模型batchsize=1处理结果 | om模型batchsize=16处理结果
+
+
 
