@@ -6,7 +6,6 @@
 ├── benchmark.aarch64             //离线推理工具（适用ARM架构），可能需要用户自行编译获得
 ├── benchmark.x86_64              //离线推理工具（适用x86架构），可能需要用户自行编译获得
 脚本文件
-├── set_env.sh                    //NPU环境变量 
 ├── clear2345.sh                  //清理文件、合并结果脚本
 ├── get_dataset_info.py           //用于获取二进制数据集信息的脚本 
 ├── 3d_nested_unet_pth2onnx.py    //生成ONNX模型文件的程序

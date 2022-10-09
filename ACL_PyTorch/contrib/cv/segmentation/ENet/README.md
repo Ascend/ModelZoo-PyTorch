@@ -104,6 +104,7 @@ python3.7 ENet_pth2onnx.py --input-file ./enet_citys.pth --output-file ./enet_ci
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```BASH
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=./enet_citys.onnx --output=./enet_citys_bs1 --input_format=NCHW --input_shape="image:1,3,480,480" --log=info --soc_version=Ascend${chip_name}
 ```
 

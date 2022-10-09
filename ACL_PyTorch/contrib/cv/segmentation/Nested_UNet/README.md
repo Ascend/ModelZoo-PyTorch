@@ -119,6 +119,7 @@ python3.7 nested_unet_pth2onnx.py nested_unet.pth nested_unet.onnx
 ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
 ```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=./nested_unet.onnx --input_format=NCHW --input_shape="actual_input_1:16,3,96,96" --output=nested_unet_bs16 --log=debug --soc_version=Ascend${chip_name}
 ```
 
