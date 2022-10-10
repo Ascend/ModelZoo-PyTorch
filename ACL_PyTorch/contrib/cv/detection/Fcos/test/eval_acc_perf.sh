@@ -22,7 +22,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 chmod +x ben*
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch}  -model_type=vision -om_path=fcos_bs1.om -device_id=0 -batch_size=1 -input_text_path=fcos.info -input_width=1333 -input_height=800 -useDvpp=false -output_binary=true
 if [ $? != 0 ]; then

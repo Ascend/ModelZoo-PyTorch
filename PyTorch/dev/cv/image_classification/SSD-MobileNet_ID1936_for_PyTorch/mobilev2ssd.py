@@ -44,8 +44,12 @@ from torch.nn import Conv2d, Sequential, ModuleList, ReLU
 import torch
 from mobilenet_ssd_priors import *
 from MobileNetV2 import MobileNetV2, MobileNetV2_pretrained
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import os
+
+
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))

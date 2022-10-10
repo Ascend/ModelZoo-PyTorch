@@ -70,7 +70,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3 -u run_classification_criteo_deepfm.py \
+taskset -c 0-23 python3 -u run_classification_criteo_deepfm.py \
      --amp \
      --use_npu \
      --steps ${steps} \

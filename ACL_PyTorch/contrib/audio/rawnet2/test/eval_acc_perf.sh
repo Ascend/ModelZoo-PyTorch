@@ -46,7 +46,7 @@ mkdir om_bs1
 mkdir om_bs16
 mkdir result
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 ./msame --model RawNet2_sim_bs1.om --input bin_out_bs1 --output om_bs1 --outfmt TXT --device 0
 if [ $? != 0 ]; then

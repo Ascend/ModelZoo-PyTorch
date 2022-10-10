@@ -21,7 +21,7 @@ export JOB_ID=10087
 # 路径参数初始化
 data_path=""
 output_path=""
-
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
     echo"usage:./train_performance_1P.sh <args>"
@@ -30,7 +30,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_path              # dataset of training
     --output_path            # output of training
     --train_steps            # max_step for training
-	  --train_epochs           # max_epoch for training
+    --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -90,7 +90,7 @@ function get_casename()
 cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
-
+cp -r ${data_path}/dataset/bert ${PWD}
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -108,47 +108,23 @@ start_time=$(date +%s)
 # 您的训练数据集在${data_path}路径下，请直接使用这个变量获取
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
-train_epochs=2
-train_steps=
-batch_size=256
+train_epochs=10
+batch_size=48
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python multimodal_driver.py --data_path=${data_path} --output_path=${output_path} --train_epochs=${train_epochs}
+    python3 multimodal_driver.py --data_path=${data_path}/dataset --output_path=${output_path} --n_epochs=${train_epochs} 1>${print_log} 2>&1
 else
-    python multimodal_driver.py --data_path=${data_path} --output_path=${output_path} --train_epochs=${train_epochs} 1>${print_log} 2>&1
+    python3 multimodal_driver.py --data_path=${data_path}/dataset --output_path=${output_path} --n_epochs=${train_epochs} 1>${print_log} 2>&1
 fi
+
 
 # 性能相关数据计算
-StepTime=`grep "" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
-#FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '3074'/'${batch_size}'}'`
+StepTime=`grep "step_time" ${print_log} | tail -n +5 | awk '{print $9}' | awk '{sum+=$1} END {print sum/NR}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
-# 精度相关数据计算
-#train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
-train_accuracy=`grep "acc" ${print_log}  | awk '{print $NF}'`
 # 提取所有loss打印信息
-grep "loss :" ${print_log} | awk -F ":" '{print $4}' | awk -F "-" '{print $1}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
-
-
-###########################################################
-#########后面的所有内容请不要修改###########################
-#########后面的所有内容请不要修改###########################
-#########后面的所有内容请不要修改###########################
-###########################################################
-
-# 判断本次执行是否正确使用Ascend NPU
-use_npu_flag=`grep "The model has been compiled on the Ascend AI processor" ${print_log} | wc -l`
-if [ x"${use_npu_flag}" == x0 ];
-then
-    echo "------------------ ERROR NOTICE START ------------------"
-    echo "ERROR, your task haven't used Ascend NPU, please check your npu Migration."
-    echo "------------------ ERROR NOTICE END------------------"
-else
-    echo "------------------ INFO NOTICE START------------------"
-    echo "INFO, your task have used Ascend NPU, please check your result."
-    echo "------------------ INFO NOTICE END------------------"
-fi
+grep "step_loss" ${print_log} | awk '{print $6}' | tr -d "," > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename
@@ -168,9 +144,6 @@ echo "------------------ Final result ------------------"
 echo "Final Performance images/sec : $FPS"
 echo "Final Performance sec/step : $StepTime"
 echo "E2E Training Duration sec : $e2e_time"
-
-# 输出训练精度
-echo "Final Train Accuracy : ${train_accuracy}"
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=(`awk 'END {print $NF}' $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}_loss.txt`)

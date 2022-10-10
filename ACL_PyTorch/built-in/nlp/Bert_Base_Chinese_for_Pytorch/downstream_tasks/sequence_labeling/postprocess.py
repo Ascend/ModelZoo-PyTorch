@@ -22,9 +22,20 @@ import torch
 from seqeval.metrics import classification_report
 from seqeval.scheme import IOB2
 from bert4torch.layers import CRF
+import torch.nn as nn
+from bert4torch.models import build_transformer_model, BaseModel
 
 
-def load_bin_file(path, shape, dtype="float16"):
+class Model(BaseModel):
+    def __init__(self, args):
+        super().__init__()
+        self.bert = build_transformer_model(config_path=args.config_path, checkpoint_path=None, segment_vocab_size=0)
+        # embedding_dims:768, len_categories: 7
+        self.fc = nn.Linear(768, 7)  # 包含首尾
+        self.crf = CRF(7)
+
+
+def load_bin_file(path, shape, dtype="float32"):
     data = np.fromfile(path, dtype).reshape(shape)
     return torch.tensor(data)
 
@@ -45,7 +56,7 @@ def evaluate(result_dir, label_dir):
         emission_score = torch.Tensor(
             load_bin_file(emission_score_path, [1, 256, 7]))
         attention_mask = torch.Tensor(
-            load_bin_file(attention_mask_path, [1, 256]))
+            load_bin_file(attention_mask_path, [1, 256], dtype="int64"))
         scores = crf.decode(emission_score, attention_mask)
         true_labels += [[categories_id2label[int(l)] for
                          l in label if l != -100] for label in labels]
@@ -72,6 +83,8 @@ def evaluate(result_dir, label_dir):
     print(eval_result)
     f1, p1, r1 = 2 * X / (Y + Z), X / Y, X / Z
     f2, p2, r2 = 2 * X2 / (Y2 + Z2), X2 / Y2, X2 / Z2
+    print("val-token level: f1:{}, precision: {}, recall:{}".format(f1, p1, r1))
+    print("val-entity level: f1:{}, precision: {}, recall:{}".format(f2, p2, r2))
     return eval_result, f1, p1, r1, f2, p2, r2
 
 
@@ -107,6 +120,10 @@ def parse_arguments():
                         help='save path for evaluation result')
     parser.add_argument('-l', '--label_dir', type=str, required=True,
                         help='label dir for label results')
+    parser.add_argument('-c', '--config_path', type=str, required=True,
+                        help='config path for export model')
+    parser.add_argument('-k', '--ckpt_path', type=str, default="./best_model.pt",
+                        help='result dir for prediction results')
     args = parser.parse_args()
     args.out_path = os.path.abspath(args.out_path)
     os.makedirs(os.path.dirname(args.out_path), exist_ok=True)
@@ -117,7 +134,9 @@ if __name__ == '__main__':
     args = parse_arguments()
     categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
     categories_id2label = {i: k for i, k in enumerate(categories)}
-    crf = CRF(7)
+    model = Model(args).to("cpu")
+    model.load_weights(args.ckpt_path)
+    crf = model.crf
 
     seqeval_result, f1_score, precision, recall, \
         f2_score, precision2, recall2 = evaluate(args.result_dir, args.label_dir)

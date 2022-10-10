@@ -26,7 +26,7 @@ Res2Net_v1b_101_for_PyTorch
 ## 2 设置环境变量
 
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 ## 3 端到端推理步骤
@@ -79,7 +79,7 @@ python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx 
   配置环境变量，运行benchmark工具进行推理，参数说明参见 [cann-benchmark](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
   ```shell
-  source env.sh  # 如果前面配置过，这里不用执行
+  source /usr/local/Ascend/ascend-toolkit/set_env.sh  # 如果前面配置过，这里不用执行
   ./benchmark -model_type=vision -om_path=resnet_bs16.om -device_id=0 -batch_size=16 -input_text_path=BinaryImageNet.info -input_width=256 -input_height=256 -useDvpp=false -output_binary=false
   ```
 

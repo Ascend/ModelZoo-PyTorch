@@ -23,6 +23,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.parallel
@@ -344,6 +346,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.profile:
         profiling(train_loader, model, criterion, optimizer, args)
+        exit(0)
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:

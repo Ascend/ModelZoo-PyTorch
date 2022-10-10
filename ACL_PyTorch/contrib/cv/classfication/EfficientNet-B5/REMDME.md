@@ -103,7 +103,7 @@ python3.7 efficientnetb5_pth2onnx.py efficientnetb5.pyth efficientnetb5_dds_8gpu
 
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1开发辅助工具指南 (推理) 01
 ```
@@ -150,7 +150,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```

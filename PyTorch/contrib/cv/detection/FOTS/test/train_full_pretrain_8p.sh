@@ -48,7 +48,7 @@ if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}
-    echo "device id is 0-7"
+    echo "device id is ${ASCEND_DEVICE_ID}"
 else
     "[Error] device id must be config"
     exit 1
@@ -71,10 +71,10 @@ fi
 
 #################创建日志输出目录，不需要修改#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${test_path_dir}/output
-    mkdir -p ${test_path_dir}/output
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 else
-    mkdir -p ${test_path_dir}/output
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
 

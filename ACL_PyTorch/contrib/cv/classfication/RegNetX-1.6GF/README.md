@@ -1,251 +1,260 @@
-# RegNetX-1.6GF Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+# RegNetX-1.6GF模型-推理指导
 
-## 1 模型概述
 
--   **[论文地址](#11-论文地址)**  
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
--   **[代码地址](#12-代码地址)**  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-### 1.1 论文地址
-[RegNetX-1.6GF论文](https://arxiv.org/abs/2003.13678)  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.2 代码地址
-[RegNetX-1.6GF代码](https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/regnet.py)  
-branch:master commit_id:742c2d524726d426ea2745055a5b217c020ccc72
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-## 2 环境说明
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
--   **[深度学习框架](#21-深度学习框架)**  
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
--   **[python第三方库](#22-python第三方库)**  
+  ******
 
-### 2.1 深度学习框架
-```
-CANN 5.0.1
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-torch == 1.8.1
-torchvision == 0.9.1
-onnx == 1.9.0
-```
+RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这样的扩展的网络家族。它是一个被量化的线性规则限制的设计空间，期望包含好的模型。
 
-### 2.2 python第三方库
+- 参考实现：
 
-```
-numpy == 1.20.1
-Pillow == 8.2.0
-opencv-python == 4.5.2.52
-timm == 0.4.9
-```
+  ```
+  url=https://github.com/rwightman/pytorch-image-models.git
+  commit_id=742c2d524726d426ea2745055a5b217c020ccc72
+  model_name=RegNetX-1.6GF
+  ```
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+  通过Git获取对应commit\_id的代码方法如下：
 
-## 3 模型转换
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+## 输入输出数据<a name="section540883920406"></a>
 
-### 3.1 pth转onnx模型
+- 输入数据
 
-1.下载pth权重文件  
-[RegNetX-1.6GF预训练pth权重文件](wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth  )  
-```
-wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth  
-```
-文件的MD5sum值是：e9275dc8fe2ae5503f2b6a5841938135
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
-2.RegNetX-1.6GF模型代码在timm里，安装timm，arm下需源码安装，参考https://github.com/rwightman/pytorch-image-models
-，若安装过程报错请百度解决
-```
-git clone https://github.com/rwightman/pytorch-image-models
-cd pytorch-image-models
-python3.7 setup.py install
-cd ..
-```
-3.编写pth2onnx脚本RegNetX_onnx.py
 
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
+- 输出数据
 
-4.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
-```
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | 1 x 1000 | FLOAT32  | ND           |
 
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
 
-### 3.2 onnx转om模型
 
-1.设置环境变量
-```
-source env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-```
-atc --framework=5 --model=./RegNetX-1.6GF.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=RegNetX-1.6GF_bs1 --log=debug --soc_version=Ascend310
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-```
+- 该模型需要以下插件与驱动
 
-## 4 数据集预处理
+  **表 1**  版本配套表
 
--   **[数据集获取](#41-数据集获取)**  
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.8.1   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
--   **[数据集预处理](#42-数据集预处理)**  
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+## 获取源码<a name="section4622531142816"></a>
 
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
+1. 获取源码。
 
-### 4.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
+   RegNetX-1.6GF模型代码在timm里，安装timm，arm下需源码安装，参考https://github.com/rwightman/pytorch-image-models ，若安装过程报错请百度解决。
+         
+   ```
+   git clone https://github.com/rwightman/pytorch-image-models
+   cd pytorch-image-models
+   python3.7 setup.py install
+   cd ..
+   ```
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 imagenet_torch_preprocess.py root/datasets/imagenet/val ./prep_dataset
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本get_info.py
+2. 安装依赖。
 
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 get_info.py bin ./prep_dataset ./RegNetX-1.6GF_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-## 5 离线推理
+   ```
+   pip3 install -r requirements.txt
+   ```
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+## 准备数据集<a name="section183221994411"></a>
 
--   **[离线推理](#52-离线推理)**  
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-### 5.1 benchmark工具概述
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。     
+      ```
+     ├── ImageNet
+        ├── ILSVRC2012_img_val
+        ├── val_label.txt
+      ```
+   
+2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 离线推理
-1.设置环境变量
-```
-source env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=RegNetX-1.6GF_bs1.om -input_text_path=./RegNetX-1.6GF_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
+   数据预处理将原始数据集转换为模型输入的数据。
 
-## 6 精度对比
+   执行imagenet_torch_preprocess.py脚本，完成预处理。
 
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
+   ```
+   python3.7 imagenet_torch_preprocess.py /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset
+   ```
+         
+      -   参数说明：
 
-### 6.1 离线推理TopN精度统计
+           -   /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val：原始数据验证集（.jpeg）所在路径。
+           -   ./prep_dataset：输出的二进制文件所在路径。
+       每个图像对应生成一个二进制文件。
+   
+   
+## 模型推理<a name="section741711594517"></a>
 
-后处理统计TopN精度
+1. 模型转换。
 
-调用vision_metric_ImageNet.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ root/datasets/imagenet/val_label.txt ./ result_bs1.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-查看输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "76.93%"}, {"key": "Top2 accuracy", "value": "86.73%"}, {"key": "Top3 accuracy", "value": "90.26%"}, {"key": "Top4 accuracy", "value": "92.16%"}, {"key": "Top5 accuracy", "value": "93.42%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   
+   1. 获取权重文件。
+     [RegNetX-1.6GF预训练pth权重文件](wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth )
+        
+   ```
+   wget https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth 
+   ```
 
-### 6.2 开源TopN精度
-[timm官网精度](https://github.com/rwightman/pytorch-image-models/blob/master/results/results-imagenet.csv)
-```
-model	    top1	top1_err	top5	top5_err	param_count	img_size	cropt_pct	interpolation
-regnetx_016	76.950	23.050	    93.420	6.580	    9.19	     224	    0.875	     bicubic
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
+   2. 使用RegNetX_onnx.py导出onnx文件。
 
-## 7 性能对比
+      运行RegNetX_onnx.py脚本。
+ 
+   ```
+   python3.7 RegNetX_onnx.py regnetx_016-65ca972a.pth RegNetX-1.6GF.onnx
+   ```
+         
+     运行成功后生成RegNetX-1.6GF.onnx模型文件，生成不同batch_size的onnx时，需修改参数。在RegNetX_onnx.py脚本中的dummy_input = torch.randn(1, 3, 224, 224)，如需生成batch_size=4的onnx，即将torch.randn(1,3,224,224)中的1改为4即可。
 
--   **[npu性能数据](#71-npu性能数据)**  
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
-1.benchmark工具在整个数据集上推理获得性能数据  
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-```
-[e2e] throughputRate: 293.101, latency: 170590
-[data read] throughputRate: 324.145, moduleLatency: 3.08504
-[preprocess] throughputRate: 321.601, moduleLatency: 3.10945
-[infer] throughputRate: 294.67, Interface throughputRate: 509.648, moduleLatency: 2.94102
-[post] throughputRate: 294.669, moduleLatency: 3.39363
-```
-Interface throughputRate: 509.648，509.648x4=2038.592既是batch1 310单卡吞吐率  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
-```
-[e2e] throughputRate: 288.007, latency: 173607
-[data read] throughputRate: 306.98, moduleLatency: 3.25754
-[preprocess] throughputRate: 304.537, moduleLatency: 3.28367
-[infer] throughputRate: 289.108, Interface throughputRate: 854.17, moduleLatency: 2.62891
-[post] throughputRate: 18.0686, moduleLatency: 55.3445
+      1. 配置环境变量。
 
-```
-Interface throughputRate: 854.17，854.17x4=3416.68既是batch16 310单卡吞吐率  
-batch4性能：
-```
-[e2e] throughputRate: 272.525, latency: 183470
-[data read] throughputRate: 288.31, moduleLatency: 3.46849
-[preprocess] throughputRate: 287.988, moduleLatency: 3.47236
-[infer] throughputRate: 273.729, Interface throughputRate: 811.533, moduleLatency: 2.7579
-[post] throughputRate: 68.4314, moduleLatency: 14.6132
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-```
-batch4 310单卡吞吐率：811.533x4=3246.132fps  
-batch8性能：
-```
-[e2e] throughputRate: 249.315, latency: 200549
-[data read] throughputRate: 263.886, moduleLatency: 3.78952
-[preprocess] throughputRate: 263.477, moduleLatency: 3.7954
-[infer] throughputRate: 251.054, Interface throughputRate: 879.765, moduleLatency: 2.63157
-[post] throughputRate: 31.3813, moduleLatency: 31.8662
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-```
-batch8 310单卡吞吐率：879.765x4=3519.06fps  
-batch32性能：
-```
-[e2e] throughputRate: 272.369, latency: 183574
-[data read] throughputRate: 290.783, moduleLatency: 3.43899
-[preprocess] throughputRate: 290.125, moduleLatency: 3.4468
-[infer] throughputRate: 274.503, Interface throughputRate: 781.04, moduleLatency: 2.72134
-[post] throughputRate: 8.58066, moduleLatency: 116.541
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-```
-batch32 310单卡吞吐率：781.04x4=3124.16fps  
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
- **性能优化：**  
->没有遇到性能不达标的问题，故不需要进行性能优化
+      3. 执行ATC命令。
+         ```
+          atc --framework=5 --model=./RegNetX-1.6GF_bs1.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=RegNetX-1.6GF_bs1 --log=debug --soc_version=Ascend${chip_name}
+         ```
+      -   参数说明：
+
+           -   model：为ONNX模型文件。
+           -   framework：5代表ONNX模型。
+           -   output:输出的OM模型。
+           -   input_format:输入数据的格式。
+           -   input_shape：输入数据的shape。
+           -   log：日志级别。
+           -   soc_version：处理器型号。
+              运行成功后生成RegNetX-1.6GF_bs1.om模型文件。
+
+2. 开始推理验证。
+
+   a.  使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+
+   b.  执行推理。
+
+      ```
+        python3.7 ais_infer.py --model /home/tangxiao/file/RegNetX-1.6GF_bs1.om --input "/home/tangxiao/RegNetX-1.6GF/prep_dataset" --output "/home/tangxiao/RegNetX-1.6GF" --outfmt TXT --batchsize n
+      ```
+
+      -   参数说明：
+
+           -   model：om文件路径。
+           -   input：数据集预处理后的文件。
+           -   output:推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
+           -   outfmt:输出结果的格式，指定为txt格式。
+           -   batchsize:输入模型的batchsize
+
+      推理后的输出默认在建立日期+时间的子文件夹中，除了图片信息的txt文件外，还有一个.json文件，需手动删除。
+
+   c.  精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+      ```
+       python3.7 vision_metric_ImageNet.py ./output_dirname/ ./val_label.txt ./ result.json
+      ```
+      -   参数说明：
+
+           -   ./output_dirname/：生成推理结果所在路径。
+           -   val_label.txt：为标签数据。
+           -   result.json:为生成结果文件。
+
+   d.  性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+      ```
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。                                                                                                                   
+**精度**：
+
+| Precision  | mAP  |
+|---|---|
+| 310精度  | 93.43%  |
+| 310P精度  | 93.42%  |                                                                                                                                
+                                                                                                                                                       
+**性能**：
+
+| Throughput  | 310  | 310P  | T4  | 310P/310   | 310P/T4  |
+|---|---|---|---|---|---|
+| RegNetX-1.6GF_bs1  | 930.57  | 1677.04  | 436.27  | 1.802  | 3.844  |
+| RegNetX-1.6GF_bs4  | 3355.08  | 4372.53  | 1084.42  | 1.303  | 4.032  |
+| RegNetX-1.6GF_bs8  | 3608.97  | 5486.04  | 1532.78  | 1.520  | 3.579  |
+| RegNetX-1.6GF_bs16  | 2783.01  | 3934.81  | 1867.64  | 1.413  | 2.107  |
+| RegNetX-1.6GF_bs32  | 3170.12  | 3752.48  | 2166.99  | 1.184  | 1.732  |
+| RegNetX-1.6GF_bs64  | 3186.38  | 3623.42  | 2276.49  | 1.137  | 1.592  |
+| 最优batch  | 3608.97  | 5486.04  | 2276.49  | 1.520  | 2.410  |
+
+
+
+
+

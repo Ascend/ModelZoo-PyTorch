@@ -84,10 +84,9 @@ python get_originroc.py checkpoint VoxCeleb 4
 
 
 
-利用权重文件和模型的网络结构转换出所需的onnx模型， checkpoint为权重文件相对路径， ecapa_tdnn.onnx 为生成的onnx模型相对路径
+利用权重文件和模型的网络结构转换出所需的onnx模型， checkpoint为权重文件相对路径， ecapa_tdnn.onnx 为生成的onnx模型相对路径。
 
 ```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
 export PYTHONPATH=$PYTHONPATH:./ECAPA_TDNN
 export PYTHONPATH=$PYTHONPATH:./ECAPA_TDNN/tacotron2
 python pytorch2onnx.py checkpoint ecapa_tdnn.onnx 
@@ -110,6 +109,7 @@ ${chip_name}可通过`npu-smi info`指令查看
 sudo apt install dos2unix
 dos2unix ./*.sh
 chmod +x *.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./to_om.sh Ascend${chip_name}
 ```
 

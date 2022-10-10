@@ -35,8 +35,11 @@ python3 TextCNN_pth2onnx.py --weight_path ./TextCNN_9045_seed460473.pth --onnx_p
     ${chip_name}可通过`npu-smi info`指令查看
    
     ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
+    该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。
     
     ```
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
     cd ..
     bash onnxsim.sh
     bash onnx2mgonnx.sh

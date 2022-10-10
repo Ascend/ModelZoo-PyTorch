@@ -1,12 +1,27 @@
-#!/use/bin/bash
+#!/bin/bash
+CANN_INSTALL_PATH_CONF='/etc/Ascend/ascend_cann_install.info'
 
-#ASCEND_HOME=/home/wxk/pack/runp/ascend-toolkit/latest
-ASCEND_HOME=/usr/local/Ascend/ascend-toolkit/latest
-export LD_LIBRARY_PATH=/usr/local/:/usr/local/lib/:/usr/lib64/:/usr/lib/:/usr/local/python3.7.5/lib/:/usr/local/openblas/lib:$ASCEND_HOME/fwkacllib/lib64/:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/usr/local/Ascend/add-ons/:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
-export PATH=$PATH:$ASCEND_HOME/fwkacllib/ccec_compiler/bin/:$ASCEND_HOME/toolkit/tools/ide_daemon/bin/
-export ASCEND_OPP_PATH=$ASCEND_HOME/opp/
-export OPTION_EXEC_EXTERN_PLUGIN_PATH=$ASCEND_HOME/fwkacllib/lib64/plugin/opskernel/libfe.so:$ASCEND_HOME/fwkacllib/lib64/plugin/opskernel/libaicpu_engine.so:$ASCEND_HOME/fwkacllib/lib64/plugin/opskernel/libge_local_engine.so
-export PYTHONPATH=$ASCEND_HOME/fwkacllib/python/site-packages/:$ASCEND_HOME/fwkacllib/python/site-packages/auto_tune.egg/auto_tune:$ASCEND_HOME/fwkacllib/python/site-packages/schedule_search.egg:$PYTHONPATH
+if [ -f $CANN_INSTALL_PATH_CONF ]; then
+    CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
+else
+    CANN_INSTALL_PATH="/usr/local/Ascend"
+fi
+
+if [ -d ${CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
+    source ${CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
+else
+    source ${CANN_INSTALL_PATH}/nnae/set_env.sh
+fi
+
+msnpureport -g error -d 0
+msnpureport -g error -d 1
+msnpureport -g error -d 2
+msnpureport -g error -d 3
+msnpureport -g error -d 4
+msnpureport -g error -d 5
+msnpureport -g error -d 6
+msnpureport -g error -d 7
+
 
 export TASK_QUEUE_ENABLE=1
 #设置是否开启PTCopy,0-关闭/1-开启
@@ -25,7 +40,6 @@ export SCALAR_TO_HOST_MEM=1
 export HCCL_WHITELIST_DISABLE=1
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export ASCEND_GLOBAL_LOG_LEVEL=3
-export ASCEND_AICPU_PATH=$ASCEND_HOME
 export MM_BMM_ND_ENABLE=1
 export bmmv2_enable=1
 export BMMV2_ENABLE=1
@@ -45,4 +59,4 @@ for index in range(len(sys.path)):
         result+=sys.path[index] + '/torch/lib:'
 print(result)"""
 )
-export LD_LIBRARY_PATH=${path_lib}:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH

@@ -1,8 +1,13 @@
 onnx==1.7.0
 torch==1.8.1
 torchvision==0.9.1
-numpy==1.18.5
+numpy==1.21.6
+Pillow==7.2.0
 opencv-python==4.2.0.34
 mmdet==2.8.0
-mmcv-full==1.2.4
+mmcv-full==1.2.7
 mmpycocotools==12.0.3
+protobuf==3.20.0
+onnxruntime==1.12.1
+decorator==5.1.1
+sympy==1.10.1

@@ -82,7 +82,6 @@ def dump_data(data_loader, save_dir):
         data_path = os.path.join(input_data_dir, "{}.bin".format(idx))
         label_path = os.path.join(label_dir, "{}.bin".format(idx))
         token_ids.detach().numpy().tofile(data_path)
-        import pdb;pdb.set_trace()
         labels.detach().numpy().tofile(label_path)
 
 

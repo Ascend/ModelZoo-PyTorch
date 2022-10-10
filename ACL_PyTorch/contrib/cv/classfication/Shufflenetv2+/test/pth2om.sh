@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf shufflenetv2_bs1.onnx
 rm -rf shufflenetv2_bs16.onnx
 python3.7 shufflenetv2_pth2onnx_bs1.py ShuffleNetV2+.Small.pth.tar shufflenetv2_bs1.onnx

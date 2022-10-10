@@ -17,7 +17,7 @@ mv yolox_x_bs1.onnx ../models
 
 cd ..
 rm -rf models/*.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 atc --model=yolox_x_fix.onnx --framework=5 --output=yolox_x_fix --input_format=NCHW --input_shape='images:1,3,640,640' --log=info --soc_version=Ascend310 --out_nodes="Conv_498:0;Conv_499:0;Conv_491:0;Conv_519:0;Conv_520:0;Conv_512:0;Conv_540:0;Conv_541:0;Conv_533:0"
 

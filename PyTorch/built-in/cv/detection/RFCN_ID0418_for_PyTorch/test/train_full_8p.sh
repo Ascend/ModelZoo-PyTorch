@@ -17,7 +17,7 @@ device_id=0
 # 学习率
 learning_rate=0.008
 # 加载数据进程数
-workers=0
+workers=8
 #预训练模型路径
 pretrained_model_path="/npu/rfcn_pretrained_model/"
 
@@ -103,41 +103,20 @@ start_time=$(date +%s)
 
 PID_START=$((KERNEL_NUM * i))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-
-if [ $(uname -m) = "aarch64" ]
-then
-    PID_START=$((KERNEL_NUM * i))
-    PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END nohup python3.7 -u ./trainval_net_8p.py \
-        --net=res101 \
-        --nw=${workers} \
-        --lr=${learning_rate} \
-        --lr_decay_step=8  \
-        --disp_interval=1 \
-        --device=npu \
-        --epochs=${train_epochs} \
-        --bs=${batch_size} \
-        --npu_id="npu:${ASCEND_DEVICE_ID}" \
-        --local_rank=${ASCEND_DEVICE_ID} \
-        --amp \
-        --opt_level=O1 \
-        --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-else
-    nohup python3.7 -u ./trainval_net_8p.py \
-        --net=res101 \
-        --nw=${workers} \
-        --lr=${learning_rate} \
-        --lr_decay_step=8  \
-        --disp_interval=1 \
-        --device=npu \
-        --epochs=${train_epochs} \
-        --bs=${batch_size} \
-        --npu_id="npu:${ASCEND_DEVICE_ID}" \
-        --local_rank=${ASCEND_DEVICE_ID} \
-        --amp \
-        --opt_level=O1 \
-        --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-fi
+taskset -c $PID_START-$PID_END nohup python3.7 -u ./trainval_net_8p.py \
+    --net=res101 \
+    --nw=${workers} \
+    --lr=${learning_rate} \
+    --lr_decay_step=8  \
+    --disp_interval=1 \
+    --device=npu \
+    --epochs=${train_epochs} \
+    --bs=${batch_size} \
+    --npu_id="npu:${ASCEND_DEVICE_ID}" \
+    --local_rank=${ASCEND_DEVICE_ID} \
+    --amp \
+    --opt_level=O1 \
+    --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 

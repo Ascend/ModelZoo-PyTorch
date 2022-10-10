@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python3.7 pytorch2onnx.py ./mmaction2/configs/recognition/tsn/tsn_r50_1x1x3_75e_ucf101_rgb.py ./tsn_r50_1x1x3_75e_ucf101_rgb_20201023-d85ab600.pth --verify
 
 mkdir -p om

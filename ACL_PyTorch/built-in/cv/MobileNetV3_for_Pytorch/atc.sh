@@ -1,3 +1,5 @@
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
 soc=$1
 output_dir=$2
 model=$3

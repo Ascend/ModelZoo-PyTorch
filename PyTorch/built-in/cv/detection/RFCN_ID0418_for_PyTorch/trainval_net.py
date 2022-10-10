@@ -260,19 +260,7 @@ if __name__ == '__main__':
                              imdb.num_classes, training=True)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
-                                             sampler=sampler_batch, num_workers=args.num_workers)
-
-    # initilize the tensor holder here.
-    im_data = torch.FloatTensor(1)
-    im_info = torch.FloatTensor(1)
-    num_boxes = torch.LongTensor(1)
-    gt_boxes = torch.FloatTensor(1)
-
-    # make variable
-    im_data = Variable(im_data)
-    im_info = Variable(im_info)
-    num_boxes = Variable(num_boxes)
-    gt_boxes = Variable(gt_boxes)
+                                             sampler=sampler_batch, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
     if args.cuda:
         cfg.CUDA = True
@@ -339,17 +327,6 @@ if __name__ == '__main__':
         if 'pooling_mode' in checkpoint.keys():
             cfg.POOLING_MODE = checkpoint['pooling_mode']
         print("loaded checkpoint %s" % (load_name))
-    
-    if args.device == 'npu':
-        im_data = im_data.npu()
-        im_info = im_info.npu()
-        num_boxes = num_boxes.npu()
-        gt_boxes = gt_boxes.npu()
-    elif args.device == 'cuda':
-        im_data = im_data.cuda()
-        im_info = im_info.cuda()
-        num_boxes = num_boxes.cuda()
-        gt_boxes = gt_boxes.cuda()
 
     if args.cuda:
         model.cuda()
@@ -363,43 +340,38 @@ if __name__ == '__main__':
 
     iters_per_epoch = int(train_size / args.batch_size)
     if args.etp_performance_mode:
-        iters_per_epoch = 100
+        iters_per_epoch = 300
 
     for epoch in range(args.start_epoch, args.max_epochs + 1):
         dataset.resize_batch()
         # setting to train mode
         model.train()
         loss_temp = 0
-        # start = time.time()
-        torch.npu.synchronize()
         epoch_start = time.time()
 
         if epoch % (args.lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, args.lr_decay_gamma)
             lr *= args.lr_decay_gamma
         
-        torch.npu.synchronize()
         start = time.time()
+        data_start = time.time()
         batch_time_sum = 0
         batch_time_mean = 0
         data_iter = iter(dataloader)
         for step in range(iters_per_epoch):
             # print("=============== epoch:", epoch, "=step:", step, "===============")
-            torch.npu.synchronize()
-            start = time.time()
             data = next(data_iter)
-            torch.npu.synchronize()
-            data_time = (time.time() - start) * 1000
+            data_time = (time.time() - data_start) * 1000
             pad_value = 0
             batch_shape = (3, 1344, 1344)
             padding_size = [0, batch_shape[-1] - data[0].shape[-1],
                             0, batch_shape[-2] - data[0].shape[-2]]
             data[0] = F.pad(data[0], padding_size, value=pad_value)
             with torch.no_grad():
-                im_data.resize_(data[0].size()).copy_(data[0])
-                im_info.resize_(data[1].size()).copy_(data[1])
-                gt_boxes.resize_(data[2].size()).copy_(data[2])
-                num_boxes.resize_(data[3].size()).copy_(data[3])
+                im_data = data[0].to(args.device, non_blocking=True)
+                im_info = data[1].to(args.device, non_blocking=True)
+                gt_boxes = data[2].to(args.device, non_blocking=True)
+                num_boxes = data[3].to(args.device, non_blocking=True)
 
             model.zero_grad()
             rois, cls_prob, bbox_pred, \
@@ -421,13 +393,13 @@ if __name__ == '__main__':
             else:
                 loss.backward()
             if args.net == "vgg16":
-                clip_gradient(optimizer, 10.)
+                optimizer.clip_optimizer_grad_norm_fused(10.)
             if args.net == "res101":
-                clip_gradient(optimizer, 4.)
+                optimizer.clip_optimizer_grad_norm_fused(4.)
             optimizer.step()
 
-            torch.npu.synchronize()
             batch_time = (time.time() - start) * 1000
+            start = time.time()
             if step > 1:
                 batch_time_sum += batch_time
                 batch_time_mean = batch_time_sum / (step - 1)
@@ -436,7 +408,6 @@ if __name__ == '__main__':
                 break
 
             if step % args.disp_interval == 0:
-                end = time.time()
                 if step > 0:
                     loss_temp /= args.disp_interval
 
@@ -478,7 +449,7 @@ if __name__ == '__main__':
                         logger.scalar_summary(tag, value, step)
 
                 loss_temp = 0
-                # start = time.time()
+                data_start = time.time()
         # 每十次保存一次模型
         if epoch % 10 == 0 or epoch == args.max_epochs:
             if args.mGPUs:
@@ -505,6 +476,5 @@ if __name__ == '__main__':
 
         # end = time.time()
         # print(end - start)
-        torch.npu.synchronize()
         epoch_end = time.time()
         print("epoch_time:", epoch_end - epoch_start)

@@ -8,7 +8,7 @@ base on [Albert-base-v2](https://github.com/lonePatient/albert_pytorch)
 git clone https://github.com/lonePatient/albert_pytorch.git
 cd albert_pytorch
 git checkout 46de9ec
-git apply ../0001-init.patch
+git apply ../albert.patch
 cd ../
 ```
 - 下载[数据集](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip) 并解压albert_pytorch/dataset/SST-2。

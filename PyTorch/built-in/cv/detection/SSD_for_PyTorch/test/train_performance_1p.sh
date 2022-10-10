@@ -53,7 +53,7 @@ fi
 
 #设置环境变量，不需要修改
 echo "Device ID: $ASCEND_DEVICE_ID"
-export RANK_ID=${$ASCEND_DEVICE_ID}
+export RANK_ID=${ASCEND_DEVICE_ID}
 
 #################创建日志输出目录，不需要修改#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then

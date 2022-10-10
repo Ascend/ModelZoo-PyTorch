@@ -154,7 +154,7 @@ do
     --checkpoint 5 \
     --amp_cfg \
     --opt_level O2 \
-    --loss_scale_value 'dynamic' \
+    --loss_scale_value 1024 \
     --device_list ${ASCEND_DEVICE_ID} \
     --n_epochs 1 \
     --no_val \

@@ -37,8 +37,12 @@ import json
 import os
 from PIL import Image
 from utils import transform
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import os
+
+
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))

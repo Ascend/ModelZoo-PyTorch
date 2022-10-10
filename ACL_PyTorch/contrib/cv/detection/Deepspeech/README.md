@@ -110,7 +110,7 @@ wget https://github.com/SeanNaren/deepspeech.pytorch/releases/download/V3.0/an4_
  - 将env.sh文件放到根目录下
  - source环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 #### 2.2.2 将ckpt2onnx.py放到根目录下
 #### 2.2.3 执行pth2onnx脚本，生成onnx模型文件
@@ -128,7 +128,7 @@ python3 ckpt2onnx.py --ckpt_path ./an4_pretrained_v3.ckpt --out_file deepspeech.
 
 #### 2.3.1 设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 #### 2.3.2 使用Ascend atc工具将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
 ```

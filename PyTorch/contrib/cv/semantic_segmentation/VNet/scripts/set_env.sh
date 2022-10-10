@@ -1,10 +1,18 @@
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64:/usr/local/Ascend/ascend-toolkit/latest/atc/lib64
-export PYTHONPATH=$PYTHONPATH:/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/toolkit/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/atc/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/pyACL/python/site-packages/acl
-export PATH=$PATH:/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/ccec_compiler/bin:/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/bin:/usr/local/Ascend/ascend-toolkit/latest/atc/bin
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
-export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
-export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
+#!/bin/bash
+CANN_INSTALL_PATH_CONF='/etc/Ascend/ascend_cann_install.info'
+
+if [ -f $CANN_INSTALL_PATH_CONF ]; then
+    CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
+else
+    CANN_INSTALL_PATH="/usr/local/Ascend"
+fi
+
+if [ -d ${CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
+    source ${CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
+else
+    source ${CANN_INSTALL_PATH}/nnae/set_env.sh
+fi
+
 
 export HCCL_WHITELIST_DISABLE=1
 export TASK_QUEUE_ENABLE=1

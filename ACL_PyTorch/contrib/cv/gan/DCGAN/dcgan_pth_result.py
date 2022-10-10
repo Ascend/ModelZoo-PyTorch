@@ -50,7 +50,7 @@ def main(checkpoint_path, dataset_path, save_path):
     input_name_list.sort()
     for name in input_name_list:
         input_path = os.path.join(dataset_path, name)
-        output_path = os.path.join(save_path, name[:-4] + "_1.bin")
+        output_path = os.path.join(save_path, name[:-4] + "_0.bin")
         print(input_path, " ===> ", output_path)
         inp = np.fromfile(input_path, dtype=np.float32)
         inp = inp.reshape(shape)

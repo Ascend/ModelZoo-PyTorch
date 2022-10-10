@@ -25,7 +25,7 @@ ResNet34网络是由来自Microsoft Research的4位学者提出的卷积神经�
 
     ```
     url=https://gitee.com/ascend/ModelZoo-PyTorch.git
-    code_path=PyTorch/contrib/cv/others
+    code_path=PyTorch/contrib/cv/classification
     ```
 
 - 通过Git获取代码方法如下：

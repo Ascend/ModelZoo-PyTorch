@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 # om模型batchsize1生成结果与基准对比结果
 rm -rf ./st_gcn_bs1.log

@@ -27,7 +27,6 @@ import numpy as np
 import pycls.core.distributed as dist
 import torch
 from pycls.core.config import cfg
-import torch.npu
 
 
 def unwrap_model(model):

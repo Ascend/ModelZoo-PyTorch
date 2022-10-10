@@ -28,7 +28,6 @@ cd ADNet
 |     |--requirements.tx
 |     |--models.py
 |     |--gen_dataset_info.py
-|     |--env.sh
 |     |--ADNet_pth2onnx.py
 |     |--ADNet_preprocess.py
 |     |--ADNet_postprocess.py

@@ -74,7 +74,7 @@ python3.7 ADNet_pth2onnx.py model_70.pth ADNet.onnx
 ```
 onnx转出om
 ```
-source env.sh（注意，latest是一个软连接，请将服务器中的/usr/local/Ascend/ascend-toolkit/latest 指向5.0.2版本的CANN包）
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 # bs16
 atc --framework=5 --model=ADNet.onnx --output=ADNet_bs16 --input_format=NCHW --input_shape="image:16,1,321,481" --log=debug --soc_version=Ascend${chip_name}
 ```
@@ -124,7 +124,6 @@ atc --framework=5 --model=ADNet.onnx --output=ADNet_bs16 --input_format=NCHW --i
 |     |--requirements.tx
 |     |--models.py
 |     |--gen_dataset_info.py
-|     |--env.sh
 |     |--ADNet_pth2onnx.py
 |     |--ADNet_preprocess.py
 |     |--ADNet_postprocess.py

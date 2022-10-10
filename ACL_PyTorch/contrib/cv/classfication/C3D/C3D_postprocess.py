@@ -38,18 +38,26 @@ file_name = result_dir
 
 num_correct_top1 = 0
 num_total = len(file_name)
-
+num_other_file = 0
 # 统计top1正确的个数
 for file_idx in range(num_total):
     x = file_name[file_idx]
+    if 'sumary' in x : 
+        num_other_file+=1
+        continue
     f = open(os.path.join(sys.argv[1], x))
-    score = f.readline().replace('\n', '').replace('\r', '').split(' ')  # score：list[str]
-    score = score[0:1010]
-    score = [float(i) for i in score]
+    scores = f.readlines()
+    s = [[],[],[],[],[],[],[],[],[],[]]
+    for i, score in enumerate(scores):
+        score_ = score.replace('\n', '').replace('\r', '').split(' ')  # score：list[str]
+        #print(score_)
+        s[i] = [float(i) for i in score_ if i!='']
+    #score = score[0:1010]
+    #score = [float(i) for i in score]
     f.close()
-    s = [[], [], [], [], [], [], [], [], [], []]
-    for i in range(10):
-        s[i] = score[101*i:101*i + 101]  # 对于score中的1010个分数，每隔101个将其取出放到s数组中
+    #s = [[], [], [], [], [], [], [], [], [], []]
+    #for i in range(10):
+    #    s[i] = score[101*i:101*i + 101]  # 对于score中的1010个分数，每隔101个将其取出放到s数组中
     cls_score = torch.tensor(s).mean(dim=0)  # 对10个clips得到的输出结果求平均
     max_value = cls_score[0]
     idx = 0
@@ -57,10 +65,10 @@ for file_idx in range(num_total):
         if cls_score[i] >= max_value:
             max_value = cls_score[i]
             idx = i
-    if label[x.split('.')[0].replace('_1', '')] == str(idx):
+    if label[x.split('.')[0].replace('_0', '')] == str(idx):
         num_correct_top1 += 1
 
-top1_acc = num_correct_top1/num_total
+top1_acc = num_correct_top1/(num_total-num_other_file)
 result_dict = {"top1_acc": top1_acc}
 print(result_dict)
 json_str = json.dumps(result_dict)

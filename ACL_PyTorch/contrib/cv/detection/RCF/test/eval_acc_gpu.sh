@@ -26,7 +26,7 @@ echo "====pth accuracy data===="
 
 cd edge_eval_python
 cd cxx/src
-source build.sh
+# source build.sh
 cd ../..
 rm -rf ../data/examples_pth/rcf_bs${batch_size}_eval_result
 mkdir -p ../data/examples_pth/rcf_bs${batch_size}_eval_result

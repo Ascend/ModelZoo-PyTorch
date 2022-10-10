@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import cv2
 import numpy as np
 import torch
 import torch.utils.data
+import torchvision
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
@@ -56,7 +57,7 @@ opt = parser.parse_args()
 
 def get_output_data(dump_dir, idx, dtype=np.float32):
     output_shape = [1, 17, 64, 48]
-    input_file = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
+    input_file = os.path.join(dump_dir, "{:0>12d}_0.bin".format(idx))
     input_data = np.fromfile(input_file, dtype=dtype).reshape(output_shape)
 
     input_data = torch.tensor(input_data, dtype=torch.float32)
