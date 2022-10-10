@@ -13,7 +13,7 @@ data_path=""
 
 
 # 训练epoch
-train_epochs=1
+train_epochs=2
 # 学习率
 learning_rate=0.8
 # 加载数据进程数
