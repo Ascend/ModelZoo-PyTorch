@@ -97,6 +97,7 @@ taskset -c $PID_START-$PID_END python3.7 -u train_8p.py   \
     --distributed \
     --loss-scale 64 \
     --no-prefetcher \
+    --pin-mem \
     --local_rank $RANK_ID  \
     --lr=${learning_rate}  \
     --lr-noise 0.42 0.9 \
