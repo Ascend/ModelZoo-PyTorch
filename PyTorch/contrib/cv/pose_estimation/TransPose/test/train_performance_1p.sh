@@ -79,7 +79,7 @@ fi
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 # source 环境变量
-source ${test_path_dir}/env.sh
+source ${test_path_dir}/env_npu.sh
 export RANK_ID=0
 if [ $(uname -m) = "aarch64" ];then
     let a=0+RANK_ID*24

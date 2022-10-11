@@ -22,7 +22,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 chmod +x ben*
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 rm -rf result/dumpOutput_device1
 ./benchmark.${arch}  -model_type=vision -device_id=0 -batch_size=1 -om_path=./intraDA_deeplabv2_bs1.om -input_text_path=./intraDA_deeplabv2_pre_bin_512_1024.info -input_width=1024 -input_height=512 -output_binary=True -useDvpp=False

@@ -60,7 +60,7 @@ python3 segmenter_pytorch2onnx.py -c ${checkpoint-path} -o ${onnx-path}
 
 1、设置环境变量
 ```shell
-set /usr/local/Ascend/ascend-toolkit/set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 说明：该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
 

@@ -22,6 +22,9 @@ from pathlib import Path
 from warnings import warn
 
 import numpy as np
+import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.distributed as dist
 import torch.nn.functional as F
 import torch.optim as optim
@@ -743,11 +746,11 @@ def main_worker(opt):
 
 
 if __name__ == '__main__':
-    # option = {}
+    option = {}
     # option["ACL_OP_DEBUG_LEVEL"] = 3 # 算子debug功能，暂不开启
     # option["ACL_DEBUG_DIR"] = "debug_file" # 算子debug功能对应文件夹，暂不开启
-    # option["ACL_OP_COMPILER_CACHE_MODE"] = "enable" # cache功能启用 
-    # option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta" # cache所在文件夹
-    # print("option:",option)
-    # torch.npu.set_option(option)
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable" # cache功能启用 
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./cache" # cache所在文件夹
+    print("option:",option)
+    torch.npu.set_option(option)
     main()

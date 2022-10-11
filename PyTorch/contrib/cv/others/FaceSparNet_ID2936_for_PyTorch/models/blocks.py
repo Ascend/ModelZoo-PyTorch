@@ -17,6 +17,7 @@ import torch.nn as nn
 from torch.nn.parameter import Parameter
 from torch.nn import functional as F
 import numpy as np
+import os
 
 class NormLayer(nn.Module):
     """Normalization Layers.
@@ -97,12 +98,14 @@ class ConvLayer(nn.Module):
         self.norm = NormLayer(out_channels, norm_type=norm_type)
 
     def forward(self, x):
-        out = self.scale_func(x).to("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        out = self.scale_func(x).to(CALCULATE_DEVICE)
         if self.use_pad:
-            out = self.reflection_pad(out).to("npu:0")
-        out = self.conv2d(out).to("npu:0")
-        out = self.norm(out).to("npu:0")
-        out = self.relu(out).to("npu:0")
+            out = self.reflection_pad(out).to(CALCULATE_DEVICE)
+        out = self.conv2d(out).to(CALCULATE_DEVICE)
+        out = self.norm(out).to(CALCULATE_DEVICE)
+        out = self.relu(out).to(CALCULATE_DEVICE)
         return out
 
 

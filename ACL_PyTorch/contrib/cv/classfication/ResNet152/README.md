@@ -1,53 +1,53 @@
-# ResNet152 OnnxÄ£ÐÍ¶Ëµ½¶ËÍÆÀíÖ¸µ¼
--   [1 Ä£ÐÍ¸ÅÊö](#1-Ä£ÐÍ¸ÅÊö)
-	-   [1.1 ÂÛÎÄµØÖ·](#11-ÂÛÎÄµØÖ·)
-	-   [1.2 ´úÂëµØÖ·](#12-´úÂëµØÖ·)
--   [2 »·¾³ËµÃ÷](#2-»·¾³ËµÃ÷)
-	-   [2.1 Éî¶ÈÑ§Ï°¿ò¼Ü](#21-Éî¶ÈÑ§Ï°¿ò¼Ü)
-	-   [2.2 pythonµÚÈý·½¿â](#22-pythonµÚÈý·½¿â)
--   [3 Ä£ÐÍ×ª»»](#3-Ä£ÐÍ×ª»»)
-	-   [3.1 pth×ªonnxÄ£ÐÍ](#31-pth×ªonnxÄ£ÐÍ)
-	-   [3.2 onnx×ªomÄ£ÐÍ](#32-onnx×ªomÄ£ÐÍ)
--   [4 Êý¾Ý¼¯Ô¤´¦Àí](#4-Êý¾Ý¼¯Ô¤´¦Àí)
-	-   [4.1 Êý¾Ý¼¯»ñÈ¡](#41-Êý¾Ý¼¯»ñÈ¡)
-	-   [4.2 Êý¾Ý¼¯Ô¤´¦Àí](#42-Êý¾Ý¼¯Ô¤´¦Àí)
-	-   [4.3 Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ](#43-Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ)
--   [5 ÀëÏßÍÆÀí](#5-ÀëÏßÍÆÀí)
-	-   [5.1 benchmark¹¤¾ß¸ÅÊö](#51-benchmark¹¤¾ß¸ÅÊö)
-	-   [5.2 ÀëÏßÍÆÀí](#52-ÀëÏßÍÆÀí)
--   [6 ¾«¶È¶Ô±È](#6-¾«¶È¶Ô±È)
-	-   [6.1 ÀëÏßÍÆÀíTopN¾«¶ÈÍ³¼Æ](#61-ÀëÏßÍÆÀíTopN¾«¶ÈÍ³¼Æ)
-	-   [6.2 ¿ªÔ´TopN¾«¶È](#62-¿ªÔ´TopN¾«¶È)
-	-   [6.3 ¾«¶È¶Ô±È](#63-¾«¶È¶Ô±È)
--   [7 ÐÔÄÜ¶Ô±È](#7-ÐÔÄÜ¶Ô±È)
-	-   [7.1 npuÐÔÄÜÊý¾Ý](#71-npuÐÔÄÜÊý¾Ý)
-	-   [7.2 T4ÐÔÄÜÊý¾Ý](#72-T4ÐÔÄÜÊý¾Ý)
-	-   [7.3 ÐÔÄÜ¶Ô±È](#73-ÐÔÄÜ¶Ô±È)
+# ResNet152 Onnxæ¨¡åž‹ç«¯åˆ°ç«¯æŽ¨ç†æŒ‡å¯¼
+-   [1 æ¨¡åž‹æ¦‚è¿°](#1-æ¨¡åž‹æ¦‚è¿°)
+	-   [1.1 è®ºæ–‡åœ°å€](#11-è®ºæ–‡åœ°å€)
+	-   [1.2 ä»£ç åœ°å€](#12-ä»£ç åœ°å€)
+-   [2 çŽ¯å¢ƒè¯´æ˜Ž](#2-çŽ¯å¢ƒè¯´æ˜Ž)
+	-   [2.1 æ·±åº¦å­¦ä¹ æ¡†æž¶](#21-æ·±åº¦å­¦ä¹ æ¡†æž¶)
+	-   [2.2 pythonç¬¬ä¸‰æ–¹åº“](#22-pythonç¬¬ä¸‰æ–¹åº“)
+-   [3 æ¨¡åž‹è½¬æ¢](#3-æ¨¡åž‹è½¬æ¢)
+	-   [3.1 pthè½¬onnxæ¨¡åž‹](#31-pthè½¬onnxæ¨¡åž‹)
+	-   [3.2 onnxè½¬omæ¨¡åž‹](#32-onnxè½¬omæ¨¡åž‹)
+-   [4 æ•°æ®é›†é¢„å¤„ç†](#4-æ•°æ®é›†é¢„å¤„ç†)
+	-   [4.1 æ•°æ®é›†èŽ·å–](#41-æ•°æ®é›†èŽ·å–)
+	-   [4.2 æ•°æ®é›†é¢„å¤„ç†](#42-æ•°æ®é›†é¢„å¤„ç†)
+	-   [4.3 ç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶](#43-ç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶)
+-   [5 ç¦»çº¿æŽ¨ç†](#5-ç¦»çº¿æŽ¨ç†)
+	-   [5.1 benchmarkå·¥å…·æ¦‚è¿°](#51-benchmarkå·¥å…·æ¦‚è¿°)
+	-   [5.2 ç¦»çº¿æŽ¨ç†](#52-ç¦»çº¿æŽ¨ç†)
+-   [6 ç²¾åº¦å¯¹æ¯”](#6-ç²¾åº¦å¯¹æ¯”)
+	-   [6.1 ç¦»çº¿æŽ¨ç†TopNç²¾åº¦ç»Ÿè®¡](#61-ç¦»çº¿æŽ¨ç†TopNç²¾åº¦ç»Ÿè®¡)
+	-   [6.2 å¼€æºTopNç²¾åº¦](#62-å¼€æºTopNç²¾åº¦)
+	-   [6.3 ç²¾åº¦å¯¹æ¯”](#63-ç²¾åº¦å¯¹æ¯”)
+-   [7 æ€§èƒ½å¯¹æ¯”](#7-æ€§èƒ½å¯¹æ¯”)
+	-   [7.1 npuæ€§èƒ½æ•°æ®](#71-npuæ€§èƒ½æ•°æ®)
+	-   [7.2 T4æ€§èƒ½æ•°æ®](#72-T4æ€§èƒ½æ•°æ®)
+	-   [7.3 æ€§èƒ½å¯¹æ¯”](#73-æ€§èƒ½å¯¹æ¯”)
 
 
 
-## 1 Ä£ÐÍ¸ÅÊö
+## 1 æ¨¡åž‹æ¦‚è¿°
 
--   **[ÂÛÎÄµØÖ·](#11-ÂÛÎÄµØÖ·)**  
+-   **[è®ºæ–‡åœ°å€](#11-è®ºæ–‡åœ°å€)**  
 
--   **[´úÂëµØÖ·](#12-´úÂëµØÖ·)**  
+-   **[ä»£ç åœ°å€](#12-ä»£ç åœ°å€)**  
 
-### 1.1 ÂÛÎÄµØÖ·
-[ResNet152ÂÛÎÄ](https://arxiv.org/pdf/1512.03385.pdf)  
+### 1.1 è®ºæ–‡åœ°å€
+[ResNet152è®ºæ–‡](https://arxiv.org/pdf/1512.03385.pdf)  
 
-### 1.2 ´úÂëµØÖ·
-[ResNet152´úÂë](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py)  
+### 1.2 ä»£ç åœ°å€
+[ResNet152ä»£ç ](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py)  
 branch:master
 commit_id:02e6da5189b22870c549470485d68fff23d511bf
           
 
-## 2 »·¾³ËµÃ÷
+## 2 çŽ¯å¢ƒè¯´æ˜Ž
 
--   **[Éî¶ÈÑ§Ï°¿ò¼Ü](#21-Éî¶ÈÑ§Ï°¿ò¼Ü)**  
+-   **[æ·±åº¦å­¦ä¹ æ¡†æž¶](#21-æ·±åº¦å­¦ä¹ æ¡†æž¶)**  
 
--   **[pythonµÚÈý·½¿â](#22-pythonµÚÈý·½¿â)**  
+-   **[pythonç¬¬ä¸‰æ–¹åº“](#22-pythonç¬¬ä¸‰æ–¹åº“)**  
 
-### 2.1 Éî¶ÈÑ§Ï°¿ò¼Ü
+### 2.1 æ·±åº¦å­¦ä¹ æ¡†æž¶
 ```
 CANN 5.0.1
 
@@ -56,7 +56,7 @@ torchvision >= 0.6.0
 onnx >= 1.7.0
 ```
 
-### 2.2 pythonµÚÈý·½¿â
+### 2.2 pythonç¬¬ä¸‰æ–¹åº“
 
 ```
 numpy == 1.18.5
@@ -64,99 +64,99 @@ Pillow == 7.2.0
 opencv-python == 4.5.1.52
 ```
 
-**ËµÃ÷£º** 
->   X86¼Ü¹¹£ºpytorch£¬torchvisionºÍonnx¿ÉÒÔÍ¨¹ý¹Ù·½ÏÂÔØwhl°ü°²×°£¬ÆäËü¿ÉÒÔÍ¨¹ýpip3.7 install °üÃû °²×°
+**è¯´æ˜Žï¼š** 
+>   X86æž¶æž„ï¼špytorchï¼Œtorchvisionå’Œonnxå¯ä»¥é€šè¿‡å®˜æ–¹ä¸‹è½½whlåŒ…å®‰è£…ï¼Œå…¶å®ƒå¯ä»¥é€šè¿‡pip3.7 install åŒ…å å®‰è£…
 >
->   Arm¼Ü¹¹£ºpytorch£¬torchvisionºÍonnx¿ÉÒÔÍ¨¹ýÔ´Âë±àÒë°²×°£¬ÆäËü¿ÉÒÔÍ¨¹ýpip3.7 install °üÃû °²×°
+>   Armæž¶æž„ï¼špytorchï¼Œtorchvisionå’Œonnxå¯ä»¥é€šè¿‡æºç ç¼–è¯‘å®‰è£…ï¼Œå…¶å®ƒå¯ä»¥é€šè¿‡pip3.7 install åŒ…å å®‰è£…
 
-## 3 Ä£ÐÍ×ª»»
+## 3 æ¨¡åž‹è½¬æ¢
 
--   **[pth×ªonnxÄ£ÐÍ](#31-pth×ªonnxÄ£ÐÍ)**  
+-   **[pthè½¬onnxæ¨¡åž‹](#31-pthè½¬onnxæ¨¡åž‹)**  
 
--   **[onnx×ªomÄ£ÐÍ](#32-onnx×ªomÄ£ÐÍ)**  
+-   **[onnxè½¬omæ¨¡åž‹](#32-onnxè½¬omæ¨¡åž‹)**  
 
-### 3.1 pth×ªonnxÄ£ÐÍ
+### 3.1 pthè½¬onnxæ¨¡åž‹
 
-1.ÏÂÔØpthÈ¨ÖØÎÄ¼þ  
-[ResNet152Ô¤ÑµÁ·pthÈ¨ÖØÎÄ¼þ](https://download.pytorch.org/models/resnet152-b121ed2d.pth)  
+1.ä¸‹è½½pthæƒé‡æ–‡ä»¶  
+[ResNet152é¢„è®­ç»ƒpthæƒé‡æ–‡ä»¶](https://download.pytorch.org/models/resnet152-b121ed2d.pth)  
 ```
 wget https://download.pytorch.org/models/resnet152-b121ed2d.pth
 ```
-ÎÄ¼þMD5sum£ºd3ddb494358a7e95e49187829ec97395
+æ–‡ä»¶MD5sumï¼šd3ddb494358a7e95e49187829ec97395
 
-2.ResNet152Ä£ÐÍ´úÂëÔÚtorchvisionÀï£¬°²×°torchvision£¬armÏÂÐèÔ´Âë°²×°£¬²Î¿¼torchvision¹ÙÍø£¬Èô°²×°¹ý³Ì±¨´íÇë°Ù¶È½â¾ö
+2.ResNet152æ¨¡åž‹ä»£ç åœ¨torchvisioné‡Œï¼Œå®‰è£…torchvisionï¼Œarmä¸‹éœ€æºç å®‰è£…ï¼Œå‚è€ƒtorchvisionå®˜ç½‘ï¼Œè‹¥å®‰è£…è¿‡ç¨‹æŠ¥é”™è¯·ç™¾åº¦è§£å†³
 ```
 git clone https://github.com/pytorch/vision
 cd vision
 python3.7 setup.py install
 cd ..
 ```
-3.±àÐ´pth2onnx½Å±¾resnet152_pth2onnx.py
+3.ç¼–å†™pth2onnxè„šæœ¬resnet152_pth2onnx.py
 
- **ËµÃ÷£º**  
->×¢ÒâÄ¿Ç°ATCÖ§³ÖµÄonnxËã×Ó°æ±¾Îª11
+ **è¯´æ˜Žï¼š**  
+>æ³¨æ„ç›®å‰ATCæ”¯æŒçš„onnxç®—å­ç‰ˆæœ¬ä¸º11
 
-4.Ö´ÐÐpth2onnx½Å±¾£¬Éú³ÉonnxÄ£ÐÍÎÄ¼þ
+4.æ‰§è¡Œpth2onnxè„šæœ¬ï¼Œç”Ÿæˆonnxæ¨¡åž‹æ–‡ä»¶
 ```
 python3.7 resnet152_pth2onnx.py ./resnet152-f37072fd.pth resnet152.onnx
 ```
 
- **Ä£ÐÍ×ª»»Òªµã£º**  
->´ËÄ£ÐÍ×ª»»Îªonnx²»ÐèÒªÐÞ¸Ä¿ªÔ´´úÂë²Ö´úÂë£¬¹Ê²»ÐèÒªÌØÊâËµÃ÷
+ **æ¨¡åž‹è½¬æ¢è¦ç‚¹ï¼š**  
+>æ­¤æ¨¡åž‹è½¬æ¢ä¸ºonnxä¸éœ€è¦ä¿®æ”¹å¼€æºä»£ç ä»“ä»£ç ï¼Œæ•…ä¸éœ€è¦ç‰¹æ®Šè¯´æ˜Ž
 
-### 3.2 onnx×ªomÄ£ÐÍ
+### 3.2 onnxè½¬omæ¨¡åž‹
 
-1.ÉèÖÃ»·¾³±äÁ¿
+1.è®¾ç½®çŽ¯å¢ƒå˜é‡
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2.Ê¹ÓÃatc½«onnxÄ£ÐÍ×ª»»ÎªomÄ£ÐÍÎÄ¼þ£¬¹¤¾ßÊ¹ÓÃ·½·¨¿ÉÒÔ²Î¿¼[CANN V100R020C10 ¿ª·¢¸¨Öú¹¤¾ßÖ¸ÄÏ (ÍÆÀí) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+2.ä½¿ç”¨atcå°†onnxæ¨¡åž‹è½¬æ¢ä¸ºomæ¨¡åž‹æ–‡ä»¶ï¼Œå·¥å…·ä½¿ç”¨æ–¹æ³•å¯ä»¥å‚è€ƒ[CANN V100R020C10 å¼€å‘è¾…åŠ©å·¥å…·æŒ‡å— (æŽ¨ç†) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ```
 atc --framework=5 --model=./resnet152.onnx --output=resnet152_bs32 --input_format=NCHW --input_shape="image:32,3,224,224" --log=debug --soc_version=Ascend310
 
 ```
 
-## 4 Êý¾Ý¼¯Ô¤´¦Àí
+## 4 æ•°æ®é›†é¢„å¤„ç†
 
--   **[Êý¾Ý¼¯»ñÈ¡](#41-Êý¾Ý¼¯»ñÈ¡)**  
+-   **[æ•°æ®é›†èŽ·å–](#41-æ•°æ®é›†èŽ·å–)**  
 
--   **[Êý¾Ý¼¯Ô¤´¦Àí](#42-Êý¾Ý¼¯Ô¤´¦Àí)**  
+-   **[æ•°æ®é›†é¢„å¤„ç†](#42-æ•°æ®é›†é¢„å¤„ç†)**  
 
--   **[Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ](#43-Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ)**  
+-   **[ç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶](#43-ç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶)**  
 
-### 4.1 Êý¾Ý¼¯»ñÈ¡
-¸ÃÄ£ÐÍÊ¹ÓÃ[ImageNet¹ÙÍø](http://www.image-net.org)µÄ5ÍòÕÅÑéÖ¤¼¯½øÐÐ²âÊÔ£¬Í¼Æ¬Óë±êÇ©·Ö±ð´æ·ÅÔÚ/root/datasets/imagenet/valÓë/root/datasets/imagenet/val_label.txt¡£
+### 4.1 æ•°æ®é›†èŽ·å–
+è¯¥æ¨¡åž‹ä½¿ç”¨[ImageNetå®˜ç½‘](http://www.image-net.org)çš„5ä¸‡å¼ éªŒè¯é›†è¿›è¡Œæµ‹è¯•ï¼Œå›¾ç‰‡ä¸Žæ ‡ç­¾åˆ†åˆ«å­˜æ”¾åœ¨/root/datasets/imagenet/valä¸Ž/root/datasets/imagenet/val_label.txtã€‚
 
-### 4.2 Êý¾Ý¼¯Ô¤´¦Àí
-1.Ô¤´¦Àí½Å±¾imagenet_torch_preprocess.py
+### 4.2 æ•°æ®é›†é¢„å¤„ç†
+1.é¢„å¤„ç†è„šæœ¬imagenet_torch_preprocess.py
 
-2.Ö´ÐÐÔ¤´¦Àí½Å±¾£¬Éú³ÉÊý¾Ý¼¯Ô¤´¦ÀíºóµÄbinÎÄ¼þ
+2.æ‰§è¡Œé¢„å¤„ç†è„šæœ¬ï¼Œç”Ÿæˆæ•°æ®é›†é¢„å¤„ç†åŽçš„binæ–‡ä»¶
 ```
 python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val ./prep_dataset
 ```
-### 4.3 Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ
-1.Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ½Å±¾gen_dataset_info.py
+### 4.3 ç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶
+1.ç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶è„šæœ¬gen_dataset_info.py
 
-2.Ö´ÐÐÉú³ÉÊý¾Ý¼¯ÐÅÏ¢½Å±¾£¬Éú³ÉÊý¾Ý¼¯ÐÅÏ¢ÎÄ¼þ
+2.æ‰§è¡Œç”Ÿæˆæ•°æ®é›†ä¿¡æ¯è„šæœ¬ï¼Œç”Ÿæˆæ•°æ®é›†ä¿¡æ¯æ–‡ä»¶
 ```
 python3.7 gen_dataset_info.py bin ./prep_dataset ./resnet152_prep_bin.info 224 224
 ```
-µÚÒ»¸ö²ÎÊýÎªÄ£ÐÍÊäÈëµÄÀàÐÍ£¬µÚ¶þ¸ö²ÎÊýÎªÉú³ÉµÄbinÎÄ¼þÂ·¾¶£¬µÚÈý¸öÎªÊä³öµÄinfoÎÄ¼þ£¬ºóÃæÎª¿í¸ßÐÅÏ¢
-## 5 ÀëÏßÍÆÀí
+ç¬¬ä¸€ä¸ªå‚æ•°ä¸ºæ¨¡åž‹è¾“å…¥çš„ç±»åž‹ï¼Œç¬¬äºŒä¸ªå‚æ•°ä¸ºç”Ÿæˆçš„binæ–‡ä»¶è·¯å¾„ï¼Œç¬¬ä¸‰ä¸ªä¸ºè¾“å‡ºçš„infoæ–‡ä»¶ï¼ŒåŽé¢ä¸ºå®½é«˜ä¿¡æ¯
+## 5 ç¦»çº¿æŽ¨ç†
 
--   **[benchmark¹¤¾ß¸ÅÊö](#51-benchmark¹¤¾ß¸ÅÊö)**  
+-   **[benchmarkå·¥å…·æ¦‚è¿°](#51-benchmarkå·¥å…·æ¦‚è¿°)**  
 
--   **[ÀëÏßÍÆÀí](#52-ÀëÏßÍÆÀí)**  
+-   **[ç¦»çº¿æŽ¨ç†](#52-ç¦»çº¿æŽ¨ç†)**  
 
-### 5.1 benchmark¹¤¾ß¸ÅÊö
+### 5.1 benchmarkå·¥å…·æ¦‚è¿°
 
-benchmark¹¤¾ßÎª»ªÎª×ÔÑÐµÄÄ£ÐÍÍÆÀí¹¤¾ß£¬Ö§³Ö¶àÖÖÄ£ÐÍµÄÀëÏßÍÆÀí£¬ÄÜ¹»Ñ¸ËÙÍ³¼Æ³öÄ£ÐÍÔÚAscend310ÉÏµÄÐÔÄÜ£¬Ö§³ÖÕæÊµÊý¾ÝºÍ´¿ÍÆÀíÁ½ÖÖÄ£Ê½£¬ÅäºÏºó´¦Àí½Å±¾£¬¿ÉÒÔÊµÏÖÖî¶àÄ£ÐÍµÄ¶Ëµ½¶Ë¹ý³Ì£¬»ñÈ¡¹¤¾ß¼°Ê¹ÓÃ·½·¨¿ÉÒÔ²Î¿¼[CANN V100R020C10 ÍÆÀíbenchmark¹¤¾ßÓÃ»§Ö¸ÄÏ 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 ÀëÏßÍÆÀí
-1.ÉèÖÃ»·¾³±äÁ¿
+benchmarkå·¥å…·ä¸ºåŽä¸ºè‡ªç ”çš„æ¨¡åž‹æŽ¨ç†å·¥å…·ï¼Œæ”¯æŒå¤šç§æ¨¡åž‹çš„ç¦»çº¿æŽ¨ç†ï¼Œèƒ½å¤Ÿè¿…é€Ÿç»Ÿè®¡å‡ºæ¨¡åž‹åœ¨Ascend310ä¸Šçš„æ€§èƒ½ï¼Œæ”¯æŒçœŸå®žæ•°æ®å’Œçº¯æŽ¨ç†ä¸¤ç§æ¨¡å¼ï¼Œé…åˆåŽå¤„ç†è„šæœ¬ï¼Œå¯ä»¥å®žçŽ°è¯¸å¤šæ¨¡åž‹çš„ç«¯åˆ°ç«¯è¿‡ç¨‹ï¼ŒèŽ·å–å·¥å…·åŠä½¿ç”¨æ–¹æ³•å¯ä»¥å‚è€ƒ[CANN V100R020C10 æŽ¨ç†benchmarkå·¥å…·ç”¨æˆ·æŒ‡å— 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+### 5.2 ç¦»çº¿æŽ¨ç†
+1.è®¾ç½®çŽ¯å¢ƒå˜é‡
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
-2.Ö´ÐÐÀëÏßÍÆÀí
+2.æ‰§è¡Œç¦»çº¿æŽ¨ç†
 ```
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=resnet152_bs1.om -input_text_path=./resnet152_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 
@@ -165,50 +165,50 @@ source env.sh
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=4 -om_path=resnet152_bs4.om -input_text_path=./resnet152_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 
 ```
-Êä³ö½á¹ûÄ¬ÈÏ±£´æÔÚµ±Ç°Ä¿Â¼result/dumpOutput_device{0}£¬Ä£ÐÍÖ»ÓÐÒ»¸öÃûÎªclassµÄÊä³ö£¬shapeÎªbs * 1000£¬Êý¾ÝÀàÐÍÎªFP32£¬¶ÔÓ¦1000¸ö·ÖÀàµÄÔ¤²â½á¹û£¬Ã¿¸öÊäÈë¶ÔÓ¦µÄÊä³ö¶ÔÓ¦Ò»¸ö_x.binÎÄ¼þ¡£
+è¾“å‡ºç»“æžœé»˜è®¤ä¿å­˜åœ¨å½“å‰ç›®å½•result/dumpOutput_device{0}ï¼Œæ¨¡åž‹åªæœ‰ä¸€ä¸ªåä¸ºclassçš„è¾“å‡ºï¼Œshapeä¸ºbs * 1000ï¼Œæ•°æ®ç±»åž‹ä¸ºFP32ï¼Œå¯¹åº”1000ä¸ªåˆ†ç±»çš„é¢„æµ‹ç»“æžœï¼Œæ¯ä¸ªè¾“å…¥å¯¹åº”çš„è¾“å‡ºå¯¹åº”ä¸€ä¸ª_x.binæ–‡ä»¶ã€‚
 
-## 6 ¾«¶È¶Ô±È
+## 6 ç²¾åº¦å¯¹æ¯”
 
--   **[ÀëÏßÍÆÀíTopN¾«¶È](#61-ÀëÏßÍÆÀíTopN¾«¶È)**  
--   **[¿ªÔ´TopN¾«¶È](#62-¿ªÔ´TopN¾«¶È)**  
--   **[¾«¶È¶Ô±È](#63-¾«¶È¶Ô±È)**  
+-   **[ç¦»çº¿æŽ¨ç†TopNç²¾åº¦](#61-ç¦»çº¿æŽ¨ç†TopNç²¾åº¦)**  
+-   **[å¼€æºTopNç²¾åº¦](#62-å¼€æºTopNç²¾åº¦)**  
+-   **[ç²¾åº¦å¯¹æ¯”](#63-ç²¾åº¦å¯¹æ¯”)**  
 
-### 6.1 ÀëÏßÍÆÀíTopN¾«¶ÈÍ³¼Æ
+### 6.1 ç¦»çº¿æŽ¨ç†TopNç²¾åº¦ç»Ÿè®¡
 
-ºó´¦ÀíÍ³¼ÆTopN¾«¶È
+åŽå¤„ç†ç»Ÿè®¡TopNç²¾åº¦
 
-µ÷ÓÃimagenet_acc_eval.py½Å±¾ÍÆÀí½á¹ûÓëlabel±È¶Ô£¬¿ÉÒÔ»ñµÃAccuracy Top5Êý¾Ý£¬½á¹û±£´æÔÚresult.jsonÖÐ¡£
+è°ƒç”¨imagenet_acc_eval.pyè„šæœ¬æŽ¨ç†ç»“æžœä¸Žlabelæ¯”å¯¹ï¼Œå¯ä»¥èŽ·å¾—Accuracy Top5æ•°æ®ï¼Œç»“æžœä¿å­˜åœ¨result.jsonä¸­ã€‚
 ```
 python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
 ```
-µÚÒ»¸öÎªbenchmarkÊä³öÄ¿Â¼£¬µÚ¶þ¸öÎªÊý¾Ý¼¯ÅäÌ×±êÇ©£¬µÚÈý¸öÊÇÉú³ÉÎÄ¼þµÄ±£´æÄ¿Â¼£¬µÚËÄ¸öÊÇÉú³ÉµÄÎÄ¼þÃû¡£  
-²é¿´Êä³ö½á¹û£º
+ç¬¬ä¸€ä¸ªä¸ºbenchmarkè¾“å‡ºç›®å½•ï¼Œç¬¬äºŒä¸ªä¸ºæ•°æ®é›†é…å¥—æ ‡ç­¾ï¼Œç¬¬ä¸‰ä¸ªæ˜¯ç”Ÿæˆæ–‡ä»¶çš„ä¿å­˜ç›®å½•ï¼Œç¬¬å››ä¸ªæ˜¯ç”Ÿæˆçš„æ–‡ä»¶åã€‚  
+æŸ¥çœ‹è¾“å‡ºç»“æžœï¼š
 ```
 {"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "78.31%"}, {"key": "Top2 accuracy", "value": "87.83%"}, {"key": "Top3 accuracy", "value": "91.25%"}, {"key": "Top4 accuracy", "value": "92.97%"}, {"key": "Top5 accuracy", "value": "94.05%"}]}
 ```
-¾­¹ý¶Ôbs1Óëbs16µÄom²âÊÔ£¬±¾Ä£ÐÍbatch1µÄ¾«¶ÈÓëbatch16µÄ¾«¶ÈÃ»ÓÐ²î±ð£¬¾«¶ÈÊý¾Ý¾ùÈçÉÏ
+ç»è¿‡å¯¹bs1ä¸Žbs16çš„omæµ‹è¯•ï¼Œæœ¬æ¨¡åž‹batch1çš„ç²¾åº¦ä¸Žbatch16çš„ç²¾åº¦æ²¡æœ‰å·®åˆ«ï¼Œç²¾åº¦æ•°æ®å‡å¦‚ä¸Š
 
-### 6.2 ¿ªÔ´TopN¾«¶È
-[torchvision¹ÙÍø¾«¶È](https://pytorch.org/vision/stable/models.html)
+### 6.2 å¼€æºTopNç²¾åº¦
+[torchvisionå®˜ç½‘ç²¾åº¦](https://pytorch.org/vision/stable/models.html)
 ```
 Model        Acc@1     Acc@5
 resnet152    78.312	   94.046
 ```
-### 6.3 ¾«¶È¶Ô±È
-½«µÃµ½µÄomÀëÏßÄ£ÐÍÍÆÀíTopN¾«¶ÈÓë¸ÃÄ£ÐÍgithub´úÂë²ÖÉÏ¹«²¼µÄ¾«¶È¶Ô±È£¬¾«¶ÈÏÂ½µÔÚ1%·¶Î§Ö®ÄÚ£¬¹Ê¾«¶È´ï±ê¡£  
- **¾«¶Èµ÷ÊÔ£º**  
->Ã»ÓÐÓöµ½¾«¶È²»´ï±êµÄÎÊÌâ£¬¹Ê²»ÐèÒª½øÐÐ¾«¶Èµ÷ÊÔ
+### 6.3 ç²¾åº¦å¯¹æ¯”
+å°†å¾—åˆ°çš„omç¦»çº¿æ¨¡åž‹æŽ¨ç†TopNç²¾åº¦ä¸Žè¯¥æ¨¡åž‹githubä»£ç ä»“ä¸Šå…¬å¸ƒçš„ç²¾åº¦å¯¹æ¯”ï¼Œç²¾åº¦ä¸‹é™åœ¨1%èŒƒå›´ä¹‹å†…ï¼Œæ•…ç²¾åº¦è¾¾æ ‡ã€‚  
+ **ç²¾åº¦è°ƒè¯•ï¼š**  
+>æ²¡æœ‰é‡åˆ°ç²¾åº¦ä¸è¾¾æ ‡çš„é—®é¢˜ï¼Œæ•…ä¸éœ€è¦è¿›è¡Œç²¾åº¦è°ƒè¯•
 
-## 7 ÐÔÄÜ¶Ô±È
+## 7 æ€§èƒ½å¯¹æ¯”
 
--   **[npuÐÔÄÜÊý¾Ý](#71-npuÐÔÄÜÊý¾Ý)**  
--   **[T4ÐÔÄÜÊý¾Ý](#72-T4ÐÔÄÜÊý¾Ý)**  
--   **[ÐÔÄÜ¶Ô±È](#73-ÐÔÄÜ¶Ô±È)**  
+-   **[npuæ€§èƒ½æ•°æ®](#71-npuæ€§èƒ½æ•°æ®)**  
+-   **[T4æ€§èƒ½æ•°æ®](#72-T4æ€§èƒ½æ•°æ®)**  
+-   **[æ€§èƒ½å¯¹æ¯”](#73-æ€§èƒ½å¯¹æ¯”)**  
 
-### 7.1 npuÐÔÄÜÊý¾Ý
-benchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíÊ±Ò²»áÍ³¼ÆÐÔÄÜÊý¾Ý£¬µ«ÊÇÍÆÀíÕû¸öÊý¾Ý¼¯½ÏÂý£¬Èç¹ûÕâÃ´²âÐÔÄÜÄÇÃ´Õû¸öÍÆÀíÆÚ¼äÐèÒªÈ·±£¶ÀÕ¼device£¬Ê¹ÓÃnpu-smi info¿ÉÒÔ²é¿´deviceÊÇ·ñ¿ÕÏÐ¡£Ò²¿ÉÒÔÊ¹ÓÃbenchmark´¿ÍÆÀí¹¦ÄÜ²âµÃÐÔÄÜÊý¾Ý£¬µ«ÊÇÓÉÓÚËæ»úÊý²»ÄÜÄ£ÄâÊý¾Ý·Ö²¼£¬´¿ÍÆÀí¹¦ÄÜ²âµÄÓÐÐ©Ä£ÐÍÐÔÄÜÊý¾Ý¿ÉÄÜ²»Ì«×¼£¬benchmark´¿ÍÆÀí¹¦ÄÜ²âÐÔÄÜ½öÎª¿ìËÙ»ñÈ¡´ó¸ÅµÄÐÔÄÜÊý¾ÝÒÔ±ãµ÷ÊÔÓÅ»¯Ê¹ÓÃ£¬¿É³õ²½È·ÈÏbenchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíÊ±ÓÉÓÚdeviceÒ²±»ÆäËüÍÆÀíÈÎÎñÊ¹ÓÃÁËµ¼ÖÂµÄÐÔÄÜ²»×¼µÄÎÊÌâ¡£Ä£ÐÍµÄÐÔÄÜÒÔÊ¹ÓÃbenchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíµÃµ½bs1Óëbs16µÄÐÔÄÜÊý¾ÝÎª×¼£¬¶ÔÓÚÊ¹ÓÃbenchmark¹¤¾ß²âÊÔµÄbatch4£¬8£¬32µÄÐÔÄÜÊý¾ÝÔÚREADME.mdÖÐÈçÏÂ×÷¼ÇÂ¼¼´¿É¡£  
-1.benchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀí»ñµÃÐÔÄÜÊý¾Ý  
-batch1µÄÐÔÄÜ£¬benchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíºóÉú³Éresult/perf_vision_batchsize_1_device_0.txt£º  
+### 7.1 npuæ€§èƒ½æ•°æ®
+benchmarkå·¥å…·åœ¨æ•´ä¸ªæ•°æ®é›†ä¸ŠæŽ¨ç†æ—¶ä¹Ÿä¼šç»Ÿè®¡æ€§èƒ½æ•°æ®ï¼Œä½†æ˜¯æŽ¨ç†æ•´ä¸ªæ•°æ®é›†è¾ƒæ…¢ï¼Œå¦‚æžœè¿™ä¹ˆæµ‹æ€§èƒ½é‚£ä¹ˆæ•´ä¸ªæŽ¨ç†æœŸé—´éœ€è¦ç¡®ä¿ç‹¬å deviceï¼Œä½¿ç”¨npu-smi infoå¯ä»¥æŸ¥çœ‹deviceæ˜¯å¦ç©ºé—²ã€‚ä¹Ÿå¯ä»¥ä½¿ç”¨benchmarkçº¯æŽ¨ç†åŠŸèƒ½æµ‹å¾—æ€§èƒ½æ•°æ®ï¼Œä½†æ˜¯ç”±äºŽéšæœºæ•°ä¸èƒ½æ¨¡æ‹Ÿæ•°æ®åˆ†å¸ƒï¼Œçº¯æŽ¨ç†åŠŸèƒ½æµ‹çš„æœ‰äº›æ¨¡åž‹æ€§èƒ½æ•°æ®å¯èƒ½ä¸å¤ªå‡†ï¼Œbenchmarkçº¯æŽ¨ç†åŠŸèƒ½æµ‹æ€§èƒ½ä»…ä¸ºå¿«é€ŸèŽ·å–å¤§æ¦‚çš„æ€§èƒ½æ•°æ®ä»¥ä¾¿è°ƒè¯•ä¼˜åŒ–ä½¿ç”¨ï¼Œå¯åˆæ­¥ç¡®è®¤benchmarkå·¥å…·åœ¨æ•´ä¸ªæ•°æ®é›†ä¸ŠæŽ¨ç†æ—¶ç”±äºŽdeviceä¹Ÿè¢«å…¶å®ƒæŽ¨ç†ä»»åŠ¡ä½¿ç”¨äº†å¯¼è‡´çš„æ€§èƒ½ä¸å‡†çš„é—®é¢˜ã€‚æ¨¡åž‹çš„æ€§èƒ½ä»¥ä½¿ç”¨benchmarkå·¥å…·åœ¨æ•´ä¸ªæ•°æ®é›†ä¸ŠæŽ¨ç†å¾—åˆ°bs1ä¸Žbs16çš„æ€§èƒ½æ•°æ®ä¸ºå‡†ï¼Œå¯¹äºŽä½¿ç”¨benchmarkå·¥å…·æµ‹è¯•çš„batch4ï¼Œ8ï¼Œ32çš„æ€§èƒ½æ•°æ®åœ¨README.mdä¸­å¦‚ä¸‹ä½œè®°å½•å³å¯ã€‚  
+1.benchmarkå·¥å…·åœ¨æ•´ä¸ªæ•°æ®é›†ä¸ŠæŽ¨ç†èŽ·å¾—æ€§èƒ½æ•°æ®  
+batch1çš„æ€§èƒ½ï¼Œbenchmarkå·¥å…·åœ¨æ•´ä¸ªæ•°æ®é›†ä¸ŠæŽ¨ç†åŽç”Ÿæˆresult/perf_vision_batchsize_1_device_0.txtï¼š  
 ```
 [e2e] throughputRate: 126.32, latency: 395819
 [data read] throughputRate: 134.323, moduleLatency: 7.44476
@@ -216,9 +216,9 @@ batch1µÄÐÔÄÜ£¬benchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíºóÉú³Éresult/perf_vision_batchsize_
 [infer] throughputRate: 127.16, Interface throughputRate: 180.131, moduleLatency: 6.90735
 [post] throughputRate: 127.159, moduleLatency: 7.86415
 ```
-Interface throughputRate: 180.131£¬180.131x4=720.524¼ÈÊÇbatch1 310µ¥¿¨ÍÌÍÂÂÊ  
+Interface throughputRate: 180.131ï¼Œ180.131x4=720.524æ—¢æ˜¯batch1 310å•å¡åžåçŽ‡  
 
-batch16µÄÐÔÄÜ£¬benchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíºóÉú³Éresult/perf_vision_batchsize_16_device_1.txt£º  
+batch16çš„æ€§èƒ½ï¼Œbenchmarkå·¥å…·åœ¨æ•´ä¸ªæ•°æ®é›†ä¸ŠæŽ¨ç†åŽç”Ÿæˆresult/perf_vision_batchsize_16_device_1.txtï¼š  
 ```
 [e2e] throughputRate: 156.123, latency: 320261
 [data read] throughputRate: 165.096, moduleLatency: 6.05708
@@ -226,39 +226,39 @@ batch16µÄÐÔÄÜ£¬benchmark¹¤¾ßÔÚÕû¸öÊý¾Ý¼¯ÉÏÍÆÀíºóÉú³Éresult/perf_vision_batchsize
 [infer] throughputRate: 156.862, Interface throughputRate: 291.04, moduleLatency: 5.1523
 [post] throughputRate: 9.80371, moduleLatency: 102.002
 ```
-Interface throughputRate: 291.04£¬291.04x4=1,164.16¼ÈÊÇbatch16 310µ¥¿¨ÍÌÍÂÂÊ  
+Interface throughputRate: 291.04ï¼Œ291.04x4=1,164.16æ—¢æ˜¯batch16 310å•å¡åžåçŽ‡  
 
 
 ./benchmark.x86_64 -batch_size=4 -om_path=./model_rectify_random.onnx.om -round=50 -device_id=0
-batch4µÄÐÔÄÜ£¬benchmark¹¤¾ß´¿ÍÆÀíºóÉú³Éresult/PureInfer_perf_of_resnet152_bs4_in_device_0.txt£º  
+batch4çš„æ€§èƒ½ï¼Œbenchmarkå·¥å…·çº¯æŽ¨ç†åŽç”Ÿæˆresult/PureInfer_perf_of_resnet152_bs4_in_device_0.txtï¼š  
 ```
 
 ave_throughputRate = 244.742samples/s, ave_latency = 4.15733ms
 
 ```
-Interface throughputRate: 244.742£¬244.742x4=978.968¼ÈÊÇbatch4 310µ¥¿¨ÍÌÍÂÂÊ 
+Interface throughputRate: 244.742ï¼Œ244.742x4=978.968æ—¢æ˜¯batch4 310å•å¡åžåçŽ‡ 
 
-batch8µÄÐÔÄÜ£¬benchmark¹¤¾ß½øÐÐ´¿ÍÆÀíÉú³Éresult/PureInfer_perf_of_resnet152_bs8_in_device_0.txt£º  
+batch8çš„æ€§èƒ½ï¼Œbenchmarkå·¥å…·è¿›è¡Œçº¯æŽ¨ç†ç”Ÿæˆresult/PureInfer_perf_of_resnet152_bs8_in_device_0.txtï¼š  
 ```
 ave_throughputRate = 270.962samples/s, ave_latency = 3.75835ms
 
 ```
-Interface throughputRate: 270.962£¬270.962x4=1,083.848¼ÈÊÇbatch8 310µ¥¿¨ÍÌÍÂÂÊ   
+Interface throughputRate: 270.962ï¼Œ270.962x4=1,083.848æ—¢æ˜¯batch8 310å•å¡åžåçŽ‡   
 
-batch32µÄÐÔÄÜ£¬benchmark¹¤¾ß´¿ÍÆÀíºóÉú³Éresult/PureInfer_perf_of_resnet152_bs32_in_device_0.txt£º  
+batch32çš„æ€§èƒ½ï¼Œbenchmarkå·¥å…·çº¯æŽ¨ç†åŽç”Ÿæˆresult/PureInfer_perf_of_resnet152_bs32_in_device_0.txtï¼š  
 ```
 ave_throughputRate = 270.402samples/s, ave_latency = 3.71981ms
 
 ```
-Interface throughputRate: 270.402£¬270.402x4=1,081.608¼ÈÊÇbatch32 310µ¥¿¨ÍÌÍÂÂÊ  
+Interface throughputRate: 270.402ï¼Œ270.402x4=1,081.608æ—¢æ˜¯batch32 310å•å¡åžåçŽ‡  
 
-### 7.2 T4ÐÔÄÜÊý¾Ý
-ÔÚ×°ÓÐT4¿¨µÄ·þÎñÆ÷ÉÏ²âÊÔgpuÐÔÄÜ£¬²âÊÔ¹ý³ÌÇëÈ·±£¿¨Ã»ÓÐÔËÐÐÆäËûÈÎÎñ£¬TensorRT°æ±¾£º7.2.3.4£¬cuda°æ±¾£º11.0£¬cudnn°æ±¾£º8.2  
-batch1ÐÔÄÜ£º
+### 7.2 T4æ€§èƒ½æ•°æ®
+åœ¨è£…æœ‰T4å¡çš„æœåŠ¡å™¨ä¸Šæµ‹è¯•gpuæ€§èƒ½ï¼Œæµ‹è¯•è¿‡ç¨‹è¯·ç¡®ä¿å¡æ²¡æœ‰è¿è¡Œå…¶ä»–ä»»åŠ¡ï¼ŒTensorRTç‰ˆæœ¬ï¼š7.2.3.4ï¼Œcudaç‰ˆæœ¬ï¼š11.0ï¼Œcudnnç‰ˆæœ¬ï¼š8.2  
+batch1æ€§èƒ½ï¼š
 ```
 trtexec --onnx=resnet152.onnx --fp16 --shapes=image:1x3x224x224 --threads
 ```
-gpu T4ÊÇ4¸ödevice²¢ÐÐÖ´ÐÐµÄ½á¹û£¬meanÊÇÊ±ÑÓ£¨tensorrtµÄÊ±ÑÓÊÇbatch¸öÊý¾ÝµÄÍÆÀíÊ±¼ä£©£¬¼´ÍÌÍÂÂÊµÄµ¹Êý³ËÒÔbatch
+gpu T4æ˜¯4ä¸ªdeviceå¹¶è¡Œæ‰§è¡Œçš„ç»“æžœï¼Œmeanæ˜¯æ—¶å»¶ï¼ˆtensorrtçš„æ—¶å»¶æ˜¯batchä¸ªæ•°æ®çš„æŽ¨ç†æ—¶é—´ï¼‰ï¼Œå³åžåçŽ‡çš„å€’æ•°ä¹˜ä»¥batch
 ```
 [06/11/2021-02:43:51] [I] GPU Compute
 [06/11/2021-02:43:51] [I] min: 2.9082 ms
@@ -268,11 +268,11 @@ gpu T4ÊÇ4¸ödevice²¢ÐÐÖ´ÐÐµÄ½á¹û£¬meanÊÇÊ±ÑÓ£¨tensorrtµÄÊ±ÑÓÊÇbatch¸öÊý¾ÝµÄÍÆÀíÊ±
 [06/11/2021-02:43:51] [I] percentile: 3.16479 ms at 99%
 [06/11/2021-02:43:51] [I] total compute time: 3.00133 s
 ```
-batch1 t4µ¥¿¨ÍÌÍÂÂÊ£º1000/(3.00433/1)=332.8529156251144fps 
+batch1 t4å•å¡åžåçŽ‡ï¼š1000/(3.00433/1)=332.8529156251144fps 
 ```
  
 
-batch16ÐÔÄÜ£º
+batch16æ€§èƒ½ï¼š
 ```
 trtexec --onnx=resnet152.onnx --fp16 --shapes=image:16x3x224x224 --threads
 ```
@@ -284,10 +284,10 @@ trtexec --onnx=resnet152.onnx --fp16 --shapes=image:16x3x224x224 --threads
 [06/11/2021-02:50:44] [I] percentile: 22.3171 ms at 99%
 [06/11/2021-02:50:44] [I] total compute time: 3.03795 s
 ```
-batch16 t4µ¥¿¨ÍÌÍÂÂÊ£º1000/(21.0969/16)=758.4052633325275fps  
+batch16 t4å•å¡åžåçŽ‡ï¼š1000/(21.0969/16)=758.4052633325275fps  
 
 
-batch4ÐÔÄÜ£º
+batch4æ€§èƒ½ï¼š
 ```
 [06/11/2021-08:01:43] [I] GPU Compute
 [06/11/2021-08:01:43] [I] min: 6.2175 ms
@@ -298,11 +298,11 @@ batch4ÐÔÄÜ£º
 [06/11/2021-08:01:43] [I] total compute time: 3.01023 s
 
 ```
-batch4 t4µ¥¿¨ÍÌÍÂÂÊ£º1000/(6.57256/4)=608.590868702606fps 
+batch4 t4å•å¡åžåçŽ‡ï¼š1000/(6.57256/4)=608.590868702606fps 
 
 
 
-batch8ÐÔÄÜ£º
+batch8æ€§èƒ½ï¼š
 ```
 [06/11/2021-08:03:59] [I] GPU Compute
 [06/11/2021-08:03:59] [I] min: 10.8062 ms
@@ -313,11 +313,11 @@ batch8ÐÔÄÜ£º
 [06/11/2021-08:03:59] [I] total compute time: 3.02744 s
 
 ```
-batch8 t4µ¥¿¨ÍÌÍÂÂÊ£º1000/(11.3813/8)=702.9074007362955fps 
+batch8 t4å•å¡åžåçŽ‡ï¼š1000/(11.3813/8)=702.9074007362955fps 
 
 
 
-batch32ÐÔÄÜ£º
+batch32æ€§èƒ½ï¼š
 ```
 [06/11/2021-08:06:39] [I] GPU Compute
 [06/11/2021-08:06:39] [I] min: 39.5345 ms
@@ -328,15 +328,15 @@ batch32ÐÔÄÜ£º
 [06/11/2021-08:06:39] [I] total compute time: 3.0751 s
 
 ```
-batch32 t4µ¥¿¨ÍÌÍÂÂÊ£º1000/(44.5667/32)=718.0248930255101fps 
+batch32 t4å•å¡åžåçŽ‡ï¼š1000/(44.5667/32)=718.0248930255101fps 
 
 ```
 
-### 7.3 ÐÔÄÜ¶Ô±È
-batch1£º180.131x4 > 1000/(3.00433/1)  
-batch16£º291.04x4 > 1000/(21.0969/16)  
-310µ¥¸ödeviceµÄÍÌÍÂÂÊ³Ë4¼´µ¥¿¨ÍÌÍÂÂÊ±ÈT4µ¥¿¨µÄÍÌÍÂÂÊ´ó£¬¹Ê310ÐÔÄÜ¸ßÓÚT4ÐÔÄÜ£¬ÐÔÄÜ´ï±ê¡£  
-¶ÔÓÚbatch1µÄ310ÐÔÄÜ¸ßÓÚT4ÐÔÄÜ2.16±¶£¬batch16µÄ310ÐÔÄÜ¸ßÓÚT4ÐÔÄÜ1.535±¶£¬¸ÃÄ£ÐÍ·ÅÔÚBenchmark/cv/classificationÄ¿Â¼ÏÂ¡£  
- **ÐÔÄÜÓÅ»¯£º**  
->Ã»ÓÐÓöµ½ÐÔÄÜ²»´ï±êµÄÎÊÌâ£¬¹Ê²»ÐèÒª½øÐÐÐÔÄÜÓÅ»¯
+### 7.3 æ€§èƒ½å¯¹æ¯”
+batch1ï¼š180.131x4 > 1000/(3.00433/1)  
+batch16ï¼š291.04x4 > 1000/(21.0969/16)  
+310å•ä¸ªdeviceçš„åžåçŽ‡ä¹˜4å³å•å¡åžåçŽ‡æ¯”T4å•å¡çš„åžåçŽ‡å¤§ï¼Œæ•…310æ€§èƒ½é«˜äºŽT4æ€§èƒ½ï¼Œæ€§èƒ½è¾¾æ ‡ã€‚  
+å¯¹äºŽbatch1çš„310æ€§èƒ½é«˜äºŽT4æ€§èƒ½2.16å€ï¼Œbatch16çš„310æ€§èƒ½é«˜äºŽT4æ€§èƒ½1.535å€ï¼Œè¯¥æ¨¡åž‹æ”¾åœ¨Benchmark/cv/classificationç›®å½•ä¸‹ã€‚  
+ **æ€§èƒ½ä¼˜åŒ–ï¼š**  
+>æ²¡æœ‰é‡åˆ°æ€§èƒ½ä¸è¾¾æ ‡çš„é—®é¢˜ï¼Œæ•…ä¸éœ€è¦è¿›è¡Œæ€§èƒ½ä¼˜åŒ–
 

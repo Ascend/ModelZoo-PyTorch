@@ -54,13 +54,12 @@ def GetNodeIndex(graph, node_name):
 INTIALIZERS  = model.graph.initializer
 for initializer in INTIALIZERS:
     W = numpy_helper.to_array(initializer)
-    if initializer.name == '329':
-        gru_58_w = copy.deepcopy(W)
-    if initializer.name == '330':
-        gru_58_r = copy.deepcopy(W)
     if initializer.name == '328':
+        gru_58_w = copy.deepcopy(W)
+    if initializer.name == '329':
+        gru_58_r = copy.deepcopy(W)
+    if initializer.name == '330':
         gru_58_b = copy.deepcopy(W)
-        # print(W.shape, gru_new_b.shape)
 
 
 # 这是GRU前面的slice算子
@@ -170,6 +169,5 @@ model.graph.node.insert(63, newnode4)
 model.graph.node.insert(64, newnode5)
 
 
-# onnx.checker.check_model(model)
 onnx.save(model, output_model)
 print("change onnx model success")

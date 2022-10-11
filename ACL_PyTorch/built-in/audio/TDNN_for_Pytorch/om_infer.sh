@@ -1,7 +1,5 @@
-install_path=/home/dl/ascend-toolkit/latest
 export PYTHONUNBUFFERD=1
-export PYTHONPATH=${install_path}/pyACL/python/site-packages/acl:$PYTHONPATH
-export LD_LIBRARY_PATH=${install_path}/acllib/lib64/:$LD_LIBRARY_PATH
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 bs=$1
 

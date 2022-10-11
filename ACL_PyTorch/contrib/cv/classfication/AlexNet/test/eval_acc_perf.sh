@@ -25,7 +25,7 @@ if [ $? != 0 ]; then
 fi
 echo '==> 2. creating ./imagenet_prep_bin.info successfully.'
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf ./result/*
 
 ./benchmark.${arch} -model_type=vision -batch_size=1 -device_id=2 -om_path=./onnx_alexnet_bs1.om -input_text_path=./imagenet_prep_bin.info -input_width=224 -input_height=224 -useDvpp=false -output_binary=false

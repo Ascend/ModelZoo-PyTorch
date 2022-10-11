@@ -37,12 +37,8 @@ class BaseOptions():
 
     def initialize(self, parser):
         """Define the common options that are used in both training and test."""
-        # basic parameters
-        #parser.add_argument('--dataroot', required=False, help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        # parser.add_argument('--data_path')
-        # parser.add_argument('--output_path')
-        parser.add_argument("--data_url", type=str, default="/home/ma-user/modelarts/inputs/data_url_0")
-        parser.add_argument("--train_url", type=str, default="/home/ma-user/modelarts/outputs/train_url_0/")
+        parser.add_argument("--data_url", type=str, default="./SparNet/")
+        parser.add_argument("--train_url", type=str, default="./outputs/train_url_0/")
         parser.add_argument('--name', type=str, default='SPARNet_S16_V4_Attn2D', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpus', type=int, default=1, help='how many gpus to use')
         parser.add_argument('--seed', type=int, default=123, help='Random seed for training')
@@ -68,7 +64,7 @@ class BaseOptions():
         parser.add_argument('--dataset_name', type=str, default='celeba', help='dataset name')
         parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
         parser.add_argument('--num_threads', default=8, type=int, help='# threads for loading data')
-        parser.add_argument('--batch_size', type=int, default=32, help='input batch size')
+        parser.add_argument('--batch_size', type=int, default=32, help='input batch size 32')
         parser.add_argument('--load_size', type=int, default=128, help='scale images to this size')
         parser.add_argument('--max_dataset_size', type=int, default=float("inf"), help='Maximum number of samples allowed per dataset. If the dataset directory contains more than max_dataset_size, only a subset is loaded.')
         parser.add_argument('--preprocess', type=str, default='none', help='scaling and cropping of images at load time [resize_and_crop | crop | scale_width | scale_width_and_crop | none]')
@@ -142,23 +138,11 @@ class BaseOptions():
         """Parse our options, create checkpoints directory suffix, and set up gpu device."""
         opt = self.gather_options()
         opt.isTrain = self.isTrain   # train or test
-
-
-       # Find avaliable GPUs automatically
-       #  if opt.gpus > 0:
-       #      opt.gpu_ids = utils.get_gpu_memory_map()[1][:opt.gpus]
-       #      if not isinstance(opt.gpu_ids, list):
-       #          opt.gpu_ids = [opt.gpu_ids]
-       #      torch.cuda.set_device(opt.gpu_ids[0])
-       #      opt.device = torch.device('cuda:{}'.format(opt.gpu_ids[0 % opt.gpus]))
-       #      opt.data_device = torch.device('cuda:{}'.format(opt.gpu_ids[1 % opt.gpus]))
-       #  else:
-       #      opt.gpu_ids = []
-       #      #opt.device = torch.device('cpu')
-       #      opt.device = torch.npu.set_device('npu:0')
         opt.gpu_ids = []
-        opt.device = torch.npu.set_device("npu:0")
-        opt.data_device = torch.npu.set_device("npu:0")
+        device_id=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(device_id)
+        opt.device = torch.npu.set_device(CALCULATE_DEVICE)
+        opt.data_device = torch.npu.set_device(CALCULATE_DEVICE)
 
         # set random seed for reproducibility
         np.random.seed(opt.seed)

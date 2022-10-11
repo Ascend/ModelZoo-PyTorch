@@ -1,5 +1,5 @@
 #!/bin/bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 echo "====TEM pre_treatment starting===="
 python BSN_tem_preprocess.py 
 if [ $? != 0 ]; then

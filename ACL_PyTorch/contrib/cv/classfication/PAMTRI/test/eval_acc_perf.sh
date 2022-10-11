@@ -22,7 +22,7 @@ if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 rm -rf result/dumpOutput_device0_bs1_query
 rm -rf result/dumpOutput_device0_bs1_gallery

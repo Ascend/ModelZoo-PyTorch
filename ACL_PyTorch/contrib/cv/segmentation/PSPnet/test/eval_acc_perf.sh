@@ -22,7 +22,7 @@ if [ $? != 0 ]; then
     exit -1
 fi
 chmod +x ben*
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 rm -rf result/dumpOutput_device0
 ./benchmark.${arch} -model_type=vision -om_path=pspnet_r50-d8_512x512_20k_voc12aug_sim_fp16_bs1.om -device_id=0 -batch_size=1 -input_text_path=voc12.info -input_width=500 -input_height=500 -useDvpp=false -output_binary=true
 if [ $? != 0 ]; then

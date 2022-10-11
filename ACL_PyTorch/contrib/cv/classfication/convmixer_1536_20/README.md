@@ -97,7 +97,7 @@ atc --framework=5 --model=./convmixer_1536_20.onnx --output=./convmixer_1536_20_
 ## <a name="4">4. 数据预处理</a>
 数据预处理过程包含在 test/eval_acc_perf.sh 的脚本中
 ### <a name="41">4.1 数据处理</a>
-1. 设置环境变量
+1. 设置环境变量, 根据实际环境配置
 ```bash
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```

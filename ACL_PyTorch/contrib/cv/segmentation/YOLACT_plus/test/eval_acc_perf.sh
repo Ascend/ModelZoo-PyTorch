@@ -27,7 +27,7 @@ python3.7.5 YOLACT_preprocess.py --valid_images=$valid_images --valid_annotation
 
 echo "perform offline eval!"
 
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 $benchmark_path -model_type=vision -device_id=0 -batch_size=1 -om_path=yolact_plus_bs1.om -input_text_path=./yolact_prep_bin.info -input_width=550 -input_height=550 -output_binary=True -useDvpp=False
 

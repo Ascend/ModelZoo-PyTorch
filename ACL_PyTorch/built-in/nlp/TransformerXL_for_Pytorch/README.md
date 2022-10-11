@@ -51,9 +51,10 @@ pip3.7 install .
 python3.7 modify_model.py model_sim.onnx
 ```
 
-7. 执行atc.sh脚本，将.onnx文件转为离线推理模型文件.om文件。
+7. 执行atc.sh脚本，将.onnx文件转为离线推理模型文件.om文件。请以实际安装环境配置环境变量。
 
 ```shell
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 bash atc.sh model_sim_new.onnx model_tsxl
 ```
 

@@ -602,8 +602,9 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
     inputs, targets = prefetcher.next()
 
     batch_idx = -1
-
+    batchtime0 = 0
     while inputs is not None:
+        start_time = time.time()
         loc = 'npu:{}'.format(gpu)
         targets = targets.to(torch.int32)
         inputs, targets = inputs.to(loc, non_blocking=False), targets.to(loc, non_blocking=False)
@@ -657,7 +658,7 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
             optimizer.step(print_flag=print_flag)
         else:
             optimizer.step()
-
+        batchtime0 += time.time() - start_time
         if batch_idx % args.print_freq == 0:
             # measure accuracy and record loss
             prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1, 5))
@@ -672,10 +673,9 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
 
             torch.npu.synchronize()
             # measure elapsed time
-            battime = (time.time() - end) / args.print_freq
+            battime = batchtime0 / args.print_freq
             batch_time.update(battime)
             fps.update(batch_size / battime * ngpus)
-            end = time.time()
 
             if args.local_rank == 0:  # plot progress
                 bar.suffix = '({batch}/{size}) | Batch: {bt:.3f}s | Total: {total:} | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f} | fps: {fp: .1f} '.format(
@@ -694,6 +694,8 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
             print('E%d' % (epoch) + bar.suffix)
 
         inputs, targets = prefetcher.next()
+        if batch_idx % args.print_freq == 0:
+            batchtime0 = 0
 
     if args.local_rank == 0:
         bar.finish()

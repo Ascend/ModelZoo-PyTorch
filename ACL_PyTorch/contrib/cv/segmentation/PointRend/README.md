@@ -28,7 +28,6 @@ python3.7 -m pip install -e detectron2
 |    ├── pth2om.sh                  //模型转换脚本，集成了auto tune功能，可以手动关闭  
 |    ├── parse.py                   //用于解析性能数据
 |    ├── eval_acc_perf.sh         //用于评估精度 
-├── env.sh                         //环境变量 
 ├── createTrainLabelIds.py     //用于准备数据集的脚本
 ├── gen_dataset_info.py         //用于获取二进制数据集信息的脚本
 ├── LICENSE                     

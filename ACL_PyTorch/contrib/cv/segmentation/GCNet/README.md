@@ -54,6 +54,10 @@ python tools/deployment/pytorch2onnx.py configs/gcnet/mask_rcnn_r50_fpn_r4_gcb_c
 2.onnx转om模型
 
 ```
+# source NPU环境变量
+source /usr/local/Ascend/ascend-toolkit/set_env.sh  
+export REPEAT_TUNE=true
+# 模型转换
 atc --framework=5 --model=GCNet.onnx --output=./GCNet_bs1 --input_shape="input:1,3,800,1216"  --log=error --soc_version=Ascend310
 ```
 

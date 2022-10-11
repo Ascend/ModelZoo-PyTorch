@@ -15,7 +15,7 @@ train_epochs=1
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数
-workers=8
+workers=32
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -93,6 +93,7 @@ python3.7 ./train_1p.py  \
     --cooldown-epochs 0 \
     --workers=${workers} \
     --no-prefetcher \
+    --pin-mem \
     --npu ${ASCEND_DEVICE_ID} \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

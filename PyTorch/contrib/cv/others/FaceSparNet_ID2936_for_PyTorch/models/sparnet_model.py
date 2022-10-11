@@ -16,7 +16,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from apex import amp
-import apex
 from models import loss 
 from models import networks
 from .base_model import BaseModel
@@ -24,6 +23,13 @@ from utils import utils
 from models.sparnet import SPARNet
 
 import apex
+import os
+
+CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != CALCULATE_DEVICE:
+    CALCULATE_DEVICE = f'npu:{CALCULATE_DEVICE}'
 
 class SPARNetModel(BaseModel):
 
@@ -36,7 +42,6 @@ class SPARNetModel(BaseModel):
         BaseModel.__init__(self, opt)
 
         self.netG = SPARNet(res_depth=opt.res_depth, norm_type=opt.Gnorm, att_name=opt.att_name, bottleneck_size=opt.bottleneck_size) 
-        # self.netG = networks.define_network(opt, self.netG).to(opt.device)
         self.netG = networks.define_network(opt, self.netG)
         self.model_names = ['G']
         self.load_model_names = ['G']
@@ -44,8 +49,7 @@ class SPARNetModel(BaseModel):
         self.visual_names = ['img_LR', 'img_SR', 'img_HR']
 
         if self.isTrain:
-            # self.criterionL1 = nn.L1Loss().to(opt.device)
-            self.criterionL1 = nn.L1Loss().to("npu:0")
+            self.criterionL1 = nn.L1Loss().to(CALCULATE_DEVICE)
             # self.optimizer_G = optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.99))
             self.optimizer_G = apex.optimizers.NpuFusedAdam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.99))
             self.optimizers = [self.optimizer_G]
@@ -58,10 +62,8 @@ class SPARNetModel(BaseModel):
     
     def set_input(self, input, cur_iters=None):
         self.cur_iters = cur_iters
-        # self.img_LR = input['LR'].to(self.opt.device)
-        # self.img_HR = input['HR'].to(self.opt.device)
-        self.img_LR = input['LR'].to("npu:0")
-        self.img_HR = input['HR'].to("npu:0")
+        self.img_LR = input['LR'].to(CALCULATE_DEVICE)
+        self.img_HR = input['HR'].to(CALCULATE_DEVICE)
 
     def forward(self):
         # self.img_SR = self.netG(self.img_LR).to(self.opt.device)
@@ -70,7 +72,7 @@ class SPARNetModel(BaseModel):
     def backward_G(self):
         # Pix loss
         self.loss_Pix = self.criterionL1(self.img_SR, self.img_HR) * self.opt.lambda_pix
-        self.loss_Pix = self.loss_Pix.to("npu:0")
+        self.loss_Pix = self.loss_Pix.to(CALCULATE_DEVICE)
         #self.loss_Pix.backward()
         with amp.scale_loss(self.loss_Pix, self.optimizer_G) as scaled_loss:
             scaled_loss.backward()
@@ -87,10 +89,4 @@ class SPARNetModel(BaseModel):
         out.append(utils.tensor_to_numpy(self.img_SR))
         out.append(utils.tensor_to_numpy(self.img_HR))
         visual_imgs = [utils.batch_numpy_to_image(x, size) for x in out]
-        
         return visual_imgs
-
-
-
-
-

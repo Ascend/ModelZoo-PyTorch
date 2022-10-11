@@ -117,7 +117,7 @@
    执行parse_testdata.py脚本。
 
    ```
-   python3.7 parse_testdata.py
+   python3 parse_testdata.py
    ```
 
    执行成功后，二进制文件生成在*./input_bin*文件夹下，标签数据label.txt生成在当前目录下。
@@ -230,9 +230,9 @@ b.  执行推理。
 
 c.  精度验证。
 
-运行脚本postpossess_CRNN_pytorch.py进行精度测试，精度会打印并保存在json文件中。
+运行脚本postpossess_CRNN_pytorch.py进行精度测试，精度会打屏显示。
 
-    python3.7.5 postpossess_CRNN_pytorch.py --pre_dir ./input_bin --batchsize 16 --modelpath crnn_final_bs16.om --label label.txt --json_output_file result
+    python3 postpossess_CRNN_pytorch.py
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -240,4 +240,4 @@ c.  精度验证。
 
 | 芯片型号 | Batch Size | 数据集      | 精度   | 性能 |
 | -------- | ---------- | ----------- | ------ | ---- |
-| 310P3    | 16         | IIIT5K_lmdb | 79.27% | 4400 |
+| 310P3    | 16         | IIIT5K_lmdb | 74.87% | 4400 |

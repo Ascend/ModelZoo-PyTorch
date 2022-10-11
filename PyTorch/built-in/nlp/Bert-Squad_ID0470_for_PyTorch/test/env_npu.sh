@@ -23,7 +23,7 @@ msnpureport -g error -d 5
 msnpureport -g error -d 6
 msnpureport -g error -d 7
 #关闭Device侧Event日志
-/msnpureport -e disable
+msnpureport -e disable
 
 export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_GLOBAL_EVENT_ENABLE=0

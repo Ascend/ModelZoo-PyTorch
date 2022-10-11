@@ -90,7 +90,7 @@ python3.7 dino_resnet50_pth2onnx.py
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
+1.设置环境变量。请以实际安装环境进行配置。
 ```
 source /usr/local/Ascend/ascend-lastest/set_env.sh
 ```
@@ -143,7 +143,7 @@ python3.7 get_info.py bin ./${prep_output_dir} ./${prep_output_dir_info} 224 224
 
 benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
 ### 5.2 离线推理
-1.设置环境变量
+1.设置环境变量，请以实际安装环境进行配置。
 ```
 source /usr/local/Ascend/ascend-lastest/set_env.sh
 ```

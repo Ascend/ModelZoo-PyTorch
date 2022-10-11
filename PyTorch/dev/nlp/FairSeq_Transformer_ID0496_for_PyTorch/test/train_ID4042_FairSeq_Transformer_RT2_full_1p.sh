@@ -106,6 +106,9 @@ pip3 install --editable .
 line=`grep "import torch" train.py -n | tail -1|awk -F ':' '{print $1}'`
 sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" train.py
 
+line1=`grep "torch.npu.global_step_inc()" train.py -n | tail -1|awk -F ':' '{print $1}'`
+sed -i "${line1}s/^/#/" train.py
+
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
@@ -175,8 +178,9 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-Time=`grep "iteration" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F "time =" '{print $2}'|awk -F "ms" '{print $1}'|tail -n +6|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
-FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*1000/'${Time}'}'`
+#Time=`grep "iteration" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F "time =" '{print $2}'|awk -F "ms" '{print $1}'|tail -n +6|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+#FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*1000/'${Time}'}'`
+FPS=`grep -rn "wps=" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "wps=" '{print $2}' | awk -F "," '{print $1}' | awk '{if(NR>=325){print}}' | awk 'END {print}' |sed s/[[:space:]]//g`
 
 
 #打印，不需要修改
@@ -199,7 +203,8 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 #吞吐量，不需要修改
 ActualFPS=${FPS}
 #单迭代训练时长，不需要修改
-TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
+#TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
+TrainingTime=`grep "iteration" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F "time =" '{print $2}'|awk -F "ms" '{print $1}'| grep -v "^$" |tail -n +6|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep "loss=" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss=" '{print $2}'|awk -F "," '{print $1}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt

@@ -35,7 +35,7 @@ python -m onnxsim deeplabv3.onnx deeplabv3_sim_bs1.onnx --input-shape="1,3,1024,
 ### 转OM
 
 ```shell
-source env_npu.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=deeplabv3_sim_bs1.onnx --output=deeplabv3_bs1 --input_format=NCHW  \
 --input_shape="input:1,3,1024,2048" --log=debug --soc_version=Ascend310 --auto_tune_mode="RL,GA"
 ```

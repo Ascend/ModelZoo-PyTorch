@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 python MTCNN_pth2onnx.py --model PNet --output_file ./weights/PNet_truncated.onnx
 python MTCNN_pth2onnx.py --model RNet --output_file ./weights/RNet_truncated.onnx
 python MTCNN_pth2onnx.py --model ONet --output_file ./weights/ONet_truncated.onnx

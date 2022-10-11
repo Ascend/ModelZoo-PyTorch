@@ -34,7 +34,7 @@ data_dump_step="10"
 profiling=False
 autotune=False
 # 训练epoch
-train_epochs=1
+train_epochs=5
 
 #参数校验，不需要修改
 for para in $*

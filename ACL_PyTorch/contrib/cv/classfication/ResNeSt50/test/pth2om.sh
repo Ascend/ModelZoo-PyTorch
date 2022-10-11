@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # please ensure resnest has already installed. "pip install resnest --pre"
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 rm -rf resnest50.onnx resnest50_sim.onnx
 python3.7 resnest_pth2onnx.py --source="./resnest50.pth" --target="resnest50.onnx"

@@ -1,7 +1,7 @@
 # train and val datasets (image directory or *.txt file with image paths)
-train: /npu/traindata/yolov5_data/train2017.txt  # 118k images
-val: /npu/traindata/yolov5_data/val2017.txt  # 5k images
-test: /npu/traindata/yolov5_data/test-dev2017.txt # 20288 of 40670 images, submit to https://competitions.codalab.org/competitions/20794
+train: ./data/coco//train2017.txt
+val: ./data/coco//val2017.txt
+test: ./data/coco//test2017.txt
 
 # number of classes
 nc: 80

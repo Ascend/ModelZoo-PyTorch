@@ -111,6 +111,8 @@ parser.add_argument('--FusedSGD', default=False, action='store_true',
                     help='use FusedSGD')
 parser.add_argument('--stop-step-num', default=None, type=int,
                     help='after the stop-step, killing the training task')
+parser.add_argument('--prof', default=False, action='store_true',
+                    help='use profiling to evaluate the performance of model')
 
 best_acc1 = 0
 cur_step = 0
@@ -393,6 +395,10 @@ def main_worker(gpu, ngpus_per_node, args):
         validate(val_loader, model, criterion, args, ngpus_per_node)
         return
     
+    if args.prof:
+        profiling(train_loader, model, criterion, optimizer, args)
+        return
+
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
@@ -435,6 +441,44 @@ def main_worker(gpu, ngpus_per_node, args):
         if args.stop_step_num is not None and cur_step >= args.stop_step_num:
             break
 
+
+def profiling(data_loader, model, criterion, optimizer, args):
+    # switch to train mode
+    model.train()
+
+    def update(model, images, target, optimizer):
+        output = model(images)
+        loss = criterion(output, target)
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        optimizer.zero_grad()
+        optimizer.step()
+
+    for step, (images, target) in enumerate(data_loader):
+        if args.device == 'npu':
+            loc = 'npu:{}'.format(args.gpu)
+            images = images.to(loc, non_blocking=True).to(torch.float)
+            target = target.to(torch.int32).to(loc, non_blocking=True)
+        else:
+            images = images.cuda(args.gpu, non_blocking=True)
+            target = target.cuda(args.gpu, non_blocking=True)
+
+        if step < 5:
+            update(model, images, target, optimizer)
+        else:
+            if args.device == 'npu':
+                with torch.autograd.profiler.profile(use_npu=True) as prof:
+                    update(model, images, target, optimizer)
+            else:
+                with torch.autograd.profiler.profile(use_cuda=True) as prof:
+                    update(model, images, target, optimizer)
+            break
+
+    prof.export_chrome_trace("output.prof")
+    
 def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node):
     global cur_step
     batch_time = AverageMeter('Time', ':6.3f')

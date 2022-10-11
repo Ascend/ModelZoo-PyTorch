@@ -12,7 +12,7 @@ else
 fi
 
 rm -rf FixRes_bs1.om FixRes_bs16.om
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 # export ASCEND_SLOG_PRINT_TO_STDOUT=1
 # export ASCEND_GLOBAL_LOG_LEVEL=1 #debug 0 --> info 1 --> warning 2 --> error 3
 # export DUMP_GE_GRAPH=2
