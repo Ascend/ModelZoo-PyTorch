@@ -90,7 +90,7 @@ def parse_args(argv=None):
                         help='If specified, override the dataset specified in the config with this one (example: coco2017_dataset).')
     parser.add_argument('--detect', default=False, dest='detect', action='store_true',
                         help='Don\'t evauluate the mask branch at all and only do object detection. This only works for --display and --benchmark.')
-    parser.add_argument('--cann_version', default=6, type=str,
+    parser.add_argument('--cann_version', default="5", type=str,
                         help='Detections with a score under this threshold will not be considered. This currently only works in display mode.')
 
     parser.set_defaults(no_bar=False, output_coco_json=False, shuffle=False,
