@@ -3,12 +3,12 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="ResNet1001_1202_for_PyTorch"
+Network="ResNet1001_ID4110_for_PyTorch"
 # 训练batch_size
 batch_size=128
 # 训练使用的npu卡数
 export RANK_SIZE=1
-# 模型结构, resnet1001或者resnet1202
+# 模型结构
 arch="resnet1001"
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -29,8 +29,12 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --arch* ]];then
         arch=`echo ${para#*=}`
+    elif [[ $para == --cifa_path* ]];then
+        cifa_path=`echo ${para#*=}`
     fi
 done
+#数据集处理
+ln -nsf $cifa_path $data_path
 
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -96,7 +100,13 @@ nohup python3.7 ./pytorch_resnet_apex.py \
     --optimizer-batch-size 128 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
+#海思ETP平台数据集还原
+if [ x"${etp_flag}" == x"true" ];then
+  if [ ! -d '/npu/traindata/imagenet_pytroch/cifa-10-batches-py']
+  then
+    rm -rf /npu/traindata/imagenet_pytroch/cifa-10-batches-py
+  fi
+fi
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改

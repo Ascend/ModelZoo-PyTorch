@@ -14,13 +14,14 @@
 
 
 ### 二、训练流程：
+**resnet1001**
 
 单卡训练流程：
 
 ```
 	1.安装环境
 	2.开始训练
-              bash ./test/train_full_1p.sh  --arch=模型名称 --data_path=数据集路径  --device_id=NPU卡ID 
+              bash ./test/train_full_1p.sh   --data_path=数据集路径  --cifa_path=cifa数据集的路径 --device_id=NPU卡ID 
 ```
 
 
@@ -29,11 +30,25 @@
 ```
 	1.安装环境
 	2.开始训练
-              bash ./test/train_full_8p.sh  --arch=模型名称 --data_path=数据集路径 
+              bash ./test/train_full_8p.sh  --data_path=数据集路径  --cifa_path=cifa数据集的路径
+```
+**resnet1202**
+
+单卡训练流程：
+
+```
+	1.安装环境
+	2.开始训练
+              bash ./test/train_full_1p.sh   --data_path=数据集路径  --cifa_path=cifa数据集的路径 --device_id=NPU卡ID 
 ```
 
-注：arch选resnet1001或resnet1202，默认为resnet1001
 
+多卡训练流程
+
+```
+	1.安装环境
+	2.开始训练
+              bash ./test/train_full_8p.sh  --data_path=数据集路径  --cifa_path=cifa数据集的路径
 
 
 ### 三、测试结果
