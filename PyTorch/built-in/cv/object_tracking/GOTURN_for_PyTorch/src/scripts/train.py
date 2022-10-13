@@ -333,7 +333,7 @@ def get_args():
     ap.add_argument('--npus', type=int, default=1,
                     help='number of npus, 0: means no npu, -1 to use all \
                     npus, 1 = use one npu, 2 = use two npus')
-
+    ap.add_argument('--device', type=int, default=0, help='which npu to train')
     # Data settings
     ap.add_argument('--imagenet_path', type=str,
                     required=True, help='path to imagenet folder, this \
@@ -420,6 +420,8 @@ def main(hparams):
     distributed_backend = None
     if hparams.npus > 1:
         distributed_backend = 'ddp'
+    else:
+        torch.npu.set_device(f"npu:{hparams.device}")
     trainer = Trainer(default_save_path=hparams.save_path,
                       gpus=hparams.npus, max_epochs=hparams.epochs,
                       max_steps=hparams.max_steps,

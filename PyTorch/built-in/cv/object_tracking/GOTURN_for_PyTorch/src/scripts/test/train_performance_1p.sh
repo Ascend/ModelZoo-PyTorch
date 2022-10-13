@@ -57,6 +57,7 @@ taskset -c 0-32 python3.7 -u train.py \
   --save_path $SAVE_PATH \
   --epochs 3 \
   --npus 1 \
+  --device 0 \
   --batch_size $batch_size \
   --max_steps 8000 \
   --pretrained_model $PRETRAINED_MODEL_PATH >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
