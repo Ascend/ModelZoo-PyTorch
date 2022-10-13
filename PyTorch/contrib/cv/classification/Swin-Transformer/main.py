@@ -106,6 +106,8 @@ def main(config):
     model.npu()
     logger.info(str(model))
 
+    NpuDropPath.enable_droppath_ensemble(model)
+
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL, loss_scale='dynamic',
