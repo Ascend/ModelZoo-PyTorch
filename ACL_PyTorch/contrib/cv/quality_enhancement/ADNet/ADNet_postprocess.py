@@ -41,7 +41,7 @@ def get_output_path(bin_folder,label_path):
         if file.endswith('.bin'):
             result_path = file
             result_paths.append(result_path)
-            name = (result_path.split('/')[3]).split('_')[0]
+            name = (result_path.split('/')[-1]).split('_')[0]
             target_path = os.path.join(label_path,name+'.bin')
             target_paths.append(target_path)
     return result_paths,target_paths
@@ -79,7 +79,6 @@ def post_process(result_path,target_path):
         output,target = file2tensor(output_path[i],target_path[i])
         Out = torch.clamp(output, 0., 1.)
         psnr = batch_PSNR(Out, target, 1.)
-        name = (output_path[i].split('/')[-1]).split('_')[0]
         psnr_val += psnr
     psnr_val /= len(output_path)
     print('average psnr_val:',psnr_val)

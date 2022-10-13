@@ -50,7 +50,7 @@ def preprocess(data_path = './dataset/BSD68',save_path='./prep_dataset'):
         ISource = Variable(ISource) 
         INoisy = Variable(INoisy) 
         print(f,'has benn transformed into binary file')
-        name = (f.split('/')[3]).split('.')[0]
+        name = (f.split('/')[-1]).split('.')[0]
         ISource = np.array(ISource).astype(np.float32)
         if not os.path.exists(os.path.join(save_path,'ISoure')):
             os.makedirs(os.path.join(save_path,'ISoure'))
