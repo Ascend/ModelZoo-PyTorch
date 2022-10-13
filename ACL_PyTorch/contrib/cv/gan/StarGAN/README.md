@@ -99,9 +99,6 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
    源码目录结构：
    ```
    ├── unzip_dataset.sh             //解压数据集
-   ├── eval_bs1_perf.sh       //310Pbs1验收脚本
-   ├── eval_bs16_perf.sh      //310Pbs16验收脚本
-   ├── pth2om.sh                //310P生成om文件
    ├── StarGAN_pre_processing.py  //预处理
    ├── StarGAN_pth2onnx.py          //用于转换pth文件到onnx文件
    ├── StarGAN_post_processing.py //用于转换txt文件到jpg文件
@@ -161,12 +158,13 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
    2. 导出onnx文件。
 
-      1. 使用pth2om.sh导出onnx文件。
+      1. 使用StarGAN_pth2onnx.py导出onnx文件。
 
-         运行pth2om.sh脚本。
+         运行StarGAN_pth2onnx.py脚本。
 
             ```
-            bash pth2om.sh './models/200000-G.pth'
+            export ASCEND_AICPU_PATH=${install_path}/{arch}-linux
+            python3.7 StarGAN_pth2onnx.py --input_file './models/200000-G.pth' --output_file './StarGAN.onnx'
             ```
 
          获得StarGAN.onnx文件。
