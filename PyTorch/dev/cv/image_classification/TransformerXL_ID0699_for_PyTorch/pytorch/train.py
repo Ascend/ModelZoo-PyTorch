@@ -76,6 +76,11 @@ from utils.exp_utils import l2_promote
 from utils.exp_utils import log_env_info
 from utils.exp_utils import register_ignoring_timeout_handler
 
+NPU_CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 
 def parse_args():
     parent_parser = argparse.ArgumentParser(
@@ -521,9 +526,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
           last_batch, last_iter, train_step, best_val_loss, meters,
           timeout_handler, device, args):
     # Turn on training mode which enables dropout.
-    torch.npu.set_start_fuzz_compile_step(3)
     model.train()
-
+    torch.npu.set_start_fuzz_compile_step(3)
     train_loss = 0
     target_tokens = 0
     log_step = 0
@@ -724,12 +728,14 @@ def main():
         print(f'{args.local_rank}: thread affinity: {affinity}')
 
     # Initialize device and distributed backend
-    torch.npu.set_device(args.local_rank)
+    print('---------local_rank:',args.local_rank)
+    if args.multi_gpu == 'ddp':
+        torch.npu.set_device(args.local_rank)
     #l2_promote()
     #device = torch.device('cuda' if args.cuda else 'cpu')
     #utils.distributed.init_distributed(args.cuda)
     device = torch.device('npu')
-    utils.distributed.init_distributed_npu()
+    utils.distributed.init_distributed_npu(args)
 
     args.work_dir = utils.exp_utils.build_work_dir_name(args.work_dir,
                                                         args.dataset,

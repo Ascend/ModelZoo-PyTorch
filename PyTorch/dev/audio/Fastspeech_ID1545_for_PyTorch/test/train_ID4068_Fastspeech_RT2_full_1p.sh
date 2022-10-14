@@ -3,16 +3,11 @@
 #当前路径,不需要修改
 cur_path=`pwd`
 
-#export ASCEND_SLOG_PRINT_TO_STDOUT=1
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 export RANK_SIZE=1
 export JOB_ID=10087
 RANK_ID_START=0
-
-export ENABLE_RUNTIME_V2=1
-
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -23,7 +18,7 @@ Network="Fastspeech_RT2_ID4068_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
-batch_size=1024
+batch_size=8192
 #训练step
 #train_steps=
 #学习率
@@ -156,7 +151,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'accu'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 
 ##获取性能数据

@@ -2,15 +2,11 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-# export ASCEND_GLOBAL_LOG_LEVEL=1
-export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
-export RANK_SIZE=1
-RANK_ID_START=0
-
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=29688
+export RANK_SIZE=8
+export JOB_ID=10087
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -19,7 +15,7 @@ data_path=""
 Network="SSD-MobileNet_RT2_ID4044_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
-batch_size=8
+batch_size=64
 
 #参数校验，不需要修改
 for para in $*
@@ -49,28 +45,26 @@ else
 fi
 wait
 
-# 添加二进制代码
-line=`grep "import torch" ${cur_path}/../train.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../train.py
 
 #训练开始时间，不需要修改
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
-#冒烟
-#sed -i "s|: 20|: 1|g" ${cur_path}/../config.json
+
+sed -i "s|: 1e-3|: 8e-3|g" ${cur_path}/../config.json
 #修改数据集路径
 sed -i "s|"1111"|"$data_path/VOCdevkit/VOC2007"|g" ${cur_path}/../config.json
 sed -i "s|"2222"|"$data_path/VOCdevkit/VOC2012"|g" ${cur_path}/../config.json
 
-#mkdir -p /root/.cache/torch/checkpoints
-#cp $data_path/*.pth  /root/.cache/torch/checkpoints/
 start_time=$(date +%s)
+RANK_ID_START=0
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
     echo "Device ID: $RANK_ID"
     export RANK_ID=$RANK_ID
+    export ASCEND_DEVICE_ID=$RANK_ID
+    export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
     #创建DeviceID输出目录，不需要修改
     if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
@@ -80,14 +74,8 @@ do
         mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
     fi
 
-    # 绑核，不需要的绑核的模型删除，需要的模型审视修改
-    #let a=RANK_ID*12
-    #let b=RANK_ID+1
-    #let c=b*12-1
-
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-
-    nohup python3 train.py config.json $PREC > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 train.py config.json > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 
@@ -95,22 +83,22 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-
+ASCEND_DEVICE_ID=0
 sed -i "s|"$data_path/VOCdevkit/VOC2007"|"1111"|g" ${cur_path}/../config.json
 sed -i "s|"$data_path/VOCdevkit/VOC2012"|"2222"|g" ${cur_path}/../config.json
-
+sed -i "s|: 8e-3|: 1e-3|g" ${cur_path}/../config.json
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep "FPS = " $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS = " '{print $2}'|awk -F ", step_time" '{print $1}' |tail -n+2 |awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+echo "E2E Training Duration sec : $e2e_time"
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep "acc = " $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v mlp_log|awk 'END {print $5}'| sed 's/,//g' |cut -c 1-5`
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
-#echo "E2E Training Duration sec : $e2e_time"
 
 #稳定性精度看护结果汇总
 #训练用例信息，不需要修改
