@@ -86,24 +86,6 @@ wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-#nohup python3 $cur_path/../train.py  \
-#        --name cifar10-100_500 \
-#        --dataset cifar10 \
-#        --model_type ViT-B_16  \
-#       --pretrained_dir ${ckpt_path}/ViT-B_16.npz \
-#        --addr=127.0.0.1 \
-#        --train_batch_size=64 \
-#        --num_steps=100 \
-#        --npu-fused-sgd \
-#        --fp16 \
-#        --data_dir ${data_path} \
-#        --fp16_opt_level O2 > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
-
-
-
-
-
-
 export MASTER_ADDR=localhost
 export MASTER_PORT=29688
 export HCCL_WHITELIST_DISABLE=1

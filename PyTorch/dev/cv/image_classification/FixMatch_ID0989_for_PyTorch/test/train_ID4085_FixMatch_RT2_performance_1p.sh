@@ -12,8 +12,6 @@ RANK_ID_START=0
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
-#设置默认日志级别,不需要修改
-export ASCEND_GLOBAL_LOG_LEVEL=3
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
@@ -118,8 +116,7 @@ if [ $bin_analysis == "True" ];then
     sed -i "${line}s/^/    /" ${cur_path}/train.py
 fi
 
-#使能RT2
-export ENABLE_RUNTIME_V2=1
+#使能模糊编译
 step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
 sed -i "${step_line}s/^/#/" ${cur_path}/train.py
 sed -i "$[step_line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py

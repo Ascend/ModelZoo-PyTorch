@@ -6,7 +6,7 @@
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
-export ENABLE_RUNTIME_V2=1  #使能RT2.0
+
 export RANK_SIZE=1
 export JOB_ID=10087
 RANK_ID_START=0

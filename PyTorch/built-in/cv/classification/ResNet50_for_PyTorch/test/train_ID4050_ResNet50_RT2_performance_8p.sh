@@ -11,9 +11,6 @@ export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-
 # 训练epoch 90
 train_epochs=3
 # 加载数据进程数

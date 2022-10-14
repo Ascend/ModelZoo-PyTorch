@@ -13,9 +13,6 @@ device_id=0
 #设置默认日志级别,不需要修改
 # export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
@@ -153,7 +150,6 @@ echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Acc@1" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-`
 
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"

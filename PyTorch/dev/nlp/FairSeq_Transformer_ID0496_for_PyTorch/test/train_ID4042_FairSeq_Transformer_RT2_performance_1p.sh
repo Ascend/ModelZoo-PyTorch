@@ -13,8 +13,6 @@ RANK_ID_START=0
 #进入到conda环境
 #source activate py8
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
 
 # 数据集路径,保持为空,不需要修改
 data_path=""

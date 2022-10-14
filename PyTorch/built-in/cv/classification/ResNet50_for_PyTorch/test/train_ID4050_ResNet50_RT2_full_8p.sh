@@ -12,8 +12,6 @@ export RANK_ID_START=0
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
 
 # 训练epoch 90
 train_epochs=90

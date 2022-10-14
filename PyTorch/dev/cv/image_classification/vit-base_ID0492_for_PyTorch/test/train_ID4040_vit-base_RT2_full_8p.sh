@@ -6,7 +6,6 @@
 cur_path=`pwd`
 
 #集合通信参数,不需要修改
-export ENABLE_RUNTIME_V2=1  #使能RT2.0
 export RANK_SIZE=8
 export JOB_ID=10087
 RANK_ID_START=0
@@ -101,51 +100,6 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
 
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
-do
-    #设置环境变量，不需要修改
-    echo "Device ID: $ASCEND_DEVICE_ID"
-    export RANK_ID=$RANK_ID
-
-
-
-    #创建DeviceID输出目录，不需要修改
-    if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
-        rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
-    else
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
-    fi
-    # 绑核，不需要的绑核的模型删除，需要的模型审视修改
-    #let a=RANK_ID*12
-    #let b=RANK_ID+1
-    #let c=b*12-1
-
-	#网络特有 拷贝预训练模型到root路径下
-	if [ -d /root/.cache/torch/checkpoints/ ];then
-        echo "File_path exist"
-    else
-        mkdir -p /root/.cache/torch/checkpoints/
-    fi
-	cp ${data_path}/mobilenet_v2-b0353104.pth /root/.cache/torch/checkpoints/
-    
-    #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
-    #python3 $cur_path/../train.py  \
-        #--name cifar10-100_500 \
-        #--dataset cifar10 \
-        #--model_type ViT-B_16  \
-        #--pretrained_dir ${ckpt_path}/ViT-B_16.npz \
-        #--addr=127.0.0.1 \
-        #--train_batch_size=64 \
-        #--num_steps=10000 \
-        #--npu-fused-sgd \
-        #--fp16 \
-        #--data_dir ${data_path} \
-        #--fp16_opt_level O2 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-done 
-wait
-
 export MASTER_ADDR=localhost
 export MASTER_PORT=29688
 export HCCL_WHITELIST_DISABLE=1
@@ -177,8 +131,6 @@ do
     let rank++
 done
 wait
-
-
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)

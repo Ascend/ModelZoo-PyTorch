@@ -5,10 +5,6 @@
 export SOC_VERSION=Ascend910
 export HCCL_CONNECT_TIMEOUT=600
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
-
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
 export RANK_SIZE=8

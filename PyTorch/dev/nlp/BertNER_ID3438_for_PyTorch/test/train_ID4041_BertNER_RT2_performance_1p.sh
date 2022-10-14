@@ -8,10 +8,6 @@ export RANK_SIZE=1
 export JOB_ID=10087
 RANK_ID_START=0
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
-
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -87,9 +83,6 @@ fi
 # 添加二进制代码
 line=`grep "import torch" ${cur_path}/../run_ner_crf.py -n | tail -1|awk -F ':' '{print $1}'`
 sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../run_ner_crf.py
-sed -i "$[line+2]ioption = {}" ${cur_path}/../run_ner_crf.py
-sed -i "$[line+3]ioption[\"NPU_FUZZY_COMPILE_BLACKLIST\"] = \"StridedSlice\"" ${cur_path}/../run_ner_crf.py
-sed -i "$[line+4]itorch.npu.set_option(option)" ${cur_path}/../run_ner_crf.py
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)

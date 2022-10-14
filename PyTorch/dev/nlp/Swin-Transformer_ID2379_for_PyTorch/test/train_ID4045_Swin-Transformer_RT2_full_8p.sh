@@ -43,7 +43,7 @@ data_path=""
 #网络名称，同目录名称
 Network="Swin-Transformer_RT2_ID4045_for_PyTorch"
 #训练epoch
-train_epochs=1
+train_epochs=48
 #训练batch_size
 batch_size=64
 #训练step
@@ -122,17 +122,16 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
 
-# 添加二进制代码
-line=`grep "import torch" moby_main.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" moby_main.py
-
 #kill残余的此网络进程
 #ps -ef | grep moby | awk '{print $2}' | xargs kill -9
 
-sed -i "s|EPOCHS: 300|EPOCHS: 1|g"  configs/moby_swin_tiny.yaml
-rm -rf output
-sed -i "s|TRAIN.EPOCHS = 300|TRAIN.EPOCHS = 1|g" config.py
-sed -i "s|pass|break|g" moby_main.py
+#参数替换
+sed -i "s|EPOCHS: 300|EPOCHS: ${train_epochs}|g"  configs/moby_swin_tiny.yaml
+sed -i "s|TRAIN.EPOCHS = 300|TRAIN.EPOCHS = ${train_epochs}|g" config.py
+
+# 添加二进制代码
+line=`grep "import torch" moby_main.py -n | tail -1|awk -F ':' '{print $1}'`
+sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" moby_main.py
 
 #mkdir -p checkpoints
 #mkdir -p /root/.cache/torch/hub/checkpoints
@@ -158,9 +157,8 @@ done
 wait
 
 #恢复参数
-sed -i "s|TRAIN.EPOCHS = 1|TRAIN.EPOCHS = 300|g" config.py
-sed -i "s|EPOCHS: 1|EPOCHS: 300|g"  configs/moby_swin_tiny.yaml
-sed -i "s|break|pass|g" moby_main.py
+sed -i "s|TRAIN.EPOCHS = ${train_epochs}|TRAIN.EPOCHS = 300|g" config.py
+sed -i "s|EPOCHS: ${train_epochs}|EPOCHS: 300|g"  configs/moby_swin_tiny.yaml
 
 ASCEND_DEVICE_ID=0
 #kill残余的此网络进程
@@ -183,7 +181,7 @@ FPS=`grep FPS $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-#train_accuracy=`grep eval_accuracy $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v mlp_log|awk 'END {print $5}'| sed 's/,//g' |cut -c 1-5`
+train_accuracy=`grep Test $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F "Acc@1 " '{print $2}'|awk -F " " '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'|sed s/[[:space:]]//g`
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -192,7 +190,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据
 #吞吐量，不需要修改
@@ -214,7 +212,7 @@ echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseNa
 echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-#echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 

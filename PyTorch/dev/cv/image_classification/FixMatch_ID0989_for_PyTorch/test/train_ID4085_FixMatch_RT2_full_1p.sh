@@ -94,7 +94,6 @@ if [[ $data_path == "" ]];then
 fi
 
 #使能RT2
-export ENABLE_RUNTIME_V2=1
 step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
 sed -i "${step_line}s/^/#/" ${cur_path}/train.py
 sed -i "$[step_line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py

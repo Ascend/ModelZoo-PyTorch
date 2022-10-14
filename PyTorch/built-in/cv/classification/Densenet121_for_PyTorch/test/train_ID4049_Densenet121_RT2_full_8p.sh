@@ -12,10 +12,6 @@ device_id=0
 #设置默认日志级别,不需要修改
 #export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
-
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
 Network="Densenet121_RT2_ID4049_for_PyTorch"

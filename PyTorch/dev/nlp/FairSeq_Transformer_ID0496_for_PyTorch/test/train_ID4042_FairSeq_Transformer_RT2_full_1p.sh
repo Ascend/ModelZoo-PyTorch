@@ -13,8 +13,6 @@ RANK_ID_START=0
 #进入到conda环境
 #source activate py8
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -186,11 +184,6 @@ FPS=`grep -rn "wps=" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVIC
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-#输出训练精度,需要模型审视修改
-#train_accuracy=`grep eval_accuracy $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v mlp_log|awk 'END {print $5}'| sed 's/,//g' |cut -c 1-5`
-#打印，不需要修改
-train_accuracy="Loss"
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #稳定性精度看护结果汇总
@@ -211,6 +204,9 @@ grep "loss=" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+
+#输出训练精度,需要模型审视修改
+train_accuracy=`tail -5 $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt|awk '{sum+=$1} END {print sum/NR}'`
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -9,9 +9,6 @@ batch_size=512
 # 训练使用的npu卡数
 export RANK_SIZE=1
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=1
-
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -106,7 +103,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'full'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
