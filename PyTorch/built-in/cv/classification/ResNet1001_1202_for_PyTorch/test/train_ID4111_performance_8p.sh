@@ -25,12 +25,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --arch* ]];then
         arch=`echo ${para#*=}`
-    elif [[ $para == --cifa_path* ]];then
-        cifa_path=`echo ${para#*=}`
+    elif [[ $para == --ckpt_path* ]];then
+        ckpt_path=`echo ${para#*=}`
     fi
 done
-#数据集处理
-ln -nsf $cifa_path $data_path
 
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -69,6 +67,12 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+  #etp平台数据集处理
+  mkdir -p ${cur_path}/data
+  ln -nsf $ckpt_path/cifar-10-python.tar.gz ${cur_path}/data
+  ln -nsf $data_path/* ${cur_path}/data
+  data_path=${cur_path}/data
 fi
 
 export NODE_RANK=0
@@ -98,13 +102,6 @@ nohup python3.7 ./DistributedResnet/main_apex_npu.py \
         --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-#海思ETP平台数据集还原
-if [ x"${etp_flag}" == x"true" ];then
-  if [ ! -d '/npu/traindata/imagenet_pytroch/cifa-10-batches-py']
-  then
-    rm -rf /npu/traindata/imagenet_pytroch/cifa-10-batches-py
-  fi
-fi
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改
