@@ -38,11 +38,12 @@ function param_check() {
 
 param_check
 
-docker run -it -u root \
+docker run -it \
   --device=/dev/davinci0 \
   --device=/dev/davinci_manager \
   --device=/dev/devmm_svm \
   --device=/dev/hisi_hdc \
+  -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \
   -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
   -v ${data_dir}:${data_dir} \
   ${docker_image} \
