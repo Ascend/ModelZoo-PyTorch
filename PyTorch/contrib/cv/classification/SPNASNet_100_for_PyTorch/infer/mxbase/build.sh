@@ -36,7 +36,11 @@ function check_env() {
 function build_spansnet100() {
     cd $path_cur
     rm -rf build
+    if [ -d "output" ]; then
+      rm -rf output
+    fi
     mkdir -p build
+    mkdir -p output
     cd build
     cmake ..
     make

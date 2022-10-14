@@ -23,6 +23,7 @@
 #include <vector>
 #include "MxBase/DeviceManager/DeviceManager.h"
 #include "MxBase/Log/Log.h"
+#include <opencv2/dnn.hpp>
 
 APP_ERROR SpansNet100Infer::Init(const InitParam &initParam) {
     deviceId_ = initParam.deviceId;
@@ -40,6 +41,26 @@ APP_ERROR SpansNet100Infer::Init(const InitParam &initParam) {
     ret = model_->Init(initParam.modelPath, modelDesc_);
     if (ret != APP_ERR_OK) {
         LogError << "ModelInferenceProcessor init failed, ret=" << ret << ".";
+        return ret;
+    }
+    MxBase::ConfigData configData;
+    const std::string softmax = initParam.softmax ? "true" : "false";
+    const std::string checkTensor = initParam.checkTensor ? "true" : "false";
+
+    configData.SetJsonValue("CLASS_NUM", std::to_string(initParam.classNum));
+    configData.SetJsonValue("TOP_K", std::to_string(initParam.topk));
+    configData.SetJsonValue("SOFTMAX", softmax);
+    configData.SetJsonValue("CHECK_MODEL", checkTensor);
+
+    auto jsonStr = configData.GetCfgJson().serialize();
+    std::map<std::string, std::shared_ptr<void>> config;
+    config["postProcessConfigContent"] = std::make_shared<std::string>(jsonStr);
+    config["labelPath"] = std::make_shared<std::string>(initParam.labelPath);
+
+    post_ = std::make_shared<MxBase::Resnet50PostProcess>();
+    ret = post_->Init(config);
+    if (ret != APP_ERR_OK) {
+        LogError << "Resnet50PostProcess init failed, ret=" << ret << ".";
         return ret;
     }
     return APP_ERR_OK;
@@ -77,6 +98,7 @@ APP_ERROR SpansNet100Infer::BinToTensorBase(const std::string file_path, MxBase:
 
 APP_ERROR SpansNet100Infer::DeInit() {
     model_->DeInit();
+    post_->DeInit();
     MxBase::DeviceManager::GetInstance()->DestroyDevices();
     return APP_ERR_OK;
 }
@@ -112,49 +134,45 @@ APP_ERROR SpansNet100Infer::Inference(const std::vector<MxBase::TensorBase> &inp
     return APP_ERR_OK;
 }
 
-APP_ERROR SpansNet100Infer::PostProcess(std::vector<MxBase::TensorBase> *outputs,
-                                        std::vector<float> *predict) {
-    MxBase::TensorBase &tensor = outputs->at(0);
-    APP_ERROR ret = tensor.ToHost();
+APP_ERROR SpansNet100Infer::PostProcess(const std::vector<MxBase::TensorBase> &inputs,
+                                        std::vector<std::vector<MxBase::ClassInfo>> &clsInfos)
+{
+    APP_ERROR ret = post_->Process(inputs, clsInfos);
     if (ret != APP_ERR_OK) {
-        LogError << GetError(ret) << "Tensor deploy to host failed.";
+        LogError << "Process failed, ret=" << ret << ".";
         return ret;
-    }
-    // check tensor is available
-    auto outputShape = tensor.GetShape();
-    uint32_t length = outputShape[0] * outputShape[1];
-    void *data = tensor.GetBuffer();
-    for (uint32_t i = 0; i < length; i++) {
-        float value = *(reinterpret_cast<float *>(data) + i);
-        predict->push_back(value);
     }
     return APP_ERR_OK;
 }
 
-APP_ERROR SpansNet100Infer::WriteResult(const std::string &fileName, const std::vector<float> &predict,
-                                        const std::string name) {
+APP_ERROR SpansNet100Infer::SaveResult(const std::vector<std::vector<MxBase::ClassInfo>> &batchClsInfos, const std::string name)
+{
     // create result file
-    std::ofstream tfile(fileName, std::ofstream::app);
+    std::string file_name = "./output/" + name + ".txt";
+    std::ofstream tfile(file_name, std::ofstream::app);
     if (tfile.fail()) {
-        LogError << "Failed to open result file: " << fileName;
+        LogError << "Failed to open result file: " << file_name;
         return APP_ERR_COMM_OPEN_FAIL;
     }
     // write inference result into file
     LogInfo << "==============================================================";
     LogInfo << "Infer finished!";
-
-    tfile<<name;
-    for (uint32_t i = 0; i < predict.size(); i++){
-        tfile << " " << predict[i];
+    tfile << name << " ";
+    for (auto clsInfos : batchClsInfos) {
+        std::string resultStr;
+        for (auto clsInfo : clsInfos) {
+            LogDebug << " className:" << clsInfo.className << " confidence:" << clsInfo.confidence <<
+                     " classIndex:" <<  clsInfo.classId;
+            resultStr += std::to_string(clsInfo.classId) + " ";
+        }
+        tfile << resultStr << std::endl;
     }
-    tfile << std::endl;
-
     LogInfo << "==============================================================";
     tfile.close();
     return APP_ERR_OK;
 }
 
-APP_ERROR SpansNet100Infer::Process(const std::string &imgPath, const std::string &outputPath) {
+APP_ERROR SpansNet100Infer::Process(const std::string &imgPath) {
     MxBase::TensorBase tensorBase;
     APP_ERROR ret = BinToTensorBase(imgPath, tensorBase);
     if (ret != APP_ERR_OK) {
@@ -166,9 +184,9 @@ APP_ERROR SpansNet100Infer::Process(const std::string &imgPath, const std::strin
     std::vector<MxBase::TensorBase> outputs = {};
     inputs.push_back(tensorBase);
     ret = Inference(inputs, outputs);
-    // output to vector
-    std::vector<float> predict;
-    ret = PostProcess(&outputs, &predict);
+    // postprocess
+    std::vector<std::vector<MxBase::ClassInfo>> batchClsInfos = {};
+    ret = PostProcess(outputs, batchClsInfos);
     if (ret != APP_ERR_OK) {
         LogError << "PostProcess failed, ret=" << ret << ".";
         return ret;
@@ -177,9 +195,9 @@ APP_ERROR SpansNet100Infer::Process(const std::string &imgPath, const std::strin
     int index = imgPath.find_last_of("/");
     std::string name = imgPath.substr(index + 1, 23);
     // save result
-    ret = WriteResult(outputPath, predict, name);
+    ret = SaveResult(batchClsInfos, name);
     if (ret != APP_ERR_OK) {
-        LogError << "save result failed, ret=" << ret << ".";
+        LogError << "Save infer results into file failed. ret = " << ret << ".";
         return ret;
     }
     return APP_ERR_OK;

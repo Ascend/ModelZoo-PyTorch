@@ -22,15 +22,24 @@
 
 namespace fs = std::experimental::filesystem;
 std::vector<double> g_inferCost;
+namespace {
+    const uint32_t CLASS_NUM = 1000;
+} // namespace
 
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
-        LogWarn << "Please input image path and ouput path, such as '../data/input/preprocess ../data/input/preprocess_result.txt";
+        LogWarn << "Please input image path and ouput path, such as '../data/input/preprocess";
         return APP_ERR_OK;
     }
     InitParam initParam = {};
     initParam.deviceId = 0;
+    initParam.classNum = CLASS_NUM;
+    initParam.topk=5;
+    initParam.softmax = false;
+    initParam.checkTensor = true;
+
     initParam.modelPath = "../data/model/spnasnet_100_bs1.om";
+    initParam.labelPath = "../data/input/imagenet1000_clsidx_to_labels.txt";
     auto spansnet = std::make_shared<SpansNet100Infer>();
     APP_ERROR ret = spansnet->Init(initParam);
     if (ret != APP_ERR_OK) {
@@ -38,12 +47,11 @@ int main(int argc, char *argv[]) {
         return ret;
     }
     std::string imgDir = argv[1];
-    std::string outputDir = argv[2];
     int index = 0;
     for (auto &entry : fs::directory_iterator(imgDir)) {
         index++;
         LogInfo << "read image path " << entry.path();
-        ret = spansnet->Process(entry.path(), outputDir);
+        ret = spansnet->Process(entry.path());
         if (ret != APP_ERR_OK) {
             LogError << "SpansNet100Infer process failed, ret=" << ret << ".";
             spansnet->DeInit();

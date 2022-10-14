@@ -47,5 +47,6 @@ link_directories(${MXBASE_POST_LIB_DIR})
 
 add_executable(${TARGET} src/main.cpp src/SpansNet100.cpp)
 target_link_libraries(${TARGET} glog cpprest mxbase opencv_world stdc++fs)
+target_link_libraries(${TARGET} glog cpprest mxbase resnet50postprocess opencv_world stdc++fs)
 
 install(TARGETS ${TARGET} RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/)

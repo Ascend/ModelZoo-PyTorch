@@ -24,6 +24,7 @@
 #include <opencv2/opencv.hpp>
 #include "MxBase/DvppWrapper/DvppWrapper.h"
 #include "MxBase/ModelInfer/ModelInferenceProcessor.h"
+#include "ClassPostProcessors/Resnet50PostProcess.h"
 #include "MxBase/Tensor/TensorContext/TensorContext.h"
 
 extern std::vector<double> g_inferCost;
@@ -31,7 +32,10 @@ extern std::vector<double> g_inferCost;
 struct InitParam {
     uint32_t deviceId;
     std::string labelPath;
-    uint32_t topk=5;
+    uint32_t classNum;
+    uint32_t topk;
+    bool softmax;
+    bool checkTensor;
     std::string modelPath;
 };
 
@@ -42,17 +46,15 @@ public:
     APP_ERROR BinToTensorBase(const std::string file_path, MxBase::TensorBase &tensorBase);
     APP_ERROR Inference(const std::vector<MxBase::TensorBase> &inputs,
                         std::vector<MxBase::TensorBase> &outputs);
-    APP_ERROR PostProcess(std::vector<MxBase::TensorBase> *outputs,
-                          std::vector<float> *predict);
-    APP_ERROR Process(const std::string &imgPath,
-                      const std::string &outputPath);
-    APP_ERROR WriteResult(const std::string &fileName,
-                          const std::vector<float> &predict,
-                          const std::string name);
+    APP_ERROR PostProcess(const std::vector<MxBase::TensorBase> &inputs,
+                          std::vector<std::vector<MxBase::ClassInfo>> &clsInfos);
+    APP_ERROR Process(const std::string &imgPath);
+    APP_ERROR SaveResult(const std::vector<std::vector<MxBase::ClassInfo>> &batchClsInfos, const std::string name);
 
 private:
     std::shared_ptr<MxBase::DvppWrapper> dvppWrapper_;
     std::shared_ptr<MxBase::ModelInferenceProcessor> model_;
+    std::shared_ptr<MxBase::Resnet50PostProcess> post_;
     MxBase::ModelDesc modelDesc_;
     uint32_t deviceId_ = 0;
 };
