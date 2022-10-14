@@ -15,7 +15,7 @@ import sys
 import time
 from typing import Iterable, Optional
 from contextlib import suppress
-
+import os
 import torch
 
 from util.mixup import Mixup
@@ -47,6 +47,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
     start_FPS = time.time()
     for data_iter_step, (samples, targets) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+        if os.environ.get("CONTROL_STEPS"):
+            if data_iter_step > int(os.environ.get("CONTROL_STEPS")):
+                break
 
         if data_iter_step == 40:
             start_FPS = time.time()

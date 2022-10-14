@@ -42,6 +42,9 @@ def train_one_epoch(model: torch.nn.Module,
 
     start_FPS = time.time()
     for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+        if os.environ.get("CONTROL_STEPS"):
+            if data_iter_step > int(os.environ.get("CONTROL_STEPS")):
+                break
 
         if data_iter_step == 40:
             start_FPS = time.time()
@@ -82,7 +85,6 @@ def train_one_epoch(model: torch.nn.Module,
             epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
             log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
             log_writer.add_scalar('lr', lr, epoch_1000x)
-
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
