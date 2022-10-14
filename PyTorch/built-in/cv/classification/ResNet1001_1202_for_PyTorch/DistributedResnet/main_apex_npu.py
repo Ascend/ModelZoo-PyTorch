@@ -634,7 +634,9 @@ def main_worker(gpu, ngpus_per_node, args):
         if (epoch + 1) % 1 == 0:
             if args.device == 'npu' and args.gpu != 0:
                 continue
-            acc1 = validate(val_loader, model, criterion, args,ngpus_per_node)
+            ONLY_TRAIN = os.environ.get("ONLY_TRAIN", None)
+            if ONLY_TRAIN is None:
+                acc1 = validate(val_loader, model, criterion, args,ngpus_per_node)
 
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
