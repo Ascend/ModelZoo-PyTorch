@@ -12,7 +12,7 @@ batch_size=256
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=1.6
+learning_rate=1.4
 # 指定训练所使用的npu device卡id
 device_id=0
 # 训练使用的npu卡数

@@ -15,7 +15,7 @@ data_path=""
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=1.6
+learning_rate=1.4
 
 #TF2.X独有，需要模型审视修改
 #export NPU_LOOP_SIZE=${train_steps}

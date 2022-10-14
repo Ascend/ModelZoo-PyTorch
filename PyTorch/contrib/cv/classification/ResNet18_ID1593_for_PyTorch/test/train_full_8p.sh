@@ -13,7 +13,7 @@ export RANK_SIZE=8
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=1.6
+learning_rate=1.4
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -116,6 +116,7 @@ then
             --world-size=1 \
             --rank=0 \
             --device='npu' \
+            --loss-scale='dynamic' \
             --multiprocessing-distributed \
             --gpu=${ASCEND_DEVICE_ID} \
             --epochs=${train_epochs} \
@@ -137,6 +138,7 @@ else
         --world-size=1 \
         --rank=0 \
         --device='npu' \
+        --loss-scale='dynamic' \
         --multiprocessing-distributed \
         --gpu=${ASCEND_DEVICE_ID} \
         --epochs=${train_epochs} \
