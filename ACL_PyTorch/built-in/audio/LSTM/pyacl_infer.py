@@ -144,7 +144,7 @@ if __name__ == '__main__':
         total_infer_time += measurements['per_infer_time_ns']
         if total_infer_num > opt.workspace:
             total_infer_time_workspace += measurements['per_infer_time_ns']
-
+    om_model.relese()
     # 推理时间
     print('[INFO] Infer time:')
     msg = 'total infer num: ' + str(total_infer_num) + '\n' + \

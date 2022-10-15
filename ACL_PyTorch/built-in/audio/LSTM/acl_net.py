@@ -105,7 +105,7 @@ class AclModel(object):
     def __call__(self, ori_data, dim):
         return self.forward(ori_data, dim)
 
-    def __del__(self):
+    def relese(self):
         # unload model
         if self.model_id:
             ret = acl.mdl.unload(self.model_id)
