@@ -34,6 +34,7 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --more_path1* ]];then
         more_path1=`echo ${para#*=}`
+    fi
 done
 
 # 校验是否传入data_path,不需要修改
