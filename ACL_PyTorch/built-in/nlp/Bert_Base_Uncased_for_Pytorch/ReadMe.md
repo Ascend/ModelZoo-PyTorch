@@ -166,11 +166,11 @@ pip3 install . && cd ..
          使用ATC工具将.onnx文件转换为.om文件，需要.onnx算子版本需为11。在bert_base_pth2onnx.py脚本中torch.onnx.export方法中的输入参数opset_version的值需为11，请勿修改。
       
       3. 修改onnx文件(以bs=8为例)。
-
+    
          ```
          # 简化onnx文件
          python3.7 -m onnxsim bert_base_batch_8.onnx bert_base_batch_8_sim.onnx
-
+    
          # 修改onnx文件
          python3.7 fix_onnx.py bert_base_batch_8_sim.onnx bert_base_batch_8_fix.onnx
          ```
@@ -181,7 +181,7 @@ pip3 install . && cd ..
 
          ```
          # 配置环境变量
-         source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          
          # 使用二进制输入时，执行如下命令
          atc --input_format=ND --framework=5 --model=bert_base_batch_${batch_size}.onnx
@@ -211,6 +211,7 @@ pip3 install . && cd ..
 
    
 
+
 2. ##### 开始推理验证。
 
    
@@ -230,14 +231,14 @@ pip3 install . && cd ..
       ```
 
       参考性能如下：
-      |       模型        | BatchSize | NPU性能 | 
-      | :---------------: | :-------: | :-----: | 
-      | Bert-Base-Uncased |     1     | 177.94 fps | 
-      | Bert-Base-Uncased |     4     | 223.48 fps | 
-      | Bert-Base-Uncased |     8     | 221.74 fps | 
-      | Bert-Base-Uncased |    16     | 219.08 fps | 
-      | Bert-Base-Uncased |    32     | 219.68 fps | 
-      | Bert-Base-Uncased |    64     | 213.30 fps | 
+      |       模型        | BatchSize | NPU性能 |
+      | :---------------: | :-------: | :-----: |
+      | Bert-Base-Uncased |     1     | 177.94 fps |
+      | Bert-Base-Uncased |     4     | 223.48 fps |
+      | Bert-Base-Uncased |     8     | 221.74 fps |
+      | Bert-Base-Uncased |    16     | 219.08 fps |
+      | Bert-Base-Uncased |    32     | 219.68 fps |
+      | Bert-Base-Uncased |    64     | 213.30 fps |
 
       执行命令，进行完整推理：
 

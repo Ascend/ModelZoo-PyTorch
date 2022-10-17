@@ -65,24 +65,24 @@ cp -r examples/aishell/s0/data/test/text ${wenet_path}/examples/aishell/s0/exp/2
 cp -r ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/global_cmvn ${wenet_path}/exp/20210601_u2++_conformer_exp
 ```
 
-5. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
+6. [获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
-   ```
-   cp -r benchmark ${wenet_path}/examples/aishell/s0/ 
-   ```
-   
-6. 拷贝本工程下提供的py文件到wenet对应目录下
+```
+cp -r benchmark ${wenet_path}/examples/aishell/s0/ 
+```
 
-   ```
-   cd  ${code_path}
-   cp -r export_onnx_npu.py ${wenet_path}/wenet/bin/
-   cp -r recognize_om.py ${wenet_path}/wenet/bin/
-   cp -r cosine_similarity.py ${wenet_path}/examples/aishell/s0/ 
-   cp -r adaptdecoder.py ${wenet_path}/examples/aishell/s0/
-   cp -r *.sh ${wenet_path}/examples/aishell/s0/ 
-   ```
+7. 拷贝本工程下提供的py文件到wenet对应目录下
 
-   
+```
+cd  ${code_path}
+cp -r export_onnx_npu.py ${wenet_path}/wenet/bin/
+cp -r recognize_om.py ${wenet_path}/wenet/bin/
+cp -r cosine_similarity.py ${wenet_path}/examples/aishell/s0/ 
+cp -r adaptdecoder.py ${wenet_path}/examples/aishell/s0/
+cp -r *.sh ${wenet_path}/examples/aishell/s0/ 
+```
+
+
 
 
 ## 2 模型转换

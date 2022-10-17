@@ -70,6 +70,7 @@ pip3.7 install -r requirements.txt
    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
    ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
    bash encoder.sh Ascend${chip_name} # Ascend310P3
    ```
 
@@ -112,12 +113,6 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
    即可打屏获取精度，精度保存在文件espnet/egs/aishell/asr1/exp/train_sp_pytorch_train_pytorch_conformer_kernel15_specaug/decode_test_decode_lm0.0_lm_4/result.txt
 
 3. 获取性能
-
-   需要首先配置环境变量:
-
-   ```
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   ```
 
    运行脚本infer_perf.py
 

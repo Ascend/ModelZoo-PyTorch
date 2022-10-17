@@ -60,7 +60,7 @@ python3.7 preprocess.py --pre_data_save_path=./pre_data/clean --which_dataset=cl
 
          ```
          #!/bin/bash
-         source /usr/local/Ascend/ascend-toolkit/latest/set_env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          
          atc --framework=5 --model=./models/wav2vec2-base-960h.onnx --output=./models/wav2vec2-base-960h --input_format=ND --input_shape="input:1,-1" --dynamic_dims="10000;20000;30000;40000;50000;60000;70000;80000;90000;100000;110000;120000;130000;140000;150000;160000;170000;180000;190000;200000;210000;220000;230000;240000;250000;260000;270000;280000;290000;300000;310000;320000;330000;340000;350000;360000;370000;380000;390000;400000;410000;420000;430000;440000;450000;460000;470000;480000;490000;500000;510000;520000;530000;540000;550000;560000" --log=error --soc_version=$1
          ```
@@ -135,10 +135,10 @@ python3.7 preprocess.py --pre_data_save_path=./pre_data/clean --which_dataset=cl
       --bin_file_path=./om_infer_res_clean \
    --res_save_path=./om_infer_res_clean/transcriptions.txt \
       --which_dataset=clean
-      ```
-      
+   ```
+   
       参数说明：
-      
+   
       - --bin_file_path：pyacl推理结果存放路径
       - --res_save_path：后处理结果存放txt文件
       - --which_dataset：精度统计所用的数据集，参看preprocess.py的参数说明
@@ -156,10 +156,10 @@ python3.7 preprocess.py --pre_data_save_path=./pre_data/clean --which_dataset=cl
       ```
    
       参数说明：
-      
+   
       - --pred_res_save_path：pytorch在线推理结果存放路径
       - --which_dataset：参看preprocess.py的参数说明
-      
+   
       脚本执行完毕后，会在屏幕上输出pytorch在线推理平均推理时间（average infer time(ms)），假定为![Figure Name:202155144621.png CAD Name:zh-cn_formulaimage_0000001124002380.png](http://resource.idp.huawei.com/idpresource/nasshare/editor/image/34040284354/1_zh-cn_formulaimage_0000001124002380.png)，换算为单卡后pytorch在线推理的每秒推理数量为：![Figure Name:202153161710.png CAD Name:zh-cn_formulaimage_0000001166163171.png](http://resource.idp.huawei.com/idpresource/nasshare/editor/image/34040284354/3_zh-cn_formulaimage_0000001166163171.png)。
-      
+   
       上述运行pyacl_infer.py脚本会得到om平均推理时间（average infer time(ms)），假定为![Figure Name:202153161914.png CAD Name:zh-cn_formulaimage_0000001166164017.png](http://resource.idp.huawei.com/idpresource/nasshare/editor/image/34040284354/1_zh-cn_formulaimage_0000001166164017.png)，换算为单卡后om的每秒推理数量为：![Figure Name:202153161758.png CAD Name:zh-cn_formulaimage_0000001119363638.png](http://resource.idp.huawei.com/idpresource/nasshare/editor/image/34040284354/2_zh-cn_formulaimage_0000001119363638.png)。
