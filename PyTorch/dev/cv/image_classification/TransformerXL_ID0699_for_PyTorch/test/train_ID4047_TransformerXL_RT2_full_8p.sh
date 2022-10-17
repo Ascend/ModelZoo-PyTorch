@@ -18,7 +18,7 @@ train_epochs=20
 #训练step
 train_steps=40000
 #学习率
-learning_rate=0.08
+learning_rate=0.01
 
 #参数配置
 data_path=""
@@ -71,8 +71,7 @@ nohup python3 -m torch.distributed.launch \
 	--fp16 \
 	--data=$data_path \
 	--max_step=40000 \
-	--multi_gpu=ddp \
-	--lr=${learning_rate} > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+	--multi_gpu=ddp > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
 e2e_time=$(( $end - $start ))
@@ -102,7 +101,6 @@ train_accuracy=`grep Eval $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_
 grep "ms/batch" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v "train loss"|awk -F 'loss ' '{print $2}'|awk -F '|' '{print $1}' > $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print $1}' $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-
 
 #关键信息打印到CaseName.log中，此处无需修改
 echo "Network = ${Network}" > $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
