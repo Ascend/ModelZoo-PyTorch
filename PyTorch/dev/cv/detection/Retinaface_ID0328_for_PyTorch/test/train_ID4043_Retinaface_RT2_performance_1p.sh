@@ -94,7 +94,7 @@ step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/train.py 
 sed -i "${step_line}s/^/#/" ${cur_path}/train.py
 inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
 sed -i "${inc_line}s/^/#/" ${cur_path}/train.py
-line=`grep "import torch" ${cur_path}/train.py -n | tail -1|awk -F ':' '{print $1}'`
+line=`grep "import torch_npu" ${cur_path}/train.py -n | tail -1|awk -F ':' '{print $1}'`
 sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py
 
 #进入训练脚本目录，需要模型审视修改

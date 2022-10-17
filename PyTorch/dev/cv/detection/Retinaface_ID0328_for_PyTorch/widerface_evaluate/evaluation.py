@@ -17,7 +17,9 @@ author: wondervictor
 mail: tianhengcheng@gmail.com
 copyright@wondervictor
 """
-
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 import tqdm
 import pickle
@@ -27,6 +29,11 @@ from scipy.io import loadmat
 from bbox import bbox_overlaps
 from IPython import embed
 
+NPU_CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 
 def get_gt_boxes(gt_dir):
     """ gt dir: (wider_face_val.mat, wider_easy_val.mat, wider_medium_val.mat, wider_hard_val.mat)"""
