@@ -13,15 +13,6 @@ else
     source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
-${install_path}/driver/tools/msnpureport -g error -d 0
-${install_path}/driver/tools/msnpureport -g error -d 1
-${install_path}/driver/tools/msnpureport -g error -d 2
-${install_path}/driver/tools/msnpureport -g error -d 3
-${install_path}/driver/tools/msnpureport -g error -d 4
-${install_path}/driver/tools/msnpureport -g error -d 5
-${install_path}/driver/tools/msnpureport -g error -d 6
-${install_path}/driver/tools/msnpureport -g error -d 7
-
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #设置默认日志级别,0-debug/1-info/2-warning/3-error

@@ -44,17 +44,6 @@ export HCCL_CONNECT_TIMEOUT=1800
 
 ulimit -SHn 512000
 
-#设置device侧日志登记为error
-${install_path}/driver/tools/msnpureport -g error -d 0
-${install_path}/driver/tools/msnpureport -g error -d 1
-${install_path}/driver/tools/msnpureport -g error -d 2
-${install_path}/driver/tools/msnpureport -g error -d 3
-${install_path}/driver/tools/msnpureport -g error -d 4
-${install_path}/driver/tools/msnpureport -g error -d 5
-${install_path}/driver/tools/msnpureport -g error -d 6
-${install_path}/driver/tools/msnpureport -g error -d 7
-#关闭Device侧Event日志
-${install_path}/driver/tools/msnpureport -e disable
 
 #---------------------------------------------Autotune---------------------------------------------
 # #开启dump数据功能

@@ -22,7 +22,8 @@ msnpureport -g error -d 4
 msnpureport -g error -d 5
 msnpureport -g error -d 6
 msnpureport -g error -d 7
-
+#关闭Device侧Event日志
+msnpureport -e disable
 
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
@@ -39,18 +40,6 @@ export COMBINED_ENABLE=1
 export SWITCH_MM_OUTPUT_ENABLE=1
 export DYNAMIC_OP="MUL"
 export DYNAMIC_OP="ADD"
-
-#设置device侧日志登记为error
-${install_path}/driver/tools/msnpureport -g error -d 0
-${install_path}/driver/tools/msnpureport -g error -d 1
-${install_path}/driver/tools/msnpureport -g error -d 2
-${install_path}/driver/tools/msnpureport -g error -d 3
-${install_path}/driver/tools/msnpureport -g error -d 4
-${install_path}/driver/tools/msnpureport -g error -d 5
-${install_path}/driver/tools/msnpureport -g error -d 6
-${install_path}/driver/tools/msnpureport -g error -d 7
-#关闭Device侧Event日志
-${install_path}/driver/tools/msnpureport -e disable
 
 path_lib=$(python3.7 -c """
 import sys

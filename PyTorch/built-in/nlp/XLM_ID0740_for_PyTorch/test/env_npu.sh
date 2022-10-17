@@ -44,19 +44,6 @@ export HCCL_WHITELIST_DISABLE=1
 
 export SCALAR_TO_HOST_MEM=1
 
-#设置Device侧日志等级为error
-${install_path}/driver/tools/msnpureport -d 0 -g error
-${install_path}/driver/tools/msnpureport -d 1 -g error
-${install_path}/driver/tools/msnpureport -d 2 -g error
-${install_path}/driver/tools/msnpureport -d 3 -g error
-${install_path}/driver/tools/msnpureport -d 4 -g error
-${install_path}/driver/tools/msnpureport -d 5 -g error
-${install_path}/driver/tools/msnpureport -d 6 -g error
-${install_path}/driver/tools/msnpureport -d 7 -g error
-#关闭Device侧Event日志
-${install_path}/driver/tools/msnpureport -e disable
-
-
 path_lib=$(python3.7 -c """
 import sys
 import re
