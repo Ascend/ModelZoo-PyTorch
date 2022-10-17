@@ -1,8 +1,7 @@
 #!/bin/bash
 
 cur_path=`pwd`/../
-#失败用例打屏
-#export ASCEND_SLOG_PRINT_TO_STDOUT=1
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 export RANK_SIZE=1
 export JOB_ID=10087
 RANK_ID_START=0

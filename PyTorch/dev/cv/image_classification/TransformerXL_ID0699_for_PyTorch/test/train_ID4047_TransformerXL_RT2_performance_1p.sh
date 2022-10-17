@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 cur_path=`pwd`/../
 export RANK_SIZE=1
 export JOB_ID=10087

@@ -1,6 +1,8 @@
 #!/bin/bash
 cur_time=`date +%Y%m%d%H%M%S`
 
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
+
 cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ];then
