@@ -20,9 +20,9 @@ import os
 import modeling
 
 def make_train_dummy_input():
-    org_input_ids = torch.ones(8, 512).long()
-    org_token_type_ids = torch.ones(8, 512).long()
-    org_input_mask = torch.ones(8, 512).long()
+    org_input_ids = torch.ones(args.batch_size, 512).long()
+    org_token_type_ids = torch.ones(args.batch_size, 512).long()
+    org_input_mask = torch.ones(args.batch_size, 512).long()
     return (org_input_ids, org_token_type_ids, org_input_mask)
 
 if __name__ == '__main__':   
@@ -41,8 +41,12 @@ if __name__ == '__main__':
     parser.add_argument('--fp16',
                         action='store_true',
                         help="use mixed-precision")
+    parser.add_argument('--batch_size',
+                        type=int,
+                        required=True,
+                        help="batch size")
     args = parser.parse_args()
-    MODEL_ONNX_PATH = "./bert_base_batch_8.onnx"
+    MODEL_ONNX_PATH = "./bert_base_batch_{}.onnx".format(args.batch_size)
     OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
     config = modeling.BertConfig.from_json_file(args.config_file)
     # Padding for divisibility by 8

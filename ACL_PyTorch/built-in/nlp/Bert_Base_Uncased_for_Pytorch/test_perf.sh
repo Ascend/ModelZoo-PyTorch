@@ -1,1 +1,0 @@
-./benchmark.x86_64 -batch_size=8 -device_id=0 -om_path=bert_base_batch_8_sim_auto.om -round=10
