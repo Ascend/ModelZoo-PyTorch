@@ -13,26 +13,38 @@ else
     source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
+#设置device侧日志登记为error
 msnpureport -g error -d 0
+msnpureport -g error -d 1
+msnpureport -g error -d 2
+msnpureport -g error -d 3
+msnpureport -g error -d 4
+msnpureport -g error -d 5
+msnpureport -g error -d 6
+msnpureport -g error -d 7
+#关闭Device侧Event日志
+msnpureport -e disable
 
-#��Host��־���������,0-�ر�/1-����
+#将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
-#����Ĭ����־����,0-debug/1-info/2-warning/3-error
+#设置默认日志级别,0-debug/1-info/2-warning/3-error
 export ASCEND_GLOBAL_LOG_LEVEL=3
-#����Event��־������־,0-�ر�/1-����
+#设置Event日志开启标志,0-关闭/1-开启
 export ASCEND_GLOBAL_EVENT_ENABLE=0
-#�����Ƿ���taskque,0-�ر�/1-����
+#设置是否开启taskque,0-关闭/1-开启
 export TASK_QUEUE_ENABLE=1
-#�����Ƿ���PTCopy,0-�ر�/1-����
+#设置是否开启PTCopy,0-关闭/1-开启
 export PTCOPY_ENABLE=1
-#�����Ƿ���combined��־,0-�ر�/1-����
+#设置是否开启combined标志,0-关闭/1-开启
 export COMBINED_ENABLE=1
-#�������ⳡ���Ƿ���Ҫ���±���,����Ҫ�޸�
+#设置特殊场景是否需要重新编译,不需要修改
 export DYNAMIC_OP="ADD#MUL"
-#HCCL����������,1-�ر�/0-����
+#HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export BMMV2_ENABLE=1
-export TRI_COMBINED_ENABLE=1
+#关闭Runtime2.0
+export ENABLE_RUNTIME_V2=0
+
 ulimit -SHn 512000
 
 path_lib=$(python3.7 -c """

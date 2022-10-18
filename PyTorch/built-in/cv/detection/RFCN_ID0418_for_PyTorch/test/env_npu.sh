@@ -13,7 +13,6 @@ else
     source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
-
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #设置默认日志级别,0-debug/1-info/2-warning/3-error
@@ -30,6 +29,9 @@ export COMBINED_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
+#关闭Runtime2.0
+export ENABLE_RUNTIME_V2=0
+
 #设置device侧日志登记为error
 msnpureport -g error -d 0
 msnpureport -g error -d 1
