@@ -44,6 +44,7 @@ from lr_scheduler import build_scheduler
 from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper, reduce_tensor
+from models.swin_transformer import NpuDropPath
 
 try:
     # noinspection PyUnresolvedReferences
