@@ -48,11 +48,6 @@ def create_supervised_trainer(model, optimizer, loss_fn,
     Returns:
         Engine: a trainer engine with supervised update function
     """
-    if device:
-        if torch.npu.device_count() > 1 or torch.cuda.device_count() > 1:
-            model = nn.DataParallel(model)
-        model.to(device)
-
     def _update(engine, batch):
         model.train()
         optimizer.zero_grad()
@@ -91,11 +86,6 @@ def create_supervised_trainer_with_center(model, center_criterion, optimizer, op
     Returns:
         Engine: a trainer engine with supervised update function
     """
-    if device:
-        if torch.npu.device_count() > 1 or torch.cuda.device_count() > 1:
-            model = nn.DataParallel(model)
-        model.to(device)
-
     def _update(engine, batch):
         model.train()
         optimizer.zero_grad()
@@ -142,11 +132,6 @@ def create_supervised_evaluator(model, metrics,
     Returns:
         Engine: an evaluator engine with supervised inference function
     """
-    if device:
-        if torch.npu.device_count() > 1 or torch.cuda.device_count() > 1:
-            model = nn.DataParallel(model)
-        model.to(device)
-
     def _inference(engine, batch):
         model.eval()
         with torch.no_grad():
@@ -311,13 +296,19 @@ def do_train_with_center(
         global ITER
         ITER += 1
 
+        data_len = torch.tensor(len(train_loader)).float().npu()
+        torch.distributed.all_reduce(data_len)
+        avg_data_len = int(data_len // num_npus)
+
         if ITER % log_period == 0:
             logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
-                        .format(engine.state.epoch, ITER, len(train_loader),
+                        .format(engine.state.epoch, ITER, avg_data_len,
                                 engine.state.metrics['avg_loss'], engine.state.metrics['avg_acc'],
                                 scheduler.get_lr()[0]))
-        if len(train_loader) == ITER:
+        if ITER == avg_data_len:
             ITER = 0
+            engine.should_terminate_single_epoch = True
+
         if ITER == 4:
             timer1.reset()
             if engine.state.epoch == 1 :

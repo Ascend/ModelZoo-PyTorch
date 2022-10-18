@@ -44,15 +44,11 @@ def train(rank, cfg, args):#lmm
     	backend='hccl',
     	world_size=args.world_size,
     	rank=rank) 
-    torch.npu.set_device('npu:{}'.format(rank))
     # prepare dataset
     train_loader, val_loader, num_query, num_classes = make_data_loader_dist(cfg, args, rank)
 
     # prepare model
     model = build_model(cfg, num_classes).npu()
-
-    if "npu" in cfg.MODEL.DEVICE:      #device
-        model = model.npu()
 
     if cfg.MODEL.IF_WITH_CENTER == 'no':
         print('Train without center loss, the loss type is', cfg.MODEL.METRIC_LOSS_TYPE)
@@ -121,7 +117,7 @@ def train(rank, cfg, args):#lmm
 
         if "npu" in cfg.MODEL.DEVICE:
             model, [optimizer, optimizer_center] = amp.initialize(model, [optimizer, optimizer_center], opt_level="O2", loss_scale=args.loss_scale, combine_grad=True)
-            model = nn.parallel.DistributedDataParallel(model, device_ids=[rank])
+            model = nn.parallel.DistributedDataParallel(model, device_ids=[rank], broadcast_buffers=False)
         do_train_with_center(
             cfg,
             model,
@@ -179,9 +175,9 @@ def main():
             config_str = "\n" + cf.read()
             logger.info(config_str)
     logger.info("Running with config:\n{}".format(cfg))
-
+    
+    torch.npu.set_device('npu:{}'.format(args.local_rank))
     train(args.local_rank, cfg, args)
-    dist.destroy_process_group()
-
+    
 if __name__ == '__main__':
     main()
