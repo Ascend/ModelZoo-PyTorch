@@ -1,257 +1,265 @@
-# Dino_Resnet50 Onnx模型PyTorch离线推理指导
-- [Dino_Resnet50 Onnx模型PyTorch离线推理指导](#Dino_Resnet50Onnx模型Pytorch离线推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		-   [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx转om模型](#32-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-		- [6.1 310离线推理TopN精度统计](#61-310离线推理topn精度统计)
-		- [6.2 310P离线推理TopN精度统计](#62-310p离线推理topn精度统计)
-		- [6.3 开源精度](#63-开源精度)
-		- [6.4 精度对比](#64-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 310性能数据](#71-310性能数据)
-		- [7.2 310P性能数据](#72-310p性能数据)
-		- [7.3 T4性能数据](#73-t4性能数据)
-		- [7.4 性能对比](#74-性能对比)
-
-
-
-## 1 模型概述
-
--   **[论文地址](#11-论文地址)**  
--   **[代码地址](#12-代码地址)**  
-
-### 1.1 论文地址
-[Caron, Mathilde, et al. "Emerging properties in self-supervised vision transformers." arXiv preprint arXiv:2104.14294 (2021).](https://arxiv.org/abs/2104.14294)
-
-### 1.2 代码地址
-[Dino代码地址](https://github.com/facebookresearch/dino)  
-branch:main  
-commit_id:cb711401860da580817918b9167ed73e3eef3dcf  
-备注：commit_id是指基于该次提交时的模型代码做推理，通常选择稳定版本的最后一次提交，或代码仓最新的一次提交  
-
-## 2 环境说明
-
--   **[深度学习框架](#21-深度学习框架)**  
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
-```
-CANN 5.1.RC1
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
-
-### 2.2 python第三方库
-
-```
-numpy == 1.18.5
-Pillow == 7.2.0
-opencv-python == 3.3.1
-```
-
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.获取权重文件，从源码包中获取权重文件：dino_resnet50_pretrain.pth 和 dino_resnet50_linearweights.pth。
-
-2.编写pthtar2onnx脚本dino_resnet50_pth2onnx.py
-
-3.执行dino_resnet50_pth2onnx脚本，生成onnx模型文件
-```
-python3.7 dino_resnet50_pth2onnx.py
-```
-
- **模型转换要点：**
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
-
-### 3.2 onnx转om模型
-
-1.设置环境变量。请以实际安装环境进行配置。
-```
-source /usr/local/Ascend/ascend-lastest/set_env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，${chip_name}可通过npu-smi info指令查看，例：310P3
-
-${chip_name}可通过`npu-smi info`指令查看
-
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-
-```
-atc --framework=5 --model=dino_resnet50.onnx --output=dino_resnet50_bs1 --input_format=NCHW --input_shape="input:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} 
-```
-
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
--   **[数据集预处理](#42-数据集预处理)**  
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，以ILSVRC2012为例，本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。
-
-### 4.2 数据集预处理
-1.编写预处理脚本dino_resnet50_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 dino_resnet50_preprocess.py dino ${datasets_path}/val ./${prep_output_dir}
-```
-resnet表示数据预处理方式为dino网络，{datasets_path}/val表示原始数据验证集（.jpeg）所在路径，${prep_output_dir}表示输出的二进制文件（.bin）所在路径。
-
-### 4.3 生成数据集信息文件
-1.编写数据集信息文件脚本get_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 get_info.py bin ./${prep_output_dir} ./${prep_output_dir_info} 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 离线推理
-1.设置环境变量，请以实际安装环境进行配置。
-```
-source /usr/local/Ascend/ascend-lastest/set_env.sh
-```
-2.执行离线推理
-```
- ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./dino_resnet50_bs1.om -input_text_path=./dino_val.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
-
-## 6 精度对比
-
--   **[310离线推理TopN精度](#61-310离线推理TopN精度)**
--   **[310P离线推理TopN精度](#62-310P离线推理TopN精度)** 
--   **[开源精度](#63-开源精度)**  
--   **[精度对比](#64-精度对比)**  
-
-### 6.1 310离线推理TopN精度统计
-
-后处理统计TopN精度
-
-执行dino_resnet50_postprocess.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 dino_resnet50_postprocess.py --anno_file ${datasets_path}/val_label.txt --benchmark_out ./result/dumpOutput_device0 --result_file ./result.json
-```
-
---benchmark_out表示生成推理结果所在路径，--anno_file表示标签数据，--result_file表示生成结果文件
-
-310精度结果：
-|         | Top1 accuracy | Top5 accuracy |
-|---------|---------------|---------------|
-| 310     | 75.27%        | 92.57%        |
-
-### 6.2 310P离线推理TopN精度统计
-
-同310，执行dino_resnet50_postprocess.py脚本：
-```
-python3.7 dino_resnet50_postprocess.py --anno_file ${datasets_path}/val_label.txt --benchmark_out ./result/dumpOutput_device0 --result_file ./result.json
-```
-
-310P精度结果：
-|         | Top1 accuracy | Top5 accuracy |
-|---------|---------------|---------------|
-| 310P    | 75.28%        | 92.57%        |
-
-### 6.3 开源精度
-
-[官网pth精度](https://github.com/facebookresearch/dino#evaluation-linear-classification-on-imagenet)
-
-| model            | Top1 accuracy   |
-| ---------------- | --------------- |
-| Dino_Resnet50    | 75.3%           |
-
-### 6.4 精度对比
-
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度不低于开源代码仓精度的1%，故精度达标。
-
- **精度调试：**  
-
->没有遇到精度不达标的问题，故不需要进行精度调试
-
-## 7 性能对比
-
--   **[310性能数据](#71-310性能数据)**
--   **[310P性能数据](#72-310P性能数据)**  
--   **[T4性能数据](#73-T4性能数据)**  
--   **[性能对比](#74-性能对比)**  
-
-### 7.1 310性能数据
-
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
-
-使用benchmark工具在整个数据集上推理获得性能数据，可以获得吞吐率数据，结果保存在当前目录result/dumpOutput_device{0}。
-
-```
- ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./dino_resnet50_bs1.om -input_text_path=./dino_val.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-
-### 7.2 310P性能数据
-
-同310，使用benchmark工具在整个数据集上推理获得性能数据：
-```
- ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./dino_resnet50_bs1.om -input_text_path=./dino_val.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-
-### 7.3 T4性能数据
-
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务。
-
-使用benchmark工具在整个数据集上推理获得性能数据：
-```
-trtexec  --onnx=dino_resnet50.onnx  --fp16 --shapes=input:1x3x224x224 --workspace=5000 --threads
-```
-
-### 7.4 性能对比
-
-性能对比表格如下：
-
-|           | 310      | 310P    | T4        | 310P/310    | 310P/T4     |
-| --------- | -------- | ------- | --------- | ----------- | ----------- |
-| bs1       | 1617.052 | 1378.5  | 878.742   | 0.852477224 | 1.568719829 |
-| bs4       | 2161.044 | 3317.4  | 1532.616  | 1.535091373 | 2.164534365 |
-| bs8       | 2410.052 | 3678.53 | 1733.528  | 1.526328063 | 2.12199053  |
-| bs16      | 2441.26  | 2708.79 | 1858.176  | 1.109586853 | 1.457768263 |
-| bs32      | 5279.8   | 2579.54 | 2033.92   | 1.1491282   | 1.268260305 |
-| bs64      | 2244.78  | 4248.18 | 2090.9376 | 2.492466593 | 2.031710559 |
-| 最优batch | 2441.26  | 4248.18 | 2090.9376 | 1.74015877  | 2.031710559 |
-
-最优的310P性能达到了最优的310性能的1.740倍，达到最优的T4性能的2.031倍。
-
-**性能优化：**
-性能已达标，不需要再优化。
+# Dino_Resnet50模型-推理指导
+
+- [概述](#概述)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型转换](#模型转换)
+  - [推理验证](#推理验证)
+- [精度&性能](#精度性能)
+
+---
+
+# 概述
+
+Dino是Facebook于今年发表的最新的无监督学习成果，在图像处理分类等方面取得了很好的成果，而与经典的Resnet50的分类模型的残差单元相结合训练，经验证也依然保障了较高精度，与纯Resnet50模型相比精度基本没有下滑，同时也保持了性能。
+
+- 论文  
+    [Caron, Mathilde, et al. "Emerging properties in self-supervised vision transformers." arXiv preprint arXiv:2104.14294 (2021).](https://arxiv.org/abs/2104.14294)
+    
+
+- 参考实现
+
+    ```
+    url = https://github.com/facebookresearch/dino
+    branch = main
+    commit_id = cb711401860da580817918b9167ed73e3eef3dcf 
+    ```
+
+- 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | input | FP32 | NCHW | 1 x 3 x 224 x 224 |
+
+- 模型输出  
+    | output-name | data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output | FLOAT32 | ND | 1 x 1000 |
+
+    
+---
+
+# 推理环境
+
+- 该模型需要以下插件与驱动
+
+    | 配套     | 版本          | 环境准备指导                                                                                           |
+    | -------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+    | 固件与驱动 | 22.0.2 | [Pytorch 框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN     | 5.1.RC2       | -                                                                                                  |
+    | Python   | 3.7.5         | -                                                                                                     |
+
+---
+
+# 快速上手
+
+## 获取源码
+
+
+1. 下载本仓，复制该推理项目所在目录，进入复制好的目录
+    ```
+    cd Dino
+    ```
+
+2. 执行以下命令安装所需的依赖
+    ```shell
+    pip install -r requirements.txt
+    ```
+
+3. 克隆开源仓并修改源码
+    ```shell
+    git clone https://github.com/facebookresearch/VideoPose3D.git
+    cd VideoPose3D
+    git checkout main
+    git reset --hard 1afb1ca0f1237776518469876342fc8669d3f6a9
+    patch -p1 < ../vp3d.patch
+    cd ..
+    ```
+
+4. 创建一个目录，用于存放整个推理过程中所需文件与生成文件
+    ```shell
+    mkdir vp3d
+    ```
+
+## 准备数据集
+
+1. 获取原始数据集  
+    本模型使用 [ImageNet官网](http://www.image-net.org) 的5万张验证集进行测试，以ILSVRC2012为例，本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。
+    ```
+    最终，数据的目录结构如下：
+    ```
+    ├── imageNet
+       ├── val
+       └── val_label.txt
+    ```
+
+2. 数据预处理  
+    运行数据预处理脚本，将原始数据转换为符合模型输入要求的bin文件。
+    ```shell
+    python3.7 dino_resnet50_preprocess.py resnet ${datasets_path}/imagenet/val ${prep_output_dir}
+    ```
+    参数说明：
+    + “resnet”：数据预处理方式为resnet网络。
+    + ${datasets_path}/imagenet/val: 原始数据验证集（.jpeg）所在路径。
+    + ${prep_output_dir}: 输出的二进制文件（.bin）所在路径。
+    
+    运行成功后，会在当前目录下生成二进制文件。
+
+
+## 模型转换
+
+1. PyTroch 模型转 ONNX 模型  
+    step1 获取权重文件  
+    该推理项目使用源码包中的权重文件（dino_resnet50_pretrain.pth和dino_resnet50_linearweights.pth）。
+
+    step2 导出 .onnx 文件
+    ```
+    python3.7 dino_resnet50_pth2onnx.py
+    ```
+
+    
+2. ONNX 模型转 OM 模型
+    step1: 查看 NPU 芯片名称 \${chip_name}
+
+    ```shell
+    npu-smi info
+    ```
+    
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
+
+    step2: ONNX 模型转 OM 模型
+    
+    ```shell
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    source /etc/profile
+    
+    # 执行 ATC 进行模型转换
+    atc --framework=5 --model=dino_resnet50.onnx --output=dino_resnet50_bs1 --input_format=NCHW --input_shape="input:1,3,224,224" --log=debug --soc_version=${chip_name}
+    ```
+    
+    参数说明：
+    + --model: ONNX模型文件所在路径。
+    + --framework: 5 代表ONNX模型。
+    + --input_format: 输入数据的排布格式。
+    + --input_shape: 输入数据的shape。
+    + --output: 生成OM模型的保存路径。
+    + --log: 日志级别。
+    + --soc_version: 处理器型号。
+    
+    运行成功后，在当前目录下会生成名为 dino_resnet50_bs1.om 的模型文件。
+
+## 推理验证
+
+1. 准备推理工具
+
+    本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
+    
+    ```shell
+    # 指定CANN包的安装路径
+    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
+    
+    # 获取推理工具源码
+    git clone https://gitee.com/ascend/tools.git
+    cp -r tools/ais-bench_workload/tool/ais_infer .
+    
+    # 打包
+    cd ais_infer/backend/
+    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
+    
+    # 安装
+    pip3 install --force-reinstall aclruntime-xxx.whl
+    cd ../..
+    ```
+
+2. 离线推理
+
+    使用 ais_infer 工具将预处理后的数据传入模型并执行推理：
+    ```shell
+    # 设置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    source /etc/profile
+    
+    # 对预处理后的数据进行推理
+    mkdir dino/infer_results/
+    python3 ais_infer/ais_infer.py \
+        --model "dino_resnet50_bs1.om" \
+        --input "{prep_output_dir}/" \
+        --output "dino/infer_results/" \
+        --batchsize 1
+        --outfmt TXT
+    ```
+    参数说明：
+    + --model: OM模型路径。
+    + --input: 存放预处理bin文件的目录路径
+    + --output: 存放推理结果的目录路径
+    + --batchsize：每次输入模型的样本数
+    + --outfmt: 推理结果数据的格式
+    运行成功后，在 dino/infer_results/ 下，会生成一个以执行开始时间%Y_%m_%d-%H_%M_%S来命名的子目录，每个预处理 bin 文件会对应生成一个推理结果 txt 文件存放在此目录下。
+
+3. 精度验证
+
+    执行后处理脚本，根据推理结果与 label比对 计算 OM 模型的准确率：
+    ```shell
+    python3.7 dino_resnet50_postprocess.py --anno_file ${datasets_path}/val_label.txt --ais_infer ./result/2022_10_18-11_26_11 --result_file ./result.json
+    ```
+    
+    参数说明：
+    + --anno_file: 标签数据位置
+    + --ais_infer: 推理结果所在路径
+    + --result_file: 输出结果位置
+    说明：精度验证之前，将推理结果文件中summary.json删除
+    运行成功后，程序会打印出模型的精度指标：
+    ```
+    ==== Validation Results ====
+    {"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "75.28%"}, {"key": "Top2 accuracy", "value": "85.38%"}, {"key": "Top3 accuracy", "value": "89.24%"}, {"key": "Top4 accuracy", "value": "91.31%"}, {"key": "Top5 accuracy", "value": "92.56%"}]}
+    ```
+
+4. 性能验证
+
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过 npu-smi info  命令查看 NPU 设备状态，请务必在 NPU 设备空闲的状态下进行性能测试。
+    + 为避免因测试持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps.
+
+    > 吞吐率（throughput）：模型在单位时间（1秒）内处理的数据样本数。
+    
+    step1 执行纯推理：
+    ```shell
+    python3 ais_infer/ais_infer.py --model dino_resnet50_bs1.om --loop 100 --batchsize 1
+    ```
+
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到 **NPU_compute_time** 中的 **mean** 字段，其含义为推理的平均耗时，单位为毫秒(ms)。
+
+---
+
+# 精度&性能
+
+1. 精度对比
+
+    | Model       | batchsize | Accuracy | 开源仓精度 |
+    | ----------- | --------- | -------- | ---------- |
+    | dino_resnet50 | 1       | top1 accuracy = 75.28% top5 accuracy = 92.56% | top1 accuracy = 75.28% top5 accuracy = 92.56%|
+    | dino_resnet50| 16      | top1 accuracy = 75.28% top5 accuracy = 92.56% | top 1 accuracy = 75.28% top5 accuracy = 92.56%|
+2. 性能对比
+    | batchsize | 310 性能 | T4 性能 | 310P 性能 | 310P/310 | 310P/T4 |
+    | ---- | ---- | ---- | ---- | ---- | ---- |
+    | 1 | 1617.052 fps | 878.742 fps | 1378.7 fps | 0.85 | 1.6 |
+    | 4 | 2161.044 fps | 1532.6 fps   | 5539.4 fps |2.5|  3.6|
+    | 8 | 2410.1 fps     | 1733.5fps    | 10986 fps |4.5| 6.3|
+    | 16| 2441.2 fps  |  1858.1fps    |  22119 fps |9  |  11|
+    | 32 | 5279.8fps | 2033.1fps    | 43852fps |    8 |21.5|
+    | 64| 2244fps  |2090fps | 87537fps|     39| 41|
