@@ -248,7 +248,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.amp:
         model, optimizer = amp.initialize(
-            model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
+            model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -461,7 +461,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
         if args.device == 'npu':
             loc = 'npu:{}'.format(args.gpu)
-            images = images.to(loc, non_blocking=True).to(torch.float)
+            images = images.to(loc, non_blocking=True)
             target = target.to(torch.int32).to(loc, non_blocking=True)
         else:
             images = images.cuda(args.gpu, non_blocking=True)
@@ -485,8 +485,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         else:
             loss.backward()
         optimizer.step()
-        if args.device == 'npu':
-            torch.npu.synchronize()
 
         # measure elapsed time
         cost_time = time.time() - end
