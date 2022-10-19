@@ -1,300 +1,297 @@
-# ADNet推理说明
+# ADNet模型-推理指导
 
-## 1 模型概述
 
-- **[论文地址](https://www.sciencedirect.com/science/article/pii/S0893608019304241)**
-- **[代码地址](https://github.com/hellloxiaotian/ADNet)**
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-### 1.1 论文地址
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[ADNet论文](https://www.sciencedirect.com/science/article/pii/S0893608019304241)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.2 代码地址
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-[ADNet代码](https://github.com/hellloxiaotian/ADNet)
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-branch:master
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-commitid:commit 997df8f0cd5cebe2d26a1468c866dd927512686f
+  ******
 
+  
 
-## 2 环境说明
 
-- 深度学习框架
-- python第三方库
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-### 2.1 深度学习框架
+ ADNet是一种注意引导的，用于图像去噪的卷积神经网络，主要包括用于图像去噪的稀疏块(SB)、特征增强块(FEB)、注意块(AB)和重构块(RB)。具体来说，SB通过使用扩展卷积和普通卷积来消除噪声，在性能和效率之间做出了折衷。该算法通过长路径集成全局和局部特征信息，增强模型的表达能力。该算法用于精细地提取隐藏在复杂背景中的噪声信息，对复杂噪声图像特别是真实噪声图像进行融合降噪是非常有效的。同时，将滤波算法与自适应算法相结合，提高了模型的训练效率，降低了模型训练的复杂度。最后，RB算法的目标是通过获得的噪声映射和给定的噪声图像来构造干净的图像。 
 
-```
-python3.7.5
-CANN 5.0.2
 
-pytorch == 1.5.0
-torchvision == 0.5.0
-onnx == 1.7.0
-onnx-simplifier == 0.3.6
-```
+- 论文参考： [Tian, Chunwei, et al. "Attention-guided CNN for image denoising." Neural Networks 124 (2020): 117-129.](https://www.sciencedirect.com/science/article/pii/S0893608019304241) 
 
-### 2.2 python第三方库
+- 参考实现：
 
-```
-numpy == 1.21.2
-Pillow == 8.3.0
-opencv-python == 4.5.3.56
-scikit-image==0.16.2
-```
+  ```
+  url=https://github.com/cqray1990/ADNet
+  branch=master
+  commit_id=76560b90045292db020b47901fe5474b84f4c942
+  ```
 
-## 3 模型转换
 
-- pth转om模型
 
-### 3.1 pth转om模型
+  通过Git获取对应commit\_id的代码方法如下：
 
-1.获取pth权重文件
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
-[pth权重文件](https://github.com/hellloxiaotian/ADNet/blob/master/gray/g25/model_70.pth
-) md5sum:7a93fb1f437cbce0fd235daaa7b9cffd 
 
-2.下载ADNet推理代码
+## 输入输出数据<a name="section540883920406"></a>
 
-```
-git clone https://gitee.com/wang-chaojiemayj/modelzoo.git
-cd modelzoo
-git checkout tuili
-```
-进入ADNet目录
-```
-cd ./contrib/ACL_PyTorch/Research/cv/quality_enhancement/ADnet
-```
-3.pth模型转onnx模型，onnx转成om模型
+- 输入数据
 
-pth模型转onnx模型
-```
-python3.7 ADNet_pth2onnx.py model_70.pth ADNet.onnx
-```
-onnx转出om
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-# bs16
-atc --framework=5 --model=ADNet.onnx --output=ADNet_bs16 --input_format=NCHW --input_shape="image:16,1,321,481" --log=debug --soc_version=Ascend${chip_name}
-```
-- model：为ONNX模型文件。
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | FLOAT32  | batchsize x 1 x 321 x 481 | NCHW         |
 
-- framework：5代表ONNX模型。
 
-- output：输出的OM模型。
+- 输出数据
 
-- input_format：输入数据的格式。
+  | 输出数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1 x 321 x 481 | NCHW         |
 
-- input_shape：输入数据的shape。
 
-- log：日志级别。
 
-- soc_version：处理器型号。
 
-  运行成功后生成ADNet_bs16.om模型文件。
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-## 4 数据集预处理
+- 该模型需要以下插件与驱动
 
-- 数据集获取
-- 数据预处理
-- 生成数据集信息文件
+  **表 1**  版本配套表
 
-### 4.1 数据集获取
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| :------------------------------------------------------------: | :-------: | :------------------------------------------------------------: |
+| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   |  \                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-本模型支持BSD68数据集共68张数据集，可从百度云盘下载
+- 该模型需要以下插件与驱动
 
-链接：https://pan.baidu.com/s/1XiePOuutbAuKRRTV949FlQ 
-提取码：0315
+   **表 2** 依赖配套表
 
-文件结构如下
+| 配套依赖                 | 版本             |
+| :-----------------------: | :----------------: |
+| torch                   |  1.12.0          |
+| torchvision             |  0.13.1          |
+| onnx                    |  1.12.0          |
+| onnx-simplifier         |  0.4.8           |
+| numpy                   |  1.21.6          |
+| Pillow                  |  9.2.0           |
+| opencv-python           |  4.6.0.66        |
+| scikit-image            |  0.19.3          |
+| tqdm                    |  4.64.1          |
+| 说明：ADnet模型的适配性较强,<br>未与任何版本有强关联，用户可根据自己环境选选择依赖                    |  \          |
 
-```
-|ADNet--test
-|     |  |--pth2om.sh
-|     |  |--perf_t4.sh
-|     |  |--parse.py
-|     |  |--eval_acc_perf.sh
-|     |--datset
-|     |  |--BSD68
-|     |--prep_dataset
-|     |  |--ISoure
-|     |  |--INoisy
-|     |--util.py
-|     |--requirements.tx
-|     |--models.py
-|     |--gen_dataset_info.py
-|     |--ADNet_pth2onnx.py
-|     |--ADNet_preprocess.py
-|     |--ADNet_postprocess.py
-```
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+## 获取源码<a name="section4622531142816"></a>
 
-### 4.2 数据集预处理
+1. 获取源码。
+   
+   源码目录结构如下：(注：可不用下载源码仓代码)
 
-运行ADNet_preprocess.py
-```
-python3.7  ADNet_preprocess.py ./dataset/BSD68 ./prep_dataset
-```
-二进制文件将保存在./prep_dataset目录下
+   ```
+   ├──ADNet_preprocess.py
+   ├──ADNet_postprocess.py
+   ├──ADNet_pth2onnx.py
+   ├──perf_t4.sh                     //gpu性能测试脚本
+   ├──models.py
+   ├──utils.py
+   ├──LICENCE
+   ├──requirements.txt
+   ├──modelzoo_level.txt
+   ├──prep_dataset
+   ├──model_70.pth
+   ├──ADNet.onnx
+   ├──ADNet_bs1.om
+   ├──ADNet_bs16.om
+   ```
 
-### 4.3 生成数据集信息文件
+   
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。
 
-1.执行生成数据集信息脚本gen_dataset_info.py，生成数据集信息文件
+   本模型支持[BSD68 数据集](https://pan.baidu.com/s/1XiePOuutbAuKRRTV949FlQ)共68张图片。用户可自行获取BSD68数据集上传数据集到服务器，可放置于任意路径下，以"/ADNet/dataset"目录为例。可使用百度网盘，提取码：0315。
 
-```
-python3.7 gen_dataset_info.py ./prep_dataset/INoisy ADNet_prep_bin.info 481 321  
-```
+   数据集目录结构如下:
 
-## 5 离线推理
+   ```
+      ├──dataset
+            ├──BSD68
+   ```
 
-- benchmark工具概述
-- 离线推理
+2. 数据预处理。
 
-### 5.1 benchmark工具概述
+   数据预处理将原始数据集转换为模型输入的数据。
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
+   执行ADNet_preprocess.py脚本，完成预处理。
 
-### 5.2 离线推理
+   ```python
+   python3 ADNet_preprocess.py /ADNet/dataset/BSD68 ./prep_dataset
+   ```
 
-1.设置环境变量
+   预处理prep_dataset目录结构如下：
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   ```
+      ├──prep_datase
+            ├──INoisy         //原图片加入随机噪声处理后文件
+            ├──ISoure         //原图片处理后文件
+   ```
 
-2.执行离线推理
 
-```
-bs16:
-./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=16 -om_path=./ADNet_bs16.om -input_text_path=./ADNet_prep_bin.info -input_width=481 -input_height=321 -output_binary=True -useDvpp=False
-```
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
 
-输出结果保存在目录result中，模型的输出有三个，其中需要的是名为output1的输出，shape为(1,19,1024,2048)(NCHW)，数据类型为FP16，每个输入对应的输出对应三个_x.bin(x代表1,2,3）文件。
+   使用Torch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       下载权重文件[model_70.pth](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fhellloxiaotian%2FADNet%2Fblob%2Fmaster%2Fgray%2Fg25%2Fmodel_70.pth)至服务器
+
+   2. 导出onnx文件。
 
-## 6 精度对比
+      a. 使用ADNet_preprocess.py导出onnx文件。
 
-- 离线推理精度
-- 开源精度
-- 开源精度对比
+         运行ADNet_preprocess.py脚本。
 
-### 6.1 离线推理精度统计
+         ```python
+         python3 ADNet_preprocess.py ./model_70.pth ADNet.onnx
+         ```
+
+         获得ADNet.onnx文件。
 
-调用ADNet_postprocess.py脚本推理结果与label比对，获取PSNR精度数据，结果直接输出
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-```
-python3.7 ADNet_postprocess.py ./result/dumpOutput_device0/ ./prep_dataset/ISoure/
-```
-
-第一个为benchmark输出目录，第二个标签目录，第三个为重定向输出目录
-
-```
-average psnr_val: 29.245188707184248
-```
-
-经过对比所有bs的om测试，在310上本模型batch1的精度与所有bs的精度一致，精度数据如上
-
-```
-average psnr_val: 29.245187698134
-```
-
-经过对比所有bs的om测试，在310P上本模型batch1的精度与所有bs的精度一致，精度数据如上
-
-### 6.2 开源精度
-
-pth精度
-
-```
-Model   论文    开源pth文件
-ADNet   29.27     29.25
-```
-
-### 6.3 精度对比
-
-将得到的om模型在 310 离线推理精度与pth精度作比较，om模型精度基本等于pth模型精度，精度达标。
-
-将得到的om模型在 310 和 310P 上分别验证推理精度，310P 上bachsize1和性能最优batchsize的精度一致且大于310（或论文精度）的99%
-
-## 7 性能对比
-
-- NPU性能数据（310）
-- NPU性能数据（310P）
-- 性能对比
-
-### 7.1 npu性能数据（310）
-
-1.benchmark工具在整个数据集上推理获得性能数据。
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 21.1584, latency: 3213.85
-[data read] throughputRate: 2267.5, moduleLatency: 0.441015
-[preprocess] throughputRate: 613.431, moduleLatency: 1.63018
-[inference] throughputRate: 33.8299, Interface throughputRate: 35.7852, moduleLatency: 29.1051
-[postprocess] throughputRate: 34.309, moduleLatency: 29.1469
-
------------------------------------------------------------
-```
-
-Interface throughputRate: 35.7852，35.7852x4=143.1408即是batch1 310单卡吞吐率
-
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 19.8971, latency: 3417.58
-[data read] throughputRate: 2382.7, moduleLatency: 0.419691
-[preprocess] throughputRate: 405.505, moduleLatency: 2.46606
-[inference] throughputRate: 27.4387, Interface throughputRate: 29.3584, moduleLatency: 35.5952
-[postprocess] throughputRate: 2.40737, moduleLatency: 415.392
-
------------------------------------------------------------
-```
-
-Interface throughputRate: 29.3584，29.3584x4=117.4336即是batch16 310单卡吞吐率
-
-### 7.2 npu性能数据（310P）
-
-1.benchmark工具在整个数据集上推理获得性能数据。
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 49.0305, latency: 1407.29
-[data read] throughputRate: 170.656, moduleLatency: 5.85975
-[preprocess] throughputRate: 162.816, moduleLatency: 6.1419
-[inference] throughputRate: 145.715, Interface throughputRate: 172.516, moduleLatency: 6.58854
-[postprocess] throughputRate: 89.2291, moduleLatency: 11.2071
-
------------------------------------------------------------
-```
-
-Interface throughputRate: 172.516 即是batch1 310P单卡吞吐率
-
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
-
-```
------------------Performance Summary------------------
-[e2e] throughputRate: 48.9669, latency: 1409.11
-[data read] throughputRate: 2623.08, moduleLatency: 0.381232
-[preprocess] throughputRate: 713.068, moduleLatency: 1.40239
-[inference] throughputRate: 136.066, Interface throughputRate: 182.893, moduleLatency: 6.66077
-[postprocess] throughputRate: 11.4454, moduleLatency: 87.3713
-
------------------------------------------------------------
-```
-
-Interface throughputRate: 182.893 即是batch16 310P单卡吞吐率
-
-### 7.4 性能对比
-
-#### 310P 与 310 性能对比
-
-310P best 为bs16，吞吐率为 216.098 fps
-
-310 best 为bs1， 吞吐率为 142.394fps
-
-310P/310 = 1.495322837 > 1.2
-
-即310P 对比 310 性能达标
+      a. 配置环境变量。
+   
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+   
+      b. 执行命令查看芯片名称。
+   
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+      | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+      +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+   
+      c. 执行ATC命令。
+
+         ```
+          atc --framework=5 --model=ADNet.onnx --output=ADNet_bs1 --input_format=NCHW --input_shape="image:1,1,321,481" --log=error --soc_version=Ascend${chip_name}
+         ```
+   
+         * 参数说明：
+         -   --model：为ONNX模型文件。
+         -   --framework：5代表ONNX模型。
+         -   --output：输出的OM模型。
+         -   --input\_format：输入数据的格式。
+         -   --input\_shape：输入数据的shape。
+         -   --log：日志级别。
+         -   --soc\_version：处理器型号。
+       
+         运行成功后生成ADNet_bs1.om模型文件。
+
+
+2. 开始推理验证。
+
+   a.  使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+
+
+   b.  执行推理。
+
+      ```
+       mkdir -p outbs1/INoisy
+       python3 ais_infer.py --model ./ADNet_bs1.om --input ./prep_dataset/INoisy/  --output ./outbs1/INoisy/ --outfmt BIN  --batchsize 1 --device 0
+      ```
+      - 参数说明：
+      -  --model：om文件路径。
+      -   --input：输入的bin文件路径。
+      -   --output：推理结果文件路径。
+      -   --outfmt：输出结果格式。
+      -   --device：NPU设备编号。
+      -   --batchsize：批大小。
+
+      推理后的输出在推理结果文件路径下的日期+时间的子文件夹(如下文：2022_10_13-03_38_20)。
+    
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   c.  精度验证。
+
+      调用脚本与原图片处理后文件比对，可以获得Accuracy数据，结果保存在result.json中。
+    
+      ```python
+       python3 ADNet_postprocess.py ./outbs1/INoisy/2022_10_13-03_38_20/ ./prep_dataset/ISoure > result.json
+      ```
+
+      -  参数说明：     
+      -   --model：om文件路径。
+      -   --input：输入的bin文件路径。
+      -   --output：推理结果文件路径。
+      -   --outfmt：输出结果格式。
+      -   --device：NPU设备编号。
+      -   --batchsize：批大小。
+
+
+   d.  性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+    
+      ```python
+       python3 ais_infer.py --model ./ADNet_bs1.om --output ./ --batchsize 1 --device 0 --outfmt BIN --loop 5
+      ```
+      - --loop：推理次数。
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| :---------: | :----------------: | :----------: | :----------: | :---------------: |
+|    310P       |        1          |     BSD68       |     29.245       |        205         |
+|    310P       |        4          |     BSD68       |     29.245       |        183         |
+|    310P       |        8          |     BSD68       |     29.245       |        204         |
+|    310P       |        16         |     BSD68       |     29.245       |        210         |
+|    310P       |        32         |     BSD68       |     29.245       |        214         |
+|    310P       |        64         |     BSD68       |     29.245       |        215         |
