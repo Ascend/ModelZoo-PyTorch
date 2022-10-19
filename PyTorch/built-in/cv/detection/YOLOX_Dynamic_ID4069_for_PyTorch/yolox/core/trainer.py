@@ -50,11 +50,6 @@ from yolox.utils import (
     synchronize
 )
 
-NPU_CALCULATE_DEVICE = 0
-if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
-    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
-if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
-    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 	
 class Trainer:
     def __init__(self, exp: Exp, args):
@@ -70,7 +65,8 @@ class Trainer:
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
-        self.device = "cuda:{}".format(self.local_rank) if self.is_distributed else "cuda:{}".format(NPU_CALCULATE_DEVICE)
+        self.device = "cuda:{}".format(self.local_rank) if self.is_distributed else "cuda:{}".format(
+            int(os.getenv('NPU_CALCULATE_DEVICE', 0)))
         self.use_model_ema = exp.ema
         self.save_history_ckpt = exp.save_history_ckpt
 

@@ -45,7 +45,65 @@ def filter_box(output, scale_range):
     return output[keep]
 
 
+def nms_numpy(boxes, scores, threshold, method):
+    if boxes.size == 0:
+        return np.empty((0, 3))
+
+    x1 = boxes[:, 0].copy()
+    y1 = boxes[:, 1].copy()
+    x2 = boxes[:, 2].copy()
+    y2 = boxes[:, 3].copy()
+    s = scores
+    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+    I = np.argsort(s)
+    pick = np.zeros_like(s, dtype=np.int16)
+    counter = 0
+    while I.size > 0:
+        i = I[-1]
+        pick[counter] = i
+        counter += 1
+        idx = I[0:-1]
+
+        xx1 = np.maximum(x1[i], x1[idx]).copy()
+        yy1 = np.maximum(y1[i], y1[idx]).copy()
+        xx2 = np.minimum(x2[i], x2[idx]).copy()
+        yy2 = np.minimum(y2[i], y2[idx]).copy()
+
+        w = np.maximum(0.0, xx2 - xx1 + 1).copy()
+        h = np.maximum(0.0, yy2 - yy1 + 1).copy()
+
+        inter = w * h
+        if method is "Min":
+            o = inter / np.minimum(area[i], area[idx])
+        else:
+            o = inter / (area[i] + area[idx] - inter)
+        I = I[np.where(o <= threshold)]
+
+    pick = pick[:counter].copy()
+    return pick
+
+
+def batched_nms_numpy(boxes, scores, idxs, threshold, method):
+    device = boxes.device
+    if boxes.numel() == 0:
+        return torch.empty((0,), dtype=torch.int64, device=device)
+    # strategy: in order to perform NMS independently per class.
+    # we add an offset to all the boxes. The offset is dependent
+    # only on the class idx, and is large enough so that boxes
+    # from different classes do not overlap
+    max_coordinate = boxes.max()
+    offsets = idxs.to(boxes) * (max_coordinate + 1)
+    boxes_for_nms = boxes + offsets[:, None]
+    boxes_for_nms = boxes_for_nms.cpu().numpy()
+    scores = scores.cpu().numpy()
+    keep = nms_numpy(boxes_for_nms, scores, threshold, method)
+    return torch.as_tensor(keep, dtype=torch.long, device=device)
+
+
 def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
+    prediction = prediction.cpu().float()
+
     box_corner = prediction.new(prediction.shape)
     box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
     box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
@@ -76,11 +134,12 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
                 nms_thre,
             )
         else:
-            nms_out_index = torchvision.ops.batched_nms(
+            nms_out_index = batched_nms_numpy(
                 detections[:, :4],
                 detections[:, 4] * detections[:, 5],
                 detections[:, 6],
                 nms_thre,
+                'other',
             )
 
         detections = detections[nms_out_index]

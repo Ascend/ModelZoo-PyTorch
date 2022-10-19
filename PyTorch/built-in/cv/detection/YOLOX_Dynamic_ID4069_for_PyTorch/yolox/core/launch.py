@@ -130,6 +130,7 @@ def _distributed_worker(
     ), "cuda is not available. Please check your installation."
     global_rank = machine_rank * num_gpus_per_machine + local_rank
     logger.info("Rank {} initialization finished.".format(global_rank))
+    torch.cuda.set_device(local_rank)
     try:
         dist.init_process_group(
             backend=backend,

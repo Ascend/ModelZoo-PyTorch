@@ -32,7 +32,7 @@ class SiLU(nn.Module):
 
 def get_activation(name="silu", inplace=True):
     if name == "silu":
-        module = nn.SiLU(inplace=inplace)
+        module = SiLU()
     elif name == "relu":
         module = nn.ReLU(inplace=inplace)
     elif name == "lrelu":

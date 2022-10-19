@@ -55,6 +55,7 @@ _LOCAL_PROCESS_GROUP = None
 
 
 def get_num_devices():
+    return torch.cuda.device_count()
     gpu_list = os.getenv('CUDA_VISIBLE_DEVICES', None)
     if gpu_list is not None:
         return len(gpu_list.split(','))
@@ -163,7 +164,7 @@ def _get_global_gloo_group():
 
 def _serialize_to_tensor(data, group):
     backend = dist.get_backend(group)
-    assert backend in ["gloo", "nccl"]
+    assert backend in ["gloo", "nccl", "hccl"]
     device = torch.device("cpu" if backend == "gloo" else "cuda")
 
     buffer = pickle.dumps(data)
@@ -233,14 +234,14 @@ def all_gather(data, group=None):
 
     # receiving Tensor from all ranks
     tensor_list = [
-        torch.empty((max_size,), dtype=torch.uint8, device=tensor.device)
+        torch.empty((max_size,), dtype=torch.uint8, device=tensor.device).int()
         for _ in size_list
     ]
-    dist.all_gather(tensor_list, tensor, group=group)
+    dist.all_gather(tensor_list, tensor.int(), group=group)
 
     data_list = []
     for size, tensor in zip(size_list, tensor_list):
-        buffer = tensor.cpu().numpy().tobytes()[:size]
+        buffer = tensor.to(torch.uint8).cpu().numpy().tobytes()[:size]
         data_list.append(pickle.loads(buffer))
 
     return data_list

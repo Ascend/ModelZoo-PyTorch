@@ -50,6 +50,8 @@ def get_async_norm_states(module):
     for name, child in module.named_modules():
         if isinstance(child, ASYNC_NORM):
             for k, v in child.state_dict().items():
+                if 'num_batches_tracked' in str(k):
+                    continue
                 async_norm_states[".".join([name, k])] = v
     return async_norm_states
 
@@ -92,7 +94,7 @@ def all_reduce(py_dict, op="sum", group=None):
     # all reduce logic across different devices.
     py_key = list(py_dict.keys())
     py_key_tensor = pyobj2tensor(py_key)
-    dist.broadcast(py_key_tensor, src=0)
+    dist.broadcast(py_key_tensor.int(), src=0)
     py_key = tensor2pyobj(py_key_tensor)
 
     tensor_shapes = [py_dict[k].shape for k in py_key]

@@ -29,7 +29,7 @@ import numpy as np
 
 import torch
 
-from yolox.utils import gather, is_main_process, postprocess, synchronize, time_synchronized
+from yolox.utils import all_gather, gather, is_main_process, postprocess, synchronize, time_synchronized
 
 
 class VOCEvaluator:
@@ -85,7 +85,7 @@ class VOCEvaluator:
             summary (sr): summary info of evaluation.
         """
         # TODO half to amp_test
-        tensor_type = torch.cuda.HalfTensor if half else torch.cuda.FloatTensor
+        tensor_type = torch.half if half else torch.float
         model = model.eval()
         if half:
             model = model.half()
@@ -111,7 +111,7 @@ class VOCEvaluator:
             progress_bar(self.dataloader)
         ):
             with torch.no_grad():
-                imgs = imgs.type(tensor_type)
+                imgs = imgs.to(tensor_type).cuda()
 
                 # skip the last iters since batchsize might be not enough for batch inference
                 is_time_record = cur_iter < len(self.dataloader) - 1
@@ -137,9 +137,9 @@ class VOCEvaluator:
 
         statistics = torch.cuda.FloatTensor([inference_time, nms_time, n_samples])
         if distributed:
-            data_list = gather(data_list, dst=0)
+            data_list = all_gather(data_list)
             data_list = ChainMap(*data_list)
-            torch.distributed.reduce(statistics, dst=0)
+            torch.distributed.all_reduce(statistics)
 
         eval_results = self.evaluate_prediction(data_list, statistics)
         synchronize()
