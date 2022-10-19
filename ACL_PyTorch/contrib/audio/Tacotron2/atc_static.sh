@@ -18,7 +18,7 @@ out_type=$(python3 get_out_type.py decoder_sim_100.onnx)
 atc --framework=5 --output=decoder_static  --input_format=ND  --soc_version=${SOC_VERSION} \
     --model=decoder_sim_100.onnx \
     --input_shape="decoder_input:${batch_size},80;attention_hidden:${batch_size},1024;attention_cell:${batch_size},1024;decoder_hidden:${batch_size},1024;decoder_cell:${batch_size},1024;attention_weights:${batch_size},${seq_len};attention_weights_cum:${batch_size},${seq_len};attention_context:${batch_size},512;
-    memory_out:${batch_size},${seq_len},512;processed_memory_out:${batch_size},${seq_len},128;mask_out:${batch_size},${seq_len};gate_output_input:${batch_size},1,1;mel_output_input:${batch_size},80,1;not_finished_input:${batch_size};mel_lengths_input:${batch_size}"  \
+    memory:${batch_size},${seq_len},512;processed_memory:${batch_size},${seq_len},128;mask:${batch_size},${seq_len};gate_output_input:${batch_size},1,1;mel_output_input:${batch_size},80,1;not_finished_input:${batch_size};mel_lengths_input:${batch_size}"  \
     --input_fp16_nodes="decoder_input;attention_hidden;attention_cell;decoder_hidden;decoder_cell;attention_weights;attention_weights_cum;attention_context;memory_out;processed_memory_out;gate_output_input;mel_output_input"  \
     --out_nodes=$out_names \
     --output_type=$out_type
