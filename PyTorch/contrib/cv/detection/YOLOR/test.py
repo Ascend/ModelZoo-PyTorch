@@ -176,7 +176,7 @@ def test(data,
             tcls = labels[:, 0].tolist() if nl else []  # target class
             seen += 1
             
-            if len(pred) == 0:
+            if pred is None or len(pred) == 0:
                 if nl:
                     stats.append((torch.zeros(0, niou, dtype=torch.bool), torch.Tensor(), torch.Tensor(), tcls))
                 continue

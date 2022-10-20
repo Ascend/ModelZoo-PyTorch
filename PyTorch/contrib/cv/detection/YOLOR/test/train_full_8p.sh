@@ -84,6 +84,8 @@ else
         --full > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 wait
+
+acc=`grep -a 'IoU=0.50:0.95' npu_8p_full.log | grep 'Average Precision'|awk 'NR==1'| awk -F " " '{print $13}'`
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
@@ -97,6 +99,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 FPS=`grep "FPS:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS:" '{print $2}'|awk -F ']' '{print $1}' |tail -1`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+echo "Final Accuracy : $acc"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
