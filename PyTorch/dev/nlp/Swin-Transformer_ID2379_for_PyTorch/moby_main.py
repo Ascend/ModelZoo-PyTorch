@@ -250,7 +250,7 @@ if __name__ == '__main__':
         else:
             rank_id = int(os.environ['RANK_ID'])
             rank = rank_id
-            device_id = rank_id
+            device_id = int(os.environ['ASCEND_DEVICE_ID'])
     else:
         rank = -1
         device_id = -1
