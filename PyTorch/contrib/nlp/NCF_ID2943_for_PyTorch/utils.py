@@ -29,12 +29,17 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================"""
-    Some handy functions for pytroch model training ...
-"""
+#Some handy functions for pytroch model training ...
+import torch
 import torch.npu
-CALCULATE_DEVICE = "npu:1"
+import os
+import apex
 
-
+ALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != CALCULATE_DEVICE:
+    CALCULATE_DEVICE = f'npu:{CALCULATE_DEVICE}'
 # Checkpoints
 def save_checkpoint(model, model_dir):
     torch.save(model.state_dict(), model_dir)
@@ -50,22 +55,24 @@ def resume_checkpoint(model, model_dir, device_id):
 def use_cuda(enabled, device_id=0):
     if enabled:
         assert torch.npu.is_available(), 'CUDA is not available'
-        torch.npu.set_device(device_id)
+        torch.npu.set_device(CALCULATE_DEVICE)
 
 
 def use_optimizer(network, params):
     if params['optimizer'] == 'sgd':
-        optimizer = torch.optim.SGD(network.parameters(),
+        optimizer = apex.optimizers.NpuFusedSGD(network.parameters(),
                                     lr=params['sgd_lr'],
                                     momentum=params['sgd_momentum'],
                                     weight_decay=params['l2_regularization'])
     elif params['optimizer'] == 'adam':
-        optimizer = torch.optim.Adam(network.parameters(), 
+        optimizer = apex.optimizers.NpuFusedAdam(network.parameters(),
                                                           lr=params['adam_lr'],
                                                           weight_decay=params['l2_regularization'])
+
     elif params['optimizer'] == 'rmsprop':
         optimizer = torch.optim.RMSprop(network.parameters(),
                                         lr=params['rmsprop_lr'],
                                         alpha=params['rmsprop_alpha'],
                                         momentum=params['rmsprop_momentum'])
+
     return optimizer

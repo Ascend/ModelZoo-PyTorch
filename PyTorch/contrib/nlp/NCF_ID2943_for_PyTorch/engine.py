@@ -32,10 +32,10 @@
 import torch
 from torch.autograd import Variable
 from tensorboardX import SummaryWriter
-
+from apex import amp
 from utils import save_checkpoint, use_optimizer
 from metrics import MetronAtK
-
+import time
 
 class Engine(object):
     """Meta Engine for training & evaluating NCF model
@@ -49,9 +49,7 @@ class Engine(object):
         self._writer = SummaryWriter(log_dir='runs/{}'.format(config['alias']))  # tensorboard writer
         self._writer.add_text('config', str(config), 0)
         self.opt = use_optimizer(self.model, config)
-        # explicit feedback
-        # self.crit = torch.nn.MSELoss()
-        # implicit feedback
+        self.model, self.opt = amp.initialize(self.model,self.opt,opt_level='O2',loss_scale=32.0,combine_grad=True)
         self.crit = torch.nn.BCELoss()
 
     def train_single_batch(self, users, items, ratings):
@@ -61,7 +59,9 @@ class Engine(object):
         self.opt.zero_grad()
         ratings_pred = self.model(users, items)
         loss = self.crit(ratings_pred.view(-1), ratings)
-        loss.backward()
+        with amp.scale_loss(loss, self.opt) as scaled_loss:
+            scaled_loss.backward()
+        #loss.backward()
         self.opt.step()
         loss = loss.item()
         return loss
@@ -69,13 +69,14 @@ class Engine(object):
     def train_an_epoch(self, train_loader, epoch_id):
         assert hasattr(self, 'model'), 'Please specify the exact model !'
         self.model.train()
+        time1 = time.time()
         total_loss = 0
         for batch_id, batch in enumerate(train_loader):
             assert isinstance(batch[0], torch.LongTensor)
             user, item, rating = batch[0], batch[1], batch[2]
             rating = rating.float()
             loss = self.train_single_batch(user, item, rating)
-            print('[Training Epoch {}] Batch {}, Loss {}'.format(epoch_id, batch_id, loss))
+            print('[Training Epoch {}] Batch {}, Loss {}, sec/step {}'.format(epoch_id, batch_id, loss, time.time()-time1))
             total_loss += loss
         self._writer.add_scalar('model/loss', total_loss, epoch_id)
 
@@ -92,13 +93,6 @@ class Engine(object):
                 negative_items = negative_items.npu()
             test_scores = self.model(test_users, test_items)
             negative_scores = self.model(negative_users, negative_items)
-            if self.config['use_cuda'] is True:
-                test_users = test_users.cpu()
-                test_items = test_items.cpu()
-                test_scores = test_scores.cpu()
-                negative_users = negative_users.cpu()
-                negative_items = negative_items.cpu()
-                negative_scores = negative_scores.cpu()
             self._metron.subjects = [test_users.data.view(-1).tolist(),
                                  test_items.data.view(-1).tolist(),
                                  test_scores.data.view(-1).tolist(),
