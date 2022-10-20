@@ -32,8 +32,8 @@ export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_EXEC_TIMEOUT=1800
-#关闭Runtime2.0
-export ENABLE_RUNTIME_V2=0
+#Runtime2.0黑名单
+export RUNTIME_V2_BLACKLIST="TopKV2"
 
 #设置Device侧日志等级为error
 msnpureport -g error -d 0
