@@ -94,7 +94,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+1. 获取原始数据集。
 
    精度测试数据集使用PaddleOCR提供的中文测试[样例集](https://github.com/PaddlePaddle/PaddleOCR/tree/release/2.6/doc/imgs)，该样例集的目录为`ch_PP-OCRv2_det/PaddleOCR/doc/imgs/`，包括20张图片样本，由于样本model_prod_flow_ch.png图片过大，可能会超出了算子计算范围，故将其移除。在`ch_PP-OCRv2_det`工作目录下执行如下命令获取样例集：
 
@@ -103,7 +103,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
     rm -rf ./imgs/model_prod_flow_ch.png
    ```
 
-2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+2. 数据预处理。
 
    数据预处理将原始数据集转换为模型输入的数据。
 
@@ -284,7 +284,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
       
       执行完成后在线推理结果保存在`ch_PP-OCRv2_det/output/det_db/det_results_Teacher/`目录下。
 
-      可将om后处理推理结果与在线推理结果进行比对，来验证om的推理精度。
+      可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。
 
    d.  性能验证。
 
@@ -316,9 +316,11 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1          | 样例图片 | 与在线推理结果一致 | 401.416 fps |
-|Ascend310P3| 4          | 样例图片 | 与在线推理结果一致 | 302.236 fps |
-|Ascend310P3| 8          | 样例图片 | 与在线推理结果一致 | 295.902 fps |
-|Ascend310P3| 16         | 样例图片 | 与在线推理结果一致 | 288.953 fps |
-|Ascend310P3| 32         | 样例图片 | 与在线推理结果一致 | 286.025 fps |
-|Ascend310P3| 64         | 样例图片 | 与在线推理结果一致 | 287.518 fps |
+|Ascend310P3| 1          | 样例图片 | 见备注 | 401.416 fps |
+|Ascend310P3| 4          | 样例图片 | 见备注 | 302.236 fps |
+|Ascend310P3| 8          | 样例图片 | 见备注 | 295.902 fps |
+|Ascend310P3| 16         | 样例图片 | 见备注 | 288.953 fps |
+|Ascend310P3| 32         | 样例图片 | 见备注 | 286.025 fps |
+|Ascend310P3| 64         | 样例图片 | 见备注 | 287.518 fps |
+
+   - 备注：可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。
