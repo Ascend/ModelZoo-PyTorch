@@ -21,9 +21,12 @@ import torch.nn.functional as F
 import pycocotools.mask as mask_util
 from mmdet.core import coco_eval, results2json, results2json_segm
 from mmdet.datasets import build_dataset
+import os.path as osp
+from tqdm import tqdm
 
-ann_file = '/annotations/instances_val2017.json'
-img_prefix = '/val2017/'
+
+ann_file = 'annotations/instances_val2017.json'
+img_prefix = 'val2017/'
 
 
 def get_masks(result, num_classes=80):
@@ -67,8 +70,10 @@ if __name__ == '__main__':
     parser.add_argument('--bin_data_path')
     parser.add_argument('--meta_info')
     parser.add_argument('--net_out_num', type=int)
-    parser.add_argument("--model_input_height", type=int, help='input tensor height')
-    parser.add_argument("--model_input_width", type=int, help='input tensor width')
+    parser.add_argument("--model_input_height", type=int,
+                        help='input tensor height')
+    parser.add_argument("--model_input_width", type=int,
+                        help='input tensor width')
 
     args = parser.parse_args()
 
@@ -81,26 +86,29 @@ if __name__ == '__main__':
 
     results = []
 
-    fp = open(args.meta_info, "r")
-    for line in fp.readlines():
-        _, file_path, img_w, img_h, ori_w, ori_h = line.split()
-        img_w = int(img_w)
-        img_h = int(img_h)
-        ori_w = int(ori_w)
-        ori_h = int(ori_h)
-        file_name = file_path.split("/")[1].replace(".bin", "")
-        result = []
-        for idx in range(args.net_out_num):
-            if idx == 1:
-                result.append(np.fromfile("%s%s_%d.bin" % (args.bin_data_path, file_name, idx + 0), dtype=np.int32))
-            else:
-                result.append(np.fromfile("%s%s_%d.bin" % (args.bin_data_path, file_name, idx + 0), dtype=np.float32))
-        result[0].shape = (100, args.model_input_height // 4, args.model_input_width // 4)
-        result[0] = handle_seg(result[0], (img_h, img_w), (ori_h, ori_w),
-                               (args.model_input_height, args.model_input_width))
-        result = get_masks([result], num_classes)
-        results.append(result)
-    fp.close()
+    with open(args.meta_info, "r") as fp:
+        for line in tqdm(fp):
+            _, file_path, img_w, img_h, ori_w, ori_h = line.split()
+            img_w = int(img_w)
+            img_h = int(img_h)
+            ori_w = int(ori_w)
+            ori_h = int(ori_h)
+            file_name = file_path.split("/")[1].replace(".bin", "")
+            file_name = osp.join(args.bin_data_path, file_name)
+            result = []
+            for idx in range(args.net_out_num):
+                if idx == 1:
+                    result.append(np.fromfile(
+                        f"{file_name}_{idx}.bin", dtype=np.int32))
+                else:
+                    result.append(np.fromfile(
+                        f"{file_name}_{idx}.bin", dtype=np.float32))
+            result[0].shape = (100, args.model_input_height //
+                               4, args.model_input_width // 4)
+            result[0] = handle_seg(result[0], (img_h, img_w), (ori_h, ori_w),
+                                   (args.model_input_height, args.model_input_width))
+            result = get_masks([result], num_classes)
+            results.append(result)
+
     result_files = results2json_segm(dataset, results, "results_solo.pkl")
     coco_eval(result_files, ["segm"], dataset.coco)
-
