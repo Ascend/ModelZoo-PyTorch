@@ -19,16 +19,18 @@ import cv2
 import argparse
 import mmcv
 import torch
+from tqdm import tqdm
 
 dataset_config = {
-        'resize': (300, 300),
-        'mean': [123.675, 116.28, 103.53],
-        'std': [1, 1, 1],
+    'resize': (300, 300),
+    'mean': [123.675, 116.28, 103.53],
+    'std': [1, 1, 1],
 }
 
 tensor_height = 300
 tensor_width = 300
-    
+
+
 def coco_preprocess(input_image, output_bin_path):
     """coco_preprocess"""
     # define the output file name
@@ -36,7 +38,7 @@ def coco_preprocess(input_image, output_bin_path):
     bin_name = img_name.split('.')[0] + ".bin"
     bin_fl = os.path.join(output_bin_path, bin_name)
 
-    one_img = mmcv.imread(os.path.join(input_image), backend='cv2')
+    one_img = mmcv.imread(input_image, backend='cv2')
     one_img = mmcv.imresize(one_img, (tensor_height, tensor_width))
     # calculate padding
     mean = np.array(dataset_config['mean'], dtype=np.float32)
@@ -47,17 +49,19 @@ def coco_preprocess(input_image, output_bin_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='preprocess of FasterRCNN pytorch model')
-    parser.add_argument("--image_folder_path", default="./coco2014/", help='image of dataset')
-    parser.add_argument("--bin_folder_path", default="./coco2014_bin/", help='Preprocessed image buffer')
-    flags = parser.parse_args()    
+    parser = argparse.ArgumentParser(
+        description='preprocess of FasterRCNN pytorch model')
+    parser.add_argument("--image_folder_path",
+                        default="./coco2014/", help='image of dataset')
+    parser.add_argument(
+        "--bin_folder_path", default="./coco2014_bin/", help='Preprocessed image buffer')
+    flags = parser.parse_args()
 
     if not os.path.exists(flags.bin_folder_path):
         os.makedirs(flags.bin_folder_path)
     images = os.listdir(flags.image_folder_path)
-    for image_name in images:
+    for image_name in tqdm(images, desc="Starting to process image..."):
         if not (image_name.endswith(".jpeg") or image_name.endswith(".JPEG") or image_name.endswith(".jpg")):
             continue
-        print("start to process image {}....".format(image_name))
         path_image = os.path.join(flags.image_folder_path, image_name)
         coco_preprocess(path_image, flags.bin_folder_path)
