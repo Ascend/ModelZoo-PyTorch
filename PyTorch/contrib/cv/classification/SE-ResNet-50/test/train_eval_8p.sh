@@ -80,7 +80,8 @@ do
         --device='npu' \
         --epochs=${train_epochs}\
         --amp \
-        --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --batch-size=${batch_size} \
+        --resume='model_best.pth.rar' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 

@@ -28,6 +28,7 @@ bash test/train_full_8p.sh --data_path=数据集路径
 
 # O2 training 8p_eval
 bash test/train_eval_8p.sh --data_path=数据集路径
+- If you want to use custom weight for infering, modify the parameter '--resume=/THE/PATH/OF/CUSTOM/WEIGHT/'
 
 # O2 online inference demo
 source test/env_npu.sh
