@@ -95,14 +95,6 @@ else
     exit 1
 fi
 
-#创建DeviceID输出目录，不需要修改
-if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-else
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-fi
-
 #进入训练脚本目录，需要模型审视修改
 cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
@@ -112,6 +104,14 @@ if [ x"${cur_path_last_dirname}" == x"test" ];then
     cur_path=`pwd`
 else
     test_path_dir=${cur_path}/test
+fi
+
+#创建DeviceID输出目录，不需要修改
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
 fi
 
 #训练开始时间，不需要修改 

@@ -31,7 +31,7 @@ export DYNAMIC_OP="ADD"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 
-#设置device侧日志登记为error
+#设置device侧日志等级为error
 msnpureport -g error -d 0
 msnpureport -g error -d 1
 msnpureport -g error -d 2
