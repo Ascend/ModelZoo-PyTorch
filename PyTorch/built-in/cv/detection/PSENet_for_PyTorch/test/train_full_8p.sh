@@ -94,7 +94,7 @@ nohup python3.7 ./NPU/src/train_ic15_8p.py \
     --batch_size $batch_size \
     --device npu \
     --opt-level O2 \
-    --loss-scale 64 \
+    --loss-scale "dynamic" \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed 16 \
     --n_epoch $train_epochs \
