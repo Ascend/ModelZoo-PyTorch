@@ -134,6 +134,9 @@ def parse_args():
     # perf
     parser.add_argument('--perf-only', action='store_true', default=False,
                         help='enable perf mode')
+    # runtime2.0
+    parser.add_argument('--rt2', action='store_true', default=False,
+                        help='enable runitme2.0 mode')
 
     args = parser.parse_args()
 
@@ -395,14 +398,16 @@ def save_checkpoint(model, args, is_best=False):
 
 if __name__ == '__main__':
     args = parse_args()
-
+    if args.rt2:
+        torch.npu.set_compile_mode(jit_compile=False)
     # reference maskrcnn-benchmark
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     args.num_gpus = num_gpus
     args.distributed = num_gpus > 1
     if not args.no_cuda and torch.cuda.is_available():
         cudnn.benchmark = True
-        args.device = "cuda"
+        NPU_CALCULATE_DEVICE = os.getenv('ASCEND_DEVICE_ID', 0)
+        args.device = "cuda:{}".format(NPU_CALCULATE_DEVICE)
     else:
         args.distributed = False
         args.device = "cpu"
