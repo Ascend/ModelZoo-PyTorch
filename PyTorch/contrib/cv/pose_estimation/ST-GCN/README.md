@@ -17,6 +17,10 @@ cd ST-GCN
 unzip <path to st-gcn-processed-data.zip>
 ```
 
+## Data Preparation
+
+- Please follow this [link](https://github.com/open-mmlab/mmskeleton/tree/master/deprecated/origin_stgcn_repo#data-preparation) for preparing data. 
+
 ## Training 
 
 To train a model, run `main.py` with the desired model architecture and the path to the Kinetics-skeleton dataset:
@@ -39,7 +43,7 @@ bash test/train_eval_1p.sh --data_path={data/path}
 python3.7.5 pthtar2onnx.py
 ```
 
-## ShufflenetV2 training result 
+## ST-GCN training result 
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
