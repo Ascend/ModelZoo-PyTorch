@@ -5,12 +5,7 @@
 -   [开始训练](开始训练.md)
 -   [训练结果展示](训练结果展示.md)
 -   [版本说明](版本说明.md)
-- 参考实现：
-```
-url=https://github.com/BaoWentz/AdvancedEAST-PyTorch
-branch=master 
-commit_id=a835c8cedce4ada1bc9580754245183d9f4aaa17
-```
+
 # 概述
 
 ## 简述
@@ -28,7 +23,7 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
 
   ```
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
-  code_path=PyTorch/contrib/cv/detection/AdvancedEast
+  code_path=PyTorch/contrib/cv/detection
   ```
   
 - 通过Git获取代码方法如下：
@@ -50,15 +45,15 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [22.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)或[1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
+  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
 
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-- 安装依赖（根据模型需求，按需添加所需依赖）。
+- 安装依赖。
 
   ```
   pip install -r requirements.txt
@@ -69,8 +64,8 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
 
 1. 获取数据集。
 
-   下载[天池ICPR数据集](https://pan.baidu.com/s/1NSyc-cHKV3IwDo6qojIrKA)，密码: ye9y
-    - 下载ICPR_text_train_part2_20180313.zip和[update] ICPR_text_train_part1_20180316.zip两个压缩包，新建目录icpr和子目录icpr/image_10000、icpr/txt_10000，将压缩包中image_9000、image_1000中的图片文件解压至image_10000中，将压缩包中txt_9000、txt_1000中的标签文件解压至txt_10000中
+   下载[天池ICPR数据集](https://pan.baidu.com/s/1NSyc-cHKV3IwDo6qojIrKA)，密码: ye9y。
+   下载ICPR_text_train_part2_20180313.zip和[update] ICPR_text_train_part1_20180316.zip两个压缩包，在源码包根目录下新建目录icpr和子目录icpr/image_10000、icpr/txt_10000，将压缩包中image_9000、image_1000中的图片文件解压至image_10000中，将压缩包中txt_9000、txt_1000中的标签文件解压至txt_10000中。
    ```
    ├── icpr
          ├──image_10000
@@ -88,8 +83,8 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
 
-2. 数据预处理（按需处理所需要的数据集）。
-    - `bash test/prep_dataset.sh`
+2. 数据预处理（在源码包根目录下执行以下命令）。
+   `bash test/prep_dataset.sh`
 
 # 开始训练
 
@@ -116,22 +111,15 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
      # 默认依次训练256，384，512，640，736五个size，可以指定要训练size，用于恢复中断的训练，例如
      # bash test/train_full_8p.sh 640 736
 
-     # eval
-     bash test/train_eval.sh
-     # 默认评估736 size，可以指定要评估的size，例如
-     # bash test/train_eval.sh 640
-  
-     # finetuning
-     bash test/train_finetune_1p.sh
-  
      # online inference demo 
      python3.7 demo.py
 
      # To ONNX
      python3.7 pth2onnx.py
+
 # 训练结果展示
 
-**表 2**  训练结果展示表
+**表 2**  训练结果展示表（pytorch1.5)
 
 | Size     | F1-score | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------: | :------:  | :------: | :------: | :------: |
@@ -146,17 +134,30 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
 | 736      | -        | 34        | 1        | -        | O1       |
 | 736      | 62.41%   | 218       | 8        | 60       | O1       |
 
+**表 3**  训练结果展示表（pytorch1.8)
+
+| Size     | F1-score | FPS       | Npu_nums | Epochs   | AMP_Type |
+| :------: | :------: | :------:  | :------: | :------: | :------: |
+| 256      | -        | 306.044   | 1        | -        | O1       |
+| 256      | -        | 1876.826  | 8        | 60       | O1       |
+| 384      | -        | 147.237   | 1        | -        | O1       |
+| 384      | -        | 978.686   | 8        | 60       | O1       |
+| 512      | -        | 82.347    | 1        | -        | O1       |
+| 512      | -        | 569.184   | 8        | 60       | O1       |
+| 640      | -        | 47.418    | 1        | -        | O1       |
+| 640      | -        | 361.766   | 8        | 60       | O1       |
+| 736      | -        | 38.31     | 1        | -        | O1       |
+| 736      | 62.47%   | 273.019   | 8        | 60       | O1       |
+
 
 # 版本说明
 
 ## 变更
 
-2020.10.14：更新内容，重新发布。
-
+2020.10.14：首次发布。
+2020.08.26：更新pytorch1.8，重新发布。
 
 ## 已知问题
-
-**_当前发行版本中存在的问题描述。_**
 
 无。
 
