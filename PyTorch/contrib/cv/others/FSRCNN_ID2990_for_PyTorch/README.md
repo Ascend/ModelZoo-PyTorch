@@ -66,7 +66,7 @@ https://e-share.obs-website.cn-north-1.myhuaweicloud.com?token=RrSfPzFZtvwfARxmY
     1、 根据数据集实际路径配置data_path，使用命令行进行训练：
 
     ​	训练时scale的值应该与train-file和eval-file选用的数据集保持一致。例如scale=4，则train-file为91-image_x4.h5，eval-file为Set5_x4.h5。
-    
+
     ```bash
     python3 train.py --train-file "data/91-image_x3.h5" \
                     --eval-file "data/Set5_x3.h5" \
@@ -80,12 +80,20 @@ https://e-share.obs-website.cn-north-1.myhuaweicloud.com?token=RrSfPzFZtvwfARxmY
     ```
 
     2、精度指标
-    
-    | PSNR   | 论文  | GPU V100 | NPU   |
+
+    | PSNR   | 论文  | GPU  | NPU   |
     | ------ | ----- | -------- | ----- |
     | Scale2 | 37.12 | 37.06    | 37.03 |
     | Scale3 | 33.22 | 33.61    | 33.56 |
     | Scale4 | 30.50 | 30.48    | 30.45 |
+
+    3、性能指标
+
+    | GPU   | NPU       |
+    | --------- | --------- |
+    | 2500 it/s | 3800 it/s |
+
+    
 
 ## 高级参考
 
