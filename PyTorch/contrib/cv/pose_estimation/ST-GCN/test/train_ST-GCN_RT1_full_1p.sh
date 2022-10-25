@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# 使能runtime v1
+export ENABLE_RUNTIME_V2=0
+
 ##################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="ST-GCN"
+Network="ST-GCN_ID4119_for_PyTorch"
 # 训练batch_size
 batch_size=64
 # 训练使用的npu卡数
@@ -12,9 +15,10 @@ export RANK_SIZE=1
 data_path=""
 
 # 训练epoch
-train_epochs=2
+train_epochs=50
+log_interval=1
 # 指定训练所使用的npu device卡id
-device_id=0
+device_id=$ASCEND_DEVICE_ID
 # 学习率
 learning_rate=0.01
 # 加载数据进程数
@@ -78,9 +82,19 @@ fi
 ##################启动训练脚本##################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-source ${test_path_dir}/env_set.sh
-python3.7 ./main.py recognition\
+
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_set.sh
+else
+    export TASK_QUEUE_ENABLE=0
+    export ASCEND_SLOG_PRINT_TO_STDOUT=0
+    export ASCEND_GLOBAL_LOG_LEVEL=3
+fi
+
+python3 ./main.py recognition\
        -c config/st_gcn/kinetics-skeleton/train.yaml\
        --device ${device_id}\
        --batch_size ${batch_size}\
@@ -92,6 +106,7 @@ python3.7 ./main.py recognition\
        --train_feeder_args label_path=\'${data_path}/train_label.pkl\'\
        --test_feeder_args data_path=\'${data_path}/val_data.npy\'\
        --test_feeder_args label_path=\'${data_path}/val_label.pkl\'\
+       --log_interval ${log_interval} \
        --num_epoch ${train_epochs} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
@@ -104,12 +119,14 @@ e2e_time=$(( $end_time - $start_time ))
 # 终端结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}' | awk -F "FPS@all" '{print $NF}' | awk -F "," '{print $1}' | awk -F " " '{print $1}'`
+#FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}' | awk -F "FPS@all" '{print $NF}' | awk -F "," '{print $1}' | awk -F " " '{print $1}'`
+TIME=`grep s/step ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{if (NR>2)sum+=$NF}END{print sum/(NR-2)}'`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${TIME}'}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk '{print $2}'`
+train_accuracy=`grep -a 'Acc' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc is : " '{print $NF}'|awk -F "%" '{print $1}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -118,7 +135,7 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 # 获取性能数据，不需要修改
 # 吞吐量
@@ -127,7 +144,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep Loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "Loss:" '{print $NF}'|awk '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss: " '{print $NF}' |grep lr:| awk '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`

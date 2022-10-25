@@ -171,6 +171,7 @@ class Processor(IO):
                     self.train_sampler.set_epoch(epoch)
                 self.train()
                 self.io.print_log('Done.')
+                self.meta_info['iter'] = 0
 
                 # save model
                 if ((epoch + 1) % self.arg.save_interval == 0) or (
@@ -229,6 +230,8 @@ class Processor(IO):
                             default=0, help='start training from which epoch')
         parser.add_argument('--num_epoch', type=int, default=80,
                             help='stop training in which epoch')
+        parser.add_argument('--steps_per_epoch', type=int, default=3700,
+                            help='steps to run in one epoch')
         parser.add_argument('--use_gpu_npu', type=str,
                             default="gpu", help='use GPU or NPU')
         parser.add_argument('--device', type=int, default=0, nargs='+',
@@ -275,5 +278,8 @@ class Processor(IO):
         parser.add_argument('--ignore_weights', type=str, default=[], nargs='+',
                             help='the name of weights which will be ignored in the initialization')
         # endregion yapf: enable
+
+        #runtime 2.0
+        parser.add_argument('--rt2', action="store_true", default=False, help='enable runtime2.0 mode')
 
         return parser
