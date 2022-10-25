@@ -67,7 +67,7 @@ fi
 export PYTHONPATH=./awesome-semantic-segmentation-pytorch:$PYTHONPATH
 
 NGPUS=8
-nohup python3 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
+nohup python3.7 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
 --model dynamicunet --amp \
 --dataset pascal_voc --dataset-path ${data_path} \
 --lr 0.0001 --epochs 50 --worker 8 \
@@ -89,18 +89,14 @@ FPS=$(grep "FPS:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEV
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-#输出训练精度,需要模型审视修改
-train_accuracy=$(grep "mIoU" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}')
-
 #打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 ##获取性能数据，不需要修改
 #吞吐量
@@ -109,7 +105,7 @@ ActualFPS=${FPS}
 TrainingTime=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}')
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep "Loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F "(" '{print $5}' | awk -F ")" '{print $1}' >${test_path_dir}/output/${ASCEND_DEVICE_ID}//train_${CaseName}_loss.txt
+grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep "Loss:" | awk -F "Loss:" '{print $2}' |awk '{print $1}' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=$(awk 'END {print}' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_loss.txt)
 
@@ -123,4 +119,3 @@ echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${
 echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
