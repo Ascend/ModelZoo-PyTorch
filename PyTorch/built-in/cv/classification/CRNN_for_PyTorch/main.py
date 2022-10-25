@@ -33,17 +33,20 @@ def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
     parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
     parser.add_argument('--npu', help='npu id', type=str)
+    parser.add_argument('--rt2', action='store_true', default=False, help='enable run time2.0 model')
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
         config = yaml.load(f)
         config = edict(config)
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
-    return config
+    return config, args
 
 
 def main():
     # load config
-    config = parse_arg()
+    config, args = parse_arg()
+    if args.rt2:
+        torch.npu.set_compile_mode(jit_compile=False)
     print('config is: ', config)
 
     # seed everything
@@ -146,6 +149,8 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
     model.train()
     end = time.time()
     for i, (inp, idx) in enumerate(train_loader):
+        if args.rt2 and i >= 1000:
+            break
         data_time.update((time.time() - end) * 1000)
         labels = idx
         inp = inp.to(device)
