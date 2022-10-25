@@ -84,6 +84,7 @@ AdvancedEast是场景文字检测算法，基于EAST算法，对EAST在长文本
    >该数据集的训练过程脚本只作为一种参考示例。
 
 2. 数据预处理（在源码包根目录下执行以下命令）。
+
    `bash test/prep_dataset.sh`
 
 # 开始训练
