@@ -18,7 +18,7 @@
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它可以用于级联已有的检测器，取得更加精确的目标检测。
+Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它可以用于级联已有的检测器，取得更加精确的目标检测。
 
 
 
@@ -28,7 +28,7 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
   ```
   url=https://github.com/SwinTransformer/Swin-Transformer-Object-Detection
   commit_id=81f498ebfe35a4e11998d651b3e00bbb1099c572
-  model_name=Cascade Mask R-CNN（Backbone:Swin-T,LrSchd:3x）
+  model_name=Transformer-SSL（Backbone:Swin-T,LrSchd:3x）
   ```
   
   通过Git获取对应commit\_id的代码方法如下：
@@ -105,10 +105,10 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
 
    数据预处理将原始数据集转换为模型输入的数据。
 
-   执行cascade_maskrcnn_preprocess.py脚本，完成预处理。
+   执行Transformer_SSL_preprocess.py脚本，完成预处理。
 
    ```shell
-    python cascade_maskrcnn_preprocess.py \
+    python Transformer_SSL_preprocess.py \
     --image_src_path=./data/coco/val2017 \
     --bin_file_path=val2017_bin \
     --input_height=800 \
@@ -207,7 +207,7 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
     2.  执行推理。
         
         ```shell
-        python ais_infer.py --model ./model_bs1.om --input "./val2017_bin" --output "result_ais"
+        python ais_infer.py --model ./model_bs1.om --input "./val2017_bin" --output "result_ais" --batchsize 1
         ```
 
          - 参数说明：  
@@ -226,7 +226,7 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
         调用脚本与数据集标签./data/coco/annotations/instances_val2017.json比对，可以获得Accuracy数据。
     
         ```
-        python cascade_maskrcnn_postprocess.py  --ann_file_path=./data/coco/annotations/instances_val2017.json  --bin_file_path=./result_ais/   --input_height=800  --input_width=1216 
+        python Transformer_SSL_postprocess.py  --ann_file_path=./data/coco/annotations/instances_val2017.json  --bin_file_path=./result_ais/   --input_height=800  --input_width=1216 
         ```
     
         - 参数说明：
@@ -250,9 +250,9 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
         
         
         获得官网精度为：
-        |box_map  |mask_map |
+        |box_map(IoU=0.5)  |mask_map(IoU=0.5) |
         |---|---|
-        |50.4  |43.7  |
+        |68.8  |66.1  |
 
         将得到的om离线模型推理精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标
 
@@ -269,5 +269,5 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
         
         | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
         | --------- | ---------------- | ---------- | ---------- | --------------- |
-        |    310p3       |    1 x 3 x 800 x 1216              |   coco2017         |      49.8:43.3      |    throughput:4.20             |
+        |    310p3       |    1 x 3 x 800 x 1216              |   coco2017         |      68.8:66.1      |    throughput:4.20             |
 
