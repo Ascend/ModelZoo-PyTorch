@@ -46,7 +46,7 @@ def postProcessing(folder_path, batch_size):
     for cnt in range(0, 64):
         x_fake_list = []
         for i in range(0, 5):
-            x_new = read_txt(os.path.join(folder_path, str(cnt*5 + i) + "_output_0.txt"), batch_size)
+            x_new = read_txt(os.path.join(folder_path, str(cnt*5 + i) + "_0.txt"), batch_size)
             x_fake_list.append(x_new)
             x_concat = torch.cat(x_fake_list, dim=3)
         result_path = os.path.join(resultPath, '{}-images.jpg'.format(cnt))

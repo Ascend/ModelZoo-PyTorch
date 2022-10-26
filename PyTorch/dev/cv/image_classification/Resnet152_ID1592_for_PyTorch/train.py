@@ -37,6 +37,8 @@ import time
 import sys
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.utils.data
 from torch import nn
 import torchvision
@@ -75,10 +77,11 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
 
         acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
         batch_size = image.shape[0]
+        rank_size = int(os.environ["RANK_SIZE"])
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
-        metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
+        metric_logger.meters['img/s'].update(batch_size * rank_size / (time.time() - start_time))
         cnt = cnt + 1
 
         if args.max_steps and cnt > args.max_steps:
@@ -229,7 +232,7 @@ def main(args):
 
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.rank])
         model_without_ddp = model.module
 
     if args.resume:

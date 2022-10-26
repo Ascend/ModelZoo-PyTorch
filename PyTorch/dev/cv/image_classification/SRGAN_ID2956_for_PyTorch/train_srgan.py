@@ -109,8 +109,7 @@ def main():
         # Initialize generator's optimizer
         optimizer_g = apex.optimizers.NpuFusedAdam(params=filter(lambda p: p.requires_grad, generator.parameters()),
                                        lr=lr)
-        generator.npu()
-        generator, optimizer_g = amp.initialize(generator, optimizer_g, opt_level = 'O2', loss_scale = 128.0, combine_grad=True)
+
         # Discriminator
         discriminator = Discriminator(kernel_size=kernel_size_d,
                                       n_channels=n_channels_d,
@@ -120,9 +119,6 @@ def main():
         # Initialize discriminator's optimizer
         optimizer_d = apex.optimizers.NpuFusedAdam(params=filter(lambda p: p.requires_grad, discriminator.parameters()),
                                        lr=lr)
-        discriminator.npu()
-        discriminator, optimizer_d = amp.initialize(discriminator, optimizer_d, opt_level = 'O2', loss_scale = 128.0, combine_grad=True)
-
     else:
         checkpoint = torch.load(checkpoint)
         start_epoch = checkpoint['epoch'] + 1
@@ -147,6 +143,16 @@ def main():
     content_loss_criterion = content_loss_criterion.to(f'npu:{NPU_CALCULATE_DEVICE}')
     adversarial_loss_criterion = adversarial_loss_criterion.to(f'npu:{NPU_CALCULATE_DEVICE}')
 
+    [generator, discriminator], [optimizer_g, optimizer_d] = amp.initialize([generator, discriminator],
+                                                                            [optimizer_g, optimizer_d],
+                                                                            opt_level='O1',
+                                                                            combine_grad=True,
+                                                                            check_combined_tensors=True)
+    #DDP
+    if distributed:
+        generator = torch.nn.parallel.DistributedDataParallel(generator, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False, find_unused_parameters=True)
+        discriminator = torch.nn.parallel.DistributedDataParallel(discriminator, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False, find_unused_parameters=True)
+
     # Custom dataloaders
     train_dataset = SRDataset(data_folder,
                               split='train',
@@ -154,19 +160,27 @@ def main():
                               scaling_factor=scaling_factor,
                               lr_img_type='imagenet-norm',
                               hr_img_type='imagenet-norm')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=workers,
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if distributed else None
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=(train_sampler is None), num_workers=workers,
+                                               sampler=train_sampler,
                                                pin_memory=True)
 
     # Total number of epochs to train for
-    epochs = int(iterations // len(train_loader) + 1)
+    epochs = int(iterations // len(train_loader) + 1) if not distributed else int(iterations // len(train_loader) //world_size + 1)
 
     # Epochs
     for epoch in range(start_epoch, epochs):
-
+        if distributed:
+            train_sampler.set_epoch(epoch)
         # At the halfway point, reduce learning rate to a tenth
-        if epoch == int((iterations / 2) // len(train_loader) + 1):
-            adjust_learning_rate(optimizer_g, 0.1)
-            adjust_learning_rate(optimizer_d, 0.1)
+        if distributed:
+            if epoch == int((iterations / 2) // len(train_loader)//world_size + 1):
+                adjust_learning_rate(optimizer_g, 0.1)
+                adjust_learning_rate(optimizer_d, 0.1)
+        else:
+            if epoch == int((iterations / 2) // len(train_loader) + 1):
+                adjust_learning_rate(optimizer_g, 0.1)
+                adjust_learning_rate(optimizer_d, 0.1)
 
         # One epoch's training
         train(train_loader=train_loader,
@@ -180,12 +194,21 @@ def main():
               epoch=epoch)
 
         # Save checkpoint
-        torch.save({'epoch': epoch,
-                    'generator': generator.state_dict(),
-                    'discriminator': discriminator.state_dict(),
-                    'optimizer_g': optimizer_g,
-                    'optimizer_d': optimizer_d},
-                   'checkpoint_srgan.pth.tar')
+        if distributed:
+            if NPU_CALCULATE_DEVICE == 0:
+                torch.save({'epoch': epoch,
+                            'generator': generator.module.state_dict(),
+                            'discriminator': discriminator.module.state_dict(),
+                            'optimizer_g': optimizer_g,
+                            'optimizer_d': optimizer_d},
+                            'checkpoint_srgan.pth.tar')
+        else:
+            torch.save({'epoch': epoch,
+                        'generator': generator.state_dict(),
+                        'discriminator': discriminator.state_dict(),
+                        'optimizer_g': optimizer_g,
+                        'optimizer_d': optimizer_d},
+                        'checkpoint_srgan.pth.tar')
 
 
 def train(train_loader, generator, discriminator, truncated_vgg19, content_loss_criterion, adversarial_loss_criterion,
@@ -293,7 +316,7 @@ def train(train_loader, generator, discriminator, truncated_vgg19, content_loss_
         # Keep track of batch times
         batch_time.update(time.time() - start)
 
-        fps = batch_size / batch_time.val
+        fps = (batch_size if not distributed else batch_size * world_size)/ batch_time.val
 
         # Reset start time
         start = time.time()
@@ -307,17 +330,22 @@ def train(train_loader, generator, discriminator, truncated_vgg19, content_loss_
                   'Adv. Loss {loss_a.val:.4f} ({loss_a.avg:.4f})----'
                   'Disc. Loss {loss_d.val:.4f} ({loss_d.avg:.4f})----'
                   'FPS {fps:.2f}'.format(epoch,
-                                                                          i,
-                                                                          len(train_loader),
-                                                                          batch_time=batch_time,
-                                                                          data_time=data_time,
-                                                                          loss_c=losses_c,
-                                                                          loss_a=losses_a,
-                                                                          loss_d=losses_d,
-                                                                          fps=fps))
+                                         i,
+                                         len(train_loader),
+                                         batch_time=batch_time,
+                                         data_time=data_time,
+                                         loss_c=losses_c,
+                                         loss_a=losses_a,
+                                         loss_d=losses_d,
+                                         fps=fps))
 
     del lr_imgs, hr_imgs, sr_imgs, hr_imgs_in_vgg_space, sr_imgs_in_vgg_space, hr_discriminated, sr_discriminated  # free some memory since their histories may be stored
 
 
 if __name__ == '__main__':
+    distributed = int(os.environ['RANK_SIZE']) > 1
+    if distributed:
+        world_size = int(os.environ['RANK_SIZE'])
+        rank_id = int(os.environ['RANK_ID'])
+        torch.distributed.init_process_group("hccl", rank=rank_id, world_size=world_size)
     main()

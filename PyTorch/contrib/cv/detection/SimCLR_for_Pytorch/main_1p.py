@@ -23,6 +23,8 @@
 import time
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import torch.nn.functional as F
 import torch.utils.data
@@ -87,6 +89,7 @@ parser.add_argument('--pretrained', dest='pretrained', action='store_true',
 parser.add_argument('--pth_path', default='', type=str, metavar='PATH',
                     help='path to pretrained checkpoint (default: none)')
 parser.add_argument('--device_id', type=int, default=0, help="device id")
+parser.add_argument('--opt_level', type=str, default="O2", help="opt level")
 
 
 def main():
@@ -163,6 +166,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch_counter, npus_p
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
         })
+    return best_acc
 
 
 def save_checkpoint(state, filename='checkpoint.pth.tar'):
@@ -208,7 +212,7 @@ def main_worker(npu, npus_per_node, args):
         weight_decay=args.weight_decay
     )
 
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0, combine_grad=True)
+    model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale="dynamic", combine_grad=True)
     criterion = torch.nn.CrossEntropyLoss().to(device)
 
     print('Part2 : Load Network  <==> Done')
@@ -228,9 +232,9 @@ def main_worker(npu, npus_per_node, args):
         print('Part3 : Load Dataset  <==> Done')
         print('Part4 : Train and Test  <==> Begin')
 
+    best_acc = 0
     for epoch_counter in range(args.epochs):
-        best_acc = 0
-        train(args, train_loader, model, criterion, optimizer, epoch_counter, npus_per_node, best_acc)
+        best_acc=train(args, train_loader, model, criterion, optimizer, epoch_counter, npus_per_node, best_acc)
         if epoch_counter >= 10:
             scheduler.step()
     print('Part4 : Train and Test  <==> Done')

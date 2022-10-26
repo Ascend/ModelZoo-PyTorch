@@ -47,9 +47,8 @@ def postprocess(hr, binres, save_path):
         hr_image = pil_image.open(os.path.join(hr, file)).convert('RGB')
 
         hr_image = np.array(hr_image).astype(np.float32)
-        # print(hr_image)
         for bin_file in os.listdir(binres):
-            if file[0:-4] in bin_file and bin_file[-6:] == '_1.bin':
+            if file[0:-4] in bin_file and bin_file[-6:] == '_0.bin':
                 y = np.fromfile(os.path.join(
                     binres, bin_file), np.float32).reshape(3, 2048, 2048)
                 y = (np.clip(y, 0, 1) * 255).astype(np.uint8)

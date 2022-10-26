@@ -18,6 +18,8 @@ python prepare_wider_data
 
 ### 3、Train
 
+    Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 1、pretrained weight
 
 download [pretrained weights](链接：https://pan.baidu.com/s/1qbQsOcgD3vuJ5m3Jnu6HTw  提取码：vbo9)

@@ -54,17 +54,16 @@ def init_distributed(cuda):
         assert torch.distributed.is_initialized()
     return distributed
 
-def init_distributed_npu():
+def init_distributed_npu(args):
     """
     Initializes distributed backend.
 
     """
     world_size = int(os.environ.get('WORLD_SIZE', 1))
-    #world_size = int(os.environ["RANK_SIZE"])
     distributed = (world_size > 1)
     if distributed:
         backend = 'hccl'
-        rank = int(os.environ["RANK_ID"])
+        rank = args.local_rank
         torch.distributed.init_process_group(backend=backend,
                                             world_size=world_size,
                                             rank=rank)
@@ -120,8 +119,8 @@ def all_reduce_item(value, op='sum'):
             raise RuntimeError('Unsupported reduce op')
 
         backend = torch.distributed.get_backend()
-        if backend == torch.distributed.Backend.NCCL:
-            device = torch.device('cuda')
+        if backend == torch.distributed.Backend.HCCL:
+            device = torch.device('npu')
         elif backend == torch.distributed.Backend.GLOO:
             device = torch.device('cpu')
         else:

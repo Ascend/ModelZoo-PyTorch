@@ -34,6 +34,8 @@ import json
 import time
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from apex import amp
 import kaldi_io
 from sp_transformer import Transformer
@@ -60,7 +62,7 @@ def recognize(args):
     char_list, sos_id, eos_id = process_dict(args.dict)
     assert model.decoder.sos_id == sos_id and model.decoder.eos_id == eos_id
 
-    model= amp.initialize(model, opt_level="O2", loss_scale=128.0, combine_grad=True)
+    model= amp.initialize(model, opt_level="O2", loss_scale='dynamic', combine_grad=True)
     # read json data
     with open(args.recog_json, 'rb') as f:
         js = json.load(f)['utts']

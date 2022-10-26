@@ -19,6 +19,8 @@ from apex.fp16_utils import master_params_to_model_params
 from apex.multi_tensor_apply import multi_tensor_applier
 from ._amp_state import maybe_print
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from apex.optimizers import FusedSGD, NpuFusedAdam, NpuFusedSGD, NpuFusedAdadelta
 from change_data_ptr import change_data_ptr
 from apex.contrib.combine_tensors import combine_npu
@@ -225,7 +227,10 @@ def combined_init_with_master_weights(stash):
         stash.combined_tensor_fp16, stash.fp16_param_grad_list = get_grad_combined_tensor_from_param(stash.all_fp16_params)
         for model_grad, master in zip(stash.fp16_param_grad_list, stash.all_fp32_from_fp16_params):
             master.grad = torch.empty_like(model_grad.to(torch.float))
-            master.data = master.data.npu_format_cast(model_grad.storage().npu_format())
+            if torch.__version__ >= "1.8":
+                master.data = master.data.npu_format_cast(torch.get_npu_format(model_grad))
+            else:
+                master.data = master.data.npu_format_cast(model_grad.storage().npu_format())
 
         stash.combined_tensor_fp32_from_fp16, stash.fp32_from_fp16_param_grad_list = get_grad_combined_tensor_from_param(stash.all_fp32_from_fp16_params)
         stash.combined_tensor_fp32, stash.fp32_param_grad_list = get_grad_combined_tensor_from_param(stash.all_fp32_from_fp32_params)

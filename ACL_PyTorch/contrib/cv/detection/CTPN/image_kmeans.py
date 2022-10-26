@@ -53,7 +53,6 @@ def image_kmeans(path):
     class_count = []
     for i in range(len(cluster_centers)):
         class_count.append(0)
-    # color_use = ['r', 'g', 'b', 'm', 'c', 'y', 'chocolate', 'sage', 'pink', 'tan']
     color_use = ['r', 'g', 'b', 'm', 'c', 'y', 'r', 'g', 'b', 'm']
     color_list = []
     for i in range(len(labels)):

@@ -19,6 +19,7 @@
 # limitations under the License
 
 
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -72,7 +73,6 @@ class ShuffleV1Block(nn.Module):
             return F.relu(x + x_proj)
         elif self.stride == 2:
             return torch.cat((self.branch_proj(x_proj), F.relu(x)), 1)
-            #return torch.cat((self.branch_proj(x_proj.float().cpu()).npu().half(), F.relu(x)), 1)
 
     def channel_shuffle(self, x):
         batchsize, num_channels, height, width = x.data.size()

@@ -39,6 +39,8 @@ from glob import glob
 import time
 import pandas as pd
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim

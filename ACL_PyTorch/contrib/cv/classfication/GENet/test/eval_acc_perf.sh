@@ -9,7 +9,7 @@ do
     fi
 done
 
-source ./test/env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 arch=`uname -m`
 rm -rf ./prep_dataset

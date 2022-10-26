@@ -89,6 +89,7 @@ python3.7.5 pth2onnx.py --input_path='/home/1.ptm' --iters=60000
 转onnx生成`gaitset_submit.onnx`文件后，再执行下面的指令转om文件：
 
 ```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=Ascend310
 ```
 
@@ -99,12 +100,14 @@ atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit --input_sh
 bs1：
 
 ```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=gaitset_submit.om -input_text_path=CASIA-B-bin.info -input_width=64 -input_height=64 -output_binary=True -useDvpp=False
 ```
 
 bs16：
 
 ```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=gaitset_submit.om -input_text_path=CASIA-B-bin.info -input_width=64 -input_height=64 -output_binary=True -useDvpp=False
 ```
 

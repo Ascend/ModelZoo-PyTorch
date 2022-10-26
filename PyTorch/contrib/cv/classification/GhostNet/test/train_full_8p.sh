@@ -78,7 +78,7 @@ fi
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 # source 环境变量
-source ${test_path_dir}/env.sh
+source ${test_path_dir}/env_npu.sh
 RANK_ID_START=0
 RANK_SIZE=8
 
@@ -130,7 +130,7 @@ FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Acc' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc is : " '{print $NF}'|awk -F "%" '{print $1}'`
+train_accuracy=`grep -a 'Best metric:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $4}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

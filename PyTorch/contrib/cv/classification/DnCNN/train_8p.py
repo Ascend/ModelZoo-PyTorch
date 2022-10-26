@@ -17,6 +17,8 @@ import os
 import argparse
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.npu
 import torch.optim as optim
@@ -114,9 +116,9 @@ def main_worker(gpu, gpu_nums, opt):
     net=net.to(loc)       
     
     #opt.lr = 0.008
-    optimizer = optim.Adam(net.parameters(), lr=opt.lr)
+    optimizer = apex.optimizers.NpuFusedAdam(net.parameters(), lr=opt.lr)
     criterion = nn.MSELoss(reduction='sum')
-    net, optimizer = amp.initialize(net, optimizer, opt_level = "O2", loss_scale = 128.0) #              
+    net, optimizer = amp.initialize(net, optimizer, opt_level = "O1", loss_scale = "dynamic", combine_grad=True) #              
     model = DDP(net, device_ids=[gpu])       
     criterion.to(loc) 
     
@@ -144,6 +146,7 @@ def main_worker(gpu, gpu_nums, opt):
             img_train, imgn_train = img_train.to(loc), imgn_train.to(loc)
             noise = noise.to(loc)
             out_train = model(imgn_train)
+            out_train = torch.npu_format_cast(out_train, 0)
             loss = criterion(out_train, noise) / (imgn_train.size()[0] * 2)
                        
             with amp.scale_loss(loss, optimizer) as scaled_loss: 

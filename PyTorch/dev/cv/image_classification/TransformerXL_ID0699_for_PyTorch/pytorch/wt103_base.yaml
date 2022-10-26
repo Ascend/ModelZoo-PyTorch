@@ -23,7 +23,7 @@ train: &train
    mem_len: 192
    eval_tgt_len: 192
    batch_size: 256
-   multi_gpu: ddp
+   multi_gpu: None
    log_interval: 10
    eval_interval: 5000
    vocab: word

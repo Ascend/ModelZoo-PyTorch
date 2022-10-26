@@ -112,7 +112,8 @@ class SRData(data.Dataset):
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
-        self.apath = os.path.join(dir_data, self.name)
+        # self.apath = os.path.join(dir_data, self.name)
+        self.apath = os.path.join(dir_data, '')
         self.dir_hr = os.path.join(self.apath, "HR")
         self.dir_lr = os.path.join(self.apath, "LR_bicubic")
         if self.input_large:

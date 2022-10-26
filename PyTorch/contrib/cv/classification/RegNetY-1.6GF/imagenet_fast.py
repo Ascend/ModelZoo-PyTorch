@@ -26,7 +26,8 @@ import random
 import numpy as np
 
 import torch
-import torch.npu
+if torch.__version__>= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.nn.functional as F
@@ -181,7 +182,8 @@ parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
 # Optimization options
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='O2 is mixed FP16/32 training, see more in https://github.com/NVIDIA/apex/tree/f5cd5ae937f168c763985f627bbf850648ea5f3f/examples/imagenet')
-parser.add_argument('--loss-scale', type=float, default=None)
+# 0519: delete type
+parser.add_argument('--loss-scale', default=None)
 
 parser.add_argument('--label-smoothing', '--ls', default=0.1, type=float)
 
@@ -318,7 +320,8 @@ class data_prefetcher():
 def main():
     global best_acc
     start_epoch = args.start_epoch  # start from epoch 0 or last checkpoint epoch
-
+    
+    #if not os.path.isdir(args.checkpoint):
     if not os.path.isdir(args.checkpoint) and args.local_rank == 0:
         mkdir_p(args.checkpoint)
 
@@ -361,7 +364,6 @@ def main():
                                       loss_scale=args.loss_scale,
                                       combine_grad=True
                                       )
-
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     # Data loading code
@@ -600,8 +602,9 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
     inputs, targets = prefetcher.next()
 
     batch_idx = -1
-
+    batchtime0 = 0
     while inputs is not None:
+        start_time = time.time()
         loc = 'npu:{}'.format(gpu)
         targets = targets.to(torch.int32)
         inputs, targets = inputs.to(loc, non_blocking=False), targets.to(loc, non_blocking=False)
@@ -655,7 +658,7 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
             optimizer.step(print_flag=print_flag)
         else:
             optimizer.step()
-
+        batchtime0 += time.time() - start_time
         if batch_idx % args.print_freq == 0:
             # measure accuracy and record loss
             prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1, 5))
@@ -670,10 +673,9 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
 
             torch.npu.synchronize()
             # measure elapsed time
-            battime = (time.time() - end) / args.print_freq
+            battime = batchtime0 / args.print_freq
             batch_time.update(battime)
             fps.update(batch_size / battime * ngpus)
-            end = time.time()
 
             if args.local_rank == 0:  # plot progress
                 bar.suffix = '({batch}/{size}) | Batch: {bt:.3f}s | Total: {total:} | Loss: {loss:.4f} | top1: {top1: .4f} | top5: {top5: .4f} | fps: {fp: .1f} '.format(
@@ -692,6 +694,8 @@ def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus
             print('E%d' % (epoch) + bar.suffix)
 
         inputs, targets = prefetcher.next()
+        if batch_idx % args.print_freq == 0:
+            batchtime0 = 0
 
     if args.local_rank == 0:
         bar.finish()

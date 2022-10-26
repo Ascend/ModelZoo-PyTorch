@@ -37,6 +37,8 @@
 import numpy as np
 import pickle
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import tqdm
 from iopath.common.file_io import g_pathmgr
 

@@ -47,7 +47,7 @@ def result2cls(input_dir):
     root = input_dir
     total = np.zeros(50000,dtype='int')
     for i in range(50000):
-        line = "ILSVRC2012_val_000" + str(i+1).zfill(5) + "_1.txt"
+        line = "ILSVRC2012_val_000" + str(i+1).zfill(5) + "_0.txt"
         file = open(root+line, "r")
         res = file.readline().split(' ')[:-1]
         file.close()

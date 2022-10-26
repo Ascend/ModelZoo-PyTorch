@@ -57,6 +57,8 @@ from contextlib import suppress
 from datetime import datetime
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -339,12 +341,12 @@ def main():
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
         args.distributed = int(os.environ['WORLD_SIZE']) > 1
-    args.device = 'cuda:0'
+    args.device = 'npu:0'
     args.world_size = 1
     args.rank = 0  # global rank
     if args.distributed:
-        args.device = 'cuda:%d' % args.local_rank
-        torch.npu.set_device(args.local_rank)
+        args.device = 'npu:%d' % args.local_rank
+        torch.npu.set_device(args.device)
         torch.distributed.init_process_group('hccl', init_method='env://')
         args.world_size = torch.distributed.get_world_size()
         args.rank = torch.distributed.get_rank()
@@ -474,7 +476,7 @@ def main():
             # Apex DDP preferred unless native amp is activated
             if args.local_rank == 0:
                 _logger.info("Using NVIDIA APEX DistributedDataParallel.")
-            model = ApexDDP(model, delay_allreduce=True)
+            model = NativeDDP(model, device_ids=[args.local_rank])
         else:
             if args.local_rank == 0:
                 _logger.info("Using native Torch DistributedDataParallel.")

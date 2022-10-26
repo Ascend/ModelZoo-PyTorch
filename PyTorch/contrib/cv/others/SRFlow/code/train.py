@@ -22,6 +22,9 @@ from os.path import basename
 import cv2
 import math
 import torch
+if torch.__version__>="1.8":
+    import torch_npu
+print(torch.__version__)
 import torch.distributed as dist
 
 import options.options as option
@@ -344,7 +347,7 @@ def main():
             else:
                 time_avg = time_all / (len_train_loader - 5)
             fps = opt['datasets']['train']['batch_size'] * opt['num_dev'] / time_avg
-            message = '<epoch:{:3d}, fps:{:.3e}> '.format(epoch, fps)
+            message = '<epoch:{:3d}, fps:{:f}> '.format(epoch, fps)
             print(message)
         epoch_starttime = 0
         epoch_time = 0

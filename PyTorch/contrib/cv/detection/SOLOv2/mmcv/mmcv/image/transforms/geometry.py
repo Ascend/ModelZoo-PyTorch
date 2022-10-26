@@ -163,13 +163,13 @@ def imcrop(img, bboxes, scale=1.0, pad_fill=None):
                 patch_shape = (_y2 - _y1 + 1, _x2 - _x1 + 1, chn)
             patch = np.array(
                 pad_fill, dtype=img.dtype) * np.ones(
-                    patch_shape, dtype=img.dtype)
+                patch_shape, dtype=img.dtype)
             x_start = 0 if _x1 >= 0 else -_x1
             y_start = 0 if _y1 >= 0 else -_y1
             w = x2 - x1 + 1
             h = y2 - y1 + 1
             patch[y_start:y_start + h, x_start:x_start + w,
-                  ...] = img[y1:y1 + h, x1:x1 + w, ...]
+            ...] = img[y1:y1 + h, x1:x1 + w, ...]
         patches.append(patch)
 
     if bboxes.ndim == 1:
@@ -192,7 +192,7 @@ def impad(img, shape, pad_val=0):
     if not isinstance(pad_val, (int, float)):
         assert len(pad_val) == img.shape[-1]
     if len(shape) < len(img.shape):
-        shape = shape + (img.shape[-1], )
+        shape = shape + (img.shape[-1],)
     assert len(shape) == len(img.shape)
     for i in range(len(shape)):
         assert shape[i] >= img.shape[i]

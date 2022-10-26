@@ -13,7 +13,7 @@ data_path=""
 
 
 # 训练epoch
-train_epochs=1
+train_epochs=2
 # 学习率
 learning_rate=0.8
 # 加载数据进程数
@@ -76,10 +76,10 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u ./main-8p.py \
+nohup python3.7 -u ./main-8p.py \
 	-a xception \
 	--amp \
-        --data ${data_path} \
+        --data_path ${data_path} \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49 \
         --workers=128 \
@@ -87,7 +87,7 @@ python3.7 -u ./main-8p.py \
         --label-smoothing=0.1 \
         --weight-decay=1.0e-04  \
         --print-freq=30 \
-        --dist-url='tcp://127.0.0.1:50000' \
+        --dist-url='tcp://127.0.0.1:50009' \
         --dist-backend='hccl' \
         --multiprocessing-distributed \
         --world-size=1 \

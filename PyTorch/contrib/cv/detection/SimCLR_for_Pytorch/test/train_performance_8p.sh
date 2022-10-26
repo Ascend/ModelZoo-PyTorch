@@ -14,7 +14,7 @@ data_path=""
 # 训练epoch
 train_epochs=1
 # 指定训练所使用的npu device卡id
-device_id=0,1,2,3,4,5,6,7
+device_id=0
 # 加载数据进程数
 workers=9
 
@@ -92,7 +92,7 @@ python3.7 ./main_8p.py \
     --epochs=${train_epochs} \
     --npu=0 \
     --distributed \
-    --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --batch_size=${batch_size}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -105,7 +105,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS " '{print $NF}'|awk -F " " '{print $1}'|tail -1`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

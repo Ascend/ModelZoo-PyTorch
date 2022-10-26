@@ -12,7 +12,7 @@
 
 ## 3. 安装依赖
 - NPU环境首先安装run包，以及NPU版本的torch与apex
-- `pip install -r requirements.txt`
+- `pip3.7 install -r requirements.txt`
 
 ## 4. 导入环境变量
 - `source ./test/env.sh`
@@ -31,5 +31,5 @@ train_performance_8p.sh      # 8卡训练性能脚本
 - 修改对应训练脚本中的 `data_path` 为数据集目录路径如 `data_path=/data/criteo/`
   
 ## 6. 执行训练脚本
-- 单卡训练执行，如 `bash ./run_wdl.sh 0 /data/criteo/`
-- 8卡训练执行，如 `bash ./run8p_wdl.sh /data/criteo/`
+- 单卡训练执行，如 `bash ./test/train_full_1p.sh --data_path=/data/criteo/ --device_id=npu卡id`
+- 8卡训练执行，如 `bash ./test/train_full_8p.sh --data_path=/data/criteo/`

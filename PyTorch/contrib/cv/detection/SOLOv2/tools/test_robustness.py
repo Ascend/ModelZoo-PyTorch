@@ -162,7 +162,7 @@ def collect_results(result_part, size, tmpdir=None):
     if tmpdir is None:
         MAX_LEN = 512
         # 32 is whitespace
-        dir_tensor = torch.full((MAX_LEN, ),
+        dir_tensor = torch.full((MAX_LEN,),
                                 32,
                                 dtype=torch.uint8,
                                 device='cuda')
@@ -395,8 +395,8 @@ def main():
             rank, _ = get_dist_info()
             if args.out and rank == 0:
                 eval_results_filename = (
-                    osp.splitext(args.out)[0] + '_results' +
-                    osp.splitext(args.out)[1])
+                        osp.splitext(args.out)[0] + '_results' +
+                        osp.splitext(args.out)[1])
                 mmcv.dump(outputs, args.out)
                 eval_types = args.eval
                 if cfg.dataset_type == 'VOCDataset':

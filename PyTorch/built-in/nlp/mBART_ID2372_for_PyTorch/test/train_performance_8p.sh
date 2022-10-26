@@ -21,36 +21,23 @@ token_size=1024
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 learning_rate=3e-05
+
+# 将对应的数据以及模型等放到对应路径 或 修改以下路径以适应本地训练
+PRETRAIN=./mbart.cc25/model.pt
+
 #参数配置
 data_path=""
+
+#训练步数
+train_steps=50
 
 if [[ $1 == --help || $1 == --h ]];then
 	echo "usage:./train_performance_1p.sh "
 	exit 1
 fi
 
-for para in $*
-do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
-    elif [[ $para == --conda_name* ]];then
-        conda_name=`echo ${para#*=}`
-        source ${cur_path}/test/set_conda.sh --conda_name=$conda_name
-        #export PATH=/usr/local/python3.7/bin:/home/anaconda3/bin:$PATH
-        #source activate py8
-        source activate $conda_name
-        
-	fi
-done
 
-#校验是否传入data_path,不需要修改
-if [[ $data_path  == "" ]];then
-	echo "[Error] para \"data_path\" must be config"
-	exit 1
-fi
-##############执行训练##########
 # cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
-cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ]; then
     test_path_dir=${cur_path}
@@ -58,6 +45,30 @@ if [ x"${cur_path_last_dirname}" == x"test" ]; then
     cur_path=`pwd`
 else
     test_path_dir=${cur_path}/test
+fi
+
+
+for para in $*
+do
+    if [[ $para == --data_path* ]];then
+		data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source ${cur_path}/test/set_conda.sh --conda_name=$conda_name
+        #export PATH=/usr/local/python3.7/bin:/home/anaconda3/bin:$PATH
+        #source activate py8
+        source activate $conda_name
+        pip3.7 install --editable ./ 
+    elif [[ $para == --ckpt* ]];then
+        PRETRAIN=`echo ${para#*=}`
+
+fi
+done
+
+#校验是否传入data_path,不需要修改
+if [[ $data_path  == "" ]];then
+	echo "[Error] para \"data_path\" must be config"
+	exit 1
 fi
 
 sed -i "s|checkpoint_utils.save_checkpoint(|#checkpoint_utils.save_checkpoint(|g" $cur_path/fairseq_cli/train.py
@@ -72,7 +83,6 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-pip3.7 install --editable ./ 
 ##################启动训练脚本##################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -81,6 +91,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+    train_steps=300
 fi
 
 export RANK_SIZE=8
@@ -97,8 +108,8 @@ do
 		then
 			let a=0+RANK_ID*24
 			let b=23+RANK_ID*24
-			taskset -c $a-$b nohup python3.7 ${cur_path}/train.py $data_path/en_ro/ --fp16 --distributed-world-size 8 --npu \
-							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 50 \
+			taskset -c $a-$b nohup python3.7 ${cur_path}/train.py $data_path/ --fp16 --distributed-world-size 8 --npu \
+							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update $train_steps \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
 							  --task translation_from_pretrained_bart \
@@ -110,14 +121,14 @@ do
 							  --max-tokens 1024 --update-freq 2 \
 							  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
 							  --seed 222 --log-format simple --log-interval 2 \
-							  --restore-file $data_path/mbart.cc25/model.pt \
+							  --restore-file ${PRETRAIN} \
                               --max-epoch $train_epochs \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
 							  --ddp-backend no_c10d > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
 	else
-		nohup python3.7 ${cur_path}/train.py $data_path/en_ro/ --fp16 --distributed-world-size 8 --npu \
-							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update 50 \
+		nohup python3.7 ${cur_path}/train.py $data_path/ --fp16 --distributed-world-size 8 --npu \
+							  --device-id $RANK_ID --distributed-rank $RANK_ID --distributed-no-spawn --max-update $train_steps \
 							  --encoder-normalize-before --decoder-normalize-before \
 							  --arch mbart_large --layernorm-embedding \
 							  --task translation_from_pretrained_bart \
@@ -129,7 +140,7 @@ do
 							  --max-tokens 1024 --update-freq 2 \
 							  --save-interval 1 --save-interval-updates 5000 --keep-interval-updates 10 --no-epoch-checkpoints \
 							  --seed 222 --log-format simple --log-interval 2 \
-							  --restore-file $data_path/mbart.cc25/model.pt \
+							  --restore-file ${PRETRAIN} \
 							  --reset-optimizer --reset-meters --reset-dataloader --reset-lr-scheduler \
 							  --langs $langs \
                               --max-epoch $train_epochs \
@@ -149,9 +160,12 @@ echo "------------------ Final result ------------------"
 #输出性能WPS，需要模型审视修改
 WPS=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "wps=" '{print $NF}'|awk -F "wps" '{print $1}'|awk -F "," '{print $1}'|awk 'END {print}'`
 train_wall=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk 'NR==1{min=$1;next}{min=min<$1?min:$1}END{print min}'|awk -F "," '{print$1}'`
+TRAIN_WALL=`grep 'train_inner ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_wall=" '{print $NF}'|awk -F "," '{print $1}'|tail -n  20|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $WPS"
 echo "E2E Training Duration sec : $e2e_time"
+echo "train_wall : $TRAIN_WALL"
 
 #性能看护结果汇总
 #训练用例信息，不需要修改

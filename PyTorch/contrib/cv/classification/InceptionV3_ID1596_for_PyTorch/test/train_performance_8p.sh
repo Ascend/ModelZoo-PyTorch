@@ -76,7 +76,7 @@ do
     taskset -c $PID_START-$PID_END python3 ./main-8p.py \
       -a inception_v3 \
       --amp \
-      --loss-scale 128 \
+      --loss_scale=128 \
       --data ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \
@@ -99,7 +99,7 @@ do
     python3 ./main-8p.py \
       -a inception_v3 \
       --amp \
-      --loss-scale 128 \
+      --loss_scale=128 \
       --data ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \
@@ -114,6 +114,7 @@ do
       --world-size=1 \
       --rank=0 \
       --device='npu' \
+      --gpu=${i}  \
       --epochs=${train_epochs} \
       --label-smoothing=0.1 \
       --batch-size=${batch_size} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &

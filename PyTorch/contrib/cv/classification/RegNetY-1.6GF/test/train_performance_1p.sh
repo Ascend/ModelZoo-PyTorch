@@ -80,18 +80,8 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-RANK_ID_START=0
-RANK_SIZE=1
 
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
-do
-
-KERNEL_NUM=$(($(nproc)/8))
-PID_START=$((KERNEL_NUM * RANK_ID))
-PID_END=$((PID_START + KERNEL_NUM - 1))
-
-nohup \
-taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
+nohup taskset -c 0-32 python3.7 -u imagenet_fast.py \
   --data ${data_path} \
   --epochs ${train_epochs} \
   --cos \
@@ -107,10 +97,9 @@ taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
   --loss-scale 16.0 \
   --rank 0 \
   --world-size 1\
-  --local_rank $RANK_ID \
+  --local_rank $device_id \
   --log-name 'train_1p.log' \
   -j ${workers} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-done
 
 wait
 

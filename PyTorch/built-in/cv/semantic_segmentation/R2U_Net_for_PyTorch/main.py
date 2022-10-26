@@ -31,13 +31,21 @@
 # ============================================================================
 import argparse
 import os
-from solver import Solver
+from typing import Any
 from data_loader import get_loader, get_dist_loader
 import random
-import torch
 import numpy as np
+import torch
+
+if torch.__version__ >="1.8":
+    import torch_npu
+    
+from solver import Solver
+
 
 def main(config):
+    print(torch.__version__)
+
     os.environ['MASTER_ADDR'] = '127.0.0.1'
     os.environ['MASTER_PORT'] = '29688'
 
@@ -165,8 +173,7 @@ if __name__ == '__main__':
                              'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet'
                         )
     parser.add_argument('--loss_scale_value',
-                        default=1024,
-                        type=int,
+                        default="dynamic",
                         help='set loss scale value.')
 
     # distributed training parameters

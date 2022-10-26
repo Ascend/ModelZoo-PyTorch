@@ -37,6 +37,8 @@ import argparse
 import os
 import random
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data

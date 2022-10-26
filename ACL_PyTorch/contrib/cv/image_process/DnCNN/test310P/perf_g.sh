@@ -1,0 +1,1 @@
+trtexec --dumpProfile --onnx=DnCNN-S-15.onnx --shapes=actual_input_1:1x1x481x481 --threads --fp16

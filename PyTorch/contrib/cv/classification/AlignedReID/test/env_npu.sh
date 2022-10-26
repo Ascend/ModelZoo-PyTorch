@@ -1,13 +1,17 @@
-export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64:/usr/local/Ascend/ascend-toolkit/latest/atc/lib64:$LD_LIBRARY_PATH
-export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/toolkit/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/atc/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/pyACL/python/site-packages/acl:$PYTHONPATH
-export PATH=/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/ccec_compiler/bin:/usr/local/Ascend/ascend-toolkit/latest/fwkacllib/bin:/usr/local/Ascend/ascend-toolkit/latest/atc/bin:/usr/local/Ascend/ascend-toolkit/latest/atc/ccec_compiler/bin:$PATH
-export ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
-export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
-export TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/python3.7/site-packages/torch/lib:${LD_LIBRARY_PATH}  #shm的so文件
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:${LD_LIBRARY_PATH}
-export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/:${LD_LIBRARY_PATH}
+#!/bin/bash
+CANN_INSTALL_PATH_CONF='/etc/Ascend/ascend_cann_install.info'
+
+if [ -f $CANN_INSTALL_PATH_CONF ]; then
+    CANN_INSTALL_PATH=$(cat $CANN_INSTALL_PATH_CONF | grep Install_Path | cut -d "=" -f 2)
+else
+    CANN_INSTALL_PATH="/usr/local/Ascend"
+fi
+
+if [ -d ${CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
+    source ${CANN_INSTALL_PATH}/ascend-toolkit/set_env.sh
+else
+    source ${CANN_INSTALL_PATH}/nnae/set_env.sh
+fi
 
 
 ulimit -SHn 512000

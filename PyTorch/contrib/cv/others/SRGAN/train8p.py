@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding:GBK
 # Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,9 @@ import tempfile
 import math
 
 import torch
+if torch.__version__>= "1.8":
+    #print("import torch_npu")
+    import torch_npu
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -47,9 +50,9 @@ parser.add_argument('--crop_size', default=88, type=int,
                         help='training images crop size')
 parser.add_argument('--upscale_factor', default=2, type=int, choices=[2, 4, 8],
                     help='super resolution upscale factor')
-parser.add_argument('--train_data_path', default='../data/DIV2K_train_HR', type=str,
+parser.add_argument('--train_data_path', default='./data/VOC2012/train', type=str,
                     help='source data folder for training')
-parser.add_argument('--val_data_path', default='../data/DIV2K_valid_HR', type=str,
+parser.add_argument('--val_data_path', default='./data/VOC2012/val', type=str,
                     help='source data folder for training')
 parser.add_argument('--only_keep_best', default=True, type=bool,
                     help='If use gpu for training.')
@@ -127,7 +130,7 @@ def main():
     os.environ['MASTER_ADDR'] = args.addr  # '10.136.181.51'
     os.environ['MASTER_PORT'] = '29688'
 
-    # ç»“æœä¿å­˜è·¯å¾„
+    # ½á¹û±£´æÂ·¾¶
 
     if not os.path.exists(config.get_root_path() + 'epochs'):
         os.makedirs(config.get_root_path() + 'epochs')
@@ -171,13 +174,13 @@ def main():
 
 
 def main_worker(gpu, ngpus_per_node, args):
-    # è®¡æ—¶æ“ä½œ
+    # ¼ÆÊ±²Ù×÷
     avt = AverageMeter(args.performance)
     if args.device_list != '':
         args.gpu = int(args.device_list.split(',')[gpu])
     else:
         args.gpu = gpu
-    # åœ¨ä¸»çº¿ç¨‹ä¸­æ‰“å°
+    # ÔÚÖ÷Ïß³ÌÖĞ´òÓ¡
     if args.rank == 0:
         print("[npu id:", args.gpu, "]", "++++++++++++++++ before set LOCAL_DEVICE_ID:", os.environ['LOCAL_DEVICE_ID'])
         os.environ['LOCAL_DEVICE_ID'] = str(args.gpu)
@@ -213,15 +216,15 @@ def main_worker(gpu, ngpus_per_node, args):
         print("[npu id:", args.gpu, "]", "===============main_worker()=================")
 
     # load data
-    # å®ä¾‹åŒ–è®­ç»ƒæ•°æ®é›†
+    # ÊµÀı»¯ÑµÁ·Êı¾İ¼¯
     train_data_set = TrainDatasetFromFolder(args.train_data_path, args.crop_size, args.upscale_factor)
     val_data_set = ValDatasetFromFolder(args.val_data_path, args.upscale_factor)
 
-    # ç»™æ¯ä¸ªrankå¯¹åº”çš„è¿›ç¨‹åˆ†é…è®­ç»ƒçš„æ ·æœ¬ç´¢å¼•, ï¼ˆè¿™ä¸€æ­¥ç›¸å½“äºæŠŠæ•´ä¸ªæ•°æ®é›†ç›´æ¥åˆ†æˆäº†GPUæ•°é‡ä»½ï¼‰
+    # ¸øÃ¿¸örank¶ÔÓ¦µÄ½ø³Ì·ÖÅäÑµÁ·µÄÑù±¾Ë÷Òı, £¨ÕâÒ»²½Ïàµ±ÓÚ°ÑÕû¸öÊı¾İ¼¯Ö±½Ó·Ö³ÉÁËGPUÊıÁ¿·İ£©
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_data_set)
     val_sampler = torch.utils.data.distributed.DistributedSampler(val_data_set)
 
-    # å°†æ ·æœ¬ç´¢å¼•æ¯batch_sizeä¸ªå…ƒç´ ç»„æˆä¸€ä¸ªlist
+    # ½«Ñù±¾Ë÷ÒıÃ¿batch_size¸öÔªËØ×é³ÉÒ»¸ölist
     train_batch_sampler = torch.utils.data.BatchSampler(
         train_sampler, args.batch_size, drop_last=True)
 
@@ -237,17 +240,17 @@ def main_worker(gpu, ngpus_per_node, args):
                                              num_workers=args.workers)
 
     # create models
-    netG = Generator(args.upscale_factor).to(loc)  # è¿™é‡Œä¼šå°†ç½‘ç»œè®¾ç½®åˆ°ä¸åŒçš„GPUä¸Š
+    netG = Generator(args.upscale_factor).to(loc)  # ÕâÀï»á½«ÍøÂçÉèÖÃµ½²»Í¬µÄGPUÉÏ
     netD = Discriminator().to(loc)
-    # è¿™ä¸€æ­¥æ“ä½œæ˜¯ä¸ºäº†åŒæ­¥å„ä¸ªGPUä¸Šçš„æƒé‡ï¼Œæƒé‡ä¸åŒä¼šå¯¼è‡´è®­ç»ƒç»“æœæœ‰è¯¯
+    # ÕâÒ»²½²Ù×÷ÊÇÎªÁËÍ¬²½¸÷¸öGPUÉÏµÄÈ¨ÖØ£¬È¨ÖØ²»Í¬»áµ¼ÖÂÑµÁ·½á¹ûÓĞÎó
     netG_checkpoint_path = os.path.join(tempfile.gettempdir(), "NetG_initial_weights.pt")
     netD_checkpoint_path = os.path.join(tempfile.gettempdir(), "NetD_initial_weights.pt")
-    # å¦‚æœä¸å­˜åœ¨é¢„è®­ç»ƒæƒé‡ï¼Œéœ€è¦å°†ç¬¬ä¸€ä¸ªè¿›ç¨‹ä¸­çš„æƒé‡ä¿æŒï¼Œ ç„¶åå…¶ä»–è¿›ç¨‹è½½å…¥ï¼Œä¿æŒåˆå§‹åŒ–æƒé‡ä¸€è‡´
+    # Èç¹û²»´æÔÚÔ¤ÑµÁ·È¨ÖØ£¬ĞèÒª½«µÚÒ»¸ö½ø³ÌÖĞµÄÈ¨ÖØ±£³Ö£¬ È»ºóÆäËû½ø³ÌÔØÈë£¬±£³Ö³õÊ¼»¯È¨ÖØÒ»ÖÂ
     if args.gpu == 0:
         torch.save(netG.state_dict(), netG_checkpoint_path)
         torch.save(netD.state_dict(), netD_checkpoint_path)
 
-    # dist.barrier()  # ç­‰å¾…æ‰€æœ‰GPUå¤„ç†å®Œ
+    # dist.barrier()  # µÈ´ıËùÓĞGPU´¦ÀíÍê
     torch.npu.synchronize()
 
     # define loss function (criterion) and optimizer
@@ -258,7 +261,7 @@ def main_worker(gpu, ngpus_per_node, args):
         netG, optimizerG = amp.initialize(netG, optimizerG, opt_level=args.amp_level, loss_scale=args.loss_scale_g)
         netD, optimizerD = amp.initialize(netD, optimizerD, opt_level=args.amp_level, loss_scale=args.loss_scale_d)
 
-    # è½¬ä¸ºDDPæ¨¡å‹
+    # ×ªÎªDDPÄ£ĞÍ
     print(f'Converting model to DDP model...')
     netG = torch.nn.parallel.DistributedDataParallel(
         netG, device_ids=[args.gpu], output_device=args.gpu, broadcast_buffers=False)
@@ -305,26 +308,26 @@ def main_worker(gpu, ngpus_per_node, args):
 
 def train_one_epoch(netG, netD, optimizerG, optimizerD, data_loader, device, epoch, rank, avt,
                     amp_b=False, number_epoch=100, world_size=1):
-    # è®°å½•å•ä¸ªepochçš„è¿è¡Œç»“æœ
+    # ¼ÇÂ¼µ¥¸öepochµÄÔËĞĞ½á¹û
     running_results = {'batch_sizes': 0, 'd_loss': 0, 'g_loss': 0, 'd_score': 0, 'g_score': 0, 'train_fps': 0}
-    # è¿›å…¥è®­ç»ƒæ¨¡å¼
+    # ½øÈëÑµÁ·Ä£Ê½
     netG.train()
     netD.train()
 
-    # åˆ›å»ºæŸå¤±
+    # ´´½¨ËğÊ§
     generator_criterion = GeneratorLoss()
-    # å®ä¾‹åŒ–ç”Ÿæˆå™¨æŸå¤±å‡½æ•°æ¨¡å‹
+    # ÊµÀı»¯Éú³ÉÆ÷ËğÊ§º¯ÊıÄ£ĞÍ
     if torch.npu.is_available():
         generator_criterion = generator_criterion.to(device)
-    # mean_loss = torch.zeros(1).to(device)  # å®šä¹‰ä¸€ä¸ªå¹³å‡æŸå¤±çš„å˜é‡ï¼Œåˆå§‹åŒ–ä¸º0
+    # mean_loss = torch.zeros(1).to(device)  # ¶¨ÒåÒ»¸öÆ½¾ùËğÊ§µÄ±äÁ¿£¬³õÊ¼»¯Îª0
 
-    # fps ç»Ÿè®¡æ–¹æ³•
+    # fps Í³¼Æ·½·¨
     fps_number = 0
     fps_count_start = False
 
     avt.t_start('training')
     for step, data in enumerate(data_loader):
-        #print(f'å½“å‰æ­¥éª¤ä¸º:{step}----------------------------------------')
+        #print(f'µ±Ç°²½ÖèÎª:{step}----------------------------------------')
         images, labels = data  # labels(batchsize*3*44*44)
         batch_size = images.size(0)
         running_results['batch_sizes'] += batch_size
@@ -352,7 +355,7 @@ def train_one_epoch(netG, netD, optimizerG, optimizerD, data_loader, device, epo
         else:
             d_loss.backward(retain_graph=True)
 
-        # # å¤šGPUåŒæ­¥d_loss
+        # # ¶àGPUÍ¬²½d_loss
         # d_loss = reduce_value(d_loss, average=True)
         stream = torch.npu.current_stream()
         stream.synchronize()
@@ -375,18 +378,18 @@ def train_one_epoch(netG, netD, optimizerG, optimizerD, data_loader, device, epo
         else:
             g_loss.backward()
 
-        # # å¤šGPUåŒæ­¥g_loss
+        # # ¶àGPUÍ¬²½g_loss
         # g_loss = reduce_value(g_loss, average=True)
         stream = torch.npu.current_stream()
         stream.synchronize()
 
-        fake_img = netG(z)
-        fake_out = netD(fake_img).mean()
+        #fake_img = netG(z)
+        #fake_out = netD(fake_img).mean()
 
         # g_loss = reduce_value(g_loss,average=True)
         optimizerG.step()
 
-        # ç»Ÿè®¡ fps
+        # Í³¼Æ fps
         if fps_count_start:
             fps = batch_size * world_size / (time.time() - fps_start_time)
             fps = round(fps, 2)
@@ -394,7 +397,7 @@ def train_one_epoch(netG, netD, optimizerG, optimizerD, data_loader, device, epo
             running_results['train_fps'] += fps
         else:
             fps = 0
-        # # å¤šGPUåŒæ­¥d_score, g_score
+        # # ¶àGPUÍ¬²½d_score, g_score
         # real_out = reduce_value(real_out, average=True)
         # fake_out = reduce_value(fake_out, average=True)
         # fps = torch.Tensor(fps)
@@ -406,9 +409,9 @@ def train_one_epoch(netG, netD, optimizerG, optimizerD, data_loader, device, epo
         running_results['d_score'] += real_out.item() * batch_size
         running_results['g_score'] += fake_out.item() * batch_size
 
-        # åœ¨è¿›ç¨‹ 0 ä¸­æ‰“å°å¹³å‡loss
+        # ÔÚ½ø³Ì 0 ÖĞ´òÓ¡Æ½¾ùloss
         if rank == 0:
-            # å¦‚æœæ˜¯ä¸»è¿›ç¨‹ï¼Œ
+            # Èç¹ûÊÇÖ÷½ø³Ì£¬
             Loss_D = running_results['d_loss'] / running_results['batch_sizes']
             Loss_G = running_results['g_loss'] / running_results['batch_sizes']
             score_D = running_results['d_score'] / running_results['batch_sizes']
@@ -416,7 +419,7 @@ def train_one_epoch(netG, netD, optimizerG, optimizerD, data_loader, device, epo
             print(f'[{epoch}/{number_epoch}] step:{step} Loss_D: {Loss_D:.4f} Loss_G: {Loss_G:.4f} '
                   f'D(x): {score_D:.4f} D(G(z)): {score_G:.4f} Fps: {fps:.4f}')
         avt.step_update()
-    # ç­‰å¾…æ‰€æœ‰è¿›ç¨‹è®¡ç®—å®Œæ¯•
+    # µÈ´ıËùÓĞ½ø³Ì¼ÆËãÍê±Ï
     if device != torch.device("cpu"):
         torch.npu.synchronize(device)
 
@@ -472,7 +475,7 @@ def evaluate(netG, epoch, data_loader, device, rank, save_val_img=False):
                 utils.save_image(image, out_path + 'epoch_%d_index_%d.png' % (epoch, index), padding=5)
                 index += 1
 
-    # ç­‰å¾…æ‰€æœ‰è¿›ç¨‹è®¡ç®—å®Œæ¯•
+    # µÈ´ıËùÓĞ½ø³Ì¼ÆËãÍê±Ï
     if device != torch.device("cpu"):
         torch.npu.synchronize(device)
 
@@ -481,7 +484,7 @@ def evaluate(netG, epoch, data_loader, device, rank, save_val_img=False):
 
 def epoch_results_save(netG, netD, performance, running_results, valing_results, epoch, results, only_best):
     global best_acc1
-    # ä¿å­˜æ¯æ¬¡è¿è¡Œç»“æœï¼Œ psnrï¼ˆå³°å€¼ä¿¡å™ªæ¯”ï¼‰ ssimï¼ˆç»“æ„ç›¸ä¼¼æ€§ï¼‰
+    # ±£´æÃ¿´ÎÔËĞĞ½á¹û£¬ psnr£¨·åÖµĞÅÔë±È£© ssim£¨½á¹¹ÏàËÆĞÔ£©
     results['epoch'].append(str(epoch))
     results['d_loss'].append(running_results['d_loss'] / running_results['batch_sizes'])
     results['g_loss'].append(running_results['g_loss'] / running_results['batch_sizes'])
@@ -494,7 +497,7 @@ def epoch_results_save(netG, netD, performance, running_results, valing_results,
     else:
         results['psnr'].append(0)
         results['ssim'].append(0)
-    # print(f"å½“å‰æ•°æ®é•¿åº¦ä¸º:{len(results['d_loss'])}")
+    # print(f"µ±Ç°Êı¾İ³¤¶ÈÎª:{len(results['d_loss'])}")
     save_training_log(results)
     # if epoch % 10 == 0 and epoch != 0:
     #     # save model parameters

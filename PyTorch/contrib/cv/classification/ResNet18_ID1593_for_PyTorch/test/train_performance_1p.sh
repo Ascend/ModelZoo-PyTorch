@@ -17,7 +17,7 @@ device_id=0
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=1.6
+learning_rate=1.4
 
 #TF2.X独有，需要模型审视修改
 #export NPU_LOOP_SIZE=${train_steps}
@@ -98,7 +98,13 @@ fi
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
+#非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source  ${test_path_dir}/env_npu.sh
+fi
+
 python3 ./main.py \
 	${data_path} \
 	-a resnet18 \

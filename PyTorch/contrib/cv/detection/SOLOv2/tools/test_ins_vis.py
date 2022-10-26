@@ -32,6 +32,7 @@ import cv2
 import numpy as np
 import matplotlib.cm as cm
 
+
 def vis_seg(data, result, img_norm_cfg, data_id, colors, score_thr, save_dir):
     img_tensor = data['img'][0]
     img_metas = data['img_meta'][0].data[0]
@@ -44,7 +45,7 @@ def vis_seg(data, result, img_norm_cfg, data_id, colors, score_thr, save_dir):
             continue
         h, w, _ = img_meta['img_shape']
         img_show = img[:h, :w, :]
-        
+
         seg_label = cur_result[0]
         seg_label = seg_label.cpu().numpy().astype(np.uint8)
         cate_label = cur_result[1]
@@ -70,12 +71,12 @@ def vis_seg(data, result, img_norm_cfg, data_id, colors, score_thr, save_dir):
 
         seg_show = img_show.copy()
         for idx in range(num_mask):
-            idx = -(idx+1)
-            cur_mask = seg_label[idx, :,:]
+            idx = -(idx + 1)
+            cur_mask = seg_label[idx, :, :]
             cur_mask = mmcv.imresize(cur_mask, (w, h))
             cur_mask = (cur_mask > 0.5).astype(np.uint8)
             if cur_mask.sum() == 0:
-               continue
+                continue
             color_mask = np.random.randint(
                 0, 256, (1, 3), dtype=np.uint8)
             cur_mask_bool = cur_mask.astype(np.bool)
@@ -85,7 +86,7 @@ def vis_seg(data, result, img_norm_cfg, data_id, colors, score_thr, save_dir):
             cur_score = cate_score[idx]
 
             label_text = class_names[cur_cate]
-            #label_text += '|{:.02f}'.format(cur_score)
+            # label_text += '|{:.02f}'.format(cur_score)
             # center
             center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)
             vis_pos = (max(int(center_x) - 10, 0), int(center_y))
@@ -99,8 +100,8 @@ def single_gpu_test(model, data_loader, args, cfg=None, verbose=True):
     results = []
     dataset = data_loader.dataset
 
-    class_num = 1000 # ins
-    colors = [(np.random.random((1, 3)) * 255).tolist()[0] for i in range(class_num)]    
+    class_num = 1000  # ins
+    colors = [(np.random.random((1, 3)) * 255).tolist()[0] for i in range(class_num)]
 
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
@@ -110,7 +111,8 @@ def single_gpu_test(model, data_loader, args, cfg=None, verbose=True):
         results.append(result)
 
         if verbose:
-            vis_seg(data, seg_result, cfg.img_norm_cfg, data_id=i, colors=colors, score_thr=args.score_thr, save_dir=args.save_dir)
+            vis_seg(data, seg_result, cfg.img_norm_cfg, data_id=i, colors=colors, score_thr=args.score_thr,
+                    save_dir=args.save_dir)
 
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
@@ -147,7 +149,7 @@ def collect_results(result_part, size, tmpdir=None):
     if tmpdir is None:
         MAX_LEN = 512
         # 32 is whitespace
-        dir_tensor = torch.full((MAX_LEN, ),
+        dir_tensor = torch.full((MAX_LEN,),
                                 32,
                                 dtype=torch.uint8,
                                 device='cuda')

@@ -3,13 +3,13 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="AlexNet"
+Network="AlexNet_ID2663_for_PyTorch"
 # 训练batch_size
 batch_size=1024
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,修改为本地数据集路径
-data_path="/opt/npu/imagenet"
+data_path=""
 
 # 训练epoch
 train_epochs=90

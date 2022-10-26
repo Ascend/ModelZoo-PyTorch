@@ -21,6 +21,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data.sampler import Sampler
+if torch.__version__>="1.8":
+    import torch_npu
+print(torch.__version__)
 import apex
 from apex import amp
 
@@ -135,6 +138,9 @@ def parse_args():
     parser.add_argument('--etp_performance_mode', dest='etp_performance_mode', default=False, action='store_true',
                         help='specify trianing steps on ETP performance mode')
 
+    # PROF
+    parser.add_argument('--prof', default=False, action='store_true',
+                    help='use profiling to evaluate the performance of model')
     args = parser.parse_args()
     return args
 
@@ -173,7 +179,63 @@ def seed_everything(seed):
     torch.npu.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+def profiling(model, data_iter, optimizer,args):
+    cann_profiling_path = './cann_profiling_15_new'
+    if not os.path.exists(cann_profiling_path):
+        os.makedirs(cann_profiling_path)
+    def update(model, data_iter, optimizer,args):
+        model.train()
+        torch.npu.synchronize()
+        data =next(data_iter)
+        torch.npu.synchronize()
+        pad_value = 0
+        batch_shape = (3, 1344, 1344)
+        padding_size = [0, batch_shape[-1] - data[0].shape[-1],
+                        0, batch_shape[-2] - data[0].shape[-2]]
+        data[0] = F.pad(data[0], padding_size, value=pad_value)
+        with torch.no_grad():
+            im_data.resize_(data[0].size()).copy_(data[0])
+            im_info.resize_(data[1].size()).copy_(data[1])
+            gt_boxes.resize_(data[2].size()).copy_(data[2])
+            num_boxes.resize_(data[3].size()).copy_(data[3]) 
+        out = model(im_data,im_info,gt_boxes,num_boxes)
+        rois, cls_prob, bbox_pred, \
+        rpn_loss_cls, rpn_loss_box, \
+        RCNN_loss_cls, RCNN_loss_bbox, \
+        rois_label = model(im_data, im_info, gt_boxes, num_boxes)
+        loss = rpn_loss_cls.mean() + rpn_loss_box.mean() \
+            + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
+        # loss_temp += loss.data[0]
+        #loss_temp += loss.item()
+        # backward
+        optimizer.zero_grad()
+            
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        optimizer.step()
+    iters_per_epoch=100
+    for step in range(iters_per_epoch):
+            
+        if step < 5:
+            update(model, data_iter, optimizer, args)
+        else:
+            if args.device == 'npu':
+                with torch.autograd.profiler.profile(use_npu=True) as prof:
+                    update(model, data_iter, optimizer,args)
+                with torch.npu.profile(cann_profiling_path):
+                    update(model, data_iter,optimizer,args)
+                            
+            else:
+                with torch.autograd.profiler.profile(use_cuda=True) as prof:
+                    update(model, data_iter, optimizer,args)
 
+        
+           # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+            prof.export_chrome_trace(f"output_{torch.__version__}.prof") # "output.prof"为输出文件地址
+            break
 if __name__ == '__main__':
 
     args = parse_args()
@@ -260,19 +322,7 @@ if __name__ == '__main__':
                              imdb.num_classes, training=True)
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
-                                             sampler=sampler_batch, num_workers=args.num_workers)
-
-    # initilize the tensor holder here.
-    im_data = torch.FloatTensor(1)
-    im_info = torch.FloatTensor(1)
-    num_boxes = torch.LongTensor(1)
-    gt_boxes = torch.FloatTensor(1)
-
-    # make variable
-    im_data = Variable(im_data)
-    im_info = Variable(im_info)
-    num_boxes = Variable(num_boxes)
-    gt_boxes = Variable(gt_boxes)
+                                             sampler=sampler_batch, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
     if args.cuda:
         cfg.CUDA = True
@@ -339,17 +389,6 @@ if __name__ == '__main__':
         if 'pooling_mode' in checkpoint.keys():
             cfg.POOLING_MODE = checkpoint['pooling_mode']
         print("loaded checkpoint %s" % (load_name))
-    
-    if args.device == 'npu':
-        im_data = im_data.npu()
-        im_info = im_info.npu()
-        num_boxes = num_boxes.npu()
-        gt_boxes = gt_boxes.npu()
-    elif args.device == 'cuda':
-        im_data = im_data.cuda()
-        im_info = im_info.cuda()
-        num_boxes = num_boxes.cuda()
-        gt_boxes = gt_boxes.cuda()
 
     if args.cuda:
         model.cuda()
@@ -363,43 +402,44 @@ if __name__ == '__main__':
 
     iters_per_epoch = int(train_size / args.batch_size)
     if args.etp_performance_mode:
-        iters_per_epoch = 100
+        iters_per_epoch = 300
+
+    if args.prof:
+        dataset.resize_batch()
+        data_iter = iter(dataloader)
+        profiling(model, data_iter, optimizer,args)
+        exit(0)
 
     for epoch in range(args.start_epoch, args.max_epochs + 1):
         dataset.resize_batch()
         # setting to train mode
         model.train()
         loss_temp = 0
-        # start = time.time()
-        torch.npu.synchronize()
         epoch_start = time.time()
 
         if epoch % (args.lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, args.lr_decay_gamma)
             lr *= args.lr_decay_gamma
         
-        torch.npu.synchronize()
         start = time.time()
+        data_start = time.time()
         batch_time_sum = 0
         batch_time_mean = 0
         data_iter = iter(dataloader)
         for step in range(iters_per_epoch):
             # print("=============== epoch:", epoch, "=step:", step, "===============")
-            torch.npu.synchronize()
-            start = time.time()
             data = next(data_iter)
-            torch.npu.synchronize()
-            data_time = (time.time() - start) * 1000
+            data_time = (time.time() - data_start) * 1000
             pad_value = 0
             batch_shape = (3, 1344, 1344)
             padding_size = [0, batch_shape[-1] - data[0].shape[-1],
                             0, batch_shape[-2] - data[0].shape[-2]]
             data[0] = F.pad(data[0], padding_size, value=pad_value)
             with torch.no_grad():
-                im_data.resize_(data[0].size()).copy_(data[0])
-                im_info.resize_(data[1].size()).copy_(data[1])
-                gt_boxes.resize_(data[2].size()).copy_(data[2])
-                num_boxes.resize_(data[3].size()).copy_(data[3])
+                im_data = data[0].to(args.device, non_blocking=True)
+                im_info = data[1].to(args.device, non_blocking=True)
+                gt_boxes = data[2].to(args.device, non_blocking=True)
+                num_boxes = data[3].to(args.device, non_blocking=True)
 
             model.zero_grad()
             rois, cls_prob, bbox_pred, \
@@ -421,13 +461,13 @@ if __name__ == '__main__':
             else:
                 loss.backward()
             if args.net == "vgg16":
-                clip_gradient(optimizer, 10.)
+                optimizer.clip_optimizer_grad_norm_fused(10.)
             if args.net == "res101":
-                clip_gradient(optimizer, 4.)
+                optimizer.clip_optimizer_grad_norm_fused(4.)
             optimizer.step()
 
-            torch.npu.synchronize()
             batch_time = (time.time() - start) * 1000
+            start = time.time()
             if step > 1:
                 batch_time_sum += batch_time
                 batch_time_mean = batch_time_sum / (step - 1)
@@ -436,7 +476,6 @@ if __name__ == '__main__':
                 break
 
             if step % args.disp_interval == 0:
-                end = time.time()
                 if step > 0:
                     loss_temp /= args.disp_interval
 
@@ -478,11 +517,11 @@ if __name__ == '__main__':
                         logger.scalar_summary(tag, value, step)
 
                 loss_temp = 0
-                # start = time.time()
+                data_start = time.time()
         # 每十次保存一次模型
         if epoch % 10 == 0 or epoch == args.max_epochs:
             if args.mGPUs:
-                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
+                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step + 1))
                 save_checkpoint({
                     'session': args.session,
                     'epoch': epoch + 1,
@@ -492,7 +531,7 @@ if __name__ == '__main__':
                     'class_agnostic': args.class_agnostic,
                 }, save_name)
             else:
-                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
+                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step + 1))
                 save_checkpoint({
                     'session': args.session,
                     'epoch': epoch + 1,
@@ -505,6 +544,5 @@ if __name__ == '__main__':
 
         # end = time.time()
         # print(end - start)
-        torch.npu.synchronize()
         epoch_end = time.time()
         print("epoch_time:", epoch_end - epoch_start)

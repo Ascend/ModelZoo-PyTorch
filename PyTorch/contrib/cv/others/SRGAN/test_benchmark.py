@@ -19,6 +19,9 @@ from math import log10
 
 import numpy as np
 import torch
+if torch.__version__>= "1.8":
+    print("import torch_npu")
+    import torch_npu
 import torchvision.utils as utils
 from torch.utils.data import DataLoader
 
@@ -78,7 +81,7 @@ model_path = root_dir + 'epochs/' + MODEL_NAME
 print(f'Load model from: {model_path}')
 model.load_state_dict(torch.load(root_dir + 'epochs/' + MODEL_NAME))
 
-test_set = TestDatasetFromFolder('../data/test', upscale_factor=UPSCALE_FACTOR)
+test_set = TestDatasetFromFolder('./data/test', upscale_factor=UPSCALE_FACTOR)
 test_loader = DataLoader(dataset=test_set, num_workers=2, batch_size=1, shuffle=False)
 # test_loader = DataLoader(dataset=test_set, batch_size=1, shuffle=False)
 

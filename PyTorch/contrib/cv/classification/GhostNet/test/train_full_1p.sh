@@ -78,8 +78,8 @@ fi
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 # source 环境变量
-source ${test_path_dir}/env.sh
-nohup python3.7  train_ghostnet_1p.py  \
+source ${test_path_dir}/env_npu.sh
+taskset -c 0-32 nohup python3.7  train_ghostnet_1p.py  \
     ${data_path} \
     --model GhostNet  \
     -b 1024   \
@@ -115,7 +115,7 @@ FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk '{print $2}'`
+train_accuracy=`grep -a 'Best metric:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $4}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

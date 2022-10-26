@@ -26,7 +26,10 @@ import random
 import numpy as np
 
 import torch
-import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.nn.functional as F
@@ -182,7 +185,7 @@ parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
 # Optimization options
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='O2 is mixed FP16/32 training, see more in https://github.com/NVIDIA/apex/tree/f5cd5ae937f168c763985f627bbf850648ea5f3f/examples/imagenet')
-parser.add_argument('--loss-scale', type=float, default=None)
+parser.add_argument('--loss-scale', type=str, default=None)
 
 parser.add_argument('--label-smoothing', '--ls', default=0.1, type=float)
 
@@ -317,6 +320,7 @@ class data_prefetcher():
 
 
 def main():
+    print(torch.__version__)
     global best_acc
     start_epoch = args.start_epoch  # start from epoch 0 or last checkpoint epoch
 
@@ -485,6 +489,7 @@ def runprof(train_loader, model, criterion, optimizer, gpu, use_npu):
     show_step = len(train_loader) // 10
 
     batch_idx = -1
+    cann_profiling_path = '/home/wangqw/RegNetX1.8-prof'
 
     for i, (inputs, targets) in enumerate(train_loader):
         # for skipstep in range(5):  #skip first 5 steps
@@ -589,7 +594,48 @@ def runprof(train_loader, model, criterion, optimizer, gpu, use_npu):
         else:
             optimizer.step()
 
+    #prof.table()
     prof.export_chrome_trace("output.prof")
+
+    with torch.npu.profile(cann_profiling_path):
+        if args.cutmix:
+            if printflag == False:
+                print('using cutmix !')
+                printflag = True
+            inputs, targets_a, targets_b, lam = cutmix_data(inputs, targets, args.cutmix_prob, use_npu)
+            outputs = model(inputs)
+            loss_func = mixup_criterion(targets_a, targets_b, lam)
+            old_loss = loss_func(criterion, outputs)
+        elif args.mixup:
+            if printflag == False:
+                print('using mixup !')
+                printflag = True
+            inputs, targets_a, targets_b, lam = mixup_data(inputs, targets, args.alpha, use_npu)
+            outputs = model(inputs)
+            loss_func = mixup_criterion(targets_a, targets_b, lam)
+            old_loss = loss_func(criterion, outputs)
+        elif args.cutout:
+            if printflag == False:
+                print('using cutout !')
+                printflag = True
+            inputs = cutout_data(inputs, args.cutout_size, use_npu)
+            outputs = model(inputs)
+            old_loss = criterion(outputs, targets)
+        else:
+            outputs = model(inputs)
+            old_loss = criterion(outputs, targets)
+
+        # compute gradient and do SGD step
+        optimizer.zero_grad()
+        with amp.scale_loss(old_loss, optimizer) as loss:
+            loss.backward()
+
+        if args.el2:
+            optimizer.step(print_flag=print_flag)
+        else:
+            optimizer.step()
+    exit(0)
+
 
 
 def train(train_loader, model, criterion, optimizer, epoch, use_npu, gpu, ngpus, data_prefetcher_stream):

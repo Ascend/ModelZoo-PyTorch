@@ -1,0 +1,3 @@
+torchvision
+timm
+pillow==9.1.0

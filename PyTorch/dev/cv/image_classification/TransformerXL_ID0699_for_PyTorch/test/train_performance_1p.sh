@@ -1,8 +1,7 @@
 #!/bin/bash
 
 cur_path=`pwd`/../
-#失败用例打屏
-#export ASCEND_SLOG_PRINT_TO_STDOUT=1
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 export RANK_SIZE=1
 export JOB_ID=10087
 RANK_ID_START=0
@@ -25,46 +24,48 @@ learning_rate=0.495
 data_path=""
 
 if [[ $1 == --help || $1 == --h ]];then
-	echo "usage:./train_performance_1p.sh "
-	exit 1
+    echo "usage:./train_performance_1p.sh "
+    exit 1
 fi
 
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
-	fi
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    fi
 done
 
 if [[ $data_path  == "" ]];then
-	echo "[Error] para \"data_path\" must be config"
-	exit 1
+    echo "[Error] para \"data_path\" must be config"
+    exit 1
 fi
+
+
 ##############执行训练##########
 cd $cur_path
 if [ -d $cur_path/test/output ];then
-	rm -rf $cur_path/test/output/*
-	mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
+    rm -rf $cur_path/test/output/*
+    mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
 else
-	mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
+    mkdir -p $cur_path/test/output/$ASCEND_DEVICE_ID
 fi
 wait
 
 
 start=$(date +%s)
 nohup python3 -m torch.distributed.launch \
-	--nproc_per_node=1 \
-	$cur_path/pytorch/train.py \
-	--affinity='disabled' \
+    --nproc_per_node=1 \
+    $cur_path/pytorch/train.py \
+    --affinity='disabled' \
     --config_file pytorch/wt103_base.yaml \
     --config aiserver_1npu_fp32 \
-	--work_dir=$cur_path/test/output/$ASCEND_DEVICE_ID \
-	--batch_size=$batch_size \
+    --work_dir=$cur_path/test/output/$ASCEND_DEVICE_ID \
+    --batch_size=$batch_size \
     --batch_chunk=16 \
-	--fp16 \
-	--data=$data_path \
+    --fp16 \
+    --data=$data_path \
     --log_interval=1 \
-	--max_step=$train_steps > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    --max_step=$train_steps > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
 e2e_time=$(( $end - $start ))
@@ -75,6 +76,10 @@ BatchSize=${batch_size}
 DeviceType=`uname -m`
 #用例名称，自动获取
 CaseName=${Network}_bs${BatchSize}_${RankSize}'p'_'perf'
+#修改二进制用例名称
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
 
 #结果打印，不需要修改
 echo "-------------------- Final result --------------------"

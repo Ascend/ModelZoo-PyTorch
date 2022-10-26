@@ -35,8 +35,9 @@ import logging
 from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
-
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -53,7 +54,6 @@ from timm.models.layers import Linear
 
 import torch.npu
 import apex
-
 try:
     from apex import amp
     from apex.parallel import DistributedDataParallel as ApexDDP
@@ -420,7 +420,7 @@ def main():
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if use_amp == 'apex':
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale=args.loss_scale)
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale=args.loss_scale,combine_grad=True)
         loss_scaler = ApexScaler()
         if args.local_rank == 0:
             _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')
@@ -528,7 +528,8 @@ def main():
         distributed=args.distributed,
         collate_fn=collate_fn,
         pin_memory=args.pin_mem,
-        use_multi_epochs_loader=args.use_multi_epochs_loader
+        use_multi_epochs_loader=args.use_multi_epochs_loader,
+        persistent_workers=False
     )
 
     loader_eval = create_loader(
@@ -544,6 +545,7 @@ def main():
         distributed=args.distributed,
         crop_pct=data_config['crop_pct'],
         pin_memory=args.pin_mem,
+        persistent_workers=False
     )
 
     # setup loss function

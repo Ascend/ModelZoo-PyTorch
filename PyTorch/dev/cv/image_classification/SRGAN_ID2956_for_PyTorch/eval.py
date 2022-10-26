@@ -65,9 +65,8 @@ srgan_generator = Generator(large_kernel_size=large_kernel_size_g,
                               n_channels=n_channels_g,
                               n_blocks=n_blocks_g,
                               scaling_factor=scaling_factor) 
-
 #srgan_generator = torch.load(srgan_checkpoint)['generator'].to(f'npu:{NPU_CALCULATE_DEVICE}')
-srgan_generator.load_state_dict(torch.load(srgan_checkpoint)['generator'])
+srgan_generator.load_state_dict(torch.load(srgan_checkpoint)['generator'], strict=False)
 srgan_generator.to(f'npu:{NPU_CALCULATE_DEVICE}')
 srgan_generator.eval()
 model = srgan_generator

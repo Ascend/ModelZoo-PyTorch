@@ -20,6 +20,8 @@ import datetime
 import yaml
 import sys
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.utils.data as data
@@ -135,12 +137,8 @@ class Trainer(object):
                                          lr=cfg["optimizer"]["init_lr"],
                                          momentum=cfg["optimizer"]["momentum"],
                                          weight_decay=cfg["optimizer"]["weight_decay"])
-        # self.optimizer = torch.optim.SGD(params = self.model.parameters(),
-        #                                  lr = cfg["optimizer"]["init_lr"],
-        #                                  momentum=cfg["optimizer"]["momentum"],
-        #                                  weight_decay=cfg["optimizer"]["weight_decay"])
         
-        self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", loss_scale=32.0)
+        self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", loss_scale="dynamic")
 
         # lr scheduler
         self.lr_scheduler = IterationPolyLR(self.optimizer,
@@ -209,52 +207,27 @@ class Trainer(object):
             for i, (images, targets, _) in enumerate(self.train_dataloader):
                 self.current_iteration += 1
 
-                # self.lr_scheduler.step()
-
                 images = images.to(self.device)
-                # targets = targets.to(self.device)
+
                 targets = targets.to(torch.int32).to(self.device)  
 
-                if self.dataparallel == 0:              
-                    # get op list
-                    with torch.autograd.profiler.profile(use_npu=True) as prof:
-                        outputs = self.model(images)
-                        loss = self.criterion(outputs, targets)
-        
-                        #self.metric.update(outputs[0], targets)
-                        #pixAcc, mIoU = self.metric.get()
-                        #lsit_pixAcc.append(pixAcc)
-                        #list_mIoU.append(mIoU)
-                        list_loss.append(loss.item())
-        
-                        self.optimizer.zero_grad()
-                        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                            scaled_loss.backward()
-                        # loss.backward()
-                        self.optimizer.step()
-                    prof.export_chrome_trace("output.prof")
-                else:
-                    outputs = self.model(images)
-                    loss = self.criterion(outputs, targets)
+                outputs = self.model(images)
+                loss = self.criterion(outputs, targets)
 
-                    #self.metric.update(outputs[0], targets)
-                    #pixAcc, mIoU = self.metric.get()
-                    #lsit_pixAcc.append(pixAcc)
-                    #list_mIoU.append(mIoU)
-                    list_loss.append(loss.item())
+                list_loss.append(loss.item())
 
-                    self.optimizer.zero_grad()
-                    with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                    # loss.backward()
-                    self.optimizer.step()
+                self.optimizer.zero_grad()
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
 
-                # self.lr_scheduler.step()  # sasa add:warning
+                self.optimizer.step()
+
                 eta_seconds = ((time.time() - start_time) / self.current_iteration) * (max_iters - self.current_iteration)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-                batch_time.update(time.time() - end)
-                end = time.time()
+                if epoch > 0 or i > 30:
+                    batch_time.update(time.time() - end)
+                    end = time.time()
 
                 if batch_time.avg > 0:
                     FPS = train_batch_size * num_devices / batch_time.avg
@@ -273,8 +246,6 @@ class Trainer(object):
                             eta_string,
                             FPS))
 
-            #average_pixAcc = sum(lsit_pixAcc) / len(lsit_pixAcc)
-            #average_mIoU = sum(list_mIoU) / len(list_mIoU)
             average_loss = sum(list_loss) / len(list_loss)
             if self.rank_id == 0:
                 logger.info(
@@ -328,7 +299,6 @@ class Trainer(object):
                 FPS = valid_batch_size * num_devices / batch_time.avg
             else:
                 FPS = 0
-                # logger.info("batch_time.avg <= 0")
 
         average_pixAcc = sum(lsit_pixAcc) / len(lsit_pixAcc)
         average_mIoU = sum(list_mIoU) / len(list_mIoU)
@@ -336,7 +306,7 @@ class Trainer(object):
         self.current_mIoU = average_mIoU
 
         logger.info(
-            "RankID[{}] Validation: Average loss: {:.3f}, Average mIoU: {:.3f}, Average pixAcc: {:.3f}, FPS: {:.3f}".format(
+            "RankID[{}] Validation: Average loss: {:.3f}, Average mIoU: {:.3f} Average pixAcc: {:.3f}, FPS: {:.3f}".format(
                 self.rank_id, average_loss, average_mIoU, average_pixAcc, FPS))
 
         if self.current_mIoU > self.best_mIoU:
@@ -397,9 +367,6 @@ if __name__ == '__main__':
     config_path = sys.argv[3]
     with open(config_path, "r") as yaml_file:
         cfg = yaml.load(yaml_file.read(), Loader=yaml.FullLoader)
-        # print(cfg)
-        # print(cfg["model"]["backbone"])
-        # print(cfg["train"]["specific_gpu_num"])
 
     # Use specific NPU
     os.environ["NPU_VISIBLE_DEVICES"] = str(cfg["train"]["specific_npu_num"])

@@ -10,13 +10,12 @@ batch_size=512
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
-
 # 训练epoch
 train_epochs=1
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数
-workers=8
+workers=32
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -72,12 +71,12 @@ start_time=$(date +%s)
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/env.sh
+    source ${test_path_dir}/env_npu.sh
 fi
 python3.7 ./train_1p.py  \
     ${data_path} \
     --model mobilenetv3_large_100  \
-    --opt sgd \
+    --opt npufusedsgd \
     --weight-decay 4e-5 \
     --momentum 0.9 \
     --sched cosine \
@@ -91,8 +90,10 @@ python3.7 ./train_1p.py  \
     --amp  \
     --lr 1.6  \
     --epochs=${train_epochs} \
+    --cooldown-epochs 0 \
     --workers=${workers} \
     --no-prefetcher \
+    --pin-mem \
     --npu ${ASCEND_DEVICE_ID} \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
@@ -106,7 +107,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 终端结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $20}'|awk 'END {print}'`
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $19}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

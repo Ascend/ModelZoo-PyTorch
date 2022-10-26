@@ -24,6 +24,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import apex
 import torch.nn as nn
 import torch.nn.parallel
@@ -300,7 +302,7 @@ def main_worker(gpu, ngpus_per_node, args):
             normalize,
         ])),
         batch_size=args.batch_size, shuffle=True,
-        num_workers=args.workers, pin_memory=False, drop_last=True)
+        num_workers=args.workers, pin_memory=True, drop_last=True)
 
     if args.evaluate:
         validate(val_loader, model, criterion, args)
@@ -372,7 +374,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         target = target.to(torch.int32)
         images, target = images.to(CALCULATE_DEVICE, non_blocking=True), target.to(CALCULATE_DEVICE,
-                                                                                    non_blocking=True)
+                                                                                    non_blocking=True).to(torch.int32)
 
         # compute output
         output = model(images)
@@ -426,7 +428,7 @@ def validate(val_loader, model, criterion, args, epoch=0, writer=None):
                 pass
             target = target.to(torch.int32)
             images, target = images.to(CALCULATE_DEVICE, non_blocking=False), target.to(CALCULATE_DEVICE,
-                                                                                        non_blocking=False)
+                                                                                        non_blocking=False).to(torch.int32)
 
             # compute output
             output = model(images)

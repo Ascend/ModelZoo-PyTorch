@@ -47,7 +47,7 @@ class RetinaSepBNHead(AnchorHead):
         self.norm_cfg = norm_cfg
         self.num_ins = num_ins
         octave_scales = np.array(
-            [2**(i / scales_per_octave) for i in range(scales_per_octave)])
+            [2 ** (i / scales_per_octave) for i in range(scales_per_octave)])
         anchor_scales = octave_scales * octave_base_scale
         super(RetinaSepBNHead, self).__init__(
             num_classes, in_channels, anchor_scales=anchor_scales, **kwargs)

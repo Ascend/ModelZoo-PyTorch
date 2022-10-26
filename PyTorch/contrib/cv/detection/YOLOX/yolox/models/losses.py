@@ -26,21 +26,19 @@ class IOUloss(nn.Module):
     def forward(self, pred, target):
         assert pred.shape[0] == target.shape[0]
 
-        tensor2 = torch.tensor(2., device=pred.device, dtype=pred.dtype)
-
         pred = pred.view(-1, 4)
         target = target.view(-1, 4)
         tl = torch.max(
-            (pred[:, :2] - pred[:, 2:] / tensor2), (target[:, :2] - target[:, 2:] / tensor2)
+            (pred[:, :2] - pred[:, 2:] / 2.), (target[:, :2] - target[:, 2:] / 2.)
         )
         br = torch.min(
-            (pred[:, :2] + pred[:, 2:] / tensor2), (target[:, :2] + target[:, 2:] / tensor2)
+            (pred[:, :2] + pred[:, 2:] / 2.), (target[:, :2] + target[:, 2:] / 2.)
         )
 
         area_p = pred[:, 2] * pred[:, 3]
         area_g = target[:, 2] * target[:, 3]
 
-        en_tmp = (tl < br).type(tl.type())
+        en_tmp = (tl < br)
         en = en_tmp[:, 0] * en_tmp[:, 1]
 
         brtl = br - tl

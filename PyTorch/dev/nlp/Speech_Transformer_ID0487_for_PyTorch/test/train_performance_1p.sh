@@ -32,6 +32,9 @@ data_dump_flag=False
 data_dump_step="10"
 profiling=False
 autotune=False
+bin_mode=False
+bin_analysis=False
+
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
     echo"usage:./train_full_1p.sh <args>"
@@ -78,6 +81,10 @@ do
         cp -rf $install_path/fwkacllib/data/rl/Ascend910/custom ${autotune_dump_path}/RL/
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
+    elif [[ $para == --bin_analysis* ]];then
+        bin_analysis="True"
     fi
 done
 #校验是否传入data_path,不需要修改
@@ -85,6 +92,25 @@ done
 #    echo "[Error] para \"data_path\" must be confing"
 #    exit 1
 #fi
+#修改模糊编译写法
+if [ $bin_mode == "True" ];then
+    step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${step_line}s/^/#/" ${cur_path}/../train.py
+    inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${inc_line}s/^/#/" ${cur_path}/../train.py
+    sed -i "43itorch.npu.global_step_inc()" ${cur_path}/../train.py
+fi
+#设置二进制变量
+if [ $bin_analysis == "True" ];then
+    #增加编译缓存设置
+    line=`grep "    main()" ${cur_path}/../train.py -n | awk -F ':' '{print $1}'`
+    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption['ACL_OP_COMPILER_CACHE_MODE'] = 'disable'" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+    sed -i "${line}ioption = {}" ${cur_path}/../train.py
+    sed -i "${line}s/^/    /" ${cur_path}/../train.py
+fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
@@ -135,6 +161,14 @@ echo "E2E Training Duration sec : $e2e_time"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [ $bin_mode == "True" ];then
+    CaseName=$CaseName"_binary"
+fi
+#二进制支持算子
+if [ $bin_analysis == "True" ];then
+    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
+    echo "cmd1=$cmd1" >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+fi
 ##获取性能数据
 #吞吐量，不需要修改
 ActualFPS=${FPS}
@@ -154,3 +188,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+

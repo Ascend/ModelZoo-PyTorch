@@ -16,6 +16,8 @@ Therefore, GloRe is re-implemented using semantics such as custom OP.
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+   Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 - The UCF-101 Dataset can be downloaded from the links below.Move the datasets to directory ./dataset/UCF101/raw/data .
     - Train Set : [Download UCF-101](https://www.crcv.ucf.edu/data/UCF101/UCF101.rar)
     - Test Set : [Download UCF-101](https://www.crcv.ucf.edu/data/UCF101/UCF101.rar)

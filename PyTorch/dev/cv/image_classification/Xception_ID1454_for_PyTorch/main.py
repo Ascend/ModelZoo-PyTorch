@@ -35,6 +35,8 @@ import shutil
 import time
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -136,7 +138,8 @@ def main():
     global best_prec1
     args = parser.parse_args()
 
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    #os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_ADDR'] = str(os.getenv('MASTER_ADDR','127.0.0.1'))
     os.environ['MASTER_PORT'] = '29688'
 
     #设置seed
@@ -149,7 +152,10 @@ def main():
         if 'RANK_SIZE' in os.environ and 'RANK_ID' in os.environ:
             args.rank_size = int(os.environ['RANK_SIZE'])
             args.rank_id = int(os.environ['RANK_ID'])
-            args.rank = args.dist_rank * args.rank_size + args.rank_id
+            if args.rank_size <= 8:
+                args.rank = args.dist_rank * args.rank_size + args.rank_id
+            else:
+                args.rank = int(os.environ['RANK'])
             args.world_size = args.world_size * args.rank_size
             args.device_id = args.rank_id
             args.batch_size = int(args.batch_size / args.rank_size)

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding:GBK
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,10 @@ import argparse
 import os
 from math import log10
 import time
+import torch
+if torch.__version__>= "1.8":
+    print("import torch_npu")
+    import torch_npu
 
 import torch.optim as optim
 import torch.utils.data
@@ -42,9 +46,9 @@ parser.add_argument('--amp', default=False, type=bool,
                     help='use amp to train the model')
 parser.add_argument('--amp_level', default='O1',
                     help='set amp level.')
-parser.add_argument('--train_data_path', default='../data/DIV2K_train_HR', type=str,
+parser.add_argument('--train_data_path', default='./data/VOC2012/train', type=str,
                     help='source data folder for training')
-parser.add_argument('--val_data_path', default='../data/DIV2K_valid_HR', type=str,
+parser.add_argument('--val_data_path', default='./data/VOC2012/val', type=str,
                     help='source data folder for training')
 parser.add_argument('--device', default='npu',
                         help='device id (i.e. npu:1 or 1,2 or cpu)')
@@ -54,7 +58,7 @@ parser.add_argument('--use_gpu', default=False, type=bool,
                     help='If use gpu for training.')
 parser.add_argument('--only_keep_best', default=True, type=bool,
                     help='Only keep best training result.')
-parser.add_argument('--save_prof', default=True, type=bool,
+parser.add_argument('--save_prof', default=False, type=bool,
                     help='If save training prof.')
 parser.add_argument('--loss_scale_g', default=128.0, help='netG amp loss_scale: dynamic, 128.0')
 parser.add_argument('--loss_scale_d', default=128.0, help='netD amp loss_scale: dynamic, 128.0')
@@ -80,10 +84,10 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
     seed_everything(5)
-    # è®¡æ—¶æ“ä½œ
+    # ¼ÆÊ±²Ù×÷
     avt = AverageMeter(opt.performance)
 
-    # é€‰æ‹©è®­ç»ƒè®¾å¤‡
+    # Ñ¡ÔñÑµÁ·Éè±¸
     if opt.use_npu:
         import torch.npu
         if torch.npu.is_available():
@@ -97,14 +101,14 @@ if __name__ == '__main__':
         device = torch.device('cpu')
         prof_kwargs = {}
 
-    print(f'ä½¿ç”¨ {device} è¿›è¡Œè®­ç»ƒ.')
+    print(f'Ê¹ÓÃ {device} ½øĞĞÑµÁ·.')
 
-    # åˆå§‹åŒ–å‚æ•°
+    # ³õÊ¼»¯²ÎÊı
     CROP_SIZE = opt.crop_size
     UPSCALE_FACTOR = opt.upscale_factor
     NUM_EPOCHS = opt.num_epochs
 
-    # ç»“æœä¿å­˜è·¯å¾„
+    # ½á¹û±£´æÂ·¾¶
     config.set_root_path(opt.output_dir)
     out_path = config.get_root_path() + 'epochs'
     if not os.path.exists(out_path):
@@ -120,16 +124,16 @@ if __name__ == '__main__':
                               batch_size=opt.batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(dataset=val_set, num_workers=opt.nproc, batch_size=1, shuffle=False)
 
-    # åˆ›å»ºç”Ÿæˆå™¨å®ä¾‹ netG, è¾“å‡ºç”Ÿæˆå™¨å‚æ•°çš„æ•°é‡
+    # ´´½¨Éú³ÉÆ÷ÊµÀı netG, Êä³öÉú³ÉÆ÷²ÎÊıµÄÊıÁ¿
     netG = Generator(UPSCALE_FACTOR)
     print('# generator parameters:', sum(param.numel() for param in netG.parameters()))
     netD = Discriminator()
     print('# discriminator parameters:', sum(param.numel() for param in netD.parameters()))
 
-    # å®ä¾‹åŒ–ç”Ÿæˆå™¨æŸå¤±å‡½æ•°æ¨¡å‹
+    # ÊµÀı»¯Éú³ÉÆ÷ËğÊ§º¯ÊıÄ£ĞÍ
     generator_criterion = GeneratorLoss()
 
-    # å¦‚æœèƒ½GPUåŠ é€Ÿï¼ŒæŠŠç½‘ç»œæ”¾åˆ°GPUä¸Š
+    # Èç¹ûÄÜGPU¼ÓËÙ£¬°ÑÍøÂç·Åµ½GPUÉÏ
     if opt.use_npu or opt.use_gpu:
         netG = netG.to(device)
         netD = netD.to(device)
@@ -139,7 +143,7 @@ if __name__ == '__main__':
         netD.cpu()
         generator_criterion.cpu()
 
-    # Adam - è‡ªé€‚åº”å­¦ä¹ ç‡+é€‚ç”¨éå‡¸ä¼˜åŒ–
+    # Adam - ×ÔÊÊÓ¦Ñ§Ï°ÂÊ+ÊÊÓÃ·ÇÍ¹ÓÅ»¯
     optimizerG = optim.Adam(netG.parameters())
     optimizerD = optim.Adam(netD.parameters())
 
@@ -148,7 +152,7 @@ if __name__ == '__main__':
         netG, optimizerG = amp.initialize(netG, optimizerG, opt_level=opt.amp_level, loss_scale=opt.loss_scale_g)
         netD, optimizerD = amp.initialize(netD, optimizerD, opt_level=opt.amp_level, loss_scale=opt.loss_scale_d)
 
-    # ç»“æœé›† : loss score psnrï¼ˆå³°å€¼ä¿¡å™ªæ¯”ï¼‰ ssimï¼ˆç»“æ„ç›¸ä¼¼æ€§ï¼‰
+    # ½á¹û¼¯ : loss score psnr£¨·åÖµĞÅÔë±È£© ssim£¨½á¹¹ÏàËÆĞÔ£©
     results = {'d_loss': [], 'g_loss': [], 'd_score': [], 'g_score': [], 'psnr': [], 'ssim': [], 'train_fps': []}
     best_results = 0
 
@@ -156,10 +160,10 @@ if __name__ == '__main__':
     for epoch in range(1, NUM_EPOCHS + 1):
         avt.t_start('epoch')
         running_results = {'batch_sizes': 0, 'd_loss': 0, 'g_loss': 0, 'd_score': 0, 'g_score': 0, 'train_fps': 0}
-        # è¿›å…¥trainæ¨¡å¼
+        # ½øÈëtrainÄ£Ê½
         netG.train()
         netD.train()
-        # fps ç»Ÿè®¡æ–¹æ³•
+        # fps Í³¼Æ·½·¨
         step = 0
         fps_number = 0
         fps_count_start = False
@@ -201,7 +205,7 @@ if __name__ == '__main__':
                             scaled_d_loss.backward(retain_graph=True)
                     else:
                         d_loss.backward(retain_graph=True)
-                    # è¿›è¡Œå‚æ•°ä¼˜åŒ–
+                    # ½øĞĞ²ÎÊıÓÅ»¯
                     optimizerD.step()
 
                     ############################
@@ -217,10 +221,10 @@ if __name__ == '__main__':
                             scaled_g_loss.backward()
                     else:
                         g_loss.backward()
-                    fake_img = netG(z)
-                    fake_out = netD(fake_img).mean()
+                    #fake_img = netG(z)
+                    #fake_out = netD(fake_img).mean()
                     optimizerG.step()
-                # ä¿å­˜ prof æ–‡ä»¶
+                # ±£´æ prof ÎÄ¼ş
                 prof.export_chrome_trace(f'{config.get_root_path()}srgan_prof_{device}_{step}.prof')
             else:
                 ############################
@@ -248,7 +252,7 @@ if __name__ == '__main__':
                         scaled_d_loss.backward(retain_graph=True)
                 else:
                     d_loss.backward(retain_graph=True)
-                # è¿›è¡Œå‚æ•°ä¼˜åŒ–
+                # ½øĞĞ²ÎÊıÓÅ»¯
                 optimizerD.step()
 
                 ############################
@@ -264,8 +268,8 @@ if __name__ == '__main__':
                         scaled_g_loss.backward()
                 else:
                     g_loss.backward()
-                fake_img = netG(z)
-                fake_out = netD(fake_img).mean()
+                #fake_img = netG(z)
+                #fake_out = netD(fake_img).mean()
                 optimizerG.step()
             if fps_count_start:
                 fps = batch_size / (time.time() - fps_start_time)
@@ -292,7 +296,7 @@ if __name__ == '__main__':
             avt.step_update()
         avt.print_time('training')
         running_results['train_fps'] = running_results['train_fps'] / fps_number
-        opt.save_prof = False  # å…³é—­ä¿å­˜prof
+        opt.save_prof = False  # ¹Ø±Õ±£´æprof
 
         if not opt.performance:
             avt.t_start('val')
@@ -307,10 +311,10 @@ if __name__ == '__main__':
                     valing_results['batch_sizes'] += batch_size
                     lr = val_lr
                     hr = val_hr
-                    if opt.use_npu or opt.use_gpu:  # å¯ä»¥è€ƒè™‘ä½¿ç”¨cpuè¿›è¡ŒéªŒè¯
+                    if opt.use_npu or opt.use_gpu:  # ¿ÉÒÔ¿¼ÂÇÊ¹ÓÃcpu½øĞĞÑéÖ¤
                         lr = lr.to(device)
                         hr = hr.to(device)
-                    sr = netG(lr)  # ä½¿ç”¨ç½‘ç»œç”Ÿæˆçš„å›¾åƒå°ºå¯¸å’ŒåŸå›¾å°ºå¯¸ä¸ä¸€è‡´
+                    sr = netG(lr)  # Ê¹ÓÃÍøÂçÉú³ÉµÄÍ¼Ïñ³ß´çºÍÔ­Í¼³ß´ç²»Ò»ÖÂ
 
                     batch_mse = ((sr - hr) ** 2).data.mean()
                     valing_results['mse'] += batch_mse * batch_size

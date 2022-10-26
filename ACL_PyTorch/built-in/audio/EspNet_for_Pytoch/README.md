@@ -19,7 +19,7 @@ pip3.7 install -r requirements.txt
    git checkout v0.10.5
    ```
 
-3. 下载网络权重文件
+4. 下载网络权重文件
 
    下载路径：https://github.com/espnet/espnet/blob/master/egs/aishell/asr1/RESULTS.md
 
@@ -27,7 +27,7 @@ pip3.7 install -r requirements.txt
 
    解压，将对应的conf，data, exp文件夹置于espnet/egs/aishell/asr1
 
-4. 数据集下载：
+5. 数据集下载：
 
    在espnet/egs/aishell/asr1/文件夹下运行bash run.sh --stage -1 –stop_stage -1下载数据集
 
@@ -39,7 +39,9 @@ pip3.7 install -r requirements.txt
 
    运行bash run.sh --stage 3 --stop_stage 3处理数据集
 
-5. 导出onnx，生成om离线文件
+6. 导出onnx，生成om离线文件
+
+   ①静态shape
 
    将export_onnx.diff放在espnet根目录下，
 
@@ -51,9 +53,27 @@ pip3.7 install -r requirements.txt
 
    生成encoder.onnx，运行python3.7.5 adaptespnet.py生成encoder_revise.onnx
 
-6. 运行 bash encoder.sh生成离线om模型， encoder_262_1478.om
+   ②动态shape
 
-   
+   将export_onnx_dynamic.diff放在espnet根目录下，运行脚本生成encoder.onnx
+
+   ```
+   patch -p1 < export_onnx_dynamic.diff
+   cd ./egs/aishell/asr1/
+   bash export_onnx.sh
+   ```
+
+7. 运行encoder.sh生成离线om模型， encoder_262_1478.om
+
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   bash encoder.sh Ascend${chip_name} # Ascend310P3
+   ```
+
 
 ## 2 离线推理 
 
@@ -68,6 +88,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
 2. 获取精度
 
+   ①静态shape
+
    首先修改acc.diff文件中的om模型路径（约162行）为生成的om路径
 
    ```
@@ -77,15 +99,20 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
    bash acc.sh
    ```
 
+   ②动态shape
+
+   首先修改acc_dynamic.diff文件中的om模型路径（约162行）为生成的om路径
+
+   ```
+   cd espnet
+   patch -p1 < acc_dynamic.diff
+   cd espnet/egs/aishell/asr1
+   bash acc.sh
+   ```
+
    即可打屏获取精度，精度保存在文件espnet/egs/aishell/asr1/exp/train_sp_pytorch_train_pytorch_conformer_kernel15_specaug/decode_test_decode_lm0.0_lm_4/result.txt
 
 3. 获取性能
-
-   需要首先配置环境变量:
-
-   ```
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   ```
 
    运行脚本infer_perf.py
 
@@ -95,6 +122,6 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
    
 
-|       模型       | 官网pth精度 | 710离线推理精度 | gpu性能 | 710性能 |
+|       模型       | 官网pth精度 | 310P离线推理精度 | gpu性能 | 310P性能 |
 | :--------------: | :---------: | :-------------: | :-----: | :-----: |
-| espnet_conformer |    5.1%     |      5.4%       | 261fps  | 430fps  |
+| espnet_conformer |    5.1%     |      分档5.4%；动态：5.1%      | 261fps  | 分档：430fps；动态：25fps |

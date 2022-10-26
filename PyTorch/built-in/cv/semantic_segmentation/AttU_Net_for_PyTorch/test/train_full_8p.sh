@@ -76,7 +76,7 @@ do
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     rm -rf ./models
-    python3.7 main.py  \
+    nohup python3.7 main.py  \
         --model_type AttU_Net \
         --data_path=$data_path \
         --num_epochs=$epochs \
@@ -87,7 +87,6 @@ do
         --seed 12345 \
         --apex \
         --apex_opt_level O2 \
-        --loss_scale_value 1024 \
         --result_path ./result_8p/ \
         --lr 0.0016 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done

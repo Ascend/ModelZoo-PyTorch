@@ -1,11 +1,12 @@
 # Res2Net_v1b_101模型测试指导
 
--   [1 文件说明](#1-文件说明)
--   [2 设置环境变量](#2-设置环境变量)
--   [3 端到端推理步骤](#3-端到端推理步骤)
-	-   [3.1 下载代码](#31-下载代码)
-	-   [3.2 om模型转换](#32-om模型转换)
-	-   [3.3 om模型推理](#33-om模型推理)
+- [Res2Net_v1b_101模型测试指导](#res2net_v1b_101模型测试指导)
+  - [1 文件说明](#1-文件说明)
+  - [2 设置环境变量](#2-设置环境变量)
+  - [3 端到端推理步骤](#3-端到端推理步骤)
+    - [3.1 下载代码](#31-下载代码)
+    - [3.2 om模型转换](#32-om模型转换)
+    - [3.3 om模型推理](#33-om模型推理)
 
 ------
 
@@ -25,7 +26,7 @@ Res2Net_v1b_101_for_PyTorch
 ## 2 设置环境变量
 
 ```shell
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 ## 3 端到端推理步骤
@@ -51,10 +52,14 @@ python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx
 python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx --optimizer
 ```
 
-利用ATC工具转换为om模型
-```shell
-bash atc.sh
-```
+
+利用ATC工具转换为om模型， ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
+  ```shell
+  bash atc.sh Ascend${chip_name} # Ascend310P3
+  ```
 
 ### 3.3 om模型推理
 
@@ -74,7 +79,7 @@ bash atc.sh
   配置环境变量，运行benchmark工具进行推理，参数说明参见 [cann-benchmark](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
 
   ```shell
-  source env.sh  # 如果前面配置过，这里不用执行
+  source /usr/local/Ascend/ascend-toolkit/set_env.sh  # 如果前面配置过，这里不用执行
   ./benchmark -model_type=vision -om_path=resnet_bs16.om -device_id=0 -batch_size=16 -input_text_path=BinaryImageNet.info -input_width=256 -input_height=256 -useDvpp=false -output_binary=false
   ```
 

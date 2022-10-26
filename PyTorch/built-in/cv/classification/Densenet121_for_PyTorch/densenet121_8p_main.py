@@ -24,6 +24,8 @@ import warnings
 
 import apex
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -266,7 +268,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=False, sampler=train_sampler, drop_last=True)
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -276,7 +278,7 @@ def main_worker(gpu, ngpus_per_node, args):
             normalize,
         ])),
         batch_size=args.batch_size, shuffle=True,
-        num_workers=args.workers, pin_memory=False, drop_last=True)
+        num_workers=args.workers, pin_memory=True, drop_last=True)
 
     # define loss function (criterion) and optimizer
     model = model.to(loc)
@@ -372,7 +374,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
         loc = 'npu:{}'.format(args.gpu)
         target = target.to(torch.int32)
-        images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False)
+        images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False).to(torch.int32)
 
         # compute output
         output = model(images)
@@ -442,7 +444,7 @@ def validate(val_loader, model, criterion, args, ngpus_per_node):
 
             loc = 'npu:{}'.format(args.gpu)
             target = target.to(torch.int32)
-            images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False)
+            images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False).to(torch.int32)
 
             # compute output
             output = model(images)

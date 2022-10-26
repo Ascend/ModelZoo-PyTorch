@@ -24,6 +24,8 @@ import glob
 import numpy as np
 import apex
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 
@@ -84,7 +86,7 @@ def train(args, train_dataset, model, tokenizer):
         except ImportError:
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
         if 'npu' in str(args.device):
-            model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level, loss_scale=128.0,
+            model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level, loss_scale="dynamic",
                                               combine_grad=True)
         else:
             model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level, loss_scale=128.0)
@@ -490,6 +492,7 @@ def main():
         else:
             device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         args.n_gpu = 1
+        torch.npu.set_device(3)
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         if args.device == 'npu':
             torch.npu.set_device(args.local_rank)

@@ -21,9 +21,10 @@
 		- [6.2 开源精度](#62-开源精度)
 		- [6.3 精度对比](#63-精度对比)
 	- [7 性能对比](#7-性能对比)
-		- [7.1 npu性能数据](#71-npu性能数据)
-		- [7.2 T4性能数据](#72-t4性能数据)
-		- [7.3 性能对比](#73-性能对比)
+		- [7.1 310性能数据](#71-310性能数据)
+		- [7.2 310P性能数据](#72-310p性能数据)
+		- [7.3 T4性能数据](#73-t4性能数据)
+		- [7.4 性能对比](#74-性能对比)
 
 
 
@@ -50,10 +51,10 @@ commit_id:a00c8ea16bcaea2bddf73b2bf506796f70077687
 
 ### 2.1 深度学习框架
 ```
-CANN 5.0.3.alpha002 
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
+CANN 5.1.RC1
+pytorch = 1.5.0
+torchvision = 0.6.0
+onnx = 1.7.0
 ```
 
 ### 2.2 python第三方库
@@ -99,11 +100,7 @@ python3.7 vnet_pth2onnx.py vnet_model_best.pth.tar vnet.onnx
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
-```
-source env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1 开发辅助工具指南 (推理) 01]
+使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1 开发辅助工具指南 (推理) 01]
 ```
 atc --model=./vnet.onnx --framework=5 --output=vnet_bs1 --input_format=NCDHW --input_shape="actual_input_1:1,1,64,80,80" --log=info --soc_version=Ascend310
 
@@ -119,6 +116,14 @@ atc --model=./vnet.onnx --framework=5 --output=vnet_bs1 --input_format=NCDHW --i
 
 ### 4.1 数据集获取
 该模型使用[LUNA16数据集](https://luna16.grand-challenge.org/Download/)的888例CT数据进行肺部区域分割。全部888例CT数据分别存储在subset0.zip~subset9.zip共10个文件中，解压后需要将所有文件移动到vnet.pytorch/luna16/lung_ct_image目录下。另有与CT数据一一对应的分割真值文件存放于seg-lungs-LUNA16.zip文件，将其解压到vnet.pytorch/luna16/seg-lungs-LUNA16目录。
+```
+cd vnet.pytorch/luna16/lung_ct_image  
+wget https://zenodo.org/record/3723295/files/subset0.zip
+wget https://zenodo.org/record/4121926/files/subset7.zip
+7za x subset0.zip
+```
+**说明：** 
+>   数据集subset0~subset6在3723295链接下载，subset7~subset9在4121926链接下载，解压后lung_ct_image包含888个.raw文件和888个.mhd文件
 
 ### 4.2 数据集预处理
 1.执行原代码仓提供的数据集预处理脚本。
@@ -143,16 +148,23 @@ python3.7 gen_dataset_info.py bin ./prep_bin ./vnet_prep_bin.info 80 80
 ## 5 离线推理
 
 -   **[benchmark工具概述](#51-benchmark工具概述)**  
-
 -   **[离线推理](#52-离线推理)**  
 
 ### 5.1 benchmark工具概述
 
 benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN 5.0.1 推理benchmark工具用户指南 01]
+获取推理benchmark工具软件包：解压后获取benchmark工具运行脚本benchmark.{arch}和scripts目录，该目录下包含各种模型处理脚本，包括模型预处理脚本、模型后处理脚本、精度统计脚本等。
+
+获取地址：https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software
+
+Ascend-cann-benchmark_{version}_Linux-{arch}.zip
+
+{version}为软件包的版本号；{arch}为CPU架构，请用户根据实际需要获取对应的软件包。
+
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -175,11 +187,15 @@ source env.sh
 python3.7 vnet_postprocess.py result/dumpOutput_device0 ./vnet.pytorch/luna16/normalized_lung_mask ./vnet.pytorch/test_uids.txt
 ```
 第一个为benchmark输出目录，第二个为真值所在目录，第三个为测试集样本的序列号。  
-查看输出结果：
+310精度测试结果：
 ```
-Error rate: 2479051/439091200 (0.5646%)
+Test set: Error: 2497889/439091200 (0.5689%)
 ```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
+310P精度测试结果：
+```
+Test set: Error: 2485695/439091200 (0.5661%)
+```
+经过对batchsize为1/4/8/16/32/64的om测试，精度数据均如上。
 
 ### 6.2 开源精度
 [原代码仓公布精度](https://github.com/mattmacy/vnet.pytorch/blob/master/README.md)
@@ -194,132 +210,71 @@ VNet    0.355%
 
 ## 7 性能对比
 
--   **[npu性能数据](#71-npu性能数据)**  
--   **[T4性能数据](#72-T4性能数据)**  
--   **[性能对比](#73-性能对比)**  
+-   **[310性能数据](#71-310性能数据)**  
+-   **[310P性能数据](#72-310P性能数据)**  
+-   **[T4性能数据](#73-T4性能数据)**  
+-   **[性能对比](#74-性能对比)**  
 
-### 7.1 npu性能数据
+### 7.1 310性能数据
 1.benchmark工具在整个数据集上推理获得性能数据  
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-```
-[e2e] throughputRate: 5.70609, latency: 187869
-[data read] throughputRate: 225.606, moduleLatency: 4.43251
-[preprocess] throughputRate: 53.7844, moduleLatency: 18.5928
-[inference] throughputRate: 5.75202, Interface throughputRate: 6.10496, moduleLatency: 173.468
-[postprocess] throughputRate: 5.75712, moduleLatency: 173.698
-```
-Interface throughputRate: 6.10496，6.10496x4=24.41984既是batch1 310单卡吞吐率  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
-```
-[e2e] throughputRate: 6.24092, latency: 171769
-[data read] throughputRate: 377.232, moduleLatency: 2.65089
-[preprocess] throughputRate: 61.2764, moduleLatency: 16.3195
-[inference] throughputRate: 6.2793, Interface throughputRate: 6.49396, moduleLatency: 159.033
-[postprocess] throughputRate: 0.398022, moduleLatency: 2512.42
-```
-Interface throughputRate: 6.49396，6.49396x4=25.97584既是batch16 310单卡吞吐率  
-batch4性能：
-```
-[e2e] throughputRate: 6.38643, latency: 167856
-[data read] throughputRate: 220.829, moduleLatency: 4.52839
-[preprocess] throughputRate: 59.272, moduleLatency: 16.8714
-[inference] throughputRate: 6.42624, Interface throughputRate: 6.67466, moduleLatency: 155.341
-[postprocess] throughputRate: 1.61227, moduleLatency: 620.245
-```
-batch4 310单卡吞吐率：6.67466x4=26.69864fps  
-batch8性能：
-```
-[e2e] throughputRate: 6.17056, latency: 173728
-[data read] throughputRate: 216.73, moduleLatency: 4.61403
-[preprocess] throughputRate: 57.3928, moduleLatency: 17.4238
-[inference] throughputRate: 6.20835, Interface throughputRate: 6.41992, moduleLatency: 160.848
-[postprocess] throughputRate: 0.781576, moduleLatency: 1279.47
-```
-batch8 310单卡吞吐率：6.41992x4=25.67968fps  
-batch32性能：
-```
-[e2e] throughputRate: 6.09413, latency: 175907
-[data read] throughputRate: 183.187, moduleLatency: 5.45889
-[preprocess] throughputRate: 49.9254, moduleLatency: 20.0299
-[inference] throughputRate: 6.15986, Interface throughputRate: 6.35151, moduleLatency: 162.051
-[postprocess] throughputRate: 0.200903, moduleLatency: 4977.52
-```
-batch32 310单卡吞吐率：6.35151x4=25.40604fps  
 
-### 7.2 T4性能数据
+batch1：Interface throughputRate: 7.91715
+batch4：Interface throughputRate: 8.5008
+batch8：Interface throughputRate: 8.00694
+batch16：Interface throughputRate: 8.11015
+batch32：Interface throughputRate: 7.91441
+
+2.执行parse脚本，计算单卡吞吐率
+```
+python parse.py result/perf_vision_batchsize_1_device_0.txt
+```
+batch1_310吞吐率为31.6686fps
+batch4_310吞吐率为34.0032fps
+batch8_310吞吐率为32.02776fps
+batch16_310吞吐率为32.4406fps
+batch32_310吞吐率为31.65764fps
+
+### 7.2 310P性能数据
+
+batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
+
+batch1：Interface throughputRate: 65.5303 ,310P吞吐率为65.5303fps
+batch4：Interface throughputRate: 64.5802 ,310P吞吐率为64.5802fps
+batch8：Interface throughputRate: 64.3861 ,310P吞吐率为64.3861fps
+batch16：Interface throughputRate: 63.617 ,310P吞吐率为63.617fps
+batch32：Interface throughputRate: 59.7592 ,310P吞吐率为59.7592fps
+batch64：Interface throughputRate: 61.1219 ,310P吞吐率为61.1219fps
+
+### 7.3 T4性能数据
 在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
 batch1性能：
 ```
 trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:1x1x64x80x80 --threads
 ```
-gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch
-```
-[09/17/2021-15:39:40] [I] GPU Compute
-[09/17/2021-15:39:40] [I] min: 92.4146 ms
-[09/17/2021-15:39:40] [I] max: 103.909 ms
-[09/17/2021-15:39:40] [I] mean: 97.0678 ms
-[09/17/2021-15:39:40] [I] median: 96.9087 ms
-[09/17/2021-15:39:40] [I] percentile: 103.909 ms at 99%
-[09/17/2021-15:39:40] [I] total compute time: 3.20324 s
-```
-batch1 t4单卡吞吐率：1000/(96.9087/1)=10.31899fps  
 
-batch16性能：
-```
-trtexec --onnx=nested_unet.onnx --fp16 --shapes=actual_input_1:16x3x96x96 --threads
-```
-```
-[09/17/2021-16:11:37] [I] GPU Compute
-[09/17/2021-16:11:37] [I] min: 1574.28 ms
-[09/17/2021-16:11:37] [I] max: 1576.2 ms
-[09/17/2021-16:11:37] [I] mean: 1575.22 ms
-[09/17/2021-16:11:37] [I] median: 1574.94 ms
-[09/17/2021-16:11:37] [I] percentile: 1576.2 ms at 99%
-[09/17/2021-16:11:37] [I] total compute time: 15.7522 s
-```
-batch16 t4单卡吞吐率：1000/(1575.22/16)=10.15731fps  
+batch1 t4单卡吞吐率：1000/(91.687/1)=10.90667fps  
+batch4 t4单卡吞吐率：1000/(360.984/4)=11.08082fps
+batch8 t4单卡吞吐率：1000/(813.193/8)=9.83776fps
+batch16 t4单卡吞吐率：1000/(1563.66/16)=10.41219fps
+batch32 t4单卡吞吐率：1000/(5932.02/32)=5.39445fps
+batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
 
-batch4性能：
-```
-[09/17/2021-15:44:51] [I] GPU Compute
-[09/17/2021-15:44:51] [I] min: 361.722 ms
-[09/17/2021-15:44:51] [I] max: 375.435 ms
-[09/17/2021-15:44:51] [I] mean: 365.263 ms
-[09/17/2021-15:44:51] [I] median: 363.615 ms
-[09/17/2021-15:44:51] [I] percentile: 375.435 ms at 99%
-[09/17/2021-15:44:51] [I] total compute time: 3.65263 s
-```
-batch4 t4单卡吞吐率：1000/(365.263/4)=10.95101fps  
+### 7.4 性能对比
 
-batch8性能：
-```
-[09/17/2021-15:52:50] [I] GPU Compute
-[09/17/2021-15:52:50] [I] min: 796.131 ms
-[09/17/2021-15:52:50] [I] max: 802.935 ms
-[09/17/2021-15:52:50] [I] mean: 798.473 ms
-[09/17/2021-15:52:50] [I] median: 798.262 ms
-[09/17/2021-15:52:50] [I] percentile: 802.935 ms at 99%
-[09/17/2021-15:52:50] [I] total compute time: 7.98473 s
-```
-batch8 t4单卡吞吐率：1000/(798.473/8)=10.01912fps  
-
-batch32性能：
-```
-[09/17/2021-16:29:35] [I] GPU Compute
-[09/17/2021-16:29:35] [I] min: 3382.94 ms
-[09/17/2021-16:29:35] [I] max: 3395.54 ms
-[09/17/2021-16:29:35] [I] mean: 3389.83 ms
-[09/17/2021-16:29:35] [I] median: 3390.36 ms
-[09/17/2021-16:29:35] [I] percentile: 3395.54 ms at 99%
-[09/17/2021-16:29:35] [I] total compute time: 33.8983 s
-```
-batch32 t4单卡吞吐率：1000/(3389.83/32)=9.44fps  
-
-### 7.3 性能对比
-batch1：6.10496x4 > 1000x1/(96.9087/1)  
-batch16：6.49396x4 > 1000x1/(1575.22/16)  
-310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率大，故310性能高于T4性能，性能达标。  
-对于batch1与batch16，310性能均高于T4性能1.2倍，该模型放在ACL_PyTorch/Benchmark/cv/segmentation目录下。  
+310 310P T4性能对比如下(benchmark推理工具)
+| batch | 310      | 310P     | T4       | 310P/310 | 310P/T4   |
+|-------|----------|---------|----------|---------|----------|
+| 1     | 31.6686  | 65.5303 | 10.90667 | 2.06925 | 6.00828  |
+| 4     | 34.0032  | 64.5802 | 11.08082 | 1.89924 | 5.82811  |
+| 8     | 32.02776 | 64.3861 | 9.83776  | 2.01032 | 6.54479  |
+| 16    | 32.4406  | 63.617  | 10.41219 | 1.96103 | 6.10986  |
+| 32    | 31.65764 | 59.7592 | 5.39445  | 1.88767 | 11.07790 |
+| 64    | -        | 61.1219 | 4.90369  | -       | 12.46447 |
+|       |          |         |          |         |          |
+| 最优  | 34.0032  | 65.5303 | 11.08082 |         |          |
+		
+对于所有batchsize，310P性能均高于310性能1.2倍，同时310P性能均高于T4性能1.6倍，性能达标。  
  **性能优化：**  
 >没有遇到性能不达标的问题，故不需要进行性能优化
 

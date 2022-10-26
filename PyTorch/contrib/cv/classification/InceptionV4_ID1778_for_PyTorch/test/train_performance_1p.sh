@@ -104,7 +104,7 @@ taskset -c 0-42 python3.7 train_1p.py \
 --amp \
     	--data ${data_path} \
     	--seed=49 \
-    	--workers=$(worker) \
+    	--workers=${worker} \
     	--learning-rate=${learning_rate} \
     	--mom=0.9 \
     	--weight-decay=1.0e-04  \

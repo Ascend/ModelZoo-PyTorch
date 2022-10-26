@@ -17,6 +17,8 @@ import os
 import sys
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.backends import cudnn
 
 sys.path.append('.')

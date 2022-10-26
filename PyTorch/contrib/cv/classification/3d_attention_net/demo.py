@@ -22,7 +22,10 @@ import numpy as np
 import torchvision
 from torchvision import transforms, datasets, models
 import os
-import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 #import cv2
 import time
 from collections import OrderedDict

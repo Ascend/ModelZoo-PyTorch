@@ -24,6 +24,8 @@ import math
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.nn.functional as F
@@ -239,7 +241,7 @@ parser.add_argument('--use_aux', default=False, action='store_true', help='use a
 # Device options
 # parser.add_argument('--gpu-id', default='0', type=str, help='id(s) for CUDA_VISIBLE_DEVICES')
 parser.add_argument('--local_rank', default=0, type=int)
-parser.add_argument('--loss_scale', default=128, type=float)
+parser.add_argument('--loss_scale', default=128)
 parser.add_argument('--max_step', default=0, type=int)
 
 

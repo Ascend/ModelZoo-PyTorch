@@ -80,7 +80,7 @@ do
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     rm -rf ./models
-    python3 main.py  \
+    nohup python3 main.py  \
         --model_type R2U_Net \
         --data_path=$data_path \
         --batch_size $batch_size \
@@ -88,7 +88,7 @@ do
         --num_workers 128 \
         --apex 1 \
         --apex-opt-level O2 \
-        --loss_scale_value 1024 \
+        --loss_scale_value dynamic \
         --distributed \
         --npu_idx ${ASCEND_DEVICE_ID}\
         --num_epochs $epochs > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -106,8 +106,9 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep FPS|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+FinalFPS=`awk -v x="$FPS" -v y="$RANK_SIZE" 'BEGIN{printf "%.3f\n", x*y}'`
 #打印，不需要修改
-echo "Final Performance images/sec : $FPS"
+echo "Final Performance images/sec : $FinalFPS"
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a 'Validation' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc: " '{print $NF}'|awk -F "," '{print $1}'`

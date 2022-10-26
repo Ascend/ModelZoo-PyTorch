@@ -1,0 +1,123 @@
+--- a/mmdet/models/dense_heads/base_dense_head.py
++++ b/mmdet/models/dense_heads/base_dense_head.py
+@@ -430,9 +496,10 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
+         mlvl_batch_bboxes = []
+         mlvl_scores = []
+ 
+-        for cls_score, bbox_pred, score_factors, priors in zip(
++        # stride will be used in tood
++        for cls_score, bbox_pred, score_factors, priors, stride in zip(
+                 mlvl_cls_scores, mlvl_bbox_preds, mlvl_score_factor,
+-                mlvl_priors):
++                mlvl_priors, self.prior_generator.strides):
+             assert cls_score.size()[-2:] == bbox_pred.size()[-2:]
+ 
+             scores = cls_score.permute(0, 2, 3,
+@@ -450,6 +517,7 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
+                     batch_size, -1).sigmoid()
+             bbox_pred = bbox_pred.permute(0, 2, 3,
+                                           1).reshape(batch_size, -1, 4)
++            bbox_pred = bbox_pred * stride[0] # Referenced from "_get_bboxes_single" in TOODHead
+             priors = priors.expand(batch_size, -1, priors.size(-1))
+             # Get top-k predictions
+             from mmdet.core.export import get_k_for_topk
+@@ -489,8 +557,9 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
+                     score_factors = score_factors.reshape(
+                         -1, 1)[transformed_inds].reshape(batch_size, -1)
+ 
+-            bboxes = self.bbox_coder.decode(
+-                priors, bbox_pred, max_shape=img_shape)
++            # bboxes = self.bbox_coder.decode(
++            #     priors, bbox_pred, max_shape=img_shape)
++            bboxes = bbox_pred # TOOD do not need decode
+ 
+             mlvl_batch_bboxes.append(bboxes)
+             mlvl_scores.append(scores)
+--- a/mmdet/models/dense_heads/tood_head.py
++++ b/mmdet/models/dense_heads/tood_head.py
+@@ -13,6 +13,46 @@ from mmdet.models.utils import sigmoid_geometric_mean
+ from ..builder import HEADS, build_loss
+ from .atss_head import ATSSHead
+ 
++class DeformConv2dFunction(torch.autograd.Function):
++
++    @staticmethod
++    def forward(ctx,
++                input,
++                offset,
++                weight,
++                stride=1,
++                padding=0,
++                dilation=1,
++                groups=1,
++                deform_groups=1):
++        output_size = [input.shape[0], weight.shape[0]]
++        for d in range(input.dim() - 2):
++            in_size = input.size(d + 2)
++            kernel = dilation * (weight.size(d + 2) - 1) + 1
++            output_size.append((in_size + (2 * padding) - kernel) // stride + 1)
++        out = torch.randn(output_size).to(input.dtype)
++        return out
++
++    @staticmethod
++    def symbolic(g,
++                 input,
++                 offset,
++                 weight,
++                 stride,
++                 padding,
++                 dilation,
++                 groups,
++                 deform_groups):
++        return g.op(
++            "DeformableConv2D",
++            input,
++            weight,
++            offset,
++            strides_i=[stride, stride],
++            pads_i=[padding, padding],
++            dilations_i=dilation,
++            groups_i=groups,
++            deformable_groups_i=deform_groups)
+ 
+ class TaskDecomposition(nn.Module):
+     """Task decomposition module in task-aligned predictor of TOOD.
+@@ -246,7 +286,8 @@ class TOODHead(ATSSHead):
+             # cls prediction and alignment
+             cls_logits = self.tood_cls(cls_feat)
+             cls_prob = self.cls_prob_module(feat)
+-            cls_score = sigmoid_geometric_mean(cls_logits, cls_prob)
++            # cls_score = sigmoid_geometric_mean(cls_logits, cls_prob)
++            cls_score = torch.sqrt(cls_logits.sigmoid()*cls_prob.sigmoid())
+ 
+             # reg prediction and alignment
+             if self.anchor_type == 'anchor_free':
+@@ -291,7 +332,15 @@ class TOODHead(ATSSHead):
+         # it is an equivalent implementation of bilinear interpolation
+         b, c, h, w = feat.shape
+         weight = feat.new_ones(c, 1, 1, 1)
+-        y = deform_conv2d(feat, offset, weight, 1, 0, 1, c, c)
++        # for npu
++        if torch.onnx.is_in_onnx_export():
++            offset_x = offset[:,0::2,:,:]
++            offset_y = offset[:,1::2,:,:]
++            mask = torch.ones(offset.size(0), offset.size(1)//2, offset.size(2), offset.size(3)).float()
++            offset = torch.cat([offset_y, offset_x, mask], dim=1)
++            y = DeformConv2dFunction.apply(feat, offset, weight, 1, 0, 1, c.item(), c.item())
++        else:
++            y = deform_conv2d(feat, offset, weight, 1, 0, 1, c, c)
+         return y
+ 
+     def anchor_center(self, anchors):
+--- a/tools/deployment/pytorch2onnx.py
++++ b/tools/deployment/pytorch2onnx.py
+@@ -97,7 +88,8 @@ def pytorch2onnx(model,
+         do_constant_folding=True,
+         verbose=show,
+         opset_version=opset_version,
+-        dynamic_axes=dynamic_axes)
++        dynamic_axes=dynamic_axes,
++        enable_onnx_checker=False)
+ 
+     model.forward = origin_forward
+ 

@@ -40,6 +40,9 @@ import os
 
 import json
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+
 import torch.utils.data
 from torchvision.transforms import transforms as T
 from opts import opts

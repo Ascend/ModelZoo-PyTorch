@@ -426,6 +426,7 @@ class TransformerEncoder(FairseqEncoder):
                                1] < pad_size else 0, 0, 0),
                            mode='constant', value=0)
         '''
+        print(src_tokens.size())
         if self.layer_wise_attention:
             return_all_hiddens = True
 
@@ -637,6 +638,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                                         0, 0),
                                    mode='constant', value=0)
         '''
+        print(prev_output_tokens.size())
         x, extra = self.extract_features(
             prev_output_tokens,
             encoder_out=encoder_out,

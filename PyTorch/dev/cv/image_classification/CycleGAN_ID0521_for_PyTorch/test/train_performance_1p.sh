@@ -3,6 +3,9 @@ cur_path=`pwd`/../
 
 #Batch Size
 batch_size=1
+export RANKSIZE=1
+export RANK_ID=0
+RANK_ID_START=0
 #网络名称，同目录名称
 Network="CycleGAN_ID0521_for_PyTorch"
 #Device数量，单卡默认为1

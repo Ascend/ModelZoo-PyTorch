@@ -105,7 +105,15 @@ parser.add_argument('--loss-scale-value', default=128., type=float,
 parser.add_argument('--max_steps', default=None, type=int, metavar='N',
                         help='number of total steps to run')
 
+parser.add_argument('--world-size', default=1, type=int,
+                    help='number of distributed processes')
+parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+                    help='url used to set up distributed training')
+parser.add_argument('--dist-backend', default='hccl', type=str,
+                    help='distributed backend')
 
+## for ascend 910
+parser.add_argument('--device_id', default=0, type=int, help='device id')
 
 args = parser.parse_args()
 print(args)
@@ -127,7 +135,15 @@ random.seed(args.manualSeed)
 torch.manual_seed(args.manualSeed)
 
 cudnn.benchmark = True
+rank_size = int(os.environ['RANKSIZE'])
+rank_id = int(os.environ['RANK_ID'])
+distributed = rank_size > 1
+device = torch.device(f'npu:{args.device_id}')
+torch.npu.set_device(device)
 
+
+if distributed:
+    torch.distributed.init_process_group('hccl', rank= rank_id, world_size= rank_size)
 ################################ modify by npu ##########################################
 # Set cuda device so everything is done on the right GPU
 #if torch.cuda.is_available() and not args.cuda:
@@ -146,8 +162,12 @@ dataset = ImageDataset(root=os.path.join(args.dataroot, args.dataset),
                            transforms.ToTensor(),
                            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
                        unaligned=True)
+if distributed:
+    train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+else:
+    train_sampler = None
 
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=128, pin_memory=True)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=(train_sampler is None), num_workers=128, pin_memory=True,sampler=train_sampler)
 
 try:
     os.makedirs(os.path.join(args.outf, args.dataset, "A"))
@@ -163,7 +183,7 @@ except OSError:
 # Set cuda device so everything is done on the right GPU
 #device = torch.device("cuda:0" if args.cuda else "cpu")
 # Set npu device so everything is done on the right NPU
-device = torch.device("npu:0" if args.npu else "cpu")
+# device = torch.device("npu:0" if args.npu else "cpu")
 ################################ modify by npu ##########################################
 
 # create model
@@ -204,7 +224,11 @@ if args.apex:
                                          opt_level=args.apex_opt_level,
                                          loss_scale=args.loss_scale_value,
                                          combine_grad=True)
-
+if distributed:
+    netG_A2B = torch.nn.parallel.DistributedDataParallel(netG_A2B, device_ids=[args.device_id])
+    netG_B2A= torch.nn.parallel.DistributedDataParallel(netG_B2A, device_ids=[args.device_id])
+    netD_A = torch.nn.parallel.DistributedDataParallel(netD_A, device_ids=[args.device_id])
+    netD_B = torch.nn.parallel.DistributedDataParallel(netD_B, device_ids=[args.device_id])
 lr_lambda = DecayLR(args.epochs, 0, args.decay_epochs).step
 lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(optimizer_G, lr_lambda=lr_lambda)
 lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(optimizer_D_A, lr_lambda=lr_lambda)
@@ -221,6 +245,8 @@ fake_A_buffer = ReplayBuffer()
 fake_B_buffer = ReplayBuffer()
 
 for epoch in range(0, args.epochs):
+    if distributed:
+        train_sampler.set_epoch(epoch)
     progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
     for i, data in progress_bar:
         if args.max_steps and i > args.max_steps:
@@ -343,8 +369,8 @@ for epoch in range(0, args.epochs):
 
         #
         step_time = time.time() - start_time
-        fps = args.batch_size / step_time
-
+        # fps = args.batch_size / step_time
+        fps = (args.batch_size if not distributed else (args.batch_size * rank_size)) / step_time
         progress_bar.set_description(
             f"[{epoch}/{args.epochs - 1}][{i}/{len(dataloader) - 1}] "
             f"Loss_D: {(errD_A + errD_B).item():.4f} "

@@ -37,6 +37,8 @@ import time
 import sys
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.utils.data
 from torch import nn
 import torchvision
@@ -233,6 +235,7 @@ def main(args):
         model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
     if args.apex:
+        print("---------",args.loss_scale_value,"---------")
         model, optimizer = amp.initialize(model, optimizer,
                                           opt_level=args.apex_opt_level,
                                           loss_scale=args.loss_scale_value,
@@ -346,8 +349,7 @@ def parse_args():
                              'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet'
                         )
     parser.add_argument('--loss_scale_value',
-                        default=1024,
-                        type=int,
+                        default='dynamic',
                         help='set loss scale value.')
 
     # distributed training parameters

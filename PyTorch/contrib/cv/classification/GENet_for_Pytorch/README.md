@@ -13,6 +13,8 @@ CANN 5.0.2
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+  `Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0`
 - Download the cifar10 dataset by referring the original [repository](https://github.com/BayesWatch/pytorch-GENet)
     - You can also without downloading them in advance. The cifar10 interface provided by torchvision will automatically download them for you.
 
@@ -51,9 +53,9 @@ All bash instructions output log files correctly.
 
 ## GENET training result
 
-| Acc@1    | FPS       | Device Type| Device Nums | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: | :------: |:------:
-|   94.73     | 1894.827   |   NPU | 1        | 300        | O2       |
-| 95.23   | 7858.025     |NPU  |8       | 300      | O2       |
-| 94.76    |  1350.074  |GPU  |1       | 300      | O2       |
-| 94.81    |  6536.289  |GPU  |8       | 300      | O2       |
+| Acc@1 |    FPS    | Device Type | Device Nums | Epochs | AMP_Type |
+|:-----:|:---------:|:-----------:|:-----------:|:------:|:--------:|
+| 94.73 | 2900.000  |     NPU     |      1      |  300   |    O2    |
+| 95.23 | 16912.437 |     NPU     |      8      |  300   |    O2    |
+| 94.76 | 1350.074  |     GPU     |      1      |  300   |    O2    |
+| 94.81 | 6536.289  |     GPU     |      8      |  300   |    O2    |

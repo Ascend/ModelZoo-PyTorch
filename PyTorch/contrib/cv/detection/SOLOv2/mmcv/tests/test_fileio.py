@@ -59,7 +59,6 @@ obj_for_test = [{'a': 'abc', 'b': 1}, 2, 'c']
 
 
 def test_json():
-
     def json_checker(dump_str):
         assert dump_str in [
             '[{"a": "abc", "b": 1}, 2, "c"]', '[{"b": 1, "a": "abc"}, 2, "c"]'
@@ -69,7 +68,6 @@ def test_json():
 
 
 def test_yaml():
-
     def yaml_checker(dump_str):
         assert dump_str in [
             '- {a: abc, b: 1}\n- 2\n- c\n', '- {b: 1, a: abc}\n- 2\n- c\n',
@@ -80,7 +78,6 @@ def test_yaml():
 
 
 def test_pickle():
-
     def pickle_checker(dump_str):
         import pickle
         assert pickle.loads(dump_str) == obj_for_test
@@ -99,7 +96,6 @@ def test_exception():
 
 
 def test_register_handler():
-
     @mmcv.register_handler('txt')
     class TxtHandler1(mmcv.BaseFileHandler):
 

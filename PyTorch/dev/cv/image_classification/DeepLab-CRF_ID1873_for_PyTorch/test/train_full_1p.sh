@@ -146,7 +146,7 @@ python3 main.py test \
 wait
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep "Pixel Accuracy" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Mean IoU" '{print $2}'|awk -F " " '{print $2}'|cut -b 1-5|sed s/[[:space:]]//g`
+train_accuracy=`grep "Pixel Accuracy" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Pixel Accuracy" '{print $2}'|awk -F " " '{print $2}'|cut -b 1-7|sed s/[[:space:]]//g`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

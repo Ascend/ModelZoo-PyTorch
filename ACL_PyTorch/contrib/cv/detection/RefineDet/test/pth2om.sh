@@ -1,4 +1,4 @@
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 input_file='./RefineDet320_VOC_final.pth'
 output_file='RefineDet320_VOC_final_no_nms.onnx'

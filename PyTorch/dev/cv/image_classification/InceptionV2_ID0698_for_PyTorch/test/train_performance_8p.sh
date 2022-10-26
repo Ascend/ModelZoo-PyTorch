@@ -26,7 +26,7 @@ batch_size=2048
 #训练step
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
-learning_rate=0.045
+learning_rate=0.72
 
 
 
@@ -119,7 +119,8 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-Timeavg=`grep "Epoch:" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F " " '{print $8}' |tail -n +2|awk '{sum+=$1} END {print sum/NR}'|sed s/[[:space:]]//g `
+#Timeavg=`grep "Epoch:" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F " " '{print $8}' |tail -n +2|awk '{sum+=$1} END {print sum/NR}'|sed s/[[:space:]]//g `
+Timeavg=`grep "Epoch:" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "Time" '{print $2}'|awk -F "(" '{print $1}' |tail -n +2|awk '{sum+=$1} END {print sum/NR}'|sed s/[[:space:]]//g `
 Timeavg=`awk 'BEGIN{printf "%.2f\n",'$Timeavg'}'`
 FPS=`awk 'BEGIN{printf "%.2f\n",'$batch_size'/'$Timeavg'}'`
 #打印，不需要修改

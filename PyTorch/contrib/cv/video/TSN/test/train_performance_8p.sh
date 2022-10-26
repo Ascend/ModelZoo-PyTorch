@@ -41,7 +41,8 @@ else
 fi
 
 
-
+echo "--device id--"
+ASCEND_DEVICE_ID=0
 #################创建日志输出目录，不需要修改#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
@@ -80,7 +81,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-fps_list=`grep 'Average FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsn_train_per_8p_${ASCEND_DEVICE_ID}.log | awk -F '-' '{print $6}' | awk '{print $3}' | awk 'END {print}'`
+fps_list=`grep 'Average FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsn_train_per_8p_${ASCEND_DEVICE_ID}.log | awk -F '-' '{print $6}' | awk '{print $3}'`
 FPS=`echo ${fps_list##* }`
 FPS=${FPS%\}*}
 # 打印，不需要修改

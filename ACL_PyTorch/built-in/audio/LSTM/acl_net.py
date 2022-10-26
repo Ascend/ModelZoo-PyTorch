@@ -105,7 +105,7 @@ class AclModel(object):
     def __call__(self, ori_data, dim):
         return self.forward(ori_data, dim)
 
-    def __del__(self):
+    def relese(self):
         # unload model
         if self.model_id:
             ret = acl.mdl.unload(self.model_id)
@@ -190,7 +190,8 @@ class AclModel(object):
     def copy_data_to_device(self, data):
         for i in range(len(data)):
             if 'bytes_to_ptr' in dir(acl.util):
-                ptr = acl.util.bytes_to_ptr(data[i]["buffer"].tobytes())
+                data_in = data[i]["buffer"].tobytes()
+                ptr = acl.util.bytes_to_ptr(data_in)
             else:
                 ptr, np = acl.util.numpy_contiguous_to_ptr(data[i]["buffer"])
             acl.rt.memcpy(self.input_bufs_ptr[i]["buffer"], data[i]["size"], ptr,

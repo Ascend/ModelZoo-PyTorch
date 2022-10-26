@@ -102,9 +102,9 @@ def get_text_boxes_om(image, img_name, args, prob_thresh=0.5):
     side_w = config.center_list[distance_list.index(min_distance)][1]
 
     # Read the output file of the om model
-    cls_numpy = np.fromfile('./result/dumpOutput_device0/{}_1.bin'.format(img_name[:-4]), dtype="float32")
+    cls_numpy = np.fromfile('./result/dumpOutput_device0/{}_0.bin'.format(img_name[:-4]), dtype="float32")
     cls_numpy = cls_numpy.reshape((-1, 2))[:int(side_h / 16)*int(side_w / 16)*10, :]
-    regr_numpy = np.fromfile('./result/dumpOutput_device0/{}_2.bin'.format(img_name[:-4]), dtype="float32")
+    regr_numpy = np.fromfile('./result/dumpOutput_device0/{}_1.bin'.format(img_name[:-4]), dtype="float32")
     regr = regr_numpy.reshape((1, -1, 2))[:, :int(side_h / 16)*int(side_w / 16)*10, :]
     
     cls_exp = np.exp(cls_numpy)

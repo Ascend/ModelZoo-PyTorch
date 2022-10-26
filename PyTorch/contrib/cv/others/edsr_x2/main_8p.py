@@ -37,6 +37,8 @@ from apex import amp
 from tqdm import tqdm
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 import torch.multiprocessing as mp
 from torch.utils.data.dataloader import DataLoader
@@ -72,6 +74,7 @@ def save_checkpoint(
             checkpoint_path,
             os.path.join(opt.save, "model_best.pth"),
         )
+    print("\n")
     print("Best:", opt.best, "This Time:", checkpoint_performance[-1][0])
 
 

@@ -12,6 +12,8 @@ Therefore,Inception V4 is re-implemented using semantics such as custom OP. For 
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - pip install -r requirements.txt
+  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 - git clone https://github.com/Cadene/pretrained-models.pytorch.git
 - Download the ImageNet dataset from http://www.image-net.org/
   - Then, and move validation images to labeled subfolders, using [the following shell script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)

@@ -8,7 +8,8 @@
 
 安装依赖
 ```shell
-pip install ./requirements/requirements.txt
+pip3.7 install ./requirements/requirements.txt
+注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision ,建议Pillow版本是9.1.0 torchvision版本是0.6.0
 ```
 
 安装mmcv

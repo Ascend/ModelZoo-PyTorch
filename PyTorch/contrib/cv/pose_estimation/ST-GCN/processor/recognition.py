@@ -149,6 +149,8 @@ class REC_Processor(Processor):
         batch_time = AverageMeter('Time', ':6.3f')
         end = time.time()
         for data, label in loader:
+            if self.meta_info['iter'] > self.arg.steps_per_epoch:
+                continue
             # get data
             data = data.float().to(self.dev)
             data.requires_grad = True
@@ -158,6 +160,7 @@ class REC_Processor(Processor):
                 label = label.int().to(self.dev)
 
             # forward
+            start_time = time.time()
             output = self.model(data)
             loss = self.loss(output, label)
             # backward
@@ -173,6 +176,8 @@ class REC_Processor(Processor):
             self.iter_info['loss'] = loss.data.item()
             self.iter_info['lr'] = '{:.6f}'.format(self.lr)
             loss_value.append(self.iter_info['loss'])
+            train_time = time.time() - start_time
+            self.iter_info['s/step'] = train_time
             self.show_iter_info()
             self.meta_info['iter'] += 1
             batch_time.update(time.time() - end)

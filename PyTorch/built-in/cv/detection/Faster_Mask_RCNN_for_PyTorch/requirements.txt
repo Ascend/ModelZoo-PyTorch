@@ -1,7 +1,6 @@
-torch==1.5.0
-apex
-torchvision==0.2.2.post2
+pillow==9.1.0
+torchvision
 fvcore
 pycocotools
 cloudpickle
-tensorboard
+tensorboard==1.15.0

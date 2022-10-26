@@ -131,7 +131,7 @@ class _ProposalTargetLayer(nn.Module):
         """
         # overlaps: (rois x gt_boxes)
 
-        overlaps = bbox_overlaps_batch(all_rois, gt_boxes)
+        overlaps = bbox_overlaps_batch(all_rois, gt_boxes).cpu()
 
         max_overlaps, gt_assignment = torch.max(overlaps, 2)
 
@@ -250,4 +250,4 @@ class _ProposalTargetLayer(nn.Module):
         bbox_targets, bbox_inside_weights = \
                 self._get_bbox_regression_labels_pytorch(bbox_target_data, labels_batch, num_classes)
 
-        return labels_batch, rois_batch, bbox_targets, bbox_inside_weights
+        return labels_batch.npu(), rois_batch.npu(), bbox_targets.npu(), bbox_inside_weights.npu()

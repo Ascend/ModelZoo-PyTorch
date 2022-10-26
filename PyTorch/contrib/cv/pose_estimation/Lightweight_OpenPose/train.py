@@ -18,6 +18,8 @@ import shutil
 import time
 import cv2
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.optim
 from torch.utils.data import DataLoader
 from torchvision import transforms

@@ -79,7 +79,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./main_1p.py \
+taskset -c 0-32 python3.7 ./main_1p.py \
     ${data_path} \
     --workers=${workers} \
     --learning_rate=0.0003 \
@@ -92,7 +92,7 @@ python3.7 ./main_1p.py \
     --epochs=${train_epochs} \
     --npu=0 \
     --npus_per_node=1 \
-    --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --batch_size=${batch_size}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

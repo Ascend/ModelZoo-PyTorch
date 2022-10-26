@@ -29,6 +29,7 @@ from mmdet.models import build_detector
 import cv2
 from scipy import ndimage
 
+
 def init_detector(config, checkpoint=None, device='cuda:0'):
     """Initialize a detector from config file.
 
@@ -280,7 +281,7 @@ def show_result_ins(img,
         for _ in range(num_mask)
     ]
     for idx in range(num_mask):
-        idx = -(idx+1)
+        idx = -(idx + 1)
         cur_mask = seg_label[idx, :, :]
         cur_mask = mmcv.imresize(cur_mask, (w, h))
         cur_mask = (cur_mask > 0.5).astype(np.uint8)
@@ -293,11 +294,11 @@ def show_result_ins(img,
         cur_cate = cate_label[idx]
         cur_score = cate_score[idx]
         label_text = class_names[cur_cate]
-        #label_text += '|{:.02f}'.format(cur_score)
+        # label_text += '|{:.02f}'.format(cur_score)
         center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)
         vis_pos = (max(int(center_x) - 10, 0), int(center_y))
         cv2.putText(img_show, label_text, vis_pos,
-                        cv2.FONT_HERSHEY_COMPLEX, 0.3, (255, 255, 255))  # green
+                    cv2.FONT_HERSHEY_COMPLEX, 0.3, (255, 255, 255))  # green
     if out_file is None:
         return img_show
     else:

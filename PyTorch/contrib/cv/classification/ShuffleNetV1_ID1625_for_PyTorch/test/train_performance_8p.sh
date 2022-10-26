@@ -13,13 +13,11 @@ data_path=""
 
 # 训练epoch
 train_epochs=2
-# 指定8卡训练所使用的device_id_list
-device_id_list=0,1,2,3,4,5,6,7
 # 学习率
 learning_rate=1
 # 加载数据进程数
-workers=184
-
+workers=24
+device_num=8
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -62,30 +60,46 @@ fi
 
 
 #################启动训练脚本#################
-#训练开始时间，不需要修改
+# 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-# source ${test_path_dir}/env.sh
-python3.7 -u ./train.py \
-    --data=${data_path} \
-    --addr=$(hostname -I |awk '{print $1}') \
-    --workers=${workers} \
-    --print-freq=1 \
-    --eval-freq=5 \
-    --dist-url='tcp://127.0.0.1:50000' \
-    --dist-backend='hccl' \
-    --multiprocessing-distributed \
-    --world-size=1 \
-    --rank=0 \
-    --amp \
-    --loss-scale 64 \
-    --batch-size ${batch_size} \
-    --epochs=${train_epochs} \
-    --learning-rate ${learning_rate} \
-    --wd 8e-5 \
-    --device-list=${device_id_list} \
-    --device_num 8 \
-    --benchmark 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+if [ $(uname -m) = "aarch64" ]
+then
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END nohup python3.7 -u train.py \
+        --model-size 1.0x \
+        --epochs ${train_epochs} \
+        --batch-size ${batch_size} \
+        --opt-level O2 \
+        --workers ${workers} \
+        --local-rank ${i} \
+        --device-num ${device_num} \
+        --data ${data_path} \
+        --world-size 1  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+else
+    nohup python3.7 -u train.py \
+        --model-size 1.0x \
+        --epochs ${train_epochs} \
+        --batch-size ${batch_size} \
+        --opt-level O2 \
+        --workers ${workers} \
+        --local-rank ${i} \
+        --device-num ${device_num} \
+        --data ${data_path} \
+        --world-size 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
+done
+
 
 wait
 
@@ -104,7 +118,7 @@ FPS=${FPS%,*}
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a '* Acc@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a '* Acc@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk '{print $1}' | awk -F "," '{print $1}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -122,7 +136,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep "Epoch " ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log |awk -F ',' '{print $2}' | awk '{print $3}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
@@ -134,6 +148,7 @@ echo "BatchSize = ${BatchSize}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${
 echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

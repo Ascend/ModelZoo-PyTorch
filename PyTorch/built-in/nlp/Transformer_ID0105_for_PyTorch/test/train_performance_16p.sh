@@ -21,6 +21,8 @@ data_path=""
 conf_path=""
 server_index=""
 fix_node_ip=""
+one_node_ip=""
+linux_num=""
 
 #网络名称,同目录名称,需要模型审视修改
 Network="Transformer_ID0105_for_PyTorch"
@@ -43,6 +45,10 @@ do
             server_index=`echo ${para#*=}`
     elif [[ $para == --fix_node_ip* ]];then
             fix_node_ip=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+            one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+            linux_num=`echo ${para#*=}`
     fi
 done
 
@@ -52,8 +58,13 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 export HCCL_IF_IP=$fix_node_ip
 export MASTER_ADDR=$one_node_ip
@@ -70,11 +81,11 @@ fi
 #################启动训练脚本#################
 
 # 非平台场景时source 环境变量
-check_etp_flag=`env | grep etp_running_flag`
-etp_flag=`echo ${check_etp_flag#*=}`
-if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/env_npu.sh
-fi
+#check_etp_flag=`env | grep etp_running_flag`
+#etp_flag=`echo ${check_etp_flag#*=}`
+#if [ x"${etp_flag}" != x"true" ];then
+#    source ${test_path_dir}/env_npu.sh
+#fi
 
 # 必要参数替换配置文件
 cd $cur_path
@@ -125,7 +136,7 @@ do
   --min-lr 0.0 \
   --dropout 0.1 \
   --weight-decay 0.0 \
-  --criterion label_smoothed_cross_entropy \
+  --criterion cross_entropy \
   --label-smoothing 0.1 \
   --max-sentences 128\
   --max-tokens 102400 \

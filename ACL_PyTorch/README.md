@@ -1,0 +1,62 @@
+# 欢迎使用Ascend ACL_PyTorch
+
+为方便更多开发者体验和使用昇腾芯片澎湃推理算力，该目录下提供了经典和主流算法模型实现昇腾服务器推理的端到端流程，更多模型持续更新中。如果您有任何需求，请在[modelzoo/issues](https://gitee.com/ascend/modelzoo/issues)提交issue，我们会及时处理。
+
+## 如何贡献
+
+在开始贡献之前，请先阅读[CONTRIBUTING](https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md)。
+谢谢！
+
+## 支持模型列表（按字母顺序排序）
+
+- [3D_ResNet_ID0421](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/3d_resnets)
+- [3D_ResNet_ID0421](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/3D_ResNet_ID0421_for_PyTorch)
+- [ATC GoogleNet (FP16)](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/GoogleNet)
+- [beit](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Beit)
+- [Big_transfer](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Big-transfer)
+- [C3D](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/C3D)
+- [CGAN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/CGAN)
+- [ch_PP-OCRv2_rec](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/ch_PP-OCRv2_rec)
+- [ch_PP-OCRv3_rec](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/ch_PP-OCRv3_rec)
+- [Conformer_Ti](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Conformer_Ti)
+- [ConvNext](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ConvNext_for_Pytorch)
+- [CycleGAN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/CycleGAN)
+- [DCGAN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/DCGAN)
+- [EDSR](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/super_resolution/EDSR)
+- [EfficientNet-B3](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/EfficientNet-B3)
+- [ELMo](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/ELMo)
+- [en_PP-OCRv3_rec](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/en_PP-OCRv3_rec)
+- [FairMOT](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/tracking/FairMOT)
+- [FCN-8s](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/FCN-8s)
+- [FOMM](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/FOMM)
+- [GhostNet1.0x](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/GhostNet1.0x)
+- [GNMT](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/GNMT)
+- [InceptionResNetV2](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/InceptionResnetV2)
+- [Jasper Onnx](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/jasper)
+- [MobileNetV1](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/MobileNet-v1)
+- [Pix2Pix](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/Pix2Pix)
+- [Real-ESRGAN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/super_resolution/Real-ESRGAN)
+- [RegNetX-1.6GF](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/RegNetX-1.6GF)
+- [ResNeSt50](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ResNeSt50)
+- [ResNeXt-50](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ResNeXt50)
+- [Rosetta_Resnet34_vd](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/Rosetta_Resnet34_vd)
+- [Segformer](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/Segformer)
+- [SimCLR](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/SimCLR_inference)
+- [sMLP](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/sMLP)
+- [SOLOV1](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/SOLOV1)
+- [SOLOV2](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/SOLOV2)
+- [SRFlow](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/image_process/SRFlow)
+- [SRGAN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/quality_enhancement/SRGAN)
+- [tacotron2](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/Tacotron2)
+- [TNT](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/TNT)
+- [Transformer-SSL](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/Transformer-SSL)
+- [Transformer-XL](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/TransformerXL_for_Pytorch)
+- [TrOCR](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/TrOCR)
+- [TSM](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/TSM)
+- [TSN](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/TSN)
+- [Twins_PCPVT_S](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Twins-PCPVT-S)
+- [Ultra-Fast-Lane-Detection](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/Ultra-Fast-Lane-Detection)
+- [VGG16](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/VGG16)
+- [vit_base_patch32_224](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/vit_base_patch32_224)
+- [vit-small](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/vit-small)
+- [xcit](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/xcit)

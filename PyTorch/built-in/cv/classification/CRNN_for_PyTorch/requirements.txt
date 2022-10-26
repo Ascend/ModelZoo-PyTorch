@@ -1,3 +1,4 @@
 easydict==1.9
 lmdb==0.98
 PyYAML==5.3
+Pillow==9.1.0

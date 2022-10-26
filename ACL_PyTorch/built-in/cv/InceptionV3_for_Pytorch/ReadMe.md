@@ -1,22 +1,28 @@
-文件作用说明：
+# InceptionV3 模型离线推理指导
+
+---
+
+## 文件作用说明：
 
 1. inceptionv3_pth2onnx.py：用于转换pth模型文件到onnx模型文件
 2. gen_calibration_bin.py：生成bin格式数据集脚本，数据集用于量化校准
 3. inceptionv3_atc.sh：onnx模型转换om模型脚本
 4. imagenet_torch_preprocess.py：数据集预处理脚本，对图片进行缩放裁剪，生成图片二进制文件
 5. aipp_inceptionv3_pth.config：数据集aipp预处理配置文件
-6. gen_dataset_info.py：生成推理输入的数据集二进制info文件
-7. env.sh：环境变量文件
-8. benchmark工具源码地址：https://gitee.com/ascend/cann-benchmark/tree/master/infer
-9. vision_metric_ImageNet.py：验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+6. ais_infer工具源码地址：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+7. vision_metric_ImageNet.py：验证推理结果脚本，比对ais_infer输出的分类结果和标签，给出Accuracy
 
 
 
-推理端到端步骤：
+## 推理端到端步骤：
 
-1. 从Torchvision下载inceptionv3模型，通过inceptionv3_pth2onnx.py脚本转化为onnx模型
+1. 从 Torchvision 下载 PyTorch 预训练的 inceptionv3 模型（这里为 inceptionv3.pth），通过 inceptionv3_pth2onnx.py 脚本转化为onnx模型
 
-2. ONNX模型量化
+   ```
+   python3.7 inceptionv3_pth2onnx.py inceptionv3.pth inceptionv3.onnx
+   ```
+
+2. ONNX模型量化（可选）
 
    1. AMCT工具包安装，具体参考《[CANN 开发辅助工具指南 01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》中的昇腾模型压缩工具使用指南（ONNX）章节；
 
@@ -46,50 +52,64 @@
 
 3. 运行inceptionv3_atc.sh脚本转换om模型
 
+   ${chip_name}可通过`npu-smi info`指令查看
+   
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
+   ```
+   bash inceptionv3_atc.sh Ascend${chip_name} # Ascend310P3
+   ```
+
 4. 用imagenet_torch_preprocess.py脚本处理数据集   
 
-```
-python3.7 imagenet_torch_preprocess.py inceptionv3 /root/dataset/ImageNet/val_union ./prep_dataset
-```
+   ```
+   python3.7 imagenet_torch_preprocess.py inceptionv3 /root/dataset/ImageNet/val_union ./prep_dataset
+   ```
 
-5. 生成推理输入的数据集二进制info文件     
+5. 设置环境变量   
 
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./inceptionv3_prep_bin.info 299 299
-```
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   ```
 
-6. 设置环境变量   
+6. 使用ais_infer离线推理
 
-```
-source env.sh
-```
+   按照 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) 文档，将 ais_infer 目录复制到当前工作目录下，编译安装 whl 文件。
+   
+   ```
+   python3.7 ./ais_infer/ais_infer.py --model inceptionv3_bs8.om --device 0 --batchsize 8 --input ./prep_dataset --output ./result/ --outfmt TXT 
+   ```
+   
+   运行 ais_infer 进行推理，结果会保存在 ./result/{timestamp} 目录下, 其中 {timestamp} 为运行推理工具的时间戳。
+   
+   目录下保存了每个图像的有推理结果和性能测试结果 summary.json 文件
 
-7. 使用benchmark离线推理
+7. 验证推理结果
 
-```
-./benchmark.x86_64 -model_type=vision -om_path=inceptionv3_bs8.om -device_id=0 -batch_size=8 -input_text_path=inceptionv3_prep_bin.info -input_width=299 -input_height=299 -output_binary=False -useDvpp=False
-```
+   首先将 ./result/{timestamp} 目录下的 summary.json 文件移动到其他目录下，然后使用 vision_metric_ImageNet.py 进行推理结果验证，获得 Top1-Top5 Accuracy。
+   
+   ```
+   python3.7 vision_metric_ImageNet.py  result/{timestamp}/  /root/dataset/ImageNet/val_label.txt  ./  result.json
+   ```
+   
+   注意将 {timestamp} 更换为具体路径
+   
+   参数说明：
 
-运行benchmark推理，结果保存在 ./result 目录下
+   - result/{timestamp}/：ais_infer 工具推理结果保存目录
+   - /root/dataset/ImageNet/val_label.txt：ImageNet验证集标签文件
+   - ./：验证结果的保存目录
+   - result.json：验证结果保存文件名
 
-8. 验证推理结果
-
-```
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ /root/dataset/ImageNet/val_label.txt ./ result.json
-```
-
-
-
-
-模型获取
+## 模型获取
 
 可以使用如下命令获取PyTorch框架的原始模型和转换后的Onnx模型
 
 Pytorch：
 ```
-wget https://modelzoo-train-atc.obs.cn-north-4.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inception_v3.pth
+wget https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inception_v3.pth
 ```
 ONNX：
 ```
-wget https://modelzoo-train-atc.obs.cn-north-4.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inceptionv3.onnx
+wget https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/003_Atc_Models/AE/ATC%20Model/InceptionV3/inceptionv3.onnx
 ```

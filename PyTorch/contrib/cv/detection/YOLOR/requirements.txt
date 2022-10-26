@@ -5,7 +5,7 @@ Cython
 matplotlib
 numpy
 opencv-python
-Pillow
+Pillow==9.1.0
 PyYAML
 scipy
 tensorboard

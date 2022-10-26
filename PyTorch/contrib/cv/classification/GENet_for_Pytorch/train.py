@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+
+import sys
+import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
+
 import argparse
 import json
 import os
@@ -25,12 +31,13 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.multiprocessing as mp
 import random
-
+from torch import nn
 from models import *
+from models.wideresnet import WideResNet
 from utils import *
-
 import apex
 from apex import amp
+
 import warnings
 
 #Basic
@@ -267,7 +274,7 @@ def main_worker(gpu, ngpus_per_node, args):
     #amp 
     if args.amp:
         print('Using amp!')
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
     
     #DDP  
     if args.distributed:
@@ -325,7 +332,7 @@ def main_worker(gpu, ngpus_per_node, args):
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
                                           shuffle=(train_sampler is None),
                                           num_workers=args.workers,
-                                          pin_memory=False,
+                                          pin_memory=True,
                                           sampler=train_sampler if not args.eval else None,
                                           drop_last=True)
     else:
@@ -425,34 +432,34 @@ def train(trainloader, model, criterion, optimizer, epoch, args, ngpus_per_node)
 
         # measure data loading time
         data_time.update(time.time() - end)
-        with torch.autograd.profiler.profile(use_cuda=True) as prof:  
-            if args.device == 'npu': 
-                loc = 'npu:{}'.format(args.gpu)
-                input = input.to(loc, non_blocking=True).to(torch.float)
-                target = target.to(torch.int32).to(loc, non_blocking=True)
-            else:
-                input = input.cuda(args.gpu, non_blocking=True)
-                target = target.cuda(args.gpu, non_blocking=True)     
+
+        if args.device == 'npu':
+            loc = 'npu:{}'.format(args.gpu)
+            input = input.to(loc, non_blocking=True).to(torch.float)
+            target = target.to(torch.int32).to(loc, non_blocking=True)
+        else:
+            input = input.cuda(args.gpu, non_blocking=True)
+            target = target.cuda(args.gpu, non_blocking=True)
                            
-            output = model(input)
-            loss = criterion(output, target)
+        output = model(input)
+        loss = criterion(output, target)
 
             # measure accuracy and record loss
-            err1, err5 = get_error(output.detach(), target, topk=(1, 5))
-            losses.update(loss.item(), input.size(0))
-            top1.update(err1.item(), input.size(0))
-            top5.update(err5.item(), input.size(0))
+        err1, err5 = get_error(output.detach(), target, topk=(1, 5))
+        losses.update(loss.item(), input.size(0))
+        top1.update(err1.item(), input.size(0))
+        top5.update(err5.item(), input.size(0))
             
-            if args.amp:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    optimizer.zero_grad()
-                    scaled_loss.backward()
-            else:
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
                 optimizer.zero_grad()
-                loss.backward()
-            optimizer.step()
-            if args.device == 'npu':
-                torch.npu.synchronize()   
+                scaled_loss.backward()
+        else:
+            optimizer.zero_grad()
+            loss.backward()
+        optimizer.step()
+        if args.device == 'npu':
+            torch.npu.synchronize()
 
         # measure elapsed time
         if i == 9:

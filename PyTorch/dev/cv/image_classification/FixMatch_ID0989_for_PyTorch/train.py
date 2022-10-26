@@ -42,6 +42,8 @@ from collections import OrderedDict
 
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
@@ -187,12 +189,16 @@ def main():
         args.world_size = 1
         if os.environ["RANK_SIZE"]:
             args.n_gpu = int(os.environ["RANK_SIZE"])
+            rank_size = int(os.environ['RANK_SIZE'])
         else:
             args.n_gpu = torch.npu.device_count()
     else:
+        print("***Distributed Training Start***")
         torch.npu.set_device(args.local_rank)
         device = torch.device('npu', args.local_rank)
-        torch.distributed.init_process_group(backend='nccl')
+        rank_size= int(os.environ['RANK_SIZE'])
+        rank_id= int(os.environ['RANK_ID'])
+        torch.distributed.init_process_group(backend='hccl', rank=rank_id, world_size=rank_size)
         args.world_size = torch.distributed.get_world_size()
         args.n_gpu = 1
 
@@ -290,6 +296,8 @@ def main():
     optimizer = apex.optimizers.NpuFusedSGD(grouped_parameters, lr=args.lr,
                           momentum=0.9, nesterov=args.nesterov)
 
+    args.total_steps = args.total_steps // rank_size
+    args.eval_step = args.eval_step // rank_size
     args.epochs = math.ceil(args.total_steps / args.eval_step)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer, args.warmup, args.total_steps)
@@ -427,7 +435,8 @@ def train(args, labeled_trainloader, unlabeled_trainloader, test_loader,
             step_time=time.time() - end
             end = time.time()
             mask_probs.update(mask.mean().item())
-            fps = batch_size / step_time
+            rank_size = int(os.environ['RANK_SIZE'])
+            fps = batch_size * rank_size / step_time
 
             if not args.no_progress:
                 p_bar.set_description("Train Epoch: {epoch}/{epochs:4} Iter: {batch:4}/{iter:4} LR: {lr:.4f} Data: {data:.3f}s Batch: {bt:.3f}s T_Fps: {fps:.3f} T_Loss: {loss:.4f} T_Loss_x: {loss_x:.4f} T_Loss_u: {loss_u:.4f} Mask: {mask:.2f} ".format(

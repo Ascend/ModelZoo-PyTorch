@@ -46,6 +46,8 @@ import datetime
 import numpy as np
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 from timm.utils import AverageMeter
@@ -112,8 +114,8 @@ def parse_option():
     return args, config
 
 
-def main(config):
-    dataset_train, _, data_loader_train, _, _ = build_loader(config)
+def main(config, device, distributed, device_id):
+    dataset_train, _, data_loader_train, _, _ = build_loader(config, distributed)
     
     config.defrost()
     config.DATA.TRAINING_IMAGES = len(dataset_train)
@@ -121,13 +123,13 @@ def main(config):
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_model(config)
-    model.npu()
+    model.to(device)
     logger.info(str(model))
 
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL,combine_grad=True)
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK], broadcast_buffers=False)
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device_id], broadcast_buffers=False)
     model_without_ddp = model.module
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -156,7 +158,8 @@ def main(config):
     logger.info("Start self-supervised pre-training")
     start_time = time.time()
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
-        data_loader_train.sampler.set_epoch(epoch)
+        if distributed:
+            data_loader_train.sampler.set_epoch(epoch)
 
         train_one_epoch(config, model, data_loader_train, optimizer, epoch, lr_scheduler)
         if dist.get_rank() == 0 and (epoch % config.SAVE_FREQ == 0 or epoch == (config.TRAIN.EPOCHS - 1)):
@@ -233,16 +236,30 @@ if __name__ == '__main__':
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
 
-    if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
-        rank = int(os.environ["RANK"])
-        world_size = int(os.environ['WORLD_SIZE'])
-        print(f"RANK and WORLD_SIZE in environ: {rank}/{world_size}")
+    distributed = int(os.environ['RANK_SIZE']) > 1
+    if 'RANK_SIZE' in os.environ and 'RANK_ID' in os.environ:
+        rank_size = int(os.environ['RANK_SIZE'])
+        world_size = rank_size
+        if distributed:
+            rank_id = int(os.environ['RANK_ID'])
+            if rank_size <= 8:
+                rank = rank_id
+            else:
+                rank = int(os.environ['RANK'])
+            device_id = rank_id
+        else:
+            rank_id = int(os.environ['RANK_ID'])
+            rank = rank_id
+            device_id = int(os.environ['ASCEND_DEVICE_ID'])
     else:
         rank = -1
+        device_id = -1
         world_size = -1
-    torch.npu.set_device(config.LOCAL_RANK)
-    torch.distributed.init_process_group(backend='hccl', world_size=world_size, rank=rank)
-    torch.distributed.barrier()
+
+
+    device = torch.device(f'npu:{device_id}')
+    torch.npu.set_device(device)
+    dist.init_process_group(backend='hccl', world_size=world_size, rank=rank)
 
     seed = config.SEED + dist.get_rank()
     torch.manual_seed(seed)
@@ -276,4 +293,4 @@ if __name__ == '__main__':
     # print config
     logger.info(config.dump())
 
-    main(config)
+    main(config, device, distributed, device_id)

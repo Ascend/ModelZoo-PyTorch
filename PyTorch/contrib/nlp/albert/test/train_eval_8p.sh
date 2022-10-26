@@ -1,4 +1,4 @@
-# encoding=utf-8
+encoding=utf-8
 
 source ./test/env_npu.sh
 
@@ -40,7 +40,7 @@ export DEVICE=npu
 TASK_NAME="SST-2"
 for i in $(seq 7 -1 0)
     do
-      nohup python3.7 ./run_classifier.py \
+      python3.7 ./run_classifier.py \
         --device=$DEVICE \
         --model_type=$BERT_MODEL \
         --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \

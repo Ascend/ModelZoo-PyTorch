@@ -8,7 +8,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-.idea
+.idea/
+.vscode/
 build/
 develop-eggs/
 dist/
@@ -130,6 +131,7 @@ dmypy.json
 *.mp4
 *.pkl
 *.npy
+*.npz
 *.bin
 *.wav
 *.bmp
@@ -140,5 +142,9 @@ fusion_result.json
 *.doc
 *.x86_64
 unsupported_op.csv
+*.zip
+*.rar
+*.7z
+*.csv
 
-
+kernel_meta*/

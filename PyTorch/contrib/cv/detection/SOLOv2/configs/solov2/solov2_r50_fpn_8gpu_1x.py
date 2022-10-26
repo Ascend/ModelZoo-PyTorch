@@ -23,7 +23,7 @@ model = dict(
         type='ResNet',
         depth=50,
         num_stages=4,
-        out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
+        out_indices=(0, 1, 2, 3),  # C2, C3, C4, C5
         frozen_stages=1,
         style='pytorch'),
     neck=dict(
@@ -54,14 +54,14 @@ model = dict(
             alpha=0.25,
             loss_weight=1.0)),
     mask_feat_head=dict(
-            type='MaskFeatHead',
-            in_channels=256,
-            out_channels=128,
-            start_level=0,
-            end_level=3,
-            num_classes=256,
-            norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)),
-    )
+        type='MaskFeatHead',
+        in_channels=256,
+        out_channels=128,
+        start_level=0,
+        end_level=3,
+        num_classes=256,
+        norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)),
+)
 # training and testing settings
 train_cfg = dict()
 test_cfg = dict(
@@ -83,7 +83,7 @@ train_pipeline = [
     dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size_divisor=1344), # diff
+    dict(type='Pad', size_divisor=1344),  # diff
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
@@ -133,7 +133,7 @@ lr_config = dict(
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -144,7 +144,7 @@ total_epochs = 12
 device_ids = range(8)
 dist_params = dict(backend='hccl')
 log_level = 'INFO'
-work_dir = './work_dirs/solov2_release_r50_fpn_8gpu_1x'
+work_dir = './test/work_dirs/solov2_release_r50_fpn_8gpu_1x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

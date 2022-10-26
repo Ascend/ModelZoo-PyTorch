@@ -1,16 +1,15 @@
 文件作用说明：
 
-1.  env.sh：ATC工具环境变量配置脚本
-2.  requirements.txt：脚本运行所需的第三方库
-3.  vgg16_ssd_amct.sh： 模型量化脚本
-4.  vgg16_ssd_atc.sh： ATC转换脚本
-5.  ssd_pth_preprocess.py： 二进制数据集预处理脚本
-6.  ssd_pth_postprocess.py： 验证推理结果脚本
-7.  get_info.py： ssd.info生成脚本 
-8.  vgg16_ssd_pth2onnx.py：pth模型文件转换onnx模型文件脚本
-9.  voc-model-labels.txt： VOC2007数据集的类别标签
-10. auto_atc.sh：模型推理自动化脚本
-11.  benchmark工具源码地址：https://gitee.com/ascend/cann-benchmark/tree/master/infer
+1.  requirements.txt：脚本运行所需的第三方库
+2.  vgg16_ssd_amct.sh： 模型量化脚本
+3.  vgg16_ssd_atc.sh： ATC转换脚本
+4.  ssd_pth_preprocess.py： 二进制数据集预处理脚本
+5.  ssd_pth_postprocess.py： 验证推理结果脚本
+6.  get_info.py： ssd.info生成脚本 
+7.  vgg16_ssd_pth2onnx.py：pth模型文件转换onnx模型文件脚本
+8.  voc-model-labels.txt： VOC2007数据集的类别标签
+9. auto_atc.sh：模型推理自动化脚本
+10.  benchmark工具源码地址：https://gitee.com/ascend/cann-benchmark/tree/master/infer
 
 推理端到端步骤：
 
@@ -23,7 +22,16 @@
    注意：脚本中导入sys.path.append(r"./pytorch-ssd")即是下载的源码
 
 3. 运行vgg16_ssd_atc.sh脚本转换om模型
-  可将--input_shape="actual_input_1:1,3,300,300" 改成想测试的shape，如 （16，3，300，300）测试16batch的onnx
+   
+   可将--input_shape="actual_input_1:1,3,300,300" 改成想测试的shape，如 （16，3，300，300）测试16batch的onnx
+   
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
+   ```
+   bash vgg16_ssd_atc.sh Ascend${chip_name} # Ascend310P3
+   ```
 
 4. 用ssd_pth_preprocess.py脚本处理数据集， 
    

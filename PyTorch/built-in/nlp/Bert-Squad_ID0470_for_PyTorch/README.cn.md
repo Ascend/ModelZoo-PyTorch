@@ -44,7 +44,7 @@ wget https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab
 ```
     bert-base:
 ```
-         ---bert_base_pretrained_amp.pt
+         ---bert_base.pt
 ```
 ### 模型训练
 参数说明：

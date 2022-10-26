@@ -148,7 +148,7 @@ class HRModule(nn.Module):
                                 bias=False),
                             build_norm_layer(self.norm_cfg, in_channels[i])[1],
                             nn.Upsample(
-                                scale_factor=2**(j - i), mode='nearest')))
+                                scale_factor=2 ** (j - i), mode='nearest')))
                 elif j == i:
                     fuse_layer.append(None)
                 else:

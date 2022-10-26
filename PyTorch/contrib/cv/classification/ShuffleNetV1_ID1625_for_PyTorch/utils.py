@@ -21,8 +21,14 @@
 
 import os
 import re
+import shutil
 import torch
 import torch.nn as nn
+import numpy as np
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from multi_epochs_dataloader import MultiEpochsDataLoader
+
 
 class CrossEntropyLabelSmooth(nn.Module):
 
@@ -34,26 +40,10 @@ class CrossEntropyLabelSmooth(nn.Module):
 
     def forward(self, inputs, targets):
         log_probs = self.logsoftmax(inputs)
-        targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1).to(torch.int64), 1)
+        targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1), 1)
         targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
         loss = (-targets * log_probs).mean(0).sum()
         return loss
-
-
-class LabelSmoothingCrossEntropy(nn.Module):
-
-    def __init__(self, smooth_factor=0., num_classes=1000):
-        super(LabelSmoothingCrossEntropy, self).__init__()
-        self.on_value = 1.0 - smooth_factor
-        self.off_value = 1.0 * smooth_factor / (num_classes - 1)
-
-    def forward(self, pred, target):
-        one_hot_label = torch.npu_one_hot(target.int(), -1, pred.size(1), self.on_value, self.off_value)
-        loss = torch.npu_softmax_cross_entropy_with_logits(pred, one_hot_label)
-
-        loss = torch.mean(loss, [0], keepdim=False, dtype=torch.float32)
-        return loss
-
 
 
 class AvgrageMeter(object):
@@ -120,3 +110,92 @@ def get_parameters(model):
     assert len(list(model.parameters())) == len(group_weight_decay) + len(group_no_weight_decay)
     groups = [dict(params=group_weight_decay), dict(params=group_no_weight_decay, weight_decay=0.)]
     return groups
+
+
+def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=None, distributed=False):
+    traindir = os.path.join(data_path, 'train')
+    train_dataset = datasets.ImageFolder(
+        traindir,
+        transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip()
+        ]))
+
+    if distributed:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    else:
+        train_sampler = None
+
+    dataloader_fn = MultiEpochsDataLoader
+    train_loader = dataloader_fn(
+        train_dataset, batch_size=batch_size, shuffle=(train_sampler is None),
+        num_workers=workers, worker_init_fn=_worker_init_fn, pin_memory=False, sampler=train_sampler,
+        collate_fn=fast_collate, drop_last=True)
+
+    return train_loader, len(train_loader), train_sampler
+
+
+def get_pytorch_val_loader(data_path, batch_size, workers=5, _worker_init_fn=None, distributed=False):
+    valdir = os.path.join(data_path, 'val')
+    val_dataset = datasets.ImageFolder(
+        valdir,
+        transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+        ]))
+
+    if distributed:
+        val_sampler = torch.utils.data.distributed.DistributedSampler(val_dataset)
+    else:
+        val_sampler = None
+
+    dataloader_fn = MultiEpochsDataLoader
+    val_loader = dataloader_fn(
+        val_dataset,
+        sampler=val_sampler,
+        batch_size=batch_size,
+        shuffle=(val_sampler is None),
+        num_workers=workers, worker_init_fn=_worker_init_fn,
+        pin_memory=False, collate_fn=fast_collate, drop_last=True)
+
+    return val_loader
+
+
+def fast_collate(batch):
+    imgs = [img[0] for img in batch]
+    targets = torch.tensor([target[1] for target in batch], dtype=torch.int64)
+    w = imgs[0].size[0]
+    h = imgs[0].size[1]
+    tensor = torch.zeros((len(imgs), 3, h, w), dtype=torch.uint8)
+    for i, img in enumerate(imgs):
+        nump_array = np.asarray(img, dtype=np.uint8)
+        if nump_array.ndim < 3:
+            nump_array = np.expand_dims(nump_array, axis=-1)
+        nump_array = np.rollaxis(nump_array, 2)
+        tensor[i] += torch.from_numpy(nump_array)
+
+    return tensor, targets
+
+
+def adjust_learning_rate(optimizer, epoch, args):
+    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+    # lr = args.lr * (0.1 ** (epoch // (args.epochs//3 - 3)))
+
+    if args.warm_up_epochs > 0 and epoch < args.warm_up_epochs:
+        lr = args.learning_rate * ((epoch + 1) / (args.warm_up_epochs + 1))
+    else:
+        alpha = 0
+        cosine_decay = 0.5 * (
+                1 + np.cos(np.pi * (epoch - args.warm_up_epochs) / (args.epochs - args.warm_up_epochs)))
+        decayed = (1 - alpha) * cosine_decay + alpha
+        lr = args.learning_rate * decayed
+
+    print("=> Epoch[%d] Setting lr: %.4f" % (epoch, lr))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, 'model_best_acc%.4f_epoch%d.pth.tar' % (state['best_acc1'], state['epoch']))

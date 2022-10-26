@@ -74,8 +74,8 @@ class TestImage(object):
         in_img = np.random.rand(10, 10, 3).astype(np.float32)
         out_img = mmcv.bgr2gray(in_img)
         computed_gray = (
-            in_img[:, :, 0] * 0.114 + in_img[:, :, 1] * 0.587 +
-            in_img[:, :, 2] * 0.299)
+                in_img[:, :, 0] * 0.114 + in_img[:, :, 1] * 0.587 +
+                in_img[:, :, 2] * 0.299)
         assert_array_almost_equal(out_img, computed_gray, decimal=4)
         out_img_3d = mmcv.bgr2gray(in_img, True)
         assert out_img_3d.shape == (10, 10, 1)
@@ -85,8 +85,8 @@ class TestImage(object):
         in_img = np.random.rand(10, 10, 3).astype(np.float32)
         out_img = mmcv.rgb2gray(in_img)
         computed_gray = (
-            in_img[:, :, 0] * 0.299 + in_img[:, :, 1] * 0.587 +
-            in_img[:, :, 2] * 0.114)
+                in_img[:, :, 0] * 0.299 + in_img[:, :, 1] * 0.587 +
+                in_img[:, :, 2] * 0.114)
         assert_array_almost_equal(out_img, computed_gray, decimal=4)
         out_img_3d = mmcv.rgb2gray(in_img, True)
         assert out_img_3d.shape == (10, 10, 1)
@@ -324,7 +324,7 @@ class TestImage(object):
                 (15, 2, 3), dtype='uint8'), padded_img[:, 10:, :])
 
         with pytest.raises(AssertionError):
-            mmcv.impad(img, (15, ), 0)
+            mmcv.impad(img, (15,), 0)
         with pytest.raises(AssertionError):
             mmcv.impad(img, (5, 5), 0)
         with pytest.raises(AssertionError):

@@ -6,7 +6,7 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 
-export RANK_SIZE=8
+export RANK_SIZE=16
 export JOB_ID=10087
 RANK_ID_START=0
 
@@ -17,6 +17,8 @@ conf_path=""
 server_index=""
 fix_node_ip=""
 devicesnum=""
+one_node_ip=""
+linux_num=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
@@ -84,14 +86,23 @@ do
 	elif [[ $para == --devicesnum* ]];then
 	    devicesnum=`echo ${para#*=}`
     elif [[ $para == --conf_path* ]];then
-            conf_path=`echo ${para#*=}`
+        conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
-            server_index=`echo ${para#*=}`
+        server_index=`echo ${para#*=}`
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
     fi
 done
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else 
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -110,7 +121,7 @@ sed -i "s|'epoch_num': 200|'epoch_num': $train_epochs|g" $cur_path/../task/pose.
 sed -i "s|'train_iters': 1000|'train_iters': $train_steps|g" $cur_path/../task/pose.py
 sed -i "s|annot_dir = 'data/MPII/annot'|annot_dir = '$data_path/data/MPII/annot'|g" $cur_path/../datat/MPII/ref.py
 sed -i "s|img_dir = 'data/MPII/images'|img_dir = '$data_path/data/MPII/images'|g" $cur_path/../datat/MPII/ref.py
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+for((RANK_ID=$RANK_ID_START;RANK_ID<8;RANK_ID++));
 do
     #设置环境变量，不需要修改
     echo "Device ID: $ASCEND_DEVICE_ID"

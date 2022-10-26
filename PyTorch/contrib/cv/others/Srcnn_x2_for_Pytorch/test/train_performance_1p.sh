@@ -16,7 +16,7 @@ train_epochs=5
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数
-workers=16
+workers=64
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -78,7 +78,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-nohup python3.7.5 -u ./train.py \
+nohup taskset -c 0-32 python3.7 -u ./train.py \
     --train-file ${data_path}/91-image_x2.h5 \
     --eval-file ${data_path}/Set5_x2.h5 \
     --outputs-dir ${test_path_dir}/npu_1p \
@@ -108,7 +108,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "fps=" '{print $NF}' | awk -F " " '{print $1}' | awk 'END {print}'`
+FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "fps=" '{print $NF}' | awk -F " " '{print $1}' | awk '{print $1}' | awk '{a+=$1} END {print a/NR}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

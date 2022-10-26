@@ -39,7 +39,7 @@ if [ $? != 0 ]; then
     echo "create flipped g bin data info fail!"
     exit -1
 fi
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 mkdir ./result -p
 rm -rf ./result/dumpOutput_device0 ./result/q_bin ./result/g_bin ./result/q_bin_flip ./result/g_bin_flip
 mkdir ./result/q_bin -p

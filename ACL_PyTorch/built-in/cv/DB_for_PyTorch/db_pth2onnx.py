@@ -36,7 +36,15 @@ def pth2onnx(model):
     dynamic_axes = {'actual_input_1': {0: '-1'}, 'output1': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 736, 1280)
 
-    torch.onnx.export(model, dummy_input, "dbnet.onnx", input_names=input_names, dynamic_axes=dynamic_axes, output_names=output_names, opset_version=11, verbose=True)
+    torch.onnx.export(model, 
+                    dummy_input, 
+                    "dbnet.onnx", 
+                    input_names=input_names, 
+                    enable_onnx_checker=False, 
+                    dynamic_axes=dynamic_axes, 
+                    output_names=output_names, 
+                    opset_version=11, 
+                    verbose=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='db pth2onnx')

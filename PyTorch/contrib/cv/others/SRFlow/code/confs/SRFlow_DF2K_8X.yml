@@ -31,7 +31,7 @@ datasets:
 
     use_shuffle: true
     n_workers: 3  # per GPU
-    batch_size: 32 #16
+    batch_size: 24 #32  16
     GT_size: 160
     use_flip: true
     color: RGB

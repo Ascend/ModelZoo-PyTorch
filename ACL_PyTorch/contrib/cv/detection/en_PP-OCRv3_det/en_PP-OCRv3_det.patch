@@ -1,0 +1,25 @@
+diff --git a/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml b/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml
+index 88514e76..b5069106 100644
+--- a/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml
++++ b/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml
+@@ -1,6 +1,6 @@
+ Global:
+   debug: false
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 500
+   log_smooth_window: 20
+   print_batch_step: 10
+diff --git a/tools/infer_det.py b/tools/infer_det.py
+index f253e8f2..66f5fa2a 100755
+--- a/tools/infer_det.py
++++ b/tools/infer_det.py
+@@ -50,7 +50,7 @@ def draw_det_res(dt_boxes, config, img, img_name, save_path):
+             os.makedirs(save_path)
+         save_path = os.path.join(save_path, os.path.basename(img_name))
+         cv2.imwrite(save_path, src_im)
+-        logger.info("The detected Image saved in {}".format(save_path))
++        # logger.info("The detected Image saved in {}".format(save_path))
+ 
+ 
+ @paddle.no_grad()

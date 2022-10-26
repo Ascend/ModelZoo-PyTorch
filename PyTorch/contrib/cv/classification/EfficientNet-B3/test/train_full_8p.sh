@@ -33,7 +33,7 @@ fi
 
 # 数据集软链到脚本内部
 cur_path=`pwd`
-default_data_path=${cur_path}/pycls/datasets/data/
+default_data_path=${cur_path}/pycls/datasets/data
 rm -rf ${default_data_path}/imagenet
 ln -s ${data_path} ${default_data_path}/imagenet
 

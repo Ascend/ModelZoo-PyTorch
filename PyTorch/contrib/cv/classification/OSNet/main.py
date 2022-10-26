@@ -50,6 +50,8 @@ import time
 import os.path as osp
 import argparse
 import torch
+if torch.__version__>= '1.8':
+      import torch_npu
 import torch.nn as nn
 import os
 
@@ -274,7 +276,7 @@ def main():
 
     if cfg.amp:
         if cfg.use_npu:
-            model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0, combine_grad=True)
+            model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale="dynamic", combine_grad=True)
         elif cfg.use_gpu:
             model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0)
 

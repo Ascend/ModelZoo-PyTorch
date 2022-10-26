@@ -10,8 +10,6 @@
 
 ## Dataset Prepare
 1. 下载COCO数据集
-2. 新建文件夹data
-3. 将coco数据集放于data目录下
 
 ## 预训练模型下载
 1. 参考mmdetection/configs/yolo/README.md,下载对应预训练模型
@@ -72,17 +70,17 @@ source ./test/env_npu.sh
 ```
 
 ### 单卡
-1. 运行 train_1p.sh
+
 ```
 chmod +x ./tools/dist_train.sh
-sh train_1p.sh
+bash test/train_full_1p.sh  --data_path=coco数据集路径               #单卡精度训练
 ```
 
 ### 8卡
-1. 运行 train_8p.sh
+        
 ```
 chmod +x ./tools/dist_train.sh
-sh train_8p.sh
+bash test/train_full_8p.sh  --data_path=coco数据集路径               #8卡精度训练
 ```
 
 ## hipcc检查问题

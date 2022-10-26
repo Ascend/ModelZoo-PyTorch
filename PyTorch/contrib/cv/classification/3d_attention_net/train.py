@@ -16,6 +16,10 @@ from __future__ import print_function, division
 from apex import amp
 from apex.optimizers import NpuFusedSGD
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 import argparse
 import torch.nn as nn
 import torch.optim as optim
@@ -27,7 +31,6 @@ from torchvision import transforms, datasets, models
 import os
 import cv2
 import time
-import torch.npu
 import torch.utils.data.distributed
 from collections import OrderedDict
 from torch.nn.parallel import DistributedDataParallel
@@ -63,8 +66,8 @@ def test(model, test_loader):
     class_total = list(0. for i in range(10))
 
     for images, labels in test_loader:
-        images = Variable(images.to(device))
-        labels = Variable(labels.to(device))
+        images = images.to(device, non_blocking=True)
+        labels = labels.to(device, non_blocking=True)
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
@@ -129,8 +132,8 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, \
                                                 batch_size=train_batch_size, \
                                                 shuffle=(train_sampler is None), \
-                                                num_workers=8, \
-                                                pin_memory=False, \
+                                                num_workers=4, \
+                                                pin_memory=True, \
                                                 sampler = train_sampler if is_train else None, \
                                                 drop_last = True)
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=test_batch_size, shuffle=False)
@@ -142,7 +145,7 @@ def main():
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0001)
     else:
         optimizer = NpuFusedSGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0001)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128)
     if distribute:
         if args.device_type == "GPU":
             model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.device_id])
@@ -181,13 +184,12 @@ def main():
                 epoch_samples += images.shape[0]
                 if i == 5:
                     tims = time.time()
-                images = Variable(images.to(device))
-                labels = Variable(labels.to(device))
-    
+                images = images.to(device, non_blocking=True)
+                labels = labels.to(device, non_blocking=True)
                 # Forward + Backward + Optimize
-                optimizer.zero_grad()
                 outputs = model(images)
                 loss = criterion(outputs, labels)
+                optimizer.zero_grad()
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
                 optimizer.step()

@@ -97,11 +97,11 @@ class BaseTrainer(object):
     bar = Bar('{}/{}'.format(opt.task, opt.exp_id), max=num_iters)
     end = time.time()
     fps = 0
-
     for iter_id, batch in enumerate(data_loader):
       if iter_id >= num_iters:
         break
-      
+      # step fps
+      per_step_time_start=time.time()
       ###FPS
       if iter_id == 5:
         start_time = time.time()
@@ -167,7 +167,10 @@ class BaseTrainer(object):
       if opt.test:
         self.save_result(output, batch, results)
       del output, loss, loss_stats
-     
+      # step fps
+      per_step_time = time.time() - per_step_time_start
+      print('iter = {}, batch_size = {}, iter_time = {}, iter_fps = {}'.format(iter_id,
+             opt.batch_size, per_step_time, opt.batch_size/per_step_time))
       ###FPS
       if iter_id == (len(data_loader)-1) and opt.local_rank ==0:        
         all_time =(time.time()-start_time)

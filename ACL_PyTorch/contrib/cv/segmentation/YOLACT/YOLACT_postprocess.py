@@ -90,6 +90,8 @@ def parse_args(argv=None):
                         help='If specified, override the dataset specified in the config with this one (example: coco2017_dataset).')
     parser.add_argument('--detect', default=False, dest='detect', action='store_true',
                         help='Don\'t evauluate the mask branch at all and only do object detection. This only works for --display and --benchmark.')
+    parser.add_argument('--cann_version', default="5", type=str,
+                        help='Detections with a score under this threshold will not be considered. This currently only works in display mode.')
 
     parser.set_defaults(no_bar=False, output_coco_json=False, shuffle=False,
                         no_sort=False, mask_proto_debug=False, detect=False, crop=True)
@@ -396,19 +398,34 @@ class InferResultFileFetcher():
         self.path = path
 
     def getInferResult(self, image_idx):
-        resultDict = {}
-        for i in range(1, 5):
-            fileName = 'coco_val2017_' + str(image_idx) + '_' + str(i) + '.bin'
-            infoFile = InferResultFile(self.path, fileName)
-            if infoFile.arrayDim == 615936:
-                resultDict[0] = infoFile
-            elif infoFile.arrayDim == 1559088:
-                resultDict[1] = infoFile
-            elif infoFile.arrayDim == 76992:
-                resultDict[2] = infoFile
-            else:
-                resultDict[3] = infoFile
-
+        if args.cann_version == '5':
+            resultDict = {}
+            for i in range(1, 5):
+                fileName = 'coco_val2017_' + str(image_idx) + '_' + str(i) + '.bin'
+                infoFile = InferResultFile(self.path, fileName)
+                if infoFile.arrayDim == 615936:
+                    resultDict[0] = infoFile
+                elif infoFile.arrayDim == 1559088:
+                    resultDict[1] = infoFile
+                elif infoFile.arrayDim == 76992:
+                    resultDict[2] = infoFile
+                else:
+                    resultDict[3] = infoFile
+        elif args.cann_version == '6':
+            resultDict = {}
+            for i in range(1, 6):
+                if i == 4:
+                    continue
+                fileName = 'coco_val2017_' + str(image_idx) + '_' + str(i) + '.bin'
+                infoFile = InferResultFile(self.path, fileName)
+                if infoFile.arrayDim == 615936:
+                    resultDict[0] = infoFile
+                elif infoFile.arrayDim == 1559088:
+                    resultDict[1] = infoFile
+                elif infoFile.arrayDim == 76992:
+                    resultDict[2] = infoFile
+                else:
+                    resultDict[3] = infoFile
         return resultDict
 
 pred_priors = None

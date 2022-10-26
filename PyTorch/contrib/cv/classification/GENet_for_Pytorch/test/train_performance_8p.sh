@@ -104,7 +104,7 @@ echo "Final Performance images/sec : $FPS"
 #输出训练精度,需要模型审视修改
 train_err=`grep -a '* Err@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Err@1" '{print $NF}'|awk -F " " '{print $1}'`
 #打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
+echo "Final Train Accuracy: `awk 'BEGIN{printf "%.2f\n", '100'-'${train_err}'}'`"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总

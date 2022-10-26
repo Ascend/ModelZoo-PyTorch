@@ -24,6 +24,8 @@ import json
 import random
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import numpy as np
 from xlm.slurm import init_signal_handler, init_distributed_mode
 from xlm.data.loader import check_data_params, load_data
@@ -285,7 +287,7 @@ def main(params):
         trainer.n_sentences = 0
 
         while trainer.n_sentences < trainer.epoch_size:
-            if trainer.n_sentences > 1280:
+            if trainer.n_sentences > 32000:
               pass
             # CLM steps
             for lang1, lang2 in shuf_order(params.clm_steps, params):

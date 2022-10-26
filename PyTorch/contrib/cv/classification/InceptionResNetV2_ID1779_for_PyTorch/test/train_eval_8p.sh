@@ -76,9 +76,8 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 python3.7 train_8p.py \
-	--data ${data_path} \
-	--amp \
-	--loss-scale 128 \ 
+    --data ${data_path} \
+    --amp \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
     --workers=$(nproc) \
@@ -86,6 +85,7 @@ python3.7 train_8p.py \
     --mom=0.9 \
     --weight-decay=1.0e-04  \
     --print-freq=30 \
+    --loss-scale 128 \
     --dist-url='tcp://127.0.0.1:50000' \
     --dist-backend='hccl' \
     --multiprocessing-distributed \
@@ -93,10 +93,10 @@ python3.7 train_8p.py \
     --rank=0 \
     --device='npu' \
     --epochs=${train_epochs} \
-	--label-smoothing=0.1 \
-	--evaluate \
-	--resume=${resume} \
-        --batch-size=${batch_size}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --label-smoothing=0.1 \
+    --evaluate \
+    --resume=${resume} \
+    --batch-size=${batch_size}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

@@ -132,7 +132,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3 train.py \
+nohup python3.7 train.py \
     --backbone ${backbone} \
     --lr ${learning_rate} \
     --workers 64 \

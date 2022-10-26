@@ -1,0 +1,5 @@
+FuncStatus:OK
+PrecisionStatus:OK
+GPUStatus:OK
+NPUMigrationStatus:OK
+PerfStatus:PERFECT

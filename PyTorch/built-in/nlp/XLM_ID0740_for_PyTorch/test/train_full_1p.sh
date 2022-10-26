@@ -7,9 +7,7 @@ export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
-export JOB_ID=10087
 RANK_ID_START=0
-
 
 export NNPU=1
 
@@ -134,15 +132,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-#sed -i "s|./data|$data_path|g" examples/cats_and_dogs.py
-#sed -i "s|epochs = 20|epochs = 1|g" examples/cats_and_dogs.py
-#sed -i "s|pass|break|g" train.py
-
-#python3 setup.py install
-#mkdir -p checkpoints
-#mkdir -p /root/.cache/torch/hub/checkpoints
-#cp $data_path/fcn_* /root/.cache/torch/hub/checkpoints
-
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
@@ -194,7 +183,7 @@ e2e_time=$(( $end_time - $start_time ))
 
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "sent/s -" '{print $2}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`
 
 
@@ -203,7 +192,7 @@ echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep eval_accuracy ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v mlp_log|awk 'END {print $5}'| sed 's/,//g' |cut -c 1-5`
-train_accuracy=`grep "vaild_en_mlm_acc" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "vaild_en_mlm_acc ->" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+train_accuracy=`grep "test_mlm_acc" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "test_mlm_acc ->" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

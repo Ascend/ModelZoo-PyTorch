@@ -63,7 +63,7 @@ start_time=$(date +%s)
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/env.sh
+    source ${test_path_dir}/env_npu.sh
 fi
 
 RANK_ID_START=0
@@ -91,12 +91,12 @@ taskset -c $PID_START-$PID_END python3.7 -u train_8p.py   \
     --reprob 0.2  \
     --remode pixel \
     --amp \
-    --opt sgd \
+    --opt npufusedsgd \
     --world_size 8  \
     --distributed \
     --loss-scale 64 \
-    --use-multi-epochs-loader  \
     --no-prefetcher \
+    --pin-mem \
     --local_rank $RANK_ID  \
     --lr=${learning_rate}  \
     --lr-noise 0.42 0.9 \

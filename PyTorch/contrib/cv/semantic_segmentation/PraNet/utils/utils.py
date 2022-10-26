@@ -16,7 +16,8 @@ import torch
 import numpy as np
 from thop import profile
 from thop import clever_format
-
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 def clip_gradient(optimizer, grad_clip):
     """

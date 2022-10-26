@@ -21,9 +21,10 @@
 		- [6.2 开源TopN精度](#62-开源topn精度)
 		- [6.3 精度对比](#63-精度对比)
 	- [7 性能对比](#7-性能对比)
-		- [7.1 npu性能数据](#71-npu性能数据)
+		- [7.1 npu性能数据-Ascend310性能数据](#71-npu性能数据-ascend310性能数据)
 		- [7.2 T4性能数据](#72-t4性能数据)
 		- [7.3 性能对比](#73-性能对比)
+		- [7.4 npu性能数据-Ascend310P性能数据](#74-npu性能数据-ascend310p性能数据)
 
 
 
@@ -100,18 +101,19 @@ python3.7 dpn131_pth2onnx.py ./dpn131-7af84be88.pth dpn131.onnx
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
-```
-source env.sh
-```
-2.使用atc将onnx模型转换为om模型文件
-```
-##Ascend310
-atc --framework=5 --model=./dpn131.onnx --output=dpn131_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend310
-##Ascend710
-atc --framework=5 --model=./dpn131.onnx --output=dpn131_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend710
+1. 设置环境变量
+	```
+	source /usr/local/Ascend/ascend-toolkit/set_env.sh
+	```
+2. 使用atc将onnx模型转换为om模型文件
 
-```
+	${chip_name}可通过`npu-smi info`指令查看
+	
+	![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+	```
+	atc --framework=5 --model=./dpn131.onnx --output=dpn131_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} # Ascend310P3
+	```
+
 
 ## 4 数据集预处理
 
@@ -147,11 +149,11 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./dpn131_prep_bin.info 224 224
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310/Ascend710上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程。
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310/Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程。
 ### 5.2 离线推理
 1.设置环境变量
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 2.执行离线推理
 ```
@@ -196,7 +198,7 @@ dpn131       79.432	   94.574
 -   **[310npu性能数据](#71-Ascend310性能数据)**
 -   **[T4性能数据](#72-T4性能数据)**
 -   **[性能对比](#73-性能对比)**
--   **[710npu性能数据](#74-Ascend710性能数据)**
+-   **[310Pnpu性能数据](#74-Ascend310P性能数据)**
 ### 7.1 npu性能数据-Ascend310性能数据
 benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
 1.benchmark工具在整个数据集上推理获得性能数据
@@ -289,8 +291,8 @@ batch1：37.3972x4=149.5888 < 1000/(5.51384/1)
 batch16：39.2882x4=157.1528 < 1000/(54.2503/16)
 310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率小，310性能低于T4性能，性能不达标。
 对于batch1与batch16，310性能均低于T4性能，该模型放在Research/cv/classification目录下。
-### 7.4 npu性能数据-Ascend710性能数据
-详细测试方法与310相同-下面仅简单记录fp16各个batch的性能数据作为参考，需特别说明的是710的数据就是benchmark工具输出的 Interface throughputRate 的值，不需要任何计算。
+### 7.4 npu性能数据-Ascend310P性能数据
+详细测试方法与310相同-下面仅简单记录fp16各个batch的性能数据作为参考，需特别说明的是310P的数据就是benchmark工具输出的 Interface throughputRate 的值，不需要任何计算。
 ```
 batch1：158.108
 batch4：371.75

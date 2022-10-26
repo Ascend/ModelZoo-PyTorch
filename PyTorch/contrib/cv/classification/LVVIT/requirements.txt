@@ -1,11 +1,10 @@
-apex==0.1+ascend
 attr==0.3.1
 attrs==21.2.0
 h5py==2.8.0
 matplotlib==3.5.1
 numpy==1.21.4
 packaging==21.3
-Pillow==8.4.0
+Pillow==9.1.0
 PyYAML==6.0
 scikit-learn==0.24.2
 scipy==1.7.2
@@ -14,7 +13,6 @@ six==1.16.0
 tabulate==0.8.9
 te==0.4.0
 timm==0.4.5
-torch==1.5.0+ascend
-torchvision==0.6.0a0
+torchvision
 tqdm==4.19.9
 wheel== 0.32.1

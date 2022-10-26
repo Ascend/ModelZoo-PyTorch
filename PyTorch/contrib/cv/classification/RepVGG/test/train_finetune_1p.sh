@@ -29,4 +29,4 @@ nohup python3.7.5 -u train.py \
     --device npu \
     --amp \
     --opt-level "O2" \
-    --loss-scale-value 128 > repvgg_finetune.log 2>&1 &
+    --loss-scale-value "dynamic" > repvgg_finetune.log 2>&1 &

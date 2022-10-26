@@ -1,0 +1,359 @@
+diff --git a/object_detection/exp/cascade_mask_rcnn_3x_ms_hybrid_base/config.py b/object_detection/exp/cascade_mask_rcnn_3x_ms_hybrid_base/config.py
+index 55f586d..6db67e8 100644
+--- a/object_detection/exp/cascade_mask_rcnn_3x_ms_hybrid_base/config.py
++++ b/object_detection/exp/cascade_mask_rcnn_3x_ms_hybrid_base/config.py
+@@ -11,7 +11,7 @@ model = dict(
+         layers=[5, 8, 20, 7],
+         head_dim=64,
+         drop_path_rate=0.4,
+-        use_checkpoint=True,
++        use_checkpoint=False,
+         checkpoint_num=[0, 0, 20, 0],
+         windows=False,
+         hybrid=True,
+@@ -35,7 +35,7 @@ model = dict(
+                     target_stds=[0.1, 0.1, 0.2, 0.2]),
+                 reg_class_agnostic=False,
+                 reg_decoded_bbox=True,
+-                norm_cfg=dict(type='SyncBN', requires_grad=True),
++                norm_cfg=dict(type='BN', requires_grad=True),
+                 loss_cls=dict(
+                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                 loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
+@@ -54,7 +54,7 @@ model = dict(
+                     target_stds=[0.05, 0.05, 0.1, 0.1]),
+                 reg_class_agnostic=False,
+                 reg_decoded_bbox=True,
+-                norm_cfg=dict(type='SyncBN', requires_grad=True),
++                norm_cfg=dict(type='BN', requires_grad=True),
+                 loss_cls=dict(
+                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                 loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
+@@ -73,7 +73,7 @@ model = dict(
+                     target_stds=[0.033, 0.033, 0.067, 0.067]),
+                 reg_class_agnostic=False,
+                 reg_decoded_bbox=True,
+-                norm_cfg=dict(type='SyncBN', requires_grad=True),
++                norm_cfg=dict(type='BN', requires_grad=True),
+                 loss_cls=dict(
+                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                 loss_bbox=dict(type='GIoULoss', loss_weight=10.0))
+@@ -128,7 +128,7 @@ optimizer = dict(_delete_=True, type='AdamW', lr=0.0001, betas=(0.9, 0.999), wei
+                                                  'relative_position_bias_table': dict(decay_mult=0.),
+                                                  'norm': dict(decay_mult=0.)}))
+ lr_config = dict(step=[27, 33])
+-runner = dict(type='EpochBasedRunnerAmp', max_epochs=36)
++runner = dict(type='EpochBasedRunner', max_epochs=36)
+ 
+ # do not use mmdet version fp16
+ fp16 = None
+diff --git a/object_detection/mmdet/apis/train.py b/object_detection/mmdet/apis/train.py
+index 7f2f1f9..97b9b48 100644
+--- a/object_detection/mmdet/apis/train.py
++++ b/object_detection/mmdet/apis/train.py
+@@ -13,7 +13,7 @@ from mmdet.core import DistEvalHook, EvalHook
+ from mmdet.datasets import (build_dataloader, build_dataset,
+                             replace_ImageToTensor)
+ from mmdet.utils import get_root_logger
+-from mmcv_custom.runner import EpochBasedRunnerAmp
++# from mmcv_custom.runner import EpochBasedRunnerAmp
+ try:
+     import apex
+ except:
+diff --git a/object_detection/mmdet/core/post_processing/bbox_nms.py b/object_detection/mmdet/core/post_processing/bbox_nms.py
+index 966d3a6..b5d0d09 100644
+--- a/object_detection/mmdet/core/post_processing/bbox_nms.py
++++ b/object_detection/mmdet/core/post_processing/bbox_nms.py
+@@ -4,6 +4,59 @@ from mmcv.ops.nms import batched_nms
+ from mmdet.core.bbox.iou_calculators import bbox_overlaps
+ 
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (1, N, 4)
++            nmsed_scores: (1, N)
++            nmsed_classes: (1, N)
++            nmsed_num: (1,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.zeros(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++            bboxes, scores, score_threshold_f=score_thr, iou_threshold_f=iou_thr,
++            max_size_per_class_i=max_size_p_class, max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    num_classes = bboxes.shape[1].numpy() // 4
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0].numpy(), -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4)
++        scores = scores.reshape(1, scores.shape[0].numpy(), -1)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,
++        score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    dets = dets.reshape((max_total_size, 5))
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
++
++
+ def multiclass_nms(multi_bboxes,
+                    multi_scores,
+                    score_thr,
+@@ -41,6 +94,10 @@ def multiclass_nms(multi_bboxes,
+ 
+     scores = multi_scores[:, :-1]
+ 
++    # for npu
++    dets, labels = batch_nms_op(bboxes, scores, score_thr, nms_cfg.get("iou_threshold"), max_num, max_num)
++    return dets, labels
++
+     labels = torch.arange(num_classes, dtype=torch.long)
+     labels = labels.view(1, -1).expand_as(scores)
+ 
+diff --git a/object_detection/mmdet/core/post_processing/merge_augs.py b/object_detection/mmdet/core/post_processing/merge_augs.py
+index dbcf79d..7c55f0a 100644
+--- a/object_detection/mmdet/core/post_processing/merge_augs.py
++++ b/object_detection/mmdet/core/post_processing/merge_augs.py
+@@ -131,8 +131,8 @@ def merge_aug_masks(aug_masks, img_metas, rcnn_test_cfg, weights=None):
+     recovered_masks = []
+     for mask, img_info in zip(aug_masks, img_metas):
+         flip = img_info[0]['flip']
+-        flip_direction = img_info[0]['flip_direction']
+         if flip:
++            flip_direction = img_info[0]['flip_direction']
+             if flip_direction == 'horizontal':
+                 mask = mask[:, :, :, ::-1]
+             elif flip_direction == 'vertical':
+@@ -143,7 +143,8 @@ def merge_aug_masks(aug_masks, img_metas, rcnn_test_cfg, weights=None):
+         recovered_masks.append(mask)
+ 
+     if weights is None:
+-        merged_masks = np.mean(recovered_masks, axis=0)
++        # merged_masks = np.mean(recovered_masks, axis=0)
++        merged_masks = sum(recovered_masks) / len(recovered_masks)
+     else:
+         merged_masks = np.average(
+             np.array(recovered_masks), axis=0, weights=np.array(weights))
+diff --git a/object_detection/mmdet/models/dense_heads/rpn_head.py b/object_detection/mmdet/models/dense_heads/rpn_head.py
+index a888cb8..3402519 100644
+--- a/object_detection/mmdet/models/dense_heads/rpn_head.py
++++ b/object_detection/mmdet/models/dense_heads/rpn_head.py
+@@ -13,6 +13,59 @@ from .anchor_head import AnchorHead
+ from .rpn_test_mixin import RPNTestMixin
+ 
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (1, N, 4)
++            nmsed_scores: (1, N)
++            nmsed_classes: (1, N)
++            nmsed_num: (1,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.zeros(max_total_size, dtype=torch.long)
++        nmsed_num = torch.Tensor([max_total_size])
++
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++            bboxes, scores, score_threshold_f=score_thr, iou_threshold_f=iou_thr,
++            max_size_per_class_i=max_size_p_class, max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    num_classes = bboxes.shape[1].numpy() // 4
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0].numpy(), -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4)
++        scores = scores.reshape(1, scores.shape[0].numpy(), -1)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,
++        score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    dets = dets.reshape((max_total_size, 5))
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
++
++
+ @HEADS.register_module()
+ class RPNHead(RPNTestMixin, AnchorHead):
+     """RPN head.
+@@ -153,6 +206,8 @@ class RPNHead(RPNTestMixin, AnchorHead):
+                     nms_pre = torch.where(scores_shape[1] < nms_pre_tensor,
+                                           scores_shape[1], nms_pre_tensor)
+                     _, topk_inds = scores.topk(nms_pre)
++                    # for npu
++                    topk_inds = topk_inds.long()
+                     batch_inds = torch.arange(batch_size).view(
+                         -1, 1).expand_as(topk_inds)
+                     scores = scores[batch_inds, topk_inds]
+@@ -230,7 +285,9 @@ class RPNHead(RPNTestMixin, AnchorHead):
+                     mlvl_scores = mlvl_scores[valid_ind]
+                     mlvl_ids = mlvl_ids[valid_ind]
+ 
+-            dets, keep = batched_nms(mlvl_proposals, mlvl_scores, mlvl_ids,
+-                                     cfg.nms)
++            # dets, keep = batched_nms(mlvl_proposals, mlvl_scores, mlvl_ids,
++            #                          cfg.nms)
++            # for npu
++            dets, _ = batch_nms_op(mlvl_proposals, mlvl_scores, 0.0, cfg.nms.get("iou_threshold"), cfg.max_per_img, cfg.max_per_img)
+             result_list.append(dets[:cfg.max_per_img])
+         return result_list
+diff --git a/object_detection/mmdet/models/roi_heads/cascade_roi_head.py b/object_detection/mmdet/models/roi_heads/cascade_roi_head.py
+index 45b6f36..51ffb6d 100644
+--- a/object_detection/mmdet/models/roi_heads/cascade_roi_head.py
++++ b/object_detection/mmdet/models/roi_heads/cascade_roi_head.py
+@@ -349,8 +349,8 @@ class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
+             det_bboxes.append(det_bbox)
+             det_labels.append(det_label)
+ 
+-        if torch.onnx.is_in_onnx_export():
+-            return det_bboxes, det_labels
++        # if torch.onnx.is_in_onnx_export():
++        #     return det_bboxes, det_labels
+         bbox_results = [
+             bbox2result(det_bboxes[i], det_labels[i],
+                         self.bbox_head[-1].num_classes)
+@@ -384,7 +384,7 @@ class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
+                     # split batch mask prediction back to each image
+                     mask_pred = mask_pred.split(num_mask_rois_per_img, 0)
+                     aug_masks.append(
+-                        [m.sigmoid().cpu().numpy() for m in mask_pred])
++                        [m for m in mask_pred])
+ 
+                 # apply mask post-processing to each image individually
+                 segm_results = []
+@@ -405,6 +405,9 @@ class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
+                         segm_results.append(segm_result)
+             ms_segm_result['ensemble'] = segm_results
+ 
++        if torch.onnx.is_in_onnx_export():
++            return det_bboxes, det_labels, segm_results
++
+         if self.with_mask:
+             results = list(
+                 zip(ms_bbox_result['ensemble'], ms_segm_result['ensemble']))
+diff --git a/object_detection/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py b/object_detection/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
+index be6772f..a66bd0f 100644
+--- a/object_detection/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
++++ b/object_detection/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
+@@ -245,6 +245,11 @@ class FCNMaskHead(nn.Module):
+         bboxes = bboxes / scale_factor
+ 
+         if torch.onnx.is_in_onnx_export():
++            # for npu
++            N = len(mask_pred)
++            mask_pred = mask_pred[range(N), labels]
++            return mask_pred
++            
+             # TODO: Remove after F.grid_sample is supported.
+             from torchvision.models.detection.roi_heads \
+                 import paste_masks_in_image
+diff --git a/object_detection/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py b/object_detection/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+index cfc838f..bd04f18 100644
+--- a/object_detection/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
++++ b/object_detection/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+@@ -4,6 +4,32 @@ from mmcv.runner import force_fp32
+ from mmdet.models.builder import ROI_EXTRACTORS
+ from .base_roi_extractor import BaseRoIExtractor
+ 
++import torch.onnx.symbolic_helper as sym_help
++
++class RoiExtractor(torch.autograd.Function):
++    @staticmethod
++    def forward(self, f0, f1, f2, f3, rois, aligned=1, finest_scale=56, pooled_height=7, pooled_width=7,
++                         pool_mode='avg', roi_scale_factor=0, sample_num=0, spatial_scale=[0.25, 0.125, 0.0625, 0.03125]):
++        """
++        feats (torch.Tensor): feats in shape (batch, 256, H, W).
++        rois (torch.Tensor): rois in shape (k, 5).
++        return:
++            roi_feats (torch.Tensor): (k, 256, pooled_width, pooled_width)
++        """
++
++        # phony implementation for shape inference
++        k = rois.size()[0]
++        roi_feats = torch.ones(k, 256, pooled_height, pooled_width)
++        return roi_feats
++
++    @staticmethod
++    def symbolic(g, f0, f1, f2, f3, rois, aligned=1, finest_scale=56, pooled_height=7, pooled_width=7):
++        # TODO: support tensor list type for feats
++        #f_tensors = sym_help._unpack_list(feats)
++        roi_feats = g.op('RoiExtractor', f0, f1, f2, f3, rois, aligned_i=1, finest_scale_i=56, pooled_height_i=pooled_height, pooled_width_i=pooled_width,
++                         pool_mode_s='avg', roi_scale_factor_i=0, sample_num_i=0, spatial_scale_f=[0.25, 0.125, 0.0625, 0.03125], outputs=1)
++        return roi_feats
++
+ 
+ @ROI_EXTRACTORS.register_module()
+ class SingleRoIExtractor(BaseRoIExtractor):
+@@ -52,6 +78,11 @@ class SingleRoIExtractor(BaseRoIExtractor):
+ 
+     @force_fp32(apply_to=('feats', ), out_fp16=True)
+     def forward(self, feats, rois, roi_scale_factor=None):
++        # for npu
++        out_size = self.roi_layers[0].output_size
++        roi_feats = RoiExtractor.apply(feats[0], feats[1], feats[2], feats[3], rois, 1, 56, out_size[0], out_size[1])
++        return roi_feats
++
+         """Forward function."""
+         out_size = self.roi_layers[0].output_size
+         num_levels = len(feats)
+diff --git a/object_detection/tools/deployment/pytorch2onnx.py b/object_detection/tools/deployment/pytorch2onnx.py
+index 4d38020..951d8a7 100644
+--- a/object_detection/tools/deployment/pytorch2onnx.py
++++ b/object_detection/tools/deployment/pytorch2onnx.py
+@@ -54,7 +54,8 @@ def pytorch2onnx(config_path,
+         keep_initializers_as_inputs=True,
+         do_constant_folding=True,
+         verbose=show,
+-        opset_version=opset_version)
++        opset_version=opset_version,
++        enable_onnx_checker=False)
+ 
+     model.forward = orig_model.forward
+ 

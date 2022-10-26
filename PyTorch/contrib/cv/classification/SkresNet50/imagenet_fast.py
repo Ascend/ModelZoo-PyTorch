@@ -26,6 +26,9 @@ import random
 import numpy as np
 
 import torch
+if torch.__version__ >="1.8":
+    import torch_npu
+    print(torch.__version__)
 import torch.npu
 import torch.nn as nn
 import torch.nn.parallel
@@ -167,11 +170,11 @@ parser.add_argument('--mineps', dest='mineps', default=1e-3, type=float,
                     help='min of weights std, typically 1e-3, 1e-8, 1e-2')
 parser.add_argument('--lam', dest='lam', default=1e-4, type=float, help='lam of weights for e-shifted L2 regularizer')
 
-parser.add_argument('--nowd-bn', dest='nowd_bn', action='store_true',
+parser.add_argument('--nowd_bn', dest='nowd_bn', action='store_true',
                     help='no weight decay on bn weights')
-parser.add_argument('--nowd-fc', dest='nowd_fc', action='store_true',
+parser.add_argument('--nowd_fc', dest='nowd_fc', action='store_true',
                     help='no weight decay on fc weights')
-parser.add_argument('--nowd-conv', dest='nowd_conv', action='store_true',
+parser.add_argument('--nowd_conv', dest='nowd_conv', action='store_true',
                     help='no weight decay on conv weights')
 
 # Datasets
@@ -179,11 +182,11 @@ parser.add_argument('-d', '--data', default='path to dataset', type=str)
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 # Optimization options
-parser.add_argument('--opt-level', default='O2', type=str,
+parser.add_argument('--opt_level', default='O2', type=str,
                     help='O2 is mixed FP16/32 training, see more in https://github.com/NVIDIA/apex/tree/f5cd5ae937f168c763985f627bbf850648ea5f3f/examples/imagenet')
-parser.add_argument('--loss-scale', type=float, default=None)
+parser.add_argument('--loss_scale', type=str, default=None)
 
-parser.add_argument('--label-smoothing', '--ls', default=0.1, type=float)
+parser.add_argument('--label_smoothing', '--ls', default=0.1, type=float)
 
 parser.add_argument('--mixup', dest='mixup', action='store_true',
                     help='whether to use mixup')
@@ -195,13 +198,13 @@ parser.add_argument('--warmup', '--wp', default=5, type=int,
                     help='number of epochs to warmup')
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('--train-batch', default=256, type=int, metavar='N',
+parser.add_argument('--train_batch', default=256, type=int, metavar='N',
                     help='train batchsize (default: 256)')
-parser.add_argument('--test-batch', default=125, type=int, metavar='N',
+parser.add_argument('--test_batch', default=125, type=int, metavar='N',
                     help='test batchsize (default: 200)')
-parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
+parser.add_argument('--lr', '--learning_rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--drop', '--dropout', default=0, type=float,
                     metavar='Dropout', help='Dropout ratio')
@@ -210,39 +213,40 @@ parser.add_argument('--schedule', type=int, nargs='+', default=[30, 60, 90],
 parser.add_argument('--gamma', type=float, default=0.1, help='LR is multiplied by gamma on schedule.')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
-parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
+parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
-parser.add_argument('--wd-all', dest='wdall', action='store_true',
+parser.add_argument('--wd_all', dest='wdall', action='store_true',
                     help='weight decay on all parameters')
-parser.add_argument('--world-size', default=-1, type=int,
+parser.add_argument('--world_size', default=-1, type=int,
                     help='number of nodes for distributed training')
 
 # Checkpoints
-parser.add_argument('--print-freq', '-p', default=10, type=int,
+parser.add_argument('--print_freq', '-p', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('-c', '--checkpoint', default='checkpoint', type=str, metavar='PATH',
                     help='path to save checkpoint (default: checkpoint)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
-parser.add_argument('--log-name', default='log.txt', type=str,
+parser.add_argument('--log_name', default='log.txt', type=str,
                     help='name of log file')
 
 # Architecture
 parser.add_argument('--depth', type=int, default=29, help='Model depth.')
 parser.add_argument('--cardinality', type=int, default=32, help='ResNet cardinality (group).')
-parser.add_argument('--base-width', type=int, default=4, help='ResNet base width.')
-parser.add_argument('--widen-factor', type=int, default=4, help='Widen factor. 4 -> 64, 8 -> 128, ...')
+parser.add_argument('--base_width', type=int, default=4, help='ResNet base width.')
+parser.add_argument('--widen_factor', type=int, default=4, help='Widen factor. 4 -> 64, 8 -> 128, ...')
 # Miscs
 parser.add_argument('--manualSeed', type=int, help='manual seed')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
+parser.add_argument('--cann_path', type=str, default='./')
 parser.add_argument('--pth_path', type=str, default='./checkpoints/checkpoint.pth.tar')
-parser.add_argument('--run-prof', default=False, action='store_true', help='run profiling')
+parser.add_argument('--run_prof', default=False, action='store_true', help='run profiling')
 # Device options
 # parser.add_argument('--gpu-id', default='0', type=str, help='id(s) for CUDA_VISIBLE_DEVICES')
-parser.add_argument('--device-list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
+parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
 parser.add_argument('--rank', default=-1, type=int,
                     help='node rank for distributed training')
 parser.add_argument('--local_rank', default=0, type=int)
@@ -495,7 +499,7 @@ def main():
 
 
 def runprof(train_loader, model, criterion, optimizer, gpu, use_cuda):
-    printflag = False
+    printflag = True
     # switch to train mode
     model.train()
     torch.set_grad_enabled(True)
@@ -506,12 +510,11 @@ def runprof(train_loader, model, criterion, optimizer, gpu, use_cuda):
     # inputs, targets = prefetcher.next()
 
     batch_idx = -1
-
+    cann_profiling_path=args.cann_path
     for i, (inputs, targets) in enumerate(train_loader):
-        # for skipstep in range(5):  #skip first 5 steps
-        if i == 5:
-            break
+
         loc = 'npu:{}'.format(gpu)
+        inputs=inputs.to(torch.float)
         targets = targets.to(torch.int32)
         inputs, targets = inputs.to(loc, non_blocking=False), targets.to(loc, non_blocking=False)
         batch_idx += 1
@@ -522,97 +525,66 @@ def runprof(train_loader, model, criterion, optimizer, gpu, use_cuda):
             print_flag = True
         else:
             print_flag = False
+        def run(inputs,targets):
+            if args.cutmix:
+                if printflag == False:
+                    print('using cutmix !')
+                    printflag = True
+                inputs, targets_a, targets_b, lam = cutmix_data(inputs, targets, args.cutmix_prob, use_cuda)
+                outputs = model(inputs)
+                loss_func = mixup_criterion(targets_a, targets_b, lam)
+                old_loss = loss_func(criterion, outputs)
+            elif args.mixup:
+                if printflag == False:
+                    print('using mixup !')
+                    printflag = True
+                inputs, targets_a, targets_b, lam = mixup_data(inputs, targets, args.alpha, use_cuda)
+                outputs = model(inputs)
+                loss_func = mixup_criterion(targets_a, targets_b, lam)
+                old_loss = loss_func(criterion, outputs)
+            elif args.cutout:
+                if printflag == False:
+                    print('using cutout !')
+                    printflag = True
+                inputs = cutout_data(inputs, args.cutout_size, use_cuda)
+                outputs = model(inputs)
+                old_loss = criterion(outputs, targets)
+            else:
+                outputs = model(inputs)
+                old_loss = criterion(outputs, targets)
 
-        if args.cutmix:
-            if printflag == False:
-                print('using cutmix !')
-                printflag = True
-            inputs, targets_a, targets_b, lam = cutmix_data(inputs, targets, args.cutmix_prob, use_cuda)
-            outputs = model(inputs)
-            loss_func = mixup_criterion(targets_a, targets_b, lam)
-            old_loss = loss_func(criterion, outputs)
-        elif args.mixup:
-            if printflag == False:
-                print('using mixup !')
-                printflag = True
-            inputs, targets_a, targets_b, lam = mixup_data(inputs, targets, args.alpha, use_cuda)
-            outputs = model(inputs)
-            loss_func = mixup_criterion(targets_a, targets_b, lam)
-            old_loss = loss_func(criterion, outputs)
-        elif args.cutout:
-            if printflag == False:
-                print('using cutout !')
-                printflag = True
-            inputs = cutout_data(inputs, args.cutout_size, use_cuda)
-            outputs = model(inputs)
-            old_loss = criterion(outputs, targets)
-        else:
-            outputs = model(inputs)
-            old_loss = criterion(outputs, targets)
+            # compute gradient and do SGD step
+            optimizer.zero_grad()
+            # loss.backward()
+            with amp.scale_loss(old_loss, optimizer) as loss:
+                loss.backward()
 
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
-        # loss.backward()
-        with amp.scale_loss(old_loss, optimizer) as loss:
-            loss.backward()
-
-        if args.el2:
-            optimizer.step(print_flag=print_flag)
-        else:
-            optimizer.step()
+            if args.el2:
+                optimizer.step(print_flag=print_flag)
+            else:
+                optimizer.step()
 
         # inputs, targets = prefetcher.next()
 
     # start profiling
-    loc = 'npu:{}'.format(gpu)
-    targets = targets.to(torch.int32)
-    inputs, targets = inputs.to(loc, non_blocking=False), targets.to(loc, non_blocking=False)
-    batch_idx += 1
-    batch_size = inputs.size(0)
-    if (batch_idx) % show_step == 0 and args.local_rank == 0:
-        print_flag = True
-    else:
-        print_flag = False
-    with torch.autograd.profiler.profile(use_npu=True) as prof:
-        if args.cutmix:
-            if printflag == False:
-                print('using cutmix !')
-                printflag = True
-            inputs, targets_a, targets_b, lam = cutmix_data(inputs, targets, args.cutmix_prob, use_cuda)
-            outputs = model(inputs)
-            loss_func = mixup_criterion(targets_a, targets_b, lam)
-            old_loss = loss_func(criterion, outputs)
-        elif args.mixup:
-            if printflag == False:
-                print('using mixup !')
-                printflag = True
-            inputs, targets_a, targets_b, lam = mixup_data(inputs, targets, args.alpha, use_cuda)
-            outputs = model(inputs)
-            loss_func = mixup_criterion(targets_a, targets_b, lam)
-            old_loss = loss_func(criterion, outputs)
-        elif args.cutout:
-            if printflag == False:
-                print('using cutout !')
-                printflag = True
-            inputs = cutout_data(inputs, args.cutout_size, use_cuda)
-            outputs = model(inputs)
-            old_loss = criterion(outputs, targets)
-        else:
-            outputs = model(inputs)
-            old_loss = criterion(outputs, targets)
 
+        if (batch_idx) % show_step == 0 and args.local_rank == 0:
+            print_flag = True
+        else:
+            print_flag = False
+        if i==5:
+            with torch.autograd.profiler.profile(use_npu=True) as prof:
+                run(inputs,targets)
+            print(prof.table())
+            prof.export_chrome_trace("output.prof")
+            with torch.npu.profile(cann_profiling_path):
+                run(inputs,targets)
+            # prof.export_chrome_trace("cann_output.prof")
+            exit(0)
+        else:
+            run(inputs,targets)
         # compute gradient and do SGD step
-        optimizer.zero_grad()
-        # loss.backward()
-        with amp.scale_loss(old_loss, optimizer) as loss:
-            loss.backward()
 
-        if args.el2:
-            optimizer.step(print_flag=print_flag)
-        else:
-            optimizer.step()
-
-    prof.export_chrome_trace("output.prof")
 
 
 def train(train_loader, model, criterion, optimizer, epoch, use_cuda, gpu, ngpus, data_prefetcher_stream):

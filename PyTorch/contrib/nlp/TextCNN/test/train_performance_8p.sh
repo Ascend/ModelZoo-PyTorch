@@ -10,7 +10,7 @@ export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='80002'
 
 # 训练batch_size
-batch_size=128
+batch_size=400
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
@@ -104,6 +104,7 @@ echo "------------------ Final result ------------------"
 FPS=`grep -a 'fps_tmp' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' |awk '{print $18}'|  awk -F '[[]' '{print $2}' |awk -F '[]]' '{print $1}'`
 
 FPS=${FPS#* }  # 去除前面的空格字符
+FPS=`echo $FPS|awk '{printf("%.2f",$0)}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

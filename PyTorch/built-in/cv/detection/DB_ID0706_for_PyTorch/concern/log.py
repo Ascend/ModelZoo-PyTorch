@@ -22,7 +22,6 @@ import time
 import pathlib
 from datetime import datetime
 
-from tensorboardX import SummaryWriter
 import yaml
 import cv2
 import numpy as np
@@ -62,9 +61,6 @@ class Logger(Configurable):
 
         self.message_logger = self._init_message_logger()
 
-        summary_path = os.path.join(self.log_dir, self.SUMMARY_DIR_NAME)
-        self.tf_board_logger = SummaryWriter(summary_path)
-
         self.metrics_writer = open(os.path.join(
             self.log_dir, self.METRICS_FILE_NAME), 'at')
 
@@ -79,7 +75,12 @@ class Logger(Configurable):
             self.database_dir, self.log_dir, application)
         pathlib.Path(storage_dir).mkdir(parents=True, exist_ok=True)
         if not os.path.exists(self.log_dir):
-            os.symlink(storage_dir, self.log_dir)
+            try:
+                os.symlink(storage_dir, self.log_dir)
+            except FileExistsError as e:
+                # it happened when multi-processing build symlink at the same time
+                # no need to new one when file exists
+                pass
 
     def save_dir(self, dir_name):
         return os.path.join(self.log_dir, dir_name)
@@ -205,7 +206,5 @@ class Logger(Configurable):
             raise AttributeError('haha')
         if name in message_levels:
             return functools.partial(self.message, name)
-        elif hasattr(self.__dict__.get('tf_board_logger'), name):
-            return self.tf_board_logger.__getattribute__(name)
         else:
             super()

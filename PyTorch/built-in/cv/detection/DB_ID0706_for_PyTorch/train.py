@@ -20,6 +20,8 @@ import argparse
 import time
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import yaml
 import torch.distributed as dist
 
@@ -64,6 +66,9 @@ def main(args):
         main_worker(0, npus_per_node, args)
 
 def main_worker(dev, npus_per_node, args):
+    if args['rt2']:
+        torch.npu.set_compile_mode(jit_compile=False) 
+        print("use rt2 train model")
     device_id = args["process_device_map"][dev]
     args["device_id"] = device_id
     loc = "npu:{}".format(device_id)
@@ -133,6 +138,7 @@ if __name__ == '__main__':
     parser.add_argument('--dist_backend', default="hccl", type=str, help='distributed backend')
     parser.add_argument('--addr', default="90.90.176.102", type=str, help='master addr')
     parser.add_argument('--Port', default="29500", type=str, help='master Port')
+    parser.add_argument('--rt2', default=False, action='store_true', help='Use rt2 in the model training')
     parser.set_defaults(debug=False)
     parser.set_defaults(benchmark=True)
 

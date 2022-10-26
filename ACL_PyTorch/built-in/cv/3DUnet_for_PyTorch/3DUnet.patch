@@ -1,0 +1,51 @@
+diff --git a/vision/medical_imaging/3d-unet/Task043_BraTS_2019.py b/vision/medical_imaging/3d-unet/Task043_BraTS_2019.py
+index 6c19607..ba06bb1 100644
+--- a/vision/medical_imaging/3d-unet/Task043_BraTS_2019.py
++++ b/vision/medical_imaging/3d-unet/Task043_BraTS_2019.py
+@@ -62,6 +62,9 @@ def main():
+     REMEMBER TO CONVERT LABELS BACK TO BRATS CONVENTION AFTER PREDICTION!
+     """
+ 
++    nnUNet_raw_data="./build/raw_data/nnUNet_raw_data"
++    maybe_mkdir_p(nnUNet_raw_data)
++
+     task_name = "Task043_BraTS2019"
+     downloaded_data_dir = args.downloaded_data_dir
+ 
+diff --git a/vision/medical_imaging/3d-unet/onnxruntime_SUT.py b/vision/medical_imaging/3d-unet/onnxruntime_SUT.py
+index 0651e2f..29ad467 100644
+--- a/vision/medical_imaging/3d-unet/onnxruntime_SUT.py
++++ b/vision/medical_imaging/3d-unet/onnxruntime_SUT.py
+@@ -25,11 +25,14 @@ import numpy as np
+ import onnxruntime
+ 
+ from brats_QSL import get_brats_QSL
++from acl_net import Net
++
+ 
+ class _3DUNET_ONNXRuntime_SUT():
+     def __init__(self, model_path, preprocessed_data_dir, performance_count):
+         print("Loading ONNX model...")
+-        self.sess = onnxruntime.InferenceSession(model_path)
++        # self.sess = onnxruntime.InferenceSession(model_path)
++        self.model = Net(device_id=0, model_path=model_path)
+ 
+         print("Constructing SUT...")
+         self.sut = lg.ConstructSUT(self.issue_queries, self.flush_queries, self.process_latencies)
+@@ -44,7 +47,8 @@ class _3DUNET_ONNXRuntime_SUT():
+ 
+             # Follow the PyTorch implementation.
+             # The ONNX file has five outputs, but we only care about the one named "output".
+-            output = self.sess.run(["output"], {"input": data[np.newaxis, ...]})[0].squeeze(0).astype(np.float16)
++            # output = self.sess.run(["output"], {"input": data[np.newaxis, ...]})[0].squeeze(0).astype(np.float16)
++            output = self.model(data[np.newaxis, ...])[0].squeeze(0).astype(np.float16)
+ 
+             response_array = array.array("B", output.tobytes())
+             bi = response_array.buffer_info()
+@@ -58,4 +62,4 @@ class _3DUNET_ONNXRuntime_SUT():
+         pass
+ 
+ def get_onnxruntime_sut(model_path, preprocessed_data_dir, performance_count):
+-    return _3DUNET_ONNXRuntime_SUT(model_path, preprocessed_data_dir, performance_count)
+\ No newline at end of file
++    return _3DUNET_ONNXRuntime_SUT(model_path, preprocessed_data_dir, performance_count)

@@ -71,5 +71,5 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/set_npu_env.sh
 fi
 
-python3 ./test.py --images-folder ${data_path} --output-folder ./res/ --checkpoint ./runs/best_checkpoint.pt --dis && zip -jmq ./runs/u.zip ./res/* && python3 ./script.py -g=./gt.zip -s=./runs/u.zip
+python3 ./test.py --images-folder ${data_path}/ch4_test_images --output-folder ./res/ --checkpoint ./runs/best_checkpoint.pt --dis && zip -jmq ./runs/u.zip ./res/* && python3 ./script.py -g=${data_path}/gt.zip -s=./runs/u.zip
 

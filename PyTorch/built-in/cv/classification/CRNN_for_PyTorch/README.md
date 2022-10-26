@@ -1,11 +1,13 @@
 环境
 ----------
-    pytorch 1.5
-    torchvision 0.5.0
     apex 0.1
     easydict 1.9
     lmdb 0.98
     PyYAML 5.3
+    Pillow 9.1.0
+    torchvision 0.6.0
+    注：pillow建议安装较新版本， 与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接： 
+        https://github.com/pytorch/vision，  建议：Pillow版本是9.1.0  当torch版本是1.5时torchvision版本是0.6.0；当torch版本是1.8时torchvision版本是0.9.1
 ## Training
 
 一、训练流程

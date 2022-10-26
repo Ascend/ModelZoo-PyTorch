@@ -29,6 +29,9 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 
+if torch.__version__ >= '1.8':
+    import torch_npu
+
 from collections import OrderedDict
 
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
@@ -41,6 +44,7 @@ from lr_scheduler import build_scheduler
 from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper, reduce_tensor
+from models.swin_transformer import NpuDropPath
 
 try:
     # noinspection PyUnresolvedReferences
@@ -102,6 +106,8 @@ def main(config):
 
     model.npu()
     logger.info(str(model))
+
+    NpuDropPath.enable_droppath_ensemble(model)
 
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
@@ -332,7 +338,12 @@ def throughput(data_loader, model, logger):
 
 if __name__ == '__main__':
     _, config = parse_option()
-
+    
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    print("option:",option)
+    torch.npu.set_option(option)
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
 

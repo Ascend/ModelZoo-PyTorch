@@ -55,7 +55,9 @@ class Runner(object):
                  log_level=logging.INFO,
                  logger=None,
                  samples_per_gpu=2,
-                 num_of_gpus=1):
+                 num_of_gpus=1,
+                 fps_lag=200,
+                 steps_per_epoch=None):
         assert callable(batch_processor)
         self.model = model
         if optimizer is not None:
@@ -81,10 +83,10 @@ class Runner(object):
 
         self._rank, self._world_size = get_dist_info()
         self.timestamp = get_time_str()
-        if logger is None:
-            self.logger = self.init_logger(work_dir, log_level)
-        else:
-            self.logger = logger
+        # if logger is None:
+        self.logger = self.init_logger(work_dir, log_level)
+        # else:
+        #    self.logger = logger
         self.log_buffer = LogBuffer()
 
         self.mode = None
@@ -94,9 +96,15 @@ class Runner(object):
         self._inner_iter = 0
         self._max_epochs = 0
         self._max_iters = 0
+        self.train_performance = False
         self.samples_per_gpu = samples_per_gpu
         self.num_of_gpus = num_of_gpus
         self.iter_time_hook = IterTimerHook()
+        self.fps_lag = fps_lag
+        self.steps_per_epoch = steps_per_epoch
+        if steps_per_epoch is None:
+            self.steps_per_epoch = 500
+
     @property
     def model_name(self):
         """str: Name of the model, usually the module class name."""
@@ -194,6 +202,9 @@ class Runner(object):
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s', level=level)
         logger = logging.getLogger(__name__)
+        if self.rank == 0:
+            logger.addHandler(logging.StreamHandler())
+            logger.setLevel(logging.INFO)
         if log_dir and self.rank == 0:
             filename = '{}.log'.format(self.timestamp)
             log_file = osp.join(log_dir, filename)
@@ -325,11 +336,17 @@ class Runner(object):
             self.outputs = outputs
             self.call_hook('after_train_iter')
             self._iter += 1
-            if i % 200 == 0 and i:
+            
+            if i % self.fps_lag == 0 and i:
                 self.logger.info('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
-                                 self.iter_time_hook.time_all))
-
-        self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)))
+                                                self.iter_time_hook.time_all))
+            if i >= self.steps_per_epoch and self.train_performance:
+                break
+        if self.train_performance:
+            pass
+        else:
+            self.logger.info('FPS: ' + str(
+                self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)))
         self.call_hook('after_train_epoch')
         self._epoch += 1
 
@@ -399,24 +416,27 @@ class Runner(object):
         self.call_hook('before_run')
 
         while self.epoch < max_epochs:
+            start_time = time.time()
             for i, flow in enumerate(workflow):
                 mode, epochs = flow
                 if isinstance(mode, str):  # self.train()
                     if not hasattr(self, mode):
                         raise ValueError(
                             'runner has no method named "{}" to run an epoch'.
-                            format(mode))
+                                format(mode))
                     epoch_runner = getattr(self, mode)
                 elif callable(mode):  # custom train()
                     epoch_runner = mode
                 else:
                     raise TypeError('mode in workflow must be a str or '
                                     'callable function, not {}'.format(
-                                        type(mode)))
+                        type(mode)))
                 for _ in range(epochs):
                     if mode == 'train' and self.epoch >= max_epochs:
                         return
                     epoch_runner(data_loaders[i], **kwargs)
+            end_time = time.time()
+            self.logger.info('Epoch %s, cost time %.3fs'%(self.epoch, end_time-start_time))
 
         time.sleep(1)  # wait for some hooks like loggers to finish
         self.call_hook('after_run')

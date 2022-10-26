@@ -7,7 +7,6 @@ export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #集合通信参数,不需要修改
 export RANK_SIZE=8
-export JOB_ID=10087
 RANK_ID_START=0
 
 
@@ -98,6 +97,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+ASCEND_DEVICE_ID=0
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -156,7 +156,7 @@ export HCCL_WHITELIST_DISABLE=1
 
 NPUS=($(seq 0 7))
 export NPU_WORLD_SIZE=${#NPUS[@]}
-rank=0
+RANK=0
 
 KERNEL_NUM=$(($(nproc)/8))
 #for((RANK_ID=0;RANK_ID<NNPU;RANK_ID++))
@@ -165,9 +165,9 @@ for i in ${NPUS[@]}
 do  
     mkdir -p  ${test_path_dir}/output/${i}/
     export NPU_CALCULATE_DEVICE=${i}
-    export RANK=${rank}
+    export RANK=${RANK}
     export ASCEND_DEVICE_ID=${i}
-    echo run process ${rank} 
+    echo run process ${RANK} 
     if [ $(uname -m) = "aarch64" ]
     then
         PID_START=$((KERNEL_NUM * i))
@@ -194,8 +194,8 @@ do
             --fp16 true     \
             --amp 2 \
             --seed 1 \
-            --local_rank $rank > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let rank++
+            --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+    let RANK++
     else
         nohup python3.7 ${cur_path}/train.py --exp_name xlm_en_zh \
             --dump_path ./dumped        \
@@ -219,13 +219,14 @@ do
             --fp16 true     \
             --amp 2 \
             --seed 1 \
-            --local_rank $rank > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
-    let rank++
+            --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
+    let RANK++
     fi
 done
 
 wait
 
+ASCEND_DEVICE_ID=0
 
 
 #恢复参数
@@ -237,7 +238,7 @@ e2e_time=$(( $end_time - $start_time ))
 
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "sent/s -" '{print $2}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 FPS=`awk 'BEGIN{printf "%.2f\n",'${FPS}'*'8'}'`
 
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`

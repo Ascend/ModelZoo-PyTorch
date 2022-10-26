@@ -97,7 +97,7 @@ class IterationTimer(HookBase):
     placed at the beginning of the list of hooks to obtain accurate timing.
     """
 
-    def __init__(self, batchsize, warmup_iter=3):
+    def __init__(self, batchsize, warmup_iter=10):
         """
         Args:
             warmup_iter (int): the number of iterations at the beginning to exclude

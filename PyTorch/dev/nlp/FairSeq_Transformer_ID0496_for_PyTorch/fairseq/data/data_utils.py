@@ -268,12 +268,10 @@ def batch_by_size(
     if isinstance(indices, types.GeneratorType):
         indices = np.fromiter(indices, dtype=np.int64, count=-1)
 
-    #return batch_by_size_fast(indices, num_tokens_fn, max_tokens, max_sentences, bsz_mult)
     return_val = batch_by_size_fast(indices, num_tokens_fn, max_tokens, max_sentences, bsz_mult)
     if return_val:
         return_val = [x for x in return_val if (len(x) % bsz_mult == 0)]
     return return_val
-
 
 def process_bpe_symbol(sentence: str, bpe_symbol: str):
     if bpe_symbol == 'sentencepiece':

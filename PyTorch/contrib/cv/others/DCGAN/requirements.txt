@@ -1,3 +1,1 @@
-torch
-apex
 torchvision

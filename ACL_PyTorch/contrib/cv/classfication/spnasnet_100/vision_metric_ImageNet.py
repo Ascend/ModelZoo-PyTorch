@@ -71,7 +71,6 @@ def load_statistical_predict_result(filepath):
     :return: probabilities, numble of label, in_type, color
     """
     with open(filepath, 'r')as f:
-        print(f)
         data = f.readline()
         temp = data.strip().split(" ")
         n_label = len(temp)
@@ -181,6 +180,5 @@ if __name__ == '__main__':
                                             img_label_dict, topn=5)
 
     elapsed = (time.time() - start)
-    print("Time used:", elapsed)
 
 

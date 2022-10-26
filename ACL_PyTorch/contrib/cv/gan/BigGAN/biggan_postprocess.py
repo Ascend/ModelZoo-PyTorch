@@ -47,6 +47,8 @@ def post_process(args):
     x = []
     num_count = 0
     for i in range(len(img_bin_list)):
+        if not img_bin_list[i].endswith(".bin"):
+               continue
         source_path = os.path.join(bin_path, img_bin_list[i])
         img = np.fromfile(source_path, dtype=np.float32)
         img = torch.from_numpy(img)

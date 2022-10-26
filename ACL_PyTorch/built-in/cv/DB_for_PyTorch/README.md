@@ -33,21 +33,24 @@ datasets/icdar2015/
 5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)  
 将benchmark.x86_64或benchmark.aarch64放到DB/  
 
-6.因包含dcn自定义算子，去除对onnx的检查  
-将/usr/local/python3.7.5/lib/python3.7/site-packages/torch/onnx/utils.py的_check_onnx_proto(proto)改为pass  
 
 ## 2 离线推理 
 
-310上执行，执行时使npu-smi info查看设备状态，确保device空闲  
+npu上执行，执行时使npu-smi info查看设备状态，确保device空闲
 ```
-bash test/pth2om.sh  
+bash test/pth2om.sh  Your_Soc_Version
 bash test/eval_acc_perf.sh --datasets_path=`pwd`/DB/datasets  
 ```
+Your_Soc_version是你的npu型号，可以用 npu-smi info 查看，例如Ascend310和Ascend310P3
+
  **评测结果：**   
-| 模型      | 官网pth精度  | 310离线推理精度  | gpu性能    | 310性能    |
-| :------: | :------: | :------: | :------:  | :------:  | 
-| DB bs1  | precision : 91.3 recall : 80.3 fmeasure : 85.4 | 0.886823 0.803563 0.843142 |  8.53fps | 10.9282fps | 
-| DB bs16 | precision : 91.3 recall : 80.3 fmeasure : 85.4 | 0.886823 0.803563 0.843142 | 7.240fps | 11.22672fps | 
+| 模型      | 官网pth精度  | 310离线推理精度  | gpu性能    | 310性能    | 310P |
+| :------: | :------: | :------: | :------:  | -------- | -------- |
+| DB bs1  | precision : 91.3 recall : 80.3 fmeasure : 85.4 | 0.886823 0.803563 0.843142 |  8.53fps | 10.9282fps | 15.21fps |
+| DB bs16 | precision : 91.3 recall : 80.3 fmeasure : 85.4 | 0.886823 0.803563 0.843142 | 7.240fps | 11.22672fps | 22.79fps |
+| DB bs32 | - | 0.886823 0.803563 0.843142 | - | - | 22.46fps |
+| DB bs64 | - | 0.886823 0.803563 0.843142 | - | - | 23.14fps |
+
 
 备注：精度问题参见[issue](https://github.com/MhLiao/DB/issues/250)，修改代码后在线推理重新测评pth精度，可以看出om与pth精度一致  
 

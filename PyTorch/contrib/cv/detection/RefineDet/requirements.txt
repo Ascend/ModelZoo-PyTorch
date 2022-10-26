@@ -1,10 +1,7 @@
-torch==1.5.0+ascend.post3
-apex==0.1+ascend
 future==0.18.2
 numpy==1.21.2 
 opencv-python==4.5.3.56
-torchvision==0.2.2
-pillow==8.3.2 
+pillow==9.1.0
 six==1.16.0
 decorator==4.4.2
 sympy==1.4

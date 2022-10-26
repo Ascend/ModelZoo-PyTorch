@@ -1,0 +1,12 @@
+torchvision
+timm
+ftfy
+regex
+kestrel
+yacs
+sklearn
+easydict==1.9
+tensorboardX
+textaugment
+requests
+ipdb

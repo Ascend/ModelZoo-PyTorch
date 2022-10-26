@@ -61,33 +61,46 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-    if  [ ! -d  "./datasets/COCO"  ]; then
-        ln -s ${data_path} ./datasets/COCO
-    fi
- 
-    for i in $(seq 0 7)
-    do
-    	export RANK=$i
-	    if [ -d ${test_path_dir}/output/${i} ];then
-    	    rm -rf ${test_path_dir}/output/${i}
-    	    mkdir -p ${test_path_dir}/output/${i}
-	    else
-    	    mkdir -p ${test_path_dir}/output/${i}
-	    fi
-        start=$((24 * i))
-        end=$((start + 23))
-        taskset -c $start-$end nohup python3.7 -u tools/train.py -n yolox-x \
-                -b ${batch_size} \
-                -d 8 \
-                --maxx_epoch ${train_epochs} \
-                --use_npu \
-                --device_id $i >> ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
-    done
-    #python3.7 tools/train.py -n yolox-x -d 8 -b ${batch_size} --maxx_epoch ${train_epochs} --fp16  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+if [ ! -d  "./datasets/VOCdevkit"  ]; then
+    ln -s ${data_path} ./datasets/VOCdevkit
+fi
 
+KERNEL_NUM=$(($(nproc)/8))
+for i in $(seq 0 7)
+do
+ASCEND_DEVICE_ID=$i
+
+#创建DeviceID输出目录，不需要修改
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
+
+if [ $(uname -m) = "aarch64" ]
+then
+    PID_START=$((KERNEL_NUM * i))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END nohup python3.7 -u tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
+        -b ${batch_size} \
+        -d 8 \
+        --maxx_epoch ${train_epochs} \
+        --use_npu \
+        --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
+else
+    nohup python3.7 -u tools/train.py -n yolox-s \
+        -f exps/example/yolox_voc/yolox_voc_s.py \
+        -b ${batch_size} \
+        -d 8 \
+        --maxx_epoch ${train_epochs} \
+        --use_npu \
+        --device_id $i > ${test_path_dir}/output/${i}/train_${i}.log 2>&1 &
+fi
+done
 
 wait
-
 
 ##################获取训练数据################
 #训练结束时间，不需要修改
@@ -97,12 +110,12 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修
-FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/{print '${batch_size}'/$15}'| sed 's/.$//' | sed 's/.$//'| tail -1`
+FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/{print '${batch_size}'/$15}'| sed 's/.$//' | sed 's/.$//'| awk '$0 >a{a=$0}END{print a}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'best' ${test_path_dir}/output/0/train_0.log | awk '{print $18}'`
+train_accuracy=`cat ${test_path_dir}/output/0/train_0.log |grep 'map_5095' | awk 'END {print}' | awk '{print $2}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

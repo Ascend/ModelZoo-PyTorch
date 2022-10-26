@@ -61,7 +61,7 @@ def batched_nms_npu(boxes, scores, idxs, iou_threshold):
     '''
     _, _, keep_mask = \
         torch.npu_nms_with_mask(
-            torch.cat([boxes, scores[..., None]], 1), iou_threshold)
+            torch.cat([boxes.float(), scores[..., None]], 1), iou_threshold)
     return keep_mask
 
 

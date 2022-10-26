@@ -16,11 +16,13 @@
 import argparse
 import sys
 import os
+import torch
+import torch_npu
 import torchlight
 from torchlight import import_class
 import torch.multiprocessing as mp
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Processor collection')
 
     # region register processor yapf: disable
@@ -44,6 +46,14 @@ if __name__ == '__main__':
     # start
     Processor = processors[arg.processor]
     p = Processor(sys.argv[2:])
+
+    if p.arg.rt2:
+        torch.npu.set_compile_mode(jit_compile=False)
+
+        option = {}
+        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "AvgPoolV2Grad"
+        torch.npu.set_option(option)
+
     devices = [p.arg.device] if isinstance(
         p.arg.device, int) else list(p.arg.device)
     os.environ['MASTER_ADDR'] = '127.0.0.1'

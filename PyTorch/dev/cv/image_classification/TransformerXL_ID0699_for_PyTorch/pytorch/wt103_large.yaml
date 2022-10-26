@@ -24,7 +24,7 @@ train: &train
    init_std: 0.005
    eval_tgt_len: 128
    batch_size: 128
-   multi_gpu: ddp
+   multi_gpu: None
    log_interval: 100
    eval_interval: 5000
    vocab: word

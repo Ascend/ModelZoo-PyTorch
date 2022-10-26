@@ -25,7 +25,8 @@ import torch.distributed as dist
 import torch.nn as nn 
 import torch.nn.parallel as par
 import torch.optim as optim
-
+if torch.__version__ >= '1.8.1':
+    import torch_npu
 sys.path.append('.')
 import checkpoint
 import data
@@ -80,11 +81,11 @@ def main_worker(args):
             pretrained_dict.pop('module.last_linear.weight')
             pretrained_dict.pop('module.last_linear.bias')
 
-        for param in net.parameters():
+        for param in model.parameters():
             param.requires_gard = False
 
-        net.last_linear = nn.Linear(2048, 1000)
-        net.load_state_dict(pretrained_dict, strict=False)
+        model.last_linear = nn.Linear(2048, 1000)
+        model.load_state_dict(pretrained_dict, strict=False)
 
     if args.label_smoothing_epsilon > 0.0:
         logging.info('Using label smoothing with epsilon = {:.3f}'.format(args.label_smoothing_epsilon))
@@ -130,7 +131,7 @@ def main_worker(args):
     model, optimizer = apex.amp.initialize(
         model, optimizer, 
         opt_level=args.opt_level, 
-        loss_scale=args.loss_scale
+        loss_scale='dynamic'
     )
     if args.distributed:
         model = par.DistributedDataParallel(model, device_ids=[args.local_rank])

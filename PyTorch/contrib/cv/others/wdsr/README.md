@@ -17,6 +17,8 @@ For Details, see src/models/wdsr.py
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
+  Note: pillow recommends installing a newer version. If the corresponding torchvision version cannot be installed directly, you can use the source code to install the corresponding version. The source code reference link: https://github.com/pytorch/vision，
+Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 - The DIV2k Dataset can be downloaded from Reference impkementation ([readme](https://github.com/ychfan/wdsr/blob/master/README.md)), find `DIV2K dataset: DIVerse 2K resolution high quality images as used for the NTIRE challenge on super-resolution @ CVPR 2017` link , download `Train Data (HR images)`, `Validation Data (HR images)`, `Train Data Track 1 bicubic downscaling x2 (LR images)`, `Validation Data Track 1 bicubic downscaling x2 (LR images)`.Move the datasets to directory ./data/DIV2K/
 
 

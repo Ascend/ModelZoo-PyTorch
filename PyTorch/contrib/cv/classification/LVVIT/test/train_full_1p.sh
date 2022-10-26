@@ -83,7 +83,7 @@ nohup python3  main.py $1 \
     --token-label-data $2 \
     --token-label-size 14 \
     --model-ema \
-    --no-prefetcher &
+    --no-prefetcher > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -93,12 +93,12 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
-FPS=`cat  nohup.out| grep '/s)' |tail -n 1 |awk -F '/s' '{print$1}'|awk -F ', ' '{print$2}'`
+FPS=`cat  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| grep '/s)' |tail -n 1 |awk -F '/s' '{print$1}'|awk -F ', ' '{print$2}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`cat  nohup.out| grep 'Best metric:'|awk -F ':' '{print$2}'|awk -F ' ' '{print$1}'`
+train_accuracy=`cat  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| grep 'Best metric:'|awk -F ':' '{print$2}'|awk -F ' ' '{print$1}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -116,7 +116,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-cat nohup.out | grep "Loss:" | awk '{print $5}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep "Loss:" | awk '{print $5}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`

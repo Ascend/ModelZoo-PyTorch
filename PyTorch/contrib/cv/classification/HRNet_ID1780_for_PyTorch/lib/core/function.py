@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import time
 import logging
-
+import sys
 import torch
 from apex import amp
 from core.evaluate import accuracy
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def train(config, train_loader, model, criterion, optimizer, epoch,
-          output_dir, tb_log_dir, writer_dict, device_num, bs):
+          output_dir, tb_log_dir, writer_dict, device_num, bs, stop_step):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -35,14 +35,17 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
     list3 = []
     end = time.time()
     for i, (input, target) in enumerate(train_loader):
+        if stop_step:
+            # reduce time for 1p perf test
+            if i > 200:
+                sys.exit(0)
         # measure data loading time
         data_time.update(time.time() - end)
         # compute output
         input = input.npu()
         output = model(input)
         target = target.npu(non_blocking=True)
-        output = output.cpu()
-        target = target.cpu()
+       
         loss = criterion(output, target)
         loss = loss.npu()
 
@@ -120,8 +123,7 @@ def validate(config, val_loader, model, criterion, output_dir, tb_log_dir,
             input = input.npu()
             output = model(input)
             target = target.npu(non_blocking=True)
-            output = output.cpu() 
-            target = target.cpu()
+          
             loss = criterion(output, target)
             loss = loss.npu()
             

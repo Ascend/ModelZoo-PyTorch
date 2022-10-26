@@ -51,7 +51,7 @@ index 515cf7e3f..b0e86b0d5 100644
          if self.normalize_before:
              xs = self.after_norm(xs)
 -
-+        print(xs.shape)
++        #
 +        return xs
          if self.intermediate_layers is not None:
              return xs, masks, intermediate_outputs

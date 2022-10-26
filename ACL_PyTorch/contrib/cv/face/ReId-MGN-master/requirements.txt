@@ -1,4 +1,4 @@
-torchvision>=0.6.0
+torchvision>=0.8.0
 onnx>=1.7.0
-torch==1.7.0
+torch==1.8.1
 albumentations == 1.0.0

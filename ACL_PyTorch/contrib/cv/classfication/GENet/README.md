@@ -1,84 +1,161 @@
-## 1、环境准备
-### 1.下载pth模型
-点击[链接](https://pan.baidu.com/s/1U_Se8EwZbfToc6Yi8wH-sw)下载原始pth模型，提取码hwst<br/>
-原始pth模型由对应的[训练代码](https://gitee.com/fleurrr/modelzoo/tree/master/contrib/PyTorch/Research/cv/image_classification/GENET_for_PyTorch)训练得到
-### 2.安装必要环境
+## <a name="1">1. 模型概述</a>
+### 1.1 参考论文
+[GENet论文](https://arxiv.org/abs/1810.12348)
+### 1.2 参考实现
+[代码地址](https://github.com/BayesWatch/pytorch-GENet)
+> branch: master
+
+> commit id: 3fbf99fb6934186004ffb5ea5c0732e0e976d5b2
+
+## <a name="1">2. 推理环境准备</a>
+### 2.1 环境介绍
+CANN=[5.0.4](https://www.hiascend.com/software/cann/commercial?version=5.0.4)。  
+硬件环境、开发环境和运行环境准备请参见[CANN 软件安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/504/envdeployment/instg)。
+### 2.2 所需依赖
+```
+Pytorch>=1.5.0
+Torchvision>=0.6.0
+ONNX>=1.7.0
+numpy==1.18.5
+Pillow==7.2.0
+```
+### 2.3 环境配置
 ```
 pip3.7 install -r requirements.txt  
 ```
-### 3.获取，安装开源模型代码
+## <a name="1">3. 数据集准备</a>
+### 3.1 下载数据集
+在官方下载cifar10数据集
+### 3.2 数据预处理
+准备Bin文件  
+```
+python3.7 preprocess.py ${datasets_path} ./prep_dataset 
+```
+第一个参数为数据集存放目录（例：若数据集路径为/home/HwHiAiUser/dataset/cifar-10-batches-py/，则数据集存放目录为/home/HwHiAiUser/dataset/），第二个参数为预处理后的数据文件的相对路径。该操作会在数据文件的目录下生成标签文件val_label.txt。
+### 3.3 生成数据集info文件
+```
+python3.7 get_info.py bin ./prep_dataset ./genet_prep_bin.info 32 32
+```
+第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件的相对路径，第三个参数为生成的数据集文件保存的路径。运行成功后，在当前目录中生成genet_prep_bin.info。
+## <a name="1">4. 模型转换</a>
+### 4.1 获取源码
 ```
 git clone https://github.com/BayesWatch/pytorch-GENet.git 
 cd pytorch-GENet/
 git reset 3fbf99fb6934186004ffb5ea5c0732e0e976d5b2 --hard
 cd ../
 ```
-### 4.下载数据集
-在官方[链接](http://www.cs.toronto.edu/~kriz/cifar.html)下载cifar10数据集
-
-### 5.获取benchmark工具 
-[下载](https://gitee.com/ascend/cann-benchmark/tree/master/infer)benchmark工具，将benchmarck.x86_64放到推理目录 
-
-## 2、om模型转换
-开始推理工作前，先设置环境变量
-```
-bash test/env.sh
-```
-运行`pthtar2onnx.py`文件以转换得到对应的onnx模型。其中${model_path}指的是模型文件路径，如/home/HwHiAiUser/model/genet.pth.tar
+### 4.2 pth转onnx模型
 ```
 python3.7 pthtar2onnx.py ${model_path}
+```
+其中${model_path}指的是模型路径，如/home/HwHiAiUser/model/genet.pth.tar
+### 4.3 onnx转om模型
+设置环境变量
+```
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+```
+使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
 
-```
-将生成onnx模型放在推理代码主目录，运行以下命令以转换om模型，模型转换中使用了autotune工具以提升om模型性能
-```
-bash test/onnx2om.sh
-```
-该指令会生成genet_bs16_tuned，genet_bs1_tuned两个模型
+${chip_name}可通过`npu-smi info`指令查看
 
-## 3、准备数据集
-下载cifar10数据集，置于${datasets_path}，运行以下命令以前处理数据集。注意，第一个参数为数据集存放目录（例：若数据集路径为/home/HwHiAiUser/dataset/cifar-10-batches-py/，则数据集存放目录为/home/HwHiAiUser/dataset/）
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   
 ```
-python3.7 preprocess.py ${datasets_path} ./prep_dataset
+bash test/onnx2om.sh Ascend${chip_name} # Ascend310P3
 ```
-运行以下指令将数据转换为bin格式，生成标签文件./prep_dataset/val_label.txt，生成数据集信息文件genet_prep_bin.info
+该指令会生成genet_bs16_tuned，genet_bs1_tuned两个模型，可在onnx2om.sh文件中修改以生成不同bs值的om模型
+>  **说明**
+> 注意目前ATC支持的onnx算子版本为11
+## <a name="1">5. 推理验证</a>
+### 5.1 使用指南
+[《CANN 推理benchmark工具用户指南》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
+### 5.2 离线推理
+1.增加benchmark.{arch}可执行权限
 ```
-python3.7 get_info.py bin ./prep_dataset ./genet_prep_bin.info 32 32
+chmod u+x benchmark.x86_64
 ```
-## 4、310推理
-运行以下指令生成推理结果文件
+2.推理
 ```
 bash test/infer_bin.sh
 ```
-该指令会在result目录下生成模型的推理结果文件以及推理性能文件，推理性能文件参考如下
+可以通过修改batch_size的值进行在不同batchsize情况下的推理（同时要修改对应的om文件路径即om_path的值）。运行该指令后输出结果默认保存在当前目录/result/dumpOutput_device0中，同时在/result目录下会生成一个推理性能文件  
+
+3.获取性能信息
 ```
-[e2e] throughputRate: 135.162, latency: 73985.3
-[data read] throughputRate: 138.155, moduleLatency: 7.23827
-[preprocess] throughputRate: 137.422, moduleLatency: 7.27687
-[infer] throughputRate: 138.1, Interface throughputRate: 554.397, moduleLatency: 4.00654
-[post] throughputRate: 138.098, moduleLatency: 7.24122
-```
-## 5、精度测试
-参考以下指令生成精度信息文件
-```
-python3.7 cifar10_acc_eval.py result/dumpOutput_device0/ ./prep_dataset/val_label.txt ./ result_bs1.json
-```
-参考以下指令获取310上推理的精度以及性能信息
-```
-python3.7 test/parse.py result_bs1.json
 python3.7 test/parse.py result/perf_vision_batchsize_1_device_0.txt
 ```
-将onnx模型置于装有gpu的设备，参考一下指令获取onnx模型在gpu上推理的性能信息
+运行该指令获得bs为1时推理所得的310的性能信息，实例如下：
+```
+[e2e] throughputRate: 132.777, latency: 75314.4
+[data read] throughputRate: 134.331, moduleLatency: 7.44429
+[preprocess] throughputRate: 134.114, moduleLatency: 7.45634
+[inference] throughputRate: 134.244, Interface throughputRate: 809.813, moduleLatency: 1.35099
+[postprocess] throughputRate: 134.257, moduleLatency: 7.44838
+```
+4，gpu设备的推理
+将onnx模型置于装有gpu的设备，参考以下指令获取onnx模型在gpu上推理的性能信息
 ```
 bash test/perf_g.sh
 ```
-
-## 6、执行入口及模型信息
-
-执行入口：
+## <a name="1">6. 精度验证</a>
+1.参考以下指令生成精度信息文件
 ```
-bash test/eval_acc_perf.sh --datasets_path='dataset path'
+python3.7 cifar10_acc_eval.py result/dumpOutput_device0/ ./prep_dataset/val_label.txt ./ result_bs1.json
 ```
+第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名  
+
+2.参考以下指令获取310上推理的精度信息
+```
+python3.7 test/parse.py result_bs1.json
+```
+精度参考：  
 |  GENET模型|  gpu吞吐率| 310吞吐率 |  精度|
 |--|--|--|--|
-|  bs1|  1829.937fps| 2217.588fps|Error@1 5.76 Error@5 0.15|
-|  bs16| 5652.112fps| 6919.96fps|Error@1 5.78 Error@5 0.15 |
+|  bs1|  1805.315fps| 3239.252fps|Error@1 5.78 Error@5 0.15|
+|  bs16| 5922.109fps| 7796.88fps|Error@1 5.78 Error@5 0.15 |
+
+
+## <a name="7">7. 性能对比</a>
+测试时要保证设备空闲，npu-smi info可以查看设备状态。benchmark工具在整个数据集上推理方式测性能可能时间较长，纯推理方式测性能可能不准确，因此bs1与bs16要使用在整个数据集上推理的方式测性能，bs4、8、32可以用纯推理的方式测性能。benchmark工具测的Interface throughputRate或samples/s数据是单个device吞吐率，计算310单卡吞吐率需要乘以4。tensorrt工具测的t4数据GPU Compute的mean代表batch个数据的时延，1000/(GPU Compute mean/batch)可以将其转换为吞吐率。  
+### 7.1 310性能数据
+以310的bs1为例:
+```
+[e2e] throughputRate: 132.777, latency: 75314.4
+[data read] throughputRate: 134.331, moduleLatency: 7.44429
+[preprocess] throughputRate: 134.114, moduleLatency: 7.45634
+[inference] throughputRate: 134.244, Interface throughputRate: 809.813, moduleLatency: 1.35099
+[postprocess] throughputRate: 134.257, moduleLatency: 7.44838
+```
+Interface throughputRate: 809.813，809.813x4=3239.252 fps。即是batch1 310单卡吞吐率,batch16的计算方法同理
+> 为了避免长期占用device， bs4,8,32使用纯推理测性能，其中，对bs4进行纯推理输入命令如下所示，其中batch_size=4表示bs的值，在对不同bs值对应的om模型进行推理时需要做出相应的更改：
+> `./benchmark.x86_64 -device_id=0 -om_path=genet_bs4_tuned.om -round=30 -batch_size=4`
+> 
+计算bs4,8,32的吞吐率时，计算方法也同样为Interface throughputRate乘4
+### 7.2 310P性能数据
+310P的推理过程与310相似，可以参考前面310的步骤。不同的是310P的吞吐率即为Interface throughputRate的值，无需乘4
+### 7.3 T4性能数据
+在运行5.2的gpu推理指令时，我们会获得相关的性能信息，以T4的bs1为例：
+```
+[05/13/2022-16:53:32] 
+[I] GPU Compute Time: 
+min = 0.512207 ms, 
+max = 2.97815 ms, 
+mean = 0.55392 ms, 
+median = 0.540283 ms,
+percentile(99%) = 0.690048 ms
+```
+batch1 t4单卡吞吐率：1000/(0.55392/1)=1805.315 fps  
+计算方法为1000/(GPU Compute mean/batch)
+### 7.4 性能对比
+性能对比结果参考如下：
+|         | 310      | 310P     | T4       | 310P/310     | 310P/T4      |
+|---------|----------|---------|----------|-------------|-------------|
+| bs1     | 3239.252 | 2580.59 | 1805.315 | 0.796662316 | 1.429440292 |
+| bs4     | 6923.88  | 6962.42 | 3258.019 | 1.005566243 | 2.137010251 |
+| bs8     | 6631     | 9350.57 | 5226.538 | 1.410129694 | 1.789056159 |
+| bs16    | 7796.88  | 10586.7 | 5922.109 | 1.357812356 | 1.787657066 |
+| bs32    | 7295.48  | 11005.9 | 5898.248 | 1.508591621 | 1.865960875 |
+| bs64    | 6611.72  | 11256.5 | 6105.938 | 1.702507063 | 1.843533295 |
+| 最优batch | 7796.88  | 11256.5 | 6105.938 | 1.443718513 | 1.843533295 |
+取310、310P与T4的最优batch进行对比，当310P的最优batch性能不低于310最优batch的1.2倍以及T4最优batch的1.6倍时，性能达标

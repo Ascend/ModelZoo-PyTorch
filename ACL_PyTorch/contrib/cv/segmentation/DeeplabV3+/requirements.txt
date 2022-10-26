@@ -1,0 +1,6 @@
+ONNX == 1.7.0
+torch == 1.6.0
+pillow == 7.2.0
+torchvision == 0.7.0
+opencv-python == 4.2.0.32
+onnx-simplifier == 0.3.3

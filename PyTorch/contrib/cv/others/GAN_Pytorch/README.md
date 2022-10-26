@@ -11,27 +11,27 @@ url=https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/g
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
 - `pip install -r requirements.txt`
-- The MNIST Dataset can be downloaded from the links below.Move the datasets to directory ./data .
+- The MNIST Dataset can be downloaded from the links below.
     - Train Set : [Download Mnist](https://wwr.lanzoui.com/iSBOeu43dkf)
 
 ## Training # 
-To train a model, change the working directory to `./test`,then run: 
+To train a model, run: 
 
 ```bash
 # 1p train perf
-bash train_performance_1p.sh
+bash train_performance_1p.sh --data_path=data/mnist
 
 # 8p train perf
-bash train_performance_8p.sh
+bash train_performance_8p.sh --data_path=data/mnist
 
 # 8p train full
-bash train_full_8p.sh
+bash train_full_8p.sh --data_path=data/mnist
 
 # 8p eval
-bash train_eval_8p.sh
+bash train_eval_8p.sh --data_path=data/mnist
 
 # finetuning
-bash train_finetune_1p.sh
+bash train_finetune_1p.sh --data_path=data/mnist
 ```
 After running,you can see the results in `./output`
 
@@ -39,8 +39,9 @@ After running,you can see the results in `./output`
 
 | Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
 | :------: | :------:  | :------: | :------: | :------: |
-| -        | 997      | 1        | 200      | O1       |
-| -     | 11795     | 8        | 200      | O1       |
+| -        | 1642.130      | 1        | 200      | O1       |
+| -     | 15275.049     | 8        | 200      | O1       |
+
 
 
 

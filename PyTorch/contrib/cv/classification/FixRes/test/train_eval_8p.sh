@@ -79,9 +79,8 @@ python3.7 -m torch.distributed.launch --nproc_per_node=8 \
     --batch 64 \
     --num_tasks 8 \
     --shared_folder_path './train_cache'
-    --addr $(hostname -I |awk '{print $1}') > evaluation.log
+    --addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/evaluation_${ASCEND_DEVICE_ID}.log 2>&1 &
 
-cp evaluation.log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 
 ##################获取训练数据################

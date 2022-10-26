@@ -53,7 +53,7 @@ commit id:6fa7ef60b4144b1e78f2cdb05598dce950e16ba6
 ### 2.1 深度学习框架
 
 ```
-CANN 5.0.1
+CANN 5.1.RC1
 
 pytorch == 1.8.0
 torchvision == 0.9.0
@@ -64,7 +64,7 @@ pytorch==1.5.0时 使用onnxsim对网络进行优化会报错
 ### 2.2 python第三方库
 
 ```
-numpy == 1.20.3
+numpy == 1.21.1
 Pillow == 8.2.0
 opencv-python == 4.5.2.54
 timm == 0.3.2
@@ -93,7 +93,6 @@ git clone https://github.com/facebookresearch/deit.git
 
 2.下载pth权重文件  
 [Deit-small预训练pth权重文件](https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth)  
-文件md5sum: d9b97735004ed2828943a009b45ae298  
 
 ```bash
 wget https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth
@@ -116,26 +115,46 @@ python3.7 deit_small_pth2onnx.py deit_small_patch16_224-cd65a155.pth deit_small_
 onnxsim对网络进行优化
 
 ```bash
-python3.7 -m onnxsim --input-shape="16,3,224,224" deit_small_patch16_224_onnx.onnx deit_small_patch16_224_bs16_onnxsim.onnx
+python3.7 -m onnxsim --input-shape="8,3,224,224" deit_small_patch16_224_onnx.onnx deit_bs8.onnx
+
 ```
 
  **模型转换要点：**  
 onnx含有的where动态shape算子可以通过onnxsimplifier转换为静态shape优化掉，因此动态batch的onnx转om失败并且测的性能数据也不对，每个batch的om都需要对应batch的onnx来转换，每个batch的性能数据也需要对应batch的onnx来测
 
+5.安装magic_onnx，优化模型
+[install magiconnx, download url](https://gitee.com/Ronnie_zheng/MagicONNX/tree/refactor/)
+
+```bash
+git clone https://gitee.com/Ronnie_zheng/MagicONNX.git -b refactor
+cd MagicONNX
+pip3 install .
+```
+把deit_model.py移动到MagicONNX文件夹中，执行deit_model.py
+```bash
+python3 deit_model.py ./deit_bs8.onnx ./deit_magic_bs8.onnx
+```
+
 
 ### 3.2 onnx转om模型
 
-1.设置环境变量
+1.设置环境变量，注意请以实际安装环境配置环境变量。
+
 
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
 
 ```bash
-sudo /usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc --framework=5 --model=deit_small_patch16_224_bs16_onnxsim.onnx --output=deit_small_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310
+atc --framework=5 --model=/MagicONNX/deit_magic_bs8.onnx --output=deit_bs8 --input_format=NCHW --input_shape="image:8,3,224,224" --log=debug --soc_version=Ascend{$chip_name}
 ```
+chip_name通过如下命令查看：
+```bash
+npu-smi info
+```
+
 
 ## 4 数据集预处理
 
@@ -147,7 +166,7 @@ sudo /usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc --framework=5 --model=d
 
 ### 4.1 数据集获取
 
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/home/common/datasets/imagenet/val与/home/common/datasets/imagenet/val_label.txt。
+该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opu/npu/ILSVRC2012/val与/opu/npu/ILSVRC2012/val_label.txt。
 
 ### 4.2 数据集预处理
 
@@ -156,7 +175,7 @@ sudo /usr/local/Ascend/ascend-toolkit/latest/atc/bin/atc --framework=5 --model=d
 2.执行预处理脚本，生成数据集预处理后的bin文件
 
 ```bash
-python3.7 imagenet_torch_preprocess.py deit /home/common/datasets/imagenet/val ./prep_dataset
+python3.7 imagenet_torch_preprocess.py deit /opu/npu/ILSVRC2012/val ./prep_dataset
 ```
 
 ### 4.3 生成数据集信息文件
@@ -179,21 +198,30 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./deit_prep_bin.info 224 224
 
 ### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
+benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在处理器上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.1.RC1 推理benchmark工具用户指南 01
 
 ### 5.2 离线推理
 
-1.设置环境变量
+1.设置环境变量，注意请以实际安装环境配置环境变量。
 
 ```bash
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+```
+
+2.增加benchmark.{arch}可执行权限
+
+```bash
+chmod u+x benchmark.x86_64
+```
+
+3.执行离线推理
+
+```bash
+sudo ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=8 -om_path=deit_bs8.om -input_text_path=./deit_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
 ```
 
 2.执行离线推理
 
-```bash
-sudo ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=deit_small_bs16.om -input_text_path=./deit_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
 
 输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
 
@@ -210,26 +238,26 @@ sudo ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=
 调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 
 ```bash
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /home/common/datasets/imagenet/val_label.txt ./ result.json
+python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /opt/npu/val_label.txt ./ result.json
 ```
 
 第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-输出结果：
+
+输出结果(310p)：
 
 | Om Model | Acc@1 | Acc@5 |
 | -------- | ----- | ----- |
-| BS1      | 79.69 | 94.97 |
-| BS16     | 79.69 | 94.97 |
-| BS32     | 79.69 | 94.97 |
+| BS1      | 79.5 | 94.83 |
+| BS8      | 79.5 | 94.83 |
+| BS32     | 79.5 | 94.83 |
 | Official | 79.9  | 95.0  |
-
 
 
 ```
 {"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "79.69%"}, {"key": "Top2 accuracy", "value": "89.22%"}, {"key": "Top3 accuracy", "value": "92.39%"}, {"key": "Top4 accuracy", "value": "93.98%"}, {"key": "Top5 accuracy", "value": "94.97%"}]}
 ```
 
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上  
+经过对bs1与bs8的om测试，本模型batch1的精度与batch8的精度没有差别，精度数据均如上  
 6.2 开源精度
 
 [Deit官方精度](https://github.com/facebookresearch/deit)
@@ -253,67 +281,36 @@ Deit-small          79.9      95.0
 
 ### 7.1 npu性能数据
 
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
+
+benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs8的性能数据为准，对于使用benchmark工具测试的batch4，16，32的性能数据在README.md中如下作记录即可。  
+
+
 1.benchmark工具在整个数据集上推理获得性能数据  
 
 batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
 
-```
-[e2e] throughputRate: 31.0192, latency: 1.6119e+06
-[data read] throughputRate: 32.8375, moduleLatency: 30.453
-[preprocess] throughputRate: 32.7685, moduleLatency: 30.5171
-[infer] throughputRate: 31.0414, Interface throughputRate: 32.6098, moduleLatency: 31.5911
-[post] throughputRate: 31.0414, moduleLatency: 32.2151
-```
 
-Interface throughputRate: 32.6098，32.6098x4=130.4392既是batch1 310单卡吞吐率  
-
-
-
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_0.txt：  
-
-```
-[e2e] throughputRate: 29.886, latency: 1.67303e+06
-[data read] throughputRate: 31.6095, moduleLatency: 31.6361
-[preprocess] throughputRate: 31.5478, moduleLatency: 31.698
-[infer] throughputRate: 29.9075, Interface throughputRate: 32.4487, moduleLatency: 32.3314
-[post] throughputRate: 1.86921, moduleLatency: 534.984
+[e2e] throughputRate: 87.7802, latency: 569604
+[data read] throughputRate: 92.9318, moduleLatency: 10.7606
+[preprocess] throughputRate: 92.6819, moduleLatency: 10.7896
+[inference] throughputRate: 88.0032, Interface throughputRate: 103.795, moduleLatency: 10.7968
+[postprocess] throughputRate: 88.0046, moduleLatency: 11.363
 ```
 
-Interface throughputRate: 32.4487，32.4487x4=129.7948既是batch16 310单卡吞吐率  
+Interface throughputRate: 103.795，103.795x4=415.18既是batch1 310单卡吞吐率  
 
 
-batch4 纯推理性能：
 
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_deit_small_bs4_in_device_3.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 40.058samples/s, ave_latency: 25.1002ms
-----------------------------------------------------------------
-```
-batch4 310单卡吞吐率：40.058x4=160.232fps 
-
-
-batch8 纯推理性能：
+batch8的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_8_device_0.txt：  
 
 ```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_deit_small_bs8_in_device_3.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 35.8103samples/s, ave_latency: 27.9923ms
-----------------------------------------------------------------
+[e2e] throughputRate: 93.9502, latency: 532197
+[data read] throughputRate: 100.308, moduleLatency: 9.96932
+[preprocess] throughputRate: 100.228, moduleLatency: 9.97721
+[inference] throughputRate: 95.0294, Interface throughputRate: 122.054, moduleLatency: 9.64742
+[postprocess] throughputRate: 11.8803, moduleLatency: 84.173
 ```
-batch8 310单卡吞吐率：35.8103x4=143.2412fps 
 
-
-batch32 纯推理性能：
-
-```
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_deit_small_bs32_in_device_3.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 33.0176samples/s, ave_latency: 30.3139ms
-----------------------------------------------------------------
-```
-batch32 310单卡吞吐率：33.0176x4=132.0704fps 
 
 **性能优化：**  
 

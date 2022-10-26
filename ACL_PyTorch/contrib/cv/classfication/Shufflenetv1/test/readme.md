@@ -13,14 +13,9 @@ pip3.7 install -r requirements.txt
 4.获取模型代码  
 git clone https://github.com/megvii-model/ShuffleNet-Series.git  
 
-5.获取权重文件  
-https://pan.baidu.com/s/1EUQVoFPb74yZm0JWHKjFOw#list/path=%2F
-
-提取码：mc24  
-
-6.获取benchmark工具  
+5.获取benchmark工具  
 将benchmark.x86_64 benchmark.aarch64放在当前目录  
 
-7.310上执行，执行时确保device空闲  
+6.310P上执行，执行时确保device空闲  
 bash test/pth2om.sh  
 bash test/eval_acc_perf.sh --datasets_path=/opt/npu

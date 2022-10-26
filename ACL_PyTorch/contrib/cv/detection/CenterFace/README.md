@@ -24,7 +24,7 @@
   - [7.1 npu性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#71-npu性能数据)
   - [7.2 T4性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#72-T4性能数据)
   - [7.3 性能对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#73-性能对比)
-- 8 710增加文件介绍
+- 8 310P增加文件介绍
 
 ## 1 模型概述
 
@@ -86,7 +86,7 @@ python3 pth2onnx.py
 1.设置环境变量
 
 ```
-source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
@@ -114,7 +114,7 @@ git clone https://gitee.com/Levi990223/center-face.git
 
 ```shell
 mv -r test center-face/src
-mv benchmark.x86_64 centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py env.sh CenterFace.onnx pth2onnx.py get_info.py model_best.pth move.sh npu_set_env.sh README.md ./center-face/src
+mv benchmark.x86_64 centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py CenterFace.onnx pth2onnx.py get_info.py model_best.pth move.sh README.md ./center-face/src
 ```
 
 下载WIDER_FACE数据集，将图片上在这个目录下：
@@ -163,8 +163,7 @@ benchmark工具为华为自研的模型推理工具，支持多种模型的离�
 1.设置环境变量
 
 ```
-source env.sh
-source npu_set_env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
 2.执行离线推理
@@ -294,7 +293,7 @@ batch16 t4单卡吞吐率：359.999
 batch1：91.86x4=367.44 > 337.544
 batch16：80.3537x4=321.4148 < 359.999
 
-## 8 710增加文件介绍
+## 8 310P增加文件介绍
 
 1.aipp_centerface.aippconfig ONNX模型转OM模型时所配置aipp
 2.calibration_bin.py 量化模型时输入真实数据的组件脚本 

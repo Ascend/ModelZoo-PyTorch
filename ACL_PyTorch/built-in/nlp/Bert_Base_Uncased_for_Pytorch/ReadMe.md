@@ -16,9 +16,19 @@
 | -------- | :----- |
 | ONNX     | 1.7.0  |
 | Pytorch  | 1.6.0  |
-| onnxsim  | 0.3.3  |
+| onnxsim  | 0.3.9  |
 | boto3    | 1.21.1 |
 | numpy    | 1.19.5 |
+
+```
+# 基础依赖
+pip3 install -r requirement.txt
+
+# 安装改图工具依赖
+git clone https://gitee.com/Ronnie_zheng/MagicONNX.git MagicONNX
+cd MagicONNX && git checkout 99a713801fe70db702e3903744d2a6372a975fea
+pip3 install . && cd ..
+```
 
 # 快速上手
 
@@ -38,11 +48,7 @@
 
    
 
-2. 下载modelzoo上源码包。
-
-3. 上传源码包到服务器任意目录并解压（如：/home/HwHiAiUser）。
-
-   
+2. 下载本仓文件。
 
    ```
    ├── bert_config.json                 //bert_base模型网络配置参数
@@ -52,11 +58,8 @@
    ├── bert_base_uncased_atc.sh         //onnx模型转换om模型脚本
    ├── bert_base_pth2onnx.py            //用于转换pth模型文件到onnx模型文件
    ├── bert_postprocess_data.py         //bert_base数据后处理脚本，用于将推理结果处理映射成文本
-   ├── add_attr_trans_b.py               //对可能存在的transpose进行优化
    └── evaluate_data.py                 //验证推理结果脚本，比对benchmark输出的分类结果，给出accuracy
    ```
-
-   
 
    ![img](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/img/public_sys-resources/note_3.0-zh-cn.png)
 
@@ -64,7 +67,7 @@
 
    
 
-4. 将ModelZoo源码包中的文件移动并替换到DeepLearningExamples/PyTorch/LanguageModeling/BERT目录中。
+3. 将本仓中的文件移动并替换到DeepLearningExamples/PyTorch/LanguageModeling/BERT目录中。
 
 #### 准备数据集
 
@@ -72,7 +75,7 @@
 
    
 
-   本模型支持使用squad QA的验证集。以squad v1.1为例，请用户自行获取squad v1.1数据集，上传数据集到服务器目录DeepLearningExamples/PyTorch/LanguageModeling/BERT/data/squad/v1.1/。
+   本模型支持使用squad QA的验证集。以squad v1.1为例，请用户自行获取[squad v1.1](https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json)数据集，上传数据集到服务器目录DeepLearningExamples/PyTorch/LanguageModeling/BERT/data/squad/v1.1/。
 
    
 
@@ -129,7 +132,7 @@
 
    1. ###### 获取权重文件。
 
-      - 在PyTorch开源框架中获取bert_base_qa.pt文件。
+      - 在PyTorch开源框架中获取[bert_base_qa.pt](https://catalog.ngc.nvidia.com/orgs/nvidia/models/bert_pyt_ckpt_base_qa_squad11_amp/files)文件。
 
    2. ###### 导出onnx文件。
 
@@ -143,16 +146,17 @@
 
          因为脚本读取已训练好的权重文件名为pytorch_model.bin。
 
-      2. 进入BERT目录下，执行bert_base_pth2onnx.py脚本将.pt文件转换为.onnx文件，执行如下命令。
+      2. 进入BERT目录下，执行bert_base_pth2onnx.py脚本将.pt文件转换为.onnx文件，执行如下命令(以bs=8为例)。
 
          ```
-         python3.7 bert_base_pth2onnx.py --init_checkpoint=pytorch_model.bin --config_file=bert_config.json
+         python3.7 bert_base_pth2onnx.py --init_checkpoint=pytorch_model.bin --config_file=bert_config.json --batch_size=8
          ```
 
          参数说明：
 
          - --init_checkpoint：输入权重文件。
          - --config_file：网络参数配置文件。
+         - --batch_size：批次大小。
 
          运行成功后，在当前目录生成bert_base_batch_8.onnx模型文件。
 
@@ -160,53 +164,53 @@
          ![img](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/img/public_sys-resources/notice_3.0-zh-cn.png)
     
          使用ATC工具将.onnx文件转换为.om文件，需要.onnx算子版本需为11。在bert_base_pth2onnx.py脚本中torch.onnx.export方法中的输入参数opset_version的值需为11，请勿修改。
-    
-      3. 此步可选，根据onnx图里是否存在（0，2，3，1）的transpose进行优化，若存在，运行下面命令。
+      
+      3. 修改onnx文件(以bs=8为例)。
     
          ```
-         python3 add_attr_trans_b.py bert_base_batch_8.onnx bert_base_batch_8.onnx
+         # 简化onnx文件
+         python3.7 -m onnxsim bert_base_batch_8.onnx bert_base_batch_8_sim.onnx
+    
+         # 修改onnx文件
+         python3.7 fix_onnx.py bert_base_batch_8_sim.onnx bert_base_batch_8_fix.onnx
          ```
 
    3. ###### 使用ATC工具将ONNX模型转OM模型。
 
-      1. 修改bert_base_uncased_atc.sh脚本，通过ATC工具使用脚本完成转换，具体的脚本示例如下：
+      1. 执行atc转换脚本，将.onnx文件转为离线推理模型文件.om文件：
 
          ```
          # 配置环境变量
-         export install_path=/usr/local/Ascend/ascend-toolkit/latest
-         export PATH=/usr/local/python3.7.5/bin:${install_path}/atc/ccec_compiler/bin:${install_path}/atc/bin:$PATH
-         export PYTHONPATH=${install_path}/atc/python/site-packages:$PYTHONPATH
-         export LD_LIBRARY_PATH=${install_path}/atc/lib64:${install_path}/acllib/lib64:$LD_LIBRARY_PATH
-         export ASCEND_OPP_PATH=${install_path}/opp
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          
          # 使用二进制输入时，执行如下命令
-         atc --input_format=ND --framework=5 --model=bert_base_batch_8.onnx --input_shape="input_ids:8,512;token_type_ids:8,512;attention_mask:8,512" --output=bert_base_batch_8_auto --log=info --soc_version=Ascend710 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_fp16_nodes="attention_mask"
+         atc --input_format=ND --framework=5 --model=bert_base_batch_${batch_size}.onnx
+         --input_shape="input_ids:${batch_size},512;token_type_ids:${batch_size},512;attention_mask:${batch_size},512"
+         --output=bert_base_batch_${batch_size}_auto
+         --log=error --soc_version=${chip_name} --optypelist_for_implmode="Gelu"
+         --op_select_implmode=high_performance --input_fp16_nodes="attention_mask"
          ```
 
          ![img](https://obs-9be7.obs.cn-east-2.myhuaweicloud.com/turing/resourcecenter/img/public_sys-resources/note_3.0-zh-cn.png)
 
-         该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。
+         该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。         
 
-          
+         参数说明：
+         - --model：为ONNX模型文件。其中${batch_size}为批次大小。
+         - --framework：5代表ONNX模型。
+         - --output：输出的OM模型。
+         - --input_format：输入数据的格式。
+         - --input_shape：输入数据的shape。
+         - --log：日志等级。
+         - --soc_version：部署芯片类型。其中${chip_name}可通过`npu-smi info`指令查看。
+         
+         ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
-         - 参数说明：
-           - --model：为ONNX模型文件。
-           - --framework：5代表ONNX模型。
-           - --output：输出的OM模型。
-           - --input_format：输入数据的格式。
-           - --input_shape：输入数据的shape。
-           - --log：日志等级。
-           - --soc_version：部署芯片类型。
-
-      2. 执行atc转换脚本，将.onnx文件转为离线推理模型文件.om文件。
-
-         ```
-         bash atc_bert_base_uncased.sh
-         ```
 
          运行成功后生成bert_base_batch_8_auto.om用于二进制输入推理的模型文件。
 
    
+
 
 2. ##### 开始推理验证。
 
@@ -214,29 +218,37 @@
 
    1. 使用Benchmark工具进行推理。
 
-      增加benchmark.*{arch}可执行权限*。
+      增加benchmark.{arch}可执行权限。
 
       ```
       chmod u+x benchmark.x86_64
       ```
 
-      验证模型性能：
+      执行纯推理命令，验证模型性能：
 
       ```
-      bash test_perf.sh
+      ./benchmark.x86_64 -batch_size=${batch_size} -device_id=0 -om_path=bert_base_batch_${batch_size}_auto.om -round=100
       ```
 
-      获得**模型性能ave_throughputRate: 198.61samples/s**, 略微有点波动。
+      参考性能如下：
+      |       模型        | BatchSize | NPU性能 |
+      | :---------------: | :-------: | :-----: |
+      | Bert-Base-Uncased |     1     | 177.94 fps |
+      | Bert-Base-Uncased |     4     | 223.48 fps |
+      | Bert-Base-Uncased |     8     | 221.74 fps |
+      | Bert-Base-Uncased |    16     | 219.08 fps |
+      | Bert-Base-Uncased |    32     | 219.68 fps |
+      | Bert-Base-Uncased |    64     | 213.30 fps |
 
-      执行命令，进行完整推理。
+      执行命令，进行完整推理：
 
       ```
-      bash infer_all.sh
+      ./benchmark.x86_64 -model_type=bert -batch_size=${batch_size} -device_id=0 -om_path=bert_base_batch_${batch_size}_auto.om -input_text_path=./bert_base_uncased.info -output_binary=true
       ```
 
       bert_base_uncased.info为处理后的数据集信息。
 
-      benchmark.*{arch}*请根据运行环境架构选择，如运行环境为x86_64，需执行./benchmark.x86_64。推理后的输出默认在当前目录result下。
+      benchmark.{arch}请根据运行环境架构选择，如运行环境为x86_64，需执行./benchmark.x86_64。推理后的输出默认在当前目录result下。
 
    2. 推理结果后处理
 
@@ -256,7 +268,7 @@
 
    3. 精度验证
 
-      调用evaluate_data.py脚本将原始数据dev-v1.1.json与推理结果数据文本predictions.json比对，可以获得Accuracy数据，结果保存在中，执行命令如下。
+      调用evaluate_data.py脚本将原始数据dev-v1.1.json与推理结果数据文本predictions.json比对，可以获得Accuracy数据，执行命令如下。
 
       ```
       python3.7 evaluate_data.py ./data/squad/v1.1/dev-v1.1.json predictions.json
@@ -264,4 +276,8 @@
 
       第一个参数为原始推理数据文本，第二个参数为生成推理结果文本。
 
-      获得**模型精度：“f1”: 47.3825**
+      参考精度如下：
+
+      |       模型          | NPU离线推理精度 |
+      | :---------------:  | :-------------: |
+      | Bert-Base-Uncased  |   Acc: 88.74%   |

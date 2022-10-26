@@ -51,8 +51,13 @@ from datasets import PascalVOCDataset
 from utils import *
 from mobilev2ssd import SSD
 import argparse
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import os
+import torch.nn.parallel
+import torch.distributed as dist
+
 try:
     from apex import amp
 except ImportError:
@@ -139,12 +144,8 @@ def train(train_loader, model, criterion, optimizer, epoch, grad_clip, args):
 
         # Backward prop.
         optimizer.zero_grad()
-        if args.apex:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
-        else:
-            loss.backward()
-
+        with amp.scale_loss(loss, optimizer) as scaled_loss:
+            scaled_loss.backward()
         # Clip gradients, if necessary
         if grad_clip is not None:
             clip_gradient(optimizer, grad_clip)
@@ -244,139 +245,143 @@ label_map['background'] = 0
 rev_label_map = {v: k for k, v in label_map.items()} # Inverse mapping
 
 def main(args):
-	# Model parameters
-	# Not too many here since the SSD300 has a very specific structure
-	with open(args.config_file_path, "r") as fp:
-		config = json.load(fp)
+    distributed = int(os.environ['RANK_SIZE']) > 1
+    if distributed:
+        args.rank = int(os.environ['RANK_ID'])
+        args.world_size = int(os.environ['RANK_SIZE'])
+        dist.init_process_group(backend='hccl',
+                                init_method='env://',
+                                world_size=args.world_size,
+                                rank=args.rank)
+    # Model parameters
+    # Not too many here since the SSD300 has a very specific structure
+    with open(args.config_file_path, "r") as fp:
+        config = json.load(fp)
         
-	n_classes = len(label_map)  # number of different types of objects
-	device = torch.device(f'npu:{NPU_CALCULATE_DEVICE}')
+    n_classes = len(label_map)  # number of different types of objects
+    device = torch.device(f'npu:{NPU_CALCULATE_DEVICE}')
 
-	#Mobilenetv2
-	#normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-	#                                 std=[0.229, 0.224, 0.225])
+    #Mobilenetv2
+    #normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                                 std=[0.229, 0.224, 0.225])
 
-	# Learning parameters
-	checkpoint = None  # path to model checkpoint, None if none
-	batch_size = config['batch_size']  # batch size
-	start_epoch = 0  # start at this epoch
-	epochs = config['n_epochs']  # number of epochs to run without early-stopping
-	epochs_since_improvement = 0  # number of epochs since there was an improvement in the validation metric
-	best_loss = 100.  # assume a high loss at first
-	workers = 4  # number of workers for loading data in the DataLoader
-	lr = config['lr']  # learning rate
-	momentum = 0.9  # momentum
-	weight_decay = config['weight_decay']  # weight decay
-	grad_clip = None # clip if g
-	backbone_network = config['backbone_network']	
-	
-	model = SSD(num_classes=n_classes, backbone_network=backbone_network)
-	# Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
-	biases = list()
-	not_biases = list()
-	param_names_biases = list()
-	param_names_not_biases = list()
-	for param_name, param in model.named_parameters():
-		if param.requires_grad:
-			if param_name.endswith('.bias'):
-			    biases.append(param)
-			    param_names_biases.append(param_name)
-			else:
-			    not_biases.append(param)
-			    param_names_not_biases.append(param_name)
-	optimizer = apex.optimizers.NpuFusedSGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
-	lr=lr, momentum=momentum, weight_decay=weight_decay)
+    # Learning parameters
+    checkpoint = None  # path to model checkpoint, None if none
+    batch_size = config['batch_size']  # batch size
+    start_epoch = 0  # start at this epoch
+    epochs = config['n_epochs']  # number of epochs to run without early-stopping
+    epochs_since_improvement = 0  # number of epochs since there was an improvement in the validation metric
+    best_loss = 100.  # assume a high loss at first
+    workers = 4  # number of workers for loading data in the DataLoader
+    lr = config['lr']  # learning rate
+    momentum = 0.9  # momentum
+    weight_decay = config['weight_decay']  # weight decay
+    grad_clip = None # clip if g
+    backbone_network = config['backbone_network']
 
-	model = model.to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
-	if args.apex:
-		model,optimizer = amp.initialize(model, optimizer, opt_level=args.apex_opt_level, combine_grad = True)
+    model = SSD(num_classes=n_classes, backbone_network=backbone_network)
+    # Initialize the optimizer, with twice the default learning rate for biases, as in the original Caffe repo
+    biases = list()
+    not_biases = list()
+    param_names_biases = list()
+    param_names_not_biases = list()
+    for param_name, param in model.named_parameters():
+        if param.requires_grad:
+            if param_name.endswith('.bias'):
+                biases.append(param)
+                param_names_biases.append(param_name)
+            else:
+                not_biases.append(param)
+                param_names_not_biases.append(param_name)
+    optimizer = apex.optimizers.NpuFusedSGD(params=[{'params': biases, 'lr': 2 * lr}, {'params': not_biases}],
+    lr=lr, momentum=momentum, weight_decay=weight_decay)
 
-	criterion = MultiBoxLoss(priors_cxcy=model.priors).to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
+    model = model.to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
+
+    model,optimizer = amp.initialize(model, optimizer, opt_level='O1', combine_grad = True)
+    if distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[NPU_CALCULATE_DEVICE])
+    criterion = MultiBoxLoss(priors_cxcy=model.module.priors if distributed else model.priors).to(f'npu:{NPU_CALCULATE_DEVICE}', non_blocking=True)
 
 
-	#voc07_path = 'VOCdevkit/VOC2007'
-	voc07_path = config['voc07_path']
+    #voc07_path = 'VOCdevkit/VOC2007'
+    voc07_path = config['voc07_path']
 
-	#voc12_path = 'VOCdevkit/VOC2012'
-	voc12_path = config['voc12_path']
-	#from utils import create_data_lists
+    #voc12_path = 'VOCdevkit/VOC2012'
+    voc12_path = config['voc12_path']
+    #from utils import create_data_lists
 
-	create_data_lists(voc07_path, voc12_path, output_folder=config['data_folder'])
+    create_data_lists(voc07_path, voc12_path, output_folder=config['data_folder'])
 
-	#data_folder = 'VOC/VOCdevkit/'
-	data_folder = config['data_folder']
-	train_dataset = PascalVOCDataset(data_folder,
-			                             split='train',
-			                             keep_difficult=keep_difficult)
-	val_dataset = PascalVOCDataset(data_folder,
-			                           split='test',
-			                             keep_difficult=keep_difficult)
-			                             
-	train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
-			                                       collate_fn=train_dataset.collate_fn, num_workers=workers,
-			                                       pin_memory=True)  # note that we're passing the collate function here
-	val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True,
-			                                     collate_fn=val_dataset.collate_fn, num_workers=workers,
-	pin_memory=True)
+    #data_folder = 'VOC/VOCdevkit/'
+    data_folder = config['data_folder']
+    train_dataset = PascalVOCDataset(data_folder,
+                                         split='train',
+                                         keep_difficult=keep_difficult)
+    val_dataset = PascalVOCDataset(data_folder,
+                                       split='test',
+                                         keep_difficult=keep_difficult)
 
-	print (start_epoch)
-	for epoch in range(start_epoch, epochs):
-			# Paper describes decaying the learning rate at the 80000th, 100000th, 120000th 'iteration', i.e. model update or batch
-			# The paper uses a batch size of 32, which means there were about 517 iterations in an epoch
-			# Therefore, to find the epochs to decay at, you could do,
-			# if epoch in {80000 // 517, 100000 // 517, 120000 // 517}:
-			#     adjust_learning_rate(optimizer, 0.1)
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if distributed else None
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=(train_sampler is None),sampler=train_sampler,
+                                                   collate_fn=train_dataset.collate_fn, num_workers=workers,
+                                                   pin_memory=True)  # note that we're passing the collate function here
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True,
+                                                 collate_fn=val_dataset.collate_fn, num_workers=workers, pin_memory=True)
 
-			# In practice, I just decayed the learning rate when loss stopped improving for long periods,
-			# and I would resume from the last best checkpoint with the new learning rate,
-			# since there's no point in resuming at the most recent and significantly worse checkpoint.
-			# So, when you're ready to decay the learning rate, just set checkpoint = 'BEST_checkpoint_ssd300.pth.tar' above
-			# and have adjust_learning_rate(optimizer, 0.1) BEFORE this 'for' loop
+    print (start_epoch)
+    for epoch in range(start_epoch, epochs):
+            # Paper describes decaying the learning rate at the 80000th, 100000th, 120000th 'iteration', i.e. model update or batch
+            # The paper uses a batch size of 32, which means there were about 517 iterations in an epoch
+            # Therefore, to find the epochs to decay at, you could do,
+            # if epoch in {80000 // 517, 100000 // 517, 120000 // 517}:
+            #     adjust_learning_rate(optimizer, 0.1)
 
-			# One epoch's training
-			train(train_loader=train_loader,
-			      model=model,
-			      criterion=criterion,
-			      optimizer=optimizer,
-			      epoch=epoch,
-			      grad_clip= grad_clip,
+            # In practice, I just decayed the learning rate when loss stopped improving for long periods,
+            # and I would resume from the last best checkpoint with the new learning rate,
+            # since there's no point in resuming at the most recent and significantly worse checkpoint.
+            # So, when you're ready to decay the learning rate, just set checkpoint = 'BEST_checkpoint_ssd300.pth.tar' above
+            # and have adjust_learning_rate(optimizer, 0.1) BEFORE this 'for' loop
+
+            # One epoch's training
+            if distributed:
+                train_sampler.set_epoch(epoch)
+            train(train_loader=train_loader,
+                  model=model,
+                  criterion=criterion,
+                  optimizer=optimizer,
+                  epoch=epoch,
+                  grad_clip= grad_clip,
                   args=args)
-			
 
-			# One epoch's validation
-			val_loss = validate(val_loader=val_loader,
-			                    model=model,
-			                    criterion=criterion)
+            # One epoch's validation
+            val_loss = validate(val_loader=val_loader,
+                                model=model,
+                                criterion=criterion)
 
-			# Did validation loss improve?
-			is_best = val_loss < best_loss
-			best_loss = min(val_loss, best_loss)
+            # Did validation loss improve?
+            is_best = val_loss < best_loss
+            best_loss = min(val_loss, best_loss)
 
-			if not is_best:
-			    epochs_since_improvement += 1
-			    print("\nEpochs since last improvement: %d\n" % (epochs_since_improvement,))
+            if not is_best:
+                epochs_since_improvement += 1
+                print("\nEpochs since last improvement: %d\n" % (epochs_since_improvement,))
 
-			else:
-			    epochs_since_improvement = 0
+            else:
+                epochs_since_improvement = 0
 
-			# Save checkpoint
-			#save_checkpoint(epoch, epochs_since_improvement, model, optimizer, val_loss, best_loss, is_best)
-			
-		
+            # Save checkpoint
+            #save_checkpoint(epoch, epochs_since_improvement, model, optimizer, val_loss, best_loss, is_best)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
     #parser.add_argument('backbone_network',help='Base model for extracting features for SSD. Must be one of ["MobileNetV1", "MobileNetV2"]')
     parser.add_argument('config_file_path',help='configuration file')
-    parser.add_argument('--apex', action='store_true',
-                        help='Use apex for mixed precision training')
-    parser.add_argument('--apex-opt-level', default='O2', type=str,
-                        help='For apex mixed precision training'
-                             'O0 for FP32 training, O1 for mixed precision training.'
-                             'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet'
-                        )
+
     args = parser.parse_args()
     
     main(args)
-    	
+
       

@@ -47,6 +47,8 @@ import warnings
 import dllogger
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.optim as optim
 import yaml
@@ -74,6 +76,11 @@ from utils.exp_utils import l2_promote
 from utils.exp_utils import log_env_info
 from utils.exp_utils import register_ignoring_timeout_handler
 
+NPU_CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 
 def parse_args():
     parent_parser = argparse.ArgumentParser(
@@ -261,7 +268,14 @@ def parse_args():
                           help='Use variable length')
     training.add_argument('--swap_mem', action='store_true',
                           help='Swap memory tensors to cpu')
-
+    training.add_argument('--profiling', type=str, default='NONE',
+                        help='choose profiling way--CANN,GE,NONE')
+    training.add_argument('--start_step', default=0, type=int, 
+                        help='start_step')
+    training.add_argument('--stop_step', default=1000, type=int,
+                        help='stop_step')              
+    training.add_argument('--bin', type=bool, default=False,
+                        help='if bin')
     val = parser.add_argument_group('validation setup')
     val.add_argument('--eval_tgt_len', type=int, default=192,
                      help='Number of tokens to predict for evaluation')
@@ -282,6 +296,7 @@ def parse_args():
 
     args.tied = not args.not_tied
 
+    
     if args.d_embed < 0:
         args.d_embed = args.d_model
 
@@ -519,9 +534,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
           last_batch, last_iter, train_step, best_val_loss, meters,
           timeout_handler, device, args):
     # Turn on training mode which enables dropout.
-    torch.npu.set_start_fuzz_compile_step(3)
     model.train()
-
+    torch.npu.set_start_fuzz_compile_step(3)
     train_loss = 0
     target_tokens = 0
     log_step = 0
@@ -532,119 +546,350 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
         train_iter = tr_iter.get_varlen_iter(start=last_iter)
     else:
         train_iter = tr_iter.get_fixlen_iter(start=last_iter)
-
+    
+    num_steps = 0
     for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1):
-        torch.npu.global_step_inc()
-        log_step += 1
-        target_tokens += target.numel()
+        if num_steps > args.stop_step:
+                import sys
+                sys.exit()
+        elif num_steps <= args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
+            with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True):       
+                log_step += 1
+                target_tokens += target.numel()
 
-        for param in model.parameters():
-            param.grad = None
-        data=data.npu(non_blocking=True)
-        target=target.npu(non_blocking=True)
+                for param in model.parameters():
+                    param.grad = None
+                data=data.npu(non_blocking=True)
+                target=target.npu(non_blocking=True)
 
-        data_chunks = torch.chunk(data, args.batch_chunk, 1)
-        target_chunks = torch.chunk(target, args.batch_chunk, 1)
+                data_chunks = torch.chunk(data, args.batch_chunk, 1)
+                target_chunks = torch.chunk(target, args.batch_chunk, 1)
 
-        for i in range(args.batch_chunk):
-            if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
-                with para_model.no_sync():
+                for i in range(args.batch_chunk):
+                    if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
+                        with para_model.no_sync():
+                            train_loss_chunk = train_iteration(
+                                para_model, i, mems, data_chunks, target_chunks, scaler,
+                                optimizer, device, True, args
+                            )
+                    else:
+                        train_loss_chunk = train_iteration(
+                            para_model, i, mems, data_chunks, target_chunks, scaler,
+                            optimizer, device, False, args
+                        )
+
+                    train_loss += train_loss_chunk
+
+                if args.fp16:
+                    if args.amp == 'pytorch':
+                        scaler.unscale_(optimizer)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+                    elif args.amp == 'apex':
+                        torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
+                else:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+
+                if args.fp16 and args.amp == 'pytorch':
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    optimizer.step()
+                    if optimizer_sparse:
+                        optimizer_sparse.step()
+
+                # step-wise learning rate annealing
+                train_step += 1
+                if args.scheduler in ['cosine', 'constant', 'dev_perf']:
+                    # linear warmup stage
+                    if train_step < args.warmup_step:
+                        curr_lr = args.lr * train_step / args.warmup_step
+                        optimizer.param_groups[0]['lr'] = curr_lr
+                        if optimizer_sparse:
+                            optimizer_sparse.param_groups[0]['lr'] = curr_lr * 2
+                    else:
+                        if args.scheduler == 'cosine':
+                            scheduler.step(train_step - args.warmup_step)
+                            if scheduler_sparse:
+                                scheduler_sparse.step(train_step - args.warmup_step)
+                elif args.scheduler == 'inv_sqrt':
+                    scheduler.step(train_step)
+                    if scheduler_sparse:
+                        scheduler_sparse.step(train_step)
+                train_loss=train_loss.item()
+                if train_step % args.log_interval == 0:
+                    cur_loss = train_loss / log_step
+                    cur_loss = utils.distributed.all_reduce_item(cur_loss, op='mean')
+                    train_loss = 0
+
+                    elapsed = time.time() - log_start_time
+                    avg_elapsed = elapsed / log_step
+                    avg_elapsed = utils.distributed.all_reduce_item(avg_elapsed, op='max')
+                    log_start_time = time.time()
+                    log_step = 0
+
+                    lr = optimizer.param_groups[0]['lr']
+                    throughput = target_tokens / elapsed
+                    throughput = utils.distributed.all_reduce_item(throughput, op='sum')
+                    meters['train_throughput'].update(throughput)
+                    target_tokens = 0
+
+                    log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
+                        '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
+                            epoch,
+                            train_step,
+                            batch,
+                            tr_iter.n_batch,
+                            lr,
+                            avg_elapsed * 1000,
+                            throughput,
+                            cur_loss,
+                            )
+
+                    dllogger_data = {
+                        'epoch': epoch,
+                        'train_batch': batch+1,
+                        'lr': lr,
+                        'train_time/batch': avg_elapsed * 1000,
+                        'train_throughput': throughput,
+                        'train_loss': cur_loss,
+                        }
+
+                    if args.dataset in ['enwik8', 'text8']:
+                        log_str += ' | bpc {:9.5f}'.format(cur_loss / math.log(2))
+                        dllogger_data['train_bits_per_character'] = cur_loss / math.log(2)
+                    else:
+                        log_str += ' | ppl {:9.2f}'.format(math.exp(cur_loss))
+                        dllogger_data['train_perplexity'] = math.exp(cur_loss)
+
+                    logging.info(log_str)
+                    dllogger.log(step=tuple([train_step]), data=dllogger_data)
+            num_steps = num_steps + 1        
+        elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':          
+            with torch.npu.profile(profiler_result_path="./GE_prof"):    
+                log_step += 1
+                target_tokens += target.numel()
+
+                for param in model.parameters():
+                    param.grad = None
+                data=data.npu(non_blocking=True)
+                target=target.npu(non_blocking=True)
+
+                data_chunks = torch.chunk(data, args.batch_chunk, 1)
+                target_chunks = torch.chunk(target, args.batch_chunk, 1)
+
+                for i in range(args.batch_chunk):
+                    if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
+                        with para_model.no_sync():
+                            train_loss_chunk = train_iteration(
+                                para_model, i, mems, data_chunks, target_chunks, scaler,
+                                optimizer, device, True, args
+                            )
+                    else:
+                        train_loss_chunk = train_iteration(
+                            para_model, i, mems, data_chunks, target_chunks, scaler,
+                            optimizer, device, False, args
+                        )
+
+                    train_loss += train_loss_chunk
+
+                if args.fp16:
+                    if args.amp == 'pytorch':
+                        scaler.unscale_(optimizer)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+                    elif args.amp == 'apex':
+                        torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
+                else:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+
+                if args.fp16 and args.amp == 'pytorch':
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    optimizer.step()
+                    if optimizer_sparse:
+                        optimizer_sparse.step()
+
+                # step-wise learning rate annealing
+                train_step += 1
+                if args.scheduler in ['cosine', 'constant', 'dev_perf']:
+                    # linear warmup stage
+                    if train_step < args.warmup_step:
+                        curr_lr = args.lr * train_step / args.warmup_step
+                        optimizer.param_groups[0]['lr'] = curr_lr
+                        if optimizer_sparse:
+                            optimizer_sparse.param_groups[0]['lr'] = curr_lr * 2
+                    else:
+                        if args.scheduler == 'cosine':
+                            scheduler.step(train_step - args.warmup_step)
+                            if scheduler_sparse:
+                                scheduler_sparse.step(train_step - args.warmup_step)
+                elif args.scheduler == 'inv_sqrt':
+                    scheduler.step(train_step)
+                    if scheduler_sparse:
+                        scheduler_sparse.step(train_step)
+                train_loss=train_loss.item()
+                if train_step % args.log_interval == 0:
+                    cur_loss = train_loss / log_step
+                    cur_loss = utils.distributed.all_reduce_item(cur_loss, op='mean')
+                    train_loss = 0
+
+                    elapsed = time.time() - log_start_time
+                    avg_elapsed = elapsed / log_step
+                    avg_elapsed = utils.distributed.all_reduce_item(avg_elapsed, op='max')
+                    log_start_time = time.time()
+                    log_step = 0
+
+                    lr = optimizer.param_groups[0]['lr']
+                    throughput = target_tokens / elapsed
+                    throughput = utils.distributed.all_reduce_item(throughput, op='sum')
+                    meters['train_throughput'].update(throughput)
+                    target_tokens = 0
+
+                    log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
+                        '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
+                            epoch,
+                            train_step,
+                            batch,
+                            tr_iter.n_batch,
+                            lr,
+                            avg_elapsed * 1000,
+                            throughput,
+                            cur_loss,
+                            )
+
+                    dllogger_data = {
+                        'epoch': epoch,
+                        'train_batch': batch+1,
+                        'lr': lr,
+                        'train_time/batch': avg_elapsed * 1000,
+                        'train_throughput': throughput,
+                        'train_loss': cur_loss,
+                        }
+
+                    if args.dataset in ['enwik8', 'text8']:
+                        log_str += ' | bpc {:9.5f}'.format(cur_loss / math.log(2))
+                        dllogger_data['train_bits_per_character'] = cur_loss / math.log(2)
+                    else:
+                        log_str += ' | ppl {:9.2f}'.format(math.exp(cur_loss))
+                        dllogger_data['train_perplexity'] = math.exp(cur_loss)
+
+                    logging.info(log_str)
+                    dllogger.log(step=tuple([train_step]), data=dllogger_data)
+            num_steps = num_steps + 1 
+        else:
+            log_step += 1
+            target_tokens += target.numel()
+
+            for param in model.parameters():
+                param.grad = None
+            data=data.npu(non_blocking=True)
+            target=target.npu(non_blocking=True)
+
+            data_chunks = torch.chunk(data, args.batch_chunk, 1)
+            target_chunks = torch.chunk(target, args.batch_chunk, 1)
+
+            for i in range(args.batch_chunk):
+                if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
+                    with para_model.no_sync():
+                        train_loss_chunk = train_iteration(
+                            para_model, i, mems, data_chunks, target_chunks, scaler,
+                            optimizer, device, True, args
+                        )
+                else:
                     train_loss_chunk = train_iteration(
                         para_model, i, mems, data_chunks, target_chunks, scaler,
-                        optimizer, device, True, args
+                        optimizer, device, False, args
                     )
+
+                train_loss += train_loss_chunk
+
+            if args.fp16:
+                if args.amp == 'pytorch':
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+                elif args.amp == 'apex':
+                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
             else:
-                train_loss_chunk = train_iteration(
-                    para_model, i, mems, data_chunks, target_chunks, scaler,
-                    optimizer, device, False, args
-                )
-
-            train_loss += train_loss_chunk
-
-        if args.fp16:
-            if args.amp == 'pytorch':
-                scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
-            elif args.amp == 'apex':
-                torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
-        else:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
 
-        if args.fp16 and args.amp == 'pytorch':
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            optimizer.step()
-            if optimizer_sparse:
-                optimizer_sparse.step()
-
-        # step-wise learning rate annealing
-        train_step += 1
-        if args.scheduler in ['cosine', 'constant', 'dev_perf']:
-            # linear warmup stage
-            if train_step < args.warmup_step:
-                curr_lr = args.lr * train_step / args.warmup_step
-                optimizer.param_groups[0]['lr'] = curr_lr
+            if args.fp16 and args.amp == 'pytorch':
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                optimizer.step()
                 if optimizer_sparse:
-                    optimizer_sparse.param_groups[0]['lr'] = curr_lr * 2
+                    optimizer_sparse.step()
+
+            # step-wise learning rate annealing
+            train_step += 1
+            if args.scheduler in ['cosine', 'constant', 'dev_perf']:
+                # linear warmup stage
+                if train_step < args.warmup_step:
+                    curr_lr = args.lr * train_step / args.warmup_step
+                    optimizer.param_groups[0]['lr'] = curr_lr
+                    if optimizer_sparse:
+                        optimizer_sparse.param_groups[0]['lr'] = curr_lr * 2
+                else:
+                    if args.scheduler == 'cosine':
+                        scheduler.step(train_step - args.warmup_step)
+                        if scheduler_sparse:
+                            scheduler_sparse.step(train_step - args.warmup_step)
+            elif args.scheduler == 'inv_sqrt':
+                scheduler.step(train_step)
+                if scheduler_sparse:
+                    scheduler_sparse.step(train_step)
+            train_loss=train_loss.item()
+            if train_step % args.log_interval == 0:
+                cur_loss = train_loss / log_step
+                cur_loss = utils.distributed.all_reduce_item(cur_loss, op='mean')
+                train_loss = 0
+
+                elapsed = time.time() - log_start_time
+                avg_elapsed = elapsed / log_step
+                avg_elapsed = utils.distributed.all_reduce_item(avg_elapsed, op='max')
+                log_start_time = time.time()
+                log_step = 0
+
+                lr = optimizer.param_groups[0]['lr']
+                throughput = target_tokens / elapsed
+                throughput = utils.distributed.all_reduce_item(throughput, op='sum')
+                meters['train_throughput'].update(throughput)
+                target_tokens = 0
+
+                log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
+                    '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
+                        epoch,
+                        train_step,
+                        batch,
+                        tr_iter.n_batch,
+                        lr,
+                        avg_elapsed * 1000,
+                        throughput,
+                        cur_loss,
+                        )
+
+                dllogger_data = {
+                    'epoch': epoch,
+                    'train_batch': batch+1,
+                    'lr': lr,
+                    'train_time/batch': avg_elapsed * 1000,
+                    'train_throughput': throughput,
+                    'train_loss': cur_loss,
+                    }
+
+                if args.dataset in ['enwik8', 'text8']:
+                    log_str += ' | bpc {:9.5f}'.format(cur_loss / math.log(2))
+                    dllogger_data['train_bits_per_character'] = cur_loss / math.log(2)
+                else:
+                    log_str += ' | ppl {:9.2f}'.format(math.exp(cur_loss))
+                    dllogger_data['train_perplexity'] = math.exp(cur_loss)
+
+                logging.info(log_str)
+                dllogger.log(step=tuple([train_step]), data=dllogger_data)
+            if args.profiling == 'GE' or args.profiling == 'CANN':
+                num_steps = num_steps + 1
             else:
-                if args.scheduler == 'cosine':
-                    scheduler.step(train_step - args.warmup_step)
-                    if scheduler_sparse:
-                        scheduler_sparse.step(train_step - args.warmup_step)
-        elif args.scheduler == 'inv_sqrt':
-            scheduler.step(train_step)
-            if scheduler_sparse:
-                scheduler_sparse.step(train_step)
-        train_loss=train_loss.item()
-        if train_step % args.log_interval == 0:
-            cur_loss = train_loss / log_step
-            cur_loss = utils.distributed.all_reduce_item(cur_loss, op='mean')
-            train_loss = 0
-
-            elapsed = time.time() - log_start_time
-            avg_elapsed = elapsed / log_step
-            avg_elapsed = utils.distributed.all_reduce_item(avg_elapsed, op='max')
-            log_start_time = time.time()
-            log_step = 0
-
-            lr = optimizer.param_groups[0]['lr']
-            throughput = target_tokens / elapsed
-            throughput = utils.distributed.all_reduce_item(throughput, op='sum')
-            meters['train_throughput'].update(throughput)
-            target_tokens = 0
-
-            log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
-                '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
-                    epoch,
-                    train_step,
-                    batch,
-                    tr_iter.n_batch,
-                    lr,
-                    avg_elapsed * 1000,
-                    throughput,
-                    cur_loss,
-                    )
-
-            dllogger_data = {
-                'epoch': epoch,
-                'train_batch': batch+1,
-                'lr': lr,
-                'train_time/batch': avg_elapsed * 1000,
-                'train_throughput': throughput,
-                'train_loss': cur_loss,
-                }
-
-            if args.dataset in ['enwik8', 'text8']:
-                log_str += ' | bpc {:9.5f}'.format(cur_loss / math.log(2))
-                dllogger_data['train_bits_per_character'] = cur_loss / math.log(2)
-            else:
-                log_str += ' | ppl {:9.2f}'.format(math.exp(cur_loss))
-                dllogger_data['train_perplexity'] = math.exp(cur_loss)
-
-            logging.info(log_str)
-            dllogger.log(step=tuple([train_step]), data=dllogger_data)
-
+                pass
         do_periodic_eval = train_step % args.eval_interval == 0
         is_final_step = train_step == args.max_step
         interrupted = timeout_handler.interrupted
@@ -722,12 +967,14 @@ def main():
         print(f'{args.local_rank}: thread affinity: {affinity}')
 
     # Initialize device and distributed backend
-    torch.npu.set_device(args.local_rank)
+    print('---------local_rank:',args.local_rank)
+    if args.multi_gpu == 'ddp':
+        torch.npu.set_device(args.local_rank)
     #l2_promote()
     #device = torch.device('cuda' if args.cuda else 'cpu')
     #utils.distributed.init_distributed(args.cuda)
     device = torch.device('npu')
-    utils.distributed.init_distributed_npu()
+    utils.distributed.init_distributed_npu(args)
 
     args.work_dir = utils.exp_utils.build_work_dir_name(args.work_dir,
                                                         args.dataset,

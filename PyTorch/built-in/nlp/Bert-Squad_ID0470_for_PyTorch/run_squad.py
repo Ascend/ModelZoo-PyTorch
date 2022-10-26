@@ -29,7 +29,7 @@ from io import open
 
 import numpy as np
 import torch
-if torch.__version__ >= "1.8.1":
+if torch.__version__ >= "1.8":
     import torch_npu
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
@@ -82,7 +82,7 @@ class NpuFusedBertAdamV2(NpuFusedBertAdam):
                                                            group['warmup'])
             else:
                 lr_scheduled = group['lr']
-            if torch.__version__ >= "1.8.1":
+            if torch.__version__ >= "1.8":
                 combined_param.data, exp_avg, exp_avg_sq = torch.npu_bert_apply_adam(lr_scheduled, beta1, beta2,
                                                                                  group['e'], combined_grad.data,
                                                                                  group['max_grad_norm'], 0,
@@ -928,9 +928,9 @@ def main():
             device = torch.device("npu:%d" % args.local_rank)
             if args.num_npu == 8:
                 torch.distributed.init_process_group(backend='hccl', world_size=8, rank=args.local_rank)
-            if args.num_npu == 16:
+            elif args.num_npu != 8 and args.num_npu % 8 == 0:
                 global_rank = int(os.getenv('RANK'))
-                torch.distributed.init_process_group(backend='hccl', world_size=16, rank=global_rank)
+                torch.distributed.init_process_group(backend='hccl', world_size=args.num_npu, rank=global_rank)
             n_npu = 1
         else:
             torch.cuda.set_device(args.local_rank)

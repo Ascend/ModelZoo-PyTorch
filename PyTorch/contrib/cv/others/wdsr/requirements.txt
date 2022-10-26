@@ -1,9 +1,7 @@
-apex
 h5py==2.8
 numpy
-Pillow
+Pillow==9.1.0
 scikit-image
 tables
-torch
 torchvision
 tensorboard

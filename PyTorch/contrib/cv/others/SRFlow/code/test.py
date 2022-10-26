@@ -21,6 +21,9 @@ import options.options as option
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from models import create_model
 import torch
+if torch.__version__>="1.8":
+    import torch_npu
+print(torch.__version__)
 from utils.util import opt_get
 from utils import util
 import numpy as np

@@ -66,6 +66,10 @@ do
     echo "Device ID: $RANK_ID"
     export RANK_ID=$RANK_ID
     export ASCEND_DEVICE_ID=$RANK_ID
+    #HCCL白名单开关，1-关闭/0-开启
+    export HCCL_WHITELIST_DISABLE=1
+    export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+    export HCCL_CONNECT_TIMEOUT=1800
     ASCEND_DEVICE_ID=$RANK_ID
 
     #创建DeviceID输出目录，不需要修改
@@ -89,7 +93,7 @@ do
         --weight-decay 1e-4 \
         --apex \
         --apex-opt-level O2 \
-        --loss_scale_value 1024 \
+        --loss_scale_value dynamic \
         --seed 1234 \
         --print-freq 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
@@ -103,7 +107,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'Epoch:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep eta:|awk -F "img/s: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+FPS=`grep -a 'img/s:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 101| head -n 100 | awk '{print$9}'| awk '{sum+=$1} END {print sum/NR}'`
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`

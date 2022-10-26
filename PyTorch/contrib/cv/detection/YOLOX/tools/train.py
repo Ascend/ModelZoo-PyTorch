@@ -19,6 +19,8 @@ import warnings
 from loguru import logger
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.backends.cudnn as cudnn
 
 from yolox.core import Trainer, launch
@@ -130,6 +132,12 @@ def main(exp, args):
 
 
 if __name__ == "__main__":
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = 'enable'
+    option["ACL_OP_COMPILER_CACHE_DIR"] = './cache'
+    
+    print('option', option)
+    torch.npu.set_option(option)
     args = make_parser().parse_args()
     exp = get_exp(args.exp_file, args.name)
     exp.merge(args.opts)

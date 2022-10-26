@@ -1,0 +1,260 @@
+diff --git a/lib/dataset/build.py b/lib/dataset/build.py
+index 97910ab..b4f2cf1 100644
+--- a/lib/dataset/build.py
++++ b/lib/dataset/build.py
+@@ -15,9 +15,9 @@ import torch.utils.data
+ from .COCODataset import CocoDataset as coco
+ from .COCODataset import CocoRescoreDataset as rescore_coco
+ from .COCOKeypoints import CocoKeypoints as coco_kpt
+-from .CrowdPoseDataset import CrowdPoseDataset as crowd_pose
+-from .CrowdPoseDataset import CrowdPoseRescoreDataset as rescore_crowdpose
+-from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose_kpt
++# from .CrowdPoseDataset import CrowdPoseDataset as crowd_pose
++# from .CrowdPoseDataset import CrowdPoseRescoreDataset as rescore_crowdpose
++# from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose_kpt
+ from .transforms import build_transforms
+ from .target_generators import HeatmapGenerator
+ from .target_generators import OffsetGenerator
+diff --git a/lib/models/conv_block.py b/lib/models/conv_block.py
+index 3352479..a3b845e 100644
+--- a/lib/models/conv_block.py
++++ b/lib/models/conv_block.py
+@@ -99,6 +99,49 @@ class Bottleneck(nn.Module):
+         return out
+ 
+ 
++class DeformConv2dFunction(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx,
++                input,
++                offset,
++                weight,
++                stride=1,
++                padding=0,
++                dilation=1,
++                groups=1,
++                deform_groups=1):
++        output_size = [input.shape[0], weight.shape[0]]
++        for d in range(input.dim() - 2):
++            in_size = input.size(d + 2)
++            kernel = dilation * (weight.size(d + 2) - 1) + 1
++            output_size.append((in_size + (2 * padding) - kernel) // stride + 1)
++        out = torch.randn(output_size).to(input.dtype)
++        return out
++
++    @staticmethod
++    def symbolic(g,
++                 input,
++                 offset,
++                 weight,
++                 stride,
++                 padding,
++                 dilation,
++                 groups,
++                 deform_groups):
++        return g.op(
++            "DeformableConv2D",
++            input,
++            weight,
++            offset,
++            strides_i=[stride,stride],
++            pads_i=[padding,padding],
++            dilations_i=dilation,
++            groups_i=groups,
++            deformable_groups_i=deform_groups)
++
++deform_conv2d = DeformConv2dFunction.apply
++
++
+ class AdaptBlock(nn.Module):
+     expansion = 1
+ 
+@@ -127,10 +170,19 @@ class AdaptBlock(nn.Module):
+         offset = offset.transpose(1,2).reshape((N,H,W,18)).permute(0,3,1,2)
+ 
+         translation = self.translation_conv(x)
+-        offset[:,0::2,:,:] += translation[:,0:1,:,:]
+-        offset[:,1::2,:,:] += translation[:,1:2,:,:]
+- 
+-        out = self.adapt_conv(x, offset)
++        # offset[:,0::2,:,:] += translation[:,0:1,:,:]
++        # offset[:,1::2,:,:] += translation[:,1:2,:,:]
++        offset += torch.cat((translation, translation, translation, translation, translation, translation, translation,
++                             translation, translation), dim=1)
++
++        weight = self.adapt_conv.weight
++        offset_x = offset[:, 0::2, :, :]
++        offset_y = offset[:, 1::2, :, :]
++        mask = torch.ones(offset.size(0), offset.size(1) // 2, offset.size(2), offset.size(3)).float()
++        offset = torch.cat([offset_y, offset_x, mask], dim=1)
++        out = deform_conv2d(x, offset, weight, 1, 1, 1, 1, 1)
++
++        # out = self.adapt_conv(x, offset)
+         out = self.bn(out)
+         
+         if self.downsample is not None:
+diff --git a/lib/utils/rescore.py b/lib/utils/rescore.py
+index a7f460f..ee4ef53 100644
+--- a/lib/utils/rescore.py
++++ b/lib/utils/rescore.py
+@@ -15,7 +15,7 @@ from torch.autograd import Variable
+ import pickle
+ import models
+ from pycocotools.cocoeval import COCOeval as COCOEval
+-from crowdposetools.cocoeval import COCOeval as CrowdposeEval
++# from crowdposetools.cocoeval import COCOeval as CrowdposeEval
+ 
+ JOINT_COCO_LINK_1 = [0, 0, 1, 1, 2, 3, 4, 5, 5, 5, 6, 6, 7, 8, 11, 11, 12, 13, 14]
+ JOINT_COCO_LINK_2 = [1, 2, 2, 3, 4, 5, 6, 6, 7, 11, 8, 12, 9, 10, 12, 13, 14, 15, 16]
+@@ -132,7 +132,7 @@ def rescore_valid(cfg, temp, ori_scores):
+     temp = np.array(temp)
+ 
+     feature = get_feature(temp, cfg.DATASET.DATASET)
+-    feature = feature.cuda()
++    # feature = feature.cuda()
+ 
+     PredictOKSmodel = eval('models.'+'predictOKS'+'.get_pose_net')(
+         cfg, feature.shape[1], is_train=False
+@@ -142,12 +142,12 @@ def rescore_valid(cfg, temp, ori_scores):
+     for name, m in pretrained_state_dict.items():
+         need_init_state_dict[name] = m
+     PredictOKSmodel.load_state_dict(need_init_state_dict, strict=False)
+-    PredictOKSmodel = torch.nn.DataParallel(
+-        PredictOKSmodel, device_ids=cfg.GPUS).cuda()
++    # PredictOKSmodel = torch.nn.DataParallel(
++    #     PredictOKSmodel, device_ids=cfg.GPUS).cuda()
+     PredictOKSmodel.eval()
+ 
+     scores = PredictOKSmodel(feature)
+-    scores = scores.cpu().numpy()
++    scores = scores.cpu().detach().numpy()
+     scores[np.isnan(scores)] = 0
+     mul_scores = scores*np.array(ori_scores).reshape(scores.shape)
+     scores = [np.float(i) for i in list(scores)]
+@@ -217,66 +217,66 @@ class COCORescoreEval(COCOEval):
+ 
+ 
+ 
+-class CrowdRescoreEval(CrowdposeEval):
+-    def __init__(self, cocoGt=None, cocoDt=None, iouType='segm'):
+-        CrowdposeEval.__init__(self, cocoGt, cocoDt, iouType)
+-        self.summary = [['pose', 'pose_heatval', 'oks']]
+-    
+-    def evaluateImg(self, imgId, catId, aRng, maxDet):
+-        '''
+-        get predicted pose and oks score for single category and image
+-        change self.summary
+-        '''
+-        p = self.params
+-        if p.useCats:
+-            gt = self._gts[imgId, catId]
+-            dt = self._dts[imgId, catId]
+-        else:
+-            gt = [_ for cId in p.catIds for _ in self._gts[imgId, cId]]
+-            dt = [_ for cId in p.catIds for _ in self._dts[imgId, cId]]
+-        if len(gt) == 0 and len(dt) == 0:
+-            return None
+-        
+-        for g in gt:
+-            tmp_area = g['bbox'][2] * g['bbox'][3] * 0.53
+-            if g['ignore'] or (tmp_area < aRng[0] or tmp_area > aRng[1]):
+-                g['_ignore'] = 1
+-            else:
+-                g['_ignore'] = 0
+-
+-        # sort dt highest score first, sort gt ignore last
+-        gtind = np.argsort([g['_ignore'] for g in gt], kind='mergesort')
+-        gt = [gt[i] for i in gtind]
+-        dtind = np.argsort([-d['score'] for d in dt], kind='mergesort')
+-        dt = [dt[i] for i in dtind[0:maxDet]]
+-        # load computed ious
+-        ious = self.ious[imgId, catId][:, gtind] if len(
+-            self.ious[imgId, catId]) > 0 else self.ious[imgId, catId]
+-
+-        gtIg = np.array([g['_ignore'] for g in gt])
+-        if not len(ious)==0:
+-            for dind, d in enumerate(dt):
+-                # information about best match so far (m=-1 -> unmatched)
+-                iou = 0
+-                m   = -1
+-                for gind, g in enumerate(gt):
+-                    #if not iscrowd[gind]:
+-                    #    continue
+-                    # if dt matched to reg gt, and on ignore gt, stop
+-                    if m>-1 and gtIg[m]==0 and gtIg[gind]==1:
+-                        break
+-                    # continue to next gt unless better match made
+-                    if ious[dind,gind] < iou:
+-                        continue
+-                    # if match successful and best so far, store appropriately
+-                    iou=ious[dind,gind]
+-                    m=gind
+-                
+-                dtkeypoint = np.array(d['keypoints']).reshape((14,3))
+-                self.summary.append([dtkeypoint[:,:2], dtkeypoint[:,2:], iou])
+-
+-    def dumpdataset(self, data_file):
+-        pickle.dump(self.summary, open(data_file, 'wb'))
++# class CrowdRescoreEval(CrowdposeEval):
++#     def __init__(self, cocoGt=None, cocoDt=None, iouType='segm'):
++#         CrowdposeEval.__init__(self, cocoGt, cocoDt, iouType)
++#         self.summary = [['pose', 'pose_heatval', 'oks']]
++#
++#     def evaluateImg(self, imgId, catId, aRng, maxDet):
++#         '''
++#         get predicted pose and oks score for single category and image
++#         change self.summary
++#         '''
++#         p = self.params
++#         if p.useCats:
++#             gt = self._gts[imgId, catId]
++#             dt = self._dts[imgId, catId]
++#         else:
++#             gt = [_ for cId in p.catIds for _ in self._gts[imgId, cId]]
++#             dt = [_ for cId in p.catIds for _ in self._dts[imgId, cId]]
++#         if len(gt) == 0 and len(dt) == 0:
++#             return None
++#
++#         for g in gt:
++#             tmp_area = g['bbox'][2] * g['bbox'][3] * 0.53
++#             if g['ignore'] or (tmp_area < aRng[0] or tmp_area > aRng[1]):
++#                 g['_ignore'] = 1
++#             else:
++#                 g['_ignore'] = 0
++#
++#         # sort dt highest score first, sort gt ignore last
++#         gtind = np.argsort([g['_ignore'] for g in gt], kind='mergesort')
++#         gt = [gt[i] for i in gtind]
++#         dtind = np.argsort([-d['score'] for d in dt], kind='mergesort')
++#         dt = [dt[i] for i in dtind[0:maxDet]]
++#         # load computed ious
++#         ious = self.ious[imgId, catId][:, gtind] if len(
++#             self.ious[imgId, catId]) > 0 else self.ious[imgId, catId]
++#
++#         gtIg = np.array([g['_ignore'] for g in gt])
++#         if not len(ious)==0:
++#             for dind, d in enumerate(dt):
++#                 # information about best match so far (m=-1 -> unmatched)
++#                 iou = 0
++#                 m   = -1
++#                 for gind, g in enumerate(gt):
++#                     #if not iscrowd[gind]:
++#                     #    continue
++#                     # if dt matched to reg gt, and on ignore gt, stop
++#                     if m>-1 and gtIg[m]==0 and gtIg[gind]==1:
++#                         break
++#                     # continue to next gt unless better match made
++#                     if ious[dind,gind] < iou:
++#                         continue
++#                     # if match successful and best so far, store appropriately
++#                     iou=ious[dind,gind]
++#                     m=gind
++#
++#                 dtkeypoint = np.array(d['keypoints']).reshape((14,3))
++#                 self.summary.append([dtkeypoint[:,:2], dtkeypoint[:,2:], iou])
++#
++#     def dumpdataset(self, data_file):
++#         pickle.dump(self.summary, open(data_file, 'wb'))
+ 
+ 
+ 

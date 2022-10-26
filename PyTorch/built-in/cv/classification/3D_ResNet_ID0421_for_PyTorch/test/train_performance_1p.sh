@@ -157,6 +157,7 @@ do
     --loss_scale_value 1024 \
     --device_list ${ASCEND_DEVICE_ID} \
     --n_epochs 1 \
+    --no_val \
     --manual_seed 1234 \
     --learning_rate 0.01 \
     --tensorboard > ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

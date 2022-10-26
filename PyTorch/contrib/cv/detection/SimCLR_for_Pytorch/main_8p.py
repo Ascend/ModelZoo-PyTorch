@@ -24,6 +24,8 @@ import os
 import time
 import argparse
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import torch.nn.functional as F
 import torch.multiprocessing as mp
@@ -91,6 +93,8 @@ parser.add_argument('--distributed', action='store_true',
 parser.add_argument('--nodes', type=int, default=1)
 parser.add_argument('--device_id', type=int, default=0, help="device id")
 parser.add_argument('--device_list', type=str, default="0,1,2,3,4,5,6,7", help="device id list")
+parser.add_argument('--opt_level', type=str, default="O2", help="opt level")
+
 
 
 def get_host_ip():
@@ -189,7 +193,7 @@ def main_worker(npu, npus_per_node, args):
         args.lr,
         weight_decay=args.weight_decay
     )
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0, combine_grad=True)
+    model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale="dynamic", combine_grad=True)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank],
                                                           broadcast_buffers=False)
@@ -213,11 +217,11 @@ def main_worker(npu, npus_per_node, args):
         print('Part3 : Load Dataset  <==> Done')
         print('Part4 : Train and Test  <==> Begin')
 
+    best_acc = 0
     for epoch_counter in range(args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch_counter)
-        best_acc = 0
-        train(args, train_loader, model, criterion, optimizer, epoch_counter, npus_per_node, best_acc)
+        best_acc=train(args, train_loader, model, criterion, optimizer, epoch_counter, npus_per_node, best_acc)
         if epoch_counter >= 10:
             scheduler.step()
     print('Part4 : Train and Test  <==> Done')
@@ -290,6 +294,8 @@ def train(args, train_loader, model, criterion, optimizer, epoch_counter, npus_p
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict(),
         })
+
+    return best_acc
 
 
 def save_checkpoint(state, filename='checkpoint.pth.tar'):

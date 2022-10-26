@@ -17,6 +17,8 @@
 
 import torch.nn as nn
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import numpy as np
 
 def get_model_complexity_info(model, input_res, print_per_layer_stat=True, as_strings=True, channel=3):

@@ -37,6 +37,8 @@ import time
 import sys
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.utils.data
 from torch import nn
 import torchvision
@@ -62,7 +64,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
     cnt = 0
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
         start_time = time.time()
-        image, target = image.to(device), target.to(device)
+        image, target = image.to(device, non_blocking=True), target.to(device, non_blocking=True)
         output = model(image)
         loss = criterion(output, target)
 
@@ -76,10 +78,11 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
 
         acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
         batch_size = image.shape[0]
+        rank_size = int(os.environ["RANK_SIZE"])
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
-        metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
+        metric_logger.meters['img/s'].update(batch_size * rank_size / (time.time() - start_time))
         cnt = cnt + 1
 
         if args.max_steps and cnt > args.max_steps:
@@ -229,7 +232,8 @@ def main(args):
 
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        rank_id = int(os.environ['RANK_ID'])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank_id])
         model_without_ddp = model.module
 
     if args.resume:
@@ -282,7 +286,7 @@ def parse_args():
                         help='number of total epochs to run')
     parser.add_argument('--max_steps', default=None, type=int, metavar='N',
                         help='number of total steps to run')
-    parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
+    parser.add_argument('-j', '--workers', default=128, type=int, metavar='N',
                         help='number of data loading workers (default: 16)')
     parser.add_argument('--lr', default=0.1, type=float, help='initial learning rate')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',

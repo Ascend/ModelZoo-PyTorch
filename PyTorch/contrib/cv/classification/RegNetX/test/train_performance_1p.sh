@@ -89,7 +89,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
+taskset -c $PID_START-$PID_END python3.7 -u imagenet_fast.py \
   --data ${data_path} \
   --epochs ${train_epochs} \
   --cos \
@@ -102,7 +102,7 @@ taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
   --label-smoothing 0.1 \
   --warmup 5 \
   --device-list ${ASCEND_DEVICE_ID} \
-  --loss-scale 16.0 \
+  --loss-scale 'dynamic' \
   --rank ${RANK_ID} \
   --world-size 1\
   --local_rank $RANK_ID \
@@ -121,7 +121,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $19}'|awk 'END {print}'`
+FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $19}'| awk '{val+=$1} END {if(NR!=0) printf("%.3f",val/NR)}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

@@ -26,7 +26,7 @@ Network="Transformer_ID0105_for_PyTorch"
 
 export BMMV2_ENABLE=1
 #训练epoch
-train_epochs=30
+train_epochs=15
 #训练batch_size,,需要模型审视修改
 batch_size=128
 
@@ -116,11 +116,11 @@ do
       --lr-scheduler inverse_sqrt \
       --warmup-init-lr 0.0 \
       --warmup-updates 4000 \
-      --lr 0.0006 \
+      --lr 0.001 \
       --min-lr 0.0 \
       --dropout 0.1 \
       --weight-decay 0.0 \
-      --criterion label_smoothed_cross_entropy \
+      --criterion cross_entropy \
       --label-smoothing 0.1 \
       --max-sentences 128\
       --max-tokens 102400 \

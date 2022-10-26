@@ -28,7 +28,8 @@ import itertools
 import os
 import math
 import torch
-import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 import time
 import ctypes
 
@@ -155,7 +156,11 @@ def main(args):
                    'accuracy': 0}
 
     # max_update
+    m = 0
     while lr >= args.min_lr and epoch_itr.epoch < max_epoch and trainer.get_num_updates() < max_update:
+        m = m + 1
+        if m >= 2:
+            pass
         DLLogger.log(step=trainer.get_num_updates(), data={'epoch': epoch_itr.epoch}, verbosity=0)
         # train for one epoch
         train(args, trainer, datasets, epoch_itr)
@@ -215,6 +220,8 @@ def train(args, trainer, datasets, epoch_itr):
     trainer.get_throughput_meter().reset()
 
     for i, sample in enumerate(itr):
+        if i > 100:
+            pass
         if i < num_batches - 1 and (i + 1) % update_freq > 0:
             # buffer updates according to --update-freq
             loss = trainer.train_step(sample, update_params=False, last_step=(i == len(itr) - 1))
