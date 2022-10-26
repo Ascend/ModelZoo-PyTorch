@@ -45,7 +45,7 @@ def main():
     results = []
     num_file = len(os.listdir(args.result_path))
     for idx in range(num_file):
-        file = os.path.join(args.result_path, str(idx) + '_output_0.txt')
+        file = os.path.join(args.result_path, str(idx) + '_0.txt')
         with open(file, 'r') as f:
             for batch in f.readlines():
                 line = batch.split(' ')[:-1]
