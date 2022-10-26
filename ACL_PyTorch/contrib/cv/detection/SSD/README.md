@@ -80,22 +80,17 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
 ## 获取源码
 
-1. 获取SSD源代码。
+1. 获取SSD源代码并修改mmdetection。
+   ```shell
+   git clone https://github.com/open-mmlab/mmdetection.git
+   cd mmdetection
+   git reset --hard a21eb25535f31634cef332b09fc27d28956fb24b
+   patch -p1 < ../ssd_mmdet.diff
+   pip install -v -e .
+   cd ..
+   ```
 
-  ```shell
-  git clone https://github.com/open-mmlab/mmdetection.git
-  cd mmdetection
-  git reset --hard a21eb25535f31634cef332b09fc27d28956fb24b
-  pip install -v -e .
-  ```
-
-2. 通过打补丁的方式修改mmdetection。
-  ```shell
-  patch -p1 < ../ssd_mmdet.diff
-  ```
-
-3. 安装依赖。
-
+2. 安装依赖。
    ```shell
    pip3 install -r requirements.txt
    ```
@@ -104,7 +99,7 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   推理数据集采用 [coco_val_2017](http://images.cocodataset.org)，数据集下载后存放路径：/root/datasets/
+   推理数据集采用 [coco_val_2017](http://images.cocodataset.org)，数据集下载后存放路径：`dataset=/root/datasets/coco`
 
    目录结构：
 
@@ -117,11 +112,11 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
 2. 数据预处理。
 
-   将原始数据集转换为模型输入的二进制数据。执行ssd_preprocess脚本。
+   将原始数据集转换为模型输入的二进制数据。执行 `ssd_preprocess.py` 脚本。
 
-   ```python
+   ```shell
    python ssd_preprocess.py \
-          --image_folder_path /root/datasets/coco/val2017 \
+          --image_folder_path $dataset/val2017 \
           --bin_folder_path val2017_ssd_bin
    ```
 
@@ -135,8 +130,8 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 3. 生成数据集info文件。
 
    运行 `get_info.py` 脚本，生成图片数据info文件。
-   ```python
-   python get_info.py jpg /root/datasets/coco/val2017 coco2017_ssd_jpg.info
+   ```shell
+   python get_info.py jpg $dataset/val2017 coco2017_ssd_jpg.info
    ```
 
    - 参数说明：
@@ -161,7 +156,7 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
       使用pytorch2onnx.py导出onnx文件。
 
-      ```python
+      ```shell
       python mmdetection/tools/pytorch2onnx.py \
               mmdetection/configs/ssd/ssd300_coco.py \
               ./ssd300_coco_20200307-a92d2092.pth \
@@ -212,7 +207,7 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
          batchsize=8    # 以8batch为例
          atc --model=ssd300_coco_dynamic_bs.onnx \
               --framework=5 \
-              --output=${om_name} \
+              --output=ssd300_coco_bs8 \
               --input_format=NCHW \
               --input_shape="input:${batchsize},3,300,300" \
               --log=error \
@@ -242,12 +237,12 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
       ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
-      ```python
+      ```shell
       python tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
-              --model ${om_path} \
+              --model ssd300_coco_bs8.om \
               --input ./val2017_ssd_bin \
-              --batchsize ${batchsize} \
-              --output ${out_path}
+              --batchsize 8 \
+              --output out
       ```
 
       - 参数说明：
@@ -265,9 +260,10 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
       调用coco_eval.py评测map精度：
 
-      ```python
+      ```shell
+      det_path=postprocess_out
       python ssd_postprocess.py \
-              --bin_data_path=${infer_result_path} \
+              --bin_data_path=out/2022_*/ \
               --score_threshold=0.02 \
               --test_annotation=coco2017_ssd_jpg.info \
               --nms_pre 200 \
