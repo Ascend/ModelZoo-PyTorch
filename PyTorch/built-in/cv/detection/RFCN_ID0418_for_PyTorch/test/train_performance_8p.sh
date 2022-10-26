@@ -128,6 +128,8 @@ wait
 ASCEND_DEVICE_ID=0
 
 nohup python3.7 ./test_net.py \
+    --arch=rfcn \
+    --dataset=pascal_voc \
     --net=res101 \
     --cfg=cfg/res101.yml \
     --checksession 1 \

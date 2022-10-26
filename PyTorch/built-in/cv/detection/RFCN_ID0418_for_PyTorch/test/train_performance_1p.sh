@@ -108,12 +108,15 @@ nohup taskset -c 0-19 python3.7 ./trainval_net.py \
     --bs=${batch_size} \
     --npu_id="npu:${ASCEND_DEVICE_ID}" \
     --etp_performance_mode \
+    --disp_interval=1 \
     --amp \
     --opt_level=O1 \
     --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 nohup python3.7 ./test_net.py \
+    --arch=rfcn \
+    --dataset=pascal_voc \
     --net=res101 \
     --cfg=cfg/res101.yml \
     --checksession 1 \

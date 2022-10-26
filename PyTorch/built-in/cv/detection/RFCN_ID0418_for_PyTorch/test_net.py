@@ -32,6 +32,9 @@ from model.rpn.bbox_transform import clip_boxes
 # from model.roi_layers import nms
 from model.rpn.bbox_transform import bbox_transform_inv
 from model.utils.net_utils import save_net, load_net, vis_detections
+if torch.__version__>="1.8":
+    import torch_npu
+print(torch.__version__)
 import apex
 from apex import amp
 
@@ -257,7 +260,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(params, momentum=cfg.TRAIN.MOMENTUM)
 
     if args.amp:
-        fasterRCNN, _ = amp.initialize(fasterRCNN, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
+        fasterRCNN, _ = amp.initialize(fasterRCNN, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
         print("=> Using amp mode.")
 
     start = time.time()

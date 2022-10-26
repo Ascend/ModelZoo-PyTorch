@@ -21,6 +21,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.data.sampler import Sampler
+if torch.__version__>="1.8":
+    import torch_npu
+print(torch.__version__)
 import apex
 from apex import amp
 
@@ -135,6 +138,9 @@ def parse_args():
     parser.add_argument('--etp_performance_mode', dest='etp_performance_mode', default=False, action='store_true',
                         help='specify trianing steps on ETP performance mode')
 
+    # PROF
+    parser.add_argument('--prof', default=False, action='store_true',
+                    help='use profiling to evaluate the performance of model')
     args = parser.parse_args()
     return args
 
@@ -173,7 +179,63 @@ def seed_everything(seed):
     torch.npu.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+def profiling(model, data_iter, optimizer,args):
+    cann_profiling_path = './cann_profiling_15_new'
+    if not os.path.exists(cann_profiling_path):
+        os.makedirs(cann_profiling_path)
+    def update(model, data_iter, optimizer,args):
+        model.train()
+        torch.npu.synchronize()
+        data =next(data_iter)
+        torch.npu.synchronize()
+        pad_value = 0
+        batch_shape = (3, 1344, 1344)
+        padding_size = [0, batch_shape[-1] - data[0].shape[-1],
+                        0, batch_shape[-2] - data[0].shape[-2]]
+        data[0] = F.pad(data[0], padding_size, value=pad_value)
+        with torch.no_grad():
+            im_data.resize_(data[0].size()).copy_(data[0])
+            im_info.resize_(data[1].size()).copy_(data[1])
+            gt_boxes.resize_(data[2].size()).copy_(data[2])
+            num_boxes.resize_(data[3].size()).copy_(data[3]) 
+        out = model(im_data,im_info,gt_boxes,num_boxes)
+        rois, cls_prob, bbox_pred, \
+        rpn_loss_cls, rpn_loss_box, \
+        RCNN_loss_cls, RCNN_loss_bbox, \
+        rois_label = model(im_data, im_info, gt_boxes, num_boxes)
+        loss = rpn_loss_cls.mean() + rpn_loss_box.mean() \
+            + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
+        # loss_temp += loss.data[0]
+        #loss_temp += loss.item()
+        # backward
+        optimizer.zero_grad()
+            
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        optimizer.step()
+    iters_per_epoch=100
+    for step in range(iters_per_epoch):
+            
+        if step < 5:
+            update(model, data_iter, optimizer, args)
+        else:
+            if args.device == 'npu':
+                with torch.autograd.profiler.profile(use_npu=True) as prof:
+                    update(model, data_iter, optimizer,args)
+                with torch.npu.profile(cann_profiling_path):
+                    update(model, data_iter,optimizer,args)
+                            
+            else:
+                with torch.autograd.profiler.profile(use_cuda=True) as prof:
+                    update(model, data_iter, optimizer,args)
 
+        
+           # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+            prof.export_chrome_trace(f"output_{torch.__version__}.prof") # "output.prof"为输出文件地址
+            break
 if __name__ == '__main__':
 
     args = parse_args()
@@ -342,6 +404,12 @@ if __name__ == '__main__':
     if args.etp_performance_mode:
         iters_per_epoch = 300
 
+    if args.prof:
+        dataset.resize_batch()
+        data_iter = iter(dataloader)
+        profiling(model, data_iter, optimizer,args)
+        exit(0)
+
     for epoch in range(args.start_epoch, args.max_epochs + 1):
         dataset.resize_batch()
         # setting to train mode
@@ -453,7 +521,7 @@ if __name__ == '__main__':
         # 每十次保存一次模型
         if epoch % 10 == 0 or epoch == args.max_epochs:
             if args.mGPUs:
-                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
+                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step + 1))
                 save_checkpoint({
                     'session': args.session,
                     'epoch': epoch + 1,
@@ -463,7 +531,7 @@ if __name__ == '__main__':
                     'class_agnostic': args.class_agnostic,
                 }, save_name)
             else:
-                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
+                save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step + 1))
                 save_checkpoint({
                     'session': args.session,
                     'epoch': epoch + 1,
