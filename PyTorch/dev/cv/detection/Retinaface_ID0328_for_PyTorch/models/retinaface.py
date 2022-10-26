@@ -23,7 +23,6 @@ from models.net import FPN as FPN
 from models.net import SSH as SSH
 
 
-
 class ClassHead(nn.Module):
     def __init__(self,inchannels=512,num_anchors=3):
         super(ClassHead,self).__init__()
@@ -79,9 +78,14 @@ class RetinaFace(nn.Module):
                 # load params
                 backbone.load_state_dict(new_state_dict)
         elif cfg['name'] == 'Resnet50':
-            import torchvision.models as models
-            backbone = models.resnet50(pretrained=cfg['pretrain'])
-            #backbone.load_state_dict(torch.load(cfg['pth_path']))
+            if torch.__version__ >= "1.8":
+                from . import resnet50
+                backbone = resnet50.resnet50(pretrained=cfg['pretrain'])
+            else:
+                import torchvision.models as models
+                backbone = models.resnet50(pretrained=cfg['pretrain'])
+            # backbone.load_state_dict(torch.load(cfg['pth_path']))
+
 
         self.body = _utils.IntermediateLayerGetter(backbone, cfg['return_layers'])
         in_channels_stage2 = cfg['in_channel']
