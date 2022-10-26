@@ -142,6 +142,7 @@ def main():
 
 
 def train(config, train_loader, dataset, converter, model, criterion, optimizer, device, epoch):
+    config, args = parse_arg()
     utils.seed_everything()
     batch_time = utils.AverageMeter()
     data_time = utils.AverageMeter()
