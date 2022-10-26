@@ -1,0 +1,10 @@
+python==3.8.0
+mmcv-full==1.6.2
+mmdet==2.25.1
+numpy==1.23.1
+onnx==1.12.0
+onnxruntime==1.12.1
+torch==1.8.1
+torchaudio==0.8.0a0+e4e171a
+torchvision==0.9.1
+tqdm==4.64.0
