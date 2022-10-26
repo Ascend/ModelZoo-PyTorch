@@ -1,9 +1,19 @@
 #!/bin/bash
-
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="SimMIM_ID3449_for_PyTorch"
+Network="SimMIM_ID4114_for_PyTorch"
 # 训练batch_size
 batch_size=128
 # 训练使用的npu卡数
@@ -21,6 +31,12 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+   elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
+        source activate $conda_name
+   elif [[ $para == --ckpt_path* ]];then
+        ckpt_path=`echo ${para#*=}`
     fi
 done
 
@@ -29,19 +45,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-
-###############指定训练脚本执行路径###############
-# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
-cur_path=`pwd`
-cur_path_last_dirname=${cur_path##*/}
-if [ x"${cur_path_last_dirname}" == x"test" ];then
-    test_path_dir=${cur_path}
-    cd ..
-    cur_path=`pwd`
-else
-    test_path_dir=${cur_path}/test
-fi
-
 
 #################创建日志输出目录，不需要修改#################
 ASCEND_DEVICE_ID=0
@@ -61,6 +64,10 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+    ckpt_path=./$output_dir/simmim_pretrain/simmim_pretrain__swin_base__img192_window6__100ep/ckpt_epoch_4.pth
+else
+    train_epochs=1
+    ckpt_path=${ckpt_path}/ckpt_epoch_1.pth
 fi
 
 KERNEL_NUM=$(($(nproc)/8))
@@ -72,7 +79,7 @@ do
     nohup taskset -c $PID_START-$PID_END python3.7 main_finetune.py  \
         --cfg configs/swin_base__100ep/simmim_finetune__swin_base__img192_window6__100ep.yaml \
         --opts TRAIN.EPOCHS $train_epochs \
-        --pretrained ./$output_dir/simmim_pretrain/simmim_pretrain__swin_base__img192_window6__100ep/ckpt_epoch_4.pth \
+        --pretrained ${ckpt_path} \
         --batch-size $batch_size \
         --amp-opt-level O1 \
         --local_rank $RANK_ID \
