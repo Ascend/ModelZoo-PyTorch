@@ -67,9 +67,10 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| Pytorch                                                      | 1.7.0   | -                                                  
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |                     
+| Pytorch                                                      | 1.8.0   | -                                                  
+| CANN                                                         | 5.1.RC1B093 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            | 
+| 操作系统                                                      | Ubuntu 18.04   | -                                                            |                     
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
   **表 2**  版本依赖表
@@ -108,6 +109,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 
 1. 获取mmaction源码。
    ```
+   git clone https://github.com/open-mmlab/mmaction2.git
    cd mmaction2
    git checkout 92e5517f1b3cbf937078d66c0dc5c4ba7abf7a08
    git am --signoff < ../nonlocal.patch
@@ -126,7 +128,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型支持 kinetics400 数据集的验证集（video 格式）。请用户自行获取 video 格式的 kinetics400 验证集，上传数据集到服务器任意目录并解压。同时生成或使用已有的文件列表用于推理。
+   本模型支持 kinetics400 数据集的验证集（video 格式）。请用户自行获取 video 格式的 kinetics400 验证集，上传数据集到服务器任意目录并解压。同时生成或使用已有的文件列表用于推理。其中数据集压缩包为[videos_val.tar.gz](https://ascend-pytorch-model-file.obs.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/video_understanding/non-local/videos_val.tar.gz )，数据标签为[kinetics400_val_list_videos.txt](https://ascend-pytorch-model-file.obs.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/video_understanding/non-local/kinetics400_val_list_videos.txt )
     
    下载数据集和标注文件并生成文件列表。
 
@@ -202,7 +204,14 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
          --shape 1 8 3 224 224
          ```
 
-         获得“tsm_nl.onnx”文件。
+         获得“tsm_nl.onnx”文件。不同的bs修改output-file与shape即可
+
+         + 参数说明
+           + mmaction2/configs/recognition/tsm/tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb.py：使用的开源代码文件路径。
+           + ../tsm_nl_dot_product_r50_1x1x8_50e_kinetics400_rgb_20200724-d8ad84d2.pth：权重文件名称。
+           + --output-file：输出文件名称。
+           + --shape：图片参数。
+
 
       2. 优化ONNX文件。
 
@@ -217,7 +226,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/set_env.sh
+          source /usr/local/Ascend_5_1_RC2/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 
@@ -259,7 +268,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           运行成功后生成“tsm_nl_bs1.om”模型文件。
+           运行成功后生成“tsm_nl_bs1.om”模型文件。不同的bs修改model、output与input_shape即可
 
 
 
