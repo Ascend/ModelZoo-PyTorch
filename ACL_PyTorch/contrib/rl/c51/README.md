@@ -1,51 +1,269 @@
-# C51模型Pytorch离线推理指导
-
-### 1 环境准备
-**1.1 安装必要的依赖**
-- pip install -r requirements.txt
-- conda install mpi4py
-- git clone https://github.com/openai/baselines.git  
-  cd baselines  
-  pip install -e '.[all]'  
-  (要求tensorflow必须在1.14及以上)
-
-**1.2 获取，修改开源模型代码**  
-在已经下载推理代码的前提下，进入模型代码仓目录
-- git clone https://github.com/ShangtongZhang/DeepRL
-- cd DeepRL
-- git apply ../c51-infer-update.patch
-
-**1.3 获取权重文件**   
-本代码仓已提供：c51.model、c51.stats
-
-**1.4 获取数据集**  
-该模型没有原始输入的数据集，故而将在线推理的输入输出保存作为数据集和标签。将在线推理生成的输入输出保存为pt文件，并将输入pt文件转成bin。
-- `bash test/get_dataset.sh`
-
-### 2 离线推理
-- **310上执行，执行时使npu-smi info查看设备状态，确保device空闲**
-
-执行如下脚本生成om模型  
-1-12行是pth2onnx  
-14-25行是onnx2om
-```
-bash test/pth2om.sh  
-```
-
-执行如下脚本进行离线推理的精度测试和性能测试  
-1-2行是使用msame工具离线推理  
-5-15行是使用benchmark工具测试性能  
-18-19行将离线推理结果和在线推理比较  
-21-30输出Ascend310推理的性能结果
-```
-bash test/eval_acc_perf.sh
-```
-
-- **评测结果：**
-
-| 模型        | 310精度/pth精度 | 性能基准（t4）   |  310性能         |
-| -----------|---------------| -------------- | --------------- |
-| C51 bs1    |    0.996      |  16141.45    |        13117.28  |
+# C51模型-推理指导
 
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+
+  ******
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法，采样过程依然使用epsilon-greedy策略取期望贪婪，并且采用单独的目标网络。与DQN算法不同的是，C51算法的卷积神经网络不再是行为值函数，而是支点处的概率，C51算法的损失函数不再是均方而是KL散度。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/ShangtongZhang/DeepRL
+  branch=master
+  commit_id=
+  model_name=C51
+  ``` 
+ 
+  通过Git获取对应commit\_id的代码方法如下：
+
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 4 x 84 x 84 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | batchsize x 4 x 51 | FLOAT32  | ND           |
+
+
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC2 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.8.0   | -                                                            |                                                           |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/ShangtongZhang/DeepRL
+   cd DeepRL
+   git apply ../c51-infer-update.patch
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install mpi4py
+   git clone https://github.com/openai/baselines.git
+   cd baselines
+   pip install -e .
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   该模型没有原始输入的数据集，故而将在线推理的输入输出保存作为数据集和标签
+
+2. 数据预处理。
+
+   将在线推理生成的输入输出保存为pt文件，并将输入pt文件转成bin。
+
+   1. 执行“c51_preprocess.py”脚本，完成预处理。
+
+      ```
+      python3.7 c51_preprocess.py c51.model c51.stats dataset/states dataset/actions 1000
+      ```
+      参数说明：
+   
+      “c51.model”：权重文件。
+
+      “c51.stats”：模型配置文件。
+
+      “dataset/states”：stats输出的二进制文件（.bin）所在路径。
+
+      “dataset/actions”：action输出的二进制文件（.bin）所在路径。
+   
+      运行成功后生成文件：
+   
+      dataset/states与actions目录下将分别生成stats与action输出的二进制文件
+   
+   2. 生成数据集bin文件
+   
+      运行“get_dataset_bin.py”脚本。
+ 
+      ```
+      python3.7 get_dataset_bin.py dataset/states dataset/bin dataset/out
+      ```
+      参数说明：
+   
+      “dataset/states”：预处理后的数据文件的相对路径。
+
+      “dataset/bin”：生成的数据集文件保存的路径。
+
+      “dataset/out”：生成的数据集文件格式。
+   
+      运行成功后生成文件：
+   
+      dataset/bin目录下生成数据集bin文件
+   
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      从源码包中获取“c51.model” 。
+       
+   2. 导出onnx文件。
+
+         使用c51.model导出onnx文件。
+
+         运行c51_pth2onnx.py脚本。
+
+         ```
+         python3.7 c51_pth2onnx.py --model-path='c51.model' --onnx-path='c51.onnx'
+         ```
+
+         获得c51.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+           source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+             +--------------------------------------------------------------------------------------------+
+             | npu-smi 22.0.0                       Version: 22.0.2                                       |
+             +-------------------+-----------------+------------------------------------------------------+
+             | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+             | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+             +===================+=================+======================================================+
+             | 0       310P3     | OK              | 17.0         56                0    / 0              |
+             | 0       0         | 0000:AF:00.0    | 0            934  / 23054                            |
+             +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+         ```
+          atc --framework=5 --model=c51.onnx --output=c51_bs1 --input_format=NCHW --input_shape="input:1,4,84,84" --auto_tune_mode="RL,GA" --log=error --soc_version=${chip_name}  --op_select_implmode=high_performance
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+
+           运行成功后生成c51_bs1.om模型文件。
+
+2. 开始推理验证。
+   
+   a.  使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   b.  执行推理。
+
+      `  python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}   `
+
+   - ${om_path}: 之前生成的OM模型的位置
+
+   - ${Bin_data_path}: 数据预处理后，二进制文件所在目录
+      
+   - --model:    需要进行推理的om模型
+   
+   - --output:   推理结果输出路径。
+   
+   - --outfmt:   输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
+   
+   - --input:      模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据
+   
+   说明： 执行ais-infer工具请选择与运行环境架构相同的命令。
+
+   c.  精度验证。
+
+      调用脚本与数据集标签比对，可以获得Accuracy数据。
+
+      ```
+       python3.7 c51_postprocess.py dataset/actions dataset/out 1000
+      ```
+
+      -   参数说明：
+
+           -   “dataset/actions”：保存的输出action的路径。
+
+           -   “dataset/out”：离线推理输出的路径。
+
+           -  “1000”：参数输出比较的个数。
+
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| batch_size | 310      | 310P    | T4       | 310P/310 | 310P/T4 |
+|------------|----------|---------|----------|----------|---------|
+| bs1        | 13572.84 | 6050.12 | 15574.14 | 0.44575  | 0.38847|
+
+精度参考下列数据。
+
+| 310精度  | 99.6% |
+|--------|-------|
+| 310P精度 | 98.9% |
+
+注：此模型不支持多batch。
