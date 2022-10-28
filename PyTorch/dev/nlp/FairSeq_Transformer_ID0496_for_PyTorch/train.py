@@ -47,6 +47,7 @@ import time
 from apex import amp
 import numpy as np
 import torch
+
 if torch.__version__ >= "1.8":
     import torch_npu
 import os
@@ -226,70 +227,92 @@ def train(args, trainer, task, epoch_itr):
     input17 = torch.randn([1000, 1000, 300]).npu()
     input18 = torch.randn([1000, 1000, 300]).npu()
     '''
-
     torch.npu.global_step_inc()
+    num_steps = 0
     for i, samples in enumerate(progress, start=epoch_itr.iterations_in_epoch):
-
         #if i == 60:
         #    exit(0)
         #for tt in samples:
         #    print(tt["net_input"]["src_tokens"].size())
         start = time.time()
-        if i<0 and epoch_itr.epoch == 1:
-            with torch.autograd.profiler.profile(use_npu = True) as prof:
-                log_output = trainer.train_step(samples)
-            #print(prof.key_averages().table())
-            prof.export_chrome_trace(("kdxf_transfomer_dynamic_step{}_npu.prof").format(i))
+        if num_steps >= args.stop_step:
+            if args.profiling == 'GE' or args.profiling == 'CANN':
+                import sys
+                sys.exit()
+        elif num_steps < args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
+            with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True):
+                if i<0 and epoch_itr.epoch == 1:
+                    with torch.autograd.profiler.profile(use_npu = True) as prof:
+                        log_output = trainer.train_step(samples)
+                    #print(prof.key_averages().table())
+                    prof.export_chrome_trace(("kdxf_transfomer_dynamic_step{}_npu.prof").format(i))
+                else:
+                    log_output = trainer.train_step(samples)
+                end = time.time()
+        elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
+            with torch.npu.profile(profiler_result_path="./GE_prof"):
+                if i<0 and epoch_itr.epoch == 1:
+                    with torch.autograd.profiler.profile(use_npu = True) as prof:
+                        log_output = trainer.train_step(samples)
+                    #print(prof.key_averages().table())
+                    prof.export_chrome_trace(("kdxf_transfomer_dynamic_step{}_npu.prof").format(i))
+                else:
+                    log_output = trainer.train_step(samples)
+                end = time.time()
         else:
-            log_output = trainer.train_step(samples)
-        '''
-        if i >= 0 and i <=3:
-            print("===== grad of step {} start".format(i))
-            for name, parameters in trainer.model.named_parameters():
-                print(name, " {}, {}, {}".format(torch.max(parameters.grad).item(), torch.min(parameters.grad).item(),
-                                               torch.mean(parameters.grad).item()))
-            print("===== grad of step {} over".format(i))
-        else:
-           exit(0)
-        '''
-        end = time.time()
-        print("iteration {} time = {} ms".format(i, (end-start)*1000))
-        
-        if log_output is None:
-            continue
-
-        # log mid-epoch stats
-        stats = get_training_stats(trainer)
-        for k, v in log_output.items():
-            if k in ['loss', 'nll_loss', 'ntokens', 'nsentences', 'sample_size']:
-                continue  # these are already logged above
-            if 'loss' in k or k == 'accuracy':
-                extra_meters[k].update(v, log_output['sample_size'])
+            if i<0 and epoch_itr.epoch == 1:
+                with torch.autograd.profiler.profile(use_npu = True) as prof:
+                    log_output = trainer.train_step(samples)
+                #print(prof.key_averages().table())
+                prof.export_chrome_trace(("kdxf_transfomer_dynamic_step{}_npu.prof").format(i))
             else:
-                extra_meters[k].update(v)
-            stats[k] = extra_meters[k].avg
-        progress.log(stats, tag='train', step=stats['num_updates'])
+                log_output = trainer.train_step(samples)
+            '''
+            if i >= 0 and i <=3:
+                print("===== grad of step {} start".format(i))
+                for name, parameters in trainer.model.named_parameters():
+                    print(name, " {}, {}, {}".format(torch.max(parameters.grad).item(), torch.min(parameters.grad).item(),
+                                                   torch.mean(parameters.grad).item()))
+                print("===== grad of step {} over".format(i))
+            else:
+               exit(0)
+            '''
+            end = time.time()
+            print("iteration {} time = {} ms".format(i, (end-start)*1000))
+            if log_output is None:
+                continue
 
+            # log mid-epoch stats
+            stats = get_training_stats(trainer)
+            for k, v in log_output.items():
+                if k in ['loss', 'nll_loss', 'ntokens', 'nsentences', 'sample_size']:
+                    continue  # these are already logged above
+                if 'loss' in k or k == 'accuracy':
+                    extra_meters[k].update(v, log_output['sample_size'])
+                else:
+                    extra_meters[k].update(v)
+                stats[k] = extra_meters[k].avg
+            progress.log(stats, tag='train', step=stats['num_updates'])
 
-        # ignore the first mini-batch in words-per-second and updates-per-second calculation
-        if i == 0:
-            trainer.get_meter('wps').reset()
-            trainer.get_meter('ups').reset()
+            # ignore the first mini-batch in words-per-second and updates-per-second calculation
+            if i == 0:
+                trainer.get_meter('wps').reset()
+                trainer.get_meter('ups').reset()
 
-        num_updates = trainer.get_num_updates()
-        if (
-            not args.disable_validation
-            and args.save_interval_updates > 0
-            and num_updates % args.save_interval_updates == 0
-            and num_updates > 0
-        ):
-            valid_losses = validate(args, trainer, task, epoch_itr, valid_subsets)
-            #checkpoint_utils.save_checkpoint(args, trainer, epoch_itr, valid_losses[0])
+            num_updates = trainer.get_num_updates()
+            if (
+                not args.disable_validation
+                and args.save_interval_updates > 0
+                and num_updates % args.save_interval_updates == 0
+                and num_updates > 0
+            ):
+                valid_losses = validate(args, trainer, task, epoch_itr, valid_subsets)
+                #checkpoint_utils.save_checkpoint(args, trainer, epoch_itr, valid_losses[0])
 
-        if num_updates >= max_update:
-            break
-        #if num_updates == 1000:
-            #exit(0)
+            if num_updates >= max_update:
+                break    
+        num_steps = num_steps + 1    
+
     # log end-of-epoch stats
     stats = get_training_stats(trainer)
     for k, meter in extra_meters.items():
@@ -431,7 +454,9 @@ def distributed_main(i, args, start_rank=0):
 def cli_main():
     parser = options.get_training_parser()
     args = options.parse_args_and_arch(parser)
-
+    if args.bin :
+        torch.npu.set_compile_mode(jit_compile=False)
+        
     if args.distributed_init_method is None:
         distributed_utils.infer_init_method(args)
 

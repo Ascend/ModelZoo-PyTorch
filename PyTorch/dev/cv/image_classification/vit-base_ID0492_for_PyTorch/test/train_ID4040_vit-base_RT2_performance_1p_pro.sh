@@ -36,10 +36,8 @@ over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling="None"
-
-if [[ $profiling == "GE" ]];then
-    export GE_PROFILING_TO_STD_OUT=1
-fi
+start_step=0
+stop_step=20
 
 if [[ $1 == --help || $1 == --h ]];then
    echo "usage:./train_performance_1p.sh --data_path=data_dir --batch_size=1024 --learning_rate=0.04"
@@ -62,6 +60,12 @@ do
         bin_mode="True"
     elif [[ $para == --bin_analysis* ]];then
         bin_analysis="True"
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     fi
 done
 
@@ -76,9 +80,13 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+if [ $profiling == "GE" ];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
+
 #添加二进制代码
-line=`grep "import torch" ${cur_path}/../train.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../train.py
+#line=`grep "import torch" ${cur_path}/../train.py -n | tail -1|awk -F ':' '{print $1}'`
+#sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../train.py
 
 cd $cur_path
 #设置环境变量，不需要修改
@@ -109,8 +117,8 @@ nohup python3 $cur_path/../train.py  \
         --data_dir ${data_path} \
         --fp16_opt_level O2 \
 		--profiling ${profiling} \
-		--start_step 5 \
-		--stop_step 10 \
+		--start_step ${start_step} \
+		--stop_step ${stop_step} \
 		--bin True > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 
 wait

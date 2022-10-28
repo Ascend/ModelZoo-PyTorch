@@ -248,8 +248,9 @@ def train(args, model):
         num_steps = 0
         for step, batch in enumerate(epoch_iterator): 
             if num_steps > args.stop_step:
-                import sys
-                sys.exit()
+                if args.profiling == 'GE' or args.profiling == 'CANN':
+                    import sys
+                    sys.exit()
             elif num_steps <= args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
                 with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True):        
                     if args.ddp:
@@ -282,29 +283,7 @@ def train(args, model):
                         global_step += 1
                         fps.update(args.train_batch_size / (time.time() - end))
                         end = time.time()
-
-                        epoch_iterator.set_description(
-                            "Training (%d / %d Steps) (loss=%2.5f) (FPS=%.2f)" % (global_step, t_total, losses.val,fps.val)
-                        )
-                        #if args.local_rank in [-1, 0]:
-                           # writer.add_scalar("train/loss", scalar_value=losses.val, global_step=global_step)
-                           # writer.add_scalar("train/lr", scalar_value=scheduler.get_lr()[0], global_step=global_step)
-                        if global_step % args.eval_every == 0 and args.local_rank in [-1, 0]:
-                            accuracy = valid(args, model, test_loader, global_step)
-                            #accuracy = valid(args, model, writer, test_loader, global_step)
-                            if best_acc < accuracy:
-                            #save ckpt
-                                
-                                save_model(args, model)
-                                best_acc = accuracy
-                            model.train()
-                        
-                        if global_step % t_total == 0:
-                            break
-                num_steps = num_steps + 1
             elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
-                        #if isinstance(test_loader, torch.utils.data.DataLoader):
-                        #    test_loader.sampler.set_epoch(step)
                 with torch.npu.profile(profiler_result_path="./GE_prof"):    
                     if args.ddp:
                         if isinstance(train_loader, torch.utils.data.DataLoader):
@@ -336,26 +315,6 @@ def train(args, model):
                         global_step += 1
                         fps.update(args.train_batch_size / (time.time() - end))
                         end = time.time()
-
-                        epoch_iterator.set_description(
-                            "Training (%d / %d Steps) (loss=%2.5f) (FPS=%.2f)" % (global_step, t_total, losses.val,fps.val)
-                        )
-                        #if args.local_rank in [-1, 0]:
-                           # writer.add_scalar("train/loss", scalar_value=losses.val, global_step=global_step)
-                           # writer.add_scalar("train/lr", scalar_value=scheduler.get_lr()[0], global_step=global_step)
-                        if global_step % args.eval_every == 0 and args.local_rank in [-1, 0]:
-                            accuracy = valid(args, model, test_loader, global_step)
-                            #accuracy = valid(args, model, writer, test_loader, global_step)
-                            if best_acc < accuracy:
-                            #save ckpt
-                                
-                                save_model(args, model)
-                                best_acc = accuracy
-                            model.train()
-                        
-                        if global_step % t_total == 0:
-                            break
-                num_steps = num_steps + 1
             else:
                 if args.ddp:
                     if isinstance(train_loader, torch.utils.data.DataLoader):
@@ -402,17 +361,14 @@ def train(args, model):
                         #accuracy = valid(args, model, writer, test_loader, global_step)
                         if best_acc < accuracy:
                         #save ckpt
-                            
                             save_model(args, model)
                             best_acc = accuracy
                         model.train()
                     
                     if global_step % t_total == 0:
                         break
-                if args.profiling == 'GE' or args.profiling == 'CANN':
-                    num_steps = num_steps + 1
-                else:
-                    pass
+            num_steps = num_steps + 1
+
             
         losses.reset()
         if global_step % t_total == 0:
