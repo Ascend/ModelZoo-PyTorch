@@ -33,8 +33,6 @@ def task_process(args):
             os.system('{} change_model.py --input_path={}/ctpn_{}x{}.onnx --output_path={}/ctpn_change_{}x{}.onnx' \
                 .format(args.interpreter, args.src_dir, h, w,args.res_dir, h, w)) 
     if args.mode == 'preprocess':
-#        for i in range(config.center_len):
-#            os.system('rm -rf data/images_bin_{}x{}'.format(config.center_list[i][0], config.center_list[i][1]))
         for i in range(config.center_len):
             os.system('mkdir -p {}_{}x{}'.format(args.res_dir, config.center_list[i][0], config.center_list[i][1]))
         os.system('{} ctpn_preprocess.py --src_dir={} --save_path={}' \
@@ -57,8 +55,6 @@ def task_process(args):
         os.system('mv {}/inf_output/*/*.bin {}'.format(args.res_dir, args.res_dir))
         os.system('rm {}/inf_output -rf'.format(args.res_dir))
         fps_all = fps_all / config.imgs_len
-#        if args.machine == 'Ascend310':
-#            fps_all = fps_all * 4  #310 throughput 
         print("====performance data====")
         print('CTPN bs1 models fps:{}'.format(fps_all))
 
@@ -73,15 +69,11 @@ if __name__ == "__main__":
                         type=str, help='src data dir')
     parser.add_argument('--res_dir', default='./data/images_bin',
                         type=str, help='res data dir')
-#    parser.add_argument('--ais_infer_dir', default='tools/ais-bench_workload/tool/ais_infer/ais_infer.py',
-#                        type=str, help='infer tool')
     parser.add_argument('--om_path', default='./ctpn_bs1.om',
                         type=str, help='om_path')
     parser.add_argument('--device', default='0',
                         type=str, help='device id')
     parser.add_argument('--batch_size', default='1',
-                        type=str, help='batch_size')                        
-#    parser.add_argument('--machine', default='Ascend310P',
-#                        type=str, help='machine type Ascend310 or Ascend310P')
+                        type=str, help='batch_size')
     args = parser.parse_args()
     task_process(args)
