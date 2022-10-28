@@ -5,7 +5,7 @@ Network="GOTURN_for_PyTorch"
 batch_size=3
 
 # 数据集路径,保持为空,不需要修改
-data_path="../../dataset"
+data_path="./dataset"
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -18,7 +18,7 @@ done
 IMAGENET_PATH=${data_path}/ILSVRC2014_Det/
 ALOV_PATH=${data_path}/ALOV/
 SAVE_PATH='./caffenet/'
-PRETRAINED_MODEL_PATH='../goturn/models/pretrained/caffenet_weights.npy'
+PRETRAINED_MODEL_PATH='./src/goturn/models/pretrained/caffenet_weights.npy'
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -51,15 +51,14 @@ if [ x"${etp_flag}" != x"true" ]; then
 	source ${test_path_dir}/env_npu.sh
 fi
 
-taskset -c 0-32 python3.7 -u train.py \
+python3.7 -u ./src/scripts/train.py \
   --imagenet_path $IMAGENET_PATH \
   --alov_path $ALOV_PATH \
   --save_path $SAVE_PATH \
   --epochs 3 \
-  --npus 1 \
-  --device 0 \
+  --npus 8 \
   --batch_size $batch_size \
-  --max_steps 8000 \
+  --max_steps 13000 \
   --pretrained_model $PRETRAINED_MODEL_PATH >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -76,9 +75,9 @@ unit="it/s"
 IsUnit=$(echo $FPS | grep "${unit}")
 if [[ "$IsUnit" != "" ]]
 then
-  its=`echo "$FPS" | awk '{printf "%.2f\n",$1}'`
+  its=`echo "$FPS" | awk '{printf "%.2f\n",$1*8}'`
 else
-  its=`echo "$FPS" | awk '{printf "%.2f\n",1/$1}'`
+  its=`echo "$FPS" | awk '{printf "%.2f\n",1/$1*8}'`
 fi
 
 #打印，不需要修改
