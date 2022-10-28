@@ -57,7 +57,9 @@ class Runner(object):
                  samples_per_gpu=2,
                  num_of_gpus=1,
                  fps_lag=200,
-                 steps_per_epoch=None):
+                 steps_per_epoch=None,
+                 profiling=None,
+                 start_step=0):
         assert callable(batch_processor)
         self.model = model
         if optimizer is not None:
@@ -102,6 +104,8 @@ class Runner(object):
         self.iter_time_hook = IterTimerHook()
         self.fps_lag = fps_lag
         self.steps_per_epoch = steps_per_epoch
+        self.profiling=profiling
+        self.start_step=start_step
         if steps_per_epoch is None:
             self.steps_per_epoch = 500
 
@@ -311,29 +315,37 @@ class Runner(object):
                 exit()
             """
             self._inner_iter = i
-            # if i == 50: ## npu diff
-            #     with torch.autograd.profiler.profile(use_npu=True) as prof:
-            #         self.call_hook('before_train_iter')
-            #         outputs = self.batch_processor(
-            #             self.model, data_batch, train_mode=True, **kwargs)
-            #         if not isinstance(outputs, dict):
-            #             raise TypeError('batch_processor() must return a dict')
-            #         if 'log_vars' in outputs:
-            #             self.log_buffer.update(outputs['log_vars'],
-            #                                    outputs['num_samples'])
-            #         self.outputs = outputs
-            #         self.call_hook('after_train_iter')
-            #     prof.export_chrome_trace('solov2_npu.prof')
-            # else:
             self.call_hook('before_train_iter')
-            outputs = self.batch_processor(
-                self.model, data_batch, train_mode=True, **kwargs)
-            if not isinstance(outputs, dict):
-                raise TypeError('batch_processor() must return a dict')
-            if 'log_vars' in outputs:
-                self.log_buffer.update(outputs['log_vars'],
-                                       outputs['num_samples'])
-            self.outputs = outputs
+            if i <= self.steps_per_epoch and i >= self.start_step and self.profiling == 'CANN':
+                with torch.npu.profiling(profiler_result_path="./CANN_prof",use_e2e_profiler=True):
+                    outputs = self.batch_processor(
+                        self.model, data_batch, train_mode=True, **kwargs)
+                    if not isinstance(outputs, dict):
+                        raise TypeError('batch_processor() must return a dict')
+                    if 'log_vars' in outputs:
+                        self.log_buffer.update(outputs['log_vars'],
+                                            outputs['num_samples'])
+                    self.outputs = outputs
+            elif i <= self.steps_per_epoch and i >= self.start_step and self.profiling == 'GE':
+                with torch.npu.profiling(profiler_result_path="./GE_prof"):
+                    outputs = self.batch_processor(
+                        self.model, data_batch, train_mode=True, **kwargs)
+                    if not isinstance(outputs, dict):
+                        raise TypeError('batch_processor() must return a dict')
+                    if 'log_vars' in outputs:
+                        self.log_buffer.update(outputs['log_vars'],
+                                            outputs['num_samples'])
+                    self.outputs = outputs
+            else:
+                outputs = self.batch_processor(
+                        self.model, data_batch, train_mode=True, **kwargs)
+                if not isinstance(outputs, dict):
+                    raise TypeError('batch_processor() must return a dict')
+                if 'log_vars' in outputs:
+                    self.log_buffer.update(outputs['log_vars'],
+                                        outputs['num_samples'])
+                self.outputs = outputs
+
             self.call_hook('after_train_iter')
             self._iter += 1
             
@@ -342,9 +354,7 @@ class Runner(object):
                                                 self.iter_time_hook.time_all))
             if i >= self.steps_per_epoch and self.train_performance:
                 break
-        if self.train_performance:
-            pass
-        else:
+        if not self.train_performance:
             self.logger.info('FPS: ' + str(
                 self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)))
         self.call_hook('after_train_epoch')

@@ -90,7 +90,9 @@ def parse_args():
     parser.add_argument('--steps_per_epoch', type=int, default=1000,help='steps per epoch')
     parser.add_argument('--batch_size', type=int, default=2,help='batch size of datasets')
     parser.add_argument('--fps_lag', type=int, default=200,help='FPS lag')
-    parser.add_argument('--rt2',action='store_true',default=False,help='enable runtime2.0 mode')
+    parser.add_argument('--rt2_bin',type=int,default=0,help='enable bin compile: 0->False, 1->True')
+    parser.add_argument('--start_step', type=int, default=0,help='start lag')
+    parser.add_argument('--profiling', type=str, default='None',help='choose profiling way: CANN, GE, None')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -107,8 +109,8 @@ def main():
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
     print('option', option)
     torch.npu.set_option(option)
-    #os.environ['MASTER_ADDR'] = '127.0.0.1'
-    #os.environ['MASTER_PORT'] = '29688'
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29688'
 
     cfg = Config.fromfile(args.config)
     if args.data_root:
@@ -199,11 +201,13 @@ def main():
         timestamp=timestamp,
         fps_lag=args.fps_lag,
         steps_per_epoch=args.steps_per_epoch,
+        profiling=args.profiling,
+        start_step=args.start_step,
         train_performance=args.train_performance)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.rt2:
+    if args.rt2_bin:
         torch.npu.set_compile_mode(jit_compile=False)
     main()

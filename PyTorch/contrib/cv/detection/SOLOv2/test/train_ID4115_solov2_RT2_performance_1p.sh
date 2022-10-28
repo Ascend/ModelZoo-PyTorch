@@ -21,7 +21,10 @@ Network="solov2_RT2_ID4115_for_Pytorch"
 batch_size=2
 device_id=4
 fps_lag=200
+start_step=0
 steps_per_epoch=1000
+profiling=None
+rt2_bin=1
 
 #参数校验，不需要修改
 for para in $*
@@ -32,8 +35,25 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --apex* ]];then
         apex=`echo ${para#*=}`
+    elif [[ $para == --fps_lag* ]];then
+        fps_lag=`echo ${para#*=}`
+    elif [[ $para == --steps_per_epoch* ]];then
+        steps_per_epoch=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --rt2_bin* ]];then
+        rt2_bin=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+    echo "GEEEEEEEE!"
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -76,7 +96,8 @@ export NPUID=0
 export RANK=0
 cd ${cur_path}/../
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 --batch_size=$batch_size\
-      --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True --rt2> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True \
+      --start_step=$start_step --profiling=$profiling --rt2_bin=$rt2_bin > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改

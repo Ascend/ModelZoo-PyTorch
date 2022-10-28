@@ -108,6 +108,8 @@ def train_detector(model,
                    timestamp=None,
                    fps_lag=200,
                    steps_per_epoch=None,
+                   profiling=None,
+                   start_step=0,
                    train_performance=False):
     logger = get_root_logger(cfg.log_level)
 
@@ -122,6 +124,8 @@ def train_detector(model,
             timestamp=timestamp,
             fps_lag=fps_lag,
             steps_per_epoch=steps_per_epoch,
+            profiling=profiling,
+            start_step=start_step,
             train_performance=train_performance)
     else:
         _non_dist_train(
@@ -133,6 +137,8 @@ def train_detector(model,
             timestamp=timestamp,
             fps_lag=fps_lag,
             steps_per_epoch=steps_per_epoch,
+            profiling=profiling,
+            start_step=start_step,
             train_performance=train_performance)
 
 
@@ -224,6 +230,8 @@ def _dist_train(model,
                 timestamp=None,
                 fps_lag=200,
                 steps_per_epoch=None,
+                profiling=None,
+                start_step=0,
                 train_performance=False):
     # prepare data loaders
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
@@ -252,7 +260,7 @@ def _dist_train(model,
     # build runner
     runner = Runner(
         model, batch_processor, optimizer, cfg.work_dir, logger=logger, samples_per_gpu=cfg.data.imgs_per_gpu,
-        num_of_gpus=cfg.gpus,fps_lag=fps_lag,steps_per_epoch=steps_per_epoch)
+        num_of_gpus=cfg.gpus,fps_lag=fps_lag,steps_per_epoch=steps_per_epoch,profiling=profiling,start_step=start_step)
     # an ugly walkaround to make the .log and .log.json filenames the same
     runner.timestamp = timestamp
 
@@ -311,6 +319,8 @@ def _non_dist_train(model,
                     timestamp=None,
                     fps_lag=200,
                     steps_per_epoch=None,
+                    profiling=None,
+                    start_step=0,
                     train_performance=False):
     if validate:
         raise NotImplementedError('Built-in validation is not implemented '
@@ -340,7 +350,7 @@ def _non_dist_train(model,
     # optimizer = build_optimizer(model, cfg.optimizer)
     runner = Runner(
         model, batch_processor, optimizer, cfg.work_dir, logger=logger, samples_per_gpu=cfg.data.imgs_per_gpu,
-        num_of_gpus=cfg.gpus,fps_lag=fps_lag,steps_per_epoch=steps_per_epoch)
+        num_of_gpus=cfg.gpus,fps_lag=fps_lag,steps_per_epoch=steps_per_epoch,profiling=profiling,start_step=start_step)
     # an ugly walkaround to make the .log and .log.json filenames the same
     runner.timestamp = timestamp
     # fp16 setting
