@@ -19,6 +19,7 @@ import argparse
 import cv2
 import numpy as np
 from ctpn.utils import gen_anchor, transform_bbox, clip_bbox, filter_bbox, nms, TextProposalConnectorOriented
+from tqdm import tqdm
 
 
 def get_text_boxes_pth(image, img_name, args, prob_thresh=0.5):
@@ -102,9 +103,9 @@ def get_text_boxes_om(image, img_name, args, prob_thresh=0.5):
     side_w = config.center_list[distance_list.index(min_distance)][1]
 
     # Read the output file of the om model
-    cls_numpy = np.fromfile('./result/dumpOutput_device0/{}_0.bin'.format(img_name[:-4]), dtype="float32")
+    cls_numpy = np.fromfile('{}/{}_0.bin'.format(args.bin_dir, img_name[:-4]), dtype="float32")
     cls_numpy = cls_numpy.reshape((-1, 2))[:int(side_h / 16)*int(side_w / 16)*10, :]
-    regr_numpy = np.fromfile('./result/dumpOutput_device0/{}_1.bin'.format(img_name[:-4]), dtype="float32")
+    regr_numpy = np.fromfile('{}/{}_1.bin'.format(args.bin_dir, img_name[:-4]), dtype="float32")
     regr = regr_numpy.reshape((1, -1, 2))[:, :int(side_h / 16)*int(side_w / 16)*10, :]
     
     cls_exp = np.exp(cls_numpy)
@@ -167,10 +168,12 @@ if __name__ == '__main__':
     parser.add_argument('--predict_txt', default='data/predict_txt',
                         type=str, help='predict txt path')            
     args = parser.parse_args()
+    if not os.path.exists(args.predict_txt):
+        os.makedirs(args.predict_txt)
     img_name_list = os.listdir(args.imgs_dir)
     if args.model == 'om':
         import config
-        for k in range(len(img_name_list)):
+        for k in tqdm(range(len(img_name_list))):
             input_img_ori = cv2.imread(os.path.join(args.imgs_dir, '{}'.format(img_name_list[k]))) # input image original
             get_text_boxes_om(input_img_ori, img_name_list[k], args)
     else:
@@ -183,6 +186,7 @@ if __name__ == '__main__':
         model = CTPN_Model().to(device)
         model.load_state_dict(torch.load(weights, map_location=device)['model_state_dict'])
         model.eval()
+        
         for k in range(len(img_name_list)):
             input_img_ori = cv2.imread(os.path.join(args.imgs_dir, '{}'.format(img_name_list[k])))
             get_text_boxes_pth(input_img_ori, img_name_list[k], args)
