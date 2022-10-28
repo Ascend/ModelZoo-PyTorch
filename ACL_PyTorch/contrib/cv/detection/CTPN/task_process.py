@@ -30,35 +30,33 @@ def task_process(args):
             os.system('rm -rf ctpn_change_{}x{}.onnx'.format(h, w))
         for i in range(config.center_len):
             h, w = config.center_list[i][0], config.center_list[i][1]
-            os.system('python change_model.py --input_path=ctpn_{}x{}.onnx \
-            --output_path=ctpn_change_{}x{}.onnx'.format(h, w, h, w))
+            os.system('{} change_model.py --input_path={}/ctpn_{}x{}.onnx --output_path={}/ctpn_change_{}x{}.onnx' \
+                .format(args.interpreter, args.src_dir, h, w,args.res_dir, h, w)) 
     if args.mode == 'preprocess':
         for i in range(config.center_len):
-            os.system('rm -rf data/images_bin_{}x{}'.format(config.center_list[i][0], config.center_list[i][1]))
-        for i in range(config.center_len):
-            os.system('mkdir data/images_bin_{}x{}'.format(config.center_list[i][0], config.center_list[i][1]))
-        os.system('python ctpn_preprocess.py --src_dir={} --save_path=./data/images_bin'.format(args.src_dir))
+            os.system('mkdir -p {}_{}x{}'.format(args.res_dir, config.center_list[i][0], config.center_list[i][1]))
+        os.system('{} ctpn_preprocess.py --src_dir={} --save_path={}' \
+        .format(args.interpreter, args.src_dir, args.res_dir))
     if args.mode == 'ais_infer':
         fps_all = 0
+        os.system('mkdir -p {}/inf_output'.format(args.res_dir))
         for i in range(config.center_len):
             h, w = config.center_list[i][0], config.center_list[i][1]
 
-            os.system(args.interpreter + ' tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
-            --model=./ctpn_bs1.om --input=./data/images_bin_{}x{} --dymHW {},{} \
-            --batchsize=1 --output=./result/inf_output'.format(h, w, h, w))
+            os.system('{} --model={} --input={}_{}x{} --dymHW {},{} --device {} --batchsize={} --output={}/inf_output' \
+            .format(args.interpreter, args.om_path, args.src_dir ,h , w, h, w,args.device, args.batch_size, args.res_dir))
 
-            sumary_path = glob.glob('./result/inf_output/*/sumary.json')[0]
+            sumary_path = glob.glob('{}/inf_output/*/sumary.json'.format(args.res_dir))[0]
             with open(sumary_path, 'r') as f:
                 output = json.load(f)
-                throughput = output['throughput']
+                throughput = output['throughput']  
             fps_all = fps_all + throughput * config.center_count[i]
             os.system('rm -f {}'.format(sumary_path))
-        os.system('mv ./result/inf_output/*/*.bin ./result/dumpOutput_device0/')
+        os.system('mv {}/inf_output/*/*.bin {}'.format(args.res_dir, args.res_dir))
+        os.system('rm {}/inf_output -rf'.format(args.res_dir))
         fps_all = fps_all / config.imgs_len
-        if args.machine == 'Ascend310':
-            fps_all = fps_all * 4  # 在310上性能要乘以4
-        print("===={} performance data====".format(args.machine))
-        print('{} bs1 fps:{}'.format(args.machine, fps_all))
+        print("====performance data====")
+        print('CTPN bs1 models fps:{}'.format(fps_all))
 
 
 if __name__ == "__main__":
@@ -67,9 +65,15 @@ if __name__ == "__main__":
                         type=str, help='which interpreter to use')
     parser.add_argument('--mode', default='ais_infer',
                         type=str, help='which mode to use')
-    parser.add_argument('--src_dir', default='data/Challenge2_Test_Task12_Images',
+    parser.add_argument('--src_dir', default='./data/Challenge2_Test_Task12_Images',
                         type=str, help='src data dir')
-    parser.add_argument('--machine', default='Ascend310P',
-                        type=str, help='machine type Ascend310 or Ascend310P')
+    parser.add_argument('--res_dir', default='./data/images_bin',
+                        type=str, help='res data dir')
+    parser.add_argument('--om_path', default='./ctpn_bs1.om',
+                        type=str, help='om_path')
+    parser.add_argument('--device', default='0',
+                        type=str, help='device id')
+    parser.add_argument('--batch_size', default='1',
+                        type=str, help='batch_size')
     args = parser.parse_args()
     task_process(args)
