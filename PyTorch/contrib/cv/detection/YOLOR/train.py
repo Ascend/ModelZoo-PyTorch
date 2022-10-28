@@ -557,6 +557,7 @@ def main():
         opt.world_size = int(os.environ["WORLD_SIZE"])
     ngpus_per_node = opt.device_num
     opt.npu_ddp = (opt.device_num > 1 or opt.world_size > 1)
+    opt.save_dir = increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok | opt.evolve)  # increment run
     if opt.npu_ddp:
         print('multi npu training')
         os.environ['MASTER_ADDR'] = opt.addr  # master ip
@@ -567,6 +568,22 @@ def main():
     else:
         print('1p training')
         main_worker(opt.npu, ngpus_per_node, opt)
+
+    if opt.full and opt.local_rank in [-1, 0]:
+        # Directories
+        wdir = Path(opt.save_dir) / 'weights' / 'last.pt' 
+        os.system(f"python3 test.py \
+                --data data/coco.yaml \
+                --img 1280 \
+                --batch 32 \
+                --conf 0.001 \
+                --iou 0.65 \
+                --cfg cfg/yolor_p6.cfg \
+                --weights {wdir} \
+                --name yolor_val \
+                --device npu \
+                --npu 1 \
+                2>&1 | tee -a npu_8p_full.log")
 
     # # Set DDP variables
     # opt.total_batch_size = opt.batch_size
