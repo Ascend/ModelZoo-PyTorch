@@ -1,17 +1,22 @@
 #!/bin/bash
 
 #网络名称，同目录名称
-Network="GOTURN_for_PyTorch"
+Network="GOTURN_ID4081_for_PyTorch"
 batch_size=3
-
+RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path="./dataset"
+max_steps=13000
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --ckpt_path* ]];then
+        ckpt_path=`echo ${para#*=}`
+    elif [[ $para == --more_path1* ]];then
+        more_path1=`echo ${para#*=}`
     fi
 done
 
@@ -49,6 +54,13 @@ check_etp_flag=$(env | grep etp_running_flag)
 etp_flag=$(echo ${check_etp_flag#*=})
 if [ x"${etp_flag}" != x"true" ]; then
 	source ${test_path_dir}/env_npu.sh
+else
+  PRETRAINED_MODEL_PATH=${ckpt_path}/caffenet_weights.npy
+  max_steps=2000
+  cp -r ${more_path1} ./src/scripts/
+  cd src
+  source settings.sh
+  cd ..
 fi
 
 python3.7 -u ./src/scripts/train.py \
@@ -58,7 +70,7 @@ python3.7 -u ./src/scripts/train.py \
   --epochs 3 \
   --npus 8 \
   --batch_size $batch_size \
-  --max_steps 13000 \
+  --max_steps $max_steps \
   --pretrained_model $PRETRAINED_MODEL_PATH >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -94,7 +106,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
