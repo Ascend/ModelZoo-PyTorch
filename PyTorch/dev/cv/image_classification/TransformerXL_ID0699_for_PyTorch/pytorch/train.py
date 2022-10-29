@@ -549,7 +549,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
         train_iter = tr_iter.get_fixlen_iter(start=last_iter)
     
     num_steps = 0
-    for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1):    
+    for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1): 
+        torch.npu.global_step_inc()   
         log_step += 1
         target_tokens += target.numel()
 
