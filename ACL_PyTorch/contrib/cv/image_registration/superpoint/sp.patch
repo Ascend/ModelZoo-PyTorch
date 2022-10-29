@@ -1,0 +1,228 @@
+diff -Nur ./1/pytorch-superpoint/Val_model_heatmap.py ./2/pytorch-superpoint/Val_model_heatmap.py
+--- ./1/pytorch-superpoint/Val_model_heatmap.py	2022-10-27 02:45:56.845449068 +0000
++++ ./2/pytorch-superpoint/Val_model_heatmap.py	2022-10-27 02:50:07.525457644 +0000
+@@ -4,7 +4,7 @@
+ Date: 2019/12/12
+ """
+ 
+-
++import os
+ import numpy as np
+ import torch
+ from torch.autograd import Variable
+@@ -85,7 +85,7 @@
+         return patches
+         pass
+ 
+-    def run(self, images):
++    def run(self, bin_path, images):
+         """
+         input: 
+             images: tensor[batch(1), 1, H, W]
+@@ -95,11 +95,25 @@
+         from utils.var_dim import toNumpy
+         train_agent = Train_model_heatmap
+ 
+-        with torch.no_grad():
+-            outs = self.net(images)
++       
++        outs = {}
++        files = images.split('/')[2] #i_bolo
++        filesname = images.split('/')[3]  #1.pmm
++        filename2 = filesname.split('.')[0]   #1
++        filesname3 = files + "_" + filename2 + "_" + "0.bin"
++        filesname4 = files + "_" + filename2 + "_" + "1.bin"
++        bin_path1 = os.path.join(bin_path, filesname3)
++        bin_path2 = os.path.join(bin_path, filesname4)
++        semi = np.fromfile(bin_path1, dtype=np.float32).reshape(1, 65, 30, 40)
++        
++        desc = np.fromfile(bin_path2, dtype=np.float32).reshape(1, 256, 30, 40)
++        semi = torch.tensor(semi)
++        desc = torch.tensor(desc)
++        outs['semi'] = semi
++        outs['desc'] = desc
+         semi = outs['semi']
+-        self.outs = outs
+ 
++        self.outs = outs
+         channel = semi.shape[1]
+         if channel == 64:
+             heatmap = train_agent.flatten_64to1(semi, cell_size=self.cell_size)
+diff -Nur ./1/pytorch-superpoint/datasets/patches_dataset.py ./2/pytorch-superpoint/datasets/patches_dataset.py
+--- ./1/pytorch-superpoint/datasets/patches_dataset.py	2022-10-27 02:45:56.981449072 +0000
++++ ./2/pytorch-superpoint/datasets/patches_dataset.py	2022-10-27 02:52:09.821461828 +0000
+@@ -1,27 +1,26 @@
+-"""
+-
+-"""
+-
+ import numpy as np
+-# import tensorflow as tf
+ import cv2
+ from pathlib import Path
+-
++import os
++import argparse
+ import torch
+ import torch.utils.data as data
+ 
+-# from .base_dataset import BaseDataset
+-# from .utils import pipeline
+ from utils.tools import dict_update
+ 
+ from models.homographies import sample_homography
+ from settings import DATA_PATH
+ 
+ from imageio import imread
++
++parser = argparse.ArgumentParser(description='Superpoint')
++parser.add_argument("--img_path", type=str, default="./preprocess_Result1/", help="result path")
++parser.add_argument("--result_path", type=str, default="./preprocess_Result1/", help="result path")
++args = parser.parse_args()
++
+ def load_as_float(path):
+     return imread(path).astype(np.float32)/255
+-
+-class PatchesDataset(data.Dataset):
++class PatchesDataset():
+     default_config = {
+         'dataset': 'hpatches',  # or 'coco'
+         'alteration': 'all',  # 'all', 'i' for illumination or 'v' for viewpoint
+@@ -42,8 +41,7 @@
+             sequence_set.append(sample)
+         self.samples = sequence_set
+         self.transform = transform
+-        if config['preprocessing']['resize']:
+-            self.sizer = np.array(config['preprocessing']['resize'])
++        self.sizer = np.array([240, 320])
+         pass
+ 
+     def __getitem__(self, index):
+@@ -79,34 +77,50 @@
+             return {'warped_im': warped_im, 'H': H}
+ 
+         def _adapt_homography_to_preprocessing(image, H):
+-            # image = zip_data['image']
+-            # H = tf.cast(zip_data['homography'], tf.float32)
+-            # target_size = np.array(self.config['preprocessing']['resize'])
+             s = max(self.sizer /image.shape[:2])
+-            # mat = np.array([[1,1,1/s], [1,1,1/s], [s,s,1]])
+             mat = np.array([[1,1,s], [1,1,s], [1/s,1/s,1]])
+-            # down_scale = np.diag(np.array([1/s, 1/s, 1]))
+-            # up_scale = tf.diag(tf.stack([s, s, tf.constant(1.)]))
+-            # H = tf.matmul(up_scale, tf.matmul(H, down_scale))
+             H = H*mat
+             return H
++        
+         sample = self.samples[index]
+         image_original = _read_image(sample['image'])
++
++        
+         image = _preprocess(image_original)
+         warped_image = _preprocess(_read_image(sample['warped_image']))
++        filepath = sample['image'].split('/')[2]
++        filepath1 = sample['image'].split('/')[3]
++        filepath2 = filepath1.split('.')[0]
++        filepath3 = filepath + "_" + filepath2
++        filepath4 = sample['warped_image'].split('/')[2]
++        filepath5 = sample['warped_image'].split('/')[3]
++        filepath6 = filepath5.split('.')[0]
++        filepath7 = filepath4 + "_" + filepath6
++        save_path = "./pre_result"
++        if not os.path.exists(save_path):
++            os.mkdir(save_path)
++        save_path1 = save_path + "/" + "bin" + "_" + filepath4 + "_"+ filepath6
++        if not os.path.exists(save_path1):
++            os.mkdir(save_path1)
++        image1 = image.numpy()
++        warped_image1 = warped_image.numpy()
++        image1.tofile(os.path.join(save_path1, filepath3 + ".bin"))
++        warped_image1.tofile(os.path.join(save_path1, filepath7 + ".bin"))
+         to_numpy = False
+         if to_numpy:
+             image, warped_image = np.array(image), np.array(warped_image)
+         homography = _adapt_homography_to_preprocessing(image_original, sample['homography'])
+-        sample = {'image': image, 'warped_image': warped_image,
+-                                    'homography': homography}
++        sample['homography'] = homography
++        sample['imagetensor'] = image
++        sample['warped_imagetensor'] = warped_image
+         return sample
+ 
+     def __len__(self):
+         return len(self.samples)
+ 
+     def _init_dataset(self, **config):
+-        dataset_folder = 'COCO/patches' if config['dataset'] == 'coco' else 'HPatches'
++        dataset_folder = './hpatches'
++        DATA_PATH = './datasets/'
+         base_path = Path(DATA_PATH, dataset_folder)
+         folder_paths = [x for x in base_path.iterdir() if x.is_dir()]
+         image_paths = []
+@@ -131,5 +145,6 @@
+                  'warped_image_paths': warped_image_paths,
+                  'homography': homographies}
+         return files
+-
+-
++if __name__ == '__main__':
++    res = PatchesDataset()
++    res._getitem_()
+diff -Nur ./1/pytorch-superpoint/evaluations/descriptor_evaluation.py ./2/pytorch-superpoint/evaluations/descriptor_evaluation.py
+--- ./1/pytorch-superpoint/evaluations/descriptor_evaluation.py	2022-10-27 02:45:56.981449072 +0000
++++ ./2/pytorch-superpoint/evaluations/descriptor_evaluation.py	2022-10-27 02:50:32.945458514 +0000
+@@ -62,7 +62,6 @@
+     Compute the homography between 2 sets of detections and descriptors inside data.
+     """
+     # shape = data['prob'].shape
+-    print("shape: ", shape)
+     real_H = data['homography']
+ 
+     # Keeps only the points shared between the two views
+@@ -88,8 +87,6 @@
+         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+     else:
+         bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+-    print("desc: ", desc.shape)
+-    print("w desc: ", warped_desc.shape)
+     cv2_matches = bf.match(desc, warped_desc)
+     matches_idx = np.array([m.queryIdx for m in cv2_matches])
+     m_keypoints = keypoints[matches_idx, :]
+@@ -97,7 +94,6 @@
+     m_dist = np.array([m.distance for m in cv2_matches])
+     m_warped_keypoints = warped_keypoints[matches_idx, :]
+     matches = np.hstack((m_keypoints[:, [1, 0]], m_warped_keypoints[:, [1, 0]]))
+-    print(f"matches: {matches.shape}")
+     # get_matches()
+     # from export_classical import get_sift_match
+     # data = get_sift_match(sift_kps_ii=keypoints, sift_des_ii=desc, 
+@@ -129,18 +125,15 @@
+                             [0, shape[0] - 1, 1],
+                             [shape[1] - 1, 0, 1],
+                             [shape[1] - 1, shape[0] - 1, 1]])
+-        print("corner: ", corners)
+         # corners = np.array([[0, 0, 1],
+         #             [0, shape[1] - 1, 1],
+         #             [shape[0] - 1, 0, 1],
+         #             [shape[0] - 1, shape[1] - 1, 1]])
+         real_warped_corners = np.dot(corners, np.transpose(real_H))
+         real_warped_corners = real_warped_corners[:, :2] / real_warped_corners[:, 2:]
+-        print("real_warped_corners: ", real_warped_corners)
+         
+         warped_corners = np.dot(corners, np.transpose(H))
+         warped_corners = warped_corners[:, :2] / warped_corners[:, 2:]
+-        print("warped_corners: ", warped_corners)
+         
+         mean_dist = np.mean(np.linalg.norm(real_warped_corners - warped_corners, axis=1))
+         # correctness = float(mean_dist <= correctness_thresh)
+diff -Nur ./1/pytorch-superpoint/utils/losses.py ./2/pytorch-superpoint/utils/losses.py
+--- ./1/pytorch-superpoint/utils/losses.py	2022-10-27 02:45:57.865449103 +0000
++++ ./2/pytorch-superpoint/utils/losses.py	2022-10-27 02:50:17.393457982 +0000
+@@ -71,7 +71,6 @@
+     # crop it
+     patches = []
+     ext = lambda img, pnt, wid: img[pnt[1]:pnt[1]+wid, pnt[0]:pnt[0]+wid]
+-    print("heatmap: ", heatmap.shape)
+     for i in range(points.shape[0]):
+         # print("point: ", points[i,:])
+         patch = ext(heatmap, points[i,:].astype(int), patch_size)
