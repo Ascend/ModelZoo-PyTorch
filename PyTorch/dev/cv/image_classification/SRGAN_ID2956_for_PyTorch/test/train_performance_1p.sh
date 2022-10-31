@@ -117,7 +117,7 @@ sed -i "s|pass|break|g" train_srgan.py
 start_time=$(date +%s)
 
 nohup python3 create_data_lists.py > $cur_path/test/output/${ASCEND_DEVICE_ID}/dataset_prepare.log 2>&1 &
-
+wait
 nohup python3 train_srgan.py > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
