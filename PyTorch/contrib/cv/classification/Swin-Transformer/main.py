@@ -85,13 +85,15 @@ def parse_option():
     parser.add_argument('--one_epoch', action='store_true', help='whether train with one GPU')
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
+    parser.add_argument('--port', default='12345', type=str, help='master port')
 
     args, unparsed = parser.parse_known_args()
 
     config = get_config(args)
     os.environ['RANK'] = str(config.LOCAL_RANK)
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12345'
+    os.environ['MASTER_ADDR'] = args.addr
+    os.environ['MASTER_PORT'] = args.port
     return args, config
 
 
@@ -349,13 +351,15 @@ if __name__ == '__main__':
 
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank = int(os.environ["RANK"])
+        if os.environ.get("CLUSTER_RANK_ID"):
+            rank = int(os.environ["CLUSTER_RANK_ID"])
         world_size = int(os.environ['WORLD_SIZE'])
         print(f"RANK and WORLD_SIZE in environ: {rank}/{world_size}")
     else:
         rank = -1
         world_size = -1
     torch.npu.set_device(config.LOCAL_RANK)
-    torch.distributed.init_process_group(backend='hccl', world_size=world_size, rank=config.LOCAL_RANK)
+    torch.distributed.init_process_group(backend='hccl', world_size=world_size, rank=rank)
     torch.distributed.barrier()
 
     seed = config.SEED + dist.get_rank()
