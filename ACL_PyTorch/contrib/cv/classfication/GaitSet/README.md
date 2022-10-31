@@ -68,7 +68,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
   | 固件与驱动                                                   | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 5.1.RC2  | -                                                            |
   | Python                                                       | 3.7.5    | -                                                            |
-  | PyTorch                                                      | 1.5.0+ascend.post5    | -                                                            |
+  | AscendPytorch                                                | 1.5.0+ascend.post5  | -    [AscendPytorch](https://gitee.com/ascend/pytorch)          |
   | onnx                                                         | 1.7.0    | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \        | \                                                            |
 
