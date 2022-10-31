@@ -226,7 +226,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend_5_1_RC2/ascend-toolkit/set_env.sh
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 
@@ -302,6 +302,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
       调用脚本与数据集标签kinetics400_val_list_videos.txt比对，可以获得Accuracy数据。
 
       ```
+       rm -rf ./out/out_1/xxx/sumary.json
        python3.7 tsm_k400_postprocess.py --result_path ./out/out_1/xxxx_xx_xx-xx_xx_xx --info_path ./mmaction2/data/kinetics400/k400_1.info
       ```
 
