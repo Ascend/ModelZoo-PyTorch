@@ -56,6 +56,7 @@ fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 
 if [ $ASCEND_DEVICE_ID ];then
+    device_id=$ASCEND_DEVICE_ID
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}

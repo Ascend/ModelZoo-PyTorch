@@ -109,8 +109,8 @@ def main():
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
     print('option', option)
     torch.npu.set_option(option)
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'
+    os.environ['MASTER_ADDR'] = os.getenv('MASTER_ADDR', '127.0.0.1')
+    os.environ['MASTER_PORT'] = os.getenv('MASTER_PORT','29688')
 
     cfg = Config.fromfile(args.config)
     if args.data_root:
