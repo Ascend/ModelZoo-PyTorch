@@ -118,7 +118,7 @@ sed -i "s|srresnet_checkpoint = \"./checkpoint_srresnet.pth.tar\"|srresnet_check
 start_time=$(date +%s)
 
 nohup python3 create_data_lists.py > $cur_path/test/output/${ASCEND_DEVICE_ID}/dataset_prepare.log 2>&1 &
-
+wait
 nohup python3 train_srgan.py > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 nohup python3 eval.py > $cur_path/test/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
