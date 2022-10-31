@@ -68,19 +68,8 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
   | 固件与驱动                                                   | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 5.1.RC2  | -                                                            |
   | Python                                                       | 3.7.5    | -                                                            |
-  | PyTorch                                                      | 1.5.0    | -                                                            |
+  | PyTorch                                                      | 1.5.0+ascend.post5    | -                                                            |
   | onnx                                                         | 1.7.0    | -                                                            |
-  | opencv-python                                                | 4.5.2.52 | -                                                            |
-  | numpy                                                        | 1.20.1   | -                                                            |
-  | imageio                                                      | 2.9.0    | -                                                            |
-  | xarray                                                       | 0.18.2   | -                                                            |
-  | sympy                                                        | 1.10.1   | -                                                            |
-  | six                                                          | 1.16.0   | -                                                            |
-  | wheel                                                        | 0.37.1   | -                                                            |
-  | decorator                                                    | 5.1.1    | -                                                            |
-  | mpmath                                                       | 1.2.1    | -                                                            |
-  | tqdm                                                         | 4.46.1   | -                                                            |
-  | aclruntime                                                   | 0.0.1    | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \        | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -96,7 +85,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+1. 获取原始数据集。（解压命令参考for i in $(ls *. tar.gz);do tar zxvf $i;done）
 
    本模型支持CASIA-B图片的验证集。下载地址http://www.cbsr.ia.ac.cn/english/Gait%20Databases.asp  ，只下载DatasetB数据集。
 
@@ -152,17 +141,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
    2. 导出onnx文件，此处导出的onnx为静态，因此需要每个batch_size的onnx。
 
-      1. 代码转换为静态的onnx，需在代码中修改batchsize大小。
-
-         a.执行命令编辑脚本。
-
-         ```
-         vim GaitSet_pth2onnx.py 
-         #修改dummy_input = torch.randn((1, align_size, 64, 44)) 中第一个参数为需要的batchsize
-         执行:wq保存退出编辑。
-         ```
-
-      2. 使用GaitSet_pth2onnx.py导出onnx文件。
+      1. 使用GaitSet_pth2onnx.py导出onnx文件。
 
          运行GaitSet_pth2onnx.py脚本，获得gaitset_submit.onnx文件。
 
@@ -203,7 +182,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
       3. 执行ATC命令。
    
          ```
-         atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit_bs1 --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=${chip_name}
          ```
    
          - 参数说明：
@@ -220,7 +199,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
    
    
    
-      运行成功后生成gaitset_submit.om模型文件。
+      运行成功后生成gaitset_submit_bs1.om模型文件。
 
 
 
@@ -251,13 +230,14 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
    
     真实数据推理：
     ```
-   python ais_infer.py --model gaitset_submit_bs1.om --input "CASIA-B-bin" --output "result" --output_dirname "dumpOutput_device0"
+   python ais_infer.py --model gaitset_submit_bs1.om --batchsize 1 --input "CASIA-B-bin" --output "result" --output_dirname "dumpOutput_device0"
     ```
    
     -   参数说明：
    
         -   model：om文件路径。
         -   input：输入数据。
+        -   batchsize：batchsize大小。
         -   output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
         -   output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中。
    

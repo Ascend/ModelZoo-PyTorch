@@ -69,9 +69,11 @@ def convert(input_path, output_path, restore_iter, hidden_dim):
     output_names = ["feature"]
 	
     dummy_input = torch.randn((1, align_size, 64, 44))
+
+    dynamic_axes = {'image_seq':{0:'-1'},'feature':{0:'-1'}}
     
     print('Exporting model to onnx...')
-    torch.onnx.export(encoder.module, dummy_input, output_path, input_names = input_names, output_names = output_names, opset_version=11, verbose=False)
+    torch.onnx.export(encoder.module, dummy_input, output_path, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=False)
     print('Onnx export done.')
 
 
