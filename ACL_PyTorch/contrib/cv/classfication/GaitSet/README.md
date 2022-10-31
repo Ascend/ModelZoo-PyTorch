@@ -79,13 +79,13 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 1. 安装依赖。
 
    ```
-   pip3 install -r requirements.txt
+   pip3 install -r requirements.txt   Ascend版torch安装参考以上链接
    ```
 
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考for i in $(ls *. tar.gz);do tar zxvf $i;done）
+1. 获取原始数据集。
 
    本模型支持CASIA-B图片的验证集。下载地址http://www.cbsr.ia.ac.cn/english/Gait%20Databases.asp  ，只下载DatasetB数据集。
 
