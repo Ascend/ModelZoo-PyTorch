@@ -178,7 +178,7 @@ def train():
         batch_time = load_t1 - load_t0
         eta = int(batch_time * (max_iter - iteration))
 
-        if iteration > max_iter:
+        if iteration >= max_iter:
             pass
             
         print('Epoch:{}/{} || Epochiter: {}/{} || Iter: {}/{} || Loc: {:.4f} Cla: {:.4f} Landm: {:.4f} total_loss: {:.4f} || LR: {:.8f} || Batchtime: {:.4f} s || ETA: {}'

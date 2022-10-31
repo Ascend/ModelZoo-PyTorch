@@ -106,7 +106,7 @@ class Trainer:
 
     def train_in_iter(self):
         for self.iter in range(self.max_iter):
-            if self.iter >= 10:pass
+            if self.iter >= 100:pass
             self.before_iter()
             self.train_one_iter()
             self.after_iter()
@@ -214,11 +214,6 @@ class Trainer:
 
         logger.info("Training start...")
         logger.info("\n{}".format(model))
-
-        torch.npu.set_compile_mode(jit_compile=False)
-        option = {}
-        option["NPU_FUZZY_COMPILE_BLACKLIST"] = ""
-        torch.npu.set_option(option)
 
     def after_train(self):
         logger.info(

@@ -566,36 +566,37 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 import sys
                 sys.exit()
         elif num_steps < args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
-            for i in range(args.batch_chunk):
-                if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
-                    with para_model.no_sync():
+            with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True): 
+                for i in range(args.batch_chunk):
+                    if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
+                        with para_model.no_sync():
+                            train_loss_chunk = train_iteration(
+                                para_model, i, mems, data_chunks, target_chunks, scaler,
+                                optimizer, device, True, args
+                            )
+                    else:
                         train_loss_chunk = train_iteration(
                             para_model, i, mems, data_chunks, target_chunks, scaler,
-                            optimizer, device, True, args
+                            optimizer, device, False, args
                         )
+
+                    train_loss += train_loss_chunk
+                if args.fp16:
+                    if args.amp == 'pytorch':
+                        scaler.unscale_(optimizer)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+                    elif args.amp == 'apex':
+                        torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
                 else:
-                    train_loss_chunk = train_iteration(
-                        para_model, i, mems, data_chunks, target_chunks, scaler,
-                        optimizer, device, False, args
-                    )
-
-                train_loss += train_loss_chunk
-            if args.fp16:
-                if args.amp == 'pytorch':
-                    scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
-                elif args.amp == 'apex':
-                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
-            else:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
 
-            if args.fp16 and args.amp == 'pytorch':
-                scaler.step(optimizer)
-                scaler.update()
-            else:
-                optimizer.step()
-                if optimizer_sparse:
-                    optimizer_sparse.step()      
+                if args.fp16 and args.amp == 'pytorch':
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    optimizer.step()
+                    if optimizer_sparse:
+                        optimizer_sparse.step()      
         elif num_steps < args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':          
             with torch.npu.profile(profiler_result_path="./GE_prof"):    
                 for i in range(args.batch_chunk):

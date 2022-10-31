@@ -107,7 +107,8 @@ do
         --pretrained_dir ${ckpt_path}/ViT-B_16.npz \
         --addr=127.0.0.1 \
         --train_batch_size=64 \
-        --num_steps=100 \
+        --num_steps=781 \
+        --eval_every=781 \
         --npu-fused-sgd \
         --fp16 \
         --ddp True \
