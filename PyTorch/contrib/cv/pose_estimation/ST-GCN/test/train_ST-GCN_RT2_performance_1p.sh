@@ -21,6 +21,14 @@ device_id=$ASCEND_DEVICE_ID
 learning_rate=0.01
 # 加载数据进程数
 workers=32
+#enable runtime2.0
+rt2=True
+# enable_bin
+bin=True
+#profiling
+profiling='NONE'
+start_step=0
+stop_step=20
 
 
 # 参数校验，data_path为必传参数， 其他参数的增删由模型自身决定；此处若新增参数需在上面有定义并赋值
@@ -32,6 +40,24 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --rt2* ]];then
+        rt2=`echo ${para#*=}`
+    elif [[ $para == --bin* ]];then
+        bin=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --train_epochs* ]];then
+        train_epochs=`echo ${para#*=}`
+    elif [[ $para == --steps_per_epoch* ]];then
+        steps_per_epoch=`echo ${para#*=}`
+    elif [[ $para == --log_interval* ]];then
+        log_interval=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     fi
 done
 
@@ -39,6 +65,10 @@ done
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
+fi
+
+if [[ $profiling == "GE" ]];then
+  export GE_PROFILING_TO_STD_OUT=1
 fi
 
 # 校验单卡训练是否指定了device id，分动态分配device id 与手动指定device id，此处不需要修改
@@ -86,10 +116,6 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_set.sh
-else
-    export TASK_QUEUE_ENABLE=0
-    export ASCEND_SLOG_PRINT_TO_STDOUT=0
-    export ASCEND_GLOBAL_LOG_LEVEL=3
 fi
 
 python3 ./main.py recognition\
@@ -100,14 +126,18 @@ python3 ./main.py recognition\
        --use_gpu_npu npu\
        --amp True\
        --num_worker $(nproc)\
-       --rt2 \
+       --rt2 ${rt2} \
+       --bin ${bin} \
        --train_feeder_args data_path=\'${data_path}/train_data.npy\'\
        --train_feeder_args label_path=\'${data_path}/train_label.pkl\'\
        --test_feeder_args data_path=\'${data_path}/val_data.npy\'\
        --test_feeder_args label_path=\'${data_path}/val_label.pkl\'\
+       --num_epoch ${train_epochs} \
        --steps_per_epoch ${steps_per_epoch} \
        --log_interval ${log_interval} \
-       --num_epoch ${train_epochs} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+       --profiling ${profiling} \
+       --start_step ${start_step} \
+       --stop_step ${stop_step} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
 

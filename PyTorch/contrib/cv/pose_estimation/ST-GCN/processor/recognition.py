@@ -23,6 +23,7 @@ import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch_npu
 
 # torchlight
 import torchlight
@@ -151,6 +152,10 @@ class REC_Processor(Processor):
         for data, label in loader:
             if self.meta_info['iter'] > self.arg.steps_per_epoch:
                 continue
+            if self.arg.profiling != 'NONE' and self.meta_info['iter'] >=self.arg.stop_step:
+                import sys
+                sys.exit()
+
             # get data
             data = data.float().to(self.dev)
             data.requires_grad = True
@@ -159,29 +164,85 @@ class REC_Processor(Processor):
             else:
                 label = label.int().to(self.dev)
 
-            # forward
-            start_time = time.time()
-            output = self.model(data)
-            loss = self.loss(output, label)
-            # backward
-            self.optimizer.zero_grad()
-            if self.amp:
-                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                    scaled_loss.backward()
+            if self.meta_info['iter'] <= self.arg.stop_step and self.meta_info['iter'] >= self.arg.start_step \
+                    and self.arg.profiling == 'CANN':
+                with torch.npu.profile(profiler_result_path="./CANN_prof", use_e2e_profiler=True):
+                    # forward
+                    start_time = time.time()
+                    output = self.model(data)
+                    loss = self.loss(output, label)
+                    # backward
+                    self.optimizer.zero_grad()
+                    if self.amp:
+                        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()
+                    # loss.backward()
+                    self.optimizer.step()
+                    # statistics
+                    self.iter_info['loss'] = loss.data.item()
+                    self.iter_info['lr'] = '{:.6f}'.format(self.lr)
+                    loss_value.append(self.iter_info['loss'])
+                    train_time = time.time() - start_time
+                    self.iter_info['s/step'] = train_time
+                    self.show_iter_info()
+                    self.meta_info['iter'] += 1
+                    batch_time.update(time.time() - end)
+                    end = time.time()
+
+            elif self.meta_info['iter'] <= self.arg.stop_step and self.meta_info['iter'] >= self.arg.start_step \
+                    and self.arg.profiling == 'GE':
+                with torch.npu.profile(profiler_result_path="./GE_prof"):
+                    # forward
+                    start_time = time.time()
+                    output = self.model(data)
+                    loss = self.loss(output, label)
+                    # backward
+                    self.optimizer.zero_grad()
+                    if self.amp:
+                        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()
+                    # loss.backward()
+                    self.optimizer.step()
+                    # statistics
+                    self.iter_info['loss'] = loss.data.item()
+                    self.iter_info['lr'] = '{:.6f}'.format(self.lr)
+                    loss_value.append(self.iter_info['loss'])
+                    train_time = time.time() - start_time
+                    self.iter_info['s/step'] = train_time
+                    self.show_iter_info()
+                    self.meta_info['iter'] += 1
+                    batch_time.update(time.time() - end)
+                    end = time.time()
+
             else:
-                loss.backward()
-            # loss.backward()
-            self.optimizer.step()
-            # statistics
-            self.iter_info['loss'] = loss.data.item()
-            self.iter_info['lr'] = '{:.6f}'.format(self.lr)
-            loss_value.append(self.iter_info['loss'])
-            train_time = time.time() - start_time
-            self.iter_info['s/step'] = train_time
-            self.show_iter_info()
-            self.meta_info['iter'] += 1
-            batch_time.update(time.time() - end)
-            end = time.time()
+                # forward
+                start_time = time.time()
+                output = self.model(data)
+                loss = self.loss(output, label)
+                # backward
+                self.optimizer.zero_grad()
+                if self.amp:
+                    with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+                # loss.backward()
+                self.optimizer.step()
+                # statistics
+                self.iter_info['loss'] = loss.data.item()
+                self.iter_info['lr'] = '{:.6f}'.format(self.lr)
+                loss_value.append(self.iter_info['loss'])
+                train_time = time.time() - start_time
+                self.iter_info['s/step'] = train_time
+                self.show_iter_info()
+                self.meta_info['iter'] += 1
+                batch_time.update(time.time() - end)
+                end = time.time()
+
         self.epoch_info['mean_loss'] = np.mean(loss_value)
         self.show_epoch_info()
         self.io.print_timer()

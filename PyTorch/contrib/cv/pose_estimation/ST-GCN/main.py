@@ -47,7 +47,7 @@ if __name__ == '__main__':
     Processor = processors[arg.processor]
     p = Processor(sys.argv[2:])
 
-    if p.arg.rt2:
+    if p.arg.bin:
         torch.npu.set_compile_mode(jit_compile=False)
 
         option = {}

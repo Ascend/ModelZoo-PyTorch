@@ -279,7 +279,14 @@ class Processor(IO):
                             help='the name of weights which will be ignored in the initialization')
         # endregion yapf: enable
 
-        #runtime 2.0
-        parser.add_argument('--rt2', action="store_true", default=False, help='enable runtime2.0 mode')
+        # runtime 2.0
+        parser.add_argument('--rt2', type=str2bool, default=False, help='enable runtime2.0 mode')
+        # enable op binary
+        parser.add_argument('--bin', type=str2bool, default=False, help='enable op binary')
+
+        #profiling
+        parser.add_argument('--profiling', type=str, default='NONE', help='choose profiling way --CANN, GE, NONE')
+        parser.add_argument('--start_step', type=int, default=0, help='start step for profiling')
+        parser.add_argument('--stop_step', type=int, default=20, help='stop step for profiling')
 
         return parser
