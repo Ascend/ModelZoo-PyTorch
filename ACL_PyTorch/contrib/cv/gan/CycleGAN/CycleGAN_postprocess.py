@@ -84,15 +84,15 @@ def main():
         os.makedirs(bin2img_fie)
     if (os.path.exists(bin2img_onnx) == False):
         os.makedirs(bin2img_onnx)
-    npu_bin = glob.glob(opt.npu_bin_file + '*.bin')
+    npu_bin = glob.glob(opt.npu_bin_file + '/*.bin')
     onnxTestImage_path = glob.glob(opt.dataroot + '/*.*')
     model_ab =  onnxTestImage_path[0].split('/')[-1].split('.')[0].split('_')[1]
     if model_ab == "A":
-        model = onnxruntime.InferenceSession(opt.onnx_path + opt.model_ga_onnx_name)
+        model = onnxruntime.InferenceSession(os.path.join(opt.onnx_path + '/' + opt.model_ga_onnx_name))
         inputs_node = "img_sat_maps"
         out_node = "maps"
     else:
-        model = onnxruntime.InferenceSession(opt.onnx_path + opt.model_gb_onnx_name)
+        model = onnxruntime.InferenceSession(os.path.join(opt.onnx_path + '/' + opt.model_gb_onnx_name))
         inputs_node = "img_maps_sat"
         out_node = "sat"
     cossimis = []

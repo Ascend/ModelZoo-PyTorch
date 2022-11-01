@@ -109,9 +109,9 @@ def main():
     dynamic_axes1 = {'img_maps_sat': {0: '-1'}, 'sat': {0: '-1'}}
     if (os.path.exists(opt.onnx_path) == False):
         os.makedirs(opt.onnx_path)
-    torch.onnx.export(model_Ga, dummy_input, f=opt.onnx_path + opt.model_ga_onnx_name, verbose=True, training=False, \
+    torch.onnx.export(model_Ga, dummy_input, f=opt.onnx_path + '/' + opt.model_ga_onnx_name, verbose=True, training=False, \
                       dynamic_axes=dynamic_axes, input_names=input_names, output_names=output_names, opset_version=11)
-    torch.onnx.export(model_Gb, dummy_input, f=opt.onnx_path + opt.model_gb_onnx_name, verbose=True, training=False, \
+    torch.onnx.export(model_Gb, dummy_input, f=opt.onnx_path + '/' + opt.model_gb_onnx_name, verbose=True, training=False, \
                       dynamic_axes=dynamic_axes1, input_names=input_names1, output_names=output_names1,
                       opset_version=11)
 
