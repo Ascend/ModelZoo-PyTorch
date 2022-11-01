@@ -92,7 +92,9 @@ def parse_args():
     parser.add_argument('--fps_lag', type=int, default=200,help='FPS lag')
     parser.add_argument('--rt2_bin',type=int,default=0,help='enable bin compile: 0->False, 1->True')
     parser.add_argument('--start_step', type=int, default=0,help='start lag')
+    parser.add_argument('--stop_step', type=int, default=20,help='stop lag')
     parser.add_argument('--profiling', type=str, default='None',help='choose profiling way: CANN, GE, None')
+    parser.add_argument('--interval', type=int, default=50,help='loss lag')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -119,8 +121,11 @@ def main():
         cfg.data.train.img_prefix = cfg.data_root + '/coco/train2017/'
         cfg.data.val.ann_file = cfg.data_root + '/coco/annotations/instances_val2017.json'
         cfg.data.val.img_prefix = cfg.data_root + '/coco/val2017/'
+        cfg.model.pretrained = cfg.data_root + '/pretrained/resnet50.pth'
 
     cfg.total_epochs = args.total_epochs
+    cfg.data.imgs_per_gpu = args.batch_size
+    cfg.log_config.interval = args.interval
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -203,11 +208,13 @@ def main():
         steps_per_epoch=args.steps_per_epoch,
         profiling=args.profiling,
         start_step=args.start_step,
+        stop_step=args.stop_step,
         train_performance=args.train_performance)
 
 
 if __name__ == '__main__':
     args = parse_args()
     if args.rt2_bin:
+        print('Enable bin compile mode....')
         torch.npu.set_compile_mode(jit_compile=False)
     main()

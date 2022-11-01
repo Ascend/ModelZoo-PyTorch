@@ -30,6 +30,12 @@ from .priority import get_priority
 from .utils import get_host_info, get_time_str, obj_from_dict
 
 
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self,exc_type,exc_val,exc_tb):
+        pass
+
 class Runner(object):
     """A training helper for PyTorch.
 
@@ -59,7 +65,8 @@ class Runner(object):
                  fps_lag=200,
                  steps_per_epoch=None,
                  profiling=None,
-                 start_step=0):
+                 start_step=0,
+                 stop_step=20):
         assert callable(batch_processor)
         self.model = model
         if optimizer is not None:
@@ -106,6 +113,7 @@ class Runner(object):
         self.steps_per_epoch = steps_per_epoch
         self.profiling=profiling
         self.start_step=start_step
+        self.stop_step = stop_step
         if steps_per_epoch is None:
             self.steps_per_epoch = 500
 
@@ -316,27 +324,13 @@ class Runner(object):
             """
             self._inner_iter = i
             self.call_hook('before_train_iter')
-            if i <= self.steps_per_epoch and i >= self.start_step and self.profiling == 'CANN':
-                with torch.npu.profiling(profiler_result_path="./CANN_prof",use_e2e_profiler=True):
-                    outputs = self.batch_processor(
-                        self.model, data_batch, train_mode=True, **kwargs)
-                    if not isinstance(outputs, dict):
-                        raise TypeError('batch_processor() must return a dict')
-                    if 'log_vars' in outputs:
-                        self.log_buffer.update(outputs['log_vars'],
-                                            outputs['num_samples'])
-                    self.outputs = outputs
-            elif i <= self.steps_per_epoch and i >= self.start_step and self.profiling == 'GE':
-                with torch.npu.profiling(profiler_result_path="./GE_prof"):
-                    outputs = self.batch_processor(
-                        self.model, data_batch, train_mode=True, **kwargs)
-                    if not isinstance(outputs, dict):
-                        raise TypeError('batch_processor() must return a dict')
-                    if 'log_vars' in outputs:
-                        self.log_buffer.update(outputs['log_vars'],
-                                            outputs['num_samples'])
-                    self.outputs = outputs
+            if i <= self.stop_step and i >= self.start_step and self.profiling == 'CANN':
+                prof_manager = torch.npu.profiling(profiler_result_path="./CANN_prof",use_e2e_profiler=True)
+            elif i <= self.stop_step and i >= self.start_step and self.profiling == 'GE':
+                prof_manager =  torch.npu.profiling(profiler_result_path="./GE_prof")
             else:
+                prof_manager = NoProfiling()    
+            with prof_manager:
                 outputs = self.batch_processor(
                         self.model, data_batch, train_mode=True, **kwargs)
                 if not isinstance(outputs, dict):
@@ -353,6 +347,8 @@ class Runner(object):
                 self.logger.info('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
                                                 self.iter_time_hook.time_all))
             if i >= self.steps_per_epoch and self.train_performance:
+                break
+            if self.profiling in ['CANN','GE'] and i >= self.stop_step:
                 break
         if not self.train_performance:
             self.logger.info('FPS: ' + str(

@@ -19,12 +19,24 @@ Network="solov2_RT2_ID4115_for_Pytorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=2
+#npu 设备ID
 device_id=4
+#FPS输出间隔
 fps_lag=200
+#profiling输出的起始点
 start_step=0
+#profiling输出的终止点
+stop_step=20
+#一个epoch训练的步长
 steps_per_epoch=1000
+#输出profiling的类型，可以选择：None、CANN、GE
 profiling=None
+#是否使能二进制编译，0->否，1->是
 rt2_bin=1
+#conda环境的名称
+conda_name=py1
+#loss输出的间隔
+interval=1
 
 #参数校验，不需要修改
 for para in $*
@@ -37,6 +49,10 @@ do
         apex=`echo ${para#*=}`
     elif [[ $para == --fps_lag* ]];then
         fps_lag=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     elif [[ $para == --steps_per_epoch* ]];then
         steps_per_epoch=`echo ${para#*=}`
     elif [[ $para == --profiling* ]];then
@@ -97,8 +113,8 @@ export NPUID=0
 export RANK=0
 cd ${cur_path}/../
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 --batch_size=$batch_size\
-      --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True \
-      --start_step=$start_step --profiling=$profiling --rt2_bin=$rt2_bin > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True --interval=$interval\
+      --start_step=$start_step --stop_step=$stop_step --profiling=$profiling --rt2_bin=$rt2_bin > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
