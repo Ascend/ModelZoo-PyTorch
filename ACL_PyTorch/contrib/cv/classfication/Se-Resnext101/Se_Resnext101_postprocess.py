@@ -1,5 +1,5 @@
 """
-Copyright 2020 Huawei Technologies Co., Ltd
+Copyright 2022 Huawei Technologies Co., Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -90,17 +90,10 @@ def load_statistical_predict_result(filepath):
 
 
 def create_visualization_statistical_result(prediction_file_path,
-                                            result_store_path, json_file_name,
+                                            json_file_path,
                                             img_gt_dict, topn=5):
-    """
-    :param prediction_file_path:
-    :param result_store_path:
-    :param json_file_name:
-    :param img_gt_dict:
-    :param topn:
-    :return:
-    """
-    writer = open(os.path.join(result_store_path, json_file_name), 'w')
+
+    writer = open(json_file_path, 'w')
     table_dict = {}
     table_dict["title"] = "Overall statistical evaluation"
     table_dict["value"] = []
@@ -110,10 +103,12 @@ def create_visualization_statistical_result(prediction_file_path,
     n_labels = 0
     count_hit = np.zeros(topn)
     for tfile_name in os.listdir(prediction_file_path):
+
+        if not tfile_name.endswith('.txt') or tfile_name.startswith('padding_'):
+            continue
         count += 1
-        temp = tfile_name.split('.')[0]
-        index = temp.rfind('_')
-        img_name = temp[:index]
+
+        img_name = '_'.join(tfile_name.split('_', 3)[:3])
         filepath = os.path.join(prediction_file_path, tfile_name)
         ret = load_statistical_predict_result(filepath)
         prediction = ret[0]
@@ -158,10 +153,8 @@ if __name__ == '__main__':
         folder_davinci_target = sys.argv[1]
         # annotation files path, "val_label.txt"
         annotation_file_path = sys.argv[2]
-        # the path to store the results json path
-        result_json_path = sys.argv[3]
-        # result json file name
-        json_file_name = sys.argv[4]
+        # result json file path
+        json_file_path = sys.argv[3]
     except IndexError:
         print("Stopped!")
         exit(1)
@@ -172,12 +165,10 @@ if __name__ == '__main__':
     if not (os.path.exists(annotation_file_path)):
         print("Ground truth file does not exist.")
 
-    if not (os.path.exists(result_json_path)):
-        print("Result folder doesn't exist.")
 
     img_label_dict = cre_groundtruth_dict_fromtxt(annotation_file_path)
     create_visualization_statistical_result(folder_davinci_target,
-                                            result_json_path, json_file_name,
+                                            json_file_path,
                                             img_label_dict, topn=5)
 
     elapsed = (time.time() - start)
