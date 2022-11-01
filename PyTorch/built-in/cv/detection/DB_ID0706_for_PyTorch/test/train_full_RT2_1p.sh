@@ -33,14 +33,11 @@ data_path=""
 model_path=$cur_path/path-to-model-directory
 
 # 训练epoch
-train_epochs=0
+train_epochs=1200
 
 # 指定训练所使用的npu device卡id
 device_id=6
 bin=False
-profiling=''
-start_step=-1
-stop_step=-1
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -54,12 +51,6 @@ do
         rt1=True
     elif [[ $para == --bin ]];then
         bin=True
-    elif [[ $para == --profiling* ]];then
-        profiling=`echo ${para#*=}`
-    elif [[ $para == --start_step* ]];then
-        start_step=`echo ${para#*=}`
-    elif [[ $para == --stop_step* ]];then
-        stop_step=`echo ${para#*=}`
     fi
 done
 # 校验是否传入data_path,不需要修改
@@ -114,9 +105,6 @@ taskset -c 0-23 nohup python3 -W ignore train.py experiments/seg_detector/ic15_r
         --epochs ${train_epochs} \
         --batch_size ${batch_size} \
         --bin ${bin} \
-        --profiling "${profiling}" \
-        --start_step ${start_step} \
-        --stop_step ${stop_step} \
         --device_list "${ASCEND_DEVICE_ID}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
@@ -139,7 +127,7 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 # 获取性能数据，不需要修改
 # 吞吐量

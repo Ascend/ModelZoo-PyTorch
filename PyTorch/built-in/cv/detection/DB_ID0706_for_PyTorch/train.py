@@ -139,7 +139,7 @@ if __name__ == '__main__':
     parser.add_argument('--dist_backend', default="hccl", type=str, help='distributed backend')
     parser.add_argument('--addr', default="90.90.176.102", type=str, help='master addr')
     parser.add_argument('--Port', default="29500", type=str, help='master Port')
-    parser.add_argument('--bin',  type=ast.literal_eval, help='turn on bin')
+    parser.add_argument('--bin',  type=ast.literal_eval, default=False ,help='turn on bin')
     parser.add_argument('--profiling', default='', type=str, help='type of profiling')
     parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
     parser.add_argument('--stop_step', default=-1, type=int, help='number of stop step')
