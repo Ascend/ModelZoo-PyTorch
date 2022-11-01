@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 # fp16 settings
 fp16 = dict(loss_scale=128.)
 
@@ -133,7 +132,7 @@ lr_config = dict(
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -144,7 +143,7 @@ total_epochs = 12
 device_ids = range(8)
 dist_params = dict(backend='hccl')
 log_level = 'INFO'
-work_dir = './work_dirs/solov2_release_r50_fpn_8gpu_1x'
+work_dir = './test/work_dirs/solov2_release_r50_fpn_8gpu_1x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

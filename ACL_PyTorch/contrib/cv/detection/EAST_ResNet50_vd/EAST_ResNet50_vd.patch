@@ -1,0 +1,11 @@
+diff --git a/configs/det/det_r50_vd_east.yml b/configs/det/det_r50_vd_east.yml
+index e84a5fa7..d83d0986 100644
+--- a/configs/det/det_r50_vd_east.yml
++++ b/configs/det/det_r50_vd_east.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 10000
+   log_smooth_window: 20
+   print_batch_step: 2

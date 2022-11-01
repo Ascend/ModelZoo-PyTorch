@@ -1,0 +1,19 @@
+diff -Nur ./a/PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_v2.0.yml ./b/PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_v2.0.yml
+--- ./a/PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_v2.0.yml	2022-09-30 03:40:50.563965615 +0000
++++ ./b/PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_v2.0.yml	2022-09-30 04:58:48.267798328 +0000
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: False
+   epoch_num: 500
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -14,7 +14,7 @@
+   use_visualdl: False
+   infer_img: doc/imgs_words/ch/word_1.jpg
+   # for data or label process
+-  character_dict_path: ppocr/utils/ppocr_keys_v1.txt
++  character_dict_path: PaddleOCR/ppocr/utils/ppocr_keys_v1.txt
+   max_text_length: 25
+   infer_mode: False
+   use_space_char: True

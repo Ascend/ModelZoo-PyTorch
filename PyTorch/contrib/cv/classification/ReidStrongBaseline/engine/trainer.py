@@ -297,7 +297,8 @@ def do_train_with_center(
         ITER += 1
 
         data_len = torch.tensor(len(train_loader)).float().npu()
-        torch.distributed.all_reduce(data_len)
+        if num_npus > 1:
+            torch.distributed.all_reduce(data_len)
         avg_data_len = int(data_len // num_npus)
 
         if ITER % log_period == 0:

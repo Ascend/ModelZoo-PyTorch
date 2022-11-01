@@ -17,10 +17,10 @@
 air_path=$1
 om_path=$2
 
-echo "Input AIR file path: ${air_path}"
+echo "Input AIR file path: ${onnx_path}"
 echo "Output OM file path: ${om_path}"
 
-atc --framework=5 --model="${air_path}" \
+atc --framework=5 --model="${onnx_path}" \
     --output="${om_path}" \
     --enable_small_channel=1 \
     --soc_version=Ascend310 \

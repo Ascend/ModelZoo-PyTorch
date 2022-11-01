@@ -76,7 +76,6 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
 
    返回项目目录，和src文件夹同级的目录
    ```
-   cd scritpts
    bash src/scritpts/download_data.sh
    
    # ILSVRC2014_Det数据集
@@ -154,7 +153,7 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
 1. 进入解压后的源码包根目录。
 
    ```
-   cd ${模型文件夹名称}/src/scripts/ 
+   cd ${模型文件夹名称}/
    ```
 
 2. 运行训练脚本。
@@ -182,14 +181,14 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
    ```
    公共参数：
    --config                            //训练配置
-   --imagenet_path ../data/ILSVRC2014_Det/  //ILSVRC2014数据集路径
-   --alov_path ../data/ALOV/  //ALOV数据集路径
-   --save_path ../caffenet/  //训练模型保存路径
+   --imagenet_path ./dataset/ILSVRC2014_Det/  //ILSVRC2014数据集路径
+   --alov_path ./dataset/ALOV/  //ALOV数据集路径
+   --save_path ./caffenet/  //训练模型保存路径
    --epochs 20  //迭代的最大次数
    --max_steps 8000  //最大的steps次数
    --npus 8  //使用的
    --batch_size 3  
-   --pretrained_model ../goturn/models/pretrained/caffenet_weights.npy  //预训练模型
+   --pretrained_model ./src/goturn/models/pretrained/caffenet_weights.npy  //预训练模型
    ```
 
 

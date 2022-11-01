@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import copy
 import os
@@ -72,6 +86,8 @@ def parse_args():
         default='none',
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--bin', action='store_true', default=False)
+    parser.add_argument('--rank_id', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -81,6 +97,12 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    if args.bin:
+        print('use bin')
+        torch.npu.set_compile_mode(jit_compile=False)
+    else:
+        print('no use bin')    
 
     cfg = Config.fromfile(args.config)
 
@@ -108,6 +130,10 @@ def main():
     else:
         cfg.gpu_ids = range(1) if args.gpus is None else range(args.gpus)
         print("********#####??##none:gpu_ids:",str(cfg.gpu_ids[0]))
+
+    cfg.gpu_ids=[f"npu:{args.rank_id}"]
+    torch.npu.set_device(cfg.gpu_ids[0])
+
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
         distributed = False

@@ -570,7 +570,7 @@ def main():
     if opt.full and opt.local_rank in [-1, 0]:
         # Directories
         wdir = Path(opt.save_dir) / 'weights' / 'last.pt' 
-        os.system(f"python test.py \
+        os.system(f"python3 test.py \
                 --data data/coco.yaml \
                 --img 1280 \
                 --batch 32 \

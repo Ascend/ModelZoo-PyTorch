@@ -32,6 +32,9 @@ import torch.multiprocessing as mp
 import torch.distributed as dist
 from torch.autograd import Variable
 from torch.utils.data.sampler import Sampler
+if torch.__version__>="1.8":
+    import torch_npu
+print(torch.__version__)
 import apex
 from apex import amp
 
@@ -317,7 +320,7 @@ def main():
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, collate_fn=padding_collate,
                                              sampler=train_sampler, num_workers=args.num_workers, pin_memory=True, drop_last=True)
-
+    
     if args.cuda:
         cfg.CUDA = True
 
@@ -438,13 +441,12 @@ def main():
             if args.net == "res101":
                 optimizer.clip_optimizer_grad_norm_fused(4.)
             optimizer.step()
-            
+
             batch_time = (time.time() - start) * 1000
             start = time.time()
             if step > 10:
                 batch_time_sum += batch_time
                 batch_time_mean = batch_time_sum / (step - 10)
-
             if step > iters_per_epoch:
                 break
 
@@ -493,8 +495,8 @@ def main():
 
                 loss_temp = 0
                 data_start = time.time()
-                
-
+        
+        
         # 每十次保存一次模型
         if epoch % 10 == 0 or epoch == args.max_epochs:
             if args.rank % npus_per_node == 0:
@@ -518,3 +520,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    

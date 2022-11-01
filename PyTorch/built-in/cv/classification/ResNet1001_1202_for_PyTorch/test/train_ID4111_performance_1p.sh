@@ -1,26 +1,26 @@
 #!/bin/bash
 
-################»ù´¡ÅäÖÃ²ÎÊý£¬ÐèÒªÄ£ÐÍÉóÊÓÐÞ¸Ä##################
-# ±ØÑ¡×Ö¶Î(±ØÐëÔÚ´Ë´¦¶¨ÒåµÄ²ÎÊý): Network batch_size RANK_SIZE
-# ÍøÂçÃû³Æ£¬Í¬Ä¿Â¼Ãû³Æ
+################åŸºç¡€é…ç½®å‚æ•°ï¼Œéœ€è¦æ¨¡åž‹å®¡è§†ä¿®æ”¹##################
+# å¿…é€‰å­—æ®µ(å¿…é¡»åœ¨æ­¤å¤„å®šä¹‰çš„å‚æ•°): Network batch_size RANK_SIZE
+# ç½‘ç»œåç§°ï¼ŒåŒç›®å½•åç§°
 Network="ResNet1202_ID4111_for_PyTorch"
-# ÑµÁ·batch_size
+# è®­ç»ƒbatch_size
 batch_size=128
-# ÑµÁ·Ê¹ÓÃµÄnpu¿¨Êý
+# è®­ç»ƒä½¿ç”¨çš„npuå¡æ•°
 export RANK_SIZE=1
-# Ä£ÐÍ½á¹¹
+# æ¨¡åž‹ç»“æž„
 arch="resnet1202"
-# Êý¾Ý¼¯Â·¾¶,±£³ÖÎª¿Õ,²»ÐèÒªÐÞ¸Ä
+# æ•°æ®é›†è·¯å¾„,ä¿æŒä¸ºç©º,ä¸éœ€è¦ä¿®æ”¹
 data_path=""
 
-# ÑµÁ·epoch 200
+# è®­ç»ƒepoch 200
 train_epochs=1
-# Ö¸¶¨ÑµÁ·ËùÊ¹ÓÃµÄnpu device¿¨id
+# æŒ‡å®šè®­ç»ƒæ‰€ä½¿ç”¨çš„npu deviceå¡id
 device_id=0
-# ¼ÓÔØÊý¾Ý½ø³ÌÊý
+# åŠ è½½æ•°æ®è¿›ç¨‹æ•°
 workers=64
 
-# ²ÎÊýÐ£Ñé£¬data_pathÎª±Ø´«²ÎÊý£¬ÆäËû²ÎÊýµÄÔöÉ¾ÓÉÄ£ÐÍ×ÔÉí¾ö¶¨£»´Ë´¦ÐÂÔö²ÎÊýÐèÔÚÉÏÃæÓÐ¶¨Òå²¢¸³Öµ
+# å‚æ•°æ ¡éªŒï¼Œdata_pathä¸ºå¿…ä¼ å‚æ•°ï¼Œå…¶ä»–å‚æ•°çš„å¢žåˆ ç”±æ¨¡åž‹è‡ªèº«å†³å®šï¼›æ­¤å¤„æ–°å¢žå‚æ•°éœ€åœ¨ä¸Šé¢æœ‰å®šä¹‰å¹¶èµ‹å€¼
 for para in $*
 do
     if [[ $para == --device_id* ]];then
@@ -34,12 +34,12 @@ do
     fi
 done
 
-# Ð£ÑéÊÇ·ñ´«Èëdata_path,²»ÐèÒªÐÞ¸Ä
+# æ ¡éªŒæ˜¯å¦ä¼ å…¥data_path,ä¸éœ€è¦ä¿®æ”¹
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-# Ð£ÑéÊÇ·ñÖ¸¶¨ÁËdevice_id,·Ö¶¯Ì¬·ÖÅädevice_idÓëÊÖ¶¯Ö¸¶¨device_id,´Ë´¦²»ÐèÒªÐÞ¸Ä
+# æ ¡éªŒæ˜¯å¦æŒ‡å®šäº†device_id,åˆ†åŠ¨æ€åˆ†é…device_idä¸Žæ‰‹åŠ¨æŒ‡å®šdevice_id,æ­¤å¤„ä¸éœ€è¦ä¿®æ”¹
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
@@ -52,8 +52,8 @@ fi
 
 
 
-###############Ö¸¶¨ÑµÁ·½Å±¾Ö´ÐÐÂ·¾¶###############
-# cdµ½ÓëtestÎÄ¼þ¼ÐÍ¬²ã¼¶Ä¿Â¼ÏÂÖ´ÐÐ½Å±¾£¬Ìá¸ß¼æÈÝÐÔ£»test_path_dirÎª°üº¬testÎÄ¼þ¼ÐµÄÂ·¾¶
+###############æŒ‡å®šè®­ç»ƒè„šæœ¬æ‰§è¡Œè·¯å¾„###############
+# cdåˆ°ä¸Žtestæ–‡ä»¶å¤¹åŒå±‚çº§ç›®å½•ä¸‹æ‰§è¡Œè„šæœ¬ï¼Œæé«˜å…¼å®¹æ€§ï¼›test_path_dirä¸ºåŒ…å«testæ–‡ä»¶å¤¹çš„è·¯å¾„
 cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ];then
@@ -65,7 +65,7 @@ else
 fi
 
 
-#################´´½¨ÈÕÖ¾Êä³öÄ¿Â¼£¬²»ÐèÒªÐÞ¸Ä#################
+#################åˆ›å»ºæ—¥å¿—è¾“å‡ºç›®å½•ï¼Œä¸éœ€è¦ä¿®æ”¹#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -73,25 +73,25 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-#ÐÞ¸Ä²ÎÊý
+#ä¿®æ”¹å‚æ•°
 sed -i "s|pass|break|g" ${test_path_dir}/../pytorch_resnet_apex.py
 wait
-#################Æô¶¯ÑµÁ·½Å±¾#################
-# ÑµÁ·¿ªÊ¼Ê±¼ä£¬²»ÐèÒªÐÞ¸Ä
+#################å¯åŠ¨è®­ç»ƒè„šæœ¬#################
+# è®­ç»ƒå¼€å§‹æ—¶é—´ï¼Œä¸éœ€è¦ä¿®æ”¹
 start_time=$(date +%s)
-# ·ÇÆ½Ì¨³¡¾°Ê±source »·¾³±äÁ¿
+# éžå¹³å°åœºæ™¯æ—¶source çŽ¯å¢ƒå˜é‡
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 else
-  #etpÆ½Ì¨Êý¾Ý¼¯´¦Àí
+  #etpå¹³å°æ•°æ®é›†å¤„ç†
   mkdir -p ${cur_path}/data
   ln -nsf $ckpt_path/cifar-10-python.tar.gz ${cur_path}/data
   ln -nsf $data_path/* ${cur_path}/data
   data_path=${cur_path}/data
 fi
-nohup python3.7 ./pytorch_resnet_apex.py \
+nohup taskset -c 0-32 python3.7 ./pytorch_resnet_apex.py \
     --arch ${arch} \
     --data ${data_path} \
     --npu ${ASCEND_DEVICE_ID} \
@@ -105,49 +105,49 @@ nohup python3.7 ./pytorch_resnet_apex.py \
 
 wait
 
-##################»ñÈ¡ÑµÁ·Êý¾Ý################
-# ÑµÁ·½áÊøÊ±¼ä£¬²»ÐèÒªÐÞ¸Ä
+##################èŽ·å–è®­ç»ƒæ•°æ®################
+# è®­ç»ƒç»“æŸæ—¶é—´ï¼Œä¸éœ€è¦ä¿®æ”¹
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 
-#²ÎÊý¸Ä»Ø
+#å‚æ•°æ”¹å›ž
 sed -i "s|break|pass|g" ${test_path_dir}/../pytorch_resnet_apex.py
 wait
 
-# ÑµÁ·ÓÃÀýÐÅÏ¢£¬²»ÐèÒªÐÞ¸Ä
+# è®­ç»ƒç”¨ä¾‹ä¿¡æ¯ï¼Œä¸éœ€è¦ä¿®æ”¹
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
-# ½á¹û´òÓ¡£¬²»ÐèÒªÐÞ¸Ä
+# ç»“æžœæ‰“å°ï¼Œä¸éœ€è¦ä¿®æ”¹
 echo "------------------ Final result ------------------"
-# Êä³öÐÔÄÜFPS£¬ÐèÒªÄ£ÐÍÉóÊÓÐÞ¸Ä
+# è¾“å‡ºæ€§èƒ½FPSï¼Œéœ€è¦æ¨¡åž‹å®¡è§†ä¿®æ”¹
 grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $7}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
 FPS=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
-# ´òÓ¡£¬²»ÐèÒªÐÞ¸Ä
+# æ‰“å°ï¼Œä¸éœ€è¦ä¿®æ”¹
 echo "Final Performance images/sec : $FPS"
 
-# Êä³öÑµÁ·¾«¶È,ÐèÒªÄ£ÐÍÉóÊÓÐÞ¸Ä
+# è¾“å‡ºè®­ç»ƒç²¾åº¦,éœ€è¦æ¨¡åž‹å®¡è§†ä¿®æ”¹
 train_accuracy=`grep -a '* Acc@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
-# ´òÓ¡£¬²»ÐèÒªÐÞ¸Ä
+# æ‰“å°ï¼Œä¸éœ€è¦ä¿®æ”¹
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
-# ÐÔÄÜ¿´»¤½á¹û»ã×Ü
-# »ñÈ¡ÐÔÄÜÊý¾Ý£¬²»ÐèÒªÐÞ¸Ä
-# ÍÌÍÂÁ¿
+# æ€§èƒ½çœ‹æŠ¤ç»“æžœæ±‡æ€»
+# èŽ·å–æ€§èƒ½æ•°æ®ï¼Œä¸éœ€è¦ä¿®æ”¹
+# åžåé‡
 ActualFPS=${FPS}
-# µ¥µü´úÑµÁ·Ê±³¤
+# å•è¿­ä»£è®­ç»ƒæ—¶é•¿
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
-# ´Ótrain_$ASCEND_DEVICE_ID.logÌáÈ¡Lossµ½train_${CaseName}_loss.txtÖÐ£¬ÐèÒª¸ù¾ÝÄ£ÐÍÉóÊÓ
+# ä»Žtrain_$ASCEND_DEVICE_ID.logæå–Lossåˆ°train_${CaseName}_loss.txtä¸­ï¼Œéœ€è¦æ ¹æ®æ¨¡åž‹å®¡è§†
 grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
-# ×îºóÒ»¸öµü´úlossÖµ£¬²»ÐèÒªÐÞ¸Ä
+# æœ€åŽä¸€ä¸ªè¿­ä»£losså€¼ï¼Œä¸éœ€è¦ä¿®æ”¹
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
-# ¹Ø¼üÐÅÏ¢´òÓ¡µ½${CaseName}.logÖÐ£¬²»ÐèÒªÐÞ¸Ä
+# å…³é”®ä¿¡æ¯æ‰“å°åˆ°${CaseName}.logä¸­ï¼Œä¸éœ€è¦ä¿®æ”¹
 echo "Network = ${Network}" >  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "RankSize = ${RANK_SIZE}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "BatchSize = ${BatchSize}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

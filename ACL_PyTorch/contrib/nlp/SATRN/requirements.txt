@@ -1,0 +1,11 @@
+torch==1.10.0
+torchvision==0.11.1
+openmim==0.3.2
+mmdet==2.25.1
+mmcv-full==1.6.0
+numpy==1.23.3
+opencv-python==4.6.0.66
+onnx-simplifier==0.4.0
+tqdm
+decorator
+sympy

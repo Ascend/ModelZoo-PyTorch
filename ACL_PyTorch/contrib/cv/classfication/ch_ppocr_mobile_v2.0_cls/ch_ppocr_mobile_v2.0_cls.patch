@@ -1,0 +1,11 @@
+diff --git a/configs/cls/cls_mv3.yml b/configs/cls/cls_mv3.yml
+index 5e643dc3..0583f9d8 100644
+--- a/configs/cls/cls_mv3.yml
++++ b/configs/cls/cls_mv3.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 100
+   log_smooth_window: 20
+   print_batch_step: 10

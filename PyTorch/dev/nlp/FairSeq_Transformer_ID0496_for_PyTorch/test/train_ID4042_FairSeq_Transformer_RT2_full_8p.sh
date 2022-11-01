@@ -147,7 +147,7 @@ do
 	    --optimizer adam \
 	    --adam-betas '(0.9, 0.98)' \
 	    --clip-norm 0.0 \
-	    --lr 0.00048 \
+	    --lr 0.00006 \
 	    --lr-scheduler inverse_sqrt \
 	    --warmup-updates 4000 \
 	    --device-id $ASCEND_DEVICE_ID \

@@ -113,6 +113,7 @@ parser.add_argument('--checkpoint-freq', default=0, type=int,
                                       '-1:no checkpoint,not support')
 
 parser.add_argument('--device-list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
+parser.add_argument('--rt2', default=False, action='store_true', help='Use rt2 in the model training')
 
 # apex
 parser.add_argument('--amp', default=False, action='store_true',
@@ -200,6 +201,9 @@ def main():
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
     args.gpu = args.process_device_map[gpu]
+    if args.rt2:
+        torch.npu.set_compile_mode(jit_compile=False)
+        print("use rt2 train model") 
 
     if args.gpu is not None:
         print("[npu id:", args.gpu, "]", "Use GPU: {} for training".format(args.gpu))

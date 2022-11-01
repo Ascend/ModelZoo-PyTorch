@@ -41,14 +41,6 @@ python3 prepare.py --images-dir "images-dir" \
                 --scale 3 
 ```
 
-或者直接下载h5py格式的数据集，转换为h5py的数据下载链接为：URL:
-https://e-share.obs-website.cn-north-1.myhuaweicloud.com?token=RrSfPzFZtvwfARxmYDFuJNIKT5r8/eVrwI26J888X/6jNdT/aKnEcd1TmxUXcXRcMIZsURCs6eof5DSB8E7Rr79//dbTrzGBA8ezuqVu/FUYvM6rlAgcEUeUWVTgUFJPpg+g9AutmQi+arIZTT2Qr7nokx1jQIuy5nG3HNOhcQCLlxuARBfiMBsSX8xqqlZAjrwhG9THZbIVYWYnzOJiJ25WN24xZrESi5ohzDKjnoys/tqFtbnB1quBd77o15lu4J1kR46XYc2YOgiJFYy+gGUA76fnCu8Fj2Z6B46jR/zgSyWdus33m1oTEwAt6m+f8i4kiY29mN04aqOZiWOplKctvzrZhxqW/K4kT5l9P0t/a7xoJzyvxw/OxHGcZR1nRW1KHvjTyhcbQD3iqaYq1n85Qy30J2j7ct+DXjmWOhuyd3u4oNVGXutEHfdtb18nVLXK4J0xt6A0UQAo/NyHIvTnEcZJ8K535ZV4FDh6WIiUfSWyBF7lQNAbzRyjaNnCOiBosIB8g/0T1g1bxq3Votb3N4UphRSuYedngVeoLZQ=
-
-提取码:
-123456
-
-*有效期至: 2023/08/25 09:41:21 GMT+08:00
-
 ### 模型训练
 
 - 单击“立即下载”，并选择合适的下载方式下载源码包。
@@ -66,7 +58,7 @@ https://e-share.obs-website.cn-north-1.myhuaweicloud.com?token=RrSfPzFZtvwfARxmY
     1、 根据数据集实际路径配置data_path，使用命令行进行训练：
 
     ​	训练时scale的值应该与train-file和eval-file选用的数据集保持一致。例如scale=4，则train-file为91-image_x4.h5，eval-file为Set5_x4.h5。
-    
+
     ```bash
     python3 train.py --train-file "data/91-image_x3.h5" \
                     --eval-file "data/Set5_x3.h5" \
@@ -80,12 +72,20 @@ https://e-share.obs-website.cn-north-1.myhuaweicloud.com?token=RrSfPzFZtvwfARxmY
     ```
 
     2、精度指标
-    
-    | PSNR   | 论文  | GPU V100 | NPU   |
+
+    | PSNR   | 论文  | GPU  | NPU   |
     | ------ | ----- | -------- | ----- |
     | Scale2 | 37.12 | 37.06    | 37.03 |
     | Scale3 | 33.22 | 33.61    | 33.56 |
     | Scale4 | 30.50 | 30.48    | 30.45 |
+
+    3、性能指标
+
+    | GPU   | NPU       |
+    | --------- | --------- |
+    | 2500 it/s | 3800 it/s |
+
+    
 
 ## 高级参考
 

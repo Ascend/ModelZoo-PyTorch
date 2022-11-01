@@ -103,7 +103,7 @@ def parse_option():
     parser.add_argument('--tag', help='tag of experiment')
     parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
-
+    parser.add_argument('--max_steps', default=None, type=int, metavar='N', help="number of total steps to run")
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
 
@@ -182,8 +182,8 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
     start = time.time()
     end = time.time()
     for idx, (samples_1, samples_2, targets) in enumerate(data_loader):
-        if idx == 100:
-            pass
+        if config.MAX_STEPS and idx > config.MAX_STEPS:
+            break
         samples_1 = samples_1.npu(non_blocking=True)
         samples_2 = samples_2.npu(non_blocking=True)
         targets = targets.npu(non_blocking=True)

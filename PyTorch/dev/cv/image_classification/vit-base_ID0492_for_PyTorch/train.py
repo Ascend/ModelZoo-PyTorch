@@ -33,6 +33,7 @@ if torch.__version__ >= "1.8":
     import torch_npu
 import torch.distributed as dist
 
+
 from tqdm import tqdm
 #from torch.utils.tensorboard import SummaryWriter
 from apex import amp, optimizers
@@ -136,7 +137,6 @@ def valid(args, model,test_loader, global_step):
         #if args.ddp:
             #if isinstance(test_loader, torch.utils.data.DataLoader):
                 #test_loader.sampler.set_epoch(step)
-
         batch = tuple(t.to(args.device) for t in batch)
         x, y = batch
         # NLLLoss int64 is not supported,need change dtype
@@ -244,60 +244,132 @@ def train(args, model):
                               dynamic_ncols=True,
                               disable=args.local_rank not in [-1, 0])
         #添加prof图
-        print('len',len(epoch_iterator))       
-        for step, batch in enumerate(epoch_iterator):
-            if args.ddp:
-                if isinstance(train_loader, torch.utils.data.DataLoader):
-                    train_loader.sampler.set_epoch(step)
-                #if isinstance(test_loader, torch.utils.data.DataLoader):
-                #    test_loader.sampler.set_epoch(step)
+        print('len',len(epoch_iterator))
+        num_steps = 0
+        for step, batch in enumerate(epoch_iterator): 
+            if num_steps > args.stop_step:
+                if args.profiling == 'GE' or args.profiling == 'CANN':
+                    import sys
+                    sys.exit()
+            elif num_steps <= args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
+                with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True):        
+                    if args.ddp:
+                        if isinstance(train_loader, torch.utils.data.DataLoader):
+                            train_loader.sampler.set_epoch(step)
+                    batch = tuple(t.to(args.device) for t in batch)
+                    x, y = batch
+                    y = y.to(torch.int32)
+                    loss = model(x, y)
+                    
+                    if args.gradient_accumulation_steps > 1:
+                        loss = loss / args.gradient_accumulation_steps
+                    if args.fp16:
+                        with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()
 
-            batch = tuple(t.to(args.device) for t in batch)
-            x, y = batch
-            y = y.to(torch.int32)
-            loss = model(x, y)
-            
-            if args.gradient_accumulation_steps > 1:
-                loss = loss / args.gradient_accumulation_steps
-            if args.fp16:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
+                    if (step + 1) % args.gradient_accumulation_steps == 0:
+                        losses.update(loss.item() * args.gradient_accumulation_steps)
+                        if args.fp16:
+                            torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
+                        else:
+                            torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                        scheduler.step()
+                        optimizer.step()
+                        optimizer.zero_grad()
+                            #添加pr添加prof图
+
+                        global_step += 1
+                        fps.update(args.train_batch_size / (time.time() - end))
+                        end = time.time()
+            elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
+                with torch.npu.profile(profiler_result_path="./GE_prof"):    
+                    if args.ddp:
+                        if isinstance(train_loader, torch.utils.data.DataLoader):
+                            train_loader.sampler.set_epoch(step)
+                    batch = tuple(t.to(args.device) for t in batch)
+                    x, y = batch
+                    y = y.to(torch.int32)
+                    loss = model(x, y)
+                    
+                    if args.gradient_accumulation_steps > 1:
+                        loss = loss / args.gradient_accumulation_steps
+                    if args.fp16:
+                        with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()
+
+                    if (step + 1) % args.gradient_accumulation_steps == 0:
+                        losses.update(loss.item() * args.gradient_accumulation_steps)
+                        if args.fp16:
+                            torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
+                        else:
+                            torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                        scheduler.step()
+                        optimizer.step()
+                        optimizer.zero_grad()
+                            #添加pr添加prof图
+
+                        global_step += 1
+                        fps.update(args.train_batch_size / (time.time() - end))
+                        end = time.time()
             else:
-                loss.backward()
+                if args.ddp:
+                    if isinstance(train_loader, torch.utils.data.DataLoader):
+                        train_loader.sampler.set_epoch(step)
+                            #if isinstance(test_loader, torch.utils.data.DataLoader):
+                            #    test_loader.sampler.set_epoch(step)
 
-            if (step + 1) % args.gradient_accumulation_steps == 0:
-                losses.update(loss.item() * args.gradient_accumulation_steps)
-                if args.fp16:
-                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-                else:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-                scheduler.step()
-                optimizer.step()
-                optimizer.zero_grad()
-                    #添加pr添加prof图
-
-                global_step += 1
-                fps.update(args.train_batch_size / (time.time() - end))
-                end = time.time()
-
-                epoch_iterator.set_description(
-                    "Training (%d / %d Steps) (loss=%2.5f) (FPS=%.2f)" % (global_step, t_total, losses.val,fps.val)
-                )
-                #if args.local_rank in [-1, 0]:
-                   # writer.add_scalar("train/loss", scalar_value=losses.val, global_step=global_step)
-                   # writer.add_scalar("train/lr", scalar_value=scheduler.get_lr()[0], global_step=global_step)
-                if global_step % args.eval_every == 0 and args.local_rank in [-1, 0]:
-                    accuracy = valid(args, model, test_loader, global_step)
-                    #accuracy = valid(args, model, writer, test_loader, global_step)
-                    if best_acc < accuracy:
-                    #save ckpt
-                        
-                        save_model(args, model)
-                        best_acc = accuracy
-                    model.train()
+                batch = tuple(t.to(args.device) for t in batch)
+                x, y = batch
+                y = y.to(torch.int32)
+                loss = model(x, y)
                 
-                if global_step % t_total == 0:
-                    break
+                if args.gradient_accumulation_steps > 1:
+                    loss = loss / args.gradient_accumulation_steps
+                if args.fp16:
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+
+                if (step + 1) % args.gradient_accumulation_steps == 0:
+                    losses.update(loss.item() * args.gradient_accumulation_steps)
+                    if args.fp16:
+                        torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
+                    else:
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    scheduler.step()
+                    optimizer.step()
+                    optimizer.zero_grad()
+                        #添加pr添加prof图
+
+                    global_step += 1
+                    fps.update(args.train_batch_size / (time.time() - end))
+                    end = time.time()
+
+                    epoch_iterator.set_description(
+                        "Training (%d / %d Steps) (loss=%2.5f) (FPS=%.2f)" % (global_step, t_total, losses.val,fps.val)
+                    )
+                    #if args.local_rank in [-1, 0]:
+                       # writer.add_scalar("train/loss", scalar_value=losses.val, global_step=global_step)
+                       # writer.add_scalar("train/lr", scalar_value=scheduler.get_lr()[0], global_step=global_step)
+                    if global_step % args.eval_every == 0 and args.local_rank in [-1, 0]:
+                        accuracy = valid(args, model, test_loader, global_step)
+                        #accuracy = valid(args, model, writer, test_loader, global_step)
+                        if best_acc < accuracy:
+                        #save ckpt
+                            save_model(args, model)
+                            best_acc = accuracy
+                        model.train()
+                    
+                    if global_step % t_total == 0:
+                        break
+            num_steps = num_steps + 1
+
+            
         losses.reset()
         if global_step % t_total == 0:
             break
@@ -369,11 +441,21 @@ def main():
     parser.add_argument('--npu-fused-sgd', action='store_true')
     parser.add_argument('--combine-grad', action='store_true')
     parser.add_argument( '--ddp',default=False,help='distributed or not ')
+    parser.add_argument('--profiling', type=str, default='NONE',
+                        help='choose profiling way--CANN,GE,NONE')
+    parser.add_argument('--start_step', default=0, type=int, 
+                        help='start_step')
+    parser.add_argument('--stop_step', default=1000, type=int,
+                        help='stop_step')              
+    parser.add_argument('--bin', type=bool, default=False,
+                        help='if bin')
     args = parser.parse_args()
 
     os.environ['MASTER_ADDR'] = args.addr  # '10.136.181.51'
     os.environ['MASTER_PORT'] = '29501'
-   
+    if args.bin:
+        torch.npu.set_compile_mode(jit_compile=False)
+        
     if args.ddp:
         NPU_WORLD_SIZE = int(os.getenv('NPU_WORLD_SIZE'))
         RANK = int(os.getenv('RANK'))
@@ -410,7 +492,7 @@ def main():
 
     # Training
     train(args, model)
-
+    
 
 if __name__ == "__main__":
     main()

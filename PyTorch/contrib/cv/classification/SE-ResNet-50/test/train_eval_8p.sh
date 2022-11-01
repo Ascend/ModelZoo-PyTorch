@@ -81,7 +81,7 @@ do
         --epochs=${train_epochs}\
         --amp \
         --batch-size=${batch_size} \
-        --resume='model_best.pth.rar' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --resume='model_best.pth.tar' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 

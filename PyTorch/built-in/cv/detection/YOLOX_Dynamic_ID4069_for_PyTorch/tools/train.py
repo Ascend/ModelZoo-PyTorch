@@ -137,6 +137,7 @@ def main(exp: Exp, args):
 
 
 if __name__ == "__main__":
+    torch.npu.set_compile_mode(jit_compile=False)
     configure_module()
     args = make_parser().parse_args()
     exp = get_exp(args.exp_file, args.name)

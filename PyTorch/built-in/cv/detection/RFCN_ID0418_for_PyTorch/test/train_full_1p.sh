@@ -113,11 +113,13 @@ nohup taskset -c 0-19 python3.7 ./trainval_net.py \
 wait
 
 nohup python3.7 ./test_net.py \
+    --arch=rfcn \
+    --dataset=pascal_voc \
     --net=res101 \
     --cfg=cfg/res101.yml \
     --checksession 1 \
     --checkepoch ${train_epochs} \
-    --checkpoint 2504 \
+    --checkpoint 2505 \
     --device=npu \
     --npu_id="npu:${ASCEND_DEVICE_ID}" \
     --amp \

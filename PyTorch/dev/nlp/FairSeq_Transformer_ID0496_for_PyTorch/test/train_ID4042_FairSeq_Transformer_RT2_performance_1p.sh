@@ -21,9 +21,9 @@ data_path=""
 #网络名称，同目录名称
 Network="FairSeq_Transformer_RT2_ID4042_for_PyTorch"
 #训练epoch
-train_epochs=1
+train_epochs=2
 #训练batch_size
-batch_size=512
+batch_size=32
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
 #学习率
@@ -140,7 +140,7 @@ do
 	    --lr 0.00006 \
 	    --lr-scheduler inverse_sqrt \
 	    --warmup-updates 4000 \
-	    --dropout 0.00 \
+	    --device-id $ASCEND_DEVICE_ID \
 	    --weight-decay 0.0001 \
 	    --source-lang de \
 	    --target-lang en \
@@ -155,10 +155,8 @@ do
 	    --disable-validation \
 	    --distributed-no-spawn \
 	    --max-tokens 15000 \
-        --max-sentences 1000 \
 	    --required-batch-size-multiple 32 \
-	    --batch-size ${batch_size} \
-            --max-epoch 1 \
+        --max-epoch ${train_epochs} \
 	    --max-source-positions 1024 \
 	    --max-target-positions 1024 \
 	    --num-workers 1 \

@@ -22,11 +22,15 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
-
+from apex import amp
+import apex
 from models import FSRCNN
 from datasets import TrainDataset, EvalDataset
 from utils import AverageMeter, calc_psnr
 
+device_id=int(os.environ['ASCEND_DEVICE_ID'])
+CALCULATE_DEVICE = "npu:{}".format(device_id)
+print(CALCULATE_DEVICE)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -48,24 +52,27 @@ if __name__ == '__main__':
         os.makedirs(args.outputs_dir)
 
     cudnn.benchmark = True
-    device = torch.device('npu:0' if torch.npu.is_available() else 'cpu')
-
+    device = torch.device(CALCULATE_DEVICE)
+    torch.npu.set_device(device)
+    print("*" *20)
+    print(device)
     torch.manual_seed(args.seed)
 
     model = FSRCNN(scale_factor=args.scale).to(device)
     criterion = nn.MSELoss()
-    optimizer = optim.Adam([
+    optimizer = apex.optimizers.NpuFusedAdam([
         {'params': model.first_part.parameters()},
         {'params': model.mid_part.parameters()},
         {'params': model.last_part.parameters(), 'lr': args.lr * 0.1}
     ], lr=args.lr)
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale=32.0, combine_grad=True)
 
     train_dataset = TrainDataset(args.train_file)
     train_dataloader = DataLoader(dataset=train_dataset,
                                   batch_size=args.batch_size,
                                   shuffle=True,
                                   num_workers=args.num_workers,
-                                  pin_memory=True)
+                                  pin_memory=False)
     eval_dataset = EvalDataset(args.eval_file)
     eval_dataloader = DataLoader(dataset=eval_dataset, batch_size=1)
 
@@ -76,6 +83,8 @@ if __name__ == '__main__':
     for epoch in range(args.num_epochs):
         model.train()
         epoch_losses = AverageMeter()
+        print("*" *50)
+        print(type(epoch_losses))
 
         with tqdm(total=(len(train_dataset) - len(train_dataset) % args.batch_size), ncols=80) as t:
             t.set_description('epoch: {}/{}'.format(epoch, args.num_epochs - 1))
@@ -93,7 +102,8 @@ if __name__ == '__main__':
                 epoch_losses.update(loss.item(), len(inputs))
 
                 optimizer.zero_grad()
-                loss.backward()
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
                 optimizer.step()
 
                 t.set_postfix(loss='{:.6f}'.format(epoch_losses.avg))

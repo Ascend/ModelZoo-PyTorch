@@ -132,8 +132,9 @@ if __name__ == "__main__":
         image = dataset.get_image(i)
         image_id = dataset.ids[i]
         height, width, _ = image.shape
-        scores_id = str(image_id)+'_1.bin'
-        boxes_id = str(image_id)+'_2.bin'
+        scores_id = str(image_id)+'_0.bin'
+        boxes_id = str(image_id)+'_1.bin'
+
         boxes = np.fromfile(os.path.join(npu_result, boxes_id), dtype='float32').reshape((1,3000,4))
         scores = np.fromfile(os.path.join(npu_result, scores_id), dtype='float32').reshape((1,3000,21))        
         boxes = torch.from_numpy(boxes)
@@ -175,7 +176,8 @@ if __name__ == "__main__":
             labels_.reshape(-1, 1).float(),
             probs_.reshape(-1, 1),
             boxes_ + 1.0  # matlab's indexes start from 1
-            ], dim=1))
+            ],dim=1 ))
+        #print(results)
     results = torch.cat(results)
     for class_index, class_name in enumerate(class_names):
         if class_index == 0: continue  # ignore background

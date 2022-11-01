@@ -17,6 +17,8 @@ import argparse
 import os
 import os.path as osp
 import time
+import sys
+sys.path.append('./')
 
 import mmcv
 import torch
@@ -85,6 +87,12 @@ def parse_args():
         '--autoscale-lr',
         action='store_true',
         help='automatically scale lr with the number of gpus')
+    parser.add_argument('--steps_per_epoch', type=int, default=1000,help='steps per epoch')
+    parser.add_argument('--batch_size', type=int, default=2,help='batch size of datasets')
+    parser.add_argument('--fps_lag', type=int, default=200,help='FPS lag')
+    parser.add_argument('--rt2_bin',type=int,default=0,help='enable bin compile: 0->False, 1->True')
+    parser.add_argument('--start_step', type=int, default=0,help='start lag')
+    parser.add_argument('--profiling', type=str, default='None',help='choose profiling way: CANN, GE, None')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -95,22 +103,22 @@ def parse_args():
 def main():
     option = {}
     option["ACL_OP_COMPILER_CACHE_MODE"] = 'enable'
-    option["ACL_OP_COMPILER_CACHE_DIR"] = './cache'
+    option["ACL_OP_COMPILER_CACHE_DIR"] = './test/cache'
 
     option["ACL_OP_SELECT_IMPL_MODE"] = 'high_precision'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
     print('option', option)
     torch.npu.set_option(option)
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'
-    args = parse_args()
+    os.environ['MASTER_ADDR'] = os.getenv('MASTER_ADDR', '127.0.0.1')
+    os.environ['MASTER_PORT'] = os.getenv('MASTER_PORT','29688')
+
     cfg = Config.fromfile(args.config)
     if args.data_root:
         cfg.data_root = args.data_root
-        cfg.data.train.ann_file = cfg.data_root + 'annotations/instances_train2017.json'
-        cfg.data.train.img_prefix = cfg.data_root + 'train2017/'
-        cfg.data.val.ann_file = cfg.data_root + 'annotations/instances_val2017.json'
-        cfg.data.val.img_prefix = cfg.data_root + 'val2017/'
+        cfg.data.train.ann_file = cfg.data_root + '/coco/annotations/instances_train2017.json'
+        cfg.data.train.img_prefix = cfg.data_root + '/coco/train2017/'
+        cfg.data.val.ann_file = cfg.data_root + '/coco/annotations/instances_val2017.json'
+        cfg.data.val.img_prefix = cfg.data_root + '/coco/val2017/'
 
     cfg.total_epochs = args.total_epochs
     # set cudnn_benchmark
@@ -125,8 +133,8 @@ def main():
         cfg.resume_from = args.resume_from
     if args.gpu_ids is not None:
         # cfg.gpu_ids = args.gpu_ids
-        # print('args.gpu_ids', args.gpu_ids[0])
         torch.npu.set_device(args.gpu_ids[0])
+        print('args.gpu_ids', args.gpu_ids[0])
     cfg.gpus = args.gpus
     print('args.gpus', args.gpus)
     if args.autoscale_lr:
@@ -191,8 +199,15 @@ def main():
         distributed=distributed,
         validate=args.validate,
         timestamp=timestamp,
+        fps_lag=args.fps_lag,
+        steps_per_epoch=args.steps_per_epoch,
+        profiling=args.profiling,
+        start_step=args.start_step,
         train_performance=args.train_performance)
 
 
 if __name__ == '__main__':
+    args = parse_args()
+    if args.rt2_bin:
+        torch.npu.set_compile_mode(jit_compile=False)
     main()

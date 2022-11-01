@@ -55,7 +55,11 @@ class Runner(object):
                  log_level=logging.INFO,
                  logger=None,
                  samples_per_gpu=2,
-                 num_of_gpus=1):
+                 num_of_gpus=1,
+                 fps_lag=200,
+                 steps_per_epoch=None,
+                 profiling=None,
+                 start_step=0):
         assert callable(batch_processor)
         self.model = model
         if optimizer is not None:
@@ -98,6 +102,12 @@ class Runner(object):
         self.samples_per_gpu = samples_per_gpu
         self.num_of_gpus = num_of_gpus
         self.iter_time_hook = IterTimerHook()
+        self.fps_lag = fps_lag
+        self.steps_per_epoch = steps_per_epoch
+        self.profiling=profiling
+        self.start_step=start_step
+        if steps_per_epoch is None:
+            self.steps_per_epoch = 500
 
     @property
     def model_name(self):
@@ -305,39 +315,48 @@ class Runner(object):
                 exit()
             """
             self._inner_iter = i
-            # if i == 50: ## npu diff
-            #     with torch.autograd.profiler.profile(use_npu=True) as prof:
-            #         self.call_hook('before_train_iter')
-            #         outputs = self.batch_processor(
-            #             self.model, data_batch, train_mode=True, **kwargs)
-            #         if not isinstance(outputs, dict):
-            #             raise TypeError('batch_processor() must return a dict')
-            #         if 'log_vars' in outputs:
-            #             self.log_buffer.update(outputs['log_vars'],
-            #                                    outputs['num_samples'])
-            #         self.outputs = outputs
-            #         self.call_hook('after_train_iter')
-            #     prof.export_chrome_trace('solov2_npu.prof')
-            # else:
             self.call_hook('before_train_iter')
-            outputs = self.batch_processor(
-                self.model, data_batch, train_mode=True, **kwargs)
-            if not isinstance(outputs, dict):
-                raise TypeError('batch_processor() must return a dict')
-            if 'log_vars' in outputs:
-                self.log_buffer.update(outputs['log_vars'],
-                                       outputs['num_samples'])
-            self.outputs = outputs
+            if i <= self.steps_per_epoch and i >= self.start_step and self.profiling == 'CANN':
+                with torch.npu.profiling(profiler_result_path="./CANN_prof",use_e2e_profiler=True):
+                    outputs = self.batch_processor(
+                        self.model, data_batch, train_mode=True, **kwargs)
+                    if not isinstance(outputs, dict):
+                        raise TypeError('batch_processor() must return a dict')
+                    if 'log_vars' in outputs:
+                        self.log_buffer.update(outputs['log_vars'],
+                                            outputs['num_samples'])
+                    self.outputs = outputs
+            elif i <= self.steps_per_epoch and i >= self.start_step and self.profiling == 'GE':
+                with torch.npu.profiling(profiler_result_path="./GE_prof"):
+                    outputs = self.batch_processor(
+                        self.model, data_batch, train_mode=True, **kwargs)
+                    if not isinstance(outputs, dict):
+                        raise TypeError('batch_processor() must return a dict')
+                    if 'log_vars' in outputs:
+                        self.log_buffer.update(outputs['log_vars'],
+                                            outputs['num_samples'])
+                    self.outputs = outputs
+            else:
+                outputs = self.batch_processor(
+                        self.model, data_batch, train_mode=True, **kwargs)
+                if not isinstance(outputs, dict):
+                    raise TypeError('batch_processor() must return a dict')
+                if 'log_vars' in outputs:
+                    self.log_buffer.update(outputs['log_vars'],
+                                        outputs['num_samples'])
+                self.outputs = outputs
+
             self.call_hook('after_train_iter')
             self._iter += 1
-            if i >= 500 and self.train_performance:
-                exit(0)
-            if i % 200 == 0 and i:
+            
+            if i % self.fps_lag == 0 and i:
                 self.logger.info('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
                                                 self.iter_time_hook.time_all))
-
-        self.logger.info('FPS: ' + str(
-            self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)))
+            if i >= self.steps_per_epoch and self.train_performance:
+                break
+        if not self.train_performance:
+            self.logger.info('FPS: ' + str(
+                self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)))
         self.call_hook('after_train_epoch')
         self._epoch += 1
 
@@ -407,6 +426,7 @@ class Runner(object):
         self.call_hook('before_run')
 
         while self.epoch < max_epochs:
+            start_time = time.time()
             for i, flow in enumerate(workflow):
                 mode, epochs = flow
                 if isinstance(mode, str):  # self.train()
@@ -425,6 +445,8 @@ class Runner(object):
                     if mode == 'train' and self.epoch >= max_epochs:
                         return
                     epoch_runner(data_loaders[i], **kwargs)
+            end_time = time.time()
+            self.logger.info('Epoch %s, cost time %.3fs'%(self.epoch, end_time-start_time))
 
         time.sleep(1)  # wait for some hooks like loggers to finish
         self.call_hook('after_run')
