@@ -69,16 +69,18 @@ def convert(input_path, output_path, restore_iter, hidden_dim):
     output_names = ["feature"]
 	
     dummy_input = torch.randn((1, align_size, 64, 44))
+
+    dynamic_axes = {'image_seq':{0:'-1'},'feature':{0:'-1'}}
     
     print('Exporting model to onnx...')
-    torch.onnx.export(encoder.module, dummy_input, output_path, input_names = input_names, output_names = output_names, opset_version=11, verbose=False)
+    torch.onnx.export(encoder.module, dummy_input, output_path, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=False)
     print('Onnx export done.')
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    from config_1p import conf_1p
-    from config_8p import conf_8p
+    from GaitSet_config_1p import conf_1p
+    from GaitSet_config_8p import conf_8p
     
     work_abspath = osp.abspath(conf_8p['WORK_PATH'])
     conf_model = conf_8p['model']

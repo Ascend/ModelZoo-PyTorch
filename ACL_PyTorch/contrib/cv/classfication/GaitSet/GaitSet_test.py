@@ -26,8 +26,8 @@ import torch.distributed as dist
 
 from model.initialization import initialization
 from model.utils import evaluation
-from config_1p import conf_1p
-from config_8p import conf_8p
+from GaitSet_config_1p import conf_1p
+from GaitSet_config_8p import conf_8p
 
 
 def boolean_string(s):

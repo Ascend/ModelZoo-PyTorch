@@ -1,141 +1,289 @@
-# GaitSet
+# GaitSet模型-推理指导
+
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
 GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移自https://github.com/AbnerHqC/GaitSet
 
 
 
-## GaitSet Detail
+- 参考实现：
 
-1、将模型修改为使用apex的混合精度进行训练
+  ```
+  url=https://github.com/AbnerHqC/GaitSet
+  branch=master
+  commit_id=14ee4e67e39373cbb9c631d08afceaf3a23b72ce
+  model_name=GaitSet
+  ```
 
-2、将模型修改为使用DDP进行分布式训练
+  通过Git获取对应commit\_id的代码方法如下：
 
-3、将模型修改为支持NPU环境下单p和多p的训练
-
-
-
-## Requirements
-
-1、`torch`、`torchvision`、`opencv-python`和`xarray`，`python3.7.5`
-
-2、下载数据集CASIA-B，下载地址http://www.cbsr.ia.ac.cn/english/Gait%20Databases.asp，注意下载DatasetB
-
-
-
-## Training
-
-### 一、数据预处理
-
-1、下载后的数据集内的压缩文件需要全部解压，解压后数据集内部的目录应为（`CASIA-B`数据集）：数据集路径/对象序号/行走状态/角度，例如`CASIA-B/001/nm-01/000/ `。
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
 
+## 输入输出数据<a name="section540883920406"></a>
 
-2、执行以下命令进行数据预处理，并转为二进制文件：（执行前需要按下面两步修改路径）
+- 输入数据
 
-```bash
-bash test/predeal.sh
-```
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 100 x 64 x 44 | NCHW         |
 
-预处理需要修改`predeal.sh`中的数据集路径。假设下载的数据集路径为`/home/CASIA-B/...`，初步处理后的数据集导出路径为`/root/CASIA-B-Pre`。则修改`predeal.sh`中含有`pretreatment.py`的一行如下：
 
-```bash
-python3.7.5 pretreatment.py --input_path='/home/CASIA-B' --output_path='/root/CASIA-B-Pre/'
-```
+- 输出数据
 
-修改后，把`config_1p.py`中的参数`dataset_path`也改为上面`output_path`所用的路径。例如导出路径为`/home/1/`则改为`"dataset_path": "/home/1"`。可以使用相对路径，起点为代码根目录。
+  | 输出数据 | 大小         | 数据类型 | 数据排布格式 |
+  | -------- | ------------ | -------- | ------------ |
+  | output1  | 1 x 62 x 256 | FLOAT32  | ND           |
 
 
 
-> 如果不是使用python3.7.5，可修改`test`目录的脚本内的`python3.7.5`为自己的版本
+
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本     | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2  | -                                                            |
+  | Python                                                       | 3.7.5    | -                                                            |
+  | AscendPytorch                                                | 1.5.0+ascend.post5  | -    [AscendPytorch](https://gitee.com/ascend/pytorch)          |
+  | onnx                                                         | 1.7.0    | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \        | \                                                            |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+
+
+1. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt   Ascend版torch安装参考以上链接
+   ```
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。
+
+   本模型支持CASIA-B图片的验证集。下载地址http://www.cbsr.ia.ac.cn/english/Gait%20Databases.asp  ，只下载DatasetB数据集。
+
+   下载后的数据集内的压缩文件需要全部解压，解压后数据集内部的目录应为（`CASIA-B`数据集）：数据集路径/对象序号/行走状态/角度，例如`CASIA-B/001/nm-01/000/ `。
+
+2. 数据预处理。
+
+   数据预处理将原始数据集转换为模型输入的数据。
+
+   a.执行命令编辑脚本。
+
+   ```
+   vim GaitSet_config_1p.py 
+   #修改dataset_path为b命令GaitSet_pretreatment.py中output_path所用的路径
+   执行:wq保存退出编辑。
+   ```
+
+   b.执行命令，完成数据集预处理。
+
+   ```
+   python GaitSet_pretreatment.py --input_path='root_path_of_raw_dataset' --output_path='root_path_for_output'
+   ```
+
+   第一个参数是数据集所在目录，第二个参数是预处理后的文件名
+
+   c.执行命令生成bin文件夹。
+
+   ```
+   mkdir CASIA-B-bin
+   python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --pre_process=True
+   ```
+
+   
+
+> **说明：** 
 >
-> 执行任意`.sh`脚本提示`'\r': command not found`是文件编码问题，转为`linux`编码即可
+> - 预处理过程中提示大量`WARNING`属于正常现象。如果出现`ERROR`错误提示则可能路径设置有误、或要求中的库文件没有安装。由于`ERROR`提示等重新导出时，建议删除导出有误的文件后再导出。
 >
-> 预处理过程中提示大量`WARNING`属于正常现象。如果出现`ERROR`错误提示则可能路径设置有误、或要求中的库文件没有安装。由于`ERROR`提示等重新导出时，建议删除导出有误的文件后再导出。
-
-运行时，首先初步处理后的数据集会在导出路径下生成。
-
-随后，脚本会使用生成的数据集，在当前根目录下生成`CASIA-B-bin`文件夹，里面含有处理好的二进制格式的图片。之后，脚本会在当前根目录下生成以`.info`结尾的图片列表文件，用于推理。
+> - 运行时，首先初步处理后的数据集会在导出路径下生成。
+>
+> - 随后，脚本会使用生成的数据集，在当前根目录下生成`CASIA-B-bin`文件夹，里面含有处理好的二进制格式的图片。
 
 
+## 模型推理<a name="section741711594517"></a>
 
-### 二、推理
+1. 模型转换。
 
-1、使用训练产生的ptm文件转为onnx和om文件：
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-(1) 如果已经训练过`Gaitset`，在`work/checkpoint/GaitSet`下生成了ptm文件：执行以下指令。当前目录下会生成`gaiset_submit.onnx`和`gaitset_submit.om`文件：
+   1. 获取权重文件。
 
-```bash
-bash test/pth2om.sh
-```
+       在源码包中已经提供权重文件GaitSet_CASIA-B_73_False_256_0.2_128_full_30-80000-encoder.ptm，如果没有，可以使用源码自带的ptm进行推理，地址：https://github.com/AbnerHqC/GaitSet/tree/master/work/checkpoint/GaitSet 。进入此地址下载里面的encoder.ptm后缀的文件
 
-> 如果没有训练，可以使用源码自带的ptm进行推理，地址：https://github.com/AbnerHqC/GaitSet/tree/master/work/checkpoint/GaitSet。进入此地址下载里面的encoder.ptm后缀的文件
+   2. 导出onnx文件，此处导出的onnx为静态，因此需要每个batch_size的onnx。
 
+      1. 使用GaitSet_pth2onnx.py导出onnx文件。
 
+         运行GaitSet_pth2onnx.py脚本，获得gaitset_submit.onnx文件。
 
-(2) 如果没有训练过，假设下载到本地的ptm路径为`/home/1.ptm`，可以先转onnx文件：
+         ```
+         python GaitSet_pth2onnx.py --input_path=’${权重文件路径}’
+         ```
+      
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-```bash
-python3.7.5 pth2onnx.py --input_path='/home/1.ptm'
-```
+      1. 配置环境变量。
 
-如果加载训练的ptm代数不为默认的80000代，例如为60000时需要设置`--iters`命令行参数：
-
-```bash
-python3.7.5 pth2onnx.py --input_path='/home/1.ptm' --iters=60000
-```
-
-
-
-转onnx生成`gaitset_submit.onnx`文件后，再执行下面的指令转om文件：
-
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=Ascend310
-```
-
-
-
-2、在支持benchmark的环境下执行以下命令、并展示精度结果：
-
-bs1：
-
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=gaitset_submit.om -input_text_path=CASIA-B-bin.info -input_width=64 -input_height=64 -output_binary=True -useDvpp=False
-```
-
-bs16：
-
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=gaitset_submit.om -input_text_path=CASIA-B-bin.info -input_width=64 -input_height=64 -output_binary=True -useDvpp=False
-```
-
-
-
-然后执行`eval_acc_perf.sh`：
-
-```bash
-bash test/eval_acc_perf.sh
-```
-
-或者在配置好了环境的前提下直接运行：
-
-```bash
-python3.7.5 -u test.py --iter=-1 --batch_size 1 --cache=True --post_process=True
-```
-
-参数`--iter`、`--cache`、`--post_process`为模型后处理固定参数不需修改。
-
-
-
-原模型精度95.405%：
-
-![](原精度.bmp)
-
-转换后精度95.512%：
-
-![](om精度.bmp)
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+   
+         > **说明：** 
+         >
+         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+      
+      4. 执行命令查看芯片名称（$\{chip\_name\}）。
+   
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+   
+      3. 执行ATC命令。
+   
+         ```
+         atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit_bs1 --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=${chip_name}
+         ```
+   
+         - 参数说明：
+   
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+   
+   
+   
+   
+      运行成功后生成gaitset_submit_bs1.om模型文件。
 
 
 
+2. 开始推理验证。
+
+   a.  使用ais-infer工具进行推理。
+
+   执行命令增加工具可执行权限，并根据OS架构选择工具
+
+   ```
+   chmod u+x 
+   ```
+
+   b.  执行推理。
+
+    纯推理模式：
+    ```
+    python ais_infer.py --model gaitset_submit_bs1_310P.om --batchsize 1 --loop 10
+    ```
+   
+    - 参数说明：
+   
+      - batchsize：batchsize大小。
+   
+      - loop：推理次数，可选参数，默认1，profiler为true时，推荐为1。
+   
+        
+   
+    真实数据推理：
+    ```
+   python ais_infer.py --model gaitset_submit_bs1.om --batchsize 1 --input "CASIA-B-bin" --output "result" --output_dirname "dumpOutput_device0"
+    ```
+   
+    -   参数说明：
+   
+        -   model：om文件路径。
+        -   input：输入数据。
+        -   batchsize：batchsize大小。
+        -   output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
+        -   output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中。
+   
+
+ 
+
+   c.  精度验证。
+
+    
+    ```bash
+    python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --post_process=True
+    ```
+    
+    参数`--iter`、`--cache`、`--post_process`为模型后处理固定参数不需修改。
+
+
+
+   原模型精度95.405%：
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+| 310      | 1          | CASIA-B  DatasetB | Rank1:95.512% | 599.98  |
+| 310 | 4 | CASIA-B  DatasetB | | 667.168 |
+| 310 | 8 | CASIA-B  DatasetB | | 678.32 |
+| 310 | 16 | CASIA-B  DatasetB | Rank1:95.512% | 684.812 |
+| 310 | 32         | CASIA-B  DatasetB | | 681.212 |
+| 310 | 64 | CASIA-B  DatasetB | | 681.564 |
+| 310P | 1 | CASIA-B  DatasetB | Rank1:95.512% | 849.55 |
+| 310P | 4 | CASIA-B  DatasetB | | 907.832 |
+| 310P | 8 | CASIA-B  DatasetB |  | 926.033 |
+| 310P | 16 | CASIA-B  DatasetB | Rank1:95.512% | 941.825 |
+| 310P | 32 | CASIA-B  DatasetB |  | 950.833 |
+| 310P | 64 | CASIA-B  DatasetB |  | 952.93 |
+| T4 | 1 | CASIA-B  DatasetB |  | 354.39 |
+| T4 | 4 | CASIA-B  DatasetB |  | 395.37 |
+| T4 | 8 | CASIA-B  DatasetB |  | 388.48 |
+| T4 | 16 | CASIA-B  DatasetB |  | 379.23 |
+| T4 | 32 | CASIA-B  DatasetB |  | 394.04 |
+| T4 | 64 | CASIA-B  DatasetB |  | 384.21 |
+
+
+
+以上在310P上的结果为AOE优化后的性能。

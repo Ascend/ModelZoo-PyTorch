@@ -427,7 +427,7 @@ class Model:
             if post_process == False:
                 feature = self.encoder(*seq, batch_frame)
             else:
-                feat = np.fromfile(f'../result/dumpOutput_device0/{i:0>4d}_1.bin', dtype=np.float32)
+                feat = np.fromfile(f'../result/dumpOutput_device0/{i:0>4d}_0.bin', dtype=np.float32)
                 feature = torch.Tensor(feat).float().npu().view(1, -1, 256)
 
                 if i % 50 == 0:
