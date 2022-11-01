@@ -61,6 +61,12 @@ else
   cd src
   source settings.sh
   cd ..
+  current_time=$(date +%s)
+  mkdir -p /npu/traindata/${current_time}
+  tar -xavf /${data_path}/GOTURN_data.tar.gz -C /npu/traindata/${current_time}/
+  data_path=/npu/traindata/${current_time}/
+  IMAGENET_PATH=${data_path}/ILSVRC2014_Det/
+  ALOV_PATH=${data_path}/ALOV/
 fi
 
 python3.7 -u ./src/scripts/train.py \
@@ -125,3 +131,6 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 #echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+if [ x"${etp_flag}" = x"true" ]; then
+    rm -rf ${data_path}
+fi
