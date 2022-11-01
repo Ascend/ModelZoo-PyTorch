@@ -1,0 +1,8 @@
+torch==1.6.0 torchvision==0.7.0
+ONNX==1.7.0
+onnxruntime-gpu==1.7.0
+kaldiio==2.17.2
+pyyaml
+tqdm
+tensorboard
+editdistance
