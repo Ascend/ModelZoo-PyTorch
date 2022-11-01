@@ -50,7 +50,7 @@ train_epochs=1
 #训练batch_size
 batch_size=64
 #训练step
-#train_steps=`expr 1281167 / ${batch_size}`
+train_steps=1000
 #学习率
 learning_rate=0.495
 
@@ -173,14 +173,13 @@ do
     #let c=b*$cpustep-1
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3 moby_main.py $PREC --cfg configs/moby_swin_tiny.yaml --local_rank 0 --data-path $data_path --batch-size ${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 moby_main.py $PREC --cfg configs/moby_swin_tiny.yaml --local_rank 0 --data-path $data_path --batch-size ${batch_size} --max_steps ${train_steps}> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
 
 #恢复参数
 sed -i "s|TRAIN.EPOCHS = 1|TRAIN.EPOCHS = 300|g" config.py
 sed -i "s|EPOCHS: 1|EPOCHS: 300|g"  configs/moby_swin_tiny.yaml
-sed -i "s|break|pass|g" moby_main.py
 
 #kill残余的此网络进程
 #ps -ef | grep moby | awk '{print $2}' | xargs kill -9

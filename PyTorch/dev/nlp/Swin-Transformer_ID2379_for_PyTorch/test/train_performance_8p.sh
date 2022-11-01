@@ -47,7 +47,7 @@ train_epochs=1
 #训练batch_size
 batch_size=64
 #训练step
-#train_steps=`expr 1281167 / ${batch_size}`
+train_steps=100
 #学习率
 learning_rate=
 
@@ -128,7 +128,6 @@ cd $cur_path/../
 sed -i "s|EPOCHS: 300|EPOCHS: 1|g"  configs/moby_swin_tiny.yaml
 rm -rf output
 sed -i "s|TRAIN.EPOCHS = 300|TRAIN.EPOCHS = 1|g" config.py
-sed -i "s|pass|break|g" moby_main.py
 
 #mkdir -p checkpoints
 #mkdir -p /root/.cache/torch/hub/checkpoints
@@ -149,14 +148,13 @@ do
         mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt
     fi
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3 moby_main.py $PREC --cfg configs/moby_swin_tiny.yaml --local_rank 0 --data-path $data_path --batch-size ${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup python3 moby_main.py $PREC --cfg configs/moby_swin_tiny.yaml --local_rank 0 --data-path $data_path --batch-size ${batch_size} --max_steps ${train_steps}> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
 
 #恢复参数
 sed -i "s|TRAIN.EPOCHS = 1|TRAIN.EPOCHS = 300|g" config.py
 sed -i "s|EPOCHS: 1|EPOCHS: 300|g"  configs/moby_swin_tiny.yaml
-sed -i "s|break|pass|g" moby_main.py
 
 ASCEND_DEVICE_ID=0
 #kill残余的此网络进程
