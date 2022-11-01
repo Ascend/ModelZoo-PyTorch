@@ -53,6 +53,12 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+class NoProling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
 class Trainer:
     def __init__(self, experiment: Experiment):
         self.experiment = experiment
@@ -88,14 +94,13 @@ class Trainer:
             group['lr'] = lr
         self.current_lr = lr
 
-    def train(self):
+    def train(self, profiling, collect_start, collect_end):
         self.logger.report_time('Start')
         self.logger.args(self.experiment)
         model = self.init_model()
         train_data_loader = self.experiment.train.data_loader.train_loader
         if self.experiment.validation:
             validation_loaders = self.experiment.validation.data_loaders
-
         self.steps = 0
         epoch = 0
         if self.experiment.train.checkpoint:
@@ -122,49 +127,60 @@ class Trainer:
             self.total = len(train_data_loader)
 
             for batch in train_data_loader:
-                data_time.update((time.time() - end) * 1000)
-                self.update_learning_rate(optimizer, epoch, self.steps)
+                current_step = self.steps
+                collect_turn = current_step > collect_start and  current_step <= collect_end
+                if(profiling == 'GE' and collect_turn):
+                    manage = torch.npu.profile('./GE_prof')
+                elif(profiling == 'CANN' and collect_turn):
+                    manage = torch.npu.profile('./CANN_prof', use_e2e_profiler=True)
+                else:
+                    if profiling in ['CANN', 'GE'] and current_step > collect_end:
+                        break
+                    manage = NoProling()
+                with manage:
+                    data_time.update((time.time() - end) * 1000)
+                    self.update_learning_rate(optimizer, epoch, self.steps)
 
-                self.logger.report_time("Data loading")
+                    self.logger.report_time("Data loading")
 
-                if self.experiment.validation and\
-                        self.steps % self.experiment.validation.interval == 0 and\
-                        self.steps > self.experiment.validation.exempt:
-                    self.validate(validation_loaders, model, epoch, self.steps)
-                self.logger.report_time('Validating ')
-                if self.logger.verbose:
-                    torch.npu.synchronize()
+                    if self.experiment.validation and\
+                            self.steps % self.experiment.validation.interval == 0 and\
+                            self.steps > self.experiment.validation.exempt:
+                        self.validate(validation_loaders, model, epoch, self.steps)
+                    self.logger.report_time('Validating ')
+                    if self.logger.verbose:
+                        torch.npu.synchronize()
 
-                loss_item = self.train_step(model, optimizer, batch,
-                                epoch=epoch, step=self.steps)
-                losses.update(loss_item)
-                if self.logger.verbose:
-                    torch.npu.synchronize()
-                self.logger.report_time('Forwarding ')
+                    loss_item = self.train_step(model, optimizer, batch,
+                                    epoch=epoch, step=self.steps)
+                    losses.update(loss_item)
+                    if self.logger.verbose:
+                        torch.npu.synchronize()
+                    self.logger.report_time('Forwarding ')
 
-                self.model_saver.maybe_save_model(
-                    model, epoch, self.steps, self.logger)
+                    self.model_saver.maybe_save_model(
+                        model, epoch, self.steps, self.logger)
 
-                self.steps += 1
-                if self.steps == 9:
-                    batch_time.reset()
-                    data_time.reset()
-                if self.total > 0 and self.steps % self.total == 2:
-                    batch_time.reset()
+                    self.steps += 1
+                    if self.steps == 9:
+                        batch_time.reset()
+                        data_time.reset()
+                    if self.total > 0 and self.steps % self.total == 2:
+                        batch_time.reset()
 
-                batch_time.update((time.time() - end) * 1000)
-                if self.steps % self.experiment.logger.log_interval == 0:
-                    fps = self.experiment.train.data_loader.batch_size * 1000 / batch_time.val
-                    step_count = (self.steps - 1) % self.total + 1
-                    msg = 'Epoch: [{0}][{1}/{2}]\t' \
-                          'Time {batch_time.val:.3f}ms ({batch_time.avg:.3f}ms)\t' \
-                          'Data {data_time.val:.3f}ms ({data_time.avg:.3f}ms)\t' \
-                          'Fps {fps:.3f}\t' \
-                          'Loss {loss.val:.5f} ({loss.avg:.5f})\t'.format(
-                        epoch, step_count, self.total, batch_time=batch_time,
-                        data_time=data_time, fps=fps, loss=losses)
-                    self.logger.info(msg)
-                end = time.time()
+                    batch_time.update((time.time() - end) * 1000)
+                    if self.steps % self.experiment.logger.log_interval == 0:
+                        fps = self.experiment.train.data_loader.batch_size * 1000 / batch_time.val
+                        step_count = (self.steps - 1) % self.total + 1
+                        msg = 'Epoch: [{0}][{1}/{2}]\t' \
+                            'Time {batch_time.val:.3f}ms ({batch_time.avg:.3f}ms)\t' \
+                            'Data {data_time.val:.3f}ms ({data_time.avg:.3f}ms)\t' \
+                            'Fps {fps:.3f}\t' \
+                            'Loss {loss.val:.5f} ({loss.avg:.5f})\t'.format(
+                            epoch, step_count, self.total, batch_time=batch_time,
+                            data_time=data_time, fps=fps, loss=losses)
+                        self.logger.info(msg)
+                    end = time.time()
             self.logger.info('npu id: {device_no:1d}' \
                   ' * FPS@all {fps:.3f}'.format(device_no=self.device.index, fps=self.experiment.train.data_loader.batch_size * 1000 / batch_time.avg))
             

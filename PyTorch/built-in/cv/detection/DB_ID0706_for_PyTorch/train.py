@@ -19,6 +19,7 @@
 import argparse
 import time
 import os
+import ast
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
@@ -66,9 +67,9 @@ def main(args):
         main_worker(0, npus_per_node, args)
 
 def main_worker(dev, npus_per_node, args):
-    if args['rt2']:
+    if args['bin']:
         torch.npu.set_compile_mode(jit_compile=False) 
-        print("use rt2 train model")
+        print("use bin train model")
     device_id = args["process_device_map"][dev]
     args["device_id"] = device_id
     loc = "npu:{}".format(device_id)
@@ -99,7 +100,7 @@ def main_worker(dev, npus_per_node, args):
     if not args['print_config_only']:
         trainer = Trainer(experiment)
         print("start train in device: ", device_id)
-        trainer.train()
+        trainer.train(args["profiling"], args["start_step"], args["stop_step"])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Text Recognition Training')
@@ -138,7 +139,10 @@ if __name__ == '__main__':
     parser.add_argument('--dist_backend', default="hccl", type=str, help='distributed backend')
     parser.add_argument('--addr', default="90.90.176.102", type=str, help='master addr')
     parser.add_argument('--Port', default="29500", type=str, help='master Port')
-    parser.add_argument('--rt2', default=False, action='store_true', help='Use rt2 in the model training')
+    parser.add_argument('--bin',  type=ast.literal_eval, help='turn on bin')
+    parser.add_argument('--profiling', default='', type=str, help='type of profiling')
+    parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
+    parser.add_argument('--stop_step', default=-1, type=int, help='number of stop step')
     parser.set_defaults(debug=False)
     parser.set_defaults(benchmark=True)
 

@@ -16,7 +16,7 @@ fi
 Network="DB_ID0706_for_PyTorch"
 
 # 训练batch_size
-batch_size=8
+batch_size=16
 
 # 训练使用的npu卡数
 export RANK_SIZE=1
@@ -33,11 +33,14 @@ data_path=""
 model_path=$cur_path/path-to-model-directory
 
 # 训练epoch
-train_epochs=1
+train_epochs=0
 
 # 指定训练所使用的npu device卡id
-device_id=0
-
+device_id=6
+bin=False
+profiling=''
+start_step=-1
+stop_step=-1
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -47,9 +50,18 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --model_path* ]];then
         model_path=`echo ${para#*=}`
+    elif [[ $para == --rt1 ]];then
+        rt1=True
+    elif [[ $para == --bin ]];then
+        bin=True
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     fi
 done
-
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
@@ -83,24 +95,24 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-# 非平台场景时source 环境变量
-check_etp_flag=`env | grep etp_running_flag`
-etp_flag=`echo ${check_etp_flag#*=}`
-if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/env_npu.sh
-fi
-
-sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
-sed -i "s|epochs: 1200|epochs: $train_epochs|g" experiments/seg_detector/ic15_resnet50_deform_thre.yaml
-sed -i "s|batch_size: 16|batch_size: $batch_size|g" experiments/seg_detector/ic15_resnet50_deform_thre.yaml
+# # 非平台场景时source 环境变量
+# check_etp_flag=`env | grep etp_running_flag`
+# etp_flag=`echo ${check_etp_flag#*=}`
+# if [ x"${etp_flag}" != x"true" ];then
+#     source ${test_path_dir}/env_npu.sh
+# fi
 
 taskset -c 0-23 nohup python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
         --data_path ${data_path}/icdar2015 \
         --resume ${mdoel_path}/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --amp \
-        --rt2 \
         --epochs ${train_epochs} \
+        --batch_size ${batch_size} \
+        --bin ${bin} \
+        --profiling "${profiling}" \
+        --start_step ${start_step} \
+        --stop_step ${stop_step} \
         --device_list "${ASCEND_DEVICE_ID}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
