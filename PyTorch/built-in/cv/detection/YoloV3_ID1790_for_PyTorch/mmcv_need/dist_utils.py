@@ -18,6 +18,7 @@ import subprocess
 from collections import OrderedDict
 
 import torch
+import torch_npu
 import torch.multiprocessing as mp
 from torch import distributed as dist
 from torch._utils import (_flatten_dense_tensors, _take_tensors,
@@ -43,9 +44,10 @@ def _init_dist_pytorch(backend, **kwargs):
     # TODO: use local_rank instead of rank % num_gpus
     rank = int(os.environ['RANK'])
     offset = 0 if os.getenv('NPUID', None) is None else int(os.environ['NPUID'])
-    num_gpus = int(os.environ['RANK_SIZE'])
+    num_gpus = os.getenv('RANK_SIZE', '-1')
+    num_gpus = torch.npu.device_count() if num_gpus == '-1' else int(num_gpus)
     torch.npu.set_device((rank + offset) % num_gpus)
-    dist.init_process_group(backend=backend, world_size=num_gpus, rank=rank)
+    dist.init_process_group(backend=backend, world_size=int(os.environ['WORLD_SIZE']), rank=rank)
 
 
 def _init_dist_mpi(backend, **kwargs):
