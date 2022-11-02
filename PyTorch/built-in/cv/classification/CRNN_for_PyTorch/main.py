@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import argparse
+import ast
 import yaml
 import os
 import time
@@ -33,7 +34,15 @@ def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
     parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
     parser.add_argument('--npu', help='npu id', type=str)
-    parser.add_argument('--rt2', action='store_true', default=False, help='enable run time2.0 model')
+    parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
+    parser.add_argument('--pro', type=ast.literal_eval, default=False, help='enable control steps number')
+    parser.add_argument('--training_debug', type=ast.literal_eval, default=False, help='enable control train_model is debug')
+    parser.add_argument('--training_type', type=ast.literal_eval, default=False, help="enable control train_model is 'GE' or 'CANN'")
+    parser.add_argument('--profiling', type=str, default='NONE',help='choose profiling way--CANN,GE,NONE')
+    parser.add_argument('--max_step', default=10, type=int, help='start_step')
+    parser.add_argument('--start_step', default=0, type=int, help='start_step')
+    parser.add_argument('--stop_step', default=1000, type=int,help='stop_step') 
+    
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
         config = yaml.load(f)
@@ -45,7 +54,7 @@ def parse_arg():
 def main():
     # load config
     config, args = parse_arg()
-    if args.rt2:
+    if args.bin:
         torch.npu.set_compile_mode(jit_compile=False)
     print('config is: ', config)
 
@@ -56,8 +65,11 @@ def main():
     model = crnn.get_crnn(config)
 
     # get device
-    device = torch.device("npu:{}".format(config.DEVICE_ID))
-    # device = 'npu:{}'.format(config.DEVICE_ID)
+    if args.npu:
+        device = 'npu:{}'.format(args.npu)
+    else:
+        device = torch.device("npu:{}".format(config.DEVICE_ID))
+    
     torch.npu.set_device(device)
     model = model.to(device)
 
@@ -139,7 +151,11 @@ def main():
                 }, os.path.join(checkpoint_dir, "checkpoint_{}_acc_{:.4f}.pth".format(epoch, acc))
             )
 
-
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 def train(config, train_loader, dataset, converter, model, criterion, optimizer, device, epoch):
     config, args = parse_arg()
@@ -149,29 +165,43 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
     losses = utils.AverageMeter()
     model.train()
     end = time.time()
+    num_steps = 0
+
     for i, (inp, idx) in enumerate(train_loader):
-        if args.rt2 and i >= 1000:
+        if args.training_debug and i >= args.max_step:
             break
-        data_time.update((time.time() - end) * 1000)
-        labels = idx
-        inp = inp.to(device)
-        preds = model(inp)
-        batch_size = inp.size(0)
-        text, length = converter.encode(labels)
-        # timestep * batchsize
-        preds_size = torch.IntTensor([preds.size(0)] * batch_size)
-        text = text.to(device)
-        length = length.to(device)
-        preds_size = preds_size.to(device)
-        loss = criterion(preds, text, preds_size, length)
-        optimizer.zero_grad()
-        if config.TRAIN.AMP:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+        if args.pro and i >= 1000:
+            break
+        if args.training_type and args.num_steps > args.stop_step:
+            import sys
+            sys.exit()
+        elif args.start_step<= num_steps <= args.stop_step and args.profiling == 'CANN':
+            profiling = torch.npu.profile(profiler_result_path="./CANN_prof2",use_e2e_profiler=True)
+        elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
+            profiling = torch.npu.profile(profiler_result_path="./GE_prof")
         else:
-            loss.backward()
-        optimizer.step()
-        losses.update(loss.item(), inp.size(0))
+            profiling = NoProfiling()
+        with profiling:       
+            data_time.update((time.time() - end) * 1000)
+            labels = idx
+            inp = inp.to(device)
+            preds = model(inp)
+            batch_size = inp.size(0)
+            text, length = converter.encode(labels)
+            # timestep * batchsize
+            preds_size = torch.IntTensor([preds.size(0)] * batch_size)
+            text = text.to(device)
+            length = length.to(device)
+            preds_size = preds_size.to(device)
+            loss = criterion(preds, text, preds_size, length)
+            optimizer.zero_grad()
+            if config.TRAIN.AMP:
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
+            optimizer.step()
+            losses.update(loss.item(), inp.size(0))
         if i == 9:
             batch_time.reset()
             data_time.reset()
@@ -179,14 +209,15 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
         fps = (config.TRAIN.BATCH_SIZE_PER_GPU / batch_time.val) * 1000
         if i % config.PRINT_FREQ == 0:
             msg = 'Epoch: [{0}][{1}/{2}]\t' \
-                  'Time {batch_time.val:.3f}ms ({batch_time.avg:.3f}ms)\t' \
-                  'Data {data_time.val:.3f}ms ({data_time.avg:.3f}ms)\t' \
-                  'Fps {fps:.3f}\t' \
-                  'Loss {loss.val:.5f} ({loss.avg:.5f})\t'.format(
+                'Time {batch_time.val:.3f}ms ({batch_time.avg:.3f}ms)\t' \
+                'Data {data_time.val:.3f}ms ({data_time.avg:.3f}ms)\t' \
+                'Fps {fps:.3f}\t' \
+                'Loss {loss.val:.5f} ({loss.avg:.5f})\t'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
                 data_time=data_time, fps=fps, loss=losses)
             print(msg)
         end = time.time()
+        num_steps = num_steps + 1
     print(' * FPS@all {:.3f}'.format(config.TRAIN.BATCH_SIZE_PER_GPU * 1000 / batch_time.avg))
 
 

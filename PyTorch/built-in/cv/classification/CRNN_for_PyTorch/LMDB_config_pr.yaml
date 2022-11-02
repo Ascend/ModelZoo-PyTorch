@@ -1,0 +1,42 @@
+DEVICE_ID: 0
+WORKERS: 64
+PRINT_FREQ: 1
+SAVE_FREQ: 1
+PIN_MEMORY: true
+DROP_LAST: true
+OUTPUT_DIR: 'output'
+
+DATASET:
+  DATA_FILTER: true
+  DATASET: LMDB
+  TRAIN_ROOT: "/opt/npu/zhusiyi/dataset/MJ_LMDB"
+  TEST_ROOT: "/opt/npu/zhusiyi/dataset/IIIT5K_lmdb"
+  ALPHABETS: '0123456789abcdefghijklmnopqrstuvwxyz'
+
+TRAIN:
+  AMP: True
+  OPT_LEVEL: O1
+  LOSS_SCALE: 128
+  BATCH_SIZE_PER_GPU: 2560
+  SHUFFLE: True
+  BEGIN_EPOCH: 0
+  END_EPOCH: 20
+  OPTIMIZER: 'adadelta'
+  RESUME:
+    IS_RESUME: False
+    FILE: '/home/CRNN_Chinese_Characters_Rec-stable_o2_epoch100/npu/output/2020-10-10-12-45/checkpoints/checkpoint_10_acc_0.7927.pth'
+
+TEST:
+  MODEL_FILE: ''
+  BATCH_SIZE_PER_GPU: 1280
+  SHUFFLE: True
+  NUM_TEST_DISP: 10
+
+MODEL:
+  NAME: 'crnn'
+  IMAGE_SIZE:
+    H: 32
+    W: 100
+  NUM_CLASSES: 0
+  NUM_HIDDEN: 256
+

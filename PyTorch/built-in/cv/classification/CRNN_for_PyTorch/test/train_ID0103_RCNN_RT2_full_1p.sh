@@ -22,7 +22,7 @@ Network="CRNN_RT2_ID0103_for_PyTorch"
 batch_size=2560
 
 #训练epoch，不需要修改
-epochs=1
+epochs=20
 start_step=700
 stop_step=720
 max_step=10
@@ -108,7 +108,7 @@ sed -i "s|TEST_ROOT.*$|TEST_ROOT\: ${data_path}/IIIT5K_lmdb|g" ${cur_path}/LMDB_
 
 python3 main.py \
     --bin=True\
-    --pro=True \
+    --pro=False \
     --training_debug=False \
     --training_type=False \
     --max_step ${max_step} \
@@ -163,7 +163,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 #获取性能数据，不需要修改
 #吞吐量

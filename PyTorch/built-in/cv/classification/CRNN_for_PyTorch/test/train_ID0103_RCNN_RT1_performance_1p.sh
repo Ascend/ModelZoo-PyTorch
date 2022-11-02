@@ -3,20 +3,32 @@
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
-export ENABLE_RUNTIME_V2=0
+#设置默认日志级别,不需要修改
+# export ASCEND_GLOBAL_LOG_LEVEL=3
+
 # 数据集路径,保持为空,不需要修改
 data_path=""
+profiling="NONE"
+
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 
 #网络名称,同目录名称,需要模型审视修改
 Network="CRNN_RT2_ID0103_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=2560
-runtime=1
+
 #训练epoch，不需要修改
 epochs=1
+start_step=700
+stop_step=720
+max_step=10
+
 # 指定训练所使用的npu device卡id
-device_id=3
+device_id=6
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -24,6 +36,24 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
+    elif [[ $para == --bin* ]];then
+        bin=`echo ${para#*=}`
+    elif [[ $para == --pro* ]];then
+        pro=`echo ${para#*=}`
+    elif [[ $para == --training_debug* ]];then
+        training_debug=`echo ${para#*=}`
+    elif [[ $para == --training_type* ]];then
+        training_type=`echo ${para#*=}`
+    elif [[ $para == --max_step* ]];then
+        max_step=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -34,6 +64,7 @@ if [[ $data_path == "" ]];then
 fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
+    device_id=$ASCEND_DEVICE_ID
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}
@@ -65,34 +96,27 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-# 非平台场景时source 环境变量
-# check_etp_flag=`env | grep etp_running_flag`
-# etp_flag=`echo ${check_etp_flag#*=}`
-# if [ x"${etp_flag}" != x"true" ];then
-#     source ${test_path_dir}/env_npu.sh
-# fi
 
 # 必要参数替换配置文件
 cur_path=`pwd`
-sed -i "0,/BATCH_SIZE_PER_GPU.*$/s//BATCH_SIZE_PER_GPU\: ${batch_size}/g" ${cur_path}/LMDB_config.yaml
-sed -i "s/END_EPOCH.*$/END_EPOCH\: ${epochs}/g" ${cur_path}/LMDB_config.yaml
-sed -i "s|TRAIN_ROOT.*$|TRAIN_ROOT\: ${data_path}/MJ_LMDB|g" ${cur_path}/LMDB_config.yaml
-sed -i "s|TEST_ROOT.*$|TEST_ROOT\: ${data_path}/IIIT5K_lmdb|g" ${cur_path}/LMDB_config.yaml
-sed -i "s/DEVICE_ID.*$/DEVICE_ID\: ${device_id}/g" ${cur_path}/LMDB_config.yaml
+sed -i "0,/BATCH_SIZE_PER_GPU.*$/s//BATCH_SIZE_PER_GPU\: ${batch_size}/g" ${cur_path}/LMDB_config_pr.yaml
+sed -i "s/END_EPOCH.*$/END_EPOCH\: ${epochs}/g" ${cur_path}/LMDB_config_pr.yaml
+sed -i "s|TRAIN_ROOT.*$|TRAIN_ROOT\: ${data_path}/MJ_LMDB|g" ${cur_path}/LMDB_config_pr.yaml
+sed -i "s|TEST_ROOT.*$|TEST_ROOT\: ${data_path}/IIIT5K_lmdb|g" ${cur_path}/LMDB_config_pr.yaml
+
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-# export ASCEND_SLOG_PRINT_TO_STDOUT=0
-# export ASCEND_GLOBAL_LOG_LEVEL=3
-# export TASK_QUEUE_ENABLE=1
-# export PTCOPY_ENABLE=1
-# export COMBINED_ENABLE=1
-# export SWITCH_MM_OUTPUT_ENABLE=1
 
-# /usr/local/Ascend/driver/tools/msnpureport -g error -d 0
-# /usr/local/Ascend/driver/tools/msnpureport -g error -d 4
-
-python3.7 main.py \
-    --cfg LMDB_config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-    
+python3 main.py \
+    --pro=True \
+    --training_debug=False \
+    --training_type=False \
+    --max_step ${max_step} \
+    --npu ${device_id} \
+    --profiling ${profiling} \
+	--start_step ${start_step} \
+	--stop_step ${stop_step} \
+    --cfg LMDB_config_pr.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+   
 wait
 
 ##################获取训练数据################
@@ -110,6 +134,29 @@ echo "Final Performance images/sec : $FPS"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
+
+#解析GE profiling
+# if [ ${profiling} == "GE" ];then
+#    echo "GE profiling is loading-------------------------------------"
+#    path=`find ./ -name "PROF*"`
+#    ada-pa ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log
+# fi
+
+#解析CANN profiling
+# if [ ${profiling} == "CANN" ];then
+# 	echo "CANN profiling is loading-------------------------------------"
+#     profs=`find ./ -name "PROF*" `
+# 	prof_path='/usr/local/Ascend/CANN-1.84/tools/profiler/profiler_tool/analysis/msprof'
+# 	iter=0
+# 	for prof in ${profs}
+# 	do
+# 		iter=$((iter+1))
+# 		python ${prof_path}/msprof.py import -dir ${prof}
+# 		python ${prof_path}/msprof.py export timeline -dir ${prof} --iteration-id  $iter
+# 		python ${prof_path}/msprof.py export summary -dir ${prof} --format csv --iteration-id  $iter
+# 	done
+# fi
+
 
 #性能看护结果汇总
 #训练用例信息，不需要修改
