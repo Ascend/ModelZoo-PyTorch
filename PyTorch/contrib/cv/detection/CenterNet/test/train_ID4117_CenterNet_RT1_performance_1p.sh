@@ -13,24 +13,46 @@ Network="CenterNet_ID4117_for_PyTorch"
 num_epochs=1
 #训练batch_size,,需要模型审视修改
 batch_size=32
-
+# 端口
+port=23456
 # 指定训练所使用的npu device卡id
 device_id=0
 
-# 使能RT1.0
+# 使能RT2.0
 export ENABLE_RUNTIME_V2=0
-echo "Runtime1.0 : $ENABLE_RUNTIME_V2"
+echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
 
-port=23456
-cur_port=`awk 'BEGIN{printf "%d", '${port}'+'${ASCEND_DEVICE_ID}'}'`
+# 调试
+bin_model=0  # 0 nobin other bin
+profiling=''
+start_step=-1
+# stop_step=-1
+num_iters=-1
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --num_epochs* ]];then
+        num_epochs=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --port* ]];then
+        port=`echo ${para#*=}`
+    elif [[ $para == --bin_model* ]];then
+        bin_model=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --num_iters* ]];then
+        num_iters=`echo ${para#*=}`
     fi
 done
+
+# 端口
+cur_port=`awk 'BEGIN{printf "%d", '${port}'+'${ASCEND_DEVICE_ID}'}'`
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -111,6 +133,10 @@ taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --world_size 1  \
             --batch_size $batch_size \
             --num_workers ${KERNEL_NUM} \
+            --bin_model ${bin_model} \
+            --profiling "${profiling}" \
+            --start_step ${start_step} \
+            --num_iters ${num_iters} \
             --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 
@@ -124,7 +150,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep 'iter_fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " = " '{print $NF}'| awk 'BEGIN{count=0}{if(NR>2){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}'`
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk -F " = " '{print $NF}'| awk 'BEGIN{count=0}{if(NR>0){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -132,7 +158,7 @@ echo "Final Performance images/sec : $FPS"
 echo "E2E Training Duration sec : $e2e_time"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=$(grep metric: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F ":" '{print $3}' | awk -F " " '{print $1}')
+train_accuracy=$(grep metric: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F ":" '{print $3}' | awk -F " " 'END{print $1}')
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 

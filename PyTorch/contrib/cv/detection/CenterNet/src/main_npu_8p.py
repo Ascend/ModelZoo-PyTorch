@@ -40,7 +40,8 @@ import os
 
 import torch
 import torch.utils.data
-import torch.npu 
+if torch.__version__ >= "1.8":
+    import torch_npu
 from opts import opts
 from models.model import create_model, load_model, save_model
 from models.data_parallel import DataParallel
@@ -56,6 +57,9 @@ import apex
 
 
 def main(opt, qtepoch=[0,]):
+  if opt.bin_model != 0:
+        torch.npu.set_compile_mode(jit_compile=False) 
+        print("use bin train model")
   torch.manual_seed(opt.seed)
   torch.backends.cudnn.benchmark = not opt.not_cuda_benchmark and not opt.test
   Dataset = get_dataset(opt.dataset, opt.task)

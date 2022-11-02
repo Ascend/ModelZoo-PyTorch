@@ -37,6 +37,7 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+import ast
 
 class opts(object):
   def __init__(self):
@@ -152,6 +153,9 @@ class opts(object):
         action="store_true",
     )
     self.parser.add_argument('--pretrained_weight_path', default='', help='pretrained weight path')
+    self.parser.add_argument('--bin_model', default=1, type=int, help='turn on bin')
+    self.parser.add_argument('--profiling', default='', type=str, help='type of profiling')
+    self.parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
 
     # test
     self.parser.add_argument('--flip_test', action='store_true',

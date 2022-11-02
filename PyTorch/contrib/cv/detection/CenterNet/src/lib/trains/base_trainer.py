@@ -43,6 +43,11 @@ from utils.utils import AverageMeter
 from torch.nn.parallel import DistributedDataParallel as DDP
 from apex import amp
 
+class NoProling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 class ModelWithLoss(torch.nn.Module):
   def __init__(self, model, loss):
@@ -97,20 +102,48 @@ class BaseTrainer(object):
     bar = Bar('{}/{}'.format(opt.task, opt.exp_id), max=num_iters)
     end = time.time()
     fps = 0
+    avg_time = 0
     for iter_id, batch in enumerate(data_loader):
       if iter_id >= num_iters:
         break
-      # step fps
-      per_step_time_start=time.time()
-      ###FPS
-      if iter_id == 5:
-        start_time = time.time()
-      ###FPS
-      data_time.update(time.time() - end)
+      collect_turn = iter_id > opt.start_step and  iter_id <= opt.num_iters
+      if(opt.profiling == 'GE' and collect_turn):
+          manage = torch.npu.profile('./GE_prof')
+      elif(opt.profiling == 'CANN' and collect_turn):
+          manage = torch.npu.profile('./CANN_prof', use_e2e_profiler=True)
+      else:
+          if opt.profiling in ['CANN', 'GE'] and iter_id > opt.num_iters:
+              break
+          manage = NoProling()
+      with manage:
+        # step fps
+        per_step_time_start=time.time()
+        ###FPS
+        if iter_id == 5:
+          start_time = time.time()
+        ###FPS
+        data_time.update(time.time() - end)
 
-        ###prof
-      if iter_id == 10 and opt.debug_prof:
-        with torch.autograd.profiler.profile(record_shapes=True, use_npu=True) as prof:  
+          ###prof
+        if iter_id == 10 and opt.debug_prof:
+          with torch.autograd.profiler.profile(record_shapes=True, use_npu=True) as prof:  
+            for k in batch:
+              if k != 'meta':
+                batch[k] = batch[k].to(device=opt.device, non_blocking=True)    
+            output, loss, loss_stats = model_with_loss(batch)
+            loss = loss.mean()
+            if phase == 'train':
+              self.optimizer.zero_grad()
+            ###amp
+              with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                scaled_loss.backward()
+            #loss.backward()
+            ###amp
+              self.optimizer.step()
+          print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+          prof.export_chrome_trace(opt.debug_dir+"/output.prof") # "output.prof"为输出文件地址
+          ###prof
+        else:
           for k in batch:
             if k != 'meta':
               batch[k] = batch[k].to(device=opt.device, non_blocking=True)    
@@ -118,81 +151,62 @@ class BaseTrainer(object):
           loss = loss.mean()
           if phase == 'train':
             self.optimizer.zero_grad()
-          ###amp
+            ###amp
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-              scaled_loss.backward()
-          #loss.backward()
-          ###amp
+                scaled_loss.backward()
+            #loss.backward()
+            ###amp
             self.optimizer.step()
-        print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-        prof.export_chrome_trace(opt.debug_dir+"/output.prof") # "output.prof"为输出文件地址
-        ###prof
-      else:
-        for k in batch:
-          if k != 'meta':
-            batch[k] = batch[k].to(device=opt.device, non_blocking=True)    
-        output, loss, loss_stats = model_with_loss(batch)
-        loss = loss.mean()
-        if phase == 'train':
-          self.optimizer.zero_grad()
-          ###amp
-          with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-              scaled_loss.backward()
-          #loss.backward()
-          ###amp
-          self.optimizer.step()
-      
-      batch_time.update(time.time() - end)
-      end = time.time()
+        
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-      Bar.suffix = '{phase}: [{0}][{1}/{2}]|Tot: {total:} |ETA: {eta:} '.format(
-        epoch, iter_id, num_iters, phase=phase,
-        total=bar.elapsed_td, eta=bar.eta_td)
-      for l in avg_loss_stats:
-        avg_loss_stats[l].update(
-          loss_stats[l].mean().item(), batch['input'].size(0))
-        Bar.suffix = Bar.suffix + '|{} {:.4f} '.format(l, avg_loss_stats[l].avg)
-      if not opt.hide_data_time:
-        Bar.suffix = Bar.suffix + '|Data {dt.val:.3f}s({dt.avg:.3f}s) ' \
-          '|Net {bt.avg:.3f}s'.format(dt=data_time, bt=batch_time)
-      if opt.print_iter > 0:
-        if iter_id % opt.print_iter == 0:
-          print('{}/{}| {}'.format(opt.task, opt.exp_id, Bar.suffix)) 
-      else:
-        bar.next()
-      
-      if opt.debug > 0:
-        self.debug(batch, output, iter_id)
-      
-      if opt.test:
-        self.save_result(output, batch, results)
-      del output, loss, loss_stats
-      # step fps
-      per_step_time = time.time() - per_step_time_start
-      print('iter = {}, batch_size = {}, iter_time = {}, iter_fps = {}'.format(iter_id,
-             opt.batch_size, per_step_time, opt.batch_size/per_step_time))
-      ###FPS
-      if iter_id == (len(data_loader)-1) and opt.local_rank ==0:        
-        all_time =(time.time()-start_time)
-        avg_time = all_time/(len(data_loader)-5)
-        if opt.world_size == -1:
-          fps =  opt.batch_size/avg_time
+        Bar.suffix = '{phase}: [{0}][{1}/{2}]|Tot: {total:} |ETA: {eta:} '.format(
+          epoch, iter_id, num_iters, phase=phase,
+          total=bar.elapsed_td, eta=bar.eta_td)
+        for l in avg_loss_stats:
+          avg_loss_stats[l].update(
+            loss_stats[l].mean().item(), batch['input'].size(0))
+          Bar.suffix = Bar.suffix + '|{} {:.4f} '.format(l, avg_loss_stats[l].avg)
+        if not opt.hide_data_time:
+          Bar.suffix = Bar.suffix + '|Data {dt.val:.3f}s({dt.avg:.3f}s) ' \
+            '|Net {bt.avg:.3f}s'.format(dt=data_time, bt=batch_time)
+        if opt.print_iter > 0:
+          if iter_id % opt.print_iter == 0:
+            print('{}/{}| {}'.format(opt.task, opt.exp_id, Bar.suffix)) 
         else:
-          fps =  opt.batch_size * opt.world_size/avg_time
-        print('')
-        print('epoch = {}, all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(epoch ,all_time,avg_time,opt.batch_size,fps))
-        print('')
-        FPS = fps
-        Avg_Time = avg_time
-      ###FPS
+          bar.next()
+        
+        if opt.debug > 0:
+          self.debug(batch, output, iter_id)
+        
+        if opt.test:
+          self.save_result(output, batch, results)
+        del output, loss, loss_stats
+        # step fps
+        per_step_time = time.time() - per_step_time_start
+        print('iter = {}, batch_size = {}, iter_time = {}, iter_fps = {}'.format(iter_id,
+              opt.batch_size, per_step_time, opt.batch_size/per_step_time))
+        ###FPS
+        if iter_id == (len(data_loader)-1) and opt.local_rank ==0:        
+          all_time =(time.time()-start_time)
+          avg_time = all_time/(len(data_loader)-5)
+          if opt.world_size == -1:
+            fps =  opt.batch_size/avg_time
+          else:
+            fps =  opt.batch_size * opt.world_size/avg_time
+          print('')
+          print('epoch = {}, all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(epoch ,all_time,avg_time,opt.batch_size,fps))
+          print('')
+        ###FPS
         
     bar.finish()
     ret = {k: v.avg for k, v in avg_loss_stats.items()}
     ret['time'] = bar.elapsed_td.total_seconds() / 60.
     ###fps
     if opt.local_rank == 0:
-      ret['avg_time'] = Avg_Time
-      ret['FPS'] = FPS
+      ret['avg_time'] = avg_time
+      ret['FPS'] = fps
     ###fps
     
     return ret, results
