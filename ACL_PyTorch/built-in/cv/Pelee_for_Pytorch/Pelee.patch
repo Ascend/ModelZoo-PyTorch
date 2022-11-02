@@ -1,6 +1,6 @@
-diff -Naur Pelee.Pytorch/configs/Pelee_VOC.py Pelee/configs/Pelee_VOC.py
---- Pelee.Pytorch/configs/Pelee_VOC.py	2021-12-15 19:31:18.196000000 +0800
-+++ Pelee/configs/Pelee_VOC.py	2021-12-15 19:27:56.824000000 +0800
+diff -Naur Pelee.Pytorch/configs/Pelee_VOC.py Pelee.Pytorch-new/configs/Pelee_VOC.py
+--- Pelee.Pytorch/configs/Pelee_VOC.py	2022-10-31 08:22:27.365752760 +0000
++++ Pelee.Pytorch-new/configs/Pelee_VOC.py	2022-10-31 08:22:27.117752770 +0000
 @@ -35,7 +35,7 @@
  )
  
@@ -17,9 +17,9 @@ diff -Naur Pelee.Pytorch/configs/Pelee_VOC.py Pelee/configs/Pelee_VOC.py
 -VOCroot = os.path.join(home, "data/VOCdevkit/")
 +VOCroot = os.path.join("/opt/dataset/", "")
  COCOroot = os.path.join(home, "data/coco/")
-diff -Naur Pelee.Pytorch/data/data_augment.py Pelee/data/data_augment.py
---- Pelee.Pytorch/data/data_augment.py	2021-12-15 19:31:18.196000000 +0800
-+++ Pelee/data/data_augment.py	2021-12-15 19:29:04.196000000 +0800
+diff -Naur Pelee.Pytorch/data/data_augment.py Pelee.Pytorch-new/data/data_augment.py
+--- Pelee.Pytorch/data/data_augment.py	2022-10-31 08:22:27.565752752 +0000
++++ Pelee.Pytorch-new/data/data_augment.py	2022-10-31 08:22:27.333752761 +0000
 @@ -245,7 +245,7 @@
          interp_method = interp_methods[0]
          img = cv2.resize(np.array(img), (self.resize,
@@ -30,9 +30,9 @@ diff -Naur Pelee.Pytorch/data/data_augment.py Pelee/data/data_augment.py
 +        # img = img.transpose(self.swap)
          return torch.from_numpy(img)
  
-diff -Naur Pelee.Pytorch/demo.py Pelee/demo.py
---- Pelee.Pytorch/demo.py	2021-12-15 19:31:18.200000000 +0800
-+++ Pelee/demo.py	2021-12-15 19:27:56.824000000 +0800
+diff -Naur Pelee.Pytorch/demo.py Pelee.Pytorch-new/demo.py
+--- Pelee.Pytorch/demo.py	2022-10-31 08:22:27.453752757 +0000
++++ Pelee.Pytorch-new/demo.py	2022-10-31 08:22:27.217752766 +0000
 @@ -120,6 +120,7 @@
          img = img.cuda()
      scale = torch.Tensor([w, h, w, h])
@@ -41,20 +41,20 @@ diff -Naur Pelee.Pytorch/demo.py Pelee/demo.py
      boxes, scores = detector.forward(out, priors)
      boxes = (boxes[0] * scale).cpu().numpy()
      scores = scores[0].cpu().numpy()
-diff -Naur Pelee.Pytorch/make.sh Pelee/make.sh
---- Pelee.Pytorch/make.sh	2021-12-15 19:31:18.244000000 +0800
-+++ Pelee/make.sh	2021-12-15 19:27:56.824000000 +0800
+diff -Naur Pelee.Pytorch/make.sh Pelee.Pytorch-new/make.sh
+--- Pelee.Pytorch/make.sh	2022-10-31 08:22:27.449752757 +0000
++++ Pelee.Pytorch-new/make.sh	2022-10-31 08:22:27.213752766 +0000
 @@ -3,6 +3,6 @@
  
  CUDA_PATH=/usr/local/cuda/
  
 -python build.py build_ext --inplace
-+python3.7.5 build.py build_ext --inplace
++python3 build.py build_ext --inplace
  
  cd ..
-diff -Naur Pelee.Pytorch/test.py Pelee/test.py
---- Pelee.Pytorch/test.py	2021-12-15 19:31:18.244000000 +0800
-+++ Pelee/test.py	2021-12-20 14:08:01.148000000 +0800
+diff -Naur Pelee.Pytorch/test.py Pelee.Pytorch-new/test.py
+--- Pelee.Pytorch/test.py	2022-10-31 08:22:27.449752757 +0000
++++ Pelee.Pytorch-new/test.py	2022-10-31 08:22:27.213752766 +0000
 @@ -25,10 +25,12 @@
      '-c', '--config', default='configs/Pelee_VOC.py', type=str)
  parser.add_argument('-d', '--dataset', default='VOC',
@@ -97,7 +97,7 @@ diff -Naur Pelee.Pytorch/test.py Pelee/test.py
 +        del self.pelee_context
 +
 +    def inference(self, input_data):
-+        return self.pelee_context([input_data.numpy().astype(np.int8])
++        return self.pelee_context([input_data.numpy().astype(np.int8)])
 +
 +
  def test_net(save_folder, net, detector, cuda, testset, transform, max_per_image=300, thresh=0.005):
@@ -123,9 +123,9 @@ diff -Naur Pelee.Pytorch/test.py Pelee/test.py
      detector = Detect(num_classes, cfg.loss.bkg_label, anchor_config)
      save_folder = os.path.join(cfg.test_cfg.save_folder, args.dataset)
      _preprocess = BaseTransform(
-diff -Naur Pelee.Pytorch/utils/build.py Pelee/utils/build.py
---- Pelee.Pytorch/utils/build.py	2021-12-15 19:31:18.244000000 +0800
-+++ Pelee/utils/build.py	2021-12-15 19:27:56.828000000 +0800
+diff -Naur Pelee.Pytorch/utils/build.py Pelee.Pytorch-new/utils/build.py
+--- Pelee.Pytorch/utils/build.py	2022-10-31 08:22:27.485752756 +0000
++++ Pelee.Pytorch-new/utils/build.py	2022-10-31 08:22:27.249752765 +0000
 @@ -56,8 +56,6 @@
      return cudaconfig
  
@@ -159,9 +159,9 @@ diff -Naur Pelee.Pytorch/utils/build.py Pelee/utils/build.py
      Extension(
          'pycocotools._mask',
          sources=['pycocotools/maskApi.c', 'pycocotools/_mask.pyx'],
-diff -Naur Pelee.Pytorch/utils/core.py Pelee/utils/core.py
---- Pelee.Pytorch/utils/core.py	2021-12-15 19:31:18.244000000 +0800
-+++ Pelee/utils/core.py	2021-12-15 19:27:56.828000000 +0800
+diff -Naur Pelee.Pytorch/utils/core.py Pelee.Pytorch-new/utils/core.py
+--- Pelee.Pytorch/utils/core.py	2022-10-31 08:22:27.481752756 +0000
++++ Pelee.Pytorch-new/utils/core.py	2022-10-31 08:22:27.249752765 +0000
 @@ -41,7 +41,7 @@
      step = int(math.floor(max_ratio - min_ratio) / (mbox_source_num - 2))
      min_sizes = list()
@@ -197,9 +197,9 @@ diff -Naur Pelee.Pytorch/utils/core.py Pelee/utils/core.py
      boxes, scores = detector.forward(out, priors)
      boxes = (boxes[0] * scale).cpu().numpy()
      scores = scores[0].cpu().numpy()
-diff -Naur Pelee.Pytorch/utils/nms_wrapper.py Pelee/utils/nms_wrapper.py
---- Pelee.Pytorch/utils/nms_wrapper.py	2021-12-15 19:31:18.248000000 +0800
-+++ Pelee/utils/nms_wrapper.py	2021-12-15 19:27:56.828000000 +0800
+diff -Naur Pelee.Pytorch/utils/nms_wrapper.py Pelee.Pytorch-new/utils/nms_wrapper.py
+--- Pelee.Pytorch/utils/nms_wrapper.py	2022-10-31 08:22:27.457752757 +0000
++++ Pelee.Pytorch-new/utils/nms_wrapper.py	2022-10-31 08:22:27.217752766 +0000
 @@ -6,26 +6,16 @@
  # --------------------------------------------------------
  
