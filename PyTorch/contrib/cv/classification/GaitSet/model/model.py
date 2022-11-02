@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Copyright (c) Soumith Chintala 2016,
 # All rights reserved
 #
@@ -310,11 +310,11 @@ class Model:
             else:
                 print('loss very small at: ', iter_i)
 
-            if self.restore_iter % 1000 == 0:
+            if self.restore_iter % 1 == 0:
                 print(f"[{local_rank}]:", datetime.now() - _time1)
                 _time1 = datetime.now()
 
-            if self.restore_iter % 50 == 0:
+            if self.restore_iter % 1 == 0:
                 print(f"[{local_rank}]: ", 'iter {}:'.format(self.restore_iter), end='')
                 
                 self.mean_dist = np.mean(self.dist_list)
@@ -337,7 +337,7 @@ class Model:
             batch_time.update(self.device_count * self.P * self.M * frame_aug_rate / (time.time() - start_time))
             start_time = time.time()
             
-            if self.restore_iter % 100 == 0:
+            if self.restore_iter % 1000 == 0:
                 self.save()
 
             if self.restore_iter == self.total_iter:

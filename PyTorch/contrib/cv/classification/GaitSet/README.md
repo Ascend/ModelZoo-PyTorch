@@ -91,6 +91,18 @@ $ source test/npu_set_env.sh
 $ bash test/train_full_1p.sh
 ```
 
+RT训练脚本可以外部指定数据集路径${data_path}和迭代数${iters}
+RT1脚本1p训练
+```bash
+$ bash train_ID4118_GaitSet_RT1_performance_1p.sh --data_path=${data_path} --iters=${iters}
+```
+
+RT2脚本1p训练
+```bash
+$ bash train_ID4118_GaitSet_RT2_performance_1p.sh --data_path=${data_path} --iters=${iters}
+```
+
+
 4、NPU8P训练
 
 ```bash

@@ -1,20 +1,16 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) Soumith Chintala 2016,
-# All rights reserved
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
-# Copyright 2020 Huawei Technologies Co., Ltd
-#
-# Licensed under the BSD 3-Clause License (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# https://spdx.org/licenses/BSD-3-Clause.html
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License
+# limitations under the License.
 
 import argparse
 import os
@@ -24,6 +20,8 @@ import time
 import warnings
 
 import torch
+if torch.__version__>="1.8":
+    import torch_npu
 import torch.npu
 import torch.distributed as dist
 import numpy as np
@@ -50,7 +48,12 @@ parser.add_argument('--device_num',default=-1,type=int,help='device_num')
 
 parser.add_argument('--local_rank', default=0, type=int)
 parser.add_argument('--addr',default='192.168.88.168',type=str,help='masterip')
-parser.add_argument('--port',default='46888',type=str,help='masterport')
+parser.add_argument('--port',default='46888', type=str,help='masterport')
+parser.add_argument('--data_path',default='', type=str,help='data_path')
+parser.add_argument('--iters',default=1000, type=int,help='iters number')
+
+# runtime2.0
+parser.add_argument('--rt2', action='store_true', default=False, help='enable runitme2.0 mode')
 # parser.add_argument('--device_num',default=-1,type=int,help='device_num')
 
 
@@ -60,14 +63,20 @@ def main():
     
     os.environ['MASTER_ADDR'] = '127.0.0.3'
     os.environ['MASTER_PORT'] = '46888'
-    
+    if args.rt2:
+        torch.npu.set_compile_mode(jit_compile=False)
     if args.device_num > 1:
         from config import conf_8p as conf
         dist.init_process_group(backend=args.dist_backend, # init_method=args.dist_url,
     							world_size=args.world_size, rank=args.local_rank)
+        conf['data'].update({'dataset_path': args.data_path})
+        conf['model'].update({'total_iter': args.iters})
+        print('The training config is:',conf)
     else:
         from config import conf_1p as conf
-    
+        conf['data'].update({'dataset_path': args.data_path})
+        conf['model'].update({'total_iter': args.iters})
+        print('The training config is:',conf)
     local_device = f'npu:{args.local_rank}'
     if args.device_num > 1:
         torch.npu.set_device(local_device)
