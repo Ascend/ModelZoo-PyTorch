@@ -16,13 +16,25 @@
 import argparse
 import os
 
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+    from torch_npu.contrib import transfer_to_npu
+
 from utils import extend_maps
 from bugfix import bilstm_train_and_eval
 from bugfix import build_corpus
+from models.config import TrainingConfig
 
 os.environ['MASTER_ADDR'] = '127.0.0.1'
 os.environ['MASTER_PORT'] = '26118'
 os.environ['WORLD_SIZE'] = '8'
+
+
+def boolean_string(s: str):
+    if s.upper() not in ["FALSE", "TRUE"]:
+        raise ValueError(f'{s} not a valid boolean string')
+    return s.upper() == "TRUE"
 
 
 def parse_option():
@@ -35,6 +47,10 @@ def parse_option():
     parser.add_argument('--seed', type=int, default=1234)
     # distributed training
     parser.add_argument("--local_rank", type=int, default=0, help='local rank for DistributedDataParallel')
+    parser.add_argument("--bin_mode", type=boolean_string, default=False, help="enable bin conmpile")
+    parser.add_argument("--train_epochs", type=int, help='train epoch num')
+    parser.add_argument("--print_step", type=int, help='step print interval')
+    parser.add_argument("--batch_size", type=int, help='train batch size')
 
     args = parser.parse_args()
 
@@ -42,12 +58,27 @@ def parse_option():
 
 
 def main():
+    if args.bin_mode:
+        print('bin_mode is on')
+        torch.npu.set_compile_mode(jit_compile=False)
+    if args.train_epochs:
+        TrainingConfig.epoches = args.train_epochs
+    if args.batch_size:
+        TrainingConfig.batch_size = args.batch_size
+    if args.print_step:
+        TrainingConfig.print_step = args.print_step
     # 读取数据
     print("读取数据...")
-    train_word_lists, train_tag_lists, word2id, tag2id = \
-        build_corpus("train")
-    dev_word_lists, dev_tag_lists = build_corpus("dev", make_vocab=False)
-    test_word_lists, test_tag_lists = build_corpus("test", make_vocab=False)
+    if args.data_path:
+        train_word_lists, train_tag_lists, word2id, tag2id = \
+            build_corpus("train", data_dir=args.data_path)
+        dev_word_lists, dev_tag_lists = build_corpus("dev", make_vocab=False, data_dir=args.data_path)
+        test_word_lists, test_tag_lists = build_corpus("test", make_vocab=False, data_dir=args.data_path)
+    else:
+        train_word_lists, train_tag_lists, word2id, tag2id = \
+            build_corpus("train")
+        dev_word_lists, dev_tag_lists = build_corpus("dev", make_vocab=False)
+        test_word_lists, test_tag_lists = build_corpus("test", make_vocab=False)
 
     # 训练评估BI-LSTM模型
     print("正在训练评估双向LSTM模型...")
