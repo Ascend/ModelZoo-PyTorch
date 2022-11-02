@@ -51,4 +51,4 @@
 
         /home/ResNet50/test/output/device_id/
 	
-
+Note: 本模型单卡和多卡使用不同的脚本，脚本配置有差异， 会影响到线性度， 目前正在重构中；

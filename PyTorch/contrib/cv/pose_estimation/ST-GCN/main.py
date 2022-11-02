@@ -17,7 +17,6 @@ import argparse
 import sys
 import os
 import torch
-import torch_npu
 import torchlight
 from torchlight import import_class
 import torch.multiprocessing as mp
