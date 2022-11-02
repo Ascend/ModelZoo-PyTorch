@@ -1,0 +1,8 @@
+python==3.8
+pytorch==1.5.1
+cudatoolkit==10.1
+torchvision==0.6.1
+cupy==8.6.0
+tensorboardX
+opencv-python
+easydict
