@@ -55,7 +55,7 @@ start_time=$(date +%s)
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/set_npu_env.sh
+    source ${test_path_dir}/env_npu.sh
 fi
 
 nohup \

@@ -22,6 +22,10 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 
@@ -73,7 +77,7 @@ start_time=$(date +%s)
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ${test_path_dir}/set_npu_env.sh
+    source ${test_path_dir}/env_npu.sh
 fi
 
 nohup \
@@ -94,10 +98,12 @@ python3.7 -u train_npu_peformance.py \
         --model-ema-decay 0.9999 \
         --addr $(hostname -I |awk '{print $1}') \
         --device-list ${ASCEND_DEVICE_ID} \
-        > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_${RANK_SIZE}'p'_'perf'.log 2>&1 &
+        > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
+#退出conda环境
+conda deactivate
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改
@@ -107,12 +113,12 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep -a '0[[:space:]]][[:space:]]TrainAvgFPS:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_${RANK_SIZE}'p'_'perf'.log|awk -F 'AvgFPS:' '{print $3}'|awk 'END {print}'`
+FPS=`grep -a 'TrainAvgFPS:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F 'AvgFPS:' '{print $3}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a '*** Best metric:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_${RANK_SIZE}'p'_'perf'.log|awk '{print $4}'|awk 'END {print}'`
+train_accuracy=`grep -a '*** Best metric:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $4}'|awk 'END {print}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -130,7 +136,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep '0[[:space:]]][[:space:]]Train:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_${RANK_SIZE}'p'_'perf'.log|awk '{print $12}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep 'Train:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $12}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
