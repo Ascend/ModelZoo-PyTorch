@@ -9,8 +9,8 @@ export ENABLE_RUNTIME_V2=0
 # export ASCEND_SLOG_PRINT_TO_STDOUT=1
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
-#进入到conda环境
-#source activate py8
+#conda环境的名称
+conda_name=py1
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -30,6 +30,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 
