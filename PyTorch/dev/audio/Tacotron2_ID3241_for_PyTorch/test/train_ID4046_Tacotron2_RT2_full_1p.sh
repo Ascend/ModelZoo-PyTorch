@@ -13,7 +13,7 @@ ckpt_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Tacotron2_RT2_ID3241_for_PyTorch"
+Network="Tacotron2_RT2_ID4046_for_PyTorch"
 #训练epoch
 train_epochs=200
 #训练batch_size
