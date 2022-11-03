@@ -1,6 +1,8 @@
 tqdm==4.19.9
-torchvision
+torchvision==0.9.1
 Pillow==9.1.0
 opencv-python==4.5.2.54
 numpy==1.20.2
-skimage==0.17.2
+scikit-image==0.17.2
+decorator
+sympy

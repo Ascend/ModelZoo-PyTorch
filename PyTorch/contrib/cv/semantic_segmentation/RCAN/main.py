@@ -33,6 +33,8 @@
 import argparse
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 import torch.multiprocessing as mp
 from torch.utils.data.dataloader import DataLoader
@@ -361,12 +363,12 @@ def main_worker(process_id,opt):
             checkpoint = torch.load(opt.finetuning_checkpoint_path, map_location=loc)
             opt.start_epoch = 0
             opt.best = -1
-            model.load_state_dict(checkpoint['model'])
+            model.load_state_dict(checkpoint['model'], False)
             checkpoint_performance = []
             checkpoint_time = []
             print("start finetuning")
         else:
-            raise ValueError("=> no checkpoint found at '{}'".format(opt.checkpoint_path))
+            raise ValueError("=> no checkpoint found at '{}'".format(opt.finetuning_checkpoint_path))
     elif opt.ifcontinue:
         if os.path.isfile(opt.checkpoint_path):
             print("loading checkpoint: {}".format(opt.checkpoint_path)) 

@@ -33,6 +33,8 @@
 import argparse
 import os
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 import torch.multiprocessing as mp
 from torch.utils.data.dataloader import DataLoader

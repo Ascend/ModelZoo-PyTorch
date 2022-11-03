@@ -86,7 +86,7 @@ if [ ${device} == "npu" ];then
     check_etp_flag=`env | grep etp_running_flag`
     etp_flag=`echo ${check_etp_flag#*=}`
     if [ x"${etp_flag}" != x"true" ];then
-        source set_npu_env.sh
+        source env_npu.sh
     fi
     export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
 else
