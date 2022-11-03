@@ -19,10 +19,11 @@ import numpy as np
 def read_info_from_json(json_path):
     if not os.path.exists(json_path):
         print(json_path, 'is not exist')
+    file_info = None
     with open(json_path, 'r') as f:
         load_data = json.load(f)
         file_info = load_data['filesinfo']
-        return file_info
+    return file_info
 
 
 def postProcesss(result_path):
@@ -34,18 +35,20 @@ def postProcesss(result_path):
         outputs.append(ndata)
     return outputs
 
+
 def cre_groundtruth_dict_fromtxt(gtfile_path):
-    labels=[]
+    labels = []
     with open(gtfile_path, 'r')as f:
-        for line in f.readlines():
+        for line in f:
             temp = line.strip().split(" ")
             labels.append(int(temp[1]))
     return labels
 
+
 def top_k_accuracy(scores, labels, topk=(1, )):
     res = []
     labels = np.array(labels)[:, np.newaxis]
-    image_nums = 50000 # 图片的总数
+    image_nums = 50000  # 图片的总数
     for k in topk:
         max_k_preds = np.argsort(scores[:image_nums], axis=1)[:, -k:][:, ::-1]
         match_array = np.logical_or.reduce(max_k_preds == labels, axis=1)
