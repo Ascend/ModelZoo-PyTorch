@@ -113,7 +113,8 @@ def create_visualization_statistical_result(prediction_file_path,
         index = temp.rfind('_')
         img_name = temp[:index]
         filepath = os.path.join(prediction_file_path, tfile_name)
-
+        if ".json" in filepath:
+            continue
         ret = load_statistical_predict_result(filepath)
         prediction = ret[0]
         n_labels = ret[1]

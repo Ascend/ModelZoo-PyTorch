@@ -12,6 +12,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
-atc --model=end2end.onnx --framework=5 --output=./atc/resnet_bs24 --input_format=NCHW --log=error --input_shape="input:24,3,32,32" --insert_op_conf=aipp.conf --soc_version=$1
+atc --model=$1 --framework=5 --output=resnet_bs24 --input_format=NCHW --log=error --input_shape="input:24,3,32,32" --insert_op_conf=aipp.conf --soc_version=$2

@@ -111,6 +111,7 @@ def preprocess(f_path, b_path):
         img = np.array(img, dtype=np.int8)
 
         img.tofile(os.path.join(b_path, file.split('.')[0] + '.bin'))
+    print("create bin dataset successfully")
 
 
 if __name__ == "__main__":
