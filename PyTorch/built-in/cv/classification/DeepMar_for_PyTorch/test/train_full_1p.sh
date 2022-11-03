@@ -153,7 +153,7 @@ echo "------------------ Final result ------------------"
 FPS=`grep FPS ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v loss|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
 
 #输出训练精度，需要模型审视修改
-train_accuracy=`grep -a 'Acc' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Acc" '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+train_accuracy=`grep -a 'Acc:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc:" '{print $NF}'|awk -F " " '{print $1}'|tr -d ,`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
