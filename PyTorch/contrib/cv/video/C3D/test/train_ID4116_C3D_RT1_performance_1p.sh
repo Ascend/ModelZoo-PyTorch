@@ -74,6 +74,8 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
+cp ${data_path}/checkpoints/c3d* /root/.cache/torch/hub/checkpoints/
+
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
