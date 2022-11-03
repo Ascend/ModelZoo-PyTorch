@@ -4,4 +4,4 @@ onnx == 1.8.1
 numpy == 1.20.2
 Pillow == 7.2.0
 opencv-python == 4.5.2.52
-CANN == 5.1.RC1
+onnx-simplifier == 0.4.8
