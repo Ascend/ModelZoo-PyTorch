@@ -78,38 +78,10 @@ code_path=ACL_PyTorch/contrib/cv/detection
   
   | 配套                                                         | 版本                | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------------------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 1.0.15              | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2             | -                                                            |
+  | 固件与驱动                                                   | 1.83.10              | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1             | -                                                            |
   | Python                                                       | 3.7.5               | -                                                            |
   | PyTorch                                                      | 1.5.0               | -                                                            |
-  | apex                                                         | 0.1+ascend.20210930 | -                                                            |
-  | certifi                                                      | 2021.10.8           | -                                                            |
-  | cycler                                                       | 0.11.0              | -                                                            |
-  | decorator                                                    | 5.1.0               | -                                                            |
-  | docutils                                                     | 0.18                | -                                                            |
-  | flatbuffers                                                  | 2.0                 | -                                                            |
-  | future                                                       | 0.18.2              | -                                                            |
-  | Geohash                                                      | 1.0                 | -                                                            |
-  | Hydra                                                        | 2.5                 | -                                                            |
-  | kiwisolver                                                   | 1.3.2               | -                                                            |
-  | matplotlib                                                   | 3.4.3               | -                                                            |
-  | mpmath                                                       | 1.2.1               | -                                                            |
-  | numpy                                                        | 1.21.0              | -                                                            |
-  | onnx                                                         | 1.10.2              | -                                                            |
-  | onnxruntime                                                  | 1.9.0               | -                                                            |
-  | pandas                                                       | 1.3.4               | -                                                            |
-  | Pillow                                                       | 8.4.0               | -                                                            |
-  | pip                                                          | 21.3.1              | -                                                            |
-  | protobuf                                                     | 3.19.1              | -                                                            |
-  | pyparsing                                                    | 3.0.6               | -                                                            |
-  | python-dateutil                                              | 2.8.2               | -                                                            |
-  | pytz                                                         | 2021.3              | -                                                            |
-  | scipy                                                        | 1.7.2               | -                                                            |
-  | setuptools                                                   | 58.0.4              | -                                                            |
-  | six                                                          | 1.16.0              | -                                                            |
-  | sympy                                                        | 1.9                 | -                                                            |
-  | typing-extensions                                            | 3.10.0.2            | -                                                            |
-  | wheel                                                        | 0.37.0              | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |                     |                                                              |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -151,7 +123,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
 
 1. 获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
 
-   本模型支持csv_mean_100图片的验证集。请用户需自行获取csv_mean_100数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。
+   本模型支持csv_mean_100图片的验证集。请用户需自行获取[csv_mean_100](https://github.com/wzmsltw/BSN-boundary-sensitive-network#download-datasets)数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。
 
    下载后将csv_mean_100放到开源仓代码目录，“./data/activitynet_feature_cuhk/”下
 
@@ -355,7 +327,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
    真实数据推理：
    
    ```
-   python3.7 /home/wt/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./ais_result --output_dirname result_pem_bs1 
+   python3.7 ${ais_infer_path}/ais_infer.py --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./ais_result --output_dirname result_pem_bs1 
    ```
    
    - 参数说明：
@@ -404,24 +376,20 @@ code_path=ACL_PyTorch/contrib/cv/detection
 | 310      | 16         | csv_mean_100 | AR100：74.34% | 36202.23 |
 | 310      | 32         | csv_mean_100 | AR100：74.34% | 35252.63 |
 | 310      | 64         | csv_mean_100 | AR100：74.34% | 37288.98 |
-| 310P     | 1          | csv_mean_100 | AR100：74.36% | 4009.57  |
-| 310P     | 4          | csv_mean_100 | AR100：74.36% | 11429.75 |
-| 310P     | 8          | csv_mean_100 | AR100：74.36% | 18465.52 |
-| 310P     | 16         | csv_mean_100 | AR100：74.36% | 24868.53 |
-| 310P     | 32         | csv_mean_100 | AR100：74.36% | 26183.07 |
-| 310P     | 64         | csv_mean_100 | AR100：74.36% | 27213.25 |
-| T4       | 1          | csv_mean_100 |               | 11439.02 |
-| T4       | 4          | csv_mean_100 |               | 24649.47 |
-| T4       | 8          | csv_mean_100 |               | 30594.96 |
-| T4       | 16         | csv_mean_100 |               | 34840.02 |
-| T4       | 32         | csv_mean_100 |               | 37340.3  |
-| T4       | 64         | csv_mean_100 |               | 41073.45 |
+| 310P     | 1          | csv_mean_100 | AR100：74.34% | 6197.32 |
+| 310P     | 4          | csv_mean_100 | AR100：74.34% | 21052.35 |
+| 310P     | 8          | csv_mean_100 | AR100：74.34% | 29687.91 |
+| 310P     | 16         | csv_mean_100 | AR100：74.34% | 34617.79 |
+| 310P     | 32         | csv_mean_100 | AR100：74.34% | 31336.91 |
+| 310P     | 64         | csv_mean_100 | AR100：74.34% | 29685.42 |
+| T4       | 1          | csv_mean_100 |               | 4962.25 |
+| T4       | 4          | csv_mean_100 |               | 28301.35 |
+| T4       | 8          | csv_mean_100 |               | 35080.33 |
+| T4       | 16         | csv_mean_100 |               | 39867.73 |
+| T4       | 32         | csv_mean_100 |               | 45102.31 |
+| T4       | 64         | csv_mean_100 |               | 50327.56 |
 
 **310P吞吐率计算公式（以bs1为例）**
-
-TEM性能数据：6049.12
-
-PEM性能数据：9152.86
 
 TEM吞吐率：6049.12
 

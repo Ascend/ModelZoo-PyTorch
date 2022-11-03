@@ -1,26 +1,24 @@
-cycler
-decorator
-docutils
-flatbuffers
-future
-Geohash
-Hydra
-kiwisolver
-matplotlib
-mpmath
-numpy
-onnx
-onnxruntime
-pandas
-Pillow
-pip
-protobuf
-pyparsing
-python-dateutil
-pytz
-scipy
-setuptools
-six
-sympy
-typing-extensions
+cycler == 0.11.0
+decorator == 5.1.0
+docutils == 0.18
+flatbuffers == 2.0
+future == 0.18.2
+Geohash == 1.0
+Hydra == 2.5
+kiwisolver == 1.3.2
+matplotlib == 3.4.3
+mpmath == 1.2.1
+numpy == 1.21.0
+onnx == 1.10.2
+onnxruntime == 1.9.0
+pandas == 1.3.4
+Pillow == 8.4.0
+protobuf == 3.19.1
+pyparsing == 3.0.6
+python-dateutil == 2.8.2
+pytz == 2021.3
+scipy == 1.7.2
+six == 1.16.0
+sympy == 1.9
+typing-extensions == 3.10.0.2
 skl2onnx
