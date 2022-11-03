@@ -51,6 +51,9 @@ def parse_option():
     parser.add_argument("--train_epochs", type=int, help='train epoch num')
     parser.add_argument("--print_step", type=int, help='step print interval')
     parser.add_argument("--batch_size", type=int, help='train batch size')
+    parser.add_argument("--profiling", type=str, help='profiling type')
+    parser.add_argument("--p_start_step", type=int, help='profiling start step')
+    parser.add_argument("--iteration_num", type=int, default=-1, help='train iteration number')
 
     args = parser.parse_args()
 

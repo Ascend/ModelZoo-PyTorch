@@ -3,7 +3,7 @@
 # 网络名称
 Network="BiLstm-CRF_RT2_ID4122_for_PyTorch"
 batch_size=64
-train_epochs=1
+train_epochs=30
 print_step=1
 RANK_SIZE=1
 

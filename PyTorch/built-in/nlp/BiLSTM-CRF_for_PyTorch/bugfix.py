@@ -42,6 +42,13 @@ from apex import amp
 import apex
 
 
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
 
 class DatasetIterater(object):
     def __init__(self, batches, batch_size, device, word2id, tag2id):
@@ -104,6 +111,7 @@ class BilstmModel(object):
             vocab_size:词典大小
             out_size:标注种类
             crf选择是否添加CRF层"""
+        self.args = args
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
 
@@ -158,22 +166,34 @@ class BilstmModel(object):
             self.step = 0
             losses = 0.
             for ind in range(0, len(word_lists), batch):
-                batch_sents = word_lists[ind:ind + batch]
-                batch_tags = tag_lists[ind:ind + batch]
+                if self.args.iteration_num != -1 and self.args.iteration_num < (self.step + 1):
+                    break
+                collect_turn = self.args.p_start_step < (self.step + 1) <= self.args.iteration_num
+                if self.args.profiling == "GE" and collect_turn:
+                    manage = torch.npu.profile('./GE_prof')
+                elif self.args.profiling == "CANN" and collect_turn:
+                    manage = torch.npu.profile("./CANN_prof", use_e2e_profiler=True)
+                else:
+                    if self.args.profiling in ["GE", "CANN"] and self.args.iteration_num < (self.step + 1):
+                        break
+                    manage = NoProfiling()
+                with manage:
+                    batch_sents = word_lists[ind:ind + batch]
+                    batch_tags = tag_lists[ind:ind + batch]
 
-                losses += self.train_step(batch_sents,
-                                          batch_tags, word2id, tag2id)
+                    losses += self.train_step(batch_sents,
+                                            batch_tags, word2id, tag2id)
 
-                if self.step % TrainingConfig.print_step == 0:
-                    total_step = (len(word_lists) // batch + 1)
-                    print("Epoch {}, step/total_step: {}/{} {:.2f}% Loss:{:.4f} step_time:{:.6f}".format(
-                        e, self.step, total_step,
-                        100. * self.step / total_step,
-                        losses / self.print_step,
-                        time.time() - end_time
-                    ))
-                    losses = 0.
-                end_time = time.time()
+                    if self.step % TrainingConfig.print_step == 0:
+                        total_step = (len(word_lists) // batch + 1)
+                        print("Epoch {}, step/total_step: {}/{} {:.2f}% Loss:{:.4f} step_time:{:.6f}".format(
+                            e, self.step, total_step,
+                            100. * self.step / total_step,
+                            losses / self.print_step,
+                            time.time() - end_time
+                        ))
+                        losses = 0.
+                    end_time = time.time()
             # 每轮结束测试在验证集上的性能，保存最好的一个
             val_loss = self.validate(
                 dev_word_lists, dev_tag_lists, word2id, tag2id)

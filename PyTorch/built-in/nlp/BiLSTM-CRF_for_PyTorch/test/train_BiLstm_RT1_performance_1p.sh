@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 网络名称
-Network="BiLstm_for_PyTorch"
+Network="BiLstm-CRF_RT1_ID4122_for_PyTorch"
 batch_size=64
 train_epochs=1
 print_step=1
@@ -34,6 +34,12 @@ for para in $*; do
         train_epochs=`echo ${para#*=}`
     elif [[ $para == --print_step* ]]; then
         print_step=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]]; then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --p_start_step* ]]; then
+        p_start_step=`echo ${para#*=}`
+    elif [[ $para == --iteration_num* ]]; then
+        iteration_num=`echo ${para#*=}`
     fi
 done
 
@@ -89,6 +95,9 @@ nohup python3.7 -u runner.py \
     --train_epochs=${train_epochs} \
     --batch_size=${batch_size} \
     --print_step=${print_step} \
+    --profiling=${profiling:-"false"} \
+    --p_start_step=${p_start_step:-0} \
+    --iteration_num=${iteration_num:-"-1"} \
     > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
