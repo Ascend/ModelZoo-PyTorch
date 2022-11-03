@@ -17,7 +17,6 @@
 
 from distutils.ccompiler import new_compiler
 import os
-from pyexpat import _Model
 import time
 import random
 import argparse

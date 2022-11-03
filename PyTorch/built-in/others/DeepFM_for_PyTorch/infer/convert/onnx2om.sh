@@ -17,8 +17,9 @@
 model_path=$1
 output_model_name=$2
 
-atc -framework=5 --model=model_path \
-    --output=output_model_name  \
+atc -framework=5 --model=$model_path \
+    --output=$output_model_name  \
     --soc_version=Ascend310  \
     --op_select_implmode=high_precision \
     --precision_mode=allow_fp32_to_fp16
+
