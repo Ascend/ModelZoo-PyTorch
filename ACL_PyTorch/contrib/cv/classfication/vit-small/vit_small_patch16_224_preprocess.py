@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tqdm import tqdm
+import os
+from timm.data import create_loader, ImageDataset
 import sys
 sys.path.append('./pytorch-image-models')
-from timm.data import create_loader, ImageDataset
-import os
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
 
 os.environ['device'] = 'cpu'
+
 
 def preprocess(src_path, save_path):
     with open("vit_prep_bin.info", "w") as f:
@@ -36,14 +35,14 @@ def preprocess(src_path, save_path):
             num_workers=8,
             crop_pct=0.9)
 
-
         for batch_idx, (input, target, path) in tqdm(enumerate(loader), total=len(loader)):
             base_index = batch_idx * 64
             for idx, (img, p) in enumerate(zip(input, path)):
                 index = base_index + idx
                 filename = os.path.basename(p)
                 img = img.numpy()
-                save_name = os.path.join(save_path, filename.split('.')[0] + ".bin")
+                save_name = os.path.join(
+                    save_path, filename.split('.')[0] + ".bin")
                 img.tofile(save_name)
                 info = "{0} {1} 224 224\n".format(index, save_name)
                 f.write(info)
