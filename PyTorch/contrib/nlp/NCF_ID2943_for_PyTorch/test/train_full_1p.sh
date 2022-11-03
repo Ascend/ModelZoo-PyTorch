@@ -120,9 +120,9 @@ else
 fi
 
 # 性能相关数据计算
-Time1 = `grep "Training Epoch 199" ${print_log} | awk -F 'sec/step' '{print $2}' | tr -d " " | awk 'END {print $NF}'`
-Time2 = `grep "Training Epoch 199" ${print_log} | awk -F 'sec/step' '{print $2}' | tr -d " " | head -n 1`
-Time = `awk 'BEGIN{printf "%.4f\n", '${Time1}'-'${Tim2}'}'`
+Time1=`grep "Training Epoch 199" ${print_log} | awk -F 'sec/step' '{print $2}' | tr -d " " | awk 'END {print $NF}'`
+Time2=`grep "Training Epoch 199" ${print_log} | awk -F 'sec/step' '{print $2}' | tr -d " " | head -n 1`
+Time=`awk 'BEGIN{printf "%.4f\n", '${Time1}'-'${Time2}'}'`
 StepTime=`awk 'BEGIN{printf "%.4f\n", '${Time}'/'4855'}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
