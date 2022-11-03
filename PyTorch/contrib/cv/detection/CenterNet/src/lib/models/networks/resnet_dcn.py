@@ -289,10 +289,16 @@ class PoseResNet(nn.Module):
             ret[head] = self.__getattr__(head)(x)
         return [ret]
 
-    def init_weights(self, num_layers):
+    def init_weights(self, num_layers, load_local_weights=False, local_weights_path=None):
         if 1:
             url = model_urls['resnet{}'.format(num_layers)]
-            pretrained_state_dict = model_zoo.load_url(url)
+            if load_local_weights:
+                print("LOADING LOCAL WEIGHTS...")
+                print(local_weights_path)
+                pretrained_state_dict = torch.load(local_weights_path, None)
+            else:
+                print("NO LOADING LOCAL WEIGHTS...")
+                pretrained_state_dict = model_zoo.load_url(url)
             print('=> loading pretrained model {}'.format(url))
             self.load_state_dict(pretrained_state_dict, strict=False)
             print('=> init deconv weights from normal distribution')
@@ -309,9 +315,9 @@ resnet_spec = {18: (BasicBlock, [2, 2, 2, 2]),
                152: (Bottleneck, [3, 8, 36, 3])}
 
 
-def get_pose_net(num_layers, heads, head_conv=256):
+def get_pose_net(num_layers, heads, head_conv=256, load_local_weights=False, local_weights_path=None):
   block_class, layers = resnet_spec[num_layers]
 
   model = PoseResNet(block_class, layers, heads, head_conv=head_conv)
-  model.init_weights(num_layers)
+  model.init_weights(num_layers, load_local_weights=load_local_weights, local_weights_path=local_weights_path)
   return model

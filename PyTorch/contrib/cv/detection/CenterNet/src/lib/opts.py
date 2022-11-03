@@ -156,6 +156,8 @@ class opts(object):
     self.parser.add_argument('--bin_model', default=1, type=int, help='turn on bin')
     self.parser.add_argument('--profiling', default='', type=str, help='type of profiling')
     self.parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
+    self.parser.add_argument('--load_local_weights', default=False, type=bool, help='turn on load local weights')
+    self.parser.add_argument('--local_weights_path', default='', type=str, help='local weights path')
 
     # test
     self.parser.add_argument('--flip_test', action='store_true',

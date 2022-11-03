@@ -79,7 +79,7 @@ def main(opt, qtepoch=[0,]):
   print('process{},device:{}'.format(opt.local_rank,opt.device))
   
   print('Creating model...')
-  model = create_model(opt.arch, opt.heads, opt.head_conv)
+  model = create_model(opt.arch, opt.heads, opt.head_conv, opt.load_local_weights, opt.local_weights_path)
   model = model.to(opt.device) #npu
   if opt.pretrained:
       checkpoint = torch.load(opt.pretrained_weight_path, map_location='cpu')

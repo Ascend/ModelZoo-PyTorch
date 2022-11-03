@@ -28,6 +28,8 @@ profiling=''
 start_step=-1
 # stop_step=-1
 num_iters=-1
+# WEIGHTS
+local_weights_path=resnet18-5c106cde.pth
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -136,6 +138,8 @@ taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --bin_model ${bin_model} \
             --profiling "${profiling}" \
             --start_step ${start_step} \
+            --load_local_weights True \
+            --local_weights_path $cur_path/data/voc/$local_weights_path \
             --num_iters ${num_iters} \
             --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
@@ -175,7 +179,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep metric: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F ":" '{print $3}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep metric: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F ":" '{print $3}' | awk -F " " '{print $1}' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
