@@ -17,7 +17,7 @@ train_epochs=1
 learning_rate=0.0001
 # 加载数据进程数
 workers=128
-
+max_steps=500
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -33,6 +33,8 @@ done
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
+else
+    max_steps=50
 fi
 
 
@@ -85,7 +87,7 @@ do
                     --dist-url='tcp://127.0.0.1:50000' \
                     --dist-backend='hccl' \
                     --epochs=${train_epochs} \
-                    --max_steps=500 \
+                    --max_steps=${max_steps} \
                     --lr=${learning_rate} \
                     --world-size=1 \
                     --batch_size=${batch_size} \

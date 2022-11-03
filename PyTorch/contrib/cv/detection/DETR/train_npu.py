@@ -318,10 +318,10 @@ def main_worker(gpu, ngpus_per_node, args):
                     'epoch': epoch,
                     'args': args,
                 }, checkpoint_path)
-
-        test_stats, coco_evaluator = evaluate(
-            model, criterion, postprocessors, data_loader_val,  base_ds, args.batch_size*ngpus_per_node, loc, args.output_dir
-        )
+        if epoch > 1:
+            test_stats, coco_evaluator = evaluate(
+                model, criterion, postprocessors, data_loader_val,  base_ds, args.batch_size*ngpus_per_node, loc, args.output_dir
+            )
 
         map = coco_evaluator.coco_eval['bbox'].stats[0]
         if map >= best:

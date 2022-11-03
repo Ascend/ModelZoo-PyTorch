@@ -17,6 +17,7 @@ train_epochs=1
 device_id=0
 # 加载数据进程数
 workers=128
+max_steps=500
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -77,6 +78,8 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    max_steps=50
 fi
 
 
@@ -85,7 +88,7 @@ nohup taskset -c 0-23 python3.7 -u train_npu.py \
     --workers=${workers} \
     --gpu=${ASCEND_DEVICE_ID} \
     --epochs=${train_epochs} \
-    --max_steps=500 \
+    --max_steps=${max_steps} \
     --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
