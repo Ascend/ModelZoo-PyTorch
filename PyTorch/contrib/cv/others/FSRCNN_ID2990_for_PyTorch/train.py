@@ -17,6 +17,10 @@ import os
 import copy
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch import nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn

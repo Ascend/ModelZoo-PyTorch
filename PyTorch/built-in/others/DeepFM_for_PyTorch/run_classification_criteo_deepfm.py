@@ -25,6 +25,8 @@ import numpy as np
 import pandas as pd
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 from sklearn.metrics import log_loss, roc_auc_score
 from sklearn.model_selection import train_test_split

@@ -20,6 +20,8 @@ import datetime
 import yaml
 import sys
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 if torch.__version__>= '1.8':
     import torch_npu
 import torch.nn as nn

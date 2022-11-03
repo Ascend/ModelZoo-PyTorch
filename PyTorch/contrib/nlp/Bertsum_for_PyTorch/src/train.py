@@ -27,6 +27,8 @@ import signal
 import time
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from pytorch_pretrained_bert import BertConfig
 
 import distributed

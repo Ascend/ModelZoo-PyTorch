@@ -33,6 +33,8 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import torch.nn as nn
 import torch.backends.cudnn as cudnn

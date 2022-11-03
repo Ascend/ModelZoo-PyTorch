@@ -32,7 +32,9 @@
 # ============================================================================
 #
 # data_url : https://www.kaggle.com/c/carvana-image-masking-challenge/data
-import torch 
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import numpy as np 
 from SETR.transformer_seg import SETRModel
 from PIL import Image

@@ -37,6 +37,9 @@ import time
 import tqdm
 import cv2
 import matplotlib.pylab as plt
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import numpy as np
 import torch.nn as nn

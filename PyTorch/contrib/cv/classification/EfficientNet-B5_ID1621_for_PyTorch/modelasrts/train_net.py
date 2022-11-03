@@ -20,7 +20,10 @@
 # limitations under the License.
 
 """Train a classification model."""
-import argparse,sys,os,torch
+import argparse,sys,os
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../'))
 
 import pycls.core.config as config

@@ -32,6 +32,9 @@
 # ============================================================================
 #
 import time
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.backends.cudnn as cudnn
 from torch import nn
 from models import Generator, Discriminator, TruncatedVGG19

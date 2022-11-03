@@ -21,6 +21,8 @@ from os import path
 from setuptools import find_packages, setup
 from typing import List
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.utils.cpp_extension import CUDA_HOME, CppExtension, CUDAExtension
 from torch.utils.hipify import hipify_python
 

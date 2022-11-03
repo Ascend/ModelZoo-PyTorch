@@ -18,6 +18,8 @@ import math
 from numpy import finfo
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from distributed import apply_gradient_allreduce
 import torch.distributed as dist
 from torch.utils.data.distributed import DistributedSampler

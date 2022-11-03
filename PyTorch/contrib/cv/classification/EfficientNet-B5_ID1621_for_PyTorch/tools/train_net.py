@@ -25,7 +25,10 @@ import pycls.core.config as config
 import pycls.core.distributed as dist
 import pycls.core.trainer as trainer
 from pycls.core.config import cfg
-import argparse,sys,os,torch
+import argparse,sys,os
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 
 def init_process_group(proc_rank, world_size, device_id, port='29588'):
     """Initializes the default process group."""

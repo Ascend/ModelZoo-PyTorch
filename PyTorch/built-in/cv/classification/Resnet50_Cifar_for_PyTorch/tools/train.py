@@ -20,6 +20,8 @@ import warnings
 
 import mmcv
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.distributed as dist
 import torch_npu
 from torch_npu.contrib import transfer_to_npu

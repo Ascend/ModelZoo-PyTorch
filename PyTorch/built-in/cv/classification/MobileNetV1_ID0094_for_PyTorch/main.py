@@ -34,6 +34,8 @@ import os
 import shutil
 import time
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 if torch.__version__ >= '1.8.1':
     import torch_npu
 import torch.nn.parallel

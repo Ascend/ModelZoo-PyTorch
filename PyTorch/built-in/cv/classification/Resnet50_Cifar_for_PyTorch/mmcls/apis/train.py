@@ -17,6 +17,8 @@ import apex
 
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.distributed as dist
 from mmcv.runner import (DistSamplerSeedHook, Fp16OptimizerHook,
                          build_optimizer, build_runner, get_dist_info)

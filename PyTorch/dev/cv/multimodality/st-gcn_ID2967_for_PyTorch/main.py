@@ -36,6 +36,9 @@ import argparse
 import sys
 
 # torchlight
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torchlights
 from torchlights import import_class
 import torch.npu

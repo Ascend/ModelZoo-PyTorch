@@ -37,6 +37,9 @@ from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 from utils import *
 import argparse
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.npu
 import os
 import time

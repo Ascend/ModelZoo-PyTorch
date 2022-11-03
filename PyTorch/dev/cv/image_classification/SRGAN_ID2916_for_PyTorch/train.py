@@ -36,6 +36,9 @@ import os
 from math import log10
 import time
 import pandas as pd
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.optim as optim
 import torch.utils.data
 import torchvision.utils as utils

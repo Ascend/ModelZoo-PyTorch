@@ -34,6 +34,8 @@
 
 import os
 #import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import argparse
 from solver import Solver
 from data_loader import get_loader
