@@ -1,6 +1,8 @@
-# ResNet18 Onnx模型端到端推理指导
+# Resnet18模型-推理指导
 
-## 1 模型概述
+## 概述
+
+ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差学习的概念，通过增加直连通道来保护信息的完整性，解决信息丢失、梯度消失、梯度爆炸等问题，让很深的网络也得以训练。ResNet有不同的网络层数，常用的有18-layer、34-layer、50-layer、101-layer、152-layer。 
 
 -   **[论文地址](#11-论文地址)**  
 
@@ -14,147 +16,197 @@
 branch:master
 commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
-## 2 环境说明
+### 输入输出数据
 
--   **[深度学习框架](#21-深度学习框架)**  
+- #### 输入输出数据
 
--   **[python第三方库](#22-python第三方库)**  
+  - 输入数据
 
-### 2.1 深度学习框架
+    | 输入数据 | 大小                      | 数据类型 | 数据排布格式 |
+    | -------- | ------------------------- | -------- | ------------ |
+    | input    | batchsize x 3 x 224 x 224 | RGB_FP32 | NCHW         |
+
+  - 输出数据
+
+    | 输出数据 | 大小             | 数据类型 | 数据排布格式 |
+    | -------- | ---------------- | -------- | ------------ |
+    | output1  | batchsize x 1000 | FLOAT32  | ND           |
+
+
+## 推理环境准备
+
+- 该模型需要以下插件与驱动
+
+  | 配套                                                         | 版本                                                         | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | [1.0.15](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |                                                              |
+  | PyTorch                                                      | [1.5.1](https://github.com/pytorch/pytorch/tree/v1.5.1)      |                                                              |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |                                                              |                                                              |
+
+- 该模型需要以下依赖。
+
+  | 依赖名称      | 版本   |
+  | ------------- | ------ |
+  | onnx          | 1.9.0  |
+  | torch         | 1.5.1  |
+  | torchVision   | 0.6.1  |
+  | numpy         | 1.19.2 |
+  | Pillow        | 8.2.0  |
+  | opencv-python | 4.5.2  |
+
+
+
+# 快速上手
+
+#### 获取源码
+
+1. 源码上传到服务器任意目录（如：/home/HwHiAiUser）。
+
+   ```
+   .
+   |-- README.md
+   |-- imagenet_acc_eval.py             //验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+   |-- imagenet_torch_preprocess.py     //数据集预处理脚本
+   |-- requirements.txt
+   |-- resnet18_pth2onnx.py             //用于转换pth模型文件到onnx模型文件
+   ```
+   
+   
+
+2. 请用户根据依赖列表和提供的requirments.txt以及自身环境准备依赖。
+
+   ```
+   pip3 install  -r requirments.txt
+   ```
+   
+
+#### 准备数据集
+
+1. 获取原始数据集。
+
+   本模型使用ImageNet官网的5万张验证集进行测试，请用户自行获取该数据集，上传数据集到服务器任意目录（如：*/home/HwHiAiUser/dataset*）。图片与标签分别存放在*/home/HwHiAiUser/dataset*/imagenet/val与*/home/HwHiAiUser/dataset*/imagenet/val_label.txt位置。
+   
+
+2. 数据预处理。
+
+   执行预处理脚本，生成数据集预处理后的bin文件。
+
+   ```
+   python3 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/imagenet/val ./prep_dataset
+   ```
+
+   第一个参数为模型类型，第二个参数为原始数据验证集（.jpeg）所在路径，第三个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
+
+   
+
+#### 模型推理
+
+1. 模型转换。
+
+   本模型基于开源框架PyTorch训练的Resnet18进行模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      单击[Link](https://download.pytorch.org/models/resnet18-f37072fd.pth)在PyTorch开源框架获中取经过训练的Resnet18权重文件resnet18-f37072fd.pth，源码中已提供下载权重文件。
+
+   2. 安装torchvision。模型代码在torchvision中，arm下需源码安装，参考torchvision官网。
+
+      执行以下命令。
+
+      ```shell
+      git clone https://github.com/pytorch/vision
+      cd vision
+      python3 setup.py install
+      cd ..
+      ```
+
+   3. 导出onnx文件。
+
+      resnet18_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令在当前目录生成resnet18.onnx模型文件。
+
+      ```shell
+      python3 resnet18_pth2onnx.py ./resnet18-f37072fd.pth resnet18.onnx
+      ```
+
+      使用ATC工具将.onnx文件转换为.om文件，导出.onnx模型文件时需设置算子版本为11。
+
+      
+
+   4. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 执行命令查看芯片名称（${chip_name}）。
+
+         ${chip_name}可通过`npu-smi info`指令查看
+
+          ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
+      2. 使用atc将onnx模型转换为om模型文件。
+   
+         ```shell
+      source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         
+      atc --framework=5 --model=./resnet18.onnx --output=resnet18_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
+         ```
+   
+         参数说明：
+
+         - --model：为ONNX模型文件。
+      - --framework：5代表ONNX模型。
+         - --output：输出的OM模型。
+      - --input_format：输入数据的格式。
+         - --input_shape：输入数据的shape。
+      - --log：日志级别。
+         - --soc_version：处理器型号，支持Ascend310系列。
+      - --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的卷积层会有性能收益。
+         - --insert_op_conf=aipp.config: AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+
+   
+
+2. 开始推理验证。
+
+a.  使用ais-infer工具进行推理。
+
+参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
+
 ```
-CANN 5.0.3
-
-torch == 1.5.1
-torchvision == 0.6.1
-onnx == 1.9.0
+ pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
 ```
 
-### 2.2 python第三方库
+b.  执行推理。
 
+```shell
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+python3 ./ais_infer/ais_infer.py --model ./resnet18_bs1.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
 ```
-numpy == 1.19.2
-Pillow == 8.2.0
-opencv-python == 4.5.2
-```
+
+-   参数说明：   
+    --model：模型地址
+    --input：预处理完的数据集文件夹
+    --output：推理结果保存地址
+    --outfmt：推理结果保存格式
+
+运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
 
 **说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
 
-## 3 数据集预处理
+**因工具限制，需要把result/xxxx_xx_xx-xx-xx-xx/summary.json从结果目录中删除，或者迁移到其他目录；**
 
--   **[数据集获取](#31-数据集获取)**  
+c.  精度验证。
 
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 3.1 数据集获取
-该模型使用ImageNet的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
-
-### 3.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val ./prep_dataset
-```
-### 3.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./resnet18_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-
-## 4 模型推理
-
--   **[pth转onnx模型](#41-pth转onnx模型)**  
-
--   **[onnx转om模型](#42-onnx转om模型)**  
-
-### 4.1 pth转onnx模型
-
-1.下载pth权重文件  
-从https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py的第26行获取对应权重下载链接，使用wget命令下载对应权重
-
-文件MD5sum：e0b1c919e74f9a193d36871d9964bf7d
-
-2.ResNet18模型代码在torchvision里，安装torchvision，arm下需源码安装，参考torchvision官网
-```
-git clone https://github.com/pytorch/vision
-cd vision
-python3.7 setup.py install
-cd ..
-```
-3.编写pth2onnx脚本resnet18_pth2onnx.py
-
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
-
-3.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 resnet18_pth2onnx.py ./resnet18-f37072fd.pth resnet18.onnx
-```
-### 4.2 onnx模型量化（可选）
-1.AMCT工具包安装，具体参考[CANN 开发辅助工具指南 (推理)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-
-2.数据预处理，用于量化因子矫正。当前模型为动态batch，建议用多batch_size的预处理文件矫正量化因子。
-执行以下命令：
-```
-python3.7.5 calibration_bin.py prep_dataset calibration_bin 64
-```
-
-3.ONNX模型量化，具体参考[CANN 开发辅助工具指南 (推理)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-在result目录下生成resnet18_deploy_model.onnx量化模型
-
-4.量化模型验证，除onnx离线模型转换om模型命令有区别外，其余一致
-
-### 4.3 onnx转om模型
-
-1. 设置环境变量
-    ```
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    ```
-**说明**
->此脚本中环境变量只供参考，请以实际安装环境配置环境变量
-
-2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 开发辅助工具指南 (推理)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-   
-   ${chip_name}可通过`npu-smi info`指令查看，例：310P3
-
-    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-    ```
-    atc --framework=5 --model=./resnet18.onnx --output=resnet18_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1 # Ascend310P3
-
-
-    ## Int8量化（可选）
-    atc --framework=5 --model=./result/resnet18_deploy_model.onnx --output=resnet18_bs1_int8 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1 # Ascend310P3
-    ```
-
-### 4.4 模型离线推理
-
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-**说明**
->此脚本中环境变量只供参考，请以实际安装环境配置环境变量
-
-2.增加benchmark.{arch}可执行权限
-```
-chmod u+x benchmark.x86_64
-```
-
-3.执行离线推理
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=resnet18_bs1.om -input_text_path=./resnet18_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-执行./benchmark.x86_64工具请选择与运行环境架构相同的命令。详情参考[CANN 推理benchmark工具用户指南](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-
-4.精度验证
 调用imagenet_acc_eval.py脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据，结果保存在result.json中。
+
+```shell
+python3 imagenet_acc_eval.py result/result/xxxx_xx_xx-xx-xx-xx（时间戳） /home/HwHiAiUser/datasets/imagenet/val_label.txt ./ result.json
 ```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /home/HwHiAiUser/dataset/imagenet/val_label.txt ./ result.json
-```
-第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称
+
+第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称。
+
+
+
+
+

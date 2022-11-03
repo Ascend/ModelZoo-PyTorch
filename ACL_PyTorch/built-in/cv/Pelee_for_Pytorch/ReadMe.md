@@ -79,7 +79,7 @@ commit_id=1eab4106330f275ab3c5dfb910ddd79a5bac95ef
 
    ```
    cd ..
-   find ./Pelee.patch -type f -name "*" -exec dos2unix {} \;
+   find ./Pelee.Pytorch -type f -name "*" -exec dos2unix {} \;
    patch -p0 < Pelee.patch
    ```
 
@@ -162,18 +162,18 @@ commit_id=1eab4106330f275ab3c5dfb910ddd79a5bac95ef
 
 
    4. 改图优化
-    
-       修改softmax节点，在softmax前插入transpose
         
+       修改softmax节点，在softmax前插入transpose
+       
        ```shell
        python3 softmax.py pelee_dynamic_bs_sim.onnx pelee_dynamic_bs_modify.onnx
        ```
     
        - softmax.py修改模型节点需要和onnx模型中Softmax节点name保持一致。如果执行脚本报错时参考onnx图中Softmax节点的name。
-        
+       
        - ONNX改图依赖om_gener工具，下载链接：https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Official/nlp/VilBert_for_Pytorch/om_gener
 
-    
+
    5. 修改atc.sh脚本，通过ATC工具使用脚本完成转换，具体的脚本示例如下：
 
       ${chip_name}可通过`npu-smi info`指令查看
@@ -214,6 +214,7 @@ commit_id=1eab4106330f275ab3c5dfb910ddd79a5bac95ef
 1. 编译报错
 pycocotools/_mask.c:10546:40: error: ‘PyTypeObject {aka struct _typeobject}’ has no member named ‘tp_print’; did you mean ‘tp_dict’?
    
+
 问题原因：开源代码和第三方库兼容性问题
 解决方案：修改源码报错行，把tp_print修改为tp_dict
 
