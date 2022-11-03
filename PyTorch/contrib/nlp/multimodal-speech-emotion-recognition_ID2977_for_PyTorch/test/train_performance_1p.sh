@@ -17,7 +17,7 @@ Network=`echo $(cd $(dirname $0);pwd) | awk -F"/" '{print $(NF-1)}'`
 export RANK_SIZE=1
 export RANK_ID=0
 export JOB_ID=10087
-
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 # 路径参数初始化
 data_path=""
 output_path=""
@@ -30,7 +30,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_path              # dataset of training
     --output_path            # output of training
     --train_steps            # max_step for training
-	  --train_epochs           # max_epoch for training
+    --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -91,6 +91,10 @@ cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
 
+#修改combine数据集路径以及模型保存路径
+sed -i "s#./outputs/train_url_0#${output_path}#g" ./lstm_classifier/combined/lstm_classifier.py
+sed -i "s#./inputs/data_url_0/combined/#${data_path}/combined/#g" ./lstm_classifier/combined/utils.py
+sed -i "s#20000#10#g" ./lstm_classifier/combined/config.py
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -109,47 +113,21 @@ start_time=$(date +%s)
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
 train_epochs=5
-# batch_size=128   #t2e
-# batch_size = 1567  #s2e
-batch_size = 200   #combined
+batch_size=200   #combined
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} --steps=${train_steps}
+    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
 else
-    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} --steps=${train_steps} 1>${print_log} 2>&1
+    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
-
-StepTime=`grep "steptime" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
+StepTime=`grep "steptime" ${print_log} | awk '{print $6}' | tr -d ";" | tail -n +5 | awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
-# 精度相关数据计算
-train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
 # 提取所有loss打印信息
-grep "loss :" ${print_log} | awk -F ":" '{print $4}' | awk -F "-" '{print $1}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
-
-
-###########################################################
-#########后面的所有内容请不要修改###########################
-#########后面的所有内容请不要修改###########################
-#########后面的所有内容请不要修改###########################
-###########################################################
-
-# 判断本次执行是否正确使用Ascend NPU
-tf_flag=`echo ${Network} | grep TensorFlow | wc -l`
-use_npu_flag=`grep "The model has been compiled on the Ascend AI processor" ${print_log} | wc -l`
-if [ x"${use_npu_flag}" == x0 -a x"${tf_flag}" == x1 ];
-then
-    echo "------------------ ERROR NOTICE START ------------------"
-    echo "ERROR, your task haven't used Ascend NPU, please check your npu Migration."
-    echo "------------------ ERROR NOTICE END------------------"
-else
-    echo "------------------ INFO NOTICE START------------------"
-    echo "INFO, your task have used Ascend NPU, please check your result."
-    echo "------------------ INFO NOTICE END------------------"
-fi
+grep "loss" ${print_log} | awk '{print $9}'> ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename
@@ -167,10 +145,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 # 输出性能FPS/单step耗时/端到端耗时
 echo "Final Performance images/sec : $FPS"
-echo "Final Performance sec/steps : $StepTime"
+echo "Final Performance sec/step : $StepTime"
 echo "E2E Training Duration sec : $e2e_time"
-# 输出训练精度
-echo "Final Train Accuracy : ${train_accuracy}"
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=(`awk 'END {print $NF}' $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}_loss.txt`)

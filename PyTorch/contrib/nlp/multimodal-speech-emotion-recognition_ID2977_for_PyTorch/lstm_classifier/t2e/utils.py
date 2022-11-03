@@ -105,10 +105,10 @@ def indexes_from_sentence(vocab, sentence):
     return indexes[:config['max_sequence_length']]
 
 
-def load_data(batched=True, test=False, file_dir='/home/ma-user/modelarts/inputs/data_url_0/t2e/'):
+def load_data(batched=True, test=False, file_dir='./inputs/data_url_0/t2e/'):
     # Load vocab
 
-    with open('/home/ma-user/modelarts/inputs/data_url_0/t2e/vocab.pkl', 'rb') as f:
+    with open('./inputs/data_url_0/t2e/vocab.pkl', 'rb') as f:
         vocab = pickle.load(f)
 
     bs = config['batch_size']

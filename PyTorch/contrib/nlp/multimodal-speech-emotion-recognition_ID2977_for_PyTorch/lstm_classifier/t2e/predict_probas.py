@@ -27,7 +27,7 @@ inputs, lengths, targets = test_pairs
 
 # Load pretrained model
 model = LSTMClassifier(config)
-checkpoint = torch.load('/home/ma-user/modelarts/outputs/train_url_0/{}-best_model.pth'.format(config['model_code']),
+checkpoint = torch.load('./outputs/train_url_0/{}-best_model.pth'.format(config['model_code']),
                         map_location='cpu')
 model.load_state_dict(checkpoint['model'])
 
@@ -35,5 +35,5 @@ with torch.no_grad():
     # Predict
     predict_probas = model(inputs, lengths).cpu().numpy()
 
-    with open('/home/ma-user/modelarts/outputs/train_url_0/text_lstm_classifier.pkl', 'wb') as f: #../../pred_probas/text_lstm_classifier.pkl
+    with open('./outputs/train_url_0/text_lstm_classifier.pkl', 'wb') as f: #../../pred_probas/text_lstm_classifier.pkl
         pickle.dump(predict_probas, f)

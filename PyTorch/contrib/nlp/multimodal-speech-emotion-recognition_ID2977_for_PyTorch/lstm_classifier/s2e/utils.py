@@ -22,7 +22,7 @@ import itertools
 import matplotlib.pyplot as plt
 
 
-def load_data(batched=True, test=False, file_dir='/home/ma-user/modelarts/inputs/data_url_0/s2e/'):
+def load_data(batched=True, test=False, file_dir='./inputs/data_url_0/s2e/'):
     bs = config['batch_size']
     ftype = 'test' if test else 'train'
     df = pd.read_csv('{}modified_df_{}.csv'.format(file_dir, ftype))

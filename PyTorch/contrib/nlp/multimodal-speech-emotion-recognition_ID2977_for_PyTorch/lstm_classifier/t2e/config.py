@@ -35,7 +35,7 @@ model_config = {
     'learning_rate': 0.0001,
     'model_code': 'bi_lstm_2_layer',
     'max_sequence_length': 20,
-    'embeddings_dir': '/home/ma-user/modelarts/inputs/data_url_0/t2e/embeddings/'
+    'embeddings_dir': './inputs/data_url_0/t2e/embeddings/'
 }
 
 
@@ -45,7 +45,7 @@ from utils import generate_word_embeddings
 def set_dynamic_hparams():
     try:
 
-        with open('/home/ma-user/modelarts/inputs/data_url_0/t2e/vocab.pkl', 'rb') as f:
+        with open('./inputs/data_url_0/t2e/vocab.pkl', 'rb') as f:
             vocab = pickle.load(f)
     except FileNotFoundError as e:
         vocab = create_vocab()

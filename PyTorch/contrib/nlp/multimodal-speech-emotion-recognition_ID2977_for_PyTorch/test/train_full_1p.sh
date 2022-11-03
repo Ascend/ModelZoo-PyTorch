@@ -17,7 +17,7 @@ Network=`echo $(cd $(dirname $0);pwd) | awk -F"/" '{print $(NF-1)}'`
 export RANK_SIZE=1
 export RANK_ID=0
 export JOB_ID=10087
-
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 # 路径参数初始化
 data_path=""
 output_path=""
@@ -90,13 +90,9 @@ function get_casename()
 cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
-
-sed -i "s#/home/ma-user/modelarts/inputs/data_url_0/t2e/#${data_path}/t2e/#g" ./lstm_classifier/t2e/config.py
-sed -i "s#/home/ma-user/modelarts/outputs/train_url_0#${output_path}#g" ./lstm_classifier/t2e/lstm_classifier.py
-sed -i "s#/home/ma-user/modelarts/inputs/data_url_0/t2e/vocab.pkl#${data_path}/t2e/vocab.pkl#g" ./lstm_classifier/t2e/create_vocab.py 
-sed -i "s#/home/ma-user/modelarts/inputs/data_url_0/t2e/#${data_path}/t2e/#g" ./lstm_classifier/t2e/utils.py
-sed -i "s#/home/ma-user/modelarts/outputs/train_url_0#${output_path}#g" ./lstm_classifier/t2e/predict_probas.py
-
+#修改combine数据集路径以及模型保存路径
+sed -i "s#./outputs/train_url_0#${output_path}#g" ./lstm_classifier/combined/lstm_classifier.py
+sed -i "s#./inputs/data_url_0/combined/#${data_path}/combined/#g" ./lstm_classifier/combined/utils.py
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -114,25 +110,32 @@ start_time=$(date +%s)
 # 您的训练数据集在${data_path}路径下，请直接使用这个变量获取
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
-#t2e
-batch_size=128  
+
+batch_size=200  
 train_epochs=10000
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./lstm_classifier/t2e/lstm_classifier.py --data_path=${data_path} --output_path=${output_path}
+    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
 else
-    python3.7 ./lstm_classifier/t2e/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>${print_log} 2>&1
+    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
-StepTime=`grep "steptime" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
+StepTime=`grep "steptime" ${print_log} | awk '{print $6}' | tr -d ";" | tail -n +5 | awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
 # 精度相关数据计算
 train_accuracy=`grep "acc" ${print_log} | awk '{print $2}' | tr -d "," | awk 'END {print $1}'`
 # 提取所有loss打印信息
-grep "loss" ${print_log} | awk '{print $9}'> ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+grep "loss" ${print_log} | awk '{print $9}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
+
+
+###########################################################
+#########后面的所有内容请不要修改###########################
+#########后面的所有内容请不要修改###########################
+#########后面的所有内容请不要修改###########################
+###########################################################
 
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename

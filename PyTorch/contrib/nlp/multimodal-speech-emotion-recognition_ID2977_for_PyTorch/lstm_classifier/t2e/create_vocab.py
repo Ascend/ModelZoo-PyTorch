@@ -37,26 +37,10 @@ class Vocabulary(object):
             self.word2count[word] += 1
 
 
-def create_vocab(): file_dir='/home/ma-user/modelarts/inputs/data_url_0/t2e/'
-    print('Loading corpus...')
-    texts = []
-    for mode in ['train', 'test']:
-       texts += list(pd.read_csv('{}text_{}.csv'.format(file_dir, mode))['transcription'])
-    
-    print("Building vocab...")
-    vocab = Vocabulary()
+def create_vocab(): 
 
-    for text in texts:
-        vocab.add_sentence(text)
-
-    print("Total words in vocab:  {}".format(vocab.size))
-    with open('vocab.pkl', 'wb') as f:
-        pickle.dump(vocab, f)
-
-    print('Generating word embeddings')
-
-    # with open('/home/ma-user/modelarts/inputs/data_url_0/t2e/vocab.pkl', 'rb') as f:
-    #     vocab = pickle.load(f)
+    with open('./inputs/data_url_0/t2e/vocab.pkl', 'rb') as f:
+        vocab = pickle.load(f)
     return vocab
 
 

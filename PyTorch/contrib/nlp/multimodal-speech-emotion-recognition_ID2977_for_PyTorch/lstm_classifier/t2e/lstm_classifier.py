@@ -18,7 +18,7 @@ import torch.nn.functional as F
 
 from config import model_config as config
 from utils import load_data, evaluate, load_word_embeddings, plot_confusion_matrix
-
+import os
 import time
 from apex import amp
 import pandas as pd
@@ -36,7 +36,11 @@ from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, precision_score, recall_score
 
 
-CALCULATE_DEVICE = 'npu:0'
+CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != CALCULATE_DEVICE:
+    CALCULATE_DEVICE = f'npu:{CALCULATE_DEVICE}'
 
 class LSTMClassifier(nn.Module):
     """docstring for LSTMClassifier"""
@@ -76,19 +80,14 @@ class LSTMClassifier(nn.Module):
 if __name__ == '__main__':
     emotion_dict = {'ang': 0, 'hap': 1, 'sad': 2, 'fea': 3, 'sur': 4, 'neu': 5}
 
-    # device = 'cuda:{}'.format(config['gpu']) if \
-    #          torch.cuda.is_available() else 'cpu'
-
-    if 'npu' in CALCULATE_DEVICE:
-        torch.npu.set_device(CALCULATE_DEVICE)
+    torch.npu.set_device(CALCULATE_DEVICE)
 
     model = LSTMClassifier(config)
     model = model.to(CALCULATE_DEVICE)
     criterion = nn.NLLLoss()
     import apex
     optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=config['learning_rate'])
-    model, optimizer = amp.initialize(model,optimizer,opt_level='O2',loss_scale=32.0,combine_grad=True)
-
+    model, optimizer = amp.initialize(model,optimizer,opt_level='O2',loss_scale=128.0,combine_grad=True)
     train_batches = load_data()
     test_batch = load_data(test=True)
 
@@ -113,20 +112,18 @@ if __name__ == '__main__':
             predictions = model(inputs, input_lengths)
             predictions = predictions.to(CALCULATE_DEVICE)
 
-
             loss = criterion(predictions, targets)
+            #loss.backward()
             with amp.scale_loss(loss,optimizer) as scaled_loss:
                 scaled_loss.backward()
             optimizer.step()
             losses.append(loss.item())
 
-
             end = time.time()
             runtime += (end - start)
             i += 1
-        if epoch % 100 == 0 :  #否则输出太多了
+        if epoch % 1 == 0:
             print("epoch = " + str(epoch) + "; steptime = {:.3f}; loss = {:.3f}".format(runtime/i, loss.data))
-        ##sum_runtime += runtime/i
         # evaluate
         with torch.no_grad():
             inputs, lengths, targets = test_batch
@@ -142,9 +139,6 @@ if __name__ == '__main__':
             targets = np.array(targets.cpu())
             predictions = np.array(predictions.cpu())
 
-            # Get results
-            # plot_confusion_matrix(targets, predictions,
-            #                       classes=emotion_dict.keys())
             performance = evaluate(targets, predictions)
             if performance['acc'] > best_acc:
                 best_acc = performance['acc']
@@ -153,9 +147,9 @@ if __name__ == '__main__':
                 torch.save({
                     'model': model.state_dict(),
                     'optimizer': optimizer.state_dict()
-                    }, '/home/ma-user/modelarts/outputs/train_url_0/{}-t2e-best_model.pth'.format(config['model_code']))
+                    }, './outputs/train_url_0/{}-t2e-best_model.pth'.format(config['model_code']))
 
-                with open('/home/ma-user/modelarts/outputs/train_url_0/{}-t2e-best_performance.pkl'.format(
+                with open('./outputs/train_url_0/{}-t2e-best_performance.pkl'.format(
                         config['model_code']), 'wb') as f:
                     pickle.dump(performance, f)
 

@@ -21,9 +21,9 @@ import torch.nn.functional as F
 from utils import load_data, evaluate, plot_confusion_matrix
 
 from config import model_config as config
-
+import os
 import time
-
+from apex import amp
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
@@ -37,7 +37,12 @@ from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, precision_score, recall_score
 
 
-CALCULATE_DEVICE = 'npu:0'
+
+CALCULATE_DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != CALCULATE_DEVICE:
+    CALCULATE_DEVICE = f'npu:{CALCULATE_DEVICE}'
 
 class LSTMClassifier(nn.Module):
     """docstring for LSTMClassifier"""
@@ -72,14 +77,16 @@ if __name__ == '__main__':
     # device = 'cuda:{}'.format(config['gpu']) if \
     #          torch.cuda.is_available() else 'cpu'
 
-    if 'npu' in CALCULATE_DEVICE:
-        torch.npu.set_device(CALCULATE_DEVICE)
+    
+    torch.npu.set_device(CALCULATE_DEVICE)
 
     model = LSTMClassifier(config)
     model = model.to(CALCULATE_DEVICE)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
-
+    #optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'])
+    import apex
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=config['learning_rate'])
+    model, optimizer = amp.initialize(model,optimizer,opt_level='O2',loss_scale=128.0,combine_grad=True)
     train_batches = load_data()
     test_pairs = load_data(test=True)
 
@@ -103,15 +110,17 @@ if __name__ == '__main__':
             predictions = predictions.to(CALCULATE_DEVICE)
 
             loss = criterion(predictions, targets)
-            loss.backward()
+            #loss.backward()
+            with amp.scale_loss(loss,optimizer) as scaled_loss:
+                scaled_loss.backward()
             optimizer.step()
             losses.append(loss.item())
 
             end = time.time()
             runtime += (end - start)
             i += 1
-        	if epoch % 100 == 0 :  #�������̫����
-            	print("epoch = " + str(epoch) + "; steptime = " + str(runtime/i))
+        if epoch % 1 == 0:
+            print("epoch = " + str(epoch) + "; steptime = {:.3f}; loss = {:.3f}".format(runtime/i, loss.data))
         # evaluate
         with torch.no_grad():
             inputs = test_pairs[0].unsqueeze(0)
@@ -138,9 +147,9 @@ if __name__ == '__main__':
                 torch.save({
                     'model': model.state_dict(),
                     'optimizer': optimizer.state_dict()
-                    }, '/home/ma-user/modelarts/outputs/train_url_0/{}-s2e-best_model.pth'.format(config['model_code']))
+                    }, './outputs/train_url_0/{}-s2e-best_model.pth'.format(config['model_code']))
 
-                with open('/home/ma-user/modelarts/outputs/train_url_0/{}-s2e-best_performance.pkl'.format(config['model_code']), 'wb') as f:
+                with open('./outputs/train_url_0/{}-s2e-best_performance.pkl'.format(config['model_code']), 'wb') as f:
                     pickle.dump(performance, f)
 
     print('train OK.')

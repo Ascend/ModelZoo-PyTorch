@@ -78,7 +78,7 @@ def npu_session_config_init(args, session_config=None):
         # profiling config
         custom_op.parameter_map["profiling_mode"].b = True
         custom_op.parameter_map["profiling_options"].s = tf.compat.as_bytes(
-            '{"output":"/home/ma-user/modelarts/outputs/train_url_0/", "training_trace":"on", "task_trace":"on", "aicpu":"on", "fp_point":"", "bp_point":""}')
+            '{"output":"./outputs/train_url_0/", "training_trace":"on", "task_trace":"on", "aicpu":"on", "fp_point":"", "bp_point":""}')
 
         # data_dump
         if args.data_dump_flag == 1:

@@ -23,7 +23,7 @@ import itertools
 import matplotlib.pyplot as plt
 
 
-def load_data(batched=True, test=False, file_dir='/home/ma-user/modelarts/inputs/data_url_0/combined/combined_features.pkl'):
+def load_data(batched=True, test=False, file_dir='./inputs/data_url_0/combined/combined_features.pkl'):
     bs = config['batch_size']
     ftype = 'test' if test else 'train'
 
