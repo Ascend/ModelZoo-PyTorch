@@ -21,8 +21,6 @@ device_id=$ASCEND_DEVICE_ID
 learning_rate=0.01
 # 加载数据进程数
 workers=32
-#enable runtime2.0
-rt2=True
 # enable_bin
 bin=True
 #profiling
@@ -40,8 +38,6 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --rt2* ]];then
-        rt2=`echo ${para#*=}`
     elif [[ $para == --bin* ]];then
         bin=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
@@ -126,7 +122,6 @@ python3 ./main.py recognition\
        --use_gpu_npu npu\
        --amp True\
        --num_worker $(nproc)\
-       --rt2 ${rt2} \
        --bin ${bin} \
        --train_feeder_args data_path=\'${data_path}/train_data.npy\'\
        --train_feeder_args label_path=\'${data_path}/train_label.pkl\'\

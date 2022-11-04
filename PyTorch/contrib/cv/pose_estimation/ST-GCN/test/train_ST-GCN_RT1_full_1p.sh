@@ -23,6 +23,8 @@ device_id=$ASCEND_DEVICE_ID
 learning_rate=0.01
 # 加载数据进程数
 workers=32
+# disable_bin
+bin=False
 
 
 # 参数校验，data_path为必传参数， 其他参数的增删由模型自身决定；此处若新增参数需在上面有定义并赋值
@@ -34,6 +36,14 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --bin* ]];then
+        bin=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --train_epochs* ]];then
+        train_epochs=`echo ${para#*=}`
+    elif [[ $para == --log_interval* ]];then
+        log_interval=`echo ${para#*=}`
     fi
 done
 
@@ -88,10 +98,6 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_set.sh
-else
-    export TASK_QUEUE_ENABLE=0
-    export ASCEND_SLOG_PRINT_TO_STDOUT=0
-    export ASCEND_GLOBAL_LOG_LEVEL=3
 fi
 
 python3 ./main.py recognition\
@@ -102,6 +108,7 @@ python3 ./main.py recognition\
        --use_gpu_npu npu\
        --amp True\
        --num_worker $(nproc)\
+       --bin ${bin} \
        --train_feeder_args data_path=\'${data_path}/train_data.npy\'\
        --train_feeder_args label_path=\'${data_path}/train_label.pkl\'\
        --test_feeder_args data_path=\'${data_path}/val_data.npy\'\
@@ -144,7 +151,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss: " '{print $NF}' |grep lr:| awk '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss: " '{print $NF}' |grep lr:| awk '{print $1}' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
