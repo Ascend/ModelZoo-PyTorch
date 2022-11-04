@@ -87,6 +87,9 @@ if [ $rt1 ];then
     export ENABLE_RUNTIME_V2=0
     echo "use rt1 runtime"
 fi
+if [ $profiling=="GE" ];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 #################创建日志输出目录，不需要修改#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
@@ -108,7 +111,7 @@ start_time=$(date +%s)
 
 taskset -c 0-23 nohup python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
         --data_path ${data_path}/icdar2015 \
-        --resume ${mdoel_path}/MLT-Pretrain-ResNet50 \
+        --resume ${data_path}/db_ckpt/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --amp \
         --epochs ${train_epochs} \
@@ -139,7 +142,7 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_RT2_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 # 获取性能数据，不需要修改
 # 吞吐量

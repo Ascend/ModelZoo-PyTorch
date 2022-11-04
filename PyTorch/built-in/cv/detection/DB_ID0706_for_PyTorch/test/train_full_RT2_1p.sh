@@ -99,13 +99,17 @@ start_time=$(date +%s)
 
 taskset -c 0-23 nohup python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
         --data_path ${data_path}/icdar2015 \
-        --resume ${mdoel_path}/MLT-Pretrain-ResNet50 \
+        --resume ${data_path}/db_ckpt/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --amp \
         --epochs ${train_epochs} \
         --batch_size ${batch_size} \
         --bin ${bin} \
         --device_list "${ASCEND_DEVICE_ID}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+wait
+nohup python3 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+    --resume outputs/workspace/${PWD##*/}/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/final \
+    --box_thresh 0.6 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 # 训练结束时间，不需要修改
@@ -119,15 +123,23 @@ FPS=`grep -a 'FPS@all' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEN
 FPS=${FPS#* }  # 去除前面的空格字符
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+# 输出训练精度,需要模型审视修改
+train_accuracy=`grep -a 'precision' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F '[#precision :]' '{print $(NF-1)}'`
+train_recall=`grep -a 'recall' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F '[#recall :]' '{print $(NF-1)}'`
+train_fmeasure=`grep -a 'fmeasure' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F '[#fmeasure :]' '{print $(NF-1)}'`
+
 
 # 打印，不需要修改
+echo "Final Train Accuracy : ${train_accuracy}"
+echo "Final Train Recall : ${train_recall}"
+echo "Final Train Fmeasure : ${train_fmeasure}"
 echo "E2E Training Duration sec : $e2e_time"
 
 # 性能看护结果汇总
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_RT2_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 # 获取性能数据，不需要修改
 # 吞吐量
@@ -149,5 +161,8 @@ echo "DeviceType = ${DeviceType}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/$
 echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainRecall = ${train_recall}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainFmeasure = ${train_fmeasure}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
