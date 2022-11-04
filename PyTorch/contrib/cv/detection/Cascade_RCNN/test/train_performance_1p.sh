@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="CascadeRCNN"
+Network="Cascade_RCNN_ID4134_for_PyTorch"
 # 训练batch_size
 batch_size=8
 # 训练使用的npu卡数
@@ -26,6 +26,10 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 
@@ -80,6 +84,10 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    #CI看护
+    sed -i "s|./R-101.pkl|${data_path}/R-101.pkl|g" configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml
+    python3.7 setup.py build develop
 fi
 python3.7 tools/train_net.py \
         --num-gpus 1 \
@@ -105,6 +113,11 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
+
+#参数回改
+if [ x"${etp_flag}" == x"true" ];then
+    sed -i "s|${data_path}/R-101.pkl|./R-101.pkl|g" configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml
+fi
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
