@@ -96,8 +96,11 @@ if [[ $ckpt_path == "" ]];then
 fi
 
 # 添加二进制代码
-line=`grep "import torch" ${cur_path}/../train.py -n | tail -1|awk -F ':' '{print $1}'`
+line=`grep "from apex import amp" ${cur_path}/../train.py -n | tail -1|awk -F ':' '{print $1}'`
 sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../train.py
+sed -i "$[line+2]ioption = {}" ${cur_path}/../train.py
+sed -i "$[line+3]ioption['NPU_FUZZY_COMPILE_BLACKLIST'] = 'DynamicRNNV2,DynamicRNNV2Grad' " ${cur_path}/../train.py
+sed -i "$[line+4]itorch.npu.set_option(option)" ${cur_path}/../train.py
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -121,7 +124,6 @@ python3 train.py --output_directory ${cur_path}/output/$ASCEND_DEVICE_ID/ckpt \
     --ckpt_path ${ckpt_path} \
     --data_path ${data_path}/ \
     --warm_start \
-    --max_steps $train_steps \
     --epochs $train_epochs > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

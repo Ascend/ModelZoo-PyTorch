@@ -31,12 +31,10 @@ from loss_function import Tacotron2Loss
 from logger import Tacotron2Logger
 from hparams import hparams
 from utils import to_gpu
-
 import apex
 from apex import amp
-if torch.__version__ >= "1.8.1":
-    import torch_npu
-    
+
+
 def reduce_tensor(tensor, n_gpus):
     rt = tensor.clone()
     dist.all_reduce(rt, op=dist.reduce_op.SUM)
@@ -277,8 +275,8 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
                     model.parameters(), hparams.grad_clip_thresh)
 
             optimizer.step()
-
-            if not is_overflow and rank == 0:
+            
+            if rank == 0:
                 duration = time.perf_counter() - start
                 print("Train loss {} {:.6f} Grad Norm {:.6f} {:.2f}s/it".format(
                     iteration, reduced_loss, grad_norm, duration))
