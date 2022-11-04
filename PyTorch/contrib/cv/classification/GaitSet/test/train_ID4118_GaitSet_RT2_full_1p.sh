@@ -9,17 +9,14 @@ RANK_SIZE=1
 #设置默认日志级别,不需要修改
 #export ASCEND_GLOBAL_LOG_LEVEL_ETP_ETP=3
 #export ASCEND_GLOBAL_EVENT_ENABLE=1
-export ENABLE_RUNTIME_V2=0
+
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="GaitSet_RT1_ID4118_for_PyTorch"
+Network="GaitSet_RT2_ID4118_for_PyTorch"
 #训练batch_size
 batch_size=128
 #训练步数
-iters=1000
-profiling='None'
-start_step=-1
-stop_step=-1
+iters=40000
 
 for para in $*
 do
@@ -27,20 +24,9 @@ do
 		data_path=`echo ${para#*=}`
     elif [[ $para == --iters* ]];then
         iters=`echo ${para#*=}`
-    elif [[ $para == --rt2 ]];then
-        rt2=True
-    elif [[ $para == --profiling* ]];then
-        profiling=`echo ${para#*=}`
-    elif [[ $para == --start_step* ]];then
-        start_step=`echo ${para#*=}`
-    elif [[ $para == --stop_step* ]];then
-        stop_step=`echo ${para#*=}`
 	fi
 done
 
-if [[ ${profiling} == "GE" ]];then
-    export GE_PROFILING_TO_STD_OUT=1
-fi
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
@@ -55,11 +41,11 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 #执行训练脚本，传参需要审视修改
-python3 train_main.py  --data_path=${data_path} \
-                       --iters=${iters} \
-                       --profiling=${profiling} \
-                       --start_step=${start_step} \
-                       --stop_step=${stop_step} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 train_main.py   --rt2 \
+                        --data_path=${data_path} \
+                        --iters=${iters} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+wait
+python3 test_main.py --iter=${iters} --data_path=${data_path} >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
@@ -75,8 +61,8 @@ FPS=`grep "FPS" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}
 echo "Final Performance images/sec : $FPS"
 
 # #输出训练精度,需要模型审视修改
-# train_accuracy=`cat $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep "top1" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F ":" 'END {print $6}'|cut -c 2-6`
-train_accuracy="SKIP"
+train_accuracy=`grep "NM:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "NM:" '{print$2}'| tr -d ","|head -n 1|awk -F " " '{print$1}'`
+
 # #打印，不需要修改
 # echo "Final Train Accuracy(top1): ${train_accuracy}"
 # echo "Final Train Accuracy(top5): ${train_accuracy1}"
@@ -85,7 +71,7 @@ train_accuracy="SKIP"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量

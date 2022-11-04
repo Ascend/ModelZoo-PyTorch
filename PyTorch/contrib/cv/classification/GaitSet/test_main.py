@@ -36,6 +36,7 @@ parser.add_argument('--batch_size', default='1', type=int,
 parser.add_argument('--cache', default=False, type=boolean_string,
                     help='cache: if set as TRUE all the test data will be loaded at once'
                          ' before the transforming start. Default: FALSE')
+parser.add_argument('--data_path',default='../../CASIA-B-Pre/', type=str,help='data_path')
 args = parser.parse_args()
 
 
@@ -47,7 +48,7 @@ def de_diag(acc, each_angle=False):
     return result
 
 
-conf['data']['dataset_path'] = os.path.abspath(conf['data']['dataset_path'])
+conf['data']['dataset_path'] = args.data_path
 conf['WORK_PATH'] = os.path.abspath(conf['WORK_PATH'])
 
 m = initialization(conf, test=args.cache)[0]

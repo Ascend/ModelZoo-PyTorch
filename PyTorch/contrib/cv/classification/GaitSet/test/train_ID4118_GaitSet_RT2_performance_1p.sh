@@ -7,16 +7,19 @@ cur_path=`pwd`
 data_path=""
 RANK_SIZE=1
 #设置默认日志级别,不需要修改
-#export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
+#export ASCEND_GLOBAL_LOG_LEVEL_ETP_ETP=3
 #export ASCEND_GLOBAL_EVENT_ENABLE=1
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="GaitSet"
+Network="GaitSet_RT2_ID4118_for_PyTorch"
 #训练batch_size
 batch_size=128
 #训练步数
 iters=1000
+profiling='None'
+start_step=-1
+stop_step=-1
 
 for para in $*
 do
@@ -24,11 +27,24 @@ do
 		data_path=`echo ${para#*=}`
     elif [[ $para == --iters* ]];then
         iters=`echo ${para#*=}`
+    elif [[ $para == --rt2 ]];then
+        rt2=True
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
 	fi
 done
 
+if [[ ${profiling} == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
+
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
+
 
 #创建DeviceID输出目录，不需要修改
 if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
@@ -42,7 +58,10 @@ start_time=$(date +%s)
 #执行训练脚本，传参需要审视修改
 python3 train_main.py  --rt2 \
                        --data_path=${data_path} \
-                       --iters=${iters} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+                       --iters=${iters} \
+                       --profiling=${profiling} \
+                       --start_step=${start_step} \
+                       --stop_step=${stop_step} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
@@ -68,7 +87,7 @@ train_accuracy="SKIP"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_'RT2'_'ID4118'_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 ##获取性能数据，不需要修改
 #吞吐量

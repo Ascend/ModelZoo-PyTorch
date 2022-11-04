@@ -44,6 +44,12 @@ class wrapperNet(nn.Module):
         super(wrapperNet, self).__init__()
         self.module = module
 
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -105,6 +111,9 @@ class Model:
                  model_name,
                  train_source,
                  test_source,
+                 profiling,
+                 start_step,
+                 stop_step,
                  img_size=64):
 
         self.save_name = save_name
@@ -121,6 +130,10 @@ class Model:
         self.batch_size = batch_size
         self.model_name = model_name
         self.P, self.M = batch_size
+        # CANN/GE profiling
+        self.profiling = profiling                 
+        self.start_step = start_step  
+        self.stop_step = stop_step 
 
         self.restore_iter = restore_iter
         self.total_iter = total_iter
@@ -271,65 +284,75 @@ class Model:
             data_time.update(time.time() - start_time)
             
             seq, view, seq_type, label, batch_frame = _t_data
-            
+            current_step = self.restore_iter
             self.restore_iter += 1
-            self.optimizer.zero_grad()
-            
-            for i in range(len(seq)):
-                seq[i] = self.np2var(seq[i]).float()
-            if batch_frame is not None:
-                batch_frame = self.np2var(batch_frame).int()
-            
-            feature = self.encoder(*seq, batch_frame)
-            
-            target_label = [train_label_set.index(l) for l in label]
-            target_label = self.np2var(np.array(target_label)).long()
-
-            triplet_feature = feature.permute(1, 0, 2).contiguous()
-            triplet_label = target_label.unsqueeze(0).cpu().repeat(triplet_feature.size(0), 1)
-            
-            triplet_feature = triplet_feature.cpu()
-            triplet_label = triplet_label.cpu()
-            
-            (full_loss_metric, hard_loss_metric, mean_dist, full_loss_num
-             ) = self.triplet_loss(triplet_feature, triplet_label)
-            if self.hard_or_full_trip == 'hard':
-                loss = hard_loss_metric.mean()
-            elif self.hard_or_full_trip == 'full':
-                loss = full_loss_metric.mean()
-            
-            self.hard_loss_metric.append(hard_loss_metric.mean().data.cpu().numpy())
-            self.full_loss_metric.append(full_loss_metric.mean().data.cpu().numpy())
-            self.full_loss_num.append(full_loss_num.mean().data.cpu().numpy())
-            self.dist_list.append(mean_dist.mean().data.cpu().numpy())
-            
-            if loss > 1e-10:
-                with amp.scale_loss(loss,self.optimizer) as scaled_loss:
-                    scaled_loss.backward()
-                self.optimizer.step()
+            collect_turn = current_step > self.start_step and  current_step <= self.stop_step
+            if(self.profiling == 'GE' and collect_turn):
+                manage = torch.npu.profile('./GE_prof')
+            elif(self.profiling == 'CANN' and collect_turn):
+                manage = torch.npu.profile('./CANN_prof', use_e2e_profiler=True)
             else:
-                print('loss very small at: ', iter_i)
+                if self.profiling in ['CANN', 'GE'] and current_step > self.stop_step:
+                    break
+                manage = NoProfiling()
+            with manage:
+                self.optimizer.zero_grad()
+                
+                for i in range(len(seq)):
+                    seq[i] = self.np2var(seq[i]).float()
+                if batch_frame is not None:
+                    batch_frame = self.np2var(batch_frame).int()
+                
+                feature = self.encoder(*seq, batch_frame)
+                
+                target_label = [train_label_set.index(l) for l in label]
+                target_label = self.np2var(np.array(target_label)).long()
 
-            if self.restore_iter % 1 == 0:
-                print(f"[{local_rank}]:", datetime.now() - _time1)
-                _time1 = datetime.now()
+                triplet_feature = feature.permute(1, 0, 2).contiguous()
+                triplet_label = target_label.unsqueeze(0).cpu().repeat(triplet_feature.size(0), 1)
+                
+                triplet_feature = triplet_feature.cpu()
+                triplet_label = triplet_label.cpu()
+                
+                (full_loss_metric, hard_loss_metric, mean_dist, full_loss_num
+                ) = self.triplet_loss(triplet_feature, triplet_label)
+                if self.hard_or_full_trip == 'hard':
+                    loss = hard_loss_metric.mean()
+                elif self.hard_or_full_trip == 'full':
+                    loss = full_loss_metric.mean()
+                
+                self.hard_loss_metric.append(hard_loss_metric.mean().data.cpu().numpy())
+                self.full_loss_metric.append(full_loss_metric.mean().data.cpu().numpy())
+                self.full_loss_num.append(full_loss_num.mean().data.cpu().numpy())
+                self.dist_list.append(mean_dist.mean().data.cpu().numpy())
+                
+                if loss > 1e-10:
+                    with amp.scale_loss(loss,self.optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                    self.optimizer.step()
+                else:
+                    print('loss very small at: ', iter_i)
 
-            if self.restore_iter % 1 == 0:
-                print(f"[{local_rank}]: ", 'iter {}:'.format(self.restore_iter), end='')
-                
-                self.mean_dist = np.mean(self.dist_list)
-                print('mean_dist={0:.8f}'.format(self.mean_dist))
-                
-                hard_loss_mean.update(np.mean(self.hard_loss_metric), self.P * self.M)
-                full_loss_mean.update(np.mean(self.full_loss_metric), self.P * self.M)
-                p_full_loss_num.update(np.mean(self.full_loss_num), self.P * self.M)
-                progress.display(self.restore_iter)
-                
-                sys.stdout.flush()
-                self.hard_loss_metric = []
-                self.full_loss_metric = []
-                self.full_loss_num = []
-                self.dist_list = []
+                if self.restore_iter % 50 == 0:
+                    print(f"[{local_rank}]:", datetime.now() - _time1)
+                    _time1 = datetime.now()
+
+                if self.restore_iter % 50 == 0:
+                    print(f"[{local_rank}]: ", 'iter {}:'.format(self.restore_iter), end='')
+                    
+                    self.mean_dist = np.mean(self.dist_list)
+                    print('mean_dist={0:.8f}'.format(self.mean_dist))
+                    
+                    hard_loss_mean.update(np.mean(self.hard_loss_metric), self.P * self.M)
+                    full_loss_mean.update(np.mean(self.full_loss_metric), self.P * self.M)
+                    p_full_loss_num.update(np.mean(self.full_loss_num), self.P * self.M)
+                    progress.display(self.restore_iter)
+                    
+                    sys.stdout.flush()
+                    self.hard_loss_metric = []
+                    self.full_loss_metric = []
+                    self.full_loss_num = []
+                    self.dist_list = []
             
             org_frame_num = 30
             from config import conf_8p as conf

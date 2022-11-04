@@ -7,12 +7,12 @@ cur_path=`pwd`
 data_path=""
 RANK_SIZE=1
 #设置默认日志级别,不需要修改
-#export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
+#export ASCEND_GLOBAL_LOG_LEVEL_ETP_ETP=3
 #export ASCEND_GLOBAL_EVENT_ENABLE=1
 export ENABLE_RUNTIME_V2=0
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="GaitSet"
+Network="GaitSet_RT1_ID4118_for_PyTorch"
 #训练batch_size
 batch_size=128
 #训练步数
@@ -26,6 +26,7 @@ do
         iters=`echo ${para#*=}`
 	fi
 done
+
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
@@ -69,7 +70,7 @@ train_accuracy=`grep "NM:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_'RT1'_'ID4118'_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量

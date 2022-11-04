@@ -51,7 +51,9 @@ parser.add_argument('--addr',default='192.168.88.168',type=str,help='masterip')
 parser.add_argument('--port',default='46888', type=str,help='masterport')
 parser.add_argument('--data_path',default='', type=str,help='data_path')
 parser.add_argument('--iters',default=1000, type=int,help='iters number')
-
+parser.add_argument('--profiling', default='', type=str, help='type of profiling')
+parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
+parser.add_argument('--stop_step', default=-1, type=int, help='number of stop step')
 # runtime2.0
 parser.add_argument('--rt2', action='store_true', default=False, help='enable runitme2.0 mode')
 # parser.add_argument('--device_num',default=-1,type=int,help='device_num')
@@ -71,11 +73,17 @@ def main():
     							world_size=args.world_size, rank=args.local_rank)
         conf['data'].update({'dataset_path': args.data_path})
         conf['model'].update({'total_iter': args.iters})
+        conf.update({'profiling': args.profiling})
+        conf.update({'start_step': args.start_step})
+        conf.update({'stop_step': args.stop_step})
         print('The training config is:',conf)
     else:
         from config import conf_1p as conf
         conf['data'].update({'dataset_path': args.data_path})
         conf['model'].update({'total_iter': args.iters})
+        conf.update({'profiling': args.profiling})
+        conf.update({'start_step': args.start_step})
+        conf.update({'stop_step': args.stop_step})
         print('The training config is:',conf)
     local_device = f'npu:{args.local_rank}'
     if args.device_num > 1:

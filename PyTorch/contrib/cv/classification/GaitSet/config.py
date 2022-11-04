@@ -16,6 +16,9 @@ conf_1p = {
     # please change to your own path
     "WORK_PATH": ".",
     "ASCEND_VISIBLE_DEVICES": "0",
+    'profiling':'None',
+    'start_step':-1,
+    'stop_step':-1,
     "data": {
         'dataset_path': "../../CASIA-B-Pre/",
         'resolution': '64',
@@ -45,6 +48,9 @@ conf_8p = {
     # please change to your own path
     "WORK_PATH": ".",
     "ASCEND_VISIBLE_DEVICES": "0,1,2,3,4,5,6,7",
+    'profiling':'None',
+    'start_step':-1,
+    'stop_step':-1,
     "data": {
         'dataset_path': "../../CASIA-B-Pre/",
         'resolution': '64',

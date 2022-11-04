@@ -23,7 +23,7 @@ import os
 from copy import deepcopy
 
 import numpy as np
-
+import argparse
 from .utils import load_data
 from .model import Model
 import torch
@@ -49,6 +49,9 @@ def initialize_model(config, train_source, test_source):
     model_param['train_source'] = train_source
     model_param['test_source'] = test_source
     model_param['train_pid_num'] = data_config['pid_num']
+    model_param['profiling'] = config['profiling']
+    model_param['start_step'] = config['start_step']
+    model_param['stop_step'] = config['stop_step']
     batch_size = int(np.prod(model_config['batch_size']))
     model_param['save_name'] = '_'.join(map(str,[
         model_config['model_name'],
