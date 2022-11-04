@@ -49,6 +49,10 @@ if [[ $data_path == "" ]]; then
     exit 1
 fi
 
+if [[ "${profiling}" == "GE" ]]; then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
+
 ###############指定训练脚本路径###############
 # cd 到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=$(pwd)
@@ -128,9 +132,12 @@ echo "E2E training duration sec: ${e2e_time}"
 
 ###############看护结果汇总###############
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${batch_size}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${batch_size}_${RANK_SIZE}'p'_'acc'
 # 单迭代训练时长
 TrainingTime=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}')
+
+# 输出所有的loss
+grep "step/total_step" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "Loss:" '{print $2}' | awk '{print $1}' >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_loss.txt
 
 # 关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # 网络名称
-Network="BiLstm-CRF_RT2_ID4122_for_PyTorch"
+Network="BiLstm-CRF_RT1_ID4122_for_PyTorch"
 batch_size=64
-train_epochs=1
+train_epochs=30
 print_step=1
 RANK_SIZE=1
 
@@ -11,7 +11,7 @@ RANK_SIZE=1
 data_path=""
 
 # 使能runtime2.0(默认2.0)
-# export ENABLE_RUNTIME_V2=1
+export ENABLE_RUNTIME_V2=0
 # 二进制
 bin_mode=true
 
@@ -132,7 +132,7 @@ echo "E2E training duration sec: ${e2e_time}"
 
 ###############看护结果汇总###############
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${batch_size}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${batch_size}_${RANK_SIZE}'p'_'acc'
 # 单迭代训练时长
 TrainingTime=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}')
 
