@@ -146,7 +146,8 @@ def main_worker(gpu, gpu_nums, opt):
             img_train, imgn_train = img_train.to(loc), imgn_train.to(loc)
             noise = noise.to(loc)
             out_train = model(imgn_train)
-            out_train = torch.npu_format_cast(out_train, 0)
+            # 910ProB problem ,fix success
+            # out_train = torch.npu_format_cast(out_train, 0)
             loss = criterion(out_train, noise) / (imgn_train.size()[0] * 2)
                        
             with amp.scale_loss(loss, optimizer) as scaled_loss: 
