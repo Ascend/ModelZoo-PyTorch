@@ -119,7 +119,7 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
        前往[Pytorch官方文档](https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html#resnet50)下载对应权重，参考下载权重如下：
    
-       ![resnet50_pth](C:\Users\Administrator\Desktop\resnet50_pth.PNG)
+      [权重](https://download.pytorch.org/models/resnet50-0676ba61.pth)
    
    2. 导出onnx文件。
    
