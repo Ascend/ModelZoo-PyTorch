@@ -150,7 +150,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
 3. 生成数据集info文件。
 
-   执行“get_info.py”，会生成两个文件，其中“solo.info”用于benchmark执行，“solo_meta.info”用于后处理。
+   执行“get_info.py”，会生成两个文件，其中“solo_meta.info”用于后处理。
    ```shell
    python get_info.py ${dataset}  \
          SOLO/configs/solo/solo_r50_fpn_8gpu_1x.py  \
