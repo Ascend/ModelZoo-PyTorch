@@ -16,9 +16,11 @@ import sys
 import mmcv
 from mmdet.datasets import build_dataset
 import pickle as pk
+import os.path as osp
 
-ann_file = '/annotations/instances_val2017.json'
-img_prefix = '/val2017/'
+
+ann_file = 'annotations/instances_val2017.json'
+img_prefix = 'val2017/'
 
 if __name__ == '__main__':
     image_src_path = sys.argv[1]
@@ -31,8 +33,8 @@ if __name__ == '__main__':
     height = int(sys.argv[8])
 
     cfg = mmcv.Config.fromfile(config_path)
-    cfg.data.test.ann_file = image_src_path + ann_file
-    cfg.data.test.img_prefix = image_src_path + img_prefix
+    cfg.data.test.ann_file = osp.join(image_src_path, ann_file)
+    cfg.data.test.img_prefix = osp.join(image_src_path, img_prefix)
 
     dataset = build_dataset(cfg.data.test)
 
@@ -41,8 +43,9 @@ if __name__ == '__main__':
 
     for idx in range(5000):
         img_id = dataset.img_ids[idx]
-        fp1.write("{} {}/{:0>12d}.bin {} {}\n".format(idx, bin_path, img_id, width, height))
-        fp_meta = open("%s/%012d.pk" % (meta_path, img_id), "rb")
+        fp1.write("{} {}/{:0>12d}.bin {} {}\n".format(idx,
+                                                      bin_path, img_id, width, height))
+        fp_meta = open(f"{meta_path}/{img_id:0>12d}.pk", "rb")
         meta = pk.load(fp_meta)
         fp_meta.close()
         fp2.write("{} {}/{:0>12d}.bin {} {} {} {}\n".format(
