@@ -21,8 +21,14 @@ from torch.nn.init import xavier_normal
 import numpy as np
 import apex
 from apex import amp
-#amp.register_float_function(torch, 'nn')
-#amp.register_float_function(torch, 'matmul')
+
+import os
+DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != DEVICE:
+    DEVICE = torch.npu.set_device(f'npu:{DEVICE}')
+
 class SubNet(nn.Module):
     '''
     The subnetwork that is used in LMF for video and audio in the pre-fusion stage
@@ -49,26 +55,8 @@ class SubNet(nn.Module):
         Args:
             x: tensor of shape (batch_size, in_size)
         '''
-        # count=0
-        # b=x.cpu().detach().numpy()
-        # for i in range(b.shape[0]-1):
-        #     for j in range(b.shape[1]-1):
-        #         # for k in range(299):
-        #         o = b[i][j]
-        #         if np.isnan(o):
-        #             count = count + 1
-        #             print(count)
         normed = self.norm(x)
         dropped = self.drop(normed)
-        # a= dropped.detach().numpy()
-        # count=0
-        # for i in range(a.shape[0]-1):
-        #     for j in range(a.shape[1]-1):
-        #         # for k in range(299):
-        #         o = a[i][j]
-        #         if np.isnan(o):
-        #             count = count + 1
-        #             print(count)
         y_1 = F.relu(self.linear_1(dropped))
         y_2 = F.relu(self.linear_2(y_1))
         y_3 = F.relu(self.linear_3(y_2))
@@ -152,8 +140,6 @@ class LMF(nn.Module):
 
         # define the post_fusion layers
         self.post_fusion_dropout = nn.Dropout(p=self.post_fusion_prob).to("npu")
-        DEVICE = torch.npu.set_device('npu:7')
-        # self.post_fusion_layer_1 = nn.Linear((self.text_out + 1) * (self.video_hidden + 1) * (self.audio_hidden + 1), self.post_fusion_dim)
         self.audio_factor = Parameter(torch.Tensor(self.rank, self.audio_hidden + 1, self.output_dim)).to(DEVICE)
         self.video_factor = Parameter(torch.Tensor(self.rank, self.video_hidden + 1, self.output_dim)).to(DEVICE)
         self.text_factor = Parameter(torch.Tensor(self.rank, self.text_out + 1, self.output_dim)).to(DEVICE)
@@ -179,14 +165,6 @@ class LMF(nn.Module):
         video_h = self.video_subnet(video_x).type(DTYPE)
         text_h = self.text_subnet(text_x).type(DTYPE)
         batch_size = audio_h.data.shape[0]
-
-        # next we perform low-rank multimodal fusion
-        # here is a more efficient implementation than the one the paper describes
-        # basically swapping the order of summation and elementwise product
-        # if audio_h.is_npu:
-        #     DTYPE = torch.cuda.FloatTensor
-        # else:
-        #     DTYPE = torch.FloatTensor
         DTYPE = torch.npu.FloatTensor
         _audio_h = torch.cat((Variable(torch.ones(batch_size, 1).type(DTYPE), requires_grad=False), audio_h), dim=1)
         _video_h = torch.cat((Variable(torch.ones(batch_size, 1).type(DTYPE), requires_grad=False), video_h), dim=1)
@@ -195,9 +173,6 @@ class LMF(nn.Module):
         fusion_video = torch.matmul(_video_h, self.video_factor)
         fusion_text = torch.matmul(_text_h, self.text_factor)
         fusion_zy = fusion_audio * fusion_video * fusion_text
-
-        # output = torch.sum(fusion_zy, dim=0).squeeze()
-        # use linear transformation instead of simple summation, more flexibility
         output = torch.matmul(self.fusion_weights, fusion_zy.permute(1, 0, 2)).squeeze() + self.fusion_bias
         output = output.view(-1, self.output_dim)
         if self.use_softmax:

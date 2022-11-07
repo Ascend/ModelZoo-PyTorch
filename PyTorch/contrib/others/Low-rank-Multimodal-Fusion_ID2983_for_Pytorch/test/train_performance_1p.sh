@@ -17,11 +17,10 @@ Network=`echo $(cd $(dirname $0);pwd) | awk -F"/" '{print $(NF-1)}'`
 export RANK_SIZE=1
 export RANK_ID=0
 export JOB_ID=10087
-
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 # 路径参数初始化
 data_path=""
 output_path=""
-para_path=""
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -30,9 +29,8 @@ if [[ $1 == --help || $1 == -h ]];then
     echo "parameter explain:
     --data_path              # dataset of training
     --output_path            # output of training
-    --para_path              # parameter
     --train_steps            # max_step for training
-	  --train_epochs           # max_epoch for training
+    --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -44,13 +42,11 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --para_path* ]];then
-        para_path=`echo ${para#*=}`
     elif [[ $para == --output_path* ]];then
         output_path=`echo ${para#*=}`
     elif [[ $para == --train_steps* ]];then
         train_steps=`echo ${para#*=}`
-	elif [[ $para == --train_epochs* ]];then
+    elif [[ $para == --train_epochs* ]];then
         train_epochs=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
@@ -65,21 +61,15 @@ fi
 
 # 校验是否传入output_path,不需要修改
 if [[ $output_path == "" ]];then
-    output_path="test/output/${ASCEND_DEVICE_ID}"
-fi
-
-# 校验是否传入data_path,不需要修改
-if [[ $para_path == "" ]];then
-    echo "[Error] para \"para_path\" must be config"
-    exit 1
+    output_path="./test/output/${ASCEND_DEVICE_ID}"
 fi
 
 # 设置打屏日志文件名，请保留，文件名为${print_log}
-print_log="test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log"
-modelarts_flag=${MODELARTS_MODEL_PATH}
+print_log="./test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log"
+modelarts_flag=`cat /etc/passwd |grep ma-user`
 if [ x"${modelarts_flag}" != x ];
 then
-    echo "running without etp..."
+    echo "running with modelarts..."
     print_log_name=`ls /home/ma-user/modelarts/log/ | grep proc-rank`
     print_log="/home/ma-user/modelarts/log/${print_log_name}"
 fi
@@ -119,16 +109,16 @@ start_time=$(date +%s)
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
 
-
 number=1
 train_epochs=2
 
 if [ x"${modelarts_flag}" != x ];
 then
-   python3 train_angry.py --data_url=${data_path} --train_url=${output_path} --train_time=${number} --train_epochs=${train_epochs} ----train_url=${output_path} --para_path=${para_path}
+   python3 train_angry.py --data_url=${data_path}/ --train_url=${output_path} --train_time=${number} --train_epochs=${train_epochs} --para_path=${PWD}/param_data.csv
 else
-   python3 train_angry.py --data_url=${data_path} --train_url=${output_path} --train_time=${number} --train_epochs=${train_epochs}  --train_url=${output_path} --para_path=${para_path}  1>${print_log} 2>&1
+   python3 train_angry.py --data_url=${data_path}/ --train_url=${output_path} --train_time=${number} --train_epochs=${train_epochs} --para_path=${PWD}/param_data.csv 1>${print_log} 2>&1
 fi
+
 batch_size=`grep "batch_size" ${print_log}  | awk '{print $NF}'`
 emotion=`grep "emotion" ${print_log}  | awk '{print $NF}'`
 # 性能相关数据计算
@@ -136,32 +126,12 @@ StepTime=`grep "steptime" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
 # 精度相关数据计算
-#train_accuracy=`grep "Final Accuracy accuracy" ${print_log}  | awk '{print $NF}'`
 train_accuracy=`grep "F1_score" ${print_log}  | awk '{print $NF}'`
 
 # 提取loss打印信息
 loss=`grep "avg_train_loss" ${print_log}  | awk '{print $NF}'`
 echo "$loss" > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
-
-###########################################################
-#########后面的所有内容请不要修改###########################
-#########后面的所有内容请不要修改###########################
-#########后面的所有内容请不要修改###########################
-###########################################################
-
-# 判断本次执行是否正确使用Ascend NPU
-use_npu_flag=`grep "The model has been compiled on the Ascend AI processor" ${print_log} | wc -l`
-if [ x"${use_npu_flag}" == x0 ];
-then
-    echo "------------------ ERROR NOTICE START ------------------"
-    echo "ERROR, your task haven't used Ascend NPU, please check your npu Migration."
-    echo "------------------ ERROR NOTICE END------------------"
-else
-    echo "------------------ INFO NOTICE START------------------"
-    echo "INFO, your task have used Ascend NPU, please check your result."
-    echo "------------------ INFO NOTICE END------------------"
-fi
 
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename
@@ -190,7 +160,6 @@ ActualLoss=(`awk 'END {print $NF}' $cur_path/output/$ASCEND_DEVICE_ID/${CaseName
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "Emotion = ${emotion}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "BatchSize = ${batch_size}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "DeviceType = `uname -m`" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

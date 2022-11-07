@@ -37,6 +37,12 @@ import numpy as np
 import csv
 import time
 
+DEVICE = 0
+if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
+    DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
+if torch.npu.current_device() != DEVICE:
+    DEVICE = torch.npu.set_device(f'npu:{DEVICE}')
+
 def setup_seed(seed):
     torch.manual_seed(seed)
     # torch.cuda.manual_seed_all(seed)
@@ -46,13 +52,7 @@ def setup_seed(seed):
     torch.backends.cudnn.deterministic = True
 
 
-# # 设置随机数种子
-# setup_seed(20)
-
-
 # 预处理数据以及训练模型
-# ...
-# ...
 def display(F1_score, accuracy_score):
     print("F1_score on test set is {}".format(F1_score))
     print("Accuracy score on test set is {}".format(accuracy_score))
@@ -71,7 +71,6 @@ def main(options):
     else:
         index=3
         num = 504
-    DEVICE=torch.npu.set_device('npu:7')
     DTYPE = torch.FloatTensor
     LONG = torch.LongTensor
     setup_seed(num)
@@ -112,21 +111,18 @@ def main(options):
     
 
 
-    params['audio_hidden'] =int(rows[index][0])#[8, 16, 32]
-    params['video_hidden'] =int(rows[index][1])# [4, 8, 16]
-    params['text_hidden'] =int(rows[index][2])#[64, 128, 256]
-    params['audio_dropout'] =rows[index][3]#[0, 0.1, 0.15, 0.2, 0.3, 0.5]
-    params['video_dropout'] =rows[index][4]#[0, 0.1, 0.15, 0.2, 0.3, 0.5]
-    params['text_dropout'] =rows[index][5]# [0, 0.1, 0.15, 0.2, 0.3, 0.5]
-    params['factor_learning_rate'] =rows[index][6]# [0.0003, 0.0005, 0.001, 0.003]
-    params['learning_rate'] =rows[index][7]# [0.0003, 0.0005, 0.001, 0.003]
-    params['rank'] =int(rows[index][8])#[1, 4, 8, 16]
-    params['batch_size'] =int(rows[index][9])# [8, 16, 32, 64, 128]
-    params['weight_decay'] =rows[index][10]#[0, 0.001, 0.002, 0.01]
+    params['audio_hidden'] =int(rows[index][0])
+    params['video_hidden'] =int(rows[index][1])
+    params['text_hidden'] =int(rows[index][2])
+    params['audio_dropout'] =rows[index][3]
+    params['video_dropout'] =rows[index][4]
+    params['text_dropout'] =rows[index][5]
+    params['factor_learning_rate'] =rows[index][6]
+    params['learning_rate'] =rows[index][7]
+    params['rank'] =int(rows[index][8])
+    params['batch_size'] =int(rows[index][9])
+    params['weight_decay'] =rows[index][10]
 
-    # total_settings = total(params)
-
-    # print("There are {} different hyper-parameter settings in total.".format(total_settings))
 
     seen_settings = set()
     best_now=0
@@ -134,16 +130,12 @@ def main(options):
     batch_sz = params['batch_size']
     print("batch_size is: {}".format(batch_sz))
     for i in range(times):
-        #num=random.randint(0,999)
-        #setup_seed(num)
         if not os.path.isfile(output_path):
             with open(output_path, 'w+') as out:
                 writer = csv.writer(out)
                 writer.writerow(["audio_hidden", "video_hidden", 'text_hidden', 'audio_dropout', 'video_dropout', 'text_dropout',
                                 'factor_learning_rate', 'learning_rate', 'rank', 'batch_size', 'weight_decay',
                                 'Best Validation CrossEntropyLoss', 'Test CrossEntropyLoss', 'Test F1-score', 'Test Accuracy Score', 'num'])
-
-        # for i in range(total_settings):
 
         ahid =params['audio_hidden']
         vhid = params['video_hidden']
@@ -158,25 +150,13 @@ def main(options):
         
 
         decay = params['weight_decay']
-        # reject the setting if it has been tried
-        # current_setting = (ahid, vhid, thid, adr, vdr, tdr, factor_lr, lr, r, batch_sz, decay)
-        # if current_setting in seen_settings:
-        #     continue
-        # else:
-        #     seen_settings.add(current_setting)
-
         model = LMF(input_dims, (ahid, vhid, thid), thid_2, (adr, vdr, tdr, 0.5), output_dim, r)
-        # if options['cuda']:
-        #     model = model.cuda()
-        #     DTYPE = torch.cuda.FloatTensor
-        #     LONG = torch.cuda.LongTensor
         model = model.to(DEVICE)
         DTYPE = torch.npu.FloatTensor
         LONG = torch.npu.LongTensor
         print("Model initialized")
         print(torch.npu.is_available())
         print(torch.npu.current_device())
-        # criterion=nnn.LabelSmoothingCrossEntropy()
         criterion = nn.CrossEntropyLoss(size_average=False)
         for p in model.parameters():
             p.data = p.data.npu()
@@ -186,7 +166,6 @@ def main(options):
         optimizer = apex.optimizers.NpuFusedAdam([{"params": factors, "lr": factor_lr}, {"params": other, "lr": lr}], weight_decay=decay)
         model, optimizer = amp.initialize(model.to(DEVICE), optimizer, opt_level="O2", loss_scale=128)
         # model, optimizer = amp.initialize(model.to(DEVICE), optimizer, opt_level = "O2", keep_batchnorm_fp32 = True,loss_scale = "dynamic")
-        # setup training
         complete = True
         min_valid_loss = float('Inf')
         train_iterator = DataLoader(train_set, batch_size=batch_sz, num_workers=4, shuffle=True)
@@ -217,10 +196,6 @@ def main(options):
                     raise e
             
                 output=output.type(torch.float16)
-                #print(output.cpu().detach().numpy().dtype)
-                #print(y.cpu().detach().numpy().dtype)
-                #y=y.type(torch.float16)
-                #print(y.cpu().detach().numpy())
                 y=y.type(torch.float16)
                 a=torch.max(y, 1)[1]
                 loss = criterion(output,a)
@@ -253,8 +228,6 @@ def main(options):
                 y = Variable(batch[-1].view(-1, output_dim).float().type(LONG), requires_grad=False)
                 output = model(x_a, x_v, x_t)
                 output=output.type(torch.float16)
-                # # print(output.numpy().dtype)
-                # # print(y.numpy().dtype)
                 y=y.type(torch.float16)
                 a=torch.max(y, 1)[1]
                 valid_loss = criterion(output,a)
@@ -304,8 +277,6 @@ def main(options):
                 y = Variable(batch[-1].view(-1, output_dim).float().type(LONG), requires_grad=False)
                 output_test = model(x_a, x_v, x_t)
                 output_test=output_test.type(torch.float16)
-                # # print(output.numpy().dtype)
-                # # print(y.numpy().dtype)
                 y=y.type(torch.float16)
                 a=torch.max(y, 1)[1]
                 loss_test = criterion(output_test,a)
@@ -329,10 +300,7 @@ def main(options):
 
     with open(output_path, 'a+') as out:
         writer = csv.writer(out)
-        # min_valid_loss = np.array(min_valid_loss, dtype=np.float64)
-        # test_loss = np.array(test_loss, dtype=np.float64)
         min_valid_loss = np.array(min_valid_loss, dtype=np.float16)
-        # test_loss = np.array(test_loss, dtype=np.float64)
         min_valid_loss = np.array(min_valid_loss, dtype=np.float16)
         writer.writerow([ahid, vhid, thid, adr, vdr, tdr, factor_lr, lr, r, batch_sz, decay,
                         min_valid_loss, test_loss, best_now,best_acc, num])
@@ -346,18 +314,15 @@ if __name__ == "__main__":
     OPTIONS.add_argument('--output_dim', dest='output_dim', type=int, default=2)
     OPTIONS.add_argument('--patience', dest='patience', type=int, default=20)
     OPTIONS.add_argument('--signiture', dest='signiture', type=str, default='')
-    # OPTIONS.add_argument('--cuda', dest='cuda', type=bool, default=True)
     OPTIONS.add_argument('--data_path', dest='data_path',
                          type=str, default='data/')
     OPTIONS.add_argument('--model_path', dest='model_path',
                          type=str, default='models')
     OPTIONS.add_argument('--output_path', dest='output_path',
                          type=str, default='results')
-    # OPTIONS.add_argument("--data_url", type=str, default="/home/ma-user/modelarts/inputs/data_url_0")
-    # OPTIONS.add_argument("--train_url", type=str, default="/home/ma-user/modelarts/outputs/train_url_0/")
     OPTIONS.add_argument("--para_path", type=str, default="1")
-    OPTIONS.add_argument("--data_url", type=str, default="/home/test_user08/Low-rank-Multimodal-Fusion-master/data/")
-    OPTIONS.add_argument("--train_url", type=str,default="/home/test_user08/Low-rank-Multimodal-Fusion-master/outputs/")
+    OPTIONS.add_argument("--data_url", type=str, default="./data/")
+    OPTIONS.add_argument("--train_url", type=str,default="./outputs/")
     OPTIONS.add_argument("--emotion", type=str, default=b"neutral")
     PARAMS = vars(OPTIONS.parse_args())
 
