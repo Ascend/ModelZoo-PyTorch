@@ -63,6 +63,10 @@ StlyeGAN2-ADA-Pytorch使用FID(Fréchet inception distance)作为评价模型训
   pip install -r requirements.txt
   ```
 
+- 下载inception模型用于计算FID。
+  - 链接：https://pan.baidu.com/s/1CBiKXaBzS8A0IGxcBivbTA 提取码：ince
+  - 进入模型代码目录下，将inception_weight.pth文件保存到 `./inception/` 文件夹下。
+
 
 ## 准备数据集
 
