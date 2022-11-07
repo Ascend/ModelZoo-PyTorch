@@ -289,8 +289,8 @@ class BaseModel(nn.Module):
                 if args.steps > 0 and total_step >= args.steps:
                     exit(0)
                 end = time.time()
-
-            torch.save(model.state_dict(), 'deepfm-model.pth')
+            if not args.dist or (args.dist and args.device_id % args.device_num == 0 and epoch == args.epochs -1):
+                torch.save(model.state_dict(), 'deepfm-model.pth')
 
             # Add epoch_logs
             epoch_logs["loss"] = total_loss_epoch / sample_num
