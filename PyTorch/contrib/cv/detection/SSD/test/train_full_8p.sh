@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="SSD"
 # 训练batch_size
-batch_size=64
+batch_size=8
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
@@ -62,6 +62,8 @@ fi
 
 
 #################启动训练脚本#################
+# 开始训练之前，清空目录
+rm -rf ./work_dirs/ssd300_coco_npu_8p/
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 # 非平台场景时source 环境变量
@@ -72,10 +74,9 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export TASK_QUEUE_ENABLE=0
 rm -rf kernel_meta/
-PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 ${train_epochs} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改
@@ -85,7 +86,6 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-rm -rf ./work_dirs/ssd300_coco_npu_8p/
 fps_list=$(python3.7 calc_fps.py ./work_dirs/ssd300_coco_npu_8p/*.json ${RANK_SIZE} ${batch_size})
 FPS=`echo ${fps_list##* }`
 FPS=${FPS%\}*}
