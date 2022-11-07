@@ -64,10 +64,6 @@ class StreamSegMetrics(_StreamMetrics):
         for k, v in results.items():
             if k!="Class IoU":
                 string += "%s: %f\n"%(k, v)
-        
-        #string+='Class IoU:\n'
-        #for k, v in results['Class IoU'].items():
-        #    string += "\tclass %d: %f\n"%(k, v)
         return string
 
     def _fast_hist(self, label_true, label_pred):
@@ -155,29 +151,19 @@ if __name__ == "__main__":
         print("npu_images:", npu_images[i])
         pred = np.fromfile(npu_images[i], dtype='float16').reshape((1,21,513,513)).astype(np.float32)
         pred = torch.from_numpy(pred)
-        #pred = F.interpolate(pred, size=(513, 513), mode='bilinear', align_corners=False)
         pred = pred.max(dim=1)[1].numpy()
         
-        #print("pred:", pred)
         print("pred.shape:", pred.shape)
-        #print("mask_images:", mask_images[i])
         
         target = Image.open(mask_images[i])
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         val_transformer = transforms.Compose([
-            #transforms.Scale(513),
             transforms.Resize(513),
             transforms.CenterCrop(513)
-            #transforms.ToTensor()
-            #normalize
         ])
-        #print("target:", target)
         
         target = val_transformer(target)
         target = torch.from_numpy( np.array( target, dtype="uint8") )
-        #print("target:", target)
-        #print("target.shape:", target.shape)
-        #break
         target = target.cpu().numpy().reshape(1,513,513)
         metrics.update(target, pred)
     score = metrics.get_results()

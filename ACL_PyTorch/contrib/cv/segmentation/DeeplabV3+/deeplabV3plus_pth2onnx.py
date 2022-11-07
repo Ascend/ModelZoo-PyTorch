@@ -19,7 +19,6 @@ import torch.onnx
 
 from modeling.deeplab import *
 
-
 def main(input_file, output_file):
     model = DeepLab(num_classes=21,
                 backbone="resnet",
