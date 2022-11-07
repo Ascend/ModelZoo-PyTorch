@@ -91,30 +91,29 @@ index 7a76964..aca5a83 100644
  
      @staticmethod
 diff --git a/requirements.txt b/requirements.txt
-index 20c8b3e..411f22a 100644
+index 20c8b3e..0bcf609 100644
 --- a/requirements.txt
 +++ b/requirements.txt
 @@ -1,10 +1,17 @@
 -torch==1.0
--matplotlib==2.1.0
--tensorflow
--numpy==1.13.3
 +torch==1.8.0
 +tensorflow==1.15
+-matplotlib==2.1.0
 +matplotlib
+-tensorflow
+-numpy==1.13.3
 +numpy
  inflect==0.2.5
--librosa==0.6.0
+ librosa==0.6.0
 -scipy==1.0.0
-+librosa==0.9.2
 +scipy
  tensorboardX==1.1
  Unidecode==1.0.22
  pillow
 +tqdm
-+numba==0.45.1
++numba==0.43.0
 +llvmlite==0.32.1
-+resampy==0.2.2
++resampy==0.2.0
 +attrs
 +psutil
 +torchvision==0.9.0
