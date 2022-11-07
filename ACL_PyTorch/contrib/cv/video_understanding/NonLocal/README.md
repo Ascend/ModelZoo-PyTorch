@@ -68,7 +68,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | Pytorch                                                      | 1.8.0   | -                                                  
-| CANN                                                         | 5.1.RC1B093 | -                                                            |
+| CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            | 
 | 操作系统                                                      | Ubuntu 18.04   | -                                                            |                     
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -282,7 +282,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
    b.  执行推理。
 
       ```
-      python3  ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./tsm_nl_bs1.om --input ./mmaction2/data/kinetics400/out_bin_1/ --output ./out/out_1/ --outfmt TXT --batchsize 1  
+      python3.7  ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./tsm_nl_bs1.om --input ./mmaction2/data/kinetics400/out_bin_1/ --output ./out/out_1/ --outfmt TXT --batchsize 1  
       ```
 
       -   参数说明：
