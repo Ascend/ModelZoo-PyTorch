@@ -80,7 +80,6 @@ python3.7 ./train.py \
     --world-size=1 \
     --rank=0 \
     --amp \
-    --loss-scale 64 \
     --batch-size ${batch_size} \
     --epochs=${train_epochs} \
     --learning-rate ${learning_rate} \
@@ -90,7 +89,6 @@ python3.7 ./train.py \
     --benchmark 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改

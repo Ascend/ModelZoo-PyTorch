@@ -80,7 +80,6 @@ python3.7 ./train.py \
     --world-size=1 \
     --rank=0 \
     --amp \
-    --loss-scale 64 \
     --batch-size ${batch_size} \
     --epochs=${train_epochs} \
     --learning-rate ${learning_rate} \

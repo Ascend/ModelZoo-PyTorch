@@ -9,7 +9,7 @@ batch_size=1024
 # 训练使用的npu卡数
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
-data_path=""
+data_path="/opt/npu/dataset/imagenet/"
 
 # 训练epoch 360
 train_epochs=360
@@ -92,7 +92,6 @@ python3.7 ./train.py \
     --world-size=1 \
     --rank=0 \
     --amp \
-    --loss-scale 64 \
     --device-list=${ASCEND_DEVICE_ID} \
     --benchmark 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

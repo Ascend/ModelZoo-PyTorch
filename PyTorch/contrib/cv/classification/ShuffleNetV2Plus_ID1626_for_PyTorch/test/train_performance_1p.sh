@@ -93,7 +93,6 @@ python3.7 ./train.py \
     --world-size=1 \
     --rank=0 \
     --amp \
-    --loss-scale 64 \
     --device-list=${ASCEND_DEVICE_ID} \
     --benchmark 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

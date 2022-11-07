@@ -408,7 +408,6 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
 
         images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
         target = target.to(loc, non_blocking=True)
-
         # compute output
         output = model(images)
         loss = criterion(output, target)
@@ -454,7 +453,6 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                         and args.rank % ngpus_per_node == 0):
                 progress.display(i)
-
 
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                 and args.rank % ngpus_per_node == 0):
@@ -622,6 +620,7 @@ def fast_collate(batch):
 
 def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=None, distributed=False):
     traindir = os.path.join(data_path, 'train')
+    print(traindir)
     train_dataset = datasets.ImageFolder(
         traindir,
         transforms.Compose([

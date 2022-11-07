@@ -12,14 +12,7 @@ if [ -d ${CANN_INSTALL_PATH}/ascend-toolkit/latest ]; then
 else
     source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
-msnpureport -g error -d 0
-msnpureport -g error -d 1
-msnpureport -g error -d 2
-msnpureport -g error -d 3
-msnpureport -g error -d 4
-msnpureport -g error -d 5
-msnpureport -g error -d 6
-msnpureport -g error -d 7
+
 
 
 #将Host日志输出到串口,0-关闭/1-开启
@@ -39,6 +32,16 @@ export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+
+#设置device侧日志登记为error
+msnpureport -g error -d 0
+msnpureport -g error -d 1
+msnpureport -g error -d 2
+msnpureport -g error -d 3
+msnpureport -g error -d 4
+msnpureport -g error -d 5
+msnpureport -g error -d 6
+msnpureport -g error -d 7
 
 
 path_lib=$(python3.7 -c """

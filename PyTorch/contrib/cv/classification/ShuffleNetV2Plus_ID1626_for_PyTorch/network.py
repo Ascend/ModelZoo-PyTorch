@@ -33,6 +33,8 @@
 
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from apex import amp
 from blocks import Shufflenet, Shuffle_Xception, HS, SELayer
