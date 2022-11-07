@@ -1,0 +1,1 @@
+ASCEND_DEVICE_ID=0 python3 train.py --npu_ids 0 --dataroot ./datasets/males --name males_model --batchSize 3 --verbose --amp
