@@ -27,7 +27,7 @@ export GST_PLUGIN_PATH=${MX_SDK_HOME}/opensource/lib/gstreamer-1.0:${MX_SDK_HOME
 
 #to set PYTHONPATH, import the StreamManagerApi.py
 export PYTHONPATH=$PYTHONPATH:${MX_SDK_HOME}/python
-
+rm -rf sdk_pred_result.txt
 for i in 0 1 2 3 4; do
     python3 main.py --num="$i"
 done

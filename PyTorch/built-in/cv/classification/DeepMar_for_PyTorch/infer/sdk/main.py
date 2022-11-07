@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--num', type=int, default=0)
     parser.add_argument('--save_path', type=str, default='./')
     args = parser.parse_args()
-    result_file = open(args.save_path + "sdk_pred_result.txt", "w")
+    result_file = open(args.save_path + "sdk_pred_result.txt", "a")
     # load data
     image = []
     label = []

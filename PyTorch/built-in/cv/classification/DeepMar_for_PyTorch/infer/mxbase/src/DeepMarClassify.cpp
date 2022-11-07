@@ -178,6 +178,9 @@ APP_ERROR DeepMarClassify::Process(const std::string &imgPath) {
         v = *(value + idx);
     }
     LogInfo << "The data in the output TensorBase is: " << std::endl << data;
-    tfile_ << imgPath.substr(10, 5) << ": \n" << data << std::endl;
+    std::string key = ".bin";
+    uint32_t start = imgPath.find(key);
+    start = start - 5; 
+    tfile_ << imgPath.substr(start, 5) << ": \n" << data << std::endl;
     return APP_ERR_OK;
 }
