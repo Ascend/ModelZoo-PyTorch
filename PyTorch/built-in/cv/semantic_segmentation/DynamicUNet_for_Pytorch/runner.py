@@ -18,6 +18,7 @@ import datetime
 import os
 import shutil
 import sys
+import ast
 
 import torch
 if torch.__version__ >= "1.8":
@@ -47,6 +48,12 @@ seed = 0
 random.seed(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
+
+class NoProfiling(object):
+    def __enter_(self):
+        pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 def parse_args():
@@ -134,9 +141,19 @@ def parse_args():
     # perf
     parser.add_argument('--perf-only', action='store_true', default=False,
                         help='enable perf mode')
-    # runtime2.0
-    parser.add_argument('--rt2', action='store_true', default=False,
-                        help='enable runitme2.0 mode')
+    parser.add_argument('--perf_iter', type=int, default=-1,
+                        help='if >0 set --perf-only=True and iteration number')
+    # bin model
+    parser.add_argument('--bin_mode', default="True", type=ast.literal_eval,
+                        help='enable bin model')
+    # profiling
+    parser.add_argument('--profiling', type=str, default="None",
+                        help='choose profiling way--CANN,GE,None')
+
+    parser.add_argument('--start_step', type=int, default=0,
+                        help='profiling start step')
+    parser.add_argument('--stop_step', type=int, default=100,
+                        help='profiling stop_ step')
 
     args = parser.parse_args()
 
@@ -170,6 +187,7 @@ class Trainer(object):
     def __init__(self, args):
         self.args = args
         self.device = torch.device(args.device)
+        print("Device Info: ",self.device)
         self.amp = args.amp
 
         # image transform
@@ -278,6 +296,10 @@ class Trainer(object):
         log_per_iters, val_per_iters = self.args.log_iter, self.args.val_epoch * self.args.iters_per_epoch
         save_per_iters = self.args.save_epoch * self.args.iters_per_epoch
         end_step = min(self.args.iters_per_epoch if self.args.perf_only else -1, 50)
+        # npu 调试参数：导出debug日志时，设置较小迭代次数，防止日志过大
+        if self.args.perf_iter > 0:
+            end_step=self.args.perf_iter
+
         start_time = time.time()
         iter_end_time = start_time
         iter_time = 0
@@ -289,31 +311,42 @@ class Trainer(object):
         self.model.train()
         for iteration, (images, targets, _) in enumerate(self.train_loader):
             iteration = iteration + 1
-            self.lr_scheduler.step()
+            if iteration > self.args.stop_step and self.args.profiling != "None":
+                sys.exit()
 
-            images = images.to(self.device)
-            targets = targets.to(self.device)
-
-            outputs = self.model(images)
-            loss_dict = self.criterion(outputs, targets)
-
-            losses = sum(loss for loss in loss_dict.values())
-
-            # reduce losses over all GPUs for logging purposes
-            loss_dict_reduced = reduce_loss_dict(loss_dict)
-            losses_reduced = sum(loss for loss in loss_dict_reduced.values())
-
-            self.optimizer.zero_grad()
-
-            if self.amp:
-                with apex.amp.scale_loss(losses, self.optimizer) as scaled_loss:
-                    scaled_loss.backward()
+            elif iteration <= self.args.stop_step and iteration >= self.args.start_step  and self.args.profiling == 'CANN':
+                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True)
+            elif iteration <= self.args.stop_step and iteration >= self.args.start_step  and self.args.profiling == 'GE':
+                prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
             else:
-                losses.backward()
+                prof_manager = NoProfiling()
 
-            self.optimizer.step()
+            with prof_manager:
+                self.lr_scheduler.step()
 
-            torch.cuda.synchronize()
+                images = images.to(self.device)
+                targets = targets.to(self.device)
+
+                outputs = self.model(images)
+                loss_dict = self.criterion(outputs, targets)
+
+                losses = sum(loss for loss in loss_dict.values())
+
+                # reduce losses over all GPUs for logging purposes
+                loss_dict_reduced = reduce_loss_dict(loss_dict)
+                losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+
+                self.optimizer.zero_grad()
+
+                if self.amp:
+                    with apex.amp.scale_loss(losses, self.optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    losses.backward()
+
+                self.optimizer.step()
+                torch.cuda.synchronize()
+
             current_iter_time = time.time() - iter_end_time
             if iteration < 5:
                 iter_time = current_iter_time
@@ -398,8 +431,16 @@ def save_checkpoint(model, args, is_best=False):
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.rt2:
+    if args.bin_mode:
         torch.npu.set_compile_mode(jit_compile=False)
+        print("enble bin mode")
+        option = {}
+        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,BNTrainingUpdate"
+        torch.npu.set_opition(opition)
+        print("set NPU_FUZZY_COMPILE_BLACKLIST ok")
+    else:
+        print("disable bin mode")
+
     # reference maskrcnn-benchmark
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     args.num_gpus = num_gpus

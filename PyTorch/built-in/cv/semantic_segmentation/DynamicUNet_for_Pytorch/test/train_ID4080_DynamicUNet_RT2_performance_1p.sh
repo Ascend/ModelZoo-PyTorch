@@ -1,14 +1,26 @@
 #!/bin/bash
-
+RANK_SIZE=1
 #网络名称，同目录名称
 Network="DynamicUNet_RT2_ID4080_for_PyTorch"
 batch_size=4  # 与训练实际batch_size保持一致
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
+epochs=1
+log_iter=1
+lr=0.0001
+worker=8
+val_epoch=5
 
 # 预训练模型路径
 more_path1=""
+
+# NPU调试参数
+profiling="None"
+start_step=0
+stop_step=20
+bin_mode=True
+perf_iter=-1
 
 #参数校验，不需要修改
 for para in $*
@@ -17,8 +29,32 @@ do
         more_path1=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    fi
+    elif [[ $para == --epochs* ]];then
+        epochs=`echo ${para#*=}`
+    elif [[ $para == --log_iter* ]];then
+        log_iter=`echo ${para#*=}`
+    elif [[ $para == --lr* ]];then
+        lr=`echo ${para#*=}`
+    elif [[ $para == --worker* ]];then
+        worker=`echo ${para#*=}`
+    elif [[ $para == --val_epoch* ]];then
+        val_epoch=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=`echo ${para#*=}`
+    elif [[ $para == --perf_iter* ]];then
+        perf_iter=`echo ${para#*=}`
+	fi
 done
+
+if [[ $profiling == "GE" ]]; then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -31,7 +67,6 @@ if [[ $more_path1 == "" ]];then
 else
 	pretrained_model=${more_path1}/resnet50-19c8e357.pth
 fi
-
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -73,10 +108,17 @@ export PYTHONPATH=./awesome-semantic-segmentation-pytorch:$PYTHONPATH
 nohup python3 -u runner.py \
 --model dynamicunet --amp \
 --dataset pascal_voc --dataset-path ${data_path} \
---lr 0.0001 --epochs 1 --worker 8 \
---log-iter 1 --val-epoch 5 \
+--lr ${lr} \
+--epochs ${epochs} \
+--worker ${worker} \
+--log-iter ${log_iter} \
+--val-epoch ${val_epoch} \
 --pretrained ${pretrained_model} \
---rt2 \
+--profiling ${profiling} \
+--start_step ${start_step} \
+--stop_step ${stop_step} \
+--perf_iter ${perf_iter} \
+--bin_mode ${bin_mode} \
 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
