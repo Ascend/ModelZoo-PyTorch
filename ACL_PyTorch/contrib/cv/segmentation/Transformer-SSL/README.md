@@ -18,7 +18,7 @@
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它可以用于级联已有的检测器，取得更加精确的目标检测。
+Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它可以用于级联已有的检测器，取得更加精确的目标检测。
 
 
 
@@ -28,18 +28,11 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
   ```
   url=https://github.com/SwinTransformer/Swin-Transformer-Object-Detection
   commit_id=81f498ebfe35a4e11998d651b3e00bbb1099c572
-  model_name=Cascade Mask R-CNN（Backbone:Swin-T,LrSchd:3x）
+  model_name=Transformer-SSL（Backbone:Swin-T,LrSchd:3x）
   ```
   
   通过Git获取对应commit\_id的代码方法如下：
 
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -84,6 +77,9 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
 
    ```
    git clone https://github.com/SwinTransformer/Swin-Transformer-Object-Detection
+   cd Swin-Transformer-Object-Detection
+   git reset --hard 81f498ebfe35a4e11998d651b3e00bbb1099c572
+   cd ..
    ```
 
 
@@ -105,10 +101,10 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
 
    数据预处理将原始数据集转换为模型输入的数据。
 
-   执行cascade_maskrcnn_preprocess.py脚本，完成预处理。
+   执行Transformer_SSL_preprocess.py脚本，完成预处理。
 
    ```shell
-    python cascade_maskrcnn_preprocess.py \
+    python Transformer_SSL_preprocess.py \
     --image_src_path=./data/coco/val2017 \
     --bin_file_path=val2017_bin \
     --input_height=800 \
@@ -137,7 +133,9 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
          
          通过打补丁的方式修改源码(change.patch已提供)：
          ```shell
-         patch -p1 < change.patch
+         cd Swin-Transformer-Object-Detection
+         patch -p1 < ../change.patch
+         cd ..
          ```
 
          在运行pytorch2onnx.py脚本前需要将该脚本放入Swin-Transformer-Object-Detection这个目录下，运行脚本：
@@ -199,15 +197,16 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
 
 2. 开始推理验证。
 
-    1.  使用ais-infer工具进行推理。
-        ```shell
-        mkdir result_ais
-        ```
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
     
     2.  执行推理。
         
         ```shell
-        python ais_infer.py --model ./model_bs1.om --input "./val2017_bin" --output "result_ais"
+        mkdir result_ais
+        python ais_infer.py --model ./model_bs1.om --input ./val2017_bin --output result_ais --batchsize 1
         ```
 
          - 参数说明：  
@@ -215,7 +214,6 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
            -   --model：om文件路径。
            -   --input：预处理后的bin文件夹路径。
            -   --output:推理结果路径
-           推理后的输出默认在当前目录result下。
 
            >**说明：** 
            >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请[参见](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
@@ -226,7 +224,7 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
         调用脚本与数据集标签./data/coco/annotations/instances_val2017.json比对，可以获得Accuracy数据。
     
         ```
-        python cascade_maskrcnn_postprocess.py  --ann_file_path=./data/coco/annotations/instances_val2017.json  --bin_file_path=./result_ais/   --input_height=800  --input_width=1216 
+        python Transformer_SSL_postprocess.py  --ann_file_path=./data/coco/annotations/instances_val2017.json  --bin_file_path=./result_ais/${time_line}   --input_height=800  --input_width=1216 
         ```
     
         - 参数说明：
@@ -235,39 +233,8 @@ Cascade_Mask_RCNN使用不同的IOU阈值，训练多个级联的检测器。它
           -   --bin_file_path：为ais_infer推理结果存放路径。
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
-  1. 推理精度
- 
-        执行完后得到310P上的精度： \
-        以下为bboxmap：
-        |AP  |AP50  |AP75  |APs  |APm  |APl  |
-        |---|---|---|---|---|---|
-        |49.8  |68.8  |54.0  |33.0   |53.8  |64.9  |
-        
-        以下为maskmap：
-        |AP  |AP50  |AP75  |APs  |APm  |APl  |
-        |---|---|---|---|---|---|
-        |43.3  |66.1  |46.9 |26.3   |47.3  |58.9  |
-        
-        
-        获得官网精度为：
-        |box_map  |mask_map |
-        |---|---|
-        |50.4  |43.7  |
-
-        将得到的om离线模型推理精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标
-
-  2. 推理性能
-   
-        batch1性能： onnx包含自定义算子，因此不能使用开源TensorRT测试性能数据，故在T4机器上使用pth在线推理测试性能的数据
-        T4上执行：
-        ```shell
-        python tools/test.py configs/swin/cascade_mask_rcnn_swin_tiny_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py  cascade_mask_rcnn_swin_tiny_patch4_window7.pth  --eval bbox segm 
-        ```
-        结果：2.7task/
-
-        调用ACL接口推理计算，性能参考下列数据。
-        
-        | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-        | --------- | ---------------- | ---------- | ---------- | --------------- |
-        |    310p3       |    1 x 3 x 800 x 1216              |   coco2017         |      49.8:43.3      |    throughput:4.20             |
+该模型只支持bs1推理     
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|    Ascend310P3       |    1 x 3 x 800 x 1216              |   coco2017         |      68.8:66.1      |    4.20             |
 
