@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import argparse
+import ast
 import yaml
 import os
 import time
@@ -36,17 +37,23 @@ def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
     parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
     parser.add_argument('--npu', help='npu id', type=str)
+    parser.add_argument('--bin', type=ast.literal_eval, default=True, help='enable run time2.0 model')
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
         config = edict(config)
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
-    return config, args.npu
+    return config, args
 
 
 def main():
     # load config
-    config, npu = parse_arg()
+    config, args = parse_arg()
+    npu = args.npu
+    if args.bin:
+        print('enable run time2.0 model now!')
+        torch.npu.set_compile_mode(jit_compile=False)
+
     print('config is: ', config)
 
     # seed everything
