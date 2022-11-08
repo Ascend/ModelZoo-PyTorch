@@ -190,7 +190,10 @@ def main():
     # model
     model = create_model(opt.model, n_cls, opt.dataset, n_trans=opt.trans, embd_sz=opt.memfeature_size)
     ########change##############
-    torch.npu.set_start_fuzz_compile_step(3)
+    if torch.__version__ >= "1.8":
+        torch.npu.set_compile_mode(jit_compile=False)
+    else:
+        torch.npu.set_start_fuzz_compile_step(3)
     ############################
     #wandb.watch(model)
     
@@ -307,7 +310,10 @@ def train(epoch, train_loader, model, criterion, optimizer, opt, MemBank):
     with tqdm(train_loader, total=len(train_loader)) as pbar:
         for _, (input, input2, input3, input4, target, indices) in enumerate(pbar):
             #############change###########
-            torch.npu.global_step_inc()
+            if torch.__version__ >= "1.8":
+                torch.npu.set_compile_mode(jit_compile=False)
+            else:
+                torch.npu.global_step_inc()
             ##############################
             data_time.update(time.time() - end)
             start_time = time.time()

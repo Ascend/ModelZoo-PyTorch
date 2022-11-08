@@ -39,6 +39,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.autograd import Variable
 from collections import OrderedDict
 

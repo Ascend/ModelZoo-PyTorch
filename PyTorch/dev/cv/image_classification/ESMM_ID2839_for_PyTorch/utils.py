@@ -38,6 +38,9 @@
 # @Description :  script description
 
 
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split

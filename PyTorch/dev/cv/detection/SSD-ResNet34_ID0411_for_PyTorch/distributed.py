@@ -32,6 +32,8 @@
 # ============================================================================
 #
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 import torch.distributed as dist
 from torch.nn.modules import Module
