@@ -1,34 +1,16 @@
-# BSD 3-Clause License
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
-# Copyright (c) 2017 xxxx
-# All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-#
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# ============================================================================
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import sys
 
@@ -37,7 +19,7 @@ from common.model import TemporalModel
 from collections import OrderedDict
 import argparse
 import torch
-from torch.serialization import load
+
 
 def proc_nodes_module(checkpoint):
     new_state_dict = OrderedDict()
@@ -53,10 +35,11 @@ def proc_nodes_module(checkpoint):
 def vp3d_path2onnx(args):
     num_joints = 17
     joints_dim = 2
-    filter_widths = [3,3,3,3,3]
+    filter_widths = [3, 3, 3, 3, 3]
 
-    model_pos = TemporalModel(num_joints, joints_dim, num_joints, filter_widths=filter_widths,
-        causal=False, dropout=0.25, channels=1024, dense=False)
+    model_pos = TemporalModel(num_joints, joints_dim, num_joints, 
+                              filter_widths=filter_widths, causal=False, 
+                              dropout=0.25, channels=1024, dense=False)
     dummy_input = torch.randn(2, 6115, num_joints, joints_dim)
     chk_filename = args.model
     print(f'Loading checkpoint {chk_filename}')
@@ -67,15 +50,15 @@ def vp3d_path2onnx(args):
     output_file = args.onnx
     input_names = ['2d_poses']
     output_names = ['3d_preds']
-    # dynamic_axes = {'2d_poses':{0:'2',1:'1024'},'3d_preds':{0:'2',1:'1024'}}
 
     model_pos.eval()
-    torch.onnx.export(model_pos, dummy_input, output_file, input_names=input_names, output_names=output_names, 
-                        opset_version=11, verbose=True)
+    torch.onnx.export(model_pos, dummy_input, output_file, input_names=input_names, 
+                      output_names=output_names, opset_version=11, verbose=False)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="vp3d to onnx")
-    parser.add_argument('-m', '--model', default='./checkpoint/model_best.bin', 
+    parser.add_argument('-m', '--model', default='./checkpoint/model_best.bin',
                         type=str, metavar='PATH', help="path to model")
     parser.add_argument('-o', '--onnx', default='vp3d.onnx')
 
