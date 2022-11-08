@@ -87,6 +87,8 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    train_epochs=1
 fi
 
 nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
