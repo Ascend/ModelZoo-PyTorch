@@ -69,6 +69,9 @@ def main(args):
 def main_worker(dev, npus_per_node, args):
     if args['bin']:
         torch.npu.set_compile_mode(jit_compile=False) 
+        option = {}
+        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingUpdate,BNTrainingUpdateGrad"
+        torch.npu.set_option(option)
         print("use bin train model")
     device_id = args["process_device_map"][dev]
     args["device_id"] = device_id
