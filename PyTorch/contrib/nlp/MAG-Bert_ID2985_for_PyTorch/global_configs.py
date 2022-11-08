@@ -15,12 +15,11 @@ import os
 import torch
 
 os.environ["WANDB_PROGRAM"] = "multimodal_driver.py"
-DEVICE = 0
-if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
-    DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
-if torch.npu.current_device() != DEVICE:
-    torch.npu.set_device(f'npu:{DEVICE}')
+
+device_id=int(os.environ['ASCEND_DEVICE_ID'])
+DEVICE = "npu:{}".format(device_id)
 print(DEVICE)
+torch.npu.set_device(DEVICE)
 
 # MOSI SETTING
 ACOUSTIC_DIM = 74
