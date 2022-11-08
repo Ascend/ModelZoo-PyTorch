@@ -50,7 +50,7 @@ if __name__ == '__main__':
         torch.npu.set_compile_mode(jit_compile=False)
 
         option = {}
-        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "AvgPoolV2Grad"
+        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "AvgPoolV2Grad,BNTrainingReduce,BNTrainingReduceGrad,BNTrainingUpdate,BNTrainingUpdateGrad"
         torch.npu.set_option(option)
 
     devices = [p.arg.device] if isinstance(
