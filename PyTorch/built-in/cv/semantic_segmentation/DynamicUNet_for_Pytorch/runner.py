@@ -436,7 +436,7 @@ if __name__ == '__main__':
         print("enble bin mode")
         option = {}
         option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,BNTrainingUpdate"
-        torch.npu.set_opition(opition)
+        torch.npu.set_option(option)
         print("set NPU_FUZZY_COMPILE_BLACKLIST ok")
     else:
         print("disable bin mode")
