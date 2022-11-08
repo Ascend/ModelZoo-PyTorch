@@ -44,3 +44,9 @@ class _RepeatSampler(object):
     def __iter__(self):
         while True:
             yield from iter(self.sampler)
+
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self,exc_type,exc_val,exc_tb):
+        pass
