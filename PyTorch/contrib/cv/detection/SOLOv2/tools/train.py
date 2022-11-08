@@ -216,5 +216,9 @@ if __name__ == '__main__':
     args = parse_args()
     if args.rt2_bin:
         print('Enable bin compile mode....')
+        options = {}
+        options["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,BNTrainingUpdate,BNTrainingUpdateGrad,Conv2D,Conv2DBackpropFilter"
+        torch.npu.set_option(options)
+        print('NPU_FUZZY_COMPILE_BLACKLIST：',options)
         torch.npu.set_compile_mode(jit_compile=False)
     main()
