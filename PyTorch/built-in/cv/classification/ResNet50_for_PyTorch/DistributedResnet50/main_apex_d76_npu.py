@@ -265,6 +265,11 @@ parser.add_argument('-t',
 parser.add_argument('--graph_mode',
                     action='store_true',
                     help='whether to enable graph mode.')
+
+# 二进制
+parser.add_argument('--bin_mode',
+                    action='store_true',
+                    help='whether to enable binary mode.')                   
 best_acc1 = 0
 
 def nvidia_model_config(args):
@@ -307,7 +312,6 @@ def nvidia_mixup_and_label_smoothing_getlossfunction(args):
             criterion = loss().to(loc)
         else:
             criterion = loss().cuda(args.gpu) 
-    print("nvidia_mixup_and_label_smoothing_getlossfunction return")
     return criterion
 
 def nvidia_mixup_get_train_loader_iter(args):
@@ -357,10 +361,7 @@ def device_id_to_process_device_map(device_list):
 
 def main():
     args = parser.parse_args()
-    print("===============main()=================")
     print(args)
-    print("===============main()=================")
-
     if args.seed is not None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -403,6 +404,9 @@ def main():
         main_worker(args.gpu, ngpus_per_node, args)
 
 def main_worker(gpu, ngpus_per_node, args):
+    if args.bin_mode:
+        print('use binary mode')
+        torch.npu.set_compile_mode(jit_compile=False)
     global best_acc1
     args.gpu = args.process_device_map[gpu]
 
@@ -450,9 +454,6 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         model.parameters()
 
-    print("[npu id:",args.gpu,"]","===============main_worker()=================")
-    print("[npu id:",args.gpu,"]",args)
-    print("[npu id:",args.gpu,"]","===============main_worker()=================")
     nvidia_logger_init(args)
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -481,9 +482,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
             # available GPUs if device_ids are not set
-            print("[npu id:",args.gpu,"]","============================test   args.gpu is not None   else==========================")
     elif args.gpu is not None:
-        print("[gpu id:",args.gpu,"]","============================test   elif args.gpu is not None:==========================")
         if args.device == 'npu':
             loc = 'npu:{}'.format(args.gpu)
             torch.npu.set_device(args.gpu)
@@ -494,11 +493,9 @@ def main_worker(gpu, ngpus_per_node, args):
 
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
-        print("[gpu id:",args.gpu,"]","============================test   1==========================")
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
             print("[gpu id:",args.gpu,"]","============================test   2==========================")
         else:
-            print("[gpu id:",args.gpu,"]","============================test   3==========================")
             if args.device == 'npu':
                 loc = 'npu:{}'.format(args.gpu)
             else:
@@ -535,7 +532,6 @@ def main_worker(gpu, ngpus_per_node, args):
             else:
                 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
         else:
-            print("[npu id:",args.gpu,"]","======================test   args.gpu is not None   else==================")
             model = torch.nn.parallel.DistributedDataParallel(model)
 
     elif args.gpu is not None:
@@ -543,13 +539,10 @@ def main_worker(gpu, ngpus_per_node, args):
 
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
-        print("[gpu id:",args.gpu,"]","============================test   1==========================")
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
-            print("[gpu id:",args.gpu,"]","============================test   2==========================")
             model.features = torch.nn.DataParallel(model.features)
             model.cuda()
         else:
-            print("[gpu id:",args.gpu,"]","============================test   3==========================")
             if args.device == 'npu':
                 loc = 'npu:{}'.format(args.gpu)
                 model = torch.nn.DataParallel(model).to(loc)
@@ -563,7 +556,6 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         criterion = nn.CrossEntropyLoss().cuda(args.gpu)
     criterion = nvidia_mixup_and_label_smoothing_getlossfunction(args)#需增加设备类型参数(npu/gpu)
-    print("criterion = nvidia_mixup_and_label_smoothing_getlossfunction(args)")
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -690,6 +682,7 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
     if args.benchmark == 1 :
         optimizer.zero_grad()
     for i, (images, target) in enumerate(train_loader):
+        if i > 99:pass
         # 图模式
         if args.graph_mode:
             print("graph mode on")
@@ -740,7 +733,6 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
             BATCH_SIZE_multiplier = int(OPTIMIZER_BATCH_SIZE / args.batch_size)
             BM_optimizer_step = ((i + 1) % BATCH_SIZE_multiplier) == 0
             if BM_optimizer_step:
-                #print("==================exec step & zero_grad===================")
                 for param_group in optimizer.param_groups:
                     for param in param_group['params']:
                         param.grad /= BATCH_SIZE_multiplier
@@ -797,6 +789,7 @@ def validate(val_loader, model, criterion, args,ngpus_per_node):
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
+            if i > 50:pass
             if args.gpu is not None:
                 if args.device == 'npu':
                     loc = 'npu:{}'.format(args.gpu)

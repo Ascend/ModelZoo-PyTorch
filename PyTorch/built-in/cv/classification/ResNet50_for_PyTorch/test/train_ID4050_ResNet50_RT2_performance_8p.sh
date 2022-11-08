@@ -12,7 +12,7 @@ export RANK_SIZE=8
 data_path=""
 
 # 训练epoch 90
-train_epochs=3
+train_epochs=1
 # 加载数据进程数
 workers=128
 
@@ -52,11 +52,6 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-# 添加二进制代码
-line=`grep "    main()" ${test_path_dir}/../DistributedResnet50/main_apex_d76_npu.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "${line}itorch.npu.set_compile_mode(jit_compile=False)" ${test_path_dir}/../DistributedResnet50/main_apex_d76_npu.py
-sed -i "${line}s/^/    /" ${test_path_dir}/../DistributedResnet50/main_apex_d76_npu.py
-
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -68,7 +63,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 export NODE_RANK=0
-
+sed -i "s|pass|break|g" ./DistributedResnet50/main_apex_d76_npu.py
 nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --data ${data_path} \
         --addr=$(hostname -I |awk '{print $1}') \
@@ -89,6 +84,7 @@ nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --benchmark=0 \
         --device='npu' \
         --epochs=${train_epochs} \
+        --bin_mode \
         --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -98,7 +94,7 @@ wait
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-
+sed -i "s|break|pass|g" ./DistributedResnet50/main_apex_d76_npu.py
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
