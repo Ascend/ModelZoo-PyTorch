@@ -47,6 +47,9 @@ if __name__ == "__main__":
     input_img_dir = sys.argv[1]
     output_img_dir = sys.argv[2]
     input_list = sys.argv[3]
+    if not os.path.exists(output_img_dir):
+        os.makedirs(output_img_dir)
+    
     with open(os.path.join(input_list), "r") as f:
         file_names = [x.strip() for x in f.readlines()]
     
