@@ -117,6 +117,7 @@ def make_parser():
 
 @logger.catch
 def main(exp: Exp, args):
+    torch.npu.set_compile_mode(jit_compile=False)
     if exp.seed is not None:
         random.seed(exp.seed)
         torch.manual_seed(exp.seed)
@@ -137,7 +138,6 @@ def main(exp: Exp, args):
 
 
 if __name__ == "__main__":
-    torch.npu.set_compile_mode(jit_compile=False)
     configure_module()
     args = make_parser().parse_args()
     exp = get_exp(args.exp_file, args.name)
