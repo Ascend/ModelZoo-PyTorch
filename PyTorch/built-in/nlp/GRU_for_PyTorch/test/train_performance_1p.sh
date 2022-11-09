@@ -53,6 +53,11 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        echo "conda_name: $conda_name"
+        source activate $conda_name
     fi
 done
 
