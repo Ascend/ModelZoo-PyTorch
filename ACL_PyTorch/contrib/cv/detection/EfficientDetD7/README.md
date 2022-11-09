@@ -84,7 +84,7 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
    git clone https://github.com/rwightman/efficientdet-pytorch   # 克隆仓库的代码
    cd efficientdet-pytorch             						  # 切换到模型的代码仓目录
    git checkout c5b694aa34900fdee6653210d856ca8320bf7d4e         # 切换到对应分支
-   patch -p1 < ../EfficientDetD7.patch									  # 添加模型补丁
+   patch -p1 < ../EfficientDetD7.patch							  # 添加模型补丁
    cd ..
    git clone https://gitee.com/zheng-wengang1/onnx_tools.git	  # 下载onnx模型修改工具
    cd onnx_tools
@@ -220,10 +220,10 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
 
    2. 执行推理。
 
-        在执行推理前，请删除并创建result文件夹
+        在执行推理前，请创建result文件夹
         
         ```
-         rm -rf ./result && mkdir result
+        mkdir result
         ```
         
         请用下列语句执行推理流程：
