@@ -57,7 +57,10 @@ try:
     from apex import amp
 except:
     amp = None
-torch.npu.set_start_fuzz_compile_step(3)
+if torch.__version__ >= "1.8":
+    torch.npu.set_compile_mode(jit_compile=False)
+else:
+    torch.npu.set_start_fuzz_compile_step(3)
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
@@ -253,7 +256,10 @@ def train(epoch, net, net2, trainloader, optimizer, criterion_rb, devide, p_labe
     unsupervised = 0
     conf_self = torch.zeros(50000)
     for batch_idx, (inputs1 , inputs2, inputs3, inputs4, targets, indexes) in enumerate(trainloader):
-        torch.npu.global_step_inc()
+        if torch.__version__ >= "1.8":
+            torch.npu.set_compile_mode(jit_compile=False)
+        else:
+            torch.npu.global_step_inc()
         if args.max_steps and batch_idx > args.max_steps:
             break
         start_time = time.time()
