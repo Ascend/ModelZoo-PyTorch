@@ -1,0 +1,91 @@
+diff --git a/configs/rec/rec_r34_vd_tps_bilstm_att.yml b/configs/rec/rec_r34_vd_tps_bilstm_att.yml
+index 8919aae7..afc37010 100644
+--- a/configs/rec/rec_r34_vd_tps_bilstm_att.yml
++++ b/configs/rec/rec_r34_vd_tps_bilstm_att.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: True
++  use_gpu: False
+   epoch_num: 400
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -83,7 +83,7 @@ Train:
+ Eval:
+   dataset:
+     name: LMDBDataSet
+-    data_dir: ./train_data/data_lmdb_release/validation/
++    data_dir: ./train_data/data_lmdb_release/evaluation/
+     transforms:
+       - DecodeImage: # load image
+           img_mode: BGR
+@@ -96,5 +96,5 @@ Eval:
+   loader:
+     shuffle: False
+     drop_last: False
+-    batch_size_per_card: 256
++    batch_size_per_card: 1
+     num_workers: 8
+diff --git a/ppocr/modeling/transforms/tps.py b/ppocr/modeling/transforms/tps.py
+index 9bdab0f8..8f8095e9 100644
+--- a/ppocr/modeling/transforms/tps.py
++++ b/ppocr/modeling/transforms/tps.py
+@@ -20,8 +20,10 @@ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+ 
++import os
+ import math
+ import paddle
++import paddle.nn as nn
+ from paddle import nn, ParamAttr
+ from paddle.nn import functional as F
+ import numpy as np
+@@ -233,6 +235,7 @@ class GridGenerator(nn.Layer):
+ 
+     def build_inv_delta_C_paddle(self, C):
+         """ Return inv_delta_C which is needed to calculate T """
++        """
+         F = self.F
+         hat_eye = paddle.eye(F, dtype='float64')  # F x F
+         hat_C = paddle.norm(
+@@ -260,6 +263,11 @@ class GridGenerator(nn.Layer):
+             ],
+             axis=0)
+         inv_delta_C = paddle.inverse(delta_C)
++        """
++
++        inv_delta_C = paddle.to_tensor(
++            np.load(os.path.join(os.getcwd(), 'inv_delta_C.npy')))
++
+         return inv_delta_C  # F+3 x F+3
+ 
+     def build_P_hat_paddle(self, C, P):
+@@ -304,5 +312,27 @@ class TPS(nn.Layer):
+         batch_P_prime = self.grid_generator(batch_C_prime, image.shape[2:])
+         batch_P_prime = batch_P_prime.reshape(
+             [-1, image.shape[2], image.shape[3], 2])
+-        batch_I_r = F.grid_sample(x=image, grid=batch_P_prime)
++
++        image = paddle.transpose(image, perm=[0, 1, 3, 2])
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 2, 1, 3])
++
++        image = paddle.add(image, paddle.zeros((1, 3, 100, 32)))
++        batch_P_prime = paddle.add(batch_P_prime, paddle.zeros((1, 100, 32, 2)))
++
++        image = paddle.transpose(image, perm=[0, 1, 3, 2])
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 2, 1, 3])
++
++        my_pad = nn.Pad2D(padding=[1, 0, 0, 0])
++
++        batch_P_prime = my_pad(batch_P_prime)
++
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 3, 1, 2])
++
++        batch_P_prime = batch_P_prime + image
++
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 1, 3, 2])
++        batch_P_prime = paddle.add(batch_P_prime, paddle.zeros((1, 3, 100, 32)))
++        batch_I_r = paddle.transpose(batch_P_prime, perm=[0, 1, 3, 2])
++
++        # batch_I_r = F.grid_sample(x=image, grid=batch_P_prime)
+         return batch_I_r
