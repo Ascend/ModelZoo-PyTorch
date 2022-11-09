@@ -57,9 +57,9 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 | 配套                                                         | 版本      | 环境准备指导                                                 |
 | ------------------------------------------------------------ |---------| ------------------------------------------------------------ |
 | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC1 | -                                                            |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.10.0  | -                                                            |
+| PyTorch                                                      | 1.8.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -92,7 +92,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 1. 获取原始数据集。
 
    ```
-   下载cifar100数据集(http://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz),放于resnet_bs24_for_pytorch目录下
+   下载cifar100数据集(http://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz),放于resnet50_bs24_for_pytorch目录下
    解压缩
    tar xvf cifar-100-python.tar.gz 
    ```
@@ -132,11 +132,11 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
          ```
          cd mmdeploy
-         python3 tools/deploy.py ./configs/mmcls/classification_onnxruntime_dynamic.py /usr/local/mmclassification/configs/resnet/resnet50_b16x8_cifar100.py  resnet50_b16x8_cifar100_20210528-67b58a1b.pth /usr/local/mmclassification/demo/demo.JPEG --work-dir /usr/local/resnet_bs24_for_pytorch/
+         python3 tools/deploy.py ./configs/mmcls/classification_onnxruntime_dynamic.py /usr/local/mmclassification/configs/resnet/resnet50_b16x8_cifar100.py  resnet50_b16x8_cifar100_20210528-67b58a1b.pth /usr/local/mmclassification/demo/demo.JPEG --work-dir /usr/local/resnet50_bs24_for_pytorch/
 
          ```
          > **说明：** 
-         /usr/local的地址按照实际情况填写,生成的end2end.onnx文件位于resnet_bs24_for_pytorch目录下.
+         /usr/local的地址按照实际情况填写,生成的end2end.onnx文件位于resnet50_bs24_for_pytorch目录下.
          
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -224,7 +224,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=5 --output ./ --outfmt BIN
+      python3 ${ais_infer_path}/ais_infer.py --model ${om_model_path} --loop 5 --output ./ --outfmt BIN
       ```
 
 
@@ -232,6 +232,6 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号  | Batch Size | 数据集      | 精度   | 性能 |
-|-------|------------|----------|------| --------------- |
-| 310P3 | 24         | cifar100 | 79.9 |       9346fps          |
+| 芯片型号  | Batch Size | 数据集      | 精度    | 性能      |
+|-------|------------|----------|-------|---------|
+| 310P3 | 24         | cifar100 | 79.9% | 9336fps |

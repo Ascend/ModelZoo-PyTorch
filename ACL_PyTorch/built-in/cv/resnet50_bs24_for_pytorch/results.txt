@@ -1,2 +1,2 @@
-perf: 9346ftps
-acc@1: 79.91%
+perf: 9336ftps
+acc@1: 79.9%
