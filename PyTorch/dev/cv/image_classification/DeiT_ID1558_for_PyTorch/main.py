@@ -228,7 +228,10 @@ def get_args_parser():
 def main(args):
     #模糊編譯
     if args.ob_compilation == True:
-        torch.npu.global_step_inc()
+        if torch.__version__ >= "1.8":
+            torch.npu.set_compile_mode(jit_compile=False)
+        else:
+            torch.npu.global_step_inc()
     else:
         #torch.npu.global_step_inc()
         torch.npu.set_start_fuzz_compile_step(3)
@@ -445,7 +448,6 @@ def main(args):
     start_time = time.time()
     max_accuracy = 0.0
     for epoch in range(args.start_epoch, args.epochs):
-        torch.npu.global_step_inc()
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
 

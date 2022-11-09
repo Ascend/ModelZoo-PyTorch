@@ -38,16 +38,15 @@ BERT parameters, for the IMDB dataset.
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
+    torch.npu.set_compile_mode(jit_compile=False)
+else:
+    torch.npu.global_step_inc()
 from apex import amp
-torch.npu.global_step_inc()
 
 import logging
 import random
 import numpy as np
 
-import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
@@ -87,7 +86,7 @@ logging.getLogger('pytorch_transformers').setLevel(logging.CRITICAL)
 DEVICE = torch.device('npu' if torch.npu.is_available() else 'cpu')
 if not torch.npu.is_available():
     DEVICE = torch.device('npu' if torch.npu.is_available() else 'cpu')
-print("DEVICE FOUND: %s" % DEVICE)
+# print("DEVICE FOUND: %s" % DEVICE)
 
 # Set seeds for reproducibility
 SEED = 42
