@@ -143,9 +143,9 @@ class Config(object):
         mox.file.copy_parallel(self.data_url, real_path)
         self.real_path = real_path
         datasets = dict()
-        datasets['peta'] = os.path.join(real_path, "peta/peta_dataset.pkl")
+        datasets['peta'] = os.path.join(real_path, "dataset/peta/peta_dataset.pkl")
         partitions = dict()
-        partitions['peta'] = os.path.join(real_path, "peta/peta_partition.pkl")
+        partitions['peta'] = os.path.join(real_path, "dataset/peta/peta_partition.pkl")
 
         self.dataset_name = args.dataset
         if args.dataset not in datasets or args.dataset not in partitions:

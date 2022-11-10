@@ -43,7 +43,7 @@ if __name__ == '__main__':
     with open("../data/config/peta_partition.pkl", 'rb') as data_file:
         partition = pickle.load(data_file)
     for idx in partition['test'][num]:
-        image.append(dataset['test_image'][idx])
+        image.append(dataset['image'][idx])
         label_tmp = np.array(dataset['att'][idx])[dataset['selected_attribute']].tolist()
         label.append(label_tmp)
 
