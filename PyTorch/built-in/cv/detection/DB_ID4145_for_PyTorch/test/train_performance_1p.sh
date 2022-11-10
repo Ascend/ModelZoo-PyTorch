@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="DB++"
+Network="DB_ID4145_for_PyTorch"
 # 训练使用的npu卡数
 export BATCH_SIZE=24
 export WORLD_SIZE=1
