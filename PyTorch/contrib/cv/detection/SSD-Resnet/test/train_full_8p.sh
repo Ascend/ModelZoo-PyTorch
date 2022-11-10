@@ -107,7 +107,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印
 echo "------------------ Final result ------------------"
 #输出性能FPS
-FPS=`grep -a 'sec:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| tail -2 | head -1 | awk -F " " '{print $15}'`
+FPS=`grep -a 'sec:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk -F " " '{print $15}' | tail +3 | awk '{sum+=$1} END {print sum/NR}'`
 #打印
 echo "Final Performance images/sec : $FPS"
 
