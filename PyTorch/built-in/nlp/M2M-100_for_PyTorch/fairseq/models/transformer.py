@@ -7,6 +7,8 @@ import math
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from fairseq import utils
 from fairseq.models import (
@@ -308,7 +310,7 @@ class TransformerEncoder(FairseqEncoder):
     def __init__(self, args, dictionary, embed_tokens):
         super().__init__(dictionary)
         self.register_buffer("version", torch.Tensor([3]))
-
+        self.encoder_attention_heads = args.encoder_attention_heads
         self.dropout_module = FairseqDropout(
             args.dropout, module_name=self.__class__.__name__
         )
@@ -413,23 +415,30 @@ class TransformerEncoder(FairseqEncoder):
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
-        x = x.transpose(0, 1)
+        global s_len
+        bsz, tgt_len, embed_dim = x.size()
+        s_len = src_tokens.size()[1]
 
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
-
+        encoder_padding_mask = (encoder_padding_mask.to(torch.float16) * -65504).unsqueeze(1).unsqueeze(2)
+        encoder_padding_mask = encoder_padding_mask.repeat(1,self.encoder_attention_heads,
+                                                           tgt_len, 1).clone().npu_format_cast(29)
         encoder_states = [] if return_all_hiddens else None
-
+        if len(x.shape) == 3:
+            x = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
+        else:
+            x = x.npu_format_cast(29)
         # encoder layers
         for layer in self.layers:
-            x = layer(x, encoder_padding_mask)
+            x = layer(x, encoder_padding_mask, bsz, tgt_len, s_len)
             if return_all_hiddens:
                 assert encoder_states is not None
                 encoder_states.append(x)
 
         if self.layer_norm is not None:
             x = self.layer_norm(x)
-
+        encoder_padding_mask = encoder_padding_mask[:,0,0,:]
         return EncoderOut(
             encoder_out=x,  # T x B x C
             encoder_padding_mask=encoder_padding_mask,  # B x T
@@ -462,7 +471,7 @@ class TransformerEncoder(FairseqEncoder):
         new_encoder_out = (
             encoder_out.encoder_out
             if encoder_out.encoder_out is None
-            else encoder_out.encoder_out.index_select(1, new_order)
+            else encoder_out.encoder_out.index_select(0, new_order)
         )
         new_encoder_padding_mask = (
             encoder_padding_mask
@@ -545,7 +554,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         super().__init__(dictionary)
         self.register_buffer("version", torch.Tensor([3]))
         self._future_mask = torch.empty(0)
-
+        self.decoder_attention_heads = args.decoder_attention_heads
         self.dropout_module = FairseqDropout(
             args.dropout, module_name=self.__class__.__name__
         )
@@ -781,27 +790,46 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         x = self.dropout_module(x)
 
         # B x T x C -> T x B x C
-        x = x.transpose(0, 1)
+        bsz, tgt_len, embed_dim = x.size()
 
         self_attn_padding_mask: Optional[Tensor] = None
         if self.cross_self_attention or prev_output_tokens.eq(self.padding_idx).any():
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
+            self_attn_padding_mask = (self_attn_padding_mask.to(torch.float16) * -65504).unsqueeze(1).unsqueeze(2)
+            self_attn_padding_mask = self_attn_padding_mask.repeat(1, self.decoder_attention_heads,
+                                                               tgt_len, 1).clone().npu_format_cast(
+                29)
 
+        if encoder_out is not None:
+            encoder_padding_mask = encoder_out.encoder_padding_mask.unsqueeze(1).unsqueeze(2)\
+                .repeat(1, self.decoder_attention_heads, tgt_len, 1)
+            if len(encoder_out.encoder_out.shape) == 3:
+                encoder_out_ = encoder_out.encoder_out.view(-1, encoder_out.encoder_out.shape[2]).clone().npu_format_cast(29)
+            else:
+                encoder_out_ = encoder_out.encoder_out.npu_format_cast(29)
+        if len(x.shape) == 3:
+            x = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
+        else:
+            x = x.npu_format_cast(29)
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
         for idx, layer in enumerate(self.layers):
             if incremental_state is None and not full_context_alignment:
-                self_attn_mask = self.buffered_future_mask(x)
-            else:
-                self_attn_mask = None
+                self_attn_mask = self.buffered_future_mask(x, tgt_len)
+                if self_attn_padding_mask is not None:
+                    self_attn_padding_mask = self_attn_padding_mask + self_attn_mask
+                else:
+                    self_attn_padding_mask = self_attn_mask.unsqueeze(0).unsqueeze(1).repeat(bsz, self.decoder_attention_heads,
+                                                               1, 1).clone().npu_format_cast(
+                29)
 
             x, layer_attn, _ = layer(
-                x,
-                encoder_out.encoder_out if encoder_out is not None else None,
-                encoder_out.encoder_padding_mask if encoder_out is not None else None,
+                x, bsz, tgt_len, s_len,
+                encoder_out_ if encoder_out is not None else None,
+                encoder_padding_mask if encoder_out is not None else None,
                 incremental_state,
-                self_attn_mask=self_attn_mask,
+                self_attn_mask=None,
                 self_attn_padding_mask=self_attn_padding_mask,
                 need_attn=bool((idx == alignment_layer)),
                 need_head_weights=bool((idx == alignment_layer)),
@@ -820,8 +848,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        # T x B x C -> B x T x C
-        x = x.transpose(0, 1)
 
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
@@ -842,8 +868,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             return self.max_target_positions
         return min(self.max_target_positions, self.embed_positions.max_positions)
 
-    def buffered_future_mask(self, tensor):
-        dim = tensor.size(0)
+    def buffered_future_mask(self, tensor, tgt_len):
+        dim = tgt_len
         # self._future_mask.device != tensor.device is not working in TorchScript. This is a workaround.
         if (
             self._future_mask.size(0) == 0

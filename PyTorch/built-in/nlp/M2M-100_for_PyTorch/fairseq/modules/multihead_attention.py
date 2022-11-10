@@ -7,6 +7,8 @@ import math
 from typing import Dict, Optional, Tuple
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn.functional as F
 from fairseq import utils
 from fairseq.incremental_decoding_utils import with_incremental_state
@@ -15,6 +17,33 @@ from fairseq.modules.quant_noise import quant_noise
 from torch import Tensor, nn
 from torch.nn import Parameter
 
+class NpuLinear(nn.Linear):
+    def forward(self, input):
+        input_shape = input.size()
+        if input.dim() == 3:
+            input = input.view(-1, self.in_features)
+            return torch.npu_linear(input,self.weight, self.bias).view(input_shape[0],
+                                                                       input_shape[1],
+                                                                       self.out_features)
+        elif input.dim() == 2:
+            return torch.npu_linear(input, self.weight,self.bias)
+        else:
+            raise RuntimeError('not support this dim')
+class MatmulApply(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, self, mat2):
+        ctx.save_for_backward(self, mat2)
+        result = torch.matmul(self, mat2.transpose(-2,-1))
+        return result.detach()
+    @staticmethod
+    def backward(ctx, grad):
+        self, mat2 = ctx.saved_tensors
+        self_grad = torch.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        return self_grad, mat2_grad
+
+def Matmul_transpose(tensor1, tensor2):
+    return MatmulApply.apply(tensor1, tensor2)
 
 @with_incremental_state
 class MultiheadAttention(nn.Module):
@@ -63,17 +92,17 @@ class MultiheadAttention(nn.Module):
         )
 
         self.k_proj = quant_noise(
-            nn.Linear(self.kdim, embed_dim, bias=bias), q_noise, qn_block_size
+            NpuLinear(self.kdim, embed_dim, bias=bias), q_noise, qn_block_size
         )
         self.v_proj = quant_noise(
-            nn.Linear(self.vdim, embed_dim, bias=bias), q_noise, qn_block_size
+            NpuLinear(self.vdim, embed_dim, bias=bias), q_noise, qn_block_size
         )
         self.q_proj = quant_noise(
-            nn.Linear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size
+            NpuLinear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size
         )
 
         self.out_proj = quant_noise(
-            nn.Linear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size
+            NpuLinear(embed_dim, embed_dim, bias=bias), q_noise, qn_block_size
         )
 
         if add_bias_kv:
@@ -115,11 +144,15 @@ class MultiheadAttention(nn.Module):
         if self.bias_v is not None:
             nn.init.xavier_normal_(self.bias_v)
 
+    def transpose_for_scores(self, x):
+        new_x_shape = (self.batch_size, self.squence_length) + (self.num_attention_heads, self.attention_head_size)
+        return torch.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
+
     def forward(
         self,
         query,
         key: Optional[Tensor],
-        value: Optional[Tensor],
+        value: Optional[Tensor], bsz, tgt_len, s_len,
         key_padding_mask: Optional[Tensor] = None,
         incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
         need_weights: bool = True,
@@ -148,43 +181,9 @@ class MultiheadAttention(nn.Module):
         if need_head_weights:
             need_weights = True
 
-        tgt_len, bsz, embed_dim = query.size()
+        embed_dim = query.size()[-1]
         assert embed_dim == self.embed_dim
-        assert list(query.size()) == [tgt_len, bsz, embed_dim]
-
-        if (
-            not self.onnx_trace
-            and not self.tpu  # don't use PyTorch version on TPUs
-            and incremental_state is None
-            and not static_kv
-            # A workaround for quantization to work. Otherwise JIT compilation
-            # treats bias in linear module as method.
-            and not torch.jit.is_scripting()
-        ):
-            assert key is not None and value is not None
-            return F.multi_head_attention_forward(
-                query,
-                key,
-                value,
-                self.embed_dim,
-                self.num_heads,
-                torch.empty([0]),
-                torch.cat((self.q_proj.bias, self.k_proj.bias, self.v_proj.bias)),
-                self.bias_k,
-                self.bias_v,
-                self.add_zero_attn,
-                self.dropout_module.p,
-                self.out_proj.weight,
-                self.out_proj.bias,
-                self.training or self.dropout_module.apply_during_inference,
-                key_padding_mask,
-                need_weights,
-                attn_mask,
-                use_separate_proj_weight=True,
-                q_proj_weight=self.q_proj.weight,
-                k_proj_weight=self.k_proj.weight,
-                v_proj_weight=self.v_proj.weight,
-            )
+        assert list(query.size()) == [tgt_len * bsz, embed_dim]
 
         if incremental_state is not None:
             saved_state = self._get_input_buffer(incremental_state)
@@ -234,45 +233,34 @@ class MultiheadAttention(nn.Module):
                     ],
                     dim=1,
                 )
-
-        q = (
-            q.contiguous()
-            .view(tgt_len, bsz * self.num_heads, self.head_dim)
-            .transpose(0, 1)
-        )
+        new_shape = (bsz, tgt_len) + (self.num_heads, self.head_dim)
         if k is not None:
-            k = (
-                k.contiguous()
-                .view(-1, bsz * self.num_heads, self.head_dim)
-                .transpose(0, 1)
-            )
+            key_shape = (bsz, k.size(0) // bsz) + (self.num_heads, self.head_dim)
+        q = torch.npu_confusion_transpose(q, (0, 2, 1, 3), new_shape, False)
+
+        if k is not None:
+            k = torch.npu_confusion_transpose(k, (0, 2, 1, 3), key_shape, False)
         if v is not None:
-            v = (
-                v.contiguous()
-                .view(-1, bsz * self.num_heads, self.head_dim)
-                .transpose(0, 1)
-            )
+            v = torch.npu_confusion_transpose(v, (0, 2, 1, 3), key_shape, False)
 
         if saved_state is not None:
             # saved states are stored with shape (bsz, num_heads, seq_len, head_dim)
             if "prev_key" in saved_state:
-                _prev_key = saved_state["prev_key"]
-                assert _prev_key is not None
-                prev_key = _prev_key.view(bsz * self.num_heads, -1, self.head_dim)
+                prev_key = saved_state["prev_key"]
+                assert prev_key is not None
                 if static_kv:
                     k = prev_key
                 else:
                     assert k is not None
-                    k = torch.cat([prev_key, k], dim=1)
+                    k = torch.cat([prev_key, k], dim=2)
             if "prev_value" in saved_state:
-                _prev_value = saved_state["prev_value"]
-                assert _prev_value is not None
-                prev_value = _prev_value.view(bsz * self.num_heads, -1, self.head_dim)
+                prev_value = saved_state["prev_value"]
+                assert prev_value is not None
                 if static_kv:
                     v = prev_value
                 else:
                     assert v is not None
-                    v = torch.cat([prev_value, v], dim=1)
+                    v = torch.cat([prev_value, v], dim=2)
             prev_key_padding_mask: Optional[Tensor] = None
             if "prev_key_padding_mask" in saved_state:
                 prev_key_padding_mask = saved_state["prev_key_padding_mask"]
@@ -281,7 +269,7 @@ class MultiheadAttention(nn.Module):
                 key_padding_mask=key_padding_mask,
                 prev_key_padding_mask=prev_key_padding_mask,
                 batch_size=bsz,
-                src_len=k.size(1),
+                src_len=k.size(2),
                 static_kv=static_kv,
             )
 
@@ -292,7 +280,7 @@ class MultiheadAttention(nn.Module):
             assert incremental_state is not None
             incremental_state = self._set_input_buffer(incremental_state, saved_state)
         assert k is not None
-        src_len = k.size(1)
+        src_len = k.size(2)
 
         # This is part of a workaround to get around fork/join parallelism
         # not supporting Optional types.
@@ -301,7 +289,7 @@ class MultiheadAttention(nn.Module):
 
         if key_padding_mask is not None:
             assert key_padding_mask.size(0) == bsz
-            assert key_padding_mask.size(1) == src_len
+            assert key_padding_mask.size(3) == src_len
 
         if self.add_zero_attn:
             assert v is not None
@@ -323,10 +311,10 @@ class MultiheadAttention(nn.Module):
                     dim=1,
                 )
 
-        attn_weights = torch.bmm(q, k.transpose(1, 2))
+        attn_weights = Matmul_transpose(q, k)
         attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
-        assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
+        assert list(attn_weights.size()) == [bsz, self.num_heads, tgt_len, src_len]
 
         if attn_mask is not None:
             attn_mask = attn_mask.unsqueeze(0)
@@ -337,16 +325,7 @@ class MultiheadAttention(nn.Module):
         if key_padding_mask is not None:
             # don't attend to padding symbols
             attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            if not self.tpu:
-                attn_weights = attn_weights.masked_fill(
-                    key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
-                    float("-inf"),
-                )
-            else:
-                attn_weights = attn_weights.transpose(0, 2)
-                attn_weights = attn_weights.masked_fill(key_padding_mask, float("-inf"))
-                attn_weights = attn_weights.transpose(0, 2)
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights = attn_weights + key_padding_mask
 
         if before_softmax:
             return attn_weights, v
@@ -354,18 +333,20 @@ class MultiheadAttention(nn.Module):
         attn_weights_float = utils.softmax(
             attn_weights, dim=-1, onnx_trace=self.onnx_trace
         )
-        attn_weights = attn_weights_float.type_as(attn_weights)
+        attn_weights = attn_weights_float.to(attn_weights.dtype)
         attn_probs = self.dropout_module(attn_weights)
 
         assert v is not None
-        attn = torch.bmm(attn_probs, v)
-        assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
+        attn = torch.matmul(attn_probs, v)
+        assert list(attn.size()) == [bsz, self.num_heads, tgt_len, self.head_dim]
         if self.onnx_trace and attn.size(1) == 1:
             # when ONNX tracing a single decoder step (sequence length == 1)
             # the transpose is a no-op copy before view, thus unnecessary
             attn = attn.contiguous().view(tgt_len, bsz, embed_dim)
         else:
-            attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
+            attn = torch.npu_confusion_transpose(attn, (0, 2, 1, 3),
+                                               (attn.size()[0]* attn.size()[2], embed_dim),
+                                               True)
         attn = self.out_proj(attn)
         attn_weights: Optional[Tensor] = None
         if need_weights:
@@ -391,26 +372,28 @@ class MultiheadAttention(nn.Module):
             new_key_padding_mask = prev_key_padding_mask
         elif prev_key_padding_mask is not None and key_padding_mask is not None:
             new_key_padding_mask = torch.cat(
-                [prev_key_padding_mask.float(), key_padding_mask.float()], dim=1
+                [prev_key_padding_mask.half(), key_padding_mask.half()], dim=3
             )
         # During incremental decoding, as the padding token enters and
         # leaves the frame, there will be a time when prev or current
         # is None
         elif prev_key_padding_mask is not None:
             filler = torch.zeros(
-                (batch_size, src_len - prev_key_padding_mask.size(1)),
+                (batch_size, prev_key_padding_mask.size(1),prev_key_padding_mask.size(2),
+                 src_len - prev_key_padding_mask.size(3)),
                 device=prev_key_padding_mask.device,
             )
             new_key_padding_mask = torch.cat(
-                [prev_key_padding_mask.float(), filler.float()], dim=1
+                [prev_key_padding_mask.half(), filler.half()], dim=3
             )
         elif key_padding_mask is not None:
             filler = torch.zeros(
-                (batch_size, src_len - key_padding_mask.size(1)),
+                (batch_size, key_padding_mask.size(1),key_padding_mask.size(2)
+                 , src_len - key_padding_mask.size(3)),
                 device=key_padding_mask.device,
             )
             new_key_padding_mask = torch.cat(
-                [filler.float(), key_padding_mask.float()], dim=1
+                [filler.half(), key_padding_mask.half()], dim=3
             )
         else:
             new_key_padding_mask = prev_key_padding_mask

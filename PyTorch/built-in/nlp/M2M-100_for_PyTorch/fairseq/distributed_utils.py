@@ -143,9 +143,10 @@ def infer_init_method(args, force_distributed=False):
 
     elif args.distributed_world_size > 1 or force_distributed:
         # fallback for single node with multiple GPUs
-        assert args.distributed_world_size <= torch.cuda.device_count()
-        port = random.randint(10000, 20000)
-        args.distributed_init_method = "tcp://localhost:{port}".format(port=port)
+        assert args.distributed_world_size <= torch.npu.device_count()
+        os.environ['MASTER_ADDR'] = '127.0.0.1'
+        os.environ['MASTER_PORT'] = '29688'
+        args.distributed_init_method = "env://"
 
     if args.pipeline_model_parallel:
         if not args.distributed_no_spawn:
@@ -185,10 +186,14 @@ def infer_init_method(args, force_distributed=False):
                 ),
             )
     elif not args.distributed_no_spawn:
-        args.distributed_num_procs = min(
-            torch.cuda.device_count(),
-            args.distributed_world_size,
-        )
+        if args.npu:
+            args.distributed_num_procs = min(torch.npu.device_count(),
+                                             args.distributed_world_size)
+        else:
+            args.distributed_num_procs = min(
+                torch.cuda.device_count(),
+                args.distributed_world_size,
+            )
 
 
 def distributed_init(args):
@@ -218,8 +223,8 @@ def distributed_init(args):
             )
 
             # perform a dummy all-reduce to initialize the NCCL communicator
-            if torch.cuda.is_available():
-                dist.all_reduce(torch.zeros(1).cuda())
+            if torch.npu.is_available():
+                dist.all_reduce(torch.zeros(1).npu())
 
         args.distributed_rank = torch.distributed.get_rank()
     else:
@@ -256,8 +261,8 @@ def distributed_init(args):
 
 def distributed_main(i, main, args, kwargs):
     args.device_id = i
-    if torch.cuda.is_available() and not args.cpu and not getattr(args, "tpu", False):
-        torch.cuda.set_device(args.device_id)
+    if torch.npu.is_available() and not args.cpu and not getattr(args, "tpu", False):
+        torch.npu.set_device(args.device_id)
     if args.distributed_rank is None:  # torch.multiprocessing.spawn
         args.distributed_rank = kwargs.pop("start_rank", 0) + i
 
@@ -417,11 +422,11 @@ def all_reduce_dict(
     for k in data_keys:
         t = data[k]
         if not torch.is_tensor(t):
-            cpu_data[k] = torch.tensor(t, dtype=torch.double)
-        elif t.device.type != device.type:
-            cpu_data[k] = t.to(dtype=torch.double)
+            cpu_data[k] = torch.tensor(t, dtype=torch.float32)
+        elif not t.is_npu:
+            cpu_data[k] = t.to(dtype=torch.float32)
         else:
-            device_data[k] = t.to(dtype=torch.double)
+            device_data[k] = t.to(dtype=torch.float32)
 
     def _all_reduce_dict(data: OrderedDict):
         if len(data) == 0:

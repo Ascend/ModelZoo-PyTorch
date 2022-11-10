@@ -102,7 +102,7 @@ class TransformerEncoderLayer(nn.Module):
                     state_dict["{}.{}.{}".format(name, new, m)] = state_dict[k]
                     del state_dict[k]
 
-    def forward(self, x, encoder_padding_mask, attn_mask: Optional[Tensor] = None):
+    def forward(self, x, encoder_padding_mask, bsz, tgt_len, s_len, attn_mask: Optional[Tensor] = None):
         """
         Args:
             x (Tensor): input to the layer of shape `(seq_len, batch, embed_dim)`
@@ -127,12 +127,14 @@ class TransformerEncoderLayer(nn.Module):
             attn_mask = attn_mask.masked_fill(attn_mask.to(torch.bool), -1e8)
 
         residual = x
+
         if self.normalize_before:
             x = self.self_attn_layer_norm(x)
+
         x, _ = self.self_attn(
             query=x,
             key=x,
-            value=x,
+            value=x, bsz=bsz, tgt_len=tgt_len,s_len=s_len,
             key_padding_mask=encoder_padding_mask,
             attn_mask=attn_mask,
         )
@@ -277,7 +279,7 @@ class TransformerDecoderLayer(nn.Module):
 
     def forward(
         self,
-        x,
+        x, bsz, tgt_len, s_len,
         encoder_out: Optional[torch.Tensor] = None,
         encoder_padding_mask: Optional[torch.Tensor] = None,
         incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
@@ -305,8 +307,10 @@ class TransformerDecoderLayer(nn.Module):
             need_attn = True
 
         residual = x
+
         if self.normalize_before:
             x = self.self_attn_layer_norm(x)
+
         if prev_self_attn_state is not None:
             prev_key, prev_value = prev_self_attn_state[:2]
             saved_state: Dict[str, Optional[Tensor]] = {
@@ -345,7 +349,7 @@ class TransformerDecoderLayer(nn.Module):
         x, attn = self.self_attn(
             query=x,
             key=y,
-            value=y,
+            value=y, bsz=bsz, tgt_len=tgt_len, s_len=s_len,
             key_padding_mask=self_attn_padding_mask,
             incremental_state=incremental_state,
             need_weights=False,
@@ -374,7 +378,7 @@ class TransformerDecoderLayer(nn.Module):
             x, attn = self.encoder_attn(
                 query=x,
                 key=encoder_out,
-                value=encoder_out,
+                value=encoder_out, bsz=bsz, tgt_len=tgt_len, s_len=s_len,
                 key_padding_mask=encoder_padding_mask,
                 incremental_state=incremental_state,
                 static_kv=True,

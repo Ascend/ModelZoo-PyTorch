@@ -87,6 +87,16 @@ class BaseFairseqModel(nn.Module):
         """Maximum length supported by the model."""
         return None
 
+    def remove_prefix(self, state_dict:dict):
+        new_state_dict = {}
+        for k,v in state_dict.items():
+            if k.startswith('encoder') or k.startswith('decoder'):
+                new_state_dict[k] = v
+            else:
+                new_k = '.'.join(k.split('.')[1:])
+                new_state_dict[new_k] = v
+        return new_state_dict
+
     def load_state_dict(self, state_dict, strict=True, args=None):
         """Copies parameters and buffers from *state_dict* into this module and
         its descendants.
@@ -94,6 +104,7 @@ class BaseFairseqModel(nn.Module):
         Overrides the method in :class:`nn.Module`. Compared with that method
         this additionally "upgrades" *state_dicts* from old checkpoints.
         """
+        state_dict = self.remove_prefix(state_dict)
         self.upgrade_state_dict(state_dict)
         new_state_dict = prune_state_dict(state_dict, args)
         return super().load_state_dict(new_state_dict, strict)

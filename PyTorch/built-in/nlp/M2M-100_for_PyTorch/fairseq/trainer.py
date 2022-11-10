@@ -15,6 +15,9 @@ from itertools import chain
 from typing import Any, Dict, List
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+import torch.distributed as dist
 from fairseq import checkpoint_utils, distributed_utils, models, optim, utils
 from fairseq.file_io import PathManager
 from fairseq.logging import meters, metrics
@@ -43,9 +46,9 @@ class Trainer(object):
         shared_params = _catalog_shared_params(model)
 
         self.tpu = getattr(args, "tpu", False)
-        self.cuda = torch.cuda.is_available() and not args.cpu and not self.tpu
-        if self.cuda:
-            self.device = torch.device("cuda")
+        self.npu = torch.npu.is_available() and not args.cpu and not self.tpu
+        if self.npu:
+            self.device = torch.device("npu")
         elif self.tpu:
             self.device = utils.get_tpu_device(args)
         else:
@@ -65,11 +68,14 @@ class Trainer(object):
             self._criterion = self._criterion.to(dtype=torch.bfloat16)
             self._model = self._model.to(dtype=torch.bfloat16)
         if not args.pipeline_model_parallel:
-            self._criterion = self._criterion.to(device=self.device)
-            self._model = self._model.to(device=self.device)
+            self._criterion = self._criterion.to(self.device)
+            self._model = self._model.to(self.device)
+
+        self._model.encoder.embed_positions.weight.data = self._model.encoder.embed_positions.weight.data.npu_format_cast(29)
+        self._model.decoder.embed_positions.weight.data = self._model.decoder.embed_positions.weight.data.npu_format_cast(29)
         self.pipeline_model_parallel = args.pipeline_model_parallel
         self.last_device = None
-        if self.cuda and self.pipeline_model_parallel:
+        if self.npu and self.pipeline_model_parallel:
             self.last_device = torch.device(args.pipeline_devices[-1])
 
         # check that shared parameters are preserved after device transfer
@@ -92,8 +98,8 @@ class Trainer(object):
         self._wrapped_model = None
 
         # TODO(myleott): support tpu
-        if self.cuda and self.data_parallel_world_size > 1:
-            self._grad_norm_buf = torch.cuda.DoubleTensor(self.data_parallel_world_size)
+        if self.npu and self.data_parallel_world_size > 1:
+            self._grad_norm_buf = torch.npu.FloatTensor(self.data_parallel_world_size)
         else:
             self._grad_norm_buf = None
 
@@ -101,8 +107,8 @@ class Trainer(object):
         if self.quantizer is not None:
             self.quantizer.set_trainer(self)
 
-        # get detailed cuda environment
-        if self.cuda:
+        # get detailed npu environment
+        if not self.npu:
             self.cuda_env = utils.CudaEnvironment()
             if self.data_parallel_world_size > 1:
                 self.cuda_env_arr = distributed_utils.all_gather_list(self.cuda_env)
@@ -202,11 +208,6 @@ class Trainer(object):
         )
 
         if self.args.fp16 or self.args.bf16:
-            if self.cuda and torch.cuda.get_device_capability(0)[0] < 7:
-                logger.info(
-                    "NOTE: your device does NOT support faster training with --fp16, "
-                    "please switch to FP32 which is likely to be faster"
-                )
             if self.args.memory_efficient_fp16 or self.args.memory_efficient_bf16:
                 self._optimizer = optim.MemoryEfficientFP16Optimizer.build_optimizer(
                     self.args, params
@@ -214,8 +215,6 @@ class Trainer(object):
             else:
                 self._optimizer = optim.FP16Optimizer.build_optimizer(self.args, params)
         else:
-            if self.cuda and torch.cuda.get_device_capability(0)[0] >= 7:
-                logger.info("NOTE: your device may support faster training with --fp16")
             self._optimizer = optim.build_optimizer(self.args, params)
 
         if self.args.use_bmuf:
@@ -492,8 +491,8 @@ class Trainer(object):
 
                 # emptying the CUDA cache after the first step can
                 # reduce the chance of OOM
-                if self.cuda and self.get_num_updates() == 0:
-                    torch.cuda.empty_cache()
+                if self.npu and self.get_num_updates() == 0:
+                    torch.npu.empty_cache()
             except RuntimeError as e:
                 if "out of memory" in str(e):
                     self._log_oom(e)
@@ -504,8 +503,8 @@ class Trainer(object):
                     )
                     ooms += 1
                     self.zero_grad()
-                    if self.cuda:
-                        torch.cuda.empty_cache()
+                    if self.npu:
+                        torch.npu.empty_cache()
                     if self.args.distributed_world_size == 1:
                         return None
                 else:
@@ -611,7 +610,7 @@ class Trainer(object):
         except OverflowError as e:
             overflow = True
             logger.info("NOTE: overflow detected, " + str(e))
-            grad_norm = torch.tensor(0.0).cuda()
+            grad_norm = torch.tensor(0.0).npu()
             self.zero_grad()
         except RuntimeError as e:
             if "out of memory" in str(e):
@@ -680,9 +679,9 @@ class Trainer(object):
                     grad_norm,
                 )
 
-                # clear CUDA cache to reduce memory fragmentation
+                # clear npu cache to reduce memory fragmentation
                 if (
-                    self.cuda
+                    self.npu
                     and self.args.empty_cache_freq > 0
                     and (
                         (self.get_num_updates() + self.args.empty_cache_freq - 1)
@@ -690,7 +689,7 @@ class Trainer(object):
                     )
                     == 0
                 ):
-                    torch.cuda.empty_cache()
+                    torch.npu.empty_cache()
 
         if self.args.fp16:
             metrics.log_scalar(
@@ -740,8 +739,8 @@ class Trainer(object):
                         for p in self.model.parameters():
                             if p.grad is not None:
                                 p.grad = None  # free some memory
-                        if self.cuda:
-                            torch.cuda.empty_cache()
+                        if self.npu:
+                            torch.npu.empty_cache()
                         return self.valid_step(sample, raise_oom=True)
                 raise e
 
@@ -876,14 +875,14 @@ class Trainer(object):
         if sample is None or len(sample) == 0:
             return None
 
-        if self.cuda:
+        if self.npu:
             if self.pipeline_model_parallel:
                 if "target" in sample:
                     sample["target"] = utils.move_to_cuda(
                         sample["target"], device=self.last_device
                     )
             else:
-                sample = utils.move_to_cuda(sample)
+                sample = utils.move_to_cuda(sample, self.device)
 
         def apply_half(t):
             if t.dtype is torch.float32:
@@ -924,9 +923,9 @@ class Trainer(object):
     def _log_oom(self, exc):
         msg = "OOM: Ran out of memory with exception: {}".format(exc)
         logger.warning(msg)
-        if torch.cuda.is_available() and hasattr(torch.cuda, "memory_summary"):
-            for device_idx in range(torch.cuda.device_count()):
-                logger.warning(torch.cuda.memory_summary(device=device_idx))
+        if torch.npu.is_available() and hasattr(torch.npu, "memory_summary"):
+            for device_idx in range(torch.npu.device_count()):
+                logger.warning(torch.npu.memory_summary(device=device_idx))
         sys.stderr.flush()
 
     def _aggregate_logging_outputs(

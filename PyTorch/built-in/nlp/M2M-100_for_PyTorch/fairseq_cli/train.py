@@ -16,6 +16,8 @@ import sys
 
 import numpy as np
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from fairseq import (
     checkpoint_utils,
     distributed_utils,
@@ -41,7 +43,12 @@ logger = logging.getLogger("fairseq_cli.train")
 
 def main(args):
     utils.import_user_module(args)
-
+    option = {}
+    option['ACL_OP_SELECT_IMPL_MODE'] = 'high_performance'
+    option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'LayerNorm'
+    torch.npu.set_option(option)
+    if args.distributed_world_size == 1:
+        torch.npu.set_device('npu:{}'.format(args.npu_id))
     assert (
         args.max_tokens is not None or args.batch_size is not None
     ), "Must specify batch size either with --max-tokens or --batch-size"

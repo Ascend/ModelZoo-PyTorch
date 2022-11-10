@@ -64,15 +64,15 @@ def collate(
         align_weights = align_tgt_c[align_tgt_i[np.arange(len(align_tgt))]]
         return 1.0 / align_weights.float()
 
-    id = torch.LongTensor([s["id"] for s in samples])
+    id = torch.IntTensor([s["id"] for s in samples])
     src_tokens = merge(
         "source",
         left_pad=left_pad_source,
         pad_to_length=pad_to_length["source"] if pad_to_length is not None else None,
     )
     # sort by descending source length
-    src_lengths = torch.LongTensor(
-        [s["source"].ne(pad_idx).long().sum() for s in samples]
+    src_lengths = torch.IntTensor(
+        [s["source"].ne(pad_idx).int().sum() for s in samples]
     )
     src_lengths, sort_order = src_lengths.sort(descending=True)
     id = id.index_select(0, sort_order)
@@ -89,8 +89,8 @@ def collate(
             else None,
         )
         target = target.index_select(0, sort_order)
-        tgt_lengths = torch.LongTensor(
-            [s["target"].ne(pad_idx).long().sum() for s in samples]
+        tgt_lengths = torch.IntTensor(
+            [s["target"].ne(pad_idx).int().sum() for s in samples]
         ).index_select(0, sort_order)
         ntokens = tgt_lengths.sum().item()
 
@@ -129,8 +129,8 @@ def collate(
         bsz, tgt_sz = batch["target"].shape
         src_sz = batch["net_input"]["src_tokens"].shape[1]
 
-        offsets = torch.zeros((len(sort_order), 2), dtype=torch.long)
-        offsets[:, 1] += torch.arange(len(sort_order), dtype=torch.long) * tgt_sz
+        offsets = torch.zeros((len(sort_order), 2), dtype=torch.int)
+        offsets[:, 1] += torch.arange(len(sort_order), dtype=torch.int) * tgt_sz
         if left_pad_source:
             offsets[:, 0] += src_sz - src_lengths
         if left_pad_target:
@@ -157,7 +157,7 @@ def collate(
         # the length of the longest sample.
         lens = [sample.get("constraints").size(0) for sample in samples]
         max_len = max(lens)
-        constraints = torch.zeros((len(samples), max(lens))).long()
+        constraints = torch.zeros((len(samples), max(lens))).int()
         for i, sample in enumerate(samples):
             constraints[i, 0 : lens[i]] = samples[i].get("constraints")
         batch["constraints"] = constraints
@@ -289,7 +289,7 @@ class LanguagePairDataset(FairseqDataset):
 
             # determine bucket sizes using self.num_tokens, which will return
             # the padded lengths (thanks to BucketPadLengthDataset)
-            num_tokens = np.vectorize(self.num_tokens, otypes=[np.long])
+            num_tokens = np.vectorize(self.num_tokens, otypes=[np.int])
             self.bucketed_num_tokens = num_tokens(np.arange(len(self.src)))
             self.buckets = [
                 (None, num_tokens) for num_tokens in np.unique(self.bucketed_num_tokens)
@@ -311,16 +311,16 @@ class LanguagePairDataset(FairseqDataset):
         if self.append_eos_to_target:
             eos = self.tgt_dict.eos() if self.tgt_dict else self.src_dict.eos()
             if self.tgt and self.tgt[index][-1] != eos:
-                tgt_item = torch.cat([self.tgt[index], torch.LongTensor([eos])])
+                tgt_item = torch.cat([self.tgt[index], torch.IntTensor([eos])])
 
         if self.append_bos:
             bos = self.tgt_dict.bos() if self.tgt_dict else self.src_dict.bos()
             if self.tgt and self.tgt[index][0] != bos:
-                tgt_item = torch.cat([torch.LongTensor([bos]), self.tgt[index]])
+                tgt_item = torch.cat([torch.IntTensor([bos]), self.tgt[index]])
 
             bos = self.src_dict.bos()
             if self.src[index][0] != bos:
-                src_item = torch.cat([torch.LongTensor([bos]), self.src[index]])
+                src_item = torch.cat([torch.IntTensor([bos]), self.src[index]])
 
         if self.remove_eos_from_source:
             eos = self.src_dict.eos()
@@ -392,11 +392,11 @@ class LanguagePairDataset(FairseqDataset):
             bsz = src_tokens.size(0)
             if self.src_lang_id is not None:
                 res["net_input"]["src_lang_id"] = (
-                    torch.LongTensor([[self.src_lang_id]]).expand(bsz, 1).to(src_tokens)
+                    torch.IntTensor([[self.src_lang_id]]).expand(bsz, 1).to(src_tokens)
                 )
             if self.tgt_lang_id is not None:
                 res["tgt_lang_id"] = (
-                    torch.LongTensor([[self.tgt_lang_id]]).expand(bsz, 1).to(src_tokens)
+                    torch.IntTensor([[self.tgt_lang_id]]).expand(bsz, 1).to(src_tokens)
                 )
         return res
 

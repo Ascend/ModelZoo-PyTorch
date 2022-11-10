@@ -56,6 +56,10 @@ class CommonParams(FairseqDataclass):
     cpu: bool = field(default=False, metadata={"help": "use CPU instead of CUDA"})
     tpu: bool = field(default=False, metadata={"help": "use TPU instead of CUDA"})
     bf16: bool = field(default=False, metadata={"help": "use bfloat16; implies --tpu"})
+    npu: bool = field(default=False, metadata={"help": "use NPU instead of CUDA"})
+    npu_id: int = field(
+        default=0, metadata={"help": "which npu id to train"}
+    )
     memory_efficient_bf16: bool = field(
         default=False,
         metadata={
@@ -141,7 +145,7 @@ class DistributedTrainingParams(FairseqDataclass):
         default=0, metadata={"help": "rank of the current worker"}
     )
     distributed_backend: str = field(
-        default="nccl", metadata={"help": "distributed backend"}
+        default="hccl", metadata={"help": "distributed backend"}
     )
     distributed_init_method: Optional[str] = field(
         default=None,

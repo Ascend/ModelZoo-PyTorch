@@ -13,7 +13,7 @@ import math
 import os
 import sys
 from itertools import chain
-
+import torch.nn.functional as F
 import numpy as np
 import torch
 from fairseq import checkpoint_utils, options, scoring, tasks, utils
@@ -56,7 +56,11 @@ def _main(args, output_file):
         stream=output_file,
     )
     logger = logging.getLogger("fairseq_cli.generate")
-
+    torch.npu.set_compile_mode(jit_compile=False)
+    option={}
+    option['ACL_OP_SELECT_IMPL_MODE'] = 'high_performance'
+    option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'LayerNorm'
+    torch.npu.set_option(option)
     utils.import_user_module(args)
 
     if args.max_tokens is None and args.batch_size is None:
@@ -68,7 +72,7 @@ def _main(args, output_file):
         np.random.seed(args.seed)
         utils.set_torch_seed(args.seed)
 
-    use_cuda = torch.cuda.is_available() and not args.cpu
+    use_npu = torch.npu.is_available() and not args.cpu
 
     # Load dataset splits
     task = tasks.setup_task(args)
@@ -120,8 +124,8 @@ def _main(args, output_file):
             continue
         if args.fp16:
             model.half()
-        if use_cuda and not args.pipeline_model_parallel:
-            model.cuda()
+        if use_npu and not args.pipeline_model_parallel:
+            model.npu()
         model.prepare_for_inference_(args)
 
     # Load alignment dictionary for unknown word replacement
@@ -170,12 +174,16 @@ def _main(args, output_file):
         return x
 
     scorer = scoring.build_scorer(args, tgt_dict)
-
+    iter = 0
     num_sentences = 0
     has_target = True
     wps_meter = TimeMeter()
     for sample in progress:
-        sample = utils.move_to_cuda(sample) if use_cuda else sample
+        length = sample['net_input']['src_lengths'][0].item()
+        if length > 90:
+            continue
+        sample["net_input"]["src_tokens"] = F.pad(sample["net_input"]["src_tokens"], (90 - length, 0), 'constant', 1)
+        sample = utils.move_to_cuda(sample, 'npu:{}'.format(args.npu_id)) if use_npu else sample
         if "net_input" not in sample:
             continue
 
@@ -341,6 +349,10 @@ def _main(args, output_file):
         num_sentences += (
             sample["nsentences"] if "nsentences" in sample else sample["id"].numel()
         )
+        if iter == 0:
+            gen_timer.reset()
+            wps_meter.reset()
+        iter = iter + 1
 
     logger.info("NOTE: hypothesis and token scores are output in base 2")
     logger.info(

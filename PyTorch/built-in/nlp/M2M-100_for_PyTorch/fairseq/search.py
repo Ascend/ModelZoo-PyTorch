@@ -114,6 +114,8 @@ class BeamSearch(Search):
         prev_output_tokens: Optional[Tensor] = None,
         original_batch_idxs: Optional[Tensor] = None,
     ):
+        lprobs = lprobs.cpu()
+        scores = scores.cpu()
         bsz, beam_size, vocab_size = lprobs.size()
 
         if step == 0:

@@ -13,7 +13,7 @@ from fairseq.criterions import FairseqCriterion, register_criterion
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=True):
     if target.dim() == lprobs.dim() - 1:
         target = target.unsqueeze(-1)
-    nll_loss = -lprobs.gather(dim=-1, index=target)
+    nll_loss = -lprobs.gather(dim=-1, index=target.long())
     smooth_loss = -lprobs.sum(dim=-1, keepdim=True)
     if ignore_index is not None:
         pad_mask = target.eq(ignore_index)

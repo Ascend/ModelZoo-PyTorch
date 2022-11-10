@@ -196,7 +196,7 @@ class SequenceGenerator(nn.Module):
             src_tokens = net_input["src_tokens"]
             # length of the source text being the character length except EndOfSentence and pad
             src_lengths = (
-                (src_tokens.ne(self.eos) & src_tokens.ne(self.pad)).long().sum(dim=1)
+                (src_tokens.ne(self.eos) & src_tokens.ne(self.pad)).int().sum(dim=1)
             )
         elif "source" in net_input:
             src_tokens = net_input["source"]
@@ -238,8 +238,8 @@ class SequenceGenerator(nn.Module):
 
         # placeholder of indices for bsz * beam_size to hold tokens and accumulative scores
         new_order = torch.arange(bsz).view(-1, 1).repeat(1, beam_size).view(-1)
-        new_order = new_order.to(src_tokens.device).long()
-        encoder_outs = self.model.reorder_encoder_out(encoder_outs, new_order)
+        new_order = new_order.to(src_tokens.device).int()
+        encoder_outs = self.model.reorder_encoder_out(encoder_outs, new_order, bsz)
         # ensure encoder_outs is a List.
         assert encoder_outs is not None
 
@@ -250,7 +250,7 @@ class SequenceGenerator(nn.Module):
         tokens = (
             torch.zeros(bsz * beam_size, max_len + 2)
             .to(src_tokens)
-            .long()
+            .int()
             .fill_(self.pad)
         )  # +2 for eos and pad
         tokens[:, 0] = self.eos if bos_token is None else bos_token
@@ -279,17 +279,17 @@ class SequenceGenerator(nn.Module):
         cand_size = 2 * beam_size  # 2 x beam size in case half are EOS
 
         # offset arrays for converting between different indexing schemes
-        bbsz_offsets = (torch.arange(0, bsz) * beam_size).unsqueeze(1).type_as(tokens)
-        cand_offsets = torch.arange(0, cand_size).type_as(tokens)
+        bbsz_offsets = (torch.arange(0, bsz) * beam_size).unsqueeze(1).type_as(tokens).cpu()
+        cand_offsets = torch.arange(0, cand_size).type_as(tokens).cpu()
 
         reorder_state: Optional[Tensor] = None
         batch_idxs: Optional[Tensor] = None
 
         original_batch_idxs: Optional[Tensor] = None
         if "id" in sample and isinstance(sample["id"], Tensor):
-            original_batch_idxs = sample["id"]
+            original_batch_idxs = sample["id"].cpu()
         else:
-            original_batch_idxs = torch.arange(0, bsz).type_as(tokens)
+            original_batch_idxs = torch.arange(0, bsz).type_as(tokens).cpu()
 
         for step in range(max_len + 1):  # one extra step for EOS marker
             # reorder decoder internal states based on the prev choice of beams
@@ -297,9 +297,8 @@ class SequenceGenerator(nn.Module):
             if reorder_state is not None:
                 if batch_idxs is not None:
                     # update beam indices to take into account removed sentences
-                    corr = batch_idxs - torch.arange(batch_idxs.numel()).type_as(
-                        batch_idxs
-                    )
+                    corr = (batch_idxs - torch.arange(batch_idxs.numel()).type_as(
+                        batch_idxs)).npu()
                     reorder_state.view(-1, beam_size).add_(
                         corr.unsqueeze(-1) * beam_size
                     )
@@ -324,15 +323,15 @@ class SequenceGenerator(nn.Module):
                 probs = probs[:, -1, :] * self.lm_weight
                 lprobs += probs
 
-            lprobs[lprobs != lprobs] = torch.tensor(-math.inf).to(lprobs)
+            # lprobs[lprobs != lprobs] = torch.tensor(-math.inf).to(lprobs)
 
-            lprobs[:, self.pad] = -math.inf  # never select pad
+            lprobs[:, self.pad] = -65504.0  # never select pad
             lprobs[:, self.unk] -= self.unk_penalty  # apply unk penalty
 
             # handle max length constraint
             if step >= max_len:
-                lprobs[:, : self.eos] = -math.inf
-                lprobs[:, self.eos + 1 :] = -math.inf
+                lprobs[:, : self.eos] = -65504.0
+                lprobs[:, self.eos + 1 :] = -65504.0
 
             # handle prefix tokens (possibly with different lengths)
             if (
@@ -345,7 +344,7 @@ class SequenceGenerator(nn.Module):
                 )
             elif step < self.min_len:
                 # minimum length constraint (does not apply if using prefix_tokens)
-                lprobs[:, self.eos] = -math.inf
+                lprobs[:, self.eos] = -65504.0
 
             # Record attention scores, only support avg_attn_scores is a Tensor
             if avg_attn_scores is not None:
@@ -377,7 +376,9 @@ class SequenceGenerator(nn.Module):
                 tokens[:, : step + 1],
                 original_batch_idxs,
             )
-
+            scores = scores.cpu()
+            cands_to_ignore = cands_to_ignore.cpu()
+            attn = attn.cpu()
             # cand_bbsz_idx contains beam indices for the top candidate
             # hypotheses, with a range of values: [0, bsz*beam_size),
             # and dimensions: [bsz, cand_size]
@@ -385,7 +386,7 @@ class SequenceGenerator(nn.Module):
 
             # finalize hypotheses that end in eos
             # Shape of eos_mask: (batch size, beam size)
-            eos_mask = cand_indices.eq(self.eos) & cand_scores.ne(-math.inf)
+            eos_mask = cand_indices.eq(self.eos) & cand_scores.ne(-65504.0)
             eos_mask[:, :beam_size][cands_to_ignore] = torch.tensor(0).to(eos_mask)
 
             # only consider eos when it's among the top beam_size indices
@@ -405,13 +406,13 @@ class SequenceGenerator(nn.Module):
                     step,
                     eos_bbsz_idx,
                     eos_scores,
-                    tokens,
+                    tokens.cpu(),
                     scores,
                     finalized,
                     finished,
                     beam_size,
                     attn,
-                    src_lengths,
+                    src_lengths.cpu(),
                     max_len,
                 )
                 num_remaining_sent -= len(finalized_sents)
@@ -436,7 +437,7 @@ class SequenceGenerator(nn.Module):
                 # TODO replace `nonzero(as_tuple=False)` after TorchScript supports it
                 batch_idxs = torch.arange(
                     bsz, device=cand_indices.device
-                ).masked_select(batch_mask)
+                ).masked_select(batch_mask).long()
 
                 # Choose the subset of the hypothesized constraints that will continue
                 self.search.prune_sentences(batch_idxs)
@@ -503,7 +504,7 @@ class SequenceGenerator(nn.Module):
 
             # Set the tokens for each beam (can select the same row more than once)
             tokens[:, : step + 1] = torch.index_select(
-                tokens[:, : step + 1], dim=0, index=active_bbsz_idx
+                tokens[:, : step + 1].cpu(), dim=0, index=active_bbsz_idx
             )
             # Select the next token for each of them
             tokens.view(bsz, beam_size, -1)[:, :, step + 1] = torch.gather(
@@ -528,6 +529,7 @@ class SequenceGenerator(nn.Module):
 
             # reorder incremental state in decoder
             reorder_state = active_bbsz_idx
+            reorder_state = reorder_state.npu()
 
         # sort by score descending
         for sent in range(len(finalized)):
@@ -548,7 +550,7 @@ class SequenceGenerator(nn.Module):
         prefix_toks = prefix_tokens[:, step].unsqueeze(-1).repeat(1, beam_size).view(-1)
         prefix_lprobs = lprobs.gather(-1, prefix_toks.unsqueeze(-1))
         prefix_mask = prefix_toks.ne(self.pad)
-        lprobs[prefix_mask] = torch.tensor(-math.inf).to(lprobs)
+        lprobs[prefix_mask] = torch.tensor(-65504.0).to(lprobs)
         lprobs[prefix_mask] = lprobs[prefix_mask].scatter(
             -1, prefix_toks[prefix_mask].unsqueeze(-1), prefix_lprobs[prefix_mask]
         )
@@ -659,7 +661,7 @@ class SequenceGenerator(nn.Module):
                 sents_seen[seen] = None
 
             if self.match_source_len and step > src_lengths[unfin_idx]:
-                score = torch.tensor(-math.inf).to(score)
+                score = torch.tensor(-65504.0).to(score)
 
             # An input sentence (among those in a batch) is finished when
             # beam_size hypotheses have been collected for it
@@ -765,8 +767,8 @@ class SequenceGenerator(nn.Module):
             ]
         for bbsz_idx in range(bsz * beam_size):
             lprobs[bbsz_idx][
-                torch.tensor(banned_tokens[bbsz_idx]).long()
-            ] = torch.tensor(-math.inf).to(lprobs)
+                torch.tensor(banned_tokens[bbsz_idx]).int()
+            ] = torch.tensor(-65504.0).to(lprobs)
         return lprobs
 
 
@@ -844,14 +846,14 @@ class EnsembleModel(nn.Module):
                     attn = attn[:, -1, :]
 
             decoder_out_tuple = (
-                decoder_out[0][:, -1:, :].div_(temperature),
+                decoder_out[0].div_(temperature),
                 None if decoder_len <= 1 else decoder_out[1],
             )
 
             probs = model.get_normalized_probs(
                 decoder_out_tuple, log_probs=True, sample=None
             )
-            probs = probs[:, -1, :]
+
             if self.models_size == 1:
                 return probs, attn
 
@@ -871,7 +873,7 @@ class EnsembleModel(nn.Module):
         return avg_probs, avg_attn
 
     @torch.jit.export
-    def reorder_encoder_out(self, encoder_outs: Optional[List[EncoderOut]], new_order):
+    def reorder_encoder_out(self, encoder_outs: Optional[List[EncoderOut]], new_order, bsz=None):
         """
         Reorder encoder output according to *new_order*.
 
@@ -882,13 +884,26 @@ class EnsembleModel(nn.Module):
         Returns:
             *encoder_out* rearranged according to *new_order*
         """
+        def reshape_encoder_outs(encoder_outs):
+            if bsz is not None:
+                _, ori_len = encoder_outs.encoder_out.size()
+                new_encoder_out = encoder_outs.encoder_out.reshape(bsz, -1, ori_len)
+            else:
+                new_encoder_out = encoder_outs.encoder_out
+            return EncoderOut(encoder_out=new_encoder_out,
+                              encoder_padding_mask=encoder_outs.encoder_padding_mask,
+                              encoder_embedding=encoder_outs.encoder_embedding,
+                              encoder_states=encoder_outs.encoder_states,
+                              src_tokens=encoder_outs.src_tokens,
+                              src_lengths=encoder_outs.src_lengths)
         new_outs: List[EncoderOut] = []
         if not self.has_encoder():
             return new_outs
         for i, model in enumerate(self.models):
             assert encoder_outs is not None
+            reshape_encoder_out = reshape_encoder_outs(encoder_outs[i])
             new_outs.append(
-                model.encoder.reorder_encoder_out(encoder_outs[i], new_order)
+                model.encoder.reorder_encoder_out(reshape_encoder_out, new_order)
             )
         return new_outs
 
