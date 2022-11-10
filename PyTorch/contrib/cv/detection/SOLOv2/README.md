@@ -29,7 +29,8 @@ be modified in the following aspects:
 1. 下载压缩modelzoo\contrib\PyTorch\cv\instance_segmentation\SOLOv2 文件夹
 2. 于npu服务器解压SOLOv2压缩包
 3. 下载coco2017数据集
-4. 将coco数据集放于SOLOv2/data目录下，目录结构如下：
+4. 下载预训练模型，下载地址：https://download.pytorch.org/models/resnet50-19c8e357.pth，下载完成后重命名为resnet50.pth
+5. 将coco数据集放于SOLOv2/data目录下，目录结构如下：
 
 ```
 GFocalV2
@@ -39,6 +40,8 @@ GFocalV2
 │       ├── annotations   796M
 │       ├── train2017     19G
 │       ├── val2017       788M
+│   ├── pretrained
+│       ├── resnet50.pth  98M
 ```
 
 ### Configure the environment
