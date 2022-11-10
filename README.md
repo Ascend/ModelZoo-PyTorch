@@ -1,4 +1,4 @@
-# 欢迎使用Ascend ModelZoo
+# 欢迎使用Ascend  ModelZoo-PyTorch
 
 为方便更多开发者使用Ascend ModelZoo，我们将持续增加典型网络和相关预训练模型。如果您有任何需求，请在[Gitee](https://gitee.com/ascend/modelzoo/issues)或[ModelZoo](https://bbs.huaweicloud.com/forum-726-1.html)提交issue，我们会及时处理。
 
