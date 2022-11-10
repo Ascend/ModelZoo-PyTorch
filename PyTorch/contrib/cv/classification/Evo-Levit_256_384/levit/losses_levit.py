@@ -1,0 +1,127 @@
+# encoding=utf-8
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import torch
+from torch.nn import functional as F
+
+
+class DistillationLoss(torch.nn.Module):
+    """
+    This module wraps a standard criterion and adds an extra knowledge distillation loss by
+    taking a teacher model prediction and using it as additional supervision.
+    """
+
+    def __init__(self, base_criterion: torch.nn.Module, teacher_model: torch.nn.Module,
+                 distillation_type: str, alpha: float, tau: float):
+        super().__init__()
+        self.base_criterion = base_criterion
+        self.teacher_model = teacher_model
+        assert distillation_type in ['none', 'soft', 'hard', 'mode1', 'mode2', 'mutual', 'cls', 'mode4']
+        self.distillation_type = distillation_type
+        self.alpha = alpha
+        self.tau = tau
+
+    def forward(self, inputs, outputs, labels):
+        """
+        Args:
+            inputs: The original inputs that are feed to the teacher model
+            outputs: the outputs of the model to be trained. It is expected to be
+                either a Tensor, or a Tuple[Tensor, Tensor], with the original output
+                in the first position and the distillation predictions as the second output
+            labels: the labels for the base criterion
+        """
+        outputs_kd = None
+        if not isinstance(outputs, torch.Tensor):
+            # assume that the model outputs a tuple of [outputs, outputs_kd]
+            if self.distillation_type == 'mode1':
+                outputs, outputs_kd, outn2, outn3, outn4 = outputs
+            elif self.distillation_type == 'mode2':
+                outputs, outputs_kd, outn2, outn3, outn4, outmg = outputs
+            elif self.distillation_type == 'mode4':
+                outputs, outputs_kd, outn2, outn3 = outputs
+            elif self.distillation_type == 'mutual':
+                outputs, outputs_kd, outm = outputs
+            elif self.distillation_type == 'cls':
+                outputs, outputs_kd, outc, outc_kd = outputs
+            else:
+                outputs, outputs_kd = outputs
+        base_loss = self.base_criterion(outputs, labels)
+        if self.distillation_type == 'none':
+            return base_loss
+        elif self.distillation_type == 'mode1':
+            base_loss += self.base_criterion(outn2, labels)
+            base_loss += self.base_criterion(outn3, labels)
+            base_loss += self.base_criterion(outn4, labels)
+            base_loss = base_loss / 4.0
+        elif self.distillation_type == 'mode2':
+            base_loss += self.base_criterion(outn2, labels)
+            base_loss += self.base_criterion(outn4, labels)
+            base_loss = base_loss / 3.0
+        elif self.distillation_type == 'mode4':
+            base_loss += self.base_criterion(outn2, labels)
+            base_loss += self.base_criterion(outn3, labels)
+            base_loss = base_loss / 3.0
+        elif self.distillation_type == 'mutual':
+            base_loss += self.base_criterion(outm, labels)
+            base_loss = base_loss / 2.0
+        elif self.distillation_type == 'cls':
+            base_loss = base_loss + self.base_criterion(outc, labels)
+            base_loss = base_loss / 2.0
+
+        if outputs_kd is None:
+            raise ValueError("When knowledge distillation is enabled, the model is "
+                             "expected to return a Tuple[Tensor, Tensor] with the output of the "
+                             "class_token and the dist_token")
+        # don't backprop throught the teacher
+        with torch.no_grad():
+            teacher_outputs = self.teacher_model(inputs)
+
+        if self.distillation_type == 'soft':
+            T = self.tau
+            # taken from https://github.com/peterliht/knowledge-distillation-pytorch/blob/master/model/net.py#L100
+            # with slight modifications
+            distillation_loss = F.kl_div(
+                F.log_softmax(outputs_kd / T, dim=1),
+                F.log_softmax(teacher_outputs / T, dim=1),
+                reduction='sum',
+                log_target=True
+            ) * (T * T) / outputs_kd.numel()
+        elif self.distillation_type == 'hard':
+            distillation_loss = F.cross_entropy(
+                outputs_kd, teacher_outputs.argmax(dim=1))
+        elif self.distillation_type == 'mode2':
+            distillation_loss = F.cross_entropy(
+                outn3, outmg.argmax(dim=1)) + F.cross_entropy(
+                outputs_kd, teacher_outputs.argmax(dim=1))
+            distillation_loss = distillation_loss / 2.0
+        elif self.distillation_type == 'mode1':
+            distillation_loss = F.cross_entropy(
+                outputs_kd, teacher_outputs.argmax(dim=1))
+        elif self.distillation_type == 'mutual':
+            distillation_loss = F.cross_entropy(
+                outm, teacher_outputs.argmax(dim=1)) + F.cross_entropy(
+                outputs_kd, teacher_outputs.argmax(dim=1))
+            distillation_loss = distillation_loss / 2.0
+        elif self.distillation_type == 'cls':
+            distillation_loss = F.cross_entropy(
+                outputs_kd, teacher_outputs.argmax(dim=1)) + F.cross_entropy(
+                outc_kd, teacher_outputs.argmax(dim=1))
+            distillation_loss = distillation_loss / 2.0
+        elif self.distillation_type == 'mode4':
+            distillation_loss = F.cross_entropy(
+                outputs_kd, teacher_outputs.argmax(dim=1))
+
+        loss = base_loss * (1 - self.alpha) + distillation_loss * self.alpha
+        return loss
