@@ -109,7 +109,7 @@ do
     --epochs $epochs \
     --num_workers 32 \
     --batch_size $batch_size \
-    --use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log 2>&1 &
+    --use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 
@@ -118,7 +118,7 @@ nohup python3.7 -u -m torch.distributed.launch \
     --num_workers 32 \
     --pretrained_weights ./output/checkpoint.pth \
     --checkpoint_key teacher \
-    --data_path $data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}_8p.log 2>&1 &
+    --data_path $data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -132,13 +132,13 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`tail -n 50 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log|grep -a 'eta'|head -n 30|awk -F " " '{print $16}'|awk '{sum+=$1} END {print sum/NR}'`
+time=`tail -n 50 ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -a 'eta'|head -n 30|awk -F " " '{print $16}'|awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'*8}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a '10-NN classifier result: Top1:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}_8p.log|awk -F " " '{print $5}'|head -1`
+train_accuracy=`grep -a '10-NN classifier result: Top1:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $5}'|head -1`
 train_accuracy=${train_accuracy%,}
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
@@ -157,7 +157,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${time}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep 'eta' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}_8p.log|awk -F "loss:" '{print $2}' |awk -F " " '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep 'eta' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log|awk -F "loss:" '{print $2}' |awk -F " " '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt|sed 's/.//'|sed 's/.$//'`
 
