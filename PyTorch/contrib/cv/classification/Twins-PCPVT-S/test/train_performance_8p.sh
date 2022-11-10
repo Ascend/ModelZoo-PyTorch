@@ -20,7 +20,7 @@ output_dir="output_full_8p"
 train_epochs=100
 # 加载数据进程数
 workers=10
-
+steps=1000
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -78,6 +78,7 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py
               --dist-eval \
               --drop-path 0.3 \
               --epochs 2 \
+              --max_step $steps \
               > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
