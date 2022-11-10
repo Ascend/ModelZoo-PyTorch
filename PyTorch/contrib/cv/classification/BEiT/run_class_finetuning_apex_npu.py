@@ -17,9 +17,10 @@ import torch
 import torch.backends.cudnn as cudnn
 import json
 import os
+if torch.__version__ >= "1.8": 
+    import torch_npu
 
 from pathlib import Path
-
 from timm.data.mixup import Mixup
 from timm.models import create_model
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
