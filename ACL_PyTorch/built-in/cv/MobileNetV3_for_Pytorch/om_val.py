@@ -23,8 +23,7 @@ import numpy as np
 
 from mobilenetv3 import MobileNetV3_Small
 from data import Dataset, create_loader, compute_accuracy, AverageMeter
-import acl
-from pyacl.acl_infer import AclNet, init_acl, release_acl
+import aclruntime
 
 
 def adjust_checkpoint(checkpoint):
@@ -41,6 +40,27 @@ def adjust_checkpoint(checkpoint):
     return new_state_dict
 
 
+def om_infer(om, input_data):
+    inputs = []
+    shape = []
+    for in_data in input_data:
+        shape.append(in_data.shape)
+        in_data = aclruntime.Tensor(in_data)
+        in_data.to_device(args.device_id)
+        inputs.append(in_data)
+
+    innames = [inp.name for inp in om.get_inputs()]
+    outnames = [out.name for out in om.get_outputs()]
+
+    outputs = om.run(outnames, inputs)
+    output_data = []
+    for out in outputs:
+        out.to_host()
+        output_data.append(out)
+
+    return output_data
+
+
 def main(args):
     # create model
     flag = args.checkpoint.split('.')[1]
@@ -51,9 +71,9 @@ def main(args):
         model.load_state_dict(checkpoint)
         model.eval()
     elif flag == 'om':
-        init_acl(args.device_id)
-        model = AclNet(device_id=args.device_id, model_path=args.checkpoint)
-    
+        options = aclruntime.session_options()
+        model = aclruntime.InferenceSession(args.checkpoint, args.device_id, options)
+
     # create dataloader
     loader = create_loader(
         Dataset(args.dataset_dir),
@@ -74,7 +94,8 @@ def main(args):
         elif flag == 'om':
             if i == len(loader) - 1:
                 input_data = F.pad(input_data, (0, 0, 0, 0, 0, 0, 0, args.batch_size-len(target)), "constant", 0)
-            output = model(input_data.numpy().astype(np.float16))[0][0]
+            output = om_infer(model, [input_data.numpy().astype(np.float16)])[0]
+            output = np.array(output)
             if i == len(loader) - 1:
                 output = output[:len(target)]
             output = torch.Tensor(output)
@@ -85,10 +106,6 @@ def main(args):
         top5.update(prec5.item(), input_data.size(0))
 
     print(f'ACC: Top1@ {top1.avg:.3f} | Top5@ {top5.avg:.3f}')
-    
-    if flag == 'om':
-        del model
-        release_acl(args.device_id)
 
 
 if __name__ == '__main__':
@@ -97,7 +114,7 @@ if __name__ == '__main__':
                         help='path to latest checkpoint')
     parser.add_argument('--dataset_dir', default='imagenet', type=str, metavar='DIR',
                         help='path to dataset')
-    parser.add_argument('--batch-size', default=16, type=int,
+    parser.add_argument('--batch-size', default=1, type=int,
                         metavar='N', help='mini-batch size')
     parser.add_argument('--img-size', default=224, type=int,
                         metavar='N', help='Input image dimension')

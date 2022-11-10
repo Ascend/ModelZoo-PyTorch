@@ -36,5 +36,5 @@ if [[ -z $soc ]]; then echo "error: missing 1 required argument: 'soc'"; exit 1 
 
 atc --framework=5 --input_format=ND --log=error --soc_version=${soc} \
     --model=${output_dir}/${model}.onnx --output=${output_dir}/${model}_bs${bs} \
-    --input_shape="mel_spec:${bs},80,-1" \
+    --input_shape="mel_spec:${bs},80,1,-1" \
     --dynamic_dims="250;500;750;1000;1250;1500;1750;2000"

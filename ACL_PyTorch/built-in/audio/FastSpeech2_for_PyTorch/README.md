@@ -119,7 +119,7 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
    > **说明：**  
      该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-   3.2 执行命令查看芯片名称（${soc_version}）
+   3.2 执行命令查看芯片名称（得到`atc`命令参数中`soc_version`）
    ```
    npu-smi info
    #该设备芯片名为Ascend310P3 （自行替换）

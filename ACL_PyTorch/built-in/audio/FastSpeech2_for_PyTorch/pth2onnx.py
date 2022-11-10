@@ -285,12 +285,15 @@ if __name__ == "__main__":
     adaptor_input = (enc_output, src_masks, args.pitch_control, args.energy_control, args.duration_control)
     (output, duration_rounded) = variance_adaptor(*adaptor_input)
 
-    torch.onnx.export(variance_adaptor, adaptor_input, os.path.join(args.output, "variance_adaptor.onnx"),
-                      opset_version=11, do_constant_folding=True,
-                      input_names=["enc_output", "src_masks", "p_control", "e_control", "d_control"],
-                      output_names=["output", "duration_rounded"],
-                      dynamic_axes={"enc_output": {0: "batch_size", 1: "max_src_len"},
-                                    "src_masks": {0: "batch_size", 1: "max_src_len"}})
+    try:
+        torch.onnx.export(variance_adaptor, adaptor_input, os.path.join(args.output, "variance_adaptor.onnx"),
+                          opset_version=11, do_constant_folding=True,
+                          input_names=["enc_output", "src_masks", "p_control", "e_control", "d_control"],
+                          output_names=["output", "duration_rounded"],
+                          dynamic_axes={"enc_output": {0: "batch_size", 1: "max_src_len"},
+                                        "src_masks": {0: "batch_size", 1: "max_src_len"}})
+    except torch.onnx.utils.ONNXCheckerError:
+        print("No Op registered for Bucketize in onnx!!!")
 
     # if If_node exist in variance_adaptor, modify to optimize performance
     variance_adaptor_onnx = os.path.join(args.output, "variance_adaptor.onnx")

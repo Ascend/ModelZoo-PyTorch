@@ -66,15 +66,16 @@ class BatchDataLoader:
             wav = wav / MAX_WAV_VALUE
             wav = torch.FloatTensor(wav)
             mel_spec = self.get_mel(wav.unsqueeze(0), self.cfg)
+            mel_spec = mel_spec.unsqueeze(2)
             mel_specs.append(mel_spec)
-            mel_lens.append(mel_spec.shape[2])
+            mel_lens.append(mel_spec.shape[3])
             wav_names.append(path)
         max_len = max(mel_lens)
 
         mel_specs_pad = []
         for mel_spec in mel_specs:
             model_shape = self.get_shape(max_len)
-            mel_spec_pad = F.pad(mel_spec, (0, model_shape - mel_spec.shape[2], 0, 0, 0, 0), "constant", 0)
+            mel_spec_pad = F.pad(mel_spec, (0, model_shape - mel_spec.shape[3], 0, 0, 0, 0, 0, 0), "constant", 0)
             mel_specs_pad.append(mel_spec_pad)
         mel_specs = torch.cat(mel_specs_pad)
 
@@ -113,8 +114,18 @@ def om_infer(om, input_data):
 def inference(generator_om, dataloader, cfg):
     for i in tqdm(range(len(dataloader))):
         mel_specs_pad, mel_lens, wav_names = dataloader[i]
-        wavs = om_infer(generator_om, [mel_specs_pad.numpy()])
-        wavs = (np.array(wavs[0]) * MAX_WAV_VALUE).astype('int16')
+        data_len = len(mel_lens)
+        if i == len(dataloader) - 1:
+            mel_specs_pad = F.pad(mel_specs_pad, (0, 0, 0, 0, 0, 0, 0, args.batch_size-data_len), "constant", 0)
+            mel_lens.extend([0]*(args.batch_size-data_len))
+            wav_names.extend(['']*(args.batch_size-data_len))
+        wavs = om_infer(generator_om, [mel_specs_pad.numpy()])[0]
+        wavs = np.array(wavs)
+        if i == len(dataloader) - 1:
+            wavs = wavs[:data_len]
+            mel_lens = mel_lens[:data_len]
+            wav_names = wav_names[:data_len]
+        wavs = (wavs * MAX_WAV_VALUE).astype('int16')
 
         for i in range(len(mel_lens)):
             wav = wavs[i].squeeze()[: mel_lens[i] * 256]

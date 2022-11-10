@@ -116,7 +116,7 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
    > **说明：**  
      该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-   3.2 执行命令查看芯片名称（${soc_version}）
+   3.2 执行命令查看芯片名称（得到`atc`命令参数中`soc_version`）
    ```
    npu-smi info
    #该设备芯片名为Ascend310P3 （自行替换）
@@ -165,17 +165,17 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
 3. 性能验证  
    可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
    ```
-   python3 ${ais_infer_path}/ais_infer.py --model=output/generator_v1_bs1.om --loop=20 --batchsize=1 --dymDims "mel_spec:1,80,250" --outputSize "1000000"
+   python3 ${ais_infer_path}/ais_infer.py --model=output/generator_v1_bs1.om --loop=1000 --batchsize=1 --dymDims "mel_spec:1,80,1,250" --outputSize "1000000"
    ```
 
 # 模型推理性能&精度
 
 调用ACL接口推理计算，性能&精度参考下列数据。
 
-|   芯片型号   | Batch Size | mel_len |   数据集     |     精度      |    性能     |
-|:-----------:|:-------------:|:-------:|:--------:|:------:|:---------:|
-| Ascend310P3 |     1      |   250   |  LJSpeech   | 人工判断语音质量 | 94.53 fps |
-| Ascend310P3 |     1      |   500   |  LJSpeech   | 人工判断语音质量 | 43.97 fps |
-| Ascend310P3 |     1      |   750   |  LJSpeech   | 人工判断语音质量 | 22.46 fps |
-| Ascend310P3 |     1      |  1000   |  LJSpeech   | 人工判断语音质量 | 15.98 fps |
+|   芯片型号   | Batch Size | mel_len |   数据集     |     精度      |        性能         |
+|:-----------:|:----------:|:-------:|:--------:|:------:|:-----------------:|
+| Ascend310P3 |    1/8     |   250   |  LJSpeech   | 人工判断语音质量 | 378.34/682.95 fps |
+| Ascend310P3 |    1/8     |   500   |  LJSpeech   | 人工判断语音质量 | 258.93/327.07 fps |
+| Ascend310P3 |    1/8     |   750   |  LJSpeech   | 人工判断语音质量 | 169.48/208.93 fps |
+| Ascend310P3 |    1/8     |  1000   |  LJSpeech   | 人工判断语音质量 | 128.59/151.88 fps |
 - 说明：由于音频数据输入长度不同，故给出不同mel_len的性能数据作为参考。
