@@ -33,7 +33,7 @@
 #
 
 import os
-#import torch
+import torch
 if torch.__version__ >= "1.8":
     import torch_npu
 import argparse
