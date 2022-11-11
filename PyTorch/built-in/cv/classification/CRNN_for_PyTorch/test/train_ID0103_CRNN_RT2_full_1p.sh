@@ -11,10 +11,6 @@ data_path=""
 profiling="NONE"
 
 
-if [[ $profiling == "GE" ]];then
-    export GE_PROFILING_TO_STD_OUT=1
-fi
-
 #网络名称,同目录名称,需要模型审视修改
 Network="CRNN_RT2_ID0103_for_PyTorch"
 
@@ -56,6 +52,11 @@ do
         device_id=`echo ${para#*=}`
     fi
 done
+
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -135,7 +136,9 @@ echo "Final Performance images/sec : $FPS"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
-
+train_accuracy=`grep -a 'best acc is:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END{print}'|awk -F " " '{print $NF}'`
+#打印，不需要修改
+echo "Final Train Accuracy : ${train_accuracy}"
 #解析GE profiling
 # if [ ${profiling} == "GE" ];then
 #    echo "GE profiling is loading-------------------------------------"
@@ -175,7 +178,7 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 grep -a 'Loss' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "Loss " '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-train_accuracy=`tail -5 ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt | awk '{sum+=$1} END {print sum/NR}'`
+
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
