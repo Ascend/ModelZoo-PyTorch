@@ -48,20 +48,18 @@ def get_pth_action(filename):
 
 
 if __name__ == "__main__":
-    action_file = sys.argv[1]
-    out_file = sys.argv[2]
-    num = int(sys.argv[3])
-    out_dir = os.listdir(out_file)
-    for out_dir_file in out_dir:
-        om_filelist = os.listdir('{0}/{1}'.format(out_file, out_dir_file))
-    file_num = len(om_filelist)
+    action_file = sys.argv[1] # dataset/action
+    out_file = sys.argv[2] # dataset/out
+    num = int(sys.argv[3]) # 1000
     equal = 0
-    for i in range(file_num):
+    om_filelist = []
+    for i, om_result_path in enumerate(os.listdir(out_file)):
+        om_filelist.append(om_result_path)
         pth_action = get_pth_action('{0}/{1}.pt'.format(action_file, i))
-        om_action = get_om_action('{0}/{1}/{2}_output_0.txt'.format(out_file, out_dir_file, i))
+        om_action = get_om_action('{0}/{1}_0.txt'.format(out_file, i))
         if pth_action==om_action:
             equal += 1
-    print('om离线推理的精度是在线推理的：{0}'.format((equal/num)))
+    print('The offline inference accuracy of om is {0} times higher than the online inference accuracy'.format((equal/num)))
     if(equal > 0.9*num):
         print("Accuancy: OK")
     else:
