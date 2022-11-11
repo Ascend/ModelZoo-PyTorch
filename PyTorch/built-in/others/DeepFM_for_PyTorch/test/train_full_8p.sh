@@ -86,6 +86,7 @@ do
         PID_END=$((PID_START + KERNEL_NUM - 1))
         nohup taskset -c $PID_START-$PID_END python3.7 -u run_classification_criteo_deepfm.py \
            --amp \
+           --loss_scale -1 \
            --use_npu \
            --optim='npu_fused_adam' \
            --device_id $RANK_ID \
@@ -97,6 +98,7 @@ do
     else
         nohup python3.7 -u run_classification_criteo_deepfm.py \
            --amp \
+           --loss_scale -1 \
            --use_npu \
            --optim='npu_fused_adam' \
            --device_id $RANK_ID \

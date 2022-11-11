@@ -203,10 +203,12 @@ class BaseModel(nn.Module):
 
         if args.amp and args.use_npu:
             from apex import amp
-            model, optim = amp.initialize(model, optim, opt_level='O1', loss_scale=1024, combine_grad=True)
+            print("======args.loss_scale:", args.loss_scale, "======")
+            model, optim = amp.initialize(model, optim, opt_level='O1', loss_scale="dynamic", combine_grad=True)
         elif args.amp and args.use_cuda:
             from apex import amp
-            model, optim = amp.initialize(model, optim, opt_level='O1', loss_scale=1024)
+            print("======args.loss_scale:", args.loss_scale, "======")
+            model, optim = amp.initialize(model, optim, opt_level='O1', loss_scale="dynamic")
 
         num_rank = 1
         if self.dist:

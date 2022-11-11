@@ -49,7 +49,7 @@ parser.add_argument('--init_checkpoint', default='', type=str, help='init checkp
 
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
-parser.add_argument('--loss-scale', default=1024, type=float,
+parser.add_argument('--loss_scale', default=-1, type=float,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt_level', default='O1', type=str,
                     help='apex opt level')
