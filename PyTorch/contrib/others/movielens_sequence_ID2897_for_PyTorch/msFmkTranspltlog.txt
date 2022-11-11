@@ -1,0 +1,170 @@
+2022-10-31 15:39:55 [INFO]    Initialing rules...
+2022-10-31 15:39:55 [INFO]    MsFmkTransplt start working now, please wait for a moment.
+2022-10-31 15:39:55 [INFO]    Analysis start...
+2022-10-31 15:39:55 [INFO]    [Progress:  0.00%]  Start analysis build_readme.py.
+2022-10-31 15:39:55 [INFO]    [Progress:  0.00%]  Analysis build_readme.py complete.
+2022-10-31 15:39:55 [INFO]    [Progress:  1.54%]  Start analysis setup.py.
+2022-10-31 15:39:55 [INFO]    [Progress:  1.54%]  Analysis setup.py complete.
+2022-10-31 15:39:55 [INFO]    [Progress:  3.08%]  Start analysis docs/conf.py.
+2022-10-31 15:39:56 [INFO]    [Progress:  3.08%]  Analysis docs/conf.py complete.
+2022-10-31 15:39:56 [INFO]    [Progress:  4.62%]  Start analysis examples/bloom_embeddings/example.py.
+2022-10-31 15:39:58 [INFO]    [Progress:  4.62%]  Analysis examples/bloom_embeddings/example.py complete.
+2022-10-31 15:39:58 [INFO]    [Progress:  6.15%]  Start analysis examples/bloom_embeddings/helpers.py.
+2022-10-31 15:39:59 [INFO]    [Progress:  6.15%]  Analysis examples/bloom_embeddings/helpers.py complete.
+2022-10-31 15:39:59 [INFO]    [Progress:  7.69%]  Start analysis examples/bloom_embeddings/performance.py.
+2022-10-31 15:40:00 [INFO]    [Progress:  7.69%]  line: 18 ~ 18         Operation Type: MODIFY              Message: change module cuda to npu
+2022-10-31 15:40:00 [INFO]    [Progress:  7.69%]  Analysis examples/bloom_embeddings/performance.py complete.
+2022-10-31 15:40:00 [INFO]    [Progress:  9.23%]  Start analysis examples/bloom_embeddings/plot.py.
+2022-10-31 15:40:00 [INFO]    [Progress:  9.23%]  Analysis examples/bloom_embeddings/plot.py complete.
+2022-10-31 15:40:00 [INFO]    [Progress: 10.77%]  Start analysis examples/movielens_sequence/helpers.py.
+2022-10-31 15:40:01 [INFO]    [Progress: 10.77%]  Analysis examples/movielens_sequence/helpers.py complete.
+2022-10-31 15:40:01 [INFO]    [Progress: 12.31%]  Start analysis examples/movielens_sequence/movielens_sequence.py.
+2022-10-31 15:40:03 [INFO]    [Progress: 12.31%]  Analysis examples/movielens_sequence/movielens_sequence.py complete.
+2022-10-31 15:40:03 [INFO]    [Progress: 13.85%]  Start analysis examples/movielens_sequence/spotlight/interactions.py.
+2022-10-31 15:40:04 [INFO]    [Progress: 13.85%]  Analysis examples/movielens_sequence/spotlight/interactions.py complete.
+2022-10-31 15:40:04 [INFO]    [Progress: 15.38%]  Start analysis examples/movielens_sequence/spotlight/layers.py.
+2022-10-31 15:40:05 [INFO]    [Progress: 15.38%]  line: 198 ~ 198       Operation Type: MODIFY              Message: change function cuda to npu
+2022-10-31 15:40:05 [INFO]    [Progress: 15.38%]  line: 232 ~ 232       Operation Type: MODIFY              Message: change function cuda to npu
+2022-10-31 15:40:05 [INFO]    [Progress: 15.38%]  line: 197 ~ 197       Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2022-10-31 15:40:05 [INFO]    [Progress: 15.38%]  line: 231 ~ 231       Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2022-10-31 15:40:05 [INFO]    [Progress: 15.38%]  Analysis examples/movielens_sequence/spotlight/layers.py complete.
+2022-10-31 15:40:05 [INFO]    [Progress: 16.92%]  Start analysis examples/movielens_sequence/spotlight/losses.py.
+2022-10-31 15:40:05 [INFO]    [Progress: 16.92%]  Analysis examples/movielens_sequence/spotlight/losses.py complete.
+2022-10-31 15:40:05 [INFO]    [Progress: 18.46%]  Start analysis examples/movielens_sequence/spotlight/sampling.py.
+2022-10-31 15:40:05 [INFO]    [Progress: 18.46%]  Analysis examples/movielens_sequence/spotlight/sampling.py complete.
+2022-10-31 15:40:05 [INFO]    [Progress: 20.00%]  Start analysis examples/movielens_sequence/spotlight/torch_utils.py.
+2022-10-31 15:40:05 [WARNING] [Progress: 20.00%]  line: 71 ~ 71         Operation Type: UNSUPPORTED         Message: torch.cuda.manual_seed is not supported now!
+2022-10-31 15:40:06 [INFO]    [Progress: 20.00%]  line: 11 ~ 11         Operation Type: MODIFY              Message: change function cuda to npu
+2022-10-31 15:40:06 [INFO]    [Progress: 20.00%]  line: 71 ~ 71         Operation Type: MODIFY              Message: change module cuda to npu
+2022-10-31 15:40:06 [INFO]    [Progress: 20.00%]  line: 18 ~ 18         Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2022-10-31 15:40:06 [INFO]    [Progress: 20.00%]  Analysis examples/movielens_sequence/spotlight/torch_utils.py complete.
+2022-10-31 15:40:06 [INFO]    [Progress: 21.54%]  Start analysis examples/movielens_sequence/spotlight/__init__.py.
+2022-10-31 15:40:06 [INFO]    [Progress: 21.54%]  Analysis examples/movielens_sequence/spotlight/__init__.py complete.
+2022-10-31 15:40:06 [INFO]    [Progress: 23.08%]  Start analysis examples/movielens_sequence/spotlight/cross_validation.py.
+2022-10-31 15:40:06 [INFO]    [Progress: 23.08%]  Analysis examples/movielens_sequence/spotlight/cross_validation.py complete.
+2022-10-31 15:40:06 [INFO]    [Progress: 24.62%]  Start analysis examples/movielens_sequence/spotlight/evaluation.py.
+2022-10-31 15:40:07 [INFO]    [Progress: 24.62%]  Analysis examples/movielens_sequence/spotlight/evaluation.py complete.
+2022-10-31 15:40:07 [INFO]    [Progress: 26.15%]  Start analysis examples/movielens_sequence/spotlight/helpers.py.
+2022-10-31 15:40:07 [INFO]    [Progress: 26.15%]  Analysis examples/movielens_sequence/spotlight/helpers.py complete.
+2022-10-31 15:40:07 [INFO]    [Progress: 27.69%]  Start analysis examples/movielens_sequence/spotlight/sequence/__init__.py.
+2022-10-31 15:40:08 [INFO]    [Progress: 27.69%]  Analysis examples/movielens_sequence/spotlight/sequence/__init__.py complete.
+2022-10-31 15:40:08 [INFO]    [Progress: 29.23%]  Start analysis examples/movielens_sequence/spotlight/sequence/implicit.py.
+2022-10-31 15:40:09 [INFO]    [Progress: 29.23%]  line: 28 ~ 85         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2022-10-31 15:40:09 [INFO]    [Progress: 29.23%]  Analysis examples/movielens_sequence/spotlight/sequence/implicit.py complete.
+2022-10-31 15:40:09 [INFO]    [Progress: 30.77%]  Start analysis examples/movielens_sequence/spotlight/sequence/representations.py.
+2022-10-31 15:40:10 [WARNING] [Progress: 30.77%]  line: 100 ~ 101       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:10 [WARNING] [Progress: 30.77%]  line: 219 ~ 220       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:10 [WARNING] [Progress: 30.77%]  line: 398 ~ 399       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:10 [WARNING] [Progress: 30.77%]  line: 403 ~ 404       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:10 [WARNING] [Progress: 30.77%]  line: 414 ~ 414       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:10 [WARNING] [Progress: 30.77%]  line: 541 ~ 542       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:11 [INFO]    [Progress: 30.77%]  Analysis examples/movielens_sequence/spotlight/sequence/representations.py complete.
+2022-10-31 15:40:11 [INFO]    [Progress: 32.31%]  Start analysis examples/movielens_sequence/spotlight/datasets/__init__.py.
+2022-10-31 15:40:11 [INFO]    [Progress: 32.31%]  Analysis examples/movielens_sequence/spotlight/datasets/__init__.py complete.
+2022-10-31 15:40:11 [INFO]    [Progress: 33.85%]  Start analysis examples/movielens_sequence/spotlight/datasets/_transport.py.
+2022-10-31 15:40:12 [INFO]    [Progress: 33.85%]  Analysis examples/movielens_sequence/spotlight/datasets/_transport.py complete.
+2022-10-31 15:40:12 [INFO]    [Progress: 35.38%]  Start analysis examples/movielens_sequence/spotlight/datasets/amazon.py.
+2022-10-31 15:40:12 [INFO]    [Progress: 35.38%]  Analysis examples/movielens_sequence/spotlight/datasets/amazon.py complete.
+2022-10-31 15:40:12 [INFO]    [Progress: 36.92%]  Start analysis examples/movielens_sequence/spotlight/datasets/goodbooks.py.
+2022-10-31 15:40:12 [INFO]    [Progress: 36.92%]  Analysis examples/movielens_sequence/spotlight/datasets/goodbooks.py complete.
+2022-10-31 15:40:12 [INFO]    [Progress: 38.46%]  Start analysis examples/movielens_sequence/spotlight/datasets/movielens.py.
+2022-10-31 15:40:13 [INFO]    [Progress: 38.46%]  Analysis examples/movielens_sequence/spotlight/datasets/movielens.py complete.
+2022-10-31 15:40:13 [INFO]    [Progress: 40.00%]  Start analysis examples/movielens_sequence/spotlight/datasets/synthetic.py.
+2022-10-31 15:40:13 [INFO]    [Progress: 40.00%]  Analysis examples/movielens_sequence/spotlight/datasets/synthetic.py complete.
+2022-10-31 15:40:13 [INFO]    [Progress: 41.54%]  Start analysis examples/movielens_sequence/spotlight/factorization/__init__.py.
+2022-10-31 15:40:13 [INFO]    [Progress: 41.54%]  Analysis examples/movielens_sequence/spotlight/factorization/__init__.py complete.
+2022-10-31 15:40:13 [INFO]    [Progress: 43.08%]  Start analysis examples/movielens_sequence/spotlight/factorization/_components.py.
+2022-10-31 15:40:14 [INFO]    [Progress: 43.08%]  Analysis examples/movielens_sequence/spotlight/factorization/_components.py complete.
+2022-10-31 15:40:14 [INFO]    [Progress: 44.62%]  Start analysis examples/movielens_sequence/spotlight/factorization/explicit.py.
+2022-10-31 15:40:15 [INFO]    [Progress: 44.62%]  line: 22 ~ 66         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2022-10-31 15:40:15 [INFO]    [Progress: 44.62%]  Analysis examples/movielens_sequence/spotlight/factorization/explicit.py complete.
+2022-10-31 15:40:15 [INFO]    [Progress: 46.15%]  Start analysis examples/movielens_sequence/spotlight/factorization/implicit.py.
+2022-10-31 15:40:16 [INFO]    [Progress: 46.15%]  line: 23 ~ 74         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2022-10-31 15:40:16 [INFO]    [Progress: 46.15%]  Analysis examples/movielens_sequence/spotlight/factorization/implicit.py complete.
+2022-10-31 15:40:16 [INFO]    [Progress: 47.69%]  Start analysis examples/movielens_sequence/spotlight/factorization/representations.py.
+2022-10-31 15:40:16 [INFO]    [Progress: 47.69%]  Analysis examples/movielens_sequence/spotlight/factorization/representations.py complete.
+2022-10-31 15:40:16 [INFO]    [Progress: 49.23%]  Start analysis spotlight/__init__.py.
+2022-10-31 15:40:16 [INFO]    [Progress: 49.23%]  Analysis spotlight/__init__.py complete.
+2022-10-31 15:40:16 [INFO]    [Progress: 50.77%]  Start analysis spotlight/cross_validation.py.
+2022-10-31 15:40:17 [INFO]    [Progress: 50.77%]  Analysis spotlight/cross_validation.py complete.
+2022-10-31 15:40:17 [INFO]    [Progress: 52.31%]  Start analysis spotlight/evaluation.py.
+2022-10-31 15:40:18 [INFO]    [Progress: 52.31%]  Analysis spotlight/evaluation.py complete.
+2022-10-31 15:40:18 [INFO]    [Progress: 53.85%]  Start analysis spotlight/helpers.py.
+2022-10-31 15:40:18 [INFO]    [Progress: 53.85%]  Analysis spotlight/helpers.py complete.
+2022-10-31 15:40:18 [INFO]    [Progress: 55.38%]  Start analysis spotlight/interactions.py.
+2022-10-31 15:40:19 [INFO]    [Progress: 55.38%]  Analysis spotlight/interactions.py complete.
+2022-10-31 15:40:19 [INFO]    [Progress: 56.92%]  Start analysis spotlight/layers.py.
+2022-10-31 15:40:20 [INFO]    [Progress: 56.92%]  line: 198 ~ 198       Operation Type: MODIFY              Message: change function cuda to npu
+2022-10-31 15:40:20 [INFO]    [Progress: 56.92%]  line: 232 ~ 232       Operation Type: MODIFY              Message: change function cuda to npu
+2022-10-31 15:40:20 [INFO]    [Progress: 56.92%]  line: 197 ~ 197       Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2022-10-31 15:40:20 [INFO]    [Progress: 56.92%]  line: 231 ~ 231       Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2022-10-31 15:40:20 [INFO]    [Progress: 56.92%]  Analysis spotlight/layers.py complete.
+2022-10-31 15:40:20 [INFO]    [Progress: 58.46%]  Start analysis spotlight/losses.py.
+2022-10-31 15:40:21 [INFO]    [Progress: 58.46%]  Analysis spotlight/losses.py complete.
+2022-10-31 15:40:21 [INFO]    [Progress: 60.00%]  Start analysis spotlight/sampling.py.
+2022-10-31 15:40:21 [INFO]    [Progress: 60.00%]  Analysis spotlight/sampling.py complete.
+2022-10-31 15:40:21 [INFO]    [Progress: 61.54%]  Start analysis spotlight/torch_utils.py.
+2022-10-31 15:40:21 [WARNING] [Progress: 61.54%]  line: 69 ~ 69         Operation Type: UNSUPPORTED         Message: torch.cuda.manual_seed is not supported now!
+2022-10-31 15:40:21 [INFO]    [Progress: 61.54%]  line: 9 ~ 9           Operation Type: MODIFY              Message: change function cuda to npu
+2022-10-31 15:40:21 [INFO]    [Progress: 61.54%]  line: 69 ~ 69         Operation Type: MODIFY              Message: change module cuda to npu
+2022-10-31 15:40:21 [INFO]    [Progress: 61.54%]  line: 16 ~ 16         Operation Type: MODIFY              Message: replace attribute "is_cuda" with "is_npu"
+2022-10-31 15:40:21 [INFO]    [Progress: 61.54%]  Analysis spotlight/torch_utils.py complete.
+2022-10-31 15:40:21 [INFO]    [Progress: 63.08%]  Start analysis spotlight/datasets/__init__.py.
+2022-10-31 15:40:21 [INFO]    [Progress: 63.08%]  Analysis spotlight/datasets/__init__.py complete.
+2022-10-31 15:40:21 [INFO]    [Progress: 64.62%]  Start analysis spotlight/datasets/_transport.py.
+2022-10-31 15:40:22 [INFO]    [Progress: 64.62%]  Analysis spotlight/datasets/_transport.py complete.
+2022-10-31 15:40:22 [INFO]    [Progress: 66.15%]  Start analysis spotlight/datasets/amazon.py.
+2022-10-31 15:40:22 [INFO]    [Progress: 66.15%]  Analysis spotlight/datasets/amazon.py complete.
+2022-10-31 15:40:22 [INFO]    [Progress: 67.69%]  Start analysis spotlight/datasets/goodbooks.py.
+2022-10-31 15:40:22 [INFO]    [Progress: 67.69%]  Analysis spotlight/datasets/goodbooks.py complete.
+2022-10-31 15:40:22 [INFO]    [Progress: 69.23%]  Start analysis spotlight/datasets/movielens.py.
+2022-10-31 15:40:23 [INFO]    [Progress: 69.23%]  Analysis spotlight/datasets/movielens.py complete.
+2022-10-31 15:40:23 [INFO]    [Progress: 70.77%]  Start analysis spotlight/datasets/synthetic.py.
+2022-10-31 15:40:23 [INFO]    [Progress: 70.77%]  Analysis spotlight/datasets/synthetic.py complete.
+2022-10-31 15:40:23 [INFO]    [Progress: 72.31%]  Start analysis spotlight/factorization/__init__.py.
+2022-10-31 15:40:23 [INFO]    [Progress: 72.31%]  Analysis spotlight/factorization/__init__.py complete.
+2022-10-31 15:40:23 [INFO]    [Progress: 73.85%]  Start analysis spotlight/factorization/_components.py.
+2022-10-31 15:40:23 [INFO]    [Progress: 73.85%]  Analysis spotlight/factorization/_components.py complete.
+2022-10-31 15:40:23 [INFO]    [Progress: 75.38%]  Start analysis spotlight/factorization/explicit.py.
+2022-10-31 15:40:25 [INFO]    [Progress: 75.38%]  line: 22 ~ 66         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2022-10-31 15:40:25 [INFO]    [Progress: 75.38%]  Analysis spotlight/factorization/explicit.py complete.
+2022-10-31 15:40:25 [INFO]    [Progress: 76.92%]  Start analysis spotlight/factorization/implicit.py.
+2022-10-31 15:40:26 [INFO]    [Progress: 76.92%]  line: 23 ~ 74         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2022-10-31 15:40:26 [INFO]    [Progress: 76.92%]  Analysis spotlight/factorization/implicit.py complete.
+2022-10-31 15:40:26 [INFO]    [Progress: 78.46%]  Start analysis spotlight/factorization/representations.py.
+2022-10-31 15:40:26 [INFO]    [Progress: 78.46%]  Analysis spotlight/factorization/representations.py complete.
+2022-10-31 15:40:26 [INFO]    [Progress: 80.00%]  Start analysis spotlight/sequence/__init__.py.
+2022-10-31 15:40:26 [INFO]    [Progress: 80.00%]  Analysis spotlight/sequence/__init__.py complete.
+2022-10-31 15:40:26 [INFO]    [Progress: 81.54%]  Start analysis spotlight/sequence/implicit.py.
+2022-10-31 15:40:28 [INFO]    [Progress: 81.54%]  line: 26 ~ 83         Operation Type: MODIFY              Message: replace string "cuda:" with "npu:"
+2022-10-31 15:40:28 [INFO]    [Progress: 81.54%]  Analysis spotlight/sequence/implicit.py complete.
+2022-10-31 15:40:28 [INFO]    [Progress: 83.08%]  Start analysis spotlight/sequence/representations.py.
+2022-10-31 15:40:29 [WARNING] [Progress: 83.08%]  line: 100 ~ 101       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:29 [WARNING] [Progress: 83.08%]  line: 219 ~ 220       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:29 [WARNING] [Progress: 83.08%]  line: 398 ~ 399       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:29 [WARNING] [Progress: 83.08%]  line: 403 ~ 404       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:29 [WARNING] [Progress: 83.08%]  line: 414 ~ 414       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:29 [WARNING] [Progress: 83.08%]  line: 541 ~ 542       Operation Type: UNSUPPORTED         Message: Only constant mode is supported.
+2022-10-31 15:40:30 [INFO]    [Progress: 83.08%]  Analysis spotlight/sequence/representations.py complete.
+2022-10-31 15:40:30 [INFO]    [Progress: 84.62%]  Start analysis tests/test_cross_validation.py.
+2022-10-31 15:40:30 [INFO]    [Progress: 84.62%]  Analysis tests/test_cross_validation.py complete.
+2022-10-31 15:40:30 [INFO]    [Progress: 86.15%]  Start analysis tests/test_datasets.py.
+2022-10-31 15:40:31 [INFO]    [Progress: 86.15%]  Analysis tests/test_datasets.py complete.
+2022-10-31 15:40:31 [INFO]    [Progress: 87.69%]  Start analysis tests/test_evaluation_metrics.py.
+2022-10-31 15:40:31 [INFO]    [Progress: 87.69%]  Analysis tests/test_evaluation_metrics.py complete.
+2022-10-31 15:40:31 [INFO]    [Progress: 89.23%]  Start analysis tests/test_interactions.py.
+2022-10-31 15:40:32 [INFO]    [Progress: 89.23%]  Analysis tests/test_interactions.py complete.
+2022-10-31 15:40:32 [INFO]    [Progress: 90.77%]  Start analysis tests/test_layers.py.
+2022-10-31 15:40:32 [INFO]    [Progress: 90.77%]  Analysis tests/test_layers.py complete.
+2022-10-31 15:40:32 [INFO]    [Progress: 92.31%]  Start analysis tests/test_serialization.py.
+2022-10-31 15:40:33 [WARNING] [Progress: 92.31%]  line: 30 ~ 30         Operation Type: UNSUPPORTED         Message: Please confirm that the parameter 'map_location' of 'torch.load' is set to NPU device.
+2022-10-31 15:40:33 [INFO]    [Progress: 92.31%]  Analysis tests/test_serialization.py complete.
+2022-10-31 15:40:33 [INFO]    [Progress: 93.85%]  Start analysis tests/factorization/test_api.py.
+2022-10-31 15:40:33 [INFO]    [Progress: 93.85%]  Analysis tests/factorization/test_api.py complete.
+2022-10-31 15:40:33 [INFO]    [Progress: 95.38%]  Start analysis tests/factorization/test_explicit.py.
+2022-10-31 15:40:34 [INFO]    [Progress: 95.38%]  Analysis tests/factorization/test_explicit.py complete.
+2022-10-31 15:40:34 [INFO]    [Progress: 96.92%]  Start analysis tests/factorization/test_implicit.py.
+2022-10-31 15:40:35 [INFO]    [Progress: 96.92%]  Analysis tests/factorization/test_implicit.py complete.
+2022-10-31 15:40:35 [INFO]    [Progress: 98.46%]  Start analysis tests/sequence/test_sequence_implicit.py.
+2022-10-31 15:40:37 [INFO]    [Progress: 98.46%]  Analysis tests/sequence/test_sequence_implicit.py complete.
+2022-10-31 15:40:37 [INFO]    [Progress:100.00%]  MsFmkTransplt run success, welcome to the next use.
