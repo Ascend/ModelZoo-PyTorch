@@ -35,6 +35,8 @@ import os
 from PIL import Image
 import cv2
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torch.utils import data
 from torchvision import transforms
 from torchvision.transforms import functional as F
