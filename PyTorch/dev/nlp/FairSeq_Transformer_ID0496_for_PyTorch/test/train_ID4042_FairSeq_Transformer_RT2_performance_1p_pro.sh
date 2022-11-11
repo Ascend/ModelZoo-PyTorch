@@ -115,14 +115,6 @@ pip3 install --editable .
 
 #修改epoch参数
 
-# 添加二进制代码
-#line=`grep "import torch" train.py -n | tail -1|awk -F ':' '{print $1}'`
-#sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" train.py
-
-line1=`grep "torch.npu.global_step_inc()" train.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "${line1}s/^/#/" train.py
-
-
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do

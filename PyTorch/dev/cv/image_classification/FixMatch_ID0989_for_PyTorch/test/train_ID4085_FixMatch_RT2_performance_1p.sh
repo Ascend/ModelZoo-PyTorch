@@ -95,14 +95,6 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-#修改模糊编译写法
-if [ $bin_mode == "True" ];then
-    step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
-    sed -i "${step_line}s/^/#/" ${cur_path}/train.py
-    inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
-    sed -i "${inc_line}s/^/#/" ${cur_path}/train.py
-    sed -i "56itorch.npu.global_step_inc()" ${cur_path}/train.py
-fi
 
 #设置二进制变量
 if [ $bin_analysis == "True" ];then

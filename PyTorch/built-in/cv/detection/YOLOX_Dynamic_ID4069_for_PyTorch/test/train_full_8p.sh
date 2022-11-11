@@ -14,7 +14,7 @@ else
 fi
 
 #集合通信参数,不需要修改
-export RANK_SIZE=1
+export RANK_SIZE=8
 export HCCL_CONNECT_TIMEOUT=1800
 export HCCL_EXEC_TIMEOUT=1800
 # 数据集路径,保持为空,不需要修改
