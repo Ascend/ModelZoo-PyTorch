@@ -229,7 +229,10 @@ def _get_parser():
 
 def main():
     # 开启模糊编译
-    torch.npu.global_step_inc()
+    if torch.__version__ >= "1.8":
+        torch.npu.set_compile_mode(jit_compile=False)
+    else:
+        torch.npu.global_step_inc()
     parser = _get_parser()
     opt = parser.parse_args()
     train(opt)

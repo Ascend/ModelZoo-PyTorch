@@ -282,7 +282,8 @@ def main():
 
     os.environ['CUDA_VISIBLE_DEVICES'] = opts.npu_id
     device = torch.device(f'npu:{NPU_CALCULATE_DEVICE}')
-    print("Device: %s" % device)
+    #print("Device: %s" % device)
+    print("Device: ", device)
 
     # Setup random seed
     torch.manual_seed(opts.random_seed)
@@ -403,7 +404,10 @@ def main():
 
         ###### Prefetcher #########
         data_prefetcher_stream = torch.npu.Stream()
-        from torch.contrib.npu.optimized_lib.module.prefetcher import Prefetcher as Prefetcher
+        if torch.__version__ >= "1.8":
+            from torch_npu.contrib.module.prefetcher import Prefetcher as Prefetcher
+        else:
+            from torch.contrib.npu.optimized_lib.module.prefetcher import Prefetcher as Prefetcher
         prefetcher = Prefetcher(train_loader, stream=data_prefetcher_stream)
         images,labels = prefetcher.next()
         while images is not None:

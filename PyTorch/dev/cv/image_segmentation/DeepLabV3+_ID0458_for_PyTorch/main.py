@@ -48,6 +48,9 @@ from metrics import StreamSegMetrics
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
+    from torch_npu.contrib.module.prefetcher import Prefetcher as Prefetcher
+else:
+    from torch.contrib.npu.optimized_lib.module.prefetcher import Prefetcher as Prefetcher
 import torch.nn as nn
 from utils.visualizer import Visualizer
 
@@ -58,7 +61,7 @@ import torch.npu
 import apex
 from apex import amp,optimizers
 import sys
-from torch.contrib.npu.optimized_lib.module.prefetcher import Prefetcher as Prefetcher
+#from torch.contrib.npu.optimized_lib.module.prefetcher import Prefetcher as Prefetcher
 
 import os
 NPU_CALCULATE_DEVICE = 0
@@ -282,7 +285,8 @@ def main():
 
     os.environ['CUDA_VISIBLE_DEVICES'] = opts.npu_id
     device = torch.device(f'npu:{NPU_CALCULATE_DEVICE}')
-    print("Device: %s" % device)
+    #print("Device: %s" % device)
+    print("Device: ", device)
 
     # Setup random seed
     torch.manual_seed(opts.random_seed)

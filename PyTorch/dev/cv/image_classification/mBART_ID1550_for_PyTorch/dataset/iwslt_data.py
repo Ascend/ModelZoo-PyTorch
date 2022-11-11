@@ -47,6 +47,8 @@ from os import path
 
 import dill
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from pathlib import Path
 from torch import nn
 from torch.autograd import Variable
