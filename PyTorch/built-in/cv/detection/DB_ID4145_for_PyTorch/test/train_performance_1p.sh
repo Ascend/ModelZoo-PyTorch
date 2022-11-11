@@ -23,7 +23,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-ln -snf $data_path ./data/
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -37,6 +36,21 @@ else
 fi
 ASCEND_DEVICE_ID=0
 #################创建日志输出目录，不需要修改#################
+if [ -d ${cur_path}/data ];
+then
+        ln -snf $data_path ./data/
+else
+        mkdir -p ${cur_path}/data
+        ln -snf $data_path ./data/
+fi
+
+if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ];
+then
+        rm -rf ${cur_path}/test/output/${ASCEND_DEVICE_ID}
+        mkdir -p ${cur_path}/test/output/${ASCEND_DEVICE_ID}
+else
+        mkdir -p ${cur_path}/test/output/${ASCEND_DEVICE_ID}
+fi
 start_time=$(date +%s)
 # 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
