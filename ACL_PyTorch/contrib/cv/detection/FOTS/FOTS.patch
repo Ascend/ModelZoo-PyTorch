@@ -1,0 +1,76 @@
+diff -Naru a/icdar_eval/script.py b/icdar_eval/script.py
+--- a/icdar_eval/script.py	2022-09-12 16:31:05.981387871 +0000
++++ b/icdar_eval/script.py	2022-09-12 16:35:08.681390844 +0000
+@@ -1,7 +1,8 @@
+ #!/usr/bin/env python
+ # -*- coding: utf-8 -*-
++
+ from collections import namedtuple
+-from . import rrc_evaluation_funcs
++import rrc_evaluation_funcs
+ import importlib
+ 
+ def evaluation_imports():
+@@ -37,7 +38,7 @@
+     gt = rrc_evaluation_funcs.load_zip_file(gtFilePath,evaluationParams['GT_SAMPLE_NAME_2_ID'])
+ 
+     subm = rrc_evaluation_funcs.load_zip_file(submFilePath,evaluationParams['DET_SAMPLE_NAME_2_ID'],True)
+-
++    
+     #Validate format of GroundTruth
+     for k in gt:
+         rrc_evaluation_funcs.validate_lines_in_file(k,gt[k],evaluationParams['CRLF'],evaluationParams['LTRB'],True)
+@@ -50,7 +51,7 @@
+         rrc_evaluation_funcs.validate_lines_in_file(k,subm[k],evaluationParams['CRLF'],evaluationParams['LTRB'],False,evaluationParams['CONFIDENCES'])
+ 
+     
+-def evaluate_method(gt_dict, subm_dict, evaluationParams):
++def evaluate_method(gtFilePath, submFilePath, evaluationParams):
+     """
+     Method evaluate_method: evaluate method and returns the results
+         Results. Dictionary with the following values:
+@@ -138,6 +139,9 @@
+     matchedSum = 0
+     
+     Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
++    
++    gt = rrc_evaluation_funcs.load_zip_file(gtFilePath,evaluationParams['GT_SAMPLE_NAME_2_ID'])
++    subm = rrc_evaluation_funcs.load_zip_file(submFilePath,evaluationParams['DET_SAMPLE_NAME_2_ID'],True)
+    
+     numGlobalCareGt = 0;
+     numGlobalCareDet = 0;
+@@ -145,7 +149,9 @@
+     arrGlobalConfidences = [];
+     arrGlobalMatches = [];
+ 
+-    for resFile, (pointsList, transcriptionsList) in gt_dict.items():
++    for resFile in gt:
++        
++        gtFile = rrc_evaluation_funcs.decode_utf8(gt[resFile])
+         recall = 0
+         precision = 0
+         hmean = 0    
+@@ -173,7 +179,8 @@
+         sampleAP = 0;
+ 
+         evaluationLog = ""
+-
++        
++        pointsList,_,transcriptionsList = rrc_evaluation_funcs.get_tl_line_values_from_file_contents(gtFile,evaluationParams['CRLF'],evaluationParams['LTRB'],True,False)
+         for n in range(len(pointsList)):
+             points = pointsList[n]
+             transcription = transcriptionsList[n]
+@@ -190,8 +197,11 @@
+                 
+         evaluationLog += "GT polygons: " + str(len(gtPols)) + (" (" + str(len(gtDontCarePolsNum)) + " don't care)\n" if len(gtDontCarePolsNum)>0 else "\n")
+         
+-        if resFile in subm_dict:
+-            pointsList, confidencesList = subm_dict[resFile]
++        if resFile in subm:
++            
++            detFile = rrc_evaluation_funcs.decode_utf8(subm[resFile]) 
++            
++            pointsList,confidencesList,_ = rrc_evaluation_funcs.get_tl_line_values_from_file_contents(detFile,evaluationParams['CRLF'],evaluationParams['LTRB'],False,evaluationParams['CONFIDENCES'])
+             for n in range(len(pointsList)):
+                 points = pointsList[n]
+                 

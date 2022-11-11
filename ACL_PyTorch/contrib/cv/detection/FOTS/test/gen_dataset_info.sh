@@ -1,1 +1,0 @@
-python3.7 ./gen_dataset_info.py bin ./res ./FOTS_prep_bin.info 2240 1248
