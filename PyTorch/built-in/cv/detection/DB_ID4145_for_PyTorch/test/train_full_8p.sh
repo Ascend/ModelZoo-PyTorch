@@ -25,8 +25,12 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
-        source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
+        cur_path=`pwd`
+        echo --$cur_path
+        cd $cur_path
+        source ${cur_path}/set_conda.sh --conda_name=$conda_name
         source activate $conda_name
+        cd -
     fi
 done
 ###############指定训练脚本执行路径###############
