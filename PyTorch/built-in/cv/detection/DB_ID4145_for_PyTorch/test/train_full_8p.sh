@@ -18,11 +18,17 @@ do
     fi
 done
 
-# 校验是否传入data_path,不需要修改
-if [[ $data_path == "" ]];then
-    echo "[Error] para \"data_path\" must be confing"
-    exit 1
-fi
+# 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
+for para in $*
+do
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
+        source activate $conda_name
+    fi
+done
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`

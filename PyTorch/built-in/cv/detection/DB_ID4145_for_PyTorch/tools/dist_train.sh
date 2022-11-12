@@ -17,9 +17,9 @@ MASTER_ADDR=${MASTER_ADDR:-"127.0.0.1"}
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
 
 if [ ${GPUS} == 1 ]; then
-    python $(dirname "$0")/train.py  $CONFIG --work-dir=${WORK_DIR} ${@:4}
+    python3 $(dirname "$0")/train.py  $CONFIG --work-dir=${WORK_DIR} ${@:4}
 else
-    python -m torch.distributed.launch \
+    python3 -m torch.distributed.launch \
         --nnodes=$NNODES \
         --node_rank=$NODE_RANK \
         --master_addr=$MASTER_ADDR \
