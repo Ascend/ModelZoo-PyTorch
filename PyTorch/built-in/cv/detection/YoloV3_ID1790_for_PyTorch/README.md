@@ -18,8 +18,9 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
 - 参考实现：
 
   ```
-  url=https://github.com/eriklindernoren/PyTorch-YOLOv3
-  commit_id=802b81265383144b6e9fbd861f3c493c6afd11ae
+  url=https://github.com/open-mmlab/mmdetection/tree/master/configs/yolo
+  branch=master
+  commit_id=3e902c3afc62693a71d672edab9b22e35f7d4776
   ```
 
 - 适配昇腾 AI 处理器的实现：
