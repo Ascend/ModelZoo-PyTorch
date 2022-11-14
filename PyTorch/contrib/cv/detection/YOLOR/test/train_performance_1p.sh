@@ -18,7 +18,7 @@ RANK_SIZE=1
 RANK_ID_START=0
 
 #网络名称，同目录名称
-Network="YoloV5_ID0638_for_PyTorch"
+Network="YoloR"
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -76,6 +76,9 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
+ln -snf $data_path ./data/coco
+
 #配置数据集路径
 sed -i 's#train: .*#train: '${data_path}'/train2017.txt#' ${cur_path}/data/coco.yaml
 sed -i 's#val: .*#val: '${data_path}'/val2017.txt#' ${cur_path}/data/coco.yaml
