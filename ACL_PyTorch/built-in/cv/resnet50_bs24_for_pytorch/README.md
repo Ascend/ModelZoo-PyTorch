@@ -76,7 +76,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    cd ..
    git clone https://github.com/open-mmlab/mmdeploy.git
    cd mmdeploy
-   git reset --hard 83b11bc1ca7227497928a57b56653b76501b1368
+   git reset --hard b0a350d49e95055136bbef570fd5c635b935c59c
    pip3 install -r requirements.txt
    pip3 install -v -e .
    ```
@@ -143,7 +143,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       1. 配置环境变量。
 
          ```
-         source /usr/local/Ascend/......
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 
