@@ -28,7 +28,7 @@ data_path=""
 #网络名称，同目录名称
 Network="MobileNetV2_RT2_ID0098_for_PyTorch"
 #训练epoch
-train_epochs=600
+train_epochs=30  #单p全量600 epoch,训练时间过长，单p全量看护epoch数为30
 #训练batch_size
 batch_size=512
 #训练step
@@ -63,6 +63,8 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --train_epochs* ]];then
+        train_epochs=`echo ${para#*=}`
     elif [[ $para == --bin_mode* ]];then
         bin_mode=`echo ${para#*=}`
     fi
@@ -161,6 +163,7 @@ echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep -a '* Acc@1' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a '* Acc@1' $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
@@ -193,4 +196,5 @@ echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseN
 echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
