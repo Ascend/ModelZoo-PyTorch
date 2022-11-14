@@ -178,7 +178,7 @@ class Trainer():
         self.device = torch.device(
             'npu' if torch.npu.is_available() else 'cpu')
         #logger.info('Trainer: Training on device: %s' % self.device)
-        logger.info('Trainer: Training on device: ', self.device)
+        logger.info('Trainer: Training on device: {}'.format(self.device))
         self._init_objects()
         logger.info('Trainer: Initialization done.')
 
