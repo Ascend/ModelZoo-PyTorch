@@ -83,7 +83,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 训练用例信息，不需要修改
 BatchSize=${BATCH_SIZE}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${WORLD_SIZE}'p'_'acc'
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"

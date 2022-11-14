@@ -6,7 +6,7 @@
 Network="DB_ID4145_for_PyTorch"
 # 训练使用的npu卡数
 export BATCH_SIZE=24
-export WORLD_SIZE=8
+export WORLD_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -71,7 +71,7 @@ fi
 # 加载ckpt
 mkdir -p checkpoints/textdet/dbnetpp/
 cp -r $data_path/res50dcnv2_synthtext.pth checkpoints/textdet/dbnetpp/
-bash tools/dist_train.sh configs/textdet/dbnetpp/dbnetpp_r50dcnv2_fpnc_1200e_icdar2015.py dbnet $WORLD_SIZE \
+python3 tools/train.py configs/textdet/dbnetpp/dbnetpp_r50dcnv2_fpnc_5e_icdar2015.py \
         > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
@@ -83,20 +83,16 @@ e2e_time=$(( $end_time - $start_time ))
 # 训练用例信息，不需要修改
 BatchSize=${BATCH_SIZE}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${WORLD_SIZE}'p'_'perf'
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 grep "time:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print substr($2,0,6)}' &> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
-FPS=`cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | sort -n | head -100 | awk -v bs=$BATCH_SIZE -v ws=$WORLD_SIZE '{a+=$1} END {if (NR != 0) printf("%.3f", 1/a*NR*bs*ws)}'`
+FPS=`cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | sort -n | head -60 | awk -v bs=$BATCH_SIZE -v ws=$WORLD_SIZE '{a+=$1} END {if (NR != 0) printf("%.3f", 1/a*NR*bs*ws)}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-# 输出训练精度,需要模型审视修改
-train_accuracy=`grep -a "hmean"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "hmean" '{print $NF}'|awk -F " " '{print $2}'`
-# 打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 # 性能看护结果汇总
@@ -120,5 +116,4 @@ echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
