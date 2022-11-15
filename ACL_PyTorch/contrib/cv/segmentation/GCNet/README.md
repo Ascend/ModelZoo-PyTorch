@@ -88,13 +88,15 @@ python3 mmdetection/tools/deployment/pytorch2onnx.py mmdetection/configs/gcnet/m
 a.配置环境变量。
 
 ```python
- source env.sh
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver/
 ```
 
 b.生成om模型
 
 ```
-atc --framework=5 --model=GCNet.onnx --output=./GCNet_bs1 --input_shape="input:1,3,800,1216"  --log=error --soc_version=Ascend310
+atc --framework=5 --model=GCNet.onnx --output=./GCNet_bs1 --input_shape="input:1,3,800,1216"  --log=error --soc_version=Ascend310P3
 ```
 
 
@@ -112,13 +114,13 @@ chmod u+x benchmark.${arch}
 b.执行推理
 
 ```python
-./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=1 -om_path=./GCNet_bs1.om -input_text_path=./coco2017.info  -input_width=1216 -input_height=800 -output_binary=True -useDvpp=False
+./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./GCNet_bs1.om -input_text_path=./coco2017.info  -input_width=1216 -input_height=800 -output_binary=True -useDvpp=False
 ```
 
 2.数据后处理
 
 ```python
-python3 GCNet_postprocess.py --bin_data_path=./result/dumpOutput_device1/ --test_annotation=coco2017_jpg.info --det_results_path=detection-results --annotations_path=mmdetection/data/coco/annotations/instances_val2017.json --net_out_num=3 --net_input_height=800 --net_input_width=1216
+python GCNet_postprocess.py --bin_data_path=./result/dumpOutput_device0/ --test_annotation=coco2017_jpg.info --det_results_path=detection-results --annotations_path=/opt/npu/coco/annotations/instances_val2017.json --net_out_num=3 --net_input_height=800 --net_input_width=1216
 ```
 
 3.精度验证
@@ -154,9 +156,11 @@ python coco_eval.py
 
  **评测结果：**   
 
-|   模型    | 官网pth精度 | 310P离线推理精度 | 基准性能 | 310P性能  |
-| :-------: | :---------: | :--------------: | :------: | :-------: |
-| GCNet bs1 |  mAP:0.613  |    mAP:0.610     | 3.931fps | 12.031fps |
+| 芯片型号 | Batch Size | 数据集  |  精度   |    性能     |
+|:----:|:----------:|:----:|:-----:|:---------:|
+| 310  |     1      | coco |       | 2.091fps  |
+| 310p |     1      | coco | 0.610 | 12.031fps |
+|  T4  |     1      | coco |       |  3.9fps   |
 
 备注：  
 1.GCNet的mmdetection实现不支持多batch。
