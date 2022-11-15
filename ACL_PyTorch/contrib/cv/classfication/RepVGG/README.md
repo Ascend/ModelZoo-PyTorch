@@ -1,198 +1,259 @@
-# RepVGG模型PyTorch离线推理指导
+# RepVGG 模型-推理指导
 
-## 1. 模型概述
 
-[论文地址](https://arxiv.org/abs/2101.03697)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-[代码地址](https://github.com/DingXiaoH/RepVGG)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-## 2. 环境准备 
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 2.1 环境说明
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-```shell
-torch == 1.8.0
-torchversion == 0.9.0
-onnx == 1.8.1
-numpy == 1.20.2
-Pillow == 7.2.0
-opencv-python ==4.5.2.52
-```
+- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-### 2.2 环境安装
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-#### 2.2.1 安装必要的依赖
+  ******
 
-测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装。
 
-```shell
-pip3 install -r requirements.txt  
-```
 
-#### 2.2.2 获取，修改与安装开源模型代码  
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-```shell
-git clone https://github.com/DingXiaoH/RepVGG   
-cd RepVGG  
-git reset 9f272318abfc47a2b702cd0e916fca8d25d683e7 --hard
-cd ..  
-```
+RepVGG是一个分类网络，该网络是在VGG网络的基础上进行改进，主要的改进点包括：
 
-#### 2.2.3 获取权重文件  
+   1. 在VGG网络的Block块中加入了Identity和残差分支，相当于把ResNet网络中的精华应用 到VGG网络中；
+   2. 模型推理阶段，通过Op融合策略将所有的网络层都转换为Conv3*3，便于模型的部署与加速。
 
-[RepVGG-A0-train.pth](https://pan.baidu.com/s/1nCsZlMynnJwbUBKn0ch7dQ), access code "rvgg"
 
-#### 2.2.4 获取数据集     
+- 参考实现：
 
-该模型使用ImageNet官网的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt。
+  ```
+  url=https://github.com/DingXiaoH/RepVGG
+  branch=master
+  commit_id=9f272318abfc47a2b702cd0e916fca8d25d683e7
+  ```
 
-#### 2.2.5 获取benchmark工具
+  通过Git获取对应commit\_id的代码方法如下：
 
-[获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer) ，将benchmark.x86_64或benchmark.aarch64放到当前目录  
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
-## 3. 数据预处理 
 
-### 3.1 数据集预处理
+## 输入输出数据<a name="section540883920406"></a>
 
-将数据集处理为可输入推理工具benchmark的格式
-```shell
-Python3.7 RepVGG_preprocess.py repvgg /opt/npu/imagenet/val ./prep_dataset
-```
+- 输入数据
 
-参数说明
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
-- `参数1`：模型名
-- `参数2`：数据集位置
-- `参数3`：输出文件夹位置
 
-### 3.2 生成数据集信息文件
+- 输出数据
 
-将处理好的数据生成对应的info文件，作为benchmark工具推理的输入
-```shell
-python3 gen_dataset_info.py bin ./prep_dataset ./RepVGG_prep_bin.info 224 224
-```
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | batchsize x 1000 | FLOAT32  | ND           |
 
-参数说明
 
-- `参数1`：前一步处理好数据的文件格式
-- `参数2`：数据位置
-- `参数3`：生成info文件名称
-- `参数4、5`：每张图片的宽和高
 
-## 4. 模型转换
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-### 4.1 执行pth2onnx脚本生成onnx文件
+- 该模型需要以下插件与驱动
 
-```shell
-python3 RepVGG_pth2onnx.py PepVGG-A0-train.pth RepVGG.onnx
-```
+  **表 1**  版本配套表
 
-参数说明
+| 配套                                                         | 版本    | 环境准备指导                                                 |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 5.1.RC1 | -                                                            |
+| Python                                                       | 3.7.5   | -                                                            |
+| PyTorch                                                      | 1.6.0   | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-- `参数1`: 输入的权重文件（.pth）路径。
-- `参数2`：输出的文件名。 
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-### 4.2 onnx模型转om模型
 
-#### 4.2.1 设置环境变量
+1. 安装依赖。
 
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   ```
+   pip3 install -r requirments.txt
+   ```
 
-说明
-设置CANN的环境变量，其中${HOME}为CANN包安装路径，默认在/usr/local/Ascend下
+2. 获取源码。
 
-#### 4.2.2 使用ATC命令将onnx模型转换为om模型
+   在已下载的源码包根目录下，执行如下命令。
 
-执行前使用`npu-smi info`查看设备状态，确保device空闲
+   ```
+   git clone https://github.com/DingXiaoH/RepVGG         # 克隆仓库的代码 
+   cd RepVGG              # 切换到模型的代码仓目录 
+   git checkout master             # 切换到对应分支 
+   git reset --hard 9f272318abfc47a2b702cd0e916fca8d25d683e7      # 代码设置到对应的commit_id 
+   cd ..        
+   ```
 
-```shell
-atc --framework=5 --model=RepVGG.onnx --output=RepVGG_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" \
-    --log=error --soc_version=Ascend${chip_name}
-```
 
-参数说明
+## 准备数据集<a name="section183221994411"></a>
 
-- `--model`: 输入的onnx模型路径。
-- `--output`:输出的文件名。 
-- `--input_format`: 输入形状的格式。
-- `--input_shape`: 模型输入的形状。
-- `--log`: 设置ATC模型转换过程中日志的级别
-- `--soc_version`:目标芯片类型，如Ascend310、Ascend310P3，${chip_name}可通过`npu-smi info`指令查看
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。
 
+   数据目录结构请参考：
+   ```
+   ├──ImageNet
+    ├──ILSVRC2012_img_val
+    ├──ILSVRC2012_devkit_t12
+        ├──val_label.txt
+   ```
 
-## 5 benchmark推理
+2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
-### 5.1 benchmark工具简介
+   数据预处理将原始数据集转换为模型输入的数据。
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310和Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程。
+   执行“RepVGG_preprocess.py”脚本，完成预处理。
 
-### 5.2 设置环境变量
+   ```
+   python3 RepVGG_preprocess.py repvgg ${datasets_path} ./prep_dataset
+   ```
+   ${datasets_path}：原始数据验证集（.jpeg）所在路径。
 
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   “./prep_dataset”：输出的二进制文件（.bin）所在路径。
 
-说明
-设置CANN的环境变量，其中${HOME}为CANN包安装路径，默认在/usr/local/Ascend下
+   每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_dataset”二进制文件夹。
 
-### 5.3 执行推理
 
-执行时使用`npu-smi info`查看设备状态，确保device空闲
+## 模型推理<a name="section741711594517"></a>
 
-```shell
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=RepVGG_bs1.om -input_text_path=./RepVGG_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+1. 模型转换。
 
-```
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-参数说明
+   1. 获取权重文件。
+       
 
-- `-model_type`:benchmark支持的模型类型，目前支持的有vision，nmt，widedeep，nlp，yolocaffe，bert，deepfm
-- `-device_id`:运行在ascend 310或ascend 310P的哪个device上，每张ascend 310卡有4个device，每张ascend 310P卡有1个device
-- `-batch_size`:om模型的batch大小，该值应与om模型的batch大小相同，否则报输入大小不一致的错误
-- `-om_path`:om模型文件路径
-- `-input_text_path`:包含数据集每个样本的路径与其相关信息的数据集信息文件路径
-- `-input_height`:输入高度
-- `-input_width`:输入宽度
-- `-output_binary`:以预处理后的数据集为输入，benchmark工具推理om模型的输出数据保存为二进制还是txt，但对于输出是int64类型的节点时，指定输出为txt时会将float类型的小数转换为0而出错
-- `-useDvpp`:是否使用aipp进行数据集预处理
+   2. 导出onnx文件。
 
-## 6. 精度和性能对比
+      1. 使用 RepVGG_pth2onnx.py 导出onnx文件。
 
-### 6.1 离线推理精度
+         执行“RepVGG_pth2onnx.py”脚本。
 
-运行如下脚本评测精度，运行后精度结果保存在result.json文件中
-```shell
-python3 RepVGG_postprocess.py result/dumpOutput_device0/ /opt/npu/imagenet/val_label.txt ./result.json
+         ```
+         python3 RepVGG_pth2onnx.py RepVGG-A0-train.pth RepVGG.onnx
+         ```
 
-```
+         获得“RepVGG.onnx”文件。
 
-参数说明
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-- `参数1`：benchmark推理结果文件所在路径
-- `参数2`：数据集标注标签路径
-- `参数3`：结果保存路径
+      1. 配置环境变量。
 
-### 7.2 npu性能数据
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-benchmark工具推理后生成result/perf_vision_batchsize_1_device_0.txt文件，其中Interface turoughputRate即为310P单卡吞吐量，Interface turoughputRate *4为310单卡吞吐量，运行脚本计算310P单卡吞吐量，计算结果回显
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-```shell
-python3 test/parse.py result/perf_vision_batchsize_1_device_0.txt 310P
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-```
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-参数说明
+      3. 执行ATC命令。
 
-- `参数1`：benchmark性能统计文件路径
-- `参数2`：目标芯片名，目前支持310P、310
+         ```
+         atc --framework=5 --model=RepVGG.onnx --output=RepVGG_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=debug --soc_version=Ascend${chip_name}
+         ```
 
-## 8. 评测结果：
+         - 参数说明：
 
-|    模型     |                    官网pth精度                     | 310P离线推理精度 | T4基准性能 | 310性能 | 310P性能 |
-| :---------: | :------------------------------------------------: | :--------------: | :--------: | ------: | :------: |
-| RepVGG bs1  | [acc1:72.418](https://github.com/DingXiaoH/RepVGG) |    acc1:72.15    |  1128fps   | 1112fps | 1919fps  |
-| RepVGG bs16 | [acc1:72.418](https://github.com/DingXiaoH/RepVGG) |    acc1:72.15    |  4784fps   | 7115fps | 8752fps  |
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成<u>***RepVGG_bs1.om***</u>模型文件。
+
+
+
+2. 开始推理验证。
+
+   a. 使用 [ais-infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) 进行推理。
+      
+      执行命令增加工具可执行权限，并根据OS架构选择工具
+
+      ```
+      chmod u+x ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py
+      ```
+
+   b. 执行推理。
+
+   首先新建推理结果保存目录lcmout，然后执行以下命令进行推理
+   ```
+   python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./RepVGG_bs1.om --input ./prep_dataset --output ./lcmout/ --outfmt NPY --batchsize 1
+   ```
+
+   -   参数说明：
+
+        -   --model：om文件路径。
+        -   --input：预处理完的数据集文件夹
+        -   --output：推理结果保存地址
+        -   --outfmt：推理结果保存格式
+        -   --batchsize：batchsize大小
+
+        推理后的输出在--output所指定目录下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 [ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+
+   c.  精度验证。
+
+   调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据。
+
+    ```
+    python RepVGG_postprocess.py --result_path ./lcmout/xxxx/sumary.json --gtfile_path /opt/npu/ILSVRC2012/val_label.txt
+    ```
+   -   参数说明：
+
+        -   --result_path：生成推理结果summary.json所在路径。
+        -   --gtfile_path：标签val_label.txt所在路径
+    
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+性能参考下列数据:
+
+| batchsize | 1       | 4       | 8       | 16      | 32      | 64      |
+|-----------|---------|---------|---------|---------|---------|---------|
+| 310       | 2366.43 | 3671.3  | 4464.62 | 4602.66 | 1150.66 | 4694.30 |
+| 310P      | 1332.38 | 5733.17 | 7434.43 | 8678.18 | 8621.25 | 5399.69 |
+| T4        | 373.20  | 781.53  | 899.19  | 1077.88 | 1002.77 | 998.98  |
+
+精度参考下列数据:
+|       | top1_acc |
+|-------|----------|
+| 310       | 0.7214   |
+| 310P      | 0.7215   |

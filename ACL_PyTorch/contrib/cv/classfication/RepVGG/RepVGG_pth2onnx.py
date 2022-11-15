@@ -42,7 +42,7 @@ def convert():
 
     input_names = ["actual_input_1"]
     output_names = ["output1"]
-    dynamic_axes = {"actual_input_1" : {0 : "-1"}, "output1" : {0 : "-1"}}
+    dynamic_axes = {"actual_input_1": {0: "-1"}, "output1": {0: "-1"}}
     dummy_input = torch.randn(1, 3, 224, 224)
     torch.onnx.export(model, dummy_input, output_file, input_names=input_names, dynamic_axes=dynamic_axes,
                     output_names=output_names, opset_version=11)
