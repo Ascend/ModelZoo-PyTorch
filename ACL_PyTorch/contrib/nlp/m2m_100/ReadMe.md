@@ -62,7 +62,7 @@ m2m100是Meta公司开发的最新seq2seq模型，支持100中语言间的互相
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC3 | -                                                            |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.9.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -101,7 +101,7 @@ m2m100是Meta公司开发的最新seq2seq模型，支持100中语言间的互相
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
    ```
-   已中英互译为例，通过sacrebleu下载数据集
+   以中英互译为例，通过sacrebleu下载数据集
 
    sacrebleu --echo src -l en-zh -t wmt20 | head -n 32 > raw_input.en-zh.en
    sacrebleu --echo ref -l en-zh -t wmt20 | head -n 32 > raw_input.en-zh.zh
