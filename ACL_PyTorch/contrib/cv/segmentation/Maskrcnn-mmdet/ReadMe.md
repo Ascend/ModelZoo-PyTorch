@@ -85,7 +85,7 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 
    ```
    pip install mmcv-full==1.2.5 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.9.0/index.html
-   进入mmdet目录安装
+   进入mmdetection git目录安装
    pip install -v -e .
    ```
 
@@ -195,7 +195,9 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
    2. 执行推理。
 
         ```
-          python3.7.5 ais_infer.py --model ./maskrcnn_r50_fpn_1x.om --input "val2017_bin"
+         在当前目录创建result文件夹用于保存推理结果
+
+         python3 ais_infer.py --model ./maskrcnn_r50_fpn_1x.om --input "val2017_bin" -o ./result
         ```
 
 
@@ -209,7 +211,7 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 
       ```
        python3.7 get_info.py jpg data/coco/val2017/ val2017_jpg.info
-       python3.7 mmdet_postprocess.py --bin_data_path=result --test_annotation=val2017_jpg.info --val2017_json_path=data/coco/annotations/instances_val2017.json --det_results_path=det_result --net_out_num=3 --net_input_height=1216 --net_input_width=1216 --ifShowDetObj
+       python3.7 mmdet_postprocess.py --bin_data_path=result --test_annotation=val2017_jpg.info --det_results_path=det_result --net_out_num=3 --net_input_height=1216 --net_input_width=1216 --ifShowDetObj
       ```
 
       - 参数说明：

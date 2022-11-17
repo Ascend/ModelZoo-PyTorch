@@ -110,7 +110,7 @@ if __name__ == '__main__':
     from mmdet.core import bbox2result
     from mmdet.core import encode_mask_results
     from mmdet.datasets import CocoDataset
-    coco_dataset = CocoDataset(ann_file='/opt/npu/dataset/coco/annotations/instances_val2017.json', pipeline=[])
+    coco_dataset = CocoDataset(ann_file='data/coco/annotations/instances_val2017.json', pipeline=[])
     coco_class_map = {id:name for id, name in enumerate(coco_dataset.CLASSES)}
     #print(dir(coco_dataset))
     results = []
