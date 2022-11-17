@@ -127,19 +127,19 @@ if __name__ == '__main__':
         res_buff = []
         bbox_results = []
         cls_segms = []
-        for num in range(1, flags.net_out_num + 1):
+        for num in range(flags.net_out_num):
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if num == 1:
+                if num == 0:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
-                elif num == 2:
-                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
+                elif num == 1:
+                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int32").astype(np.int64)
                     buf = np.reshape(buf, [100, 1])
-                elif num == 3:
+                elif num == 2:
                     bboxes = np.fromfile(path_base + "_" + str(num - 2) + ".bin", dtype="float32")
                     bboxes = np.reshape(bboxes, [100, 5])
                     bboxes = torch.from_numpy(bboxes)
-                    labels = np.fromfile(path_base + "_" + str(num - 1) + ".bin", dtype="int64")
+                    labels = np.fromfile(path_base + "_" + str(num - 1) + ".bin", dtype="int32").astype(np.int64)
                     labels = np.reshape(labels, [100, 1])
                     labels = torch.from_numpy(labels)
                     mask_pred = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
