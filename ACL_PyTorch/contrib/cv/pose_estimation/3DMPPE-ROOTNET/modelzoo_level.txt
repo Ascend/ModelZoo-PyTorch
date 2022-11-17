@@ -1,3 +1,4 @@
 FuncStatus:OK
 PrecisionStatus:OK
-PerfStatus:PERFECT
+AutoTune:OK
+PerfStatus:OK 

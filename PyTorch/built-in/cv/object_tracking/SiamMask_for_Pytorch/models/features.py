@@ -17,6 +17,7 @@
 # Licensed under The MIT License
 # Written by Qiang Wang (wangqiang2015 at ia.ac.cn)
 # --------------------------------------------------------
+import torch
 import torch.nn as nn
 import logging
 
@@ -77,7 +78,7 @@ class MultiStageFeature(Features):
         for p in self.parameters():
             p.requires_grad = False
 
-        logger.info('Current training {} layers:\n\t'.format(self.train_num, self.train_layers()))
+        logger.info('Current training {} layers: {}\n\t'.format(self.train_num, self.train_layers()))
         for m in self.train_layers():
             for p in m.parameters():
                 p.requires_grad = True

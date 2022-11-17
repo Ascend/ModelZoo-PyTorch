@@ -25,9 +25,9 @@ def evaluate(result_path, result_file, img_path, ann_path):
     bin_path = os.listdir(result_path)[0]
     result_path = os.path.join(result_path, bin_path)
     bin_list = os.listdir(result_path)
-    bin_list.sort(key=lambda x: int(x[:-13]))
+    bin_list.sort(key=lambda x: int(x[:-6]))
     preds = []
-    for i,f in enumerate(bin_list):
+    for i, f in enumerate(bin_list):
         bin_path = os.path.join(result_path, f)
         coord_out = np.fromfile(bin_path, dtype=np.float32).reshape(-1, 3)
         preds.append(coord_out)
@@ -42,7 +42,7 @@ def evaluate(result_path, result_file, img_path, ann_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='preprocess of 3D-ResNets')
-    parser.add_argument('--img_path', default='MuPoTS/MultiPersonTestSet',type=Path, help='Directory path of videos')
+    parser.add_argument('--img_path', default='MuPoTS/MultiPersonTestSet', type=Path, help='Directory path of videos')
     parser.add_argument('--ann_path', default='MuPoTS/MuPoTS-3D.json', type=Path, help='Annotation file path')
     parser.add_argument('--input_path', default='out_bs1', type=Path, help='Directory path of videos')
     parser.add_argument('--result_file', default='result_bs1', type=Path, help='Directory path of binary output data')

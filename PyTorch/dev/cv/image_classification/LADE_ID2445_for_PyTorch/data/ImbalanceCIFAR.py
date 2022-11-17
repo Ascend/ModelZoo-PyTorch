@@ -36,6 +36,9 @@ Adopted from https://github.com/Megvii-Nanjing/BBN
 Customized by Kaihua Tang
 """
 
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np

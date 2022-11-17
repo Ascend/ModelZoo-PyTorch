@@ -17,7 +17,9 @@
 # Licensed under The MIT License
 # Written by Qiang Wang (wangqiang2015 at ia.ac.cn)
 # --------------------------------------------------------
+import os
 import torch
+import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -44,7 +46,7 @@ class SiamMask(nn.Module):
         if not self.anchor.generate_all_anchors(image_center, size):
             return
         all_anchors = self.anchor.all_anchors[1]  # cx, cy, w, h
-        self.all_anchors = torch.from_numpy(all_anchors).float().cuda()
+        self.all_anchors = torch.from_numpy(all_anchors).float().npu()
         self.all_anchors = [self.all_anchors[i] for i in range(4)]
 
     def feature_extractor(self, x):
@@ -136,18 +138,23 @@ class SiamMask(nn.Module):
 
 
 def get_cls_loss(pred, label, select):
-    if select.nelement() == 0: return pred.sum()*0.
-    pred = torch.index_select(pred, 0, select)
-    label = torch.index_select(label, 0, select)
-
-    return F.nll_loss(pred, label)
+    if select.nelement() == 0:
+        return pred.sum() * 0.
+    loss = F.nll_loss(pred, label, ignore_index=-1, reduction='none')
+    mask = torch.zeros(label.shape)
+    mask[select] = 1.
+    rank = int(os.environ['RANK'])
+    mask = mask.to(f'npu:{rank}')
+    loss = loss * mask
+    loss = loss.sum() / mask.sum()
+    return loss
 
 
 def select_cross_entropy_loss(pred, label):
     pred = pred.view(-1, 2)
     label = label.view(-1)
-    pos = Variable(label.data.eq(1).nonzero().squeeze()).cuda()
-    neg = Variable(label.data.eq(0).nonzero().squeeze()).cuda()
+    pos = Variable(label.data.eq(1).nonzero().squeeze()).npu()
+    neg = Variable(label.data.eq(0).nonzero().squeeze()).npu()
 
     loss_pos = get_cls_loss(pred, label, pos)
     loss_neg = get_cls_loss(pred, label, neg)
@@ -169,32 +176,60 @@ def weight_l1_loss(pred_loc, label_loc, loss_weight):
     return loss.sum().div(b)
 
 
-def select_mask_logistic_loss(p_m, mask, weight, o_sz=63, g_sz=127):
+def select_mask_logistic_loss(p_m, mask, weight, o_sz=63, g_sz=127, fixed_sz=16):
+    bs, _, _, _ = p_m.shape
+    fixed_batch = bs * fixed_sz
+
     weight = weight.view(-1)
-    pos = Variable(weight.data.eq(1).nonzero().squeeze())
-    if pos.nelement() == 0: return p_m.sum() * 0, p_m.sum() * 0, p_m.sum() * 0, p_m.sum() * 0
+    pos = Variable((weight == 1).int())
+    pos_sum, pos_bool = pos.sum(), pos.bool()
+
+    if pos_sum == 0:
+        return p_m.sum() * 0, p_m.sum() * 0, p_m.sum() * 0, p_m.sum() * 0
 
     p_m = p_m.permute(0, 2, 3, 1).contiguous().view(-1, 1, o_sz, o_sz)
-    p_m = torch.index_select(p_m, 0, pos)
-    p_m = nn.UpsamplingBilinear2d(size=[g_sz, g_sz])(p_m)
+    mask_pos = pos.view(-1, 1).repeat(1, o_sz * o_sz).view(-1, 1, o_sz, o_sz)
+    p_m = p_m * mask_pos
+
+    # ResizeBilinearV2 5HD
+    p_m = p_m.permute(1, 0, 2, 3).contiguous()
+    _, b, _, _ = p_m.shape
+    p_m = torch.squeeze(p_m)[pos_bool]
+    p_m_select = torch.zeros([1, fixed_batch, o_sz, o_sz], dtype=p_m.dtype, device=p_m.device)
+    p_m_select[0, :pos_sum] = p_m
+    p_m = nn.UpsamplingBilinear2d(size=[g_sz, g_sz])(p_m_select)
     p_m = p_m.view(-1, g_sz * g_sz)
 
+    # Im2col 5HD
+    mask = mask.permute(1, 0, 2, 3).contiguous()
     mask_uf = F.unfold(mask, (g_sz, g_sz), padding=32, stride=8)
+    mask_uf = torch.reshape(mask_uf, (mask.shape[1], mask_uf.shape[1] // mask.shape[1], -1))
     mask_uf = torch.transpose(mask_uf, 1, 2).contiguous().view(-1, g_sz * g_sz)
+    mask_pos = pos.float().view(-1, 1).repeat(1, g_sz * g_sz).view(-1, g_sz * g_sz)
+    mask_uf = mask_uf * mask_pos
+    mask_uf = mask_uf[pos_bool]
 
-    mask_uf = torch.index_select(mask_uf, 0, pos)
-    loss = F.soft_margin_loss(p_m, mask_uf)
-    iou_m, iou_5, iou_7 = iou_measure(p_m, mask_uf)
+    mask_uf_select = torch.zeros([fixed_batch, g_sz * g_sz], dtype=mask_uf.dtype, device=mask_uf.device)
+    mask_uf_select[:pos_sum, :] = mask_uf
+    loss = F.soft_margin_loss(p_m, mask_uf_select, reduction='none')
+    loss_all = torch.zeros([b, g_sz * g_sz], dtype=torch.float32, device=p_m.device)
+    loss_all[pos_bool] = loss[:pos_sum]
+    loss = loss_all
+    loss = loss * mask_pos
+    loss = loss.sum() / mask_pos.sum()
+
+    iou_m, iou_5, iou_7 = iou_measure(p_m, mask_uf_select, pos_sum)
     return loss, iou_m, iou_5, iou_7
 
 
-def iou_measure(pred, label):
+def iou_measure(pred, label, nonzero):
     pred = pred.ge(0)
-    mask_sum = pred.eq(1).add(label.eq(1))
+    mask_sum = pred.eq(1).int().add(label.eq(1).int())
     intxn = torch.sum(mask_sum == 2, dim=1).float()
     union = torch.sum(mask_sum > 0, dim=1).float()
-    iou = intxn/union
-    return torch.mean(iou), (torch.sum(iou > 0.5).float()/iou.shape[0]), (torch.sum(iou > 0.7).float()/iou.shape[0])
+    iou = intxn / union
+    return torch.sum(iou) / nonzero, (torch.sum(iou > 0.5).float() / nonzero), \
+           (torch.sum(iou > 0.7).float() / nonzero)
     
 
 if __name__ == "__main__":

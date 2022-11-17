@@ -5,3 +5,7 @@ onnxruntime == 1.9.0
 numpy == 1.20.3
 opencv-python == 4.5.2.54
 onnx-simplifier == 0.3.6
+protobuf==3.19.0
+decorator
+sympy
+tqdm

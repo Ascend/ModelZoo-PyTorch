@@ -99,7 +99,7 @@ FPS=`grep -a 'FPS'  ${output_log}|tail -1 |awk -F " " '{print $2}'`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'This Time' ${output_log} | tail -1 | awk -F " " '{print $5}'`
+train_accuracy=`grep -a 'This Time' ${output_log} | tail -1 | awk -F " " '{print $2}'`
 #打印，不需要修改
 echo "Final Train Accuracy (PSNR): ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

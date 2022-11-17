@@ -1,0 +1,21 @@
+diff -Nur ./b/PaddleOCR/configs/det/ch_ppocr_v2.0/ch_det_res18_db_v2.0.yml ./a/PaddleOCR/configs/det/ch_ppocr_v2.0/ch_det_res18_db_v2.0.yml
+--- ./b/PaddleOCR/configs/det/ch_ppocr_v2.0/ch_det_res18_db_v2.0.yml	2022-10-08 07:36:50.358556073 +0000
++++ ./a/PaddleOCR/configs/det/ch_ppocr_v2.0/ch_det_res18_db_v2.0.yml	2022-10-08 07:41:42.118566055 +0000
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: False
+   epoch_num: 1200
+   log_smooth_window: 20
+   print_batch_step: 2
+diff -Nur ./b/PaddleOCR/tools/infer_det.py ./a/PaddleOCR/tools/infer_det.py
+--- ./b/PaddleOCR/tools/infer_det.py	2022-10-08 07:36:50.586556081 +0000
++++ ./a/PaddleOCR/tools/infer_det.py	2022-10-08 07:42:32.686567785 +0000
+@@ -50,7 +50,6 @@
+             os.makedirs(save_path)
+         save_path = os.path.join(save_path, os.path.basename(img_name))
+         cv2.imwrite(save_path, src_im)
+-        logger.info("The detected Image saved in {}".format(save_path))
+ 
+ 
+ @paddle.no_grad()

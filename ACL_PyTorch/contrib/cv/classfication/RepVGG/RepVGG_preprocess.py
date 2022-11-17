@@ -16,6 +16,7 @@ import sys
 import multiprocessing
 from PIL import Image
 import numpy as np
+from tqdm import tqdm
 
 
 model_config = {
@@ -56,11 +57,7 @@ def resize(img, size, interpolation=Image.BILINEAR):
 
 
 def gen_input_bin(mode_type, file_batches, batch):
-    i = 0
-    for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
-
+    for file in tqdm(file_batches[batch]):
         # RGBA to RGB
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
         image = resize(image, model_config[mode_type]['resize']) # Resize

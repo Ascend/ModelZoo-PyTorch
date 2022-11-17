@@ -62,6 +62,18 @@ def load_config(args):
     # deal with lr
     if 'lr' not in config:
         config['lr'] = {}
+    else:
+        lr_factor = args.P if 'P' in vars(args) else 1
+        if 'start_lr' in config['lr']:
+            config['lr']['start_lr'] = config['lr']['start_lr'] * lr_factor
+        if 'end_lr' in config['lr']:
+            config['lr']['end_lr'] = config['lr']['end_lr'] * lr_factor
+        if 'warmup' in config['lr']:
+            if 'start_lr' in config['lr']['warmup']:
+                config['lr']['warmup']['start_lr'] = config['lr']['warmup']['start_lr'] * lr_factor
+            if 'end_lr' in config['lr']['warmup']:
+                config['lr']['warmup']['end_lr'] = config['lr']['warmup']['end_lr'] * lr_factor
+
     default = {
             'feature_lr_mult': 1.0,
             'rpn_lr_mult': 1.0,

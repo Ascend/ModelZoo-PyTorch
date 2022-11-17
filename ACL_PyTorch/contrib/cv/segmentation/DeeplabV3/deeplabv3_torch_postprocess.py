@@ -214,7 +214,7 @@ if __name__ == '__main__':
                         help='path to om/onnx output file, default ./result')
     parser.add_argument('--gt_path', default="/opt/npu/cityscapes/gtFine/val",
                         help='path to gtFine/val, default /opt/npu/cityscapes/gtFine/val')
-    parser.add_argument('--out_suffix', default="_leftImg8bit_1.bin",
+    parser.add_argument('--out_suffix', default="_leftImg8bit_0.bin",
                         help='suffix of the om/onnx output, default "_leftImg8bit_1.bin"')
     parser.add_argument('--result_path', default="./postprocess_result",
                         help='path to save the script result, default ./postprocess_result.txt')

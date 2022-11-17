@@ -34,6 +34,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from torchvision.models import vgg19
 import math
 import torch.npu

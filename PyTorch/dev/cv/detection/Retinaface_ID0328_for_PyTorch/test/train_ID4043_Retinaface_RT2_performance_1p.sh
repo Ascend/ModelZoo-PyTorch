@@ -21,7 +21,7 @@ train_epochs=1
 #训练batch_size
 batch_size=1
 #训练step
-train_steps=1000
+train_steps=999
 #学习率
 learning_rate=8e-2
 RANK_SIZE=1
@@ -118,12 +118,12 @@ fi
 #参数修改 
 sed -i "s|'epoch': 100,|'epoch': 1,|g" $cur_path/data/config.py
 sed -i "s|pass|break|g" $cur_path/train.py
-sed -i "s|iteration > max_iter|iteration > $train_steps|g" $cur_path/train.py 
+sed -i "s|args.max_steps and iteration > args.max_steps|iteration > args.max_steps|g" $cur_path/train.py 
 wait
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3 train.py --training_dataset=${data_path} --network resnet50 --apex > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 train.py --training_dataset=${data_path} --network resnet50 --apex --max_steps $train_steps> $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -132,7 +132,7 @@ e2e_time=$(( $end_time - $start_time ))
 #参数回改 
 sed -i "s|'epoch': 1,|'epoch': 100,|g" $cur_path/data/config.py
 sed -i "s|break|pass|g" $cur_path/train.py
-sed -i "s|iteration > $train_steps|iteration > max_iter|g" $cur_path/train.py 
+sed -i "s|iteration > args.max_steps|args.max_steps and iteration > args.max_steps|g" $cur_path/train.py 
 wait
 
 #结果打印，不需要修改

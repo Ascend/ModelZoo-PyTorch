@@ -134,7 +134,8 @@ header = []
 
 header.append('PyTorch Version: %s' % torch.__version__)
 header.append('CUDA device available: %s' % torch.npu.is_available())
-header.append('Using CUDA device: %s' % DEVICE)
+#header.append('Using CUDA device: %s' % DEVICE)
+header.append('Using CUDA device: {}'.format(DEVICE))
 header.append('Random Seed: %s' % RANDOM_SEED)
 header.append('Task Importance Weight: %s' % IMP_WEIGHT)
 header.append('Output Path: %s' % PATH)

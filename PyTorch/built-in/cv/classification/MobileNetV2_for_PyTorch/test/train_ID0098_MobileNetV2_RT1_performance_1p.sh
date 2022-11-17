@@ -66,6 +66,8 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --train_epochs* ]];then
+        train_epochs=`echo ${para#*=}`
     elif [[ $para == --start_step* ]];then
         start_step=`echo ${para#*=}`
     elif [[ $para == --stop_step* ]];then
