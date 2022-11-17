@@ -9,7 +9,7 @@
     "lr": {
         "type": "log",
         "start_lr": 0.005,
-        "end_lr": 0.0025,
+        "end_lr": 0.0005,
         "warmup": {
             "start_lr": 0.001,
             "end_lr": 0.005,
@@ -19,30 +19,30 @@
         }
     },
     "loss": {
-        "weight": [1.0, 1.2, 36]
+        "weight": [1.0, 1.0, 32]
     },
     "train_datasets": {
         "datasets": {
             "ytb_vos": {
-                "root": "../../data/ytb_vos/crop511",
-                "anno": "../../data/ytb_vos/train.json",
+                "root": "data/ytb_vos/crop511",
+                "anno": "data/ytb_vos/train.json",
                 "num_use": 200000,
                 "frame_range": 20
             },
             "vid": {
-                "root": "../../data/vid/crop511",
-                "anno": "../../data/vid/train.json",
+                "root": "data/vid/crop511",
+                "anno": "data/vid/train.json",
                 "num_use": 200000,
                 "frame_range": 100
             },
             "coco": {
-                "root": "../../data/coco/crop511",
-                "anno": "../../data/coco/train2017.json",
+                "root": "data/coco/crop511",
+                "anno": "data/coco/train2017.json",
                 "frame_range": 1
             },
             "det": {
-                "root": "../../data/det/crop511",
-                "anno": "../../data/det/train.json",
+                "root": "data/det/crop511",
+                "anno": "data/det/train.json",
                 "num_use": 100000,
                 "frame_range": 1
             }
@@ -69,8 +69,8 @@
     "val_datasets": {
         "datasets": {
             "vid": {
-                "root": "../../data/vid/crop511",
-                "anno": "../../data/vid/val.json",
+                "root": "data/vid/crop511",
+                "anno": "data/vid/val.json",
                 "num_use": 1000
             }
         },

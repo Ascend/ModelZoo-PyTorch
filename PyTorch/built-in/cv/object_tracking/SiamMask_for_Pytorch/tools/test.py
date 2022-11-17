@@ -20,8 +20,10 @@
 from __future__ import division
 import argparse
 import logging
-import numpy as np
 import cv2
+import os
+import random
+import numpy as np
 from PIL import Image
 from os import makedirs
 from os.path import join, isdir, isfile
@@ -280,7 +282,7 @@ def siamese_track(state, im, mask_enable=False, refine_enable=False, device='cpu
             c = -a * bbox[0]
             d = -b * bbox[1]
             mapping = np.array([[a, 0, c],
-                                [0, b, d]]).astype(np.float)
+                                [0, b, d]]).astype(np.float64)
             crop = cv2.warpAffine(image, mapping, (out_sz[0], out_sz[1]),
                                   flags=cv2.INTER_LINEAR,
                                   borderMode=cv2.BORDER_CONSTANT,
@@ -410,7 +412,7 @@ def track_vot(model, video, hp=None, mask_enable=False, refine_enable=False, dev
            args.resume.split('/')[-1].split('.')[0]
 
     if 'VOT' in args.dataset:
-        video_path = join('test', args.dataset, name,
+        video_path = join('output', args.dataset, name,
                           'baseline', video['name'])
         if not isdir(video_path): makedirs(video_path)
         result_path = join(video_path, '{:s}_001.txt'.format(video['name']))
@@ -419,7 +421,7 @@ def track_vot(model, video, hp=None, mask_enable=False, refine_enable=False, dev
                 fin.write("{:d}\n".format(x)) if isinstance(x, int) else \
                         fin.write(','.join([vot_float2str("%.4f", i) for i in x]) + '\n')
     else:  # OTB
-        video_path = join('test', args.dataset, name)
+        video_path = join('output', args.dataset, name)
         if not isdir(video_path): makedirs(video_path)
         result_path = join(video_path, '{:s}.txt'.format(video['name']))
         with open(result_path, "w") as fin:
@@ -530,7 +532,7 @@ def track_vos(model, video, hp=None, mask_enable=False, refine_enable=False, mot
         multi_mean_iou = []
 
     if args.save_mask:
-        video_path = join('test', args.dataset, 'SiamMask', video['name'])
+        video_path = join('output', args.dataset, 'SiamMask', video['name'])
         if not isdir(video_path): makedirs(video_path)
         pred_mask_final = np.array(pred_masks)
         pred_mask_final = (np.argmax(pred_mask_final, axis=0).astype('uint8') + 1) * (
@@ -570,7 +572,7 @@ def main():
 
     # setup model
     if args.arch == 'Custom':
-        from custom import Custom
+        from models.custom_base import Custom
         model = Custom(anchors=cfg['anchors'])
     else:
         parser.error('invalid architecture: {}'.format(args.arch))
@@ -579,7 +581,12 @@ def main():
         assert isfile(args.resume), '{} is not a valid file'.format(args.resume)
         model = load_pretrain(model, args.resume)
     model.eval()
-    device = torch.device('cuda' if (torch.cuda.is_available() and not args.cpu) else 'cpu')
+
+    args.rank = int(os.environ['RANK'])
+    args.device = torch.device(f'npu:{args.rank}')
+    torch.npu.set_device(args.device)
+    model = model.npu()
+    device = torch.device(f'npu:{args.rank}' if args.device else 'cpu')
     model = model.to(device)
     # setup dataset
     dataset = load_dataset(args.dataset)

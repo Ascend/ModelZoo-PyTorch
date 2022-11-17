@@ -37,7 +37,7 @@ logger = logging.getLogger('global')
 
 
 sample_random = random.Random()
-sample_random.seed(123456)
+sample_random.seed(12345)
 
 
 class SubDataSet(object):

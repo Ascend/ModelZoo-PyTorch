@@ -45,7 +45,7 @@ class AverageMeter(object):
         self.sum = {}
         self.count = {}
 
-    def update(self, batch=1, **kwargs):
+    def update(self, batch=1, num=1, **kwargs):
         val = {}
         for k in kwargs:
             val[k] = kwargs[k] / float(batch)
@@ -55,7 +55,7 @@ class AverageMeter(object):
                 self.sum[k] = 0
                 self.count[k] = 0
             self.sum[k] += kwargs[k]
-            self.count[k] += batch
+            self.count[k] += num
 
     def __repr__(self):
         s = ''
@@ -79,7 +79,10 @@ class AverageMeter(object):
         return Meter(attr, self.val[attr], self.avg(attr))
 
     def avg(self, attr):
-        return float(self.sum[attr]) / self.count[attr]
+        if not self.count[attr]:
+            return 0.
+        else:
+            return float(self.sum[attr]) / self.count[attr]
 
 
 class IouMeter(object):

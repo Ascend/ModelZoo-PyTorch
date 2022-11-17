@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import torch
+import torch_npu
 import logging
 logger = logging.getLogger('global')
 
@@ -43,10 +44,10 @@ def remove_prefix(state_dict, prefix):
 
 def load_pretrain(model, pretrained_path):
     logger.info('load pretrained model from {}'.format(pretrained_path))
-    if not torch.cuda.is_available():
+    if not torch.npu.is_available():
         pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage)
     else:
-        device = torch.cuda.current_device()
+        device = torch.npu.current_device()
         pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage.cuda(device))
 
     if "state_dict" in pretrained_dict.keys():
@@ -70,7 +71,7 @@ def load_pretrain(model, pretrained_path):
 
 def restore_from(model, optimizer, ckpt_path):
     logger.info('restore from {}'.format(ckpt_path))
-    device = torch.cuda.current_device()
+    device = torch.npu.current_device()
     ckpt = torch.load(ckpt_path, map_location=lambda storage, loc: storage.cuda(device))
     epoch = ckpt['epoch']
     best_acc = ckpt['best_acc']
@@ -81,4 +82,4 @@ def restore_from(model, optimizer, ckpt_path):
 
     check_keys(optimizer, ckpt['optimizer'])
     optimizer.load_state_dict(ckpt['optimizer'])
-    return model, optimizer, epoch, best_acc, arch
+    return model, optimizer, epoch, best_acc, arch, ckpt
