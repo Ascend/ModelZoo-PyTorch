@@ -79,7 +79,6 @@ wait
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-perf
 # 训练用例信息，不需要修改
 BatchSize=${BATCH_SIZE}
 DeviceType=`uname -m`
