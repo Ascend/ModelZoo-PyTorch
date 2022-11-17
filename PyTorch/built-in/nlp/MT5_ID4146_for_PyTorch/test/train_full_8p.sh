@@ -49,6 +49,14 @@ check_etp_flag=$(env | grep etp_running_flag)
 etp_flag=$(echo ${check_etp_flag#*=})
 if [ x"${etp_flag}" != x"true" ]; then
 	source ${test_path_dir}/env_npu.sh
+else
+	model_path=${data_path}/mt5-small/
+	cd ./transformers/
+	pip3 install -e .
+	cd ..
+	mkdir /root/.cache/huggingface
+	ln -s ${data_path}/wmt16/datasets /root/.cache/huggingface/
+	ln -s ${data_path}/wmt16/modules /root/.cache/huggingface/
 fi
 
 python3 -m torch.distributed.launch --nproc_per_node 8 run_translation.py \
@@ -113,3 +121,4 @@ echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${Ca
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+echo "ActualFPS" = ${FPS} >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
