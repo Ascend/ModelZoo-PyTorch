@@ -21,6 +21,8 @@ import time
 import warnings
 from inceptionresnetv2 import InceptionResNetV2
 import torch
+if torch.__version__>= '1.8':
+      import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -398,7 +400,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
                   'Acc@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
                 data_time=data_time, loss=losses, top1=top1, top5=top5))
-            print("batch_size:", args.batch_size, '* FPS@all {:.3f}'.format(args.batch_size/batch_time.avg))
+    print("Train:","batch_size:", args.batch_size, '* FPS@all {:.3f}'.format(args.batch_size/batch_time.avg))
     
 def validate(val_loader, model, criterion, args):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -446,7 +448,7 @@ def validate(val_loader, model, criterion, args):
                       'Acc@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                        i, len(val_loader), batch_time=batch_time, loss=losses,
                        top1=top1, top5=top5))
-                print("batch_size:", args.batch_size, '* FPS@all {:.3f}'.format(args.batch_size/batch_time.avg))
+        print("Test:","batch_size:", args.batch_size, '* FPS@all {:.3f}'.format(args.batch_size/batch_time.avg))
 
 
         # TODO: this should also be done with the ProgressMeter
