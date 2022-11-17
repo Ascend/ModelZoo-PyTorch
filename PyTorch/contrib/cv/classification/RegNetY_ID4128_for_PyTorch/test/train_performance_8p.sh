@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="RegNetX_for_PyTorch"
+Network="RegNetY_ID4128_for_PyTorch"
 # 训练batch_size
 batch_size=128
 # 训练使用的npu卡数
@@ -80,7 +80,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
+taskset -c $PID_START-$PID_END python3.7 -u imagenet_fast.py \
   --data ${data_path} \
   --epochs ${train_epochs} \
   --cos \
@@ -93,7 +93,7 @@ taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
   --label-smoothing 0.1 \
   --warmup 5 \
   --device-list 0,1,2,3,4,5,6,7 \
-  --loss-scale 16.0 \
+  --loss-scale 'dynamic' \
   --rank 0 \
   --world-size 1\
   --local_rank $RANK_ID \
@@ -113,12 +113,13 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'fps'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $19}'| awk '{val+=$1} END {if(NR!=0) printf("%.3f",val/NR)}'`
+FPS=`grep 'fps' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | tail -n 1 | awk '{print $19}'`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'top1:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "top1:" '{print $NF}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a 'Best acc'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $3}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -136,7 +137,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep Loss: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss:" '{print $NF}' | awk -F " " '{print $1}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
