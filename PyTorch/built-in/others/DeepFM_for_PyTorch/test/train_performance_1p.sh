@@ -23,7 +23,7 @@ data_path=""
 # 训练步数
 steps=1000
 #网络名称,同目录名称,需要模型审视修改
-Network="DeepFM_for_Pytorch"
+Network="DeepFM_ID4129_for_Pytorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=1024
