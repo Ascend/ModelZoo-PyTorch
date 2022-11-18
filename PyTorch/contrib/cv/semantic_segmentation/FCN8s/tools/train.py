@@ -36,10 +36,10 @@ import os
 import os.path as osp
 import time
 
-import mmcv
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
+import mmcv
 from mmcv.runner import get_dist_info, init_dist
 from mmcv.utils import Config, DictAction, get_git_hash
 
