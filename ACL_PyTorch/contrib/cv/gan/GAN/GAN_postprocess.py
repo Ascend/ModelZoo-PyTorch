@@ -26,10 +26,8 @@ def read_bin(filename):
     return data
 
 def main(args):
-    old_path = os.listdir(args.txt_path)
     os.makedirs(args.infer_results_path, exist_ok=True)
-    old_path.sort(reverse=True)
-    new_path = args.txt_path+'/'+old_path[0]
+    new_path = args.txt_path
     files = os.listdir(new_path)
     for file in files:
         filename = new_path + '/' + file
