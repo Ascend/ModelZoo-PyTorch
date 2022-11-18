@@ -79,18 +79,23 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+1. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+2. 获取源码。
 
    ```
    git clone https://github.com/open-mmlab/mmdetection        
    cd mmdetection              
-   git reset --hard 6c1347d7c0fa220a7be99cb19d1a9e8b6cbf7544        
-   pip3 install -r requirements/build.txt     
+   git reset --hard 6c1347d7c0fa220a7be99cb19d1a9e8b6cbf7544          
    python3 setup.py develop
    cd ..        
    ```
 
-2. 源码改动。
+3. 源码改动。
 
    i. 使用GCNet.diff对mmdetection源码进行修改
    ```
@@ -101,15 +106,18 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
    ```
    ii. 修改环境下onnx源码，除去对导出onnx模型检查。
    ```
-   vim /usr/local/python3.7.5/lib/python3.7/site-packages/torch/onnx/utils.py
-   ```
-   修改文件的_check_onnx_proto(proto)改为pass，执行:wq保存并退出。
-
-3. 安装依赖。
+   进入/torch/onnx/utils.py，修改文件的_check_onnx_proto(proto)改为pass，执行:wq保存并退出。
 
    ```
-   pip3 install -r requirements.txt
+
+4. 安装mmcv-full,mmpycocotools
+
    ```
+   pip3 install openmim
+   mim install mmcv-full==1.2.5
+   mim install mmpycocotools==12.0.3
+   ```
+
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -240,7 +248,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
 
 
         ```
-        python3.7 gen_dataset_info.py jpg ./datasets/coco/val2017 coco2017_jpg.info
+        python3 gen_dataset_info.py jpg ./datasets/coco/val2017 coco2017_jpg.info
         ```
 
         - 参数说明：
