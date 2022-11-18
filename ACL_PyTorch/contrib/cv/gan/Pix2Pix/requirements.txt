@@ -1,8 +1,9 @@
 onnx==1.7.0
-torchvision>=0.6.0
+torchvision==0.6.0
 numpy==1.21.0
 pillow==7.2.0
 decorator==5.0.9
 sympy==1.9
-dominate>=2.4.0
+dominate==2.7.0
 tqdm==4.64.0
+mpmath==1.2.1

@@ -44,16 +44,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import glob
-
+import argparse
 
 import torch
 from PIL import Image
 import numpy as np
 from torchvision import transforms
-import argparse
+from tqdm import tqdm
 
-
-def tensor2im(input_image, imtype=np.uint8):
+def tensor2im(input_image, imtype):
     """"Converts a Tensor array into a numpy image array.
 
     Parameters:
@@ -73,7 +72,8 @@ def tensor2im(input_image, imtype=np.uint8):
         image_numpy = input_image
     return image_numpy.astype(imtype)
 
-def make_power(img, base, method=Image.BICUBIC):
+
+def make_power(img, base, method):
     ow, oh = img.size
     h = int(round(oh / base) * base)
     w = int(round(ow / base) * base)
@@ -111,44 +111,23 @@ def bin2img_tensor(bin_src):
 
 def main():
     
-    if (os.path.exists(bin2img_file) == False):
-        os.makedirs(bin2img_file)
-    print(npu_bin_file + '*.bin')
-    npu_bin_list = glob.glob(npu_bin_file + '*.bin') # 获取指定目录下的所有bin文件
-    print(npu_bin_list)
-    # onnxTestImage_path = glob.glob(dataroot + '/testA/*.*')
-    # model_Ga = onnxruntime.InferenceSession(onnx_path + model_pix2pix_onnx_name)
-    # cossimis = []
-    for npu_bin in npu_bin_list:
+    if not os.path.exists(args.bin2img_file):
+        os.makedirs(args.bin2img_file)
+    all_file = args.npu_bin_file + '/*.bin'
+    npu_bin_list = glob.glob(all_file)
+    for npu_bin in tqdm(npu_bin_list):
         b2imtensor = bin2img_tensor(npu_bin)
-        image_numpy = tensor2im(b2imtensor)
+        image_numpy = tensor2im(b2imtensor, np.uint8)
         image_name = npu_bin.split('/')[-1].split('.')[0]+ '.jpg'
-        print(image_name)
-        image_save_path = bin2img_file+image_name 
+        image_save_path = os.path.join(args.bin2img_file, image_name) 
         image_pil = Image.fromarray(image_numpy)
         image_pil.save(image_save_path)
-    # print('average cosine_similarity:')
-    # print(np.mean(cossimis))
-    # plt.plot(cossimis)
-    # plt.xlabel("samples")
-    # plt.ylabel("cosine_similarity")
-    # plt.savefig('cosine_similarity.jpg')
-    # plt.show()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--bin2img_file', help='bin2img_file')
-    parser.add_argument('--npu_bin_file', help='npu_bin_file')
+    parser = argparse.ArgumentParser(description='provide the file path')
+    parser.add_argument('--bin2img_file', default='./result/bin2img_bs1/', type=str, help='bin2img_file')
+    parser.add_argument('--npu_bin_file', default='./result/bs1', type=str, help='npu_bin_file')
     args = parser.parse_args()
-
-
-    # bin2img_file = './result/bin2img_bs16/'
-    # npu_bin_file = './result/dumpOutput_device0_bs16/'
-
-    bin2img_file = args.bin2img_file
-    npu_bin_file = args.npu_bin_file
-
-    # dataroot = './datasets/facades'
     
     main()

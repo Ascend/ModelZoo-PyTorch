@@ -1,274 +1,271 @@
 # Pix2Pix模型-推理指导
 
-- [概述](##概述)
-- [输入输出数据](##输入输出数据)
-- [推理环境准备](##推理环境准备)
-- [快速上手](##快速上手)
-   - [准备数据集](###准备数据集)
-- [模型推理](##模型推理)
-- [模型推理精度&性能](##模型推理精度&性能)
-   - [精度](##精度)
-   - [性能](##性能)
 
-## 概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-Pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图像翻译的经典论文。其是将CGAN的思想运用在了图像翻译的领域上，学习从输入图像到输出图像之间的映射，从而得到指定的输出图像。
+    - [输入输出数据](#section540883920406)
 
-- 参考论文：
 
-  P. Isola, J.-Y. Zhu, T. Zhou, and A. A. Efros. Image-toimage translation with conditional adversarial networks. In IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2017.
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图像翻译的经典论文。其是将CGAN的思想运用在了图像翻译的领域上，学习从输入图像到输出图像之间的映射，从而得到指定的输出图像。
+
+
 
 - 参考实现：
 
   ```
   url=https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
-  branch=master 
+  commit_id=master
   commit_id=aac572a869b6cfc7486d1d8e2846e5e34e3f0e05
-  model_name=Pix2Pix
+  model_name=pix2pix
   ```
   
-- 适配昇腾 AI 处理器的实现：
 
-  ```
-  url=https://gitee.com/ascend/modelzoo.git 
-  branch=master 
-  commit_id=676b142ab9e3068ca0f4ef77825b1f55454b6e09
-  code_path=/contrib/ACL_PyTorch/Research/cv/gan/Pix2Pix
-  ```
-  
-  通过Git获取对应commit_id的代码方法如下：
 
-  ```
-  git clone {repository_url}        # 克隆仓库的代码 
-  cd {repository_name}              # 切换到模型的代码仓目录 
-  git checkout {branch}             # 切换到对应分支 
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id 
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
-## 输入输出数据
+## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
-   | 输入数据 | 大小                      | 数据类型 | 数据排布格式 |
-   | -------- | ------------------------- | -------- | ------------ |
-   | inputs   | batchsize x 3 x 256 x 256 | RGB_FP32 | NCHW         |
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 256 x 256 | NCHW         |
+
 
 - 输出数据
 
-   | 输出数据  | 大小                     | 数据类型 | 数据排布格式 |
-   | --------- | ------------------------ | -------- | ------------ |
-   | NetOutput | batchsize x3 x 256 x 256 | RGB_FP32 | NCHW         |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output  | RGB_FP32  | batchsize x 3 x 256 x 256 | NCHW          |
 
-## 推理环境准备
 
-- 本样例配套的CANN版本为CANN 5.1.RC2  。
 
-- 硬件环境、开发环境和运行环境准备请参见《[CANN 软件安装指南](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=installation-upgrade)》。
 
-- 该模型需要以下依赖。请确认安装依赖。
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-  **表 1** 版本配套表
+- 该模型需要以下插件与驱动
 
-| 依赖名称    | 版本                        | 默认版本 |
-| ----------- | --------------------------- | -------- |
-| CANN        | 5.1.RC2                     | -        |
-| onnx        | 1.7.0                       | 1.7.0    |
-| torch       | 1.5.0+ascend.post5.20220315 | None     |
-| torchvision | 0.6.0                       | None     |
-| numpy       | 1.21.0                      | None     |
-| Pillow      | 7.2.0                       | None     |
-| decorator   | 5.0.9                       | None     |
-| sympy       | 1.9                         | None     |
-| dominate    | 2.7.0                       | None     |
-| aclruntime  | 0.0.1                       | None     |
-| tqdm        | 4.64.0                      | None     |
+  **表 1**  版本配套表
 
-## 快速上手
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.5.0   | [AscendPyTorch环境准备](https://gitee.com/ascend/pytorch)                                                           |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-### 准备数据集
 
-1. 获取原始数据集
 
-   以facades为例，请用户需自行获取facades数据集，上传数据集到Pix2Pix的datasets目录下并解压（如：/Pix2Pix/datasets/facades）。训练集和验证集图片分别位于“train/”和“test/”文件夹路径下。  
-   
-   [数据集链接](http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/)
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   目录结构如下：(注：可不用下载源码仓代码)
    ```
-   ├Pix2Pix
+   ├─options
+   ├─models
    ├─datasets
-   ├── facades
-   │  ├──train├──图片1、2、3、4
-   │  │        
-   │  ├──test ├──图片1、2、3、4
+   ├─data
+   ├─scripts
+   ├─util
+   ├─checkpoints
+   ├─pix2pix_postprocess.py
+   ├─pix2pix_preprocess.py
+   ├─pix2pix_postprocess.py
+   ├─modelzoo_level.txt
+   ├─requirements.txt
+   ├─LICENSE
+   ├─README.md
    ```
 
-2. 数据预处理
+2. 安装依赖。
 
-   数据预处理将原始数据集jpg转换为模型输入的数据bin。
-
-- BIN 文件输入
-
-   ```bash
-   python pix2pix_preprocess.py --dataroot './datasets/facades' 
+   ```
+   pip3 install -r requirements.txt
    ```
 
-## 模型推理
+## 准备数据集<a name="section183221994411"></a>
 
-1. 模型转换
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   1. 获取权重文件（两种方法）
+   本模型支持[facades 验证集]()。用户可自行获取facades数据集上传到服务器，可放置于任意路径下，以"./datasets"目录为例。下：
 
-      1. 运行*download_pix2pix_model.sh*脚本下载权重文件
-      2. 下载Pix2Pix中facades_label2photo_pretrained的权重文件latest_net_G.pth，放到./checkpoints/facades_label2photo_pretrained目录下。
+   ```
+   ├─datasets
+      ├──facades
+            ├──train
+            ├──test      //验证集
+   ```
 
-   2. 导出onnx文件
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-      1. 使用latest_net_G.pth导出onnx文件
+   执行pix2pix_preprocess.py脚本，完成预处理。
 
-         运行pth2onnx.py脚本。
+   ```
+   python3 pix2pix_preprocess.py --dataroot ./datasets/facades --results_dir ./pre_bin
+   ```
+   - 参数说明：
 
-         ```bash
-         python pix2pix_pth2onnx.py \
-         --direction BtoA \ # 无需修改  
-         --model pix2pix \ # 无需修改 
-         --checkpoints_dir ./checkpoints \ # 路径
-         --name facades_label2photo_pretrained  # 文件名
+      - --dataroot：数据集路径。
+      - --results_dir：输出结果路径。
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      下载权重文件[latest_net_G.pth](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/a6f8e32cece64665973056e8cda253d1/1)，放到./checkpoints/facades_label2photo_pretrained目录下。
+
+   2. 导出onnx文件。
+
+      1. 使用pix2pix_pth2onnx.py导出onnx文件。
+
+         运行pix2pix_pth2onnx.py脚本。
+
          ```
-         获得netG_onnx.onnx文件。
-         
-   3. 使用ATC工具将ONNX模型转为OM模型
+         python3 pix2pix_pth2onnx.py --direction BtoA --model pix2pix --checkpoints_dir ./checkpoints --name facades_label2photo_pretrained
+         ```
+         在./checkpoints/facades_label2photo_pretrained/路径下生成netG_onnx.onnx文件。
 
-       1. 配置环境变量
-       
-          ```bash
-          source /usr/local/Ascend/ascend-toolkit/set_env.sh
-          ```
-       
-          > **说明：** 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 (推理)](https://gitee.com/link?target=https%3A%2F%2Fsupport.huawei.com%2Fenterprise%2Fzh%2Fascend-computing%2Fcann-pid-251168373%3Fcategory%3Ddeveloper-documents%26subcategory%3Dauxiliary-development-tools)》。
-       
-       2. 执行命令查看芯片名称($\{chip\_name\})
-       
-          ```bash
-          npu-smi info
-          #该设备芯片名为Ascend310P3(自行替换)
-          结果如下：
-          +--------------------------------------------------------------------------------------------+
-          | npu-smi 22.0.0                       Version: 22.0.2                                       |
-          +-------------------+-----------------+------------------------------------------------------+
-          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-          +===================+=================+======================================================+
-          | 0       310P3     | OK              | 16.5         56                0    / 0              |
-          | 0       0         | 0000:3B:00.0    | 0            924  / 21534                            |
-          +===================+=================+======================================================+
-          ```
-       
-       3. 执行ATC命令
-       
-          ```bash
-          atc --framework=5 --model=./checkpoints/facades_label2photo_pretrained/netG_onnx.onnx --output=./checkpoints/facades_label2photo_pretrained/netG_om_bs1 --input_format=NCHW --input_shape="inputs:1,3,256,256" --log=debug --soc_version=Ascend{chip_name}
-          ```
-       
-          - 参数说明：
-       
-            - --model：为ONNX模型文件。
-            - --framework：5代表ONNX模型。
-            - --output：输出的OM模型。
-            - --input_format：输入数据的格式。
-            - --input_shape：输入数据的shape。
-            - --log：日志级别。
-            - --soc_version：处理器型号。{chip_name}请自行替换为上述的芯片名称。
-       
-            运行成功后生成netG_om_bs1.om模型文件。
 
-2. 开始推理验证
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-   1. 使用ais-infer工具进行推理。
+      1. 配置环境变量。
 
-      1. 安装推理工具
-
-         ```bash
-         git clone https://gitee.com/ascend/tools.git
-         cd tools/ais-bench_workload/tool/ais_infer/backend/
-         pip3 wheel ./
-         pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_aarch64.whl
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
-      2. 创建结果输出目录
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-         ```bash
-         mkdir ./result
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
          ```
 
-      3. 执行推理
-   
-         ```bash
-         python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./checkpoints/facades_label2photo_pretrained/netG_om_bs1.om --input  "./datasets/facades/bin" --output "result/dumpOutput_device0_bs1" --outfmt BIN --batchsize 1
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=./checkpoints/facades_label2photo_pretrained/netG_onnx.onnx --output=./netG_om_bs1 --input_format=NCHW --input_shape="inputs:1,3,256,256" --log=debug --soc_version=Ascend${chip_name} 
          ```
 
          - 参数说明：
-         - --model: 需要进行推理的om模型。
-         - --input：模型需要的输入，支持bin文件和目录。
-         -  --output：推理结果输出路径。
-         - --outfmt：输出数据的格式。
 
-         推理后的输出在目录./result/dumpOutput_device0_bs1/Timestam下，Timestam为日期+时间的子文件夹,如 2022_08_11-10_37_29。为方便执行后续精度验证，可以更改输出文件夹的名字。
-         
-         ```bash
-         cd ./result/dumpOutput_device0_bs1
-         mv 2022_08_11-10_37_29/ bs1
-         ```
-   
-   
-   2. 数据后处理
-   
-      将推理的bin文件转为jpg
-   
-      ```bash
-      python3.7 pix2pix_postprocess.py --bin2img_file=./result/bin2img_bs1/  --npu_bin_file=./result/dumpOutput_device0_bs1/bs1
-      ```
-   
-      - 参数说明
-        - --bin2img_file 为图片保存路径
-        - --npu_bin_file 为推理输出bin文件路径
-   
-      转化的jpg文件在./result/bin2img_bs1/下参看
-   
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成netG_om_bs1.om模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+
+        ```
+        mkdir results
+        python3 ${tool_path}/ais_infer.py --model ./netG_om_bs1.om --input ./pre_bin --output ./results --output_dirname bs1 --outfmt BIN --batchsize 1  --device 0
+        ```
+
+      -   参数说明：
+         -  --model：om文件路径。
+         -  --input：输入的bin文件路径。
+         -  --output：推理结果文件路径。
+         -  --outfmt：输出结果格式。
+         -  --batchsize：批大小。
+         -  --device：NPU设备编号。
+         -  output_dirname：推理结果文件路径的子文件路径。
+
+        推理后的输出在推理结果文件路径的子文件路径下(./results/bs1/)。
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
    3. 精度验证。
-   
-      根据源码仓根据作者pth生成图片命令
-   
-      ```bash
-      python test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_label2photo_pretrained
+
+      调用脚本生成om结果复原图片图片。
+
       ```
-   
-      - 转化的jpg文件在./results/facades_label2photo_pretrained/test_latest/images查看
-   
-      - 将pth生成的图片与om生成的图片做比较
+      python3 pix2pix_postprocess.py --bin2img_file=./results/bin2img_bs1/  --npu_bin_file=./result/bs1/
+      ```
 
-## 模型推理精度&性能
+      - 参数说明：
+        - --bin2img_file：推理om模型的结果复原图路径。
+        - --npu_bin_file：推理om模型的结果路径。
 
-### 性能
-| Model     | Batch Size | 310 (FPS/Card) | 310P (FPS/Card) | T4 (FPS/Card) | 310P/310   | 310P/T4      |
-| --------- | ---------- | -------------- | -------------- | ------------- | --------- | ----------- |
-| Pix2Pix   | 1          | 548.63952      | 527.00922      | 509.4840455   | 0.9605747 | 1.034397894 |
-| Pix2Pix   | 4          | 500.15276      | 872.76959      | 409.9146045   | 1.745006  | 2.129149769 |
-| Pix2Pix   | 8          | 497.8626       | 743.1343       | 344.3259389   | 1.4926494 | 2.158229227 |
-| Pix2Pix   | 16         | 503.57928      | 920.12192      | 335.3932066   | 1.827164  | 2.743412512 |
-| Pix2Pix   | 32         | 500.53896      | 924.53483      | 295.1675537   | 1.8470787 | 3.132237332 |
-| Pix2Pix   | 64         | 498.2512       | 915.08315      | 282.4260397   | 1.83659   | 3.24008068  |
-| 最优batch |            | 548.63952      | 924.53483      | 509.4840455   | 1.6851408 | 1.81464923  |
+      ```
+      调用脚本生成onnx的推理结果复原图片，复原图片位于./results/facades_label2photo_pretrained/test_latest/images/，然后对onnx和om的结果进行观察对比。
+      python3 test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_label2photo_pretrained --num_test 106
+      ```
+      - 参数说明：
+        - --dataroot：数据集的路径。
+        - --num_test：验证集的数目。
 
-### 精度
+   4. 性能验证。
 
-![原图](https://foruda.gitee.com/images/1660789893035211565/2_real_b.png "2_real_B.png") | ![窗口](https://foruda.gitee.com/images/1660789909317587071/2_real_a.png "2_real_A.png")
----|---
-原图 | 窗口
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-![pth处理结果](https://foruda.gitee.com/images/1660789926632865129/2_fake_b.png "2_fake_B.png") | ![om模型batchsize=1处理结果](https://foruda.gitee.com/images/1660789949522235347/2_0.jpeg "2_0.jpg") | ![om模型batchsize=16处理结果](https://foruda.gitee.com/images/1660789966155300818/2_0.jpeg "2_0.jpg")
----|---|---
-pth处理结果 | om模型batchsize=1处理结果 | om模型batchsize=16处理结果
+      ```
+      python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+      ```
+
+      - 参数说明：
+        - --model：om模型的路径。
+        - --loop：推理的循环次数。
+        - --batch_size：批大小。
 
 
 
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| :---------: | :----------------: | :----------: | :----------: | :---------------: |
+|  Ascend310P   |   1   |   facades   |  通过观察图片精度达标   |   640.766   |
+|  Ascend310P   |   4   |   facades   |  通过观察图片精度达标   |   774.654   |
+|  Ascend310P   |   8   |   facades   |  通过观察图片精度达标   |   931.718   |
+|  Ascend310P   |   16   |   facades   |  通过观察图片精度达标   |   945.187   |
+|  Ascend310P   |   32   |   facades   |  通过观察图片精度达标   |   963.043   |
+|  Ascend310P   |   64   |   facades   |  通过观察图片精度达标   |   956.723   |
