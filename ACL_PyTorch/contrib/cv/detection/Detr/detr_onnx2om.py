@@ -17,28 +17,20 @@ import argparse
 parser = argparse.ArgumentParser('Set transformer detector', add_help=False)
 parser.add_argument('--batch_size', default=1)
 parser.add_argument('--auto_tune', default=False)
+parser.add_argument('--soc_version', default='Ascend310P3')
 args = parser.parse_args()
 
-input_shape = [['768,1280,24,40;768,768,24,24;768,1024,24,32'], [1024, 768, 32, 24], [1280, 768, 40, 24],
+input_shape = [[768, 1280, 24, 40], [768, 768, 24, 24], [768, 1024, 24, 32], [1024, 768, 32, 24], [1280, 768, 40, 24],
                [768, 1344, 24, 42], [1344, 768, 42, 24], [1344, 512, 42, 16], [512, 1344, 16, 42]]
 
-to_om = 'atc --framework=5 --model=model/detr_bs{}.onnx -output=auto_om/detr_bs{}_{}_{} ' \
-        '--input_shape="inputs:{},3,{},{};mask:{},{},{}" --input_format=ND --soc_version=Ascend310'
-to_dyom = 'atc --framework=5 --model=model/detr_bs{}.onnx -output=auto_om/detr_gear_bs{}_{} ' \
-          '--input_shape="inputs:{},3,-1,-1;mask:{},-1,-1"  --dynamic_dims="{}" --input_format=ND --soc_version=Ascend310'
+to_om = 'atc --framework=5 --model=./model/detr_bs{}.onnx -output=./auto_om/detr_bs{}_{}_{} ' \
+        '--input_shape="inputs:{},3,{},{};mask:{},{},{}" --input_format=ND --soc_version={}'
 
 if args.auto_tune == True:
     to_om = to_om + ' --auto_tune_mode="RL,GA"'
-    to_dyom = to_dyom + ' --auto_tune_mode="RL,GA"'
 
 for i in input_shape:
-    if len(i) == 4:
         command = to_om.format(args.batch_size, args.batch_size, i[0], i[1], args.batch_size, i[0], i[1],
-                               args.batch_size, i[2], i[3])
-        print(command)
-        os.system(command)
-    else:
-        command = to_dyom.format(args.batch_size, args.batch_size,
-                                 i[0].split(',')[0], args.batch_size, args.batch_size, i[0])
+                               args.batch_size, i[2], i[3], args.soc_version)
         print(command)
         os.system(command)

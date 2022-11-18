@@ -25,9 +25,9 @@ weight = np.array(weight)
 val_times = []
 with open(args.log_path, 'r') as l:
     for line in l.readlines():
-        if line.startswith('Inference average time without first time: '):
-            val_time = float(line.split(':')[1].replace('ms', '')) / 1000
+        if line.startswith('[INFO] throughput'):
+            val_time = float(line.split(':')[0].split('/')[1].split('(')[1].replace(')', '')) / 1000
             val_times.append(val_time)
 val_times = np.array(val_times)
-fps = 1 / sum(val_times * weight) * args.batch_size * 4
+fps = 1 / sum(val_times * weight) * args.batch_size #单位s
 print(fps)

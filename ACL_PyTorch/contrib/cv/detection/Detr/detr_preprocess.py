@@ -15,6 +15,7 @@
 import cv2
 from PIL import Image
 import os
+import torchvision.transforms as t
 import transformer as T
 import torch
 import argparse
@@ -32,7 +33,7 @@ if not os.path.exists(args.mask_file):
     os.mkdir(args.mask_file)
 
 normalize = T.Compose([
-    T.ToTensor(),
+    t.ToTensor(),
     T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
