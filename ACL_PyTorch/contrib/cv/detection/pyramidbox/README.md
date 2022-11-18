@@ -1,292 +1,274 @@
-# Pyramidbox Onnx模型端到端推理指导
+# Pyramidbox模型-推理指导
 
-- 1 模型概述
-  - [1.1 论文地址]([[1803.07737\] PyramidBox: A Context-assisted Single Shot Face Detector (arxiv.org)](https://arxiv.org/abs/1803.07737))
-  - [1.2 代码地址](https://gitee.com/kghhkhkljl/pyramidbox.git)
-- 2 环境说明
-  - [2.1 深度学习框架](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#21-深度学习框架)
-  - [2.2 python第三方库](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#22-python第三方库)
-- 3 模型转换
-  - [3.1 pth转onnx模型](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#31-pth转onnx模型)
-  - [3.2 onnx转om模型](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#32-onnx转om模型)
-- 4 数据集预处理
-  - [4.1 数据集获取](https://www.graviti.cn/open-datasets/WIDER_FACE)
-  - [4.2 数据集预处理](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#42-数据集预处理)
-  - [4.3 生成数据集信息文件](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#43-生成数据集信息文件)
-- 5 离线推理
-  - [5.1 benchmark工具概述](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#51-benchmark工具概述)
-  - [5.2 离线推理](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#52-离线推理)
-- 6 精度对比
-  - [6.1 离线推理精度统计](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#61-离线推理精度统计)
-  - [6.2 开源精度](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#62-开源精度)
-  - [6.3 精度对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#63-精度对比)
-- 7 性能对比
-  - [7.1 npu性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#71-npu性能数据)
-  - [7.2 T4性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#72-T4性能数据)
-  - [7.3 性能对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#73-性能对比)
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-- **论文地址**
-- **代码地址**
+    - [输入输出数据](#section540883920406)
 
-### 1.1 论文地址
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[Pyramidbox论文](https://arxiv.org/abs/1803.07737)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.2 代码地址
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-https://gitee.com/kghhkhkljl/pyramidbox.git
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-## 2 环境说明
+  ******
 
-- **深度学习框架**
-- **python第三方库**
+  
 
-### 2.1 深度学习框架
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-```
-python3.7.5
-CANN 5.0.3
+Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首先，通过使用一个新的上下文锚，通过一种半监督的方法来监督高级上下文特征的学习，；其次，提出了低层次特征pyramid网络，将足够的高层次上下文语义特征和低层次面部特征结合在一起，这也使得模型能够在单一镜头中预测所有尺度的人脸；第三，引入上下文敏感结构，增加预测网络的容量，提高最终输出的精度。此外，采用数据锚采样的方法对不同尺度的训练样本进行增广，增加了小人脸训练数据的多样性。
 
-pytorch >= 1.5.0
-torchvision >= 0.10.0
-onnx >= 1.7.0
 
-说明：若是在conda环境下，直接采用python，不用python3.7
-```
+- 参考实现：
 
-### 2.2 python第三方库
+  ```
+  url=https://gitee.com/kghhkhkljl/pyramidbox.git
+  commit_id=b498eefe0bd7ce6a530c195642e836c314b57c81
+  code_path=ACL_PyTorch/contrib/cv/detection
+  model_name=pyramidbox
+  ```
+  
 
-```
-torch == 1.9.0
-numpy == 1.20.3
-Pillow == 8.2.0
-opencv-python == 4.5.3.56
-scipy == 1.7.1
-easydict == 1.9
-six == 1.16.0
-pycocotools == 2.0.2
-```
+## 输入输出数据<a name="section540883920406"></a>
 
-## 3 模型转换
+- 输入数据
 
-- **pth转onnx模型**
-- **onnx转om模型**
+  | 输入数据 | 数据类型 | 大小                        | 数据排布格式 |
+  | -------- | -------- | --------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 1000 x 1000 | NCHW         |
 
-### 3.1 pth转onnx模型
 
-1.拉取代码仓库 （因为使用了开源代码模块，所以需要git clone一下）
+- 输出数据
 
-```shell
-git clone https://gitee.com/kghhkhkljl/pyramidbox.git
-```
+  | 输出数据 | 数据类型 | 大小             | 数据排布格式 |
+  | -------- | -------- | ---------------- | ------------ |
+  | output1  | FLOAT16  | batchsize x 1000 | ND           |
 
-克隆下来源代码之后将pr中的代码放到克隆下来的pyramidbox下面
 
-2.下载pth权重文件
-权重文件从百度网盘上获取：[pyramidbox_120000_99.02.pth_免费高速下载|百度网盘-分享无限制 (baidu.com)](https://pan.baidu.com/s/1VtzgB9srkJY4SUtVM3n8tw?_at_=1631960039538)
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-下载下来的权重文件也需要放在pyramidbox目录下面
+- 该模型需要以下插件与驱动
 
-3.使用pth2onnx.py进行onnx的转换
+  **表 1**  版本配套表
 
-```
-方法二：cd pyramidbox/test
-bash pth2onnx.sh
-方法二：cd pyramidbox
-python3.7 pyramidbox_pth2onnx.py  ./pyramidbox_1000.onnx ./pyramidbox_120000_99.02.pth
-第一个参数是onnx文件生成在当前目录的名字，第二个参数是当前目录下的权重文件
-```
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.9.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-### 3.2 onnx转om模型
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-1.设置环境变量
+## 获取源码<a name="section4622531142816"></a>
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+1. 获取源码。
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
+   ```shell
+   git clone https://gitee.com/kghhkhkljl/pyramidbox.git        # 克隆仓库的代码
+   ```
+   
+   克隆下来源代码之后将pr中的代码放到克隆下来的pyramidbox下面
+   
+2. 安装依赖。
 
-```
-方法一：cd pyramidbox/test
-bash onnxToom.sh 
-方法二：cd pyramidbox
-atc --framework=5 --model=pyramidbox_1000.onnx --input_format=NCHW --input_shape="image:1,3,1000,1000" --output=pyramidbox_1000_bs1 --log=debug --soc_version=Ascend310 --precision_mode=force_fp32
+   ```shell
+   pip3 install -r requirements.txt
+   ```
 
---model是onnx的文件名，--input_shape是图片的shape，--output是输出on文件的文件名
-```
+## 准备数据集<a name="section183221994411"></a>
 
-## 4 数据集预处理
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-- **数据集获取**
-- **数据集预处理**
-- **生成数据集信息文件**
+   本模型支持widerface 3226张图片的验证集。下载地址：[https://share.weiyun.com/5ot9Qv1](https://share.weiyun.com/5ot9Qv1)
 
-### 4.1 数据集获取
+   上传数据集到服务器pyramidbox目录并解压存放至images（需自建）。目录结构如下：
 
-下载WIDER_FACE数据集：
+   ```
+   images
+   ├── 0--Parade    //不同二级目录       
+   └── 1--Handshaking 
+   └── ...
+   ```
 
-下载地址：https://www.graviti.cn/open-datasets/WIDER_FACE
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-可以将数据集图片放在pyramidbox目录下的images下面,images目录需要自己创建（说明：images下面是个二级目录）
+   执行“pyramidbox_preprocess.py”脚本，完成预处理。
 
-```
-cd pyramidbox/images
-```
+   ```shell
+   cd pyramidbox
+   python3 pyramidbox_preprocess.py ./images ./data1000_1 ./data1000_2
+   ```
 
-### 4.2 数据集预处理
+   * 参数说明
+     * 第一个参数：数据集所在目录
+     * 第二个和第三个参数：预处理后的文件名（说明：由于预处理需要进行两次图片的不同处理，所以生成的文件有两个）
 
-1.预处理脚本pyramidbox_pth_preprocess.py
+3. 迁移数据集信息文件
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+   检索预处理完成后的结果并转移至新文件夹内
 
-```
-方法一：cd pyramidbox/test
-bash pre_deal.sh
-方法二：cd pyramidbox
-python3.7 pyramidbox_pth_preprocess.py ./images ./data1000_1 ./data1000_2
-第一个参数是预处理文件，第二个参数是数据集所在目录，第三和第四个参数是预处理后的文件名（说明：由于预处理需要进行两次图片的不同处理，所以生成的文件有两个）
-```
+   ```shell
+   find ${dataset_path}/data1000_1 -type f -iname "*.bin" -exec mv --backup=numbered -t ${dataset_path}/bs1_data_1 {} +
+   find ${dataset_path}/data1000_2 -type f -iname "*.bin" -exec mv --backup=numbered -t ${dataset_path}/bs1_data_2 {} +
+   
+   需要先新建用以存放迁移后数据的文件夹，因为预处理结果额外包含一层子目录，所以将所有后缀符合的文件全部取出放入新文件夹内
+   ```
 
-### 4.3 生成数据集信息文件
 
-1.生成数据集信息文件脚本get_info.py
+## 模型推理<a name="section741711594517"></a>
 
-2.执行生成数据集信息脚本，生成数据集信息文件
+1. 模型转换。
 
-```
-方法一：cd pyramidbox/test
-bash to_info.sh
-方法二：cd pyramidbox
-python3.7 get_info.py bin ./data1000_1 ./pyramidbox_pre_bin_1000_1.info 1000 1000
-python3.7 get_info.py bin ./data1000_2 ./pyramidbox_pre_bin_1000_2.info 1000 1000
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-第一个是预处理后的数据集所在目录，第二个参数是生成的info文件名，后两个参数是图片的宽高。（说明：由于预处理会对图片进行两次处理，生成的文件有两个，所以会需要生成两个info文件）
-```
+   1. 获取权重文件。
 
-## 5 离线推理
+       从该源码包中获取权重文件（pyramidbox_120000_99.02.pth）
 
-- **benchmark工具概述**
-- **离线推理**
+   2. 使用pth2onnx.py进行onnx的转换。
 
-### 5.1 benchmark工具概述
+      ```shell
+      python3 pyramidbox_pth2onnx.py  ./pyramidbox_1000.onnx ./pyramidbox_120000_99.02.pth
+      ```
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.3推理benchmark工具用户指南 
+      * 参数说明：
+        * 第一个参数：onnx文件生成在当前目录的名字。
+        * 第二个参数：当前目录下的权重文件
 
-### 5.2 离线推理
+      运行后生成pyramidbox_1000.onnx，该模型只支持bs1。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-1.执行离线推理
+       1. 配置环境变量。
+
+          ```shell
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          ```
+
+       2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-执行前需要将benchmark.x86_64移动到执行目录下
+          ```shell
+          npu-smi info
+          #该设备芯片名为Ascend310P3 （自行替换）
+          回显如下：
+          +-------------------+-----------------+------------------------------------------------------+
+          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+          +===================+=================+======================================================+
+          | 0       310P3     | OK              | 15.8         42                0    / 0              |
+          | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+          +===================+=================+======================================================+
+          | 1       310P3     | OK              | 15.4         43                0    / 0              |
+          | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+          +===================+=================+======================================================+
+          ```
 
-(注：执行目录是/pyramidbox)
+       3. 执行ATC命令。
 
-然后运行如下命令：
+          ```shell
+          atc --framework=5 --model=pyramidbox_1000.onnx --input_format=NCHW --input_shape="image:1,3,1000,1000" --output=pyramidbox_bs1 --log=debug --soc_version=Ascend${chip_name} --precision_mode=force_fp32 --fusion_switch_file=fusion_switch.cfg
+          ```
 
-```
-方法一：cd pyramidbox/test
-bash infer.sh
-方法二：cd pyramidbox
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./pyramidbox_1000_bs1.om -input_text_path=./pyramidbox_pre_bin_1.info -input_width=1000 -input_height=1000 -output_binary=True -useDvpp=False --precision_mode=force_fp32
-./benchmark.x86_64 -model_type=vision -device_id=1 -batch_size=1 -om_path=./pyramidbox_1000_bs1.om -input_text_path=./pyramidbox_pre_bin_2.info -input_width=1000 -input_height=1000 -output_binary=True -useDvpp=False --precision_mode=force_fp32
+          - 参数说明：
 
--om_path为om所在的路径，-input_text_path为预处理后的bin文件的整个info文件，-input_width为图片的宽，-input_height为图片的高。由于预处理后的数据集有两个，所以此脚本需要运行两次，第二次运行只需要改动-device_id=1和-input_text_path为相应的info文件即可(例如：pyramidbox_pre_bin_2.info)。
-```
+            -   --model：为ONNX模型文件。
+            -   --framework：5代表ONNX模型。
+            -   --output：输出的OM模型。
+            -   --input\_format：输入数据的格式。
+            
+            -   --input\_shape：输入数据的shape。
+            -   --log：日志级别。
+            -   --soc\_version：处理器型号。
+            -   --precision_mode：精度模式
+            -   --fusion_switch_file=fusion_switch.cfg：关闭算子融合的配置文件
+            
 
-输出结果默认保存在当前目录result/dumpOutput_device{0}以及result/dumpOutput_device{1}下，每个输入对应的输出对应2个_1.bin文件，我们只使用第一个。
+   运行成功后生成pyramidbox_bs1.om模型文件。
 
-2.处理目录result/dumpOutput_device{0}和result/dumpOutput_device{1}下的bin文件
+2. 开始推理验证。
 
-将该目录下的文件分类别存放，以便于后处理
+   1. 使用ais-infer工具进行推理。
 
-```
-方法一：cd pyramidbox/test
-bash convert.sh
-方法二：cd pyramidbox
-python3.7 convert.py ./result/dumpOutput_device0/ ./result/result1
-python3.7 convert.py ./result/dumpOutput_device1/ ./result/result2
-第一个参数是infer.sh脚本生成的文件，第二个参数是生成的二级目录所在的文件夹。
-```
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
+   2. 执行推理。
 
+        ```shell
+        mkdir result
+        
+        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path}
+        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path}
+        
+        说明：由于预处理后的数据集有两个，所以此脚本需要运行两次
+        ```
 
-## 6 精度对比
+        -   参数说明：
+   
+             -   model：om所在的路径。
+             -   input：预处理后的所有bin文件。
+             -   outfmt：输出格式，此处默认为BIN。
+             -   output：输出文件路径
 
-- **离线推理精度**
-- **开源精度**
-- **精度对比**
+        推理后的输出默认在当前目录result下。
+   
+        > **说明：** 
+        > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-### 6.1 离线推理精度统计
+   3. 处理目录下的bin文件
+   
+      ```shell
+      python3.7 convert.py ./2022_10_27-09_50_54 ./result/result11
+      python3.7 convert.py ./2022_10_27-10_02_51 ./result/result22
+      ```
+      
+      * 参数说明
+        * 第一个参数：生成的文件（需要改成对应日期）
+        * 第二个参数：生成的二级目录所在文件夹
+   
+3. 精度验证。
 
-1.后处理
+   经过后处理脚本和精度评估文件，此处evaluation文件中目标文件名(../output_1280需要和后处理输出一致。运行结束后会显示精度结果。
 
-```
-cd ./pyramidbox
-python3.7 pyramidbox_pth_postprocess.py
-```
+   ```shell
+   cd ./pyramidbox
+   python3.7 pyramidbox_postprocess.py ./evaluate/ground_truth/wider_face_val.mat ./images ./output_1280 ./result/result11 ./result/result22
+   
+   cd ./pyramidbox/evaluate
+   python3.7 evaluation.py
+   ```
 
-2.进行Ascend310上精度评估
+   * 后处理参数说明
+     * 第一个参数：mat文件目录
+     * 第二个参数：图片存储目录
+     * 第三个参数：后处理结果保存路径
+     * 第四个参数：处理后的bin文件目录1
+     * 第五个参数：处理后的bin文件目录2
 
-```
-cd ./pyramidbox/evaluate
-python3.7 evaluation.py
-```
+4. 性能验证。
 
-### 6.2 开源精度
+   可使用ais_infer推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
-pyramidbox在线推理精度：
+   ```shell
+   python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --loop=20 --outfmt=BIN --output=${output_path}
+   ```
 
-```
-Easy   Val AP: 0.958986327388428
-Medium Val AP: 0.9504929578311708
-Hard   Val AP: 0.907248372271328
-```
+   -   参数说明：
 
-### 6.3 精度对比
+        -   model：om所在的路径。
+        -   outfmt：输出格式，此处默认为BIN。
+        -   output：输出文件路径
 
-```
-Easy   Val AP: 0.9628280209085509
-Medium Val AP: 0.9538134269337523
-Hard   Val AP: 0.8798007442124222
-```
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-### 6.3 精度对比
+调用ACL接口推理计算，性能参考下列数据。
 
-由于源码没有固定住shape，所以精度会有损失，因此和同一分辨率下的在线推理进行对比。对比方式：三个尺度求和取平均。
-
-## 7 性能对比
-
-- **npu性能数据**
-- **T4性能数据**
-- **性能对比**
-
-### 7.1 npu性能数据
-
-1.benchmark工具在整个数据集上推理获得性能数据
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
-
-```
-[e2e] throughputRate: 0.609815, latency: 5.29013e+06
-[data read] throughputRate: 0.635586, moduleLatency: 1573.35
-[preprocess] throughputRate: 0.61536, moduleLatency: 1625.07
-[infer] throughputRate: 0.6099, Interface throughputRate: 0.620281, moduleLatency: 1638.44
-[post] throughputRate: 0.6099, moduleLatency: 1639.61
-```
-
-Interface throughputRate: 0.620281，0.620281x4=2.48既是batch1 310单卡吞吐率
-
-
-
-说明：由于bs2以上会导致爆显存，所以测不了性能，此处只测了bs1。
-
-![1633688929248](C:\Users\Eiven\AppData\Roaming\Typora\typora-user-images\1633688929248.png)
-
-### 7.2 T4性能数据
-
-batch1 t4单卡吞吐率的计算方法是通过计算平均每张图片的耗时t，然后用1/t即是batch1 t4的单卡吞吐率。此处的t=1.560808，所以吞吐率为0.6407
-
-### 7.3 性能对比
-
-batch1：0.620281x4=2.48>0.6407
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+| Ascend310P | 1 | Widerface | Easy   Val AP: 0.9629268827693285<br/>Medium Val AP: 0.9538798956286163<br/>Hard   Val AP: 0.8808383584682273 | 8.583 |
