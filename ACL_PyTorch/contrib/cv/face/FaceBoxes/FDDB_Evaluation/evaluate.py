@@ -20,6 +20,76 @@ import numpy as np
 import cv2
 from bbox import bbox_overlaps
 import pickle
+import shutil
+
+def convert():
+    path = os.getcwd()
+
+    if not os.path.exists(os.path.join(path, '1')):
+        os.makedirs(os.path.join(path, '1'))
+    with open('FDDB_dets.txt', 'r') as f:
+    
+        while(True):
+            img_name = f.readline().strip('\n').replace('/', '_')
+            if img_name:
+                pass
+            else:
+                break
+        
+            raw = f.readline().strip('\n').split('.')[0]
+            file_name = ''.join([img_name, '.txt'])
+        
+            os.chdir(os.path.join(path, '1'))
+            with open(file_name, 'w') as new_file:
+                new_file.write(img_name+'\n')
+                new_file.write(raw+'\n')
+                for i in range(int(raw)):
+                    new_file.write(f.readline())
+            os.chdir(path)
+
+def pred_create(gt_path):
+    path = os.getcwd()
+    if not os.path.exists(os.path.join(path, 'pred_sample')):
+        os.makedirs(os.path.join(path, 'pred_sample'))
+    pred_path = os.path.join(path, 'pred_sample')
+    for j in range(1, 11):    
+        if not os.path.exists(os.path.join(pred_path, '{}'.format('%01d' % j))):
+            os.makedirs(os.path.join(pred_path, '{}'.format('%01d' % j)))
+        with open(os.path.join(gt_path, 'FDDB-fold-{}-ellipseList.txt'.format('%02d' % j)), 'r') as f:
+    
+            while(True):
+                img_name = f.readline().strip('\n').replace('/', '_')
+                if img_name:
+                    pass
+                else:
+                    break
+        
+                raw = f.readline().strip('\n').split('.')[0]
+                file_name = ''.join([img_name, '.txt'])
+        
+                os.chdir(os.path.join(pred_path, '{}'.format('%01d' % j)))
+                with open(file_name, 'w') as new_file:
+                    new_file.write(img_name+'\n')
+                    new_file.write(raw+'\n')
+                    for i in range(int(raw)):
+                        new_file.write(f.readline())
+                os.chdir(path)
+
+def split():
+    path = os.getcwd()  # D:\PythonProject\FDDB_Evaluation
+    pre_dir = os.path.join(path, '1')  # D:\PythonProject\FDDB_Evaluation\1
+    # D:\PythonProject\FDDB_Evaluation\pred_sample
+    cur_path = os.path.join(path, 'pred_sample')
+        
+    for dir_name in os.listdir(cur_path):
+        print(dir_name)
+        # D:\PythonProject\FDDB_Evaluation\pred_sample\1
+        tmp_path = os.path.join(cur_path, dir_name.strip('\n'))
+        print(tmp_path)
+        for data in os.listdir(tmp_path):
+            pre_file = os.path.join(pre_dir, data)
+            cur_file = os.path.join(tmp_path, data)
+            shutil.move(pre_file, cur_file)
 
 def get_gt_boxes(gt_dir):
     """ gt dir: (wider_face_val.mat, wider_easy_val.mat, wider_medium_val.mat, wider_hard_val.mat)"""
@@ -79,18 +149,13 @@ def read_pred_file(filepath):
         img_file = lines[0].rstrip('\n\r')
         lines = lines[2:]
 
-    # b = lines[0].rstrip('\r\n').split(' ')[:-1]
-    # c = float(b)
-    # a = map(lambda x: [[float(a[0]), float(a[1]), float(a[2]), float(a[3]), float(a[4])] for a in x.rstrip('\r\n').split(' ')], lines)
     boxes = []
     for line in lines:
         line = line.rstrip('\r\n').split(' ')
         if line[0] == '':
             continue
-        # a = float(line[4])
         boxes.append([float(line[0]), float(line[1]), float(line[2]), float(line[3]), float(line[4])])
     boxes = np.array(boxes)
-    # boxes = np.array(list(map(lambda x: [float(a) for a in x.rstrip('\r\n').split(' ')], lines))).astype('float')
     return img_file.split('/')[-1], boxes
 
 
@@ -270,6 +335,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--pred', default="./pred_sample/")
     parser.add_argument('-g', '--gt', default='./ground_truth/')
-
     args = parser.parse_args()
+
+    pred_create(args.gt)
+    convert()
+    split()
     evaluation(args.pred, args.gt)

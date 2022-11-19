@@ -1,0 +1,53 @@
+diff --git a/utils/build.py b/utils/build.py
+index 30aa149..067149d 100755
+--- a/utils/build.py
++++ b/utils/build.py
+@@ -56,7 +56,6 @@ def locate_cuda():
+     return cudaconfig
+ 
+ 
+-CUDA = locate_cuda()
+ 
+ # Obtain the numpy include directory.  This logic works across numpy versions.
+ try:
+@@ -118,23 +117,6 @@ ext_modules = [
+         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+         include_dirs=[numpy_include]
+     ),
+-    Extension('nms.gpu_nms',
+-              ['nms/nms_kernel.cu', 'nms/gpu_nms.pyx'],
+-              library_dirs=[CUDA['lib64']],
+-              libraries=['cudart'],
+-              language='c++',
+-              runtime_library_dirs=[CUDA['lib64']],
+-              # this syntax is specific to this build system
+-              # we're only going to use certain compiler args with nvcc and not with gcc
+-              # the implementation of this trick is in customize_compiler() below
+-              extra_compile_args={'gcc': ["-Wno-unused-function"],
+-                                  'nvcc': ['-arch=sm_52',
+-                                           '--ptxas-options=-v',
+-                                           '-c',
+-                                           '--compiler-options',
+-                                           "'-fPIC'"]},
+-              include_dirs=[numpy_include, CUDA['include']]
+-              ),
+ ]
+ 
+ setup(
+diff --git a/utils/nms_wrapper.py b/utils/nms_wrapper.py
+index a956568..84c6b39 100755
+--- a/utils/nms_wrapper.py
++++ b/utils/nms_wrapper.py
+@@ -6,7 +6,6 @@
+ # --------------------------------------------------------
+ 
+ from .nms.cpu_nms import cpu_nms, cpu_soft_nms
+-from .nms.gpu_nms import gpu_nms
+ 
+ 
+ # def nms(dets, thresh, force_cpu=False):
+@@ -28,4 +27,3 @@ def nms(dets, thresh, force_cpu=False):
+     if force_cpu:
+         #return cpu_soft_nms(dets, thresh, method = 0)
+         return cpu_nms(dets, thresh)
+-    return gpu_nms(dets, thresh)

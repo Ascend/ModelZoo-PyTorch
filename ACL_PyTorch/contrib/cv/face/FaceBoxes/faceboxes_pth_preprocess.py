@@ -65,16 +65,15 @@ if __name__ == '__main__':
             height_pad = target_size -img.shape[0]
             top = 0
             bottom = height_pad
-            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0,0,0))
+            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0, 0, 0))
             im_height, im_width, _ = img.shape
-    
-            img -= (104, 117, 123)
-            img = img.transpose(2, 0, 1)
+
             img = torch.from_numpy(img).unsqueeze(0)
+            img = img.contiguous().byte()
             
-            img_name1='_'.join(img_name.split('/')) 
-            print('begin: {0}, {1}'.format(img_name,img.shape))
-            fw.write('{:s} {:.3f} {:.3f} {:.3f}\n'.format(img_name1,im_height, im_width, resize))
+            img_name1 = '_'.join(img_name.split('/'))
+            print('begin: {0}, {1}'.format(img_name, img.shape))
+            fw.write('{:s} {:.3f} {:.3f} {:.3f}\n'.format(img_name1, im_height, im_width, resize))
             
             
             true_path = os.path.join(args.save_folder)

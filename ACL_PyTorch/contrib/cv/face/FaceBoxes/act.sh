@@ -1,2 +1,0 @@
-atc --framework=5 --model=faceboxes-b0.onnx --output=faceboxes-b0_bs1 --input_format=NCHW --input_shape="image:1,3,1024,1024" --log=debug --soc_version=Ascend310 --out_nodes="Reshape_127:0;Softmax_134:0" --auto_tune_mode="RL,GA" 
-atc --framework=5 --model=faceboxes-b0.onnx --output=faceboxes-b0_bs16 --input_format=NCHW --input_shape="image:16,3,1024,1024" --log=debug --soc_version=Ascend310 --out_nodes="Softmax_134:0;Reshape_127:0" --auto_tune_mode="RL,GA"
