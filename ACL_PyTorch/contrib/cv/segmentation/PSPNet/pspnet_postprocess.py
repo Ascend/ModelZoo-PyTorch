@@ -18,7 +18,10 @@ import argparse
 import torch
 import mmcv
 import numpy as np
+
+from tqdm import tqdm
 from terminaltables import AsciiTable
+
 
 CLASSES = ('background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
            'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog',
@@ -82,7 +85,7 @@ def voc2012_evaluation(results, gt_seg_maps):
     total_area_union = torch.zeros((num_classes,), dtype=torch.float64)
     total_area_pred_label = torch.zeros((num_classes,), dtype=torch.float64)
     total_area_label = torch.zeros((num_classes,), dtype=torch.float64)
-    for i in range(num_imgs):
+    for i, data in enumerate(tqdm(range(num_imgs))):
         if isinstance(results[i], str):
             pred_label = torch.from_numpy(np.load(results[i]))
         else:
@@ -224,7 +227,7 @@ if __name__ == '__main__':
     for bin_file in sorted(total_img):
         path_base = os.path.join(bin_path, bin_file)
         # load all segected output tensor
-        output = np.fromfile(path_base + "_" + str(1) + ".bin", dtype="int32")
+        output = np.fromfile(path_base + "_" + str(0) + ".bin", dtype="int64")
         output = np.reshape(output, [net_input_width, net_input_height])
         current_img_size = img_size_dict[bin_file]
         output = postprocess_mask(output, img_size_dict[bin_file], net_input_width, net_input_height)

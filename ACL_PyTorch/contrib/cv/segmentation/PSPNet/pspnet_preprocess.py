@@ -19,6 +19,8 @@ import cv2
 import mmcv
 import torch
 
+from tqdm import tqdm
+
 
 dataset_config = {
     'mean': (123.675, 116.28, 103.53),
@@ -83,13 +85,13 @@ if __name__ == "__main__":
                 img_name = line.strip()
                 img_info = img_name + img_suffix
                 img_infos.append(img_info)
-    print(img_infos)
-    images = os.listdir(flags.image_folder_path)
 
-    for image_name in images:
+    images = os.listdir(flags.image_folder_path)
+    
+    for idx, image_name in enumerate(tqdm(images)):        
         if not (image_name.endswith(".jpeg") or image_name.endswith(".JPEG") or image_name.endswith(
                 ".jpg") and image_name in img_infos):
             continue
-        print("start to process image {}....".format(image_name))
+
         path_image = os.path.join(flags.image_folder_path, image_name)
         voc2012_preprocess(path_image, flags.bin_folder_path)

@@ -16,6 +16,7 @@ import os
 import sys
 import cv2
 from glob import glob
+from tqdm import tqdm
 
 
 def get_bin_info(file_path, info_name, width, height):
@@ -37,7 +38,7 @@ def get_jpg_info(file_path, info_name):
             if len(image_name) == 0:
                 continue
             else:
-                for index, img in enumerate(image_name):
+                for index, img in enumerate(tqdm(image_name)):
                     img_cv = cv2.imread(img)
                     shape = img_cv.shape
                     width, height = shape[1], shape[0]
