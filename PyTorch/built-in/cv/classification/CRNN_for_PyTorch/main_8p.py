@@ -37,7 +37,7 @@ def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
     parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
     parser.add_argument('--npu', help='npu id', type=str)
-    parser.add_argument('--bin', type=ast.literal_eval, default=True, help='enable run time2.0 model')
+    parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
         config = yaml.safe_load(f)
