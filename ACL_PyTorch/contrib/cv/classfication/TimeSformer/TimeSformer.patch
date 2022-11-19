@@ -1,0 +1,17 @@
+--- a/mmaction2/tools/deployment/pytorch2onnx.py
++++ b/mmaction2/tools/deployment/pytorch2onnx.py
+@@ -70,10 +70,12 @@
+         model,
+         input_tensor,
+         output_file,
++        input_names=['imgs'],
++        output_names=['result'],
+         export_params=True,
+         keep_initializers_as_inputs=True,
+-        verbose=show,
+-        opset_version=opset_version)
++        verbose=False,
++        opset_version=11)
+ 
+     print(f'Successfully exported ONNX model: {output_file}')
+     if verify:
