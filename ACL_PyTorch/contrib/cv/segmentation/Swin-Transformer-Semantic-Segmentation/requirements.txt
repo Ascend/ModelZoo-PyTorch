@@ -1,0 +1,12 @@
+torch==1.7.1
+torchvision==0.8.2
+torchaudio==0.7.2
+numpy==1.21.6
+mmcv-full==1.2.0
+tqdm==4.64.1
+decorator==5.1.1
+sympy==1.10.1
+timm==0.6.11
+opencv-python==4.6.0.66
+onnx==1.11.0
+onnxruntime==1.12.1
