@@ -1,0 +1,10 @@
+diff -Nur ./a/PaddleOCR/configs/det/det_r50_vd_sast_icdar15.yml ./b/PaddleOCR/configs/det/det_r50_vd_sast_icdar15.yml
+--- ./a/PaddleOCR/configs/det/det_r50_vd_sast_icdar15.yml	2022-11-07 02:26:09.096348151 -1000
++++ ./b/PaddleOCR/configs/det/det_r50_vd_sast_icdar15.yml	2022-11-07 02:55:52.904409180 -1000
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: False
+   epoch_num: 5000
+   log_smooth_window: 20
+   print_batch_step: 2
