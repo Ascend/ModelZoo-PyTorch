@@ -290,10 +290,8 @@ def compute_feature_stats_for_generator(opts, detector_url, detector_kwargs, rel
     detector = get_feature_detector(url=detector_url, device=opts.device, num_gpus=opts.num_gpus, rank=opts.rank, verbose=progress.verbose)
 
     # Main loop.
-    torch.npu.set_start_fuzz_compile_step(3)
     while not stats.is_full():
         images = []
-        torch.npu.global_step_inc()
         for _i in range(batch_size // batch_gen):
             z = torch.randn([batch_gen, G.z_dim], device=opts.device)
             c = [dataset.get_label(np.random.randint(len(dataset))) for _i in range(batch_gen)]

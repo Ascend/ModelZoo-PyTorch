@@ -58,19 +58,16 @@ def constant(value, shape=None, dtype=None, device=None, memory_format=None):
 #----------------------------------------------------------------------------
 # Replace NaN/Inf with specified numerical values.
 
-try:
-    nan_to_num = torch.nan_to_num # 1.8.0a0
-except AttributeError:
-    def nan_to_num(input, nan=0.0, posinf=None, neginf=None, *, out=None): # pylint: disable=redefined-builtin
-        assert isinstance(input, torch.Tensor)
-        if posinf is None:
-            posinf = torch.finfo(input.dtype).max
-        if neginf is None:
-            neginf = torch.finfo(input.dtype).min
-        assert nan == 0
-        # return torch.clamp(input.unsqueeze(0).nansum(0), min=neginf, max=posinf, out=out)
-        _input = torch.where(torch.isnan(input), torch.full_like(input, 0), input)
-        return torch.clamp(_input, min=neginf, max=posinf, out=out)
+def nan_to_num(input, nan=0.0, posinf=None, neginf=None, *, out=None): # pylint: disable=redefined-builtin
+    assert isinstance(input, torch.Tensor)
+    if posinf is None:
+        posinf = torch.finfo(input.dtype).max
+    if neginf is None:
+        neginf = torch.finfo(input.dtype).min
+    assert nan == 0
+    # return torch.clamp(input.unsqueeze(0).nansum(0), min=neginf, max=posinf, out=out)
+    _input = torch.where(torch.isnan(input), torch.full_like(input, 0), input)
+    return torch.clamp(_input, min=neginf, max=posinf, out=out)
 
 #----------------------------------------------------------------------------
 # Symbolic assert.

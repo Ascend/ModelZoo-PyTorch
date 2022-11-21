@@ -1,10 +1,18 @@
 # StlyeGAN2-ADA for PyTorch
 
--   [概述](#概述)
--   [准备训练环境](#准备训练环境)
--   [开始训练](#开始训练)
--   [训练结果展示](#训练结果展示)
--   [版本说明](#版本说明)
+- [StlyeGAN2-ADA for PyTorch](#stlyegan2-ada-for-pytorch)
+- [概述](#概述)
+  - [简述](#简述)
+- [准备训练环境](#准备训练环境)
+  - [准备环境](#准备环境)
+  - [准备数据集](#准备数据集)
+- [开始训练](#开始训练)
+  - [训练模型](#训练模型)
+- [训练结果展示](#训练结果展示)
+- [生成图片](#生成图片)
+- [版本说明](#版本说明)
+  - [变更](#变更)
+  - [已知问题](#已知问题)
 
 
 
@@ -110,12 +118,12 @@ StlyeGAN2-ADA-Pytorch使用FID(Fréchet inception distance)作为评价模型训
 
 2. 数据预处理。
 
-   由于NPU硬件和一些算子的限制，输入图片的尺寸必须不大于64×64。可以使用`dataset_tool.py`对原始数据集进行处理：
+   可以使用`dataset_tool.py`对原始数据集进行处理：
    ```bash
    python dataset_tool.py --source=~/downloads/afhq/train/wild --dest=~/data/afhqwild_64.zip \
        --width=64 --height=64
    ```
-   得到的zip文件可以直接用于训练，也可解压后用于训练。
+   得到的zip文件可以直接用于训练，也可解压后用于训练。可通过`--width`与`--height`指定图片分辨率，使用大分辨率时按需调整batch_size。
 
 
 # 开始训练
