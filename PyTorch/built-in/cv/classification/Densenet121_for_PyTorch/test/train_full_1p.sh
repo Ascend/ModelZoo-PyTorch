@@ -122,6 +122,8 @@ nohup python3.7 ${cur_path}/densenet121_1p_main.py  \
       --eval-freq 5 \
       --batch-size $batch_size \
       --epochs $train_epochs \
+      --loss-scale -1 \
+      --dist-backend 'hccl' \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 

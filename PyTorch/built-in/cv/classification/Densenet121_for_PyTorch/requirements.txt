@@ -1,1 +1,3 @@
-opencv-python
+decorator
+sympy
+torchvision==0.9.1

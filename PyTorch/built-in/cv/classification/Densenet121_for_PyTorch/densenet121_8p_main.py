@@ -288,7 +288,10 @@ def main_worker(gpu, ngpus_per_node, args):
                                 weight_decay=args.weight_decay)
 
     if args.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, 
+                                          opt_level=args.opt_level, 
+                                          loss_scale=args.loss_scale, 
+                                          combine_grad=True)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     # optionally resume from a checkpoint
@@ -330,7 +333,8 @@ def main_worker(gpu, ngpus_per_node, args):
             best_acc1 = max(acc1, best_acc1)
 
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                                                        and args.rank % ngpus_per_node == 0 and epoch == args.epochs - 1):
+                                                        and args.rank % ngpus_per_node == 0 
+                                                        and epoch == args.epochs - 1):
                 if args.amp:
                     save_checkpoint({
                         'epoch': epoch + 1,
@@ -549,4 +553,11 @@ def accuracy(output, target, topk=(1,)):
 
 
 if __name__ == '__main__':
+    
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    print("option:", option)
+    torch.npu.set_option(option)
+
     main()

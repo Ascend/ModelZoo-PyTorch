@@ -143,10 +143,10 @@ def main():
 
 
     if args.seed is not None:
-        random.seed(seed)
-        os.environ['PYTHONHASHSEED'] = str(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+        os.environ['PYTHONHASHSEED'] = str(args.seed)
+        np.random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        random.seed(args.seed)
 
     if args.gpu is not None:
         warnings.warn('You have chosen a specific GPU. This will completely '
@@ -250,7 +250,10 @@ def main_worker(gpu, ngpus_per_node, args):
                                 weight_decay=args.weight_decay)
 
     if args.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, 
+                                          opt_level=args.opt_level, 
+                                          loss_scale=args.loss_scale, 
+                                          combine_grad=True)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -529,4 +532,11 @@ def accuracy(output, target, topk=(1,)):
 
 
 if __name__ == '__main__':
+
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    print("option:", option)
+    torch.npu.set_option(option)
+
     main()
