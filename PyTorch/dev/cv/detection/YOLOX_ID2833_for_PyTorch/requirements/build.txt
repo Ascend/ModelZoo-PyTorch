@@ -1,0 +1,4 @@
+# These must be installed before building mmdetection
+cython
+numpy
+mmcv-full>=1.7.0

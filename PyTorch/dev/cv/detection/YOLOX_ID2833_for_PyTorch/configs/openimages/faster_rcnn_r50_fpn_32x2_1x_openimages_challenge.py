@@ -1,0 +1,63 @@
+
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Copyright (c) Open-MMLab. All rights reserved.    
+_base_ = ['faster_rcnn_r50_fpn_32x2_1x_openimages.py']
+
+model = dict(
+    roi_head=dict(bbox_head=dict(num_classes=500)),
+    test_cfg=dict(rcnn=dict(score_thr=0.01)))
+
+# dataset settings
+dataset_type = 'OpenImagesChallengeDataset'
+data_root = 'data/OpenImages/'
+data = dict(
+    train=dict(
+        type=dataset_type,
+        ann_file=data_root +
+        'challenge2019/challenge-2019-train-detection-bbox.txt',
+        img_prefix=data_root + 'OpenImages/',
+        label_file=data_root + 'challenge2019/cls-label-description.csv',
+        hierarchy_file=data_root + 'challenge2019/class_label_tree.np'),
+    val=dict(
+        type=dataset_type,
+        ann_file=data_root +
+        'challenge2019/challenge-2019-validation-detection-bbox.txt',
+        img_prefix=data_root + 'OpenImages/',
+        label_file=data_root + 'challenge2019/cls-label-description.csv',
+        hierarchy_file=data_root + 'challenge2019/class_label_tree.np',
+        meta_file=data_root +
+        'challenge2019/challenge-2019-validation-metas.pkl',
+        image_level_ann_file=data_root +
+        'challenge2019/challenge-2019-validation-detection-'
+        'human-imagelabels.csv'),
+    test=dict(
+        type=dataset_type,
+        ann_file=data_root +
+        'challenge2019/challenge-2019-validation-detection-bbox.txt',
+        img_prefix=data_root + 'OpenImages/',
+        label_file=data_root + 'challenge2019/cls-label-description.csv',
+        hierarchy_file=data_root + 'challenge2019/class_label_tree.np',
+        meta_file=data_root +
+        'challenge2019/challenge-2019-validation-metas.pkl',
+        image_level_ann_file=data_root +
+        'challenge2019/challenge-2019-validation-detection-'
+        'human-imagelabels.csv'))
+evaluation = dict(interval=1, metric='mAP')
+
+# NOTE: `auto_scale_lr` is for automatically scaling LR,
+# USER SHOULD NOT CHANGE ITS VALUES.
+# base_batch_size = (32 GPUs) x (2 samples per GPU)
+auto_scale_lr = dict(base_batch_size=64)
