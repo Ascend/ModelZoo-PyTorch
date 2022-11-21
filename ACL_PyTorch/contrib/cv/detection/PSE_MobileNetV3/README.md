@@ -164,6 +164,15 @@
     
     注：PaddleOCR模型转ONNX，详情请参考 [Paddle2ONNX模型转化与预测](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/deploy/paddle2onnx/readme.md)。
 
+    step4: 修改ONNX
+    ```
+    python modify_onnx.py --input_onnx /a/b/c/input.onnx --output /a/b/c/output.onnx
+
+    ```
+    参数说明：
+    xxxxxxxxxxxx
+    xxxxxxxxxxxx
+
 2. ONNX 模型转 OM 模型  
 
     step1: 查看NPU芯片名称 \${chip_name}
