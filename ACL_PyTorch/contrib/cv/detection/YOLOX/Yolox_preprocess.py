@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from yolox.data import COCODataset, ValTransform
 import os
-import sys
 import argparse
 from tqdm import tqdm
 import torch
-from yolox.data import COCODataset, ValTransform
+import sys
 sys.path.append('./YOLOX')
 
 
@@ -29,7 +29,7 @@ def main():
                         help='output for prepared data', default='./prep_data',
                         type=str)
     parser.add_argument('--batch',
-                        help='validation batch size', default = 1,
+                        help='validation batch size', default=1,
                         type=int)
     opt = parser.parse_args()
 
@@ -42,18 +42,19 @@ def main():
     )
     sampler = torch.utils.data.SequentialSampler(valdataset)
 
-    dataloader_kwargs = {"num_workers": 8, "pin_memory": True, "sampler": sampler, "batch_size": opt.batch}
+    dataloader_kwargs = {"num_workers": 8, "pin_memory": True,
+                         "sampler": sampler, "batch_size": opt.batch}
 
     val_loader = torch.utils.data.DataLoader(valdataset, **dataloader_kwargs)
     if os.path.exists(opt.output):
         os.system("rm-rf " + opt.output)
     else:
         os.system("mkdir " + opt.output)
-    for idx, data in tqdm(enumerate(val_loader)):
-        inps = data[0].numpy()
+    for idx, data in enumerate(tqdm(val_loader)):
+        data = data[0].detach().numpy()
         output_name = "{:0>12d}.bin".format(idx)
         output_path = os.path.join(opt.output, output_name)
-        inps.tofile(output_path)
+        data.tofile(output_path)
 
 
 if __name__ == "__main__":

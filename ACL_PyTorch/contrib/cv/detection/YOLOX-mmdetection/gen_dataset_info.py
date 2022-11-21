@@ -25,10 +25,9 @@ if __name__ == '__main__':
     config_path = sys.argv[2]
     bin_path = sys.argv[3]
     meta_path = sys.argv[4]
-    info_name = sys.argv[5]
-    info_meta_name = sys.argv[6]
-    width = int(sys.argv[7])
-    height = int(sys.argv[8])
+    info_meta_name = sys.argv[5]
+    width = int(sys.argv[6])
+    height = int(sys.argv[7])
 
     cfg = mmcv.Config.fromfile(config_path)
     cfg.data.test.ann_file = image_src_path + ann_file
@@ -37,11 +36,10 @@ if __name__ == '__main__':
 
     dataset = build_dataset(cfg.data.test)
 
-    with open(info_name, "w") as fp1, open(info_meta_name, "w") as fp2:
+    with open(info_meta_name, "w") as fp2:
         for idx in range(5000):
             img_id = dataset.img_ids[idx]
-            fp1.write("{} {}/{:0>12d}.bin {} {}\n".format(idx, bin_path, img_id, width, height))
-            fp_meta = open("%s/%012d.pk" % (meta_path, img_id), "rb")
+            fp_meta = open(f"{meta_path}/{img_id:0>12d}.pk", "rb")
             meta = pk.load(fp_meta)
             fp_meta.close()
             fp2.write("{} {}/{:0>12d}.bin {}\n".format(

@@ -20,15 +20,15 @@ import mmcv
 import torch
 import pickle as pk
 import multiprocessing
+from tqdm import tqdm
+
 
 flags = None
 
 
 def gen_input_bin(file_batches, batch):
-    i = 0
+
     for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
 
         image = mmcv.imread(os.path.join(flags.image_src_path, file))
         # ori_shape = image.shape
@@ -49,10 +49,15 @@ def preprocess():
     files = os.listdir(flags.image_src_path)
     file_batches = [files[i:i + 100] for i in range(0, 5000, 100) if files[i:i + 100] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
+    pbar = tqdm(range(len(file_batches)))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch))
+        thread_pool.apply_async(gen_input_bin,
+                                args=(file_batches, batch),
+                                callback=lambda _: pbar.update(1),
+                                error_callback=lambda _: pbar.update(1))
     thread_pool.close()
     thread_pool.join()
+
     print("in thread, except will not report! please ensure bin files generated.")
 
 
