@@ -678,7 +678,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
             train_step += 1
             if args.scheduler in ['cosine', 'constant', 'dev_perf']:
                 # linear warmup stage
-                if train_step < args.warmup_step:
+                if train_step <= args.warmup_step:
                     curr_lr = args.lr * train_step / args.warmup_step
                     optimizer.param_groups[0]['lr'] = curr_lr
                     if optimizer_sparse:
