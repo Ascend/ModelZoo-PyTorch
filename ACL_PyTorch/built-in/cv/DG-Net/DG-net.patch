@@ -1,0 +1,445 @@
+diff -Nur ./a/DG-Net/DGnet.py ./b/DG-Net/DGnet.py
+--- ./a/DG-Net/DGnet.py	1970-01-01 00:00:00.000000000 +0000
++++ ./b/DG-Net/DGnet.py	2022-11-17 10:37:22.572834143 +0000
+@@ -0,0 +1,191 @@
++from __future__ import print_function
++import sys
++sys.path.append('.')
++from trainer import DGNet_Trainer, to_gray
++from utils import get_config
++import argparse
++from torch.autograd import Variable
++import torchvision.utils as vutils
++import sys
++import torch
++import random
++import os
++import numpy as np
++from torchvision import datasets, models, transforms
++from PIL import Image
++from shutil import copyfile
++from networks import AdaINGen, MsImageDis
++from reIDmodel import ft_net, ft_netAB, PCB
++from utils import get_model_list, vgg_preprocess, load_vgg16, get_scheduler
++from torch.autograd import Variable
++import torch
++import torch.nn as nn
++import copy
++import os
++import cv2
++import numpy as np
++from random_erasing import RandomErasing
++import random
++import yaml
++
++
++
++def load_network(network, name):
++    save_path = os.path.join('./models',name,'net_last.pth')
++    network.load_state_dict(torch.load(save_path))
++    return network
++
++def load_config(name):
++    config_path = os.path.join('./models',name,'opts.yaml')
++    with open(config_path, 'r') as stream:
++        config = yaml.load(stream)
++    return config
++
++class DGNet_test(nn.Module):
++    def __init__(self, hyperparameters, gpu_ids=[0]):
++        super(DGNet_test, self).__init__()
++        lr_g = hyperparameters['lr_g']
++        lr_d = hyperparameters['lr_d']
++        ID_class = hyperparameters['ID_class']
++        if not 'apex' in hyperparameters.keys():
++            hyperparameters['apex'] = False
++        self.fp16 = hyperparameters['apex']
++        # Initiate the networks
++        # We do not need to manually set fp16 in the network for the new apex. So here I set fp16=False.
++        self.gen_a = AdaINGen(hyperparameters['input_dim_a'], hyperparameters['gen'], fp16 = False)  # auto-encoder for domain a
++        self.gen_b = self.gen_a  # auto-encoder for domain b
++
++        if not 'ID_stride' in hyperparameters.keys():
++            hyperparameters['ID_stride'] = 2
++        
++        if hyperparameters['ID_style']=='PCB':
++            self.id_a = PCB(ID_class)
++        elif hyperparameters['ID_style']=='AB':
++            self.id_a = ft_netAB(ID_class, stride = hyperparameters['ID_stride'], norm=hyperparameters['norm_id'], pool=hyperparameters['pool']) 
++        else:
++            self.id_a = ft_net(ID_class, norm=hyperparameters['norm_id'], pool=hyperparameters['pool']) # return 2048 now
++
++        self.id_b = self.id_a
++        self.dis_a = MsImageDis(3, hyperparameters['dis'], fp16 = False)  # discriminator for domain a
++        self.dis_b = self.dis_a # discriminator for domain b
++
++        # load teachers
++        if hyperparameters['teacher'] != "":
++            teacher_name = hyperparameters['teacher']
++            print(teacher_name)
++            teacher_names = teacher_name.split(',')
++            teacher_model = nn.ModuleList()
++            teacher_count = 0
++            for teacher_name in teacher_names:
++                config_tmp = load_config(teacher_name)
++                if 'stride' in config_tmp:
++                    stride = config_tmp['stride'] 
++                else:
++                    stride = 2
++                model_tmp = ft_net(ID_class, stride = stride)
++                teacher_model_tmp = load_network(model_tmp, teacher_name)
++                teacher_model_tmp.model.fc = nn.Sequential()  # remove the original fc layer in ImageNet
++                teacher_model_tmp = teacher_model_tmp.cpu()
++                if self.fp16:
++                    teacher_model_tmp = amp.initialize(teacher_model_tmp, opt_level="O1")
++                teacher_model.append(teacher_model_tmp.cpu().eval())
++                teacher_count +=1
++            self.teacher_model = teacher_model
++
++        self.instancenorm = nn.InstanceNorm2d(512, affine=False)
++
++        # RGB to one channel
++        if hyperparameters['single']=='edge':
++            self.single = to_edge
++        else:
++            self.single = to_gray(False)
++
++        # Random Erasing when training
++        if not 'erasing_p' in hyperparameters.keys():
++            self.erasing_p = 0
++        else:
++            self.erasing_p = hyperparameters['erasing_p']
++        self.single_re = RandomErasing(probability = self.erasing_p, mean=[0.0, 0.0, 0.0])
++
++        if not 'T_w' in hyperparameters.keys():
++            hyperparameters['T_w'] = 1
++        # Setup the optimizers
++        beta1 = hyperparameters['beta1']
++        beta2 = hyperparameters['beta2']
++        dis_params = list(self.dis_a.parameters()) #+ list(self.dis_b.parameters())
++        gen_params = list(self.gen_a.parameters()) #+ list(self.gen_b.parameters())
++
++        self.dis_opt = torch.optim.Adam([p for p in dis_params if p.requires_grad],
++                                        lr=lr_d, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
++        self.gen_opt = torch.optim.Adam([p for p in gen_params if p.requires_grad],
++                                        lr=lr_g, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
++        # id params
++        if hyperparameters['ID_style']=='PCB':
++            ignored_params = (list(map(id, self.id_a.classifier0.parameters() ))
++                            +list(map(id, self.id_a.classifier1.parameters() ))
++                            +list(map(id, self.id_a.classifier2.parameters() ))
++                            +list(map(id, self.id_a.classifier3.parameters() ))
++                            )
++            base_params = filter(lambda p: id(p) not in ignored_params, self.id_a.parameters())
++            lr2 = hyperparameters['lr2']
++            self.id_opt = torch.optim.SGD([
++                 {'params': base_params, 'lr': lr2},
++                 {'params': self.id_a.classifier0.parameters(), 'lr': lr2*10},
++                 {'params': self.id_a.classifier1.parameters(), 'lr': lr2*10},
++                 {'params': self.id_a.classifier2.parameters(), 'lr': lr2*10},
++                 {'params': self.id_a.classifier3.parameters(), 'lr': lr2*10}
++            ], weight_decay=hyperparameters['weight_decay'], momentum=0.9, nesterov=True)
++        elif hyperparameters['ID_style']=='AB':
++            ignored_params = (list(map(id, self.id_a.classifier1.parameters()))
++                            + list(map(id, self.id_a.classifier2.parameters())))
++            base_params = filter(lambda p: id(p) not in ignored_params, self.id_a.parameters())
++            lr2 = hyperparameters['lr2']
++            self.id_opt = torch.optim.SGD([
++                 {'params': base_params, 'lr': lr2},
++                 {'params': self.id_a.classifier1.parameters(), 'lr': lr2*10},
++                 {'params': self.id_a.classifier2.parameters(), 'lr': lr2*10}
++            ], weight_decay=hyperparameters['weight_decay'], momentum=0.9, nesterov=True)
++        else:
++            ignored_params = list(map(id, self.id_a.classifier.parameters() ))
++            base_params = filter(lambda p: id(p) not in ignored_params, self.id_a.parameters())
++            lr2 = hyperparameters['lr2']
++            self.id_opt = torch.optim.SGD([
++                 {'params': base_params, 'lr': lr2},
++                 {'params': self.id_a.classifier.parameters(), 'lr': lr2*10}
++            ], weight_decay=hyperparameters['weight_decay'], momentum=0.9, nesterov=True)
++
++        self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
++        self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
++        self.id_scheduler = get_scheduler(self.id_opt, hyperparameters)
++        self.id_scheduler.gamma = hyperparameters['gamma2']
++
++        #ID Loss
++        self.id_criterion = nn.CrossEntropyLoss()
++        self.criterion_teacher = nn.KLDivLoss(size_average=False)
++        # Load VGG model if needed
++        if 'vgg_w' in hyperparameters.keys() and hyperparameters['vgg_w'] > 0:
++            self.vgg = load_vgg16(hyperparameters['vgg_model_path'] + '/models')
++            self.vgg.eval()
++            for param in self.vgg.parameters():
++                param.requires_grad = False
++
++        # save memory
++        if self.fp16:
++            # Name the FP16_Optimizer instance to replace the existing optimizer
++            assert torch.backends.cudnn.enabled, "fp16 mode requires cudnn backend to be enabled."
++            self.gen_a = self.gen_a.cpu()
++            self.dis_a = self.dis_a.cpu()
++            self.id_a = self.id_a.cpu()
++
++            self.gen_b = self.gen_a
++            self.dis_b = self.dis_a
++            self.id_b = self.id_a
++
++            self.gen_a, self.gen_opt = amp.initialize(self.gen_a, self.gen_opt, opt_level="O1")
++            self.dis_a, self.dis_opt = amp.initialize(self.dis_a, self.dis_opt, opt_level="O1")
++            self.id_a, self.id_opt = amp.initialize(self.id_a, self.id_opt, opt_level="O1")
++    def forward(self, x_a, x_b):
++        c = self.gen_a.encode(x_a)
++        f, _ = self.id_a(x_b)
++        outputs = self.gen_a.decode(c, f)
++        return outputs
+\ No newline at end of file
+diff -Nur ./a/DG-Net/networks.py ./b/DG-Net/networks.py
+--- ./a/DG-Net/networks.py	2022-11-17 10:32:26.992823572 +0000
++++ ./b/DG-Net/networks.py	2022-11-17 11:19:40.596924910 +0000
+@@ -375,6 +375,7 @@
+         self.model += [Conv2dBlock(dim, dim, 3, 1, 1, norm='none', activation=activ, pad_type=pad_type)]
+         self.model += [Conv2dBlock(dim, output_dim, 1, 1, 0, norm='none', activation='none', pad_type=pad_type)]
+         self.model = nn.Sequential(*self.model)
++        self.model.eval()
+ 
+     def forward(self, x):
+         output = self.model(x)
+@@ -525,6 +526,31 @@
+         out = self.fuse(out)
+         return out
+ 
++class pad_replace(nn.Module):
++    def __init__(self, padding=0):
++        super(pad_replace, self).__init__()
++        self.padding=padding
++    def forward(self, x):
++        d = self.padding
++        if d==0:
++            return x 
++        elif d==1:
++            pad1 = x[:,:,1:d+1,:]
++            pad2 = x[:,:,-d-1:-1,:]
++            y = torch.cat((pad1, x, pad2), dim=2)
++            pad1 = y[:,:,:,1:d+1]
++            pad2 = y[:,:,:,-d-1:-1]
++            z = torch.cat((pad1, y, pad2), dim=3)
++            return z
++        else:
++            pad1 = torch.flip(x[:,:,1:d+1,:],[2])
++            pad2 = torch.flip(x[:,:,-d-1:-1,:],[2])
++            y = torch.cat((pad1, x, pad2), dim=2)
++            pad1 = torch.flip(y[:,:,:,1:d+1],[3])
++            pad2 = torch.flip(y[:,:,:,-d-1:-1],[3])
++            z = torch.cat((pad1, y, pad2), dim=3)
++            return z
++
+ 
+ class Conv2dBlock(nn.Module):
+     def __init__(self, input_dim ,output_dim, kernel_size, stride,
+@@ -533,7 +559,8 @@
+         self.use_bias = True
+         # initialize padding
+         if pad_type == 'reflect':
+-            self.pad = nn.ReflectionPad2d(padding)
++            # self.pad = nn.ReflectionPad2d(padding)
++            self.pad = pad_replace(padding=padding)
+         elif pad_type == 'replicate':
+             self.pad = nn.ReplicationPad2d(padding)
+         elif pad_type == 'zero':
+@@ -820,13 +847,19 @@
+     def forward(self, x):
+         assert self.weight is not None and self.bias is not None, "Please assign weight and bias before calling AdaIN!"
+         b, c = x.size(0), x.size(1)
+-        running_mean = self.running_mean.repeat(b).type_as(x)
+-        running_var = self.running_var.repeat(b).type_as(x)
++        # running_mean = self.running_mean.repeat(b).type_as(x)
++        # running_var = self.running_var.repeat(b).type_as(x)
+         # Apply instance norm
+         x_reshaped = x.contiguous().view(1, b * c, *x.size()[2:])
+-        out = F.batch_norm(
+-            x_reshaped, running_mean, running_var, self.weight, self.bias,
+-            True, self.momentum, self.eps)
++        # out = F.batch_norm(
++        #     x_reshaped, running_mean, running_var, self.weight, self.bias,
++        #     True, self.momentum, self.eps)
++        mean = x_reshaped.mean(dim=(0, 2, 3), keepdim=True)
++        var = ((x_reshaped - mean) ** 2).mean(dim=(0, 2, 3), keepdim=True)
++        out = (x_reshaped - mean) / torch.sqrt(var + self.eps)
++
++        # out = (x_reshaped-running_mean.reshape(1,-1,1,1))/torch.sqrt(running_var.reshape(1,-1,1,1)+self.eps)  
++        out = out*self.weight.reshape(1,-1,1,1)+self.bias.reshape(1,-1,1,1)
+ 
+         return out.view(b, c, *x.size()[2:])
+ 
+@@ -852,10 +885,10 @@
+             mean = mean.half()
+             std = std.half()
+         else:
+-            mean = x.view(x.size(0), -1).mean(1).view(*shape)
+-            std = x.view(x.size(0), -1).std(1).view(*shape)
++            mean = x.view(x.size(0), -1).mean(1, keepdim=True)
++            std = torch.sqrt((x.view(x.size(0), -1)-mean).pow(2).mean(1))
+ 
+-        x = (x - mean) / (std + self.eps)
++        x = (x - mean.view(*shape)) / (std.view(*shape) + self.eps)
+         if self.affine:
+             shape = [1, -1] + [1] * (x.dim() - 2)
+             x = x * self.gamma.view(*shape) + self.beta.view(*shape)
+diff -Nur ./a/DG-Net/reIDmodel.py ./b/DG-Net/reIDmodel.py
+--- ./a/DG-Net/reIDmodel.py	2022-11-17 10:32:26.992823572 +0000
++++ ./b/DG-Net/reIDmodel.py	2022-11-17 10:37:22.652834146 +0000
+@@ -120,6 +120,7 @@
+             model_ft.avgpool = nn.AdaptiveAvgPool2d((1,1))
+ 
+         self.model = model_ft
++        self.model.eval()
+ 
+         if stride == 1:
+             self.model.layer4[0].downsample[0].stride = (1,1)
+diff -Nur ./a/DG-Net/train.py ./b/DG-Net/train.py
+--- ./a/DG-Net/train.py	2022-11-17 10:32:26.992823572 +0000
++++ ./b/DG-Net/train.py	2022-11-17 10:37:16.824833937 +0000
+@@ -46,7 +46,7 @@
+ # Setup model and data loader
+ if opts.trainer == 'DGNet':
+     trainer = DGNet_Trainer(config, gpu_ids)
+-    trainer.cuda()
++    trainer.cpu()
+ 
+ random.seed(7) #fix random result
+ train_loader_a, train_loader_b, test_loader_a, test_loader_b = get_all_data_loaders(config)
+@@ -55,14 +55,14 @@
+ test_a_rand = random.permutation(test_loader_a.dataset.img_num)[0:display_size] 
+ test_b_rand = random.permutation(test_loader_b.dataset.img_num)[0:display_size] 
+ 
+-train_display_images_a = torch.stack([train_loader_a.dataset[i][0] for i in train_a_rand]).cuda()
+-train_display_images_ap = torch.stack([train_loader_a.dataset[i][2] for i in train_a_rand]).cuda()
+-train_display_images_b = torch.stack([train_loader_b.dataset[i][0] for i in train_b_rand]).cuda()
+-train_display_images_bp = torch.stack([train_loader_b.dataset[i][2] for i in train_b_rand]).cuda()
+-test_display_images_a = torch.stack([test_loader_a.dataset[i][0] for i in test_a_rand]).cuda()
+-test_display_images_ap = torch.stack([test_loader_a.dataset[i][2] for i in test_a_rand]).cuda()
+-test_display_images_b = torch.stack([test_loader_b.dataset[i][0] for i in test_b_rand]).cuda()
+-test_display_images_bp = torch.stack([test_loader_b.dataset[i][2] for i in test_b_rand]).cuda()
++train_display_images_a = torch.stack([train_loader_a.dataset[i][0] for i in train_a_rand]).cpu()
++train_display_images_ap = torch.stack([train_loader_a.dataset[i][2] for i in train_a_rand]).cpu()
++train_display_images_b = torch.stack([train_loader_b.dataset[i][0] for i in train_b_rand]).cpu()
++train_display_images_bp = torch.stack([train_loader_b.dataset[i][2] for i in train_b_rand]).cpu()
++test_display_images_a = torch.stack([test_loader_a.dataset[i][0] for i in test_a_rand]).cpu()
++test_display_images_ap = torch.stack([test_loader_a.dataset[i][2] for i in test_a_rand]).cpu()
++test_display_images_b = torch.stack([test_loader_b.dataset[i][0] for i in test_b_rand]).cpu()
++test_display_images_bp = torch.stack([test_loader_b.dataset[i][2] for i in test_b_rand]).cpu()
+ 
+ # Setup logger and output folders
+ if not opts.resume:
+@@ -98,9 +98,9 @@
+             trainer.module.update_learning_rate()
+         else:
+             trainer.update_learning_rate()
+-        images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
+-        pos_a, pos_b = pos_a.cuda().detach(), pos_b.cuda().detach()
+-        labels_a, labels_b = labels_a.cuda().detach(), labels_b.cuda().detach()
++        images_a, images_b = images_a.cpu().detach(), images_b.cpu().detach()
++        pos_a, pos_b = pos_a.cpu().detach(), pos_b.cpu().detach()
++        labels_a, labels_b = labels_a.cpu().detach(), labels_b.cpu().detach()
+ 
+         with Timer("Elapsed time in update: %f"):
+             # Main training code
+@@ -113,8 +113,6 @@
+                 trainer.dis_update(x_ab.clone(), x_ba.clone(), images_a, images_b, config, num_gpu=1)
+                 trainer.gen_update(x_ab, x_ba, s_a, s_b, f_a, f_b, p_a, p_b, pp_a, pp_b, x_a_recon, x_b_recon, x_a_recon_p, x_b_recon_p, images_a, images_b, pos_a, pos_b, labels_a, labels_b, config, iterations, num_gpu=1)
+ 
+-            torch.cuda.synchronize()
+-
+         # Dump training stats in log file
+         if (iterations + 1) % config['log_iter'] == 0:
+             print("\033[1m Epoch: %02d Iteration: %08d/%08d \033[0m" % (nepoch, iterations + 1, max_iter), end=" ")
+diff -Nur ./a/DG-Net/trainer.py ./b/DG-Net/trainer.py
+--- ./a/DG-Net/trainer.py	2022-11-17 10:32:26.992823572 +0000
++++ ./b/DG-Net/trainer.py	2022-11-17 10:37:22.740834149 +0000
+@@ -44,7 +44,7 @@
+         xx = torch.from_numpy(xx.astype(np.float32))
+         out[i,:,:] = xx
+     out = out.unsqueeze(1) 
+-    return out.cuda()
++    return out.cpu()
+ 
+ def scale2(x):
+     if x.size(2) > 128: # do not need to scale the input
+@@ -65,11 +65,11 @@
+ def train_bn(m):
+     classname = m.__class__.__name__
+     if classname.find('BatchNorm') != -1:
+-        m.train()
++        m.eval()
+ 
+ def fliplr(img):
+     '''flip horizontal'''
+-    inv_idx = torch.arange(img.size(3)-1,-1,-1).long().cuda()  # N x C x H x W
++    inv_idx = torch.arange(img.size(3)-1,-1,-1).long().cpu()  # N x C x H x W
+     img_flip = img.index_select(3,inv_idx)
+     return img_flip
+ 
+@@ -114,15 +114,15 @@
+                 outputs_t += outputs_t1 + outputs_t2
+             count +=2
+         _, dlabel = torch.max(outputs_t.data, 1)
+-        outputs_t = torch.zeros(inputs.size(0), num_class).cuda()
++        outputs_t = torch.zeros(inputs.size(0), num_class).cpu()
+         for i in range(inputs.size(0)):
+             outputs_t[i, dlabel[i]] = 1
+     elif teacher_style == 2: # appearance label
+-        outputs_t = torch.zeros(inputs.size(0), num_class).cuda()
++        outputs_t = torch.zeros(inputs.size(0), num_class).cpu()
+         for i in range(inputs.size(0)):
+             outputs_t[i, alabel[i]] = 1
+     elif teacher_style == 3: # LSRO
+-        outputs_t = torch.ones(inputs.size(0), num_class).cuda()
++        outputs_t = torch.ones(inputs.size(0), num_class).cpu()
+     elif teacher_style == 4: #Two-label
+         count = 0
+         sm = nn.Softmax(dim=1)
+@@ -138,7 +138,7 @@
+                 outputs_t += outputs_t1 + outputs_t2
+             count +=2
+         mask = torch.zeros(outputs_t.shape)
+-        mask = mask.cuda()
++        mask = mask.cpu()
+         for i in range(inputs.size(0)):
+             mask[i, alabel[i]] = 1
+             mask[i, slabel[i]] = 1
+@@ -210,10 +210,10 @@
+                 model_tmp = ft_net(ID_class, stride = stride)
+                 teacher_model_tmp = load_network(model_tmp, teacher_name)
+                 teacher_model_tmp.model.fc = nn.Sequential()  # remove the original fc layer in ImageNet
+-                teacher_model_tmp = teacher_model_tmp.cuda()
++                teacher_model_tmp = teacher_model_tmp.cpu()
+                 if self.fp16:
+                     teacher_model_tmp = amp.initialize(teacher_model_tmp, opt_level="O1")
+-                teacher_model.append(teacher_model_tmp.cuda().eval())
++                teacher_model.append(teacher_model_tmp.cpu().eval())
+                 teacher_count +=1
+             self.teacher_model = teacher_model
+             if hyperparameters['train_bn']:
+@@ -300,9 +300,9 @@
+         if self.fp16:
+             # Name the FP16_Optimizer instance to replace the existing optimizer
+             assert torch.backends.cudnn.enabled, "fp16 mode requires cudnn backend to be enabled."
+-            self.gen_a = self.gen_a.cuda()
+-            self.dis_a = self.dis_a.cuda()
+-            self.id_a = self.id_a.cuda()
++            self.gen_a = self.gen_a.cpu()
++            self.dis_a = self.dis_a.cpu()
++            self.id_a = self.id_a.cpu()
+ 
+             self.gen_b = self.gen_a
+             self.dis_b = self.dis_a
+@@ -314,7 +314,7 @@
+ 
+     def to_re(self, x):
+         out = torch.FloatTensor(x.size(0), x.size(1), x.size(2), x.size(3))
+-        out = out.cuda()
++        out = out.cpu()
+         for i in range(x.size(0)):
+             out[i,:,:,:] = self.single_re(x[i,:,:,:])
+         return out
