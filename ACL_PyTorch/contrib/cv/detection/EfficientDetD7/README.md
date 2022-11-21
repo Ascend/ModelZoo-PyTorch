@@ -119,11 +119,12 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
    执行“EfficientDetD7_preprocess.py”脚本，完成预处理。
 
    ```
+   mkdir bin_save
    python3 EfficientDetD7_preprocess.py --root=coco_data --bin-save=bin_save
-   ```
-
-    - root：coco数据集文件
-
+```
+   
+ - root：coco数据集文件
+   
     - bin-save：输出的二进制文件（.bin）所在路径
 
   每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成bin_save文件夹。
@@ -146,21 +147,29 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
 
       1. 使用EfficientDetD7_pth2onnx.py导出onnx文件。
 
-         运行EfficientDetD7_pth2onnx.py脚本。
+         运行EfficientDetD7_pth2onnx.py脚本以获得d7_bs1.onnx 文件。
          ```
          python3 EfficientDetD7_pth2onnx.py --batch_size=1 --checkpoint=./model/d7.pth --out=./model/d7_bs1.onnx 
          ```
 
-         获得d7_bs1.onnx 文件。
+         参数说明：
+         
+         -   --batch_size：转出模型的batchsize，目前只支持1
+         -   --checkpoint：待转模型的参数文件
+         -   --out：输出的onnx模型文件名。
+         
+         
          
       2. 优化ONNX文件。
-         
-      ```
-      python3 -m onnxsim --input-shape="1,3,1536,1536" --dynamic-input-shape ./model/d7_bs1.onnx ./model/d7_bs1_sim.onnx --skip-shape-inference
+
+         ```
+         python3 -m onnxsim --input-shape="1,3,1536,1536" --dynamic-input-shape ./model/d7_bs1.onnx ./model/d7_bs1_sim.onnx --skip-shape-inference
          python3 modify_onnx.py --model=./model/d7_bs1_sim.onnx --out=./model/d7_bs1_modify.onnx
-      ```
+         ```
+
+      ​		获得d7_bs1_modify.onnx文件。
+
       
-         获得d7_bs1_modify.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 

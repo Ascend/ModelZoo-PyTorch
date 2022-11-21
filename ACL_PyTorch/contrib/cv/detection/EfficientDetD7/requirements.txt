@@ -3,6 +3,7 @@ timm>=0.3.2
 torchvision
 pyyaml
 numpy
+skl2onnx
 
 # an update version that fixes some bugs, incl issues with numpy >= 1.18
 pycocotools>=2.0.2
