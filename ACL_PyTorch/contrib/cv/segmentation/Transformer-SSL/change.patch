@@ -1,29 +1,3 @@
---- Swin-Transformer-Object-Detection/mmdet/models/backbones/swin_transformer.py	2022-08-03 17:10:43.910705201 -0900
-+++ swint/mmdet/models/backbones/swin_transformer.py	2022-08-03 17:01:55.022687107 -0900
-@@ -214,7 +214,9 @@ class SwinTransformerBlock(nn.Module):
- 
-         # cyclic shift
-         if self.shift_size > 0:
--            shifted_x = torch.roll(x, shifts=(-self.shift_size, -self.shift_size), dims=(1, 2))
-+            # shifted_x = torch.roll(x, shifts=(-self.shift_size, -self.shift_size), dims=(1, 2))
-+            shifted_x = torch.cat((x[:,self.shift_size:,:,:],x[:,:self.shift_size,:,:]), dim=1)
-+            shifted_x = torch.cat((x[:,:,self.shift_size:,:],x[:,:,:self.shift_size,:]), dim=2)
-             attn_mask = mask_matrix
-         else:
-             shifted_x = x
-@@ -233,7 +235,9 @@ class SwinTransformerBlock(nn.Module):
- 
-         # reverse cyclic shift
-         if self.shift_size > 0:
--            x = torch.roll(shifted_x, shifts=(self.shift_size, self.shift_size), dims=(1, 2))
-+            # x = torch.roll(shifted_x, shifts=(self.shift_size, self.shift_size), dims=(1, 2))
-+            x = torch.cat((shifted_x[:,-self.shift_size:,:,:],shifted_x[:,:-self.shift_size,:,:]),dim=1)
-+            x = torch.cat((shifted_x[:,:,-self.shift_size:,:],shifted_x[:,:,:-self.shift_size,:]),dim=2)
-         else:
-             x = shifted_x
-
-
-
 --- Swin-Transformer-Object-Detection/configs/swin/cascade_mask_rcnn_swin_tiny_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py	2022-08-03 17:10:43.910705201 -0900
 +++ swint/configs/swin/cascade_mask_rcnn_swin_tiny_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py	2022-08-03 17:01:55.022687107 -0900
 @@ -33,7 +33,7 @@

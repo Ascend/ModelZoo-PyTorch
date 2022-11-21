@@ -11,7 +11,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
 
 
@@ -27,7 +27,7 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 
   ```
   url=https://github.com/SwinTransformer/Swin-Transformer-Object-Detection
-  commit_id=81f498ebfe35a4e11998d651b3e00bbb1099c572
+  commit_id=c7b20110addde0f74b1fbf812b403d16a59a87a9
   model_name=Transformer-SSL（Backbone:Swin-T,LrSchd:3x）
   ```
   
@@ -55,7 +55,7 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -64,9 +64,9 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.7.0   | -                                                            |
+| PyTorch                                                      | 1.7.1   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -78,15 +78,22 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
    ```
    git clone https://github.com/SwinTransformer/Swin-Transformer-Object-Detection
    cd Swin-Transformer-Object-Detection
-   git reset --hard 81f498ebfe35a4e11998d651b3e00bbb1099c572
+   git reset --hard c7b20110addde0f74b1fbf812b403d16a59a87a9
    cd ..
    ```
+
+2. 安装依赖
+    ```
+    pip install -r requirements.txt
+    pip install mmcv-full==1.4.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.7/index.html
+    ```
 
 
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   COCO ： COCO数据集是一个大型的、丰富的物体检测，分割和字幕数据集。这个数据集以scene understanding为目标，主要从复杂的日常场景中截取，图像中的目标通过精确的segmentation进行位置的标定。图像包括91类目标，328,000影像和2,500,000个label。目前为止有语义分割的最大数据集，提供的类别有80 类，有超过33 万张图片，其中20 万张有标注，整个数据集中个体的数目超过150 万个。数据集下载地址：[http://cocodataset.org](http://cocodataset.org)。
    该模型使用coco2017的5千张验证集进行测试，图片与标签分别存放在./data/coco/val2017与./data/coco/annotations/instances_val2017.json。格式如下：
    ```shell
    ├──data 
