@@ -434,10 +434,6 @@ if __name__ == '__main__':
     if args.bin_mode:
         torch.npu.set_compile_mode(jit_compile=False)
         print("enble bin mode")
-        option = {}
-        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,BNTrainingUpdate"
-        torch.npu.set_option(option)
-        print("set NPU_FUZZY_COMPILE_BLACKLIST ok")
     else:
         print("disable bin mode")
 
