@@ -109,7 +109,7 @@
 
    ```
    git clone https://github.com/kaldi-asr/kaldi
-cd kaldi
+   cd kaldi
    ```
    
    检查工具包所需依赖并安装缺少依赖。
@@ -237,35 +237,23 @@ cd kaldi
        
        ```
        mkdir -p checkpoint/ctc_fbank_cnn
-   mv ./ctc_best_model.pth ./checkpoint/ctc_fbank_cnn/
+       mv ./ctc_best_model.pth ./checkpoint/ctc_fbank_cnn/
        ```
 
-   2. 导出onnx文件。
+   2. 执行steps/LSTM_pth2onnx.py脚本将.pth文件转换为.onnx文件
 
-      1. 使用nasnetlarge_pth2onnx.py导出onnx文件。
+      ```
+      python3 ./steps/LSTM_pth2onnx.py --batchsize=16
+      ```
 
-         运行nasnetlarge_pth2onnx.py脚本。
-   
-         ```
-      python3 nasnetlarge_pth2onnx.py nasnetalarge-a1897284.pth nasnetlarge.onnx
-         ```
-
-         获得nasnetlarge.onnx文件。
-
-      2. 优化ONNX文件。
-
-         执行steps/LSTM_pth2onnx.py脚本将.pth文件转换为.onnx文件
-   
-         ```
-         python3 ./steps/LSTM_pth2onnx.py --batchsize=16
-         ```
-         
       获得lstm_ctc_16batch.onnx文件。
-         注：若有warnings.warn("Exporting a model to ONNX with a batch_size other than 1, " +  无需理会。
-         不同batchsize模型需要修改--batchsize参数。
-      
+
+      注：若有warnings.warn("Exporting a model to ONNX with a batch_size other than 1, " +  无需理会。
+
+      不同batchsize模型需要修改--batchsize参数。
+
    3. 使用ATC工具将ONNX模型转OM模型。
-   
+
       1. 配置环境变量。
       
          ```
@@ -309,7 +297,7 @@ cd kaldi
          
          其中，不同batchsize模型除需要修改输入输出模型名称外，还需将输入改为"actual_input_1:{batchsize},390,243"
          运行成功后生成lstm_ctc_16batch.om模型文件。
-   
+
 2. 开始推理验证。
 
    1. 使用ais-infer工具进行推理。
