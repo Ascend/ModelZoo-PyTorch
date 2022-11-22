@@ -1,230 +1,213 @@
-# ResNet101 Onnx模型端到端推理指导
-- [ResNet101 Onnx模型端到端推理指导](#resnet101-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx模型量化](#32-onnx模型量化)
-		- [3.3 onnx转om模型](#33-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-		- [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
-		- [6.2 开源TopN精度](#62-开源topn精度)
-		- [6.3 精度对比](#63-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 npu性能数据](#71-npu性能数据)
-		- [7.2 T4性能数据](#72-t4性能数据)
-		- [7.3 性能对比](#73-性能对比)
+# Resnet101模型-推理指导
 
+## 概述
 
+ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差学习的概念，通过增加直连通道来保护信息的完整性，解决信息丢失、梯度消失、梯度爆炸等问题，让很深的网络也得以训练。ResNet有不同的网络层数，常用的有18-layer、34-layer、50-layer、101-layer、152-layer。 
 
-## 1 模型概述
+-   参考论文：[Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun; Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2016, pp. 770-778](https://arxiv.org/pdf/1512.03385.pdf)
+-   参考实现：
 
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)**  
-
-### 1.1 论文地址
-[ResNet101论文](https://arxiv.org/pdf/1512.03385.pdf)  
-
-### 1.2 代码地址
-[ResNet101代码](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py)  
-branch:master
-commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
-
-## 2 环境说明
-
--   **[深度学习框架](#21-深度学习框架)**  
-
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
-```
-CANN 5.0.4
-
-torch == 1.5.1
-torchvision == 0.6.1
-onnx == 1.9.0
+```shell
+url=https://github.com/pytorch/vision
+branch=master
+commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
 ```
 
-### 2.2 python第三方库
+
+
+### 输入输出数据
+
+- #### 输入输出数据
+
+  - 输入数据
+
+    | 输入数据 | 大小                      | 数据类型 | 数据排布格式 |
+    | -------- | ------------------------- | -------- | ------------ |
+    | input    | batchsize x 3 x 224 x 224 | RGB_FP32 | NCHW         |
+
+  - 输出数据
+
+    | 输出数据 | 大小             | 数据类型 | 数据排布格式 |
+    | -------- | ---------------- | -------- | ------------ |
+    | output1  | batchsize x 1000 | FLOAT32  | ND           |
+
+
+### 推理环境准备
+
+- 该模型需要以下插件与驱动
+
+  | 配套                                                         | 版本                                                         | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | [1.0.15](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |                                                              |
+  | PyTorch                                                      | [1.5.1](https://github.com/pytorch/pytorch/tree/v1.5.1)      |                                                              |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |                                                              |                                                              |
+
+- 该模型需要以下依赖。
+
+  | 依赖名称      | 版本     |
+  | ------------- | -------- |
+  | onnx          | >=1.9.0  |
+  | torch         | >=1.5.1  |
+  | torchVision   | >=0.6.1  |
+  | numpy         | >=1.19.2 |
+  | Pillow        | >=8.2.0  |
+  | opencv-python | >=4.5.2  |
+
+
+
+## 快速上手
+
+### 获取源码
+
+1. 源码上传到服务器任意目录（如：/home/HwHiAiUser）。
+
+   ```
+   .
+   |-- README.md
+   |-- imagenet_acc_eval.py             //验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
+   |-- imagenet_torch_preprocess.py     //数据集预处理脚本
+   |-- requirements.txt
+   |-- resnet101_pth2onnx.py            //用于转换pth模型文件到onnx模型文件
+   ```
+
+   
+
+2. 请用户根据依赖列表和提供的requirments.txt以及自身环境准备依赖。
+
+   ```
+   pip3 install  -r requirments.txt
+   ```
+
+   
+
+### 准备数据集
+
+1. 获取原始数据集。
+
+   本模型使用ImageNet官网的5万张验证集进行测试，请用户自行获取该数据集，上传数据集到服务器任意目录（如：*/home/HwHiAiUser/dataset*）。图片与标签分别存放在*/home/HwHiAiUser/dataset*/imagenet/val与*/home/HwHiAiUser/dataset*/imagenet/val_label.txt位置。
+
+   
+
+2. 数据预处理。
+
+   执行预处理脚本，生成数据集预处理后的bin文件。
+
+   ```
+   python3 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/imagenet/val ./prep_dataset
+   ```
+
+   第一个参数为模型类型，第二个参数为原始数据验证集（.jpeg）所在路径，第三个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
+
+   
+   
+
+### 模型推理
+
+1. 模型转换。
+
+   本模型基于开源框架PyTorch训练的Resnet101进行模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      点击[Link](https://download.pytorch.org/models/resnet101-63fe2227.pth)在PyTorch开源框架获中取经过训练的Resnet101权重文件resnet101-63fe2227.pth，源码中已提供下载权重文件 。
+
+   2. 安装torchvision。模型代码在torchvision中，arm下需源码安装，参考torchvision官网。
+
+      执行以下命令。
+
+      ```shell
+      git clone https://github.com/pytorch/vision
+      cd vision
+      python3 setup.py install
+      cd ..
+      ```
+
+   3. 导出onnx文件。
+
+      resnet101_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令在当前目录生成resnet101.onnx模型文件。
+
+      ```shell
+      python3 resnet101_pth2onnx.py ./resnet101-63fe2227.pth resnet101.onnx
+      ```
+
+      使用ATC工具将.onnx文件转换为.om文件，导出.onnx模型文件时需设置算子版本为11。
+
+   4. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 执行命令查看芯片名称（${chip_name}）。
+
+         ${chip_name}可通过`npu-smi info`指令查看
+
+          ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
+      2. 使用atc将onnx模型转换为om模型文件。
+
+         ```shell
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          
+         atc --framework=5 --model=./resnet101.onnx --output=resnet101_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
+         ```
+
+        参数说明：
+        - --model：为ONNX模型文件。
+        - --framework：5代表ONNX模型。
+        - --output：输出的OM模型。
+        - --input_format：输入数据的格式。
+        - --input_shape：输入数据的shape。
+        - --log：日志级别。
+        - --soc_version：处理器型号，支持Ascend310系列。
+        - --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的卷积层会有性能收益。
+        - --insert_op_conf=aipp.config: AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+
+   
+
+2. 开始推理验证。
+
+a.  使用ais-infer工具进行推理。
+
+参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 
 ```
-numpy == 1.19.2
-Pillow == 8.2.0
-opencv-python == 4.5.2
+ pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+
 ```
+
+b.  执行推理。
+
+```shell
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+python3 ./ais_infer/ais_infer.py --model ./resnet101_bs1.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
+
+```
+
+-   参数说明：   
+    --model：模型地址
+    --input：预处理完的数据集文件夹
+    --output：推理结果保存地址
+    --outfmt：推理结果保存格式
+
+运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
 
 **说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
 
-## 3 模型转换
+**因工具限制，需要把result/xxxx_xx_xx-xx-xx-xx/summary.json从结果目录中删除，或者迁移到其他目录；**
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+c.  精度验证。
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+调用imagenet_acc_eval.py脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
-请参考[pytorch原始仓](https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py)给出的ResNet101权重文件下载地址获取权重文件：resnet101-63fe2227.pth
-
-2.ResNet101模型代码在torchvision里，安装torchvision，arm下需源码安装，参考torchvision官网，若安装过程报错请百度解决
+```shell
+python3 imagenet_acc_eval.py result/result/xxxx_xx_xx-xx-xx-xx（时间戳） /home/HwHiAiUser/datasets/imagenet/val_label.txt ./ result.json
 
 ```
-git clone https://github.com/pytorch/vision
-cd vision
-python3.7 setup.py install
-cd ..
-```
-3.编写pth2onnx脚本resnet101_pth2onnx.py
 
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
+第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称。
 
-4.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 resnet101_pth2onnx.py ./resnet101-63fe2227.pth resnet101.onnx
-```
 
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
 
-### 3.2 onnx模型量化(可选)
 
-1.AMCT工具包安装，具体参考《[CANN 开发辅助工具指南  01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》中的昇腾模型压缩工具使用指南（ONNX）章节；
-
-2.生成bin格式数据集，数据集用于校正量化因子。当前模型为动态batch，建议使用较大的batch size：
-
-```
-python3.7 gen_calibration_bin.py resnet /root/datasets/imagenet/val ./calibration_bin 32 1
-```
-
-参数说明：
-
-- resnet：模型类型
-- /root/datasets/imagenet/val：模型使用的数据集路径；
-- ./calibration_bin：生成的bin格式数据集路径；
-- 32：batch size；
-- 1：batch num。
-
-3.ONNX模型量化
-
-```
-amct_onnx calibration --model resnet101.onnx  --save_path ./result/resnet101  --input_shape "image:32,3,224,224" --data_dir "./calibration_bin" --data_types "float32" 
-```
-
-会在result目录下生成resnet101_deploy_model.onnx量化模型
-
-4.量化模型后续的推理验证流程和非量化一致。
-
-### 3.3 onnx转om模型
-
-1. 设置环境变量
-
-	```
-	source /usr/local/Ascend/ascend-toolkit/set_env.sh
-	```
-2. 使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南  01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》中的ATC工具使用指南章节
-
-	```
-	atc --framework=5 --model=./resnet101.onnx --output=resnet101_bs16 --input_format=NCHW --input_shape="image:16,3,224,224" --log=debug --soc_version=Ascend310 --insert_op_conf=aipp.config
-	```
-
-**说明：**  
-
-> 若设备类型为Ascend310P，设置--soc_version=Ascend${chip_name}（Ascend310P3）， ${chip_name}可通过`npu-smi info`指令查看；
-> ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
->
-> aipp.config是AIPP工具数据集预处理配置文件，详细说明可参考"ATC工具使用指南"中的"AIPP配置"章节。
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用ImageNet的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
-
-### 4.2 数据集预处理
-
-1.预处理脚本imagenet_torch_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val ./prep_dataset
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./resnet101_prep_bin.info 256 256
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310、310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考《[CANN 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=resnet101_bs16.om -input_text_path=./resnet101_prep_bin.info -input_width=256 -input_height=256 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
-
-## 6 精度对比
-
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理TopN精度统计
-
-后处理统计TopN精度
-
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-查看输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "77.37%"}, {"key": "Top2 accuracy", "value": "87.1%"}, {"key": "Top3 accuracy", "value": "90.61%"}, {"key": "Top4 accuracy", "value": "92.42%"}, {"key": "Top5 accuracy", "value": "93.54%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上
-
-### 6.2 开源TopN精度
-[torchvision官网精度](https://pytorch.org/vision/stable/models.html)
-```
-Model         Acc@1     Acc@5
-ResNet-101    77.374    93.546
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
