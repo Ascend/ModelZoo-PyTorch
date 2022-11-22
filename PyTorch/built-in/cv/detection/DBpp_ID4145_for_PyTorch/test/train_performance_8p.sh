@@ -87,7 +87,7 @@ CaseName=${Network}_bs${BatchSize}_${WORLD_SIZE}'p'_'perf'
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-grep "time:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print substr($2,0,6)}' &> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
+grep -a "time:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print substr($2,0,6)}' &> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
 FPS=`cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | sort -n | head -8 | awk -v bs=$BATCH_SIZE -v ws=$WORLD_SIZE '{a+=$1} END {if (NR != 0) printf("%.3f", 1/a*NR*bs*ws)}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
