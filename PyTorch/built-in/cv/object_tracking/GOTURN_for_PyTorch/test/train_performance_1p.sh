@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #网络名称，同目录名称
-Network="GOTURN_for_PyTorch"
+Network="GOTURN_ID4081_for_PyTorch"
 batch_size=3
-
+max_steps=8000
 # 数据集路径,保持为空,不需要修改
 data_path="./dataset"
 
@@ -12,6 +12,10 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --ckpt_path* ]];then
+        ckpt_path=`echo ${para#*=}`
+    elif [[ $para == --more_path1* ]];then
+        more_path1=`echo ${para#*=}`        
     fi
 done
 
@@ -49,6 +53,19 @@ check_etp_flag=$(env | grep etp_running_flag)
 etp_flag=$(echo ${check_etp_flag#*=})
 if [ x"${etp_flag}" != x"true" ]; then
 	source ${test_path_dir}/env_npu.sh
+else
+  PRETRAINED_MODEL_PATH=${ckpt_path}/caffenet_weights.npy
+  max_steps=2000
+  cp -r ${more_path1} ./src/scripts/
+  cd src
+  source settings.sh
+  cd ..
+  current_time=$(date +%s)
+  mkdir -p /npu/traindata/${current_time}
+  tar -xavf /${data_path}/GOTURN_data.tar.gz -C /npu/traindata/${current_time}/
+  data_path=/npu/traindata/${current_time}/
+  IMAGENET_PATH=${data_path}/ILSVRC2014_Det/
+  ALOV_PATH=${data_path}/ALOV/    
 fi
 
 taskset -c 0-32 python3.7 -u ./src/scripts/train.py \
@@ -59,7 +76,7 @@ taskset -c 0-32 python3.7 -u ./src/scripts/train.py \
   --npus 1 \
   --device 0 \
   --batch_size $batch_size \
-  --max_steps 8000 \
+  --max_steps $max_steps \
   --pretrained_model $PRETRAINED_MODEL_PATH >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -85,10 +102,10 @@ fi
 echo "Final Performance iter/sec : $its"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=$(grep "val_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F ": " '{print $2}' | awk -F "," '{print $1}' | awk -F "(" '{print $2}' )
+#train_accuracy=$(grep "val_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F ": " '{print $2}' | awk -F "," '{print $1}' | awk -F "(" '{print $2}' )
 
 #打印，不需要修改
-echo "Final val loss : ${train_accuracy}"
+#echo "Final val loss : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总
@@ -111,4 +128,8 @@ echo "DeviceType = ${DeviceType}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/
 echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+#echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+#处理数据集
+if [ x"${etp_flag}" = x"true" ]; then
+    rm -rf ${data_path}
+fi
