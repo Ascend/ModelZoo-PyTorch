@@ -21,7 +21,6 @@ RANK_ID_START=0
 RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
-ASCEND_DEVICE_ID=7
 
 #设置默认日志级别,不需要修改
 export ASCEND_GLOBAL_LOG_LEVEL=3
