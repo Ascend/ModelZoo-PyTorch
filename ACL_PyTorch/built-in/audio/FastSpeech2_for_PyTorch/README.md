@@ -115,6 +115,7 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
    3.1 配置环境变量  
    ```
    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   export ENABLE_RUNTIME_V2=0
    ```
    > **说明：**  
      该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
