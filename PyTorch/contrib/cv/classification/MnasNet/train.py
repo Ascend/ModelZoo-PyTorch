@@ -35,6 +35,8 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import mnasnet
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.npu
 
 CALCULATE_DEVICE = "npu:0"
@@ -140,7 +142,6 @@ def main():
 
     args.distributed = args.world_size > 1 or args.multiprocessing_distributed
 
-    # ngpus_per_node = torch.cuda.device_count()
     args.process_device_map = device_id_to_process_device_map(args.device_list)
     if args.device == 'npu':
         ngpus_per_node = len(args.process_device_map)
@@ -161,7 +162,6 @@ def main():
 
 def main_worker(npu, ngpus_per_node, args):
     global best_acc1
-    # args.npu = npu
 
     args.npu = args.process_device_map[npu]
 
@@ -183,11 +183,9 @@ def main_worker(npu, ngpus_per_node, args):
             else:
                 dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                         world_size=args.world_size, rank=args.rank)
-            # dist.init_process_group(backend=args.dist_backend, world_size=args.world_size, rank=args.rank)
     # create model
     if args.pretrained:
         print("=> using pre-trained model '{}'".format(args.arch))
-        # model = models.__dict__[args.arch](pretrained=True)
         pretrained_dict = torch.load("./model_best.pth.tar", map_location="cpu")["state_dict"]
         model = mnasnet.mnasnet1_0()
         if "fc.weight" in pretrained_dict:
@@ -200,7 +198,6 @@ def main_worker(npu, ngpus_per_node, args):
     else:
         print("=> creating model '{}'".format('mansnet'))
         model = mnasnet.mnasnet1_0()
-        # model = models.__dict__[args.arch]()
 
     args.loss_scale = 128
 
@@ -255,7 +252,6 @@ def main_worker(npu, ngpus_per_node, args):
 
     model = model.to(loc)
     # define loss function (criterion) and optimizer
-    # criterion = nn.CrossEntropyLoss().to(loc)
     criterion = LabelSmoothingCrossEntropy().to(loc)
 
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
@@ -264,7 +260,7 @@ def main_worker(npu, ngpus_per_node, args):
                                     nesterov=True)
     lr_schedule = CosineWithWarmup(optimizer, args.warmup, 0.1, args.epochs)
 
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O1", loss_scale=args.loss_scale)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O1", loss_scale="dynamic",combine_grad = True)
     if args.multiprocessing_distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.npu], broadcast_buffers=False)
 
@@ -343,12 +339,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    # prefetcher = data_prefetcher(train_loader)
-    # images, target = prefetcher.next()
-    # i = -1
     # while images is not None:
     for i, (images, target) in enumerate(train_loader):
-        # i += 1
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -368,7 +360,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        #loss.backward()
 
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
@@ -385,7 +376,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         end = time.time()
         if i % args.print_freq == 0 and args.rank == 0:
             progress.display(i)
-        # images, target = prefetcher.next()
     print('NPU: {}, solve {} batchs'.format(args.rank, i))
 
 
@@ -406,12 +396,8 @@ def validate(val_loader, model, criterion, args):
     with torch.no_grad():
         end = time.time()
 
-        # prefetcher = data_prefetcher(val_loader)
-        # images, target = prefetcher.next()
-        # i = -1
         # while images is not None:
         for i, (images, target) in enumerate(val_loader):
-        #     i += 1
             loc = 'npu:{}'.format(args.npu)
             target = target.to(torch.int32)
             images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False)
@@ -432,7 +418,6 @@ def validate(val_loader, model, criterion, args):
 
             if i % args.print_freq == 0 and args.rank == 0:
                 progress.display(i)
-            # images, target = prefetcher.next()
 
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(top1=top1, top5=top5))
@@ -452,15 +437,10 @@ def runprof(train_loader, model, criterion, optimizer, epoch, args):
     i = -1
     while images is not None:
         i += 1
-        if args.npu is not None:
-            images = images.cuda(args.npu, non_blocking=True)
-
-        if 'npu' in CALCULATE_DEVICE:
-            target = target.to(torch.int32)
         images, target = images.to(CALCULATE_DEVICE, non_blocking=True), target.to(CALCULATE_DEVICE, non_blocking=True)
 
         if i >= 5:
-            with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            with torch.autograd.profiler.profile(use_npu=True) as prof:
                 out = model(images)
                 loss = criterion(out, target)
                 optimizer.zero_grad()
@@ -682,6 +662,12 @@ class data_prefetcher():
         return input, target
 
 if __name__ == '__main__':
+    option = {}
+    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    print("option:",option)
+    torch.npu.set_option(option)
+
     if 'npu' in CALCULATE_DEVICE:
         torch.npu.set_device(CALCULATE_DEVICE)
     main()

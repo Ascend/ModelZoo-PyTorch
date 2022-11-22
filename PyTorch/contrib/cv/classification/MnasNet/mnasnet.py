@@ -155,7 +155,7 @@ class MNASNet(torch.nn.Module):
             nn.ReLU(inplace=True),
         ]
         self.layers = nn.Sequential(*layers)
-        self.classifier = nn.Sequential(nn.Dropout(p=dropout, inplace=True),
+        self.classifier = nn.Sequential(nn.Dropout(p=dropout, inplace=False),
                                         nn.Linear(1280, num_classes))
         self._initialize_weights()
 
