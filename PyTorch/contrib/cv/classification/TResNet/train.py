@@ -28,7 +28,6 @@ NVIDIA CUDA specific speedups adopted from NVIDIA Apex examples
 
 Hacked together by / Copyright 2020 Ross Wightman (https://github.com/rwightman)
 """
-import torch.npu
 import argparse
 import time
 import yaml
@@ -39,6 +38,9 @@ from contextlib import suppress
 from datetime import datetime
 
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
+import torch.npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
@@ -61,7 +63,7 @@ except ImportError:
 has_native_amp = False
 try:
     if getattr(torch.npu.amp, 'autocast') is not None:
-        has_native_amp = True
+        has_native_amp = False
 except AttributeError:
     pass
 
@@ -282,6 +284,8 @@ parser.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='convert model torchscript for inference')
 parser.add_argument('--world-size', default=1,type=int,
                     help='world size of group')
+parser.add_argument('--loss-scaler', default='dynamic', 
+                    help='loss scale using in amp')
 
 def _parse_args():
     # Do we have a config file to parse?
@@ -408,7 +412,7 @@ def main():
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if use_amp == 'apex':
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O2',loss_scale=128.0,combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O2',loss_scale=args.loss_scaler,combine_grad=True)
         loss_scaler = ApexScaler()
         if args.local_rank == 0:
             _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')

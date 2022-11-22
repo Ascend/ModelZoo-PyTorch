@@ -28,6 +28,8 @@ import glob
 import time
 import logging
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 from collections import OrderedDict

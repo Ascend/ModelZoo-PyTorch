@@ -14,6 +14,8 @@
 # ============================================================================
 import argparse
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import torchvision
 from torchvision import datasets, transforms
 from collections import OrderedDict

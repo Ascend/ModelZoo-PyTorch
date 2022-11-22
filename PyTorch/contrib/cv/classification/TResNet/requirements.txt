@@ -1,3 +1,7 @@
 numpy
 opencv-python
 Pillow==9.1.0
+pyyaml
+torchvision==0.9.1
+decorator
+sympy
