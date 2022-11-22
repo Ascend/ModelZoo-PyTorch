@@ -73,8 +73,8 @@
 
 3. 执行以下命令创建 Python 虚拟环境并安装所需的依赖
     ```shell
-    pip install -r requirements.txt
-    python setup.py install
+    pip3 install -r requirements.txt
+    python3 setup.py install
     ```
 
 4. 创建一个目录，用于存放整个推理过程中所需文件与生成文件
@@ -107,7 +107,7 @@
 2. 数据预处理  
     执行前处理脚本将原始数据转换为 OM 模型输入需要的 bin 文件。
     ```shell
-    python pse_preprocess.py \
+    python3 pse_preprocess.py \
         --config configs/det/det_mv3_pse.yml \
         --opt data_dir=pse/icdar2015/ bin_dir=pse/bin_list info_dir=pse/info_list
     ```
@@ -166,7 +166,7 @@
 
     step4: 修改ONNX
     ```
-    python modify_onnx.py --input_onnx /a/b/c/input.onnx --output /a/b/c/output.onnx
+    python3 modify_onnx.py --input_onnx /a/b/c/input.onnx --output /a/b/c/output.onnx
 
     ```
     参数说明：
@@ -277,7 +277,7 @@
 
     执行后处理脚本，根据推理结果计算OM模型的准确率：
     ```shell
-    python pse_postprocess.py \
+    python3 pse_postprocess.py \
         -c configs/det/det_mv3_pse.yml  \
         -o res_dir=pse/results/bs1_out/ info_dir=pse/info_list/
     ```
