@@ -125,7 +125,7 @@
 1. PyTroch 模型转 ONNX 模型  
 
     step1: 下载 paddle 预训练模型
-    下载 PaddleOCR 提供的 [预训练模型](https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/det_mv3_pse_v2.0_train.tar) 到 pse 目录下，然后解压。
+    下载 PaddleOCR 提供的 [预训练模型](https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_mv3_pse_v2.0_train.tar) 到 pse 目录下，然后解压。
     ```shell
     cd pse
     wget https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/det_mv3_pse_v2.0_train.tar
