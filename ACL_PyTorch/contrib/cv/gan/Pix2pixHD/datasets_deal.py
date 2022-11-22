@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import glob
 import shutil
 
@@ -22,9 +23,9 @@ if __name__ == "__main__":
     test_original_gtfine_dir = sys.argv[3] 
 
     if not os.path.exists(test_inst_dir):
-        os.mkdir(test_inst_dir)
+        os.makedirs(test_inst_dir)
     if not os.path.exists(test_label_dir):
-        os.mkdir(test_label_dir)
+        os.makedirs(test_label_dir)
 
     city_name_dir = os.listdir(test_original_gtfine_dir)
     img_inst_number = 0

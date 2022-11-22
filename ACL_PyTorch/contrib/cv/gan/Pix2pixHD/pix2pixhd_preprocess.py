@@ -14,12 +14,13 @@
 
 import os
 import sys
+
 from PIL import Image
 import numpy as np
-import multiprocessing
 import torch
-import torchvision.transforms as transforms
 from torch.autograd import Variable
+import torchvision.transforms as transforms
+from tqdm import tqdm
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -30,11 +31,12 @@ IMG_EXTENSIONS = [
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
-def make_dataset(dir):
-    images = []
-    assert os.path.isdir(dir), '%s is not a valid directory' % dir
 
-    for root, _, fnames in sorted(os.walk(dir)):
+def make_dataset(dir_path):
+    images = []
+    assert os.path.isdir(dir_path), '%s is not a valid directory' % dir_path
+
+    for root, _, fnames in sorted(os.walk(dir_path)):
         for fname in fnames:
             if is_image_file(fname):
                 path = os.path.join(root, fname)
@@ -42,25 +44,25 @@ def make_dataset(dir):
 
     return images
 
+
 def get_transform():
     transform_list = []
     transform_list += [transforms.ToTensor()]
 
     return transforms.Compose(transform_list)
-    
+
+
 def image_read(label_file, inst_file):                  
-    A = Image.open(label_file) 
-    A1 = A.load()
+    A = Image.open(label_file)
     transform_A = get_transform()
     A_tensor = transform_A(A) * 255.0
     inst = Image.open(inst_file)
-    inst1 = inst.load()
     inst_tensor = transform_A(inst)
     
     return A_tensor, inst_tensor
 
 
-def encode_input(label_map, inst_map, label_nc = 35, infer=True): 
+def encode_input(label_map, inst_map, label_nc=35, infer=True): 
     
     label_map = label_map.unsqueeze(0)
     inst_map = inst_map.unsqueeze(0)
@@ -76,12 +78,13 @@ def encode_input(label_map, inst_map, label_nc = 35, infer=True):
 
     return input_label
 
+
 def get_edges(t):
     edge = torch.ByteTensor(t.size()).zero_()
-    edge[:,:,:,1:] = edge[:,:,:,1:] | (t[:,:,:,1:] != t[:,:,:,:-1])
-    edge[:,:,:,:-1] = edge[:,:,:,:-1] | (t[:,:,:,1:] != t[:,:,:,:-1])
-    edge[:,:,1:,:] = edge[:,:,1:,:] | (t[:,:,1:,:] != t[:,:,:-1,:])
-    edge[:,:,:-1,:] = edge[:,:,:-1,:] | (t[:,:,1:,:] != t[:,:,:-1,:])
+    edge[:, :, :, 1:] = edge[:, :, :, 1:] | (t[:, :, :, 1:] != t[:, :, :, :-1])
+    edge[:, :, :, :-1] = edge[:, :, :, :-1] | (t[:, :, :, 1:] != t[:, :, :, :-1])
+    edge[:, :, 1:, :] = edge[:, :, 1:, :] | (t[:, :, 1:, :] != t[:, :, :-1, :])
+    edge[:, :, :-1, :] = edge[:, :, :-1, :] | (t[:, :, 1:, :] != t[:, :, :-1, :])
 
     return edge.float()
 
@@ -107,30 +110,28 @@ def gen_input_bin(label_batches, inst_batches, batch):
         A_tensor, inst_tensor = image_read(label_file, inst_file)
         input_label = encode_input(A_tensor, inst_tensor)
         float_input = transform_invert(input_label)
-        print("float_input = ",float_input.shape, float_input.dtype)
+        print("float_input = ", float_input.shape, float_input.dtype)
         print("save_path = ", os.path.join(save_path, label_file.split('.')[0] + ".bin"))
         float_input.tofile(os.path.join(save_path, label_file.split('.')[0] + ".bin"))
 
 
-
-def preprocess(src_path, save_path):
+def preprocess(src_path_para, save_path_para):
 
     dir_label = 'test_label'  
-    dir_label = os.path.join(src_path, dir_label)  
+    dir_label = os.path.join(src_path_para, dir_label)  
     label_paths = sorted(make_dataset(dir_label))  
 
     dir_inst = 'test_inst'
-    dir_inst = os.path.join(src_path, dir_inst) 
+    dir_inst = os.path.join(src_path_para, dir_inst) 
     inst_paths = sorted(make_dataset(dir_inst))  
 
-    for i in range(len(label_paths)):
+    for i in tqdm(range(len(label_paths))):
         label_file = label_paths[i]
         inst_file = inst_paths[i]
         A_tensor, inst_tensor = image_read(label_file, inst_file)
         input_label = encode_input(A_tensor, inst_tensor)
         float_input = transform_invert(input_label)
-        float_input.tofile(os.path.join(save_path, label_file.split('/')[-1].split('.')[0] + ".bin"))
-
+        float_input.tofile(os.path.join(save_path_para, label_file.split('/')[-1].split('.')[0] + ".bin"))
 
 
 if __name__ == '__main__':

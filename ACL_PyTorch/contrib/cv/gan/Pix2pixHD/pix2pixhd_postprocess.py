@@ -13,15 +13,15 @@
 # limitations under the License.
 
 import os
-import numpy as np
-import matplotlib
-import matplotlib.image as img
-from PIL import Image
-import cv2
 import sys
 
-def save_image(image_numpy, image_path):
-    image_pil = Image.fromarray(image_numpy)
+import numpy as np
+from PIL import Image
+from tqdm import tqdm
+
+
+def save_image(image_numpy_path, image_path):
+    image_pil = Image.fromarray(image_numpy_path)
     image_pil.save(image_path)
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         os.mkdir(save_image_dir)
     bin_path_list = os.listdir(bin_dir)
 
-    for iterm in bin_path_list:
+    for iterm in tqdm(bin_path_list):
         bin_path = os.path.join(bin_dir, iterm)
         image = np.fromfile(bin_path, dtype = np.float32)
         image.shape = 3, 1024, 2048  
@@ -41,7 +41,3 @@ if __name__ == "__main__":
         image_numpy = image_numpy.astype(np.uint8)
         save_path = os.path.join(save_image_dir, iterm.split('.')[0] + 'generated.jpg')
         save_image(image_numpy, save_path)
-
-
-
-

@@ -21,7 +21,9 @@ index ee05d85..bc72291 100755
          assert(torch.cuda.is_available())
          netD.cuda(gpu_ids[0])
 diff --git a/models/pix2pixHD_model.py b/models/pix2pixHD_model.py
-index fafdec0..cbd6f27 100755
+old mode 100755
+new mode 100644
+index fafdec0..a66d2c2
 --- a/models/pix2pixHD_model.py
 +++ b/models/pix2pixHD_model.py
 @@ -54,7 +54,7 @@ class Pix2PixHDModel(BaseModel):
@@ -33,6 +35,42 @@ index fafdec0..cbd6f27 100755
              self.load_network(self.netG, 'G', opt.which_epoch, pretrained_path)            
              if self.isTrain:
                  self.load_network(self.netD, 'D', opt.which_epoch, pretrained_path)  
+@@ -115,21 +115,22 @@ class Pix2PixHDModel(BaseModel):
+             # create one-hot vector for label map 
+             size = label_map.size()
+             oneHot_size = (size[0], self.opt.label_nc, size[2], size[3])
+-            input_label = torch.cuda.FloatTensor(torch.Size(oneHot_size)).zero_()
+-            input_label = input_label.scatter_(1, label_map.data.long().cuda(), 1.0)
++            input_label = torch.FloatTensor(torch.Size(oneHot_size)).zero_()
++            input_label = input_label.scatter_(1, label_map.data.long(), 1.0)
+             if self.opt.data_type == 16:
+                 input_label = input_label.half()
+ 
+         # get edges from instance map
+         if not self.opt.no_instance:
+-            inst_map = inst_map.data.cuda()
++            inst_map = inst_map.data
+             edge_map = self.get_edges(inst_map)
+             input_label = torch.cat((input_label, edge_map), dim=1)         
+         input_label = Variable(input_label, volatile=infer)
+ 
+         # real images for training
+         if real_image is not None:
+-            real_image = Variable(real_image.data.cuda())
++            real_image = Variable(real_image.data)
++            
+ 
+         # instance map for feature encoding
+         if self.use_features:
+@@ -260,7 +261,7 @@ class Pix2PixHDModel(BaseModel):
+         return feature
+ 
+     def get_edges(self, t):
+-        edge = torch.cuda.ByteTensor(t.size()).zero_()
++        edge = torch.ByteTensor(t.size()).zero_()
+         edge[:,:,:,1:] = edge[:,:,:,1:] | (t[:,:,:,1:] != t[:,:,:,:-1])
+         edge[:,:,:,:-1] = edge[:,:,:,:-1] | (t[:,:,:,1:] != t[:,:,:,:-1])
+         edge[:,:,1:,:] = edge[:,:,1:,:] | (t[:,:,1:,:] != t[:,:,:-1,:])
 diff --git a/options/base_options.py b/options/base_options.py
 index 0d5e769..61a6a1e 100755
 --- a/options/base_options.py
