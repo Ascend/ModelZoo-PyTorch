@@ -84,35 +84,19 @@ else
     test_path_dir=${cur_path}/test
 fi
 
-#创建DeviceID输出目录，不需要修改
-if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
-else
-    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
-fi
-
-# 添加二进制代码
-# line=`grep "import apex" ${cur_path}/src/main_npu_8p.py -n | tail -1 | awk -F ':' '{print $1}'`
-# sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/src/main_npu_8p.py
 
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 # 非平台场景时source 环境变量
-# check_etp_flag=`env | grep etp_running_flag`
-# etp_flag=`echo ${check_etp_flag#*=}`
-# if [ x"${etp_flag}" != x"true" ];then
-#     source ${test_path_dir}/env_npu.sh
-# fi
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 #数据集处理
 ln -nsf ${data_path} $cur_path/data
 
-#执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-# cd $cur_path/src
-# {
-# python main_npu_1p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --dataset pascal --num_epochs 5 
-# } > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     
 cd $cur_path/src
 
@@ -120,9 +104,15 @@ RANK_ID_START=0
 RANK_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
 let DIS_BS=${batch_size}/${RANK_SIZE}
-echo 'START TRAINING 8P!' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
+if [ -d ${test_path_dir}/output/$RANK_ID];then
+    rm -rf ${test_path_dir}/output/$RANK_ID
+    mkdir -p ${test_path_dir}/output/$RANK_ID
+else
+    mkdir -p ${test_path_dir}/output/$RANK_ID
+fi
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
@@ -132,7 +122,7 @@ taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --dataset pascal \
             --num_epochs $num_epochs \
             --lr_step 45,60,75 \
-            --port=$cur_port \
+            --port=${cur_port} \
             --world_size 8  \
             --batch_size ${DIS_BS} \
             --lr 3.54e-4 \
@@ -143,7 +133,7 @@ taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --load_local_weights True \
             --local_weights_path $cur_path/data/voc/$local_weights_path \
             --num_iters ${num_iters} \
-            --local_rank $RANK_ID >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --local_rank $RANK_ID > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
 done
 
 wait
@@ -153,6 +143,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
+ASCEND_DEVICE_ID=0
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
