@@ -69,7 +69,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
                                                
 
@@ -106,7 +106,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
    ```
    ii. 修改环境下onnx源码，除去对导出onnx模型检查。
    ```
-   进入/torch/onnx/utils.py，修改文件的_check_onnx_proto(proto)改为pass，执行:wq保存并退出。
+   进入 python依赖安装路径/torch/onnx/utils.py，修改文件的_check_onnx_proto(proto)改为pass，执行:wq保存并退出。
 
    ```
 
@@ -159,7 +159,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
 
    2. 导出onnx文件。
 
-      1. 运行“mmdetection/tools/deployment/pytorch2onnx.py”脚本。
+      1. 运行“mmdetection/tools/deployment/pytorch2onnx.py”脚本。 
 
 
          ```
@@ -203,7 +203,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=GCNet.onnx --output=./GCNet_bs1 --input_shape="input:1,3,800,1216"  --log=error --soc_version=$\{chip\_name\} --input_format=NCHW 
+         atc --framework=5 --model=GCNet.onnx --output=./GCNet_bs1 --input_shape="input:1,3,800,1216"  --log=error --soc_version=${chip_name} --input_format=NCHW 
           
          ```
 
@@ -227,7 +227,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
    2. 执行推理。
 
         ```
-        python3 ais_infer.py --model /home/xhs/GCNet/GCNet_bs1.om --input /home/xhs/GCNet/val2017_bin --output /home/xhs/GCNet/result --batchsize 1 --outfmt BIN
+        python3 ais_infer.py --model ./GCNet_bs1.om --input ./val2017_bin --output ./result --batchsize 1 --outfmt BIN --output_dirname result
         ```
 
       - 参数说明：
@@ -236,6 +236,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
         + --output: 存放推理结果的目录路径
         + --batchsize：每次输入模型的样本数
         + --outfmt: 推理结果数据的格式
+        + --output_dirname: 推理结果输出子文件夹
 
         推理后的输出默认在当前目录result下。
 
@@ -259,7 +260,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
       运行成功后，在当前目录生成coco2017_jpg.info
      执行后处理脚本，计算精度：
       ```
-      python3 GCNet_postprocess.py --bin_data_path=./result/2022_11_03-17_26_58 --test_annotation=coco2017_jpg.info --det_results_path=detection-results --annotations_path=/opt/npu/coco/annotations/instances_val2017.json --net_out_num=3 --net_input_height=800 --net_input_width=1216
+      python3 GCNet_postprocess.py --bin_data_path=./result --test_annotation=coco2017_jpg.info --det_results_path=detection-results --annotations_path=instances_val2017.json --net_out_num=3 --net_input_height=800 --net_input_width=1216
       ```
     
       - 参数说明：
