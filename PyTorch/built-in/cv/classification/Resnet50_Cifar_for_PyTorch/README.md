@@ -79,7 +79,7 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 1. 获取数据集。
 
   模型训练所需要的数据集（cifar100）脚本会自动下载,请保持网络畅通.如果需要可用如下命令自行下载
-    wget https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+    wget https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
 
    ```
    数据集目录结构参考如下所示:
@@ -91,14 +91,6 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
       ├──test
 
  模型训练所需要的数据集（cifar100）脚本会自动下载,请保持网络畅通
-
-   数据集结构如下：
-   cifar-100-python
-       --file.txt
-       --meta
-       --test
-       --train
-
 
 # 开始训练
 
