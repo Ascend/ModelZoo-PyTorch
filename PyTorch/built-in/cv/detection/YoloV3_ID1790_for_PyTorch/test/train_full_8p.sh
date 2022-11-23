@@ -15,6 +15,7 @@ fi
 #集合通信参数,不需要修改
 export RANK_SIZE=8
 RANK_ID_START=0
+export WORLD_SIZE=8
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
