@@ -92,6 +92,9 @@ def main():
     conf = Config()
     experiment_args = conf.compile(conf.load(args['exp']))['Experiment']
     experiment_args.update(cmd=args)
+    experiment_args["evaluation"]["data_loaders"]["icdar2015"]["dataset"]["data_dir"] = [args["data"]]
+    experiment_args["evaluation"]["data_loaders"]["icdar2015"]["dataset"]["data_list"] = [os.path.join(
+        args["data"], "test_list.txt")]
     experiment = Configurable.construct_class_from_config(experiment_args)
 
     Eval(experiment, experiment_args, cmd=args, verbose=args['verbose']).eval(args['visualize'])
@@ -138,18 +141,18 @@ class Eval:
         data = {k: v[0:1]for k, v in batch.items()}
         if  torch.npu.is_available():
             torch.npu.synchronize()
-        start = time.time() 
+        start = time.time()
         for _ in range(times):
             pred = model.forward(data)
         for _ in range(times):
-            output = self.structure.representer.represent(batch, pred, is_output_polygon=False) 
+            output = self.structure.representer.represent(batch, pred, is_output_polygon=False)
         time_cost = (time.time() - start) / times
         self.logger.info('Params: %s, Inference speed: %fms, FPS: %f' % (
             str(sum(p.numel() for p in model.parameters() if p.requires_grad)),
             time_cost * 1000, 1 / time_cost))
-        
+
         return time_cost
-        
+
     def format_output(self, batch, output):
         batch_boxes, batch_scores = output
         for index in range(batch['image'].size(0)):
@@ -175,7 +178,7 @@ class Eval:
                         box = boxes[i,:,:].reshape(-1).tolist()
                         result = ",".join([str(int(x)) for x in box])
                         res.write(result + ',' + str(score) + "\n")
-        
+
     def eval(self, visualize=False):
         CALCULATE_DEVICE = "npu:0"
         torch.npu.set_device(CALCULATE_DEVICE)
@@ -194,7 +197,7 @@ class Eval:
                         time_cost = self.report_speed(model, batch, times=50)
                         continue
                     pred = model.forward(batch, training=False)
-                    output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon']) 
+                    output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon'])
                     if not os.path.isdir(self.args['result_dir']):
                         os.mkdir(self.args['result_dir'])
                     self.format_output(batch, output)

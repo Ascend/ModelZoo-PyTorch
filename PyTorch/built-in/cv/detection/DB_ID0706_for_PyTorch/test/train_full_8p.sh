@@ -97,6 +97,7 @@ taskset -c 0-${cpu_number} nohup python3.7 -W ignore train.py experiments/seg_de
     --Port 29502 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 nohup python3.7 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
+    --data ${data_path}/icdar2015 \
     --resume outputs/workspace/${PWD##*/}/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/final \
     --box_thresh 0.6 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
