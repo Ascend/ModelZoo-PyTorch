@@ -111,6 +111,9 @@ parser.add_argument('--val_feq', default=10, type=int,
 parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
 parser.add_argument('--stop-step-num', default=None, type=int,
                     help='after the stop-step, killing the training task')
+parser.add_argument('--prof', default=True, action='store_true',
+                    help='use profiling to evaluate the performance of model')
+
 cur_step = 0
 
 # for servers to immediately record the logs
@@ -295,6 +298,10 @@ def main_worker(npu, nnpus_per_node, args):
             print(res, file=f)
         return
 
+    if args.prof:
+        profiling(train_loader, model, criterion, optimizer, args)
+        return
+
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -325,7 +332,38 @@ def main_worker(npu, nnpus_per_node, args):
                         'amp': amp.state_dict(),
                     })
         if args.stop_step_num is not None and cur_step >= args.stop_step_num:
+            pass
+
+
+def profiling(data_loader, model, criterion, optimizer, args):
+    # switch to train mode
+    model.train()
+
+    def update(model, images, target, optimizer):
+        output = model(images)
+        loss = criterion(output, target)
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        optimizer.zero_grad()
+        optimizer.step()
+
+    for step, (images, target) in enumerate(data_loader):
+
+        loc = 'npu:{}'.format(args.npu)
+        images = images.to(loc, non_blocking=True).to(torch.float)
+        target = target.to(torch.int32).to(loc, non_blocking=True)
+
+        if step < 5:
+            update(model, images, target, optimizer)
+        else:
+            with torch.autograd.profiler.profile(use_npu=True) as prof:
+                update(model, images, target, optimizer)
             break
+
+    prof.export_chrome_trace("output.prof")
 
 def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node):
     global cur_step
