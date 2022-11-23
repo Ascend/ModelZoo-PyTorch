@@ -10,7 +10,7 @@ export ENABLE_RUNTIME_V2=1
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #conda环境的名称
-conda_name=py1
+conda_name=py2
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -80,23 +80,30 @@ cp ${data_path}/checkpoints/c3d* /root/.cache/torch/hub/checkpoints/
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-#conda deactivate
-
 cur_path=`pwd`
 
-sed -i "s|data_root = 'data/ucf101/rawframes/'|data_root= '${data_path}/rawframes/'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py
-sed -i "s|data_root_val = 'data/ucf101/rawframes/'|data_root_val= '${data_path}/rawframes/'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py
-sed -i "s|ann_file_train = f'data/ucf101/ucf101_train_split_{split}_rawframes.txt'|ann_file_train= f'${data_path}/ucf101_train_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py
-sed -i "s|ann_file_val = f'data/ucf101/ucf101_val_split_{split}_rawframes.txt'|ann_file_val= f'${data_path}/ucf101_val_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py
-sed -i "s|ann_file_test = f'data/ucf101/ucf101_val_split_{split}_rawframes.txt'|ann_file_test= f'${data_path}/ucf101_val_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py
-sed -i "0,/total_epochs.*$/s//total_epochs= ${epochs}/g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py
+#mmcv modify
+location=`pip3 show mmcv | grep Location | awk '{print $NF}'`
+cp ${cur_path}/additional_need/mmcv/distributed.py ${location}/mmcv/parallel/
+cp ${cur_path}/additional_need/mmcv/test.py ${location}/mmcv/engine/
+cp ${cur_path}/additional_need/mmcv/dist_utils.py ${location}/mmcv/runner/
+cp ${cur_path}/additional_need/mmcv/optimizer.py ${location}/mmcv/runner/hooks/
+cp ${cur_path}/additional_need/mmcv/epoch_based_runner.py ${location}/mmcv/runner/
 
-python3.7 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py \
+#config modify
+sed -i "s|data_root = 'data/ucf101/rawframes/'|data_root= '${data_path}/rawframes/'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py
+sed -i "s|data_root_val = 'data/ucf101/rawframes/'|data_root_val= '${data_path}/rawframes/'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py
+sed -i "s|ann_file_train = f'data/ucf101/ucf101_train_split_{split}_rawframes.txt'|ann_file_train= f'${data_path}/ucf101_train_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py
+sed -i "s|ann_file_val = f'data/ucf101/ucf101_val_split_{split}_rawframes.txt'|ann_file_val= f'${data_path}/ucf101_val_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py
+sed -i "s|ann_file_test = f'data/ucf101/ucf101_val_split_{split}_rawframes.txt'|ann_file_test= f'${data_path}/ucf101_val_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py
+
+
+python3.7 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py \
     --validate \
     --seed 0 \
     --deterministic \
     --bin \
-    --cfg-options data.workers_per_gpu=8 \
+    --cfg-options data.workers_per_gpu=8 log_config.interval=20\
     --rank_id=$ASCEND_DEVICE_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -108,7 +115,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-avg_step_time=`grep "Epoch" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print $2}' | awk -F " " '{print $1}' | awk -F "," '{print $1}'| awk 'BEGIN{count=0}{if (NR>10 && NR<65){sum+=$1;count+=1}}END{printf "%.4f\n", sum/count}'`
+avg_step_time=`grep "Epoch" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print $2}' | awk -F " " '{print $1}' | awk -F "," '{print $1}'| awk 'BEGIN{count=0}{if (NR>1 && NR<7){sum+=$1;count+=1}}END{printf "%.4f\n", sum/count}'`
 FPS=`awk 'BEGIN{printf "%.4f\n", '$batch_size'/'$avg_step_time'}'`
 #FPS=`grep -rn "wps=" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "wps=" '{print $2}' | awk -F "," '{print $1}' | awk '{if(NR>=325){print}}' | awk 'END {print}' |sed s/[[:space:]]//g`
 
@@ -120,7 +127,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据
 #吞吐量，不需要修改
@@ -129,10 +136,12 @@ ActualFPS=${FPS}
 #TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep top5_acc | awk '{print $(NF-2)}' | awk -F ',' '{print $1}' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep "grad_norm" | awk '{print $(NF-2)}' | awk -F ',' '{print $1}' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+
+train_accuracy=`cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep top1_acc | awk END'{print $(NF-4)}' | awk -F ',' '{print $1}'`
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -142,7 +151,7 @@ echo "DeviceType = ${DeviceType}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/$
 echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${avg_step_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-#echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 

@@ -70,15 +70,8 @@ class EpochBasedRunner(BaseRunner):
                 self.logger.info('load_data costs:'+str(time.time()-self.end))
             self._inner_iter = i
             self.call_hook('before_train_iter')
-            if(rank == 0 and self._epoch == 0 and self._iter<=10):
-                with torch.autograd.profiler.profile(use_npu=True) as prof:
-                    self.run_iter(data_batch, train_mode=True, **kwargs)
-                    self.call_hook('after_train_iter')
-                print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-                prof.export_chrome_trace("output.prof")
-            else:
-                self.run_iter(data_batch, train_mode=True, **kwargs)
-                self.call_hook('after_train_iter')
+            self.run_iter(data_batch, train_mode=True, **kwargs)
+            self.call_hook('after_train_iter')
             self._iter += 1
             if(rank == 0 and self.batch_time.avg>0):
                 self.logger.info('Compute FPS@all: {:.3f},Time@all: {:.3f}'.format(world_size*self.data_loader.batch_size/self.batch_time.avg,self.batch_time.avg))
