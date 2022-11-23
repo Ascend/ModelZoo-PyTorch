@@ -126,21 +126,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 sed -i 's/\x0D/\x0A/g' ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
-step_time=`grep -E "^\[Training\].+\/step" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END{print $4}'`
-digit_time=`echo $step_time |sed 's/[a-z]*\/step//g' |sed 's/[[:space:]]//g'`
-if [[ "$step_time" =~ ^[0-9]+\.?[0-9]+us\/step$ ]]; then
-    FPS=`awk 'BEGIN{printf "%.2f\n",'${RANK_SIZE}'*'${batch_size}'*1000000/'${digit_time}'}'`
-    TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${digit_time}'/1000000}'`
-elif [[ "$step_time" =~ ^[0-9]+\.?[0-9]+ms\/step$ ]]; then
-    FPS=`awk 'BEGIN{printf "%.2f\n",'${RANK_SIZE}'*'${batch_size}'*1000/'${digit_time}'}'`
-    TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${digit_time}'/1000}'`
-elif [[ "$step_time" =~ ^[0-9]+\.?[0-9]+s\/step$ ]]; then
-    FPS=`awk 'BEGIN{printf "%.2f\n",'${RANK_SIZE}'*'${batch_size}'/'${digit_time}'}'`
-    TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${digit_time}'}'`
-else
-    FPS=0
-    TrainingTime=0
-fi
+step_time=`grep "step cost" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "step cost" '{print$2}'|tail -n +4 | awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${RANK_SIZE}'*'${batch_size}'/'${step_time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

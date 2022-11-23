@@ -178,6 +178,7 @@ def train(args, train_dataset, model, tokenizer):
             pbar.reset()
             pbar.epoch_start(current_epoch=epoch)
         for step, batch in enumerate(train_dataloader):
+            begin= time.time()
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
                 steps_trained_in_current_epoch -= 1
@@ -234,6 +235,7 @@ def train(args, train_dataset, model, tokenizer):
                     # torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
                     logger.info("Saving optimizer and scheduler states to %s", output_dir)
+            print("{} step cost {:.2}".format(step, time.time() - begin))
         logger.info("\n")
         if 'npu' in str(args.device):
             torch.npu.empty_cache()
