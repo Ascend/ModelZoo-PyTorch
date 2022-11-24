@@ -136,7 +136,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
 2. 数据预处理，将原始数据集转换为模型输入的数据。
    运行数据预处理脚本，将原始数据转换为符合模型输入要求的bin文件。
    ```shell
-   python3 GCNet_preprocess.py --image_src_path=mmdetection/data/coco/val2017 --bin_file_path=val2017_bin --model_input_height=800 --model_input_width=1216
+   python3 GCNet_preprocess.py --image_src_path=./datasets/coco/val2017 --bin_file_path=val2017_bin --model_input_height=800 --model_input_width=1216
    ```
     -参数说明：
      + --image_src_path：原始数据验证集（.jpg）所在路径。
@@ -260,7 +260,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
       运行成功后，在当前目录生成coco2017_jpg.info
      执行后处理脚本，计算精度：
       ```
-      python3 GCNet_postprocess.py --bin_data_path=./result --test_annotation=coco2017_jpg.info --det_results_path=detection-results --annotations_path=instances_val2017.json --net_out_num=3 --net_input_height=800 --net_input_width=1216
+      python3 GCNet_postprocess.py --bin_data_path=./result --test_annotation=coco2017_jpg.info --det_results_path=detection-results --annotations_path=./datasets/coco/annotations/instances_val2017.json --net_out_num=3 --net_input_height=800 --net_input_width=1216
       ```
     
       - 参数说明：
@@ -275,7 +275,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
                  
       ```
       python3 txt_to_json.py
-      python3 coco_eval.py --ground_truth=mmdetection/data/coco/annotations/instances_val2017.json
+      python3 coco_eval.py --ground_truth=./datasets/coco/annotations/instances_val2017.json
       ```  
 
          - 参数说明：
