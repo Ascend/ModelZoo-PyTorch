@@ -89,7 +89,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep "Full_Loss" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk -F'Full_Loss' '{print$2}'|awk -F' ' '{print$1}'|awk 'NR%8==1' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep "Full_Loss" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk -F'Full_Loss' '{print$2}'|awk -F' ' '{print$1}'|awk 'NR%4==0' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 #编译耗时

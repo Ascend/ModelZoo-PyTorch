@@ -121,7 +121,7 @@ fi
 
 taskset -c 0-${cpu_number} nohup python3.7 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
         --data_path ${data_path}/icdar2015 \
-        --resume ${data_path}/MLT-Pretrain-ResNet50 \
+        --resume ${data_path}/db_ckpt/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --distributed \
         --amp \
