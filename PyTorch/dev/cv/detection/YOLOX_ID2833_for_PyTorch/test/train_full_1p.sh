@@ -24,7 +24,7 @@ Network="YOLOX_ID2833_for_PyTorch"
 #训练batch_size,,需要模型审视修改
 batch_size=8
 #总训练Epoch数
-total_epoch=100
+total_epoch=10
 #val间隔数，多少个Epoch
 val_epoch=10
 
