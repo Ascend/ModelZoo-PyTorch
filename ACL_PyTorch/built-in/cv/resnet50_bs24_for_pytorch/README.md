@@ -136,7 +136,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
          ```
          > **说明：** 
-         /usr/local的地址按照实际情况填写,生成的end2end.onnx文件位于resnet50_bs24_for_pytorch目录下.
+         /usr/local的地址按照后面的文件夹位置的实际情况填写,生成的end2end.onnx文件位于resnet50_bs24_for_pytorch目录下.
          
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -177,7 +177,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
            Ascend310P3，给soc_version传参数，该参数支持Ascend310和Ascend310P[1-4]
          
-           运行成功后生成**resnet50_bs24.om**模型文件。
+           运行成功后在目录下生成**resnet50_bs24.om**模型文件。
 
 2. 开始推理验证。
 
@@ -189,13 +189,13 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    b.  执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ${om_model_path} --input ${data_path} --output ./ --outfmt TXT --output_dirname dst
+      python3 ${ais_infer_path}/ais_infer.py --model ./resnet50_bs24.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
       ```
 
       -   参数说明：
 
            -   model：需要推理om模型的路径。
-           -   input：模型需要的输入文件夹。
+           -   input：模型需要的输入bin文件夹路径。
            -   output：推理结果输出路径。
            -   outfmt：输出数据的格式。
            -   output_dirname:推理结果输出子文件夹。
@@ -224,7 +224,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ${om_model_path} --loop 5 --output ./ --outfmt BIN
+      python3 ${ais_infer_path}/ais_infer.py --model ./resnet50_bs24.om --loop 1000 --output ./ --outfmt BIN
       ```
 
 
