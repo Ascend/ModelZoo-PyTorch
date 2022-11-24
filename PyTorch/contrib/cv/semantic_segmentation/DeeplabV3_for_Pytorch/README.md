@@ -74,7 +74,7 @@ pip3.7 install opencv-python-headless
 ```shell
 cd ../DeeplabV3_for_PyTorch
 /bin/cp -f mmcv_need/_functions.py ../mmcv/mmcv/parallel/
-/bin/cp -f mmcv_need/scatter_gather.py ../mmcv/parallel/
+/bin/cp -f mmcv_need/scatter_gather.py ../mmcv/mmcv/parallel/
 /bin/cp -f mmcv_need/dist_utils.py ../mmcv/mmcv/runner/
 ```
 

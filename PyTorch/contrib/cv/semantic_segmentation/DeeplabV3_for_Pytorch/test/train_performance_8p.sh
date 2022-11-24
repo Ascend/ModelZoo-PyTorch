@@ -14,7 +14,7 @@ data_path=""
 # 训练step
 train_step=7000
 # 加载数据进程数
-workers=256
+workers=$(($(nproc)/8))
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -88,6 +88,7 @@ do
             --seed 1 \
             --deterministic \
             --device npu \
+            --options data.workers_per_gpu=${workers} \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
@@ -95,6 +96,7 @@ do
             --seed 1 \
             --deterministic \
             --device npu \
+            --options data.workers_per_gpu=${workers} \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
@@ -113,7 +115,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |sed -n "10p"|awk '{print $21}'|sed 's/.$//'`
+FPS=`grep "INFO:mmseg:Iter" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "," '{print $6}' | awk -F ": " '{print $2}' | awk 'END {print}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

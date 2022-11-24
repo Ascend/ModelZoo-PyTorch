@@ -16,7 +16,7 @@ train_step=1000
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数
-workers=32
+workers=$(($(nproc)/8))
 
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -91,6 +91,7 @@ taskset -c 0-95 python3.7 -m torch.distributed.launch --nproc_per_node=1 --maste
     --launcher pytorch \
     --device npu \
     --seed 1 \
+    --options data.workers_per_gpu=${workers} \
     --deterministic > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -108,7 +109,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |sed -n "10p"|awk '{print $21}'|sed 's/.$//'`
+FPS=`grep "INFO:mmseg:Iter" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "," '{print $6}' | awk -F ": " '{print $2}' | awk 'END {print}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
