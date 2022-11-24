@@ -151,7 +151,9 @@ def main():
     os.environ['MASTER_ADDR'] = host_ip
     os.environ['MASTER_PORT'] = '29988'
     rank_id = device_id
-    dist.init_process_group(backend='hccl', rank=rank_id, world_size=device_num)
+
+    if device_num > 1:
+        dist.init_process_group(backend='hccl', rank=rank_id, world_size=device_num)
     
     logger, final_output_dir, tb_log_dir = create_logger(
         config, args.cfg, 'train')
@@ -200,7 +202,9 @@ def main():
     lr = args.lr * device_num
     optimizer = get_optimizer(config, model, lr)
     model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=128.0)
-    model = DDP(model, device_ids=[device_id])
+
+    if device_num > 1:    
+        model = DDP(model, device_ids=[device_id])
 
     best_perf = 0.0
     best_model = False
@@ -247,7 +251,10 @@ def main():
         ])
     )
 
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    if device_num > 1:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    else:
+        train_sampler = None
     nproc = args.nproc
     num_workers = nproc // device_num
     bs = args.bs
@@ -276,7 +283,8 @@ def main():
 
     train_epochs = args.train_epochs
     for epoch in range(train_epochs):
-        train_sampler.set_epoch(epoch)
+        if device_num > 1:
+            train_sampler.set_epoch(epoch)
         lr_scheduler.step()
         # train for one epoch
         train(config, train_loader, model, criterion, optimizer, epoch,
