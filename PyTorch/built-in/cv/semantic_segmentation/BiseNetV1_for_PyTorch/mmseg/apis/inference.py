@@ -17,6 +17,7 @@
 import matplotlib.pyplot as plt
 import mmcv
 import torch
+import torch_npu
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 
@@ -52,6 +53,12 @@ def init_segmentor(config, checkpoint=None, device='cuda:0'):
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
     model.eval()
+
+    if device == 'npu':
+        from mmcv.device.npu import NPUDataParallel
+        model = NPUDataParallel(model)
+        model.cfg = config
+
     return model
 
 

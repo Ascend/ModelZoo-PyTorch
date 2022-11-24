@@ -23,6 +23,7 @@ import warnings
 
 import mmcv
 import torch
+import torch_npu
 import torch.distributed as dist
 from mmcv.cnn.utils import revert_sync_batchnorm
 from mmcv.runner import get_dist_info, init_dist
@@ -106,6 +107,12 @@ def parse_args():
         '--auto-resume',
         action='store_true',
         help='resume from the latest checkpoint automatically.')
+    parser.add_argument(
+        '--opt-level',
+        choices=['O0', 'O1', 'O2'],
+        default='O1',
+        help='apex opt level'
+    )
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -133,6 +140,12 @@ def main():
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
+
+    cfg.opt_level = args.opt_level
+    if cfg.opt_level is None:
+        cfg.opt_level = 'O0'
+    elif (cfg.opt_level == 'O1' or cfg.opt_level == 'O2') and cfg.optimizer.type == 'SGD':
+        cfg.optimizer.type = 'NpuFusedSGD'
 
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:

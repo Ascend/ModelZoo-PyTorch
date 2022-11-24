@@ -21,7 +21,9 @@ import warnings
 import mmcv
 import numpy as np
 import torch
+import torch_npu
 import torch.distributed as dist
+from apex import amp
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          build_runner, get_dist_info)
 from mmcv.utils import build_from_cfg
@@ -77,7 +79,9 @@ def set_random_seed(seed, deterministic=False):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    torch.npu.manual_seed(seed)
+    torch.npu.manual_seed_all(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
     if deterministic:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
@@ -115,6 +119,18 @@ def train_segmentor(model,
     train_loader_cfg = {**loader_cfg, **cfg.data.get('train_dataloader', {})}
     data_loaders = [build_dataloader(ds, **train_loader_cfg) for ds in dataset]
 
+    # build runner
+    optimizer = build_optimizer(model, cfg.optimizer)
+
+    # set AMP
+    logger.info('AMP initialization start')
+    model, optimizer = amp.initialize(model.npu(), optimizer,
+                                      opt_level=cfg.opt_level,
+                                      loss_scale=128.0,
+                                      combine_grad=cfg.opt_level != 'O0'
+                                      )
+    logger.info('AMP initialization end')
+
     # put model on devices
     if distributed:
         find_unused_parameters = cfg.get('find_unused_parameters', False)
@@ -127,13 +143,10 @@ def train_segmentor(model,
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
     else:
-        if not torch.cuda.is_available():
+        if not torch.npu.is_available():
             assert digit_version(mmcv.__version__) >= digit_version('1.4.4'), \
                 'Please use MMCV >= 1.4.4 for CPU training!'
         model = build_dp(model, cfg.device, device_ids=cfg.gpu_ids)
-
-    # build runner
-    optimizer = build_optimizer(model, cfg.optimizer)
 
     if cfg.get('runner') is None:
         cfg.runner = {'type': 'IterBasedRunner', 'max_iters': cfg.total_iters}
