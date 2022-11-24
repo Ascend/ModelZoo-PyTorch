@@ -227,7 +227,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
    2. 执行推理。
 
         ```
-        python3 ais_infer.py --model ./GCNet_bs1.om --input ./val2017_bin --output ./result --batchsize 1 --outfmt BIN --output_dirname result
+        python3 ais_infer.py --model ./GCNet_bs1.om --input ./val2017_bin --output ./ --batchsize 1 --outfmt BIN --output_dirname result
         ```
 
       - 参数说明：
