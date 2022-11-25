@@ -75,11 +75,13 @@ end = time.time()
 last_idx = len(loader) - 1
 
 om_data = args.omfile
+result_file_name = list(os.listdir(om_data))[0]
+om_data = f"{om_data}/{result_file_name}/"
 files = list(set([file.split('_')[0] for file in os.listdir(om_data)]))
 files.sort()
 
-box_list = [i for i in range(1, 10, 2)]
-class_list = [i for i in range(2, 11, 2)]
+box_list = [i for i in range(5, 10)]
+class_list = [i for i in range(0, 5)]
 print(args)
 
 with torch.no_grad():

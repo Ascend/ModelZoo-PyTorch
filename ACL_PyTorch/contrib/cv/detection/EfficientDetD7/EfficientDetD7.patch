@@ -1,0 +1,294 @@
+diff --git a/effdet/__init__.py b/effdet/__init__.py
+index c2aa4bc..ae65662 100644
+--- a/effdet/__init__.py
++++ b/effdet/__init__.py
+@@ -1,5 +1,5 @@
+ from .efficientdet import EfficientDet
+-from .bench import DetBenchPredict, DetBenchTrain, unwrap_bench
++from .bench import DetBenchPredict, unwrap_bench
+ from .data import create_dataset, create_loader, create_parser, DetectionDatset, SkipSubset
+ from .evaluator import CocoEvaluator, PascalEvaluator, OpenImagesEvaluator, create_evaluator
+ from .config import get_efficientdet_config, default_detection_model_configs
+diff --git a/effdet/bench.py b/effdet/bench.py
+index b528c8b..7cc6864 100644
+--- a/effdet/bench.py
++++ b/effdet/bench.py
+@@ -32,6 +32,7 @@ def _post_process(
+ 
+         num_classes (int): number of output classes
+     """
++    
+     batch_size = cls_outputs[0].shape[0]
+     cls_outputs_all = torch.cat([
+         cls_outputs[level].permute(0, 2, 3, 1).reshape([batch_size, -1, num_classes])
+@@ -56,7 +57,7 @@ def _post_process(
+     return cls_outputs_all_after_topk, box_outputs_all_after_topk, indices_all, classes_all
+ 
+ 
+-@torch.jit.script
++
+ def _batch_detection(
+         batch_size: int, class_out, box_out, anchor_boxes, indices, classes,
+         img_scale: Optional[torch.Tensor] = None,
+@@ -77,22 +78,21 @@ def _batch_detection(
+ 
+ 
+ class DetBenchPredict(nn.Module):
+-    def __init__(self, model):
++    def __init__(self, config):
+         super(DetBenchPredict, self).__init__()
+-        self.model = model
+-        self.config = model.config  # FIXME remove this when we can use @property (torchscript limitation)
+-        self.num_levels = model.config.num_levels
+-        self.num_classes = model.config.num_classes
+-        self.anchors = Anchors.from_config(model.config)
+-        self.max_detection_points = model.config.max_detection_points
+-        self.max_det_per_image = model.config.max_det_per_image
+-        self.soft_nms = model.config.soft_nms
+-
+-    def forward(self, x, img_info: Optional[Dict[str, torch.Tensor]] = None):
+-        class_out, box_out = self.model(x)
++        self.config=config
++        self.num_levels = config.num_levels
++        self.num_classes = config.num_classes
++        self.anchors = Anchors.from_config(config)
++        self.max_detection_points = config.max_detection_points
++        self.max_det_per_image = config.max_det_per_image
++        self.soft_nms = config.soft_nms
++
++    def forward(self, x, class_out,box_out,img_info: Optional[Dict[str, torch.Tensor]] = None):
+         class_out, box_out, indices, classes = _post_process(
+             class_out, box_out, num_levels=self.num_levels, num_classes=self.num_classes,
+             max_detection_points=self.max_detection_points)
++
+         if img_info is None:
+             img_scale, img_size = None, None
+         else:
+
+ 
+ def unwrap_bench(model):
+diff --git a/effdet/config/model_config.py b/effdet/config/model_config.py
+index df7f5f5..598d38d 100644
+--- a/effdet/config/model_config.py
++++ b/effdet/config/model_config.py
+@@ -12,20 +12,15 @@ from copy import deepcopy
+ def default_detection_model_configs():
+     """Returns a default detection configs."""
+     h = OmegaConf.create()
+-
+     # model name.
+     h.name = 'tf_efficientdet_d1'
+-
+     h.backbone_name = 'tf_efficientnet_b1'
+     h.backbone_args = None  # FIXME sort out kwargs vs config for backbone creation
+     h.backbone_indices = None
+-
+     # model specific, input preprocessing parameters
+     h.image_size = (640, 640)
+-
+     # dataset specific head parameters
+     h.num_classes = 90
+-
+     # feature + anchor config
+     h.min_level = 3
+     h.max_level = 7
+@@ -36,7 +31,6 @@ def default_detection_model_configs():
+     # aspect ratios can be specified as below too, pairs will be calc as sqrt(val), 1/sqrt(val)
+     #h.aspect_ratios = [1.0, 2.0, 0.5]
+     h.anchor_scale = 4.0
+-
+     # FPN and head config
+     h.pad_type = 'same'  # original TF models require an equivalent of Tensorflow 'SAME' padding
+     h.act_type = 'swish'
+
+diff --git a/effdet/data/dataset.py b/effdet/data/dataset.py
+index d751562..0087393 100644
+--- a/effdet/data/dataset.py
++++ b/effdet/data/dataset.py
+@@ -44,9 +44,9 @@ class DetectionDatset(data.Dataset):
+ 
+         img_path = self.data_dir / img_info['file_name']
+         img = Image.open(img_path).convert('RGB')
++
+         if self.transform is not None:
+             img, target = self.transform(img, target)
+-
+         return img, target
+ 
+     def __len__(self):
+diff --git a/effdet/data/dataset_factory.py b/effdet/data/dataset_factory.py
+index d47e183..1cffa9e 100644
+--- a/effdet/data/dataset_factory.py
++++ b/effdet/data/dataset_factory.py
+@@ -18,6 +18,7 @@ def create_dataset(name, root, splits=('train', 'val')):
+     name = name.lower()
+     root = Path(root)
+     dataset_cls = DetectionDatset
++
+     datasets = OrderedDict()
+     if name.startswith('coco'):
+         if 'coco2014' in name:
+@@ -33,10 +34,13 @@ def create_dataset(name, root, splits=('train', 'val')):
+                 ann_filename=ann_file,
+                 has_labels=split_cfg['has_labels']
+             )
++            print(root / Path(split_cfg['img_dir']))
+             datasets[s] = dataset_cls(
+                 data_dir=root / Path(split_cfg['img_dir']),
+                 parser=create_parser(dataset_cfg.parser, cfg=parser_cfg),
+             )
++
++
+     elif name.startswith('voc'):
+         if 'voc0712' in name:
+             dataset_cfg = Voc0712Cfg()
+diff --git a/effdet/data/loader.py b/effdet/data/loader.py
+index adf96cf..77b0dc9 100644
+--- a/effdet/data/loader.py
++++ b/effdet/data/loader.py
+@@ -111,31 +111,30 @@ class PrefetchLoader:
+             re_count=1,
+             ):
+         self.loader = loader
+-        self.mean = torch.tensor([x * 255 for x in mean]).cuda().view(1, 3, 1, 1)
+-        self.std = torch.tensor([x * 255 for x in std]).cuda().view(1, 3, 1, 1)
++        self.mean = torch.tensor([x * 255 for x in mean]).view(1, 3, 1, 1)
++        self.std = torch.tensor([x * 255 for x in std]).view(1, 3, 1, 1)
+         if re_prob > 0.:
+             self.random_erasing = RandomErasing(probability=re_prob, mode=re_mode, max_count=re_count)
+         else:
+             self.random_erasing = None
+ 
+     def __iter__(self):
+-        stream = torch.cuda.Stream()
++
+         first = True
+ 
+         for next_input, next_target in self.loader:
+-            with torch.cuda.stream(stream):
+-                next_input = next_input.cuda(non_blocking=True)
+-                next_input = next_input.float().sub_(self.mean).div_(self.std)
+-                next_target = {k: v.cuda(non_blocking=True) for k, v in next_target.items()}
+-                if self.random_erasing is not None:
+-                    next_input = self.random_erasing(next_input, next_target)
++
++            next_input = next_input.float().sub_(self.mean).div_(self.std)
++            next_target = {k: v for k, v in next_target.items()}
++            if self.random_erasing is not None:
++                next_input = self.random_erasing(next_input, next_target)
+ 
+             if not first:
+                 yield input, target
+             else:
+                 first = False
+ 
+-            torch.cuda.current_stream().wait_stream(stream)
++
+             input = next_input
+             target = next_target
+ 
+@@ -186,34 +185,19 @@ def create_loader(
+         # The fast collate fn accepts ONLY numpy uint8 images and annotations dicts of ndarrays and python scalars
+         transform = transform_fn
+     else:
+-        if is_training:
+-            transform = transforms_coco_train(
+-                img_size,
+-                interpolation=interpolation,
+-                use_prefetcher=use_prefetcher,
+-                fill_color=fill_color,
+-                mean=mean,
+-                std=std)
+-        else:
+-            transform = transforms_coco_eval(
+-                img_size,
+-                interpolation=interpolation,
+-                use_prefetcher=use_prefetcher,
+-                fill_color=fill_color,
+-                mean=mean,
+-                std=std)
++        transform = transforms_coco_eval(
++            img_size,
++            interpolation=interpolation,
++            use_prefetcher=use_prefetcher,
++            fill_color=fill_color,
++            mean=mean,
++            std=std)
+     dataset.transform = transform
+ 
+     sampler = None
+-    if distributed:
+-        if is_training:
+-            sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+-        else:
+-            # This will add extra duplicate entries to result in equal num
+-            # of samples per-process, will slightly alter validation results
+-            sampler = OrderedDistributedSampler(dataset)
+ 
+     collate_fn = collate_fn or DetectionFastCollate(anchor_labeler=anchor_labeler)
++    print(anchor_labeler)
+     loader = torch.utils.data.DataLoader(
+         dataset,
+         batch_size=batch_size,
+@@ -224,9 +208,6 @@ def create_loader(
+         collate_fn=collate_fn,
+     )
+     if use_prefetcher:
+-        if is_training:
+-            loader = PrefetchLoader(loader, mean=mean, std=std, re_prob=re_prob, re_mode=re_mode, re_count=re_count)
+-        else:
+-            loader = PrefetchLoader(loader, mean=mean, std=std)
++        loader = PrefetchLoader(loader, mean=mean, std=std)
+ 
+     return loader
+
+diff --git a/effdet/efficientdet.py b/effdet/efficientdet.py
+index cf7a1b6..149973b 100644
+--- a/effdet/efficientdet.py
++++ b/effdet/efficientdet.py
+@@ -223,21 +223,30 @@ class FpnCombine(nn.Module):
+         for offset, resample in zip(self.inputs_offsets, self.resample.values()):
+             input_node = x[offset]
+             input_node = resample(input_node)
++
+             nodes.append(input_node)
+ 
++        def nodes_to_out(nodes):
++            out=nodes[0]
++            for i in range(len(nodes)-1):
++                out=torch.add(out,nodes[i+1])
++            return out
++
++
+         if self.weight_method == 'attn':
+             normalized_weights = torch.softmax(self.edge_weights.to(dtype=dtype), dim=0)
+-            out = torch.stack(nodes, dim=-1) * normalized_weights
++            out = torch.add(*nodes) * normalized_weights
+         elif self.weight_method == 'fastattn':
+             edge_weights = nn.functional.relu(self.edge_weights.to(dtype=dtype))
+             weights_sum = torch.sum(edge_weights)
+-            out = torch.stack(
+-                [(nodes[i] * edge_weights[i]) / (weights_sum + 0.0001) for i in range(len(nodes))], dim=-1)
++            out = torch.add(
++                *[(nodes[i] * edge_weights[i]) / (weights_sum + 0.0001) for i in range(len(nodes))])
+         elif self.weight_method == 'sum':
+-            out = torch.stack(nodes, dim=-1)
++            out = nodes_to_out(nodes)
+         else:
+             raise ValueError('unknown weight_method {}'.format(self.weight_method))
+-        out = torch.sum(out, dim=-1)
++
++
+         return out
+ 
+ 
+diff --git a/effdet/factory.py b/effdet/factory.py
+index 1bee96d..1e1db07 100644
+--- a/effdet/factory.py
++++ b/effdet/factory.py
+@@ -1,5 +1,5 @@
+ from .efficientdet import EfficientDet, HeadNet
+-from .bench import DetBenchTrain, DetBenchPredict
++from .bench import DetBenchPredict
+ from .config import get_efficientdet_config
+ from .helpers import load_pretrained, load_checkpoint
