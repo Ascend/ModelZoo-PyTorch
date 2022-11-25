@@ -1,0 +1,6 @@
+sphinx<2.0
+sphinx-argparse
+soundfile
+sympy
+tensorboardX
+editdistance

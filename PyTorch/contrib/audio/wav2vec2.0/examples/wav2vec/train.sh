@@ -1,0 +1,1 @@
+fairseq-hydra-train task.data=./train-clean-100 --config-dir ./config/finetuning --config-name wav2vec2_base_librispeech
