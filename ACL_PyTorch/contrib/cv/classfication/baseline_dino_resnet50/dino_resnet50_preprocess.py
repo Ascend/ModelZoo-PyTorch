@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,44 +15,27 @@
 import os
 import sys
 import numpy as np
-import multiprocessing
 from PIL import Image
 from tqdm import tqdm
 
 
-model_config = {
-    'dino': {
-        'resize': 256,
-        'centercrop': 224,
-        'mean': [0.485, 0.456, 0.406],
-        'std': [0.229, 0.224, 0.225],
-    },
-    'inceptionv3': {
-        'resize': 342,
-        'centercrop': 299,
-        'mean': [0.485, 0.456, 0.406],
-        'std': [0.229, 0.224, 0.225],
-    },
-    'inceptionv4': {
-        'resize': 342,
-        'centercrop': 299,
-        'mean': [0.5, 0.5, 0.5],
-        'std': [0.5, 0.5, 0.5],
-    },
-}
-
-
-def center_crop(img, output_size):
-    if isinstance(output_size, int):
-        output_size = (int(output_size), int(output_size))
-    image_width, image_height = img.size
-    crop_height, crop_width = output_size
-    crop_top = int(round((image_height - crop_height) / 2.))
-    crop_left = int(round((image_width - crop_width) / 2.))
-    return img.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
-
-
 def resize(img, size, interpolation=Image.BILINEAR):
+    r"""Resize the input PIL Image to the given size.
+
+    Args:
+        img (PIL Image): Image to be resized.
+        size (sequence or int): Desired output size. If size is a sequence like
+            (h, w), the output size will be matched to this. If size is an int,
+            the smaller edge of the image will be matched to this number maintaining
+            the aspect ratio. i.e, if height > width, then image will be rescaled to
+            :math:`\left(\text{size} \times \frac{\text{height}}{\text{width}}, \text{size}\right)`
+        interpolation (int, optional): Desired interpolation. Default is
+            ``PIL.Image.BILINEAR``
+
+    Returns:
+        PIL Image: Resized image.
+    """
+
     if isinstance(size, int):
         w, h = img.size
         if (w <= h and w == size) or (h <= w and h == size):
@@ -69,60 +52,44 @@ def resize(img, size, interpolation=Image.BILINEAR):
         return img.resize(size[::-1], interpolation)
 
 
-def gen_input_bin(mode_type, file_batches, src_path, save_path):
-    i = 0
-    for filename in tqdm(file_batches[0]):
-        i = i + 1
-        if filename.endswith('.JPEG'):
-            imgname = filename.strip('.JPEG')
-        elif filename.endswith('.jpeg'):
-            imgname = filename.strip('.jpeg')
-        else:
-            raise ValueError('Invalid image name:', filename)
-        
-        input_image = Image.open(os.path.join(src_path, filename)).convert('RGB')
-        if '/' in imgname:
-            _, imgname = imgname.split('/')
-        input_image = resize(input_image, model_config[mode_type]['resize']) # Resize
-        input_image = center_crop(input_image, model_config[mode_type]['centercrop']) # CenterCrop
-        img = np.array(input_image, dtype=np.float32)
-        img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
-        img = img / 255. # ToTensor: div 255
-        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
-        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
-        img.tofile(os.path.join(save_path, imgname + ".bin"))
+def center_crop(img, out_height, out_width):
+    height, width, _ = img.shape
+    left = int((width - out_width) / 2)
+    right = int((width + out_width) / 2)
+    top = int((height - out_height) / 2)
+    bottom = int((height + out_height) / 2)
+    img = img[top:bottom, left:right]
+    return img
 
 
-def preprocess(mode_type, src_path, save_path):
-    folder_list = os.listdir(src_path)
-    if folder_list[0].endswith('.JPEG'):
-        # val/xxxx.JPEG
-        files = folder_list
-    else:
-        # val/xxxx/xxxx.JPEG
-        files = []
-        for folder in folder_list:
-            file_list = os.listdir(os.path.join(src_path, folder))
-            for filename in file_list:
-                files.append(os.path.join(folder, filename))
-    file_batches = [files]
-    gen_input_bin(mode_type, file_batches, src_path, save_path)
+def preprocess(file_path, bin_path):
+    in_files = os.listdir(file_path)
+    if not os.path.exists(bin_path):
+        os.makedirs(bin_path)
+    input_size = (256, 256)
+    mean = [0.485, 0.456, 0.406]
+    std = [0.229, 0.224, 0.225]
+    for file in tqdm(in_files):
+        img = Image.open(os.path.join(file_path, file)).convert('RGB')
+        img = resize(img, input_size)  # transforms.Resize(256)
+        img = np.array(img, dtype=np.float32)
+        img = center_crop(img, 224, 224)   # transforms.CenterCrop(224)
+
+        img = img / 255.
+
+        # 均值方差
+        img[..., 0] -= mean[0]
+        img[..., 1] -= mean[1]
+        img[..., 2] -= mean[2]
+        img[..., 0] /= std[0]
+        img[..., 1] /= std[1]
+        img[..., 2] /= std[2]
+
+        img = img.transpose(2, 0, 1)  # HWC -> CHW
+        img.tofile(os.path.join(bin_path, file.split('.')[0] + '.bin'))
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        raise Exception("usage: python3 xxx.py [model_type] [src_path] [save_path]")
-    mode_type = sys.argv[1]
-    src_path = sys.argv[2]
-    save_path = sys.argv[3]
-    src_path = os.path.realpath(src_path)
-    save_path = os.path.realpath(save_path)
-    if mode_type not in model_config:
-        model_type_help = "model type: "
-        for key in model_config.keys():
-            model_type_help += key
-            model_type_help += ' '
-        raise Exception(model_type_help)
-    if not os.path.isdir(save_path):
-        os.makedirs(os.path.realpath(save_path))
-    preprocess(mode_type, src_path, save_path)
+if __name__ == "__main__":
+    file_path = os.path.abspath(sys.argv[1])
+    bin_path = os.path.abspath(sys.argv[2])
+    preprocess(file_path, bin_path)

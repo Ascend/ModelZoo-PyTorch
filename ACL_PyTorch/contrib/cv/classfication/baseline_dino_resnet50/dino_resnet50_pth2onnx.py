@@ -14,33 +14,38 @@
 import torch
 import torchvision.models as models
 import torch.nn as nn
+import argparse
 
 
-model=models.resnet50(pretrained=True)
-embed_dim = model.fc.weight.shape[1]
-model.fc = nn.Identity()
+def convert(args):
+    model = models.resnet50(pretrained=False)
+    model.fc = nn.Identity()
+    state_dict = torch.load(args.backbone_pth, map_location='cpu')
+    model.load_state_dict(state_dict, strict=True)
 
-state_dict = torch.load('dino_resnet50_pretrain.pth', map_location='cpu')
-temp=nn.Linear(2048,1000)
-state_dict2 = torch.load('dino_resnet50_linearweights.pth', map_location='cpu')["state_dict"]
-temp.weight.data = state_dict2['module.linear.weight']
-temp.bias.data = state_dict2['module.linear.bias']
-model.load_state_dict(state_dict, strict=True)
+    linear_weights = torch.load(args.linear_pth,
+                                map_location='cpu')["state_dict"]
+    linear = nn.Linear(2048, 1000)
+    linear.weight.data = linear_weights['module.linear.weight']
+    linear.bias.data = linear_weights['module.linear.bias']
+    model.fc = linear
+    model.eval()
 
-model.fc=temp
-model.eval()
-x = torch.randn(1, 3, 224, 224, requires_grad=True)
-model.to(device='cpu')
-torch_out = model(x.to(device="cpu"))
+    input_names = ["input"]
+    output_names = ["output"]
+    dummy_input = torch.randn(16, 3, 224, 224)
+    dynamic_axes = {'input': {0: '-1'}, 'output': {0: '-1'}}
+    torch.onnx.export(model, dummy_input, args.out,
+                      input_names=input_names,
+                      dynamic_axes=dynamic_axes,
+                      output_names=output_names,
+                      opset_version=11)
 
-# Export the model
-torch.onnx.export(model,               # model being run
-                  x,                         # model input (or a tuple for multiple inputs)
-                  "dino_resnet50.onnx",   # where to save the model (can be a file or file-like object)
-                  export_params=True,        # store the trained parameter weights inside the model file
-                  opset_version=10,          # the ONNX version to export the model to
-                  do_constant_folding=True,  # whether to execute constant folding for optimization
-                  input_names = ['input'],   # the model's input names
-                  output_names = ['output'], # the model's output names
-                  dynamic_axes={'input' : {0 : 'batch_size'},    # variable length axes
-                                'output' : {0 : 'batch_size'}})
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--out', help='onnx output name')
+    parser.add_argument('--backbone_pth', help='backbone model pth path')
+    parser.add_argument('--linear_pth', help='linear model pth path')
+    args = parser.parse_args()
+    convert(args)
