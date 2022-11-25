@@ -12,7 +12,7 @@ export RANK_SIZE=1
 data_path=""
 
 # 训练epoch
-train_epochs=80
+train_epochs=20
 # 指定训练所使用的npu device卡id
 device_id=1
 # 加载数据进程数
@@ -80,7 +80,7 @@ source test/env_npu.sh
 rm -f nohup.out
 cd train/train-1P
 
-nohup python train_RawNet2.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python train_RawNet2.py -epoch ${train_epochs} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -93,13 +93,14 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F 'INFOFPS:|/epoch' '{print $2}'`
+FPS=`grep -a 'INFOFPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F 'INFOFPS:|/epoch' '{print $2}'|awk '{sum += $1} END {printf "%3.3f",sum/NR}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-eer=`grep -a 'eer' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "eer:" '{print $NF}'`
+eer=`grep -a 'eer'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "eer:|/epoch" '{print $2}'|awk 'END{print}'`
 #打印，不需要修改
+train_accuracy=${eer}
 echo "Final Train Accuracy : ${eer}"
 echo "E2E Training Duration sec : $e2e_time"
 
@@ -116,10 +117,9 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-awk -F "INFOEpoch:" '{print $2}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log >> /opt/npu/Vox_Data/test/output/$ASCEND_DEVICE_ID/train_loss_temp.txt
-awk '!/^$/' $ASCEND_DEVICE_ID/output/$ASCEND_DEVICE_ID/train_loss_temp.txt >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep "INFOEpoch" | awk -F "INFOEpoch:" '{print $2}' |  awk -F "loss =" '{print $2}' | awk -F "]" '{print $1}' | sed 's/\s*//g' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
-#ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" >  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -28,6 +28,8 @@ import json
 import numpy as np
 
 import torch
+if torch.__version__ >="1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP

@@ -54,7 +54,7 @@ def get_args():
     #hyper-params
     parser.add_argument('-frame', type = int, default = 135395880960) # the number of frames of all the .wav file
     parser.add_argument('-bs', type = int, default = 128)
-    parser.add_argument('-lr', type = float, default = 0.001)
+    parser.add_argument('-lr', type = float, default = 0.0015)
     parser.add_argument('-nb_samp', type = int, default = 59049)
     parser.add_argument('-window_size', type = int, default = 11810)
     

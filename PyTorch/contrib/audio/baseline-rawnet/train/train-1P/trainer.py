@@ -121,6 +121,9 @@ def train_model(model, db_gen, optimizer, epoch, args, device, lr_scheduler, cri
         
 
 def time_augmented_evaluate_model(mode, model, db_gen, l_utt, save_dir, epoch, l_trial, args, device):
+    with open(args.save_dir + args.name + '/' + args.save_log + 'TA_{}.log'.format(epoch), mode = 'w') as ff:
+        logger = get_logger(args.save_dir + args.name + '/' + args.save_log + 'TA_{}.log'.format(epoch))
+    
     f_log = open(args.save_dir + args.name + '/' + args.save_log + 'TA_{}.log'.format(epoch), 'a', buffering = 1)
     args = get_args()
     if mode not in ['val','eval']: raise ValueError('mode should be either "val" or "eval"')
