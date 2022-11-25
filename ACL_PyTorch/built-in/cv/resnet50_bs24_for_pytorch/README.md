@@ -84,6 +84,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 2. 安装依赖。
 
    ```
+   pip3 uninstall mmcv -y
    pip3 install -r requirements.txt
    ```
 
@@ -176,8 +177,10 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
            ./end2end.onnx，onnx文件所在路径
 
            Ascend310P3，给soc_version传参数，该参数支持Ascend310和Ascend310P[1-4]
-         
-           运行成功后在目录下生成**resnet50_bs24.om**模型文件。
+
+           运行成功后在目录下生成**resnet_bs24.om**模型文件。
+
+
 
 2. 开始推理验证。
 
@@ -189,7 +192,8 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    b.  执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./resnet50_bs24.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
+      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs24.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
+
       ```
 
       -   参数说明：
@@ -216,7 +220,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
     
       ./img_label.txt：为标签数据
     
-      result.json：为生成结果文件
+      result.json：为生成结果文件,位于同一目录下
 
 
    d.  性能验证。
@@ -224,7 +228,8 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./resnet50_bs24.om --loop 1000 --output ./ --outfmt BIN
+      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs24.om --loop 1000 --output ./ --outfmt BIN
+
       ```
 
 

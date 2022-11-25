@@ -149,7 +149,7 @@ def create_visualization_statistical_result(prediction_file_path,
             table_dict["value"].append({"key": "Top" + str(i + 1) + " accuracy",
                                         "value": str(
                                             round(accuracy[i] * 100, 2)) + '%'})
-
+        print(table_dict)
         json.dump(table_dict, writer)
     writer.close()
 
