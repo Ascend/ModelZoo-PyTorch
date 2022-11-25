@@ -61,7 +61,7 @@ if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
 os.environ['CUDA_VISIBLE_DEVICES'] = CUDA_VISIBLE_DEVICES
 
 def main():
-    torch.npu.set_start_fuzz_compile_step(3)
+    torch.npu.set_compile_mode(jit_compile=False)
     #鍔犺浇鏁版嵁
     trainloader, testloader = read_dataset(input_size, batch_size, root, set)
 

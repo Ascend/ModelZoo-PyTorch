@@ -68,7 +68,6 @@ def train(model,
         lr = next(iter(optimizer.param_groups))['lr']
         n=0
         for i, data in enumerate(tqdm(trainloader)):
-            torch.npu.global_step_inc()
             n=n+1
             if n >= 100:
                 pass
