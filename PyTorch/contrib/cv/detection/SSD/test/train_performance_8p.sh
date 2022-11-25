@@ -79,7 +79,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export TASK_QUEUE_ENABLE=0
 rm -rf kernel_meta/
-PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 ${train_epochs} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 --cfg-options total_epochs=${train_epochs} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
