@@ -7,7 +7,7 @@ Network="ST-GCN"
 # 训练batch_size
 batch_size=64
 # 训练使用的npu卡数
-export RANK_SIZE=1
+export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
 

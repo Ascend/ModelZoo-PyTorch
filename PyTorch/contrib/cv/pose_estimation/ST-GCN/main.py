@@ -20,8 +20,10 @@ import torch
 import torchlight
 from torchlight import import_class
 import torch.multiprocessing as mp
-
-if __name__ == '__main__':
+if torch.__version__>= '1.8':
+    import torch_npu
+    
+if __name__ == '__main__':  
     parser = argparse.ArgumentParser(description='Processor collection')
 
     # region register processor yapf: disable
