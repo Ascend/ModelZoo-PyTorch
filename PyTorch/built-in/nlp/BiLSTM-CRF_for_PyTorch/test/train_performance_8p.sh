@@ -3,6 +3,7 @@
 #网络名称，同目录名称
 Network="BiLstm_for_PyTorch"
 batch_size=64
+export RANK_SIZE=1
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -41,7 +42,7 @@ for i in $(seq 7 -1 0)
           --amp_opt_level="O2"\
           --distributed \
           --seed=42\
-          --local_rank=$i >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --local_rank=$i >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${i}.log 2>&1 &
     done
 
 wait
@@ -53,15 +54,45 @@ e2e_time=$(($end_time - $start_time))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "bilstm训练完毕" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "," '{print $2}' | awk -F "时" '{print $2}' | awk -F "秒" '{print $1}')
+FPS=$(grep "Totaltime" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "," '{print $2}' | awk -F "S" '{print $1}')
 FPS=$[$batch_size*1800*8/$FPS]
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=$(grep "top1" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $4}')
+train_accuracy=$(grep "avg/total" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $4}')
 
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
+
+#性能看护结果汇总
+#训练用例信息，不需要修改
+BatchSize=${batch_size}
+DeviceType=`uname -m`
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+
+##获取性能数据，不需要修改
+#吞吐量
+ActualFPS=${FPS}
+#单迭代训练时长
+TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*1000/'${FPS}'}'`
+
+#从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
+grep "Epoch =" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $9}'|sed 's/,$//' >> $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+
+#最后一个迭代loss值，不需要修改
+ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+
+#关键信息打印到${CaseName}.log中，不需要修改
+echo "Network = ${Network}" > $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "BatchSize = ${batch_size}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log

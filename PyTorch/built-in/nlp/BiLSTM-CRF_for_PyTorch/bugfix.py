@@ -291,7 +291,7 @@ class BilstmModel(object):
             val_loss = val_losses / val_step
 
             if val_loss < self._best_val_loss:
-                print("保存模型...")
+                print("Saving Model...")
                 self.best_model = deepcopy(self.model)
                 self._best_val_loss = val_loss
 
@@ -315,7 +315,7 @@ class BilstmModel(object):
             val_loss = val_losses / val_step
 
             if val_loss < self._best_val_loss:
-                print("保存模型...")
+                print("Saving Model...")
                 self.best_model = self.model
                 self._best_val_loss = val_loss
 
@@ -394,10 +394,10 @@ def bilstm_train_and_eval(train_data, dev_data, test_data,
     model_name = "bilstm_crf" if crf else "bilstm"
     torch.save(bilstm_model.model.state_dict(), saving_path + model_name + ".pt")
     if crf:
-        print("bilstm_crf训练完毕,共用时{}秒.".format(int(time.time() - start)))
+        print("Totaltime,{}S.".format(int(time.time() - start)))
     else:
-        print("bilstm训练完毕,共用时{}秒.".format(int(time.time() - start)))
-    print("评估{}模型中...".format(model_name))
+        print("Totaltime,{}S.".format(int(time.time() - start)))
+    print("Evaluating {}...".format(model_name))
     pred_tag_lists, test_tag_lists = bilstm_model.test(
         test_word_lists, test_tag_lists, word2id, tag2id)
 

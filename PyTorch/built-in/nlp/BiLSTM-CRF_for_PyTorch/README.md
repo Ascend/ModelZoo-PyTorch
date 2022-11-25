@@ -65,10 +65,11 @@ LSTM常常被用来解决序列标注问题。LSTM依靠神经网络超强的非
 
 1. 获取数据集。
 
-   请用户自行从https://github.com/luopeixiang/named_entity_recognition/tree/master/ResumeNER 该链接获取数据集，并将获取好的数据集放在源码包根目录下新建的ResumeNER/文件夹下，数据集目录结构如下所示：
+   请用户自行从https://github.com/luopeixiang/named_entity_recognition/tree/master/ResumeNER 该链接获取数据集，并将获取好的数据集放在源码包根目录下新建的BiLstm/文件夹下，数据集目录结构如下所示：
 
    ```
-   ├── ResumeNER
+   ├── BiLstm
+      ├── ResumeNER
          ├── dev.char.bmes               
          ├── test.char.bmes
          ├── train.char.bmes

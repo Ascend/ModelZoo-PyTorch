@@ -71,7 +71,7 @@ def main():
     if args.print_step:
         TrainingConfig.print_step = args.print_step
     # 读取数据
-    print("读取数据...")
+    print("Reading Data...")
     if args.data_path:
         train_word_lists, train_tag_lists, word2id, tag2id = \
             build_corpus("train", data_dir=args.data_path)
@@ -84,7 +84,7 @@ def main():
         test_word_lists, test_tag_lists = build_corpus("test", make_vocab=False)
 
     # 训练评估BI-LSTM模型
-    print("正在训练评估双向LSTM模型...")
+    print("Training to evaluate BiLSTM model...")
     # LSTM模型训练的时候需要在word2id和tag2id加入PAD和UNK
     bilstm_word2id, bilstm_tag2id = extend_maps(word2id, tag2id, for_crf=False)
     lstm_pred = bilstm_train_and_eval(
