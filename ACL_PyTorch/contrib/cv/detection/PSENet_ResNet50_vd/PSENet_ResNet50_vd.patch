@@ -1,0 +1,31 @@
+diff --git a/configs/det/det_r50_vd_pse.yml b/configs/det/det_r50_vd_pse.yml
+index 8e77506c..9a8f43dd 100644
+--- a/configs/det/det_r50_vd_pse.yml
++++ b/configs/det/det_r50_vd_pse.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   epoch_num: 600
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -131,4 +131,4 @@ Eval:
+     shuffle: False
+     drop_last: False
+     batch_size_per_card: 1 # must be 1
+-    num_workers: 8
+\ No newline at end of file
++    num_workers: 8
+diff --git a/ppocr/postprocess/pse_postprocess/pse/__init__.py b/ppocr/postprocess/pse_postprocess/pse/__init__.py
+index 1903a914..23f302bc 100644
+--- a/ppocr/postprocess/pse_postprocess/pse/__init__.py
++++ b/ppocr/postprocess/pse_postprocess/pse/__init__.py
+@@ -18,7 +18,7 @@ import subprocess
+ python_path = sys.executable
+ 
+ ori_path = os.getcwd()
+-os.chdir('ppocr/postprocess/pse_postprocess/pse')
++os.chdir('PaddleOCR/ppocr/postprocess/pse_postprocess/pse')
+ if subprocess.call(
+         '{} setup.py build_ext --inplace'.format(python_path), shell=True) != 0:
+     raise RuntimeError(
