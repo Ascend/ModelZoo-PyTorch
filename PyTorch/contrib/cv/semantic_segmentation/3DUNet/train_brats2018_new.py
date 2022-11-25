@@ -20,7 +20,8 @@ import os
 import torch
 from apex import amp
 #-------------------------
-import torch.npu
+if torch.__version__ >= '1.8':
+    import torch_npu
 #-------------------------
 import lib.medloaders as medical_loaders
 import lib.medzoo as medzoo

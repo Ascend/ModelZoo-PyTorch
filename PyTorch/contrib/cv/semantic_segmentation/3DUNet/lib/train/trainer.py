@@ -123,7 +123,7 @@ class Trainer:
         end = time.time()
         for batch_idx, input_tuple in enumerate(self.train_data_loader):
 
-            if self.args.prof and batch_idx==5:
+            if self.args.prof and batch_idx==16:
                 with torch.autograd.profiler.profile(use_npu=True) as prof:  
                     self.optimizer.zero_grad()
 
