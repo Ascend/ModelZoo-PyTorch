@@ -43,20 +43,23 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 RANK_ID_START=0
-
+KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
- KERNEL_NUM=$(($(nproc)/8))
+
  PID_START=$((KERNEL_NUM * RANK_ID))
  PID_END=$((PID_START + KERNEL_NUM - 1))
 
  export WORLD_SIZE=$RANK_SIZE
-
-
- nohup taskset -c $PID_START-$PID_END python3.7 -u ${test_path_dir}/../tools_8p/train.py \
-  --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml\
-  --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
+ if [ $(uname -m) = "aarch64" ]
+ then
+    nohup taskset -c $PID_START-$PID_END python3.7 -u ${test_path_dir}/../tools_8p/train.py \
+        --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml\
+        --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+ else
+    nohup python3.7 -u ${test_path_dir}/../tools_8p/train.py \
+        --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml\
+        --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 
 wait

@@ -7,8 +7,6 @@ Network="SimRPN_for_PyTorch"
 # 训练使用的npu卡数
 RANK_SIZE=1
 
-
-
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -44,12 +42,23 @@ fi
 
 
 npu_VISIBLE_DEVICES=0
-python3.7 -m torch.distributed.launch \
-    --nproc_per_node=1 \
-    --master_port=2333 \
-    ${test_path_dir}/../tools_1p/train.py \
-	--cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu_performace/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_per_${ASCEND_DEVICE_ID}.log 2>&1 &
-
+if [ $(uname -m) = "aarch64" ]
+then
+    taskset -c 0-32 python3.7 -m torch.distributed.launch \
+        --nproc_per_node=1 \
+        --master_port=2333 \
+        ${test_path_dir}/../tools_1p/train.py \
+        --is_performance \
+        --max_step 1000 \
+        --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu_performace/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_per_${ASCEND_DEVICE_ID}.log 2>&1 &
+else
+    python3.7 -m torch.distributed.launch \
+        --nproc_per_node=1 \
+        --master_port=2333 \
+        ${test_path_dir}/../tools_1p/train.py \
+        --is_performance \
+        --max_step 1000 \
+        --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu_performace/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_per_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 

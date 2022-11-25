@@ -26,6 +26,7 @@ import math
 import json
 import random
 import numpy as np
+import apex
 
 try:
     from apex import amp
@@ -33,6 +34,8 @@ except:
     print('no apex')
 
 import torch
+if torch.__version__>= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 from torch.utils.data import DataLoader
@@ -58,6 +61,10 @@ parser.add_argument('--seed', type=int, default=123456,
                     help='random seed')
 parser.add_argument('--local_rank', type=int, default=0,
                     help='compulsory for pytorch launcer')
+parser.add_argument('--is_performance', action='store_true', default=False,
+                    help='test performance or not test')
+parser.add_argument('--max_step', type=int, default=2000,
+                    help='stop in max step')
 args = parser.parse_args()
 
 
@@ -244,6 +251,10 @@ def train(train_loader, model, optimizer, lr_scheduler):
                             cfg.TRAIN.EPOCH * num_per_epoch)
                 print('FPS', (28 * 8 / avgtime.item()))
         end = time.time()
+        
+        if args.is_performance:
+            if idx == args.max_step:
+                exit()
 
 
 def main():
