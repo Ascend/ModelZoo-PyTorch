@@ -4,19 +4,23 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ============================================================================
+
 
 import os
 import sys
 import json
 import numpy as np
 import time
+from tqdm import tqdm
+
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -70,7 +74,7 @@ def load_statistical_predict_result(filepath):
     data_vec: the probabilitie of prediction in the 1000
     :return: probabilities, numble of label, in_type, color
     """
-    with open(filepath, 'r')as f:
+    with open(filepath, 'r') as f:
         data = f.readline()
         temp = data.strip().split(" ")
         n_label = len(temp)
@@ -108,10 +112,13 @@ def create_visualization_statistical_result(prediction_file_path,
     resCnt = 0
     n_labels = 0
     count_hit = np.zeros(topn)
-    for tfile_name in os.listdir(prediction_file_path):
+
+    for idx, tfile_name in enumerate(tqdm(os.listdir(prediction_file_path))):
+        if 'json' in tfile_name:
+            continue
         count += 1
         temp = tfile_name.split('.')[0]
-        index = temp.rfind('_')
+        index = temp.rfind('_', 0, 26)
         img_name = temp[:index]
         filepath = os.path.join(prediction_file_path, tfile_name)
         ret = load_statistical_predict_result(filepath)
@@ -131,7 +138,7 @@ def create_visualization_statistical_result(prediction_file_path,
             if (str(realLabel) == str(sort_index[i])):
                 count_hit[i] += 1
                 break
-
+    
     if 'value' not in table_dict.keys():
         print("the item value does not exist!")
     else:

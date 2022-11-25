@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import argparse
 import torch
 import torch.onnx
 sys.path.append(r"./pretrained-models.pytorch")
@@ -28,9 +29,14 @@ def pth2onnx(input_file, output_file):
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 224, 224)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, verbose=True, opset_version=11)
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, verbose=False, opset_version=11)
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    pth2onnx(input_file, output_file)
+    parser = argparse.ArgumentParser(description='SENet pth2onnx')
+    parser.add_argument("--pth", default="./se_resnet50-ce0d4300.pth", help='pth file')
+    parser.add_argument("--onnx", default="./se_resnet50_dybs.onnx", help='save onnx file')
+    parsers = parser.parse_args()
+    
+    pth2onnx(parsers.pth, parsers.onnx)
+    
+    print("Successfully exported ONNX model: {}".format(parsers.onnx))

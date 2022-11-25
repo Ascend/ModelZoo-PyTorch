@@ -14,9 +14,10 @@
 
 import os
 import sys
-from PIL import Image
 import numpy as np
-import multiprocessing
+
+from PIL import Image
+from tqdm import tqdm
 
 
 model_config = {
@@ -68,34 +69,19 @@ def resize(img, size, interpolation=Image.BILINEAR):
         return img.resize(size[::-1], interpolation)
 
 
-def gen_input_bin(mode_type, file_batches, batch):
-    i = 0
-    for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
-
-        # RGBA to RGB
-        image = Image.open(os.path.join(src_path, file)).convert('RGB')
-        image = resize(image, model_config[mode_type]['resize']) # Resize
-        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
-        img = np.array(image, dtype=np.float32)
-        img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
-        img = img / 255. # ToTensor: div 255
-        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
-        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
-
-
 def preprocess(mode_type, src_path, save_path):
     files = os.listdir(src_path)
-    file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
-    thread_pool = multiprocessing.Pool(len(file_batches))
-    for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch))
-    thread_pool.close()
-    thread_pool.join()
-    print("in thread, except will not report! please ensure bin files generated.")
-
+    for idx, im_file in enumerate(tqdm(files)):
+        # RGBA to RGB
+        image = Image.open(os.path.join(src_path, im_file)).convert('RGB')
+        image = resize(image, model_config[mode_type]['resize'])
+        image = center_crop(image, model_config[mode_type]['centercrop'])
+        img = np.array(image, dtype=np.float32)
+        img = img.transpose(2, 0, 1)
+        img = img / 255.
+        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None]
+        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None]
+        img.tofile(os.path.join(save_path, im_file.split('.')[0] + ".bin"))
 
 if __name__ == '__main__':
     if len(sys.argv) < 4:
