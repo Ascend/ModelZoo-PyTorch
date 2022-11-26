@@ -25,7 +25,7 @@ NVIDIA CUDA specific speedups adopted from NVIDIA Apex examples
 Hacked together by Ross Wightman (https://github.com/rwightman)
 
 """
-import torch.npu 
+
 import sys
 import os
 import argparse
@@ -38,6 +38,8 @@ from datetime import datetime
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch
+if torch.__version__>="1.8":
+    import torch_npu
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 try:
