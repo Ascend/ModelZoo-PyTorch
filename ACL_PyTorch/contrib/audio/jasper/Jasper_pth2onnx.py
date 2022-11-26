@@ -20,7 +20,7 @@ from common import helpers
 from jasper.model import Jasper
 
 
-def pth2onnx(ckpt_path,out_path,bs):
+def pth2onnx(ckpt_path, out_path, bs):
     cfg = config.load('configs/jasper10x5dr_speedp-online_speca.yaml')
     model = Jasper(encoder_kw=config.encoder(cfg),
                    decoder_kw=config.decoder(cfg, n_classes=29))
@@ -47,4 +47,4 @@ if __name__ == '__main__':
     ckpt_path = sys.argv[1]
     out_path = sys.argv[2]
     bs = sys.argv[3]
-    pth2onnx(ckpt_path,out_path,bs)
+    pth2onnx(ckpt_path, out_path, bs)

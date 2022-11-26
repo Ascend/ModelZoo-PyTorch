@@ -135,7 +135,7 @@ def main():
         agg['logits'].append(log_probs)
 
     wer, _ = process_evaluation_epoch(agg)
-    print('eval_wer: 100 * %.5f' % wer)
+    print(f'eval_wer: {100 * wer}')
 
     if args.save_predictions:
         with open(args.save_predictions, 'w') as f:
