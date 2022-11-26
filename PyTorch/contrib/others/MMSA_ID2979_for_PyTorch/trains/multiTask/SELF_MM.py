@@ -145,13 +145,13 @@ class SELF_MM():
             y_pred = {'M': [], 'T': [], 'A': [], 'V': []}
             y_true = {'M': [], 'T': [], 'A': [], 'V': []}
             losses = []
-            start_time = time.time()
             model.train()
             train_loss = 0.0
             left_epochs = self.args.update_epochs
             ids = []
             with tqdm(dataloader['train']) as td:
                 for batch_data in td:
+                    start_time = time.time()
                     if left_epochs == self.args.update_epochs:
                         optimizer.zero_grad()
                     left_epochs -= 1
@@ -199,11 +199,11 @@ class SELF_MM():
                         # update
                         optimizer.step()
                         left_epochs = self.args.update_epochs
+                    logger.info("epochs cost time: %s " % (time.time() - start_time))
                 if not left_epochs:
                     # update
                     optimizer.step()
             train_loss = train_loss / len(dataloader['train'])
-            logger.info("epochs cost time: %s " % (time.time() - start_time))
             logger.info("TRAIN-(%s) (%d/%d/%d)>> loss: %.4f " % (self.args.modelName, \
                         epochs-best_epoch, epochs, self.args.cur_time, train_loss))
             for m in self.args.tasks:
