@@ -49,7 +49,6 @@ from bert4torch.layers import CRF
 from bert4torch.tokenizers import Tokenizer
 from bert4torch.models import build_transformer_model, BaseModel
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch_npu.contrib.module import NpuFairseqDropout
 
 try:
     # noinspection PyUnresolvedReferences
