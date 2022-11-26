@@ -78,7 +78,8 @@ python3 -m torch.distributed.launch --nproc_per_node 8 run_translation.py \
     --optim adamw_apex_fused_npu \
     --use_combine_ddp True \
     --half_precision_backend apex \
-    --max_step 1000 \
+    --download_max_retries 1 \
+    --max_step 600 \
     --save_step 5000 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

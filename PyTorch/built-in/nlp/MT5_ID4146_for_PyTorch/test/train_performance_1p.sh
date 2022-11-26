@@ -69,6 +69,7 @@ python3 run_translation.py \
     --use_combine_grad True \
     --optim adamw_apex_fused_npu \
     --half_precision_backend apex \
+    --download_max_retries 1 \
     --max_step 1000 \
     --save_step 5000 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
