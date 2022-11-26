@@ -31,7 +31,7 @@ def per_class_iu(hist):
     
 
 class Evaluator(object):
-    def __init__(self, cityscapes_path, folder_davinci_target, outdir):
+    def __init__(self, cityscapes_path, folder_davinci_target):
 
         loc = "cpu"
         self.device = torch.device(loc)
@@ -40,8 +40,6 @@ class Evaluator(object):
         self.image_paths, self.mask_paths = _get_city_pairs(cityscapes_path, "val")
 
         self.annotation_file_path = folder_davinci_target
-
-        self.outdir = outdir
 
     def eval(self):
         
@@ -102,7 +100,7 @@ class Evaluator(object):
 
     def file2tensor(self, annotation_file):
     
-        filepath = annotation_file + '_2.bin'
+        filepath = annotation_file + '_1.bin'
         size = os.path.getsize(filepath)  
         res = []
         L = int(size/4)
@@ -159,8 +157,6 @@ if __name__ == '__main__':
         cityscapes_path = sys.argv[1]
         # txt file path
         folder_davinci_target = sys.argv[2]
-        # the path to store the results json path
-        outdir = sys.argv[3]
 
     except IndexError:
         print("Stopped!")
@@ -170,9 +166,6 @@ if __name__ == '__main__':
         print("config file folder does not exist.")
     if not (os.path.exists(folder_davinci_target)):
         print("target file folder does not exist.")
-    if not (os.path.exists(outdir)):
-        print("output file folder does not exist.")
-        os.makedirs(outdir)
 
-    evaluator = Evaluator(cityscapes_path, folder_davinci_target, outdir)
+    evaluator = Evaluator(cityscapes_path, folder_davinci_target)
     evaluator.eval()
