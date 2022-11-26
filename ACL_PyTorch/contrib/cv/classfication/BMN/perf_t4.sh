@@ -1,1 +1,0 @@
-trtexec --onnx=bmn-bs1.onnx --fp16 --shapes=image:1x400x100
