@@ -27,8 +27,8 @@ args = parser.parse_args()
 
 
 if __name__ == '__main__':
-    prediction_dir = args.output_path
-    prediction = os.path.join(prediction_dir, os.listdir(prediction_dir)[0])
+    prediction = args.output_path
+
 
     gt = args.gt_path
     num_samples = len(os.listdir(gt))
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         label = np.fromfile(label_path, dtype=np.float32)
         if pred_idx < label_idx // args.batch_size + 1:
             pred_idx += 1
-            out_path = os.path.join(prediction, '{}_output_0.bin'.format(pred_idx - 1))
+            out_path = os.path.join(prediction, '{}_0.bin'.format(pred_idx - 1))
             if not os.path.exists(out_path):
                 print("Error: {} not exists".format(out_path))
                 continue
