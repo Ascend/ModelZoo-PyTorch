@@ -25,7 +25,7 @@ export BMMV2_ENABLE=1
 #训练epoch
 train_epochs=30
 #训练batch_size,,需要模型审视修改
-batch_size=128
+batch_size=256
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -70,6 +70,21 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
+# taskset绑核
+RANK_ID_START=0
+RANK_SIZE=8
+KERNEL_NUM=$(($(nproc)/8))
+
+for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+do
+
+PID_START=$((KERNEL_NUM * RANK_ID))
+PID_END=$((PID_START + KERNEL_NUM - 1))
+
+nohup taskset -c $PID_START-$PID_END python3.7 train_8p_new.py -j ${KERNEL_NUM} --local_rank $RANK_ID & 
+done
+
+
 start_time=$(date +%s)
 NPUS=($(seq 0 7))
 export NPU_WORLD_SIZE=${#NPUS[@]}
@@ -102,7 +117,7 @@ do
       --weight-decay 0.0 \
       --criterion cross_entropy \
       --label-smoothing 0.1 \
-      --max-sentences 128\
+      --max-sentences 256\
       --max-tokens 102400 \
       --max-epoch $train_epochs \
       --seed 1 \
@@ -124,7 +139,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-fps=`grep -rns "Time" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep -v "all" |awk -F "Time" '{print$2}' |awk -F "(" '{print$1}'|tail -n +5|awk '{sum+=$1} END {print"",8*128*NR/sum}'|sed s/[[:space:]]//g`
+fps=`grep -rns "Time" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep -v "all" |awk -F "Time" '{print$2}' |awk -F "(" '{print$1}'|tail -n +5|awk '{sum+=$1} END {print"",8*256*NR/sum}'|sed s/[[:space:]]//g`
 FPS=`python3 -c "print(${fps}*96)"`
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -rns "Validation" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk 'END {print $6}'`
@@ -145,7 +160,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 #获取性能数据，不需要修改
 #吞吐量
-ActualFPS=${FPS}
+ActualFPS=${fps}
 #单迭代训练时长
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'$FPS'}'`
