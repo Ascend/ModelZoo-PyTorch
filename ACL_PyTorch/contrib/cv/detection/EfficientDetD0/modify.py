@@ -12,24 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append(r'onnx_tools/OXInterface')
-from OXInterface import OXGraph
+
 import numpy as np
+from auto_optimizer import OnnxGraph
 import argparse
+
 
 parser = argparse.ArgumentParser(description='pth to onnx')
 parser.add_argument('--model', type=str, default='d0_bs8_sim.onnx', metavar='N',
                     help='onnx model')
-parser.add_argument('--node', type=str, default='1532', metavar='N',
-                    help='need to modify pad node number')
 parser.add_argument('--out', type=str, default='d0_bs8_modify.onnx', metavar='N',
+
                     help='modified onnx')
 
-
 args = parser.parse_args()
-oxgraph = OXGraph(args.model)
-oxinitializer_node = oxgraph.get_oxinitializer_by_name(args.node)
-new_data = np.array(0, dtype=np.float32)
-oxinitializer_node.set_data(new_data)
-oxgraph.save_new_model(args.out)
+g = OnnxGraph.parse(args.model)
+new_ini = g.add_initializer('new_ini', np.array(0).astype(np.float16))
+node=g.get_nodes('Pad')[0]
+g[node.inputs[2]] = new_ini
+g.save(args.out)

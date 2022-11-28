@@ -19,6 +19,7 @@ import argparse
 from effdet import create_dataset, create_loader
 from effdet.data import resolve_input_config
 from timm.utils import *
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Validation')
 
@@ -36,43 +37,42 @@ parser.add_argument('-b', '--batch-size', default=1, type=int,
                     metavar='N', help='mini-batch size (default: 128)')
 parser.add_argument('--img-size', default=None, type=int,
                     metavar='N', help='Input image dimension, uses model default if empty')
+if __name__ == '__main__':
+    args = parser.parse_args()
+    setup_default_logging()
+    dataset = create_dataset(args.dataset, args.root, args.split)
+    if args.model == 'tf_efficientdet_d0':
+        model_config = {'input_size': (3, 512, 512),
+                        'interpolation': 'bilinear',
+                        'mean': (0.485, 0.456, 0.406),
+                        'std': (0.229, 0.224, 0.225),
+                        'fill_color': 'mean'}
+    elif args.model == 'tf_efficientdet_d7':
+        model_config = {'input_size': (3, 1536, 1536),
+                        'interpolation': 'bilinear',
+                        'mean': (0.485, 0.456, 0.406),
+                        'std': (0.229, 0.224, 0.225),
+                        'fill_color': 'mean'}
+    input_config = resolve_input_config(args, model_config)
+    print(args)
+    loader = create_loader(
+        dataset,
+        input_size=input_config['input_size'],
+        batch_size=args.batch_size,
+        use_prefetcher=True,
+        interpolation=input_config['interpolation'],
+        fill_color=input_config['fill_color'],
+        mean=input_config['mean'],
+        std=input_config['std'],
+        num_workers=4,
+        pin_mem=True,
+    )
+    pic=os.listdir(os.path.join(args.root,'val2017'))
+    pic.sort()
 
-args = parser.parse_args()
-setup_default_logging()
-dataset = create_dataset(args.dataset, args.root, args.split)
-if args.model == 'tf_efficientdet_d0':
-    model_config = {'input_size': (3, 512, 512),
-                    'interpolation': 'bilinear',
-                    'mean': (0.485, 0.456, 0.406),
-                    'std': (0.229, 0.224, 0.225),
-                    'fill_color': 'mean'}
-elif args.model == 'tf_efficientdet_d7':
-    model_config = {'input_size': (3, 1536, 1536),
-                    'interpolation': 'bilinear',
-                    'mean': (0.485, 0.456, 0.406),
-                    'std': (0.229, 0.224, 0.225),
-                    'fill_color': 'mean'}
-input_config = resolve_input_config(args, model_config)
-print(args)
-loader = create_loader(
-    dataset,
-    input_size=input_config['input_size'],
-    batch_size=args.batch_size,
-    use_prefetcher=True,
-    interpolation=input_config['interpolation'],
-    fill_color=input_config['fill_color'],
-    mean=input_config['mean'],
-    std=input_config['std'],
-    num_workers=4,
-    pin_mem=True,
-)
-pic=os.listdir(os.path.join(args.root,'val2017'))
-pic.sort()
-
-if not os.path.exists(args.bin_save):
-    os.makedirs(args.bin_save)
-
-for i, file in zip(loader, pic):
-    img = i[0].numpy()
-    print(file)
-    img.tofile(os.path.join(args.bin_save, file.split('.')[0] + ".bin"))
+    if not os.path.exists(args.bin_save):
+        os.makedirs(args.bin_save)
+    one_batch = tqdm(zip(loader, pic))
+    for i, file in one_batch:
+        img = i[0].numpy()
+        img.tofile(os.path.join(args.bin_save, file.split('.')[0] + ".bin"))

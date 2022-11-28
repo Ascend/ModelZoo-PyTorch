@@ -28,13 +28,13 @@ parser.add_argument('--checkpoint', type=str, default='d0.pth', metavar='N',
 parser.add_argument('--out', type=str, default='d0.onnx', metavar='N',
                     help='export onnx model')
 
-
-args = parser.parse_args()
-config = get_efficientdet_config(model_name='tf_efficientdet_d0')
-model = EfficientDet(config=config,pretrained_backbone=False)
-model_path = args.checkpoint
-model.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
-model.eval()
-example = torch.randn(args.batch_size, 3, 512, 512)
-export_onnx_file = args.out
-torch.onnx.export(model, example, export_onnx_file, do_constant_folding=True, verbose=True, opset_version=11)
+if __name__ == '__main__':
+    args = parser.parse_args()
+    config = get_efficientdet_config(model_name='tf_efficientdet_d0')
+    model = EfficientDet(config=config,pretrained_backbone=False)
+    model_path = args.checkpoint
+    model.load_state_dict(torch.load(model_path,map_location=torch.device('cpu')))
+    model.eval()
+    example = torch.randn(args.batch_size, 3, 512, 512)
+    export_onnx_file = args.out
+    torch.onnx.export(model, example, export_onnx_file, do_constant_folding=True, verbose=True, opset_version=11)
