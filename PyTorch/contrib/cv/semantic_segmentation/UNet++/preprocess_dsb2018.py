@@ -26,20 +26,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import argparse
 from glob import glob
 
 import cv2
 import numpy as np
 from tqdm import tqdm
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', default='./data-science-bowl-2018',
+                        help='the path of data-science-bowl-2018')
+    parser.add_argument('--save_files', default='./inputs',
+                        help='the path of data-science-bowl-2018')
+    config = parser.parse_args()
+    return config
 
-def main():
+def main(config):
     img_size = 96
+    paths = glob(os.path.join(config.data_dir, 'stage1_train/*'))
 
-    paths = glob('inputs/data-science-bowl-2018/stage1_train/*')
-
-    os.makedirs('inputs/dsb2018_%d/images' % img_size, exist_ok=True)
-    os.makedirs('inputs/dsb2018_%d/masks/0' % img_size, exist_ok=True)
+    os.makedirs(config.save_files, exist_ok=True)
+    images_path = os.path.join(config.save_files, './dsb2018_%d/images' % img_size)
+    masks_path = os.path.join(config.save_files, './dsb2018_%d/masks/0' % img_size)
+    os.makedirs(images_path, exist_ok=True)
+    os.makedirs(masks_path, exist_ok=True)
 
     for i in tqdm(range(len(paths))):
         path = paths[i]
@@ -55,11 +66,10 @@ def main():
             img = img[..., :3]
         img = cv2.resize(img, (img_size, img_size))
         mask = cv2.resize(mask, (img_size, img_size))
-        cv2.imwrite(os.path.join('inputs/dsb2018_%d/images' % img_size,
-                    os.path.basename(path) + '.png'), img)
-        cv2.imwrite(os.path.join('inputs/dsb2018_%d/masks/0' % img_size,
-                    os.path.basename(path) + '.png'), (mask * 255).astype('uint8'))
+        cv2.imwrite(os.path.join(images_path, os.path.basename(path) + '.png'), img)
+        cv2.imwrite(os.path.join(masks_path, os.path.basename(path) + '.png'), (mask * 255).astype('uint8'))
 
 
 if __name__ == '__main__':
-    main()
+    config = parse_args()
+    main(config)

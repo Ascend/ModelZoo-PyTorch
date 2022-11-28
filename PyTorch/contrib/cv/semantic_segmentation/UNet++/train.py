@@ -110,6 +110,8 @@ def parse_args():
     # dataset
     parser.add_argument('--dataset', default='dsb2018_96',
                         help='dataset name')
+    parser.add_argument('--data_path', default='./inputs/dsb2018_96',
+                        help='data dir')
     parser.add_argument('--img_ext', default='.png',
                         help='image file extension')
     parser.add_argument('--mask_ext', default='.png',
@@ -303,7 +305,8 @@ def train(config, train_loader, model, criterion, optimizer, epoch):
 
     if config['num_gpus'] == 1 or (config['num_gpus'] > 1
                                                and config['rank_id'] % config['num_gpus'] == 0):
-        print("[npu id:", config['rank_id'], "]", '* FPS@all {:.3f}'.format(config['num_gpus'] * config['batch_size'] / (config['num_gpus'] * batch_time.avg)))
+        print("[npu id:", config['rank_id'], "]", '* FPS@all {:.3f}'.format(
+            config['num_gpus'] * config['batch_size'] / (config['num_gpus'] * batch_time.avg)))
 
 
 def validate(config, val_loader, model, criterion):
@@ -359,6 +362,18 @@ def validate(config, val_loader, model, criterion):
     return iou.avg
 
 
+def proc_nodes_module(checkpoint, AttrName):
+    new_state_dict = OrderedDict()
+    for k, v in checkpoint[AttrName].items():
+        if (k[0:7] == "module."):
+            name = k[7:]
+        else:
+            name = k[0:]
+        new_state_dict[name] = v
+    return new_state_dict
+
+
+
 def main():
     config = vars(parse_args())
 
@@ -382,7 +397,8 @@ def main():
     torch.backends.cudnn.benchmark = False
     
     if config['num_gpus'] > 1:
-        init_process_group(proc_rank=config['rank_id'], world_size=config['num_gpus'], device_type=config['device'])
+        init_process_group(proc_rank=config['rank_id'],
+                           world_size=config['num_gpus'], device_type=config['device'])
     elif config['device'] == "npu":
         torch.npu.set_device(0)
     elif config['device'] == "gpu":
@@ -429,7 +445,8 @@ def main():
         raise NotImplementedError
 
     if config["amp"]:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=config["opt_level"], loss_scale=config["loss_scale"], combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=config["opt_level"],
+                                          loss_scale=config["loss_scale"], combine_grad=True)
 
     if config["num_gpus"] > 1:
         #Make model replica operate on the current device
@@ -443,7 +460,8 @@ def main():
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, factor=config['factor'], patience=config['patience'],
                                                    verbose=1, min_lr=config['min_lr'])
     elif config['scheduler'] == 'MultiStepLR':
-        scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[int(e) for e in config['milestones'].split(',')], gamma=config['gamma'])
+        scheduler = lr_scheduler.MultiStepLR(
+            optimizer, milestones=[int(e) for e in config['milestones'].split(',')], gamma=config['gamma'])
     elif config['scheduler'] == 'ConstantLR':
         scheduler = None
     else:
@@ -455,6 +473,7 @@ def main():
             print("=> loading checkpoint '{}'".format(config['resume']))
             checkpoint = torch.load(config['resume'], map_location=loc)
             best_iou = checkpoint['best_iou']
+            checkpoint['state_dict'] = proc_nodes_module(checkpoint, 'state_dict')
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             if config['amp']:
@@ -465,7 +484,7 @@ def main():
             print("=> no checkpoint found at '{}'".format(config['resume']))
 
     # Data loading code
-    img_ids = glob(os.path.join('inputs', config['dataset'], 'images', '*' + config['img_ext']))
+    img_ids = glob(os.path.join(config['data_path'], 'images', '*' + config['img_ext']))
     img_ids = [os.path.splitext(os.path.basename(p))[0] for p in img_ids]
 
     train_img_ids, val_img_ids = train_test_split(img_ids, test_size=0.2, random_state=41)
@@ -489,8 +508,8 @@ def main():
 
     train_dataset = Dataset(
         img_ids=train_img_ids,
-        img_dir=os.path.join('inputs', config['dataset'], 'images'),
-        mask_dir=os.path.join('inputs', config['dataset'], 'masks'),
+        img_dir=os.path.join(config['data_path'], 'images'),
+        mask_dir=os.path.join(config['data_path'], 'masks'),
         img_ext=config['img_ext'],
         mask_ext=config['mask_ext'],
         num_classes=config['num_classes'],
@@ -500,8 +519,8 @@ def main():
 
     val_dataset = Dataset(
         img_ids=val_img_ids,
-        img_dir=os.path.join('inputs', config['dataset'], 'images'),
-        mask_dir=os.path.join('inputs', config['dataset'], 'masks'),
+        img_dir=os.path.join(config['data_path'], 'images'),
+        mask_dir=os.path.join(config['data_path'], 'masks'),
         img_ext=config['img_ext'],
         mask_ext=config['mask_ext'],
         num_classes=config['num_classes'],
@@ -554,8 +573,7 @@ def main():
             trigger = 0
 
         # save checkpoint
-        if config['num_gpus'] == 1 or \
-                (config['num_gpus'] > 1 and config['rank_id'] % config['num_gpus'] == 0):
+        if config['num_gpus'] == 1 or (config['num_gpus'] > 1 and config['rank_id'] % config['num_gpus'] == 0):
             print("save epoch is ", epoch + 1)
             if config['amp']:
                 save_checkpoint({
