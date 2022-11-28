@@ -103,7 +103,8 @@ nohup python3.7 ${cur_path}/../main-8p.py \
     --rank=0 \
     --device='npu' \
     --epochs=$train_epochs \
-	  --label-smoothing=0.1 \
+    --label-smoothing=0.1 \
+    --bin_mode=${bin_mode:-"true"} \
     --batch-size=${batch_size} > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 #训练结束时间，不需要修改

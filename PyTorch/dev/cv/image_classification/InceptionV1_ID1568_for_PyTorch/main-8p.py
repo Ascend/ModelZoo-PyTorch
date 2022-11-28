@@ -121,7 +121,7 @@ parser.add_argument('--label-smoothing',
                     help='label smoothing')
 parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
-
+parser.add_argument('--bin_mode', type=boolean_string, default=False, help='enable bin compile')
 
 warnings.filterwarnings('ignore')
 best_acc1 = 0
@@ -191,6 +191,10 @@ def main():
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
     args.gpu = args.process_device_map[gpu]
+
+    if args.bin_mode:
+        print('use binary mode')
+        torch.npu.set_compile_mode(jit_compile=False)
 
     if args.gpu is not None:
         print("[npu id:", args.gpu, "]", "Use GPU: {} for training".format(args.gpu))

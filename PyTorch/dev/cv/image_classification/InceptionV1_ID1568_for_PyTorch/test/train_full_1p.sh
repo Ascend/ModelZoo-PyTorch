@@ -96,6 +96,7 @@ nohup python3.7 ${cur_path}/../main.py \
   	-p 100 \
   	${PREC} \
   	--label-smoothing 0.1 \
+	--bin_mode=${bin_mode:-"true"} \
    	--wd 0.0002 > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 # end=$(date +%s)
