@@ -1,0 +1,9 @@
+mmcls==0.20.1
+mmcv==1.4.7
+mmcv-full==1.4.7
+torchvision==0.10.0
+torch==1.9.0
+onnx==1.11.0
+onnxruntime==1.10.0 
+numpy==1.21.5
+Pillow==9.1.0
