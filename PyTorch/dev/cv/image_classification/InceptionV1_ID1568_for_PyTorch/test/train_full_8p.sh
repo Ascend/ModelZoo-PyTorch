@@ -53,6 +53,8 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=`echo ${para#*=}`
     fi
 done
 
