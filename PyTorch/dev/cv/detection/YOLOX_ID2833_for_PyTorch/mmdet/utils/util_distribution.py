@@ -1,4 +1,3 @@
-
 # Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +41,15 @@ def build_dp(model, device='cuda', dim=0, *args, **kwargs):
         dp_factory['npu'] = NPUDataParallel
         torch.npu.set_device(kwargs['device_ids'][0])
         torch.npu.set_compile_mode(jit_compile=False)
+
+        # NPU_FUZZY_COMPILE_BLACKLIST
+        er_flag = False
+        if er_flag:
+            print("=====Set MY NPU_FUZZY_COMPILE_BLACKLIST======")
+            option = {}
+            option["NPU_FUZZY_COMPILE_BLACKLIST"] = "StrideAdd,Pack"
+            torch.npu.set_option(option)
+
         model = model.npu()
     elif device == 'cuda':
         model = model.cuda(kwargs['device_ids'][0])
@@ -76,6 +84,15 @@ def build_ddp(model, device='cuda', *args, **kwargs):
         from mmcv.device.npu import NPUDistributedDataParallel
         torch.npu.set_compile_mode(jit_compile=False)
         ddp_factory['npu'] = NPUDistributedDataParallel
+
+        # NPU_FUZZY_COMPILE_BLACKLIST
+        er_flag = False
+        if er_flag:
+            print("=====Set MY NPU_FUZZY_COMPILE_BLACKLIST======")
+            option = {}
+            option["NPU_FUZZY_COMPILE_BLACKLIST"] = "StrideAdd,Pack"
+            torch.npu.set_option(option)
+
         model = model.npu()
     elif device == 'cuda':
         model = model.cuda()
