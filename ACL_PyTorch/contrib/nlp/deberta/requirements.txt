@@ -1,3 +1,6 @@
+torch==1.11.0
+onnx==1.11.0
+numpy==1.21.6
 packaging
 regex
 requests

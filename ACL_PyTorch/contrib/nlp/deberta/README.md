@@ -1,84 +1,109 @@
-## Deberta 模型离线推理指导
-
-### 一、环境准备
-
-Ascend环境: CANN 5.1.RC2
-
-#### 1. 创建conda环境
+# Deberta模型-推理指导
 
 
-```
-conda create --name deberta python=3.7.5 -y
-conda activate deberta
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-pip install torch==1.11.0 onnx==1.11.0 numpy==1.21.6
-pip install -r requirements.txt
-
-```
-
-#### 2. 获取开源模型代码仓
-
-```
-git clone https://github.com/microsoft/DeBERTa.git
-cd DeBERTa
-git reset --hard c558ad99373dac695128c9ec45f39869aafd374e
-patch -p1 < ../deberta.patch
-cd ..
-```
+    - [输入输出数据](#section540883920406)
 
 
-### 二、转 ONNX
 
-1. 获取权重文件，保存到当前工作目录
-    [pytorch.model-073631.bin](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/nlp/Deberta/pytorch.model-073631.bin)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-    也可自己通过源码训练获得
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-2. 执行转 ONNX 脚本
-    ```
-    python3.7 pth2onnx.py --init_model ./pytorch.model-073631.bin --onnx_path ./dynamic.onnx --config ./model_config.json
-    ```
-    其中"init_model"表示模型加载权重的地址和名称,"onnx_path"表示转换后生成的onnx模型的存储地址和名称,[model_config.json](./model_config.json)是模型训练的时候在预训练config的基础上加上mnli任务的config拼接得到的中间文件，用于初始化模型。
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
 
 
-### 三、转 OM
 
-```
-# 设置环境变量, 用户需使用自定义安装路径，指定为：
-source /opt/npu/cann_5.1.rc205/ascend-toolkit/set_env.sh
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-# 执行ATC参考命令
-atc --framework=5 \
---model=./dynamic.onnx \
---output=./deberta_bs${batch_size} \
---input_format=ND \
---input_shape="input_ids:${batch_size},256;input_mask:${batch_size},256" \
---soc_version=Ascend${chip_name} \
---log=error
-```
-说明：\\$\{batch\_size\} 表示生成不同 batch size 的 om 模型；  
-\\${chip\_name}可通过 npu-smi info 指令查看，如下图标注部分。
+DeBERTa使用两种新技术改进了BERT和RoBERTa模型。第一种是解耦注意力机制，其中每个单词使用content embedding和position embedding表示，单词之间的注意力权重使用关于其内容和相对位置的解耦矩阵来计算。第二，使用增强的掩码解码器来替换输出softmax层，以预测模型预训练中被Mask的Token。
 
-![](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)  
 
-### 四、数据集预处理
+- 参考实现：
 
-#### 1.获取数据集 
-```
-cd DeBERTa
-./experiments/glue/download_data.sh ../ MNLI
-cd ..
-```
-如果执行有问题参考源码仓./experiments/glue/download_data.sh的命令，进入源码仓分步执行下面命令
-```
-curl -s -J -L  https://raw.githubusercontent.com/nyu-mll/jiant/v1.3.2/scripts/download_glue_data.py -o ../glue.py
-./experiments/glue/download_data.sh ../ MNLI
-```
-或者从此链接获取[MNLI数据集](https://ascend-pytorch-one-datasets.obs.cn-north-4.myhuaweicloud.com/infer/MNLI/MNLI.zip)
-解压后数据集目录结构如下:
-```
-  ${data_path}
-  |-- MNLI
+  ```
+  url=https://github.com/microsoft/DeBERTa.git
+  commit_id=c558ad99373dac695128c9ec45f39869aafd374e
+  ```
+
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input_ids    | int32 | batchsize x 256 | ND         |
+  | input_mask    | int32 | batchsize x 256 | ND         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 3 | ND           |
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动 
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.11.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/microsoft/DeBERTa.git
+   cd DeBERTa
+   git reset --hard c558ad99373dac695128c9ec45f39869aafd374e
+   patch -p1 < ../deberta.patch
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   执行以下命令，或者从此链接获取[MNLI数据集](https://ascend-pytorch-one-datasets.obs.cn-north-4.myhuaweicloud.com/infer/MNLI/MNLI.zip)
+
+   ```
+   cd DeBERTa/experiments/glue
+   ./download_data.sh ./ MNLI
+   cd ..
+   ```
+
+   目录结构如下：
+
+   ```
+   |-- MNLI
       |-- original
       |    |-- multinli_1.0_dev_matched.jsonl
       |    |-- multinli_1.0_dev_matched.txt
@@ -92,65 +117,158 @@ curl -s -J -L  https://raw.githubusercontent.com/nyu-mll/jiant/v1.3.2/scripts/do
       |-- dev_matched.tsv
       |-- test_mismatched.tsv
       |-- train.tsv
+   ```
 
-```
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-#### 2. 执行数据预处理脚本
-```
-  python3.7 deberta_preprocess.py --datasets_path ${datasets_path}/ --pre_data_save_path ./pre_mnli_bs${batch_size} --batch_size ${batch_size}
-```
-参数说明：  
-\\${data_path}/：数据集路径  
-./pre_mnli_bs\\${batch\_size}：预处理后的 bin 文件存放路径  
-\\$\{batch\_size\} 表示生成不同 batch size 的 om 模型  
-> **说明：**  
-> 在预处理代码里,tokenizers = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base"),需要从网上下载相关文件，可能会存在无法下载的问题。
-> 解决方法：下载[pre_deberta.zip](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/nlp/Deberta/pre_deberta.zip),将里面的文件放在根目录~/.cache/huggingface/transformers下,预处理可正常运行
+   执行deberta_preprocess.py脚本，完成预处理。
 
-### 五、离线推理
+   ```
+   python3 deberta_preprocess.py --datasets_path ${dataset_path} --pre_data_save_path ./pre_mnli --batch_size 1 
+   ```
 
-1. 准备 msame 推理工具  
-    msame模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。获取工具及使用方法可以参考[msame模型推理工具指南](https://gitee.com/ascend/tools/tree/master/msame)，将msame文件放到当前目录
-2. 推理时，使用 npu-smi info 命令查看 device 是否在运行其它推理任务，提前确保 device 空闲
-    ```
-    # 删除之前冗余的推理文件，创建 result 文件夹
-    rm -rf ./result/outputs_bs${batch_size}_om/${dataset_version}
-    mkdir -p ./result/outputs_bs${batch_size}_om/${dataset_version}
+   - 参数说明：
+     - --datasets_path：数据集路径  
+     - --pre_data_save_path：预处理后的 bin 文件存放路径  
+     - --batch_size 数据batch size
+   
+   > **说明：**  
+   > 在预处理代码里,tokenizers = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base"),需要从网上下载相关文件，可能会存在无法下载的问题。
+   > 解决方法：下载[pre_deberta.zip](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/nlp/Deberta/pre_deberta.zip),将里面的文件放在根目录~/.cache/huggingface/transformers下,预处理可正常运行
 
-    # 推理
-    chmod a+x msame
 
-    ./msame --model ./deberta_bs${batch_size}.om --input ./pre_mnli_bs${batch_size}/${dataset_version}/input_ids/,./pre_mnli_bs${batch_size}/${dataset_version}/input_mask/ --output ./result/outputs_bs${batch_size}_om/${dataset_version}
-    ```
-    参数说明：  
-    --model：om 模型路径  
-    --input：预处理后的 bin 文件存放路径  
-    --output：输出文件存放路径 
-    \\$\{dataset\_version\} 表示使用哪种数据集类型，取值 match 或者 mismatch  
-    \\$\{batch\_size\} 表示推理使用模型的 batch size  
+## 模型推理<a name="section741711594517"></a>
 
-3. 执行数据后处理脚本
-    ```
-    python3.7 deberta_postprocess.py --datasets_path ${datasets_path}/ --bin_file_path ./result/outputs_bs${batch_size}_om/${dataset_version}/*/ --dataset_version ${dataset_version} --eval_save_path ./result --eval_save_file eval_bs${batch_size}_${dataset_version}.txt
-    ```
-    参数说明：
-    --bin_file_path：推理生成的result  
-    --dataset_version 表示使用哪种数据集类型，取值 match 或者 mismatch  
-    --output：输出文件存放路径  
-    eval_save_path 和 eval_save_file 表示输出精度数据所在的路径和文件名, 两者用于打印精度信息  
-    \\$\{datasets_path\}：表示MNLI数据集，用于获得标签数据和MNLI数据集的领域类别  
-    \\$\{batch\_size\} 表示推理使用模型的 batch size  
-  
+1. 模型转换。
 
-4. 性能测试
-    使用msame工具进行纯推理，可以根据不同的batchsize和dataset_version进行纯推理。使用同一输入进行性能测试，与T4机器性能测试对比：
-    ```
-    ./msame --model ./deberta_bs${batch_size}.om --input ./pre_mnli_bs${batch_size}/${dataset_version}/input_ids/input_0.bin,./pre_mnli_bs${batch_size}/${dataset_version}/input_mask/input_0.bin --output ./result/perf_bs${batch_size}_om/${dataset_version} --loop 100 > msame_bs${batch_size}_${dataset_version}.txt
-    ```
-    说明：
-    使用对应batchsize的某一输入计算100次，将结果重定向到msame_bs\\${batch_size}_\\${dataset_version}.txt文件中
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-**精度评测结果：**
+   1. 获取权重文件。
+
+       [pytorch.model-073631.bin](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/nlp/Deberta/pytorch.model-073631.bin)
+
+   2. 导出onnx文件。
+
+      1. 使用pth2onnx.py导出onnx文件。
+
+         ```
+         python3.7 pth2onnx.py --init_model ./pytorch.model-073631.bin --onnx_path ./deberta.onnx --config ./model_config.json
+         ```
+         其中"init_model"表示模型加载权重的地址和名称,"onnx_path"表示转换后生成的onnx模型的存储地址和名称,[model_config.json](./model_config.json)是模型训练的时候在预训练config的基础上加上mnli任务的config拼接得到的中间文件，用于初始化模型。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 \
+         --model=./deberta.onnx \
+         --output=./deberta_bs${batch_size} \
+         --input_format=ND \
+         --input_shape="input_ids:${batch_size},256;input_mask:${batch_size},256" \
+         --soc_version=Ascend${chip_name} \
+         --log=error
+         ```
+
+         说明：\$\{batch\_size\} 表示生成不同 batch size 的 om 模型
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+         运行成功后生成<u>***deberta_bs${batch_size}.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+        ```
+        mkdir result
+        mkdir result/${dataset_version}
+        python3 ais_infer.py --model ./deberta_bs${batch_size}.om --input ./pre_mnli/${dataset_version}/input_ids/,./pre_mnli/${dataset_version}/input_mask/ --output ./result/${dataset_version}  
+        ```
+
+        -   参数说明：
+
+             -   --model：om 模型路径。
+             -   --input：预处理后的 bin 文件存放路径。
+             -   --output：输出文件存放路径。
+      
+        \${dataset_version} 表示使用哪种数据集类型，取值 match 或者 mismatch  
+        \${batch_size} 表示推理使用模型的 batch size
+
+        推理后的输出默认在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+      ```
+      python3.7 deberta_postprocess.py --datasets_path ${dataset_path}/ --bin_file_path ./result/${dataset_version}/*/ --dataset_version ${dataset_version} --eval_save_path ./result --eval_save_file eval_bs${batch_size}_${dataset_version}.txt
+      ```
+
+      - 参数说明：
+
+        - --bin_file_path：生成推理结果所在路径
+        - --dataset_version：表示使用哪种数据集类型，取值 match 或者 mismatch
+        - --output：输出文件存放路径 
+        - --eval_save_path：输出精度数据文件所在的路径
+        - --eval_save_file：输出精度数据文件名
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om 模型路径
+        - --batchsize：batch大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
 
 | 模型    | 官网精度 | 310P 精度 | 基准性能 | 310P 性能 |
 | ------- | ------- | -------- | -------- | -------- |
