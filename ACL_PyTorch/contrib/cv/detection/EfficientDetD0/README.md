@@ -145,19 +145,19 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
          运行EfficientDetD0_pth2onnx.py脚本。
 
          ```
-         python EfficientDetD0_pth2onnx.py --batch_size=1 --checkpoint=d0.pth --out=d0_bs${bs}.onnx 
+         python EfficientDetD0_pth2onnx.py --checkpoint=d0.pth --out=d0.onnx 
          ```
 
-         获得d0_bs${bs}.onnx文件。
+         获得d0.onnx文件。
 
       2. 优化ONNX文件，安装[auto_optimizer](https://gitee.com/ascend/tools.git)模块。
 
          ```
-	     python -m onnxsim d0_bs${bs}.onnx d0_bs&{bs}_sim.onnx
-         python modify.py --model=d0_bs&{bs}_sim.onnx --out=d0_bs&{bs}_m.onnx
+	     python -m onnxsim d0.onnx d0_sim.onnx
+         python modify.py --model=d0_sim.onnx --out=d0_m.onnx
          ```
 
-         获得d0_bs&{bs}_m.onnx文件。
+         获得d0_m.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -189,7 +189,7 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
 
 			```
 			atc --framework=5 \
-				--model=d0_bs${bs}_m.onnx \
+				--model=d0_m.onnx \
 				--output=d0_bs${bs} \
 				--input_format=NCHW \
 				--input_shape="x.1:${bs},3,512,512" \
