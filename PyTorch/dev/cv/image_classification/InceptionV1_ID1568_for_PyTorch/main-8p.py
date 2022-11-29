@@ -121,7 +121,7 @@ parser.add_argument('--label-smoothing',
                     help='label smoothing')
 parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
-parser.add_argument('--bin_mode', type=boolean_string, default=False, help='enable bin compile')
+parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
 
 warnings.filterwarnings('ignore')
 best_acc1 = 0
