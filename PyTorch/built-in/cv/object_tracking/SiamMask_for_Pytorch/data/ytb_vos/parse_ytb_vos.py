@@ -128,7 +128,10 @@ def convert_ytb_vos(data_dir, out_dir):
                     instanceObj = Instance(img, instanceId)
                     instanceObj_dict = instanceObj.toDict()
                     mask = (img == instanceId).astype(np.uint8)
-                    _, contour, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                    if cv2.__version__ >= '4.0':
+                        contour, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                    else:
+                        _, contour, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
                     polygons = [c.reshape(-1).tolist() for c in contour]
                     instanceObj_dict['contours'] = [p for p in polygons if len(p) > 4]
                     if len(instanceObj_dict['contours']) and instanceObj_dict['pixelCount'] > 1000:
