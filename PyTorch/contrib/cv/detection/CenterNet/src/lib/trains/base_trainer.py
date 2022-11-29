@@ -108,9 +108,9 @@ class BaseTrainer(object):
         break
       collect_turn = iter_id > opt.start_step and  iter_id <= opt.num_iters
       if(opt.profiling == 'GE' and collect_turn):
-          manage = torch.npu.profile('./GE_prof')
+          manage = torch.npu.profile('../GE_prof')
       elif(opt.profiling == 'CANN' and collect_turn):
-          manage = torch.npu.profile('./CANN_prof', use_e2e_profiler=True)
+          manage = torch.npu.profile('../CANN_prof', use_e2e_profiler=True)
       else:
           if opt.profiling in ['CANN', 'GE'] and iter_id > opt.num_iters:
               break
