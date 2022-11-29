@@ -67,8 +67,8 @@ def launch(main_func, num_gpus_per_machine, num_machines=1, machine_rank=0, dist
             logger.warning(
                 "file:// is not a reliable init_method in multi-machine jobs. Prefer tcp://"
             )
-        os.environ['MASTER_ADDR'] = '127.0.0.1'
-        os.environ['MASTER_PORT'] = str(_find_free_port())
+        os.environ['MASTER_ADDR'] = args[0].master_addr
+        os.environ['MASTER_PORT'] = args[0].master_port
         os.environ["WORLD_SIZE"] = str(world_size)
 
         mp.spawn(

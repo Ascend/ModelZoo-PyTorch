@@ -97,6 +97,8 @@ Run on multiple machines:
     parser.add_argument(
         "--machine-rank", type=int, default=0, help="the rank of this machine (unique per machine)"
     )
+    parser.add_argument("--master-addr", type=str, default='127.0.0.1', help="master addr")
+    parser.add_argument("--master-port", type=str, default='23333', help="master port")
 
     # PyTorch still may leave orphan processes in multi-gpu training.
     # Therefore we use a deterministic way to obtain port,
