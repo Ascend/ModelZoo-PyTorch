@@ -87,6 +87,9 @@ def parse_option():
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
     parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
     parser.add_argument('--port', default='12345', type=str, help='master port')
+    parser.add_argument('--nnodes', default=1, type=int, help='number of distributed processes')
+    parser.add_argument('--node_rank', default=-1, type=int, help='node rank for distributed training')
+    parser.add_argument('--nproc_per_node', default=8, type=int, help='rank size')
 
     args, unparsed = parser.parse_known_args()
 
@@ -339,7 +342,7 @@ def throughput(data_loader, model, logger):
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
+    args, config = parse_option()
     
     option = {}
     option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
@@ -356,8 +359,8 @@ if __name__ == '__main__':
         world_size = int(os.environ['WORLD_SIZE'])
         print(f"RANK and WORLD_SIZE in environ: {rank}/{world_size}")
     else:
-        rank = -1
-        world_size = -1
+        rank = args.node_rank * args.nproc_per_node + args.local_rank
+        world_size = args.nnodes * args.nproc_per_node
     torch.npu.set_device(config.LOCAL_RANK)
     torch.distributed.init_process_group(backend='hccl', world_size=world_size, rank=rank)
     torch.distributed.barrier()

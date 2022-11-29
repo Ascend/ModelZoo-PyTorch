@@ -37,6 +37,14 @@ bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=real_pre_train_
 
 ```
 
+## 多机多卡性能数据获取流程
+
+```shell
+	1. 安装环境
+	2. 开始训练，每个机器所请按下面提示进行配置
+        bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size*所有卡数 --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
+```
+
 Log path:
 test/output/devie_id/train_${device_id}.log # training detail log
 test/output/devie_id/WideReesnet50_2_bs8192_8p_perf.log # 8p training performance result log
