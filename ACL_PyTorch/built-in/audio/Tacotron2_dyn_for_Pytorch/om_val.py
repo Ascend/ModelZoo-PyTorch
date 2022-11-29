@@ -14,20 +14,14 @@
 
 
 import os
-import sys
-import difflib
-
-import wave
-import numpy as np
 import argparse
-import logging
+
+import numpy as np
 import torch
 import onnxruntime as rt
-import acl
-from torch import jit
 from scipy.io.wavfile import write
 from scipy.special import expit
-from acl_infer import AclNet, init_acl, release_acl
+from ais_bench.infer.interface import InferSession
 
 from tacotron2.text import text_to_sequence
 from inference import MeasureTime
@@ -41,11 +35,11 @@ def parse_args(parser):
                         help='input text')
     parser.add_argument('-o', '--output', required=False, default="output/audio", type=str,
                         help='output folder to save autio')
-    parser.add_argument('--encoder', default='./output/encoder_dyn.om', type=str,
+    parser.add_argument('--encoder', default='./output/om/encoder_dyn.om', type=str,
                         help='load encoder model')
-    parser.add_argument('--decoder', default='./output/decoder_iter_dyn.om', type=str,
+    parser.add_argument('--decoder', default='./output/om/decoder_iter_dyn.om', type=str,
                         help='load decoder model')
-    parser.add_argument('--postnet', default='./output/postnet_dyn.om', type=str,
+    parser.add_argument('--postnet', default='./output/om/postnet_dyn.om', type=str,
                         help='load postnet model')
     parser.add_argument('-bs', '--batch_size', default=1, type=int,
                         help='Batch size')
@@ -53,7 +47,7 @@ def parse_args(parser):
                         help='max input len')
     parser.add_argument('--gen_wave', action='store_true',
                         help='generate wav file')
-    parser.add_argument('--waveglow', default='./output/waveglow.onnx', type=str,
+    parser.add_argument('--waveglow', default='./output/onnx/waveglow.onnx', type=str,
                         help='load waveglow model')
     parser.add_argument('--stft-hop-length', type=int, default=256,
                         help='STFT hop length for estimating audio length from mel size')
@@ -61,8 +55,6 @@ def parse_args(parser):
                         help='Sampling rate')
     parser.add_argument('--device_id', default=0, type=int,
                         help='device id')
-    parser.add_argument('--use_dynamic_data_buffer', action='store_true',
-                        help='debug mode')
     return parser
 
 
@@ -152,16 +144,10 @@ def get_mask_from_lengths(lengths):
 
 class Tacotron2():
     def __init__(self, encoder, decoder, postnet, device_id, cost_time=0,
-                 encoder_cost_time=0, decoder_cost_time=0, postnet_cost_time=0,
-                 use_dynamic_data_buffer=False):
-        init_acl(device_id)
-        self.encoder = AclNet(model_path=encoder, device_id=device_id, output_data_shape=[624288 * 4, 624288 * 4, 4])
-        print("load encoder success")
-        self.decoder = AclNet(model_path=decoder, device_id=device_id, output_data_shape=20000)
-        print("load decoder success")
-        self.postnet = AclNet(model_path=postnet, device_id=device_id, output_data_shape=640000)
-        print("load postnet success")
-        self.use_dynamic_data_buffer = use_dynamic_data_buffer
+                 encoder_cost_time=0, decoder_cost_time=0, postnet_cost_time=0):
+        self.encoder = InferSession(device_id, encoder)
+        self.decoder = InferSession(device_id, decoder)
+        self.postnet = InferSession(device_id, postnet)
 
         self.cost_time = cost_time
         self.encoder_cost_time = encoder_cost_time
@@ -170,8 +156,6 @@ class Tacotron2():
         self.max_decoder_steps = 2000
 
         np.random.seed(1)
-        self.random = np.random.rand(self.max_decoder_steps + 1, 256)
-        self.random = self.random.astype(np.float16)
 
     def update_decoder_inputs(self, decoder_inputs, decoder_outputs):
         new_decoder_inputs = [
@@ -183,8 +167,8 @@ class Tacotron2():
             decoder_outputs[6],  # attention_weights
             decoder_outputs[7],  # attention_weights_cum
             decoder_outputs[8],  # attention_context
-            decoder_inputs[8],  # memory
-            decoder_inputs[9],  # processed_memory
+            decoder_inputs[8],   # memory
+            decoder_inputs[9],   # processed_memory
             decoder_inputs[10],  # mask
         ]
 
@@ -196,7 +180,7 @@ class Tacotron2():
     def infer_tacotron2(self, seqs, seq_lens, measurements):
         print("Starting run Tacotron2 encoder ……")
         with MeasureTime(measurements, "tacotron2_encoder_time", cpu_run=True):
-            encoder_output, encoder_t = self.encoder([seqs, seq_lens])
+            encoder_output = self.encoder.infer([seqs, seq_lens], "dymshape", 3000000)
         self.encoder_cost_time = measurements["tacotron2_encoder_time"]
 
         ##### init decoder_inputs
@@ -224,7 +208,7 @@ class Tacotron2():
         while True:
             exec_seq += 1
             with MeasureTime(measurements, "tacotron2_decoder_time", cpu_run=True):
-                decoder_iter_output, decoder_t = self.decoder(decoder_inputs)
+                decoder_iter_output = self.decoder.infer(decoder_inputs, "dymshape", 20000)
             self.decoder_cost_time += measurements["tacotron2_decoder_time"]
             decoder_inputs = self.update_decoder_inputs(decoder_inputs, decoder_iter_output)
 
@@ -235,8 +219,7 @@ class Tacotron2():
                 mel_outputs = np.concatenate((mel_outputs, np.expand_dims(decoder_iter_output[0], 2)), 2)
 
             # decide whether stop decoder or not
-            dec = torch.le(torch.Tensor(self.sigmoid(decoder_iter_output[1])), gate_threshold).to(torch.int32).squeeze(
-                1)
+            dec = torch.le(torch.Tensor(self.sigmoid(decoder_iter_output[1])), gate_threshold).to(torch.int32).squeeze(1)
             not_finished = not_finished * dec
             mel_lengths += not_finished
 
@@ -252,7 +235,7 @@ class Tacotron2():
 
         print("Starting run Tacotron2 postnet ……")
         with MeasureTime(measurements, "tacotron2_postnet_time", cpu_run=True):
-            mel_outputs_postnet, postnet_t = self.postnet(mel_outputs)
+            mel_outputs_postnet = self.postnet.infer([mel_outputs], "dymshape", 640000)
         self.postnet_cost_time = measurements["tacotron2_postnet_time"]
         mel_outputs_postnet = mel_outputs_postnet[0]
 
@@ -307,8 +290,7 @@ if __name__ == '__main__':
     wav_names, wav_texts = load_wav_texts(args.input)
 
     # load model
-    tacotron2 = Tacotron2(args.encoder, args.decoder, args.postnet,
-                          args.device_id, use_dynamic_data_buffer=args.use_dynamic_data_buffer)
+    tacotron2 = Tacotron2(args.encoder, args.decoder, args.postnet, args.device_id)
 
     all_time = 0
     all_mels = 0
