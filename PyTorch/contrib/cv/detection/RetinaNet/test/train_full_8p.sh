@@ -56,6 +56,7 @@ fi
 # 变量
 export DETECTRON2_DATASETS=${data_path}
 export PYTHONPATH=./:$PYTHONPATH
+export batch_size=$batch_size
 
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
@@ -71,11 +72,12 @@ python3.7 -u tools/train_net.py \
     --device-ids 0 1 2 3 4 5 6 7 \
     --num-gpus 8 \
     AMP 1\
-    OPT_LEVEL O2 \
+    OPT_LEVEL O1 \
     LOSS_SCALE_VALUE 64 \
     SOLVER.IMS_PER_BATCH ${batch_size} \
     DATALOADER.NUM_WORKERS ${workers} \
-    SOLVER.BASE_LR 0.04 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    SOLVER.BASE_LR 0.04 \
+    SOLVER.MAX_ITER ${max_iter} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

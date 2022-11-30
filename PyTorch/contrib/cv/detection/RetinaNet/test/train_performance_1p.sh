@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="RetinaNet"
 # 训练batch_size
-batch_size=16
+batch_size=8
 # 训练使用的npu卡数
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
@@ -70,6 +70,7 @@ fi
 # 变量
 export DETECTRON2_DATASETS=${data_path}
 export PYTHONPATH=./:$PYTHONPATH
+export batch_size=$batch_size
 
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
@@ -83,12 +84,13 @@ fi
 python3.7 tools/train_net.py \
     --config-file configs/COCO-Detection/retinanet_R_50_FPN_1x.yaml \
     AMP 1 \
-    OPT_LEVEL O2 \
+    OPT_LEVEL O1 \
     MODEL.DEVICE npu:${ASCEND_DEVICE_ID} \
     LOSS_SCALE_VALUE 64 \
     SOLVER.IMS_PER_BATCH ${batch_size} \
     DATALOADER.NUM_WORKERS ${workers} \
     SOLVER.BASE_LR 0.01 \
+    DATASETS.TEST '()' \
     SOLVER.MAX_ITER ${max_iter} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -107,11 +109,7 @@ FPS=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log |
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-# 输出训练精度,需要模型审视修改
-train_accuracy=`grep -A 3 "Evaluation results for bbox:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 1 | awk '{print $2}'`
-
 # 打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 # 性能看护结果汇总

@@ -70,7 +70,7 @@ python3.7 tools/train_net.py \
         --config-file configs/COCO-Detection/retinanet_R_50_FPN_1x.yaml \
         --eval-only  \
 	    AMP 1\
-        OPT_LEVEL O2 \
+        OPT_LEVEL O1 \
         LOSS_SCALE_VALUE 64 \
         MODEL.DEVICE npu:0 \
         SOLVER.IMS_PER_BATCH 16 \

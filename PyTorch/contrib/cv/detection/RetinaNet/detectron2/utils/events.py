@@ -26,7 +26,7 @@ from fvcore.common.history_buffer import HistoryBuffer
 from detectron2.config import get_cfg
 
 _CURRENT_STORAGE_STACK = []
-cfg = get_cfg()
+
 
 def get_event_storage():
     """
@@ -184,11 +184,13 @@ class CommonMetricPrinter(EventWriter):
         self.logger = logging.getLogger(__name__)
         self._max_iter = max_iter
         self._last_write = None
+        self.cfg = None 
 
     def write(self):
         storage = get_event_storage()
         iteration = storage.iter
-
+        if self.cfg is None:
+            self.cfg = get_cfg()
         try:
             data_time = storage.history("data_time").avg(20)
         except KeyError:
@@ -239,8 +241,8 @@ class CommonMetricPrinter(EventWriter):
                 data_time="data_time: {:.4f}  ".format(data_time) if data_time is not None else "",
                 lr=lr,
                 memory="max_mem: {:.0f}M".format(max_mem_mb) if max_mem_mb is not None else "",
-                batchsize = "batchsize: {:.0f}  " .format(cfg.SOLVER.IMS_PER_BATCH),
-                fps = "fps: {:.3f}   ".format((cfg.SOLVER.IMS_PER_BATCH *8) / iter_time) if iter_time is not None else "",
+                batchsize = "batchsize: {:.0f}  " .format(int(os.environ['batch_size'])),
+                fps = "fps: {:.3f}   ".format((int(os.environ['batch_size'])) / iter_time) if iter_time is not None else "",
             )
         )
 
