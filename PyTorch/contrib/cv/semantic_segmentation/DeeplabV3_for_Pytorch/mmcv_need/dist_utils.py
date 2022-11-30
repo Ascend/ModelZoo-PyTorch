@@ -44,11 +44,11 @@ def init_dist(launcher, backend='nccl', **kwargs):
 
 def _init_dist_pytorch(backend, **kwargs):
     # TODO: use local_rank instead of rank % num_gpus
-    rank = int(os.environ['RANK'])
     offset = 0 if os.getenv('NPUID', None) is None else int(os.environ['NPUID'])
+    rank = int(os.environ['RANK']) + offset
     num_gpus = int(os.environ['RANK_SIZE'])
-    torch.npu.set_device((rank + offset) % num_gpus)
-    dist.init_process_group(backend=backend, world_size=num_gpus, rank=rank)
+    torch.npu.set_device(rank % num_gpus)
+    dist.init_process_group(backend=backend, world_size=int(os.environ['RANK_SIZE']), rank=rank)
 
 
 def _init_dist_mpi(backend, **kwargs):

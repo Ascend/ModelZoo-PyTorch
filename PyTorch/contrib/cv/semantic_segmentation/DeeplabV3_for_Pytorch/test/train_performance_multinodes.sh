@@ -8,7 +8,6 @@ Network="DeeplabV3_for_PyTorch"
 batch_size=48
 # 训练使用的npu卡数
 export RANK_SIZE=8
-export WORLD_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -17,6 +16,12 @@ train_step=7000
 # 加载数据进程数
 workers=$(($(nproc)/8))
 
+# for multi node setting
+nnodes=1
+node_rank=0
+local_addr=127.0.0.1
+master_addr=127.0.0.1
+master_port=23333
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -25,6 +30,20 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+	elif [[ $para == --batch_size* ]]; then
+		batch_size=$(echo ${para#*=})
+	elif [[ $para == --learning_rate* ]]; then
+		learning_rate=$(echo ${para#*=})
+	elif [[ $para == --nnodes* ]]; then
+		nnodes=$(echo ${para#*=})
+	elif [[ $para == --node_rank* ]]; then
+		node_rank=$(echo ${para#*=})
+	elif [[ $para == --local_addr* ]]; then
+		local_addr=$(echo ${para#*=})
+	elif [[ $para == --master_addr* ]]; then
+		master_addr=$(echo ${para#*=})
+	elif [[ $para == --master_port* ]]; then
+		master_port=$(echo ${para#*=})
     fi
 done
 
@@ -69,8 +88,16 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 chmod +x ${cur_path}/tools/train.py
+sed -i "s|max_iters=7000|max_iters=1000|g" configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py
 # 修改数据路径
 sed -i "s|data/cityscapes/|$data_path/|g" configs/_base_/datasets/cityscapes.py
+
+#集合通信参数，不需要修改
+export WORLD_SIZE=$((nnodes * RANK_SIZE))
+export NPUID=$((node_rank * RANK_SIZE))
+
+# 多机多卡
+export HCCL_IF_IP=$local_addr
 
 KERNEL_NUM=$(($(nproc)/8))
 
@@ -85,24 +112,31 @@ do
         taskset -c $PID_START-$PID_END python3.7\
         ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
             --launcher pytorch \
+            --master-addr $master_addr \
+            --master-port $master_port \
             --seed 1 \
             --deterministic \
             --device npu \
-            --options data.workers_per_gpu=${workers} \
-            --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --options data.workers_per_gpu=${workers} data.samples_per_gpu=${batch_size} \
+            --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
             --launcher pytorch \
+            --master-addr $master_addr \
+            --master-port $master_port \
             --seed 1 \
             --deterministic \
             --device npu \
-            --options data.workers_per_gpu=${workers} \
-            --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --options data.workers_per_gpu=${workers} data.samples_per_gpu=${batch_size} \
+            --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 
 wait
 
+# 复原参数
+sed -i "s|max_iters=1000|max_iters=7000|g" configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py
+sed -i "s|$data_path/|data/cityscapes/|g" configs/_base_/datasets/cityscapes.py
 
 ##################获取训练数据################
 #训练结束时间，不需要修改
@@ -126,7 +160,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 ##获取性能数据，不需要修改
 #吞吐量
@@ -148,6 +182,5 @@ echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
