@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import os
+import sys
 from collections import defaultdict
 
 import torch
+from tqdm import tqdm
 
 from ECAPA_TDNN.main import inference_embeddings_to_plt_hist_and_roc
-import sys
-from tqdm import tqdm
 
 if __name__ == "__main__":
     result_path = sys.argv[1]
@@ -32,10 +32,10 @@ if __name__ == "__main__":
     #样本总数为4648，bs为16,drop_last=True，所以循环4648/16且向下取整即290
     for i in tqdm(range(result_nums)):
         index = i+1
-        speakers = torch.load(speakers_path+ 'speakers'+str(index)+".pt")
+        speakers = torch.load(speakers_path+ f"speakers{index}.pt")
 
         batch = []
-        with open(result_path+ "mels"+str(index)+"_output_0.txt", 'r') as file:
+        with open(os.path.join(result_path+ f"mels{index}_0.txt"), 'r') as file:
             data_read = file.read()
             data_line = str(data_read).split('\n')
 
