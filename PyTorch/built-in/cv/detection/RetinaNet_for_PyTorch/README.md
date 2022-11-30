@@ -73,3 +73,10 @@ chmod +x ./tools/dist_train.sh
 bash ./test/train_full_1p.sh  --data_path=数据集路径       #精度训练
 ```
 
+### 多机多卡性能数据获取流程
+
+```shell
+     1. 安装环境
+     2. 开始训练，每个机器所请按下面提示进行配置
+             bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
+```
