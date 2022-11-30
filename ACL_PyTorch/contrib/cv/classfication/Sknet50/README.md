@@ -222,7 +222,7 @@
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-       python7 sknet_postprocess.py result ./val_label.txt ./ result.json
+       python sknet_postprocess.py result ./val_label.txt ./ result.json
       ```
 
       - 参数说明：
@@ -240,7 +240,7 @@
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3.7 ${ais_infer_path}/ais_infer.py --model=sk_resnet50_bs${bs}.om --loop=100 --batchsize=${batch_size}
+         python ${ais_infer_path}/ais_infer.py --model=sk_resnet50_bs${bs}.om --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：
