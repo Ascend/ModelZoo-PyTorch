@@ -17,6 +17,10 @@ do
         model_path=`echo ${para#*=}`
     elif [[ $para == --output_dir* ]];then
         output_dir=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh --conda_name=$conda_name
+        source activate $conda_name
     fi
 done
 
