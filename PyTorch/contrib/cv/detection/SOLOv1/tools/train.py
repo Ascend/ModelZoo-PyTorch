@@ -56,6 +56,7 @@ def parse_args():
         help='ids of gpus to use '
              '(only applicable to non-distributed training)')
     parser.add_argument('--seed', type=int, default=None, help='random seed')
+    parser.add_argument('--addr', type=str, default="127.0.0.1", help='address of master')
     parser.add_argument(
         '--fine-tune',
         action='store_true',
@@ -88,9 +89,9 @@ def parse_args():
 
 
 def main():
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'
     args = parse_args()
+    os.environ['MASTER_ADDR'] = args.addr
+    os.environ['MASTER_PORT'] = '29688'
     cfg = Config.fromfile(args.config)
     if args.data_root:
         cfg.data_root = args.data_root

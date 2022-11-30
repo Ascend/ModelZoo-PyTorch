@@ -37,17 +37,21 @@ def init_dist(launcher, backend='nccl', **kwargs):
 
 def _init_dist_pytorch(backend, **kwargs):
     # TODO: use local_rank instead of rank % num_gpus
-    rank = int(os.environ['RANK'])
+    local_rank = int(os.environ['RANK'])
     # npu diff
     # fox:根据GPU与NPU环境设置分布式代码
     if torch.cuda.is_available():
         num_gpus = torch.cuda.device_count()
-        torch.cuda.set_device(rank % num_gpus)
+        rank = local_rank
+        torch.cuda.set_device(local_rank % num_gpus)
     else:
         offset = 0 if os.getenv('NPUID', None) is None else int(os.environ['NPUID'])
         num_gpus = int(os.environ['RANK_SIZE'])
-        torch.npu.set_device((rank + offset) % num_gpus)
-    dist.init_process_group(backend=backend, world_size=num_gpus, rank=rank)
+        rank = local_rank + offset
+        torch.npu.set_device(rank % num_gpus)
+        world_size = num_gpus if os.getenv("WORLD_SIZE", None) is None else int(os.environ["WORLD_SIZE"])
+
+    dist.init_process_group(backend=backend, world_size=world_size, rank=rank)
 
 
 def _init_dist_mpi(backend, **kwargs):
