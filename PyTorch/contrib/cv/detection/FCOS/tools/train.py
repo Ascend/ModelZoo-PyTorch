@@ -153,7 +153,7 @@ def main():
         cfg.resume_from = args.resume_from
     if args.npu_ids is not None:
         cfg.npu_ids = args.npu_ids
-        torch.npu.set_device(cfg.npu_ids[0])
+        # torch.npu.set_device(cfg.npu_ids[0])
     else:
         cfg.npu_ids = range(1) if args.npus is None else range(args.npus)
         
