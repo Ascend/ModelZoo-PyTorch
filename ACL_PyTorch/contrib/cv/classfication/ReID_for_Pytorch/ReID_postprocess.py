@@ -22,6 +22,7 @@ import numpy as np
 import torch
 from utils.reid_metric import R1_mAP
 
+
 def get_pred_label(label_dir, pre_dir):
     img_paths = glob.glob(os.path.join(label_dir, '*.jpg'))
     pattern = re.compile(r'([-\d]+)_c(\d)')
@@ -34,9 +35,9 @@ def get_pred_label(label_dir, pre_dir):
 
         filename = img_path.split("/")[-1]
         if filename[-8:] == ".jpg.jpg":
-            bin_file = filename[:-8] + "_1.bin"
+            bin_file = filename[:-8] + "_0.bin"
         else:
-            bin_file = filename[:-4] + "_1.bin"
+            bin_file = filename[:-4] + "_0.bin"
         output = np.fromfile(os.path.join(pre_dir, bin_file), dtype="float32")
         output = torch.from_numpy(output)
         output = output.unsqueeze(0)
