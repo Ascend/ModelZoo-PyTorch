@@ -17,11 +17,11 @@ from auto_optimizer import OnnxGraph
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--n1',type=str,default='pse.onnx')
-parser.add_argument('--n2',type=str,default='pse_new.onnx')
+parser.add_argument('--input_onnx',type=str)
+parser.add_argument('--output',type=str)
 args = parser.parse_args()
 
-g = OnnxGraph.parse(args.n1)
+g = OnnxGraph.parse(args.input_onnx)
 resize_list = g.get_nodes('Resize')
 for node in resize_list:
 	node['coordinate_transformation_mode'] = 'pytorch_half_pixel'
@@ -29,4 +29,4 @@ for node in resize_list:
 	node['mode'] = 'linear'
 	node['nearest_mode'] = 'floor'
 	g[node.inputs[1]].value = np.array([], dtype=np.float32)
-g.save(args.n2)
+g.save(args.output)

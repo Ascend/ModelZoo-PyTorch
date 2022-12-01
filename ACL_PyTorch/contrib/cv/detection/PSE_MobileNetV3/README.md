@@ -47,7 +47,7 @@
 
     | 配套      | 版本    | 环境准备指导 |
     | --------- | ------- | ---------- |
-    | 固件与驱动 | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.RC1 | -          |
     | Python    | 3.7.5   | -          |
     
@@ -106,6 +106,7 @@
 
 2. 数据预处理  
     执行前处理脚本将原始数据转换为 OM 模型输入需要的 bin 文件。
+
     ```shell
     python3 pse_preprocess.py \
         --config configs/det/det_mv3_pse.yml \
@@ -122,13 +123,13 @@
 
 ## 模型转换
 
-1. PyTroch 模型转 ONNX 模型  
+1. PyTorch 模型转 ONNX 模型  
 
     step1: 下载 paddle 预训练模型
     下载 PaddleOCR 提供的 [预训练模型](https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_mv3_pse_v2.0_train.tar) 到 pse 目录下，然后解压。
     ```shell
     cd pse
-    wget https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/det_mv3_pse_v2.0_train.tar
+    wget https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_mv3_pse_v2.0_train.tar
     tar xf det_mv3_pse_v2.0_train.tar
     cd ..
     ```
@@ -165,13 +166,25 @@
     注：PaddleOCR模型转ONNX，详情请参考 [Paddle2ONNX模型转化与预测](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/deploy/paddle2onnx/readme.md)。
 
     step4: 修改ONNX
+
+    安装auto_optimizer
+
+    ```shell
+    git clone https://gitee.com/ascend/auto-optimizer.git
+    cd auto-optimizer
+    pip install -r requirements.txt
+    python setup.py install
+
     ```
-    python3 modify_onnx.py --input_onnx /a/b/c/input.onnx --output /a/b/c/output.onnx
+    因Resize算子精度问题，修改ONNX模型
+
+    ```
+    python3 modify_onnx.py --input_onnx pse/PSE_MobileNetV3.onnx --output pse/modified.onnx
 
     ```
     参数说明：
-    xxxxxxxxxxxx
-    xxxxxxxxxxxx
+    + --input_onnx: 输入的ONNX模型的路径
+    + --output: 生成ONNX模型的保存路径
 
 2. ONNX 模型转 OM 模型  
 
@@ -201,8 +214,8 @@
     
     # 执行 ATC 进行模型转换
     atc --framework=5 \
-        --model=pse/PSE_MobileNetV3.onnx \
-        --input_shape="x:${bs},3,704,1280" \
+        --model=pse/modified.onnx \
+        --input_shape="x:${bs},3,736,1312" \
         --output=pse/PSE_MobileNetV3_bs${bs} \
         --input_format=NCHW \
         --log=error \
@@ -236,7 +249,7 @@
 
     # 获取推理工具源码
     git clone https://gitee.com/ascend/tools.git ascend_tools/
-    cp -r ascend_tools/ais-bench_workload/tool/ais_infer .
+    cp -r ascend_tools/ais-bench_workload/tool/ais_infer /xxx/PaddleOCR/.
 
     # 打包
     cd ais_infer/backend/
@@ -288,9 +301,9 @@
     
     运行成功后，程序会打印出模型的精度指标：
     ```
-    precision:0.7829198473282443
-    recall:0.7900818488204141
-    hmean:0.7864845434938893
+    precision:0.8214486243683324
+    recall:0.7043813192103996
+    hmean:0.7584240539139452
     ```
 
 4. 性能验证  
@@ -307,35 +320,22 @@
     python3 ais_infer/ais_infer.py --model pse/PSE_MobileNetV3_bs1.om --loop 100 --batchsize 1
     ```
 
-    执行完纯推理命令，程序会打印出与性能相关的指标：
-    ```
-    [INFO] -----------------Performance Summary------------------
-    [INFO] H2D_latency (ms): min = 0.6420612335205078, max = 0.6420612335205078, mean = 0.6420612335205078, median = 0.6420612335205078, percentile(99%) = 0.6420612335205078
-    [INFO] NPU_compute_time (ms): min = 3.384000062942505, max = 3.48799991607666, mean = 3.3978900051116945, median = 3.3959999084472656, percentile(99%) = 3.4691900992393494
-    [INFO] D2H_latency (ms): min = 0.8094310760498047, max = 0.8094310760498047, mean = 0.8094310760498047, median = 0.8094310760498047, percentile(99%) = 0.8094310760498047
-    [INFO] throughput 1000*batchsize(1)/NPU_compute_time.mean(3.3978900051116945): 294.30028591144116
-    [INFO] ------------------------------------------------------
-    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，则找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
     
-    计算吞吐率：
-    + 执行纯推理时若指定了 batchsize，则找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率，本例中的吞吐率为 2302.35 fps.
-    + 若没有指定 batchsize，则可以通过 **NPU_compute_time** 中的 **mean** 来计算：
-    $$throughput = \frac{batchsize}{mean} * 1000 = 294.30(fps)$$  
-
 ----
 # 性能&精度
 
-在310P设备上，OM模型个各batchsize的精度与目标精度[{precision:78.2%, recall:79.1%, hmean:78.65%}](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/algorithm_det_pse.md#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B)各指标的相对误差均低于 1%，当 batchsize 为 4 时模型性能最优，达 314 fps.
+在310P设备上，OM模型个各batchsize的精度与目标精度[{precision:82.20%, recall:70.48%, hmean:75.89%}](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/algorithm_det_pse.md#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B)各指标的相对误差均低于 1%，当 batchsize 为 1 时模型性能最优，达 231.03 fps.
 
 各batchsize的精度与性能指标如下：
 
 | 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
 | --------- | -------- | --------- | -------------------------------------------------------- | --------- |
-|Ascend310P3| 1        | ICDAR2015 | {'precision': 0.7827, 'recall': 0.7906, 'hmean': 0.7866} | 282.8 fps |
-|Ascend310P3| 4        | ICDAR2015 | {'precision': 0.7827, 'recall': 0.7906, 'hmean': 0.7866} | 314.0 fps |
-|Ascend310P3| 8        | ICDAR2015 | {'precision': 0.7827, 'recall': 0.7906, 'hmean': 0.7866} | 301.8 fps |
-|Ascend310P3| 16       | ICDAR2015 | {'precision': 0.7827, 'recall': 0.7906, 'hmean': 0.7866} | 287.3 fps |
-|Ascend310P3| 32       | ICDAR2015 | {'precision': 0.7827, 'recall': 0.7906, 'hmean': 0.7866} | 289.6 fps |
-|Ascend310P3| 64       | ICDAR2015 | {'precision': 0.7827, 'recall': 0.7906, 'hmean': 0.7866} | 292.2 fps |
+|Ascend310P3| 1        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 231.03 fps |
+|Ascend310P3| 4        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 157.67 fps |
+|Ascend310P3| 8        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 154.46 fps |
+|Ascend310P3| 16       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 150.21 fps |
+|Ascend310P3| 32       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 166.85 fps |
+|Ascend310P3| 64       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 190.27 fps |
 
 
