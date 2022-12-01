@@ -81,6 +81,8 @@ class opts(object):
                              help='the current process id')
     self.parser.add_argument('--world_size', type=int, default=-1, 
                              help='world_size') 
+    self.parser.add_argument('--rank', type=int, default=0, help="rank of machine") 
+    self.parser.add_argument('--addr', type=str, default='127.0.0.1', help="addr of master")
     self.parser.add_argument('--port', type=str, default='44444', 
                              help='port')
     
