@@ -45,6 +45,7 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 from bert4torch.snippets import sequence_padding, Callback, ListDataset, seed_everything
+from bert4torch.optimizers import get_linear_schedule_with_warmup
 from bert4torch.layers import CRF
 from bert4torch.tokenizers import Tokenizer
 from bert4torch.models import build_transformer_model, BaseModel
@@ -86,6 +87,7 @@ print(device)
 
 maxlen = 256
 batch_size = 16
+warm_factor = 0.1
 categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
 categories_id2label = {i: k for i, k in enumerate(categories)}
 categories_label2id = {k: i for i, k in enumerate(categories)}
@@ -190,6 +192,9 @@ if 'npu' in device:
 else:
     optimizer = optim.Adam(model.parameters(), lr=2e-5)
 
+updates_total = len(train_dataloader) * args.train_epochs
+scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warm_factor*updates_total, num_training_steps=updates_total)
+
 class Loss(nn.Module):
     def forward(self, outputs, labels, seq_length=None):
         if distributed:
@@ -208,9 +213,9 @@ if distributed:
 
 # 支持多种自定义metrics = ['accuracy', acc, {acc: acc}]均可
 if distributed:
-    model.module.compile(loss=Loss(), optimizer=optimizer, metrics=acc, use_apex=True, clip_grad_norm=1.0)
+    model.module.compile(loss=Loss(), optimizer=optimizer, metrics=acc, use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
 else:
-    model.compile(loss=Loss(), optimizer=optimizer, metrics=acc, use_apex=True, clip_grad_norm=1.0)
+    model.compile(loss=Loss(), optimizer=optimizer, metrics=acc, use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
 
 def evaluate(data):
     X, Y, Z = 1e-10, 1e-10, 1e-10
