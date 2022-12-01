@@ -95,6 +95,7 @@ e2e_time=$(($end_time - $start_time))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=$(grep "train_steps_per_second" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F "=" '{print $2}' | sed 's/^[ \t]*//g')
+FPS=`echo "$FPS" | awk '{printf "%.2f\n",$1*8}'`
 #打印，不需要修改
 echo "Final Performance iter/sec : $FPS"
 
