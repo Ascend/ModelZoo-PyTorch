@@ -195,7 +195,7 @@ def main(args):
             train_loader.sampler.set_epoch(epoch)
         for _, (img, local_labels) in enumerate(train_loader):
             global_step += 1
-            if args.perf_only and global_step > 10000:
+            if args.perf_only and global_step > 1000:
                 exit()
 
             local_embeddings = backbone(img)
