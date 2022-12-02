@@ -20,7 +20,8 @@ import time
 
 import mmcv
 import torch
-from mmcv import Config
+from mmcv import Config,  DictAction
+
 from mmcv.runner import init_dist, load_state_dict
 
 from mmdet import __version__
@@ -78,6 +79,13 @@ def parse_args():
         help='apex opt-level')
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument(
+        '--cfg-options',
+        nargs='+',
+        action=DictAction,
+        help='override some settings in the used config, the key-value pair '
+        'in xxx=yyy format will be merged into config file.')
+
+    parser.add_argument(
         '--autoscale-lr',
         action='store_true',
         help='automatically scale lr with the number of gpus')
@@ -93,6 +101,8 @@ def main():
     os.environ['MASTER_ADDR'] = args.addr
     os.environ['MASTER_PORT'] = '29688'
     cfg = Config.fromfile(args.config)
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
     if args.data_root:
         cfg.data_root = args.data_root
         cfg.data.train.ann_file = cfg.data_root + 'annotations/instances_train2017.json'

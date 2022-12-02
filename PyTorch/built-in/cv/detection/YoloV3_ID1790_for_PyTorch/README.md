@@ -158,7 +158,7 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
      ```shell
      	1. 安装环境
      	2. 开始训练，每个机器所请按下面提示进行配置
-             bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size*所有卡数 --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
+             bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
      ```
 
    --data\_path参数填写数据集路径。

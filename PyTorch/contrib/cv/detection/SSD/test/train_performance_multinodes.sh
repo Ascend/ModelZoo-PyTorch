@@ -115,7 +115,8 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-fps_list=$(python3.7 calc_fps.py ./work_dirs/ssd300_coco_npu_8p/*.json ${RANK_SIZE} ${batch_size})
+GPU_NUM=$((RANK_SIZE * nnodes))
+fps_list=$(python3.7 calc_fps.py ./work_dirs/ssd300_coco_npu_8p/*.json ${GPU_NUM} ${batch_size})
 FPS=`echo ${fps_list##* }`
 FPS=${FPS%\}*}
 # 打印，不需要修改
