@@ -109,7 +109,7 @@ e2e_time=$(( $end_time - $start_time ))
 
 FPS=`grep -a 'fps: '  $cur_path/output/${Network}/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "fps: " '{print $NF}'|awk -F "," '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 #吞吐量
-ActualFPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${FPS}'}'`
+ActualFPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${FPS}'*'${nnodes}'}'`
 echo "Final Performance images/sec : $ActualFPS"
 
 #输出训练精度,需要模型审视修改

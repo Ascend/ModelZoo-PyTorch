@@ -94,7 +94,7 @@ NODE_RANK=$node_rank \
 ADDR=$master_addr \
 PORT=$master_port ./tools/dist_train.sh ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x_coco.py 8 \
     --npu-ids $((node_rank * RANK_SIZE)) \
-    --cfg-options optimizer.lr=0.01 total_epochs=1 data_root=$data_path \
+    --cfg-options optimizer.lr=0.01 total_epochs=1 data_root=$data_path data.samples_per_gpu=${batch_size} \
     --seed 0 \
     --no-validate \
     --opt-level O1 \
@@ -109,7 +109,9 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+# FPS=`grep -a 'FPS'  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+time=`grep -a 'time' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
+FPS=`awk 'BEGIN{print "%.2f\n", '${batch_size}'*'${RANK_SIZE}'*'${nnodes}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
