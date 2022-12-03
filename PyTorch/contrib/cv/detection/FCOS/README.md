@@ -80,17 +80,16 @@ cd FCOS
 ```
 
 ### 1p
-导入环境变量，修改train_1p.sh权限并运行
+
 ```
-chmod +x ./scripts/train_1p.sh
-bash ./scripts/train_1p.sh
+
+bash ./test/train_full_1p.sh  --data_path=数据集路径
 ```
 
 ### 8p
-导入环境变量，修改train_8p.sh权限并运行
+
 ```
-chmod +x ./scripts/train_8p.sh
-bash ./scripts/train_8p.sh
+bash ./test/train_full_8p.sh  --data_path=数据集路径
 ```
 
 ### 多机多卡性能数据获取流程
