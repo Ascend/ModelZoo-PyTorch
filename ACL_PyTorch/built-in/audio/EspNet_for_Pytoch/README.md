@@ -10,16 +10,22 @@ pip3.7 install -r requirements.txt
 
 2. 安装acl_infer，https://gitee.com/peng-ao/pyacl
 
-3. 获取，修改与安装开源模型代码  
+3. 安装om_gener, https://gitee.com/peng-ao/om_gener
 
-   EspNet安装比较复杂，请按照https://espnet.github.io/espnet/installation.html安装指导安装
+4. 安装开源模型代码   
+
+   EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation.html
+
+   若安装mkl失败，则去launchpad.net/ubuntu/+source/intel-mkl/2020.0.166-1  
+
+   下载 intel-mkl_2020.0.166.orig.tar.gz 文件，解压后 bash install.sh安装即可
 
    ```
    cd espnet
-   git checkout v0.10.5
+   git checkout v.0.10.5
    ```
 
-4. 下载网络权重文件
+5. 下载网络权重文件
 
    下载路径：https://github.com/espnet/espnet/blob/master/egs/aishell/asr1/RESULTS.md
 
@@ -27,7 +33,7 @@ pip3.7 install -r requirements.txt
 
    解压，将对应的conf，data, exp文件夹置于espnet/egs/aishell/asr1
 
-5. 数据集下载：
+6. 数据集下载：
 
    在espnet/egs/aishell/asr1/文件夹下运行bash run.sh --stage -1 –stop_stage -1下载数据集
 
@@ -39,13 +45,19 @@ pip3.7 install -r requirements.txt
 
    运行bash run.sh --stage 3 --stop_stage 3处理数据集
 
-6. 导出onnx，生成om离线文件
+   若缺少对应的文件夹，则自己建立文件夹
+
+7. 导出onnx，生成om离线文件
+
+   首先将export_onnx.sh和adaptespnet.py置于espnet/egs/aishell/asr1文件夹下
 
    ①静态shape
 
    将export_onnx.diff放在espnet根目录下，
 
    ```
+   git checkout .
+   git checkout v.0.10.5
    patch -p1 < export_onnx.diff
    cd ./egs/aishell/asr1/
    bash export_onnx.sh
@@ -58,19 +70,26 @@ pip3.7 install -r requirements.txt
    将export_onnx_dynamic.diff放在espnet根目录下，运行脚本生成encoder.onnx
 
    ```
+   git checkout .
+   git checkout v.0.10.5
    patch -p1 < export_onnx_dynamic.diff
    cd ./egs/aishell/asr1/
    bash export_onnx.sh
    ```
 
-7. 运行encoder.sh生成离线om模型， encoder_262_1478.om
+8. 运行encoder_dynamic.sh生成离线动态shape模型，encoder.om
 
    ${chip_name}可通过`npu-smi info`指令查看
 
    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
    ```
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   bash encoder_dynamic.sh Ascend${chip_name} # Ascend310P3
+   ```
+
+9. 运行encoder.sh生成离线om模型， encoder_262_1478.om
+
+   ```
    bash encoder.sh Ascend${chip_name} # Ascend310P3
    ```
 
@@ -94,6 +113,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
    ```
    cd espnet
+   git checkout .
+   git checkout v.0.10.5
    patch -p1 < acc.diff
    cd espnet/egs/aishell/asr1
    bash acc.sh
@@ -105,6 +126,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
    ```
    cd espnet
+   git checkout .
+   git checkout v.0.10.5
    patch -p1 < acc_dynamic.diff
    cd espnet/egs/aishell/asr1
    bash acc.sh
@@ -114,14 +137,27 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 
 3. 获取性能
 
-   运行脚本infer_perf.py
+   需要首先配置环境变量:
+
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   ```
+
+   运行脚本infer_perf.py获取分档下的性能
 
    ```
    python3.7.5 infer_perf.py即可获取打印的fps性能
    ```
 
+   运行脚本infer_perf_dynamic.py获取动态shape下的性能
+   
+   ```
+   python3.7.5 infer_perf_dynamic.py即可获取打印的fps性能
+   ```
+   
    
 
 |       模型       | 官网pth精度 | 310P离线推理精度 | gpu性能 | 310P性能 |
 | :--------------: | :---------: | :-------------: | :-----: | :-----: |
 | espnet_conformer |    5.1%     |      分档5.4%；动态：5.1%      | 261fps  | 分档：430fps；动态：25fps |
+
