@@ -1,8 +1,11 @@
 torchvision
 onnx
-cv2
+opencv-python
 numpy
-os
 scipy
+decorator
+sympy
+mpmath
+matplotlib
 Pillow==9.1.0
 

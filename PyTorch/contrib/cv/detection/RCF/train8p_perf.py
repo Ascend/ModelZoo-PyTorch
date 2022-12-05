@@ -23,19 +23,38 @@ import os
 from data_loader import BSDS_RCFLoader
 from torch.utils.data import DataLoader
 import apex.amp as amp
+import argparse
 from apex.optimizers import NpuFusedSGD
 import time
 
-CALCULATE_DEVICE = "npu:0"
+def parse_arg():
+    parser = argparse.ArgumentParser(description="train RCF")
+    parser.add_argument('--npu', help='npu id', type=str)
+    args = parser.parse_args()
+    return args.npu
 
-model = models.resnet101(pretrained=True).npu()
+os.environ['MASTER_ADDR'] = '127.0.0.1'
+os.environ['MASTER_PORT'] = '29679'
 
-init_lr = 1e-2
+npu = parse_arg()
+
+# 8p
+# ----------------------------------------------------------------
+torch.distributed.init_process_group(backend='hccl', world_size=8, rank=int(npu))
+
+device = torch.device("npu:{}".format(npu))
+torch.npu.set_device(device)
+# ----------------------------------------------------------------
+
+model = models.resnet101(pretrained=True).to(device)
+
+# init_lr = 8*1e-2
+init_lr = 8*1e-3
 batch_size = 3
 
-# resume = 'ckpt/40001.pth'
-# checkpoint = torch.load(resume)
-# model.load_state_dict(checkpoint)
+#resume = 'ckpt/only-final-lr-0.08-iter-40000.pth'
+#checkpoint = torch.load(resume)
+#model.load_state_dict(checkpoint)
 
 def adjust_lr(init_lr, now_it, total_it):
     power = 0.9
@@ -55,9 +74,14 @@ def save_ckpt(model, name):
 
 train_dataset = BSDS_RCFLoader(split="train")
 # test_dataset = BSDS_RCFLoader(split="test")
+# 添加trainsampler
+# ----------------------------------------------------------------
+train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+
 train_loader = DataLoader(
     train_dataset, batch_size=batch_size,
-    num_workers=8, drop_last=True, shuffle=True)
+    num_workers=8, drop_last=True, sampler=train_sampler)
+# ----------------------------------------------------------------
 
 
 def cross_entropy_loss_RCF(prediction, label):
@@ -76,7 +100,7 @@ def cross_entropy_loss_RCF(prediction, label):
 
 
 model.train()
-total_epoch = 1
+total_epoch = 5
 each_epoch_iter = len(train_loader)
 total_iter = total_epoch * each_epoch_iter
 
@@ -84,30 +108,21 @@ print_cnt = 10
 ckpt_cnt = 10000
 cnt = 0
 
+
 optim = make_optim(model, adjust_lr(init_lr, cnt, total_iter))
-model, optim = amp.initialize(model, optim, opt_level="O2", loss_scale=128.0)
-torch.npu.set_device(CALCULATE_DEVICE)
+# ---------------------------------------------------------------------------------
+model, optim = amp.initialize(model, optim, opt_level="O2",loss_scale=128.0, combine_grad=True)
+model = torch.nn.parallel.DistributedDataParallel(model,device_ids=[npu],broadcast_buffers=False,find_unused_parameters=True)
+# ---------------------------------------------------------------------------------
+
 
 for epoch in range(total_epoch):
     avg_loss = 0.
     for i, (image, label) in enumerate(train_loader):
         start = time.time()
         cnt += 1
-       
-        image, label = image.npu(), label.npu()
-
-#         if i==6:
-#             with torch.autograd.profiler.profile(use_npu=True) as prof:
-#                 outs = model(image, label.size()[2:])
-#                 total_loss = cross_entropy_loss_RCF(outs[-1], label)
-#                 optim.zero_grad()
-# #                total_loss.backward()
-#                 with amp.scale_loss(total_loss, optim) as scaled_loss:
-#                      scaled_loss.backward()
-#                 optim.step()
-#             print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-#             prof.export_chrome_trace("output.prof") # "output.prof"为输出文件地址
-
+        
+        image, label = image.to(device), label.to(device)
         outs = model(image, label.size()[2:])
         total_loss = cross_entropy_loss_RCF(outs[-1], label)
         optim.zero_grad()
@@ -115,14 +130,13 @@ for epoch in range(total_epoch):
         with amp.scale_loss(total_loss, optim) as scaled_loss:
             scaled_loss.backward()
         optim.step()
-        fps = batch_size / (time.time() - start)
+        fps = 8*batch_size / (time.time() - start)
 
         avg_loss += float(total_loss)
         if cnt % print_cnt == 0:
             print('[{}/{}] epoch:{} loss:{} avg_loss:{} FPS:{}'.format(cnt, total_iter, epoch, float(total_loss), avg_loss / print_cnt, fps), flush=True)
             avg_loss = 0
 
-        if cnt % ckpt_cnt == 0:
-            save_ckpt(model, 'only-final-lr-{}-iter-{}'.format(init_lr, cnt))
-
+        if cnt % ckpt_cnt == 0 and int(npu) % 8 == 0:
+            save_ckpt(model.module, 'only-final-lr-{}-iter-{}'.format(init_lr, cnt))
 
