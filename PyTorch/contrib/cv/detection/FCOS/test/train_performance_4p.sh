@@ -14,7 +14,7 @@ fi
 
 
 #集合通信参数,不需要修改
-export RANK_SIZE=1
+export RANK_SIZE=4
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -25,7 +25,6 @@ Network="FCOS"
 #训练batch_size,,需要模型审视修改
 batch_size=2
 device_id=0
-
 #参数校验，不需要修改
 for para in $*
 do
@@ -78,9 +77,9 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-PORT=29880 ./tools/dist_train.sh ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x_coco.py 1 \
-    --npu-ids ${device_id} \
-    --cfg-options optimizer.lr=0.00125 data.samples_per_gpu=${batch_size} total_epochs=1 data_root=$data_path \
+PORT=29888 ./tools/dist_train.sh ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x_coco.py 4 \
+    --npu-ids 0 \
+    --cfg-options optimizer.lr=0.01 data.samples_per_gpu=${batch_size} total_epochs=1 data_root=$data_path \
     --seed 0 \
     --opt-level O1 \
     --loss-scale 32.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

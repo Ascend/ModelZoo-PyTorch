@@ -38,7 +38,7 @@ from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          Fp16OptimizerHook, OptimizerHook, build_optimizer)
 from mmcv.utils import build_from_cfg
-
+from mmcv.runner import get_dist_info
 from mmdet.core import DistEvalHook, EvalHook
 from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
@@ -118,14 +118,15 @@ def train_detector(model,
         model = MMDataParallel(
             model, device_ids=cfg.npu_ids)  # mode with apex
 
-
+    _, world_size = get_dist_info()
     # build runner
     runner = EpochBasedRunner(
         model,
         optimizer=optimizer,
         work_dir=cfg.work_dir,
         logger=logger,
-        meta=meta)
+        meta=meta,
+        num_of_gpus=world_size)
     # an ugly workaround to make .log and .log.json filenames the same
     runner.timestamp = timestamp
     # fp16 setting
