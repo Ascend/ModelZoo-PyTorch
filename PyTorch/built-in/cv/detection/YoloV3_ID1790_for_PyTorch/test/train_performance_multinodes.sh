@@ -132,7 +132,7 @@ do
             --master-addr $master_addr \
             --master-port $master_port \
             --cfg-options \
-            samples_per_gpu=${batch_size} \
+            data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
             --seed 0 \
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -142,7 +142,7 @@ do
             --master-addr $master_addr \
             --master-port $master_port \
             --cfg-options \
-            samples_per_gpu=${batch_size} \
+            data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
             --seed 0 \
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
