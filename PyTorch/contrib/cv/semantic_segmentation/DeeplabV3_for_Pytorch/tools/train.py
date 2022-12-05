@@ -22,6 +22,8 @@ import time
 
 import mmcv
 import torch
+if torch.__version__>= '1.8':
+      import torch_npu
 from mmcv.runner import init_dist
 from mmcv.utils import Config, DictAction, get_git_hash
 
@@ -81,10 +83,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-
     os.environ['MASTER_ADDR'] = args.master_addr
     os.environ['MASTER_PORT'] = args.master_port
-
     cfg = Config.fromfile(args.config)
     if args.options is not None:
         cfg.merge_from_dict(args.options)

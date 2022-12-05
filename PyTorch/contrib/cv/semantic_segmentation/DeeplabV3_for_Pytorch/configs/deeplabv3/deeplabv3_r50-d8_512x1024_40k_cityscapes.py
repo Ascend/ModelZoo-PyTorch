@@ -32,7 +32,7 @@ evaluation = dict(interval=1000)
 optimizer = dict(type='NpuFusedSGD', lr=0.06)
 optimizer_config = dict(type='AmpOptimizerHook')
 opt_level = 'O1'
-loss_scale = 1024
+loss_scale = 256
 
 log_config = dict(
     interval=50,
