@@ -40,4 +40,3 @@ log_config = dict(
         dict(type='TextLoggerHook_FPS', by_epoch=False),
     ])
 
-device_num = 8

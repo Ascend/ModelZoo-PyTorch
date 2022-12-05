@@ -7,8 +7,8 @@ Network="DeeplabV3_for_PyTorch"
 # 训练batch_size
 batch_size=48
 # 训练使用的npu卡数
-export RANK_SIZE=8
-export WORLD_SIZE=8
+export RANK_SIZE=4
+export WORLD_SIZE=4
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
