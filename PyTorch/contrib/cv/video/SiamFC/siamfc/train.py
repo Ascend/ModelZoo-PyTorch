@@ -38,7 +38,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 # from apex.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 
-import torch.npu
+if torch.__version__ >= '1.8':
+    import torch_npu
 import random
 import time
 
@@ -170,34 +171,33 @@ def train(data_dir, workers, epochs):
         batch_time = AverageMeter('Time', ':6.3f')
         train_loss = []
         model.train()
+
+        end = time.time()
         for i, data in enumerate(tqdm(trainloader)):
             exemplar_imgs, instance_imgs = data
             exemplar_var, instance_var = Variable(exemplar_imgs.npu()), Variable(instance_imgs.npu())
 
             optimizer.zero_grad()
 
-            # reset time
-            end = time.time()
             outputs = model([exemplar_var, instance_var])  # [batch, 1, 15, 15]
-            cost_time = time.time() - end
+
             loss = criterion(outputs, train_gt, train_weight)
-            end = time.time()
             # using apex
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
             # without apex
             # loss.backward()
             # calculate time
-            cost_time += time.time() - end
-            end = time.time()
             optimizer.step()  # update parameter
-            cost_time -= time.time() - end
+            cost_time = time.time() - end
 
             batch_time.update(cost_time)
 
             step = epoch * len(trainloader) + i
             summary_writer.add_scalar('train/loss', loss.data, step)
             train_loss.append(loss.data)
+            end = time.time()
+            
         train_loss = torch.mean(torch.stack(train_loss))
         valid_loss = []
         model.eval()  # test mode
@@ -317,13 +317,12 @@ def train_dist(args):
         train_loss = []
         model.train()
 
+        torch.npu.synchronize()
+        end = time.time()
         for i, data in enumerate(trainloader):
-            end = time.time()
             exemplar_imgs, instance_imgs = data
             exemplar_var, instance_var = Variable(exemplar_imgs.to(args.device)), Variable(
                 instance_imgs.to(args.device))
-            cost_time = (time.time() - end) / 2
-            end = time.time()
             optimizer.zero_grad()
             outputs = model((exemplar_var, instance_var))  # [batchsize, 1, 15, 15]
 
@@ -342,8 +341,9 @@ def train_dist(args):
             # synchronize between all devices
             torch.npu.synchronize()
             # calculate time
-            cost_time += time.time() - end
+            cost_time = time.time() - end
             batch_time.update(cost_time)
+            end = time.time()
 
             step = epoch * len(trainloader) + i
             if args.is_master:
