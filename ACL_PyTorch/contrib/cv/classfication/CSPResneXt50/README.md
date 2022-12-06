@@ -1,245 +1,252 @@
-# CSPResNeXt50 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 开源精度](#62-开源精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-
-## 1 模型概述
-
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)**  
-
-### 1.1 论文地址
-[CSPResNeXt50论文](https://arxiv.org/pdf/1911.11929v1.pdf)  
-
-### 1.2 代码地址
-[CSPResNeXt50代码](https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/cspnet.py)  
-branch:master  
-commit id:d584e7f617a4d0f1a0b4838227bd1f8852dfa236  
+# CSPResNeXt50模型-推理指导
 
 
-## 2 环境说明
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
--   **[深度学习框架](#21-深度学习框架)**  
-
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
-```
-CANN 5.1.RC2
-
-pytorch = 1.10.2
-torchvision = 0.11.3
-onnx =  1.12.0
-```
-### 2.2 python第三方库
-
-```
-numpy == 1.22.3
-Pillow ==  9.2.0
-opencv-python ==  4.6.0.66
-```
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
-
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
-[CSPResNeXt50预训练pth权重文件](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/cspresnext50_ra_224-648b4713.pth)  
-文件md5sum: 9a123c2b8a4eafd42926d2f3c105ed3d  
-
-```
-wget http://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/cspresnext50_ra_224-648b4713.pth
-```
-2.cspresnext50模型代码在代码仓中
-
-```
-git clone https://github.com/rwightman/pytorch-image-models.git 
-```
- 3.编写pth2onnx脚本cspresnext50_pth2onnx.py
-
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
-
-4.执行pth2onnx脚本，生成onnx模型文件
-
-```
-python3.7 cspresnext_pth2onnx.py cspresnext50_ra_224-648b4713.pth cspresnext.onnx
-```
-
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明  
-
-### 3.2 onnx转om模型
-
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
-${chip_name}可通过`npu-smi info`指令查看，例：310P3
-![输入图片说明](../../../../../image.png)
-```
-atc --framework=5 --model=./cspresnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=cspresnext_bs1 --log=debug --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_cspresnext.config --enable_small_channel=1
-```
-参数说明：--input_shape：输入数据的shape。  
-    --output：输出的OM模型。  
-    --log：日志级别。  
-    --soc_version：处理器型号，Ascend310或Ascend710。  
-    --soc_version：处理器型号。  
-    --insert_op_config：插入算子的配置文件路径与文件名，例如aipp预处理算子。  
-    --enable_small_channel：Set enable small channel. 0(default): disable; 1: enable  
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imageNet/val_label.txt。
-
-### 4.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 cspresnext_torch_preprocess.py /opt/npu/imageNet/val ./prep_dataset
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本get_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 get_info.py bin ./prep_dataset ./cspresnext_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.2 推理benchmark工具用户指南 01
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=cspresnext_bs1.om -input_text_path=./cspresnext_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
-
-## 6 精度对比
-
--   **[离线推理精度](#61-离线推理精度)**  
--   **[开源精度](#62-开源精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理精度统计
-
-后处理统计TopN精度
-
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /opt/npu/imageNet/val_label.txt ./ result.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-查看输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "80.06%"}, {"key": "Top2 accuracy", "value": "89.18%"}, {"key": "Top3 accuracy", "value": "92.33%"}, {"key": "Top4 accuracy", "value": "93.98%"}, {"key": "Top5 accuracy", "value": "94.94%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上   
-
-### 6.2 开源精度
-[论文精度](https://arxiv.org/pdf/1911.11929v1.pdf)
-
-```
-Model               	Acc@1     Acc@5
-CSPResNeXt-50		     77.9      94.0
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
-
->没有遇到精度不达标的问题，故不需要进行精度调试  
-
-## 7 性能对比
-
--   **[npu性能数据](#71-npu性能数据)**  
-
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
-1.benchmark工具在整个数据集上推理获得性能数据  
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
-  
-Interface throughputRate: 516.646，516.646x4既是batch16 310单卡吞吐率  
-batch4性能：  
- ./benchmark.x86_64 -round=20 -batch_size=4 -device_id=0 -om_path=cspresnext_bs4.om
-
-batch8性能：
-./benchmark.x86_64 -round=20 -batch_size=8 -device_id=0 -om_path=cspresnext_bs8.om
-
-batch32性能：
-./benchmark.x86_64 -round=20 -batch_size=32 -device_id=0 -om_path=cspresnext_bs32.om
-|        | bs1      | bs4      | bs8      | bs16     | bs32     |
-|--------|----------|----------|----------|----------|----------|
-| 单卡     | 416.753  | 557.636  | 525.834  | 516.646  | 430.524  |
-| 单卡性能x4 | 1667.012 | 2230.544 | 2103.338 | 2066.584 | 1722.096 |
+    - [输入输出数据](#section540883920406)
 
 
 
- **性能优化：**  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-1.从profiling数据的op_statistic_0_1.csv看出影响性能的是TransData，StridedSliceD，Conv2D算子，Conv2D算子不存在问题，由于格式转换om模型StridedSliceD前后需要有TransData算子，从op_summary_0_1.csv可以看出单个TransData或Transpose算子aicore耗时，确定是否可以优化  
-2.蓝区社区版本CANN 5.0.2.alpha003优化了StridedSliceD，可以使bs1,4,8,16达标  
-3.修改five_2_four.py与four_2_five.py优化TransData可以使bs32达标   
-> five_2_four.py:9928  
-> 修改如下：  
-elif dst_format.lower() == "nchw" and dst_shape in [[2560, 512, 4, 26], [2560, 512, 1, 26], [2560, 256, 8, 25],  
-                                                    [16, 240, 7, 7], [16, 120, 14, 14],  
-                                                    [32,2048,7,7],[32,1024,14,14],[32,256,56,56],[32,512,28,28]]:
-														
-> four_2_five.py:1219  
-修改如下：  
-if src_format.upper() == "NCHW" and shape_input in [[16, 240, 7, 7], [16, 120, 14, 14],  
-                                                    [32,1024,7,7],[32,3,224,224],[32,128,56,56]] and dtype_input == "float16":  
->
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-优化后测得单卡吞吐率bs32: 369.97x4=1479.88fps  
-同理优化bs1 4 8 16的Transdata，上面记录的都是优化后的性能数据
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+CSPResNeXt50提出了跨阶段局部网络（CSPNet），用来缓解以往工作需要从网络架构角度进行大量推理计算的问题，把这个问题归结为网络优化中的[重复梯度信息]。CSPNet通过整合网络阶段开始和结束的特征图来尊重梯度的可变性，在实验中，该方法减少了20%的计算量。
+
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/rwightman/pytorch-image-models
+  commit_id=d584e7f617a4d0f1a0b4838227bd1f8852dfa236
+  model_name=CSPResNeXt50
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | ND         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1000 | ND           |
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动 
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/rwightman/pytorch-image-models.git
+   cd pytorch-image-models            
+   git reset --hard d584e7f617a4d0f1a0b4838227bd1f8852dfa236
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型使用[ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org)的5万张验证集进行测试，以ILSVRC2012为例，用户需获取[ILSVRC2012数据集](http://www.image-net.org/download-images)，并上传到服务器，图片与标签分别存放在./imagenet/val与./imageNet/val_label.txt。
+   ```
+   ├── imagenet
+       ├── val
+       ├── val_label.txt 
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行cspresnext_preprocess.py脚本，完成预处理。
+
+   ```
+   python cspresnext_preprocess.py ./imageNet/val ./prep_dataset 
+   ```
+   - 参数说明：
+
+      -   第一个参数：数据集
+      -   第二个参数：预处理保存地址
+
+   
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. [获取权重文件](https://drive.google.com/open?id=1IxKu5lAYCo4UpzAl5pOBIDAvC843vjn1)
+     cspresnext50_ra_224-648b4713.pth
+
+   2. 导出onnx文件。
+
+      1. 使用cspresnext_pth2onnx.py导出onnx文件。
+         ```
+         python cspresnext_pth2onnx.py --pth=cspresnext50_ra_224-648b4713.pth --onnx=cspresnext.onnx
+         ```
+         - pth：pth权重文件
+         - onnx：onnx文件名
+         
+         获得cspresnext.onnx文件。
+
+
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 \
+             --model=./cspresnext.onnx \
+             --input_format=NCHW \
+             --input_shape="image:${bs},3,224,224" \
+             --output=cspresnext_bs${bs} \
+             --log=debug \
+             --soc_version=Ascend${chip_name} \
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成<u>***cspresnext_bs${bs}.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=cspresnext_bs${bs}.om --input=./prep_dataset/ --output=./ --output_dirname=result --outfmt=TXT --batchsize=${bs}
+        ```
+
+        -   参数说明：
+             -   model：om文件路径。
+             -   input：预处理文件。
+             -   output：推理文件保存路径
+             -   output_dirname：推理文件保存目录
+
+        推理后的输出保存在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
+
+   3. 精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据
+
+      ```
+      python3 cspresnext_postprocess.py --result_path=./result_summary.json --gtfile_path=./imageNet/val_label.txt
+      ```
+
+      - 参数说明：
+        - result_path：推理生成结果信息的json文件
+        - gtfile_path：数据集标签
+
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python ${ais_infer_path}/ais_infer.py --model=cspresnext_bs${bs}.om --loop=100 --batchsize=${bs}
+        ```
+
+      - 参数说明：
+        - --model：om文件路径。
+        - --batchsize：batchsize大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|   Ascend310P3        |         1         |      ImageNet      |    79.79%        |       1498          |
+|   Ascend310P3        |         4         |      ImageNet      |    79.79%        |       3251          |
+|   Ascend310P3        |         8         |      ImageNet      |            |       2998          |
+|   Ascend310P3        |         16         |      ImageNet      |           |       2454          |
+|   Ascend310P3        |        32        |      ImageNet      |           |       2289          |
+|   Ascend310P3        |         64         |      ImageNet      |           |      1888           |
