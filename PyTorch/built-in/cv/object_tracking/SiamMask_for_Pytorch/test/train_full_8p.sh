@@ -111,7 +111,7 @@ TEST_DATASET=VOT2018
 
 for i in $(seq 1 $epochs)
 do
-  export RANK=$(($i % $RANK_SIZE))
+  export RANK=0
   python3.7 -u tools/test.py \
             --config=experiments/siammask_base/config.json \
             --resume output/checkpoint_e${i}.pth \
