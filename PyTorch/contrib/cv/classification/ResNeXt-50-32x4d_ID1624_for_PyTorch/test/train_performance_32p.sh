@@ -30,6 +30,8 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     elif [[ $para == --fix_node_ip* ]];then
 	    fix_node_ip=`echo ${para#*=}`
 	elif [[ $para == --devicesnum* ]];then
