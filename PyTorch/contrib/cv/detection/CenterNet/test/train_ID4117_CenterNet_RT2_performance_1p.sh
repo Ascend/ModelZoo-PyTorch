@@ -122,7 +122,7 @@ cd $cur_path/src
 
 RANK_ID_START=0
 RANK_SIZE=1
-KERNEL_NUM=$(($(nproc)/1))
+KERNEL_NUM=$(($(nproc)/8))
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
