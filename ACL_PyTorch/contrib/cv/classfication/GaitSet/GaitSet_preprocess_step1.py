@@ -30,6 +30,7 @@ import argparse
 
 from multiprocessing import Pool
 from multiprocessing import TimeoutError as MP_TimeoutError
+from tqdm import tqdm
 
 START = "START"
 FINISH = "FINISH"
@@ -178,7 +179,7 @@ print('Pretreatment Start.\n'
 id_list = os.listdir(INPUT_PATH)
 id_list.sort()
 # Walk the input path
-for _id in id_list:
+for _id in tqdm(id_list):
     seq_type = os.listdir(os.path.join(INPUT_PATH, _id))
     seq_type.sort()
     for _seq_type in seq_type:
@@ -199,7 +200,7 @@ pool.close()
 unfinish = 1
 while unfinish > 0:
     unfinish = 0
-    for i, res in enumerate(results):
+    for i, res in tqdm(enumerate(results),total=len(results)):
         try:
             res.get(timeout=0.1)
         except Exception as e:
