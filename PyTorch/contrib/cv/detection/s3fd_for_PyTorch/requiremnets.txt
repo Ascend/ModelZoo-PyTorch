@@ -1,0 +1,8 @@
+torch==1.8.0
+numpy==1.19.5
+apex==0.1
+opencv-python==4.5.1.48
+scipy==1.6.3
+Pillow==8.2.0
+six==1.16.0
+easydict==1.9
