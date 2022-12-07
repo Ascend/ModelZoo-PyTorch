@@ -1,7 +1,18 @@
-diff --git a/models/icnet.py b/models/icnet.py
-index 95aa8d846474cbbef66eac0ee30725a4dd7c6dc7..0f2f7fcdabf77d0904b6e582ce486ecad5248233 100644
---- a/models/icnet.py
-+++ b/models/icnet.py
+diff -Nur ./a/ICNet-pytorch/models/base_models/resnetv1b.py ./b/ICNet-pytorch/models/base_models/resnetv1b.py
+--- ./a/ICNet-pytorch/models/base_models/resnetv1b.py	2022-11-18 09:03:57.291723587 +0000
++++ ./b/ICNet-pytorch/models/base_models/resnetv1b.py	2022-11-18 09:00:28.187716109 +0000
+@@ -118,8 +118,6 @@
+         else:
+             self.layer3 = self._make_layer(block, 256, layers[2], stride=2, norm_layer=norm_layer)
+             self.layer4 = self._make_layer(block, 512, layers[3], stride=2, norm_layer=norm_layer)
+-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+ 
+         for m in self.modules():
+             if isinstance(m, nn.Conv2d):
+diff -Nur ./a/ICNet-pytorch/models/icnet.py ./b/ICNet-pytorch/models/icnet.py
+--- ./a/ICNet-pytorch/models/icnet.py	2022-11-18 09:03:57.291723587 +0000
++++ ./b/ICNet-pytorch/models/icnet.py	2022-11-18 08:59:52.507714833 +0000
 @@ -2,7 +2,7 @@
  import torch
  import torch.nn as nn
@@ -11,7 +22,7 @@ index 95aa8d846474cbbef66eac0ee30725a4dd7c6dc7..0f2f7fcdabf77d0904b6e582ce486eca
  from .segbase import SegBaseModel
  from torchsummary import summary
  
-@@ -11,21 +11,21 @@ __all__ = ['ICNet', 'get_icnet', 'get_icnet_resnet50_citys',
+@@ -11,21 +11,21 @@
  
  class ICNet(SegBaseModel):
      """Image Cascade Network"""
@@ -38,7 +49,7 @@ index 95aa8d846474cbbef66eac0ee30725a4dd7c6dc7..0f2f7fcdabf77d0904b6e582ce486eca
      def forward(self, x):
          # sub 1
          x_sub1 = self.conv_sub1(x)
-@@ -33,31 +33,43 @@ class ICNet(SegBaseModel):
+@@ -33,31 +33,43 @@
          # sub 2
          x_sub2 = F.interpolate(x, scale_factor=0.5, mode='bilinear', align_corners=True)
          _, x_sub2, _, _ = self.base_forward(x_sub2)

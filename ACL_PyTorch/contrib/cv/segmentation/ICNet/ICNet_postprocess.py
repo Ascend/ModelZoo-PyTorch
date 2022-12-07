@@ -26,6 +26,7 @@ import struct
 from PIL import Image
 from torchvision import transforms
 from utils import SegmentationMetric, get_color_pallete
+from tqdm import tqdm
 
 
 class Evaluator(object):
@@ -52,7 +53,7 @@ class Evaluator(object):
         lsit_pixAcc = []
         list_mIoU = []
 
-        for i in range(len(self.image_paths)):
+        for i in tqdm(range(len(self.image_paths))):
             filename = os.path.basename(self.image_paths[i])
             annotation_file = os.path.join(self.annotation_file_path, filename.split('.')[0])
             
