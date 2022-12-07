@@ -19,6 +19,11 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+
     fi
 done
 
@@ -43,7 +48,8 @@ fi
 
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
+
+ASCEND_DEVICE_ID=$device_id}
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -65,7 +71,8 @@ python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  ma
           --output=output/test \
           --cfg configs/swin_tiny_patch4_window7_224.yaml \
           --data-path ${data_path} \
-          --batch-size 256 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --local_rank ${device_id} \
+          --batch-size ${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

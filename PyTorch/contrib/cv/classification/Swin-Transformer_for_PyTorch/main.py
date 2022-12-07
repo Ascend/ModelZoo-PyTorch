@@ -346,7 +346,10 @@ if __name__ == '__main__':
     
     option = {}
     option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
-    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    k_dir = "./kernel_meta"
+    if not os.path.exists(k_dir):
+        os.mkdir(k_dir)
+    option["ACL_OP_COMPILER_CACHE_DIR"] = k_dir
     print("option:",option)
     torch.npu.set_option(option)
     if config.AMP_OPT_LEVEL != "O0":
@@ -361,9 +364,12 @@ if __name__ == '__main__':
     else:
         rank = args.node_rank * args.nproc_per_node + args.local_rank
         world_size = args.nnodes * args.nproc_per_node
+    if world_size <=1:
+        rank = 0
     torch.npu.set_device(config.LOCAL_RANK)
     torch.distributed.init_process_group(backend='hccl', world_size=world_size, rank=rank)
-    torch.distributed.barrier()
+    if world_size > 1:
+        torch.distributed.barrier()
 
     seed = config.SEED + dist.get_rank()
     torch.manual_seed(seed)

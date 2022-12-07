@@ -22,7 +22,7 @@ fi
 #集合通信参数,不需要修改
 
 export RANK_SIZE=8
-batch_size=64
+batch_size=8
 RANK_ID_START=0
 
 # 数据集路径,保持为空,不需要修改
@@ -73,6 +73,9 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+
     fi
 done
 
@@ -138,7 +141,7 @@ do
     fi
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    bash train_retinanet_8p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
+    BATCH_SIZE=$batch_size bash train_retinanet_8p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
     
     #python3 ./tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py \
     #    --launcher pytorch \
@@ -158,7 +161,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
+total_size=$((batch_size * RANK_SIZE))
+FPS=`awk 'BEGIN{printf "%.2f\n", '${total_size}'/'${time}'}'`
 Train_accuracy=`grep -a 'Epoch(val)' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP: " '{print $2}'|awk -F "," '{print $1}'|tail -1`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

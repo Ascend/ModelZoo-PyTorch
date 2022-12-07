@@ -37,6 +37,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -46,6 +50,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+ASCEND_DEVICE_ID=${device_id}
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -113,7 +118,7 @@ nohup python3.7 -u train_1p.py \
   --weight-decay 0.0 \
   --criterion cross_entropy \
   --label-smoothing 0.1 \
-  --max-sentences 128\
+  --max-sentences ${batch_size} \
   --max-tokens 102400\
   --seed 1 \
   --save-dir $MODELDIR \

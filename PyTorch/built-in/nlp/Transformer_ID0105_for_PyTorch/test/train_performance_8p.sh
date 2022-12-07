@@ -36,6 +36,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}
     fi
 done
 
@@ -129,7 +131,7 @@ do
   --weight-decay 0.0 \
   --criterion cross_entropy \
   --label-smoothing 0.1 \
-  --max-sentences 256\
+  --max-sentences ${batch_size} \
   --max-tokens 102400 \
   --seed 1 \
   --save-dir $MODELDIR \

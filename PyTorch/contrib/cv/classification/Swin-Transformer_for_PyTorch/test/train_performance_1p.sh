@@ -11,7 +11,7 @@ export RANK_SIZE=1
 export WORLD_SIZE=1
 data_path_info=$1
 data_path=`echo ${data_path_info#*=}`
-
+device_id=0
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -19,6 +19,10 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -43,7 +47,7 @@ fi
 
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
+ASCEND_DEVICE_ID=$device_id
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -65,8 +69,9 @@ python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  ma
           --output=output/test \
           --one_epoch \
           --cfg configs/swin_tiny_patch4_window7_224.yaml \
+          --local_rank $device_id  \
           --data-path ${data_path} \
-          --batch-size 256 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+          --batch-size ${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

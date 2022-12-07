@@ -25,6 +25,8 @@ export RANK_SIZE=1
 batch_size=8
 RANK_ID_START=0
 
+# 指定训练所使用的npu device卡id
+device_id=0
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -89,6 +91,10 @@ do
     elif [[ $para == --bind_core* ]]; then
         bind_core=`echo ${para#*=}`
         name_bind="_bindcore"
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -116,8 +122,6 @@ sed -i "s/total_epochs/#total_epochs/g"  configs/retinanet/retinanet_r50_fpn_1x_
 sed -i "s/#optimizer_config/optimizer_config/g"  configs/retinanet/retinanet_r50_fpn_1x_coco.py
 
 SIll=1
-# 指定训练所使用的npu device卡id
-device_id=0
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
@@ -154,7 +158,7 @@ do
     fi
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    bash train_retinanet_1p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
+    BATCH_SIZE=$batch_size DEVICE_ID=${device_id} bash train_retinanet_1p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
 
     #python3 ./tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py \
     #    --launcher pytorch \

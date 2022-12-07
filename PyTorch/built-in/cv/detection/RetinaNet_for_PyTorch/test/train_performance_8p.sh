@@ -22,7 +22,7 @@ fi
 #集合通信参数,不需要修改
 #保证rank table file 文件rank_table_8p.json存放在和test同级的configs目录下
 export RANK_SIZE=8
-batch_size=64
+batch_size=8
 #RANK_TABLE_FILE=${cur_path}/../configs/rank_table_8p.json
 RANK_ID_START=0
 
@@ -90,6 +90,8 @@ do
         autotune=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     elif [[ $para == --bind_core* ]]; then
         bind_core=`echo ${para#*=}`
         name_bind="_bindcore"
@@ -159,7 +161,7 @@ do
     fi
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    bash train_retinanet_8p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
+    BATCH_SIZE=$batch_size bash train_retinanet_8p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
     
     #python3 ./tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py \
     #    --launcher pytorch \
@@ -182,7 +184,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
+total_size=$((batch_size * RANK_SIZE))
+FPS=`awk 'BEGIN{printf "%.2f\n", '${total_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 echo "E2E Training Duration sec : $e2e_time"
