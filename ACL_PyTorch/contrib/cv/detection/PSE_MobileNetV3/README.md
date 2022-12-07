@@ -326,17 +326,17 @@
 ----
 # 性能&精度
 
-在310P设备上，OM模型个各batchsize的精度与目标精度[{precision:82.20%, recall:70.48%, hmean:75.89%}](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/algorithm_det_pse.md#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B)各指标的相对误差均低于 1%，当 batchsize 为 1 时模型性能最优，达 231.03 fps.
+在310P设备上，OM模型个各batchsize的精度与目标精度[{precision:82.20%, recall:70.48%, hmean:75.89%}](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/algorithm_det_pse.md#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B)各指标的相对误差均低于 1%，当 batchsize 为 1 时模型性能最优，达 219.49 fps.
 
 各batchsize的精度与性能指标如下：
 
 | 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
 | --------- | -------- | --------- | -------------------------------------------------------- | --------- |
-|Ascend310P3| 1        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 231.03 fps |
-|Ascend310P3| 4        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 157.67 fps |
-|Ascend310P3| 8        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 154.46 fps |
-|Ascend310P3| 16       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 150.21 fps |
-|Ascend310P3| 32       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 166.85 fps |
-|Ascend310P3| 64       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 190.27 fps |
+|Ascend310P3| 1        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 219.49 fps |
+|Ascend310P3| 4        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 143.86 fps |
+|Ascend310P3| 8        | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 140.41 fps |
+|Ascend310P3| 16       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 136.94 fps |
+|Ascend310P3| 32       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 137.18 fps |
+|Ascend310P3| 64       | ICDAR2015 | {'precision': 0.8214, 'recall': 0.7044, 'hmean': 0.7584} | 175.27 fps |
 
 
