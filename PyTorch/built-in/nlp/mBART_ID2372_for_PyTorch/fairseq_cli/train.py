@@ -47,6 +47,7 @@ def main(args):
     option = {}
     option['ACL_OP_SELECT_IMPL_MODE'] = 'high_performance'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'LayerNorm'
+    option['NPU_FUZZY_COMPILE_BLACKLIST'] = 'MultiHeadAttention,MultiHeadAttentionGrad'
     torch.npu.set_option(option)
     if args.distributed_world_size == 1:
         torch.npu.set_device('npu:{}'.format(args.npu_id))
