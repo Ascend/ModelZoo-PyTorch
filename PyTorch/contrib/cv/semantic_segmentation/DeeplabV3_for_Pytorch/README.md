@@ -60,7 +60,7 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 - 安装依赖（根据模型需求，按需添加所需依赖）。
 
   ```
-  pip install -r requirements.txt
+  bash env_set.sh
   ```
 
 - 替换mmcv_need中的代码到mmcv-full
@@ -143,14 +143,6 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
      # training 8p performance
       bash ./test/train_performance_8p.sh --data_path=real_data_path
      ```
-
-  ## 多机多卡性能数据获取流程
-
-      ```shell
-        1. 安装环境
-        2. 开始训练，每个机器所请按下面提示进行配置
-              bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
-      ```
 
    --data\_path参数填写数据集路径。
 
