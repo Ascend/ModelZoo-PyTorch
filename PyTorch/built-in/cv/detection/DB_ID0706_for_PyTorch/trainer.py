@@ -132,7 +132,7 @@ class Trainer:
                 if(profiling == 'GE' and collect_turn):
                     manage = torch.npu.profile('./GE_prof')
                 elif(profiling == 'CANN' and collect_turn):
-                    manage = torch.npu.profile('./CANN_prof', use_e2e_profiler=True)
+                    manage = torch.npu.profile('./CANN_prof')
                 else:
                     if profiling in ['CANN', 'GE'] and current_step > collect_end:
                         break
@@ -183,7 +183,7 @@ class Trainer:
                     end = time.time()
             self.logger.info('npu id: {device_no:1d}' \
                   ' * FPS@all {fps:.3f}'.format(device_no=self.device.index, fps=self.experiment.train.data_loader.batch_size * 1000 / batch_time.avg))
-            
+
             epoch += 1
             if epoch > self.experiment.train.epochs:
                 if self.experiment.local_rank in [-1, 0]:

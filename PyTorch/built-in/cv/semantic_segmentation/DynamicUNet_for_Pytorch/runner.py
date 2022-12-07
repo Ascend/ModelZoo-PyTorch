@@ -315,7 +315,7 @@ class Trainer(object):
                 sys.exit()
 
             elif iteration <= self.args.stop_step and iteration >= self.args.start_step  and self.args.profiling == 'CANN':
-                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True)
+                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
             elif iteration <= self.args.stop_step and iteration >= self.args.start_step  and self.args.profiling == 'GE':
                 prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
             else:

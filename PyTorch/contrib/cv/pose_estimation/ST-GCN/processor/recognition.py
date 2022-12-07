@@ -165,7 +165,7 @@ class REC_Processor(Processor):
 
             if self.meta_info['iter'] <= self.arg.stop_step and self.meta_info['iter'] >= self.arg.start_step \
                     and self.arg.profiling == 'CANN':
-                with torch.npu.profile(profiler_result_path="./CANN_prof", use_e2e_profiler=True):
+                with torch.npu.profile(profiler_result_path="./CANN_prof"):
                     # forward
                     start_time = time.time()
                     output = self.model(data)

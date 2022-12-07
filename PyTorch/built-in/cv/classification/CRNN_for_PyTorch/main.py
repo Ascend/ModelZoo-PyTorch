@@ -41,8 +41,8 @@ def parse_arg():
     parser.add_argument('--profiling', type=str, default='NONE',help='choose profiling way--CANN,GE,NONE')
     parser.add_argument('--max_step', default=10, type=int, help='start_step')
     parser.add_argument('--start_step', default=0, type=int, help='start_step')
-    parser.add_argument('--stop_step', default=1000, type=int,help='stop_step') 
-    
+    parser.add_argument('--stop_step', default=1000, type=int,help='stop_step')
+
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
         config = yaml.load(f)
@@ -69,7 +69,7 @@ def main():
         device = 'npu:{}'.format(args.npu)
     else:
         device = torch.device("npu:{}".format(config.DEVICE_ID))
-    
+
     torch.npu.set_device(device)
     model = model.to(device)
 
@@ -176,12 +176,12 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
             import sys
             sys.exit()
         elif args.start_step<= num_steps <= args.stop_step and args.profiling == 'CANN':
-            profiling = torch.npu.profile(profiler_result_path="./CANN_prof2",use_e2e_profiler=True)
+            profiling = torch.npu.profile(profiler_result_path="./CANN_prof")
         elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
             profiling = torch.npu.profile(profiler_result_path="./GE_prof")
         else:
             profiling = NoProfiling()
-        with profiling:       
+        with profiling:
             data_time.update((time.time() - end) * 1000)
             labels = idx
             inp = inp.to(device)

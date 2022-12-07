@@ -165,7 +165,7 @@ def train(args, train_dataset, model, tokenizer):
                 steps_trained_in_current_epoch -= 1
                 continue
             if step in [1, 6, 42, 441, 443]:
-                with torch.npu.profile(profiler_result_path=os.getcwd(), use_e2e_profiler=True):
+                with torch.npu.profile(profiler_result_path=os.getcwd()):
                     model.train()
                     batch = tuple(t.to(args.device, non_blocking=True) for t in batch)
                     inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
