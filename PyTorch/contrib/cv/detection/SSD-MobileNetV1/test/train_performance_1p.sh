@@ -17,7 +17,7 @@ train_epochs=1
 # 指定训练所使用的npu device卡id
 device_id=0
 # 加载数据进程数
-workers=4
+workers=16
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -95,7 +95,7 @@ nohup python3.7 ./main.py \
     --debug_steps=1 \
     --local_rank=${device_id} \
     --lr=0.01 \
-    --prof=true \
+    --prof=False \
     --main_rank=${device_id} \
     --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

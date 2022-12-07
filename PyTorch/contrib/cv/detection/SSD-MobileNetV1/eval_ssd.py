@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd, create_mobilenetv1_ssd_predictor
 from vision.datasets.voc_dataset import VOCDataset
 from vision.utils import box_utils, measurements

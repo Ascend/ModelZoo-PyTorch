@@ -20,9 +20,11 @@ import itertools
 import time
 
 import torch
-import torch.npu
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR, LambdaLR
+import apex
 from apex import amp
 
 from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
@@ -107,7 +109,7 @@ parser.add_argument('--local_rank', default=0, type=int,
                     help='node rank/npu for distributed training')      
 parser.add_argument("--amp", default=True, type=str2bool, help='if use amp')  
 parser.add_argument('--opt_level', default='O1', type=str, help='apex optimize level')
-parser.add_argument('--loss_scale_value', default=None, type=float, help='static loss scale value')
+parser.add_argument('--loss_scale_value', default=128.0, type=float, help='static loss scale value')
 parser.add_argument('--npu', default=0, type=int,
                     help='use which npu to train')  
 parser.add_argument('--prof', default=False, type=str2bool,
@@ -316,11 +318,11 @@ def main():
 
     criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
                              center_variance=0.1, size_variance=0.2, device=DEVICE)
-    optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
+    optimizer = apex.optimizers.NpuFusedSGD(params, lr=args.lr, momentum=args.momentum,
                                 weight_decay=args.weight_decay)
     # 添加混合精度支持
     if args.amp:
-        net, optimizer = amp.initialize(net, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale_value)
+        net, optimizer = amp.initialize(net, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale_value,combine_grad=True)
 
     logging.info(f"Learning rate: {args.lr}, Base net learning rate: {base_net_lr}, "
                  + f"Extra Layers learning rate: {extra_layers_lr}.")
