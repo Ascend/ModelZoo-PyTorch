@@ -20,6 +20,8 @@ learning_rate=1
 # 加载数据进程数
 workers=24
 device_num=1
+# 训练device_id
+device_id=0
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*

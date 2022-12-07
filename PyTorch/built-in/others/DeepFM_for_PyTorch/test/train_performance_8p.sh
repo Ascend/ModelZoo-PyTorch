@@ -35,6 +35,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --steps* ]];then
         steps=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -92,6 +94,7 @@ do
            --device_id $RANK_ID \
            --device_num 8 \
            --data_path=$data_path \
+           --batch_size=$batch_size \
            --dist \
            --lr=0.0008 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
@@ -103,6 +106,7 @@ do
            --device_id $RANK_ID \
            --device_num 8 \
            --data_path=$data_path \
+           --batch_size=$batch_size \
            --dist \
            --lr=0.0008 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
