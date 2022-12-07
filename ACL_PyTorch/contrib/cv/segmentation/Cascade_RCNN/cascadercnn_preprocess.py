@@ -18,6 +18,7 @@ import numpy as np
 import cv2
 import torch
 import multiprocessing
+import tqdm
 
 def resize(img, size):
     old_h = img.shape[0]
@@ -36,7 +37,7 @@ def resize(img, size):
 
 def gen_input_bin(file_batches, batch):
     i = 0
-    for file in file_batches[batch]:
+    for file in tqdm.tqdm(file_batches[batch]):
         i = i + 1
         print("batch", batch, file, "===", i)
 
