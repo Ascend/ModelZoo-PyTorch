@@ -20,6 +20,7 @@ from torchvision.transforms import (
 )
 import sys
 import os
+from tqdm import tqdm
 
 
 def build_transforms(
@@ -40,10 +41,6 @@ def build_transforms(
     """
     normalize = Normalize(mean=norm_mean, std=norm_std)
     
-    print('Building test transforms ...')
-    print('+ resize to {}x{}'.format(height, width))
-    print('+ to torch tensor of range [0, 1]')
-    print('+ normalization (mean={}, std={})'.format(norm_mean, norm_std))
 
     transform_test = Compose([
         Resize((height, width)),
@@ -57,12 +54,11 @@ def build_transforms(
 def preprocess(src_path, save_path):
     i = 0
     in_files = os.listdir(src_path)
-    for file in in_files:
+    for file in tqdm(in_files):
         file_d = os.path.join(src_path, file)
         tp = file_d.split('.')[-1]
         if tp == 'jpg':
             i = i + 1
-            print(src_path + '/' + file)
             input_image = Image.open(src_path + '/' + file).convert('RGB')
             height = 256
             width = 128

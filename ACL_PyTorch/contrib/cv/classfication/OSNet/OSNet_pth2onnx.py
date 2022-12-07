@@ -14,6 +14,8 @@
 
 
 import torch
+import sys
+sys.path.append('./deep-person-reid')
 import torchreid
 import sys
 

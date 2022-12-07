@@ -22,8 +22,10 @@ import os.path as osp
 import torch
 import glob
 import re
+sys.path.append('./deep-person-reid')
 from torchreid.metrics import distance as distance
 from torchreid.metrics import rank as rank
+from tqdm import tqdm
 
 
 def gen_qf(filepath):
@@ -81,7 +83,7 @@ def process_dir(dir_path, relabel=False):
     pid2label = {pid: label for label, pid in enumerate(pid_container)}
 
     data = []
-    for img_path in img_paths:
+    for img_path in tqdm(img_paths):
         pid, camid = map(int, pattern.search(img_path).groups())
         if pid == -1:
             continue # junk images are just ignored
@@ -103,7 +105,7 @@ def parse_data_for_eval(data):
 
 def _feature_extraction(data_loader):
     pids_, camids_ = [], []
-    for batch_idx, data in enumerate(data_loader):
+    for batch_idx, data in tqdm(enumerate(data_loader), total=len(data_loader)):
         imgs, pids, camids = parse_data_for_eval(data)
         pids_.append(pids)
         camids_.extend([camids])
