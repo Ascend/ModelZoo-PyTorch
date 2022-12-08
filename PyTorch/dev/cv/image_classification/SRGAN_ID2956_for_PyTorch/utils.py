@@ -35,12 +35,12 @@ from PIL import Image
 import os
 import json
 import random
-import torchvision.transforms.functional as FT
-import math
-import os
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
+import torchvision.transforms.functional as FT
+import math
+import os
     
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
