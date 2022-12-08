@@ -14,6 +14,7 @@ import argparse
 import os
 import json
 import numpy as np
+from tqdm import tqdm
 
 
 def read_info_from_json(json_path):
@@ -33,19 +34,18 @@ def read_info_from_json(json_path):
 def postProcesss(result_path):
     file_info = read_info_from_json(result_path)
     outputs = []
-    for i in file_info.items():
+    for i in tqdm(file_info.items()):
         # 获取推理结果文件地址
         res_path = i[1]['outfiles'][0]
         ndata = np.loadtxt(res_path)
         outputs.append(ndata)
     return outputs
 
-def cre_groundtruth_dict_fromtxt():
+def cre_groundtruth_dict_fromtxt(gtfile_path):
     """
     :param filename: file contains the imagename and label number
     :return: dictionary key imagename, value is label number
     """
-    gtfile_path = './val_label.txt'
     labels=[]
     with open(gtfile_path, 'r')as f:
         for line in f.readlines():
@@ -67,9 +67,10 @@ def top_k_accuracy(scores, labels, topk=(1, )):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='postprocess of resnest')
     parser.add_argument('--result_path')
+    parser.add_argument('--gt_path')
     opt = parser.parse_args()
     outputs = postProcesss(opt.result_path)
-    labels = cre_groundtruth_dict_fromtxt()
+    labels = cre_groundtruth_dict_fromtxt(opt.gt_path)
     print('Evaluating top_k_accuracy ...')
     top_acc = top_k_accuracy(outputs, labels, topk=(1, 5))
     print(f'\ntop{1}_acc\t{top_acc[0]:.4f}')
