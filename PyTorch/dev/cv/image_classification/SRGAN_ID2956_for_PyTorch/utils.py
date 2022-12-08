@@ -36,10 +36,9 @@ import os
 import json
 import random
 import torchvision.transforms.functional as FT
-import torch
 import math
-import torch.npu
 import os
+import torch
 if torch.__version__ >= "1.8":
     import torch_npu
     
