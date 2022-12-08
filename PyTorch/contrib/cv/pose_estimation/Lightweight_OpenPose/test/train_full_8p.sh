@@ -28,6 +28,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --step* ]];then
         step=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 

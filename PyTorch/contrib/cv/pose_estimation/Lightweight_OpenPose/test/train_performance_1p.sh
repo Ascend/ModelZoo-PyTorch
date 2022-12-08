@@ -19,6 +19,8 @@ train_epochs=1
 workers=16
 # lr
 base_lr=4e-5
+# 指定训练卡
+device_id=0
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -27,6 +29,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -49,7 +53,7 @@ else
 fi
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
+ASCEND_DEVICE_ID=${device_id}
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -83,7 +87,7 @@ python3.7.5 train.py \
     --print-freq 1 \
     --addr=$(hostname -I |awk '{print $1}') \
     --rank=0 \
-    --gpu=0 \
+    --gpu=${device_id} \
     --device='npu' \
     --dist-url='tcp://127.0.0.1:50000' \
     --world-size=1 \
@@ -91,7 +95,7 @@ python3.7.5 train.py \
     --loss-scale=16 \
     --amp \
     --opt-level O1 \
-    --device-list '0' \
+    --device-list ${ASCEND_DEVICE_ID} \
     > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

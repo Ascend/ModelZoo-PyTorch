@@ -168,7 +168,8 @@ def main():
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_ap
-    args.gpu = args.process_device_map[gpu]
+    if args.distributed:
+        args.gpu = args.process_device_map[gpu]
 
     args.rank = args.rank * ngpus_per_node + gpu
     if args.distributed:
