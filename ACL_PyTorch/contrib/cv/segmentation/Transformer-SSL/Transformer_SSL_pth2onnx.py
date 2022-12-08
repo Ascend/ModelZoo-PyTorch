@@ -14,6 +14,8 @@
 
 import argparse
 import os.path as osp
+import sys
+sys.path.append("./Swin-Transformer-Object-Detection")
 
 import torch
 from mmcv import DictAction
@@ -67,8 +69,8 @@ def pytorch2onnx(config_path,
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Convert MMDetection models to ONNX')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('--config', help='test config file path')
+    parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument('--input-img', type=str, help='Images for input')
     parser.add_argument('--output-file', type=str, default='1216.onnx')
     parser.add_argument('--opset-version', type=int, default=11)
