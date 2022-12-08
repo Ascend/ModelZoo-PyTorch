@@ -91,6 +91,20 @@ parser.add_argument('--opt-level', default='O2', type=str,
 
 best_acc1 = 0
 
+def fast_collate(batch):
+    imgs = [img[0] for img in batch]
+    targets = torch.tensor([target[1] for target in batch], dtype=torch.int64)
+    w = imgs[0].size[0]
+    h = imgs[0].size[1]
+    tensor = torch.zeros((len(imgs), 3, h, w), dtype=torch.uint8)
+    for i, img in enumerate(imgs):
+        nump_array = np.asarray(img, dtype=np.uint8)
+        if nump_array.ndim < 3:
+            nump_array = np.expand_dims(nump_array, axis=-1)
+        nump_array = np.rollaxis(nump_array, 2)
+        tensor[i] += torch.from_numpy(nump_array)
+
+    return tensor, targets
 
 def main():
     args = parser.parse_args()
@@ -261,8 +275,6 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.Compose([
                 transforms.RandomResizedCrop(224),
                 transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize,
             ]))
 
         val_dataset = datasets.ImageFolder(
@@ -270,8 +282,6 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.Compose([
                 transforms.Resize(256),
                 transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                normalize,
             ]))
 
     if args.distributed:
@@ -283,11 +293,12 @@ def main_worker(gpu, ngpus_per_node, args):
 
     train_loader = MultiEpochsDataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler,
+        collate_fn=fast_collate, drop_last=True)
 
     val_loader = MultiEpochsDataLoader(
         val_dataset, batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=True, sampler=val_sampler)
+        num_workers=args.workers, pin_memory=True, sampler=val_sampler, collate_fn=fast_collate)
 
     if args.evaluate:
         validate(val_loader, model, criterion, args)
@@ -335,13 +346,16 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
     # switch to train mode
     model.train()
 
+    mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).view(1, 3, 1, 1).to(device, non_blocking=True)
+    std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1).to(device, non_blocking=True)
+
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         # move data to the same device as model
-        images = images.to(device, non_blocking=True)
+        images = images.to(device, non_blocking=True).to(torch.float).sub(mean).div(std)
         target = target.to(device, non_blocking=True)
 
         # compute output
@@ -376,11 +390,13 @@ def validate(val_loader, model, criterion, args):
 
     def run_validate(loader, base_progress=0):
         with torch.no_grad():
+            mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).view(1, 3, 1, 1).to(args.gpu, non_blocking=True)
+            std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1).to(args.gpu, non_blocking=True)
             end = time.time()
             for i, (images, target) in enumerate(loader):
                 i = base_progress + i
                 if args.gpu is not None and torch.npu.is_available():
-                    images = images.to(args.gpu, non_blocking=True)
+                    images = images.to(args.gpu, non_blocking=True).to(torch.float).sub(mean).div(std)
                     target = target.to(args.gpu, non_blocking=True)
                 elif torch.backends.mps.is_available():
                     images = images.to('mps')
@@ -533,7 +549,6 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
-
 
 if __name__ == '__main__':
     main()
