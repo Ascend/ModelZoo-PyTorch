@@ -595,6 +595,7 @@ class TrainingArguments:
         },
     )
     local_rank: int = field(default=-1, metadata={"help": "For distributed training: local_rank"})
+    device_id: int = field(default=0, metadata={"help": "For distributed training: device_id"})
     xpu_backend: str = field(
         default=None,
         metadata={"help": "The backend to be used for distributed training on Intel XPU.", "choices": ["mpi", "ccl"]},
@@ -1077,7 +1078,7 @@ class TrainingArguments:
             # trigger an error that a device index is missing. Index 0 takes into account the
             # GPUs available in the environment, so `CUDA_VISIBLE_DEVICES=1,2` with `cuda:0`
             # will use the first GPU in that env, i.e. GPU#1
-            device = torch.device("npu:0" if torch.npu.is_available() else "cpu")
+            device = torch.device("npu:{}".format(self.device_id) if torch.npu.is_available() else "cpu")
             # Sometimes the line in the postinit has not been run before we end up here, so just checking we're not at
             # the default value.
             self._n_gpu = torch.cuda.device_count()

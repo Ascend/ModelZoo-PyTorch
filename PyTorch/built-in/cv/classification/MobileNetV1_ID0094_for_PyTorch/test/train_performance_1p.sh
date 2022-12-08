@@ -21,7 +21,6 @@ RANK_ID_START=0
 RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
-ASCEND_DEVICE_ID=0
 data_path="/npu/traindata/imagenet_pytorch/"
 # 指定训练所使用的npu device卡id
 device_id=0
@@ -57,6 +56,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
       data_path=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
@@ -109,7 +110,7 @@ nohup python3.7 ${cur_path}/main.py \
     --batch_size=${batch_size} \
     --learning-rate=${learning_rate} \
     --epochs=$train_epochs \
-    --device_id=$ASCEND_DEVICE_ID \
+    --device_id=${device_id} \
     --max_steps=2000 \
     --loss-scale-value=1024 \
     --apex \
