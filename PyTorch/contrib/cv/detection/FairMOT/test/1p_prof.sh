@@ -1,3 +1,4 @@
+
 # 数据集路径,保持为空,不需要修改
 source test/env_npu.sh
 data_path=""
@@ -16,11 +17,14 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-
-RANK_ID_START=0
-Network="FairMOT"
-RANK_SIZE=8
+#基础参数
 batch_size=12
+Network="FairMOT"
+RANK_SIZE=1
+
+ln -sb ${data_path} /root/dataset
+
+
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -43,38 +47,21 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-ln -sb ${data_path} /root/dataset
-cd src
 
 start_time=$(date +%s)
-
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
-do
-
-KERNEL_NUM=$(($(nproc)/$RANK_SIZE))
-PID_START=$((KERNEL_NUM * RANK_ID))
-PID_END=$((PID_START + KERNEL_NUM - 1))
-WORKERS_NUM=$((KERNEL_NUM - 1))
-echo "WORKERS_NUM: $WORKERS_NUM"
-
-nohup taskset -c $PID_START-$PID_END \
-      python3.7 -u train_8p.py mot --exp_id mot17_dla34  \
+cd src
+nohup python3.7 -u  train_1p.py mot --exp_id mot17_dla34  \
             --load_model '../models/ctdet_coco_dla_2x.pth' \
             --data_cfg '../src/lib/cfg/mot17.json'   \
-            --world_size 8 \
+            --world_size 1 \
             --batch_size 12 \
-            --rank $RANK_ID \
+            --rank 0 \
             --print_iter 1 \
-            --lr 30e-4 \
-            --use_npu True \
-            --use_amp True \
-            --num_epochs 3 \
+            --num_epochs 1 \
+            --prof True \
 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 & 
 
-done
-
 wait
-
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
@@ -103,7 +90,6 @@ echo "E2E Training Duration sec : $e2e_time"
 #最后一个迭代loss值，不需要修改
 ActualLoss=`grep -a 'loss'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $8}'`
 
-
 #关键信息打印到result.log中，不需要修改
 echo "Network = ${Network}" >  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "RankSize = ${RANK_SIZE}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -115,5 +101,8 @@ echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+
+
+cat  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 
 
