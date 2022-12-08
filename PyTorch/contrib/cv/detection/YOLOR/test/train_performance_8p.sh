@@ -21,7 +21,7 @@ RANK_SIZE=8
 RANK_ID_START=0
 
 #网络名称，同目录名称
-Network="YoloR_for_PyTorch"
+Network="YoloR_ID0638_for_PyTorch"
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
