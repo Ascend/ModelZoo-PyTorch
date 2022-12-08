@@ -143,7 +143,7 @@ FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'*8}'`
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep "INFO:global:Epoch:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log | tail -n 201 | awk -F "siammask_loss" '{print $2}' | awk -F " " '{print $2}' | awk '{sum+=$1} END {print sum/200}'`
+train_accuracy=`grep "INFO:global:Epoch:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_8p.log | tail -n 201 | awk -F "siammask_loss" '{print $2}' | awk -F " " '{print $2}' | awk '$1 != "nan" {print $1}' | awk '{sum+=$1} END {print sum/200}'`
 train_accuracy=${train_accuracy}
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
