@@ -13,7 +13,7 @@ apex="O1"
 Network="SOLOv1"
 
 #训练batch_size,,需要模型审视修改
-batch_size=16
+batch_size=2
 device_id=0
 
 # for multi node setting
@@ -108,7 +108,7 @@ do
             --seed 0 \
             --data_root=$data_path \
             --total_epochs 1 \
-            --cfg-options data.samples_per_gpu=${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --cfg-options data.imgs_per_gpu=${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
@@ -119,7 +119,7 @@ do
             --seed 0 \
             --data_root=$data_path \
             --total_epochs 1 \
-            --cfg-options data.samples_per_gpu=${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --cfg-options data.imgs_per_gpu=${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 wait 

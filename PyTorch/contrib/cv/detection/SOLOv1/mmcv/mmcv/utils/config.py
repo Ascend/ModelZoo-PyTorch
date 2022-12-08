@@ -15,7 +15,7 @@
 # Copyright (c) Open-MMLab. All rights reserved.
 import os.path as osp
 import sys
-from argparse import ArgumentParser
+from argparse import Action, ArgumentParser
 from importlib import import_module
 
 from addict import Dict
@@ -23,6 +23,9 @@ from addict import Dict
 from .misc import collections_abc
 from .path import check_file_exist
 
+BASE_KEY = '_base_'
+DELETE_KEY = '_delete_'
+RESERVED_KEYS = ['filename', 'text', 'pretty_text']
 
 class ConfigDict(Dict):
 
@@ -172,3 +175,133 @@ class Config(object):
 
     def __iter__(self):
         return iter(self._cfg_dict)
+    @staticmethod
+    def _merge_a_into_b(a, b, allow_list_keys=False):
+        b = b.copy()
+        for k, v in a.items():
+            if allow_list_keys and k.isdigit() and isinstance(b, list):
+                k = int(k)
+                if len(b) <= k:
+                    raise KeyError(f'Index {k} exceeds the length of list {b}')
+                b[k] = Config._merge_a_into_b(v, b[k], allow_list_keys)
+            elif isinstance(v,
+                            dict) and k in b and not v.pop(DELETE_KEY, False):
+                allowed_types = (dict, list) if allow_list_keys else dict
+                if not isinstance(b[k], allowed_types):
+                    raise TypeError(
+                        f'{k}={v} in child config cannot inherit from base '
+                        f'because {k} is a dict in the child config but is of '
+                        f'type {type(b[k])} in base config. You may set '
+                        f'`{DELETE_KEY}=True` to ignore the base config')
+                b[k] = Config._merge_a_into_b(v, b[k], allow_list_keys)
+            else:
+                b[k] = v
+        return b
+
+    def merge_from_dict(self, options, allow_list_keys=True):
+        """Merge list into cfg_dict.
+
+        Merge the dict parsed by MultipleKVAction into this cfg.
+
+        Examples:
+            >>> options = {'model.backbone.depth': 50,
+            ...            'model.backbone.with_cp':True}
+            >>> cfg = Config(dict(model=dict(backbone=dict(type='ResNet'))))
+            >>> cfg.merge_from_dict(options)
+            >>> cfg_dict = super(Config, self).__getattribute__('_cfg_dict')
+            >>> assert cfg_dict == dict(
+            ...     model=dict(backbone=dict(depth=50, with_cp=True)))
+
+            # Merge list element
+            >>> cfg = Config(dict(pipeline=[
+            ...     dict(type='LoadImage'), dict(type='LoadAnnotations')]))
+            >>> options = dict(pipeline={'0': dict(type='SelfLoadImage')})
+            >>> cfg.merge_from_dict(options, allow_list_keys=True)
+            >>> cfg_dict = super(Config, self).__getattribute__('_cfg_dict')
+            >>> assert cfg_dict == dict(pipeline=[
+            ...     dict(type='SelfLoadImage'), dict(type='LoadAnnotations')])
+
+        Args:
+            options (dict): dict of configs to merge from.
+            allow_list_keys (bool): If True, int string keys (e.g. '0', '1')
+              are allowed in ``options`` and will replace the element of the
+              corresponding index in the config if the config is a list.
+              Default: True.
+        """
+        option_cfg_dict = {}
+        for full_key, v in options.items():
+            d = option_cfg_dict
+            key_list = full_key.split('.')
+            for subkey in key_list[:-1]:
+                d.setdefault(subkey, ConfigDict())
+                d = d[subkey]
+            subkey = key_list[-1]
+            d[subkey] = v
+
+        cfg_dict = super(Config, self).__getattribute__('_cfg_dict')
+        super(Config, self).__setattr__(
+            '_cfg_dict',
+            Config._merge_a_into_b(
+                option_cfg_dict, cfg_dict, allow_list_keys=allow_list_keys))
+
+class DictAction(Action):
+
+    @staticmethod
+    def _parse_int_float_bool(val):
+        try:
+            return int(val)
+        except ValueError:
+            pass
+        try:
+            return float(val)
+        except ValueError:
+            pass
+        if val.lower() in ['true', 'false']:
+            return True if val.lower() == 'true' else False
+        return val
+
+    @staticmethod
+    def _parse_iterable(val):
+
+        def find_next_comma(string):
+            assert (string.count('(') == string.count(')')) and (
+                    string.count('[') == string.count(']')), \
+                f'Imbalanced brackets exist in {string}'
+            end = len(string)
+            for idx, char in enumerate(string):
+                pre = string[:idx]
+                # The string before this ',' is balanced
+                if ((char == ',') and (pre.count('(') == pre.count(')'))
+                        and (pre.count('[') == pre.count(']'))):
+                    end = idx
+                    break
+            return end
+
+        # Strip ' and " characters and replace whitespace.
+        val = val.strip('\'\"').replace(' ', '')
+        is_tuple = False
+        if val.startswith('(') and val.endswith(')'):
+            is_tuple = True
+            val = val[1:-1]
+        elif val.startswith('[') and val.endswith(']'):
+            val = val[1:-1]
+        elif ',' not in val:
+            # val is a single value
+            return DictAction._parse_int_float_bool(val)
+
+        values = []
+        while len(val) > 0:
+            comma_idx = find_next_comma(val)
+            element = DictAction._parse_iterable(val[:comma_idx])
+            values.append(element)
+            val = val[comma_idx + 1:]
+        if is_tuple:
+            values = tuple(values)
+        return values
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        options = {}
+        for kv in values:
+            key, val = kv.split('=', maxsplit=1)
+            options[key] = self._parse_iterable(val)
+        setattr(namespace, self.dest, options)

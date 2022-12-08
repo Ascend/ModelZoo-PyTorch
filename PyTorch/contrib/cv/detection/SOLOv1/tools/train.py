@@ -150,6 +150,7 @@ def main():
     # log some basic info
     logger.info('Distributed training: {}'.format(distributed))
     logger.info('MMDetection Version: {}'.format(__version__))
+    print("cfg config: ", cfg)
     logger.info('Config:\n{}'.format(cfg.text))
 
     # set random seeds
