@@ -16,6 +16,9 @@ fi
 #集合通信参数,不需要修改
 export RANK_SIZE=1
 
+#conda环境的名称
+conda_name=py4
+
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -38,6 +41,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 
