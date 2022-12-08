@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="retinaface"
 # 训练batch_size
-batch_size=32
+batch_size=256
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 训练epoch
@@ -82,9 +82,9 @@ python3.7 -u ${currentDir}/train.py \
     --dist-url='tcp://127.0.0.1:50003' \
     --dist-backend='hccl' \
     --world-size=1 \
-    --batch-size=256 \
-    --lr=1e-2 \
-    --epochs=1 \
+    --batch-size=${batch_size} \
+    --lr=${learning_rate} \
+    --epochs=${train_epochs} \
     --device_num=8 \
     --rank=0 \
     --amp \
@@ -99,19 +99,32 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
+weights=`find -name 'Resnet50*' | xargs ls -t | head -1`
+python3.7 test_widerface.py -m $weights &
+
+
+wait
+
+echo "Finish test_widerface.py"
+
+cd widerface_evaluate
+python3.7 evaluation.py > eval_result.txt &
+
+wait
+
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 # *********************************修改了路径*********************************
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/logs/log_train_full_8p.log|awk -F " " '{print $7}'|awk 'END {print}'`
+FPS=`echo "${FPS} * ${RANK_SIZE}" | bc`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
 # ***********************************修改了路径*******************************
-train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/logs/log_train_full_8p.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 # 打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
+cat eval_result.txt
 echo "E2E Training Duration sec : $e2e_time"
 
 # 性能看护结果汇总
@@ -141,6 +154,5 @@ echo "DeviceType = ${DeviceType}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/$
 echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -15,6 +15,8 @@
 from __future__ import print_function
 import os
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 import argparse
@@ -34,8 +36,10 @@ from multi_epochs_dataloader import MultiEpochsDataLoader
 from apex import amp
 
 parser = argparse.ArgumentParser(description='Retinaface Training')
-parser.add_argument('--data', default='/home/lyp/Retinaface/data/widerface/train/label.txt', help='Training dataset directory')
-parser.add_argument('--val-data', default='/home/lyp/Retinaface/data/widerface/val/label.txt', help='val dataset directory')
+parser.add_argument('--data', default='/home/lyp/Retinaface/data/widerface/train/label.txt',
+                    help='Training dataset directory')
+parser.add_argument('--val-data', default='/home/lyp/Retinaface/data/widerface/val/label.txt',
+                    help='val dataset directory')
 parser.add_argument('--network', default='resnet50', help='Backbone network mobile0.25 or resnet50')
 parser.add_argument('--workers', default=4, type=int, help='Number of workers used in dataloading')
 parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float, help='initial learning rate')
@@ -44,25 +48,25 @@ parser.add_argument('--resume-net', default=None, help='resume net for retrainin
 parser.add_argument('--weight_decay', default=5e-4, type=float, help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float, help='Gamma update for SGD')
 parser.add_argument('--save_folder', default='./weights/', help='Location to save checkpoint models')
-parser.add_argument('--dist_backend', default='nccl',type=str, help='GPU for nccl, NPU for hccl')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',help='number of total epochs to run')
-parser.add_argument('-b', '--batch-size', default=32, type=int,metavar='N')
-parser.add_argument('--world-size', default=-1, type=int,help='number of nodes for distributed training')
-parser.add_argument('--rank', default=-1, type=int,help='node rank for distributed training')
+parser.add_argument('--dist_backend', default='nccl', type=str, help='GPU for nccl, NPU for hccl')
+parser.add_argument('--epochs', default=90, type=int, metavar='N', help='number of total epochs to run')
+parser.add_argument('-b', '--batch-size', default=32, type=int, metavar='N')
+parser.add_argument('--world-size', default=-1, type=int, help='number of nodes for distributed training')
+parser.add_argument('--rank', default=-1, type=int, help='node rank for distributed training')
 parser.add_argument('--dist-url', default='tcp://127.0.0.1:50000', type=str,
                     help='url used to set up distributed training')
-parser.add_argument('--dist-backend', default='nccl', type=str,help='distributed backend')
-parser.add_argument('--gpu', default=None, type=int,help='NPU id to use.')
+parser.add_argument('--dist-backend', default='nccl', type=str, help='distributed backend')
+parser.add_argument('--gpu', default=None, type=int, help='NPU id to use.')
 parser.add_argument('--device', default='npu', type=str, help='npu or gpu')
 parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
-parser.add_argument('--device_num', default=-1, type=int,help='device_num')
+parser.add_argument('--device_num', default=-1, type=int, help='device_num')
 parser.add_argument('--device-list', default='0', type=str, help='device id list')
 
-parser.add_argument('--amp', default=False, action='store_true',help='use amp to train the model')
-parser.add_argument('--loss-scale', default=64., type=float,help='loss scale using in amp, default -1 means dynamic')
-parser.add_argument('--opt-level', default='O2', type=str,help='loss scale using in amp, default -1 means dynamic')
-parser.add_argument('--warmup_epoch', default=1, type=int,help='warm up')
-parser.add_argument('--distributed', action='store_true',help='distributed')
+parser.add_argument('--amp', default=False, action='store_true', help='use amp to train the model')
+parser.add_argument('--loss-scale', default=64., type=float, help='loss scale using in amp, default -1 means dynamic')
+parser.add_argument('--opt-level', default='O2', type=str, help='loss scale using in amp, default -1 means dynamic')
+parser.add_argument('--warmup_epoch', default=1, type=int, help='warm up')
+parser.add_argument('--distributed', action='store_true', help='distributed')
 args = parser.parse_args()
 
 if torch.cuda.is_available():
@@ -238,7 +242,8 @@ def main_worker(gpu, ngpus_per_node, args):
         if args.distributed:
             train_sampler.set_epoch(epoch)
         # train for one epoch
-        loss_train = train(train_loader, priors, step_index, train_loader_len, net, criterion, optimizer, epoch, args, ngpus_per_node)
+        loss_train = train(train_loader, priors, step_index, train_loader_len, net, criterion,
+                           optimizer, epoch, args, ngpus_per_node)
         if ((epoch+1) % 10 == 0 and (epoch+1) > 0) or ((epoch+1) % 5 == 0 and (epoch+1) > cfg['decay1']):
             is_best = loss_train < min_loss
             min_loss = min(loss_train, loss_train)
@@ -251,7 +256,8 @@ def main_worker(gpu, ngpus_per_node, args):
                         'optimizer': optimizer.state_dict(),
                         'amp': amp.state_dict(),
                     }, is_best,
-                        save_folder + cfg['name'] + '_epoch_' + str(epoch+1) + 'distributed_' + str(distributed))
+                        save_folder + cfg['name'] + '_epoch_' + str(epoch+1) + '_distributed_' + str(distributed)
+                        + '.pth.tar')
                 else:
                     save_checkpoint({
                         'epoch': epoch,
@@ -259,7 +265,8 @@ def main_worker(gpu, ngpus_per_node, args):
                         'min_loss': min_loss,
                         'optimizer': optimizer.state_dict(),
                     }, is_best,
-                        save_folder + cfg['name'] + '_epoch_' + str(epoch+1) + 'distributed_' + str(distributed))
+                        save_folder + cfg['name'] + '_epoch_' + str(epoch+1) + '_distributed_' + str(distributed)
+                        + '.pth.tar')
 
 
 
@@ -273,7 +280,8 @@ def get_pytorch_loader(dataset, batch_size, workers=5, _worker_init_fn=None, dis
     dataloader_fn = MultiEpochsDataLoader
     train_loader = dataloader_fn(
         train_dataset, batch_size=batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, worker_init_fn=_worker_init_fn, pin_memory=False, sampler=train_sampler, collate_fn=detection_collate,drop_last=True)
+        num_workers=args.workers, worker_init_fn=_worker_init_fn, pin_memory=False,
+        sampler=train_sampler, collate_fn=detection_collate, drop_last=True)
     return train_loader, len(train_loader), train_sampler
 
 
@@ -331,7 +339,6 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
                 # backprop
                 loss_l, loss_c, loss_landm = criterion(out, priors.cpu(), targets, args.gpu)
                 loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
-
                 if args.amp:
                     with amp.scale_loss(loss, optimizer) as scaled_loss:
                         scaled_loss.backward()
@@ -358,9 +365,9 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
         if not args.distributed or (args.distributed and args.gpu == 0):
             progress.display(i)
     if not args.distributed or (args.distributed and args.gpu == 0):
-        if batch_time.avg > 0 :
+        if batch_time.avg > 0:
             print("[npu id:", args.gpu, "]",
-                  '* FPS@all {:.3f}, TIME@all {:.3f}'.format(ngpus_per_node * args.batch_size / batch_time.avg,
+                  '* FPS@all {:.3f} TIME@all {:.3f}'.format(ngpus_per_node * args.batch_size / batch_time.avg,
                                                              batch_time.avg))
     return losses.avg
 

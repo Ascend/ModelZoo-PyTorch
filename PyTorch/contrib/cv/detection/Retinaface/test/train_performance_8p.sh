@@ -4,6 +4,8 @@
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
 Network="retinaface"
+# 训练batch size
+batch_size=256
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 训练epoch
@@ -73,7 +75,7 @@ python3.7 -u ${currentDir}/train.py \
     --dist-url='tcp://127.0.0.1:50003' \
     --dist-backend='hccl' \
     --world-size=1 \
-    --batch-size=256 \
+    --batch-size=${batch_size} \
     --lr=1e-2 \
     --epochs=${train_epochs} \
     --device_num=8 \
@@ -95,6 +97,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 # ***********************修改了路径***************************
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/logs/log_train_performance_8p.log|awk -F " " '{print $7}'|awk 'END {print}'`
+FPS=`echo "${FPS} * ${RANK_SIZE}" |bc`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

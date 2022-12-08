@@ -42,7 +42,8 @@ class MultiBoxLoss(nn.Module):
         See: https://arxiv.org/pdf/1512.02325.pdf for more details.
     """
 
-    def __init__(self, num_classes, overlap_thresh, prior_for_matching, bkg_label, neg_mining, neg_pos, neg_overlap, encode_target):
+    def __init__(self, num_classes, overlap_thresh, prior_for_matching,
+                 bkg_label, neg_mining, neg_pos, neg_overlap, encode_target):
         super(MultiBoxLoss, self).__init__()
         self.num_classes = num_classes
         self.threshold = overlap_thresh
@@ -68,14 +69,11 @@ class MultiBoxLoss(nn.Module):
         """
 
         loc_data, conf_data, landm_data = predictions
-        loc_data = loc_data.cpu()
-        conf_data = conf_data.cpu()
-        landm_data = landm_data.cpu()
         priors = priors
         num = loc_data.size(0)
         num_priors = (priors.size(0))
         #once bug has been fixed,this can change to npu
-        loc = 'cpu'
+        loc='npu:{}'.format(arg_gpu)
         # match priors (default boxes) and ground truth boxes
         loc_t = torch.Tensor(num, num_priors, 4)
         landm_t = torch.Tensor(num, num_priors, 10)
@@ -128,7 +126,7 @@ class MultiBoxLoss(nn.Module):
         pos_idx = pos.unsqueeze(2).expand_as(conf_data)
 
         neg_idx = neg.unsqueeze(2).expand_as(conf_data)
-        conf_p = conf_data[(pos_idx+neg_idx).gt(0)].view(-1,self.num_classes)
+        conf_p = conf_data[(pos_idx+neg_idx).gt(0)].view(-1, self.num_classes)
         targets_weighted = conf_t[(pos+neg).gt(0)]
         loss_c = F.cross_entropy(conf_p.to(loc), targets_weighted.to(loc), reduction='sum')
 
