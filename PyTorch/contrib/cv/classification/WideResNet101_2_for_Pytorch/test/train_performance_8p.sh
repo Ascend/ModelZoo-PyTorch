@@ -106,14 +106,12 @@ python3.7 -u ./main_npu_8p.py \
     --world-size=1 \
     --dist-backend='hccl' \
     --multiprocessing-distributed \
-    --loss-scale=128.0 \
+    --loss-scale='dynamic' \
     --opt-level='O2' \
     --device='npu' \
     --rank=0 \
     --warm_up_epochs=5 \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
-
 wait
 
 ##################获取训练数据##################

@@ -25,6 +25,8 @@ from apex import amp
 import math
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -40,8 +42,8 @@ import models
 from models import resnet_0_6_0
 
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR',
@@ -49,9 +51,9 @@ parser.add_argument('data', metavar='DIR',
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+                         ' | '.join(model_names) +
+                         ' (default: resnet18)')
+parser.add_argument('-j', '--workers', default=128, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -103,8 +105,8 @@ parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
 parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
-parser.add_argument('--loss-scale', default=1024., type=float,
-                    help='loss scale using in amp, default -1 means dynamic')
+parser.add_argument('--loss-scale', default='dynamic',
+                    help='loss scale using in amp, default dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--prof', default=False, action='store_true',
@@ -113,6 +115,7 @@ parser.add_argument('--save_path', default='', type=str,
                     help='path to save models')
 
 best_acc1 = 0
+
 
 def device_id_to_process_device_map(device_list):
     devices = device_list.split(",")
@@ -205,7 +208,7 @@ def main_worker(gpu, ngpus_per_node, args):
         model.load_state_dict(pretrained_dict, strict=False)
         for param in model.parameters():
             param.requires_grad = False
-        model.fc = nn.Linear(2048,1000)
+        model.fc = nn.Linear(2048, 1000)
     else:
         print("=> creating model wide_resnet101_2")
         model = resnet_0_6_0.wide_resnet101_2()
@@ -219,7 +222,6 @@ def main_worker(gpu, ngpus_per_node, args):
     args.batch_size = int(args.batch_size / ngpus_per_node)
     args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
     ############## npu modify end #############
-
 
     # Data loading code
     traindir = os.path.join(args.data, 'train')
@@ -259,9 +261,9 @@ def main_worker(gpu, ngpus_per_node, args):
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().to(loc)
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                nesterov=True,
-                                weight_decay=args.weight_decay)
+                                            momentum=args.momentum,
+                                            nesterov=True,
+                                            weight_decay=args.weight_decay)
 
     if args.amp:
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
@@ -277,7 +279,7 @@ def main_worker(gpu, ngpus_per_node, args):
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             if args.amp:
-              amp.load_state_dict(checkpoint['amp'])
+                amp.load_state_dict(checkpoint['amp'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
@@ -310,14 +312,14 @@ def main_worker(gpu, ngpus_per_node, args):
         best_acc1 = max(acc1, best_acc1)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                and args.rank % ngpus_per_node == 0):
+                                                    and args.rank % ngpus_per_node == 0):
             if args.amp:
                 save_checkpoint({
                     'epoch': epoch + 1,
                     'arch': args.arch,
                     'state_dict': model.state_dict(),
                     'best_acc1': best_acc1,
-                    'optimizer' : optimizer.state_dict(),
+                    'optimizer': optimizer.state_dict(),
                     'amp': amp.state_dict(),
                 }, is_best)
             else:
@@ -326,7 +328,7 @@ def main_worker(gpu, ngpus_per_node, args):
                     'arch': args.arch,
                     'state_dict': model.state_dict(),
                     'best_acc1': best_acc1,
-                    'optimizer' : optimizer.state_dict(),
+                    'optimizer': optimizer.state_dict(),
                 }, is_best)
 
 
@@ -366,6 +368,7 @@ def profiling(data_loader, model, criterion, optimizer, args):
             break
 
     prof.export_chrome_trace("output.prof")
+
 
 def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -416,7 +419,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         batch_time.update(time.time() - end)
         end = time.time()
 
-    ###### modify 4 ######
+        ###### modify 4 ######
         if i % args.print_freq == 0:
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                         and args.rank % ngpus_per_node == 0):
@@ -433,7 +436,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
 def validate(val_loader, model, criterion, args, ngpus_per_node):
     ###### modify 5 ######
-    batch_time = AverageMeter('Time', ':6.3f', start_count_index= 5)
+    batch_time = AverageMeter('Time', ':6.3f', start_count_index=5)
     ###### modify 5 end ######
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -472,11 +475,10 @@ def validate(val_loader, model, criterion, args, ngpus_per_node):
                                                             and args.rank % ngpus_per_node == 0):
                     progress.display(i)
 
-
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                     and args.rank % ngpus_per_node == 0):
             print("[npu id:", args.gpu, "]", '[AVG-ACC] * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-                      .format(top1=top1, top5=top5))
+                  .format(top1=top1, top5=top5))
 
     return top1.avg
 
