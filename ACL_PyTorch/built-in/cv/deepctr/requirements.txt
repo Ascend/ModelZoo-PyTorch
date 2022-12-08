@@ -1,0 +1,14 @@
+torch==1.10.1
+tensorflow-cpu==1.15.0
+torchvision==0.11.2
+onnx==1.12.0
+protobuf==3.19.4
+decorator==5.1.0
+onnxruntime==1.8.0
+opencv-python
+sympy
+cython
+numpy
+tqdm
+pandas
+scikit-learn
