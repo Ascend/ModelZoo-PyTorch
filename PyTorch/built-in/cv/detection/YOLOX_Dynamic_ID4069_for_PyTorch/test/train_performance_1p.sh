@@ -43,7 +43,7 @@ do
         epochs=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
-        source set_conda.sh
+        source $test_path_dir/set_conda.sh
         source activate $conda_name
     fi
 done
