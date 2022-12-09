@@ -26,9 +26,9 @@ sys.path.append('./YOLOX')
 
 
 def get_output_data(dump_dir, idx, dtype=np.float32):
-    shapes = [[1, 4, 80, 80], [1, 1, 80, 80], [1, 80, 80, 80],
-              [1, 4, 40, 40], [1, 1, 40, 40], [1, 80, 40, 40],
-              [1, 4, 20, 20], [1, 1, 20, 20], [1, 80, 20, 20]]
+    shapes = [[-1, 4, 80, 80], [-1, 1, 80, 80], [-1, 80, 80, 80],
+              [-1, 4, 40, 40], [-1, 1, 40, 40], [-1, 80, 40, 40],
+              [-1, 4, 20, 20], [-1, 1, 20, 20], [-1, 80, 20, 20]]
     res = []
     for index, shape in enumerate(shapes):
         file_name = os.path.join(dump_dir, f"{idx:0>12d}_{index}.bin")
