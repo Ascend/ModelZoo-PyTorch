@@ -1,234 +1,271 @@
-# UNet++ Onnx模型端到端推理指导
-- [UNet++ Onnx模型端到端推理指导](#unet-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-		- [2.3 获取ais_infer工具](#23-获取ais_infer工具)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx转om模型](#32-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 AisBench工具概述](#51-aisbench工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-		- [6.1 离线推理IoU精度](#61-离线推理iou精度)
-		- [6.2 开源IoU精度](#62-开源iou精度)
-		- [6.3 精度对比](#63-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 npu性能数据](#71-npu性能数据)
-		- [7.2 T4性能数据](#72-t4性能数据)
-		- [7.3 性能对比](#73-性能对比)
+# UNet++ (Nested UNet)模型-推理指导
+
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+- [输入输出数据](#section540883920406)
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+  
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以相同的分辨率密集连接，主要用于医学图像分割任务。
+
+- 参考论文：
+
+  [UNet++: A Nested U-Net Architecture for Medical Image Segmentation](https://arxiv.org/abs/1807.10165)
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/4uiiurz1/pytorch-nested-unet
+  branch=master
+  commit_id=557ea02f0b5d45ec171aae2282d2cd21562a633e
+  ```
+  
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据       | 数据类型 | 大小                    | 数据排布格式 |
+  | -------------- | -------- | ----------------------- | ------------ |
+  | actual_input_1 | RGB_FP32 | batchsize x 3 x 96 x 96 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小                    | 数据排布格式 |
+  | -------- | -------- | ----------------------- | ------------ |
+  | output_1 | RGB_FP32 | batchsize x 1 x 96 x 96 | NCHW         |
 
 
 
-## 1 模型概述
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
--   **[论文地址](#11-论文地址)**  
+- 该模型需要以下插件与驱动
 
--   **[代码地址](#12-代码地址)**  
+  **表 1**  版本配套表
 
-### 1.1 论文地址
-[UNet++论文](https://arxiv.org/abs/1807.10165)  
-
-### 1.2 代码地址
-[UNet++代码](https://github.com/4uiiurz1/pytorch-nested-unet)  
-branch:master  
-commit_id:557ea02f0b5d45ec171aae2282d2cd21562a633e  
-备注：commit_id是指基于该次提交时的模型代码做推理，通常选择稳定版本的最后一次提交，或代码仓最新的一次提交  
-
-## 2 环境说明
-
--   **[深度学习框架](#21-深度学习框架)**  
-
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
-```
-CANN 5.1.RC2
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
-实测环境中Torch的版本为1.5.0
-
-### 2.2 python第三方库
-
-```
-numpy == 1.20.3
-Pillow == 8.2.0
-opencv-python == 4.5.2.54
-albumentations == 0.5.2
-```
-
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-
-### 2.3 获取[ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-
-将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件； 
-```
-pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
-```
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
-
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.UNet++模型代码下载
-```
-git clone https://github.com/4uiiurz1/pytorch-nested-unet
-```
-2.原模型中resize采用双线性差值方法，影响模型在Ascend310P上的推理性能，需要改为最近邻方法。
-```
-cd pytorch-nested-unet
-patch -p1 < ../nested_unet.diff
-cd ..
-```
-
-3.编写pth2onnx脚本nested_unet_pth2onnx.py
-
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
-
-4.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 nested_unet_pth2onnx.py nested_unet.pth nested_unet.onnx
-```
-
- **模型转换要点：**  
->此模型转换为onnx时需要将resize函数的模式修改为最近邻，参考nested_unet.diff文件
-
-### 3.2 onnx转om模型
-
-1.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.1.RC2 开发辅助工具指南 (推理) 01  
-`${chip_name}`可通过 `npu-smi info` 指令查看，例: 310P3
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=./nested_unet.onnx --input_format=NCHW --input_shape="actual_input_1:16,3,96,96" --output=nested_unet_bs16 --log=debug --soc_version=Ascend${chip_name}
-```
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型将[2018 Data Science Bowl数据集](https://www.kaggle.com/c/data-science-bowl-2018)的训练集随机划分为训练集和验证集，为复现精度这里采用固定的验证集，验证集图像编号保存在val_ids.txt。
-
-### 4.2 数据集预处理
-1.执行原代码仓提供的数据集预处理脚本，并将处理后的数据集移动到当前目录下
-```
-cd pytorch-nested-unet
-python3.7 preprocess_dsb2018.py
-cp -r inputs/dsb2018_96/ ../
-cp val_ids.txt ../
-cd ..
-```
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 preprocess_nested_unet.py ./dsb2018_96/images ./prep_dataset ./val_ids.txt
-```
-
-## 5 离线推理
-
--   **[AisBench工具概述](#51-AisBench工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 AisBench工具概述
-AisBench推理工具，该工具包含前端和后端两部分。 后端基于c++开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。
-### 5.2 离线推理
-1.执行离线推理
-```
-python3.7 /path/to/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./nested_unet_bs1.om --input ./prep_dataset/ --output ./ais_results --outfmt BIN --batchsize=1
-```
---model：模型地址  
---input：预处理完的数据集文件夹  
---output：推理结果保存地址  
---outfmt：推理结果保存格式  
---batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的  batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。  
-输出结果默认保存在当前目录ais_results/X(X为执行推理的时间)，每个输入对应一个_X.bin文件的输出。
-
-
-## 6 精度对比
-
--   **[离线推理IoU精度](#61-离线推理IoU精度)**  
--   **[开源IoU精度](#62-开源IoU精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理IoU精度
-
-后处理统计IoU精度
-
-调用postprocess_nested_unet.py脚本推理结果与语义分割真值进行比对，可以获得IoU精度数据。
-```
-python3.7 postprocess_nested_unet.py ./ais_results/2022_07_11-15_53_11/sumary.json ./dsb2018_96/masks/0/
-```
-第一个为AisBench输出目录，第二个为真值所在目录。  
-查看输出结果：
-```
-IoU: 0.8385
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
-
-### 6.2 开源IoU精度
-[原代码仓公布精度](https://github.com/4uiiurz1/pytorch-nested-unet/blob/master/README.md)
-```
-Model           IoU  
-Nested U-Net    0.842  
-```
-### 6.3 精度对比
-将得到的om离线模型推理IoU精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
-
-## 7 性能对比
-
--   **[npu性能数据](#71-npu性能数据)**  
--   **[T4性能数据](#72-T4性能数据)**  
--   **[性能对比](#73-性能对比)**  
-
-### 7.1 npu性能数据
-AisBench工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用AisBench纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，AisBench纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认AisBench工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用AisBench工具在整个数据集上推理得到bs1与bs16的性能数据为准。  
-
-### 7.2 T4性能数据
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
- 
-### 7.3 性能对比
-|         | 310         | 310P3       | T4          | 310P3/310   | 310P3/T4     |
-|---------|-------------|-------------|-------------|-------------|--------------|
-| bs1     | 1674.950432 | 1681.600281 | 320.5865223 | 1.003970177 | 5.245386704  |
-| bs4     | 1868.409806 | 2495.595994 | 400.8416683 | 1.335679135 | 6.22588965   |
-| bs8     | 1845.83697  | 1907.807965 | 458.3922516 | 1.033573385 | 4.161955091  |
-| bs16    | 1757.895362 | 1852.471243 | 549.9608379 | 1.053800632 | 3.368369374  |
-| bs32    | 1724.390615 | 1796.602154 | 568.2170006 | 1.041876555 | 3.161824007  |
-|         |             |             |             |             |              |
-| 最优Batch | 1868.409806 | 2495.595994 | 568.2170006 | 1.335679135 | 4.391976993  |
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.12.1  | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
 
-310P单个device的吞吐率比310单卡的吞吐率大，故310P性能高于310性能，性能达标。  
-对于batch1与batch16，310P性能均高于310性能1.2倍，该模型放在Benchmark/cv/segmentation目录下。  
- **性能优化：**  
->以上在310P上的结果为AOE优化后的性能。
-因直接使用ATC导出模型已达标，所以不使用AOE进行性能优化。
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取本仓源码。
+
+2. 在同级目录下，下载第三方源码并打补丁。
+
+   ```
+   git clone https://github.com/4uiiurz1/pytorch-nested-unet
+   cd pytorch-nested-unet
+   git reset --hard 557ea02f0b5d45ec171aae2282d2cd21562a633e
+   patch -p1 < ../nested_unet.diff
+   cd ..
+   ```
+
+3. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型使用[2018 Data Science Bowl数据集](https://gitee.com/link?target=https%3A%2F%2Fwww.kaggle.com%2Fc%2Fdata-science-bowl-2018)进行推理测试 ，用户自行获取 `stage1_train.zip` 后，将文件解压并上传数据集到第三方源码的 `inputs/data-science-bowl-2018` 目录下。数据集及第三方源码的目录结构关系如下所示：
+
+   ```
+   pytorch-nested-unet/
+   |-- LICENSE
+   |-- README.md
+   |-- archs.py
+   |-- dataset.py
+   |-- inputs
+   |   `-- data-science-bowl-2018 
+   |       `-- stage1_train # 解压后数据集
+   |			|-- xxx
+   |			|-- yyy
+   |   		`-- ...
+   |-- ...
+   |-- preprocess_dsb2018.py # 数据集预处理脚本
+   |-- ...
+   `-- val_ids.txt
+   ```
+
+2. 执行原代码仓提供的数据集预处理脚本，生成处理后的数据集文件夹dsb2018_96。
+
+   ```
+   cd pytorch-nested-unet
+   python3 preprocess_dsb2018.py
+   cd ..
+   ```
+   
+3. 将第2步得到的数据集转换为模型的输入数据。
+
+   执行 nested_unet_preprocess.py 脚本，完成数据预处理。
+
+   ```
+   python3 nested_unet_preprocess.py ./pytorch-nested-unet/inputs/dsb2018_96/images ${prep_data} ./pytorch-nested-unet/val_ids.txt
+   ```
+   参数说明：
+
+   - --参数1：原数据集所在路径。
+   - --参数2：生成数据集的路径。
+   - --参数3：验证集图像id文件。
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       获取权重文件[nested_unet](*https://www.hiascend.com/zh/software/modelzoo/models/detail/1/06d27ff207e5417f8f02a5d6c414b05e/1*)
+
+   2. 导出onnx文件。
+
+      1. 使用nested_unet_pth2onnx.py导出动态batch的onnx文件。
+
+         ```
+         python3 nested_unet_pth2onnx.py ${pth_file} ${onnx_file}
+         ```
+
+         参数说明：
+
+         - --pth_file：权重文件。
+         - --onnx_file：生成 onnx 文件。
+      
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+   
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+      
+   3. 执行ATC命令。
+     
+         ```
+          # bs = [1, 4, 8, 16, 32, 64]
+         atc --framework=5 --model=./nested_unet.onnx --input_format=NCHW --input_shape="actual_input_1:${bs},3,96,96" --output=nested_unet_bs${bs} --log=error --soc_version=Ascend${chip_name}
+         ```
+      
+         运行成功后生成nested_unet_bs${bs}.om模型文件。
+      
+         参数说明：
+         - --model：为ONNX模型文件。
+         - --framework：5代表ONNX模型。
+         - --output：输出的OM模型。
+         - --input\_format：输入数据的格式。
+         - --input\_shape：输入数据的shape。
+         - --log：日志级别。
+         - --soc\_version：处理器型号。
+   
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+      ```
+      mkdir result
+      python3 ${ais_bench_path}/ais_infer.py --model=nested_unet_bs${bs}.om  --batchsize=${bs} \
+      --input ${prep_data} --output result --output_dirname result_bs${bs} --outfmt BIN
+      ```
+      
+      参数说明：
+      
+      -   --model：om模型路径。
+      -   --batchsize：批次大小。
+      -   --input：输入数据所在路径。
+      -   --output：推理结果输出路径。
+      -   --output_dirname：推理结果输出子文件夹。
+      -   --outfmt：推理结果输出格式
+   
+3. 精度验证。
+  
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+   
+      ```
+    python3 nested_unet_postprocess.py ./result/result_bs${bs} ./pytorch-nested-unet/inputs/dsb2018_96/masks/0/
+    ```
+
+      参数说明：
+   
+      - --参数1：推理输出目录。
+      - --参数2：真值所在目录。
+   
+4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+  
+      ```
+      python3 ${ais_bench_path}/ais_infer.py --model=nested_unet_bs${bs}.om --loop=50 --batchsize=${bs}
+      ```
+      
+      参数说明：
+      - --model：om模型路径。
+      - --loop：推理单组数据的循环次数。
+      - --batchsize：批次大小。
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，UNet++模型的性能和精度参考下列数据。
+
+| 芯片型号    | Batch Size | 数据集                 | 开源精度（IoU） | 精度指标（IoU） |
+| ----------- | ---------- | ---------------------- | --------------- | --------------- |
+| Ascend310P3 | 16         | data-science-bowl-2018 | 0.842           | 0.838           |
+
+| 芯片型号    | Batch Size | 性能指标（FPS） |
+| ----------- | ---------- | --------------- |
+| Ascend310P3 | 1          | 1887.38         |
+| Ascend310P3 | 4          | 2623.44         |
+| Ascend310P3 | 8          | 2606.03         |
+| Ascend310P3 | 16         | 2545.31         |
+| Ascend310P3 | 32         | 2491.28         |
+| Ascend310P3 | 64         | 1760.00         |

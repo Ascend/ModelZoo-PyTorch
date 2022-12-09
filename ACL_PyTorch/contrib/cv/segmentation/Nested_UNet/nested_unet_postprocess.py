@@ -46,37 +46,17 @@ def iou_score(output, target):
 
     return (intersection + smooth) / (union + smooth)
 
-def read_info_from_json(json_path):
-    '''
-    此函数用于读取inference_tools生成的json文件
-    input: json文件地址
-    output: dict结构: 为原始的json转换出来的结构
-    '''
-    if os.path.exists(json_path) is False:
-        print(json_path, 'is not exist')
-    with open(json_path, 'r') as f:
-        load_data = json.load(f)
-        file_info = load_data['filesinfo']
-        return file_info
-
 def main():
 
-    file_info = read_info_from_json(result_json_path)
-
+    file_names = os.listdir(result_dir_path)
     avg_meter = AverageMeter()
 
-    for i in file_info.items():
-        # 获取推理结果文件地址
-        result_file_name = os.path.basename(i[1]['outfiles'][0])
-        # 使用result_dir的路径作为结果文件的路径，可以使得运行该脚本的路径更通用
-        res_path = os.path.join(result_dir_path, result_file_name)
-        # 获取对应的标签
-        label_id = os.path.splitext(os.path.basename(i[1]['infiles'][0]))[0]
-
+    for file_name in file_names:
+        res_path = os.path.join(result_dir_path, file_name)
         result = np.fromfile(res_path, dtype='float32')
         result = np.reshape(result, (1, 96, 96))
 
-        mask = cv2.imread(os.path.join(mask_path, label_id + '.png'))
+        mask = cv2.imread(os.path.join(mask_path, file_name.split('_')[0] + '.png'))
         mask = mask.astype('float32') / 255
 
         mask = mask.transpose(2, 0, 1)[0]
@@ -87,7 +67,6 @@ def main():
 
 
 if __name__ == "__main__":
-    result_json_path = sys.argv[1]
+    result_dir_path = sys.argv[1]
     mask_path = sys.argv[2]
-    result_dir_path = os.path.dirname(result_json_path)
     main()
