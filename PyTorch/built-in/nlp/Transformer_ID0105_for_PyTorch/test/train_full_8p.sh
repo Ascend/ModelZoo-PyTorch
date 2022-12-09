@@ -35,7 +35,7 @@ do
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
-        batch_size=`echo ${para#*=}
+        batch_size=`echo ${para#*=}`
     fi
 done
 
