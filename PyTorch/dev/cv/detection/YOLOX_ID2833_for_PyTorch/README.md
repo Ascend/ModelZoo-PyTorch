@@ -1,3 +1,5 @@
+
+
 # YOLOX for PyTorch
 
 -   [概述](概述.md)
@@ -88,7 +90,7 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
    >该数据集的训练过程脚本只作为一种参考示例。
 
 2. 数据预处理
-    
+   
     - 本模型不涉及
 
 ## 获取预训练模型（可选）
@@ -111,26 +113,28 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
 
    - 单机单卡训练
 
-     启动单卡训练。
-
      ```
-     cd test
+cd test
      bash train_full_1p.sh --data_path=xx/xx/coco2017
-  bash train_performance_1p.sh --data_path=xx/xx/coco2017
+     或
+     bash train_performance_1p.sh --data_path=xx/xx/coco2017
+   ```
+     
+     
+     
+   - 单机8卡训
+   
      ```
+      cd test
+      bash train_full_8p.sh --data_path=xx/xx/coco2017
+      或
+      bash train_performance_8p.sh --data_path=xx/xx/coco2017
+     ```
+   
+     
+   
+     训练完成后，pth文件保存在./work_dirs下面，权重文件保存在../test/output/$deviceid/ckpt下，并输出模型训练精度和性能信息。
 
-   - 单机8卡训练
-
-     启动8卡训练。
-   
-     ```
-  cd test
-     bash train_full_8p.sh --data_path=xx/xx/coco2017 
-  bash train_performance_8p.sh --data_path=xx/xx/coco2017
-     ```
-   
-   训练完成后，pth文件保存在./work_dirs下面，权重文件保存在../test/output/$deviceid/ckpt下，并输出模型训练精度和性能信息。
-   
 
 # 训练结果展示
 

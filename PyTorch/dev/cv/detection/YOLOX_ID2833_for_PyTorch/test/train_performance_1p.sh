@@ -89,9 +89,9 @@ chmod +x ${cur_path}/tools/dist_train.sh
 export ENABLE_RUNTIME_V2=1
 echo "Runtime 2.0 $ENABLE_RUNTIME_V2"
 
-sed -i "s|max_epochs = 300|max_epochs = $total_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|max_epochs = [0-9]\{1,3\}|max_epochs = $total_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|data/coco/|$data_path/|g" configs/yolox/yolox_s_8x8_300e_coco.py
-sed -i "s|interval = 10|interval = $val_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|interval = [0-9]\{1,3\}|interval = $val_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|annotations/instances_train2017.json|annotations/MINIinstances_train2017.json|g" configs/yolox/yolox_s_8x8_300e_coco.py
 
 #训练开始时间，不需要修改
@@ -109,6 +109,7 @@ sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x
 sed -i "s|$data_path/|data/coco/|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|interval = $val_epoch|interval = 10|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|annotations/MINIinstances_train2017.json|annotations/instances_train2017.json|g" configs/yolox/yolox_s_8x8_300e_coco.py
+
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
