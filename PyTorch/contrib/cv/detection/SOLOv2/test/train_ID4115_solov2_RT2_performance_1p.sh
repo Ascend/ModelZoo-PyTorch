@@ -111,6 +111,7 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export NPUID=0
 export RANK=0
+export PYTHONPATH=${cur_path}/../mmcv:$PYTHONPATH
 cd ${cur_path}/../
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 --batch_size=$batch_size\
       --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True --interval=$interval\
