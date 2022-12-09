@@ -43,7 +43,9 @@ import numpy as np
 import time
 from progress.bar import Bar
 import torch
-
+if torch.__version__ >= "1.8":
+    import torch_npu
+    
 from external.nms import soft_nms
 from opts import opts
 from logger import Logger

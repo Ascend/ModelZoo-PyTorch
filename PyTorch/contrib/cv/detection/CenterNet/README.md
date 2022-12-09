@@ -1,123 +1,201 @@
-# CenetrNet
+# CenterNet for PyTorch
 
-This implements training of CenetrNet on the Pascal VOC dataset, mainly modified from [CenterNet](https://github.com/xingyizhou/CenterNet).
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-## CenetrNet Detail
+# 概述
 
-Detection identifies objects as axis-aligned boxes in an image. Most successful object detectors enumerate a nearly exhaustive list of potential object locations and classify each. This is wasteful, inefficient, and requires additional post-processing. In this paper, we take a different approach. We model an object as a single point -- the center point of its bounding box. Our detector uses keypoint estimation to find center points and regresses to all other object properties, such as size, 3D location, orientation, and even pose. Our center point based approach, CenterNet, is end-to-end differentiable, simpler, faster, and more accurate than corresponding bounding box based detectors. 
+## 简述
 
+CenterNet使用关键点检测的方法去预测目标边框的中心点，然后回归出目标的其他属性，例如大小、3D位置、方向甚至是其姿态。而且这个方向相比之前的目标检测器，实现起来更加简单，推理速度更快，精度更高。
 
+- 参考实现：
 
-## Requirements
+  ```
+  url=url=https://github.com/xingyizhou/CenterNet.git 
+  commit_id=5b1a490a52da57d3580e80b8bb4bbead9ef2af96
+  ```
 
-- Install PyTorch ([pytorch.org](http://pytorch.org))
-- Install [COCOAPI](https://github.com/cocodataset/cocoapi):
+- 适配昇腾 AI 处理器的实现：
 
-    ~~~
-    git clone https://github.com/cocodataset/cocoapi.git
-    cd cocoapi/PythonAPI
-    python setup.py install
-    ~~~
--  Install Dependencies
-    ~~~
-    pip install -r requirements.txt
-    ~~~
-- Compile deformable convolutional (from DCNv2).
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/contrib/cv/detection
+  ```
 
-    ~~~
-    cd ./src/lib/models/networks/DCNv2
-    ./make.sh
-    ~~~
-- Compile NMS
-    ~~~
-    cd ./src/lib/external
-    make
-    ~~~
+- 通过Git获取代码方法如下：
 
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
-## Download the Pscal VOC dataset 
+- 通过单击“立即下载”，下载源码包。
 
-  - Run
-      ~~~
-      cd ./src/tools/
-      bash get_pascal_voc.sh
-      ~~~
-  - The above script includes:
-      - Download, unzip, and move Pascal VOC images from the VOC website. 
-      - Download Pascal VOC annotation in COCO format (from Detectron). 
-      - Combine train/val 2007/2012 annotation files into a single json. 
-  - Move the created `voc` folder to `data` (or create symlinks) to make the data folder like:
+# 准备训练环境
 
-  ~~~
-  ${CenterNet_ROOT}
-  |-- data
-  `-- |-- voc
-      `-- |-- annotations
-          |   |-- pascal_trainval0712.json
-          |   |-- pascal_test2017.json
-          |-- images
-          |   |-- 000001.jpg
-          |   ......
-          `-- VOCdevkit
-  
-  ~~~
-  The `VOCdevkit` folder is needed to run the evaluation script from [faster rcnn](https://github.com/rbgirshick/py-faster-rcnn/blob/master/tools/reval.py).
+## 准备环境
 
-## Training
+- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
 
-To train a model, run `main_npu_1p/8p.py` with the desired model architecture:
+  **表 1**  版本配套表
 
-```bash
-# training 1p accuracy
-bash test/train_full_1p.sh  --data_path=YourDataPath
+  | 配套       | 版本                                                         |
+  | ---------- | ------------------------------------------------------------ |
+  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
 
-# training 1p performance
-bash test/train_performance_1p.sh   --data_path=YourDataPath
+- 环境准备指导。
 
-# training 8p accuracy
-bash test/train_full_8p.sh  --data_path=YourDataPath
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
-# training 8p performance
-bash test/train_performance_8p.sh  --data_path=YourDataPath
+- 安装依赖。
 
-# evaluate 8p accuracy
-bash test/train_eval.sh  --data_path=YourDataPath
-```
-### 多机多卡性能数据获取流程
+  ```
+  pip install -r requirements.txt
+  ```
 
-```shell
-     1. 安装环境
-     2. 开始训练，每个机器所请按下面提示进行配置
-             bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
-```
+- 安装COCOAPI
 
-## Related Files Path:
-- log path:
-  ~~~
-    exp/task(default:ctdet)/exp_id/date_and_time/log.txt  # training detail and performance result log    
-    test/output/devie_id/test_0.log # 8p training accuracy result log
-  ~~~
-- model path:
-  ~~~
-    exp/task(default:ctdet)/exp_id/model_last.pth  #The completed training model(Use this model for testing by default)
-    exp/task(default:ctdet)/exp_id/model_best.pth  #Training the model with the lowest loss
-    exp/task(default:ctdet)/exp_id/model_45.pth  #Model of the 45th epoch, Training at this epoch will drop the learn rate
-    exp/task(default:ctdet)/exp_id/model_60.pth  #Model of the 60th epoch, Training at this epoch will drop the learn rate
-    exp/task(default:ctdet)/exp_id/model_75.pth  #Model of the 75th epoch, Training at this epoch will drop the learn rate
-  ~~~
+  ```
+  git clone https://github.com/cocodataset/cocoapi.git
+  cd cocoapi/PythonAPI
+  python setup.py install
+  ```
 
-## Test other models
-If you want to test another model (e.g. model_best), enter the command in the terminal
-  ~~~
-    python src/test.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --dataset pascal --resume --flip_test --load_model YourModelPath
+- 编译可变形卷积（来自DCNv2）
 
-  ~~~
+  ```
+  cd ./src/lib/models/networks/DCNv2
+  ./make.sh
+  ```
 
+- 编译NMS
 
+  ```
+  cd ./src/lib/external
+  make
+  ```
 
-## CenterNet training result
+## 准备数据集
 
-| Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: | :------: |
-| -        | 140       | 1        | 5        | O1       |
-| 71.16   | 1080      | 8        | 90      | O1       |
+1. 获取数据集。
+
+   用户自行获取Pscal VOC数据集，将数据集上传到服务器任意路径下并解压。
+
+     - 运行脚本
+
+       ~~~
+       cd ./src/tools/
+       bash get_pascal_voc.sh
+       ~~~
+
+     - 上述脚本内容包含:
+
+       - 从VOC网站下载、解压缩和移动Pascal VOC图像。
+       - 下载COCO格式的Pascal VOC注释（从Detectron下载）。
+       - 将train/val 2007/2012注释文件合并到单个json中。
+
+   数据集目录结构参考如下所示。
+
+   ```
+   |-- data
+   `-- |-- voc
+       `-- |-- annotations
+           |   |-- pascal_trainval0712.json
+           |   |-- pascal_test2017.json
+           |-- images
+           |   |-- 000001.jpg
+           |   ......
+           `-- VOCdevkit        
+   ```
+
+   > **说明：** 
+   > 该数据集的训练过程脚本只作为一种参考示例。 
+
+备注：Vocdevkit需要用[faster rcnn](https://github.com/rbgirshick/py-faster-rcnn/blob/master/tools/reval.py)去运行评估脚本。
+
+# 开始训练
+
+## 训练模型
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练和单机8卡训练。
+
+   - 单机单卡训练
+
+     启动单卡训练。
+
+     ```
+     bash ./test/train_full_1p.sh --data_path=数据集路径    
+     ```
+
+   - 单机8卡训练
+
+     启动8卡训练。
+
+     ```
+     bash ./test/train_full_8p.sh --data_path=数据集路径 
+     ```
+
+   --data\_path参数填写数据集路径。
+
+   3.运行测试脚本。
+
+   ```
+   bash ./test/train_eval.sh --data_path=数据集路径
+   ```
+
+   模型训练脚本参数说明如下。
+
+   ```
+   公共参数：
+   --data_path                         //数据集路径
+   --num_workers                       //加载数据进程数      
+   --num_epochs                        //重复训练次数
+   --batch_size                        //训练批次大小
+   --lr                           		 //初始学习率，默认：3.54e-4
+   --device_list                       //训练指定训练用卡
+   --world-size                        //分布式训练节点数量
+   ```
+
+训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME    | Acc@1 | FPS   | Epochs | AMP_Type | Torch_version |
+| ------- | ----- | :---- | ------ | :------- | ------------- |
+| 1p-竞品 | -     | -     | -      | -        | -             |
+| 8p-竞品 | -     | -     | -      | -        | -             |
+| 1p-NPU  | -     | 91    | 1      | O1       | 1.5           |
+| 1p-NPU  | -     | 95.44 | 1      | O1       | 1.8           |
+| 8p-NPU  | 71.16 | 657   | 90     | O1       | 1.5           |
+| 8p-NPU  | 71.12 | 840.208| 90     | O1       | 1.8           |
+
+备注：OBS无模型归档数据，以Torch1.5版本的自验结果作为标杆数据。
+
+# 版本说明
+
+## 变更
+
+2022.09.20：更新pytorch1.8版本。
+
+2021.10.09：首次发布。
+
+## 已知问题
+
+无。
+
