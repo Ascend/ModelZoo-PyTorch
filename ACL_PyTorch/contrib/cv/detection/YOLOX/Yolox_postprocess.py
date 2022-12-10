@@ -17,6 +17,7 @@ import argparse
 from tqdm import tqdm
 import torch
 import numpy as np
+import shutil
 from yolox.data import COCODataset, ValTransform
 from yolox.evaluators import COCOEvaluator
 from yolox.utils.boxes import postprocess
@@ -38,6 +39,42 @@ def get_output_data(dump_dir, idx, dtype=np.float32):
     return res
 
 
+def is_whitelist_prefix(path):
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.abspath(path)
+    return path.startswith(dir_path)
+
+
+def is_link(path):
+    return os.path.islink(os.path.abspath(path))
+
+
+def is_owner(path):
+    path_owner = os.stat(path).st_uid
+    current_user = os.geteuid()
+    return path_owner == current_user
+
+
+def rmdir(path):
+    if not is_whitelist_prefix(path):
+        raise RuntimeError('illegal path')
+
+    if not is_link(path):
+        raise RuntimeError('illegal link path')
+
+    if not is_owner(path):
+        raise RuntimeError('No permission to remove directory')
+
+    shutil.rmtree(path)
+
+
+def mkdir(path):
+    if not is_whitelist_prefix(path):
+        raise RuntimeError('illegal path')
+
+    os.makedirs(path, mode=0o750)
+
+
 def main():
     parser = argparse.ArgumentParser(description='YOLOX Postprocess')
     parser.add_argument('--dataroot', dest='dataroot',
@@ -52,9 +89,15 @@ def main():
     opt = parser.parse_args()
 
     if os.path.exists(opt.dump_dir):
-        os.system("rm-rf " + opt.dump_dir)
-    else:
-        os.system("mkdir " + opt.dump_dir)
+        try:
+            rmdir(opt.dump_dir)
+        except:
+            raise RuntimeError(f'Failed to remove existing directory')
+
+    try:
+        mkdir(opt.dump_dir)
+    except:
+        raise RuntimeError(f'Failed to create directory')
 
     valdataset = COCODataset(
         data_dir=opt.dataroot,
@@ -77,7 +120,7 @@ def main():
     for cur_iter, (imgs, _, info_imgs, ids) in enumerate(tqdm(val_loader)):
 
         opt1, opt2, opt3, opt4, opt5, opt6, opt7, opt8, opt9 = get_output_data(
-            opt.dump_dir, cur_iter)
+            dump_dir, cur_iter)
         opt2 = opt2.sigmoid()
         opt3 = opt3.sigmoid()
 
