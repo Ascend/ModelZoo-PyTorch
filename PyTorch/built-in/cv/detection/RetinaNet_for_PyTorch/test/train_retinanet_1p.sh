@@ -20,7 +20,7 @@ BATCH_SIZE=${BATCH_SIZE:-2}
 #export HCCL_WHITELIST_DISABLE=1
 #export SCALAR_TO_HOST_MEM=1
 #export RANK_SIZE=8
-PORT=29500 ./tools/dist_train.sh configs/retinanet/retinanet_r50_fpn_1x_coco.py 1 --cfg-options data.samples_per_gpu=$BATCH_SIZE optimizer.lr=0.005 --seed 0 --gpu-ids ${DEVICE_ID} --no-validate --opt-level O1
+PORT=29688 ./tools/dist_train.sh configs/retinanet/retinanet_r50_fpn_1x_coco.py 1 --cfg-options data.samples_per_gpu=$BATCH_SIZE optimizer.lr=0.005 --seed 0 --gpu-ids ${DEVICE_ID} --no-validate --opt-level O1
 
 
 #export RANK=0
