@@ -118,6 +118,7 @@ export RANK_SIZE=8
 #集合通信参数,不需要修改
 export WORLD_SIZE=$((nnodes * RANK_SIZE))
 export NPUID=$((node_rank * RANK_SIZE))
+KERNEL_NUM=$(($(nproc) / 8))
 
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
