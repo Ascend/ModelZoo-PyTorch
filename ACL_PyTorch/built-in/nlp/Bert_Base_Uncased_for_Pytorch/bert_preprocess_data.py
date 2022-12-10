@@ -51,6 +51,8 @@ from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
 
 #from apex import amp
+
+sys.path.append("./DeepLearningExamples/PyTorch/LanguageModeling/BERT/")
 from schedulers import LinearWarmUpScheduler
 from file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 import modeling
@@ -404,6 +406,10 @@ def data_main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--predict_file", default=None, type=str,
                         help="SQuAD json for predictions. E.g., dev-v1.1.json or test-v1.1.json")
+                        
+    parser.add_argument("--save_dir", default="./bert_bin", type=str,
+                        help="The output path. The input_ids, input_mask, and the segment_ids folder will be stored in this location. By default it is \"./bert_bin\".")
+
     parser.add_argument("--max_seq_length", default=384, type=int,
                         help="The maximum total input sequence length after WordPiece tokenization. Sequences "
                              "longer than this will be truncated, and sequences shorter than this will be padded.")
@@ -435,7 +441,11 @@ def data_main():
         max_query_length=args.max_query_length,
         is_training=False)
 
-    bin_path = "./bert_bin"
+    output_root = args.save_dir
+    input_ids_path = os.path.join(output_root, "input_ids")
+    input_mask_path = os.path.join(output_root, "input_mask")
+    segment_ids_path = os.path.join(output_root, "segment_ids")
+
     all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
     all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
     all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
@@ -445,19 +455,26 @@ def data_main():
     eval_sampler = SequentialSampler(eval_data)
     eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.predict_batch_size)
     
-    if not os.path.exists(bin_path):
-        os.makedirs(bin_path)
+    if not os.path.exists(input_ids_path):
+        os.makedirs(input_ids_path)
+
+    if not os.path.exists(input_mask_path):
+        os.makedirs(input_mask_path)
+        
+    if not os.path.exists(segment_ids_path):
+        os.makedirs(segment_ids_path)
+
     i = -1
     for input_ids, input_mask, segment_ids, example_indices in eval_dataloader:
         i = i + 1
         print("[info] file", "===", i)
         
         input_ids_np = input_ids.numpy()
-        input_mask_np = input_mask.numpy().astype("float16")
+        input_mask_np = input_mask.numpy()
         segment_ids_np = segment_ids.numpy()
-        input_ids_np.tofile(os.path.join(bin_path, "input_ids_" + str(i) + '.bin'))
-        segment_ids_np.tofile(os.path.join(bin_path, "segment_ids_" + str(i) + '.bin'))
-        input_mask_np.tofile(os.path.join(bin_path, "input_mask_" + str(i) + '.bin'))
+        input_ids_np.tofile(os.path.join(input_ids_path, "Bert_" + str(i) + '.bin'))
+        segment_ids_np.tofile(os.path.join(input_mask_path, "segment_ids_" + str(i) + '.bin'))
+        input_mask_np.tofile(os.path.join(segment_ids_path, "input_mask_" + str(i) + '.bin'))
 
 if __name__ == "__main__":
     data_main()

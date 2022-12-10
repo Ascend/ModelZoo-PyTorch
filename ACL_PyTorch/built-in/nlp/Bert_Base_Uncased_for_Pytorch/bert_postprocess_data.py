@@ -54,6 +54,7 @@ from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
 
 #from apex import amp
+sys.path.append("./DeepLearningExamples/PyTorch/LanguageModeling/BERT/")
 from schedulers import LinearWarmUpScheduler
 from file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 import modeling
@@ -421,8 +422,8 @@ def main():
     batch_start_logits_ = []
     batch_end_logits_ = []      
     for i in range(test_num):       
-        batch_end_logit = np.fromfile('{}Bert_{}_2.bin'.format(npu_path, i), dtype='float32')
-        batch_start_logit = np.fromfile('{}Bert_{}_1.bin'.format(npu_path, i), dtype='float32')       
+        batch_end_logit = np.fromfile('{}Bert_{}_1.bin'.format(npu_path, i), dtype='float32')
+        batch_start_logit = np.fromfile('{}Bert_{}_0.bin'.format(npu_path, i), dtype='float32')  
         batch_start_logits = torch.from_numpy(batch_start_logit) 
         batch_end_logits = torch.from_numpy(batch_end_logit)   
         start_logits = batch_start_logits.cpu().tolist()
