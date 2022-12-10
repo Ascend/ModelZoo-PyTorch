@@ -326,7 +326,7 @@
 ----
 # 性能&精度
 
-在310P设备上，OM模型个各batchsize的精度与目标精度[{precision:82.20%, recall:70.48%, hmean:75.89%}](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/algorithm_det_pse.md#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B)各指标的相对误差均低于 1%，当 batchsize 为 1 时模型性能最优，达 219.49 fps.
+在310P设备上，OM模型个各batchsize的精度与目标精度[{precision:82.20%, recall:70.48%, hmean:75.89%}](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/doc/doc_ch/algorithm_det_psenet.md#1-%E7%AE%97%E6%B3%95%E7%AE%80%E4%BB%8B)各指标的相对误差均低于 1%，当 batchsize 为 1 时模型性能最优，达 219.49 fps.
 
 各batchsize的精度与性能指标如下：
 
