@@ -47,10 +47,7 @@ def preprocess(file_path, bin_path):
           image = cv2.imread(os.path.join(cur_path, document))
           for scale in opt.test_scales:
              images, meta = detector.pre_process(image, scale, meta=None)
-             if not os.path.exists(os.path.join(bin_path,file)):
-                 os.makedirs(os.path.join(bin_path,file))
-             des_path = os.path.join(bin_path,file)
-             images.numpy().tofile(os.path.join(des_path,document.split('.')[0] +'.bin'))
+             images.numpy().tofile(os.path.join(bin_path,document.split('.')[0] +'.bin'))
         
 if __name__ == "__main__":
     file_path = os.path.abspath(sys.argv[1])
