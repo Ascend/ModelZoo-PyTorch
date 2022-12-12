@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -11,7 +13,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
 
   ******
@@ -70,32 +72,11 @@
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.16（NPU驱动固件版本为5.1.RC2）  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | - 
-| Torch                                                        | 1.5.0 | - 
-
-
-- 该模型需要以下依赖
-
-  **表 2**  依赖列表
-
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| onnx                                                         | 1.7.0 | -    
-| Torch                                                        | 1.5.0 | - 
-| TorchVision                                                  | 0.6.0 | - 
-| opencv-python                                                | 4.5.3.56 | - 
-| numpy                                                        | 1.20.3 | - |
-| scipy                                                        | 1.6.2 | - |
-| tqdm                                                         | 4.62.1 | - |
-| pycocotools                                                  | 2.0 | - |
-| Cython                                                       | 0.29.32 | - |
-| decorator                                                    | 5.1.1 | - |
-| sympy                                                        | 1.10.1 | - |
-| scikit-learn                                                 | 0.24.2   | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.16（NPU驱动固件版本为5.1.RC2）  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | - 
+  | Python                                                        | 3.7.5 | - 
 
 
 
@@ -175,13 +156,17 @@
 
    2. 导出onnx文件。
 
-      1. 使用“snapshot_6.pth.tar”导出onnx文件。
+        使用“snapshot_6.pth.tar”导出onnx文件。
 
-         运行“3DMPPE-ROOTNET_pth2onnx.py”脚本。
+        运行“3DMPPE-ROOTNET_pth2onnx.py”脚本。
 
          ```
          python 3DMPPE-ROOTNET_pth2onnx.py snapshot_6.pth.tar 3DMPPE-ROOTNET.onnx
          ```
+         - 参数说明：
+
+           -   --snapshot_6.pth.tarl：为权重文件路径。
+           -   --3DMPPE-ROOTNET.onnx：onnx文件的输出路径。
 
          获得“3DMPPE-ROOTNET.onnx”文件。
 
@@ -232,7 +217,7 @@
 
 2. 开始推理验证。
 
-   1.  使用ais_infer工具进行推理。ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+   1.  使用ais_infer工具进行推理。ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
    2.  创建输出的文件夹。
 
@@ -272,13 +257,17 @@
             -   --result_file：推理结果的accuracy数据。
 
 
-   <!--e.  性能验证。-->
+   5. 性能验证。
 
-   <!--   可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：-->
+       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-   <!--   ```-->
-   <!--    python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}-->
-      <!--```-->
+       ```
+       python ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+       ```
+       - 参数说明：
+            - --model：om模型的路径
+            - --loop: 推理次数
+            - --batchsize：数据集batch_size的大小
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
