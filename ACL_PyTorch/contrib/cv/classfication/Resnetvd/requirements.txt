@@ -1,0 +1,9 @@
+torch == 1.8.0
+torchvision == 0.9.0
+onnx == 1.10.2
+numpy == 1.21.4
+opencv-python == 4.5.4.58
+pretrainedmodels == 0.7.4
+protobuf == 3.20.0
+decorator 
+sympy
