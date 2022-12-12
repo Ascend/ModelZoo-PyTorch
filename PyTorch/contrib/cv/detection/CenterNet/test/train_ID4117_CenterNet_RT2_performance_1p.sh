@@ -62,7 +62,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 # GE 模式profiling添加环境变量
-if [ $profiling=="GE" ];then
+if [[ $profiling == "GE" ]];then
     export GE_PROFILING_TO_STD_OUT=1
 fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改

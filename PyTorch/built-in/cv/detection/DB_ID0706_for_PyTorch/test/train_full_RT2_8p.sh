@@ -87,7 +87,7 @@ if [ $rt1 ];then
     export ENABLE_RUNTIME_V2=0
     echo "use rt1 runtime"
 fi
-if [ $profiling=="GE" ];then
+if [[ $profiling == "GE" ]];then
     export GE_PROFILING_TO_STD_OUT=1
 fi
 #################创建日志输出目录，不需要修改#################
