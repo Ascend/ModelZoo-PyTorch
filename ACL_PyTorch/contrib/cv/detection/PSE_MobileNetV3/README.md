@@ -173,8 +173,8 @@
     git clone https://gitee.com/ascend/auto-optimizer.git
     cd auto-optimizer
     git reset --hard 52e2f791ba6fa9d55c5b57f0a2521c69aed01ea9
-    pip install -r requirements.txt
-    python setup.py install
+    pip3 install -r requirements.txt
+    python3 setup.py install
 
     ```
     因Resize算子精度问题，修改ONNX模型
