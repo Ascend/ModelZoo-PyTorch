@@ -55,11 +55,8 @@ def load_meta(dataset, keyword='vox1'):
         wav_files_test = sorted(glob(dataset +'/vox1_test' + '/*/*/*.wav'))
         print(f'Len. wav_files_test {len(wav_files_test)}')
 
-        if not os.path.isfile('vox1_test.csv'):
-            test_meta = struct_meta(wav_files_test)
-            write_to_csv(test_meta, 'vox1_test.csv')
-        else:
-            test_meta = read_from_csv('vox1_test.csv')
+        test_meta = struct_meta(wav_files_test)
+        write_to_csv(test_meta, 'vox1_test.csv')
     
     return  test_meta
 
