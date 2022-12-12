@@ -4,46 +4,46 @@ currentDir=$(cd "$(dirname "$0")";pwd)
 echo 'Current directory is: '$currentDir
 
 N_NPUS=$(python3.7 -c """
-from config import conf_8p as conf
+from config import conf_1p as conf
 device_str = conf['ASCEND_VISIBLE_DEVICES']
 print(len(device_str) // 2 + 1)
 """
 )
-Total_iter=$(python3.7 -c """
-from config import conf_8p as conf
-print(conf['model']['total_iter'])
+Device_id=$(python3.7 -c """
+from config import conf_1p as conf
+print(conf['ASCEND_VISIBLE_DEVICES'])
 """
 )
 Data_path=$(python3.7 -c """
-from config import conf_8p as conf
+from config import conf_1p as conf
 print(conf['data']['dataset_path'])
 """
 )
-
 echo 'Using '$N_NPUS' NPUs...'
 
-#################基础配置参数，需要模型审视修改##################
+################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
 Network="Gaitset"
 # 训练batch_size
-batch_size=1024
+batch_size=128
 # 训练使用的npu卡数
 export RANK_SIZE=$N_NPUS
 # 数据集路径,保持为空,不需要修改
 data_path=$Data_path
 
 # 训练iters
-train_iters=$Total_iter
+train_iters=100
+# 指定训练所使用的npu device卡id
+device_id=$Device_id
 # 加载数据进程数
 workers=$(nproc)
-
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
-    if [[ $para == --workers* ]];then
-        workers=`echo ${para#*=}`
+    if [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     fi
@@ -54,13 +54,24 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
+
 
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
-cur_path_last_diename=${cur_path##*/}
-if [ x"${cur_path_last_diename}" == x"test" ];then
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
     test_path_dir=${cur_path}
     cd ..
     cur_path=`pwd`
@@ -70,7 +81,6 @@ fi
 
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -91,13 +101,13 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 
-python3.7 -m torch.distributed.launch --nproc_per_node=$N_NPUS train_main.py \
+python3.7 -u train_main.py \
     --data_path ${data_path} \
     --dist_backend='hccl' \
     --world_size=$N_NPUS \
     --rank=0 \
-    --iters 40000 \
-    --device_num=$N_NPUS  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
+    --device_num=$N_NPUS  \
+    --total_iter=$train_iters > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 
 wait
 
@@ -112,12 +122,13 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS_Pre=`grep -a '（FPS）'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $6}'|awk 'END {print}'`
 FPS=${FPS_Pre:1:${#FPS_Pre}-4}
-##打印，不需要修改
+#打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-##输出训练精度,需要模型审视修改
-#train_err=`grep -a '* Err@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Err@1" '{print $NF}'|awk -F " " '{print $1}'`
-##打印，不需要修改
+#输出训练精度,需要模型审视修改
+#train_err=`grep -a '* Err@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${RANK_SIZE}'p'_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Err@1" '{print $NF}'|awk -F " " '{print $1}'`
+
+#打印，不需要修改
 #echo "Final Train Accuracy: `awk 'BEGIN{printf "%.2f\n", '100'-'${train_err}'}'`"
 #echo "E2E Training Duration sec : $e2e_time"
 
@@ -136,7 +147,8 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep -a "Full_Loss" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F " " '{print $15}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
-##最后一个迭代loss值，不需要修改
+
+#最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}'  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
