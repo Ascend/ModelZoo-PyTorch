@@ -121,7 +121,7 @@ echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $11}' >>${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
 FPS=$(cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}')
-FPS=$((FPS*nnodes))
+FPS=`awk 'BEGIN{printf "%.3f\n", '${FPS}' * '${nnodes}'}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
