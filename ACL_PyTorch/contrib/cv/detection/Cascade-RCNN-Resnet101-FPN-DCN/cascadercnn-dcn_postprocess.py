@@ -16,6 +16,7 @@ import os
 import numpy as np
 import argparse
 import cv2
+import tqdm
 
 CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
             'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
@@ -97,7 +98,7 @@ if __name__ == '__main__':
     os.makedirs(det_results_path, exist_ok=True)
     total_img = set([name[:name.rfind('_')]
                      for name in os.listdir(bin_path) if "bin" in name])
-    for bin_file in sorted(total_img):
+    for bin_file in tqdm.tqdm(sorted(total_img)):
         path_base = os.path.join(bin_path, bin_file)
         # load all detected output tensor
         res_buff = []
@@ -114,7 +115,7 @@ if __name__ == '__main__':
                 print("[ERROR] file not exist", path_base + "_" + str(num) + ".bin")
         res_tensor = np.concatenate(res_buff, axis=1)
         current_img_size = img_size_dict[bin_file]
-        print("[TEST]---------------------------concat{} imgsize{}".format(len(res_tensor), current_img_size))
+        
         predbox = coco_postprocess(res_tensor, current_img_size, flags.net_input_width, flags.net_input_height)
 
         if flags.ifShowDetObj == True:
@@ -139,10 +140,10 @@ if __name__ == '__main__':
                   # 图像，文字内容， 坐标 ，字体，大小，颜色，字体厚度
             
         if flags.ifShowDetObj == True:
-            print(os.path.join(det_results_path, bin_file +'.jpg'))
+          
             cv2.imwrite(os.path.join(det_results_path, bin_file +'.jpg'), imgCur, [int(cv2.IMWRITE_JPEG_QUALITY),70])
 
         det_results_file = os.path.join(det_results_path, bin_file + ".txt")
         with open(det_results_file, "w") as detf:
             detf.write(det_results_str)
-        print(det_results_str)
+ 
