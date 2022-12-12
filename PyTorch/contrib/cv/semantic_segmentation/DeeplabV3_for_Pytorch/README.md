@@ -65,7 +65,7 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 
 - 替换mmcv_need中的代码到mmcv-full
   ```
-  mmcv_path=mmcv 安装路径
+  mmcv_path=mmcv安装路径
   ```
   ```
   cd ${code_path}
@@ -128,7 +128,7 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
      ```
      # training 1p accuracy
      bash ./test/train_full_1p.sh --data_path=real_data_path  
-    # training 1p performance
+     # training 1p performance
      bash ./test/train_performance_1p.sh --data_path=real_data_path 
      ```
 
@@ -138,10 +138,10 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 
      ```
      # training 8p accuracy
-      bash ./test/train_full_8p.sh --data_path=real_data_path
+     bash ./test/train_full_8p.sh --data_path=real_data_path
 
      # training 8p performance
-      bash ./test/train_performance_8p.sh --data_path=real_data_path
+     bash ./test/train_performance_8p.sh --data_path=real_data_path
      ```
 
    --data\_path参数填写数据集路径。
