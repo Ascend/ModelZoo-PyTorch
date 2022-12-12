@@ -358,6 +358,8 @@ class Model:
             from config import conf_8p as conf
             frame_aug_rate = conf['model']['frame_num'] / org_frame_num
             batch_time.update(self.device_count * self.P * self.M * frame_aug_rate / (time.time() - start_time))
+            if self.restore_iter < 5:
+                print('Iter_time: {}'.format((time.time() - start_time)))
             start_time = time.time()
 
             if self.restore_iter % 1000 == 0:

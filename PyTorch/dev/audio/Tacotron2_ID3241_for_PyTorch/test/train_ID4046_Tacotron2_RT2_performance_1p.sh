@@ -136,6 +136,9 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 TrainingTime=`grep "Train loss" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log |awk -F " " '{print $8}'|awk -F "s" '{print $1}'|tail -n +3|awk '{sum+=$1}END {print"",sum/NR}'|sed s/[[:space:]]//g`
 FPS=`python3 -c "print(${batch_size}/${TrainingTime})"`
+
+#输出CompileTime
+CompileTime=`grep "Train loss" $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log |head -n 2|awk '{print $8}'|awk -F "s" '{print $1}'|awk '{sum+=$1}END {print sum}'|sed s/[[:space:]]//g`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 echo "E2E Training Duration sec : $e2e_time"
@@ -168,4 +171,5 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

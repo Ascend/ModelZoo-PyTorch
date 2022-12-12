@@ -108,6 +108,9 @@ sed -i "s|for self.epoch in range(self.start_epoch, 1):|for self.epoch in range(
 iter_time=`grep 'iter_time:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F 'iter_time:' '{print $2}'|awk -F 's' '{print $1}'|tail -n+3|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${iter_time}'}'`
 
+#输出CompileTime
+CompileTime=`grep 'iter_time:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2|awk -F 'iter_time:' '{print $2}'|awk -F 's' '{print $1}'|awk '{sum+=$1} END {print sum}'|sed s/[[:space:]]//g`
+
 # 输出训练精度
 train_accuracy=`grep 'Training of experiment is done and the best AP' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F 'Training of experiment is done and the best AP is' '{print $2}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'|sed s/[[:space:]]//g`
 echo "Final Performance images/sec : $FPS"
@@ -141,3 +144,4 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -348,6 +348,8 @@ def train(args, model):
 
                     global_step += 1
                     fps.update(args.train_batch_size / (time.time() - end))
+                    if global_step < 5 :
+                        print("Iter_time: {:.4f}".format(time.time() - end))
                     end = time.time()
 
                     epoch_iterator.set_description(

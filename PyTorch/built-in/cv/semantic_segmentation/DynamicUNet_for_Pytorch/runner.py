@@ -362,9 +362,9 @@ class Trainer(object):
 
             if iteration % log_per_iters == 0 and save_to_disk:
                 logger.info(
-                    "Iters: {:d}/{:d} || FPS: {:.2f} || Lr: {:.6f} || Loss: {:.4f} || Cost Time: {} || Estimated Time: {}".format(
+                    "Iters: {:d}/{:d} || FPS: {:.2f} || Lr: {:.6f} || Loss: {:.4f} || Cost Time: {} || Estimated Time: {}|| Iter_Time: {}".format(
                         iteration, max_iters, fps, self.optimizer.param_groups[0]['lr'], losses_reduced.item(),
-                        str(datetime.timedelta(seconds=int(time.time() - start_time))), eta_string))
+                        str(datetime.timedelta(seconds=int(time.time() - start_time))), eta_string), iter_time)
 
             if iteration == end_step:
                 exit()

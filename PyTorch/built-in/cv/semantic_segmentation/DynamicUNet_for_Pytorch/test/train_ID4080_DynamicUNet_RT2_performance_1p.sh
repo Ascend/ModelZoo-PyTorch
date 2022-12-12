@@ -132,6 +132,9 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=$(grep "FPS:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS:" '{print $2}' | awk -F " " '{print $1}' | awk 'BEGIN{count=0}{if(NR>2){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}')
 
+#输出CompileTime
+CompileTime=`grep "FPS:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -n 2|awk -F "Iter_Time: " '{print $2}' |awk '{sum += $1} END {print sum}'`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -170,3 +173,4 @@ echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/${ASCEND_DEVICE_
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
