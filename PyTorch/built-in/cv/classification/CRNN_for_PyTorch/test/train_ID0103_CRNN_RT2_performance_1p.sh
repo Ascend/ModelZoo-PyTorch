@@ -127,6 +127,11 @@ e2e_time=$(( $end_time - $start_time ))
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
+
+#输出CompileTime，需要模型审视修改
+compile_time=`grep "Fps" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Time" '{print $2}' | awk -F " " '{print $1}'|head -1|awk -F 'ms' '{print $1}'`
+CompileTime=`awk 'BEGIN{printf "%.2f\n", '${compile_time}'/'1000'}'`
+
 #输出性能FPS，需要模型审视修改
 TIME=`grep "Fps" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Time" '{print $2}' | awk -F " " '{print $1}'| awk 'BEGIN{count=0}{if(NR>2){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '1000*$batch_size'/'${TIME}'}'`
@@ -191,3 +196,4 @@ echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/$ASCEND_DEVIC
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
