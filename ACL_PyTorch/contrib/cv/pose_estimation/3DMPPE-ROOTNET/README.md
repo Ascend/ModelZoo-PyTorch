@@ -24,7 +24,7 @@
 三维人体姿态估计的目标是在三维空间中定位单个或多个人体的语义关键点，使得模型能够理解人类行为，进行人机交互。3DMPPE-ROOTNET是一个三维多人姿态估计的通用框架，在几个公开可用的3D单人和多人姿态估计数据集上都取得了最好的水平。
 
 
-- 参考论文：Gyeongsik Moon, Ju Yong Chang, Kyoung Mu Lee. Camera Distance-aware Top-down Approach for 3D Multi-person Pose Estimation from a Single RGB Image.(2019)
+- 参考论文：[Gyeongsik Moon, Ju Yong Chang, Kyoung Mu Lee. Camera Distance-aware Top-down Approach for 3D Multi-person Pose Estimation from a Single RGB Image.(2019)](https://arxiv.org/abs/1907.11346)
 - 参考实现：
 
   ```
@@ -72,7 +72,7 @@
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 1.0.16（NPU驱动固件版本为5.1.RC2）  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC2 | - 
 | Torch                                                        | 1.5.0 | - 
 
@@ -171,8 +171,7 @@
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。
-       从源码包中获取“snapshot_6.pth.tar”权重文件。
+   1. 获取权重文件 [snapshot_6.pth.tar](https://pan.baidu.com/s/15gzQpHGflKB9QcoEZ6XbYQ)。
 
    2. 导出onnx文件。
 
@@ -233,12 +232,9 @@
 
 2. 开始推理验证。
 
-   1.  使用ais_infer工具进行推理。
+   1.  使用ais_infer工具进行推理。ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
-       ```
-       git clone https://gitee.com/ascend/tools.git
-       ```
-   2.  创建每个bs输出的out_bs文件夹。
+   2.  创建输出的文件夹。
 
        ```
        mkdir out_bs1
