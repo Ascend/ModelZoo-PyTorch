@@ -1,161 +1,280 @@
-#  CenterNet模型PyTorch离线推理指导
-
-## 1 环境准备
-
-1.安装必要的依赖，建议手动安装
-
-```
-pip3 install -r requirements.txt
-```
-
-2.获取，修改与安装开源模型代码
-
-安装CenterNet，这里的CANN使用自带的环境变量
-
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-
-git clone https://github.com/xingyizhou/CenterNet
-cd CenterNet/src/lib/models/networks
-rm -r DCNv2
-rm -r pose_dla_dcn.py
-git clone https://github.com/jinfagang/DCNv2_latest.git
-mv DCNv2_latest DCNv2
-cd DCNv2
-rm -r dcn_v2.py
-cd ../../../../../../
-mv dcn_v2.py CenterNet/src/lib/models/networks/DCNv2
-mv pose_dla_dcn.py CenterNet/src/lib/models/networks
-
-cd CenterNet/src/lib/external
-make
-cd ../models/networks/DCNv2
-python3 setup.py build develop
-cd ../../../../../../
-```
-
-备注：将源码中DCNv2算子更新到DCNv2_latest，以支持pytorch1.8；按照上述步骤替换pose_dcn_dla.py文件与dcn_v2.py文件，以修改自定义算子，实现onnx的推理过程 (CANN版本为5.1.RC1)
-
-另外，需要单独修改python环境中的utils.py文件，不同环境下具体路径有一定差异。手动将/usr/local/python3.7.5/lib/python3.7/site-packages/torch/onnx/utils.py下述部分做相应更改：
-
-```python
-if enable_onnx_checker and \
-    operator_export_type is OperatorExportTypes.ONNX and \
-        not val_use_external_data_format:
-    # Only run checker if enabled and we are using ONNX export type and
-    # large model format export in not enabled.
-    # _check_onnx_proto(proto)
-    pass
-```
-备注：在编译可变形卷积的时候可能出现编译不成功的情况，如果出现下面这类错误
-```
-error: ‘TORCH_CHECK_ARG’ was not declared in this scope
-error: command '/usr/bin/g++' failed with exit code 1
-```
-需对DCNv2/src/cpu下的各个.cpp文件添加以下声明
-```
-#include <TH/TH.h>
-```
-除此之外，还需要对dcn_v2_cpu.cpp中141-142行处的TORCH_CHECK_ARG改为THArgCheck，
-并将dcn_v2_psroi_pooling_cpu.cpp中的#include <ATen/ceil_div.h>注释掉
-
-DCNv2/src/cuda下的各个.cu添加如下声明，.cu可用vim编辑修改
-```
-#include <THC/THC.h>
-#include <THC/THCAtomics.cuh>
-#include <THC/THCDeviceUtils.cuh>
-```
-同将dcn_v2_psroi_pooling_cuda.cu中的#include <ATen/ceil_div.h>注释掉，最后再重新执行python3 setup.py build develop进行编译，即可成功
-
-3.获取权重文件
-
-[ctdet_coco_dla_2x.pth](https://drive.google.com/open?id=1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT)，放在当前目录下
-
-4.数据集
-获取COCO数据集：[coco2017](https://cocodataset.org/#download)，下载其中val2017图片及其标注文件（[2017 Val images](http://images.cocodataset.org/zips/val2017.zip)，[2017 Train/Val annotations](http://images.cocodataset.org/annotations/annotations_trainval2017.zip)），解压后放入/opt/npu/datasets/coco以及CenterNet/data/coco/路径下，其中val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
-
-```
-CenterNet
-├── data
-│   ├── coco
-│   │   ├── annotations
-│   │   ├── val2017
-```
-调用数据预处理脚本文件将数据转换为模型输入的数据
-```
-python3.7 CenterNet_preprocess.py /opt/npu/coco/val2017 ./prep_dataset
-```
-
-生成数据集info文件
-```
-python3.7 get_info.py bin ./prep_dataset ./prep_bin.info 512 512
-```
+# CenterNet模型-推理指导
 
 
-4.模型转换.pth->.onnx
-```
-python3.7 CenterNet_pth2onnx.py ctdet_coco_dla_2x.pth CenterNet.onnx
-```
-执行ATC脚本完成onnx模型到om模型的转换
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-${chip_name}可通过`npu-smi info`指令查看
+  - [输入输出数据](#section540883920406)
 
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=CenterNet.onnx  --output=CenterNet_bs1 --input_format=NCHW --input_shape="actual_input:1,3,512,512" --out_nodes="Conv_1120:0;Conv_1123:0;Conv_1126:0" --log=info --soc_version=Ascend${chip_name}
-```
-5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)
-将benchmark.x86_64放到当前目录
-```
-chmod u+x benchmark.x86_64
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./CenterNet_bs1.om -input_text_path=./prep_bin.info -input_width=512 -input_height=512 -output_binary=True -useDvpp=False
-```
-## 2 离线推理测试
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-获取ctdet_coco_dla_2x.pth权重文件，放在主目录下，接着可以执行.sh完成整个推理流程
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-**1.pth转om：**
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-```
-bash test/pth2om.sh Ascend${chip_name}
-```
-成功执行后会生成bs1和bs16对应的.om文件
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-**3.执行推理和评估脚本：**
-```
-bash test/eval_acc_perf.sh --datasets_path=/opt/npu/coco
-```
-**注： 若出现使用ATC、benchmark工具出现错误时，请参考推理指导书上的解决方案**
+CenterNet 是在 2019 年提出的用于目标检测的模型，相比传统依靠 anchors的检测网络，CenterNet 是一种 anchor-free 的目标检测网络，其输出主要为heatmap，获取该热力图分布的中心点即作为目标的中心点。而目标的其他输出，如尺寸和偏移量等则通过在特征图中通过回归得到，这种方法原理简单，兼容性强，在速度和精度上都比较有优势。
 
-**评测结果：**
 
-精度：
+- 论文：
 
-| 模型          | 官网pth精度 | t4在线推理精度| 310离线推理精度 | 310P离线推理精度  |
-| ------------- | ----------- | -------------| -------- | -------- |
-| CenterNet_bs1 | AP : 36.6   | AP : 36.6     | AP : 36.4 | AP : 36.4  |
+  [Objects as Points: Xingyi Zhou, Dequan Wang, Philipp Krähenbühl.(2019)](https://arxiv.org/abs/1904.07850)
 
-性能：
+- 参考实现：
 
-| batchsize     | t4 | 310|  310P  |
-| ------------- | ----------- | --------------- | -------- |
-| 1 | 14.2857   | 19.11108       | 32.4865
-| 4 | -   | 19.37716      | 35.7424
-| 8 | -   | 19.50532       | 36.3168
-| 16 | -   | 19.632       | 36.8814
-| 32 | -   | 19.75924       | 37.1302
+  ```
+  url= https://github.com/xingyizhou/CenterNet 
+  branch=master 
+  commit_id=2b7692c377c6686fb35e473dac2de6105eed62c6
+  ```
 
-最优batch对比：
 
-310P/t4 : 37.1302/14.2857>1.6 
 
-310P/310: 37.1302/19.75924>1.2
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 512 x 512 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小                       | 数据排布格式 |
+  | -------- | -------- | -------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 80 x 128 x  128 | ND           |
+  | output2  | FLOAT32  | batchsize x 2 x 128 x  128 | ND           |
+  | output3  | FLOAT32  | batchsize x 2 x 128 x  128 | ND           |
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动   
+
+  **表 1**  版本配套表
+
+  | 配套       | 版本    | 环境准备指导                                                 |
+  | ---------- | ------- | ------------------------------------------------------------ |
+  | 固件与驱动 | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN       | 5.1.RC2 | -                                                            |
+  | Python     | 3.7.5   | -                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 安装依赖。
+   ```
+   pip install -r requirements.txt
+   ```
+   
+2. 获取源码并安装。
+
+   ```
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+    git clone https://github.com/xingyizhou/CenterNet
+    cd CenterNet/src/lib/models/networks
+    rm -r DCNv2
+    rm -r pose_dla_dcn.py
+    git clone https://github.com/jinfagang/DCNv2_latest.git
+    mv DCNv2_latest DCNv2
+    cd DCNv2
+    rm -r dcn_v2.py
+    cd ../../../../../../
+    mv dcn_v2.py CenterNet/src/lib/models/networks/DCNv2
+    mv pose_dla_dcn.py DCNv2.patch CenterNet/src/lib/models/networks
+
+    cd CenterNet/src/lib/external
+    make
+    cd ../models/networks/DCNv2
+    python setup.py build develop
+    cd ../../../../../../
+   ```
+
+3. 在编译可变形卷积的时候可能出现编译不成功的情况，如果出现下面这类错误，通过打补丁的形式修改相应文件。
+
+   ```
+   error: ‘TORCH_CHECK_ARG’ was not declared in this scope
+   error: command '/usr/bin/g++' failed with exit code 1
+   ```
+
+   1）cd到CenterNet/src/lib/models/networks目录下，执行以下命令打补丁
+
+    ```
+    patch -p0 < DCNv2.patch
+    ```
+
+   2） 最后再重新执行python setup.py build develop进行编译，即可成功
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。
+
+   获取COCO数据集：coco2017，下载其中val2017图片及其标注文件（2017 Val images，2017 Train/Val annotations），放入CenterNet/data/coco/路径下，val2017目录存放coco数据集的验证集图片，“annotations”目录存放coco数据集的“instances_val2017.json”。目录结构如下：
+
+   ```
+   CenterNet
+   ├── data
+   │   ├── coco
+   │   │   ├── annotations
+   │   │   ├── val2017
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行CenterNet_preprocess.py脚本，完成预处理。
+
+   ```
+   python CenterNet_preprocess.py data/coco/val2017 prep_dataset
+   ```
+
+   参数说明：
+
+   - data/coco/val2017:  原始数据验证集所在路径。
+   - prep_dataset:   输出的二进制文件保存路径。
+
+   运行成功后，生成“prep_dataset”文件夹，prep_dataset目录下生成的是供模型推理的bin文件。
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。放在当前目录下 [ctdet_coco_dla_2x.pth](https://gitee.com/link?target=https%3A%2F%2Fdrive.google.com%2Fopen%3Fid%3D1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT)
+
+   2. 导出onnx文件。
+
+      使用ctdet_coco_dla_2x.pth导出onnx文件。
+
+      在CenterNet根目录下，运行CenterNet_pth2onnx.py脚本。
+
+      ```
+      python CenterNet_pth2onnx.py ctdet_coco_dla_2x.pth CenterNet.onnx
+      ```
+
+      获得CenterNet.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         source /etc/profile
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=CenterNet.onnx  --output=CenterNet_bs1 --input_format=NCHW --input_shape="actual_input:1,3,512,512" --out_nodes="Conv_1120:0;Conv_1123:0;Conv_1126:0" --log=info --soc_version=Ascend${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成 CenterNet_bs1.om 模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+
+   2. 执行推理。
+
+      ```
+      python ${ais_infer_path}/ais_infer.py --model CenterNet_bs1.om --input prep_dataset --output result --output_dirname dumpout_bs1 --batchsize 1
+      ```
+
+      -   参数说明：
+
+           -   --model：om模型的路径。
+           -   --input：输入模型的二进制文件路径。
+           -   --output：推理结果输出目录。
+           -    --output_dirname：推理结果输出的二级目录名。
+           -   --batchsize：输入数据的batchsize。
+
+      推理后的输出在当前目录result下。
+
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
+
+   3. 精度验证。
+
+      在CenterNet根目录下，执行脚本CenterNet_postprocess.py获取精度。
+
+      ```
+      python CenterNet_postprocess.py --bin_data_path=./result/dumpout_bs1/  --dataset=./data
+      ```
+
+      - 参数说明：
+
+        - --bin_data_path：推理结果文件路径
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型的路径
+        - --batchsize：数据集batch_size的大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集   | 精度 | 性能    |
+| -------- | ---------- | -------- | ---- | ------- |
+| 310P3    | 1          | COCO2017 | 36.4 | 32.1448 |
+| 310P3    | 4          | COCO2017 | - | 34.1512 |
+| 310P3    | 8          | COCO2017 | - | 33.0343 |
+| 310P3    | 16         | COCO2017 | - | 33.6273 |
+| 310P3    | 32         | COCO2017 | - | 31.8843 |
 
 备注：
 
-1.原官网pth精度 AP : 37.4 是在线推理时keep_res(保持分辨率)的结果，但由于离线推理需要固定shape，故需要去掉keep_res(保持分辨率)。去掉keep_res(保持分辨率)后，跑在线推理精度评估得到  AP : 36.6 ，故以 AP : 36.6 作为精度基准
+1.原官网pth精度 AP : 37.4 是在线推理时keep_res(保持分辨率)的结果，但由于离线推理需要固定shape，故需要去掉keep_res(保持分辨率)。去掉keep_res(保持分辨率)后，跑在线推理精度评估得到 AP : 36.6 ，故以 AP : 36.6 作为精度基准
 
 2.onnx因包含npu自定义算子dcnv2而不能推理，故使用在线推理测试性能
 
