@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
+import argparse
 sys.path.append('./SegmenTron')
 from segmentron.utils.score import SegmentationMetric
 import os
@@ -19,10 +20,26 @@ import struct
 """Evaluation Metrics for Semantic Segmentation"""
 import torch
 import numpy as np
-
+from tqdm import tqdm
 
 __all__ = ['SegmentationMetric', 'batch_pix_accuracy', 'batch_intersection_union',
            'pixelAccuracy', 'intersectionAndUnion', 'hist_info', 'compute_score']
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--result_bin_root', default='/home/user_dir/FastSCNN/result/bs1', 
+                        help='the path of the inference results')
+    
+    parser.add_argument('--label_bin_root', default='/opt/npu/prep_datasets/gtFine/', 
+                        help='the path of the labels corresponding to the inference results')
+    
+    parser.add_argument('--sort_log', default='/home/agc/FastSCNN/sort.log')
+
+    args = parser.parse_args()
+
+    return args
 
 
 class SegmentationMetric(object):
@@ -167,12 +184,13 @@ def hist_info(pred, label, num_cls):
     return np.bincount(num_cls * label[k].astype(int) + pred[k], minlength=num_cls ** 2).reshape(num_cls,
                                                                                                  num_cls), labeled, correct
 
+
 def compute_score(hist, correct, labeled):
 
     iu = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
     mean_IU = np.nanmean(iu)
     mean_IU_no_back = np.nanmean(iu[1:])
-    freq = hist.sum(1) / hist.sum()
+    # freq = hist.sum(1) / hist.sum()
     # freq_IU = (iu[freq > 0] * freq[freq > 0]).sum()
     mean_pixel_acc = correct / labeled
 
@@ -180,78 +198,55 @@ def compute_score(hist, correct, labeled):
 
 
 class postprocess(object):
-    def __init__(self, result_bin_root):
-        self.result_bin_root = result_bin_root
+    def __init__(self, args):
+        self.args = args
+
     def process(self):
         sum_mIoU = 0
         sum_pixAcc = 0
         metric = SegmentationMetric(19)
-        result_bin_root = self.result_bin_root
-        label_bin_root = 'prep_dataset/datasets/gtFine'
-        output_path, target_path = _get_output_target_path(result_bin_root, label_bin_root)
-
-        for i in range(len(output_path)):
+        result_bin_root = self.args.result_bin_root
+        label_bin_root = self.args.label_bin_root
+        sort_path = self.args.sort_log
+        output_path, target_path = _get_output_target_path(result_bin_root, label_bin_root, sort_path)
+        
+        pbar = tqdm(range(len(output_path)))
+        for i in pbar:
             output, target = file2tensor(output_path[i], target_path[i])
             metric.update(output, target)
             pixAcc, mIoU = metric.get()
             sum_mIoU += mIoU
             sum_pixAcc += pixAcc
-            print("Sample: {:d}, validation pixAcc: {:.3f}, mIoU: {:.3f}".format(
+            pbar.set_description("Sample: {:d}, validation pixAcc: {:.3f}, mIoU: {:.3f}".format(
                 i + 1, pixAcc * 100, mIoU * 100))
-        print('AvgmIou',sum_mIoU/5, '  |  ', 'AvgpixAcc', sum_pixAcc/5)
+        print('AvgmIou', sum_mIoU/5, '  |  ', 'AvgpixAcc', sum_pixAcc/5)
 
-def _get_output_target_path(bin_folder, laber_folder):
+
+def _get_output_target_path(bin_folder, laber_folder, sort_path):
     result_paths3 = []
     labels_paths = []
-    print("result_bin_folder:", bin_folder)
-    print('label_bin_folder:', laber_folder)
-    for root, _, files in os.walk(bin_folder):
-        for file in files:
-            if file.endswith('_1.bin'):
-                result_path = os.path.join(root, file)
-                result_paths3.append(result_path.replace('_1.bin', '_3.bin'))
-                temp_path = file.replace('_1.bin', '.bin')
-                temp_path = temp_path.replace('leftImg8bit', 'gtFine_labelIds')
-                mask_path = os.path.join(laber_folder,temp_path)
-                labels_paths.append(mask_path)
+    print("result_bin_root:", bin_folder)
+    print('label_bin_root:', laber_folder)
+    with open(sort_path, 'r', encoding='utf-8') as f:
+        sort_list = [line.strip() for line in f]
+    for img_name in sort_list:
+        res_path = os.path.join(bin_folder, img_name.replace('.png', '_0.bin'))
+        lbl_path = os.path.join(laber_folder, img_name.replace('leftImg8bit.png', 'gtFine_labelIds.bin'))
+        result_paths3.append(res_path)
+        labels_paths.append(lbl_path)
+
     return result_paths3, labels_paths
 
 
+def file2tensor(bin_file3, mask_path):
+    dim_res = np.fromfile(bin_file3, dtype=np.float32)
+    tensor_res3 = torch.tensor(dim_res).reshape(1, 19, 1024, 2048)
+    mask = np.fromfile(mask_path, dtype=np.float32)
+    target = torch.tensor(mask).reshape(1, 1, 1024, 2048)
+    return tensor_res3, target
 
-def file2tensor( bin_file3, mask_path):
-    size = os.path.getsize(bin_file3)
-    res3 = []
-    L = int(size / 2)  # 由于需要的是float32类型，所以按照4字节读取；根据实际情况按字节读取
-    binfile = open(bin_file3, 'rb')
-    for i in range(L):
-        data = binfile.read(2)
-        num = struct.unpack('h', data)
-        res3.append(num[0])
-    binfile.close()
-
-    dim_res = np.array(res3).reshape(1, 19, 1024, 2048)  # 转换为对应的shape，可通过在线推理打印outputs的shape获取到
-    tensor_res3 = torch.tensor(dim_res, dtype=torch.float16)
-    # print(bin_file, tensor_res.dtype, tensor_res.shape)
-
-    size = os.path.getsize(mask_path)
-    mask = []
-    L = int(size / 4)  # 由于需要的是float32类型，所以按照4字节读取；根据实际情况按字节读取
-    binfile = open(mask_path, 'rb')
-    for i in range(L):
-        data = binfile.read(4)
-        num = struct.unpack('f', data)
-        mask.append(num[0])
-    binfile.close()
-
-    dim_res = np.array(mask).reshape(1, 1, 1024, 2048)  # 转换为对应的shape，可通过在线推理打印outputs的shape获取到
-    target = torch.tensor(dim_res, dtype=torch.float32)
-    # print(bin_file, tensor_res.dtype, tensor_res.shape)
-
-    return tensor_res3,target
 
 if __name__ == '__main__':
- result_path = sys.argv[1]
- pro_process = postprocess(result_path)
- pro_process.process()
-
-
+    args = parse_args()
+    pro_process = postprocess(args)
+    pro_process.process()
