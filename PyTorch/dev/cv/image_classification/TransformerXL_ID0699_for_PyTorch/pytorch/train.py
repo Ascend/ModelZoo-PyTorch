@@ -551,6 +551,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
     num_steps = 0
     for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1):
         torch.npu.global_step_inc()
+        start_time = time.time()
         log_step += 1
         target_tokens += target.numel()
 
@@ -697,7 +698,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 cur_loss = train_loss / log_step
                 cur_loss = utils.distributed.all_reduce_item(cur_loss, op='mean')
                 train_loss = 0
-
+                end_time = time.time() - start_time
+                print("step time:", end_time)
                 elapsed = time.time() - log_start_time
                 avg_elapsed = elapsed / log_step
                 avg_elapsed = utils.distributed.all_reduce_item(avg_elapsed, op='max')
@@ -709,7 +711,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 throughput = utils.distributed.all_reduce_item(throughput, op='sum')
                 meters['train_throughput'].update(throughput)
                 target_tokens = 0
-
+                
                 log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
                     '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
                         epoch,
