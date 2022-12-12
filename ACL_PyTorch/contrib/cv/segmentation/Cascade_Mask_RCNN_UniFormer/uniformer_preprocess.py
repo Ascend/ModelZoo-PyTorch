@@ -17,7 +17,7 @@ import argparse
 import numpy as np
 import mmcv
 import multiprocessing
-
+import tqdm
 
 def gen_input_bin(file_batches, batch):
     model_h = args.input_height
@@ -25,7 +25,7 @@ def gen_input_bin(file_batches, batch):
     mean = np.array([123.675, 116.28, 103.53], dtype=np.float64)
     std = np.array([58.395, 57.12, 57.375], dtype=np.float64)
 
-    for file in file_batches[batch]:
+    for file in tqdm.tqdm(file_batches[batch]):
         img = mmcv.imread(os.path.join(args.image_src_path, file))
         scalar_ratio = min(model_h / img.shape[0], model_w / img.shape[1])
         img = mmcv.imrescale(img, scalar_ratio)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
                         help='Preprocessed image buffer')
     parser.add_argument("--input_height", default=800,
                         type=int, help='input tensor height')
-    parser.add_argument("--input_width", default=1344,
+    parser.add_argument("--input_width", default=1216,
                         type=int, help='input tensor width')
     args = parser.parse_args()
 

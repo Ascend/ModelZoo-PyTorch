@@ -27,7 +27,7 @@ def postprecess():
     bin_path = args.bin_file_path
     latest_result = os.listdir(bin_path)
     latest_result.sort()
-    bin_path = os.path.join(bin_path, latest_result[-1])
+    #bin_path = os.path.join(bin_path, latest_result[-1])
     model_h = args.input_height
     model_w = args.input_width
 
@@ -37,12 +37,12 @@ def postprecess():
         ori_h = data_info['height']
         ori_w = data_info['width']
         scalar_ratio = min(model_h / ori_h, model_w / ori_w)
-
+        
         path_base = os.path.join(bin_path, file_name.split('.')[0])
-        bboxes = np.fromfile(path_base + '_output_0.bin', dtype=np.float32)
+        bboxes = np.fromfile(path_base + '_0.bin', dtype=np.float32)
         bboxes = np.reshape(bboxes, [100, 5])
-        labels = np.fromfile(path_base + '_output_1.bin', dtype=np.int64)
-        mask_pred = np.fromfile(path_base + '_output_2.bin', dtype=np.float32)
+        labels = np.fromfile(path_base + '_1.bin', dtype=np.int64)
+        mask_pred = np.fromfile(path_base + '_2.bin', dtype=np.float32)
         mask_pred = np.reshape(mask_pred, [100, 1, 28, 28])
 
         bboxes[..., 0:4] = bboxes[..., 0:4] / scalar_ratio
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     parser.add_argument("--ann_file_path", default="./data/coco/annotations/instances_val2017.json")
     parser.add_argument("--bin_file_path", default="./result/")
     parser.add_argument("--input_height", default=800, type=int)
-    parser.add_argument("--input_width", default=1344, type=int)
+    parser.add_argument("--input_width", default=1216, type=int)
     args = parser.parse_args()
 
     postprecess()
