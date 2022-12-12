@@ -77,14 +77,10 @@ def gen_input_bin(mode_type, file_batches, batch):
 
         # RGBA to RGB
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
-        image = resize(image, model_config[mode_type]['resize'])  # Resize
-        image = center_crop(image, model_config[mode_type]['centercrop'])  # CenterCrop
-        img = np.array(image, dtype=np.float32)
-        img = img.transpose(2, 0, 1)  # ToTensor: HWC -> CHW 矩阵转置
-        img = img / 255.  # ToTensor: div 255
-        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None]  # Normalize: mean
-        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None]  # Normalize: std
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin")) # tofile()将数组中的数据以二进制格式写进文件
+        image = resize(image, model_config[mode_type]['resize']) # Resize
+        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
+        img = np.array(image, dtype=np.int8)
+        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
 
 def preprocess(mode_type, src_path, save_path): # 数据预处理
