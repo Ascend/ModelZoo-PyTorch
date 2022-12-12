@@ -51,6 +51,15 @@ This folder contains the implementation of training of the `BiseNetV1` on the `C
 
 ### Prepare Datasets
 - The data can be found [here](https://www.cityscapes-dataset.com/downloads/) after registration. Download `gtFine_trainvaltest.zip` (241MB) and `leftImg8bit_trainvaltest.zip` (11GB). 
+- The compressed package should be stored in `$BiseNetV1_for_PyTorch/data`.
+- To decompress the dataset, run:
+  ```shell
+  cd $BiseNetV1_for_PyTorch/data
+  apt install unzip
+  unzip leftImg8bit_trainvaltest.zip -d cityscapes
+  # when prompting whether to overwrite, enter 'A'
+  unzip gtFine_trainvaltest.zip -d cityscapes
+  ```
 - After decompression, the file structure should look like:
   ```none
   $ BiseNetV1_for_PyTorch
@@ -76,6 +85,7 @@ This folder contains the implementation of training of the `BiseNetV1` on the `C
 - By convention, `**labelTrainIds.png` are used for cityscapes training. To generate `**labelTrainIds.png`, run:
   ```shell
   cd $BiseNetV1_for_PyTorch
+  pip install cityscapesscripts
   # --nproc means 8 process for conversion, which could be omitted as well.
   python tools/convert_datasets/cityscapes.py data/cityscapes --nproc 8
   ```
@@ -105,8 +115,8 @@ bash ./test/train_performance_8p.sh
 
 ### Training result for `BiseNetV1`
 
-| mIoU | FPS | Npu_nums | Epochs | AMP_Type | CPU |
-|:----:|:---:|:--------:|:------:|:--------:|:---:|
-|  -   |  -  |    1     |   1    |    O1    | ARM |
-|  -   |  -  |    8     |   1    |    O1    | ARM |
-|  -   |  -  |    8     |   20   |    O1    | ARM |
+| mIoU | FPS | Npu_nums | Steps | AMP_Type | CPU |
+|:----:|:---:|:--------:|:-----:|:--------:|:---:|
+|  -   |  -  |    1     |  400  |    O1    | ARM |
+|  -   |  -  |    8     |  400  |    O1    | ARM |
+|  -   |  -  |    8     | 40000 |    O1    | ARM |
