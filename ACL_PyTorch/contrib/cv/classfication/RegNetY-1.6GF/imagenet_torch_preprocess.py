@@ -20,6 +20,7 @@ from torchvision import transforms
 import math
 from timm.data.transforms import _pil_interp, ToNumpy 
 import sys
+from tqdm import tqdm
 
 def transforms_imagenet_eval(
         img_size=224,
@@ -62,9 +63,7 @@ def preprocess(src_path, save_path):
     preprocess = transforms_imagenet_eval()
     i = 0
     in_files = os.listdir(src_path)
-    for file in in_files:
-        i = i + 1
-        print(file, "===", i)
+    for file in tqdm(in_files):
         input_image = Image.open(src_path + '/' + file).convert('RGB')
         input_tensor = preprocess(input_image)
         img = np.array(input_tensor).astype(np.float32)
