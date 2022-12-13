@@ -93,7 +93,6 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 nohup taskset -c $PID_START-$PID_END python3.7 train_8p_new.py -j ${KERNEL_NUM} --local_rank $RANK_ID & 
 done
 
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 export PTCOPY_ENABLE=1
 export TASK_QUEUE_ENABLE=1

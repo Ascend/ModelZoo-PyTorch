@@ -2,7 +2,6 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export SCALAR_TO_HOST_MEM=1
 
 export MKL_SERVICE_FORCE_INTEL=1

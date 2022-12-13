@@ -2,7 +2,6 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 #集合通信参数,不需要修改
 

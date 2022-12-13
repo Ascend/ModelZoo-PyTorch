@@ -90,8 +90,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
-export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 export PTCOPY_ENABLE=1
 export TASK_QUEUE_ENABLE=1
 #export DYNAMIC_OP="ADD#MUL"
