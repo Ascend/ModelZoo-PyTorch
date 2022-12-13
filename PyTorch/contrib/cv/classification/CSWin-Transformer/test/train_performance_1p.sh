@@ -6,7 +6,7 @@
 #网络名称，同目录名称
 Network="CSwin-Transformer"
 #训练epoch
-train_epochs=310
+train_epochs=1
 #训练batch_size
 batch_size=256
 #训练step
@@ -35,15 +35,12 @@ echo "all para $*"
 #参数校验，不需要修改
 for para in $*
 do
-#	echo "enter in"
-#	echo "this para $para"
-#	data_path=`echo ${para#*=}`
-#	echo "datapath $data_path"
     if [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-#	echo "datapath $data_path"
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -116,8 +113,9 @@ python3.7 -m torch.distributed.launch --nproc_per_node 1 main.py \
     --warmup-epochs 20 \
     --model-ema-decay 0.99984 \
     --drop-path 0.2 \
-    --epochs 1 \
+    --epochs ${train_epochs} \
     --cooldown-epochs 0 \
+    --local_rank ${device_id} \
     > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
