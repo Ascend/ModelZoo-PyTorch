@@ -98,12 +98,13 @@ class DBLoss(nn.Module):
         for level_inx in range(num_levels):
             kernel = []
             for batch_inx in range(batch_size):
-                mask = torch.from_numpy(bitmasks[batch_inx].masks[level_inx])
+                mask = torch.from_numpy(bitmasks[batch_inx].masks[level_inx]).npu(non_blocking=True)
                 mask_sz = mask.shape
                 pad = [
                     0, target_sz[1] - mask_sz[1], 0, target_sz[0] - mask_sz[0]
                 ]
-                mask = F.pad(mask, pad, mode='constant', value=0)
+                if pad[1] > 0 or pad[3] > 0:
+                    mask = F.pad(mask, pad, mode='constant', value=0)
                 kernel.append(mask)
             kernel = torch.stack(kernel)
             result_tensors.append(kernel)
@@ -123,9 +124,13 @@ class DBLoss(nn.Module):
         positive_loss = loss * positive.float()
         negative_loss = loss * negative.float()
 
-        negative_loss, _ = torch.topk(negative_loss.view(-1).cpu(), negative_count)
+        negative_loss, _ = torch.sort(negative_loss.view(-1), descending=True)
+        valid_mask = torch.zeros((len(negative_loss), ))
+        valid_mask[:negative_count] = 1
+        valid_mask = valid_mask.npu(non_blocking=True)
+        negative_loss_sum = (negative_loss * valid_mask).sum()
 
-        balance_loss = (positive_loss.sum() + negative_loss.sum().npu()) / (
+        balance_loss = (positive_loss.sum() + negative_loss_sum) / (
             positive_count + negative_count + self.eps)
 
         return balance_loss
@@ -172,9 +177,9 @@ class DBLoss(nn.Module):
         gt = {}
         for k in keys:
             gt[k] = eval(k)
-            gt[k] = [item.rescale(downsample_ratio) for item in gt[k]]
+            if downsample_ratio != 1:
+                gt[k] = [item.rescale(downsample_ratio) for item in gt[k]]
             gt[k] = self.bitmasks2tensor(gt[k], feature_sz[2:])
-            gt[k] = [item.to(preds.device) for item in gt[k]]
         gt['gt_shrink'][0] = (gt['gt_shrink'][0] > 0).float()
         if self.bbce_loss:
             loss_prob = self.balance_bce_loss(pred_prob, gt['gt_shrink'][0],
