@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import onnx
+
 
 def getNodeByName(nodes, name: str):
     for n in nodes:
@@ -21,7 +23,13 @@ def getNodeByName(nodes, name: str):
     
     return -1
 
-model = onnx.load("maskrcnn_r50_fpn_1x.onnx")
-cast = getNodeByName(model.graph.node, 'Cast_622')
-cast.attribute[0].i = 6
-onnx.save(model, 'maskrcnn_r50_fpn_1x.onnx')
+
+if __name__ == '__main__':
+    if len(sys.argv) is not 3:
+        print('only need 2 params, include onnx source path and dest path.')
+
+    model = onnx.load(sys.argv[1])
+    cast = getNodeByName(model.graph.node, 'Cast_622')
+    cast.attribute[0].i = 6
+    onnx.save(model, sys.argv[2])
+    print("onnx saved to: {}".format(sys.argv[2]))
