@@ -1,11 +1,11 @@
 torch == 1.10.1
 torchvision == 0.11.2
 opencv-python == 4.5.5.62
+pillow == 9.3.0
 numpy ==1.21.5
 scikit-image == 0.19.1
 onnx == 1.10.2
 onnx-simplifier == 0.3.6
-tqdm == 4.62.2
-json
-argparse
-glob
+tqdm == 4.62.1
+protobuf == 3.20.0
+matplotlib == 3.5.3
