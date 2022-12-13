@@ -143,9 +143,9 @@ def main(args):
     combine_ddp = True
 
     if cfg.fp16:
-        backbone, [opt_backbone, opt_pfc] = amp.initialize(backbone, [opt_backbone, opt_pfc], opt_level="O1", 
+        backbone, [opt_backbone, opt_pfc] = amp.initialize(backbone, [opt_backbone, opt_pfc], opt_level="O1",
                                                            scale_window=100, combine_grad=True, combine_ddp=combine_ddp,
-                                                           ddp_replica_count=6)
+                                                           ddp_replica_count=6, loss_scale=256.)
         opt_pfc.accelerate = False
         opt_pfc.combine_ddp = False
 
@@ -197,7 +197,8 @@ def main(args):
             global_step += 1
             if args.perf_only and global_step > 1000:
                 exit()
-
+            img = img.npu()
+            local_labels = local_labels.npu()
             local_embeddings = backbone(img)
             loss: torch.Tensor = module_partial_fc(local_embeddings, local_labels, opt_pfc)
 
