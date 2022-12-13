@@ -19,6 +19,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -27,7 +29,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-
 
 
 ###############指定训练脚本执行路径###############

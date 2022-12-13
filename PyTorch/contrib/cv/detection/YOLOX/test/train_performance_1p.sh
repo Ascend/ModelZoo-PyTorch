@@ -24,6 +24,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -83,6 +85,7 @@ fi
 taskset -c 0-23 python3.7 tools/train.py -n yolox-s \
     -f exps/example/yolox_voc/yolox_voc_s.py \
     -d 1 -b ${batch_size} \
+    --device_id ${device_id} \
     --maxx_epoch ${train_epochs}  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
