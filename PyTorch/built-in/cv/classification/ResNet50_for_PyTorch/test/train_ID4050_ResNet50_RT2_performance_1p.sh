@@ -123,7 +123,7 @@ grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE
 FPS=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 
 #输出CompileTime
-CompileTime=`grep Epoch: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2| awk -F "Time" '{print$2}'|awk '{sum+=$1}END{print sum)'`
+CompileTime=`grep Epoch: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2| awk -F "Time" '{print$2}'|awk '{sum+=$1}END{print sum}'`
 
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
