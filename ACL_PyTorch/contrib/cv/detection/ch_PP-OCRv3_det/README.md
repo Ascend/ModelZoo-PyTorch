@@ -210,20 +210,29 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a. 安装推理工具。     
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
-        
+      本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) 作为推理工具，须自己拉取源码，打包并安装。
+
+      ```bash
+      # 指定CANN包的安装路径
+      export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
+       
+      # 获取推理工具源码
+      git clone https://gitee.com/ascend/tools.git ascend_tools/
+      cp -r ascend_tools/ais-bench_workload/tool/ais_infer .
+      
+      # 打包
+      cd ais_infer/backend/
+      pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
+      
+      # 安装
+      pip3 install --force-reinstall aclruntime-xxx.whl
+      cd ../..
       ```
-      cd tools
-      git clone https://gitee.com/ascend/tools.git
-      cd ..
-      cp -r ./tools/tools/ais-bench_workload/tool/ais_infer/ ./
-   
-      ```
 
 
-   b.  执行推理。
+   b. 执行推理。
 
       ```
       python3 ch_PP-OCRv3_det_ais_infer.py \
@@ -242,7 +251,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
       推理完成后结果保存在`ch_PP-OCRv3_det/results_bs${batchsize}`目录下。
 
 
-   c.  精度验证。
+   c. 精度验证。
 
       执行后处理脚本`ch_PP-OCRv3_det_postprocess.py`，参考命令如下：
     
@@ -278,7 +287,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
     
       可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。
 
-   d.  性能验证。
+   d. 性能验证。
 
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     
@@ -308,11 +317,11 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1          | 样例图片 | 见备注 | 337.23 fps |
-|Ascend310P3| 4          | 样例图片 | 见备注 | 287.41 fps |
-|Ascend310P3| 8          | 样例图片 | 见备注 | 319.14 fps |
-|Ascend310P3| 16         | 样例图片 | 见备注 | 322.52 fps |
-|Ascend310P3| 32         | 样例图片 | 见备注 | 317.73 fps |
-|Ascend310P3| 64         | 样例图片 | 见备注 | 286.84 fps |
+|Ascend310P3| 1          | 样例图片 | 见备注 | 320.55 fps |
+|Ascend310P3| 4          | 样例图片 | 见备注 | 307.33 fps |
+|Ascend310P3| 8          | 样例图片 | 见备注 | 298.52 fps |
+|Ascend310P3| 16         | 样例图片 | 见备注 | 292.25 fps |
+|Ascend310P3| 32         | 样例图片 | 见备注 | 288.39 fps |
+|Ascend310P3| 64         | 样例图片 | 见备注 | 259.84 fps |
 
    - 备注：将OM推理结果后处理后，与在线推理结果进行对比，对于每张验证图片，两者得到的文本框数量与位置均一致，可判定OM精度正常。
