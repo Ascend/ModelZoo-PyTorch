@@ -82,7 +82,7 @@ do
     export RANK_ID=$RANK_ID
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 ./imagenet/main.py \
+    nohup taskset -c $PID_START-$PID_END python3.7 main.py \
         --data $data_path \
         --amp \
         --world-size 1 \
