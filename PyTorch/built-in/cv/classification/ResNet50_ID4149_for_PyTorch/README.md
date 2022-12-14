@@ -132,7 +132,24 @@ ResNet是由微软研究院的Kaiming He等四名华人提出，是ImageNet竞赛中分类问题效果较好
      ```
 
    --data_path参数填写数据集路径。
+   
+   
+   - 多机多卡训练
 
+     启动多机多卡训练。
+
+     ```
+     bash test/train_cluster.sh --data_path==xxx --batch_size="xxx" --lr=="xxx" --train_epochs="xxx" --world_size="xxx" --node_rank="xxx" --master_addr="xxx"
+     ```
+
+   --data_path参数填写数据集路径    
+   --batch_size网络训练的batch size    
+   --train_epochs网络训练周期    
+   --world_size集群训练节点数    
+   --node_rank集群训练节点ID，每个节点不一样    
+   --master_addr集群训练主节点ip    
+   
+    
    模型训练脚本参数说明如下。
 
    ```
