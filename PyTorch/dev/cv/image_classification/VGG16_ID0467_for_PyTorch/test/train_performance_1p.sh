@@ -80,7 +80,7 @@ wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 $cur_path/../train.py  \
+nohup python3 $cur_path/../train.py  \
         --model vgg16 \
         --epochs ${train_epochs} \
         --device $ASCEND_DEVICE_ID \
@@ -101,6 +101,10 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep Epoch: $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "img/s:" '{print$2}' | awk '{print$1}'|awk '{sum+=$1} END {print sum/NR}'`
+
+#输出CompileTime
+CompileTime=`grep "time:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2|awk '{sum+=$(NF-5)} END {print sum}'`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -139,3 +143,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
