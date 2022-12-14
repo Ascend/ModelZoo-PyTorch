@@ -48,6 +48,8 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     fi
 done
 
@@ -100,7 +102,6 @@ wait
 
 
 #修改参数
-sed -i "s|pass|break|g" ${cur_path}/densenet121_1p_main.py
 wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -113,20 +114,20 @@ fi
 
 
 #训练
-nohup python3.7 ${cur_path}/densenet121_1p_main.py  \
+nohup python3.7 ${cur_path}/main.py  \
       --workers 40 \
       --arch densenet121 \
-      --npu $ASCEND_DEVICE_ID \
       --lr 0.1 \
       --momentum 0.9 \
       --amp \
       --print-freq 1 \
       --eval-freq 5 \
+      --gpu ${device_id} \
       --batch-size $batch_size \
       --epochs $train_epochs \
-      --stop-step-num 50 \
       --loss-scale -1 \
       --dist-backend 'hccl' \
+      --stop-step-num 50 \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
@@ -134,7 +135,6 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 #参数改回
-sed -i "s|break|pass|g" ${cur_path}/densenet121_1p_main.py
 wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"

@@ -38,7 +38,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 from densenet_0_2_2 import densenet121
-
 from apex import amp
 
 BATCH_SIZE = 512
@@ -121,6 +120,8 @@ parser.add_argument('--device-list', default='0,1,2,3,4,5,6,7', type=str, help='
 # apex
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
+parser.add_argument('--bin', default=False, action='store_true',
+                    help='use binary mode to train the model')
 parser.add_argument('--loss-scale', default=1024., type=float,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
@@ -129,6 +130,8 @@ parser.add_argument('--class_num', default=1000, type=int,
                     help='number of class')
 parser.add_argument('--pretrained_weight', default='', type=str, metavar='PATH',
                     help='path to pretrained weight')
+parser.add_argument('--stop-step-num', default=None, type=int,
+                    help='after the stop-step,killing the training task.')
 
 warnings.filterwarnings('ignore')
 best_acc1 = 0
@@ -190,9 +193,18 @@ def main():
         # we have to set KERNEL_NAME_ID for every proc
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
+    else:
+        ngpus_per_node = 1
+        main_worker(args.gpu, ngpus_per_node, args)
 
 
 def main_worker(gpu, ngpus_per_node, args):
+    if args.bin:
+        torch.npu.set_compile_mode(jit_compile=False)
+        option = {}
+        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "AvgPoolV2Grad"
+        torch.npu.set_option(option)
+
     global best_acc1
     args.gpu = args.process_device_map[gpu]
     print("npu id:", args.gpu)
@@ -292,7 +304,8 @@ def main_worker(gpu, ngpus_per_node, args):
                                           opt_level=args.opt_level, 
                                           loss_scale=args.loss_scale, 
                                           combine_grad=True)
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
+    if args.distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -417,7 +430,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                         and args.rank % ngpus_per_node == 0):
                 progress.display(i)
-
+        if args.stop_step_num is not None and i >= args.stop_step_num:
+            break
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()

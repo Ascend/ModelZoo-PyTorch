@@ -159,7 +159,7 @@ def train(hyp, opt, device, tb_writer=None):
     ema = ModelEMA(model) if rank in [-1, 0] else None
 
     # DDP mode
-    if npu and rank != -1:
+    if npu and rank != -1 and opt.multiprocessing_distributed:
         model = DDP(model, device_ids=[NPU_CALCULATE_DEVICE], broadcast_buffers=False)
 
     # Trainloader
@@ -431,13 +431,11 @@ def main_worker(opt):
         opt.weights = last if opt.resume and not opt.weights else opt.weights
     print("training config:", opt)
     device = torch.device(loc) if opt.device == 'npu' else torch.device('cpu')
-
     if opt.multiprocessing_distributed:
         if opt.dist_url == "env://" and opt.global_rank == -1:
             opt.global_rank = int(os.environ["RANK"])
         dist.init_process_group(backend=opt.dist_backend,  # init_method=cfg.dist_url,
                                 world_size=opt.world_size, rank=opt.global_rank)
-
     opt.hyp = opt.hyp or ('data/hyp.scratch.yaml')
     opt.data, opt.cfg, opt.hyp = check_file(opt.data), check_file(opt.cfg), check_file(opt.hyp)  # check files
     assert len(opt.cfg) or len(opt.weights), 'either --cfg or --weights must be specified'
@@ -447,7 +445,7 @@ def main_worker(opt):
     opt.total_batch_size = opt.batch_size
     opt.batch_size = opt.total_batch_size // opt.world_size
 
-    print(opt)
+    print("opt.. ")
     with open(opt.hyp) as f:
         hyp = yaml.load(f, Loader=yaml.FullLoader)  # load hyps
 
@@ -551,7 +549,8 @@ def main(opt):
         opt.world_size = npus_per_node * opt.world_size
         main_worker(opt)
     else:
-        print('multi npu training failed to init...')
+        opt.world_size = 1
+        main_worker(opt)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -585,7 +584,7 @@ if __name__ == '__main__':
                         help='loss scale using in amp, default means dynamic loss scale')
     parser.add_argument('--opt-level', default='O1', type=str,
                         help='loss scale using in amp, default O1')
-    parser.add_argument('--world_size', default=-1, type=int,
+    parser.add_argument('--world_size', default=1, type=int,
                         help='number of nodes for distributed training')
     parser.add_argument('--multiprocessing_distributed', action='store_true',
                         help='Use multi-processing distributed training to launch '
