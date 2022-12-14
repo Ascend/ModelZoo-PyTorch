@@ -1,3 +1,4 @@
+#!/bin/bash
 CANN_INSTALL_PATH_CONF='/etc/Ascend/ascend_cann_install.info'
 
 if [ -f $CANN_INSTALL_PATH_CONF ]; then
@@ -12,9 +13,15 @@ else
     source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
-export TASK_QUEUE_ENABLE=1
+#将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
+#设置默认日志级别,0-debug/1-info/2-warning/3-error
 export ASCEND_GLOBAL_LOG_LEVEL=3
+#设置是否开启taskque,0-关闭/1-开启
+export TASK_QUEUE_ENABLE=1
+#HCCL白名单开关,1-关闭/0-开启
+export HCCL_WHITELIST_DISABLE=1
+export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
 
 path_lib=$(python3.7 -c """
 import sys
