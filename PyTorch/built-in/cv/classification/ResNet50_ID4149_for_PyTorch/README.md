@@ -49,8 +49,8 @@ ResNet是由微软研究院的Kaiming He等四名华人提出，是ImageNet竞赛中分类问题效果较好
 
 | 配套       | 版本                                                         |
 | ---------- | ------------------------------------------------------------ |
-| 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-| CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
+| 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+| CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial |
 | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
 - 环境准备指导。
@@ -158,15 +158,15 @@ ResNet是由微软研究院的Kaiming He等四名华人提出，是ImageNet竞赛中分类问题效果较好
 **表 2**  训练结果展示表
 | NAME  | Acc@1  | FPS  | Epochs  | AMP_Type  | Torch  |
 |---|---|---|---|---|---|
-| 1p-NPU  |   | 1689  | 90  | O2  | 1.8  |
-| 8p-NPU   | 73.94  | 12921  | 90  | O2  | 1.8  |
+| 1p-NPU  |   | 1680  | 90  | O2  | 1.8  |
+| 8p-NPU   | 76.63  | 11910  | 90  | O2  | 1.8  |
 
 
 # 版本说明
 
 ## 变更
 
-2022.12.09：首次发布。
+2022.12.14：首次发布。
 
 ## 已知问题
 
