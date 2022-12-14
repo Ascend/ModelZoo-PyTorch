@@ -141,7 +141,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
          python3 StarGAN_pth2onnx.py --input_file './200000-G.pth' --output_file './StarGAN.onnx'
          ```
 
-         获得StarGAN.onnx文件。
+         获得StarGAN.onnx文件，受模型前处理影响，不支持bs32,64.
 
 
 
@@ -250,8 +250,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 | 4          | *201.207*      | *1280*     | 
 | 8          | *199.913*      | *1281.4*     | 
 | 16         | *200.986*      | *1244.8*     |
-| 32         | *200.986*      | *1113.4*     | 
-| 64         | *201.307*      | *1116*     | 
+
 
 精度测试：
 
