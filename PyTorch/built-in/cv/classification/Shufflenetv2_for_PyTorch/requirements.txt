@@ -1,6 +1,5 @@
 Numpy
 Pillow
 Requests
-torchvision==0.9.1
 Decorator
 sympy
