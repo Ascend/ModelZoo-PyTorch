@@ -88,8 +88,43 @@ parser.add_argument('--loss-scale', default=1024., type=float,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
-
+parser.add_argument('--warmup', default=8, type=int, metavar='E', help='number of warmup epochs')
+parser.add_argument('--label-smoothing', default=0.1, type=float, metavar='S', help='label smoothing')
+parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
 best_acc1 = 0
+
+def lr_policy(lr_fn):
+    def _alr(optimizer, iteration, epoch):
+        lr = lr_fn(iteration, epoch)
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+    return _alr
+
+def lr_cosine_policy(base_lr, warmup_length, epochs):
+    def _lr_fn(iteration, epoch):
+        if epoch < warmup_length:
+            lr = base_lr * (epoch + 1) / warmup_length
+        else:
+            e = epoch - warmup_length
+            es = epochs - warmup_length
+            lr = 0.5 * (1 + np.cos(np.pi * e / es)) * base_lr
+        return lr
+
+    return lr_policy(_lr_fn)
+
+class CrossEntropy(nn.CrossEntropyLoss):
+    def __init__(self, smooth_factor=0., num_classes=1000):
+        super(CrossEntropy, self).__init__()
+        self.on_value = 1.0 - smooth_factor
+        self.off_value = 1.0 * smooth_factor / (num_classes - 1)
+
+    def forward(self, input, target):
+        one_hot_label = torch.npu_one_hot(target, -1, input.size(1), self.on_value, self.off_value)
+        one_hot_label = one_hot_label.to(torch.float16)
+        loss = torch.npu_softmax_cross_entropy_with_logits(input.to(torch.float16), one_hot_label)
+
+        loss = torch.mean(loss, [0], keepdim=False, dtype=torch.float32)
+        return loss
 
 def fast_collate(batch):
     imgs = [img[0] for img in batch]
@@ -108,8 +143,8 @@ def fast_collate(batch):
 
 def main():
     args = parser.parse_args()
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'
+    os.environ['MASTER_ADDR'] = args.addr
+    os.environ['MASTER_PORT'] = '29501'
 
     if args.seed is not None:
         os.environ['PYTHONHASHSEED'] = str(args.seed)
@@ -190,7 +225,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 # When using a single GPU per process and per
                 # DistributedDataParallel, we need to divide the batch size
                 # ourselves based on the total number of GPUs of the current node.
-                args.batch_size = int(args.batch_size / ngpus_per_node)
+                args.batch_size = int(args.batch_size / args.world_size)
                 args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
             else:
                 model.npu()
@@ -221,19 +256,21 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         device = torch.device("cpu")
     # define loss function (criterion), optimizer, and learning rate scheduler
-    criterion = nn.CrossEntropyLoss().to(device)
+    lr_scheduler = lr_cosine_policy(args.lr, args.warmup, args.epochs)
+    criterion = CrossEntropy(args.label_smoothing).to(device)
 
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
+
     if args.amp:
         model, optimizer = amp.initialize(
-            model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale,combine_grad=True)
+            model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, verbosity=1, combine_grad=True)
     if args.distributed and args.gpu is not None:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+
     
     # optionally resume from a checkpoint
     if args.resume:
@@ -252,7 +289,6 @@ def main_worker(gpu, ngpus_per_node, args):
                 best_acc1 = best_acc1.to(args.gpu)
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            scheduler.load_state_dict(checkpoint['scheduler'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
@@ -298,7 +334,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     val_loader = MultiEpochsDataLoader(
         val_dataset, batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=True, sampler=val_sampler, collate_fn=fast_collate)
+        num_workers=args.workers, pin_memory=True, sampler=val_sampler, collate_fn=fast_collate, drop_last=True)
 
     if args.evaluate:
         validate(val_loader, model, criterion, args)
@@ -309,12 +345,12 @@ def main_worker(gpu, ngpus_per_node, args):
             train_sampler.set_epoch(epoch)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, device, args)
+        train(train_loader, model, criterion, optimizer, epoch, device, args, lr_scheduler)
 
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
         
-        scheduler.step()
+        #scheduler.step()
         
         # remember best acc@1 and save checkpoint
         is_best = acc1 > best_acc1
@@ -328,11 +364,10 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-                'scheduler' : scheduler.state_dict()
             }, is_best)
 
 
-def train(train_loader, model, criterion, optimizer, epoch, device, args):
+def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_scheduler):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -353,6 +388,8 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
+
+        lr_scheduler(optimizer, i, epoch)
 
         # move data to the same device as model
         images = images.to(device, non_blocking=True).to(torch.float).sub(mean).div(std)
