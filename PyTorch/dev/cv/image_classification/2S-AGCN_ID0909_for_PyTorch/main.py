@@ -465,7 +465,8 @@ class Processor():
             self.optimizer.step()
             loss_value.append(loss.data.item())
             timer['model'] += self.split_time()
-            FPS = self.arg.batch_size / (time.time() - start_time)
+            step_time = time.time() - start_time
+            FPS = self.arg.batch_size / step_time
             value, predict_label = torch.max(output.data, 1)
             acc = torch.mean((predict_label == label.data).float())
             self.train_writer.add_scalar('acc', acc, self.global_step)
@@ -476,7 +477,9 @@ class Processor():
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
             self.train_writer.add_scalar('lr', self.lr, self.global_step)
-            print('FPS: ',FPS)
+            print('FPS: ', FPS)
+            print("Time: ", step_time)
+
             # if self.global_step % self.arg.log_interval == 0:
             #     self.print_log(
             #         '\tBatch({}/{}) done. Loss: {:.4f}  lr:{:.6f}'.format(
