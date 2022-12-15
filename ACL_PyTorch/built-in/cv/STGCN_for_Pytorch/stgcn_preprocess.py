@@ -1,17 +1,4 @@
-# ============================================================================
-# Copyright 2018-2019 Open-MMLab. All rights reserved.
-#                                  Apache License
-#                            Version 2.0, January 2004
-#                         http://www.apache.org/licenses/
-#
-#   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,7 +57,7 @@ def create_input_dataset(output_dir, data_dir, label_dir):
         label_data.tofile(label_bin_path)
 
 
-def preprocess(dataset_cfg, output_dir, batch_size=1, workers=1):
+def preprocess(dataset_cfg, output_dir, workers=1):
     """ST-GCN preprocess script to create input dataset.
     Args:
         -dataset_cfg: dataset config file
@@ -79,7 +66,6 @@ def preprocess(dataset_cfg, output_dir, batch_size=1, workers=1):
     """
     dataset = call_obj(**dataset_cfg)
     data_loader = torch.utils.data.DataLoader(dataset=dataset,
-                                            batch_size=batch_size,
                                             shuffle=False,
                                             num_workers=workers)
     if not os.path.exists(output_dir):
@@ -106,26 +92,23 @@ def preprocess(dataset_cfg, output_dir, batch_size=1, workers=1):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='kinetics dataset preprocess')
-    parser.add_argument('-data_dir',
+    parser.add_argument('--data_path',
         default='./data/kinetics-skeleton/val_data.npy', help='data file path')
-    parser.add_argument('-label_dir',
+    parser.add_argument('--label_path',
         default='./data/kinetics-skeleton/val_label.pkl',
         help='label file path')
-    parser.add_argument('-output_dir',
+    parser.add_argument('--output_dir',
         default='./data/kinetics-skeleton/',
         help='output the preprocessed data and label')
-    parser.add_argument('-batch_size', default=1,
-        help='batch size of the model input')
-    parser.add_argument('-num_workers', default=1,
+    parser.add_argument('--num_workers', default=1,
         help='count of the dataloader')
     args = parser.parse_args()
 
     # para init
-    batch = args.batch_size
-    dataset_path = args.data_dir
-    labels_path = args.label_dir
+    dataset_path = args.data_path
+    labels_path = args.label_path
     num_worker = args.num_workers
-    output_path = args.output_dir
+    output_dir = args.output_dir
 
     dataset_file = {
         'type': 'deprecated.datasets.skeleton_feeder.SkeletonFeeder',
@@ -134,7 +117,7 @@ if __name__ == "__main__":
     }
 
     # create input_data
-    create_input_dataset(output_path, dataset_path, labels_path)
+    create_input_dataset(output_dir, dataset_path, labels_path)
 
     # preprocess
-    preprocess(dataset_file, output_path, int(batch), int(num_worker))
+    preprocess(dataset_file, output_dir, int(num_worker))

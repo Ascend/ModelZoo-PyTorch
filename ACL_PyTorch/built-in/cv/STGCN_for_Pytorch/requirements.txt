@@ -1,4 +1,13 @@
 torch==1.2.0
 torchvision==0.4.0
-onnx==1.7.0
-numpy==1.19.2
+mmcv==0.4.3
+mmdet==1.0rc1
+mmskeleton==0.7rc1
+opencv-python==4.6.0.66
+opencv-python-headless==4.6.0.66
+Pillow==6.2.2
+pycocotools==2.0.6
+PyYAML==6.0
+scipy==1.7.3
+numpy==1.21.5
+lazy-import==0.2.2
