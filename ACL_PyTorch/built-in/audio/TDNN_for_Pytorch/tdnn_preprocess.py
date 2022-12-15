@@ -33,15 +33,14 @@ classifier = EncoderClassifier.from_hparams(source='best_model', savedir='best_m
 
 with open('test.json', 'r') as f:
     data_info = json.load(f)
-    i = 0
     
-    for key, value in tqdm(data_info.items()):
+    for i, (key, value) in enumerate(tqdm(data_info.items())):
         wav_file = 'data' + value['wav'][11:] # prefix length 11
         signal, fs = torchaudio.load(wav_file)
         feats = classifier.extract_feats(signal)
         # pad signal
         pad = (feats.shape[1] // 100 + 1) * 100 - feats.shape[1]
-        feats = F.pad(feats, (0,0,0,pad,0,0), value=0)
+        feats = F.pad(feats, (0, 0, 0, pad, 0, 0), value=0)
 
         # dump bin file
         output = value['wav'].split('/')[-1][:-4]
@@ -50,7 +49,6 @@ with open('test.json', 'r') as f:
         # write shape info
         file.write(f'{str(i)} {output} ({str(feats.shape[0])},{str(feats.shape[1])},{str(feats.shape[2])})')
         file.write('\n')
-        i += 1
 
     print('data preprocess done')
     file.close()
