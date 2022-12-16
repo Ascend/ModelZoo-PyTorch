@@ -39,7 +39,7 @@ def st_gcn_postprocess(result_dir, label_dir):
     for idx in range(len(filelist)):
         if idx == objcnt:
             break
-        file_dir = os.path.join(result_dir, "{}_1.bin".format(idx))
+        file_dir = os.path.join(result_dir, "{}_0.bin".format(idx))
         data = np.fromfile(file_dir, dtype='float32')
         results.append(data)
     results = np.concatenate(results)

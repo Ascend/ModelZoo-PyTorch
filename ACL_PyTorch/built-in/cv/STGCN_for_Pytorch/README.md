@@ -61,7 +61,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 1. 在GPU服务器上安装`CUDA`与`CUDNN`（版本参照上表），然后依次执行以下命令安装python第三方库。
     ```bash
     conda install pytorch==1.2.0 torchvision==0.4.0 cudatoolkit=10.0 -c pytorch
-    pip install mmcv-full==0.4.3
+    pip install mmcv==0.4.3
     pip install Cython==0.29.32
     git clone https://github.com/open-mmlab/mmdetection.git
     cd ./mmdection
@@ -112,7 +112,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     + --label_path: 原始标签存放位置
     + --output_dir: 输出文件的保存目录
     
-    运行成功后，data/kinetics-skeleton/目录下会创建val_data和val_label两个子目录，每个子目录下面都生成19799个bin文件。
+    运行成功后，data/kinetics-skeleton/目录下会创建val_data和val_label两个子目录，每个子目录下面都生成19796个bin文件。
 
 
 ## 模型转换
@@ -209,7 +209,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     ```bash
     python stgcn_postprocess.py \
         --result_dir ./st_gcn_bs${bs}_out/ \
-        --label_path ./data/Kinetics/kinetics-skeleton/val_label.pkl \
+        --label_path ./data/Kinetics/kinetics-skeleton/val_label.pkl
     ```
     参数说明：
     + --result_dir: 存放推理结果的目录路径
@@ -235,3 +235,4 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 |Ascend310P3| 16        | kinetics-skeleton | Top1@Acc=31.59%   Top5@Acc: 53.74% | 217.65 fps |
 |Ascend310P3| 32        | kinetics-skeleton | Top1@Acc=31.59%   Top5@Acc: 53.74% | 223.21 fps |
 |Ascend310P3| 64        | kinetics-skeleton | Top1@Acc=31.59%   Top5@Acc: 53.74% | 219.39 fps |
+
