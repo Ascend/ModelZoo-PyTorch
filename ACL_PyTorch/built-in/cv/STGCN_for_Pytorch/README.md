@@ -77,6 +77,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     cd mmskeleton/ops/nms
     python setup_linux.py develop
     cd -
+    pip install Pillow==6.2.2
     ```
     执行完后，把模型推理的业务代码与补丁文件都复制到当前目录。
 
