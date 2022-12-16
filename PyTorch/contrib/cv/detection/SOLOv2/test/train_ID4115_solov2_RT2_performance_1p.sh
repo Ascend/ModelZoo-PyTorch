@@ -131,7 +131,7 @@ num_FPS=`grep '.* - mmcv.runner.runner - INFO - FPS:' $cur_path/output/${ASCEND_
 FPS=$(awk 'BEGIN{printf "%.2f\n",'${sum_FPS}'/'${num_FPS}'}')
 
 #输出CompileTime
-CompileTime=`grep '- INFO - Epoch' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2|awk -F "time:" '{print $2}'|awk '{sum += $1} END {print sum}'`
+CompileTime=`grep grep "mmcv.runner.runner" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep "Epoch"|head -n 2|awk -F "time:" '{print $2}'|awk '{sum += $1} END {print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

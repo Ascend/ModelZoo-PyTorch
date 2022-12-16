@@ -43,6 +43,7 @@ start_time=$(date +%s)
 #执行训练脚本，传参需要审视修改
 python3 train_main.py   --rt2 \
                         --data_path=${data_path} \
+                        --local_rank ${ASCEND_DEVICE_ID} \
                         --iters=${iters} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 python3 test_main.py --iter=${iters} --data_path=${data_path} >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
