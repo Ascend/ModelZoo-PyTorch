@@ -3,6 +3,7 @@ torchvision==0.4.0
 mmcv==0.4.3
 mmdet==1.0rc1
 mmskeleton==0.7rc1
+Cython==0.29.32
 opencv-python==4.6.0.66
 opencv-python-headless==4.6.0.66
 Pillow==6.2.2

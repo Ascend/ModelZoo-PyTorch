@@ -61,6 +61,7 @@ def pt2onnx():
         output_names=output_name,
         verbose=False,
         dynamic_axes={'input1': {0: '-1'}, 'output1': {0: '-1'}}
+    )
 
 
 if __name__ == "__main__":

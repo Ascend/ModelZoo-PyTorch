@@ -62,6 +62,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     ```bash
     conda install pytorch==1.2.0 torchvision==0.4.0 cudatoolkit=10.0 -c pytorch
     pip install mmcv-full==0.4.3
+    pip install Cython==0.29.32
     git clone https://github.com/open-mmlab/mmdetection.git
     cd ./mmdection
     git checkoutput master
@@ -72,7 +73,9 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     cd mmskeleton
     git checkout master
     git reset --hard b4c076baa9e02e69b5876c49fa7c509866d902c7
-    python setup.py install
+    python setup.py develop
+    cd mmskeleton/ops/nms
+    python setup_linux.py develop
     ```
     执行完后，把模型推理的业务代码与补丁文件都复制到当前目录。
 
@@ -86,7 +89,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 ## 准备数据集
 
 1. 获取原始数据集  
-    该模型使用`Kinetics-skeleton`行为识别数据集来验证模型精度。将测试数据按以下结构解压并存放。
+    该模型使用`Kinetics-skeleton`行为识别数据集来验证模型精度。从[开源链接](https://drive.google.com/open?id=103NOL9YYZSW1hLoWmYnv5Fs8mK-Ij7qb)下载数据集。该推理业务需要的数据以及目录结构如下：
     ```
     data/
     `-- Kinetics/
@@ -99,7 +102,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 2. 数据预处理  
     执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
     ```bash
-    python3 stgcn_preprocess.py \
+    python stgcn_preprocess.py \
         --data_path ./data/Kinetics/kinetics-skeleton/val_data.npy \
         --label_path ./data/Kinetics/kinetics-skeleton/val_label.pkl \
         --output_dir ./data/kinetics-skeleton/
@@ -116,7 +119,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 
 1. PyTroch 模型转 ONNX 模型  
     ```bash
-    Python3.7 stgcn_pth2onnx.py –-ckpt=./checkpoints/st_gcn.kinetics-6fa43f73.pth –-onnx=./st_gcn.onnx
+    python stgcn_pth2onnx.py --ckpt ./checkpoints/st_gcn.kinetics-6fa43f73.pth --onnx ./st_gcn.onnx
     ```
     参数说明：
     + --ckpt: 预训练权重文件的路径
@@ -204,7 +207,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     
     此步骤需要将NPU服务器上OM模型的推理结果复制到GPU服务器上，然后再GPU服务器上执行后处理脚本，根据推理结果计算OM模型的精度：
     ```bash
-    python3 stgcn_postprocess.py \
+    python stgcn_postprocess.py \
         --result_dir ./st_gcn_bs${bs}_out/ \
         --label_path ./data/Kinetics/kinetics-skeleton/val_label.pkl \
     ```
@@ -232,4 +235,3 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 |Ascend310P3| 16        | kinetics-skeleton | Top1@Acc=31.59%   Top5@Acc: 53.74% | 217.65 fps |
 |Ascend310P3| 32        | kinetics-skeleton | Top1@Acc=31.59%   Top5@Acc: 53.74% | 223.21 fps |
 |Ascend310P3| 64        | kinetics-skeleton | Top1@Acc=31.59%   Top5@Acc: 53.74% | 219.39 fps |
-
