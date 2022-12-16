@@ -23,6 +23,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --checkpoint* ]];then
         MODEL=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -61,7 +63,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${cur_path}/test/env_npu.sh
 fi
 nohup python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  $MODEL --show --out  results_solo.pkl --eval segm \
-      --data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --batch_size=${batch_size} --gpu-ids ${device_id} --data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################

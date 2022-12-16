@@ -185,6 +185,7 @@ def parse_args():
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
+    parser.add_argument('--batch_size', type=int, default=1, help='batch size of datasets')
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
@@ -318,7 +319,7 @@ def main():
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,
-        imgs_per_gpu=1,
+        imgs_per_gpu=args.batch_size,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
         shuffle=False)

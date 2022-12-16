@@ -15,6 +15,16 @@ train_epochs=2
 # 指定训练所使用的npu device卡id
 device_id=0
 
+#参数校验，不需要修改
+for para in $*
+do
+    if [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    fi
+done
+
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -61,6 +71,7 @@ python3.7 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_
     --validate \
     --seed 0 \
     --deterministic \
+    --cfg-options data.videos_per_gpu=${batch_size} \
     --rank_id ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
 
 wait
