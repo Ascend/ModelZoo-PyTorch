@@ -64,8 +64,8 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     pip install mmcv==0.4.3
     pip install Cython==0.29.32
     git clone https://github.com/open-mmlab/mmdetection.git
-    cd ./mmdection
-    git checkoutput master
+    cd ./mmdetection
+    git checkout master
     git reset --hard 4357697acaaf7b3eb17a9e78f2e0b8996bcf4e73
     python setup.py install
     cd ..
