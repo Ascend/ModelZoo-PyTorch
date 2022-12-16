@@ -1,17 +1,4 @@
-# ============================================================================
-# Copyright 2018-2019 Open-MMLab. All rights reserved.
-#                                  Apache License
-#                            Version 2.0, January 2004
-#                         http://www.apache.org/licenses/
-#
-#   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 
 import os
 import cv2
@@ -51,7 +39,7 @@ def st_gcn_postprocess(result_dir, label_dir):
     for idx in range(len(filelist)):
         if idx == objcnt:
             break
-        file_dir = os.path.join(result_dir, "{}_1.bin".format(idx))
+        file_dir = os.path.join(result_dir, "{}_0.bin".format(idx))
         data = np.fromfile(file_dir, dtype='float32')
         results.append(data)
     results = np.concatenate(results)
@@ -69,11 +57,11 @@ def st_gcn_postprocess(result_dir, label_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='kinetics-skeleton postprocess')
-    parser.add_argument('-result_dir', 
+    parser.add_argument('--result_dir', 
         default='./result/dumpOutput_device1/', help='data file path')
-    parser.add_argument('-label_dir', 
+    parser.add_argument('--label_path', 
         default='./data/kinetics-skeleton/val_label.pkl', 
         help='label file path')
     args = parser.parse_args()
     # create input_data
-    st_gcn_postprocess(args.result_dir, args.label_dir)
+    st_gcn_postprocess(args.result_dir, args.label_path)
