@@ -16,7 +16,7 @@ data_path=""
 # 训练epoch
 train_epochs=1
 # 加载数据进程数
-workers=16
+workers=64
 # lr
 base_lr=4e-5
 # 指定训练卡
