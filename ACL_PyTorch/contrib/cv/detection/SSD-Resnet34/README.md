@@ -94,6 +94,10 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
    链接：https://pan.baidu.com/s/1xH3ZSP63NRukAPMlI4ePNw 
    提取码：rcof
    ```
+   >**说明：** 
+   >网盘里只有x86架构的工具包，用户如需arm架构的工具包请自行编译（网址如下）。
+   >https://www.hiascend.com/software/ai-frameworks/commercial
+
     2. 安装环境
    ```
    pip3 install -r requirements.txt
