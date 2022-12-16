@@ -148,7 +148,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep FPS  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $4}' | awk 'NR>1{print line}{line=$0}' | awk '{sum+=$1} END {print "", sum/NR}' | sed 's/^[ \t]*//g'`
 #输出编译时间
-CompileTime=`grep "train time:"  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log  | head -2 |awk -F " " '{print $5}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+CompileTime=`grep "train time:"  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log  | head -2 |awk -F " " '{print $7}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

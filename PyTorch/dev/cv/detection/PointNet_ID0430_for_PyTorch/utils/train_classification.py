@@ -183,7 +183,7 @@ for epoch in range(opt.nepoch):
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
         end_time = time.time() - start_time
-        print('[%d: %d/%d] train time: %f FPS: %f train loss: %f accuracy: %f' % (epoch, i, num_batch, end_time, opt.batchSize/end_time, loss.item(), correct.item() / float(opt.batchSize)))
+        print('[%d: %d/%d] FPS: %f  train time: %f train loss: %f accuracy: %f' % (epoch, i, num_batch, opt.batchSize/end_time, end_time, loss.item(), correct.item() / float(opt.batchSize)))
 
         if i % 10 == 0:
             j, data = next(enumerate(testdataloader, 0))
