@@ -133,7 +133,6 @@ then
         --device-list '0,1,2,3,4,5,6,7' \
         --amp \
         --benchmark 0 \
-        --loss-scale -1 \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 else
@@ -158,7 +157,6 @@ else
         --device-list '0,1,2,3,4,5,6,7' \
         --amp \
         --benchmark 0 \
-        --loss-scale -1 \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 fi
