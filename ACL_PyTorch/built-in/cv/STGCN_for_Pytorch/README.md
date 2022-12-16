@@ -43,7 +43,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 
     | 配套      | 版本    | 环境准备指导 |
     | --------- | ------- | ---------- |
-    | 固件与驱动 | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.RC1 | -          |
     | Nvidia-Driver | 460.67 |         |
     | CUDA      | 10.0    | -          |
