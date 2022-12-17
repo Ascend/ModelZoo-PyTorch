@@ -190,7 +190,7 @@ ResNext101是一个轻量化，并且高度模块化的用于图像分类的神�
       3. 执行ATC命令。
    
          ```
-         atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=./resnext101_32x8d.onnx --output=resnext101_32x8d_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend${chip_name}
          ```
          
          - 参数说明：
@@ -246,6 +246,20 @@ ResNext101是一个轻量化，并且高度模块化的用于图像分类的神�
         -  第二个参数 ：  标签数据 。
         -  第三个参数  ：   生成结果文件路径 。
         -  第四个参数  ：   生成结果文件名称。
+
+   4. 性能验证
+
+        可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+      - --model：om模型
+      - --batchsize：模型batchsize
+      - --loop: 循环次数
+
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
