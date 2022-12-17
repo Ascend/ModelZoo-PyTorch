@@ -191,7 +191,7 @@ TransPose是一种基于CNN特征提取器、Transformer编码器和预测头的
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=models/tp_r_256x192_enc3_d256_h1024_mh8_sim.onnx --output=models/tp_r_256x192_enc3_d256_h1024_mh8_bs1 --input_format=NCHW --input_shape="input:1,3,256,192" --fusion_switch_file=fusion_switch.cfg --log=error --soc_version=Ascend310P3
+         atc --framework=5 --model=models/tp_r_256x192_enc3_d256_h1024_mh8_sim.onnx --output=models/tp_r_256x192_enc3_d256_h1024_mh8_bs1 --input_format=NCHW --input_shape="input:1,3,256,192" --fusion_switch_file=fusion_switch.cfg --log=error --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
