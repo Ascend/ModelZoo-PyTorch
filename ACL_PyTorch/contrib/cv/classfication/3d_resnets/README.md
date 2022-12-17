@@ -2,6 +2,8 @@
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
+   
+   - [输入输出数据](#section540883920406)
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
@@ -11,9 +13,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
@@ -26,28 +26,16 @@
   ```
   url=https://github.com/kenshohara/3D-ResNets-PyTorch
   branch=master
-  commit_id=f399b376ca555f0ff925d77517313164c66504f9
-  model_name=3d_resnets
+  commit_id=540a0ea1abaee379fa3651d4d5afbd2d667a1f49
   ```
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
 
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
-  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | 输入数据  | 大小      | 数据类型                | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | FLOAT32| 10 x 3 x 16 x 112 x 112 | ND|
+  | input    |  10 x 3 x 16 x 112 x 112 | FLOAT32|  ND|
 
 
 - 输出数据
@@ -56,58 +44,93 @@
   | -------- | -------- | -------- | ------------ |
   | output1  | 10 x 51 | FLOAT32  | ND           |
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.6.0   | -                                                            |
-| onnx	| 1.7.0	| 1.7.0 |
-| Torch	| 1.8.0	| 1.5.0 |
-| TorchVision	| 0.9.0	| None | 
-| numpy	| 1.21.2	| None | 
-| Pillow	| 8.3.0	| None | 
-| scikit-image	| 0.16.2	| None | 
-| Opencv-python	| 4.6.0.66	| None |    
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.16（NPU驱动固件版本为5.1.RC2）  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |                                                           |
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+## 获取源码<a name="section4622531142816"></a>
 
 
-1. 安装依赖。
+1. 获取源码。
+
+    源码目录结构：
+    ``` 
+    ├── 3D-ResNets_postprocess.py              //模型后处理脚本  
+    ├── 3D-ResNets_preprocess.py               //模型前处理脚本 
+    ├── 3D-ResNets_pth2onnx.py                 //用于转换pth文件到onnx文件  
+    ├── eval_accuracy.py                          //模型精度输出文件
+    ├── resnet.patch                            //修改开源仓resnet.py文件的patch文件
+    ├── modelzoo_level.txt                          //模型精度性能结果
+    ├── requirements.txt                            //依赖库和版本号
+    ├── LICENSE                                     //Apache LICENCE                            
+    ├── README.md                                   //模型离线推理说明README
+    ```
+2. 获取开源代码仓并整理代码结构。
+   ```
+   git clone https://github.com/kenshohara/3D-ResNets-PyTorch.git 
+   mv 3D-ResNets_postprocess.py 3D-ResNets_preprocess.py 3D-ResNets_pth2onnx.py eval_accuracy.py 3D-ResNets-PyTorch/
+   ```
+
+
+3. 修改resnet文件。在源码路径3d_resnets目录下执行patch命令。
+    ```
+    patch -p0 < resnet.patch
+    ```
+
+4. 安装依赖。
 
    ```
-   pip3 install -r requirment.txt
+   pip install -r requirements.txt
    ```
-
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+1. 获取原始数据集。
 
-   本模型基于hmdb51数据集训练和推理，hmdb51是一个轻量的动作识别数据汇集，包含51种动作的短视频。hmdb51数据集的获取及处理参考Link(https://github.com/kenshohara/3D-ResNets-PyTorch)中Preparation和HMDB-51小节，处理后的数据格式为从视频帧中提取的jpg图片和标签json文件。
+   本模型基于hmdb51数据集训练和推理，hmdb51是一个轻量的动作识别数据汇集，包含51种动作的短视频。hmdb51数据集的获取及处理参考[源代码仓](https://github.com/kenshohara/3D-ResNets-PyTorch)中Preparation和HMDB-51小节。
+   数据目录结构请参考：
+    ```
+    ├──hmdb51
+        ├──image1
+           ├──image1_1
+              ├──image.jpg
+           ├──image1_2
+              ├──image.jpg
+        ├──image2
+           ├──image2_1
+              ├──image.jpg
+           ├──image2_2
+              ├──image.jpg
+    ```
 
-2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+2. 数据预处理。
 
-   数据预处理将图片数据转换为模型输入的二进制数据，将原始数据（.jpg）转化为二进制文件（.bin）。执行3D-ResNets_postprocess.py脚本。
+   数据预处理将图片数据转换为模型输入的二进制数据，将原始数据（.jpg）转化为二进制文件（.bin）。
+   在3D-ResNets-PyTorch目录下，执行3D-ResNets_postprocess.py脚本。
 
    ```
-   python3 3D-ResNets_preprocess.py --video_path=hmdb51 --annotation_path=hmdb51_1.json --output_path=Binary_hmdb51 --dataset=hmdb51 --inference_batch_size=1
+   python 3D-ResNets_preprocess.py --video_path=hmdb51 --annotation_path=hmdb51_1.json --output_path=Binary_hmdb51 --dataset=hmdb51 --inference_batch_size=1
    ```
-         - 参数说明：  
+    - 参数说明：  
        
-           -   --video_path：jpg数据最上层目录。
-           -   --annotation_path：数据集信息路径。
-           -   --output_path：输出目录。
-           -   --dataset：数据集类型，默认hmdb51。
-           -   --inference_batch_size：推理batch_size。
-    运行完预处理脚本会在当前目录输出hmdb51.info文件和Binary_hmdb51二进制文件夹，包含视频片段名字和长度信息，用于后处理。
+      - --video_path：原始数据集的路径。
+      - --annotation_path：数据集信息路径。
+      - --output_path：输出目录。
+      - --dataset：数据集类型，默认hmdb51。
+      - --inference_batch_size：推理batch_size。
+
+   运行完预处理脚本会在当前目录输出hmdb51.info文件和Binary_hmdb51二进制文件夹，包含视频片段名字和长度信息，用于后处理。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -115,34 +138,28 @@
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。
-
-       − 从源码包中获取save_700.pth文件
+   1. 获取权重文件 [save_700.pth](https://pan.baidu.com/s/1Hcgd8AAObItOO5-H3n5vdQ)，提取码：jctn。
 
    2. 导出onnx文件。
 
-      1. 将模型权重文件.pt转换为.onnx文件。
-         − 下载代码仓。
+      将模型权重文件.pth转换为.onnx文件。
 
+         在3D-ResNets-PyTorch目录下，执行3D-ResNets_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
          ```
-           git clone https://github.com/kenshohara/3D-ResNets-PyTorch.git
+         python 3D-ResNets_pth2onnx.py --root_path=./ --video_path=hmdb51 --annotation_path=hmdb51_1.json --result_path=result --dataset=hmdb51 --model=resnet --model_depth=50 --n_classes=51 --resume_path=save_700.pth
          ```
+         - 参数说明：
+             - --root_path：工作目录。
+             - --video_path：原始数据验证集所在路径。
+             - --annotation_path：hmdb51_1.json文件所在目录。
+             - --result_path：生成的中间文件所在目录。
+             - --dataset：数据集类型。
+             - --model：模型类型。
+             - --model_depth：resnet模型的深度。
+             - --n_classes：数据集类型数。
+             - --resume_path：权重文件所在路径。
 
-         − 将代码仓上传至服务器。修改主目录models/resnet.py文件中代码：
-
-         ```
-           self.avgpool = nn.AdaptiveAvgPool3d((1, 1, 1))
-           改为
-           self.avgpool = nn.AvgPool3d((1,4,4))
-         ```
-         − 进入代码仓目录并将save_700.pth与3D-ResNets_pth2onnx.py移到github项目主目录下。
-         − 进入主目录，执行3D-ResNets_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
-         ```
-           python3 3D-ResNets_pth2onnx.py --root_path=./ --video_path=hmdb51 --annotation_path=hmdb51_1.json --result_path=result --dataset=hmdb51 --model=resnet --model_depth=50 --n_classes=51 --resume_path=save_700.pth
-         ```
-         − 需用户创建result文件夹。
-         − 对应参数信息可在github项目主目录中opts.py中查看。
-         − 运行成功后，在当前目录生成3D-Resnets.onnx模型文件。然后将生成onnx文件移到ModelZoo源码包中。此模型当前仅支持batch_size=10。
+        运行成功后，在当前目录生成3D-ResNets.onnx模型文件。
 
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -174,10 +191,10 @@
          +===================+=================+======================================================+
          ```
 
-      3. 执行ATC命令。
+      3. 执行ATC命令。此模型当前仅支持batch_size=10。
 
          ```
-         atc --model=3D-ResNets_sim.onnx --framework=5 --output=output_3D-ResNets --input_format=NCHW --input_shape="input:10,3,16,112,112" --log=info --soc_version=Ascend${chip_name}
+         atc --model=3D-Resnets.onnx --framework=5 --output=3D-ResNets --input_format=NCHW --input_shape="input:10,3,16,112,112" --log=info --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -190,53 +207,79 @@
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
            
-           运行成功后生成<u>***3D-Resnets.om***</u>模型文件。
+           运行成功后生成 3D-ResNets.om 模型文件。
 
 
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+   1. 使用ais_infer工具进行推理。ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+      ```
+      pip install -v --force-reinstall 'git+https://gitee.com/ascend/tools.git#egg=aclruntime&subdirectory=ais-bench_workload/tool/ais_infer/backend'
+      pip install -v --force-reinstall 'git+https://gitee.com/ascend/tools.git#egg=ais_bench&subdirectory=ais-bench_workload/tool/ais_infer'
+      ```
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
+   2. 创建推理结果保存的文件夹。
+      ```
+      mkdir result
+      ```
 
-   ```
-   chmod u+x 
-   ```
+   3. 执行推理命令。
 
-b.  执行推理。
-
-    ```
-     python3 ais_infer.py --model 3D-Resnets.om --input Binary_hmdb51 --output result --batchsize=10
-    ```
+      ```
+      python -m ais_bench --model 3D-ResNets.om --input Binary_hmdb51 --output result --batchsize=10
+      ```
+        -  参数说明：
     
-    -   参数说明：
-    
-        -   model：模型地址。
-        -   input：预处理完的数据集文件夹。
-        -   output：推理结果保存地址。默认会建立日期+时间的子文件夹保存输出结果，如果指定output_dirname将保存到output_dirname的子文件夹下。
-        -   batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的  batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。  
+           - --model：模型地址。
+           - --input：预处理完的数据集文件夹。
+           - --output：推理结果保存路径。
+           - --output_dirname：推理结果输出子文件夹。
+           - --batchsize：模型batch size 默认为1。
     
         推理后的输出默认在当前目录result下。
     
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
 
-c.  精度验证。
+    4. 精度验证。
 
-    - 运行后处理脚本3D-ResNets\_postprocess.py将推理结果处理成json文件。
+       1. 运行后处理脚本3D-ResNets_postprocess.py将推理结果处理成json文件。
     
-    ```
-     python3 3D-ResNets_postprocess.py out/20210408_084607/ 1
-    ```
+          ```
+          python 3D-ResNets_postprocess.py result/dumpout_bs10/ 1
+          ```
+          -  参数说明：
     
-    第一个参数out/20210408_084607/为推理时自动生成的output目录，具体名称根据时间变化，请修改为实际名称。第二个参数是选择统计精度的topK的K值，如1表示统计top 1精度。运行成功后生成val.json文件。
+              - result/dumpout_bs10/：推理结果的路径。
+              - 1：选择统计精度的topK的K值，如1表示统计top 1精度。
+
+            运行成功后生成val.json文件。
+
+       2. 运行eval_accuracy.py脚本与数据集标签hmdb51_1.json比对，可以获得Accuracy数据。
     
-    - 运行eval_accuracy.py脚本与数据集标签hmdb51_1.json比对，可以获得Accuracy数据。
-    ```
-     python3 eval_accuracy.py hmdb51_1.json val.json --subset validation -k 1 --ignore
-    ```
-    val.json 是后处理输出的json文件，subset选择评测的子集，k为统计精度topK的K值，--ignore用于忽略缺失数据。
+          ```
+          python eval_accuracy.py hmdb51_1.json val.json --subset validation --k 1 --ignore
+          ```
+          -  参数说明：
+    
+             - hmdb51_1.json：数据集的标签文件。
+             - val.json 是后处理输出的json文件。
+             - --subset：选择评测的子集，默认为validation。
+             - --k：选择统计精度的topK的K值，如1表示统计top 1精度。
+             - --ignore：忽略缺失数据。
+
+    5. 性能验证。
+
+       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+       ```
+       python ${ais_infer_path}/ais_infer.py --model=3D-ResNets.om --loop=20 --batchsize=10
+       ```
+       - 参数说明：
+            - --model：om模型的路径
+            - --loop: 推理次数
+            - --batchsize：数据集batch_size的大小
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -245,5 +288,4 @@ c.  精度验证。
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| 310          | bs10                | hmdb51  | 0.6222     | 392.2100  |
-| 310P          | bs10              | hmdb51  | 0.6222     | 794.9064  |
+| 310P3         | 10               | hmdb51  | 0.6222     | 830.7165  |
