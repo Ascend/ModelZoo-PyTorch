@@ -44,11 +44,12 @@ if __name__ == "__main__":
         audio, sr = load_wav_to_torch(filepath)
         melspectrogram = mel2samp.get_mel(audio)
         filename = os.path.basename(filepath)
-        new_filepath = args.output_dir + filename + '.bin'
+        new_filepath = args.output_dir + filename + '.npy'
         shape_file = args.output_dir + filename + '.txt'
 
         melspectrogram = np.array(melspectrogram, dtype=np.float32)
-        melspectrogram.tofile(new_filepath)
+        melspectrogram = np.expand_dims(melspectrogram, axis=0)
+        np.save(new_filepath, melspectrogram)
         np.savetxt(shape_file, audio.shape, fmt='%d')
         print(new_filepath)
 
