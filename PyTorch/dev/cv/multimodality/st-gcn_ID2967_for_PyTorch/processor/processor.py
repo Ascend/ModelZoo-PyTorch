@@ -130,7 +130,7 @@ class Processor(IO):
                 else:
                     info = info + ' | {}: {}'.format(k, v)
 
-            self.io.print_log(info + ' | fps: {:.2f}'.format(fps))
+            self.io.print_log(info + ' | fps: {:.2f}'.format(fps) + ' | step_time: {:.2f}'.format(self.arg.batch_size/fps))
 
             if self.arg.pavi_log:
                 self.io.log('train', self.meta_info['iter'], self.iter_info)
