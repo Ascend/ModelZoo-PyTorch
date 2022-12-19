@@ -181,7 +181,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
     ```bash
     python -m ais_bench
         --model ./st_gcn_bs${bs}.om \
-        --input ./data/kinetics-skeleton/ \
+        --input ./data/kinetics-skeleton/val_data/ \
         --output ./ \
         --output_dirname ./st_gcn_bs${bs}_out
         --batchsize ${bs}
