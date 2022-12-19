@@ -126,6 +126,7 @@ def train_detector(model,
         work_dir=cfg.work_dir,
         logger=logger,
         meta=meta,
+        max_iters=cfg.max_step,
         num_of_gpus=world_size)
     # an ugly workaround to make .log and .log.json filenames the same
     runner.timestamp = timestamp
