@@ -1,0 +1,8 @@
+torch==1.7.0
+torchvision==0.8.0
+torchaudio==0.7.0
+onnx==1.7.0
+onnxoptimizer==0.2.7
+onnxruntime==1.5.2
+opencv-python==4.4.0.46
+cpython==0.29.30

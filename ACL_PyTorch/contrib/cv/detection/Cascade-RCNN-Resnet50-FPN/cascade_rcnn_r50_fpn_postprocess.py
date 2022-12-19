@@ -17,6 +17,7 @@ import numpy as np
 import argparse
 import json
 import cv2
+import tqdm
 
 CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
             'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     os.makedirs(det_results_path, exist_ok=True)
 
     result_info = json.load(open(os.path.join(bin_path,'sumary.json'),'r'))
-    for k,v in result_info['filesinfo'].items():
+    for k,v in tqdm.tqdm(result_info['filesinfo'].items()):
         bin_file = os.path.basename(v['infiles'][0]).split(".")[0]
         res_buff = []
         for num in range(flags.net_out_num):
@@ -140,10 +141,9 @@ if __name__ == '__main__':
                   # 图像，文字内容， 坐标 ，字体，大小，颜色，字体厚度
             
         if flags.ifShowDetObj == True:
-            print(os.path.join(det_results_path, bin_file +'.jpg'))
             cv2.imwrite(os.path.join(det_results_path, bin_file +'.jpg'), imgCur, [int(cv2.IMWRITE_JPEG_QUALITY),70])
 
         det_results_file = os.path.join(det_results_path, bin_file + ".txt")
         with open(det_results_file, "w") as detf:
             detf.write(det_results_str)
-        print(det_results_str)
+      
