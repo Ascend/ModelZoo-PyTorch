@@ -18,6 +18,7 @@ from PIL import Image
 import numpy as np
 from torchvision import transforms
 import multiprocessing
+from tqdm import tqdm
 
 
 def preprocess(src_path, save_path):
@@ -31,10 +32,8 @@ def preprocess(src_path, save_path):
     in_files = os.listdir(src_path)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    i = 0
-    for file in in_files:
-        i = i + 1
-        print(file, "=====", i)
+
+    for file in tqdm(in_files):
         input_image = Image.open(src_path + '/' + file).convert('RGB')
         input_tensor = preprocess(input_image)
         img = np.array(input_tensor).astype(np.float32)
