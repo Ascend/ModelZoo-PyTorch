@@ -98,7 +98,7 @@ sed -i "s|annotations/instances_train2017.json|annotations/MINIinstances_train20
 start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 1  \
-    --cfg-options log_config.interval=50  \
+    --cfg-options data.persistent_workers=False log_config.interval=50  \
     --no-validate  \
     --launcher none  \
     --local_rank=${device_id}  \

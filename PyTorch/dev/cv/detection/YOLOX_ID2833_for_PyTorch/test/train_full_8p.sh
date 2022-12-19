@@ -87,7 +87,7 @@ start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
     --launcher pytorch  \
-    --cfg-options log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --cfg-options data.persistent_workers=False log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x8_300e_coco.py
