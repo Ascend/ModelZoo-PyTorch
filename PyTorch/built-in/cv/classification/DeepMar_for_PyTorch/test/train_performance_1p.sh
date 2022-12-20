@@ -1,5 +1,4 @@
 #!/bin/bash
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
