@@ -84,8 +84,7 @@ class EpochBasedRunner(BaseRunner):
             self.call_hook('after_train_iter')
             self._iter += 1
         # added by jyl
-        self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_timer_hook.time_all * (len(self.data_loader) - 5))) 
-
+        self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_timer_hook.time_all * (self._max_iters - 5))) 
         self.call_hook('after_train_epoch')
         self._epoch += 1
 
