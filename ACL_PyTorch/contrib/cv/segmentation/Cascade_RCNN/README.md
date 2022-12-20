@@ -98,7 +98,10 @@
    patch -p1 < ../cascadercnn_detectron2.diff
    ```
     3. 屏蔽torch.onnx model_check相关代码
-   进入detectron2/tools/deploy中
+   ```
+   mv export.patch ./tools/deploy
+   ```
+   进入tools/deploy中
    ```
    patch -p 1 export_model.py export.patch
    ```
