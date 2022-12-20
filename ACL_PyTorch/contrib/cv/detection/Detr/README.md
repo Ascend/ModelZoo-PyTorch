@@ -250,9 +250,10 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
       调用“detr_postprocess.py”脚本。
 
       ```
+      export PYTHONPATH=usr/local/detr
       python3.7 detr_postprocess.py --coco_path=coco_data --result=result
       ```
-
+      - usr/local/detr:源码库路径
       - --coco_path：数据集路径。
       - --result：om推理出的数据存放路径。
 

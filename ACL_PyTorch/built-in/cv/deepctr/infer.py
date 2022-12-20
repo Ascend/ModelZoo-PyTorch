@@ -26,32 +26,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from deepctr_torch.inputs import SparseFeat, get_feature_names, \
     build_input_features
-
-
-def infer_simple(inputs, model_path, device_id):
-
-    options = aclruntime.session_options()
-    session = aclruntime.InferenceSession(model_path, device_id, options)
-
-    # create new numpy data according inputs info
-    model_input = inputs.numpy()
-    model_input = aclruntime.Tensor(model_input)
-
-    model_input.to_device(device_id)
-
-    outnames = [session.get_outputs()[0].name]
-    feeds = {session.get_inputs()[0].name: model_input}
-
-    outpus = session.run(outnames, feeds)
-
-    outarray = []
-    for out in outpus:
-        # convert acltensor to host memory
-        out.to_host()
-        # convert acltensor to numpy array
-        outarray.append(np.array(out))
-    # sumary inference throughput
-    return torch.from_numpy(outarray[0])
+from ais_bench.infer.interface import InferSession
 
 
 if __name__ == '__main__':
@@ -108,11 +83,11 @@ if __name__ == '__main__':
 
     # 4.infer
     pred_ans = []
-
+    model = InferSession(args.device_id, args.model_path)
     for _, x_test in enumerate(test_loader):
         x = x_test[0].float()
 
-        y_pred = infer_simple(x, args.model_path, args.device_id)
+        y_pred = model.infer([x])[0]
         pred_ans.append(y_pred)
 
     result = np.concatenate(pred_ans).astype('float64')
