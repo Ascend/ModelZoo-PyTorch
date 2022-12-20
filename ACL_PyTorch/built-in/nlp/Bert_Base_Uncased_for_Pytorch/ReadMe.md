@@ -218,7 +218,7 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
       3. 执行ATC命令（注意替换指令中的```${batch_size}```和```${chip_name}```）。
 
          ```
-          atc --input_format=ND --framework=5 --model=bert_base_batch_${batch_size}.onnx --input_shape="input_ids:${batch_size},512;token_type_ids:${batch_size},512;attention_mask:${batch_size},512" --output=bert_base_batch_${batch_size}_auto --log=error --soc_version=${chip_name}  --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+          atc --input_format=ND --framework=5 --model=bert_base_batch_${batch_size}_fix.onnx --input_shape="input_ids:${batch_size},512;token_type_ids:${batch_size},512;attention_mask:${batch_size},512" --output=bert_base_batch_${batch_size}_auto --log=error --soc_version=${chip_name}  --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
          ```
 
          - 参数说明：
