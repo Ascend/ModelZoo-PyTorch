@@ -25,6 +25,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}` 
     fi
 done
 
@@ -89,7 +91,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export TASK_QUEUE_ENABLE=0
 rm -rf kernel_meta/
-python3.7 ./tools/train.py configs/ssd/ssd300_coco_npu.py --cfg-options total_epochs=${train_epochs} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3.7 ./tools/train.py configs/ssd/ssd300_coco_npu.py --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} --gpu-ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
