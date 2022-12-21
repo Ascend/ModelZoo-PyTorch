@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
 import sys
+
+from tqdm import tqdm
+from PIL import Image
+import numpy as np
 import torch
 from torchvision import transforms
-import numpy as np
-from PIL import Image
+
 
 def preprocess(src_path, save_path):
+
+    src_path = os.path.realpath(src_path)
+    save_path = os.path.realpath(save_path)
+    if not os.path.isdir(save_path):
+        os.makedirs(os.path.realpath(save_path))
 
     preprocess = transforms.Compose([
         transforms.Resize(342),
@@ -30,9 +39,8 @@ def preprocess(src_path, save_path):
 
     i = 0
     in_files = os.listdir(src_path)
-    for file in in_files:
+    for file in tqdm(in_files):
         i = i + 1
-        print(file, "===", i)
         input_image = Image.open(src_path + '/' + file).convert('RGB')
         input_tensor = preprocess(input_image)
         img = np.array(input_tensor).astype(np.float32)
@@ -40,11 +48,14 @@ def preprocess(src_path, save_path):
         
 
 if __name__ == "__main__":
-    src_path = sys.argv[1] 
-    save_path= sys.argv[2]
-    src_path = os.path.realpath(src_path)
-    save_path = os.path.realpath(save_path)
-    if not os.path.isdir(save_path):
-        os.makedirs(os.path.realpath(save_path))
-    preprocess(src_path,save_path)
+
+    import argparse
+    parser = argparse.ArgumentParser('data preprocess.')
+    parser.add_argument('--src_path', type=str, required=True, 
+                        help='path to original dataset.')
+    parser.add_argument('--save_path', type=str, required=True, 
+                        help='a directory to save bin files.')
+    args = parser.parse_args()
+
+    preprocess(args.src_path, args.save_path)
     
