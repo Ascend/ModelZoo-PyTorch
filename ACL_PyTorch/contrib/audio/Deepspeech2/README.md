@@ -76,6 +76,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 1. 获取源码。
    ```
    git clone https://github.com/SeanNaren/deepspeech.pytorch.git -b V3.0
+   pip3 install -e .
    ```
 
 2. 安装依赖。
@@ -87,9 +88,6 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
     >torchaudio==0.8.0目前没有可以在arm环境下运行的包。
 
 3. 在Deepspeech2目录下执行differences.patch文件，修改开源仓model.py文件。
-
-
-
 
     ```
     patch -p4 < differences.patch
@@ -106,8 +104,8 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
     得到的数据结构为
     ```
     |——an4_test_manifest.json
-        |——labels.json  
-        |——an4_dataset
+    |——labels.json  
+    |——an4_dataset
             |——val
             |——train
             |——test
@@ -134,6 +132,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
     > **说明：** 
     >在预处理前，修改an4_test_manifest.json中root_path参数，改为当前an4_dataset中test数据集的路径，方便进行数据预处理。
+    >如果linux系统缺少sox，需要安装sox。
 
     运行成功后在./data/an4_dataset/test目录下生成供模型推理的bin文件。
 
@@ -222,7 +221,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
    2. 执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./deepspeech_bs1.om  --input ./data/an4_dataset/test/spect, ./data/an4_dataset/test/sizes --output ./result --outfmt TXT --batchsize 1
+      python3 ${ais_infer_path}/ais_infer.py --model ./deepspeech_bs1.om  --input ./data/an4_dataset/test/spect,./data/an4_dataset/test/sizes --output ./result --output_dir dumpout_bs1 --outfmt TXT --batchsize 1
       ```
     
       -   参数说明：
@@ -245,7 +244,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
         执行deepspeech2_postprocess.py脚本，可以获得精度数据。
      
          ```
-         python3 deepspeech2_postprocess.py --out_path ./result --info_path ./data/an4_dataset/test --label_file ./labels.json
+         python3 deepspeech2_postprocess.py --out_path ./result/dumpout_bs1 --info_path ./data/an4_dataset/test --label_file ./labels.json
          ```
          - 参数说明：
 
