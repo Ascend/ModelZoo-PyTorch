@@ -17,6 +17,7 @@ import os
 import cv2
 import numpy as np
 from torchvision import transforms
+from tqdm import tqdm
 
 
 class Normalize(object):
@@ -65,11 +66,9 @@ def preprocess(src_path, save_path):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    i = 0
-    for file in in_files:
+
+    for file in tqdm(in_files):
         import pdb 
-        i = i + 1
-        print(file, "====", i)
         input_image = cv2.imread(src_path + '/' + file)
         b, g, r = cv2.split(input_image)
         input_image = cv2.merge([r, g, b])
