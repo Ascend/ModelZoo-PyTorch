@@ -35,8 +35,7 @@ def main(file_dir, output_dir, sampling_rate):
             if file_type in ['.bin']:
                 bin_list.append(file_name)
                 audio = np.fromfile(file_name, dtype=np.float32)
-                with torch.no_grad():
-                    audio = audio * MAX_WAV_VALUE
+                audio = audio * MAX_WAV_VALUE
                 audio = audio.squeeze()
                 audio = audio.astype('int16')
                 audio_path = os.path.join(
