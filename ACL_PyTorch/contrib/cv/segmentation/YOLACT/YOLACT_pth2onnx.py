@@ -30,16 +30,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
 '''
-YOLACT pth权重文件转为onnx权重文件
+YOLACT weight converte to ONNX
 '''
-import sys
-import os
-sys.path.append('../')
+
+import argparse
+
 import torch
 import torch.onnx
-import argparse
-from yolact import Yolact
 from torch.autograd import Variable
+
+from yolact import Yolact
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
@@ -108,13 +108,7 @@ def optimSoftmax(model):
     b.dim_param = '81'
 
 
-def convert(path, pthPath):
-    '''
-    转换pth模型为onnx模型
-    :param path: onnx模型存储路径
-    :param pthPath: pth模型路径
-    :return:
-    '''
+def convert(pthPath):
     yolact_net = Yolact()
     yolact_net.load_weights(pthPath, useCuda=False)
     yolact_net.exportOnnx = True
@@ -149,13 +143,10 @@ def convert(path, pthPath):
                           opset_version=11, verbose=True)
 
 if __name__ == '__main__':
-    path = os.getcwd()
-    pthPath = os.getcwd() + '/' + args_pth2onnx.trained_model
-    convert(path, pthPath)
+    convert(args_pth2onnx.trained_model)
     import onnx
     if args_pth2onnx.cann_version == '5':
-        model = onnx.load('./' + args_pth2onnx.outputName + '.onnx')
-        removeAdd240Node(model)
-        optimSoftmax(model)
-        onnx.save_model(model, args_pth2onnx.outputName + '.onnx')
-
+        model_load = onnx.load('./' + args_pth2onnx.outputName + '.onnx')
+        removeAdd240Node(model_load)
+        optimSoftmax(model_load)
+        onnx.save_model(model_load, args_pth2onnx.outputName + '.onnx')
