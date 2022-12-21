@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
 import torch
 import torch.onnx
@@ -60,7 +61,7 @@ def export_onnx(config, weights, bs):
     model.eval()
 
     checkpoint = torch.load(weights, map_location='cpu')
-    onnx_path = weights[:-4] + ".onnx"
+    onnx_path = os.path.splitext(weights)[0] + ".onnx"
     try:
         model.load_state_dict(checkpoint)
     except:
