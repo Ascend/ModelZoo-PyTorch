@@ -62,10 +62,10 @@ def main(args):
     files.sort()
     for file, (samples, targets) in zip(files, metric_logger.log_every(data_loader_val, print_freq, header)):
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-        pred_boxes_file = os.path.join(path, file.replace('.jpg', '_output_1.bin'))
+        pred_boxes_file = os.path.join(path, file.replace('.jpg', '_1.bin'))
         pred_boxes = np.fromfile(pred_boxes_file, dtype=np.float32)
         pred_boxes.shape = 1, 100, 4
-        pred_logits_file = os.path.join(path, file.replace('.jpg', '_output_0.bin'))
+        pred_logits_file = os.path.join(path, file.replace('.jpg', '_0.bin'))
         pred_logits = np.fromfile(pred_logits_file, dtype=np.float32)
         pred_logits.shape = 1, 100, 92
         om_out = {'pred_logits': torch.from_numpy(pred_logits),
