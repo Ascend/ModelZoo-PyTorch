@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, sys
+
+import os
+import sys
+import pathlib
+
+import tqdm
 import numpy as np
 import torch
-import pathlib
+
 sys.path.append(r"./pytorch-ssd")
 from vision.datasets.voc_dataset import VOCDataset
 from vision.ssd.data_preprocessing import PredictionTransform
@@ -106,12 +111,10 @@ def compute_average_precision_per_class(num_true_cases, gt_boxes, difficult_case
     else:
         return measurem
 
-if __name__ == "__main__":
-    dataroot=os.path.abspath(sys.argv[1])
-    label_file = os.path.abspath(sys.argv[2])
+
+def postprocess(dataroot, label_file, npu_result, eval_path):
+
     class_names = [name.strip() for name in open(label_file).readlines()]
-    npu_result = os.path.abspath(sys.argv[3])
-    eval_path = os.path.abspath(sys.argv[4])
     eval_path = pathlib.Path(eval_path)
     if not os.path.exists(eval_path):
         os.makedirs(eval_path)
@@ -127,16 +130,15 @@ if __name__ == "__main__":
     sigma=0.5
 
     results = []
-    for i in range(len(dataset)):
-        print("i:",i)
+    for i in tqdm.tqdm(range(len(dataset))):
         image = dataset.get_image(i)
         image_id = dataset.ids[i]
         height, width, _ = image.shape
         scores_id = str(image_id)+'_0.bin'
         boxes_id = str(image_id)+'_1.bin'
 
-        boxes = np.fromfile(os.path.join(npu_result, boxes_id), dtype='float32').reshape((1,3000,4))
-        scores = np.fromfile(os.path.join(npu_result, scores_id), dtype='float32').reshape((1,3000,21))        
+        boxes = np.fromfile(os.path.join(npu_result, boxes_id), dtype='float32').reshape((1, 3000, 4))
+        scores = np.fromfile(os.path.join(npu_result, scores_id), dtype='float32').reshape((1, 3000, 21))        
         boxes = torch.from_numpy(boxes)
         scores = torch.from_numpy(scores)
         boxes = boxes[0]
@@ -161,7 +163,6 @@ if __name__ == "__main__":
             picked_box_probs.append(box_probs_)
             picked_labels.extend([class_index] * box_probs_.size(0))
         if not picked_box_probs:
-            print("###########################################")
             boxes_, labels_, probs_ =  torch.tensor([]), torch.tensor([]), torch.tensor([])
         else:
             picked_box_probs = torch.cat(picked_box_probs)
@@ -169,7 +170,9 @@ if __name__ == "__main__":
             picked_box_probs[:, 1] *= height
             picked_box_probs[:, 2] *= width
             picked_box_probs[:, 3] *= height
-            boxes_, labels_, probs_ = picked_box_probs[:, :4], torch.tensor(picked_labels), picked_box_probs[:, 4]
+            boxes_ = picked_box_probs[:, :4]
+            labels_  = torch.tensor(picked_labels)
+            probs_ = picked_box_probs[:, 4]
         indexes = torch.ones(labels_.size(0), 1, dtype=torch.float32) * i
         results.append(torch.cat([
             indexes.reshape(-1, 1),
@@ -187,10 +190,7 @@ if __name__ == "__main__":
             for i in range(sub.size(0)):
                 prob_box = sub[i, 2:].numpy()
                 image_id = dataset.ids[int(sub[i, 0])]
-                print(
-                    image_id + " " + " ".join([str(v) for v in prob_box]),
-                    file=f
-                )
+                print(image_id + " " + " ".join([str(v) for v in prob_box]), file=f)
     aps = []
     average_path = eval_path / "average.txt"
     fa = open(average_path, "w")
@@ -206,7 +206,7 @@ if __name__ == "__main__":
             all_difficult_cases[class_index],
             prediction_path,
             iou_threshold,
-            use_2007_metric = True
+            use_2007_metric=True
         )
         aps.append(ap)
         print(f"{class_name}: {ap}")
@@ -214,3 +214,15 @@ if __name__ == "__main__":
     print(f"\nAverage Precision Across All Classes:{sum(aps)/len(aps)}")
     fa.write(f"\nAverage Precision Across All Classes:{sum(aps)/len(aps)}")
     fa.close()
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, help='path to dataset')
+    parser.add_argument('--label_file', type=str, help='path to label file')
+    parser.add_argument('--infer_result', type=str, help='path to inference results')
+    parser.add_argument('--eval_output', type=str, help='a directory to save metrics files')
+    args = parser.parse_args()
+
+    postprocess(args.data_root, args.label_file, args.infer_result, args.eval_output)
