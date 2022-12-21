@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,17 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
 import os
 import sys
+import pathlib
+
+from tqdm import tqdm
 import numpy as np
 from PIL import Image
 import torch
-import pathlib
+
 sys.path.append(r"./pytorch-ssd")
 from vision.datasets.voc_dataset import VOCDataset
 from vision.ssd.data_preprocessing import PredictionTransform
 import vision.utils.box_utils as box_utils
 import vision.utils.measurements as measurements
+
 
 def group_annotation_by_class(dataset):
     true_case_stat = {}
@@ -107,17 +113,13 @@ def compute_average_precision_per_class(num_true_cases, gt_boxes, difficult_case
         return measurements.compute_average_precision(precision, recall)
 
 
-if __name__ == "__main__":
-    dataroot=os.path.abspath(sys.argv[1])
-    label_file = os.path.abspath(sys.argv[2])
+def postprocess(data_root, label_file, infer_result, eval_output):
     class_names = [name.strip() for name in open(label_file).readlines()]
-    npu_result = os.path.abspath(sys.argv[3])
-    eval_path = os.path.abspath(sys.argv[4])
-    eval_path = pathlib.Path(eval_path)
-    if not os.path.exists(eval_path):
-        os.makedirs(eval_path)
+    eval_output = pathlib.Path(eval_output)
+    if not os.path.exists(eval_output):
+        os.makedirs(eval_output)
 
-    dataset = VOCDataset(dataroot, is_test=True)
+    dataset = VOCDataset(data_root, is_test=True)
     true_case_stat, all_gb_boxes, all_difficult_cases = group_annotation_by_class(dataset)
     size = 300
     mean = np.array([123, 117, 104])  # RGB layout
@@ -128,14 +130,14 @@ if __name__ == "__main__":
     sigma=0.5
 
     results = []
-    for i in range(len(dataset)):
+    for i in tqdm(range(len(dataset))):
         image = dataset.get_image(i)
         image_id = dataset.ids[i]
         height, width, _ = image.shape
-        scores_id = str(image_id)+'_1.bin'
-        boxes_id = str(image_id)+'_2.bin'
-        boxes = np.fromfile(os.path.join(npu_result, boxes_id), dtype='float32').reshape((1, 3000, 4))
-        scores = np.fromfile(os.path.join(npu_result, scores_id), dtype='float32').reshape((1, 3000, 21))
+        scores_id = str(image_id)+'_0.bin'
+        boxes_id = str(image_id)+'_1.bin'
+        boxes = np.fromfile(os.path.join(infer_result, boxes_id), dtype='float32').reshape((1, 3000, 4))
+        scores = np.fromfile(os.path.join(infer_result, scores_id), dtype='float32').reshape((1, 3000, 21))
         boxes = torch.from_numpy(boxes)
         scores = torch.from_numpy(scores)
         boxes = boxes[0]
@@ -163,7 +165,6 @@ if __name__ == "__main__":
             picked_box_probs.append(box_probs_)
             picked_labels.extend([class_index] * box_probs_.size(0))
         if not picked_box_probs:
-            print("###########################################")
             boxes_, labels_, probs_ =  torch.tensor([]), torch.tensor([]), torch.tensor([])
         else:
             picked_box_probs = torch.cat(picked_box_probs)
@@ -182,7 +183,7 @@ if __name__ == "__main__":
     results = torch.cat(results)
     for class_index, class_name in enumerate(class_names):
         if class_index == 0: continue  # ignore background
-        prediction_path = eval_path / f"det_test_{class_name}.txt"
+        prediction_path = eval_output / f"det_test_{class_name}.txt"
         with open(prediction_path, "w") as f:
             sub = results[results[:, 1] == class_index, :]
             for i in range(sub.size(0)):
@@ -197,7 +198,7 @@ if __name__ == "__main__":
     for class_index, class_name in enumerate(class_names):
         if class_index == 0:
             continue
-        prediction_path = eval_path / f"det_test_{class_name}.txt"
+        prediction_path = eval_output / f"det_test_{class_name}.txt"
         ap = compute_average_precision_per_class(
             true_case_stat[class_index],
             all_gb_boxes[class_index],
@@ -209,3 +210,15 @@ if __name__ == "__main__":
         aps.append(ap)
         print(f"{class_name}: {ap}")
     print(f"\nAverage Precision Across All Classes:{sum(aps)/len(aps)}")
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, help='path to dataset')
+    parser.add_argument('--label_file', type=str, help='path to label file')
+    parser.add_argument('--infer_result', type=str, help='path to inference results')
+    parser.add_argument('--eval_output', type=str, help='a directory to save metrics files')
+    args = parser.parse_args()
+
+    postprocess(args.data_root, args.label_file, args.infer_result, args.eval_output)
