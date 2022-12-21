@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
 import sys
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+
 
 def resize(img, size, interpolation=Image.BILINEAR):
     r"""Resize the input PIL Image to the given size.
@@ -62,6 +64,8 @@ def center_crop(img, out_height, out_width):
 
 
 def preprocess(file_path, bin_path):
+    file_path = os.path.abspath(file_path)
+    bin_path = os.path.abspath(bin_path)
     in_files = os.listdir(file_path)
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
@@ -92,6 +96,12 @@ def preprocess(file_path, bin_path):
 
 
 if __name__ == "__main__":
-    file_path = os.path.abspath(sys.argv[1])
-    bin_path = os.path.abspath(sys.argv[2])
-    preprocess(file_path, bin_path)
+    import argparse
+    parser = argparse.ArgumentParser('data preprocess.')
+    parser.add_argument('--src_path', type=str, required=True, 
+                        help='path to original dataset.')
+    parser.add_argument('--save_path', type=str, required=True, 
+                        help='a directory to save bin files.')
+    args = parser.parse_args()
+
+    preprocess(args.src_path, args.save_path)
