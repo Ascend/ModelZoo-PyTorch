@@ -141,7 +141,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 #FPS=`grep "]time" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F":" 'NR>1{print $3}' | awk -F"s" '{print $1}' | head -n -1 | awk '{sum+=$1} END {print 64*NR/sum}'`
-FPS=`grep -rn "progress:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print $2}'| awk -F "s" '{print $1}'|awk '{if (NR>1){print $1}}'|awk '{if(length !=0) print $0}'|awk '{sum+=$1} END {print 64*NR/sum}'`
+FPS=`grep -rn "progress:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print $2}'| awk -F "s" '{print $1}'|awk '{if (NR>12){print $1}}'|awk '{if(length !=0) print $0}'|awk '{sum+=$1} END {print 64*NR/sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
