@@ -99,9 +99,10 @@
    ```
     3. 屏蔽torch.onnx model_check相关代码
    ```
-   mv export.patch ./tools/deploy
+   cd ..
+   mv export.patch ./detectron2/tools/deploy
    ```
-   进入tools/deploy中
+   进入/detectron2/tools/deploy中
    ```
    patch -p 1 export_model.py export.patch
    ```
