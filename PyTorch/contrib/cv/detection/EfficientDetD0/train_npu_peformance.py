@@ -801,4 +801,7 @@ def validate(model, loader, args, evaluator=None, log_suffix=''):
     return metrics
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
+    torch.npu.set_option(option)
     main()
