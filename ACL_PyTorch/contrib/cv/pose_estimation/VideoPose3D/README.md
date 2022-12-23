@@ -1,5 +1,6 @@
 # VideoPose3D 模型推理指导
 
+- [VideoPose3D 模型推理指导](#videopose3d-模型推理指导)
 - [概述](#概述)
 - [推理环境](#推理环境)
 - [快速上手](#快速上手)
@@ -7,7 +8,7 @@
   - [准备数据集](#准备数据集)
   - [模型转换](#模型转换)
   - [推理验证](#推理验证)
-- [精度&性能](#精度性能)
+- [精度\&性能](#精度性能)
 
 ---
 
@@ -183,7 +184,7 @@ VideoPose3D 是一个基于时间维度上膨胀卷积的高效全卷积网络�
 
 1. 准备推理工具
 
-    本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
+    本推理项目使用 [ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
     
     ```shell
     # 指定CANN包的安装路径
@@ -194,17 +195,19 @@ VideoPose3D 是一个基于时间维度上膨胀卷积的高效全卷积网络�
     cp -r tools/ais-bench_workload/tool/ais_infer .
     
     # 打包
-    cd ais_infer/backend/
-    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    
+    cd ais_infer/
+    pip3 wheel ./backend/ -v   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
+    pip3 wheel ./ -v
+
     # 安装
-    pip3 install --force-reinstall aclruntime-xxx.whl
+    pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+    pip3 install ./ais_bench-{version}-py3-none-any.whl
     cd ../..
     ```
 
 2. 离线推理
 
-    使用 ais_infer 工具将预处理后的数据传入模型并执行推理：
+    使用 ais_bench 工具将预处理后的数据传入模型并执行推理：
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -212,7 +215,7 @@ VideoPose3D 是一个基于时间维度上膨胀卷积的高效全卷积网络�
     
     # 对预处理后的数据进行推理
     mkdir vp3d/infer_results/
-    python3 ais_infer/ais_infer.py \
+    python3 -m ais_bench \
         --model "vp3d/vp3d_seq6115.om" \
         --input "vp3d/prep_dataset/inputs/" \
         --output "vp3d/infer_results/" \
@@ -254,7 +257,7 @@ VideoPose3D 是一个基于时间维度上膨胀卷积的高效全卷积网络�
     
     step1 执行纯推理：
     ```shell
-    python3 ais_infer/ais_infer.py --model vp3d/vp3d_seq6115.om --loop 100 --batchsize 1
+    python3 -m ais_bench --model vp3d/vp3d_seq6115.om --loop 100 --batchsize 1
     ```
 
     执行完纯推理命令，程序会打印出与性能相关的指标，找到 **NPU_compute_time** 中的 **mean** 字段，其含义为推理的平均耗时，单位为毫秒(ms)。每次输入模型的数据量为 2 * 6115，可算得模型的吞吐率为：

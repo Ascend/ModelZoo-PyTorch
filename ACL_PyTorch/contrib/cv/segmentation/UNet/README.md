@@ -52,13 +52,15 @@ git reset --hard 6aa14cb
 mv ./Pytorch-UNet ./Pytorch_UNet
 ```
 
-### 1.3 [获取ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload)  
+### 1.3 [获取ais_bench工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload)  
 
 ```
 git clone https://gitee.com/ascend/tools.git
-cd tools/ais-bench_workload/tool/ais_infer/backend/
-pip3 wheel ./
-pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+cd tools/ais-bench_workload/tool/ais_infer/
+pip3 wheel ./backend/ -v
+pip3 wheel ./ -v
+pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+pip3 install ./ais_bench-{version}-py3-none-any.whl
 ```
 
 如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
@@ -149,10 +151,10 @@ atc --model=./unet_carvana_sim_final.onnx --framework=5 --output=UNet_bs1 --inpu
 
 ### 3.2 开始推理验证
 
-#### 3.2.1 使用ais_infer工具执行推理
+#### 3.2.1 使用ais_bench工具执行推理
 
 ```
-python3 ./ais_infer/ais_infer.py --model ./UNet_bs1.om --input "./prep_bin" --batchsize 1 --output new_result/
+python3 -m ais_bench --model ./UNet_bs1.om --input "./prep_bin" --batchsize 1 --output new_result/
 ```
 
 输出文件夹通常根据系统当前时间命名，如2022_08_05-13_01_09，为便于操作，可以更改输出文件夹的名字

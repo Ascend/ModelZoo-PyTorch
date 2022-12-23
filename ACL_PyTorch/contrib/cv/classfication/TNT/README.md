@@ -210,15 +210,15 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
 
    b.  执行推理。
 
       ```
-        python3 ais_infer.py --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT --batchsize 1
+        python3 -m ais_bench --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT --batchsize 1
       ```
 
       -   参数说明：
@@ -232,7 +232,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       推理后的输出默认在当前目录result下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -252,10 +252,10 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
+       python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
       ```
 
 

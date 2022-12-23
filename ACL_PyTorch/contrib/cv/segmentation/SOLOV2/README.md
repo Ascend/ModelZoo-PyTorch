@@ -251,16 +251,16 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    b.  执行推理。
 
    推理完成后即可输出性能结果。
 
    ```
-   python3 ais_infer.py --model ../solov2.om --input ../val2017_bin/ --output ./result/ --outfmt BIN --loop 1
+   python3 -m ais_bench --model ../solov2.om --input ../val2017_bin/ --output ./result/ --outfmt BIN --loop 1
    ```
 
    * 参数说明：
@@ -272,7 +272,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
       推理后的输出默认在当前目录result下。
 
    > **说明：**
-   > 执行ais-infer工具请选择与运行环境架构相同的命令。
+   > 执行ais_bench工具请选择与运行环境架构相同的命令。
 
    c.  后处理。
 

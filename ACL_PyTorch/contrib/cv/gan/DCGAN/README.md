@@ -205,14 +205,14 @@ DCGAN是生成对抗网络GAN中一种常见的模型结构。其中的生成器
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-    ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+    请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
 
    b.  执行推理。
       ```shell
-      python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model=./dcgan_sim_bs{batch_size}.om --batchsize=${batchsize} --output=./result --input=./prep_dataset --loop=2000
+      python3 -m ais_bench --model=./dcgan_sim_bs{batch_size}.om --batchsize=${batchsize} --output=./result --input=./prep_dataset --loop=2000
       ```
     - 参数说明：
       - --model：om模型路径
@@ -245,9 +245,9 @@ DCGAN是生成对抗网络GAN中一种常见的模型结构。其中的生成器
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
       ```shell
-      python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model=./dcgan_sim_bs{batch_size}.om --batchsize=${batchsize} --output=./result --input=./prep_dataset
+      python3 -m ais_bench --model=./dcgan_sim_bs{batch_size}.om --batchsize=${batchsize} --output=./result --input=./prep_dataset
       ```
 
     - 参数说明：

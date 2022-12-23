@@ -21,12 +21,13 @@ cd ../
 
 - `pip install -r requirements.txt`
 
-- 获取 ais-infer 工具
+- 获取 ais-bench 工具
 
-  参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
+  参考[ais_bench工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 
   ```
-   pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+   pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+   pip3 install ./ais_bench-{version}-py3-none-any.whl
   ```
 
 ## 模型转换
@@ -91,8 +92,8 @@ mv ./bin/token_*.bin ./bin/bin3
 ## 模型推理
 
 ```shell
-#使用ais-infer对 om 模型进行推理
-python3 ./ais_infer_x86_64/ais_infer.py --model ./outputs/albert_bs32s.om --input ./bin/bin1,./bin/bin2,./bin/bin3 --output ./result/ --outfmt TXT --batchsize 32
+#使用ais_bench对 om 模型进行推理
+python3 -m ais_bench --model ./outputs/albert_bs32s.om --input ./bin/bin1,./bin/bin2,./bin/bin3 --output ./result/ --outfmt TXT --batchsize 32
 #观察对应的性能打印结果throughput 1000*batchsize(32)/NPU_compute_time.mean(xx.xxx): xxx.xxx
 
 

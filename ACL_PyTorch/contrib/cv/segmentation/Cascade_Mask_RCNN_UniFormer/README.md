@@ -214,15 +214,15 @@ UniFormer（Unified transFormer）在arxiv中引入（更多细节可以在arxiv
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    2. 执行推理。
 
         
     ```
-    python ais_infer.py --model ${om_path}/uniformer_bs1.om\  
+    python -m ais_bench --model ${om_path}/uniformer_bs1.om\  
                                   --input ./val2017_bin/\ 
                                   --output ./\ 
                                   --batchsize 1\
@@ -241,7 +241,7 @@ UniFormer（Unified transFormer）在arxiv中引入（更多细节可以在arxiv
         推理后的输出默认在当前目录result下。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -258,10 +258,10 @@ UniFormer（Unified transFormer）在arxiv中引入（更多细节可以在arxiv
     
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
     ```
-    python ais_infer.py --model ${om_path}/uniformer_bs1.om --loop 100 --batchsize 1
+    python _-m ais_bench --model ${om_path}/uniformer_bs1.om --loop 100 --batchsize 1
     ```
 
     - 参数说明：

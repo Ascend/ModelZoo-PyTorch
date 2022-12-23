@@ -188,11 +188,12 @@
 
    使用PyTorch将模型权重文件.chkpt转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取ais-infer推理工具
+   1. 获取ais_bench推理工具
 
-      根据[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)生成后端whl包并安装
+      根据[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)生成后端whl包并安装
       ```bash
-      pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+      pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+      pip3 install ./ais_bench-{version}-py3-none-any.whl
       ```
 
    2. 获取权重文件。
@@ -341,9 +342,10 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      使用ais-infer之前需要配置环境变量：
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      使用ais-bench之前需要配置环境变量：
 
       ```bash
       source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -353,14 +355,14 @@
 
       ```bash
       mkdir ais_result
-      python3 ./ais_infer/ais_infer.py --model ./model/transformer_greedySearch_input15_maxSeqLen15_finalom.om  --input ./pre_data/len15 --output ./ais_result 
+      python3 -m ais-bench --model ./model/transformer_greedySearch_input15_maxSeqLen15_finalom.om  --input ./pre_data/len15 --output ./ais_result 
       ```
       - 参数说明：
          - --model：om模型路径
          - --input：数据预处理步骤最终生成二进制的文件夹
          - --output：推理结果输出目录。
 
-      ais_infer.py文件以实际路径为准。ais-infer工具参数详情请参见：[ ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#参数说明)
+      ais_bench工具参数详情请参见：[ ais-bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#参数说明)
 
       使用以上命令的输出结果中有类似以下信息：
 
@@ -372,7 +374,7 @@
 
 
 
-      “使用ais-infer工具进行推理” 小节的以上内容为在310P使用ais-infer推理工具进行推理的说明。本模型在310上使用了benchmark推理工具进行推理。在310上推理的命令如下：
+      “安装ais_bench推理工具” 小节的以上内容为在310P使用ais_bench推理工具进行推理的说明。本模型在310上使用了benchmark推理工具进行推理。在310上推理的命令如下：
 
       ```bash
       rm -rf result
@@ -392,7 +394,7 @@
       python3.7 Transformer_postprocess.py --bin_file_path ./ais_result/2022_08_23-09_22_56 --data_pkl ./pkl_file/m30k_deen_shr.pkl --result_path len15_ais_infer_result
       ```
       - 参数说明：
-         - --bin_file_path：使用ais-infer工具进行推理时的output path，请注意修改。
+         - --bin_file_path：安装ais_bench推理工具时的output path，请注意修改。
          - --data_pkl：预处理之后的数据。
          - --result_path：存储后处理的结果的路径。
 
@@ -405,7 +407,7 @@
       ```
       - 参数说明：
          - --ground_truth_file_path：标杆数据路径（在数据预处理的第3小步已根据测试数据集生成）。
-         - --pred_file_path：ais-infer推理结果路径。
+         - --pred_file_path：ais_bench推理结果路径。
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -419,4 +421,4 @@
 
 **说明：**
 
-1. 在310上的性能使用benchmark测得，在310P上的性能使用ais_infer测得。
+1. 在310上的性能使用benchmark测得，在310P上的性能使用ais_bench测得。

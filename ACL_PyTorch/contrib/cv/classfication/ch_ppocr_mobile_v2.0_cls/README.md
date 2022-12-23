@@ -226,18 +226,18 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+a.  安装ais_bench推理工具。请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
-执行ais-infer工具推理命令，如下：
+执行ais_bench工具推理命令，如下：
 
    ```
-    python3 ${path_to_ais-infer}/ais_infer.py \
+    python3 -m ais_bench \
         --model=./ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om \
         --input=./pre_data \
         --output=./
    ```
 
-`${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+`${batchsize}`表示不同batch的om模型。
    -   参数说明：
 
        -   --model：om模型路径。
@@ -273,16 +273,16 @@ ${output_path}为推理结果的保存路径。
 
 c.  性能验证。
 
-可以使用ais-infer工具的纯推理模式验证模型性能，命令如下。
+可以使用ais_bench工具的纯推理模式验证模型性能，命令如下。
 
    ```
-    python3 ${path_to_ais-infer}/ais_infer.py \
+    python3 -m ais_bench \
         --model=./ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om \
         --loop=50 \
         --batchsize=${batchsize}
    ```
 
- `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+ `${batchsize}`表示不同batch的om模型。
 
    -   参数说明：
 
@@ -290,7 +290,7 @@ c.  性能验证。
        -   --loop：推理次数。
        -   --batchsize：om模型的batch。
     
-纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能。
+纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

@@ -1,13 +1,14 @@
 #   SFA3D模型-推理指导
 
-- [概述](#00)
-  - [输入输出数据](#00_1)
-- [推理环境准备](#01)
-- [快速上手](#1)
-  - [获取源码](#1_0)
-  - [准备数据集](#1_1)
-  - [模型推理](#1_2)
-- [模型推理性能&精度](#2)
+- [SFA3D模型-推理指导](#sfa3d模型-推理指导)
+- [模型概述](#模型概述)
+  - [输入输出数据](#输入输出数据)
+- [推理环境准备](#推理环境准备)
+- [快速上手](#快速上手)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能](#模型推理性能)
 
 
 
@@ -228,16 +229,15 @@ SFA3D（Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clou
       
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    2. 执行推理。
 
       ```
       mkdir ais_infer_result
-      python3 ais_infer.py --ais_infer_path ${ais_infer_path} 
-                          --model SFA3D_bs${n}.om 
+      python3 -m ais_bench --model SFA3D_bs${n}.om 
                           --input ${input_data_save_path} 
                           --batchsize=${n}
                           --output ais_infer_result
@@ -245,20 +245,19 @@ SFA3D（Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clou
 
       参数说明:\
       n为batchsize设定。\
-      --ais_infer_path：ais_infer推理脚本`ais_infer.py`所在路径，如"./tools/ais-bench_workload/tool/ais_infer"。\
       --model：待推理的om模型。\
       --input：模型输入，支持bin文件和目录，此例为数据文件夹路径。\
       --output：推理结果输出路径。
 
       推理后样本的输出在当前目录的ais_infer_result文件夹下，默认会建立日期+时间的子文件夹保存输出结果。
 
-      **说明：** 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      **说明：** 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
       
 
 3. 精度验证。
 
-   本篇用模型原代码仓提供的loss计算方法评估。SFA3D模型推理有5个输出文件（hm_cen, cen_offset, direction, z, dim）；解析ais_infer推理结果，调用脚本与标签文件的targets比对，计算loss。
+   本篇用模型原代码仓提供的loss计算方法评估。SFA3D模型推理有5个输出文件（hm_cen, cen_offset, direction, z, dim）；解析ais_bench推理结果，调用脚本与标签文件的targets比对，计算loss。
 
    - 对于主图目标（hm_cen）使用 focal_loss
    - 对于中心偏移和偏向角（cen_offset, direction）使用 l1_loss
@@ -306,11 +305,11 @@ SFA3D（Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clou
 
    纯推理数据，测试时确保服务器上无其他进程。
 
-   1. ais_infer纯推理。
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+   1. ais_bench纯推理。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+      python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
       ```
 
    2. trt纯推理。

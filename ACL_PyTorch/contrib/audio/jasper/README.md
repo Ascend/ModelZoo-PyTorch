@@ -205,9 +205,9 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    2. 使用pyACL进行推理。
 
@@ -234,10 +234,10 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 
    4. 性能验证
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：执行推理。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：执行推理。
 
       ```shell
-      python3 {ais_infer_path}/ais_infer.py --model jasper_bs1.om --batchsize 1 --loop 20
+      python3 -m ais_bench --model jasper_bs1.om --batchsize 1 --loop 20
       ```
 
       -   参数说明：

@@ -159,9 +159,9 @@
 
         运行成功后生成OM模型文件。
 
-4. 使用ais-infer工具进行推理
+4. 安装ais_bench推理工具
 
-   安装过程可参考：[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+   请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 5. 执行推理
 
@@ -172,7 +172,7 @@
    cd ${root_dir}
    mkdir -p ./output_data/bs64
    cd ${infer_dir}
-   python3 ais_infer.py --model ${root_dir}/models/om/bert_base_chinese_bs64.om --input ${root_dir}/preprocessed_data/input_data --output ${root_dir}/output_data/bs64 --batchsize 64 --device 0
+   python3 -m ais_bench --model ${root_dir}/models/om/bert_base_chinese_bs64.om --input ${root_dir}/preprocessed_data/input_data --output ${root_dir}/output_data/bs64 --batchsize 64 --device 0
    cd ${root_dir}
    ```
 

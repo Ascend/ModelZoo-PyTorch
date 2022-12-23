@@ -122,11 +122,12 @@ python3.7 PointRend_preprocess.py /root/datasets/cityscapes ./preprocess_bin
 
 - **2.3 性能验证**
 
-    [获取ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+    [获取ais_bench工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
     ```
-    pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
     git clone https://gitee.com/ascend/tools.git 
+    pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+    pip3 install ./ais_bench-{version}-py3-none-any.whl
 
     ```
 
@@ -134,7 +135,7 @@ python3.7 PointRend_preprocess.py /root/datasets/cityscapes ./preprocess_bin
     ```
 
     推理
-    python3  ais_infer.py  --model ./PointRend.om  --input ./preprocess_bin --output ./ --outfmt BIN --batchsize 1
+    python3  -m ais_bench  --model ./PointRend.om  --input ./preprocess_bin --output ./ --outfmt BIN --batchsize 1
 
     --model：模型地址
     --input：预处理完的数据集文件夹
@@ -151,7 +152,7 @@ python3.7 PointRend_preprocess.py /root/datasets/cityscapes ./preprocess_bin
     nohup python3.7 PointRend_postprocess.py /root/dataset/cityscapes/ result/ais_infer_resutl&
 
     /root/datasets/cityscapes：数据集路径。
-    result/ais_infer_resutl”：ais-infer推理结果所在路径  
+    result/ais_infer_resutl”：ais_bench推理结果所在路径  
     ```
     |     | 310精度  | 310P精度 |
     |-----|--------|--------|

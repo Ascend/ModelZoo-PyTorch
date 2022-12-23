@@ -241,14 +241,14 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      用户自行下载ais_infer 推理工具。
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    b.  执行推理。
 
       ```
-        python3.7 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py  --device 0  --model CGAN_bs1.om --output ./ --outfmt BIN --loop 5 --input prep_dataset
+        python3.7 -m ais_bench  --device 0  --model CGAN_bs1.om --output ./ --outfmt BIN --loop 5 --input prep_dataset
       ```
 
       -   参数说明：
@@ -264,11 +264,11 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
       推理后的输出默认在当前目录下。根据推理时间生成结果文件夹。例如：/2022_09_04-17_57_51
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
-      将ais-infer推理获得的BIN输出结果进行后处理，保存为图片。
+      将ais_bench推理获得的BIN输出结果进行后处理，保存为图片。
 
       ```
       python3.7 CGAN_postprocess.py --bin_out_path ./2022_09_04-17_57_51 --save_path ./result
@@ -283,10 +283,10 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证om模型的性能，因为CGAN模型只支持bs1,所以不需要考虑batch_size的变化。参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证om模型的性能，因为CGAN模型只支持bs1,所以不需要考虑batch_size的变化。参考命令如下：
 
       ```
-      python3.7 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py  --device 0  --model CGAN_bs1.om --output ./ --outfmt BIN --loop 5 --input prep_dataset
+      python3.7 -m ais_bench  --device 0  --model CGAN_bs1.om --output ./ --outfmt BIN --loop 5 --input prep_dataset
       ```
 
 

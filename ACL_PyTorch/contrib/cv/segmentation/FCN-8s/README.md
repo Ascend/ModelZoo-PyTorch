@@ -228,29 +228,31 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
 
-      1. 下载ais_infer 推理工具代码
+      1. 下载ais_bench 推理工具代码
 
          ```
 		 git clone https://gitee.com/ascend/tools.git
          ```
 
-      2. 进入./ais-bench/tool/ais_infer目录下执行如下命令进行编译，即可生成推理后端whl包
+      2. 进入./ais-bench/tool/ais_infer目录下执行如下命令进行编译，即可生成推理前、后端whl包
 
          ```
-		 cd tools/ais-bench_workload/tool/ais_infer/backend/
+		 cd tools/ais-bench_workload/tool/ais_infer/
          ```
 
          ```
-		 pip3 wheel ./
+		 pip3 wheel ./backend/ -v
+       pip3 wheel ./ -v
          ```
 
       3. 在运行设备上执行如下命令，进行安装
 
          ```
-		 pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl --force-reinstall
+		 pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl--force-reinstall
+       pip3 install ./ais_bench-{version}-py3-none-any.whl
          ```
 
 		 注：安装完成后返回上级中的FCN-8s目录
@@ -262,7 +264,7 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
       ```
 
       ```
-      python3.7 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --device 0 --batchsize 1 --model ./fcn_r50-d8_512x512_20k_voc12aug_bs1.om --input ./voc12_bin/ --output ./result/
+      python3.7 -m ais_bench --device 0 --batchsize 1 --model ./fcn_r50-d8_512x512_20k_voc12aug_bs1.om --input ./voc12_bin/ --output ./result/
       ```
 
       -   参数说明：
@@ -275,7 +277,7 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
           推理后的输出在目录“./result/Timestam”下，Timestam为日期+时间的子文件夹,如 2022_08_24-16_16_28
 
           >**说明：** 
-          >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+          >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 

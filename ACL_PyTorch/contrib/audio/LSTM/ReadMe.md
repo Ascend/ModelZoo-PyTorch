@@ -300,16 +300,16 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    2. 执行推理。
 
         创建文件夹lcmout，并在此文件夹下分别创建bs1 - bs64 6个子文件夹。
 
         ```
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./lstm_ctc_16batch.om --input ./lstm_bin/ --output ./lcmout/bs16/ --outfmt NPY --batchsize 16
+        python3 -m ais_bench --model ./lstm_ctc_16batch.om --input ./lstm_bin/ --output ./lcmout/bs16/ --outfmt NPY --batchsize 16
         ```
 
         -   参数说明：
@@ -325,7 +325,7 @@
         推理后的输出默认在当前目录result下。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
 
    3. 精度验证。
 

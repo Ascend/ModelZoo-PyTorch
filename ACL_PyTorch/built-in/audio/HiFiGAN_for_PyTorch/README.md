@@ -1,12 +1,16 @@
 # HiFiGAN-推理指导
 
+- [HiFiGAN-推理指导](#hifigan-推理指导)
 - [概述](#概述)
+    - [输入输出数据](#输入输出数据)
 - [推理环境准备](#推理环境准备)
 - [快速上手](#快速上手)
   - [获取源码](#获取源码)
   - [准备数据集](#准备数据集)
   - [模型推理](#模型推理)
-- [模型推理性能&精度](#模型推理性能&精度)
+    - [1 模型转换](#1-模型转换)
+    - [2 开始推理验证](#2-开始推理验证)
+- [模型推理性能\&精度](#模型推理性能精度)
 
 ******
 
@@ -150,8 +154,8 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
     
 ### 2 开始推理验证
 
-1. 安装`ais-infer`推理工具  
-   `ais-infer`工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+1. 安装`ais_bench`推理工具  
+   请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 2. 执行推理  
    运行`om_val.py`推理OM模型，合成语音默认保存在`output/wavs`文件夹下。
@@ -163,7 +167,7 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
    ```
 
 3. 性能验证  
-   可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
+   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
    ```
    python3 -m ais_bench --model output/generator_v1_bs${bs}.om --loop 1000 --batchsize ${bs} --dymDims "mel_spec:${bs},80,1,${mel_len}" --outputSize "1000000"
    ```

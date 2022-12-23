@@ -130,26 +130,28 @@ python3 segmenter_preprocess.py --cfg-path ${cfg-path} --data-root ${data-root} 
 ## 5. 离线推理
 
 ### 5.1 准备推理工具
-推理工具使用ais_infer，须自己拉取源码，打包并安装
+推理工具使用ais_bench，须自己拉取源码，打包并安装
 ```shell
 # 指定CANN包的安装路径
 export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
 # 获取源码
 git clone https://gitee.com/ascend/tools.git
-cd tools/ais-bench_workload/tool/ais_infer/backend/
+cd tools/ais-bench_workload/tool/ais_infer/
 # 打包
-pip3.7 wheel ./
+pip3 wheel ./backend/ -v
+pip3 wheel ./ -v
 # 安装
-pip3 install --force-reinstall ./aclruntime-0.0.1-cp37-cp37m-linux_aarch64.whl
+pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+pip3 install ./ais_bench-{version}-py3-none-any.whl
 ```
-参考：[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
+参考：[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
 
 
 ### 5.2 离线推理
 ```shell
 cd tools/ais-bench_workload/tool/ais_infer/
 mkdir ${result-dir}   # 提前创建推理结果的保存目录
-python3 ais_infer.py --model ${om-path} --input ${bin-dir} --output ${result-dir}
+python3 -m ais_bench --model ${om-path} --input ${bin-dir} --output ${result-dir}
 ```
 参数说明：<br>
 --model:  OM模型路径<br>
@@ -168,11 +170,11 @@ python3 segmenter_postprocess.py --result-dir {infer-result-dir} --gt-path ${gt-
 
 
 ### 5.4 性能验证
-用ais_infer工具进行纯推理100次，然后根据平均耗时计算出吞吐率
+用ais_bench工具进行纯推理100次，然后根据平均耗时计算出吞吐率
 ```shell
 cd tools/ais-bench_workload/tool/ais_infer/
 mkdir tmp_out   # 提前创建临时目录用于存放推理的临时输出
-python3 ais_infer.py --model ${om-path} --output tmp_out --loop 100
+python3 -m ais_bench --model ${om-path} --output tmp_out --loop 100
 rm -r tmp_out   # 删除临时目录
 ```
 说明：性能测试前使用`npu-smi info`命令查看 NPU 设备的状态，确认空闲后再进行测试。

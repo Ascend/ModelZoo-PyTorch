@@ -34,16 +34,18 @@ bash test/pth2om.sh {soc_version}
 ```
 通过`npu-smi info`命令查看并指定 {soc_version} 参数。
 
-6.获取ais_infer工具  
-根据文档安装[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)工具，复制 ais_infer 目录到当前工作目录下。
+6.获取ais_bench工具  
+根据文档安装[ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)工具，复制 ais_infer 目录到当前工作目录下。
 编译安装 aclruntime的 whl 文件。
 ```
 git clone https://gitee.com/ascend/tools.git 或下载tools项目压缩包并解压
 cp  tools/ais-bench_workload/tool/ais_infer ./
-cd ais_infer/backend
-pip3.7 wheel ./
+cd ais_infer/
+pip3 wheel ./backend/ -v
+pip3 wheel ./ -v
 ls
-pip3 install --force-reinstall ./aclruntime*.whl
+pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+pip3 install ./ais_bench-{version}-py3-none-any.whl
 cd ../..
 ```
 

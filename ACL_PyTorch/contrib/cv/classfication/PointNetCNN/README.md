@@ -231,16 +231,16 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 
    b.  执行推理。
 
       ```
       mkdir ais_result
-      python3.7 tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./pointnetcnn_bs1.om --batchsize 1 --input "prep_dataset,prep_dataset" --output ./ais_result --outfmt "TXT"
+      python3.7 -m ais_bench --model ./pointnetcnn_bs1.om --batchsize 1 --input "prep_dataset,prep_dataset" --output ./ais_result --outfmt "TXT"
       ```
 
       -   参数说明：
@@ -255,7 +255,7 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
       输出结果保存在当前目录ais_result/X(X为执行推理的时间)文件夹下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -267,17 +267,17 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
 
       ./labels/label：标签文件路径 
     
-      ./ais_result：ais_infer推理结果
+      ./ais_result：ais_bench推理结果
     
       result_bs1.json：为生成结果文件
 
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
       ```
-       python3.7 tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model=./pointnetcnn_bs1.om --loop=20 --batchsize=1
+       python3.7 -m ais_bench --model=./pointnetcnn_bs1.om --loop=20 --batchsize=1
       ```
 
 

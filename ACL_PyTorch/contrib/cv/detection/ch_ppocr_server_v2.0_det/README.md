@@ -210,9 +210,9 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    b.  执行推理。
       ```
@@ -243,9 +243,9 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
     d. 性能验证。
 
-    可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+    可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     ```
-    python3 ${path_to_ais-infer}/ais_infer.py \
+    python3 -m ais_bench\
         --model=./ch_ppocr_server_det_bs${batchsize}.om \
         --loop=100 \
         --dymHW=736,736 \
@@ -257,9 +257,9 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
      - --dymHW：动态分辨率参数，指定模型输入的实际H、W。
      - --batchsize：om模型的batch。
 
-    `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+    `${batchsize}`表示不同batch的om模型。
 
-    纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能。
+    纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

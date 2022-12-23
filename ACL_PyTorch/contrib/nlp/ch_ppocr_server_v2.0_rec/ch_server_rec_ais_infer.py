@@ -37,7 +37,7 @@ def ais_infer(ais_infer, model, inputs, outputs):
             
             rm_cmd = f'rm -rf {temp_dir_childs_path}'
             mv_cmd = f'mv {temp_dir_childs_path_files} {outputs}'
-            ais_infer_cmd = f'python3 {ais_infer} --model={model} --input={data} --output={temp_dir} --dymHW={h},{w} --outfmt=NPY'
+            ais_infer_cmd = f'python3 -m ais_bench --model={model} --input={data} --output={temp_dir} --dymHW={h},{w} --outfmt=NPY'
 
             if os.system(ais_infer_cmd):
                 shutil.rmtree(temp_dir)

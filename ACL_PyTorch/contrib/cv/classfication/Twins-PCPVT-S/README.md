@@ -209,14 +209,14 @@ Twins_PCPVT_S使用CPVT中提出的条件位置编码(CPE)来代替PVT中的绝�
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    2. 执行推理。
 
       ```bash
-       python3 /home/infname78/ais_infer_x86_64/ais_infer.py --model ./twins_bs${batch_size}.om --output ./result --outfmt BIN --input ./prep_dataset
+       python3 -m ais_bench --model ./twins_bs${batch_size}.om --output ./result --outfmt BIN --input ./prep_dataset
       ```
 
       - 参数说明
@@ -227,7 +227,7 @@ Twins_PCPVT_S使用CPVT中提出的条件位置编码(CPE)来代替PVT中的绝�
         推理后的输出默认在当前目录result下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -245,10 +245,10 @@ Twins_PCPVT_S使用CPVT中提出的条件位置编码(CPE)来代替PVT中的绝�
 
    4. 性能验证
 
-       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```bash
-      python3 /home/infname78/ais_infer_x86_64/ais_infer.py --model ./twins_bs${batch_size}.om  --output ./  --outfmt BIN --loop 100 --batchsize=${batch_size}
+      python3 -m ais_bench --model ./twins_bs${batch_size}.om  --output ./  --outfmt BIN --loop 100 --batchsize=${batch_size}
       ```
 
 

@@ -212,13 +212,13 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
 
 2. 开始推理验证。
    
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    b.  执行推理。
       ```shell
-      python3.7 ais_infer.py --model=c51_bs1.om --input dataset/bin  --output dataset/out/2022_11_8_21_03_50 --outfmt TXT --batchsize 1
+      python3.7 -m ais_bench --model=c51_bs1.om --input dataset/bin  --output dataset/out/2022_11_8_21_03_50 --outfmt TXT --batchsize 1
       ```
 
 
@@ -236,7 +236,7 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
        
 
    
-   说明： 执行ais-infer工具请选择与运行环境架构相同的命令。
+   说明： 执行ais_bench工具请选择与运行环境架构相同的命令。
 
    c.  精度验证。
 

@@ -235,14 +235,14 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    2. 执行推理。
 
         ```
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./spanBert_bs1.om --input "./input_ids,./segment_ids,./input_mask" --output ./result/bs1 --outfmt BIN --batchsize 1
+        python3 -m ais_bench --model ./spanBert_bs1.om --input "./input_ids,./segment_ids,./input_mask" --output ./result/bs1 --outfmt BIN --batchsize 1
         ```
         
         - 参数说明：
@@ -255,7 +255,7 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
         推理后的输出默认在当前目录result下。
         
          >**说明：** 
-         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+         >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
    
    3. 精度验证。
    
@@ -290,7 +290,7 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
       调用ACL接口推理，将{batchsize}改为实际的batchsize。参考命令如下：
       
       ```
-       python3 ${ais_infer_path}/ais_infer.py --model /spanBert_bs16.om --output ./lcmout/ --output_dirname bs1 --outfmt BIN --batchsize 16 --loop 5
+       python3 -m ais_bench --model /spanBert_bs16.om --output ./lcmout/ --output_dirname bs1 --outfmt BIN --batchsize 16 --loop 5
       ```
       
       + 参数说明：

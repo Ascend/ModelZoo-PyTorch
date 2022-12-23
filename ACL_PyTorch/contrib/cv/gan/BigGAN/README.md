@@ -1,20 +1,21 @@
 # BigGAN ONNX模型端到端推理指导
-- [1. 模型概述](#1)
-    - [论文地址](#11)
-    - [参考实现](#12)
-    - [代码地址](#13)
-- [2. 环境说明](#2)
-    - [深度学习框架](#21)
-    - [python第三方库](#22)
-- [3. 模型转换](#3)
-    - [pth转onnx模型](#31)
-    - [onnx转om模型](#32)
-- [4. 输入数据生成](#4)
-    - [数据生成](#41)
-- [5. 离线推理](#5)
-- [6. 精度对比](#6)
-    - [模型后处理](#61)
-    - [精度计算](#62)
+- [BigGAN ONNX模型端到端推理指导](#biggan-onnx模型端到端推理指导)
+  - [1. 模型概述](#1-模型概述)
+    - [1.1 论文地址](#11-论文地址)
+    - [1.2 参考实现](#12-参考实现)
+    - [1.3 代码地址](#13-代码地址)
+  - [2. 环境说明](#2-环境说明)
+    - [2.1 深度学习框架](#21-深度学习框架)
+    - [2.2 python第三方库](#22-python第三方库)
+  - [3. 模型转换](#3-模型转换)
+    - [3.1 pth转onnx模型](#31-pth转onnx模型)
+    - [3.2 onnx转om模型](#32-onnx转om模型)
+  - [4. 数据预处理](#4-数据预处理)
+    - [4.1 数据生成](#41-数据生成)
+  - [5. 离线推理](#5-离线推理)
+  - [6. 精度对比](#6-精度对比)
+    - [6.1 模型后处理](#61-模型后处理)
+    - [6.2 精度计算](#62-精度计算)
 
 ## <a name="1">1. 模型概述</a>
 ### <a name="11">1.1 论文地址</a>
@@ -139,9 +140,9 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 
 ## <a name="5">5. 离线推理</a>
 
-1.安装ais_infer推理工具
+1.安装ais_bench推理工具
 
-   安装链接: https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+   请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
    
 2.执行离线推理
 
@@ -149,7 +150,7 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 ```
     cd tools/ais-bench_workload/tool/ais_infer
     mkdir -p /home/ylz/BigGAN/outputs_bs1_om
-    python3.7 ais_infer.py --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 
+    python3.7 -m ais_bench --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 
 ```
 
     --model ：输入的om文件。

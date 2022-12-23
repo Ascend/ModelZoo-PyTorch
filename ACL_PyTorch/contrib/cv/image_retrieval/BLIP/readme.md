@@ -261,9 +261,9 @@ BLIP模型为一种新的Vision-Language Pre-training框架，它可以灵活地
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    2. 执行推理。
 
@@ -273,17 +273,17 @@ BLIP模型为一种新的Vision-Language Pre-training框架，它可以灵活地
          mkdir coco2014_infer/image_feat
          mkdir coco2014_infer/text_embed
 
-         python ${path_to_ais-infer}/ais_infer.py \
+         python -m ais_bench \
                --model ./BLIP_image_bs${batchsize}.om \
                --input ./coco2014_bin/img/ \
                --output ./coco2014_infer/image_embed  
          
-         python ${path_to_ais-infer}/ais_infer.py \
+         python -m ais_bench \
                --model ./BLIP_image_feat_bs${batchsize}.om \
                --input ./coco2014_bin/img/ \
                --output ./coco2014_infer/image_feat
 
-         python ${path_to_ais-infer}/ais_infer.py \
+         python -m ais_bench \
                --model ./BLIP_text_bs${batchsize}.om \
                --input ./coco2014_bin/ids/,./coco2014_bin/mask/ \
                --output ./coco2014_infer/text_embed  
@@ -297,7 +297,7 @@ BLIP模型为一种新的Vision-Language Pre-training框架，它可以灵活地
 
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
 
    3. 精度验证。
 
@@ -312,21 +312,21 @@ BLIP模型为一种新的Vision-Language Pre-training框架，它可以灵活地
         --pth_path  ./model_base_retrieval_coco.pth 
       ```
       参数说明：
-         - --text_embed_path  ais-infer推理输出的保存路径（文本嵌入）
-         - --image_embed_path ais-infer推理输出的保存路径（图像嵌入）
-         - --image_feat_path  ais-infer推理输出的保存路径（图像高维特征）
+         - --text_embed_path  ais_bench推理输出的保存路径（文本嵌入）
+         - --image_embed_path ais_bench推理输出的保存路径（图像嵌入）
+         - --image_feat_path  ais_bench推理输出的保存路径（图像高维特征）
          - --coco_bin_path  预处理后的coco数据集的二进制文件保存路径
          - --pth_path  模型的pytorch预训练权重文件
       
-      注意：ais-infer 工具在每次推理时会在指定的输出目录中新建一个以当前时间命名的文件夹作为最终的输出目录，因此在本步骤中需根据实际情况替换参数中的${specific_dir}。
+      注意：ais_bench 工具在每次推理时会在指定的输出目录中新建一个以当前时间命名的文件夹作为最终的输出目录，因此在本步骤中需根据实际情况替换参数中的${specific_dir}。
 
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=100 --batchsize=${batch_size}
+         python -m ais_bench --model=${om_model_path} --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：

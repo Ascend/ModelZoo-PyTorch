@@ -156,20 +156,22 @@ pip install -r requirements.txt
 
 #### 3.4.1 准备推理工具
 
-+ 推理工具使用ais_infer，须自己拉取源码，打包并安装。
++ 推理工具使用ais_bench，须自己拉取源码，打包并安装。
     ```shell
     # 指定CANN包的安装路径
     export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
     # 获取源码
     git clone https://gitee.com/ascend/tools.git
-    cd tools/ais-bench_workload/tool/ais_infer/backend/
+    cd tools/ais-bench_workload/tool/ais_infer/
     # 打包，会在当前目录下生成 aclruntime-xxx.whl
     pip3 install --upgrade pip
-    pip3 wheel ./
+    pip3  wheel ./backend/ -v
+    pip3  wheel ./ -v
     # 安装
-    pip3 install --force-reinstall aclruntime-xxx.whl
+    pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+    pip3 install ./ais_bench-{version}-py3-none-any.whl
     ```
-    参考：[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
+    参考：[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
 
 #### 3.4.2 执行推理
 1. 需进入 ais_infer.py 所在目录执行以下代码
@@ -177,7 +179,7 @@ pip install -r requirements.txt
     # 对预处理后的数据进行推理
     cd ais_infer
     mkdir ../result/
-    python3 ais_infer.py --model ../se-resnext_bs16.om --input ../prep_dataset/ --output ../result/ --outfmt TXT --batchsize 16
+    python3 -m ais_bench --model ../se-resnext_bs16.om --input ../prep_dataset/ --output ../result/ --outfmt TXT --batchsize 16
     cd ..
     ```
     参数说明：
@@ -235,7 +237,7 @@ pip install -r requirements.txt
     
     纯推理命令：
     ```shell
-    python3 ais_infer.py --model ./se-resnext_bs16.om --batchsize 16 --loop 100
+    python3 -m ais_bench --model ./se-resnext_bs16.om --batchsize 16 --loop 100
     ```
     执行完纯推理命令，程序会打印出跟性能先关的指标：
     ```log

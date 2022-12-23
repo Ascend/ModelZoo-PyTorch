@@ -94,6 +94,6 @@ def postprocess(result_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('result_path', help='ais_infer result bin files path')
+    parser.add_argument('result_path', help='ais_bench result bin files path')
     args = parser.parse_args()
     postprocess(args.result_path)

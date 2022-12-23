@@ -1,18 +1,14 @@
 # Detr模型-推理指导
 
-- [概述](##概述)
-
-- [推理环境准备](##推理环境准备)
-
-- [快速上手](##快速上手)
-  
-  - [获取源码](##获取源码)
-  - [准备数据集](##准备数据集)
-  - [模型推理](##模型推理)
-
-- [模型推理性能](##模型推理性能)
-
-- [配套环境](##配套环境)
+- [Detr模型-推理指导](#detr模型-推理指导)
+  - [概述](#概述)
+  - [输入输出数据](#输入输出数据)
+  - [推理环境准备\[所有版本\]](#推理环境准备所有版本)
+  - [快速上手](#快速上手)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能\&精度](#模型推理性能精度)
 
 ## 概述
 
@@ -216,16 +212,18 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
       ```
       git clone https://gitee.com/ascend/tools.git
-      cd tools/ais-bench_workload/tool/ais_infer/backend/
-      pip3 wheel ./
-      pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+      cd tools/ais-bench_workload/tool/ais_infer/
+      pip3  wheel ./backend/ -v
+      pip3  wheel ./ -v
+      pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+      pip3 install ./ais_bench-{version}-py3-none-any.whl
       ```
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
 
    b.  执行推理。
@@ -236,7 +234,7 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
       ```
 
       -   参数说明：
-          -   --ais_path:ais-infer工具推理文件路径 
+          -   --ais_path:ais_bench工具推理文件路径 
           -   --img_path:前处理的图片文件路径 
           -   --mask_path:前处理的mask文件路径 
           -   --out_put:ais_infer推理数据输出路径

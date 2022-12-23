@@ -234,27 +234,29 @@
       1. 准备推理工具。
       
       
-     a. 下载推理工具-ais_infer
+     a. 下载推理工具-ais_bench
        ```
        git clone https://gitee.com/ascend/tools.git
        ```
      
      b. 编译、安装推理工具
        ```
-       cd ./tools/ais-bench_workload/tool/ais_infer/backend/
-       pip3.7 wheel ./ #编译 要根据自己的python版本
+       cd ./tools/ais-bench_workload/tool/ais_infer/
+       pip3  wheel ./backend/ -v #编译 要根据自己的python版本
+       pip3  wheel ./ -v
        ls
        pip install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
+       pip3 install ./ais_bench-{version}-py3-none-any.whl
        cd ../../../../..
        ```
      
-     2. 执行推理
+     1. 执行推理
       
        1. 性能测试
         
           ```
           # 性能测试
-          python /home/lcy/bert_large/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./bert_large_bs${bs}_fix.om --batchsize ${bs} --loop 50
+          python -m ais_bench --model ./bert_large_bs${bs}_fix.om --batchsize ${bs} --loop 50
           ```
         
           参数说明：
@@ -269,7 +271,7 @@
         
           ```
           # 精度测试
-          python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./bert_large_bs${bs}_fix.om --input "./bert_bin/bert_bin_2022xxxx-xxxxxx/input_ids,./bert_bin/bert_bin_2022xxxx-xxxxxx/attention_mask,./bert_bin/bert_bin_2022xxxx-xxxxxx/token_type_ids" --output ./bert-large-OUT/bs${bs} --batchsize ${bs} --outfmt NPY
+          python -m ais_bench --model ./bert_large_bs${bs}_fix.om --input "./bert_bin/bert_bin_2022xxxx-xxxxxx/input_ids,./bert_bin/bert_bin_2022xxxx-xxxxxx/attention_mask,./bert_bin/bert_bin_2022xxxx-xxxxxx/token_type_ids" --output ./bert-large-OUT/bs${bs} --batchsize ${bs} --outfmt NPY
           ```
         
           参数说明：

@@ -191,15 +191,15 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
            运行成功后生成StarGAN_bs1.om模型
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    2. 执行推理。
 
       以batchsize=16 为例子
       ```
-      python3  ais_infer.py --model ./StarGAN_bs16.om  --input ./bin/img,./bin/attr --output ./  --outfmt TXT  --batchsize 16 --output_dirname result
+      python3  -m ais_bench --model ./StarGAN_bs16.om  --input ./bin/img,./bin/attr --output ./  --outfmt TXT  --batchsize 16 --output_dirname result
       ```
 
       - 参数说明：
@@ -213,7 +213,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
         推理后的输出默认在当前目录result下。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -227,10 +227,10 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
     
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ais_infer.py --model StarGAN_bs1.om --loop 100 --batchsize 1
+      python3 -m ais_bench --model StarGAN_bs1.om --loop 100 --batchsize 1
       ```
 
       -参数说明：

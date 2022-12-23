@@ -102,11 +102,12 @@ atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_1
 ```
 
 ### 步骤 2 开始推理验证。
-1. 使用ais_infer工具进行推理
+1. 安装ais_bench推理工具
+   请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 ```shell
-python3 ais_infer.py –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt TXT --batchsize {batch_size}
+python3 -m ais_bench –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt TXT --batchsize {batch_size}
 ```
-2. 精度验证
+1. 精度验证
 ```shell
 # 调用ais_verify.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 python3.7 vision_metric_ImageNet.py ${ais_output} ./val_label.txt ./ result.json

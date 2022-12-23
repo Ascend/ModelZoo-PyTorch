@@ -178,34 +178,9 @@ Transformer架构已广泛应用于自然语言处理领域。本模型的作者
 
 2. 开始推理验证。
 
-- 使用ais-infer工具进行推理。
+- 安装ais_bench推理工具。
 
-    执行命令增加工具可执行权限，并根据OS架构选择工具
-
-    ```
-    chmod u+x 
-    ```
-
-    下载ais_infer 推理工具代码
-
-    ```
-    git clone https://gitee.com/ascend/tools.git
-    ```
-
-    进入./ais-bench/tool/ais_infer目录下执行如下命令进行编译，即可生成推理后端whl包
-
-    ```
-    cd tools/ais-bench_workload/tool/ais_infer/backend/
-    pip3 wheel ./
-    ```
-
-    在运行设备上执行如下命令，进行安装
-
-    ```
-    pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-    ```
-
-    如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
+    请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
 - 执行推理。
 
@@ -218,7 +193,7 @@ Transformer架构已广泛应用于自然语言处理领域。本模型的作者
     执行推理
 
     ```
-    python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model vit_bs1.om --input "./prep_dataset" --batchsize 1 --output result/ --outfmt TXT
+    python3 -m ais_bench --model vit_bs1.om --input "./prep_dataset" --batchsize 1 --output result/ --outfmt TXT
     ```
 
     -   参数说明：
@@ -231,7 +206,7 @@ Transformer架构已广泛应用于自然语言处理领域。本模型的作者
         推理后的输出在目录“./result/Timestam”下，Timestam为日期+时间的子文件夹,如 2022_08_11-10_37_29。
 
     >**说明：** 
-    >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+    >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
 3.  精度验证。
 

@@ -198,16 +198,16 @@ FastSCNN：快速分割卷积神经网络（Fast-SCNN），一种基于高分辨
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
    2. 执行推理。
 
       推理支持batchsize1/2/4/8
  
         ```
-         python ais_infer.py  --model ./fast_scnn_bs1.om --input ./prep_datasets/leftImg8bit/ --output ./result --output_dirname bs1 --outfmt BIN --batchsize 1
+         python3 -m ais_bench  --model ./fast_scnn_bs1.om --input ./prep_datasets/leftImg8bit/ --output ./result --output_dirname bs1 --outfmt BIN --batchsize 1
         ```
 
         -   参数说明：
@@ -219,7 +219,7 @@ FastSCNN：快速分割卷积神经网络（Fast-SCNN），一种基于高分辨
              - --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
              - --batchsize：om模型的batch_size。
 
-        更详细的参数说明请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。推理后的输出默认在当前目录result下。
+        更详细的参数说明请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。推理后的输出默认在当前目录result下。
 
    3. 精度验证。
 
