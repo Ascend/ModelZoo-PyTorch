@@ -48,7 +48,7 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
   | ---------- | ------------------------------------------------------------ |
   | 硬件 | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
 - 环境准备指导。
