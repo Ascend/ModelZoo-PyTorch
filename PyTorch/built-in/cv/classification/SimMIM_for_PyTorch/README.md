@@ -1,152 +1,204 @@
-# SimMIM
+# SimMIM_for_PyTorch
 
-By [Zhenda Xie](https://zdaxie.github.io)\*, [Zheng Zhang](https://stupidzz.github.io/)\*, [Yue Cao](http://yue-cao.me)\*, [Yutong Lin](https://github.com/impiga), [Jianmin Bao](https://jianminbao.github.io/), [Zhuliang Yao](https://github.com/Howal), [Qi Dai](https://www.microsoft.com/en-us/research/people/qid/) and [Han Hu](https://ancientmooner.github.io/)\*.
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-This repo is the official implementation of ["SimMIM: A Simple Framework for Masked Image Modeling"](https://arxiv.org/abs/2111.09886).
 
-## Updates
 
-***03/02/2022***
+# 概述
 
-SimMIM got accepted by CVPR 2022. SimMIM was used in ["Swin Transformer V2"](https://github.com/microsoft/Swin-Transformer) to alleviate the data hungry problem for large-scale vision model training.
+## 简述
 
-***12/09/2021***
+SimMIM最初在arxiv中描述，arxiv作为遮罩图像建模的简单框架。通过系统研究，我们发现每个组件的简单设计都显示出非常强大的表示学习性能：1）使用中等大小的遮罩补丁（例如，32）随机屏蔽输入图像，使文本前任务变得强大;2）通过直接回归预测RGB值的原始像素并不比复杂设计的斑块分类方法差;3）预测头可以像线性层一样轻，性能不会比重的更差。
 
-Initial commits:
+- 参考实现：
 
-1. Pre-trained and fine-tuned models on ImageNet-1K (`Swin Base`, `Swin Large`, and `ViT Base`) are provided.
-2. The supported code for ImageNet-1K pre-training and fine-tuneing is provided.
+  ```
+  url=https://github.com/microsoft/SimMIM
+  commit_id=519ae7b0999b9d720daa61e3848cd41b8fbd9978
+  ```
 
-## Introduction
+- 适配昇腾 AI 处理器的实现：
 
-**SimMIM** is initially described in [arxiv](https://arxiv.org/abs/2111.09886), which serves as a
-simple framework for masked image modeling. From systematically study, we find that simple designs of each component have revealed very strong representation learning performance: 1) random masking of the input image with a moderately large masked patch size (e.g., 32) makes a strong pre-text task; 2) predicting raw pixels of RGB values by direct regression performs no worse than the patch classification approaches with complex designs; 3) the prediction head can be as light as a linear layer, with no worse performance than heavier ones.
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/cv/classification
+  ```
+  
+- 通过Git获取代码方法如下：
 
-<div align="center">
-    <img src="figures/teaser.jpg" height="250px" />
-</div>
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+  
+- 通过单击“立即下载”，下载源码包。
 
-## Main Results on ImageNet
+# 准备训练环境
 
-### Swin Transformer
+## 准备环境
 
-**ImageNet-1K Pre-trained and Fine-tuned Models**
+- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
 
-| name | pre-train epochs | pre-train resolution | fine-tune resolution | acc@1 | pre-trained model | fine-tuned model |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Swin-Base | 100 | 192x192 | 192x192 | 82.8 | [google](https://drive.google.com/file/d/1Wcbr66JL26FF30Kip9fZa_0lXrDAKP-d/view?usp=sharing)/[config](configs/swin_base__100ep/simmim_pretrain__swin_base__img192_window6__100ep.yaml) | [google](https://drive.google.com/file/d/1RsgHfjB4B1ZYblXEQVT-FPX3WSvBrxcs/view?usp=sharing)/[config](configs/swin_base__100ep/simmim_finetune__swin_base__img192_window6__100ep.yaml) |
-| Swin-Base | 100 | 192x192 | 224x224 | 83.5 | [google](https://drive.google.com/file/d/1Wcbr66JL26FF30Kip9fZa_0lXrDAKP-d/view?usp=sharing)/[config](configs/swin_base__100ep/simmim_pretrain__swin_base__img192_window6__100ep.yaml) | [google](https://drive.google.com/file/d/1mb43BkW56F5smwiX-g7QUUD7f1Rftq8u/view?usp=sharing)/[config](configs/swin_base__100ep/simmim_finetune__swin_base__img224_window7__100ep.yaml) |
-| Swin-Base | 800 | 192x192 | 224x224 | 84.0 | [google](https://drive.google.com/file/d/15zENvGjHlM71uKQ3d2FbljWPubtrPtjl/view?usp=sharing)/[config](configs/swin_base__800ep/simmim_pretrain__swin_base__img192_window6__800ep.yaml) | [google](https://drive.google.com/file/d/1xEKyfMTsdh6TfnYhk5vbw0Yz7a-viZ0w/view?usp=sharing)/[config](configs/swin_base__800ep/simmim_finetune__swin_base__img224_window7__800ep.yaml) |
-| Swin-Large | 800 | 192x192 | 224x224 | 85.4 | [google](https://drive.google.com/file/d/1qDxrTl2YUDB0505_4QrU5LU2R1kKmcBP/view?usp=sharing)/[config](configs/swin_large__800ep/simmim_pretrain__swin_large__img192_window12__800ep.yaml) | [google](https://drive.google.com/file/d/1mf0ZpXttEvFsH87Www4oQ-t8Kwr0x485/view?usp=sharing)/[config](configs/swin_large__800ep/simmim_finetune__swin_large__img224_window14__800ep.yaml) |
-| SwinV2-Huge | 800 | 192x192 | 224x224 | 85.7 | / | / |
-| SwinV2-Huge | 800 | 192x192 | 512x512 | 87.1 | / | / |
+  **表 1**  版本配套表
 
-### Vision Transformer
 
-**ImageNet-1K Pre-trained and Fine-tuned Models**
+| 配套       | 版本                                                         |
+| ---------- | ------------------------------------------------------------ |
+| 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+| 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+| CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial |
+| PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
-| name | pre-train epochs | pre-train resolution | fine-tune resolution | acc@1 | pre-trained model | fine-tuned model |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| ViT-Base | 800 | 224x224 | 224x224 | 83.8 | [google](https://drive.google.com/file/d/1dJn6GYkwMIcoP3zqOEyW1_iQfpBi8UOw/view?usp=sharing)/[config](configs/vit_base__800ep/simmim_pretrain__vit_base__img224__800ep.yaml) | [google](https://drive.google.com/file/d/1fKgDYd0tRgyHyTnyB1CleYxjo0Gn5tEB/view?usp=sharing)/[config](configs/vit_base__800ep/simmim_finetune__vit_base__img224__800ep.yaml) |
+- 环境准备指导。
 
-## Citing SimMIM
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖。
 
-```
-@inproceedings{xie2021simmim,
-  title={SimMIM: A Simple Framework for Masked Image Modeling},
-  author={Xie, Zhenda and Zhang, Zheng and Cao, Yue and Lin, Yutong and Bao, Jianmin and Yao, Zhuliang and Dai, Qi and Hu, Han},
-  booktitle={International Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year={2022}
-}
-```
+  ```
+  pip3.7 install -r requirements.txt
+  ```
 
-## Getting Started
 
-### Installation
+## 准备数据集
 
-- Install `CUDA 11.3` with `cuDNN 8` following the official installation guide of [CUDA](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) and [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive).
+1. 获取数据集。
 
-- Setup conda environment:
-```bash
-# Create environment
-conda create -n SimMIM python=3.8 -y
-conda activate SimMIM
+   用户自行获取原始数据集ImageNet，将数据集上传到服务器任意路径下并解压。
 
-# Install requirements
-conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
+   SimMIM_for_PyTorch使用到的ImageNet数据集目录结构参考如下所示。
 
-# Install apex
-git clone https://github.com/NVIDIA/apex
-cd apex
-pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
-cd ..
+   ```
+   ├── ImageNet
+         ├──train
+              ├──类别1
+                    │──图片1
+                    │──图片2
+                    │   ...       
+              ├──类别2
+                    │──图片1
+                    │──图片2
+                    │   ...   
+              ├──...                     
+         ├──val  
+              ├──类别1
+                    │──图片1
+                    │──图片2
+                    │   ...       
+              ├──类别2
+                    │──图片1
+                    │──图片2
+                    │   ...              
+   ```
 
-# Clone SimMIM
-git clone https://github.com/microsoft/SimMIM
-cd SimMIM
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
-# Install other requirements
-pip install -r requirements.txt
-```
 
-### Evaluating provided models
 
-To evaluate a provided model on ImageNet validation set, run:
-```bash
-python -m torch.distributed.launch --nproc_per_node <num-of-gpus-to-use> main_finetune.py \
---eval --cfg <config-file> --resume <checkpoint> --data-path <imagenet-path>
-```
 
-For example, to evaluate the `Swin Base` model on a single GPU, run:
-```bash
-python -m torch.distributed.launch --nproc_per_node 1 main_finetune.py \
---eval --cfg configs/swin_base__800ep/simmim_finetune__swin_base__img224_window7__800ep.yaml --resume simmim_finetune__swin_base__img224_window7__800ep.pth --data-path <imagenet-path>
-```
+# 开始训练
 
-### Pre-training with SimMIM
-To pre-train models with `SimMIM`, run:
-```bash
-python -m torch.distributed.launch --nproc_per_node <num-of-gpus-to-use> main_simmim.py \ 
---cfg <config-file> --data-path <imagenet-path>/train [--batch-size <batch-size-per-gpu> --output <output-directory> --tag <job-tag>]
-```
+## Pre-Training
 
-For example, to pre-train `Swin Base` for 800 epochs on one DGX-2 server, run:
-```bash
-python -m torch.distributed.launch --nproc_per_node 16 main_simmim.py \ 
---cfg configs/swin_base__800ep/simmim_pretrain__swin_base__img192_window6__800ep.yaml --batch-size 128 --data-path <imagenet-path>/train [--output <output-directory> --tag <job-tag>]
-```
+1. 进入解压后的源码包根目录。
 
-### Fine-tuning pre-trained models
-To fine-tune models pre-trained by `SimMIM`, run:
-```bash
-python -m torch.distributed.launch --nproc_per_node <num-of-gpus-to-use> main_finetune.py \ 
---cfg <config-file> --data-path <imagenet-path> --pretrained <pretrained-ckpt> [--batch-size <batch-size-per-gpu> --output <output-directory> --tag <job-tag>]
-```
+   ```
+   cd /${模型文件夹名称}
+   ```
 
-For example, to fine-tune `Swin Base` pre-trained by `SimMIM` on one DGX-2 server, run:
-```bash
-python -m torch.distributed.launch --nproc_per_node 16 main_finetune.py \ 
---cfg configs/swin_base__800ep/simmim_finetune__swin_base__img224_window7__800ep.yaml --batch-size 128 --data-path <imagenet-path> --pretrained <pretrained-ckpt> [--output <output-directory> --tag <job-tag>]
-```
+2. 运行训练脚本。
 
-## Contributing
+   该模型支持单机单卡训练和单机8卡训练。
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+   - 单机单卡训练
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+     启动单卡训练。
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+     ```
+     bash ./test/pretrain_performance_1p.sh --data_path=real_data_path
+     ```
 
-## Trademarks
+   - 单机8卡训练
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+     启动8卡训练。
+
+     ```
+     bash ./test/pretrain_performance_8p.sh --data_path=real_data_path
+     bash ./test/pretrain_full_8p.sh --data_path=real_data_path
+     ```
+     
+## Fine-Tuning
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称}
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练和单机8卡训练。
+
+   - 单机单卡训练
+
+     启动单卡训练。
+
+     ```
+     bash ./test/finetune_performance_1p.sh --data_path=real_data_path 
+     ```
+
+   - 单机8卡训练
+
+     启动8卡训练。
+
+     ```
+     bash ./test/finetune_performance_8p.sh --data_path=real_data_path
+     bash ./test/finetune_full_8p.sh --data_path=real_data_path
+     ```
+   --data_path参数填写数据集路径。
+
+   
+   
+   模型训练脚本参数说明如下。
+
+   ```
+   公共参数：
+   --data-path                              //数据集路径
+   --output                                 //输出文件路径
+   --batch-size                             //批大小
+   --local_rank                             //使用的NPU的id
+   --pretrained                             //预训练模型路径
+   --opts TRAIN.EPOCHS                      //重复训练次数
+   ```
+
+# 训练结果展示
+
+## Pre-Training训练结果展示表
+| NAME  | Acc@1  | FPS  | Epochs  | AMP_Type  | Torch  |
+|---|---|---|---|---|---|
+| 1p-NPU  |   | 198  | 2  | O1  | 1.8  |
+| 1p-竞品  |   | 185.6  | 2  | O1  | 1.8  |
+| 8p-NPU  | 81.782 | 1555  | 100  | O1  | 1.8  |
+| 8p-竞品   | 82.06  | 1422 | 100  | O1  | 1.8  |
+
+## Fine-Tuning训练结果展示表
+| NAME  | Acc@1  | FPS  | Epochs  | AMP_Type  | Torch  |
+|---|---|---|---|---|---|
+| 1p-NPU  |   | 194  | 2  | O1  | 1.8  |
+| 1p-竞品  |   | 189.5  | 2  | O1  | 1.8  |
+| 8p-NPU  | 81.782  | 1513  | 100  | O1  | 1.8  |
+| 8p-竞品   | 82.06  | 1410  | 100  | O1  | 1.8  |
+# 版本说明
+
+## 变更
+
+2022.12.14：首次发布。
+
+## 已知问题
+
+无。
