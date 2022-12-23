@@ -215,8 +215,8 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
 
 2. 开始推理验证。
 
-    1. 使用ais-infer工具进行推理。  
-        ais-infer工具获取及使用方式请点击查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+    1. 使用ais_bench工具进行推理。  
+        ais_bench工具获取及使用方式请点击查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
     2. 推理时，使用 npu-smi info 命令查看 device 是否在运行其它推理任务，提前确保 device 空闲
         ```
@@ -225,11 +225,10 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
         mkdir -p ./out/
 
         # 推理
-        python3.7 ${ais_infer_path}/ais_infer.py --model ./trocr_bs1.om \
+        python3.7 -m ais_bench --model ./trocr_bs1.om \
                                                  --input ./pre_data \
                                                  --output ./out
         ```
-        \${ais\_infer\_path}/ais_infer.py为ais_infer工具脚本路径 
 
         参数说明:    
         --model：om 模型路径      
@@ -237,7 +236,7 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
         --output：输出文件存放路径 
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
     3. 精度验证。
 
@@ -267,9 +266,9 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
 
     4. 性能验证。
 
-        使用ais_infer工具进行纯推理。使用同一输入进行性能测试，与基准性能对比：
+        使用ais_bench工具进行纯推理。使用同一输入进行性能测试，与基准性能对比：
         ```
-        python3.7 ${ais_infer_path}/ais_infer.py \
+        python3.7 -m ais_bench \
         --model ./trocr_bs1.om \
         --loop 100
         ```

@@ -1,13 +1,14 @@
 # MAE 模型推理指导
 
+- [MAE 模型推理指导](#mae-模型推理指导)
 - [概述](#概述)
-    - [输入输出数据](#输入输出数据)
+  - [输入输出数据](#输入输出数据)
 - [推理环境](#推理环境)
 - [快速上手](#快速上手)
-    - [获取源码](#获取源码)
-    - [准备数据集](#准备数据集)
-    - [模型转换](#模型转换)
-    - [推理验证](#推理验证)
+  - [安装](#安装)
+  - [准备数据集](#准备数据集)
+  - [模型转换](#模型转换)
+  - [推理验证](#推理验证)
 - [性能&精度](#性能精度)
 
 ----
@@ -163,7 +164,7 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
 ## 推理验证
 
 1. 对数据集推理  
-    该离线模型使用ais_infer作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
+    该离线模型使用ais_bench作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python3 -m ais_bench \
         --model mae_batch_size${batch_size} \

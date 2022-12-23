@@ -198,19 +198,15 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  使用ais_bench工具进行推理。
 
-      ```
-      chmod u+x ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py
-      ```
-
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
    b.  执行推理。
 
       ```
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model onnx_models/swin_b16.om --input ${prep_output_dir --output ./result_bs16/ --outfmt TXT --batchsize 16  
+      python -m ais_bench --model onnx_models/swin_b16.om --input ${prep_output_dir --output ./result_bs16/ --outfmt TXT --batchsize 16  
       ```
 
       -   参数说明：
@@ -224,19 +220,19 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
       推理后的输出在--output指定目录下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 。
 
    c.  精度验证。
 
       调用swin_postprocess.py脚本与数据集标签target.json比对，可以获得Accuracy数据，结果保存在result.json中。
 
-      注：需把ais-infer工具推理完成后推理结果保存地址中的sumary.json文件删除，否则运行精度验证脚本会报错
+      注：需把ais_bench工具推理完成后推理结果保存地址中的sumary.json文件删除，否则运行精度验证脚本会报错
 
       ```
       python3.7 swin_postprocess.py --result_path=result_bs16/2022_09_01-18_51_23/ --target_file=target.json --save_path=./result_bs16.json
       ```
-      注：--result_path指定的result_bs16/2022_09_01-18_51_23/路径不是固定，具体路径为ais-infer工具推理命令中，--output指定目录下的生成推理结果所在路径
+      注：--result_path指定的result_bs16/2022_09_01-18_51_23/路径不是固定，具体路径为ais_bench工具推理命令中，--output指定目录下的生成推理结果所在路径
 
       --result_path：生成推理结果所在路径
     
@@ -247,10 +243,10 @@ Swin-Transformer是针对于图片处理设计的基于Transformer架构的神�
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+      python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
       ```
 
 

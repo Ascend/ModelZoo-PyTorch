@@ -188,7 +188,7 @@ ResNeXt50是一种用于图像分类的卷积神经网络，这个模型的默�
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。ais-infer工具安装指导见：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+a.  使用ais_bench工具进行推理。ais_bench工具安装指导见：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
 
    执行命令增加工具可执行权限，并根据OS架构选择工具
    
@@ -199,7 +199,7 @@ a.  使用ais-infer工具进行推理。ais-infer工具安装指导见：https:/
 b.  执行推理。
 
     ```
-    python ais_infer.py --model "/home/zzy/resnext50_bs16_310.om" --input /home/zzy/prep_bin/  --output "/home/zzy/output/" --outfmt  TXT  --batchsize 16 
+    python -m ais_bench --model "/home/zzy/resnext50_bs16_310.om" --input /home/zzy/prep_bin/  --output "/home/zzy/output/" --outfmt  TXT  --batchsize 16 
     ```
 
     -   参数说明：
@@ -214,7 +214,7 @@ b.  执行推理。
         推理后的输出默认在当前目录output下。
 
       
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
 c.  精度验证。
 

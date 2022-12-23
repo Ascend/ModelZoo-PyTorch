@@ -1,27 +1,28 @@
 # Efficient-3DCNNs模型PyTorch离线推理指导
 
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集二进制文件和信息文件](#43-生成数据集二进制文件和信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 获取ais_infer推理工具](#51-获取ais_infer推理工具)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理topk精度统计](#61-离线推理topk精度统计)
-	-   [6.2 开源topk精度](#62-开源topk精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+- [Efficient-3DCNNs模型PyTorch离线推理指导](#efficient-3dcnns模型pytorch离线推理指导)
+	- [1 模型概述](#1-模型概述)
+		- [1.1 论文地址](#11-论文地址)
+		- [1.2 代码地址](#12-代码地址)
+	- [2 环境说明](#2-环境说明)
+		- [2.1 深度学习框架](#21-深度学习框架)
+		- [2.2 python第三方库](#22-python第三方库)
+	- [3 模型转换](#3-模型转换)
+		- [3.1 pth转onnx模型](#31-pth转onnx模型)
+		- [3.2 onnx转om模型](#32-onnx转om模型)
+	- [4 数据集预处理](#4-数据集预处理)
+		- [4.1 数据集获取](#41-数据集获取)
+		- [4.2 数据集预处理](#42-数据集预处理)
+		- [4.3 生成数据集二进制文件和info文件](#43-生成数据集二进制文件和info文件)
+	- [5 离线推理](#5-离线推理)
+		- [5.1 获取ais\_bench推理工具](#51-获取ais_bench推理工具)
+		- [5.2 离线推理](#52-离线推理)
+	- [6 精度对比](#6-精度对比)
+		- [6.1 离线推理topk精度统计](#61-离线推理topk精度统计)
+		- [6.2 开源topk精度](#62-开源topk精度)
+		- [6.3 精度对比](#63-精度对比)
+	- [7 性能对比](#7-性能对比)
+		- [7.1 npu性能数据](#71-npu性能数据)
 
 
 
@@ -205,15 +206,17 @@ python3.7 Efficient-3DCNNs_preprocess.py --video_path=/home/HwHiAiUser/datasets/
 
 ## 5 离线推理
 
--   **[获取ais_infer推理工具](#51-获取ais_infer推理工具)**  
+-   **[获取ais_bench推理工具](#51-获取ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 获取ais_infer推理工具
+### 5.1 获取ais_bench推理工具
 
 https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
 
-将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件； pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件； 
+pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+pip3 install ./ais_bench-{version}-py3-none-any.whl
 
 ### 5.2 离线推理
 昇腾芯片上执行，执行时使npu-smi info查看设备状态，确保device空闲
@@ -231,7 +234,7 @@ mkdir result
 ```
 执行推理
 ```
-python3 tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./Efficient-3DCNNs/Efficient-3DCNNs_bs1.om  --input ./Efficient-3DCNNs/bin1/ --output result --output_dirname out1
+python3 -m ais_bench --model ./Efficient-3DCNNs/Efficient-3DCNNs_bs1.om  --input ./Efficient-3DCNNs/bin1/ --output result --output_dirname out1
 ```
 参数说明：
 
@@ -284,7 +287,7 @@ Efficient-3DCNNs        0.81126     0.96299
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-1.ais_infer工具在整个数据集上推理获得性能数据  
+1.ais_bench工具在整个数据集上推理获得性能数据  
 
 | Throughput | 310 | 310P      | T4 | 310P/310 | 310P/T4 |     
 |------------|-----|-----------|----|----------|---------|

@@ -214,14 +214,14 @@ root
         运行成功后生成Simclr_model_bs1.om模型文件。
 
   2.开始推理验证  
-   a.使用ais-infer工具进行推理
+   a.使用ais_bench工具进行推理
 
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
   
    b.执行推理。
 
 ```
-python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/ --outfmt "TXT" --batchsize 1
+python3.7 -m ais_bench --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/ --outfmt "TXT" --batchsize 1
 ```
 -   参数说明：
      

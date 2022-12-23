@@ -265,7 +265,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
 
 2. 开始推理验证
 
-   a. 使用ais-infer工具进行推理。
+   a. 使用ais_bench工具进行推理。
 
    执行命令增加工具可执行权限，并根据OS架构选择工具
 
@@ -273,14 +273,14 @@ code_path=ACL_PyTorch/contrib/cv/detection
    chmod u+x 
    ```
 
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    b. 执行推理。
 
    真实数据推理：
    
    ```
-    python3.7 /home/wt/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model BSN_tem_bs1.om --batchsize 1 --input="./output/BSN-TEM-preprocess/feature/"  --output ./ais_result --output_dirname result_tem_bs1 
+    python3.7 -m ais_bench --model BSN_tem_bs1.om --batchsize 1 --input="./output/BSN-TEM-preprocess/feature/"  --output ./ais_result --output_dirname result_tem_bs1 
    ```
    
    
@@ -294,7 +294,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
    
    推理后的输出默认在当前目录result下。
    
-   > **说明：** 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+   > **说明：** 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
    
    c. 数据后处理。
    
@@ -327,7 +327,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
    真实数据推理：
    
    ```
-   python3.7 ${ais_infer_path}/ais_infer.py --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./ais_result --output_dirname result_pem_bs1 
+   python3.7 -m ais_bench --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./ais_result --output_dirname result_pem_bs1 
    ```
    
    - 参数说明：

@@ -221,9 +221,9 @@ en_PP-OCRv3_det是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
    b.  执行推理。
@@ -247,7 +247,7 @@ en_PP-OCRv3_det是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
       推理完成后结果保存在`en_PP-OCRv3_det/results_bs${batchsize}`目录下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -281,10 +281,10 @@ en_PP-OCRv3_det是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench \
           --model=./en_PP-OCRv3_det_bs${batchsize}.om \
           --loop=50 \
           --dymHW=736,992 \
@@ -298,9 +298,9 @@ en_PP-OCRv3_det是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
           -   --dymHW：动态分辨率参数，指定模型输入的实际H、W。
           -   --batchsize：om模型的batch。
 
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+     `${batchsize}`表示不同batch的om模型。
 
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能。
+      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

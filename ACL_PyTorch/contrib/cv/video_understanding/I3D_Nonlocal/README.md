@@ -346,9 +346,9 @@ I3D是一种新的基于2D ConvNet 膨胀的双流膨胀3D ConvNet (I3D)。一�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
       在已下载的源码包根目录下, 可参考下列命令安装：
 
@@ -356,20 +356,22 @@ I3D是一种新的基于2D ConvNet 膨胀的双流膨胀3D ConvNet (I3D)。一�
       export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest  # 指定CANN包的安装路径
       
       git clone https://gitee.com/ascend/tools.git  # 获取源码
-      cd tools/ais-bench_workload/tool/ais_infer/backend/  # 打包
+      cd tools/ais-bench_workload/tool/ais_infer/  # 打包
       
-      pip3 wheel ./
+      pip3  wheel ./backend/ -v
+      pip3  wheel ./ -v
       
-      pip3 install --force-reinstall ./aclruntime-0.0.1-cp37-cp37m-linux_aarch64.whl  # 安装
+      pip3 install --force-reinstall ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl  # 安装
+      pip3 install --force-reinstall ./ais_bench-{version}-py3-none-any.whl
       ```
 
    2. 执行推理。
          在已下载的源码包根目录下，执行如下命令：
 
          ```
-         cd tools/ais-bench_workload/tool/ais_infer/  # 移动至ais_infer推理工具所在目录 
+         cd tools/ais-bench_workload/tool/ais_infer/  # 移动至ais_bench推理工具所在目录 
          mkdir out_tmp  # 创建一个存储纯推理结果的临时目录
-         python3 ais_infer.py --model ./i3d_nl_dot_bs1.om --output ./out_tmp --batchsize 1 --outfmt TXT --loop 5
+         python3 -m ais_bench --model ./i3d_nl_dot_bs1.om --output ./out_tmp --batchsize 1 --outfmt TXT --loop 5
          ```
 
          - 参数说明：
@@ -386,7 +388,7 @@ I3D是一种新的基于2D ConvNet 膨胀的双流膨胀3D ConvNet (I3D)。一�
          
          > **说明：**
          >
-         > 执行ais-infer工具请选择与运 行环境架构相同的命令。参数详情请参见：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+         > 执行ais_bench工具请选择与运 行环境架构相同的命令。参数详情请参见：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
    3. 精度验证
 
       ```

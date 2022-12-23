@@ -241,7 +241,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
 二. 开始推理验证。
 
-1.  使用ais-infer工具进行推理。
+1.  使用ais_bench工具进行推理。
 
     执行命令增加工具可执行权限，并根据OS架构选择工具
     ```
@@ -253,7 +253,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
     1. 测试性能数据
     ```
-    python3 ais_infer.py --model "beit_mg_bs8.om"  --loop 100 --batchsize 8
+    python3 -m ais_bench --model "beit_mg_bs8.om"  --loop 100 --batchsize 8
     ```
         
    - 参数说明：
@@ -264,7 +264,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
 
     2. 测试精度数据
         ```
-        python3 ais_infer.py --model "beit_mg_bs8.om" \
+        python3 -m ais_bench --model "beit_mg_bs8.om" \
         --input "./prep_image_bs8" \
         --output ./ais_out/ \
         --outfmt TXT  
@@ -279,7 +279,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
          - output：输出路径
          - batchsize: om模型batch size大小
        > **说明：** 
-        > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见
+        > 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见
 
 
 3. 精度验证。

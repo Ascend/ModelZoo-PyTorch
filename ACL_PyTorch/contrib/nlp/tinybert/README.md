@@ -17,9 +17,9 @@ pip install -r requirements.txt
 
 从ModelZoo中获取权重文件包“SST-2_model.zip”，解压至当前目录
 
-（4）获取ais_infer推理工具
+（4）获取ais_bench推理工具
 
-ais_infer工具请通过该 [链接](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)下载。
+ais_bench工具请通过该 [链接](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)下载。
 
 
 2.推理
@@ -42,7 +42,7 @@ bash ./test/onnx2om.sh ${bs} ${chip_name}
 bash ./test/preprocess_data.sh
 # 输出：input_ids, segment_ids, input_mask三个文件夹各放置872笔数据对应的二进制数据文件
 
-# 4.使用ais_infer工具推理
+# 4.使用ais_bench工具推理
 bash ./test/ais_inference.sh ${bs}
 # 输出：若执行bash ./test/ais_inference.sh 1，则在当前路径的result文件夹内生成一个新的文件夹，同时在屏幕上打印出性能数据
 # 注：第一个参数代表批大小
@@ -59,7 +59,7 @@ trtexec --onnx=TinyBERT_sim_bs${bs}.onnx --workspace=5000 --threads
 
 3.推理结果
 ======
-以下给出以ais_infer作为推理工具的精度及性能数据：
+以下给出以ais_bench作为推理工具的精度及性能数据：
 
 |<center>模型|<center>官网pth精度|<center>310推理精度|<center>310P推理精度|<center>310性能|<center>310P性能|<center>T4性能|<center>310P/310|<center>310P/T4
 |  ----  | ----  | ----|---- |---- | ---- | ---- | ---- | ---- | 

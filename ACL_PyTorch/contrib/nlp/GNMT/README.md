@@ -218,16 +218,17 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
 2. 开始推理验证。
 
-    1. 使用ais-infer工具进行推理。  
-        查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件。
+    1. 使用ais_bench工具进行推理。  
+        查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件。
         ```
-        pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+        pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+        pip3 install ./ais_bench-{version}-py3-none-any.whl
         ```
 
     2. 执行推理。
         ```
         mkdir out_data
-        python3.7 ${ais_infer_path}/ais_infer.py \
+        python3.7 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --input=./pre_data/input_encoder/,./pre_data/input_enc_len,./pre_data/input_decoder \
             --output=./out_data/ \
@@ -243,7 +244,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         推理后的输出默认在当前目录out_data下。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
     3. 精度验证。
 
@@ -257,15 +258,15 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         ```
 
         -  参数说明：
-            -  --bin_file_path：ais_infer自动生成的目录名。
+            -  --bin_file_path：ais_bench自动生成的目录名。
             -  --res_file_path：推理结果保存在该目录的 pred_sentences.txt 文件中。
             -  --pre_file_path：预处理文件目录。
 
     4. 性能验证。
 
-        使用ais-infer工具进行纯推理，获得性能数据。
+        使用ais_bench工具进行纯推理，获得性能数据。
         ```
-        python3.7 ${ais_infer_path}/ais_infer.py \
+        python3.7 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --loop 50
         ```

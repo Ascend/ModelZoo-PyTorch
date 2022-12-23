@@ -169,22 +169,24 @@ GoogleNet是一种用于图像分类的卷积神经网络，这个模型的默�
 
 2. 开始推理验证。
 
-   a.使用ais-infer工具进行推理。
+   a.使用ais_bench工具进行推理。
 
       1.本推理工具编译需要安装好CANN环境。用户可以设置CANN_PATH环境变量指定安装的CANN版本路径，比如export CANN_PATH=/xxx/nnae/latest/. 如果不设置，本推理工具默认会从 CANN_PATH /usr/local/Ascend/nnae/latest/ /usr/local/Ascend/ascend-toolkit/latest 分别尝试去获取
 
  
       2.进入ais-bench/tool/ais_infer目录下执行如下命令进行编译，即可生成推理后端whl包
       ```
-      pip wheel ./
+      wheel ./backend/ -v
+      pip3  wheel ./ -v
 
       pip install ./aclruntime-0.0.1-cp37-cp37m-linux_aarch64.whl
+      pip3 install ./ais_bench-{version}-py3-none-any.whl
       ```
 
    b.执行推理。
    
       ```
-      python ais_infer.py --model ./googlenet_bs32.om --input ./prep_bin/ --output ./lmcout/bs32 --outfmt TXT --batchsize 32
+      python -m ais_bench --model ./googlenet_bs32.om --input ./prep_bin/ --output ./lmcout/bs32 --outfmt TXT --batchsize 32
       ```
    
    c.精度验证。

@@ -200,9 +200,9 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
 - 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  使用ais_bench工具进行推理。
 
-     ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+     ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    b.  执行推理。
 
@@ -210,7 +210,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    ```
    mkdir ./result
-   python ais_infer/ais_infer.py --model ./mobilenet-v1_bs16.om --input ./prep_dataset --batchsize 16 --output ./result --outfmt "TXT" --device 0
+   python -m ais_bench --model ./mobilenet-v1_bs16.om --input ./prep_dataset --batchsize 16 --output ./result --outfmt "TXT" --device 0
    ```
 
    - 参数说明：
@@ -229,7 +229,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见《[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见《[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
 
    c.  精度验证。
 
@@ -241,7 +241,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
    ```
 
    - 参数说明：
-     - ./result/2022_08_21-23_31_47/：为生成推理结果所在路径,请根据ais-infer工具自动生成的目录名进行更改。
+     - ./result/2022_08_21-23_31_47/：为生成推理结果所在路径,请根据ais_bench工具自动生成的目录名进行更改。
      - val_label.txt：为标签数据。
      - result.json：为生成结果文件。
 

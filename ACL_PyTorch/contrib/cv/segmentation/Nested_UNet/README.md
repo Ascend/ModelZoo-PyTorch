@@ -207,15 +207,15 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
       ```
       mkdir result
-      python3 ${ais_bench_path}/ais_infer.py --model=nested_unet_bs${bs}.om  --batchsize=${bs} \
+      python3 -m ais_bench --model=nested_unet_bs${bs}.om  --batchsize=${bs} \
       --input ${prep_data} --output result --output_dirname result_bs${bs} --outfmt BIN
       ```
       
@@ -241,10 +241,10 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
       - --参数1：推理输出目录。
       - --参数2：真值所在目录。
    
-4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
   
       ```
-      python3 ${ais_bench_path}/ais_infer.py --model=nested_unet_bs${bs}.om --loop=50 --batchsize=${bs}
+      python3 -m ais_bench --model=nested_unet_bs${bs}.om --loop=50 --batchsize=${bs}
       ```
       
       参数说明：

@@ -213,15 +213,15 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
 
       ```
       mkdir result
-      python3 ${tool_path}/ais_infer.py --model deeplabv3_plus_res101_sim_bs1.om --input ./prep_bin/ --output ./result/ --outfmt BIN --batchsize 1 --device 0
+      python3 -m ais_bench --model deeplabv3_plus_res101_sim_bs1.om --input ./prep_bin/ --output ./result/ --outfmt BIN --batchsize 1 --device 0
       ```
 
       - 参数说明：
@@ -236,7 +236,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
       推理后的输出默认在推理结果文件路径下的日期+时间的子文件夹下(如：./result/2022_11_02-07_10_57)。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 

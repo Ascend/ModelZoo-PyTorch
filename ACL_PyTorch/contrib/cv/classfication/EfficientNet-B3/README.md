@@ -193,15 +193,15 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
    b.  执行推理。
 
    ```
-   python3.7 ais_infer.py  --model ./efficientnetB3_bs1.om --input ./prep_dataset  --output ./result_bs1 --outfmt TXT   
+   python3.7 -m ais_bench  --model ./efficientnetB3_bs1.om --input ./prep_dataset  --output ./result_bs1 --outfmt TXT   
    ```
 
 - 参数说明：
@@ -216,7 +216,7 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
    推理后的输出在output参数对应路径的文件result_bs1里,推理结果保存在sumary.json里，便于汇总统计。
 
  >**说明：** 
->执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见《ais_infer 推理工具使用文档》。
+>执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见《ais_bench 推理工具使用文档》。
 
   c.  精度验证。
 
@@ -236,10 +236,10 @@ python3.7 imagenet_acc_eval.py ./result_bs1 ./datasets/imagenet/val_label.txt ./
 
    d.  性能验证。
 
-可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
 ```
-python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
 ```
 
 

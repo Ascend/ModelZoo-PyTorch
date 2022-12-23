@@ -197,9 +197,9 @@
 
 2. 开始推理验证。
    
-   a. 使用ais-infer工具进行推理。
+   a. 使用ais_bench工具进行推理。
    
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
    
    b. 执行推理。
    
@@ -210,7 +210,7 @@
    ```
    
    ```
-   python3.7 ais_infer.py --model "GAN_bs1.om" --input ./vectors --output "./result"  --batchsize 1 --loop 100
+   python3.7 -m ais_bench --model "GAN_bs1.om" --input ./vectors --output "./result"  --batchsize 1 --loop 100
    ```
    
    - 参数说明：
@@ -222,7 +222,7 @@
      推理后的输出默认在当前目录result下。
      
      **说明：** 
-     执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+     执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
      
      c. 精度验证。
      
@@ -240,7 +240,7 @@
      ais_infer纯推理验证不同batch_size的om模型的性能，参考命令如下:
      
      ```
-     python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=100 --batchsize=${batch_size}
+     python3.7 -m ais_bench --model=${om_model_path} --loop=100 --batchsize=${batch_size}
      ```
 
 # 模型推理性能&精度

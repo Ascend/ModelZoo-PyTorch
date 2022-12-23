@@ -302,9 +302,9 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
 
 2. 开始推理验证。
 
-   1. a. 使用ais-infer工具进行推理。
+   1. a. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
       b.  执行推理与性能验证。
 

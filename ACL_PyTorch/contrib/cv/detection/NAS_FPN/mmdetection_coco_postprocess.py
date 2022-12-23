@@ -107,7 +107,7 @@ if __name__ == '__main__':
     total_img = set([name[:name.rfind('_')]
                      for name in os.listdir(bin_path) if "bin" in name])
 
-    # convert ais_infer result name to original bin_file name
+    # convert ais_bench result name to original bin_file name
     if flags.is_ais_infer:
         name_dic = dict()
         with open(os.path.join(bin_path, "sumary.json"), 'r') as f:

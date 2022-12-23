@@ -181,15 +181,15 @@ Densenet 针对 Resnet 的冗余结构提出了改进：让网络中的每一层
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
       ```
       mkdir result
-      python3 ${ais_infer_path}/ais_infer.py --model=densenet121_bs${bs}.om  --batchsize=${bs} \
+      python3 -m ais_bench --model=densenet121_bs${bs}.om  --batchsize=${bs} \
       --input ${save_dir} --output result --output_dirname result_bs${bs} --outfmt TXT
       ```
       
@@ -215,10 +215,10 @@ Densenet 针对 Resnet 的冗余结构提出了改进：让网络中的每一层
       - --result_dir：推理结果所在路径，这里为 ./result/result_bs${bs}。
       - --gt_file：真值标签文件val_label.txt所在路径。
    
-4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
   
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=densenet121_bs${bs}.om --loop=50 --batchsize=${bs}
+      python3 -m ais_bench --model=densenet121_bs${bs}.om --loop=50 --batchsize=${bs}
       ```
       
       参数说明：

@@ -118,7 +118,7 @@ cd ..
 
    执行pointnetplus_preprocess.py脚本，完成预处理。
 
-   说明：详细部分可见本文档ais_infer推理的部分。由于需要om模型生成的中间结果，因此，此步骤可以先不执行，到推理部分再执行。
+   说明：详细部分可见本文档ais_bench推理的部分。由于需要om模型生成的中间结果，因此，此步骤可以先不执行，到推理部分再执行。
 
     ```
     python pointnetplus_preprocess.py --preprocess_part 1 --save_path ./modelnet40_processed/part1/pointset_chg_part1 --save_path2 ./modelnet40_processed/part1/xyz_chg_part1 --data_loc $datasets_path
@@ -220,11 +220,11 @@ cd ..
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+a.  使用ais_bench工具进行推理。
 
    执行命令增加工具可执行权限，并根据OS架构选择工具
 
-   [ais_infer推理工具的安装方法](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+   [ais_bench推理工具的安装方法](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    ```
 从tools中将ais_infer文件夹复制到与om模型同级的目录下
@@ -238,16 +238,16 @@ b.  执行推理。
 ```
  python pointnetplus_preprocess.py --preprocess_part 1 --save_path /home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part1 --save_path2 /home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part1 --data_loc /home/houyw/modelnet40_normal_resampled
 ```
-2. 使用ais_infer对part1进行推理，并对结果进行保存（./out/bs1/part1）
+2. 使用ais_bench对part1进行推理，并对结果进行保存（./out/bs1/part1）
 3. 对part1的数据进行预处理，获得part2数据（输入./out/bs1/part1和xyz_chg_part1, 输出pointset_chg_part2和xyz_chg_part2）
-4. 使用ais_infer对part2进行推理，并对结果进行保存（./out/bs1/part2）
+4. 使用ais_bench对part2进行推理，并对结果进行保存（./out/bs1/part2）
 
 ```
    mkdir -p /home/houyw/Pointnetplus/out/bs1/part1
 
    cd ais_infer
 
-   python ais_infer.py  --model ../Pointnetplus_part1_bs1.om --input '/home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part1,/home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part1' --output '/home/houyw/Pointnetplus/out/bs1/part1' --outfmt BIN --loop 10 --batchsize 1
+   python -m ais_bench  --model ../Pointnetplus_part1_bs1.om --input '/home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part1,/home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part1' --output '/home/houyw/Pointnetplus/out/bs1/part1' --outfmt BIN --loop 10 --batchsize 1
 
    cd ..
 
@@ -257,7 +257,7 @@ b.  执行推理。
 
    cd ais_infer
 
-   python ais_infer.py  --model ../Pointnetplus_part2_bs1.om --input '/home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part2,/home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part2' --output '/home/houyw/Pointnetplus/out/bs1/part2' --outfmt BIN --loop 10 --batchsize 1
+   python -m ais_bench  --model ../Pointnetplus_part2_bs1.om --input '/home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part2,/home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part2' --output '/home/houyw/Pointnetplus/out/bs1/part2' --outfmt BIN --loop 10 --batchsize 1
 ```
 
 - 参数说明：

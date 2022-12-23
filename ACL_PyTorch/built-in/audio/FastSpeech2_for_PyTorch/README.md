@@ -1,12 +1,16 @@
 # FastSpeech2-推理指导
 
+- [FastSpeech2-推理指导](#fastspeech2-推理指导)
 - [概述](#概述)
+    - [输入输出数据](#输入输出数据)
 - [推理环境准备](#推理环境准备)
 - [快速上手](#快速上手)
   - [获取源码](#获取源码)
   - [准备数据集](#准备数据集)
   - [模型推理](#模型推理)
-- [模型推理性能&精度](#模型推理性能&精度)
+    - [1 模型转换](#1-模型转换)
+    - [2 开始推理验证](#2-开始推理验证)
+- [模型推理性能&精度](#模型推理性能精度)
 
 ******
 
@@ -154,8 +158,8 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
     
 ### 2 开始推理验证
 
-1. 安装`ais-infer`推理工具  
-   `ais-infer`工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+1. 安装`ais_bench`推理工具  
+   `ais_bench`工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 2. 执行推理  
    运行`om_val.py`推理OM模型，合成语音默认保存在`output/result/LJSpeech`文件夹下。可设置参数`-vp/-ve/-vd`分别调整合成语音的`pitch`（音调）/`energy`（响度）/`duration`（语速）。
@@ -168,7 +172,7 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
    ```
 
 3. 性能验证  
-   可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，FastSpeech2包括多个子模型，各子模型测试性能的参考命令如下：
+   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，FastSpeech2包括多个子模型，各子模型测试性能的参考命令如下：
    ```
    python3 -m ais_bench --model output/om/encoder_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "texts:${bs},${seq_len};src_masks:${bs},${seq_len}" --outputSize "1000000"
    python3 -m ais_bench --model output/om/variance_adaptor_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "enc_output:${bs},${seq_len},256;src_masks:${bs},${seq_len};p_control:1;e_control:1;d_control:1" --outputSize "1000000,1000000"

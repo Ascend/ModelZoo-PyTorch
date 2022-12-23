@@ -220,15 +220,15 @@ Video swin transformer是一种基于Transformer的视频识别主干网络结�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
         ```
         mkdir ./out
-        python3 ${ais_infer_path}/ais_infer.py --model video_swin.om --input ./bin1 --output ./out --output_dir 1 --batchsize 1
+        python3 -m ais_bench --model video_swin.om --input ./bin1 --output ./out --output_dir 1 --batchsize 1
         ```
         -   参数说明：
 
@@ -241,7 +241,7 @@ Video swin transformer是一种基于Transformer的视频识别主干网络结�
         推理后的输出在当前目录out下。
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -257,10 +257,10 @@ Video swin transformer是一种基于Transformer的视频识别主干网络结�
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=100 --batchsize=${batch_size}
+         python3 -m ais_bench --model=${om_model_path} --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：

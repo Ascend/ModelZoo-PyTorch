@@ -167,12 +167,13 @@ commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+a.  使用ais_bench工具进行推理。
 
-参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
+参考[ais_bench工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 
 ```
- pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+ pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+ pip3 install ./ais_bench-{version}-py3-none-any.whl
 ```
 
 b.  执行推理。
@@ -180,7 +181,7 @@ b.  执行推理。
 ```shell
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
     
-python3 ./ais_infer/ais_infer.py --model ./resnet18_bs1.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
+python3 -m ais_bench --model ./resnet18_bs1.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
 ```
 
 -   参数说明：   
@@ -192,7 +193,7 @@ python3 ./ais_infer/ais_infer.py --model ./resnet18_bs1.om --input ./prep_datase
 运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
 
 **说明：** 
-执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
+执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
 
 **因工具限制，需要把result/xxxx_xx_xx-xx-xx-xx/summary.json从结果目录中删除，或者迁移到其他目录；**
 

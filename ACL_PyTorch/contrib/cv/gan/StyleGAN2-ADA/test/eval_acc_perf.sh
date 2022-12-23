@@ -23,7 +23,7 @@ fi
 mkdir -p dump/bs1
 touch dump/log.txt
 
- python3 ./ais_infer_x86_64/ais_infer.py --model ../G_ema_om_bs1.om --input ./input/bs1/ --output ./dump/bs1/ >> dump/log.txt
+ python3 -m ais_bench --model ../G_ema_om_bs1.om --input ./input/bs1/ --output ./dump/bs1/ >> dump/log.txt
 
 if [ -d "./dump/bs1" ]; then
   echo "inference with om success"

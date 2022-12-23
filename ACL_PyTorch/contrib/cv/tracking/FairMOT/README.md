@@ -202,13 +202,13 @@
 
 2. 开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+a.  使用ais_bench工具进行推理。
 
-   获取[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer )工具。
+   获取[ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer )工具。
 
 b.  执行推理（支持bs1到bs8,其他bs模型太大无法跑出）。
 
-    python3.7 ./ais_infer/ais_infer.py  --model fairmot_bs1.om --input pre_dataset --device 0 -o ./ --outfmt BIN --batchsize 1
+    python3.7 -m ais_bench  --model fairmot_bs1.om --input pre_dataset --device 0 -o ./ --outfmt BIN --batchsize 1
 
    - 参数说明: 
       -   --model: om文件路径。
@@ -219,7 +219,7 @@ b.  执行推理（支持bs1到bs8,其他bs模型太大无法跑出）。
 		...
 
         > **说明: ** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
 c.  精度验证。
 

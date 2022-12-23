@@ -1,11 +1,14 @@
 # EDSR模型-推理指导
 
--   [概述](#概述)
--   [推理环境准备](#推理环境准备)
--   [快速上手](#快速上手)
-	-   [准备数据集](#准备数据集)
-	-   [模型推理](#模型推理)
--   [模型推理性能&精度](#模型推理性能&精度)
+- [EDSR模型-推理指导](#edsr模型-推理指导)
+- [概述](#概述)
+  - [输入输出数据](#输入输出数据)
+  - [文件结构](#文件结构)
+- [推理环境准备](#推理环境准备)
+- [快速上手](#快速上手)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能&精度](#模型推理性能精度)
 
 
 ******
@@ -231,23 +234,23 @@ pip install -r requirements.txt
 
 2. 开始推理验证。
 
-​	a. 使用ais-infer工具进行推理。
+​	a. 使用ais_bench工具进行推理。
 
-ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
 
 ​	b.  执行推理。
 
 ```
-python3.7 ais_infer.py --model ./edsr_x2.om --input ./prep_data/bin --output ./out --batchsize 1
+python3.7 -m ais_bench --model ./edsr_x2.om --input ./prep_data/bin --output ./out --batchsize 1
 ```
 
 ​	推理后的输出默认在当前目录下。
 
 **说明**
 
->执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见使用文档。
+>执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见使用文档。
 
 
 
@@ -257,7 +260,7 @@ python3.7 ais_infer.py --model ./edsr_x2.om --input ./prep_data/bin --output ./o
 
 **说明**
 
->第一个参数为ais-infer输出目录，第二个为数据集配套标签
+>第一个参数为ais_bench输出目录，第二个为数据集配套标签
 
 
 
@@ -290,7 +293,7 @@ d-3 性能测试
 npu测试命令示例如下：
 
 ```
-python3.7 ais_infer.py --model /edsr_x2_256_bs1.om --output ./out --batchsize 1 --loop 20
+python3.7 -m ais_bench --model /edsr_x2_256_bs1.om --output ./out --batchsize 1 --loop 20
 ```
 
 

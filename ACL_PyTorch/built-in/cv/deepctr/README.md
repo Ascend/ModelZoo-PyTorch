@@ -217,9 +217,9 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
    b.  执行推理。
@@ -239,7 +239,7 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 		...
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -248,7 +248,7 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
       python3 -m ais_bench --model ./WDL.om --loop 1000 --batchsize 40

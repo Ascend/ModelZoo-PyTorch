@@ -192,12 +192,13 @@ python3 parse_testdata.py data/demo.png inputs
 
 2.开始推理验证。
 
-a.  使用ais-infer工具进行推理。
+a.  使用ais_bench工具进行推理。
 
-参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
+参考[ais_bench工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 
 ```
- pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+ pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+ pip3 install ./ais_bench-{version}-py3-none-any.whl
 ```
 
 b.  执行推理。
@@ -205,7 +206,7 @@ b.  执行推理。
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
     
     mkdir out
-    python3 ${ais_infer_path}/ais_infer.py --model ./crnn_1.om --input ./inputs --output ./ --output_dirname out --device 0 --batchsize 1
+    python3 -m ais_bench --model ./crnn_1.om --input ./inputs --output ./ --output_dirname out --device 0 --batchsize 1
         
         参数说明：   
         --model：模型地址
@@ -215,7 +216,7 @@ b.  执行推理。
     运行成功后会在out下生成推理输出的bin文件。
     
     **说明：** 
-    执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
+    执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
 
 c.  精度验证。
 

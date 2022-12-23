@@ -23,7 +23,7 @@ def ais_infer(bs, ais_infer_path):
         path = f"out"
         if not os.path.exists(path):
             os.makedirs(path)
-        os.system(f'python3 {ais_infer_path}/ais_infer.py --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data/shape_{h}x{w}')
+        os.system(f'python3 -m ais_bench --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data/shape_{h}x{w}')
         for j in os.listdir(path):
             p = os.path.join(path, j)
             if os.path.isdir(p):
@@ -36,7 +36,7 @@ def ais_infer(bs, ais_infer_path):
         path = f"out_flip"
         if not os.path.exists(path):
             os.makedirs(path)
-        os.system(f'python3 {ais_infer_path}/ais_infer.py --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data_flip/shape_{h}x{w}')
+        os.system(f'python3 -m ais_bench --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data_flip/shape_{h}x{w}')
         for j in os.listdir(path):
             p = os.path.join(path, j)
             if os.path.isdir(p):

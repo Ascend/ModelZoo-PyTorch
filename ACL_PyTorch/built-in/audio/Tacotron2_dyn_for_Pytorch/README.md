@@ -148,8 +148,8 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
     
 ### 2 开始推理验证
 
-1. 安装`ais-infer`推理工具  
-   `ais-infer`工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+1. 安装`ais_bench`推理工具  
+   `ais_bench`工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 2. 执行推理  
    运行`om_val.py`推理OM模型，合成语音默认保存在`output/audio`文件夹下。
@@ -163,7 +163,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    其中，`bs`为模型`batch_size`，`device_id`设置推理用第几号卡。
 
 3. 性能验证  
-   可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，Tacotron2包括多个子模型，各子模型测试性能的参考命令如下：
+   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，Tacotron2包括多个子模型，各子模型测试性能的参考命令如下：
    ```
    python3 -m ais_bench --model output/om/encoder_dyn.om --loop 20 --batchsize ${bs} --dymShape "sequences:${bs},${seq_len};sequence_lengths:${bs}" --outputSize "3000000,3000000,3000000"
    python3 -m ais_bench --model output/om/decoder_iter_dyn.om --loop 20 --batchsize ${bs} --dymShape "decoder_input:${bs},80;attention_hidden:${bs},1024;attention_cell:${bs},1024;decoder_hidden:${bs},1024;decoder_cell:${bs},1024;attention_weights:${bs},${seq_len};attention_weights_cum:${bs},${seq_len};attention_context:${bs},512;memory:${bs},${seq_len},512;processed_memory:${bs},${seq_len},128;mask:${bs},${seq_len}" --outputSize "20000,20000,20000,20000,20000,20000,20000,20000,20000"

@@ -187,9 +187,9 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      ais_bench工具获取及使用方式请点击查看[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    2. 执行推理。
 
@@ -226,7 +226,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
          python3.7 -m ais_bench --model=${om_model_path} --loop 5

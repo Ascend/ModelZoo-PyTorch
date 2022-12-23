@@ -1,22 +1,15 @@
 # TOOD模型-推理指导
 
 
-- [1. 概述](#1)
-
-
-  - [1.1 输入输出数据](#11)
-
-- [2. 推理环境准备](#2)
-
-- [3. 快速上手](#3)
-
-  - [3.1 获取源码](#31)
-  - [3.2 准备数据集](#32)
-  - [3.3 模型推理](#33)
-
-- [4. 模型推理性能&精度](#4) 
-
-  ******
+- [TOOD模型-推理指导](#tood模型-推理指导)
+- [1. 概述](#1-概述)
+  - [1.1 输入输出数据](#11-输入输出数据)
+- [2. 推理环境准备](#2-推理环境准备)
+- [3. 快速上手](#3-快速上手)
+  - [3.1 获取源码](#31-获取源码)
+  - [3.2 准备数据集](#32-准备数据集)
+  - [3.3 模型推理](#33-模型推理)
+- [4. 模型推理性能\&精度](#4-模型推理性能精度)
 
   
 
@@ -241,18 +234,17 @@ TOOD 是一种任务对齐的一阶段目标检测模型。 单阶段目标检�
 
 2. 开始推理验证。
 
-    1.  使用ais-infer工具进行推理, ais-infer工具获取及使用方式请点击查看 [ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) 
+    1.  使用ais_bench工具进行推理, ais_bench工具获取及使用方式请点击查看 [ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) 
    
    2.  执行推理
 
         ```bash
         mkdir output
-        python ${ais_infer_path}/ais_infer.py --model tood.om --input data/coco/val2017_bin_1216_1216 --output output 
+        python -m ais_bench --model tood.om --input data/coco/val2017_bin_1216_1216 --output output 
         ```
 
         参数说明：
         
-        - ais-infer 路径
         - model：需要推理的 om 文件路径
         - input：数据集 bin 文件所在路径
         - output：推理结果保存的路径
@@ -260,7 +252,7 @@ TOOD 是一种任务对齐的一阶段目标检测模型。 单阶段目标检�
         运行后会在 output 文件夹下面得到推理结果
 
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3.  精度验证。
 
@@ -281,10 +273,10 @@ TOOD 是一种任务对齐的一阶段目标检测模型。 单阶段目标检�
 
    4.  性能验证。
    
-       可使用 ais_infer 推理工具的纯推理模式验证不同 om 模型的性能，参考命令如下:
+       可使用 ais_bench 推理工具的纯推理模式验证不同 om 模型的性能，参考命令如下:
 
        ```bash
-       python ${ais_infer_path}/ais_infer.py --model tood.om --loop=20 --output ./xingneng/
+       python -m ais_bench --model tood.om --loop=20 --output ./xingneng/
        ```
 
 

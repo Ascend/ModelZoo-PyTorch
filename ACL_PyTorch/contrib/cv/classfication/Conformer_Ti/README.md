@@ -1,11 +1,14 @@
 # Conformer_Ti模型-推理指导
 
--   [概述](#概述)
--   [推理环境准备](#推理环境准备)
--   [快速上手](#快速上手)
-	-   [准备数据集](#准备数据集)
-	-   [模型推理](#模型推理)
--   [模型推理性能精度](#模型推理性能和精度)
+- [Conformer_Ti模型-推理指导](#conformer_ti模型-推理指导)
+- [概述](#概述)
+  - [输入输出数据](#输入输出数据)
+  - [文件结构](#文件结构)
+- [推理环境准备](#推理环境准备)
+- [快速上手](#快速上手)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能和精度](#模型推理性能和精度)
 
 
 ******
@@ -268,16 +271,16 @@ Conformer_Ti
 
 2. 开始推理验证。
 
-​	1.  使用ais-infer工具进行推理。
+​	1.  使用ais_bench工具进行推理。
 
-​		AisBench推理工具，该工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。获取工具及使用方法		可以参考https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+​		ais_bench推理工具，该工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。获取工具及使用方法		可以参考https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
 
 
 
 ​	2.  执行推理。
 
 ```
-python3.7 ais_infer.py --model /location/conformer_ti_bs1.om --input /location/val_bin --output /location/out_bs1/ --batchsize 1 --outfmt TXT 
+python3.7 -m ais_bench --model /location/conformer_ti_bs1.om --input /location/val_bin --output /location/out_bs1/ --batchsize 1 --outfmt TXT 
 ```
 
 
@@ -290,7 +293,7 @@ python3.7 ais_infer.py --model /location/conformer_ti_bs1.om --input /location/v
 
 ​		**说明**
 
->第一个参数为ais-infer输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名
+>第一个参数为ais_bench输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名
 
 
 

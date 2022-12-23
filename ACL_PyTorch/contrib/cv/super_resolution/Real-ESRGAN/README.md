@@ -190,14 +190,14 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
 
 2. 开始推理验证。
 
-    1. 使用ais-infer工具进行推理。
+    1. 使用ais_bench工具进行推理。
 
-        ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+        ais_bench工具获取及使用方式请点击查看[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 
     2.  执行推理。
         ```shell
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --input ./prep_dataset_bin
+        python3 -m ais_bench --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --input ./prep_dataset_bin
         ```
           - 参数说明：
             - --model：om模型路径
@@ -225,7 +225,7 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
 
     4. 性能验证
         ```shell
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --outfmt BIN --loop 5
+        python3 -m ais_bench --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --outfmt BIN --loop 5
         ```
         - 参数说明：
           - --model：om模型路径

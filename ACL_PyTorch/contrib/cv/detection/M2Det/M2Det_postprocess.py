@@ -88,7 +88,7 @@ if __name__ == '__main__':
             img_width = int(temp[2])
             img_height = int(temp[3])
             img_size_dict[img_name] = (img_width, img_height, img_file_path)
-        # convert ais_infer result name to original bin_file name
+        # convert ais_bench result name to original bin_file name
     if args.is_ais_infer:
         name_dic = dict()
         with open(os.path.join(bin_path, "sumary.json"), 'r') as f:

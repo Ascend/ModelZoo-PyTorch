@@ -213,7 +213,7 @@
 
 2. 开始推理验证。
 
-   1. 使用ais_infer工具进行推理。ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+   1. 使用ais_bench工具进行推理。ais_bench工具获取及使用方式请点击查看 [ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
       ```
       pip install -v --force-reinstall 'git+https://gitee.com/ascend/tools.git#egg=aclruntime&subdirectory=ais-bench_workload/tool/ais_infer/backend'
       pip install -v --force-reinstall 'git+https://gitee.com/ascend/tools.git#egg=ais_bench&subdirectory=ais-bench_workload/tool/ais_infer'
@@ -240,7 +240,7 @@
         推理后的输出默认在当前目录result下。
     
         >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
 
     4. 精度验证。
 
@@ -271,10 +271,10 @@
 
     5. 性能验证。
 
-       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
        ```
-       python ${ais_infer_path}/ais_infer.py --model=3D-ResNets.om --loop=20 --batchsize=10
+       python -m ais_bench --model=3D-ResNets.om --loop=20 --batchsize=10
        ```
        - 参数说明：
             - --model：om模型的路径

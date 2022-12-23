@@ -198,15 +198,15 @@ PAMTRI是一种姿态感知多任务重新识别框架，它通过关键点、�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
       > `output` 路径根据用户需求自由设置，这里以 `output=./out` 为例说明
       ```shell
       # 针对query数据集进行推理
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
          --model "./PAMTRI_bs1.om" \
          --input "./prep_dataset_query" \
          --output ${output} \
@@ -217,7 +217,7 @@ PAMTRI是一种姿态感知多任务重新识别框架，它通过关键点、�
          --loop 1
 
       # 针对gallery数据集进行推理
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
          --model "./PAMTRI_bs1.om" \
          --input "./prep_dataset_gallery" \
          --output ${output} \
@@ -239,7 +239,7 @@ PAMTRI是一种姿态感知多任务重新识别框架，它通过关键点、�
 
          推理后的输出默认在 `--output` 文件夹下。
          > **说明：**
-         > 执行ais-infer工具请选择与运行环境架构相同的命令。
+         > 执行ais_bench工具请选择与运行环境架构相同的命令。
 
    3. 精度验证。
 
@@ -263,10 +263,10 @@ PAMTRI是一种姿态感知多任务重新识别框架，它通过关键点、�
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```shell
-        python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+        python -m ais_bench \
               --model ./PAMTRI_bs1.om \
               --input ./prep_dataset_query \
               --loop 20 \

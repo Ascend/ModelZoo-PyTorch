@@ -90,8 +90,8 @@ python3 ../Waveglow_preprocess.py -f ./test_files.txt -c ./config.json -o ./data
 > -c 模型配置json文件  
 > -o 前处理结果存放路径
 ### 四、 离线推理
-#### 1. ais_infer工具概述
-查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_infer工具安装
+#### 1. ais_bench工具概述
+查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_bench工具安装
 
 #### 2. 离线推理
 ```
@@ -104,16 +104,16 @@ npu-smi info
 # 执行离线推理
 rm -rf result/
 mkdir result
-sh ../Waveglow_inference.sh ./tools/ais-bench_workload/tool/ais_infer ./data/
+sh ../Waveglow_inference.sh  ./data/
 ```
 **参数说明：**
->第一个参数为ais_infer路径  
+>第一个参数为ais_bench路径  
 >第二个参数为前处理结果存放路径  
 
 
 ### 五、 后处理
 #### 1. 推理结果 
-执行Waveglow_postprocess.py脚本对ais_infer推理结果进行后处理，得到'.wav'音频文件
+执行Waveglow_postprocess.py脚本对ais_bench推理结果进行后处理，得到'.wav'音频文件
 ```
 rm -rf ./synwavs
 mkdir synwavs
@@ -124,9 +124,9 @@ python3 ../Waveglow_postprocess.py -f ./result/ -o ./synwavs/
 > -o 后处理结果存放路径  
 
 #### 2. 性能数据
-使用ais_infer工具获得性能数据：
+使用ais_bench工具获得性能数据：
 ```
-python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model "./waveglow.om" --output "./output/" --outfmt BIN --dymDims mel:1,80,832 --batchsize 1
+python3 -m ais_bench --model "./waveglow.om" --output "./output/" --outfmt BIN --dymDims mel:1,80,832 --batchsize 1
 ```
 Interface throughput Rate:0.59fps，即是batch1 310P单卡吞吐率  
 

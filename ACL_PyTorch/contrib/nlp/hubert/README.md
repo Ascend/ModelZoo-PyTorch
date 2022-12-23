@@ -116,11 +116,12 @@ pre_data_label_save_path label：保存位置 ./pre_data/test-clean/label/
 
 ###  五、离线推理
 
-1.准备 ais_infer 推理工具
-查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件：
+1.准备 ais_bench 推理工具
+查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件：
 
 ```bash
-pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+pip3 install ./ais_bench-{version}-py3-none-any.whl
 ```
 
 2.推理时，使用 npu-smi info 命令查看 device 是否在运行其它推理任务，提前确保 device 空闲
@@ -128,11 +129,9 @@ pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
 ```bash
 # 创建文件夹，存放推理结果文件
 mkdir -p ./out_data/test-clean
-python3.7 ${ais_infer_path}/ais_infer.py --model ./hubert.om --input "./pre_data/test-clean/source/" --output "./out_data/test-clean/"
+python3.7 -m ais_bench --model ./hubert.om --input "./pre_data/test-clean/source/" --output "./out_data/test-clean/"
 ```
 参数说明：
-
-${ais_infer_path}/ais_infer.py为ais_infer工具脚本路径
 
 --model：om 模型路径
 
@@ -158,10 +157,10 @@ python3.7 hubert_postprocess.py --model_path ./data/pt/hubert_large_ll60k_finetu
 
 --res_file_path：表示输出精度数据所在的文件名
 
-4.性能测试 采用ais_infer纯推理模式：
+4.性能测试 采用ais_bench纯推理模式：
 
 ```bash
-python3.7 ${ais_infer_path}/ais_infer.py --model ./hubert.om --loop=50 
+python3.7 -m ais_bench --model ./hubert.om --loop=50 
 ```
 
 推理性能吞吐率在“throughput”日志中显示。

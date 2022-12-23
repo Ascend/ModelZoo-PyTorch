@@ -200,15 +200,15 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
       ```shell
       bs=1
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
           --model ./kge_onnx_head.om \
           --input "./bin-bs1/head/pos,./bin-bs1/head/neg" \
           --output ./RotatEout/head \
@@ -216,7 +216,7 @@
           --outfmt NPY \
           --batchsize $bs
 
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
           --model ./kge_onnx_tail.om \
           --input "./bin-bs1/tail/pos,./bin-bs1/tail/neg" \
           --output ./RotatEout/tail \
@@ -231,7 +231,7 @@
         - --outfmt：推理结果保存格式
 
         >**说明：**
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -250,16 +250,16 @@
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```shell
       bs=1
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
           --model ./kge_onnx_head.om \
           --loop=20 \
           --batchsize $bs
 
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
           --model ./kge_onnx_tail.om \
           --loop=20 \
           --batchsize $bs

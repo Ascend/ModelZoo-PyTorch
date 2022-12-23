@@ -185,16 +185,16 @@
         
         运行成功后生成OM模型文件。
 
-4. 使用ais-infer工具进行推理
+4. 使用ais_bench工具进行推理
 
-   安装过程可参考：[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+   安装过程可参考：[ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 5. 执行推理
 
    ```shell
    # 以bs1模型推理为例
    mkdir -p ./output_data/bs1
-   python3 ais_infer.py --model ./bert_base_chinese_bs1.om --input ./input_data/input_ids,./input_data/attention_mask,./input_data/token_type_ids --output ./output_data/bs1 --batchsize 1 --device 1
+   python3 -m ais_bench --model ./bert_base_chinese_bs1.om --input ./input_data/input_ids,./input_data/attention_mask,./input_data/token_type_ids --output ./output_data/bs1 --batchsize 1 --device 1
    ```
 
 6. 精度验证

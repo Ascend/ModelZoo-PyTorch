@@ -207,15 +207,15 @@
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
       ```
       mkdir result
-      python3 ${ais_infer_path}/ais_infer.py --model=bmn_bs1.om  --batchsize=1 \
+      python3 -m ais_bench --model=bmn_bs1.om  --batchsize=1 \
       --input ${save_dir} --output result --output_dirname result_bs1
       ```
       
@@ -239,10 +239,10 @@
    
       - --result_dir：推理结果所在路径，例如本文档中应为result/result_bs1。
     
-4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
   
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=bmn_bs${bs}.om --loop=50 --batchsize=${bs}
+      python3 -m ais_bench --model=bmn_bs${bs}.om --loop=50 --batchsize=${bs}
       ```
       
       参数说明：

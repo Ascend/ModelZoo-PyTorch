@@ -274,15 +274,15 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
    b.  执行推理。
 
       ```
-      python3.7  ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./tsm_nl_bs1.om --input ./mmaction2/data/kinetics400/out_bin_1/ --output ./out/out_1/ --outfmt TXT --batchsize 1  
+      python3.7  -m ais_b ench --model ./tsm_nl_bs1.om --input ./mmaction2/data/kinetics400/out_bin_1/ --output ./out/out_1/ --outfmt TXT --batchsize 1  
       ```
 
       -   参数说明：
@@ -295,7 +295,7 @@ Nonlocal模型的作用即为了有效捕捉序列中各个元素间的依赖关
       推理后的输出默认在当前目录./out/out_1下。推理之后将out/out_1/xxx/sumary.json删除。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 

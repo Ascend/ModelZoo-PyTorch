@@ -134,22 +134,24 @@ python shiftvit_preprocess.py --data-root /path/to/imagenet/ --save-dir shiftvit
 ## 5. 离线推理
 
 ### 5.1 准备推理工具
-推理工具使用ais_infer，须自己拉取源码，打包并安装
+推理工具使用ais_bench，须自己拉取源码，打包并安装
 ```shell
 # 指定CANN包的安装路径
 export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
 
 # 获取源码
 git clone https://gitee.com/ascend/tools.git
-cd tools/ais-bench_workload/tool/ais_infer/backend/
+cd tools/ais-bench_workload/tool/ais_infer/
 
-# 打包，会在当前目录下生成 aclruntime-xxx.whl
-pip3.7 wheel ./
+# 打包，会在当前目录下生成 aclruntime-xxx.whl,ais_bench-xxx.whl
+pip3  wheel ./backend/ -v
+pip3  wheel ./ -v
 
 # 安装
-pip3 install --force-reinstall aclruntime-xxx.whl
+pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
+pip3 install ./ais_bench-{version}-py3-none-any.whl
 ```
-参考：[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
+参考：[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
 
 
 ### 5.2 离线推理
@@ -167,7 +169,7 @@ pip3 install --force-reinstall aclruntime-xxx.whl
 - step2 对预处理后的数据进行推理
 
     ```shell
-    python3 ais_infer.py --model /path/to/shiftvit/shiftvit2-bs${bs}.om --input path/to/shiftvit/val-bin --output path/to/shiftvit/val-out/
+    python3 -m ais_bench --model /path/to/shiftvit/shiftvit2-bs${bs}.om --input path/to/shiftvit/val-bin --output path/to/shiftvit/val-out/
     ```
     参数说明:
     - --model, OM模型路径
@@ -180,16 +182,16 @@ pip3 install --force-reinstall aclruntime-xxx.whl
 python shiftvit_postprocess.py --result-dir shiftvit/val-out/2022_08_09-20_37_12/ --gt-path shiftvit/val-gt.npy
 ```
 参数说明：
-- --result-dir, 存放推理结果的目录路径，需注意ais_infer工具会在推理时根据推理开始时间创建子目录
+- --result-dir, 存放推理结果的目录路径，需注意ais_bench工具会在推理时根据推理开始时间创建子目录
 - --gt-path, 预处理生成的图片到标注的映射文件路径
 
 
 ### 5.4 性能验证
-用 ais_infer 工具进行纯推理100次，然后根据平均耗时计算出吞吐率
+用 ais_bench 工具进行纯推理100次，然后根据平均耗时计算出吞吐率
 ```shell
 cd tools/ais-bench_workload/tool/ais_infer/
 mkdir tmp_out   # 提前创建临时目录用于存放纯推理输出
-python3 ais_infer.py --model /path/to/shiftvit/shiftvit2-bs${bs}.om --output tmp_out --batchsize ${bs} --loop 100
+python3 -m ais_bench --model /path/to/shiftvit/shiftvit2-bs${bs}.om --output tmp_out --batchsize ${bs} --loop 100
 rm -r tmp_out   # 删除临时目录
 ```
 说明：

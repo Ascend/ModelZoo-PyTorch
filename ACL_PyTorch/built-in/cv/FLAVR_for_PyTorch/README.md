@@ -219,15 +219,15 @@ FLAVR使用3D卷积来学习帧间运动信息，是一种无光流估计的单�
 
 2. 开始推理验证（以bs=8为例）。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais_bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
       ```
       mkdir result
-      python3 ${ais_infer_path}/ais_infer.py --model=FLAVR_4x_bs8.om  --batchsize=8 \
+      python3 -m ais_bench --model=FLAVR_4x_bs8.om  --batchsize=8 \
       --input ${save_dir}/input_0,${save_dir}/input_1,.${save_dir}/input_2,${save_dir}/input_3 \
       --output result --output_dirname result_bs8
       ```
@@ -239,7 +239,7 @@ FLAVR使用3D卷积来学习帧间运动信息，是一种无光流估计的单�
       -   --input：输入数据所在路径。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
         
    3. 精度验证。
 
@@ -254,10 +254,10 @@ FLAVR使用3D卷积来学习帧间运动信息，是一种无光流估计的单�
       - --data_dir：原数据集所在路径。
       - --result_dir：推理结果所在路径。
    
-   4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+   4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
    
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=FLAVR_4x_bs${bs}.om --loop=50 --batchsize=${bs}
+      python3 -m ais_bench --model=FLAVR_4x_bs${bs}.om --loop=50 --batchsize=${bs}
       ```
       
       参数说明：

@@ -1,13 +1,14 @@
 # STGCN(ST-GCN) 模型推理指导
 
+- [STGCN(ST-GCN) 模型推理指导](#stgcnst-gcn-模型推理指导)
 - [概述](#概述)
-    - [输入输出数据](#输入输出数据)
+  - [输入输出数据](#输入输出数据)
 - [推理环境](#推理环境)
 - [快速上手](#快速上手)
-    - [获取源码](#获取源码)
-    - [准备数据集](#准备数据集)
-    - [模型转换](#模型转换)
-    - [推理验证](#推理验证)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型转换](#模型转换)
+  - [推理验证](#推理验证)
 - [性能&精度](#性能精度)
 
 ----
@@ -177,7 +178,7 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 
 ## 推理验证
 
-1. 该离线模型使用ais_infer作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
+1. 该离线模型使用ais_bench作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python -m ais_bench
         --model ./st_gcn_bs${bs}.om \
