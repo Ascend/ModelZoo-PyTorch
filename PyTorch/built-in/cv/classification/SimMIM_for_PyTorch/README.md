@@ -12,8 +12,7 @@
 
 ## 简述
 
-SimMIM最初在arxiv中描述，arxiv作为遮罩图像建模的简单框架。通过系统研究，我们发现每个组件的简单设计都显示出非常强大的表示学习性能：1）使用中等大小的遮罩补丁（例如，32）随机屏蔽输入图像，使文本前任务变得强大;2）通过直接回归预测RGB值的原始像素并不比复杂设计的斑块分类方法差;3）预测头可以像线性层一样轻，性能不会比重的更差。
-
+本文档介绍了SimMIM，一个用于掩蔽图像建模的简单框架。通过系统研究，我们发现每个组件的简单设计都显示出非常强大的表示学习性能：使用中等大小的遮罩补丁（例如，32）随机屏蔽输入图像，使文本前任务变得强大；通过直接回归预测RGB值的原始像素并不比复杂设计的斑块分类方法差；预测头可以像线性层一样轻，性能不会比重的更差。
 - 参考实现：
 
   ```
@@ -45,13 +44,12 @@ SimMIM最初在arxiv中描述，arxiv作为遮罩图像建模的简单框架。�
 
   **表 1**  版本配套表
 
-
-| 配套       | 版本                                                         |
-| ---------- | ------------------------------------------------------------ |
-| 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-| 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-| CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial |
-| PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
+    | 配套       | 版本                                                         |
+    | ---------- | ------------------------------------------------------------ |
+    | 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+    | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+    | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
+    | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
 - 环境准备指导。
 
