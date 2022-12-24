@@ -20,6 +20,17 @@ msnpureport -g error -d 5
 msnpureport -g error -d 6
 msnpureport -g error -d 7
 
+export ASCEND_SLOG_PRINT_TO_STDOUT=0
+export ASCEND_GLOBAL_LOG_LEVEL=3
+export PTCOPY_ENABLE=1
+export TASK_QUEUE_ENABLE=1
+export DYNAMIC_OP="ADD#MUL"
+export COMBINED_ENABLE=1
+export DYNAMIC_COMPILE_ENABLE=0
+export EXPERIMENTAL_DYNAMIC_PARTITION=0
+export ASCEND_GLOBAL_EVENT_ENABLE=0
+
+
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 path_lib=$(python3.7 -c """
@@ -43,4 +54,3 @@ echo ${path_lib}
 
 export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
 
-#echo ${LD_LIBRARY_PATH}
