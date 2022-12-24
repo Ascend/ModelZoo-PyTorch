@@ -159,7 +159,7 @@ def pth2onnx(model, dummy_input, output_file):
     model.eval()  
     input_names = ["input"]
     output_names = ['mel_out', 'dec_lens', 'dur_pred', 'pitch_pred', 'energy_pred']
-    torch.onnx.export(model, dummy_input, output_file, input_names=input_names, output_names=output_names, opset_version=11, verbose=False)
+    torch.onnx.export(model, dummy_input, output_file, dynamic_axes={'input': {0: 'bs'}}, input_names=input_names, output_names=output_names, opset_version=11, verbose=False)
 
 def main():
     """
@@ -172,10 +172,6 @@ def main():
     args, unk_args = parser.parse_known_args()
 
     torch.backends.cudnn.benchmark = args.cudnn_benchmark
-
-    # if args.output is not None:
-    #     Path(args.output).mkdir(parents=False, exist_ok=True)
-
 
     device = torch.device('cpu')
 
@@ -190,27 +186,11 @@ def main():
     else:
         generator = None
 
-    if not os.path.exists("./test/models"):
-        os.mkdir("./test/models")
-
     bs = args.batch_size
 
     text_padded = torch.LongTensor(bs, 200)
     text_padded.zero_()
-    pth2onnx(model=generator, dummy_input=text_padded, output_file=f"./test/models/FastPitch_bs{bs}.onnx")
-
-    # text_padded = torch.LongTensor(8, 200)
-    # text_padded.zero_()
-    # pth2onnx(model=generator, dummy_input=text_padded, output_file="./test/models/FastPitch_bs8.onnx")
-
-    # text_padded = torch.LongTensor(16, 200)
-    # text_padded.zero_()
-    # pth2onnx(model=generator, dummy_input=text_padded, output_file="./test/models/FastPitch_bs16.onnx")
-
-    # text_padded = torch.LongTensor(32, 200)
-    # text_padded.zero_()
-    # pth2onnx(model=generator, dummy_input=text_padded, output_file="./test/models/FastPitch_bs32.onnx")
-
+    pth2onnx(model=generator, dummy_input=text_padded, output_file=f"FastPitch.onnx")
 
 if __name__ == '__main__':
     main()
