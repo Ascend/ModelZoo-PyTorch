@@ -113,7 +113,7 @@ train_data
 
 ## 方法二. 下载数据集并自行处理
 ### 1. 分词处理
-1. 下载数据集并放于工程根目录下，以en_ro数据集为例
+1. 下载原始数据集并放于在源码包根目录下新建的“src_data/”目录下，以en_ro数据集为例。
 2. 下载并安装SPM [here](https://github.com/google/sentencepiece)
 ```bash
 SPM=/path/to/sentencepiece/build/src/spm_encode
@@ -137,8 +137,8 @@ ${SPM} --model=${MODEL} < ${DATA}/${TEST}.${TGT} > ${DATA}/${TEST}.spm.${TGT} &
 
 ```bash
 DICT=dict.txt
-DATA=/path/data/
-DEST=/path/dest/
+DATA=/path/data/   //用户可以根据实际情况进行修改， 如 DATA=./src_data/ （原始数据集所在路径）
+DEST=/path/dest/   //用户可以根据实际情况进行修改， 如 DEST=./train_data/ （处理后的数据集所在路径）
 NAME=en_ro
 TRAIN=train
 TEST=test
