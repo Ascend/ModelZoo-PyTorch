@@ -198,7 +198,7 @@ FaceBoxes的新型人脸检测器，它在速度和准确性方面都有卓越�
 
 2. 开始推理验证。
 
-   1. 安装ais_bench推理工具。请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。  
+   1. 安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。  
 
    2. 创建推理结果保存的文件夹。
 
@@ -220,7 +220,7 @@ FaceBoxes的新型人脸检测器，它在速度和准确性方面都有卓越�
            -   --batchsize : 批大小。
 
       推理结果保存在result/dumpout_bs1下面，并且也会输出性能数据。
-	  > 说明： 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
+	  > 说明： 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
 
    4. 精度验证。

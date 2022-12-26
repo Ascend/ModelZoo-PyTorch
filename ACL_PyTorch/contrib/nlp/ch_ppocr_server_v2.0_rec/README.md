@@ -218,7 +218,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
 
    a.  安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 
    b.  执行推理。
@@ -240,7 +240,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
       推理完成后在当前`ch_ppocr_server_v2.0_rec`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
 
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
       在`ch_ppocr_server_v2.0_rec`工作目录下执行后处理脚本`ch_server_rec_postprocess.py`，参考命令如下：

@@ -215,7 +215,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
    1. 安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 
    2. 执行推理。
@@ -235,7 +235,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
       推理后的输出默认在当前目录result下。
       并且会输出性能数据
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。执行其他bs只需修改batchsize参数。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。执行其他bs只需修改batchsize参数。
 
 
     3. 精度验证。

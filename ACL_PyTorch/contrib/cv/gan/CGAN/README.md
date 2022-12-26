@@ -243,7 +243,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
    a.  安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    b.  执行推理。
 
@@ -264,7 +264,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
       推理后的输出默认在当前目录下。根据推理时间生成结果文件夹。例如：/2022_09_04-17_57_51
 
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

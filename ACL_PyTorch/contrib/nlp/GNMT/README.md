@@ -219,11 +219,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 2. 开始推理验证。
 
     1. 安装ais_bench推理工具。  
-        查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件。
-        ```
-        pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-        pip3 install ./ais_bench-{version}-py3-none-any.whl
-        ```
+       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
     2. 执行推理。
         ```
@@ -244,7 +240,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         推理后的输出默认在当前目录out_data下。
 
         >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
     3. 精度验证。
 

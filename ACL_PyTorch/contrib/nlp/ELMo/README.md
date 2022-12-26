@@ -238,7 +238,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
    1.  安装ais_bench推理工具。
 
-       请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2.  执行推理。
 
@@ -258,7 +258,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
       推理完成后在当前工作目录生成推理结果，命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
 
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3.  精度对比。
 

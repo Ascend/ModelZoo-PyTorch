@@ -117,12 +117,7 @@ pre_data_label_save_path label：保存位置 ./pre_data/test-clean/label/
 ###  五、离线推理
 
 1.准备 ais_bench 推理工具
-查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件：
-
-```bash
-pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-pip3 install ./ais_bench-{version}-py3-none-any.whl
-```
+  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
 2.推理时，使用 npu-smi info 命令查看 device 是否在运行其它推理任务，提前确保 device 空闲
 

@@ -283,7 +283,7 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
 
    a.  安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 
    b.  执行推理。

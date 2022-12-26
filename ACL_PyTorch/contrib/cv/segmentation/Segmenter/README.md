@@ -131,20 +131,7 @@ python3 segmenter_preprocess.py --cfg-path ${cfg-path} --data-root ${data-root} 
 
 ### 5.1 准备推理工具
 推理工具使用ais_bench，须自己拉取源码，打包并安装
-```shell
-# 指定CANN包的安装路径
-export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-# 获取源码
-git clone https://gitee.com/ascend/tools.git
-cd tools/ais-bench_workload/tool/ais_infer/
-# 打包
-pip3 wheel ./backend/ -v
-pip3 wheel ./ -v
-# 安装
-pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-pip3 install ./ais_bench-{version}-py3-none-any.whl
-```
-参考：[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
 
 ### 5.2 离线推理

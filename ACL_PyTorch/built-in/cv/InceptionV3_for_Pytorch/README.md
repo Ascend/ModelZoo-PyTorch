@@ -156,7 +156,7 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
 ## 推理验证
 
 1. 对数据集推理  
-    该离线模型使用ais_bench作为推理工具，请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。完成安装后，执行以下命令预处理后的数据进行推理。
+    该离线模型使用ais_bench作为推理工具，请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python -m ais_bench \
         --model inceptionv3_bs${bs}.om \

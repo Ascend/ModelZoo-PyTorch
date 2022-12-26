@@ -216,7 +216,7 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
 2. 开始推理验证。
 
     1. 安装ais_bench推理工具。  
-        请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
     2. 推理时，使用 npu-smi info 命令查看 device 是否在运行其它推理任务，提前确保 device 空闲
         ```
@@ -236,7 +236,7 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
         --output：输出文件存放路径 
 
         >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
     3. 精度验证。
 

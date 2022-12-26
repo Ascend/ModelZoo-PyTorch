@@ -180,7 +180,7 @@ CNN_Transformer是学习用于解决自监督任务的基本语音单元。对�
 
    1. 安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2. 创建推理输出文件夹
 
@@ -206,7 +206,7 @@ CNN_Transformer是学习用于解决自监督任务的基本语音单元。对�
          推理完成后默认在--output指定目录下生成推理结果。其目录命名格式为xxxx_xx_xx-xx_xx_xx(年_月_日-时_分_秒)，如2022_11_14-16_13_58。
 
          >**说明：** 
-         >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
+         >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

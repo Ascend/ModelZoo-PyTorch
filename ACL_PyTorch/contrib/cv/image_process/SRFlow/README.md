@@ -219,15 +219,7 @@ SRFlow是一种基于归一化流的超分辨率方法，具备比GAN更强的�
 
    a.  安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  ，推理工具安装：
-      ```
-        git clone https://gitee.com/ascend/tools.git
-        cd tools/ais-bench_workload/tool/ais_infer/
-        pip3 wheel ./backend/ -v
-        pip3 wheel ./ -v
-        pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-        pip3 install ./ais_bench-{version}-py3-none-any.whl
-      ```
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
    b.  执行推理。
 

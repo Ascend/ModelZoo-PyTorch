@@ -122,17 +122,10 @@ python3.7 PointRend_preprocess.py /root/datasets/cityscapes ./preprocess_bin
 
 - **2.3 性能验证**
 
-    [获取ais_bench工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+    获取ais_bench工具 
 
-    ```
-    git clone https://gitee.com/ascend/tools.git 
-    pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-    pip3 install ./ais_bench-{version}-py3-none-any.whl
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
-    ```
-
-
-    ```
 
     推理
     python3  -m ais_bench  --model ./PointRend.om  --input ./preprocess_bin --output ./ --outfmt BIN --batchsize 1

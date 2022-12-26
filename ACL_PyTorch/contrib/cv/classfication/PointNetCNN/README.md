@@ -233,7 +233,7 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
 
    a.  安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 
    b.  执行推理。
@@ -255,7 +255,7 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
       输出结果保存在当前目录ais_result/X(X为执行推理的时间)文件夹下。
 
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

@@ -156,7 +156,7 @@ python3.7 retinaface_pth_preprocess.py
 [ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)工具为华为自研的模型推理工具，
 支持om模型的离线推理，能够迅速统计出模型在Ascend310P3上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程.
 
-参考使用文档，复制 ais_infer 目录到当前工作路径下，然后编译安装 whl 文件。
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 1.设置环境变量

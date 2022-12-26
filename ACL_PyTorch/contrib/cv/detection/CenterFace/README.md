@@ -201,7 +201,7 @@
       推理后的输出在当前目录result下。
 
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 处理目录result/dumpout_bs1下的bin文件，将该目录下的文件分类别存放，以便于后处理。
 

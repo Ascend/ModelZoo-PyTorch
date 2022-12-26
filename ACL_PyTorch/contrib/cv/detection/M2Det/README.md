@@ -15,7 +15,7 @@
 		- [4.2 数据集预处理](#42-数据集预处理)
 		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
 	- [5 离线推理](#5-离线推理)
-		- [5.1 获取ais_bench工具](#51-获取ais_bench工具)
+		- [5.1 获取ais\_bench工具](#51-获取ais_bench工具)
 		- [5.2 离线推理](#52-离线推理)
 	- [6 精度对比](#6-精度对比)
 		- [6.1 离线推理Acc精度统计](#61-离线推理acc精度统计)
@@ -233,13 +233,7 @@ python3.7 gen_dataset_info.py jpg ${coco_imgs_path}/val2014 coco_images.info
 
 ### 5.1 获取ais_bench工具
 
-[获取ais_bench工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-将工具编译后的压缩包放置在当前目录；
-
-解压工具包，安装工具压缩包中的whl文件；
-
-pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-pip3 install ./ais_bench-{version}-py3-none-any.whl
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
 ### 5.2 离线推理
 1.设置环境变量

@@ -231,7 +231,7 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
    1. 安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
 
@@ -252,7 +252,7 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
       推理后的输出在推理结果文件路径下的日期+时间的子文件夹(./resultAbs1/2022_10_28-09_21_37/和./resultBbs1/2022_10_28-09_21_47/)。
    
       >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

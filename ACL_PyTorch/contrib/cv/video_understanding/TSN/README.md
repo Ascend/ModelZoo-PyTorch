@@ -359,22 +359,8 @@ yapf                  0.32.0
 
    1. 安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
-      在已下载的源码包根目录下, 可参考下列命令安装：
-
-      ```
-      export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest  # 指定CANN包的安装路径
-      
-      git clone https://gitee.com/ascend/tools.git  # 获取源码
-      cd tools/ais-bench_workload/tool/ais_infer/  # 打包
-      
-      pip3  wheel ./backend/ -v
-      pip3  wheel ./ -v
-      
-      pip3 install --force-reinstall ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl  # 安装
-      pip3 install --force-reinstall ./ais_bench-{version}-py3-none-any.whl
-      ```
 
    2. 执行推理。
 
@@ -409,7 +395,7 @@ yapf                  0.32.0
 
           **说明：** 
 
-         > 执行ais_bench工具请选择与运 行环境架构相同的命令。参数详情请参见：https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+         > 执行ais_bench工具请选择与运 行环境架构相同的命令。参数详情请参见：--help命令。
 
       2. 精度测试
 

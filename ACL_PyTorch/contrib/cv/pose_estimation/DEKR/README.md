@@ -249,8 +249,7 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
    a.  使用 ais_bench 工具进行推理。
 
-   - ais_bench的获取方式和使用方法：[参考链接](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-   
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
    b.  执行推理。
 

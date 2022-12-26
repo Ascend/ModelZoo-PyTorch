@@ -180,7 +180,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
    a.  安装ais_bench推理工具。
 
-      请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 
    b.  执行推理。
@@ -200,7 +200,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 		...
 
       >**说明：** 
-      >执行ais)bench工具请选择与运行环境架构相同的命令。参数详情请参见。
+      >执行ais)bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

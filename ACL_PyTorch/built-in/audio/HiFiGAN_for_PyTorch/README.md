@@ -155,7 +155,7 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
 ### 2 开始推理验证
 
 1. 安装`ais_bench`推理工具  
-   请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 2. 执行推理  
    运行`om_val.py`推理OM模型，合成语音默认保存在`output/wavs`文件夹下。

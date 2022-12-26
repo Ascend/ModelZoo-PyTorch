@@ -54,16 +54,7 @@ mv ./Pytorch-UNet ./Pytorch_UNet
 
 ### 1.3 [获取ais_bench工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload)  
 
-```
-git clone https://gitee.com/ascend/tools.git
-cd tools/ais-bench_workload/tool/ais_infer/
-pip3 wheel ./backend/ -v
-pip3 wheel ./ -v
-pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-pip3 install ./ais_bench-{version}-py3-none-any.whl
-```
-
-如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
 
 ## 2准备数据集   
 
