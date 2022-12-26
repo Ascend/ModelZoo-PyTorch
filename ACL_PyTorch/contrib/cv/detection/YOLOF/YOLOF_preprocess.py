@@ -31,7 +31,6 @@ def gen_input_bin(file_batches, batch):
     image_meta_bag = []
     for file in file_batches[batch]:
         i = i + 1
-        print("batch", batch, file, "===", i)
         src = Image.open(os.path.join(flags.image_src_path, file)).convert("RGB")
         ori_shape = (src.size[1], src.size[0])
         image = src.resize((height, width), 2)
