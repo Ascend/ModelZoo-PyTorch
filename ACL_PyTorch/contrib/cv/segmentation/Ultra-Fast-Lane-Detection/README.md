@@ -205,25 +205,12 @@
 
 1. 准备推理工具  
 
-    本推理项目使用 [ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
+    本推理项目使用ais_bench作为推理工具，须自己打包并安装。
     ```shell
     # 指定CANN包的安装路径
     export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-
-    # 获取推理工具源码
-    git clone https://gitee.com/ascend/tools.git
-    # cd tools/ais-bench_workload/tool/ais_infer/backend/
-    cp -r tools/ais-bench_workload/tool/ais_infer .
-
-    # 打包
-    cd ais_infer/
-    pip3  wheel ./backend/ -v   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    pip3  wheel ./ -v           # 会在当前目录下生成 ais_bench-xxx.whl
-    # 安装
-    pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-    pip3 install ./ais_bench-{version}-py3-none-any.whl
-    cd ../..
     ```
+    请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)    
 
 2. 离线推理  
 

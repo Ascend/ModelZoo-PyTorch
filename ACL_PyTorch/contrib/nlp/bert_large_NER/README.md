@@ -231,26 +231,11 @@
     
  2.  使用om模型进行推理验证。
    
-      1. 准备推理工具。
+     a. 准备推理工具ais_bench。
       
-      
-     a. 下载推理工具-ais_bench
-       ```
-       git clone https://gitee.com/ascend/tools.git
-       ```
+       请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
      
-     b. 编译、安装推理工具
-       ```
-       cd ./tools/ais-bench_workload/tool/ais_infer/
-       pip3  wheel ./backend/ -v #编译 要根据自己的python版本
-       pip3  wheel ./ -v
-       ls
-       pip install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-       pip3 install ./ais_bench-{version}-py3-none-any.whl
-       cd ../../../../..
-       ```
-     
-     1. 执行推理
+     b. 执行推理
       
        1. 性能测试
         
@@ -288,7 +273,7 @@
           
             执行结束输出保存在 ./bert-large-OUT/bs${bs}下。
       
-    3. 精度验证
+    c. 精度验证
     
        ```
        # 调用脚本将推理生成数据与数据集标签比对，可以获得Accuracy数据，结果保存在result.json中

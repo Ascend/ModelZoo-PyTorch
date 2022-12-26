@@ -226,19 +226,7 @@ EAST是一个高效准确的场景文本检测器，通过两步进行文本检�
     # 指定CANN包的安装路径
     export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
 
-    # 获取推理工具源码
-    git clone https://gitee.com/ascend/tools.git ascend_tools/
-    cp -r ascend_tools/ais-bench_workload/tool/ais_infer .
-
-    # 打包
-    cd ais_infer/
-    pip3  wheel ./backend/ -v   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    pip3  wheel ./ -v           # 会在当前目录下生成 ais_bench-xxx.whl
-    
-    # 安装
-    pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-    pip3 install ./ais_bench-{version}-py3-none-any.whl
-    cd ../..
+    请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
     ```
 
 2. 离线推理  

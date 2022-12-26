@@ -223,18 +223,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 2.安装ais_bench工具
 
-```sh
-# 将工具的相关代码下载到本地
-git clone https://gitee.com/ascend/tools.git
-# 进入ais-bench/tool/ais_infer目录，执行如下命令进行编译，生成推理后端whl包
-cd tool/ais_infer/
-pip3  wheel ./backend/ -v
-pip3  wheel ./ -v
-# 在运行设备上执行如下命令，进行安装
-pip3 install ./aclruntime-{version}-cp37-cp37m-linux_xxx.whl
-pip3 install ./ais_bench-{version}-py3-none-any.whl
-# 如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
-```
+请点击本链接进行安装ais_bench推理工具，以及查看具体使用方法(https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)  
 
 3.建立软链接
 
