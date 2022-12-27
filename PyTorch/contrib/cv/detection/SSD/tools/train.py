@@ -22,6 +22,8 @@ import warnings
 
 import mmcv
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
 from mmcv.utils import get_git_hash
