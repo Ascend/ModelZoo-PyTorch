@@ -124,7 +124,7 @@ python3 ../Waveglow_postprocess.py -f ./result/ -o ./synwavs/
 > -o 后处理结果存放路径  
 
 #### 2. 性能数据
-使用ais_bench工具获得性能数据：
+使用ais_bench推理工具获得性能数据：
 ```
 python3 -m ais_bench --model "./waveglow.om" --output "./output/" --outfmt BIN --dymDims mel:1,80,832 --batchsize 1
 ```

@@ -156,8 +156,8 @@ pip install -r requirements.txt
 
 #### 3.4.1 准备推理工具
 
-+ 推理工具使用ais_bench，须自己拉取源码，打包并安装。
-  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
++ 推理工具使用ais_bench。
+  安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 #### 3.4.2 执行推理
 1. 需进入 ais_infer.py 所在目录执行以下代码

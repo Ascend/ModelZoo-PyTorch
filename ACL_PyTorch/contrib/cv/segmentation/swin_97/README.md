@@ -207,7 +207,7 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
 
 2. 离线推理  
 
-    使用ais_bench工具将预处理后的数据传入模型并执行推理：
+    使用ais_bench推理工具将预处理后的数据传入模型并执行推理：
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh

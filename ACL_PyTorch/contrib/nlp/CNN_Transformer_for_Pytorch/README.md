@@ -218,17 +218,17 @@ CNN_Transformer是学习用于解决自监督任务的基本语音单元。对�
       ```
 
       - 参数说明：
-        - --bin_file_path：ais_bench工具推理结果存放路径；
+        - --bin_file_path：ais_bench推理工具推理结果存放路径；
         - --res_save_path：后处理结果存放txt文件;
         - --which_dataset：精度统计所用的数据集，参看CNN_Transformer_Preprocess.py的参数说明；
       
-      注：--bin_file_path指定的result_bs16/2022_09_01-18_51_23/路径不是固定，具体路径为ais_bench工具推理命令中，--output指定目录下的生成推理结果所在路径
+      注：--bin_file_path指定的result_bs16/2022_09_01-18_51_23/路径不是固定，具体路径为ais_bench推理工具推理命令中，--output指定目录下的生成推理结果所在路径
 
       精度验证完成后，在--res_save_path指定目录下生成后处理结果存放的txt文件，同时在txt文件的同级目录下生成精度统计文件wer.txt 
 
    4. 性能验证。
 
-      由于TensorRT无法运行wav2vec2-base-960h.onnx模型，所以性能测试以ais_bench工具得到的om推理性能和pytorch在线推理性能作比较。
+      由于TensorRT无法运行wav2vec2-base-960h.onnx模型，所以性能测试以ais_bench推理工具得到的om推理性能和pytorch在线推理性能作比较。
 
       在GPU环境上运行`CNN_Transformer_pth_online_infer.py`脚本，得到pytorch在线推理性能。
 

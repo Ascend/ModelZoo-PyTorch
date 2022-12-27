@@ -258,7 +258,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
     4. 性能验证。
 
-        使用ais_bench工具进行纯推理，获得性能数据。
+        使用ais_bench推理工具进行纯推理，获得性能数据。
         ```
         python3.7 -m ais_bench \
             --model=./gnmt_msl30_sim.om \

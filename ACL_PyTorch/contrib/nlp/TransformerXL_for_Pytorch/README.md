@@ -238,7 +238,7 @@ Transformer-XL是一个自然语言处理框架，在Transformer的基础上提�
 
 2. 模型推理
 
-   利用ais_bench工具进行推理，ais_bench工具安装参考该[链接](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。由于该模型的特殊性，无法直接使用ais_infer.py文件进行推理，故调用aclruntime的接口进行推理验证。
+   利用ais_bench推理工具进行推理，ais_bench推理工具安装参考该[链接](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。由于该模型的特殊性，无法直接使用ais_infer.py文件进行推理，故调用aclruntime的接口进行推理验证。
 
    执行run_enwik8_base.sh脚本进行性能和精度的推理
 

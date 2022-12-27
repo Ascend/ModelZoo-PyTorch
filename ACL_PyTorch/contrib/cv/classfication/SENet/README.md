@@ -239,7 +239,7 @@
       python3 SE_ResNet50_postprocess.py ${output_path}/xxxx_xx_xx-xx_xx_xx {data_path}/imageNet/val_label.txt ./ result_bs${batchsize}.json
       ```
       
-      第一个参考为ais_bench工具推理结果路径，第二个参数为标签文件val_label.txt路径，第三个参数为精度结果文件保存路径，第四个参数为不同batchsize精度结果文件名称。
+      第一个参考为ais_bench推理工具推理结果路径，第二个参数为标签文件val_label.txt路径，第三个参数为精度结果文件保存路径，第四个参数为不同batchsize精度结果文件名称。
 
    d.  性能验证。
 

@@ -134,8 +134,8 @@ python shiftvit_preprocess.py --data-root /path/to/imagenet/ --save-dir shiftvit
 ## 5. 离线推理
 
 ### 5.1 准备推理工具
-推理工具使用ais_bench，须自己拉取源码，打包并安装。  
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
+推理工具使用ais_bench。  
+安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 ### 5.2 离线推理
 
@@ -165,7 +165,7 @@ python shiftvit_preprocess.py --data-root /path/to/imagenet/ --save-dir shiftvit
 python shiftvit_postprocess.py --result-dir shiftvit/val-out/2022_08_09-20_37_12/ --gt-path shiftvit/val-gt.npy
 ```
 参数说明：
-- --result-dir, 存放推理结果的目录路径，需注意ais_bench工具会在推理时根据推理开始时间创建子目录
+- --result-dir, 存放推理结果的目录路径，需注意ais_bench推理工具会在推理时根据推理开始时间创建子目录
 - --gt-path, 预处理生成的图片到标注的映射文件路径
 
 

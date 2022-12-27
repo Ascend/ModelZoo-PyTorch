@@ -228,7 +228,7 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
 
 a.  安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
-执行ais_bench工具推理命令，如下：
+执行ais_bench推理工具推理命令，如下：
 
    ```
     python3 -m ais_bench \
@@ -273,7 +273,7 @@ ${output_path}为推理结果的保存路径。
 
 c.  性能验证。
 
-可以使用ais_bench工具的纯推理模式验证模型性能，命令如下。
+可以使用ais_bench推理工具的纯推理模式验证模型性能，命令如下。
 
    ```
     python3 -m ais_bench \

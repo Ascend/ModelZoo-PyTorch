@@ -13,7 +13,7 @@
 		- [4.1 数据集获取](#41-数据集获取)
 		- [4.2 数据集预处理](#42-数据集预处理)
 	- [5 离线推理](#5-离线推理)
-		- [5.1 ais\_bench工具概述](#51-ais_bench工具概述)
+		- [5.1 ais\_bench工具概述](#51-ais_bench推理工具概述)
 		- [5.2 离线推理](#52-离线推理)
 	- [6 精度对比](#6-精度对比)
 		- [6.1 离线推理精度统计](#61-离线推理精度统计)
@@ -147,13 +147,13 @@ python3.7 retinaface_pth_preprocess.py
 
 ## 5 离线推理
 
--   **[ais_bench工具概述](#51-ais_bench工具概述)**  
+-   **[ais_bench推理工具概述](#51-ais_bench推理工具概述)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 ais_bench工具概述
+### 5.1 ais_bench推理工具概述
 
-ais_bench工具为华为自研的模型推理工具。支持om模型的离线推理，能够迅速统计出模型在Ascend310P3上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程.
+ais_bench推理工具为华为自研的模型推理工具。支持om模型的离线推理，能够迅速统计出模型在Ascend310P3上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程.
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
@@ -193,7 +193,7 @@ python3.7 retinaface_pth_postprocess.py --prediction-folder ./result/{timestamp}
 
 参数说明：
 
-- `--prediction-folder`：ais_bench工具的推理结果，默认为 ./result/{timestamp}
+- `--prediction-folder`：ais_bench推理工具的推理结果，默认为 ./result/{timestamp}
 - `--info-folder`：验证集预处理时生成的info信息，默认为 ./widerface/prep_info
 - `--output-folder`：处理结果的保存位置，默认为 ./widerface_result
 - `--confidence-threshold`：置信度阈值，默认为 0.02

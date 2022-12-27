@@ -229,7 +229,7 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
       ```
 
       -   参数说明：
-          -   --ais_path:ais_bench工具推理文件路径 
+          -   --ais_path:ais_bench推理工具推理文件路径 
           -   --img_path:前处理的图片文件路径 
           -   --mask_path:前处理的mask文件路径 
           -   --out_put:ais_infer推理数据输出路径

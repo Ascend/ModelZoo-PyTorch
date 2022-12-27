@@ -207,9 +207,9 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./efficientnet-B1_prep_bin.info
 
 ## 5 离线推理
 
-### 5.1 ais_bench工具概述
+### 5.1 ais_bench推理工具概述
 
-ais_bench工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。
+ais_bench推理工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。
 
 ### 5.2 离线推理
 
@@ -219,7 +219,7 @@ ais_bench工具包含前端和后端两部分。 后端基于c+开发，实现�
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
 ```
 
-2.安装ais_bench工具
+2.安装ais_bench推理工具
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 

@@ -389,7 +389,7 @@
       python3.7 Transformer_postprocess.py --bin_file_path ./ais_result/2022_08_23-09_22_56 --data_pkl ./pkl_file/m30k_deen_shr.pkl --result_path len15_ais_infer_result
       ```
       - 参数说明：
-         - --bin_file_path：使用ais_bench工具进行推理时的output path，请注意修改。
+         - --bin_file_path：使用ais_bench推理工具进行推理时的output path，请注意修改。
          - --data_pkl：预处理之后的数据。
          - --result_path：存储后处理的结果的路径。
 

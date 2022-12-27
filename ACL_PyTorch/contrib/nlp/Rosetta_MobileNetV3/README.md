@@ -237,7 +237,7 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
 
 2. 离线推理  
 
-    使用ais_bench工具将预处理后的数据传入模型并执行推理：
+    使用ais_bench推理工具将预处理后的数据传入模型并执行推理：
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh

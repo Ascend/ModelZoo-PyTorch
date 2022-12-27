@@ -312,8 +312,8 @@ NAS-FPN        0.405
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-1.ais_bench工具在整个数据集上推理获得性能数据  
-batch1的性能，ais_bench工具在整个数据集上推理后生成result/sumary.json：  
+1.ais_bench推理工具在整个数据集上推理获得性能数据  
+batch1的性能，ais_bench推理工具在整个数据集上推理后生成result/sumary.json：  
 ```
 "NPU_compute_time": {
    "min": 14.676570892333984, 

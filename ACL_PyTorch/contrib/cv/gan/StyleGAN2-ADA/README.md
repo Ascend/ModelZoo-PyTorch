@@ -26,7 +26,7 @@ pip install -r requirements.txt
 
 
 
-5.获取ais_bench工具
+5.获取ais_bench推理工具
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 

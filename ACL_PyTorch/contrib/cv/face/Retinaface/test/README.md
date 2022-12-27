@@ -34,7 +34,7 @@ bash test/pth2om.sh {soc_version}
 ```
 通过`npu-smi info`命令查看并指定 {soc_version} 参数。
 
-6.获取ais_bench工具  
+6.获取ais_bench推理工具  
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 7.评估精度

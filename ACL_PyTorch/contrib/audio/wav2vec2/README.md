@@ -208,15 +208,12 @@ wav2vec2 是一个用于语音表示学习的自监督学习框架，它完成�
 
 2. 开始推理验证。
 
-   根据OS架构选择的推理工具，执行命令增加工具可执行权限，在此以ais_bench工具为例。
+   根据OS架构选择的推理工具，执行命令增加工具可执行权限，在此以ais_bench推理工具为例。
 
-   a. ais_bench 安装
+   a. 安装ais_bench推理工具
 
-      ais_bench工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[推理工具ais_bench官方源码仓](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-
-      ```
-      chmod u+x  # 为本用户增加执行权限
-      ```
+      ais_bench推理工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考。   
+	  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
    b. 执行推理。
 
