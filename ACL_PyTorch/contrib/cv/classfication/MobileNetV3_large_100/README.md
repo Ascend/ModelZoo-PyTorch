@@ -1,293 +1,244 @@
-﻿# MobileNetV3_large_100 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 T4性能数据](#72-T4性能数据)
-	-   [7.3 性能对比](#73-性能对比)
+#  MobileNet_V3_large 模型-推理指导
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
 
-## 1 模型概述
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[论文地址](#11-论文地址)**  
--   **[代码地址](#12-代码地址)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.1 论文地址
-[MobileNetV3论文](https://arxiv.org/pdf/1905.02244v5.pdf)
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 1.2 代码地址
-[MobileNetV3代码](https://github.com/rwightman/gen-efficientnet-pytorch)  branch: master commit id:a4ac4dd7d72069a2aa4564df53ff4eb9b9f64400
+------
 
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-## 2 环境说明
+MobileNetV3探索了自动搜索算法和网络设计如何协同工作，以利用互补的方法提高整体技术水平，发布了两个新的MobileNet模型：MobileNetV3 Large和MobileNetV3 Small，本文是MobileNetV3 Large在NPU上的部署案例。
 
--   **[深度学习框架](#21-深度学习框架)**  
--   **[python第三方库](#22-python第三方库)**  
+- 参考论文：
 
-### 2.1 深度学习框架
-```
-CANN 5.0.2
+  [Searching for MobileNetV3](https://arxiv.org/pdf/1905.02244v5.pdf)
 
-torch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
+- 参考实现：
 
-### 2.2 python第三方库
+  ```
+  url=https://github.com/rwightman/gen-efficientnet-pytorch
+  commit_id=a4ac4dd7d72069a2aa4564df53ff4eb9b9f64400
+  ```
 
-```
-numpy == 1.21.6
-Pillow == 9.1.1
-opencv-python == 4.5.2.54
-```
+## 输入输出数据<a name="section540883920406"></a>
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+- 输入数据
 
-## 3 模型转换
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | image    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
--   **[onnx转om模型](#32-onnx转om模型)**  
+- 输出数据
 
-### 3.1 pth转onnx模型
+  | 输出数据 | 数据类型 | 大小             | 数据排布格式 |
+  | -------- | -------- | ---------------- | ------------ |
+  | class    | RGB_FP32 | batchsize x 1000 | ND           |
 
-1.下载.pth权重文件  
-[MobileNetV3预训练.pth权重文件](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv3_large_100_ra-f55367f5.pth) 
-文件md5sum：e5a1723b0a2ccdd058af3493100b4a93 
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-2.安装gen-efficientnet-pytorch
+- 该模型需要以下插件与驱动
 
-```
-git clone https://github.com/rwightman/gen-efficientnet-pytorch.git
-python3.7 -m pip install -e gen-efficientnet-pytorch
-```
+  **表 1** 版本配套表
 
-3.编写pth2onnx脚本MobileNetV3_pth2onnx.py
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.12.1  | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
- **说明：**  
->目前ATC支持的onnx算子版本为11
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-4.执行pth2onnx脚本，生成onnx模型文件
+## 获取源码<a name="section4622531142816"></a>
 
-```
-python3.7 MobileNetV3_pth2onnx.py mobilenetv3_large_100_ra-f55367f5.pth mobilenetv3_100.onnx
-```
+1. 获取本仓源码
 
- **模型转换要点：**  
->geffnet.create_model()中必须设置exportable=True，这样会把不能导出的HardSwishJitAutoFn算子用其他算子替代
->
->代码中的原始注解如下：
->
->> exportable=True flag disables autofn/jit scripted activations and uses Conv2dSameExport layers for models using SAME padding
+2. 安装第三方源码库
 
-### 3.2 onnx转om模型
+   ```
+   git clone https://github.com/rwightman/gen-efficientnet-pytorch.git
+   cd gen-efficientnet-pytorch
+   git checkout a4ac4dd7d72069a2aa4564df53ff4eb9b9f64400
+   python3 -m pip install -e .
+   cd ..
+   ```
 
-1.设置环境变量
+3. 安装依赖。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-```
-atc --framework=5  --enable_small_channel=1 --insert_op_conf=aipp.config --model=./mobilenetv3_100.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=mobilenetv3_100_bs16 --log=debug --soc_version=Ascend${chip name}
-```
+## 准备数据集<a name="section183221994411"></a>
 
-## 4 数据集预处理
+1. 获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
 
--   **[数据集获取](#41-数据集获取)**  
--   **[数据集预处理](#42-数据集预处理)**  
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+   本模型使用[ImageNet](https://gitee.com/link?target=https%3A%2F%2Fimage-net.org%2Fdownload.php)验证集进行推理测试 ，用户自行获取数据集后，将文件解压并上传数据集到任意路径下。数据集目录结构如下所示：
 
-### 4.1 数据集获取
-对于图像分类任务，该模型使用[ImageNet官网]的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt
-
-### 4.2 数据集预处理
-1.预处理脚本img_preprocess.py
+   ```
+   imageNet/
+   |-- val
+   |   |-- ILSVRC2012_val_00000001.JPEG
+   |   |-- ILSVRC2012_val_00000002.JPEG
+   |   |-- ILSVRC2012_val_00000003.JPEG
+   |   ...
+   |-- val_label.txt
+   ...
+   ```
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+2. 数据预处理，将原始数据集转换为模型的输入数据。
 
-```
-python3.7 img_preprocess.py /root/datasets/imagenet/val ./prep_dataset
-```
-第一个参数为验证集路径，第二个参数为预处理后生成的二进制文件的存储路径
-
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./mobilenetv3_100_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=mobilenetv3_100_bs16.om -input_text_path=./mobilenetv3_100_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_devicex，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
-
-## 6 精度对比
-
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理TopN精度统计
-
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据。
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
-
-```
-第一个参数为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名，其中存有推理的Top5精度。
-对batch1和batch16的模型分别调用benchmark进行推理，并统计其Top5的精度。查看其输出结果：
-
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "75.77%"}, {"key": "Top2 accuracy", "value": "85.58%"}, {"key": "Top3 accuracy", "value": "89.29%"}, {"key": "Top4 accuracy", "value": "91.24%"}, {"key": "Top5 accuracy", "value": "92.53%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1与batch16的精度没有差别，精度数据均如上。
-
-### 6.2 开源TopN精度
-[github开源代码仓精度](https://rwightman.github.io/pytorch-image-models/results/)
-
-```
-Model                           Acc@1     Acc@5
-mobilenetv3_large_100		75.766	  92.542
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
-
->没有遇到精度不达标的问题，故不需要进行精度调试
-
-## 7 性能对比
-
--   **[npu性能数据](#71-npu性能数据)**  
--   **[T4性能数据](#72-T4性能数据)**  
--   **[性能对比](#73-性能对比)**  
-
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时会统计性能数据，存储于result/perf_vision_batchsize_bs_device_0.txt中。但是推理整个数据集较慢，如此测性能时需要确保benchmark独占device，使用npu-smi info可以查看device是否空闲。
-除此之外，也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具推理得到bs1与bs16的性能数据为准；对于使用benchmark工具测试的batch4，8，32的性能数据仅在README.md中作如下记录。  
-1.benchmark工具在整个数据集上推理获得性能数据   
-使用benchmark工具的纯推理功能测试模型的推理性能，命令如下：
-
-```
-./benchmark.x86_64 -round=20 -om_path=mobilenetv3_100_bs1.om -device_id=0 -batch_size=1
-```
-benchmark工具进行纯推理后测得的性能数据存储于result/PureInfer_perf_of_mobilenet-v1_bsx_in_device_0.txt，其中x为模型的batch_size。
-
-batch1的性能，benchmark工具在整个数据集上推理后生成result/PureInfer_perf_of_mobilenetv3_100_bs1_in_device_0.txt：
-```
-[e2e] throughputRate: 230.705, latency: 216727
-[data read] throughputRate: 244.812, moduleLatency: 4.08477
-[preprocess] throughputRate: 244.525, moduleLatency: 4.08957
-[infer] throughputRate: 232.04, Interface throughputRate: 378.955, moduleLatency: 3.62845
-[post] throughputRate: 232.04, moduleLatency: 4.30961
-```
-Interface throughputRate: 378.955，378.955x4=1515.820即是batch1 310单卡吞吐率
-
-batch16的性能，benchmark工具在整个数据集上推理后生成
-result/PureInfer_perf_of_mobilenetv3_100_bs16_in_device_0.txt
-
-```
-[e2e] throughputRate: 139.214, latency: 359159
-[data read] throughputRate: 140.692, moduleLatency: 7.10771
-[preprocess] throughputRate: 140.553, moduleLatency: 7.11475
-[infer] throughputRate: 140.577, Interface throughputRate: 945.665, moduleLatency: 2.51216
-[post] throughputRate: 8.7859, moduleLatency: 113.819
-```
-Interface throughputRate: 945.665，945.665x4=3782.660即是batch16 310单卡吞吐率
-
-batch4性能：
-```
-ave_throughputRate = 821.703samples/s, ave_latency = 1.245ms
-```
-batch4 310单卡吞吐率：821.703x4=3286.812 fps
-
-batch8性能：
-```
-ave_throughputRate = 907.738samples/s, ave_latency = 1.11522ms
-```
-batch8 310单卡吞吐率：907.738x4=3630.952 fps
-
-batch32性能：
-```
-ave_throughputRate = 823.648samples/s, ave_latency = 1.21733ms
-```
-batch32 310单卡吞吐率：823.648x4=3294.592 fps
-
-### 7.2 T4性能数据
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2   
-
-
-<table border="1px" align="center" bordercolor="black" width="80%" height="100px">
-    <tr align="center">
-        <td></td>
-        <td>bs1</td>
-        <td>bs4</td>
-        <td>bs8</td>
-        <td>bs16</td>
-        <td>bs32</td>
-        <td>bs64</td>
-    </tr>
-    <tr align="center">
-        <td>单卡吞吐率</td>
-        <td>1478.24</td>
-        <td>3386.12</td>
-        <td>3986.86</td>
-        <td>4396.53</td>
-        <td>4390.71</td>
-        <td>3775.76</td>
-    </tr>
-</table>
-
-### 7.3 性能对比
-batch1：1532.636 > 1529.856  
-batch16：3828.304< 4070.345  
-batch1时310性能高于T4, batch16时310性能略低于T4，该模型放在Research/cv/classification目录下。
-
- **性能优化：**  
->profiling工具分析，Conv2D、Add和TransData三个算子耗时最长
->
->未做性能优化
+   执行 mobilenetv3_large_100_preprocess.py 脚本，完成数据预处理。
 
+   ```
+   python3 mobilenetv3_large_100_preprocess.py ${data_dir} ${save_dir} 
+   ```
 
+   参数说明：
 
+   - --data_dir：原数据集所在路径。
+   - --save_dir：生成数据集二进制文件。
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      从开源仓获取权重文件[mobilenetv3_large_100_ra-f55367f5.pth](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv3_large_100_ra-f55367f5.pth)
+
+   2. 导出onnx文件。
+
+      1. 使用mobilenetv3_large_100_pth2onnx.py导出动态batch的onnx文件。
+
+         ```
+         python3 mobilenetv3_large_100_pth2onnx.py ${pth_file} ${onnx_file}
+         ```
+
+         参数说明：
+
+         - --pth_file：权重文件。
+         - --onnx_file：生成 onnx 文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（${chip_name}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+   4. 执行ATC命令。
+
+      ```
+       # bs = [1, 4, 8, 16, 32, 64]
+       atc --model=${onnx_file} --framework=5 --output=mobilenetv3_large_100_bs${bs} \
+       --input-shape="image:${bs},3,224,224" --log=error --soc_version=Ascend${chip_name} --enable_small_channel=1 --insert_op_conf=aipp.config
+      ```
+
+      运行成功后生成mobilenetv3_large_100_bs${bs}.om模型文件。
+
+      参数说明：
+
+      - --model：为ONNX模型文件。
+      - --framework：5代表ONNX模型。
+      - --output：输出的OM模型。
+      - --input_format：输入数据的格式。
+      - --input_shape：输入数据的shape。
+      - --log：日志级别。
+      - --soc_version：处理器型号。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+      ```
+      python3 -m ais_bench --model=mobilenetv3_large_100_bs${bs}.om  --batchsize=${bs} \
+      --input ${save_dir} --output result --output_dirname result_bs${bs} --outfmt TXT
+      ```
+      
+      参数说明：
+      
+      - --model：om模型路径。
+      - --batchsize：批次大小。
+      - --input：输入数据所在路径。
+      - --output：推理结果输出路径。
+      - --output_dirname：推理结果输出子文件夹。
+      - --outfmt：推理结果输出格式
+   
+3. 精度验证。
+
+   调用脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+   ```
+   python3 mobilenetv3_large_100_postprocess.py ${result_dir} ${gt_file} result.json
+   ```
+
+   参数说明：
+
+   - --result_dir：推理结果所在路径，这里为 ./result/result_bs${bs}。
+   - --gt_file：真值标签文件val_label.txt所在路径。
+
+4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+   ```
+   python3 -m ais_bench --model=mobilenetv3_large_100_bs${bs}.om --loop=50 --batchsize=${bs}
+   ```
+
+   参数说明：
+
+   - --model：om模型路径。
+   - --batchsize：批次大小。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，mobilenetv3_large_100模型的性能和精度参考下列数据。
+
+| 芯片型号    | Batch Size | 数据集   | 开源精度                                                     | 精度指标1（Acc@1） | 精度指标2（Acc@5） |
+| ----------- | ---------- | -------- | ------------------------------------------------------------ | ------------------ | ------------------ |
+| Ascend310P3 | 1          | ImageNet | [链接](https://rwightman.github.io/pytorch-image-models/results/) | 75.62%             | 92.47%             |
+
+| 芯片型号    | Batch Size | 性能（FPS） |
+| ----------- | ---------- | ----------- |
+| Ascend310P3 | 1          | 2248.81     |
+| Ascend310P3 | 4          | 4970.47     |
+| Ascend310P3 | 8          | 6991.12     |
+| Ascend310P3 | 16         | 6998.89     |
+| Ascend310P3 | 32         | 5239.56     |
+| Ascend310P3 | 64         | 4249.16     |

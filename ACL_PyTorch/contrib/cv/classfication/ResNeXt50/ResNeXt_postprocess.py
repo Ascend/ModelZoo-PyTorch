@@ -16,10 +16,7 @@ import sys
 import json
 import numpy as np
 import time
-
-np.set_printoptions(threshold=sys.maxsize)
-
-LABEL_FILE = "HiAI_label.json"
+from tqdm import tqdm
 
 
 def gen_file_name(img_name):
@@ -108,11 +105,11 @@ def create_visualization_statistical_result(prediction_file_path,
     resCnt = 0
     n_labels = 0
     count_hit = np.zeros(topn)
-    for tfile_name in os.listdir(prediction_file_path):
+    for tfile_name in tqdm(os.listdir(prediction_file_path)):
         if not tfile_name.endswith(".txt"):
             continue
         count += 1
-        temp = tfile_name.split('.')[0]
+        temp = os.path.splitext(tfile_name)[0]
         index = temp.rfind('_')
         img_name = temp[:index]
         filepath = os.path.join(prediction_file_path, tfile_name)

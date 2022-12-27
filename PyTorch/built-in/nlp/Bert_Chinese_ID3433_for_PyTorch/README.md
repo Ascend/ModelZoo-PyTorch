@@ -7,7 +7,6 @@
 -   [版本说明](版本说明.md)
 
 
-
 # 概述
 
 ## 简述
@@ -37,8 +36,6 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
   
 - 通过单击“立即下载”，下载源码包。
 
-
-
 # 准备训练环境
 
 ## 准备环境
@@ -64,7 +61,13 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
   pip install -r requirements.txt
   ```
 
+- 安装transformers
 
+  ```
+  cd transformers
+  pip3 install -e ./
+  cd ..
+  ```
 
 ## 准备数据集
 
@@ -132,7 +135,8 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=real_data_path   
+     bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --device_id=0  # 单卡精度训练
+     bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 单卡性能训练   
      ```
 
    - 单机8卡训练
@@ -140,10 +144,27 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path  
+     bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡精度训练
+     bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡性能训练  
      ```
 
-   --data\_path参数填写数据集路径。
+   - 双机16卡训练
+   
+     启动双机16卡训练。
+
+     ```
+     bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡精度训练
+     bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡性能训练
+     ```
+
+    ```
+	   --data_path：  数据集路径
+	   --model_size： 训练model是base或者是large
+	   --device_id：  单卡训练时所使用的device_id
+	   --node_rank:   集群节点序号，master节点是0， 其余节点依次加1
+	   --master_addr：master节点服务器的ip
+	   --master_port: 分布式训练中,master节点使用的端口
+    ```
 
    模型训练脚本参数说明如下。
 
@@ -174,7 +195,6 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 
-
 # 训练结果展示
 
 **表2**  训练结果展示表
@@ -185,19 +205,32 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 | 8p-NPU(X86)  | 0.59 | 936 | 3    |
 | 8p-NPU(ARM)  | 0.59 | 860 | 3    |
 
-
-
 # 版本说明
 
 ## 变更
 
 2022.08.24：首次发布
 
-
-
 ## 已知问题
 
-无。
+1. Q:第一次运行报类似"xxx **socket timeout** xxx"的错误该怎么办？
+
+   A:第一次运行tokenizer会对单词进行预处理，根据您的数据集大小，耗时不同，若时间过长，可能导致等待超时。此时可以通过设置较大的超时时间阈值尝试解决：
+
+    （1）设置pytorch框架内置超时时间，修改脚本中的distributed_process_group_timeout（单位秒）为更大的值，例如设置为7200：
+   
+    ```
+    --distributed_process_group_timeout 7200
+    ```
+
+    （2）设置HCCL的建链时间为更大的值，修改env.sh中环境变量HCCL_CONNECT_TIMEOUT（单位秒）的值：
+
+    ```
+    export HCCL_CONNECT_TIMEOUT=7200
+    ```
+2. Q:如果训练报wandb.error.UsageError:api_key not configured (no-tty)的错误该怎么办?
+  
+   A:export WANDB_DISABLED=1
 
 
 

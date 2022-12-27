@@ -130,7 +130,7 @@ FPS=`grep fps $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID
 echo "Final Performance images/sec : $FPS"
 
 #获取编译时间
-CompileFps=`grep "fps" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F ' ' '{print $4}'| awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+CompileFps=`grep "fps" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F ' ' '{print $4}' |sed s/[[:space:]]//g`
 CompileTime=`awk 'BEGIN{printf "%.2f\n",1024/'${CompileFps}'}'`
 
 #输出训练精度,需要模型审视修改

@@ -11,13 +11,9 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
   ******
-
-
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
@@ -32,17 +28,6 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
   url=https://github.com/huawei-noah/CV-backbones/tree/master/tnt_pytorch
   branch=master 
   commit_id=03e8cdfe92494a55ddfb11cc875ff2e1c33f91da
-  ```
-
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
 
 
@@ -63,7 +48,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -71,8 +56,8 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.5.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -83,19 +68,18 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
 1. 获取源码。
 
-   ```
+   ```shell
    git clone https://github.com/huawei-noah/CV-Backbones.git
    cd CV-Backbones
    git checkout 7a0760f0b77c2e9ae585dcadfd34ff7575839ace
    patch tnt_pytorch/tnt.py ../TNT.patch
    cd ..
    cp CV-Backbones/tnt_pytorch/tnt.py ./
-
    ```
 
 2. 安装依赖。
 
-   ```
+   ```shell
    pip3 install -r requirements.txt
    ```
 
@@ -110,21 +94,21 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
         ├──ILSVRC2012_img_val
         ├──imagenet_labels_tnt.json
     ```
-2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+2. 数据预处理
 
    数据预处理将原始数据集转换为模型输入的数据。
 
     使用“TNT_preprocess.py”对JPEG图片文件进行预处理并将其转换为bin文件。
 
 
-       ```
-       python3.7 TNT_preprocess.py --src-path /home/HwHiAiUser/dataset/imagenet/val --save-path ./prep_dataset
-       ```
-
+      ```shell
+      python3.7 TNT_preprocess.py --src-path /home/HwHiAiUser/dataset/imagenet/val --save-path ./prep_dataset
+      ```
+    
       --src-path：原始数据验证集（.jpeg）所在路径。
-
+    
       --save-path：输出的二进制文件（.bin）所在路径。
-
+    
       每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“prep_dataset”二进制文件夹。
 
 
@@ -135,29 +119,28 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 获取权重文件。
-
-       从源码包中获取权重文件：“tnt_s_81.5.pth.tar”。
-
+      ```shell
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/TNT/PTH/tnt_s_81.5.pth.tar
+      ```
    2. 导出onnx文件。
 
       1. 使用“tnt_s_81.5.pth.tar”导出onnx文件。
             运行“TNT_pth2onnx.py”脚本。
 
-
          ```
-         python3.7 TNT_pth2onnx.py --pretrain_path tnt_s_81.5.pth.tar --batch_size 1
+         python3.7 TNT_pth2onnx.py --pretrain_path tnt_s_81.5.pth.tar --batch_size 16
          ```
-
-         获得tnt_s_patch16_224_bs1_cast.onnx文件。
-
+    
+         获得`tnt_s_patch16_224_bs16_cast.onnx`文件。
+    
       2. 优化ONNX文件。
-
+    
          ```
          python3.7 -m onnxsim tnt_s_patch16_224_bs16_cast.onnx tnt_s_patch16_224_bs16_cast_sim.onnx --input-shape "16,196,16,24"
-
          ```
-         bs1不需要进行onnxsim优化，否则会存在精度问题。   
          获得“tnt_s_patch16_224_bs16_cast_sim.onnx”文件。
+         > 注意 bs1不需要进行onnxsim优化，否则会存在精度问题  
+
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -190,7 +173,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
 
       3. 执行ATC命令。
          ```
-          atc --framework=5 --model=tnt_s_patch16_224_bs1_cast.onnx --output=TNT_bs1 --input_format=NCHW --input_shape="inner_tokens:1,196,16,24" --log=debug --soc_version=Ascend{chip_name}
+          atc --framework=5 --model=tnt_s_patch16_224_bs16_cast_sim.onnx --output=TNT_bs16 --input_format=NCHW --input_shape="inner_tokens:16,196,16,24" --log=debug --soc_version=Ascend{chip_name}
          ```
 
          - 参数说明：
@@ -201,10 +184,9 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
            -   --input\_format：输入数据的格式。
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
+           -   --soc\_version：处理器型号
 
-           运行成功后生成<u>***TNT_bs1.om***</u>模型文件。
+            运行成功后生成<u>***TNT_bs16.om***</u>模型文件。
 
 
 
@@ -218,34 +200,33 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
    b.  执行推理。
 
       ```
-        python3 -m ais_bench --input ./prep_dataset --output ./  --model TNT_bs1.om --outfmt TXT --batchsize 1
+        python3 -m ais_bench --input ./prep_dataset --output ./  --model TNT_bs16.om --outfmt TXT --batchsize 16 --output_dirname result
       ```
-
+    
       -   参数说明：
-
+    
            -   model：模型路径。
            -   input：预处理文件路径。
            -   output：输出路径。
            -   outfmt：输出文件格式。
-		...
-
+    	...
+    
       推理后的输出默认在当前目录result下。
 
 
    c.  精度验证。
 
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-
-      ```
-       rm -rf {your_result_path}/summary.json
-       python3.7 TNT_postprocess.py --label_file=/home/HwHiAiUser/dataset/imagenet/imagenet_labels_tnt.json --pred_dir=./${your_result_path} > result.json
-      ```
-
-      ${your_result_path}：为生成推理结果所在路径 
     
-      val_label.txt：为标签数据
+      ```
+      python3 TNT_postprocess.py --label_file=/home/HwHiAiUser/dataset/imagenet/imagenet_labels_tnt.json --pred_dir=./${your_result_path} > result.json
+      ```
+    - 参数说明
+      - ${your_result_path}：为生成推理结果所在路径 
     
-      result.json：为生成结果文件
+      - val_label.txt：为标签数据
+    
+      生成结果文件 result.json
 
 
    d.  性能验证。
@@ -255,24 +236,20 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       ```
        python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
       ```
+      - 参数说明
+        - --model：om模型
+        - --loop：循环次数
+        - --batchsize：模型batch size
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-精度：
-|     | ACC |
-|-----|-----|
-| 310 |   81.5%  |
-| 310P  |   81.5%  |
-
-性能：
-| Throughoutput | 310    | 310P   | T4     | 310P/310 | 310P/T4 |
-|---------------|--------|--------|--------|----------|---------|
-| bs1           | 106.43 | 137.08 | 98.03  | 1.28     | 1.39    |
-| bs4           | 126.79 | 168.08 | 153.84 | 1.32     | 1.09    |
-| bs8           | 121.30 | 202.26 | 153.37 | 1.66     | 1.31    |
-| bs16          | 116.23 | 198.26 | 153.4  | 1.70     | 1.29    |
-| bs32          | 105.35 | 186.97 | 153.92 | 1.77     | 1.21    |
-| bs64          | 104.99 | 175.39 | 153.69 | 1.67     | 1.14    |
-|               |        |        |        |          |         |
-| 最优batch       | 126.79 | 202.26 | 153.92 | 1.59     | 1.31    |
+调用ACL接口推理计算，性能参考下列数据
+| 芯片型号 | Batch Size |  数据集  | 精度 |  性能  |
+| :------: | :--------: | :------: | :--: | :----: |
+|  310P3   |     1      | ImageNet | 81.5 | 186 |
+|  310P3   |     4      | ImageNet | 81.5 | 259 |
+|  310P3   |     8      | ImageNet | 81.5 | 274 |
+|  310P3   |     16     | ImageNet | 81.5 | 264 |
+|  310P3   |     32     | ImageNet | 81.5 | 231 |
+|  310P3   |     64     | ImageNet | 81.5 | 195 |

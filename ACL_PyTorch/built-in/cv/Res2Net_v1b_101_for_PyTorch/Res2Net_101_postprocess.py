@@ -17,6 +17,7 @@ import sys
 import json
 import numpy as np
 import time
+from tqdm import tqdm
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -104,9 +105,9 @@ def create_visualization_statistical_result(prediction_file_path,
     resCnt = 0
     n_labels = ""
     count_hit = np.zeros(topn)
-    for tfile_name in os.listdir(prediction_file_path):
+    for tfile_name in tqdm(os.listdir(prediction_file_path)):
         count += 1
-        temp = tfile_name.split('.')[0]
+        temp = os.path.splitext(tfile_name)[0]
         index = temp.rfind('_')
         img_name = temp[:index]
         filepath = os.path.join(prediction_file_path, tfile_name)
