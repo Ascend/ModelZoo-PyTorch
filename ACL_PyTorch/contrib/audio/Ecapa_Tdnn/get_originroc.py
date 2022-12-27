@@ -28,7 +28,7 @@ if __name__ == "__main__":
     model = ECAPA_TDNN(1211, device).to(device)
     checkpoint = sys.argv[1]
     data_set = sys.argv[2]
-    batch_size = int(sys.argv[3])
+    batch_size = 1
  
     optimizer = optim.Adam(model.parameters(), lr=1e-5, weight_decay=2e-5)
 

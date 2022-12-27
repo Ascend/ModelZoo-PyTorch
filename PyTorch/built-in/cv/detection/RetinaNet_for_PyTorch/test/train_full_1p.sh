@@ -1,12 +1,4 @@
 #!/bin/bash
-
-
-export LANG=en_US.UTF-8
-
-path=$(python3 -c "import sys;print(sys.path[-1])")
-python_path=$(echo $path | awk -F 'lib' '{print $1}')
-chmod -R 777 $python_path
-
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -20,26 +12,20 @@ else
 fi
 
 #集合通信参数,不需要修改
-
 export RANK_SIZE=1
 batch_size=8
-RANK_ID_START=0
 
-# 指定训练所使用的npu device卡id
-device_id=0
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
-#设置默认日志级别,不需要修改
-#export ASCEND_GLOBAL_LOG_LEVEL=3
+# 指定训练所使用的npu device卡id
+device_id=0
 
 #基础参数 需要模型审视修改
 #网络名称，同目录名称
-Network="Retinanet_ID0427_for_PyTorch"
+Network="RetinaNet_ID0427_for_PyTorch"
 #训练epoch
-train_epochs=
-#TF2.X独有，不需要修改
-#export NPU_LOOP_SIZE=${train_steps}
+train_epochs=2
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
@@ -88,13 +74,13 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --bind_core* ]]; then
-        bind_core=`echo ${para#*=}`
-        name_bind="_bindcore"
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --bind_core* ]]; then
+        bind_core=`echo ${para#*=}`
+        name_bind="_bindcore"
     fi
 done
 
@@ -104,24 +90,17 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-
-#训练开始时间，不需要修改
-start_time=$(date +%s)
-
-
+#autotune时，先开启autotune执行单P训练，不需要修改
+if [[ $autotune == True ]]; then
+    train_full_1p.sh --autotune=$autotune --data_path=$data_path
+    wait
+    autotune=False
+	export autotune=$autotune
+fi
+#数据集处理
 mkdir -p $cur_path/data
 ln -snf $data_path/coco $cur_path/data/
-cp $test_path_dir/train_retinanet_1p.sh $cur_path/
 
-#进入训练脚本目录
-cd $cur_path/
-
-###修改参数，增加eval模式验证
-sed -i "s/--no-validate//g" train_retinanet_8p.sh
-sed -i "s/total_epochs/#total_epochs/g"  configs/retinanet/retinanet_r50_fpn_1x_coco.py
-sed -i "s/#optimizer_config/optimizer_config/g"  configs/retinanet/retinanet_r50_fpn_1x_coco.py
-
-SIll=1
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
@@ -141,34 +120,22 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((SIll+RANK_ID_START));RANK_ID++));
-do
-    #设置环境变量，不需要修改
-    echo "Device ID: $RANK_ID"
-    export RANK_ID=$RANK_ID
-    export ASCEND_DEVICE_ID=$RANK_ID
-    ASCEND_DEVICE_ID=$RANK_ID
+#创建DeviceID输出目录，不需要修改
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
+fi
+#训练开始时间，不需要修改
+start_time=$(date +%s)
 
-    #创建DeviceID输出目录，不需要修改
-    if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
-        rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
-        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-    else
-        mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
-    fi
-
-    #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    BATCH_SIZE=$batch_size DEVICE_ID=${device_id} bash train_retinanet_1p.sh > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
-
-    #python3 ./tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py \
-    #    --launcher pytorch \
-    #    --cfg-options optimizer.lr=0.038\
-    #    --seed 0 \
-    #    --gpu-ids 0 \
-    #    --no-validate \
-    #    --opt-level O1 \
-	#	> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-done
+#执行训练脚本，以下传参不需要修改，其他需要模型审视修改
+PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
+taskset -c 0-96 python3.7 -m torch.distributed.launch  --nproc_per_node=$RANK_SIZE \
+        ${cur_path}/tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py --launcher pytorch --cfg-options data.samples_per_gpu=${batch_size} optimizer.lr=0.04 --seed 0 \
+        --gpu-ids ${ASCEND_DEVICE_ID}  --opt-level O1 \
+        > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
 wait
 
 #训练结束时间，不需要修改
@@ -177,9 +144,10 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`grep -a "time:"  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
+time=`grep -a 'time:'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
-Train_accuracy=`grep -a 'Average Precision' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|head -1`
+Train_accuracy=`grep -a 'Epoch(val)' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP: " '{print $2}'|awk -F "," '{print $1}'|tail -1`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 echo "Final Train Accuracy : ${Train_accuracy}"
@@ -189,22 +157,20 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
-
-##获取性能数据
-grep "time:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log > $test_path_dir/traintime.log
-sed -i '1,10d' $test_path_dir/traintime.log
-TrainingTime=`cat $test_path_dir/traintime.log | grep "time:" |awk '{sum+=$15} END {print sum/NR}'`
-
-temp1=`echo "8 * ${batch_size}"|bc`
-ActualFPS=`echo "scale=2;${temp1} / ${TrainingTime}"|bc`
+CaseName=${Network}${name_bind}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -ri  "Epoch(val)"  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $11}'| tr -d ','`
 
-#从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep "loss:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $(NF-2)}' > $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+##获取性能数据
+grep "time:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log > traintime.log
+sed -i '1,10d' traintime.log
+TrainingTime=`cat traintime.log | grep "time:" |awk '{sum+=$15} END {print sum/NR}'`
+temp1=`echo "1 * ${batch_size}"|bc`
+ActualFPS=`echo "scale=2;${temp1} / ${TrainingTime}"|bc`
 
+#从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
+grep "loss:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $(NF-2)}' |awk -F "," '{print $1}'> $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 if [ x"${etp_flag}" != x"true" ];then

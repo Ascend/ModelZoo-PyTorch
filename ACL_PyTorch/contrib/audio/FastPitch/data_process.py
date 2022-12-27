@@ -259,9 +259,6 @@ def main():
 
     torch.backends.cudnn.benchmark = args.cudnn_benchmark
 
-    # if args.output is not None:
-    #     Path(args.output).mkdir(parents=False, exist_ok=True)
-
     device = torch.device('cpu')
 
     if args.fastpitch != 'SKIP':
@@ -292,7 +289,7 @@ def main():
     if not os.path.exists("./test/input_bin"):
         os.mkdir("./test/input_bin")
     info_name = "./test/input_bin_info.info"
-    dataset_path = "/opt/npu/LJSpeech-1.1/"
+    dataset_path = "./LJSpeech-1.1/"
 
     with open(info_name, 'w') as file:
         for i, b in enumerate(batches):

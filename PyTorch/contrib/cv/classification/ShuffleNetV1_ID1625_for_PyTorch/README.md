@@ -46,7 +46,8 @@ ShuffleNet V1是一个计算效率极高的图像分类网络，它是专门为�
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
 

@@ -160,6 +160,10 @@ sed -i '1d' FPS.log
 sed -i '$d' FPS.log
 FPS=`grep "train.total_ips :" FPS.log | awk -F 'train.total_ips :' '{print $2}'|awk '{sum+=$1} END {print sum/NR}'`
 
+#获取编译时间
+CompileFps=`grep "Epoch:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F 'train.total_ips :' '{print $2}'| awk -F " " '{print $1}' |sed s/[[:space:]]//g`
+CompileTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${CompileFps}'}'`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -197,3 +201,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
