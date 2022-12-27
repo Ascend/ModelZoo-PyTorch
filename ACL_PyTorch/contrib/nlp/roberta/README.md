@@ -208,16 +208,16 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 使用ais-bench工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais-bench工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    2. 执行推理。
 
         ```
         # 以bs1为例
         mkdir -p results/bs1
-        python3 -m ais_bench --model outputs/roberta_base_batch_1.om --input ./data/SST-2-bin/roberat_base_bin --output results/ --output_dirname bs1 --device 1
+        python3 -m ais_bench --model outputs/roberta_base_batch_1.om --input ./data/SST-2-bin/roberta_base_bin --output results/ --output_dirname bs1 --device 1 --batchsize 1
         ```
 
         -   参数说明：
@@ -226,12 +226,10 @@
              -   --input：输入文件。
              -   --output：输出目录。
              -   --device：NPU设备编号。
+             -   --batchsize: 模型对应batchsize。
 
 
         推理后的输出默认在当前目录results/bs1下。
-
-        >**说明：**
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
