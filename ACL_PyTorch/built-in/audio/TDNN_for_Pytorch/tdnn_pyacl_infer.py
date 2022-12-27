@@ -26,14 +26,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import acl
-from acl_net import AclModel
-
 import os
 import shutil
 import argparse
+
+import acl
 import numpy as np
 from tqdm import tqdm
+from acl_net import AclModel
 
 DTYPE = {
     'float32': np.float32,
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('--device_id', required=True, type=int)
     parser.add_argument('--cpu_run', required=True, choices=['True', 'False'])
     parser.add_argument('--sync_infer', required=True, choices=['True', 'False'])
-    parser.add_argument('--workspace', required=True, type=int)
+    parser.add_argument('--workspace', type=int, default=0)
     parser.add_argument('--input_info_file_path', required=True)
     parser.add_argument('--input_dtypes', required=True)
     parser.add_argument('--infer_res_save_path', required=True)
@@ -166,7 +166,7 @@ if __name__ == '__main__':
             total_inputs.append(batch_input)
             total_keys.append(batch_key)
 
-    for i, b_ipt in tqdm(enumerate(total_inputs)):
+    for i, b_ipt in enumerate(tqdm(total_inputs)):
         batch_input = np.squeeze(np.array(b_ipt), axis=1)
         if batch_input.shape[0] < bs:
             batch_input = np.pad(batch_input, [(0, bs-batch_input.shape[0]), (0, 0), (0, 0)], mode='constant')

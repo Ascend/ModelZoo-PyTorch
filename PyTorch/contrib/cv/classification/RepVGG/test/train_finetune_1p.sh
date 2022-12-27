@@ -6,6 +6,10 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -23,10 +27,11 @@ nohup python3.7.5 -u train.py \
     --workers 32 \
     --custom-weight-decay \
     --epochs 1 \
-    --batch-size=512 \
+    --batch-size=${batch_size} \
     --lr 0.2 \
     --wd 4e-5 \
     --device npu \
+    --rank_id ${device_id} \
     --amp \
     --opt-level "O2" \
     --loss-scale-value "dynamic" > repvgg_finetune.log 2>&1 &

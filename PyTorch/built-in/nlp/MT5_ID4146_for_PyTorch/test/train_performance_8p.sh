@@ -17,6 +17,10 @@ do
         model_path=`echo ${para#*=}`
     elif [[ $para == --output_dir* ]];then
         output_dir=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh --conda_name=$conda_name
+        source activate $conda_name
     fi
 done
 
@@ -91,7 +95,8 @@ e2e_time=$(($end_time - $start_time))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "it/s" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 2 | awk "NR==1 {print}" | awk -F "]" '{print $1}' | awk -F ", " '{print $2}' | sed 's/^[ \t]*//g')
+FPS=$(grep "it/s" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 2 | awk "NR==1 {print}" | awk -F "100%" '{print $NF}' | awk -F "]" '{print $1}' | awk -F ", " '{print $2}' | sed 's/^[ \t]*//g')
+FPS=`echo "$FPS" | awk '{printf "%.2f\n",$1*8}'`
 #打印，不需要修改
 echo "Final Performance iter/sec : $FPS"
 
@@ -118,3 +123,7 @@ echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${Ca
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualFPS" = ${FPS} >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+
+rm -rf /root/.cache/huggingface/datasets/wmt16/ro-en/1.0.0/28ebdf8cf22106c2f1e58b2083d4b103608acd7bfdb6b14313ccd9e5bc8c313a/cache-*.arrow
+rm -rf ./tst-translation
+

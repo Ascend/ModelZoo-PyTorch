@@ -32,3 +32,5 @@ tqdm==4.36.1
 traitlets==4.3.3
 urllib3==1.25.6
 wcwidth==0.1.7
+decorator
+sympy

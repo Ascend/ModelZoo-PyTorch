@@ -102,9 +102,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
-#修改参数
-sed -i "s|pass|break|g" ${cur_path}/examples/imagenet/main.py
-wait
+
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -138,10 +136,7 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
-#参数改回
-#修改参数
-sed -i "s|break|pass|g" ${test_path_dir}/examples/imagenet/main.py
-wait
+
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"

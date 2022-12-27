@@ -50,10 +50,7 @@ def main(args):
     base_ds = get_coco_api_from_dataset(dataset_val)
     postprocessors = {'bbox': PostProcess()}
     print('start validate')
-    model = detr_resnet50(pretrained=False)
-    model.load_state_dict(torch.load('model/detr.pth', map_location="cpu")['model'])
-    model.to(device)
-    model.eval()
+
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('class_error', utils.SmoothedValue(window_size=1, fmt='{value:.2f}'))
     header = 'Test:'

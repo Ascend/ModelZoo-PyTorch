@@ -7,15 +7,13 @@
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-  - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
-
+  
 - [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
-
   ******
+
 
 
 
@@ -99,10 +97,10 @@
 
 2. 数据预处理。
 
-   执行parse_testdata.py脚本。
-
+   1. 执行parse_testdata.py脚本。
+   
    ```
-python3 parse_testdata.py ./IIIT5K_lmdb input_bin
+   python3 parse_testdata.py ./IIIT5K_lmdb input_bin
    ```
    
    执行成功后，二进制文件生成在*./input_bin*文件夹下，标签数据label.txt生成在当前目录下。
@@ -110,115 +108,120 @@ python3 parse_testdata.py ./IIIT5K_lmdb input_bin
 
 ## 模型推理<a name="section741711594517"></a>
 
-1. 模型转换。
+模型转换。
 
-   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。
+获取权重文件。
 
-      因此模型官方实现没有提供对应的权重，所以此处使用NPU自行训练的权重结果作为原始输入，对应下载[权重](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/c-version/CRNN_for_PyTorch/zh/1.3/m/CRNN_for_PyTorch_1.3_model.zip)
+因此模型官方实现没有提供对应的权重，所以此处使用NPU自行训练的权重结果作为原始输入，对应下载[权重](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/c-version/CRNN_for_PyTorch/zh/1.3/m/CRNN_for_PyTorch_1.3_model.zip)
 
-      下载后解压获取里面的checkpoint.pth权重文件
+下载后解压获取里面的checkpoint.pth权重文件
 
-   2. 导出onnx文件。
+导出onnx文件。
 
-      1. 使用pth2onnx.py导出onnx文件。
+1. 使用pth2onnx.py导出onnx文件。
 
-         运行pth2onnx.py脚本。
+   运行pth2onnx.py脚本。
 
-         ```
-         python3.7 pth2onnx.py ./checkpoint.pth ./crnn_npu_dy.onnx
-         ```
+   ```
+   python3.7 pth2onnx.py ./checkpoint.pth ./crnn_npu_dy.onnx
+   ```
 
-         获得crnn_npu_dy.onnx文件。
+   获得crnn_npu_dy.onnx文件。
 
-   3. 使用ATC工具将ONNX模型转OM模型。
+使用ATC工具将ONNX模型转OM模型。
 
-      1. 配置环境变量。
+2. 配置环境变量。
 
-         ```
-         source /usr/local/Ascend/ascend-toolkit/set_env.sh
-         ```
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   ```
 
-         > **说明：** 
-         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+   > **说明：** 
+   > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+3. 执行命令查看芯片名称（$\{chip\_name\}）
 
-         ```
-         npu-smi info
-         #该设备芯片名为Ascend310P3 （请根据实际芯片填入）
-         回显如下：
-         +-------------------+-----------------+------------------------------------------------------+
-         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-         +===================+=================+======================================================+
-         | 0       310P3     | OK              | 15.8         42                0    / 0              |
-         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
-         +===================+=================+======================================================+
-         | 1       310P3     | OK              | 15.4         43                0    / 0              |
-         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
-         +===================+=================+======================================================+
-         ```
+      ```shell
+      npu-smi info
+      ```
+      该设备芯片名为Ascend310P3 （请根据实际芯片填入）
+      会显如下：
 
-      3. 执行ATC命令。
+      ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
 
-         ```
-         atc --model=crnn_npu_dy.onnx --framework=5 --output=crnn_final_bs16 --input_format=NCHW --input_shape="actual_input_1:16,1,32,100" --log=error --soc_version=Ascend${chip_name}
-         
-         备注：Ascend${chip_name}请根据实际查询结果填写
-         ```
+4. 执行atc命令
 
-         - 参数说明：
+      ```shell
+      # Ascend${chip_name}请根据实际查询结果填写 
+      atc --model=crnn_npu_dy.onnx --framework=5 --output=crnn_final_bs16 --input_format=NCHW --input_shape="actual_input_1:16,1,32,100" --log=error --soc_version=Ascend${chip_name}
+      ```
+      
+      参数说明:  
+      
+      - --model：为ONNX模型文件 
+      
+      - --framework：5代表ONNX模型 
+      
+      - --output：输出的OM模型 
+      
+      - --input_format：输入数据的格式 
+      
+      - --input_shape：输入数据的shape 
+      
+      - --log：日志级别 
+      
+      - --soc_version：处理器型号 
+      
+      运行成功后生成crnn_final_bs16.om模型文件 
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           
+5. 开始推理验证。
 
-运行成功后生成crnn_final_bs16.om模型文件。
-           
+    a. 使用ais-infer工具进行推理。
 
+    参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 
-2.开始推理验证。
+    ```shell
+    pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+    ```
 
-a.  使用ais-infer工具进行推理。
+    b. 执行推理
 
-参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
-
-```
- pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
-```
-
-b.  执行推理。
-
+    ```shell
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    
-    mkdir result
+
     python3 ${ais_infer_path}/ais_infer.py --model ./crnn_final_bs16.om --input ./input_bin --output ./ --output_dirname result --device 0 --batchsize 16 --output_batchsize_axis 1
-        
-        参数说明：   
-        --model：模型地址
-        --input：预处理完的数据集文件夹
-        --output：推理结果保存地址
-        --outfmt：推理结果保存格式
-    
-    运行成功后会在result/下生成推理输出的txt文件。
-    
+    ```
+
+    参数说明:
+
+    - --model：模型地址 
+    - --input：预处理完的数据集文件夹 
+    - --output：推理结果保存路径
+    - --output_dirname: 推理结果存储位置
+
+    运行成功后会在 ./result 下生成推理输出的bin文件
+
     **说明：** 
     执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
 
-**因工具限制，需要把result/summary.json从结果目录中删除，或者迁移到其他目录；**
+    c. 精度验证。
+    运行脚本postpossess_CRNN_pytorch.py进行精度测试，精度会打屏显示。
 
-c.  精度验证。
+    ```
+    python3 postpossess_CRNN_pytorch.py ./result ./label.txt
+    ```
+6. 性能验证
 
-运行脚本postpossess_CRNN_pytorch.py进行精度测试，精度会打屏显示。
-
-    python3 postpossess_CRNN_pytorch.py
+    可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+    ```
+    python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+    ```
+    - 参数说明
+      - --model：om模型
+      - --loop：循环次数
+      - --batchsize：推理张数
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -226,7 +229,7 @@ c.  精度验证。
 
 | 芯片型号 | Batch Size | 数据集      | 精度   | 性能  |
 | -------- | ---------- | ----------- | ------ | ----- |
-| 310P31   | 1          | IIIT5K_lmdb | 74.87% | 1229  |
+| 310P3    | 1          | IIIT5K_lmdb | 74.87% | 1229  |
 | 310P3    | 4          | IIIT5K_lmdb | 74.87% | 4548  |
 | 310P3    | 8          | IIIT5K_lmdb | 74.87% | 8035  |
 | 310P3    | 16         | IIIT5K_lmdb | 74.87% | 13555 |

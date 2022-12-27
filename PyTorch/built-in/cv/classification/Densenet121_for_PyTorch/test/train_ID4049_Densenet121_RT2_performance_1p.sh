@@ -99,19 +99,7 @@ else
 fi
 wait
 
-# 添加二进制代码
-line=`grep "import torch" ${test_path_dir}/../densenet121_1p_main.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${test_path_dir}/../densenet121_1p_main.py
-sed -i "$[line+2]ioption = {}" ${test_path_dir}/../densenet121_1p_main.py
-sed -i "$[line+3]ioption[\"NPU_FUZZY_COMPILE_BLACKLIST\"] = \"AvgPoolV2Grad\"" ${test_path_dir}/../densenet121_1p_main.py
-sed -i "$[line+4]itorch.npu.set_option(option)" ${test_path_dir}/../densenet121_1p_main.py
 
-
-
-#修改参数
-sed -i "s|pass|break|g" ${cur_path}/densenet121_1p_main.py
-
-wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 # 非平台场景时source 环境变量
@@ -123,13 +111,14 @@ fi
 
 
 #训练
-nohup python3.7 ${cur_path}/densenet121_1p_main.py  \
+nohup python3.7 ${cur_path}/main.py  \
       --workers 40 \
       --arch densenet121 \
-      --npu $ASCEND_DEVICE_ID \
+      --gpu $ASCEND_DEVICE_ID \
       --lr 0.1 \
       --momentum 0.9 \
       --amp \
+      --bin \
       --print-freq 1 \
       --eval-freq 5 \
       --batch-size $batch_size \
@@ -141,15 +130,13 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-#参数改回
-sed -i "s|break|pass|g" ${cur_path}/densenet121_1p_main.py
 wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 #FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
 FPS=`grep FPS ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F 'FPS@all' '{print $2}'|awk '{sum+=$1} END{print sum/NR}'`
-
+CompileTime=`grep Epoch ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -n +2|awk -F "Time" '{print $2}'|awk '{print$1}'|awk '{sum+=$1} END{print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -187,3 +174,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -81,6 +81,8 @@ class opts(object):
                              help='the current process id')
     self.parser.add_argument('--world_size', type=int, default=-1, 
                              help='world_size') 
+    self.parser.add_argument('--rank', type=int, default=0, help="rank of machine") 
+    self.parser.add_argument('--addr', type=str, default='127.0.0.1', help="addr of master")
     self.parser.add_argument('--port', type=str, default='44444', 
                              help='port')
     
@@ -153,7 +155,7 @@ class opts(object):
         action="store_true",
     )
     self.parser.add_argument('--pretrained_weight_path', default='', help='pretrained weight path')
-    self.parser.add_argument('--bin_model', default=1, type=int, help='turn on bin')
+    self.parser.add_argument('--bin_model', default=0, type=int, help='turn on bin')
     self.parser.add_argument('--profiling', default='', type=str, help='type of profiling')
     self.parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
     self.parser.add_argument('--load_local_weights', default=False, type=bool, help='turn on load local weights')

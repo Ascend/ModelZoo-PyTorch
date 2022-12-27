@@ -13,7 +13,7 @@ apex="O1"
 Network="SOLOv1"
 
 #训练batch_size,,需要模型审视修改
-batch_size=16
+batch_size=2
 device_id=0
 
 #参数校验，不需要修改
@@ -25,6 +25,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --apex* ]];then
         apex=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -76,22 +78,24 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
+        taskset -c $a-$b python3.7 -u ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
             --data_root=$data_path \
+            --cfg-options data.imgs_per_gpu=${batch_size} \
             --total_epochs 1 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
+        python3.7 -u ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level O1 \
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
             --data_root=$data_path \
+            --cfg-options data.imgs_per_gpu=${batch_size} \
             --total_epochs 1 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done

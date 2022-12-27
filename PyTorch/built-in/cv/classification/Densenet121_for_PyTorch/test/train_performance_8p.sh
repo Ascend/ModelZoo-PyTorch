@@ -102,8 +102,6 @@ else
 fi
 wait
 
-#修改参数
-sed -i "s|pass|break|g" ${cur_path}/densenet121_8p_main.py
 wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -124,7 +122,7 @@ then
     do
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/densenet121_8p_main.py \
+    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -143,13 +141,12 @@ then
         --device-list '0,1,2,3,4,5,6,7' \
         --amp \
         --benchmark 0 \
-        --loss-scale -1 \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 else
     for i in $(seq 0 7)
     do
-    nohup python3.7 ${cur_path}/densenet121_8p_main.py \
+    nohup python3.7 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -168,7 +165,6 @@ else
         --device-list '0,1,2,3,4,5,6,7' \
         --amp \
         --benchmark 0 \
-        --loss-scale -1 \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 fi
@@ -177,8 +173,6 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-#参数改回
-sed -i "s|break|pass|g" ${cur_path}/densenet121_8p_main.py
 wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"

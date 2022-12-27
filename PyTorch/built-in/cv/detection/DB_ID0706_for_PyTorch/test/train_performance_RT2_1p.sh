@@ -87,7 +87,7 @@ if [ $rt1 ];then
     export ENABLE_RUNTIME_V2=0
     echo "use rt1 runtime"
 fi
-if [ $profiling=="GE" ];then
+if [[ $profiling == "GE" ]];then
     export GE_PROFILING_TO_STD_OUT=1
 fi
 #################创建日志输出目录，不需要修改#################
@@ -132,6 +132,9 @@ echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS@all' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F '[#@all]' '{print $NF}'`
 FPS=${FPS#* }  # 去除前面的空格字符
+
+#输出CompileTime
+CompileTime=`grep Epoch ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2| awk -F "Time " '{print $2}' | awk -F 'ms' '{print $1}'|awk '{sum += $1} END {print sum/1000}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -166,3 +169,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -132,7 +132,7 @@ def main(args, init_distributed=False):
     for name, module in model.named_modules():
         module.register_forward_hook(hook_func('[forward]: '+name, npu_dict, module))
         module.register_backward_hook(hook_func('[backward]: '+name, npu_dict, module))
-    ''' 
+    '''
     criterion = task.build_criterion(args)
     #print(model)
     print('| model {}, criterion {}'.format(args.arch, criterion.__class__.__name__))
@@ -243,7 +243,7 @@ def train(args, trainer, task, epoch_itr):
                 import sys
                 sys.exit()
         elif num_steps < args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
-            with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True):
+            with torch.npu.profile(profiler_result_path="./CANN_prof"):
                 if i<0 and epoch_itr.epoch == 1:
                     with torch.autograd.profiler.profile(use_npu = True) as prof:
                         log_output = trainer.train_step(samples)
@@ -313,8 +313,8 @@ def train(args, trainer, task, epoch_itr):
                 #checkpoint_utils.save_checkpoint(args, trainer, epoch_itr, valid_losses[0])
 
             if num_updates >= max_update:
-                break    
-        num_steps = num_steps + 1    
+                break
+        num_steps = num_steps + 1
 
     # log end-of-epoch stats
     stats = get_training_stats(trainer)
@@ -459,7 +459,7 @@ def cli_main():
     args = options.parse_args_and_arch(parser)
     if args.bin :
         torch.npu.set_compile_mode(jit_compile=False)
-        
+
     if args.distributed_init_method is None:
         distributed_utils.infer_init_method(args)
 

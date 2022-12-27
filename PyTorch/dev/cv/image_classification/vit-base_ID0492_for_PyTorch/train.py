@@ -209,7 +209,7 @@ def train(args, model):
                                           opt_level=args.fp16_opt_level,
                                           combine_grad=True)
         amp._amp_state.loss_scalers[0]._loss_scale = 2**20
-    
+
 
     if args.ddp:
         model = model.to(f'npu:{NPU_CALCULATE_DEVICE}')
@@ -246,13 +246,13 @@ def train(args, model):
         #添加prof图
         print('len',len(epoch_iterator))
         num_steps = 0
-        for step, batch in enumerate(epoch_iterator): 
+        for step, batch in enumerate(epoch_iterator):
             if num_steps > args.stop_step:
                 if args.profiling == 'GE' or args.profiling == 'CANN':
                     import sys
                     sys.exit()
             elif num_steps <= args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
-                with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True):        
+                with torch.npu.profile(profiler_result_path="./CANN_prof"):
                     if args.ddp:
                         if isinstance(train_loader, torch.utils.data.DataLoader):
                             train_loader.sampler.set_epoch(step)
@@ -260,7 +260,7 @@ def train(args, model):
                     x, y = batch
                     y = y.to(torch.int32)
                     loss = model(x, y)
-                    
+
                     if args.gradient_accumulation_steps > 1:
                         loss = loss / args.gradient_accumulation_steps
                     if args.fp16:
@@ -284,7 +284,7 @@ def train(args, model):
                         fps.update(args.train_batch_size / (time.time() - end))
                         end = time.time()
             elif num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
-                with torch.npu.profile(profiler_result_path="./GE_prof"):    
+                with torch.npu.profile(profiler_result_path="./GE_prof"):
                     if args.ddp:
                         if isinstance(train_loader, torch.utils.data.DataLoader):
                             train_loader.sampler.set_epoch(step)
@@ -292,7 +292,7 @@ def train(args, model):
                     x, y = batch
                     y = y.to(torch.int32)
                     loss = model(x, y)
-                    
+
                     if args.gradient_accumulation_steps > 1:
                         loss = loss / args.gradient_accumulation_steps
                     if args.fp16:
@@ -326,7 +326,7 @@ def train(args, model):
                 x, y = batch
                 y = y.to(torch.int32)
                 loss = model(x, y)
-                
+
                 if args.gradient_accumulation_steps > 1:
                     loss = loss / args.gradient_accumulation_steps
                 if args.fp16:
@@ -348,6 +348,8 @@ def train(args, model):
 
                     global_step += 1
                     fps.update(args.train_batch_size / (time.time() - end))
+                    if global_step < 5 :
+                        print("Iter_time: {:.4f}".format(time.time() - end))
                     end = time.time()
 
                     epoch_iterator.set_description(
@@ -364,12 +366,12 @@ def train(args, model):
                             save_model(args, model)
                             best_acc = accuracy
                         model.train()
-                    
+
                     if global_step % t_total == 0:
                         break
             num_steps = num_steps + 1
 
-            
+
         losses.reset()
         if global_step % t_total == 0:
             break
@@ -443,10 +445,10 @@ def main():
     parser.add_argument( '--ddp',default=False,help='distributed or not ')
     parser.add_argument('--profiling', type=str, default='NONE',
                         help='choose profiling way--CANN,GE,NONE')
-    parser.add_argument('--start_step', default=0, type=int, 
+    parser.add_argument('--start_step', default=0, type=int,
                         help='start_step')
     parser.add_argument('--stop_step', default=1000, type=int,
-                        help='stop_step')              
+                        help='stop_step')
     parser.add_argument('--bin', type=bool, default=False,
                         help='if bin')
     args = parser.parse_args()
@@ -455,12 +457,12 @@ def main():
     os.environ['MASTER_PORT'] = '29501'
     if args.bin:
         torch.npu.set_compile_mode(jit_compile=False)
-        
+
     if args.ddp:
         NPU_WORLD_SIZE = int(os.getenv('NPU_WORLD_SIZE'))
         RANK = int(os.getenv('RANK'))
         torch.distributed.init_process_group('hccl', rank=RANK, world_size=NPU_WORLD_SIZE)
-        
+
     print('lr',args.learning_rate)
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1:
@@ -492,7 +494,7 @@ def main():
 
     # Training
     train(args, model)
-    
+
 
 if __name__ == "__main__":
     main()

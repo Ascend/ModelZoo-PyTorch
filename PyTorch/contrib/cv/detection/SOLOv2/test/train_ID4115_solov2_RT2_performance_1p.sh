@@ -111,6 +111,7 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export NPUID=0
 export RANK=0
+export PYTHONPATH=${cur_path}/../mmcv:$PYTHONPATH
 cd ${cur_path}/../
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 --batch_size=$batch_size\
       --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True --interval=$interval\
@@ -128,6 +129,9 @@ echo "------------------ Final result ------------------"
 sum_FPS=`grep '.* - mmcv.runner.runner - INFO - FPS:' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{sum +=$NF};END{print sum}'`
 num_FPS=`grep '.* - mmcv.runner.runner - INFO - FPS:' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | wc -l`
 FPS=$(awk 'BEGIN{printf "%.2f\n",'${sum_FPS}'/'${num_FPS}'}')
+
+#输出CompileTime
+CompileTime=`grep "mmcv.runner.runner" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |grep "Epoch"|head -n 2|awk -F "time:" '{print $2}'|awk '{sum += $1} END {print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -168,3 +172,4 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Ca
 echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

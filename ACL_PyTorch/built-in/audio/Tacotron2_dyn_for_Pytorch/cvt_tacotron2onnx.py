@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import os
+import sys
+import argparse
 import torch
 from torch import nn
 from torch.nn import functional as F
-import argparse
-
-import sys
 
 sys.path.append('./')
 
-import models
 from inference import checkpoint_from_distributed, unwrap_distributed, load_and_setup_model, prepare_input_sequence
 from tacotron2_common.utils import to_gpu, get_mask_from_lengths
 
@@ -217,6 +215,9 @@ def main():
         description='PyTorch Tacotron 2 export to TRT')
     parser = parse_args(parser)
     args, _ = parser.parse_known_args()
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
 
     tacotron2 = load_and_setup_model('Tacotron2', parser, args.tacotron2,
                                      fp16_run=args.fp16, cpu_run=True)

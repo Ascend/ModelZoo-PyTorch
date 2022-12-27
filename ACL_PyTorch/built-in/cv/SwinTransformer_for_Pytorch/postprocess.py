@@ -35,10 +35,13 @@ def evaluate(args):
     predict_result = dict()
     predict_files = os.listdir(input_dir)
     predict_files = list(
-        filter(lambda x:os.path.splitext(x)[1] == ".bin" , predict_files))
-    for predict_name in predict_files:
+        filter(lambda x:os.path.splitext(x)[1] in [".bin", ".npy"], predict_files))
+    for predict_name in tqdm(predict_files):
         predict_path = os.path.join(input_dir, predict_name)
-        predict_data = np.argsort(-1 * np.fromfile(predict_path, dtype=dtype))
+        if os.path.splitext(predict_name)[1] == ".bin":
+            predict_data = np.argsort(-1 * np.fromfile(predict_path, dtype=dtype))
+        else:
+            predict_data = np.argsort(-1 * np.load(predict_path).reshape(-1))
         predict_result[os.path.splitext(predict_name)[0][:-2]] = {
             "top1": predict_data[0], "top5": predict_data[:5]}
 

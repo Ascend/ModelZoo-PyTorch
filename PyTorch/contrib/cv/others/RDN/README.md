@@ -1,51 +1,152 @@
-# RDN 训练
-# Residual Dense Network for Image Super-Resolution
-This implements training of RDN on the DIV2K_x2 dataset.
-- Reference implementation：
-```
-url=https://github.com/yjn870/RDN-pytorch
-```
+# RDN for PyTorch
 
-## RDN Detail # 
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-As of the current date, Ascend-Pytorch is still inefficient for contiguous operations. 
-Therefore, RDN is re-implemented using semantics such as custom OP. 
+# 概述
+
+## 简述
+
+RDN主要是提出了网络结构RDB(residual dense blocks)，它本质上就是残差网络结构与密集网络结构的结合。RDN是针对图像复原任务的CNN模型。包含四个模块：Shallow feature extraction net（SFENet）表示前两个卷积层，用于提取浅层特征；Residual dense blocks（RDBs）融合残差模块和密集模块，每个块还包含Local feature fusion 和Local residual learning；Dense feature fusion（DFF）包含Global feature fusion 和Global residual learning 两部分；Up-sampling net（UPNet）网络最后的上采样（超分任务需要）+卷积操作。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/yjn870/RDN-pytorch
+  commit_id=f2641c0817f9e1f72acd961e3ebf42c89778a054
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/contrib/cv/others
+  ```
+  
+- 通过Git获取代码方法如下：
+
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+  
+- 通过单击“立即下载”，下载源码包。
+
+# 准备训练环境
+
+## 准备环境
+
+- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+
+  **表 1**  版本配套表
+
+  | 配套       | 版本                                                         |
+  | ---------- | ------------------------------------------------------------ |
+  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
+
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖。
+
+  ```
+  pip install -r requirements.txt
+  ```
 
 
-## Requirements # 
+## 准备数据集
 
-- Install PyTorch ([pytorch.org](http://pytorch.org))
-- `pip install -r requirements.txt`
-- The DIV2k, Set5 Dataset can be downloaded from the links below.Move the datasets to directory ./data .
-    - Train Set : [Download DIV2k](https://www.dropbox.com/s/41sn4eie37hp6rh/DIV2K_x2.h5?dl=0)
-    - Test Set : [Download Set5](https://www.dropbox.com/s/pd52pkmaik1ri0h/rdn_x2.pth?dl=0)
+1. 获取数据集。
 
-## Training # 
-To train a model, run `main.py` with the desired model architecture and the path to the ImageNet dataset:
+   请用户自行准备好数据集，包含训练集和验证集两部分，训练集使用DIV2K，验证集使用Set5。将准备好的训练集和验证集上传至服务器任意目录下并解压，解压后的训练集和验证集目录结构如下所示。
 
-```bash
-# 1p train perf
-bash test/train_performance_1p.sh
+   ```
+   ├── data
+         ├──DIV2K_x2.h5
+         ├──Set5_x2.h5                 
+   ```
 
-# 8p train perf
-bash test/train_performance_8p.sh
+   > **说明：** 
+   > 该数据集的训练过程脚本只作为一种参考示例。  
 
-# 8p train full
-bash test/train_full_8p.sh
+# 开始训练
 
-# 8p eval
-bash test/train_eval_8p.sh
+## 训练模型
 
-# finetuning
-bash test/train_finetune_1p.sh
-```
+1. 进入解压后的源码包根目录。
 
-## RDN training result # 
+   ```
+   cd /${模型文件夹名称} 
+   ```
 
-| Acc@1    | FPS       | Npu_nums | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: | :------: |
-| -        | 240      | 1        | 800      | O1       |
-| 37.95     | 1716     | 8        | 800      | O1       |
+2. 运行训练脚本。
 
+   该模型支持单机单卡训练和单机8卡训练。
 
+   - 单机单卡训练
 
+     启动单卡训练。
+
+     ```
+     bash ./test/train_full_1p.sh  --data_path=数据集路径
+     ```
+
+   - 单机8卡训练
+
+     启动8卡训练。
+
+     ```
+     bash ./test/train_full_8p.sh  --data_path=数据集路径
+     ```
+
+   --data\_path参数填写数据集路径。
+
+   模型训练脚本参数说明如下。
+
+   ```
+   公共参数：
+   --data_path                         //数据集路径
+   --model                             //使用模型
+   --workers                           //加载数据进程数
+   --device_id                         //指定训练用卡
+   --epochs                            //重复训练次数
+   --batch_size                        //训练批次大小，默认为64
+   --lr                                //初始学习率，默认：5e-4
+   --weight_decay                      //权重衰减，默认：1e-4
+   --growth_rate					             //增长率
+   --loss_scale_value                  //混合精度lossscale大小
+   --apex_opt_level                    //混合精度类型
+   ```
+   
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME    | Acc@1  | FPS      | Epochs | AMP_Type | Torch_version |
+| ------- | ------ | :------  | ------ | :------- | :------------ |
+| 1p-竞品 | -      | -        | -      | -        | -             |
+| 8p-竞品 | -      | -        | -      | -        | -             |
+| 1p-NPU  | -      | 240      | 1      | O1       | 1.5           |
+| 1p-NPU  | -      | 544      | 1      | O1       | 1.8           |
+| 8p-NPU  | 37.95  | 1716     | 800    | O1       | 1.5           |
+| 8p-NPU  | 37.97  | 4337     | 800    | O1       | 1.8           |
+
+# 版本说明
+
+## 变更
+
+2022.11.30: 更新pytorch1.8版本。
+
+2022.01.30：首次发布。
+
+## 已知问题
+
+无。

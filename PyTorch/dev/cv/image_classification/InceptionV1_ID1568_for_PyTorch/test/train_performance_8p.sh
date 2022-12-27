@@ -37,7 +37,7 @@ over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling=False
-
+bin_mode=0
 
 if [[ $1 == --help || $1 == --h ]];then
    echo "usage:./train_performance_1p.sh --data_path=data_dir --batch_size=1024 --learning_rate=0.04"
@@ -54,6 +54,8 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=1
     fi
 done
 
@@ -110,7 +112,7 @@ nohup python3.7 ${cur_path}/../main-8p.py \
     --device='npu' \
     --epochs=$train_epochs \
   	--label-smoothing=0.1 \
-    --bin_mode=${bin_mode:-"true"} \
+    --bin_mode=${bin_mode} \
     --batch-size=${batch_size} > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 #训练结束时间，不需要修改

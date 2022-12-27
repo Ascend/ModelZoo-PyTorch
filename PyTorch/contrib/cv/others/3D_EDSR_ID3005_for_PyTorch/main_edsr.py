@@ -109,7 +109,7 @@ def train(training_data_loader, optimizer, model, criterion, epoch, device):
         t1 = time.time()
         mse = torch.mean((sr - target) ** 2)
         psnr = 10 * math.log10(1.0 / torch.mean(mse))
-        if iteration % 10 == 0:
+        if iteration % 1 == 0:
             print("===> Epoch[{}]({}/{}): Train Loss:{:.10f} psnr:{:.10f}".format( \
                 epoch, iteration, len(training_data_loader), loss.item(), psnr))
             print('===> Timer:%.4f' % (t1 - t0))

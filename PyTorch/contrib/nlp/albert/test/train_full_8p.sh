@@ -12,6 +12,8 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -89,7 +91,7 @@ for i in $(seq 7 -1 0)
         --do_eval \
         --do_lower_case \
         --max_seq_length=128 \
-        --batch_size=440 \
+        --batch_size=${batch_size} \
         --learning_rate=180e-5 \
         --num_train_epochs=7.0 \
         --logging_steps=10 \

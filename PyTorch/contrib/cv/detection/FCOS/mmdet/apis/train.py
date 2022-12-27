@@ -38,7 +38,7 @@ from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          Fp16OptimizerHook, OptimizerHook, build_optimizer)
 from mmcv.utils import build_from_cfg
-
+from mmcv.runner import get_dist_info
 from mmdet.core import DistEvalHook, EvalHook
 from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
@@ -108,7 +108,7 @@ def train_detector(model,
         find_unused_parameters = cfg.get('find_unused_parameters', False)
         # Sets the `find_unused_parameters` parameter in
         # torch.nn.parallel.DistributedDataParallel
-        print("/home/jyl/mmdetection-master/mmdet/apis/train.py", "  NPUID:",torch.npu.current_device())
+        print("NPUID:",torch.npu.current_device())
         model = MMDistributedDataParallel(
             model,  
             device_ids=[torch.npu.current_device()], 
@@ -118,14 +118,16 @@ def train_detector(model,
         model = MMDataParallel(
             model, device_ids=cfg.npu_ids)  # mode with apex
 
-
+    _, world_size = get_dist_info()
     # build runner
     runner = EpochBasedRunner(
         model,
         optimizer=optimizer,
         work_dir=cfg.work_dir,
         logger=logger,
-        meta=meta)
+        meta=meta,
+        max_iters=cfg.max_step,
+        num_of_gpus=world_size)
     # an ugly workaround to make .log and .log.json filenames the same
     runner.timestamp = timestamp
     # fp16 setting

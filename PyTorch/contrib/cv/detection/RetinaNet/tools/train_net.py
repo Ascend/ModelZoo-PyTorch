@@ -33,6 +33,8 @@ import logging
 import os
 from collections import OrderedDict
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from apex import amp
 
 import detectron2.utils.comm as comm

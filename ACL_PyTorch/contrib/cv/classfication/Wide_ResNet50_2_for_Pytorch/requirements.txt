@@ -4,3 +4,4 @@ onnx == 1.7.0
 numpy == 1.18.5
 Pillow == 7.2.0
 opencv-python == 4.2.0.34
+tqdm

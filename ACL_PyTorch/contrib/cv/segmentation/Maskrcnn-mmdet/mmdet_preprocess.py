@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ import cv2
 import mmcv
 import torch
 import multiprocessing
+import tqdm 
+
 
 def resize(img, size):
     old_h = img.shape[0]
@@ -29,14 +31,13 @@ def resize(img, size):
     resized_img = mmcv.imresize(img, (new_w, new_h), backend='cv2')
     return resized_img
 
+
 def gen_input_bin(file_batches, batch):
     i = 0
-    for file in file_batches[batch]:
+    for im_file in tqdm.tqdm(file_batches[batch]):
         i = i + 1
-        print("batch", batch, file, "===", i)
 
-        image = mmcv.imread(os.path.join(flags.image_src_path, file), backend='cv2')
-        #image = mmcv.imrescale(image, (flags.model_input_width, flags.model_input_height))
+        image = mmcv.imread(os.path.join(flags.image_src_path, im_file), backend='cv2')
         image = resize(image, (flags.model_input_width, flags.model_input_height))
         mean = np.array([123.675, 116.28, 103.53], dtype=np.float32)
         std = np.array([58.395, 57.12, 57.375], dtype=np.float32)
@@ -48,9 +49,9 @@ def gen_input_bin(file_batches, batch):
         pad_right = flags.model_input_width - pad_left - w
         pad_bottom = flags.model_input_height - pad_top - h
         image = mmcv.impad(image, padding=(pad_left, pad_top, pad_right, pad_bottom), pad_val=0)
-        #mmcv.imwrite(image, './paded_jpg/' + file.split('.')[0] + '.jpg')
         image = image.transpose(2, 0, 1)
-        image.tofile(os.path.join(flags.bin_file_path, file.split('.')[0] + ".bin"))
+        image.tofile(os.path.join(flags.bin_file_path, im_file.split('.')[0] + ".bin"))
+
 
 def preprocess(src_path, save_path):
     files = os.listdir(src_path)
@@ -61,6 +62,7 @@ def preprocess(src_path, save_path):
     thread_pool.close()
     thread_pool.join()
     print("in thread, except will not report! please ensure bin files generated.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='preprocess of MaskRCNN PyTorch model')

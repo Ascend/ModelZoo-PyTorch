@@ -1,144 +1,156 @@
+#  TDNN for PyTorch
 
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-## 概述
+# 概述
 
-ECAPA-TDNN基于传统TDNN模型进行了改进，主要有三个方面的优化，分别是：增加了一维SE残差模块（1-Dimensional Squeeze-Excitation Res2Block）;多层特征融合（Multi-layer feature aggregation and summation）;通道和上下文相关的统计池化（Channel- and context-dependent statistics pooling）
-
- 
+## 简述
+ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN模型进行了改进，主要有三个方面的优化，分别是：增加了一维SE残差模块（1-Dimensional Squeeze-Excitation Res2Block）;多层特征融合（Multi-layer feature aggregation and summation）;通道和上下文相关的统计池化（Channel- and context-dependent statistics pooling）。
 
 - 参考实现：
-[https://github.com/speechbrain/speechbrain/tree/develop/templates/speaker_id](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fspeechbrain%2Fspeechbrain%2Ftree%2Fdevelop%2Ftemplates%2Fspeaker_id)
 
+  ```
+  url=https://github.com/speechbrain/speechbrain/tree/develop/templates/speaker_id
+  commit_id=d333cf277706146bd622cb46f928083f9938b21a
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/contrib/audio
+  ```
   
-
-
-
-## 支持特性
-
-| 特性列表   | 是否支持 |
-| ---------- | -------- |
-| 分布式训练 | 是       |
-| 混合精度   | 是       |
-| 并行数据   | 是       |
-
-## 混合精度训练
-
-昇腾910 AI处理器提供自动混合精度功能，模型使用 opt_level="O1", loss_scale=128, combine_grad=True的配置进行amp.initialize
-
-脚本已默认开启混合精度，设置如下。
+- 通过Git获取代码方法如下：
 
   ```
-  parser.add_argument(       
-  		"--auto_mix_prec",        
-  		action="store_true",        
-  		help="This flag enables training with automatic mixed-precision.",     
-      )
+  git clone {url}        # 克隆仓库的代码 
+  cd {code_path}         # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
+  
+- 通过单击“立即下载”，下载源码包。
+
+# 准备训练环境
+
+## 准备环境
+
+ 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+
+  **表 1**  版本配套表
+
+  | 配套       | 版本                                                                                 |
+  |------------------------------------------------------------------------------------| ------------------------------------------------------------ |
+  | 硬件 | [1.0.11.SPC002](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)        |
+  | CANN       | [5.0.2](https://www.hiascend.com/software/cann/commercial?version=5.0.2)           |
+  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)                             |
+
+1. 环境准备指导。
+
+   1. 请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》准备torch_npu环境。
+   2. 安装torchaudio，npu安装方法请参考:https://gitee.com/ascend/modelzoo/issues/I48AZM
+  
+4. 安装依赖并安装环境。
+
+    ```
+    pip install -r requirements.txt
+    pip install --editable .
+    ```
 
 
-<h2 id="训练环境准备.md">训练环境准备</h2>
+## 准备数据集
 
-CANN版本：5.0.2
+1. 获取数据集。
 
-昇腾torch版本：1.5.0
+   模型训练使用rirs_noises数据集，数据集请用户自行获取。
 
-#### speechbrain环境配置
+2. 将数据集分别解压至`./data/LibriSpeech`和`./data/RIRS_NOISES`文件夹路径下，数据集目录结构参考：
 
-（详情请参考speechbrain官方文档安装方法。）
-
-1. 安装torch 1.5.0
-
-2. 安装torchaudio，npu安装方法请参考
-
-   https://e.gitee.com/HUAWEI-ASCEND/dashboard?issue=I48AZM
-
-3. cd tdnn
-
-   pip install -r requirement.txt
-
-   pip install --editable .
+   ```
+   ├── data
+   │    ├──LibriSpeech├──train-clean-5
+   │    │                                         
+   │    ├──RIRS_NOISES├──pointsource_noises
+                      ├──real_rirs_isotropic_noises
+                      ├──simulated_rirs           
+   ```
 
 
-<h2 id="快速上手.md">快速上手</h2>
 
-- 数据集准备
+# 开始训练
 
-模型训练使用rirs_noises、train-clean-5数据集，数据集请用户自行获取。
+## 训练模型
 
-- 模型训练
+1. 进入解压后的源码包根目录。
 
-选择合适的下载方式下载源码包。
+   ```
+   cd /${模型文件夹名称}/speaker_id
+   ```
 
-Before training, modify the data_folder in these scripts.
+2. 运行训练脚本。
 
-```bash
-# training 1p loss
-bash ./test/train_full_1p.sh --data_folder=""
+   该模型支持单机单卡训练和单机8卡训练。
 
-# training 1p performance
-bash ./test/train_performance_1p.sh --data_folder=""
+   - 单机单卡训练
 
-# training 8p loss
-bash ./test/train_full_8p.sh --data_folder=""
+     启动单卡训练。
 
-# training 8p performance
-bash ./test/train_performance_8p.sh --data_folder=""
-```
+     ```
+     bash ./test/train_full_1p.sh --data_folder=/data/xxx/   # 精度训练
+     bash ./test/train_performance_1p.sh --data_folder=/data/xxx/  # 性能训练 
+     ```
 
-```
-Log path:
-    test/output/train_full_1p.log              # 1p training result log
-    test/output/train_performance_1p.log       # 1p training performance result log
-    test/output/train_full_8p.log              # 8p training result log
-    test/output/train_performance_8p.log       # 8p training performance result log
-```
+   - 单机8卡训练
 
-## 训练结果
+     启动8卡训练。
 
-| acc |  FPS   | Npu_nums | Epochs | AMP_Type |
-| :--------: | :----: | :------: | :----: | :------: |
-|     -      |  8.25  |    1     |   1    |    O1    |
-|  0.9062  | 43.863 |    8     |   5    |    O1    |
+     ```
+     bash ./test/train_full_8p.sh --data_folder=/data/xxx/   # 精度训练
+     bash ./test/train_performance_8p.sh --data_folder=/data/xxx/  # 性能训练    
+     ```
 
-<h2 id="高级参考.md">高级参考</h2>
+    --data_folder参数填写数据集路径。
+   
+3. 日志文件夹如下。
 
-### 脚本和示例代码
+     ```
+     Log path:
+        test/output/train_full_1p.log              # 1p training result log
+        test/output/train_performance_1p.log       # 1p training performance result log
+        test/output/train_full_8p.log              # 8p training result log
+        test/output/train_performance_8p.log       # 8p training performance result log
+     ```
 
-```
-├── README.md                                 //代码说明文档
-├── speechbrain                               //框架支持文件
-├── templates/speaker_id
-│    ├──test                                 //测试脚本
-│    ├──custom_model.py                      //简易TDNN模块
-|    ├──mini_librispeech_prepare.py          //数据清单文件
-│    ├──run_1p.sh                            //单卡运行启动脚本
-│    ├──run_8p.sh                            //8卡运行启动脚本
-│    ├──train.py                             //网络训练与测试代码
-│    ├──train.yaml                           //网络训练参数脚本 
-```
+   模型训练脚本参数说明如下。
 
-### 脚本参数
+   ```
+   公共参数：
+   --data_folder                              //数据集路径
+   --workers                           //加载数据进程数
+   ```
 
-```
---seed                   制作参数对象seed
---rank_size              使用NPU卡数量，默认：1
---number_of_epochs       训练epoch次数，默认：5
---data_folder            数据集路径，默认：./data
---output_folder          结果输出保存的文件路径，默认：./results/speaker_id/<seed>
---batch_size             每个NPU的batch size，默认：64
-```
+# 训练结果展示
+
+**表 2**  训练结果展示表
 
 
-## 训练过程
+| NAME    | Valid Err |   FPS | Epochs | AMP_Type |
+|---------|-----------|------:|--------|---------:|
+| 1p-GPU  | -         | 17.43 | 1      |        - |
+| 1p-NPU  | -         |  7.99 | 1      |       O1 |
+| 8p-GPU  | 7.81e-03  | 83.26 | 5      |        - |
+| 8p-NPU  | 3.91e-02  | 45.78 | 5      |       O1 |
 
-1.  通过“模型训练”中的训练指令启动单卡或者多卡训练。单卡和多卡通过运行不同脚本，支持单卡、8卡网络训练。
+# 版本说明
 
-2.  参考脚本的模型存储路径为results/<seed>/save，训练脚本log中包括如下信息。
+## 变更
 
-```
-Epoch: 1, lr: 1.00e-03 - train loss: 2.70 - valid loss: 3.39, valid error: 9.47e-01
-Epoch loaded: 1 - test loss: 3.43, test error: 9.54e-01
-```
-## 注意事项
+2022.07.05：整改Readme，重新发布。
 
- **该模型为了固定shape，修改了1、/speechbrain/dataio/dataio.py read_audio函数 2、/speechbrain/templates/speaker_id/train.py prepare_features函数 3、/speechbrain/core.py _train_loader_specifics里的sampler。其中第三个修改是因为数据集不足固定shape，实际使用模型务必还原回去。** 
+## 已知问题
+
+无。

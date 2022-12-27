@@ -260,7 +260,7 @@ def main():
     if args.num_gpus > 1:
         init_process_group(proc_rank=args.rank_id, world_size=args.num_gpus, device_type=args.device)
     elif args.device == "npu":
-        torch.npu.set_device(0)
+        torch.npu.set_device(args.rank_id)
     elif args.device == "cuda":
         torch.cuda.set_device(0)
 

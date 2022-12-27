@@ -17,6 +17,13 @@ import torch
 import torch.onnx
 sys.path.append(r"./pytorch-image-models")
 import timm
+import argparse
+
+def get_args_parser():
+    parser = argparse.ArgumentParser('CSPR pth2onnx scipt', add_help=False)
+    parser.add_argument('--pth' , help='pth file')
+    parser.add_argument('--onnx', help='onnx name')
+    return parser
 
 def pth2onnx(input_file, output_file):
     model = timm.create_model('cspresnext50', pretrained=False)
@@ -30,4 +37,7 @@ def pth2onnx(input_file, output_file):
     dummy_input = torch.randn(1, 3, 224, 224)
     torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, verbose=True, opset_version=11)
 if __name__=="__main__":
-    pth2onnx(sys.argv[1], sys.argv[2])
+
+    parser = get_args_parser()
+    args = parser.parse_args()
+    pth2onnx(args.pth, args.onnx)

@@ -1,0 +1,8 @@
+torch==1.12.0
+torchaudio==0.12.0
+torchvision==0.13.0
+tqdm==4.64.1
+onnx==1.12.0
+mmcv-full==1.6.2
+einops
+scipy

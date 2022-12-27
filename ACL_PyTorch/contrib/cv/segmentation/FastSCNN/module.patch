@@ -1,3 +1,13 @@
+From 67f87627a8d4b23b1d2dbb156ecbf04babbe6fb6 Mon Sep 17 00:00:00 2001
+From: Qw1kowa <1741235576@qq.com>
+Date: Fri, 2 Dec 2022 07:05:02 +0000
+Subject: [PATCH] module.patch
+
+---
+ segmentron/modules/module.py | 23 +++++++++++++++++++++--
+ segmentron/utils/options.py  | 17 +++++++++++++++++
+ 2 files changed, 38 insertions(+), 2 deletions(-)
+
 diff --git a/segmentron/modules/module.py b/segmentron/modules/module.py
 index 942ea13..51e324d 100644
 --- a/segmentron/modules/module.py
@@ -48,10 +58,10 @@ index 942ea13..51e324d 100644
              feats.append(F.interpolate(conv(avgpool(x)), size, mode='bilinear', align_corners=True))
          return torch.cat(feats, dim=1)
 diff --git a/segmentron/utils/options.py b/segmentron/utils/options.py
-index ea4c8b0..d2940a0 100644
+index ea4c8b0..193f415 100644
 --- a/segmentron/utils/options.py
 +++ b/segmentron/utils/options.py
-@@ -21,6 +21,12 @@ def parse_args():
+@@ -21,9 +21,26 @@ def parse_args():
      # for visual
      parser.add_argument('--input-img', type=str, default='tools/demo_vis.png',
                          help='path to the input image or a directory of images')
@@ -64,3 +74,21 @@ index ea4c8b0..d2940a0 100644
      # config options
      parser.add_argument('opts', help='See config for all options',
                          default=None, nargs=argparse.REMAINDER)
++    parser.add_argument('--datasets_input_path', default='/opt/npu/datasets/cityscapes', 
++                        help='the path of the datasets to preprocess')
++    parser.add_argument('--datasets_output_path', default='/opt/npu/prep_datasets', 
++                        help='the path of the datasets after preprocess')
++    parser.add_argument('--result_bin_root', default='/home/user_dir/FastSCNN/result/bs1', 
++                        help='the path of the inference results')
++    
++    parser.add_argument('--label_bin_root', default='/opt/npu/prep_datasets/gtFine/', 
++                        help='the path of the labels corresponding to the inference results')
++    
++    parser.add_argument('--sort_log', default='/home/agc/FastSCNN/sort.log')
+     args = parser.parse_args()
+ 
+     return args
+\ No newline at end of file
+-- 
+2.17.1
+

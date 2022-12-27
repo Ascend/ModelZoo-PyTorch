@@ -32,12 +32,12 @@
 # ============================================================================
 #
 import torch
+import torch_npu
 from torch.utils.data import Dataset
 import json
 import os
 from PIL import Image
 from utils import ImageTransforms
-import torch.npu
 import os
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):

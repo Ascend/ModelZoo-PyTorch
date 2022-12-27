@@ -48,7 +48,7 @@ def convert():
     dynamic_axes = {'actual_input': {0: '-1'}, 'output1': {0: '-1'}, 'output2': {0: '-1'}, 'output3': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 512, 512)
     torch.onnx.export(model, dummy_input, output_file, input_names=input_names, dynamic_axes=dynamic_axes,
-                      output_names=output_names, opset_version=11, verbose=True)
+                      output_names=output_names, opset_version=11, verbose=True, enable_onnx_checker=False)
 
 if __name__ == "__main__":
     input_file = sys.argv[1]

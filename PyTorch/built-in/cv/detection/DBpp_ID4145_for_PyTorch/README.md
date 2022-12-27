@@ -42,14 +42,8 @@
 
   ```
   pip install -r requirements.txt
-  git clone https://github.com/wangjiangben-hw/mmcv
-  cd mmcv && git checkout 996b3503c4f14b250bdb5810fcb271ebbe286619
-  cp $project/mmcv.patch .
-  patch -p1 < mmcv.patch
-  MMCV_WITH_OPS=1 pip3 install -e . -v
-  git clone https://github.com/wangjiangben-hw/mmdetection
-  cd mmdetection && git checkout 746975f94a2bde60c3b0056c462264dfeab96f30
-  pip3 install -e .
+  pip install mmcv-full -f http://download.openmmlab.com/mmcv/dist/npu/torch1.8.0/index.html
+  pip install mmdet
   ```
 - 请注意在x86下开启cpu性能模式 [将cpu设置为performance模式](https://gitee.com/ascend/pytorch/blob/master/docs/zh/PyTorch%E8%AE%AD%E7%BB%83%E8%B0%83%E4%BC%98&%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/PyTorch%E8%AE%AD%E7%BB%83%E8%B0%83%E4%BC%98&%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md#%E5%B0%86cpu%E8%AE%BE%E7%BD%AE%E4%B8%BAperformance%E6%A8%A1%E5%BC%8F)
   

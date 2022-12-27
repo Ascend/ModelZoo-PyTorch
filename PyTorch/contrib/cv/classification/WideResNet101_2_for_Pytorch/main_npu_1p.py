@@ -43,8 +43,8 @@ from models import resnet_0_6_0
 CALCULATE_DEVICE = "npu:0"
 
 model_names = sorted(name for name in models.__dict__
-    if name.islower() and not name.startswith("__")
-    and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__")
+                     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR',
@@ -52,8 +52,8 @@ parser.add_argument('data', metavar='DIR',
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
                     choices=model_names,
                     help='model architecture: ' +
-                        ' | '.join(model_names) +
-                        ' (default: resnet18)')
+                         ' | '.join(model_names) +
+                         ' (default: resnet18)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
@@ -107,8 +107,8 @@ parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
 parser.add_argument('--warm_up_epochs', default=0, type=int,
                     help='warm up')
-parser.add_argument('--loss-scale', default=1024., type=float,
-                    help='loss scale using in amp, default -1 means dynamic')
+parser.add_argument('--loss-scale', default='dynamic',
+                    help='loss scale using in amp, default dynamic')
 parser.add_argument('--opt-level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--prof', default=False, action='store_true',
@@ -131,7 +131,6 @@ parser.add_argument('--model_url',
                     help='path to pretrained model')
 parser.add_argument('--onnx', default=True, action='store_true',
                     help="convert pth model to onnx")
-
 
 cur_step = 0
 CACHE_TRAINING_URL = "/cache/training/"
@@ -224,7 +223,7 @@ def main_worker(gpu, ngpus_per_node, args):
             pretrained_dict.pop('fc.bias')
         for param in model.parameters():
             param.requires_grad = False
-        model.fc = nn.Linear(2048,1000)
+        model.fc = nn.Linear(2048, 1000)
     else:
         print("=> creating model wide_resnet101_2")
         model = resnet_0_6_0.wide_resnet101_2()
@@ -234,7 +233,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # elif args.distributed:
     ###### modify npu_p1 2######
     if args.distributed:
-    ###### modify npu_p1 2 end ######
+        ###### modify npu_p1 2 end ######
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
         # DistributedDataParallel will use all available devices.
@@ -273,9 +272,9 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().to(CALCULATE_DEVICE)
     ############## npu modify 4 end #############
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                nesterov=True,
-                                weight_decay=args.weight_decay)
+                                            momentum=args.momentum,
+                                            nesterov=True,
+                                            weight_decay=args.weight_decay)
     ###### modify 1 ######
     if args.amp:
         model, optimizer = amp.initialize(
@@ -372,7 +371,7 @@ def main_worker(gpu, ngpus_per_node, args):
         best_acc1 = max(acc1, best_acc1)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                and args.rank % ngpus_per_node == 0):
+                                                    and args.rank % ngpus_per_node == 0):
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
@@ -422,6 +421,7 @@ def profiling(data_loader, model, criterion, optimizer, args):
 
     prof.export_chrome_trace("output.prof")
 
+
 def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -456,7 +456,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))# pylint: disable=unbalanced-tuple-unpacking
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))  # pylint: disable=unbalanced-tuple-unpacking
         losses.update(loss.item(), images.size(0))
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
@@ -477,10 +477,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         batch_time.update(time.time() - end)
         end = time.time()
 
-    ###### modify 4 ######
+        ###### modify 4 ######
         if i % args.print_freq == 0:
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                                                          and args.rank % ngpus_per_node == 0):
+                                                        and args.rank % ngpus_per_node == 0):
                 progress.display(i)
 
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed
@@ -497,7 +497,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
 def validate(val_loader, model, criterion, args):
     ###### modify 5 ######
-    batch_time = AverageMeter('Time', ':6.3f', start_count_index= 5)
+    batch_time = AverageMeter('Time', ':6.3f', start_count_index=5)
     ###### modify 5 end ######
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -525,7 +525,7 @@ def validate(val_loader, model, criterion, args):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))# pylint: disable=unbalanced-tuple-unpacking
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))  # pylint: disable=unbalanced-tuple-unpacking
             losses.update(loss.item(), images.size(0))
             top1.update(acc1[0], images.size(0))
             top5.update(acc5[0], images.size(0))

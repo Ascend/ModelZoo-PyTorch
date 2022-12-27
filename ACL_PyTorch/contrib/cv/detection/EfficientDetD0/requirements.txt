@@ -1,14 +1,6 @@
+timm == 0.6.11
 torch==1.8.0
-timm>=0.3.2
-torchvision
 pyyaml
-numpy
-decorator==5.1.1
-
-# an update version that fixes some bugs, incl issues with numpy >= 1.18
 pycocotools>=2.0.2
-
-omegaconf>=2.0
-onnx-simplifier
+onnx-simplifier==0.3.6
 skl2onnx
-backports.lzma

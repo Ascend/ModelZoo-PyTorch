@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,9 +10,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
 import argparse
 import os
 import json
+from tqdm import tqdm
 import numpy as np
 
 
@@ -52,7 +55,7 @@ def postProcesss(result_path, gtfile_path):
 
     outputs = []
     labels = []
-    for i in file_info.items():
+    for i in tqdm(file_info.items()):
         # get inference result file
         res_path = i[1]['outfiles'][0]
         
@@ -148,15 +151,19 @@ def confusion_matrix(y_pred, y_real, normalize=None):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='postprocess of r2plus1d')
-    parser.add_argument('--result_path')
-    parser.add_argument('--gtfile_path')
-    opt = parser.parse_args()
+    parser = argparse.ArgumentParser('postprocess of r2plus1d')
+    parser.add_argument('--result_path', type=str, 
+                        help='inference results directory path')
+    parser.add_argument('--gtfile_path', type=str,
+                        help='path to label file')
+    args = parser.parse_args()
 
-    assert opt.result_path is not None
-    assert opt.gtfile_path is not None
+    assert os.path.isfile(args.result_path), \
+            "inference results folder does not exist."
+    assert os.path.isfile(args.gtfile_path), \
+            "Groundtruth file does not exist."
     
-    outputs, labels = postProcesss(opt.result_path, opt.gtfile_path)
+    outputs, labels = postProcesss(args.result_path, args.gtfile_path)
 
     print('Evaluating top_k_accuracy ...')
     top_acc = top_k_accuracy(outputs, labels, topk=(1, 5))

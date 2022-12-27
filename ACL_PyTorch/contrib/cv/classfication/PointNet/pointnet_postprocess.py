@@ -51,16 +51,15 @@ def cre_groundtruth_list_fromtxt(gtfile_path):
     return gt_list
 
 
-def calc_acc_bs1(dirname, img_ge_dict):
-    output_folder = os.listdir(dirname)
-    output_files = os.listdir(os.path.join(dirname, output_folder[0]))
+def calc_acc(dirname, img_ge_dict):
+    output_files=os.listdir(dirname)
     ground_truth = []
     labels = []
     for f in output_files:
         real_name = f.split('_')[0]
         if real_name in img_ge_dict:
             ground_truth.append(img_ge_dict[real_name])
-        file_name = os.path.join(dirname, output_folder[0], f)
+        file_name = os.path.join(dirname, f)
         file = open(file_name, 'r')
         content = file.read()
         file.close()
@@ -77,38 +76,9 @@ def calc_acc_bs1(dirname, img_ge_dict):
     print('om model accuracy:', correct / total)
 
 
-def calc_acc_bs16(dirname, gt_list):
-    output_folder = os.listdir(dirname)
-    output_files = os.listdir(os.path.join(dirname, output_folder[0]))
-    file_count = len(output_files)
-    labels = []
-    for i in range(file_count):
-        if i < 10:
-            file_name = "bin_batch00" + str(i) + "_output_0.txt"
-        elif i >= 10 and i < 100:
-            file_name = "bin_batch0" + str(i) + "_output_0.txt"
-        else:
-            file_name = "bin_batch" + str(i) + "_output_0.txt"
-        f = open(os.path.join(dirname, output_folder[0], file_name))
-        for line in f.readlines():
-            content_list = list(map(float, line.split()))
-            arr = np.array(content_list)
-            labels.append(np.argmax(arr))
-
-    total = len(labels)
-    correct = 0.
-    for i in range(total):
-        if gt_list[i] == labels[i]:
-            correct += 1
-    print('om model accuracy:', correct / total)
-
 if __name__ == '__main__':
     name2label = sys.argv[1]
     infer_res = sys.argv[2]
-    batch_size = sys.argv[3]
-    if batch_size.endswith("16"):
-        img_gt_list = cre_groundtruth_list_fromtxt(name2label)
-        calc_acc_bs16(infer_res, img_gt_list)
-    else:
-        img_gt_dict = cre_groundtruth_dict_fromtxt(name2label)
-        calc_acc_bs1(infer_res, img_gt_dict)
+    img_gt_dict = cre_groundtruth_dict_fromtxt(name2label)
+    calc_acc(infer_res, img_gt_dict)
+

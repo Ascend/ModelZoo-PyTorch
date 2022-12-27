@@ -13,6 +13,7 @@ tqdm
 sympy>=1.8
 decorator>=5.0.9
 pycocotools>=2.0  # COCO mAP
+protobuf==3.19.1
 
 # extras --------------------------------------
 # thop  # FLOPS computation

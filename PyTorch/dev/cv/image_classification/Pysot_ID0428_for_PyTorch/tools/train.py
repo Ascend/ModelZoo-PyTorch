@@ -287,6 +287,8 @@ def train(train_loader, model, optimizer, lr_scheduler, tb_writer, args):
 
         batch_size = cfg.TRAIN.BATCH_SIZE
         fps = (batch_size / batch_time)
+        if idx < 3 and epoch == 0:
+            print("step_time: ", batch_time)
         if rank == 0:
             for k, v in batch_info.items():
                 tb_writer.add_scalar(k, v, tb_idx)

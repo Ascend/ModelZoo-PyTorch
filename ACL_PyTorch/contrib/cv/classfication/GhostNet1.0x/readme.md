@@ -1,102 +1,115 @@
 # GhostNet1.0x模型-推理指导
 
 
-- [概述](#概述)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-- [推理环境准备](#推理环境准备)
-
-- [快速上手](#快速上手)
-
-  - [准备数据集](#准备数据集)
-  - [模型推理](#模型推理)
-
-- [模型推理性能](#模型推理性能)
+    - [输入输出数据](#section540883920406)
 
 
-# 概述<a name="概述"></a>
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
  GhostNet是华为诺亚方舟实验室提出的一个新型神经网络结构，其中的Ghost Module和深度分离卷积就很类似，不同之处在于先进行PointwiseConv，后进行DepthwiseConv，另外增加了DepthwiseConv的数量，包括一个恒定映射。
 
 - 参考实现：
 
   ```
-  url=https://github.com/huawei-noah/CV-Backbones.git
+  url=https://github.com/huawei-noah/CV-Backbones
   branch=master
   commit_id=5a06c87a8c659feb2d18d3d4179f344b9defaceb
   model_name=GhostNet1.0x
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
 
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
-## 输入输出数据<a name="输入输出数据"></a>
+## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
-| 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
-| -------- | -------- | ------------------------- | ------------ |
-| input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
 
 - 输出数据
 
-| 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-| -------- | -------- | -------- | ------------ |
-| output1  | 1 x 1000 | FLOAT32  | ND           |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1000 | ND           |
 
 
-# 推理环境准备\[所有版本\]<a name="推理环境准备"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-- 该模型需要以下插件与驱动
+- 该模型需要以下插件与驱动   
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本      | 环境准备指导                                                 |
-| ------------------------------------------------------------ |---------| ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.8.0   | -                                                            |
-| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
-
-# 快速上手<a name="快速上手"></a>
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
-1. 安装依赖。
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
 
    ```
-   pip3 install -r requirements.txt
+   git clone https://github.com/huawei-noah/CV-Backbones.git
+   cd CV-Backbones
+   git reset --hard 5a06c87a8c659feb2d18d3d4179f344b9defaceb
+   cd ..
    ```
 
-## 准备数据集<a name="准备数据集"></a>
+2. 安装依赖。
 
-1. 获取原始数据集（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   ```
+   pip install -r requirements.txt
+   ```
 
-   该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
+## 准备数据集<a name="section183221994411"></a>
 
-2. 数据预处理
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   本模型使用[ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org)的5万张验证集进行测试，以ILSVRC2012为例，用户需获取[ILSVRC2012数据集](http://www.image-net.org/download-images)，并上传到服务器，图片与标签分别存放在./imagenet/val与./imageNet/val_label.txt。
+   ```
+   ├── imagenet
+       ├── val
+       ├── val_label.txt 
+   ```
 
-   1.预处理脚本imagenet_torch_preprocess.py
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-    2.如验证的数据集在目录imageNet下
-    ```
-    ├── imageNet    
-           └── val       // 验证集文件夹
-    ├── val_label.txt    //验证集标注信息      
-    ```
-    执行预处理脚本，生成数据集预处理后的bin文件，将原始数据（.jpg）转化为二进制文件（.bin）存放在prep_dataset文件目录下
-    ```
-    python3.7 imagenet_torch_preprocess.py ghostnet /root/datasets/imageNet/val ./prep_dataset
-    ```
+   执行Ghostnet_preprocess.py脚本，完成预处理。
 
-## 模型推理<a name="模型推理"></a>
+   ```
+   python Ghostnet_preprocess.py ./imagenet/val ./prep_dataset
+   ```
+   - 参数说明：
+
+      -   第一个参数为数据集目录。
+      -   第二个参数为预处理保存目录。
+
+
+## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
@@ -104,29 +117,22 @@
 
    1. 获取权重文件。
 
-       1.下载pth权重文件[GhostNet预训练pth权重文件](https://github.com/huawei-noah/CV-Backbones/raw/master/ghostnet_pytorch/models/state_dict_73.98.pth)或是执行下述命令获取
+      下载pth权重文件[GhostNet预训练pth权重文件](https://github.com/huawei-noah/CV-Backbones/raw/master/ghostnet_pytorch/models/state_dict_73.98.pth)或是执行下述命令获取
        ```
        wget http://github.com/huawei-noah/CV-Backbones/raw/master/ghostnet_pytorch/models/state_dict_73.98.pth
-       ```
-       2.下载开源仓
-       ```
-       git clone https://github.com/huawei-noah/CV-Backbones.git
-       cd CV-Backbones
-       git reset --hard 5a06c87a8c659feb2d18d3d4179f344b9defaceb
-       cd ..
        ```
 
    2. 导出onnx文件。
 
-      1. 使用ghostnet_pth2onnx.py导出onnx文件。
+      1. 使用Ghostnet_pth2onnx.py导出onnx文件。
 
-         运行ghostnet_pth2onnx.py脚本。
+         运行Ghostnet_pth2onnx.py脚本。
 
          ```
-         python3.7 ghostnet_pth2onnx.py state_dict_73.98.pth ghostnet.onnx
+         python Ghostnet_pth2onnx.py state_dict_73.98.pth Ghostnet.onnx
          ```
 
-         获得ghostnet.onnx文件。
+         获得Ghostnet.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -136,10 +142,7 @@
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
-         > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
-
-      2. 执行命令查看芯片名称。
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
          ```
          npu-smi info
@@ -158,8 +161,15 @@
          ```
 
       3. 执行ATC命令。
+
          ```
-          atc --framework=5 --model=./ghostnet.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=ghostnet_bs1 --log=debug --soc_version=Ascend${chip_name}
+         atc --framework=5 \
+             --model=./Ghostnet.onnx \
+             --input_format=NCHW \
+             --input_shape="image:${bs},3,224,224" \
+             --output=ghostnet_bs${bs} \
+             --log=debug \
+             --soc_version=Ascend${chip_name}          
          ```
 
          - 参数说明：
@@ -171,71 +181,76 @@
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 
-           运行成功后生成ghostnet_bs1.om模型文件。
-
-
+           运行成功后生成<u>***ghostnet_bs${bs}.om***</u>模型文件。
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   1. 使用ais-infer工具进行推理。
+
       ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-   b.  执行推理。
+   2. 执行推理。
+
+        ```
+      python ${ais_infer_path}/ais_infer.py \
+             --model=ghostnet_bs${bs}.om \
+             --input=./prep_dataset \
+             --output=./ \
+             --output_dirname=./result \
+             --batchsize=${batch_size}     
+        ```
+
+        -   参数说明：
+
+             -   model：om模型地址
+             -   input：预处理数据
+             -   output：推理结果保存路径
+             -   output_dirname:推理结果保存子目录
+
+        推理后的输出默认在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据。
+
       ```
-      python ${ais_infer_path}/ais_infer.py --model ./ghostnet_bs1.om --input ./prep_dataset/ --output ./ --outfmt NPY --batchsize 1
+      python Ghostnet_postprocess.py --result_path=result_summary.json --gt_path=./imagenet/val_label.txt
       ```
+
       - 参数说明：
-           - model：为OM模型文件
-           - input：为数据路径
-           - output：输出推理结果
-           - outfmt：输出结果的格式
-           - input_shape：输入数据的shape
-           - batchsize：模型接受的bs大小
-        ...
-      推理后的输出默认在当前目录result下。
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-   c.  精度验证。
+        - result_path：推理结果生成的json信息文件
 
-      调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得精度结果数据，显示在控制台。
-      ```
-      python3.7 imagenet_acc_eval.py ./lcmout/2022_xx_xx-xx_xx_xx/sumary.json /home/HwHiAiUser/dataset/imageNet/val_label.txt
-      ```
-      - 参数说明：
-         - val_label.txt：为标签数据
-         - sumary.json：为生成结果文件
 
-   d.  性能验证。
+        - gt_path：为标签数据
+
+   4. 性能验证。
 
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-      ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
-      ```
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=ghostnet_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
 
 
-# 模型推理性能&精度<a name="模型推理性能"></a>
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
-以下为不同芯片型号和bs下的精度和性能表现
-GhostNet在310上的精度复现与性能表现如下表1，表2所示
 
-表1-精度对比
-
-| 芯片型号 | top1 | top5 |
-|:------|:---:|:------:|
-| 310 | 0.7398 | 0.9146 |
-| 310P | 0.7398 | 0.9146 |
-
-表2-性能对比
-
-| Batch Size | 310 | 310P | t4 | 310P/310| 310P/t4|
-|:------|:------:|:------:|:------:|:------:|:------:|
-| 1 | 	1348.024 | 1502.4291 | 219.2172| 1.1145 | 6.8536|
-| 4 | 2233.9991 | 2317.6152 | 701.0072 | 1.0374| 3.3061|
-| 8 | 2463.9302 | 3739.9555| 1032.52| 1.5179 | 3.6222|
-| 16 | 2624.8900 | 3438.7936| 924.992| 1.3101| 3.7176|
-| 32 | 2689.0490 | 3020.9916| 447.872| 1.1234| 6.7452|
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|    Ascend310P3       |         1         |     imagenet       |     73.98%       |      1801           |
+|    Ascend310P3       |         4         |     imagenet       |            |       3632          |
+|    Ascend310P3       |         8         |     imagenet       |            |       4974          |
+|    Ascend310P3       |         16         |     imagenet       |            |       4292          |
+|    Ascend310P3       |         32         |     imagenet       |            |       3519          |
+|    Ascend310P3       |         64         |     imagenet       |            |       3058          |

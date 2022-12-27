@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import os
 import sys
 import cv2
+
+from tqdm import tqdm
+
 from glob import glob
 
 
 def get_bin_info(file_path, info_name, width, height):
     bin_images = glob(os.path.join(file_path, '*.bin'))
     with open(info_name, 'w') as file:
-        for index, img in enumerate(bin_images):
+        for index, img in tqdm(enumerate(bin_images), total = len(image_name), desc="get_bin_info"):
             content = ' '.join([str(index), img, width, height])
             file.write(content)
             file.write('\n')
@@ -38,7 +40,7 @@ def get_jpg_info(file_path, info_name):
             if len(image_name) == 0:
                 continue
             else:
-                for index, img in enumerate(image_name):
+                for index, img in tqdm(enumerate(image_name), total = len(image_name), desc="get_jpg_info"):
                     img_cv = cv2.imread(img)
                     shape = img_cv.shape
                     width, height = shape[1], shape[0]

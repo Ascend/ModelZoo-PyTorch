@@ -25,8 +25,11 @@ steps=1000
 #网络名称,同目录名称,需要模型审视修改
 Network="DeepFM_ID4129_for_Pytorch"
 
-#训练batch_size,,需要模型审视修改
+#训练batch_size,需要模型审视修改
 batch_size=1024
+
+#训练device_id,需要模型审视修改
+device_id=0
 
 #参数校验，不需要修改
 for para in $*
@@ -35,6 +38,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --steps* ]];then
         steps=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -50,11 +57,8 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
 
-ASCEND_DEVICE_ID=0
-
-ASCEND_DEVICE_ID=0
-
 #创建DeviceID输出目录，不需要修改
+export ASCEND_DEVICE_ID=${device_id}
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
@@ -76,6 +80,7 @@ taskset -c 0-23 python3 -u run_classification_criteo_deepfm.py \
      --steps ${steps} \
      --optim='npu_fused_adam' \
      --data_path=$data_path \
+     --batch_size=$batch_size \
      --device_id $ASCEND_DEVICE_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

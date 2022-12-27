@@ -26,10 +26,12 @@ from segmentron.data.dataloader import get_segmentation_dataset
 from segmentron.utils.distributed import make_data_sampler, make_batch_data_sampler
 from segmentron.config import cfg
 from segmentron.utils.options import parse_args
+from tqdm import tqdm
 
 
 class Pretreatment(object):
     def __init__(self, args):
+        self.args = args
         # image transform
         input_transform = transforms.Compose([
             transforms.ToTensor(),
@@ -37,7 +39,7 @@ class Pretreatment(object):
         ])
 
         # dataset and dataloader
-        val_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='val', mode='testval', transform=input_transform, root='/opt/npu/datasets/cityscapes')
+        val_dataset = get_segmentation_dataset(cfg.DATASET.NAME, split='val', mode='testval', transform=input_transform, root=self.args.datasets_input_path)
         val_sampler = make_data_sampler(val_dataset, False, False)
         val_batch_sampler = make_batch_data_sampler(val_sampler, images_per_batch=1, drop_last=False)
         self.val_loader = data.DataLoader(dataset=val_dataset,
@@ -51,26 +53,24 @@ class Pretreatment(object):
                 setattr(m[1], attr, value)
 
     def process(self):
-        print('start pretreatment')
-        save_path = '/opt/npu/prep_dataset/datasets/leftImg8bit'
-        save_mask_path = '/opt/npu/prep_dataset/datasets/gtFine'
-        if not os.path.exists('/opt/npu/prep_dataset'):
-            os.mkdir('/opt/npu/prep_dataset')
-        if not os.path.exists('/opt/npu/prep_dataset/datasets'):
-            os.mkdir('/opt/npu/prep_dataset/datasets')
-        if not os.path.exists('/opt/npu/prep_dataset/datasets/leftImg8bit'):
-            os.mkdir('/opt/npu/prep_dataset/datasets/leftImg8bit')
-        if not os.path.exists('/opt/npu/prep_dataset/datasets/gtFine'):
-            os.mkdir('/opt/npu/prep_dataset/datasets/gtFine')
-        print('images_bin stored in /opt/npu/prep_dataset/datasets/leftImg8bit')
-        print('masks_bin stored in /opt/npu/prep_dataset/datasets/gtFine')
-        for i, (image, target, filename) in enumerate(self.val_loader):
-            imgs = np.array(image).astype(np.float32)
-            imgs.tofile(os.path.join(save_path, filename[0].split('.')[0] + ".bin"))
-            mask = np.array(target).astype(np.float32)
-            temp_path = filename[0].replace('leftImg8bit', 'gtFine_labelIds')
-            mask.tofile(os.path.join(save_mask_path, temp_path.split('.')[0] + ".bin"))
-        print('end pretreeatmen')
+        save_path = os.path.join(self.args.datasets_output_path, 'leftImg8bit')
+        save_mask_path = os.path.join(self.args.datasets_output_path, 'gtFine')
+        if not os.path.exists(self.args.datasets_output_path):
+            os.mkdir(self.args.datasets_output_path)
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
+        if not os.path.exists(save_mask_path):
+            os.mkdir(save_mask_path)
+
+        with tqdm(total=len(self.val_loader)) as pbar:
+            for i, (image, target, filename) in enumerate(self.val_loader):
+                pbar.set_description('Processing:' + str((i+1)))
+                imgs = np.array(image).astype(np.float32)
+                imgs.tofile(os.path.join(save_path, filename[0].split('.')[0] + ".bin"))
+                mask = np.array(target).astype(np.float32)
+                temp_path = filename[0].replace('leftImg8bit', 'gtFine_labelIds')
+                mask.tofile(os.path.join(save_mask_path, temp_path.split('.')[0] + ".bin"))
+                pbar.update(1)
 
 
 if __name__ == '__main__':

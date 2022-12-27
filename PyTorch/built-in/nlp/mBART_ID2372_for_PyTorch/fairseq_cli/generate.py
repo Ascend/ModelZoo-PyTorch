@@ -60,6 +60,7 @@ def _main(args, output_file):
     option={}
     option['ACL_OP_SELECT_IMPL_MODE'] = 'high_performance'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'LayerNorm'
+    option['NPU_FUZZY_COMPILE_BLACKLIST'] = 'MultiHeadAttention,MultiHeadAttentionGrad'
     torch.npu.set_option(option)
     utils.import_user_module(args)
 

@@ -211,6 +211,8 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
 
         loss_meter.update(loss.item(), targets.size(0))
         norm_meter.update(grad_norm)
+        if idx < 5 and epoch == 0:
+            print("Iter_time: {:.4f}".format(time.time() - end))
         batch_time.update(time.time() - end)
         end = time.time()
         FPS = config.DATA.BATCH_SIZE / batch_time.val

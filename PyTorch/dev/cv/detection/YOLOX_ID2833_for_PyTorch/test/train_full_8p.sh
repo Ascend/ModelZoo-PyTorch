@@ -77,16 +77,17 @@ chmod +x ${cur_path}/tools/dist_train.sh
 export ENABLE_RUNTIME_V2=1
 echo "Runtime 2.0 $ENABLE_RUNTIME_V2"
 
-sed -i "s|max_epochs = 300|max_epochs = $total_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|max_epochs = [0-9]\{1,3\}|max_epochs = $total_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|data/coco/|$data_path/|g" configs/yolox/yolox_s_8x8_300e_coco.py
-sed -i "s|interval = 10|interval = $val_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|interval = [0-9]\{1,3\}|interval = $val_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|annotations/MINIinstances_train2017.json|annotations/instances_train2017.json|g" configs/yolox/yolox_s_8x8_300e_coco.py
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
     --launcher pytorch  \
-    --cfg-options log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --cfg-options data.persistent_workers=False log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x8_300e_coco.py

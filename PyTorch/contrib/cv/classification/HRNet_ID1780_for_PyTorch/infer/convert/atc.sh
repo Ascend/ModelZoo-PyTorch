@@ -22,5 +22,4 @@ atc \
   --framework=5 \
   --output=$output_model_name \
   --soc_version=Ascend310 \
-  --output_type=FP32 \
-exit 0
+  --output_type=FP32

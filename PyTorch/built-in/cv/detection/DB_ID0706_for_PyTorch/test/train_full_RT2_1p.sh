@@ -88,6 +88,7 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
+sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
 
 #################启动训练脚本#################
 #训练开始时间，不需要修改

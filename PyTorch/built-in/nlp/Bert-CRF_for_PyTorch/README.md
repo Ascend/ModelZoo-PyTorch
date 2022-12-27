@@ -44,7 +44,8 @@ bert4torch是一个基于pytorch的训练框架，前期以效仿和实现bert4k
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 硬件 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | NPU固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
 
@@ -157,9 +158,9 @@ bert4torch是一个基于pytorch的训练框架，前期以效仿和实现bert4k
 | NAME     | Accuracy-Highest |  samples/s | AMP_Type |
 | -------  | -----  | ---: | -------: |
 | 1p-竞品A  | best_F1: 0.95499 | 97 |       O1 |
-| 1p-NPU   | best_F1: 0.95325 | 114.333 |       O1 |
+| 1p-NPU   | best_F1: 0.96499 | 181 |       O1 |
 | 8p-竞品A  | best_F1: 0.92541 | 719.1 |       O1 |
-| 8p-NPU   | best_F1: 0.93978 | 1040.2 |       O1 |
+| 8p-NPU   | best_F1: 0.92388 | 1100 |       O1 |
 
 备注：本模型在X86平台上性能显著高于ARM，若要达到表中性能，请注意必须在x86平台上进行性能测试，并将cpu设置为performance模式。
 

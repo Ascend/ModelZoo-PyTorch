@@ -10,3 +10,4 @@ decorator==5.1.1
 mpmath==1.2.1
 tqdm==0.0.1
 aclruntime==0.0.1
+torch==1.5.0

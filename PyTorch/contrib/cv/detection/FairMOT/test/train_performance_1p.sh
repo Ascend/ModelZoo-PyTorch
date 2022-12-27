@@ -17,9 +17,40 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+#基础参数
+batch_size=12
+Network="FairMOT"
+RANK_SIZE=1
+
 ln -sb ${data_path} /root/dataset
+
+
+
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_diename=${cur_path##*/}
+if [ x"${cur_path_last_diename}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
+
+#################创建日志输出目录，不需要修改#################
+ASCEND_DEVICE_ID=0
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
+
+
+start_time=$(date +%s)
 cd src
-python3.7 -u  train_1p.py mot --exp_id mot17_dla34  \
+nohup python3.7 -u  train_1p.py mot --exp_id mot17_dla34  \
             --load_model '../models/ctdet_coco_dla_2x.pth' \
             --data_cfg '../src/lib/cfg/mot17.json'   \
             --world_size 1 \
@@ -27,8 +58,49 @@ python3.7 -u  train_1p.py mot --exp_id mot17_dla34  \
             --rank 0 \
             --print_iter 1 \
             --num_epochs 1 \
+> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 & 
 
-cd ..
+wait
+end_time=$(date +%s)
+e2e_time=$(( $end_time - $start_time ))
+
+
+#输出性能FPS，需要模型审视修改
+echo "---------Final result----------"
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $22}'`
+#打印，不需要修改
+echo "Final Performance images/sec : $FPS"
+
+#性能看护结果汇总
+#训练用例信息，不需要修改
+BatchSize=${batch_size}
+DeviceType=`uname -m`
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+
+echo "Final Train Accuracy : ${train_accuracy}"
+echo "E2E Training Duration sec : $e2e_time"
+
+##获取性能数据，不需要修改
+#吞吐量
+ActualFPS=${FPS}
+#单迭代训练时长
+TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
+
+
+#最后一个迭代loss值，不需要修改
+ActualLoss=`grep -a 'loss'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F " " '{print $8}'`
+
+#关键信息打印到result.log中，不需要修改
+echo "Network = ${Network}" >  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 
 
 

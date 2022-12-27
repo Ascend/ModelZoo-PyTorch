@@ -11,13 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-python3.7 OpenPose_postprocess.py
---benchmark_result_path ./result/dumpOutput_device0
---detections_save_path ./output/result.json
---pad_txt_path ./output/pad.txt
---labels /root/datasets/coco/annotations/person_keypoints_val2017.json
-"""
 import argparse
 import json
 import os
@@ -32,8 +25,8 @@ from val import run_coco_eval, convert_to_coco_format
 
 def read_txt(txt_path, shape):
     with open(txt_path, "r") as f:
-        line = f.readline()
-        line_split = line.strip().split(" ")
+        line = f.read().splitlines()
+        line_split = ''.join(line).strip().split(" ")
         line_split = [eval(i) for i in line_split]
         line_split = torch.Tensor(line_split)
         heatmaps = line_split.view(shape)
@@ -53,7 +46,7 @@ def transfer(heatmaps, pafs, height, width, top, bottom, left, right, stride=8):
 
 
 def post_process(args):
-    txt_folder = args.benchmark_result_path
+    txt_folder = args.dump_output_result_path
     json_path = args.detections_save_path
     pad_path = args.pad_txt_path
     pad_info = {}
@@ -68,9 +61,9 @@ def post_process(args):
         index = txt_pure_name.rfind('_')
         name_suffix = txt_pure_name[index + 1]
         # 单张推理输出的文件有四个，前两个是第一阶段输出的heatmaps和pafs数据，后两个是第二阶段输出的heatmaps和pafs数据
-        if name_suffix == "3":  # 第二阶段输出的heatmaps数据
+        if name_suffix == "2":  # 第二阶段输出的heatmaps数据
             txt_1.append(txt)
-        elif name_suffix == "4":    # 第二阶段输出的pafs数据
+        elif name_suffix == "3":    # 第二阶段输出的pafs数据
             txt_2.append(txt)
     txt_1.sort()
     txt_2.sort()
@@ -105,7 +98,7 @@ def post_process(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--benchmark_result_path", default="./result/dumpOutput_device0")
+    parser.add_argument("--dump_output_result_path", default="./result/dumpOutput_device0")
     parser.add_argument("--detections_save_path", default="./output/result.json")
     parser.add_argument("--pad_txt_path", default="./output/pad.txt",
                         help="padding around the image with 368*640")

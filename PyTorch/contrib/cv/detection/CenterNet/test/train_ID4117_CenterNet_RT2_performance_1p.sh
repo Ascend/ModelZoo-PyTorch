@@ -61,6 +61,10 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+# GE 模式profiling添加环境变量
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     device_id=${ASCEND_DEVICE_ID}
@@ -118,7 +122,7 @@ cd $cur_path/src
 
 RANK_ID_START=0
 RANK_SIZE=1
-KERNEL_NUM=$(($(nproc)/1))
+KERNEL_NUM=$(($(nproc)/8))
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
@@ -155,6 +159,10 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| awk -F " = " '{print $NF}'| awk 'BEGIN{count=0}{if(NR>0){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}'`
+
+#输出CompileTime
+CompileTime=`grep 'iter_time' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 2|awk -F "iter_time = " '{print $2}'| awk '{print $1}'|awk '{sum += $1} END {print sum}'`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -194,3 +202,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

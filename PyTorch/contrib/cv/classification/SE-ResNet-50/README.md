@@ -125,7 +125,12 @@ SE-ResNet是加入了“Squeeze-and-Excitation”（SE）模块的ResNet架构�
      bash ./test/train_full_8p.sh --data_path={data/path}          # 8p精度 完成100个epoch训练大约11h
      bash ./test/train_eval_8p.sh --data_path={data/path}          # 8p验证 
      ```
-   
+   - 多机多卡性能数据获取流程
+     ```
+     1. 安装环境
+     2. 开始训练，每个机器所请按下面提示进行配置
+            bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size*所有卡数 --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
+     ```
    --data\_path参数填写数据集路径。
    
    对于train_eval_8p.sh，可以在脚本内修改--resume参数，指定evaluate的参数文件路径。

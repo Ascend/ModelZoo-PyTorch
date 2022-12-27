@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--test_annotation", default="./origin_pictures.info")
     parser.add_argument("--bin_data_path", default="./result/dumpOutput_device0")
-    parser.add_argument("--net_out_num", type=int, default=3)
+    parser.add_argument("--net_out_num", type=int, default=2)
     parser.add_argument("--net_input_width", type=int, default=1216)
     parser.add_argument("--net_input_height", type=int, default=800)
     parser.add_argument("--annotations_path", default="/root/datasets")
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     cnt = 0
     for ids in coco_dataset.img_ids:
         cnt = cnt + 1
-        bin_file = glob.glob(bin_path + '/*0' + str(ids) + '_output_0.txt')[0]
+        bin_file = glob.glob(f'{bin_path}/*0{str(ids)}_0.txt')[0]
         bin_file = bin_file[bin_file.rfind('/') + 1:]
         bin_file = bin_file[:bin_file.find('_')]
         print(cnt - 1, bin_file)
@@ -69,11 +69,11 @@ if __name__ == '__main__':
         res_buff = []
         bbox_results = []
         cls_segms = []
-        if os.path.exists(path_base + "_" + "output_0" + ".txt") and os.path.exists(path_base + "_" + "output_1" + ".txt"):
-            bboxes = np.loadtxt(path_base + "_output_" + str(flags.net_out_num - 3) + ".txt", dtype="float32")
+        if os.path.exists(f'{path_base}_0.txt') and os.path.exists(f'{path_base}_1.txt'):
+            bboxes = np.loadtxt(f'{path_base}_{str(flags.net_out_num - 2)}.txt', dtype="float32")
             bboxes = np.reshape(bboxes, [100, 5])
             bboxes = torch.from_numpy(bboxes)
-            labels = np.loadtxt(path_base + "_output_" + str(flags.net_out_num - 2) + ".txt", dtype="int64")
+            labels = np.loadtxt(f'{path_base}_{str(flags.net_out_num - 1)}.txt', dtype="int64")
             labels = np.reshape(labels, [100, 1])
             labels = torch.from_numpy(labels)
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
             bboxes = postprocess_bboxes(bboxes, img_size_dict[bin_file], flags.net_input_width, flags.net_input_height)
             bbox_results = [bbox2result(bboxes, labels[:, 0], 80)]
         else:
-            print("[ERROR] file not exist", path_base + "_output_" + str(0) + ".txt",path_base + "_output_" + str(1) + ".txt")
+            print("[ERROR] file not exist", f'{path_base}_{str(0)}.txt', f'{path_base}_ {str(1)}.txt')
 
         result = bbox_results
         results.extend(result)

@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,11 +36,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--test_annotation", default="./origin_pictures.info")
     parser.add_argument("--bin_data_path", default="./result/dumpOutput_device0/")
-    parser.add_argument("--det_results_path", default="./detection-results/")
     parser.add_argument("--net_out_num", type=int, default=3)
     parser.add_argument("--net_input_width", type=int, default=1216)
     parser.add_argument("--net_input_height", type=int, default=800)
-    parser.add_argument("--ifShowDetObj", action="store_true", help="if input the para means True, neither False.")
     parser.add_argument("--annotations_path", default="/root/datasets/coco/annotations/instances_val2017.json")
     flags = parser.parse_args()
 
@@ -55,8 +53,6 @@ if __name__ == '__main__':
             img_size_dict[img_name] = (img_width, img_height, img_file_path)
 
     bin_path = flags.bin_data_path
-    det_results_path = flags.det_results_path
-    os.makedirs(det_results_path, exist_ok=True)
 
     coco_dataset = CocoDataset(ann_file='{}'.format(flags.annotations_path), pipeline=[])
     coco_class_map = {id:name for id, name in enumerate(coco_dataset.CLASSES)}

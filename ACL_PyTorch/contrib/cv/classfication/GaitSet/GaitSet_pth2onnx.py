@@ -21,7 +21,8 @@ from datetime import datetime
 import numpy as np
 import argparse
 import os
-
+import sys
+sys.path.append("./GaitSet")
 from model.initialization import initialization
 from model.utils import evaluation
 
@@ -30,6 +31,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from config import conf
 
 from model.network import TripletLoss, SetNet
 from model.utils import TripletSampler
@@ -79,12 +81,11 @@ def convert(input_path, output_path, restore_iter, hidden_dim):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    from GaitSet_config_1p import conf_1p
-    from GaitSet_config_8p import conf_8p
+
     
-    work_abspath = osp.abspath(conf_8p['WORK_PATH'])
-    conf_model = conf_8p['model']
-    conf_data = conf_8p['data']
+    work_abspath = osp.abspath('./')
+    conf_model = conf['model']
+    conf_data = conf['data']
     
     model = conf_model['model_name']
     dataset = conf_data['dataset']
@@ -100,7 +101,7 @@ if __name__ == "__main__":
         iters = args.iters
         
     pth_prefix = f'{model}_{dataset}_{pid}_{shuffle}_{dim}_{margin}_{bs}_{hoft}_{frame}-{iters}'
-    onnx_path = osp.join(work_abspath, '../gaitset_submit.onnx')
+    onnx_path = osp.join(work_abspath, './gaitset_submit.onnx')
     pth_path = osp.join(work_abspath, f'checkpoint/{model}/{pth_prefix}-encoder.ptm')
     
     if args.input_path != '':

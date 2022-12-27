@@ -244,16 +244,36 @@ class SimOTAAssigner(BaseAssigner):
         return is_in_gts_or_centers, is_in_boxes_and_centers
 
     def dynamic_k_matching(self, cost, pairwise_ious, num_gt, valid_mask):
-        matching_matrix = torch.zeros_like(cost, dtype=torch.uint8)
+        matching_matrix = torch.zeros_like(cost, dtype=torch.int)
         # select candidate topk ious for dynamic-k calculation
         candidate_topk = min(self.candidate_topk, pairwise_ious.size(0))
         topk_ious, _ = torch.topk(pairwise_ious, candidate_topk, dim=0)
         # calculate dynamic k for each gt
         dynamic_ks = torch.clamp(topk_ious.sum(0).int(), min=1)
-        for gt_idx in range(num_gt):
-            _, pos_idx = torch.topk(
-                cost[:, gt_idx], k=dynamic_ks[gt_idx], largest=False)
-            matching_matrix[:, gt_idx][pos_idx] = 1
+
+        if num_gt > 2:
+            device = matching_matrix.device
+            min_k = torch.min(dynamic_ks)
+            max_k = torch.max(dynamic_ks)
+            min_k, max_k = min_k.item(), max_k.item()
+            if min_k == max_k:
+                _, pos_idx = torch.topk(-cost, k=max_k, dim=0, largest=True)
+                matching_matrix.scatter_(0, pos_idx, 1)
+            else:
+                matching_matrix = matching_matrix.cpu()
+                offsets = torch.arange(0, matching_matrix.shape[1], dtype=torch.uint8).npu()[None, :]
+                matching_matrix = matching_matrix.npu()
+                masks = (torch.arange(0,max_k,dtype=dynamic_ks.dtype).npu()[:,None].expand(max_k,matching_matrix.shape[1]) < dynamic_ks[None,:])
+                _, pos_idx = torch.topk(-cost, k=max_k, dim=0, largest=True)
+
+                pos_idx = pos_idx * matching_matrix.shape[1] + offsets
+                pos_idx = torch.masked_select(pos_idx, masks)
+                matching_matrix.view(-1).index_fill_(0, pos_idx, 1)
+        else:
+            ks = dynamic_ks.tolist()
+            for gt_idx in range(num_gt):
+                _, pos_idx = torch.topk(cost[:, gt_idx], k=ks[gt_idx], largest=False)
+                matching_matrix[:, gt_idx][pos_idx] = 1
 
         del topk_ious, dynamic_ks, pos_idx
 

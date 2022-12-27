@@ -456,6 +456,7 @@ def main():
                              "See details at https://nvidia.github.io/apex/amp.html")
     parser.add_argument("--local_rank", type=int, default=-1,
                         help="For distributed training: local_rank")
+    parser.add_argument("--device-id", type=int, default=0, help="1p special card")
     parser.add_argument('--server_ip', type=str, default='', help="For distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="For distant debugging.")
     parser.add_argument("--stop_point", default=1.0, type=float,
@@ -488,11 +489,12 @@ def main():
     # Setup CUDA, GPU & distributed training #rank -1不用，0主机，正整数从机
     if args.local_rank == -1 or args.no_cuda:
         if args.device == 'npu':
-            device = torch.device("npu" if torch.npu.is_available() and not args.no_cuda else "cpu")
+            device = torch.device(f"npu:{args.device_id}" if torch.npu.is_available() and not args.no_cuda else "cpu")
         else:
-            device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+            device = torch.device(f"cuda:{args.device_id}" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+
         args.n_gpu = 1
-        torch.npu.set_device(3)
+        torch.npu.set_device(args.device_id)
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         if args.device == 'npu':
             torch.npu.set_device(args.local_rank)

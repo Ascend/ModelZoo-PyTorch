@@ -112,7 +112,7 @@ python3.7 -u ./main_npu_8p.py \
     --world-size=1 \
     --dist-backend='hccl' \
     --multiprocessing-distributed \
-    --loss-scale=128.0 \
+    --loss-scale='dynamic' \
     --opt-level='O2' \
     --device='npu' \
     --rank=0 \

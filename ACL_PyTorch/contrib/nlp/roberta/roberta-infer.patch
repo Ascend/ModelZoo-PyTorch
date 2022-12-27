@@ -1,24 +1,42 @@
-From 9682859b1cd47c723175f453cbebf5b797dda19e Mon Sep 17 00:00:00 2001
-From: htliang <chris_lht@outlook.com>
-Date: Tue, 14 Sep 2021 20:32:49 +0800
-Subject: [PATCH] infer
-
----
- fairseq/criterions/sentence_prediction.py |   2 +-
- fairseq/data/iterators.py                 |  23 ++++-
- fairseq/data/pad_dataset.py               |   9 +-
- fairseq/dataclass/configs.py              |  27 +++++-
- fairseq/distributed/utils.py              |  61 ++++++++----
- fairseq/hub_utils.py                      |   3 +-
- fairseq/models/roberta/model.py           |   4 +-
- fairseq/optim/adam.py                     |   6 +-
- fairseq/tasks/fairseq_task.py             |  14 ++-
- fairseq/trainer.py                        | 112 ++++++++++++++--------
- fairseq/utils.py                          |   2 +
- fairseq_cli/train.py                      |  49 ++++++++--
- fairseq_cli/validate.py                   |  32 ++++---
- 13 files changed, 242 insertions(+), 102 deletions(-)
-
+diff --git a/examples/roberta/preprocess_GLUE_tasks.sh b/examples/roberta/preprocess_GLUE_tasks.sh
+old mode 100755
+new mode 100644
+index 7f215a3b..4239fb87
+--- a/examples/roberta/preprocess_GLUE_tasks.sh
++++ b/examples/roberta/preprocess_GLUE_tasks.sh
+@@ -134,7 +134,7 @@ do
+     do
+       LANG="input$INPUT_TYPE"
+       echo "BPE encoding $SPLIT/$LANG"
+-      python -m examples.roberta.multiprocessing_bpe_encoder \
++      python3 -m fairseq.examples.roberta.multiprocessing_bpe_encoder \
+       --encoder-json encoder.json \
+       --vocab-bpe vocab.bpe \
+       --inputs "$TASK_DATA_FOLDER/processed/$SPLIT.raw.$LANG" \
+@@ -159,7 +159,7 @@ do
+   for INPUT_TYPE in $(seq 0 $((INPUT_COUNT-1)))
+   do
+     LANG="input$INPUT_TYPE"
+-    fairseq-preprocess \
++      python3 ./fairseq/fairseq_cli/preprocess.py \
+       --only-source \
+       --trainpref "$TASK_DATA_FOLDER/processed/train.$LANG" \
+       --validpref "${DEVPREF//LANG/$LANG}" \
+@@ -170,7 +170,7 @@ do
+   done
+   if [[ "$TASK" !=  "STS-B" ]]
+   then
+-    fairseq-preprocess \
++    python3 ./fairseq/fairseq_cli/preprocess.py \
+       --only-source \
+       --trainpref "$TASK_DATA_FOLDER/processed/train.label" \
+       --validpref "${DEVPREF//LANG/label}" \
+@@ -182,4 +182,5 @@ do
+     awk '{print $1 / 5.0 }' "$TASK_DATA_FOLDER/processed/train.label" > "$TASK-bin/label/train.label"
+     awk '{print $1 / 5.0 }' "$TASK_DATA_FOLDER/processed/dev.label" > "$TASK-bin/label/valid.label"
+   fi
++  mv $TASK-bin ./data
+ done
 diff --git a/fairseq/criterions/sentence_prediction.py b/fairseq/criterions/sentence_prediction.py
 index 482b9798..ca1bd4fe 100644
 --- a/fairseq/criterions/sentence_prediction.py
@@ -803,6 +821,3 @@ index 22b93e9a..0dd5914f 100644
      )
  
  
--- 
-2.29.2.windows.3
-

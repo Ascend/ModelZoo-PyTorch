@@ -19,7 +19,7 @@ import os
 import json
 import torch
 import sys
-
+from tqdm import tqdm
 
 def get_file(root):
     catfile = os.path.join(root, 'synsetoffset2category.txt')
@@ -62,10 +62,10 @@ def get_file(root):
     return datapath
 
 
-def preprocess_bs1(datapath, save_path):
+def preprocess(datapath, save_path):
     npoints = 2500
     total = len(datapath)
-    for index in range(total):
+    for index in tqdm(range(total)):
         fn = datapath[index]
         point_set = np.loadtxt(fn[1]).astype(np.float32)
         seg = np.loadtxt(fn[2]).astype(np.int64)
@@ -82,51 +82,11 @@ def preprocess_bs1(datapath, save_path):
         point_set.tofile(os.path.join(save_path, file_name.split('.')[0] + ".bin"))
 
 
-def preprocess_bs16(datapath, save_path):
-    npoints = 2500
-    total = len(datapath)
-    iter_total = total // 16
-    for k in range(iter_total + 1):
-        start = k * 16
-        if k == iter_total:
-            end = total
-        else:
-            end = k * 16 + 16
-        batch_data = None
-        for index in range(start, end):
-            fn = datapath[index]
-            point_set = np.loadtxt(fn[1]).astype(np.float32)
-            seg = np.loadtxt(fn[2]).astype(np.int64)
-
-            choice = np.random.choice(len(seg), npoints, replace=True)
-
-            point_set = point_set[choice, :]
-
-            point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
-            dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
-            point_set = point_set / dist
-            point_set = point_set.transpose(1, 0)
-            if index == start:
-                batch_data = point_set
-            else:
-                batch_data = np.concatenate((batch_data, point_set), axis=0)
-        if k < 10:
-            file_name = "bin_batch00" + str(k)
-        elif k >= 10 and k < 100:
-            file_name = "bin_batch0" + str(k)
-        else:
-            file_name = "bin_batch" + str(k)
-        batch_data.tofile(os.path.join(save_path, file_name + ".bin"))
-
-
 if __name__ == '__main__':
     root = sys.argv[1]
     save_path = sys.argv[2]
-    batch_size = sys.argv[3]
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     datapath = get_file(root)
-    if batch_size.endswith("16"):
-        preprocess_bs16(datapath, save_path)
-    else:
-        preprocess_bs1(datapath, save_path)
+    preprocess(datapath, save_path)
+   

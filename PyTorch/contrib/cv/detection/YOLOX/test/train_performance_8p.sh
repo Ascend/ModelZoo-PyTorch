@@ -19,6 +19,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -112,7 +114,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修
-FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/{print '${batch_size}'/$15}'| sed 's/.$//' | sed 's/.$//'| awk '$0 >a{a=$0}END{print a}'`
+FPS=`grep -a 'iter_time'  ${test_path_dir}/output/0/train_0.log|awk '/iter_time/{print '${batch_size}'/$15}' | awk '$0 >a{a=$0}END{print a}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

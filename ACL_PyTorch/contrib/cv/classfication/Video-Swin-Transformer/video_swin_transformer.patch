@@ -1,0 +1,33 @@
+diff --git a/tools/data/kinetics/generate_videos_filelist.sh b/tools/data/kinetics/generate_videos_filelist.sh
+index 16db70c..ede8e10 100644
+--- a/tools/data/kinetics/generate_videos_filelist.sh
++++ b/tools/data/kinetics/generate_videos_filelist.sh
+@@ -9,9 +9,6 @@ else
+ fi
+ 
+ cd ../../../
+-PYTHONPATH=. python tools/data/build_file_list.py ${DATASET} data/${DATASET}/videos_train/ --level 2 --format videos --num-split 1 --subset train --shuffle
+-echo "Train filelist for video generated."
+ 
+-PYTHONPATH=. python tools/data/build_file_list.py ${DATASET} data/${DATASET}/videos_val/ --level 2 --format videos --num-split 1 --subset val --shuffle
++PYTHONPATH=. python tools/data/build_file_list.py ${DATASET} data/${DATASET}/val/ --level 2 --format videos --num-split 1 --subset val --shuffle
+ echo "Val filelist for video generated."
+-cd tools/data/kinetics/
+diff --git a/tools/data/parse_file_list.py b/tools/data/parse_file_list.py
+index e220094..834779b 100644
+--- a/tools/data/parse_file_list.py
++++ b/tools/data/parse_file_list.py
+@@ -348,11 +348,11 @@ def parse_kinetics_splits(level, dataset):
+         """
+         if test:
+             # video = f'{x[0]}_{int(x[1]):06d}_{int(x[2]):06d}'
+-            video = f'{x[1]}_{int(float(x[2])):06d}_{int(float(x[3])):06d}'
++            video = f'{x[1]}'
+             label = -1  # label unknown
+             return video, label
+ 
+-        video = f'{x[1]}_{int(float(x[2])):06d}_{int(float(x[3])):06d}'
++        video = f'{x[1]}'
+         if level == 2:
+             video = f'{convert_label(x[0])}/{video}'
+         else:

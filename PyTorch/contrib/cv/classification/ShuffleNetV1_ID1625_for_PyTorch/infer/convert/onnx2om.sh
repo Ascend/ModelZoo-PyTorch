@@ -23,5 +23,4 @@ atc --model=$model \
     --input_shape="actual_input_1:1,3,224,224" \
     --soc_version=Ascend310 \
     --precision_mode=allow_mix_precision \
-    --op_select_implmode=high_precision \
-exit 0
+    --op_select_implmode=high_precision

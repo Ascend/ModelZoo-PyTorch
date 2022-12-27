@@ -72,7 +72,7 @@ def preprocess(config):
         num_workers=0,
         pin_memory=True
     )
-    for idx, (image, _, _, _) in tqdm(enumerate(valid_loader)):
+    for idx, (image, _, _, _) in enumerate(tqdm(valid_loader)):
         image_flip = torch.flip(image, [3])
         image = image.numpy()
         image_flip = image_flip.numpy()

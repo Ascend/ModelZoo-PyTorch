@@ -1,222 +1,262 @@
-# FastPitch模型端到端推理指导
+# FastPitch模型-推理指导
 
-## 1 模型概述
 
-- **[论文地址](https://arxiv.org/abs/2006.06873)**
-- **[代码地址](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/FastPitch)**
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-### 1.1 论文地址
+    - [输入输出数据](#section540883920406)
 
-[FastPitch论文](https://arxiv.org/abs/2006.06873)
+
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
 Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）、音调预测器和持续时间预测器组成。 在通过第一组 N 个 Transformer 块、编码后，信号用基音信息增强并离散上采样。 然后它通过另一组 N个 Transformer 块，目的是平滑上采样信号，并构建梅尔谱图。
 
-### 1.2 开源代码地址
 
-[FastPitch开源代码](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/FastPitch)
+- 参考实现：
 
-## 2 环境说明
+  ```
+  url=https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/FastPitch
+  ```
 
-### 2.1 深度学习框架
 
-```
-onnx==1.9.0
-torch==1.8.0
-```
 
-### 2.2 python第三方库
+## 输入输出数据<a name="section540883920406"></a>
 
-```
-matplotlib
-numpy
-inflect
-librosa==0.8.0
-scipy
-Unidecode
-praat-parselmouth==0.3.3
-tensorboardX==2.0
-dllogger
-```
+- 输入数据
 
-**说明：**
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 200 | NCHW         |
 
-> X86架构：pytorch和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
-> Arm架构：pytorch和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
 
-## 3 模型转换
+- 输出数据
 
-### pth转om模型
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 80 x 900 | ND           |
 
-1.下载pth权重文件
-```
-wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/audio/FastPitch/pretrained_models.zip
-```
-（waveglow为语音生成器，不在本模型范围内, 但为了确保代码能正常运行，需要下载）
 
-2.安装相关依赖
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-```
-cd FastPitch
-pip install -r requirements.txt
-```
+- 该模型需要以下插件与驱动 
 
-3.激活相关环境
+  **表 1**  版本配套表
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-3.pth转onnx, onnx简化，onnx转om。(以batch_size=1为例)
 
-```
-# 导出onnx
-python pth2onnx.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch pretrained_models/fastpitch/nvidia_fastpitch_210824.pt --waveglow pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt --wn-channels 256 --energy-conditioning --batch-size 1
-# 简化onnx
-python -m onnxsim ./test/models/FastPitch_bs1.onnx ./test/models/FastPitch_bs1_sim.onnx
-# 根据实际情况设置环境变量
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-# 转出om
-atc --framework=5 --model=./test/models/FastPitch_bs1_sim.onnx --output=./test/models/FastPitch_bs1 --input_format=ND --input_shape="input:1,200" --out_nodes='Transpose_2044:0' --log=debug --soc_version=Ascend310
-```
 
-输出在/test/models中。
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+## 获取源码<a name="section4622531142816"></a>
 
+1. 获取源码。
 
-## 4 数据集预处理
+   ```
+   git clone https://github.com/NVIDIA/DeepLearningExamples
+   git clone https://github.com/NVIDIA/dllogger.git
+   cd dllogger
+   git checkout 26a0f8f1958de2c0c460925ff6102a4d2486d6cc
+   cd ..
+   export PYTHONPATH=dllogger:${PYTHONPATH}
+   ```
 
-### 4.1 数据集获取
+2. 安装依赖。
 
-（可选）本项目默认将数据集存放于/opt/npu/
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-```
-cd ..
-wget https://ascend-pytorch-one-datasets.obs.cn-north-4.myhuaweicloud.com/train/zip/LJSpeech-1.1.zip
-unzip LJSpeech-1.1.zip
-mv /LJSpeech-1.1 /opt/npu/
-```
+## 准备数据集<a name="section183221994411"></a>
 
-### 4.2 数据集预处理
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-生成输入数据，并准备输出标签和pth权重的输出数据。本模型的验证集大小为100，具体信息在phrases/tui_val100.tsv文件中。
+   ```
+   wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
+   tar -xvjf LJSpeech-1.1.tar.bz2
+   ```
 
-- FastPitch模型的输入数据是由文字编码组成，输入长度不等，模型已经将其补零成固定长度200。将输入数据转换为bin文件方便后续推理，存入test/input_bin文件夹下，且生成生成数据集预处理后的bin文件以及相应的info文件。
-- 在语音合成推理过程中，输出为mel图谱，本模型的输出维度为batch_size×900×80。将其输出tensor存为pth文件存入test/mel_tgt_pth文件夹下。
-- 同时，为了后面推理结束后将推理精度与原模型pth权重精度进行对比，将输入数据在pth模型中前传得到的输出tensor村委pth文件存入test/mel_out_pth文件夹下。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-以上步骤均执行下面指令完成：
+   生成输入数据，并准备输出标签和pth权重的输出数据。本模型的验证集大小为100，具体信息在phrases/tui_val100.tsv文件中。
 
-```
-python data_process.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch pretrained_models/fastpitch/nvidia_fastpitch_210824.pt --waveglow pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt
-```
+   - FastPitch模型的输入数据是由文字编码组成，输入长度不等，模型已经将其补零成固定长度200。将输入数据转换为bin文件方便后续推理，存入test/input_bin文件夹下，且生成生成数据集预处理后的bin文件以及相应的info文件。
+   - 在语音合成推理过程中，输出为mel图谱，本模型的输出维度为batch_size×900×80。将其输出tensor存为pth文件存入test/mel_tgt_pth文件夹下。
+   - 同时，为了后面推理结束后将推理精度与原模型pth权重精度进行对比，将输入数据在pth模型中前传得到的输出tensor存为pth文件存入test/mel_out_pth文件夹下。
 
-## 5 离线推理及精度对比
+   以上步骤均执行下面指令完成：
+   
+   ```
+   python3 DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/prepare_dataset.py --wav-text-filelists DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/filelists/ljs_audio_text_val.txt --n-workers 16 --batch-size 1 --dataset-path ./LJSpeech-1.1 --extract-mels --f0-method pyin
+   ```
 
-### 5.1 使用benchmark工具推理
+   ```
+   python3 data_process.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch pretrained_models/fastpitch/nvidia_fastpitch_210824.pt --waveglow pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt
+   ```
 
-获取benchmark工具
 
-### 5.2 模型推理
+## 模型推理<a name="section741711594517"></a>
 
-- 使用benchmark工具进行推理(以batch_size=1为例）：
+1. 模型转换。
 
-benchmark模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。推理得到的结果会在test/result中。
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-将推理得到的结果重新转换为tensor形式，与标签mel_tgt计算mel_loss1。同时，将原模型pth权重前传得到的输出mel_out与标签mel_tgt计算出mel_loss2。mel_loss1与mel_loss2精度对齐则推理正确。
+   1. 获取权重文件。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-cd test
-./benchmark.x86_64 -model_type=nlp -device_id=0 -batch_size=1 -om_path=./models/FastPitch_bs1.om -input_text_path=./input_bin_info.info -output_binary=True -useDvpp=False
-```
+      ```
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FastPitch/PTH/nvidia_fastpitch_210824.pt
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FastPitch/PTH/nvidia_waveglow256pyt_fp16.pt
+      ```
+      （waveglow为语音生成器，不在本模型范围内, 但为了确保代码能正常运行，需要下载）
 
+   2. 导出onnx文件。
 
+      1. 使用pth2onnx.py导出onnx文件。
 
-### 5.3 精度对比
+         ```
+         python3 pth2onnx.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch nvidia_fastpitch_210824.pt --waveglow nvidia_waveglow256pyt_fp16.pt --wn-channels 256 --energy-conditioning --batch-size 1
+         ```
 
-```
-cd ..
-python infer_test.py
-```
+         获得FastPitch.onnx文件。
 
-以下为测试出的batch_size=1和16的精度对比：
+      2. 优化ONNX文件。
 
-```
-mel_loss:
-          om          pth
-bs1	    11.246       11.265
-bs16	11.330       11.265
-```
+         ```
+         python3 -m onnxsim FastPitch.onnx FastPitch_sim.onnx --dynamic-input-shape --input-shape 1,200
+         ```
 
+         获得FastPitch_sim.onnx文件。
 
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-## 6 性能对比
+      1. 配置环境变量。
 
-### 6.1 npu性能数据
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-1. 运行test/performance.sh脚本
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-```
-cd test
-./benchmark.x86_64 -round=20 -device_id=0 -batch_size=1 -om_path=./models/FastPitch_bs1.om
-```
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-测试出来的ave_throughputRate，将其乘以4即为吞吐率。
+      3. 执行ATC命令。
 
-以下计算结果为batch_size=1的结果。
+         ```
+         atc --framework=5 --model=FastPitch_sim.onnx --output=FastPitch_bs1 --input_format=ND --input_shape="input:1,200" --out_nodes='Transpose_2044:0' --log=debug --soc_version=Ascend${chip_name} 
+         ```
 
-![img](file:///C:\Users\1\AppData\Local\Temp\ksohtml\wps9EEB.tmp.jpg)
+         - 参数说明：
 
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
+           运行成功后生成<u>***FastPitch_bs1.om***</u>模型文件。
 
+2. 开始推理验证。
 
+   1. 使用ais-infer工具进行推理。
 
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
+   2. 配置环境变量。
 
-### 6.2 T4性能数据
+      ```
+      source /usr/local/Ascend/ascend-toolkit/set_env.sh
+      ```
 
-提供以下测试代码作参考：
+   3. 执行推理。
 
-```python
-import time
+        ```
+        python3 -m ais_bench --model FastPitch_bs1.om --input test/input_bin --output result --output_dirname output_bs1 --outfmt BIN
+        ```
 
-model=...(导入模型及加载pth权重)
+        -   参数说明：
 
-input = torch.ones(size=(1, 200), dtype=torch.int64, device=device)
-total_time = 0
-lens = 20
-for _ in range(lens):
-	start = time.time()
-	output = model(input)
-	end = time.time()
-	total_time += end - start
-print(f"batch_size=1, FPS:{1.0/(total_time/lens)}")
+             -   --model：om文件路径。
+             -   --input：输入数据路径。
+             -   --output：推理结果输出路径。
+             -   --outfmt：推理结果输出格式。
 
- 
-input = torch.ones(size=(16, 200), dtype=torch.int64, device=device)
-total_time = 0
-lens = 20
-for _ in range(lens):
-	start = time.time()
-	output = model(input)
-	end = time.time()
-	total_time += end - start
-print(f"batch_size=16, FPS:{16.0/(total_time/lens)}")
-```
+        推理后的输出默认在当前目录result下。
 
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
+   4. 精度验证。
 
+      调用脚本与数据集标签比对，可以获得Accuracy数据。
 
+      ```
+      python3 infer_test.py result/output_bs1
+      ```
 
-### 6.3 性能对比
+   5. 性能验证。
 
-| Model     | Batch Size | A300 Throughput/Card | T4 Throughput/Card | A300/T4 |
-| --------- | ---------- | -------------------- | ------------------ | ------- |
-| FasfPitch | 1          | 54.1476              | 28.828             | 1.878   |
-| FasfPitch | 4          | 51.728               | -                  | -       |
-| FasfPitch | 8          | 51.3684              | -                  | -       |
-| FasfPitch | 16         | 51.714               | 64.94              | 0.796   |
-| FasfPitch | 32         | 52.0696              | -                  | -       |
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-由于模型并没有性能要求，bs1、bs4、bs8、bs16、bs32时npu的性能高于T4性能的0.5倍，性能达标。
+        ```
+         python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
 
+      - 参数说明：
+        - --model：om文件路径
+        - --batchsize：batch大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+|mel_loss  |   om     |     pth   |
+| -------- | -------- | --------- |
+|bs1	     |  11.246  |   11.265  |
+|bs16	     |  11.330  |   11.265  |
+
+
+| Model     | Batch Size |T4 Throughput/Card |  310 Throughput/Card |  310P3 Throughput/Card |
+| --------- | ---------- | ------------------ | -------------------- | --------------------- |
+| FasfPitch | 1          | 28.828             | 54.1476              |         90.2718       |
+| FasfPitch | 4          | -                  | 51.728               |         123.7534      |
+| FasfPitch | 8          | -                  | 51.3684              |         126.9909      |
+| FasfPitch | 16         | 64.94              | 51.714               |         124.2424      |
+| FasfPitch | 32         | -                  | 52.0696              |         124.1726      |
+| FasfPitch | 64         | -                  | -                    |         84.8399       |   

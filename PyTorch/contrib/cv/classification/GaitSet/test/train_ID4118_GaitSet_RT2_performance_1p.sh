@@ -61,6 +61,7 @@ python3 train_main.py  --rt2 \
                        --iters=${iters} \
                        --profiling=${profiling} \
                        --start_step=${start_step} \
+                       --local_rank ${ASCEND_DEVICE_ID} \
                        --stop_step=${stop_step} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
@@ -73,6 +74,9 @@ echo "------------------ Final result ------------------"
 sed -i "s|\r|\n|g" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 #输出性能FPS，需要模型审视修改
 FPS=`grep "FPS" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS" '{print$2}' | tr -d "(" | tr -d ")" | tr -d "',"|awk -F " " 'END{print$3}'`
+
+#输出CompileTime
+CompileTime=`grep Iter_time ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2|awk -F "Iter_time: " '{print$2}' |awk '{sum += $1} END {print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -113,4 +117,5 @@ echo "TrainingTime = ${TrainingTime}" >> ${cur_path}/output/$ASCEND_DEVICE_ID/${
 echo "TrainAccuracy = ${train_accuracy}" >> ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "Make_Time = None" >> ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log

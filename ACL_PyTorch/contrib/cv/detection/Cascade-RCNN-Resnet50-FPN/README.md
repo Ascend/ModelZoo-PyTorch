@@ -1,338 +1,328 @@
-# Cascade R-CNN Onnx模型端到端推理指导
+# Cascade-RCNN-Resnet50-FPN模型-推理指导
 
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架和第三方库](#21-深度学习框架和第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 获取原始数据集](#41-获取原始数据集)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集info文件](#43-生成数据集info文件)
--   [5 精度对比](#5-精度对比)
-	-   [5.1 离线推理精度](#51-离线推理精度)
-	-   [5.2 开源精度](#52-开源精度)
-	-   [5.3 精度对比](#53-精度对比)
--   [6 性能对比](#6-性能对比)
-	-   [6.1 性能对比](#61-性能对比)
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
 
 
 
-## 1 模型概述
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[论文地址](#11-论文地址)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
--   **[代码地址](#12-代码地址)**  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-### 1.1 论文地址
-[论文地址](https://arxiv.org/abs/1712.00726)  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 1.2 代码地址
-[代码地址](https://github.com/open-mmlab/mmdetection/tree/master/configs/cascade_rcnn)  
-branch:master    
-commit id：a21eb25535f31634cef332b09fc27d28956fb24b
-## 2 环境说明
+  ******
 
--   **[深度学习框架和第三方库](#21-深度学习框架和第三方库)**  
 
-### 2.1 深度学习框架和第三方库
-```
-python3.7.5
-CANN 5.1.RC1
 
-pytorch = 1.7.0
-torchvision = 0.8.0
-onnx = 1.7.0
-onnxoptimizer = 0.2.7
-onnxruntime = 1.5.2
-opencv-python = 4.4.0.46
-pillow = 9.0.1
-numpy == 1.21.5
-cpython = 0.29.30
-mmcv = 1.2.5
-mmdet = 2.8.0
-mmpycocotools = 12.0.3
-```
 
-**说明：** 
-   pytorch 安装 cpu版本
-```
-conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 -c pytorch
-```
-   mmcv 也安装cpu版本
-```
-pip install mmcv-full==1.2.5 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.7.0/index.html
-```
-   mmdetecton 需要下载代码仓后，在源码包根目录下用源码安装
-```
-git clone --branch v2.8.0 https://github.com/open-mmlab/mmdetection
-cd mmdetection
-git reset --hard a21eb25535f31634cef332b09fc27d28956fb24b
-pip install -v -e .
-```
-   其他包可以通过pip安装
-```
-pip install opencv-python==4.4.0.46 onnxruntime==1.5.2 mmpycocotools==12.0.3 onnxoptimizer
-```
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+Cascade-RCNN_DCN在之前的cascade-RCNN的基础上，采用形变卷积算子，使整体网络精度提升。
+
+
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/open-mmlab/mmdetection
+  commit_id=a21eb25535f31634cef332b09fc27d28956fb24b
+  code_path=contrib/cv/detection/Cascade-RCNN-Resnet50-FPN
+  ```
+  
+ 
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 1216 x 1216 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | boxes  | FLOAT32  | 100 x 5 | ND           |
+  | labels  | INT64       | 100 x 1 | ND           |
+ 
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动   
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17(NPU驱动固件版本为6.0.RC1)  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+                                               
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 安装依赖。
+
+   ```
+   pip install -r requirements.txt     
+   ```
+
+2. 获取源码。
+    1. 安装开源仓
+   ```
+   git clone --branch v2.8.0 https://github.com/open-mmlab/mmdetection
+   cd mmdetection
+   git reset --hard a21eb25535f31634cef332b09fc27d28956fb24b
+   pip install -v -e .
+
+   ```
+    2. 修改模型
+   ```
+   patch -p1 < ../Cascade_RCNN.patch
+   cd ..
+   ```
+
+3. 安装mmcv-full,mmpycocotools
+
+   ```
+   pip install openmim
+   mim install mmcv-full==1.2.5
+   mim install mmpycocotools==12.0.3
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。
+   本模型已在coco 2017数据集上验证过精度。推理数据集采用coco_val_2017，请用户自行获取coco_val_2017数据集。将instances_val2017.json文件和val2017文件夹按照如下目录结构上传并解压数据集到服务器任意目录。
+    最终，数据的目录结构如下：
+   ```
+   ├── coco
+       ├── val2017   
+       ├── annotations
+            ├──instances_val2017.json
+         
+
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+
+   执行cascade_rcnn_r50_fpn_preprocess.py脚本，完成预处理。
+
+   ```
+   python cascade_rcnn_r50_fpn_preprocess.py --image_folder_path ./coco/val2017 --bin_folder_path ./val2017_bin
+   ```
+   - 参数说明：
+      -  --image_folder_path：数据集路径。
+      -  --bin_folder_path：预处理后的数据文件的相对路径。
+      
+    
+    运行成功后，会在当前目录下生成二进制文件。
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       [获取地址](https://gitee.com/link?target=http%3A%2F%2Fdownload.openmmlab.com%2Fmmdetection%2Fv2.0%2Fcascade_rcnn%2Fcascade_rcnn_r50_fpn_1x_coco%2Fcascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth)
+
+   2. 导出onnx文件。
+
+      1. 使用mmdetection/tools/pytorch2onnx.py导出onnx文件。
+
+      
   
 
-## 3 模型转换
+         ```
+         python mmdetection/tools/pytorch2onnx.py mmdetection/configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py 
+         ./cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth --output-file=cascade_rcnn_r50_fpn.onnx --shape 1216 
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+         ```
+         - 参数说明：
+            -  --shape : 模型大小
+            -  --output-file: 输出onnx模型
+          
 
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
-[Cascade_RCNN预训练pth权重文件](http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth) 
-下载经过训练的Cascade-RCNN-R50-FPN-1X-COCO模型权重文件，并移动到Modelzoo源码包中。
-
-2.修改修改mmdetection源码适配Ascend NPU
-
-使用mmdetection（v2.8.0）导出onnx前, 需要对源码做一定的改动，以适配Ascend NPU。具体的代码改动请参考Modelzoo源码包中的Cascade_RCNN修改实现.md文档。添加NPU自定义算子后需要屏蔽掉torch.onnx中的model_check相关代码，否则导出onnx过程中无法识别自定义算子会导致报错。
-
-代码修改方式使用patch，在源码包目录下运行命令：
-```
-patch -p1 < Cascade_RCNN.patch
-```
+         获得cascade_rcnn_r50_fpn.onnx文件,模型只支持bs1。
 
 
-b.（可选）修改cascade_rcnn_r50_fpn.py文件中nms_post参数
-打开文件。
-```
-vi mmdetection/configs/_base_/models/cascade_rcnn_r50_fpn.py
-```
-修改参数。
-```python
-test_cfg = dict(
-    rpn=dict(
-        nms_across_levels=False,
-        nms_pre=1000,
-        nms_post=500,
-        max_num=1000,
-        nms_thr=0.7,
-        min_bbox_size=0),
-    rcnn=dict(
-        score_thr=0.05,
-        nms=dict(type='nms', iou_threshold=0.5),
-        max_per_img=100))
-```
-**说明：** 
-由于NPU RoiExtractor算子的特殊性，适当减少其输入框的数量可以在小幅度影响精度的基础上大幅度提高性能，推荐将test_cfg中rpn层的nms_post参数从1000改为500，用户可以自行决定是否应用此项改动。
 
-d.替换相应源代码后，调用mmdete/tools目录中的pytorch2onnx脚本导出ONNX模型。这里注意指定shape为1216。
-```
-python3.7 mmdetection/tools/pytorch2onnx.py mmdetection/configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py ./cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth --output-file=cascade_rcnn_r50_fpn.onnx --shape=1216 --verify --show
-```
-运行成功后在当前目录生成cascade_crnn_r50_fpn.onnx文件。此模型当前仅支持batch_size=1。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
+      1. 配置环境变量。
 
-### 3.2 onnx转om模型
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-1.设置环境变量
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+      3. 执行ATC命令。
 
-修改好的onnx可以直接利用ATC工具转换为om，进行离线推理。在转换om文件前，通过ATC工具的--out_nodes参数，指定输出节点为boxes和labels前的最后两个节点，可以剔除修改模型时产生的多余分支。不同模型的输出节点会有区别，可以用netron等模型可视化工具打开后查看output节点前的最后算子名称，并指定为ATC输出节点--out_nodes。
+         ```
+            atc --framework=5\ 
+                 --model=./cascade_rcnn_r50_fpn.onnx\ 
+                 --output=./cascade_rcnn_r50_fpn\ 
+                 --input_format=NCHW\ 
+                 --input_shape="input:1,3,1216,1216"\ 
+                 --log=info\
+                 --out_nodes="Concat_828:0;Reshape_830:0"\
+                 --soc_version=Ascend${ChipName}
+         ```
 
-运行atc命令，完成onnx到om模型转换。
+         - 参数说明：
 
-```
-atc --model=./cascade_rcnn_r50_fpn.onnx --framework=5 --output=cascade_rcnn_r50_fpn_wjy --input_format=NCHW --input_shape="input:1,3,1216,1216" --log=info --soc_version=Ascend${chip_name} --out_nodes="Concat_828:0;Reshape_830:0"
-```
-注：${chip_name}由“npu-smi info”命令查看处理器获得。
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --out_nodes: 输出节点
 
-运行成功后，生成cascade_rcnn_r50_fpn.om文件。
+        运行成功后生成cascade_rcnn_r50_fpn.om模型文件。
 
-**参数说明：**
-- --model：为ONNX模型文件。
-- --framework：5代表ONNX模型。
-- --output：输出的OM模型。
-- --input_format：输入数据的格式。
-- --input_shape：输入数据的shape。
-- --out_nodes：输出节点名称。
-- --log：日志级别。
-- --soc_version：推理设备名称。
+2. 开始推理验证。
 
-## 4 数据集预处理
+   1. 使用ais-infer工具进行推理。
 
--   **[获取原始数据集](#41-获取原始数据集)**  
--   **[数据集预处理](#42-数据集预处理)**  
--   **[生成数据集info文件](#43-生成数据集info文件)**  
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-### 4.1 获取原始数据集
-本模型已在coco 2017数据集上验证过精度。推理数据集采用coco_val_2017，请用户自行获取coco_val_2017数据集或者参考mmdetection相关指导获取其他数据集.
-将instances_val2017.json文件和val2017文件夹上传并解压数据集到ModelZoo的源码包路径下。
-```
-├── instances_val2017.json    //验证集标注信息       
-└── data/val2017             // 验证集文件夹
-```
+   2. 执行推理。
 
-### 4.2 数据集预处理
-1.将原始数据集转换为模型输入的二进制数据。
+        
+    ```
+    python ais_infer.py --model ./cascade_rcnn_r50_fpn.om\  
+                                  --input ./val2017_bin/\ 
+                                  --output ./result\ 
+                                  --batchsize 1\
+                                  --outfmt BIN\
+                                  --output_dirname ais-result
+    ```
 
-将原始数据（.jpg）转化为二进制文件（.bin）。转化方法参考mmdetection预处理方法，以获得最佳精度。以coco_2017数据集为例，通过缩放、均值方差手段归一化，输出为二进制文件。
+    - 参数说明：
 
-执行mmdetection_coco_preprocess.py脚本。
-```
-python3.7 mmdetection_coco_preprocess.py --image_folder_path ./data/val2017 --bin_folder_path ./data/val2017_bin
-```
-**说明：**
-- --image_folder_path：原始数据验证集（.jpg）所在路径。
-- --bin_folder_path：输出的二进制文件（.bin）所在路径。
-每个图像对应生成一个二进制文件。
+      - --model: OM模型路径。
+      - --input: 存放预处理bin文件的目录路径
+      - --output: 存放推理结果的目录路径
+      - --batchsize：每次输入模型的样本数
+      - --outfmt: 推理结果数据的格式
+      - --output_dirname: 输出结果子目录
+        推理后的输出默认在当前目录result下。
 
-### 4.3 生成数据集info文件
-1.二进制输入info文件生成
-使用脚本计算精度时需要输入二进制数据集的info文件
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-1.JPG图片info文件生成
-后处理时需要输入数据集.jpg图片的info文件。使用get_info.py脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。
+   3. 精度验证。
 
-运行get_info.py脚本。
-```
-python3.7 get_info.py jpg ../dataset/coco/val2017 coco2017_jpg.info
-```
-第一个参数为生成的数据集文件格式，第二个参数为coco图片数据文件的相对路径，第三个参数为生成的数据集信息文件保存的路径。运行成功后，在当前目录中生成coco2017_jpg.info。
+      运行get_info.py,生成图片数据文件
+    ```
+    python get_info.py jpg ./coco/val2017 coco2017_jpg.info
+    ```
+    - 参数说明：
 
+      - --第一个参数：原始数据集
+      - --第二个参数：图片数据信息
 
-## 5 精度对比
+      调用“cascade_rcnn_r50_fpn_postprocess.py”评测模型的精度。
 
--   **[离线推理精度](#51-离线推理精度)**  
--   **[开源精度](#52-开源精度)**  
--   **[精度对比](#53-精度对比)**  
+    ```
+    python cascade_rcnn_r50_fpn_postprocess.py --bin_data_path=result --prob_thres=0.05 --ifShowDetObj --det_results_path=detection-results --test_annotation=coco2017_jpg.info  
+    ```
+    - 参数说明：
 
-### 5.1 离线推理精度
-1.使用ais_infer工具进行离线推理.
+      - --bin_data_path: 推理结果。
+      - --test_annotatio: 原始图片信息文件。
+      - --det_results_path: 后处理输出结果。
+      - --ifShowDetObj：是否将box画在图上显示。
+      - --prob_thres: 目标框的置信度阈值
 
-```
-python3.7 ais_infer.py --model cascade_rcnn_r50_fpn_aoe.om --input data/val2017_bin/  --output ais_infer_result --outfmt BIN --batchsize 1
-```
-**参数说明:**
-- --mode：om模型路径。
-- --input：二进制数据集文件夹路径。
-- --output：输出文件夹路径。
-- --outfmt：后处理输出格式。
-- --batchsize：推理的batchsize大小。
+      评测结果的mAP值需要使用官方的pycocotools工具，首先将后处理输出的txt文件转化为coco数据集评测精度的标准json格式。
 
-2.推理结果展示。
+    ```
+    python txt_to_json.py --npu_txt_path detection-results --json_output_file coco_detection_aisInfer_result
+    ```
+    - 参数说明：
 
-本模型提供后处理脚本，将二进制数据转化为txt文件，同时生成画出检测框后的图片，直观展示推理结果。
-执行脚本。
-```
-python mmdetection_coco_postprocess.py --bin_data_path=ais_infer_result/日期文件夹 --prob_thres=0.05 --ifShowDetObj --det_results_path=ais_infer_detection_results --test_annotation=coco2017_jpg.info
-```
-**参数说明:**
-- --bin_data_path：推理输出目录。
-- --prob_thres：框的置信度阈值，低于阈值的框将被舍弃。
-- --ifShowDetObj：决定是否生成检测图片。
-- --det_results：后处理输出目录。
-- --test_annotation：原始图片信息文件，源码包中提供。
+      - --npu_txt_path: 后处理输出结果
+      - --json_output_file: 输出json
 
-3.精度验证
-评测结果的mAP值需要使用官方的pycocotools工具，首先将后处理输出的txt文件转化为coco数据集评测精度的标准json格式。
+      调用coco_eval.py脚本，输出推理结果的详细评测报告。
+  
+    ```
+    python coco_eval.py --detection_result coco_detection_aisInfer_result.json --ground_truth ./coco/annotations/instances_val2017.json
+    ```
+    - 参数说明：
 
-执行转换脚本。
-```
-python txt_to_json.py --npu_txt_path ais_infer_detection_results --json_output_file coco_detection_aisInfer_result
-```
-运行成功后，生成coco_detection_result.json文件。
+      - --detection_result: 输出json
+      - --ground_truth: 标签
+     
+    
+   4. 性能验证。
 
-调用coco_eval.py脚本，输出推理结果的详细评测报告。
-```
-python coco_eval.py --detection_result coco_detection_aisInfer_result.json
-```
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-4.精度结果：
-310 batch1的精度：
-```
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.405
-Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.589
-Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.438
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.236
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.444
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.516
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.551
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.551
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.551
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.354
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.590
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.687
-{'bbox_mAP': 0.405, 'bbox_mAP_50': 0.589, 'bbox_mAP_75': 0.438, 'bbox_mAP_s': 0.236, 'bbox_mAP_m': 0.444, 'bbox_mAP_l': 0.516, 'bbox_mAP_copypaste': '0.405 0.589 0.438 0.236 0.444 0.516'}
-```
-310p batch1的精度：
-```
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.405
-Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.589
-Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.438
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.235
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.444
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.515
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.551
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.551
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.551
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.355
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.590
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.688
-{'bbox_mAP': 0.405, 'bbox_mAP_50': 0.589, 'bbox_mAP_75': 0.438, 'bbox_mAP_s': 0.235, 'bbox_mAP_m': 0.444, 'bbox_mAP_l': 0.515, 'bbox_mAP_copypaste': '0.405 0.589 0.438 0.235 0.444 0.515'}
-```
+    ```
+    python ais_infer.py --model ./cascade_rcnn_r50_fpn.om --loop 100 --batchsize 1
+    ```
 
-T4 batch1的精度：
-```
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.403
-Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.586
-Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.440
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.225
-Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.438
-Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.529
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.543
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.543
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.543
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.333
-Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.582
-Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.689
-OrderedDict([('bbox_mAP', 0.403), ('bbox_mAP_50', 0.586), ('bbox_mAP_75', 0.44), ('bbox_mAP_s', 0.225), ('bbox_mAP_m', 0.438), ('bbox_mAP_l', 0.529), ('bbox_mAP_copypaste', '0.403 0.586 0.440 0.225 0.438 0.529')])
-```
+    - 参数说明：
+
+      - --model: om模型
+      - --batchsize: 每次输入模型样本数
+      - --loop: 循环次数    
 
 
-### 5.2 开源精度
-[github开源代码仓精度](https://github.com/open-mmlab/mmdetection/blob/master/configs/cascade_rcnn/README.md)
 
-|    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP | Config | Download |
-| :-------------: | :-----: | :-----: | :------: | :------------: | :----: |:------:|:--------:|
-|    R-50-FPN     | pytorch |   1x    |   4.4    |      16.1      |  40.3  | [config](https://github.com/open-mmlab/mmdetection/tree/master/configs/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco.py) | [model](http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth) &#124; [log](http://download.openmmlab.com/mmdetection/v2.0/cascade_rcnn/cascade_rcnn_r50_fpn_1x_coco/cascade_rcnn_r50_fpn_1x_coco_20200316_214748.log.json) |
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
+调用ACL接口推理计算，性能参考下列数据。
 
-### 5.3 精度对比
+1. 精度对比
 
-分别将310和310p上得到的om离线模型推理精度与该模型github代码仓上公布的精度对比，精度均达标。
-|    精度    | 310     | 310p    | T4     | 开源   | 
-| ---------- | ------- | ------- | ------ | ------ |
-|   box AP   |  40.5   |  40.5   |  40.3  |  40.3  |
+    | Model       | batchsize | Accuracy | 
+    | ----------- | --------- | -------- |
+    | Cascade_rcnn_r50| 1       | bbox_mAP = 0.405 |
 
-在310上满足精度要求（40.5>=40.3);
-在310p上满足精度要求（40.5>=40.3）;
-在T4上满足精度要求（40.3>=40.3）;
+2. 性能对比
 
-## 6 性能对比
-
--   **[性能对比](#61-性能对比)**  
-
-### 6.1 性能对比
-
-| Throughput | 310     |310P(aoe)| T4     | 310P/310 | 310P/T4   |
-| :---------- | :------- | :------- | :------ | :-------- | :--------- |
-| bs1        | 3.53833 | 6.23197 | 2.60000 | 1.76127 | 2.39691 |
-
-经过AOE优化后性能达标：
-310p的最优batch性能 >=1.2倍310最优batch性能x 4，（1.76>1.2,性能满足）
-310p的最优batch性能 >=1.6倍T4最优batch性能，（2.39>1.6,性能满足）
+    | batchsize | 310 性能 | 310P 性能 | 
+    | ---- | ---- | ---- |
+    | 1 | 3.5  |6.5 |
+    
 

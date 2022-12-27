@@ -106,6 +106,7 @@ nohup python3.7 run_mlm.py \
         --fp16_opt_level O2 \
         --loss_scale 8192 \
         --use_combine_grad \
+        --device_id ${device_id} \
         --optim adamw_apex_fused_npu \
         --output_dir ./output > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait

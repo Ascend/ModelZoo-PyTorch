@@ -12,30 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
+import argparse
+
 import torch
-from torch import nn
 
 from model import Generator
 
-def pth2onnx(input_file, batch_size, upscale_factor):
-    device = torch.device('cpu')
-    # 创建模型
-    netG = Generator(scale_factor=upscale_factor)
-    # 加载参数
-    netG.load_state_dict(torch.load(input_file, map_location='cpu'))
+def pth2onnx(args):
+    netG = Generator(scale_factor=args.upscale_factor)
+    netG.load_state_dict(torch.load(args.src_path, map_location='cpu'))
     netG.eval()
     input_names = ["lrImage"]
     output_names = ["hrImage"]
     
-    model_name ='SRGAN'
-    bs = int(batch_size)
-    dummy_input = torch.randn(bs, 3, 400, 400)
-    export_name = 'srgan_bs{}.onnx'.format(batch_size)
+    dummy_input = torch.randn(16, 3, 400, 400)
+    dynamic_axes = {'lrImage': {0: '-1'}}
+    export_name = args.result_path
     torch.onnx.export(netG, dummy_input, export_name,
                       input_names=input_names, output_names=output_names,
-                      opset_version=11)
+                      dynamic_axes=dynamic_axes, opset_version=11)
 
 if __name__ == '__main__':
-    pth2onnx(sys.argv[1], sys.argv[2], 2)
+    parser = argparse.ArgumentParser(description='fix onnx script')
+    parser.add_argument('--src_path', default='./netG_best.pth', type=str, help='weight path')
+    parser.add_argument('--result_path', default='./srgan.onnx', type=str, help='onnx path')
+    parser.add_argument('--upscale_factor', default=2, type=int, help='upscale_factor')
+    args_parser = parser.parse_args()
+    
+    pth2onnx(args_parser)

@@ -25,7 +25,8 @@
         "dataSource": "mxpi_imageresize0",
         "modelPath": "../convert/crnn.om",
         "waitingTime": "2000",
-	"outputDeviceId": "-1"
+	    "outputDeviceId": "-1",
+        "outputHasBatcgDim": "0"
       },
       "factory": "mxpi_tensorinfer",
       "next": "mxpi_classpostprocessor0"

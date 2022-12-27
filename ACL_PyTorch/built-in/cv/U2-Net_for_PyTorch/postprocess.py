@@ -14,11 +14,12 @@
 
 
 import os
+import glob
+import argparse
+
 from PIL import Image
 from skimage import io
 import numpy as np
-import glob
-import argparse
 from tqdm import tqdm
 
 
@@ -33,8 +34,8 @@ def parse_args():
                         help='input dataset image dir')
     parser.add_argument('--save_dir', type=str, default='./test_vis_ECSSD')
     parser.add_argument('--out_dir', type=str, default='./result/dumpOutput_device0')
-    args = parser.parse_args()
-    return args
+    global_args = parser.parse_args()
+    return global_args
 
 
 def save_output(image_name, predict_np, d_dir):
@@ -42,7 +43,6 @@ def save_output(image_name, predict_np, d_dir):
     img_name = image_name.split(os.sep)[-1]
     image = io.imread(image_name)
     imo = im.resize((image.shape[1], image.shape[0]), resample=Image.BILINEAR)
-    pb_np = np.array(imo)
 
     aaa = img_name.split(".")
     bbb = aaa[0:-1]
@@ -50,8 +50,8 @@ def save_output(image_name, predict_np, d_dir):
     for i in range(1, len(bbb)):
         imidx = imidx + "." + bbb[i]
 
-    save_dir = os.path.join(d_dir, imidx + '.png')
-    imo.save(save_dir)
+    save_output_result = os.path.join(d_dir, imidx + '.png')
+    imo.save(save_output_result)
 
 
 def normPRED(d):
@@ -63,7 +63,7 @@ def normPRED(d):
 
 def postprocess(ori_image_list, bin_dir, num, save_dir):
     for idx in tqdm(range(num)):
-        bin_path = os.path.join(bin_dir, '{}_1.bin'.format(idx))
+        bin_path = os.path.join(bin_dir, '{}_0.bin'.format(idx))
         bin_data = np.fromfile(bin_path, dtype=np.float32).reshape([320, 320])
         bin_data = normPRED(bin_data)
         image_path = ori_image_list[idx]
@@ -73,9 +73,9 @@ def postprocess(ori_image_list, bin_dir, num, save_dir):
 if __name__ == '__main__':
     args = parse_args()
     out_dir = args.out_dir
-    save_dir = args.save_dir
+    save_dir_path = args.save_dir
     image_dir = args.image_dir
     bin_files = os.listdir(out_dir)
-    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(save_dir_path, exist_ok=True)
     img_name_list = glob.glob(image_dir + os.sep + '*')
-    postprocess(img_name_list, out_dir, len(bin_files), save_dir)
+    postprocess(img_name_list, out_dir, len(bin_files), save_dir_path)

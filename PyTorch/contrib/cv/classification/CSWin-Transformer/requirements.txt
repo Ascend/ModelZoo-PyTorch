@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 bcolz 
 mxnet 
 tensorboardX 
@@ -12,19 +11,8 @@ PyTurboJPEG
 scikit-learn
 termcolor 
 prettytable
-=======
-bcolz 
-mxnet 
-tensorboardX 
-matplotlib 
-easydict 
-opencv-python 
-einops
-scikit-image 
-imgaug 
-PyTurboJPEG
-scikit-learn
-termcolor 
-prettytable
->>>>>>> 42481b123dc5d31799889ff3e4566e38db0df579
 timm==0.3.4
+torchvision==0.9.1
+pyyaml
+decorator
+sympy

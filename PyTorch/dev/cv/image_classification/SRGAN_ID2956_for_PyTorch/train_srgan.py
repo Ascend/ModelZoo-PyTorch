@@ -40,7 +40,6 @@ from torch import nn
 from models import Generator, Discriminator, TruncatedVGG19
 from datasets import SRDataset
 from utils import *
-import torch.npu
 import os
 import apex
 try:

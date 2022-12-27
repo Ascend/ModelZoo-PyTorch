@@ -22,7 +22,6 @@ import warnings
 import torch
 if torch.__version__>="1.8":
     import torch_npu
-import torch.npu
 import torch.distributed as dist
 import numpy as np
 
@@ -58,11 +57,13 @@ parser.add_argument('--stop_step', default=-1, type=int, help='number of stop st
 parser.add_argument('--rt2', action='store_true', default=False, help='enable runitme2.0 mode')
 # parser.add_argument('--device_num',default=-1,type=int,help='device_num')
 
+parser.add_argument('--total_iter', default=-1, type=int, help='train_performance total_iter')
+
 
 def main():
     warnings.filterwarnings("ignore")
     args = parser.parse_args()
-    
+
     os.environ['MASTER_ADDR'] = '127.0.0.3'
     os.environ['MASTER_PORT'] = '46888'
     if args.rt2:
@@ -90,9 +91,13 @@ def main():
         torch.npu.set_device(local_device)
     else:
         torch.npu.set_device(local_device)
-    
+
+    # If parameters from train_performance
+    if args.total_iter != -1:
+        conf['model']['total_iter'] = args.total_iter
+
     model = initialization(conf, train=True)[0]
-    
+
     if args.local_rank == 0:
         print('Training...')
     model.fit()

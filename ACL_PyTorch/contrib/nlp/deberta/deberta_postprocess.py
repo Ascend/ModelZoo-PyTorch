@@ -70,7 +70,7 @@ def run_postprocess(args):
     result=OrderedDict()
     predicts = []
     pre_files=os.listdir(args.bin_file_path)
-    pre_files.sort(key=lambda x:int(x[6:-13]))
+    pre_files.sort(key=lambda x:int(x.split('_')[1]))
 
     for pre_file in pre_files:
         pre = np.fromfile(os.path.join(args.bin_file_path,pre_file),dtype=np.float32).reshape(-1,3)

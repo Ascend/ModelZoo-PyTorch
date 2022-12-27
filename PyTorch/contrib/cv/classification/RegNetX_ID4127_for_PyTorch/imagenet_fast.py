@@ -350,7 +350,7 @@ def main():
     print("rank = ", args.rank)
     print('world_size = ', args.world_size)
     dist.init_process_group(backend='hccl', 
-                            world_size=args.world_size, rank=args.rank)
+                            world_size=args.world_size, rank=args.local_rank)
     print('world_size = ', args.world_size)
 
     # create model

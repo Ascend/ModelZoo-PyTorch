@@ -29,6 +29,10 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -93,9 +97,8 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-
-nohup taskset -c 0-47 python3.7 train.py \
-                --device_id ${ASCEND_DEVICE_ID} \
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
+nohup taskset -c 0-47 python3.7 main.py \
                 --img $image_size $image_size \
                 --data coco.yaml \
                 --cfg cfg/yolov4.cfg \

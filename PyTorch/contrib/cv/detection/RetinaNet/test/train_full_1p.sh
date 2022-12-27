@@ -70,6 +70,7 @@ fi
 # 变量
 export DETECTRON2_DATASETS=${data_path}
 export PYTHONPATH=./:$PYTHONPATH
+export batch_size=$batch_size
 
 #################启动训练脚本#################
 # 训练开始时间，不需要修改
@@ -83,7 +84,7 @@ fi
 python3.7 tools/train_net.py \
     --config-file configs/COCO-Detection/retinanet_R_50_FPN_1x.yaml \
     AMP 1 \
-    OPT_LEVEL O2 \
+    OPT_LEVEL O1 \
     MODEL.DEVICE npu:${ASCEND_DEVICE_ID} \
     LOSS_SCALE_VALUE 64 \
     SOLVER.IMS_PER_BATCH ${batch_size} \

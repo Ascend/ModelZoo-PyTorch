@@ -17,6 +17,9 @@ import argparse
 import torch
 import random
 import os
+import sys
+
+sys.path.append("./DeepLearningExamples/PyTorch/LanguageModeling/BERT/")
 import modeling
 
 def make_train_dummy_input():
@@ -33,6 +36,10 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help="The checkpoint file from pretraining")   
+    parser.add_argument("--save_dir",
+                        default="./",
+                        type=str,
+                        help="The path of the directory that stores the output onnx model")   
     parser.add_argument("--config_file",
                         default=None,
                         type=str,
@@ -46,7 +53,12 @@ if __name__ == '__main__':
                         required=True,
                         help="batch size")
     args = parser.parse_args()
-    MODEL_ONNX_PATH = "./bert_base_batch_{}.onnx".format(args.batch_size)
+
+    output_root = args.save_dir
+    if not os.path.exists(output_root):
+        os.makedirs(output_root)
+
+    MODEL_ONNX_PATH = os.path.join(output_root, "bert_base_batch_{}.onnx".format(args.batch_size))
     OPERATOR_EXPORT_TYPE = torch._C._onnx.OperatorExportTypes.ONNX
     config = modeling.BertConfig.from_json_file(args.config_file)
     # Padding for divisibility by 8

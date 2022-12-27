@@ -87,6 +87,9 @@ def parse_option():
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
     parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
     parser.add_argument('--port', default='12345', type=str, help='master port')
+    parser.add_argument('--nnodes', default=1, type=int, help='number of distributed processes')
+    parser.add_argument('--node_rank', default=-1, type=int, help='node rank for distributed training')
+    parser.add_argument('--nproc_per_node', default=8, type=int, help='rank size')
 
     args, unparsed = parser.parse_known_args()
 
@@ -248,8 +251,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
         torch.npu.synchronize()
         loss_meter.update(loss.item(), targets.size(0))
         norm_meter.update(grad_norm)
-        if idx > 5:
-            batch_time.update(time.time() - end)
+        batch_time.update(time.time() - end)
 
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
@@ -339,11 +341,14 @@ def throughput(data_loader, model, logger):
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
+    args, config = parse_option()
     
     option = {}
     option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
-    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+    k_dir = "./kernel_meta"
+    if not os.path.exists(k_dir):
+        os.mkdir(k_dir)
+    option["ACL_OP_COMPILER_CACHE_DIR"] = k_dir
     print("option:",option)
     torch.npu.set_option(option)
     if config.AMP_OPT_LEVEL != "O0":
@@ -356,11 +361,14 @@ if __name__ == '__main__':
         world_size = int(os.environ['WORLD_SIZE'])
         print(f"RANK and WORLD_SIZE in environ: {rank}/{world_size}")
     else:
-        rank = -1
-        world_size = -1
+        rank = args.node_rank * args.nproc_per_node + args.local_rank
+        world_size = args.nnodes * args.nproc_per_node
+    if world_size <=1:
+        rank = 0
     torch.npu.set_device(config.LOCAL_RANK)
     torch.distributed.init_process_group(backend='hccl', world_size=world_size, rank=rank)
-    torch.distributed.barrier()
+    if world_size > 1:
+        torch.distributed.barrier()
 
     seed = config.SEED + dist.get_rank()
     torch.manual_seed(seed)

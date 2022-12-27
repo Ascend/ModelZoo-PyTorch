@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+  - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -11,11 +13,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
-
-
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
@@ -32,15 +30,6 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
   model_name=Real-ESRGAN
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone https://github.com/xinntao/Real-ESRGAN.git        # 克隆仓库的代码
-  cd Real-ESRGAN                                              # 切换到模型的代码仓目录
-  git reset c9023b3d7a5b711b0505a3e39671e3faab9de1fe --hard      # 切换到对应分支
-  ```
-
-
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
@@ -55,7 +44,7 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
     | input.1 | RGB_FP32 | batchsize x 3 x 64 x 64 | NCHW         |
 
 - 输出数据
-  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | 输出数据 | 数据类型 | 大小                      | 数据排布格式 |
   | ------- | -------- | ------------------------- | ------------ |
   | output | RGB_FP32 | batchsize x 3 x 880 x 880 | NCHW         |
 
@@ -68,11 +57,10 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 1.0.16（NPU驱动固件版本为5.1.RC2）  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.5.0   | -                                                            |
-| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+| Python                                                       | 3.7.5   | -                                                            |                                                         |
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -89,34 +77,34 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
 2. 安装依赖。
 
    ```
-   pip install -r requirements.txt
+   pip3 install -r requirements.txt
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+1. 获取原始数据集。
 
     推理数据集代码仓已提供，并且放置在代码仓./Real-ESRGAN/inputs目录
 
-2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+2. 数据预处理。
 
     数据预处理将原始数据集转换为模型输入的数据：
 
     执行`ESRGAN_preprocess.py`脚本，完成预处理。
     - 对于性能测试使用64x64的输入
       ~~~shell
-      python3 Real-ESRGAN_preprocess.py ./Real-ESRGAN/inputs/ ./prep_dataset_bin 64 64
+      python3 Real-ESRGAN_preprocess.py ./Real-ESRGAN/inputs/ ./prep_dataset_bin_64 64 64
       ~~~
     - 对于精度测试使用220x220的输入
       ~~~shell
-      python3 Real-ESRGAN_preprocess.py ./Real-ESRGAN/inputs/ ./prep_dataset_bin 220 220
+      python3 Real-ESRGAN_preprocess.py ./Real-ESRGAN/inputs/ ./prep_dataset_bin_220 220 220
       ~~~
     - 参数说明：
       -   `./Real-ESRGAN/inputs/` 为输入的图像目录路径
       -   `./prep_dataset_bin` 为输出bin文件路径
       -   `220 220` 输出后的bin文件被裁剪为220x220的大小
 
-    运行成功后会生成名为`prep_dataset_bin`目录，其中包含裁剪后的图像，并以bin的格式存储。
+    运行成功后会生成名为`prep_dataset_bin_64`和`prep_dataset_bin_220`目录，其中包含裁剪后的图像，并以bin的格式存储。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -135,11 +123,11 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
 
    2. 导出onnx文件。
 
-      使用`Real-ESRGAN_pth2onnx.py`导出onnx文件。
+      使用Real-ESRGAN_pth2onnx.py导出onnx文件。
 
-        运行`./Real-ESRGAN_pth2onnx.py`脚本。
+        运行./Real-ESRGAN_pth2onnx.py脚本。
         ```shell
-        python3 ./Real-ESRGAN_pth2onnx.py --bs=${batch_size} --input_size=220 --onnx_output=./realesrgan-x4-b${batchsize}.onnx
+        python3 ./Real-ESRGAN_pth2onnx.py --bs=${batch_size} --input_size=220 --onnx_output=./realesrgan-x4-bs${batchsize}.onnx
         ```
        - 参数说明：
           -   --bs: 为输入图像的batch_size，默认为`1`
@@ -148,7 +136,7 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
       
         此处，导出onnx模型时需要指定输入的尺寸，若需进行精度推理则使用220x220，若需进行性能推理则使用默认尺寸64x64
         
-        最终获得`realesrgan-x4-b${batchsize}.onnx`文件。
+        最终获得`realesrgan-x4-bs${batchsize}.onnx`文件。
 
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -202,25 +190,12 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+    1. 使用ais-infer工具进行推理。
 
-    ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+        ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 
-   b.  执行推理。
-    
-    1. 性能推理
-        ```shell
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --outfmt BIN --loop 5
-        ```
-          - 参数说明：
-            - --model：om模型路径
-            - --batchsize：batchisize大小
-            - --output: 输出路径
-            - --outfmt: 输出文件格式
-            - --loop: 循环次数
-	
-    2. 精度推理
+    2.  执行推理。
         ```shell
         python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --input ./prep_dataset_bin
         ```
@@ -229,43 +204,35 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
             - --batchsize：batchisize大小
             - --output: 输出路径
             - --input：输入bin文件目录
- 
-    推理后的输出默认在当前目录result下。
 
-    >**说明：** 
-    > 在进行精度推理时，需要指定输入图像的路径并使用输入尺寸为$220 \times 220$的om模型。
+        推理后的输出默认在当前目录result下。
+        >**说明：** 
+        > 在进行精度推理时，需要指定输入图像的路径并使用输入尺寸为$220 \times 220$的om模型。
 
-   c.  精度验证。
-
-      由于代码仓与论文当中并没有提供精度指标，作者是在代码仓的inputs文件夹下进行的推理，生成原图的恢复图像。所以我们参考作者的方法，在npu上进行了图像推理，**精度看图像生成的效果**。
-
-      在离线推理结束后，使用脚本将输出的BIN文件，进行后处理得到恢复后的图像。生成的图像保存在img_path文件夹下。
-        
-      ```shell
-      rm -rf ./img_path
-      mkdir ./img_path
-      python3 Real-ESRGAN_postprocess.py  ./result/dumpOutput_device0  ./img_path
-      ```
-      - 参数说明：
-        - ./result/dumpOutput_device0：为推理生成的bin文件
-        - img_path：为生成图像结果文件
+    3. 精度验证
+           由于代码仓与论文当中并没有提供精度指标，作者是在代码仓的inputs文件夹下进行的推理，生成原图的恢复图像。所以我们参考作者的方法，在npu上进行了图像推理，精度看图像生成的效果。
+        在离线推理结束后，使用脚本将输出的BIN文件，进行后处理得到恢复后的图像。生成的图像保存在img_path文件夹下。
+        ```shell
+        rm -rf ./img_path
+        mkdir ./img_path
+        python3 Real-ESRGAN_postprocess.py  ./result/dumpOutput_device0  ./img_path
+        ```
+        - 参数说明：
+           - ./result/dumpOutput_device0：为推理生成的bin文件
+           - img_path：为生成图像结果文件
       
-      最终，将生成图像结果文件，打开并查看模型效果。
+        将生成图像结果文件，打开并查看模型效果。
 
-
-   d.  性能验证。
-
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-      ```shell
-      python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --outfmt BIN --loop 5
-      ```
-
-      - 参数说明：
-        - --model：om模型路径
-        - --batchsize：batchisize大小
-        - --output: 输出路径
-        - --outfmt: 输出文件格式
-        - --loop: 循环次数
+    4. 性能验证
+        ```shell
+        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./realesrgan_bs${batchsize}.om --batchsize ${batchsize} --output ./result --outfmt BIN --loop 5
+        ```
+        - 参数说明：
+          - --model：om模型路径
+          - --batchsize：batchisize大小
+          - --output: 输出路径
+          - --outfmt: 输出文件格式
+          - --loop: 循环次数
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -285,9 +252,11 @@ Real-ESRGAN 旨在开发通用图像恢复的实用算法。作者将强大的�
   
   2. 精度对比
   - 原始输入图像
+
     ![原始输入](https://foruda.gitee.com/images/1661936252729537681/814f6ceb_8600636.png "图片1.png")
     
   - 推理结果图：
+
     ![推理结果1](https://foruda.gitee.com/images/1661676458669849672/0f13c736_8600636.png "0014_1.png")
     ![推理结果2](https://foruda.gitee.com/images/1661676470063451286/6283e830_8600636.png "0030_1.png")
     ![推理结果3](https://foruda.gitee.com/images/1661676481459202408/226a13fd_8600636.png "ADE_val_00000114_1.png")

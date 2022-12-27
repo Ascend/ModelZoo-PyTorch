@@ -32,15 +32,15 @@ mv nnUNet nnUnet
 
 4. 下载网络权重文件并导出onnx
 
-   下载链接：https://zenodo.org/record/3903982#.YL9Ky_n7SUk下载fold_1.zip
+   下载链接：https://zenodo.org/record/3903982#.YL9Ky_n7SUk
 
-   在3d-unet目录下创建build/result目录，并将下载的fold_1.zip文件解压，将nnUNet目录放在result目录下，文件目录为：
+   下载fold_1.zip，在3d-unet目录下创建build/result目录，并将下载的fold_1.zip文件解压，将nnUNet目录放在result目录下，文件目录为：
 
    ```
    3d-unet/build/result/nnUNet/3d_fullres/Task043_BraTS2019/nnUNetTrainerV2__nnUNetPlansv2.mlperf.1/
    ```
 
-   运行脚本导出onnx，onnx默认保存在build/model下，
+   运行脚本导出onnx，onnx默认保存在build/model下，模型生成在build/model/目录下，分别是224_224_160.onnx单batch模型和224_224_160_dynamic_bs.onnx动态batch onnx
 
 ```
 python3 unet_pytorch_to_onnx.py
@@ -48,8 +48,14 @@ python3 unet_pytorch_to_onnx.py
 
 5. 运行脚本将onnx转为om模型，该框架和应用场景都是单batch，导出单batch om模型即可
 
+   ${chip_name}可通过`npu-smi info`指令查看
+
+   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+
+
+
 ```
-bash atc.sh
+bash atc.sh 224_224_160_dynamic_bs.onnx 3DUnet Ascend${chip_name}
 ```
 
 ## 2 离线推理 
@@ -94,12 +100,28 @@ bash atc.sh
    patch -p1 < ../3DUnet.patch
    ```
 
-3. 运行脚本
+3. 数据集下载，该模型使用MICCAI_BraTS2019训练集中得部分数据进行测试，官方下载链接(需注册)：
 
-   手动创建build/postprocessed_data/目录
+   [BraTS2019数据集](https://www.med.upenn.edu/cbica/brats2019/data.html)
 
+   将下载的训练集解压，将其放在inference/vision/medical_imaging/3d_unet/目录下，目录如下
+   
    ```
-   mkdir build/postprocessed_data/
+   buid->
+   	->MICCAI_BraTS_2019_Data_Training->
+   									 ->HGG
+                                        ->LGG
+   ```
+   
+   手动创建build/postprocessed_data/目录
+   
+   ```
+   cd build
+   mkdir postprocessed_data
+   mkdir raw_data
+   cd raw_data
+   mkdir nnUNet_raw_data
+   cd ../../
    ```
 
 ```

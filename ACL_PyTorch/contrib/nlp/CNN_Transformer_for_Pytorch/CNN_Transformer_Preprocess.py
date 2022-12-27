@@ -82,10 +82,8 @@ if __name__ == '__main__':
             padding_len_set.add(padding_len)
             speech = np.pad(speech, (0, padding_len - len_speech), 'constant',
                             constant_values=(0, 0)).astype(np.float32).reshape(1, padding_len)
-            bin_file_path = os.path.join(pre_data_save_path, str(count) + '.bin')
-            speech.tofile(bin_file_path)
-            if count == 34:
-                continue
+            npy_file_path = os.path.join(pre_data_save_path, str(count) + '.npy')
+            np.save(npy_file_path, speech)
             f_info.write(
                 str(count) + ' ' + os.path.join(pre_data_save_path,
                                                 str(count) + '.bin ') + str(speech.shape).replace(' ', '') + '\n')

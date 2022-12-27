@@ -124,7 +124,7 @@ def main(opt):
       # for k, v in log_dict_val.items():
       #   logger.scalar_summary('val_{}'.format(k), v, epoch)
       #   logger.write('{} {:8f} | '.format(k, v))
-      print('best:{} metric:{}  epotchs:{}'.format(best,log_dict_train[opt.metric],epoch))
+      print('best:{} metric:{}  epochs:{}'.format(best,log_dict_train[opt.metric],epoch))
       
       if log_dict_train[opt.metric] < best:
         best = log_dict_train[opt.metric]

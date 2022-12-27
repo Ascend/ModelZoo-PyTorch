@@ -197,7 +197,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         running_loss += loss.item()
         running_regression_loss += regression_loss.item()
         running_classification_loss += classification_loss.item()
-       
+
         if i and i % debug_steps == 0:
             avg_loss = running_loss / debug_steps
             avg_reg_loss = running_regression_loss / debug_steps
@@ -318,7 +318,7 @@ if __name__ == '__main__':
     net = create_net(num_classes)
     #print(net)
 
-  
+
 
 
     min_loss = -10000.0
@@ -381,7 +381,7 @@ if __name__ == '__main__':
     #换接口
     optimizer = apex.optimizers.NpuFusedSGD(params, lr=args.lr, momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-    
+
     #混合精度=====================
 
     if args.apex:
@@ -413,7 +413,7 @@ if __name__ == '__main__':
         scheduler.step()
         train(train_loader, net, criterion, optimizer,
               device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
-        
+
         if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
             logging.info(

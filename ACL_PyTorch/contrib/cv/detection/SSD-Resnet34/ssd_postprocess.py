@@ -22,6 +22,7 @@ from box_coder import build_ssd300_coder
 from async_evaluator import AsyncEvaluator
 from eval import print_message,evaluate_coco,setup_distributed
 from data.prefetcher import eval_prefetcher
+import tqdm
 
 def coco_eval(args,coco, cocoGt, encoder, inv_map, epoch, evaluator=None):        
     bin_input=args.bin_input
@@ -40,7 +41,7 @@ def coco_eval(args,coco, cocoGt, encoder, inv_map, epoch, evaluator=None):
                            args.nhwc,
                            args.use_fp16)
     
-    for nbatch, (img, img_id, img_size) in enumerate(coco):
+    for nbatch, (img, img_id, img_size) in tqdm.tqdm(enumerate(coco)):
         with torch.no_grad():
             ploc = np.fromfile(bin_input + '/' + str(img_id) + '_0.bin', np.float32)
             ploc = np.reshape(ploc, (1,4,8732))
@@ -52,7 +53,7 @@ def coco_eval(args,coco, cocoGt, encoder, inv_map, epoch, evaluator=None):
 
             ploc, plabel = ploc.float(), plabel.float()
             
-            print("img_id=",img_id)
+            #print("img_id=",img_id)
 
             for idx in range(ploc.shape[0]):
                 ploc_i = ploc[idx, :, :].unsqueeze(0)

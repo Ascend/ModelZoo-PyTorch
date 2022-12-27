@@ -16,6 +16,8 @@ from vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd
 from vision.ssd.data_preprocessing import PredictionTransform
 from vision.ssd.config import mobilenetv1_ssd_config as config
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import cv2
 
 def get_raw_data():

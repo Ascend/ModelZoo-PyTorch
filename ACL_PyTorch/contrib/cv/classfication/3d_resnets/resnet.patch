@@ -1,0 +1,12 @@
+--- 3D-ResNets-PyTorch/models/back_resnet.py	2022-12-12 06:35:03.354195351 +0000
++++ 3D-ResNets-PyTorch/models/resnet.py	2022-12-12 06:35:29.922196260 +0000
+@@ -146,7 +146,8 @@ class ResNet(nn.Module):
+                                        shortcut_type,
+                                        stride=2)
+ 
+-        self.avgpool = nn.AdaptiveAvgPool3d((1, 1, 1))
++        #self.avgpool = nn.AdaptiveAvgPool3d((1, 1, 1))
++        self.avgpool = nn.AvgPool3d((1,4,4))
+         self.fc = nn.Linear(block_inplanes[3] * block.expansion, n_classes)
+ 
+         for m in self.modules():

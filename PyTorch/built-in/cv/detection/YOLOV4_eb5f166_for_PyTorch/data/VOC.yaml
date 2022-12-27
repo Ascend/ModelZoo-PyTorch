@@ -1,0 +1,23 @@
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: ./data/VOC
+train: # train images (relative to 'path')  16551 images
+  - ./data/VOC/images/train2012
+  - ./data/VOC/images/train2007
+  - ./data/VOC/images/val2012
+  - ./data/VOC/images/val2007
+val: # val images (relative to 'path')  4952 images
+  - ./data/VOC/images/test2007
+test: # test images (optional)
+  - ./data/VOC/images/test2007
+
+# Classes
+nc: 20  # number of classes
+names: ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog',
+        'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']  # class names
+
+
+# url = 'https://github.com/ultralytics/yolov5/releases/download/v1.0/'
+# urls = [url + 'VOCtrainval_06-Nov-2007.zip',  # 446MB, 5012 images
+#         url + 'VOCtest_06-Nov-2007.zip',  # 438MB, 4953 images
+#         url + 'VOCtrainval_11-May-2012.zip']  # 1.95GB, 17126 images
+# VOCdevkit/

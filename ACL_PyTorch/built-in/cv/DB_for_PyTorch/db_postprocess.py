@@ -33,7 +33,7 @@ class Eval:
 
     def get_pred(self, filename):
         path_base = os.path.join(flags.bin_data_path, filename.split(".")[0])
-        mask_pred = np.fromfile(path_base + "_" + str(1) + ".bin", dtype="float32")
+        mask_pred = np.fromfile(path_base + "_" + '0' + ".bin", dtype="float32")
         mask_pred = np.reshape(mask_pred, [1, 1, 736, 1280])
         mask_pred = torch.from_numpy(mask_pred)
         return mask_pred

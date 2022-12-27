@@ -118,6 +118,8 @@ sed -i "s|\r|\n|g" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DE
 average_step_time=$(grep "step_time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print $4}' | awk 'BEGIN{count=0}{if(NR>3){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}')
 FPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${average_step_time}'}')
 
+#输出CompileTime
+CompileTime=`grep "step_time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "step_time:" '{print $2}'|head -n 2|awk '{sum += $1} END {print sum}'`
 # 输出训练精度
 train_accuracy=$(grep "step/total_step" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "Loss:" '{print $2}' | awk 'END{print $1}')
 
@@ -150,4 +152,5 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/${ASCEND_DEVICE
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 # echo "Status = 0" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log

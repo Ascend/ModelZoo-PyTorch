@@ -45,7 +45,7 @@ import apex
 class NoProfiling(object):
     def __enter__(self):
         pass
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
@@ -172,7 +172,7 @@ class BilstmModel(object):
                 if self.args.profiling == "GE" and collect_turn:
                     manage = torch.npu.profile('./GE_prof')
                 elif self.args.profiling == "CANN" and collect_turn:
-                    manage = torch.npu.profile("./CANN_prof", use_e2e_profiler=True)
+                    manage = torch.npu.profile("./CANN_prof")
                 else:
                     if self.args.profiling in ["GE", "CANN"] and self.args.iteration_num < (self.step + 1):
                         break

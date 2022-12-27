@@ -119,6 +119,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
     balance = [4.0, 1.0, 0.5, 0.4, 0.1] if np == 5 else balance
     for i, pi in enumerate(p):  # layer index, layer predictions
         b, a, gj, gi = indices[i]  # image, anchor, gridy, gridx
+        a = a.npu()
         allmask = targets_mask[i]
         sum_mask = targets_sum_mask[i]
         # tobj = torch.zeros_like(pi[..., 0], device=device)  # target obj
@@ -263,6 +264,7 @@ def build_targets(p, targets, model):
         # indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))  # image, anchor, grid indices
         indices.append((b, a, gj, gi))  # image, anchor, grid indices
         tbox.append(torch.cat((gxy - gij2.float(), gwh), 0))  # box
+        a = a.npu()
         anch.append(anchors[a])  # anchors
         tcls.append(c)  # class
         targets_mask.append(allmask)

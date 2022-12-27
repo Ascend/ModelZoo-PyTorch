@@ -43,11 +43,12 @@
 
   **表 1** 版本配套表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.15](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fhardware%2Ffirmware-drivers%3Ftag%3Dcommercial) |
-  | CANN       | [5.1.RC1](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fsoftware%2Fcann%2Fcommercial%3Fversion%3D5.1.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
+  | 配套          | 版本                                                         |
+  | ------------- | ------------------------------------------------------------ |
+  | 硬件          | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | NPU固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN          | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
+  | PyTorch       | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
 
 - 环境准备指导。
 
@@ -57,6 +58,7 @@
 
   ```
   pip install -r requirements.txt
+  注：只有opencv-python==3.4.3.18时，模型收敛，其他版本不收敛！
   ```
 
 ## 准备数据集
@@ -170,7 +172,7 @@
 
    - 单机8卡训练
 
-     启动单卡训练
+     启动8卡训练
 
      ```
      bash ./test/train_performance_8p.sh --data_path=./data/ICDAR2015
@@ -197,12 +199,12 @@
 
 **表 2** 训练结果展示表
 
-| NAME      | Hmean  | FPS    | Epochs | AMP_Type |
-| --------- | ------ | ------ | ------ | -------- |
-| 1p-NPU1.5 | -      | 16.101 | 20     | -        |
-| 1p-NPU1.8 | -      | 16.101 | 20     | O2       |
-| 8p-NPU1.5 | 81.838 | 77.614 | 583    | -        |
-| 8p-NPU1.8 | 81.838 | 45.714 | 583    | O2       |
+| NAME      | Hmean  | FPS     | Epochs | AMP_Type |
+| --------- | ------ | ------- | ------ | -------- |
+| 1p-NPU1.5 | -      | 16.101  | 20     | -        |
+| 1p-NPU1.8 | -      | 21.263  | 20     | O2       |
+| 8p-NPU1.5 | 81.838 | 77.614  | 583    | -        |
+| 8p-NPU1.8 | 80.796 | 54.3062 | 583    | O2       |
 
 # 版本说明
 

@@ -148,6 +148,6 @@ def get_Acc(bin_path, label, batch_size):
 
 
 if __name__ == '__main__':
-    bin_path = './result'
-    label = './label.txt'
+    bin_path = sys.argv[1]
+    label = sys.argv[2]
     get_Acc(bin_path, label, 1)
