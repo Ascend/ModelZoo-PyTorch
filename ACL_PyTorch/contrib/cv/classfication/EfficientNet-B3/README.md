@@ -214,8 +214,6 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
 
    推理后的输出在output参数对应路径的文件result_bs1里,推理结果保存在sumary.json里，便于汇总统计。
 
- >**说明：** 
->执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
   c.  精度验证。
 

@@ -296,9 +296,6 @@ BLIP模型为一种新的Vision-Language Pre-training框架，它可以灵活地
              -   output：输出数据路径。
 
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
-
    3. 精度验证。
 
       执行后处理脚本BLIP_postprocess.py`，参考命令如下：

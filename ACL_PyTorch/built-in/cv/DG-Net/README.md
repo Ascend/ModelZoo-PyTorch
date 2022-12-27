@@ -216,9 +216,6 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
              -   batchsize：batchsize大小
 
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
-
    3. 精度验证。
 
       调用脚本对推理数据进行可视化处理

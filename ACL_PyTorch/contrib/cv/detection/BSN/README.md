@@ -293,8 +293,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
      - --output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中
    
    推理后的输出默认在当前目录result下。
-   
-   > **说明：** 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
+
    
    c. 数据后处理。
    

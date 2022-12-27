@@ -52,9 +52,9 @@ git reset --hard 6aa14cb
 mv ./Pytorch-UNet ./Pytorch_UNet
 ```
 
-### 1.3 [获取ais_bench工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload)  
+### 1.3  安装ais_bench推理工具
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 ## 2准备数据集   
 
@@ -141,8 +141,10 @@ atc --model=./unet_carvana_sim_final.onnx --framework=5 --output=UNet_bs1 --inpu
 运行成功后生成的UNet_bs1.om文件用于图片输入推理的模型文件。
 
 ### 3.2 开始推理验证
+安装ais_bench推理工具  
 
-#### 3.2.1 使用ais_bench工具执行推理
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+#### 3.2.1 使用ais_bench推理工具执行推理
 
 ```
 python3 -m ais_bench --model ./UNet_bs1.om --input "./prep_bin" --batchsize 1 --output new_result/

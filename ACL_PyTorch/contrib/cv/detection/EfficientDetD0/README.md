@@ -230,11 +230,6 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
            -   --batchsize：batchsize大小
 
 
-
-
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
-
    3. 精度验证。
 
       调用脚本postprocess.py预测精度

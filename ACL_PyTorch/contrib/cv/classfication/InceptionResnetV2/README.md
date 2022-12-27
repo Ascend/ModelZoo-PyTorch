@@ -163,7 +163,7 @@ InceptionResNetV2结合了ResNet与Inception网络的特点，在Inception网络
 ## 推理验证
 
 1. 对数据集推理  
-    该离线模型使用ais_bench作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
+    该离线模型使用ais_bench作为推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python -m ais_bench \
         --model inceptionresnetv2_bs${bs}.om \

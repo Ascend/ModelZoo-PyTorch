@@ -243,10 +243,6 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
              -   outfmt：推理输出类型
 
 
-
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
-
    3. 精度验证。
 
       调用脚本centroid-reid_postprocess.py计算精度

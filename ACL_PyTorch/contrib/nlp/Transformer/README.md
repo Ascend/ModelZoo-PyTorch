@@ -190,7 +190,7 @@
 
    1. 获取ais_bench推理工具
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
    2. 获取权重文件。
 
@@ -358,7 +358,6 @@
          - --input：数据预处理步骤最终生成二进制的文件夹
          - --output：推理结果输出目录。
 
-      ais_bench工具参数详情请参见--help命令。
 
       使用以上命令的输出结果中有类似以下信息：
 

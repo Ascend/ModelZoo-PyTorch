@@ -240,8 +240,6 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
 
         推理后的输出默认在当前目录result下。
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

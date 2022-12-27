@@ -219,7 +219,7 @@ SRFlow是一种基于归一化流的超分辨率方法，具备比GAN更强的�
 
    a.  安装ais_bench推理工具。
 
-   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
    b.  执行推理。
 
@@ -228,10 +228,9 @@ SRFlow是一种基于归一化流的超分辨率方法，具备比GAN更强的�
         rm -rf result
         mkdir result
         
-        # 推理，执行ais_bench工具请选择与运行环境架构相同的命令。
         python -m ais_bench --device 0 --batchsize 1 --model ./srflow_df2k_x8_bs1.om --input ./prep_data/bin/ --output ./result/
       ```
-      -m ais_bench为ais_bench工具脚本路径。
+ 
       -   参数说明：
    
            -   model：om模型类型。
@@ -241,9 +240,7 @@ SRFlow是一种基于归一化流的超分辨率方法，具备比GAN更强的�
     	...
    
       推理后的输出默认在当前目录result下。
-   
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。
+
 
    c.  精度验证。
 

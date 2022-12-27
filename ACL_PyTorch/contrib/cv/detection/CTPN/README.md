@@ -301,9 +301,6 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       performance = \frac{\sum_i^n f_i*s_i}{\sum_i^ns_i}
       $$
 
-   
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

@@ -229,7 +229,7 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 2. 开始推理验证。
 
    a.  安装ais_bench推理工具。
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
    b.  执行推理。
 
@@ -250,8 +250,6 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 
           推理后的输出在目录“./result/Timestam”下，Timestam为日期+时间的子文件夹,如 2022_08_24-16_16_28
 
-          >**说明：** 
-          >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

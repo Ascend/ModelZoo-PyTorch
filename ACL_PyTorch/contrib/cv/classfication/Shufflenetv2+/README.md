@@ -177,7 +177,7 @@ commit_id=d69403d4b5fb3043c7c0da3c2a15df8c5e520d89
 
 a.  安装ais_bench推理工具。
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 b.  执行推理。
 
@@ -195,10 +195,6 @@ python3 -m ais_bench --model ./resnet101_bs1.om --input ./prep_dataset/ --output
 
 运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
 
-**说明：** 
-执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
-
-**因工具限制，需要把result/xxxx_xx_xx-xx-xx-xx/summary.json从结果目录中删除，或者迁移到其他目录；**
 
 c.  精度验证。
 

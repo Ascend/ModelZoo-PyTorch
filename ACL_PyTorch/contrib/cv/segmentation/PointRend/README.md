@@ -122,7 +122,7 @@ python3.7 PointRend_preprocess.py /root/datasets/cityscapes ./preprocess_bin
 
 - **2.3 性能验证**
 
-    获取ais_bench工具 
+    安装ais_bench推理工具   
 
     请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 

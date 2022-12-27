@@ -270,8 +270,6 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
 
       推理完成后在当前`PSENet_ResNet50_vd`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
 
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

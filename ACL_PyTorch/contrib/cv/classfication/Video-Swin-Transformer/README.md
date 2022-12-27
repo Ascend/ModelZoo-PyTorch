@@ -240,8 +240,6 @@ Video swin transformer是一种基于Transformer的视频识别主干网络结�
 
         推理后的输出在当前目录out下。
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

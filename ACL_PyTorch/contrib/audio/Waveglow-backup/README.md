@@ -90,8 +90,8 @@ python3 ../Waveglow_preprocess.py -f ./test_files.txt -c ./config.json -o ./data
 > -c 模型配置json文件  
 > -o 前处理结果存放路径
 ### 四、 离线推理
-#### 1. ais_bench工具概述
-查看[《ais_bench 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，完成ais_bench工具安装
+#### 1. 安装ais_bench推理工具
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 #### 2. 离线推理
 ```

@@ -129,10 +129,8 @@ python3 segmenter_preprocess.py --cfg-path ${cfg-path} --data-root ${data-root} 
 
 ## 5. 离线推理
 
-### 5.1 准备推理工具
-推理工具使用ais_bench，须自己拉取源码，打包并安装
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
-
+### 5.1 安装ais_bench推理工具
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 ```shell
@@ -157,7 +155,7 @@ python3 segmenter_postprocess.py --result-dir {infer-result-dir} --gt-path ${gt-
 
 
 ### 5.4 性能验证
-用ais_bench工具进行纯推理100次，然后根据平均耗时计算出吞吐率
+用ais_bench推理工具进行纯推理100次，然后根据平均耗时计算出吞吐率
 ```shell
 cd tools/ais-bench_workload/tool/ais_infer/
 mkdir tmp_out   # 提前创建临时目录用于存放推理的临时输出

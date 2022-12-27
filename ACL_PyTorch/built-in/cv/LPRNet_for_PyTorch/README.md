@@ -273,8 +273,6 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
         推理后的输出在当前目录`result/{timestamp}`路径下，其中{timestamp}为执行推理认为时的时间戳。
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

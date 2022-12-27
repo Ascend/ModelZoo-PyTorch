@@ -259,8 +259,6 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
       推理后的输出默认在当前工作目录下，其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_30-08_50_53`。
 
-      > **说明：** 
-      > 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 
@@ -272,7 +270,7 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
       -   参数说明：
 
-           -   --json_path：ais_bench工具生成的json文件路径；${path_to_json}代表sumary.json文件的存放路径。
+           -   --json_path：ais_bench推理工具生成的json文件路径；${path_to_json}代表sumary.json文件的存放路径。
            -   --dataset_path：cityscpaes数据集所在路径；比如：若cityscpaes存放在/opt/npu/cityscpaes，则--dataset_path=/opt/npu/
 
 

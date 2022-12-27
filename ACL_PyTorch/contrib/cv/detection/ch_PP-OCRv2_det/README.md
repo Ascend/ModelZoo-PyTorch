@@ -254,8 +254,6 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
       推理完成后结果保存在`ch_PP-OCRv2_det/results_bs${batchsize}`目录下。
 
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

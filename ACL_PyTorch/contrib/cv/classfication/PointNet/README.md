@@ -227,10 +227,6 @@ PointNet是针对3D点云进行分类和分割的模型。该网络包含了三�
              -   --outfmt： 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT” ；
              -   --batchsize： 模型batch size ;
 
-       
-
-         >**说明：** 
-         >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

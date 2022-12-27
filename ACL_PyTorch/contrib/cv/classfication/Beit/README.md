@@ -274,8 +274,7 @@ beit模型离线推理，采用imagenet数据集中的val数据，以及val_labe
          - outfmt：输出数据格式。
          - output：输出路径
          - batchsize: om模型batch size大小
-       > **说明：** 
-        > 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令
+    
 
 
 3. 精度验证。

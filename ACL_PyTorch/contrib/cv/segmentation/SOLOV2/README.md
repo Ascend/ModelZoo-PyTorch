@@ -271,8 +271,6 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    * --loop 	推理次数，可选参数，默认1，profiler为true时，推荐为1
       推理后的输出默认在当前目录result下。
 
-   > **说明：**
-   > 执行ais_bench工具请选择与运行环境架构相同的命令。
 
    c.  后处理。
 

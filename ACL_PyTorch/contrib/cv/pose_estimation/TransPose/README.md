@@ -210,7 +210,7 @@ TransPose是一种基于CNN特征提取器、Transformer编码器和预测头的
 
    1. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
@@ -225,8 +225,6 @@ TransPose是一种基于CNN特征提取器、Transformer编码器和预测头的
             - --input：存放预处理 bin 文件的目录路径
             - --output：推理输出文件夹
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

@@ -187,8 +187,6 @@ python3 -m ais_bench --model ./resnet101_bs1.om --input ./prep_dataset/ --output
 
 运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
 
-**说明：** 
-执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
 
 c.  精度验证。

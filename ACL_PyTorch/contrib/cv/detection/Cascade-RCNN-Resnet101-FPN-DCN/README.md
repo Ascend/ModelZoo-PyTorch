@@ -252,8 +252,6 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
       - --output_dirname: 输出结果子目录
         推理后的输出默认在当前目录result下。
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

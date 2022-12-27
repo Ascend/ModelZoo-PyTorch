@@ -249,9 +249,6 @@ SFA3D（Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clou
       --output：推理结果输出路径。
 
       推理后样本的输出在当前目录的ais_infer_result文件夹下，默认会建立日期+时间的子文件夹保存输出结果。
-
-      **说明：** 执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
-
       
 
 3. 精度验证。

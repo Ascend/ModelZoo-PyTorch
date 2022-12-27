@@ -232,7 +232,7 @@ python3.7 gen_dataset_info.py jpg ${coco_imgs_path}/val2014 coco_images.info
 
 ### 5.1 获取ais_bench工具
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 1.设置环境变量

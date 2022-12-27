@@ -209,7 +209,7 @@ python3.7 gen_dataset_info.py bin ./prep_dataset ./efficientnet-B1_prep_bin.info
 
 ### 5.1 ais_bench工具概述
 
-ais_bench工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。获取工具及使用方法可以参考[tools: Ascend tools - Gitee.com](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+ais_bench工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。
 
 ### 5.2 离线推理
 

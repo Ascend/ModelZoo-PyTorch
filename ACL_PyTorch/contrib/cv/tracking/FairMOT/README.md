@@ -204,7 +204,7 @@
 
 a.  安装ais_bench推理工具。
 
-   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。  
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 b.  执行推理（支持bs1到bs8,其他bs模型太大无法跑出）。
 
@@ -218,8 +218,6 @@ b.  执行推理（支持bs1到bs8,其他bs模型太大无法跑出）。
       -   --outfmt: 输出格式(后续脚本只支持bin格式)
 		...
 
-        > **说明: ** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
 c.  精度验证。
 

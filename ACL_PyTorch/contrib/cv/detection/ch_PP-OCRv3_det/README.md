@@ -212,7 +212,6 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
    a. 安装推理工具。     
 
-      本推理项目使用 ais_bench 作为推理工具，须自己拉取源码，打包并安装。
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 

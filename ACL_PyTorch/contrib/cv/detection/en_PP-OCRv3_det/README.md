@@ -246,8 +246,6 @@ en_PP-OCRv3_det是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
       推理完成后结果保存在`en_PP-OCRv3_det/results_bs${batchsize}`目录下。
 
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

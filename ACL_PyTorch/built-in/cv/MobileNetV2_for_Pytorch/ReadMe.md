@@ -190,8 +190,6 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
            -   output_dirname:推理结果输出子文件夹。
 		...
 
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

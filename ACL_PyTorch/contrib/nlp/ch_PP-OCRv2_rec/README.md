@@ -243,8 +243,6 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
       推理完成后结果保存在`ch_PP-OCRv2_rec/results_bs${batchsize}`目录下。
 
-      >**说明：** 
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c.  精度验证。
 

@@ -264,8 +264,6 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
    b. 执行推理。
 
-   运行 ais_bench 脚本。
-
        cd ${上一级目录} 
        mkdir ais_infer_result
        python3 -m ais_bench --model yolov3_bsn.om 
@@ -275,8 +273,6 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
    
       推理后的输出默认在当前目录result下。
 
-      >**说明：**
-      >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    c. 模型后处理。
    

@@ -215,8 +215,6 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
         推理后的输出保存在当前目录result下。
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 

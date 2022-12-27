@@ -257,8 +257,6 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
 
         推理结果输出在目录```./bert_bin/outputs/```下。
 
-        >**说明：** 
-        >执行ais_bench工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。
 
    3. 精度验证。
 
