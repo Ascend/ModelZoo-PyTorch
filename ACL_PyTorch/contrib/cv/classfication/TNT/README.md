@@ -234,7 +234,7 @@ TNT是针对图像分类的模型，该模型将图像的patch进一步划分为
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-       python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
+       python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
       ```
       - 参数说明
         - --model：om模型
