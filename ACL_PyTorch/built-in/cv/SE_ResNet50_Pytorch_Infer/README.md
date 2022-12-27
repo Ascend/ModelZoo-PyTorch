@@ -1,239 +1,236 @@
-# SE_ResNet50 Onnx模型端到端推理指导
-- [SE_ResNet50 Onnx模型端到端推理指导](#se_resnet50-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 推理硬件设备](#21-推理硬件设备)
-		- [2.2 深度学习框架](#22-深度学习框架)
-		- [2.3 Python第三方库](#23-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 获取pth权重文件](#31-获取pth权重文件)
-		- [3.2 pth转onnx模型](#32-pth转onnx模型)
-		- [3.3 onnx转om模型](#33-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-		- [5.3 性能验证](#53-性能验证)
-	- [6 评测结果](#6-评测结果)
-	- [6 test目录说明](#6-test目录说明)
+# SE_ResNet50模型-推理指导
 
-## 1 模型概述
 
--   **[论文地址](#11-论文地址)**  
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
--   **[代码地址](#12-代码地址)**  
+    - [输入输出数据](#section540883920406)
 
-### 1.1 论文地址
-[SE_ResNet50论文](https://openaccess.thecvf.com/content_cvpr_2018/papers/Hu_Squeeze-and-Excitation_Networks_CVPR_2018_paper.pdf)  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-### 1.2 代码地址
-[SE_ResNet50代码](https://github.com/Cadene/pretrained-models.pytorch/blob/master/pretrainedmodels/models/senet.py)  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-## 2 环境说明
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
--   **[推理硬件设备](#21-推理硬件设备)**  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
--   **[深度学习框架](#22-深度学习框架)**  
+  ******
 
--   **[Python第三方库](#23-Python第三方库)**  
 
-### 2.1 推理硬件设备
-```
-Ascend310P
-```
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-### 2.2 深度学习框架
-```
-CANN 5.0.4
+为了提高网络的表征能力，SE-ResNet-50在ResNet基础上，更加关注特征通道之间的关系，提出了一种新的架构单元，称为“Squeeze-and-Excitation”（SE）模块。它显式地建模特征通道之间的相互依赖关系，采用一种全新的“特征重标定”策略。具体来说，就是通过学习的方式来自动获取到每个特征通道的重要程度，然后依照这个重要程度去提升有用的特征并抑制对当前任务用处不大的特征。SE模块以最小的额外计算成本为深层架构带来了显著的性能改进。SENets在ILSVRC2017分类比赛上获得了第一名
 
-torch == 1.8.0
-torchvision == 0.9.0
-onnx == 1.10.2
-```
 
-### 2.3 Python第三方库
+- 参考实现：
 
-```
-numpy == 1.21.4
-opencv-python == 4.5.4.58
-pretrainedmodels == 0.7.4
-```
+  ```
+  model_name=build-in/cv/SE_ResNet50_Pytorch_Infer
+  ```
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
 
-## 3 模型转换
 
--   **[获取pth权重文件](#31-获取pth权重文件)**  
+## 输入输出数据<a name="section540883920406"></a>
 
--   **[pth转onnx模型](#32-pth转onnx模型)**  
+- 输入数据
 
--   **[onnx转om模型](#33-onnx转om模型)**  
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
-### 3.1 获取pth权重文件
-执行命令：
 
-```
-wget https://data.lip6.fr/cadene/pretrainedmodels/se_resnet50-ce0d4300.pth
-```
-执行后在当前目录下获取pth权重文件：se_resnet50-ce0d4300.pth。
+- 输出数据
 
-### 3.2 pth转onnx模型
-执行命令：
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 1 x 1000 | ND           |
 
-```
-python3 SE_ResNet50_pth2onnx.py ./se_resnet50-ce0d4300.pth ./se_resnet50_dynamic_bs.onnx
-```
 
-命令参数分别为输入pth文件：./se_resnet50-ce0d4300.pth和输出onnx文件：./se_resnet50_dynamic_bs.onnx  
-执行后在当前路径下生成se_resnet50_dynamic_bs.onnx模型文件。  
 
-### 3.3 onnx转om模型
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-a.设置环境变量：
+- 该模型需要以下插件与驱动
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+  **表 1**  版本配套表
 
-该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-b.执行atc模型转换命令：
 
-${chip_name}可通过`npu-smi info`指令查看，例：310P3
 
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-```
-atc --model=./se_resnet50_dynamic_bs.onnx --framework=5 --input_format=NCHW --input_shape="image:32,3,224,224" --output=./se_resnet50_fp16_bs32 --log=error --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_SE_ResNet50_pth.config --enable_small_channel=1
-```
+## 获取源码<a name="section4622531142816"></a>
 
-参数说明：
-    --model：为ONNX模型文件。  
-    --framework：5代表ONNX模型。  
-    --input_format：输入数据的格式。  
-    --input_shape：输入数据的shape。  
-    --output：输出的OM模型。  
-    --log：日志级别。  
-    --soc_version：处理器型号。  
-    --insert_op_config：插入算子的配置文件路径与文件名，例如aipp预处理算子。  
-    --enable_small_channel：Set enable small channel. 0(default): disable; 1: enable  
+1. 获取源码
 
-执行后在当前目录下生成om模型文件：se_resnet50_fp16_bs32.om。
+   ```
+   git clone {repository_url}        # 克隆仓库的代码
+   cd {repository_name}              # 切换到模型的代码仓目录
+   git checkout {branch/tag}         # 切换到对应分支
+   git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+   cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+   ```
 
-## 4 数据集预处理
+2. 安装依赖
 
--   **[数据集获取](#41-数据集获取)**  
+   ```
+   pip3 install -r requirements.txt
+   ```
 
--   **[数据集预处理](#42-数据集预处理)**  
+## 准备数据集<a name="section183221994411"></a>
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-### 4.1 数据集获取
-该模型使用ImageNet的5万张验证集进行测试，图片与标签分别存放在/home/HwHiAiUser/dataset/ImageNet/val_union路径与/home/HwHiAiUser/dataset/ImageNet/val_label.txt文件下。  
 
-数据集获取请参考[pytorch原始仓](https://github.com/pytorch/examples/tree/master/imagenet)说明。
+   本模型支持ImageNet验证集。用户需自行获取数据集（或给出明确下载链接），图片与标签分别存放在./dataset/ImageNet/val_union路径与./dataset/ImageNet/val_label.txt文件下。目录结构如下：
 
-### 4.2 数据集预处理
+   ```
+   dataset
+   |——ImageNet
+      ├── val_union     
+      └── val_label.txt             
+   ```
 
-1.预处理工具为：imagenet_torch_preprocess.py  
-2.执行工具命令：
-```
-python3 ./imagenet_torch_preprocess.py /home/HwHiAiUser/dataset/ImageNet/val_union ./data/ImageNet_bin
-```
-命令参数分别数据集图片路径：/home/HwHiAiUser/dataset/ImageNet/val_union和处理结果bin文件保存路径：./data/ImageNet_bin。  
-执行后在./data/ImageNet_bin路径下生成数据处理后的bin文件。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件工具为：gen_dataset_info.py。  
-2.执行工具命令：  
+   执行imagenet_torch_preprocess.py脚本，完成预处理。
 
-```
-python3 ./gen_dataset_info.py bin ./data/ImageNet_bin ./data/ImageNet_bin.info 224 224
-```
-命令参数分别为数据集文件类型：bin、文件路径：./data/ImageNet_bin、数据集信息文件：./data/ImageNet_bin.info、图片像素长：224、图片像素宽：224。  
-执行后在./data路径下生成数据集信息文件：ImageNet_bin.info。
+   ```
+   python3 ./imagenet_torch_preprocess.py ./dataset/ImageNet/val_union ./data/ImageNet_bin 
+   ```
 
-## 5 离线推理
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+## 模型推理<a name="section741711594517"></a>
 
--   **[离线推理](#52-离线推理)**  
+1. 模型转换。
 
--   **[性能验证](#52-性能验证)** 
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-### 5.1 benchmark工具概述
+   1. 获取权重文件。
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 离线推理
-1.设置环境变量：
+       ```
+       wget https://data.lip6.fr/cadene/pretrainedmodels/se_resnet50-ce0d4300.pth
+       ```
+      执行后在当前目录下获取pth权重文件：se_resnet50-ce0d4300.pth
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
 
-2.执行推理命令：
+   2. 导出onnx文件。
 
-```
-./benchmark.x86_64 -model_type=vision -om_path=./se_resnet50_fp16_bs32.om -device_id=0 -batch_size=32 -input_text_path=./data/ImageNet_bin.info -input_width=256 -input_height=256 -output_binary=false -useDvpp=false
-```
+      1. 使用SE_ResNet50_pth2onnx.py导出onnx文件
 
-分辨率(input_width，input_height)要与aipp_SE_ResNet50_pth.config文件中配置(src_image_size_w，src_image_size_h)保持一致，执行后推理结果保存在./result/dumpOutput_device0路径下。  
+         运行SE_ResNet50_pth2onnx.py脚本。
 
-3.精度验证：
-调用vision_metric_ImageNet.py工具脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据：
+         ```
+         python3 SE_ResNet50_pth2onnx.py ./se_resnet50-ce0d4300.pth ./se_resnet50_dynamic_bs.onnx
+         ```
 
-```
-python3 ./vision_metric_ImageNet.py ./result/dumpOutput_device0/ /home/HwHiAiUser/dataset/ImageNet/val_label.txt ./result accuracy_result.json
-```
+         获得se_resnet50_dynamic_bs.onnx文件。
 
-第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称。
-执行后模型精度结果保存在./result/accuracy_result.json文件中
 
-### 5.3 性能验证
-1.设置环境变量：
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+      1. 配置环境变量。
 
-2.执行性能测试命令：
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-```
-./benchmark.x86_64 -round=50 -om_path=./se_resnet50_fp16_bs32.om -device_id=0 -batch_size=32  > ./result/performace_result.json
-```
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-执行后性能测试结果保存在./result/performace_result.json文件中
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-## 6 评测结果
+      3. 执行ATC命令。
 
-评测结果
-| 模型            | pth精度                | 310P精度                   | 性能基准     | 310P性能     |
-| --------------- | ---------------------- | ------------------------- | ------------ | ----------- |
-| SE_ResNet50 bs32 | Acc@1 77.63,Acc@5 93.64| Acc@1 77.36,Acc@5 93.76   | 1554.726fps  | 2690.43fps  |
+         ```
+          atc --model=./se_resnet50_dynamic_bs.onnx --framework=5 --input_format=NCHW --input_shape="image:32,3,224,224" --output=./se_resnet50_fp16_bs32 --log=error --soc_version=Ascend${chip_name} --insert_op_conf=./aipp_SE_ResNet50_pth.config --enable_small_channel=1
+         ```
 
-## 6 test目录说明
+         - 参数说明：
 
-test目录下存放的为测试脚本，其中：  
-1.pth2om.sh为pth模型转om模型脚本，使用命令为：
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --insert\_op\_conf=aipp_SE_ResNet50_pth.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据
 
-```
-bash ./test/pth2om.sh /usr/local/Ascend Ascend${chip_name}
-```
+2. 开始推理验证。
 
-其中/usr/local/Ascend为cann包默认安装路径，执行后在当前目录下生成om模型: se_resnet50_fp16_bs32.om。  
+   1. 使用ais-infer工具进行推理。
 
-2.eval_acc_perf.sh为om模型，精度、性能测试脚本，使用命令为：
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-```
-bash ./test/eval_acc_perf.sh /usr/local/Ascend ./se_resnet50_fp16_bs32.om 32 0 /home/HwHiAiUser/dataset/ImageNet/val_label.txt
-```
+   2. 执行推理。
 
-其中第1个参数为cann包安装路径，第2个参数为om模型，第3个参数为batch_size，第4个参数为device_id，第5个参数为标签数据。执行后精度结果保存在./result/accuracy_result.json文件中，性能结果保存在./result/performace_result.json文件中。
+         ```
+         python3 -m ais_bench --model ./se_resnet50_fp16_bs32.om --batchsize 32 --input ./data/ImageNet_bin --output ./ --output_dirname result --outfmt TXT 
+         ```
+         - 参数说明
+           - --model: om模型
+           - --batchsize: 模型batch size
+           - --input: 输入数据
+           - --output: 输出保存路径
+           - --output_dirname: 输出保存文件夹
+           - --outfmt: 输出格式
+
+
+        推理后的输出默认在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      调用vision_metric_ImageNet.py工具脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据：
+
+      ```
+      python3 ./vision_metric_ImageNet.py ./result/ ./dataset/ImageNet/val_label.txt ./ accuracy_result.json
+      ```
+
+      第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称。
+      执行后模型精度结果保存在./accuracy_result.json文件中
+
+   4. 性能验证。
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型
+        - --batchsize：模型batchsize
+        - --loop: 循环次数
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+|  310P3        |   32         |  ImageNet      |  acc@1: 77.36<br>acc@5: 93.76    |   2690   |
