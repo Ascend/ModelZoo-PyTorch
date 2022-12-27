@@ -1,290 +1,247 @@
+# TextSnake模型-推理指导
 
 
-# TextSnake ONNX模型端到端推理指导
-- [TextSnake ONNX模型端到端推理指导](#textsnake-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx转om模型](#32-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成预处理数据集信息文件](#43-生成预处理数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 310P性能数据](#71-310p性能数据)
-		- [7.2 T4性能数据](#72-t4性能数据)
-		- [7.3 性能对比](#73-性能对比)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-## 1 模型概述
+    - [输入输出数据](#section540883920406)
 
--   **[论文地址](#11-论文地址)**  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[代码地址](#12-代码地址)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.1 论文地址
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
 [TextSnake论文](https://arxiv.org/abs/1807.01544)
 论文主要提出了一种能够灵活表示任意弯曲形状文字的数据结构——TextSnake，主要思想是使用多个不同大小，带有方向的圆盘(disk)对标注文字进行覆盖，并使用FCN来预测圆盘的中心坐标，大小和方向进而预测出场景中的文字
 
-### 1.2 代码地址
 
-[TextSnake Pytorch实现代码](https://github.com/princewang1994/TextSnake.pytorch)
-```
-branch=master 
-commit_id=b4ee996d5a4d214ed825350d6b307dd1c31faa07
-```
+- 参考实现：
 
-## 2 环境说明
+  ```
+  url=https://github.com/princewang1994/TextSnake.pytorch
+  commit_id=b4ee996d5a4d214ed825350d6b307dd1c31faa07
+  model_name=contrib/cv/detection/TextSnake
+  ```
 
--   **[深度学习框架](#21-深度学习框架)**  
 
--   **[python第三方库](#22-python第三方库)**  
+## 输入输出数据<a name="section540883920406"></a>
 
-### 2.1 深度学习框架
-```
-CANN == 5.1.RC1
-pytorch == 1.5.0
-torchvision == 0.6.0
-onnx == 1.8.0
-```
+- 输入数据
 
-### 2.2 python第三方库
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 512 x 512 | NCHW         |
 
-```
-easydict==1.8
-opencv-python==4.1.2.30
-scikit_image==0.14.0
-numpy==1.15.1
-scipy==1.5.4
-Pillow==5.3.0
-shapely
-tqdm
-```
 
-安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装
+- 输出数据
 
-```
-pip install -r requirements.txt  
-```
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 1 x 7 x 512 x 512 | ND           |
 
 
 
-## 3 模型转换
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+- 该模型需要以下插件与驱动
 
+  **表 1**  版本配套表
 
-### 3.1 pth转onnx模型
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-1.获取pth权重文件  
 
-权重文件从百度网盘上获取：https://pan.baidu.com/s/1sU3pRBTFebbsMDac-1HsQA 密码：etdi
 
-2.获取TextSnake源码
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-```shell
-git clone https://github.com/princewang1994/TextSnake.pytorch
-```
-3.使用TextSnake_pth2onnx.py进行onnx的转换，在目录下生成TextSnake.onnx，注意将网盘里的模型名称修改为textsnake_vgg_180.pth
+## 获取源码<a name="section4622531142816"></a>
 
-```
-python TextSnake_pth2onnx.py --input_file './textsnake_vgg_180.pth'  --output_file './TextSnake.onnx'
-```
+1. 获取源码
 
+   ```
+   git clone https://github.com/princewang1994/TextSnake.pytorch
+   cd TextSnake.pytorch
+   git reset --hard b4ee996d5a4d214ed825350d6b307dd1c31faa07
+   cd ..
+   ```
 
+2. 安装依赖
 
-### 3.2 onnx转om模型
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-1.设置环境变量
+## 准备数据集<a name="section183221994411"></a>
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23310P424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名：
+  首先进入TextSnake.pytorch/dataset/total-text文件夹中,根据[源码仓](https://github.com/princewang1994/TextSnake.pytorch/tree/master/dataset/total_text/download.sh)的方式下载数据集并整理成gt文件夹和Images文件夹。回到TextSnake目录下新建data文件夹，进入data文件夹，创建total-text文件夹，将第一步生成的Images/Test移动到total-text中，将gt/Test移动到total-text中。目录如下：
 
-使用atc将onnx模型 ${chip_name}可通过npu-smi info指令查看
+   ```
+      data
+         |——total-text
+         ├── gt
+            |——Test     
+         └── Images
+            |——Test 
+   ```
 
-![输入图片说明](https://images.gitee.com/uploads/images/2022/0704/095450_881600a3_7629432.png "屏幕截图.png")
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-执行ATC命令
+   执行TextSnake_preprocess.py脚本，完成预处理
 
-```shell
-atc --model=TextSnake.onnx \
---framework=5 \
---output=TextSnake_bs1 \
---input_format=NCHW \
---input_shape="image:1,3,512,512" \
---log=info \
---soc_version=Ascend${chip_name} \
-```
-参数说明：\
---model：为ONNX模型文件。 \
---framework：5代表ONNX模型。\
---output：输出的OM模型。\
---input_format：输入数据的格式。\
---input_shape：输入数据的shape。\
---log：日志级别。\
---soc_version：处理器型号。\
+   ```
+   python3 TextSnake_preprocess.py --src_path ./data/total-text/Images/Test --save_path ./total-text-bin
+   ```
 
-## 4 数据集预处理
 
--   **[数据集获取](#41-数据集获取)**  
+## 模型推理<a name="section741711594517"></a>
 
--   **[数据集预处理](#42-数据集预处理)**  
+1. 模型转换。
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-### 4.1 数据集获取
-该模型使用Total-Text-Dataset
-1.首先进入TextSnake.pytorch/dataset/total-text文件夹中
-根据[源码仓](https://github.com/princewang1994/TextSnake.pytorch/tree/master/dataset/total_text/download.sh)的方式下载数据集并整理成gt文件夹和Images文件夹。
+   1. 获取权重文件
 
-2.回到TextSnake目录下新建data文件夹，进入data文件夹，创建total-text文件夹，将第一步生成的Images/Test移动到total-text中，将gt/Test移动到total-text中。
+      ```
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/TextSnake/PTH/textsnake_vgg_180.pth
+      ```
 
-### 4.2 数据集预处理
-1.预处理脚本TextSnake_preprocess.py
+   2. 导出onnx文件。
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+      1. 使用TextSnake_pth2onnx.py导出onnx文件。
 
-```shell
-python TextSnake_preprocess.py --src_path ./data/total-text/Images/Test --save_path ./total-text-bin
-```
+         运行TextSnake_pth2onnx.py脚本。
 
-### 4.3 生成预处理数据集信息文件
-1.生成数据集信息文件脚本get_info.py
+         ```
+         python3 TextSnake_pth2onnx.py --input_file './textsnake_vgg_180.pth'  --output_file './TextSnake.onnx'
+         ```
 
-2.执行生成数据集信息脚本，生成数据集信息文件
+         获得TextSnake.onnx文件。
 
-```shell
-python get_info.py bin ./total-text-bin ./textsnake_prep_bin.info 512 512
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
 
+   3. 使用ATC工具将ONNX模型转OM模型。
 
+      1. 配置环境变量。
 
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-## 5 离线推理
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
--   **[离线推理](#52-离线推理)**  
+      3. 执行ATC命令。
 
-### 5.1 benchmark工具概述
+         ```
+          atc --model=TextSnake.onnx \
+            --framework=5 \
+            --output=TextSnake_bs1 \
+            --input_format=NCHW \
+            --input_shape="image:1,3,512,512" \
+            --log=error \
+            --soc_version=Ascend${chip_name} \
+         ```
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23310P424%7C251366513%7C22892968%7C251168373)
+         - 参数说明：
 
-### 5.2 离线推理
-1.设置环境变量
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+          
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.将benchmark.x86_64放到当前目录下，执行离线推理，执行时使npu-smi info查看设备状态，确保device空闲
+           运行成功后生成`TextSnake_bs1.om`模型文件。
 
-```shell
-./benchmark.x86_64 \
--model_type=vision \
--device_id=0 \
--batch_size=1 \
--om_path=TextSnake_bs1.om \
--input_text_path=./textsnake_prep_bin.info \ -input_width=512 \
--input_height=512 \
--output_binary=False \
--useDvpp=False \
-```
+2. 开始推理验证。
 
-## 6 精度对比  
+   1. 使用ais-infer工具进行推理。
 
-调用TextSnake_postprocess.py：
-```shell
-python TextSnake_postprocess.py first
-```
-最后一个参数为"first"为生成结果文件的路径。
-执行完后会打印出精度：
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-```
-Config: tr: 0.7 - tp: 0.6
-Precision = 0.6495 - Recall = 0.5463 - Fscore = 0.5934
+   2. 执行推理。
 
-Config: tr: 0.8 - tp: 0.4
-Precision = 0.8728 - Recall = 0.7076 - Fscore = 0.7840
-```
+        ```
+         python3 -m ais_bench --model TextSnake_bs1.om \
+	      --input ./total-text-bin \ 
+	      --output ./ \
+	      --output_dirname result \
+	      --outfmt TXT \
+        ```
 
-[官网精度](https://github.com/princewang1994/TextSnake.pytorch/blob/master/README.md)
-```
-tr=0.7 / tp=0.6时
-Precision=0.652，Recall=0.549，F1-score=0.596
+        -   参数说明：
 
-tr=0.8 / tp=0.4时
-Precision=0.874，Recall=0.711，F1-score=0.784
-```
->比较离线推理精度可知，精度下降在1个点之内，因此可视为精度达标
-没有遇到精度不达标的问题，故不需要进行精度调试
+             - --model：om模型
+             - --input：输入文件
+             - --output：输出路径
+             - --output_dirname: 输出结果文件夹
+             - --outfmt: 输出格式
+                  	
 
+        推理后的输出默认在当前目录result下。
 
-## 7 性能对比
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
--   **[310性能数据](#71-310性能数据)**  
--   **[310P性能数据](#72-310P性能数据)**  
--   **[T4性能数据](#73-T4性能数据)** 
--   **[性能对比](#74-性能对比)**  
+   3. 精度验证。
 
-### 7.1 310P性能数据
+      调用TextSnake_postprocess.py，精度会打屏显示
 
-batch1的性能：
- 测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
+      ```
+       python TextSnake_postprocess.py result
+      ```
 
-```
-./benchmark.x86_64 -round=20 -om_path=TextSnake_bs1.om -device_id=0 -batch_size=1
-```
-执行20次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果
-```
-[INFO] Dataset number: 19 finished cost 5.56ms
-[INFO] PureInfer result saved in ./result/PureInfer_perf_of_TextSnake_bs1_in_device_0.txt
------------------PureInfer Performance Summary------------------
-[INFO] ave_throughputRate: 180.362samples/s, ave_latency: 5.57205ms
-----------------------------------------------------------------
-```
-Interface throughputRate: 180.362 即是batch1 310P单卡吞吐率
+   4. 性能验证
 
-### 7.2 T4性能数据
+   可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+	```
+	python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} 
+	```
+	- 参数说明
+		- --model：om模型
+		- --loop：循环次数
+		- --batchsize：推理张数
 
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务
 
-batch1性能
 
-```
-trtexec --onnx=TextSnake.onnx --fp16 --shapes=image:1x3x512x512
-```
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch
+调用ACL接口推理计算，性能参考下列数据。
 
-```
-[10/09/2021-02:29:51] [I] GPU Compute
-[10/09/2021-02:29:51] [I] min: 9.02429 ms
-[10/09/2021-02:29:51] [I] max: 12.1098 ms
-[10/09/2021-02:29:51] [I] mean: 9.35521 ms
-[10/09/2021-02:29:51] [I] median: 9.2533 ms
-[10/09/2021-02:29:51] [I] percentile: 11.4744 ms at 99%
-[10/09/2021-02:29:51] [I] total compute time: 3.02173 s
-```
-
-batch1 t4单卡吞吐率：1000/(9.35521/1)=106.8923fps
-
-### 7.3 性能对比
-
-batch1：
-310P vs 310: 180.362fps > 1.2 * 147.2052fps
-310P vs T4 : 180.362fps > 1.6 * 106.8923fps
-性能在310P上的性能达到310的1.2倍,达到T4性能的1.6倍,性能达标
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+|     310P3     |    1        |  Total-Text-Dataset      | tr0.7 & tp0.6:f1:0.59<br>tr0.8 & tp0.4:f1:0.78     |  180.36    |
