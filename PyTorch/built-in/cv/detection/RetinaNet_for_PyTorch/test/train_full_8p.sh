@@ -146,7 +146,7 @@ do
     PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
     taskset -c 0-96 python3.7 -m torch.distributed.launch  --nproc_per_node=$RANK_SIZE \
         ${cur_path}/tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py --launcher pytorch --cfg-options data.samples_per_gpu=${batch_size} optimizer.lr=0.04 --seed 0 \
-        --gpu-ids 0 --no-validate --opt-level O1 \
+        --gpu-ids 0 --opt-level O1 \
         > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
 done
 wait
@@ -157,11 +157,13 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
+time=`grep -a 'time:'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
 total_size=$((batch_size * RANK_SIZE))
 FPS=`awk 'BEGIN{printf "%.2f\n", '${total_size}'/'${time}'}'`
+Train_accuracy=`grep -a 'Epoch(val)' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP: " '{print $2}'|awk -F "," '{print $1}'|tail -1`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+echo "Final Train Accuracy : ${Train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #稳定性精度看护结果汇总
@@ -170,6 +172,8 @@ BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}${name_bind}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
+#输出训练精度,需要模型审视修改
+train_accuracy=`grep -ri  "Epoch(val)"  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $11}'| tr -d ','`
 ##获取性能数据
 grep "time:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log > traintime.log
 sed -i '1,10d' traintime.log
@@ -177,7 +181,13 @@ TrainingTime=`cat traintime.log | grep "time:" |awk '{sum+=$15} END {print sum/N
 temp1=`echo "8 * ${batch_size}"|bc`
 ActualFPS=`echo "scale=2;${temp1} / ${TrainingTime}"|bc`
 
-ActualLoss=`grep "loss:" traintime.log | awk 'END {print $23}'`
+#从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
+grep "loss:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $(NF-2)}' |awk -F "," '{print $1}'> $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+#最后一个迭代loss值，不需要修改
+ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+if [ x"${etp_flag}" != x"true" ];then
+    train_accuracy=${Train_accuracy}
+fi
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -188,4 +198,5 @@ echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseN
 echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
