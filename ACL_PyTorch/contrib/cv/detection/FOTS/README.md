@@ -179,11 +179,7 @@
 
 1. 准备推理工具  
 
-    本推理项目使用ais_bench 作为推理工具。
-    ```shell
-    # 打包并安装推理工具包
-    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-    ```
+    本推理项目使用ais_bench 作为推理工具。  
     请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 2. 离线推理  

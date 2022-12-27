@@ -134,13 +134,8 @@ python shiftvit_preprocess.py --data-root /path/to/imagenet/ --save-dir shiftvit
 ## 5. 离线推理
 
 ### 5.1 准备推理工具
-推理工具使用ais_bench，须自己拉取源码，打包并安装
-```shell
-# 指定CANN包的安装路径
-export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-```
+推理工具使用ais_bench，须自己拉取源码，打包并安装。  
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
-
 
 ### 5.2 离线推理
 

@@ -244,13 +244,8 @@
 
 1. 准备推理工具  
 
-    本推理项目使用 [ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
-    ```shell
-    # 指定CANN包的安装路径
-    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-
-    # 获取推理工具源码
-    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。。
+    本推理项目使用 ais_bench 作为推理工具，须自己拉取源码，打包并安装。
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 2. 离线推理  
 
