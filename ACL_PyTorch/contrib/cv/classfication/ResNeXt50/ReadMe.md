@@ -219,10 +219,10 @@ ResNeXt50是一种用于图像分类的卷积神经网络，这个模型的默�
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python ${ais_infer_path}/ais_infer.py --model=resnext50_bs${bs}.om --loop=100 --batchsize=${batch_size}
+         python -m ais_bench --model=resnext50_bs${bs}.om --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：
