@@ -245,9 +245,7 @@
            
    
         `${batchsize}`表示不同batch的om模型。推理完成后在指定目录即`./result/result_bs${batchsize}`生成推理结果。
-   
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
    
    3. 精度验证。
       

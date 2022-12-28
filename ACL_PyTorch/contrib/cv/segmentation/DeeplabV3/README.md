@@ -216,7 +216,7 @@ DeeplabV3是一个经典的图像语义分割网络，在v1和v2版本基础上�
 
       ```
       mkdir result
-      python3 ${ais_infer_path}/ais_infer.py  --model deeplabv3_bs1.om --input ./prep_dataset --output ./result --output_dirname=bs1 --outfmt BIN --batchsize=1  --device=0
+      python3 -m ais_bench  --model deeplabv3_bs1.om --input ./prep_dataset --output ./result --output_dirname=bs1 --outfmt BIN --batchsize=1  --device=0
       ```
       - 参数说明：
          - --model：模型类型。

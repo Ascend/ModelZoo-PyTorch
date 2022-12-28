@@ -220,7 +220,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
 
       ```
       mkdir result
-      python3 ${ais_infer_path}/ais_infer.py --model=deeplabv3_plus_res101_sim_bs1.om --input=./prep_bin/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1 --device=0
+      python3 -m ais_bench --model=deeplabv3_plus_res101_sim_bs1.om --input=./prep_bin/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1 --device=0
       ```
 
       - 参数说明：

@@ -220,11 +220,11 @@
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
 
-   b. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
+   b. 执行推理。
 
       ```
       mkdir -p result/INoisy
-      python3 ${ais_infer_path}/ais_infer.py --model=./ADNet_bs1.om --input=./prep_dataset/INoisy/  --output=./result/INoisy/ --output_dirname=bs1 --outfmt=BIN  --batchsize=1 --device=0
+      python3 -m ais_bench --model=./ADNet_bs1.om --input=./prep_dataset/INoisy/  --output=./result/INoisy/ --output_dirname=bs1 --outfmt=BIN  --batchsize=1 --device=0
       ```
 
       - 参数说明：
@@ -260,7 +260,7 @@
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     
       ```python
-      python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device=${device_id} --outfmt=BIN
+      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device=${device_id} --outfmt=BIN
       ```
 
       - 参数说明：
