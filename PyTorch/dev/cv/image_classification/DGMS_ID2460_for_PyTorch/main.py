@@ -177,7 +177,8 @@ class Trainer(object):
             end = time.time()
 
             fps = self.args.batch_size / (time.time() - start)
-
+            if i < 2:
+                print("step_time = {:.4f}".format(time.time() - start))
             train_loss = (loss.item() + train_loss)
             tbar.set_description('Train Loss: {loss:.4f} | T1: {top1: .3f} | T5: {top5: .2f} | best T1: {pre_best:.2f} T5: {best_top5:.2f} NZ: {nz_val:.4f} #Params: {params:.2f}M | lr: {_lr:.8f} | fps: {fps:.2f}'
                 .format(loss=losses.avg,
