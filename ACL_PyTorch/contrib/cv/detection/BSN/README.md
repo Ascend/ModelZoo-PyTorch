@@ -78,7 +78,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
   
   | 配套                                                         | 版本                | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------------------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 1.83.10              | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0.17           | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1             | -                                                            |
   | Python                                                       | 3.7.5               | -                                                            |
   | PyTorch                                                      | 1.5.0               | -                                                            |
@@ -88,16 +88,9 @@ code_path=ACL_PyTorch/contrib/cv/detection
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 单击“立即下载”，下载源码包。
-
-2. 上传源码包到服务器任意目录并解压（如：/home/HwHiAiUser）。
+1. 获取本仓源码，上传至服务器任意目录并解压。
 
    ```
-   ├──test
-        ├──eval_acc_perf.sh     //验证精度、性能脚本
-        ├──pth2om.sh                //模型转换脚本
-        ├──parse.py             //输出保存的性能信息 
-   ├── gen_dataset_info.py         //用于获取二进制数据集信息的脚本 
    ├── BSN_eval.py             //测试精度文件 
    ├── BSN_pem_postprocess.py      //pem后处理文件
    ├── BSN_tem_postprocess.py      //tem后处理文件
@@ -108,32 +101,58 @@ code_path=ACL_PyTorch/contrib/cv/detection
    ├── REAME.md 
    ```
 
-3. 获取开源代码仓。
-
-   在已下载的源码包根目录下，执行如下命令。
+3. 在已下载的本仓代码根目录下，执行如下命令以获取开源代码仓。
 
    ```
-   git clone https://github.com/wzmsltw/BSN-boundary-sensitive-network.pytorch   #获取开源代码仓
-   git clone https://gitee.com/zheng-wengang1/onnx_tools     #获取优化工具
+   git clone https://github.com/wzmsltw/BSN-boundary-sensitive-network.pytorch
+   cd BSN-boundary-sensitive-network.pytorch
+   git reset --hard e50d12953ec51c128360181afe69db37298f30d2
+   cd ..
    ```
 
+3. 安装相关依赖，其中改图依赖auto_optimizer的详细安装方式参见[链接](https://gitee.com/sibylk/msadvisor/tree/master/auto-optimizer)。
 
+   ```
+   # 安装必要依赖
+   pip3 install -r requirements.txt
+   # 安装改图依赖
+   git clone https://gitee.com/ascend/msadvisor.git
+   cd auto-optimizer
+   pip3 install -r requirements.txt
+   python3 setup.py install
+   ```
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
 
-   本模型支持csv_mean_100图片的验证集。请用户需自行获取[csv_mean_100](https://github.com/wzmsltw/BSN-boundary-sensitive-network#download-datasets)数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。
-
-   下载后将csv_mean_100放到开源仓代码目录，“./data/activitynet_feature_cuhk/”下
+   本模型使用处理后的[Activity1.3](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fwzmsltw%2FBSN-boundary-sensitive-network%23download-datasets)数据集进行推理测试 ，用户自行获取数据集后，将文件解压并上传数据集到**指定路径**下。
 
    ```
-   ├── data
-         ├── activitynet_feature_cuhk
-               |--  csv_mean_100
-   ```
-
+   # 若从 BaiduYun 链接下载，需运行此步
+   # zip -FF zip_csv_mean_100.zip --out csv_mean_100.zip
    
+   # 解压并上传至指定路径
+   unzip csv_mean_100.zip
+   mv csv_mean_100 ${path-to-BSN-boundary-sensitive-network.pytorch}/data/activitynet_feature_cuhk
+   ```
+
+   数据集目录结构如下所示：
+
+   ```
+   data
+   |-- activitynet_annotations
+   |   |-- action_name.csv
+   |   |-- anet_anno_action.json
+   |   `-- video_info_new.csv
+   `-- activitynet_feature_cuhk
+       |-- csv_mean_100
+       |   |-- v_---9CpRcKoU.csv
+       |   |-- v_--0edUL8zmA.csv
+       |   |-- v_--1DO2V4K74.csv
+       |   |-- v_--6bJUbfpnQ.csv
+   ...
+   ```
 
 2. 数据预处理。
 
@@ -142,27 +161,6 @@ code_path=ACL_PyTorch/contrib/cv/detection
    ```
    python3 BSN_tem_preprocess.py
    ```
-
-   
-
-3. 生成数据集info文件。
-
-   生成bin文件的输入info文件。
-
-   使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用“gen_dataset_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“gen_dataset_info.py”脚本。
-
-   ```
-   python3 gen_dataset_info.py  tem ./output/BSN-TEM-preprocess/feature ./TEM-video-feature.info  400 100
-   ```
-
-   “tem”：生成的数据集文件格式。
-
-   “./output/BSN-TEM-preprocess/feature”：预处理后的数据文件的**相对路径**。
-
-   “./TEM-video-feature.info”：生成的数据集文件保存的路径。
-
-   运行成功后，在当前目录中生成“TEM-video-feature.info”。
-
 
 
 
@@ -174,42 +172,26 @@ code_path=ACL_PyTorch/contrib/cv/detection
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件：“model_final_f10217.pkl”。
+      获取pem和tem权重文件：[pem_best.pth.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/BSN/PTH/pem_best.pth.tar) 和 [tem_best.pth.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/BSN/PTH/tem_best.pth.tar)
 
    2. 导出onnx文件
 
-      1. 代码转换为静态的onnx，需在代码中修改batchsize大小。
-
-         a.执行命令编辑脚本。
+      1. 运行BSN_tem_pth2onnx.py脚本，导出动态batch的onnx文件。
 
          ```
-         BSN_tem_pth2onnx.py
-         #修改dummy_input = torch.randn(align_size,400,100) 中第一个参数为需要的batchsize
-         执行:wq保存退出编辑。
-         BSN_pem_pth2onnx.py
-         #修改dummy_input = torch.randn(align_size,1000,32) 中第一个参数为需要的batchsize
-         执行:wq保存退出编辑。
+         python3 BSN_tem_pth2onnx.py --pth_path=tem_best.pth.tar --onnx_path=BSN_tem.onnx
+         ```
          
-         ```
-      
-      2. 使用“pem_best.pth.tar”和“tem_best.pth.tar”导出onnx文件
-      
-         运行“BSN_tem_pth2onnx.py”脚本。
+      3. 优化onnx文件（改图依赖auto_optimizer的详细使用方式参见[链接](https://gitee.com/sibylk/msadvisor/tree/master/auto-optimizer)）
       
          ```
-         python3 BSN_tem_pth2onnx.py --pth_path='${权重文件路径}' --onnx_path='${onnx文件的存放路径}'
+         python3 -m auto_optimizer optimize -k 0 BSN_tem.onnx BSN_tem_fix.onnx
          ```
       
-      3. 优化onnx文件
+      4. 运行BSN_pem_pth2onnx.py脚本，导出动态batch的onnx文件。
       
          ```
-         python3 TEM_onnx_conv1d2conv2d.py '${onnx文件的存放路径}' '${优化后的onnx文件存放路径}'
-         ```
-      
-      4. 运行“BSN_pem_pth2onnx.py”脚本。
-      
-         ```
-         python3 BSN_pem_pth2onnx.py --pth_path='${权重文件路径}' --onnx_path='${onnx文件的存放路径}'
+         python3 BSN_pem_pth2onnx.py --pth_path=pem_best.pth.tar --onnx_path=BSN_pem.onnx
          ```
       
       5. 使用ATC工具将ONNX模型转OM模型。
@@ -244,13 +226,11 @@ code_path=ACL_PyTorch/contrib/cv/detection
       
          3. 执行ACT命令
          
+            ```
+            atc --model=BSN_tem_fix.onnx --framework=5 --output=BSN_tem_bs${bs} --input_format=ND --input_shape="video:${bs},400,100" --log=error --soc_version=${chip_name}
+            atc --model=BSN_pem.onnx --framework=5 --output=BSN_pem_bs${bs} --input_format=ND --input_shape="video_feature:${bs},1000,32" --log=error --soc_version=${chip_name}
+            ```
             
-         
-            ```
-            atc --model=BSN_tem1_bs1.onnx --framework=5 --output=BSN_tem_bs1 --input_format=ND --input_shape="video:1,400,100"  --log=debug --soc_version=${chip_name}
-            atc --model=BSN_pem_bs1.onnx --framework=5 --output=BSN_pem_bs1 --input_format=ND --input_shape="video_feature:1,1000,32"  --log=debug --soc_version=${chip_name}
-            ```
-         
             - 参数说明：
               
                  - --model：为ONNX模型文件。
@@ -261,7 +241,7 @@ code_path=ACL_PyTorch/contrib/cv/detection
                  - --log：日志级别。
               - --soc_version：处理器型号。
               
-              运行成功后生成“BSN_tem_bs1.om”和“BSN_pem_bs1.om”模型文件。
+              运行成功后生成`BSN_tem_bs${bs}.om`和`BSN_pem_bs${bs}.om`模型文件。
 
 2. 开始推理验证
 
@@ -283,8 +263,6 @@ code_path=ACL_PyTorch/contrib/cv/detection
     python3.7 -m ais_bench --model BSN_tem_bs1.om --batchsize 1 --input="./output/BSN-TEM-preprocess/feature/"  --output ./ais_result --output_dirname result_tem_bs1 
    ```
    
-   
-   
    - 参数说明：
      - model：om文件路径。
      - input：输入数据。
@@ -297,36 +275,22 @@ code_path=ACL_PyTorch/contrib/cv/detection
    
    c. 数据后处理。
    
-   运行“BSN_tem_postprocess.py”脚本进行TEM模型后处理
+   运行BSN_tem_postprocess.py脚本进行TEM模型后处理
    
    ```
-    python3.7 BSN_tem_postprocess.py --TEM_out_path ./ais_result/result_tem_bs1/
+   python3 BSN_tem_postprocess.py --TEM_out_path ./result/result_tem_bs1/
    ```
    
-   由于tem的后处理与pem的前处理有关，故pem的前处理置后执行。
+   由于tem的后处理与pem的前处理有关，故pem的前处理置后执行，运行BSN_pem_preprocess.py脚本。
    
    ```
-    python3 BSN_pem_preprocess.py
+   python3 BSN_pem_preprocess.py
    ```
-   
-   使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用“gen_dataset_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“gen_dataset_info.py”脚本。
-   
-   ```
-   python3 gen_dataset_info.py  pem ./output/BSN-PEM-preprocess/feature ./PEM-video-feature.info  1000 32
-   ```
-   
-   “pem”：生成的数据集文件格式。
-   
-   “./output/BSN-PEM-preprocess/feature”：预处理后的数据文件的**相对路径**。
-   
-   “./PEM-video-feature.info”：生成的数据集文件保存的路径。
-   
-   运行成功后，在当前目录中生成“PEM-video-feature.info”。
    
    真实数据推理：
    
    ```
-   python3.7 -m ais_bench --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./ais_result --output_dirname result_pem_bs1 
+   python3 -m ais_bench --model BSN_pem_bs1.om --batchsize 1 --input="./output/BSN-PEM-preprocess/feature/"  --output ./result --output_dirname result_pem_bs1 
    ```
    
    - 参数说明：
@@ -336,62 +300,43 @@ code_path=ACL_PyTorch/contrib/cv/detection
      - output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
      - --output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中
    
-   运行“BSN_pem_postprocess.py”脚本进行PEM模型后处理
+   运行BSN_pem_postprocess.py脚本进行PEM模型后处理
    
    ```
-     python3.7 BSN_pem_postprocess.py --PEM_out_path ./ais_result/result_pem_bs1/
+   python3 BSN_pem_postprocess.py --PEM_out_path ./result/result_pem_bs1/
    ```
    
    d. 精度验证。
    
-   将python2的代码，使用前转为python3转换脚本。
+   使用前，将精度验证脚本从python2转为python3。
    
    ```
-      2to3 -w ./BSN-boundary-sensitive-network.pytorch/Evaluation/eval_proposal.py
+   2to3 -w ./BSN-boundary-sensitive-network.pytorch/Evaluation/eval_proposal.py
    ```
    
-      ​	运行“BSN_eval.py”脚本，测试模型精度。
+   运行BSN_eval.py脚本，测试模型精度。
    
    ```
-      python3 BSN_eval.py
+   python3 BSN_eval.py
    ```
    
-      原模型精度74.34%
-
-
-
-
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+调用ACL接口推理计算，模型BSN性能精度参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集       | 精度          | 性能     |
-| -------- | ---------- | ------------ | ------------- | -------- |
-| 310      | 1          | csv_mean_100 | AR100：74.34% | 6962.63  |
-| 310      | 4          | csv_mean_100 | AR100：74.34% | 20458.91 |
-| 310      | 8          | csv_mean_100 | AR100：74.34% | 30193.26 |
-| 310      | 16         | csv_mean_100 | AR100：74.34% | 36202.23 |
-| 310      | 32         | csv_mean_100 | AR100：74.34% | 35252.63 |
-| 310      | 64         | csv_mean_100 | AR100：74.34% | 37288.98 |
-| 310P     | 1          | csv_mean_100 | AR100：74.34% | 6197.32 |
-| 310P     | 4          | csv_mean_100 | AR100：74.34% | 21052.35 |
-| 310P     | 8          | csv_mean_100 | AR100：74.34% | 29687.91 |
-| 310P     | 16         | csv_mean_100 | AR100：74.34% | 34617.79 |
-| 310P     | 32         | csv_mean_100 | AR100：74.34% | 31336.91 |
-| 310P     | 64         | csv_mean_100 | AR100：74.34% | 29685.42 |
-| T4       | 1          | csv_mean_100 |               | 4962.25 |
-| T4       | 4          | csv_mean_100 |               | 28301.35 |
-| T4       | 8          | csv_mean_100 |               | 35080.33 |
-| T4       | 16         | csv_mean_100 |               | 39867.73 |
-| T4       | 32         | csv_mean_100 |               | 45102.31 |
-| T4       | 64         | csv_mean_100 |               | 50327.56 |
+| 芯片型号    | Batch Size | 数据集       | 开源精度（Acc@1）                              | 参考精度（Acc@1） |
+| ----------- | ---------- | ------------ | ---------------------------------------------- | ----------------- |
+| Ascend310P3 | 1          | csv_mean_100 | [74.16%](https://arxiv.org/pdf/1806.02964.pdf) | 74.34%            |
 
-**310P吞吐率计算公式（以bs1为例）**
+| 芯片型号    | Batch Size | 参考性能（FPS） |
+| ----------- | ---------- | --------------- |
+| Ascend310P3 | 1          | 6197.32         |
+| Ascend310P3 | 4          | 21052.63        |
+| Ascend310P3 | 8          | 29687.91        |
+| Ascend310P3 | 16         | 34617.80        |
+| Ascend310P3 | 32         | 31336.91        |
+| Ascend310P3 | 64         | 29685.43        |
 
-TEM吞吐率：6049.12
-
-PEM吞吐率：9152.86
-
-BSN整体吞吐率为：1/(1/6049.12+1/9152.86)=3642.08
+注：以bs1为例，BSN整体吞吐率计算公式为 1/(1/TEM吞吐率+1/PEM吞吐率)

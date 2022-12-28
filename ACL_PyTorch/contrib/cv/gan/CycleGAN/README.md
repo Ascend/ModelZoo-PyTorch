@@ -66,7 +66,7 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
    | 配套                                                         | 版本    | 环境准备指导                                                 |
    | :------------------------------------------------------------: | :-------: | :------------------------------------------------------------: |
-   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+   | 固件与驱动                                                   | 1.0.16  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
    | CANN                                                         | 5.1.RC2 | -                                                            |
    | Python                                                       | 3.7.5   |  \                                                            |
    | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -80,8 +80,8 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
    ```
    git clone https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix -b master
-   cd ctpn.pytorch
-   git reset --hard 9bcef69d5b39385d18afad3d5a839a02ae0b43e7 
+   cd pytorch-CycleGAN-and-pix2pix
+   git reset --hard 9bcef69d5b39385d18afad3d5a839a02ae0b43e7
 
    patch -p1 < ../CycleGAN.patch
    cp ./models/networks.py ../
@@ -138,8 +138,9 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
    执行CycleGAN_preprocess.py脚本，完成预处理。
 
    ```python
-   python3 CycleGAN_preprocess.py --src_path_testA=./datasets/maps/testA/   --save_pathTestA_dst=./datasetsDst/maps/testA/  --src_path_testB=./datasets/maps/testB/ --save_pathTestB_dst=./datasetsDst/maps/testB/
+   python3 CycleGAN_preprocess.py --src_path_testA=./datasets/maps/testA/ --save_pathTestA_dst=./datasetsDst/maps/testA/  --src_path_testB=./datasets/maps/testB/ --save_pathTestB_dst=./datasetsDst/maps/testB/
    ```
+
    - 参数说明：
       - --src_path_testA ：航拍数据转卫星地图的测试集路径。
       - --src_path_testB：卫星地图转航拍的测试集路径。
@@ -168,7 +169,7 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
          运行CycleGAN_pth2onnx.py导脚本。
 
          ```python
-         python3 CycleGAN_pth2onnx.py --model_ga_path=./latest_net_G_A.pth --model_gb_path=./latest_net_G_B.pth --onnx_path=./   --model_ga_onnx_name=model_Ga.onnx    --model_gb_onnx_name=model_Gb.onnx
+         python3 CycleGAN_pth2onnx.py --model_ga_path=./latest_net_G_A.pth --model_gb_path=./latest_net_G_B.pth --onnx_path=./ --model_ga_onnx_name=model_Ga.onnx    --model_gb_onnx_name=model_Gb.onnx
          ```
 
          - 参数说明
@@ -229,18 +230,17 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
 2. 开始推理验证。
 
-   1. 安装ais_bench推理工具。
+   1. 使用ais-infer工具进行推理。
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
       ```
-      mkdir resultAbs1 resultBbs1  
-      source /usr/local/Ascend/ascend-toolkit/set_env.sh  
-      python3 -m ais_bench --model=./CycleGAN_Ga_bs1.om --input=./datasetsDst/maps/testA/ --output=./resultAbs1/ --outfmt=BIN --batchsize=1
+      mkdir result
+      python3 ${ais_infer_path}/ais_infer.py --model=./CycleGAN_Ga_bs1.om --input=./datasetsDst/maps/testA/ --output=./result/ --output_dirname=Abs1 --outfmt=BIN --batchsize=1
 
-      python3 -m ais_bench --model=./CycleGAN_Gb_bs1.om --input=./datasetsDst/maps/testB/ --output=./resultBbs1/ --outfmt=BIN --batchsize=1
+      python3 ${ais_infer_path}/ais_infer.py --model=./CycleGAN_Gb_bs1.om --input=./datasetsDst/maps/testB/ --output=./result/ --output_dirname=Bbs1 --outfmt=BIN --batchsize=1
       ```
       - 参数说明：
          -  --model：om文件路径。
@@ -250,7 +250,7 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
          -  --device：NPU设备编号。
          -  --res_dir：得到的结果文件夹。
 
-      推理后的输出在推理结果文件路径下的日期+时间的子文件夹(./resultAbs1/2022_10_28-09_21_37/和./resultBbs1/2022_10_28-09_21_47/)。
+      推理后的输出在推理结果文件路径下的日期+时间的子文件夹(./result/Abs1/和./result/Bbs1/)。
    
 
 
@@ -259,17 +259,17 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
       调用脚本与原图片处理后文件比对，可以获得Accuracy数据，结果在标准输出中打印。
     
       ```python
-      python3 CycleGAN_postprocess.py --dataroot=./datasets/maps/testA/ --npu_bin_file=./resultAbs1/2022_10_28-09_21_37/ --onnx_path=./ --om_save --onnx_save
+      python3 CycleGAN_postprocess.py --dataroot=./datasets/maps/testA/ --npu_bin_file=./result/Abs1/ --onnx_path=./ --om_save --onnx_save
 
-      python3 CycleGAN_postprocess.py --dataroot=./datasets/maps/testB/ --npu_bin_file=./resultBbs1/2022_10_28-09_21_47/ --onnx_path=./ --om_save --onnx_save
+      python3 CycleGAN_postprocess.py --dataroot=./datasets/maps/testB/ --npu_bin_file=./result/Bbs1/ --onnx_path=./ --om_save --onnx_save
       ```
 
       -  参数说明：     
          - --dataroot：前处理后的路径。
          - --npu_bin_file：推理的om模型的结果路径。
          - --onnx_path：以npu_bin_file路径为参考基础的路径。
-         - --om_save：存在，则可在./resultBbs1/2022_10_28-09_21_47/./om/下查看om推理生成的图片结果。
-         - --onnx_save：存在，则可在./resultBbs1/2022_10_28-09_21_47/./onnx/下查看onnx推理生成的图片结果。
+         - --om_save：存在，则可在./result/Abs1/./om/下查看om推理生成的图片结果。
+         - --onnx_save：存在，则可在./result/Abs1/./onnx/下查看onnx推理生成的图片结果。
 
 
 

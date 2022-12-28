@@ -60,7 +60,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -107,10 +107,10 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   请用户需自行获取[VOCtrainval_11-May-2012 数据集](https://pjreddie.com/media/files/VOCtrainval_11-May-2012.tar)，上传数据集到服务器任意目录并解压（以当前路径"./dataset"为例） VOCtrainval_11-May-2012数据集目录结构如下：
+   请用户需自行获取[VOCtrainval_11-May-2012 数据集](https://pjreddie.com/media/files/VOCtrainval_11-May-2012.tar)，上传数据集到服务器任意目录并解压（以当前路径"./datasets"为例） VOCtrainval_11-May-2012数据集目录结构如下：
 
    ```
-   ├──dataset
+   ├──datasets
          ├──VOCdevkit
                ├──VOC2012
                      ├── ImageSets
@@ -127,7 +127,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
    执行preprocess_deeplabv3plus_pytorch.py脚本，完成预处理。
 
    ```
-   python3 preprocess_deeplabv3plus_pytorch.py ./dataset/VOCdevkit/VOC2012/JPEGImages/ ./prep_bin/ ./dataset/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt
+   python3 preprocess_deeplabv3plus_pytorch.py ./datasets/VOCdevkit/VOC2012/JPEGImages/ ./prep_bin/ ./datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt
    ```
 
    - 参数说明：
@@ -199,15 +199,14 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
          ```
 
          - 参数说明：
-
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --enable\_small\_channel:使能后在channel<=4的卷积层会有性能收益。
+            - --model：为ONNX模型文件。
+            - --framework：5代表ONNX模型。
+            - --output：输出的OM模型。
+            - --input\_format：输入数据的格式。
+            - --input\_shape：输入数据的shape。
+            - --log：日志级别。
+            - --soc\_version：处理器型号。
+            - --enable\_small\_channel:使能后在channel<=4的卷积层会有性能收益。
 
            运行成功后生成deeplabv3_plus_res101-sim_bs1.om模型文件。
 
@@ -221,7 +220,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
 
       ```
       mkdir result
-      python3 -m ais_bench --model deeplabv3_plus_res101_sim_bs1.om --input ./prep_bin/ --output ./result/ --outfmt BIN --batchsize 1 --device 0
+      python3 ${ais_infer_path}/ais_infer.py --model=deeplabv3_plus_res101_sim_bs1.om --input=./prep_bin/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1 --device=0
       ```
 
       - 参数说明：
@@ -233,7 +232,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
          - --batchsize：批大小
 
 
-      推理后的输出默认在推理结果文件路径下的日期+时间的子文件夹下(如：./result/2022_11_02-07_10_57)。
+      推理后的输出默认在文件夹(如：./result/bs1)下。
 
 
    3. 精度验证。
@@ -241,7 +240,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-      python3 post_deeplabv3plus_pytorch.py --result_path=./result/2022_11_02-07_10_57/ --label_images=./dataset/VOCdevkit/VOC2012/SegmentationClass/ --labels=./dataset/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt
+      python3 post_deeplabv3plus_pytorch.py --result_path=./result/bs1/ --label_images=./datasets/VOCdevkit/VOC2012/SegmentationClass/ --labels=./datasets/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt
       ```
 
       - 参数说明：

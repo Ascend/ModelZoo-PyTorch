@@ -59,7 +59,7 @@ DeeplabV3是一个经典的图像语义分割网络，在v1和v2版本基础上�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -216,7 +216,7 @@ DeeplabV3是一个经典的图像语义分割网络，在v1和v2版本基础上�
 
       ```
       mkdir result
-      python3 -m ais_bench  --model deeplabv3_bs1.om --input ./prep_dataset --output ./result --output_dirname=bs1 --outfmt BIN --batchsize=1  --device=0
+      python3 ${ais_infer_path}/ais_infer.py  --model deeplabv3_bs1.om --input ./prep_dataset --output ./result --output_dirname=bs1 --outfmt BIN --batchsize=1  --device=0
       ```
       - 参数说明：
          - --model：模型类型。

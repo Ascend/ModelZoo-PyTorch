@@ -18,47 +18,68 @@ sys.path.append(r"./BSN-boundary-sensitive-network.pytorch")
 
 from models import TEM
 
-parser = argparse.ArgumentParser(
-    description='tem2onnx')
-parser.add_argument('--pth_path',
-                    default='./tem_best.pth.tar',
-                    help='pth path') 
-parser.add_argument('--onnx_path',
-                    default='./BSN_tem.onnx',
-                    help='onnx path')
+parser = argparse.ArgumentParser(description='tem2onnx')
+parser.add_argument(
+        '--pth_path',
+        default='./tem_best.pth.tar',
+        help='pth path'
+        ) 
+parser.add_argument(
+        '--onnx_path',
+        default='./BSN_tem.onnx',
+        help='onnx path'
+        )
 parser.add_argument(
         '--tem_feat_dim',
         type=int,
-        default=400)
+        default=400
+        )
 parser.add_argument(
         '--tem_hidden_dim',
         type=int,
-        default=512)
+        default=512
+        )
 parser.add_argument(
         '--tem_batch_size',
         type=int,
-        default=16)
+        default=16
+        )
 parser.add_argument(
         '--temporal_scale',
         type=int,
-        default=100)
+        default=100
+        )
 opt = parser.parse_args()
 
 def pth_onnx(opt):
-    
-    
     opt = vars(opt)
     pth_path = opt['pth_path']
     onnx_path = opt['onnx_path']
+
     model = TEM(opt)
-    checkpoint = torch.load(pth_path,map_location='cpu')
+    checkpoint = torch.load(pth_path, map_location='cpu')
     base_dict = {'.'.join(k.split('.')[1:]): v for k,v in list(checkpoint['state_dict'].items())}
     model.load_state_dict(base_dict)
     input_names=["video"]
     output_names = ["output"]
     model.eval()
     dummy_input = torch.randn(1,400,100)
-    torch.onnx.export(model,dummy_input,onnx_path,input_names = input_names,output_names=output_names,verbose=True,opset_version=11)                       
-if __name__ =="__main__":
+    dynamic_axes = {
+        'video': {0:'-1'},
+        'output': {0:'-1'}
+    }
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_path,
+        input_names=input_names,
+        output_names=output_names,
+        verbose=True,
+        opset_version=11,
+        dynamic_axes=dynamic_axes
+        )                       
+
+if __name__ == "__main__":
     opt = parser.parse_args()
     pth_onnx(opt)

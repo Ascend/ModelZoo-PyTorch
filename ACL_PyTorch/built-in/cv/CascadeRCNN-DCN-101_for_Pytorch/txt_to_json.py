@@ -110,7 +110,7 @@ def get_predict_list(file_path, gt_classes):
             right = float(right)
             top = float(top)
             bottom = float(bottom)
-            bbox = [left, top, right - left, bottom - top]
+            bbox = [left, top, right-left, bottom-top]
             bounding_boxes.append({"image_id": int(file_id), "bbox": bbox, 
                                    "score": float(scores), "category_id":
                                        cat_ids[CLASSES.index(class_name)]})
@@ -120,7 +120,7 @@ def get_predict_list(file_path, gt_classes):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('mAp calculate')
-    parser.add_argument('--npu_txt_path', default="detection-results",
+    parser.add_argument('--npu_txt_path', default="detection-results11",
                         help='the path of the predict result')
     parser.add_argument("--json_output_file", default="coco_detection_result")
     args = parser.parse_args()

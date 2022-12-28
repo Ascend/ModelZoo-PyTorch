@@ -11,24 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
+import argparse
 
 import torch
 import torch.onnx
 from collections import OrderedDict
+import sys
 sys.path.append('./HigherHRNet-Human-Pose-Estimation')
-from lib.models import pose_higher_hrnet
-from lib.config import cfg
 from lib.config import update_config
-import argparse
+from lib.config import cfg
+from lib.models import pose_higher_hrnet
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg',
                         help='experiment configure file name',
-                        default=
-                        "HigherHRNet-Human-Pose-Estimation/experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml",
+                        default="HigherHRNet-Human-Pose-Estimation/experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml",
                         type=str)
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
@@ -37,6 +36,10 @@ def parse_args():
     parser.add_argument('--weights',
                         help='weights path',
                         default='model_best.pth.tar',
+                        type=str)
+    parser.add_argument('--onnx_path',
+                        help='onnx path',
+                        default='pose_higher_hrnet_w32_512_bs1_dynamic.onnx',
                         type=str)
     parser.add_argument('--bs', type=int, default=1)
 
@@ -54,12 +57,11 @@ def proc_node_module(checkpoint, AttrName):
     return new_state_dict
 
 
-def export_onnx(config, weights, bs):
+def export_onnx(config, weights, onnx_path, bs):
     model = pose_higher_hrnet.get_pose_net(config, is_train=False)
     model.eval()
     checkpoint = torch.load(weights, map_location='cpu')
 
-    onnx_path = weights[:-4] + "_bs" + str(bs) + "_dynamic.onnx"
     try:
         model.load_state_dict(checkpoint)
     except:
@@ -68,7 +70,8 @@ def export_onnx(config, weights, bs):
 
     input_names = ["input"]
     output_names = ["output1", "output2"]
-    dummy_input = torch.zeros(bs, 3, config.DATASET.INPUT_SIZE, config.DATASET.INPUT_SIZE)
+    dummy_input = torch.zeros(
+        bs, 3, config.DATASET.INPUT_SIZE, config.DATASET.INPUT_SIZE)
     dynamic_axes = {"input": {2: "-1", 3: "-1"},
                     "output1": {0: "-1"},
                     "output2": {0: "-1"}}
@@ -85,4 +88,4 @@ def export_onnx(config, weights, bs):
 if __name__ == "__main__":
     args = parse_args()
     update_config(cfg, args)
-    export_onnx(cfg, args.weights, args.bs)
+    export_onnx(cfg, args.weights, args.onnx_path, args.bs)

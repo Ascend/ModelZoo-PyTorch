@@ -36,6 +36,7 @@ import cv2
 import argparse
 import mmcv
 import torch
+import tqdm
 
 dataset_config = {
         'resize': (1216, 1216),
@@ -79,9 +80,8 @@ if __name__ == "__main__":
     if not os.path.exists(flags.bin_folder_path):
         os.makedirs(flags.bin_folder_path)
     images = os.listdir(flags.image_folder_path)
-    for image_name in images:
+    for image_name in tqdm.tqdm(images):
         if not (image_name.endswith(".jpeg") or image_name.endswith(".JPEG") or image_name.endswith(".jpg")):
             continue
-        print("start to process image {}....".format(image_name))
         path_image = os.path.join(flags.image_folder_path, image_name)
         coco_preprocess(path_image, flags.bin_folder_path)

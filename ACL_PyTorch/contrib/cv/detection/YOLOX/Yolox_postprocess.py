@@ -17,13 +17,11 @@ import argparse
 from tqdm import tqdm
 import torch
 import numpy as np
-import shutil
+sys.path.append('./YOLOX')
 from yolox.data import COCODataset, ValTransform
 from yolox.evaluators import COCOEvaluator
 from yolox.utils.boxes import postprocess
-
 from yolox.utils.demo_utils import demo_postprocess
-sys.path.append('./YOLOX')
 
 
 def get_output_data(dump_dir, idx, dtype=np.float32):

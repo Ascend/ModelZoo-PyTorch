@@ -55,7 +55,6 @@ from scipy import linalg
 from torch.nn.functional import adaptive_avg_pool2d
 if torch.__version__ >= '1.8':
     import torch_npu
-import torch.npu
 
 
 try:
