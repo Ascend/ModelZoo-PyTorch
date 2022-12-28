@@ -15,26 +15,30 @@
 
 from __future__ import absolute_import, division, print_function
 
+import os
 import argparse
 import numpy as np
 
 
 def om_post(ar):
-    res_dir=ar.dump_output    
-    label = np.loadtxt('albert.label')
+    res_dir=ar.result_dir
+    labels = np.load(ar.label_path)
     yes = 0
-    for i in range(len(label)):
-        res_path = res_dir + '/input_ids_%d_0.txt' % i
-        res = np.loadtxt(res_path)
-        if (res[1] > res[0] and label[i] > 0.5) or (res[1] < res[0] and label[i] < 0.5):
+    for i in range(len(labels)):
+        res_path = os.path.join(res_dir, f'{i}_0.npy')
+        res = np.load(res_path).flatten()
+        label = labels.flatten()[i]
+        if (res[1] > res[0] and label > 0.5) or (res[1] < res[0] and label < 0.5):
             yes += 1
-    print("acc = {:.3f}".format(yes / len(label)))
+    print("acc = {:.3f}".format(yes / len(labels)))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dump_output", default="", type=str,required=True,
-                        help="./result/dumpOutput_xxx, contains acc")
+    parser.add_argument("--result_dir", default="", type=str, required=True,
+                        help="infer result dir.")
+    parser.add_argument("--label_path", default="", type=str, required=True,
+                        help="path for gt label.")
     ar = parser.parse_args()
 
     om_post(ar)

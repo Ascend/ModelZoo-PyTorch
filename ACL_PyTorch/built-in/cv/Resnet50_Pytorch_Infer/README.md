@@ -11,9 +11,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
   ******
 
@@ -104,10 +102,8 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
    ```
    python3 imagenet_torch_preprocess.py resnet ./ImageNet/val ./prep_dataset
-   
-   每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成prep_dataset二进制文件夹
    ```
-
+   每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成prep_dataset二进制文件夹
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -192,32 +188,33 @@ a.  安装ais_bench推理工具。
     请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 b.  执行推理。
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh 
+   python3 -m ais_bench --model ./resnet50_bs64.om --input ./prep_dataset/ --output ./ --output_dirname result --outfmt TXT
+   ```
 
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    
-    python3 -m ais_bench --model ./resnet50_bs64.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
+   - 参数说明：   
+      - --model：模型地址
+      -  --input：预处理完的数据集文件夹
+      -  --output：推理结果保存地址
+      -  --output_dirname: 推理结果保存文件夹
+      -  --outfmt：推理结果保存格式
         
-    -   参数说明：   
-        --model：模型地址
-        --input：预处理完的数据集文件夹
-        --output：推理结果保存地址
-        --outfmt：推理结果保存格式
+   运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
     
-    运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
-   
+   **说明：** 
+   执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令
 
 c.  精度验证。
 
 统计推理输出的Top 1-5 Accuracy
 调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-
-    python3 vision_metric_ImageNet.py result/xxxx_xx_xx-xx-xx-xx（时间戳） ./val_label.txt ./ result.json
-    
-    result/xxxx_xx_xx-xx-xx-xx（时间戳）：为推理结果所在路径
-    
-    val_label.txt：为标签数据
-    
-    result.json：为生成结果文件
+   ```
+   python3 vision_metric_ImageNet.py ./result ./val_label.txt ./ result.json
+   ```
+   - 参数说明
+     - val_label.txt：为标签数据
+     - result.json：为生成结果文件
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -225,5 +222,5 @@ c.  精度验证。
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| 310P3 | 64 | ImageNet | top-1: 76.14% ;top-5: 92.87% | 4250 |
+| 310P3 | 64 | ImageNet | top-1: 76.14% <br>top-5: 92.87% | 4250 |
 

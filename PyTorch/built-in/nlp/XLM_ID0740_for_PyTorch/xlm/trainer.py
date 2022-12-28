@@ -461,7 +461,7 @@ class Trainer(object):
             n1 = pred_mask.sum().item()
             n2 = max(n1 % 8, 8 * (n1 // 8))
             if n2 != n1:
-                pred_mask[torch.nonzero(pred_mask).view(-1)[:n1 - n2]] = 0
+                pred_mask[torch.nonzero(pred_mask).view(-1)[:int(n1 - n2)]] = 0
             pred_mask = pred_mask.view(slen, bs)
             assert pred_mask.sum().item() % 8 == 0
 

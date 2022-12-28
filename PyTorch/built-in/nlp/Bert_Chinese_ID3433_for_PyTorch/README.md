@@ -61,7 +61,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
   pip install -r requirements.txt
   ```
 
-- 安装transformers
+- 安装transformers：
 
   ```
   cd transformers
@@ -128,7 +128,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 2. 运行训练脚本。
 
-   该模型支持单机单卡训练和单机8卡训练。
+   该模型支持单机单卡训练、单机8卡训练以及双机多卡训练。
 
    - 单机单卡训练
 
@@ -148,6 +148,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡性能训练  
      ```
 
+
    - 双机16卡训练
    
      启动双机16卡训练。
@@ -157,14 +158,33 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡性能训练
      ```
 
-    ```
+     ```
 	   --data_path：  数据集路径
 	   --model_size： 训练model是base或者是large
 	   --device_id：  单卡训练时所使用的device_id
 	   --node_rank:   集群节点序号，master节点是0， 其余节点依次加1
 	   --master_addr：master节点服务器的ip
 	   --master_port: 分布式训练中,master节点使用的端口
-    ```
+     ```
+   
+   - 双机8卡训练  
+     启动双机8卡训练。
+
+     ```
+     bash ./test/train_cluster_8p.sh --data_path=real_data_path --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx 
+     ```
+     
+     ```
+     --node_rank                              //集群节点序号，master节点是0，其余节点依次加1
+     --master_addr                            //master节点服务器的ip
+     --master_port                            //分布式训练中，master节点使用的端口
+     --data_path                              //数据集路径
+     ```
+     
+    
+     
+
+
 
    模型训练脚本参数说明如下。
 

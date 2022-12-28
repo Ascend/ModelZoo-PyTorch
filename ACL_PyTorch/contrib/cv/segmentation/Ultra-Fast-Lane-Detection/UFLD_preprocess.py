@@ -29,9 +29,8 @@ def jpg_to_bin(dataset_path, bin_path):
     test_txt_path = os.path.join(dataset_path, 'test.txt')
     image_names = []
     with open(test_txt_path, 'r', encoding='utf-8') as f:
-        image_names.append(f.readline().strip())
+        image_names = f.readlines()
    
-
     preprocess = transforms.Compose(
         [transforms.Resize((288, 800)),])
 
@@ -39,11 +38,11 @@ def jpg_to_bin(dataset_path, bin_path):
         os.makedirs(bin_path)
 
     for img_name in tqdm.tqdm(image_names):
-        src_path = os.path.join(dataset_path, img_name)
+        src_path = os.path.join(dataset_path, img_name.strip())
         if not os.path.isfile(src_path):
             continue
         dst_path = os.path.join(bin_path, 
-            img_name.replace('/', '-').replace('.jpg', '.bin'))
+            img_name.strip().replace('/', '-').replace('.jpg', '.bin'))
 
         image = Image.open(src_path).convert('RGB')
         input_tensor = preprocess(image)

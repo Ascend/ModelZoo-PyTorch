@@ -27,6 +27,7 @@ def psnr(sr, hr, shave=4):
   psnr = -10 * mse.log10()
   return psnr.mean()
 
+
 def unPackPad(lr_image, width, height):
     lr_image = lr_image.reshape((3, 2040, 2040))
     lr_height = lr_image.shape[2]
@@ -38,6 +39,7 @@ def unPackPad(lr_image, width, height):
     lr_image_unpad = lr_image[:, pad_h:2040 - pad_h, pad_w:2040 - pad_w]
 
     return lr_image_unpad
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -77,27 +79,26 @@ if __name__ == '__main__':
     sum = 0
     avg = 0.0
     count = 0
-    resultFile = open(arg.result,'w')
-    for hrFile in datasetData:
-        num = hrFile.split('.')
-        lrFile = num[0] + "x2_1.bin"
-        srcData = np.fromfile(os.path.join(arg.bin_data_path, lrFile), dtype="float32")
-        srcData = srcData.reshape((3, 2040, 2040))
-        hr = Image.open(os.path.join(arg.dataset_path, hrFile))
-        srcData = unPackPad(srcData, hr.width, hr.height)
-        hr = np.asarray(hr)
-        hr = hr.transpose((2, 0, 1))
-        hr = hr.astype(np.float32) / 255.
-        srcDataTensor = torch.from_numpy(srcData)
-        binDataTensor = torch.from_numpy(hr)
-        result = psnr(srcDataTensor, binDataTensor, shave)
-        sum += result.item()
-        count += 1
-        avg = sum / count
-        content = hrFile+' PSNR: {:.2f}'.format(result.item())
-        print(content)
-        resultFile.write(content)
-        resultFile.write('\n')
+    with open(arg.result,'w') as resultFile:
+        for lrFile in os.listdir(arg.bin_data_path):
+            hrFile = lrFile[:4] + '.png'
+            srcData = np.fromfile(os.path.join(arg.bin_data_path, lrFile), dtype="float32")
+            srcData = srcData.reshape((3, 2040, 2040))
+            hr = Image.open(os.path.join(arg.dataset_path, hrFile))
+            srcData = unPackPad(srcData, hr.width, hr.height)
+            hr = np.asarray(hr)
+            hr = hr.transpose((2, 0, 1))
+            hr = hr.astype(np.float32) / 255.
+            srcDataTensor = torch.from_numpy(srcData)
+            binDataTensor = torch.from_numpy(hr)
+            result = psnr(srcDataTensor, binDataTensor, shave)
+            sum += result.item()
+            count += 1
+            avg = sum / count
+            content = hrFile+' PSNR: {:.2f}'.format(result.item())
+            print(content)
+            resultFile.write(content)
+            resultFile.write('\n')
 
-    print('avg_psnr:', avg)
-    resultFile.write('avg_psnr:'+str(avg))
+        print('avg_psnr:', avg)
+        resultFile.write('avg_psnr:'+str(avg))
