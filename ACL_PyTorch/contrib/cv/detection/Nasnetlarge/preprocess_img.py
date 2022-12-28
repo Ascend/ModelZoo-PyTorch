@@ -19,6 +19,7 @@ import numpy as np
 import pretrainedmodels
 from pretrainedmodels import utils
 from PIL import Image
+from tqdm import tqdm
 
 
 def init_transform():
@@ -38,7 +39,7 @@ def preprecess(src_path, save_path):
     """
     in_files = os.listdir(src_path)
     transform = init_transform()
-    for out_file in in_files:
+    for out_file in tqdm(in_files):
         input_image = Image.open(src_path + '/' + out_file).convert('RGB')
         input_tensor = transform(input_image)
         img = np.array(input_tensor).astype(np.float32)
