@@ -190,7 +190,7 @@
 - [PraNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/PraNet)
 - [PSENet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/PSENet_for_Pytorch)
 - [PSENet_ResNet50_vd](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/PSENet_ResNet50_vd)
-- [PSPnet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/PSPnet)
+- [PSPNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/PSPNet)
 - [pyramidbox](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/pyramidbox)
 - [R(2+1)D](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/R(2+1)D)
 - [R(2+1)D_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/R(2+1)D_for_Pytorch)
