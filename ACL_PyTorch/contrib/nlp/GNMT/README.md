@@ -11,9 +11,8 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
 ******
 
@@ -70,8 +69,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
     | 配套                                                         | 版本    | 环境准备指导                                                 |
     | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-    | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-    | CANN                                                         | 5.1.RC2 | -                                                            |
+    | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN                                                         | 6.0.RC1 | -                                                            |
     | Python                                                       | 3.7.5   | -                                                            |
     | PyTorch                                                      | 1.12.0  | -                                                            |
     | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -102,7 +101,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
     ```
 
 2. 获取权重文件。  
-    将权重文件[gnmt.pth](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com:443/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/nlp/gnmt/gnmt.pth?AccessKeyId=4WKXHKTRCNZGLVNUBZWO&Expires=1692930088&Signature=Wu7W%2BMmpGMLJxW2C1GkjOUbZSAU%3D)下载到本地后上传到当前工作目录。
+    将权重文件[gnmt.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/GNMT/PTH/gnmt.pth)下载到本地后上传到当前工作目录。
 
 3. 数据预处理。
 
@@ -160,7 +159,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
    
         2. 优化ONNX文件。
             ```
-            python3.7 -m onnxsim gnmt_msl30.onnx gnmt_msl30_sim.onnx
+            python3 -m onnxsim gnmt_msl30.onnx gnmt_msl30_sim.onnx
             ```
 
             获得gnmt_msl30_sim.onnx文件。
@@ -219,10 +218,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 2. 开始推理验证。
 
     1. 使用ais-infer工具进行推理。  
-        查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，将工具编译后的压缩包放置在当前目录，解压工具包，安装工具压缩包中的whl文件。
-        ```
-        pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
-        ```
+        查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
     2. 执行推理。
         ```
@@ -230,7 +226,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         python3.7 ${ais_infer_path}/ais_infer.py \
             --model=./gnmt_msl30_sim.om \
             --input=./pre_data/input_encoder/,./pre_data/input_enc_len,./pre_data/input_decoder \
-            --output=./out_data/ \
+            --output=./ \
+            --output_dirname=result
             --outfmt=BIN
         ```
 
@@ -239,8 +236,9 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
             -  --input：输入名及文件路径。
             -  --output：输出路径。
             -  --outfmt：输出文件格式。
+            -  --output_dirname: 输出结果保存文件夹。
 
-        推理后的输出默认在当前目录out_data下。
+        推理后的输出默认在当前目录result下。
 
         >**说明：** 
         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
@@ -251,7 +249,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         ```
         python3.7 gnmt_postprocess.py \
             --model_path ./gnmt.pth \
-            --bin_file_path ./out_data/2022_xx_xx-xx_xx_xx/ \
+            --bin_file_path ./result \
             --res_file_path ./res_data \
             --pre_file_path ./pre_data
         ```
@@ -267,7 +265,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         ```
         python3.7 ${ais_infer_path}/ais_infer.py \
             --model=./gnmt_msl30_sim.om \
-            --loop 50
+            --loop 20 \
+            --batchsize 1
         ```
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
