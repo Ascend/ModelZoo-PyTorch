@@ -208,10 +208,11 @@ U-2-Net是基于UNet提出的一种新的网络结构，网络基于encode-decod
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
-   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
-      mkdir result
+      mkdir result  
+	   source /usr/local/Ascend/ascend-toolkit/set_env.sh  
       python3 -m ais_bench --model=./models/u2net_sim_bs1_fixv2.om --input=./test_data_ECSSD/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1  --device 0
       ```
 

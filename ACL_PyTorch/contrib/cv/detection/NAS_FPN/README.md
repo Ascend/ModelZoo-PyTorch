@@ -14,7 +14,7 @@
 	-   [4.2 数据集预处理](#42-数据集预处理)
 	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
 -   [5 离线推理](#5-离线推理)
-	-   [5.1 获取ais_infer推理工具](#51-获取ais_infer推理工具)
+	-   [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
 	-   [5.2 离线推理](#52-离线推理)
 -   [6 精度对比](#6-精度对比)
 	-   [6.1 离线推理mAP精度统计](#61-离线推理mAP精度统计)
@@ -210,11 +210,11 @@ python3 get_info.py jpg ./coco/val2017 coco2017_jpg.info
 
 ## 5 离线推理
 
--   **[获取ais_bench推理工具](#51-获取ais_bench推理工具)**  
+-   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 获取ais_bench推理工具
+### 5.1 安装ais_bench推理工具
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 

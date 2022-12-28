@@ -107,8 +107,7 @@ mkdir result
 sh ../Waveglow_inference.sh  ./data/
 ```
 **参数说明：**
->第一个参数为ais_bench路径  
->第二个参数为前处理结果存放路径  
+>第一个参数为前处理结果存放路径 
 
 
 ### 五、 后处理

@@ -233,10 +233,11 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
       mkdir resultAbs1 resultBbs1
+	  source /usr/local/Ascend/ascend-toolkit/set_env.sh
       python3 -m ais_bench --model=./CycleGAN_Ga_bs1.om --input=./datasetsDst/maps/testA/ --output=./resultAbs1/ --outfmt=BIN --batchsize=1
 
       python3 -m ais_bench --model=./CycleGAN_Gb_bs1.om --input=./datasetsDst/maps/testB/ --output=./resultBbs1/ --outfmt=BIN --batchsize=1

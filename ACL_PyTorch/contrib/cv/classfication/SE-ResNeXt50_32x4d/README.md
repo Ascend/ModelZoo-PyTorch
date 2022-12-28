@@ -107,7 +107,7 @@ atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_1
 ```shell
 python3 -m ais_bench –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt TXT --batchsize {batch_size}
 ```
-1. 精度验证
+2. 精度验证
 ```shell
 # 调用ais_verify.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 python3.7 vision_metric_ImageNet.py ${ais_output} ./val_label.txt ./ result.json

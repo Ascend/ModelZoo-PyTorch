@@ -212,7 +212,7 @@ DeeplabV3是一个经典的图像语义分割网络，在v1和v2版本基础上�
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
       mkdir result

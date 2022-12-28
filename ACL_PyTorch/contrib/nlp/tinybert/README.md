@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 从ModelZoo中获取权重文件包“SST-2_model.zip”，解压至当前目录
 
-（4）获取ais_bench推理工具
+（4）安装ais_bench推理工具
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 

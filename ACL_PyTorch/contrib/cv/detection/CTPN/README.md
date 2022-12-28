@@ -276,7 +276,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
    1. 安装ais_bench推理工具。
 
-      ais_bench推理工具获取及使用方式请点击查看[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 

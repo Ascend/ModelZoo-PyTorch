@@ -172,7 +172,7 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
 
 ## 推理验证
 
-1. 该离线模型使用ais_bench作为推理工具，请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
+1. 安装ais_bench推理工具，请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python3 -m ais_bench
         --model ./convmixer_1536_20_${batch_size} \

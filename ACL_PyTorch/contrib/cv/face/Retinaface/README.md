@@ -13,7 +13,7 @@
 		- [4.1 数据集获取](#41-数据集获取)
 		- [4.2 数据集预处理](#42-数据集预处理)
 	- [5 离线推理](#5-离线推理)
-		- [5.1 ais\_bench工具概述](#51-ais_bench推理工具概述)
+		- [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
 		- [5.2 离线推理](#52-离线推理)
 	- [6 精度对比](#6-精度对比)
 		- [6.1 离线推理精度统计](#61-离线推理精度统计)
@@ -147,13 +147,11 @@ python3.7 retinaface_pth_preprocess.py
 
 ## 5 离线推理
 
--   **[ais_bench推理工具概述](#51-ais_bench推理工具概述)**  
+-   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 ais_bench推理工具概述
-
-ais_bench推理工具为华为自研的模型推理工具。支持om模型的离线推理，能够迅速统计出模型在Ascend310P3上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程.
+### 5.1 安装ais_bench推理工具
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
@@ -181,7 +179,6 @@ python3.7 -m ais_bench --model retinaface_bs16.om --device 0 --batchsize 16 --in
 
 1. 推理结果后处理
 
-首先，将推理结果中的性能测试结果 summary.json 文件移动到其他目录
 ```
 mv ./result/{timestamp}/sumary.json ./result/
 ```

@@ -250,8 +250,11 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
            运行成功后生成C3D.om模型文件。
 
 2. 开始推理验证。
+    a. 安装ais_bench推理工具
 
-    a.  执行推理。
+       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。 
+	   
+    b.  执行推理。
 	```shell
 	# 移除异常数据
     bash ../check_rawframes_filelist.sh
@@ -274,7 +277,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
     
     推理后的输出在当前目录result/result_bs1下。
     
-    b.  精度验证。
+    c.  精度验证。
     
     ```shell
     python3 ../C3D_postprocess.py ./result/result_bs1/ ./data/ucf101/ucf101_val_split_1_rawframes.txt ./top1_acc.json

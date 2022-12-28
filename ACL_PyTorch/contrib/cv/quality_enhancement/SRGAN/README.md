@@ -216,13 +216,13 @@
 
             运行成功后生成srgan_bs1.om模型文件。
 
-2. 开始推理验证(${tool_path}请根据实际的推理工具路径填写)。
+2. 开始推理验证。
 
    1. 安装ais_bench推理工具。
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
       python3 estimate_per.py   --interpreter='python3 ${tool_path}/ais_infer.py' --om_path=./srgan_bs1.om --src_path=./preprocess_data/ --save_path=./result/bs1  --batchsize=1 --device=0  

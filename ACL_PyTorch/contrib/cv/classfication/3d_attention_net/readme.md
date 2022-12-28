@@ -29,7 +29,7 @@ patch -p1 <../3d_attention_net.patch
 cd ..
 ```
 
-4. 获取推理工具
+4. 安装ais_bench推理工具  
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 

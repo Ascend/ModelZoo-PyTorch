@@ -14,7 +14,7 @@ cd -
 把TextCNN*脚本和gen_dataset_info.py脚本放到ascend_textcnn文件夹里;把*.sh脚本和fit_onnx.py放在ascend_textcnn的平行文件夹
 
 ## 3 模型推理
-3.1. 前处理
+1. 前处理
 
 ```
 cd ascend_textcnn
@@ -22,7 +22,7 @@ python3 TextCNN_preprocess.py --save_folder bin
 python3 gen_dataset_info.py bin info
 ```
 
-3.2. 转onnx
+2. 转onnx
 
 获取[TextCNN_9045_seed460473.pth](https://gitee.com/hex5b25/ascend-textcnn/raw/master/Chinese-Text-Classification-Pytorch/THUCNews/saved_dict/TextCNN_9045_seed460473.pth)
 
@@ -30,7 +30,7 @@ python3 gen_dataset_info.py bin info
 python3 TextCNN_pth2onnx.py --weight_path ./TextCNN_9045_seed460473.pth --onnx_path ./dy_textcnn.onnx
 ```
 
-3.3. 转om
+3. 转om
 
     ${chip_name}可通过`npu-smi info`指令查看
    
@@ -46,7 +46,7 @@ python3 TextCNN_pth2onnx.py --weight_path ./TextCNN_9045_seed460473.pth --onnx_p
     bash onnx2om.sh Ascend${chip_name} # Ascend310P3
     ```
 
-3.4. 后处理得到精度
+4. 后处理得到精度
 
 请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
@@ -57,7 +57,7 @@ mkdir -p ./output_data/bs1
 python3 -m ais_bench --model mg_om_dir/textcnn_1bs.om --input ./input_data --output ./output_data/bs1 --batchsize 1 --device 0
 python3 TextCNN_postprocess.py ./output_data/bs1/ > result_bs1.json
 ```
-3.5. 性能数据
+5. 性能数据
 
 推理结果打屏显示，以1bs为例
 
