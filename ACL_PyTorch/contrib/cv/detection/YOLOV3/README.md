@@ -264,8 +264,8 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
    b. 执行推理。
 
-       mkdir ais_infer_result
-	   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+       mkdir ais_infer_result  
+       source /usr/local/Ascend/ascend-toolkit/set_env.sh 
        python3 -m ais_bench --model yolov3_bsn.om 
                             --input yolov3_bin 
                             --batchsize=n 

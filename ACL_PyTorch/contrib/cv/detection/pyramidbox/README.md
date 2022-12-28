@@ -220,7 +220,8 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
              -   output：输出文件路径
              -   output_dirname: 输出保存文件夹,可以对应取名 result11 和 result22
 
-        推理后的输出默认在当前目录result下。
+        推理后的输出默认在当前目录`result11` 和 `result22`下。
+   
 
 
    3. 处理目录下的bin文件

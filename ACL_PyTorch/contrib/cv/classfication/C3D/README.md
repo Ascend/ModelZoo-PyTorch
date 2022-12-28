@@ -261,7 +261,8 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
     rm -rf prep_datasets/v_PommelHorse_g05*.bin
     
     # 执行推理
-    mkdir result
+    mkdir result  
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh  
     python3 -m ais_bench --model ./C3D_bs1.om --batchsize=1 --input=./prep_datasets/ --output ./result --output_dirname result_bs1 --outfmt TXT
     ```
     

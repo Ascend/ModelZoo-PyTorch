@@ -226,7 +226,8 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
 
 2. 开始推理验证。
 
-a.  安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+a.  安装ais_bench推理工具。  
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
 执行ais_bench推理工具推理命令，如下：
 

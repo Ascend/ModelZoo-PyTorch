@@ -225,9 +225,10 @@ SRFlow是一种基于归一化流的超分辨率方法，具备比GAN更强的�
 
       ```
         # 创建result文件夹，存放推理结果文件
-        rm -rf result
-        mkdir result
+        rm -rf result 
+        mkdir result  
         
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh    
         python -m ais_bench --device 0 --batchsize 1 --model ./srflow_df2k_x8_bs1.om --input ./prep_data/bin/ --output ./result/
       ```
  

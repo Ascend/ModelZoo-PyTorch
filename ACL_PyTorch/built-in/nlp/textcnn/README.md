@@ -65,7 +65,7 @@ python3 TextCNN_postprocess.py ./output_data/bs1/ > result_bs1.json
 python3 -m ais_bench --model mg_om_dir/textcnn_1bs.om --output ./output_data/bs1 --outfmt BIN --loop 100 --device 0
 ```
 
-## 4 自验
+## 3 自验
 | 模型           | 官网精度   | 310P离线推理精度 | 310P性能 |
 |--------------|--------|-----------|-------|
 | Textcnn 64bs | [91.22%](https://gitee.com/huangyd8/Chinese-Text-Classification-Pytorch) | 90.47%    |  27242.83     |

@@ -212,7 +212,7 @@ U-2-Net是基于UNet提出的一种新的网络结构，网络基于encode-decod
 
       ```
       mkdir result  
-	   source /usr/local/Ascend/ascend-toolkit/set_env.sh  
+      source /usr/local/Ascend/ascend-toolkit/set_env.sh  
       python3 -m ais_bench --model=./models/u2net_sim_bs1_fixv2.om --input=./test_data_ECSSD/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1  --device 0
       ```
 

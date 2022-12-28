@@ -236,8 +236,8 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
    2. 执行推理。
 
       ```
-      mkdir resultAbs1 resultBbs1
-	  source /usr/local/Ascend/ascend-toolkit/set_env.sh
+      mkdir resultAbs1 resultBbs1  
+      source /usr/local/Ascend/ascend-toolkit/set_env.sh  
       python3 -m ais_bench --model=./CycleGAN_Ga_bs1.om --input=./datasetsDst/maps/testA/ --output=./resultAbs1/ --outfmt=BIN --batchsize=1
 
       python3 -m ais_bench --model=./CycleGAN_Gb_bs1.om --input=./datasetsDst/maps/testB/ --output=./resultBbs1/ --outfmt=BIN --batchsize=1
