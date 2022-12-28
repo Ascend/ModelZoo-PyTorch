@@ -32,7 +32,7 @@ def proc_nodes_module(checkpoint, AttrName):
     return new_state_dict
 
 
-def model_transfer(args):
+def model_transfer(config):
     batch_size = config.DATA.BATCH_SIZE
     onnx_model = build_model(config)
     ckpt = torch.load(config.MODEL.RESUME, map_location='cpu')
@@ -41,18 +41,17 @@ def model_transfer(args):
     onnx_model.cpu()
     input_names = ["image"]
     output_names = ["class"]
-    dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(batch_size, 3, 224, 224)
     fp16 = False
     if fp16:
-        onnx_path = 'onnx_models/swin_b' + str(batch_size) + '_fp16.onnx'
+        onnx_path = 'models/onnx/swin_tiny_bs' + str(batch_size) + '_fp16.onnx'
     else:
-        onnx_path = 'onnx_models/swin_b' + str(batch_size) + '.onnx'
-    torch.onnx.export(onnx_model, dummy_input, onnx_path, input_names=input_names, dynamic_axes=dynamic_axes,
+        onnx_path = 'models/onnx/swin_tiny_bs' + str(batch_size) + '.onnx'
+    torch.onnx.export(onnx_model, dummy_input, onnx_path, input_names=input_names,
                       output_names=output_names, opset_version=11, verbose=True)
     print("model saved successful at ", onnx_path)
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
-    model_transfer(config)
+    _, main_config = parse_option()
+    model_transfer(main_config)

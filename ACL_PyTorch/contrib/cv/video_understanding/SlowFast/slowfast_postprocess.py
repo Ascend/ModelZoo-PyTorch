@@ -1,31 +1,32 @@
-"""
-Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-============================================================================
-"""
 import os
 import argparse
-import numpy as np
 from collections import OrderedDict
+
+from tqdm import tqdm
+import numpy as np
 from mmaction.core import top_k_accuracy
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Dataset K400 Postprocessing')
-    parser.add_argument('--result_path', type=str)
-    parser.add_argument('--info_path', type=str)
+    parser.add_argument('--result_dir', type=str)
+    parser.add_argument('--label_file', type=str)
 
     args = parser.parse_args()
 
@@ -37,15 +38,17 @@ def main():
 
     # load info file
     gt_labels = []
-    with open(args.info_path, 'r') as f:
+    with open(args.label_file, 'r') as f:
         for line in f.readlines():
             gt_labels.append(int(line.split(' ')[1]))
 
     # load inference result
     results = []
-    num_file = len(os.listdir(args.result_path))
-    for idx in range(num_file):
-        file = os.path.join(args.result_path, str(idx) + '_output_0.txt')
+    all_files = [file for file in os.listdir(args.result_dir)
+                 if not file.endswith('.json')]
+    num_file = len(all_files)
+    for idx in tqdm(range(num_file)):
+        file = os.path.join(args.result_dir, str(idx) + '_0.txt')
         with open(file, 'r') as f:
             for batch in f.readlines():
                 line = batch.split(' ')[:-1]
