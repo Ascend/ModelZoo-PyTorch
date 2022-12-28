@@ -112,7 +112,7 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
    python vgg16_preprocess.py ${dataset_dir} ./prep_dataset
    ```
    - 参数说明
-      - ${datasets_path}：原始数据验证集（.jpeg）所在路径
+      - `${dataset_dir}`：原始数据验证集（.jpeg）所在路径
       - `./prep_dataset`：输出的二进制文件（.bin）所在路径
 
     每个图像对应生成一个二进制bin文件，一个附加信息文件。
