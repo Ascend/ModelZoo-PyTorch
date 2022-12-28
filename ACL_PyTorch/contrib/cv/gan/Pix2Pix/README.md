@@ -17,7 +17,7 @@
 
 - [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-  ******
+******
 
 
 
@@ -32,7 +32,7 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 - 参考实现：
 
   ```
-  url=https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
+  url=//github.com/junyanz/pytorch-CycleGAN-and-pix2pix
   commit_id=master
   commit_id=aac572a869b6cfc7486d1d8e2846e5e34e3f0e05
   model_name=pix2pix
@@ -67,7 +67,7 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.5.0   | [AscendPyTorch环境准备](https://gitee.com/ascend/pytorch)                                                           |
@@ -109,7 +109,7 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型支持[facades 验证集]()。用户可自行获取facades数据集上传到服务器，可放置于任意路径下，以"./datasets"目录为例。下：
+   本模型支持[facades 验证集](http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/facades.tar.gz)。用户可自行获取facades数据集上传到服务器，可放置于任意路径下，以"./datasets"目录为例。下：
 
    ```
    ├─datasets
@@ -125,8 +125,8 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
    ```
    python3 pix2pix_preprocess.py --dataroot ./datasets/facades --results_dir ./pre_bin
    ```
-   - 参数说明：
 
+   - 参数说明：
       - --dataroot：数据集路径。
       - --results_dir：输出结果路径。
 
@@ -185,16 +185,15 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
          ```
 
          - 参数说明：
+            - --model：为ONNX模型文件。
+            - --framework：5代表ONNX模型。
+            - --output：输出的OM模型。
+            - --input\_format：输入数据的格式。
+            - --input\_shape：输入数据的shape。
+            - --log：日志级别。
+            - --soc\_version：处理器型号。
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-
-           运行成功后生成netG_om_bs1.om模型文件。
+         运行成功后生成netG_om_bs1.om模型文件。
 
 2. 开始推理验证。
 
@@ -202,23 +201,22 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 
       ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
 
-        ```
-        mkdir results
-        python3 ${tool_path}/ais_infer.py --model ./netG_om_bs1.om --input ./pre_bin --output ./results --output_dirname bs1 --outfmt BIN --batchsize 1  --device 0
-        ```
+      ```
+      mkdir result
+      python3 ${ais_infer_path}/ais_infer.py --model ./netG_om_bs1.om --input ./pre_bin --output ./result  --output_dirname=bs1 --outfmt BIN --batchsize 1  --device 0
+      ```
 
-      -   参数说明：
-         -  --model：om文件路径。
-         -  --input：输入的bin文件路径。
-         -  --output：推理结果文件路径。
-         -  --outfmt：输出结果格式。
-         -  --batchsize：批大小。
-         -  --device：NPU设备编号。
-         -  output_dirname：推理结果文件路径的子文件路径。
+      - 参数说明：
+         - --model：om文件路径。
+         - --input：输入的bin文件路径。
+         - --output：推理结果文件路径。
+         - --outfmt：输出结果格式。
+         - --batchsize：批大小。
+         - --device：NPU设备编号。
 
-        推理后的输出在推理结果文件路径的子文件路径下(./results/bs1/)。
+        推理后的输出在文件夹(./result/bs1)中。
         >**说明：** 
         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
@@ -227,20 +225,20 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
       调用脚本生成om结果复原图片图片。
 
       ```
-      python3 pix2pix_postprocess.py --bin2img_file=./results/bin2img_bs1/  --npu_bin_file=./result/bs1/
+      python3 pix2pix_postprocess.py --bin2img_file=./result/bin2img_bs1/  --npu_bin_file=./result/bs1/
       ```
 
       - 参数说明：
-        - --bin2img_file：推理om模型的结果复原图路径。
-        - --npu_bin_file：推理om模型的结果路径。
+         - --bin2img_file：推理om模型的结果复原图路径。
+         - --npu_bin_file：推理om模型的结果路径。
 
+      调用脚本生成onnx的推理结果复原图片，对onnx和om的结果进行观察对比。
       ```
-      调用脚本生成onnx的推理结果复原图片，复原图片位于./results/facades_label2photo_pretrained/test_latest/images/，然后对onnx和om的结果进行观察对比。
       python3 test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_label2photo_pretrained --num_test 106
       ```
       - 参数说明：
-        - --dataroot：数据集的路径。
-        - --num_test：验证集的数目。
+         - --dataroot：数据集的路径。
+         - --num_test：验证集的数目。
 
    4. 性能验证。
 
@@ -251,9 +249,9 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
       ```
 
       - 参数说明：
-        - --model：om模型的路径。
-        - --loop：推理的循环次数。
-        - --batch_size：批大小。
+         - --model：om模型的路径。
+         - --loop：推理的循环次数。
+         - --batch_size：批大小。
 
 
 
