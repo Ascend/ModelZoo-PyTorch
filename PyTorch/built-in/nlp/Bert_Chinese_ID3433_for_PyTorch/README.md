@@ -147,6 +147,8 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡精度训练
      bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡性能训练  
      ```
+     
+   - 双机多卡训练
 
    - 双机16卡训练
    
@@ -165,6 +167,23 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 	   --master_addr：master节点服务器的ip
 	   --master_port: 分布式训练中,master节点使用的端口
     ```
+     
+     启动双机8卡训练。
+
+     ```
+     bash ./test/train_cluster_8p.sh --data_path=real_data_path --node_rank={0,1} --master_addr=MASTERADDR --master_port=MASTERPORT 
+     ```
+     
+     ```
+     --node_rank                              //集群节点序号，master节点是0，其余节点依次加1
+     --master_addr                            //master节点服务器的ip
+     --master_port                            //分布式训练中，master节点使用的端口
+     ```
+     
+    
+     
+
+   --data_path参数填写数据集路径。
 
    模型训练脚本参数说明如下。
 
