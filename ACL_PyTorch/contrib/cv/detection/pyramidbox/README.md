@@ -205,9 +205,9 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
         ```shell
         mkdir result11 result22
         
-        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
+        python -m ais_bench --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
 
-        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
+        python -m ais_bench --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
         
         说明：由于预处理后的数据集有两个，所以此脚本需要运行两次
         ```
