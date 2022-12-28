@@ -19,6 +19,7 @@ from torchvision import transforms
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data.transforms import _pil_interp
 from PIL import Image
+from tqdm import tqdm
 
 sys.path.append('./Swin-Transformer')
 from main import parse_option
@@ -52,21 +53,17 @@ def preprocess(config):
     save_path = config.BIN_PATH
     val_files = os.listdir(val_path)
     i = 0
-    for val_set in val_files:
+    for val_set in tqdm(val_files):
         valset_p = os.path.join(val_path, val_set)
         if not os.path.isdir(valset_p):
-            i = i + 1
-            file = val_set
-            print(file, "===", i)
+            file_name = val_set
             input_image = Image.open(valset_p).convert('RGB')
             input_tensor = Transform(input_image)
             img = np.array(input_tensor).astype(np.float32)
-            img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+            img.tofile(os.path.join(save_path, file_name.split('.')[0] + ".bin"))
             continue
         files = os.listdir(valset_p)
         for file in files:
-            i = i + 1
-            print(file, "===", i)
             input_image = Image.open(valset_p + '/' + file).convert('RGB')
             input_tensor = Transform(input_image)
             img = np.array(input_tensor).astype(np.float32)
@@ -74,5 +71,5 @@ def preprocess(config):
 
 
 if __name__ == '__main__':
-    _, config = parse_option()
-    preprocess(config)
+    _, main_config = parse_option()
+    preprocess(main_config)
