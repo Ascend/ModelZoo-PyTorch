@@ -1,5 +1,5 @@
 diff --git a/lib/core/group.py b/lib/core/group.py
-index f09be8f..93b6240 100644
+index f09be8f..03e2ca6 100644
 --- a/lib/core/group.py
 +++ b/lib/core/group.py
 @@ -162,7 +162,7 @@ class HeatmapParser(object):
@@ -11,8 +11,17 @@ index f09be8f..93b6240 100644
  
          ind_k = torch.stack((x, y), dim=3)
  
+@@ -201,7 +201,7 @@ class HeatmapParser(object):
+         :param det: numpy.ndarray of size (17, 128, 128)
+         :param tag: numpy.ndarray of size (17, 128, 128) if not flip
+         :param keypoints: numpy.ndarray of size (17, 4) if not flip, last dim is (x, y, det score, tag score)
+-        :return: 
++        :return:
+         """
+         if len(tag.shape) == 3:
+             # tag shape: (17, 128, 128, 1)
 diff --git a/lib/core/inference.py b/lib/core/inference.py
-index fbc427e..d70c7be 100644
+index fbc427e..49aa73d 100644
 --- a/lib/core/inference.py
 +++ b/lib/core/inference.py
 @@ -12,7 +12,7 @@ from __future__ import print_function
@@ -24,51 +33,11 @@ index fbc427e..d70c7be 100644
  
  
  def get_outputs(
-@@ -84,6 +84,7 @@ def get_multi_stage_outputs(
- 
-     outputs = model(image)
-     for i, output in enumerate(outputs):
-+        print(output.shape)
-         if len(outputs) > 1 and i != len(outputs) - 1:
-             output = torch.nn.functional.interpolate(
-                 output,
-@@ -164,6 +165,7 @@ def get_multi_stage_outputs(
-             torch.nn.functional.interpolate(
-                 tms,
-                 size=(size_projected[1], size_projected[0]),
-+                # size=(512, 512),
-                 mode='bilinear',
-                 align_corners=False
-             )
-diff --git a/lib/core/trainer.py b/lib/core/trainer.py
-index 0a20940..de29826 100644
---- a/lib/core/trainer.py
-+++ b/lib/core/trainer.py
-@@ -36,6 +36,8 @@ def do_train(cfg, model, data_loader, loss_factory, optimizer, epoch,
-         # measure data loading time
-         data_time.update(time.time() - end)
- 
-+
-+
-         # compute output
-         outputs = model(images)
- 
 diff --git a/lib/dataset/COCODataset.py b/lib/dataset/COCODataset.py
-index 265c54a..1f51f94 100644
+index 265c54a..793dff7 100644
 --- a/lib/dataset/COCODataset.py
 +++ b/lib/dataset/COCODataset.py
-@@ -1,10 +1,3 @@
--# ------------------------------------------------------------------------------
--# Copyright (c) Microsoft
--# Licensed under the MIT License.
--# Written by Bin Xiao (leoxiaobin@gmail.com)
--# Modified by Bowen Cheng (bcheng9@illinois.edu)
--# ------------------------------------------------------------------------------
--
- from __future__ import absolute_import
- from __future__ import division
- from __future__ import print_function
-@@ -21,14 +14,13 @@ import numpy as np
+@@ -21,7 +21,7 @@ import numpy as np
  from torch.utils.data import Dataset
  
  from pycocotools.cocoeval import COCOeval
@@ -77,22 +46,7 @@ index 265c54a..1f51f94 100644
  
  logger = logging.getLogger(__name__)
  
- 
- class CocoDataset(Dataset):
-     """`MS Coco Detection <http://mscoco.org/dataset/#detections-challenge2016>`_ Dataset.
--
-     Args:
-         root (string): Root directory where dataset is located to.
-         dataset (string): Dataset name(train2017, val2017, test2017).
-@@ -97,7 +89,6 @@ class CocoDataset(Dataset):
-         """
-         Args:
-             index (int): Index
--
-         Returns:
-             tuple: Tuple (image, target). target is the object returned by ``coco.loadAnns``.
-         """
-@@ -163,9 +154,9 @@ class CocoDataset(Dataset):
+@@ -163,9 +163,9 @@ class CocoDataset(Dataset):
          :param cfg: cfg dictionary
          :param preds: prediction
          :param output_dir: output directory
@@ -105,29 +59,11 @@ index 265c54a..1f51f94 100644
          '''
          res_folder = os.path.join(output_dir, 'results')
          if not os.path.exists(res_folder):
-@@ -306,4 +297,4 @@ class CocoDataset(Dataset):
-             info_str.append((name, coco_eval.stats[ind]))
-             # info_str.append(coco_eval.stats[ind])
- 
--        return info_str
-+        return info_str
-\ No newline at end of file
 diff --git a/lib/dataset/COCOKeypoints.py b/lib/dataset/COCOKeypoints.py
-index 9957720..f380492 100644
+index 9957720..0a2b562 100644
 --- a/lib/dataset/COCOKeypoints.py
 +++ b/lib/dataset/COCOKeypoints.py
-@@ -1,10 +1,3 @@
--# ------------------------------------------------------------------------------
--# Copyright (c) Microsoft
--# Licensed under the MIT License.
--# Written by Bin Xiao (leoxiaobin@gmail.com)
--# Modified by Bowen Cheng (bcheng9@illinois.edu)
--# ------------------------------------------------------------------------------
--
- from __future__ import absolute_import
- from __future__ import division
- from __future__ import print_function
-@@ -14,8 +7,8 @@ import logging
+@@ -14,8 +14,8 @@ import logging
  import numpy as np
  
  import pycocotools
@@ -138,44 +74,26 @@ index 9957720..f380492 100644
  
  
  logger = logging.getLogger(__name__)
-@@ -148,4 +141,4 @@ class CocoKeypoints(CocoDataset):
-             'got {} vs {}.'.format(
-                 len(heatmap_generator), len(joints_generator)
-             )
--        return len(heatmap_generator)
-+        return len(heatmap_generator)
-\ No newline at end of file
 diff --git a/lib/dataset/__init__.py b/lib/dataset/__init__.py
-index 1d32d71..9ac170a 100644
+index 1d32d71..e1fa8c2 100644
 --- a/lib/dataset/__init__.py
 +++ b/lib/dataset/__init__.py
-@@ -5,7 +5,7 @@
+@@ -5,7 +5,6 @@
  # ------------------------------------------------------------------------------
  
  from .COCOKeypoints import CocoKeypoints as coco
 -from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose
-+# from .CrowdPoseKeypoints import CrowdPoseKeypoints as crowd_pose
  from .build import make_dataloader
  from .build import make_test_dataloader
  
 diff --git a/lib/dataset/build.py b/lib/dataset/build.py
-index 5b45ce3..0a1d77d 100644
+index 5b45ce3..f443b56 100644
 --- a/lib/dataset/build.py
 +++ b/lib/dataset/build.py
-@@ -1,24 +1,13 @@
--# ------------------------------------------------------------------------------
--# Copyright (c) Microsoft
--# Licensed under the MIT License.
--# Written by Bin Xiao (leoxiaobin@gmail.com)
--# Modified by Bowen Cheng (bcheng9@illinois.edu)
--# ------------------------------------------------------------------------------
--
- from __future__ import absolute_import
- from __future__ import division
- from __future__ import print_function
+@@ -11,14 +11,11 @@ from __future__ import print_function
  
  import torch.utils.data
--
+ 
 -from .COCODataset import CocoDataset as coco
 -from .COCOKeypoints import CocoKeypoints as coco_kpt
 -from .CrowdPoseDataset import CrowdPoseDataset as crowd_pose
@@ -192,87 +110,96 @@ index 5b45ce3..0a1d77d 100644
  
  
  def build_dataset(cfg, is_train):
-diff --git a/lib/dataset/target_generators/target_generators.py b/lib/dataset/target_generators/target_generators.py
-index e8e3165..db9bd49 100644
---- a/lib/dataset/target_generators/target_generators.py
-+++ b/lib/dataset/target_generators/target_generators.py
-@@ -1,10 +1,3 @@
--# ------------------------------------------------------------------------------
--# Copyright (c) Microsoft
--# Licensed under the MIT License.
--# Written by Bin Xiao (leoxiaobin@gmail.com)
--# Modified by Bowen Cheng (bcheng9@illinois.edu)
--# ------------------------------------------------------------------------------
--
- from __future__ import absolute_import
- from __future__ import division
- from __future__ import print_function
-@@ -112,4 +105,4 @@ class JointsGenerator():
-                         visible_nodes[i][tot] = \
-                             (y * output_res + x, 1)
-                     tot += 1
--        return visible_nodes
-+        return visible_nodes
-\ No newline at end of file
-diff --git a/lib/dataset/transforms/build.py b/lib/dataset/transforms/build.py
-index 6b18320..5de3d02 100644
---- a/lib/dataset/transforms/build.py
-+++ b/lib/dataset/transforms/build.py
-@@ -1,10 +1,3 @@
--# ------------------------------------------------------------------------------
--# Copyright (c) Microsoft
--# Licensed under the MIT License.
--# Written by Bin Xiao (leoxiaobin@gmail.com)
--# Modified by Bowen Cheng (bcheng9@illinois.edu)
--# ------------------------------------------------------------------------------
--
- from __future__ import absolute_import
- from __future__ import division
- from __future__ import print_function
-@@ -82,4 +75,4 @@ def build_transforms(cfg, is_train=True):
-         ]
-     )
- 
--    return transforms
-+    return transforms
-\ No newline at end of file
-diff --git a/lib/dataset/transforms/transforms.py b/lib/dataset/transforms/transforms.py
-index 0be0ecc..2fbe4d8 100644
---- a/lib/dataset/transforms/transforms.py
-+++ b/lib/dataset/transforms/transforms.py
-@@ -1,10 +1,3 @@
--# ------------------------------------------------------------------------------
--# Copyright (c) Microsoft
--# Licensed under the MIT License.
--# Written by Bin Xiao (leoxiaobin@gmail.com)
--# Modified by Bowen Cheng (bcheng9@illinois.edu)
--# ------------------------------------------------------------------------------
--
- from __future__ import absolute_import
- from __future__ import division
- from __future__ import print_function
-@@ -179,4 +172,4 @@ class RandomAffineTransform(object):
-             image, mat_input, (self.input_size, self.input_size)
-         )
- 
--        return image, mask, joints
-+        return image, mask, joints
-\ No newline at end of file
 diff --git a/lib/models/__init__.py b/lib/models/__init__.py
-index 11df676..7c5eea1 100644
+index 11df676..a98ab6f 100644
 --- a/lib/models/__init__.py
 +++ b/lib/models/__init__.py
-@@ -8,4 +8,4 @@ from __future__ import absolute_import
+@@ -8,4 +8,3 @@ from __future__ import absolute_import
  from __future__ import division
  from __future__ import print_function
  
 -import models.pose_higher_hrnet
-+# import models.pose_higher_hrnet
 diff --git a/lib/utils/transforms.py b/lib/utils/transforms.py
-index 8f366d9..be4faaf 100644
+index 8f366d9..e705ea0 100644
 --- a/lib/utils/transforms.py
 +++ b/lib/utils/transforms.py
-@@ -186,7 +186,6 @@ def resize_align_multi_scale(image, input_size, current_scale, min_scale):
+@@ -152,33 +152,67 @@ def resize(image, input_size):
+     return image_resized, center, scale
+ 
+ 
+-def get_multi_scale_size(image, input_size, current_scale, min_scale):
++def get_nearest_boader(value, value_list):
++    value_list = sorted(value_list)
++    if value_list[0] > value:
++        print("warning:{}->{}".format(value, value_list[0]))
++        return value_list[0]
++    if value_list[-1] < value:
++        print("warning:{}->{}".format(value, value_list[-1]))
++        return value_list[-1]
++    left = 0
++    right = len(value_list)
++    while left < right:
++        mid = (right - left) // 2 + left
++        if value_list[mid] == value:
++            return value
++        elif value_list[mid] < value:
++            left = mid + 1
++        elif value_list[mid] > value:
++            right = mid
++
++    if left + 1 < len(value_list):
++        if abs(value_list[left] - value) > abs(value_list[left + 1] - value):
++            return value_list[left + 1]
++    return value_list[left]
++
++
++def get_multi_scale_size(image, input_size, current_scale, min_scale, scale_list):
+     h, w, _ = image.shape
+     center = np.array([int(w / 2.0 + 0.5), int(h / 2.0 + 0.5)])
+ 
+     # calculate the size for min_scale
+-    min_input_size = int((min_scale * input_size + 63)//64 * 64)
++    min_input_size = int((min_scale * input_size + 63) // 64 * 64)
++
+     if w < h:
+         w_resized = int(min_input_size * current_scale / min_scale)
+-        h_resized = int(
+-            int((min_input_size/w*h+63)//64*64)*current_scale/min_scale
++        assert w_resized == 512
++        h_resized_ori = int(
++            int((min_input_size / w * h + 63) // 64 * 64) * current_scale / min_scale
+         )
++        # change h_resized to nearest value in scale_list
++        h_resized = get_nearest_boader(h_resized_ori, scale_list)
++
+         scale_w = w / 200.0
+         scale_h = h_resized / w_resized * w / 200.0
+     else:
+         h_resized = int(min_input_size * current_scale / min_scale)
+-        w_resized = int(
+-            int((min_input_size/h*w+63)//64*64)*current_scale/min_scale
++        assert h_resized == 512
++        w_resized_ori = int(
++            int((min_input_size / h * w + 63) // 64 * 64) * current_scale / min_scale
+         )
++        # change h_resized to nearest value in scale_list
++        w_resized = get_nearest_boader(w_resized_ori, scale_list)
++
+         scale_h = h / 200.0
+         scale_w = w_resized / h_resized * h / 200.0
+ 
+     return (w_resized, h_resized), center, np.array([scale_w, scale_h])
+ 
+ 
+-def resize_align_multi_scale(image, input_size, current_scale, min_scale):
++def resize_align_multi_scale(image, input_size, current_scale, min_scale, scale_list):
+     size_resized, center, scale = get_multi_scale_size(
+-        image, input_size, current_scale, min_scale
++        image, input_size, current_scale, min_scale, scale_list
+     )
+     trans = get_affine_transform(center, scale, 0, size_resized)
+ 
+@@ -186,7 +220,6 @@ def resize_align_multi_scale(image, input_size, current_scale, min_scale):
          image,
          trans,
          size_resized
