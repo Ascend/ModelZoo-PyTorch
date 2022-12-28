@@ -217,13 +217,14 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
 2. 开始推理验证。
 
-    1. 使用ais-infer工具进行推理。  
-        查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+    1. 安装ais_bench推理工具。  
+        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
     2. 执行推理。
         ```
         mkdir out_data
-        python3.7 ${ais_infer_path}/ais_infer.py \
+		source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        python3.7 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --input=./pre_data/input_encoder/,./pre_data/input_enc_len,./pre_data/input_decoder \
             --output=./ \
