@@ -50,7 +50,7 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
   | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | ------------------ | ------------ |
   | output1  | FLOAT32  | 100 x 5            | ND           |
-  | output2  | INT64    | 100                | ND           |
+  | output2  | INT32    | 100                | ND           |
   | output3  | FLOAT32  | 100 x 80 X 28 X 28 | ND           |
 
 
@@ -84,6 +84,7 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 2. 安装依赖。
 
    ```
+   pip3 install -r requirements.txt
    pip3 install mmcv-full==1.2.5 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.9.0/index.html
    cd mmdetection/
    git apply ../mmdet_maskrcnn.patch
@@ -234,14 +235,28 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 
       ```
        python3 get_info.py jpg data/coco/val2017/ val2017_jpg.info
-       python3.7 mmdet_postprocess.py --bin_data_path=2022_12_13-04_18_31 --test_annotation=val2017_jpg.info --det_results_path=det_result --net_out_num=3 --net_input_height=1216 --net_input_width=1216 --ifShowDetObj
+       python3.7 mmdet_postprocess.py \
+           --bin_data_path=2022_12_20-14_15_48 \
+           --test_annotation=val2017_jpg.info \
+           --det_results_path=det_result \
+           --net_out_num=3 \
+           --net_input_height=1216 \
+           --net_input_width=1216 \
+           --ifShowDetObj \
+           --val2017_json_path=./data/coco/annotations/instances_val2017.json
+
       ```
 
       - 参数说明：
-
-        - result：为生成推理结果所在路径  
-        - det_results_path：后处理结果输出目录
+        - bin_data_path：为生成推理结果所在路径  
+        - test_annotation：图片标签信息
+        - det_results_path：检测结果路径
+        - net_out_num：模型输出结果个数
+        - net_input_height：模型输入图像高
+        - net_input_width：模型输入图像宽
         - ifShowDetObj：在图片上画出后处理结果
+        - val2017_json_path：数据集标签文件信息
+
 
    4. 性能验证。
 
@@ -255,6 +270,6 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-| 310P3     |        1         |    coco    |    bbox map:0.59 segm map50 0.554        |       11.3 FPS         |
+| 芯片型号 | Batch Size | 数据集 | 基准精度 | 基准性能 | 精度 | 性能 |
+| -------- | ---------- | ------ | ------- | -------- | ---- | ---- |
+| 310P3    |      1     |  coco  | bbox map50: 0.588; segm map50: 0.557 | 4.612 fps | bbox map50: 0.59; segm map50: 0.554 | 11.3 fps |
