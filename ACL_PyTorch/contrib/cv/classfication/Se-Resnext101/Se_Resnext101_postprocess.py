@@ -19,31 +19,6 @@ import json
 import numpy as np
 import time
 
-np.set_printoptions(threshold=sys.maxsize)
-
-LABEL_FILE = "HiAI_label.json"
-
-
-def gen_file_name(img_name):
-    full_name = img_name.split('/')[-1]
-    index = full_name.rfind('.')
-    return full_name[:index]
-
-
-def cre_groundtruth_dict(gtfile_path):
-    """
-    :param filename: file contains the imagename and label number
-    :return: dictionary key imagename, value is label number
-    """
-    img_gt_dict = {}
-    for gtfile in os.listdir(gtfile_path):
-        if (gtfile != LABEL_FILE):
-            with open(os.path.join(gtfile_path, gtfile), 'r') as f:
-                gt = json.load(f)
-                ret = gt["image"]["annotations"][0]["category_id"]
-                img_gt_dict[gen_file_name(gtfile)] = ret
-    return img_gt_dict
-
 
 def cre_groundtruth_dict_fromtxt(gtfile_path):
     """
@@ -69,24 +44,16 @@ def load_statistical_predict_result(filepath):
     output:
     n_label:numble of label
     data_vec: the probabilitie of prediction in the 1000
-    :return: probabilities, numble of label, in_type, color
+    :return: probabilities, numble of label
     """
     with open(filepath, 'r')as f:
         data = f.readline()
         temp = data.strip().split(" ")
         n_label = len(temp)
-        if data == '':
-            n_label = 0
         data_vec = np.zeros((n_label), dtype=np.float32)
-        in_type = ''
-        color = ''
-        if n_label == 0:
-            in_type = f.readline()
-            color = f.readline()
-        else:
-            for ind, prob in enumerate(temp):
-                data_vec[ind] = np.float32(prob)
-    return data_vec, n_label, in_type, color
+        for ind, prob in enumerate(temp):
+            data_vec[ind] = np.float32(prob)
+    return data_vec, n_label
 
 
 def create_visualization_statistical_result(prediction_file_path,
