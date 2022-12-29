@@ -17,6 +17,7 @@ import sys
 sys.path.append("./pycls")
 import numpy as np
 import cv2
+import tqdm
 
 from pycls.datasets import transforms
 
@@ -40,16 +41,13 @@ def trans(im):
 	return im
 
 def EffnetB1_preprocess(src_path, save_path):
-	i = 0
 	classes = os.listdir(src_path)
-	for classname in classes:
+	for classname in tqdm.tqdm(classes):
 		dirs = os.path.join(src_path, classname)
 		save_dir = os.path.join(save_path, classname)
 		if not os.path.isdir(save_dir):
 			os.makedirs(os.path.realpath(save_dir))
 		for img in os.listdir(dirs):
-			i = i + 1
-			print(img, "===", i)
 			img_path = os.path.join(dirs, img)
 			im = cv2.imread(img_path)
 			im = trans(im)
