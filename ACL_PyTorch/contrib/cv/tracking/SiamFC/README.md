@@ -195,9 +195,9 @@ SiamFC是视觉目标跟踪领域首次采用孪生网络方法的模型，该�
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
@@ -210,8 +210,8 @@ SiamFC是视觉目标跟踪领域首次采用孪生网络方法的模型，该�
         执行ais_infer工具进行性能验证。
    
         ```
-        python3.7 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py  --model ./om/exemplar_bs1.om --input pre_dataset1/ --device 0 --batchsize 1
-        python3.7 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py  --model ./om/search_bs1.om --input pre_dataset2/ --device 0 --batchsize 1
+        python3.7 -m ais_bench  --model ./om/exemplar_bs1.om --input pre_dataset1/ --device 0 --batchsize 1
+        python3.7 -m ais_bench  --model ./om/search_bs1.om --input pre_dataset2/ --device 0 --batchsize 1
         ```
    
         -   参数说明：
@@ -221,9 +221,7 @@ SiamFC是视觉目标跟踪领域首次采用孪生网络方法的模型，该�
              -   --output：推理结果所在路径。
              -   --outfmt：推理结果文件格式。
              -   --batchsize：不同的batchsize。
-   
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
         
    3. 精度验证。
    
