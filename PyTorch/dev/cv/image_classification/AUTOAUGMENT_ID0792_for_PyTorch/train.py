@@ -122,7 +122,7 @@ def train(args, train_loader, model, criterion, optimizer, epoch, scheduler=None
             loss.backward()
         optimizer.step()
 
-        if epoch == 1 and i < 3:
+        if epoch == 0 and i < 3:
             print("step_time: ", time.time() - start_time)
     log = OrderedDict([
         ('loss', losses.avg),
