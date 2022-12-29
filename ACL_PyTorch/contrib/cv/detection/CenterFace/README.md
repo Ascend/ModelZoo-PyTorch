@@ -78,9 +78,6 @@
    mv centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py pth2onnx.py move.sh ./center-face/src
    ```
 
-   
-
-
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
@@ -101,18 +98,21 @@
 2. 获取权重文件model_best.pth。放在center-face/src/目录下。
 3. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   在center-face/src路径下，执行centerface_pth_preprocess.py脚本，完成预处理。
+   1. 在center-face/src路径下，执行以下命令编译nms。
+      ```
+      cd lib/external/
+      python setup.py build_ext --inplace
+      cd ../../
+      ```
+   2. 执行centerface_pth_preprocess.py脚本，完成预处理。
+      ```
+      python centerface_pth_preprocess.py ../data ../after_images/
+      ```
+      - 参数说明：
+         - ../data:  原始数据验证集所在路径。
+         - ../after_images/:   输出的二进制文件保存路径。
 
-   ```
-   python centerface_pth_preprocess.py ../data ../after_images/
-   ```
-
-   参数说明：
-
-   - ../data:  原始数据验证集所在路径。
-   - ../after_images/:   输出的二进制文件保存路径。
-
-   运行成功后，生成after_images文件夹，after_images目录下生成的是供模型推理的bin文件。
+      运行成功后，生成after_images文件夹，after_images目录下生成的是供模型推理的bin文件。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -222,13 +222,16 @@
          python centerface_pth_postprocess.py
          ```
 
-      2. 精度验证。在center-face/evaluate目录下，执行evaluation.py文件进行精度验证。
+      2. 在center-face/evaluate目录下，执行以下命令编译bbox。
+         ```
+         python setup.py build_ext --inplace
+         ```
+
+      3. 精度验证。在center-face/evaluate目录下，执行evaluation.py文件进行精度验证。
 
          ```
          python evaluation.py
          ```
-
-      
 
    5. 性能验证。
 
