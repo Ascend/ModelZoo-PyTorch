@@ -72,7 +72,7 @@ export RANK=0
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 12 \
       --batch_size=${batch_size} --data_root=$data_path --gpu-ids ${device_id} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
-python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
+python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  test/work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
       --gpu-ids ${device_id} --out  results_solo.pkl --eval segm --data_root=$data_path >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
