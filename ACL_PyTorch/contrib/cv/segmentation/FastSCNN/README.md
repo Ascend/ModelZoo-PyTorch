@@ -218,8 +218,7 @@ FastSCNN：快速分割卷积神经网络（Fast-SCNN），一种基于高分辨
              - --output_dirname 推理结果保存的文件夹，和上个参数配合使用，推理文件保存在./output/output_dirname文件夹下。
              - --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
              - --batchsize：om模型的batch_size。
-
-        执行ais_bench推理工具请选择与运行环境架构相同的命令。参数详情请参见--help命令。  
+ 
 		推理后的输出默认在当前目录result下。
 
    3. 精度验证。

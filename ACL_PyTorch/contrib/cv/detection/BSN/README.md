@@ -247,12 +247,6 @@ code_path=ACL_PyTorch/contrib/cv/detection
 
    a. 安装ais_bench推理工具。
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
-
-   ```
-   chmod u+x 
-   ```
-
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
 
    b. 执行推理。

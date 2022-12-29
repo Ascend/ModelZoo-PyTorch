@@ -225,7 +225,7 @@
    2. 执行推理。
 
       ```
-      python3 estimate_per.py   --interpreter='python3 ${tool_path}/ais_infer.py' --om_path=./srgan_bs1.om --src_path=./preprocess_data/ --save_path=./result/bs1  --batchsize=1 --device=0  
+      python3 estimate_per.py   --interpreter='python3 -m ais_bench' --om_path=./srgan_bs1.om --src_path=./preprocess_data/ --save_path=./result/bs1  --batchsize=1 --device=0  
       ```
 
       - 参数说明：
