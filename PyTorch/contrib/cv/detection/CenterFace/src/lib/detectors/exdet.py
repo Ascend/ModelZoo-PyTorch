@@ -43,7 +43,8 @@ import numpy as np
 from progress.bar import Bar
 import time
 import torch
-import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
 from external.nms import soft_nms
 from models.decode import exct_decode, agnex_ct_decode
 from models.utils import flip_tensor
