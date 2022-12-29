@@ -36,18 +36,6 @@
   ```
 
 
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
@@ -152,7 +140,7 @@
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件 [snapshot_6.pth.tar](https://pan.baidu.com/s/15gzQpHGflKB9QcoEZ6XbYQ)。
+   1. 获取权重文件 [snapshot_6.pth.tar](https://pan.baidu.com/s/1YGAciTdPcD8UO91Ni-k6bw?pwd=hgyw)。
 
    2. 导出onnx文件。
 
