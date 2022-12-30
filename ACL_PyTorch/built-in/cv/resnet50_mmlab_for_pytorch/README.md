@@ -1,4 +1,4 @@
-# ResNet50_bs24-推理指导
+# ResNet50_mmlab-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -11,9 +11,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
   ******
 
@@ -37,14 +35,14 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
   | 输入数据 | 数据类型     | 大小               | 数据排布格式 |
   |----------|------------------| ------------------------- | ------------ |
-  | input    | RGB_INT8 | 24 x 32 x 32 x 3 | NHWC         |
+  | input    | RGB_INT8 | BATCH_SIZE x 3 x 32 x 32 | NHWC         |
 
 
 - 输出数据
 
   | 输出数据 | 大小        | 数据类型 | 数据排布格式 |
   |-----------| -------- | -------- | ------------ |
-  | output  | 24 x 100 | FLOAT32  | ND           |
+  | output  | BATCH_SIZE x 100 | FLOAT32  | ND           |
 
 
 
@@ -56,7 +54,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
 | 配套                                                         | 版本      | 环境准备指导                                                 |
 | ------------------------------------------------------------ |---------| ------------------------------------------------------------ |
-| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.8.0   | -                                                            |
@@ -95,7 +93,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    ```
    下载cifar100数据集(http://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz),放于resnet50_bs24_for_pytorch目录下
    解压缩
-   tar xvf cifar-100-python.tar.gz 
+   tar -xvf cifar-100-python.tar.gz 
    ```
    解压缩后生成文件夹cifar-100-python,推理只使用其中的test文件。
    
@@ -103,11 +101,13 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
    数据预处理将原始数据集转换为模型输入的数据。
 
+   执行**preprocess_resnet50_pytorch.py**脚本，完成预处理
    ```
    python3 preprocess_resnet50_pytorch.py ./cifar-100-python/test ./bin_data
-
-   运行成功后,同一目录下生成cifar100数据集的可视化数据集pic,bin格式的数据集bin_data以及label文件img_label.txt
    ```
+   运行成功后,同一目录下生成cifar100数据集的可视化数据集pic,bin格式的数据集bin_data以及label文件img_label.txt
+   
+
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -164,15 +164,10 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
       3. 执行ATC命令。
          ```
-         bash resnet_atc.sh ./end2end.onnx Ascend310P3
+         atc --model=end2end.onnx --framework=5 --output=resnet_bs1 --input_format=NCHW --log=error --input_shape="input:1,3,32,32" --insert_op_conf=aipp.conf --soc_version=Ascend${chip_name}
          ```
 
-         - 参数说明：
-           ./end2end.onnx，onnx文件所在路径
-
-           Ascend310P3，给soc_version传参数，该参数支持Ascend310和Ascend310P[1-4]
-
-           运行成功后在目录下生成**resnet_bs24.om**模型文件。
+           运行成功后在目录下生成**resnet_bs1.om**模型文件。
 
 
 
@@ -186,7 +181,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    b.  执行推理。
 
       ```
-      python3 -m ais_bench --model ./resnet_bs24.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
+      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs1.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
 
       ```
 
@@ -197,7 +192,6 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
            -   output：推理结果输出路径。
            -   outfmt：输出数据的格式。
            -   output_dirname:推理结果输出子文件夹。
-		...
 
       >**说明：** 
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
@@ -209,12 +203,12 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       ```
       python3 postprocess_resnet50_pytorch.py  ./dst/  ./img_label.txt ./ result.json
       ```
+      - 参数说明
 
-      ./dst/：为生成推理结果所在路径  
-    
-      ./img_label.txt：为标签数据
-    
-      result.json：为生成结果文件,位于同一目录下
+        - ./dst：为生成推理结果所在路径  
+        - ./img_label.txt：为标签数据
+        - ./: 存放结果的路径
+        - result.json：为生成结果文件
 
 
    d.  性能验证。
@@ -222,9 +216,13 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 -m ais_bench --model ./resnet_bs24.om --loop 1000 --output ./ --outfmt BIN --batchsize 24
+      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs1.om --loop 20 --batchsize 1
 
       ```
+      - 参数说明
+        - --model: om模型s
+        - --loop: 循环次数
+        - --batchsize: 模型batch size
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -233,4 +231,9 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
 | 芯片型号  | Batch Size | 数据集      | 精度    | 性能      |
 |-------|------------|----------|-------|---------|
-| 310P3 | 24         | cifar100 | 79.9% | 9336fps |
+| 310P3 | 1         | cifar100 | 79.9% | 1137 |
+| 310P3 | 4         | cifar100 | 79.9% | 5308 |
+| 310P3 | 8         | cifar100 | 79.9% | 7517 |
+| 310P3 | 16         | cifar100 | 79.9% | 9329 |
+| 310P3 | 32         | cifar100 | 79.9% | 6790 |
+| 310P3 | 64         | cifar100 | 79.9% | 6374 |
