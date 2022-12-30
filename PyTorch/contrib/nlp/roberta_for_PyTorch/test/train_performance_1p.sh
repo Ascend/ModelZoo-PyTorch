@@ -90,7 +90,7 @@ nohup taskset -c 0-23 python3.7 -u ${cur_path}/train.py $data_path \
     --restore-file $ROBERTA_PATH \
     --max-positions 512 \
     --batch-size $MAX_SENTENCES \
-    --max-tokens 4400 \
+    --max-tokens 8800 \
     --pad-length 70 \
     --task sentence_prediction \
     --reset-optimizer --reset-dataloader --reset-meters \
