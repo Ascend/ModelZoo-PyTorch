@@ -90,7 +90,7 @@ nohup python3.7 ./pytorch_resnet50_apex.py \
     --warmup 5 \
     --label-smoothing=0.1 \
     --epochs ${train_epochs} \
-    --evaluate \
+    --evaluate True \
     --resume ${checkpoint} \
     --optimizer-batch-size 512 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
