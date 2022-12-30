@@ -149,6 +149,10 @@ def main():
     print(args)
     print("=======================")
     if args.bin_mode:
+        options = {}
+        options["NPU_FUZZY_COMPILE_BLACKLIST"] = "MaxPoolGradWithArgmaxV1,MaxPoolWithArgmaxV1"
+        torch.npu.set_option(options)
+        print('NPU_FUZZY_COMPILE_BLACKLIST:',options["NPU_FUZZY_COMPILE_BLACKLIST"])
         torch.npu.set_compile_mode(jit_compile=False)
 
     if args.npu is None:
