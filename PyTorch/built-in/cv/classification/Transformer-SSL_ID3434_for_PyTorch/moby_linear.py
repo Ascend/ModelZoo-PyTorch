@@ -35,6 +35,10 @@ try:
 except ImportError:
     amp = None
 
+option = {}
+option["NPU_FUZZY_COMPILE_BLACKLIST"] = "ConcatD"
+torch.npu.set_option(option)
+
 
 def parse_option():
     parser = argparse.ArgumentParser('Swin Transformer training and evaluation script', add_help=False)
