@@ -59,7 +59,7 @@ opt.device = torch.device("cuda:" + str(opt.gpus[0]) if opt.gpus[0] >= 0 else "c
 
 def get_output_data(dump_dir, idx, dtype=np.float32):
     output_shape = [1, 17, 64, 48]
-    input_file = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
+    input_file = os.path.join(dump_dir, "{:0>12d}_0.bin".format(idx))
     input_data = np.fromfile(input_file, dtype=dtype).reshape(output_shape)
     return input_data
 
