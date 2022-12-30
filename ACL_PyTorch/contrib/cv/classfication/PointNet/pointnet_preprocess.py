@@ -19,7 +19,7 @@ import os
 import json
 import torch
 import sys
-from tqdm import tqdm
+
 
 def get_file(root):
     catfile = os.path.join(root, 'synsetoffset2category.txt')
@@ -62,10 +62,10 @@ def get_file(root):
     return datapath
 
 
-def preprocess(datapath, save_path):
+def preprocess_bs1(datapath, save_path):
     npoints = 2500
     total = len(datapath)
-    for index in tqdm(range(total)):
+    for index in range(total):
         fn = datapath[index]
         point_set = np.loadtxt(fn[1]).astype(np.float32)
         seg = np.loadtxt(fn[2]).astype(np.int64)
@@ -88,5 +88,4 @@ if __name__ == '__main__':
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     datapath = get_file(root)
-    preprocess(datapath, save_path)
-   
+    preprocess_bs1(datapath, save_path)
