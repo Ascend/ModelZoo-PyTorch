@@ -249,11 +249,11 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
 
    3. 性能验证。
 
-      1. 使用ais-infer工具进行验证。
+      1. 安装ais_bench推理工具。
 
-         ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)。
+         请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-      2. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      2. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
          ```
          python -m ais_bench --model=yolov3-sim.om --loop=20 --batchsize=1

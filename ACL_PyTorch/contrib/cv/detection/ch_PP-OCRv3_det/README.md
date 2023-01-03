@@ -219,7 +219,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
       ```
       python3 ch_PP-OCRv3_det_ais_infer.py \
-          --ais_infer=${path_to_ais-infer}/ais_infer.py \
+          --ais_infer=${path_to_ais_bench}/ais_infer.py \
           --model=./ch_PP-OCRv3_det_bs${batchsize}.om \
           --input=./prep_data_dir/img_bin \
           --output=results_bs${batchsize}
@@ -230,7 +230,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
            -   --model：om模型路径。
            -   --input：预处理后的numpy文件存放路径。
            -   --output:推理结果存放路径
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+      `${path_to_ais_bench}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
       推理完成后结果保存在`ch_PP-OCRv3_det/results_bs${batchsize}`目录下。
 
 

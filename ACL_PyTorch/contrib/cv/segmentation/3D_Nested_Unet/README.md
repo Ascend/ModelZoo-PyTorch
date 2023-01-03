@@ -242,15 +242,15 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
       mkdir  $pwd_path/result/
-      python3 ${ais_infer_path}/ais_infer.py --model=./nnunetplusplus.om --input=$pwd_path/input_bins/  --output=./$pwd_path/result/ --output_dirname=bs1 --outfmt=BIN  --batchsize=1 --device=0  
+      python3 -m ais_bench --model=./nnunetplusplus.om --input=$pwd_path/input_bins/  --output=./$pwd_path/result/ --output_dirname=bs1 --outfmt=BIN  --batchsize=1 --device=0  
       ```
 
       - 参数说明：
@@ -263,8 +263,6 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
       推理后的输出默认在当前目录$pwd_path/result/bs1下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -280,7 +278,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
       > 注：可执行以下命令进行一键式进行所有数据集的前后处理以及npu推理。
       >```
-      >python3 infer.py  --environment=$pwd_path/ --interpreter=python3 --npu_interpreter="python3 ${ais_infer_path}/ais_infer.py" --om_path=./nnunetplusplus.om --device=0
+      >python3 infer.py  --environment=$pwd_path/ --interpreter=python3 --npu_interpreter="python3 ${ais_bench_path}/ais_infer.py" --om_path=./nnunetplusplus.om --device=0
       >```
       >
 
@@ -293,10 +291,10 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
       实验的精度将记录在$pwd_path/RESULTS_FOLDER/nnUNet/3d_fullres/Task003_Liver/nnUNetPlusPlusTrainerV2__nnUNetPlansv2.1/fold_0/validation_raw/summary.json中。
 3. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     
       ```python
-      python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device=${device_id} --outfmt=BIN
+      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device=${device_id} --outfmt=BIN
       ```
 
       - 参数说明：

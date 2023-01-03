@@ -225,7 +225,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
       在当前目录下运行以下指令
       ```
       python3 ch_server_rec_ais_infer.py \
-          --ais_infer=${path_to_ais-infer}/ais_infer.py \
+          --ais_infer=${path_to_ais_bench}/ais_infer.py \
           --model=./ch_ppocr_server_rec_bs${batchsize}.om \
           --inputs=./pre_data \
           --batchsize=${batchsize}

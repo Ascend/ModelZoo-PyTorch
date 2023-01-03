@@ -241,7 +241,7 @@ python3.7 -m ais_bench --model ../Simclr_model_bs1.om --input "../prep_data/" --
 调用脚本Simclr_postprocess.py获取，可以获得Accuracy数据，结果保存在log文件中。
 
 ```
- python3.7 Simclr_postprocess.py  ./ais_infer/result/2022_07_25-10_41_40/ > result_bs1.log
+ python3.7 Simclr_postprocess.py  ./ais_bench/result/2022_07_25-10_41_40/ > result_bs1.log
 ```
 result/2022_07_25-10_41_40/：为生成推理结果所在路径  
     

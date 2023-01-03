@@ -147,7 +147,6 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 
 ·执行命令
 ```
-    cd tools/ais-bench_workload/tool/ais_infer
     mkdir -p /home/ylz/BigGAN/outputs_bs1_om
     python3.7 -m ais_bench --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 
 ```

@@ -187,7 +187,7 @@
 
 2. 离线推理
 
-    进入 ais_infer.py 所在目录并执行以下命令对预处理数据推理，将推理结果保存在开源仓目录下。
+    执行以下命令对预处理数据推理，将推理结果保存在开源仓目录下。
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -228,9 +228,8 @@
 
 4. 性能验证
 
-    进入 ais_infer.py 所在目录，纯推理100次，然后通过日志获取模型的性能指标。
+    纯推理100次，然后通过日志获取模型的性能指标。
     ```shell
-    cd ais_infer/
     mkdir tmp_out   # 提前创建临时目录用于存放纯推理输出
     python3.7 -m ais_bench --model /path/to/model --output ./tmp_out --outfmt BIN  --batchsize ${bs} --loop 100
     rm -r tmp_out   # 删除临时目录

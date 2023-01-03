@@ -24,7 +24,7 @@ def ais_infer(bs):
                   [512, 896], [512, 960], [576, 512], [640, 512], [704, 512], [768, 512], [832, 512], [896, 512],
                   [960, 512]]
     for h, w in scale_list:
-        os.system('python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py '
+        os.system('python3 -m ais_bench '
                   '--model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om '
                   '--input=./prep_output_dir/shape_{1}x{2}/ '
                   '--output=./bs1_dir --outfmt BIN --batchsize {0} --dymHW={1},{2} '
@@ -32,7 +32,7 @@ def ais_infer(bs):
         os.system(
             'cp -r bs1_dir/shape_{0}x{1}/*.bin new_bs1_dir/'.format(h, w))
 
-        os.system('python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py '
+        os.system('python3 -m ais_bench '
                   '--model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om '
                   '--input=./prep_output_flip_dir/shape_{1}x{2}/ '
                   '--output=./ --outfmt BIN --batchsize {0} --dymHW={1},{2} '
@@ -43,7 +43,7 @@ def ais_infer(bs):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='ais-infer')  # task process paramater
+        description='ais_bench')  # task process paramater
     parser.add_argument('--bs', default=1,
                         type=int, help='batchsize')
     args = parser.parse_args()

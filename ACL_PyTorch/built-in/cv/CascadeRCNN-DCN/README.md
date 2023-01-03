@@ -236,7 +236,7 @@
 
         
     ```
-    python ais_infer.py --model ./cascade.om\  
+    python -m ais_bench --model ./cascade.om\  
                                   --input ./val2017_bin/\ 
                                   --output ./\ 
                                   --batchsize 1\
@@ -254,8 +254,6 @@
       - --output_dirname: 输出结果子目录
         推理后的输出默认在当前目录result下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -307,7 +305,7 @@
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
     ```
-    python ais_infer.py --model ./cascade.om --loop 100 --batchsize 1
+    python -m ais_bench --model ./cascade.om --loop 100 --batchsize 1
     ```
 
     - 参数说明：

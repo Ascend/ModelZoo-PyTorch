@@ -207,7 +207,7 @@ SiamFC是视觉目标跟踪领域首次采用孪生网络方法的模型，该�
        python3 get_perf_data.py ./pre_dataset1 ./pre_dataset2
         ```
 
-        执行ais_infer工具进行性能验证。
+        执行ais_bench工具进行性能验证。
    
         ```
         python3.7 -m ais_bench  --model ./om/exemplar_bs1.om --input pre_dataset1/ --device 0 --batchsize 1
@@ -228,7 +228,7 @@ SiamFC是视觉目标跟踪领域首次采用孪生网络方法的模型，该�
       调用wholeprocess.py脚本进行精度验证，由于此网络性能验证时需要两个模型交替运行，所以使用脚本进行推理。
    
       ```
-      python3 wholeprocess.py ./OTB2015/ ./pre_dataset ./dataset_info ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py ./om/exemplar_bs1.om ./om/search_bs1.om ${batchsize}
+      python3 wholeprocess.py ./OTB2015/ ./pre_dataset ./dataset_info ./tools/ais-bench_workload/tool/ais_bench/ais_infer.py ./om/exemplar_bs1.om ./om/search_bs1.om ${batchsize}
       ```
    
       - 参数说明：
@@ -236,7 +236,7 @@ SiamFC是视觉目标跟踪领域首次采用孪生网络方法的模型，该�
         - ./OTB2015/：数据地址。
         - ./pre_dataset：数据预处理的保存地址。
         - ./dataset_info： 数据信息的保存地址。
-        - ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py：推理工具所在路径。
+        - ./tools/ais-bench_workload/tool/ais_bench/ais_infer.py：推理工具所在路径。
         - ./om/exemplar_bs1.om：exemplar模型所在路径。
         - ./om/search_bs1.om：search_bs1模型所在路径。
         - ${batchsize}：不同的batchsize。

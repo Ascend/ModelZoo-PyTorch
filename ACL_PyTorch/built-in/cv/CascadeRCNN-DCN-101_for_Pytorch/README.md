@@ -236,7 +236,7 @@
 
         
     ```
-    python ais_infer.py --model ./cascadercnn.om\  
+    python -m ais_bench --model ./cascadercnn.om\  
                                   --input ./val2017_bin/\ 
                                   --output ./\ 
                                   --batchsize 1\

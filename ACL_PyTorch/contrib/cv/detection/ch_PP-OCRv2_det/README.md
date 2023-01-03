@@ -238,7 +238,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
       ```
       python3 ch_PP-OCRv2_det_ais_infer.py \
-          --ais_infer=${path_to_ais-infer}/ais_infer.py \
+          --ais_infer=${path_to_ais_bench}/ais_infer.py \
           --model=./ch_PP-OCRv2_det_bs${batchsize}.om \
           --inputs=./pre_data \
           --batchsize=${batchsize}
@@ -250,7 +250,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
            -   --inputs：输入数据集路径。
            -   --batchsize：om模型的batchsize。
 
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。。
+      `${path_to_ais_bench}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。。
 
       推理完成后结果保存在`ch_PP-OCRv2_det/results_bs${batchsize}`目录下。
 

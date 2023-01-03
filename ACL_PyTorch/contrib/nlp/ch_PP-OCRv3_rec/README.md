@@ -226,12 +226,12 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
       推理脚本命令格式如下：
       ```
-      bash ais_infer.sh ${ais_infer_path} ${imgW320_om} ${imgW620_om} ${bin_data} ${results_path} ${batchsize}
+      bash ais_infer.sh ${ais_bench_path} ${imgW320_om} ${imgW620_om} ${bin_data} ${results_path} ${batchsize}
       ```
 
       -   参数说明：
 
-           -   ${ais_infer_path}：ais_infer python脚本路径。
+           -   ${ais_bench_path}：ais_infer python脚本路径。
            -   ${imgW320_om}：imgW为320的om。
            -   ${imgW620_om}：imgW为620的om。
            -   ${bin_data}：bin数据路径。
@@ -241,7 +241,7 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
       推理脚本命令举例：
 
       ```
-      bash ais_infer.sh ./tools/ais_infer/ais_infer.py ./ch_PP-OCRv3_rec_dybs_320.om ./ch_PP-OCRv3_rec_dybs_620.om ./image_bin ./result_bs1 1
+      bash ais_infer.sh ./tools/ais_bench/ais_infer.py ./ch_PP-OCRv3_rec_dybs_320.om ./ch_PP-OCRv3_rec_dybs_620.om ./image_bin ./result_bs1 1
       ```
 
       命令运行结束后在`./result_bs1`目录下生成batchsize=1时的推理结果，获取其他batchsize的推理结果只需要在命令中修改`${results_path}`和`${batchsize}`两个参数即可。

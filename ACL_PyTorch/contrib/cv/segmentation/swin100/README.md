@@ -216,9 +216,7 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
     
     # 对预处理后的数据进行推理
     mkdir swin100/val_bs1_out/
-    cd ais_infer
     python3 -m ais_bench --model ../swin100/base_slide_bs1.om --input ../swin100/val_bin/ --output ../swin100/val_bs1_out/ --batchsize 1
-    cd ..
     ```
     参数说明：
     + --model: OM模型路径。
@@ -272,9 +270,7 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
     
     执行纯推理：
     ```shell
-    cd ais_infer
     python3 -m ais_bench --model ../swin100/base_slide_bs1.om --loop 100 --batchsize 1
-    cd ..
     ```
 
     执行完纯推理命令，程序会打印出与性能相关的指标：

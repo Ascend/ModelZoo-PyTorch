@@ -225,9 +225,7 @@ a.  安装ais_bench推理工具。
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    ```
-从tools中将ais_infer文件夹复制到与om模型同级的目录下
-cd ais_infer
-   ```
+
 
 b.  执行推理。
 
@@ -243,17 +241,14 @@ b.  执行推理。
 ```
    mkdir -p /home/houyw/Pointnetplus/out/bs1/part1
 
-   cd ais_infer
 
    python -m ais_bench  --model ../Pointnetplus_part1_bs1.om --input '/home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part1,/home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part1' --output '/home/houyw/Pointnetplus/out/bs1/part1' --outfmt BIN --loop 10 --batchsize 1
 
-   cd ..
 
    python pointnetplus_preprocess.py --preprocess_part 2 --save_path /home/houyw/Pointnetplus/modelnet40_processed/bs1/pointset_chg_part2 --save_path2 /home/houyw/Pointnetplus/modelnet40_processed/bs1/xyz_chg_part2 --data_loc /home/houyw/Pointnetplus/out/bs1/part1 --data_loc2 /home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part1
 
    mkdir -p /home/houyw/Pointnetplus/out/bs1/part2
 
-   cd ais_infer
 
    python -m ais_bench  --model ../Pointnetplus_part2_bs1.om --input '/home/houyw/Pointnetplus/modelnet40_processed/part1/xyz_chg_part2,/home/houyw/Pointnetplus/modelnet40_processed/part1/pointset_chg_part2' --output '/home/houyw/Pointnetplus/out/bs1/part2' --outfmt BIN --loop 10 --batchsize 1
 ```

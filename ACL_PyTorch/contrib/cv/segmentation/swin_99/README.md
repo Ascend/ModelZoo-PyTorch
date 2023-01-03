@@ -200,9 +200,8 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
 
 ## 推理验证
 
-1. 准备推理工具  
+1. 安装ais_bench推理工具  
 
-    本推理项目使用 [ais_bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
     请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 2. 离线推理  
@@ -215,9 +214,7 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
     
     # 对预处理后的数据进行推理
     mkdir swin99/val_bs1_out/
-    cd ais_infer
     python3 -m ais_bench --model ../swin99/base_slide_bs1.om --input ../swin99/val_bin/ --output ../swin99/val_bs1_out/ --batchsize 1
-    cd ..
     ```
     参数说明：
     + --model: OM模型路径。
@@ -271,9 +268,7 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
     
     执行纯推理：
     ```shell
-    cd ais_infer
     python3 -m ais_bench --model ../swin99/base_slide_bs1.om --loop 100 --batchsize 1
-    cd ..
     ```
 
     执行完纯推理命令，程序会打印出与性能相关的指标：

@@ -355,7 +355,6 @@ I3D是一种新的基于2D ConvNet 膨胀的双流膨胀3D ConvNet (I3D)。一�
          在已下载的源码包根目录下，执行如下命令：
 
          ```
-         cd tools/ais-bench_workload/tool/ais_infer/  # 移动至ais_bench推理工具所在目录 
          mkdir out_tmp  # 创建一个存储纯推理结果的临时目录
          python3 -m ais_bench --model ./i3d_nl_dot_bs1.om --output ./out_tmp --batchsize 1 --outfmt TXT --loop 5
          ```

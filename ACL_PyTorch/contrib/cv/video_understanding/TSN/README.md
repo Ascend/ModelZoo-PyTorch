@@ -370,8 +370,7 @@ yapf                  0.32.0
 
          在已下载的源码包根目录下，执行如下命令：
 
-         ```
-         cd tools/ais-bench_workload/tool/ais_infer/  # 移动至ais_bench推理工具所在目录 
+         ``` 
          mkdir out_tmp  # 创建一个存储纯推理结果的临时目录
          python3 -m ais_bench --model ../../../../tsn_bs1_710.om --output ./tmp_out --batchsize 1 --outfmt TXT --loop 5
          ```
@@ -399,7 +398,6 @@ yapf                  0.32.0
 
          ```
          mkdir result  # 创建一个存储真实数据推理结果的临时目录
-         cd tools/ais-bench_workload/tool/ais_infer/  # 移动至ais_bench推理工具所在目录 
          python3-m ais_bench --model ../../../../tsn_bs1_710.om --input ../../../../mmaction2/data/ucf101/out_bin_1/  --output ../../../../result/ --batchsize 1 --outfmt TXT 
          ```
 

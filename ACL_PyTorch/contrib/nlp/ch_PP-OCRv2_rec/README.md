@@ -227,7 +227,7 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
       ```
       python3 ch_PP-OCRv2_rec_ais_infer.py \
-          --ais_infer=${path_to_ais-infer}/ais_infer.py \
+          --ais_infer=${path_to_ais_bench}/ais_infer.py \
           --model=./ch_PP-OCRv2_rec_bs${batchsize}.om \
           --inputs=./pre_data \
           --batchsize=${batchsize}
@@ -239,7 +239,7 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
            -   --inputs：输入数据集路径。
            -   --batchsize：om模型输入的batchsize。
 
-      `${path_to_ais-infer}`为ais_infer.py脚本所在路径。`${batchsize}`表示不同batch的om模型。。
+      `${path_to_ais_bench}`为ais_infer.py脚本所在路径。`${batchsize}`表示不同batch的om模型。。
 
       推理完成后结果保存在`ch_PP-OCRv2_rec/results_bs${batchsize}`目录下。
 
