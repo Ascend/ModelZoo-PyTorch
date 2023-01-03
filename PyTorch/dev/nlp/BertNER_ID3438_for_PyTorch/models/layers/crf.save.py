@@ -31,26 +31,6 @@ import torch
 import torch.nn as nn
 from typing import List, Optional
 
-class NpuSlice(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, input, start=[], end=[]):
-        input_shape = list(input.shape)
-        pads = [None, ] * len(input_shape) * 2
-        strides = [1, ] * len(input_shape)
-        for i in range(len(input_shape)):
-            pads[2 * i] = start[i]
-            pads[2 * i + 1] = input_shape[i] - end[i]
-        ctx.pads = pads
-        result = torch.npu_indexing(input, start, end, strides)
-        return result
-    @staticmethod
-    def backward(ctx, grad):
-        pads = ctx.pads
-        self_grad = torch.npu_pad(grad, pads)
-        return self_grad, None, None
-
-npu_slice = NpuSlice.apply
-
 class CRF(nn.Module):
     """Conditional random field.
     This module implements a conditional random field [LMP01]_. The forward computation
@@ -79,8 +59,6 @@ class CRF(nn.Module):
             raise ValueError(f'invalid number of tags: {num_tags}')
         super().__init__()
         self.num_tags = num_tags
-        self.index1 = dict()
-        self.index2 = dict()
         self.batch_first = batch_first
         self.start_transitions = nn.Parameter(torch.empty(num_tags))
         self.end_transitions = nn.Parameter(torch.empty(num_tags))
@@ -212,50 +190,36 @@ class CRF(nn.Module):
             if not no_empty_seq and not no_empty_seq_bf:
                 raise ValueError('mask of the first timestep must all be on')
 
-    def _create_idxs(self, batch_size, seq_length, num_tags, device):
-        if seq_length not in self.index1:
-            self.index1[seq_length] = torch.arange(batch_size, dtype=torch.long, device=device) * seq_length
-        if seq_length not in self.index2:
-            self.index2[seq_length] = torch.arange(batch_size, dtype=torch.long, device=device).unsqueeze(1).unsqueeze(2) * seq_length * num_tags + \
-                torch.arange(1, seq_length, dtype=torch.long, device=device).unsqueeze(0).unsqueeze(2) * num_tags
-
-    def _compute_score(self, emissions: torch.Tensor, tags: torch.LongTensor, mask: torch.ByteTensor) -> torch.Tensor:
-        # emissions: (batch_size, seq_length, num_tags)
-        # tags: (batch_size, seq_length)
-        # mask: (batch_size, seq_length)
-        # emissions: (batch_size, seq_length, num_tags)
-        emissions = emissions.transpose(0, 1)
-        tags = tags.transpose(0, 1)
-        mask = mask.transpose(0, 1)
-        batch_size, seq_length, num_tags = emissions.shape
-        self._create_idxs(batch_size, seq_length, num_tags, emissions.device)
-        idx1 = self.index1[seq_length]
-        idx2 = self.index2[seq_length]
-        device = emissions.device
+    def _compute_score(self, emissions: torch.Tensor,
+                       tags: torch.LongTensor,
+                       mask: torch.BoolTensor) -> torch.Tensor:
+        # emissions: (seq_length, batch_size, num_tags)
+        # tags: (seq_length, batch_size)
+        # mask: (seq_length, batch_size)
+        seq_length, batch_size = tags.shape
         mask = mask.float()
+
+        bs_index = torch.arange(batch_size, device=tags.device)
 
         # Start transition score and first emission
         # shape: (batch_size,)
-        tags_flat = tags.flatten()
-        tags0_idx = tags_flat[idx1]
-        score = self.start_transitions[tags0_idx]
-        emissions_flat = emissions.flatten()
-        index2 = idx1 * num_tags + tags0_idx
-        score += emissions_flat[index2]
-        sliced_tags1 = npu_slice(tags, [0, 0], [batch_size, seq_length-1])
-        sliced_tags2 = npu_slice(tags, [0, 1], [batch_size, seq_length])
-        tags_index = (sliced_tags1 * num_tags + sliced_tags2).flatten()
-        sliced_mask_flat = npu_slice(mask, [0, 1], [batch_size, seq_length]).flatten()
-        score += (self.transitions.flatten()[tags_index] * sliced_mask_flat).reshape(-1, seq_length-1).sum(1)
+        score = self.start_transitions[tags[0]]
+        score += emissions[0, bs_index, tags[0]]
 
-        tags_index2 = (idx2 + sliced_tags2.unsqueeze(2)).flatten()
-        score += (emissions_flat[tags_index2] * sliced_mask_flat).reshape(-1, seq_length-1).sum(1)
+        for i in range(1, seq_length):
+            # Transition score to next tag, only added if next timestep is valid (mask == 1)
+            # shape: (batch_size,)
+            score += self.transitions[tags[i - 1], tags[i]] * mask[i]
+
+            # Emission score for next tag, only added if next timestep is valid (mask == 1)
+            # shape: (batch_size,)
+            score += emissions[i, bs_index, tags[i]] * mask[i]
+
         # End transition score
         # shape: (batch_size,)
-        seq_ends = mask.sum(dim=1).long() - 1
-        # shape: (batch_size,)
-        index3 = idx1 + seq_ends
-        last_tags = tags_flat[index3]
+        seq_ends = mask.long().sum(dim=0).long() - 1
+        # shape: (batch_size,) DTS2022062509691
+        last_tags = tags[seq_ends, bs_index]
         # shape: (batch_size,)
         score += self.end_transitions[last_tags]
 
