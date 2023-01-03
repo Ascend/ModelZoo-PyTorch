@@ -201,7 +201,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
    1. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 建立软链接
       将prep_dataset文件夹处理为工具可以输入的格式。

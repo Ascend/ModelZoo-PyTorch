@@ -117,7 +117,7 @@ pre_data_label_save_path label：保存位置 ./pre_data/test-clean/label/
 ###  五、离线推理
 
 1.准备 ais_bench 推理工具
-  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 2.推理时，使用 npu-smi info 命令查看 device 是否在运行其它推理任务，提前确保 device 空闲
 

@@ -186,7 +186,7 @@ FSAF 是 CVPR2019发表的一种无锚定方法。实际上它等价于基于锚
 ## 推理验证
 
 1. 对数据集推理  
-    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
+    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python3 -m ais_bench \
         --model ./fsaf_bs1.om \

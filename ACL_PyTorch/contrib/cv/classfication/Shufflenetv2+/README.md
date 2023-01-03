@@ -177,7 +177,7 @@ commit_id=d69403d4b5fb3043c7c0da3c2a15df8c5e520d89
 
 a.  安装ais_bench推理工具。
 
-    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 b.  执行推理。
 

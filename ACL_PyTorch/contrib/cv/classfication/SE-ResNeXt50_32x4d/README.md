@@ -103,7 +103,7 @@ atc --model=./se_resnext50_32x4d.onnx --framework=5 --output=seresnext50_32x4d_1
 
 ### 步骤 2 开始推理验证。
 1. 安装ais_bench推理工具
-   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 ```shell
 python3 -m ais_bench –model seresnext50_32x4d.om --input prep_bin/ --output ./ --outfmt TXT --batchsize {batch_size}
 ```

@@ -181,7 +181,7 @@ MobileNet网络是由google团队在2017年提出的，专注于移动端或者�
 ## 推理验证
 
 1. 对数据集推理  
-    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
+    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python -m ais_bench \
         --model mb1-ssd_bs${bs}.om \

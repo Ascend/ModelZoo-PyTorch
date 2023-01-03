@@ -216,7 +216,7 @@ python3 get_info.py jpg ./coco/val2017 coco2017_jpg.info
 
 ### 5.1 安装ais_bench推理工具
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 昇腾芯片上执行，执行时使npu-smi info查看设备状态，确保device空闲

@@ -142,7 +142,7 @@ python3.7 ENet_preprocess.py --src-path=$datasets_path --save_path ./prep_datase
 ### 5.1 AisBench工具概述
 
 AisBench推理工具，该工具包含前端和后端两部分。 后端基于c++开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。  
-工具链接: <https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer/>
+工具链接: <https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench/>
 
 ### 5.2 离线推理
 

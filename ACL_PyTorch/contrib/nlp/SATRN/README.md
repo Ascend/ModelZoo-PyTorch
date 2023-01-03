@@ -203,7 +203,7 @@
 1. 准备推理工具  
 
     本推理项目使用 ais_bench 作为推理工具，须自己打包并安装。
-    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 2. 离线推理  
 

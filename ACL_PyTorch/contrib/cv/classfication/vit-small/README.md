@@ -195,7 +195,7 @@ Vision Transformer是一个经典的图像分类网络。以前的cv领域虽然
 
    1. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
       > `output` 路径根据用户需求自由设置，这里以 `output=./result` 为例说明

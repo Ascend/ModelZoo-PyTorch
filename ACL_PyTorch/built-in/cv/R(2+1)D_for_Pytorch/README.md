@@ -57,7 +57,7 @@ PYTHONPATH=. python3.7 ./mmaction2/tools/data/build_file_list.py ucf101 data/ucf
 ```
 - **1.5 安装ais_bench推理工具**
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 ## 2 离线推理 
 

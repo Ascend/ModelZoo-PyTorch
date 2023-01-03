@@ -211,7 +211,7 @@ wav2vec2 是一个用于语音表示学习的自监督学习框架，它完成�
    根据OS架构选择的推理工具，执行命令增加工具可执行权限，在此以ais_bench推理工具为例。
 
    a. 安装ais_bench推理工具     
-	  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+	  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    b. 执行推理。
 

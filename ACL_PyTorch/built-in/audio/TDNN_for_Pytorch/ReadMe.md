@@ -217,7 +217,7 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
    3. 性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size和length的om模型的性能。  
-	  安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。  
+	  安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 	  推理参考命令如下：
 
         ```

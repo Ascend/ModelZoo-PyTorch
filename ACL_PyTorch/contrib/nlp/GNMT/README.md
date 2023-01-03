@@ -218,7 +218,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 2. 开始推理验证。
 
     1. 安装ais_bench推理工具。  
-        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
     2. 执行推理。
         ```
