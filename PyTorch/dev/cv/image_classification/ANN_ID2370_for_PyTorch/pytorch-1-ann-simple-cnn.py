@@ -214,7 +214,8 @@ for epoch in range(num_epochs):
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
         optimizer.step() # Update parameters
-        
+        if i < 2:
+            print("step_time = {:.4f}".format(time.time() - start_time), flush=True)       
         count += 1
         
         if count % 50 == 0:
