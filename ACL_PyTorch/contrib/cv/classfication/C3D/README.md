@@ -79,8 +79,9 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
    pip3 install mmcv-full==1.4.0
    
    git clone https://github.com/open-mmlab/mmaction2.git        # 克隆仓库的代码
-   cd mmaction2              # 切换到模型的代码仓目录
-   git checkout 3e9e99ff7413b2b5c105586000dc0cc793ce00b5         # 切换到对应分支
+   cd mmaction2                                                 # 切换到模型的代码仓目录
+   git checkout 3e9e99ff7413b2b5c105586000dc0cc793ce00b5        # 切换到对应分支
+   
    pip3 install -r requirements/build.txt
    pip3 install -v -e .
    ```
@@ -233,7 +234,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
       3. 执行ATC命令。
 
          ```
-         # bs=[1,4,8,16,32,64]
+         # bs=[1,4,8,16,32]
          atc --framework=5 --model=C3D.onnx --output=C3D_bs${bs} --input_format=ND --input_shape="image:${bs},10,3,16,112,112" --log=error --soc_version=Ascend${chip_name}
          ```
          
@@ -253,7 +254,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
     a. 安装ais_bench推理工具
 
        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。 
-	   
+	
     b.  执行推理。
 	```shell
 	# 移除异常数据
@@ -261,9 +262,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
     rm -rf prep_datasets/v_PommelHorse_g05*.bin
     
     # 执行推理
-    mkdir result  
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh  
-    python3 -m ais_bench --model ./C3D_bs1.om --batchsize=1 --input=./prep_datasets/ --output ./result --output_dirname result_bs1 --outfmt TXT
+    python3 -m ais_bench --model ./C3D_bs${bs}.om --batchsize=${bs} --input=./prep_datasets/ --output ./result --output_dirname result_bs${bs} --outfmt TXT
     ```
     
     参数说明：
@@ -271,17 +270,17 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
     - --model：需要进行推理的om模型。
     - --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
     - --output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
-    - --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+    - --outfmt：输出数据的格式，默认”BIN“。
     - --batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
     - --output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中。
     
     
-    推理后的输出在当前目录result/result_bs1下。
+    推理后的输出在当前目录result/result_bs${bs}下。
     
     c.  精度验证。
     
     ```shell
-    python3 ../C3D_postprocess.py ./result/result_bs1/ ./data/ucf101/ucf101_val_split_1_rawframes.txt ./top1_acc.json
+    python3 ../C3D_postprocess.py ./result/result_bs${bs}/ ./data/ucf101/ucf101_val_split_1_rawframes.txt ./top1_acc.json
     ```
     
     参数说明：
