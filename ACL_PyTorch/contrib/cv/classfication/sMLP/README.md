@@ -181,21 +181,9 @@
 
 ## 推理验证
 
-1. 准备推理工具
+1. 安装ais_bench推理工具
 
-    推理工具使用ais_infer，须自己拉取源码，打包并安装。
-    ```shell
-    # 指定CANN包的安装路径
-    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-    # 获取源码
-    git clone https://gitee.com/ascend/tools.git
-    cd tools/ais-bench_workload/tool/ais_infer/backend/
-    # 打包
-    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    # 安装
-    pip3 install --force-reinstall aclruntime-xxx.whl
-    ```
-    参考：[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D)
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 2. 离线推理
 
@@ -208,14 +196,14 @@
     mkdir </path/to>/SPACH/infer_results/
 
     # 执行推理
-    python ais_infer.py  \
+    python -m ais_bench  \
         --model </path/to>/SPACH/sMLPNet-T-batch8-high.om \
         --input </path/to>/SPACH/imagenet-val-bin \
         --output </path/to>/SPACH/infer_results/ \
         --outfmt NPY \
         -–batchsize 8
     ```
-    ais_infer 参数说明:
+    ais_bench 参数说明:
     + --model: OM模型路径
     + --input: 存放预处理bin文件的目录路径
     + --output: 存放推理结果的目录路径
@@ -244,7 +232,7 @@
     ```shell
     cd ais_infer/
     mkdir tmp_out   # 提前创建临时目录用于存放纯推理输出
-    python3.7 ais_infer.py --model /path/to/model --output ./tmp_out --outfmt BIN  --batchsize ${bs} --loop 100
+    python3.7 -m ais_bench --model /path/to/model --output ./tmp_out --outfmt BIN  --batchsize ${bs} --loop 100
     rm -r tmp_out   # 删除临时目录
     ```
     说明：

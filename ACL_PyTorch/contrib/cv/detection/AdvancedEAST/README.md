@@ -188,7 +188,7 @@ AdvancedEAST是一种用于场景图像文本检测的算法，它主要基于EA
 
    1. 使用ais-infer工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)。
 
    2. 执行推理。
 
@@ -207,7 +207,7 @@ AdvancedEAST是一种用于场景图像文本检测的算法，它主要基于EA
       推理后的输出默认在当前目录result下。
 
       >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 [参数说明](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#参数说明)。
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 [参数说明](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench#参数说明)。
 
    3. 精度验证。
 

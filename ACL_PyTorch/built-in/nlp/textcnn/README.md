@@ -48,13 +48,13 @@ python3 TextCNN_pth2onnx.py --weight_path ./TextCNN_9045_seed460473.pth --onnx_p
 
 4. 后处理得到精度
 
-推理模型使用ais_infer工具，安装过程可参考：[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 以bs1为例 
 
 ```
 mkdir -p ./output_data/bs1
-python3 ais_infer.py --model mg_om_dir/textcnn_1bs.om --input ./input_data --output ./output_data/bs1 --batchsize 1 --device 0
+python3 -m ais_bench --model mg_om_dir/textcnn_1bs.om --input ./input_data --output ./output_data/bs1 --batchsize 1 --device 0
 python3 TextCNN_postprocess.py ./output_data/bs1/ > result_bs1.json
 ```
 5. 性能数据
@@ -62,7 +62,7 @@ python3 TextCNN_postprocess.py ./output_data/bs1/ > result_bs1.json
 推理结果打屏显示，以1bs为例
 
 ```
-python3 ais_infer.py --model mg_om_dir/textcnn_1bs.om --output ./output_data/bs1 --outfmt BIN --loop 100 --device 0
+python3 -m ais_bench --model mg_om_dir/textcnn_1bs.om --output ./output_data/bs1 --outfmt BIN --loop 100 --device 0
 ```
 
 ## 3 自验

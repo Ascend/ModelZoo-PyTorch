@@ -160,20 +160,9 @@ model_name=FOMM
 
    ascend tools：
 
-   在`FOMM/`下执行如下命令安装ascend tools推理工具包：
+   在`FOMM/`下执行如下建议安装ascend tools推理工具包：
 
-   ```shell
-   git clone https://gitee.com/Ascend/tools.git
-   ```
-
-   编译并安装aclruntime工具，依次执行如下命令：
-
-   ```shell
-   cd ./tools/ais-bench_workload/tool/ais_infer/backend/
-   pip wheel ./
-   pip install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-   cd /home/.../FOMM/
-   ```
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
    
    magiconnx:
    
@@ -382,9 +371,9 @@ model_name=FOMM
 
 2. 开始推理验证。<u>***根据实际推理工具编写***</u>
 
-   a. 使用ais-infer工具进行推理。
+   a. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    b.  执行推理。
 
@@ -402,13 +391,13 @@ model_name=FOMM
 
    ```shell
    mkdir infer_out
-   python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-kp-bs1.om --input pre_data/driving/ --output infer_out/ --outfmt NPY --output_dirname kpd
+   python -m ais_bench --model taichi-onnx/oms/taichi-kp-bs1.om --input pre_data/driving/ --output infer_out/ --outfmt NPY --output_dirname kpd
    ```
    
    * kp source
    
    ```shell
-   python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-kp-bs1.om --input pre_data/source/ --output infer_out/ --outfmt NPY --output_dirname kps
+   python -m ais_bench --model taichi-onnx/oms/taichi-kp-bs1.om --input pre_data/source/ --output infer_out/ --outfmt NPY --output_dirname kps
    ```
    
    参数说明：
@@ -492,7 +481,7 @@ model_name=FOMM
    
    ```shell
    mkdir infer_out/out/
-   python tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model taichi-onnx/oms/taichi-gen-bs1.om --input pre_data/source/,infer_out/kpdv/,infer_out/kpdj/,infer_out/kpsv/,infer_out/kpsj/ --output infer_out/ --outfmt NPY --output_dirname out/
+   python -m ais_bench --model taichi-onnx/oms/taichi-gen-bs1.om --input pre_data/source/,infer_out/kpdv/,infer_out/kpdj/,infer_out/kpsv/,infer_out/kpsj/ --output infer_out/ --outfmt NPY --output_dirname out/
    ```
    
    至此，模型推理部分就完成了。

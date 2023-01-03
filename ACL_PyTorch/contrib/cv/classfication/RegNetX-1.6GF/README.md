@@ -209,14 +209,14 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
 
         ```
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./RegNetX-1.6GF_bs1.om --input ./prep_dataset/ --output ./ --output_dirname bs1 --outfmt TXT --batchsize 1
+        python3 -m ais_bench --model ./RegNetX-1.6GF_bs1.om --input ./prep_dataset/ --output ./ --output_dirname bs1 --outfmt TXT --batchsize 1
         ```
 
         -   参数说明：
@@ -228,10 +228,8 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
              -   --output_dirname： 推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中 。
              -   --batchsize：不同的batchsize。
    
-        推理后的输出默认在建立日期+时间的子文件夹中，除了图片信息的txt文件外，还有一个.json文件，需手动删除。 
-   
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        推理后的输出默认在建立日期+时间的子文件夹中，有图片信息的txt文件。 
+
    
    3. 精度验证。
    

@@ -5,6 +5,7 @@
 
     - [输入输出数据](#section540883920406)
 
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
@@ -22,6 +23,9 @@
 
 EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用迁移学习数据集上达到了相当不错的准确率，参数量也大大减少，说明其具备良好的迁移能力，且能够显著提升模型效果。
 
+  ```
+  url=https://github.com/rwightman/pytorch-image-models
+  ```
 
 - 参考实现：
 
@@ -44,6 +48,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
   | --------| -------- | -------- | ------------ |
   | output  | FLOAT32  | batchsize x 1000 | ND           |
 
+- 该模型需要以下插件与驱动  
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -194,9 +199,9 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
 2. 开始推理验证。
 
-   1. 使用ais_bench工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais_bench工具获取及使用方式请点击查看[ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，文档中aclruntime也需要安装。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 建立软链接
       将prep_dataset文件夹处理为工具可以输入的格式。

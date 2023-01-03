@@ -231,30 +231,17 @@
     
  2.  使用om模型进行推理验证。
    
-      1. 准备推理工具。
+     a. 准备推理工具ais_bench。
       
-      
-     a. 下载推理工具-ais_infer
-       ```
-       git clone https://gitee.com/ascend/tools.git
-       ```
+       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
      
-     b. 编译、安装推理工具
-       ```
-       cd ./tools/ais-bench_workload/tool/ais_infer/backend/
-       pip3.7 wheel ./ #编译 要根据自己的python版本
-       ls
-       pip install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-       cd ../../../../..
-       ```
-     
-     2. 执行推理
+     b. 执行推理
       
        1. 性能测试
         
           ```
           # 性能测试
-          python /home/lcy/bert_large/tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./bert_large_bs${bs}_fix.om --batchsize ${bs} --loop 50
+          python -m ais_bench --model ./bert_large_bs${bs}_fix.om --batchsize ${bs} --loop 50
           ```
         
           参数说明：
@@ -269,7 +256,7 @@
         
           ```
           # 精度测试
-          python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./bert_large_bs${bs}_fix.om --input "./bert_bin/bert_bin_2022xxxx-xxxxxx/input_ids,./bert_bin/bert_bin_2022xxxx-xxxxxx/attention_mask,./bert_bin/bert_bin_2022xxxx-xxxxxx/token_type_ids" --output ./bert-large-OUT/bs${bs} --batchsize ${bs} --outfmt NPY
+          python -m ais_bench --model ./bert_large_bs${bs}_fix.om --input "./bert_bin/bert_bin_2022xxxx-xxxxxx/input_ids,./bert_bin/bert_bin_2022xxxx-xxxxxx/attention_mask,./bert_bin/bert_bin_2022xxxx-xxxxxx/token_type_ids" --output ./bert-large-OUT/bs${bs} --batchsize ${bs} --outfmt NPY
           ```
         
           参数说明：
@@ -286,7 +273,7 @@
           
             执行结束输出保存在 ./bert-large-OUT/bs${bs}下。
       
-    3. 精度验证
+    c. 精度验证
     
        ```
        # 调用脚本将推理生成数据与数据集标签比对，可以获得Accuracy数据，结果保存在result.json中

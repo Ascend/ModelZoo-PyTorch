@@ -139,9 +139,9 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 
 ## <a name="5">5. 离线推理</a>
 
-1.安装ais_infer推理工具
+1.安装ais_bench推理工具
 
-   安装链接: https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
    
 2.执行离线推理
 
@@ -149,7 +149,7 @@ python3.7 biggan_preprocess.py --batch-size 1 --num-inputs 50000
 ```
     cd tools/ais-bench_workload/tool/ais_infer
     mkdir -p /home/ylz/BigGAN/outputs_bs1_om
-    python3.7 ais_infer.py --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 
+    python3.7 -m ais_bench --model "./biggan_sim_bs1.om" --input "./prep_noise_bs1,./prep_label_bs1"  --output "./outputs_bs1_om" --outfmt BIN --batchsize 1 
 ```
 
     --model ：输入的om文件。

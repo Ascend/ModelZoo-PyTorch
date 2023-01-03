@@ -250,16 +250,20 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
            运行成功后生成C3D.om模型文件。
 
 2. 开始推理验证。
+    a. 安装ais_bench推理工具
 
-    a.  执行推理。
+       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。 
+	   
+    b.  执行推理。
 	```shell
 	# 移除异常数据
     bash ../check_rawframes_filelist.sh
     rm -rf prep_datasets/v_PommelHorse_g05*.bin
     
     # 执行推理
-    mkdir result
-    python3 ${ais_infer_path}/ais_infer.py --model ./C3D_bs1.om --batchsize=1 --input=./prep_datasets/ --output ./result --output_dirname result_bs1 --outfmt TXT
+    mkdir result  
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh  
+    python3 -m ais_bench --model ./C3D_bs1.om --batchsize=1 --input=./prep_datasets/ --output ./result --output_dirname result_bs1 --outfmt TXT
     ```
     
     参数说明：
@@ -273,11 +277,8 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
     
     
     推理后的输出在当前目录result/result_bs1下。
-    >**说明：** 
-    >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见:
-    >https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
     
-    b.  精度验证。
+    c.  精度验证。
     
     ```shell
     python3 ../C3D_postprocess.py ./result/result_bs1/ ./data/ucf101/ucf101_val_split_1_rawframes.txt ./top1_acc.json

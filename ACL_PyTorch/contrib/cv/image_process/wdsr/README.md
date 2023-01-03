@@ -193,9 +193,9 @@ Wdsr是对EDSR进行改进，去除了冗余的卷积层，同时也改造了res
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
@@ -228,7 +228,7 @@ Wdsr是对EDSR进行改进，去除了冗余的卷积层，同时也改造了res
    - --参数3：生成结果文件。
    - --参数4：缩放图片大小。
 
-4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
    ```
    python3 -m ais_bench --model=wdsr_bs${bs}.om --loop=500 --batchsize=${bs}

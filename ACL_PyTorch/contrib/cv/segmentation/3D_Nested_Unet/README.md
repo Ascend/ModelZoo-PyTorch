@@ -244,7 +244,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
    1. 使用ais-infer工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
 
    2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
 

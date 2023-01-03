@@ -281,13 +281,14 @@ R(2+1)D是应用于视频理解领域的时空卷积模块，它明确地将3d�
 
    
 
-​		a.  使用ais-infer工具进行推理。
+​		a.  安装ais_bench推理工具。
+         请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 ​		b.  执行推理。
 
     ```
     mkdir predata_bts1_om_out
-    python3 ais_infer.py --model /home/HwHiAiUser/r2plus1d_bs16.om --input  /home/HwHiAiUser/predata_bts1  --batchsize 16 --output "./predata_bts1_om_out" --outfmt TXT
+    python3 -m ais_bench --model /home/HwHiAiUser/r2plus1d_bs16.om --input  /home/HwHiAiUser/predata_bts1  --batchsize 16 --output "./predata_bts1_om_out" --outfmt TXT
     ```
     
     -   参数说明：
@@ -297,9 +298,6 @@ R(2+1)D是应用于视频理解领域的时空卷积模块，它明确地将3d�
         --  outfmt：输出数据的格式
     	...
 
-
-​        >**说明：** 
-​        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
 ​		c.  精度验证。			
 

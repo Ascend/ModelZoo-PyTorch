@@ -210,26 +210,9 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 2. 开始推理验证。
 
-   a. 安装推理工具。     
+   a. 安装ais_bench推理工具。     
 
-      本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) 作为推理工具，须自己拉取源码，打包并安装。
-
-      ```bash
-      # 指定CANN包的安装路径
-      export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-       
-      # 获取推理工具源码
-      git clone https://gitee.com/ascend/tools.git ascend_tools/
-      cp -r ascend_tools/ais-bench_workload/tool/ais_infer .
-      
-      # 打包
-      cd ais_infer/backend/
-      pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-      
-      # 安装
-      pip3 install --force-reinstall aclruntime-xxx.whl
-      cd ../..
-      ```
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 
    b. 执行推理。
@@ -289,10 +272,10 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
    d. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench \
           --model=./ch_PP-OCRv3_det_bs${batchsize}.om \
           --loop=50 \
           --dymHW=736,992 \
@@ -306,9 +289,9 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
           -   --dymHW：动态分辨率参数，指定模型输入的实际H、W。
           -   --batchsize：om模型的batch。
     
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+      `${batchsize}`表示不同batch的om模型。
     
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能。
+      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

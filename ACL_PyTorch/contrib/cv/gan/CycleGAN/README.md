@@ -230,17 +230,17 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
       mkdir result
-      python3 ${ais_infer_path}/ais_infer.py --model=./CycleGAN_Ga_bs1.om --input=./datasetsDst/maps/testA/ --output=./result/ --output_dirname=Abs1 --outfmt=BIN --batchsize=1
+      python3 -m ais_bench --model=./CycleGAN_Ga_bs1.om --input=./datasetsDst/maps/testA/ --output=./result/ --output_dirname=Abs1 --outfmt=BIN --batchsize=1
 
-      python3 ${ais_infer_path}/ais_infer.py --model=./CycleGAN_Gb_bs1.om --input=./datasetsDst/maps/testB/ --output=./result/ --output_dirname=Bbs1 --outfmt=BIN --batchsize=1
+      python3 -m ais_bench --model=./CycleGAN_Gb_bs1.om --input=./datasetsDst/maps/testB/ --output=./result/ --output_dirname=Bbs1 --outfmt=BIN --batchsize=1
       ```
       - 参数说明：
          -  --model：om文件路径。
@@ -252,8 +252,7 @@ CycleGAN是基于对抗生成的图像风格转换卷积神经网络，该网络
 
       推理后的输出在推理结果文件路径下的日期+时间的子文件夹(./result/Abs1/和./result/Bbs1/)。
    
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
 
    3. 精度验证。
 

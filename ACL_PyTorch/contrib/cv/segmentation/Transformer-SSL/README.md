@@ -205,15 +205,15 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
     
     2.  执行推理。
         
         ```shell
-        python ${ais_infer_path}/ais_infer.py --model ./model_bs1.om --input ./val2017_bin --output ./ --output_dirname result --batchsize 1
+        python -m ais_bench --model ./model_bs1.om --input ./val2017_bin --output ./ --output_dirname result --batchsize 1
         ```
 
          - 参数说明：  
@@ -222,8 +222,6 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
            -   --input：预处理后的bin文件夹路径。
            -   --output:推理结果路径
 
-           >**说明：** 
-           >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请[参见](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
     
     3.  精度验证。

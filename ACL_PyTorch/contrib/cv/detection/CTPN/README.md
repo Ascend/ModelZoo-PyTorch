@@ -243,9 +243,9 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
 
@@ -270,9 +270,6 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       performance = \frac{\sum_i^n f_i*s_i}{\sum_i^ns_i}
       $$
 
-   
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 

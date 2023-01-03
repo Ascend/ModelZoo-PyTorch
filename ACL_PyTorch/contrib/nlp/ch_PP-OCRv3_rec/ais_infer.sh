@@ -11,12 +11,12 @@ mkdir ${results}
 rm -rf temp
 mkdir temp
 
-python3 ${ais_infer} --model=${model_320} --input=${image_bin}/48_320/ --dymBatch=${batch_size} --output=./temp 
+python3 -m ais_bench --model=${model_320} --input=${image_bin}/48_320/ --dymBatch=${batch_size} --output=./temp 
 
 mv ./temp/*/*.bin ${results}/
 rm -rf ./temp/*
 
-python3 ${ais_infer} --model=${model_620} --input=${image_bin}/48_620/ --dymBatch=${batch_size} --output=./temp
+python3 -m ais_bench --model=${model_620} --input=${image_bin}/48_620/ --dymBatch=${batch_size} --output=./temp
 
 mv ./temp/*/*.bin ${results}/
 rm -rf ./temp

@@ -216,16 +216,9 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ```
-      git clone https://gitee.com/ascend/tools.git
-      cd tools/ais-bench_workload/tool/ais_infer/backend/
-      pip3 wheel ./
-      pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-      ```
-
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。   
 
 
    b.  执行推理。
@@ -236,7 +229,7 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
       ```
 
       -   参数说明：
-          -   --ais_path:ais-infer工具推理文件路径 
+          -   --ais_path:ais_bench推理工具推理文件路径 
           -   --img_path:前处理的图片文件路径 
           -   --mask_path:前处理的mask文件路径 
           -   --out_put:ais_infer推理数据输出路径
