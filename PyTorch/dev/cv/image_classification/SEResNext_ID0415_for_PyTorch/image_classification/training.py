@@ -386,7 +386,7 @@ def train(
         loss = step(input, target, optimizer_step=optimizer_step)
 
         it_time = time.time() - end
-        if i < 3 and epoch ==0:
+        if i < 3:
             print("step_time: ", it_time)
         if logger is not None:
             logger.log_metric("train.loss", to_python_float(loss), bs)

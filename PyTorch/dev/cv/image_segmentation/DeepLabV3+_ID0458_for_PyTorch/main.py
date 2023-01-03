@@ -430,6 +430,9 @@ def main():
             interval_loss += np_loss
             if vis is not None:
                 vis.vis_scalar('Loss', cur_itrs, np_loss)
+                
+            if cur_itrs < 3 and cur_epochs == 1:
+                print("step_time: ", time.time() - end)
 
             if (cur_itrs) % 10 == 0:
                 interval_loss = interval_loss/10
