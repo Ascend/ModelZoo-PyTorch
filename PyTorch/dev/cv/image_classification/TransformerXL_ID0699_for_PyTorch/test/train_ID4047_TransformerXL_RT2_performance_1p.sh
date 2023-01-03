@@ -39,14 +39,6 @@ if [[ $data_path  == "" ]];then
     exit 1
 fi
 
-#使能RT2
-step_line=`grep "torch.npu.set_start_fuzz_compile_step(3)" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
-sed -i "${step_line}s/^/#/" ${cur_path}/pytorch/train.py
-inc_line=`grep "torch.npu.global_step_inc()" ${cur_path}/pytorch/train.py -n | awk -F ':' '{print $1}'`
-sed -i "${inc_line}s/^/#/" ${cur_path}/pytorch/train.py
-line=`grep "import torch" ${cur_path}/pytorch/train.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/pytorch/train.py
-
 ##############执行训练##########
 cd $cur_path
 if [ -d $cur_path/test/output ];then
@@ -102,6 +94,8 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${BatchSize}'*1000/'${FPS}'}'`
 grep "ms/batch" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v "train loss"|awk -F 'loss ' '{print $2}'|awk -F '|' '{print $1}' > $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print $1}' $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+#计算编译耗时
+CompileTime=`grep "step time:" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log  | head -2 |awk -F ":" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #关键信息打印到CaseName.log中，此处无需修改
 echo "Network = ${Network}" > $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -113,3 +107,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log

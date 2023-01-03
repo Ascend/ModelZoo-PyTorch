@@ -15,6 +15,8 @@
 import os
 import sys
 import torch
+if torch.__version__>= '1.8.1':
+      import torch_npu
 import numpy as np
 
 import datetime
@@ -175,14 +177,8 @@ def main(args):
     if not args.use_cpu:
         classifier = classifier.npu()
         criterion = criterion.npu()
-    try:
-        checkpoint = torch.load(str(exp_dir) + '/checkpoints/best_model.pth')
-        start_epoch = checkpoint['epoch']
-        classifier.load_state_dict(checkpoint['model_state_dict'])
-        log_string('Use pretrain model')
-    except:
-        log_string('No existing model, starting training from scratch...')
-        start_epoch = 0
+    log_string('No existing model, starting training from scratch...')
+    start_epoch = 0
     '''MODEL LOADING'''
     if args.optimizer == 'Adam':
         optimizer = apex.optimizers.NpuFusedAdam(

@@ -35,6 +35,8 @@ batch_size=512
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
 learning_rate=0.045
+# 指定训练所使用的npu device卡id
+device_id=0
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
@@ -56,6 +58,8 @@ do
       data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
       batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
@@ -82,7 +86,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 cd $cur_path
-ASCEND_DEVICE_ID=0
+ASCEND_DEVICE_ID=${device_id}
 #设置环境变量，不需要修改
 echo "Device ID: $ASCEND_DEVICE_ID"
 export RANK_ID=$RANK_ID

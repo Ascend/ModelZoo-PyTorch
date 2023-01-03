@@ -12,7 +12,7 @@ index 7160474..608553c 100755
          "sampling_rate": 22050,
          "filter_length": 1024,
 diff --git a/glow.py b/glow.py
-index 7a76964..aca5a83 100644
+index 7a76964..89fc584 100644
 --- a/glow.py
 +++ b/glow.py
 @@ -248,48 +248,49 @@ class WaveGlow(torch.nn.Module):
@@ -32,7 +32,7 @@ index 7a76964..aca5a83 100644
  
 -        spect = spect.unfold(2, self.n_group, self.n_group).permute(0, 2, 1, 3)
 -        spect = spect.contiguous().view(spect.size(0), spect.size(1), -1).permute(0, 2, 1)
- 
+-
 -        if spect.type() == 'torch.cuda.HalfTensor':
 -            audio = torch.cuda.HalfTensor(spect.size(0),
 -                                          self.n_remaining_channels,
@@ -65,7 +65,7 @@ index 7a76964..aca5a83 100644
 +            audio_1 = audio[:, n_half:(n_half+n_half), :]
  
              output = self.WN[k]((audio_0, spect))
--
+ 
 -            s = output[:, n_half:, :]
 +            s = output[:, n_half:(n_half+n_half), :]
              b = output[:, :n_half, :]
@@ -91,16 +91,15 @@ index 7a76964..aca5a83 100644
  
      @staticmethod
 diff --git a/requirements.txt b/requirements.txt
-index 20c8b3e..0bcf609 100644
+index 20c8b3e..ae27cbb 100644
 --- a/requirements.txt
 +++ b/requirements.txt
-@@ -1,10 +1,17 @@
+@@ -1,10 +1,10 @@
 -torch==1.0
-+torch==1.8.0
-+tensorflow==1.15
 -matplotlib==2.1.0
++torch==1.8.0
 +matplotlib
--tensorflow
+ tensorflow
 -numpy==1.13.3
 +numpy
  inflect==0.2.5
@@ -110,10 +109,3 @@ index 20c8b3e..0bcf609 100644
  tensorboardX==1.1
  Unidecode==1.0.22
  pillow
-+tqdm
-+numba==0.43.0
-+llvmlite==0.32.1
-+resampy==0.2.0
-+attrs
-+psutil
-+torchvision==0.9.0

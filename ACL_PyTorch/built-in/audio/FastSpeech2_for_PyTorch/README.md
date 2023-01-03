@@ -17,7 +17,7 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
 
 - 版本说明：
   ```
-  url=https://github.com/ming024/FastSpeech2.git
+  url=https://github.com/ming024/FastSpeech2
   commit_id=d4e79eb52e8b01d24703b2dfc0385544092958f3
   model_name=FastSpeech2
   ```
@@ -164,18 +164,19 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
                -p config/LJSpeech/preprocess.yaml \
                -t config/LJSpeech/train.yaml \
                -vp 1.0 -ve 1.0 -vd 1.0 \
-               --batch 1
+               --batch 1 --device_id 0
    ```
 
 3. 性能验证  
-   可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，FastSpeech2包括多个子模型，由于输入音频长度可变，以长度10的音频为例，参考命令如下：
+   可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，FastSpeech2包括多个子模型，各子模型测试性能的参考命令如下：
    ```
-   python3 ${ais_infer_path}/ais_infer.py --model=output/om/encoder_bs1.om --loop=20 --batchsize=1 --dymShape "texts:1,10;src_masks:1,10" --outputSize "1000000"
-   python3 ${ais_infer_path}/ais_infer.py --model=output/om/variance_adaptor_bs1.om --loop=20 --batchsize=1 --dymShape "enc_output:1,10,256;src_masks:1,10;p_control:1;e_control:1;d_control:1" --outputSize "1000000,1000000"
-   python3 ${ais_infer_path}/ais_infer.py --model=output/om/decoder_bs1.om --loop=20 --batchsize=1 --dymShape "output:1,250,256;mel_masks:1,250" --outputSize "1000000"
-   python3 ${ais_infer_path}/ais_infer.py --model=output/om/postnet_bs1.om --loop=20 --batchsize=1 --dymShape "dec_output:1,250,256" --outputSize "1000000"
-   python3 ${ais_infer_path}/ais_infer.py --model=output/om/hifigan_bs1.om --loop=20 --batchsize=1 --dymDims "mel_output:1,250,80" --outputSize "1000000"
+   python3 -m ais_bench --model output/om/encoder_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "texts:${bs},${seq_len};src_masks:${bs},${seq_len}" --outputSize "1000000"
+   python3 -m ais_bench --model output/om/variance_adaptor_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "enc_output:${bs},${seq_len},256;src_masks:${bs},${seq_len};p_control:1;e_control:1;d_control:1" --outputSize "1000000,1000000"
+   python3 -m ais_bench --model output/om/decoder_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "output:${bs},250,256;mel_masks:${bs},250" --outputSize "1000000"
+   python3 -m ais_bench --model output/om/postnet_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "dec_output:${bs},250,256" --outputSize "1000000"
+   python3 -m ais_bench --model output/om/hifigan_bs${bs}.om --loop 20 --batchsize ${bs} --dymDims "mel_output:${bs},250,80" --outputSize "1000000"
    ```
+   其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度。
 
 # 模型推理性能&精度
 

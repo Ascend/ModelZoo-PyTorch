@@ -20,10 +20,10 @@ from collections import OrderedDict
 import torch
 from torch.nn import functional as F
 import numpy as np
+from ais_bench.infer.interface import InferSession
 
 from mobilenetv3 import MobileNetV3_Small
 from data import Dataset, create_loader, compute_accuracy, AverageMeter
-import aclruntime
 
 
 def adjust_checkpoint(checkpoint):
@@ -40,27 +40,6 @@ def adjust_checkpoint(checkpoint):
     return new_state_dict
 
 
-def om_infer(om, input_data):
-    inputs = []
-    shape = []
-    for in_data in input_data:
-        shape.append(in_data.shape)
-        in_data = aclruntime.Tensor(in_data)
-        in_data.to_device(args.device_id)
-        inputs.append(in_data)
-
-    innames = [inp.name for inp in om.get_inputs()]
-    outnames = [out.name for out in om.get_outputs()]
-
-    outputs = om.run(outnames, inputs)
-    output_data = []
-    for out in outputs:
-        out.to_host()
-        output_data.append(out)
-
-    return output_data
-
-
 def main(args):
     # create model
     flag = args.checkpoint.split('.')[1]
@@ -71,8 +50,7 @@ def main(args):
         model.load_state_dict(checkpoint)
         model.eval()
     elif flag == 'om':
-        options = aclruntime.session_options()
-        model = aclruntime.InferenceSession(args.checkpoint, args.device_id, options)
+        model = InferSession(args.device_id, args.checkpoint)
 
     # create dataloader
     loader = create_loader(
@@ -94,8 +72,7 @@ def main(args):
         elif flag == 'om':
             if i == len(loader) - 1:
                 input_data = F.pad(input_data, (0, 0, 0, 0, 0, 0, 0, args.batch_size-len(target)), "constant", 0)
-            output = om_infer(model, [input_data.numpy().astype(np.float16)])[0]
-            output = np.array(output)
+            output = model.infer([input_data.numpy().astype(np.float16)])[0]
             if i == len(loader) - 1:
                 output = output[:len(target)]
             output = torch.Tensor(output)

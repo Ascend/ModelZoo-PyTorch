@@ -1,0 +1,17 @@
+diff -Naru a/configs/det/det_mv3_east.yml b/configs/det/det_mv3_east.yml
+--- a/configs/det/det_mv3_east.yml	2022-11-10 10:57:23.296981862 +0000
++++ b/configs/det/det_mv3_east.yml	2022-11-10 10:58:27.352982646 +0000
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: False
+   epoch_num: 10000
+   log_smooth_window: 20
+   print_batch_step: 2
+@@ -106,4 +106,4 @@
+     shuffle: False
+     drop_last: False
+     batch_size_per_card: 1 # must be 1
+-    num_workers: 2
+\ No newline at end of file
++    num_workers: 0

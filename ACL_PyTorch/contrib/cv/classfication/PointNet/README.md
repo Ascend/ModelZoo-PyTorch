@@ -1,212 +1,270 @@
-# PointNet Onnx模型端到端推理指导
+# PointNet模型-推理指导
 
-## 1. 模型概述
-- 论文地址
-- 代码地址
 
-### 1.1 论文地址
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-[PointNet论文](https://arxiv.org/abs/1612.00593)
+    - [输入输出数据](#section540883920406)
 
-### 1.2 代码地址
 
-[PointNet代码](https://github.com/fxia22/pointnet.pytorch)
 
-## 2. 环境说明
-1.安装必要的依赖
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-```
-pip3.7 install -r requirements.txt
-```
-2.获取，修改与安装开源模型代码
-```
-git clone https://github.com/fxia22/pointnet.pytorch
-cd pointnet.pytorch
-git checkout f0c2430b0b1529e3f76fb5d6cd6ca14be763d975
-patch -p1 < ../modify.patch
-cd ..
-```
-## 3. 模型转换
-- pth转onnx模型
-- onnx转om模型
-- 脚本运行
-### 3.1 pth转onnx模型
-1. 设置环境变量
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2. pth权重文件下载：
-链接：https://pan.baidu.com/s/168Vk3C60iZOWrgGIBNAkjw 
-提取码：lmwa
-下载好后请放到PointNet工程目录下
-3. 编写pth2onnx脚本，生成onnx文件
-4. 执行pth2onnx.py脚本，生成具有动态shape的onnx模型文件
-```shell
-python3.7 pointnet_pth2onnx.py --model checkpoint_79_epoch.pkl --output_file pointnet.onnx
-```
-5. 由于在后期推理时，trt工具无法支持动态shape的onnx模型文件，所以先使用onnx-simplifier将输入优化成固定的shape，batch_size为1时如下：
-```shell
-python3.7 -m onnxsim pointnet.onnx pointnet_bs1_sim.onnx --input-shape="1,3,2500" --dynamic-input-shape
-```
-batch_size为16时如下：
-```shell
-python3.7 -m onnxsim pointnet.onnx pointnet_bs16_sim.onnx --input-shape="16,3,2500" --dynamic-input-shape
-```
-batch_size为4,8,32时类似
-6. 利用fix_conv1d.py对模型进行优化，提升性能
-先准备必要的环境：
-```shell
-git clone https://gitee.com/zheng-wengang1/onnx_tools.git
-cd onnx_tools && git checkout cbb099e5f2cef3d76c7630bffe0ee8250b03d921
-cd ..
-```
-对batch_size为1的onnx模型进行优化：
-```shell
-python3.7 fix_conv1d.py pointnet_bs1_sim.onnx pointnet_bs1_sim_fixed.onnx
-```
-batch_size为4,8,16,32类似
-### 3.2 onnx转om模型
-1. 使用atc将onnx模型转换为om模型文件， batch_size为1时：
-```shell
-atc --framework=5 --model=./pointnet_bs1_sim_fixed.onnx --output=./pointnet_bs1_fixed --input_shape="image:1, 3, 2500" --soc_version=Ascend310  --log=error > atc.log
-```
-若要生成batch_size为16的om模型，对应命令为：
-```shell
-atc --framework=5 --model=./pointnet_bs16_sim_fixed.onnx --output=./pointnet_bs16_fixed --input_shape="image:16, 3, 2500" --soc_version=Ascend310  --log=error > atc.log
-```
-batch_size为4,8,32时类似
-### 3.3 脚本运行
-运行如下脚本即可完成上述过程
-```shell
-bash test/pth2om.sh
-```
-## 4. 数据预处理
-- 数据集获取
-- 数据集预处理
-- 生成数据信息文件
-### 4.1 数据集获取
-1. 进入到数据集下载脚本的文件夹下
-```shell
-cd test
-```
-2. 执行数据集下载脚本
-```shell
-source download.sh
-```
-3. 返回上级目录并新建一个文件夹，将下载好的数据移动到此文件夹下
-```shell
-cd ..
-mkdir data
-mv shapenetcore_partanno_segmentation_benchmark_v0 ./data/
-```
-### 4.2 数据集预处理
-1. 仿照github官网训练预处理方法处理数据，编写预处理脚本pointnet_preprocess.py，由于这里数据集是非图片类文件，所以使用二进制的输入
-2. 执行预处理脚本，生成数据集预处理后的bin文件。第一个参数为数据集存放的位置，第二个参数为预处理后所有二进制文件保存的路径，第三个参数为batch_size
-```shell
-python3.7 pointnet_preprocess.py data/shapenetcore_partanno_segmentation_benchmark_v0 ./bin_file batch_size=1
-```
-生成batch_size为16的数据集预处理后的bin文件：
-```shell
-python3.7 pointnet_preprocess.py data/shapenetcore_partanno_segmentation_benchmark_v0 ./bin_file_bs16 batch_size=16
-```
-## 5. 离线推理
-- 特别说明：在这里由于PointNet模型用于分类时的输入shape原因不能使用benchmark工具在训练数据上做推理，只能使用纯推理方式。所以使用另外一个名为msame的工具在训练数据上做推理。而msame工具不能设置推理时的batch_size，所以只好对bs1和bs16各自生成对应的二进制文件，然后用于推理。而且由于样本量不是16的倍数，所以对于bs16的情况会遗留一些样本没办法推理，导致精度上和bs1有一点小差距。
-### 5.1 msame工具
-[msame使用说明](https://gitee.com/ascend/tools/tree/master/msame)
-下载msame并解压到PointNet目录下，本模型使用的是Ascend-5.0.2，所以使用如下下载链接：
-https://obs-book.obs.cn-east-2.myhuaweicloud.com/cjl/msame.zip
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-#### 5.1.1 设置环境变量
-(如下为设置环境变量的示例，请将/home/HwHiAiUser/Ascend/ascend-toolkit/latest替换为Ascend 的ACLlib安装包的实际安装路径。)
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-export DDK_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest
-export NPU_HOST_LIB=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/acllib/lib64/stub
-#### 5.1.2 运行编译脚本
-cd msame/
-chmod 777 build.sh
-./build.sh g++ out
-### 5.2 离线推理
-1. 在PointNet工程下新建一个文件夹存放推理结果
-```shell
-mkdir res_data
-```
-2. 针对batch_size为1的情况，运行如下命令进行离线推理：
-```shell
-./msame/out/msame --model "pointnet_bs1_fixed.om" --input "bin_file" --output "res_data/bs1_out/" --outfmt TXT --device 1
-```
-3. 进入到res_data目录下，对上一步推理输出的结果文件夹重命名为bs1_out
-4. batch_size为16时的推理，注意将输出的结果文件夹重命名为bs16_out
-```shell
-./msame/out/msame --model "pointnet_bs16_fixed.om" --input "bin_file_bs16" --output "res_data/bs16_out/" --outfmt TXT --device 1
-```
-### 5.3 脚本运行
-运行如下脚本即可完成上述步骤，得到bs1和bs16各自的精度数据
-```shell
-bash test/eval_acc.sh
-```
-## 6. 精度对比
-- 离线推理分类准确率
-- pth模型推理分类准确率
-- 开源分类准确率
-- 准确率对比
-### 6.1 离线推理分类准确率
-后处理与准确率计算
-batch_size为1时，运行pointnet_postprocess.py脚本与label比对，可以计算准确率并打印。
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-```shell
-python3.7 pointnet_postprocess.py ./name2label.txt ./res_data/bs1_out batch_size=1
-```
-输出结果：
-```
-test accuracy: 0.9735
-```
-batch_size为16时，运行pointnet_postprocess.py脚本与label比对，可以计算准确率并打印。
+  ******
 
-```shell
-python3.7 pointnet_postprocess.py ./name2label.txt ./res_data/bs16_out batch_size=16
-```
-输出结果：
-```
-test accuracy: 0.9728
-```
-经过对比bs1与bs16的om测试，本模型batch_size为1的精度与batch_size为16的精度有较小差距，原因在第5节已有说明。
-### 6.2 pth模型推理分类准确率
-运行eval.py脚本，得到pth推理的准确率：
-```
-test accuracy: 0.9742
-```
-### 6.3 开源分类准确率
-github开源仓上得到的最好结果是：
-```
-test accuracy: 0.981
-```
-### 6.4 准确率对比
-将得到的om离线模型推理准确率与该模型github代码仓上公布的精度对比，如下表所以，精度下降在1%范围内，故精度达标。
-模型|Accuracy
--|-
-github开源仓结果(官方)|98.1%
-pth模型推理结果|97.42%
-batch_size为1的om模型离线推理结果|97.35%
-batch_size为16的om模型离线推理结果|97.28%
 
-## 7. 性能评测
-### 1. 310芯片性能数据
-运行如下脚本可得到在310芯片上，每个batch_size的om模型对应的性能数据
-```shell
-bash test/perform_310.sh
-```
-### 2. gpu基准性能数据
-运行如下脚本可得到在基准gpu上，每个batch_size的onnx模型对应的性能数据
-```shell
-bash test/perform_g.sh
-```
-### 3. 性能对比
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-Model|Batch Size|310(FPS/Card)|基准(FPS/Card)
--|-|-|-
-PointNet|1|987|1787
-PointNet|4|1058|2251
-PointNet|8|1098|2367
-PointNet|16|1102|2412
-PointNet|32|1076|2380
+PointNet是针对3D点云进行分类和分割的模型。该网络包含了三维的STN模块，三维的STN可以通过学习点云本身的位姿信息学习到一个最有利于网络进行分类或分割的DxD旋转矩阵（D代表特征维度，pointnet中D采用3和64）。pointnet采用了两次STN，第一次input transform是对空间中点云进行调整，直观上理解是旋转出一个更有利于分类或分割的角度，比如把物体转到正面；第二次feature transform是对提取出的64维特征进行对齐，即在特征层面对点云进行变换。 
 
+
+- 参考实现：
+
+  ```
+  url=https://github.com/fxia22/pointnet.pytorch 
+  commit_id=f0c2430b0b1529e3f76fb5d6cd6ca14be763d975
+  code_path=/ACL_PyTorch/contrib/cv/classfication/PointNet
+  model_name=PointNet
+  ```
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                 | 数据排布格式 |
+  | -------- | -------- | -------------------- | ------------ |
+  | input    | FP32     | batchsize x 3 x 2500 | BCN          |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 16 | BD         |
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/fxia22/pointnet.pytorch        
+   cd pointnet.pytorch              # 切换到模型的代码仓目录 
+   git checkout f0c2430b0b1529e3f76fb5d6cd6ca14be763d975
+   patch -p1 < ../modify.patch    # 打上补丁
+   cd ..  
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 数据预处理。 （解压命令参考tar –xvf *.tar与 unzip *.zip） 
+
+   本模型是对点云数据进行分类，使用的数据集是shapenet的子集，用户需要自行获取数据集，数据集包含了16个类别文件夹和用于对应类别和训练集测试集划分的功能文件，下载完成后请将数据存放到模型根目录下自行创建的data文件夹中。 数据集目录如下：
+
+   ```
+   shapenet
+   ├──02691156
+   │   ├── points
+   │   ├── points_label
+   │   ├── seg_img
+   ├──02773838
+   │   ├── points
+   │   ├── points_label
+   │   ├── seg_img
+   ......#省略8个文件夹
+   │   ├── README.txt
+   │   ├── README.txt~
+   │   ├── synsetoffset2category.txt
+   │   ├── train_test_split
+   ```
+   
+2.  数据预处理，将原始数据集转换为模型输入的数据。 
+
+    执行预处理脚本“ pointnet_preprocess.py”。 
+
+      ```
+      python3 pointnet_preprocess.py ./data/shapenetcore_partanno_segmentation_benchmark_v0 ./bin_file
+      ```
+
+   + 参数说明：
+     + ./data/：数据集所在路径；
+     + bin_file：是预处理后的数据文件的相对路径；
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1.  获取权重文件。 
+
+      从代码仓中获取权重文件“[checkpoint_79_epoch.pkl](https://pan.baidu.com/s/168Vk3C60iZOWrgGIBNAkjw)” ，提取码：lmwa，下载好后请放到PointNet工程目录下。
+
+   2.  导出onnx文件。
+
+       1. 使用pointnet_pth2onnx.py导出onnx文件。
+   
+            ```
+            python3 pointnet_pth2onnx.py
+            ```
+      
+            获得pointnet.onnx文件。
+   
+       2. 简化ONNX文件。 
+   
+            ```
+            python3 -m onnxsim pointnet.onnx pointnet_bs1_sim.onnx --input-shape="1, 3, 2500" --dynamic-input-shape
+            ```
+      
+            获得pointnet_bs1_sim.onnx文件。
+   
+       3. 优化ONNX文件
+   
+            ```
+            git clone https://gitee.com/zheng-wengang1/onnx_tools.git
+            cd onnx_tools && git checkout cbb099e5f2cef3d76c7630bffe0ee8250b03d921
+            cd ..
+            python3 fix_conv1d.py pointnet_bs1_sim.onnx pointnet_bs1_sim_fixed.onnx
+            ```
+   
+            获得pointnet_bs1_sim_fixed.onnx文件。
+   
+   3. 使用ATC工具将ONNX模型转OM模型。
+   
+      1. 配置环境变量。
+   
+            ```
+             source /usr/local/Ascend/ascend-toolkit/set_env.sh
+            ```
+   
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+   
+            ```
+            npu-smi info
+            #该设备芯片名为Ascend310P3 （自行替换）
+            回显如下：
+            +-------------------+-----------------+------------------------------------------------------+
+            | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+            | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+            +===================+=================+======================================================+
+            | 0       310P3     | OK              | 15.8         42                0    / 0              |
+            | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+            +===================+=================+======================================================+
+            | 1       310P3     | OK              | 15.4         43                0    / 0              |
+            | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+            +===================+=================+======================================================+
+            ```
+   
+      3. 执行ATC命令。
+   
+            ```
+            atc --framework=5 --model=pointnet_bs1_sim_fixed.onnx --output=pointnet_bs1_fixed --input_shape="image:1, 3, 2500" --soc_version=Ascend${chip_name} --log=error --out_nodes "LogSoftmax_84:0"
+            ```
+   
+            + 参数说明：
+              + --model：为ONNX模型文件；
+              + --framework：5代表ONNX模型；
+              + --output：输出的OM模型；
+              + --input\_format：输入数据的格式；
+              + --input\_shape：输入数据的shape；
+              + --log：日志级别；
+              + --out_nodes：固定输出节点；
+              + --soc\_version：处理器型号；
+   
+            运行成功后在--output指定地址生成pointnet_bs1_fixed.om模型文件。
+   
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+
+   2. 执行推理。
+
+        ```
+        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./pointnet_bs1_fixed.om --input ./bin_file --output ./result/bs1 --outfmt TXT --batchsize 1 
+        ```
+
+        -   参数说明：
+
+             -   --model：om文件路径；
+             -   --input：预处理完的数据集文件夹；
+             -   --output：推理结果保存地址；
+             -   --outfmt： 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT” ；
+             -   --batchsize： 模型batch size ;
+
+       
+
+         >**说明：** 
+         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
+
+   3. 精度验证。
+
+       调用“pointnet_postprocess.py”脚本与数据集标签“name2label.txt”比对，可以获得Accuracy数据。 
+
+      ```
+       python3 pointnet_postprocess.py ./name2label.txt ./result/bs1/xxxx
+      ```
+      
+      - 参数说明：
+        - ./name2label.txt：为标签数据路径；
+        - ./result/bs1/xxxx： 推理结果所在路径 ;
+     
+      
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+精度：
+| Batch Size |   310      |   310P     |  github开源仓结果（官方)|  pth模型推理结果|
+| ---------- | ---------- | ---------- | --------------------|-----------|
+|   1        |  0.974243  | 0.973895   |         0.981          |       0.9742|           
+
+
+
+性能：
+| 芯片型号| Batch Size |   310      |   310P     |      310P/310   | 
+| --------| ---------- | ---------- | ----------  | ---------------| 
+| 310P3   |   1        | 1199.43986 | 2132.781818 | 1.7781482      | 
+| 310P3 |   4        | 1343.31039 | 1937.487074   | 1.4423227      | 
+| 310P3 |   8        | 1483.77947 | 2160.862723     | 1.45632337     | 
+| 310P3 |   16       | 1426.54631 | 2251.604186 | 1.57836039     |
+| 310P3 |   32       | 1456.63772 | 2211.745445 | 1.51839089     | 
+| 310P3 |   64       | 1484.46742 | 2220.06382 |  1.49552883    |  

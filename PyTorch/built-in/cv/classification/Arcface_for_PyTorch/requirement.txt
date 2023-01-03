@@ -1,5 +1,6 @@
 tensorboard
-easydict
+easydict==1.10
 mxnet
 onnx
 sklearn
+scikit-learn

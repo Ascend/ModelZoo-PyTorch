@@ -141,6 +141,9 @@ echo "------------------ Final result ------------------"
 Time=`grep "Epoch:"  $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Batchtime: " '{print $2}'|awk -F " " '{print $1}'|tail -n+5|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${Time}'}'`
 #FPS=`grep TimeHistory  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $6}'`
+
+#输出CompileTime
+CompileTime=`grep "Epoch:"  $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 2|awk -F "Batchtime: " '{print $2}'|awk '{sum+=$1} END {print sum}'|sed s/[[:space:]]//g`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -179,6 +182,7 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "ModelStatus = ${ModelStatus}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "DTS_Number = ${DTS_Number}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "Status = ${Status}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log

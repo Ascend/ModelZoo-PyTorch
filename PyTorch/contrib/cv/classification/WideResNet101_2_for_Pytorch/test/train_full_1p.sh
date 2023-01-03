@@ -113,14 +113,13 @@ python3.7 -u ./main_npu_1p.py \
     --print-freq=10 \
     --epochs=${train_epochs} \
     --amp \
-    --loss-scale=128.0 \
+    --loss-scale='dynamic' \
     --opt-level='O2' \
     --device='npu' \
     --world-size=1 \
     --npu=${ASCEND_DEVICE_ID} \
     --save_path=${test_path_dir}/train_1p_${start_time} \
     --batch-size=${batch_size} > ${test_path_dir}/train_1p_${start_time}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
 wait
 
 ##################获取训练数据##################

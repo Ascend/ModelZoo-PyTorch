@@ -26,7 +26,8 @@ from models.retinaface import RetinaFace
 from utils.box_utils import decode, decode_landm
 from utils.timer import Timer
 
-
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 
 def check_keys(model, pretrained_state_dict):

@@ -1,1 +1,0 @@
-python3.7 CNN_Transformer_pth_online_infer.py --pred_res_save_path=./pth_online_infer_res/validation/transcriptions.txt --which_dataset=validation

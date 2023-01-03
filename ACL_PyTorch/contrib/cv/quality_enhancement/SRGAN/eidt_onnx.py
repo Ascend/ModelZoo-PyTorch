@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 import numpy as np
-from magiconnx import OnnxGraph
-import sys
+from auto_optimizer import OnnxGraph
 
 def fix(graph):
     nodes = graph.get_nodes(op_type='PRelu')
@@ -25,8 +26,12 @@ def fix(graph):
 
 
 if __name__ == '__main__':
-    onnx_path = sys.argv[1]
-    batch_size = sys.argv[2]
-    onnx_graph = OnnxGraph(onnx_path)
+    parser = argparse.ArgumentParser(description='fix onnx script')
+    parser.add_argument('--src_path', default='srgan.onnx', type=str)
+    parser.add_argument('--result_path', default='./srgan_fix.onnx', type=str)
+    args = parser.parse_args()
+    
+    onnx_graph = OnnxGraph.parse(args.src_path)
     fix(onnx_graph)
-    onnx_graph.save('srgan_fix_bs{}.onnx'.format(batch_size))
+    onnx_graph.save(args.result_path)
+    

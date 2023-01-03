@@ -325,11 +325,11 @@ class Runner(object):
             self._inner_iter = i
             self.call_hook('before_train_iter')
             if i <= self.stop_step and i >= self.start_step and self.profiling == 'CANN':
-                prof_manager = torch.npu.profiling(profiler_result_path="./CANN_prof",use_e2e_profiler=True)
+                prof_manager = torch.npu.profiling(profiler_result_path="./CANN_prof")
             elif i <= self.stop_step and i >= self.start_step and self.profiling == 'GE':
                 prof_manager =  torch.npu.profiling(profiler_result_path="./GE_prof")
             else:
-                prof_manager = NoProfiling()    
+                prof_manager = NoProfiling()
             with prof_manager:
                 outputs = self.batch_processor(
                         self.model, data_batch, train_mode=True, **kwargs)
@@ -342,7 +342,7 @@ class Runner(object):
 
             self.call_hook('after_train_iter')
             self._iter += 1
-            
+
             if i % self.fps_lag == 0 and i:
                 self.logger.info('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
                                                 self.iter_time_hook.time_all))

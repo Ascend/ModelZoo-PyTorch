@@ -1,239 +1,261 @@
-# Jasper Onnx模型端到端推理指导
+# Jasper模型-推理指导
 
-- [Jasper Onnx模型端到端推理指导](#jasper-onnx模型端到端推理指导)
-  - [1. 模型概述](#1-模型概述)
-    - [1.1 论文地址](#11-论文地址)
-    - [1.2 代码地址](#12-代码地址)
-  - [2. 环境准备](#2-环境准备)
-    - [2.1 文件说明](#21-文件说明)
-    - [2.2 环境依赖准备](#22-环境依赖准备)
-  - [3. 模型转换](#3-模型转换)
-    - [3.1 pth转onnx模型](#31-pth转onnx模型)
-    - [3.2 onnx转om模型](#32-onnx转om模型)
-  - [4. 端到端推理及验证](#4-端到端推理及验证)
-    - [4.1 离线推理](#41-离线推理)
-    - [4.2 精度验证](#42-精度验证)
-    - [4.3 性能验证](#43-性能验证)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
 
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-## 1. 模型概述
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模型在不借助任何外部数据的情况下在LibriSpeech数据集上取得了SOTA的结果。
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
--   **[论文地址](#11-论文地址)**  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
--   **[代码地址](#12-代码地址)**  
+  ******
 
-### 1.1 论文地址
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-[J. Li, V. Lavrukhin, B. Ginsburg, R. Leary, O. Kuchaiev, J. M.Cohen, H. Nguyen, and R. T. Gadde, “Jasper: An End-to-End Convolutional Neural Acoustic Model,” in arXiv, 2019.](https://arxiv.org/pdf/1904.03288.pdf)
+Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模型在不借助任何外部数据的情况下在LibriSpeech数据集上取得了SOTA的结果
 
-### 1.2 代码地址
+- 参考实现：
 
-```
-url=https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechRecognition/Jasper 
-branch=master 
-commit_id=15af494a8e7e0c33fcbdc6ef9cc12e3929e313aa
-```
-
-通过Git获取对应commit_id的代码方法如下：
-
-```
-git clone {repository_url}        # 克隆仓库的代码
-cd {repository_name}              # 切换到模型的代码仓目录
-git checkout {branch}             # 切换到对应分支
-git reset --hard {commit_id}      # 代码设置到对应的commit_id
-cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-```
-
-## 2. 环境准备
-
--   **[文件说明](#21-文件说明)**  
-
--   **[环境依赖准备](#22-环境依赖准备)**  
-
-### 2.1 文件说明
-
-  1. `acl_net.py`：PyACL推理工具代码
-  2. `om_infer_acl.py`：Jasper推理代码，基于om推理
-  3. `Jasper_pth2onnx.py`：根据pth文件得到onnx模型
-
-### 2.2 环境依赖准备
-
-本环境在Ubuntu 18.04，python3.7.11 版本下测试通过，具体环境依赖见requirements.txt文件，用户可根据自己的运行环境自行安装所需依赖
-
-- 文件下载
-  
-  - 源码下载
-  
-    下载[Jasper源码](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechRecognition/Jasper)并解压文件，切换到 `DeepLearningExamples/PyTorch/SpeechRecognition/Jasper` 目录下。
-  
-  - 权重下载
-  
-    ```shell
-    mkdir ./checkpoints
-    wget -P ./checkpoints https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/audio/Jasper/jasper_fp16.pt
-    ```
-  
-  - 数据集下载
-  
-    下载 [LibriSpeech-test-other.tar.gz](https://www.openslr.org/resources/12/test-other.tar.gz)数据集并根据 [Quick Start Guide](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechRecognition/Jasper#quick-start-guide) 的 `Download and preprocess the dataset` 部分进行数据预处理，将原始 `.flac` 文件转换成 `.wav` 文件，数据集预处理成功后Jasper目录下应存在如下结构目录
-    
-    ```
-    dataset/LibriSpeech/
-    ├── dev-clean 
-    ├── dev-clean-wav
-    ├── librispeech-dev-clean-wav.json
-    ```
-  
-- 文件拷贝®
-
-  1. 将源码包中除```Jasper.patch```的其他文件移动到`DeepLearningExamples/PyTorch/SpeechRecognition/Jasper` 目录下
-  
-  2. 将源码包中`Jasper.patch`文件移动到代码仓`DeepLearningExamples`目录下执行
-  
-     ```bash
-     git apply Jasper.patch
-     ```
-- 安装依赖
   ```
-  pip3 install ONNX==1.7.0
-  pip3 install librosa==0.8.0
-  pip3 install Pytorch==1.5.0
-  pip3 install numpy==1.18.5
-  pip3 install ascii-graph==1.5.1
-  pip3 install ipdb
-  pip3 install pandas==1.1.4
-  pip3 install pyyaml
-  pip3 install soundfile
-  apt-get install sox
-  pip3 install sox==1.4.1
-  pip3 install tqdm==4.53.0
-  pip3 install wrapt==1.10.11
-  pip3 install unidecode==1.2.0
-  pip3 install inflect==5.3.0
+  url=https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechRecognition/Jasper
+  commit_id=15af494a8e7e0c33fcbdc6ef9cc12e3929e313aa
+  code_path= ACL_PyTorch/contrib/audio/jasper
+  model_name=jasper
   ```
-## 3. 模型转换
-
-- **[pth转onnx模型](#31-pth转onnx模型)** 
-
-- **[onnx转om模型](#32-onnx转om模型)**
-
-### 3.1 pth转onnx模型
-
-```
-#导入pth模型。
-mkdir checkpoints
-mv  nvidia_jasper_210205  checkpoints/jasper_fp16.pt。
-```
-
-```
-注释所有apex依赖和源工程代码修改。
-将源码中diff.patch文件移动到代码仓“DeepLearningExamples”目录下，根据diff.path内容，手动调整/PyTorch/SpeechRecognition/Jasper/common/features.py /PyTorch/SpeechRecognition/Jasper/common/helpers.py /PyTorch/SpeechRecognition/Jasper/jasper/model.py三个文件
-```
 
 
-```bash
-# Jasper_pth2onnx.py需要三个参数，第一个为pth模型路径，第二个为转换后的模型，第三个为模型的batch size
-# 生成batch size为1的onnx模型
-python3.7 Jasper_pth2onnx.py checkpoints/jasper_fp16.pt jasper.onnx 1
-```
+## 输入输出数据<a name="section540883920406"></a>
 
-因为atc工具目前对动态shape场景支持度不高，官方提供的onnx模型给模型调测带来较大困难，所以需要使用pth2onnx脚本重新生成带feat_lens的模型。
+- 输入数据
 
-### 3.2 onnx转om模型
+  | 输入数据 | 数据类型 | 大小               | 数据排布格式 |
+  | -------- | -------- | ------------------ | ------------ |
+  | input    | RGB_FP16 | batchsize x 64 x-1 | ND           |
 
-1. 设置环境变量
+- 输出数据
 
-   ```bash
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh	
+  | 输出数据 | 数据类型 | 大小                | 数据排布格式 |
+  | -------- | -------- | ------------------- | ------------ |
+  | output   | FP16     | batchsize x -1 x 29 | ND           |
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+**表 1**  版本配套表
+
+| 配套                                                            | 版本    | 环境准备指导                                                                                          |
+| --------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| 固件与驱动                                                      | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                            | 5.1.RC2 | -                                                                                                     |
+| Python                                                          | 3.7.5   | -                                                                                                     |
+| PyTorch                                                         | 1.8.0   | -                                                                                                     |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```shell
+   git clone https://github.com/NVIDIA/DeepLearningExamples.git
+   cd DeepLearningExamples
+   git reset --hard 15af494a8e7e0c33fcbdc6ef9cc12e3929e313aa
+   cd PyTorch/SpeechRecognition/Jasper      # 将本仓库中代码拷贝到此目录下执行
    ```
 
-2. 使用atc将onnx模型转换为om模型文件
-  
-    ${chip_name}可通过`npu-smi info`指令查看
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+2. 安装依赖。
 
-
-   ```bash
-   # 将jasper_1batch.onnx模型转换为jasper_1batch.om，对于不同batch size的onnx模型，需要修改input_shape参数重feats的第一维
-   atc --model=jasper.onnx \
-       --framework=5 \
-       --input_format=ND \
-       --input_shape="feats:1,64,4000;feat_lens:1" \
-       --output=jasper_1batch \
-       --soc_version=${chip_name} \
-       --log=error
+   ```shell
+   pip3 install -r requirements.txt
+   sudo apt install libsndfile1
+   sudo apt install sox
    ```
 
-## 4. 端到端推理及验证
+## 准备数据集<a name="section183221994411"></a>
 
-- **[离线推理](#41-离线推理)** 
-- **[精度验证](#42-精度验证)**
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-- **[性能验证](#43-性能验证)**
+   本模型支持 LibriSpeech 语音包的验证集。请用户自行获取 [LibriSpeech-test-other.tar.gz](https://www.openslr.org/resources/12/test-other.tar.gz)数据集，然后上传数据集到推理服务器任意目录并解压（如：`dataset_dir=/home/HwHiAiUser/dataset`）。
 
-### 4.1 离线推理
+   目录结构如下：
 
-```bash
-datasets_path="./dataset/LibriSpeech/"
+   ```shell
+   ├──LibriSpeech
+       ├──test-other
+         ├──8461
+         ├──8280
+         ......
+       ├──SPEAERS.TXT
+       ├──README.TXT
+       ├──LICENSE.TXT
+       ├──CHAPTERS.TXT
+       ├──BOOKS.TXT
+   ```
 
-# 使用jasper_1batch.om模型在LibriSpeech数据集的dev-clean上进行推理，推理结果保存在result_bs1.txt中
-# 执行离线推理后会输出wer值，与参考精度值3.20比较，保证精度差异在1%以内即可。
-# 对于不同batch size的om模型，需要修改batch_size参数
-python3.7 om_infer_acl.py \
-        --batch_size 1 \
-        --model ./jasper_1batch.om \
-        --val_manifests ${datasets_path}/librispeech-dev-clean-wav.json \
-        --model_config configs/jasper10x5dr_speedp-online_speca.yaml \
-        --dataset_dir ${datasets_path} \
-        --max_duration 40 \
-        --pad_to_max_duration \
-        --save_predictions ./result_bs1.txt
-```
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-### 4.2 精度验证
+   使用代码仓 Japser/utils目录下的convert_librispeech.py 脚本原始数据（.flac）转化为语音文件（.wav）。
 
-执行离线推理后会输出wer值，与参考精度值9.66比较，保证精度差异在1%以内即可。
+   ```shell
+   python ./utils/convert_librispeech.py \
+          --input_dir ${dataset_dir}/test-other \
+          --dest_dir ${dataset_dir}/test-other-wav \
+          --output_json ${dataset_dir}/librispeech-test-other-wav.json
+   ```
 
-| 模型      | pth精度 | 310精度   | 310P精度
-| -------- | ------- | ------- |-----|
-| Jasper   | 9.66   | 9.730| 9.726   
-### 4.3 性能验证
+      - 参数说明：
+          - --input_dir： 原始数据验证集（.flac）所在路径
+          - --dest_dir： 输出文件（.wav）所在路径
+          - --output_json：wav对应的元信息json文件
 
-使用ais_infer.py推理测试模型性能 [ais_infer具体参考](http://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-
-
-``````shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-
-获取ais_infer
-pip3 install aclruntime-0.0.1-cp37-cp37m-linux_x86_64.whl
-git clone https://gitee.com/ascend/tools.git
+      每个 .flac 对应生成一个.wav文件 。
 
 
-推理
-python3 {ais_infer_path}/ais_infer.py --model {jasper_path}/jasper_batch_1.om --output ./ --outfmt BIN --batchsize 1
+## 模型推理<a name="section741711594517"></a>
 
---model：模型地址
---input：预处理完的数据集文件夹
---output：推理结果保存地址
---outfmt：推理结果保存格式
---batchsize: batchsize的值
-``````
+1. 模型转换。
 
-纯推理后性能结果保存在```result/PureInfer_perf_of_jasper_1batch_in_device_0.txt```，使用tail命令查看性能数据
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-```bash
-tail result/PureInfer_perf_of_jasper_1batch_in_device_0.txt
-```
-性能结果
-|batch_size|310       |310P        |
-|----------|----------|------------|
-|bs1       |17.9528057|23.9646092  |
-|bs4       |19.6234026|20.59439543 |
-|bs8       |19.44036742|21.2358747 |
-|bs16      |19.74849299|28.21203738|
-|bs32      |19.80529607|28.21540613|
-|bs64      |19.79865766|26.20766411|
+   1. 获取权重文件。
+
+       - 点击[Link](https://ngc.nvidia.com/catalog/models/nvidia:jasper_pyt_ckpt_amp)获取官方发布的Jasper权重文件nvidia_jasper_210205.pt。
+
+         ```
+         mkdir checkpoint
+         ```
+
+         将nvidia_jasper_210205.pt 文件移动到checkpoint文件夹下。
+
+       - 注释所有apex依赖和源工程代码修改。
+
+         将源码中Jasper.patch文件移动到代码仓“DeepLearningExamples”目录下，执行命令。
+
+         ```shell
+         git apply Jasper.patch
+         ```
+
+         注：若无法打patch可手动执行。
+
+   2. 导出onnx文件。
+
+      将源码中Jasper_pth2onnx.py脚本移动到代码仓“DeepLearningExamples/PyTorch/SpeechRecognition/Jasper”目录下，执行如下命令。
+
+      ```
+      python Jasper_pth2onnx.py  checkpoint/nvidia_jasper_210205.pt jasper_bs1.onnx 1
+      ```
+
+      该转换过程执行时间较长请耐心等待。运行成功后在当前目录生成 jasper_bs1.onnx 模型文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```shell
+          source /usr/local/Ascend/ascend_tooklit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```shell
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```shell
+          atc --model=jasper_bs1.onnx \
+             --framework=5 \
+             --input_format=ND \
+             --input_shape="feats:1,64,4000;feat_lens:1" \
+             --output=jasper_bs1 \
+             --soc_version=${chip_name} \
+             --log=error
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+         运行成功后生成jasper_bs1.om模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 使用pyACL进行推理。
+
+      执行 om_infer_acl.py进行离线推理。
+
+      ```shell
+      # 使用jasper_1batch.om模型在LibriSpeech数据集的dev-clean上进行推理，推理结果保存在result_bs1.txt中
+      # 执行离线推理后会输出wer值，与参考精度值比较，保证精度差异在1%以内即可。
+      # 对于不同batch size的om模型，需要修改batch_size参数
+      python Jasper_infer_acl.py \
+              --batch_size 1 \
+              --model ./jasper_bs1.om \
+              --val_manifests ${dataset_dir}/librispeech-test-other-wav.json \
+              --model_config configs/jasper10x5dr_speedp-online_speca.yaml \
+              --dataset_dir ${dataset_dir} \
+              --max_duration 40 \
+              --pad_to_max_duration \
+              --save_predictions ./result_bs1.txt
+      ```
+
+   3. 精度验证。
+
+      执行离线推理后会输出wer值，与[官方给出的wer=9.66](https://ngc.nvidia.com/catalog/models/nvidia:jasper_pyt_onnx_fp16_amp/version)进行对比，保证精度差异在1%以内即可。
+
+   4. 性能验证
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：执行推理。
+
+      ```shell
+      python3 {ais_infer_path}/ais_infer.py --model jasper_bs1.om --batchsize 1 --loop 20
+      ```
+
+      -   参数说明：
+
+           -   --model：om模型。
+           -   --loop：纯推理循环次数。
+           -   --batchsize：batchsize的值
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集                        | 精度  | 性能  |
+| -------- | ---------- | ----------------------------- | ----- | ----- |
+| 310P3    | 1          | LibriSpeech-test-other.tar.gz | 9.726 | 29.25 |
+| 310P3    | 4          | LibriSpeech-test-other.tar.gz | 9.726 | 28.59 |
+| 310P3    | 8          | LibriSpeech-test-other.tar.gz | 9.726 | 21.23 |
+| 310P3    | 16         | LibriSpeech-test-other.tar.gz | 9.726 | 28.21 |
+| 310P3    | 32         | LibriSpeech-test-other.tar.gz | 9.726 | 28.54 |
+| 310P3    | 64         | LibriSpeech-test-other.tar.gz | 9.726 | 26.37 |

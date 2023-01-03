@@ -164,8 +164,9 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
 3. 性能验证  
    可使用`ais_infer`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
    ```
-   python3 ${ais_infer_path}/ais_infer.py --model=output/mbv3_small_bs1.om --loop=1000 --batchsize=1
+   python3 -m ais_bench --model output/mbv3_small_bs${bs}.om --loop 1000 --batchsize ${bs}
    ```
+   其中，`bs`为模型`batch_size`。
 
 # 模型推理性能&精度
 

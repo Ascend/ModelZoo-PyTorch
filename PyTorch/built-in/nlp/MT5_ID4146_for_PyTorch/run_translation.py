@@ -27,6 +27,7 @@ from typing import Optional
 import datasets
 import numpy as np
 from datasets import load_dataset, load_metric
+from datasets.download.download_config import DownloadConfig
 
 import transformers
 from transformers import (
@@ -211,6 +212,13 @@ class DataTrainingArguments:
             "needs to be the target language token.(Usually it is the target language token)"
         },
     )
+    download_max_retries: Optional[int] = field(
+        default=5,
+        metadata={
+            "help": "The max numbers to retry to download datasets."
+        },
+    )
+
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
@@ -308,7 +316,7 @@ def main():
     if data_args.dataset_name is not None:
         # Downloading and loading a dataset from the hub.
         raw_datasets = load_dataset(
-            data_args.dataset_name, data_args.dataset_config_name, cache_dir=model_args.cache_dir
+            data_args.dataset_name, data_args.dataset_config_name, cache_dir=model_args.cache_dir, download_config=DownloadConfig(max_retries=data_args.download_max_retries)
         )
     else:
         data_files = {}
@@ -609,10 +617,6 @@ def main():
     if len(languages) > 0:
         kwargs["language"] = languages
 
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
 
     return results
 

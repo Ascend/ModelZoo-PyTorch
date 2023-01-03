@@ -203,6 +203,9 @@ class opts(object):
     self.parser.add_argument('--use_amp', default = True,
                               help = 'use amp or not')
 
+    self.parser.add_argument('--prof', default = False,
+                              help = 'output prof')
+
   def parse(self, args=''):
     if args == '':
       opt = self.parser.parse_args()

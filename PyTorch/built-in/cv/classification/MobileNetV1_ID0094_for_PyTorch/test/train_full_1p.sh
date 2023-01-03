@@ -39,7 +39,6 @@ learning_rate=0.1
 # 指定训练所使用的npu device卡id
 device_id=0
 
-
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
 #维持参数，以下不需要修改
@@ -58,6 +57,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
       data_path=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
@@ -112,7 +113,7 @@ nohup python3.7 ${cur_path}/main.py \
     --batch_size=${batch_size} \
     --learning-rate=${learning_rate} \
     --epochs=$train_epochs \
-    --device_id=$ASCEND_DEVICE_ID \
+    --device_id=${device_id} \
     --apex \
     --apex-opt-level='O2' \
     --workers=128 \

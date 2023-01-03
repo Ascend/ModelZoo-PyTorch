@@ -11,29 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-import pdb
-
 import torch
 import os
 import numpy as np
 from tqdm import tqdm
 
-def postProcesss(result_path, data_head, data_tail):
 
-    data_mulu = os.listdir(result_path)
-    data_mulu.sort(key=lambda x: int(x.split('_')[1][0:]))
-    head_list_date = data_mulu[0]
-    head_mulu_path = os.path.join(result_path, head_list_date)
-    bin_head_list = os.listdir(head_mulu_path)
+def postProcesss(head_result_path, tail_result_path, data_head, data_tail):
+
+    bin_head_list = os.listdir(head_result_path)
     bin_head_list.sort(key=lambda x: int(x.split('-')[0][3:]))
 
-    tail_list_date = data_mulu[1]
-    tail_mulu_path = os.path.join(result_path, tail_list_date)
-    bin_tail_list = os.listdir(tail_mulu_path)
+    bin_tail_list = os.listdir(tail_result_path)
     bin_tail_list.sort(key=lambda x: int(x.split('-')[0][3:]))
     head_ite_list = os.listdir(data_head+'/post')
     tail_ite_list = os.listdir(data_tail+'/post')
-
     head_pos_list = os.listdir(data_head+'/possamp')
     tail_pos_list = os.listdir(data_head + '/possamp')
     head_ite_list.sort(key=lambda x: int(x.split('-')[0][3:]))
@@ -42,8 +34,8 @@ def postProcesss(result_path, data_head, data_tail):
     tail_pos_list.sort(key=lambda x: int(x.split('-')[0][3:]))
 
     logs = []
-    for i in tqdm(range(len(bin_head_list))):
-        bin_path = os.path.join(head_mulu_path, bin_head_list[i])
+    for i in tqdm(range(len(bin_head_list)), desc="Postprocessing head data..."):
+        bin_path = os.path.join(head_result_path, bin_head_list[i])
         score = np.load(bin_path)
         score = torch.from_numpy(score)
         ite_path = os.path.join(data_head+'/post', head_ite_list[i])
@@ -71,8 +63,8 @@ def postProcesss(result_path, data_head, data_tail):
                 'HITS@3': 1.0 if ranking <= 3 else 0.0,
                 'HITS@10': 1.0 if ranking <= 10 else 0.0,
             })
-    for i in tqdm(range(len(bin_tail_list))):
-        bin_path = os.path.join(tail_mulu_path, bin_tail_list[i])
+    for i in tqdm(range(len(bin_tail_list)), desc="Postprocessing tail data..."):
+        bin_path = os.path.join(tail_result_path, bin_tail_list[i])
         score = np.load(bin_path)
         score = torch.from_numpy(score)
         ite_path = os.path.join(data_tail + '/post', tail_ite_list[i])
@@ -80,10 +72,10 @@ def postProcesss(result_path, data_head, data_tail):
         filter_bias = torch.from_numpy(filter_bias)
         pos_path = os.path.join(data_tail + '/possamp', tail_pos_list[i])
         positive_sample = np.loadtxt(pos_path)
-        positive_sample = positive_sample.reshape(-1,3)
+        positive_sample = positive_sample.reshape(-1, 3)
         score += filter_bias
-        score = torch.reshape(score,(-1,14541))
-        
+        score = torch.reshape(score, (-1, 14541))
+
         # Explicitly sort all the entities to ensure that there is no test exposure bias
         argsort = torch.argsort(score, dim=1, descending=True)
         positive_arg = positive_sample[:, 2]
@@ -109,14 +101,20 @@ def postProcesss(result_path, data_head, data_tail):
     return metrics
 
 
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='postprocess of r2plus1d')
+    parser = argparse.ArgumentParser(description='postprocess of rotate')
 
-    parser.add_argument('--result_path', default=r'E:/huawei/KGE_inference/out')
-    parser.add_argument('--data_head', default=r'E:/huawei/KGE_inference/bin/head')
-    parser.add_argument('--data_tail', default=r'E:/huawei/KGE_inference/bin/tail')
+    parser.add_argument(
+        '--head_result_path', default=r'RotatEout/bs1/head')
+    parser.add_argument(
+        '--tail_result_path', default=r'RotatEout/bs1/tail')
+    parser.add_argument(
+        '--data_head', default=r'bin/head')
+    parser.add_argument(
+        '--data_tail', default=r'bin/tail')
     opt = parser.parse_args()
-    metrics = postProcesss(opt.result_path, opt.data_head, opt.data_tail)
+    metrics = postProcesss(opt.head_result_path,
+                           opt.tail_result_path,
+                           opt.data_head,
+                           opt.data_tail)
     print(metrics)
-

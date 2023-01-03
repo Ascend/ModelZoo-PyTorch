@@ -1,0 +1,17 @@
+diff -Naru a/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml b/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml
+--- a/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml	2022-11-10 10:57:23.296981862 +0000
++++ b/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml	2022-11-27 07:45:09.863363663 +0000
+@@ -1,6 +1,6 @@
+ Global:
+   debug: false
+-  use_gpu: true
++  use_gpu: False
+   epoch_num: 500
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -221,4 +221,4 @@
+     shuffle: False
+     drop_last: False
+     batch_size_per_card: 1 # must be 1
+-    num_workers: 2
++    num_workers: 0

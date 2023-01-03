@@ -5,18 +5,18 @@ cur_path=`pwd`
 
 #集合通信参数
 export RANK_SIZE=8
-#export ENABLE_RUNTIME_V2=1
 #设置log level,0-debug/1-info/2-warning/3-error
-#export ASCEND_GLOBAL_LOG_LEVEL_ETP_ETP_ETP_ETP_ETP=3
+#export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 #将Host日志输出到串口,0-关闭/1-开启
 #export ASCEND_SLOG_PRINT_TO_STDOUT=0
-export PYTHONPATH=${cur_path}/../mmcv:$PYTHONPATH
+#export PYTHONPATH=${cur_path}/../mmcv:$PYTHONPATH
 # 数据集路径,保持为空,不需要修改
 data_path=""
 apex="O1"
 #网络名称,同目录名称,需要模型审视修改
 Network="solov2_RT2_ID4115_for_Pytorch"
 
+epochs=12
 #训练batch_size,,需要模型审视修改
 batch_size=16
 #npu 设备ID
@@ -126,7 +126,7 @@ do
             --autoscale-lr \
             --seed 0 \
             --data_root=$data_path \
-            --total_epochs 12 \
+            --total_epochs $epochs \
             --rt2_bin=$rt2_bin \
             --batch_size=$dis_bs \
             --fps_lag=$fps_lag \
@@ -134,12 +134,12 @@ do
     else
         python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
-            --opt-level O1 \
+            --opt-level $apex \
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
             --data_root=$data_path \
-            --total_epochs 12 \
+            --total_epochs $epochs \
             --rt2_bin=$rt2_bin \
             --batch_size=$dis_bs \
             --fps_lag=$fps_lag \
@@ -147,8 +147,8 @@ do
     fi
 done
 wait
-python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
-      --out  results_solo.pkl --eval segm --data_root=$data_path >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  ${cur_path}/work_dirs/solov2_release_r50_fpn_8gpu_1x/epoch_${epochs}.pth --show \
+      --out  results_solo.pkl --eval segm --data_root=$data_path/coco/ >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -165,8 +165,8 @@ FPS=$(awk 'BEGIN{printf "%.2f\n",'${sum_FPS}'/'${num_FPS}'}')
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-# train_accuracy=`grep -a 'bbox_mAP' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP: " '{print $NF}'|awk -F "," '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-train_accuracy=`grep  'mmcv.runner.runner:Epoch' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep eta: | awk -F "loss: " '{print $NF}' | awk -F "," '{print $1}' | awk 'END {print}'`
+#train_accuracy=`grep  'mmcv.runner.runner:Epoch' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep eta: | awk -F "loss: " '{print $NF}' | awk -F "," '{print $1}' | awk 'END {print}'`
+train_accuracy=`grep -a 'maxDets' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $13}'|head -n 1`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

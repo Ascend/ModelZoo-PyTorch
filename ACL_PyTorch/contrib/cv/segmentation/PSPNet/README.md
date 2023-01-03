@@ -57,7 +57,7 @@
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.8.0   | -                                                            |
@@ -228,38 +228,39 @@
    2. 执行推理。
 
         ```
-         python3 ${path_to_ais-infer}/ais_infer/ais_infer.py \
+         python3 -m ais_bench \
              --model=./pspnet_sim_bs${batchsize}.om \
              --input=./voc12_bin/ \
              --batchsize=${batchsize} \
-             --output=./   
+             --output=./result \
+             --output_dirname=result_bs${batchsize}
         ```
          - 参数说明：
-
+   
            -   --model：om模型路径。
            -   --input：bin文件路径。
            -   --batchsize：om模型的batch。
            -   --output：推理结果保存路径。
-      
-        `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。${batchsize}表示不同batch的om模型。
-
-        推理完成后在当前PSENet工作目录生成推理结果。其目录命名格式为xxxx_xx_xx-xx_xx_xx(年_月_日-时_分_秒)，如2022_08_18-06_55_19。
-
+           -   --output_dirname：推理结果子文件夹。
+           
+   
+        `${batchsize}`表示不同batch的om模型。推理完成后在指定目录即`./result/result_bs${batchsize}`生成推理结果。
+   
         >**说明：** 
         >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
-
+   
    3. 精度验证。
       
       获取图片信息，命令为：
-
+   
       ```
       python3 get_info.py jpg ${data_path}/VOCdevkit/VOC2012/JPEGImages/ voc12_jpg.info
       ```
       
       第一个参数为图片类型，第二个参数为数据集图片路径，第三个参数为生成的图片信息文件。
-
+   
       调pspnet_postprocess.py脚本，计算mIoU指标，命令为：
-
+   
       ```
        python3 pspnet_postprocess.py \
            --test_annotation=./voc12_jpg.info \
@@ -268,11 +269,11 @@
            --split=${data_path}/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt \
            --net_input_width=500 \
            --net_input_height=500 \
-           --bin_data_path=${output_path}/xxxx_xx_xx-xx_xx_xx
+           --bin_data_path=./result/result_bs${batchsize}
       ```
-
+   
       - 参数说明：
-
+   
         - --test_annotation：图片信息文件。
         - --img_dir：图片路径。
         - --ann_dir：Ground Truth路径。
@@ -280,15 +281,15 @@
         - --net_input_width：模型输入图片宽。
         - --net_input_height：模型输入图片高。
         - --bin_data_path：om推理结路径。
-
+   
    4. 性能验证。
-
+   
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
+   
         ```
-         python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+         python3 -m ais_bench --model=pspnet_sim_bs${batchsize}.om --loop=20 --batchsize=${batch_size}
         ```
-
+   
       - 参数说明：
         - --model：om模型。
         - --loop：执行推理次数。
@@ -301,11 +302,11 @@
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | ----------- | -------- | ------- | ----------- | --------------- |
-| Ascend310P3 | 1        | VOC2012 | mIoU: 76.18 | 51.912          |
-| Ascend310P3 | 4        | VOC2012 | mIoU: 76.18 | 47.177          |
-| Ascend310P3 | 8        | VOC2012 | mIoU: 76.18 | 40.137          |
-| Ascend310P3 | 16       | VOC2012 | mIoU: 76.18 | 73.974          |
-| Ascend310P3 | 32       | VOC2012 | mIoU: 76.18 | 40.485          |
-| Ascend310P3 | 64       | VOC2012 | mIoU: 76.18 | 40.893          |
+| Ascend310P3 | 1        | VOC2012 | mIoU: 76.18 | 48.52     |
+| Ascend310P3 | 4        | VOC2012 | mIoU: 76.18 | 63.26     |
+| Ascend310P3 | 8        | VOC2012 | mIoU: 76.18 | 66.99     |
+| Ascend310P3 | 16       | VOC2012 | mIoU: 76.18 | 67.85     |
+| Ascend310P3 | 32       | VOC2012 | mIoU: 76.18 | 67.23     |
+| Ascend310P3 | 64       | VOC2012 | mIoU: 76.18 | 63.69     |
 
 注意：性能最优batchsize为16。

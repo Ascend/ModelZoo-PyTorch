@@ -27,6 +27,8 @@ from apex import amp
 from concurrent.futures import ProcessPoolExecutor
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP

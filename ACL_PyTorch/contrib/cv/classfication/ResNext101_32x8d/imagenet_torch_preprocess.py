@@ -17,7 +17,7 @@ import sys
 from PIL import Image
 import numpy as np
 import multiprocessing
-
+from tqdm import tqdm
 
 model_config = {
     'resnet': {
@@ -69,10 +69,9 @@ def resize(img, size, interpolation=Image.BILINEAR):
 
 
 def gen_input_bin(mode_type, file_batches, batch):
-    i = 0
+    
     for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
+        
 
         # RGBA to RGB
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
@@ -90,8 +89,11 @@ def preprocess(mode_type, src_path, save_path):
     files = os.listdir(src_path)
     file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
+    pbar = tqdm(range(len(file_batches)))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch))
+        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch),
+                                callback=lambda _: pbar.update(1),
+                                error_callback=lambda _: pbar.update(1))
     thread_pool.close()
     thread_pool.join()
     print("in thread, except will not report! please ensure bin files generated.")
@@ -114,4 +116,3 @@ if __name__ == '__main__':
     if not os.path.isdir(save_path):
         os.makedirs(os.path.realpath(save_path))
     preprocess(mode_type, src_path, save_path)
-

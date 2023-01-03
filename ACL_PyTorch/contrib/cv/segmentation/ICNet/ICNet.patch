@@ -1,0 +1,111 @@
+diff -Nur ./a/ICNet-pytorch/models/base_models/resnetv1b.py ./b/ICNet-pytorch/models/base_models/resnetv1b.py
+--- ./a/ICNet-pytorch/models/base_models/resnetv1b.py	2022-11-18 09:03:57.291723587 +0000
++++ ./b/ICNet-pytorch/models/base_models/resnetv1b.py	2022-11-18 09:00:28.187716109 +0000
+@@ -118,8 +118,6 @@
+         else:
+             self.layer3 = self._make_layer(block, 256, layers[2], stride=2, norm_layer=norm_layer)
+             self.layer4 = self._make_layer(block, 512, layers[3], stride=2, norm_layer=norm_layer)
+-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+ 
+         for m in self.modules():
+             if isinstance(m, nn.Conv2d):
+diff -Nur ./a/ICNet-pytorch/models/icnet.py ./b/ICNet-pytorch/models/icnet.py
+--- ./a/ICNet-pytorch/models/icnet.py	2022-11-18 09:03:57.291723587 +0000
++++ ./b/ICNet-pytorch/models/icnet.py	2022-11-18 08:59:52.507714833 +0000
+@@ -2,7 +2,7 @@
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
+-
++import numpy as np
+ from .segbase import SegBaseModel
+ from torchsummary import summary
+ 
+@@ -11,21 +11,21 @@
+ 
+ class ICNet(SegBaseModel):
+     """Image Cascade Network"""
+-    
+-    def __init__(self, nclass = 19, backbone='resnet50', pretrained_base=True):
++
++    def __init__(self, nclass = 19, backbone='resnet50', pretrained_base=True, train_mode=True):
+         super(ICNet, self).__init__(nclass,backbone, pretrained_base=pretrained_base)
+         self.conv_sub1 = nn.Sequential(
+             _ConvBNReLU(3, 32, 3, 2),
+             _ConvBNReLU(32, 32, 3, 2),
+             _ConvBNReLU(32, 64, 3, 2)
+         )
+-        
+-        self.ppm = PyramidPoolingModule()
++
++        self.ppm = PyramidPoolingModule(mode=train_mode)
+ 
+         self.head = _ICHead(nclass)
+ 
+         self.__setattr__('exclusive', ['conv_sub1', 'head'])
+-        
++
+     def forward(self, x):
+         # sub 1
+         x_sub1 = self.conv_sub1(x)
+@@ -33,31 +33,43 @@
+         # sub 2
+         x_sub2 = F.interpolate(x, scale_factor=0.5, mode='bilinear', align_corners=True)
+         _, x_sub2, _, _ = self.base_forward(x_sub2)
+-        
++
+         # sub 4
+         x_sub4 = F.interpolate(x, scale_factor=0.25, mode='bilinear', align_corners=True)
+         _, _, _, x_sub4 = self.base_forward(x_sub4)
+         # add PyramidPoolingModule
+         x_sub4 = self.ppm(x_sub4)
+-        
++
+         outputs = self.head(x_sub1, x_sub2, x_sub4)
+-        
++
+         return tuple(outputs)
+ 
+ class PyramidPoolingModule(nn.Module):
+-	def __init__(self, pyramids=[1,2,3,6]):
+-		super(PyramidPoolingModule, self).__init__()
+-		self.pyramids = pyramids
+-
+-	def forward(self, input):
+-		feat = input
+-		height, width = input.shape[2:]
+-		for bin_size in self.pyramids:
+-			x = F.adaptive_avg_pool2d(input, output_size=bin_size)
+-			x = F.interpolate(x, size=(height, width), mode='bilinear', align_corners=True)
+-			feat  = feat + x
+-		return feat
+-    
++    def __init__(self, pyramids=[1,2,3,6], mode=True):
++        super(PyramidPoolingModule, self).__init__()
++        self.pyramids = pyramids
++        self.train_mode = mode
++        print("train_mode:",self.train_mode)
++
++    def forward(self, input):
++        feat = input
++        height, width = input.shape[2:]
++        for bin_size in self.pyramids:
++            if self.train_mode:
++                x = F.adaptive_avg_pool2d(input, output_size=bin_size)
++            else:
++
++                inputsz = np.array(input.shape[2:])
++                outputsz = np.array([bin_size, bin_size])
++                stridesz = np.floor(inputsz / outputsz).astype(np.int32)
++                kernelsz = inputsz - (outputsz - 1) * stridesz
++                print("========avg para kernelsz, stridesz======:", kernelsz, stridesz)
++                x = F.avg_pool2d(input, kernel_size=list(kernelsz), stride=list(stridesz))
++                # x = F.avg_pool2d(input, kernel_size=bin_size)
++            x = F.interpolate(x, size=(height, width), mode='bilinear', align_corners=True)
++            feat  = feat + x
++        return feat
++
+ class _ICHead(nn.Module):
+     def __init__(self, nclass, norm_layer=nn.BatchNorm2d, **kwargs):
+         super(_ICHead, self).__init__()

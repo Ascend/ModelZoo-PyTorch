@@ -1,2 +1,0 @@
-benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=genet_bs1_tuned.om -input_text_path=genet_prep_bin.info -input_width=32 -input_height=32 -output_binary=False -useDvpp=False
-benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=genet_bs16_tuned.om -input_text_path=genet_prep_bin.info -input_width=32 -input_height=32 -output_binary=False -useDvpp=False

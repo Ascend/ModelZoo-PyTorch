@@ -20,6 +20,9 @@ export HCCL_EXEC_TIMEOUT=1800
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
+#conda环境的名称
+conda_name=py4
+
 #网络名称,同目录名称,需要模型审视修改
 Network="YOLOX_Dynamic_ID4069_for_PyTorch"
 
@@ -39,6 +42,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source $test_path_dir/set_conda.sh
+        source activate $conda_name
     fi
 done
 

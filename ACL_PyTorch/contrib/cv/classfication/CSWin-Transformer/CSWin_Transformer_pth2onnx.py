@@ -12,15 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+sys.path.append("./CSWin-Transformer")
 import models
 import onnx
-import sys
 import torch
 import torchvision
-
 from onnxsim import simplify
 from timm import create_model
 from timm.models import load_checkpoint
+import argparse
+
+def get_args_parser():
+    parser = argparse.ArgumentParser('CSPR pth2onnx scipt', add_help=False)
+    parser.add_argument('--pth' , help='pth file')
+    parser.add_argument('--onnx', help='onnx name')
+    parser.add_argument('--batchsize', help='batchsize')
+    return parser
 
 def pth2onnx(input_file, output_file, batch_size):
     model = create_model('CSWin_64_24322_small_224',
@@ -51,7 +59,9 @@ def pth2onnx(input_file, output_file, batch_size):
 
 
 if __name__ == '__main__':
-    batch_size = sys.argv[1]
-    input_file = sys.argv[2]
-    output_file = sys.argv[3]
+    parser = get_args_parser()
+    args = parser.parse_args()
+    batch_size = args.batchsize
+    input_file = args.pth
+    output_file = args.onnx
     pth2onnx(input_file, output_file, batch_size)

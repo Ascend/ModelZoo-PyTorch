@@ -16,7 +16,7 @@ learning_rate=2e-3
 # 指定训练所使用的npu device卡id
 device_id=0
 # 训练使用的npu卡数
-export RANK_SIZE=1
+export RANK_SIZE=8
 # 数据集路径,修改为本地数据集路径
 data_path=""
 
@@ -35,15 +35,10 @@ echo "all para $*"
 #参数校验，不需要修改
 for para in $*
 do
-#	echo "enter in"
-#	echo "this para $para"
-#	data_path=`echo ${para#*=}`
-#	echo "datapath $data_path"
     if [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-#	echo "datapath $data_path"
     fi
 done
 

@@ -1,108 +1,222 @@
-# DeeplabV3模型使用说明
+# DeeplabV3 for PyTorch
 
-## Requirements
-* NPU配套的run包安装
-* Python 3.7.5
-* PyTorch(NPU版本)
-* apex(NPU版本)
-* mmcv-full 1.3.9
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-### Dataset Prepare
-1. 下载cityscapes数据集
 
-2. 新建文件夹data
 
-3. 将cityscas数据集放于data目录下
+# 概述
+
+## 简述
+
+DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池化解决分辨率的下降（由下采样导致），采用ASPP模型实现多尺度特征图融合，提出了更通用的框架，适用于更多网络。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/fregu856/deeplabv3
+  commit_id=415d983ec8a3e4ab6977b316d8f553371a415739
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/contrib/cv/semantic_segmentation
+  ```
+  
+- 通过Git获取代码方法如下：
+
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+  
+- 通过单击“立即下载”，下载源码包。
+
+# 准备训练环境
+
+## 准备环境
+
+- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+
+  **表 1**  版本配套表
+
+  | 配套       | 版本                                                         |
+  | ---------- | ------------------------------------------------------------ |
+  | 硬件 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | NPU固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
+  | mmcv  | 1.3.9 |
+
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖。
+
+  ```
+  cd ${code_path}
+
+  bash env_set.sh
+  ```
+
+  如在bash env_set.sh过程中出现无法连接mmcv的github报错，可以参考env_set.sh脚本中的配置命令进行mmcv的下载、编译以及替换操作。其中mmcv替换操作需要指定其安装目录，具体操作如下所示。
+  ```
+  mmcv_path=mmcv安装路径
+  ```
+
+  ```
+  cd ${code_path}
+
+  /bin/cp -f mmcv_need/_functions.py ${mmcv_path}/mmcv/parallel/
+  /bin/cp -f mmcv_need/scatter_gather.py ${mmcv_path}/mmcv/parallel/
+  /bin/cp -f mmcv_need/dist_utils.py ${mmcv_path}/mmcv/runner/
+  ```
+## 准备数据集
+
+1. 获取数据集。
+
+- 下载cityscapes数据集
+
+- 新建文件夹data
+
+- 将cityscas数据集放于data目录下
 
    ```shell
    ln -s /path/to/cityscapes/ ./data
+   # 注：'/path/to/cityscapes/'为数据集存放的路径，根据实际路径进行指定。
    ```
+- 配置数据集路径
 
-4. 处理数据集，`**labelTrainIds.png` 被用来训练
+  ```
+  vim configs/_base_/datasets/cityscapes.py
+  ```
+  修改19行data_root为data文件夹路径
+
+2. 数据预处理。
+
+- 执行以下命令进行数据预处理操作：
 
    ```shell
    python3 tools/convert_datasets/cityscapes.py data/cityscapes --nproc 8
-   # python3 tools/convert_datasets/cityscapes.py /path/to/cityscapes --nproc 8
+   # 注：'data/cityscapes'为数据集存放的路径，根据实际路径进行指定。
+   ```
+- 预处理后数据集目录结构参考如下所示。
+
+  ```
+  ├data
+  ├─ cityscapes   
+  ├── gtFine
+  │       ├── test     
+  │       │       ├──城市1──图片1、2、3、4
+  │       │       ├──城市2──图片1、2、3、4  
+  │       ├── train
+  │       │       │──城市3──图片1、2、3、4
+  │       │       ├──城市4──图片1、2、3、4  
+  │       └── val      
+  │       │       │──城市5──图片1、2、3、4
+  │       │       ├──城市6──图片1、2、3、4  
+  ├── leftImg8bit
+  │       ├── test     
+  │       │       ├──城市1──图片1、2、3、4
+  │       │       ├──城市2──图片1、2、3、4  
+  │       ├── train
+  │       │       │──城市3──图片1、2、3、4
+  │       │       ├──城市4──图片1、2、3、4  
+  │       └── val      
+  │       │       │──城市5──图片1、2、3、4
+  │       │       ├──城市6──图片1、2、3、4
+  ```
+
+## 获取预训练模型
+
+若无法自动下载，可手动下载resnet50_v1c.pth，并放到/root/.cache/torch/checkpoints/文件夹下。
+
+# 开始训练
+
+## 训练模型
+
+1. 进入模型代码所在路径。
+
+   ```
+   cd /${code_path} 
    ```
 
-### 预训练模型下载
-* 若无法自动下载，可手动下载resnet50_v1c.pth，并放到/root/.cache/torch/checkpoints/文件夹下。
+2. 运行训练脚本。
 
-### 脚本环境安装
-#### 运行env_set.sh脚本，进行MMCV和mmsegmentation的安装
-```shell
-bash env_set.sh
-```
-编译mmcv耗时较长，请耐心等待
+   该模型支持单机单卡训练和单机8卡训练。
 
-### 手动环境安装
-#### Build MMSEG from source
+   - 单机单卡训练
 
-1. 下载项目zip文件并解压
-3. 于npu服务器解压DeeplabV3_for_PyTorch压缩包
-4. 执行以下命令，安装mmsegmentation
-```shell
-cd DeeplabV3_for_PyTorch
-pip3.7 install -r requirements.txt
-pip3.7 install -e .
-pip3.7 list | grep mm
-```
+     启动单卡训练。
 
+     ```
+     bash ./test/train_full_1p.sh --data_path=real_data_path
+     ```
 
-#### Build MMCV
+   - 单机单卡性能
 
-##### MMCV full version with cpu
-```shell
-source ./test/env_npu.sh
-cd ..
-git clone -b v1.3.9 --depth=1 https://github.com/open-mmlab/mmcv.git
-export MMCV_WITH_OPS=1
-export MAX_JOBS=8
+     启动单卡性能测试。
 
-cd mmcv
-python3.7 setup.py build_ext
-python3.7 setup.py develop
-pip3.7 list | grep mmcv
-# 安装opencv-python-headless, 规避cv2引入错误
-pip3.7 uninstall opencv-python
-pip3.7 install opencv-python-headless
-```
+     ```
+     bash ./test/train_performance_1p.sh --data_path=real_data_path
+     ```
 
-##### Modified MMCV
-将mmcv_need目录下的文件替换到mmcv的安装目录下。
+   - 单机8卡训练
 
-```shell
-cd ../DeeplabV3_for_PyTorch
-/bin/cp -f mmcv_need/_functions.py ../mmcv/mmcv/parallel/
-/bin/cp -f mmcv_need/scatter_gather.py ../mmcv/mmcv/parallel/
-/bin/cp -f mmcv_need/dist_utils.py ../mmcv/mmcv/runner/
-```
+     启动8卡训练。
 
-## Training
+     ```
+     bash ./test/train_full_8p.sh --data_path=real_data_path
+     ```
 
-```shell
-# training 1p accuracy
-bash ./test/train_full_1p.sh --data_path=real_data_path
+   - 单机8卡性能
 
-# training 1p performance
-bash ./test/train_performance_1p.sh --data_path=real_data_path
+     启动8卡性能测试。
+     
+     ```
+     bash ./test/train_performance_8p.sh --data_path=real_data_path
+     ```
 
-# training 8p accuracy
-bash ./test/train_full_8p.sh --data_path=real_data_path
+   --data_path参数填写数据集路径。
+   
+   训练完成后，权重文件保存在当前路径的output文件夹下，并输出模型训练精度和性能信息。
 
-# training 8p performance
-bash ./test/train_performance_8p.sh --data_path=real_data_path
-```
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME    | mIOU |  FPS | Epochs | AMP_Type |
+| ------- | ----- | ---: | ------ | -------: |
+| 1p-torch1.5 | 90.97   |  6.657 | 1000     |        - |
+| 1p-torch1.8  | 91.11     |  6.806 | 1000      |       O2 |
+| 8p-torch1.5 | 94.49 | 36.689  | 1000    |        - |
+| 8p-torch1.8  | 96.13 | 38.925 | 1000    |       O2 |
+
+# 版本说明
+
+## 变更
+
+2022.08.31：更新内容，重新发布。
+
+2020.07.08：首次发布。
+
+## 已知问题
+
+无。
 
 
-## hipcc检查问题
-若在训练模型时，有报"which: no hipcc in (/usr/local/sbin:..." 的日志打印问题，
-而hipcc是amd和nvidia平台需要的，npu并不需要。
-建议在torch/utils/cpp_extension.py文件中修改代码，当检查hipcc时，抑制输出。
-将 hipcc = subprocess.check_output(['which', 'hipcc']).decode().rstrip('\r\n')修改为
-hipcc = subprocess.check_output(['which', 'hipcc'], stderr=subporcess.DEVNULL).decode().rstrip('\r\n')
 
-## 报No module named 'mmcv._ext'问题
-在宿主机上训练模型，有时会报No module named 'mmcv._ext'问题(按照setup.py build_ext安装一般不会遇到此问题)，或者别的带有mmcv的报错。
-解决方法：这一般是因为宿主机上安装了多个版本的mmcv，而训练脚本调用到了不匹配DeeplabV3模型使用的mmcv，因此报mmcv的错误。
-为了解决这个问题，建议在启动训练脚本前，先导入已经安装的符合DeeplabV3模型需要的mmcv路径的环境变量。export PYTHONPATH=mmcv的路径:$PYTHONPATH
+
+
+
+
+
+
+
+

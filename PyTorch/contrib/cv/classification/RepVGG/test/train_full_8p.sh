@@ -50,6 +50,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -74,7 +76,7 @@ nohup taskset -c $PID_START-$PID_END python3.7 -u train.py \
 -a RepVGG-A0 \
 --data ${data_path} \
 --workers 192 \
---batch-size=4096 \
+--batch-size=${batch_size} \
 --lr 1.6 \
 --wd 4e-5 \
 --device npu \

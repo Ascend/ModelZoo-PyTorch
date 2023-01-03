@@ -40,7 +40,6 @@ from mmdet.models.detectors import \
 from mmocr.models.builder import (DETECTORS, build_backbone, build_head,
                                   build_neck)
 
-
 @DETECTORS.register_module()
 class SingleStageDetector(MMDET_SingleStageDetector):
     """Base class for single-stage detectors.

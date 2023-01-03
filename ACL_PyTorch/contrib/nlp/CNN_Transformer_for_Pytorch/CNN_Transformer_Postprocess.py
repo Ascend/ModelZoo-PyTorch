@@ -66,10 +66,8 @@ if __name__ == '__main__':
     bin_file_num = len(bin_file_list)
     transcription_list = []
     with open(res_save_path, 'wt', encoding='utf-8') as f_pred:
-        for i in range(bin_file_num + 1):
-            if i == 34:
-                continue
-            output = np.fromfile(os.path.join(bin_file_path, str(i) + '.0.bin'), dtype=np.float32)
+        for i in range(bin_file_num):
+            output = np.fromfile(os.path.join(bin_file_path, str(i) + '_0.bin'), dtype=np.float32)
             output = output.reshape(1, len(output) // 32, 32)
             output = torch.from_numpy(output)
             predicted_ids = torch.argmax(output, dim=-1)
@@ -88,7 +86,7 @@ if __name__ == '__main__':
     else:
         librispeech_dataset = load_dataset('librispeech_asr', 'other', split='test')
 
-    wer_ = str(wer(librispeech_dataset['text'][:34]+librispeech_dataset['text'][35:], transcription_list))
+    wer_ = str(wer(librispeech_dataset['text'], transcription_list))
     print('[INFO] WER:', wer_)
     with open(os.path.join(pardir, 'wer.txt'), 'wt', encoding='utf-8') as f_wer:
         f_wer.write('WER: ' + wer_ + '\n')

@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
-import torch
-import argparse
 import os
 import sys
+import argparse
+import torch
 
 sys.path.append('./')
 
@@ -84,6 +84,9 @@ def main():
         description='PyTorch Tacotron 2 Inference')
     parser = parse_args(parser)
     args, _ = parser.parse_known_args()
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
 
     export_onnx(parser, args)
 

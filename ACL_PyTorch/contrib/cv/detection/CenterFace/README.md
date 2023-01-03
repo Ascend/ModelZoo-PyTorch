@@ -1,299 +1,263 @@
-# CenterFace Onnx模型端到端推理指导
+# CenterFace模型-推理指导
 
-- 1 模型概述
-  - [1.1 论文地址](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#11-论文地址)
-  - [1.2 代码地址](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#12-代码地址)
-- 2 环境说明
-  - [2.1 深度学习框架](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#21-深度学习框架)
-  - [2.2 python第三方库](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#22-python第三方库)
-- 3 模型转换
-  - [3.1 pth转onnx模型](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#31-pth转onnx模型)
-  - [3.2 onnx转om模型](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#32-onnx转om模型)
-- 4 数据集预处理
-  - [4.1 数据集获取](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#41-数据集获取)
-  - [4.2 数据集预处理](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#42-数据集预处理)
-  - [4.3 生成数据集信息文件](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#43-生成数据集信息文件)
-- 5 离线推理
-  - [5.1 benchmark工具概述](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#51-benchmark工具概述)
-  - [5.2 离线推理](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#52-离线推理)
-- 6 精度对比
-  - [6.1 离线推理精度统计](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#61-离线推理精度统计)
-  - [6.2 开源精度](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#62-开源精度)
-  - [6.3 精度对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#63-精度对比)
-- 7 性能对比
-  - [7.1 npu性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#71-npu性能数据)
-  - [7.2 T4性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#72-T4性能数据)
-  - [7.3 性能对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#73-性能对比)
-- 8 310P增加文件介绍
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-- **论文地址**
-- **代码地址**
+  - [输入输出数据](#section540883920406)
 
-### 1.1 论文地址
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[CenterFace论文](https://arxiv.org/abs/1911.03599)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.2 代码地址
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-[CenterFace代码](https://github.com/chenjun2hao/CenterFace.pytorch)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-## 2 环境说明
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-- **深度学习框架**
-- **python第三方库**
+- 论文：[CenterFace: Joint Face Detection and Alignment Using Face as Point](https://arxiv.org/abs/1911.03599)
 
-### 2.1 深度学习框架
 
-```
-python3.7.5
-CANN 5.0.1
+- 参考实现：
 
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
+  ```
+  url=https://gitee.com/andyrose/center-face.git
+  branch=master
+  commit_id=063db90e844fa0271abc14067b871f5afcbe6c60
+  ```
 
-### 2.2 python第三方库
 
-```
-numpy == 1.20.3
-Pillow == 8.2.0
-opencv-python == 4.5.2.54
-```
 
-## 3 模型转换
+## 输入输出数据<a name="section540883920406"></a>
 
-- **pth转onnx模型**
-- **onnx转om模型**
+- 输入数据
 
-### 3.1 pth转onnx模型
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 800 x 800 | NCHW         |
 
-1.下载pth权重文件
-权重文件从百度网盘上获取：https://pan.baidu.com/s/1sU3pRBTFebbsMDac-1HsQA        密码：etdi
 
-2.使用pth2onnx.py进行onnx的转换
+- 输出数据
 
-```
-mv ./CenterFace/center-face/src/pth2onnx.py  ./CenterFace/center-face/src/lib
-cd ./CenterFace/center-face/src/lib
-python3 pth2onnx.py
-```
+  | 输出数据 | 数据类型 | 大小       | 数据排布格式 |
+  | -------- | -------- | ---------- | ------------ |
+  | output1  | FLOAT32  | 1 x 40000  | ND           |
+  | output2  | FLOAT32  | 1 x 80000  | ND           |
+  | output3  | FLOAT32  | 1 x 80000  | ND           |
+  | output4  | FLOAT32  | 1 x 400000 | ND           |
 
-### 3.2 onnx转om模型
 
-1.设置环境变量
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+- 该模型需要以下插件与驱动   
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
+  **表 1**  版本配套表
 
-```
-cd ./CenterFace/center-face/src/test
-bash onnxToom.sh
-```
+  | 配套        | 版本    | 环境准备指导                                                 |
+  | ----------- | ------- | ------------------------------------------------------------ |
+  | 固件与驱动  | 1.0.17（NPU驱动固件版本为6.0.RC1）  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN        | 6.0.RC1 | -                                                            |
+  | Python      | 3.7.5   | -                                                            |
 
-## 4 数据集预处理
 
-- **数据集获取**
-- **数据集预处理**
-- **生成数据集信息文件**
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-### 4.1 数据集获取
+## 获取源码<a name="section4622531142816"></a>
 
-拉取代码仓库 （因为使用了开源代码模块，所以需要git clone一下）
+1. 获取源码。
 
-```shell
-git clone https://gitee.com/Levi990223/center-face.git
-```
+   ```
+   git clone https://gitee.com/Levi990223/center-face.git
+   ```
 
-整理代码结构
+2. 整理代码结构
 
-```shell
-mv -r test center-face/src
-mv benchmark.x86_64 centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py CenterFace.onnx pth2onnx.py get_info.py model_best.pth move.sh README.md ./center-face/src
-```
+   ```
+   mv centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py pth2onnx.py move.sh ./center-face/src
+   ```
 
-下载WIDER_FACE数据集，将图片上在这个目录下：
+## 准备数据集<a name="section183221994411"></a>
 
-下载地址：https://www.graviti.cn/open-datasets/WIDER_FACE
+1. 获取原始数据集。
 
-```
-$CenterFace_ROOT/center-face/data/{eval_dataset}
-```
+   获取WIDER_FACE数据集，在center-face目录下创建一个data目录，然后将下载下来的图片数据放在这个data目录下。目录结构如下：
 
-### 4.2 数据集预处理
+   ```
+   center-face
+   ├── data
+   │   ├── img1
+   │   |  ├── img.jpg
+   │   ├── img2
+   │   |  ├── img.jpg
+   │   ├── img3
+   │   |  ├── img.jpg
+   ```
 
-1.预处理脚本centerface_pth_preprocess.py
+2. 获取权重文件model_best.pth。放在center-face/src/目录下。
+3. 数据预处理，将原始数据集转换为模型输入的数据。
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+   1. 在center-face/src路径下，执行以下命令编译nms。
+      ```
+      cd lib/external/
+      python setup.py build_ext --inplace
+      cd ../../
+      ```
+   2. 执行centerface_pth_preprocess.py脚本，完成预处理。
+      ```
+      python centerface_pth_preprocess.py ../data ../after_images/
+      ```
+      - 参数说明：
+         - ../data:  原始数据验证集所在路径。
+         - ../after_images/:   输出的二进制文件保存路径。
 
-```
-cd ./CenterFace/center-face/src/test 
-bash start.sh
-```
+      运行成功后，生成after_images文件夹，after_images目录下生成的是供模型推理的bin文件。
 
-### 4.3 生成数据集信息文件
 
-1.生成数据集信息文件脚本get_info.py
+## 模型推理<a name="section741711594517"></a>
 
-2.执行生成数据集信息脚本，生成数据集信息文件
+1. 模型转换。
 
-```
-cd ./CenterFace/center-face/src/test
-bash to_info.sh
-```
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-to_info.sh里，第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
+   1. 导出onnx文件。
 
-## 5 离线推理
+      使用model_best.pth导出onnx文件。将pth2onnx.py移动到center-face/src/lib目录下
 
-- **benchmark工具概述**
-- **离线推理**
+      在center-face/src/lib目录下，运行pth2onnx.py脚本。
 
-### 5.1 benchmark工具概述
+      ```
+      python pth2onnx.py
+      ```
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
+      在目录center-face/src下，获得 CenterFace.onnx 文件。
 
-### 5.2 离线推理
+   2. 使用ATC工具将ONNX模型转OM模型。
 
-1.设置环境变量
+      1. 配置环境变量。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         source /etc/profile
+         ```
 
-2.执行离线推理
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-执行前需要将benchmark.x86_64移动到执行目录下
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-(注：执行目录是/center-face/src)
+      3. 切换目录到center-face/src下，执行ATC命令。
 
-然后运行如下命令：
+         ```
+         atc --framework=5 --model=CenterFace.onnx --input_format=NCHW --input_shape="image:1,3,800,800" --output=CenterFace_bs1 --log=debug --soc_version=${chip_name}
+         ```
 
-```
-cd ./CenterFace/center-face/src/test
-bash infer.sh
-```
+         - 参数说明：
 
-输出结果默认保存在当前目录result/dumpOutput_device{0}，每个输入对应的输出对应四个_x.bin文件。
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-3.处理目录result/dumpOutput_device{0}下的bin文件
+           运行成功后生成CenterFace_bs1.om模型文件。
 
-将该目录下的文件分类别存放，以便于后处理
+2. 开始推理验证。
 
-```
-cd ./CenterFace/center-face/src/
-python3 convert.py ./result/dumpOutput_device1/ ./result/result
-```
+   1. 使用ais-infer工具进行推理。
 
-第一个参数是benchmark得到的bin文件目录，第二个参数是保存路径
+      ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
-## 6 精度对比
+   2. 执行推理。
 
-- **离线推理精度**
-- **开源精度**
-- **精度对比**
+      ```
+      python {ais_infer_path}/ais_infer.py --model CenterFace_bs1.om --input ../after_images/ --output result --output_dirname dumpout_bs1 --batchsize 1
+      ```
 
-### 6.1 离线推理精度统计
+      -   参数说明：
 
-1.后处理
+           -   --model：om模型的路径。
+           -   --input：输入模型的二进制文件路径。
+           -   --output：推理结果输出目录。
+           -   --output_dirname：推理结果输出的二级目录名。
+           -   --batchsize：输入数据的batchsize。
 
-注：这里需要使用wide_face_val.mat文件，在center-face/evaluate/ground_truth/可以找到，然后将其移动到center-face/src目录下,然后执行下面命令
+      推理后的输出在当前目录result下。
 
-```
-cd ./CenterFace/center-face/src
-python3 centerface_pth_postprocess.py
-```
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
 
-2.进行Ascend310上精度评估
+   3. 处理目录result/dumpout_bs1下的bin文件，将该目录下的文件分类别存放，以便于后处理。
 
-```
-cd ./CenterFace/center-face/evaluate
-python3 evaluation.py
-```
+      在center-face/src目录下，执行convert.py文件
 
-### 6.2 开源精度
+      ```
+      mkdir result/result
+      python convert.py ./result/dumpout_bs1/ ./result/result
+      ```
 
-[CenterFace官网精度]([chenjun2hao/CenterFace.pytorch: unofficial version of centerface, which achieves the best balance between speed and accuracy at face detection (github.com)](https://github.com/chenjun2hao/CenterFace.pytorch))
+   4. 精度验证。
 
-```
-Easy   Val AP: 0.9257383419951156
-Medium Val AP: 0.9131308732465665
-Hard   Val AP: 0.7717305552550734
-```
+      在center-face/src目录下，调用脚本centerface_pth_postprocess.py进行推理结果的后处理。需要将center-face/evaluate/groud_truth路径下的wider_face_val.mat拷贝至center-face/src路径下
 
-### 6.3 精度对比
+      1. 执行后处理脚本
 
-```
-Easy   Val AP: 0.9190736484158941
-Medium Val AP: 0.9067769085346155
-Hard   Val AP: 0.7425807072008017
-```
+         ```
+         python centerface_pth_postprocess.py
+         ```
 
-### 6.3 精度对比
+      2. 在center-face/evaluate目录下，执行以下命令编译bbox。
+         ```
+         python setup.py build_ext --inplace
+         ```
 
-实际上官网的hard精度达不到77%，最高74%左右，所以对比下来精度是达标的。
+      3. 精度验证。在center-face/evaluate目录下，执行evaluation.py文件进行精度验证。
 
-## 7 性能对比
+         ```
+         python evaluation.py
+         ```
 
-- **npu性能数据**
-- **T4性能数据**
-- **性能对比**
+   5. 性能验证。
 
-### 7.1 npu性能数据
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-1.benchmark工具在整个数据集上推理获得性能数据
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=CenterFace_bs1.om --loop=20 --batchsize=${batch_size}
+        ```
 
-```
-[e2e] throughputRate: 33.1307, latency: 97372
-[data read] throughputRate: 36.336, moduleLatency: 27.5209
-[preprocess] throughputRate: 35.6065, moduleLatency: 28.0847
-[infer] throughputRate: 33.4556, Interface throughputRate: 91.86, moduleLatency: 29.2697
-[post] throughputRate: 33.4544, moduleLatency: 29.8915
-```
+      - 参数说明：
+        - --model：om模型的路径
+        - --batchsize：数据集batch_size的大小
 
-Interface throughputRate: 91.86，91.86x4=367.44既是batch1 310单卡吞吐率
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
 
-```
-[e2e] throughputRate: 31.7581, latency: 101580
-[data read] throughputRate: 35.0206, moduleLatency: 28.5547
-[preprocess] throughputRate: 33.9534, moduleLatency: 29.4521
-[infer] throughputRate: 32.022, Interface throughputRate: 80.3537, moduleLatency: 30.4381
-[post] throughputRate: 2.00424, moduleLatency: 498.943
 
-```
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-Interface throughputRate: 80.3537，80.3537x4=321.4148既是batch16 310单卡吞吐率
+调用ACL接口推理计算，性能参考下列数据。
 
-### 7.2 T4性能数据
+| 芯片型号 | Batch Size | 数据集    | 精度                          | 性能    |
+| -------- | ---------- | --------- | ----------------------------- | ------- |
+| 310P3    | 1          | widerface | hard：74.55%<br/>easy：92.24%<br/>Medium：91.02% | 439.9085 |
+| 310P3    | 4          | widerface | hard：74.55%<br/>easy：92.24%<br/>Medium：91.02% | 412.4094 |
+| 310P3    | 8          | widerface | hard：74.55%<br/>easy：92.24%<br/>Medium：91.02% | 375.9275 |
+| 310P3    | 16         | widerface | hard：74.55%<br/>easy：92.24%<br/>Medium：91.02% | 369.6435 |
+| 310P3    | 32         | widerface | hard：74.55%<br/>easy：92.24%<br/>Medium：91.02% | 371.7701 |
 
-```
-[W] [TRT] TensorRT was linked against cuBLAS/cuBLAS LT 11.2.0 but loaded cuBLAS/cuBLAS LT 11.1.0
-[W] [TRT] TensorRT was linked against cuBLAS/cuBLAS LT 11.2.0 but loaded cuBLAS/cuBLAS LT 11.1.0
-[W] [TRT] TensorRT was linked against cuBLAS/cuBLAS LT 11.2.0 but loaded cuBLAS/cuBLAS LT 11.1.0
-t4 bs1 fps:337.544
-[W] [TRT] TensorRT was linked against cuBLAS/cuBLAS LT 11.2.0 but loaded cuBLAS/cuBLAS LT 11.1.0
-[W] [TRT] TensorRT was linked against cuBLAS/cuBLAS LT 11.2.0 but loaded cuBLAS/cuBLAS LT 11.1.0
-[W] [TRT] TensorRT was linked against cuBLAS/cuBLAS LT 11.2.0 but loaded cuBLAS/cuBLAS LT 11.1.0
-t4 bs16 fps:359.999
-```
 
-batch1 t4单卡吞吐率：337.544
 
-batch16 t4单卡吞吐率：359.999
-
-### 7.3 性能对比
-
-batch1：91.86x4=367.44 > 337.544
-batch16：80.3537x4=321.4148 < 359.999
-
-## 8 310P增加文件介绍
-
-1.aipp_centerface.aippconfig ONNX模型转OM模型时所配置aipp
-2.calibration_bin.py 量化模型时输入真实数据的组件脚本 

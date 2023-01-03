@@ -123,7 +123,7 @@ AvgFPS=${FPS}
 
 #最后一个迭代loss值
 MinLoss=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep 'Averaged stats:' | awk 'BEGIN {min = 65536} {if ($12+0 < min+0) min=$12} END {print min}'`
-MaxAccuracy=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep 'Max accuracy' | awk 'BEGIN {max = 0} {if ($9+0 > max+0) max=$9} END {print max}'`
+MaxAccuracy=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep 'Max accuracy' | awk 'BEGIN {max = 0} {if ($3+0 > max+0) max=$3} END {print max}'`
 echo "MaxAccuracy = ${MaxAccuracy}"
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" >  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

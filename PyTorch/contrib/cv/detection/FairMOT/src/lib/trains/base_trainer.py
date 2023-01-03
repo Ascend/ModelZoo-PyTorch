@@ -104,6 +104,17 @@ class BaseTrainer(object):
       for k in batch:
         if k != 'meta':
           batch[k] = batch[k].to(device=opt.device, non_blocking=True)
+      if opt.prof and iter_id==16:
+          with torch.autograd.profiler.profile(use_npu=True) as prof:  
+              output, loss, loss_stats = model_with_loss(batch)
+              loss = loss.mean()
+              self.optimizer.zero_grad()
+              with amp.scale_loss(loss, self.optimizer) as scaled_loss: 
+                scaled_loss.backward()
+                self.optimizer.step()
+          print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+          prof.export_chrome_trace("output.prof") # "output.prof"为输出文件地址
+          exit()
    
 
 

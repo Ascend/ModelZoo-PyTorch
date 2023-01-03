@@ -22,8 +22,11 @@ epochs=3
 #网络名称,同目录名称,需要模型审视修改
 Network="DeepFM_for_Pytorch"
 
-#训练batch_size,,需要模型审视修改
+#训练batch_size,需要模型审视修改
 batch_size=1024
+
+#训练device_id,需要模型审视修改
+device_id=0
 
 #参数校验，不需要修改
 for para in $*
@@ -32,6 +35,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -47,9 +54,6 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
 
-# 指定训练所使用的npu device卡id
-device_id=0
-
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -60,8 +64,6 @@ else
     "[Error] device id must be config"
     exit 1
 fi
-
-ASCEND_DEVICE_ID=0
 
 #创建DeviceID输出目录，不需要修改
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
@@ -85,6 +87,7 @@ nohup python3.7 run_classification_criteo_deepfm.py \
      --epochs ${epochs} \
      --optim='npu_fused_adam' \
      --data_path=$data_path \
+     --batch_size=$batch_size \
      --device_id $ASCEND_DEVICE_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

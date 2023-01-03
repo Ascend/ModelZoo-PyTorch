@@ -20,6 +20,7 @@ import sys
 from PIL import Image
 import numpy as np
 import multiprocessing
+from tqdm import tqdm
 
 
 model_config = {
@@ -86,11 +87,7 @@ def gen_input_bin(mode_type, file_batches, batch):
         :param batch:
         :return: None
     """
-    i = 0
     for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
-
         # RGBA to RGB
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
         image = resize(image, model_config[mode_type]['resize']) # Resize
@@ -112,9 +109,13 @@ def preprocess(mode_type, src_path, save_path):
     """
     files = os.listdir(src_path)
     file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
+
+    pbar = tqdm(total=len(file_batches))
+    pbar.set_description("Preprocessing")
+    update = lambda *args:pbar.update()
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch))
+        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch), callback=update)
     thread_pool.close()
     thread_pool.join()
     print("in thread, except will not report! please ensure bin files generated.")

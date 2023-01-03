@@ -1,91 +1,257 @@
-# Res2Net_v1b_101模型测试指导
-
-- [Res2Net_v1b_101模型测试指导](#res2net_v1b_101模型测试指导)
-  - [1 文件说明](#1-文件说明)
-  - [2 设置环境变量](#2-设置环境变量)
-  - [3 端到端推理步骤](#3-端到端推理步骤)
-    - [3.1 下载代码](#31-下载代码)
-    - [3.2 om模型转换](#32-om模型转换)
-    - [3.3 om模型推理](#33-om模型推理)
-
-------
-
-## 1 文件说明
-```
-Res2Net_v1b_101_for_PyTorch
-    ├── get_info.py                      // 生成推理输入的数据集二进制info文件或jpg info文件
-    ├── pth2onnx.py                      // 用于转换pth模型文件到onnx模型文件
-    ├── diff.patch                       // 修改开源代码的patch文件
-    ├── imagenet_torch_preprocess.py     // imagenet数据集预处理，生成图片二进制文件
-    ├── README.md
-    ├── atc.sh                           // onnx模型转换om模型脚本
-    └── vision_metric_ImageNet.py        // 验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
-
-```
-
-## 2 设置环境变量
-
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-
-## 3 端到端推理步骤
-
-### 3.1 下载代码  
-git clone 开源仓 https://github.com/Res2Net/Res2Net-PretrainedModels ，切换到所需tag。
-```shell
-git clone https://github.com/Res2Net/Res2Net-PretrainedModels.git
-cd Res2Net-PretrainedModels
-git reset 1d51000f3340fb61b4 --hard
-git apply diff.patch
-```
-
-### 3.2 om模型转换
-
-通过pth2onnx.py脚本转化为onnx模型
-
-```shell
-# 直接导出原始ONNX
-python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx
-
-# 导出NPU上优化后的ONNX
-python3.7 pth2onnx.py -m ./res2net101_v1b_26w_4s-0812c246.pth -o ./res2net.onnx --optimizer
-```
+# Res2Net_v1b_101模型-推理指导
 
 
-利用ATC工具转换为om模型， ${chip_name}可通过`npu-smi info`指令查看
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+    - [输入输出数据](#section540883920406)
+
+
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+在多个尺度上表示特征对于许多视觉任务都非常重要。骨干卷积神经网络 (CNN) 的最新进展不断展示出更强的多尺度表示能力，从而在广泛的应用中实现一致的性能提升。然而，大多数现有方法以分层方式表示多尺度特征。该模型中提出了一种新的 CNN 构建块，即 Res2Net，通过在单个残差块内构建分层的残差状连接。 Res2Net 在粒度级别表示多尺度特征，并增加每个网络层的感受野范围。提出的 Res2Net 块可以插入最先进的主干 CNN 模型，例如 ResNet、ResNeXt 和 DLA。在所有这些模型上评估 Res2Net 块，并在广泛使用的数据集（例如 CIFAR-100 和 ImageNet）上展示了与基线模型相比的一致性能提升。对代表性计算机视觉任务（即目标检测、类激活映射和显着目标检测）的进一步消融研究和实验结果，进一步验证了 Res2Net 相对于最先进的基线方法的优越性。
+
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/Res2Net/Res2Net-PretrainedModels
+  commit_id=7ed111407a22723672eac575b300adc04e75e925
+  model_name=Res2Net
+  ```
+
+
+
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 1 x 1000 | ND           |
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动  
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.5.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/Res2Net/Res2Net-PretrainedModels.git   
+   cd Res2Net-PretrainedModels        
+   git reset --hard 7ed111407a22723672eac575b300adc04e75e925  
+   patch -p1 < ../diff.patch
+   cd ..           
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   本模型使用[ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org)的5万张验证集进行测试，以ILSVRC2012为例，用户需获取[ILSVRC2012数据集](http://www.image-net.org/download-images)，并上传到服务器，图片与标签分别存放在./imagenet/val与./imageNet/val_label.txt。
+   ```
+   ├── imagenet
+       ├── val
+       ├── val_label.txt 
+   ```
+
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行Res2Net_101_preprocess.py脚本，完成预处理。
+
+   ```
+   python Res2Net_101_preprocess.py ./imagenet/val ./prep_dataset
+   ```
+   - 参数说明：
+
+      -   第一个参数为数据集目录。
+      -   第二个参数为预处理保存目录。
+
+
    
-  ```shell
-  bash atc.sh Ascend${chip_name} # Ascend310P3
-  ```
 
-### 3.3 om模型推理
 
-（1） 数据集预处理
+## 模型推理<a name="section741711594517"></a>
 
-  数据预处理，把ImageNet 50000张图片转为二进制文件（.bin）
+1. 模型转换。
 
-   ```shell
-   python3.7 imagenet_torch_preprocess.py res2net101 /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_bin
-   ```
-  生成数据集info文件
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   ```shell
-   python3.7 get_info.py bin ./prep_bin ./BinaryImageNet.info 224 224
-   ```
-（2）推理
-  配置环境变量，运行benchmark工具进行推理，参数说明参见 [cann-benchmark](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
+   1. 获取权重文件。
 
-  ```shell
-  source /usr/local/Ascend/ascend-toolkit/set_env.sh  # 如果前面配置过，这里不用执行
-  ./benchmark -model_type=vision -om_path=resnet_bs16.om -device_id=0 -batch_size=16 -input_text_path=BinaryImageNet.info -input_width=256 -input_height=256 -useDvpp=false -output_binary=false
-  ```
+      ```
+      wget https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net101_v1b_26w_4s-0812c246.pth
+      ```
 
-（3）统计Accuracy值
-  精度验证，调用vision_metric_ImageNet.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中
+   2. 导出onnx文件。
 
-   ```shell
-   python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
-   ```
+      1. 使用Res2Net_101_pth2onnx.py导出onnx文件。
+
+         运行Res2Net_101_pth2onnx.py脚本。
+
+         ```
+         python Res2Net_101_pth2onnx.py res2net101_v1b_26w_4s-0812c246.pth res2net101_v1b.onnx         
+         ```
+
+         获得res2net101_v1b.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=./res2net101_v1b.onnx --output=res2net101_v1b_bs${bs} --input_format=NCHW --input_shape="image:${bs},3,224,224" --log=debug --soc_version=Ascend${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成<u>***res2net101_v1b_bs${bs}.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=res2net101_v1b_bs${bs}.om --input=./prep_dataset --output=./ --output_dirname=./result --batchsize=${batch_size} --outfmt TXT  
+        ```
+
+        -   参数说明：
+
+             -   model：om模型地址
+             -   input：预处理数据
+             -   output：推理结果保存路径
+             -   output_dirname:推理结果保存子目录
+
+
+        推理后的输出保存在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+      ```
+       python Res2Net_101_postprocess.py result/ ./val_label.txt ./ result.json
+      ```
+
+      - 参数说明：
+
+        - result：为生成推理结果所在路径 
+
+
+        - val_label.txt：为标签数据
+
+
+        - result.json：为生成结果文件
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python ${ais_infer_path}/ais_infer.py --model=res2net101_v1b_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|    Ascend310P3       |        1          |     imagenet       |     81.3%       |       459          |
+|    Ascend310P3       |        4          |     imagenet       |            |        1052         |
+|    Ascend310P3       |        8          |     imagenet       |            |         1131        |
+|    Ascend310P3       |        16          |     imagenet       |            |       1068          |
+|    Ascend310P3       |        32          |     imagenet       |            |       904          |
+|    Ascend310P3       |        64         |     imagenet       |            |         809        |

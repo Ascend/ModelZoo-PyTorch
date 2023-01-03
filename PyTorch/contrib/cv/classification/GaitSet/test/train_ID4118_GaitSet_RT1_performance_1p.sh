@@ -59,6 +59,7 @@ python3 train_main.py  --data_path=${data_path} \
                        --iters=${iters} \
                        --profiling=${profiling} \
                        --start_step=${start_step} \
+                       --local_rank ${ASCEND_DEVICE_ID} \
                        --stop_step=${stop_step} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

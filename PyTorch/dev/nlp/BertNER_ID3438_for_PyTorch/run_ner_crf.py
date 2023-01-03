@@ -235,7 +235,7 @@ def train(args, train_dataset, model, tokenizer):
                     # torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
                     logger.info("Saving optimizer and scheduler states to %s", output_dir)
-            print("{} step cost {:.2}".format(step, time.time() - begin))
+            print("{} step cost {:.2f}".format(step, time.time() - begin))
         logger.info("\n")
         if 'npu' in str(args.device):
             torch.npu.empty_cache()

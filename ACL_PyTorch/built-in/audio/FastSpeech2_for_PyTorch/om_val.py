@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader
 import yaml
 import numpy as np
 from scipy.io import wavfile
-import aclruntime
+from ais_bench.infer.interface import InferSession
 
 from utils.tools import to_device, get_mask_from_lengths, pad
 from dataset import TextDataset
@@ -56,71 +56,27 @@ def LR(x, duration, max_len=None):
     return output, torch.LongTensor(mel_len)
 
 
-def om_infer(om, input_data, mode):
-    inputs = []
-    shape = []
-    for in_data in input_data:
-        if torch.is_tensor(in_data):
-            shape.append(in_data.numpy().shape)
-            in_data = aclruntime.Tensor(in_data.numpy())
-        elif type(in_data) is np.ndarray:
-            shape.append(in_data.shape)
-            in_data = aclruntime.Tensor(in_data)
-        elif type(in_data) is np.float64:
-            shape.append(in_data.size)
-            in_data = aclruntime.Tensor(in_data)
-        else:
-            shape.append(np.array(in_data).shape)
-        in_data.to_device(args.device_id)
-        inputs.append(in_data)
-
-    innames = [inp.name for inp in om.get_inputs()]
-    outnames = [out.name for out in om.get_outputs()]
-
-    for i, inp in enumerate(innames):
-        if i == 0:
-            dynamic_shape = re.sub('[()\s]', '', f"{inp}:{shape[i]}")
-        else:
-            dynamic_shape += re.sub('[()\s]', '', f";{inp}:{shape[i]}")
-
-    if mode == 'dynamic':
-        om.set_dynamic_shape(dynamic_shape)
-        om.set_custom_outsize([1000000] * len(outnames))
-    elif mode == 'multi':
-        om.set_dynamic_dims(dynamic_shape)
-    else:
-        pass
-
-    outputs = om.run(outnames, inputs)
-    output_data = []
-    for out in outputs:
-        out.to_host()
-        output_data.append(out)
-
-    return output_data
-
-
 def fastspeech2_infer(texts, src_masks, fastspeech2_om, control_values):
     encoder_om, variance_adaptor_om, decoder_om, postnet_om = fastspeech2_om
     pitch_control, energy_control, duration_control = np.array(control_values)
 
     # encoder infer
-    enc_output = om_infer(encoder_om, [texts, src_masks], 'dynamic')
+    enc_output = encoder_om.infer([texts, src_masks], "dymshape", 1000000)
 
     # variance_adaptor infer
-    output_tmp = om_infer(variance_adaptor_om, [enc_output[0], src_masks,
-                                                pitch_control, energy_control, duration_control], 'dynamic')
+    output_tmp = variance_adaptor_om.infer([enc_output[0], src_masks,
+                                                pitch_control, energy_control, duration_control], "dymshape", 1000000)
 
-    output = torch.from_numpy(np.array(output_tmp[0]))
-    d_rounded = torch.from_numpy(np.array(output_tmp[1]))
+    output = torch.from_numpy(output_tmp[0])
+    d_rounded = torch.from_numpy(output_tmp[1])
     output, mel_lens = LR(output, d_rounded)
     mel_masks = get_mask_from_lengths(mel_lens)
 
     # decoder infer
-    dec_output = om_infer(decoder_om, [output, mel_masks], 'dynamic')
+    dec_output = decoder_om.infer([output, mel_masks], "dymshape", 1000000)
 
     # postnet infer
-    mel_output = om_infer(postnet_om, [dec_output[0]], 'dynamic')
+    mel_output = postnet_om.infer([dec_output[0]], "dymshape", 1000000)
 
     return (mel_output, mel_lens)
 
@@ -138,13 +94,13 @@ def hifigan_infer(ids, mel_output, mel_lens, preprocess_config, train_config, hi
     x_pad = np.pad(mel_output[0], ((0, 0), (0, model_shape - mel_output[0].shape[1]), (0, 0)),
                    mode="constant", constant_values=0)
 
-    wavs = om_infer(hifigan_om, [x_pad], 'multi')
+    wavs = hifigan_om.infer([x_pad], "dymdims", 1000000)
 
     max_wav_value = preprocess_config["preprocessing"]["audio"]["max_wav_value"]
     lengths = mel_lens * preprocess_config["preprocessing"]["stft"]["hop_length"]
     sampling_rate = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
 
-    wavs = (np.array(wavs[0]) * max_wav_value).astype("int16")
+    wavs = (wavs[0] * max_wav_value).astype("int16")
     wavs = [wav for wav in wavs]
 
     for i in range(len(mel_lens)):
@@ -186,19 +142,12 @@ if __name__ == "__main__":
     print("load dataset success")
 
     # load model
-    options = aclruntime.session_options()
-    encoder_om = aclruntime.InferenceSession(os.path.join(args.om_path, args.encoder.format(args.batch_size)),
-                                             args.device_id, options)
-    variance_adaptor_om = aclruntime.InferenceSession(
-        os.path.join(args.om_path, args.variance_adaptor.format(args.batch_size)),
-        args.device_id, options)
-    decoder_om = aclruntime.InferenceSession(os.path.join(args.om_path, args.decoder.format(args.batch_size)),
-                                             args.device_id, options)
-    postnet_om = aclruntime.InferenceSession(os.path.join(args.om_path, args.postnet.format(args.batch_size)),
-                                             args.device_id, options)
+    encoder_om = InferSession(args.device_id, os.path.join(args.om_path, args.encoder.format(args.batch_size)))
+    variance_adaptor_om = InferSession(args.device_id, os.path.join(args.om_path, args.variance_adaptor.format(args.batch_size)))
+    decoder_om = InferSession(args.device_id, os.path.join(args.om_path, args.decoder.format(args.batch_size)))
+    postnet_om = InferSession(args.device_id, os.path.join(args.om_path, args.postnet.format(args.batch_size)))
     fastspeech2_om = (encoder_om, variance_adaptor_om, decoder_om, postnet_om)
-    hifigan_om = aclruntime.InferenceSession(os.path.join(args.om_path, args.vocoder.format(args.batch_size)),
-                                             args.device_id, options)
+    hifigan_om = InferSession(args.device_id, os.path.join(args.om_path, args.vocoder.format(args.batch_size)))
     print("load model success")
 
     control_values = args.pitch_control, args.energy_control, args.duration_control

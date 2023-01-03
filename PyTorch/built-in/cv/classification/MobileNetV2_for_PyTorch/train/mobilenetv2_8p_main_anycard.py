@@ -208,7 +208,7 @@ def main_worker(gpu, ngpus_per_node, args):
     args.gpu = args.process_device_map[gpu]
     if args.bin_mode:
         torch.npu.set_compile_mode(jit_compile=False)
-        print("use rt2+bin train model") 
+        print("use rt2+bin train model")
 
     if args.gpu is not None:
         print("[npu id:", args.gpu, "]", "Use GPU: {} for training".format(args.gpu))
@@ -365,7 +365,7 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
         if args.profiling in ['CANN','GE'] and i >= args.stop_step:
             pass
         if i <= args.stop_step and i >= args.start_step and args.profiling == 'CANN':
-                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True)
+                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
         elif i <= args.stop_step and i >= args.start_step and args.profiling == 'GE':
             prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
         else:

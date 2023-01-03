@@ -81,6 +81,8 @@ def parse_args():
         default='none',
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--master-addr', type=str, default='127.0.0.1', help='master addr')
+    parser.add_argument('--master-port', type=str, default='23333', help='master port')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -97,9 +99,10 @@ def parse_args():
 
 
 def main():
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'
     args = parse_args()
+
+    os.environ['MASTER_ADDR'] = args.master_addr
+    os.environ['MASTER_PORT'] = args.master_port
 
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
@@ -130,6 +133,7 @@ def main():
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
         distributed = False
+        torch.npu.set_device(args.npu_ids[0])
     else:
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)

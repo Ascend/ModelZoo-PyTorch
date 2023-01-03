@@ -2,8 +2,6 @@
 
 cur_path=`pwd`/../
 path=`pwd`
-#失败用例打屏
-export ASCEND_SLOG_PRINT_TO_STDOUT=3
 
 #基础参数，需要模型审视修改
 #Batch Size
@@ -84,6 +82,10 @@ FPS=`grep "FPS"  $path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
+#获取编译时间
+CompileFps=`grep "FPS"  $path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F ", loss" '{print$1}' | head -1 |awk '{print$NF}'|sed s/[[:space:]]//g`
+CompileTime=`awk 'BEGIN{printf "%.3f\n",'${batch_size}'/'${CompileFps}'}'`
+
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep "Acc" $path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F ',' '{print $1}'|tail -1|awk '{print $NF}'`
 #打印，不需要修改
@@ -120,3 +122,4 @@ echo "ActualFPS = ${ActualFPS}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.lo
 echo "TrainingTime = ${TrainingTime}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log

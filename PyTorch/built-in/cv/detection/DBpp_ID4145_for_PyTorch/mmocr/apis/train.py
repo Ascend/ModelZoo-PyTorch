@@ -38,6 +38,7 @@ import mmcv
 import numpy as np
 import torch
 import torch.distributed as dist
+from torch_npu.contrib.module.deform_conv import ModulatedDeformConv
 try:
     import apex
     from apex import amp
@@ -49,6 +50,7 @@ from mmcv.device.npu import NPUDataParallel, NPUDistributedDataParallel
 from mmcv.runner import (DistSamplerSeedHook, EpochBasedRunner,
                          Fp16OptimizerHook, OptimizerHook, build_optimizer,
                          build_runner, get_dist_info)
+from mmcv.ops.modulated_deform_conv import ModulatedDeformConv2dPack
 from mmdet.core import DistEvalHook, EvalHook
 from mmdet.datasets import build_dataloader, build_dataset
 
@@ -57,6 +59,41 @@ from mmocr.apis.utils import (disable_text_recog_aug_test,
                               replace_image_to_tensor)
 from mmocr.utils import get_root_logger
 
+class ApexOptimizerHook(OptimizerHook):
+
+    def after_train_iter(self, runner):
+        runner.optimizer.zero_grad()
+        if self.detect_anomalous_params:
+            self.detect_anomalous_parameters(runner.outputs['loss'], runner)
+        with amp.scale_loss(runner.outputs['loss'], runner.optimizer) as scaled_loss:
+            scaled_loss.backward()
+
+        if self.grad_clip is not None:
+            grad_norm = self.clip_grads(runner.model.parameters())
+            if grad_norm is not None:
+                # Add grad norm to the logger
+                runner.log_buffer.update({'grad_norm': float(grad_norm)},
+                                         runner.outputs['num_samples'])
+        runner.optimizer.step()
+
+def replace_layers(model):
+    for n, m in model.named_children():
+        if len(list(m.children())) > 0:
+            ## compound module, go inside it
+            replace_layers(m)
+            
+        if isinstance(m, ModulatedDeformConv2dPack):
+            ## simple module
+            new = ModulatedDeformConv(m.in_channels, m.out_channels, m.kernel_size, 
+                                      m.stride[0] if isinstance(m.stride, tuple) else m.stride, 
+                                      m.padding[0] if isinstance(m.padding, tuple) else m.padding,
+                                      m.dilation[0] if isinstance(m.dilation, tuple) else m.dilation, 
+                                      m.groups, m.deform_groups, m.bias)
+            try:
+                n = int(n)
+                model[n] = new
+            except:
+                setattr(model, n, new)
 
 def train_detector(model,
                    dataset,
@@ -96,6 +133,8 @@ def train_detector(model,
                             **cfg.data.get('train_dataloader', {}))
 
     data_loaders = [build_dataloader(ds, **train_loader_cfg) for ds in dataset]
+
+    replace_layers(model)
 
     # put model on gpus
     if distributed:
@@ -164,10 +203,8 @@ def train_detector(model,
     if fp16_cfg is not None:
         optimizer_config = Fp16OptimizerHook(
             **cfg.optimizer_config, **fp16_cfg, distributed=distributed)
-    elif distributed and 'type' not in cfg.optimizer_config:
-        optimizer_config = OptimizerHook(**cfg.optimizer_config)
     else:
-        optimizer_config = cfg.optimizer_config
+        optimizer_config = ApexOptimizerHook(**cfg.optimizer_config)
 
     # register hooks
     runner.register_training_hooks(

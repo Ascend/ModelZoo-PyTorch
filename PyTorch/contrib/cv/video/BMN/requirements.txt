@@ -4,10 +4,8 @@ auto-tune
 certifi==2018.10.15
 cycler==0.11.0
 decorator==5.1.0
-decord==0.6.0
 fonttools==4.28.1
 future==0.18.2
-hccl
 kiwisolver==1.3.2
 matplotlib==3.5.0
 mpmath==1.2.1
@@ -24,9 +22,7 @@ scipy==1.7.2
 setuptools-scm==6.3.2
 six==1.16.0
 sympy==1.9
-te==0.4.0
 tensor-fused-plugin
 tomli==1.2.2
-topi==0.4.0
 torchvision
 tqdm==4.19.9

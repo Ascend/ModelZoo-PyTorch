@@ -198,7 +198,8 @@
       python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
             --model ./retinanet_bs1.om \
             --input ./val2017_bin \
-            --output ./result \
+            --output ./ \
+            --output_dirname result \
             --batchsize 1 \
             --outfmt BIN
       ```
@@ -207,6 +208,7 @@
          + --model: OM模型路径。
          + --input: 存放预处理bin文件的目录路径
          + --output: 存放推理结果的目录路径
+         + --output_dirname: 存放推理结果文件夹
          + --batchsize：每次输入模型的样本数
          + --outfmt: 推理结果数据的格式
 

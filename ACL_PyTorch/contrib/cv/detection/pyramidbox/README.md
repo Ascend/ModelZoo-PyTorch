@@ -58,8 +58,8 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.9.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -130,7 +130,9 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
 
    1. 获取权重文件。
 
-       从该源码包中获取权重文件（pyramidbox_120000_99.02.pth）
+      ```shell
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/pyramidbox/PTH/pyramidbox_120000_99.02.pth
+      ```
 
    2. 使用pth2onnx.py进行onnx的转换。
 
@@ -173,7 +175,7 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
        3. 执行ATC命令。
 
           ```shell
-          atc --framework=5 --model=pyramidbox_1000.onnx --input_format=NCHW --input_shape="image:1,3,1000,1000" --output=pyramidbox_bs1 --log=debug --soc_version=Ascend${chip_name} --precision_mode=force_fp32 --fusion_switch_file=fusion_switch.cfg
+          atc --framework=5 --model=pyramidbox_1000.onnx --input_format=NCHW --input_shape="image:1,3,1000,1000" --output=pyramidbox_bs1 --log=error --soc_version=Ascend${chip_name} --precision_mode=force_fp32 --fusion_switch_file=fusion_switch.cfg
           ```
 
           - 参数说明：
@@ -201,10 +203,11 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
    2. 执行推理。
 
         ```shell
-        mkdir result
+        mkdir result11 result22
         
-        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path}
-        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path}
+        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
+
+        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
         
         说明：由于预处理后的数据集有两个，所以此脚本需要运行两次
         ```
@@ -215,8 +218,9 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
              -   input：预处理后的所有bin文件。
              -   outfmt：输出格式，此处默认为BIN。
              -   output：输出文件路径
+             -   output_dirname: 输出保存文件夹,可以对应取名 result11 和 result22
 
-        推理后的输出默认在当前目录result下。
+        推理后的输出默认在当前目录`result11` 和 `result22`下。
    
         > **说明：** 
         > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
@@ -224,8 +228,8 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
    3. 处理目录下的bin文件
    
       ```shell
-      python3.7 convert.py ./2022_10_27-09_50_54 ./result/result11
-      python3.7 convert.py ./2022_10_27-10_02_51 ./result/result22
+      python3.7 convert.py ./result11 ./result/result11
+      python3.7 convert.py ./result22 ./result/result22
       ```
       
       * 参数说明
@@ -234,7 +238,7 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
    
 3. 精度验证。
 
-   经过后处理脚本和精度评估文件，此处evaluation文件中目标文件名(../output_1280需要和后处理输出一致。运行结束后会显示精度结果。
+   经过后处理脚本和精度评估文件，此处evaluation文件中目标文件名(../output_1280)需要和后处理输出一致。运行结束后会显示精度结果。
 
    ```shell
    cd ./pyramidbox
@@ -256,14 +260,14 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
    可使用ais_infer推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
    ```shell
-   python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --loop=20 --outfmt=BIN --output=${output_path}
+   python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --loop 20 --batchsize 1
    ```
 
    -   参数说明：
 
-        -   model：om所在的路径。
-        -   outfmt：输出格式，此处默认为BIN。
-        -   output：输出文件路径
+        -   model：om所在的路径
+        -   loop：循环次数
+        -   batchsize：模型batch size
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -271,4 +275,4 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| Ascend310P | 1 | Widerface | Easy   Val AP: 0.9629268827693285<br/>Medium Val AP: 0.9538798956286163<br/>Hard   Val AP: 0.8808383584682273 | 8.583 |
+| 310P3 | 1 | Widerface | Easy   Val AP: 0.9629268827693285<br/>Medium Val AP: 0.9538798956286163<br/>Hard   Val AP: 0.8808383584682273 | 8.9 |

@@ -52,16 +52,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi  
 
-# 数据集软链到脚本工程内部
-cur_path=`pwd`
-default_data_path=${cur_path}/inputs/
-if [ -d ${default_data_path}/dsb2018_96 ]; then
-    echo "data set has exists"
-else
-    mkdir -p ${cur_path}/inputs/
-    rm -rf ${default_data_path}/dsb2018_96
-    ln -s ${data_path} ${default_data_path}/dsb2018_96
-fi
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
@@ -79,13 +69,13 @@ do
         mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
     fi
 
-
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     KERNEL_NUM=$(($(nproc)/8))
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     
-    taskset -c $PID_START-$PID_END python3.7 -u train.py \
+    taskset -c $PID_START-$PID_END python3 -u train.py \
+        --data_path ${data_path} \
         --batch_size $batch_size \
         --epochs 100 \
         --optimizer Adam \

@@ -1,161 +1,256 @@
-## <a name="1">1. 模型概述</a>
-### 1.1 参考论文
-[GENet论文](https://arxiv.org/abs/1810.12348)
-### 1.2 参考实现
-[代码地址](https://github.com/BayesWatch/pytorch-GENet)
-> branch: master
-
-> commit id: 3fbf99fb6934186004ffb5ea5c0732e0e976d5b2
-
-## <a name="1">2. 推理环境准备</a>
-### 2.1 环境介绍
-CANN=[5.0.4](https://www.hiascend.com/software/cann/commercial?version=5.0.4)。  
-硬件环境、开发环境和运行环境准备请参见[CANN 软件安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/504/envdeployment/instg)。
-### 2.2 所需依赖
-```
-Pytorch>=1.5.0
-Torchvision>=0.6.0
-ONNX>=1.7.0
-numpy==1.18.5
-Pillow==7.2.0
-```
-### 2.3 环境配置
-```
-pip3.7 install -r requirements.txt  
-```
-## <a name="1">3. 数据集准备</a>
-### 3.1 下载数据集
-在官方下载cifar10数据集
-### 3.2 数据预处理
-准备Bin文件  
-```
-python3.7 preprocess.py ${datasets_path} ./prep_dataset 
-```
-第一个参数为数据集存放目录（例：若数据集路径为/home/HwHiAiUser/dataset/cifar-10-batches-py/，则数据集存放目录为/home/HwHiAiUser/dataset/），第二个参数为预处理后的数据文件的相对路径。该操作会在数据文件的目录下生成标签文件val_label.txt。
-### 3.3 生成数据集info文件
-```
-python3.7 get_info.py bin ./prep_dataset ./genet_prep_bin.info 32 32
-```
-第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件的相对路径，第三个参数为生成的数据集文件保存的路径。运行成功后，在当前目录中生成genet_prep_bin.info。
-## <a name="1">4. 模型转换</a>
-### 4.1 获取源码
-```
-git clone https://github.com/BayesWatch/pytorch-GENet.git 
-cd pytorch-GENet/
-git reset 3fbf99fb6934186004ffb5ea5c0732e0e976d5b2 --hard
-cd ../
-```
-### 4.2 pth转onnx模型
-```
-python3.7 pthtar2onnx.py ${model_path}
-```
-其中${model_path}指的是模型路径，如/home/HwHiAiUser/model/genet.pth.tar
-### 4.3 onnx转om模型
-设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-使用ATC工具转换，工具使用方法可以参考[《CANN 开发辅助工具指南 (推理)》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-
-${chip_name}可通过`npu-smi info`指令查看
-
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-   
-```
-bash test/onnx2om.sh Ascend${chip_name} # Ascend310P3
-```
-该指令会生成genet_bs16_tuned，genet_bs1_tuned两个模型，可在onnx2om.sh文件中修改以生成不同bs值的om模型
->  **说明**
-> 注意目前ATC支持的onnx算子版本为11
-## <a name="1">5. 推理验证</a>
-### 5.1 使用指南
-[《CANN 推理benchmark工具用户指南》](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)
-### 5.2 离线推理
-1.增加benchmark.{arch}可执行权限
-```
-chmod u+x benchmark.x86_64
-```
-2.推理
-```
-bash test/infer_bin.sh
-```
-可以通过修改batch_size的值进行在不同batchsize情况下的推理（同时要修改对应的om文件路径即om_path的值）。运行该指令后输出结果默认保存在当前目录/result/dumpOutput_device0中，同时在/result目录下会生成一个推理性能文件  
-
-3.获取性能信息
-```
-python3.7 test/parse.py result/perf_vision_batchsize_1_device_0.txt
-```
-运行该指令获得bs为1时推理所得的310的性能信息，实例如下：
-```
-[e2e] throughputRate: 132.777, latency: 75314.4
-[data read] throughputRate: 134.331, moduleLatency: 7.44429
-[preprocess] throughputRate: 134.114, moduleLatency: 7.45634
-[inference] throughputRate: 134.244, Interface throughputRate: 809.813, moduleLatency: 1.35099
-[postprocess] throughputRate: 134.257, moduleLatency: 7.44838
-```
-4，gpu设备的推理
-将onnx模型置于装有gpu的设备，参考以下指令获取onnx模型在gpu上推理的性能信息
-```
-bash test/perf_g.sh
-```
-## <a name="1">6. 精度验证</a>
-1.参考以下指令生成精度信息文件
-```
-python3.7 cifar10_acc_eval.py result/dumpOutput_device0/ ./prep_dataset/val_label.txt ./ result_bs1.json
-```
-第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名  
-
-2.参考以下指令获取310上推理的精度信息
-```
-python3.7 test/parse.py result_bs1.json
-```
-精度参考：  
-|  GENET模型|  gpu吞吐率| 310吞吐率 |  精度|
-|--|--|--|--|
-|  bs1|  1805.315fps| 3239.252fps|Error@1 5.78 Error@5 0.15|
-|  bs16| 5922.109fps| 7796.88fps|Error@1 5.78 Error@5 0.15 |
+# GENet模型-推理指导
 
 
-## <a name="7">7. 性能对比</a>
-测试时要保证设备空闲，npu-smi info可以查看设备状态。benchmark工具在整个数据集上推理方式测性能可能时间较长，纯推理方式测性能可能不准确，因此bs1与bs16要使用在整个数据集上推理的方式测性能，bs4、8、32可以用纯推理的方式测性能。benchmark工具测的Interface throughputRate或samples/s数据是单个device吞吐率，计算310单卡吞吐率需要乘以4。tensorrt工具测的t4数据GPU Compute的mean代表batch个数据的时延，1000/(GPU Compute mean/batch)可以将其转换为吞吐率。  
-### 7.1 310性能数据
-以310的bs1为例:
-```
-[e2e] throughputRate: 132.777, latency: 75314.4
-[data read] throughputRate: 134.331, moduleLatency: 7.44429
-[preprocess] throughputRate: 134.114, moduleLatency: 7.45634
-[inference] throughputRate: 134.244, Interface throughputRate: 809.813, moduleLatency: 1.35099
-[postprocess] throughputRate: 134.257, moduleLatency: 7.44838
-```
-Interface throughputRate: 809.813，809.813x4=3239.252 fps。即是batch1 310单卡吞吐率,batch16的计算方法同理
-> 为了避免长期占用device， bs4,8,32使用纯推理测性能，其中，对bs4进行纯推理输入命令如下所示，其中batch_size=4表示bs的值，在对不同bs值对应的om模型进行推理时需要做出相应的更改：
-> `./benchmark.x86_64 -device_id=0 -om_path=genet_bs4_tuned.om -round=30 -batch_size=4`
-> 
-计算bs4,8,32的吞吐率时，计算方法也同样为Interface throughputRate乘4
-### 7.2 310P性能数据
-310P的推理过程与310相似，可以参考前面310的步骤。不同的是310P的吞吐率即为Interface throughputRate的值，无需乘4
-### 7.3 T4性能数据
-在运行5.2的gpu推理指令时，我们会获得相关的性能信息，以T4的bs1为例：
-```
-[05/13/2022-16:53:32] 
-[I] GPU Compute Time: 
-min = 0.512207 ms, 
-max = 2.97815 ms, 
-mean = 0.55392 ms, 
-median = 0.540283 ms,
-percentile(99%) = 0.690048 ms
-```
-batch1 t4单卡吞吐率：1000/(0.55392/1)=1805.315 fps  
-计算方法为1000/(GPU Compute mean/batch)
-### 7.4 性能对比
-性能对比结果参考如下：
-|         | 310      | 310P     | T4       | 310P/310     | 310P/T4      |
-|---------|----------|---------|----------|-------------|-------------|
-| bs1     | 3239.252 | 2580.59 | 1805.315 | 0.796662316 | 1.429440292 |
-| bs4     | 6923.88  | 6962.42 | 3258.019 | 1.005566243 | 2.137010251 |
-| bs8     | 6631     | 9350.57 | 5226.538 | 1.410129694 | 1.789056159 |
-| bs16    | 7796.88  | 10586.7 | 5922.109 | 1.357812356 | 1.787657066 |
-| bs32    | 7295.48  | 11005.9 | 5898.248 | 1.508591621 | 1.865960875 |
-| bs64    | 6611.72  | 11256.5 | 6105.938 | 1.702507063 | 1.843533295 |
-| 最优batch | 7796.88  | 11256.5 | 6105.938 | 1.443718513 | 1.843533295 |
-取310、310P与T4的最优batch进行对比，当310P的最优batch性能不低于310最优batch的1.2倍以及T4最优batch的1.6倍时，性能达标
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
+
+
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+作者在大量实验研究的基础上提出了一种GPU端高效网络设计的通用范式，该设计范式促使作者仅需要采用简单而轻量的NAS方法即可得到高效且高精度的GPU端网络架构。基于所设计的网络架构设计范式，作者提出了一类GPU端高效的网络，称之为GENet。
+
+- 参考实现：
+
+  ```
+  url=git clone https://github.com/BayesWatch/pytorch-GENet.git
+  commit_id=3fbf99fb6934186004ffb5ea5c0732e0e976d5b2
+  model_name=pytorch-GENet
+  ```
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 32 x 32 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 1 x 1000 | ND           |
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动  
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.5.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/BayesWatch/pytorch-GENet.git 
+   cd pytorch-GENet/
+   git reset --hard 3fbf99fb6934186004ffb5ea5c0732e0e976d5b2
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   本模型支持cifar-10验证集。用户需自行获取数据集，将压并上传数据集到当前目录新建文件夹data下。目录结构如下：
+
+   ```
+   data   
+   └── cifar-10-batchses-py
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行GENet_preprocess.py脚本，完成预处理。
+
+   ```
+   python GENet_preprocess.py ./data/ ./predata
+   ```
+   - 参数说明：
+
+      -   第一个参数：数据集目录
+      -   第二个参数：预处理数据保存目录
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      ```
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/GENET/PTH/genet.pth.tar
+      ```
+
+   2. 导出onnx文件。
+
+      1. 使用GENet_pth2onnx.py导出onnx文件。
+
+         运行GENet_pth2onnx.py脚本。
+
+         ```
+         python GENet_pth2onnx.py genet.pth.tar genet.onnx
+         ```
+         - 参数说明：
+
+            -   第一个参数：权重文件
+            -   第二个参数：保存onnx文件         
+
+         获得genet.onnx文件。
+
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --model=genet.onnx \
+             --framework=5 \
+             --input_format=NCHW \
+             --input_shape="image:${bs},3,32,32" \
+             --output=genet_bs${bs} \
+             --soc_version= Ascend${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号
+
+           运行成功后生成<u>***genet_bs${bs}.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=genet_bs${bs} --input=./predata --output=./ --output_dirname=./result --batchsize=${batch_size} --outfmt=TXT    
+        ```
+
+        -   参数说明：
+
+             -   model：om模型地址
+             -   input：预处理数据
+             -   output：推理结果保存路径
+             -   output_dirname：推理结果保存子目录
+             -   outfmt：输出数据格式
+
+
+        推理后的输出保存在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+      ```
+      python3 GENet_postprocess.py ./result/ ./predata/val_label.txt ./ result.json
+      ```
+
+      - 参数说明：
+
+        - result：为生成推理结果所在路径
+
+
+        - val_label.txt：为标签数据
+
+
+        - result.json：为生成结果文件
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python3.7 ${ais_infer_path}/ais_infer.py --model=genet_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|    Ascend310P3       |      1            |      cifar-10      |     top1:94.23%       |       2652          |
+|    Ascend310P3       |      4            |      cifar-10      |     top1:94.23%       |       6981          |
+|    Ascend310P3       |      8            |      cifar-10      |     top1:94.23%       |      7768           |
+|    Ascend310P3       |      16            |      cifar-10      |     top1:94.23%       |      9981           |
+|    Ascend310P3       |      32            |      cifar-10      |     top1:94.23%       |        7991        |
+|    Ascend310P3       |      64            |      cifar-10      |     top1:94.23%       |       9235          |

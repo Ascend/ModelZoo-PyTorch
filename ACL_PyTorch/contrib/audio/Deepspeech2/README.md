@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+  - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -11,9 +13,8 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
 
 
@@ -61,9 +62,9 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- |   ------------------------------------------------------------ |
-  | 固件与驱动| 22.0.2| [Pytorch框架推理环境准备]  (https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies)                                                        |
-  | Pytorch| 1.8.0 | -                                                            |
+  | 固件与驱动| 1.0.16（NPU驱动固件版本为5.1.RC2）                  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies)                                                        |
   |CANN|5.1.RC2|-                                                              |
+  | Pytorch| 1.8.0 | -  |
 
 
 
@@ -72,27 +73,25 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+1. 获取源码并安装。
    ```
    git clone https://github.com/SeanNaren/deepspeech.pytorch.git -b V3.0
+   cd deepspeech.pytorch
+   pip3 install -e .
    ```
 
 2. 安装依赖。
 
     ```
-      pip install -r requirement.txt
+    pip3 install -r requirement.txt
     ```
     > **说明：** 
     >torchaudio==0.8.0目前没有可以在arm环境下运行的包。
 
-3. 修改开源仓model.py文件.
-
-
-
+3. 在Deepspeech2目录下执行differences.patch文件，修改开源仓model.py文件。
 
     ```
-    cd deepspeech.pytorch/deepspeech_pytorch
-    patch -p1 < differences.patch
+    patch -p4 < differences.patch
     ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -106,11 +105,11 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
     得到的数据结构为
     ```
     |——an4_test_manifest.json
-                    |——labels.json  
-                    |——an4_dataset
-                                     |——val
-                                     |——train
-                                     |——test
+    |——labels.json  
+    |——an4_dataset
+            |——val
+            |——train
+            |——test
     ```
     > **说明：** 
     >如下载不了，可在本地用vscode拉代码下载过后传到服务器。
@@ -126,14 +125,17 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
    ```
    - 参数说明:
 
-      --data_file：json文件路径。
+      - --data_file：json文件路径。
    
-      --save_path：输出的二进制文件（.bin）所在路径。
+      - --save_path：输出的二进制文件（.bin）所在路径。
    
-      --label_file：标签文件路径。
+      - --label_file：标签文件路径。
 
     > **说明：** 
     >在预处理前，修改an4_test_manifest.json中root_path参数，改为当前an4_dataset中test数据集的路径，方便进行数据预处理。
+    >如果linux系统缺少sox，需要安装sox。
+
+    运行成功后在./data/an4_dataset/test目录下生成供模型推理的bin文件。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -187,86 +189,101 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
           ```
       3. 执行ATC命令。
           ```
-          atc --framework=5 --model=./deepspeech.onnx --input_format=NCHW --input_shape="spect:1,1,161,621;transcript:1" --output=deepspeech_bs1 --log=debug --soc_version=${chip_name}
+          atc --framework=5 --model=./deepspeech.onnx --input_format=NCHW --input_shape="spect:1,1,161,621;transcript:1" --output=deepspeech_bs1 --log=error --soc_version=${chip_name}
           ```
 
           - 参数说明：
 
-              --model：为ONNX模型文件。
+              - --model：为ONNX模型文件。
 
-              --framework：5代表ONNX模型。
+              - --framework：5代表ONNX模型。
 
-              --output：输出的OM模型。
+              - --output：输出的OM模型。
 
-              --input_format：输入数据的格式。
+              - --input_format：输入数据的格式。
 
-              --input_shape：输入数据的shape。
+              - --input_shape：输入数据的shape。
 
-              --log：日志级别。
+              - --log：日志级别。
 
-              --soc_version：处理器型号。
+              - --soc_version：处理器型号。
 
-             运行成功后生成“deepspeech_bs1.om”模型文件。
+        运行成功后生成“deepspeech_bs1.om”模型文件。
 
 
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   1. 使用ais-infer工具进行推理。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
 
-   b.  执行推理。
+   2. 执行推理。
 
       ```
-        python3 ais_infer.py --model ./deepspeech_bs1.om  --input ./data/an4_dataset/test/spect, ./data/an4_dataset/test/sizes --output ./result --outfmt TXT --batchsize 1
+      python3 ${ais_infer_path}/ais_infer.py --model ./deepspeech_bs1.om  --input ./data/an4_dataset/test/spect,./data/an4_dataset/test/sizes --output ./result --output_dir dumpout_bs1 --outfmt TXT --batchsize 1
       ```
     
       -   参数说明：
     
-           -- model：om文件路径。
+           - -- model：om文件路径。
 
-           -- input：输入的数据文件。
+           - -- input：输入的数据文件。
 
-           -- output：输出结果路径。
+           - -- output：输出结果路径。
     
       推理后的输出默认在当前目录result下。
       并且会输出性能数据
       >**说明：** 
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。执行其他bs只需修改batchsize参数。
 
-   c.  精度验证。
 
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-     
-      然后调用deepspeech2_postprocess.py脚本，可以获得精度数据。
-      
-     
-    ```
-    python deepspeech2_postprocess.py --out_path ./result --info_path ./data/an4_dataset/test --label_file ./labels.json
-    ```
-    - 参数说明：
+    3. 精度验证。
 
-       --out_path：生成推理结果所在路径。
+        调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+        执行deepspeech2_postprocess.py脚本，可以获得精度数据。
+     
+         ```
+         python3 deepspeech2_postprocess.py --out_path ./result/dumpout_bs1 --info_path ./data/an4_dataset/test --label_file ./labels.json
+         ```
+         - 参数说明：
+
+           - --out_path：生成推理结果所在路径。
     
-       --info_path：输出的二进制文件（.bin）所在路径。
+           - --info_path：输出的二进制文件（.bin）所在路径。
     
-       --label_file：标签数据路径。
+           - --label_file：标签数据路径。
+
+    4. 性能验证。
+
+        可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+        python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+        
+        - 参数说明：
+           - --model：om模型的路径
+           - --batchsize：数据集batch_size的大小
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+  精度如下列数据。
 
-| 芯片型号 | 数据集 | 精度 |
-| --------- | ---------- | ---------- |
-|     310      |    an4        |       WER 9.573；CER 5.515     |
-|     310p      |    an4        |       WER 9.573；CER 5.515     |
+  |数据集 | 精度 |
+  | ---------- | ---------- |
+  |   an4        |       Average WER 9.573 Average CER 5.515     |
 
-  不同bs下的性能
-| 芯片型号 | Batch Size = 1   |  Batch Size = 4|  Batch Size = 8|  Batch Size = 16 |  Batch Size = 32 | Batch Size = 64 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |--------------- |--------------- |
-|     310      |       0.44196           |    1.68       |      3.32    |       6.4    |        6.32       |6.4   |
-|     310p      |       0.48         |   1.93   |       3.86   |      7.7  |        7.74  |        7.48  |
-|     t4      |       4.496          |   17.6      |      35.5    |      71   |       142  |       284|
+
+  调用ACL接口推理计算，性能参考下列数据。
+
+  | 芯片型号 | Batch Size | 数据集   | 性能    |
+  | -------- | ---------- | -------- | ------- |
+  | 310P3    | 1          | an4 |  0.48  |
+  | 310P3    | 4          | an4 |  1.93 |
+  | 310P3    | 8          | an4 |  3.86 |
+  | 310P3    | 16         | an4 |  7.7 |
+  | 310P3    | 32         | an4 |  7.74 |
+  | 310P3    | 64         | an4 |  7.48 |

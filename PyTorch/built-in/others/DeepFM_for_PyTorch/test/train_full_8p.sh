@@ -36,6 +36,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -93,6 +95,7 @@ do
            --device_num 8 \
            --epochs ${epochs} \
            --data_path=$data_path \
+           --batch_size=$batch_size \
            --dist \
            --lr=0.0008 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
@@ -105,6 +108,7 @@ do
            --device_num 8 \
            --epochs ${epochs} \
            --data_path=$data_path \
+           --batch_size=$batch_size \
            --dist \
            --lr=0.0008 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi

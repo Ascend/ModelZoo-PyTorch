@@ -2,7 +2,6 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export SCALAR_TO_HOST_MEM=1
 
 export MKL_SERVICE_FORCE_INTEL=1
@@ -91,7 +90,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
-    train_steps=300
+    train_steps=2000
 fi
 
 export RANK_SIZE=8

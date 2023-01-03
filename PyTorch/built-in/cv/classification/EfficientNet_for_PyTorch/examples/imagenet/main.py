@@ -111,7 +111,7 @@ parser.add_argument('--val_feq', default=10, type=int,
 parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
 parser.add_argument('--stop-step-num', default=None, type=int,
                     help='after the stop-step, killing the training task')
-parser.add_argument('--prof', default=True, action='store_true',
+parser.add_argument('--prof', action='store_true',
                     help='use profiling to evaluate the performance of model')
 
 cur_step = 0

@@ -31,7 +31,6 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
   model_name=Transformer-SSL（Backbone:Swin-T,LrSchd:3x）
   ```
   
-  通过Git获取对应commit\_id的代码方法如下：
 
 
 
@@ -79,6 +78,7 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
    git clone https://github.com/SwinTransformer/Swin-Transformer-Object-Detection
    cd Swin-Transformer-Object-Detection
    git reset --hard c7b20110addde0f74b1fbf812b403d16a59a87a9
+   patch -p1 < ../change.patch
    cd ..
    ```
 
@@ -112,10 +112,10 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 
    ```shell
     python Transformer_SSL_preprocess.py \
-    --image_src_path=./data/coco/val2017 \
-    --bin_file_path=val2017_bin \
-    --input_height=800 \
-    --input_width=1216
+           --image_src_path=./data/coco/val2017 \
+           --bin_file_path=val2017_bin \
+           --input_height=800 \
+           --input_width=1216
    ```
    - 参数说明：
 
@@ -136,21 +136,21 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 
    2. 导出onnx文件。
 
-      1. 使用pytorch2onnx.py导出onnx文件。
-         
-         通过打补丁的方式修改源码(change.patch已提供)：
-         ```shell
-         cd Swin-Transformer-Object-Detection
-         patch -p1 < ../change.patch
-         cd ..
-         ```
-
-         在运行pytorch2onnx.py脚本前需要将该脚本放入Swin-Transformer-Object-Detection这个目录下，运行脚本：
+      1. 运行脚本：
 
          ```shell
-         python pytorch2onnx.py  configs/swin/cascade_mask_rcnn_swin_tiny_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py cascade_mask_rcnn_swin_tiny_patch4_window7.pth --input-img  tests/data/color.jpg  --output-file model.onnx 
+         python Transformer_SSL_pth2onnx.py  
+                --config Swin-Transformer-Object-Detection/configs/swin/cascade_mask_rcnn_swin_tiny_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py \
+                --checkpoint cascade_mask_rcnn_swin_tiny_patch4_window7.pth \
+                --input-img  Swin-Transformer-Object-Detection/tests/data/color.jpg  \
+                --output-file model.onnx 
          ```
-        
+          - 参数说明：
+
+            -   --config：pytorch模型配置。
+            -   --checkpoint：模型权重文件。
+            -   --input-img：输入样例图片。
+            -   --output-file：保存onnx文件。
          获得model.onnx文件。
 
 
@@ -159,9 +159,9 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
 
       1. 配置环境变量。
 
-        ```shell
-        source /usr/local/Ascend/ascend-toolkit/set_env.sh
-        ```
+          ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          ```
   
          > **说明：** 
          >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
@@ -199,8 +199,9 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
+           -   --op_precision_mode：指定算子高性能模式
 
-           运行成功后生成model_bs1.om模型文件。
+           运行成功后生成model_bs1.om模型文件。（该模型只支持bs1）
 
 2. 开始推理验证。
 
@@ -212,8 +213,7 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
     2.  执行推理。
         
         ```shell
-        mkdir result_ais
-        python ais_infer.py --model ./model_bs1.om --input ./val2017_bin --output result_ais --batchsize 1
+        python ${ais_infer_path}/ais_infer.py --model ./model_bs1.om --input ./val2017_bin --output ./ --output_dirname result --batchsize 1
         ```
 
          - 参数说明：  
@@ -231,7 +231,11 @@ Transformer-SSL使用不同的IOU阈值，训练多个级联的检测器。它�
         调用脚本与数据集标签./data/coco/annotations/instances_val2017.json比对，可以获得Accuracy数据。
     
         ```
-        python Transformer_SSL_postprocess.py  --ann_file_path=./data/coco/annotations/instances_val2017.json  --bin_file_path=./result_ais/${time_line}   --input_height=800  --input_width=1216 
+        python Transformer_SSL_postprocess.py  \
+               --ann_file_path=./data/coco/annotations/instances_val2017.json  \
+               --bin_file_path=./result  \
+               --input_height=800  \
+               --input_width=1216 
         ```
     
         - 参数说明：

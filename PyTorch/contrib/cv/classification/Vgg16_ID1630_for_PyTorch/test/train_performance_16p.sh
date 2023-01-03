@@ -27,14 +27,16 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-		elif [[ $para == --fix_node_ip* ]];then
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --fix_node_ip* ]];then
 	    fix_node_ip=`echo ${para#*=}`
-	elif [[ $para == --devicesnum* ]];then
+    elif [[ $para == --devicesnum* ]];then
 	    devicesnum=`echo ${para#*=}`
     elif [[ $para == --conf_path* ]];then
             conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
-            server_index=`echo ${para#*=}`
+        server_index=`echo ${para#*=}`
     fi
 done
 

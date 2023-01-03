@@ -20,6 +20,7 @@ from parse_config import parse_args, validate_arguments, validate_group_bn
 from data.build_pipeline import build_pipeline
 from data.prefetcher import eval_prefetcher
 from eval import setup_distributed
+import tqdm
 
 def preprocess(args,coco):
     coco = eval_prefetcher(iter(coco),
@@ -27,9 +28,9 @@ def preprocess(args,coco):
                            args.pad_input,
                            args.nhwc,
                            args.use_fp16)
-    for nbatch, (img, img_id, img_size) in enumerate(coco):
+    for nbatch, (img, img_id, img_size) in tqdm.tqdm(enumerate(coco)):
         with torch.no_grad():
-            print("img_id=",img_id)
+            # print("img_id=",img_id)
             bin_name=str(img_id)+ ".bin"
             bin_fl = bin_output +'/'+ bin_name
             img=img.detach().cpu()

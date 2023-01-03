@@ -120,8 +120,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    os.environ['MASTER_ADDR'] = '127.0.0.1'  # 可以使用当前真实ip或者'127.0.0.1'
-    os.environ['MASTER_PORT'] = '29688'  # 随意一个可使用的port即可
+    # os.environ['MASTER_ADDR'] = '127.0.0.1'  # 可以使用当前真实ip或者'127.0.0.1'
+    # os.environ['MASTER_PORT'] = '29688'  # 随意一个可使用的port即可
 
     cfg = Config.fromfile(args.config)
     if args.options is not None:

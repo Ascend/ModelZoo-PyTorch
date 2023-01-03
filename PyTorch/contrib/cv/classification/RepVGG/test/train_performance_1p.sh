@@ -19,6 +19,19 @@ Network="RepVGG"
 batch_size=512
 # 训练使用的npu卡数
 export RANK_SIZE=1
+
+data_path=""
+for para in $*
+do
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    fi
+done
+
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -45,14 +58,6 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-data_path=""
-for para in $*
-do
-    if [[ $para == --data_path* ]];then
-        data_path=`echo ${para#*=}`
-    fi
-done
-
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
@@ -65,10 +70,11 @@ nohup python3.7 -u train.py \
     --data ${data_path} \
     --workers 32 \
     --epochs 3 \
-    --batch-size=512 \
+    --batch-size=${batch_size} \
     --lr 0.2 \
     --wd 4e-5 \
     --device npu \
+    --rank_id ${device_id} \
     --amp \
     --custom-weight-decay \
     --opt-level "O2" \

@@ -1,6 +1,0 @@
-torchvision
-pyyaml
-numpy
-pycocotools
-omegaconf
-timm==0.4.12

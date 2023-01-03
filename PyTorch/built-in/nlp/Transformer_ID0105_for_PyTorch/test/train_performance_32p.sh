@@ -98,8 +98,6 @@ STAT_FILE="log.txt"
 sed -i "s|if i>100:pass|if i>100:break|g" train_8p.py
 sed -i "s|if m >=2:pass|if m >=2:break|g" train_8p.py
 
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
-export ASCEND_GLOBAL_LOG_LEVEL_ETP=3
 export PTCOPY_ENABLE=1
 export TASK_QUEUE_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"

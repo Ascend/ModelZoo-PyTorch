@@ -26,46 +26,46 @@ from models.net import SSH as SSH
 
 
 class ClassHead(nn.Module):
-    def __init__(self,inchannels=512,num_anchors=3):
-        super(ClassHead,self).__init__()
+    def __init__(self, inchannels=512, num_anchors=3):
+        super(ClassHead, self).__init__()
         self.num_anchors = num_anchors
-        self.conv1x1 = nn.Conv2d(inchannels,self.num_anchors*2,kernel_size=(1,1),stride=1,padding=0)
+        self.conv1x1 = nn.Conv2d(inchannels, self.num_anchors*2, kernel_size=(1, 1), stride=1, padding=0)
 
-    def forward(self,x):
+    def forward(self, x):
         out = self.conv1x1(x)
-        out = out.permute(0,2,3,1).contiguous()
+        out = out.permute(0, 2, 3, 1).contiguous()
         
         return out.view(out.shape[0], -1, 2)
 
 class BboxHead(nn.Module):
-    def __init__(self,inchannels=512,num_anchors=3):
-        super(BboxHead,self).__init__()
-        self.conv1x1 = nn.Conv2d(inchannels,num_anchors*4,kernel_size=(1,1),stride=1,padding=0)
+    def __init__(self, inchannels=512, num_anchors=3):
+        super(BboxHead, self).__init__()
+        self.conv1x1 = nn.Conv2d(inchannels, num_anchors*4, kernel_size=(1, 1), stride=1, padding=0)
 
-    def forward(self,x):
+    def forward(self, x):
         out = self.conv1x1(x)
-        out = out.permute(0,2,3,1).contiguous()
+        out = out.permute(0, 2, 3, 1).contiguous()
 
         return out.view(out.shape[0], -1, 4)
 
 class LandmarkHead(nn.Module):
-    def __init__(self,inchannels=512,num_anchors=3):
-        super(LandmarkHead,self).__init__()
-        self.conv1x1 = nn.Conv2d(inchannels,num_anchors*10,kernel_size=(1,1),stride=1,padding=0)
+    def __init__(self, inchannels=512, num_anchors=3):
+        super(LandmarkHead, self).__init__()
+        self.conv1x1 = nn.Conv2d(inchannels, num_anchors*10, kernel_size=(1, 1), stride=1, padding=0)
 
-    def forward(self,x):
+    def forward(self, x):
         out = self.conv1x1(x)
-        out = out.permute(0,2,3,1).contiguous()
+        out = out.permute(0, 2, 3, 1).contiguous()
 
         return out.view(out.shape[0], -1, 10)
 
 class RetinaFace(nn.Module):
-    def __init__(self, cfg = None, phase = 'train'):
+    def __init__(self, cfg=None, phase='train'):
         """
         :param cfg:  Network related settings.
         :param phase: train or test.
         """
-        super(RetinaFace,self).__init__()
+        super(RetinaFace, self).__init__()
         self.phase = phase
         backbone = None
         if cfg['name'] == 'mobilenet0.25':
@@ -91,7 +91,7 @@ class RetinaFace(nn.Module):
             in_channels_stage2 * 8,
         ]
         out_channels = cfg['out_channel']
-        self.fpn = FPN(in_channels_list,out_channels)
+        self.fpn = FPN(in_channels_list, out_channels)
         self.ssh1 = SSH(out_channels, out_channels)
         self.ssh2 = SSH(out_channels, out_channels)
         self.ssh3 = SSH(out_channels, out_channels)
@@ -134,7 +134,7 @@ class RetinaFace(nn.Module):
     #         landmarkhead.append(LandmarkHead(inchannels,anchor_num))
     #     return landmarkhead
 
-    def forward(self,inputs):
+    def forward(self, inputs):
         out = self.body(inputs)
 
         # FPN
@@ -147,7 +147,7 @@ class RetinaFace(nn.Module):
         features = [feature1, feature2, feature3]
 
         bbox_regressions = torch.cat([self.bboxHead[i](feature) for i, feature in enumerate(features)], dim=1)
-        classifications = torch.cat([self.classHead[i](feature) for i, feature in enumerate(features)],dim=1)
+        classifications = torch.cat([self.classHead[i](feature) for i, feature in enumerate(features)], dim=1)
         ldm_regressions = torch.cat([self.landmarkHead[i](feature) for i, feature in enumerate(features)], dim=1)
 
         if self.phase == 'train':

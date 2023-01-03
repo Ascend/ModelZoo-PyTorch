@@ -2,14 +2,23 @@
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
+
+
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
   - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
 
 
 
@@ -23,21 +32,10 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
   ```
   url=https://github.com/AbnerHqC/GaitSet
-  branch=master
   commit_id=14ee4e67e39373cbb9c631d08afceaf3a23b72ce
   model_name=GaitSet
   ```
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
+  
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -50,83 +48,82 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
 - 输出数据
 
-  | 输出数据 | 大小         | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型        | 大小 | 数据排布格式 |
   | -------- | ------------ | -------- | ------------ |
-  | output1  | 1 x 62 x 256 | FLOAT32  | ND           |
+  | output1  | FLOAT32 | batchsize x 62 x 256  | ND           |
 
 
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
-
-- 该模型需要以下插件与驱动
+- 该模型需要以下插件与驱动  
 
   **表 1**  版本配套表
 
-  | 配套                                                         | 版本     | 环境准备指导                                                 |
-  | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 1.0.15   | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2  | -                                                            |
-  | Python                                                       | 3.7.5    | -                                                            |
-  | AscendPytorch                                                | 1.5.0+ascend.post5  | -    [AscendPytorch](https://gitee.com/ascend/pytorch)          |
-  | onnx                                                         | 1.7.0    | -                                                            |
-  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \        | \                                                            |
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.5.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+## 获取源码<a name="section4622531142816"></a>
 
-
-1. 安装依赖。
+1. 获取源码。
 
    ```
-   pip3 install -r requirements.txt   Ascend版torch安装参考以上链接
+   git clone https://github.com/AbnerHqC/GaitSet.git
+   cd GaitSet
+   git reset --hard 14ee4e67e39373cbb9c631d08afceaf3a23b72ce
+   cd ..
+   patch -p2 < ../change.patch
    ```
 
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。
-
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
    本模型支持CASIA-B图片的验证集。下载地址http://www.cbsr.ia.ac.cn/english/Gait%20Databases.asp  ，只下载DatasetB数据集。
 
-   下载后的数据集内的压缩文件需要全部解压，解压后数据集内部的目录应为（`CASIA-B`数据集）：数据集路径/对象序号/行走状态/角度，例如`CASIA-B/001/nm-01/000/ `。
-
-2. 数据预处理。
-
-   数据预处理将原始数据集转换为模型输入的数据。
-
-   a.执行命令编辑脚本。
-
+   下载后的数据集内的压缩文件需要全部解压，解压后数据集内部的目录应为（`GaitDatasetB-silh`数据集）：数据集路径/对象序号/行走状态/角度，如
    ```
-   vim GaitSet_config_1p.py 
-   #修改dataset_path为b命令GaitSet_pretreatment.py中output_path所用的路径
-   执行:wq保存退出编辑。
+   GaitDatasetB-silh
+   ├── 001      
+   └── 002
    ```
 
-   b.执行命令，完成数据集预处理。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行GaitSet_preprocess_step1.py脚本
 
    ```
-   python GaitSet_pretreatment.py --input_path='root_path_of_raw_dataset' --output_path='root_path_for_output'
+   python GaitSet_preprocess_step1.py --input_path=./GaitDatasetB-silh --output_path=./predata
    ```
+   -   参数说明：
 
-   第一个参数是数据集所在目录，第二个参数是预处理后的文件名
+         -   input_path：数据集地址
+         -   output：初步预处理保存地址
 
-   c.执行命令生成bin文件夹。
-
+   执行GaitSet_preprocess_step2.py脚本，完成预处理
    ```
    mkdir CASIA-B-bin
-   python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --pre_process=True
-   ```
+   python GaitSet_preprocess_step2.py --data_path=./predata --bin_file_path=./CASIA-B-bin/
+   ```   
+   -   参数说明：
 
-   
+         -   data_path：初步预处理结果
+         -   bin_file_path：预处理数据地址
 
-> **说明：** 
->
-> - 预处理过程中提示大量`WARNING`属于正常现象。如果出现`ERROR`错误提示则可能路径设置有误、或要求中的库文件没有安装。由于`ERROR`提示等重新导出时，建议删除导出有误的文件后再导出。
->
-> - 运行时，首先初步处理后的数据集会在导出路径下生成。
->
-> - 随后，脚本会使用生成的数据集，在当前根目录下生成`CASIA-B-bin`文件夹，里面含有处理好的二进制格式的图片。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -136,33 +133,31 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 获取权重文件。
+      源码仓中存在权重文件，地址是GaitSet/work/checkpoint/GaitSet/GaitSet_CASIA-B_73_False_256_0.2_128_full_30-80000-encoder.ptm
 
-       在源码包中已经提供权重文件GaitSet_CASIA-B_73_False_256_0.2_128_full_30-80000-encoder.ptm，如果没有，可以使用源码自带的ptm进行推理，地址：https://github.com/AbnerHqC/GaitSet/tree/master/work/checkpoint/GaitSet 。进入此地址下载里面的encoder.ptm后缀的文件
-
-   2. 导出onnx文件，此处导出的onnx为静态，因此需要每个batch_size的onnx。
+   2. 导出onnx文件。
 
       1. 使用GaitSet_pth2onnx.py导出onnx文件。
 
-         运行GaitSet_pth2onnx.py脚本，获得gaitset_submit.onnx文件。
+         运行GaitSet_pth2onnx.py脚本。
 
          ```
-         python GaitSet_pth2onnx.py --input_path=’${权重文件路径}’
+         python GaitSet_pth2onnx.py --input_path=./GaitSet/work/checkpoint/GaitSet/GaitSet_CASIA-B_73_False_256_0.2_128_full_30-80000-encoder.ptm
          ```
-      
+
+         获得XXX.onnx文件。
+
+
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```
-         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-   
-         > **说明：** 
-         >
-         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
-      
-      4. 执行命令查看芯片名称（$\{chip\_name\}）。
-   
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
          ```
          npu-smi info
          #该设备芯片名为Ascend310P3 （自行替换）
@@ -178,15 +173,20 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
          | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
          +===================+=================+======================================================+
          ```
-   
+
       3. 执行ATC命令。
-   
+
          ```
-         atc --framework=5 --model=gaitset_submit.onnx --output=gaitset_submit_bs1 --input_shape="image_seq:1,100,64,44" --log=debug --soc_version=${chip_name}
+         atc --framework=5 \
+             --model=gaitset_submit.onnx \
+             --output=gaitset_submit_bs${bs} \
+             --input_shape="image_seq:${bs},100,64,44" \
+             --log=debug \
+             --soc_version=Ascend{chip_name}
          ```
-   
+
          - 参数说明：
-   
+
            -   --model：为ONNX模型文件。
            -   --framework：5代表ONNX模型。
            -   --output：输出的OM模型。
@@ -194,68 +194,56 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
-   
-   
-   
-   
-      运行成功后生成gaitset_submit_bs1.om模型文件。
 
+           运行成功后生成<u>***gaitset_submit_bs${bs}.om***</u>模型文件。
 
+2. 开始推理验证。<u>***根据实际推理工具编写***</u>
 
-2. 开始推理验证。
+   1. 使用ais-infer工具进行推理。
 
-   a.  使用ais-infer工具进行推理。
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
+   2. 执行推理。
 
-   ```
-   chmod u+x 
-   ```
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=gaitset_submit_bs${bs}.om --input=./CASIA-B-bin --output=./ --output_dirname=./result --batchsize=${batch_size}     
+        ```
 
-   b.  执行推理。
+        -   参数说明：
 
-    纯推理模式：
-    ```
-    python ais_infer.py --model gaitset_submit_bs1_310P.om --batchsize 1 --loop 10
-    ```
-   
-    - 参数说明：
-   
-      - batchsize：batchsize大小。
-   
-      - loop：推理次数，可选参数，默认1，profiler为true时，推荐为1。
-   
-        
-   
-    真实数据推理：
-    ```
-   python ais_infer.py --model gaitset_submit_bs1.om --batchsize 1 --input "CASIA-B-bin" --output "result" --output_dirname "dumpOutput_device0"
-    ```
-   
-    -   参数说明：
-   
-        -   model：om文件路径。
-        -   input：输入数据。
-        -   batchsize：batchsize大小。
-        -   output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
-        -   output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中。
-   
+             -   model：om模型地址
+             -   input：预处理数据
+             -   output：推理结果保存路径
+             -   output_dirname:推理结果保存子目录
 
- 
+        推理后的输出保存在当前目录result下。
 
-   c.  精度验证。
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-    
-    ```bash
-    python -u GaitSet_test.py --iter=-1 --batch_size 1 --cache=True --post_process=True
-    ```
-    
-    参数`--iter`、`--cache`、`--post_process`为模型后处理固定参数不需修改。
+   3. 精度验证。
 
+      调用脚本GaitSet_postprocess.py，可以获得Accuracy数据。
 
+      ```
+      python GaitSet_postprocess.py --output_path=./result
+      ```
 
-   原模型精度95.405%：
+      - 参数说明：
+
+        - output_path：推理结果保存地址
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+      python ${ais_infer_path}/ais_infer.py --model=gaitset_submit_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
 
 
 
@@ -265,25 +253,9 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| 310      | 1          | CASIA-B  DatasetB | Rank1:95.512% | 599.98  |
-| 310 | 4 | CASIA-B  DatasetB | | 667.168 |
-| 310 | 8 | CASIA-B  DatasetB | | 678.32 |
-| 310 | 16 | CASIA-B  DatasetB | Rank1:95.512% | 684.812 |
-| 310 | 32         | CASIA-B  DatasetB | | 681.212 |
-| 310 | 64 | CASIA-B  DatasetB | | 681.564 |
-| 310P | 1 | CASIA-B  DatasetB | Rank1:95.512% | 849.55 |
-| 310P | 4 | CASIA-B  DatasetB | | 907.832 |
-| 310P | 8 | CASIA-B  DatasetB |  | 926.033 |
-| 310P | 16 | CASIA-B  DatasetB | Rank1:95.512% | 941.825 |
-| 310P | 32 | CASIA-B  DatasetB |  | 950.833 |
-| 310P | 64 | CASIA-B  DatasetB |  | 952.93 |
-| T4 | 1 | CASIA-B  DatasetB |  | 354.39 |
-| T4 | 4 | CASIA-B  DatasetB |  | 395.37 |
-| T4 | 8 | CASIA-B  DatasetB |  | 388.48 |
-| T4 | 16 | CASIA-B  DatasetB |  | 379.23 |
-| T4 | 32 | CASIA-B  DatasetB |  | 394.04 |
-| T4 | 64 | CASIA-B  DatasetB |  | 384.21 |
-
-
-
-以上在310P上的结果为AOE优化后的性能。
+|     Ascend310P3      |        1          |     GaitDatasetB-silh       |      95.512%      |         606        |
+|     Ascend310P3      |        4          |     GaitDatasetB-silh       |            |       696          |
+|     Ascend310P3      |       8          |     GaitDatasetB-silh       |            |         703        |
+|     Ascend310P3      |       16          |     GaitDatasetB-silh       |            |        714         |
+|     Ascend310P3      |        32          |     GaitDatasetB-silh       |            |       720          |
+|     Ascend310P3      |        64          |     GaitDatasetB-silh       |            |        723         |

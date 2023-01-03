@@ -173,6 +173,9 @@ def train300_mlperf_coco(args):
     
     args = setup_distributed(args)
     
+    if not args.distributed:
+        torch.npu.set_device(args.device_id)
+
     # Build the model
     model_options = {
         'use_nhwc' : args.nhwc,

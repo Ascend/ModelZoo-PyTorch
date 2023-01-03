@@ -108,9 +108,8 @@ def create_visualization_statistical_result(prediction_file_path,
     count_hit = np.zeros(topn)
     for tfile_name in os.listdir(prediction_file_path):
         count += 1
-        temp = tfile_name.split('.')[0]
-        index = temp.rfind('_output')
-        img_name = temp[:index]
+        temp = tfile_name.split('.')[0].split('_')[:-1]
+        img_name = '_'.join(temp)
         filepath = os.path.join(prediction_file_path, tfile_name)
         ret = load_statistical_predict_result(filepath)
         prediction = ret[0]

@@ -17,22 +17,21 @@ import argparse
 from tqdm import tqdm
 import torch
 import numpy as np
+sys.path.append('./YOLOX')
 from yolox.data import COCODataset, ValTransform
 from yolox.evaluators import COCOEvaluator
 from yolox.utils.boxes import postprocess
-
 from yolox.utils.demo_utils import demo_postprocess
-sys.path.append('./YOLOX')
 
 
 def get_output_data(dump_dir, idx, dtype=np.float32):
-    shapes = [[1, 4, 80, 80], [1, 1, 80, 80], [1, 80, 80, 80],
-              [1, 4, 40, 40], [1, 1, 40, 40], [1, 80, 40, 40],
-              [1, 4, 20, 20], [1, 1, 20, 20], [1, 80, 20, 20]]
+    shapes = [[-1, 4, 80, 80], [-1, 1, 80, 80], [-1, 80, 80, 80],
+              [-1, 4, 40, 40], [-1, 1, 40, 40], [-1, 80, 40, 40],
+              [-1, 4, 20, 20], [-1, 1, 20, 20], [-1, 80, 20, 20]]
     res = []
     for index, shape in enumerate(shapes):
         file_name = os.path.join(dump_dir, f"{idx:0>12d}_{index}.bin")
-        data = np.formfile(file_name, dtype=dtype).reshape(shape)
+        data = np.fromfile(file_name, dtype=dtype).reshape(shape)
         res.append(torch.from_numpy(data))
 
     return res
@@ -50,11 +49,6 @@ def main():
     parser.add_argument('--batch', dest='batch',
                         help='batch for dataloader', default=1, type=int)
     opt = parser.parse_args()
-
-    if os.path.exists(opt.dump_dir):
-        os.system("rm-rf " + opt.dump_dir)
-    else:
-        os.system("mkdir " + opt.dump_dir)
 
     valdataset = COCODataset(
         data_dir=opt.dataroot,

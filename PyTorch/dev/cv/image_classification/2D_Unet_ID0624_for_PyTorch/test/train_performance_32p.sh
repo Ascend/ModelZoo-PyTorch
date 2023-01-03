@@ -1,8 +1,6 @@
 #!/bin/bash
 
 cur_path=`pwd`/../
-#失败用例打屏
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 
 source /usr/local/Ascend/bin/setenv.bash
 

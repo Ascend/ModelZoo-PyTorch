@@ -93,7 +93,7 @@ taskset -c $PID_START-$PID_END python3.7 -u imagenet_fast.py \
   --label-smoothing 0.1 \
   --warmup 5 \
   --device-list 0,1,2,3,4,5,6,7 \
-  --loss-scale 'dynamic' \
+  --loss-scale 16.0 \
   --rank 0 \
   --world-size 1\
   --local_rank $RANK_ID \

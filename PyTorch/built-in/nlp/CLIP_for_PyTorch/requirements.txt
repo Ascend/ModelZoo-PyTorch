@@ -1,0 +1,7 @@
+accelerate
+datasets == 1.8.0
+tokenizers
+sentencepiece == 0.1.96
+protobuf == 3.14
+wikiextractor
+sklearn

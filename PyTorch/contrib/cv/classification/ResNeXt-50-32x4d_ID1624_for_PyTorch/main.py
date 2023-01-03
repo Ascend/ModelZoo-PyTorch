@@ -28,7 +28,6 @@ import torch
 if torch.__version__ >= "1.8":
     import torch_npu
 import numpy as np
-# import torch.npu
 from apex import amp
 import apex
 
@@ -196,7 +195,7 @@ def main_worker(gpu, ngpus_per_node, args):
             args.rank = args.rank * ngpus_per_node + gpu
 
         if args.device == 'npu':
-            dist.init_process_group(backend=args.dist_backend,  # init_method=args.dist_url,
+            dist.init_process_group(backend=args.dist_backend,
                                     world_size=args.world_size, rank=args.rank)
         else:
             dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
@@ -204,7 +203,6 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     if args.pretrained:
         print("=> using pre-trained model resnext50_32x4d")
-        # model = resnet_0_6_0.resnext50_32x4d(pretrained=True)
         model = resnet_0_6_0.resnext50_32x4d(pretrained=False, progress=True)
         parameters = model.parameters()
         pretrained_dict = \
@@ -278,9 +276,6 @@ def main_worker(gpu, ngpus_per_node, args):
                 print("before : model = torch.nn.DataParallel(model).cuda()")
 
     # define loss function (criterion) and optimizer
-    # optimizer = torch.optim.SGD(model.parameters(), args.lr,
-    #                             momentum=args.momentum,
-    #                             weight_decay=args.weight_decay)
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
                             momentum=args.momentum,
                             weight_decay=args.weight_decay)
@@ -426,13 +421,6 @@ def main_worker(gpu, ngpus_per_node, args):
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                     and args.rank % ngpus_per_node == 0):
-            # save_checkpoint({
-            #     'epoch': epoch + 1,
-            #     'arch': args.arch,
-            #     'state_dict': model.state_dict(),
-            #     'best_acc1': best_acc1,
-            #     'optimizer' : optimizer.state_dict(),
-            # }, is_best)
             ############## npu modify begin #############
             if args.amp:
                 save_checkpoint({
@@ -531,16 +519,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        # if args.amp:
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
-        # else:
-        #     loss.backward()
         optimizer.step()
-
-        # torch.npu.synchronize()
-
-        # measure elapsed time
         cost_time = time.time() - end
         batch_time.update(cost_time)
         end = time.time()
@@ -554,9 +535,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                 and args.rank % ngpus_per_node == 0):
-#        print("[npu id:", args.gpu, "]", "batch_size:", ngpus_per_node * args.batch_size,
-#              'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
-#                args.batch_size / batch_time.avg))
         if batch_time.avg:
             print("[npu id:", args.gpu, "]", "batch_size:", args.world_size * args.batch_size,
                   'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
@@ -674,8 +652,6 @@ class ProgressMeter(object):
 
 def adjust_learning_rate(optimizer, epoch, args):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    # lr = args.lr * (0.1 ** (epoch // (args.epochs//3 - 3)))
-
     if args.warm_up_epochs > 0 and epoch < args.warm_up_epochs:
         lr = args.lr * ((epoch + 1) / (args.warm_up_epochs + 1))
     else:

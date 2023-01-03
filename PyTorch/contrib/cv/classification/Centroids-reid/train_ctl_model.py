@@ -1,3 +1,4 @@
+
 # encoding: utf-8
 # BSD 3-Clause License
 #
@@ -42,6 +43,8 @@ from pathlib import Path
 import numpy as np
 import pytorch_lightning as pl
 import torch
+if torch.__version__ >= "1.8":
+     import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat

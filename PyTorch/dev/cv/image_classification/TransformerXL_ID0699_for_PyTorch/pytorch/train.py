@@ -270,10 +270,10 @@ def parse_args():
                           help='Swap memory tensors to cpu')
     training.add_argument('--profiling', type=str, default='NONE',
                         help='choose profiling way--CANN,GE,NONE')
-    training.add_argument('--start_step', default=0, type=int, 
+    training.add_argument('--start_step', default=0, type=int,
                         help='start_step')
     training.add_argument('--stop_step', default=1000, type=int,
-                        help='stop_step')              
+                        help='stop_step')
     training.add_argument('--bin', type=bool, default=True,
                         help='if bin')
     val = parser.add_argument_group('validation setup')
@@ -297,7 +297,7 @@ def parse_args():
     args.tied = not args.not_tied
     if args.bin:
         torch.npu.set_compile_mode(jit_compile=False)
-    
+
     if args.d_embed < 0:
         args.d_embed = args.d_model
 
@@ -536,7 +536,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
           timeout_handler, device, args):
     # Turn on training mode which enables dropout.
     model.train()
-    torch.npu.set_start_fuzz_compile_step(3)
+    if not torch.__version__ >= "1.8":
+        torch.npu.set_start_fuzz_compile_step(3)
     train_loss = 0
     target_tokens = 0
     log_step = 0
@@ -547,10 +548,12 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
         train_iter = tr_iter.get_varlen_iter(start=last_iter)
     else:
         train_iter = tr_iter.get_fixlen_iter(start=last_iter)
-    
+
     num_steps = 0
-    for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1): 
-        torch.npu.global_step_inc()   
+    for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1):
+        if not torch.__version__ >= "1.8":
+            torch.npu.global_step_inc()
+        start_time = time.time()
         log_step += 1
         target_tokens += target.numel()
 
@@ -566,7 +569,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 import sys
                 sys.exit()
         elif num_steps < args.stop_step and num_steps >= args.start_step  and args.profiling == 'CANN':
-            with torch.npu.profile(profiler_result_path="./CANN_prof",use_e2e_profiler=True): 
+            with torch.npu.profile(profiler_result_path="./CANN_prof"):
                 for i in range(args.batch_chunk):
                     if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
                         with para_model.no_sync():
@@ -596,9 +599,9 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 else:
                     optimizer.step()
                     if optimizer_sparse:
-                        optimizer_sparse.step()      
-        elif num_steps < args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':          
-            with torch.npu.profile(profiler_result_path="./GE_prof"):    
+                        optimizer_sparse.step()
+        elif num_steps < args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
+            with torch.npu.profile(profiler_result_path="./GE_prof"):
                 for i in range(args.batch_chunk):
                     if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
                         with para_model.no_sync():
@@ -697,7 +700,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 cur_loss = train_loss / log_step
                 cur_loss = utils.distributed.all_reduce_item(cur_loss, op='mean')
                 train_loss = 0
-
+                end_time = time.time() - start_time
+                print("step time:", end_time)
                 elapsed = time.time() - log_start_time
                 avg_elapsed = elapsed / log_step
                 avg_elapsed = utils.distributed.all_reduce_item(avg_elapsed, op='max')
@@ -709,7 +713,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 throughput = utils.distributed.all_reduce_item(throughput, op='sum')
                 meters['train_throughput'].update(throughput)
                 target_tokens = 0
-
+                
                 log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
                     '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
                         epoch,
@@ -740,9 +744,9 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
 
                 logging.info(log_str)
                 dllogger.log(step=tuple([train_step]), data=dllogger_data)
-            
+
             num_steps = num_steps + 1
-           
+
         do_periodic_eval = train_step % args.eval_interval == 0
         is_final_step = train_step == args.max_step
         interrupted = timeout_handler.interrupted
@@ -1234,5 +1238,8 @@ if __name__ == "__main__":
     # code, but it is still valid.
     if 'apex' in sys.modules:
         amp.register_half_function(torch, 'einsum')
+    
+    if torch.__version__ >= "1.8":
+        torch.npu.set_compile_mode(jit_compile=False)
 
     main()

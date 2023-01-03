@@ -2,7 +2,6 @@
 
 cur_path=`pwd`/../
 #失败用例打屏
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 
 #基础参数，需要模型审视修改
 #Batch Size

@@ -18,6 +18,7 @@ import numpy as np
 from PIL import Image
 from torchvision import transforms
 import multiprocessing
+from tqdm import tqdm
 
 preprocess = transforms.Compose([
         transforms.Resize([256, 128]),
@@ -30,8 +31,6 @@ def gen_input_bin(file_batches, batch):
     for file in file_batches[batch]:
         if ".db" in file:
             continue
-        i = i + 1
-        print("batch", batch, file, "===", i)
 
         input_image = Image.open(os.path.join(src_path, file)).convert('RGB')
         input_tensor = preprocess(input_image)
@@ -42,8 +41,11 @@ def ReID_preprocess(src_path, save_path):
     files = os.listdir(src_path)
     file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
+    pbar = tqdm(range(len(file_batches)))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch))
+        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch),
+                                callback=lambda _: pbar.update(1),
+                                error_callback=lambda _: pbar.update(1))
     thread_pool.close()
     thread_pool.join()
     print("in thread, except will not report! please ensure bin files generated.")

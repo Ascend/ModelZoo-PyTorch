@@ -45,6 +45,8 @@ do
         one_node_ip=`echo ${para#*=}`
     elif [[ $para == --linux_num* ]];then
         linux_num=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -106,7 +108,7 @@ sed -i "s|./coco/train2017.txt|$data_path/../coco_txl/COCO2017/train2017.txt|g" 
 sed -i "s|./coco/val2017.txt|$data_path/../coco_txl/COCO2017/val2017.txt|g" data/coco.yaml
 sed -i "s|./coco/testdev2017.txt|$data_path/../coco_txl/COCO2017/testdev2017.txt|g" data/coco.yaml
 sed -i "s|./coco/annotations/instances_val|$data_path/../coco_txl/COCO2017/annotations/instances_val|g" test.py
-sed -i "s|opt.notest or final_epoch:|opt.notest:|g" train_8p.py
+sed -i "s|opt.notest or final_epoch:|opt.notest:|g" main.py
 
 export HCCL_IF_IP=$fix_node_ip
 export MASTER_ADDR=$one_node_ip
@@ -132,7 +134,7 @@ do
     then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 train_8p.py --img $image_size $image_size \
+    taskset -c $PID_START-$PID_END python3.7 main.py --img $image_size $image_size \
                                           --data coco.yaml \
                                           --cfg cfg/yolov4_8p.cfg \
                                           --weights '' \
@@ -153,7 +155,7 @@ do
                                           --stop_step_num 100 \
                                           --notest > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 train_8p.py --img $image_size $image_size \
+        python3.7 main.py --img $image_size $image_size \
                    --data coco.yaml \
                    --cfg cfg/yolov4_8p.cfg \
                    --weights '' \
@@ -189,7 +191,7 @@ sed -i "s|$data_path/../coco_txl/COCO2017/train2017.txt|./coco/train2017.txt|g" 
 sed -i "s|$data_path/../coco_txl/COCO2017/val2017.txt|./coco/val2017.txt|g" data/coco.yaml
 sed -i "s|$data_path/../coco_txl/COCO2017/testdev2017.txt|./coco/testdev2017.txt|g" data/coco.yaml
 sed -i "s|$data_path/../coco_txl/COCO2017/annotations/instances_val|./coco/annotations/instances_val|g" test.py
-sed -i "s|opt.notest:|opt.notest or final_epoch:|g" train_8p.py
+sed -i "s|opt.notest:|opt.notest or final_epoch:|g" main.py
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"

@@ -21,7 +21,6 @@ RANK_ID_START=0
 RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
-ASCEND_DEVICE_ID=0
 data_path="/npu/traindata/imagenet_pytorch/"
 # 指定训练所使用的npu device卡id
 device_id=0
@@ -57,6 +56,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
       data_path=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
@@ -109,7 +110,7 @@ nohup python3.7 ${cur_path}/main.py \
     --batch_size=${batch_size} \
     --learning-rate=${learning_rate} \
     --epochs=$train_epochs \
-    --device_id=$ASCEND_DEVICE_ID \
+    --device_id=${device_id} \
     --max_steps=2000 \
     --loss-scale-value=1024 \
     --apex \
@@ -129,6 +130,9 @@ echo "------------------ Final result ------------------"
 FPS=`grep -a 'img/s'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $9}'|awk 'END {print}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+
+#获取编译时间
+CompileTime=`grep "Epoch" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 |awk -F " " '{print $4}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '* Prec@1' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk '{print $3}'`

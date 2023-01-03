@@ -37,7 +37,7 @@ over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling=False
-
+bin_mode=0
 
 if [[ $1 == --help || $1 == --h ]];then
    echo "usage:./train_performance_1p.sh --data_path=data_dir --batch_size=1024 --learning_rate=0.04"
@@ -54,6 +54,8 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=1
     fi
 done
 
@@ -95,6 +97,7 @@ nohup python3.7 ${cur_path}/../main.py \
 	  -p 100 \
 	  ${PREC} \
   	--label-smoothing 0.1 \
+    --bin_mode=${bin_mode} \
    	--wd 0.0002 > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 sed -i "s|break|pass|g"  ${cur_path}/../main.py
@@ -114,6 +117,10 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'Epoch:' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log |awk -F "Time" '{print $2}' | awk -F ' ' '{print $1}' | tail -n+2 | awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${FPS}'}'`
+
+#输出CompileTime
+CompileTime=`grep Iter_time $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log |head -n 2| awk '{sum+=$2} END {print sum}'|sed s/[[:space:]]//g`
+
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -153,3 +160,4 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Ca
 echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

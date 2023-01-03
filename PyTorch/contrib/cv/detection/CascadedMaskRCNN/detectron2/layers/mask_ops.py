@@ -56,14 +56,12 @@ def _do_paste_mask(masks, boxes, img_h, img_w, skip_empty=True):
         x0_int, y0_int = 0, 0
         x1_int, y1_int = img_w, img_h
 
-    boxes = boxes.to("cpu")
-    masks = masks.to("cpu")
     x0, y0, x1, y1 = torch.split(boxes, 1, dim=1)  # each is Nx1
 
     N = masks.shape[0]
 
-    img_y = torch.arange(y0_int, y1_int, device="cpu", dtype=torch.float32) + 0.5
-    img_x = torch.arange(x0_int, x1_int, device="cpu", dtype=torch.float32) + 0.5
+    img_y = torch.arange(y0_int, y1_int, device="npu", dtype=torch.float32) + 0.5
+    img_x = torch.arange(x0_int, x1_int, device="npu", dtype=torch.float32) + 0.5
     img_y = (img_y - y0) / (y1 - y0) * 2 - 1
     img_x = (img_x - x0) / (x1 - x0) * 2 - 1
     # img_x, img_y have shapes (N, w), (N, h)

@@ -1,119 +1,107 @@
-# Cascade-Mask-RCNN Onnx模型端到端推理指导
+# Cascade-Mask-RCNN模型-推理指导
 
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理Acc精度统计](#61-离线推理Acc精度统计)
-	-   [6.2 开源Acc精度](#62-开源Acc精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
 
 
 
-## 1 模型概述
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[论文地址](#11-论文地址)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
--   **[代码地址](#12-代码地址)**  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-### 1.1 论文地址
-[Cai Z, Vasconcelos N. Cascade r-cnn: Delving into high quality object detection[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2018: 6154-6162.](https://arxiv.org/abs/1712.00726)  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 1.2 代码地址
-[url=https://github.com/facebookresearch/detectron2.git](https://github.com/facebookresearch/detectron2.git)  
-branch:master  
-commit_id:468ae58cf49d09931788f378e4b3d4cc2f171c22
+  ******
 
-## 2 环境说明
 
--   **[深度学习框架](#21-深度学习框架)**  
 
--   **[python第三方库](#22-python第三方库)**  
 
-### 2.1 深度学习框架
-```
-CANN 5.1.RC1
-pytorch == 1.8.0
-torchvision == 0.9.0
-onnx == 1.8.0
-```
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-### 2.2 python第三方库
+在目标检测中，需要一个交并比(IOU)阈值来定义物体正负标签。使用低IOU阈值(例如0.5)训练的目标检测器通常会产生噪声检测。然而，随着IOU阈值的增加，检测性能趋于下降。影响这一结果的主要因素有两个：第一训练过程中由于正样本呈指数级消失而导致的过度拟合；第二检测器为最优的IOU与输入假设的IOU之间的推断时间不匹配。针对这些问题，提出了一种多级目标检测体系结构-级联R-CNN.它由一系列随着IOU阈值的提高而训练的探测器组成，以便对接近的假阳性有更多的选择性。探测器是分阶段训练的，利用观察到的探测器输出是训练下一个高质量探测器的良好分布。逐步改进的假设的重采样保证了所有探测器都有一组等效尺寸的正的例子，从而减少了过拟合问题。同样的级联程序应用于推理，使假设与每个阶段的检测器质量之间能够更紧密地匹配。Cascade R-CNN的一个简单实现显示，在具有挑战性的COCO数据集上，它超过了所有的单模型对象检测器。实验还表明，Cascade R-CNN在检测器体系结构中具有广泛的适用性，独立于基线检测器强度获得了一致的增益.
 
-```
-numpy == 1.21.4
-opencv-python == 4.2.0.34
-decorator == 5.1.0
-sympy == 1.9
-```
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
 
-## 3 模型转换
+- 参考实现：
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+  ```
+  url=https://github.com/facebookresearch/detectron2.git
+  commit_id=aa8ea943411a2e5cd616e4d517215779a2ea2dad
+  code_path=contrib/cv/segmentation/Cascade_Mask_RCNN
+  ```
+  
+ 
 
--   **[onnx转om模型](#32-onnx转om模型)**  
 
-### 3.1 pth转onnx模型
+## 输入输出数据<a name="section540883920406"></a>
 
-1. 准备pth权重文件  
-使用训练好的pkl权重文件：model_final_e9d89b.pkl
+- 输入数据
 
-下载路径：
-https://github.com/facebookresearch/detectron2/blob/main/MODEL_ZOO.md
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 1344 x 1344 | NCHW         |
 
-下载Other Settings项 Cascade R-CNN 1x 36.4精度的model文件
 
-2. 下载detectron2源码并安装
+- 输出数据
 
-```shell
-git clone https://github.com/facebookresearch/detectron2
-cd detectron2
-git reset --hard aa8ea943411a2e5cd616e4d517215779a2ea2dad--hard
-python3.7 -m pip install -e .
-```
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 100 x 4 | ND           |
+  | output2  | FLOAT32  | 100 x 1 | ND           |
+  | output3  | INT64    | 100 x 1 | ND           |
+  | output4  | FLOAT32  | 100 x 80 x 28 x 28 | NCHW |
+ 
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
- **说明：**  
-> 安装所需的依赖说明请参考detectron2/INSTALL.md
->
+- 该模型需要以下插件与驱动   
 
-3. detectron2代码迁移
-通过打补丁的方式修改detectron2：
-```shell
-patch -p1 < ../cascade_maskrcnn.patch 
-cd ..
-```
+  **表 1**  版本配套表
 
-4. 准备coco2017验证集，数据集获取参见本文第四章第一节  
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17(NPU驱动固件版本为6.0.RC1)  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | Pytorch                                                      | 1.8.0   | -                                                            |
+                    
 
-(a)方法一：在当前目录按结构构造数据集：datasets/coco目录下有annotations与val2017两个文件夹，annotations目录存放coco数据集的instances_val2017.json，val2017目录存放coco数据集的5000张验证图片.
 
-(b)方法二：修改读取数据集路径。
-```shell
-vim detectron2/detectron2/data/datasets/builtin.py
-```
-修改os.getenv中的数据集路径，保存并退出。
-```python
-if __name__.endswith(".builtin"):     
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 安装依赖。
+
+   ```
+   pip install -r requirements.txt     
+   ```
+
+2. 获取源码。
+    1. 安装开源仓
+   ```
+   git clone https://github.com/facebookresearch/detectron2
+   cd detectron2
+   git reset --hard aa8ea943411a2e5cd616e4d517215779a2ea2dad
+   python -m pip install -e .
+
+   ```
+    2. 修改模型
+   ```
+   patch -p1 < ../cascade_maskrcnn.patch
+   cd ..
+   ```
+
+3. 修改os.getenv中的数据集路径，保存并退出。
+ 
+   ```
+   vim detectron2/detectron2/data/datasets/builtin.py
+   if __name__.endswith(".builtin"):     
     # Assume pre-defined datasets live in `./datasets`.     
     _root = os.getenv("DETECTRON2_DATASETS", "/opt/npu")//修改为数据集实际路径     
     register_all_coco(_root)     
@@ -122,200 +110,211 @@ if __name__.endswith(".builtin"):
     register_all_cityscapes_panoptic(_root)     
     register_all_pascal_voc(_root)     
     register_all_ade20k(_root)
-```
+   ```
 
-6.运行如下命令，生成model.onnx
-运行“detectron2/tools/deploy/export_model.py”脚本：
-```shell
-python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/Misc/cascade_mask_rcnn_R_50_FPN_1x.yaml --output ./output --export-method tracing --format onnx MODEL.WEIGHTS model_final_e9d89b.pkl MODEL.DEVICE cpu
-```
+## 准备数据集<a name="section183221994411"></a>
 
-### 3.2 onnx转om模型
+1. 获取原始数据集。
+   本模型已在coco 2017数据集上验证过精度。推理数据集采用coco_val_2017，请用户自行获取coco_val_2017数据集。将instances_val2017.json文件和val2017文件夹按照如下目录结构上传并解压数据集到服务器任意目录。
+    最终，数据的目录结构如下：
+   ```
+   ├── coco
+       ├── val2017   
+       ├── annotations
+            ├──instances_val2017.json
+         
 
-1. 设置环境变量
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   ```
 
-2. 使用atc将onnx模型
-${chip_name}可通过npu-smi info指令查看，例：310P3
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-
-执行ATC命令：
-```shell
-atc --model=output/model.onnx \
---framework=5 \
---output=output/cascade_maskrcnn_bs1 \
---input_format=NCHW \
---input_shape="0:1,3,1344,1344" \
---out_nodes="Cast_1835:0;Gather_1838:0;Reshape_1829:0;Slice_1862:0" \
---log=debug \
---soc_version=Ascend${chip_name} \
-```
-
-参数说明：
---model：为ONNX模型文件。
---framework：5代表ONNX模型。
---output：输出的OM模型。
---input_format：输入数据的格式。
---input_shape：输入数据的shape。
---log：日志级别。
---soc_version：处理器型号。
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用coco2017的5千张验证集进行测试，图片与标签分别存放在./datasets/coco/val2017与./datasets/coco/annotations/instances_val2017.json。格式如下：
-```
-├──datasets 
-   └── coco 
-       ├──annotations 
-           └──instances_val2017.json    //验证集标注信息        
-       └── val2017                      // 验证集文件夹
-```
-
-### 4.2 数据集预处理
-将原始数据（.jpg）转化为二进制文件（.bin）。以coco_2017数据集为例，通过缩放、均值方差手段归一化，输出为二进制文件。
-
-执行“cascade_maskrcnn_preprocess.py”脚本。
-
-```shell
-python3.7 cascade_maskrcnn_preprocess.py \
---image_src_path=./datasets/coco/val2017 \
---bin_file_path=val2017_bin \
---model_input_height=1344 \
---model_input_width=1344
-```
-每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“val2017_bin”二进制文件夹。
-
-### 4.3 生成数据集信息文件
-使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用get_info.py脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。
-
-1. 生成JPG图片输入info文件
-```shell
-python3.7 get_info.py jpg ./datasets/coco/val2017 cascade_maskrcnn_jpeg.info
-```
-第一个参数为生成的数据集文件格式；第二个参数为原始数据文件相对路径；第三个参数为生成的info文件名。
-运行成功后，在当前目录中生成cascade_maskrcnn_jpeg.info。
-
-2. 生成BIN文件输入info文件
-```shell
-python3.7 get_info.py bin ./val2017_bin cascade_maskrcnn.info 1344 1344
-```
-第一个参数为生成的数据集文件格式，第二个参数为预处理后的数据文件相对路径，第三个参数为生成的数据集文件名，第四个和第五个参数分别为模型输入的宽度和高度。
-运行成功后，在当前目录中生成cascade_maskrcnn.info。
-
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 离线推理
-1.设置环境变量
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-增加benchmark.{arch}可执行权限
-```shell
-chmod u+x benchmark.x86_64
-```
-执行推理
-```shell
-./benchmark.x86_64 -model_type=vision -om_path=output/cascade_maskrcnn_bs1.om -device_id=0 -batch_size=1 -input_text_path=cascade_maskrcnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
-```
-推理后的输出默认在当前目录“result/dumpOutput_device0”下，每个输入对应的输出对应一个_x.bin文件。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
 
-## 6 精度对比
+   执行cascade_maskrcnn_preprocess.py脚本，完成预处理。
 
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理Acc精度统计
-
-后处理统计Acc精度
-
-调用cascade_maskrcnn_postprocess.py评测map精度。
-```python
-python3.7 cascade_maskrcnn_postprocess.py \
---bin_data_path=./result/dumpOutput_device0/ \
---test_annotation=cascade_maskrcnn_jpeg.info \
---det_results_path=./ret_npuinfer/ \
---net_out_num=4 \
---net_input_height=1344 --net_input_width=1344 \
---ifShowDetObj
-```
-参数说明：
---bin_data_path：为benchmark推理结果。
---test_annotation：为原始图片信息文件。
---det_results_path：为后处理输出结果。
---net_out_num：为网络输出个数。
---net_input_height、--net_input_width：为网络高宽。
---ifShowDetObj：为是否将box画在图上显示。
-
-执行完后得到310P上的精度：
-
-|AP  |AP50  |AP75  |APs  |APm  |APl  |
-|---|---|---|---|---|---|
-|36.298  |56.864  |39.031  |17.554   |38.606  |52.503  |
+   ```
+   python cascade_maskrcnn_preprocess.py --image_src_path ./coco/val2017 --bin_file_path ./val2017_bin --model_input_height=1344 
+   --model_input_width=1344
+   ```
+   - 参数说明：
+      -  --image_src_path：数据集路径。
+      -  --bin_file_path：预处理后的数据文件的相对路径。
+      -  --model_input_height: 模型高
+      -  --model_input_width: 模型宽
+      
+    
+    运行成功后，会在当前目录下生成二进制文件。
 
 
-### 6.2 开源TopN精度
-[官网精度](https://github.com/facebookresearch/detectron2/blob/master/MODEL_ZOO.md)
-参考[detectron2框架在线推理指南](https://detectron2.readthedocs.io/en/latest/tutorials/getting_started.html)，安装依赖PyTorch(GPU版本)与设置环境变量，在GPU上执行推理，测得GPU精度如下：
+## 模型推理<a name="section741711594517"></a>
 
-```shell
-git clone https://github.com/facebookresearch/detectron2
+1. 模型转换。
 
-python3.7 -m pip install -e detectron2
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-cd ./detectron2/tools
+   1. 获取权重文件。
 
-python train_net.py --config-file ./detectron2/configs/Misc/cascade_mask_rcnn_R_50_FPN_1x.yaml --eval-only MODEL.WEIGHTS model_final_e9d89b.pkl
-```
-配置文件与权重文件分别为cascade_mask_rcnn_R_50_FPN_1x.yaml与model_final_e9d89b.pkl。
+       [获取地址](https://dl.fbaipublicfiles.com/detectron2/Misc/cascade_mask_rcnn_R_50_FPN_1x/138602847/model_final_e9d89b.pkl)
 
-root/datasets/coco下面放置coco2017验证集图片与标签（参考本文第三章第一节步骤五）
+   2. 导出onnx文件。
 
-获得官网精度为：
+      1. 使用detectron2/tools/deploy/export_model.py导出onnx文件。
 
-|AP  |AP50  |AP75  |APs  |APm  |APl  |
-|---|---|---|---|---|---|
-|36.403  |56.945  |39.208  |17.477   |38.669  |52.491  |
+      
+  
 
-### 6.3 精度对比
-将得到的om离线模型推理Acc精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。
+         ```
+         python detectron2/tools/deploy/export_model.py --config-file detectron2/configs/Misc/cascade_mask_rcnn_R_50_FPN_1x.yaml --output ./output -- 
+         export-method tracing --format onnx MODEL.WEIGHTS model_final_e9d89b.pkl MODEL.DEVICE cpu  
 
-**精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
+         ```
+         - 参数说明：
+            -  --output: 输出onnx模型
+          
 
-## 7 性能对比
+         获得model.onnx文件,模型只支持bs1。
 
--   **[npu性能数据](#71-npu性能数据)**  
 
-### 7.1 npu性能数据
-离线推理的Interface throughputRate即为吞吐量，对于310，需要乘以4，710只有一颗芯片，FPS为该值本身。
 
-310上Interface throughputRate: ，1.18511x4=4.74044即batch1 310单卡吞吐率为4.74044。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-310P上Interface throughputRate: 8.82862 ，即是batch1 310P单卡吞吐率为8.82862。
+      1. 配置环境变量。
 
-T4单卡吞吐率为4.53933。
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-Cascade M-RCNN不支持多batch。
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-**性能优化：**  
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
->没有遇到性能不达标的问题，故不需要进行性能优化
+      3. 执行ATC命令。
+
+         ```
+            atc --framework=5\ 
+                 --model=./output/model.onnx\ 
+                 --output=./cascade_maskrcnn_bs1\ 
+                 --input_format=NCHW\ 
+                 --input_shape="0:1,3,1344,1344"\ 
+                 --log=info\
+                 --out_nodes="Cast_1835:0;Gather_1838:0;Reshape_1829:0;Slice_1862:0"\
+                 --soc_version=Ascend${ChipName}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --out_nodes: 输出节点
+
+        运行成功后生成cascade_maskrcnn_bs1.om模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+        
+    ```
+    python ais_infer.py --model ./cascade_maskrcnn_bs1.om\  
+                                  --input ./val2017_bin/\ 
+                                  --output ./\ 
+                                  --batchsize 1\
+                                  --outfmt BIN\
+                                  --output_dirname result
+    ```
+
+    - 参数说明：
+
+      - --model: OM模型路径。
+      - --input: 存放预处理bin文件的目录路径
+      - --output: 存放推理结果的目录路径
+      - --batchsize：每次输入模型的样本数
+      - --outfmt: 推理结果数据的格式
+      - --output_dirname: 输出结果子目录
+        推理后的输出默认在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      运行get_info.py,生成图片数据文件
+    ```
+    python get_info.py jpg ./coco/val2017  cascade_maskrcnn_jpeg.info
+    ```
+    - 参数说明：
+
+      - --第一个参数：原始数据集
+      - --第二个参数：图片数据信息
+
+      调用“cascade_maskrcnn_postprocess.py”评测模型的精度。
+
+    ```
+    python cascade_maskrcnn_postprocess.py --bin_data_path=result  --ifShowDetObj --det_results_path=detection-results -- 
+    test_annotation=cascade_maskrcnn_jpeg.info  --net_out_num=4 --net_input_height=1344 --net_input_width=1344
+    ``` 
+    - 参数说明：
+
+      - --bin_data_path: 推理结果。
+      - --test_annotatio: 原始图片信息文件。
+      - --det_results_path: 后处理输出结果。
+      - --ifShowDetObj：是否将box画在图上显示。
+      - --net_out_num: 网络输出个数
+      - --net_input_height: 网络高
+      - --net_input_width: 网络宽
+
+     
+    
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+    ```
+    python ais_infer.py --model ./cascade_maskrcnn_bs1.om --loop 100 --batchsize 1
+    ```
+
+    - 参数说明：
+
+      - --model: om模型
+      - --batchsize: 每次输入模型样本数
+      - --loop: 循环次数    
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+1. 精度对比
+
+    | Model       | batchsize | Accuracy 
+    | ----------- | --------- | -------- |
+    | Cascade_maskrcnn| 1       | ap = 36.29 |
+
+2. 性能对比
+
+    | batchsize | 310 性能 | 310P 性能 | 
+    | ---- | ---- | ---- |
+    | 1 | 5  |18|

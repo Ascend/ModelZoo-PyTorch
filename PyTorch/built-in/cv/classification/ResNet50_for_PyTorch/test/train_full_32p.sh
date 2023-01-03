@@ -25,6 +25,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     elif [[ $para == --conf_path* ]];then
             conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then

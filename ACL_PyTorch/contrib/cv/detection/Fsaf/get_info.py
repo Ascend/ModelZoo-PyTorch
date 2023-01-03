@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-import sys
+import argparse
 import cv2
 from glob import glob
 
@@ -47,14 +47,11 @@ def get_jpg_info(file_path, info_name):
 
 
 if __name__ == '__main__':
-    file_type = sys.argv[1]
-    file_path = sys.argv[2]
-    info_name = sys.argv[3]
-    if file_type == 'bin':
-        width = sys.argv[4]
-        height = sys.argv[5]
-        assert len(sys.argv) == 6, 'The number of input parameters must be equal to 5'
-        get_bin_info(file_path, info_name, width, height)
-    elif file_type == 'jpg':
-        assert len(sys.argv) == 4, 'The number of input parameters must be equal to 3'
-        get_jpg_info(file_path, info_name)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file_type", default="")
+    parser.add_argument("--file_path", default="")
+    parser.add_argument("--info_name", default="")
+    args = parser.parse_args()
+    get_bin_info(args.file_type, args.file_path, args.info_name)
+

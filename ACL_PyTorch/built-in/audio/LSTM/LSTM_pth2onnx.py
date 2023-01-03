@@ -216,8 +216,8 @@ def main(conf, batchsize):
     batch_size = int(batchsize)
     dummy_input = torch.randn(batch_size, 390, 243, device='cpu')
     dynamic_axes = {'actual_input_1': {0: '-1'}, 'output1': {1: '-1'}}
-    output_file = "lstm_ctc_{}batch.onnx".format(str(batch_size))
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, output_names = output_names, opset_version=11)
+    output_file = "lstm_ctc.onnx"
+    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, output_names = output_names, opset_version=11, dynamic_axes=dynamic_axes)
 if __name__ == '__main__':
     ssl._create_default_https_context = ssl._create_unverified_context
     args = parser.parse_args()

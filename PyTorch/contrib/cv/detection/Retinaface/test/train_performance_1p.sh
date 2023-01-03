@@ -13,7 +13,7 @@ data_path=""
 # 训练epoch
 train_epochs=100
 # 指定训练所使用的npu device卡id
-device_id=2
+device_id=0
 # 学习率
 learning_rate=0.001
 
@@ -84,8 +84,8 @@ python3.7 -u ${currentDir}/train.py \
     --dist-url='tcp://127.0.0.1:50000' \
     --dist-backend='hccl' \
     --world-size=1 \
-    --batch-size=32 \
-    --epochs=1 \
+    --batch-size=${batch_size} \
+    --epochs=${train_epochs} \
     --rank=0 \
     --amp \
     --opt-level='O2' \

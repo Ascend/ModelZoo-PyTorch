@@ -1,157 +1,289 @@
-# CSWin-Transformer模型PyTorch离线推理指导
+# CSWin-Transformer模型-推理指导
 
-## 1. 模型概述
-[论文地址](https://arxiv.org/pdf/2107.00652.pdf)
 
-[代码地址](https://github.com/microsoft/CSWin-Transformer)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-## 2. 环境准备 
-### 2.1 环境说明
-```shell
-pip install -r ./requirements.txt
-```
-### 2.2 环境安装
-#### 2.2.1 获取，修改与安装开源模型代码  
-```
-首先克隆本代码仓
-cd CSWin-Transformer
-git clone https://github.com/microsoft/CSWin-Transformer.git
-cd CSWin-Transformer
-git reset f111ae2f771df32006e7afd7916835dd67d4cb9d --hard
-cd ..
-patch -p0 ./CSWin-Transformer/models/cswin.py diff.patch   (把补丁应用到模型代码上)
-cp CSWin_Transformer_preprocess.py ./CSWin-Transformer  (把前处理脚本粘贴到源代码仓中)
-cp CSWin_Transformer_postprocess.py ./CSWin-Transformer (把后处理脚本粘贴到源代码仓中)
-cp CSWin_Transformer_pth2onnx.py ./CSWin-Transformer    (pth2onnx.py脚本放到源代码仓中)
-cd CSWin-Transformer
-```
+    - [输入输出数据](#section540883920406)
 
 
 
-#### 2.2.3 获取权重文件  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[cswin_small_224.pth](https://github.com/microsoft/CSWin-Transformer/releases/download/v0.1.0/cswin_small_224.pth)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-保证权重文件的位置和pth2onnx.py脚本在同一个文件夹中
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-#### 2.2.4 获取数据集     
-[获取imagNet-1K数据集](https://www.image-net.org/download.php)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-#### 2.2.5 获取ais_infer工具
-[获取ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer) ，按照教程安装好这个工具。
+  ******
 
-## 3. 数据预处理 
-### 3.1 数据集预处理
 
-新建二进制文件目录
 
-```
-mkdir ${savePath}
-```
 
-- `--${savepath}`：处理后二进制文件存放的目录
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-将数据集处理为可输入推理工具ais_infer的格式
+CSWin Transformer（cross-shape window）是Swin-Transformer的改进版，它提出了通过十字形的窗口来做Self-attention，它不仅计算效率非常高，而且能够通过两层计算就获得全局的感受野。CSWin Transformer还提出了新的编码方式：LePE，进一步提高了模型的准确率。
 
-```shell
-python CSWin_Transformer_preprocess.py --data ${dataset_path} --savepath ${savePath}
-```
-参数说明
-- `--data`：数据集位置    路径为验证集文件夹的上一级，比如： /opt/npu/imagenet/
-- `--savepath`：输出的二进制文件存放的文件夹位置
 
-## 4. 模型转换
-### 4.1 执行pth2onnx脚本生成onnx文件
-```shell
-python CSWin_Transformer_pth2onnx.py ${batch_size} ${input_path} ${output_model}
-```
-参数说明
-- `参数1`: 转出onnx模型的batch_size
-- `参数2`: 输入权重文件的路径，比如   ./cswin_small_224.pth
-- `参数3`: 输出onnx模型的路径，注意此处要加上模型名称，比如   ./cswin_bs1.onnx
 
-### 4.2 onnx模型转om模型
-#### 4.2.1 设置环境变量
-```shell
-source ${HOME}/ascend-toolkit/set_env.sh
-```
-说明
-设置CANN的环境变量，默认在/usr/local/Ascend下
+- 参考实现：
 
-#### 4.2.2 使用ATC命令将onnx模型转换为om模型
-执行前使用`npu-smi info`查看设备状态，确保device空闲
-```shell
-export TUNE_BANK_PATH=custom_tune_bank/bs${bs}
-
-atc --model=cswin_bs${bs}.onnx --framework=5 --output=cswin_bs${bs} --input_format=NCHW --input_shape="input:${bs},3,224,224"  --output_type=FP16 --log=error --soc_version=Ascend${chip_name} --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
-```
-参数说明
-- `--model`: 输入的onnx模型路径。
-- `--output`:输出的文件名。 
-- `--input_format`: 输入形状的格式。
-- `--input_shape`: 模型输入的形状。
-- `--log`: 设置ATC模型转换过程中日志的级别
-- `--soc_version`:目标芯片类型，如Ascend310、Ascend310P，${chip_name}可通过`npu-smi info`指令查看
-- `${bs}`：为转出om模型的batch size
-- `--optypelist_for_implmode`：设置optype列表中算子的实现方式，这里设为Gelu
-- `--op_select_implmode`：选择转换模式为高精度还是高性能，本次使用高性能模式
-
-## 5 ais_infer推理
-### 5.1 ais_infer工具简介
-ais_infer工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310和Ascend310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程。
-### 5.2 设置环境变量
-```shell
-source ${HOME}/ascend-toolkit/set_env.sh
-```
-说明
-设置CANN的环境变量，其中${HOME}为CANN包安装路径，默认在/usr/local/Ascend下
-
-### 5.3 执行推理
-执行时使用`npu-smi info`查看设备状态，确保device空闲
-```shell
-mkdir ${output_dir}
-
-python ais_infer.py  --model ${model_path}/cswin_bs${bs}.om --input ${input} --output ${output} --outfmt TXT --batchsize ${batch_size}
-
-cd ${output_dir}
-rm -f sumary.json
-cd ${path_postprocess}
-```
-参数说明
-- `--model`:om模型的路径
-
-- `--input`:预处理后的数据集二进制文件位置
-
-- `--output`:推理结果位置 
-
-- `--outfmt`:推理结果的格式，此处选择TXT
-
-- `${output_dir}`:是最终推理结果存放的具体文件夹，通常以推理开始的时间作为文件夹名称， 因为ais_inder推理工具会生成一个sumary.json文件，把他删掉之后后处理才能正常进行。
-
-- `${model_path}`:是om模型存放的文件夹的路径
-
-- `--batchsize`:模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。用于结果吞吐率计算。
-
-- `${path_postprocess}`:后处理脚本 CSWin_Transformer_postprocess.py 所在的路径，此处绝对路径，比如   /home/Liu/CSWin-Transformer/
-
+  ```
+  url=https://github.com/microsoft/CSWin-Transformer
+  commit_id=f111ae2f771df32006e7afd7916835dd67d4cb9d
+  model_name=CSWin-Transformer
+  ```
   
 
-## 6. 精度和性能对比
-### 6.1 离线推理精度
-回到代码目录，运行如下脚本评测精度，运行后精度结果保存在result.json文件中
-```shell
-python CSWin_Transformer_postprocess.py ${output} ${val_label} ./ result.json
-```
-参数说明
-- `参数1`：ais_infer推理结果文件所在路径
-- `参数2`：数据集标注标签路径
-- `参数3`：imagenet数据集的val_label存放地址
-- `参数4`：结果保存的文件
-### 6.2 npu性能数据
-工具推理后生成result.json文件，其中thuroughput即为310P单卡吞吐率，Interface turoughputRate *4为310单卡吞吐率，运行脚本计算310单卡吞吐量，计算结果回显
-## 7. 评测结果：
-|          模型          | 官网pth精度  | 310P离线推理精度 | T4基准性能  |    310P性能 |
-| :--------------------: | :----------: | :--------------: | :---------: | ----------: |
-| CSWin-Transformer bs1  | top1 : 83.6% |  top1 : 83.31%   | 81.0707fps  | 104.0722fps |
-| CSWin-Transformer bs16 | top1 : 83.6% |  top1 : 83.26%   | 211.3101fps | 206.3643fps |
 
+
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1000 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动  
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/microsoft/CSWin-Transformer.git
+   cd CSWin-Transformer
+   git reset --hard  f111ae2f771df32006e7afd7916835dd67d4cb9d 
+   cd ..
+   patch -p0 ./CSWin-Transformer/models/cswin.py diff.patch
+   cd CSWin-Transformer
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型使用[ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org)的5万张验证集进行测试，以ILSVRC2012为例，用户需获取[ILSVRC2012数据集](http://www.image-net.org/download-images)，并上传到服务器，图片与标签分别存放在./imagenet/val与./imageNet/val_label.txt。
+   ```
+   │imagenet/
+   ├──train/
+   │  ├── n01440764
+   │  │   ├── n01440764_10026.JPEG
+   │  │   ├── n01440764_10027.JPEG
+   │  │   ├── ......
+   │  ├── ......
+   ├──val/
+   │  ├── n01440764
+   │  │   ├── ILSVRC2012_val_00000293.JPEG
+   │  │   ├── ILSVRC2012_val_00002138.JPEG
+   │  │   ├── ......
+   │  ├── ......
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行CSWin_Transformer_preprocess.py脚本，完成预处理。
+
+   ```
+   python ../CSWin_Transformer_preprocess.py --data ${dataset_path} --savepath ${savePath}
+   ```
+   - 参数说明：
+
+      -   --data：imagenet数据集
+      -   --savepath：预处理数据保存地址
+
+
+
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+   
+      [权重文件](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Fmicrosoft%2FCSWin-Transformer%2Freleases%2Fdownload%2Fv0.1.0%2Fcswin_small_224.pth)
+
+   2. 导出onnx文件。
+
+      1. 使用CSWin_Transformer_pth2onnx.py导出onnx文件。
+
+         运行CSWin_Transformer_pth2onnx.py脚本。
+
+         ```
+         cd ..
+         python CSWin_Transformer_pth2onnx.py --batchsize=${batch_size} --pth=${pth_path} --onnx=cswin_bs${bs}.onnx
+         ```
+         - 参数说明：
+
+            -   --batchsize：batchsize大小
+            -   --pth：模型权重文件
+            -   --onnx：onnx文件保存名称        
+         获得cswin_bs${bs}.onnx文件。
+
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --model=cswin_bs${bs}.onnx \
+             --framework=5 \
+             --output=cswin_bs${bs} \
+             --input_format=NCHW \
+             --input_shape="input:${bs},3,224,224" \
+             --soc_version=Ascend${chip_name} \
+             --optypelist_for_implmode="Gelu" \
+             --op_select_implmode=high_performance 
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --optypelist_for_implmode：选择部分算子高性能模式
+
+           运行成功后生成<u>***cswin_bs${bs}.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 执行推理。
+
+        ```
+        python ${ais_infer_path}/ais_infer.py  \
+               --model cswin_bs${bs}.om \
+               --input ${input} \
+               --output ./ \
+               --output_dirname=result
+               --outfmt TXT \
+               --batchsize ${batch_size}  
+        ```
+
+        -   参数说明：
+
+             -   model：om文件路径。
+             -   input：预处理文件路径。
+             -   output:推理数据路径
+
+        推理后的输出保存在当前目录result下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
+
+   3. 精度验证。
+
+      调用CSWin_Transformer_postprocess.py脚本评测精度，运行后精度结果保存在result.json文件中
+
+      ```
+       python CSWin_Transformer_postprocess.py ${output} ${val_label} ./ result.json
+      ```
+
+      - 参数说明：
+
+        - output：为生成推理结果所在路径 
+
+
+        - val_label：为标签数据
+
+
+        - result.json：为生成结果文件
+
+   4. 性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python3.7 ${ais_infer_path}/ais_infer.py --model=cswin_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|   310P3        |      1            |      ImageNet      |    83.3%        |      105.6           |
+|   310P3        |      4            |      ImageNet      |            |      185.3           |
+|   310P3        |      8            |      ImageNet      |            |      220.5           |
+|   310P3        |      16            |      ImageNet      |    83.3%        |      223.5           |
+|   310P3        |      32           |      ImageNet      |            |        207.3         |
+|   310P3        |      64            |      ImageNet      |            |      105.6           |

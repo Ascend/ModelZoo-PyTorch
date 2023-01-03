@@ -169,6 +169,9 @@ def train300_mlperf_coco(args):
 
     
     args = setup_distributed(args)
+
+    if not args.distributed:
+        torch.npu.set_device(args.device_id)
     
     # Build the model
     model_options = {
@@ -483,4 +486,7 @@ def main():
 
 if __name__ == "__main__":
 
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
+    torch.npu.set_option(option)
     main()

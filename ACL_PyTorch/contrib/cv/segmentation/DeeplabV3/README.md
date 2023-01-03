@@ -3,144 +3,136 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
+
+
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
   - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
-  
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
 
 
-
-# 概述
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
 DeeplabV3是一个经典的图像语义分割网络，在v1和v2版本基础上进行改进，多尺度(multiple scales)分割物体，设计了串行和并行的带孔卷积模块，采用多种不同的atrous rates来获取多尺度的内容信息，提出 Atrous Spatial Pyramid Pooling(ASPP)模块, 挖掘不同尺度的卷积特征，以及编码了全局内容信息的图像层特征，提升图像分割效果。
-
 - 参考论文：[Chen, Liang-Chieh, et al. "Rethinking atrous convolution for semantic image segmentation." arXiv preprint arXiv:1706.05587 (2017).](https://arxiv.org/pdf/1706.05587.pdf)
-
 
 - 参考实现：
 
-  ```
-  url=https://github.com/open-mmlab/mmsegmentation.git
-  branch=master
-  commit_id=fa1554f1aaea9a2c58249b06e1ea48420091464d
-  model_name=DeeplabV3
-  ```
+   ```
+   url=https://github.com/open-mmlab/mmsegmentation.git
+   branch=master
+   commit_id=fa1554f1aaea9a2c58249b06e1ea48420091464d
+   model_name=DeeplabV3
+   ```
   
 
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-
-
-## 输入输出数据
+## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
-  | 输入数据 | 数据类型                    | 大小     | 数据排布格式 |
-  | -------- | --------------------------- | -------- | ------------ |
-  | input    | batchsize x 3 x 1024 x 2048 | RGB_FP32 | NCHW         |
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 1024 x 2048 | NCHW         |
 
 
 - 输出数据
 
-  | 输出数据 | 大小                        | 数据类型 | 数据排布格式 |
-  | -------- | --------------------------- | -------- | ------------ |
-  | output1  | batchsize x 1 x 1024 x 2048 | FLOAT64  | ND           |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output  | FLOAT64  | batchsize x 1 x 1024 x 2048 | ND           |
 
 
 
-# 推理环境准备\[所有版本]
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-- 硬件环境、开发环境和运行环境准备请参见《[CANN 软件安装指南](https://www.hiascend.com/document/detail/zh/canncommercial/504/envdeployment/instg)》。
+- 该模型需要以下插件与驱动
+  **表 1**  版本配套表
 
-- 该模型需要以下依赖。
-
-  | 配套                                                         | 版本    | 环境准备指导 |
-  | ------------------------------------------------------------ | ------- | ------------ |
-  | 固件与驱动                                                   | 22.0.2  | -            |
-  | CANN                                                         | 5.1.RC2 | -            |
-  | Python                                                       | 3.7.5   | -            |
-  | PyTorch                                                      | 1.5.0   | -            |
-  | 说明：Atias 300I Duo推理卡请以CANN版本选择实际固件与驱动版本 |         |              |
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-# 快速上手
+## 获取源码<a name="section4622531142816"></a>
 
-## 获取源码
-
-1. 获取源码。
-
-```
-git clone https://github.com/open-mmlab/mmsegmentation.git
-pip3 install mmcv-full==1.3.7
-cd mmsegmentation
-git checkout fa1554f1aaea9a2c58249b06e1ea48420091464d
-pip install -e . 
-cd ..
-```
-
-2. 安装依赖
-
-```
-pip3 install -r requirements.txt
-```
-
-## 准备数据集
-
-- 获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
-
-   本模型将使用到Cityscapes验证集，请用户需自行获取数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。
-
-   数据目录结构请参考：
+1. 获取源码。**<u>*此处获取指获取第三方开源代码仓的命令*</u>**
 
    ```
-   cityscapes
-   ├── gtFine
-      ├── test
-      ├── train
-      ├── val
-   ├── leftImg8bit
-      ├── tesy
-      ├── train
-      ├── val
-   ```
-   
-- 数据预处理。\(请拆分sh脚本，将命令分开填写\)
-
-   数据预处理将原始数据集转换为模型输入的数据。
-
-   执行“deeplabv3_torch_preprocess.py”脚本，完成预处理。
-
-   ```
-   python3 ./deeplabv3_torch_preprocess.py  ${DATASET_PATH} ./prep_dataset
+   git clone -b master https://github.com/open-mmlab/mmsegmentation.git 
+   pip3 install mmcv-full==1.3.7
+   cd mmsegmentation
+   git reset --hard fa1554f1aaea9a2c58249b06e1ea48420091464d
+   pip3 install -e . 
+   cd ..
    ```
 
-   - ${DATASET_PATH}：原始数据验证集（.jpeg）所在路径。
+   目录结构如下：
+   ```
+   ├──mmsegmentation                         //开源仓目录
+   ├──deeplabv3_torch_preprocess.py
+   ├──deeplabv3_torch_postprocess.py
+   ├──LICENCE
+   ├──requirements.txt
+   ├──README.md
+   ├──modelzoo_level.txt
+   ```
 
-   - “./prep_dataset”：输出的二进制文件（.bin）所在路径。
+2. 安装依赖。
 
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-   每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成prep_dataset二进制文件。
+## 准备数据集<a name="section183221994411"></a>
 
-   
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
+   本模型将使用到[Cityscapes 验证集]()，请用户需自行获取数据集，上传数据集到服务器任意目录并解压,以"./datasets"。目录结构如下：
 
-## 模型推理
+   ```
+   ├──./datasets
+         ├──cityscapes
+            ├──leftImg8bit       //预处理需要的数据集      
+            ├──gtFine
+               ├──val           
+                  ├──munster
+                  ├──lindau
+                  ├──frankfurt
+                     ├──frankfurt_000001_083852_gtFine_polygons.json
+                     ├──frankfurt_000001_083852_gtFine_labelTrainIds.png   //后处理时需要，请选对数据集
+                     ├──frankfurt_000001_083852_gtFine_labelIds.png
+                     ├──frankfurt_000001_083852_gtFine_instanceIds.png
+                     ├──frankfurt_000001_083852_gtFine_color.png
+               ├──train
+               ├──test
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行deeplabv3_torch_preprocess.py脚本，完成预处理。
+
+   ```
+   python3 deeplabv3_torch_preprocess.py  ./datasets/cityscapes/leftImg8bit/val/ ./prep_dataset
+   ```
+   - 参数说明：
+      - 第一个参数：数据集路径。
+      - 第二个参数：处理完成的数据集路径。
+
+## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
@@ -148,155 +140,116 @@ pip3 install -r requirements.txt
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件“deeplabv3_r50-d8_512x1024_40k_cityscapes_20200605_022449-acadc2f8.pth”。
-   
-   2. 导出onnx文件。
-   
-      1. 使用
-   
-         “deeplabv3_r50-d8_512x1024_40k_cityscapes_20200605_022449-acadc2f8.pth”
+      从源码包中获取[权重文件  deeplabv3_r50-d8_512x1024_40k_cityscapes_20200605_022449-acadc2f8.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/22.1.30/ATC%20DeeplabV3%28FP16%29%20from%20Pytorch%20-%20Ascend310.zip),可放置于任意路径下，以"./"为例。
 
-         导出onnx文件。
-   
-         运行“pytorch2onnx.py”脚本。
+   2. 导出onnx文件。
+
+      1. 使用deeplabv3_r50-d8_512x1024_40k_cityscapes_20200605_022449-acadc2f8.pth权重文件导出onnx文件。
+
+         运行mmsegmentation/tools/pytorch2onnx.py脚本。
 
          ```
          python3 mmsegmentation/tools/pytorch2onnx.py mmsegmentation/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py --checkpoint ./deeplabv3_r50-d8_512x1024_40k_cityscapes_20200605_022449-acadc2f8.pth --output-file deeplabv3.onnx --shape 1024 2048
          ```
 
-         - 参数说明：
-           - --checkpoint:    pth所在路径。
-           - --output-file:   导出的onnx所在路径
-           - --shape：   输入数据的shape。
-   
-         获得“deeplabv3.onnx”文件。
-   
-      2. 使用onnxsimplifier简化模型。
-   
+         获得deeplabv3.onnx文件。
+
+      2. 优化ONNX文件。
+
          ```
          python3 -m onnxsim deeplabv3.onnx deeplabv3_sim_bs1.onnx --input-shape="1,3,1024,2048" --dynamic-input-shape
          ```
-   
-         - 参数说明：
-           - --input-shape：   输入数据的shape。
-           - --dynamic-input-shape: 表示动态batch。
-         
-         获得“deeplabv3_sim_bs1.onnx”文件。
-         
-         使用ATC工具将.onnx文件转换为.om文件，导出.onnx模型文件时需设置算子版本为11。
-   
+
+         获得deeplabv3_sim_bs1.onnx文件。
+
    3. 使用ATC工具将ONNX模型转OM模型。
-   
+
       1. 配置环境变量。
-   
+
          ```
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-      
-         > **说明：** 
-         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
-      
-      2. 执行命令查看芯片名称（$\{chip\_name\}）。 
-      
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
          ```
          npu-smi info
-         
-         +--------------------------------------------------------------------------------------------+
-         | npu-smi 22.0.0                       Version: 22.0.2                                       |
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
          +-------------------+-----------------+------------------------------------------------------+
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
          +===================+=================+======================================================+
-         | 0       310P3     | OK              | 17.6         65                0    / 0              |
-         | 0       0         | 0000:5E:00.0    | 0            938  / 21534                            |
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
          +===================+=================+======================================================+
-         
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
          ```
-      
-   3. 执行ATC命令。
-      
-      ```
-         atc --framework=5 --model=deeplabv3_sim_bs1.onnx --output=deeplabv3_bs1 --input_format=NCHW --input_shape="input:1,3,1024,2048" --log=debug --soc_version=Ascend${chip_name}  
-      ```
-      
-      - 参数说明：
-      
-        - --model：为ONNX模型文件。
-        - --framework：5代表ONNX模型。
-        - --output：输出的OM模型。
-        - --input_format：输入数据的格式。
-        - --input_shape：输入数据的shape。
-        - --log：日志级别。
-        - --soc_version：处理器型号。
-        
-      运行成功后生成模型“deeplabv3_bs1.om”文件。
 
+      3. 执行ATC命令。
 
+         ```
+         atc --framework=5 --model=deeplabv3_sim_bs1.onnx --output=deeplabv3_bs1 --input_format=NCHW --input_shape="input:1,3,1024,2048" --log=error --soc_version=Ascend${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成deeplabv3_bs1.om模型文件。
 
 2. 开始推理验证。
 
-   使用ais-infer工具进行推理。
+   1. 使用ais-infer工具进行推理。
 
-   a.  使用ais-infer工具进行推理。
-   
-   ​	ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
-   
-   b.  推理模型
-   
-   ```
-   python3 ais_infer.py  --model ${om_path} --output ./ --outfmt BIN --input ${Bin_data_path}
-   ```
-   
-   - ${om_path}: 之前生成的OM模型（deeplabv3_bs1.om）的位置
-   - ${Bin_data_path}: 数据预处理后，二进制文件所在目录（prep_dataset）
-   
-   
-   - --model:    需要进行推理的om模型
-   
-   - --output:   推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果 如果指定output_dirname 将保存到output_dirname的子文件夹下。
-   
-   - --outfmt:   输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
-   
-   - --input:      模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据
-   
-   说明： 执行ais-infer工具请选择与运行环境架构相同的命令。
-   
-   c.  精度验证。
-   
-   删除生成结果文件中的sumary.json，返回主目录，调用“deeplabv3_torch_postprocess.py”脚本与数据集groundtrue位于“cityscapes/gtFine/val”比对，可以获得mIoU数据，结果保存在“result.json”中。
-   
-   ```
-   python3 ./deeplabv3_torch_postprocess.py --output_path=.tools/ais-bench_workload/tool/ais_infer/2022*/ --gt_path=${DATASET_PATH}/val --result_path=./result
-   ```
-   
-   - --output_path：ais_infer生成推理结果所在路径。
-   
-   - --gt_path：标签数据。
-   
-   - --result_path：生成结果文件。
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
- 
+   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
+
+      ```
+      mkdir result
+      python3 ${ais_infer_path}/ais_infer.py  --model deeplabv3_bs1.om --input ./prep_dataset --output ./result --output_dirname=bs1 --outfmt BIN --batchsize=1  --device=0
+      ```
+      - 参数说明：
+         - --model：模型类型。
+         - --input：om模型推理输入文件路径。
+         - --output：om模型推理输出文件路径。
+         - --output_dirname：
+         - --outfmt：输出格式
+         - --batchsize：批大小。
+         - --device：NPU设备编号。
+
+        推理后的输出默认在当前目录./result/bs1下。
+
+        >**说明：** 
+        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
+   3. 精度验证。
+
+      调用脚本与数据集的gtFine/val比对，可以获得Accuracy数据，结果在终端和./result.txt中显示。
+
+      ```
+      python3 deeplabv3_torch_postprocess.py --output_path=./result/bs1 --gt_path=./datasets/cityscapes/gtFine/val --result_path=./result
+      ```
+
+      - 参数说明：
+         - --output_path：ais_infer生成推理结果所在路径。
+         - --gt_path：标签数据路径。
+         - --result_path：为生成结果文件
 
 
-# 模型推理性能&精度
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
 
-精度：
-
-| Precesion | mAP         |
-| --------- | ----------- |
-| 310精度   | mIoU  79.06 |
-| 310p精度  | mIoU  79.12 |
-
-此处精度为bs1精度，bs1和最优bs精度无差别。
-
-性能:
-
-|      | 310   | 310p   | T4    | 310p/310 | 310p/T4 |
-| ---- | ----- | ------ | ----- | -------- | ------- |
-| bs1  | 2.789 | 5.3444 | 5.804 | 1.916    | 0.920   |
-
-注：此模型不支持多batch。
-
-bs1: 310p大于310的1.2倍，性能达标。
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | :----------------: | ---------- | ---------- | --------------- |
+|  Ascend310P  |  1   |   Cityscapes   |   79.12    |   4.910    |

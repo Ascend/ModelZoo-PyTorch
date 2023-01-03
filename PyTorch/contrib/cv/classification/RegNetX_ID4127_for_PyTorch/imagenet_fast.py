@@ -350,7 +350,7 @@ def main():
     print("rank = ", args.rank)
     print('world_size = ', args.world_size)
     dist.init_process_group(backend='hccl', 
-                            world_size=args.world_size, rank=args.rank)
+                            world_size=args.world_size, rank=args.local_rank)
     print('world_size = ', args.world_size)
 
     # create model
@@ -1018,4 +1018,7 @@ def reduce_tensor(tensor):
 
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "KLDiv, KlDivLossGrad"
+    torch.npu.set_option(option)
     main()

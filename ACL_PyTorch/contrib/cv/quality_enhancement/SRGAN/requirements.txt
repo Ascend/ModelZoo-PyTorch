@@ -1,18 +1,13 @@
-onnx >= 1.10.2
-numpy >= 1.19.5
-onnx-simplifier >= 0.3.6
-onnxconverter-common >= 1.9.0
-onnxoptimizer >= 0.2.6
-onnxruntime >= 1.10.0
-opencv-python >= 4.5.4.58
-Pillow >= 8.4.0
-protobuf >= 3.19.1
-pytz >= 2021.3
-requests >= 2.26.0
-scikit-learn >= 0.24.2
-scipy >= 1.5.4
-skl2onnx >= 1.10.3
-torch >=1.12.1
-torchvision >=0.13.1
-decorator >=5.1.1
-tqdm >=4.64.1
+torch == 1.9.0
+torchvision==0.10.0
+onnx == 1.8.0
+onnxruntime==1.13.1
+numpy==1.21.6
+Pillow==9.3.0
+decorator==5.1.1
+tqdm==4.64.1
+protobuf==3.20.0
+setuptools==65.5.0
+onnx-simplifier==0.3.6
+opencv-python==4.5.4.58
+typing_extensions-4.4.0

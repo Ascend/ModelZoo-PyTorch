@@ -23,7 +23,6 @@ from segmentron.utils.options import parse_args
 from segmentron.config import cfg
 import ssl
 
-
 def pth2onnx():
     model = get_segmentation_model()
     checkpoint = torch.load(args.pth_path, map_location='cpu')
@@ -34,9 +33,10 @@ def pth2onnx():
     dynamic_axes = {'image': {0: '-1'}, 'output1': {0: '-1'}}
     dummy_input1 = torch.randn(args.batch_size, 3, 1024, 2048)
     output_file1 = args.onnx_name + '.onnx'
-    torch.onnx.export(model, dummy_input1, output_file1, input_names = input_names, output_names = output_names, opset_version=11, verbose=True)
+    torch.onnx.export(model, dummy_input1, output_file1, input_names = input_names,dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=True)
     print(args.onnx_name,"batchsize",args.batch_size," onnx has transformed successfully")
     print('onnx export done.')
+    
 
 if __name__ == "__main__":
     args = parse_args()
@@ -44,3 +44,4 @@ if __name__ == "__main__":
     cfg.update_from_file(args.config_file)
     cfg.update_from_list(args.opts)
     pth2onnx()
+

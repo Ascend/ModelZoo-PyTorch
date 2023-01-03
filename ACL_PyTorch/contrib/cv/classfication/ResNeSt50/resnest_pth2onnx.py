@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import argparse
+import sys
+sys.path.append('./ResNeSt')
 import torch
 import torch.onnx
 from resnest.torch import resnest50

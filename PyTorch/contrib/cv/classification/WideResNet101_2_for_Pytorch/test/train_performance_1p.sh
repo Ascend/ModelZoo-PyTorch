@@ -58,7 +58,7 @@ done
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
-    echo "[Error] para \"data_path\" must be confing"
+    echo "[Error] para \"data_path\" must be config"
     exit 1
 fi
 
@@ -112,13 +112,12 @@ python3.7 -u ./main_npu_1p.py \
     --print-freq=10 \
     --epochs=${train_epochs} \
     --amp \
-    --loss-scale=128.0 \
+    --loss-scale='dynamic' \
     --opt-level='O2' \
     --device='npu' \
     --world-size=1 \
     --npu=${ASCEND_DEVICE_ID} \
     --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
 wait
 
 ##################获取训练数据##################

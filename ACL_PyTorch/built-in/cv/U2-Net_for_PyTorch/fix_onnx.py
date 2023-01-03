@@ -14,7 +14,7 @@
 
 
 import sys
-from magiconnx import OnnxGraph
+from auto_optimizer import OnnxGraph
 
 
 BS = 1
@@ -79,6 +79,6 @@ def fix_resizev2():
 if __name__ == '__main__':
     input_path = sys.argv[1]
     output_path = sys.argv[2]
-    onnx_graph = OnnxGraph(input_path)
+    onnx_graph = OnnxGraph.parse(input_path)
     fix_resizev2()
     onnx_graph.save(output_path)

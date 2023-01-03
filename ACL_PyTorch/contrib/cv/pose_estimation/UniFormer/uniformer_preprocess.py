@@ -17,6 +17,8 @@ import cv2
 import mmcv
 import numpy as np
 from argparse import ArgumentParser
+import sys
+sys.path.append("./UniFormer/pose_estimation/")
 from xtcocotools.coco import COCO
 from mmpose.core.post_processing import get_affine_transform
 from mmpose.apis.inference import _box2cs

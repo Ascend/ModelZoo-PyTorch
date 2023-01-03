@@ -89,16 +89,16 @@ chmod +x ${cur_path}/tools/dist_train.sh
 export ENABLE_RUNTIME_V2=1
 echo "Runtime 2.0 $ENABLE_RUNTIME_V2"
 
-sed -i "s|max_epochs = 300|max_epochs = $total_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|max_epochs = [0-9]\{1,3\}|max_epochs = $total_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|data/coco/|$data_path/|g" configs/yolox/yolox_s_8x8_300e_coco.py
-sed -i "s|interval = 10|interval = $val_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
+sed -i "s|interval = [0-9]\{1,3\}|interval = $val_epoch|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|annotations/instances_train2017.json|annotations/MINIinstances_train2017.json|g" configs/yolox/yolox_s_8x8_300e_coco.py
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 1  \
-    --cfg-options log_config.interval=50  \
+    --cfg-options data.persistent_workers=False log_config.interval=50  \
     --no-validate  \
     --launcher none  \
     --local_rank=${device_id}  \
@@ -109,6 +109,7 @@ sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x
 sed -i "s|$data_path/|data/coco/|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|interval = $val_epoch|interval = 10|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|annotations/MINIinstances_train2017.json|annotations/instances_train2017.json|g" configs/yolox/yolox_s_8x8_300e_coco.py
+
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
@@ -118,6 +119,8 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`grep -a ', time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|tail -n 10|awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
+compile_time=`grep -a ', time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|head -n 1|awk '{sum+=$1} END {print sum}'`
+CompileTime=`awk 'BEGIN{print ('$compile_time'-'$time')*50}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -152,6 +155,7 @@ echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #退出anaconda环境
 if [ -n "$conda_name" ];then
     echo "conda $conda_name deactivate"

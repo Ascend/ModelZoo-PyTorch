@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# 训练batch_size
+batch_size=4096
+
 source test/env_npu.sh
 
 data_path=""
@@ -7,6 +10,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -31,7 +36,7 @@ nohup taskset -c $PID_START-$PID_END python3.7.5 -u train.py \
 -a RepVGG-A0 \
 --data ${data_path} \
 --workers 192 \
---batch-size=256 \
+--batch-size=${batch_size} \
 --lr 0.1 \
 --wd 4e-5 \
 --device npu \

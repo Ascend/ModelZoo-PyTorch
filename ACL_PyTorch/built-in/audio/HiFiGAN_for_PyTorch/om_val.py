@@ -23,7 +23,7 @@ import torch.nn.functional as F
 import numpy as np
 from scipy.io.wavfile import write
 from tqdm import tqdm
-import aclruntime
+from ais_bench.infer.interface import InferSession
 
 from meldataset import mel_spectrogram, MAX_WAV_VALUE, load_wav
 
@@ -82,35 +82,6 @@ class BatchDataLoader:
         return (mel_specs, mel_lens, wav_names)
 
 
-def om_infer(om, input_data):
-    inputs = []
-    shape = []
-    for in_data in input_data:
-        shape.append(in_data.shape)
-        in_data = aclruntime.Tensor(in_data)
-        in_data.to_device(args.device_id)
-        inputs.append(in_data)
-
-    innames = [inp.name for inp in om.get_inputs()]
-    outnames = [out.name for out in om.get_outputs()]
-
-    for i, inp in enumerate(innames):
-        if i == 0:
-            dynamic_shape = re.sub('[()\s]', '', f"{inp}:{shape[i]}")
-        else:
-            dynamic_shape += re.sub('[()\s]', '', f";{inp}:{shape[i]}")
-
-    om.set_dynamic_dims(dynamic_shape)
-
-    outputs = om.run(outnames, inputs)
-    output_data = []
-    for out in outputs:
-        out.to_host()
-        output_data.append(out)
-
-    return output_data
-
-
 def inference(generator_om, dataloader, cfg):
     for i in tqdm(range(len(dataloader))):
         mel_specs_pad, mel_lens, wav_names = dataloader[i]
@@ -119,8 +90,7 @@ def inference(generator_om, dataloader, cfg):
             mel_specs_pad = F.pad(mel_specs_pad, (0, 0, 0, 0, 0, 0, 0, args.batch_size-data_len), "constant", 0)
             mel_lens.extend([0]*(args.batch_size-data_len))
             wav_names.extend(['']*(args.batch_size-data_len))
-        wavs = om_infer(generator_om, [mel_specs_pad.numpy()])[0]
-        wavs = np.array(wavs)
+        wavs = generator_om.infer([mel_specs_pad.numpy()], "dymdims", 1000000)[0]
         if i == len(dataloader) - 1:
             wavs = wavs[:data_len]
             mel_lens = mel_lens[:data_len]
@@ -150,8 +120,7 @@ if __name__ == "__main__":
     config = AttrDict(json_config)
 
     # load model
-    options = aclruntime.session_options()
-    generator_om = aclruntime.InferenceSession(args.om, args.device_id, options)
+    generator_om = InferSession(args.device_id, args.om)
     print("load model success")
 
     # load dataset

@@ -48,7 +48,7 @@ def load_pretrain(model, pretrained_path):
         pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage)
     else:
         device = torch.npu.current_device()
-        pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage.cuda(device))
+        pretrained_dict = torch.load(pretrained_path)
 
     if "state_dict" in pretrained_dict.keys():
         pretrained_dict = remove_prefix(pretrained_dict['state_dict'], 'module.')
@@ -72,7 +72,7 @@ def load_pretrain(model, pretrained_path):
 def restore_from(model, optimizer, ckpt_path):
     logger.info('restore from {}'.format(ckpt_path))
     device = torch.npu.current_device()
-    ckpt = torch.load(ckpt_path, map_location=lambda storage, loc: storage.cuda(device))
+    ckpt = torch.load(ckpt_path)
     epoch = ckpt['epoch']
     best_acc = ckpt['best_acc']
     arch = ckpt['arch']

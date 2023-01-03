@@ -3,8 +3,6 @@
 cur_path=`pwd`
 # 指定训练所使用的npu device卡id
 device_id=0
-#失败用例打屏
-export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export SCALAR_TO_HOST_MEM=1
 
 export MKL_SERVICE_FORCE_INTEL=1

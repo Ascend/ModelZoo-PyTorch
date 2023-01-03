@@ -54,13 +54,13 @@ def merge_outputs(detections):
 
 def run(result_list, index, meta, dataset, filename):
     output={}
-    for i in range(1, 4):
+    for i in range(3):
         buf = np.fromfile(f'{result_list}/{filename[0:-4]}_{i}.bin', dtype="float32")
-        if i == 1:
+        if i == 0:
            output['hm'] = torch.tensor(buf.reshape(1, 80, 128, 128))
-        if i == 2:
+        if i == 1:
            output['wh'] = torch.tensor(buf.reshape(1, 2, 128, 128))
-        if i == 3:
+        if i == 2:
            output['reg'] = torch.tensor(buf.reshape(1, 2, 128, 128))
     detections = []
     hm = output['hm'].sigmoid_()

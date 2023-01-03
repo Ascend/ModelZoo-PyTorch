@@ -102,16 +102,6 @@ else
 fi
 wait
 
-# 添加二进制代码
-line=`grep "import torch" ${test_path_dir}/../densenet121_8p_main.py -n | tail -1|awk -F ':' '{print $1}'`
-sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${test_path_dir}/../densenet121_8p_main.py
-sed -i "$[line+2]ioption = {}" ${test_path_dir}/../densenet121_8p_main.py
-sed -i "$[line+3]ioption[\"NPU_FUZZY_COMPILE_BLACKLIST\"] = \"AvgPoolV2Grad\"" ${test_path_dir}/../densenet121_8p_main.py
-sed -i "$[line+4]itorch.npu.set_option(option)" ${test_path_dir}/../densenet121_8p_main.py
-
-#修改参数
-sed -i "s|pass|break|g" ${cur_path}/densenet121_8p_main.py
-wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -131,7 +121,7 @@ then
     do
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/densenet121_8p_main.py \
+    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -149,13 +139,14 @@ then
         --gpu $i \
         --device-list '0,1,2,3,4,5,6,7' \
         --amp \
+        --bin \
         --benchmark 0 \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 else
     for i in $(seq 0 7)
     do
-    nohup python3.7 ${cur_path}/densenet121_8p_main.py \
+    nohup python3.7 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -173,6 +164,7 @@ else
         --gpu $i \
         --device-list '0,1,2,3,4,5,6,7' \
         --amp \
+        --bin \
         --benchmark 0 \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
@@ -182,8 +174,6 @@ wait
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-#参数改回
-sed -i "s|break|pass|g" ${cur_path}/densenet121_8p_main.py
 wait
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"

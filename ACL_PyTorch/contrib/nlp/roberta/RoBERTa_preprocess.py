@@ -165,12 +165,10 @@ def main():
     dataset = load_dataset(
         split=args.data_kind, data_path=args.data_path, pad_length=args.pad_length)
     # save data to local
-    root_path = os.path.join(
-        args.data_path, "batch_size_{}".format(args.batch_size))
-    bin_path = os.path.join(root_path, "roberta_base_bin")
+    bin_path = os.path.join(args.data_path, "roberta_base_bin")
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
-    label_path = os.path.join(root_path, "roberta_base.label")
+    label_path = os.path.join(args.data_path, "roberta_base.label")
     data_tofile(dataset, args.batch_size, bin_path, label_path)
 
 

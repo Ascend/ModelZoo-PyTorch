@@ -10,11 +10,22 @@ For details, see [UNet++](https://github.com/4uiiurz1/pytorch-nested-unet).
 ## Requirements 
 
 - Install PyTorch ([pytorch.org](http://pytorch.org))
+
 - pip install -r requirements.txt
+
+- 若遇到module 'cv2' has  no attribute '_registerMatType' 报错，可按照以下步骤解决
+
+
+	  pip install -r requirements.txt
+	  pip uninstall opencv-python
+	  pip uninstall opencv-python-headless
+	  pip install opencv-python-headless==4.6.0.66
+	  pip install tqdm
+	  pip install pillow==6.2.2
+
 - get dataset from [data-science-bowl-2018](https://www.kaggle.com/c/data-science-bowl-2018/data).The file structure is the following:
 ```
-inputs
-└── data-science-bowl-2018
+── data-science-bowl-2018
     ├── stage1_train
     |   ├── 00ae65...
     │   │   ├── images
@@ -27,7 +38,8 @@ inputs
 ```
 - the data-science-bowl-2018 dataset need preprocess. 
 ```bash
-python3.7.5 preprocess_dsb2018.py
+python3.7.5 preprocess_dsb2018.py  --data_dir=./data-science-bowl-2018
+数据会保存在./data-science-bowl-2018文件夹下
 ```
 
 ## Training
@@ -39,6 +51,7 @@ python3.7.5 preprocess_dsb2018.py
     1.安装环境  
     2.开始训练
         bash ./test/train_full_1p.sh  --data_path=数据集路径         # 精度训练
+        eg: bash ./test/train_full_1p.sh --data_path=./inputs/dsb2018_96/
         bash ./test/train_performance_1p.sh  --data_path=数据集路径  # 性能训练
 
 
@@ -48,8 +61,19 @@ python3.7.5 preprocess_dsb2018.py
     1.安装环境
     2.开始训练
         bash ./test/train_full_8p.sh  --data_path=数据集路径         # 精度训练
+        eg:bash ./test/train_full_8p.sh --data_path=./inputs/dsb2018_96/
         bash ./test/train_performance_8p.sh  --data_path=数据集路径  # 性能训练
 
+单卡或多卡在线评估：
+
+		bash  ./test/eval.sh   数据集路径    模型文件路径
+
+		eg: bash ./test/eval.sh ./inputs/dsb2018_96/ ./models/dsb2018_96_NestedUNet_woDS/model_best.pth.tar
+
+demo在线评估：
+
+		python demo.py --data_path=./inputs/dsb2018_96
+		
 
 二、Docker容器训练
 
@@ -63,6 +87,8 @@ python3.7.5 preprocess_dsb2018.py
     ./docker_start.sh pytorch:b020 /train/peta /home/DeepMar
 
 3.执行步骤一训练流程（环境安装除外）
+
+
 
 三、测试结果
 训练日志路径：网络脚本test下output文件夹内。例如：

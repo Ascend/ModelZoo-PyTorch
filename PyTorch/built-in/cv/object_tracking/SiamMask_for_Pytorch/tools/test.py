@@ -584,10 +584,10 @@ def main():
 
     args.rank = int(os.environ['RANK'])
     args.device = torch.device(f'npu:{args.rank}')
+    device = args.device if args.device else 'cpu'
     torch.npu.set_device(args.device)
-    model = model.npu()
-    device = torch.device(f'npu:{args.rank}' if args.device else 'cpu')
-    model = model.to(device)
+    model = model.to(args.device)
+
     # setup dataset
     dataset = load_dataset(args.dataset)
 

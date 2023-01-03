@@ -137,6 +137,8 @@ parser.add_argument('--amp', action='store_true', help='use apex')
 parser.add_argument('--pm', '--precision-mode', default='O2', type=str,
                     help='precision mode to use for mix precision, only support O1, O2')
 parser.add_argument('--loss_scale', default=1024, type=int, help='loss_scale for amp')
+parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
+
 
 best_acc1 = 0
 
@@ -146,6 +148,13 @@ def main():
     print("=======================")
     print(args)
     print("=======================")
+    if args.bin_mode:
+        options = {}
+        options["NPU_FUZZY_COMPILE_BLACKLIST"] = "MaxPoolGradWithArgmaxV1,MaxPoolWithArgmaxV1"
+        torch.npu.set_option(options)
+        print('NPU_FUZZY_COMPILE_BLACKLIST:',options["NPU_FUZZY_COMPILE_BLACKLIST"])
+        torch.npu.set_compile_mode(jit_compile=False)
+
     if args.npu is None:
         args.npu = 0
     global CALCULATE_DEVICE
@@ -428,6 +437,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # measure elapsed time
         batch_time.update(time.time() - end)
         fps.update(args.batch_size/(time.time() - end))
+        if i < 5 :
+            print("Iter_time: {:.4f}".format(time.time() - end))
         end = time.time()
 
         if i % args.print_freq == 0:

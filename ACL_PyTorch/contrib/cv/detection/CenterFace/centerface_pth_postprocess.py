@@ -90,15 +90,15 @@ def pre_postprocess():
           dist={}
           if ff=='kerne':
               break
-          for i in range(1, 5):        #one image ----->four bin
+          for i in range(4):        #one image ----->four bin
               txt_file = np.fromfile(f'../../../result/result/{file}/{ff}_{i}.bin', dtype=np.float32)
-              if i==1:
+              if i==0:
                  dist['hm']=torch.tensor(txt_file.reshape(-1,1,200,200))
-              if i==2:
+              if i==1:
                  dist['wh']=torch.tensor(txt_file.reshape(-1,2,200,200))
-              if i==3:
+              if i==2:
                  dist['hm_offset']=torch.tensor(txt_file.reshape(-1,2,200,200))
-              if i==4:
+              if i==3:
                  dist['landmarks']=torch.tensor(txt_file.reshape(-1,10,200,200))
           List.append(dist)
     os.chdir(root_path)

@@ -54,6 +54,16 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import apex
 
 
+def device_id_to_process_device_map(device_list):
+    devices = device_list.split(",")
+    devices = [int(x) for x in devices]
+    devices.sort()
+
+    process_device_map = dict()
+    for process_id, device_id in enumerate(devices):
+        process_device_map[process_id] = device_id
+
+    return process_device_map
 
 
 def main(opt, qtepoch=[0,]):
@@ -66,7 +76,7 @@ def main(opt, qtepoch=[0,]):
   opt = opts().update_dataset_info_and_set_heads(opt, Dataset)
   if opt.local_rank ==0:
     print(opt)
-  os.environ['MASTER_ADDR'] = '127.0.0.1'
+  os.environ['MASTER_ADDR'] = opt.addr
   os.environ['MASTER_PORT'] = opt.port
   device_id = int(opt.device_list.split(',')[int(opt.local_rank)])
   opt.device = 'npu:{}'.format(device_id)
@@ -75,7 +85,10 @@ def main(opt, qtepoch=[0,]):
   print(opt.device)
   
   logger = Logger(opt)
-  dist.init_process_group(backend='hccl', world_size=opt.world_size, rank=opt.local_rank)
+  device_map = device_id_to_process_device_map(opt.device_list)  
+  nproc_per_node = len(device_map) 
+  global_rank = opt.rank * nproc_per_node +  opt.local_rank 
+  dist.init_process_group(backend='hccl', world_size=opt.world_size, rank=global_rank)
   print('process{},device:{}'.format(opt.local_rank,opt.device))
   
   print('Creating model...')
@@ -151,7 +164,7 @@ def main(opt, qtepoch=[0,]):
         #   logger.scalar_summary('val_{}'.format(k), v, epoch)
         #   logger.write('{} {:8f} | '.format(k, v))
       
-      print('best:{} metric:{}  epotchs:{}'.format(best,log_dict_train[opt.metric],epoch),flush=True)
+      print('best:{} metric:{}  epochs:{}'.format(best,log_dict_train[opt.metric],epoch),flush=True)
       
       if log_dict_train[opt.metric] < best:
         best = log_dict_train[opt.metric]
