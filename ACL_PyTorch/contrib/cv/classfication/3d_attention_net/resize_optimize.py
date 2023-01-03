@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,28 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import sys
+from magiconnx import OnnxGraph
 
-import os
-import onnx
-import numpy as np
-from pprint import pprint
-from onnx_tools.OXInterface.OXInterface import OXDataType, OXGraph, OXInitializer, OXNode
 
-oxgraph = OXGraph('3d_attention_net.onnx')
-oxnode = oxgraph.get_oxnode_by_name('Resize_77')
-oxnode.set_attribute(attr_name='coordinate_transformation_mode', attr_value="asymmetric")
-oxnode.set_attribute(attr_name='mode', attr_value="nearest")
+def fix_resize(graph):
+    for resize_node in graph.get_nodes(op_type="Resize"):
+        resize_node["coordinate_transformation_mode"] = "asymmetric"
+        resize_node["mode"] = "nearest"
 
-oxnode = oxgraph.get_oxnode_by_name('Resize_96')
-oxnode.set_attribute(attr_name='coordinate_transformation_mode', attr_value="asymmetric")
-oxnode.set_attribute(attr_name='mode', attr_value="nearest")
 
-oxnode = oxgraph.get_oxnode_by_name('Resize_173')
-oxnode.set_attribute(attr_name='coordinate_transformation_mode', attr_value="asymmetric")
-oxnode.set_attribute(attr_name='mode', attr_value="nearest")
-
-oxnode = oxgraph.get_oxnode_by_name('Resize_241')
-oxnode.set_attribute(attr_name='coordinate_transformation_mode', attr_value="asymmetric")
-oxnode.set_attribute(attr_name='mode', attr_value="nearest")
-
-oxgraph.save_new_model('3d_attention_net_resize_optimized.onnx')
+if __name__ == '__main__':
+    onnx_graph = OnnxGraph(sys.argv[1])
+    fix_resize(onnx_graph)
+    onnx_graph.save(sys.argv[2])

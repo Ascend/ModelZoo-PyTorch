@@ -73,16 +73,17 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+1. 获取源码并安装。
    ```
    git clone https://github.com/SeanNaren/deepspeech.pytorch.git -b V3.0
+   cd deepspeech.pytorch
    pip3 install -e .
    ```
 
 2. 安装依赖。
 
     ```
-    pip install -r requirement.txt
+    pip3 install -r requirement.txt
     ```
     > **说明：** 
     >torchaudio==0.8.0目前没有可以在arm环境下运行的包。
@@ -188,7 +189,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
           ```
       3. 执行ATC命令。
           ```
-          atc --framework=5 --model=./deepspeech.onnx --input_format=NCHW --input_shape="spect:1,1,161,621;transcript:1" --output=deepspeech_bs1 --log=debug --soc_version=${chip_name}
+          atc --framework=5 --model=./deepspeech.onnx --input_format=NCHW --input_shape="spect:1,1,161,621;transcript:1" --output=deepspeech_bs1 --log=error --soc_version=${chip_name}
           ```
 
           - 参数说明：
@@ -284,3 +285,4 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
   | 310P3    | 8          | an4 |  3.86 |
   | 310P3    | 16         | an4 |  7.7 |
   | 310P3    | 32         | an4 |  7.74 |
+  | 310P3    | 64         | an4 |  7.48 |

@@ -22,6 +22,7 @@ import argparse
 
 from aligned_reid.dataset import create_dataset
 from aligned_reid.utils.utils import str2bool
+from tqdm import tqdm
 
 
 class Config(object):
@@ -129,17 +130,13 @@ def preprocess(file_path, bin_path):
     in_files = os.listdir(file_path)
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
-    i = 0
 
     resize_size = (256, 128)
     mean = [0.486, 0.459, 0.408]
     std = [0.229, 0.224, 0.225]
 
-    for file in in_files:
+    for file in tqdm(in_files):
         if file in test_sets.im_names:
-            i = i + 1
-            print(file, "===", i)
-
             img = Image.open(os.path.join(file_path, file)).convert('RGB')
 
             img = resize(img, resize_size)

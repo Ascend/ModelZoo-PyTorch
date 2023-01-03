@@ -16,9 +16,20 @@
 import os
 import torch
 import numpy as np
+from tqdm import tqdm
+import argparse
 from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision import transforms, datasets, models
+
+
+parser = argparse.ArgumentParser(description='3D Attention Net preprocess script')
+parser.add_argument('--data_path', default='', type=str, metavar='PATH',
+                    help='path of dataset (default: none)')
+parser.add_argument('--save_path', default='', type=str, metavar='PATH',
+                    help='path of output (default: none)')
+args = parser.parse_args()
+
 
 def preprocess(data_path = "./data/", save_path = "./pre_process_result/"):
     # Image Preprocessing
@@ -54,15 +65,15 @@ def preprocess(data_path = "./data/", save_path = "./pre_process_result/"):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     cnt = -1
-    for images, labels in test_loader:
+    for images, labels in tqdm(test_loader):
         for i in range(len(images)):
             cnt += 1
             image = images[i]
             label = labels[i]
             image = np.array(image).astype(np.float32)
-            image.tofile(f"{save_path}image_{cnt}.bin")
-            if(cnt % 100 == 9):
-                print(f"current: {cnt}")
-               
+            out_path = os.path.join(save_path, f"image_{cnt}.bin")
+            image.tofile(out_path)
+
+
 if __name__ == "__main__":
-    preprocess()
+    preprocess(args.data_path, args.save_path)
