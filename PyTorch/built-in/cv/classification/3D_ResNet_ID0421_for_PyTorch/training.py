@@ -85,7 +85,9 @@ def train_epoch(epoch,
         batch_time.update(time.time() - end_time)
         fps.update(opt.world_size * opt.batch_size / batch_time.val)
         end_time = time.time()
-
+        if i < 2:
+            print("step_time = {:.4f}".format(batch_time.val), flush=True)
+            
         if epoch == 1 and i == 0:
             batch_time.reset()
             data_time.reset()
