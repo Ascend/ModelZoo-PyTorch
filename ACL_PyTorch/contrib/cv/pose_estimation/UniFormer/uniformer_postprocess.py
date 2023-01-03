@@ -53,8 +53,6 @@ def main():
     dataset_path = args.dataset
     bin_path = args.bin
     latest_result = os.listdir(bin_path)
-    latest_result.sort()
-    bin_path = os.path.join(bin_path, latest_result[-1])
 
     cfg = mmcv.Config.fromfile(args.config)
     image_size = cfg.data_cfg['image_size']
