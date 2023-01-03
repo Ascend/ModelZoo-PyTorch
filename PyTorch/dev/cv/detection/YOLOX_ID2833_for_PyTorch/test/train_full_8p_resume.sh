@@ -24,9 +24,9 @@ Network="YOLOX_ID2833_for_PyTorch"
 #训练batch_size,,需要模型审视修改
 batch_size=8
 #总训练Epoch数
-total_epoch=1
+total_epoch=300
 #val间隔数，多少个Epoch
-val_epoch=1
+val_epoch=10
 
 #参数校验，不需要修改
 for para in $*
@@ -86,11 +86,27 @@ sed -i "s|annotations/MINIinstances_train2017.json|annotations/instances_train20
 start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
-    --no-validate  \
     --launcher pytorch  \
     --cfg-options data.persistent_workers=True log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
+
+for ((i = 0; i < 10 ; i++)) do
+    sleep 1m
+    flag=`grep -a 'mmdet - INFO - Epoch [[]300[]][[]1800/1849[]]' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END{print NR}'`
+    echo "------------------ Auto Resume ------------------$i"
+    if [[ $flag == 0 ]]; then
+      echo "------------------ Auto Resume in------------------"
+      PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
+        --launcher pytorch  \
+        --auto-resume  \
+        --cfg-options data.persistent_workers=True log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+      wait
+    fi
+done
+
+
+
 sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|$data_path/|data/coco/|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|interval = $val_epoch|interval = 10|g" configs/yolox/yolox_s_8x8_300e_coco.py
@@ -105,7 +121,10 @@ time=`grep -a ', time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*8/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
-
+#输出训练精度,需要模型审视修改
+train_accuracy=`grep -a 'mmdet - INFO - Epoch(val)' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP:" '{print $2}'|awk -F "," 'END {print $1}'`
+#打印，不需要修改
+echo "Final Train Accuracy : ${train_accuracy}"
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
 
@@ -113,7 +132,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量
@@ -135,6 +154,7 @@ echo "DeviceType = ${DeviceType}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${C
 echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #退出anaconda环境
