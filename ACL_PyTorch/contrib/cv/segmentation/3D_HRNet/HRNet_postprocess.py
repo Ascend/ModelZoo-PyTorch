@@ -22,11 +22,31 @@ from torch.nn import functional as F
 import numpy as np
 import time
 import json
+import argparse
 from tqdm import tqdm
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='HRNet postprocess process.')
+    parser.add_argument('--res_path',
+                        help="infer result path for postprocess",
+                        default='',
+                        type=str)
+    parser.add_argument('--data_path',
+                        help="dataset path for postprocess",
+                        default='',
+                        type=str)
+    parser.add_argument('--save_path',
+                        help="postprocess result path for postprocess",
+                        default='',
+                        type=str)
+    args = parser.parse_args()
+    return args
 
 
 def is_label(filename):
     return filename.endswith("_labelIds.png")
+
 
 def convert_label(label, inverse=False):
     temp = label.copy()
@@ -50,25 +70,22 @@ def convert_label(label, inverse=False):
             label[temp == k] = v
     return label
 
-def main():
 
-    writer = open(os.path.join(result_json_path, json_file_name), 'w')
+def main():
+    writer = open(result_json_path, 'w')
     table_dict = {}
     table_dict["title"] = "overall statistical evaluation"
 
     result1_ids = glob(os.path.join(result_dir, '*' + '1.bin'))
     result1_ids = [os.path.splitext(os.path.basename(p))[0] for p in result1_ids]
     result1_ids.sort()
-    # print('result1_ids\'length:', len(result1_ids))
 
     result2_ids = glob(os.path.join(result_dir, '*' + '2.bin'))
     result2_ids = [os.path.splitext(os.path.basename(p))[0] for p in result2_ids]
     result2_ids.sort()
-    # print('result2_ids\'length:', len(result2_ids))
 
     gt_ids = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(gt_dir)) for f in fn if is_label(f)]
     gt_ids.sort()
-    # print('gt_ids\'length:' , len(gt_ids))
 
     start = time.time()
 
@@ -76,7 +93,6 @@ def main():
         (19, 19, 2))
     
     for index in tqdm(range(len(result1_ids))):
-        # print("now is image ", index)
 
         # output1:out_aux
         file1path = os.path.join(result_dir, result1_ids[index] + '.bin')
@@ -99,7 +115,6 @@ def main():
         pred.append(out)
 
         # label
-        # print(gt_ids[index])
         label = cv2.imread(gt_ids[index], cv2.IMREAD_GRAYSCALE)
         label = convert_label(label)
         label = np.array(label).astype('int32') # 1024*2048
@@ -160,8 +175,9 @@ def get_confusion_matrix(label, pred, size, num_class, ignore=-1):
 
 
 if __name__ == "__main__":
-    result_dir = sys.argv[1]  # "result/dumpOutput_device0/"
-    gt_dir = sys.argv[2]  # "/root/jyf/cityscapes/gtFine/val/"
-    result_json_path = sys.argv[3] # "./"
-    json_file_name = sys.argv[4] # "result.json"
+    global_args = parse_args()
+    result_dir = global_args.res_path
+    gt_dir = global_args.data_path
+    result_json_path = global_args.save_path
+    os.makedirs(os.path.dirname(result_json_path), exist_ok=True)
     main()
