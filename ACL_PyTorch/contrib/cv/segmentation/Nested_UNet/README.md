@@ -146,7 +146,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
    1. 获取权重文件。
 
-       获取权重文件[nested_unet](*https://www.hiascend.com/zh/software/modelzoo/models/detail/1/06d27ff207e5417f8f02a5d6c414b05e/1*)
+       获取权重文件[nested_unet](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Unet%2B%2B/PTH/nested_unet.pth)
 
    2. 导出onnx文件。
 
@@ -214,7 +214,6 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
    2. 执行推理。
 
       ```
-      mkdir result
       python3 -m ais_bench --model=nested_unet_bs${bs}.om  --batchsize=${bs} \
       --input ${prep_data} --output result --output_dirname result_bs${bs} --outfmt BIN
       ```
@@ -230,7 +229,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
    
 3. 精度验证。
   
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+      调用脚本与真值比对，可以获得精度结果。
    
       ```
     python3 nested_unet_postprocess.py ./result/result_bs${bs} ./pytorch-nested-unet/inputs/dsb2018_96/masks/0/
