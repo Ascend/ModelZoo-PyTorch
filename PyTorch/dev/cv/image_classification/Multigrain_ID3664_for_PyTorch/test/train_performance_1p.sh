@@ -141,7 +141,7 @@ echo "------------------ Final result ------------------"
 FPS=`grep "train_FPS_avg" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "train_FPS_avg " '{print$2}'|awk '{sum+=$1} END {print sum/NR}'`
 
 #获取编译时间
-CompileFps=`grep "train_batch_time" $$cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F 'train_batch_time' '{print $2}'| awk -F ' ' '{print $1}' |sed s/[[:space:]]//g`
+CompileFps=`grep "train_batch_time" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F 'train_batch_time' '{print $2}'| awk -F ' ' '{print $1}' |sed s/[[:space:]]//g`
 CompileTime=`awk 'BEGIN{printf "%.2f\n",'${CompileFps}'/1000}'`
 
 #打印，不需要修改
