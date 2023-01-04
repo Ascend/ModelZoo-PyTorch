@@ -1,7 +1,23 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import os
 import sys
 import numpy as np
 from PIL import Image
+from tqdm import tqdm
 
 
 def resize(img, size, interpolation=Image.BILINEAR):
@@ -48,18 +64,18 @@ def center_crop(img, out_height, out_width):
 
 
 def preprocess(file_path, bin_path):
+    file_path = os.path.abspath(file_path)
+    bin_path = os.path.abspath(bin_path)
     in_files = os.listdir(file_path)
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
-    i = 0
+    
 
     resize_size = 342
     mean = [0.5, 0.5, 0.5]
     std = [0.5, 0.5, 0.5]
 
-    for file in in_files:
-        i = i + 1
-        print(file, "===", i)
+    for file in tqdm(in_files):
 
         img = Image.open(os.path.join(file_path, file)).convert('RGB')
 
@@ -80,6 +96,12 @@ def preprocess(file_path, bin_path):
 
 
 if __name__ == "__main__":
-    file_path = os.path.abspath(sys.argv[1])
-    bin_path = os.path.abspath(sys.argv[2])
-    preprocess(file_path, bin_path)
+    import argparse
+    parser = argparse.ArgumentParser('data preprocess.')
+    parser.add_argument('--src_path', type=str, required=True, 
+                        help='path to original dataset.')
+    parser.add_argument('--save_path', type=str, required=True, 
+                        help='a directory to save bin files.')
+    args = parser.parse_args()
+
+    preprocess(args.src_path, args.save_path)
