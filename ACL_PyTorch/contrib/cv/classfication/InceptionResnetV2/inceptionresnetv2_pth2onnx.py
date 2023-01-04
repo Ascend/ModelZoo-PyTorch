@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +13,19 @@
 # limitations under the License.
 
 import  sys
-sys.path.append(r"./pretrained-models.pytorch")
 import  torch
-import  torch.onnx
-import pretrainedmodels.models as models
-from pretrainedmodels.models.inceptionresnetv2 import InceptionResNetV2 
 import torch.utils.model_zoo as model_zoo
 
+sys.path.append(r"./pretrained-models.pytorch")
+import pretrainedmodels.models as models
+from pretrainedmodels.models.inceptionresnetv2 import InceptionResNetV2 
+
+
+url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth'
 pretrained_settings = {
     'inceptionresnetv2': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth',
+            'url': url,
             'input_space': 'RGB',
             'input_size': [3, 299, 299],
             'input_range': [0, 1],
@@ -32,7 +34,7 @@ pretrained_settings = {
             'num_classes': 1000
         },
         'imagenet+background': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth',
+            'url': url,
             'input_space': 'RGB',
             'input_size': [3, 299, 299],
             'input_range': [0, 1],
@@ -43,6 +45,7 @@ pretrained_settings = {
     }
 }
 
+
 def inceptionresnetv2(num_classes=1000, pretrained='imagenet', localpth=None):
     r"""InceptionResNetV2 model architecture from the
     `"InceptionV4, Inception-ResNet..." <https://arxiv.org/abs/1602.07261>`_ paper.
@@ -50,7 +53,8 @@ def inceptionresnetv2(num_classes=1000, pretrained='imagenet', localpth=None):
     if pretrained:
         settings = pretrained_settings['inceptionresnetv2'][pretrained]
         assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+            "num_classes should be {}, but is {}".format(settings['num_classes'], 
+                                                        num_classes)
 
         # both 'imagenet'&'imagenet+background' are loaded from same parameters
         model = InceptionResNetV2(num_classes=1001)
@@ -76,16 +80,28 @@ def inceptionresnetv2(num_classes=1000, pretrained='imagenet', localpth=None):
         model = InceptionResNetV2(num_classes=num_classes)
     return model
 
+
 def pth2onnx(input_file,output_file):
-    model = inceptionresnetv2(num_classes=1001, pretrained='imagenet+background', localpth=input_file)
+    model = inceptionresnetv2(num_classes=1001, 
+                              pretrained='imagenet+background', 
+                              localpth=input_file)
     model.eval()
+
     input_names = ["image"]
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 299, 299)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11, verbose=True)
+    torch.onnx.export(model, dummy_input, output_file, input_names=input_names, 
+                      dynamic_axes=dynamic_axes, output_names=output_names, 
+                      opset_version=11, verbose=False)
+
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    pth2onnx(input_file, output_file)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='InceptionResNetV2 Pytorch model convert to ONNX model')
+    parser.add_argument('--ckpt', default=None, help='input checkpoint file path')
+    parser.add_argument('--onnx', default='out.onnx', help='output onnx file path')
+    args = parser.parse_args()
+
+    pth2onnx(args.ckpt, args.onnx)

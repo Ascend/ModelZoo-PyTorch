@@ -45,8 +45,9 @@ LSTM常常被用来解决序列标注问题。LSTM依靠神经网络超强的非
 
   | 配套        | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动   | [22.0.RC3](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.1.RC1](https://www.hiascend.com/software/cann/commercial?version=6.1.RC1) |
+  | 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 固件与驱动   | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
 
 - 环境准备指导。
@@ -107,7 +108,7 @@ LSTM常常被用来解决序列标注问题。LSTM依靠神经网络超强的非
      ```
 
 
-   
+
    训练完成后，输出模型训练精度和性能信息。
 
 模型训练脚本参数说明如下：
@@ -115,12 +116,13 @@ LSTM常常被用来解决序列标注问题。LSTM依靠神经网络超强的非
     公共参数：
     　　
         -- amp_opt_level  // 混合精度类型
-
-        -- seed    // 固定随机参数 
-   
-        -- distributed // 是否使用多卡训练
-
+    
+        -- seed           // 固定随机参数 
+       
+        -- distributed    // 是否使用多卡训练
+    
         -- local_rank     // 指定的训练用卡
+
 
 　
 　　　　 　

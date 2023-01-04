@@ -210,24 +210,16 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a. 安装ais_bench推理工具。     
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
-        
-      ```
-      cd tools
-      git clone https://gitee.com/ascend/tools.git
-      cd ..
-      cp -r ./tools/tools/ais-bench_workload/tool/ais_infer/ ./
-   
-      ```
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 
-   b.  执行推理。
+   b. 执行推理。
 
       ```
       python3 ch_PP-OCRv3_det_ais_infer.py \
-          --ais_infer=${path_to_ais-infer}/ais_infer.py \
+          --ais_infer=${path_to_ais_bench}/ais_infer.py \
           --model=./ch_PP-OCRv3_det_bs${batchsize}.om \
           --input=./prep_data_dir/img_bin \
           --output=results_bs${batchsize}
@@ -238,11 +230,11 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
            -   --model：om模型路径。
            -   --input：预处理后的numpy文件存放路径。
            -   --output:推理结果存放路径
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+      `${path_to_ais_bench}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
       推理完成后结果保存在`ch_PP-OCRv3_det/results_bs${batchsize}`目录下。
 
 
-   c.  精度验证。
+   c. 精度验证。
 
       执行后处理脚本`ch_PP-OCRv3_det_postprocess.py`，参考命令如下：
     
@@ -278,12 +270,12 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
     
       可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。
 
-   d.  性能验证。
+   d. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench \
           --model=./ch_PP-OCRv3_det_bs${batchsize}.om \
           --loop=50 \
           --dymHW=736,992 \
@@ -297,9 +289,9 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
           -   --dymHW：动态分辨率参数，指定模型输入的实际H、W。
           -   --batchsize：om模型的batch。
     
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+      `${batchsize}`表示不同batch的om模型。
     
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能。
+      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -308,11 +300,11 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1          | 样例图片 | 见备注 | 337.23 fps |
-|Ascend310P3| 4          | 样例图片 | 见备注 | 287.41 fps |
-|Ascend310P3| 8          | 样例图片 | 见备注 | 319.14 fps |
-|Ascend310P3| 16         | 样例图片 | 见备注 | 322.52 fps |
-|Ascend310P3| 32         | 样例图片 | 见备注 | 317.73 fps |
-|Ascend310P3| 64         | 样例图片 | 见备注 | 286.84 fps |
+|Ascend310P3| 1          | 样例图片 | 见备注 | 320.55 fps |
+|Ascend310P3| 4          | 样例图片 | 见备注 | 307.33 fps |
+|Ascend310P3| 8          | 样例图片 | 见备注 | 298.52 fps |
+|Ascend310P3| 16         | 样例图片 | 见备注 | 292.25 fps |
+|Ascend310P3| 32         | 样例图片 | 见备注 | 288.39 fps |
+|Ascend310P3| 64         | 样例图片 | 见备注 | 259.84 fps |
 
    - 备注：将OM推理结果后处理后，与在线推理结果进行对比，对于每张验证图片，两者得到的文本框数量与位置均一致，可判定OM精度正常。

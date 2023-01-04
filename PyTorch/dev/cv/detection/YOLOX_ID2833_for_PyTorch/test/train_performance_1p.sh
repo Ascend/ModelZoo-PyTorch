@@ -98,7 +98,7 @@ sed -i "s|annotations/instances_train2017.json|annotations/MINIinstances_train20
 start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 1  \
-    --cfg-options log_config.interval=1  \
+    --cfg-options data.persistent_workers=True log_config.interval=50  \
     --no-validate  \
     --launcher none  \
     --local_rank=${device_id}  \
@@ -119,7 +119,8 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`grep -a ', time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|tail -n 10|awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
-CompileTime=`grep -a ', time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|head -n 2|awk '{sum+=$1} END {print sum}'`
+compile_time=`grep -a ', time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|head -n 1|awk '{sum+=$1} END {print sum}'`
+CompileTime=`awk 'BEGIN{print ('$compile_time'-'$time')*50}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

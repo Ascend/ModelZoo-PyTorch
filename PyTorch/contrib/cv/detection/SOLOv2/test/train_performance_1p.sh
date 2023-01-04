@@ -25,6 +25,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --apex* ]];then
         apex=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -68,7 +70,7 @@ fi
 export NPUID=0
 export RANK=0
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 \
-      --data_root=$data_path --gpu-ids 0 --train_performance=True > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --batch_size=${batch_size} --data_root=$data_path --gpu-ids ${device_id} --train_performance=True > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改

@@ -71,6 +71,8 @@ TrainingTime=`awk 'BEGIN{printf "%2f\n",'${BatchSize}'*1000/'${ActualFPS}'}'`
 grep "report_loss" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk '{print $3}' >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}_loss.log
 ActualLoss=`awk 'END {print $1}' $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}_loss.log`
 TrainAccuracy=`grep "dice" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|tail -n 1|cut -d "," -f 1|cut -d "(" -f 2`
+#输出编译时间
+CompileTime=`grep "step_time = " $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | head -2 |awk -F 'step_time = ' '{print $2}'| awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #关键信息打印到CaseName.log中，此处无需修改
 echo "Network = ${Network}" > $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -83,3 +85,4 @@ echo "E2ETrainingTime = ${e2etime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/$
 echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainAccuracy = ${TrainAccuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log

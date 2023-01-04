@@ -136,6 +136,7 @@ lr_config = dict(
     warmup_ratio=1.0 / 3,
     step=[8, 11])
 total_epochs = 12
+max_step = None
 # add for print log
 log_config = dict(
     interval=50,

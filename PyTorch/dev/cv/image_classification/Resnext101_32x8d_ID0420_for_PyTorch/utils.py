@@ -171,6 +171,8 @@ class MetricLogger(object):
             data_time.update(time.time() - end)
             yield obj
             iter_time.update(time.time() - end)
+            if i < 2:
+                print("step_time: {}".format(iter_time))
             if i % print_freq == 0:
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))

@@ -54,6 +54,7 @@ def gen_data(img_list):
                 xy_list = reorder_vertexes(xy_list)  # 坐标顺序转换为统一格式
                 xy_list_array[i] = xy_list
             
+            img_fname = img_fname[:-4].replace('.', '-') + img_fname[-4:]
             im.save(os.path.join(train_image_dir, img_fname))
             np.save(os.path.join(
                 train_label_dir,

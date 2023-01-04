@@ -1,337 +1,276 @@
 # EfficientNet-B1模型PyTorch离线推理指导
 
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集切分](#42-数据集切分)
-	-   [4.3 数据集预处理](#43-数据集预处理)
-	-   [4.4 生成数据集信息文件](#44-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 ais_infer工具概述](#51-ais_infer工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 精度数据](#61-精度数据)
-	-   [6.2 精度对比](#62-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 310P性能数据](#71-310P性能数据)  
-	-   [7.2 T4性能数据](#72-T4性能数据) 
-	-   [7.3 性能对比](#73-性能对比)
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用迁移学习数据集上达到了相当不错的准确率，参数量也大大减少，说明其具备良好的迁移能力，且能够显著提升模型效果。
+
+  ```
+  url=https://github.com/rwightman/pytorch-image-models
+  ```
+
+- 参考实现：
+
+  ```
+  url=https://github.com/rwightman/pytorch-image-models
+  ```
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | FLOAT32 | batchsize x 3 x 240 x 240 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | --------| -------- | -------- | ------------ |
+  | output  | FLOAT32  | batchsize x 1000 | ND           |
+
+- 该模型需要以下插件与驱动  
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动  
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
+  | Python                                                       | 3.7.5   | 创建anaconda环境时指定python版本即可，conda create -n ${your_env_name} python==3.7.5 |
+  | PyTorch                                                      | 1.11.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
 
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-## 1 模型概述
+## 获取源码<a name="section4622531142816"></a>
 
-### 1.1 论文地址
+1. 获取源码。
 
-[EfficientNet-B1](https://arxiv.org/abs/1905.11946)*是针对网络参数扩张方式问题，经过EfficientNet-B0进行扩张提高网络性能的网络。*
+   ```sh
+   git clone https://github.com/facebookresearch/pycls
+   cd pycls
+   git reset f20820e01eef7b9a47b77f13464e3e77c44d5e1f --hard
+   cd ..
+   ```
 
-### 1.2 代码地址
+2. 安装依赖，测试环境时可能已经安装其中的一些不同版本的库，故手动测试时不推荐使用该命令安装
 
-[EfficientNet-B1 Pytorch实现代码](https://github.com/facebookresearch/pycls)
-
-```sh
-branch=master
-commit_id=8c79a8e2adfffa7cae3a88aace28ef45e52aa7e5
-```
-
-
-
-
-
-## 2 环境说明
-
-### 2.1 深度学习框架
-
-```sh
-CANN == 5.1.RC1
-pytorch == 1.8.0
-torchvision == 0.9.0
-onnx == 1.10.0
-```
-
-### 2.2 python第三方库
-
-```sh
-onnx-simplifier == 0.4.5
-isort==4.3.21
-iopath
-fairscale
-flake8
-pyyaml
-matplotlib
-numpy 
-opencv-python
-parameterized
-setuptools
-simplejson
-submitit
-yacs
-yattag
-scipy
-decorator
-sympy
-```
-
-安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装。
-
-```sh
-pip install -r requirements.txt
-```
+   ```
+   pip3.7 install -r requirements.txt
+   ```
 
 
+## 准备数据集<a name="section183221994411"></a>
 
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
+    本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的meta.mat。
+    
+    数据目录结构参考如下格式：
 
-## 3 模型转换
-
-### 3.1 pth转onnx模型
-
-1.获取pth权重文件
-
-```sh
-wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E4%BA%A4%E4%BB%98%E4%BB%B6/cv/image_classification/EfficientNet-B1/EN-B1_dds_8gpu.pyth
-```
-
-2.获取EfficientNet-B1源码
-
-```sh
-git clone https://github.com/facebookresearch/pycls
-cd pycls
-git reset f20820e01eef7b9a47b77f13464e3e77c44d5e1f --hard
-cd ..
-```
-
-3.使用Efficient-B1_pth2onnx.py进行onnx的转换，在目录下生成Efficient-b1.onnx。
-
-```sh
-python3.7 Efficient-B1_pth2onnx.py
-```
-
-4.对onnx模型进行onnxsim优化。（以batch_size=16为例。）
-```sh
-python3.7 -m onnxsim --input-shape="image:16,3,240,240" ./Efficient-b1.onnx bs16_onnxsim.onnx
-```
-
-### 3.2 onnx转om模型
-
-1.设置环境变量，请以实际安装环境配置。
-
-```sh
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23310P424|251366513|22892968|251168373)，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名：
-
-```sh
-atc --framework=5 --model=./bs16_onnxsim.onnx --input_format=NCHW --input_shape="image:16,3,240,240" --output=Efficient-b1_bs16 --log=debug --soc_version=Ascend${chip_name} --enable_small_channl=1
-# 此处以bs=16为例。
-# ${chip_name}可通过npu-smi info指令查看
-```
-
-![输入图片说明](https://images.gitee.com/uploads/images/2022/0704/095450_881600a3_7629432.png "屏幕截图.png")
-
-参数说明： --model：为ONNX模型文件。 
-
---framework：5代表ONNX模型。 
-
---output：输出的OM模型。 
-
---input_format：输入数据的格式。 
-
---input_shape：输入数据的shape。 
-
---log：日志级别。
-
- --soc_version：处理器型号。
-
-
-
-
-
-## 4 数据集预处理
-
-### 4.1 数据集获取
-
-获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
-
-本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的meta.mat。
-
-数据目录结构请参考：
-
-```
-├──ILSVRC2012_img_val
-├──val
-├──ILSVRC2012_devkit_t12
-     ├── data
+    ```text
+    ├──ILSVRC2012_img_val
+    ├──val
+    ├──ILSVRC2012_devkit_t12
+       ├── data
            └── meta.mat
-```
+    ```
 
-### 4.2 数据集切分
+2. 数据预处理
+   1. 首先运行数据集切分脚本ImageNet_val_split.py切分官方val数据集，形成上述目录结构，
+      ```
+      python3.7 ImageNet_val_split.py ./val ./ILSVRC2012_devkit_t12
+      ```
+      - 参数说明：
 
-切分官方val数据集，形成和train一样的文件结构，即根目录-类别-图片 三级
+         -   ./val：下载且未分类的ImageNet的val数据集**绝对路径**（如果需要保留val文件夹请先备份）。
+         -   ./ILSVRC2012_devkit_t12：官方提供的deckit文件夹**绝对路径**。
 
-```sh
-# 第一个参数为 新下载且未分类的 imagenet的val数据集路径，
-# 第二个参数为官方 提供的 devkit 文件夹，如果要保留val文件夹请先备份
-python3.7 ImageNet_val_split.py ./val ./ILSVRC2012_devkit_t12
-```
+   2. 然后将原始数据集转换为模型输入的数据，执行Efficient-B1_preprocess.py脚本，完成预处理。
+      ```
+      python3.7 Efficient-B1_preprocess.py ./val ./prep_dataset
+      ```
+      - 参数说明：
 
-### 4.3 数据集预处理
+         -   ./val：同上述val数据集**绝对路径**。
+         -   ./prep_dataset：保存数据集处理后二进制文件的文件夹**绝对路径**。
 
-执行“Efficient-B1_preprocess.py”预处理脚本，生成数据集预处理后的bin文件。
+## 模型推理<a name="section741711594517"></a>
 
-```sh
-python3.7 Efficient-B1_preprocess.py ../val ./prep_dataset
-```
+1. 模型转换。
 
-### 4.4 生成数据集信息文件
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-生成数据集info文件。
+   1. 获取权重文件。
 
-```sh
-python3.7 gen_dataset_info.py bin ./prep_dataset ./efficientnet-B1_prep_bin.info 240 240 
-```
+      ```sh
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/EfficientNet-B1/PTH/EN-B1_dds_8gpu.pyth
+      ```
+
+   2. 导出onnx文件。
+
+      1. 使用pth2onnx导出onnx文件。
+
+         运行pth2onnx脚本。
+
+         ```
+         python3.7 Efficient-B1_pth2onnx.py
+         ```
+
+         获得Efficient-b1.onnx文件。
+
+      2. 优化ONNX文件。
+
+         ```sh
+         python3.7 -m onnxsim --overwrite-input-shape="image:8,3,240,240" ./Efficient-b1.onnx efficient_B1_onnxsim.onnx
+         ```
+
+         获得efficient_B1_onnxsim.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+          atc --model=efficient_B1_onnxsim.onnx --framework=5 --input_format=NCHW --input_shape="image:8,3,240,240" --output=Efficientnet_b1_bs8 --soc_version=Ascend${chip\_name\} --log=debug 
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --input_format：输入数据的格式。
+           -   --input_shape：输入数据的shape。
+           -   --output：输出的OM模型。
+           -   --soc_version：处理器型号。
+           -   --log：日志级别。
+
+           运行成功后生成<u>***Efficientnet_b1_bs8.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+   2. 建立软链接
+      将prep_dataset文件夹处理为工具可以输入的格式。
+      1. 创建用于保存软链接的文件夹
+         ```
+         mkdir soft_link
+         cd soft_link
+         ```
+      
+      2. 建立软链接（若无法建立，可尝试切换root用户重新建立）
+         ```
+         find /home/${username}/ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/classfication/EfficientNet-B1/prep_dataset/ -name "*.bin" | xargs -i ln -sf {} /home/${username}/ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/classfication/EfficientNet-B1/soft_link/
+         ```
+
+   3. 执行推理。
+
+        ```
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        python3.7 -m ais_bench --model Efficientnet_b1_bs8.om --input ./soft_link --output ./ --outfmt TXT --device 0  
+        ```
+
+        -   参数说明：
+
+             -   --model：om文件路径。
+             -   --input：数据预处理后保存文件的路径。
+             -   --output：输出文件夹路径。
+             -   --outfmt：输出格式（一般为BIN或者TXT）。
+             -   --device：NPU的ID，默认填0。
+
+        推理后的输出默认在当前目录生成{20xx_xx_xx-xx_xx_xx}文件夹。
 
 
 
+   4. 精度验证。
 
+      调用Efficient-B1_postprocess.py脚本，可以获得精度accuracy数据（top1和top5），输入指令后请稍等片刻
 
-## 5 离线推理
+      ```
+       python3.7 Efficient-B1_postprocess.py --pre_dir ${20xx_xx_xx-xx_xx_xx} --data_dir ../val/ --save_file ./result.json
+      ```
 
-### 5.1 ais_infer工具概述
+      - 参数说明：
 
-ais_infer工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。获取工具及使用方法可以参考[tools: Ascend tools - Gitee.com](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+        -   --pre_dir：为生成推理结果所在相对路径。  
+        -   --data_dir：同上述val数据集绝对路径。
+        -   --save_file：保存精度验证结果的路径文件。
 
-### 5.2 离线推理
+   5. 性能验证。
 
-1.设置环境变量，请以实际安装环境配置。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-```sh
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+        ```
+         python3.7 -m ais_bench --model ./Efficientnet_b1_bs8.om --loop 5
+        ```
 
-2.安装ais_infer工具
-
-```sh
-# 将工具的相关代码下载到本地
-git clone https://gitee.com/ascend/tools.git
-# 进入ais-bench/tool/ais_infer目录，执行如下命令进行编译，生成推理后端whl包
-cd tool/ais_infer/backend/
-pip3.7 wheel ./
-# 在运行设备上执行如下命令，进行安装
-pip3 install ./aclruntime-0.0.1-cp37-cp37m-linux_aarch64.whl
-# 如果安装提示已经安装了相同版本的whl，请执行命令请添加参数"--force-reinstall"
-```
-
-3.建立软链接
-
-```sh
-# 由于“标签/bin文件”这一文件结构并不符合输出性能数据的要求，且直接cp文件量过多，因此选择建立软链接。
-find ../prep_dataset/ -name "*.bin" | xargs -i ln -sf {} ./ruanlianjie
-```
-
-4.输出性能数据
-
-```sh
-# 以bs=16为例。
-python3.7 ais_infer.py --model Efficient-b1_bs16.om --output ./ --input ./ruanlianjie --outfmt TXT
-# --model 需要进行推理的om模型
-# --output 推理数据输出路径
-# --input 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据
-# --outfmt 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
-```
-
-5.切换到测试性能时生成的{20xx_xx_xx-xx_xx_xx}文件夹下，并删除sumary.json
-
-```sh
-rm -rf sumary.json
-```
-
-6.对性能的输出结果进行重命名，以便于输出精度。
-
-```sh
-# 由于性能输出的文件以“0.txt”结尾，不符合输出精度所要求的“以1.txt结尾”这一要求，因此需要对输出精度时输出的文件进行重命名。
-
-# 安装rename，已经安装则可以跳过。
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install rename
-rename "s/_0.txt/_1.txt/" *
-```
+      - 参数说明：
+        - --model：om模型的路径
 
 
 
-## 6 精度对比
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-### 6.1 精度数据
+调用ACL接口推理计算，性能参考下列数据。
 
-调用Efficient-B1_postprocess.py:
-
-```sh
-# 输出精度
-python3.7 Efficient-B1_postprocess.py --pre_dir {20xx_xx_xx-xx_xx_xx} --data_dir ../val/ --save_file ./result.json
-# 其中--pre_dir这一参数需要适时调整为测试性能时的输出的{20xx_xx_xx-xx_xx_xx}文件夹。
-```
-
-### 6.2 精度对比
-
-|          | **310** | **310P** |
-| -------- | ------- | -------- |
-| **Top1** | 75.936% | 75.936%  |
-| **Top5** | 92.774% | 92.774%  |
-
-### 
-
-
-
-## 7 性能对比
-
-### 7.1 310P性能数据
-
-测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务。
-
-```sh
-# 以bs=16为例。
-python3.7 ais_infer.py --model Efficient-b1_bs16.om --output ./ --input ./ruanlianjie --outfmt TXT
-# --model 需要进行推理的om模型
-# --output 推理数据输出路径
-# --input 模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据
-# --outfmt 输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”
-```
-
-Interface throughputRate: 1635.3即是batch16 310P单卡吞吐率。
-
-### 7.2 T4性能数据
-
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务。
-
-```sh
-trtexec --onnx=./Efficient-b1.onnx  --shapes=image:16x3x240x240 --threads
-```
-
-batch1 t4单卡吞吐率：1000*16/24.3536=656.98fps
-
-### 7.3 性能对比
-
-|               | **310**  | **310P** | **T4** | **310P/310** | **310P/T4** |
-| ------------- | -------- | -------- | ------ | ------------ | ----------- |
-| **bs1**       | 944.972  | 359.09   | 353.61 | 0.38         | 1.02        |
-| **bs16**      | 1361.796 | 1635.3   | 656.98 | 1.201        | 2.49        |
-| **最优batch** | 1361.796 | 1635.3   | 656.98 | 1.201        | 2.49        |
-
-batch16： 
-
-310P vs 310: 1635.3fps > 1.2 * 1361.796fps 
-
-310P vs T4 : 1635.3fps > 1.6 * 656.98fps 
-
-性能在310P上的性能达到310的1.2倍,达到T4性能的1.6倍,性能达标。
+| 芯片型号 | Batch Size | 数据集|  精度TOP1 | 精度TOP5 | 性能|
+| --------- | ----| ----------| ------     |---------|---------|
+| 310P3 |  1       | ImageNet |   75.940     |   92.774  |   838.223      |
+| 310P3 |  4       | ImageNet |   75.940     |   92.774  |    1235.712      |
+| 310P3 |  8       | ImageNet |   75.940     |   92.774  |  1409.692     |
+| 310P3 |  16       | ImageNet |   75.940     |   92.774  |   1360.392      |
+| 310P3 |  32       | ImageNet |   75.940     |   92.774  |   1304.791      |
+| 310P3 |  64       | ImageNet |   75.940     |   92.774  |   1273.800      |

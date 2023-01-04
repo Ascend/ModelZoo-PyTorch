@@ -15,14 +15,14 @@ fi
 echo ----------------------------om model offline infer------------------------------
 rm -rf result_bs1
 mkdir result_bs1
-python3.7 ./ais_infer/ais_infer.py --model retinaface_bs1.om --device 0 --batchsize 1 --input ./widerface/prep/ --output ./result_bs1 --outfmt BIN
+python3.7 -m ais_bench --model retinaface_bs1.om --device 0 --batchsize 1 --input ./widerface/prep/ --output ./result_bs1 --outfmt BIN
 if [ $? != 0 ]; then
     echo "fail to infer bs1 result!"
     exit -1
 fi
 rm -rf result_bs16
 mkdir result_bs16
-python3.7 ./ais_infer/ais_infer.py --model retinaface_bs16.om --device 1 --batchsize 16 --input ./widerface/prep/ --output ./result_bs16 --outfmt BIN
+python3.7 -m ais_bench --model retinaface_bs16.om --device 1 --batchsize 16 --input ./widerface/prep/ --output ./result_bs16 --outfmt BIN
 if [ $? != 0 ]; then
     echo "fail to infer bs16 result!!"
     exit -1

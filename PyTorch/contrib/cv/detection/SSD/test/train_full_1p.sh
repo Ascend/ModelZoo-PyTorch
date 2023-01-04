@@ -25,6 +25,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}` 
     fi
 done
 
@@ -89,7 +91,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export TASK_QUEUE_ENABLE=0
 rm -rf kernel_meta/
-python3.7 ./tools/train.py configs/ssd/ssd300_coco_npu.py --cfg-options total_epochs=${train_epochs} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3.7 ./tools/train.py configs/ssd/ssd300_coco_npu.py --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} --gpu-ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -108,8 +110,8 @@ FPS=${FPS%\}*}
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-# 输出训练精度,需要模型审视修改
-train_accuracy=`grep 'Epoch(val)'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ',' '{print $2}'|awk '{print $10}' | awk 'END {print}'`
+# 输出训练精度,需要模型审视修改 # eval.log | awk -F ',' '{print $1}' | awk '{print $2}' | awk ' END {print}'
+train_accuracy=`grep 'Epoch(val)'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F 'bbox_mAP: ' '{print $2}'| awk -F ',' '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

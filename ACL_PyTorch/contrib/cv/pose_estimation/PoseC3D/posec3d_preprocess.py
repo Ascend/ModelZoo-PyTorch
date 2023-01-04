@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,26 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
-import torch
-import numpy as np
+import os.path as osp
 import argparse
+
 from tqdm import tqdm
-from mmcv import Config
+import numpy as np
+import torch
 import torch.nn.functional as F
+from mmcv import Config
 from mmaction.datasets import build_dataloader, build_dataset
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Dataset HMDB51 Preprocessing')
-    parser.add_argument('--config',
+    parser = argparse.ArgumentParser(
+                        description='Dataset HMDB51 Preprocessing')
+    parser.add_argument('--config_file',
                         default='./mmaction2/configs/skeleton/posec3d/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint.py',
-                        help='config file path')
-    parser.add_argument('--batch_size', default=1, type=int, help='Batch size for inference')
-    parser.add_argument('--num_worker', default=8, type=int, help='Number of workers for inference')
-    parser.add_argument('--data_root', default='/opt/npu/hmdb51/rawframes/', type=str)
-    parser.add_argument('--ann_file', default='/opt/npu/hmdb51/hmdb51.pkl', type=str)
-    parser.add_argument('--name', default='./prep_hmdb51_bs1', type=str)
+                        help='path to config file.')
+    parser.add_argument('--frame_dir', type=str,
+                        help='directory of raw frames.')
+    parser.add_argument('--ann_file', type=str,
+                        help='path to annotation file.')
+    parser.add_argument('--output_dir', type=str, default='prep_dataset',
+                        help='directory to save results of preprocess.')
+    parser.add_argument('--num_worker', default=8, type=int, 
+                        help='number of workers for load data.')
 
     args = parser.parse_args()
 
@@ -39,47 +46,42 @@ def parse_args():
 
 
 def main():
-    args = parse_args()
-    cfg = Config.fromfile(args.config)
 
-    cfg.data.test.ann_file = args.ann_file
-    cfg.data.test.data_prefix = args.data_root
+    args = parse_args()
+    # load config.
+    cfg = Config.fromfile(args.config_file)
 
     # build the dataloader
+    cfg.data.test.ann_file = args.ann_file
+    cfg.data.test.data_prefix = args.frame_dir
     dataset = build_dataset(cfg.data.test, dict(test_mode=True))
     dataloader_setting = dict(
-        videos_per_gpu=args.batch_size,
+        videos_per_gpu=1,
         workers_per_gpu=args.num_worker,
         dist=False,
         shuffle=False)
-    dataloader_setting = dict(dataloader_setting, **cfg.data.get('test_dataloader', {}))
+    dataloader_setting = dict(dataloader_setting, 
+                              **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
-    root_path = os.path.dirname(args.ann_file)
-    out_path = args.name
-    
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-    info_file = open(os.path.join(root_path, 'hmdb51.info'), 'w')
+    # prepare
+    bin_dir = osp.join(args.output_dir, 'bin')
+    if not osp.isdir(bin_dir):
+        os.makedirs(bin_dir)
+    info_file = open(osp.join(args.output_dir, 'hmdb51_label.txt'), 'w')
 
-    pbar = tqdm(data_loader)
-    i = 0
-    for data in pbar:
-        pbar.set_description('Preprocessing ')
-        imgs = data['imgs']
-        label = data['label']
+    # save data with binary files.
+    for i, data in enumerate(tqdm(data_loader, desc='Preprocessing')):
+        bin_name = f'{i:0>5d}'
+        label = data['label'].cpu().numpy()[0]
+        info_file.write(f'{bin_name} {label}\n')
+        bin_path = osp.join(bin_dir, bin_name + '.bin')
+        if osp.isfile(bin_path) and osp.getsize(bin_path) == 204718080:
+            continue
+        img = data['imgs'].cpu().numpy()
+        img.tofile(bin_path)
+    info_file.close()
 
-        for batch in range(imgs.shape[0]):
-            l = label.cpu().numpy()[batch]
-            info_file.write(str(args.batch_size*i+batch) + ' ' + str(l))
-            info_file.write('\n')
-
-        if imgs.shape[0] != args.batch_size:
-            imgs = F.pad(imgs, (0,0,0,0,0,0,0,0,0,args.batch_size-imgs.shape[0]))
-
-        bin_info = imgs.cpu().numpy()
-        bin_info.tofile(out_path + '/' + str(i) + '.bin')
-        i += 1
 
 if __name__ == '__main__':
     main()

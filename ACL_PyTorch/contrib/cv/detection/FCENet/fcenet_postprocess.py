@@ -112,7 +112,7 @@ if __name__ == '__main__':
         img_num = enum[index1+1:index2]
         img_idx.append(int(img_num))
     
-    for tfile_name in os.listdir(prediction_file_path):
+    for tfile_name in tqdm(os.listdir(prediction_file_path)):
         tmp = tfile_name.split('.')[0]
         index = tmp.rfind('_')
         img_name = tmp[:index]
@@ -159,7 +159,6 @@ if __name__ == '__main__':
                 count += 1     
             print("\r", end="")
             i = int(count/30)
-            print("process: {}%: ".format(i), ">" * (i // 2), end="\n")
             sys.stdout.flush()
             time.sleep(0.05)
     postprocess = FCEPostprocessor(fourier_degree = 5,

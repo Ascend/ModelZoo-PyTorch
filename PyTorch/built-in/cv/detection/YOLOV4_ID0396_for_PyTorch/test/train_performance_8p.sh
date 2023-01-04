@@ -89,7 +89,7 @@ else
     sed -i "s|./coco/val2017.txt|$data_path/../coco_txl/COCO2017/val2017.txt|g" data/coco.yaml
     sed -i "s|./coco/testdev2017.txt|$data_path/../coco_txl/COCO2017/testdev2017.txt|g" data/coco.yaml
     sed -i "s|./coco/annotations/instances_val|$data_path/../coco_txl/COCO2017/annotations/instances_val|g" test.py
-    sed -i "s|opt.notest or final_epoch:|opt.notest:|g" train_8p.py
+    sed -i "s|opt.notest or final_epoch:|opt.notest:|g" main.py
 fi
 
 #################启动训练脚本#################
@@ -104,7 +104,7 @@ do
     then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 train_8p.py --img $image_size $image_size \
+    nohup taskset -c $PID_START-$PID_END python3.7 main.py --img $image_size $image_size \
                                           --data coco.yaml \
                                           --cfg cfg/yolov4_8p.cfg \
                                           --weights '' \
@@ -125,7 +125,7 @@ do
                                           --stop_step_num 100 \
                                           --notest > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup python3.7 train_8p.py --img $image_size $image_size \
+        nohup python3.7 main.py --img $image_size $image_size \
                    --data coco.yaml \
                    --cfg cfg/yolov4_8p.cfg \
                    --weights '' \
@@ -161,7 +161,7 @@ if [ x"${etp_running_flag}" = x"true" ];then
     sed -i "s|$data_path/../coco_txl/COCO2017/val2017.txt|./coco/val2017.txt|g" data/coco.yaml
     sed -i "s|$data_path/../coco_txl/COCO2017/testdev2017.txt|./coco/testdev2017.txt|g" data/coco.yaml
     sed -i "s|$data_path/../coco_txl/COCO2017/annotations/instances_val|./coco/annotations/instances_val|g" test.py
-    sed -i "s|opt.notest:|opt.notest or final_epoch:|g" train_8p.py
+    sed -i "s|opt.notest:|opt.notest or final_epoch:|g" main.py
 fi
 
 # 结果打印，不需要修改

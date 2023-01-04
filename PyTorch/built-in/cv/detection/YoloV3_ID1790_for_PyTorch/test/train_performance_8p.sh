@@ -24,13 +24,15 @@ data_path=""
 Network="YoloV3_ID1790_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
-batch_size=1024
+batch_size=64
 
 #参数校验，不需要修改
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
     if [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
@@ -113,14 +115,14 @@ do
         PID_END=$((PID_START + KERNEL_NUM - 1))
         taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
             --launcher pytorch \
-            --cfg-options \
+            --cfg-options data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
             --seed 0 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
             --launcher pytorch \
-            --cfg-options \
+            --cfg-options data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
             --seed 0 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -140,8 +142,8 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
-FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
+time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|sed '/^$/d'|awk 'END {print}'|sed 's/.$//'`
+FPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

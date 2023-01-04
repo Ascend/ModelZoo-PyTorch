@@ -217,21 +217,21 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
    b.  执行推理。
 
       推理脚本命令格式如下：
       ```
-      bash ais_infer.sh ${ais_infer_path} ${imgW320_om} ${imgW620_om} ${bin_data} ${results_path} ${batchsize}
+      bash ais_infer.sh ${ais_bench_path} ${imgW320_om} ${imgW620_om} ${bin_data} ${results_path} ${batchsize}
       ```
 
       -   参数说明：
 
-           -   ${ais_infer_path}：ais_infer python脚本路径。
+           -   ${ais_bench_path}：ais_infer python脚本路径。
            -   ${imgW320_om}：imgW为320的om。
            -   ${imgW620_om}：imgW为620的om。
            -   ${bin_data}：bin数据路径。
@@ -241,13 +241,11 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
       推理脚本命令举例：
 
       ```
-      bash ais_infer.sh ./tools/ais_infer/ais_infer.py ./ch_PP-OCRv3_rec_dybs_320.om ./ch_PP-OCRv3_rec_dybs_620.om ./image_bin ./result_bs1 1
+      bash ais_infer.sh ./tools/ais_bench/ais_infer.py ./ch_PP-OCRv3_rec_dybs_320.om ./ch_PP-OCRv3_rec_dybs_620.om ./image_bin ./result_bs1 1
       ```
 
       命令运行结束后在`./result_bs1`目录下生成batchsize=1时的推理结果，获取其他batchsize的推理结果只需要在命令中修改`${results_path}`和`${batchsize}`两个参数即可。
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -304,10 +302,10 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench \
           --model=./ch_PP-OCRv3_rec_dybs_320.om \
           --loop=50 \
           --dymBatch=${batchsize} \
@@ -321,9 +319,9 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
           -   --dymBatch：om模型的batch。
           -   --batchsize：om模型的batch。
 
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+      `${batchsize}`表示不同batch的om模型。
 
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能，如下所示（仅供参考，以实现推理性能为准）：
+      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能，如下所示（仅供参考，以实现推理性能为准）：
 
       ```
        [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(3.30181999206543): 4845.8123212196415

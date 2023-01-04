@@ -114,6 +114,9 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep "FPS" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F ":" 'END {print $2}'|cut -c 3-7 `
 echo "Final Performance images/sec : $FPS"
+#输出编译耗时
+CompileTime=`grep "Time:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 |awk -F ":" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep "best accuracy" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F ":" 'END {print $2}'|cut -c 2-6`
@@ -148,7 +151,7 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 ###下面字段用于冒烟看护
 #BatchSize=${batch_size}
 #设备类型，自动获取

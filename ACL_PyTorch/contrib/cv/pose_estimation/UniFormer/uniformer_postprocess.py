@@ -14,10 +14,13 @@
 
 import os
 import mmcv
+import sys
 import numpy as np
 from argparse import ArgumentParser
+sys.path.append("./UniFormer/pose_estimation/")
 from mmpose.datasets import TopDownCocoDataset
 from mmpose.core.evaluation import keypoints_from_heatmaps
+from tqdm import tqdm
 
 
 def _box2cs(box, image_size):
@@ -50,8 +53,6 @@ def main():
     dataset_path = args.dataset
     bin_path = args.bin
     latest_result = os.listdir(bin_path)
-    latest_result.sort()
-    bin_path = os.path.join(bin_path, latest_result[-1])
 
     cfg = mmcv.Config.fromfile(args.config)
     image_size = cfg.data_cfg['image_size']
@@ -70,7 +71,7 @@ def main():
     outputs = []
 
     # process each image
-    for image_id in coco.imgs.keys():
+    for image_id in tqdm(coco.imgs.keys()):
         # get bounding box annotations
         image = coco.loadImgs(image_id)[0]
         image_name = os.path.join(img_prefix, image['file_name'])
@@ -94,7 +95,7 @@ def main():
             center, scale = _box2cs(bbox, image_size)
 
             heatmap = np.fromfile(os.path.join(
-                bin_path, f'{ann_id}_output_0.bin'), dtype=np.float32)
+                bin_path, f'{ann_id}_0.bin'), dtype=np.float32)
             heatmap = np.reshape(
                 heatmap, [1, 17, heatmap_size[1], heatmap_size[0]])
 

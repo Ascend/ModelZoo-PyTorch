@@ -103,16 +103,10 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
    数据预处理将原始数据集转换为模型输入的数据。
 
-   执行**preprocess_resnet50_pytorch.py**脚本，完成预处理。同时运行**get_info.py**生成数据集信息文件。
-
    ```
    python3 preprocess_resnet50_pytorch.py ./cifar-100-python/test ./bin_data
 
    运行成功后,同一目录下生成cifar100数据集的可视化数据集pic,bin格式的数据集bin_data以及label文件img_label.txt
-   
-   python3 get_info.py ./bin_data ./pre_data.info 32 32
-
-   运行成功后,同一目录下生成pre_data.info数据集信息文件
    ```
 
 ## 模型推理<a name="section741711594517"></a>
@@ -184,15 +178,15 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 
    b.  执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs24.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
+      python3 -m ais_bench --model ./resnet_bs24.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
 
       ```
 
@@ -205,8 +199,6 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
            -   output_dirname:推理结果输出子文件夹。
 		...
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -225,10 +217,10 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs24.om --loop 1000 --output ./ --outfmt BIN
+      python3 -m ais_bench --model ./resnet_bs24.om --loop 1000 --output ./ --outfmt BIN --batchsize 24
 
       ```
 

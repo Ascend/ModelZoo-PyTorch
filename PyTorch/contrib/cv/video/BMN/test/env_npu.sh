@@ -22,6 +22,8 @@ msnpureport -g error -d 4
 msnpureport -g error -d 5
 msnpureport -g error -d 6
 msnpureport -g error -d 7
+#关闭Device侧Event日志
+msnpureport -e disable
 
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
@@ -43,6 +45,9 @@ export DYNAMIC_OP="ADD#MUL"
 export HCCL_WHITELIST_DISABLE=1
 # HCCL默认超时时间120s较少，修改为1800s对齐PyTorch默认设置
 export HCCL_CONNECT_TIMEOUT=1800
+#以下两条优化FPS
+export MM_BMM_ND_ENABLE=1
+export SCALAR_TO_HOST_MEM=1
 
 ulimit -SHn 512000
 

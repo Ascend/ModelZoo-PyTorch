@@ -225,16 +225,16 @@ yolor将统一网络的隐性知识(implicit knowledge)和显性知识(explicit 
 2. 开始推理验证。
 
 
-a.  使用ais-infer工具进行推理。
+a.  安装ais_bench推理工具。
 
  
-   ais_infer工具获取及使用方式请点击查看《[ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)》。
+  请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
 b.  执行推理。
 
 ```
- python3 ais_infer.py  --model /home/yolor/yolor_bs1.om --input /home/yolor/val2017_bin/ --output ./ --batchsize 1
+ python3 -m ais_bench  --model /home/yolor/yolor_bs1.om --input /home/yolor/val2017_bin/ --output ./ --batchsize 1
 ```
 
   -  参数说明：

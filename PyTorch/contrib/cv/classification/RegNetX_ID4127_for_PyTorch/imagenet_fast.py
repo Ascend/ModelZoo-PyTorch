@@ -1018,4 +1018,7 @@ def reduce_tensor(tensor):
 
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "KLDiv, KlDivLossGrad"
+    torch.npu.set_option(option)
     main()

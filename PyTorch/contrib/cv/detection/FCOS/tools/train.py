@@ -228,4 +228,7 @@ def main():
         meta=meta)
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
+    torch.npu.set_option(option)
     main()

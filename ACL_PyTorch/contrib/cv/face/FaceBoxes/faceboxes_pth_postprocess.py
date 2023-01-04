@@ -102,8 +102,8 @@ if __name__ == '__main__':
             scale = torch.Tensor([im_width, im_height, im_width, im_height])
             
             #input loc conf
-            img_bin_1 = os.path.join(args.prep_folder,img_name+'_1.bin')
-            img_bin_2 = os.path.join(args.prep_folder,img_name+'_2.bin')
+            img_bin_1 = os.path.join(args.prep_folder,img_name+'_0.bin')
+            img_bin_2 = os.path.join(args.prep_folder,img_name+'_1.bin')
             buf_1 = np.fromfile(img_bin_1, dtype="float32")
             buf_2 = np.fromfile(img_bin_2, dtype="float32") 
             conf = np.reshape(buf_2, [1, 21824, 2])

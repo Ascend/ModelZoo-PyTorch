@@ -15,6 +15,8 @@
 import os
 import sys
 import torch
+if torch.__version__>= '1.8.1':
+      import torch_npu
 import numpy as np
 import pdb
 import datetime
@@ -190,15 +192,8 @@ def main(gpu,args):
     if not args.use_cpu:
         classifier = classifier.to(CALCULATE_DEVICE)
         criterion = criterion.to(CALCULATE_DEVICE)
-
-    try:
-        checkpoint = torch.load(str(exp_dir) + '/checkpoints/best_model.pth')
-        start_epoch = checkpoint['epoch']
-        classifier.load_state_dict(checkpoint['model_state_dict'])
-        log_string('Use pretrain model')
-    except:
-        log_string('No existing model, starting training from scratch...')
-        start_epoch = 0
+    log_string('No existing model, starting training from scratch...')
+    start_epoch = 0
     '''MODEL LOADING'''
     if args.optimizer == 'Adam':
         optimizer = apex.optimizers.NpuFusedAdam(
@@ -210,7 +205,7 @@ def main(gpu,args):
         )
     else:
         optimizer = apex.optimiziers.NpuFusedSGD(classifier.parameters(), lr=0.01, momentum=0.9)
-    classifier, optimizer = amp.initialize(classifier, optimizer, opt_level="O2", loss_scale = 128, combine_grad=True)
+    classifier, optimizer = amp.initialize(classifier, optimizer, opt_level="O2", loss_scale = "dynamic", combine_grad=True)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.7)
     classifier = torch.nn.parallel.DistributedDataParallel(classifier, device_ids=[args.npu], broadcast_buffers=False)
 

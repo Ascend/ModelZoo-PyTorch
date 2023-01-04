@@ -78,9 +78,6 @@
    mv centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py pth2onnx.py move.sh ./center-face/src
    ```
 
-   
-
-
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
@@ -101,18 +98,21 @@
 2. 获取权重文件model_best.pth。放在center-face/src/目录下。
 3. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   在center-face/src路径下，执行centerface_pth_preprocess.py脚本，完成预处理。
+   1. 在center-face/src路径下，执行以下命令编译nms。
+      ```
+      cd lib/external/
+      python setup.py build_ext --inplace
+      cd ../../
+      ```
+   2. 执行centerface_pth_preprocess.py脚本，完成预处理。
+      ```
+      python centerface_pth_preprocess.py ../data ../after_images/
+      ```
+      - 参数说明：
+         - ../data:  原始数据验证集所在路径。
+         - ../after_images/:   输出的二进制文件保存路径。
 
-   ```
-   python centerface_pth_preprocess.py ../data ../after_images/
-   ```
-
-   参数说明：
-
-   - ../data:  原始数据验证集所在路径。
-   - ../after_images/:   输出的二进制文件保存路径。
-
-   运行成功后，生成after_images文件夹，after_images目录下生成的是供模型推理的bin文件。
+      运行成功后，生成after_images文件夹，after_images目录下生成的是供模型推理的bin文件。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -180,14 +180,14 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      ais_bench推理工具获取及使用方式请点击查看 [ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)
 
    2. 执行推理。
 
       ```
-      python {ais_infer_path}/ais_infer.py --model CenterFace_bs1.om --input ../after_images/ --output result --output_dirname dumpout_bs1 --batchsize 1
+      python -m ais_bench --model CenterFace_bs1.om --input ../after_images/ --output result --output_dirname dumpout_bs1 --batchsize 1
       ```
 
       -   参数说明：
@@ -200,8 +200,6 @@
 
       推理后的输出在当前目录result下。
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[参数详情](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E)。
 
    3. 处理目录result/dumpout_bs1下的bin文件，将该目录下的文件分类别存放，以便于后处理。
 
@@ -222,20 +220,23 @@
          python centerface_pth_postprocess.py
          ```
 
-      2. 精度验证。在center-face/evaluate目录下，执行evaluation.py文件进行精度验证。
+      2. 在center-face/evaluate目录下，执行以下命令编译bbox。
+         ```
+         python setup.py build_ext --inplace
+         ```
+
+      3. 精度验证。在center-face/evaluate目录下，执行evaluation.py文件进行精度验证。
 
          ```
          python evaluation.py
          ```
 
-      
-
    5. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-      python ${ais_infer_path}/ais_infer.py --model=CenterFace_bs1.om --loop=20 --batchsize=${batch_size}
+      python -m ais_bench --model=CenterFace_bs1.om --loop=20 --batchsize=${batch_size}
         ```
 
       - 参数说明：

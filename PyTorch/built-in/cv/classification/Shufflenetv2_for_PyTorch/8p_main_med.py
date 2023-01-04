@@ -188,7 +188,7 @@ def main():
             mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
     else:
         # Simply call main_worker function
-        main_worker(args.gpu, ngpus_per_node, args)
+        main_worker(args.local_rank, ngpus_per_node, args)
 
 
 def main_worker(gpu, ngpus_per_node, args):
@@ -254,7 +254,8 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.amp:
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, combine_grad=True)
 
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
+    if args.distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -610,4 +611,7 @@ def get_pytorch_val_loader(data_path, batch_size, workers=5, _worker_init_fn=Non
 
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingUpdate"
+    torch.npu.set_option(option)
     main()

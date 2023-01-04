@@ -212,14 +212,14 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
            运行成功后生成<u>***d0_bs${bs}***</u>模型文件。
 
 2. 开始推理验证。
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
         ```
-		python ${ais_infer_path}/ais_infer.py --model=d0_bs${bs}.om --input=./bin_save --batchsize=${batch_size} --output=./ --output_dirname=./result  
+		python -m ais_bench --model=d0_bs${bs}.om --input=./bin_save --batchsize=${batch_size} --output=./ --output_dirname=./result  
         ```
          - 参数说明：
 
@@ -229,11 +229,6 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
            -   --output_dirname：推理数据保存目录
            -   --batchsize：batchsize大小
 
-
-
-
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
 
    3. 精度验证。
 
@@ -249,10 +244,10 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-        python ${ais_infer_path}/ais_infer.py --model=d0_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        python -m ais_bench --model=d0_bs${bs}.om --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：

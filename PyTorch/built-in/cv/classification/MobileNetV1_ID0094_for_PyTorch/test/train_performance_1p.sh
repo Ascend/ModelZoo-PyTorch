@@ -131,6 +131,9 @@ FPS=`grep -a 'img/s'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
+#获取编译时间
+CompileTime=`grep "Epoch" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 |awk -F " " '{print $4}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '* Prec@1' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk '{print $3}'`
 

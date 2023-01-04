@@ -73,25 +73,18 @@ class EpochBasedRunner(BaseRunner):
         self.model.train()
         self.mode = 'train'
         self.data_loader = data_loader
-        self._max_iters = self._max_epochs * len(self.data_loader)
         self.call_hook('before_train_epoch')
         time.sleep(2)  # Prevent possible deadlock during epoch transition
         for i, data_batch in enumerate(self.data_loader):
+            if i > self._max_iters:
+                break
             self._inner_iter = i
-            # if i==50:
-            #     with torch.autograd.profiler.profile(use_npu=True) as prof:
-            #         self.call_hook('before_train_iter')
-            #         self.run_iter(data_batch, train_mode=True)
-            #         self.call_hook('after_train_iter')
-            #     prof.export_chrome_trace("output.prof")
-            # else:
             self.call_hook('before_train_iter')
             self.run_iter(data_batch, train_mode=True)
             self.call_hook('after_train_iter')
             self._iter += 1
         # added by jyl
-        self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_timer_hook.time_all * (len(self.data_loader) - 5))) 
-
+        self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_timer_hook.time_all * (self._max_iters - 5))) 
         self.call_hook('after_train_epoch')
         self._epoch += 1
 
@@ -136,7 +129,8 @@ class EpochBasedRunner(BaseRunner):
         for i, flow in enumerate(workflow):
             mode, epochs = flow
             if mode == 'train':
-                self._max_iters = self._max_epochs * len(data_loaders[i])
+                if not self._max_iters:
+                    self._max_iters = self._max_epochs * len(data_loaders[i])
                 break
 
         work_dir = self.work_dir if self.work_dir is not None else 'NONE'

@@ -120,10 +120,8 @@ if __name__ == '__main__':
     #for bin_file in sorted(total_img):
     for ids in coco_dataset.img_ids:
         cnt = cnt + 1
-        import pdb
-        # pdb.set_trace()
-        
-        bin_file = glob.glob(bin_path + '/*0' + str(ids) + '_output_0.bin')[0]
+
+        bin_file = glob.glob(bin_path + '/*0' + str(ids) + '_0.bin')[0]
         bin_file = bin_file[bin_file.rfind('/') + 1:]
         bin_file = bin_file[:bin_file.rfind('_')]
 
@@ -138,15 +136,13 @@ if __name__ == '__main__':
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
                 elif num == 1:
-                    import pdb
-                    # pdb.set_trace()
-                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
+                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int32")
                     buf = np.reshape(buf, [100, 1])
                 elif num == 2:
                     bboxes = np.fromfile(path_base + "_" + str(num - 2) + ".bin", dtype="float32")
                     bboxes = np.reshape(bboxes, [100, 5])
                     bboxes = torch.from_numpy(bboxes)
-                    labels = np.fromfile(path_base + "_" + str(num - 1) + ".bin", dtype="int64")
+                    labels = np.fromfile(path_base + "_" + str(num - 1) + ".bin", dtype="int32")
                     labels = np.reshape(labels, [100, 1]).astype(np.int64)
                     labels = torch.from_numpy(labels)
                     mask_pred = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
@@ -162,7 +158,7 @@ if __name__ == '__main__':
                     masks = masks >= 0.5
 
                     
-                    img_id = bin_file[:-7]
+                    img_id = bin_file
                     masks = postprocess_masks(masks, img_size_dict[img_id], flags.net_input_width, flags.net_input_height)
                     if torch.cuda.is_available():
                         masks = masks.cpu()

@@ -268,6 +268,8 @@ def pre_train(opt, dataset_train, dataset_val, dataset_test, data_loader):
             train_accuracies.append(acc.item())
             train_losses.append(loss.item())
             step_time = time.time() - start_time
+            if i < 3:
+                print("step_time = {}".format(step_time), flush=True)
             if (i % 10 == 0):
                 train_acc_avg = np.mean(np.array(train_accuracies))
                 log(log_file_path, 'Train Epoch: {}\tBatch: [{}]\tLoss: {:.3f}\tAccuracy: {:.3f} % ({:.3f} %) \ttime/step(s):{:.4f}'.format(
