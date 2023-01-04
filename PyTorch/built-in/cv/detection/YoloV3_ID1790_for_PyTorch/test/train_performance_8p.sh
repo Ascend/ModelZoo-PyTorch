@@ -24,7 +24,7 @@ data_path=""
 Network="YoloV3_ID1790_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
-batch_size=128
+batch_size=64
 
 #参数校验，不需要修改
 for para in $*
