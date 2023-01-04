@@ -89,7 +89,7 @@ FPS=`grep Train  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE
 echo "Final Performance images/sec : $FPS"
 
 #获取编译时间
-CompileFps=`grep "Train"$test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F '|' '{print $4}'|awk -F ' ' '{print $2}' |sed s/[[:space:]]//g`
+CompileFps=`grep "Train" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F '|' '{print $4}'|awk -F ' ' '{print $2}' |sed s/[[:space:]]//g`
 CompileTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${CompileFps}'}'`
 
 #打印，不需要修改
