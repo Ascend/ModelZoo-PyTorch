@@ -24,8 +24,6 @@ import random
 import time
 import re
 import string
-import time
-import sys
 from io import open
 
 import numpy as np
@@ -55,12 +53,12 @@ def evaluate(args, eval_dataset, eval_dataloader,
     for fi in files:
         fi_d = os.path.join(filepath,fi)            
         if os.path.isdir(fi_d):
-          all_file.append(fi_d)
+            all_file.append(fi_d)
     bin_path = all_file[0]
 
     for idx, (input_ids, input_mask, segment_ids, example_indices) in enumerate(eval_dataloader):
-        batch_start_logits = np.fromfile('{}/{}_output_0.bin'.format(bin_path, idx), dtype='float32')
-        batch_end_logits = np.fromfile('{}/{}_output_1.bin'.format(bin_path, idx), dtype='float32')
+        batch_start_logits = np.fromfile('{}/{}_0.bin'.format(bin_path, idx), dtype='float32')
+        batch_end_logits = np.fromfile('{}/{}_1.bin'.format(bin_path, idx), dtype='float32')
         batch_start_logits = torch.from_numpy(batch_start_logits) 
         batch_end_logits = torch.from_numpy(batch_end_logits)
         batch_start_logits = torch.reshape(batch_start_logits, (-1, 512))

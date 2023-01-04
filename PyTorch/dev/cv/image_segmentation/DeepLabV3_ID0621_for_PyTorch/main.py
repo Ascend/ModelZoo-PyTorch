@@ -432,7 +432,8 @@ def main():
             interval_loss += np_loss
             if vis is not None:
                 vis.vis_scalar('Loss', cur_itrs, np_loss)
-
+            if cur_itrs < 3:
+                print("Time: ", opts.batch_size/fps.val)
             if (cur_itrs) % 10 == 0:
                 interval_loss = interval_loss/10
                 print("Epoch %d, Itrs %d/%d, Loss=%f ,FPS=%.2f" %

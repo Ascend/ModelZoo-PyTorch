@@ -18,6 +18,7 @@ import argparse
 import torch
 import imageio
 import numpy as np
+from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser(description='EDSR post process script')
@@ -25,8 +26,6 @@ parser.add_argument('--res', default='', type=str, metavar='PATH',
                     help='om result path')
 parser.add_argument('--HR', default='', type=str, metavar='PATH',
                     help='high res path')
-parser.add_argument('--save', action='store_true',
-                    help='save image')
 parser.add_argument('--save_path', default='', type=str, metavar='PATH',
                     help='result image save path')
 args = parser.parse_args()
@@ -34,18 +33,14 @@ args = parser.parse_args()
 
 def postprocess(img_src_path, src_path, save_path):
     data = []
-    count = 0
-    # create dir
-    if not os.path.isdir(save_path) and args.save:
-        os.makedirs(save_path)
-    for idx, file_name in enumerate(os.listdir(src_path)):
+    for idx, file_name in tqdm(enumerate(os.listdir(src_path))):
         array = np.load(
-            os.path.join(src_path, file_name), allow_pickle=True).transpose(1, 2, 0)
+            os.path.join(src_path, file_name), allow_pickle=True).squeeze(0).transpose(1, 2, 0)
         img = torch.from_numpy(array.astype("float32"))
         img = quantize(img, 255)
 
         img_path = os.path.join(
-            img_src_path, "{}.png".format(file_name[:-6])
+            img_src_path, "{}.png".format(file_name.split('x')[0])
         )
         hr = imageio.imread(img_path)
         hr = torch.from_numpy(hr)
@@ -53,15 +48,9 @@ def postprocess(img_src_path, src_path, save_path):
         psnr = calc_psnr(img, hr, scale, 255)
         data.append({"file": file_name, "psnr": psnr})
 
-        img = img.byte().cpu()
-        if args.save:
-            imageio.imwrite(os.path.join(save_path + file_name)+".png", img.numpy())
-        count += 1
-        print("OK, count = ", count)
-
     data = eval_acc(data)
     json_data = json.dumps(data, indent=4, separators=(',', ': '))
-    with open("result.json", 'w') as f:
+    with open(args.save_path, 'w') as f:
         f.write(json_data)
 
 

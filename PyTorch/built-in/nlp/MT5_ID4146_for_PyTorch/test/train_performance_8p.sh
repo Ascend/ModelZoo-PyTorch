@@ -123,3 +123,7 @@ echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${Ca
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualFPS" = ${FPS} >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+
+rm -rf /root/.cache/huggingface/datasets/wmt16/ro-en/1.0.0/28ebdf8cf22106c2f1e58b2083d4b103608acd7bfdb6b14313ccd9e5bc8c313a/cache-*.arrow
+rm -rf ./tst-translation
+

@@ -1,7 +1,6 @@
-torch == 1.5.0
-torchvision == 0.6.0
-onnx == 1.10.1
-numpy == 1.21.2
-Pillow == 8.3.1
-opencv-python == 4.5.3.56
-onnxruntime==1.9.0
+torch==1.8.0
+torchvision==0.9.0
+onnx==1.7.0
+numpy==1.21.6
+Pillow==9.2.0
+opencv-python==4.6.0.66

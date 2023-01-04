@@ -38,16 +38,16 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
 - 输入数据
 
-  | 输入数据 | 数据类型    | 大小     | 数据排布格式 |
-  |---------|--------|--------| ------------ |
-  | input    | Float32 | 40 x 6 | ND     |
+  | 输入数据 | 大小     | 数据类型    | 数据排布格式 |
+  |--------|---------| -------- | ------------ |
+  | input | 40 x 6 | FLOAT16 | ND           |
 
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  |--------| -------- | -------- | ------------ |
-  | output  | 40 x 1 | FLOAT32  | ND           |
+  | 输出数据 | 大小     | 数据类型    | 数据排布格式 |
+  |--------|---------| -------- | ------------ |
+  | output  | 40 x 1 | FLOAT16 | ND           |
 
 
 
@@ -59,7 +59,7 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
 | 配套                                                         | 版本      | 环境准备指导                                                 |
 | ------------------------------------------------------------ |---------| ------------------------------------------------------------ |
-| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.10.1  | -                                                            |
@@ -217,9 +217,9 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 
    b.  执行推理。
@@ -238,8 +238,6 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
            -   device_id：推理需要的卡号。
 		...
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -248,10 +246,10 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./WDL.om --loop 1000 --output ./ --outfmt BIN
+      python3 -m ais_bench --model ./WDL.om --loop 1000 --batchsize 40
 
       ```
 
@@ -260,8 +258,8 @@ DeepCTR的设计主要是面向那些对深度学习以及CTR预测算法感兴�
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号  | model   | Batch Size | 数据集      | 精度     | 性能     |
-|-------|---------|------------|----------|--------|--------|
-| 310P3 | WDL     | 60         | movielens_sample | 2.1479 | 0.05ms |
-| 310P3 | xDeepFM | 60         | movielens_sample | 1.9712 | 0.16ms |
-| 310P3 | AutoInt | 60         | movielens_sample | 2.1465 | 0.20ms |
+| 芯片型号  | model   | Batch Size | 数据集      | 精度     | 性能      |
+|-------|---------|------------|----------|--------|---------|
+| 310P3 | WDL     | 40         | movielens_sample | 2.1479 | 0.079ms |
+| 310P3 | xDeepFM | 40         | movielens_sample | 1.9712 | 0.177ms |
+| 310P3 | AutoInt | 40         | movielens_sample | 2.1465 | 0.22ms  |

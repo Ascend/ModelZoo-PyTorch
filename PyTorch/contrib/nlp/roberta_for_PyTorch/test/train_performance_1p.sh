@@ -35,51 +35,13 @@ if [[ ! -d $OUTPUT_DIR ]];then
     mkdir -p $OUTPUT_DIR
 fi
 
-
-#维测参数，precision_mode需要模型审视修改
-precision_mode="allow_mix_precision"
-#维持参数，以下不需要修改
-over_dump=False
-data_dump_flag=False
-data_dump_step="10"
-profiling=False
-autotune=False
-
-# 帮助信息，不需要修改
-if [[ $1 == --help || $1 == -h ]];then
-    echo"usage:./train_performance_1p.sh <args>"
-    exit 1
-fi
-
 #参数校验，不需要修改
 for para in $*
 do
-    if [[ $para == --precision_mode* ]];then
-        precision_mode=`echo ${para#*=}`
-	elif [[ $para == --over_dump* ]];then
-        over_dump=`echo ${para#*=}`
-        over_dump_path=${cur_path}/output/overflow_dump
-        mkdir -p ${over_dump_path}
-    elif [[ $para == --data_dump_flag* ]];then
-        data_dump_flag=`echo ${para#*=}`
-        data_dump_path=${cur_path}/output/data_dump
-        mkdir -p ${data_dump_path}
-    elif [[ $para == --data_dump_step* ]];then
-        data_dump_step=`echo ${para#*=}`
-    elif [[ $para == --profiling* ]];then
-        profiling=`echo ${para#*=}`
-        profiling_dump_path=${cur_path}/output/profiling
-        mkdir -p ${profiling_dump_path}
-    elif [[ $para == --data_path* ]];then
+    if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    elif [[ $para == --conda_name* ]];then
-        conda_name=`echo ${para#*=}`
-        source set_conda.sh
-        echo "conda_name: $conda_name"
-        source activate $conda_name
     fi
 done
-
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
@@ -101,12 +63,6 @@ fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
-elif [ ${device_id} ];then
-    export ASCEND_DEVICE_ID=${device_id}
-    echo "device id is ${ASCEND_DEVICE_ID}"
-else
-    "[Error] device id must be config"
-    exit 1
 fi
 
 #非平台场景时source 环境变量
@@ -129,13 +85,12 @@ start_time=$(date +%s)
 
 cd ${cur_path}
 python3 setup.py build_ext --inplace > ${test_path_dir}/build.log
-cd ${test_path_dir}
 
-nohup python3.7 -u ${cur_path}/train.py $data_path \
+nohup taskset -c 0-23 python3.7 -u ${cur_path}/train.py $data_path \
     --restore-file $ROBERTA_PATH \
     --max-positions 512 \
     --batch-size $MAX_SENTENCES \
-    --max-tokens 4400 \
+    --max-tokens 8800 \
     --pad-length 70 \
     --task sentence_prediction \
     --reset-optimizer --reset-dataloader --reset-meters \
@@ -176,7 +131,7 @@ FPS=`grep -a 'FPS='  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'accuracy='  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F 'accuracy=' '{print $2}'|awk -F ',' '{print $1}'|tail -1`
+train_accuracy=`grep -a 'valid | epoch'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|tail -1|awk -F 'accuracy' '{print $2}'|awk -F '|' '{print $1}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

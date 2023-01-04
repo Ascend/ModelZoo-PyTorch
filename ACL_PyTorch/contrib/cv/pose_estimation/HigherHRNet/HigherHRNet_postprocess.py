@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import os
 import argparse
 import sys
@@ -20,26 +21,27 @@ from tqdm import tqdm
 import numpy as np
 import torch
 sys.path.append('./HigherHRNet-Human-Pose-Estimation')
-from lib.core.inference import aggregate_results
-from lib.dataset.build import make_test_dataloader
-from lib.config import update_config
-from lib.core.group import HeatmapParser
-from lib.config import cfg
-from lib.dataset.transforms.build import FLIP_CONFIG
-from lib.utils.transforms import get_final_preds
 from lib.utils.utils import create_logger
-# from lib.utils.vis import save_valid_image
-from tools import get_multi_scale_size
+from lib.utils.transforms import get_final_preds
+from lib.dataset.transforms.build import FLIP_CONFIG
+from lib.config import cfg
+from lib.core.group import HeatmapParser
+from lib.config import update_config
+from lib.dataset.build import make_test_dataloader
+from lib.core.inference import aggregate_results
+from lib.utils.transforms import get_multi_scale_size
 
 
 def get_output_data(dump_dir, idx, size, dtype=np.float32):
     input_data = []
     output_1_shape = [1, 34, size[1] // 4, size[0] // 4]
     output_2_shape = [1, 17, size[1] // 2, size[0] // 2]
-    input_1_file = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
-    input_2_file = os.path.join(dump_dir, "{:0>12d}_2.bin".format(idx))
-    input_data_1 = np.fromfile(input_1_file, dtype=dtype)[: 1 * 34 * (size[0] // 4) * (size[1] // 4)].reshape(output_1_shape)
-    input_data_2 = np.fromfile(input_2_file, dtype=dtype)[: 1 * 17 * (size[0] // 2) * (size[1] // 2)].reshape(output_2_shape)
+    input_1_file = os.path.join(dump_dir, "{:0>12d}_0.bin".format(idx))
+    input_2_file = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
+    input_data_1 = np.fromfile(input_1_file,
+                               dtype=dtype)[: 1 * 34 * (size[0] // 4) * (size[1] // 4)].reshape(output_1_shape)
+    input_data_2 = np.fromfile(input_2_file,
+                               dtype=dtype)[: 1 * 17 * (size[0] // 2) * (size[1] // 2)].reshape(output_2_shape)
 
     input_data_1 = torch.tensor(input_data_1, dtype=torch.float32)
     input_data_2 = torch.tensor(input_data_2, dtype=torch.float32)
@@ -75,10 +77,11 @@ def postprocess(config, output_dir):
     heatmapparser = HeatmapParser(config)
     all_preds = []
     all_scores = []
-    for idx, (images, annos) in tqdm(enumerate(data_loader)):
+    for idx, (images, annos) in enumerate(tqdm(data_loader)):
         image = images[0].cpu().numpy()
         base_size, center, scale = get_multi_scale_size(
-            image, config.DATASET.INPUT_SIZE, 1.0, min(config.TEST.SCALE_FACTOR), scale_list
+            image, config.DATASET.INPUT_SIZE, 1.0, min(
+                config.TEST.SCALE_FACTOR), scale_list
         )
         final_heatmaps = None
         tags_list = []
@@ -174,7 +177,8 @@ def postprocess(config, output_dir):
             final_heatmaps, tags, config.TEST.ADJUST, config.TEST.REFINE
         )
         final_results = get_final_preds(
-            grouped, center, scale, [final_heatmaps.size(3), final_heatmaps.size(2)]
+            grouped, center, scale, [
+                final_heatmaps.size(3), final_heatmaps.size(2)]
         )
 
         all_preds.append(final_results)
@@ -192,8 +196,7 @@ if __name__ == '__main__':
     # general
     parser.add_argument('--cfg',
                         help='experiment configure file name',
-                        default=
-                        "HigherHRNet-Human-Pose-Estimation/experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml",
+                        default="HigherHRNet-Human-Pose-Estimation/experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml",
                         type=str)
 
     parser.add_argument('opts',

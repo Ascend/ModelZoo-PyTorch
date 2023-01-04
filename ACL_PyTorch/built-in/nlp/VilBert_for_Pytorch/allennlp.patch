@@ -1,0 +1,30 @@
+diff --git a/allennlp/data/image_loader.py b/allennlp/data/image_loader.py
+index 0f1ef6b7..05e5c00b 100644
+--- a/allennlp/data/image_loader.py
++++ b/allennlp/data/image_loader.py
+@@ -1,10 +1,12 @@
+ from os import PathLike
+ from typing import Union, Sequence, Tuple, List, cast
++from PIL import Image
+ 
+ 
+ import torch
+ import torchvision
+ from torch import FloatTensor, IntTensor
++import torchvision.transforms as transforms
+ 
+ from allennlp.common.file_utils import cached_path
+ from allennlp.common.registrable import Registrable
+@@ -169,7 +171,11 @@ class TorchImageLoader(ImageLoader):
+         self.pixel_std = pixel_std
+ 
+     def load(self, filename: OnePath) -> FloatTensor:
+-        image = torchvision.io.read_image(filename).float().to(self.device) / 256
++        # image = torchvision.io.read_image(filename).float().to(self.device) / 256
++        image = Image.open(filename)
++        transform = transforms.Compose([transforms.PILToTensor()])
++        image = transform(image).float().to(self.device) / 256
++
+         if self.normalize:
+             mean = torch.as_tensor(self.pixel_mean, dtype=image.dtype, device=self.device).view(
+                 -1, 1, 1

@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="SSD"
 # 训练batch_size
-batch_size=64
+batch_size=8
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
@@ -21,6 +21,8 @@ do
         train_epochs=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`    
     fi
 done
 
@@ -74,7 +76,7 @@ export TASK_QUEUE_ENABLE=0
 
 
 rm -rf kernel_meta/
-PORT=29500 ./tools/dist_test.sh configs/ssd/ssd300_coco_npu_8p.py work_dirs/ssd300_coco_npu_8p/latest.pth 8 --eval bbox > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+PORT=29500 ./tools/dist_test.sh configs/ssd/ssd300_coco_npu_8p.py work_dirs/ssd300_coco_npu_8p/latest.pth 8 --eval bbox --cfg-options data.samples_per_gpu=${batch_size}> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -86,7 +88,7 @@ e2e_time=$(( $end_time - $start_time ))
 
 
 # 输出训练精度,需要模型审视修改 # eval.log | awk -F ',' '{print $1}' | awk '{print $2}' | awk ' END {print}'
-train_accuracy=`grep "bbox_mAP" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ',' '{print $1}' | awk '{print $2}' | awk ' END {print}'`
+train_accuracy=`grep 'Epoch(val)'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F 'bbox_mAP: ' '{print $2}'| awk -F ',' '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

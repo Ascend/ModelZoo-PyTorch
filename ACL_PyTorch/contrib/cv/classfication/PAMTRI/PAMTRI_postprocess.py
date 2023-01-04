@@ -67,7 +67,7 @@ def postprocess(args, ranks=range(1, 51)):
     for root, folder, files in os.walk(args.queryfeature_path):
         files.sort(key=lambda x: int(x.split('_')[0]))
         for file in tqdm(files, desc="Extracted features for query set..."):
-            # ais-infer推理出的第四个输出"features"读入，features为计算mAP值的特征
+            # ais_bench推理出的第四个输出"features"读入，features为计算mAP值的特征
             if file.split('_')[1] == "3.bin":
                 featuresq = np.fromfile(os.path.join(root, file),
                                         dtype="float32")
@@ -87,7 +87,7 @@ def postprocess(args, ranks=range(1, 51)):
     for root, folder, files in os.walk(args.galleryfeature_path):
         files.sort(key=lambda x: int(x.split('_')[0]))
         for file in tqdm(files, desc="Extracted features for gallery set..."):
-            # ais-infer推理出的第四个输出"features"读入，features为计算mAP值的特征
+            # ais_bench推理出的第四个输出"features"读入，features为计算mAP值的特征
             if file.split('_')[1] == "3.bin":
                 featuresg = np.fromfile(os.path.join(root, file),
                                         dtype="float32")

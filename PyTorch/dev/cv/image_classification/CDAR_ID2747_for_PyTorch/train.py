@@ -216,6 +216,8 @@ def train(epoch, model, source_loader, target_loader):
 
         fps = args.batch_size / (time.time() - start)
 
+        if batch_idx < 2:
+            print("step_time = {:.4f}".format(time.time()-start))
         if batch_idx % args.log_interval == 0:
             print('\nLoss: {:.6f},  label_Loss: {:.6f},  join_Loss: {:.6f}, global_Loss:{:.4f}, local_Loss:{:.4f}, fps:{:.2f}'.format(
                 loss.item(), soft_loss.item(), join_loss.item(), global_loss.item(), local_loss.item(), fps))

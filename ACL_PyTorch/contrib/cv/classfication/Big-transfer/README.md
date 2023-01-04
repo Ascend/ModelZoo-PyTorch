@@ -68,7 +68,7 @@
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.83.10  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 1.0.17 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | >1.8.0  | -                                                            |
@@ -211,46 +211,36 @@
 
 2. 开始推理验证。
 
-   a. 使用ais-infer工具进行推理。
+   a. 安装ais_bench推理工具。
 
-      参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
-
-      ```
-      pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
-      ```
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    b. 执行推理。
 
       ```
       source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      python3 ./ais_infer_x86_64/ais_infer.py --model ./bit_bs16.om --input ./dataset_bin/ --output ./result/ --outfmt BIN --batchsize 16
-      ```  
+      python3 -m ais_bench --model ./bit_bs16.om --input ./dataset_bin/ --output ./result/ --outfmt BIN --batchsize 16
+      ```
 
       参数说明：   
       - --model：模型地址
       - --input：预处理完的数据集文件夹
       - --output：推理结果保存地址
       - --outfmt：推理结果保存格式
-      
-      运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
-      
-      **说明：** 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
-
-      **注意：** 因工具限制，需要把result/xxxx_xx_xx-xx-xx-xx/summary.json从结果目录中删除，或者迁移到其他目录；
-
+   
+   
    c. 精度验证。
 
       统计推理输出的Top 1-5 Accuracy
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据。
+   
       ```
-      python3 bit_postprocess.py --output_dir result/xxxx_xx_xx-xx-xx-xx（时间戳）--label_path label.txt 
+      python3 bit_postprocess.py --output_dir ${result_dir} --label_path ${gt_file}
       ```
 
       参数说明：
-      - result/xxxx_xx_xx-xx-xx-xx（时间戳）：为推理结果所在路径
-      - val_label.txt：为标签数据
-      - result.json：为生成结果文件
+      - --output_dir：为推理结果所在路径
+      - --label_path：为标签数据文件所在路径
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 

@@ -1,3 +1,17 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the BSD 3-Clause License  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://opensource.org/licenses/BSD-3-Clause
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +26,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+print(torch.__version__)
 import sys
 from dataset import VideoDataSet
-from loss_function import bmn_loss_func, get_mask
 import os
 import json
-import torch
 import torch.nn.parallel
 import torch.optim as optim
 import numpy as np
@@ -27,9 +43,10 @@ import pandas as pd
 from post_processing import BMN_post_processing
 from eval import evaluation_proposal
 from apex import amp
-import torch.npu
 import torch.distributed as dist
 import time
+import torch.npu
+from loss_function import bmn_loss_func, get_mask
 
 sys.dont_write_bytecode = True
     
@@ -127,7 +144,7 @@ def test_BMN(data_loader, model, epoch, bm_mask):
                 epoch_pemreg_loss / (n_iter + 1),
                 epoch_loss / (n_iter + 1)))
   
-    if opt["local_rank"]==0:
+    if opt["local_rank"] == 0:
         state = {'epoch': epoch + 1,
                  'state_dict': model.state_dict()}
         torch.save(state, opt["checkpoint_path"] + "/BMN_checkpoint.pth.tar")
@@ -140,6 +157,8 @@ def BMN_Train(opt):
     model = BMN(opt)
     #model = model.npu()
     model = model.to(f'npu:{opt["local_rank"]}')
+    print(model)
+
     if opt["finetune"] == 1:
         checkpoint = torch.load(opt["pth_path"], map_location='npu:0')
         base_dict = {'.'.join(k.split('.')[1:]): v for k,v in list(checkpoint['state_dict'].items())}
@@ -147,7 +166,7 @@ def BMN_Train(opt):
         
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=opt["training_lr"],weight_decay=opt["weight_decay"])
     
-    model, optimizer = amp.initialize(model, optimizer, opt_level='O1', loss_scale=128.0)
+    model, optimizer = amp.initialize(model, optimizer, opt_level='O1', loss_scale=128, combine_grad=True)
     if not isinstance(model, torch.nn.parallel.DistributedDataParallel):
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[opt["local_rank"]], broadcast_buffers=False)
     
@@ -231,7 +250,9 @@ def main(opt):
         torch.npu.set_device(0)
     else:
         os.environ['MASTER_ADDR'] = '127.0.0.1'
-        os.environ['MASTER_PORT'] = '29680'
+        os.environ['MASTER_PORT'] = '29681'
+        #print('world_size: ', opt["world_size"])
+        #print('rank: ', opt["local_rank"])
         dist.init_process_group(backend='hccl',world_size=opt["world_size"], rank=opt["local_rank"])
         local_device = torch.device(f'npu:{opt["local_rank"]}')
         torch.npu.set_device(local_device)
@@ -278,4 +299,5 @@ if __name__ == '__main__':
     # print(b.shape, c.shape)
     # print(b)
     # print(c)
+    print(opt)
     main(opt)

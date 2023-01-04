@@ -12,19 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import ssl
 import sys
 
 import torch
-import torch.onnx
 import torchvision.models as models
 
 
-def convert():
-    # https://github.com/pytorch/vision/blob/master/torchvision/models/inception.py
-    if (len(sys.argv) == 3):
-        model = models.inception_v3(pretrained=False, transform_input=True, init_weights=False)
-        checkpoint = torch.load(input_file, map_location=None)
+def convert(checkpoint=None, output_file='./inceptionv3.onnx'):
+    if (checkpoint):
+        model = models.inception_v3(
+            pretrained=False, 
+            transform_input=True, 
+            init_weights=False
+        )
+        checkpoint = torch.load(checkpoint, map_location=None)
         model.load_state_dict(checkpoint)
     else:
         model = models.inception_v3(pretrained=True)
@@ -35,16 +38,25 @@ def convert():
     dynamic_axes = {'actual_input_1': {0: '-1'}, 'output1': {0: '-1'}}
 
     dummy_input = torch.randn(1, 3, 299, 299)
-
-    torch.onnx.export(model, dummy_input, output_file, input_names=input_names, dynamic_axes=dynamic_axes,
-                      output_names=output_names, opset_version=11)
+    torch.onnx.export(
+        model, 
+        dummy_input, 
+        output_file, 
+        input_names=input_names, 
+        output_names=output_names, 
+        dynamic_axes=dynamic_axes,
+        opset_version=11
+    )
 
 
 if __name__ == "__main__":
-    if (len(sys.argv) == 3):
-        input_file = sys.argv[1]
-        output_file = sys.argv[2]
-    else:
-        output_file = "./inceptionv3.onnx"
+    import argparse
+    parser = argparse.ArgumentParser('data preprocess.')
+    parser.add_argument('--checkpoint', type=str, default=None, 
+                        help='path to PyTorch pretrained file(.pth)')
+    parser.add_argument('--onnx', type=str, default='./inceptionv3.onnx', 
+                        help='path to save onnx model(.onnx)')
+    args = parser.parse_args()
+
     ssl._create_default_https_context = ssl._create_unverified_context
-    convert()
+    convert(args.checkpoint, args.onnx)

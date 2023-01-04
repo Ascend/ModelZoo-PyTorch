@@ -19,7 +19,6 @@ import cv2
 import torch
 import multiprocessing
 import tqdm
-
 def resize(img, size):
     old_h = img.shape[0]
     old_w = img.shape[1]
@@ -38,9 +37,7 @@ def resize(img, size):
 def gen_input_bin(file_batches, batch):
     i = 0
     for file in tqdm.tqdm(file_batches[batch]):
-        i = i + 1
-        print("batch", batch, file, "===", i)
-
+       
         image = cv2.imread(os.path.join(flags.image_src_path, file), cv2.IMREAD_COLOR)
         image = resize(image, (800, 1333))
         mean = np.array([103.53, 116.28, 123.675], dtype=np.float32)

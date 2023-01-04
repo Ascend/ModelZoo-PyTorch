@@ -85,6 +85,8 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, pri
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
         cnt = cnt + 1
+        if cnt < 3:
+            print("step_time = {:.4f}".format(time.time() - start_time), flush=True)
 
         if args.max_steps and cnt > args.max_steps:
             break

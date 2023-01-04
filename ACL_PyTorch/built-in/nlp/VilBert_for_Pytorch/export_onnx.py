@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the License);
 # you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ import_plugins()
 def export_onnx(model, args):
     bsz = args.batch_size
     pdlen = args.pad_len
-    SLEN = 43
+    box_num = args.box_num
 
     print("[INFO] Export to onnx.")
-    box_features = torch.ones(bsz, SLEN, 1024, dtype=torch.float)
-    box_coordinates = torch.ones(bsz, SLEN, 4, dtype=torch.float)
-    box_mask = torch.ones(bsz, SLEN, dtype=torch.bool)
+    box_features = torch.ones(bsz, box_num, 1024, dtype=torch.float)
+    box_coordinates = torch.ones(bsz, box_num, 4, dtype=torch.float)
+    box_mask = torch.ones(bsz, box_num, dtype=torch.bool)
     q_token_ids = torch.ones(bsz, pdlen, dtype=torch.int64)
     q_mask = torch.ones(bsz, pdlen, dtype=torch.bool)
     q_type_ids = torch.ones(bsz, pdlen, dtype=torch.int64)
@@ -38,19 +38,26 @@ def export_onnx(model, args):
         box_features,
         box_coordinates,
         box_mask,
-        {
-            'tokens': {
-                'token_ids': q_token_ids, 'mask': q_mask, 'type_ids': q_type_ids
-            }
-        }
+        q_token_ids,
+        q_mask,
+        q_type_ids
     )
+    dynamic_axes = {
+        'box_features': {0: 'batch_size', 1: 'box_num'},
+        'box_coordinates': {0: 'batch_size', 1: 'box_num'},
+        'box_mask': {0: 'batch_size', 1: 'box_num'},
+        'token_ids': {0: 'batch_size', 1: 'seq_len'},
+        'mask': {0: 'batch_size', 1: 'seq_len'},
+        'type_ids': {0: 'batch_size', 1: 'seq_len'}
+    }
     torch.onnx.export(
         model, dummy_input,
-        f"./models/vqa-vilbert_bs{bsz}.onnx",
-        input_names=['box_features', 'box_coordinates', 'box_mask', 'q_token_ids', 'q_mask', 'q_type_ids'],
+        args.save_path,
+        dynamic_axes=dynamic_axes,
+        input_names=['box_features', 'box_coordinates', 'box_mask',
+                     'token_ids', 'mask', 'type_ids'],
         output_names=['logits', 'probs'],
         opset_version=11,
-        enable_onnx_checker=True
     )
     print('[INFO] Done!')
 
@@ -59,17 +66,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="""Evaluate the specified model + dataset""")
     parser.add_argument("--archive_file", type=str, default="models/vilbert-vqa-pretrained.2021-03-15.tar.gz",
                         help="path to an archived trained model")
-    parser.add_argument("--weights-file", type=str, help="a path that overrides weights file to use")
-    parser.add_argument("--cuda-device", type=int, default=-1, help="id of GPU to use (if any)")
+    parser.add_argument("--weights_file", type=str, help="a path that overrides weights file to use")
+    parser.add_argument("--save_path", type=str, help="save path for onnx model") 
+    parser.add_argument("--cuda_device", type=int, default=-1, help="id of GPU to use (if any)")
     parser.add_argument("-o", "--overrides", type=str, default="",
                         help="a json(net) structure used to override the experiment configuration, e.g.")
-    parser.add_argument("--batch-size", type=int, default=1,
+    parser.add_argument("--batch_size", type=int, default=1,
                         help="If non-empty, the batch size to use during evaluation.")
-    parser.add_argument("--pad-len", type=int, default=32, help="padding sequence to fixed length.")
+    parser.add_argument("--pad_len", type=int, default=32, help="padding sequence to fixed length.")
+    parser.add_argument("--box_num", type=int, default=43, help="box num to fixed length.")
     args = parser.parse_args()
 
-    # predictor = Predictor.from_path(args.archive_file)
-    # model = predictor._model
 
     archive = load_archive(
         args.archive_file,

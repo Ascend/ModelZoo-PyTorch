@@ -218,16 +218,16 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
    b.  执行推理。
 
       ```
       python3 ch_PP-OCRv2_rec_ais_infer.py \
-          --ais_infer=${path_to_ais-infer}/ais_infer.py \
+          --ais_infer=${path_to_ais_bench}/ais_infer.py \
           --model=./ch_PP-OCRv2_rec_bs${batchsize}.om \
           --inputs=./pre_data \
           --batchsize=${batchsize}
@@ -239,12 +239,10 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
            -   --inputs：输入数据集路径。
            -   --batchsize：om模型输入的batchsize。
 
-      `${path_to_ais-infer}`为ais_infer.py脚本所在路径。`${batchsize}`表示不同batch的om模型。。
+      `${path_to_ais_bench}`为ais_infer.py脚本所在路径。`${batchsize}`表示不同batch的om模型。。
 
       推理完成后结果保存在`ch_PP-OCRv2_rec/results_bs${batchsize}`目录下。
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -300,10 +298,10 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
    d.  性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python ${path_to_ais-infer}/ais_infer.py \
+      python -m ais_bench \
           --model=./ch_PP-OCRv2_rec_bss${batchsize}.om \
           --dymHW=32,320 \
           --loop=20 \
@@ -317,9 +315,9 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
           -   --dymHW：指定动态shape模型的H和W。
           -   --batchsize：om模型的batch。
 
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
+      `${batchsize}`表示不同batch的om模型。
 
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能，如下所示：
+      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能，如下所示：
 
       ```
       [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(5.840699934959412): 2739.3977054414777

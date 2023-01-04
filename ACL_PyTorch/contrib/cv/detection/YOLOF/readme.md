@@ -1,51 +1,271 @@
-###  YOLOF模型PyTorch离线推理指导
+# YOLOF模型-推理指导
 
-### 1. 环境准备
 
-1. 安装依赖
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-```bash
-pip install -r requirements.txt
-```
+    - [输入输出数据](#section540883920406)
 
-2. 获取，修改与安装开源模型代码
 
-```
-git clone -b main https://github.com/megvii-model/YOLOF.git
-cd YOLOF
-git reset 6189487b80601dfeda89302c22abac060f977785 --hard
 
-patch -p1 < ../YOLOF.patch
-python3 setup.py develop
-cd ..
-```
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-3. 将权重文件YOLOF_CSP_D_53_DC5_9x.pth放到当前工作目录
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-4. 数据集
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-   获取COCO数据集，并重命名为coco，放到当前目录下的 YOLOF/datasets/ 文件夹内
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-5. [获取msame工具](https://gitee.com/ascend/tools/tree/master/msame)
 
-   将msame文件放到当前工作目录
 
-### 2. 离线推理
 
-310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
 
-${chip_name}可通过`npu-smi info`指令查看
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+YOLOF引入了一种解决该优化问题的替代方案而无需使用复杂的特征金字塔，只需要使用单层特征图。基于这个简单高效的方案，设计了You Only Look One-level Feature（YOLOF）检测框架。在该框架中，有两个核心组件，分别是膨胀编码器（Dilated Encoder）和均衡匹配策略（Uniform Matching），它们带来了巨大的性能提升。COCO数据集上的实验证明了YOLOF的有效性，它获得了和有特征金字塔版本相当的结果但是速度快了2.5倍。此外，在没有Transformer层的前提下，YOLOF可以和同样使用单层特征图的DETR媲美且训练轮次少了7倍。
 
-```bash
-bash test/pth2om.sh --batch_size=1 --soc_version=Ascend${chip_name}
-bash test/eval_acc_perf.sh  --batch_size=1
-```
 
-**评测结果：**
+- 参考实现：
 
-| 模型       | pth精度     | 310P离线推理精度 | 310P性能    |
-| ---------- | ----------- | --------------- | ---------- |
-| YOLOF bs1  | box AP:50.9 | box AP:51.0     | fps 27.697 |
-| YOLOF bs16 | box AP:50.9 | box AP:51.0     | fps 38.069 |
+  ```
+  url=https://github.com/megvii-model/YOLOF
+  commit_id=https://github.com/megvii-model/YOLOF
+  model_name=YOLOF
+  ```
+
+
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 608 x 608 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 100 x 4 | ND           |
+  | output2  | FLOAT32  | batchsize x 100 | ND           |
+  | output3  | INT64  | batchsize x 100 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动  
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone -b main https://github.com/megvii-model/YOLOF.git
+   cd YOLOF
+   git reset --hard 6189487b80601dfeda89302c22abac060f977785
+   patch -p1 < ../YOLOF.patch
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型支持coco2017验证集。用户需自行获取数据集，将annotations文件和val2017文件夹解压并上传数据集到源码包路径下的dataset文件夹下。目录结构如下：
+
+   ```
+   YOLOF
+   └── dataset
+       └──coco
+            ├── annotations
+            └── val2017 
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行YOLOF_preprocess.py脚本，完成预处理。
+
+   ```
+   python3 YOLOF_preprocess.py --image_src_path=YOLOF/dataset/coco/val2017/ --bin_file_path=./val2017_bin --meta_file_path=./val2017_bin_meta
+   ```
+      - 参数说明：
+
+         -   --image_src_path：数据集目录
+         -   --bin_file_path：预处理数据保存目录
+         -   --meta_file_path：meta数据保存地址
+   
+   执行gen_dataset_info.py脚本。获取数据信息
+   ```
+   python gen_dataset_info.py --meta_file_path=val2017_bin_meta/ --meta_info_file_name yolof_meta.info
+   ```
+      - 参数说明：
+
+         -   --meta_file_path：meta数据目录
+         -   --meta_info_file_name：提取数据信息
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+   ```
+   wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/YOLOF/PTH/YOLOF_CSP_D_53_DC5_9x.pth
+   ```
+   2. 导出onnx文件。
+
+      1. 使用YOLOF_pth2onnx.py导出onnx文件。
+
+         运行YOLOF_pth2onnx.py脚本。
+
+         ```
+         python YOLOF_pth2onnx.py \
+                --model_config=YOLOF/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x \
+                --out=yolof.onnx \
+                --pth_path=./YOLOF_CSP_D_53_DC5_9x.pth
+         ```
+         - 参数说明：
+
+           -   --model_config：模型配置文件。
+           -   --framework：5代表ONNX模型。
+           -   --out：输出的Onnx模型。
+           -   --pth_path：模型权重文件
+         获得yolof.onnx文件。
+
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=yolof.onnx --output=yolof_bs${bs} --input_shape="input:${bs},3,608,608" --log=error --soc_version=Ascend{chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。。
+
+           运行成功后生成<u>***yolof_bs${bs}.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+   2. 执行推理。
+
+        ```
+      python -m ais_bench --model=yolof_bs${bs}.om --input=./val2017_bin --output=./ --output_dirname=./result --batchsize=${batch_size}     
+        ```
+
+        -   参数说明：
+
+             -   model：om模型地址
+             -   input：预处理数据
+             -   output：推理结果保存路径
+             -   output_dirname:推理结果保存子目录
+
+        推理后的输出默认在当前目录result下。
+
+
+   3. 精度验证。
+
+      调用脚本YOLOF_postprocess.py计算推理精度
+
+      ```
+       python YOLOF_postprocess.py --pth_path YOLOF_CSP_D_53_DC5_9x.pth --bin_data_path result --meta_info_path yolof_meta.info
+      ```
+
+      - 参数说明：
+
+        - pth_path：模型权重文件
+
+
+        - bin_data_path：推理结果保存路径
+
+
+        - meta_info_path：数据信息info文件
+
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python -m ais_bench --model=yolof_bs${bs}.om --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|    Ascend310P3       |        1         |     coco2017       |     mAP:42.8%       |       74          |
+|    Ascend310P3       |       4         |     coco2017       |            |        125         |
+|    Ascend310P3       |        8        |     coco2017       |            |        125         |
+|    Ascend310P3       |        16         |     coco2017       |            |      126           |
+|    Ascend310P3       |        32         |     coco2017       |            |      124           |
+|    Ascend310P3       |       64        |     coco2017       |            |        116         |

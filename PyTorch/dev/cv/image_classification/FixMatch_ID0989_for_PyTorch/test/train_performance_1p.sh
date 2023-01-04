@@ -175,6 +175,8 @@ sed -i "s|\r|\n|g" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVI
 #输出性能FPS，需要模型审视修改
 #TrainingTime=`grep "Train Epoch" ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print$6}' | awk '{print$1}' | awk '{sub(/.{1}$/,"")}1' | awk '{sum+=$1} END {print"",sum/NR}'`
 FPS=`grep "Train Epoch" ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print$7}' | awk '{print$1}' |tail -n +3 | awk '{sum+=$1} END {print"",sum/NR}' | sed s/[[:space:]]//g`
+#输出CompileTime
+CompileTime=`grep "Iter_time" ${cur_path}/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2|awk '{sum+=$2} END {print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -224,3 +226,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log

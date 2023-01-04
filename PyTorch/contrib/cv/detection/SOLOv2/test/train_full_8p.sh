@@ -13,7 +13,7 @@ apex="O1"
 Network="SOLOv2"
 
 #训练batch_size,,需要模型审视修改
-batch_size=16
+batch_size=2
 device_id=0
 
 #参数校验，不需要修改
@@ -25,6 +25,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --apex* ]];then
         apex=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -82,6 +84,7 @@ do
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
+            --batch_size=${batch_size} \
             --data_root=$data_path \
             --total_epochs 12 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
@@ -91,12 +94,13 @@ do
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
+            --batch_size=${batch_size} \
             --data_root=$data_path \
             --total_epochs 12 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 wait
-python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
+python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  test/work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
       --out  results_solo.pkl --eval segm --data_root=$data_path >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

@@ -176,7 +176,7 @@ def train(train_loader, model, criterion, optimizer, epoch,  args, npu_per_node)
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed 
                                                     and args.rank % npu_per_node == 0):
             batch_time = time.time() - batch_time
-            output_log = '(epoch: {epoch:0>3d} {batch:0>2d}/{size}) | FPS: {fps:5.3f} | Loss : {lossv:.4f} | Acc_t: {acc: .4f} | IOU_t: {iou_t: .4f} | IOU_k: {iou_k: .4f}'.format(
+            output_log = '(epoch: {epoch:0>3d} {batch:0>2d}/{size}) | FPS: {fps:5.3f} | Loss : {lossv:.4f} | Acc_t: {acc: .4f} | IOU_t: {iou_t: .4f} | IOU_k: {iou_k: .4f} | step_time: {step_time: .4f}'.format(
                 epoch=epoch + 1,
                 batch=batch_idx + 1,
                 size=len(train_loader),
@@ -184,7 +184,8 @@ def train(train_loader, model, criterion, optimizer, epoch,  args, npu_per_node)
                 lossv=losses.val,
                 acc=score_text['Mean Acc'],
                 iou_t=score_text['Mean IoU'],
-                iou_k=score_kernel['Mean IoU'])
+                iou_k=score_kernel['Mean IoU'],
+                step_time=batch_time)
             batch_time = time.time()
             print(output_log)
     epoch_time = time.time() - epoch_time

@@ -25,7 +25,7 @@ testsize = 352
 
 def test(pred_dir, save_path, data_path):
     # 只要res2
-    bin_images = glob(os.path.join(pred_dir, '*_4.bin'))
+    bin_images = glob(os.path.join(pred_dir, '*_3.bin'))
     # 必须要排序，因为原模型代码中输入排序了
     bin_images = sorted(bin_images)
 

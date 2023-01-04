@@ -11,7 +11,9 @@
 
 ## 简述
 
-近年来，大规模对比语言图像预训练（CLIP）（Radford等人，2021）因其令人印象深刻的零镜头识别能力和良好的下游任务转移能力而引起了前所未有的关注。然而，该剪辑非常需要数据，需要4亿对图像-文本进行预训练，因此限制了其采用。这项工作提出了一种新的训练范式，数据高效剪辑（DeCLIP），以缓解这一限制。我们证明，通过仔细利用图像-文本对之间的广泛监督，DeCLIP可以更有效地学习通用视觉特征。我们没有使用单一图像-文本对比监督，而是通过使用（1）每个模态内的自我监督来充分挖掘数据潜力；（2） 跨模式的多视角监督；（3） 来自其他类似对的最近邻监控。得益于这些固有的监控，DeCLIP-ResNet50可以在ImageNet上实现60.4%的零拍top1精度，比CLIP-ResNet50高0.8%，同时使用7.1×更少的数据。当转移到下游任务时，DeCLIP-ResNet50在11个视觉数据集中有8个优于其对应的数据集。此外，扩展模型和计算在框架中也很有效。
+DeCLIP是一种数据高效的CLIP训练方法，通过利用图像-文本对之间的联系，DeCLIP可以更有效地学习通用视觉特征。
+相较于CLIP需要4亿对图像-文本进行预训练， DeCLIP-ResNet50在使用更少的数据的同时在ImageNet上实现60.4%的准确度，
+比CLIP-ResNet50高0.8%。
 
 - 参考实现：
 
@@ -24,7 +26,7 @@
 
   ```
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
-  code_path=PyTorch/built-in/others/
+  code_path=PyTorch/built-in/others
   ```
   
 - 通过Git获取代码方法如下：
@@ -44,17 +46,18 @@
 
   **表 1**  版本配套表
 
-  | 配套        | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动   | [22.0.RC3](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.1.RC1](https://www.hiascend.com/software/cann/commercial?version=6.1.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
+  | 配套        | 版本                                                                           |
+  |------------------------------------------------------------------------------| ------------------------------------------------------------ |
+  | 硬件版本 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 固件与驱动   | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)                       |
 
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-- 安装依赖（根据模型需求，按需添加所需依赖）。
+- 安装依赖。
 
   ```
   pip install -r requirements.txt
@@ -84,12 +87,6 @@
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
 
-2. 数据预处理
-    - 本模型不涉及
-
-## 获取预训练模型（可选）
-
-- 本模型不涉及
 
 # 开始训练
 
@@ -132,16 +129,16 @@
 
 # 训练结果展示
 
-**表 2**  训练结果展示表
+**表 2**  `训练结果展示表`
 
-| NAME     | Acc@1  |  FPS | Steps     | AMP_Type |
-| -------  | -----  | ---: | ------    | -------: |
-| 1p-NPU   | -      |  85  | 1000      |       O1 |
-| 8p-竞品A  | 24.69  | 560  | 128000    |       O1 |
-| 8p-NPU   | 32.9   | 580  | 128000    |       O1 |
-| 32p-NPU  | 43.2   | 2000 | 128000    |       O1 |
+| NAME    | Acc@1 |    FPS | Steps   | AMP_Type |
+|---------|-------|-------:| ------    | -------: |
+| 1p-NPU  | -     | 143.26 | 1000    |       O1 |
+| 1p-竞品A  | -     |     85 | 1000    |       O1 |
+| 8p-NPU  | 31.52 | 537.43 | 128000  |       O1 |
+| 8p-竞品A  | 24.7  |    560 | 128000  |       O1 |
+| 32p-NPU | 43.2  |  20000 | 128000  |       O1 |
 
-备注：一定要有竞品和NPU。
 
 # 版本说明
 
@@ -150,8 +147,6 @@
 2022.08.16：首次发布
 
 ## 已知问题
-
-**_当前发行版本中存在的问题描述。_**
 
 无。
 

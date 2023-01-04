@@ -14,7 +14,7 @@
 	-   [4.2 数据集预处理](#42-数据集预处理)
 	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
 -   [5 离线推理](#5-离线推理)
-	-   [5.1 获取ais_infer推理工具](#51-获取ais_infer推理工具)
+	-   [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
 	-   [5.2 离线推理](#52-离线推理)
 -   [6 精度对比](#6-精度对比)
 	-   [6.1 离线推理mAP精度统计](#61-离线推理mAP精度统计)
@@ -192,7 +192,7 @@ python3 mmdetection_coco_preprocess.py --image_folder_path ./coco/val2017 --bin_
 ### 4.3 生成数据集info文件
 生成bin文件的输入info文件。
 
-使用ais_infer推理需要输入图片数据集的info文件，用于获取数据集。使用“get_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“get_info.py”脚本。
+使用ais_bench推理需要输入图片数据集的info文件，用于获取数据集。使用“get_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“get_info.py”脚本。
 
 ```
 python3 get_info.py jpg ./coco/val2017 coco2017_jpg.info
@@ -210,15 +210,13 @@ python3 get_info.py jpg ./coco/val2017 coco2017_jpg.info
 
 ## 5 离线推理
 
--   **[获取ais_infer推理工具](#51-获取ais_infer推理工具)**  
+-   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 获取ais_infer推理工具
+### 5.1 安装ais_bench推理工具
 
-https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer
-
-将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件； pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 昇腾芯片上执行，执行时使npu-smi info查看设备状态，确保device空闲
@@ -231,7 +229,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 
 执行推理
 ```
-python3 ais_infer.py --model ../NAS_FPN/nas_fpn_1.om --input ../NAS_FPN/val2017_bin --output ../result/
+python3 -m ais_bench --model ../NAS_FPN/nas_fpn_1.om --input ../NAS_FPN/val2017_bin --output ../result/
 ```
 参数说明:
 
@@ -314,8 +312,8 @@ NAS-FPN        0.405
 -   **[npu性能数据](#71-npu性能数据)**  
 
 ### 7.1 npu性能数据
-1.ais_infer工具在整个数据集上推理获得性能数据  
-batch1的性能，ais_infer工具在整个数据集上推理后生成result/sumary.json：  
+1.ais_bench推理工具在整个数据集上推理获得性能数据  
+batch1的性能，ais_bench推理工具在整个数据集上推理后生成result/sumary.json：  
 ```
 "NPU_compute_time": {
    "min": 14.676570892333984, 

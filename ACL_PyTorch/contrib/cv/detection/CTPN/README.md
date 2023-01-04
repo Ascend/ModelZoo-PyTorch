@@ -66,7 +66,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
    | 配套                                                         | 版本    | 环境准备指导                                                 |
    | :------------------------------------------------------------: | :-------: | :------------------------------------------------------------: |
-   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+   | 固件与驱动                                                   | 1.0.16  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
    | CANN                                                         | 5.1.RC2 | -                                                            |
    | Python                                                       | 3.7.5   |  \                                                            |
    | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -114,10 +114,10 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 1. 获取原始数据集。
 
-   本模型支持[ICDAR2013 数据集](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2F%3Fch%3D2)及相应[评测方法代码](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2Fstandalones%2Fscript_test_ch2_t1_e2-1577983067.zip)。用户可自行获取ICDAR2013数据集及评测方法代码上传到服务器，可放置于任意路径下，以"./data"和"./script"目录为例。
+   本模型支持[ICDAR2013 数据集](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2F%3Fch%3D2)及相应[评测方法代码](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2Fstandalones%2Fscript_test_ch2_t1_e2-1577983067.zip)。用户可自行获取ICDAR2013数据集及评测方法代码上传到服务器，可放置于任意路径下，以"./datasets"和"./script"目录为例。
 
    ```
-   ├──data
+   ├──datasets
          ├──Challenge2_Test_Task12_Images
    ├──script
          ├──gt.zip
@@ -133,7 +133,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    因为该模型根据图片输入形状采用分档输入，一共分为了10档，因此需要生成不同分辨率的预处理文件，为简化步骤、避免浪费不必要的时间，直接将相应的预处理程序放在任务处理的"task_process.py"脚本中，该脚本会自动删除和创建数据预处理的文件夹，以及调用预处理“ctpn_preprocess.py”程序。执行task_process.py脚本，完成预处理。
 
    ```python
-   python3 task_process.py --interpreter=python3 --mode=preprocess --src_dir=./data/Challenge2_Test_Task12_Images --res_dir ./data/images_bin
+   python3 task_process.py --interpreter=python3 --mode=preprocess --src_dir=./datasets/Challenge2_Test_Task12_Images --res_dir ./pre_bin/images_bin
    ```
    - 参数说明：
       - --interpreter:解释器路径。
@@ -144,7 +144,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
    预处理后生成结果目录结构如下：
 
    ```
-   ├──data
+   ├──pre_bin
          ├──images_bin_248x360        
          ├──images_bin_1000x462
          ├──images_bin_280x550
@@ -197,36 +197,6 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
             ├──ctpn_1000x462.onnx      
          ```
 
-      2. 使用task_process.py优化onnx文件。
-
-         运行task_process.py脚本。
-
-         ```python
-         python3 task_process.py --interpreter=python3 --mode="change model" --src_dir ./ --res_dir ./
-         ```
-
-         - 参数说明：
-            - --interpreter:解释器路径。
-            - --mode：脚本处理的方式。
-            - --src_dir：输入文件的目录。
-            - --res_dir：得到的文件的目录。
-
-
-         获得最终的onnx文件如下：
-         ```
-         ├──./
-            ├──ctpn_change_280x550.onnx        
-            ├──ctpn_change_248x360.onnx
-            ├──ctpn_change_319x973.onnx
-            ├──ctpn_change_458x440.onnx
-            ├──ctpn_change_477x636.onnx
-            ├──ctpn_change_631x471.onnx
-            ├──ctpn_change_650x997.onnx
-            ├──ctpn_change_753x1000.onnx
-            ├──ctpn_change_997x744.onnx
-            ├──ctpn_change_1000x462.onnx      
-         ```
-
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
@@ -269,28 +239,27 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
             -   --soc\_version：处理器型号。
             -   --dynamic\_image\_size：设置输入图片的动态分辨率参数。
 
-
          运行成功后生成ctpn_bs1.om模型文件。
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理。
+   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
 
       ```
-      python3 task_process.py --interpreter="python3 ${tool_path}/ais_infer.py" --om_path ./ctpn_bs1.om --src_dir ./data/images_bin --res_dir ./result
+      python3 task_process.py --interpreter="python3 ${ais_infer_path}/ais_infer.py" --om_path=./ctpn_bs1.om --src_dir=./pre_bin/images_bin --res_dir=./result --batch_size=1 --device=0
       ```
       - 参数说明：
-      -  --interpreter:推理工具(${tool_path}请根据实际的推理工具路径填写)。
-      -  --model：om文件路径。
-      -  --input：输入的bin文件路径。
-      -  --output：推理结果文件路径。
-      -  --outfmt：输出结果格式。
-      -  --device：NPU设备编号。
-      -  --res_dir：得到的结果文件夹。
+         - --interpreter:推理工具。
+         - --model：om文件路径。
+         - --input：输入的bin文件路径。
+         - --output：推理结果文件路径。
+         - --outfmt：输出结果格式。
+         - --device：NPU设备编号。
+         - --res_dir：得到的结果文件夹。
 
       推理后的输出在推理结果文件路径下result文件夹。
 
@@ -301,29 +270,24 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       performance = \frac{\sum_i^n f_i*s_i}{\sum_i^ns_i}
       $$
 
-   
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
       调用脚本与原图片处理后文件比对，可以获得Accuracy数据，结果保存在result.json中。
     
       ```python
-      python3 ctpn_postprocess.py --imgs_dir=./data/Challenge2_Test_Task12_Images --bin_dir=./result --predict_txt=data/predict_txt
-      zip -j ./script/predict_txt.zip ./data/predict_txt/*
+      python3 ctpn_postprocess.py --imgs_dir=./datasets/Challenge2_Test_Task12_Images --bin_dir=./result --predict_txt=./result/predict_txt
+      zip -j ./script/predict_txt.zip ./result/predict_txt/*
       python3 script/script.py -g=./script/gt.zip –s=./script/predict_txt.zip > result.json
       ```
 
       -  参数说明：     
-      -   --model：om文件路径。
-      -   --input：输入的bin文件路径。
-      -   --output：推理结果文件路径。
-      -   --outfmt：输出结果格式。
-      -   --device：NPU设备编号。
-      -   --batchsize：批大小。
-
-
+         - --model：om文件路径。
+         - --input：输入的bin文件路径。
+         - --output：推理结果文件路径。
+         - --outfmt：输出结果格式。
+         - --device：NPU设备编号。
+         - --batchsize：批大小。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

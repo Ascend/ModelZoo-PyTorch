@@ -177,6 +177,7 @@ if __name__ == "__main__":
 		print("epoch is " + str(epoch))
 		a=datetime.now()
 		for img, mask in tqdm(train_loader, total=len(train_loader)):
+			start_time = datetime.now().timestamp()
 			optimizer.zero_grad()
 			step += 1
 			img = img.to(device)
@@ -195,7 +196,9 @@ if __name__ == "__main__":
 			else:
 				loss.backward()
 			optimizer.step()
-
+			if step < 3:
+				step_time = datetime.now().timestamp()-start_time
+				print("step_time = {:.4f}".format(step_time), flush=True)
 			if step % len(train_loader) == 0:
 				b=datetime.now()
 				print("FPS is " + str(len(train_loader)/(b-a).seconds))
