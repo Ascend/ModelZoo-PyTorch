@@ -25,7 +25,7 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
 - 参考实现：
 
   ```
-  url=https://github.com/rwightman/pytorch-image-models
+  url=https://github.com/facebookresearch/pycls
   ```
 
 
@@ -54,7 +54,7 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
+  | CANN                                                         | 6.0.RC1 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
   | Python                                                       | 3.7.5   | 创建anaconda环境时指定python版本即可，conda create -n ${your_env_name} python==3.7.5 |
   | PyTorch                                                      | 1.11.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |                                                          |
@@ -206,13 +206,10 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
 
    3.  精度验证。
 
-         调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+         调用脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
          ```   
-         cd result_bs16
-         rm -r sumary.json
-         cd ..
-         python3.7 imagenet_acc_eval.py ./result_bs16 ./val_label.txt ./ result.json
+         python3.7 imagenet_acc_eval.py ./result_bs16/ ./val_label.txt ./ result.json
          ```   
          - 参数说明
             - ./result_bs16：为生成推理结果所在路径 
@@ -235,9 +232,9 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
 
 | 芯片型号 | Batch Size | 数据集|  精度TOP1 | 精度TOP5 | 性能|
 | --------- | ----| ----------| ------     |---------|---------|
-| 310P3 |  1       | ImageNet |   76.25     |   92.56  |   482.63      |
-| 310P3 |  4       | ImageNet |   76.25     |   92.56  |    571.51      |
-| 310P3 |  8       | ImageNet |   76.25     |   92.56  |  579.54     |
-| 310P3 |  16       | ImageNet |   76.25     |   92.56  |   666.00      |
-| 310P3 |  32       | ImageNet |   76.25     |   92.56  |   555.33      |
-| 310P3 |  64       | ImageNet |   76.25     |   92.56  |   556.82      |
+| 310P3 |  1       | ImageNet |   76.25     |   92.56  |   481.87      |
+| 310P3 |  4       | ImageNet |   76.25     |   92.56  |    637.50      |
+| 310P3 |  8       | ImageNet |   76.25     |   92.56  |  694.53     |
+| 310P3 |  16       | ImageNet |   76.25     |   92.56  |   739.02      |
+| 310P3 |  32       | ImageNet |   76.25     |   92.56  |   723.47      |
+| 310P3 |  64       | ImageNet |   76.25     |   92.56  |   734.21      |
