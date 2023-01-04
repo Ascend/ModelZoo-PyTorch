@@ -17,11 +17,12 @@ import os.path as osp
 import os
 import numpy as np
 import torch
-import datasets
 from sklearn.metrics import average_precision_score
 from collections import OrderedDict
 from collections import defaultdict
 import json
+
+from reid import datasets
 
 
 def get_data(name, data_dir):
@@ -220,7 +221,7 @@ def load_result(filepath):
         for  file in files:
             file_tmp = file.split('.', 2)[0]
             list_file = file_tmp.split('_')
-            if list_file[4] == '1': 
+            if list_file[4] == '0':
                 file = filepath + '/' + file
                 output = np.fromfile(file, dtype='float32')
                 output = torch.from_numpy(output)

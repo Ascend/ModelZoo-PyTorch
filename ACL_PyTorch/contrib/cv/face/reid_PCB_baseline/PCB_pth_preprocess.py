@@ -17,9 +17,10 @@ import os.path as osp
 import os
 import numpy as np
 from torch.utils.data import DataLoader
-import datasets
 from torchvision.transforms import Normalize, RandomHorizontalFlip, ToTensor, Compose
 from PIL import Image
+
+from reid import datasets
 
 
 class Preprocessor(object):
