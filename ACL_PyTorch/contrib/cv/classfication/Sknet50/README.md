@@ -124,7 +124,7 @@
    1. 获取权重文件。
      
       ```
-      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/YOLOF/PTH/YOLOF_CSP_D_53_DC5_9x.pth
+      "https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SKNet50/PTH/sk_resnet50.pth.tar"
       ```
 
    2. 导出onnx文件。
