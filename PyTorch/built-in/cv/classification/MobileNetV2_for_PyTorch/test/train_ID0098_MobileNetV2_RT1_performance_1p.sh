@@ -176,9 +176,8 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep FPS ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
 
-#获取编译时间
-CompileTime=`grep "Time" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | head -2 | awk -F ' ' '{print $9}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
-
+#输出CompileTime
+CompileTime=`grep Epoch ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|head -n 2|awk -F "Time " '{print $2}'|awk '{print $1}'|awk '{sum+=$1} END {print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
