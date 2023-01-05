@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+sys.path.append("./centroids-reid")
 import argparse
 from config import cfg
 from train_ctl_model import CTLModel
