@@ -4,7 +4,7 @@ tensorboardX==1.8
 opencv-python-headless
 anyconfig
 munch
-scipy
+scipy==1.2.7
 sortedcontainers
 shapely==1.3.0
 pyclipper
