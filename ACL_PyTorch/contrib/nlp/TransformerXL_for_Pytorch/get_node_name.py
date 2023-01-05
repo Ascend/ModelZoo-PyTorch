@@ -16,12 +16,20 @@ import sys
 import onnx
 
 model = onnx.load(sys.argv[1])
+in_names = [n.name for n in model.graph.input]
 out_names = [n.name for n in model.graph.output]
 
-rstr = ''
+in_names_str = ''
+for in_name in in_names:
+    if in_name == 'data':
+        continue
+    in_names_str += in_name + ';'
+print(in_names_str[:-1], end='end')
+
+
+out_names_str = ''
 for nn in out_names:
     for n in model.graph.node:
         if nn in n.output:
-            rstr += n.name + ':0;'
-print(rstr[:-1])
-
+            out_names_str += n.name + ':0;'
+print(out_names_str[:-1], end='')
