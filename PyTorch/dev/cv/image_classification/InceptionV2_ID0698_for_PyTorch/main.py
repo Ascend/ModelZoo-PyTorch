@@ -427,7 +427,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
             loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        
+
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()

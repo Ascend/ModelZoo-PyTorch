@@ -108,7 +108,7 @@ def train_detector(model,
         find_unused_parameters = cfg.get('find_unused_parameters', False)
         # Sets the `find_unused_parameters` parameter in
         # torch.nn.parallel.DistributedDataParallel
-        print("/home/jyl/mmdetection-master/mmdet/apis/train.py", "  NPUID:",torch.npu.current_device())
+        print("NPUID:",torch.npu.current_device())
         model = MMDistributedDataParallel(
             model,  
             device_ids=[torch.npu.current_device()], 
@@ -126,6 +126,7 @@ def train_detector(model,
         work_dir=cfg.work_dir,
         logger=logger,
         meta=meta,
+        max_iters=cfg.max_step,
         num_of_gpus=world_size)
     # an ugly workaround to make .log and .log.json filenames the same
     runner.timestamp = timestamp

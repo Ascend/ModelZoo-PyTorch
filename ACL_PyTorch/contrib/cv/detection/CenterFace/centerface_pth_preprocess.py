@@ -24,7 +24,7 @@ import torch
 
 from lib.opts_pose import opts
 from lib.detectors.detector_factory import detector_factory
-from datasets.dataset_factory import get_dataset
+from lib.datasets.dataset_factory import get_dataset
     
 def preprocess(file_path, bin_path):
     opt = opts().parse('--task {} --load_model {}'.format('multi_pose', 'model_best.pth').split(' ')) 

@@ -328,8 +328,13 @@ class Runner(object):
             if i % 200 == 0 and i:
                 self.logger.info('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
                                  self.iter_time_hook.time_all))
+                if self.rank == 0:
+                    print('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
+                                 self.iter_time_hook.time_all), flush=True)
 
         self.logger.info('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)))
+        if self.rank == 0:
+            print('FPS: ' + str(self.samples_per_gpu * self.num_of_gpus / self.iter_time_hook.time_all * (len(self.data_loader) - 5)), flush=True)
         self.call_hook('after_train_epoch')
         self._epoch += 1
 

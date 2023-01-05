@@ -436,7 +436,9 @@ class Result(Dict):
         for k, v in self.items():
             if isinstance(v, torch.Tensor):
                 v = v.detach()
-            newone[k] = copy(v)
+                newone[k] = v.clone()
+            else:
+                newone[k] = copy(v)
         return newone
 
     @staticmethod

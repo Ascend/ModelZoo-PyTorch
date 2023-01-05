@@ -76,6 +76,10 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -142,16 +146,15 @@ do
         --arch=shufflenet_v2_x1_0  \
         --dist-url='tcp://127.0.0.1:50000' \
         --dist-backend='hccl' \
-        --multiprocessing-distributed \
         --world-size=1 \
-        --batch-size=1536 \
+        --batch-size=${batch_size} \
         --epochs=${train_epochs} \
         --warm_up_epochs=1 \
         --rank=0 \
         --amp \
         --momentum=0 \
         --wd=3.0517578125e-05 \
-        --device-list=0 \
+        --local_rank=${device_id} \
         --benchmark 0 \
 		> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
         

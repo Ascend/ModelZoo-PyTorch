@@ -186,6 +186,7 @@ EfficientNet-B3是一种卷积神经网络，该网络是在EfficientNet-B0的�
 
          ais_bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
 
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2.  执行推理。
 

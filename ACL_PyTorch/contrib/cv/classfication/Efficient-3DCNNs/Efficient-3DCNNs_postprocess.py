@@ -63,7 +63,6 @@ def evaluate(result_path, class_names, info_path, annotation_path, acc_file):
     f = open(info_path, 'r')
     ucf101_info = f.readlines()
     bin_list = os.listdir(result_path)
-    bin_list.remove('sumary.json')
     bin_list.sort(key= lambda x:int(x[:-6]))
     output_buffer = []
     previous_video_id = ''

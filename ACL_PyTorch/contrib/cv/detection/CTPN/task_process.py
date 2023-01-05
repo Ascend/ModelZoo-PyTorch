@@ -46,7 +46,7 @@ def task_process(args):
             os.system('{} --model={} --input={}_{}x{} --dymHW {},{} --device {} --batchsize={} --output={}/inf_output' \
             .format(args.interpreter, args.om_path, args.src_dir ,h , w, h, w,args.device, args.batch_size, args.res_dir))
 
-            sumary_path = glob.glob('{}/inf_output/*/sumary.json'.format(args.res_dir))[0]
+            sumary_path = glob.glob('{}/inf_output/*ary.json'.format(args.res_dir))[0]
             with open(sumary_path, 'r') as f:
                 output = json.load(f)
                 throughput = output['throughput']  
@@ -56,7 +56,7 @@ def task_process(args):
         os.system('rm {}/inf_output -rf'.format(args.res_dir))
         fps_all = fps_all / config.imgs_len
         print("====performance data====")
-        print('CTPN bs1 models fps:{}'.format(fps_all))
+        print('CTPN bs{} models fps:{}'.format(args.batch_size, fps_all))
 
 
 if __name__ == "__main__":

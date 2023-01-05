@@ -1,331 +1,274 @@
-# Nasnetlarge Onnx模型端到端推理指导
-
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理精度统计](#61-离线推理精度统计)
-	-   [6.2 开源精度](#62-开源精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-	-   [7.2 基准性能数据](#72-基准性能数据)
-	-   [7.3 性能对比](#73-性能对比)
+# Nasnetlarge模型-推理指导
 
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-## 1 模型概述
+    - [输入输出数据](#section540883920406)
 
--   **[论文地址](#11-论文地址)**  
 
--   **[代码地址](#12-代码地址)**  
 
-### 1.1 论文地址
-[论文地址](https://arxiv.org/abs/1707.07012)  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-### 1.2 代码地址
-[代码地址](https://github.com/Cadene/pretrained-models.pytorch#nasnet)  
-branch:master    
-commit id：b8134c79b34d8baf88fe0815ce6776f28f54dbfe
-## 2 环境说明
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
--   **[深度学习框架](#21-深度学习框架)**  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
--   **[python第三方库](#22-python第三方库)**  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 2.1 深度学习框架
-```
-python3.7.5
-CANN 5.1.RC1
+  ******
 
-pytorch >= 1.8.0
-torchvision >= 0.9.0
-onnx >= 1.8.0
-```
-### 2.2 python第三方库
+  
 
-```
-numpy == 1.20.3
-munch == 2.5.1.dev12
-tqdm == 4.36.1
-scipy == 1.3.1
-onnx-simplifier == 0.3.5 
-skl2onnx
-tqdm
-```
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+SPNASNet100是通过网络搜索技术得到的精度与效率权衡的卷积神经网络，用于图像分类任务。
 
-## 3 模型转换
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+- 参考实现：
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+  ```
+  url=https://github.com/Cadene/pretrained-models.pytorch.git
+  commit_id=b8134c79b34d8baf88fe0815ce6776f28f54dbfe
+  code_path=ACL_PyTorch/contrib/cv/detection/Nasnetlarge
+  model_name=Nasnetlarge
+  ```
+  
 
-### 3.1 pth转onnx模型
 
-1.下载pth权重文件  
-[nasnetlarge预训练pth权重文件](http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth) 
-md5sum：78a73e51ee50997294f1f35a34b4de66   
-```
-wget http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth
-```
-安装onnx_tools
 
-```
-git clone https://gitee.com/zheng-wengang1/onnx_tools.git test/onnx_tools
-```
+## 输入输出数据<a name="section540883920406"></a>
 
-2.编写pth2onnx脚本nasnetlarge_pth2onnx.py
+- 输入数据
 
- **说明：**  
->目前ATC支持的onnx算子版本为11
+  | 输入数据 | 数据类型 | 大小                     | 数据排布格式 |
+  | -------- | -------- | ------------------------ | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 331x 331 | NCHW         |
 
-3.执行pth2onnx脚本，生成onnx模型文件
 
-```
-python3.7 nasnetlarge_pth2onnx.py nasnetalarge-a1897284.pth nasnetlarge.onnx
-```
+- 输出数据
 
-4.使用onnxsim，生成onnx_sim模型文件
+  | 输出数据 | 数据类型 | 大小             | 数据排布格式 |
+  | -------- | -------- | ---------------- | ------------ |
+  | output1  | FP32     | Batchsize x 1000 | ND           |
 
-```
-python3.7 -m onnxsim --input-shape="1,3,331,331" nasnetlarge.onnx nasnetlarge_sim.onnx
-```
 
-5.算子融合优化
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-```
-python3.7 merge_sliced.py nasnetlarge_sim.onnx nasnetlarge_sim_merge.onnx
-```
+- 该模型需要以下插件与驱动  
 
+  **表 1**  版本配套表
 
-### 3.2 onnx转om模型
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-1.设置环境变量
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
+## 获取源码<a name="section4622531142816"></a>
 
-```
-atc --framework=5 --model=nasnetlarge_sim_merge.onnx --input_format=NCHW --input_shape="image:1,3,331,331" --output=nasnetlarge_sim_bs1 --log=debug --soc_version=Ascend${chip_name} 
-```
+1. 获取源码。
 
-注：${chip_name}由“npu-smi info”命令查看处理器获得。
-![输入图片说明](img/chip.png)
+   ```
+   git clone https://github.com/Cadene/pretrained-models.pytorch 
+   cd pretrained-models.pytorch
+   python3 setup.py install
+   ```
+   
+2. 安装依赖。
 
-## 4 数据集预处理
+   ```
+   pip3 install -r requirements.txt
+   ```
+   
+   >**注**：在获取源码前建议先执行2.安装依赖，获取源码中python3 setup.py install 需要用到一些依赖文件。已在requirements.txt中列出。
 
--   **[数据集获取](#41-数据集获取)**  
--   **[数据集预处理](#42-数据集预处理)**  
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+## 准备数据集<a name="section183221994411"></a>
 
-### 4.1 数据集获取
-对于图像分类任务，该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-### 4.2 数据集预处理
-1.预处理脚本preprocess_img.py
+   本模型支持[ImageNet 50000](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org)张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/opt/npu/）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。目录结构如下：
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+   ```
+   ├── ImageNet
+   ├── val
+   ├── val_label.txt  
+   ```
 
-```
-python3.7 preprocess_img.py /opt/npu/imagenet/val ./prep_dataset 
-```
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-第一个参数为验证集路径，第二个参数为预处理后生成的二进制文件的存储路径
+   将原始数据（.jpeg）转化为二进制文件（.bin）。
 
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
+   执行preprocess_img.py脚本，完成预处理。
 
-2.执行生成数据集信息脚本，生成数据集信息文件
+   ```
+   python3 preprocess_img.py ${datasets} ${prep_dataset}
+   ```
 
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./nasnetlarge_prep_bin.info 331 331
-```
+   + 参数说明：
+     + ${datasets}：原始数据验证集（.jpeg）所在路径,例如：/opt/npu/ImageNet/val。
+     + ${prep_dataset}：输出的二进制文件（.bin）所在路径。
 
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
+   每个图像对应生成一个二进制文件。
 
-## 5 离线推理
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
--   **[离线推理](#52-离线推理)**  
+## 模型推理<a name="section741711594517"></a>
 
-### 5.1 benchmark工具概述
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
+1. 模型转换。
 
-### 5.2 离线推理
-1.设置环境变量
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   1. 获取权重文件。
 
-2.执行离线推理
+       从源码包中获取权重文件[nasnetalarge-a1897284.pth](http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth)。
 
-```
- ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=nasnetlarge_sim_bs1.om -input_text_path=./nasnetlarge_prep_bin.info -input_width=331 -input_height=331 -output_binary=False -useDvpp=False
-```
+       ```
+       wget http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth
+       ```
 
-输出结果默认保存在当前目录result/dumpOutput_devicex，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
+   2. 导出onnx文件。
 
-## 6 精度对比
+      1. 使用nasnetlarge_pth2onnx.py导出onnx文件。
 
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
+         运行nasnetlarge_pth2onnx.py脚本。
 
-### 6.1 离线推理TopN精度统计
+         ```
+         python3 nasnetlarge_pth2onnx.py nasnetalarge-a1897284.pth nasnetlarge.onnx
+         ```
 
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据。
+         获得nasnetlarge.onnx文件。
+
+      2. 优化ONNX文件。
+
+         使用onnxsim，生成不同batch size的onnx_sim模型文件
+
+         ```
+         python3 -m onnxsim --input-shape="1,3,331,331" nasnetlarge.onnx nasnetlarge_sim1.onnx
+         ```
+         
+         获得nasnetlarge_sim1.onnx文件。
+         
+      3. 不同bs算子融合优化。
+
+         ```
+         git clone https://gitee.com/ascend/msadvisor.git
+         cd /msadvisor/auto-optimizer
+         pip3 install -r requirements.txt
+         python3 setup.py install 
+         cd ../..
+         python3 -m auto_optimizer opt nasnetlarge_sim1.onnx nasnetlarge_sim1_merge.onnx -k KnowledgeMergeConsecutiveSlice
+         ```
+      
+          获得nasnetlarge_sim1_merge.onnx文件。
 
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /opt/npu/imagenet/val_label.txt ./ result.json
-```
-
-第一个参数为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名，其中存有推理的Top5精度。
-对batch1和batch16的模型分别调用benchmark进行推理，并统计其Top5的精度。查看其输出结果：
-
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1001"}, {"key": "Top1 accuracy", "value": "82.53%"}, {"key": "Top2 accuracy", "value": "91.12%"}, {"key": "Top3 accuracy", "value": "93.91%"}, {"key": "Top4 accuracy", "value": "95.2%"}, {"key": "Top5 accuracy", "value": "95.99%"}]}
-```
-
-经过对bs1与bs16的om测试，本模型batch1与batch16的精度没有差别，精度数据均如上。
-
-### 6.2 开源TopN精度
-[github开源代码仓精度](https://github.com/Cadene/pretrained-models.pytorch/blob/master/README.md)
-
-Model               Acc@1     Acc@5
-NASNet-Large		82.566	  96.086
-
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，Top1与Top5精度均达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
-
-## 7 性能对比
-
--   **[npu性能数据](#71-npu性能数据)**  
--   **[基准性能数据](#72-基准性能数据)**  
--   **[性能对比](#73-性能对比)**  
-
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时会统计性能数据，存储于result/perf_vision_batchsize_bs_device_0.txt中。但是推理整个数据集较慢，如此测性能时需要确保benchmark独占device，使用npu-smi info可以查看device是否空闲。
-除此之外，也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。
-模型的性能以使用benchmark工具推理得到bs1与bs16的性能数据为准；对于使用benchmark工具测试的batch4，8，32，64的性能数据仅在README.md中作如下记录。  
-1.benchmark工具推理获得性能数据  
-使用benchmark工具的推理功能测试模型的推理性能，命令如下：
-
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=nasnetlarge_sim1_merge.om -input_text_path=./nasnetlarge_prep_bin.info -input_width=331 -input_height=331 -output_binary=False -useDvpp=False
-```
-
-benchmark工具进行推理后测得的性能数据存储于result/perf_vision_batchsize_x_device_0.txt，其中x为模型的batch_size。
-
-batch1性能：  
-
-```
-[e2e] throughputRate: 83.5628, latency: 598352
-[data read] throughputRate: 86.2813, moduleLatency: 11.59
-[preprocess] throughputRate: 86.0436, moduleLatency: 11.622
-[inference] throughputRate: 83.7909, Interface throughputRate: 113.609, moduleLatency: 11.51
-[postprocess] throughputRate: 83.7924, moduleLatency: 11.9343
-```
-
-batch1的310P吞吐率为113.609fps
-
-batch16性能：
-
-```
-[e2e] throughputRate: 70.9337, latency: 704884
-[data read] throughputRate: 72.9184, moduleLatency: 13.714
-[preprocess] throughputRate: 72.5527, moduleLatency: 13.7831
-[inference] throughputRate: 71.1929, Interface throughputRate: 143.496, moduleLatency: 11.3749
-[postprocess] throughputRate: 4.4509, moduleLatency: 224.674
-```
-
-batch16 310P吞吐率 ：143.496fps
-
-batch4性能：
-
-```
-[e2e] throughputRate: 74.6563, latency: 669736
-[data read] throughputRate: 76.6128, moduleLatency: 13.0526
-[preprocess] throughputRate: 76.2606, moduleLatency: 13.1129
-[inference] throughputRate: 74.9629, Interface throughputRate: 163.917, moduleLatency: 11.0111
-[postprocess] throughputRate: 18.7421, moduleLatency: 53.3559
-```
-
-batch4 310P吞吐率：163.917fps  
-
-batch8性能：
-
-```
-[e2e] throughputRate: 74.2414, latency: 673479
-[data read] throughputRate: 75.6931, moduleLatency: 13.2112
-[preprocess] throughputRate: 75.41, moduleLatency: 13.2608
-[inference] throughputRate: 74.5419, Interface throughputRate: 159.078, moduleLatency: 10.8562
-[postprocess] throughputRate: 9.31917, moduleLatency: 107.306
-```
-
-batch8 310P吞吐率：159.078fps  
-
-batch32性能：
-
-```
-[e2e] throughputRate: 87.7866, latency: 569563
-[data read] throughputRate: 90.4474, moduleLatency: 11.0561
-[preprocess] throughputRate: 89.7505, moduleLatency: 11.142
-[inference] throughputRate: 88.4308, Interface throughputRate: 134.228, moduleLatency: 10.2621
-[postprocess] throughputRate: 2.76599, moduleLatency: 361.534
-```
-
-batch32 310P吞吐率：134.228fps  
-
-batch64性能：
-
-```
-[e2e] throughputRate: 76.969, latency: 649613
-[data read] throughputRate: 79.2339, moduleLatency: 12.6209
-[preprocess] throughputRate: 78.8025, moduleLatency: 12.6899
-[inference] throughputRate: 77.487, Interface throughputRate: 113.828, moduleLatency: 11.7346
-[postprocess] throughputRate: 1.21343, moduleLatency: 824.11
-```
-
-batch64 310P吞吐率：113.828fps  
-
-### 7.2 基准性能数据
-使用onnxruntime在T4服务器测试模型基准性能数据。
-
-### 7.3 性能对比
-| Throughput | 310     | 310P    | T4     | 310P/310    | 310P/T4     |
-| ---------- | ------- | ------- | ------ | ----------- | ----------- |
-| bs1        | 120.712 | 122.147 | 31.746 | 1.011887799 | 3.847634348 |
-| bs4        | 131.478 | 165.939 | 39.468 | 1.262104687 | 4.204393433 |
-| bs8        | 123.164 | 155.383 | 38.319 | 1.261594297 | 4.054985777 |
-| bs16       | 120.508 | 143.066 | 30.119 | 1.187190892 | 4.750024901 |
-| bs32       | 98.14   | 136.04  | 29.357 | 1.386183004 | 4.633988487 |
-| bs64       | 114.13  | 114.448 | 41.057 | 1.002786296 | 2.787539275 |
-|            |         |         |        |             |             |
-| 最优batch  | 131.478 | 165.939 | 41.057 | 1.262104687 | 4.041673771 |
-
-
-
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=nasnetlarge_sim1_merge.onnx --input_format=NCHW --input_shape="image:1,3,331,331" --output=nasnetlarge_sim1_merge.onnx --log=debug --soc_version=Ascend${chip_name}
+         ```
+         
+         - 参数说明：
+         
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           
+         
+         运行成功后生成nasnetlarge_sim1_merge.onnx模型文件。
+
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+   2. 执行推理。
+
+        ```
+        python3 -m ais_bench --model nasnetlarge_sim1_merge.onnx --input ./prep_dataset --output ./result/ --output_dirname bs1 --outfmt TXT --batchsize 1
+        ```
+
+        -   参数说明：
+
+             -   --model：om模型。
+             -   --input：预处理数据集路径。
+             -   --output：推理结果所在路径。
+             -   ----output_dirname：推理结果输出子文件夹。可选参数。与参数output搭配使用，单独使用无效。设置该值时输出结果将保存到 output/output_dirname文件夹中 。
+             -   --outfmt：推理结果文件格式。
+             -   --batchsize：不同的batchsize。
+   
+        推理后的输出默认在当前目录result下。
+   
+   
+   3. 精度验证。
+   
+      调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据。，结果保存在result.json中。
+   
+      ```
+       python3 imagenet_acc_eval.py result/bs1/ /opt/npu/imagenet/val_label.txt ./ result.json
+      ```
+   
+      - 参数说明：
+   
+        - result/bs1/：为生成推理结果所在路径  
+        - /opt/npu/imagenet/val_label.txt：标签数据。
+        - ./ ： 生成结果文件路径
+        - result.json：生成结果文件名称。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+精度对比：
+
+| Model     | Nasnetlarge                |
+| --------- | -------------------------- |
+| 标杆精度  | top1：82.56%  top5：96.08% |
+| 310P3精度 | top1：82.5%   top5：96.02% |
+
+性能对比：
+
+| 芯片型号 | Batch Size   | 数据集 | 性能 |
+| --------- | ---------------- | ---------- | --------------- |
+| 310P3 | 1 | ILSVRC2012 | 153.316 |
+| 310P3 | 4 | ILSVRC2012 | 175.744 |
+| 310P3 | 8 | ILSVRC2012 | 162.623 |
+| 310P3 | 16 | ILSVRC2012 | 146.502 |
+| 310P3 | 32 | ILSVRC2012 | 135.831 |
+| 310P3 | 64 | ILSVRC2012 | 113.459 |

@@ -29,23 +29,25 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
-from layers import Detect
-from data import COCODetection, get_label_map
-from utils.augmentations import BaseTransform
-from utils.functions import MovingAverage, ProgressBar
-from layers.box_utils import jaccard, mask_iou
-from utils import timer
-from layers.output_utils import postprocess
-import pycocotools
-from data import cfg, set_cfg
-import numpy as np
-import torch
-import argparse
+import os
 import random
 import pickle
-import os
+import argparse
 from collections import defaultdict
 from collections import OrderedDict
+
+import torch
+import pycocotools
+import numpy as np
+
+from layers import Detect
+from layers.output_utils import postprocess
+from layers.box_utils import jaccard, mask_iou
+from data import cfg, set_cfg
+from data import COCODetection, get_label_map
+from utils import timer
+from utils.augmentations import BaseTransform
+from utils.functions import MovingAverage, ProgressBar
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -72,6 +74,8 @@ def parse_args(argv=None):
                         help='In quantitative mode, the file to save detections before calculating mAP.')
     parser.add_argument('--max_images', default=-1, type=int,
                         help='The maximum number of images from the dataset to consider. Use -1 for all.')
+    parser.add_argument('--npu_result', default=-1, type=str,
+                        help='The path of npu infer result.')
     parser.add_argument('--output_coco_json', dest='output_coco_json', action='store_true',
                         help='If display is not set, instead of processing IoU values, this just dumps detections into the coco json file.')
     parser.add_argument('--config', default=None,
@@ -400,7 +404,7 @@ class InferResultFileFetcher():
     def getInferResult(self, image_idx):
         if args.cann_version == '5':
             resultDict = {}
-            for i in range(1, 5):
+            for i in range(0, 4):
                 fileName = 'coco_val2017_' + str(image_idx) + '_' + str(i) + '.bin'
                 infoFile = InferResultFile(self.path, fileName)
                 if infoFile.arrayDim == 615936:
@@ -413,8 +417,8 @@ class InferResultFileFetcher():
                     resultDict[3] = infoFile
         elif args.cann_version == '6':
             resultDict = {}
-            for i in range(1, 6):
-                if i == 4:
+            for i in range(0, 5):
+                if i == 3:
                     continue
                 fileName = 'coco_val2017_' + str(image_idx) + '_' + str(i) + '.bin'
                 infoFile = InferResultFile(self.path, fileName)
@@ -448,8 +452,6 @@ def evaluate(path, dataset):
     frame_times = MovingAverage()
     dataset_size = len(dataset) if args.max_images < 0 else min(args.max_images, len(dataset))
     progress_bar = ProgressBar(30, dataset_size)
-
-    print()
 
     # For each class and iou, stores tuples (score, isPositive)
     # Index ap_data[type][iouIdx][classIdx]
@@ -514,7 +516,6 @@ def evaluate(path, dataset):
             print('\rProcessing Output Results  %s %6d / %6d (%5.2f%%)    %5.2f fps        '
                   % (repr(progress_bar), it+1, dataset_size, progress, fps), end='')
 
-    print()
     print('Saving data...')
     with open(args.ap_data_file, 'wb') as f:
         pickle.dump(ap_data, f)
@@ -553,21 +554,17 @@ def print_maps(all_maps):
     make_row = lambda vals: (' %5s |' * len(vals)) % tuple(vals)
     make_sep = lambda n:  ('-------+' * n)
 
-    print()
     print(make_row([''] + [('.%d ' % x if isinstance(x, int) else x + ' ') for x in all_maps['box'].keys()]))
     print(make_sep(len(all_maps['box']) + 1))
     for iou_type in ('box', 'mask'):
         print(make_row([iou_type] + ['%.2f' % x if x < 100 else '%.1f' % x for x in all_maps[iou_type].values()]))
     print(make_sep(len(all_maps['box']) + 1))
-    print()
 
 if __name__ == '__main__':
-    path = './result/dumpOutput_device0/'
     parse_args()
 
     if args.config is not None:
         set_cfg(args.config)
-
     else:
         args.config = 'yolact_base_config'
         print('Config not specified. Parsed %s from the file name.\n' % args.config)
@@ -578,4 +575,4 @@ if __name__ == '__main__':
                             transform=BaseTransform(), has_gt=cfg.dataset.has_gt)
     prep_coco_cats()
 
-    evaluate(path, dataset)
+    evaluate(args.npu_result + '/', dataset)

@@ -251,8 +251,7 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
         torch.npu.synchronize()
         loss_meter.update(loss.item(), targets.size(0))
         norm_meter.update(grad_norm)
-        if idx > 5:
-            batch_time.update(time.time() - end)
+        batch_time.update(time.time() - end)
 
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']

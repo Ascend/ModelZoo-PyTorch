@@ -13,11 +13,13 @@
 # limitations under the License.
 # ============================================================================
 
+import os
+import sys
+import struct 
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-import os
-import struct 
 
 
 def bin2tensor(binName):
@@ -56,12 +58,12 @@ def mel_loss(mel_out, mel_tgt):
 
 
 def test_om():
-    tgt_path = "./test/mel_tgt_pth/"
-    out_path = './test/result/dumpOutput_device0/'
-    data_len = 100
+    tgt_path = './test/mel_tgt_pth/'
+    out_path = sys.argv[1]
+    data_len = 99
     mel_loss_total = 0
     for i in range(data_len):
-        mel_out = bin2tensor(os.path.join(out_path, f"data{i}.bin")).reshape(1, 80, 900)
+        mel_out = bin2tensor(os.path.join(out_path, f"data{i}_0.bin")).reshape(1, 80, 900)
         mel_tgt = torch.load(os.path.join(tgt_path, f"mel_tgt{i}.pth"))
         mel_loss_ = mel_loss(mel_out, mel_tgt)
         mel_loss_total += mel_loss_
@@ -71,7 +73,7 @@ def test_om():
 def test_pth():
     out_path = './test/mel_out_pth/'
     tgt_path = './test/mel_tgt_pth/'
-    data_len = 100
+    data_len = 99
     mel_loss_total = 0
     for i in range(data_len):
         mel_out = torch.load(os.path.join(out_path, f"mel_out{i}.pth"))

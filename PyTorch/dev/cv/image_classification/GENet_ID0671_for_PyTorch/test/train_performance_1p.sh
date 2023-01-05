@@ -77,6 +77,8 @@ ActualFPS=`grep Epoch: $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEV
 #单迭代训练时长
 TrainingTime=`cat $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep "Epoch:"|awk -F " " '{print $4}' |awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 
+CompileTime=`grep "step_time" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 |awk -F "step_time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 ##获取Loss
 #从train_$ASCEND_DEVICE_ID.log提取Loss到${CaseName}_loss.txt中，需要修改***匹配规则
 grep "Epoch:" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "Loss" '{print$2}' | awk '{print$1}' > $cur_path/test/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
@@ -93,3 +95,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log

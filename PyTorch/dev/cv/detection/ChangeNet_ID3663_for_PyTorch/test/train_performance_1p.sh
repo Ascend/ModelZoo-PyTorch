@@ -114,6 +114,9 @@ echo "Final Performance images/sec : $FPS"
 
 echo "E2E Training Duration sec : $e2e_time"
 
+#输出编译时间
+CompileTime=`grep "batch_time = " $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -2 |awk -F "batch_time = " '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 #稳定性精度看护结果汇总
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
@@ -146,3 +149,4 @@ echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseNa
 #echo "Status = 1" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "error_msg = RuntimeError: dim ([2, 4, 128, 128]) cannot convert to NDC1HWC0" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -120,3 +120,10 @@ bash ./test/train_performance_8p.sh
 |  -   |  -  |    1     |  400  |    O1    | ARM |
 |  -   |  -  |    8     |  400  |    O1    | ARM |
 |  -   |  -  |    8     | 40000 |    O1    | ARM |
+
+### Notes
+It is recommended to use `python` or `python3.7` to execute the model training process. If you need to use `python3`, run the following commands before using `python3` due to the `2to3` dependency.
+```bash
+unlink /usr/bin/python3
+ln -s /usr/bin/python3.7 /usr/bin/python3
+```

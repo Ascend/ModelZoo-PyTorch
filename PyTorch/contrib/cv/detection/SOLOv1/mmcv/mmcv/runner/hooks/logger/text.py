@@ -80,6 +80,8 @@ class TextLoggerHook(LoggerHook):
             log_items.append('{}: {}'.format(name, val))
         log_str += ', '.join(log_items)
         runner.logger.info(log_str)
+        if runner.rank == 0:
+            print(log_str, flush=True)
 
     def _dump_log(self, log_dict, runner):
         # dump log in json format
@@ -122,3 +124,4 @@ class TextLoggerHook(LoggerHook):
 
         self._log_info(log_dict, runner)
         self._dump_log(log_dict, runner)
+         

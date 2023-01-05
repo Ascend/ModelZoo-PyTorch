@@ -65,7 +65,7 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.1.0   | -                                                            |
@@ -110,12 +110,14 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
    ```
    利用源码中的prepare-market.py脚本，将数据分类
    ```
-   python ./DG-Net/prepare-market.py
+   cd DG-net
+   python prepare-market.py
+   cd ..
    ```
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   执行DGnet_preprocess脚本，完成预处理。
+   执行DGnet_preprocess脚本，完成预处理。(在进行预处理之前需要先下载并解压权重文件)
 
    ```
    python3 ./DGnet_preprocess.py --input_folder=./Market/pytorch/train_all/ --output_folder=./bin_path1 --output_folder2=./bin_path2 
@@ -136,7 +138,7 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
 
    1. 获取权重文件。
 
-      在该目录下自行获取权重文件
+      在[目录](https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/gan/DG-Net/DG-Net.zip)下自行获取权重文件，并解压
 
    2. 导出onnx文件。
 
@@ -197,14 +199,14 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
 
         ```
-      python3.7 ${ais_infer_path}/ais_infer.py --model=DG-net_bs${bs}.om --input="./bin_path2,./bin_path1" --batchsize=${batch_size}  
+      python3.7 -m ais_bench --model=DG-net_bs${bs}.om --input="./bin_path2,./bin_path1" --batchsize=${batch_size}  
         ```
 
         -   参数说明：
@@ -213,9 +215,6 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
              -   input：预处理数据
              -   batchsize：batchsize大小
 
-
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
    3. 精度验证。
 
@@ -244,10 +243,10 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3.7 ${ais_infer_path}/ais_infer.py --model=DG-net_bs${bs}.om --loop=100 --batchsize=${batch_size}
+         python3.7 -m ais_bench --model=DG-net_bs${bs}.om --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：
@@ -262,7 +261,7 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|     Ascend310P3      |        1          |      Market1501      |     17.89       |     296            |
+|     Ascend310P3      |        1          |      Market1501      |     18.12       |     296            |
 |     Ascend310P3      |        4          |      Market1501      |            |       568          |
 |     Ascend310P3      |        8          |      Market1501      |            |        584         |
 |     Ascend310P3      |        16          |      Market1501      |            |        517         |

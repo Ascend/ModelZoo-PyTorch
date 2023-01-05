@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import sys
 import ssl
+
 import torch
 import torch.onnx
-import pretrainedmodels.models as models
-from pretrainedmodels.models.inceptionv4 import InceptionV4
 import torch.utils.model_zoo as model_zoo
 
+sys.path.append(r"./pretrained-models.pytorch")
+from pretrainedmodels.models.inceptionv4 import InceptionV4
+
+
+url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth'
 pretrained_settings = {
     'inceptionv4': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth',
+            'url': url,
             'input_space': 'RGB',
             'input_size': [3, 299, 299],
             'input_range': [0, 1],
@@ -32,7 +37,7 @@ pretrained_settings = {
             'num_classes': 1000
         },
         'imagenet+background': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth',
+            'url': url,
             'input_space': 'RGB',
             'input_size': [3, 299, 299],
             'input_range': [0, 1],
@@ -43,11 +48,13 @@ pretrained_settings = {
     }
 }
 
+
 def inceptionv4(num_classes=1000, pretrained='imagenet', localpath=None):
     if pretrained:
         settings = pretrained_settings['inceptionv4'][pretrained]
         assert num_classes == settings['num_classes'], \
-            "num_classes should be {}, but is {}".format(settings['num_classes'], num_classes)
+            "num_classes should be {}, but is {}".format(settings['num_classes'], 
+                                                         num_classes)
 
         # both 'imagenet'&'imagenet+background' are loaded from same parameters
         model = InceptionV4(num_classes=1001)
@@ -71,27 +78,30 @@ def inceptionv4(num_classes=1000, pretrained='imagenet', localpath=None):
 
     return model
 
-def convert():
+def convert(checkpoint=None, output_file=None,):
     # https://github.com/Cadene/pretrained-models.pytorch/blob/master/pretrainedmodels/models/inceptionv4.py
-    if (len(sys.argv) == 3):
-        model = inceptionv4(num_classes=1001, pretrained='imagenet+background', localpath=input_file)
-    else:
-        model = models.inceptionv4(num_classes=1001, pretrained='imagenet+background')
-
+    model = inceptionv4(num_classes=1001, pretrained='imagenet+background', 
+                        localpath=checkpoint)
     model.eval()
-    input_names = ["actual_input_1"]
-    output_names = ["output1"]
-    dynamic_axes = {'actual_input_1': {0: '-1'}, 'output1': {0: '-1'}}
-
+    input_names = ["image"]
+    output_names = ["class"]
+    dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 299, 299)
 
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, opset_version=11)
+    torch.onnx.export(model, dummy_input, output_file, 
+                      input_names = input_names,
+                      output_names = output_names,
+                      dynamic_axes = dynamic_axes, 
+                      opset_version=11)
+
 
 if __name__ == "__main__":
-    if (len(sys.argv) == 3):
-        input_file = sys.argv[1]
-        output_file = sys.argv[2]
-    else:
-        output_file = "./inceptionv4.onnx"
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='InceptionResNetV2 Pytorch model convert to ONNX model')
+    parser.add_argument('--ckpt', default=None, help='input checkpoint file path')
+    parser.add_argument('--onnx', default='out.onnx', help='output onnx file path')
+    args = parser.parse_args()
+
     ssl._create_default_https_context = ssl._create_unverified_context
-    convert()
+    convert(args.ckpt, args.onnx)

@@ -52,7 +52,7 @@ def load_meta(dataset, keyword='vox1'):
 
     if keyword == 'vox1':
 
-        wav_files_test = sorted(glob(dataset +'/vox1_test' + '/*/*/*.wav'))
+        wav_files_test = sorted(glob(dataset + '/*/*/*.wav'))
         print(f'Len. wav_files_test {len(wav_files_test)}')
 
         test_meta = struct_meta(wav_files_test)
@@ -86,7 +86,7 @@ def get_dataloader(keyword='vox1', t_thres=19, batchsize = 16, dataset = DATA_SE
 if __name__ == "__main__":
     predata_path = sys.argv[2]
     prespeaker_path = sys.argv[3]
-    batchsize = int(sys.argv[4])
+    batchsize = 1
     dataset_test, test_speakers = get_dataloader('vox1', 19, batchsize)
     if not os.path.exists(predata_path):  #判断是否存在文件夹如果不存在则创建为文件夹
        os.makedirs(predata_path)
@@ -96,6 +96,6 @@ if __name__ == "__main__":
     for mels, mel_length, speakers in tqdm(dataset_test):
       i=i+1
       mels = np.array(mels).astype(np.float32)
-      mels.tofile(predata_path+'mels'+str(i)+".bin")
-      torch.save(speakers,prespeaker_path + 'speakers'+str(i)+".pt")
+      mels.tofile(os.path.join(predata_path, f'mels{str(i)}.bin'))
+      torch.save(speakers, os.path.join(prespeaker_path, f'speakers{str(i)}.pt'))
       

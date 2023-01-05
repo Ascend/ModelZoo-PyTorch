@@ -199,6 +199,7 @@ if is_train is True:
         model.train()
         tims = time.time()
         for i, (images, labels) in enumerate(train_loader):
+            start_time = time.time()
             #images = Variable(images.cuda())
             images = Variable(images.npu())
             # print(images.data)
@@ -215,7 +216,8 @@ if is_train is True:
             else:
                 loss.backward()
             optimizer.step()
-            # print("hello")
+            if i < 2:
+                print("step_time = {:.4f}".format(time.time() - start_time), flush=True)
             if (i+1) % 100 == 0:
                 #print("Epoch [%d/%d], Iter [%d/%d] Loss: %.4f" %(epoch+1, total_epoch, i+1, len(train_loader), loss.data[0]))
                 print("Epoch [%d/%d], Iter [%d/%d] Loss: %.4f" %(epoch+1, total_epoch, i+1, len(train_loader), loss.item()))

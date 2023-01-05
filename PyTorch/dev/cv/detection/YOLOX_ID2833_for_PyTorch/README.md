@@ -1,5 +1,9 @@
 
 
+
+
+
+
 # YOLOX for PyTorch
 
 -   [概述](概述.md)
@@ -111,29 +115,49 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
 
    该模型支持单机单卡训练和单机8卡训练。
 
-   - 单机单卡训练
+   单机单卡训练
 
-     ```
-cd test
-     bash train_full_1p.sh --data_path=xx/xx/coco2017
-     或
-     bash train_performance_1p.sh --data_path=xx/xx/coco2017
    ```
-     
-     
-     
-   - 单机8卡训
+   cd test
+   bash train_full_1p.sh --data_path=xx/xx/coco2017
+   或
+   bash train_performance_1p.sh --data_path=xx/xx/coco2017
+   ```
+
    
-     ```
-      cd test
+
+   单机8卡训练
+
+   ```
+   
+   cd test
       bash train_full_8p.sh --data_path=xx/xx/coco2017
       或
       bash train_performance_8p.sh --data_path=xx/xx/coco2017
-     ```
+   ```
    
-     
-   
-     训练完成后，pth文件保存在./work_dirs下面，权重文件保存在../test/output/$deviceid/ckpt下，并输出模型训练精度和性能信息。
+
+   训练完成后，pth文件保存在./work_dirs下面，权重文件保存在../test/output/$deviceid/ckpt下，并输出模型训练精度和性能信息。
+
+
+
+​	3、验证模型
+
+​		可使用提供的 test_1p.sh或 test_8p.sh对上述训练出的pth文件进行推理验证。
+
+​		注意：1p与1p的pth对应，8p与8p的pth对应。
+
+​		
+
+```
+   cd test
+   bash test_1p.sh --data_path=xx/xx/coco2017 --pth_path=xx/work_dirs/yoloxxx/*.pth
+   或
+   bash test_8p.sh --data_path=xx/xx/coco2017 --pth_path=xx/work_dirs/yoloxxx/*.pth
+```
+
+​		
+
 
 
 # 训练结果展示
