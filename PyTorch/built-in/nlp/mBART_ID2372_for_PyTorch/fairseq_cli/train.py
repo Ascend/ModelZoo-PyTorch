@@ -282,7 +282,7 @@ def train(args, trainer, task, epoch_itr):
             if hasattr(trainer.model, "all_reduce") and (trainer.optimizer.fp16_tmp_grads is not None) and (not visited) and (epoch_itr.epoch <= 1):
                 trainer.first_grad = wrapper_model_all_reduce(trainer.model, trainer.optimizer.fp16_tmp_grads, trainer.reduce_stream)
                 visited = True
-        if i < 3 and epoch == 1:
+        if i < 3 and epoch_itr.epoch == 1:
             print("step_time: ", time.time() - start_time)
         if log_output is not None:  # not OOM, overflow, ...
             # log mid-epoch stats
