@@ -26,11 +26,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 - 参考实现：
 
   ```
-<<<<<<< HEAD
   url=https://github.com/facebookresearch/pycls
-=======
-  url=https://github.com/rwightman/pytorch-image-models
->>>>>>> b50bfddb28f5f9b9dc2c0f9c0b981980310c1053
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -58,11 +54,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-<<<<<<< HEAD
   | CANN                                                         | 6.0.RC1 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
-=======
-  | CANN                                                         | 5.1.RC2 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
->>>>>>> b50bfddb28f5f9b9dc2c0f9c0b981980310c1053
   | Python                                                       | 3.7.5   | 创建anaconda环境时指定python版本即可，conda create -n ${your_env_name} python==3.7.5 |
   | PyTorch                                                      | 1.11.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -75,11 +67,8 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
 1. 获取源码。
 
-<<<<<<< HEAD
-   ```
-=======
+
    ```sh
->>>>>>> b50bfddb28f5f9b9dc2c0f9c0b981980310c1053
    git clone https://github.com/facebookresearch/pycls
    cd pycls
    git reset f20820e01eef7b9a47b77f13464e3e77c44d5e1f --hard
@@ -136,11 +125,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
    1. 获取权重文件。
 
-<<<<<<< HEAD
       ```
-=======
-      ```sh
->>>>>>> b50bfddb28f5f9b9dc2c0f9c0b981980310c1053
       wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/EfficientNet-B1/PTH/EN-B1_dds_8gpu.pyth
       ```
 
@@ -158,11 +143,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
       2. 优化ONNX文件。
 
-<<<<<<< HEAD
-         ```
-=======
          ```sh
->>>>>>> b50bfddb28f5f9b9dc2c0f9c0b981980310c1053
          python3.7 -m onnxsim --overwrite-input-shape="image:8,3,240,240" ./Efficient-b1.onnx efficient_B1_onnxsim.onnx
          ```
 
@@ -215,12 +196,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 2. 开始推理验证。
 
    1. 使用ais_bench工具进行推理。
-
-<<<<<<< HEAD
       ais_bench工具获取及使用方式请点击查看[ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)
-=======
-      ais_bench工具获取及使用方式请点击查看[ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，文档中aclruntime也需要安装。
->>>>>>> b50bfddb28f5f9b9dc2c0f9c0b981980310c1053
 
    2. 建立软链接
       将prep_dataset文件夹处理为工具可以输入的格式。
