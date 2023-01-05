@@ -146,6 +146,8 @@ def main():
             model.optimize_parameters(current_step)
 
             # log
+            if current_step < 3:
+                print("step_time = {:.4f}".format(time.time() - start_time), flush=True)
             if current_step % opt['logger']['print_freq'] == 0:
                 logs = model.get_current_log()
                 step_time += (time.time() - start_time)

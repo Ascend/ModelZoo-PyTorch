@@ -1,213 +1,263 @@
-# Wide_ResNet50_2 ONNX模型端到端推理指导
-
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
--   [7 性能对比](#7-性能对比)
+# Wide_ResNet50_2模型-推理指导
 
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)**  
-
-### 1.1 论文地址
-[Wide_ResNet50_2论文](https://arxiv.org/abs/1605.07146)  
-
-### 1.2 代码地址
-[Wide_Resnet50_2代码地址](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py)
-```
-branch=master
-commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
-```
- 
-## 2 环境说明
-
--   **[深度学习框架](#21-深度学习框架)**  
-
--   **[python第三方库](#22-python第三方库)**  
-### 2.1 深度学习框架
-```
-CANN 5.1.RC1   
-pytorch >= 1.5.0   
-torchvision >= 0.6.0   
-onnx >= 1.7.0   
-
-```
-### 2.2 python第三方库
-```
-numpy == 1.18.5   
-Pillow == 7.2.0   
-opencv-python == 4.2.0.34   
-```
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-## 3 模型转换
+    - [输入输出数据](#section540883920406)
 
 
-### 3.1 pth转onnx模型
 
-1. 下载pth权重文件  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[wide_resnet50_2权重文件下载](https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-```
-wget https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth
-```
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-2. 下载模型代码
-```
-git clone https://github.com/pytorch/vision
-cd vision
-git reset 7d955df73fe0e9b47f7d6c77c699324b256fc41f --hard
-python3.7 setup.py install
-cd ..
-```
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-3. 执行pth2onnx脚本，生成onnx模型文件
-```python
-python3.7 pth2onnx.py ./wide_resnet50_2-95faca4d.pth ./wide_resnet50_2.onnx
-```
-./wide_resnet50_2-95faca4d.pth为输入权重文件路径，./wide_resnet50_2.onnx
-为输出onnx文件路径。运行成功后，在当前目录生成wide_resnet50_2.onnx模型文件
-	
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
+  ******
 
-### 3.2 onnx转om模型
+  
 
-1.设置环境变量
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考<<CANN 5.0.1 开发辅助工具指南 (推理) 01>>
-使用二进制输入时，执行如下命令
-```
-atc --framework=5 --model=wide_resnet50_2.onnx --output=wide_resnet50_2_bs4 --input_format=NCHW --input_shape="image:4,3,224,224" --log=error --soc_version=Ascend${chip_name}
-```   
-参数说明：   
---model：为ONNX模型文件。   
---framework：5代表ONNX模型。   
---output：输出的OM模型。   
---input_format：输入数据的格式。   
---input_shape：输入数据的shape。   
---soc_version:处理器版本    
-
-${chip_name}可通过`npu-smi info`指令查看，例：310P3   
-
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)   
+深度残差网络被证明能够扩展到数千层，并且仍然有改进的性能。然而，每提高一个百分点的准确率，就需要增加近一倍的层数，因此训练深度残差网络有一个减少特征重用的问题，这使得这些网络的训练非常缓慢。为了解决这些问题，论文对ResNet的结构进行了详细的实验研究，并在此基础上提出了一种减小残差网络深度、增加残差网络宽度的新结构，称为宽残差网络(WRNs)，并表明这些网络结构远优于通常使用的薄且深的网络结构。
 
 
-## 4 数据集预处理
+- 参考实现：
 
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imagenet/val与/opt/npu/imagenet/val_label.txt
+  ```
+  url=https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+  commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
+  code_path=ACL_PyTorch/contrib/cv/classfication/Wide_ResNet50_2_for_Pytorch
+  model_name=Wide_ResNet50_2_for_Pytorch
+  ```
+  
 
-### 4.2 数据集预处理
+## 输入输出数据<a name="section540883920406"></a>
 
-1.执行预处理脚本preprocess.py，生成数据集预处理后的bin文件
+- 输入数据
 
-```
-python3.7 preprocess.py /opt/npu/ImageNet/ILSVRC2012_img_val ./prep_bin
-```
-### 4.3 生成数据集信息文件
-
-1.执行生成数据集信息脚本get_info.py，生成数据集信息文件
-
-二进制输入info文件生成
-```
-python3.7 get_info.py bin ./prep_bin ./wide_resnet50_2_prep_bin.info 224 224
-```
-参数说明：   
-bin为模型输入的类型，   
-./prep_bin为生成的bin文件路径，   
-./wide_resnet50_2_prep_bin.info为输出的info文件，   
-224 224为宽高信息   
+  | 输入数据 | 数据类型 | 大小                     | 数据排布格式 |
+  | -------- | -------- | ------------------------ | ------------ |
+  | input    | FLOAT32  | batchsizex 3 x 224 x 224 | NCHW         |
 
 
-图片输入info文件生成
-```
-python3.7 get_info.py jpg ../dataset/ImageNet/ILSVRC2012_img_val ./ImageNet.info
-```
-参数说明：   
-jpg为模型输入的类型，   
-../dataset/ImageNet/ILSVRC2012_img_val为预处理后的数据文件相对路径，   
-./ImageNet.info为输出的info文件   
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 1 x 1000 | NCHW         |
 
 
-## 5 离线推理
-### 5.1 benchmark工具概述
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)   
-### 5.2 离线推理(310+310P)   
+- 该模型需要以下插件与驱动  
 
-1.设置环境变量
+  **表 1**  版本配套表
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.1   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-2.增加benchmark可执行权限
+- 该模型需要以下依赖 
 
-```
-chmod +x benchmark.x86_64
-```
+  **表 2**  依赖列表
 
-3. 执行离线推理
+  | 依赖名称      | 版本     |
+  | ------------- | -------- |
+  | onnx          | 1.7.0    |
+  | Torch         | 1.8.1    |
+  | TorchVision   | 0.9.1    |
+  | numpy         | 1.18.5   |
+  | Pillow        | 7.2.0    |
+  | opencv-python | 4.2.0.34 |
 
-二进制类型输入推理命令
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=4 -om_path=wide_resnet50_2_bs4.om -input_text_path=./wide_resnet50_2_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
 
 
-## 6 离线推理精度统计
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-后处理统计TopN精度
+## 获取源码<a name="section4622531142816"></a>
 
-调用vision_metric_ImageNet.py脚本推理结果与label比对，可以获得Accuracy Top1&Top5数据，结果保存在result.json中。
-```
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
-```
-参数说明：   
-result/dumpOutput_device0/为benchmark输出目录，   
-./val_label.txt为数据集配套标签，   
-./是生成文件的保存目录，   
-result.json是生成的文件名。  
+1. 获取源码。
 
-精度对比：   
-|      | top1   | top5   |
-|------|--------|--------|
-| 310  | 78.48% | 94.09% |
-| 310P | 78.48% | 94.09% |
+   ```
+   git clone https://github.com/pytorch/vision
+   cd vision
+   git reset 7d955df73fe0e9b47f7d6c77c699324b256fc41f --hard
+   python3 setup.py install
+   cd ..
+   ```
+   
+2. 安装依赖。
 
-## 7 性能对比
-|         | 310     | 310P    | aoe后310P | T4      | 310P（aoe）/310 | 310P(aoe)/T4 |
-|---------|---------|---------|----------|---------|---------------|--------------|
-| bs1     | 830.52  | 731.72  |          | 487.12  |               |              |
-| bs4     | 1065.75 | 1674.09 | 1729,43  | 783.15  | 1.62273       | 2.20829      |
-| bs8     | 1066.03 | 1655.68 |          | 893.28  |               |              |
-| bs16    | 1162.01 | 1580.17 |          | 986.95  |               |              |
-| bs32    | 967.48  | 1592.23 |          | 1046.79 |               |              |
-| bs64    | 802.78  | 1042.48 |          | 1076.90 |               |              |
-|         |         |         |          |         |               |              |
-| 最优batch | 162.01  | 1674.09 | 1729.43  | 1076.90 | 1.48830       | 1.60592      |
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型支持 [ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org) 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。 目录结构如下：
+
+   ```
+   ├── ImageNet
+     ├── ILSVRC2012_img_val
+     ├── val_label.txt
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   将原始数据（.jpeg）转化为二进制文件（.bin）。
+
+   执行preprocess.py 脚本，完成预处理。
+
+   ```
+   python3 preprocess.py ${datasets}/ILSVRC2012_img_val ./prep_bin
+   ```
+
+   + 参数说明：
+     + 第一个参数：原始数据验证集（.jpeg）所在路径。
+     + 第二个参数：输出的二进制文件（.bin）所在路径。
+
+   每个图像对应生成一个二进制文件。
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       从源码包中获取权重文件[wide_resnet50_2-95faca4d.pth](https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth)。
+
+       ```
+       wget https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth
+       ```
+
+   2. 导出onnx文件。
+
+      1. 使用pth2onnx.py导出onnx文件。
+   
+         运行pth2onnx.py脚本。
+   
+         ```
+         python3 pth2onnx.py ./wide_resnet50_2-95faca4d.pth ./wide_resnet50_2.onnx
+         ```
+   
+      
+      获得wide_resnet50_2.onnx文件。
+      
+   3. 使用ATC工具将ONNX模型转OM模型。
+   
+      1. 配置环境变量。
+   
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+   
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+   
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+   
+      3. 执行ATC命令。
+   
+         ```
+         atc --framework=5 --model=wide_resnet50_2.onnx --output=wide_resnet50_2_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend${chip_name}
+         ```
+         
+         - 参数说明：
+         
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           
+         
+         运行成功后生成wide_resnet50_2_bs1.om模型文件。
+   
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
+
+   2. 执行推理。
+
+        ```
+        python3 -m ais_bench --model ./wide_resnet50_2_bs1.om --input ./prep_bin --output ./result --output_dirname bs1 --outfmt TXT --batchsize 1
+        ```
+        
+        + 参数说明：
+          +  --model：om模型。
+          + --input：预处理数据集路径。
+          + --output：推理结果所在路径。
+          + --outfmt：推理结果文件格式。
+          + --batchsize：不同的batchsize。
+        
+        推理后的输出结果在result
+
+        
+   3. 精度验证。
+   
+        调用vision_metric_ImageNet.py脚本与label比对，可以获得Accuracy数据，结果保存在result.json中，val_label保存数据集标签。
+   
+        ```
+        python3 vision_metric_ImageNet.py ./result/bs1/ ${datasets}/val_label.txt ./ result_bs1.json
+        ```
+   
+        - 参数说明：
+   
+          -  ./result/bs1/ ：为生成推理结果所在路径  
+          -  ${datasets}/val_label.txt：标签数据。
+          -  ./ ： 生成结果文件路径
+          -  result_bs1.json：生成结果文件名称。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+精度对比：
+
+| Model     | Wide_ResNet50_2             |
+| --------- | --------------------------- |
+| 开源精度  | top1：78.48%   top5：94.09% |
+| 310P3精度 | top1：78.48%   top5：94.09% |
+
+性能对比：
+
+| 芯片型号 | Batch Size   | 数据集 | 性能 |
+| --------- | ---------------- | ---------- | --------------- |
+| 310P3 | 1 | ILSVRC2012 | 748.088 |
+| 310P3 | 4 | ILSVRC2012 | 1742.709 |
+| 310P3 | 8 | ILSVRC2012 | 1951.064 |
+| 310P3 | 16 | ILSVRC2012 | 1832.706 |
+| 310P3 | 32 | ILSVRC2012 | 2097.663 |
+| 310P3 | 64 | ILSVRC2012 | 1171.403 |
+

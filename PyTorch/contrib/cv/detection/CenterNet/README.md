@@ -45,6 +45,7 @@ CenterNet使用关键点检测的方法去预测目标边框的中心点，然�
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
+  | 硬件    | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
@@ -197,5 +198,9 @@ CenterNet使用关键点检测的方法去预测目标边框的中心点，然�
 
 ## 已知问题
 
-无。
+1. 若出现无法找到datasets包的问题，本模型使用的是lib目录下的本地文件，请删除环境中同名三方库。
+2. 针对在1.11版本torch下，DCNv2编译失败问题，可删除原DCNv2文件，并在该文件目录“CenterNet/src/lib/models/networks”下，重新拉取DCNv2源码包。
+```
+git clone -b pytorch_1.11 https://github.com/lbin/DCNv2.git
+```
 

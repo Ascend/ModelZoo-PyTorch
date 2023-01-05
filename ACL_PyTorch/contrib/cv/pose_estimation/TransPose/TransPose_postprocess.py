@@ -92,7 +92,7 @@ def postprocess(config):
     image_path = []
     filenames = []
     imgnums = []
-    for idx, (image, _, _, meta) in tqdm(enumerate(valid_loader)):
+    for idx, (image, _, _, meta) in enumerate(tqdm(valid_loader)):
         outputs = get_output_data(opt.dump_dir, idx)
         outputs_flipped = get_output_data(opt.dump_dir_flip, idx)
         output_flipped = flip_back(outputs_flipped.cpu().numpy(),

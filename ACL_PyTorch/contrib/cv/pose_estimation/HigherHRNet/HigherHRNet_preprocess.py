@@ -15,16 +15,16 @@
 
 import os
 import argparse
-import sys
-
 from tqdm import tqdm
 import torch
 import torchvision.transforms
-from tools import resize_align_multi_scale
+
+import sys
 sys.path.append('./HigherHRNet-Human-Pose-Estimation')
 from lib.dataset.build import make_test_dataloader
 from lib.config import update_config
 from lib.config import cfg
+from lib.utils.transforms import resize_align_multi_scale
 
 
 def preprocess(config):
@@ -39,7 +39,7 @@ def preprocess(config):
             )
         ]
     )
-    for idx, (images, _) in tqdm(enumerate(data_loader)):
+    for idx, (images, _) in enumerate(tqdm(data_loader)):
         image = images[0].numpy()
         input_size = config.DATASET.INPUT_SIZE
 
@@ -47,7 +47,8 @@ def preprocess(config):
             image, input_size, 1.0, min(config.TEST.SCALE_FACTOR), scale_list
         )
         # hxw
-        prefix = 'shape_{}x{}'.format(image_resized.shape[0], image_resized.shape[1])
+        prefix = 'shape_{}x{}'.format(
+            image_resized.shape[0], image_resized.shape[1])
 
         output_path = os.path.join(opt.output, prefix)
         output_path_flip = os.path.join(opt.output_flip, prefix)
@@ -77,8 +78,7 @@ if __name__ == '__main__':
     # general
     parser.add_argument('--cfg',
                         help='experiment configure file name',
-                        default=
-                        "HigherHRNet-Human-Pose-Estimation/experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml",
+                        default="HigherHRNet-Human-Pose-Estimation/experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml",
                         type=str)
     parser.add_argument('opts',
                         help="Modify config options using the command-line",

@@ -40,7 +40,11 @@ ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code
 4. 数据集预处理
 
    cd ${wenet_path}/examples/aishell/s0/
+
+   mkdir -p /export/data/asr-data/OpenSLR/33
+
    bash run.sh --stage -1 --stop_stage -1 # 下载数据集
+
    bash run.sh --stage 0 --stop_stage 0 # 处理数据集
    bash run.sh --stage 1 --stop_stage 1 # 处理数据集
    bash run.sh --stage 2 --stop_stage 2 # 处理数据集

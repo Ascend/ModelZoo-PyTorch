@@ -33,7 +33,6 @@ def pth2onnx(ckpt_path, onnx_path):
         output_names = ["output"],
         opset_version=11,
         verbose=False,
-        strip_doc_string=True,
         dynamic_axes={"input": {0: "-1"}, "output": {0: "-1"}}
     )
 

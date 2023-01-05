@@ -11,7 +11,7 @@ batch_size=1
 # 训练使用的npu卡数
 export RANK_SIZE=1
 data_path=""
-MODEL="./work_dirs/solov2_release_r50_fpn_8gpu_1x/epoch_12.pth"
+MODEL="./test/work_dirs/solov2_release_r50_fpn_8gpu_1x/epoch_12.pth"
 device_id=0
 
 #参数校验，不需要修改
@@ -23,6 +23,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --checkpoint* ]];then
         MODEL=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -61,7 +63,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${cur_path}/test/env_npu.sh
 fi
 nohup python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  $MODEL --show --out  results_solo.pkl --eval segm \
-      --data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --batch_size=${batch_size} --gpu-ids ${device_id} --data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################

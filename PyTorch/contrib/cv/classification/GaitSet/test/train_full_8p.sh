@@ -91,7 +91,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 
-python3.7 -m torch.distributed.launch --nproc_per_node=$N_NPUS train_main.py \
+python3.7 -m torch.distributed.launch --master_port=46888 --nproc_per_node=$N_NPUS train_main.py \
     --data_path ${data_path} \
     --dist_backend='hccl' \
     --world_size=$N_NPUS \
@@ -110,8 +110,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS_Pre=`grep -a '（FPS）'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $6}'|awk 'END {print}'`
-FPS=${FPS_Pre:1:${#FPS_Pre}-4}
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS" '{print $2}' | awk -F " " '{print $2}' |awk 'END {print}'`
 ##打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-import sys
 from pathlib import Path
 import tqdm
 
@@ -75,7 +74,6 @@ def get_groudtruth(gt_file):
 
 def save_metrics(scores, metrics_file):
     scores["inference"] = "single_scale"
-    suffix = "ss"
     scores["cat_iou"] = np.round(100 * scores["cat_iou"], 2).tolist()
     for k, v in scores.items():
         if k != "cat_iou" and k != "inference":

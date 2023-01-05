@@ -17,6 +17,7 @@ import torch
 import argparse
 import os
 from PIL import Image
+from tqdm import tqdm
 
 
 class GTFineFile(object):
@@ -149,7 +150,7 @@ class IntersectAndUnion(object):
 
 def eval_metrics(output_path,
                  gt_path,
-                 out_suffix='_leftImg8bit_output_0.bin',
+                 out_suffix='_leftImg8bit_0.bin',
                  gt_suffix='_gtFine_labelTrainIds.png',
                  result_path='./postprocess_result',
                  num_classes=19,
@@ -183,10 +184,10 @@ def eval_metrics(output_path,
     for root, sub_dirs, files in os.walk(output_path):
         files = [file for file in files if file.endswith('bin')]
         len = str(files.__len__())
-        for i, output_name in enumerate(files):
+        for i, output_name in tqdm(enumerate(files)):
             if not output_name.endswith('bin'):
                 continue
-            print('STDC metric [' + str(i + 1) + '/' + len + '] on process: ' + output_name)
+            #print('STDC metric [' + str(i + 1) + '/' + len + '] on process: ' + output_name)
             seg_map_name = output_name.replace(out_suffix, gt_suffix)
             seg_map_path = fileFinder.get_file(seg_map_name)
 
@@ -215,7 +216,7 @@ if __name__ == '__main__':
                         help='path to om/onnx output file, default ./result')
     parser.add_argument('--gt_path', default="/opt/npu/cityscapes/gtFine/val",
                         help='path to gtFine/val, default /opt/npu/cityscapes/gtFine/val')
-    parser.add_argument('--out_suffix', default="_leftImg8bit_output_0.bin",
+    parser.add_argument('--out_suffix', default="_leftImg8bit_0.bin",
                         help='suffix of the om/onnx output, default "_leftImg8bit_1.bin"')
     parser.add_argument('--result_path', default="./postprocess_result",
                         help='path to save the script result, default ./postprocess_result.txt')

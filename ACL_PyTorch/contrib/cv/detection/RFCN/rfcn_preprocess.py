@@ -95,30 +95,20 @@ def get_bin(file_path,bin_path):
         im_data.resize_(data.size()).copy_(data)
         im_data1 = im_data.numpy()
         im_data1.tofile(os.path.join(bin_path, imglist[i].split('.')[0] + ".bin"))
-    return imglist
 
 
-def get_bin_info(bin_path, info_name,imglist):
-    with open(info_name, 'w') as file:
-        for index in range(len(imglist)):
-            content = ' '.join([str(index), bin_path+"/"+str(imglist[index])+".bin",str(1344),str(1344)])
-            file.write(content)
-            file.write('\n')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='preprocess of RFCN pytorch model')
     parser.add_argument("--file_path", dest="file_path",default="./RFCN-pytorch.1.0/data/VOCdevkit2007/VOC2007/JPEGImages/", help='image of dataset')
     parser.add_argument("--bin_path",dest="bin_path", default="./bin", help='Preprocessed image buffer')
-    parser.add_argument("--info_name", dest="info_name", default="./demo.info", help='bin-->info')
 
     args = parser.parse_args()
 
     file_path = args.file_path
     bin_path = args.bin_path
-    info_name = args.info_name
-    imglist=get_bin(file_path,bin_path)
-
-    get_bin_info(bin_path,info_name,imglist)
+    get_bin(file_path,bin_path)
+    
 
 
 

@@ -14,10 +14,14 @@
 
 import onnx
 import sys
-in_onnx = sys.argv[1]
-out_onnx = sys.argv[2]
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--in_onnx', type=str, default="")
+parser.add_argument('--out_onnx', type=str, default="")
+opt = parser.parse_args()
 
-onnx_model = onnx.load(in_onnx)
+
+onnx_model = onnx.load(opt.in_onnx)
 graph = onnx_model.graph
 nodes = graph.node
 
@@ -28,4 +32,4 @@ for node in nodes:
     if node.name in optimize_resize_list:
         node.attribute[1].s = b'nearest'
 
-onnx.save(onnx_model, out_onnx)
+onnx.save(onnx_model, opt.out_onnx)

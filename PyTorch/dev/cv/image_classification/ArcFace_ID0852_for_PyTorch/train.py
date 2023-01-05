@@ -241,7 +241,8 @@ def train(args):
             total_iters += 1
 
             if total_iters == 700: pass
-
+            if total_iters < 2 and epoch == 1:
+                print("Step_Time: ", time.time() - since)
             # print train information
             if total_iters % 100 == 0:
                 # current training accuracy

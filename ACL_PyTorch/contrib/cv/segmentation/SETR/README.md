@@ -72,7 +72,7 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
 
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -132,7 +132,7 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
 
 3. 获取开源代码仓。
 
-   （1）.手动编译安装1.2.7版本的mmcv。
+   （1）手动编译安装1.2.7版本的mmcv。
 
    ```shell
    git clone https://github.com/open-mmlab/mmcv.git
@@ -143,7 +143,7 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
    cd ..
    ```
 
-   （2）.下载源码包。
+   （2）下载源码包。
 
    ```shell
    git clone https://github.com/fudan-zvg/SETR.git
@@ -157,9 +157,9 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   （1）.本模型使用CityScape 500张图片的验证集。从[cityscape数据集](https://www.cityscapes-dataset.com/)获取gtFine_trainvaltest.zip和leftImg8bit_trainvaltest.zip，上传数据集到服务器任意目录并解压（如：/root/datasets）。数据集需要软连接到SETR/data文件下。
+   （1）本模型使用CityScape 500张图片的验证集。从[cityscape数据集](https://www.cityscapes-dataset.com/)获取gtFine_trainvaltest.zip和leftImg8bit_trainvaltest.zip，上传数据集到服务器任意目录并解压（如：/root/datasets）。数据集需要软连接到SETR/data文件下。
 
-   （2）.数据集目录结构如下：
+   （2）数据集目录结构如下：
 
    ```shell
    cityscapes
@@ -175,7 +175,7 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
 
 2. 数据预处理。
 
-   （1）.处理数据集，并将数据集软连接到SETR/data文件下。
+   （1）处理数据集，并将数据集软连接到SETR/data文件下。
 
    ```shell
    cd SETR   #进入开源代码仓
@@ -190,7 +190,7 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
    
    执行cityscapes.py文件时会提示不存在train_extra文件，可以忽略，推理时不会用到。
    
-   （2）.生成二进制文件。
+   （2）生成二进制文件。
    
    ```shell
    python ../SETR_preprocess.py configs/SETR/SETR_Naive_768x768_40k_cityscapes_bs_8.py ../input_bin
@@ -220,11 +220,14 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   （1）.获取权重文件。
+   （1）获取权重文件。
 
-   从源码包中获取权重文件“SETR_Naive_cityscapes_b8_40k.pth”，在SETR文件夹下新建author_pth文件夹，然后把权重文件放入该文件夹。
+   ```
+   wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SETR/PTH/SETR_Naive_cityscapes_b8_40k.pth
+   ```
+   在SETR文件夹下新建author_pth文件夹，然后把权重文件放入该文件夹
 
-   （2）.导出onnx文件。
+   （2）导出onnx文件。
 
    使用“pytorch2onnx.py”导出onnx文件。
 
@@ -253,74 +256,71 @@ code_path=ACL_PyTorch/contrib/cv/segmentation
    运行后得到“setr_naive_768x768_sim.onnx”文件。
    
 
-（3）.使用ATC工具将ONNX模型转OM模型。
+   （3）使用ATC工具将ONNX模型转OM模型。
 
-a.配置环境变量。
+   a.配置环境变量。
 
    ```shell
    source /usr/local/Ascend/ascend-toolkit/set_env.sh
    ```
 
-  > **说明：** 
-  >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+     > **说明：** 
+     >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
    b.执行命令查看芯片名称（$\{chip\_name\}）。
 
-```
-   npu-smi info
-   #该设备芯片名为Ascend310P3 （自行替换）
-   回显如下：
-   +--------------------------------------------------------------------------------------------+
-   | npu-smi 22.0.0                       Version: 22.0.2                                       |
-   +-------------------+-----------------+------------------------------------------------------+
-   | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-   | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-   +===================+=================+======================================================+
-   | 0       310P3     | OK              | 16.0         50                1236 / 1236           |
-   | 0       0         | 0000:86:00.0    | 0            4066 / 21534                            |
-   +===================+=================+======================================================+
-```
+   ```
+      npu-smi info
+      #该设备芯片名为Ascend310P3 （自行替换）
+      回显如下：
+      +--------------------------------------------------------------------------------------------+
+      | npu-smi 22.0.0                       Version: 22.0.2                                       |
+      +-------------------+-----------------+------------------------------------------------------+
+      | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+      | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+      +===================+=================+======================================================+
+      | 0       310P3     | OK              | 16.0         50                1236 / 1236           |
+      | 0       0         | 0000:86:00.0    | 0            4066 / 21534                            |
+      +===================+=================+======================================================+
+   ```
 
    c.执行ATC命令。
 
-   ```shell
-   atc --framework=5 --model=setr_naive_768x768_sim.onnx --output=setr_naive_768x768_bs1 --input_format=NCHW --input_shape="img:1,3,768,768" --log=debug --soc_version=Ascend {chip_name}
-   ```
+      ```shell
+      atc --framework=5 --model=setr_naive_768x768_sim.onnx --output=setr_naive_768x768_bs1 --input_format=NCHW --input_shape="img:1,3,768,768" --log=debug --soc_version=Ascend {chip_name}
+      ```
+      参数说明：
+      -   --model：为ONNX模型文件。
+      -   --framework：5代表ONNX模型。
+      -   --output：输出的OM模型。
+      -   --input_format：输入数据的格式。
+      -   --input_shape：输入数据的shape。
+      -   --log：日志级别。
+      -   --soc_version：处理器型号。
 
-   参数说明：
-
-   * --model：为ONNX模型文件。
-   -   --framework：5代表ONNX模型。
-   -   --output：输出的OM模型。
-   -   --input\_format：输入数据的格式。
-   -   --input\_shape：输入数据的shape。
-   -   --log：日志级别。
-   -   --soc\_version：处理器型号。
-
-   运行成功后生成"setr_naive_768x768_bs1.om"模型文件。
+      运行成功后生成"setr_naive_768x768_bs1.om"模型文件。
 
 2. 开始推理验证。
 
-   1. a. 使用ais-infer工具进行推理。
+   1. a. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
       b.  执行推理与性能验证。
 
       ```shell
       source /usr/local/Ascend/ascend-toolkit/set_env.sh
       # 执行推理
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model new_setr_naive_768x768_bs1.om --input ./new_input_bin/ --output ./lcmout/ --outfmt BIN --batchsize 1
+      python -m ais_bench --model new_setr_naive_768x768_bs1.om --input ./new_input_bin/ --output ./lcmout/ --outfmt BIN --batchsize 1
       ```
       
       参数说明：
-      
-* --model：需要进行推理的om模型。
-      
--   --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
--   --output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
--   --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
--   --batchsize：模型batch size。
+
+      -   --model：需要进行推理的om模型
+      -   --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
+      -   --output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
+      -   --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+      -   --batchsize：模型batch size。
 
 3. 精度验证。
 
@@ -341,5 +341,3 @@ a.配置环境变量。
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 | Ascend310P3 | 1 | CityScape | mIoU:77.35 | 3.4376 |
-
-离线模型仅支持1batch

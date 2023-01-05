@@ -536,7 +536,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
           timeout_handler, device, args):
     # Turn on training mode which enables dropout.
     model.train()
-    torch.npu.set_start_fuzz_compile_step(3)
+    if not torch.__version__ >= "1.8":
+        torch.npu.set_start_fuzz_compile_step(3)
     train_loss = 0
     target_tokens = 0
     log_step = 0
@@ -550,7 +551,8 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
 
     num_steps = 0
     for batch, (data, target, seq_len, _) in enumerate(train_iter, start=last_batch+1):
-        torch.npu.global_step_inc()
+        if not torch.__version__ >= "1.8":
+            torch.npu.global_step_inc()
         start_time = time.time()
         log_step += 1
         target_tokens += target.numel()
@@ -1236,5 +1238,8 @@ if __name__ == "__main__":
     # code, but it is still valid.
     if 'apex' in sys.modules:
         amp.register_half_function(torch, 'einsum')
+    
+    if torch.__version__ >= "1.8":
+        torch.npu.set_compile_mode(jit_compile=False)
 
     main()

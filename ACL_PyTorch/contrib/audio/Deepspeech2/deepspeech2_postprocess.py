@@ -101,9 +101,7 @@ def read_target_sizes(info_path):
 
 
 if __name__ == '__main__':
-    out_path_real = args.out_path + '/' + sorted(os.listdir(args.out_path))[-1]
-    # print(out_path_real)
-    out_dataset = read_dataset(out_path_real)
+    out_dataset = read_dataset(args.out_path)
     out_sizes = read_sizes(args.info_path)
     targets = read_targets(args.info_path)
     target_sizes = read_target_sizes(args.info_path)

@@ -146,7 +146,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
    1. 获取权重文件。
 
-       获取权重文件[nested_unet](*https://www.hiascend.com/zh/software/modelzoo/models/detail/1/06d27ff207e5417f8f02a5d6c414b05e/1*)
+       获取权重文件[nested_unet](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Unet%2B%2B/PTH/nested_unet.pth)
 
    2. 导出onnx文件。
 
@@ -207,15 +207,14 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
       ```
-      mkdir result
-      python3 ${ais_bench_path}/ais_infer.py --model=nested_unet_bs${bs}.om  --batchsize=${bs} \
+      python3 -m ais_bench --model=nested_unet_bs${bs}.om  --batchsize=${bs} \
       --input ${prep_data} --output result --output_dirname result_bs${bs} --outfmt BIN
       ```
       
@@ -230,7 +229,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
    
 3. 精度验证。
   
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+      调用脚本与真值比对，可以获得精度结果。
    
       ```
     python3 nested_unet_postprocess.py ./result/result_bs${bs} ./pytorch-nested-unet/inputs/dsb2018_96/masks/0/
@@ -241,10 +240,10 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
       - --参数1：推理输出目录。
       - --参数2：真值所在目录。
    
-4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
   
       ```
-      python3 ${ais_bench_path}/ais_infer.py --model=nested_unet_bs${bs}.om --loop=50 --batchsize=${bs}
+      python3 -m ais_bench --model=nested_unet_bs${bs}.om --loop=50 --batchsize=${bs}
       ```
       
       参数说明：

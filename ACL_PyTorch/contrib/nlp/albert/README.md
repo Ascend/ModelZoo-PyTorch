@@ -1,129 +1,278 @@
-# Albert
+# Albert模型-推理指导
 
-base on [Albert-base-v2](https://github.com/lonePatient/albert_pytorch)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-## 运行说明
-- 下载[原始代码仓](https://github.com/lonePatient/albert_pytorch)
-```
-git clone https://github.com/lonePatient/albert_pytorch.git
-cd albert_pytorch
-git checkout 46de9ec
-git apply ../albert.patch
-cd ../
-```
-- 下载[数据集](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip) 并解压albert_pytorch/dataset/SST-2。
+    - [输入输出数据](#section540883920406)
 
-- 下载[预训练模型](https://drive.google.com/open?id=1byZQmWDgyhrLpj8oXtxBG6AA52c8IHE- ) 并解压到albert_pytorch/prev_trained_model/albert_base_v2。
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-- 下载[训练好的模型](https://pan.baidu.com/s/1G5QSVnr2c1eZkDBo1W-uRA )（提取码：mehp ）并解压到albert_pytorch/outputs/SST-2。
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-- 文件夹若无请新建
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-- `pip install -r requirements.txt`
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-- 获取 ais-infer 工具
+- [配套环境](#ZH-CN_TOPIC_0000001126121892)
 
-  参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parameterization和Cross-layer parameter sharing两大机制减少参数量，得到一个占用较小的模型，对实际落地有较大的意义，不过由于其主要还是减少参数，不影响推理速度。
 
   ```
-   pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+  url=https://github.com/lonePatient/albert_pytorch
+  branch=master
+  commit_id=46de9ec
   ```
 
-## 模型转换
+## 输入输出数据<a name="section540883920406"></a>
 
-```bash
-#设置环境
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-执行命令查看芯片名称（$\{chip\_name\}）
+- 输入数据
 
-```
-npu-smi info
-#该设备芯片名为Ascend310P3 （请根据实际芯片填入）
-回显如下：
-+-------------------+-----------------+------------------------------------------------------+
-| NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-| Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-+===================+=================+======================================================+
-| 0       310P3     | OK              | 15.8         42                0    / 0              |
-| 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
-+===================+=================+======================================================+
-| 1       310P3     | OK              | 15.4         43                0    / 0              |
-| 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
-+===================+=================+======================================================+
-```
+  | 输入数据       | 数据类型 | 大小                      | 数据排布格式 |
+  | --------       | -------- | ------------------------- | ------------ |
+  | input_ids      | INT64    | batchsize x seq_len       | ND           |
+  | attention_mask | INT64    | batchsize x seq_len       | ND           |
+  | token_type_ids | INT64    | batchsize x seq_len       | ND           |
 
-运行模型转换脚本转换OM
+- 输出数据
 
-```shell
-#pth转换为ONNX，此处以batchsize=32为例
-python3.7 ./Albert_pth2onnx.py --batch_size=32 --pth_dir=./albert_pytorch/outputs/SST-2/ --onnx_dir=./outputs/
-
-#使用onnxsim工具优化模型
-python3.7 -m onnxsim ./outputs/albert_bs32.onnx ./outputs/albert_bs32s.onnx
-
-#ONNX模型转换成OM文件
-atc --input_format=ND --framework=5 --model=./outputs/albert_bs32s.onnx --output=./outputs/albert_bs32s --log=error --soc_version=Ascend${chip_name} --input_shape="input_ids:32,128;attention_mask:32,128;token_type_ids:32,128"
-
-#ps：--soc_version处填入实际的芯片名称，例如Ascend310P3
-```
+  | 输出数据 | 大小               | 数据类型 | 数据排布格式 |
+  | -------- | --------           | -------- | ------------ |
+  | output   | batch_size x class | FLOAT32  | ND           |
 
 
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-## 数据预处理
+- 该模型需要以下插件与驱动
 
-```shell
-# 前处理，pth_dir参数是预训练模型的路径
-python3.7 Albert_preprocess.py --pth_dir=./albert_pytorch/outputs/SST-2/
+  **表 1**  版本配套表
 
-# 生成bin文件，bin文件在bin_dir文件夹下，info和label文件在当前目录下
-python3.7 gen_dataset_info.py --pth_dir=./albert_pytorch/outputs/SST-2/ --bin_dir=./bin/
+| 配套                                                            | 版本    | 环境准备指导                                                                                          |
+| ------------------------------------------------------------    | ------- | ------------------------------------------------------------                                          |
+| 固件与驱动                                                      | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                            | 6.0.RC1 | -                                                                                                     |
+| Python                                                          | 3.7.5   | -                                                                                                     |
+| PyTorch                                                         | 1.5.0+ | -                                                                                                     |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
 
-# 拆分bin文件数据，并严格归并对应数据到bin1、bin2、bin3三个目录（跟模型的输入相匹配）
-mkdir ./bin/bin1 ./bin/bin2 ./bin/bin3
-mv ./bin/input_*.bin ./bin/bin1
-mv ./bin/attention_*.bin ./bin/bin2
-mv ./bin/token_*.bin ./bin/bin3
-```
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git        # 克隆仓库的代码
+   git checkout master         # 切换到对应分支
+   cd ACL_PyTorch/contrib/nlp/albert              # 切换到模型的代码仓目录
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   git clone https://gitee.com/Ronnie_zheng/MagicONNX.git MagicONNX
+   cd MagicONNX && git checkout dev
+   pip3 install . && cd ..
+   ```
+
+2. 获取开源代码仓。
+   在已下载的源码包根目录下，执行如下命令。
+
+   ```
+   git clone https://github.com/lonePatient/albert_pytorch.git
+   cd albert_pytorch
+   git checkout 46de9ec
+   patch -p1 < ../albert.patch
+   cd ../
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+1. 获取原始数据集。
+
+   本模型采用[SST-2数据集](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip)，解压到 `albert_pytorch/dataset/SST-2`文件夹下
+
+   数据目录结构请参考：
+   ```
+   ├──SST-2
+    ├──original/
+    ├──dev.tsv
+    ├──train.tsv
+    ├──test.tsv
+   ```
+
+2. 数据预处理。
+
+   数据预处理将原始数据集转换为模型输入的数据。该模型数据预处理需要加载模型，所以需要先下载权重文件：
+
+   获取[预训练权重文件](https://drive.google.com/open?id=1byZQmWDgyhrLpj8oXtxBG6AA52c8IHE-)，并解压到albert_pytorch/prev_trained_model/albert_base_v2。
+
+   下载[训练好的模型](https://pan.baidu.com/s/1G5QSVnr2c1eZkDBo1W-uRA )（提取码：mehp ）并解压到albert_pytorch/outputs/SST-2。
+
+   执行“Albert_preprocess.py”脚本，完成预处理。
+
+   ```
+   python3 Albert_preprocess.py --pth_dir=./albert_pytorch/outputs/SST-2/ --data_path=./albert_pytorch/dataset/SST-2/ --save_dir ./preprocessed_data
+   ```
+   - 参数说明：
+
+     --pth_dir: 模型权重所在路径
+
+     --data-path：原始数据集所在路径
+
+     --save_dir: 预处理数据保存路径, 其中gt_label保存在 `${save_dir}/label.npy` 
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+   
+      数据预处理阶段已经完成模型权重下载。
+
+   2. 导出onnx文件。
+
+      1. 使用脚本导出onnx文件。
+
+         运行“Albert_pth2onnx.py”脚本。
+
+         ```
+         # pth转换为ONNX，此处以bs32为例
+         python3 ./Albert_pth2onnx.py --batch_size=32 --pth_dir=./albert_pytorch/outputs/SST-2/ --onnx_dir=./outputs/
+         ```
+
+         - 参数说明：
+
+           --batch_size: 导出模型batchsize。
+
+           --pth_dir：权重所在路径。
+
+           --onnx_dir: 输出onnx文件所在目录。
+
+         获得outputs/albert_bs32.onnx文件。
+
+      2. 优化ONNX文件。
+
+         ```
+         # 以bs32为例
+         python3 -m onnxsim ./outputs/albert_bs32.onnx ./outputs/albert_bs32s.onnx
+         python3 opt_onnx.py ./outputs/albert_bs32s.onnx ./outputs/albert_bs32_opt.onnx
+         ```
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+         > **说明：**
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------|-----------------|------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+         ```
+         # 以bs32为例
+         atc --input_format=ND --framework=5 --model=./outputs/albert_bs32_opt.onnx --output=./outputs/albert_bs32 --log=error --soc_version=${chip_name} --input_shape="input_ids:32,128;attention_mask:32,128;token_type_ids:32,128" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成albert_b32.om模型文件。
 
 
 
-## 模型推理
+2. 开始推理验证。
 
-```shell
-#使用ais-infer对 om 模型进行推理
-python3 ./ais_infer_x86_64/ais_infer.py --model ./outputs/albert_bs32s.om --input ./bin/bin1,./bin/bin2,./bin/bin3 --output ./result/ --outfmt TXT --batchsize 32
-#观察对应的性能打印结果throughput 1000*batchsize(32)/NPU_compute_time.mean(xx.xxx): xxx.xxx
+   1. 安装ais_bench推理工具。
 
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-# 竞品性能测试
-trtexec --onnx=./outputs/albert_bs32s.onnx --fp16 --threads
-```
+   2. 执行推理。
 
+        ```
+        # 以bs32为例
+        mkdir -p results/bs32
+        python3 -m ais_bench --model outputs/albert_bs32.om --input ./preprocessed_data/input_ids,./preprocessed_data/attention_mask,./preprocessed_data/token_type_ids --output results/bs32 --outfmt NPY --batchsize 32
+        ```
+        -   参数说明：
 
-
-## 模型后处理
-
-```shell
-#删除工具生成的中间文件
-rm ./result/xxxx_xx_xx-xx_xx_xx（时间戳）/sumary.json
-
-# 对数据进行后处理
-python3.7 Albert_postprocess.py --dump_output=./result/xxxx_xx_xx-xx_xx_xx（时间戳）
-
-#运行后会打印出对应的结果acc=xxx
-#./result/xxxx_xx_xx-xx_xx_xx（时间戳）此目录根据实际值填写
-```
+             -   --model：om文件路径。
+             -   --input：输入文件。
+             -   --output：输出目录。
+             -   --device：NPU设备编号。
+             -   --outfmt: 输出数据格式。
+             -   --batchsize：推理模型对应的batchsize。
 
 
+        推理后的输出默认在当前目录outputs/bs32下。
 
-## 结果
+   3.  精度验证。
 
-精度性能
+      调用Albert_postprocess.py脚本与数据集标签比对，获得Accuracy数据。
 
-| 模型      | pth精度  | 310精度  | 基准性能    | 310性能    | 310P3性能 |
-| :------: | :------: | :------: | :------:  | :------:  | :------:  |
-| Albert bs1  | acc:0.928 | acc:0.927  |  276.61fps | 231.39fps |  |
-| Albert bs16 | acc:0.928  | acc:0.927 | 577.73fps | 300.83fps |  |
-| Albert bs16 | acc:0.928 | acc:0.927 |  |  | 754.1fps |
+      ```
+      python3 Albert_postprocess.py --result_dir results/bs32/${timestamp} --label_path preprocessed_data/label.npy
+      ```
 
+      -   参数说明：
+
+        --result_dir：生成推理结果所在路径。
+
+        --label_path：GT label文件所在路径。
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+精度参考下列数据:
+
+| device |   ACC |
+|--------|-------|
+| 基准   | 92.8% |
+| 310    | 92.7% |
+| 310P   | 92.8% |
+
+
+性能参考下列数据。
+
+
+| 模型        | 基准性能 | 310性能   | 310P3性能  |
+| :------:    | :------: | :------:  | :------:   |
+| Albert bs1  | 516fps   | 231.39fps | 794.49fps  |
+| Albert bs16 | 851fps   | 300.83fps | 1288.93fps |
+| Albert bs4  | 934fps   |           | 1200.07fps |
+| Albert bs8  | 908fps   |           | 1327.35fps |
+| Albert bs32 | 905fps   |           | 1266.09fps |
+| Albert bs64 | 1064fps  |           | 1205.49fps |

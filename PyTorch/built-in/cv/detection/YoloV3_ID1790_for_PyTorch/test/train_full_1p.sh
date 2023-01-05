@@ -22,13 +22,20 @@ data_path=""
 Network="YoloV3_ID1790_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
-batch_size=128
+batch_size=64
+
+# 指定训练所使用的npu device卡id
+device_id=0
 
 #参数校验，不需要修改
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
     if [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
@@ -54,9 +61,6 @@ fi
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
-
-# 指定训练所使用的npu device卡id
-device_id=0
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
@@ -84,10 +88,11 @@ start_time=$(date +%s)
 sed -i "s|data/coco/|$data_path/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-PORT=29500 ./tools/dist_train.sh configs/yolo/yolov3_d53_320_273e_coco.py 1  \
-    --cfg-options optimizer.lr=0.001  \
+python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
+    --cfg-options optimizer.lr=0.001 data.samples_per_gpu=${batch_size} \
     --seed 0  \
-    --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --local_rank 0 \
+    --npu_ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -100,7 +105,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
+time=`grep -a 'mmdet:Epoch'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|sed '/^$/d'|awk '{sum+=$1} END {print sum/NR}'|sed 's/.$//'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

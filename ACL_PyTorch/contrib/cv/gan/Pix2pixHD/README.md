@@ -62,7 +62,7 @@ Pix2PixHD作为pix2pix的改进版本，是一个经典的图像生成网络，�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -219,15 +219,15 @@ Pix2PixHD作为pix2pix的改进版本，是一个经典的图像生成网络，�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${tool_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
       mkdir result
-      python3 ${tool_path}/ais_infer.py --model=./pix2pixhd_bs1.om --input=./prep_datasets/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1  --device 0 
+      python3 -m ais_bench --model=./pix2pixhd_bs1.om --input=./prep_datasets/ --output=./result/ --output_dirname=bs1 --outfmt=BIN --batchsize=1  --device 0 
       ```
       - 参数说明：
          - --model：模型类型。
@@ -240,8 +240,7 @@ Pix2PixHD作为pix2pix的改进版本，是一个经典的图像生成网络，�
 
         推理后的结果在"./result/bs1/"路径下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
 
    3. 精度验证。
 
@@ -267,10 +266,10 @@ Pix2PixHD作为pix2pix的改进版本，是一个经典的图像生成网络，�
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device 0
+      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device 0
       ```
       - 参数说明：
          - --model：om模型的路径。

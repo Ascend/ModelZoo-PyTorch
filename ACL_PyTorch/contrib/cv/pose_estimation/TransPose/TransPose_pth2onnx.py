@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import sys
 import torch
 import torch.onnx
@@ -60,7 +61,7 @@ def export_onnx(config, weights, bs):
     model.eval()
 
     checkpoint = torch.load(weights, map_location='cpu')
-    onnx_path = weights[:-4] + "_bs" + str(bs)+".onnx"
+    onnx_path = os.path.splitext(weights)[0] + ".onnx"
     try:
         model.load_state_dict(checkpoint)
     except:
@@ -71,6 +72,7 @@ def export_onnx(config, weights, bs):
     output_names = ["output"]
     dummy_input = torch.zeros(bs, 3, 256, 192)
     torch.onnx.export(model, dummy_input, onnx_path, input_names=input_names,
+                      dynamic_axes={'input': {0: 'bs'}},
                       output_names=output_names,
                       opset_version=11)
     print('onnx export done .')

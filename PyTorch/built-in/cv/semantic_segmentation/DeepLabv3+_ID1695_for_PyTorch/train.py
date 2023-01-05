@@ -158,6 +158,8 @@ class Trainer(object):
               loss.backward()
           self.optimizer.step()
           train_loss += loss.item()
+          if i < 3 and epoch == 0:
+              print("step_time: ", time.time() - t_int)
           if self.args.is_master_node:
               print('train_loss: %.3f' % (train_loss / (i + 1)))
               tbar.set_description('Train loss: %.3f' % (train_loss / (i + 1)))

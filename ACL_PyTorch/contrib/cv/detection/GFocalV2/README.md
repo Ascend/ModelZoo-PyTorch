@@ -1,261 +1,256 @@
-# GFocalV2模型PyTorch离线推理指导
+# GFocalV2模型-推理指导
 
-- [GFocalV2模型PyTorch离线推理指导](#GFocalV2模型PyTorch离线推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx转om模型](#32-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成预处理数据集信息文件](#43-生成预处理数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 msame工具概述](#51-msame工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-	- [7 性能对比](#7-性能对比)
-        - [7.1 310P性能数据](#71-310p性能数据)
-        - [7.2 T4性能数据](#72-t4性能数据)
-        - [7.3 性能对比](#73-性能对比)
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
--   **[论文地址](#11-论文地址)**  
+    - [输入输出数据](#section540883920406)
 
--   **[代码地址](#12-代码地址)**  
 
-### 1.1 论文地址
-[GfocalV2论文](https://arxiv.org/abs/1807.01544)
-论文主要引入边界框不确定性的统计量来高效地指导定位质量估计，从而提升one-stage的检测器性能
 
-### 1.2 代码地址
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[GfocalV2 Pytorch实现代码](https://github.com/implus/GFocalV2)
-```
-branch=master 
-commit_id=bfcc2b9fbbcad714cff59dacc8fb1111ce381cda
-```
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-## 2 环境说明 
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
--   **[深度学习框架](#21-深度学习框架)**  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
--   **[python第三方库](#22-python第三方库)**  
+  ******
 
-### 2.1 深度学习框架
-```
-CANN == 5.1.RC2
-pytorch == 1.8.0
-torchvision == 0.9.0
-onnx == 1.9.0
-```
 
-### 2.2 python第三方库
 
-```
-mmcv-full == 1.2.4 
-mmdet == 2.6.0
-opencv-python == 4.5.1.48
-numpy == 1.21.6
-pillow == 7.2.0
-```
 
-安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-```
-pip install -r requirements.txt  
-```
+GFocalV2主要引入边界框不确定性的统计量来高效地指导定位质量估计，从而提升one-stage的检测器性能。
 
 
+- 参考实现：
 
-## 3 模型转换
+  ```
+  url=https://github.com/implus/GFocalV2
+  commit_id=bfcc2b9fbbcad714cff59dacc8fb1111ce381cda
+  ```
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
 
--   **[onnx转om模型](#32-onnx转om模型)**  
 
 
-### 3.1 pth转onnx模型
+## 输入输出数据<a name="section540883920406"></a>
 
-1.获取pth权重文件  
+- 输入数据
 
-[gfocalv2预训练的pth权重文件](https://drive.google.com/file/d/1wSE9-c7tcQwIDPC6Vm_yfOokdPfmYmy7/view?usp=sharing)
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 800 x 1216 | NCHW         |
 
-2.获取GFocalV2源码
 
-获取GFocalV2代码
-```
-git clone https://github.com/implus/GFocalV2.git -b master
-cd GFocalV2
-git reset --hard b7b355631daaf776e097a6e137501aa27ff7e757
-patch -p1 < ../GFocalV2.diff
-python3.7 setup.py develop
-cd ..
-```
-3.使用./GFocalV2/tools/pytorch2onnx.py进行onnx的转换，在目录下生成gfocal.onnx
+- 输出数据
 
-```
-python3.7 ./GFocalV2/tools/pytorch2onnx.py ./GFocalV2/configs/gfocal/gfocal_r50_fpn_1x.py ./gfocal_r50_fpn_1x.pth --output-file gfocal.onnx --input-img ./GFocalV2/demo/demo.jpg --shape 800 1216 --show
-```
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 100 x 5 | ND           |
+  | output2  | FLOAT32  | 100 | ND           |
 
 
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-### 3.2 onnx转om模型
+- 该模型需要以下插件与驱动
+  **表 1**  版本配套表
 
-1.设置环境变量
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23310P424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名：
 
-使用atc将onnx模型转换为om模型 ${chip_name}可通过npu-smi info指令查看
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-![输入图片说明](https://images.gitee.com/uploads/images/2022/0704/095450_881600a3_7629432.png "屏幕截图.png")
+## 获取源码<a name="section4622531142816"></a>
 
-执行ATC命令
+1. 获取源码。
 
-```shell
-atc --framework=5 --model=./gfocal.onnx --output=gfocal_bs1 --input_format=NCHW --input_shape="input.1:1,3,800,1216" --log=debug --soc_version=Ascend${chip_name}
-```
-参数说明：\
---model：为ONNX模型文件。 \
---framework：5代表ONNX模型。\
---output：输出的OM模型。\
---input_format：输入数据的格式。\
---input_shape：输入数据的shape。\
---log：日志级别。\
---soc_version：处理器型号。\
+   ```
+   git clone https://github.com/implus/GFocalV2.git
+   cd GFocalV2         
+   git checkout master    
+   git reset --hard b7b355631daaf776e097a6e137501aa27ff7e757 
+   patch -p1 < ../GFocalV2.diff
+   python3 setup.py develop
+   cd ..             
+   ```
 
-## 4 数据集预处理
+2. 安装依赖。
 
--   **[数据集获取](#41-数据集获取)**  
+   ```
+   pip3 install -r requirements.txt
+   ```
 
--   **[数据集预处理](#42-数据集预处理)**  
+## 准备数据集<a name="section183221994411"></a>
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-### 4.1 数据集获取
-该模型使用COCO数据集
-[coco2017](https://cocodataset.org/#download)，下载其中val2017图片及其标注文件，放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json，文件目录结构如下：
-```
-root
-├── dataset
-│   ├── coco
-│   │   ├── annotations
-│   │   ├── val2017
-```
-### 4.2 数据集预处理
-1.预处理脚本gfocal_preprocess.py
+   该模型使用COCO数据集[coco2017](https://cocodataset.org/#download)，下载其中val2017图片及其标注文件，放入服务器/root/dataset/coco/文件夹，val2017目录存放coco数据集的验证集图片，annotations目录存放coco数据集的instances_val2017.json。目录结构如下：
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+   ```
+   dataset
+   ├── coco  
+      ├── annotations  
+      ├── val2017  
+   ```
 
-```shell
-python3.7 gfocal_preprocess.py --image_src_path=${datasets_path}/coco/val2017 --bin_file_path=val2017_bin --model_input_height=800 --model_input_width=1216
-```
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-### 4.3 生成预处理数据集信息文件
-1.生成数据集信息文件脚本get_info.py
+   执行gfocal_preprocess.py脚本，完成预处理。
 
-2.执行生成数据集信息脚本，生成数据集信息文件
+   ```
+   python3 gfocal_preprocess.py --image_src_path=${datasets_path}/coco/val2017 --bin_file_path=val2017_bin --model_input_height=800 --model_input_width=1216
+   ```
 
-```shell
-python3.7 get_info.py jpg ${datasets_path}/coco/val2017 gfocal_jpeg.info
-```
-第一个参数为模型输入的类型，第二个参数为数据集路径，第三个为输出的info文件
+3. 生成预处理数据集信息文件
 
+   执行get_info.py，生成数据集信息文件
 
-## 5 离线推理 
--   **[msame工具概述](#51-msame工具概述)**  
+   ```
+   python3 get_info.py jpg ${datasets_path}/coco/val2017 gfocal_jpeg.info
+   ```
+   第一个参数为模型输入的类型，第二个参数为数据集路径，第三个为输出的info文件
 
--   **[离线推理](#52-离线推理)**  
+## 模型推理<a name="section741711594517"></a>
 
-### 5.1 msame工具概述
+1. 模型转换。
 
-msame工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[参考链接](https://gitee.com/ascend/tools/tree/master/msame#https://gitee.com/link?target=https%3A%2F%2Fobs-book.obs.cn-east-2.myhuaweicloud.com%2Fcjl%2Fmsame.zip)
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-### 5.2 离线推理
-1.设置环境变量
+   1. 获取权重文件。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.将编译完成的可执行文件放到当前目录下，执行离线推理，执行时使npu-smi info查看设备状态，确保device空闲
+      [gfocalv2预训练的pth权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/GFocalV2/PTH/gfocal_r50_fpn_1x.pth)
 
-```shell
-./tools/msame/out/msame --model "./gfocal_bs1.om" --input "./val2017_bin" --output "./out/" --outfmt TXT
-```
+   2. 导出onnx文件。
 
-## 6 精度对比 
-调用gfocal_postprocess.py：
-```shell
-python3.7 gfocal_postprocess.py --bin_data_path=./out/2* --test_annotation=gfocal_jpeg.info --net_out_num=3 --net_input_height=800 --net_input_width=1216
-```
-参数"--bin_data_path"为推理生成结果文件的路径。
-执行完后会打印出精度。
-```
-Average Precision(AP)@[ IoU=0.50:0.95 | area=all | maxDets=100 ] =0.406
-```
-[官网精度](https://github.com/implus/GFocalV2)
-```
-Average Precision(AP)@[ IoU=0.50:0.95 | area=all | maxDets=100 ] =0.410
-```
+      1. 使用pytorch2onnx.py导出onnx文件。
 
-## 7 性能对比
+         ```
+         python3 ./GFocalV2/tools/pytorch2onnx.py ./GFocalV2/configs/gfocal/gfocal_r50_fpn_1x.py ./gfocal_r50_fpn_1x.pth --output-file gfocal.onnx --input-img ./GFocalV2/demo/demo.jpg --shape 800 1216 --show
+         ```
 
--   **[310性能数据](#71-310性能数据)**  
--   **[310P性能数据](#72-310P性能数据)**  
--   **[T4性能数据](#73-T4性能数据)** 
--   **[性能对比](#74-性能对比)**  
+         获得gfocal.onnx文件。
 
-### 7.1 310性能数据
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-batch1的性能：
- 测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
+      1. 配置环境变量。
 
-```
-./tools/msame/out/msame --model "./gfocal_bs1.om" --input "./val2017_bin" --output "./out/" --outfmt TXT
-```
-执行数据集推理，推理完成时显示推理时间。
-```
-Inference average time : 223.21ms
-Inference average time without first time : 223.22ms
-```
-由于310为四芯片，计算fps时使用4*1000/223.21=17.92fps
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-### 7.2 310P性能数据
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-batch1的性能：
- 测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-```
-./tools/msame/out/msame --model "./gfocal_bs1.om" --input "./val2017_bin" --output "./out/" --outfmt TXT
-```
-执行数据集推理，推理完成时显示推理时间。
-```
-Inference average time : 28.99ms
-Inference average time without first time : 28.99ms
-```
-计算fps时使用1000/28.99=34.49fps
+      3. 执行ATC命令。
 
-### 7.3 性能对比
+         ```
+         atc --framework=5 --model=./gfocal.onnx --output=gfocal_bs1 --input_format=NCHW --input_shape="input.1:1,3,800,1216" --log=debug --soc_version=Ascend${chip_name} 
+         ```
 
-**评测结果：** 
+         - 参数说明：
 
-| 模型      |  310P性能    | 310性能    |T4性能  |310P/310 |310P/T4| 
-| :------: |  :------:  | :------:  | :------:  |:------:  |  :------:  | 
-| GFocalV2 bs1  |  34.49fps |17.92fps | 9.4fps |1.92| 3.67|
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-```
-# 710性能是否超过基准： 是
-310P vs 310: bs1:710=(34.49/17.92) 1.92倍基准
-310P vs T4: bs1:710=(34.49/9.4) 3.67倍基准
-性能在310P上的性能超过310的1.2倍,超过T4性能的1.6倍,性能达标
-备注：离线模型不支持多batch。
-```
+           运行成功后生成<u>***gfocal_bs1.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
+
+   2. 配置环境变量
+
+        ```
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        ```
+
+   3. 执行推理。
+
+
+        ```
+        python3 -m ais_bench --model ./gfocal_bs1.om --input ./val2017_bin --output result --outfmt TXT  
+        ```
+
+        -   参数说明：
+
+             -   --model：om文件路径
+             -   --input：预处理后二进制目录。
+             -   --output：推理结果输出路径。
+             -   --outfmt：推理结果输出格式。
+
+        推理后的输出默认在当前目录result下。
+
+
+   4. 精度验证。
+
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+      ```
+      python3 gfocal_postprocess.py --bin_data_path=result/${outout_dir} --annotations_path=${datasets_path} --test_annotation=gfocal_jpeg.info --net_out_num=2 --net_input_height=800 --net_input_width=1216
+      ```
+
+      - 参数说明：
+
+        - --bin_data_path：为生成推理结果所在目录
+        - --annotations_path：为数据集annotation所在目录
+        - --test_annotations：为预处理数据集信息文件所在路径
+
+   5. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+        python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batch大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|   310P        |      1            |    COCO2017        |   AP(IoU=0.50:0.95)=0.406         |      38.33 fps           |
+|   310P        |      4            |    COCO2017        |   AP(IoU=0.50:0.95)=0.406         |      41.85 fps           |
+|   310P        |      8            |    COCO2017        |   AP(IoU=0.50:0.95)=0.406         |      38.56 fps           |
+|   310P        |      16            |    COCO2017        |   AP(IoU=0.50:0.95)=0.406         |      37.22 fps           |
+|   310P        |      32            |    COCO2017        |   AP(IoU=0.50:0.95)=0.406         |      41.57 fps           |
+|   310P        |      64            |    COCO2017        |   AP(IoU=0.50:0.95)=0.406         |      37.45 fps           |

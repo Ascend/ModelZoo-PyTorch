@@ -245,7 +245,8 @@ def train():
 		##        
         batch_sise = target.size(0)
         fps = (batch_sise / batch_time.val)
-
+        if i < 3 and epoch == 0:
+            print("step_time: ", batch_time.val)
         if i % args.print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'

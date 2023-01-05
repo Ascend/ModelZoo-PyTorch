@@ -333,11 +333,11 @@ def measure_time(enter_msg):
 
 
 """Accuracy calculation"""
-def main(pth):
+def main(pth, gt_path, key_idx):
     ids = []
     cams = []
 
-    partition_file = os.path.expanduser('./market1501/partitions.pkl')
+    partition_file = gt_path
     partitions = load_pickle(partition_file)
     im_names = partitions['test_im_names']
     global_feats = np.zeros((len(im_names), 2048))
@@ -348,7 +348,7 @@ def main(pth):
         cams.append(cam)
 
     marks = partitions['test_marks']
-    key = '_2'
+    key = f'_{key_idx}'
 
     i = 0
 
@@ -418,4 +418,6 @@ def main(pth):
 
 if __name__ == "__main__":
     result_path = sys.argv[1]
-    main(result_path)
+    gt_path = sys.argv[2]
+    key_idx = sys.argv[3]
+    main(result_path, gt_path, key_idx)

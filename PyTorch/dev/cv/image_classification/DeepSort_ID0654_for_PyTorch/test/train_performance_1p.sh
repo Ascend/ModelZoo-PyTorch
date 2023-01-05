@@ -141,9 +141,12 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 #FPS=`grep "]time" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F":" 'NR>1{print $3}' | awk -F"s" '{print $1}' | head -n -1 | awk '{sum+=$1} END {print 64*NR/sum}'`
-FPS=`grep -rn "progress:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print $2}'| awk -F "s" '{print $1}'|awk '{if (NR>1){print $1}}'|awk '{if(length !=0) print $0}'|awk '{sum+=$1} END {print 64*NR/sum}'`
+FPS=`grep -rn "progress:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "time:" '{print $2}'| awk -F "s" '{print $1}'|awk '{if (NR>12){print $1}}'|awk '{if(length !=0) print $0}'|awk '{sum+=$1} END {print 64*NR/sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+
+#获取编译时间
+CompileTime=`grep "progress:" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F "time:" '{print $2}' | awk -F "s" '{print $1}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep train_accuracy $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $8}'|cut -c 1-5`
@@ -180,3 +183,4 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

@@ -97,9 +97,8 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-
-nohup taskset -c 0-47 python3.7 train.py \
-                --device_id ${ASCEND_DEVICE_ID} \
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
+nohup taskset -c 0-47 python3.7 main.py \
                 --img $image_size $image_size \
                 --data coco.yaml \
                 --cfg cfg/yolov4.cfg \

@@ -17,7 +17,7 @@ Network=`echo $(cd $(dirname $0);pwd) | awk -F"/" '{print $(NF-1)}'`
 export RANK_SIZE=1
 export RANK_ID=0
 export JOB_ID=10087
-
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 # 路径参数初始化
 data_path=""
 output_path=""
@@ -30,7 +30,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_path              # dataset of training
     --output_path            # output of training
     --train_steps            # max_step for training
-	  --train_epochs           # max_epoch for training
+    --train_epochs           # max_epoch for training
     --batch_size             # batch size
     -h/--help                show help message
     "
@@ -91,9 +91,6 @@ cd ${cur_path}/../
 rm -rf ./test/output/${ASCEND_DEVICE_ID}
 mkdir -p ./test/output/${ASCEND_DEVICE_ID}
 
-# 移动数据
-sed -i "s#./dataset#${data_path}#" option.py
-
 # 训练开始时间记录，不需要修改
 start_time=$(date +%s)
 ##########################################################
@@ -112,14 +109,27 @@ start_time=$(date +%s)
 # 您的训练输出目录在${output_path}路径下，请直接使用这个变量获取
 # 您的其他基础参数，可以自定义增加，但是batch_size请保留，并且设置正确的值
 batch_size=1
-
-python3.7 ./dataset_generator.py --dir_data=${data_path}
+train_epochs=50
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./main_edsr.py --batch_size=${batch_size} --use_npu
+    python3.7 ./main_edsr.py \
+        --dir_data=${data_path}/ \
+        --dir_train_data=${data_path}/train/ \
+        --dir_test_data=${data_path}/test/ \
+        --batch_size=${batch_size} \
+        --epochs=${train_epochs} \
+        --use_npu \
+        --npu=${NPU_CALCULATE_DEVICE} 1>${print_log} 2>&1
 else
-    python3.7 ./main_edsr.py --batch_size=${batch_size} --use_npu 1>${print_log} 2>&1
+    python3.7 ./main_edsr.py \
+        --dir_data=${data_path}/ \
+        --dir_train_data=${data_path}/train/ \
+        --dir_test_data=${data_path}/test/ \
+        --batch_size=${batch_size} \
+        --epochs=${train_epochs} \
+        --use_npu \
+        --npu=${NPU_CALCULATE_DEVICE} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算
@@ -136,20 +146,6 @@ grep "Test Loss:" ${print_log} | awk -F ":" '{print $3}' | awk '{print $1}' > ./
 #########后面的所有内容请不要修改###########################
 #########后面的所有内容请不要修改###########################
 ###########################################################
-
-# 判断本次执行是否正确使用Ascend NPU
-tf_flag=`echo ${Network} | grep TensorFlow | wc -l`
-use_npu_flag=`grep "The model has been compiled on the Ascend AI processor" ${print_log} | wc -l`
-if [ x"${use_npu_flag}" == x0 -a x"${tf_flag}" == x1 ];
-then
-    echo "------------------ ERROR NOTICE START ------------------"
-    echo "ERROR, your task haven't used Ascend NPU, please check your npu Migration."
-    echo "------------------ ERROR NOTICE END------------------"
-else
-    echo "------------------ INFO NOTICE START------------------"
-    echo "INFO, your task have used Ascend NPU, please check your result."
-    echo "------------------ INFO NOTICE END------------------"
-fi
 
 # 获取最终的casename，请保留，case文件名为${CaseName}
 get_casename

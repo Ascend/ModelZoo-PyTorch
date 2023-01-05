@@ -86,7 +86,7 @@ else:
 print(device)
 
 maxlen = 256
-batch_size = 16
+batch_size = int(os.environ["BATCH_SIZE"])
 warm_factor = 0.1
 categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
 categories_id2label = {i: k for i, k in enumerate(categories)}

@@ -88,7 +88,7 @@ start_time=$(date +%s)
 PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
     --no-validate  \
     --launcher pytorch  \
-    --cfg-options log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --cfg-options data.persistent_workers=True log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x8_300e_coco.py

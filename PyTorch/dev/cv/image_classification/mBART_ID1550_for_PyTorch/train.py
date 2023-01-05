@@ -201,6 +201,8 @@ def train(opt):
             tokens += batch.ntokens
             step_time = time.time() - start_time
             FPS = opt.batch_size / step_time
+            if i < 2:
+                print("step_time = {:.4f}".format(step_time), flush=True)
             if i % opt.report_every == 0 and i > 0:
                 elapsed = time.time() - start
                 print("Epoch: %s, Step: %d Loss: %f PPL: %f Tokens per Sec: %f, time/step(s):%.4f, FPS: %.3f" %

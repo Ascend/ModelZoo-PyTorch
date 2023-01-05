@@ -53,18 +53,18 @@ if __name__ == '__main__':
     cls = runner_decrator(RUNNERS.get(config.TRAINER.NAME))
     evaluator = cls.build_evaluator(config, dataset_name, cls.build_test_loader(config).dataset)
     evaluator.reset()
-    bin_data_path = args.bin_data_path + os.listdir(args.bin_data_path)[0] + "/"
+    bin_data_path = args.bin_data_path
 
     with open(args.meta_info_path, "r") as fp:
         for line in fp:
             values = line.split()
             file_name = values[0]
             batch_size = (len(values) - 1) // 3
-            nmsed_boxes_batch = np.fromfile("{0}{1}_output_{2}.bin".format(bin_data_path, file_name, 0),
+            nmsed_boxes_batch = np.fromfile("{0}/{1}_{2}.bin".format(bin_data_path, file_name, 0),
                                             dtype=np.float32).reshape(batch_size, -1, 4)
-            nmsed_scores_batch = np.fromfile("{0}{1}_output_{2}.bin".format(bin_data_path, file_name, 1),
+            nmsed_scores_batch = np.fromfile("{0}/{1}_{2}.bin".format(bin_data_path, file_name, 1),
                                              dtype=np.float32).reshape(batch_size, -1)
-            nmsed_classes_batch = np.fromfile("{0}{1}_output_{2}.bin".format(bin_data_path, file_name, 2),
+            nmsed_classes_batch = np.fromfile("{0}/{1}_{2}.bin".format(bin_data_path, file_name, 2),
                                               dtype=np.int64).reshape(batch_size, -1)
             last_image = ""
             for i in range(batch_size):

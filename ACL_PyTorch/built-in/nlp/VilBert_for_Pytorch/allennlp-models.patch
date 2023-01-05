@@ -1,0 +1,26 @@
+diff --git a/allennlp_models/vision/models/vilbert_vqa.py b/allennlp_models/vision/models/vilbert_vqa.py
+index 7cc29e80..46d5073f 100644
+--- a/allennlp_models/vision/models/vilbert_vqa.py
++++ b/allennlp_models/vision/models/vilbert_vqa.py
+@@ -75,10 +75,20 @@ class VqaVilbert(VisionTextModel):
+         box_features: torch.Tensor,
+         box_coordinates: torch.Tensor,
+         box_mask: torch.Tensor,
+-        question: TextFieldTensors,
++        token_ids,
++        mask,
++        type_ids,
++        # question: TextFieldTensors,
+         labels: Optional[torch.Tensor] = None,
+         label_weights: Optional[torch.Tensor] = None,
+     ) -> Dict[str, torch.Tensor]:
++        question = {
++            "tokens": {
++                "token_ids": token_ids,
++                "mask": mask,
++                "type_ids": type_ids
++            }
++        }
+ 
+         return super().forward(
+             box_features,

@@ -17,7 +17,7 @@ import argparse
 import torch
 
 
-sys.path.append('./workspace/EDSR-PyTorch/src')
+sys.path.append('./EDSR-PyTorch/src')
 from model.edsr import EDSR
 
 
@@ -41,7 +41,6 @@ def parser_func():
                         help='out path for onnx model')
     args = parser.parse_args()
     args.scale = list(map(lambda x: int(x), args.scale.split('+')))
-    os.makedirs(os.path.dirname(args.out_path), exist_ok=True)
     return args
 
 

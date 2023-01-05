@@ -22,6 +22,8 @@ import warnings
 
 import mmcv
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
 from mmcv.utils import get_git_hash
@@ -120,6 +122,7 @@ def main():
         cfg.resume_from = args.resume_from
     if args.gpu_ids is not None:
         cfg.gpu_ids = args.gpu_ids
+        torch.npu.set_device(args.gpu_ids[0])
     else:
         cfg.gpu_ids = range(1) if args.gpus is None else range(args.gpus)
 
@@ -190,4 +193,7 @@ def main():
 
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
+    torch.npu.set_option(option)
     main()

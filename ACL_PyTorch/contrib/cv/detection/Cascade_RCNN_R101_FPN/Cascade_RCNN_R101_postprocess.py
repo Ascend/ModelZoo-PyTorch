@@ -15,7 +15,6 @@
 import os
 import numpy as np
 import cv2
-import json
 import glob
 import sys
 import argparse
@@ -38,88 +37,10 @@ CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
             'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock',
             'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
-name2id = {
-    'person':1,
-    'bicycle':2,
-    'car':3,
-    'motorcycle':4,
-    'airplane':5,
-    'bus':6,
-    'train':7,
-    'truck':8,
-    'boat':9,
-    'traffic light':10,
-    'fire hydrant':11,
-    'stop sign':13,
-    'parking meter':14,
-    'bench':15,
-    'bird':16,
-    'cat':17,
-    'dog':18,
-    'horse':19,
-    'sheep':20,
-    'cow':21,
-    'elephant':22,
-    'bear':23,
-    'zebra':24,
-    'giraffe':25,
-    'backpack':27,
-    'umbrella':28,
-    'handbag':31,
-    'tie':32,
-    'suitcase':33,
-    'frisbee':34,
-    'skis':35,
-    'snowboard':36,
-    'sports ball':37,
-    'kite':38,
-    'baseball bat':39,
-    'baseball glove':40,
-    'skateboard':41,
-    'surfboard':42,
-    'tennis racket':43,
-    'bottle':44,
-    'wine glass':46,
-    'cup':47,
-    'fork':48,
-    'knife':49,
-    'spoon':50,
-    'bowl':51,
-    'banana':52,
-    'apple':53,
-    'sandwich':54,
-    'orange':55,
-    'broccoli':56,
-    'carrot':57,
-    'hot dog':58,
-    'pizza':59,
-    'donut':60,
-    'cake':61,
-    'chair':62,
-    'couch':63,
-    'potted plant':64,
-    'bed':65,
-    'dining table':67,
-    'toilet':70,
-    'tv':72,
-    'laptop':73,
-    'mouse':74,
-    'remote':75,
-    'keyboard':76,
-    'cell phone':77,
-    'microwave':78,
-    'oven':79,
-    'toaster':80,
-    'sink':81,
-    'refrigerator':82,
-    'book':84,
-    'clock':85,
-    'vase':86,
-    'scissors':87,
-    'teddy bear':88,
-    'hair drier':89,
-    'toothbrush':90
-}
+cat_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 
+24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 
+48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 67, 70,
+72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
 
 def coco_postprocess(bbox: np.ndarray, image_size, 
                         net_input_width, net_input_height):
@@ -206,7 +127,7 @@ def get_predict_list(file_path, gt_classes):
             bottom = float(bottom)
             bbox = [left, top, right-left, bottom-top]
             bounding_boxes.append({"image_id": int(file_id), "bbox": bbox, 
-                                   "score": float(scores), "category_id": name2id[class_name]})
+                                   "score": float(scores), "category_id": cat_ids[CLASSES.index(class_name)]})
         # sort detection-results by decreasing scores
         # bounding_boxes.sort(key=lambda x: float(x['score']), reverse=True)
     return bounding_boxes
@@ -214,8 +135,9 @@ def coco_evaluation(annotation_json, result_json):
     cocoGt = COCO(annotation_json)
     cocoDt = cocoGt.loadRes(result_json)
     iou_thrs = np.linspace(.5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
+    iou_type = 'bbox'
 
-    cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+    cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
     cocoEval.params.catIds = cocoGt.get_cat_ids(cat_names=CLASSES)
     cocoEval.params.imgIds = cocoGt.get_img_ids()
     cocoEval.params.maxDets = [100, 300, 1000] # proposal number for evaluating recalls/mAPs.
@@ -261,14 +183,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--bin_data_path", default="./result/dumpOutput_device0")
     parser.add_argument("--test_annotation", default="./coco2017_jpg.info")
-    parser.add_argument("--det_results_path", default="./ais_infer_detection_results")
-    parser.add_argument("--img_path", default="./data/val2017/")
+    parser.add_argument("--det_results_path", default="./detection-results")
+    parser.add_argument("--img_path", default="./val2017/")
     parser.add_argument("--net_out_num", default=2)
     parser.add_argument("--net_input_width", default=1216)
     parser.add_argument("--net_input_height", default=1216)
     parser.add_argument("--prob_thres", default=0.05)
     parser.add_argument("--ifShowDetObj", action="store_true", help="if input the para means True, neither False.")
-    parser.add_argument('--npu_txt_path', default="ais_infer_detection_results", help='the path of the predict result')
+    parser.add_argument('--npu_txt_path', default="detection-results",
+                        help='the path of the predict result')
     parser.add_argument("--json_output_file", default="coco_detection_result")
     parser.add_argument("--ground_truth", default="instances_val2017.json")
     parser.add_argument("--detection_result", default="coco_detection_result.json")
@@ -286,29 +209,28 @@ if __name__ == '__main__':
             img_height = int(temp[3])
             img_size_dict[img_name] = (img_width, img_height, img_file_path)
 
-#    print(img_size_dict)
     # read bin file for generate predict result
     bin_path = flags.bin_data_path
     det_results_path = flags.det_results_path
     img_path = flags.img_path
     os.makedirs(det_results_path, exist_ok=True)
-
-    result_info = json.load(open(os.path.join(bin_path,'sumary.json'),'r'))
-    for k,v in result_info['filesinfo'].items():
-        bin_file = os.path.basename(v['infiles'][0]).split(".")[0]
+    total_img = set([name[:name.rfind('_')]
+                     for name in os.listdir(bin_path) if "bin" in name])
+    for bin_file in sorted(total_img):
+        path_base = os.path.join(bin_path, bin_file)
+        # load all detected output tensor
         res_buff = []
-        for num in range(flags.net_out_num):
-            if os.path.exists(v['outfiles'][num]):
+        for num in range(0, flags.net_out_num ):
+            if os.path.exists(path_base + "_" + str(num) + ".bin"):
                 if num == 0:
-                    buf = np.fromfile(v['outfiles'][num], dtype="float32")
+                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
                 elif num == 1:
-                    buf = np.fromfile(v['outfiles'][num], dtype="int64")
+                    buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     buf = np.reshape(buf, [100, 1])
                 res_buff.append(buf)
             else:
-                print("[ERROR] file not exist", v['outfiles'][num])
-
+                print("[ERROR] file not exist", path_base + "_" + str(num) + ".bin")
         res_tensor = np.concatenate(res_buff, axis=1)
         current_img_size = img_size_dict[bin_file]
         print("[TEST]---------------------------concat{} imgsize{}".format(len(res_tensor), current_img_size))

@@ -117,6 +117,9 @@ FPS=`python3 -c "print(${batch_size}/${TrainingTime})"`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
+#获取编译时间
+CompileTime=`grep "Train-Time: " $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | head -2 | awk -F 'Train-Time: ' '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep "Train" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F "Train-Accuracy: " '{print $2}'|awk -F " | Train-Time" '{print $1}' |awk 'BEGIN {max = 0} {if ($1+0 > max+0) max=$1} END {print max}'`
 #打印，不需要修改
@@ -151,6 +154,7 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 
 ###下面字段用于冒烟看护
 #BatchSize=${batch_size}
