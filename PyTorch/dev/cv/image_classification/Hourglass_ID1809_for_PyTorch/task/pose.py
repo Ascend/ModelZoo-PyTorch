@@ -200,7 +200,7 @@ def make_network(configs):
                 print("the loss is: %.6f" %(loss.item()))
                 step_time = time.time() - st_time
                 fps = 16 / step_time
-                print("fps: %.6f" %(fps))
+                print("fps: %.6f" %(fps), ", step_time: %.4f" %(step_time))
             
             if batch_id == config['train']['decay_iters']:
                 ## decrease the learning rate after decay # iterations
