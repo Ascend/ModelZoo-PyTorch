@@ -142,7 +142,7 @@ do
             --data_root=$data_path --train_performance=True \
             --total_epochs 1 \
             --rt2_bin=$rt2_bin \
-            --batch_size=$batch_size \
+            --batch_size=$dis_bs \
             --fps_lag=$fps_lag \
             --interval=$interval > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
