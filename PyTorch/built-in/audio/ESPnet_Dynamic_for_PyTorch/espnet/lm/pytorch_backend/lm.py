@@ -283,9 +283,6 @@ def train(args):
 
     #开启模糊编译
     torch.npu.set_compile_mode(jit_compile=False)
-    option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = ""
-    torch.npu.set_option(option)
 
     # Save model conf to json
     model_conf = args.outdir + "/model.json"

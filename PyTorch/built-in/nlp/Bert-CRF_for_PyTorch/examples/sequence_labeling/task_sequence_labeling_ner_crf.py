@@ -67,12 +67,6 @@ parser.add_argument("--data_path", type=str, default='')
 parser.add_argument("--workers", type=int, default=4)
 args = parser.parse_args()
 
-#开启模糊编译
-# torch.npu.set_compile_mode(jit_compile=False)
-# option = {}
-# option["NPU_FUZZY_COMPILE_BLACKLIST"] = ""
-# torch.npu.set_option(option)
-
 distributed = 'WORLD_SIZE' in os.environ 
 
 if distributed:
