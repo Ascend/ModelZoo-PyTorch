@@ -33,15 +33,6 @@
   commit_id=140de6e704fd8d61f3e5ea20ffde130b7d5fd065
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -76,47 +67,37 @@
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-
-
-1. 安装依赖。
+1. 下载开源代码仓
 
    ```
-   pip3 install -r requirment.txt
+   git clone https://github.com/google-research/big_transfer.git
+   cd big_transfer
+   git reset --hard 140de6e704fd8d61f3e5ea20ffde130b7d5fd065
    ```
-2. 下载开源代码仓和gitee实现，并将对应的gitee中的代码复制到开源代码仓下；最终结构如下：
+
+2. 将本仓代码复制到开源代码仓下。
+
+3. 安装依赖。
 
    ```
-   ├── big_tansfer
-      ├── bit_preprocess.py
-         ├── bit_postprocess.py  
-         ├── bit_pth2onnx.py 
-         ├── LICENSE  
-      ├── README.md 
-         ├── requirements.txt
-         ...
+   pip3 install -r requirements.txt
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   此模型CIFAR10。下载好数据集后（cifar-10-python.tar.gz），在big_transfer目录下创建文件夹，命名为DATADIR，然后将数据集放置在DATADIR文件夹内并解压。这一步可使用步骤2的脚本实现。
-
-   下载链接：[CIFAR-10](http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)
-
-   目录结构如下：
+   此模型CIFAR10。下载好数据集后（[cifar-10-python.tar.gz](http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)），上传到服务器任意路径${data_dir}并解压。目录结构如下：
 
     ```
-   ├── big_transfer
-   	├── DATADIR
-   		├── cifar-10-batches-py
-   			├──test_batch
-   			├──batches.meta
-   			├──readme.html
-   			├──data_batch_x
-   	├── cifar-10-python.tar.gz
+   ├── ${data_dir}
+   	├── cifar-10-batches-py
+   		├──test_batch
+   		├──batches.meta
+   		├──readme.html
+   		├──data_batch_x
     ```
-
+   
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
 
    数据预处理将原始数据集转换为模型输入的数据。
@@ -124,13 +105,13 @@
    对CIFAR10中的图片进行裁剪遮挡处理，并将结果放置在big_transfer/dataset_bin目录下并生成标签文件label.txt。预处理后的数据输出格式为bin。
 
    ```
-   python3 bit_preprocess.py --dataset_path DATADIR --save_path dataset_bin
+   python3 bit_preprocess.py --dataset_path ${data_dir} --save_path ${save_dir} --label_path ${gt_file}
    ```
    参数说明：
-   •	dataset_path: 数据路径
-   •	save_path: 保存路径
-
-
+   
+   - --dataset_path: 数据路径
+   - --save_path: 保存路径
+   - --label_path：生成真值标签文件
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -140,7 +121,7 @@
 
    1. 获取权重文件。
 
-      [bit.pth](https://pan.baidu.com/s/1WHVpYbKQVTNYJupsJs8FWg?pwd=3jnx), access code "3jnx"
+      下载[bit.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Big-transfer/PTH/bit.pth)权重文件，并放置在工作目录`big_transfer`下
 
    2. 导出onnx文件。
 
@@ -189,14 +170,13 @@
          +===================+=================+======================================================+
          ```
 
-      3. 执行ATC命令（以 bs=16 为例）。
+      3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=./bit_bs16_sim.onnx --input_format=NCHW --input_shape="image:16,3,128,128" --output=bit_bs16 --log=debug --soc_version=Ascend${chip_name}
+         # bs=[1,4,8,16,32,64]
+         atc --framework=5 --model=./bit_bs${bs}_sim.onnx --input_format=NCHW --input_shape="image:${bs},3,128,128" --output=bit_bs${bs} --log=error --soc_version=Ascend${chip_name}
+         ```
          
-         # 备注：Ascend${chip_name}请根据实际查询结果填写
-         ```
-
          参数说明：
          -   --model：为ONNX模型文件。
          -   --framework：5代表ONNX模型。
@@ -204,43 +184,51 @@
          -   --input\_format：输入数据的格式。
          -   --input\_shape：输入数据的shape。
          -   --log：日志级别。
-         -   --soc\_version：处理器型号。
-         -   --insert\_op\_conf:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
-
-           
-
+         -   --soc\_version：处理器型号。  
+         
+   
 2. 开始推理验证。
 
    a. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+   参考[ais-bench工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
 
    b. 执行推理。
-
+   
       ```
-      source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      python3 -m ais_bench --model ./bit_bs16.om --input ./dataset_bin/ --output ./result/ --outfmt BIN --batchsize 16
+      python3 -m ais_bench --model ./bit_bs${bs}.om --input ${save_dir} --output result --output_dirname result_bs${bs} --outfmt BIN --batchsize ${bs}
       ```
 
       参数说明：   
       - --model：模型地址
       - --input：预处理完的数据集文件夹
       - --output：推理结果保存地址
+      - --output_dirname：推理结果子文件夹
       - --outfmt：推理结果保存格式
-   
+      - --batchsize：批次大小
    
    c. 精度验证。
-
-      统计推理输出的Top 1-5 Accuracy
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据。
+   
+   统计推理输出的Top 1-5 Accuracy，调用脚本与真值标签比对，可以获得精度数据。
    
       ```
       python3 bit_postprocess.py --output_dir ${result_dir} --label_path ${gt_file}
       ```
-
+   
       参数说明：
-      - --output_dir：为推理结果所在路径
+      - --output_dir：为推理结果所在路径，这里为result/result_bs${bs}
       - --label_path：为标签数据文件所在路径
+   
+   d. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+   ```
+   python3 -m ais_bench --model=bit_bs${bs}.om --loop=50 --batchsize=${bs}
+   ```
+   
+   参数说明：
+   
+   - --model：om模型路径。
+   - --batchsize：批次大小。
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
