@@ -1,4 +1,4 @@
-# ResNet50_mmlab-推理指导
+# ResNet50_mmlab 推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -181,7 +181,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    b.  执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs1.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
+      python3 -m ais_bench --model ./resnet_bs1.om --input ./bin_data --output ./ --outfmt TXT --output_dirname dst
 
       ```
 
@@ -214,7 +214,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./resnet_bs1.om --loop 20 --batchsize 1
+      python3 -m ais_bench --model ./resnet_bs1.om --loop 20 --batchsize 1
 
       ```
       - 参数说明
