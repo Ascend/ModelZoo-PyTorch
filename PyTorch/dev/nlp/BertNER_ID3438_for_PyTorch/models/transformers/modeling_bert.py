@@ -31,7 +31,6 @@ from io import open
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
-
 from .modeling_utils import PreTrainedModel, prune_linear_layer
 from .configuration_bert import BertConfig
 from .file_utils import add_start_docstrings
@@ -1151,3 +1150,4 @@ class BertForQuestionAnswering(BertPreTrainedModel):
             outputs = (total_loss,) + outputs
 
         return outputs  # (loss), start_logits, end_logits, (hidden_states), (attentions)
+

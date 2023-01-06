@@ -161,8 +161,7 @@ sed -i '$d' FPS.log
 FPS=`grep "train.total_ips :" FPS.log | awk -F 'train.total_ips :' '{print $2}'|awk '{sum+=$1} END {print sum/NR}'`
 
 #获取编译时间
-CompileFps=`grep "Epoch:" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F 'train.total_ips :' '{print $2}'| awk -F " " '{print $1}' |sed s/[[:space:]]//g`
-CompileTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${CompileFps}'}'`
+CompileTime=`grep "step_time" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F "step_time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

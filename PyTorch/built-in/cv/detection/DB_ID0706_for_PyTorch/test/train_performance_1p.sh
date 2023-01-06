@@ -111,6 +111,10 @@ FPS=${FPS#* }  # 去除前面的空格字符
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
+#输出CompileTime
+CompileTime=`grep Epoch ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2| awk -F "Time " '{print $2}' | awk -F 'ms' '{print $1}'|awk '{sum += $1} END {print sum/1000}'`
+
+
 # 打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
 
@@ -142,3 +146,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log

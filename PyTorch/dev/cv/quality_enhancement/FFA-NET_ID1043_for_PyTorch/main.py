@@ -132,6 +132,8 @@ def train(net,loader_train,loader_test,optim,criterion):
         optim.zero_grad()
         losses.append(loss.item())
         fps = opt.bs / (time.time() - begin_time)
+        if step < 3:
+            print("step_time = {:.4f}".format(time.time() - begin_time), flush=True)
         print(f'\rtrain loss :{loss.item():.5f}| step :{step}/{opt.steps}|lr :{lr :.7f} |time_used :{(time.time()-start_time)/60 :.1f}|fps :{fps:.4f}',end='',flush=True)
 
         #with SummaryWriter(logdir=log_dir,comment=log_dir) as writer:

@@ -205,7 +205,7 @@
 
 2. 开始推理验证。
 
-   1.  使用ais_infer工具进行推理。ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+   1.  安装ais_bench推理工具。ais_bench推理工具获取及使用方式请点击查看 [ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)。
 
    2.  创建输出的文件夹。
 
@@ -218,7 +218,7 @@
 
        执行命令
        ```
-       python ${ais_infer_path}/ais_infer.py --device 0 --batchsize 1 --model 3DMPPE-ROOTNET_bs1.om --input "data_image_bs1,data_cam_bs1" --output out_bs1
+       python -m ais_bench --device 0 --batchsize 1 --model 3DMPPE-ROOTNET_bs1.om --input "data_image_bs1,data_cam_bs1" --output out_bs1
        ```
        -   参数说明：
       
@@ -247,10 +247,10 @@
 
    5. 性能验证。
 
-       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
        ```
-       python ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+       python -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
        ```
        - 参数说明：
             - --model：om模型的路径

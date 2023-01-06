@@ -25,7 +25,7 @@ def ais_infer(bs, ais_infer_path, om_model):
         path = f"out"
         if not os.path.exists(path):
             os.makedirs(path)
-        os.system(f'python3 {ais_infer_path}/ais_infer.py --input prep_data/{file_path} --dymDims mel:1,80,{scale} --model {om_model} --output {path} --outfmt BIN --batchsize {bs}')
+        os.system(f'python3 -m ais_bench --input prep_data/{file_path} --dymDims mel:1,80,{scale} --model {om_model} --output {path} --outfmt BIN --batchsize {bs}')
         for j in os.listdir(path):
             p = os.path.join(path, j)
             if os.path.isdir(p):

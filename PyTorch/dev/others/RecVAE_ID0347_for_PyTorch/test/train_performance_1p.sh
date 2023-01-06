@@ -121,6 +121,9 @@ FPS=`python3 -c "print(${batch_size}/${TrainingTime})"`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
+#获取编译时间
+CompileTime=`grep "time:" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | head -2 | awk -F "time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -157,4 +160,4 @@ echo "TrainingTime = ${TrainingTime}" >> $path/output/$ASCEND_DEVICE_ID/${CaseNa
 echo "ActualLoss = ${ActualLoss}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #echo "TrainAccuracy = ${train_accuracy}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
+echo "CompileTime = ${CompileTime}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log

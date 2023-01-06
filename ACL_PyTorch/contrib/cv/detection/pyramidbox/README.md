@@ -196,18 +196,18 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
         ```shell
         mkdir result11 result22
         
-        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
+        python -m ais_bench --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_1/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
 
-        python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
+        python -m ais_bench --model ${model_path}/pyramidbox_bs1.om --input=${dataset_path}/bs1_data_2/ --outfmt=BIN --output=${output_path} --output_dirname=${output_dir_name}
         
         说明：由于预处理后的数据集有两个，所以此脚本需要运行两次
         ```
@@ -222,8 +222,7 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
 
         推理后的输出默认在当前目录`result11` 和 `result22`下。
    
-        > **说明：** 
-        > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
 
    3. 处理目录下的bin文件
    
@@ -257,10 +256,10 @@ Pyramidbox是一种新的基于上下文辅助的单镜头人脸检测器。首�
 
 4. 性能验证。
 
-   可使用ais_infer推理工具的纯推理模式验证om模型的性能，参考命令如下：
+   可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
    ```shell
-   python ais_infer.py --model ${model_path}/pyramidbox_bs1.om --loop 20 --batchsize 1
+   python -m ais_bench --model ${model_path}/pyramidbox_bs1.om --loop 20 --batchsize 1
    ```
 
    -   参数说明：

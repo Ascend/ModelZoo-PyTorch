@@ -1,13 +1,14 @@
 # Rosetta_MobileNetV3 模型推理指导
 
+- [Rosetta\_MobileNetV3 模型推理指导](#rosetta_mobilenetv3-模型推理指导)
 - [概述](#概述)
 - [推理环境](#推理环境)
 - [快速上手](#快速上手)
-    - [获取源码](#获取源码)
-    - [准备数据集](#准备数据集)
-    - [模型转换](#模型转换)
-    - [推理验证](#推理验证)
-- [性能&精度](#性能精度)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型转换](#模型转换)
+  - [推理验证](#推理验证)
+- [性能\&精度](#性能精度)
 
 ----
 # 概述
@@ -231,27 +232,12 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
 
 1. 准备推理工具  
 
-    本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
-    ```shell
-    # 指定CANN包的安装路径
-    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-
-    # 获取推理工具源码
-    git clone https://gitee.com/ascend/tools.git ascend_tools/
-    cp -r ascend_tools/ais-bench_workload/tool/ais_infer .
-
-    # 打包
-    cd ais_infer/backend/
-    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    
-    # 安装
-    pip3 install --force-reinstall aclruntime-xxx.whl
-    cd ../..
-    ```
+    本推理项目使用 ais_bench 作为推理工具，须自己打包并安装。
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 2. 离线推理  
 
-    使用ais_infer工具将预处理后的数据传入模型并执行推理：
+    使用ais_bench推理工具将预处理后的数据传入模型并执行推理：
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -259,7 +245,7 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
     
     # 对预处理后的数据进行推理
     mkdir rosetta/val_bs1_out/
-    python3 ais_infer/ais_infer.py --model rosetta/rosetta_mobilenetv3_bs1.om --input rosetta/bin_list/ --output rosetta/val_bs1_out/ --batchsize 1
+    python3 -m ais_bench --model rosetta/rosetta_mobilenetv3_bs1.om --input rosetta/bin_list/ --output rosetta/val_bs1_out/ --batchsize 1
     ```
     参数说明：
     + --model: OM模型路径。
@@ -299,7 +285,7 @@ Rosetta是用于图像中文本检测和识别的大规模系统，文本识别�
     
     执行纯推理：
     ```shell
-    python3 ais_infer/ais_infer.py --model rosetta/rosetta_mobilenetv3_bs1.om --loop 100 --batchsize 1
+    python3 -m ais_bench --model rosetta/rosetta_mobilenetv3_bs1.om --loop 100 --batchsize 1
     ```
 
     执行完纯推理命令，程序会打印出与性能相关的指标：

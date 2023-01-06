@@ -64,7 +64,7 @@
 
 2. 安装推理过程所需的依赖
     ```shell
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     ```
 
 3. 下载本仓，将该模型目录下的Python脚本、requirements.txt与补丁文件复制到当前目录，并修改源码。
@@ -173,14 +173,15 @@
 
 ## 推理验证
 
-1. 使用ais-infer工具进行推理 
+1. 安装ais_bench推理工具  
+  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+2. 离线推理  
 
-2. 执行推理 
-
+    使用ais_bench推理工具将预处理后的数据传入模型并执行推理：
     ```shell
-    python -m ais_bench \
+    python3 -m ais_bench \
         --model ./FOTS_bs1.om \
         --input ./res \
         --output ./ \
@@ -201,10 +202,11 @@
     首先调用 FOTS_postprocess.py 对模型的推理输出进行处理：
     ```shell
     mkdir outPost
-    python FOTS_postprocess.py ./outPost/ ./result
+    python3 FOTS_postprocess.py ./outPost/ ./result
     ```
 
     调用开源仓原 icdar_eval 目录下的 script.py 获取推理模型的精度指标：
+    
     ```shell
     mkdir runs
     zip -jmq runs/u.zip outPost/*
@@ -218,15 +220,18 @@
 
 4. 性能验证  
 
-    可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+    可使用ais-bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-        ```
-         python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
-        ```
-      - 参数说明：
+    ```shell
+    python3 -m ais_bench --model ./FOTS_bs1.om --loop 100 --batchsize 1
+    ```
+    - 参数说明：
         - --model：om模型
         - --batchsize：模型batchsize
         - --loop: 循环次数
+
+    执行完纯推理命令，程序会打印出与性能相关的指标。找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
+
 
 ----
 # 性能&精度

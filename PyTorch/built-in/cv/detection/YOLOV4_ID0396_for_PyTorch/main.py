@@ -27,6 +27,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.utils.data
+import torch
 if torch.__version__ >= "1.8":
     import torch_npu
 import yaml
@@ -605,7 +606,9 @@ if __name__ == '__main__':
     parser.add_argument('--stop_step_num', default=None, type=int,
                         help='after the stop_step, killing the training task')
     opt = parser.parse_args()
-
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "SigmoidCrossEntropyWithLogitsGradV2"
+    torch.npu.set_option(option)
     main(opt)
     # Resume
     #

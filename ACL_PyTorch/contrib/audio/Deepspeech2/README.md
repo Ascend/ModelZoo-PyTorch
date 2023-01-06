@@ -73,16 +73,17 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+1. 获取源码并安装。
    ```
    git clone https://github.com/SeanNaren/deepspeech.pytorch.git -b V3.0
+   cd deepspeech.pytorch
    pip3 install -e .
    ```
 
 2. 安装依赖。
 
     ```
-    pip install -r requirement.txt
+    pip3 install -r requirement.txt
     ```
     > **说明：** 
     >torchaudio==0.8.0目前没有可以在arm环境下运行的包。
@@ -188,7 +189,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
           ```
       3. 执行ATC命令。
           ```
-          atc --framework=5 --model=./deepspeech.onnx --input_format=NCHW --input_shape="spect:1,1,161,621;transcript:1" --output=deepspeech_bs1 --log=debug --soc_version=${chip_name}
+          atc --framework=5 --model=./deepspeech.onnx --input_format=NCHW --input_shape="spect:1,1,161,621;transcript:1" --output=deepspeech_bs1 --log=error --soc_version=${chip_name}
           ```
 
           - 参数说明：
@@ -213,15 +214,15 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看 [ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 
    2. 执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model ./deepspeech_bs1.om  --input ./data/an4_dataset/test/spect,./data/an4_dataset/test/sizes --output ./result --output_dir dumpout_bs1 --outfmt TXT --batchsize 1
+      python3 -m ais_bench --model ./deepspeech_bs1.om  --input ./data/an4_dataset/test/spect,./data/an4_dataset/test/sizes --output ./result --output_dir dumpout_bs1 --outfmt TXT --batchsize 1
       ```
     
       -   参数说明：
@@ -234,8 +235,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
     
       推理后的输出默认在当前目录result下。
       并且会输出性能数据
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。执行其他bs只需修改batchsize参数。
+
 
 
     3. 精度验证。
@@ -256,10 +256,10 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
     4. 性能验证。
 
-        可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+        可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-        python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
         ```
         
         - 参数说明：
@@ -285,3 +285,4 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
   | 310P3    | 8          | an4 |  3.86 |
   | 310P3    | 16         | an4 |  7.7 |
   | 310P3    | 32         | an4 |  7.74 |
+  | 310P3    | 64         | an4 |  7.48 |

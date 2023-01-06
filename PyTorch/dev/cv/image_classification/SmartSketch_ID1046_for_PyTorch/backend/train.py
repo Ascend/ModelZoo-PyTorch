@@ -37,6 +37,7 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 """
 
 import sys
+import time
 from collections import OrderedDict
 from options.train_options import TrainOptions
 import data
@@ -69,6 +70,7 @@ visualizer = Visualizer(opt)
 for epoch in iter_counter.training_epochs():
     iter_counter.record_epoch_start(epoch)
     for i, data_i in enumerate(dataloader, start=iter_counter.epoch_iter):
+        start_time = time.time()
         if opt.max_steps and i > opt.max_steps:
             break
         iter_counter.record_one_iteration()
@@ -80,7 +82,8 @@ for epoch in iter_counter.training_epochs():
 
         # train discriminator
         trainer.run_discriminator_one_step(data_i)
-
+        if i < 2 and epoch == 1:
+            print("step_time = {:.4f}".format(time.time() - start_time), flush=True)
         # Visualizations
         if iter_counter.needs_printing():
             losses = trainer.get_latest_losses()

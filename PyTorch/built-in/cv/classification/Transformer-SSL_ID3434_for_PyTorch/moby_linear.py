@@ -13,6 +13,8 @@ import datetime
 import numpy as np
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 
@@ -32,6 +34,10 @@ try:
     from apex import amp
 except ImportError:
     amp = None
+
+option = {}
+option["NPU_FUZZY_COMPILE_BLACKLIST"] = "ConcatD"
+torch.npu.set_option(option)
 
 
 def parse_option():

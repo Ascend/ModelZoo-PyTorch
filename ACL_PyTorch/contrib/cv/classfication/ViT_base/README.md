@@ -95,7 +95,7 @@
 
    ```
    mkdir -p prep_dataset
-   python3 ViT_base_preprocess.py --data-path ImageNet/val/ --store-path ./prep_dataset
+   python3 Vit_base_preprocess.py --data-path ImageNet/val/ --store-path ./prep_dataset
    ```
 
 ## 模型推理<a name="section741711594517"></a>
@@ -111,7 +111,7 @@
          ```
          # 以bs1为例
          mkdir -p models/onnx
-         python3 ViT_base_pth2onnx.py --batch_size 1 --model_path B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz --save_dir models/onnx
+         python3 Vit_base_pth2onnx.py --batch_size 1 --model_path B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz --save_dir models/onnx
          ```
 
          获得vit_base_bs1.onnx文件。
@@ -173,16 +173,16 @@
 
 2. 开始推理验证。<u>***根据实际推理工具编写***</u>
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
 
         ```
         # 以bs1为例
         mkdir -p outputs/bs1
-        python3 -m ais_bench --model models/om/vit_base_bs1.om --input prep_dataset/ --output outputs/bs1 --device 1
+        python3 -m ais_bench --model models/om/vit_base_bs1.om --input prep_dataset/ --output outputs/bs1 --device 1 --batchsize 1
         ```
 
         -   参数说明：
@@ -191,12 +191,11 @@
              -   --input：输入文件。
              -   --output：输出目录。
              -   --device：NPU设备编号。
+             -   --batchsize: 模型对应batchsize。
 
 
         推理后的输出默认在当前目录outputs/bs1下。
 
-        >**说明：**
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -204,7 +203,7 @@
 
       ```
       # 以bs1为例
-      python3 ViT_base_postprocess.py --save_path result_bs1.json --input_dir ./outputs/bs1/${timestamp} --label_path ImageNet/val_label.txt
+      python3 Vit_base_postprocess.py --save_path result_bs1.json --input_dir ./outputs/bs1/${timestamp} --label_path ImageNet/val_label.txt
       ```
 
       - 参数说明：

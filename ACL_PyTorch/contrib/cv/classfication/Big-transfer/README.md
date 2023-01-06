@@ -211,19 +211,15 @@
 
 2. 开始推理验证。
 
-   a. 使用ais-infer工具进行推理。
+   a. 安装ais_bench推理工具。
 
-      参考[ais-infer工具源码地址](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)安装将工具编译后的压缩包放置在当前目录；解压工具包，安装工具压缩包中的whl文件；
-
-      ```
-      pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
-      ```
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    b. 执行推理。
 
       ```
       source /usr/local/Ascend/ascend-toolkit/set_env.sh
-      python3 ./ais_infer_x86_64/ais_infer.py --model ./bit_bs16.om --input ./dataset_bin/ --output ./result/ --outfmt BIN --batchsize 16
+      python3 -m ais_bench --model ./bit_bs16.om --input ./dataset_bin/ --output ./result/ --outfmt BIN --batchsize 16
       ```
 
       参数说明：   
@@ -232,7 +228,6 @@
       - --output：推理结果保存地址
       - --outfmt：推理结果保存格式
    
-      **说明：** 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 --help命令。
    
    c. 精度验证。
 

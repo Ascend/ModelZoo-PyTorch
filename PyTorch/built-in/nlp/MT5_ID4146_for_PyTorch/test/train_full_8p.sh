@@ -127,3 +127,7 @@ echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualFPS" = ${FPS} >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+
+if [ x"${etp_flag}" == x"true" ]; then
+    rm -rf $output_dir    
+fi

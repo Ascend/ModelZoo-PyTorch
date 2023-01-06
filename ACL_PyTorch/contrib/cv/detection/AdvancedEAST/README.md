@@ -1,92 +1,250 @@
-# AdvancedEAST模型PyTorch离线推理指导
+# AdvancedEAST模型-推理指导
 
-## 1 环境准备
 
-1.安装必要的依赖
-```
-pip3.7 install -r requirements.txt
-```
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-2.获取开源模型代码
-```
-git clone https://github.com/BaoWentz/AdvancedEAST-PyTorch -b master
-cd AdvancedEAST-PyTorch
-git reset a835c8cedce4ada1bc9580754245183d9f4aaa17 --hard
-cd ..  
-```
+  - [输入输出数据](#section540883920406)
 
-3.获取权重文件
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[AdvancedEAST预训练pth权重文件](https://pan.baidu.com/s/1NSyc-cHKV3IwDo6qojIrKA)，密码: ye9y
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-解压后使用3T736_best_mF1_score.pth，文件sha1: 9D0C603C4AA4E955FEA04925F3E01E793FEF4045
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-4.获取数据集
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-[天池ICPR数据集](https://pan.baidu.com/s/1NSyc-cHKV3IwDo6qojIrKA)，密码: ye9y
+  
 
-下载ICPR_text_train_part2_20180313.zip和[update] ICPR_text_train_part1_20180316.zip两个压缩包，新建目录icpr和子目录icpr/image_10000、icpr/txt_10000，将压缩包中image_9000、image_1000中的图片文件解压至image_10000中，将压缩包中txt_9000、txt_1000中的标签文件解压至txt_10000中
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-5.[获取benchmark工具](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/)
+AdvancedEAST是一种用于场景图像文本检测的算法，它主要基于EAST: An Efficient and Accurate Scene Text Detector，并进行了重大改进，使长文本预测更加准确。
 
-将benchmark.x86_64或benchmark.aarch64放到当前目录
 
-## 2 数据预处理
+- 参考论文：[Xinyu Zhou, Cong Yao, He Wen, Yuzhi Wang, Shuchang Zhou, Weiran He, Jiajun Liang. EAST: An Efficient and Accurate Scene Text Detector. (2017)](https://arxiv.org/abs/1704.03155v2)
 
-1.图片缩放、标签转换为npy文件和图片转换为bin文件
-	python3.7 AdvancedEAST_preprocess.py icpr prep_dataset
-	第一个参数为数据集的路径，第二个参数为生成bin文件的路径。
+- 参考实现：
 
-2.生成数据集info文件
-	python3.7 gen_dataset_info.py bin prep_dataset prep_bin.info 736 736
-	第一个参数为生成的数据集文件格式，第二个参数为预处理后的bin文件的路径，第三个参数为生成的数据集文件保存的路径，第四第五个参数为图片的宽和高。运行成功后，在当前目录中生成prep_bin.info。
+  ```
+  url=https://github.com/BaoWentz/AdvancedEAST-PyTorch 
+  branch=master 
+  commit_id=a835c8cedce4ada1bc9580754245183d9f4aaa17
+  ```
 
-## 3 离线推理 
 
-1.模型转换
-	1)将模型权重文件.pth转换为.onnx文件
-		python3.7 AdvancedEAST_pth2onnx.py 3T736_best_mF1_score.pth AdvancedEAST_dybs.onnx
-	
-	2)设置atc工作所需要的环境变量
-		source /usr/local/Ascend/ascend-toolkit/set_env.sh
-	
-	3)将.onnx文件转为离线推理模型文件.om文件
-		atc --framework=5 --model=AdvancedEAST_dybs.onnx --output=AdvancedEAST_bs1 --input_format=NCHW --input_shape='input_1:1,3,736,736' --log=debug --soc_version=Ascend${chip_name}
-		参数说明：
-		--model：为ONNX模型文件。
-		--framework：5代表ONNX模型。
-		--output：输出的OM模型。
-		--input_format：输入数据的格式。
-		--input_shape：输入数据的shape。
-		--log：日志级别。
-		--soc_version：处理器型号。
 
-2.开始推理
-	1）增加benchmark.{arch}可执行权限
-		chmod u+x benchmark.x86_64
-		
-	2）推理
-		310P上执行，执行时使npu-smi info查看设备状态，确保device空闲
-		
-		./benchmark.x86_64 -model_type=vision -batch_size=1 -device_id=0 -om_path=AdvancedEAST_bs1.om -input_text_path=prep_bin.info -input_width=736 -input_height=736 -useDvpp=false -output_binary=true
-		参数说明：
-		-- model_type：模型的类型。
-		-- batch_size：执行一次模型推理所处理的数据量。
-		-- device_id：运行的Device编号。
-		-- om_path：经过ATC转换后的模型OM文件所在的路径。
-		-- input_text_path：模型对应的数据集所在的路径。
-		-- input_width：输入模型的宽度。
-		-- input_height：输入模型的高度。
-		-- useDvpp：模型前处理是否使用DVPP编解码模块。
-		-- output_binary：输出结果格式是否为二进制文件（即bin文件）。
-		
-	3）精度验证
-		python3.7 AdvancedEAST_postprocess.py icpr result/dumpOutput_device0
-		第一个参数为数据集路径，第二个参数为推理结果所在路径。
+## 输入输出数据<a name="section540883920406"></a>
 
-**评测结果：**
-| 模型      | 官网pth精度  | 310离线推理精度  | 基准性能    | 310P性能    |
-| :------: | :------: | :------: | :------:  | :------:  |
-| AdvancedEAST bs1  | f1-score:52.08% | f1-score:52.08% | 84.626fps | 137.91fps |
-| AdvancedEAST bs16 | f1-score:52.08% | f1-score:52.08% | 86.304fps | 95.5733fps |
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 736 x 736 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 7 x 184 x 184 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动   
+
+  **表 1**  版本配套表
+
+  | 配套       | 版本                               | 环境准备指导                                                 |
+  | ---------- | ---------------------------------- | ------------------------------------------------------------ |
+  | 固件与驱动 | 1.0.16（NPU驱动固件版本为5.1.RC2） | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN       | 5.1.RC2                            | -                                                            |
+  | Python     | 3.7.5                              | -                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/BaoWentz/AdvancedEAST-PyTorch -b master 
+   cd AdvancedEAST-PyTorch 
+   git reset a835c8cedce4ada1bc9580754245183d9f4aaa17 --hard 
+   cd ..
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型支持天池ICPR数据集中的1000张图片作为验证集。下载链接: https://pan.baidu.com/s/1NSyc-cHKV3IwDo6qojIrKA，密码: ye9y。下载ICPR_text_train_part2_20180313.zip和[update] ICPR_text_train_part1_20180316.zip两个压缩包，新建目录icpr和子目录icpr/image_10000、icpr/txt_10000，将压缩包中image_9000、image_1000中的图片文件解压至image_10000中，将压缩包中txt_9000、txt_1000中的标签文件解压至txt_10000中。目录结构如下：
+
+   ```
+   icpr
+   ├── image_10000           //验证集图片  
+        ├── img1.jpg
+   └── txt_10000             // 标签文件夹
+        ├── img1.txt
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行AdvancedEAST_preprocess.py脚本，完成预处理。
+
+   ```
+   python AdvancedEAST_preprocess.py icpr prep_dataset
+   ```
+
+    -   参数说明：
+         - icpr：数据集的路径。
+         - prep_dataset：预处理之后bin文件存放的文件夹。
+
+   运行成功生成文件夹prep_dataset，存放着预处理之后的二进制文件。
+
+
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件[3T736_best_mF1_score.pth](https://pan.baidu.com/s/1ZGag4Ar7Yf5P_rmBrLhcWw?pwd=ttnb)。
+
+   2. 导出onnx文件。
+
+      使用AdvancedEAST_pth2onnx.py导出onnx文件。
+
+      运行AdvancedEAST_pth2onnx.py脚本。
+
+      ```
+      python AdvancedEAST_pth2onnx.py 3T736_best_mF1_score.pth AdvancedEAST_dybs.onnx
+      ```
+
+      - 参数说明：
+        - 3T736_best_mF1_score.pth：pth权重文件路径。
+        - AdvancedEAST_dybs.onnx：导出onnx的文件路径。
+
+      获得AdvancedEAST_dybs.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=AdvancedEAST_dybs.onnx --output=AdvancedEAST_bs1 --input_format=NCHW --input_shape='input_1:1,3,736,736' --log=error --soc_version=Ascend${chip_name} --auto_tune_mode='RL,GA'
+         ```
+
+         - 参数说明：
+           - --model：为ONNX模型文件。
+           - --framework：5代表ONNX模型。
+           - --output：输出的OM模型。
+           - --input_format：输入数据的格式。
+           - --input_shape：输入数据的shape。
+           - --log：日志级别。
+           - --soc_version：处理器型号。
+           - --auto_tune_mode: 设置算子的自动调优模式。
+           
+          运行成功后生成<u>***AdvancedEAST_bs1.om***</u>模型文件。
+
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+   2. 执行推理。
+
+      ```
+      python -m ais_bench --model AdvancedEAST_bs1.om  --input prep_dataset/ --output ./result --output_dir dumpout_bs1 --batchsize 1
+      ```
+
+      -   参数说明：
+
+           -   --model：模型类型。
+           -   --input：om文件路径。
+           -   --output：输出文件目录。
+           -   --output_dir：输出文件子目录。
+           -   --batchsize：数据集的batchsize。
+
+      推理后的输出默认在当前目录result下。
+
+
+   3. 精度验证。
+
+      调用脚本AdvancedEAST_postprocess.py，获得精度数据。
+
+      ```
+      python AdvancedEAST_postprocess.py icpr result/dumpout_bs1
+      ```
+
+      - 参数说明：
+
+        - icpr：数据集路径
+        - result/dumpout_bs1：推理结果所在路径。
+
+      > 注意：后处理需要用到libgeos_c.so，若报错请安装系统对应的包，如Ubuntu执行以下命令：sudo apt-get install libgeos-dev。
+
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+      python -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型的路径。
+        - --batchsize：推理的batchsize。
+        - --loop：推理循环的次数。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号    | Batch Size | 数据集 | 精度            | 性能     |
+| ----------- | ---------- | ------ | --------------- | -------- |
+| Ascend310P3 |       1       |   ICPR     | f1-score:52.08% | 137.9101 |
+| Ascend310P3 |       4       |   ICPR     | f1-score:52.08% | 133.0594 |
+| Ascend310P3 |       8       |   ICPR     | f1-score:52.08% | 131.4062 |
+| Ascend310P3 |       16      |   ICPR     | f1-score:52.08% | 131.5172 |
+| Ascend310P3 |       32      |   ICPR     | f1-score:52.08% | 131.3700 |
+| Ascend310P3 |       64      |    ICPR    | f1-score:52.08% | 131.7403 |
 

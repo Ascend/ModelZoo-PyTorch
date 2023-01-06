@@ -192,14 +192,14 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
 
 1. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
    
    2. 执行推理。
    
       ```shell
-      python3.7 ../ais_infer_x86_64/ais_infer.py --batchsize 1 --model ./swin-s_bs1.om --input "./val2017_bin" --output "result_ais"
+      python3.7 -m ais_bench --batchsize 1 --model ./swin-s_bs1.om --input "./val2017_bin" --output "result_ais"
       ```
    - 参数说明：
       - model：om文件路径。
@@ -223,14 +223,14 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
          - 参数说明：
 
             - --ann_file_path：为原始图片信息文件。
-            - --bin_file_path：为ais_infer推理结果。
+            - --bin_file_path：为ais_bench推理结果。
             - --input_height：输入图片的高
             - --input_height：输入图片的宽   
    
    4. 性能验证
       
       ```shell
-      python3.7 ./ais_infer_x86_64/ais_infer.py --batchsize 1 --model swin-s_bs1.om --outfmt BIN --loop 20 --output ./performance 
+      python3.7 -m ais_bench --batchsize 1 --model swin-s_bs1.om --outfmt BIN --loop 20 --output ./performance 
       ```
       - 参数说明：      
          - model：om文件路径。

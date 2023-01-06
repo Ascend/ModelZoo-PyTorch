@@ -25,6 +25,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 

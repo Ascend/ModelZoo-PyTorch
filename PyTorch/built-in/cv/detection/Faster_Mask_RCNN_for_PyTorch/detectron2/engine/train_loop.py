@@ -157,10 +157,12 @@ class TrainerBase:
                     #         self.after_step()
                     #     prof.export_chrome_trace("MaskRCNN_O2.prof")
                     #     break
-
+                    start_time = time.time()
                     self.before_step()
                     self.run_step()
                     self.after_step()
+                    if self.iter < 2:
+                        print("step_time = %.4f" % (time.time() - start_time), flush=True)
             except Exception:
                 logger.exception("Exception during training:")
                 raise

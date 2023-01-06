@@ -1,8 +1,7 @@
-diff --git a/losses/center_loss.py b/losses/center_loss.py
-index 555f575..5a579e9 100644
---- a/losses/center_loss.py
-+++ b/losses/center_loss.py
-@@ -17,11 +17,7 @@ class CenterLoss(nn.Module):
+diff -Nur ./b/losses/center_loss.py ./a/losses/center_loss.py
+--- ./b/losses/center_loss.py	2023-01-05 02:28:47.726602949 +0000
++++ ./a/losses/center_loss.py	2023-01-05 02:45:51.326615490 +0000
+@@ -17,11 +17,7 @@
          self.num_classes = num_classes
          self.feat_dim = feat_dim
          self.use_gpu = use_gpu
@@ -15,11 +14,10 @@ index 555f575..5a579e9 100644
  
      def forward(self, x, labels):
          """
-diff --git a/modelling/bases.py b/modelling/bases.py
-index 40ba360..21cada8 100644
---- a/modelling/bases.py
-+++ b/modelling/bases.py
-@@ -170,11 +170,11 @@ class ModelBase(pl.LightningModule):
+diff -Nur ./b/modelling/bases.py ./a/modelling/bases.py
+--- ./b/modelling/bases.py	2023-01-05 02:28:47.726602949 +0000
++++ ./a/modelling/bases.py	2023-01-05 02:47:38.838616807 +0000
+@@ -170,11 +170,11 @@
      def validation_step(self, batch, batch_idx):
          self.backbone.eval()
          self.bn.eval()
@@ -33,7 +31,18 @@ index 40ba360..21cada8 100644
  
      @rank_zero_only
      def validation_create_centroids(
-@@ -384,7 +384,7 @@ class ModelBase(pl.LightningModule):
+@@ -291,10 +291,6 @@
+ 
+         log_data = {"mAP": mAP}
+ 
+-        # TODO This line below is hacky, but it works when grad_monitoring is active
+-        self.trainer.logger_connector.callback_metrics.update(log_data)
+-        log_data = {**log_data, **topks}
+-        self.trainer.logger.log_metrics(log_data, step=self.trainer.current_epoch)
+ 
+     def validation_epoch_end(self, outputs):
+         if self.trainer.global_rank == 0 and self.trainer.local_rank == 0:
+@@ -384,7 +380,7 @@
          return masks, labels_list_copy
  
      @rank_zero_only
@@ -42,11 +51,10 @@ index 40ba360..21cada8 100644
          ret = self.validation_step(batch, batch_idx)
          return ret
  
-diff --git a/utils/reid_metric.py b/utils/reid_metric.py
-index 74743c1..547919e 100644
---- a/utils/reid_metric.py
-+++ b/utils/reid_metric.py
-@@ -74,20 +74,11 @@ class R1_mAP:
+diff -Nur ./b/utils/reid_metric.py ./a/utils/reid_metric.py
+--- ./b/utils/reid_metric.py	2023-01-05 02:28:47.730602949 +0000
++++ ./a/utils/reid_metric.py	2023-01-05 02:45:51.326615490 +0000
+@@ -74,20 +74,11 @@
          self.num_query = num_query
          self.max_rank = max_rank
          self.feat_norm = feat_norm

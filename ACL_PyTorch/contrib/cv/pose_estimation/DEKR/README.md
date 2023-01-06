@@ -247,21 +247,19 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
 2. 开始推理验证。
 
-   a.  使用 ais-infer 工具进行推理。
+   a.  安装ais_bench推理工具。
 
-   - ais-infer的获取方式和使用方法：[参考链接](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-   
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    b.  执行推理。
 
    运行 DEKR_ais_infer 脚本。
    ```
-   python3 DEKR_ais_infer.py --bs 1 --ais_infer_path ${ais_infer_path}
+   python3 DEKR_ais_infer.py --bs 1 
    ```
    
    - 参数说明：
       -    --bs: batchsize大小，默认为1。
-      -    --ais_infer_path: ais-infer 工具所在的文件夹。
 
    c.  精度验证。
 
@@ -280,10 +278,10 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
    
    d. 性能验证。
 
-   采用 ais_infer 纯推理模式，执行以下命令：
+   采用ais_bench推理工具纯推理模式，执行以下命令：
 
    ```
-   python3 {ais_infer_path}/ais_infer.py \
+   python3 -m ais_bench \
        --model models/dekr_bs1.om \
        --output out --dymHW 512,512 --loop 50
    ```

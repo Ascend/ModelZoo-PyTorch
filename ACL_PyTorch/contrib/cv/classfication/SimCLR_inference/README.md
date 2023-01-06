@@ -214,14 +214,14 @@ root
         运行成功后生成Simclr_model_bs1.om模型文件。
 
   2.开始推理验证  
-   a.使用ais-infer工具进行推理
+   a.安装ais_bench推理工具
 
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
   
    b.执行推理。
 
 ```
-python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/ --outfmt "TXT" --batchsize 1
+python3.7 -m ais_bench --model ../Simclr_model_bs1.om --input "../prep_data/" --output ./result/ --outfmt "TXT" --batchsize 1
 ```
 -   参数说明：
      
@@ -241,7 +241,7 @@ python3.7 ais_infer.py --model ../Simclr_model_bs1.om --input "../prep_data/" --
 调用脚本Simclr_postprocess.py获取，可以获得Accuracy数据，结果保存在log文件中。
 
 ```
- python3.7 Simclr_postprocess.py  ./ais_infer/result/2022_07_25-10_41_40/ > result_bs1.log
+ python3.7 Simclr_postprocess.py  ./ais_bench/result/2022_07_25-10_41_40/ > result_bs1.log
 ```
 result/2022_07_25-10_41_40/：为生成推理结果所在路径  
     

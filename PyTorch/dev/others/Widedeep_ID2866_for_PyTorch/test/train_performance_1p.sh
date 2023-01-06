@@ -146,6 +146,8 @@ echo "------------------ Final result ------------------"
 Time=`grep Time  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Time" '{print $2}' |tail -n +3 | awk '{sum+=$1} END {print"", sum/NR}'|sed s/[[:space:]]//g`
 FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${Time}'}'`
 
+# 编译耗时
+CompileTime=`grep Epoch $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -n +2|awk -F "Time" '{print $2}'|awk -F " " '{print $1}'|awk '{sum+=$1} END{print sum}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -185,3 +187,4 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Ca
 #echo "TrainAccuracy = ${train_accuracy}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

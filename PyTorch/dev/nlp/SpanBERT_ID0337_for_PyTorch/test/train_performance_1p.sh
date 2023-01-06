@@ -115,6 +115,8 @@ echo "TrainingTime: ${TrainingTime}"
 FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${TrainingTime}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+#输出编译时间
+CompileTime=`grep "Epoch:" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | head -2 |awk -F "step_time = " '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep f1 $path/squad_touput/eval_results.txt|awk '{print $NF}'`
@@ -146,4 +148,4 @@ echo "TrainingTime = ${TrainingTime}" >> $path/output/$ASCEND_DEVICE_ID/${CaseNa
 #echo "TrainAccuracy = ${train_accuracy}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
+echo "CompileTime = ${CompileTime}" >> $path/output/$ASCEND_DEVICE_ID/${CaseName}.log

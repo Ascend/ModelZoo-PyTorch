@@ -172,7 +172,7 @@ FPS=`echo|awk "{print 1/$step_time*$batch_size}"`
 echo "Final Performance item/sec : $FPS"
 
 #获取编译时间
-CompileTime=`grep "Epoch =" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F ' ' '{print $9}'|sed 's/,$//'` | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+CompileTime=`grep "Epoch =" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F ' ' '{print $9}'|sed 's/,$//' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep "End training," ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $10}'`

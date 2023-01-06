@@ -13,7 +13,7 @@
 		- [4.1 数据集获取](#41-数据集获取)
 		- [4.2 数据集预处理](#42-数据集预处理)
 	- [5 离线推理](#5-离线推理)
-		- [5.1 ais_infer工具概述](#51-ais_infer工具概述)
+		- [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
 		- [5.2 离线推理](#52-离线推理)
 	- [6 精度对比](#6-精度对比)
 		- [6.1 离线推理精度统计](#61-离线推理精度统计)
@@ -147,16 +147,13 @@ python3.7 retinaface_pth_preprocess.py
 
 ## 5 离线推理
 
--   **[ais_infer工具概述](#51-ais_infer工具概述)**  
+-   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 ais_infer工具概述
+### 5.1 安装ais_bench推理工具
 
-[ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)工具为华为自研的模型推理工具，
-支持om模型的离线推理，能够迅速统计出模型在Ascend310P3上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程.
-
-参考使用文档，复制 ais_infer 目录到当前工作路径下，然后编译安装 whl 文件。
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 1.设置环境变量
@@ -166,9 +163,9 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 2.执行离线推理
 ```
 mkdir result
-python3.7 ./ais_infer/ais_infer.py --model retinaface_bs16.om --device 0 --batchsize 16 --input ./widerface/prep/ --output ./result --outfmt BIN
+python3.7 -m ais_bench --model retinaface_bs16.om --device 0 --batchsize 16 --input ./widerface/prep/ --output ./result --outfmt BIN
 ```
-输出结果默认保存在 ./result/{timestamp} 下，{timestamp} 表示 ais_infer 工具执行推理任务时的时间戳。
+输出结果默认保存在 ./result/{timestamp} 下，{timestamp} 表示 ais_bench 工具执行推理任务时的时间戳。
 
 目录下保存了每个输入对应的推理结果和性能测试文件 summary.json 文件。
 
@@ -182,7 +179,6 @@ python3.7 ./ais_infer/ais_infer.py --model retinaface_bs16.om --device 0 --batch
 
 1. 推理结果后处理
 
-首先，将推理结果中的性能测试结果 summary.json 文件移动到其他目录
 ```
 mv ./result/{timestamp}/sumary.json ./result/
 ```
@@ -194,7 +190,7 @@ python3.7 retinaface_pth_postprocess.py --prediction-folder ./result/{timestamp}
 
 参数说明：
 
-- `--prediction-folder`：ais_infer工具的推理结果，默认为 ./result/{timestamp}
+- `--prediction-folder`：ais_bench推理工具的推理结果，默认为 ./result/{timestamp}
 - `--info-folder`：验证集预处理时生成的info信息，默认为 ./widerface/prep_info
 - `--output-folder`：处理结果的保存位置，默认为 ./widerface_result
 - `--confidence-threshold`：置信度阈值，默认为 0.02
@@ -230,9 +226,9 @@ mobildenet0.25      90.44     87.57     72.44
 -   **[性能对比](#73-性能对比)**  
 
 ### 7.1 npu性能数据
-1. ais_infer 工具在整个数据集上推理获得性能数据  
+1. ais_bench 工具在整个数据集上推理获得性能数据  
 
-batch1的性能：ais_infer 工具推理后输出的性能数据 
+batch1的性能：ais_bench 工具推理后输出的性能数据 
 ```
 [INFO] --------------------Performance Summary--------------------
 [INFO] H2D_latency (ms): min = 0.5559921264648438, max = 37.662506103515625, mean = 0.7194576245690456, median = 0.7016658782958984, percentile(99%) = 1.0185837745666504
@@ -242,7 +238,7 @@ batch1的性能：ais_infer 工具推理后输出的性能数据
 ```
 throughput: 1018.255 既为 batch1 下 Ascend310P3单卡的吞吐率
 
-batch16的性能：ais_infer 工具推理后输出的性能数据  
+batch16的性能：ais_bench 工具推理后输出的性能数据  
 ```
 [INFO] --------------------Performance Summary--------------------
 [INFO] H2D_latency (ms): min = 8.71133804321289, max = 26.23581886291504, mean = 11.305984884205431, median = 11.35861873626709, percentile(99%) = 13.030257225036623

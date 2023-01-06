@@ -1313,6 +1313,7 @@ if __name__ == "__main__":
     option = {}
     option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
     option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
+    option["MM_BMM_ND_ENABLE"] = 'disable'
     torch.npu.set_option(option)
     main()
     dllogger.flush()
