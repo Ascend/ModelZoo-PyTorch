@@ -220,11 +220,14 @@ def train(args, trainer, datasets, epoch_itr):
     trainer.get_throughput_meter().reset()
 
     for i, sample in enumerate(itr):
+        start_time = time.time()
         if i > 100:
             pass
         if i < num_batches - 1 and (i + 1) % update_freq > 0:
             # buffer updates according to --update-freq
             loss = trainer.train_step(sample, update_params=False, last_step=(i == len(itr) - 1))
+            if i < 2:
+                print("step_time = %.4f" % (time.time() - start_time), flush=True)
             continue
         else:
             loss = trainer.train_step(sample, update_params=True, last_step=(i == len(itr) - 1))
