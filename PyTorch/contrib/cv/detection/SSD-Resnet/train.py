@@ -37,6 +37,8 @@ from torch.nn.parallel import DistributedDataParallel
 # necessary pytorch imports
 import torch.utils.data.distributed
 import torch.distributed as dist
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 # Apex imports
 try:
@@ -486,4 +488,7 @@ def main():
 
 if __name__ == "__main__":
 
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
+    torch.npu.set_option(option)
     main()

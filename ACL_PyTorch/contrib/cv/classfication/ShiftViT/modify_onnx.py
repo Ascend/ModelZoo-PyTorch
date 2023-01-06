@@ -12,50 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import argparse
 import sys
-import onnx
-from onnx import TensorProto
+import numpy as np
+from auto_optimizer import OnnxGraph
 
 
-def modify_onnx(input_onnx, output_onnx):
+def modify_onnx(model_path, save_path):
+    g = OnnxGraph.parse(model_path)
     
-    model = onnx.load(input_onnx)
+    if not find_pattern(g):
+        print('Can not find pattern: Mul -> Add -> GAP -> Flatten -> Gemm')
+    else:
+        print('The model is successfully modified.')
     
-    # create a new node
-    Y = onnx.helper.make_tensor('Y', onnx.TensorProto.FLOAT, [1], [1])
-    model.graph.initializer.append(Y)
-    pow_node = onnx.helper.make_node(
-        'Pow',
-        inputs=['1824', 'Y'],
-        outputs=['pow_insert_out'],
-        name='Pow_insert'
-    )
-    
-    # find the insert location of new node
-    insert_idx = -1
-    for i, node in enumerate(model.graph.node):
-        if node.name == 'Mul_1463' and node.input[0] == '1824':
-            insert_idx = i
-            node.input[0] = 'pow_insert_out'
-            break
-    if insert_idx == -1:
-        raise Exception("can not find the insert location.")
+    g.save(save_path)
+
+
+def find_pattern(graph):
+    gemms = graph.get_nodes('Gemm')
+    for gemm in gemms:
+        flatten = graph.get_prev_node(gemm.inputs[0])
+        if flatten.op_type != 'Flatten':
+            return False
+        gap = graph.get_prev_node(flatten.inputs[0])
+        if gap.op_type != 'GlobalAveragePool':
+            return False
+        add = graph.get_prev_node(gap.inputs[0])
+        if add.op_type != 'Add':
+            return False
+        mul = graph.get_prev_node(add.inputs[0])
+        if mul.op_type != 'Mul':
+            return False
         
-    model.graph.node.insert(insert_idx, pow_node)
-    onnx.save(model, output_onnx)
+        # insert Pow before Mul to interrupt fusion pass
+        pow_new = graph.add_node('Pow_new', 'Pow')
+        pow_ini = graph.add_initializer('Pow_ini', np.array([1]).astype('float32'))
+        graph.insert_node(mul.name, pow_new, 0, 'before')
+        pow_new.inputs.append('Pow_ini')
+    
+    return True
 
 
 if __name__ == "__main__":
-
-    import argparse
-    parser = argparse.ArgumentParser('modify the onnx model.')
-    parser.add_argument('-i', '--input-onnx-path', type=str,
-                        help='path to original onnx model.')
-    parser.add_argument('-o', '--output-onnx-path', type=str,
-                        help='path to save modified onnx model.')
+    parser = argparse.ArgumentParser(
+                        'modify model with auto_optimizer')
+    parser.add_argument('-i', '--input-onnx', type=str, 
+                        required=True, help='path to onnx file before modification')
+    parser.add_argument('-o', '--output-onnx', type=str, 
+                        required=True, help='path to onnx file after modification')
     args = parser.parse_args()
 
-    modify_onnx(args.input_onnx_path, args.output_onnx_path)
-
-
+    modify_onnx(args.input_onnx, args.output_onnx)

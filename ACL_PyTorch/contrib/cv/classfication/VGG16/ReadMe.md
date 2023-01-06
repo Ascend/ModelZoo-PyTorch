@@ -112,7 +112,7 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
    python vgg16_preprocess.py ${dataset_dir} ./prep_dataset
    ```
    - 参数说明
-      - ${datasets_path}：原始数据验证集（.jpeg）所在路径
+      - `${dataset_dir}`：原始数据验证集（.jpeg）所在路径
       - `./prep_dataset`：输出的二进制文件（.bin）所在路径
 
     每个图像对应生成一个二进制bin文件，一个附加信息文件。
@@ -190,13 +190,13 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
       ```shell
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
             --model ./vgg16_bs1.om \
             --input ./prep_dataset \
             --output ./vgg16out/ \
@@ -213,8 +213,7 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
         -   --batchsize：batchsize大小
 
       推理后的输出在 `--output` 所指定目录下。
-      >**说明：**
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 [ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+
 
    3. 精度验证。
 

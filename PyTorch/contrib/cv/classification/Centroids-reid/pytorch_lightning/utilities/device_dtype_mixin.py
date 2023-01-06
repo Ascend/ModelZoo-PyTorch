@@ -15,6 +15,8 @@
 from typing import Union, Optional
 
 import torch
+if torch.__version__ >='1.8':
+    import torch_npu
 from torch.nn import Module
 
 
@@ -109,6 +111,18 @@ class DeviceDtypeModuleMixin(Module):
             torch.float16
         """
         # there is diff nb vars in PT 1.5
+        if torch.__version__ >='1.8':
+             if args:
+                 args_list = list(args)
+                 for index, arg in enumerate(args_list):
+                      if isinstance(arg,tuple) and "type='npu'" in str(arg):
+                         args_list[index] = torch_npu.new_device(type=torch_npu.npu.native_device, index=arg.index)
+                         break
+                 args = tuple(args_list)
+             if kwargs and isinstance(kwargs.get("device"),tuple):
+                 namedtuple_device = kwargs.get("device")
+                 if "type='npu'" in str(namedtuple_device):
+                   kwargs['device'] = torch_npu.new_device(type=torch_npu.npu.native_device, index=namedtuple_device.index)
         out = torch._C._nn._parse_to(*args, **kwargs)
         self.__update_properties(device=out[0], dtype=out[1])
         return super().to(*args, **kwargs)

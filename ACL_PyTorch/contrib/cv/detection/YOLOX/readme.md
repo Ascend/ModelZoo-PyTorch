@@ -187,14 +187,14 @@ YOLOX是基于往年对YOLO系列众多改进而产生的目标检测模型，�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
         ```shell
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+        python3 -m ais_bench \
                   --model=yolox_x.om \
                   --input=prep_data \
                   --output ./ \
@@ -214,8 +214,6 @@ YOLOX是基于往年对YOLO系列众多改进而产生的目标检测模型，�
 
         推理后的输出默认在当前目录--output下。
 
-        >**说明：**
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
@@ -225,11 +223,8 @@ YOLOX是基于往年对YOLO系列众多改进而产生的目标检测模型，�
 
       - 参数说明：
 
-        - --dataset_path：数据集路径
-        - --model_config：模型配置文件路径
-        - --bin_data_path：推理结果所在路径
-        -  --meta_info_path：gen_dataset_info.py生成的后处理文件
-        -  --num_classes：目标检测类别数
+        - --dataroot：数据集路径
+        - --dump_dir：`ais-infer`推理结果文件目录
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 

@@ -1,250 +1,251 @@
-# ResNet34 Onnx模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+# ResNet34 模型-推理指导
 
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
--   **[论文地址](#11-论文地址)**  
+    - [输入输出数据](#section540883920406)
 
--   **[代码地址](#12-代码地址)**  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-### 1.1 论文地址
-[ResNet34论文](https://arxiv.org/pdf/1512.03385.pdf)  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.2 代码地址
-[ResNet34代码](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py)  
-branch:master
-commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-## 2 环境说明
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
--   **[深度学习框架](#21-深度学习框架)**  
-
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
-```
-CANN 5.0.1
-
-torch == 1.5.1
-torchvision == 0.6.1
-onnx == 1.9.0
-```
-
-### 2.2 python第三方库
-
-```
-numpy == 1.19.2
-Pillow == 8.2.0
-opencv-python == 4.5.2.52
-```
-
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
-
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
-[ResNet-34预训练pth权重文件](https://download.pytorch.org/models/resnet34-b627a593.pth)  
-```
-wget https://download.pytorch.org/models/resnet34-b627a593.pth
-```
-文件MD5sum：78fe1097b28dbda1373a700020afeed9
-
-2.ResNet34模型代码在torchvision里，安装torchvision，arm下需源码安装，参考torchvision官网，若安装过程报错请百度解决
-```
-git clone https://github.com/pytorch/vision
-cd vision
-python3.7 setup.py install
-cd ..
-```
-3.编写pth2onnx脚本resnet34_pth2onnx.py
-
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
-
-4.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 resnet34_pth2onnx.py ./resnet34-b627a593.pth resnet34.onnx
-```
-
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
-
-### 3.2 onnx转om模型
-
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-```
-atc --framework=5 --model=./resnet34.onnx --output=resnet34_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend310
-
-```
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。
-
-### 4.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 imagenet_torch_preprocess.py resnet /root/datasets/imagenet/val ./prep_dataset
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prep_dataset ./resnet34_prep_bin.info 224 224
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=resnet34_bs1.om -input_text_path=./resnet34_prep_bin.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
-
-## 6 精度对比
-
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理TopN精度统计
-
-后处理统计TopN精度
-
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-查看输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "73.31%"}, {"key": "Top2 accuracy", "value": "83.7%"}, {"key": "Top3 accuracy", "value": "87.72%"}, {"key": "Top4 accuracy", "value": "89.92%"}, {"key": "Top5 accuracy", "value": "91.44%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上
-
-### 6.2 开源TopN精度
-[torchvision官网精度](https://pytorch.org/vision/stable/models.html)
-```
-Model        Acc@1     Acc@5
-ResNet-34    73.314    91.420
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
-
-## 7 性能对比
-
--   **[npu性能数据](#71-npu性能数据)**  
-
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
-1.benchmark工具在整个数据集上推理获得性能数据  
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
-```
-[e2e] throughputRate: 275.179, latency: 181700
-[data read] throughputRate: 293.361, moduleLatency: 3.40877
-[preprocess] throughputRate: 292.803, moduleLatency: 3.41527
-[infer] throughputRate: 277.19, Interface throughputRate: 503.525, moduleLatency: 2.7551
-[post] throughputRate: 277.189, moduleLatency: 3.60764
-```
-Interface throughputRate: 503.525，503.525x4=2014.1既是batch1 310单卡吞吐率  
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：  
-```
-[e2e] throughputRate: 177.5, latency: 281691
-[data read] throughputRate: 181.124, moduleLatency: 5.52107
-[preprocess] throughputRate: 180.841, moduleLatency: 5.52973
-[infer] throughputRate: 178.082, Interface throughputRate: 938.992, moduleLatency: 2.53232
-[post] throughputRate: 11.1299, moduleLatency: 89.8479
-```
-Interface throughputRate: 938.992，938.992x4=3755.968既是batch16 310单卡吞吐率  
-batch4的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_4_device_1.txt：  
-```
-[e2e] throughputRate: 238.247, latency: 209866
-[data read] throughputRate: 251.629, moduleLatency: 3.97411
-[preprocess] throughputRate: 251.149, moduleLatency: 3.98169
-[infer] throughputRate: 239.788, Interface throughputRate: 672.405, moduleLatency: 3.026
-[post] throughputRate: 59.9466, moduleLatency: 16.6815
-```
-Interface throughputRate: 672.405，672.405x4=2689.62既是batch4 310单卡吞吐率 
-batch8的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_8_device_1.txt：  
-```
-[e2e] throughputRate: 223.522, latency: 223692
-[data read] throughputRate: 233.498, moduleLatency: 4.28269
-[preprocess] throughputRate: 233.151, moduleLatency: 4.28906
-[infer] throughputRate: 224.317, Interface throughputRate: 884.554, moduleLatency: 2.62576
-[post] throughputRate: 28.0393, moduleLatency: 35.6643
-```
-Interface throughputRate: 884.554，884.554x4=3538.216既是batch8 310单卡吞吐率 
-batch32的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_32_device_1.txt：  
-```
-[e2e] throughputRate: 200.951, latency: 248817
-[data read] throughputRate: 209.207, moduleLatency: 4.77995
-[preprocess] throughputRate: 208.778, moduleLatency: 4.78978
-[infer] throughputRate: 202.034, Interface throughputRate: 875.835, moduleLatency: 2.617
-[post] throughputRate: 6.31544, moduleLatency: 158.342
+  ******
 
 
-```
-Interface throughputRate: 875.835，875.835x4=3503.34既是batch32 310单卡吞吐率 
 
- **性能优化：**  
->没有遇到性能不达标的问题，故不需要进行性能优化
 
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目标分类等领域以及作为计算机视觉任务主干经典神经网络的一部分，典型的网络有resnet50, resnet34等。Resnet34网络参数量更少，更易训练。
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/pytorch/vision
+  commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
+  model_name=contrib/cv/classfication/ResNet34
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | 1 x 1000 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone https://github.com/pytorch/vision
+   cd vision
+   python3.7 setup.py install
+   cd ..
+   ```
+
+2. 安装依赖
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型使用ImageNet 50000张图片的验证集，请前往ImageNet官网下载数据集
+
+    ```
+    ├── ImageNet
+    |   ├── val
+    |   |    ├── ILSVRC2012_val_00000001.JPEG
+    │   |    ├── ILSVRC2012_val_00000002.JPEG
+    │   |    ├── ......
+    |   ├── val_label.txt
+    ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行imagenet_torch_preprocess.py脚本，完成预处理
+   ```
+   python3.7 imagenet_torch_preprocess.py resnet ./Imagenet/val ./prep_dataset
+   ```
+
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       ```
+       wget https://download.pytorch.org/models/resnet34-b627a593.pth
+       ```
+
+   2. 导出onnx文件。
+
+      1. 使用resnet34_pth2onnx.py导出onnx文件
+
+         运行resnet34_pth2onnx.py脚本。
+
+         ```
+         python3.7 resnet34_pth2onnx.py ./resnet34-b627a593.pth resnet34.onnx
+         ```
+
+         获得`resnet34.onnx`文件。
+
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --framework=5 --model=./resnet34.onnx --output=resnet34_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=error --soc_version=Ascend${chip_name} 
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+          
+
+           运行成功后生成`resnet34_bs1.om`模型文件。
+
+2. 开始推理验证
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。 
+
+   2. 执行推理。
+
+        ```
+        python3 -m ais_bench --model resnet34_bs1.om \
+					--input prep_dataset \
+					--output ./ \
+					--output_dirname result \
+					--outfmt TXT
+        ```
+
+        -   参数说明：
+
+             -   model：om模型
+             -   input：推理输入数据
+             -   output：推理结果输出路径
+             -   output_dirname: 推理结果文件夹
+             -   outfmt: 推理结果格式
+                  	
+
+        推理后的输出默认在当前目录result下。
+
+
+   3. 精度验证。
+
+      调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
+      ```
+      python3.7 imagenet_acc_eval.py ./result ./Imagenet/val_label.txt ./ result.json
+      ```
+      - 参数说明
+        - ./result: 推理结果
+        - val_label.txt: 验证label
+        - ./: 保存结果路径
+        - result.json: 保存结果文件
+
+      结果保存在当前目录的result.json
+
+   4. 性能验证
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+      ```
+
+      - 参数说明：
+        - --model：om模型
+        - --batchsize：模型batchsize
+        - --loop: 循环次数
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+|     310P3     |    1        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  1931    |
+|     310P3     |    4        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  4436    |
+|     310P3     |    8        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5499    |
+|     310P3     |    16        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5857    |
+|     310P3     |    32        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5967    |
+|     310P3     |    64        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5215    |

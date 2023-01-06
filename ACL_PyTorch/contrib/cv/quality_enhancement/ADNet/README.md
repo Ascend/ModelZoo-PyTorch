@@ -74,27 +74,10 @@
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | :------------------------------------------------------------: | :-------: | :------------------------------------------------------------: |
-| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 1.0.16  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   |  \                                                            |
+| Python                                                       | 3.7.5   |  -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
-
-- 该模型需要以下插件与驱动
-
-   **表 2** 依赖配套表
-
-| 配套依赖                 | 版本             |
-| :-----------------------: | :----------------: |
-| torch                   |  1.12.0          |
-| torchvision             |  0.13.1          |
-| onnx                    |  1.12.0          |
-| onnx-simplifier         |  0.4.8           |
-| numpy                   |  1.21.6          |
-| Pillow                  |  9.2.0           |
-| opencv-python           |  4.6.0.66        |
-| scikit-image            |  0.19.3          |
-| tqdm                    |  4.64.1          |
-| 说明：ADnet模型的适配性较强,<br>未与任何版本有强关联，用户可根据自己环境选选择依赖                    |  \          |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -134,13 +117,13 @@
 
 1. 获取原始数据集。
 
-   本模型支持[BSD68 数据集](https://pan.baidu.com/s/1XiePOuutbAuKRRTV949FlQ)共68张图片。用户可自行获取BSD68数据集上传数据集到服务器，可放置于任意路径下，以"/ADNet/dataset"目录为例。可使用百度网盘，提取码：0315。
+   本模型支持[BSD68 数据集](https://pan.baidu.com/s/1XiePOuutbAuKRRTV949FlQ)共68张图片。用户可自行获取BSD68数据集上传数据集到服务器，可放置于任意路径下，以"./datasets"目录为例。可使用百度网盘，提取码：0315。
 
    数据集目录结构如下:
 
    ```
-      ├──dataset
-            ├──BSD68
+   ├──datasets
+         ├──BSD68
    ```
 
 2. 数据预处理。
@@ -150,15 +133,15 @@
    执行ADNet_preprocess.py脚本，完成预处理。
 
    ```python
-   python3 ADNet_preprocess.py /ADNet/dataset/BSD68 ./prep_dataset
+   python3 ADNet_preprocess.py ./datasets/BSD68 ./prep_dataset
    ```
 
    预处理prep_dataset目录结构如下：
 
    ```
-      ├──prep_datase
-            ├──INoisy         //原图片加入随机噪声处理后文件
-            ├──ISoure         //原图片处理后文件
+   ├──prep_datase
+         ├──INoisy         //原图片加入随机噪声处理后文件
+         ├──ISoure         //原图片处理后文件
    ```
 
 
@@ -174,12 +157,12 @@
 
    2. 导出onnx文件。
 
-      a. 使用ADNet_preprocess.py导出onnx文件。
+      a. 使用ADNet_pth2onnx.py导出onnx文件。
 
-         运行ADNet_preprocess.py脚本。
+         运行ADNet_pth2onnx.py脚本。
 
          ```python
-         python3 ADNet_preprocess.py ./model_70.pth ADNet.onnx
+         python3 ADNet_pth2onnx.py ./model_70.pth ./ADNet.onnx
          ```
 
          获得ADNet.onnx文件。
@@ -215,72 +198,76 @@
       c. 执行ATC命令。
 
          ```
-          atc --framework=5 --model=ADNet.onnx --output=ADNet_bs1 --input_format=NCHW --input_shape="image:1,1,321,481" --log=error --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=ADNet.onnx --output=ADNet_bs1 --input_format=NCHW --input_shape="image:1,1,321,481" --log=error --soc_version=Ascend${chip_name}
          ```
    
-         * 参数说明：
-         -   --model：为ONNX模型文件。
-         -   --framework：5代表ONNX模型。
-         -   --output：输出的OM模型。
-         -   --input\_format：输入数据的格式。
-         -   --input\_shape：输入数据的shape。
-         -   --log：日志级别。
-         -   --soc\_version：处理器型号。
+         - 参数说明：
+            - --model：为ONNX模型文件。
+            - --framework：5代表ONNX模型。
+            - --output：输出的OM模型。
+            - --input\_format：输入数据的格式。
+            - --input\_shape：输入数据的shape。
+            - --log：日志级别。
+            - --soc\_version：处理器型号。
        
          运行成功后生成ADNet_bs1.om模型文件。
 
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
-   b.  执行推理。
+   b. 执行推理。
 
       ```
-       mkdir -p outbs1/INoisy
-       python3 ais_infer.py --model ./ADNet_bs1.om --input ./prep_dataset/INoisy/  --output ./outbs1/INoisy/ --outfmt BIN  --batchsize 1 --device 0
+      mkdir -p result/INoisy
+      python3 -m ais_bench --model=./ADNet_bs1.om --input=./prep_dataset/INoisy/  --output=./result/INoisy/ --output_dirname=bs1 --outfmt=BIN  --batchsize=1 --device=0
       ```
+
       - 参数说明：
-      -  --model：om文件路径。
-      -   --input：输入的bin文件路径。
-      -   --output：推理结果文件路径。
-      -   --outfmt：输出结果格式。
-      -   --device：NPU设备编号。
-      -   --batchsize：批大小。
+         - --model：om文件路径。
+         - --input：输入的bin文件路径。
+         - --output：推理结果文件路径。
+         - --outfmt：输出结果格式。
+         - --device：NPU设备编号。
+         - --batchsize：批大小。
 
-      推理后的输出在推理结果文件路径下的日期+时间的子文件夹(如下文：2022_10_13-03_38_20)。
+      推理后的输出在文件夹(如下文：./result/INoisy/bs1)。
     
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
-   c.  精度验证。
+   c. 精度验证。
 
       调用脚本与原图片处理后文件比对，可以获得Accuracy数据，结果保存在result.json中。
     
       ```python
-       python3 ADNet_postprocess.py ./outbs1/INoisy/2022_10_13-03_38_20/ ./prep_dataset/ISoure > result.json
+      python3 ADNet_postprocess.py ./result/INoisy/bs1 ./prep_dataset ISoure > result.json
       ```
 
       -  参数说明：     
-      -   --model：om文件路径。
-      -   --input：输入的bin文件路径。
-      -   --output：推理结果文件路径。
-      -   --outfmt：输出结果格式。
-      -   --device：NPU设备编号。
-      -   --batchsize：批大小。
+         - --model：om文件路径。
+         - --input：输入的bin文件路径。
+         - --output：推理结果文件路径。
+         - --outfmt：输出结果格式。
+         - --device：NPU设备编号。
+         - --batchsize：批大小。
 
 
-   d.  性能验证。
+   d. 性能验证。
 
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
     
       ```python
-       python3 ais_infer.py --model ./ADNet_bs1.om --output ./ --batchsize 1 --device 0 --outfmt BIN --loop 5
+      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} --device=${device_id} --outfmt=BIN
       ```
-      - --loop：推理次数。
+
+      - 参数说明：
+         - --model：om模型路径。
+         - --batchsize：批大小。
+         - --loop：推理循环次数。
+         - --device：NPU设备编号。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

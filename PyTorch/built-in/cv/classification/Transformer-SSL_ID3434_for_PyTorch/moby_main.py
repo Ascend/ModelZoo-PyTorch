@@ -15,8 +15,6 @@ import numpy as np
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-if torch.__version__ >= '1.8':
-    import torch_npu
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 from timm.utils import AverageMeter
@@ -227,6 +225,7 @@ if __name__ == '__main__':
     option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
     option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
     option["MM_BMM_ND_ENABLE"] = "enable"
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "ConcatD"
 
     torch.npu.set_option(option)
 

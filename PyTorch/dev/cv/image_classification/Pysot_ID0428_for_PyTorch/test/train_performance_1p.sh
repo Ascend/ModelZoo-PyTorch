@@ -139,7 +139,7 @@ FPS=`cat $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep
 echo "Final Performance images/sec : $FPS"
 
 #获取编译时间
-CompileTime=`grep "step_time" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F 'step_time' '{print $2}'| awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+CompileTime=`grep "step_time" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F 'step_time:' '{print $2}'| awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 
 #性能看护结果汇总

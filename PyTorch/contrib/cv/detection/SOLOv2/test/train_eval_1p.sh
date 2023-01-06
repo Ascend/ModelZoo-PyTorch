@@ -11,7 +11,7 @@ batch_size=1
 # 训练使用的npu卡数
 export RANK_SIZE=1
 data_path=""
-MODEL="./work_dirs/solov2_release_r50_fpn_8gpu_1x/epoch_12.pth"
+MODEL="./test/work_dirs/solov2_release_r50_fpn_8gpu_1x/epoch_12.pth"
 device_id=0
 
 #参数校验，不需要修改

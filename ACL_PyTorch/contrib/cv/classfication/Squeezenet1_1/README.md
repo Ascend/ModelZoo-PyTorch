@@ -171,15 +171,15 @@ Squeezenet的设计采用了卷积替换、减少卷积通道数和降采样操�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
       ```
       mkdir result
-      python3 ${ais_bench_path}/ais_infer.py --model=squeezenet1_1_bs${bs}.om  --batchsize=${bs} \
+      python3 -m ais_bench --model=squeezenet1_1_bs${bs}.om  --batchsize=${bs} \
       --input ${save_dir} --output result --output_dirname result_bs${bs} --outfmt TXT
       ```
 
@@ -205,10 +205,10 @@ Squeezenet的设计采用了卷积替换、减少卷积通道数和降采样操�
    - --result_dir：推理结果所在路径，这里为 ./result/result_bs${bs}。
    - --gt_file：真值标签文件val_label.txt所在路径。
 
-4. 可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
    ```
-   python3 ${ais_bench_path}/ais_infer.py --model=squeezenet1_1_bs${bs}.om --loop=50 --batchsize=${bs}
+   python3 -m ais_bench --model=squeezenet1_1_bs${bs}.om --loop=50 --batchsize=${bs}
    ```
 
    参数说明：

@@ -56,11 +56,24 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
+- 编译安装wrap-ctc模块。
+
+    ```shell
+    ### npu环境变量
+    source {deepspeech_root}/scripts/env_new.sh
+    git clone https://github.com/SeanNaren/warp-ctc.git
+    cd warp-ctc
+    git checkout -b pytorch_bindings origin/pytorch_bindings
+    mkdir build; cd build; cmake ..; make
+    cd ../pytorch_binding && python3.7 setup.py install
+    ```
+
 - 安装依赖。
 
   ```
   pip install -r requirements.txt
   ```
+  
 - 如果需要在多机或者多卡上训练该模型，那么需要按照以下步骤安装etcd。
 
     ```shell
@@ -80,7 +93,7 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
 2. 或者您还可以自行下载数据集解压至源码包根目录下的`data/`文件夹下。
 
-执行完成后目录结构如下所示：
+    执行完成后目录结构如下所示：
    ```
    ├── data/an4_dataset
          ├──train                    

@@ -130,7 +130,7 @@ step_time=`grep "step cost" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_
 FPS=`awk 'BEGIN{printf "%.2f\n",'${RANK_SIZE}'*'${batch_size}'/'${step_time}'}'`
 
 #输出CompileTime
-CompileTime=`grep "step cost" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "step cost" '{print$2}'|head -n 2 | awk '{sum+=$1} END {print"",sum}'|sed s/[[:space:]]//g`
+CompileTime=`grep "step cost" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "step cost" '{print $2}'|head -2 | awk '{sum+=$1} END {print"",sum}'|sed s/[[:space:]]//g`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

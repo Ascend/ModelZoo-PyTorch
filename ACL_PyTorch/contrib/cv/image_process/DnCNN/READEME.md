@@ -1,288 +1,248 @@
-# DnCNN ONNX模型端到端推理指导
-- [DnCNN ONNX模型端到端推理指导](#dncnn-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx转om模型](#32-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 推理数据集获取](#41-推理数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-		- [6.1 离线推理TopN精度统计](#61-离线推理topn精度统计)
-		- [6.2 开源PSNR精度](#62-开源psnr精度)
-		- [6.3 精度对比](#63-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 npu性能数据](#71-npu性能数据)
+# DnCNN模型-推理指导
+
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
 
 
 
-## 1 模型概述
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[论文地址](#11-论文地址)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
--   **[代码地址](#12-代码地址)**  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-### 1.1 论文地址
-[DnCNN论文](https://ieeexplore.ieee.org/document/7839189)  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 1.2 代码地址
 
-brach:master
 
-commit_id: 6b0804951484eadb7f1ea24e8e5c9ede9bea485b
 
-备注：commitid指的是值模型基于此版本代码做的推理
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-[DnCNN代码](https://github.com/SaoYan/DnCNN-PyTorch)  
+DnCNN作为去噪神经网络非常出名，这个网络强调了residual learning（残差学习）和batch normalization（批量标准化）在信号复原中相辅相成的作用，可以在较深的网络的条件下，依然能带来快的收敛和好的性能。这个算法可以解决处理未知噪声水平的高斯去噪、超分辨率、JPEG去锁等多个领域的问题。
 
-## 2 环境说明
 
--   **[深度学习框架](#21-深度学习框架)**  
+- 参考实现：
 
--   **[python第三方库](#22-python第三方库)**  
+  ```
+  url=https://github.com/SaoYan/DnCNN-PyTorch
+  commit_id=6b0804951484eadb7f1ea24e8e5c9ede9bea485b
+  code_path=https://gitee.com/ascend/ModelZoo-PyTorch/blob/master/ACL_PyTorch/contrib/cv/image_process/DnCNN
+  model_name=DnCNN
+  ```
 
-### 2.1 深度学习框架
-```  
-CANN 5.0.1
-torch==1.8.0
-torchvision==0.9.0
-onnx==1.9.0
-```
 
-### 2.2 python第三方库
+## 输入输出数据<a name="section540883920406"></a>
 
-```
-numpy==1.20.2
-opencv-python==4.5.2.52
-scikit-image==0.16.2
-```
+- 输入数据
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+  | 输入数据 | 数据类型 | 大小                        | 数据排布格式 |
+  | ---- |---------------------------| ------------------------- | ------------ |
+  | input    | FP32 | batchsize x 1 x 481 x 481 | NCHW         |
 
-## 3 模型转换
 
--   **[pth转onnx模型](#31-pth转onnx模型)** 
+- 输出数据
 
--   **[onnx转om模型](#32-onnx转om模型)** 
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1 x 481 x 481 | NCHW           |
 
-### 3.1 pth转onnx模型
 
-1.DnCNN模型代码下载
-```
-git clone https://github.com/SaoYan/DnCNN-PyTorch
-cd DnCNN-PyTorch
-```  
-2.获取源码pth权重文件   
-wget https://ascend-model-file.obs.cn-north-4.myhuaweicloud.com/%E4%BA%A4%E4%BB%98%E4%BB%B6/cv/image_classification/DnCnn/net.pth  
-文件的MD5sum值是： 5703a29b082cc03401fa9d9fee12cb71  
 
-3.获取NPU训练pth文件，将net.pth文件移动到DnCNN目录下
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-4.编写pth2onnx脚本DnCNN_pth2onnx.py
+- 该模型需要以下插件与驱动   
 
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
+  **表 1**  版本配套表
 
-5.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 DnCNN_pth2onnx.py net.pth DnCNN-S-15.onnx
-```
+  | 配套                                                         | 版本      | 环境准备指导                                                 |
+  |---------| ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
 
-### 3.2 onnx转om模型
 
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-lastest/set_env.sh
-```
-2.增加benchmark.{arch}可执行权限。
-```
-chmod u+x benchmark.x86_64
-```
-3.使用atc将onnx模型转换为om模型文件
-（310）
-```
-atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend310
-```
-(310P) for循环分别执行bs1和bs16
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-${chip_name}可通过`npu-smi info`指令查看
+## 获取源码<a name="section4622531142816"></a>
 
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+1. 获取源码。
+
+   ```
+   git clone https://github.com/SaoYan/DnCNN-PyTorch
+   ```
+
+2. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+
+   该模型使用官网提供的数据集进行验证，存放路径为源码路径下的的data目录。
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行data_preprocess.py脚本，完成预处理。
+
+   ```
+   python3.7 data_preprocess.py ./DnCNN-PyTorch/data ISource INoisy
+
+   ```
    
-```
-for i in 1 16;do
-atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:"$i",1,481,481" --output=DnCNN-S-15_bs"$i" --log=debug --soc_version=Ascend${chip_name}
-done
-```
+   - 参数说明：
+   
+     ./DnCNN-PyTorch/data，验证集文件所在路径
+   
+     ISource，输出的预处理后标签数据集路径     
+
+     INoisy，输出的预处理后数据集路径
 
 
-## 4 数据集预处理
 
--   **[数据集获取](#41-数据集获取)**  
+## 模型推理<a name="section741711594517"></a>
 
--   **[数据集预处理](#42-数据集预处理)**  
+1. 模型转换。
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-### 4.1 推理数据集获取
-存放路径为 https://github.com/SaoYan/DnCNN-PyTorch 的data目录
+   1. 获取权重文件。
 
-### 4.2 数据集预处理
-1.预处理脚本data_preprocess.py
+      [DnCNN预训练pth权重文件](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/4ab8abf42ef54bb9b461aca384c6313e/1)
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
+      ```
+      进入网页点击立即下载，压缩包中有net.pth的权重文件
+      ```
 
-```
-python3.7 data_preprocess.py data ISource INoisy
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本get_info.py
+   2. 导出onnx文件。
 
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 get_info.py bin INoisy DnCNN_bin.info 481 481
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-## 5 离线推理
+      1. 使用DnCNN_pth2onnx.py脚本。
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+         运行DnCNN_pth2onnx.py脚本。
 
--   **[离线推理](#52-离线推理)**  
+         ```
+         python3.7 DnCNN_pth2onnx.py net.pth DnCNN-S-15.onnx
+         ```
 
-### 5.1 benchmark工具概述
+         获得DnCNN-S-15.onnx文件。
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-lastest/set_env.sh
-```
-2.执行离线推理
-for循环分别执行bs1和bs16
-```
-for i in 1 16;do
-./benchmark.x86_64 -model_type=vision -om_path=DnCNN-S-15_bs"$i".om -device_id=0 -batch_size="$i" -input_text_path=DnCNN_bin.info -input_width=481 -input_height=481 -useDvpp=false -output_binary=true
-done
-```
-输出结果默认保存在当前目录result/dumpOutput_deviceX(X为对应的device_id)，每个输入对应的输出对应一个_X.bin文件。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-## 6 精度对比
+      1. 配置环境变量。
 
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
+         ```
+          source /usr/local/Ascend/......
+         ```
 
-### 6.1 离线推理TopN精度统计
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-后处理统计TopN精度
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-调用postprocess.py脚本推理结果进行PSRN计算，结果会打印在屏幕上
-```
-python3.7 postprocess.py result/dumpOutput_device0/
-```
-第一个参数为benchmark输出目录
-查看输出结果：
-```
-ISource/test064.bin PSNR 29.799832
-infering...
-ISource/test065.bin PSNR 31.486418
-infering...
-ISource/test066.bin PSNR 35.676752
-infering...
-ISource/test067.bin PSNR 28.577475
-infering...
-ISource/test068.bin PSNR 29.709767
+      3. 执行ATC命令。
 
-PSNR on test data 31.526892
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上
+         ```
+         atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:{batch size},1,481,481" --output=DnCNN-S-15_bs{batch size} --log=debug --soc_version=Ascend310P3
+         示例
+         atc --framework=5 --model=./DnCNN-S-15.onnx --input_format=NCHW --input_shape="actual_input_1:1,1,481,481" --output=DnCNN-S-15_bs1 --log=debug --soc_version=Ascend310P3
+         ```
 
-### 6.2 开源PSNR精度
-```
-| Noise Level | DnCNN-S | DnCNN-B | DnCNN-S-PyTorch | DnCNN-B-PyTorch |
-|:-----------:|:-------:|:-------:|:---------------:|:---------------:|
-|     15      |  31.73  |  31.61  |      31.71      |      31.60      |
-|     25      |  29.23  |  29.16  |      29.21      |      29.15      |
-|     50      |  26.23  |  26.23  |      26.22      |      26.20      |
-```
-### 6.3 精度对比
-将得到的om离线模型推理PSNR值与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
+         - 参数说明：
 
->没有遇到精度不达标的问题，故不需要进行精度调试
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-## 7 性能对比
+           运行成功后生成onnx_alexnet_bs1.om模型文件，batch size为4、8、16、32、64的修改对应的batch size的位置即可。
 
--   **[npu性能数据](#71-npu性能数据)**  
+2. 开始推理验证。
 
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device。为快速获取性能数据，也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准。这里给出两种方式，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
-1.benchmark工具在整个数据集上推理获得性能数据  
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
-```
-[e2e] throughputRate: 15.0465, latency: 4519.32
-[data read] throughputRate: 966.417, moduleLatency: 1.03475
-[preprocess] throughputRate: 525.539, moduleLatency: 1.90281
-[infer] throughputRate: 22.6328, Interface throughputRate: 23.7919, moduleLatency: 43.8903
-[post] throughputRate: 22.615, moduleLatency: 44.2185
-```
-Interface throughputRate: 23.7919，23.7919x4=95.176既是batch1 310单卡吞吐率  
+   1. 安装ais_bench推理工具。
 
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
-```
-[e2e] throughputRate: 15.3818, latency: 4420.81
-[data read] throughputRate: 1484.65, moduleLatency: 0.673559
-[preprocess] throughputRate: 316.273, moduleLatency: 3.16182
-[infer] throughputRate: 21.4529, Interface throughputRate: 22.2853, moduleLatency: 45.6179
-[post] throughputRate: 1.56798, moduleLatency: 637.764
-```
-Interface throughputRate: 22.2853，22.2853x4=89.1412既是batch16 310单卡吞吐率  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
-batch4性能：
-```
-[e2e] throughputRate: 15.5641, latency: 4369.02
-[data read] throughputRate: 1898.17, moduleLatency: 0.526824
-[preprocess] throughputRate: 523.883, moduleLatency: 1.90882
-[infer] throughputRate: 22.091, Interface throughputRate: 23.9045, moduleLatency: 44.5192
-[post] throughputRate: 5.50981, moduleLatency: 181.495
-```
-batch4 310单卡吞吐率 23.9045x4=95.618
+   2. 执行推理。
 
-batch8性能：
-```
-[e2e] throughputRate: 15.5035, latency: 4386.1
-[data read] throughputRate: 1863.93, moduleLatency: 0.5365
-[preprocess] throughputRate: 461.471, moduleLatency: 2.16699
-[infer] throughputRate: 20.7804, Interface throughputRate: 22.2652, moduleLatency: 47.2831
-[post] throughputRate: 2.74035, moduleLatency: 364.917
-```
-batch8 310单卡吞吐率 22.2652x4=89.0608
+        ```
+        python3 -m ais_bench --model ./DnCNN-S-15_bs{batch size}.om --input ./INoisy/ --output ./output --output_dirname subdir --outfmt 'BIN' --batchsize {batch size}
+        示例
+        python3 -m ais_bench --model ./DnCNN-S-15_bs1.om --input ./INoisy/ --output ./output --output_dirname subdir --outfmt 'BIN' --batchsize 1
+        ```
 
-batch32性能：
-```
-[e2e] throughputRate: 12.4075, latency: 5480.54
-[data read] throughputRate: 1770.65, moduleLatency: 0.564765
-[preprocess] throughputRate: 242.944, moduleLatency: 4.11618
-[infer] throughputRate: 15.641, Interface throughputRate: 13.2648, moduleLatency: 62.7386
-[post] throughputRate: 0.68503, moduleLatency: 1459.79
-```
-batch32 310单卡吞吐率 13.2648x4=53.0592
+        -   参数说明：
 
-**性能优化：** 
+             -   model：需要推理om模型的路径。
+             -   input：模型需要的输入bin文件夹路径。
+             -   output：推理结果输出路径。
+             -   outfmt：输出数据的格式。
+             -   output_dirname:推理结果输出子文件夹。
 
->batch32纯推理性能达标。
+        推理后的输出默认在当前目录output的subdir下。
+
+   3. 精度验证。
+
+      调用postprocess.py脚本推理结果进行PSRN计算，结果会打印在屏幕上。
+
+      ```
+       python3.7 postprocess.py ./output/subdir
+      ```
+
+      - 参数说明：
+
+        - ./output/subdir：为生成推理结果所在路径
+
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+        python3.7 -m ais_bench --model=./DnCNN-S-15_bs{batch size}.om --loop=1000 --batchsize={batch size}
+        示例
+        python3.7 -m ais_bench --model=./DnCNN-S-15_bs1.om --loop=1000 --batchsize=1
+        ```
+
+      - 参数说明：
+        - --model：需要验证om模型所在路径
+        - --batchsize：验证模型的batch size，按实际进行修改
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集      | 精度                   | 性能  |
+| --------- |------------|----------|----------------------|-----|
+|   310P3        | 1          | 官网提供     | 31.53  | 128 |
+|   310P3        | 4          | 官网提供 | 31.53 | 138 |
+|   310P3        | 8          | 官网提供 | 31.53 | 153 |
+|   310P3        | 16         | 官网提供 | 31.53 | 166 |
+|   310P3        | 32         | 官网提供 | 31.53 | 142 |
+|   310P3        | 64         | 官网提供 | 31.53 | 142 |

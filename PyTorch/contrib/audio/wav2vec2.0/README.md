@@ -45,9 +45,10 @@ Wav2vec2.0是Meta在2020年发表的无监督语音预训练模型。它的核�
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
+  | 硬件 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | NPU固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
+  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
 
 - 环境准备指导。
 

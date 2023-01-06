@@ -86,6 +86,7 @@ nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --rank=0 \
         --benchmark=0 \
         --device='npu' \
+        --device-list='0,1,2,3' \
         --epochs=${train_epochs} \
         --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

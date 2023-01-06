@@ -494,7 +494,8 @@ class Trainer():
                 batch_time = (time.time() - start_time) / cnt
                 step_time = (time.time()-t1)
                 fps =  self.batch_size_training / step_time
-          
+                if cnt < 3:
+                    print("step_time = {:.4f}".format(step_time), flush=True)
                 if cnt > 100:
                     pass
 

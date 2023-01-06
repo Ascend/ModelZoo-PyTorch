@@ -57,6 +57,7 @@ from slowfast.utils.meters import AVAMeter, TrainMeter, ValMeter, EpochTimer
 from slowfast.utils.multigrid import MultigridSchedule
 import torch.npu
 import os
+import time
 import apex
 try:
     from apex import amp
@@ -94,6 +95,7 @@ def train_epoch(
     data_size = len(train_loader)
 
     for cur_iter, (inputs, labels, _, meta) in enumerate(train_loader):
+        start_time = time.time()
         if cur_iter == 100:
             pass
         # Transfer the data to the current GPU device.
@@ -138,7 +140,8 @@ def train_epoch(
             scaled_loss.backward()
         # Update the parameters.
         optimizer.step()
-
+        if cur_iter < 2 and cur_epoch == 1:
+            print("step_time = {:.4f}".format(time.time() - start_time), flush=True)
         if cfg.DETECTION.ENABLE:
             if cfg.NUM_GPUS > 1:
                 loss = du.all_reduce([loss])[0]

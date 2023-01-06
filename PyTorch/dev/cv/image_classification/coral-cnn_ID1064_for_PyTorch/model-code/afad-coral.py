@@ -454,6 +454,8 @@ for epoch in range(num_epochs):
         # LOGGING
         step_time = (time.time() - start_time)
         FPS = BATCH_SIZE / step_time
+        if batch_idx < 2:
+            print("step_time = {:.4f}".format(step_time))
         if not batch_idx % 50:
             s = ('Epoch: %03d/%03d | Batch %04d/%04d | loss: %.4f | time/step(s):%.4f |FPS: %.3f'
                  % (epoch+1, num_epochs, batch_idx,

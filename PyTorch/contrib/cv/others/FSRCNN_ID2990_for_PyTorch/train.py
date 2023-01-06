@@ -15,6 +15,7 @@
 import argparse
 import os
 import copy
+import time
 
 import torch
 if torch.__version__ >= "1.8":
@@ -92,8 +93,9 @@ if __name__ == '__main__':
 
         with tqdm(total=(len(train_dataset) - len(train_dataset) % args.batch_size), ncols=80) as t:
             t.set_description('epoch: {}/{}'.format(epoch, args.num_epochs - 1))
-
+            idx = 0
             for data in train_dataloader:
+                start_time = time.time()
                 inputs, labels = data
 
                 inputs = inputs.to(device)
@@ -109,7 +111,10 @@ if __name__ == '__main__':
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
                 optimizer.step()
-
+                
+                if idx < 2:
+                    print("step_time = {:.4f}".format(time.time()-start_time))
+                    idx += 1
                 t.set_postfix(loss='{:.6f}'.format(epoch_losses.avg))
                 t.update(len(inputs))
 

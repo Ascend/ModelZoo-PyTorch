@@ -150,6 +150,8 @@ class Trainer(BaseTrainer):
             
             step_time = time.time() - start_time
             FPS = self.data_loader.batch_size / step_time
+            if batch_idx < 2:
+                print("step_time = %.4f" % (step_time), flush=True)
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f} max group LR: {:.4f} min group LR: {:.4f}, time/step(s):{:.4f}, FPS:{:.3f}'.format(
                     epoch,

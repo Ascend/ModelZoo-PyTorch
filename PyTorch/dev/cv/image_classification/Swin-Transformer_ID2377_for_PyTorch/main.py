@@ -175,6 +175,8 @@ def train(config, model, criterion, data_loader, optimizer, lr_scheduler, epoch)
         end = time.time()
         step_time = end - start_time
         FPS = config.DATA.BATCH_SIZE / step_time
+        if i < 2:
+            print("step_time = %.4f" % (step_time), flush=True)
         if i % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
             etas = batch_time.avg * (num_steps - i)

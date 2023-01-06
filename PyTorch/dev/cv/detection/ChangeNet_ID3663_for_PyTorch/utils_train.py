@@ -133,6 +133,9 @@ def train_model(model, dataloaders, criterion, optimizer, sc_plt, writer, device
             # statistics
             running_loss += loss.item()
             iterations += 1
+            if iterations < 3:
+                batch_time = time.perf_counter() - start_time
+                print("batch_time = {}".format(batch_time), flush=True)
             if args.local_rank in [0, -1] and iterations == len(train_loader) * (epoch+1) -1:
                 step_time = end_time - start_time
                 FPS = reference_img.size(0) / step_time

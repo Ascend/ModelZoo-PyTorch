@@ -45,7 +45,7 @@
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
   | 硬件    | [1.0.11](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial   ) |
+  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | CANN       | [5.0.2](https://www.hiascend.com/software/cann/commercial?version=5.0.2) |
   | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
 

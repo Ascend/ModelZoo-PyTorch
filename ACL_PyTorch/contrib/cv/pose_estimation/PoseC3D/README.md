@@ -1,189 +1,237 @@
-# PoseC3D ONNX模型端到端推理指导
-- [1. 模型概述](#1)
-    - [论文地址](#11)
-    - [代码地址](#12)
-- [2. 环境说明](#2)
-    - [深度学习框架](#21)
-    - [python第三方库](#22)
-- [3. 模型转换](#3)
-    - [pth转onnx模型](#31)
-    - [onnx转om模型](#32)
-- [4. 数据预处理](#4)
-    - [数据处理](#41)
-- [5. 离线推理](#5)
-    - [msame工具概述](#51)
-    - [离线推理](#52)
-    - [精度和性能比较](#53)
+# PoseC3D 模型推理指导
 
-## <a name="1">1. 模型概述</a>
-### <a name="11">1.1 论文地址</a>
-[Revisiting Skeleton-based Action Recognition](https://arxiv.org/abs/2104.13586)
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
 
-### <a name="12">1.2 代码地址</a>
-[posec3d代码](https://github.com/open-mmlab/mmaction2/tree/master/configs/skeleton/posec3d)
+----
+# 概述
 
-```bash
-conda create -n {your-envname} python=3.7.5 pytorch=1.10 cudatoolkit=11.3 torchvision
-conda activate {your-envname}
-pip install openmim
-pip install tqdm
-pip install mmcv-full
-pip install mmdet  # optional
-pip install mmpose  # optional
-git clone https://github.com/open-mmlab/mmaction2.git
-cd mmaction2
-pip install -e .
-```
-> **说明：**   
-> 本离线推理项目中posec3d模型对应论文中PoseConv3D，以下说明中将PoseConv3D简称为posec3d
+PoseC3D 是一种基于 3D-CNN 的骨骼行为识别框架，同时具备良好的识别精度与效率，在包含 FineGYM, NTURGB+D, Kinetics-skeleton 等多个骨骼行为数据集上达到了 SOTA。不同于传统的基于人体 3 维骨架的 GCN 方法，PoseC3D 仅使用 2 维人体骨架热图堆叠作为输入，就能达到更好的识别效果。
 
-## <a name="2">2. 环境说明</a>
-### <a name="21">2.1 深度学习框架</a>
-```
-CANN 5.1.RC1
-torch==1.11.0
-torchvision==0.12.0a0+76b4a42
-onnxruntime==1.11.1
-onnx==1.11.0
-```
++ 论文  
+    [Revisiting Skeleton-based Action Recognition](https://arxiv.org/abs/2104.13586)  
+    Haodong Duan, Yue Zhao, Kai Chen, Dahua Lin, Bo Dai  
 
-### <a name="22">2.2 python第三方库</a>
-```
-protobuf==3.20.1
-tqdm==4.63.1
-sympy==1.10.1
-```
-> **说明：**  
-> pytorch，torchvision和onnx:(X86架构)可以通过pip方式安装或官方下载whl包安装; (Arm架构)可以通过源码编译安装   
-> 其他第三方库: 可以通过 pip3.7 install -r requirements.txt 进行安装
++ 参考实现：  
+    url = https://github.com/open-mmlab/mmaction2/tree/master/configs/skeleton/posec3d  
+    tag = v0.24.1  
+    config = slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint  
 
-## <a name="3">3. 模型转换</a>
-一步式从pth权重文件转om模型的脚本，能够由pth权重文件生成bacth为1的om模型：
-```bash
-bash ./test/pth2om.sh --batch_size=1 --not_skip_onnx=true --chip_name==${chip_name}
-#注： ${chip_name}可以根据 npu-smi info命令查看
-```
-运行后会生成如下文件：
-```bash
-├── posec3d_bs1.onnx
-├── posec3d_bs1.om
-```
+## 输入输出数据
++ 模型输入  
+    | 输入数据         | 数据类型   | 大小                        | 数据排布格式 |
+    | --------------- | --------- | --------------------------- | ----------- |
+    | onnx::Reshape_0 | FLOAT32   | bs x 20 x 17 x 48 x 56 x 56 | ND          | 
 
-### <a name="31">3.1 pth转onnx模型</a>
-1. 设置环境变量
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
++ 模型输出  
+    | 输出数据 |  数据类型 | 大小          | 数据排布格式 |
+    | ------- | --------- | ------------ | ----------- |
+    | -       |  FLOAT32  | (bs*20) x 51 | ND          |
 
-2. 下载由hmdb51数据集训练得到的模型权重文件: 
-[HMDB51-ckpt](https://github.com/open-mmlab/mmaction2/tree/master/configs/skeleton/posec3d)表格HMDB51对应ckpt(checkpoint)一栏的链接，点击即可直接下载。
 
-3. 执行posec3d_pth2onnx.py脚本，生成onnx模型文件 
-```bash
-python ./posec3d_pytorch2onnx.py ./mmaction2/configs/skeleton/posec3d/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint.py ./slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint-76ffdd8b.pth --shape 1 20 17 48 56 56 --verify --output-file ./posec3d_bs1.onnx
-```
-其中"shape"表示输入节点的shape，"output-file"表示转换后生成的onnx模型的存储地址和名称  
+----
+# 推理环境
 
-### <a name="32">3.2 onnx转om模型</a>
-1. 使用atc将onnx模型转换为om模型文件，posec3d模型需要借助aoe优化获得的知识库，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/51RC2alpha002/infacldevg/atctool)
+- 该模型推理所需配套的软件如下：
 
-```bash
-# 将知识库文件夹通过scp -r指令复制到当前目录
-export TUNE_BANK_PATH="./aoe_result_bs1"
-atc --framework=5 --model=./posec3d_bs1.onnx --output=./posec3d_bs1 --input_format=ND --input_shape="invals:1,20,17,48,56,56" --log=debug --soc_version=Ascend${chip_name}
-```
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.8.13  | -          |
+    
+    说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
-## <a name="4">4. 数据预处理</a>
-在当前目录下载hmdb51.pkl标注文件
-[hmdb51](https://github.com/open-mmlab/mmaction2/tree/master/tools/data/skeleton)在Prepare Annotations目录下附有直接下载hmdb51.pkl标注文件的链接
 
-数据预处理过程包含在 test/eval_acc_perf.sh 的脚本中
-### <a name="41">4.1 数据处理</a>
-1. 设置环境变量
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+----
+# 快速上手
 
-2. 下载hmdb51数据集。posec3d模型使用hmdb51中的1530个视频数据进行测试，具体来说参考posec3d的源码仓中的测试过程对验证集视频进行提取帧，对预处理后的图像进行缩放，中心裁剪以及归一化，并将图像数据转换为二进制文件(.bin)
-```bash
-cd ./mmaction2/tools/data/hmdb51
-bash download_annotations.sh
-bash download_videos.sh
-bash extract_rgb_frames_opencv.sh
-bash generate_rawframes_filelist.sh
-bash generate_videos_filelist.sh
-mv ../../../data/hmdb51 /opt/npu
-cd ../../../..
-```
-> **说明：**  
-> 本项目使用的推理工具为msame，需要针对不同的batch_size生成不同的输入数据  
+## 获取源码
 
-3. 执行输入数据的生成脚本，生成模型输入的bin文件
-```bash
-python3 posec3d_preprocess.py --batch_size 1 --data_root /opt/npu/hmdb51/rawframes/  --ann_file hmdb51.pkl --name /opt/npu/hmdb51/prep_hmdb51_bs1
-```
-其中"batch_size"表示生成数据集对应的batch size,data_root表示处理前原数据集的地址，ann_file表示对应的标注文件，"name"表示生成数据集的文件夹名称。
-运行后，将会得到如下形式的文件夹：
-```
-├── prep_image_bs1
-│    ├──0.bin
-│    ├──......     	 
-```
+1. 安装推理过程所需的依赖
+    ```bash
+    pip install -r requirements.txt
+    ```
+2. 获取开源仓源码
+    ```bash
+    git clone -b v0.24.1 https://github.com/open-mmlab/mmaction2.git
+    pip install -v -e mmaction2
+    ```
 
-## <a name="5">5. 离线推理</a>
-执行一步式推理前，请先按照5.1节准备msame离线推理工具  
-一步式进行输入数据的准备，模型离线推理和NPU性能数据的获取：
-```bash
-bash ./test/eval_acc_perf.sh --batch_size=1 --datasets_path=/opt/npu/hmdb51
-```
-运行后会生成如下文件/文件夹：
-```bash
-├── hmdb51         		  # /opt/npu下数据集(文件夹)            
-│    ├── annotations   	  # 注释文件(文件夹)
-│    ├── prep_hmdb51_bs1  # 预处理输出的二进制文件(文件夹)       
-│    ├── rawframes   	  # 原始帧(文件夹)       
-│    ├── videos   		  # 视频数据(文件夹)
-```
-```bash
-├── msame_bs1.txt         # msame推理过程的输出
-├── result            
-│    ├── outputs_bs1_om   # 模型的输出(文件夹)
-```
+## 准备数据集
 
-### <a name="51">5.1 msame工具概述</a>
-msame模型推理工具，其输入是om模型以及模型所需要的输入bin文件，其输出是模型根据相应输入产生的输出文件。获取工具及使用方法可以参考[msame模型推理工具指南](https://gitee.com/ascend/tools/tree/master/msame)
-### <a name="52">5.2 离线推理</a>
-1. 设置环境变量
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-chmod u+x msame
-```
+1. 获取原始数据集  
+    该模型使用[HMDB51数据集](https://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/)来验证精度，参考[mmaction2官方提供的hmdb51数据集获取与处理方法](https://github.com/open-mmlab/mmaction2/tree/master/tools/data/hmdb51)，下载原始视频并截帧，最后生成文件列表。
+    ```bash
+    cd ./mmaction2/tools/data/hmdb51
+    bash download_videos.sh
+    bash extract_rgb_frames_opencv.sh
+    cd -
+    wget https://download.openmmlab.com/mmaction/posec3d/hmdb51.pkl -P mmaction2/data/hmdb51/
+    rm -rf mmaction2/data/hmdb51/videos
+    ```
+    执行上述命令后，生成的数据目录结构如下：
+    ```
+    ├── mmaction2/
+        ├── data/
+            ├── hmdb51/
+                ├── hmdb51.pkl
+                └── rawframes/
+                    ├── brush_hair/
+                    ├── cartwheel/
+                    ├── ...
+                    ├── walk/
+                    └── wave/
+    ```
 
-2. 执行离线推理
-运行如下命令进行离线推理：
-```bash
-./msame --model "./posec3d_bs1.om" --input "/opt/npu/hmdb51/prep_hmdb51_bs1" --output "./result/outputs_bs1_om" --outfmt TXT > msame_bs1.txt
-```
-模型输出格式是txt，输出保存在"output"参数指定的文件夹中，同时会生成推理的日志文件msame_bs1.txt
 
-### <a name="53">5.3 精度和性能比较</a>
-1. 性能数据的获取
-通过给test/parser.py指定推理后的日志文件，可以得到离线推理的性能数据
-```bash
-python3.7 test/parse.py --result-file ./msame_bs1.txt --batch-size 1
-```
-其中"result-file"表示性能数据的地址和名称，"batch_size"表示性能测试时模型对应的batch size
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为推理工具支持的bin文件。
+    ```bash
+    python posec3d_preprocess.py \
+        --frame_dir ./mmaction2/data/hmdb51/rawframes/ \
+        --ann_file ./mmaction2/data/hmdb51/hmdb51.pkl \
+        --output_dir ./prep_data
+    ```
+    参数说明：
+    + --frame_dir: 视频截帧后的存放目录
+    + --ann_file: 标注文件路径
+    + --output_dir: 预处理结果的保存目录
+    
+    执行上述命令后，`./prep_data`目录下会生成一个名为`bin`的子目录，存放生成的1530个bin文件，此外还会生成`./prep_data/hmdb51_label.txt`文件，其内容为预处理后的每个bin文件对应的标签。
 
-2. 精度数据的计算
-精度计算利用posec3d_postprocess.py脚本
-```
- python3 posec3d_postprocess.py --result_path ./result/outputs_bs1_om/{实际文件夹名} --info_path ./hmdb51.info
-```
-其中result_path表示离线推理输出所在的文件夹，info_path（默认为"./hmdb51.info"）表示hmdb51验证集标签的地址和名称。
+## 模型转换
 
-| 模型      | 参考精度  | 310P精度  | 性能基准    | 310P性能    |
-| :------: | :------: | :------: | :------:  | :------:  |
-| posec3d_hmdb51_bs1  | top1:69.3%  | top1:69.2%  | 9.988fps | 22.021fps |
+1. PyTroch 模型转 ONNX 模型  
+ 
+    下载open-mmlab官方提供的[**预训练模型**](https://download.openmmlab.com/mmaction/skeleton/posec3d/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint-76ffdd8b.pth)到当前目录，可参考命令：
+    ```bash
+    wget https://download.openmmlab.com/mmaction/skeleton/posec3d/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint-76ffdd8b.pth
+    ```
 
-> **说明：**  
-> Top1表示预测结果中概率最大的类别与真实类别一致的概率，其值越大说明分类模型的效果越优 
+    执行mmaction官方提供的转ONNX脚本，生成ONNX模型：
+    ```bash
+    python mmaction2/tools/deployment/pytorch2onnx.py \
+        ./mmaction2/configs/skeleton/posec3d/slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint.py \
+        ./slowonly_kinetics400_pretrained_r50_u48_120e_hmdb51_split1_keypoint-76ffdd8b.pth \
+        --shape ${bs} 20 17 48 56 56 \
+        --output-file ./posec3d_bs${bs}.onnx
+    ```
+    说明：前两个位置参数分别为模型配置文件路径与预训练权重文件路径；`--shape`为模型输入的shape，可对bs设置不同值以生成不同batchsize的ONNX模型；`--output-file`为生成ONNX模型的保存路径。
+
+
+2. ONNX 模型转 OM 模型  
+
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
+
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+    chip_name=310P3  # 根据 step1 的结果设值
+    
+    # 执行 ATC 进行模型转换
+    atc --framework=5 \
+        --model=./posec3d_bs${bs}.onnx \
+        --output=./posec3d_bs${bs} \
+        --input_format=ND \
+        --input_shape="onnx::Reshape_0:${bs},20,17,48,56,56" \
+        --log=error \
+        --soc_version=Ascend${chip_name}
+    ```
+
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+
+
+## 推理验证
+
+1. 对数据集推理  
+    该离线模型使用ais_infer作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
+    ```bash
+    python -m ais_bench \
+        --model ./posec3d_bs${bs}.om \
+        --input ./prep_data/bin/ \
+        --output ./ \
+        --output_dirname result_bs${bs} \
+        --batchsize ${bs}
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --output_dirname 用于存放推理结果的子目录名，位于--output指定的目录下
+    + --batchsize 模型每次输入bin文件的数量
+
+
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python -m ais_bench --model ./posec3d_bs${bs}.om --batchsize ${bs} --loop 100
+    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
+
+3. 精度验证  
+
+    执行后处理脚本，根据推理结果计算OM模型的精度指标：
+    ```bash
+    python posec3d_postprocess.py \
+        --infer_results ./result_bs${bs} \
+        --label_file ./prep_data/hmdb51_label.txt
+    ```
+    参数说明：
+    + --infer_results: 推理结果所在路径
+    + --label_file: 预处理后的标签文件路径
+    
+    运行结束后，程序会打印出OM模型的精度指标：
+    ```
+    Evaluating top_k_accuracy ...
+    top1_acc        0.6922
+    top5_acc        0.9131
+    ```
+
+----
+# 性能&精度
+
+在310P设备上，OM模型精度为  **{Top1@Acc=69.22%, Top5@Acc=91.31%}**，当batchsize设为8时OM模型性能最优，达 **22.39 fps**。
+
+| 芯片型号   | BatchSize | 数据集       | 精度            | 性能       |
+| --------- | --------- | ------------ | --------------- | --------- |
+|Ascend310P3| 1         | HMDB51       | Top1@Acc=69.22%, Top5@Acc=91.31 | 22.05 fps |
+|Ascend310P3| 4         | HMDB51       | Top1@Acc=69.22%, Top5@Acc=91.31 | 22.16 fps |
+|Ascend310P3| 8         | HMDB51       | Top1@Acc=69.22%, Top5@Acc=91.31 | **22.39 fps** |
+
+说明：在310P服务器上，当batchsize为16或更高时，OM模型因内存不足无法推理。

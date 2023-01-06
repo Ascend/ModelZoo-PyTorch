@@ -282,6 +282,8 @@ class Trainer(object):
         # processing speed
         new_time = time.time()
         diff = new_time - self.last_time
+        if self.n_total_iter < 3:
+            print("step_time: ", diff)
         s_speed = "{:7.2f} ms/iter {:7.2f} sent/s - {:8.2f} words/s - ".format(
             diff * 1000.0 / self.print_freq,
             self.stats['processed_s'] * 1.0 / diff,
@@ -461,7 +463,7 @@ class Trainer(object):
             n1 = pred_mask.sum().item()
             n2 = max(n1 % 8, 8 * (n1 // 8))
             if n2 != n1:
-                pred_mask[torch.nonzero(pred_mask).view(-1)[:n1 - n2]] = 0
+                pred_mask[torch.nonzero(pred_mask).view(-1)[:int(n1 - n2)]] = 0
             pred_mask = pred_mask.view(slen, bs)
             assert pred_mask.sum().item() % 8 == 0
 

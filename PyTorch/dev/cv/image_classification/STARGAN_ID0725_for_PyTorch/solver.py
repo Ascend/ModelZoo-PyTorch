@@ -265,7 +265,7 @@ class Solver(object):
         print('Start training...')
         start_time = time.time()
         for i in range(start_iters, self.num_iters):
-
+            start = time.time()
             # =================================================================================== #
             #                             1. Preprocess input data                                #
             # =================================================================================== #
@@ -372,7 +372,8 @@ class Solver(object):
             # =================================================================================== #
             #                                 4. Miscellaneous                                    #
             # =================================================================================== #
-
+            if i < 2:
+                print("step_time = %.4f" % (time.time() - start), flush=True)
             # Print out training information.
             if (i+1) % self.log_step == 0:
                 et = time.time() - start_time

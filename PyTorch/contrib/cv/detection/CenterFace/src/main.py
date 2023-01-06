@@ -29,7 +29,9 @@ from datasets.dataset_factory import get_dataset
 from trains.train_factory import train_factory
 from datasets.sample.multi_pose import Multiposebatch
 from apex import amp
-import torch.npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+
 def main(opt, qtepoch=[0,]):
 
   torch.manual_seed(opt.seed)

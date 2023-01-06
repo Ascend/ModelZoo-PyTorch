@@ -1,260 +1,239 @@
-# RCAN Onnx 模型端到端推理指导
-
-- [1. 模型概述](#1)
-  - [论文地址](#11)
-  - [代码地址](#12)
-- [2. 环境说明](#2)
-  - [深度学习框架](#21)
-  - [python第三方库](#22)
-- [3. 模型转换](#3)
-  - [pth转onnx模型](#31)
-- [4. 数据预处理](#4)
-  - [数据集获取](#41)
-  - [数据集预处理](#42)
-  - [生成数据集信息文件](#43)
-- [5. 离线推理](#5)
-  - [benchmark工具概述](#51)
-  - [离线推理](#52)
-- [6. 精度对比](#6)
-- [7. 性能对比](#7)
-  - [npu性能数据](#71)
-  - [T4性能数据](#72)
-  - [性能对比](#73)
-
-## <a name="1">1. 模型概述</a>
-
-### <a name="11">1.1 论文地址</a>
-
-[RCAB 论文](https://arxiv.org/abs/1807.02758)
-
-### <a name="12">1.2 代码地址</a>
-
-[RCAN 代码](https://github.com/yulunzhang/RCAN)
-
-branck: master
-
-commit_id: 3339ebc59519c3bb2b5719b87dd36515ec7f3ba7
-
-## <a name="2">2. 环境说明</a>
-
-对于batch1与batch16，310性能均高于T4性能1.2倍，该模型放s在Benchmark/cv/classification目录下。</a>
-
-### <a name="21">2.1 深度学习框架</a>
-
-```
-pytorch == 1.8.0
-torchvision == 0.9.0
-onnx == 1.9.0
-CANN == 5.1.RC1
-```
-
-### <a name="22">2.2 python第三方库</a>
-
-```
-numpy == 1.21.1
-Pillow == 7.2.0
-opencv-python == 4.2.0
-imageio == 2.9.0
-scikit-image == 0.18.1
-scipy == 1.7.3
-```
-
-
-> **说明：**
->
-> X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装 
->
-> Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-## <a name="3">3. 模型转换</a>
-
-### <a name="31">3.1 pth转onnx模型</a>
-
-1. 下载 pth 权重文，放入models目录下
-
-   [RCAN 预训练pth权重文件](https://pan.baidu.com/s/1bkoJKmdOcvLhOFXHVkFlKA)
-
-   文件名：RCAN_BIX2.pt
-
-   md5sum：f567f8560fde71ba0973a7fe472a42f2
-
-2. 克隆代码仓库代码
-
-   ```bash
-   git clone https://github.com/yulunzhang/RCAN.git
-   ```
-
-3. 使用rcan_pth2onnx.py 脚本将pth转化为onnx
-
-   ```bash
-   python3.7 rcan_pth2onnx.py --pth RCAN_BIX2.pt --onnx rcan.onnx
-   ```
-
-   RCAN_BIX2.pt 文件为步骤1中下载的预训练权重文件，该条指令将在运行处生成一个rcan.onnx文件，此文件即为目标onnx文件
-
-
-### <a name="32">3.2 onnx转om模型</a>
-
-下列需要在具备华为Ascend系列芯片的机器上执行：
-
-1. 设置 atc 工作所需要的环境变量
-
-   ```bash
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   ```
-   
-2. 由于transpose算子对于某些shape不友好，需要进行优化，将如下内容写入switch.cfg中
-
-   ```
-   TransposeReshapeFusionPass:off
-   ```
-
-   经过Profiling分析，ConfusionTransposeD算子性能过低，故将其输入加入白名单。即在/usr/local/Ascend/ascend-toolkit/5.0.2.alpha003/x86_64-linux/opp/op_impl/built-in/ai_core/tbe/impl/dynamic/transpose.py里添加 Tranpose shape 白名单：
-
-   ```
-   1,64,2,2,256,256
-   ```
-
-   以下是优化前后性能对比
-
-   |      | 未任何优化前310（单卡吞吐率） | 优化后310（单卡吞吐率） |
-   | :--: | :---------------------------: | :---------------------: |
-   | bs1  |            0.7245             |         9.3220          |
-
-3. 使用atc工具将onnx模型转换为om模型，命令参考
-
-   ${chip_name}可通过`npu-smi info`指令查看
-
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-   
-   ```bash
-   atc --framework=5 --model=rcan.onnx --output=rcan_1bs --input_format=NCHW --input_shape="image:1,3,256,256" --fusion_switch_file=switch.cfg --log=debug --soc_version=Ascend${chip_name}
-   ```
-
-   此命令将在运行路径下生成一个rcan_1bs.om文件，此文件即为目标om模型文件
-
-## <a name="4">4. 数据预处理</a>
-
-### <a name="41">4.1 数据集获取</a>
-
-该模型使用[Set5](https://github.com/yulunzhang/RCAN/tree/master/RCAN_TestCode/OriginalTestData/Set5)的5张验证集进行测试，图片数据放在/root/datasets/Set5。
-
-### <a name="42">4.2 数据集预处理</a>
-
-使用 rcan_preprocess.py 脚本进行数据预处理，脚本执行命令：
-
-```
-python3.7 rcan_preprocess.py -s /root/datasets/Set5/LR -d ./prep_data --size 256
-```
-
-由于rcan模型支持动态输入，而atc工具需要指定输入大小，所以要在此对图像添加pad和进行缩放到同一大小，最终对推理产生的结果进行后处理恢复。以上命令将自动生成一个pad_info.json文件，此文件记录在数据预处理中对图像的pad和缩放信息，用于数据后处理时进行图像裁剪。
-
-### <a name="43">4.3 生成数据集信息文件</a>
-
-1. 生成数据集信息文件脚本 gen_dataset_info.py
-
-2. 执行生成数据集信息脚本，生成数据集信息文件
-
-   ```bash
-   python3.7 gen_dataset_info.py bin ./prep_data ./rcan_prep_bin.info 256 256
-   ```
-
-   第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
-
-## <a name="5">5. 离线推理</a>
-
-### <a name="51">5.1 benchmark工具概述</a>
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理benchmark工具用户指南 01
-
-### <a name="52">5.2 离线推理</a>
-
-1. 执行离线推理
-
-   ```bash
-   ./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=rcan_1bs.om -input_text_path=./rcan_prep_bin.info -input_width=256 -input_height=256 -output_binary=True -useDvpp=False
-   ```
-
-   输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为HR_image的输出，shape为bs * 512 * 512，数据类型为FP32，对应1个超分辨后的图像数据，每个输入对应的输出对应一个_x.bin文件。
-   
-2. 数据后处理
-
-   ```bash
-   python3.7 rcan_postprocess.py -s result/dumpOutput_device0/ -d post_data
-   ```
-
-   由于在预处理中对图像进行了添加pad和缩放操作，故要对推理结果进行相应的裁剪和缩放
-
-## <a name="6">6. 精度对比</a>
-
-### <a name="61">6.1 离线推理TopN精度</a>
-
-## <a name="6">6. 精度对比</a>
-
-|                    | PSNR  |  SSIM  |
-| :----------------: | :---: | :----: |
-|   原github仓库精度   | 38.27 | 0.9614 |
-| 310 om模型离线推理精度 | 38.25 | 0.9606 |
-| 310p om模型离线推理精度 | 38.25 | 0.9606 |
-
-## <a name="7">7. 性能对比</a>
-
-### <a name="71">7.1 npu性能数据</a>
-
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。由于模型不接受多 batch 输入，所以只统计在整个数据集上推理得到bs1的性能数据
-
-使用benchmark工具在整个数据集上推理时获得的性能数据：
-
-310:
-```
-[e2e] throughputRate: 1.30679, latency: 3826.82
-[data read] throughputRate: 1058.2, moduleLatency: 0.945
-[preprocess] throughputRate: 7.64831, moduleLatency: 130.748
-[infer] throughputRate: 2.3029, Interface throughputRate: 2.32143, moduleLatency: 433.593
-[post] throughputRate: 2.75189, moduleLatency: 363.387
-```
-
-Interface throughputRate: 2.32143，2.32143x4=9.28572fps 即是batch1 310单卡吞吐率
-
-310p:
-```
-[e2e] throughputRate: 2.72746, latency: 1833.21
-[data read] throughputRate: 1405.68, moduleLatency: 0.7114
-[preprocess] throughputRate: 8.26564, moduleLatency: 120.983
-[infer] throughputRate: 11.5912, Interface throughputRate: 12.4141, moduleLatency: 86.0648
-[post] throughputRate: 13.6097, moduleLatency: 73.4772
-```
-
-Interface throughputRate: 12.4141, 即是batch1 310p单卡吞吐率
-
-
-### <a name="72">7.2 T4性能数据</a>
-
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2
-
-```
-trtexec --onnx=rcan.onnx --fp16 --shapes=image:1x3x256x256
-```
-
-gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch。其中--fp16是算子精度，目前算子精度只测--fp16的。
-
-```
-[07/14/2021-10:48:26] [I] GPU Compute
-[07/14/2021-10:48:26] [I] min: 150.972 ms
-[07/14/2021-10:48:26] [I] max: 157.659 ms
-[07/14/2021-10:48:26] [I] mean: 152.567 ms
-[07/14/2021-10:48:26] [I] median: 151.477 ms
-[07/14/2021-10:48:26] [I] percentile: 157.659 ms at 99%
-[07/14/2021-10:48:26] [I] total compute time: 3.19929 s
-```
-
-batch1 t4单卡吞吐率：1000/(152.567/1)=6.5545fps 
-
-### <a name="73">7.3 性能对比</a>
-|       | 310   |  310p  |   T4   | 310p/310 | 310p/T4|
-| :---: | :---: | :----: | :----: |  :---:   | :----: |
-|  bs1  |9.28572|12.4141 | 6.5545 |  1.3369  | 1.8940 |
-
-310单个device的吞吐率乘4即单卡吞吐率比T4单卡的吞吐率大，故310性能高于T4性能，性能达标。
-310p单卡的吞吐率大于310单卡吞吐率乘4的1.2倍，310p单卡大于T4单卡的1.6倍，性能达标。
-
+# RCAN 模型推理指导
+
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
+
+----
+# 概述
+
+RCAN设计了一个残差中的残差（RIR）结构来构造深层网络，每个 RIR 结构由数个残差组（RG）以及长跳跃连接（LSC）组成，每个 RG 则包含一些残差块和短跳跃连接（SSC）。RIR 结构允许丰富的低频信息通过多个跳跃连接直接进行传播，使主网络专注于学习高频信息。此外，我们还提出了一种通道注意力机制（CA），通过考虑通道之间的相互依赖性来自适应地重新调整特征。解决了过深的网络却难以训练。低分辨率的输入以及特征包含丰富的低频信息，但却在通道间被平等对待，因此阻碍了网络的表示能力的问题。
+
++ 论文  
+    [Image Super-Resolution Using Very Deep Residual Channel Attention Networks](https://arxiv.org/abs/1807.02758)  
+    Yulun Zhang, Kunpeng Li, Kai Li, Lichen Wang, Bineng Zhong, Yun Fu  
+
++ 参考实现：  
+    url = https://github.com/yulunzhang/RCAN  
+    branch = master  
+    commit_id = 3339ebc59519c3bb2b5719b87dd36515ec7f3ba7  
+
+## 输入输出数据
++ 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | input      | RGB_FP32  | NCHW        | batchsize x 3 x 256 x 256 | 
+
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output1     |  RGB_FP32  | NCHW        | batchsize x 3 x 512 x 512   |
+
+
+----
+# 推理环境
+
+- 该模型推理所需配套的软件如下：
+
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.7.5   | -          |
+    
+    说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
+
+
+----
+# 快速上手
+
+## 获取源码
+
+1. 安装推理过程所需的依赖
+    ```bash
+    pip install -r requirements.txt
+    ```
+2. 获取开源仓源码
+    ```bash
+    git clone https://github.com/yulunzhang/RCAN.git -b master
+    cd RCAN
+    git checkout 3339ebc59519c3bb2b5719b87dd36515ec7f3ba7
+    cd ..
+    ```
+
+## 准备数据集
+
+1. 获取原始数据集  
+    该模型使用 [Set5](http://people.rennes.inria.fr/Aline.Roumy/results/SR_BMVC12.html) 的5张验证集图片进行精度验证，可前往 [Hugging Face](https://huggingface.co/datasets/eugenesiow/Set5/tree/main/data) 自行下载`Set5_HR.tar.gz`和`Set5_LR_x2.tar.gz`，然后将两个压缩包内的图片分别解压到`Set5/HR`和`Set5/LR`目录。
+    按以上操作获取数据集并解压后，数据的目录结构如下:  
+    ```
+    ├── Set5/
+        ├── HR/
+            ├── baby.png
+            ├── bird.png
+            ├── butterfly.png
+            ├── head.png
+            └── woman.png
+        └── LR/
+            ├── baby.png
+            ├── bird.png
+            ├── butterfly.png
+            ├── head.png
+            └── woman.png
+    ```
+
+
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
+    ```bash
+    python rcan_preprocess.py -s ./Set5/LR -o ./prep_data -sz 256
+    ```
+    参数说明：
+    + -s/--source: 原始数据路径
+    + -o/--output: 保存输出bin文件的目录路径
+    + -sz/--size: 统一大小后的尺寸，默认为256
+    
+    预处理程序会对原始图片进行pad和缩放操作，从而将不同shape的图片处理成同一大小。上述命令运行结束后，`./prep_data`目录下会生成一个pad_info.json文件来记录在预处理中图片的pad和缩放信息，用于后处理时进行图像裁剪。此外，`./prep_data`目录下目录下还会生成一个名为`bin`的子目录，用于存放预处理后生成的bin文件。
+
+
+## 模型转换
+
+1. PyTroch 模型转 ONNX 模型  
+ 
+    进入 [Dropbox](https://www.dropbox.com/s/qm9vc0p0w9i4s0n/models_ECCV2018RCAN.zip?dl=0) / [BaiduYun](https://pan.baidu.com/s/1bkoJKmdOcvLhOFXHVkFlKA) / [GoogleDrive](https://drive.google.com/file/d/10bEK-NxVtOS9-XSeyOZyaRmxUTX3iIRa/view?usp=sharing) 任意一个下载通道，下载开源仓提供的预训练权重到当前目录，解压缩。该推理任务只需用到 `models_ECCV2018RCAN/RCAN_BIX2.pt`。可通过md5sum值(f567f8560fde71ba0973a7fe472a42f2)来检查预训练权重文件的完整性。
+
+    然后执行执行以下命令生成 ONNX 模型：
+    ```bash
+    python rcan_pth2onnx.py --pth ./models_ECCV2018RCAN/RCAN_BIX2.pt --onnx ./rcan.onnx --shape 256 256 --scale 2
+    ```
+    参数说明：
+    + --pth: 预训练权重文件的路径
+    + --onnx: 生成ONNX模型的保存路径
+    + --shape: 模型输入数据的形状，须与预处理时的--size保持一致
+    + --scale: 模型输出图片相对于输入图片的放大倍数，默认为2
+
+2. ONNX 模型转 OM 模型  
+
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
+
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+    chip_name=310P3  # 根据 step1 的结果设值
+    bs=1  # 根据需要自行设置batchsize
+
+    # 执行 ATC 进行模型转换
+    atc --framework=5 \
+        --model=rcan.onnx \
+        --output=rcan_bs${bs} \
+        --input_format=NCHW \
+        --input_shape="image:${bs},3,256,256" \
+        --log=debug \
+        --soc_version=Ascend${chip_name}
+    ```
+
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+
+
+## 推理验证
+
+1. 对数据集推理  
+    该离线模型使用ais_infer作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
+    ```bash
+    python -m ais_bench \
+        --model rcan_bs${bs}.om \
+        --input ./prep_data/bin/ \
+        --output ./ \
+        --output_dirname result_bs${bs} \
+        --batchsize ${bs}
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --output_dirname 用于存放推理结果的子目录名，位于--output指定的目录下
+    + --batchsize 模型每次输入bin文件的数量
+
+
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python -m ais_bench --model rcan_bs${bs}.om --batchsize ${bs} --loop 100
+    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
+
+3. 精度验证  
+
+    执行后处理脚本，根据推理结果计算OM模型的精度：
+    ```bash
+    python rcan_postprocess.py \
+        --infer_results ./result_bs${bs} \
+        --pad_info ./prep_data/pad_info.json \
+        --hr_images ./Set5/HR \
+        --save_dir ./gen_images_bs${bs} \
+        --shape 256 256 \
+        --scale 2
+    ```
+    参数说明：
+    + --infer_results: 存放推理结果的目录路径
+    + --pad_info: 数据预处理生成的pad信息文件路径
+    + --hr_images: 存放原始HR图片的目录路径
+    + --save_dir: 模型输出经后处理后，生成图片的保存目录
+    + --shape: 模型输入数据的形状，须与预处理时的--size保持一致
+    + --scale: 模型输出图片相对于输入图片的放大倍数，默认为2，须跟导出ONNX时的--scale参数保持一致
+    
+    运行成功后，程序会根据推理结果生成放大后的图片，并打印出模型的精度指标：
+    ```
+    Images generated! path: ./gen_images_bs1
+    Evaluation of RCAN model
+    PSNR    38.249656290876096
+    SSIM    0.9606179588265406
+    ```
+
+----
+# 性能&精度
+
+在310P设备上，模型精度为  **{PSNR=38.25, SSIM=0.9606}**，当batchsize设为 1 时OM模型性能最优，达 **12.25 fps**。
+
+| 芯片型号   | BatchSize | 数据集      | 精度                    | 性能       |
+| --------- | --------- | ----------- | ----------------------- | --------- |
+|Ascend310P3| 1         | Set5        | PSNR=38.25, SSIM=0.9606 | **12.25 fps** |
+|Ascend310P3| 4         | Set5        | PSNR=38.25, SSIM=0.9606 | 10.39 fps |
+|Ascend310P3| 8         | Set5        | PSNR=38.25, SSIM=0.9606 | 11.08 fps |
+|Ascend310P3| 16        | Set5        | PSNR=38.25, SSIM=0.9606 | 11.21 fps |
+|Ascend310P3| 32        | Set5        | PSNR=38.25, SSIM=0.9606 | 11.37 fps |
+|Ascend310P3| 64        | Set5        | PSNR=38.25, SSIM=0.9606 | 10.96 fps |

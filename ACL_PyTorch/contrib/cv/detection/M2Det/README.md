@@ -14,7 +14,7 @@
 	-   [4.2 数据集预处理](#42-数据集预处理)
 	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
 -   [5 离线推理](#5-离线推理)
-	-   [5.1 获取ais_infer工具](#51-获取ais_infer工具)
+	-   [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
 	-   [5.2 离线推理](#52-离线推理)
 -   [6 精度对比](#6-精度对比)
 	-   [6.1 离线推理Acc精度统计](#61-离线推理Acc精度统计)
@@ -192,7 +192,7 @@ python3.7 M2Det_preprocess.py --config=configs/m2det512_vgg.py --save_folder=pre
 --COCO_anns：数据集annotations存放路径。
 
 ### 4.3 生成数据集信息文件
-使用ais_infer推理需要输入图片数据集的info文件，用于获取数据集。使用gen_dataset_info.py脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行gen_dataset_info.py脚本。
+使用ais_bench推理需要输入图片数据集的info文件，用于获取数据集。使用gen_dataset_info.py脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行gen_dataset_info.py脚本。
 
 生成BIN文件输入info文件
 
@@ -226,18 +226,13 @@ python3.7 gen_dataset_info.py jpg ${coco_imgs_path}/val2014 coco_images.info
 
 ## 5 离线推理
 
--   **[获取ais_infer工具](#51-获取ais_infer工具)**  
+-   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 获取ais_infer工具
+### 5.1 安装ais_bench推理工具
 
-[获取ais_infer工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
-将工具编译后的压缩包放置在当前目录；
-
-解压工具包，安装工具压缩包中的whl文件；
-
-pip3 install aclruntime-0.01-cp37-cp37m-linux_xxx.whl
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 ### 5.2 离线推理
 1.设置环境变量
@@ -247,7 +242,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 2.执行离线推理
 执行推理
 ```shell
-python3.7  ais_infer.py --model /home/zzl/M2Det/m2det_bs1.om  --input /home/zzl/M2Det/pre_dataset/ --output /home/zzl/M2Det/result
+python3.7  -m ais_bench --model /home/zzl/M2Det/m2det_bs1.om  --input /home/zzl/M2Det/pre_dataset/ --output /home/zzl/M2Det/result
 ```
 参数说明：
 
@@ -287,7 +282,7 @@ python3.7 M2Det_postprocess.py --bin_data_path=result/2022_07_22-09_31_54/ --tes
 
 --COCO_anns：coco数据集annotations路径。
 
---is_ais_infer：使用ais_infer推理工具。
+--is_ais_infer：使用ais_bench推理工具。
 
 执行完后得到310P上的精度：
 

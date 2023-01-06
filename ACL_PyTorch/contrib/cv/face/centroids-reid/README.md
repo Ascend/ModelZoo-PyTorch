@@ -89,7 +89,8 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
    git clone https://github.com/mikwieczorek/centroids-reid.git  
    cd ./centroids-reid
    git reset --hard a1825b7a92b2a8d5e223708c7c43ab58a46efbcf 
-   patch -p1 <  centroid-reid.patch
+   patch -p2 < ../centroid-reid.patch
+   cd ..
    mkdir models
    ```
 
@@ -142,7 +143,10 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
 
    1. 获取权重文件。
       
-      在该目录下获取权重文件
+      ```
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Centroids-reid/PTH/resnet50-19c8e357.pth
+      ```
+      将两个权重文件都放置在models文件目录下
 
    2. 导出onnx文件。
 
@@ -210,9 +214,9 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
@@ -220,18 +224,20 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
         mkdir -p DukeMTMC-reID/result/gallery
         mkdir -p DukeMTMC-reID/result/query
         #gallery 
-        python tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+        python -m ais_bench \
                 --model ./centroid-reid_r50_bs${bs}.om \
                 --input ./DukeMTMC-reID/bin_data/gallery  \
-                --output ./DukeMTMC-reID/result/gallery  \
-                --outfmt TXT
+                --output ./DukeMTMC-reID/result  \
+                --output_dirname gallery \
+                --outfmt TXT \
                 --batchsize ${bs}
         #query 
-        python tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+        python -m ais_bench \
 				--model ./centroid-reid_r50_bs${bs}.om  \
 				--input ./DukeMTMC-reID/bin_data/query  \
-				--output ./DukeMTMC-reID/result/query  \
-				--outfmt TXT  
+				--output ./DukeMTMC-reID/result  \
+            --output_dirname query \
+				--outfmt TXT  \
 				--batchsize ${bs}
         ```
 
@@ -243,10 +249,6 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
              -   outfmt：推理输出类型
 
 
-
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]。
-
    3. 精度验证。
 
       调用脚本centroid-reid_postprocess.py计算精度
@@ -254,8 +256,8 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
       ```
       python ./centroid-reid_postprocess.py \
 			   --dataset_dir ./DukeMTMC-reID/result/ \
-			   --query_path query/${time_line}  \
-			   --gallery_path  gallery/${time_line}
+			   --query_path query \
+			   --gallery_path  gallery
       ```
 
       - 参数说明：
@@ -268,10 +270,10 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3.7 tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model=${om_model_path} --loop=100 --batchsize=${batch_size}
+         python -m ais_bench --model=${om_model_path} --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：

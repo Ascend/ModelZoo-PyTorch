@@ -55,7 +55,7 @@ if __name__ == "__main__":
     '''
     import argparse
 
-    parser = argparse.ArgumentParser(description='Postprocess of ais_infer result')
+    parser = argparse.ArgumentParser(description='Postprocess of ais_bench result')
     parser.add_argument('-f', "--file_dir", required=True)
     parser.add_argument('-o', "--output_dir", required=True)
     parser.add_argument("--sampling_rate", default=22050, type=int)

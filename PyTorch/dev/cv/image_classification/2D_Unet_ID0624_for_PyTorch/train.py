@@ -35,6 +35,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 try:
     from apex import amp
 except:
@@ -137,6 +138,7 @@ def train_net(args,
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
             for batch in train_loader:
+                start_time = time.time()
                 imgs = batch['image']
                 true_masks = batch['mask']
                 assert imgs.shape[1] == net.n_channels, \
@@ -163,6 +165,8 @@ def train_net(args,
 
                 pbar.update(imgs.shape[0])
                 global_step += 1
+                if global_step < 3:
+                    print("step_time = {:.4f}".format(time.time()-start_time), flush=True)
                 if global_step == 100: pass
 
                 if global_step % (n_train // (10 * batch_size)) == 0:

@@ -105,6 +105,9 @@ FPS=`awk -v x=$batch_size -v y=$perf 'BEGIN{printf "%.2f\n",x/y}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
+#获取编译时间
+CompileTime=`grep "Timer:" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | head -2 | awk -F "Timer:" '{print $2}' | awk -F " " '{print $1}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 #输出训练精度,需要模型审视修改
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
@@ -140,7 +143,7 @@ echo "ActualFPS = ${ActualFPS}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
+echo "CompileTime = ${CompileTime}" >> $cur_path/test/output/$ASCEND_DEVICE_ID/${CaseName}.log
 
 sed -i "s|break|pass|g" main.py
 sed -i "s|$data_path/../$target_data/ID1182_CarPeting_Pytorch_RRN|/home/panj/data|g" ${cur_path}/main.py

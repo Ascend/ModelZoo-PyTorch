@@ -203,7 +203,8 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
       ```shell
       mkdir infer     								#创建存放推理结果的文件夹
@@ -212,7 +213,7 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
    2. 执行推理。
    
         ```shell
-        python ${ais_infer_path}/ais_infer.py --model swin_bs${bs}.om --input data/bin/ --output infer/ --batchsize ${bs}
+        python -m ais_bench --model swin_bs${bs}.om --input data/bin/ --output infer/ --batchsize ${bs}
         ```
    
         参数说明：
@@ -244,10 +245,10 @@ Transformer 在 NLP 领域表现优异，如何将 Transformer 从 NLP 领域应
       
    4. 性能验证。
    
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
    
         ```shell
-        python ${ais_infer_path}/ais_infer.py --model swin_bs${bs}.om --loop 100 --batchsize ${bs}
+        python -m ais_bench --model swin_bs${bs}.om --loop 100 --batchsize ${bs}
         ```
       
       参数说明：

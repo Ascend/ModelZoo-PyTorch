@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+import sys
+sys.path.append("./centroids-reid")
 from PIL import Image
 import argparse
 import numpy as np
@@ -27,13 +29,13 @@ def main(args):
                 T.Normalize(mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD)
             ])
 
-    in_files = os.listdir(src_path)
+    in_files = os.listdir(args.src_path)
     for file in tqdm(in_files):
-        input_image = Image.open(src_path + '/' + file).convert('RGB')
+        input_image = Image.open(args.src_path + '/' + file).convert('RGB')
         input_tensor = transform(input_image)
         img = np.array(input_tensor).astype(np.float32)
         
-        save_file_path = os.path.join(save_path, file.split('.')[0] + ".bin")
+        save_file_path = os.path.join(args.save_path, file.split('.')[0] + ".bin")
         img.tofile(save_file_path)
 
 

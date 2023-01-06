@@ -63,11 +63,12 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 
   ```
   pip install -r requirements.txt
+  python3 setup.py build_ext --inplace
   ```
 
 
 
-## 准备数据集
+## 训练准备
 
 1. 获取数据集。
 
@@ -94,7 +95,9 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
               │──valid.bin
               │——valid.idx              
    ```
+2. 获取预训练模型
 
+    下载预训练模型 [RoBERTa.base](https://dl.fbaipublicfiles.com/fairseq/models/roberta.base.tar.gz) , 解压至源码包路径下：“./pre_train_model/RoBERTa.base/model.pt”。
 
 
 # 开始训练
@@ -111,23 +114,28 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 
    该模型支持单机单卡训练和单机8卡训练。
 
-   - 单机单卡训练
-
-     启动单卡训练。
-
-     ```
-     bash ./test/train_full_1p.sh --data_path=real_data_path   
-     ```
-
    - 单机8卡训练
 
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path  
+     bash ./test/train_full_8p.sh --data_path=real_data_path   
      ```
 
-   --data\_path参数填写数据集路径。
+   - 单机性能
+
+     单卡性能。
+
+     ```
+     bash ./test/train_performance_1p.sh --data_path=real_data_path  
+     ```
+     8卡性能。
+
+     ```
+     bash ./test/train_performance_8p.sh --data_path=real_data_path  
+     ```
+
+   --data_path参数填写数据集路径。
 
    模型训练脚本参数说明如下。
 

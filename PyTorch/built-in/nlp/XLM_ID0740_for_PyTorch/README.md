@@ -1,77 +1,203 @@
-# XLM模型使用说明
+# XLM_ID0740_for_PyTorch
 
-## Requirements
-* NPU配套的run包安装
-* Python 3.7.5
-* numpy 
-* PyTorch(NPU版本)
-* apex(NPU版本)
-* (可选)参考《Pytorch 网络模型移植&训练指南》6.4.2章节，配置cpu为性能模式，以达到模型最佳性能；不开启不影响功能。
+-   [概述](#概述)
+-   [准备训练环境](#准备训练环境)
+-   [开始训练](#开始训练)
+-   [训练结果展示](#训练结果展示)
+-   [版本说明](#版本说明)
 
-## Dataset Prepare
-1. 下载Wikipedia单语数据，本模型训练时使用en，zh两种单语数据集，执行下载单语数据命令：
+# 概述
+
+## 简述
+
+XLM模型是transformer的改进模型，其克服了信息不互通的难题，将不同语言放在一起采用新的训练目标进行训练，从而让模型能够掌握更多的跨语言信息。这种跨语言模型的一个显著优点是，对于预训练后的后续任务（比如文本分类或者翻译等任务），训练语料较为稀少的语言可以利用在其他语料上学习到的信息。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/facebookresearch/XLM.git
+  commit_id=cd281d32612d145c6742b4d3f048f80df8669c30
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/nlp
+  ```
+
+- 通过Git获取代码方法如下：
+
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+
+- 通过单击“立即下载”，下载源码包。
+
+# 准备训练环境
+
+## 准备环境
+
+- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+
+  **表 1**  版本配套表
+
+  | 配套       | 版本                                                         |
+  | ---------- | ------------------------------------------------------------ |
+  | 硬件       | [1.0.11](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [5.0.2](https://www.hiascend.com/software/cann/commercial?version=5.0.2) |
+  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)       |
+
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+
+- 安装依赖。
+
+  ```
+  pip install -r requirements.txt
+  ```
+
+
+## 准备数据集
+
+1. 下载Wikipedia单语数据，本模型训练时使用en，zh两种单语数据集，在源码包根目录下执行下载单语数据命令：
 ```
-./get-data-wiki.sh en  # 下载英文单语数据
-./get-data-wiki.sh zh  # 下载中文单语数据
+./get-data-wiki.sh en   # 下载英文单语数据
+./get-data-wiki.sh zh   # 下载中文单语数据
+```
+
+2. 数据集目录结构参考如下所示。
+```
+├ data
+├── processed
+│    ├── XLM_en_zh    
+│         ├── 50K
+│              ├── test.en.pth
+│              ├── test.zh.pth
+│              ├── train.en.pth
+│              ├── train.zh.pth
+│              ├── valid.en.pth
+│              ├── valid.zh.pth
 ```
 
 ## 安装语言处理工具
 方法一：
-1. 进入tools路径
+1. 进入源码包根目录下的tools路径。
 ```
 cd tools/
 ```
-2. 安装摩西标记器 
+2. 安装摩西标记器。
 ```
 git clone https://github.com/moses-smt/mosesdecoder
 ```
-3. 安装 中文斯坦福分词器
+3. 安装中文斯坦福分词器。
 ```
 wget https://nlp.stanford.edu/software/stanford-segmenter-2018-10-16.zip
 unzip stanford-segmenter-2018-10-16.zip
 ```
-4. 安装fastBPE
+4. 安装fastBPE。
 ```
 git clone https://github.com/glample/fastBPE
 cd fastBPE
 g++ -std=c++11 -pthread -O3 fastBPE/main.cc -IfastBPE -o fast
 ```
 方法二：
-直接使用install-tools.sh脚本进行安装
+直接使用源码包根目录下的install-tools.sh脚本进行安装。
+
 ```
 ./install-tools.sh
 ```
 
-##处理数据集en,zh
-执行脚本tokenize_en_zh.sh
+处理en和zh数据集，执行脚本tokenize_en_zh.sh。
+
 ```
 bash tokenize_en_zh.sh
 ```
-就会在data/processed/XLM_en_zh/50k路径下生成处理好的en,zh数据集
+就会在data/processed/XLM_en_zh/50k路径下生成处理好的en,zh数据集。
 
+# 开始训练
 
-## Train MODEL
+## 训练模型
 
-### 单卡（由于XLM模型在单卡训练时，loss不收敛，故不采用单卡训练）
-       bash ./test/train_full_1p.sh  --data_path=数据集路径                 # 精度训练
-       bash ./test/train_performance_1p.sh  --data_path=数据集路径     # 性能训练
-        [ 数据集路径写到XLM_en_zh这一级 ]
+1. 进入解压后的源码包根目录。
 
-### 8卡
-       bash ./test/train_full_8p.sh  --data_path=数据集路径           # 精度训练
-       bash ./test/train_performance_8p.sh  --data_path=数据集路径     # 性能训练
-        [ 数据集路径写到XLM_en_zh这一级 ]
+   ```
+   cd /${模型文件夹名称} 
+   ```
 
-## 单卡训练时，如何指定使用第几张卡进行训练
-1. 修改 xlm/slurm.py脚本
- 将168行，torch.npu.set_device(params.local_rank) 注释掉
- 同时在其后添加如下一行
- torch.npu.set_device("npu:id") # id可以设置为自己想指定的卡
+2. 运行训练脚本。
 
+   该模型支持单机单卡训练和单机8卡训练。
 
-## 由于XLM模型在docker中训练需要占用比较大的内存，建议在开启docker时，将shm-size设置大些
-建议设置shm-size为100G，已经在docker_start.sh脚本中添加，如果宿主机内存不足100G，可以适当减小，
-修改docker_start.sh脚本中的shm-size参数配置， 可设置为10G左右。
+   - 单机单卡训练
 
-## 注意: XLM模型在八卡训练的编译阶段，使用的内存最大能达到315G左右，
-   建议测试服务器要保证有大于320G的可用内存空间，才能拉起模型训练。
+     启动单卡训练（由于XLM模型在单卡训练时，loss不收敛，故不采用单卡训练）。
+
+     ```
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     [ 数据集路径写到XLM_en_zh这一级 ]
+     ```
+   
+   - 单机8卡训练
+   
+     启动8卡训练。
+   
+     ```
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     [ 数据集路径写到XLM_en_zh这一级 ]
+     ```
+
+3. 指定单卡训练id。
+
+   修改xlm/slurm.py脚本
+   ```
+   将168行，torch.npu.set_device(params.local_rank) 注释掉，并在其后添加如下一行
+   torch.npu.set_device("npu:id")  # id可以设置为自己想指定的卡
+   ```
+
+--data_path参数填写数据集路径。
+
+模型训练脚本参数说明如下。
+
+   ```
+公共参数：
+--amp                               //是否使用混合精度
+--seed                              //随机数种子设置
+--fp16                              //采用半精度训练
+--encoder_only                      //仅适用编码器
+--use_memory                        //使用外部存储器
+--data_path                         //数据集路径
+--reload_checkpoint                 //重新加载权重文件
+--exp_name                          //实验名称
+--mem_enc_positions                 //编码器中的内存位置
+   ```
+
+训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| Type | AUC | FPS       | Epochs   |
+| :------: | :------:  | :------: | :------: |
+| NPU-1p | - | 160 | 1     |
+| NPU-8p | 59.8 | 1160 | 180 |
+
+# 版本说明
+
+## 变更
+
+2023.01.03：更新readme，重新发布。
+
+2021.07.08：首次发布。
+
+## 已知问题
+
+XLM模型在8卡训练的编译阶段，使用的内存最大能达到315G左右，建议测试服务器要保证有大于320G的可用内存空间，才能拉起模型训练。

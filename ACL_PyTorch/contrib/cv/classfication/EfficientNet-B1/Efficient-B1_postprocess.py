@@ -18,6 +18,7 @@ import argparse
 import re
 import numpy
 import json
+import tqdm
 
 def rename(data_dir, pre_dir):
     txtfile_2_class = dict()
@@ -39,8 +40,7 @@ def eval(data_dir, pred_dir, save_file):
     txtfiles = os.listdir(pred_dir)
     top1_acc = 0
     top5_acc = 0
-    for txtfile in txtfiles:
-        print("loading {}".format(txtfile))
+    for txtfile in tqdm.tqdm(txtfiles):
         pre_num = numpy.loadtxt(os.path.join(pred_dir, txtfile))
         class_ids = classification(data_dir)
         class_pres = zip(class_ids, pre_num)

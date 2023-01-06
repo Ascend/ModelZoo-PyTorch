@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+sys.path.append('./pytorch-image-models')
 from tqdm import tqdm
 import os
 from timm.data import create_loader, ImageDataset
-import sys
-sys.path.append('./pytorch-image-models')
+
 
 os.environ['device'] = 'cpu'
 

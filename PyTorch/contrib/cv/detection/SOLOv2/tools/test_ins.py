@@ -294,8 +294,8 @@ def main():
     cfg = mmcv.Config.fromfile(args.config)
     if args.data_root:
         cfg.data_root = args.data_root
-        cfg.data.test.ann_file = cfg.data_root + 'annotations/instances_val2017.json'
-        cfg.data.test.img_prefix = cfg.data_root + 'val2017/'
+        cfg.data.test.ann_file = cfg.data_root + '/coco/annotations/instances_val2017.json'
+        cfg.data.test.img_prefix = cfg.data_root + '/coco/val2017/'
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True

@@ -1,212 +1,308 @@
-# HigherHRNet模型PyTorch离线推理指导
+# HigherHRNet模型-推理指导
 
-## 1 环境准备
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-1.安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装
+    - [输入输出数据](#section540883920406)
 
-```
-pip install -r requirements.txt  
-```
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-2.获取，修改与安装开源模型代码
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-```
-git clone https://github.com/cocodataset/cocoapi.git
-cd cocoapi/PythonAPI
-# Install into global site-packages
-make install
-cd -
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-git clone https://github.com/HRNet/HigherHRNet-Human-Pose-Estimation.git
-cd HigherHRNet-Human-Pose-Estimation
-patch -p1 < ../HigherHRNet.patch
-cd ..
-```
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-3.[获取benchmark工具](https://gitee.com/ascend/cann-benchmark/tree/master/infer)
-将benchmark.x86_64或benchmark.aarch64放到当前目录
+  ******
 
-## 2 数据准备
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-1.获取coco2017数据集 ，新建data文件夹，数据文件目录格式如下：
+自下而上的人体姿态估计方法由于尺度变化的挑战而难以为小人体预测正确的姿态。HigherHRNet：一种新的自下而上的人体姿势估计方法，用于使用高分辨率特征金字塔学习尺度感知表示。该方法配备了用于训练的多分辨率监督和用于推理的多分辨率聚合，能够解决自下而上的多人姿势估计中的尺度变化挑战，并能更精确地定位关键点，尤其是对于小人物。 HigherHRNet中的特征金字塔包括HRNet的特征图输出和通过转置卷积进行上采样的高分辨率输出。
 
-```
-${POSE_ROOT}
-|-- data
-`-- |-- coco
-    `-- |-- annotations
-        |   |-- person_keypoints_train2017.json
-        |   `-- person_keypoints_val2017.json
-        `-- images
-            |-- train2017
-            |   |-- 000000000009.jpg
-            |   |-- 000000000025.jpg
-            |   |-- 000000000030.jpg
-            |   |-- ... 
-            `-- val2017
-                |-- 000000000139.jpg
-                |-- 000000000285.jpg
-                |-- 000000000632.jpg
-                |-- ... 
-```
+- 参考实现：
 
-2. 数据预处理,将原始数据集转换为模型输入的数据
+  ```shell
+  url=https://github.com/HRNet/HigherHRNet-Human-Pose-Estimation.git
+  commit_id=aa23881492ff511185acf756a2e14725cc4ab4d7
+  code_path=ACL_PyTorch/contrib/cv/pose_estimation/HigherHRNet
+  model_name=HigherHRNet
+  ```
 
-```
-python3 HigherHRNet_preprocess.py --output ${prep_output_dir} --output_flip ${prep_output_flip_dir}
-```
+## 输入输出数据<a name="section540883920406"></a>
 
-- 参数说明：
-  -  --output：输出的二进制文件（.bin）所在路径
-  - --output_flip：输出的二进制文件flip（.bin）所在路径。
+- 输入数据
 
-3. 生成数据集info文件
-```
-python3 gen_dataset_info.py bin ${prep_output_dir} ./prep_bin
-python3 gen_dataset_info.py bin ${prep_output_flip_dir} ./prep_bin_flip
-```
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | FLOAT32  | batchsize x 3 x 512x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 576  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 640  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 704  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 768  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 832  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 896  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 960  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 512x 1024 | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 576x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 640x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 704x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 768x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 832x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 896x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 960x 512  | NCHW         |
+  | input    | FLOAT32  | batchsize x 3 x 1024x 512 | NCHW         |
 
-- 参数说明：
-  - “bin”：生成的数据集文件格式。
-  - ${prep_output_dir}：预处理后的数据文件的相对路径。
-  - ${prep_output_flip_dir}：预处理后的数据文件的相对路径。
-  - “./prep_bin”：生成的数据集文件保存的路径。
-  - “./prep_bin_flip”：生成的数据集文件保存的路径
+- 输出数据
 
-运行成功后，在当前目录中生成“prep_bin.info”和“prep_bin_flip.info”
+  | 输出数据 | 数据类型 | 大小                               | 数据排布格式 |
+  | -------- | -------- | ---------------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 17 x h/4 x w/41 x 1000 | NCHW         |
+  | output2  | FLOAT32  | batchsize x 17 x h/2 x w/2         | NCHW         |
 
-## 3 离线推理
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-1. 获取权重文件方法。
+- 该模型需要以下插件与驱动
 
-   从这里下载权重文件([GoogleDrive](https://drive.google.com/open?id=1bdXVmYrSynPLSk5lptvgyQ8fhziobD50) or [OneDrive](https://1drv.ms/f/s!AhIXJn_J-blW4AwKRMklXVzndJT0))。
+  **表 1**  版本配套表
 
-   文件名称：pose_higher_hrnet_w32_512.pth
+  | 配套                                                            | 版本    | 环境准备指导                                                                                          |
+  | --------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+  | 固件与驱动                                                      | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                            | 5.1.RC2 | -                                                                                                     |
+  | Python                                                          | 3.7.5   | -                                                                                                     |
+  | PyTorch                                                         | 1.8.0   | -                                                                                                     |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
 
-    ```
-    mkdir models
-    mv pose_higher_hrnet_w32_512.pth models
-    ```
-2. 导出.onnx文件。
-    ```
-    python3 HigherHRNet_pth2onnx.py --weights models/pose_higher_hrnet_w32_512.pth
-    ```
-    获得pose_higher_hrnet_w32_512_bs1_dynamic.onnx文件。
 
-​        **注：**ATC工具转换.onnx文件到.om文件时，目前支持的**onnx算子版本为11**。
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-​        需将HigherHRNet_pth2onnx.py脚本中torch.onnx.export方法内的输入参数**opset_version的值需设为11**。
+## 获取源码<a name="section4622531142816"></a>
 
-3. 使用ATC工具将ONNX模型转OM模型。
+1. 获取源码。
 
-   a. 配置环境变量
-   
-   ```
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   ```
-   
-    b. ${chip_name}可通过`npu-smi info`指令查看，例：310P3
-   
-   ![image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-   
-    ```
-    atc --framework=5 --model=models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx  --output=models/pose_higher_hrnet_w32_512_bs1_dynamic --input_format=NCHW --input_shape="input:1,3,-1,-1" --dynamic_image_size="1024,512;960,512;896,512;832,512;768,512;704,512;640,512;576,512;512,512;512,576;512,640;512,704;512,768;512,832;512,896;512,960;512,1024"  --out_nodes="Conv_1818:0;Conv_1851:0" --soc_version=Ascend${chip_name}
-    ```
-   
-- 参数说明：
-  - --model：为ONNX模型文件。
-  - --framework：5代表ONNX模型。
-  - --output：输出的OM模型。
-  - --input_format：输入数据的格式。
-  - --input_shape：输入数据的shape。
-  - --log：日志级别。
-  - --soc_version：处理器型号。
-
-运行成功后生成“pose_higher_hrnet_w32_512_bs1.om”模型文件。
-
-4. 开始验证推理
-
-   a. 使用Benchmark工具进行推理。
-
-   执行以下命令增加Benchmark工具可执行权限，并根据OS架构选择工具，如果是X86架构，工具选择benchmark.x86_64，如果是Arm，选择benchmark.aarch64
-
-   ```
-   chmod u+x benchmark.${arch}
+   ```shell
+   git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
+   cd cocoapi/PythonAPI
+   make install
+   cd ../..
+   git clone https://github.com/HRNet/HigherHRNet-Human-Pose-Estimation
+   cd HigherHRNet-Human-Pose-Estimation
+   patch -p1 < ../HigherHRNet.patch
+   cd ..
    ```
 
-   b. 使用Benchmark工具进行推理。
+2. 安装依赖。
 
-   ```
-   python3 HigherHRNet_benchmark.py --bs 1
-   ```
-   
-- 参数说明：
-  - --bs：批大小，即1次迭代所使用的样本量，目前仅只支持bs为1
-  
-   c. 精度验证	
-  
-   ```
-   python3 HigherHRNet_postprocess.py  --dump_dir './result/dumpOutput_device0_bs1' --dump_dir_flip './result/dumpOutput_device0_bs1_flip'
-   ```
-  
-- 参数说明：
-  - --dump_dir：生成推理结果所在路径。
-  - --dump_dir_flip：生成推理结果所在路径。
-  
-   后处理输出的结果，日志保存在“output”目录下。
-  
-   d. 性能验证
-  
-   ```
-   python3 HigherHRNet_performance.py
-   ```
-  
-   GPU机器上执行，执行前使用nvidia-smi查看设备状态，确保device空闲
-  
-   ```
-   trtexec --onnx=models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx --fp16 --shapes=image:1x3x512x512
+   ```shell
+   pip3 install -r requirements.txt
    ```
 
-**评测结果：**
+## 准备数据集<a name="section183221994411"></a>
 
-1. 精度
+1. 获取原始数据集。
 
-|     | 310     |310P    |
-|-----|---------|---------|
-| bs1 | AP:67.1 | AP:67.1 |
+   本模型支持COCO2017 4952张图片的验证集。请用户需自行获取[COCO2017](https://cocodataset.org/)数据集，上传数据集到本项目路径下。目录结构如下：
+   > 因为模型代码开源仓配置文件限制，请注意数据集配置路径
 
-目前仅支持bs为1的情况
+   ```
+    data
+     |-- coco
+      `-- |-- annotations
+          |   |-- person_keypoints_train2017.json
+          |   `-- person_keypoints_val2017.json
+          `-- images
+              |-- train2017
+              |   |-- 000000000009.jpg
+              |   |-- 000000000025.jpg
+              |   |-- 000000000030.jpg
+              |   |-- ...
+              `-- val2017
+                  |-- 000000000139.jpg
+                  |-- 000000000285.jpg
+                  |-- 000000000632.jpg
+                  |-- ...
+   ```
 
-2. 性能
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-| Input Shape | 310        | 310P(未优化)   | 310P/310(未优化)   | 310P(优化后）    | 310P/310(优化后）   | T4       | 310P/T4         |
-|-------------|------------|------------|----------------|-------------|----------------|----------|----------------|
-| (512,512)   | 196        | 172        | 0.88           | 262         | 1.33           | 39       | 6.71           |
-| (512,1024)  | 87         | 102        | 1.17           | 126         | 1.45           | 20       | 6.29           |
-| (1024,512)  | 90         | 111        | 1.23           | 143         | 1.59           | 20       | 7.14           |
-| (512,576)   | 156        | 108        | 0.69           | 229         | 1.47           | 33       | 6.95          |
-| (512,640)   | 144        | 99         | 0.69           | 215         | 1.49           | 31       | 6.94           |
-| (512,704)   | 140       | 90         | 0.64           | 188         | 1.34           | 27       | 6.96           |
-| (512,768)   | 117      | 86        | 0.74           | 172        | 1.47      | 26     | 6.63        |
-|(512,832)   |	110	|110	|1.00	|161	|1.46	|24	|6.71   |
-|(512,896)   |	100	|111	|1.11	|148	|1.48	|23	|6.45|
-|(512,960)   |	101	|100	|0.99	|143	|1.41	|22	|6.48|
-|(576,512)   |	156	|108	|0.69	|237	|1.52	|35	|6.76|
-|(640,512)   |	142	|98	|0.69	|206	|1.45	|33	|6.23|
-|(704,512)   |	136	|89	|0.65	|188	|1.38	|28	|6.72|
-|(768,512)   |	116	|86	|0.74	|178	|1.53	|26	|6.84|
-|(832,512)   |	113	|110	|0.97	|157	|1.39	|25	|6.27|
-|(896,512)   |	102	|112	|1.10	|153	|1.50	|23	|6.63|
-|(960,512)   |	101	|102	|1.01	|140	|1.38	|22	|6.35|
-| avg/min/max | 124/87/196 | 106/86/172 | 0.88/0.64/1.23 | 179/126/262 | 1.45/1.33/1.59 | 27/20/39 | 6.65/6.23/7.14 |
+   执行 `HigherHRNet_preprocess.py` 脚本，完成预处理。
 
-注：若310P性能太低，可使用以下操作进行调优
+   ```shell
+   python3 HigherHRNet_preprocess.py --output prep_output_dir --output_flip prep_output_flip_dir
+   ```
 
-在原 ATC 模型转换命令中添加 --auto_tune_mode="RL,GA" 即可实现 autotune 调优。autotune的作用是控制TBE算子编译时能在昇腾AI处理器上寻找最好的性能配置。[参考链接](https://gitee.com/ascend/docs-openmind/tree/master/guide/modelzoo/onnx_model/tutorials/%E4%B8%93%E9%A2%98%E6%A1%88%E4%BE%8B/%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98)
+   + 参数说明：
+     + --output：输出的二进制文件（.bin）所在路径。
+     + --output_flip：输出的二进制文件flip（.bin）所在路径。
 
-```
-pip install absl-py sympy decorator  
-atc --framework=5 --model=models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx  --output=models/pose_higher_hrnet_w32_512_bs1_dynamic --input_format=NCHW --input_shape="input:1,3,-1,-1" --dynamic_image_size="1024,512;960,512;896,512;832,512;768,512;704,512;640,512;576,512;512,512;512,576;512,640;512,704;512,768;512,832;512,896;512,960;512,1024"  --out_nodes="Conv_1818:0;Conv_1851:0" --auto_tune_mode="RL,GA" --soc_version=Ascend${chip_name}
-```
+## 模型推理<a name="section741711594517"></a>
 
-${chip_name}可通过`npu-smi info`指令查看，例：310P3
+1. 模型转换。
+
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+       获取权重文件 [pose_higher_hrnet_w32_512.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/HigherHRNet/PTH/pose_higher_hrnet_w32_512.pth)
+
+       ```shell
+       mkdir models
+       mv pose_higher_hrnet_w32_512.pth models
+       ```
+
+   2. 导出onnx文件。
+
+      使用HigherHRNet_pth2onnx.py导出onnx文件。
+
+      ```shell
+      python3 HigherHRNet_pth2onnx.py \
+              --weights models/pose_higher_hrnet_w32_512.pth \
+              --onnx_path  models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx
+      ```
+
+      - 参数说明：
+        - --weights：为pth模型文件输入。
+        - --onnx_path：onnx文件输出。
+
+      获得pose_higher_hrnet_w32_512_bs1_dynamic.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```shell
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```shell
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```shell
+          atc --framework=5 \
+             --model=models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx \
+             --output=models/pose_higher_hrnet_w32_512_bs1_dynamic \
+             --input_format=NCHW \
+             --input_shape="input:1,3,-1,-1" \
+             --dynamic_image_size="1024,512;960,512;896,512;832,512;768,512;704,512;640,512;576,512;512,512;512,576;512,640;512,704;512,768;512,832;512,896;512,960;512,1024" \
+             --out_nodes="Conv_770:0;Conv_795:0"\
+             --soc_version=Ascend${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+         运行成功后生成pose_higher_hrnet_w32_512_bs1_dynamic.om模型文件。
+
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+   2. 执行推理。
+
+        因为该模型需要指定的动态batch参数较多，这里将ais_bench工具写到HigherHRNet_ais_infer.py脚本中来执行。
+
+        ```shell
+         python3 HigherHRNet_ais_infer.py --bs 1
+        ```
+
+        也可参考下列命令来一个一个手动执行：
+
+        ```shell
+          python3 -m ais_bench \
+                --model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om \
+                --input="./prep_output_dir/shape_512x512/" \
+                --output=./ --ouyput_dirname=bs1_dir \
+                --outfmt BIN \
+                --batchsize 1 \
+                --dymHW=512,512
+
+         python3 -m ais_bench \
+                --model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om \
+                --input="./prep_output_dir/shape_512x512/" \
+                --output=./ --ouyput_dirname=bs1_flip_dir \
+                --outfmt BIN \
+                --batchsize 1 \
+                --dymHW=512,512
+        ```
+
+        -   参数说明：
+
+         -   --model：om模型。
+         -   --input：模型需要的输入。
+         -   --output：推理结果输出路径。
+         -   --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+         -   --dymHW：动态分辨率参数。
+         -   --ouyput_dirname:推理结果输出子文件夹。可选参数。与参数output搭配使用。
+         -   --batchsize：模型batch size 默认为1 。
+
+        HigherHRNet中的特征金字塔包括HRNet的特征图输出和通过转置卷积进行上采样的高分辨率输出,其中bs1_dir 是特征图输出的推理结果，bs1_flip_dir是高分辨率输出的推理结果。
+
+
+   3. 精度验证。
+
+      ```shell
+      python3 HigherHRNet_postprocess.py  --dump_dir './new_bs1_dir' --dump_dir_flip './new_bs1_flip'
+      ```
+
+      - 参数说明：
+
+        - --dump_dir：生成推理结果所在路径。
+        - --dump_dir_flip：生成推理结果所在路径。
+
+      后处理输出的结果，日志保存在“output”目录下。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| Precision |         |
+| --------- | ------- |
+| 标杆精度  | AP:67.1 |
+| 310P3精度 | AP:67.1 |
+
+| 芯片型号 | Input Shape | 数据集   | 性能(aoe) |
+| -------- | ----------- | -------- | --------- |
+| 310P3    | 512,512     | coco2017 | 254.82    |
+| 310P3    | 512,1024    | coco2017 | 130.65    |
+| 310P3    | 1024,512    | coco2017 | 121.60    |
+| 310P3    | 512,576     | coco2017 | 229.55    |
+| 310P3    | 512,640     | coco2017 | 213.09    |
+| 310P3    | 512,704     | coco2017 | 188.57    |
+| 310P3    | 512,768     | coco2017 | 171.64    |
+| 310P3    | 512,832     | coco2017 | 160.206   |
+| 310P3    | 512,896     | coco2017 | 140.543   |
+| 310P3    | 512,960     | coco2017 | 143.704   |
+| 310P3    | 576,512     | coco2017 | 227.66    |
+| 310P3    | 640,512     | coco2017 | 196.288   |
+| 310P3    | 704,512     | coco2017 | 187.76    |
+| 310P3    | 768,512     | coco2017 | 178.99    |
+| 310P3    | 832,512     | coco2017 | 157.56    |
+| 310P3    | 896,512     | coco2017 | 153.25    |
+| 310P3    | 960,512     | coco2017 | 140.85    |

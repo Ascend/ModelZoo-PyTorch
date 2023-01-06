@@ -200,9 +200,9 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-bench工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-bench工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
 
@@ -222,7 +222,7 @@
              -   --batchsize：推理模型对应的batchsize。
 
 
-        推理后的输出默认在当前目录outputs/bs32下。
+        推理后的输出默认在当前目录results/bs1下。
 
    3.  精度验证。
 

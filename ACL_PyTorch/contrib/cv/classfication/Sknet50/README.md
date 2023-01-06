@@ -1,287 +1,263 @@
-# SK-ResNet50 Onnx 模型端到端推理指导 
+# SK-ResNet50模型-推理指导
 
-- [1. 模型概述](#1)
-  - [论文地址](#11)
-  - [代码地址](#12)
-- [2. 环境说明](#2)
-  - [深度学习框架](#21)
-  - [python第三方库](#22)
-  - [环境导入命令](#23)
-- [3. 模型转换](#3)
-  - [pth转onnx模型](#31)
-- [4. 数据预处理](#4)
-  - [数据集获取](#41)
-  - [数据集预处理](#42)
-  - [生成数据集信息文件](#43)
-- [5. 离线推理](#5)
-  - [benchmark工具概述](#51)
-  - [离线推理](#52)
-- [6. 精度对比](#6)
-  - [离线推理TopN精度](#61)
-  - [精度对比](#62)
-- [7. 性能对比](#7)
-  - [npu性能数据](#71)
-  - [T4性能数据](#72)
-  - [性能对比](#73)
 
-## <a name="1">1. 模型概述</a>
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-### <a name="11">1.1 论文地址</a>
+    - [输入输出数据](#section540883920406)
 
-[SK-ResNet 论文](https://arxiv.org/pdf/1903.06586.pdf) 
 
-### <a name="12">1.2 代码地址</a>
 
-[SK-ResNet 代码](https://github.com/implus/PytorchInsight)
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-branch: master
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-commit_id: 2864528f8b83f52c3df76f7c3804aa468b91e5cf
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-## <a name="2">2. 环境说明</a>
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### <a name="21">2.1 深度学习框架</a>
 
-```
-pytorch == 1.8.2+cpu
-torchvision == 0.9.2+cpu
-onnx == 1.9.0
-```
 
-### <a name="22">2.2 python第三方库</a>
 
-```
-numpy == 1.21.6
-Pillow == 9.1.0
-opencv-python == 4.5.5.64
-sympy == 1.10.1
-decorator == 5.1.1
 
-```
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-### <a name="23">2.3 环境导入命令</a>
 
-```
-pip install sympy
-pip install decorator
-pip install onnx==1.9.0
-pip install torch==1.8.2+cpu torchvision==0.9.2+cpu torchaudio==0.8.2 -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
-pip install opencv-python
-```
+- 参考实现：
 
-> **说明：**
->
-> X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装 
->
-> Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+  ```
+  url=https://github.com/implus/PytorchInsight
+  commit_id=2864528f8b83f52c3df76f7c3804aa468b91e5cf
+  model_name=SK-Resnet
+  ```
+  
 
-## <a name="3">3. 模型转换</a>
 
-### <a name="31">3.1 pth转onnx模型</a>
 
-1. 下载 pth 权重文件
 
-   [SK-ResNet50预训练pth权重文件(百度网盘，提取码：tfwn)](https://pan.baidu.com/s/1Lx5CNUeRQXOSWjzTlcO2HQ)
 
-   文件名：sk_resnet50.pth.tar
+## 输入输出数据<a name="section540883920406"></a>
 
-   md5sum：979bbb525ee0898003777a8e663e91c0
+- 输入数据
 
-2. 克隆代码仓库代码
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
-   ```bash
-   git clone https://github.com/implus/PytorchInsight.git
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1000 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动  
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
    ```
-	仓库代码克隆到Sknet50文件夹下
-	仓库代码包含pth权重文件
-
-3. 使用 sknet2onnx.py 转换pth为onnx文件，在命令行运行如下指令：
-
-   ```bash
-   python sknet2onnx.py --pth sk_resnet50.pth.tar --onnx sk_resnet50.onnx
-   ```
-   
-   sk_resnet50.pth.tar文件为步骤1中下载的预训练权重文件，该条指令将在运行处生成一个sknet50.onnx文件，此文件即为目标onnx文件
-
-**模型转换要点：**
-
-> pytorch导出onnx时softmax引入了transpose以操作任意轴，然而在onnx中已支持softmax操作任意轴，故可删除transpose提升性能
-
-### <a name="32">3.2 onnx转om模型</a>
-
-下列需要在具备华为Ascend系列芯片的机器上执行：
-
-1. 设置 atc 工作所需要的环境变量
-
-   ```bash
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   git clone https://github.com/implus/PytorchInsight.git 
+   cd PytorchInsight
+   git reset --hard 2864528f8b83f52c3df76f7c3804aa468b91e5cf
+   cd ..
    ```
 
-2. 使用atc工具将onnx模型转换为om模型，命令参考
+2. 安装依赖。
 
-   ${chip_name}可通过`npu-smi info`指令查看
-
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-
-   ```bash
-   1batch命令:
-   atc --framework=5 --model=sk_resnet50.onnx --output=sk_resnet50_bs1_310p --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=Ascend${chip_name}
    ```
-   
-   1batch命令将在运行路径下生成一个Sk_resnet50_bs1_310p.om文件，此文件即为1batch的om模型文件，其他batch同理
-
-## <a name="4">4. 数据预处理</a>
-
-### <a name="41">4.1 数据集获取</a>
-
-该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集进行测试，图片与标签分别存放在/opt/npu/imageNet/val与/opt/npu/imageNet/val_label_LSL.txt。
-
-### <a name="42">4.2 数据集预处理</a>
-
-使用 sknet_preprocess.py 脚本进行数据预处理，脚本执行命令：
-
-```bash
-python sknet_preprocess.py -s /opt/npu/imageNet/val -d ./prep_data
-```
-
-### <a name="43">4.3 生成数据集信息文件</a>
-
-1. 生成数据集信息文件脚本 get_info.py
-
-2. 执行生成数据集信息脚本，生成数据集信息文件
-
-   ```bash
-   python get_info.py bin ./prep_data ./sknet_prep_bin_lsl.info 224 224
+   pip install -r requirements.txt
    ```
 
-   第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
+## 准备数据集<a name="section183221994411"></a>
 
-## <a name="5">5. 离线推理</a>
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+   本模型使用[ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fwww.image-net.org)的5万张验证集进行测试，以ILSVRC2012为例，用户需获取[ILSVRC2012数据集](http://www.image-net.org/download-images)，并上传到服务器，图片与标签分别存放在./imagenet/val与./imageNet/val_label.txt。
+   ```
+   ├── imagenet
+       ├── val
+       ├── val_label.txt 
+   ```
 
-### <a name="51">5.1 benchmark工具概述</a>
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310p上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN V100R020C10 推理benchmark工具用户指南 01
+   执行sknet_preprocess.py脚本，完成预处理。
 
-### <a name="52">5.2 离线推理</a>
+   ```
+   python sknet_preprocess.py -s ./imageNet/val -d ./prep_data 
+   ```
+   - 参数说明：
 
-```bash
-chmod +x benchmark.x86_64
-1batch:
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=sk_resnet50_bs1_310p.om -input_text_path=sknet_prep_bin_lsl.info -input_width=224 -input_height=224 -output_binary=False -useDvpp=False
+      -   -s：数据集地址
+      -   -d：预处理数据保存地址
 
-```
-首先要添加benchmark.x86_64可执行权限再进行推理
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。上面为1batch，其他batch同理
 
-## <a name="6">6. 精度对比</a>
 
-### <a name="61">6.1 离线推理TopN精度</a>
+## 模型推理<a name="section741711594517"></a>
 
-后处理统计TopN精度，调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中：
+1. 模型转换。
 
-```bash
-python vision_metric_ImageNet.py result/dumpOutput_device0/ /opt/npu/imageNet/val_label_LSL.txt ./ result_bs1.json
-```
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。查看输出结果：
+   1. 获取权重文件。
+     
+      ```
+      "https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SKNet50/PTH/sk_resnet50.pth.tar"
+      ```
 
-```json
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "77.54%"}, {"key": "Top2 accuracy", "value": "87.12%"}, {"key": "Top3 accuracy", "value": "90.73%"}, {"key": "Top4 accuracy", "value": "92.55%"}, {"key": "Top5 accuracy", "value": "93.70%"}]}
-```
+   2. 导出onnx文件。
 
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上
+      1. 使用sknet_pth2onnx.py导出onnx文件。
 
-### <a name="62">6.2 精度对比</a>
+         运行sknet_pth2onnx.py脚本。
 
-|                    |   TOP1   |   TOP5   |
-| :----------------: | :------: | :------: |
-|  310精度  | 77.54% | 93.70% |
-|  310p精度  | 77.54% | 93.70% |
+         ```
+         python sknet_pth2onnx.py --pth sk_resnet50.pth.tar --onnx sk_resnet50.onnx
+         ```
+         - 参数说明：
 
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。
+            -   -pth：权重文件
+            -   -onnx：onnx模型保存名称
+         获得sk_resnet50.onnx文件。
 
-## <a name="7">7. 性能对比</a>
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-### <a name="71">7.1 npu性能数据</a>
+      1. 配置环境变量。
 
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-benchmark工具作纯推理时使用的命令参考如下：
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-```bash
-./benchmark.x86_64 -round=20 -om_path=sknet50_1bs.om -batch_size=1 
-```
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-1. batch1 性能
+      3. 执行ATC命令。
 
-   使用benchmark工具在整个数据集上推理时获得的性能数据：
+         ```
+         atc --framework=5 \
+             --model=sk_resnet50.onnx \
+             --output=sk_resnet50_bs${bs} \
+             --input_format=NCHW \
+             --input_shape="image:${bs},3,224,224" \
+             --log=debug \
+             --soc_version=Ascend${chip_name} 
+         ```
 
-   Interface throughputRate: 812.681 即是batch1 310p单卡吞吐率
+         - 参数说明：
 
-2. batch4 性能
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-   Interface throughputRate: 2062.16 即是batch4 310p单卡吞吐率
 
-3. batch8 性能
+           运行成功后生成<u>***sk_resnet50_bs${bs}.om***</u>模型文件。
 
-   Interface throughputRate: 2174.18 即是batch8 310p单卡吞吐率
+2. 开始推理验证。
 
-4. batch16 性能
+   1. 安装ais_bench推理工具。
 
-   Interface throughputRate: 2041.62 即是batch16 310p单卡吞吐率
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-5. batch32 性能
+   2. 执行推理。
 
-   Interface throughputRate: 1879.74 即是batch32 310p单卡吞吐率
+        ```
+      python -m ais_bench --model=sk_resnet50_bs${bs}.om --input=./prep_data  --output=./ --output_dirname=./result --batchsize=${batch_size} --outfmt=TXT    
+        ```
 
-6. batch64 性能
+        -   参数说明：
 
-   Interface throughputRate: 1780.68 即是batch64 310p单卡吞吐率
+             -   model：om模型地址
+             -   input：预处理数据
+             -   output：推理结果保存路径
+             -   output_dirname：推理结果保存子目录
+             -   outfmt：推理后数据保存格式
 
-### <a name="72">7.2 T4性能数据</a>
 
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2
+        推理后的输出保存在当前目录result下。
 
-```bash
-trtexec --onnx=sk_resnet50.onnx --fp16 --shapes=image:1x3x224x224 --threads
-```
 
-gpu T4是4个device并行执行的结果，mean是时延（tensorrt的时延是batch个数据的推理时间），即吞吐率的倒数乘以batch。其中--fp16是算子精度，目前算子精度只测--fp16的。
+   3. 精度验证。
 
-1. batch1 性能
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
-   batch1 t4单卡吞吐率：1000/(2.16149/1)=462.64fps
-   
-2. batch4 性能
+      ```
+       python sknet_postprocess.py result ./val_label.txt ./ result.json
+      ```
 
-   batch4 t4单卡吞吐率：1000/(4.43787/4)=895.11fps
-   
-3. batch8 性能
- 
-   batch8 t4单卡吞吐率：1000/(7.84424/8)=1019.86fps
-   
-4. batch16 性能
- 
-   batch16 t4单卡吞吐率：1000/(15.3644/16)=1041.37fps
-   
-5. batch32 性能
- 
-   batch32 t4单卡吞吐率：1000/(26.6422/32)=1201.10fps
+      - 参数说明：
 
-6. batch64 性能
- 
-   batch64 t4单卡吞吐率：1000/(50.5169/64)=1266.90fps
+        - result：为生成推理结果所在路径
 
-### <a name="73">7.3 性能对比</a>
 
-|       |    310   |    310p   |     T4   | 310p/310  |  310p/T4  |
-| :-----| :------: | :------: | :------: | :------: | :------: |
-|  bs1  | 723.5 | 812.681 | 462.64 | 1.123263303 | 1.756616376 |
-|  bs4  | 1177.36 | 2062.16 | 895.11 | 1.751511857 | 2.303806236 |
-|  bs8  | 1325.04 | 2174.18 | 1019.86 | 1.640841031 | 2.131841625 |
-|  bs16  | 1357.24 | 2041.62 | 1041.37 | 1.504243907 | 1.960513554 |
-|  bs32  | 1329.876 | 1879.74 | 1201.1 | 1.413470128 | 1.565015403 |
-|  bs64  | 1165.084 | 1780.68 | 1266.9 | 1.528370487 | 1.405541085 |
-|  最优bs | 1357.24 | 2174.18 | 1266.9 | 1.601912705 | 1.716141763 |
+        - val_label.txt：为标签数据
 
-310P的每个batch的性能都需要达到310的1倍以上，性能达标。
+
+        - result.json：为生成结果文件
+
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python -m ais_bench --model=sk_resnet50_bs${bs}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型路径
+        - --batchsize：batchsize大小
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| --------- | ---------------- | ---------- | ---------- | --------------- |
+|    Ascend310P3       |        1          |     imagenet       |     77.54%       |         907        |
+|    Ascend310P3       |        4         |     imagenet       |            |       2377          |
+|    Ascend310P3       |        8          |     imagenet       |            |       2416          |
+|    Ascend310P3       |        16          |     imagenet       |            |       2199          |
+|    Ascend310P3       |        32          |     imagenet       |            |       2033          |
+|    Ascend310P3       |        64          |     imagenet       |            |       1907          |

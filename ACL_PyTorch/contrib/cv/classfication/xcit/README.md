@@ -201,17 +201,14 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 
 2. 开始推理验证。
 
-    a.  使用ais-infer工具进行推理。
+    a.  安装ais_bench推理工具。
 
-   执行命令增加工具可执行权限，并根据OS架构选择工具
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   ```
-   chmod u+x 
-   ```
 
     b.  执行推理。   
    ```
-        python3 ais_infer.py --model onnx_models/xcit_b16.om --input ./prep_dataset --output ./ --outfmt TXT
+        python3 -m ais_bench --model onnx_models/xcit_b16.om --input ./prep_dataset --output ./ --outfmt TXT
    ```
 
     -   参数说明：
@@ -223,8 +220,6 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 
         推理后的输出默认在当前目录下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
     c.  精度验证。
 
