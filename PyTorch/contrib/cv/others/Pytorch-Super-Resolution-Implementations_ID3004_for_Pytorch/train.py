@@ -138,7 +138,7 @@ def train(epoch):
     epoch_loss = 0
     for iteration, batch in enumerate(training_data_loader, 1):
         input, target = batch[0].to(device), batch[1].to(device)
-
+        
         optimizer.zero_grad()
         loss = criterion(model(input), target)
         epoch_loss += loss.item()

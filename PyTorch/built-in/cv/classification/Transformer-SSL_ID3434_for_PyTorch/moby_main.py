@@ -191,6 +191,9 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
         loss_meter.update(loss.item(), targets.size(0))
         norm_meter.update(grad_norm)
 
+        if idx < 3 and epoch == 0:
+            print("Step_Time: ", time.time() - end)
+
         if idx < 20:
             data_time.reset()
             batch_time.reset()
