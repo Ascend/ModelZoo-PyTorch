@@ -36,6 +36,8 @@ batch_size=128
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
 learning_rate=0.008
+# 指定训练所使用的npu device卡id
+device_id=0
 #维持参数，以下不需要修改
 over_dump=False
 data_dump_flag=False
@@ -56,6 +58,8 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     fi
 done
 
@@ -66,8 +70,6 @@ if [[ $data_path == "" ]];then
 fi
    
 cd $cur_path
-# 指定训练所使用的npu device卡id
-device_id=0
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
