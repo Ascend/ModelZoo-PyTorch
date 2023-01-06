@@ -34,6 +34,7 @@ def parse_args():
                     default=None,
                     nargs=argparse.REMAINDER)
     parser.add_argument('--pth', default='best.pth', help='load pth file')
+    parser.add_argument('--save_path', default='hrnet.onnx', help='path for out onnx model')
     args = parser.parse_args()
     update_config(config, args)
     return args
@@ -62,7 +63,7 @@ def convert():
     output_names = ['output1', 'output2']
     dynamic_axes = {'image': {0: '-1'}, 'output1': {0: '-1'}, 'output2': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 1024, 2048)
-    torch.onnx.export(model, dummy_input, "hrnet.onnx",
+    torch.onnx.export(model, dummy_input, args.save_path,
                      input_names=input_names, output_names=output_names, dynamic_axes=dynamic_axes,
                      opset_version=11, verbose=True)
 

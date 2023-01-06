@@ -197,16 +197,16 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
-      ```
-      mkdir result
-      python3 ${ais_infer_path}/ais_infer.py --model ./netG_om_bs1.om --input ./pre_bin --output ./result  --output_dirname=bs1 --outfmt BIN --batchsize 1  --device 0
-      ```
+        ```
+        mkdir results
+        python3 -m ais_bench --model ./netG_om_bs1.om --input ./pre_bin --output ./results --output_dirname bs1 --outfmt BIN --batchsize 1  --device 0
+        ```
 
       - 参数说明：
          - --model：om文件路径。
@@ -216,9 +216,8 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
          - --batchsize：批大小。
          - --device：NPU设备编号。
 
-        推理后的输出在文件夹(./result/bs1)中。
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+        推理后的输出在推理结果文件路径的子文件路径下(./results/bs1/)。
+
 
    3. 精度验证。
 
@@ -242,10 +241,10 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
       ```
 
       - 参数说明：

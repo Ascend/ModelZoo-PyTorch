@@ -176,6 +176,9 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 FPS=`grep "FPS@all" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}'|tr -d ,| sed s/[[:space:]]//g`
 ActualFPS=${FPS}
 
+#获取编译时间
+CompileTime=`grep "Epoch:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F "Time" '{print $2}' | awk -F " " '{print $1}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 temp1=`echo "1 * ${batch_size}"|bc`
@@ -193,3 +196,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log

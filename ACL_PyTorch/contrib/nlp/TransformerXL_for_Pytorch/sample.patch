@@ -480,7 +480,7 @@ index db542a8..829894f 100644
 -    python eval.py \
 -        --cuda \
 -        --data ../data/enwik8/ \
-+    python3.8 eval.py \
++    python3 eval.py \
 +        --data ./data/enwik8/ \
          --dataset enwik8 \
          --tgt_len 80 \
@@ -494,7 +494,7 @@ index db542a8..829894f 100644
          ${@:2}
 +elif [[ $1 == 'om_eval' ]]; then
 +    echo 'Run evaluation...'
-+    python3.8 om_eval.py \
++    python3 om_eval.py \
 +        --data ./data/enwik8/ \
 +        --dataset enwik8 \
 +        --tgt_len 80 \
@@ -506,7 +506,7 @@ index db542a8..829894f 100644
 +        ${@:2}
 +elif [[ $1 == 'onnx' ]]; then
 +    echo 'Run evaluation...'
-+    python3.8 eval.py \
++    python3 eval.py \
 +        --data ./data/enwik8/ \
 +        --dataset enwik8 \
 +        --tgt_len 80 \

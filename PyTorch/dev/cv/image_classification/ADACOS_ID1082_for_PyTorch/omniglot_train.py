@@ -32,6 +32,7 @@
 # ============================================================================
 #
 import os
+import time
 import argparse
 import numpy as np
 from tqdm import tqdm
@@ -115,6 +116,7 @@ def train(args, train_loader, model, metric_fc, criterion, optimizer):
     metric_fc.train()
 
     for i, (input, target) in tqdm(enumerate(train_loader), total=len(train_loader)):
+        start_time = time.time()
         if args.cpu:
             input = input.cpu()
             target = target.long().cpu()
@@ -143,6 +145,8 @@ def train(args, train_loader, model, metric_fc, criterion, optimizer):
         else:
             loss.backward()
         optimizer.step()
+        if i < 2:
+            print("step_time = {:.4f}".format(time.time() - start_time), flush=True)
 
     log = OrderedDict([
         ('loss', losses.avg),

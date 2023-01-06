@@ -175,14 +175,13 @@ Dino是Facebook于今年发表的最新的无监督学习成果，在图像处�
 
 2. 推理验证
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
-
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
       ```shell
-      python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
             --model ./dino_resnet50_bs1.om \
             --input ./prep_dataset \
             --output ./dinoresnet50_out/ \
@@ -200,8 +199,7 @@ Dino是Facebook于今年发表的最新的无监督学习成果，在图像处�
         -   --batchsize：batchsize大小
 
       推理后的输出在 `--output` 所指定目录下。
-      >**说明：**
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 [ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+    
 
    3. 精度验证。
 

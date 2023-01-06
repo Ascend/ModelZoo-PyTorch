@@ -390,6 +390,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         # measure elapsed time
         batch_time.update(time.time() - end)
         fps.update(args.batch_size/(time.time() - end))
+        if i < 2:
+            print("step_time = %.4f" % (time.time() - end), flush=True)
         end = time.time()
 
         if i % args.print_freq == 0:

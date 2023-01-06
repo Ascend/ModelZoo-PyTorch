@@ -90,7 +90,7 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
       ├── bert_base_uncased_atc.sh         //onnx模型转换om模型脚本
       ├── bert_base_pth2onnx.py            //用于转换pth模型文件到onnx模型文件
       ├── bert_postprocess_data.py         //bert_base数据后处理脚本，用于将推理结果处理映射成文本
-      └── evaluate_data.py                 //验证推理结果脚本，比对ais_infer输出的分类结果，给出accuracy
+      └── evaluate_data.py                 //验证推理结果脚本，比对ais_bench输出的分类结果，给出accuracy
    ```
 
 2. 安装依赖
@@ -236,9 +236,9 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理（以batch_size=8为例）。
 
@@ -257,8 +257,6 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
 
         推理结果输出在目录```./bert_bin/outputs/```下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
    3. 精度验证。
 
@@ -293,7 +291,7 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```bash
         #执行纯推理命令，验证模型性能：

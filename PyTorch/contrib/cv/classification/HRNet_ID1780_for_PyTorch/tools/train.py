@@ -195,6 +195,10 @@ def main():
 
     loc = 'npu:{}'.format(device_id)
     torch.npu.set_device(loc)
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce"
+    torch.npu.set_option(option)
+    
     model = model.npu()
   
     # define loss function (criterion) and optimizer

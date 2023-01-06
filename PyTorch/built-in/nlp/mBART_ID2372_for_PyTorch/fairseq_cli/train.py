@@ -13,6 +13,7 @@ import math
 import os
 import random
 import sys
+import time
 
 import numpy as np
 import torch
@@ -273,6 +274,7 @@ def train(args, trainer, task, epoch_itr):
     visited = False
     MHAConfig.set_fussion()
     for i, samples in enumerate(progress):
+        start_time = time.time()
         with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
             "train_step-%d" % i
         ):
@@ -280,7 +282,8 @@ def train(args, trainer, task, epoch_itr):
             if hasattr(trainer.model, "all_reduce") and (trainer.optimizer.fp16_tmp_grads is not None) and (not visited) and (epoch_itr.epoch <= 1):
                 trainer.first_grad = wrapper_model_all_reduce(trainer.model, trainer.optimizer.fp16_tmp_grads, trainer.reduce_stream)
                 visited = True
-
+        if i < 3 and epoch_itr.epoch == 1:
+            print("step_time: ", time.time() - start_time)
         if log_output is not None:  # not OOM, overflow, ...
             # log mid-epoch stats
             num_updates = trainer.get_num_updates()

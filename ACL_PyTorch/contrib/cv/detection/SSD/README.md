@@ -232,13 +232,13 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
       ```shell
-      python tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+      python -m ais_bench \
               --model ssd300_coco_bs8.om \
               --input ./val2017_ssd_bin \
               --batchsize 8 \
@@ -253,8 +253,7 @@ SSD将detection转化为regression的思路，可以一次完成目标定位与�
          -    --output：模型推理结果存放的路径。
 
       推理后的输出在 `--output` 所指定目录下。
-      >**说明：**
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见 [ais_infer推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
+
 
    3. 精度验证。
 

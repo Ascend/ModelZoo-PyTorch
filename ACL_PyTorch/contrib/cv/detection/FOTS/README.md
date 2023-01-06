@@ -176,24 +176,13 @@
 
 ## 推理验证
 
-1. 准备推理工具  
-
-    本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
-    ```shell
-    git clone https://gitee.com/ascend/tools.git
-    
-    # 打包并安装推理工具包
-    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-    cd tools/ais-bench_workload/tool/ais_infer/backend/
-    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    pip3 install --force-reinstall aclruntime-xxx.whl
-
-    cd -
-    ```
+1. 安装ais_bench推理工具  
+  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 2. 离线推理  
 
-    使用ais_infer工具将预处理后的数据传入模型并执行推理：
+    使用ais_bench推理工具将预处理后的数据传入模型并执行推理：
     ```shell
     # 设置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
@@ -201,7 +190,7 @@
     
     # 对预处理后的数据进行推理
     mkdir result
-    python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+    python -m ais_bench \
         --model ./FOTS_bs1.om \
         --input ./res \
         --output ./result \
@@ -246,7 +235,7 @@
     
     执行纯推理：
     ```shell
-    python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./FOTS_bs1.om --loop 100 --batchsize 1
+    python -m ais_bench --model ./FOTS_bs1.om --loop 100 --batchsize 1
     ```
 
     执行完纯推理命令，程序会打印出与性能相关的指标。找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。

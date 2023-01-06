@@ -174,6 +174,8 @@ def train(epoch):
         t1 = time.time()
         fps = batch_size / (t1 - t2)
         print('fps: %f \n' % (fps))
+        if batch_idx < 2:
+            print('step_time: %.4f' % (t1-t2))
     t1 = time.time()
     return epoch * math.ceil(len(train_loader.dataset) / float(batch_size) ) + niter - 1 
 

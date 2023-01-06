@@ -18,6 +18,7 @@ import torch
 import torchvision.transforms as transforms
 import argparse
 from PIL import Image
+from tqdm import tqdm
 
 def preprocess(src_path, save_path):
     if not os.path.exists(save_path):
@@ -33,10 +34,8 @@ def preprocess(src_path, save_path):
 
     i = 0
     in_files = os.listdir(src_path)
-    for file in in_files:
+    for file in tqdm(in_files):
         i = i + 1
-        if i%100 == 0:
-            print(file, "===", i)
         input_image = Image.open(src_path + '/' + file).convert('RGB')
         input_tensor = preprocess(input_image)
         img = np.array(input_tensor).astype(np.float32)

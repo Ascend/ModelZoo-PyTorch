@@ -198,6 +198,9 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         running_regression_loss += regression_loss.item()
         running_classification_loss += classification_loss.item()
 
+        if i < 3 and epoch == 0:
+            print("step_time: ", time.time() - start_time)
+            
         if i and i % debug_steps == 0:
             avg_loss = running_loss / debug_steps
             avg_reg_loss = running_regression_loss / debug_steps

@@ -86,7 +86,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 
-python3.7 -m torch.distributed.launch --nproc_per_node=$N_NPUS train_main.py \
+python3.7 -m torch.distributed.launch --master_port=46888 --nproc_per_node=$N_NPUS train_main.py \
     --data_path ${data_path} \
     --dist_backend='hccl' \
     --world_size=$N_NPUS \

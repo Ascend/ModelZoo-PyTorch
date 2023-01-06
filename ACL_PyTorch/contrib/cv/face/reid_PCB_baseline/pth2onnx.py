@@ -15,23 +15,28 @@
 import torch
 import argparse
 from torch.autograd import Variable
-    
+
 
 def main(args):
     model = torch.load(args.pth)
-    x = torch.randn(1, 3, 384, 128)
-    model.eval()
-    input_names=["input_1"]
-    output_names=["output_1"]
-    dynamic_axes = {'input_1': {0: '-1'}, 'output_1': {0: '-1'}}
-    x = Variable(x, volatile=True)
+    x = torch.randn(args.batch_size, 3, 384, 128)
+
+    with torch.no_grad():
+        model.eval()
+
+    input_names = ["input_1"]
+    output_names = ["output_1"]
+
     # Export the model
-    torch.onnx.export(model, x, "./models/PCB.onnx", input_names=input_names, output_names=output_names,   \
-         dynamic_axes=dynamic_axes, opset_version=11, verbose=True, do_constant_folding=True, export_params=True)
+    torch.onnx.export(model, x, args.onnx, input_names=input_names, output_names=output_names,
+                      opset_version=11, verbose=False, do_constant_folding=True, export_params=True)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Softmax loss classification")
+    parser = argparse.ArgumentParser(description="pcb")
     # data
-    parser.add_argument('-p', '--pth', type=str, default='./models/PCB_3_7.pt',)
+    parser.add_argument('-p', '--pth', type=str, default='./PCB_3_7.pt', )
+    parser.add_argument('-o', '--onnx', type=str, default='./PCB.onnx', )
+    parser.add_argument('-b', '--batch_size', type=int, default=1, )
+
     main(parser.parse_args())

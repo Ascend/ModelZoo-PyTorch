@@ -611,4 +611,7 @@ def get_pytorch_val_loader(data_path, batch_size, workers=5, _worker_init_fn=Non
 
 
 if __name__ == '__main__':
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingUpdate"
+    torch.npu.set_option(option)
     main()

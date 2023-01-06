@@ -77,16 +77,16 @@
    bash ./unzip_dataset.sh
    ```
 
-   数据集中包含两部分，一部分是训练图片，即128x128的CelebA人脸照片。另一部分是一个包含特征属性的celeba_attr.txt文件。
+   数据集中包含两部分，一部分是训练图片，即128x128的CelebA人脸照片。另一部分是一个包含特征属性的list_attr_celeba.txt文件。
 
    数据集目录结构参考：
 
    ```
    ├ data
    ├── celeba
-   │    ├──image    
+   │    ├──images    
    │    │     ├── image0.jpg …
-   │    ├──celeba_attr.txt                    
+   │    ├──list_attr_celeba.txt
    ```
 
    > **说明：** 
@@ -110,9 +110,9 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh '[your_dataset_path]'
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/
      
-     bash ./test/train_performance_1p.sh '[your_dataset_path]'
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
      ```
 
    - 单机8卡训练
@@ -120,13 +120,15 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh '[your_dataset_path]'
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/
      
-     bash ./test/train_performance_8p.sh '[your_dataset_path]'
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
      ```
 
-   模型训练脚本参数说明如下。
+   --data_path参数填写数据集路径。
 
+   模型训练脚本参数说明如下。
+   
    ```
    公共参数：
    --mode                    //训练或测试，通常使用train 

@@ -159,8 +159,7 @@ FPS=`grep "FPS"  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${time}'}'`
 
 #获取编译时间
-CompileFps=`grep "fps" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F "FPS:" '{print $2}' |sed s/[[:space:]]//g`
-CompileTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${CompileFps}'}'`
+CompileTime=`grep "FPS"  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 2|awk -F "):" '{print $2}'|awk -F "," '{sum += $1} END {print sum}'|sed s/[[:space:]]//g`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
