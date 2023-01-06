@@ -62,10 +62,11 @@ def model_convert(dir):
     centroid = farthest_point_sample(test_input, npoint)
     new_xyz, new_points = sample_and_group(npoint, radius, nsample, test_input, points, centroid)
     new_points = new_points.permute(0, 3, 2, 1)
+    dynamic_axes = {"samp_points": {0: "-1"}, "xyz": {0: "-1"}}
     input_names = ["xyz", "samp_points"]
     output_names = ["l1_xyz", "l1_point"]
     torch.onnx.export(model, (new_xyz, new_points),
-                      "Pointnetplus_part1_bs{}.onnx".format(args.batch_size),
+                      "Pointnetplus_part1.onnx", dynamic_axes=dynamic_axes,
                       input_names=input_names, verbose=True, output_names=output_names, opset_version=11)
 
 
@@ -90,9 +91,9 @@ def model_convert2(dir):
     new_xyz = new_xyz.permute(0, 2, 1)
     input_names = ["l1_xyz", "l1_points"]
     output_names = ["class", "l3_point"]
-
+    dynamic_axes = {"l1_xyz": {0: "-1"}, "l1_points": {0: "-1"}}
     torch.onnx.export(model, (new_xyz, new_points),
-                      "Pointnetplus_part2_bs{}.onnx".format(args.batch_size),
+                      "Pointnetplus_part2.onnx", dynamic_axes=dynamic_axes,
                       input_names=input_names, verbose=True, output_names=output_names, opset_version=11)
 
 

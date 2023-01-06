@@ -1,314 +1,247 @@
-# FixRes Onnx模型端到端推理指导
+# FixRes模型-推理指导
 
-## 1 模型概述
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
+
+
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
 FixRes是图像分类任务的卷积神经网络，该网络基于ResNet50进行了改进，相比ResNet网络，FixRes在测试时采用更大的分辨率输入图像，以此降低训练、测试时图像增强方法不同对分类准确率造成的负面影响。
+- 参考实现：
 
-### 1.1 论文地址
+  ```
+  url=https://github.com/facebookresearch/FixRes
+  commit_id=c9be6acc7a6b32f896e62c28a97c20c2348327d3
+  code_path=https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/FixRes
+  model_name=FixRes
+  ```
 
-[Hugo Touvron and Andrea Vedaldi and Matthijs Douze and Hervé Jégou (2020). Fixing the train-test resolution discrepancy: FixEfficientNet. CoRR, abs/2003.08237.](https://arxiv.org/pdf/2003.08237.pdf)
 
-### 1.2 代码地址
+## 输入输出数据<a name="section540883920406"></a>
 
-```shell
-ur=https://github.com/facebookresearch/FixRes
-branch=master
-commit_id=c9be6acc7a6b32f896e62c28a97c20c2348327d3
-```
+- 输入数据
 
-## 2 环境准备 
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
-### 2.1 深度学习框架
 
-```
-CANN 5.1.RC1
-pytorch == 1.8.0
-torchvision == 0.9.0
-onnx == 1.8.0
-```
+- 输出数据
 
-### 2.2 python第三方库
+  | 输出数据 | 数据类型 | 大小               | 数据排布格式 |
+  | -------- |------------------| -------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 1000 | ND           |
 
-```
-numpy == 1.18.5
-opencv-python == 4.5.2.54
-Pillow == 7.2.0
-```
 
-**说明：** 
 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-## 3 模型转换
+- 该模型需要以下插件与驱动   
 
-使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+  **表 1**  版本配套表
 
-### 3.1 pth转onnx模型
+  | 配套                                                         | 版本      | 环境准备指导                                                 |
+  |---------| ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.9.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-1. 准备pth权重文件  
-   使用训练好的pkl权重文件：ResNetFinetune.pth
 
-下载地址： [https://dl.fbaipublicfiles.com/FixRes_data/FixRes_Pretrained_Models/ResNetFinetune.pth](https://github.com/facebookresearch/FixRes)
 
-2. 导出onnx文件。
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-   1. 使用“ResNetFinetune.pth”导出onnx文件。
+## 获取源码<a name="section4622531142816"></a>
 
-      运行“FixRes_pth2onnx.py”脚本，获得“FixRes.onnx”文件。
+1. 获取源码。
 
-      ```shell
-      python3.7 FixRes_pth2onnx.py --pretrain_path ResNetFinetune.pth
-      ```
-
-      使用ATC工具将.onnx文件转换为.om文件，导出.onnx模型文件时需设置算子版本为11。
-
-### 3.2 onnx模型转om模型
-
-使用ATC工具将ONNX模型转OM模型。
-
-1. 配置环境变量。
-
-   ```shell
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   ```
+   git clone https://github.com/facebookresearch/FixRes.git
    ```
 
-2. 使用atc将onnx模型
-   ${chip_name}可通过npu-smi info指令查看，例：310P3
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+2. 安装依赖。
 
-执行ATC命令：
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-```shell
-atc --framework=5 
---model=FixRes.onnx 
---output=FixRes_bs1 
---input_format=NCHW 
---input_shape="image:1,3,384,384" 
---log=debug 
---soc_version=Ascend${chip_name}
---auto_tune_mode="RL,GA"
-```
+## 准备数据集<a name="section183221994411"></a>
 
-参数说明：
---model：为ONNX模型文件。
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
---framework：5代表ONNX模型。
 
---output：输出的OM模型。
+   该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集进行测试，图片与标签分别存放在/local/FixRes/imagenet/val与/local/FixRes/imagenet/val_label.txt。
+   ```
+   imagenet
+   ├── val_label.txt    //验证集标注信息       
+   └── val             // 验证集文件夹
+   ```
 
---input_format：输入数据的格式。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
---input_shape：输入数据的shape。
+   执行FixRes_preprocess.py脚本，完成预处理。
 
---log：日志级别。
+   ```
+   python3.7 FixRes_preprocess.py --src-path /local/FixRes/imagenet/val --save-path ./val_FixRes
 
---soc_version：处理器型号。
+   ```
+   
+   - 参数说明：
+   
+     --src-path，原始数据验证集（.jpeg）所在路径。
+         
+     --save-path，输出的二进制文件（.bin）所在路径。
 
-## 4 数据集预处理
 
-### 4.1 数据集获取
 
-本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集，请自行下载验证需要的标签文件“imagenet_labels_fixres.json”。
+## 模型推理<a name="section741711594517"></a>
 
-数据目录结构请参考：
+1. 模型转换。
 
-```
-├──ImageNet
-    ├──ILSVRC2012_img_val
-    ├──imagenet_labels_fixres.json
-```
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-### 4.2 数据预处理。
+   1. 获取权重文件。
 
-数据预处理将原始数据集转换为模型输入的数据。
+      [FixRes预训练pth权重文件](https://dl.fbaipublicfiles.com/FixRes_data/FixRes_Pretrained_Models/ResNetFinetune.pth)  
 
-执行“FixRes_preprocess.py”脚本，完成预处理。
+   2. 导出onnx文件。
 
-```shell
-python3.7 FixRes_preprocess.py 
---src-path /home/HwHiAiUser/dataset/imagenet/val 
---save-path ./val_FixRes
-```
+      1. 使用FixRes_pth2onnx.py脚本。
 
---src-path：原始数据验证集（.jpeg）所在路径。
+         运行FixRes_pth2onnx.py脚本。
 
---save-path：输出的二进制文件（.bin）所在路径。
+         ```
+         python3.7 FixRes_pth2onnx.py --pretrain_path ResNetFinetune.pth
+         ```
 
-每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“val_FixRes”二进制文件夹。
+         获得FixRes.onnx文件。
 
-### 4.3 生成数据集info文件。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-生成bin文件的输入info文件。
+      1. 配置环境变量。
 
-使用benchmark推理需要输入图片数据集的info文件，用于获取数据集。使用“gen_dataset_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“gen_dataset_info.py”脚本。
+         ```
+          source /usr/local/Ascend/......
+         ```
 
-```shell
-python3.7 gen_dataset_info.py bin  ./val_FixRes ./prep_bin.info 384 384
-```
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-“bin”：生成的数据集文件格式。
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-“./val_FixRes”：预处理后的数据文件的**相对路径**。
+      3. 执行ATC命令。
 
-“./prep_bin.info”：生成的数据集文件保存的路径。
+         ```
+         atc --framework=5 --model=FixRes.onnx --output=FixRes_bs{batch size} --input_format=NCHW --input_shape="image:{batch size},3,384,384" --log=debug --soc_version=Ascend310P3
+         示例
+         atc --framework=5 --model=FixRes.onnx --output=FixRes_bs1 --input_format=NCHW --input_shape="image:1,3,384,384" --log=debug --soc_version=Ascend310P3
+         ```
 
-“384”：图片的宽和高。
+         - 参数说明：
 
-运行成功后，在当前目录中生成“prep_bin.info”。
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-## 5 离线推理
+           运行成功后生成FixRes_bs1.om模型文件，batch size为4、8、16、32、64的修改对应的batch size的位置即可。
 
-### 5.1 benchmark工具概述
+2. 开始推理验证。
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)。
+   1. 安装ais_bench推理工具。
 
-### 5.2 离线推理
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
-1.设置环境变量
+   2. 执行推理。
 
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+        ```
+        python3 -m ais_bench --model ./FixRes_bs{batch size}.om --input ./val_FixRes/ --output ./output --output_dirname subdir --outfmt 'TXT' --batchsize {batch size}
+        示例
+        python3 -m ais_bench --model ./FixRes_bs1.om --input ./val_FixRes/ --output ./output --output_dirname subdir --outfmt 'TXT' --batchsize 1
+        ```
 
-2.执行离线推理
-增加benchmark.{arch}可执行权限
+        -   参数说明：
 
-```shell
-chmod u+x benchmark.x86_64
-```
+             -   model：需要推理om模型的路径。
+             -   input：模型需要的输入bin文件夹路径。
+             -   output：推理结果输出路径。
+             -   outfmt：输出数据的格式。
+             -   output_dirname:推理结果输出子文件夹。
 
-执行推理。执行时使npu-smi info查看设备状态，确保device空闲。
+        推理后的输出默认在当前目录output的subdir下。
 
-```shell
- ./benchmark.x86_64 -model_type=vision 
- -device_id=0 
- -batch_size=1 
- -om_path=./FixRes_bs1.om 
- -input_text_path=./prep_bin.info 
- -input_width=384 
- -input_height=384 
- -output_binary=False 
- -useDvpp=False
-```
+   3. 精度验证。
 
-参数说明：
+      调用FixRes_postprocess.py脚本与label比对，可以获得Accuracy Top1数据，结果保存在result.json中。
 
---model_type：模型类型。
+      ```
+      python3.7 FixRes_postprocess.py ./output/subdir/  /local/DPN131/imagenet/val_label.txt  ./  result.json
+      ```
 
---om_path：om文件路径。
+      - 参数说明：
 
---device_id：NPU设备编号。
+        - ./output/subdir/：为生成推理结果所在路径  
 
---batch_size：参数规模。
+        - /local/FixRes/imagenet/val_label.txt：为标签数据所在路径
 
---input_text_path：图片二进制信息。
+   4. 性能验证。
 
---input_width：输入图片宽度。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
---input_height：输入图片高度。
+        ```
+        python3.7 -m ais_bench --model=./FixRes_bs{batch size}.om --loop=1000 --batchsize={batch size}
+        示例
+        python3.7 -m ais_bench --model=./FixRes_bs1.om --loop=1000 --batchsize=1
+        ```
 
---useDvpp：是否使用Dvpp。
+      - 参数说明：
+        - --model：需要验证om模型所在路径
+        - --batchsize：验证模型的batch size，按实际进行修改
 
---output_binary：输出二进制形式。
 
-推理后的输出默认在当前目录result下。
 
-推理后的输出默认在当前目录“result/dumpOutput_device0”下。
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-## 6 精度对比
+调用ACL接口推理计算，性能参考下列数据。
 
-### 6.1 离线推理Acc精度统计
-
-调用“FixRes_postprocess.py”脚本与数据集标签“imagenet_labels_fixres.json”比对，可以获得Top 1 Accuracy数据，结果保存在“result.json”中。
-
-```shell
-python3.7 FixRes_postprocess.py 
---label_file=./imagenet_labels_fixres.json 
---pred_dir=./result/dumpOutput_device0 > result.json
-```
-
-参数说明：
-
---label_file：生成推理结果所在路径。
-
---pred_dir：标签数据。
-
-“result.json”：生成结果文件。
-
-执行完后得到310P上的精度。
-
-```
-Top 1 Accuracy: 79.1%
-```
-
-### 6.2 精度对比
-
- **评测结果：**官网pth精度[rank1:79.0%](https://github.com/facebookresearch/FixRes)，  310离线推理精度rank1:79.1%。
-
-## 7 性能对比
-
-### 7.1 310性能数据
-
-**性能测试：** 测试npu性能要确保device空闲，使用npu-smi info命令可查看device是否在运行其它推理任务。性能测试可使用`benchmark`工具。
-
-```
-./benchmark.x86_64 -round=20 -om_path=./FixRes_bs4.om -device_id=0 -batch_size=4
-```
-
-执行20次纯推理取均值，统计吞吐率与其倒数时延（benchmark的时延是单个数据的推理时间），npu性能是一个device执行的结果。
-
-`benchmark`工具在整个数据集上推理方式测性能可能时间较长，纯推理方式测性能可能不准确，因此bs1要使用在整个数据集上推理的方式测性能。
-
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./FixRes_bs1.om -input_text_path=./prep_bin.info -input_width=384 -input_height=384 -output_binary=False -useDvpp=False
-```
-
-**Interface throughputRate:** 183.263 * 4 = 733.052, 即是batch1 310单卡吞吐率。
-
-### 7.2 310P性能数据
-
-**Interface throughputRate:** 893.562, 即是batch1 310P单卡吞吐率。
-
-### 7.3 T4性能数据
-
-在装有T4卡的服务器上使用`onnxruntime-gpu`工具测试gpu性能，测试代码如下。测试过程请确保卡没有运行其他任务。
-
-```python
-import time
-from turtle import width
-import numpy as np
-import onnxruntime as rt
-print(rt.get_device())
-
-batch_size=1
-length=224
-width=224
-providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
-
-sess = rt.InferenceSession("./FixRes.onnx", providers=providers)
-print("providers:",sess.get_providers())
-input_name = sess.get_inputs()[0].name
-outputs = ["output"]
-
-# onnx模型输入节点
-data = np.random.randn(batch_size,3, length, width).astype(np.float32)
-
-# 推理200次，
-for K in range(200):
-    start_time = time.time()
-    result = sess.run([], {input_name: data})
-    end_time = time.time() - start_time
-    time_list.append(end_time)
-
-print("Batch_size: ",batch_size)
-print("Time used: ", np.mean(time_list), 's')
-print("T4 Throughput: ",batch_size/np.mean(time_list))
-```
-
-**T4 Throughput:** 200.616，即是batch1 T4单卡吞吐率。
-
-### 7.4 性能对比
-
-性能在310P上的性能达到310的1.2倍，达到T4性能的1.6倍，性能达标。
+| 芯片型号 | Batch Size | 数据集 | 精度        | 性能  |
+| --------- |------------| ---------- |-----------|-----|
+|   310P3        | 1          |  ImageNet          | 79.0/Top1 | 973 |
+|   310P3        | 4          |  ImageNet          | 79.0/Top1 | 984 |
+|   310P3        | 8          |  ImageNet          | 79.0/Top1 | 952 |
+|   310P3        | 16         |  ImageNet          | 79.0/Top1 | 933 |
+|   310P3        | 32         |  ImageNet          | 79.0/Top1 | 957 |
+|   310P3        | 64         |  ImageNet          | 79.0/Top1 | 949 |
