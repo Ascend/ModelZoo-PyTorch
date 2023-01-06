@@ -1,208 +1,280 @@
-# T2T-ViT Onnx模型端到端推理指导
+#  T2T-ViT 模型-推理指导
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
 
-### 1.1 论文地址
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-[Tokens-to-Token ViT: Training Vision Transformers from Scratch on ImageNet](https://arxiv.org/abs/2101.11986)
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 1.2 代码地址
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-开源仓：[https://github.com/yitu-opensource/T2T-ViT](https://github.com/yitu-opensource/T2T-ViT)<br>
-branch：main<br>
-commit_id：0f63dc9558f4d192de926504dbddfa1b3f5db6ca<br>
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-本离线推理项目实现的模型为开源仓中的T2T-ViT-14模型。
+------
 
-## 2 环境说明
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-该模型离线推理使用 Atlas 300I Pro 推理卡，所有步骤都在 [CANN 5.1.RC1](https://www.hiascend.com/software/cann/commercial) 环境下进行，CANN包以及相关驱动、固件的安装请参考 [软件安装](https://www.hiascend.com/document/detail/zh/canncommercial/51RC1/envdeployment/instg)。
-### 2.1 安装依赖
-```shell
-conda create -n ${env_name} python=3.7.5
-conda activate ${env_name}
-pip install -r requirements.txt 
-```
-env_name为虚拟环境的名称
+balabala
 
-### 2.2 获取开源仓代码
-```shell
-git clone https://github.com/yitu-opensource/T2T-ViT.git
-cd T2T-ViT
-git checkout main
-git reset --hard 0f63dc9558f4d192de926504dbddfa1b3f5db6ca
-```
+- 参考论文：
 
-## 3 源码改动
-1. models/token_performer.py文件打补丁：
-```shell
-patch -p1 models/token_performer.py token_performer.patch
-```
-改动原因：<br>
-由于OM模型中Einsum算子低精度计算（float16）会放大误差，导致精度问题。在转OM时使用--keep_dtype参数，尝试让Einsum算子保持原精度(float32)计算，但Einsum算子前面的TransData算子又会使此操作失效。所以定位到Einsum算子在模型源码中的位置，对其进行等价替换后，重新转ONNX，转OM时再使用--keep_dtype参数，TransData算子被消除，--keep_dtype参数生效。<br>
+  [Tokens-to-Token ViT: Training Vision Transformers from Scratch on ImageNet](https://arxiv.org/abs/2101.11986)
 
-2. 进入虚拟环境中 timm/models/layers/文件夹内：
-```shell
-patch -p1 helpers.py ${patch_path}
-```
-patch_path为helpers.patch文件路径。<br>
-改动原因：<br>
-torch在1.8版本之后container_abcs已经被移除，使用timm包内的models/layers/helpers.py时会报错。<br>
+- 参考实现：
 
-3. 进入虚拟环境中timm/data文件夹内：
-```shell
-patch -p1 loader.py ${patch_path}
-```
-patch_path为loaders.patch文件路径。<br>
-改动原因：<br>
-由于310P上无GPU，使用timm包内的data/loader.py时会报错。<br>
+  ```
+  url=https://github.com/yitu-opensource/T2T-ViT
+  branch=main
+  commit_id=0f63dc9558f4d192de926504dbddfa1b3f5db6ca
+  ```
 
-## 4 模型转换
+## 输入输出数据<a name="section540883920406"></a>
 
-### 4.1 Pytorch转ONNX模型
+- 输入数据
 
-1. 下载pth权重文件
-```shell
-wget https://github.com/yitu-opensource/T2T-ViT/releases/download/main/81.5_T2T_ViT_14.pth.tar
-```
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | image    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
-2. 执行T2T_ViT_pth2onnx.py脚本，生成ONNX模型文件
+- 输出数据
 
-```shell
-python3.7 T2T_ViT_pth2onnx.py --pth-dir ${pth_path} --onnx-dir ${onnx_path}
-```
-参数说明：<br>
---pth-path: Pytorch模型文件路径<br>
---onnx-path: ONNX模型文件保存路径（包括文件名）<br>
+  | 输出数据 | 数据类型 | 大小             | 数据排布格式 |
+  | -------- | -------- | ---------------- | ------------ |
+  | class    | FP32     | batchsize x 1000 | ND           |
 
-### 4.2 ONNX转OM模型
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-1. 设置环境变量
+- 该模型需要以下插件与驱动
 
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+  **表 1** 版本配套表
 
-该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.12.1  | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-2、生成OM模型
-ATC工具的使用请参考 [ATC模型转换](https://www.hiascend.com/document/detail/zh/canncommercial/51RC1/inferapplicationdev/atctool)
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-```shell
-atc --framework=5 --model=${onnx-path} --output=${om-path} --input_format=NCHW --input_shape="image:${bs},3,224,224" --log=error --soc_version=Ascend${chip_name} --keep_dtype=keep_dtype.cfg
-```
-参数说明：<br>
---model：ONNX模型文件路径<br>
---output：生成OM模型的保存路径（含文件名）<br>
-执行命令前，需设置--input_shape参数中bs的数值，例如：1、4、8、16、32、64。<br> 
-chip_name可通过`npu-smi info`指令查看，例：310P3。<br>
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+## 获取源码<a name="section4622531142816"></a>
 
-## 5 数据预处理
+1. 获取开源模型代码。
 
+   ```
+   git clone https://github.com/yitu-opensource/T2T-ViT.git
+   cd T2T-ViT
+   git reset --hard 0f63dc9558f4d192de926504dbddfa1b3f5db6ca
+   ```
 
-### 5.1 数据集获取
+2. 获取本仓源码，并放置于第1步获得的T2T-ViT目录下。
 
-该模型使用[ImageNet官网](http://www.image-net.org/)的5万张验证集图片进行测试。<br>
-数据集结构如下：
-```
-│imagenet/
-├──train/
-│  ├── n01440764
-│  │   ├── n01440764_10026.JPEG
-│  │   ├── n01440764_10027.JPEG
-│  │   ├── ......
-│  ├── ......
-├──val/
-│  ├── n01440764
-│  │   ├── ILSVRC2012_val_00000293.JPEG
-│  │   ├── ILSVRC2012_val_00002138.JPEG
-│  │   ├── ......
-│  ├── ......
-```
+3. 安装必要依赖。
 
-### 5.2 数据集预处理
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-运行T2T_ViT_preprocess.py预处理脚本，生成数据集预处理后的bin文件。
+4. 源码改动。
 
-```shell
-python3.7 T2T_ViT_preprocess.py -–data-dir ${dataset_path} --out-dir ${prep_output_dir} –gt-path ${groundtruth_path} -–batch-size ${batch_size}
-```
-参数说明：<br>
---data-dir：数据集路径<br>
---out-dir：保存bin文件路径<br>
---gt-path：保存标签文件路径<br>
---batch-size：需要测试的batch_size<br>
+   1. models/token_performer.py文件打补丁：
 
+      ```
+      patch -p1 models/token_performer.py token_performer.patch
+      ```
 
-## 6 离线推理
+      - 备注：由于OM模型中Einsum算子低精度计算（float16）会放大误差，导致精度问题。在转OM时使用--keep_dtype参数，尝试让Einsum算子保持原精度(float32)计算，但Einsum算子前面的TransData算子又会使此操作失效。所以定位到Einsum算子在模型源码中的位置，对其进行等价替换后，重新转ONNX，转OM时再使用--keep_dtype参数，TransData算子被消除，--keep_dtype参数生效。
 
-### 6.1 msame工具
+   2. 进入python第三方库timm/data文件夹内：
 
-本项目使用msame工具进行推理，msame编译及用法参考[msame推理工具](https://gitee.com/ascend/tools/tree/master/msame)。<br>
-msame推理前需要设置环境变量：
-``` shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh 
-```
+      ```
+      patch -p1 loader.py ${patch_path}
+      ```
 
-该命令中使用CANN默认安装路径(/usr/local/Ascend/ascend-toolkit)中的环境变量，使用过程中请按照实际安装路径设置环境变量。
+      - ${patch_path} 为 loaders.patch 文件路径。
 
-### 6.2 离线推理
+## 准备数据集<a name="section183221994411"></a>
 
-运行如下命令进行离线推理：
+1. 获取原始数据集。（解压命令参考tar –xvf *.tar与 unzip *.zip）
 
-```shell
-./msame --model ${om_path}  --input ${input_dataset_path} --output ${output_dir} --outfmt BIN
-```
-参数说明：<br>
---model：为om模型文件路径<br>
---input：数据预处理后的bin文件路径<br>
---output：保存标签路径（含文件名）<br>
+   本模型使用[ImageNet](https://gitee.com/link?target=https%3A%2F%2Fimage-net.org%2Fdownload.php)验证集进行推理测试 ，用户自行获取数据集后，将文件解压并上传数据集到任意路径下。数据集目录结构如下所示：
 
-输出结果保存在output_dir中，文件类型为bin文件。
+   ```
+   │imagenet/
+   ├──val/
+   │  ├── n01440764
+   │  │   ├── ILSVRC2012_val_00000293.JPEG
+   │  │   ├── ILSVRC2012_val_00002138.JPEG
+   │  │   ├── ......
+   │  ├── ......
+   ```
+   
+2. 数据预处理，将原始数据集转换为模型的输入数据。
 
-### 6.3 精度验证
+   运行T2T_ViT_preprocess.py预处理脚本，生成数据集预处理后的bin文件。
 
-运行T2T_ViT_postprocess.py脚本并与npy文件比对，可以获得Accuracy Top1数据。
+   ```
+   python3 T2T_ViT_preprocess.py --data-dir ${data_dir} --out-dir ${prep_bin} --gt-path ${gt_path}
+   ```
 
-```shell
-python3.7 T2T_ViT_postprocess.py –result-dir ${msame_bin_path} –gt-path ${gt_path} --batch-size ${batch_size}
-```
-参数说明：<br>
---result-dir：生成推理结果所在路径<br>
---gt-path：标签数据文件路径<br>
---batch-size：需要测试的batch_size<br>
+   参数说明：
 
+   - --data-dir：数据集路径。
+   - --out-dir：指定保存bin文件的路径，比如 prep_bin。
+   - --gt-path：生成npy真值文件路径， 比如 label.npy。
 
-### 6.4 性能验证
-需注意：性能测试前使用`npu-smi info`命令查看 NPU 设备的状态，确认空闲后再进行测试。<br>
-用msame工具进行纯推理100次，然后根据平均耗时计算出吞吐率。
-```shell
-./msame --model ${om_path} --output ${output_path} --outfmt TXT --loop 100
-```
-参数说明：<br>
---model：为om模型文件路径<br>
---output：保存推理结果路径<br>
+## 模型推理<a name="section741711594517"></a>
 
-执行上述命令后，日志中会记录Inference average time without first time，即为NPU计算的平均耗时(ms)。以此计算出模型在对应 batch_size 下的吞吐率：
-$$ 吞吐率 = \frac {bs * 1000} {time}$$
+1. 模型转换。
 
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
+   1. 获取权重文件。
 
-## 7 精度和性能对比
+      ```
+      wget https://github.com/yitu-opensource/T2T-ViT/releases/download/main/81.5_T2T_ViT_14.pth.tar
+      ```
 
-总结：
- 1. 310P上离线推理的精度(81.414%)与Pytorch在线推理精度(81.5%)基本持平；
- 2. 性能最优的batch_size为8，310P性能/性能基准=5.44倍。
+   2. 导出onnx文件。
 
-各batch_size对比结果如下：
+      1. 使用T2T_ViT_pth2onnx.py导出动态batch的onnx文件。
 
-|     模型     |                        开源仓Pytorch精度                        | 310P离线推理精度 | 基准性能 | 310P性能 |
-| :----------: | :-------------------------------------------------------: | :--------------: | :------: | :------: |
-| T2T-ViT bs1  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  24fps   |  142fps  |
-| T2T-ViT bs4  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  32fps   |  179fps  |
-| T2T-ViT bs8  | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  39fps   |  212fps  |
-| T2T-ViT bs16 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  35fps   |  210fps  |
-| T2T-ViT bs32 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  34fps   |  203fps  |
-| T2T-ViT bs64 | [rank1:81.5%](https://github.com/yitu-opensource/T2T-ViT) |   rank1:81.4%    |  36fps   |  198fps  |
+         ```
+         python3 T2T_ViT_pth2onnx.py --pth-path 81.5_T2T_ViT_14.pth.tar --onnx-path T2T_ViT.onnx
+         ```
+
+         参数说明：
+
+         - --pth-path：Pytorch模型文件路径。
+         - --onnx-path：ONNX模型文件保存路径。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（${chip_name}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+   4. 安装 [auto_optimizer工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer#%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B)， 生成指定算子精度模式的配置文件。
+
+      ```
+      # 安装依赖
+      git clone https://gitee.com/ascend/msadvisor.git
+      cd msadvisor/auto-optimizer
+      pip install -r requirements.txt
+      
+      # 运行脚本生成cfg文件
+      python3 gen_cfg.py T2T_ViT.onnx keep_dtype.cfg
+      ```
+
+      参数说明：
+
+      - --参数1：为ONNX模型文件。
+      - --参数2：生成的配置文件。
+
+   5. 执行ATC命令。
+
+      ```
+      # bs = [1, 4, 8, 16, 32, 64]
+      atc --framework=5 --model=T2T_ViT.onnx --output=T2T_ViT_bs${bs} --input_format=NCHW --input_shape="image:${bs},3,224,224" --log=error --soc_version=Ascend${chip_name} --keep_dtype=keep_dtype.cfg
+      ```
+
+      运行成功后生成T2T_ViT_bs${bs}.om模型文件。
+
+      参数说明：
+
+      - --model：为ONNX模型文件。
+      - --framework：5代表ONNX模型。
+      - --output：输出的OM模型。
+      - --input_format：输入数据的格式。
+      - --input_shape：输入数据的shape。
+      - --log：日志级别。
+      - --soc_version：处理器型号。
+      - --keep_dtype：指定算子精度模式的配置文件。
+
+2. 开始推理验证。
+
+   1. 使用ais-bench工具进行推理。
+
+      ais-bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
+
+   2. 执行推理。
+
+      ```
+      python3 -m ais_bench --model=T2T_ViT_bs${bs}.om  --batchsize=${bs} \
+      --input ${prep_bin} --output result --output_dirname result_bs${bs} --outfmt BIN
+      ```
+      
+      参数说明：
+      
+      - --model：om模型路径。
+      - --batchsize：批次大小。
+      - --input：输入数据所在路径。
+      - --output：推理结果输出路径。
+      - --output_dirname：推理结果输出子文件夹。
+      - --outfmt：推理结果输出格式
+   
+3. 精度验证。
+
+   调用T2T_ViT_postprocess.py脚本与真值标签比对，可以获得精度数据。
+
+   ```
+   python3 T2T_ViT_postprocess.py --result-dir ${result_dir} --gt-path ${gt_path}
+   ```
+
+   参数说明：
+
+   - --result-dir：生成推理结果所在路径，这里为result/result_bs1
+   - --gt-path：预处理时生成的标签数据文件路径，这里为label.npy
+
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+   ```
+   python3 -m ais_bench --model=T2T_ViT_bs${bs}.om --loop=50 --batchsize=${bs}
+   ```
+
+   参数说明：
+
+   - --model：om模型路径。
+   - --batchsize：批次大小。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，T2T_ViT模型的性能和精度参考下列数据。
+
+| 芯片型号    | Batch Size | 数据集   | 开源精度（Acc@1）                                            | 参考精度（Acc@1） |
+| ----------- | ---------- | -------- | ------------------------------------------------------------ | ----------------- |
+| Ascend310P3 | 1          | ImageNet | [81.5%](https://github.com/yitu-opensource/T2T-ViT#2-t2t-vit-models) | 81.4%             |
+
+| 芯片型号    | Batch Size | 参考性能（FPS） |
+| ----------- | ---------- | --------------- |
+| Ascend310P3 | 1          | 163.14          |
+| Ascend310P3 | 4          | 170.73          |
+| Ascend310P3 | 8          | 194.66          |
+| Ascend310P3 | 16         | 189.98          |
+| Ascend310P3 | 32         | 180.15          |
+| Ascend310P3 | 64         | 174.90          |
