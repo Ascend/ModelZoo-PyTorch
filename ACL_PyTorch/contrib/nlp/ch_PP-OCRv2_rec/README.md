@@ -29,30 +29,21 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
   model_name=ch_PP-OCRv2_rec
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
-
+ 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
   | input    | RGB_FP32 | batchsize x 3 x H x W | NCHW         |
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型    | 大小 | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | batchsize x D x 6625 | FLOAT32  | ND           |
+  | output1  | FLOAT32 | batchsize x D x 6625  | ND           |
 
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -88,7 +79,7 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
    ```
    pip3 install -r requirements.txt
    cd PaddleOCR
-   python3 setup.py install
+   python setup.py install
    cd ..
    ```
 
@@ -105,7 +96,7 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
    在`ch_PP-OCRv2_rec`工作目录下，执行ch_PP-OCRv2_rec_preprocess.py脚本，完成预处理。
 
    ```
-    python3 ch_PP-OCRv2_rec_preprocess.py \
+    python ch_PP-OCRv2_rec_preprocess.py \
         -c PaddleOCR/configs/rec/ch_PP-OCRv2/ch_PP-OCRv2_rec_distillation.yml \
         -o Global.infer_img=PaddleOCR/doc/imgs_words/ch/
    ```
@@ -196,7 +187,7 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
              --output=./ch_PP-OCRv2_rec_bs${batchsize} \
              --input_format=NCHW \
              --input_shape="x:${batchsize},3,-1,-1" \
-             --dynamic_image_size="32,320;32,413" \
+             --dynamic_dims="32,320;32,413"  \
              --log=error  \
              --soc_version=Ascend${chip_name}
          ```
@@ -218,31 +209,26 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
 2. 开始推理验证。
 
-   a.  安装ais_bench推理工具。
+   a. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
+      请访问[ais_bench推理工具代码仓](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)，根据readme文档进行工具安装。
 
 
    b.  执行推理。
 
       ```
-      python3 ch_PP-OCRv2_rec_ais_infer.py \
-          --ais_infer=${path_to_ais_bench}/ais_infer.py \
-          --model=./ch_PP-OCRv2_rec_bs${batchsize}.om \
-          --inputs=./pre_data \
-          --batchsize=${batchsize}
+      python -m ais_bench --model=ch_PP-OCRv2_rec_bs${batchsize}.om --input=./pre_data/ --output=./ --output_dirname=results_bs${batchsize} --auto_set_dymdims_mode=1 --outputSize 100000 --outfmt=NPY
       ```
 
       -   参数说明：
-           -   --ais_infer：ais_infer.py脚本路径
            -   --model：om模型路径。
            -   --inputs：输入数据集路径。
            -   --batchsize：om模型输入的batchsize。
 
-      `${path_to_ais_bench}`为ais_infer.py脚本所在路径。`${batchsize}`表示不同batch的om模型。。
+      推理完成后结果保存在`results_bs${batchsize}`目录下。
 
-      推理完成后结果保存在`ch_PP-OCRv2_rec/results_bs${batchsize}`目录下。
-
+      >**说明：** 
+      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 
@@ -298,10 +284,10 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
    d.  性能验证。
 
-      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python -m ais_bench \
+      python ${path_to_ais-infer}/ais_infer.py \
           --model=./ch_PP-OCRv2_rec_bss${batchsize}.om \
           --dymHW=32,320 \
           --loop=20 \
@@ -315,9 +301,9 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
           -   --dymHW：指定动态shape模型的H和W。
           -   --batchsize：om模型的batch。
 
-      `${batchsize}`表示不同batch的om模型。
+      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
 
-      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能，如下所示：
+      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能，如下所示：
 
       ```
       [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(5.840699934959412): 2739.3977054414777
