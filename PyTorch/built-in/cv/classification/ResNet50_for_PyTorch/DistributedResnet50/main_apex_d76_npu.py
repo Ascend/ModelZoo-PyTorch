@@ -762,8 +762,9 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
         torch.npu.disable_graph_mode()   
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed
             and args.rank % ngpus_per_node == 0):
-        print("[npu id:",args.gpu,"]", "batch_size:", ngpus_per_node*args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
-                ngpus_per_node*args.batch_size/batch_time.avg))
+        if batch_time.avg > 0:
+            print("[npu id:",args.gpu,"]", "batch_size:", ngpus_per_node*args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
+                    ngpus_per_node*args.batch_size/batch_time.avg))
     return top1.avg
 
 def validate(val_loader, model, criterion, args,ngpus_per_node):

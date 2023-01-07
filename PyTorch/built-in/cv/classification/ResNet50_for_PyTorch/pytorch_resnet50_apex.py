@@ -511,8 +511,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         print("args.graph_mode")
         torch.npu.disable_graph_mode()
 
-    print("batch_size:", args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
-            args.batch_size/batch_time.avg))
+    if batch_time.avg > 0:
+        print("batch_size:", args.batch_size, 'Time: {:.3f}'.format(batch_time.avg), '* FPS@all {:.3f}'.format(
+                args.batch_size/batch_time.avg))
 
 def validate(val_loader, model, criterion, args):
     batch_time = AverageMeter('Time', ':6.3f')
