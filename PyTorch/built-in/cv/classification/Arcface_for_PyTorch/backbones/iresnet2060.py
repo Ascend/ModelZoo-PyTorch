@@ -16,7 +16,7 @@ import torch
 from torch import nn
 from apex import amp
 
-assert torch.__version__ >= "1.8.1"
+assert torch.__version__ > "1.8"
 from torch.utils.checkpoint import checkpoint_sequential
 
 __all__ = ['iresnet2060']
