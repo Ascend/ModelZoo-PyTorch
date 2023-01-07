@@ -100,7 +100,7 @@ for ((i = 0; i < 10 ; i++)) do
       PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
         --launcher pytorch  \
         --auto-resume  \
-        --cfg-options data.persistent_workers=True log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --cfg-options data.persistent_workers=True log_config.interval=50 >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
       wait
     fi
 done
