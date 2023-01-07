@@ -129,5 +129,8 @@ echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVI
 echo "ActualFPS" = ${FPS} >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 
 if [ x"${etp_flag}" == x"true" ]; then
-    rm -rf $output_dir    
+    rm -rf $output_dir
+    rm -rf /root/.cache/huggingface/datasets/downloads
+    rm -rf /root/.cache/huggingface/datasets/_root_.cache*.lock
+    rm -rf /root/.cache/huggingface/datasets/wmt16/ro-en/1.0.0/28ebd*.lock  
 fi
