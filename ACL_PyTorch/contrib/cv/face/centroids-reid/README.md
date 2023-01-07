@@ -145,6 +145,7 @@ Centroids-reid是一种图像检索任务包括从一组图库（数据库）图
       
       ```
       wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Centroids-reid/PTH/resnet50-19c8e357.pth
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Centroids-reid/PTH/dukemtmcreid_resnet50_256_128_epoch_120.ckptwget
       ```
       将两个权重文件都放置在models文件目录下
 
