@@ -147,8 +147,9 @@ YOLOF引入了一种解决该优化问题的替代方案而无需使用复杂的
          ```
          python YOLOF_pth2onnx.py \
                 --model_config=YOLOF/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x \
-                --out=yolof.onnx \
+                --out=yolof_bs${bs}.onnx \
                 --pth_path=./YOLOF_CSP_D_53_DC5_9x.pth
+                --batch_size=${bs}
          ```
          - 参数说明：
 
@@ -156,7 +157,8 @@ YOLOF引入了一种解决该优化问题的替代方案而无需使用复杂的
            -   --framework：5代表ONNX模型。
            -   --out：输出的Onnx模型。
            -   --pth_path：模型权重文件
-         获得yolof.onnx文件。
+           -   --batch_size：bs大小
+         获得yolof_bs${bs}.onnx文件。
 
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -188,7 +190,7 @@ YOLOF引入了一种解决该优化问题的替代方案而无需使用复杂的
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=yolof.onnx --output=yolof_bs${bs} --input_shape="input:${bs},3,608,608" --log=error --soc_version=Ascend{chip_name}
+         atc --framework=5 --model=yolof_bs${bs}.onnx --output=yolof_bs${bs} --input_shape="input:${bs},3,608,608" --log=error --soc_version=Ascend{chip_name}
          ```
 
          - 参数说明：
@@ -230,7 +232,7 @@ YOLOF引入了一种解决该优化问题的替代方案而无需使用复杂的
       调用脚本YOLOF_postprocess.py计算推理精度
 
       ```
-       python YOLOF_postprocess.py --pth_path YOLOF_CSP_D_53_DC5_9x.pth --bin_data_path result --meta_info_path yolof_meta.info
+       python YOLOF_postprocess.py --pth_path YOLOF_CSP_D_53_DC5_9x.pth --bin_data_path result --meta_info_path yolof_meta.info 
       ```
 
       - 参数说明：

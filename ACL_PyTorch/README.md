@@ -353,5 +353,4 @@
 - [GoogleNet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/GoogleNet_for_Pytorch)
 - [PSENet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/PSENet_for_Pytorch)
 - [RawNet2_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/RawNet2_for_Pytorch)
-- [ResNeXt50_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/ResNeXt50_for_Pytorch)
 - [TransformerXL_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/TransformerXL_for_Pytorch)

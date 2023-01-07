@@ -13,18 +13,17 @@
 # limitations under the License.
 import numpy as np
 import argparse
-
+import sys
+sys.path.append("./YOLOF/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/")
+sys.path.append("./YOLOF")
+from config import config
 import torch
 from cvpods.structures import Boxes, Instances
 from cvpods.modeling.postprocessing import detector_postprocess
 from cvpods.engine import RUNNERS
 from cvpods.evaluation import build_evaluator
-
 import sys
 import os
-
-sys.path.append("{0}/YOLOF/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/".format(sys.path[0]))
-from config import config
 
 const_shape = (608, 608)
 dataset_name = "coco_2017_val"

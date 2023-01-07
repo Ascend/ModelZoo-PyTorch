@@ -1,6 +1,12 @@
 torch == 1.7.1
 torchvision == 0.8.2
-
+portalocker
+cloudpickle
+tabulate
+termcolor
+pycocotools
+easydict
+colorama
 onnx==1.7.0
 onnx-simplifier
 opencv-python
