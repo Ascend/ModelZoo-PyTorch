@@ -1,39 +1,24 @@
-# BSD 3-Clause License
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
-# Copyright (c) 2017 xxxx
-# All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-#
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# ============================================================================
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import os
 import numpy as np
 import argparse
 import cv2
+from tqdm import tqdm
+
 
 CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
             'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
@@ -116,16 +101,16 @@ if __name__ == '__main__':
     os.makedirs(det_results_path, exist_ok=True)
     total_img = set([name[:name.rfind('_')]
                      for name in os.listdir(bin_path) if "bin" in name])
-    for bin_file in sorted(total_img):
+    for bin_file in tqdm(sorted(total_img)):
         path_base = os.path.join(bin_path, bin_file)
         # load all detected output tensor
         res_buff = []
-        for num in range(1, flags.net_out_num + 1):
+        for num in range(flags.net_out_num):
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if num == 1:
+                if num == 0:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
-                elif num == 2:
+                elif num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     buf = np.reshape(buf, [100, 1])
                 res_buff.append(buf)
@@ -163,4 +148,3 @@ if __name__ == '__main__':
         det_results_file = os.path.join(det_results_path, bin_file + ".txt")
         with open(det_results_file, "w") as detf:
             detf.write(det_results_str)
-        print(det_results_str)
