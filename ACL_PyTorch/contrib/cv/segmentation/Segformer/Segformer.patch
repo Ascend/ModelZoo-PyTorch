@@ -1,26 +1,3 @@
-Binary files mmsegmentation/.git/index and mmsegmentation_t/.git/index differ
-diff -ru mmsegmentation/.git/logs/HEAD mmsegmentation_t/.git/logs/HEAD
---- mmsegmentation/.git/logs/HEAD	2022-07-15 16:24:17.498042261 +0800
-+++ mmsegmentation_t/.git/logs/HEAD	2022-07-15 16:22:06.002040650 +0800
-@@ -1 +1 @@
--0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873457 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
-+0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873326 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
-diff -ru mmsegmentation/.git/logs/refs/heads/master mmsegmentation_t/.git/logs/refs/heads/master
---- mmsegmentation/.git/logs/refs/heads/master	2022-07-15 16:24:17.498042261 +0800
-+++ mmsegmentation_t/.git/logs/refs/heads/master	2022-07-15 16:22:06.002040650 +0800
-@@ -1 +1 @@
--0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873457 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
-+0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873326 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
-diff -ru mmsegmentation/.git/logs/refs/remotes/origin/HEAD mmsegmentation_t/.git/logs/refs/remotes/origin/HEAD
---- mmsegmentation/.git/logs/refs/remotes/origin/HEAD	2022-07-15 16:24:17.498042261 +0800
-+++ mmsegmentation_t/.git/logs/refs/remotes/origin/HEAD	2022-07-15 16:22:06.002040650 +0800
-@@ -1 +1 @@
--0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873457 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
-+0000000000000000000000000000000000000000 0e37281884193838417a43802bb7a4c854d2067e infname63 <infname63@d0c3e5f6b93c.(none)> 1657873326 +0800	clone: from https://github.com/open-mmlab/mmsegmentation.git
-Only in mmsegmentation/.git/objects/pack: pack-676410b3c10967716089214d105e726500708b5d.idx
-Only in mmsegmentation/.git/objects/pack: pack-676410b3c10967716089214d105e726500708b5d.pack
-Only in mmsegmentation_t/.git/objects/pack: pack-79dd6f6dce3e643e16a8b285f78f6c1b48a91c92.idx
-Only in mmsegmentation_t/.git/objects/pack: pack-79dd6f6dce3e643e16a8b285f78f6c1b48a91c92.pack
 diff -ru mmsegmentation/mmseg/models/segmentors/encoder_decoder.py mmsegmentation_t/mmseg/models/segmentors/encoder_decoder.py
 --- mmsegmentation/mmseg/models/segmentors/encoder_decoder.py	2022-07-15 16:24:17.578042262 +0800
 +++ mmsegmentation_t/mmseg/models/segmentors/encoder_decoder.py	2022-07-15 16:27:48.142044842 +0800
