@@ -12,7 +12,7 @@ Network="Bert_Chinese_for_PyTorch"
 #训练epoch
 train_epochs=3
 #训练batch_size 默认bert base batch size, 该参数外部可传入
-batch_size=16
+batch_size=32
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
 warmup_ratio=0.0

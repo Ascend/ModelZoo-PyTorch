@@ -132,16 +132,28 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
    - 单机单卡训练
 
-     启动单卡训练。
+     启动base单卡训练。
 
      ```
      bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --device_id=0  # 单卡精度训练
      bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 单卡性能训练   
      ```
+     启动large单卡训练。
+
+     ```
+     bash test/train_full_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --device_id=0 --warmup_ratio=0.1 --weight_decay=0.00001  # 单卡精度训练
+     bash test/train_performance_1p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001    # 单卡性能训练   
+     ```
 
    - 单机8卡训练
 
-     启动8卡训练。
+     启动base8卡训练。
+
+     ```
+     bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base     # 8卡精度训练
+     bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base    # 8卡性能训练  
+     ```
+     启动large8卡训练。
 
      ```
      bash test/train_full_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡精度训练
@@ -151,11 +163,18 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
    - 双机16卡训练
    
-     启动双机16卡训练。
+     启动base双机16卡训练。
 
      ```
-     bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡精度训练
-     bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡性能训练
+     bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx  # 16卡精度训练
+     bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx  # 16卡性能训练
+     ```
+	 
+     启动large双机16卡训练。
+
+     ```
+     bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡精度训练
+     bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡性能训练
      ```
 
      ```
