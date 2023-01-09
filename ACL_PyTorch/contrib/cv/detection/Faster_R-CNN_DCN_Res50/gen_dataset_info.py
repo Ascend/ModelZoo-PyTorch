@@ -16,6 +16,7 @@ import os
 import sys
 import cv2
 from glob import glob
+from tqdm import tqdm
 
 
 def get_bin_info(file_path, info_name, width, height):
@@ -30,7 +31,7 @@ def get_bin_info(file_path, info_name, width, height):
 def get_jpg_info(file_path, info_name):
     extensions = ['jpg', 'jpeg', 'JPG', 'JPEG']
     image_names = []
-    for extension in extensions:
+    for extension in tqdm(extensions):
         image_names.append(glob(os.path.join(file_path, '*.' + extension)))  
     with open(info_name, 'w') as file:
         for image_name in image_names:

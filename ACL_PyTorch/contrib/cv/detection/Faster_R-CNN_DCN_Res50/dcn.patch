@@ -1,3 +1,16 @@
+diff --git a/configs/_base_/models/faster_rcnn_r50_fpn.py b/configs/_base_/models/faster_rcnn_r50_fpn.py
+index 338a5c6b..c53800c7 100644
+--- a/configs/_base_/models/faster_rcnn_r50_fpn.py
++++ b/configs/_base_/models/faster_rcnn_r50_fpn.py
+@@ -98,7 +98,7 @@ test_cfg = dict(
+     rpn=dict(
+         nms_across_levels=False,
+         nms_pre=1000,
+-        nms_post=1000,
++        nms_post=500,
+         max_num=1000,
+         nms_thr=0.7,
+         min_bbox_size=0),
 diff --git a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
 index e9eb3579..4b28385a 100644
 --- a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
