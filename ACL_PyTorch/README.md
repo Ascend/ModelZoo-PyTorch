@@ -146,6 +146,7 @@
 - [PraNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/PraNet)
 - [PSE_MobileNetV3](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/PSE_MobileNetV3)
 - [PSENet_ResNet50_vd](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/PSENet_ResNet50_vd)
+- [PSENet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/PSENet_for_Pytorch)
 - [PSPNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/PSPNet)
 - [pyramidbox](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/pyramidbox)
 - [R(2+1)D](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/R(2+1)D)
@@ -350,6 +351,5 @@
 ##  待验证模型
 - [EfficientNet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/EfficientNet_for_Pytorch)
 - [GoogleNet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/GoogleNet_for_Pytorch)
-- [PSENet_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/PSENet_for_Pytorch)
 - [RawNet2_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/RawNet2_for_Pytorch)
 - [TransformerXL_for_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/TransformerXL_for_Pytorch)

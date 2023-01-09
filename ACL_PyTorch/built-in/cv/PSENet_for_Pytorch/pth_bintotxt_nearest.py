@@ -1,10 +1,24 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import sys
 import numpy as np
 import torch
 import cv2
 from pypse import pse as pypse
-import torch.nn.functional as F
+
 
 
 img_path = sys.argv[1]
@@ -40,19 +54,13 @@ def get_images():
 
 im_fn_list = get_images()
 for im_fn in im_fn_list:
-    print(im_fn)
     im = cv2.imread(im_fn)
     idx = os.path.basename(im_fn).split('/')[-1].split('.')[0].split('_')[1]
-    seg_maps = np.fromfile(bin_path+"/img_{}_1.bin".format(idx), "float32")
+    seg_maps = np.fromfile(bin_path+"/img_{}_0.bin".format(idx), "float32")
     seg_maps = np.reshape(seg_maps, (1, 7, 704, 1216))
     seg_maps = torch.from_numpy(seg_maps)
 
-    # Resize 算子
-    # seg_maps = F.interpolate(seg_maps, size=(704, 1216), mode='bilinear', align_corners=False)
-    # print(seg_maps)
-    # print(seg_maps.shape)
-    #
-    # seg_maps = seg_maps.float()
+    
     score = torch.sigmoid(seg_maps[:, 0, :, :])
     outputs = (torch.sign(seg_maps - 1.0) + 1) / 2
 
@@ -85,7 +93,7 @@ for im_fn in im_fn_list:
         bbox = cv2.boxPoints(rect) * img_scale
         bbox = bbox.astype('int32')
         bboxes.append(bbox.reshape(-1))
-    # print(bboxes)
+    
     # save txt
     res_file = os.path.join(txt_path,'{}.txt'.format(os.path.splitext(os.path.basename(im_fn))[0]))
     with open(res_file, 'w') as f:
@@ -95,11 +103,6 @@ for im_fn in im_fn_list:
             f.write(line)
 
 
-    # show result
-    # for bbox in bboxes:
-    #     cv2.drawContours(im, [bbox.reshape(4, 2)], -1, (0, 255, 0), 2)
-    # cv2.namedWindow('result', cv2.WINDOW_NORMAL)
-    # cv2.imshow('result', im)
-    # cv2.waitKey()
+   
 
 
