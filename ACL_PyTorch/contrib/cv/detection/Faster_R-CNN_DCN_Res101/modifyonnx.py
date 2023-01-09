@@ -18,9 +18,11 @@ import argparse
 # 1:Get batch parameter
 parser = argparse.ArgumentParser(description='manual to this script')
 parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--input_path', type=str)
+parser.add_argument('--save_path', type=str)
 args = parser.parse_args()
 
-onnx_model = onnx.load("./FasterRCNNDCN.onnx")
+onnx_model = onnx.load(args.input_path)
 graph = onnx_model.graph
 node = graph.node
 
@@ -52,5 +54,4 @@ for i in range(len(node)):
 
 
 str_bs = str(args.batch_size)
-new_model_name = './FasterRCNNDCN_change_bs' + str_bs + '.onnx'
-onnx.save(onnx_model, new_model_name)
+onnx.save(onnx_model, args.save_path)

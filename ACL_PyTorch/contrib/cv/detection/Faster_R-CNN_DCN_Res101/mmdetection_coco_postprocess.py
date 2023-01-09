@@ -17,6 +17,8 @@ import os
 import numpy as np
 import argparse
 import cv2
+from tqdm import tqdm
+
 
 CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
             'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
@@ -99,16 +101,16 @@ if __name__ == '__main__':
     os.makedirs(det_results_path, exist_ok=True)
     total_img = set([name[:name.rfind('_')]
                      for name in os.listdir(bin_path) if "bin" in name])
-    for bin_file in sorted(total_img):
+    for bin_file in tqdm(sorted(total_img)):
         path_base = os.path.join(bin_path, bin_file)
         # load all detected output tensor
         res_buff = []
-        for num in range(1, flags.net_out_num + 1):
+        for num in range(flags.net_out_num):
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if num == 1:
+                if num == 0:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
-                elif num == 2:
+                elif num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     buf = np.reshape(buf, [100, 1])
                 res_buff.append(buf)
@@ -146,4 +148,3 @@ if __name__ == '__main__':
         det_results_file = os.path.join(det_results_path, bin_file + ".txt")
         with open(det_results_file, "w") as detf:
             detf.write(det_results_str)
-        print(det_results_str)
