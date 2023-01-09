@@ -1,5 +1,5 @@
 """
-Copyright 2020 Huawei Technologies Co., Ltd
+Copyright 2022 Huawei Technologies Co., Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,15 +20,21 @@ limitations under the License.
 import os
 import argparse
 import numpy as np
-from collections import OrderedDict
-from mmaction.core import top_k_accuracy
+from tqdm import tqdm
+import mmcv
+from mmcv import Config
+from mmaction import __version__
+from mmaction.datasets import build_dataset
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Dataset UCF101 Postprocessing')
-    parser.add_argument('--result_path', type=str)
-    parser.add_argument('--info_path', type=str)
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--config', default='./mmaction2/configs/recognition/tsn/tsn_r50_1x1x3_75e_ucf101_rgb.py')
+    parser.add_argument('--work-dir', default='./inputs',
+                        help='the dir to save images')
+
+    parser.add_argument('--data_root', required=True, type=str, default='./mmaction2/tools/data/ucf101/')
+    parser.add_argument('--result_path', required=True, type=str)
 
     args = parser.parse_args()
 
@@ -37,22 +43,28 @@ def parse_args():
 
 def main():
     args = parse_args()
-    with open(args.info_path, "r") as f:
-        l = list(map(lambda x: int(x.strip()), f.readlines()))
 
-    num_samples = len(l) // args.batch_size
-    i = 0
+    cfg = Config.fromfile(args.config)
+    
+    mmcv.mkdir_or_exist(os.path.abspath(cfg.work_dir))
+
+    cfg.data.test.ann_file = os.path.join(args.data_root, cfg.data.test.ann_file[12:])
+    cfg.data.test.data_prefix = os.path.join(args.data_root, cfg.data.test.data_prefix[12:])
+    dataset = build_dataset(cfg.data.test, dict(test_mode=True))
+
     acc = 0
-    while i < num_samples:
-        with open(args.result_path+str(i)+'_0.txt', 'r') as f:
+    files = os.listdir(args.result_path)
+    for file in tqdm(files):
+        with open(os.path.join(args.result_path, file)) as f:
             lines = f.readlines()
             lines = list(map(lambda x:x.strip().split(), lines))
-            lines = np.array([[float(lines[m][n]) for n in range(101)]for m in range(args.batch_size)]).argmax(1)
-        for k in range(args.batch_size):
-            acc += int(lines[k] == l[i*args.batch_size + k])
-        i += 1
+            lines = np.array([float(lines[0][n]) for n in range(101)]).argmax(0)
+            
+        i = int(file.split('_')[0])
+        label = np.array(dataset[i]['label']).astype(np.uint16)
+        acc += int(lines == label)
 
-    print(acc / len(l))
+    print(acc / len(files))
 
 
 if __name__ == '__main__':
