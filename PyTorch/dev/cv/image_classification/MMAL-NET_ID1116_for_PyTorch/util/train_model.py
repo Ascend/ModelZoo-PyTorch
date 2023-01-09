@@ -99,10 +99,10 @@ def train(model,
             optimizer.step()
             step_time = time.time() - start_time
             fps = batch_size / step_time
-
+            if i < 3 and epoch == 1:
+                print("step_time: ", step_time)
         scheduler.step()
-        if i < 3 and epoch == 1:
-            print("step_time: ", step_time)
+
         # evaluation every epoch
         if eval_trainset:
             raw_loss_avg, windowscls_loss_avg, total_loss_avg, raw_accuracy, local_accuracy, local_loss_avg\

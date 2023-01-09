@@ -142,6 +142,8 @@ if __name__ == '__main__':
             train_loss += loss.item()
             runtime += (time.time() - start)
             i+=1
+            if i < 3 and epoch == 0:
+                print("Step Time: ", time.time() - start)
         print('epoch{}'.format(epoch) + ' : ' + 'loss={:.6f}, each_step_time={:.6f}'.format(train_loss/i, runtime/i))
         torch.save(model.state_dict(), os.path.join(args.outputs_dir, 'epoch_{}.pth'.format(epoch)))
 

@@ -133,6 +133,9 @@ fi
 StepTime=`grep "each_step_time" ${print_log} | awk '{print $4}' | awk -F '=' '{print $2}' | tail -n +3 | awk '{sum+=$1} END {print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
+#获取编译时间
+CompileTime=`grep "Time:" ${print_log} | head -2 | awk -F "Time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 # 提取所有loss打印信息
 grep "loss=" ${print_log} | awk '{print $3}' | tr -d ',' | awk -F '=' '{print $2}' > ./test/output/${ASCEND_DEVICE_ID}/my_output_loss.txt
 
@@ -170,3 +173,4 @@ echo "ActualFPS = ${FPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${StepTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
