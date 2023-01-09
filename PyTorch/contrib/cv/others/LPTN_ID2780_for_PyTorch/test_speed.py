@@ -19,7 +19,7 @@ from os import path as osp
 
 from codes.data import create_dataloader, create_dataset
 from codes.models import create_model
-from codes.train import parse_options
+from train import parse_options
 from codes.utils import (get_root_logger, get_time_str, make_exp_dirs)
 from codes.utils.options import dict2str
 import ascend_function
