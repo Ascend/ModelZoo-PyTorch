@@ -135,7 +135,8 @@ def train(config):
 			torch.nn.utils.clip_grad_norm(DCE_net.parameters(),config.grad_clip_norm)
 			optimizer.step()
 			cost_time += time.time() - start_time
-
+			if iteration < 3 and epoch == 0:
+				print("step_time: ", time.time() - start_time)  
 			if ((iteration+1) % config.display_iter) == 0:
 				time_average = cost_time / config.display_iter
 				fps = config.train_batch_size / time_average
@@ -192,4 +193,4 @@ if __name__ == "__main__":
 
 
 
-	
+    

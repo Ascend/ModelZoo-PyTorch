@@ -477,9 +477,6 @@ def train(args):
 
     #开启模糊编译
     torch.npu.set_compile_mode(jit_compile=False)
-    option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = ""
-    torch.npu.set_option(option)
 
     if args.train_dtype in ("float16", "float32", "float64"):
         dtype = getattr(torch, args.train_dtype)

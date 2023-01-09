@@ -52,7 +52,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-KERNEL_NUM=$(nproc)
+KERNEL_NUM=$(($(nproc)/8))
 export OMP_NUM_THREADS=$KERNEL_NUM
 i=0
 if [ -d ${cur_path}/test/output/${i} ];

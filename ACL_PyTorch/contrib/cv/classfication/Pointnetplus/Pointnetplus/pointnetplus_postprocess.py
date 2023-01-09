@@ -30,8 +30,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=1, required=False,
                         help='batch size')
     args = parser.parse_args()
-    out_folder = os.listdir(args.target_path)[-1]
-    args.target_path = os.path.join(args.target_path, out_folder)
+
     return args
 
 def pc_normalize(pc):
@@ -65,7 +64,7 @@ def test(pred_path,data_path):
     def load_infer_results():
         num_out = len(data_pth) // args.batch_size
         for j in range(num_out):
-            pred_loca = os.path.join(pred_path, 'part2_' + str(j) + '_output_0.bin')
+            pred_loca = os.path.join(pred_path, 'part2_' + str(j) + '_0.bin')
             pred = np.fromfile(pred_loca,np.float32)
             if args.batch_size == 1:
                 pred.shape = 1, 40

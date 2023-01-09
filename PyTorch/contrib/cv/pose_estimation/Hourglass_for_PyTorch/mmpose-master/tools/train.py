@@ -23,8 +23,6 @@ import time
 
 import mmcv
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist, set_random_seed
 from mmcv.utils import get_git_hash

@@ -234,14 +234,15 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
 
 2. 开始推理验证。
 
-   a.  使用ais-bench工具进行推理。
+a.  安装ais_bench推理工具  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-      ais-bench工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
 
-   b.  执行推理。
+b.  执行推理。
 
       ```
+      mkdir -p ais_results/bs1
       python3.7 -m ais_bencn --model ./FasterRCNNDCN.om --input ./val2017_bin --output ./ais_results --outfmt BIN --batchsize 1 --output_dirname bs1
       ```
       -   参数说明：
@@ -252,7 +253,7 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
         -   --outfmt: 推理结果保存格式。
         -   --batchsize： 模型对应batchsize。
 
-      推理后的输出默认在当前目录ais_result/bs1下。
+      推理后的输出默认在当前目录ais_results/bs1下。
 
 c.  精度验证。
 -   bin转txt：

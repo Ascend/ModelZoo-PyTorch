@@ -220,13 +220,13 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
 
-        因为该模型需要指定的动态batch参数较多，这里将ais-infer工具写到HigherHRNet_ais_infer.py脚本中来执行。
+        因为该模型需要指定的动态batch参数较多，这里将ais_bench工具写到HigherHRNet_ais_infer.py脚本中来执行。
 
         ```shell
          python3 HigherHRNet_ais_infer.py --bs 1
@@ -235,7 +235,7 @@
         也可参考下列命令来一个一个手动执行：
 
         ```shell
-          python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+          python3 -m ais_bench \
                 --model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om \
                 --input="./prep_output_dir/shape_512x512/" \
                 --output=./ --ouyput_dirname=bs1_dir \
@@ -243,7 +243,7 @@
                 --batchsize 1 \
                 --dymHW=512,512
 
-         python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+         python3 -m ais_bench \
                 --model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om \
                 --input="./prep_output_dir/shape_512x512/" \
                 --output=./ --ouyput_dirname=bs1_flip_dir \
@@ -264,8 +264,6 @@
 
         HigherHRNet中的特征金字塔包括HRNet的特征图输出和通过转置卷积进行上采样的高分辨率输出,其中bs1_dir 是特征图输出的推理结果，bs1_flip_dir是高分辨率输出的推理结果。
 
-        >**说明：**
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 

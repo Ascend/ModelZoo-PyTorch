@@ -197,6 +197,9 @@ echo "------------------ Final result ------------------"
 FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $12}'|awk '{print $1}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`
 
+#获取编译时间
+CompileTime=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 1|awk -F " " '{print $10}'|awk '{print $1}'|awk '{sum+=$1} END {print"",sum/1000}'|sed s/[[:space:]]//g`
+
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -236,3 +239,4 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 #echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

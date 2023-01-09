@@ -207,16 +207,16 @@ DQN其实是深度学习和强化学习知识的结合，也就是用Deep Networ
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
    
-    ais-infer工具获取及使用方式请点击查看[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
     
    2. 执行推理。
 
        ```
         mkdir result
-        python3.7 ais_infer.py --model=dqn_bs1.om --input bin_path --output result --outfmt BIN --batchsize 1
+        python3.7 -m ais_bench --model=dqn_bs1.om --input bin_path --output result --outfmt BIN --batchsize 1
        ```
        
         -   参数说明
@@ -225,10 +225,6 @@ DQN其实是深度学习和强化学习知识的结合，也就是用Deep Networ
             -   --output: 推理结果输出路径。
             -   --outfmt：输出数据的格式。
             -   --batchsize：训练批次大小。
- 
-        > **说明：** 
-        > 执行ais-infer工具请选择与运行环境架构相同的命令。
- 
 
    3. 精度验证。
 
@@ -249,10 +245,10 @@ DQN其实是深度学习和强化学习知识的结合，也就是用Deep Networ
 
     4.性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-       python3.7 ais_infer.py --model=dqn_bs1.om --loop=20 --batchsize 1
+       python3.7 -m ais_bench --model=dqn_bs1.om --loop=20 --batchsize 1
       ```
       
       -   参数说明

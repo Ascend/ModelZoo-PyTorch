@@ -20,6 +20,7 @@ import bisect
 
 import torch.utils.data as data
 import cv2
+cv2.setNumThreads(1)
 import numpy as np
 import glob
 from concern.config import Configurable, State

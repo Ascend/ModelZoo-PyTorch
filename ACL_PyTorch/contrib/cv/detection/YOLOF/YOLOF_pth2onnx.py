@@ -15,13 +15,12 @@
 import torch
 import argparse
 import numpy as np
+import sys
+sys.path.append("./YOLOF")
 from cvpods.engine import default_setup
 from cvpods.checkpoint import DefaultCheckpointer
-
-import sys
-
-sys.path.append("{0}/YOLOF/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/".format(sys.path[0]))
-sys.path.append("{0}/YOLOF/playground/detection/coco/yolof/".format(sys.path[0]))
+sys.path.append("./YOLOF/playground/detection/coco/yolof/yolof.cspdarknet53.DC5.9x/")
+sys.path.append("./YOLOF/playground/detection/coco/yolof/")
 from net import build_model
 from config import config
 

@@ -15,12 +15,12 @@
 import argparse
 import logging
 import os
+import time
 
 import numpy as np
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-import torch_npu
 import apex
 from torch import distributed
 from torch.utils.data import DataLoader
@@ -195,6 +195,7 @@ def main(args):
             train_loader.sampler.set_epoch(epoch)
         for _, (img, local_labels) in enumerate(train_loader):
             global_step += 1
+            start_time = time.time()
             if args.perf_only and global_step > 1000:
                 exit()
             img = img.npu()
@@ -216,6 +217,8 @@ def main(args):
             opt_pfc.zero_grad()
             lr_scheduler_backbone.step()
             lr_scheduler_pfc.step()
+            if global_step < 3 and epoch == 0:
+                print("step_time = {}".format(time.time() - start_time), flush=True)
 
             with torch.no_grad():
                 loss_am.update(loss.item(), 1)

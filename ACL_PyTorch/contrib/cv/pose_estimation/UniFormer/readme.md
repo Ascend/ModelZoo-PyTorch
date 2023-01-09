@@ -64,10 +64,10 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
-  | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | Python                                                       | 3.8   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
@@ -82,6 +82,9 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
    git clone -b main https://github.com/Sense-X/UniFormer.git
    cd UniFormer
    git reset e8024703bffb89cb7c7d09e0d774a0d2a9f96c25 --hard
+   cd pose_estimation
+   python setup.py install 
+   cd ..
    patch -p1 < ../uniformer.patch
    cd ..
    ```
@@ -97,12 +100,13 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
 
-   本模型支持coco2014验证集。用户需自行获取数据集（或给出明确下载链接），将instances_valminusminival2014.json文件和val2014文件夹解压并上传数据集到源码包路径下。目录结构如下：
+   本模型支持coco验证集。用户需自行获取数据集（或给出明确下载链接），将person_keypoints_val2017.json文件和val2017文件夹解压并上传数据集到源码包路径下。目录结构如下：
 
    ```
-   coco2014
-   ├── instances_valminusminival2014.json    //验证集标注信息       
-   └── val2014             // 验证集文件夹
+   coco
+   ├── annotations
+   │   └─person_keypoints_val2017.json    //验证集标注信息       
+   └── val2017             // 验证集文件夹
    ```
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
@@ -110,7 +114,7 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
    执行uniformer_preprocess.py脚本，完成预处理。
 
    ```
-   python uniformer_preprocess.py --dataset=./coco2014 --bin=pre_data
+   python uniformer_preprocess.py --dataset=./coco --bin=pre_data
    ```
       -   参数说明：
 
@@ -198,14 +202,14 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
         ```
-      python ${ais_infer_path}/ais_infer.py --model=uniformer_bs${bs}.om --input=./pre_data --output=./ --output_dirname=./result --batchsize=${batch_size}  
+      python -m ais_bench --model=uniformer_bs${bs}.om --input=./pre_data --output=./ --output_dirname=./result --batchsize=${batch_size}  
         ```
 
         -   参数说明：
@@ -217,15 +221,13 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
 
         推理后的输出保存在当前目录result下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    3. 精度验证。
 
       调用脚本uniformer_postprocess.py
 
       ```
-      python uniformer_postprocess.py --dataset=coco_2014 --bin=result
+      python uniformer_postprocess.py --dataset=coco --bin=result
       ```
 
       - 参数说明：
@@ -237,10 +239,10 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
 
    4. 性能验证。
 
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python ${ais_infer_path}/ais_infer.py --model=uniformer_bs${bs}.om --loop=100 --batchsize=${batch_size}
+      python -m ais_bench --model=uniformer_bs${bs}.om --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：
@@ -256,8 +258,8 @@ UniFormer 提出了一种整合 3D 卷积和时空自注意力机制的 Transfor
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 |    Ascend310P3       |        1          |      coco      |     93.5       |       178.8          |
-|    Ascend310P3       |        1          |      coco      |            |          210       |
-|    Ascend310P3       |        1          |      coco      |            |      295           |
-|    Ascend310P3       |        1          |      coco      |            |       286          |
-|    Ascend310P3       |        1          |      coco      |            |       257          |
-|    Ascend310P3       |        1          |      coco      |            |       243          |
+|    Ascend310P3       |       4          |      coco      |            |          210       |
+|    Ascend310P3       |        8          |      coco      |            |      295           |
+|    Ascend310P3       |        16          |      coco      |            |       286          |
+|    Ascend310P3       |        32          |      coco      |            |       257          |
+|    Ascend310P3       |        64         |      coco      |            |       243          |

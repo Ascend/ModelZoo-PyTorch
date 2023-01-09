@@ -160,13 +160,14 @@ def train(epoch):
         #     target = target.to(torch.int32)
 
         input, target = batch[0].to(device, non_blocking=True), batch[1].to(device, non_blocking=True)
-
+        start_time = time.time()
         optimizer.zero_grad()
         loss = criterion(model(input), target)
         epoch_loss += loss.item()
         loss.backward()
         optimizer.step()
-
+        if iteration < 3 and epoch == 1:
+            print("step_time: ", time.time() - start_time)
         print("===> Epoch[{}]({}/{}): Loss: {:.6f}".format(epoch, iteration, len(training_data_loader), loss.item()))
 
     print("===> Epoch {} Complete: Avg. Loss: {:.6f}".format(epoch, epoch_loss / len(training_data_loader)))

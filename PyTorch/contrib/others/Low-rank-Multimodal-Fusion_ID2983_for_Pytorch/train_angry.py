@@ -37,11 +37,9 @@ import numpy as np
 import csv
 import time
 
-DEVICE = 0
-if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
-    DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
-if torch.npu.current_device() != DEVICE:
-    DEVICE = torch.npu.set_device(f'npu:{DEVICE}')
+device_id=int(os.environ['ASCEND_DEVICE_ID'])
+DEVICE = torch.device(f'npu:{device_id}') 
+torch.npu.set_device(DEVICE)
 
 def setup_seed(seed):
     torch.manual_seed(seed)

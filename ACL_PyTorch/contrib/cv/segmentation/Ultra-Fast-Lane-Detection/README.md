@@ -1,14 +1,15 @@
 
 # Ultra-Fast-Lane-Detection 模型推理指导
 
+- [Ultra-Fast-Lane-Detection 模型推理指导](#ultra-fast-lane-detection-模型推理指导)
 - [概述](#概述)
 - [推理环境](#推理环境)
 - [快速上手](#快速上手)
-    - [获取源码](#获取源码)
-    - [准备数据集](#准备数据集)
-    - [模型转换](#模型转换)
-    - [推理验证](#推理验证)
-- [精度&性能](#精度性能)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型转换](#模型转换)
+  - [推理验证](#推理验证)
+- [精度\&性能](#精度性能)
 
 ----
 # 概述
@@ -201,9 +202,9 @@
 
 ## 推理验证
 
-1. 准备推理工具  
+1. 安装ais_bench推理工具  
 
-    本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
     
 2. 离线推理  
 

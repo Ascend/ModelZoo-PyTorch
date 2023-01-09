@@ -54,6 +54,7 @@ from networks import get_model, num_class
 from warmup_scheduler import GradualWarmupScheduler
 import torch.npu
 import os
+import time
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
@@ -81,7 +82,7 @@ def run_epoch(model, loader_s, loader_u, loss_fn, optimizer, desc_default='', ep
     steps = 0
     for data, label in loader_s:
         steps += 1
-
+        start_time = time.time()
         if not unsupervised:
             data, label = data.npu(), label.npu()
             preds = model(data)
@@ -123,7 +124,8 @@ def run_epoch(model, loader_s, loader_u, loss_fn, optimizer, desc_default='', ep
 
             optimizer.step()
             optimizer.zero_grad()
-
+        if steps < 3 and epoch == 1:
+            print("step_time: ", time.time() - start_time)
         top1, top5 = accuracy(preds, label, (1, 5))
 
         metrics.add_dict({
@@ -279,7 +281,6 @@ if __name__ == '__main__':
         logger.info('checkpoint will be saved at %s', args.save)
     logger.info('unsupervsed=%s', args.unsupervised)
 
-    import time
     t = time.time()
     result = train_and_eval(args.tag, args.dataroot, save_path=args.save, only_eval=args.only_eval, unsupervised=args.unsupervised)
     elapsed = time.time() - t

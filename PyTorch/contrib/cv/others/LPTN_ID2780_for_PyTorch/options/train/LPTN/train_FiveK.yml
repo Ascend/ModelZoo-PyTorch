@@ -10,8 +10,6 @@ datasets:
     name: FiveK
     type: UnPairedImageDataset
     # (for disk)
-#    dataroot_gt: datasets/FiveK/FiveK_480p/train/B
-#    dataroot_lq: datasets/FiveK/FiveK_480p/train/A
     # (for lmdb)
     dataroot_gt: datasets/FiveK/FiveK_train_target.lmdb
     dataroot_lq: datasets/FiveK/FiveK_train_source.lmdb
@@ -36,8 +34,6 @@ datasets:
   val:
     name: FiveK_val
     type: PairedImageDataset
-#    dataroot_gt: datasets/FiveK/FiveK_480p/test/B
-#    dataroot_lq: datasets/FiveK/FiveK_480p/test/A
     dataroot_gt: datasets/FiveK/FiveK_test_target.lmdb
     dataroot_lq: datasets/FiveK/FiveK_test_source.lmdb
     io_backend:

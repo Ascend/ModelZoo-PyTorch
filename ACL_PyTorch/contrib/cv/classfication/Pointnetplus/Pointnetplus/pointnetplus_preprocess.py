@@ -103,13 +103,13 @@ def preprocess(save_path,save_path2,data_location):
 
 
 def preprocess2(save_path,save_path2,data_location,data_location2):
-    data_toal_folder = os.listdir(data_location)[-1]
-    data_total_path = os.path.join(data_location, data_toal_folder)
+
+    data_total_path = os.path.join(data_location)
     save_path = save_path
     save_path2 = save_path2
     file_start = 'point_set'
-    file_end_one = '_output_1.bin'
-    file_end_zero = '_output_0.bin'
+    file_end_one = '_1.bin'
+    file_end_zero = '_0.bin'
     os.makedirs(save_path, exist_ok=True)
     os.makedirs(save_path2, exist_ok=True)
     test = os.path.join(data_total_path, file_start+str(0)+file_end_zero)

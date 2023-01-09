@@ -127,7 +127,6 @@ EpochTime=`grep -A 1 "Avg. Loss" ${print_log} | grep -v "Avg. Loss" | awk 'NR%2=
 StepTime=`awk 'BEGIN{printf "%.2f\n", '${EpochTime}'/ '113'}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${StepTime}'}'`
 
-
 # 精度相关数据计算
 train_accuracy=`grep "Avg. PSNR" ${print_log} | awk '{print $4}' | awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
 
@@ -153,6 +152,10 @@ echo "Final Performance images/sec : $FPS"
 echo "Final Performance sec/step : $StepTime"
 echo "E2E Training Duration sec : $e2e_time"
 
+
+#获取编译时间
+CompileTime=`grep "step_time:" ${print_log} | head -2 | awk -F "step_time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 # 最后一个迭代loss值，不需要修改
 ActualLoss=(`awk 'END {print $NF}' $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}_loss.txt`)
 
@@ -166,3 +169,4 @@ echo "ActualFPS = ${FPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${StepTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log

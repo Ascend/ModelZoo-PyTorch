@@ -74,13 +74,13 @@ def main(config, device, logger, vdl_writer, data_path):
         batch = transform(data, ops)
             
         images = np.expand_dims(batch[0], axis=0)
-        image_name = "{}.bin".format(os.path.basename(im_file)[:-4])
+        image_name = "{}.npy".format(os.path.basename(im_file)[:-4])
 
         if images.shape == (1, 3, 48, 320):
-            images.tofile(os.path.join(data_path, '48_320', image_name))
+            images.tofile(os.path.join(data_path, image_name))
             
         if images.shape == (1, 3, 48, 620):
-            images.tofile(os.path.join(data_path, '48_620', image_name))
+            images.tofile(os.path.join(data_path, image_name))
         
         pbar.update(1)
     
@@ -94,7 +94,5 @@ if __name__ == "__main__":
     if os.path.exists(data_path):
         shutil.rmtree(data_path)
     os.makedirs(data_path)
-    os.makedirs(os.path.join(data_path, '48_320'))
-    os.makedirs(os.path.join(data_path, '48_620'))
     
     main(config, device, logger, vdl_writer, data_path)

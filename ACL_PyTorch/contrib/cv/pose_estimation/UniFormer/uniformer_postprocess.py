@@ -53,8 +53,6 @@ def main():
     dataset_path = args.dataset
     bin_path = args.bin
     latest_result = os.listdir(bin_path)
-    latest_result.sort()
-    bin_path = os.path.join(bin_path, latest_result[-1])
 
     cfg = mmcv.Config.fromfile(args.config)
     image_size = cfg.data_cfg['image_size']
@@ -97,7 +95,7 @@ def main():
             center, scale = _box2cs(bbox, image_size)
 
             heatmap = np.fromfile(os.path.join(
-                bin_path, f'{ann_id}_output_0.bin'), dtype=np.float32)
+                bin_path, f'{ann_id}_0.bin'), dtype=np.float32)
             heatmap = np.reshape(
                 heatmap, [1, 17, heatmap_size[1], heatmap_size[0]])
 

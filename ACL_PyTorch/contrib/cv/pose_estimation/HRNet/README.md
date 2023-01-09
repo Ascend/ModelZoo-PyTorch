@@ -205,14 +205,14 @@
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    b.  执行推理。
 
       ```
-       python3.7 ${ais_infer_path}/ais_infer.py --model ${om_model_path} --input ${dataset_path} --output ${result_path} --outfmt TXT --batchsize ${batch_size} 
+       python3.7 -m ais_bench --model ${om_model_path} --input ${dataset_path} --output ${result_path} --outfmt TXT --batchsize ${batch_size} 
       ```
 
       - 参数说明：
@@ -225,8 +225,6 @@
 
       推理后的输出默认在当前目录result下。
 
-      >**说明：** 
-      >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
 
    c.  精度验证。
 

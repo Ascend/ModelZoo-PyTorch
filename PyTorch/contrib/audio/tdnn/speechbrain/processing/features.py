@@ -163,46 +163,19 @@ class STFT(torch.nn.Module):
             x = x.reshape(or_shape[0] * or_shape[2], or_shape[1])
 
         x = x.cpu()
+        batch_size, fids = x.shape
 
-        if version.parse(torch.__version__) <= version.parse("1.6.0"):
-            # stft = torch.stft(
-                # x,
-                # self.n_fft,
-                # self.hop_length,
-                # self.win_length,
-                # self.window.to(x.device),
-                # self.center,
-                # self.pad_mode,
-                # self.normalized_stft,
-                # self.onesided,
-            # )
-            batch_size, fids = x.shape
-            # f_dim = self.n_fft // 2 + 1
-            # t_dim = int(fids / self.hop_length + 0.5) + 1
-            # stft = torch.zeros(batch_size, f_dim, t_dim, 2)
-            with torch.autograd.profiler.record_function("stft_computing"):
-                f_dim, t_dim, Zxx = signal.stft(
-                    x,
-                    nperseg=self.n_fft,
-                    noverlap=self.win_length-self.hop_length,
-                    window=self.window,
-                    return_onesided='True')
-                stft = torch.zeros(batch_size, len(f_dim), len(t_dim), 2)
-                stft[:, :, :, 0] = torch.tensor(Zxx.real)
-                stft[:, :, :, 1] = torch.tensor(Zxx.imag)
-        else:
-            stft = torch.stft(
+        with torch.autograd.profiler.record_function("stft_computing"):
+            f_dim, t_dim, Zxx = signal.stft(
                 x,
-                self.n_fft,
-                self.hop_length,
-                self.win_length,
-                self.window.to(x.device),
-                self.center,
-                self.pad_mode,
-                self.normalized_stft,
-                self.onesided,
-                return_complex=False,
-            )
+                nperseg=self.n_fft,
+                noverlap=self.win_length-self.hop_length,
+                window=self.window,
+                return_onesided='True')
+            stft = torch.zeros(batch_size, len(f_dim), len(t_dim), 2)
+            stft[:, :, :, 0] = torch.tensor(Zxx.real)
+            stft[:, :, :, 1] = torch.tensor(Zxx.imag)
+
         x = x.npu()
         # Retrieving the original dimensionality (batch,time, channels)
         if len(or_shape) == 3:

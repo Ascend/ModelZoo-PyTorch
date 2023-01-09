@@ -13,21 +13,19 @@
 # limitations under the License.
 from __future__ import print_function
 import torch
+if torch.__version__ >= "1.8":
+     import torch_npu
+print(torch.__version__)
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.nn.parameter import Parameter
 from torch.nn.init import xavier_normal
 import numpy as np
-import apex
-from apex import amp
 
 import os
-DEVICE = 0
-if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
-    DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
-if torch.npu.current_device() != DEVICE:
-    DEVICE = torch.npu.set_device(f'npu:{DEVICE}')
+device_id=int(os.environ['ASCEND_DEVICE_ID'])
+DEVICE = torch.device(f'npu:{device_id}')
 
 class SubNet(nn.Module):
     '''

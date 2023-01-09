@@ -27,6 +27,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.utils.data
+import torch
 if torch.__version__ >= "1.8":
     import torch_npu
 import yaml
@@ -247,6 +248,7 @@ def train(hyp, opt, device, tb_writer=None):
         optimizer.zero_grad()
         start_time = time.time()
         for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
+            begine_time = time.time()
             if i == 5:
                 start_time = time.time()
             ni = i + nb * epoch  # number integrated batches (since train start)
@@ -320,6 +322,7 @@ def train(hyp, opt, device, tb_writer=None):
                     if tb_writer and result is not None:
                         tb_writer.add_image(f, result, dataformats='HWC', global_step=epoch)
                         # tb_writer.add_graph(model, imgs)  # add model to tensorboard
+            print("Current iter: {}, time: {}".format(i, time.time()-begine_time))
             if opt.stop_step_num is not None and i >= opt.stop_step_num:
                 break
 
@@ -605,7 +608,9 @@ if __name__ == '__main__':
     parser.add_argument('--stop_step_num', default=None, type=int,
                         help='after the stop_step, killing the training task')
     opt = parser.parse_args()
-
+    option = {}
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "SigmoidCrossEntropyWithLogitsGradV2"
+    torch.npu.set_option(option)
     main(opt)
     # Resume
     #

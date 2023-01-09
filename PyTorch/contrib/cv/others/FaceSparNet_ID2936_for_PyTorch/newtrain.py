@@ -18,8 +18,6 @@ from utils.logger import Logger
 from utils import utils
 import time
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
 from options.train_options import TrainOptions
 from data import create_dataset
 from models import create_model

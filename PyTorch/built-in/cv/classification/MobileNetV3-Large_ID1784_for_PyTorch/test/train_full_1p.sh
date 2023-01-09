@@ -37,9 +37,8 @@ batch_size=128
 train_steps=`expr 1281167 / ${batch_size}`
 #学习率
 learning_rate=0.008
-
-
-
+# 指定训练所使用的npu device卡id
+device_id=0
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
 #维持参数，以下不需要修改
@@ -62,6 +61,8 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     fi
 done
   
@@ -72,9 +73,6 @@ if [[ $data_path == "" ]];then
 fi
 
 cd $cur_path
-
-# 指定训练所使用的npu device卡id
-device_id=0
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
@@ -123,15 +121,6 @@ nohup python3.7 ${cur_path}/main.py \
     --workers=128 \
     --print-freq=10   > $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
-# end=$(date +%s)
-# e2etime=$(( $end - $start ))
-
-# fps=`grep -a 'FPS' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk 'END {print $7}'`
-# step_time=`awk 'BEGIN{printf "%.2f\n",'1000'*'${batch_size}'/'$fps'}'`
-
-# echo "Final Performance image/s : $fps"
-# echo "Final Performance ms/step : $step_time"
-# echo "Final Training Duration sec : $e2etime"
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)

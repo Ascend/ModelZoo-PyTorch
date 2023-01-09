@@ -225,14 +225,14 @@ STDC网络包含了一种新的结构，称为短期密集连接模块(Short-Ter
    
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
         ```
-        python3 ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./stdc_optimize_bs1.om --input ./prep_dataset --output ./result --output_dirname bs1 --outfmt BIN --batchsize 1
+        python3 -m ais_bench --model ./stdc_optimize_bs1.om --input ./prep_dataset --output ./result --output_dirname bs1 --outfmt BIN --batchsize 1
         ```
         
         + 参数说明：
@@ -244,8 +244,6 @@ STDC网络包含了一种新的结构，称为短期密集连接模块(Short-Ter
         
         推理后的输出默认在当前目录lcmout下。
         
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
         
    3. 精度验证。
    

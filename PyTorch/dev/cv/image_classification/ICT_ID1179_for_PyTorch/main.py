@@ -743,7 +743,8 @@ def train(trainloader,unlabelledloader, model, ema_model, optimizer, epoch, file
         # measure elapsed time
         meters.update('batch_time', time.time() - end)
         end = time.time()
-
+        if i < 2:
+            print("step_time = {:.4f}".format(meters["batch_time"].val))
         if i % args.print_freq == 0:
             
             print(

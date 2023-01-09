@@ -32,8 +32,6 @@ import gc
 import time
 import random
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
 import torch.npu
 import pynvml
 import logging

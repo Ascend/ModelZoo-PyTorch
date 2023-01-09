@@ -186,7 +186,7 @@ FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'/'${time_per_iter}'}'`
 train_accuracy=`grep "LFW Ave" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Accuracy: " '{print $2}'`
 
 #获取编译时间
-CompileTime=`grep "step_time" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F "step_time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+CompileTime=`grep "Step_Time" $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -1 | awk -F "Step_Time:" '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #打印，不需要修改
 echo "------------------ Final result ------------------"

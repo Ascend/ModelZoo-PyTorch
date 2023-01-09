@@ -88,7 +88,7 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
 1. 进入解压后的源码包根目录。
 
    ```
-   cd /${模型文件夹名称}/speaker_id
+   cd /${模型文件夹名称}/templates/speaker_id
    ```
 
 2. 运行训练脚本。

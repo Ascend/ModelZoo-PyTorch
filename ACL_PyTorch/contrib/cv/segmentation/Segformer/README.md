@@ -233,15 +233,15 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
 2. 开始推理验证。
 
-   a.  使用ais-infer工具进行推理。
+   a.  安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
    b.  执行推理。
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py \
+      python3 -m ais_bench \
       --model=./segformer_bs${batch_size}.om \
       --input=./prep_dataset \
       --output=./ \
@@ -255,12 +255,10 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
            -   --output：输出文件保存路径。
            -   --outfmt：输出文件格式。
 
-      `${ais_infer_path}` 为 ais_infer.py 脚本的存放路径；`${batch_size}` 表示不同 batch 的 om 模型，该模型支持的batchsize为：1，4。
+      `${batch_size}` 表示不同 batch 的 om 模型，该模型支持的batchsize为：1，4。
 
       推理后的输出默认在当前工作目录下，其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_30-08_50_53`。
 
-      > **说明：** 
-      > 执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
    c.  精度验证。
 
@@ -272,16 +270,16 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
       -   参数说明：
 
-           -   --json_path：ais_infer工具生成的json文件路径；${path_to_json}代表sumary.json文件的存放路径。
+           -   --json_path：ais_bench推理工具生成的json文件路径；${path_to_json}代表sumary.json文件的存放路径。
            -   --dataset_path：cityscpaes数据集所在路径；比如：若cityscpaes存放在/opt/npu/cityscpaes，则--dataset_path=/opt/npu/
 
 
    d.  性能验证。
 
-      使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，命令如下：
+      使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，命令如下：
 
       ```
-      python3 ${ais_infer_path}/ais_infer.py --model=./segformer_bs${batch_size}.om --loop=50 --batchsize=${batch_size}
+      python3 -m ais_bench --model=./segformer_bs${batch_size}.om --loop=50 --batchsize=${batch_size}
       ```
 
 

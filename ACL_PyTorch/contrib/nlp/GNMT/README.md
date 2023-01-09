@@ -217,13 +217,14 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
 2. 开始推理验证。
 
-    1. 使用ais-infer工具进行推理。  
-        查看[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
+    1. 安装ais_bench推理工具。  
+        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
     2. 执行推理。
         ```
         mkdir out_data
-        python3.7 ${ais_infer_path}/ais_infer.py \
+		source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        python3.7 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --input=./pre_data/input_encoder/,./pre_data/input_enc_len,./pre_data/input_decoder \
             --output=./ \
@@ -240,8 +241,6 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
         推理后的输出默认在当前目录result下。
 
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)。
 
     3. 精度验证。
 
@@ -255,15 +254,15 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         ```
 
         -  参数说明：
-            -  --bin_file_path：ais_infer自动生成的目录名。
+            -  --bin_file_path：ais_bench自动生成的目录名。
             -  --res_file_path：推理结果保存在该目录的 pred_sentences.txt 文件中。
             -  --pre_file_path：预处理文件目录。
 
     4. 性能验证。
 
-        使用ais-infer工具进行纯推理，获得性能数据。
+        使用ais_bench推理工具进行纯推理，获得性能数据。
         ```
-        python3.7 ${ais_infer_path}/ais_infer.py \
+        python3.7 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --loop 20 \
             --batchsize 1

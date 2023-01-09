@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import argparse
-import logging
+from tqdm import tqdm
 from pathlib import Path
 import numpy as np
 import torch
@@ -23,9 +23,6 @@ from timm.utils import *
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 
-torch.backends.cudnn.benchmark = True
-_logger = logging.getLogger('train')
-
 
 def _parse_args():
 
@@ -33,29 +30,11 @@ def _parse_args():
     parser.add_argument('--data-dir', type=str, metavar='DIR', help='path to dataset')
     parser.add_argument('--out-dir', type=str, metavar='PATH', help='path to eval checkpoint')
     parser.add_argument('--gt-path', type=str, metavar='PATH', help='path to groundtruth')
-    parser.add_argument('-b', '--batch-size', type=int, default=1, metavar='N',
-                    help='input batch size')
     args = parser.parse_args()
 
     args.prefetcher = True
     args.distributed = False
-    args.device = 'cpu'
-    args.world_size = 1
-    args.rank = 0
-    args.img_size = 224
-    args.interpolation = ''
-    args.mean = None
-    args.std = None
-    args.crop_pct = None
-    args.channels_last = False
-    args.tta = 0
-    args.log_interval = 50
-    args.local_rank = 0
-    args.model_ema = True
-    args.model_ema_force_cpu = False
-    args.model_ema_decay = 0.99996
-    args.seed = 42
-    args.batch_size = args.batch_size
+    args.batch_size = 1
     args.num_classes = 1000
 
     return args
@@ -63,7 +42,7 @@ def _parse_args():
 
 def load_val_data(args):
 
-    data_config = resolve_data_config(vars(args), verbose=args.local_rank == 0)
+    data_config = resolve_data_config(vars(args), verbose=True)
     dataset_eval = Dataset(args.data_dir)
     loader_eval = create_loader(
         dataset_eval,
@@ -87,14 +66,9 @@ def pre_process(loader, output_dir, gt_path, args):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    last_idx = len(loader) - 1
     labels = []
-    num = 0
-    for batch_idx, (input, target) in enumerate(loader):
+    for batch_idx, (input, target) in tqdm(enumerate(loader)):
         if target.shape[0] == args.batch_size:
-            last_batch = batch_idx == last_idx
-            if args.channels_last:
-                input = input.contiguous(memory_format=torch.channels_last)
             bin_data = input.numpy()
             save_path = output_dir / f"{batch_idx:0>5d}.bin"
             bin_data.tofile(save_path)
@@ -104,13 +78,9 @@ def pre_process(loader, output_dir, gt_path, args):
 
 
 def main():
-    setup_default_logging()
     args = _parse_args()
-    torch.manual_seed(args.seed + args.rank)
-
     loader = load_val_data(args)
     pre_process(loader, args.out_dir, args.gt_path, args)
-
 
 
 if __name__ == '__main__':

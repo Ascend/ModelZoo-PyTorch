@@ -52,6 +52,7 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 
   | 配套       | 版本                                                         |
   | ---------- | ------------------------------------------------------------ |
+  | 硬件    | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
   | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
@@ -65,7 +66,7 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
   1. pip3.7 install -r requirements.txt
   2. 安装mmcv
      cd /${模型文件夹名称}
-     git clone --depth=1 https://github.com/open-mmlab/mmcv.git
+     git clone -b v1.7.0 --depth=1 https://github.com/open-mmlab/mmcv.git
      cd mmcv
      MMCV_WITH_OPS=1 pip3 install -e .
   3. 安装mmcls
@@ -79,6 +80,7 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 1. 获取数据集。
 
   模型训练所需要的数据集（cifar100）脚本会自动下载,请保持网络畅通.如果需要可用如下命令自行下载
+    
     wget https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
 
    ```
@@ -123,7 +125,7 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
      ```
 
     注意：模型训练所需要的数据集（cifar100）脚本会自动下载,请保持网络畅通，如果已有数据集，这也可用传参的方式传入，例如：
-      bash ./test/train_full_1p.sh --data_path=cifa100数据集路径
+      bash ./test/train_full_1p.sh --data_path=cifar100数据集路径
 
    
 

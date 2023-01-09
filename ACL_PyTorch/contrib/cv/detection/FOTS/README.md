@@ -14,10 +14,6 @@
 
 与以前的方法相比，FOTS 引入了新颖的 ROIRotate 操作，将文本检测和识别统一成端到端框架。TOTS 不仅适用于水平文本，并且可以解决更复杂和困难的情况。网络中共享训练特征，互补监督的应用，加快了模型整体的速度，使得 FOTS 在速度和性能方面完全碾压了 CTPN，可以进行实时的文本识别。
 
-+ 论文  
-    [FOTS: Fast Oriented Text Spotting with a Unified Network](https://arxiv.org/abs/1801.01671)  
-    Xuebo Liu, Ding Liang, Shi Yan, Dagui Chen, Yu Qiao, Junjie Yan
-
 + 参考实现  
     ```
     url = https://github.com/Wovchena/text-detection-fots.pytorch.git
@@ -40,16 +36,17 @@
 ----
 # 推理环境
 
-- 该模型离线推理使用 Atlas 300I Pro 推理卡，推理所需配套的软件如下：
+- 该模型需要以下插件与驱动
 
-    | 配套      | 版本    | 环境准备指导 |
-    | --------- | ------- | ---------- |
-    | 固件与驱动  | 22.0.2 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-    | CANN      | 5.1.RC2 | -          |
-    | Python    | 3.7.13  | -          |
+  **表 1**  版本配套表
 
-    说明：该模型离线推理使用 Atlas 300I Pro 推理卡，Atlas 300I Duo 推理卡请以 CANN 版本选择实际固件与驱动版本。
-
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 ----
 # 快速上手
@@ -67,7 +64,7 @@
 
 2. 安装推理过程所需的依赖
     ```shell
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     ```
 
 3. 下载本仓，将该模型目录下的Python脚本、requirements.txt与补丁文件复制到当前目录，并修改源码。
@@ -148,7 +145,6 @@
     ```shell
     # 配置环境变量
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
     
     # 执行 ATC 进行模型转换
     atc --framework=5 \
@@ -170,60 +166,47 @@
     + --output: 输出的OM模型。
     + --log：日志级别。
     + --soc_version: 处理器型号。
+    + --insert_op_conf:aipp配置文件
 
     命令中的`${bs}`表示模型输入的 batchsize，比如将`${bs}`设为 1，则运行结束后会在当前目录下生成 FOTS_bs1.om
 
 
 ## 推理验证
 
-1. 准备推理工具  
-
-    本推理项目使用 [ais_infer](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%BB%8B%E7%BB%8D) 作为推理工具，须自己拉取源码，打包并安装。
-    ```shell
-    git clone https://gitee.com/ascend/tools.git
-    
-    # 打包并安装推理工具包
-    export CANN_PATH=/usr/local/Ascend/ascend-toolkit/latest
-    cd tools/ais-bench_workload/tool/ais_infer/backend/
-    pip3 wheel ./   # 会在当前目录下生成 aclruntime-xxx.whl，具体文件名因平台架构而异
-    pip3 install --force-reinstall aclruntime-xxx.whl
-
-    cd -
-    ```
+1. 安装ais_bench推理工具  
+  
+    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 2. 离线推理  
 
-    使用ais_infer工具将预处理后的数据传入模型并执行推理：
+    使用ais_bench推理工具将预处理后的数据传入模型并执行推理：
     ```shell
-    # 设置环境变量
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/Ascend/driver/lib64/driver
-    
-    # 对预处理后的数据进行推理
-    mkdir result
-    python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py \
+    python3 -m ais_bench \
         --model ./FOTS_bs1.om \
         --input ./res \
-        --output ./result \
+        --output ./ \
+        --output_dirname result 
         --batchsize 1 \
     ```
     参数说明：
     + --model: OM模型路径。
     + --input: 存放预处理bin文件的目录路径
     + --output: 存放推理结果的目录路径
+    + --output_dirname:推理结果存放文件夹
     + --batchsize: 每次输入模型的样本数
     
-    运行成功后，在 result 下，会生成一个以执行开始时间`%Y_%m_%d-%H_%M_%S`来命名的子目录，每个预处理 bin 文件会对应生成三个推理结果 bin 文件存放在此目录下。
+    运行成功后，结果存在`result`下
   
 3. 精度验证  
 
     首先调用 FOTS_postprocess.py 对模型的推理输出进行处理：
     ```shell
     mkdir outPost
-    python FOTS_postprocess.py ./outPost/ ./result/2022_09_30-03_05_04/
+    python3 FOTS_postprocess.py ./outPost/ ./result
     ```
 
     调用开源仓原 icdar_eval 目录下的 script.py 获取推理模型的精度指标：
+    
     ```shell
     mkdir runs
     zip -jmq runs/u.zip outPost/*
@@ -237,36 +220,33 @@
 
 4. 性能验证  
 
-    对于性能的测试，需要注意以下三点：
-    + 测试前，请通过 npu-smi info  命令查看 NPU 设备状态，请务必在 NPU 设备空闲的状态下进行性能测试。
-    + 为避免因测试持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
-    + 使用吞吐率作为性能指标，单位为 fps.
+    可使用ais-bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-    > 吞吐率（throughput）：模型在单位时间（1秒）内处理的数据样本数。
-    
-    执行纯推理：
     ```shell
-    python ./tools/ais-bench_workload/tool/ais_infer/ais_infer.py --model ./FOTS_bs1.om --loop 100 --batchsize 1
+    python3 -m ais_bench --model ./FOTS_bs1.om --loop 100 --batchsize 1
     ```
+    - 参数说明：
+        - --model：om模型
+        - --batchsize：模型batchsize
+        - --loop: 循环次数
 
     执行完纯推理命令，程序会打印出与性能相关的指标。找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
+
 
 ----
 # 性能&精度
 
 1. 性能对比
 
-| Batch Size | 310 (FPS/Card) | 310P (FPS/Card) | T4 (FPS/Card) | 310P/310   | 310P/T4   |
-| ---------- | -------------- | ------------- | -------- | -------- | -------- |
-| 1          | *35.70*        | *85.73*       | *44.89*  | *2.40* | *1.91* |
-| 2          | *31.62*        | *55.82*       | *46.08*  | *1.77* | *1.21* |
-| 4          | *31.37*        | *56.45*       | *46.91*  | *1.79* | *1.20* |
-| 8          | *31.22*        | *53.09*       | *46.36*  | *1.70* | *1.15* |
-| **best**   | **35.70**      | **85.73**     | **46.91**| **2.40** | **1.83** |
+| 芯片型号 | Batch Size | 性能 |
+| -------- | ----------  | ---- |
+|    310P3      |     1    |   66   |
+|    310P3      |     4    |   64   |
+|    310P3      |     8    |   65   |
+|    310P3      |     16    |   66   |
+|    310P3      |     32    |48      |
+|    310P3      |     64    | 48     |
 
-- 在310P设备上，当 batchsize为1 时模型性能最优，达 85.73 fps
-- 最优性能相比，310P/310=2.40倍，310P/T4=1.83倍
-- 因显存不足，不支持推理 batchsize >= 16 的模型
 
 2. 精度对比
 

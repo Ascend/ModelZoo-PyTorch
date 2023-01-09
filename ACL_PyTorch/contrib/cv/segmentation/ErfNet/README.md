@@ -15,7 +15,7 @@
     - [4.1 数据集获取](#41-数据集获取)
     - [4.2 数据集预处理](#42-数据集预处理)
   - [5 离线推理](#5-离线推理)
-    - [5.1 ais_infer工具概述](#51-ais_infer工具概述)
+    - [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
     - [5.2 离线推理](#52-离线推理)
   - [6 精度对比](#6-精度对比)
     - [6.1 离线推理精度](#61-离线推理精度)
@@ -151,13 +151,13 @@ ${datasets_path}/cityscapes/gtFine/val：数据集路径。（请用 数据集�
 
 ## 5 离线推理
 
--   **[ais_infer工具概述](#51-ais_infer工具概述)**  
+-   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
 
 -   **[离线推理](#52-离线推理)**  
 
-### 5.1 ais_infer工具概述
+### 5.1 安装ais_bench推理工具
 
- AisBench推理工具，该工具包含前端和后端两部分。 后端基于c+开发，实现通用推理功能； 前端基于python开发，实现用户界面功能 
+请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。 
 
 ### 5.2 离线推理
 
@@ -170,7 +170,7 @@ source /usr/local/Ascend/ascend-toolkit/set_env.sh
 2.执行离线推理
 
 ```
-python3 ais_infer.py --model ${user_path}/ErfNet/ErfNet_bs1.om --input=${user_path}/ErfNet/prep_dataset/ --outfmt BIN --output ${user_path}/output/ --batchsize 1
+python3 -m ais_bench --model ${user_path}/ErfNet/ErfNet_bs1.om --input=${user_path}/ErfNet/prep_dataset/ --outfmt BIN --output ${user_path}/output/ --batchsize 1
 ```
 
 {user_path}：请用用户个人文件准确路径替换。

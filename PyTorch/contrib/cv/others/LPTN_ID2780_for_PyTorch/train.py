@@ -37,7 +37,7 @@ import ascend_function
 def parse_options(is_train=True):
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-opt', type=str, default='/home/liangjie/1code/LPTN_refined/options/train/LPTN/train_FiveK.yml', help='Path to option YAML file.')
+        '-opt', type=str, default='./options/train/LPTN/train_FiveK.yml', help='Path to option YAML file.')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm'],
@@ -147,7 +147,12 @@ def main():
 
     # load resume states if necessary
     if opt['path'].get('resume_state'):
-        device_id = torch_npu.npu.current_device()
+        DEVICE=int(os.environ['ASCEND_DEVICE_ID'])
+        CALCULATE_DEVICE = "npu:{}".format(DEVICE)
+        print("CALCULATE_DEVICE*****************", CALCULATE_DEVICE)
+        device_id = torch.device(CALCULATE_DEVICE)
+        print("device_id*********", device_id)
+        torch.npu.set_device(device_id)
         resume_state = torch.load(
             opt['path']['resume_state'],
             map_location=lambda storage, loc: storage.npu(device_id))

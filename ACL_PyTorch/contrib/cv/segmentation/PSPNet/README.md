@@ -221,9 +221,9 @@
 
 2. 开始推理验证。
 
-   1. 使用ais-infer工具进行推理。
+   1. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
 
@@ -245,9 +245,7 @@
            
    
         `${batchsize}`表示不同batch的om模型。推理完成后在指定目录即`./result/result_bs${batchsize}`生成推理结果。
-   
-        >**说明：** 
-        >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
+
    
    3. 精度验证。
       
@@ -283,9 +281,9 @@
         - --bin_data_path：om推理结路径。
    
    4. 性能验证。
-   
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-   
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
         ```
          python3 -m ais_bench --model=pspnet_sim_bs${batchsize}.om --loop=20 --batchsize=${batch_size}
         ```

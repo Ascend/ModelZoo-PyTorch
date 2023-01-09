@@ -258,29 +258,21 @@ YOLOv3是一种端到端的one-stage目标检测模型。相比与YOLOv2，YOLOv
 
 2. 开始推理验证
 
-   a. 使用ais-infer工具进行推理。
+   a. 安装ais_bench推理工具。
 
-      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    b. 执行推理。
 
-   运行 ais_infer 脚本。
-
-       cd ${上一级目录} 
-       mkdir ais_infer_result
-       python3 ais_infer.py --ais_infer_path ${ais_infer_path} 
-                            --model yolov3_bsn.om 
+       mkdir ais_infer_result  
+       source /usr/local/Ascend/ascend-toolkit/set_env.sh 
+       python3 -m ais_bench --model yolov3_bsn.om 
                             --input yolov3_bin 
                             --batchsize=n 
                             --output ais_infer_result
    
       推理后的输出默认在当前目录result下。
 
-      参数说明:
-          --ais_infer_path：ais_infer推理脚本`ais_infer.py`所在路径，如“./tools/ais-bench_workload/tool/ais_infer”。
-
-      >**说明：**
-      >执行ais_infer工具请选择与运行环境架构相同的命令。参数详情请参见[《ais_infer 推理工具使用文档》](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)
 
    c. 模型后处理。
    

@@ -135,6 +135,9 @@ echo "Final Performance images/sec : $FPS"
 
 echo "E2E Training Duration sec : $e2e_time"
 
+#输出编译时间
+CompileTime=`grep "Current iter:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -2 | awk -F " " '{print $5}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+
 # 性能看护结果汇总
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
@@ -163,3 +166,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

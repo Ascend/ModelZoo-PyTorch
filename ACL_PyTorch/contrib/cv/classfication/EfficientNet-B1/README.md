@@ -5,6 +5,7 @@
 
     - [输入输出数据](#section540883920406)
 
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
@@ -22,11 +23,14 @@
 
 EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用迁移学习数据集上达到了相当不错的准确率，参数量也大大减少，说明其具备良好的迁移能力，且能够显著提升模型效果。
 
+  ```
+  url=https://github.com/rwightman/pytorch-image-models
+  ```
 
 - 参考实现：
 
   ```
-  url=https://github.com/rwightman/pytorch-image-models
+  url=https://github.com/facebookresearch/pycls
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -44,6 +48,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
   | --------| -------- | -------- | ------------ |
   | output  | FLOAT32  | batchsize x 1000 | ND           |
 
+- 该模型需要以下插件与驱动  
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -54,7 +59,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
+  | CANN                                                         | 6.0.RC1 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
   | Python                                                       | 3.7.5   | 创建anaconda环境时指定python版本即可，conda create -n ${your_env_name} python==3.7.5 |
   | PyTorch                                                      | 1.11.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -66,6 +71,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 ## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
+
 
    ```sh
    git clone https://github.com/facebookresearch/pycls
@@ -124,7 +130,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
    1. 获取权重文件。
 
-      ```sh
+      ```
       wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/EfficientNet-B1/PTH/EN-B1_dds_8gpu.pyth
       ```
 
@@ -195,8 +201,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 2. 开始推理验证。
 
    1. 使用ais_bench工具进行推理。
-
-      ais_bench工具获取及使用方式请点击查看[ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)，文档中aclruntime也需要安装。
+      ais_bench工具获取及使用方式请点击查看[ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)
 
    2. 建立软链接
       将prep_dataset文件夹处理为工具可以输入的格式。

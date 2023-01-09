@@ -17,13 +17,13 @@ import argparse
 
 scale_list = [[512,768], [512, 512], [768, 512], [512, 1024], [1024, 512]]
 
-def ais_infer(bs, ais_infer_path):
+def ais_infer(bs):
     for i in range(len(scale_list)):
         h, w = scale_list[i][0], scale_list[i][1]
         path = f"out"
         if not os.path.exists(path):
             os.makedirs(path)
-        os.system(f'python3 {ais_infer_path}/ais_infer.py --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data/shape_{h}x{w}')
+        os.system(f'python3 -m ais_bench --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data/shape_{h}x{w}')
         for j in os.listdir(path):
             p = os.path.join(path, j)
             if os.path.isdir(p):
@@ -36,7 +36,7 @@ def ais_infer(bs, ais_infer_path):
         path = f"out_flip"
         if not os.path.exists(path):
             os.makedirs(path)
-        os.system(f'python3 {ais_infer_path}/ais_infer.py --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data_flip/shape_{h}x{w}')
+        os.system(f'python3 -m ais_bench --model models/dekr_bs{bs}.om --output {path} --dymHW {h},{w} --input prep_data_flip/shape_{h}x{w}')
         for j in os.listdir(path):
             p = os.path.join(path, j)
             if os.path.isdir(p):
@@ -45,9 +45,8 @@ def ais_infer(bs, ais_infer_path):
                 os.system(f"rm -rf {p}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='ais infer')  # task process paramater
-    parser.add_argument('--ais_infer_path', default='ais_infer', type=str)
+    parser = argparse.ArgumentParser(description='ais bench')  # task process paramater
     parser.add_argument('--bs', default=1,
                         type=int, help='batchsize')
     args = parser.parse_args()
-    ais_infer(args.bs, args.ais_infer_path)
+    ais_infer(args.bs)
