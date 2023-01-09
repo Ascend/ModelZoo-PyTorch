@@ -1,5 +1,51 @@
---- FLAVR/pytorch_msssim/__init__.py	2022-10-27 15:42:13.493376660 +0800
-+++ __init__.py	2022-10-27 17:41:28.445464323 +0800
+diff -uNr FLAVR/model/FLAVR_arch.py FLAVR_fix/model/FLAVR_arch.py
+--- FLAVR/model/FLAVR_arch.py	2022-12-29 20:27:26.927633002 +0800
++++ FLAVR_fix/model/FLAVR_arch.py	2022-12-29 20:37:21.731640290 +0800
+@@ -110,6 +110,32 @@
+         return self.upconv(x)
+ 
+ 
++class pad_replace(nn.Module):
++    def __init__(self, padding=0):
++        super(pad_replace, self).__init__()
++        self.padding=padding
++    def forward(self, x):
++        d = self.padding
++        if d==0:
++            return x 
++        elif d==1:
++            pad1 = x[:,:,1:d+1,:]
++            pad2 = x[:,:,-d-1:-1,:]
++            y = torch.cat((pad1, x, pad2), dim=2)
++            pad1 = y[:,:,:,1:d+1]
++            pad2 = y[:,:,:,-d-1:-1]
++            z = torch.cat((pad1, y, pad2), dim=3)
++            return z
++        else:
++            pad1 = torch.flip(x[:,:,1:d+1,:],[2])
++            pad2 = torch.flip(x[:,:,-d-1:-1,:],[2])
++            y = torch.cat((pad1, x, pad2), dim=2)
++            pad1 = torch.flip(y[:,:,:,1:d+1],[3])
++            pad2 = torch.flip(y[:,:,:,-d-1:-1],[3])
++            z = torch.cat((pad1, y, pad2), dim=3)
++            return z
++
++
+ class UNet_3D_3D(nn.Module):
+     def __init__(self, block , n_inputs, n_outputs, batchnorm=False , joinType="concat" , upmode="transpose"):
+         super().__init__()
+@@ -138,7 +164,7 @@
+         self.feature_fuse = Conv_2d(nf[3]*n_inputs , nf[3] , kernel_size=1 , stride=1, batchnorm=batchnorm)
+ 
+         self.outconv = nn.Sequential(
+-            nn.ReflectionPad2d(3),
++            pad_replace(padding=3),
+             nn.Conv2d(nf[3], out_channels , kernel_size=7 , stride=1, padding=0) 
+         )         
+ 
+diff -uNr FLAVR/pytorch_msssim/__init__.py FLAVR_fix/pytorch_msssim/__init__.py
+--- FLAVR/pytorch_msssim/__init__.py	2022-12-29 20:27:26.927633002 +0800
++++ FLAVR_fix/pytorch_msssim/__init__.py	2022-12-29 20:39:02.987641531 +0800
 @@ -20,7 +20,7 @@
      _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
      _2D_window = _1D_window.mm(_1D_window.t())

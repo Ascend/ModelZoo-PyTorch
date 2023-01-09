@@ -29,6 +29,8 @@ def parse_args():
                         help='path to pth model')
     parser.add_argument('--output_file', type=str, required=True,
                         help='path to save onnx model')
+    parser.add_argument('--image_size', type=str, default=224,
+                        help='path to save onnx model')
     parser.add_argument('--opset_version', type=int, default=13,
                         help='onnx opset version')
     parser.add_argument('--nbr_frame', type=int, default=4)
@@ -41,13 +43,15 @@ def parse_args():
 def pth2onnx(model, input_data, output_file, opset_version):
     model.eval()
     input_names = ['input_0', 'input_1', 'input_2', 'input_3']
-    output_names = ['output']
+    output_names = ['output_0', 'output_1', 'output_2']
     dynamic_axes = {
         'input_0':{0:'-1'},
         'input_1':{0:'-1'},
         'input_2':{0:'-1'},
         'input_3':{0:'-1'},
-        'output':{0:'-1'},
+        'output_0':{0:'-1'},
+        'output_1':{0:'-1'},
+        'output_2':{0:'-1'}
     }
     with torch.no_grad():
         torch.onnx.export(
@@ -77,5 +81,5 @@ if __name__ == "__main__":
     model_dict = model.state_dict()
     model.load_state_dict(torch.load(args.input_file, map_location='cpu')['state_dict'], strict=True)
     
-    input_data = [torch.randn(1, 3, 224, 224)] * 4
+    input_data = [torch.randn(1, 3, args.image_size, args.image_size)] * 4
     pth2onnx(model, input_data, args.output_file, args.opset_version)
