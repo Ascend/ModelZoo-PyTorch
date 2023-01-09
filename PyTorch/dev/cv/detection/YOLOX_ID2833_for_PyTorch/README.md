@@ -136,8 +136,9 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
       bash train_performance_8p.sh --data_path=xx/xx/coco2017
    ```
    
-
-   训练完成后，pth文件保存在./work_dirs下面，权重文件保存在../test/output/$deviceid/ckpt下，并输出模型训练精度和性能信息。
+训练完成后，pth文件保存在./work_dirs下面，并输出模型训练精度和性能信息。
+   
+   注意：train_full_8p.sh为通用的8P全量精度训练脚本，train_full_8p_resume.sh 在train_full_8p.sh的基础上新增了异常退出后复跑机制，注意是规避三方组件异常退出等，确保训练可以完成。
 
 
 
@@ -166,10 +167,10 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
 
 | NAME     | mAp(Iou=0.50:.95) |  FPS | Steps     |
 | -------  | :---:  | ---: | :----:    |
-| 8p-NPU   | -  | - | 1,479,200 |
-| 8p-竞品A |       0.432       | 246.1 | 1,479,200 |
+| 8p-NPU   | 0.46 | 175 | 4,437,600 |
+| 8p-竞品A |       0.462       | 244.7 | 4,437,600 |
 
-备注：一定要有竞品和NPU。
+
 
 # 版本说明
 
@@ -181,9 +182,9 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
 
 **_当前发行版本中存在的问题描述。_**
 
-无。
+1、全量训练下，配置data.persistent_workers=False，mmdetection存在精度问题： https://github.com/open-mmlab/mmdetection/issues/9530 ，后续在三方组件修复此问题后，刷新同步。
 
-
+2、全量训练下，配置data.persistent_workers=True，训练过程概率性内存异常，需要刷新Torch版本（预计2023-2 BugFix），可选用train_full_8p_resume.sh 临时规避。
 
 
 

@@ -24,7 +24,7 @@ Network="YOLOX_ID2833_for_PyTorch"
 #训练batch_size,,需要模型审视修改
 batch_size=8
 #总训练Epoch数
-total_epoch=100
+total_epoch=300
 #val间隔数，多少个Epoch
 val_epoch=10
 
@@ -90,20 +90,6 @@ PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
     --cfg-options data.persistent_workers=True log_config.interval=50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
-for ((i = 0; i < 10 ; i++)) do
-    sleep 1m
-    flag=`grep -a 'mmdet - INFO - Epoch [[]100[]][[]1800/1849[]]' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END{print NR}'`
-    echo "------------------ Auto Resume ------------------$i"
-    if [[ $flag == 0 ]]; then
-      echo "------------------ Auto Resume in------------------"
-      PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
-        --launcher pytorch  \
-        --auto-resume  \
-        --cfg-options data.persistent_workers=True log_config.interval=50 >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-      wait
-    fi
-done
 
 sed -i "s|max_epochs = $total_epoch|max_epochs = 300|g" configs/yolox/yolox_s_8x8_300e_coco.py
 sed -i "s|$data_path/|data/coco/|g" configs/yolox/yolox_s_8x8_300e_coco.py
