@@ -99,6 +99,8 @@ grep "Speed" ${training_log} |awk '{print $4}' > ${test_path_dir}/output/${ASCEN
 FPS=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log |tail -n 100 |awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+#输出编译时间
+CompileTime=`grep step_time ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -2 |awk -F "step_time = " '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 # 输出训练精度,需要模型审视修改
 #lfw_accuracy_log=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_lfw_accuracy.log
@@ -142,3 +144,4 @@ echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/${ASCEND_DEVIC
 #echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
