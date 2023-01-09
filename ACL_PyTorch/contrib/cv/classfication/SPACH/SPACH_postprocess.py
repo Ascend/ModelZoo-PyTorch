@@ -26,25 +26,15 @@ def postprocess(txt_path, label_path):
         for line_n in target_lines:
             target_n = int(line_n.split(" ")[1])
             target.append(target_n)
-        target = np.array(target)
-
 
     pre_file_list = sorted(os.listdir(txt_path))
     output = []
-
     for file in pre_file_list:
-        with open(txt_path + file, 'r') as f:
-            output_line = f.readline()
-            while(output_line):
-                output_list_n = []
-                for output_n in output_line.split(" ")[0:-1]:
-                    output_list_n.append(float(output_n))
-
-                output.append(output_list_n)
-                output_line = f.readline()
-    output = np.array(output)
-    output = torch.tensor(output)
-    target = torch.tensor(target)
+        out = np.loadtxt(os.path.join(txt_path, file))
+        output.append(out)
+    
+    output = torch.tensor(np.array(output))
+    target = torch.tensor(np.array(target))
     acc1, acc5 = accuracy(output, target, topk=(1, 5))
     print("{"+"key: Top1 accuracy, value: {top1:.2f}%".format(top1=acc1.item())+"}"+
     "{"+"key: Top5 accuracy, value: {top5:.2f}%".format(top5=acc5.item())+"}")

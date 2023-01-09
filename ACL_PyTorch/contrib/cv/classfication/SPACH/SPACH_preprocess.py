@@ -13,13 +13,15 @@
 # limitations under the License.
 
 import os
-from PIL import Image
-from torchvision import transforms
-from torchvision.transforms import InterpolationMode
-import numpy as np
 import argparse
 
-def preprocess(src_path, save_path, batch_size):
+from PIL import Image
+from tqdm import tqdm
+from torchvision import transforms
+import numpy as np
+
+
+def preprocess(src_path, save_path):
 
     in_files = sorted(os.listdir(src_path))
 
@@ -30,27 +32,16 @@ def preprocess(src_path, save_path, batch_size):
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
 
-    num = batch_size
-    imgs = np.array([]).astype(np.float32)
-    for idx, file in enumerate(in_files):
-        num = num - 1
-        idx = idx + 1
-        input_image = Image.open(src_path + '/' + file).convert('RGB')
+    for file in tqdm(in_files):
+        input_image = Image.open(os.path.join(src_path, file)).convert('RGB')
         input_tensor = preprocesser(input_image)
-        
         img = np.array(input_tensor).astype(np.float32)
-        imgs = np.append(imgs, img)
-        if num==0:
-            num = batch_size
-            imgs.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
-            print(imgs.shape)
-            imgs = np.array([]).astype(np.float32)
+        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('--src-path', type=str, default = None)
     parser.add_argument('--save-path', type=str, default = None)
-    parser.add_argument('--batch-size', type=int, default = None)
     args = parser.parse_args()
-    preprocess(args.src_path, args.save_path, args.batch_size)
+    preprocess(args.src_path, args.save_path)
