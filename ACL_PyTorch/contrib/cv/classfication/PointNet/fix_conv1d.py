@@ -17,7 +17,7 @@ from onnx_tools.OXInterface.OXInterface import OXGraph
 
 
 INPUT_NODE = 'image'
-FIX_NODE = 'Relu_35'
+FIX_NODE = 'Relu_36'
 
 
 def conv1d2conv2d(oxgraph, node_conv):
@@ -121,6 +121,6 @@ def fix_conv1d(model_path, out_path, beg_list, end_list):
 if __name__ == '__main__':
     input_path = sys.argv[1]
     save_path = sys.argv[2]
-    beg_nodes = ['Conv_3', 'Conv_33', 'Conv_69']
-    end_nodes = ['Relu_11', 'Relu_47', 'Conv_72']
+    beg_nodes = ['Conv_3', 'Conv_35', 'Conv_72']
+    end_nodes = ['Relu_8', 'Relu_45', 'Conv_74']
     fix_conv1d(input_path, save_path, beg_nodes, end_nodes)

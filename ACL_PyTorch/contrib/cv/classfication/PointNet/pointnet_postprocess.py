@@ -51,12 +51,15 @@ def cre_groundtruth_list_fromtxt(gtfile_path):
     return gt_list
 
 
-def calc_acc(dirname, img_ge_dict):
-    output_files=os.listdir(dirname)
+def calc_acc_bs1(dirname, img_ge_dict, key_idx):
+    output_files = os.listdir(dirname)
     ground_truth = []
     labels = []
     for f in output_files:
         real_name = f.split('_')[0]
+        out_idx = f.split('_')[1][:-4]
+        if out_idx != key_idx:
+            continue
         if real_name in img_ge_dict:
             ground_truth.append(img_ge_dict[real_name])
         file_name = os.path.join(dirname, f)
@@ -79,6 +82,6 @@ def calc_acc(dirname, img_ge_dict):
 if __name__ == '__main__':
     name2label = sys.argv[1]
     infer_res = sys.argv[2]
+    out_idx = sys.argv[3]
     img_gt_dict = cre_groundtruth_dict_fromtxt(name2label)
-    calc_acc(infer_res, img_gt_dict)
-
+    calc_acc_bs1(infer_res, img_gt_dict, out_idx)

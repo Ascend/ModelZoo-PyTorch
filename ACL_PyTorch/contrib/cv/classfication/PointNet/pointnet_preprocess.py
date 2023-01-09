@@ -21,6 +21,7 @@ import torch
 import sys
 from tqdm import tqdm
 
+
 def get_file(root):
     catfile = os.path.join(root, 'synsetoffset2category.txt')
     cat = {}
@@ -89,4 +90,3 @@ if __name__ == '__main__':
         os.mkdir(save_path)
     datapath = get_file(root)
     preprocess(datapath, save_path)
-   

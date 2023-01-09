@@ -29,9 +29,9 @@ def pth2onnx(opt):
         classifier.load_state_dict(torch.load(opt.model, map_location='cpu')['model_state_dict'])
     classifier.eval()
 
-    input_names = ["image"]
+    input_names = ["input"]
     output_names = ["class"]
-    dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
+    dynamic_axes = {'input': {0: '-1'}, 'class': {0: '-1'}}
 
     dummy_input = torch.randn(1, 3, 2500)
 
