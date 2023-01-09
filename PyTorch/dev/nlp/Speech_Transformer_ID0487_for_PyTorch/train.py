@@ -27,8 +27,6 @@
 # limitations under the License.
 import numpy as np
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
 from torch.utils.tensorboard import SummaryWriter
 # from torch import nn
 from tqdm import tqdm

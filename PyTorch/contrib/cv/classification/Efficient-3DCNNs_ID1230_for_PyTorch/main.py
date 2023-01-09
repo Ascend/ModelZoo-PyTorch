@@ -15,10 +15,6 @@
 import os
 import json
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
-if torch.__version__ >= '1.8':
-    import torch_npu
 from torch import nn
 from torch import optim
 from torch.optim import lr_scheduler

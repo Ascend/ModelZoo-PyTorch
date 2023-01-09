@@ -30,8 +30,6 @@ Hacked together by / Copyright 2020 Ross Wightman (https://github.com/rwightman)
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-if torch.__version__>= '1.8':
-      import torch_npu
 import argparse
 import time
 import yaml

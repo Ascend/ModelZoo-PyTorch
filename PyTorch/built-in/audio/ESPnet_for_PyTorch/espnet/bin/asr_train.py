@@ -16,8 +16,6 @@ import sys
 import configargparse
 import numpy as np
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
 
 from espnet import __version__
 from espnet.utils.cli_utils import strtobool
