@@ -184,6 +184,8 @@ def main(args):
 if __name__ == "__main__":
     args = default_argument_parser().parse_args()
     print("Command Line Args:", args)
+    if torch.__version__ >= "1.8":
+        torch.npu.set_compile_mode(jit_compile=False)
     launch(
         main,
         args.num_gpus,
