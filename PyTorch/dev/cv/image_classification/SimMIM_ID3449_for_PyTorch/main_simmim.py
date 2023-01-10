@@ -19,7 +19,7 @@ from timm.utils import AverageMeter
 # ----------npu modified start----------
 use_NPU = True
 try:
-    if torch.__version__ >= "1.8.1":
+    if torch.__version__ >= "1.8":
         import torch_npu
     else:
         import torch.npu
