@@ -64,13 +64,16 @@ def preprocess(src_path, save_path):
     preprocess = transforms_imagenet_eval()
     i = 0
     in_files = os.listdir(src_path)
-    for file in in_files:
-        i = i + 1
-        print(file, "===", i)
-        input_image = Image.open(src_path + '/' + file).convert('RGB')
-        input_tensor = preprocess(input_image)
-        img = np.array(input_tensor).astype(np.float32)
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+    for file_name in in_files:
+        img_names = os.listdir(os.path.join(src_path, file_name))
+        for img_name in img_names:
+            i = i + 1
+            print(img_name, "===", i)
+            img_path = os.path.join(os.path.join(src_path, file_name), img_name)
+            input_image = Image.open(img_path).convert('RGB')
+            input_tensor = preprocess(input_image)
+            img = np.array(input_tensor).astype(np.float32)
+            img.tofile(os.path.join(save_path, img_name.split('.')[0] + ".bin"))
 
 
 if __name__ == '__main__':

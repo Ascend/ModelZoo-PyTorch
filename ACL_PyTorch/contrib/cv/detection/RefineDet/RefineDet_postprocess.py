@@ -36,12 +36,12 @@ def test_net(dataset, det_nms, result_path, set_type='test'):
     for i in tqdm(range(num_images)):
         start = time.time()
         res_ls = []
-        for j in range(1, 5):
+        for j in range(0, 4):
             bin_path = os.path.join(result_path, '%07d_%d.bin'%(i+1,j))
             out1 = np.fromfile(bin_path ,dtype=np.float32)
             res_ls.append(out1)
-        # 参数位置对调  
-        
+        # 参数位置对调
+
         odm_loc_data, odm_conf_data,arm_loc_data,arm_conf_data = res_ls
         arm_loc_data = torch.from_numpy(arm_loc_data.reshape(1, 6375, 4))
         arm_conf_data = torch.from_numpy(arm_conf_data.reshape(1, 6375, 2))
@@ -76,8 +76,8 @@ def test_net(dataset, det_nms, result_path, set_type='test'):
     with open(det_file, 'wb') as f:
         pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
     print('Evaluating detections')
-    mAp = evaluate_detections(all_boxes, output_dir, dataset.ids)
-    return mAp
+    evaluate_detections(all_boxes, output_dir, dataset.ids)
+
 
 if __name__ == '__main__':
     num_classes = len(labelmap) + 1                      
@@ -89,6 +89,4 @@ if __name__ == '__main__':
                            target_transform=VOCAnnotationTransform(),
                            dataset_name='VOC07test')
     det_nms = Detect_RefineDet(21, 320, 0, 1000, 0.01, 0.45, 0.01, 500)
-    mAp = test_net(dataset, det_nms, result_path, set_type='test')
-    with open('acc.txt', 'w') as f:
-        f.write('mAp: ' + str(mAp))
+    test_net(dataset, det_nms, result_path, set_type='test')

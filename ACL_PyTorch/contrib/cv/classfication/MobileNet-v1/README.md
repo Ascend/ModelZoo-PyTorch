@@ -1,25 +1,23 @@
 # MobileNetV1模型-推理指导
 
 
-- [概述](#ZH-CN_TOPIC_0000001172161501)
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境准备](#推理环境准备)
 
-- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+- [快速上手](#快速上手)
 
-- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
 
-  - [获取源码](#section4622531142816)
-  - [准备数据集](#section183221994411)
-  - [模型推理](#section741711594517)
-
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能](#模型推理性能)
 
   ******
 
   
 
-# 概述
+# 概述<a name="概述"></a>
 
 MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建的轻量级神经网络，它是将标准卷积拆分为了两个操作：深度卷积（depthwise convolution）和逐点卷积（pointwise convolution），同时提出了两个超参数，分别是宽度乘子和分辨率乘子，用于快速调节模型适配到特定环境。MobileNetV1在尺寸、计算量、速度上的有一定优越性。
 
@@ -33,18 +31,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
   commit_id=8b3bde3e525ba6d17b9cabb5feb8ee49a9e1e8e0
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-
-## 输入输出数据
+## 输入输出数据<a name="输入输出数据"></a>
 
 - 输入数据
 
@@ -62,25 +49,25 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
 
 
-# 推理环境准备
+# 推理环境准备<a name="推理环境准备"></a>
 
 - 该模型需要以下插件与驱动
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| 配套                                                         | 版本      | 环境准备指导                                                 |
+| ------------------------------------------------------------ |---------| ------------------------------------------------------------ |
+| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.5.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |         |                                                              |
 
 
 
-# 快速上手
+# 快速上手<a name="快速上手"></a>
 
-## 安装依赖包
+## 获取源码<a name="获取源码"></a>
 
 1. 获取源码。
 
@@ -94,13 +81,13 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 2. 安装依赖。
 
    ```
-   pip3 install -r requirements.txt	
+   pip3.7.5 install -r requirements.txt	
    ```
 
 ​		
 
 
-## 准备数据集
+## 准备数据集<a name="准备数据集"></a>
 
 1. 获取原始数据集。
 
@@ -114,22 +101,22 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
 2. 数据预处理。
 
-   将原始数据（.jpeg）转化为二进制文件（.bin）。
+   将原始数据转化为二进制文件（.bin）。
 
    执行imagenet_torch_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的prep_dataset文件夹中。
 
    ```
-   python3.7 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/ImageNet/ILSVRC2012_img_val ./prep_dataset	
+   python3.7.5 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/imagenet/val ./prep_dataset	
    ```
    
    - 参数说明
      - 第一个参数指定了图片的预处理方式（不需要修改）。
-     - 第二个参数为原始数据验证集（.jpeg）所在路径。
+     - 第二个参数为原始数据验证集所在路径。
      - 第三个参数为输出的二进制文件（.bin）所在路径，每个图像对应生成一个二进制文件。
 
 
 
-## 模型推理
+## 模型推理<a name="模型推理"></a>
 
 - 模型转换。
 
@@ -137,17 +124,22 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    1. 获取权重文件。
 
-       从ModelZoo的源码包中获取MobileNet-v1权重文件[mobilenet_sgd_rmsprop_69.526.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/ATC%20MobileNetV1%28FP16%29%20from%20Pytorch%20-%20Ascend310/zh/1.1/ATC%20MobileNetV1%28FP16%29%20from%20Pytorch%20-%20Ascend310.zip)。
+       从ModelZoo的源码包中获取MobileNet-v1权重文件[mobilenet_sgd_rmsprop_69.526.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/MobileNetV1/PTH/mobilenet_sgd_rmsprop_69.526.tar)。
 
    2. 导出onnx文件。
 
       1. 执行脚本。
 
          ```
-         python3.7 mobilenet-v1_pth2onnx.py mobilenet_sgd_rmsprop_69.526.tar mobilenet-v1.onnx
+         python3.7.5 mobilenet-v1_pth2onnx.py mobilenet_sgd_rmsprop_69.526.tar mobilenet-v1.onnx
          ```
          
          获得mobilenet-v1.onnx文件。
+         
+         - 参数说明：
+         
+           - 第一个参数为输入的MobileNet_v1权重文件。
+           - 第二个参数为输出的ONNX模型文件路径以及名称。
          
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -197,6 +189,8 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
          
+           运行成功后生成mobilenet-v1_bs16.om模型文件。
+         
 
 - 开始推理验证。
 
@@ -210,7 +204,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    ```
    mkdir ./result
-   python -m ais_bench --model ./mobilenet-v1_bs16.om --input ./prep_dataset --batchsize 16 --output ./result --outfmt "TXT" --device 0
+   python3.7.5 -m ais_bench --model ./mobilenet-v1_bs16.om --input ./prep_dataset --batchsize 16 --output ./result --outfmt "TXT" --device 0
    ```
 
    - 参数说明：
@@ -219,7 +213,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
      -   --input：模型需要的输入，支持bin文件和目录，若不加该参数，会自动生成都为0的数据。
 
-     -   --batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。--input\_format：输入数据的格式。
+     -   --batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
 
      -   --output：推理结果输出路径。默认会建立日期+时间的子文件夹保存输出结果。
 
@@ -231,21 +225,21 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    c.  精度验证。
 
-   调用脚本与数据集标签val\_label.txt比对，生成精度验证结果文件，注意需要首先删除存放推理结果的文件夹中的sumary.json文件，否则会出现错误。结果保存在result.json中。
+   调用脚本与数据集标签val\_label.txt比对，生成精度验证结果文件，结果保存在result_bs16.json中。
 
    ```
    rm -rf ./result/2022_08_21-23_31_47/sumary.json
-   python3.7 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ ./val_label.txt ./ result.json
+   python3.7.5 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ ./val_label.txt ./ result_bs16.json
    ```
 
    - 参数说明：
      - ./result/2022_08_21-23_31_47/：为生成推理结果所在路径,请根据ais_bench推理工具自动生成的目录名进行更改。
      - val_label.txt：为标签数据。
-     - result.json：为生成结果文件。
+     - result_bs16.json：为生成结果文件。
 
    ​	
 
-# 模型推理性能&精度
+# 模型推理性能&精度<a name="模型推理性能&精度"></a>
 
 调用ACL接口推理计算，精度和性能参考下列数据。
 
@@ -262,21 +256,21 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
 | Throughput |   310   |   310P    |    T4   | 310P/310 | 310P/T4 |
 |:---------:|:-------:|:---------:|:-------:|:--------:|:-------:|
-| bs1        | 4550.44 | 4241.54 | 3723.37 | 0.932   | 1.139 |
-| bs4        |   6736 | 8313.37 | 5615.17 | 1.234   | 1.481 |
-| bs8        | 7116.32 | 10430.75 | 6067.96 | 1.466   | 1.719 |
-| bs16       |   6938 | 12259.18 | 6337.39 | 1.767   | 1.934 |
-| bs32       | 6176.84 | 13274.92 | 6457.18 | 2.149   | 2.056 |
-| bs64       | 5899.52 | 14515.69 | 6657.6 | 2.460   | 2.180 |
-| 最优batch  | 7116.32 | 14515.69 | 6657.6 | 2.040   | 2.180 |
+| bs1        | 4550.44 | 4905.183  | 3723.37 |  1.078   |  1.317  |
+| bs4        |   6736 | 9862.322  | 5615.17 |  1.464   |  1.756  |
+| bs8        | 7116.32 | 12933.766 | 6067.96 |  1.817   |  2.131  |
+| bs16       |   6938 | 15064.651 | 6337.39 |  2.171   |  2.377  |
+| bs32       | 6176.84 | 16124.099 | 6457.18 |  2.610   |  2.497  |
+| bs64       | 5899.52 | 7703.188  | 6657.6 |  1.306   |  1.157  |
+| 最优batch  | 7116.32 | 16124.099 | 6657.6 |  2.266   |  2.422  |
 
 310最优batch为：bs8
 
-310P3最优batch为：bs64
+310P3最优batch为：bs32
 
 T4最优batch为：bs64
 
 
-最优性能比(310P3 / 310)为14132.2 / 7116.32 = 2.040倍
+最优性能比(310P3 / 310)为16124.099 / 7116.32 = 2.266倍
 
-最优性能比(310P3 / T4)为14132.2 / 6657.6 = 2.180倍
+最优性能比(310P3 / T4)为16124.099 / 6657.6 = 2.422倍

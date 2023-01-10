@@ -35,7 +35,8 @@ from data import COCODetection, VOCDetection, detection_collate, preproc
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='M2Det Postprocess')
-    parser.add_argument("--bin_data_path", default="./result/dumpOutput_device0")
+    parser.add_argument("--bin_data_path", default="./result/2023_01_08-22_37_53")
+    parser.add_argument("--bin_summary_path", default="./result/2023_01_08-22_37_53_summary.json")
     parser.add_argument("--test_annotation", default="./coco_images.info")
     parser.add_argument("--det_results_path", default="./detection-results/")
     parser.add_argument("--net_out_num", type=int, default=2)
@@ -91,7 +92,7 @@ if __name__ == '__main__':
         # convert ais_bench result name to original bin_file name
     if args.is_ais_infer:
         name_dic = dict()
-        with open(os.path.join(bin_path, "sumary.json"), 'r') as f:
+        with open(args.bin_summary_path, 'r') as f:
             sumary = json.load(f)
         for value in sumary["filesinfo"].values():
             img_name = value["infiles"][0].split("/")[-1].split(".")[0]

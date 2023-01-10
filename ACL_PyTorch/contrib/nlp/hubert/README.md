@@ -1,5 +1,4 @@
-## Hubert模型离线推理指导
-# RefineDet模型PyTorch离线推理指导
+# Hubert模型离线推理指导
 - [概述](#概述)
     - [输入输出数据](#输入输出数据)
 - [推理环境准备](#推理环境准备)
@@ -131,7 +130,7 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
 
    ```
    mkdir -p ./pre_data/test-clean
-   python3.7 hubert_preprocess.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --datasets_tsv_path ./data/test-clean/train.tsv --datasets_ltr_path ./data/test-clean/train.ltr --pre_data_source_save_path ./pre_data/test-clean/source/ --pre_data_label_save_path ./pre_data/test-clean/label/
+   python3.7.5 hubert_preprocess.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --datasets_tsv_path ./data/test-clean/train.tsv --datasets_ltr_path ./data/test-clean/train.ltr --pre_data_source_save_path ./pre_data/test-clean/source/ --pre_data_label_save_path ./pre_data/test-clean/label/
    ```
    
    - 参数说明
@@ -253,7 +252,7 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
 
         ```
         mkdir -p ./res_data/test-clean
-        python3.7 hubert_postprocess.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --source_json_path ./out_data/test-clean/*summary.json --label_bin_file_path ./pre_data/test-clean/label/ --res_file_path ./res_data/test-clean/        
+        python3.7.5 hubert_postprocess.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --source_json_path ./out_data/test-clean/*summary.json --label_bin_file_path ./pre_data/test-clean/label/ --res_file_path ./res_data/test-clean/        
         ```
 
         - 参数说明：

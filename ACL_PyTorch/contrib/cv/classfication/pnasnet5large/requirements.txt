@@ -5,3 +5,4 @@ numpy == 1.20.1
 Pillow == 8.2.0
 opencv-python == 4.5.2.52
 timm == 0.4.9
+onnxsim == 0.4.10

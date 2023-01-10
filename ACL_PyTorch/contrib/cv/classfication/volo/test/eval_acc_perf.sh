@@ -1,1 +1,0 @@
-python volo_postprocess.py --batchsize $1 --result $2 --label $3

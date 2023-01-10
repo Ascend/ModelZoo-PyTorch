@@ -110,7 +110,7 @@ def task(idx, file_names):
     outputs_sub = []
     for i in range(start, end):
         file = file_names[i]
-        with open(os.path.join(args.result_dir, file + '_1.txt')) as res_f:
+        with open(os.path.join(args.result_dir, file + '_0.txt')) as res_f:
             output = []
             for line in res_f:
                 num_list = line.split()
