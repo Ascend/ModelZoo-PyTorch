@@ -101,6 +101,8 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
 
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
+
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改

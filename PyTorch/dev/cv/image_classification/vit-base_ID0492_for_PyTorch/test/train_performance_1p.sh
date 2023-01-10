@@ -94,6 +94,8 @@ cd $cur_path
 echo "Device ID: $ASCEND_DEVICE_ID"
 export RANK_ID=$RANK_ID
 
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
+
 if [ -d $cur_path/output ];then
    rm -rf $cur_path/output/*
    mkdir -p $cur_path/output/$ASCEND_DEVICE_ID
