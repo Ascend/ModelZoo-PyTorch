@@ -1,4 +1,4 @@
-einops
+einops==0.6.0
 imgaug
 librosa
 lmdb
