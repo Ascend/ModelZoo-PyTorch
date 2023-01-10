@@ -39,15 +39,15 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
 - 输入数据
 
-  | 输入数据  | 数据类型 | 大小                      | 数据排布格式 |
-  | -------- | -------- | ------------------------- | ------------ |
-  | input    | RGB_FP32 | batchsize x 3 x 24 x 94 | NCHW         |
+  | 输入数据  | 数据类型  | 大小                     | 数据排布格式  |
+  | -------- | -------- | ------------------------ | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 24 x 94  | NCHW         |
 
 - 输出数据
 
-  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
-  | -------- | -------- | -------- | ------------ |
-  | output  | FLOAT32  | batchsize x 68 x 18 | ND  |
+  | 输出数据  | 数据类型  | 大小                | 数据排布格式  |
+  | -------- | -------- | ------------------- | ------------ |
+  | output   | FLOAT32  | batchsize x 68 x 18 | ND           |
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -55,32 +55,34 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
   **表 1**  版本配套表
 
-  | 配套   | 版本    | 环境准备指导                                                |
-  | ------ | ------- | ---------------------------------------------------------- |
+  | 配套        | 版本    | 环境准备指导                                                |
+  | ---------- | ------- | ---------------------------------------------------------- |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | -                                                            |
-  | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | CANN                                                        | 6.0.0   | -                                                            |
+  | Python                                                      | 3.7.5   | -                                                            |
+  | PyTorch                                                     | 1.8.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 - 该模型需要以下依赖   
 
   **表 2**  依赖列表
 
-  | 依赖名称              | 版本                  |
+  | 依赖名称               | 版本                    |
   | --------------------- | ----------------------- |
-  | numpy                 | 1.21.6                  |
-  | torchvision           | 0.9.0                   |
-  | onnx                  | 1.8.0                   |
+  | torch                 | 1.10.0                  |
+  | torchvision           | 0.11.1                  |
+  | onnx                  | 1.12.0                  |
   | onnxruntime           | 1.12.1                  |
   | onnx-simplifier       | 0.3.6                   |
   | onnxoptimizer         | 0.3.0                   |
+  | onnxsim               | 0.4.8                   |
   | opencv-python         | 4.6.0.66                |
-  | Pillow                | 7.2.0                   |
+  | Pillow                | 9.0.0                   |
+  | numpy                 | 1.21.6                  |
   | tqdm                  | 4.64.0                  |
   | imutils               | 0.5.4                   |
-  | MagicONNX             | -                       |
-  | onnxsim               | 0.4.8                   | 
+  | protobuf              | 3.20.0                  |
+  | auto-optimizer        | 0.1.0                   | 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -88,7 +90,7 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
 1. 获取源码。
 
-   ```shell
+   ```
    git clone https://github.com/sirius-ai/LPRNet_Pytorch.git
    cd LPRNet_Pytorch
    git reset --hard 7c976664b3f3879efabeaff59c7a117e49d5f29e
@@ -97,7 +99,7 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
 2. 安装依赖。<u>***若有需要编译安装的需补充安装步骤，并使用有序列表说明步骤顺序***</u>
 
-   ```shell
+   ```
    pip3 install -r requirements.txt
    ```
 
@@ -107,13 +109,14 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
    > 注意：其中`onnxsim`库在aarch64环境下可能会安装失败，推荐在x86_64环境下进行安装，并对onnx模型进行简化，其他操作可在aarch64环境下运行。
 
-   `MagicONNX`库[安装参考](https://gitee.com/Ronnie_zheng/MagicONNX#2-%E5%AE%89%E8%A3%85)：
+   `auto-optimizer`库[安装参考](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)：
 
-   ```shell
-   git clone https://gitee.com/Ronnie_zheng/MagicONNX
-   cd MagicONNX
-   pip3 install .
-   cd ..
+   ```
+   git clone https://gitee.com/ascend/msadvisor.git
+   cd ./msadvisor/auto-optimizer
+   pip3 install -r requirements.txt
+   python3 setup.py install
+   cd ../../
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -138,8 +141,8 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
    执行`LPRNet_preprocess.py`脚本，完成预处理，生成二进制bin数据文件。
 
-   ```shell
-   python3.7 LPRNet_preprocess.py --img_path=LPRNet_Pytorch/data/test --dst_path=prep_data 
+   ```
+   python3 LPRNet_preprocess.py --img_path=LPRNet_Pytorch/data/test --dst_path=prep_data 
    ```
 
    参数说明：
@@ -163,8 +166,8 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
          运行`LPRNet_pth2onnx.py`脚本。
 
-         ```shell
-         python3.7 LPRNet_pth2onnx.py --pth=LPRNet_Pytorch/weights/Final_LPRNet_model.pth --output=LPRNet.onnx
+         ```
+         python3 LPRNet_pth2onnx.py --pth=LPRNet_Pytorch/weights/Final_LPRNet_model.pth --output=LPRNet.onnx
          ```
 
          参数说明：
@@ -174,29 +177,31 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
          获得LPRNet.onnx文件。
 
-      2. 优化ONNX文件。
+      2. 调整 onnx 模型适配NPU。
 
-         使用 onnxsim 工具对到处的 onnx 模型文件进行常量折叠简化模型。
-         因 onnxsim 工具在 aarch64 环境下可能安装失败，推荐在 x86_64 linux 环境下执行该操作：
+         执行 `LPRNet_modify_onnx.py`，使用 auto-optimizer 工具对 onnx 模型进行修改以适配NPU和优化模型。
 
-         ```shell
-         python3.7 -m onnxsim LPRNet.onnx LPRNet_sim.onnx
          ```
-
-         获得LPRNet_sim.onnx文件。
-
-      3. 调整 onnx 模型适配NPU。
-
-         执行 `LPRNet_modify_onnx.py`，使用 MagixONNX 工具对 onnx 模型进行修改以适配NPU。
-
-         ```shell
-         python3.7 LPRNet_modify_onnx.py --onnx=LPRNet_sim.onnx --output=LPRNet_mod.onnx
+         python3 LPRNet_modify_onnx.py --onnx=LPRNet.onnx --output=LPRNet_mod.onnx
          ```
 
          参数说明：
 
          - `--onnx`: 要修改的onnx模型路径。
          - `--output`: 修改后onnx模型的保存路径。
+
+         获得LPRNet_mod.onnx文件。
+
+      3. 优化ONNX文件。
+
+         使用 onnxsim 工具对到处的 onnx 模型文件进行常量折叠简化模型。
+         因 onnxsim 工具在 aarch64 环境下可能安装失败，推荐在 x86_64 linux 环境下执行该操作：
+
+         ```
+         python3 -m onnxsim LPRNet_mod.onnx LPRNet_sim.onnx --input-shape='input:1,3,24,94'
+         ```
+
+         获得LPRNet_sim.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -230,7 +235,7 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
          ```
          mkdir models
-         atc --framework=5 --model=LPRNet_mod.onnx --input_format=NCHW --input_shape='input:{batchsize},3,24,94' --output=models/LPRNet_bs{batchsize} --log=error --soc_version=Ascend{chip_name}
+         atc --framework=5 --model=LPRNet_sim.onnx --input_format=NCHW --input_shape='input:{batchsize},3,24,94' --output=models/LPRNet_bs{batchsize} --log=error --soc_version=Ascend{chip_name}
          ```
 
          - 参数说明：
@@ -260,7 +265,7 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
         ```
         mkdir result
-        python3.7 -m ais_bench --model models/LPRNet_bs4.om --input ./prep_data --batchsize 4 --output result --outfmt BIN
+        python3 -m ais_bench --model models/LPRNet_bs4.om --input ./prep_data --batchsize 4 --output result --outfmt BIN
         ```
 
         -   参数说明：
@@ -273,13 +278,12 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
         推理后的输出在当前目录`result/{timestamp}`路径下，其中{timestamp}为执行推理认为时的时间戳。
 
-
    3. 精度验证。
 
       调用`LPRNet_postprocess.py`脚本与数据集标签比对，可以获得Accuracy数据。
 
       ```
-      python LPRNet_postprocess.py ./result/{timestamp}
+      python3 LPRNet_postprocess.py ./result/{timestamp}
       ```
 
       - 参数说明：
@@ -291,7 +295,7 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-        python3.7 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        python3 -m ais_bench --model=${om_model_path} --loop=1000 --batchsize=${batch_size}
         ```
 
       - 参数说明：
@@ -302,13 +306,13 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+调用ACL接口推理计算，性能与精度参考下列数据。
 
-| 芯片型号     | Batch Size | 数据集 | 精度 | 性能 |
-| ----------- | :--------: | :---:  | ---------- | --------------- |
-| Ascend310P3 |  1         |  -     |  88.3%     |   1504.59 fps   |
-| Ascend310P3 |  4         |  -     |  89.6%     |   5548.95 fps   |
-| Ascend310P3 |  8         |  -     |  89.8%     |   8490.15 fps   |
-| Ascend310P3 |  16        |  -     |  90.2%     |   9181.07 fps   |
-| Ascend310P3 |  32        |  -     |  90.2%     |   8558.11 fps   |
-| Ascend310P3 |  64        |  -     |  90.2%     |   7782.58 fps   |
+| 芯片型号     | Batch Size | 数据集 | 精度        | 性能             |
+| ----------- | :--------: | :---:  | :------:   | :--------------: |
+| Ascend310P3 |  1         |  -     |  88.3%     |   5714.29 fps    |
+| Ascend310P3 |  4         |  -     |  89.6%     |   14981.27 fps   |
+| Ascend310P3 |  8         |  -     |  89.5%     |   20512.82 fps   |
+| Ascend310P3 |  16        |  -     |  90.2%     |   25039.12 fps   |
+| Ascend310P3 |  32        |  -     |  90.2%     |   27313.22 fps   |
+| Ascend310P3 |  64        |  -     |  89.8%     |   20043.85 fps   |

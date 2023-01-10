@@ -11,77 +11,131 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import numpy as np
 
-from magiconnx import OnnxGraph
+from auto_optimizer import OnnxGraph
+
+
+def modify_max_pool_1(graph: OnnxGraph) -> OnnxGraph:
+    """ simplify maxpool3d-1 """
+    graph.add_node(name='MaxPool_2_new', op_type='MaxPool', 
+                   inputs=['65'], outputs=['66'], 
+                   attrs={'ceil_mode': np.int64(0), 
+                          'kernel_shape': np.int64([3, 3]),
+                          'pads': np.int64([0, 0, 0, 0]), 
+                          'strides': np.int64([1, 1])})
+    graph.remove(name='MaxPool_2', mapping={})
+
+    return graph
+
+
+def modify_max_pool_2(graph: OnnxGraph) -> OnnxGraph:
+    """ optimize maxpool3d-2 """
+    conv_9_w = graph[graph['Conv_9'].inputs[1]].value
+    conv_9_w_even = conv_9_w[::2, ::, ::, ::]
+
+    conv_9_b = graph[graph['Conv_9'].inputs[2]].value
+    conv_9_b_even = conv_9_b[::2]
+
+    graph.add_initializer(name='Conv_9_w_even', value=conv_9_w_even)
+    graph.add_initializer(name='Conv_9_b_even', value=conv_9_b_even)
+
+    graph.add_node(name='Conv_9_even', op_type='Conv', 
+                   inputs=['72', 'Conv_9_w_even', 'Conv_9_b_even'], outputs=['conv_9_even'], 
+                   attrs={'dilations': np.int64([1, 1]), 
+                          'kernel_shape': np.int64([1, 1]), 
+                          'pads': np.int64([0, 0, 0, 0]),
+                          'strides': np.int64([1, 1])})
+
+    graph.add_node(name='Relu_10_even', op_type='Relu', 
+                   inputs=['conv_9_even'], outputs=['relu_10_even'])
+    
+    graph.add_node(name='MaxPool_11_new', op_type='MaxPool', 
+                   inputs=['relu_10_even'], outputs=['76'], 
+                   attrs={'ceil_mode': np.int64(0), 
+                          'kernel_shape': np.int64([3, 3]),
+                          'pads': np.int64([0, 0, 0, 0]), 
+                          'strides': np.int64([1, 2])})
+    graph.remove(name='MaxPool_11', mapping={})
+
+    return graph
+
+
+def modify_max_pool_3(graph: OnnxGraph) -> OnnxGraph:
+    """ optimize maxpool3d-3 """
+    conv_26_w = graph[graph['Conv_26'].inputs[1]].value
+    conv_26_w_even = conv_26_w[::4, ::, ::, ::]
+
+    conv_26_b = graph[graph['Conv_26'].inputs[2]].value
+    conv_26_b_even = conv_26_b[::4]
+
+    graph.add_initializer(name='Conv_26_w_even', value=conv_26_w_even)
+    graph.add_initializer(name='Conv_26_b_even', value=conv_26_b_even)
+
+    graph.add_node(name='Conv_26_even', op_type='Conv', 
+                   inputs=['91', 'Conv_26_w_even', 'Conv_26_b_even'], outputs=['conv_26_even'], 
+                   attrs={'dilations': np.int64([1, 1]), 
+                          'kernel_shape': np.int64([1, 1]), 
+                          'pads': np.int64([0, 0, 0, 0]), 
+                          'strides': np.int64([1, 1])})
+
+    graph.add_node(name='Relu_27_even', op_type='Relu', 
+                   inputs=['conv_26_even'], outputs=['relu_27_even'])
+    
+    graph.add_node(name='MaxPool_28_new', op_type='MaxPool', 
+                   inputs=['relu_27_even'], outputs=['95'], 
+                   attrs={'ceil_mode': np.int64(0),
+                          'kernel_shape': np.int64([3, 3]),
+                          'pads': np.int64([0, 0, 0, 0]),  
+                          'strides': np.int64([1, 2])})
+    graph.remove(name='MaxPool_28',  mapping={})
+
+    return graph
 
 
 def modify_max_pool(graph: OnnxGraph) -> OnnxGraph:
-    """modify MaxPool3D operator, insert Unsqueeze and Squeeze operator arround it."""
-    unsqueeze1 = graph.add_node('unsqueeze1', 'Unsqueeze', {'axes': [0]},
-                                inputs=['65'], outputs=['65_unsq'])
-    max_pool_2 = graph['MaxPool_2']
-    max_pool_2.inputs = ['65_unsq']
-    max_pool_2.outputs = ['66_mp']
-    squeeze1 = graph.add_node('squeeze1', 'Squeeze', {'axes': [0]},
-                              inputs=['66_mp'], outputs=['66'])
-
-    unsqueeze2 = graph.add_node('unsqueeze2', 'Unsqueeze', {'axes': [0]},
-                                inputs=['75'], outputs=['75_unsq'])
-    max_pool_2 = graph['MaxPool_11']
-    max_pool_2.inputs = ['75_unsq']
-    max_pool_2.outputs = ['76_mp']
-    squeeze1 = graph.add_node('squeeze2', 'Squeeze', {'axes': [0]},
-                              inputs=['76_mp'], outputs=['76'])
-
-    unsqueeze3 = graph.add_node('unsqueeze3', 'Unsqueeze', {'axes': [0]},
-                                inputs=['94'], outputs=['94_unsq'])
-    max_pool_2 = graph['MaxPool_28']
-    max_pool_2.inputs = ['94_unsq']
-    max_pool_2.outputs = ['95_mp']
-    squeeze1 = graph.add_node('squeeze3', 'Squeeze', {'axes': [0]},
-                              inputs=['95_mp'], outputs=['95'])
+    """ optimize all maxpool """
+    graph = modify_max_pool_1(graph)
+    graph = modify_max_pool_2(graph)
+    graph = modify_max_pool_3(graph)
 
     return graph
 
 
 def modify_reduce_mean(graph: OnnxGraph) -> OnnxGraph:
     """modify ReduceMean operator, add axes attribute"""
-    reduce_mean_38_new = graph.add_node('reduce_mean_38_new', 'ReduceMean',
-                                        {'axes': [0, 1, 2, 3], 'keepdims': 0},
-                                        inputs=['106'], outputs=['107'])
-    graph.del_node('ReduceMean_38')
-    graph['Div_39'].inputs = ['104', '107']
+    graph.add_node(name='reduce_mean_38_new', op_type='ReduceMean', 
+                   inputs=['106'], outputs=['107'],
+                   attrs={'axes': np.int64([0, 1, 2, 3]), 'keepdims': np.int64(0)})
+    graph.remove(name='ReduceMean_38', mapping={})
 
-    reduce_mean_45_new = graph.add_node('reduce_mean_45_new', 'ReduceMean',
-                                        {'axes': [0, 1, 2, 3], 'keepdims': 0},
-                                        inputs=['113'], outputs=['114'])
-    graph.del_node('ReduceMean_45')
-    graph['Div_46'].inputs = ['111', '114']
+    graph.add_node(name='reduce_mean_45_new', op_type='ReduceMean', 
+                   inputs=['113'], outputs=['114'],
+                   attrs={'axes': np.int64([0, 1, 2, 3]), 'keepdims': np.int64(0)})
+    graph.remove(name='ReduceMean_45', mapping={})
 
-    reduce_mean_52_new = graph.add_node('reduce_mean_52_new', 'ReduceMean',
-                                        {'axes': [0, 1, 2, 3], 'keepdims': 0},
-                                        inputs=['120'], outputs=['121'])
-    graph.del_node('ReduceMean_52')
-    graph['Div_53'].inputs = ['118', '121']
+    graph.add_node(name='reduce_mean_52_new', op_type='ReduceMean', 
+                   inputs=['120'], outputs=['121'],
+                   attrs={'axes': np.int64([0, 1, 2, 3]), 'keepdims': np.int64(0)})
+    graph.remove(name='ReduceMean_52', mapping={})
 
-    reduce_mean_56_new = graph.add_node('reduce_mean_56_new', 'ReduceMean',
-                                        {'axes': [0, 1, 2, 3], 'keepdims': 0},
-                                        inputs=['124'], outputs=['125'])
-    graph.del_node('ReduceMean_56')
-    graph['Div_57'].inputs = ['101', '125']
+    graph.add_node(name='reduce_mean_56_new', op_type='ReduceMean', 
+                   inputs=['124'], outputs=['125'],
+                   attrs={'axes': np.int64([0, 1, 2, 3]), 'keepdims': np.int64(0)})
+    graph.remove(name='ReduceMean_56', mapping={})
 
     return graph
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--onnx', dest='onnx', default='./LPRNet_sim.onnx',
+    parser.add_argument('--onnx', dest='onnx', default='./LPRNet.onnx',
                         help='onnx model path')
     parser.add_argument('--output', dest='output', default='./LPRNet_mod.onnx',
                         help='modified onnx model store path')
     args = parser.parse_args()
 
-    graph = OnnxGraph(args.onnx)
+    graph = OnnxGraph.parse(args.onnx)
     graph = modify_max_pool(graph)
     graph = modify_reduce_mean(graph)
     graph.save(args.output)
