@@ -142,7 +142,8 @@ class TrainerBase:
         Args:
             start_iter, max_iter (int): See docs above
         """
-        torch.npu.set_start_fuzz_compile_step(3)
+        if torch.__version__ < "1.8":
+            torch.npu.set_start_fuzz_compile_step(3)
         logger = logging.getLogger(__name__)
         logger.info("Starting training from iteration {}".format(start_iter))
 
