@@ -195,7 +195,6 @@ def getitem(img_path,labelpath):
 
     name, img = imgread(img_path)
 
-    # label_fullpath = self.label_list[idx]
     assert len(labelpath) < 256, "Expected label path less than 256 for padding"
 
     mask = Image.open(labelpath)
@@ -270,7 +269,7 @@ def bintonp(name,bin_path):
     cls = []
     for i in range(8):
         msk_name = bin_path + '/' + str(name) + '_' + str(i) + '_1.bin'
-        cls_name = bin_path + '/' + str(name) + '_' + str(i) + '_2.bin'
+        cls_name = bin_path + '/' + str(name) + '_' + str(i) + '_0.bin'
         mask_i = np.fromfile(msk_name, dtype=np.float32)
         mask_i.shape = 21,1024,1024
         cls_i = np.fromfile(cls_name, dtype=np.float32)

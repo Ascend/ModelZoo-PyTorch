@@ -26,36 +26,34 @@ def add_model(name, model):
     models[name]['model'] = model
     return models
 
-def load(paths,models):
-    # loading
-    for name, data in models.items():
+
+def load(paths, models):
+    for _, data in models.items():
         if data['model'] is not None:
             data['model'].load_state_dict(torch.load(paths,map_location=torch.device('cpu')))
-    print("load weight from",paths)
+    print("load weight from", paths)
 
-def pth2onnx(output_file):
 
-    cfg_file = sys.argv[1]
-    model_path = sys.argv[2]
-
+def pth2onnx(cfg_file, pth_file, output_file):
     cfg_from_file(cfg_file)
 
     model = get_model(cfg.NET, num_classes=cfg.TEST.NUM_CLASSES)
     models = add_model('enc', model)
-    load(model_path, models)
+    load(pth_file, models)
 
     for p in model.parameters():
         p.requires_grad = False
 
     model.eval()
     input_names = ["image"]
-    output_names = ["mask"]
-    dynamic_axes = {'image': {0: '-1'}, 'mask': {0: '-1'}}
+    output_names = ["cls", "mask"]
+    dynamic_axes = {'image': {0: '-1'}, 'cls': {0: '-1'}, 'mask': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 1024, 1024)
     torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, verbose=True, opset_version=11)
 
 if __name__ == "__main__":
-
-    output_file = './wideresnet_dybs.onnx'
-    pth2onnx(output_file)
+    cfg_path = sys.argv[1]
+    pth_path = sys.argv[2]
+    output_path = sys.argv[3]
+    pth2onnx(cfg_path, pth_path, output_path)
 
