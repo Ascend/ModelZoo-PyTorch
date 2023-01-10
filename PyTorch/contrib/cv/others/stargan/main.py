@@ -17,7 +17,11 @@ import os
 import argparse
 import torch.multiprocessing as mp
 import random
-import torch.npu
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 from solver import Solver
 
 from torch.backends import cudnn
@@ -95,6 +99,9 @@ if __name__ == '__main__':
     # DDP.
     parser.add_argument('--npus', type = int, default = 1)
     parser.add_argument('--distributed', type = bool, default = False)
+
+    # Amp
+    parser.add_argument('--amp', default = False, action="store_true")
 
     # Test configuration.
     parser.add_argument('--test_iters', type=int, default=200000, help='test model from this step')

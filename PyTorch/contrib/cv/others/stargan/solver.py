@@ -86,6 +86,9 @@ class Solver(object):
         self.distributed = config.distributed
         self.world_size = config.npus
 
+        # Amp.
+        self.amp = config.amp
+
         # if not self.distributed else config.gpus
 
         # Directories.
@@ -226,8 +229,10 @@ class Solver(object):
         self.G.to(loc)
         self.D.to(loc)
 
-        self.G, self.g_optimizer = amp.initialize(self.G, self.g_optimizer, opt_level = "O1", loss_scale = 32.0)
-        self.D, self.d_optimizer = amp.initialize(self.D, self.d_optimizer, opt_level = "O1", loss_scale = 32.0)
+        if self.amp:
+            print("====== use amp =======")
+            self.G, self.g_optimizer = amp.initialize(self.G, self.g_optimizer, opt_level = "O1", loss_scale = 32.0)
+            self.D, self.d_optimizer = amp.initialize(self.D, self.d_optimizer, opt_level = "O1", loss_scale = 32.0)
 
         if self.distributed:
             self.G = nn.parallel.DistributedDataParallel(self.G, device_ids = [rank], broadcast_buffers=False)
@@ -305,8 +310,11 @@ class Solver(object):
                         # Backward and optimize.
                         d_loss = d_loss_real + d_loss_fake + self.lambda_cls * d_loss_cls + self.lambda_gp * d_loss_gp
                         self.reset_grad()
-                        with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
-                            scaled_loss.backward()  
+                        if self.amp:
+                            with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
+                                scaled_loss.backward()  
+                        else:
+                            d_loss.backward()
                         self.d_optimizer.step()
 
                     # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
@@ -330,8 +338,11 @@ class Solver(object):
                     # Backward and optimize.
                     d_loss = d_loss_real + d_loss_fake + self.lambda_cls * d_loss_cls + self.lambda_gp * d_loss_gp
                     self.reset_grad()
-                    with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
-                        scaled_loss.backward()  
+                    if self.amp:
+                        with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
+                            scaled_loss.backward()  
+                    else:
+                        d_loss.backward()
                     self.d_optimizer.step()
 
                 # Logging.
@@ -359,8 +370,11 @@ class Solver(object):
                             # Backward and optimize.
                             g_loss = g_loss_fake + self.lambda_rec * g_loss_rec + self.lambda_cls * g_loss_cls
                             self.reset_grad()
-                            with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
-                                scaled_loss.backward()
+                            if self.amp:
+                                with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
+                                    scaled_loss.backward()
+                            else:
+                                g_loss.backward()
                             self.g_optimizer.step()
                         # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
                         prof.export_chrome_trace("StarGAN_npu1p.prof")
@@ -378,8 +392,11 @@ class Solver(object):
                         # Backward and optimize.
                         g_loss = g_loss_fake + self.lambda_rec * g_loss_rec + self.lambda_cls * g_loss_cls
                         self.reset_grad()
-                        with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
-                            scaled_loss.backward()
+                        if self.amp:
+                            with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
+                                scaled_loss.backward()
+                        else:
+                            g_loss.backward()
                         self.g_optimizer.step()
 
                     # Logging.
