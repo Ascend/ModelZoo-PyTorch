@@ -78,6 +78,17 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
+
 #非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
@@ -86,7 +97,6 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 cd $cur_path
-ASCEND_DEVICE_ID=${device_id}
 #设置环境变量，不需要修改
 echo "Device ID: $ASCEND_DEVICE_ID"
 export RANK_ID=$RANK_ID

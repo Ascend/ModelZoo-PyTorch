@@ -122,7 +122,7 @@ nohup python3.7 ${cur_path}/main.py  \
       --amp \
       --print-freq 1 \
       --eval-freq 5 \
-      --gpu ${device_id} \
+      --gpu ${ASCEND_DEVICE_ID} \
       --batch-size $batch_size \
       --epochs $train_epochs \
       --dist-backend 'hccl' \
