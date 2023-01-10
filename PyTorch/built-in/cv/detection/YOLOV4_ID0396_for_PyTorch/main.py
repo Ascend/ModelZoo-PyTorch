@@ -608,33 +608,4 @@ if __name__ == '__main__':
     parser.add_argument('--stop_step_num', default=None, type=int,
                         help='after the stop_step, killing the training task')
     opt = parser.parse_args()
-    option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "SigmoidCrossEntropyWithLogitsGradV2"
-    torch.npu.set_option(option)
     main(opt)
-    # Resume
-    #
-    # if opt.local_rank == -1 or ("RANK" in os.environ and os.environ["RANK"] == "0"):
-    #     check_git_status()
-
-    # opt.hyp = opt.hyp or ('data/hyp.scratch.yaml')
-    # opt.data, opt.cfg, opt.hyp = check_file(opt.data), check_file(opt.cfg), check_file(opt.hyp)  # check files
-    # assert len(opt.cfg) or len(opt.weights), 'either --cfg or --weights must be specified'
-    #
-    # opt.img_size.extend([opt.img_size[-1]] * (2 - len(opt.img_size)))  # extend to 2 sizes (train, test)
-    # device = select_device(opt.device, batch_size=opt.batch_size)
-    # opt.total_batch_size = opt.batch_size
-    # opt.world_size = 1
-    # opt.global_rank = -1
-
-    # DDP mode
-    # if opt.local_rank != -1:
-    #     assert torch.npu.device_count() > opt.local_rank
-    #     torch.npu.set_device(opt.local_rank)
-    #     device = torch.device('npu', opt.local_rank)
-    #     dist.init_process_group(backend='nccl', init_method='env://')  # distributed backend
-    #     opt.world_size = dist.get_world_size()
-    #     opt.global_rank = dist.get_rank()
-    #     assert opt.batch_size % opt.world_size == 0, '--batch-size must be multiple of CUDA device count'
-    #     opt.batch_size = opt.total_batch_size // opt.world_size
-
