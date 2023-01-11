@@ -132,7 +132,7 @@ FPS=`python3 -c "print(${batch_size}/${TrainingTime})"`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 #输出编译时间
-CompileTime=`grep "step_time" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -1 |awk -F "step_time " '{print $2}' |sed s/[[:space:]]//g`
+CompileTime=`grep "Step_Time:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -2 |awk -F "Step_Time:" '{print $2}' |awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 #输出训练精度,需要模型审视修改
 #train_accuracy=`grep train_accuracy $path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $8}'|cut -c 1-5`

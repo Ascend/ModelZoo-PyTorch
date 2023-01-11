@@ -321,7 +321,12 @@ def fit(start_epoch, model, loss_func, opt, lr_scheduler, best_score, max_batche
                     scaled_loss.backward()
             else:
                 loss.backward()
+
+            if iter < 3 and epoch == 0:
+                print("Step_Time: ", time.time() - start_time)
+
             batch_per_iter_cnt += 1
+
             if batch_per_iter_cnt == max_batches_per_iter_cnt:
                 opt.step()
                 batch_per_iter_cnt = 0

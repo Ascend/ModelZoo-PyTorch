@@ -198,7 +198,7 @@ FPS=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_D
 #FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`
 
 #获取编译时间
-CompileTime=`grep "sent/s"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 1|awk -F " " '{print $10}'|awk '{print $1}'|awk '{sum+=$1} END {print"",sum/1000}'|sed s/[[:space:]]//g`
+CompileTime=`grep "step_time"  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 2|awk -F "step_time:" '{print $2}'|awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
 
 
 #打印，不需要修改

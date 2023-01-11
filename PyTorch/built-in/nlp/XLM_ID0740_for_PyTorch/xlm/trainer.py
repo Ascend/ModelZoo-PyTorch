@@ -282,8 +282,6 @@ class Trainer(object):
         # processing speed
         new_time = time.time()
         diff = new_time - self.last_time
-        if self.n_total_iter < 3:
-            print("step_time: ", diff)
         s_speed = "{:7.2f} ms/iter {:7.2f} sent/s - {:8.2f} words/s - ".format(
             diff * 1000.0 / self.print_freq,
             self.stats['processed_s'] * 1.0 / diff,

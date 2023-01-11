@@ -21,6 +21,7 @@
 
 import os
 import json
+import time
 import random
 import argparse
 import torch
@@ -286,9 +287,11 @@ def main(params):
 
         trainer.n_sentences = 0
 
+        step = 0
         while trainer.n_sentences < trainer.epoch_size:
             if trainer.n_sentences > 32000:
               pass
+            start_time = time.time()
             # CLM steps
             for lang1, lang2 in shuf_order(params.clm_steps, params):
                 trainer.clm_step(lang1, lang2, params.lambda_clm)
@@ -315,6 +318,9 @@ def main(params):
 
             trainer.iter()
 
+            if step < 2 and trainer.epoch == 0:
+                step += 1
+                print("step_time: ", time.time() - start_time)
         logger.info("============ End of epoch %i ============" % trainer.epoch)
 
         # evaluate perplexity
