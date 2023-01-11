@@ -4,3 +4,4 @@ opencv-python
 Pillow==9.1.0
 six==1.15.0
 tqdm
+torchvision
