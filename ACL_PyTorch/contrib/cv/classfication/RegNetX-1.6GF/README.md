@@ -64,33 +64,24 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 1.0 .17 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.8.1   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
-
-- 该模型需要以下依赖   
-
-  **表 2**  依赖列表
-
-  | 依赖名称      | 版本     |
-  | ------------- | -------- |
-  | numpy         | 1.19.2   |
-  | torchvision   | 0.9.1    |
-  | onnx          | 1.9.0    |
-  | Pillow        | 8.2.0    |
-  | tqdm          | 4.64.1   |
-  | Opencv-python | 4.5.2.52 |
-  | timm          | 0.4.9    |
-
 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
+1. 安装依赖。
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+2. 获取源码。
 
    RegNetX-1.6GF模型代码在timm里，安装timm，arm下需源码安装，参考[https://github.com/rwightman/pytorch-image-models](https://gitee.com/link?target=https%3A%2F%2Fgithub.com%2Frwightman%2Fpytorch-image-models) ，若安装过程报错请百度解决 
    
@@ -99,12 +90,6 @@ RegNet并不是一个单一的网络，甚至也不是一个像EfficientNets这�
    cd pytorch-image-models
    python3 setup.py install
    cd ..
-   ```
-   
-2. 安装依赖。
-
-   ```
-   pip3 install -r requirements.txt
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
