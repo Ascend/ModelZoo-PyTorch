@@ -312,6 +312,10 @@ if __name__ == '__main__':
     opt.data = check_file(opt.data)  # check file
     print(opt)
 
+    torch.npu.set_compile_mode(jit_compile=False)
+    option = dict()
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Identity"
+    torch.npu.set_option(option)
     if opt.task in ['val', 'test']:  # run normally
         test(opt.data,
              opt.weights,

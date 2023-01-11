@@ -149,8 +149,7 @@ wait
 
 
 if [ x"${etp_running_flag}" != x"true" ];then
-    cp ./runs/evolve/weights/best_yolov4.pt ./weights/
-    nohup taskset -c 0-23  python3.7 test.py --img-size $image_size --conf 0.001 --batch 32 --device ${ASCEND_DEVICE_ID} --data coco.yaml --cfg cfg/yolov4.cfg --weights weights/best_yolov4.pt >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup taskset -c 0-23  python3.7 test.py --img-size $image_size --conf 0.001 --batch 32 --device ${ASCEND_DEVICE_ID} --data coco.yaml --cfg cfg/yolov4.cfg --weights runs/evolve/weights/best.pt >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 wait
 
