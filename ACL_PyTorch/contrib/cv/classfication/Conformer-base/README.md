@@ -98,11 +98,14 @@ Conformer是一个结合卷积和Transformer的混合网络结构，以利用卷
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取ILSVRC2012数据集http://www.image-net.org/download-images，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。目录结构如下：
+   本模型支持ImageNet 50000张图片的验证集。以ILSVRC2012为例，请用户需自行获取[ILSVRC2012数据集](http://www.image-net.org/download-images)，上传数据集到服务器任意目录并解压（如：/home/HwHiAiUser/dataset）。本模型将使用到ILSVRC2012_img_val.tar验证集及ILSVRC2012_devkit_t12.gz中的val_label.txt数据标签。目录结构如下：
 
    ```
    ├── datasets
       ├── val
+         ├── ILSVRC2012_val_00000001.jpeg
+         ├── ILSVRC2012_val_00000002.jpeg
+         ├── ...
       ├── val_label.txt 
    ```
 
@@ -196,7 +199,7 @@ Conformer是一个结合卷积和Transformer的混合网络结构，以利用卷
         ```
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         mkdir output
-        python3 -m ais_bench --model ./conformer_base_bs1.om --input ./bin --output ./output --outfmt TXT  
+        python3 -m ais_bench --model ./conformer_base_bs1.om --input ./bin --output ./output --output_dirname bs1 --outfmt TXT  
         ```
 
         -   参数说明：
@@ -212,7 +215,7 @@ Conformer是一个结合卷积和Transformer的混合网络结构，以利用卷
       调用Conformer-base_postprocess.py脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在acc_result.json中。
 
       ```
-       python3 Conformer-base_postprocess.py --anno_file={dataset_path}/val_label.txt --benchmark_out=output/{ais_infer_out} --result_file=acc_result.json
+       python3 Conformer-base_postprocess.py --anno_file={dataset_path}/val_label.txt --benchmark_out=output/bs1 --result_file=acc_result.json
       ```
 
       - 参数说明：
@@ -220,7 +223,7 @@ Conformer是一个结合卷积和Transformer的混合网络结构，以利用卷
         - {dataset_path}/val_label.txt：数据集标签文件
 
 
-        - output/{ais_infer_out}：生成推理结果所在目录
+        - output/bs1：生成推理结果所在目录
 
 
         - acc_result.json：生成结果文件

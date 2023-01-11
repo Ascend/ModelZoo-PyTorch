@@ -1,11 +1,14 @@
 # Conformer_Ti模型-推理指导
 
--   [概述](#概述)
--   [推理环境准备](#推理环境准备)
--   [快速上手](#快速上手)
-	-   [准备数据集](#准备数据集)
-	-   [模型推理](#模型推理)
--   [模型推理性能精度](#模型推理性能和精度)
+- [Conformer\_Ti模型-推理指导](#conformer_ti模型-推理指导)
+- [概述](#概述)
+  - [输入输出数据](#输入输出数据)
+  - [文件结构](#文件结构)
+- [推理环境准备](#推理环境准备)
+- [快速上手](#快速上手)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能和精度](#模型推理性能和精度)
 
 
 ******
@@ -113,23 +116,18 @@ Conformer_Ti
    ImageNet2012验证集目录结构参考如下所示。
 
    ```
-   ├── ImageNet2012              
-         ├──val  
-              ├──类别1
-                    │──图片1
-                    │──图片2
-                    │   ...       
-              ├──类别2
-                    │──图片1
-                    │──图片2
-                    │   ...
-         ├──val_lable.txt  
+   ├── datasets
+      ├── val
+         ├── ILSVRC2012_val_00000001.jpeg
+         ├── ILSVRC2012_val_00000002.jpeg
+         ├── ...
+      ├── val_label.txt 
    ```
 
 2. 数据预处理。
    执行预处理脚本，生成数据集预处理后的bin文件
    ```
-   python3 conformer_preprocess.py resnet /location/imagenet/val ./val_bin
+   python3 conformer_preprocess.py resnet imagenet/val ./val_bin
    ```
 
    **说明**
@@ -275,7 +273,7 @@ Conformer_Ti
 ​	2.  执行推理。
 
 ```
-python3.7 -m ais_bench --model /location/conformer_ti_bs1.om --input /location/val_bin --output /location/out_bs1/ --batchsize 1 --outfmt TXT 
+python3.7 -m ais_bench --model conformer_ti_bs1.om --input val_bin --output out --output_dirname bs1 --batchsize 1 --outfmt TXT 
 ```
 
 
@@ -284,7 +282,7 @@ python3.7 -m ais_bench --model /location/conformer_ti_bs1.om --input /location/v
 
 ​		调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
-    python3.7 conformer_postprocess.py ./out_bs1/out_data/ ./val_label.txt ./ result.json
+    python3.7 conformer_postprocess.py ./out/bs1 ./val_label.txt ./ result.json
 
 ​		**说明**
 

@@ -56,7 +56,7 @@
   | output1  | batchsize x 25 x 37 | FLOAT32  | ND           |
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -92,6 +92,8 @@
    python3 setup.py install
    cd ..
    ```
+   > **说明：**
+   > 由于PaddlePaddle官方不支持arm架构，arm平台请通过源码编译安装。
 
 ## 准备数据集<a name="section183221994411"></a>
 
