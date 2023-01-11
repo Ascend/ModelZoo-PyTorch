@@ -24,9 +24,6 @@ from apex import amp
 
 import detectron2.utils.comm as comm
 from detectron2.utils.events import EventStorage
-option = {}
-option["NPU_FUZZY_COMPILE_BLACKLIST"] = "NMSWithMask,BatchMultiClassNonMaxSuppression,Conv2DTranspose"
-torch.npu.set_option(option)
 __all__ = ["HookBase", "TrainerBase", "SimpleTrainer"]
 
 

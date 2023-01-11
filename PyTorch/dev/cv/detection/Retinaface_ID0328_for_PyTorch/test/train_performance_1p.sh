@@ -110,9 +110,6 @@ if [ $bin_mode == "True" ];then
     sed -i "18itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py
     line=`grep "torch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/train.py -n | awk -F ':' '{print $1}'`
     line=$[ $line+1 ]
-    sed -i "${line}itorch.npu.set_option(option)" ${cur_path}/train.py
-    sed -i "${line}ioption['NPU_FUZZY_COMPILE_BLACKLIST'] = 'ReduceSum,Slice'" ${cur_path}/train.py
-    sed -i "${line}ioption = {}" ${cur_path}/train.py
 fi
 
 #设置二进制变量

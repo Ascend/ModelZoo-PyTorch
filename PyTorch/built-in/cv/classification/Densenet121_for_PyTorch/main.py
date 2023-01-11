@@ -201,9 +201,6 @@ def main():
 def main_worker(gpu, ngpus_per_node, args):
     if args.bin:
         torch.npu.set_compile_mode(jit_compile=False)
-        option = {}
-        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "AvgPoolV2Grad"
-        torch.npu.set_option(option)
 
     global best_acc1
     args.gpu = args.process_device_map[gpu]

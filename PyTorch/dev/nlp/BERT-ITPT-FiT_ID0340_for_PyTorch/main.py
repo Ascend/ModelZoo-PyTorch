@@ -60,10 +60,6 @@ from bert_utils.model_utils import train, test
 import argparse
 import apex
 
-option = {}
-option["NPU_FUZZY_COMPILE_BLACKLIST"] = "AxpyV2"
-torch.npu.set_option(option)
-
 
 parser = argparse.ArgumentParser(description='PyTorch for Bert ITPT-Fit')
 parser.add_argument('--apex', action='store_true',

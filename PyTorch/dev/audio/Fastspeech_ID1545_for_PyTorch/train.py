@@ -64,11 +64,6 @@ if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
 
 # 添加二进制模糊编译机制
 torch.npu.set_compile_mode(jit_compile=False)
-# 添加算子黑名单
-option = {}
-option["NPU_FUZZY_COMPILE_BLACKLIST"] = "DynamicGRUV2,DynamicGRUV2Grad"
-torch.npu.set_option(option)
-
 
 def step_and_update_lr_frozen(optimizer, learning_rate_frozen):
     for param_group in optimizer.param_groups:
