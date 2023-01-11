@@ -80,6 +80,8 @@ Cascade R-CNN是目标检测two-stage算法的代表之一，使用cascade回归
    ```
    pip install -r requirements.txt     
    ```
+>**说明：** 
+>torch1.7在arm上不支持pip直接安装，如在arm上复现请参考[官方源码编译步骤](https://github.com/pytorch/pytorch/tree/v1.7.0#installation)安装
 
 2. 获取源码。
     1. 安装开源仓
@@ -152,8 +154,7 @@ Cascade R-CNN是目标检测two-stage算法的代表之一，使用cascade回归
   
 
          ```
-         python mmdetection/tools/pytorch2onnx.py mmdetection/configs/cascade_rcnn/cascade_rcnn_r101_fpn_1x_coco.py 
-         ./cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth --output-file=cascade_rcnn_r101.onnx --shape 1216 
+         python mmdetection/tools/pytorch2onnx.py     mmdetection/configs/cascade_rcnn/cascade_rcnn_r101_fpn_1x_coco.py                   ./cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth --output-file=cascade_rcnn_r101.onnx --shape 1216 
 
          ```
          - 参数说明：
@@ -199,7 +200,7 @@ Cascade R-CNN是目标检测two-stage算法的代表之一，使用cascade回归
                  --output=./cascade_rcnn_r101\ 
                  --input_format=NCHW\ 
                  --input_shape="input:1,3,1216,1216"\ 
-                 --log=info\
+                 --log=error\
                  --out_nodes="Concat_947:0;Reshape_949:0"\
                  --soc_version=Ascend${ChipName}
          ```
