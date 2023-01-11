@@ -29,7 +29,7 @@ export DYNAMIC_OP="ADD"
 # 数据集路径,保持为空,不需要修改
 data_path=""
 # 检验预训练模型的路径
-model_path=$cur_path/path-to-model-directory
+model_path=/npu/traindata/ICDAR2015/db_ckpt
 
 # 训练epoch
 train_epochs=1
@@ -87,6 +87,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+    model_path=$cur_path/path-to-model-directory
 fi
 sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
 
