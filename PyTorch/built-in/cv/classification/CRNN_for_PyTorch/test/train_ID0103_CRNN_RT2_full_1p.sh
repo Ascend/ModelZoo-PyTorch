@@ -22,7 +22,10 @@ epochs=20
 start_step=700
 stop_step=720
 max_step=10
-
+bin=True
+pro=False 
+training_debug=False 
+training_type=False 
 # 指定训练所使用的npu device卡id
 device_id=6
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -108,10 +111,10 @@ sed -i "s|TEST_ROOT.*$|TEST_ROOT\: ${data_path}/IIIT5K_lmdb|g" ${cur_path}/LMDB_
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 
 python3 main.py \
-    --bin=True\
-    --pro=False \
-    --training_debug=False \
-    --training_type=False \
+    --bin=${bin}\
+    --pro=${pro} \
+    --training_debug=${training_debug} \
+    --training_type=${training_type} \
     --max_step ${max_step} \
     --npu ${device_id} \
     --profiling ${profiling} \
