@@ -87,7 +87,6 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
-    model_path=$cur_path/path-to-model-directory
 fi
 sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
 
