@@ -1,74 +1,158 @@
-# FastPitch 1.1 for PyTorch
+# FastPitch for PyTorch
 
-note
-- please download from origin repo:
-- https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/FastPitch/filelists
+-   [概述](#概述)
+-   [准备训练环境](#准备训练环境)
+-   [开始训练](#开始训练)
+-   [训练结果展示](#训练结果展示)
+-   [版本说明](#版本说明)
 
+# 概述
 
-This repository provides a script and recipe to train the FastPitch model to achieve state-of-the-art accuracy and is tested and maintained by NVIDIA.
+## 简述
 
-This implements training of FastPitch on the LJ-Speech dataset, mainly modified from [pytorch/examples](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/FastPitch).
+  FastPitch模型由双向Transformer主干(也称为Transformer编码器)，音调预测器和持续时间预测器组成。在通过第一组N个Transformer块编码后，信号用基音信息增强并离散上采样，然后它通过另一组Transformer块，目的是平滑上采样信号，并构建梅尔谱图。
 
-## FastPitch Detail
+- 参考实现：
+    ```
+    url=https://github.com/NVIDIA/DeepLearningExamples.git
+    branch=master
+    commit_id=8a1661b6e22416194197b8842738ad7b98e96974
+    ```
 
-[FastPitch](https://arxiv.org/abs/2006.06873) is one of two major components in a neural, text-to-speech (TTS) system:
+- 适配昇腾 AI 处理器的实现：
 
-- a mel-spectrogram generator such as [FastPitch](https://arxiv.org/abs/2006.06873) or [Tacotron 2](https://arxiv.org/abs/1712.05884), and
-- a waveform synthesizer such as [WaveGlow](https://arxiv.org/abs/1811.00002) (see [NVIDIA example code](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/Tacotron2)).
+    ```
+    url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+    code_path=PyTorch/contrib/audio
+    ```
 
-The FastPitch model generates mel-spectrograms and predicts a pitch contour from raw input text.
+- 通过Git获取代码方法如下：
 
-## Requirements
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
-- Install torch==1.5.0
-- pip install -r requerements.txt
-- Download the LJ-Speech dataset from https://ascend-pytorch-one-datasets.obs.cn-north-4.myhuaweicloud.com/train/zip/LJSpeech-1.1.zip. The complete dataset has the following structure:
+- 通过单击“立即下载”，下载源码包。
 
-```
-./LJSpeech-1.1
-├── mels             # (optional) Pre-calculated target mel-spectrograms; may be calculated on-line
-├── metadata.csv     # Mapping of waveforms to utterances
-├── pitch            # Fundamental frequency countours for input utterances; may be calculated on-line
-├── README
-└── wavs             # Raw waveforms
-```
+# 准备训练环境
 
+## 准备环境
 
+- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
 
-## Training
+  **表 1**  版本配套表
 
-To train a model, run `train.py` with the desired model architecture and the path to the LJ-Speech dataset:
+  | 配套       | 版本                                                         |
+  | ---------- | ------------------------------------------------------------ |
+  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
+  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
+  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)       |
 
-Before training, modify the dataset_path in these scripts.
+- 环境准备指导。
 
-```bash
-# training 1p loss
-bash ./test/train_full_1p.sh
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
-# training 1p performance
-bash ./test/train_performance_1p.sh
+- 安装依赖。
 
-# training 8p loss
-bash ./test/train_full_8p.sh
+  ```
+  pip3.7 install -r requirements.txt
+  ```
 
-# training 8p performance
-bash ./test/train_performance_8p.sh
-```
-
-```
-Log path:
-    test/output/train_full_1p.log              # 1p training result log
-    test/output/train_performance_1p.log       # 1p training performance result log
-    test/output/train_full_8p.log              # 8p training result log
-    test/output/train_performance_8p.log       # 8p training performance result log
-```
-
+## 准备数据集
 
 
-## Fastpitch training result
+1. 获取数据集。
 
-| Val Loss |   FPS    | Npu_nums | Epochs | AMP_Type |
-| :------: | :------: | :------: | :----: | :------: |
-|    -     | 2084.35  |    1     |   1    |    O1    |
-|   3.69   | 18736.45 |    8     |  100   |    O1    |
+   用户可以在源码包根目录下运行以下脚本自行下载LJSpeech-1.1数据集。
+      ```
+      bash scripts/download_dataset.sh
+      bash scripts/prepare_dataset.sh   
 
+      ```
+
+    数据集目录结构参考如下所示。
+
+    ```
+    ./LJSpeech-1.1
+    ├── mels            
+    ├── metadata.csv    
+    ├── pitch           
+    ├── README
+    └── wavs           
+    ```
+
+
+# 开始训练
+
+## 训练模型
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练和单机8卡训练。
+
+   - 单机单卡训练
+
+     启动单卡训练，训练之前请在训练脚本中修改默认的数据集路径，例如：./test/train_performance_1p.sh 脚本中的DATASET_PATH对应的路径修改为实际数据集所在路径。
+
+     ```
+     bash ./test/train_full_1p.sh 
+     
+     bash ./test/train_performance_1p.sh 
+     ```
+
+   - 单机8卡训练
+
+     启动8卡训练，训练之前请在训练脚本中修改默认的数据集路径，例如：./test/train_performance_8p.sh 脚本中的DATASET_PATH对应的路径修改为实际数据集所在路径。
+
+     ```
+     bash ./test/train_full_8p.sh 
+     
+     bash ./test/train_performance_8p.sh 
+     ```
+
+
+3. 模型训练脚本参数说明如下。
+
+    ```
+    公共参数：
+    --amp                               //是否使用混合精度
+    --datasaet_path                     //数据集路径
+    --lr                                //初始学习率
+    --epochs                            //重复训练次数
+    --batch-size                        //训练批次大小
+    --num_gpus                          //使用卡数
+    --weight-decay                      //权重衰减
+    --epochs-per-checkpoint             //每训练N轮保存一下模型权重
+    --grad-accumulation                 //训练过程中，每N个step打印一下精度及性能
+    --output_dir                        //训练过程保存的模型权重路径
+    ```
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| 名称 | Val Loss | FPS      | Npu_nums | Epochs | AMP_Type |
+| ---- | -------- | -------- | -------- | ------ | -------- |
+| NPU  | -        | 2084.35  | 1        | 1      | O1       |
+| NPU  | 3.69     | 18736.45 | 8        | 100    | O1       |
+| GPU  | -        | 7112.68  | 1        | 1      | O1       |
+| GPU  | 3.49     | 49083.58 | 8        | 100    | O1       |
+
+# 版本说明
+
+## 变更
+
+2023.1.10：更新readme，重新发布。
+
+
+## 已知问题
+
+暂无。
