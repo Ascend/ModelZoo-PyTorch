@@ -246,10 +246,6 @@ def run_eval(args):
 
 
 if __name__ == "__main__":
-
-    option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
-    torch.npu.set_option(option)
     args = parse_args()
     validate_arguments(args)
 
