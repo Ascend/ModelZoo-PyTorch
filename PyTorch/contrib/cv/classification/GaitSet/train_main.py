@@ -46,6 +46,8 @@ parser.add_argument('--rank', default=-1, type=int,
 parser.add_argument('--device_num',default=-1,type=int,help='device_num')
 
 parser.add_argument('--local_rank', default=0, type=int)
+parser.add_argument('--batch_size_p', default=8, type=int, help='batch_size_p')
+parser.add_argument('--batch_size_m', default=16, type=int, help='batch_size_m')
 parser.add_argument('--addr',default='192.168.88.168',type=str,help='masterip')
 parser.add_argument('--port',default='46888', type=str,help='masterport')
 parser.add_argument('--data_path',default='', type=str,help='data_path')
@@ -74,6 +76,7 @@ def main():
     							world_size=args.world_size, rank=args.local_rank)
         conf['data'].update({'dataset_path': args.data_path})
         conf['model'].update({'total_iter': args.iters})
+        conf['model'].update({'batch_size': (args.batch_size_p, args.batch_size_m)})
         conf.update({'profiling': args.profiling})
         conf.update({'start_step': args.start_step})
         conf.update({'stop_step': args.stop_step})
@@ -82,6 +85,7 @@ def main():
         from config import conf_1p as conf
         conf['data'].update({'dataset_path': args.data_path})
         conf['model'].update({'total_iter': args.iters})
+        conf['model'].update({'batch_size': (args.batch_size_p, args.batch_size_m)})
         conf.update({'profiling': args.profiling})
         conf.update({'start_step': args.start_step})
         conf.update({'stop_step': args.stop_step})
@@ -98,10 +102,10 @@ def main():
 
     model = initialization(conf, train=True)[0]
 
-    if args.local_rank == 0:
+    if args.local_rank == 0 or args.device_num == 1:
         print('Training...')
     model.fit()
-    if args.local_rank == 0:
+    if args.local_rank == 0 or args.device_num == 1:
         print('Training finished!')
 
 if __name__ == '__main__':

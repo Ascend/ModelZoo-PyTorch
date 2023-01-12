@@ -148,8 +148,9 @@ class Model:
             self.device_count = len(device_str) // 2 + 1
             self.local_device = f'npu:{local_rank}'
         except:
+            local_rank = torch.npu.current_device()
             self.device_count = 1
-            self.local_device = 'npu'
+            self.local_device = f'npu:{local_rank}'
 
         print(f'----Using device:{local_rank}----')
         self.encoder = SetNet(self.hidden_dim).float()

@@ -26,7 +26,9 @@ echo 'Using '$N_NPUS' NPUs...'
 # 网络名称，同目录名称
 Network="Gaitset"
 # 训练batch_size
-batch_size=128
+# batch_size=128
+batch_size_p=8
+batch_size_m=16
 # 训练使用的npu卡数
 export RANK_SIZE=$N_NPUS
 # 数据集路径,保持为空,不需要修改
@@ -46,6 +48,10 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size_p* ]];then
+        batch_size_p=`echo ${para#*=}`
+    elif [[ $para == --batch_size_m* ]];then
+        batch_size_m=`echo ${para#*=}`
     fi
 done
 
@@ -107,6 +113,9 @@ python3.7 -u train_main.py \
     --world_size=$N_NPUS \
     --rank=0 \
     --device_num=$N_NPUS  \
+    --local_rank=$device_id \
+    --batch_size_p=$batch_size_p \
+    --batch_size_m=$batch_size_m \
     --total_iter=$train_iters > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 
 wait
@@ -133,7 +142,7 @@ echo "Final Performance images/sec : $FPS"
 
 #性能看护结果汇总
 #训练用例信息，不需要修改
-BatchSize=${batch_size}
+BatchSize=$(($batch_size_p * $batch_size_m))
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
@@ -141,7 +150,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 #吞吐量
 ActualFPS=${FPS}
 #单迭代训练时长
-TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
+TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${BatchSize}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep -a "Full_Loss" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F " " '{print $15}' >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
