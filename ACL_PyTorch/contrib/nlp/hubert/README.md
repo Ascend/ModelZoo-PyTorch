@@ -76,6 +76,7 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
    git reset --hard 5528b6a38224404d80b900609463fd6864fd115a
    patch -p1 < ../hubert.patch
    cd ..
+   mkdir data
    ```
 
 2. 安装依赖。
@@ -94,13 +95,17 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
    用户自行获得[test-clean](https://www.openslr.org/resources/12/test-clean.tar.gz)数据集，解压到./data/
 
    运行hubert_data.sh脚本将数据集处理成tsv,ltr文件。
+   
+   ```
+   bash hubert_data.sh
+   ```
 
    解压后数据集目录结构：
 
     ```
     ├── data
     │     ├──LibriSpeech
-    |        ├──test-clean
+    │        ├──test-clean
     │           ├──61
     │           	├──70968
     │                     ├──61-70968.trans.txt
@@ -114,8 +119,6 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
     │        ├──LICENSE.TXT
     │        ├──README.TXT
     │        ├──SPEAKERS.TXT
-    │     ├──pt
-    │        ├──hubert_large_ll60k_finetune_ls960.pt
     │     ├──test-clean
     │        ├──train.wrd
     │        ├──train.tsv
@@ -126,19 +129,19 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
 
    将原始数据转化为二进制文件（.bin）。
 
-   执行hubert_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的pre_data/test-clean文件夹中。
+   执行hubert_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的pre_data/test-clean文件夹中。模型权重获取方法见[模型推理](#模型推理)。
 
    ```
    mkdir -p ./pre_data/test-clean
-   python3.7.5 hubert_preprocess.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --datasets_tsv_path ./data/test-clean/train.tsv --datasets_ltr_path ./data/test-clean/train.ltr --pre_data_source_save_path ./pre_data/test-clean/source/ --pre_data_label_save_path ./pre_data/test-clean/label/
+   python3.7.5 hubert_preprocess.py --model_path ./hubert_large_ll60k_finetune_ls960.pt --datasets_tsv_path ./data/test-clean/train.tsv --datasets_ltr_path ./data/test-clean/train.ltr --pre_data_source_save_path ./pre_data/test-clean/source/ --pre_data_label_save_path ./pre_data/test-clean/label/
    ```
    
    - 参数说明
-       - model_path：模型位置 ./data/pt/hubert_large_ll60k_finetune_ls960.pt
-       - datasets_tsv_path：数据集tsv位置 ./data/test-clean/train.tsv
-       - datasets_ltr_path：数据集ltr位置 ./data/test-clean/train.ltr
-       - pre_data_source_save_path source：保存路径 ./pre_data/test-clean/source/
-       - pre_data_label_save_path label：保存位置 ./pre_data/test-clean/label/
+       - model_path：表示模型权重文件路径。
+       - datasets_tsv_path：数据集tsv位置。
+       - datasets_ltr_path：数据集ltr位置。
+       - pre_data_source_save_path: source保存路径。
+       - pre_data_label_save_path: label保存位置。
     ```
     ├── pre_data
     │   ├──test-clean
@@ -170,12 +173,12 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
          运行pth2onnx.py脚本。
 
          ```
-         python3.7.5 pth2onnx.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --onnx_path ./hubert.onnx
+         python3.7.5 pth2onnx.py --model_path hubert_large_ll60k_finetune_ls960.pt --onnx_path ./hubert.onnx
          ```
 
          获得hubert.onnx文件。
          - 参数说明：
-             - --model_path：权重文件路径。
+             - --model_path：表示模型权重文件路径。
              - --onnx_path：生成的onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型
@@ -252,14 +255,14 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
 
         ```
         mkdir -p ./res_data/test-clean
-        python3.7.5 hubert_postprocess.py --model_path ./data/pt/hubert_large_ll60k_finetune_ls960.pt --source_json_path ./out_data/test-clean/*summary.json --label_bin_file_path ./pre_data/test-clean/label/ --res_file_path ./res_data/test-clean/        
+        python3.7.5 hubert_postprocess.py --model_path ./hubert_large_ll60k_finetune_ls960.pt --source_json_path ./out_data/test-clean/2023_01_06-02_25_32_summary.json --label_bin_file_path ./pre_data/test-clean/label/ --res_file_path ./res_data/test-clean/
         ```
 
         - 参数说明：
-            - --model_path ：表示模型路径
-            - --source_json_path：表示离线推理输出所在的文件夹的json文件，路径为"./out_data/test-clean/*summary.json (*号代表"日期+时间"的命名)
-            - --label_bin_file_path：表示正确答案的文件路径
-            - --res_file_path：表示输出精度数据所在的文件名
+            - --model_path: 表示模型权重文件路径。
+            - --source_json_path: 表示离线推理输出所在的文件夹的json文件，路径为"./out_data/test-clean/*_summary.json (*号代表"日期+时间"的命名)。
+            - --label_bin_file_path: 表示正确答案的文件路径。
+            - --res_file_path: 表示输出精度数据所在的文件名。
 
    4. 性能验证。
 
@@ -270,8 +273,8 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
         ```
 
       - 参数说明：
-        - --model：需要进行推理的om模型。
-        - --batchsize：模型batchsize。不输入该值将自动推导。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
+        - --model: 需要进行推理的om模型。
+        - --batchsize: 模型batchsize。不输入该值将自动推导。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
         - --output: 推理结果输出路径。默认会建立"日期+时间"的子文件夹保存输出结果。
         - --loop: 推理次数。默认值为1，取值范围为大于0的正整数。
         - --device: 指定NPU运行设备。取值范围为[0,255]，默认值为0。

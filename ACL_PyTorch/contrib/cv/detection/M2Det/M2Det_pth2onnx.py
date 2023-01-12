@@ -29,12 +29,12 @@ from utils.core import init_net
 
 
 parser = argparse.ArgumentParser(description='pth2onnx')
-parser.add_argument('--c', '--config', default='M2Det/configs/m2det512_vgg16.py')
-parser.add_argument('--d', '--dataset', default='COCO', help='VOC or COCO dataset')
+parser.add_argument('-c', '--config', default='M2Det/configs/m2det512_vgg16.py')
+parser.add_argument('-d', '--dataset', default='COCO', help='VOC or COCO dataset')
 parser.add_argument('--resume_net', default=None, help='resume net for retraining')
 parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for retraining')
-parser.add_argument('--pth', '--pth_path', default='weights/m2det512_vgg.pth')
-parser.add_argument('--onnx', '--onnx_path', default='m2det512.onnx')
+parser.add_argument('-pth', '--pth_path', default='weights/m2det512_vgg.pth')
+parser.add_argument('-onnx', '--onnx_path', default='m2det512.onnx')
 Args = parser.parse_args()
 
 def proc_nodes_module(checkpoint):
@@ -76,12 +76,12 @@ def convert(args, cfg):
     model.eval()
     input_names = ["image"]
     output_names = ["scores", "boxes"]
-    #dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
-    dynamic_axes = {'image':{0:'-1'}, 'scores':{0:'-1'}, 'boxes':{0:'-1'}}
+    dynamic_axes = {'image': {0: '-1'}, 'scores': {0: '-1'}, 'boxes': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 512, 512)
-    torch.onnx.export(model, dummy_input, args.onnx_path, input_names = input_names, 
-                      dynamic_axes = dynamic_axes, output_names = output_names, 
+    torch.onnx.export(model, dummy_input, args.onnx_path, input_names=input_names,
+                      dynamic_axes=dynamic_axes, output_names=output_names,
                       verbose=True, opset_version=11)
+
 
 if __name__ == "__main__":
     Cfg = Config.fromfile(Args.config)

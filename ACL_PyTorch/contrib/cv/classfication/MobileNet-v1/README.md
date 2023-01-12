@@ -176,7 +176,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
          使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
          
          ```
-         atc --framework=5 --model=./mobilenet-v1.onnx --input_format=NCHW --input_shape="image:16,3,224,224" --output=mobilenet-v1_bs16 --log=debug --soc_version=Ascend{chip_name}
+         atc --framework=5 --model=./mobilenet-v1.onnx --input_format=NCHW --input_shape="image:32,3,224,224" --output=mobilenet-v1_bs32 --log=debug --soc_version=Ascend${chip_name}
          ```
       
          - 参数说明：
@@ -189,7 +189,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
          
-           运行成功后生成mobilenet-v1_bs16.om模型文件。
+           运行成功后生成mobilenet-v1_bs32.om模型文件。
          
 
 - 开始推理验证。
@@ -204,7 +204,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    ```
    mkdir ./result
-   python3.7.5 -m ais_bench --model ./mobilenet-v1_bs16.om --input ./prep_dataset --batchsize 16 --output ./result --outfmt "TXT" --device 0
+   python3.7.5 -m ais_bench --model ./mobilenet-v1_bs32.om --input ./prep_dataset --batchsize 32 --output ./result --outfmt "TXT" --device 0
    ```
 
    - 参数说明：
@@ -228,14 +228,27 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
    调用脚本与数据集标签val\_label.txt比对，生成精度验证结果文件，结果保存在result_bs16.json中。
 
    ```
-   rm -rf ./result/2022_08_21-23_31_47/sumary.json
-   python3.7.5 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ ./val_label.txt ./ result_bs16.json
+   python3.7.5 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ /home/HwHiAiUser/dataset/imagenet/val_label.txt ./ result_bs32.json
    ```
 
    - 参数说明：
      - ./result/2022_08_21-23_31_47/：为生成推理结果所在路径,请根据ais_bench推理工具自动生成的目录名进行更改。
      - val_label.txt：为标签数据。
-     - result_bs16.json：为生成结果文件。
+     - result_bs32.json：为生成结果文件。
+
+   d. 性能验证。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+   ```
+   python3.7.5 -m ais_bench --model ./mobilenet-v1_bs32.om --batchsize 32 --output ./result --loop 1000 --device 0
+   ```
+      
+   - 参数说明：
+     - --model：需要进行推理的om模型。
+     - --batchsize：模型batchsize。不输入该值将自动推导。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。
+     - --output: 推理结果输出路径。默认会建立"日期+时间"的子文件夹保存输出结果。
+     - --loop: 推理次数。默认值为1，取值范围为大于0的正整数。
+     - --device: 指定NPU运行设备。取值范围为[0,255]，默认值为0。
 
    ​	
 

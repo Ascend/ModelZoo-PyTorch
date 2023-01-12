@@ -1,18 +1,164 @@
 diff --git a/configs/m2det512_vgg.py b/configs/m2det512_vgg.py
-index 01d21b1..df49100 100644
+index 01d21b1..a35fe35 100644
 --- a/configs/m2det512_vgg.py
 +++ b/configs/m2det512_vgg.py
-@@ -2,7 +2,7 @@ model = dict(
-     type = 'm2det',
-     input_size = 512,
-     init_net = True,
+@@ -1,77 +1,77 @@
+-model = dict(
+-    type = 'm2det',
+-    input_size = 512,
+-    init_net = True,
 -    pretrained = 'weights/vgg16_reducedfc.pth',
+-    m2det_config = dict(
+-        backbone = 'vgg16',
+-        net_family = 'vgg', # vgg includes ['vgg16','vgg19'], res includes ['resnetxxx','resnextxxx']
+-        base_out = [22,34], # [22,34] for vgg, [2,4] or [3,4] for res families
+-        planes = 256,
+-        num_levels = 8,
+-        num_scales = 6,
+-        sfam = False,
+-        smooth = True,
+-        num_classes = 81,
+-        ),
+-    rgb_means = (104, 117, 123),
+-    p = 0.6,
+-    anchor_config = dict(
+-        step_pattern = [8, 16, 32, 64, 128, 256],
+-        size_pattern = [0.06, 0.15, 0.33, 0.51, 0.69, 0.87, 1.05],
+-        ),
+-    save_eposhs = 10,
+-    weights_save = 'weights/'
+-    )
+-
+-train_cfg = dict(
+-    cuda = True,
+-    warmup = 5,
+-    per_batch_size = 16,
+-    lr = [0.004, 0.002, 0.0004, 0.00004, 0.000004],
+-    gamma = 0.1,
+-    end_lr = 1e-6,
+-    step_lr = dict(
+-        COCO = [90, 110, 130, 150, 160],
+-        VOC = [100, 150, 200, 250, 300], # unsolve
+-        ),
+-    print_epochs = 10,
+-    num_workers= 8,
+-    )
+-
+-test_cfg = dict(
+-    cuda = True,
+-    topk = 0,
+-    iou = 0.45,
+-    soft_nms = True,
+-    score_threshold = 0.1,
+-    keep_per_class = 50,
+-    save_folder = 'eval'
+-    )
+-
+-loss = dict(overlap_thresh = 0.5,
+-            prior_for_matching = True,
+-            bkg_label = 0,
+-            neg_mining = True,
+-            neg_pos = 3,
+-            neg_overlap = 0.5,
+-            encode_target = False)
+-
+-optimizer = dict(type='SGD', momentum=0.9, weight_decay=0.0005)
+-
+-dataset = dict(
+-    VOC = dict(
+-        train_sets = [('2007', 'trainval'), ('2012', 'trainval')],
+-        eval_sets = [('2007', 'test')],
+-        ),
+-    COCO = dict(
+-        train_sets = [('2014', 'train'), ('2014', 'valminusminival')],
+-        eval_sets = [('2014', 'minival')],
+-        test_sets = [('2015', 'test-dev')],
+-        )
+-    )
+-
+-import os
+-home = os.path.expanduser("~")
+-VOCroot = os.path.join(home,"data/VOCdevkit/")
+-COCOroot = os.path.join(home,"data/coco/")
++model = dict(
++    type = 'm2det',
++    input_size = 512,
++    init_net = True,
 +    pretrained = 'M2Det/weights/vgg16_reducedfc.pth',
-     m2det_config = dict(
-         backbone = 'vgg16',
-         net_family = 'vgg', # vgg includes ['vgg16','vgg19'], res includes ['resnetxxx','resnextxxx']
++    m2det_config = dict(
++        backbone = 'vgg16',
++        net_family = 'vgg', # vgg includes ['vgg16','vgg19'], res includes ['resnetxxx','resnextxxx']
++        base_out = [22,34], # [22,34] for vgg, [2,4] or [3,4] for res families
++        planes = 256,
++        num_levels = 8,
++        num_scales = 6,
++        sfam = False,
++        smooth = True,
++        num_classes = 81,
++        ),
++    rgb_means = (104, 117, 123),
++    p = 0.6,
++    anchor_config = dict(
++        step_pattern = [8, 16, 32, 64, 128, 256],
++        size_pattern = [0.06, 0.15, 0.33, 0.51, 0.69, 0.87, 1.05],
++        ),
++    save_eposhs = 10,
++    weights_save = 'weights/'
++    )
++
++train_cfg = dict(
++    cuda = True,
++    warmup = 5,
++    per_batch_size = 16,
++    lr = [0.004, 0.002, 0.0004, 0.00004, 0.000004],
++    gamma = 0.1,
++    end_lr = 1e-6,
++    step_lr = dict(
++        COCO = [90, 110, 130, 150, 160],
++        VOC = [100, 150, 200, 250, 300], # unsolve
++        ),
++    print_epochs = 10,
++    num_workers= 8,
++    )
++
++test_cfg = dict(
++    cuda = True,
++    topk = 0,
++    iou = 0.45,
++    soft_nms = True,
++    score_threshold = 0.1,
++    keep_per_class = 50,
++    save_folder = 'eval'
++    )
++
++loss = dict(overlap_thresh = 0.5,
++            prior_for_matching = True,
++            bkg_label = 0,
++            neg_mining = True,
++            neg_pos = 3,
++            neg_overlap = 0.5,
++            encode_target = False)
++
++optimizer = dict(type='SGD', momentum=0.9, weight_decay=0.0005)
++
++dataset = dict(
++    VOC = dict(
++        train_sets = [('2007', 'trainval'), ('2012', 'trainval')],
++        eval_sets = [('2007', 'test')],
++        ),
++    COCO = dict(
++        train_sets = [('2014', 'train'), ('2014', 'valminusminival')],
++        eval_sets = [('2017', 'val')],
++        test_sets = [('2015', 'test-dev')],
++        )
++    )
++
++import os
++home = os.path.expanduser("~")
++VOCroot = os.path.join(home,"data/VOCdevkit/")
++COCOroot = os.path.join(home,"data/coco/")
 diff --git a/data/coco.py b/data/coco.py
-index 3784d65..9d07625 100644
+index 3784d65..43a62d3 100644
 --- a/data/coco.py
 +++ b/data/coco.py
 @@ -24,9 +24,10 @@ from utils.pycocotools import mask as COCOmask
@@ -28,6 +174,15 @@ index 3784d65..9d07625 100644
          self.data_path = os.path.join(os.path.expanduser("~"),'data')
          self.cache_path = os.path.join(self.data_path, 'coco_cache')
          self.image_set = image_sets
+@@ -36,7 +37,7 @@ class COCODetection(data.Dataset):
+         self.ids = list()
+         self.annotations = list()
+         self._view_map = {
+-            'minival2014' : 'val2014',          # 5k val2014 subset
++            'val2017' : 'val2017',          # 5k val2017 subset
+             'valminusminival2014' : 'val2014',  # val2014 \setminus minival2014
+             'test-dev2015' : 'test2015',
+         }
 @@ -57,6 +58,7 @@ class COCODetection(data.Dataset):
              self._class_to_coco_cat_id = dict(zip([c['name'] for c in cats],
                                                    _COCO.getCatIds()))
@@ -36,19 +191,22 @@ index 3784d65..9d07625 100644
              self.image_indexes = indexes
              self.ids.extend([self.image_path_from_index(data_name, index) for index in indexes ])
              if image_set.find('test') != -1:
-@@ -74,8 +76,9 @@ class COCODetection(data.Dataset):
+@@ -72,10 +74,10 @@ class COCODetection(data.Dataset):
+         """
+         # Example image path for index=119993:
          #   images/train2014/COCO_train2014_000000119993.jpg
-         file_name = ('COCO_' + name + '_' +
-                      str(index).zfill(12) + '.jpg')
+-        file_name = ('COCO_' + name + '_' +
+-                     str(index).zfill(12) + '.jpg')
 -        image_path = os.path.join(self.root, 'images',
 -                              name, file_name)
++        file_name = (str(index).zfill(12) + '.jpg')
 +        #image_path = os.path.join(self.root, 'images',
 +        #                      name, file_name)
 +        image_path = os.path.join(self.COCO_imgs, name, file_name)
          assert os.path.exists(image_path), \
                  'Path does not exist: {}'.format(image_path)
          return image_path
-@@ -84,12 +87,14 @@ class COCODetection(data.Dataset):
+@@ -84,12 +86,14 @@ class COCODetection(data.Dataset):
      def _get_ann_file(self, name):
          prefix = 'instances' if name.find('test') == -1 \
                  else 'image_info'
@@ -66,7 +224,7 @@ index 3784d65..9d07625 100644
          if os.path.exists(cache_file):
              with open(cache_file, 'rb') as fid:
                  roidb = pickle.load(fid)
-@@ -179,7 +184,7 @@ class COCODetection(data.Dataset):
+@@ -179,7 +183,7 @@ class COCODetection(data.Dataset):
              PIL img
          '''
          img_id = self.ids[index]
@@ -75,7 +233,7 @@ index 3784d65..9d07625 100644
  
  
      def pull_tensor(self, index):
-@@ -246,7 +251,7 @@ class COCODetection(data.Dataset):
+@@ -246,7 +250,7 @@ class COCODetection(data.Dataset):
      def _coco_results_one_category(self, boxes, cat_id):
          results = []
          for im_ind, index in enumerate(self.image_indexes):

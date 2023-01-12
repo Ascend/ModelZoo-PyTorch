@@ -53,7 +53,7 @@ def get_topK(files, topk, bs):
     else:
         matrix = np.zeros((len(files) * bs, topk))
     for file in files:
-        data = read_txt_data(root + file)
+        data = read_txt_data(os.path.join(root, file))
         if bs == 1:
             line = np.argsort(data)[-topk:][::-1]
             index = int(file.split('_')[1])

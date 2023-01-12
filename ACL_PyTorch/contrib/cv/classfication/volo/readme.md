@@ -84,6 +84,7 @@ VOLO采用两阶段架构设计，同时考虑了更具细粒度的token表示�
    git clone https://gitee.com/Ronnie_zheng/MagicONNX.git
    cd MagicONNX
    pip3.7.5 install .
+   cd ..
    ```
 
 ​		
@@ -127,7 +128,7 @@ VOLO采用两阶段架构设计，同时考虑了更具细粒度的token表示�
 
    1. 获取权重文件。
 
-       从官网获取d1_224_84.pth.tar权重文件[d1_224_84.pth.tar](https://github.com/sail-sg/volo/releases/download/volo_1/d1_224_84.2.pth.tar)。
+       从官网获取d1_224_84.2.pth.tar权重文件[d1_224_84.2.pth.tar](https://github.com/sail-sg/volo/releases/download/volo_1/d1_224_84.2.pth.tar)。
 
    2. 导出onnx文件。
 
@@ -136,7 +137,7 @@ VOLO采用两阶段架构设计，同时考虑了更具细粒度的token表示�
          运行使用volo_pth2onnx.py脚本。
 
          ```
-         python3.7.5 --src d1_224_84.pth.tar --des volo_bs8.onnx --batchsize 8
+         python3.7.5 volo_pth2onnx.py --src d1_224_84.2.pth.tar --des volo_bs8.onnx --batchsize 8
          ```
 
          获得volo_bs8.onnx文件。
@@ -190,7 +191,7 @@ VOLO采用两阶段架构设计，同时考虑了更具细粒度的token表示�
          使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
          
          ```
-         atc --framework=5 --model=volo_modify_bs8.onnx --output=volo_bs8 --input_format=NCHW --input_shape="input:8,3,224,224" --log=debug --soc_version=Ascend310P3 --buffer_optimize=off_optimize
+         atc --framework=5 --model=volo_modify_bs8.onnx --output=volo_bs8 --input_format=NCHW --input_shape="input:8,3,224,224" --log=debug --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize
          ```
       
          - 参数说明：

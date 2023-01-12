@@ -34,9 +34,9 @@
 
 - 输入数据
 
-  | 输入数据 | 数据类型 | 大小                        | 数据排布格式 |
-  | ---- |---------------------------| ----------------- | -------- |
-  | image    | FP32 | batchsize x 3 x 512 x 512 | NCHW       |
+  | 输入数据 | 数据类型     | 大小                        | 数据排布格式 |
+  |----------|---------------------------| ----------------- | -------- |
+  | image    | RGB_FP32 | batchsize x 3 x 512 x 512 | NCHW       |
 
 
 - 输出数据
@@ -72,7 +72,7 @@
 1. 获取源码。
 
    ```
-   git clone https://github.com/VDIGPKU/M2Det.git
+   git clone https://github.com/qijiezhao/M2Det
    cd M2Det
    git reset --hard de4a6241bf22f7e7f46cb5cb1eb95615fd0a5e12
    patch -p1 < ../M2Det.patch
@@ -98,7 +98,7 @@
 1. 获取原始数据集。
    本模型支持coco2017 5000张图片的验证集。
    用户需自行获取数据集，将instances_val2017.json文件和val2017文件夹解压并上传数据集到服务器任意文件夹。
-   coco2014验证集所需文件目录参考（只列出该模型需要的目录）。
+   coco2017验证集所需文件目录参考（只列出该模型需要的目录）。
     
    数据集目录结构如下:
 
@@ -115,24 +115,24 @@
    执行M2Det_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的pre_dataset文件夹中。
 
    ```
-   python3.7.5 M2Det_preprocess.py --config=configs/m2det512_vgg.py --save_folder=pre_dataset --COCO_imgs=coco_imgs_path --COCO_anns=coco_anns_path
+   python3.7.5 M2Det_preprocess.py --config=./M2Det/configs/m2det512_vgg.py --save_folder=pre_dataset --COCO_imgs=${coco2017_path} --COCO_anns=${coco2017_path}
    ```
    
    - 参数说明
        - --config：模型配置文件。
        - --save_folder：预处理后的数据文件保存路径。
        - --COCO_imgs：数据集images存放路径。
-       - --COCO_anns：数据集annotations存放路径。
+       - --COCO_anns：数据集标注信息存放路径。
    
    执行gen_dataset_info.py脚本，生成原始图片数据集的info文件，包括了路径和shape。
    
    ```
-   python3.7.5 gen_dataset_info.py jpg ${coco_imgs_path}/val2017 coco_images.info
+   python3.7.5 gen_dataset_info.py jpg ${coco2017_path}/val2017 coco_images.info
    ```
    
    - 参数说明
        - jpg：输入文件类型，不需要修改。
-       - ${coco_imgs_path}/val2017：数据集images存放路径。
+       - ${coco2017_path}/val2017：数据集images存放路径。
        - coco_images.info：预处理后的数据集info文件保存路径。
 
 ## 模型推理<a name="模型推理"></a>
@@ -154,7 +154,7 @@
          运行M2Det_pth2onnx.py脚本。
 
          ```
-         python3.7.5 M2Det_pth2onnx.py --c=M2Det/configs/m2det512_vgg.py --pth=M2Det/weights/m2det512_vgg.pth --onnx=m2det512.onnx
+         python3.7.5 M2Det_pth2onnx.py --c=./M2Det/configs/m2det512_vgg.py --pth=./M2Det/weights/m2det512_vgg.pth --onnx=m2det512.onnx
          ```
 
          获得m2det512.onnx文件。
