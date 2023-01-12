@@ -2,7 +2,7 @@
 RANK_SIZE=1
 #网络名称，同目录名称
 Network="DynamicUNet_RT2_ID4080_for_PyTorch"
-batch_size=32  # 与训练实际batch_size保持一致
+batch_size=4  # 与训练实际batch_size保持一致
 
 # 数据集路径,保持为空,不需要修改
 data_path=""

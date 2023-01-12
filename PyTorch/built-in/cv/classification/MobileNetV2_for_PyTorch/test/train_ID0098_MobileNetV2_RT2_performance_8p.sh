@@ -18,7 +18,7 @@ data_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="MobileNetV2_ID3072_for_PyTorch"
+Network="MobileNetV2_RT2_ID0098_for_PyTorch"
 #训练epoch
 train_epochs=1
 #训练batch_size
