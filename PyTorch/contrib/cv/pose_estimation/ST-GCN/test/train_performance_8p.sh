@@ -28,6 +28,8 @@ do
         world_size=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -64,7 +66,6 @@ fi
 
 
 ##################创建日志输出目录，不需要修改##################
-ASCEND_DEVICE_ID=${device_id}
 if [ -d ${test_path_dir}/output/$ASCEND_DEVICE_ID ];then
     rm -rf ${test_path_dir}/output/$ASCEND_DEVICE_ID
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
