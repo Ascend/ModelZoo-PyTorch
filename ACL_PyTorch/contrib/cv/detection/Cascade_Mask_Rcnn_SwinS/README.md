@@ -94,13 +94,11 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
 
    将原始数据（.jpg）转化为二进制文件（.bin）。以coco_2017数据集为例，通过缩放、均值方差等手段归一化，输出为二进制文件。
 
-   将cascade_maskrcnn_preprocess.py脚本移动到Swin-Transformer-Object-Detection目录下
-
-   Swin-Transformer-Object-Detection目录下执行“cascade_maskrcnn_preprocess.py”脚本，完成预处理。
+   执行“cascade_maskrcnn_preprocess.py”脚本，完成预处理。
    
    ```shell
    python3.7 cascade_maskrcnn_preprocess.py \
-   --image_src_path=./data/coco/images/val2017 \
+   --image_src_path=./data/coco/val2017 \
    --bin_file_path=val2017_bin \
    --input_height=800 \
    --input_width=1216
@@ -121,14 +119,14 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
 
    2. 导出onnx文件。
 
-      Swin-Transformer-Object-Detection目录下使用tools/deployment/pytorch2onnx.py脚本导出onnx文件。
+      使用tools/deployment/pytorch2onnx.py脚本导出onnx文件。
 
-         运行pytorch2onnx.py脚本。
+      运行pytorch2onnx.py脚本。
 
          ```shell
-         python3.7 tools/deployment/pytorch2onnx.py \
-         configs/swin/cascade_mask_rcnn_swin_small_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py \
-         checkpoints/cascade_mask_rcnn_swin_small_patch4_window7.pth \
+         python3.7 Swin-Transformer-Object-Detection/tools/deployment/pytorch2onnx.py \
+         Swin-Transformer-Object-Detection/configs/swin/cascade_mask_rcnn_swin_small_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py \
+         cascade_mask_rcnn_swin_small_patch4_window7.pth \
          --output-file swin-s.onnx
          ```
 
@@ -151,7 +149,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
          npu-smi info
          #该设备芯片名为Ascend310P3 （自行替换）
          回显如下：
-         +-------------------+-----------------+------------------------------------------------------+
+         +-------------------|-----------------|------------------------------------------------------+
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
          +===================+=================+======================================================+
@@ -166,7 +164,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
       3. 执行ATC命令。
       
          ```shell
-          atc --model=swin-s.onnx \
+         atc --model=swin-s.onnx \
          --framework=5 \
          --output=swin-s_bs1 \
          --input_format=NCHW \
@@ -188,7 +186,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
            -   --op_precision_mode：设置算子精度模式配置文件（.ini格式）的路径以及文件名。
       
 
-​				运行成功后生成**swin-s_bs1.om**模型文件。
+​        运行成功后生成**swin-s_bs1.om**模型文件。
 
 1. 开始推理验证。
 
@@ -199,23 +197,23 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
    2. 执行推理。
    
       ```shell
-      python3.7 -m ais_bench --batchsize 1 --model ./swin-s_bs1.om --input "./val2017_bin" --output "result_ais"
+      python3.7 -m ais_bench --batchsize 1 --model ./swin-s_bs1.om --input "./val2017_bin" --output ais_results --output_dirname bs1
       ```
    - 参数说明：
       - model：om文件路径。
       - batchsize：om文件对应的模型batch size。
       - input：模型输入的路径。
       - output：推理结果输出路径。
+      - output_dirname: 输出文件名。
 
 	
 	3. 精度验证。
-	将cascade_maskrcnn_postprocess.py脚本移动到Swin-Transformer-Object-Detection目录下
 	调用cascade_maskrcnn_postprocess.py评测map精度。
       
          ```shell
          python3.7 cascade_maskrcnn_postprocess.py \
          --ann_file_path=./data/coco/annotations/instances_val2017.json \
-         --bin_file_path=./result_ais/ \
+         --bin_file_path=./ais_results/bs1 \
          --input_height=800 \
          --input_width=1216 \
          ```
@@ -230,13 +228,13 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
    4. 性能验证
       
       ```shell
-      python3.7 -m ais_bench --batchsize 1 --model swin-s_bs1.om --outfmt BIN --loop 20 --output ./performance 
+      python3.7 -m ais_bench --batchsize 1 --model swin-s_bs1.om --loop 20 
       ```
       - 参数说明：      
          - model：om文件路径。
          - batchsize：om文件对应的模型batch size。
          - input：模型输入的路径。
-         - output：推理结果输出路径。
+         - loop：推理循环次数。
 
 
 # 模型推理性能&精度

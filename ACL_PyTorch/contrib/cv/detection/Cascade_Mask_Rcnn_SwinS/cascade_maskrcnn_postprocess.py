@@ -25,25 +25,7 @@ from mmdet.models.roi_heads.mask_heads.fcn_mask_head import _do_paste_mask
 import os
 
 
-def get_map():
-    data_dict = {}
-    path = args.bin_file_path+'/sumary.json'
-    with open(path, 'r', encoding='utf8') as fp:
-        json_data = json.load(fp)
-        data = json_data.get('filesinfo')  # 5000个dict
-        for key in data.keys():
-            data_dict2 = data.get(key)
-            infile = data_dict2.get('infiles')
-            name = infile[0].split('/')[2]
-            print('name: ', name)
-            outfiles = data_dict2.get('outfiles')
-            data_dict[name] = outfiles
-            print('outfiles: ', outfiles)
-    return data_dict
-
-
 def postprecess():
-    data_dict = get_map()
     dataset = CocoDataset(ann_file=args.ann_file_path, pipeline=[])
     bin_path = args.bin_file_path
     latest_result = os.listdir(bin_path)
@@ -58,14 +40,16 @@ def postprecess():
         ori_w = data_info['width']
         scalar_ratio = min(model_h / ori_h, model_w / ori_w)
 
-        path_base = file_name.split('.')[0]+'.bin'
-        print('path_base: ', path_base)
-        path_item_bboxes = data_dict.get(path_base)[0]
+        path_base = file_name.split('.')[0]
+        path_item_bboxes = os.path.join(args.bin_file_path,
+                                        path_base + "_0.bin")
         bboxes = np.fromfile(path_item_bboxes, dtype=np.float32)
         bboxes = np.reshape(bboxes, [100, 5])
-        path_item_labels = data_dict.get(path_base)[1]
+        path_item_labels = os.path.join(args.bin_file_path,
+                                        path_base + "_1.bin")
         labels = np.fromfile(path_item_labels, dtype=np.int64)
-        path_item_mask = data_dict.get(path_base)[2]
+        path_item_mask = os.path.join(args.bin_file_path,
+                                      path_base + "_2.bin")
         mask_pred = np.fromfile(path_item_mask, dtype=np.float32)
         mask_pred = np.reshape(mask_pred, [100, 1, 28, 28])
 
