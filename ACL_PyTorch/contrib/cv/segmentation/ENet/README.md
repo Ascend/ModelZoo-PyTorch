@@ -1,239 +1,251 @@
-# ENet Onnx模型端到端推理指导
+# ENet 模型-推理指导
 
-- [ENet Onnx模型端到端推理指导](#enet-onnx模型端到端推理指导)
-    - [1 模型概述](#1-模型概述)
-        - [1.1 论文地址](#11-论文地址)
-        - [1.2 代码地址](#12-代码地址)
-    - [2 环境说明](#2-环境说明)
-        - [2.1 深度学习框架](#21-深度学习框架)
-        - [2.2 python第三方库](#22-python第三方库)
-    - [3 模型转换](#3-模型转换)
-        - [3.1 pth转onnx模型](#31-pth转onnx模型)
-        - [3.2 onnx转om模型](#32-onnx转om模型)
-    - [4 数据集预处理](#4-数据集预处理)
-        - [4.1 数据集获取](#41-数据集获取)
-        - [4.2 数据集预处理](#42-数据集预处理)
-        - [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-    - [5 离线推理](#5-离线推理)
-        - [5.1 AisBench工具概述](#51-aisbench工具概述)
-        - [5.2 离线推理](#52-离线推理)
-    - [6 精度对比](#6-精度对比)
-        - [6.1 离线推理MIoU精度](#61-离线推理miou精度)
-        - [6.2 精度对比](#62-精度对比)
-    - [7 性能对比](#7-性能对比)
-        - [7.1 npu性能数据](#71-npu性能数据)
-        - [7.2 T4性能数据](#72-t4性能数据)
-        - [7.3 性能对比表格](#73-性能对比表格)
 
-## 1 模型概述
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-- **[论文地址](#11-论文地址)**  
+    - [输入输出数据](#section540883920406)
 
-- **[代码地址](#12-代码地址)**  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-### 1.1 论文地址
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-[ENet论文](https://arxiv.org/pdf/1606.02147.pdf)  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-### 1.2 代码地址
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-[ENet代码](https://github.com/Tramac/awesome-semantic-segmentation-pytorch)  
-branch:master  
-commit_id: **5843f75215dadc5d734155a238b425a753a665d9**  
-备注：commit_id是指基于该次提交时的模型代码做推理，通常选择稳定版本的最后一次提交，或代码仓最新的一次提交  
+  ******
 
-上述开源代码仓库没有给出训练好的模型权重文件，因此使用910训练好的pth权重文件来做端到端推理，该权重文件的精度是**54.627%**。
 
-## 2 环境说明
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-- **[深度学习框架](#21-深度学习框架)**  
+ENet是用于实时语义分割的深度神经网络体系结构，该网络借鉴ResNet的残Bottleneck结构来组建网络，其五个主要阶段中，前三个为编码器，后两个为解码器，形成的网络结构在满足快速推理的情况下，仍旧能够达到较高的精度。
 
-- **[python第三方库](#22-python第三方库)**  
 
-### 2.1 深度学习框架
+- 参考实现：
 
-```
-CANN 5.1.RC2
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
-本实验环境中Torch版本为1.5.0
+  ```
+  url=https://github.com/Tramac/awesome-semantic-segmentation-pytorch
+  commit_id=5843f75215dadc5d734155a238b425a753a665d9
+  model_name=contrib/cv/segmentation/ENet
+  ```
 
-### 2.2 python第三方库
 
-```
-numpy == 1.20.3
-Pillow == 8.4.0
-opencv-python == 4.5.2.54
-albumentations == 0.4.5
-densetorch == 0.0.2
-```
 
-**说明：**
+## 输入输出数据<a name="section540883920406"></a>
 
-> X86架构：pytorch和torchvision可以通过官方下载whl包安装，其他可以通过pip3.7 install 包名 安装
->
-> Arm架构：pytorch，torchvision和opencv可以通过github下载源码编译安装，其他可以通过pip3.7 install 包名 安装
->
-> 以上为多数网络需要安装的软件与推荐的版本，根据实际情况安装。如果python脚本运行过程中import 模块失败，安装相应模块即可，如果报错是缺少动态库，网上搜索报错信息找到相应安装包，执行apt-get install 包名安装即可
+- 输入数据
 
-## 3 模型转换
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 480x 480 | NCHW         |
 
-- **[pth转onnx模型](#31-pth转onnx模型)**  
 
-- **[onnx转om模型](#32-onnx转om模型)**  
+- 输出数据
 
-### 3.1 pth转onnx模型
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | output  | FLOAT32  | batchsize x 19 x 96 x 96 | NCHW           |
 
-1.编写pth2onnx脚本RefineNet_pth2onnx.py
 
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
 
-2.执行pth2onnx脚本，生成onnx模型文件
 
-```bash
-python3.7 ENet_pth2onnx.py --input-file ./enet_citys.pth --output-file ./enet_citys.onnx
-```
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-### 3.2 onnx转om模型
+- 该模型需要以下插件与驱动
 
-1.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.1.RC2 开发辅助工具指南 (推理) 01  
-`${chip_name}`可通过 `npu-smi info` 指令查看，例: 310P3
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+  **表 1**  版本配套表
 
-```BASH
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-atc --framework=5 --model=./enet_citys.onnx --output=./enet_citys_bs1 --input_format=NCHW --input_shape="image:1,3,480,480" --log=info --soc_version=Ascend${chip_name}
-```
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-## 4 数据集预处理
 
-- **[数据集获取](#41-数据集获取)**  
 
-- **[数据集预处理](#42-数据集预处理)**  
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-- **[生成数据集信息文件](#43-生成数据集信息文件)**  
+## 获取源码<a name="section4622531142816"></a>
 
-### 4.1 数据集获取
+1. 安装依赖。
 
-该模型使用Cityscapes数据集作为训练集，其下的val中的500张图片作为验证集。推理部分只需要用到这500张验证图片，验证集输入图片存放在`citys/leftImg8bit/val`，验证集target存放在`citys/gtFine/val`。
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-下载Cityscapes数据集后，把数据集解压放在数据集共享文件夹`/opt/npu`下。
+## 准备数据集<a name="section183221994411"></a>
 
-### 4.2 数据集预处理
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-1.参考开源代码仓库对验证集所做的预处理，编写预处理脚本。
+  该模型使用Cityscapes数据集作为训练集，其下的val中的500张图片作为验证集。推理部分只需要用到这500张验证图片，验证集输入图片存放在`./datasets/citys/leftImg8bit/val`，验证集target存放在`./datasets/citys/gtFine/val`：
 
-2.执行预处理脚本，生成数据集预处理后的bin文件  
-`$datasets_path` 为Cityscapes数据集的路径。
+   ```
+   datasets
+   ├── citys
+     ├── gtFine
+           ├── val
+     ├── leftImg8bit
+           ├── val  
+   ```
 
-```bash
-python3.7 ENet_preprocess.py --src-path=$datasets_path --save_path ./prep_dataset
-```
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-## 5 离线推理
+   执行`ENet_preprocess.py`脚本，完成预处理。
 
-- **[AisBench工具概述](#51-AisBench工具概述)**  
+   ```
+   Python3.7 ENet_preprocess.py --src_path ./datasets/citys --save_path ./prep_dataset
+   ```
+   - 参数说明
+      - src_path: 原始数据路径
+      - save_path：保存结果路径
+  
+
+## 模型推理<a name="section741711594517"></a>
 
-- **[离线推理](#52-离线推理)**  
+1. 模型转换。
 
-### 5.1 AisBench工具概述
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-AisBench推理工具，该工具包含前端和后端两部分。 后端基于c++开发，实现通用推理功能； 前端基于python开发，实现用户界面功能。  
-工具链接: <https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench/>
+   1. 获取权重文件。
 
-### 5.2 离线推理
+       ```
+       wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Enet/PTH/enet_citys.pth
+       ```
 
-1.执行离线推理
+   2. 导出onnx文件。
 
-```
-python -m ais_bench --model ./enet_bs16.om --input ./prep_dataset/ --output ./ais_results --outfmt BIN --batchsize=16
-```
+      1. 使用`ENet_pth2onnx.py`导出onnx文件。
+         运行`ENet_pth2onnx.py`脚本。
 
---model：模型地址  
---input：预处理完的数据集文件夹  
---output：推理结果保存地址  
---outfmt：推理结果保存格式  
---batchsize：模型batch size 默认为1 。当前推理模块根据模型输入和文件输出自动进行组batch。参数传递的batchszie有且只用于结果吞吐率计算。请务必注意需要传入该值，以获取计算正确的吞吐率。  
-输出结果默认保存在当前目录ais_results/X(X为执行推理的时间)，每个输入对应一个_X.bin文件的输出。  
+         ```
+         Python3.7 ENet_pth2onnx.py --input-file enet_citys.pth --output-file enet_citys.onnx
+         ```
+         - 参数说明
+            - input-file： 输入pth文件
+            - output-file： 输出onnx文件
 
-## 6 精度对比
+         获得`enet_citys.onnx`文件。
 
-- **[离线推理MIoU精度](#61-离线推理IoU精度)**
-- **[精度对比](#62-精度对比)**  
 
-### 6.1 离线推理MIoU精度
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-后处理统计MIoU精度
+      1. 配置环境变量。
 
-调用ENet_postprocess.py脚本推理结果与语义分割真值进行比对，可以获得IoU精度数据。
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-```bash
-python3.7 ENet_postprocess.py --src-path=$datasets_path  --result-dir ./ais_results/2022_07_11-15_53_11/sumary.json | tee eval_log.txt
-```
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-第一个为真值所在目录，第二个为AisBench输出目录中summary.json的路径。  
-`| tee eval_log.txt`  为将输出结果保存至 “eval_log.txt”的文件中。  
-查看输出结果：
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         会显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-```
-BS 1
-miou: 54.115%
-BS 16
-miou: 54.115%
-```
+      3. 执行ATC命令。
 
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
+         ```
+         atc --framework=5 \
+            --model=./enet_citys.onnx \
+            --output=./enet_citys_bs1 \
+            --input_format=NCHW \
+            --input_shape="image:1,3,480,480" \
+            --log=error \
+            --soc_version=Ascend${chip_name}
+         ```
 
-### 6.2 精度对比
+         - 参数说明：
 
-ENet论文给出的精度是58.3%，但它没有训练代码，也没有给出训练好的模型权重。因此只能与910训练好的模型权重进行精度对比（0.54627）。
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-将得到的om离线模型推理miou精度与910训练好的`.pth权重的miou进行对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
+           运行成功后生成`enet_citys_bs1.om`模型文件。
 
->没有遇到精度不达标的问题，故不需要进行精度调试
+2. 开始推理验证。
+   1. 使用ais-bench工具进行推理。
 
-## 7 性能对比
+      ais-bench工具获取及使用方式请点击查看[[ais-bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
 
-- **[npu性能数据](#71-npu性能数据)**  
- **[T4性能数据](#72-T4性能数据)**  
- **[性能对比表格](#73-性能对比表格)**  
+   2. 执行推理。
 
-### 7.1 npu性能数据
+        ```
+        python3 -m ais_bench  --model ./enet_citys_bs1.om \
+               --input ./prep_dataset/ \
+               --output ./ \
+               --outfmt BIN \
+               --output_dirname result
+        ```
 
-AisBench工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用AisBench纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，AisBench纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认AisBench工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用AisBench工具在整个数据集上推理得到bs1与bs16的性能数据为准。  
+        -   参数说明：
 
-### 7.2 T4性能数据
+             -   model：om模型
+             -   input：输入文件
+             -   output：输出路径
+             -   outfmt: 输出格式
+             -   output_dirname：输出文件夹
+                  	...
 
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
+        推理后的输出默认在当前目录`result`下。
 
-### 7.3 性能对比表格
+        >**说明：** 
+        >执行ais-bench工具请选择与运行环境架构相同的命令
 
-|         | 310          | 310P3        | 310P3(aoe)   | T4           | 310P3/310    | 310P3(aoe)/310 | 310P3(aoe)/T4 |
-|---------|--------------|--------------|--------------|--------------|--------------|----------------|---------------|
-| bs1     | 825.2858383  | 731.749437   | 1041.247997  | 88.80967977  | 0.886661812  | 1.261681649    | 11.72448769   |
-| bs4     | 797.8526878  | 947.2603366  | 1107.245594  | 76.70662909  | 1.187262199  | 1.387781994    | 14.43480971   |
-| bs8     | 706.8480246  | 767.3814194  | 1050.013124  | 76.49302703  | 1.085638486  | 1.485486396    | 13.72691296   |
-| bs16    | 701.0886768  | 642.8421665  | 1063.887262  | 77.02512213  | 0.91691991   | 1.517478883    | 13.81221129   |
-| bs32    | -            | 626.778119   | 1068.416192  | 76.6339237   | -            | -              | 13.94181768   |
-|         |              |              |              |              |              |                |               |
-| 最优Batch | 825.2858383  | 947.2603366  | 1107.245594  | 88.80967977  | 1.147796669  | 1.341651029    | 12.46762286   |
+   3. 精度验证。
 
+      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
->310P单个device的吞吐率比310单卡的吞吐率大，故310P性能高于310性能，性能达标。  
->对于batch1与batch16，310P性能均高于310性能1.2倍，该模型放在Benchmark/cv/segmentation目录下。  
+      ```
+       python3.7 ENet_postprocess.py --src_path=./datasets/citys  --result_dir ./result_summary.json | tee eval_log.txt
+      ```
+      - 参数说明：
+        - src_path：原数据路径  
+        - result_dir：结果json路径
 
- **性能优化：**  
->以上在310P上的结果为AOE优化后的性能。  
-使用AOE进行性能优化
+      结果保存在`eval_log.txt`
+   4. 性能验证。
 
-```
-# 以batch size 32 为例
-# 保存知识库
-export TUNE_BANK_PATH=/home/HwHiAiUser/custom_tune_bank
-# 执行AOE优化
-aoe --framework 5 --model enet_citys.onnx --job_type 1 --output ./enet_bs32_aoe_job1_1 --input_shape="image:32,3,480,480"  --log error
-```
+      可使用ais-bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+         python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om模型
+        - --batchsize：模型batchsize
+        - --loop: 循环次数
+
+
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+|    310P3      |       1     |     citys   |   mIoU:54.11   |    1071  |
+|    310P3      |       4     |     citys   |   mIoU:54.11   |    1327  |
+|    310P3      |       8     |     citys   |   mIoU:54.11   |    1224  |
+|    310P3      |       16     |     citys   |   mIoU:54.11   |    1205  |
+|    310P3      |       32     |     citys   |   mIoU:54.11   |    1205  |
+|    310P3      |       64     |     citys   |   mIoU:54.11   |    1009  |
