@@ -94,10 +94,10 @@ wait
 for ((i = 0; i < 10 ; i++)) do
     sleep 1m
     flag=`grep -a 'mmdet - INFO - Epoch [[]300[]][[]1800/1849[]]' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END{print NR}'`
-    flagLast=`grep -a 'mmdet - INFO - Epoch [[]270[]][[]1800/1849[]]' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END{print NR}'`
+    flagLast=`grep -a 'mmdet - INFO - Epoch [[]271[]][[]50/1849[]]' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END{print NR}'`
 
     echo "------------------ Train Resume ------------------$i"
-    if [[ $flag == $flagLast ]]; then
+    if [[ flag -eq 0 && $flag == $flagLast ]]; then
       echo "------------------ Auto Resume in------------------"
       PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
         --launcher pytorch  \
@@ -105,12 +105,12 @@ for ((i = 0; i < 10 ; i++)) do
         --cfg-options data.persistent_workers=True log_config.interval=50 >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
       wait
     fi
-    if [[ $flag < $flagLast ]]; then
+    if [[ flag -eq 0 && $flag < $flagLast ]]; then
       echo "------------------ Resume-from in------------------"
       PORT=29500 ./tools/dist_train.sh configs/yolox/yolox_m_8x8_300e_coco.py 8  \
         --launcher pytorch  \
         --resume-from ${cur_path}/work_dirs/yolox_m_8x8_300e_coco/epoch_270.pth  \
-        --cfg-options data.persistent_workers=True log_config.interval=50 >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --cfg-options data.persistent_workers=False log_config.interval=50 >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
       wait
     fi
 done
