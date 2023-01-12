@@ -103,11 +103,6 @@ def main():
     if args.bin:
         print('use bin')
         torch.npu.set_compile_mode(jit_compile=False)
-
-        option = {}
-        option["NPU_FUZZY_COMPILE_BLACKLIST"] = "MaxPool3D"
-        torch.npu.set_option(option)
-        
     else:
         print('no use bin')    
 
