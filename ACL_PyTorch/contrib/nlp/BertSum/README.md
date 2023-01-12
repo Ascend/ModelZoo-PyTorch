@@ -1,285 +1,293 @@
+# BertSum模型-推理指导
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-# BertSum Onnx模型端到端推理指导
+    - [输入输出数据](#section540883920406)
+
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+BertSum模型主要由句子编码层和摘要判断层组成，其中，`句子编码层` 通过BERT模型获取文档中每个句子的句向量编码，`摘要判断层` 通过三种不同的结构进行选择判断，为每个句子进行打分，最终选取最优的top-n个句子作为文档摘要。
+
+  ```
+  url=https://github.com/nlpyang/BertSum
+  branch=master
+  commit_id=05f8c634197
+  ```
 
-- 1 模型概述
-  - [1.1 代码地址](https://gitee.com/kghhkhkljl/pyramidbox.git)
-- 2 环境说明
-  - [2.1 深度学习框架](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#21-深度学习框架)
-  - [2.2 python第三方库](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#22-python第三方库)
-- 3 模型转换
-  - [3.1 pth转onnx模型](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#31-pth转onnx模型)
-  - [3.2 onnx转om模型](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#32-onnx转om模型)
-- 4 数据集预处理
-  - [4.1 数据集获取](https://www.graviti.cn/open-datasets/WIDER_FACE)
-  - [4.2 数据集预处理](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#42-数据集预处理)
-  - [4.3 生成数据集信息文件](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#43-生成数据集信息文件)
-- 5 离线推理
-  - [5.1 benchmark工具概述](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/ResNext50#51-benchmark工具概述)
-  - [5.2 离线推理](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#52-离线推理)
-- 6 精度对比
-  - [6.1 离线推理精度统计](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#61-离线推理精度统计)
-  - [6.2 开源精度](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#62-开源精度)
-  - [6.3 精度对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#63-精度对比)
-- 7 性能对比
-  - [7.1 npu性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#71-npu性能数据)
-  - [7.2 T4性能数据](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#72-T4性能数据)
-  - [7.3 性能对比](https://gitee.com/ascend/modelzoo/tree/master/built-in/ACL_PyTorch/Benchmark/cv/classification/Pyramidbox#73-性能对比)
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | src      | INT64    | batchsize x seq_len       | ND           |
+  | segs     | INT64    | batchsize x seq_len       | ND           |
+  | clss     | INT64    | batchsize x seq_len       | ND           |
+  | mask     | BOOL     | batchsize x seq_len       | ND           |
+  | mask_cls | BOOL     | batchsize x seq_len       | ND           |
 
-## 1 模型概述
+- 输出数据
 
-- **论文地址**
-- **代码地址**
+  | 输出数据 | 大小               | 数据类型 | 数据排布格式 |
+  | -------- | --------           | -------- | ------------ |
+  | output   | batch_size x class | FLOAT32  | ND           |
+  | mask_cls | batch_size x class | FLOAT32  | ND           |
 
-### 1.1 论文地址
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-[Bertsum论文](https://arxiv.org/abs/1803.07737)
+- 该模型需要以下插件与驱动
 
-### 1.2 代码地址
+  **表 1**  版本配套表
 
-https://github.com/nlpyang/BertSum.git
+| 配套                                                            | 版本    | 环境准备指导                                                                                          |
+| ------------------------------------------------------------    | ------- | ------------------------------------------------------------                                          |
+| 固件与驱动                                                      | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                            | 6.0.RC1 | -                                                                                                     |
+| Python                                                          | 3.7.5   | -                                                                                                     |
+| PyTorch                                                         | 1.5.0+ | -                                                                                                     |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
 
-## 2 环境说明
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-- **深度学习框架**
-- **python第三方库**
+## 获取源码<a name="section4622531142816"></a>
 
-### 2.1 深度学习框架
+1. 获取源码。
 
-```
-python3.7.5
-CANN 5.0.3
+   ```
+   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git        # 克隆仓库的代码
+   git checkout master         # 切换到对应分支
+   cd ACL_PyTorch/contrib/nlp/BertSum              # 切换到模型的代码仓目录
+   ```
 
-pytorch >= 1.5.0
-torchvision >= 0.10.0
-onnx >= 1.7.0
+2. 安装依赖。
 
-说明：若是在conda环境下，直接采用python，不用python3.7
-```
+   ```
+   pip3 install -r requirements.txt
+   ```
+   其中`pyrouge`安装较为复杂，完整过程如下（部分依赖如果已安装，则可以跳过）：
+   ```
+   # 安装Berkeley DB library依赖
+   sudo apt-cache search libdb  # 检查当前Berkeley DB library 的版本
+   sudo apt-get install libdb5.3-dev  # 安装对应DB版本
+   # 安装Perl解释器的DB_File模块
+   wget http://www.cpan.org/authors/id/P/PM/PMQS/DB_File-1.835.tar.gz
+   tar -zxvf DB_File-1.835.tar.gz
+   cd DB_File-1.835
+   perl Makefile.PL
+   make
+   make test # if %%%看到PASS为成功
+   sudo make install
+   # 安装pyrouge库
+   pip3 install pyrouge==0.1.3
+   # 下载pyrouge源码
+   git clone https://github.com/andersjo/pyrouge.git
+   cd pyrouge && git checkout 3b6c415204dbc2c8360a01d92533441f4aae95eb
+   pyrouge_set_rouge_path ${work_path}/pyrouge/tools/ROUGE-1.5.5  # 需要为绝对路径, ${work_path}为仓代码路径
+   # 需要重新编译WordNet的DB文件
+   cd tools/ROUGE-1.5.5/data
+   rm WordNet-2.0.exc.db
+   cd WordNet-2.0-Exceptions
+   cd data/WordNet-2.0-Exceptions/
+   ./buildExeptionDB.pl . exc WordNet-2.0.exc.db
+   cd ../
+   # 软链新生成的文件
+   ln -s WordNet-2.0-Exceptions/WordNet-2.0.exc.db WordNet-2.0.exc.db
+   cd ${work_path}  # 返回原始目录
+   ```
 
-### 2.2 python第三方库
+2. 获取开源代码仓。
+   在已下载的源码包根目录下，执行如下命令。
 
-```
-torch==1.7.1
-tensorboardX==2.4.1
-pyrouge==0.1.3
-pytorch-pretrained-bert==0.6.2
-onnx-simplifier==0.3.6
-```
+   ```
+   git clone https://github.com/nlpyang/BertSum.git
+   cd BertSum && git checkout 05f8c634197
+   patch -p1 < bertsum.patch
+   cd ..
+   ```
 
-### **2.3 环境配置**
+## 准备数据集<a name="section183221994411"></a>
+1. 获取原始数据集。
 
-ROUGE配置参考博客：
+   本模型采用仓内自带的[预处理数据](https://drive.google.com/open?id=1x0d61LP9UAN389YN00z0Pv-7jQgirVg6)，放到`bert_data`目录下（如不存在，则需要自行创建）。
 
-[(10条消息) Ubuntu安装配置ROUGE_BigSea-CSDN博客](https://blog.csdn.net/Hay54/article/details/78744912)
+   数据目录结构请参考：
 
-pyrouge配置参考博客：
+   ```
+   ├──bert_data
+    ├──cnndm.test.0.pt
+    ├──...
+   ```
 
-[(10条消息) 在Ubuntu下配置pyrouge_MerryCao的博客-CSDN博客](https://blog.csdn.net/MerryCao/article/details/49174283)
+2. 数据预处理。
 
-## 3 模型转换
+   数据预处理将原始数据集转换为模型输入的数据。
 
-- **pth转onnx模型**
-- **onnx转om模型**
+   执行“BertSum_preprocess.py”脚本，完成预处理。
 
-### 3.1 pth转onnx模型
+   ```
+   python BertSum_pth_preprocess.py -bert_data_path ./bert_data/cnndm -out_path ./prep_data
+   ```
 
-1.拉取代码仓库 （因为使用了开源代码模块，所以需要git clone一下）
+   - 参数说明：
 
-```shell
-git clone https://github.com/nlpyang/BertSum.git
-```
+     -bert_data_path：原始数据集所在路径
 
-克隆下来源代码并解压，将pr中的代码放到解压之后的BertSum/src目录下面并对BertSum/src/models/data_loder.py进行一个更改： 
+     -out_path: 预处理结果所在路径。
 
-将31行的mask=1-(src==0)修改为mask=~(src==0) 将35行的mask=1-(clss==-1)修改为mask=~(clss==-1)
+  运行成功后，在当前`./prep_data`目录下生成二进制文件夹。
 
-2.下载pth权重文件
+## 模型推理<a name="section741711594517"></a>
 
-权重文件默认存放在**/home/BertSum/src**目录下
+1. 模型转换。
 
-3.使用pth2onnx.py进行onnx的转换
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-```
-方法一：cd /home/BertSum/src/test
-bash pth2onnx.sh
-方法二：cd /home/BertSum/src
-python BertSum-pth2onnx.py -mode test -bert_data_path ../bert_data/cnndm -model_path MODEL_PATH -visible_gpus -1 -gpu_ranks 0 -batch_size 1 -log_file LOG_FILE -result_path RESULT_PATH -test_all -block_trigram true -onnx_path bertsum_13000_9_bs1.onnx -path model_step_13000.pt
-```
+   1. 获取权重文件。
 
-获得bertsum_13000_9_bs1.onnx文件
+       获取[训练好的模型](https://pan.baidu.com/s/1bM16HNCQHeqbXYhHscmzQA)（提取码：e0nv ）放到当前目录。
 
-方法二种的-bert_data_path是数据集所在目录，-batch_size需设置为1，-onnx_path是onnx输出文件
+   2. 导出onnx文件。
 
-### 3.2 onnx模型简化
+      1. 使用脚本导出onnx文件。
 
-由于存在expand算子导致转om不成功，所以需要使用onnx简化工具对onnx进行简化
+         运行BertSum_pth2onnx.py脚本。
 
-使用pth2onnx.py进行onnx的转换
+         ```
+         python3 BertSum-pth2onnx.py  -bert_data_path ./bert_data/cnndm -onnx_path bertsum_13000_9.onnx -pth_path model_step_13000.pt
+         ```
 
-```
-方法一：cd /home/BertSum/src/test
-bash simplify.sh
-方法二：cd /home/BertSum/src
-python -m onnxsim ./bertsum_13000_9_bs1.onnx ./bertsum_13000_9_sim_bs1.onnx
-```
+         - 输入参数说明：
+           - -bert_data_path: 原始预处理数据路径。
+           - -onnx_path: 输出onnx文件路径。
+           - -pth_path: 模型权重路径。
 
-获得bertsum_13000_9_sim_bs1.onnx文件
+         获得bertsum_13000_9.onnx文件。
 
-### 3.3 onnx简化模型转om模型
+      2. 优化ONNX文件。
 
-1.设置环境变量
+         ```
+         # 以bs1为例
+         python -m onnxsim ./bertsum_13000_9.onnx ./bertsum_13000_9_sim_bs1.onnx --input-shape "src:1,512" "segs:1,512" "clss:1,37" "mask:1,512" "mask_cls:1,37"
+         ```
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.3 开发辅助工具指南 (推理) 01
+      1. 配置环境变量。
 
-```
-方法一：cd /home/BertSum/src/test
-bash onnxToom.sh 
-方法二：cd /home/BertSum/src
-atc --input_format=ND --framework=5 --model=./bertsum_13000_9_sim_bs1.onnx --input_shape="src:1,512;segs:1,512;clss:1,37;mask:1,512;mask_cls:1,37" --output=bertsum_13000_9_sim_bs1  \
---log=info --soc_version=Ascend310 --precision_mode=allow_mix_precision \
---modify_mixlist=ops_info.json
-```
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-方法二中的model是onnx模型的名字，input_shape是paper的shape，output为输出om的名字，--precision_mode表示采用混合精度
+         > **说明：**
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-## 4 数据集预处理
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-- **数据集获取**
-- **数据集预处理**
-- **生成数据集信息文件**
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------|-----------------|------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-### 4.1 数据集获取
+      3. 执行ATC命令。
+         ```
+         # 以bs1为例
+         atc --input_format=ND --framework=5 --model=./bertsum_13000_9_sim_bs1.onnx --input_shape="src:1,512;segs:1,512;clss:1,37;mask:1,512;mask_cls:1,37" --output=bertsum_13000_9_sim_bs1 --log=error --soc_version=Ascend310
+         ```
 
-参考原代码仓
+         - 参数说明：
 
-### 4.2 数据集预处理
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-1.预处理脚本BertSum_pth_preprocess.py
+           运行成功后生成bertsum_13000_9_sim_bs1.om模型文件。
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
 
-```
-方法一：cd /home/BertSum/src/test
-bash pre_deal.sh
-方法二：cd /home/BertSum/src
-python BertSum_pth_preprocess.py -mode test -bert_data_path ../bert_data/cnndm -model_path MODEL_PATH -visible_gpus -1 -gpu_ranks 0 -batch_size 600 -log_file LOG_FILE -result_path RESULT_PATH -test_all -block_trigram true
-```
 
--bert_data_path是数据集所在目录，后面的参数是固定的。
+2. 开始推理验证。
 
-### 5 离线推理
+   1. 使用ais-bench工具进行推理。
 
-- **msame工具**
-- **离线推理**
+      ais-bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
 
-### 5.1 msame工具
+   2. 执行推理。
 
-获取msame工具（https://gitee.com/ascend/tools/tree/master/msame），并将得到的msame工具放在/home/BertSum-master/src下
+        ```
+        # 以bs1为例
+        python3 -m ais_bench --model "./bertsum_13000_9_sim_bs1.om" --input "./prep_data/pre_data/src,./prep_data/pre_data/segs,./prep_data/pre_data/clss,./prep_data/pre_data/mask,./prep_data/pre_data/mask_cls" --output "./results" --output_dirname bs1 --batchsize 1
+        ```
 
-### 5.2 离线推理
+        -   参数说明：
 
-1.执行离线推理
+             -   --model：om文件路径。
+             -   --input：输入文件。
+             -   --output：输出目录。
+             -   --output_dirname：输出文件名。
+             -   --batchsize：模型对应batchsize。
 
-benchmark工具暂不支持多输入，因此改用msame，首先要source环境变量
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+        推理后的输出默认在当前目录results/bs1下。
 
-2.使用msame将onnx模型转换为om模型文件，工具使用方法可以参考CANN 
+   3.  精度验证。
 
-然后运行如下命令：
+      调用BertSum_postprocess.py脚本与数据集标签比对，获得Accuracy数据。
 
-```
-方法一：cd /home/BertSum/src/test
-bash infer.sh
-方法二：cd /home/BertSum/src
-./msame --model "./bertsum_13000_9_sim_bs1_1.om" --input "./pre_data/src,./pre_data/segs,./pre_data/clss,./pre_data/mask,./pre_data/mask_cls" --output "./result" --outfmt bin
-./msame --model "./bertsum_13000_9_sim_bs1_1.om" --input "./pre_data_1/src,./pre_data_1/segs,./pre_data_1/clss,./pre_data_1/mask,./pre_data_1/mask_cls" --output "./result" --outfmt bin
-```
+      ```
+      mkdir temp  # 创建临时存储文件
+      python BertSum_pth_postprocess.py -bert_data_path ./bert_data/cnndm -bert_config_path BertSum/bert_config_uncased_base.json -result_dir ./results/bs1
+      ```
+      - 输入参数说明：
+        - -bert_data_path：原始数据路径。
+        - -bert_config_path： 模型配置路径。
+        - -result_dir: 推理结果路径。
 
-要采用msema工具推理两次，因为有些paper的shape第一维为2，所以分两次进行推理。pre_data下存放的是shape为第一维为1的所有预处理之后的数据以及shape为2的部分预处理得到的数据。shape为2的另一部分数据存放在pre_data_1下面。--model是om文件，--input是预处理之后文件所在目录，--output为输出bin文件所在目录，--outfmt代表输出bin文件*。*
 
-输出的bin文件在/home/BertSum-master/src/result目录下，此目录下会存在两个文件，将其中一个时间小的命名为result_1,将另一个时间大的命名为result_2。
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-## 6 精度对比
+精度参考下列数据:
 
-- **离线推理精度**
-- **开源精度**
-- **精度对比**
+| device | ROUGE-1 Average_R |
+|--------|-------------------|
+| 基准   |            42.96% |
+| 310    |            42.95% |
+| 310P3  |            42.85% |
 
-### 6.1 离线推理精度统计
 
-1.后处理
+性能参考下列数据。
 
-```
-cd /home/BertSum/src
-python BertSum_pth_postprocess.py  -visible_gpus -1 -gpu_ranks 0 -batch_size 600 -log_file LOG_FILE -result_path RESULT_PATH -test_all -block_trigram true -path_1 ./result/result_1 -path_2 ./result/result_2
-```
 
-```
- -path_1是推理得到的文件result_1,-path_2是推理得到的result_2
- 自验报告
-  # 第X次验收测试   
-  # 验收结果 OK 
-  # 验收环境: A + K / CANN 5.0.3
-  # 关联issue: 
-  
-  # pth是否能正确转换为om
-  bash test/onnx2om.sh
-  # 验收结果： OK 
-  # 备注： 成功生成om，无运行报错，报错日志xx 等
-  
-  # 精度数据是否达标（需要显示官网pth精度与om模型的精度）
-  # npu性能数据(由于msame工具不支持多batch，所以只测试了bs1的性能)
-  # 验收结果： 是 / 否
-  # 备注： 目标pth精度42.96；bs1验收om精度42.92；精度下降不超过1%；无运行报错，报错日志xx 等
-  # 备注： 验收310测试性能bs1:61.538FPS；无运行报错，报错日志xx 等
-  
-  # 在t4上测试bs1性能
-  bash perf.sh
-  # 验收结果： OK / Failed
-  # 备注： 验收基准测试性能bs1:94.281FPS；无运行报错，报错日志xx 等
-  
-  # 310性能是否超过基准： 否
-  t4:310=(94.281/61.538)1.53倍基准
-```
-
-### 6.2 开源精度
-
-BertSum在线训练精度：
-
-42.96%
-
-### 6.3 离线推理精度
-
-42.95%
-
-### 6.3 精度对比
-
-由于源码采用的是动态shape，而离线推理是通过加padding固定住shape进行推理的，所以精度会有损失，因此和同一分辨率下的在线推理进行对比。对比方式：三个尺度求和取平均。
-
-## 7 性能对比
-
-- **310性能数据**
-- **T4性能数据**
-- **性能对比**
-
-### 7.1 310性能数据
-
-每张图片平均耗时：65.06ms，所以310吞吐率为：1000/65×4=61.538
-
-说明：由于msame不支持多batch，所以此处只测了bs1的性能。
-
-### 7.2 T4性能数据
-
-T4性能为：94.281
-
-### 7.3 性能对比
-
-batch1：94.281>61.538
+| 模型         | 基准性能  | 310性能   | 310P3性能 |
+| BertSum bs1  | 61.538fps | 94.281fps | 136.33fps |
+| :------:     | :------:  | :------:  | :------:  |
+| BertSum bs4  | -         | -         | 133.11fps |
+| BertSum bs8  | -         | -         | 138.09fps |
+| BertSum bs16 | -         | -         | 138.06fps |
+| BertSum bs32 | -         | -         | 137.42fps |
+| BertSum bs64 | -         | -         | 118.94fps |

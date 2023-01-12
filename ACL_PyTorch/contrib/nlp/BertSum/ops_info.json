@@ -1,7 +1,0 @@
-{
-    "black-list":{
-        "to-add":[
-            "LayerNorm"
-        ]
-    }
-}
