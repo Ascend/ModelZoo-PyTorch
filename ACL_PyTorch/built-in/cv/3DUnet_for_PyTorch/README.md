@@ -1,38 +1,142 @@
-# 3DUNet模型PyTorch离线推理指导
+# 3DUNet 模型-推理指导
 
-## 1 环境准备 
 
-1. 安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装  
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-```
-pip3.7 install -r requirements.txt  
-```
+    - [输入输出数据](#section540883920406)
 
-2. 获取，修改与安装开源模型代码  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-```
-git clone --recurse-submodules https://github.com/mlcommons/inference.git
-cd inference
-git reset 74353e3118356600c1c0f42c514e06da7247f4e8 --hard
-cd vision/medical_imaging/3d-unet
-git clone https://github.com/MIC-DKFZ/nnUNet.git
-cd nnUNet/
-git reset b38c69b345b2f60cd0d053039669e8f988b0c0af --hard
-cd ../
-mv nnUNet nnUnet
-```
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-3. 编译环境，进入inference/loadgen目录，执行以下命令。
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+3DUNet模型一般用于3D语义分割。
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/mlcommons/inference.git
+  commit_id=74353e3118356600c1c0f42c514e06da7247f4e8
+  model_name=3DUNet
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                            | 数据排布格式 |
+  | -------- | -------- | ------------------------------- | ------------ |
+  | input    | FLOAT32  | batchsize x 4 x 224 x 224 x 160 | ND           |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小                            | 数据排布格式 |
+  | -------- | -------- | ------------------------------- | ------------ |
+  | output   | FLOAT32  | batchsize x 4 x 224 x 224 x 160 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+
+   ```
+   git clone --recurse-submodules https://github.com/mlcommons/inference.git
+   cd inference
+   git reset 74353e3118356600c1c0f42c514e06da7247f4e8 --hard
+   cd vision/medical_imaging/3d-unet
+   git clone https://github.com/MIC-DKFZ/nnUNet.git
+   cd nnUNet/
+   git reset b38c69b345b2f60cd0d053039669e8f988b0c0af --hard
+   cd ../
+   mv nnUNet nnUnet
+   ```
+   
+2. 安装依赖
+
+   ```
+   pip3 install -r requirements.txt
+   ```
+
+3. 编译环境，进入inference/loadgen目录，执行以下命令
 
    ```
    CFLAGS="-std=c++14 -O3" python3 setup.py develop
    ```
 
-   若失败，则升级gcc版本
+   若失败，考虑升级gcc版本
 
-4. 下载网络权重文件并导出onnx
+## 准备数据集<a name="section183221994411"></a>
 
-   下载链接：https://zenodo.org/record/3903982#.YL9Ky_n7SUk
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   该模型使用MICCAI_BraTS2019训练集中得部分数据进行测试，官方下载链接(需注册)：
+
+   [BraTS2019数据集](https://www.med.upenn.edu/cbica/brats2019/data.html)
+   
+   将下载的训练集解压，将其放在inference/vision/medical_imaging/3d_unet/目录下，目录如下
+   
+    ```
+   buid->
+   	->MICCAI_BraTS_2019_Data_Training->
+   									 ->HGG
+                                        ->LGG
+    ```
+   
+2. 数据预处理
+
+   ```
+   cd build
+   mkdir postprocessed_data
+   mkdir raw_data
+   cd raw_data
+   mkdir nnUNet_raw_data
+   cd ../../
+   python3 Task043_BraTS_2019.py
+   python3 preprocess.py
+   ```
+
+
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   1. 下载权重链接：https://zenodo.org/record/3903982#.YL9Ky_n7SUk
 
    下载fold_1.zip，在3d-unet目录下创建build/result目录，并将下载的fold_1.zip文件解压，将nnUNet目录放在result目录下，文件目录为：
 
@@ -42,106 +146,117 @@ mv nnUNet nnUnet
 
    运行脚本导出onnx，onnx默认保存在build/model下，模型生成在build/model/目录下，分别是224_224_160.onnx单batch模型和224_224_160_dynamic_bs.onnx动态batch onnx
 
-```
-python3 unet_pytorch_to_onnx.py
-```
-
-5. 运行脚本将onnx转为om模型，该框架和应用场景都是单batch，导出单batch om模型即可
-
-   ${chip_name}可通过`npu-smi info`指令查看
-
-   ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
-
-
-
-```
-bash atc.sh 224_224_160_dynamic_bs.onnx 3DUnet Ascend${chip_name}
-```
-
-## 2 离线推理 
-
-1. 修改运行脚本Task043_BraTS_2019.py，在main函数中添加以下内容
+   2. 运行unet_pytorch_to_onnx.py脚本。
 
    ```
-   nnUNet_raw_data="./build/raw_data/nnUNet_raw_data"
-   maybe_mkdir_p(nnUNet_raw_data)
-   ```
-   
-2. 修改onnxruntime_SUT.py
-
-   import头文件
-
-   ```
-   from acl_net import Net 
+   python3.7 unet_pytorch_to_onnx.py
    ```
 
-   __init__函数中增加
+   3. 使用ATC工具将ONNX模型转OM模型。
+      1. 配置环境变量。
 
-   ```
-   self.model = Net(device_id = 0, model_path = model_path)
-   ```
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-   注释self.sess:
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-   ```
-   #self.sess = onnxruntime.InferenceSession(model_path)
-   ```
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-   issue_queries函数中修改output
+      3. 执行ATC命令。
 
-   ```
-   output = self.model(data[np.newaxis, ...])[0].squeeze(0).astype(np.float16)
-   ```
-   
-   或者直接通过patch文件进行修改：
-   
-   ```
-   cd inference
-   patch -p1 < ../3DUnet.patch
-   ```
+         ```
+         bash atc.sh 224_224_160_dynamic_bs.onnx 3DUnet Ascend${chip_name}
+         ```
 
-3. 数据集下载，该模型使用MICCAI_BraTS2019训练集中得部分数据进行测试，官方下载链接(需注册)：
+2. 开始推理验证
 
-   [BraTS2019数据集](https://www.med.upenn.edu/cbica/brats2019/data.html)
+   1. 使用ais-infer工具进行推理。
 
-   将下载的训练集解压，将其放在inference/vision/medical_imaging/3d_unet/目录下，目录如下
-   
-   ```
-   buid->
-   	->MICCAI_BraTS_2019_Data_Training->
-   									 ->HGG
-                                        ->LGG
-   ```
-   
-   手动创建build/postprocessed_data/目录
-   
-   ```
-   cd build
-   mkdir postprocessed_data
-   mkdir raw_data
-   cd raw_data
-   mkdir nnUNet_raw_data
-   cd ../../
-   ```
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
 
-```
-python3 Task043_BraTS_2019.py
-python3 preprocess.py
-```
+   2. 执行推理。
 
-3. 获取精度
+        1. 修改运行脚本Task043_BraTS_2019.py，在main函数中添加以下内容
 
-   将acl_net.py拷贝到3d-unet目录下，运行source /usr/local/Ascend/ascend-toolkit/set_env.sh设置环境变量。运行如下命令获取精度：
+           ```
+           nnUNet_raw_data="./build/raw_data/nnUNet_raw_data"
+           maybe_mkdir_p(nnUNet_raw_data)
+           ```
 
-   ```
-   python3 run.py --accuracy --backend onnxruntime --model ./build/model/3DUnet.om
-   ```
+        2. 修改onnxruntime_SUT.py
 
-**评测结果：**   
+           import头文件
 
-|    模型    |    官网pth精度    | 310P/310离线推理精度 | gpu性能 |         310P性能         | 310性能 |
-| :--------: | :---------------: | :-----------------: | :-----: | :---------------------: | ------- |
-| 3DUNet bs1 | mean tumor:0.8530 |  mean tumor:0.8530  | 0.5fps  | ~~4.4fps~~<br />6.26fps | 0.78fps |
+           ```
+           ais_bench.infer.interface import InferSession 
+           ```
+
+           __init__函数中增加
+
+           ```
+           self.model = InferSession(0, model_path)
+           ```
+
+           注释self.sess:
+
+           ```
+           #self.sess = onnxruntime.InferenceSession(model_path)
+           ```
+
+           issue_queries函数中修改output
+
+           ```
+           output = self.model.infer([data[np.newaxis, ...]])[0].squeeze(0).astype(np.float16)
+           ```
+
+           或者直接通过patch文件进行修改：
+
+           ```
+           cd inference
+           patch -p1 < ../3DUnet.patch
+           ```
+
+   3. 精度验证。
+
+      将acl_net.py拷贝到3d-unet目录下，运行source /usr/local/Ascend/ascend-toolkit/set_env.sh设置环境变量。运行如下命令获取精度：
+
+      ```
+      python3 run.py --accuracy --backend onnxruntime --model ./build/model/3DUnet.om 
+      ```
+
+   4. 性能验证
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+         python3 -m ais_bench --model=${om_model_path} --loop=1000 --batchsize=${batch_size}
+      ```
+
+      - 参数说明：
+           - --model：om模型
+           - --batchsize：模型batchsize
+           - --loop: 循环次数
 
 
 
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集 | 精度 | 310P性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+|     310P3     |    1        | BraTS2019 |   mean tumor:0.853   |  6.26fps  |

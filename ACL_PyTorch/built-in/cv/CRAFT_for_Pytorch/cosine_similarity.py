@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-from pyacl.acl_infer import AclNet, init_acl, release_acl
-import acl
+from ais_bench.infer.interface import InferSession
 import numpy as np
 import onnxruntime
 
@@ -25,10 +24,9 @@ def cos_sim(a, b):
 
 if __name__ == '__main__':
     DEVICE = 0
-    init_acl(DEVICE)
     input_data = np.random.random((1, 3, 640, 640)).astype("float32")
-    net = AclNet(model_path="craft.om", device_id=DEVICE)
-    output_data, exe_time = net([input_data])
+    net = InferSession(DEVICE, "craft.om")
+    output_data = net.infer([input_data])
     y = output_data[0].flatten()
     feature = output_data[1].flatten()
     onnx_model = onnxruntime.InferenceSession("craft.onnx")
@@ -42,5 +40,3 @@ if __name__ == '__main__':
     cos_2 = cos_sim(feature, onnx_feature)
     print("cosine_1:", cos_1)
     print("cosine_2:", cos_2)
-    del net
-    release_acl(DEVICE)

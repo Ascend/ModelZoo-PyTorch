@@ -1,88 +1,188 @@
-# CARFT模型PyTorch离线推理指导
+# CRAFT 模型-推理指导
 
-## 1 环境准备 
 
-1. 安装必要的依赖，测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装  
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-```
-pip3.7 install -r requirements.txt  
-```
+    - [输入输出数据](#section540883920406)
 
-2. 安装acl_infer
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-   ```
-   git clone https://gitee.com/peng-ao/pyacl.git
-   cd pyacl
-   pip3 install .
-   ```
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-3. 获取，修改与安装开源模型代码  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
+
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+
+CRAFT模型是一个文本检测模型。
+
+
+- 参考实现：
+
+  ```
+  url=https://github.com/clovaai/CRAFT-pytorch.git
+  commit_id=e332dd8b718e291f51b66ff8f9ef2c98ee4474c8
+  model_name=CRAFT_for_Pytorch
+  ```
+
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 640 x 640 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 数据类型 | 大小                       | 数据排布格式 |
+  | -------- | -------- | -------------------------- | ------------ |
+  | y        | FLOAT32  | batchsize x 320 x 320 x 2  | ND           |
+  | feature  | FLOAT32  | batchsize x 32 x 320 x 320 | ND           |
+
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动
+
+  **表 1**  版本配套表
+
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
 
    ```
    git clone https://github.com/clovaai/CRAFT-pytorch.git
    cd CRAFT-pytorch/
    git reset e332dd8b718e291f51b66ff8f9ef2c98ee4474c8 --hard
    ```
-
-4. 下载网络权重文件craft_mlt_25k.pth
-
-5. 数据集下载：
-
-   使用随机数据测试余弦相似度
-
-6. 导出onnx，生成om离线文件
-
-   ```
-   cp export_onnx.py CRAFT-pytorch/
-   cp craft_mlt_25k.pth CRAFT-pytorch/
-   python3 export_onnx.py --trained_model craft_mlt_25k.pth
-   ```
-
-   生成craft.onnx
-
-7. 运行 bash craft_atc.sh生成离线om模型， craft.om
-
-   ${chip_name}可通过`npu-smi info`指令查看
    
-    ![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+2. 安装依赖
 
    ```
-   cp craft_atc.sh CRAFT-pytorch/
-   bash craft_atc.sh Ascend${chip_name} # Ascend310P3
+   pip3 install -r requirements.txt
    ```
-
    
 
-## 2 离线推理 
+## 准备数据集<a name="section183221994411"></a>
 
-1. 首先为了获得更好的性能，可以首先设置日志等级，商发版本默认ERROR级别
+1. 获取原始数据集。
 
-```
-export ASCEND_GLOBAL_LOG_LEVEL=3
-/usr/local/Ascend/driver/tools/msnpureport -g error -d 0
-```
+   本模型使用随机数据进行测试
 
-2. 获取精度,模型有2个输出，我们计算余弦相似度
+## 模型推理<a name="section741711594517"></a>
 
-```
-cp cosine_similarity.py CRAFT-pytorch/
-python3 cosine_similarity.py
-```
+1. 模型转换。
 
-3. [获取benchmark工具，](https://gitee.com/ascend/cann-benchmark/tree/master/infer)将benchmark.x86_64或benchmark.aarch64放到与craft相同的目录
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh 
-./benchmark.x86_64 -round=10 -batch_size=1 -device_id=0 -om_path=craft.om 
-```
+   1. 获取权重文件。
+
+       到https://github.com/clovaai/CRAFT-pytorch 链接下下载General项的pretrained model craft_mlt_25k.pth
+       
+   2. 导出onnx文件。
+
+      ```
+      cp export_onnx.py CRAFT-pytorch/
+      cp craft_mlt_25k.pth CRAFT-pytorch/
+      python3 export_onnx.py --trained_model craft_mlt_25k.pth
+      ```
+
+      
+
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         cp craft_atc.sh CRAFT-pytorch/
+         bash craft_atc.sh Ascend${chip_name} # Ascend310P3
+         ```
+
+
+           运行成功后生成craft.om模型文件。
+
+4. 开始推理验证
+
+   1. 使用ais-infer工具进行推理。
+
+      ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+
+   2. 精度验证。
+
+      调用以下脚本，会打印出余弦相似度
+      ```
+      cp cosine_similarity.py CRAFT-pytorch/
+      python3 cosine_similarity.py
+      ```
+
+   4. 性能验证
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+      python3 -m ais_bench --model=craft.om --loop=20 --batchsize=1
+      ```
+
+      - 参数说明：
+        - --model：om模型
+        - --batchsize：模型batchsize
+        - --loop: 循环次数
 
 
 
-```
-   
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-|     模型      | 官网pth精度 | 310P离线推理精度 | gpu性能 | 310P性能 |
-| :-----------: | :---------: | :-------------: | :-----: | :-----: |
-| CRAFT_General |             |                 |         | 148fps  |
+调用ACL接口推理计算，性能参考下列数据。
 
-```
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| -------- | ---------- | ------ | ---- | ---- |
+|     310P3     |    1        |  随机数据  |   余弦相似度:0.999   |  140fps  |

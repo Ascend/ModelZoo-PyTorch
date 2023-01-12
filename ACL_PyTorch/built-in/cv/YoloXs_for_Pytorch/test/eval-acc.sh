@@ -26,28 +26,18 @@ if [ $? != 0 ]; then
     exit -1
 fi
 
-rm -rf result/dumpOutput_device*
+rm -rf result/
 
-./benchmark.${arch} -model_type=vision -device_id=0 -batch_size=4 -om_path=./models/yolox.om -input_text_path=./prep_bin.info -input_width=640 -input_height=640 -output_binary=True -useDvpp=False
+
+
+python3 -m ais_bench --model ./models/yolox.om --input prep_data --output ./ --output_dirname result --outfmt BIN
+
+
+python Yolox_postprocess.py --dataroot ${datasets_path} --dump_dir 'result/'
 if [ $? != 0 ]; then
     echo "fail!"
     exit -1
 fi
 
-
-python Yolox_postprocess.py --dataroot ${datasets_path} --dump_dir 'result/dumpOutput_device0'
-if [ $? != 0 ]; then
-    echo "fail!"
-    exit -1
-fi
-
-
-echo "====performance data===="
-python test/parse.py result/perf_vision_batchsize_4_device_0.txt
-
-if [ $? != 0 ]; then
-    echo "fail!"
-    exit -1
-fi
 echo "success"
 

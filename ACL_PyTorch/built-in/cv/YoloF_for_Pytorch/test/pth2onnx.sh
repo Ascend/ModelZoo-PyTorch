@@ -9,7 +9,7 @@ cp bbox_nms.py ${mmdeploy_path}/mmdeploy/codebase/mmdet/core/post_processing/bbo
 cp pytorch2onnx.py ${mmdeploy_path}/mmdeploy/apis/pytorch2onnx.py
 cp deploy.py ${mmdeploy_path}/tools/deploy.py
 cd ${mmdeploy_path}
-python tools/deploy.py \
+python3 tools/deploy.py \
 configs/mmdet/detection/detection_onnxruntime_dynamic.py \
 ${mmdetection_path}/configs/yolof/yolof_r50_c5_8x8_1x_coco.py  \
 yolof_r50_c5_8x8_1x_coco_20210425_024427-8e864411.pth \

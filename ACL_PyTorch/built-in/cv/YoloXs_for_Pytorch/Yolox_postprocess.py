@@ -26,7 +26,7 @@ sys.path.append('./YOLOX')
 
 
 def get_output_data(dump_dir, idx, dtype=np.float32):
-    input_file_1 = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
+    input_file_1 = os.path.join(dump_dir, "{:0>12d}_0.bin".format(idx))
     input_data_1 = np.fromfile(input_file_1, dtype=dtype).reshape([1, 8400, 85])
     return input_data_1
 
@@ -37,7 +37,7 @@ def main():
                         help='data root dirname', default='/opt/npu/coco',
                         type=str)
     parser.add_argument('--dump_dir', dest='dump_dir',
-                        help='dump dir for bin files', default='./result/dumpOutput_device0/',
+                        help='dump dir for bin files', default='./result/',
                         type=str)
     
     parser.add_argument('--batch', dest='batch', help='batch for dataloader', default=1, type=int)

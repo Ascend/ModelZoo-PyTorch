@@ -20,7 +20,7 @@ index 0651e2f..29ad467 100644
  import onnxruntime
  
  from brats_QSL import get_brats_QSL
-+from acl_net import Net
++ais_bench.infer.interface import InferSession 
 +
  
  class _3DUNET_ONNXRuntime_SUT():
@@ -28,7 +28,7 @@ index 0651e2f..29ad467 100644
          print("Loading ONNX model...")
 -        self.sess = onnxruntime.InferenceSession(model_path)
 +        # self.sess = onnxruntime.InferenceSession(model_path)
-+        self.model = Net(device_id=0, model_path=model_path)
++        self.model = InferSession(0, model_path)
  
          print("Constructing SUT...")
          self.sut = lg.ConstructSUT(self.issue_queries, self.flush_queries, self.process_latencies)
@@ -38,7 +38,7 @@ index 0651e2f..29ad467 100644
              # The ONNX file has five outputs, but we only care about the one named "output".
 -            output = self.sess.run(["output"], {"input": data[np.newaxis, ...]})[0].squeeze(0).astype(np.float16)
 +            # output = self.sess.run(["output"], {"input": data[np.newaxis, ...]})[0].squeeze(0).astype(np.float16)
-+            output = self.model(data[np.newaxis, ...])[0].squeeze(0).astype(np.float16)
++            output = self.model.infer([data[np.newaxis, ...]])[0].squeeze(0).astype(np.float16)
  
              response_array = array.array("B", output.tobytes())
              bi = response_array.buffer_info()

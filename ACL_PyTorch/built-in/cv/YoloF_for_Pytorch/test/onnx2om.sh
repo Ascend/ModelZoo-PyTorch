@@ -18,9 +18,9 @@ if [ ! -d "int8data" ];then
     mkdir int8data
 fi
 # get quant data
-python generate_data.py --img_src_path ${img_src_path} --save_path int8data --batch_size 16
+python3 generate_data.py --img_src_path ${img_src_path} --save_path int8data --batch_size 16
 # get quant onnx
-python adaptyolof.py --src_path ${src_path} --save_path ${save_path}
+python3 adaptyolof.py --src_path ${src_path} --save_path ${save_path}
 
 rm -f yolof.om
 

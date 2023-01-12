@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_path', default="/opt/npu/coco")
     parser.add_argument('--model_config', default="mmdetection/configs/yolox/yolox_s_8x8_300e_coco.py")
-    parser.add_argument('--bin_data_path', default="result/dumpOutput_device0/")
+    parser.add_argument('--bin_data_path', default="result/")
     parser.add_argument('--meta_info_path', default="yolox_meta.info")
     parser.add_argument('--num_classes', default=81)
 
@@ -45,8 +45,8 @@ if __name__ == '__main__':
             scalar = float(scalar)
             file_name = file_path.split("/")[1].replace(".bin", "")
             result_list = [
-                np.fromfile("{0}{1}_{2}.bin".format(args.bin_data_path, file_name, 1), dtype=np.float32).reshape(-1, 5),
-                np.fromfile("{0}{1}_{2}.bin".format(args.bin_data_path, file_name, 2), dtype=np.int32)]
+                np.fromfile("{0}{1}_{2}.bin".format(args.bin_data_path, file_name, 0), dtype=np.float32).reshape(-1, 5),
+                np.fromfile("{0}{1}_{2}.bin".format(args.bin_data_path, file_name, 1), dtype=np.int32)]
             result_list[0][..., :4] /= scalar
             bbox_result = bbox2result(result_list[0], result_list[1], num_classes)
             outputs.append(bbox_result)
