@@ -91,13 +91,13 @@ do
 			--local_rank ${RANK_ID} \
 			--batch_size=$batch_size \
 			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
+			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
 	else
         python3.7 train.py train.yaml \
 			--local_rank ${RANK_ID} \
 			--batch_size=$batch_size \
 			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
+			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
 	fi
 done
 wait
