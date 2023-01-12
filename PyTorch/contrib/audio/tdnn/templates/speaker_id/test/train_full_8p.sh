@@ -1,7 +1,7 @@
 ##################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 删除之前结果
-rm -rf ../results
+rm -rf ./results
 
 #集合通信参数,不需要修改
 export RANK_SIZE=8

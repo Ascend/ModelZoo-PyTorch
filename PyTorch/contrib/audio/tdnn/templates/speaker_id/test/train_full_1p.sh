@@ -2,7 +2,7 @@
 ##################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 删除之前结果
-rm -rf ../results
+rm -rf ./results
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
@@ -78,7 +78,7 @@ fi
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 # source 环境变量
-#source ${test_path_dir}/env.sh
+source ${test_path_dir}/env_npu.sh
 export WORLD_SIZE=1
 export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='211225'

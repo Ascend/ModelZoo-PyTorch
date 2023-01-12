@@ -1,6 +1,6 @@
 #!/bin/bash
 # 删除之前结果
-rm -rf ../results
+rm -rf ./results
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
@@ -74,7 +74,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 # source 环境变量
-#source test/env_npu.sh  #source 这个.sh会报错
+source test/env_npu.sh
 export WORLD_SIZE=1
 export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='211225'
