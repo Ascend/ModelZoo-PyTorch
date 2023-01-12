@@ -5,3 +5,4 @@ numpy ==1.21.1
 onnx-simplifier == 0.3.6
 tqdm == 4.62.2
 easydict == 1.9
+pip == 21.2
