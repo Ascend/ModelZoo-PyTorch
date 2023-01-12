@@ -20,7 +20,15 @@ import numpy as np
 from tqdm import tqdm
 from scipy import interpolate
 from sklearn.model_selection import KFold
-from FaceNet_preprocess import read_pairs
+
+
+def read_pairs(pairs_filename):
+    pairs = []
+    with open(pairs_filename, 'r') as f:
+        for line in f.readlines()[1:]:
+            pair = line.strip().split()
+            pairs.append(pair)
+    return np.array(pairs, dtype=object)
 
 
 def load_json(json_path):
@@ -212,19 +220,22 @@ def calculate_val_far(threshold, dist, actual_issame):
 
 
 if __name__ == '__main__':
-    pairs_path = './data/pairs.txt'
     parser = argparse.ArgumentParser()
+    parser.add_argument('--pair_path', default='./data/pairs.txt', type=str, help='path for pair gt label')
     parser.add_argument('--crop_dir', type=str, help='cropped image save path')
     parser.add_argument('--test_dir', type=str, help='test file path')
     parser.add_argument('--ONet_output_dir', type=str, help='preprocess bin files save path')
     arg = parser.parse_args()
     embedding_output_path = arg.test_dir
-    pairs = read_pairs(pairs_path)
+    pairs = read_pairs(arg.pair_path)
     crop_paths = load_json(arg.ONet_output_dir)
     crop_dir = arg.crop_dir
     path_list, _ = get_paths(crop_dir, pairs)
     embeddings_dict = face_postprocess(crop_paths, embedding_output_path)
-    embeddings = np.array([embeddings_dict['./' + os.path.relpath(path)] for path in path_list])
+    if list(embeddings_dict.keys())[0][:2] == './':
+        embeddings = np.array([embeddings_dict['./' + os.path.relpath(path)] for path in path_list])
+    else:
+        embeddings = np.array([embeddings_dict[os.path.relpath(path)] for path in path_list])
     path_list, issame_list = get_paths(crop_dir, pairs)
     tpr, fpr, accuracy, val, val_std, far, fp, fn = evaluate(embeddings, issame_list)
     print("accuracy:", accuracy)

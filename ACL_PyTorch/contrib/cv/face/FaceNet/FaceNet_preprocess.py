@@ -22,15 +22,6 @@ from facenet_pytorch import fixed_image_standardization
 from torch.utils.data import DataLoader, SequentialSampler
 
 
-def read_pairs(pairs_filename):
-    pairs = []
-    with open(pairs_filename, 'r') as f:
-        for line in f.readlines()[1:]:
-            pair = line.strip().split()
-            pairs.append(pair)
-    return np.array(pairs, dtype=object)
-
-
 def face_preprocess(crop_dir, save_dir):
     # create dataset and data loaders from cropped images output from MTCNN
     trans = transforms.Compose([
@@ -61,13 +52,11 @@ def face_preprocess(crop_dir, save_dir):
 
 
 if __name__ == '__main__':
-    pairs_path = './data/pairs.txt'
     parser = argparse.ArgumentParser()
     parser.add_argument('--crop_dir', type=str, help='cropped image save path')
     parser.add_argument('--save_dir', type=str, help='preprocess bin files save path')
-    parser.add_argument('--batch_size', type=int, help='preprocess bin files save path')
+    parser.add_argument('--batch_size', type=int, default=1, help='preprocess bin files save path')
     arg = parser.parse_args()
     batch_size = arg.batch_size
     workers = 0 if os.name == 'nt' else 8
-    pairs = read_pairs(pairs_path)
     face_preprocess(arg.crop_dir, arg.save_dir)

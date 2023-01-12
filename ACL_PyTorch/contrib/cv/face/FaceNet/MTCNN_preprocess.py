@@ -256,6 +256,8 @@ def process_rnet(config):
 
 def process_onet(config):
     data_dir = config.data_dir
+    if data_dir[-1] == "/":
+        data_dir = data_dir[:-1]
     loader = build_dataset(config)
     processor = MTCNNPreprocessor(config)
     pnet_data = load_json(config.input_path)
@@ -312,37 +314,33 @@ def save_crop_imgs(batch_boxes, batch_points, img, save_path):
     return faces
 
 
-def parser_args():
-    pass
-
-
 def build_config(arg):
     pnet_config = {
         'net': 'pnet',
-        'device_id': 1,
+        'device_id': arg.device_id,
         'output_path': './data/output/split_bs' + str(arg.batch_size)  + '/',
         'model_path': './weights/PNet_dynamic.om',
-        'data_dir': './data/lfw',
+        'data_dir': arg.data_dir,
         'num_workers': 8,
         'batch_size': arg.batch_size
     }
     rnet_config = {
         'net': 'rnet',
-        'device_id': 1,
+        'device_id': arg.device_id,
         'input_path': './data/output/split_bs' + str(arg.batch_size)  + '/pnet.json',
         'output_path': './data/output/split_bs' + str(arg.batch_size) + '/',
         'model_path': './weights/RNet_dynamic.om',
-        'data_dir': './data/lfw',
+        'data_dir': arg.data_dir,
         'num_workers': 8,
         'batch_size': arg.batch_size
     }
     onet_config = {
         'net': 'onet',
-        'device_id': 1,
+        'device_id': arg.device_id,
         'input_path': './data/output/split_bs' + str(arg.batch_size)  + '/rnet.json',
         'output_path': './data/output/split_bs' + str(arg.batch_size)  + '/',
         'model_path': './weights/ONet_dynamic.om',
-        'data_dir': './data/lfw',
+        'data_dir': arg.data_dir,
         'num_workers': 8,
         'batch_size': arg.batch_size
     }
@@ -353,7 +351,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, help='[PNet/RNet/ONet]')
     parser.add_argument('--data_dir', type=str, help='the absolute files path of lfw dataset')
-    parser.add_argument('--batch_size', type=int, help='[1/16]')
+    parser.add_argument('--batch_size', default=1, type=int, help='[1/16]')
+    parser.add_argument('--device_id', default=0, type=int)
     arg = parser.parse_args()
     pnet_config, rnet_config, onet_config = build_config(arg)
     if arg.model == 'Pnet':

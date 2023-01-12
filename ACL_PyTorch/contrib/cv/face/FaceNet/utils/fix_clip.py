@@ -19,9 +19,8 @@ from magiconnx import OnnxGraph
 
 
 def fix(graph):
-    clip_node = graph['Clip_473']
-    max_value = graph.add_initializer('max_value', np.array(999999999, dtype=np.float32))
-    clip_node.inputs[2] = max_value.name
+    for clip_node in graph.get_nodes(op_type="Clip"):
+        clip_node["max"] = 999999999
 
 
 if __name__ == '__main__':

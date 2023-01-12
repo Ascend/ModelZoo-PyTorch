@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import functools
 import acl
 
 # error code
@@ -215,10 +216,10 @@ class Net(object):
         self._gen_dataset("in", input_shapes)
         self._gen_dataset("out")
 
-    def _data_from_device_to_host(self, input_data, out_size_list):
+    def _data_from_device_to_host(self, input_data, output_shape):
         res = []
         self._data_interaction(res, ACL_MEMCPY_DEVICE_TO_HOST)
-        output = self.get_result(self.output_data_host, input_data, out_size_list)
+        output = self.get_result(self.output_data_host, input_data, output_shape)
         return output
 
     def _destroy_databuffer(self):
@@ -234,6 +235,21 @@ class Net(object):
             ret = acl.mdl.destroy_dataset(dataset)
             check_ret("acl.mdl.destroy_dataset", ret)
 
+    def _get_output_shape(self):
+        output_shape = []
+        num = acl.mdl.get_dataset_num_buffers(self.load_output_dataset)
+        for output_index in range(num):
+            outpu_desc = acl.mdl.get_dataset_tensor_desc(
+                self.load_output_dataset, output_index)
+            temp_output_shape = []
+            dim_nums = acl.get_tensor_desc_num_dims(outpu_desc)
+            for i in range(dim_nums):
+                dim, ret = acl.get_tensor_desc_dim_v2(outpu_desc, i)
+                temp_output_shape.append(dim)
+            output_shape.append(temp_output_shape)
+        self.output_shape = output_shape
+        return output_shape
+
     def _prepare_data_buffer(self, input_data=None, out_size_list=None):
         self._gen_data_buffer(self.input_size, des="in", data=input_data)
         self._gen_data_buffer(self.output_size, des="out", out_size_list=out_size_list)
@@ -247,24 +263,22 @@ class Net(object):
         self._data_from_host_to_device(input_data)
         ret = acl.mdl.execute(self.model_id, self.load_input_dataset, self.load_output_dataset)
         check_ret("acl.mdl.execute", ret)
+        output_shape = self._get_output_shape()
         self._destroy_databuffer()
-        result = self._data_from_device_to_host(input_data=input_data, out_size_list=out_size_list)
+        result = self._data_from_device_to_host(input_data=input_data, output_shape=output_shape)
         self._release_data_buffer()
         return result
 
-    def get_result(self, output_data, data, out_size_list):
+    def get_result(self, output_data, data, output_shape):
         dataset = []
         batch_size = data[0].shape[0]
         for i in range(len(output_data)):
             dims, ret = acl.mdl.get_output_dims(self.model_desc, i)
             check_ret("acl.mdl.get_output_dims", ret)
 
-            data_shape = dims.get("dims")
-            # fix dynamic batch size
-            # data_shape[0] = batch_size
+            data_shape = output_shape[i]
             data_type = acl.mdl.get_output_data_type(self.model_desc, i)
-            # data_len =  functools.reduce(lambda x, y: x * y, data_shape)
-            data_len = out_size_list[i]
+            data_len =  functools.reduce(lambda x, y: x * y, data_shape)
             ftype = np.dtype(ACL_DTYPE.get(data_type))
 
             size = output_data[i]["size"]
