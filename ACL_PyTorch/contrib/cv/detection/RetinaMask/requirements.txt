@@ -1,0 +1,9 @@
+matplotlib==3.5.2
+onnx==1.8.1
+onnx-simplifier==0.3.9
+opencv-python==4.5.5.64
+pycocotools==2.0
+torch==1.6.0
+torchvision==0.7.0
+tqdm==4.64.0
+yacs==0.1.8
