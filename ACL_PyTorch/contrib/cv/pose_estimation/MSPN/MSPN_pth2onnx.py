@@ -25,7 +25,7 @@ def main():
 
     model = MSPN(cfg)
 
-    model_file = os.path.join(cfg.OUTPUT_DIR, "mspn_2xstg_coco.pth")
+    model_file = os.path.join("mspn_2xstg_coco.pth")
     if os.path.exists(model_file):
         print('MSPN loaded')
         state_dict = torch.load(

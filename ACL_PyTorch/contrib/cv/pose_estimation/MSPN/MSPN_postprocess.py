@@ -82,8 +82,8 @@ def get_results(outputs, centers, scales, kernel=11, shifts=[0.25]):
     
     return preds, maxvals
 
-
-def compute_on_dataset(data_loader, device="cpu"):
+#change
+def compute_on_dataset(data_loader, args, device="cpu"):
     results = list() 
     cpu_device = torch.device("cpu")
 
@@ -93,7 +93,8 @@ def compute_on_dataset(data_loader, device="cpu"):
     for _, batch in enumerate(data):
         imgs, scores, centers, scales, img_ids = batch
         output_name='img_%d_%d_1.bin' %(int(img_ids[0]), k)
-        output_path=os.path.join('result/dumpOutput_device0/',output_name)
+        #change
+        output_path=os.path.join(args.inference_result, output_name)
         outputs = np.fromfile(output_path, dtype=np.float32).reshape(1,17,64,48)
         k += 1
 
@@ -131,9 +132,10 @@ def _accumulate_predictions_from_multiple_gpus(predictions_per_gpu, logger):
     
     return predictions
 
-
-def inference(data_loader, logger, device="cpu"):
-    predictions = compute_on_dataset(data_loader, device)
+#change
+def inference(data_loader, logger, args, device="cpu"):
+    #change
+    predictions = compute_on_dataset(data_loader, args, device)
     synchronize()
     predictions = _accumulate_predictions_from_multiple_gpus(
             predictions, logger)
@@ -149,6 +151,8 @@ def main():
     parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument("--iter", "-i", type=int, default=-1)
     parser.add_argument("--datasets_path",default="$MSPN_HOME/dataset/COCO")
+    #ADD paramater
+    parser.add_argument("--inference_result",default="./result")
     args = parser.parse_args()
     COCODataset.cur_dir=os.path.join(args.datasets_path)
     num_gpus = int(
@@ -172,7 +176,8 @@ def main():
             is_dist=distributed)
 
     device = 'cpu'
-    results = inference(data_loader, logger, device)
+    #change 
+    results = inference(data_loader, logger, args, device)
     synchronize()
 
     if is_main_process():
