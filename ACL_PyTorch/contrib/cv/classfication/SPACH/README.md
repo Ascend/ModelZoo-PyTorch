@@ -102,7 +102,7 @@ SPACH 是结合了卷积和Transformer模块的混合模型，应用于分类任
    执行 SPACH_preprocess.py 脚本，完成数据预处理。
 
    ```
-   python3 ./SPACH_preprocess.py --src-path=${data_dir} --save-path=${save_dir}
+   python3 SPACH_preprocess.py --src-path=${data_dir} --save-path=${save_dir}
    ```
 
    参数说明：
