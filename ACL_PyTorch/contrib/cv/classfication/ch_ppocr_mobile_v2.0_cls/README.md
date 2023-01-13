@@ -56,7 +56,7 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
 
   | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | 1 x 2 | FLOAT32  | ND           |
+  | output1  | batchsize x 2 | FLOAT32  | ND           |
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -66,10 +66,10 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                    | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 5.1.RC2 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| paddlepaddle                                                 | 2.3.1   | -                                                            |
+| paddlepaddle                                                 | 2.3.2   | 仅支持X86服务器安装                                           |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -235,7 +235,8 @@ a.  安装ais_bench推理工具。
     python3 -m ais_bench \
         --model=./ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om \
         --input=./pre_data \
-        --output=./
+        --output=./ \
+        --batchsize=${batchsize}
    ```
 
 `${batchsize}`表示不同batch的om模型。
@@ -244,6 +245,7 @@ a.  安装ais_bench推理工具。
        -   --model：om模型路径。
        -   --input：bin文件路径。
        -   --output：推理结果保存路径。
+       -   --batchsize：om模型的batch。
 
 推理完成后在当前`ch_ppocr_mobile_v2.0_cls`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_12_04-15_46_57`。
 
