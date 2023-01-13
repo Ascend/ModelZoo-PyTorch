@@ -23,7 +23,7 @@ from config import cfg
 
 from dataset.attribute import load_dataset
 from dataset.COCO.coco import COCODataset
-
+import argparse
 
 def preprocess(save_path: str):
     cpu_device = torch.device("cpu")
