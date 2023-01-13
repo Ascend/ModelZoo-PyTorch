@@ -96,7 +96,7 @@ def preprocess(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src-path', type=str, required=True)
+    parser.add_argument('--src_path', type=str, required=True)
     parser.add_argument('--save_path', type=str, default='prep_dataset')
 
     args = parser.parse_args()
@@ -105,4 +105,4 @@ if __name__ == '__main__':
         os.makedirs(os.path.realpath(args.save_path))
     preprocess(args)
 
-# python ENet_preprocess.py --src-path=/root/.torch/datasets/citys --save_path prep_dataset
+# python ENet_preprocess.py --src_path=/root/.torch/datasets/citys --save_path prep_dataset

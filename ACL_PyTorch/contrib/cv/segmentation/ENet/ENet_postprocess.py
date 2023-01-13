@@ -109,9 +109,9 @@ def postprocess(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src-path', type=str, required=True)
-    parser.add_argument('--result-dir', type=str, default='result/dumpOutput_device0')
-    parser.add_argument('--batch-size', type=int, default=1, metavar='N',
+    parser.add_argument('--src_path', type=str, required=True)
+    parser.add_argument('--result_dir', type=str, default='result/dumpOutput_device0')
+    parser.add_argument('--batch_size', type=int, default=1, metavar='N',
                         help='input batch size for training (default: 8)')
     parser.add_argument('--workers', '-j', type=int, default=4,
                         metavar='N', help='dataloader threads')
@@ -119,4 +119,3 @@ if __name__ == '__main__':
 
     postprocess(args)
 
-# python ENet_postprocess.py --src-path=/root/.torch/datasets/citys --result-dir result/dumpOutput_device0
