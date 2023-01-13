@@ -115,7 +115,7 @@ echo "---------------- Final result ----------------"
 sed -i "s|\r|\n|g" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 # 输出性能FPS
-average_step_time=$(grep "step_time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print $4}' | awk 'BEGIN{count=0}{if(NR>3){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}')
+average_step_time=$(grep "step_time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print $4}' | awk 'BEGIN{count=0}{if(NR>5){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}')
 FPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${average_step_time}'}')
 
 #输出CompileTime
