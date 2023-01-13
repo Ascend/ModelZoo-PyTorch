@@ -24,6 +24,8 @@ import numpy as np
 def preprocess(src_path, save_path):
 
     in_files = sorted(os.listdir(src_path))
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
 
     preprocesser = transforms.Compose([
         transforms.Resize(256, interpolation=3),
