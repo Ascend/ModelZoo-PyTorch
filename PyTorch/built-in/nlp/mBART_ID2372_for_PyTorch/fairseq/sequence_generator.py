@@ -454,11 +454,11 @@ class SequenceGenerator(nn.Module):
 
                 if prefix_tokens is not None:
                     prefix_tokens = prefix_tokens[batch_idxs]
-                src_lengths = src_lengths[batch_idxs]
+                src_lengths = src_lengths[batch_idxs.npu()]
                 cands_to_ignore = cands_to_ignore[batch_idxs]
 
                 scores = scores.view(bsz, -1)[batch_idxs].view(new_bsz * beam_size, -1)
-                tokens = tokens.view(bsz, -1)[batch_idxs].view(new_bsz * beam_size, -1)
+                tokens = tokens.view(bsz, -1)[batch_idxs.npu()].view(new_bsz * beam_size, -1)
                 if attn is not None:
                     attn = attn.view(bsz, -1)[batch_idxs].view(
                         new_bsz * beam_size, attn.size(1), -1
@@ -500,7 +500,7 @@ class SequenceGenerator(nn.Module):
             active_bbsz_idx = torch.gather(cand_bbsz_idx, dim=1, index=active_hypos)
             active_scores = torch.gather(cand_scores, dim=1, index=active_hypos)
 
-            active_bbsz_idx = active_bbsz_idx.view(-1)
+            active_bbsz_idx = active_bbsz_idx.view(-1).int()
             active_scores = active_scores.view(-1)
 
             # copy tokens and scores for active hypotheses
@@ -604,6 +604,7 @@ class SequenceGenerator(nn.Module):
         """
         assert bbsz_idx.numel() == eos_scores.numel()
 
+        bbsz_idx = bbsz_idx.int()
         # clone relevant token and attention tensors.
         # tokens is (batch * beam, max_len). So the index_select
         # gets the newly EOS rows, then selects cols 1..{step + 2}
