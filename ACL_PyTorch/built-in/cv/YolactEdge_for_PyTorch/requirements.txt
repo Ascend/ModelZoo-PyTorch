@@ -1,7 +1,11 @@
 cython
+torch==1.10.0
+torchvision
 opencv-python
 pillow
 matplotlib
 GitPython
 termcolor
 tensorboard
+pycocotools
+tqdm

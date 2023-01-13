@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,8 +41,15 @@ if __name__ == '__main__':
         net.eval()
         net.detect.use_fast_nms = args.fast_nms
 
+        input_names = ["image"]
+        output_names = ["output0", "output1", "output2", "output3", "output4", "output5"]
+        dynamic_axes = {'image':{0:'-1'}, 'output0':{0:'-1'}, 'output1':{0:'-1'}, 'output2':{0:'-1'}, 'output3':{0:'-1'}, 'output4':{0:'-1'}, 'output5':{0:'-1'}}
+
         torch.onnx.export(net,
                             x,
                             'yolact_edge.onnx',
+                            dynamic_axes=dynamic_axes,
+                            input_names=input_names,
                             opset_version=11,
+                            output_names=output_names,
                             enable_onnx_checker=True)
