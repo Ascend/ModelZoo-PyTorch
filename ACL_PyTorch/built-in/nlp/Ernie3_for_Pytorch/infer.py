@@ -33,7 +33,7 @@ from paddlenlp.metrics import ChunkEvaluator
 from paddlenlp.metrics.squad import squad_evaluate, compute_prediction
 from paddlenlp.data import DataCollatorForTokenClassification, DataCollatorWithPadding
 from paddlenlp.transformers import AutoTokenizer
-from pyacl.acl_infer import AclNet, init_acl, release_acl
+from ais_bench.infer.interface import InferSession
 import acl
 
 METRIC_CLASSES = {
@@ -225,8 +225,8 @@ class Predictor(object):
                 om_model = args.model_path
             else:
                 return
-            init_acl(args.device_id)
-            predictor = AclNet(model_path=om_model, device_id=args.device_id)
+            
+            predictor = InferSession(args.device_id, om_model)
             return cls(predictor, [], [])
         if args.use_onnxruntime:
             assert args.device != "xpu", "Running ONNXRuntime on XPU is temporarily not supported."
@@ -357,7 +357,7 @@ class Predictor(object):
 
     def predict_batch(self, data):
         if len(self.output_handles) == 0 and len(self.input_handles) == 0:
-            result, t = self.predictor(data)
+            result = self.predictor.infer(data)
             return result
         if len(self.output_handles) == 0:
             input_dict = {}
