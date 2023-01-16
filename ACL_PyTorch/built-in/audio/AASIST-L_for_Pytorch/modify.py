@@ -124,7 +124,7 @@ def find_cov(model):
     for node in bn_nodes:
         next_node = model.get_next_nodes(node.outputs[0])[0]
         if next_node.op_type == 'Selu':
-            conv_node = model.get_next_nodes(next_node.outputs[0])[0]
+            conv_node = model.get_next_nodes(next_node.outputs[0])[1]
             nodes[0] = conv_node.name
             for i in range(1, 5):
                 next_node = model.get_next_nodes(next_node.outputs[0])[0]
