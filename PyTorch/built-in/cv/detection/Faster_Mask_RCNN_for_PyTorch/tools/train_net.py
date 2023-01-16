@@ -186,7 +186,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    torch.npu.set_compile_mode(jit_compile=True)
     args = default_argument_parser().parse_args()
     print("Command Line Args:", args)
     launch(
