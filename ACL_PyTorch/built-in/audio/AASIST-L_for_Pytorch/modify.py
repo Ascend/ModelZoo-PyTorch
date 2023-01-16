@@ -15,7 +15,7 @@
 
 import numpy as np
 import argparse
-from auto-optimizer import OnnxGraph
+from auto_optimizer import OnnxGraph
 
 def remove_zero_weights(model, bs):
     tanh_nodes = model.get_nodes('Tanh')
@@ -84,11 +84,11 @@ def clear_softmax(model):
         prev_node = model.get_prev_node(inp)
         if prev_node.op_type != 'Transpose':
             continue
-        next_node = model.get_next_nodes(output)[0]
+        next_node = model.get_next_nodes(out)[0]
         if next_node.op_type != 'Transpose':
             continue
         axis = node.attrs['axis']
-        new_axis = prev_node.attrs['prem'][axis]
+        new_axis = prev_node.attrs['perm'][axis]
         node.attrs['axis'] = new_axis
         model.remove(prev_node.name)
         model.remove(next_node.name)
@@ -108,7 +108,7 @@ def replace_gather(model):
         f_node.inputs = [node.outputs[1]]
         f_out = 'fatten_out_' + str(i)
         f_node.outputs = [f_node]
-        g_node.inputs = [ge_nodes.inputs[0], f_out]
+        g_node.inputs = [ge_node.inputs[0], f_out]
         g_out = 'gather_out_' + str(i)
         g_node.outputs = [g_out]
         s_node.inputs = [g_out]
@@ -119,20 +119,21 @@ def replace_gather(model):
     return model
 
 def find_cov(model):
-    bn_nodes = mdoel.get_nodes('BatchNormalization')
-    nodes = (None, None, None, None, None)
+    bn_nodes = model.get_nodes('BatchNormalization')
+    nodes = [None, None, None, None, None]
     for node in bn_nodes:
         next_node = model.get_next_nodes(node.outputs[0])[0]
         if next_node.op_type == 'Selu':
-            for i in range(5):
-                nodes[i] = next_node.name
+            conv_node = model.get_next_nodes(next_node.outputs[0])[0]
+            nodes[0] = conv_node.name
+            for i in range(1, 5):
                 next_node = model.get_next_nodes(next_node.outputs[0])[0]
+                nodes[i] = next_node.name
             break
-        print(node, nodes)
     return nodes
 
 def slice_conv(model):
-    conv_1, selu, conv_2, conv_3, add_ = find_cov(model) # 8, 9, 10, 11, 12
+    conv_3, conv_1, selu, conv_2, add_ = find_cov(model) # 8, 9, 10, 11, 12
     begin_output = model[conv_1].inputs[0]
     attrs1 = model[conv_1].attrs
     attrs2 = model[conv_2].attrs
@@ -143,7 +144,7 @@ def slice_conv(model):
     final_inputs = model[add_].outputs
     model.remove(conv_1, {})
     model.remove(conv_2, {})
-    mdoel.remove(conv_3, {})
+    model.remove(conv_3, {})
     model.remove(selu, {})
     model.remove(add_, {})
     ind = [[[0], [4299]], [[4297], [8597]], [[8595], [12895]], [[12893], [17193]], [[17191], [21490]]]
@@ -155,7 +156,7 @@ def slice_conv(model):
         name_slice_2 = 'Slice2_new_' + str(i)
         name_1 = 'Conv1_s' + str(i)
         name_2 = 'Conv2_s' + str(i)
-        name_3 = 'Conv2_s' + str(i)
+        name_3 = 'Conv3_s' + str(i)
         name_selu = 'Selu_new_' + str(i)
         name_add = 'Add_new_' + str(i)
         begin_name = 'ind0_s' + str(i)
@@ -182,7 +183,7 @@ def slice_conv(model):
             attrs_1['pads'] = [1, 1, 1, 0]
             attrs_2['pads'] = [0, 1, 0, 0]
             attrs_3['pads'] = [0, 1, 0, 0]
-        if i == 4:
+        elif i == 4:
             attrs_1['pads'] = [1, 0, 1, 1]
             attrs_2['pads'] = [0, 0, 0, 1]
             attrs_3['pads'] = [0, 0, 0, 1]
@@ -230,7 +231,7 @@ def conv1d_to_conv2d(model, bs):
             next_maxpool.attrs['kernel_shape'] = [1, 3]
             next_maxpool.attrs['strides'] = [1, 3]
             model.remove(next_unsq.name)
-            ori_outputs = next_maxpool.Outputs
+            ori_outputs = next_maxpool.outputs
             new_outputs = ['after_maxpool_' + str(i)]
             next_maxpool.outputs = new_outputs
             reshape = 'Reshape_new_' + str(i)
@@ -248,8 +249,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m1', '--input_name', required=True, help='filepath of the original onnx model')
     parser.add_argument('-m2', '--output_name', required=True, help='filepath of the modified onnx model')
-    parser.add_argument('-bs', '--batch_size', required=True, help='batch size of the model input')
-    parser.add_argument('method', '--modified_method', default='all', help='which method is used to modify. \
+    parser.add_argument('-bs', '--batch_size', required=True, type=int, help='batch size of the model input')
+    parser.add_argument('-method', '--modified_method', default='all', help='which method is used to modify. \
                         The options are all, remove, clear, conv, slice, replace. \
                         The replace method can only be used when batch size is 1.')
     args = parser.parse_args()
@@ -260,25 +261,25 @@ if __name__ == '__main__':
     bs = args.batch_size
     model = OnnxGraph.parse(input_name)
     if method == 'all':
-        model = remove_zero_weights(model, bs):
+        model = remove_zero_weights(model, bs)
         model = clear_softmax(model)
         if bs == 1:
             model = replace_gather(model)
         model = conv1d_to_conv2d(model, bs)
         model = slice_conv(model)
-        elif method == 'remove':
-            mdoel = remove_zero_weights(model,bs)
-        elif method == 'clear':
-            model = clear_softmax(mdoel)
-        elif method == 'replace' and bs == 1:
-            model = replace_gather(model)
-        elif method == 'conv':
-            model = conv1d_to_conv2d(model, bs)
-        elif method == 'slice':
-            model = slice_conv(model)
-        else:
-            print('No method is applied to the model!')
-        model.remove_unused_nodes()
-        model.infershape()
-        mdoel.save(output_name)
-        print('successfully saved the model')
+    elif method == 'remove':
+        mdoel = remove_zero_weights(model,bs)
+    elif method == 'clear':
+        model = clear_softmax(model)
+    elif method == 'replace' and bs == 1:
+        model = replace_gather(model)
+    elif method == 'conv':
+        model = conv1d_to_conv2d(model, bs)
+    elif method == 'slice':
+        model = slice_conv(model)
+    else:
+        print('No method is applied to the model!')
+    model.remove_unused_nodes()
+    model.infershape()
+    model.save(output_name)
+    print('successfully saved the model')
