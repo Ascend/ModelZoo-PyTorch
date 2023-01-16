@@ -164,7 +164,7 @@ def build_dataloader(dataset,
         worker_init_fn, num_workers=num_workers, rank=rank,
         seed=seed) if seed is not None else None
 
-    if digit_version(torch.__version__) >= digit_version('1.8.0'):
+    if digit_version(torch.__version__) >= digit_version('1.8.0a0'):
         data_loader = DataLoader(
             dataset,
             batch_size=batch_size,
