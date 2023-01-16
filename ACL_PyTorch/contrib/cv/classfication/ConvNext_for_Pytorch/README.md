@@ -11,9 +11,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
   ******
 
@@ -23,9 +21,7 @@
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适用于各种各样的计算机视觉任务。
-
-
+ConvNext是卷积神经网络，有内嵌的感应偏差，使他们更好的适用于各种各样的计算机视觉任务。
 
 - 参考实现：
 
@@ -36,32 +32,30 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
   model_name=models/convnext
   ```
 
-
-
-  通过Git获取对应commit\_id的代码方法如下：
+  通过Git获取对应commit_id的代码方法如下：
 
   ```
-  git clone https://github.com/facebookresearch/ConvNeXt.git        # 克隆仓库的代码
-  cd ConvNext              # 切换到模型的代码仓目录
-  git checkout main         # 切换到对应分支
-  git reset --hard 3d444184dc27156e0562133c3b69b56f7efba500      # 代码设置到对应的commit_id
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
-
 
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
-  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | 输入数据  | 数据类型  | 大小                      | 数据排布格式  |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+  | image    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
 
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | -------- | ------------ |
-  | output1  | 1 x 1000 | FLOAT32  | ND           |
+  | 输出数据  | 数据类型  | 大小             | 数据排布格式 |
+  | -------- | -------- | ---------------- | ----------- |
+  | class    | FLOAT32  | batchsize x 1000 | ND          |
 
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -70,12 +64,12 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.8.0   | -                                                            |
+| 配套       | 版本     | 环境准备指导              |
+| ---------- | ------- | ------------------------ |
+| 固件与驱动  | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN       | 6.0.0   | -                        |
+| Python     | 3.7.5   | -                        |
+| PyTorch    | 1.8.0   | -                        |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -84,19 +78,15 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
 1. 获取源码。
 
    ```
-   https://github.com/facebookresearch/ConvNeXt.git 
-   branch=main 
-   commit_id=3d444184dc27156e0562133c3b69b56f7efba500
-
-   git clone https://github.com/facebookresearch/ConvNeXt.git
-   ```
-2. 修改源码。
-此模型转换为onnx需要修改开源代码仓代码
-   ```
-   patch -p1 < convnext.patch
+   git clone https://github.com/facebookresearch/ConvNeXt.git    # 克隆仓库的代码
+   cd ConvNext                                                   # 切换到模型的代码仓目录
+   git checkout main                                             # 切换到对应分支
+   git reset --hard 3d444184dc27156e0562133c3b69b56f7efba500     # 代码设置到对应的commit_id
+   patch -p1 < ../convnext.patch                                 # 此模型转换为onnx需要修改开源代码仓代码
+   cd ..
    ```
 
-3. 安装依赖。
+2. 安装依赖。
 
    ```
    pip3 install -r requirements.txt
@@ -115,10 +105,16 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
    执行ConvNext_preprocess.py脚本，完成预处理。
 
    ```
-   python ConvNext_preprocess.py --dataset_root ${dataset_path} --output_dir ${prep_output_dir} --bs ${batch_size}
+   python3 ConvNext_preprocess.py --dataset_root ${dataset_path} --output_dir ${prep_output_dir} --bs ${batch_size}
    ```
 
-  data_root为预处理之前的数据集路径，output_dir为预处理结果的输出路径，bs为生成的二进制文件的batch_size。batch_size=1的二进制文件适用与后面所有batch_size的推理验证。
+   - 参数说明
+      - data_root：预处理之前的数据集路径。
+      - output_dir：预处理结果的输出路径。
+      - bs：生成的二进制文件的batch_size。batch_size=1的二进制文件适用与后面所有batch_size的推理验证。
+   
+   > **说明：**
+   > 请根据实际数据集文件结构修改ConvNext_preprocess.py中数据读取部分。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -129,9 +125,9 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
 
    1. 获取权重文件。
 
-       ```
-         wget https://dl.fbaipublicfiles.com/convnext/convnext_tiny_1k_224_ema.pth
-         ```
+      ```
+      wget https://dl.fbaipublicfiles.com/convnext/convnext_tiny_1k_224_ema.pth
+      ```
 
 
    2. 导出onnx文件。
@@ -141,7 +137,7 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
          运行ConvNext_pth2onnx.py脚本。
 
          ```
-         python ConvNext_pth2onnx.py convnext_tiny_1k_224_ema.pth convnext.onnx
+         python3 ConvNext_pth2onnx.py convnext_tiny_1k_224_ema.pth convnext.onnx
          ```
 
          convnext_tiny_1k_224_ema.pth为获取的权重文件,获得convnext.onnx文件。
@@ -152,11 +148,11 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/ascend-lastest/set_env.sh
+         source /usr/local/Ascend/ascend-lastest/set_env.sh
          ```
 
          > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+         > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
@@ -177,8 +173,9 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
          ```
 
       3. 执行ATC命令。
+
          ```
-          atc --framework=5 --model=./convnext_bs1.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=convnextbs1 --log=error --soc_version=${chip_name} --keep_dtype=execeotionlist.cfg --op_precision_mode=op_precision.ini
+         atc --framework=5 --model=./convnext.onnx --input_format=NCHW --input_shape="image:1,3,224,224" --output=convnextbs1 --log=error --soc_version=${chip_name} --keep_dtype=execeotionlist.cfg --op_precision_mode=op_precision.ini
          ```
 
          - 参数说明：
@@ -199,61 +196,57 @@ ConvNext是卷积神经网络,有内嵌的感应偏差，使他们更好的适�
 
 2. 开始推理验证。
 
-   a.  安装ais_bench推理工具。
+   1. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
+   2.  执行推理。
 
-   b.  执行推理。
+         ```
+         python3 -m ais_bench --model ./convnextbs1.om --input ${prep_output_dir} --output ./output/ --outfmt BIN --batchsize 1 
+         ```
 
-      ```
-       python -m ais_bench --model ./convnextbs1.om --input ./data/ --output ./output/ --outfmt  BIN --batchsize 1 
-      ```
+         -  参数说明：
 
+            -   outfmt：推理输出文件的格式
+            -   input：预处理后的数据路径
+            -   batchsize：推理的batchsize
+            -   model：om文件路径
+            -   input：预处理后的数据路径
+            -   output：推理输出路径
+      
+   3.  精度验证。
+
+         调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+
+         ```
+         mkdir Result
+         python3 ConvNext_postprocess.py ./output/${time_stamp} ./Result result.json ./val_label.txt
+         ```
       -   参数说明：
 
-           -   outfmt:推理输出文件的格式。
-           -   input:预处理后的数据路径。
-           -   batchsize:推理的batchsize。
-           -   model：om文件路径。
-           -   input:预处理后的数据路径。
-           -   output:推理输出路径。
-	  
-
-      推理后的输出默认在当前目录result下。
-
-
-   c.  精度验证。
-
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-
-      ```
-       python ConvNext_postprocess.py ./output ./Result result.json ./val_label.txt
-      ```
-     -   参数说明：
-
-           -   ./output：为生成推理结果所在路径。
-           -   val_label.txt：为标签数据。
-           -   result.json：生成结果文件。
-           -   ./Result：为result.json所在路径。
+           -   ./output/${time_stamp}：生成推理结果所在路径
+           -   val_label.txt：标签数据
+           -   result.json：生成结果文件
+           -   ./Result：result.json所在路径
         
-   d.  性能验证。
+   4.  性能验证。
 
-      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+         可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-      ```
-       python -m ais_bench --model ./convnextbs1.om --output ./output/ --outfmt  BIN --batchsize 1
-      ```
+         ```
+         python3 -m ais_bench --model ./convnextbs1.om --loop 1000 --batchsize 1
+         ```
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+调用ACL接口推理计算，性能和精度参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-|    310p       |         1         |      ImageNet      |       82.094%      |       262.4          |
-|    310p       |         4         |      ImageNet      |       82.093%      |       440.91          |
-|    310p       |         8         |      ImageNet      |       82.095%      |       461.9          |
-|    310p       |         16         |      ImageNet      |       82.092%      |       449.03          |
-|    310p       |         32         |      ImageNet      |       82.094%      |       435.7          |
+| 芯片型号  | Batch Size  | 数据集     | 精度      | 性能    |
+| -------- | ----------- | ---------- | -------- | ------- |
+|    310p  |      1      |  ImageNet  | 81.948%  | 364.45  |
+|    310p  |      4      |  ImageNet  | 81.948%  | 500.72  |
+|    310p  |      8      |  ImageNet  | 81.948%  | 511.46  |
+|    310p  |      16     |  ImageNet  | 81.948%  | 494.78  |
+|    310p  |      32     |  ImageNet  | 81.948%  | 480.52  |

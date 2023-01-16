@@ -1,13 +1,14 @@
-diff -Naur pysot/pysot/core/config.py pysot_local/pysot/core/config.py
---- pysot/pysot/core/config.py	2021-12-01 18:14:55.800000000 +0800
-+++ pysot_local/pysot/core/config.py	2021-12-01 18:09:38.664000000 +0800
+diff --git a/pysot/core/config.py b/pysot/core/config.py
+index 90959a0..85e5914 100644
+--- a/pysot/core/config.py
++++ b/pysot/core/config.py
 @@ -1,5 +1,3 @@
 -# Copyright (c) SenseTime. All Rights Reserved.
 -
  from __future__ import absolute_import
  from __future__ import division
  from __future__ import print_function
-@@ -14,6 +12,18 @@
+@@ -14,6 +12,18 @@ cfg = __C
  __C.META_ARC = "siamrpn_r50_l234_dwxcorr"
  
  __C.CUDA = True
@@ -26,7 +27,7 @@ diff -Naur pysot/pysot/core/config.py pysot_local/pysot/core/config.py
  
  # ------------------------------------------------------------------------ #
  # Training options
-@@ -171,7 +181,7 @@
+@@ -171,7 +181,7 @@ __C.BACKBONE = CN()
  __C.BACKBONE.TYPE = 'res50'
  
  __C.BACKBONE.KWARGS = CN(new_allowed=True)
@@ -35,10 +36,11 @@ diff -Naur pysot/pysot/core/config.py pysot_local/pysot/core/config.py
  # Pretrained backbone weights
  __C.BACKBONE.PRETRAINED = ''
  
-diff -Naur pysot/pysot/models/model_builder.py pysot_local/pysot/models/model_builder.py
---- pysot/pysot/models/model_builder.py	2021-12-01 18:14:55.800000000 +0800
-+++ pysot_local/pysot/models/model_builder.py	2021-12-01 18:10:06.244000000 +0800
-@@ -9,9 +9,9 @@
+diff --git a/pysot/models/model_builder.py b/pysot/models/model_builder.py
+index c6d0d1e..ff75fd2 100644
+--- a/pysot/models/model_builder.py
++++ b/pysot/models/model_builder.py
+@@ -9,9 +9,9 @@ import torch.nn as nn
  import torch.nn.functional as F
  
  from pysot.core.config import cfg
@@ -50,7 +52,7 @@ diff -Naur pysot/pysot/models/model_builder.py pysot_local/pysot/models/model_bu
  from pysot.models.neck import get_neck
  
  
-@@ -32,56 +32,35 @@
+@@ -32,56 +32,35 @@ class ModelBuilder(nn.Module):
          self.rpn_head = get_rpn_head(cfg.RPN.TYPE,
                                       **cfg.RPN.KWARGS)
  
@@ -113,7 +115,7 @@ diff -Naur pysot/pysot/models/model_builder.py pysot_local/pysot/models/model_bu
  
          # get feature
          zf = self.backbone(template)
-@@ -94,22 +73,6 @@
+@@ -94,22 +73,6 @@ class ModelBuilder(nn.Module):
              zf = self.neck(zf)
              xf = self.neck(xf)
          cls, loc = self.rpn_head(zf, xf)
@@ -137,20 +139,22 @@ diff -Naur pysot/pysot/models/model_builder.py pysot_local/pysot/models/model_bu
 -            outputs['total_loss'] += cfg.TRAIN.MASK_WEIGHT * mask_loss
 -            outputs['mask_loss'] = mask_loss
          return outputs
-diff -Naur pysot/pysot/tracker/base_tracker.py pysot_local/pysot/tracker/base_tracker.py
---- pysot/pysot/tracker/base_tracker.py	2021-12-01 18:14:55.800000000 +0800
-+++ pysot_local/pysot/tracker/base_tracker.py	2021-12-01 18:10:54.404000000 +0800
-@@ -90,6 +90,4 @@
+diff --git a/pysot/tracker/base_tracker.py b/pysot/tracker/base_tracker.py
+index 96bcd3c..b1db6e8 100644
+--- a/pysot/tracker/base_tracker.py
++++ b/pysot/tracker/base_tracker.py
+@@ -90,6 +90,4 @@ class SiameseTracker(BaseTracker):
          im_patch = im_patch[np.newaxis, :, :, :]
          im_patch = im_patch.astype(np.float32)
          im_patch = torch.from_numpy(im_patch)
 -        if cfg.CUDA:
 -            im_patch = im_patch.cuda()
          return im_patch
-diff -Naur pysot/pysot/tracker/siamrpn_tracker.py pysot_local/pysot/tracker/siamrpn_tracker.py
---- pysot/pysot/tracker/siamrpn_tracker.py	2021-12-01 18:14:55.800000000 +0800
-+++ pysot_local/pysot/tracker/siamrpn_tracker.py	2021-12-01 18:10:54.296000000 +0800
-@@ -7,14 +7,17 @@
+diff --git a/pysot/tracker/siamrpn_tracker.py b/pysot/tracker/siamrpn_tracker.py
+index 24c10da..3a955f0 100644
+--- a/pysot/tracker/siamrpn_tracker.py
++++ b/pysot/tracker/siamrpn_tracker.py
+@@ -7,14 +7,18 @@ from __future__ import unicode_literals
  
  import numpy as np
  import torch.nn.functional as F
@@ -160,10 +164,10 @@ diff -Naur pysot/pysot/tracker/siamrpn_tracker.py pysot_local/pysot/tracker/siam
  from pysot.core.config import cfg
  from pysot.utils.anchor import Anchors
  from pysot.tracker.base_tracker import SiameseTracker
--
 +sys.path.append(r"/home/SiamRPN")
-+from acl_net import Net
-+import acl
++from ais_bench.infer.interface import InferSession
++import aclruntime
+ 
  
  class SiamRPNTracker(SiameseTracker):
 -    def __init__(self, model):
@@ -171,26 +175,20 @@ diff -Naur pysot/pysot/tracker/siamrpn_tracker.py pysot_local/pysot/tracker/siam
          super(SiamRPNTracker, self).__init__()
          self.score_size = (cfg.TRACK.INSTANCE_SIZE - cfg.TRACK.EXEMPLAR_SIZE) // \
              cfg.ANCHOR.STRIDE + 1 + cfg.TRACK.BASE_SIZE
-@@ -23,8 +26,16 @@
+@@ -23,8 +27,10 @@ class SiamRPNTracker(SiameseTracker):
          window = np.outer(hanning, hanning)
          self.window = np.tile(window.flatten(), self.anchor_num)
          self.anchors = self.generate_anchor(self.score_size)
 -        self.model = model
 -        self.model.eval()
 +
-+        device_id = 3
++        device_id = 0
 +        om_path = cfg.OM_PATH
-+        ret = acl.init()
-+        assert ret == 0
-+        ret = acl.rt.set_device(device_id)
-+        assert ret == 0
-+        context, ret = acl.rt.create_context(device_id)
-+        assert ret == 0
-+        self.om_context = Net(context, device_id=device_id, model_path=om_path, first=True)
++        self.om_context = InferSession(device_id, om_path)
  
      def generate_anchor(self, score_size):
          anchors = Anchors(cfg.ANCHOR.STRIDE,
-@@ -88,7 +99,8 @@
+@@ -88,7 +94,8 @@ class SiamRPNTracker(SiameseTracker):
          z_crop = self.get_subwindow(img, self.center_pos,
                                      cfg.TRACK.EXEMPLAR_SIZE,
                                      s_z, self.channel_average)
@@ -200,31 +198,33 @@ diff -Naur pysot/pysot/tracker/siamrpn_tracker.py pysot_local/pysot/tracker/siam
  
      def track(self, img):
          """
-@@ -106,10 +118,17 @@
+@@ -106,10 +113,17 @@ class SiamRPNTracker(SiameseTracker):
                                      cfg.TRACK.INSTANCE_SIZE,
                                      round(s_x), self.channel_average)
  
 -        outputs = self.model.track(x_crop)
+-
+-        score = self._convert_score(outputs['cls'])
+-        pred_bbox = self._convert_bbox(outputs['loc'], self.anchors)
 +        x_crop = x_crop.data.cpu().contiguous().numpy()
-+        outputs = self.om_context([self.z_crop, x_crop])
++        outputs = self.om_context.infer([self.z_crop, x_crop])
 +        if outputs[0].shape == (1, 20, 25, 25):
 +            data_cls = torch.from_numpy(outputs[1])
 +            data_loc = torch.from_numpy(outputs[0])
 +        else:
 +            data_cls = torch.from_numpy(outputs[0])
 +            data_loc = torch.from_numpy(outputs[1])
- 
--        score = self._convert_score(outputs['cls'])
--        pred_bbox = self._convert_bbox(outputs['loc'], self.anchors)
++
 +        score = self._convert_score(data_cls)
 +        pred_bbox = self._convert_bbox(data_loc, self.anchors)
  
          def change(r):
              return np.maximum(r, 1. / r)
-diff -Naur pysot/pysot/tracker/tracker_builder.py pysot_local/pysot/tracker/tracker_builder.py
---- pysot/pysot/tracker/tracker_builder.py	2021-12-01 18:14:55.800000000 +0800
-+++ pysot_local/pysot/tracker/tracker_builder.py	2021-12-01 18:10:54.348000000 +0800
-@@ -17,5 +17,5 @@
+diff --git a/pysot/tracker/tracker_builder.py b/pysot/tracker/tracker_builder.py
+index d358261..6651085 100644
+--- a/pysot/tracker/tracker_builder.py
++++ b/pysot/tracker/tracker_builder.py
+@@ -17,5 +17,5 @@ TRACKS = {
           }
  
  
@@ -232,10 +232,11 @@ diff -Naur pysot/pysot/tracker/tracker_builder.py pysot_local/pysot/tracker/trac
 -    return TRACKS[cfg.TRACK.TYPE](model)
 +def build_tracker():
 +    return TRACKS[cfg.TRACK.TYPE]()
-diff -Naur pysot/pysot/utils/model_load.py pysot_local/pysot/utils/model_load.py
---- pysot/pysot/utils/model_load.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/pysot/utils/model_load.py	2021-12-01 18:11:05.660000000 +0800
-@@ -46,9 +46,8 @@
+diff --git a/pysot/utils/model_load.py b/pysot/utils/model_load.py
+index dbc184d..de4b2ad 100644
+--- a/pysot/utils/model_load.py
++++ b/pysot/utils/model_load.py
+@@ -46,9 +46,8 @@ def remove_prefix(state_dict, prefix):
  
  def load_pretrain(model, pretrained_path):
      logger.info('load pretrained model from {}'.format(pretrained_path))
@@ -246,10 +247,11 @@ diff -Naur pysot/pysot/utils/model_load.py pysot_local/pysot/utils/model_load.py
      if "state_dict" in pretrained_dict.keys():
          pretrained_dict = remove_prefix(pretrained_dict['state_dict'],
                                          'module.')
-diff -Naur pysot/toolkit/datasets/video.py pysot_local/toolkit/datasets/video.py
---- pysot/toolkit/datasets/video.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/toolkit/datasets/video.py	2021-12-01 18:14:00.304000000 +0800
-@@ -15,7 +15,7 @@
+diff --git a/toolkit/datasets/video.py b/toolkit/datasets/video.py
+index 9063a1e..a150b13 100644
+--- a/toolkit/datasets/video.py
++++ b/toolkit/datasets/video.py
+@@ -15,7 +15,7 @@ class Video(object):
          self.gt_traj = gt_rect
          self.attr = attr
          self.pred_trajs = {}
@@ -258,7 +260,7 @@ diff -Naur pysot/toolkit/datasets/video.py pysot_local/toolkit/datasets/video.py
          self.imgs = None
  
          if load_img:
-@@ -40,7 +40,7 @@
+@@ -40,7 +40,7 @@ class Video(object):
          if isinstance(tracker_names, str):
              tracker_names = [tracker_names]
          for name in tracker_names:
@@ -267,10 +269,11 @@ diff -Naur pysot/toolkit/datasets/video.py pysot_local/toolkit/datasets/video.py
              if os.path.exists(traj_file):
                  with open(traj_file, 'r') as f :
                      pred_traj = [list(map(float, x.strip().split(',')))
-diff -Naur pysot/toolkit/datasets/vot.py pysot_local/toolkit/datasets/vot.py
---- pysot/toolkit/datasets/vot.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/toolkit/datasets/vot.py	2021-12-01 18:14:00.252000000 +0800
-@@ -97,6 +97,7 @@
+diff --git a/toolkit/datasets/vot.py b/toolkit/datasets/vot.py
+index f66d7c1..cc1c4e6 100644
+--- a/toolkit/datasets/vot.py
++++ b/toolkit/datasets/vot.py
+@@ -97,6 +97,7 @@ class VOTDataset(Dataset):
      """
      def __init__(self, name, dataset_root, load_img=False):
          super(VOTDataset, self).__init__(name, dataset_root)
@@ -278,10 +281,11 @@ diff -Naur pysot/toolkit/datasets/vot.py pysot_local/toolkit/datasets/vot.py
          with open(os.path.join(dataset_root, name+'.json'), 'r') as f:
              meta_data = json.load(f)
  
-diff -Naur pysot/toolkit/evaluation/ar_benchmark.py pysot_local/toolkit/evaluation/ar_benchmark.py
---- pysot/toolkit/evaluation/ar_benchmark.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/toolkit/evaluation/ar_benchmark.py	2021-12-01 18:14:17.852000000 +0800
-@@ -7,7 +7,7 @@
+diff --git a/toolkit/evaluation/ar_benchmark.py b/toolkit/evaluation/ar_benchmark.py
+index 935474b..af2269f 100644
+--- a/toolkit/evaluation/ar_benchmark.py
++++ b/toolkit/evaluation/ar_benchmark.py
+@@ -7,7 +7,7 @@ import itertools
  import numpy as np
  
  from colorama import Style, Fore
@@ -290,10 +294,11 @@ diff -Naur pysot/toolkit/evaluation/ar_benchmark.py pysot_local/toolkit/evaluati
  
  class AccuracyRobustnessBenchmark:
      """
-diff -Naur pysot/toolkit/evaluation/eao_benchmark.py pysot_local/toolkit/evaluation/eao_benchmark.py
---- pysot/toolkit/evaluation/eao_benchmark.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/toolkit/evaluation/eao_benchmark.py	2021-12-01 18:14:17.904000000 +0800
-@@ -4,7 +4,7 @@
+diff --git a/toolkit/evaluation/eao_benchmark.py b/toolkit/evaluation/eao_benchmark.py
+index a92d8b6..1db6826 100644
+--- a/toolkit/evaluation/eao_benchmark.py
++++ b/toolkit/evaluation/eao_benchmark.py
+@@ -4,7 +4,7 @@ import numpy as np
  
  from glob import glob
  
@@ -302,10 +307,11 @@ diff -Naur pysot/toolkit/evaluation/eao_benchmark.py pysot_local/toolkit/evaluat
  
  class EAOBenchmark:
      """
-diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
---- pysot/tools/eval.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/tools/eval.py	2021-12-01 18:14:39.104000000 +0800
-@@ -9,19 +9,19 @@
+diff --git a/tools/eval.py b/tools/eval.py
+index 8bc1dae..fe8a67f 100644
+--- a/tools/eval.py
++++ b/tools/eval.py
+@@ -9,19 +9,19 @@ import argparse
  from glob import glob
  from tqdm import tqdm
  from multiprocessing import Pool
@@ -331,7 +337,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
                      type=str, help='tracker name')
  parser.add_argument('--show_video_level', '-s', dest='show_video_level',
                      action='store_true')
-@@ -30,17 +30,16 @@
+@@ -30,17 +30,16 @@ args = parser.parse_args()
  
  
  def main():
@@ -353,7 +359,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
      root = os.path.join(root, args.dataset)
      if 'OTB' in args.dataset:
          dataset = OTBDataset(args.dataset, root)
-@@ -49,15 +48,15 @@
+@@ -49,15 +48,15 @@ def main():
          success_ret = {}
          with Pool(processes=args.num) as pool:
              for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
@@ -372,7 +378,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
      elif 'LaSOT' == args.dataset:
          dataset = LaSOTDataset(args.dataset, root)
          dataset.set_tracker(tracker_dir, trackers)
-@@ -65,20 +64,20 @@
+@@ -65,20 +64,20 @@ def main():
          success_ret = {}
          with Pool(processes=args.num) as pool:
              for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
@@ -397,7 +403,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
      elif 'UAV' in args.dataset:
          dataset = UAVDataset(args.dataset, root)
          dataset.set_tracker(tracker_dir, trackers)
-@@ -86,15 +85,15 @@
+@@ -86,15 +85,15 @@ def main():
          success_ret = {}
          with Pool(processes=args.num) as pool:
              for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
@@ -416,7 +422,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
      elif 'NFS' in args.dataset:
          dataset = NFSDataset(args.dataset, root)
          dataset.set_tracker(tracker_dir, trackers)
-@@ -102,15 +101,15 @@
+@@ -102,15 +101,15 @@ def main():
          success_ret = {}
          with Pool(processes=args.num) as pool:
              for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
@@ -435,7 +441,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
      elif args.dataset in ['VOT2016', 'VOT2017', 'VOT2018', 'VOT2019']:
          dataset = VOTDataset(args.dataset, root)
          dataset.set_tracker(tracker_dir, trackers)
-@@ -118,17 +117,17 @@
+@@ -118,17 +117,17 @@ def main():
          ar_result = {}
          with Pool(processes=args.num) as pool:
              for ret in tqdm(pool.imap_unordered(ar_benchmark.eval,
@@ -456,7 +462,7 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
      elif 'VOT2018-LT' == args.dataset:
          dataset = VOTLTDataset(args.dataset, root)
          dataset.set_tracker(tracker_dir, trackers)
-@@ -136,10 +135,10 @@
+@@ -136,10 +135,10 @@ def main():
          f1_result = {}
          with Pool(processes=args.num) as pool:
              for ret in tqdm(pool.imap_unordered(benchmark.eval,
@@ -469,10 +475,11 @@ diff -Naur pysot/tools/eval.py pysot_local/tools/eval.py
  
  
  if __name__ == '__main__':
-diff -Naur pysot/tools/test.py pysot_local/tools/test.py
---- pysot/tools/test.py	2021-12-01 18:14:55.804000000 +0800
-+++ pysot_local/tools/test.py	2021-12-02 09:54:45.236000000 +0800
-@@ -22,7 +22,7 @@
+diff --git a/tools/test.py b/tools/test.py
+index f1e61b5..343b819 100644
+--- a/tools/test.py
++++ b/tools/test.py
+@@ -22,7 +22,7 @@ from toolkit.utils.region import vot_overlap, vot_float2str
  
  
  parser = argparse.ArgumentParser(description='siamrpn tracking')
@@ -481,7 +488,7 @@ diff -Naur pysot/tools/test.py pysot_local/tools/test.py
          help='datasets')
  parser.add_argument('--config', default='', type=str,
          help='config file')
-@@ -38,26 +38,26 @@
+@@ -38,26 +38,26 @@ torch.set_num_threads(1)
  
  def main():
      # load config
@@ -514,7 +521,7 @@ diff -Naur pysot/tools/test.py pysot_local/tools/test.py
      total_lost = 0
      if args.dataset in ['VOT2016', 'VOT2018', 'VOT2019']:
          # restart tracking
-@@ -69,6 +69,7 @@
+@@ -69,6 +69,7 @@ def main():
              frame_counter = 0
              lost_number = 0
              toc = 0
@@ -522,7 +529,7 @@ diff -Naur pysot/tools/test.py pysot_local/tools/test.py
              pred_bboxes = []
              for idx, (img, gt_bbox) in enumerate(video):
                  if len(gt_bbox) == 4:
-@@ -118,7 +119,7 @@
+@@ -118,7 +119,7 @@ def main():
                      cv2.waitKey(1)
              toc /= cv2.getTickFrequency()
              # save results
@@ -531,7 +538,7 @@ diff -Naur pysot/tools/test.py pysot_local/tools/test.py
                      'baseline', video.name)
              if not os.path.isdir(video_path):
                  os.makedirs(video_path)
-@@ -129,10 +130,13 @@
+@@ -129,10 +130,13 @@ def main():
                          f.write("{:d}\n".format(x))
                      else:
                          f.write(','.join([vot_float2str("%.4f", i) for i in x])+'\n')

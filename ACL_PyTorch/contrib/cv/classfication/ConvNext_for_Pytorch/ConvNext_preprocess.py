@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import torchvision.transforms as transforms
+from torchvision.transforms import InterpolationMode
 from PIL import Image
 import os
 import numpy as np
@@ -21,19 +22,19 @@ from tqdm import tqdm
 
 def preprocess(save_path, src_path):
     preprocess = transforms.Compose([
-        transforms.Resize(256, Image.BICUBIC),
+        transforms.Resize(256, InterpolationMode.BICUBIC),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    in_files = os.listdir(src_path)
-    for idx, file in enumerate(in_files):
-        idx = idx + 1
-        pbar.update(1)
-        input_image = Image.open(src_path + '/' + file).convert('RGB')
-        input_tensor = preprocess(input_image)
-        img = np.array(input_tensor).astype(np.float32)
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+    
+    for root, dirs, files in os.walk(src_path):
+        for file in files:
+            pbar.update(1)
+            input_image = Image.open(os.path.join(root, file)).convert('RGB')
+            input_tensor = preprocess(input_image)
+            img = np.array(input_tensor).astype(np.float32)
+            img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
 
 if __name__ == '__main__':       

@@ -16,7 +16,8 @@ from typing import Iterable, Optional
 import torch
 from timm.data import Mixup
 from timm.utils import accuracy, ModelEma
-import utils
+# import utils
+from ConvNeXt import utils
 import os
 import sys
 import json

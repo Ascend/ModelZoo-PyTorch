@@ -1,5 +1,5 @@
---- ./old/ConvNeXt/models/convnext.py	2022-09-05 18:18:52.922170456 -0900
-+++ ./new/ConvNeXt/models/convnext.py	2022-09-05 18:22:04.234163614 -0900
+--- ./models/convnext.py	2022-09-05 18:18:52.922170456 -0900
++++ ./models/convnext.py	2022-09-05 18:22:04.234163614 -0900
 @@ -109,7 +109,7 @@
          for i in range(4):
              x = self.downsample_layers[i](x)

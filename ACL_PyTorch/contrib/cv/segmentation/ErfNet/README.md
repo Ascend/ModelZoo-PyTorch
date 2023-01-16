@@ -1,256 +1,283 @@
-# ErfNet模型PyTorch离线推理指导
+# ErfNet模型-推理指导
 
-- [ErfNet模型PyTorch离线推理指导](#vnet-onnx模型端到端推理指导)
 
-  - [1 模型概述](#1-模型概述)
-    - [1.1 论文地址](#11-论文地址)
-    - [1.2 代码地址](#12-代码地址)
-  - [2 环境说明](#2-环境说明)
-    - [2.1 深度学习框架](#21-深度学习框架)
-    - [2.2 python第三方库](#22-python第三方库)
-  - [3 模型转换](#3-模型转换)
-    - [3.1 pth转onnx模型](#31-pth转onnx模型)
-    - [3.2 onnx转om模型](#32-onnx转om模型)
-  - [4 数据集预处理](#4-数据集预处理)
-    - [4.1 数据集获取](#41-数据集获取)
-    - [4.2 数据集预处理](#42-数据集预处理)
-  - [5 离线推理](#5-离线推理)
-    - [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
-    - [5.2 离线推理](#52-离线推理)
-  - [6 精度对比](#6-精度对比)
-    - [6.1 离线推理精度](#61-离线推理精度)
-    - [6.2 开源精度](#62-开源精度)
-    - [6.3 精度对比](#63-精度对比)
-  - [7 性能对比](#7-性能对比)
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-## 1 模型概述
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
--   **[论文地址](#11-论文地址)**  
+- [模型推理性能&性能](#ZH-CN_TOPIC_0000001172201573)
 
--   **[代码地址](#12-代码地址)**  
+  ******
 
-### 1.1 论文地址
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-[ErfNet论文](https://ieeexplore.ieee.org/abstract/document/8063438)  
+ErfNet(Efficient Residual Factorized Network)是一个能够实现准确和快速的像素级别语义分割的架构。该架构采用了重新设计的残差层，提升了效率，使自身在可靠性和速度之间获得了一个很好的权衡。ErfNet适用于如自动驾驶汽车中的场景理解这种需要稳健性和实时操作的应用。
 
-### 1.2 代码地址
+- 参考实现：
 
-[ErfNet代码](https://github.com/Eromera/erfnet_pytorch)  
-branch:master  
-commit_id=d4a46faf9e465286c89ebd9c44bc929b2d213fb3 
-备注：commit_id是指基于该次提交时的模型代码做推理，通常选择稳定版本的最后一次提交，或代码仓最新的一次提交  
+  ```
+  url=https://github.com/Eromera/erfnet_pytorch
+  branch=master
+  commit_id=d4a46faf9e465286c89ebd9c44bc929b2d213fb3
+  model_name=ErfNet
+  ``` 
+ 
+  通过Git获取对应commit_id的代码方法如下：
 
-## 2 环境说明
+  ```
+  git clone {repository_url}        # 克隆仓库的代码
+  cd {repository_name}              # 切换到模型的代码仓目录
+  git checkout {branch/tag}         # 切换到对应分支
+  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
+  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
 
--   **[深度学习框架](#21-深度学习框架)**  
 
--   **[python第三方库](#22-python第三方库)**  
+## 输入输出数据<a name="section540883920406"></a>
 
-### 2.1 深度学习框架
+- 输入数据
 
-```
-CANN 5.1.RC1
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
+  | 输入数据        | 数据类型  | 大小                       | 数据排布格式  |
+  | -------------- | -------- | -------------------------- | ------------ |
+  | actual_input_1 | FLOAT32  | batchsize x 3 x 512 x 1024 | NCHW         |
 
-### 2.2 python第三方库
 
-```
-numpy == 1.20.2
-Pillow == 7.2.0
-opencv-python == 4.5.2.52
-```
+- 输出数据
 
-**说明：** 
+  | 输出数据  | 数据类型  | 大小                        | 数据排布格式  |
+  | -------- | -------- | --------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 20 x 512 x 1024 | NCHW         |
 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
 
-## 3 模型转换
+# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+- 该模型需要以下插件与驱动
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+  **表 1**  版本配套表
 
-### 3.1 pth转onnx模型
+  | 配套           | 版本    | 环境准备指导              |
+  | ------------  | ------- | ------------------------ |
+  | 固件与驱动     | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN          | 6.0.0   | -                        |
+  | Python        | 3.7.5   | -                        |
+  | PyTorch       | 1.8.0   | -                        |  
 
-1.获取，修改与安装开源模型代码 
+- 该模型需要以下依赖   
 
-```
-git clone https://github.com/Eromera/erfnet_pytorch   
-cd erfnet_pytorch  
-git reset d4a46faf9e465286c89ebd9c44bc929b2d213fb3 --hard
-cd ..  
-```
+  **表 2**  依赖列表
 
-2.获取权重文件放到当前目录
+  | 依赖名称               | 版本                    |
+  | --------------------- | ----------------------- |
+  | torchvision           | >= 0.6.0                |
+  | onnx                  | >= 1.7.0                |
+  | numpy                 | 1.20.2                  |
+  | Pillow                | 7.2.0                   |
+  | opencv-python         | 4.5.2.52                |
 
-[erfnet_pretrained.pth](https://github.com/Eromera/erfnet_pytorch/blob/master/trained_models/erfnet_pretrained.pth)   
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-3.执行ErfNet_pth2onnx.py脚本，生成onnx模型文件，由于使用原始的onnx模型转出om后，精度有损失，故添加了modify_bn_weights.py来修改转出onnx模型bn层的权重。
+## 获取源码<a name="section4622531142816"></a>
 
-```
-python ErfNet_pth2onnx.py erfnet_pretrained.pth ErfNet_origin.onnx
-python modify_bn_weights.py ErfNet_origin.onnx ErfNet.onnx
-```
+1. 获取源码。
 
-### 3.2 onnx转om模型
+    ```
+    git clone https://github.com/Eromera/erfnet_pytorch   
+    cd erfnet_pytorch  
+    git reset d4a46faf9e465286c89ebd9c44bc929b2d213fb3 --hard
+    cd .. 
+    ```
 
-1.设置环境变量
+2. 安装依赖。
+  
+    ```
+    pip3 install -r requirements.txt
+    ```
 
-```
-source /usr/local/Ascend/ascend-set_env.sh
-```
+    **说明：** 
+    >   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3 install 包名 安装
+    >
+    >   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3 install 包名 安装
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1 开发辅助工具指南 (推理) 01]
+## 准备数据集<a name="section183221994411"></a>
 
-```
-atc --framework=5 --model=ErfNet.onnx --output=ErfNet_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,512,1024" --log=debug --soc_version=Ascend{chip_name} --output_type=FP16
-```
+1. 获取原始数据集。
 
-“{chip_name}”：npu处理器型号。（请使用npu-smi info指令查询）
+    - 下载[Cityscapes dataset](https://www.cityscapes-dataset.com/)数据集。
+      - 下载名为"leftImg8bit"的RGB图像和名为"gtFine"的标签。
+      - 注意：在训练时，应该使用"_labelTrainIds"而非"_labelIds"，可以下载[cityscapes scripts](https://github.com/mcordts/cityscapesScripts)和[conversor](https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/preparation/createTrainIdLabelImgs.py)，通过两者将labelIds转换为trainIds。 
 
-![1660301955987](C:\Users\86188\AppData\Roaming\Typora\typora-user-images\1660301955987.png)
+2. 数据预处理。
 
-## 4 数据集预处理
+    1. 执行“ErfNet_preprocess.py”脚本将原始数据集转换为模型输入的数据。
 
--   **[数据集获取](#41-数据集获取)**  
+        ```
+        python3 ErfNet_preprocess.py ${datasets_path}/cityscapes/leftImg8bit/val ./prep_dataset ${datasets_path}/cityscapes/gtFine/val ./gt_label
+        ```
 
--   **[数据集预处理](#42-数据集预处理)**  
+      - 参数说明：
+        - ${datasets_path}/cityscapes/leftImg8bit/val：数据集路径。（请用数据集准确路径替换{datasets_path}）
+        - ./prep_dataset：输出文件路径。
+        - ${datasets_path}/cityscapes/gtFine/val：数据集路径。（请用数据集准确路径替换{datasets_path}）
+   
+## 模型推理<a name="section741711594517"></a>
 
+1. 模型转换。
 
-### 4.1 数据集获取
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-[获取cityscapes](https://www.cityscapes-dataset.com/)
+   1. 获取权重文件。
 
-- Download the Cityscapes dataset from https://www.cityscapes-dataset.com/
+      下载权重文件[erfnet_pretrained.pth](https://github.com/Eromera/erfnet_pytorch/blob/master/trained_models/erfnet_pretrained.pth)，放到当前目录。
+       
+   2. 导出onnx文件。
 
-  - Download the "leftImg8bit" for the RGB images and the "gtFine" for the labels.
-  - Please note that for training you should use the "_labelTrainIds" and not the "_labelIds", you can download the [cityscapes scripts](https://github.com/mcordts/cityscapesScripts) and use the [conversor](https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/preparation/createTrainIdLabelImgs.py) to generate trainIds from labelIds  
+      执行ErfNet_pth2onnx.py脚本，生成onnx模型文件。由于使用原始的onnx模型转出om后，精度有损失，故添加了modify_bn_weights.py来修改转出onnx模型bn层的权重。
 
-### 4.2 数据集预处理
+        ```
+        python3 ErfNet_pth2onnx.py erfnet_pretrained.pth ErfNet_origin.onnx
+        python3 modify_bn_weights.py ErfNet_origin.onnx ErfNet.onnx
+        ```
 
-执行“ErfNet_preprocess.py”脚本将原始数据集转换为模型输入的数据。
+        获得ErfNet.onnx文件。
 
-```
-python ErfNet_preprocess.py ${datasets_path}/cityscapes/leftImg8bit/val ./prep_dataset ${datasets_path}/cityscapes/gtFine/val ./gt_label
-```
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-{datasets_path}/cityscapes/leftImg8bit/val：数据集路径。（请用 数据集准确路径替换{datasets_path}）
+      1. 配置环境变量。
 
-./prep_dataset：输出文件路径。
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-${datasets_path}/cityscapes/gtFine/val：数据集路径。（请用 数据集准确路径替换{datasets_path}）
+         > **说明：** 
+         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-./gt_label：输出文件路径。
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-## 5 离线推理
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+             +--------------------------------------------------------------------------------------------+
+             | npu-smi 22.0.0                       Version: 22.0.2                                       |
+             +-------------------+-----------------+------------------------------------------------------+
+             | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+             | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+             +===================+=================+======================================================+
+             | 0       310P3     | OK              | 17.0         56                0    / 0              |
+             | 0       0         | 0000:AF:00.0    | 0            934  / 23054                            |
+             +===================+=================+======================================================+
+         ```
 
--   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
+      3. 执行ATC命令。
+         ```
+         atc --framework=5 --model=ErfNet.onnx --output=ErfNet_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,512,1024" --log=error --soc_version=${chip_name} --output_type=FP16
+         ```
 
--   **[离线推理](#52-离线推理)**  
+         - 参数说明：
 
-### 5.1 安装ais_bench推理工具
+            - --model：为ONNX模型文件。
+            - --framework：5代表ONNX模型。
+            - --output：输出的OM模型。
+            - --input\_format：输入数据的格式。
+            - --input\_shape：输入数据的shape。
+            - --log：日志级别。
+            - --soc\_version：处理器型号。
+            - --output_type: 网络输出类型。
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。 
+          运行成功后生成ErfNet_bs1.om模型文件。
 
-### 5.2 离线推理
+2. 开始推理验证。
+   
+   1. 安装ais_bench推理工具。
 
-1.设置环境变量
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+   2. 执行推理。
+      ```
+      python3 -m ais_bench --model=${user_path}/ErfNet/ErfNet_bs1.om --input ${user_path}/ErfNet/prep_dataset/ --output ${user_path}/output/ --outfmt BIN --batchsize 1
+      ```
 
-2.执行离线推理
+      - 参数说明：
 
-```
-python3 -m ais_bench --model ${user_path}/ErfNet/ErfNet_bs1.om --input=${user_path}/ErfNet/prep_dataset/ --outfmt BIN --output ${user_path}/output/ --batchsize 1
-```
+         - --model: om模型的路径
 
-{user_path}：请用用户个人文件准确路径替换。
+         - --input: 输入的bin文件目录
+       
+         - --output: 推理结果输出路径
+      
+         - --outfmt: 输出数据的格式
 
-输出结果保存在 ${user_path}/output/下面，每个输入对应一个_X.bin文件的输出。
+         - --batchsize: 模型输入批次大小
 
-## 6 精度对比
+         - ${user_path}: 用户个人文件准确路径替换
 
--   **[离线推理精度](#61-离线推理精度)**  
--   **[开源精度](#62-开源精度)**  
--   **[精度对比](#63-精度对比)**  
+   3. 精度验证。
 
-### 6.1 离线推理精度
+      后处理统计精度， 执行后处理脚本进行精度验证。
 
-后处理统计精度
+      ```
+      python3 ErfNet_postprocess.py ${user_path}/output/2022_07_15-14_16_46/sumary.json ${user_path}/ErfNet/gt_label/
+      ```
 
-执行后处理脚本进行精度验证。
+      - 参数说明：
 
-```
-python ErfNet_postprocess.py ${user_path}/output/2022_07_15-14_16_46/sumary.json ${user_path}/ErfNet/gt_label/
-```
+        - “${user_path}/output/2022_07_15-14_16_46/sumary.json”：ais_bench推理结果汇总数据保存路径。
 
-“${user_path}/output/2022_07_15-14_16_46/sumary.json”：ais_infer推理结果汇总数据保存路径。
+        - “${user_path}/ErfNet/gt_label/”：合并后的验证集路径。
+   
+   4. 性能验证。
 
-${user_path}/ErfNet/gt_label/：合并后的验证集路径。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-310精度测试结果
+      ```
+      python3 -m ais_bench --model=ErfNet_bs1.om --loop 1000 --batchsize 1
+      ```
 
-```
-iou is  tensor(0.7220, dtype=torch.float64)
-```
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-310p精度测试结果
+1. 性能对比
+    
+    T4、310、310P3性能对比参考下列数据。
 
-```
-iou is  tensor(0.7220, dtype=torch.float64)
-```
+    | batchsize | T4       | 310          | 310P    | 310P/310 | 310P/T4 | 310P-AOE | 310P-AOE/310 | 310P-AOE/T4 |
+    | --------- | -------- | ------------ | ------- | -------- | ------- | -------- | ------------ | ----------- |
+    | 1         | 215.8135 | 220.2016     | 292.137 | 1.327    | 1.35    | 380.0822 | 1.73         | 1.76        |
+    | 4         | 226.745  | 176.2568     | 192.398 | 1.09     | 0.849   | 379.2337 | 2.15         | 1.67        |
+    | 8         | 237.8234 | 176.6912     | 210.707 | 1.1925   | 0.886   | 381.9549 | 2.16         | 1.6         |
+    | 16        | 250.2417 | 175.8732     | 211.125 | 1.2      | 0.84    | 379.9660 | 2.16         | 1.51        |
+    | 32        | 222.312  | 181.5056     | 215.234 | 1.186    | 0.9682  | 380.1598 | 2.09         | 1.71        |
+    | 64        | 226.2459 | 内存分配失败 | 216.937 | /        | 0.96    | 226.5988 | /            | 1.001       |
+    | 最优batch | 250.2417 | 220.2016     | 292.137 | 1.33     | 1.17    | 381.9545 | 1.73         | 1.53        |
 
-经过对batchsize1/4/8/16/32/64的om测试，精度数据均如上。
+    经过对比，AOE调优后的性能结果已经达到交付要求。
 
-### 6.2 开源精度
+2. 精度对比
 
-[官网pth精度](https://github.com/Eromera/erfnet_pytorch)
+    310、310P3精度参考下列数据。
 
-```
-iou:72.20
-```
+    | batch | 310   | 310P  |
+    | ----- | ----- | ----- |
+    | 1     | 72.20 | 72.20 |
+    | 4     | 72.20 | 72.20 |
+    | 8     | 72.20 | 72.20 |
+    | 16    | 72.20 | 72.20 |
+    | 32    | 72.20 | 72.20 |
 
-### 6.3 精度对比
+    [官网pth精度](https://github.com/Eromera/erfnet_pytorch)
 
-| batch | 310   | 310P  |
-| ----- | ----- | ----- |
-| 1     | 72.20 | 72.20 |
-| 4     | 72.20 | 72.20 |
-| 8     | 72.20 | 72.20 |
-| 16    | 72.20 | 72.20 |
-| 32    | 72.20 | 72.20 |
+    ```
+    iou:72.20
+    ```
 
-将得到的om离线模型推理IoU精度与该模型github代码仓上公布的精度对比，310与710上的精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
+    将得到的om离线模型推理IoU精度与该模型github代码仓上公布的精度对比，310与710上的精度下降在1%范围之内，故精度达标。
 
->没有遇到精度不达标的问题，故不需要进行精度调试
 
-## 7 性能对比
-
-310 310P T4性能对比如下
-
-| batchsize | T4       | 310          | 310P    | 310P/310 | 310P/T4 | 310P-AOE | 310P-AOE/310 | 310P-AOE/T4 |
-| --------- | -------- | ------------ | ------- | -------- | ------- | -------- | ------------ | ----------- |
-| 1         | 215.8135 | 220.2016     | 292.137 | 1.327    | 1.35    | 380.0822 | 1.73         | 1.76        |
-| 4         | 226.745  | 176.2568     | 192.398 | 1.09     | 0.849   | 379.2337 | 2.15         | 1.67        |
-| 8         | 237.8234 | 176.6912     | 210.707 | 1.1925   | 0.886   | 381.9549 | 2.16         | 1.6         |
-| 16        | 250.2417 | 175.8732     | 211.125 | 1.2      | 0.84    | 379.9660 | 2.16         | 1.51        |
-| 32        | 222.312  | 181.5056     | 215.234 | 1.186    | 0.9682  | 380.1598 | 2.09         | 1.71        |
-| 64        | 226.2459 | 内存分配失败 | 216.937 | /        | 0.96    | 226.5988 | /            | 1.001       |
-| 最优batch | 250.2417 | 220.2016     | 292.137 | 1.33     | 1.17    | 381.9545 | 1.73         | 1.53        |
-
-经过对比，AOE调优后的性能结果已经达到交付要求。
-
-备注：  
-
-1.由于使用原始的onnx模型转出om后，精度有损失，故添加了modify_bn_weights.py来修改转出onnx模型bn层的权重。
-2.由于tensorRT不支持部分算子，故gpu性能数据使用在线推理的数据。
+备注：
+1. 由于使用原始的onnx模型转出om后，精度有损失，故添加了modify_bn_weights.py来修改转出onnx模型bn层的权重。
+2. 由于tensorRT不支持部分算子，故gpu性能数据使用在线推理的数据。

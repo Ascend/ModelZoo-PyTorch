@@ -11,10 +11,9 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
-
+  ******
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
@@ -47,16 +46,16 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 
 - 输入数据
 
-  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | 输入数据  | 数据类型  | 大小                      | 数据排布格式  |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | RGB_FP32 | 1 x 3 x 500 x 500 | NCHW         |
+  | input    | RGB_FP32 | 1 x 3 x 500 x 500         | NCHW         |
 
 
 - 输出数据
 
-  | 输出数据 | 数据类型  | 大小 | 数据排布格式 |
-  | -------- | -------- | -------- | ------------ |
-  | output  |  INT32 |1 x 1 x 500 x 500 | ND           |
+  | 输出数据  | 数据类型  | 大小               | 数据排布格式  |
+  | -------- | -------- | ------------------ | ------------ |
+  | output   |  INT32   | 1 x 1 x 500 x 500  | ND           |
 
 
 
@@ -69,22 +68,32 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| CANN                                                         | 6.0.0  | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.6.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
+1. 获取源码。
 
+   安装mmsegmentation源码。
 
-1. 安装依赖。
+   ```
+   git clone https://github.com/open-mmlab/mmcv.git
+   cd mmcv
+   pip3 install -e .
+   cd ..
+   git clone https://github.com/open-mmlab/mmsegmentation.git
+   cd mmsegmentation
+   pip3 install -e . 
+   cd ..
+   ```
+
+2. 安装依赖。
 
    ```
    pip3 install -r requirements.txt
-   ```
-
-   ```
    pip3 install mmcv-full==1.6.1
    ```
    
@@ -95,7 +104,7 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型该模型使用VOC2012的1449张验证集进行测试，数据集在服务器的目录为/opt/npu/VOCdevkit/VOC2012，若服务器没有此数据集，请用户自行获取该数据集，上传并解压数据集到服务器任意目录。（如：/home/HwHiAiUser/datasets）
+   本模型该模型使用VOC2012的1449张验证集进行测试，数据集在服务器的目录为/opt/npu/VOCdevkit/VOC2012，请更换为实际数据集路径。若服务器没有此数据集，请用户自行获取该数据集，上传并解压数据集到服务器任意目录。（如：/home/HwHiAiUser/datasets）
 
    ```
    ├── VOC2012
@@ -116,21 +125,17 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
    执行FCN-8s_preprocess.py脚本，完成预处理。
 
    ```
-   python3.7 FCN-8s_preprocess.py --image_folder_path=/opt/npu/VOCdevkit/VOC2012/JPEGImages/ --split=/opt/npu/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt --bin_folder_path=./voc12_bin/
+   python3 FCN-8s_preprocess.py --image_folder_path=/opt/npu/VOCdevkit/VOC2012/JPEGImages/ --split=/opt/npu/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt --bin_folder_path=./voc12_bin/
    ```
     -   参数说明：
 
         -   image_folder_path：原始数据验证集（.jpeg）所在路径。
         -   bin_folder_path：输出的二进制文件（.bin）所在路径。
 
-3. 运行get_info.py脚本，生成图片数据info文件。
-
-   数据预处理将原始数据集转换为模型输入的数据。
-
-   执行get_info.py脚本，完成预处理。
+   运行get_info.py脚本，生成图片数据info文件。
 
    ```
-   python3.7 get_info.py jpg /opt/npu/VOCdevkit/VOC2012/JPEGImages/ voc12_jpg.info
+   python3 get_info.py jpg /opt/npu/VOCdevkit/VOC2012/JPEGImages/ voc12_jpg.info
    ```
 
     -   参数说明：
@@ -147,44 +152,31 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
 
    1. 获取权重文件。
 
-       获取fcn-8s基于mmsegmentation预训练的npu权重文件，下载链接：[fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth](https://download.openmmlab.com/mmsegmentation/v0.5/fcn/fcn_r50-d8_512x512_20k_voc12aug/fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth)
+      获取fcn-8s基于mmsegmentation预训练的npu权重文件，下载链接：[fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth](https://download.openmmlab.com/mmsegmentation/v0.5/fcn/fcn_r50-d8_512x512_20k_voc12aug/fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth)。
 
-       ```
-       wget https://download.openmmlab.com/mmsegmentation/v0.5/fcn/fcn_r50-d8_512x512_20k_voc12aug/fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth
-       ```
+      ```
+      wget https://download.openmmlab.com/mmsegmentation/v0.5/fcn/fcn_r50-d8_512x512_20k_voc12aug/fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth
+      ```
 
    2. 导出onnx文件。
 
-      1. mmsegmentation源码安装
+      使用pytorch2onnx.py导出onnx文件。
 
-         ```
-         git clone https://github.com/open-mmlab/mmcv.git
-		 cd mmcv
-		 pip install -e .
-		 cd ..
-		 git clone https://github.com/open-mmlab/mmsegmentation.git
-		 cd mmsegmentation
-		 pip install -e . 
-		 cd ..
-         ```
+      运行pytorch2onnx.py脚本导出指定batch size为1的onnx模型，模型不支持动态batch。
 
-      2. 使用pytorch2onnx.py导出onnx文件。
+      ```
+      python3 mmsegmentation/tools/pytorch2onnx.py mmsegmentation/configs/fcn/fcn_r50-d8_512x512_20k_voc12aug.py --checkpoint fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth --output-file fcn_r50-d8_512x512_20k_voc12aug.onnx --shape 500 500 --show
+      ```
 
-         运行pytorch2onnx.py脚本导出指定batch size为1的onnx模型，模型不支持动态batch。
-
-         ```
-         python3.7 mmsegmentation/tools/pytorch2onnx.py mmsegmentation/configs/fcn/fcn_r50-d8_512x512_20k_voc12aug.py --checkpoint fcn_r50-d8_512x512_20k_voc12aug_20200617_010715-52dc5306.pth --output-file fcn_r50-d8_512x512_20k_voc12aug.onnx --shape 500 500 --show
-         ```
-
-         获得fcn_r50-d8_512x512_20k_voc12aug.onnx文件。
+      获得fcn_r50-d8_512x512_20k_voc12aug.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/ascend-toolkit/set_env.sh
-          source /opt/npu/CANN-6.1.1/ascend-toolkit/set_env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         source /opt/npu/CANN-6.1.1/ascend-toolkit/set_env.sh
          ```
 
          > **说明：** 
@@ -222,59 +214,66 @@ FCN-8s定义并详细描述了全卷积网络的空间，解释了它们在空�
            -   --soc\_version：处理器型号。
            -   --insert\_op\_conf=aipp\_resnet34.config:  AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 
-           运行成功后生成<u>fcn_r50-d8_512x512_20k_voc12aug_bs1.om***</u>模型文件。
+         运行成功后生成<u>fcn_r50-d8_512x512_20k_voc12aug_bs1.om</u>模型文件。
 
 
 
 2. 开始推理验证。
 
-   a.  安装ais_bench推理工具。
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+   1.  安装ais_bench推理工具。
+   
+         请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   b.  执行推理。
+   2.  执行推理。
+
+         ```
+         mkdir result
+         python3 -m ais_bench --device 0 --batchsize 1 --model ./fcn_r50-d8_512x512_20k_voc12aug_bs1.om --input ./voc12_bin/ --output ./result/
+         ```
+
+         - 参数说明：
+            - --model：om模型路径
+            - --input：预处理后的输入数据
+            - --batchsize：om模型的batchsize
+            - --output：推理结果存放目录
+
+         推理后的输出在目录“./result/Timestam”下，Timestam为日期+时间的子文件夹，如 2022_08_24-16_16_28。
+
+         > **说明：** 
+         > 执行ais-bench工具请选择与运行环境架构相同的命令。
+
+   3.  精度验证。
+
+         调用FCN-8s_postprocess.py评测bs1的mIoU精度：
+
+         ```
+         python3 FCN-8s_postprocess.py --bin_data_path=./result/2022_08_24-16_16_28 --test_annotation=./voc12_jpg.info --img_dir=/opt/npu/VOCdevkit/VOC2012/JPEGImages --ann_dir=/opt/npu/VOCdevkit/VOC2012/SegmentationClass --split=/opt/npu/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt --net_input_width=500 --net_input_height=500
+         ```
+
+         - 参数说明：
+
+            - --bin_data_path：推理结果
+            - --test_annotation：原始图片信息文件
+            - --img_dir：原始图片位置
+            - --ann_dir：验证图片位置
+            - --spli：图片的split
+            - --net_input_width：网宽
+            - --net_input_height：网高
+   
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      mkdir result
+      python3 -m ais_bench --model ./fcn_r50-d8_512x512_20k_voc12aug_bs1.om --loop 1000 --batchsize 1
       ```
-
-      ```
-      python3.7 -m ais_bench --device 0 --batchsize 1 --model ./fcn_r50-d8_512x512_20k_voc12aug_bs1.om --input ./voc12_bin/ --output ./result/
-      ```
-
-      -   参数说明：
-
-          -   --model：om模型路径
-          -   --input：预处理后的输入数据。
-          -   --batchsize：om模型的batchsize。
-          -   --output：推理结果存放目录。
-
-          推理后的输出在目录“./result/Timestam”下，Timestam为日期+时间的子文件夹,如 2022_08_24-16_16_28
-
-
-   c.  精度验证。
-
-      调用FCN-8s_postprocess.py评测bs1的mIoU精度：
-
-      ```
-    python3.7 FCN-8s_postprocess.py --bin_data_path=./result/2022_08_24-16_16_28 --test_annotation=./voc12_jpg.info --img_dir=/opt/npu/VOCdevkit/VOC2012/JPEGImages --ann_dir=/opt/npu/VOCdevkit/VOC2012/SegmentationClass --split=/opt/npu/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt --net_input_width=500 --net_input_height=500
-      ```
-
-      -   参数说明：
-
-          -   --bin_data_path：推理结果
-          -   --test_annotation：原始图片信息文件
-          -   --img_dir：原始图片位置
-          -   --ann_dir：验证图片位置
-          -   --spli：图片的split
-          -   --net_input_width：网宽
-          -   --net_input_height：网高
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+调用ACL接口推理计算，性能和精度参考下列数据。
 
-| 芯片型号   | Batch Size | 数据集    | 精度                                 | 性能            |
-| --------- | ---------- | -------- | ----------------------------------- | --------------- |
-|Ascend310P |    1       |  VOC2012 |mIoU：69.01% mAcc：78.94% aAcc：93.04%|  91.5592        |
-|Ascend310  |    1       |  VOC2012 |mIoU：69.01% mAcc：78.94% aAcc：93.04%|  64.8908        |
-|T4         |    1       |    -     |         -                           |  58.6830       |
+| 芯片型号   | Batch Size | 数据集    | 精度                                    | 性能            |
+| --------- | ---------- | -------- | --------------------------------------- | --------------- |
+|Ascend310P |    1       |  VOC2012 |mIoU：69.01%  mAcc：78.94%  aAcc：93.04%  |  84.7436fps     |
+|Ascend310  |    1       |  VOC2012 |mIoU：69.01%  mAcc：78.94%  aAcc：93.04%  |  64.8908fps     |
+|T4         |    1       |    -     |         -                               |  58.6830fps     |
