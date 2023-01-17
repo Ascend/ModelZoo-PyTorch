@@ -25,7 +25,7 @@ echo "Starting pth导出onnx"
 python3 util/pth2onnx.py --onnx=${output_dir}/${model}.onnx --batch=${bs} || exit 1
 
 echo "Starting 修改onnx模型"
-python3 util/modify_onnx.py --input=${output_dir}/${model}.onnx --output=${output_dir}/${model}.onnx || exit 1
+python3 util/modify.py -m1=${output_dir}/${model}.onnx -m2=${output_dir}/${model}.onnx -bs=${bs} || exit 1
 
 echo "Starting atc转模型"
 bash util/atc.sh ${soc} ${output_dir}/${model} ${output_dir}/${model} ${bs} || exit 1

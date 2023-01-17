@@ -26,7 +26,7 @@ git clone https://github.com/clovaai/aasist.git
 （2）[LA数据集](https://datashare.ed.ac.uk/handle/10283/3336) ，推理采用ASVspoof2019数据集的验证集进行精度评估。
 
 ### 1.3 安装依赖
-安装 [onnx改图接口工具](https://gitee.com/peng-ao/om_gener)  
+安装 [onnx改图接口工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)  
 安装 [om推理接口工具](https://gitee.com/peng-ao/pyacl)
 
 ## 2 推理步骤
