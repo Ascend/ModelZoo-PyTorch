@@ -16,7 +16,7 @@ import os
 import sys
 import argparse
 import multiprocessing
-
+import tqdm
 cur_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, cur_path + "/..")
 
@@ -29,10 +29,9 @@ trans = build_transforms(fix_shape)
 
 
 def gen_input_bin(file_batches, batch):
-    i = 0
-    for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
+
+    for file in tqdm.tqdm(file_batches[batch]):
+       
 
         image = Image.open(os.path.join(flags.image_src_path, file)).convert('RGB')
         dummy_input = trans(image)

@@ -43,7 +43,7 @@ def display_results(info_file, results_path, coco_path, fix_shape, output_path):
         ratio = fix_shape / long_side
 
         bboxes_file, labels_file, scores_file, masks_file = \
-            name + '_1.bin', name + '_2.bin', name + '_3.bin', name + '_4.bin'
+            name + '_0.bin', name + '_1.bin', name + '_2.bin', name + '_3.bin'
         bboxes = np.fromfile(os.path.join(results_path, bboxes_file), dtype=np.float32).reshape(-1, 4)
         labels = np.fromfile(os.path.join(results_path, labels_file), dtype=np.int32)
         scores = np.fromfile(os.path.join(results_path, scores_file), dtype=np.float32)
