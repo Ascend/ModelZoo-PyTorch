@@ -151,7 +151,6 @@ class TrainerBase:
             try:
                 self.before_train()
                 for self.iter in range(start_iter, max_iter):
-                    torch.npu.set_option(option)
                     # if self.iter == 2:
                     #     with torch.autograd.profiler.profile(record_shapes=True,use_npu=True) as prof:
                     #         self.before_step()
