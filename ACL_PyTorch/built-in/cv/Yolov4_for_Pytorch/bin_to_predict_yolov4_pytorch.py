@@ -311,13 +311,13 @@ def post_process(flags):
 
     for bin_file in sorted(total_img):
         path_base = os.path.join(bin_path, bin_file)
-        src_img = cv2.imread(os.path.join(ori_path, '{}.jpg'.format(bin_file)))
+        src_img = cv2.imread(os.path.join(ori_path, 'val2014', '{}.jpg'.format(bin_file)))
         assert src_img is not None, 'Image Not Found ' + bin_file
 
         # 加载检测的所有输出tensor
-        feature_map_1 = np.fromfile(path_base + "_" + '1' + ".bin", dtype="float32").reshape(yolo_shape[0])
-        feature_map_2 = np.fromfile(path_base + "_" + '2' + ".bin", dtype="float32").reshape(yolo_shape[1])
-        feature_map_3 = np.fromfile(path_base + "_" + '3' + ".bin", dtype="float32").reshape(yolo_shape[2])
+        feature_map_1 = np.fromfile(path_base + "_" + '0' + ".bin", dtype="float32").reshape(yolo_shape[0])
+        feature_map_2 = np.fromfile(path_base + "_" + '1' + ".bin", dtype="float32").reshape(yolo_shape[1])
+        feature_map_3 = np.fromfile(path_base + "_" + '2' + ".bin", dtype="float32").reshape(yolo_shape[2])
 
         pred_1 = yolo1.forward(torch.from_numpy(feature_map_1))
         pred_2 = yolo2.forward(torch.from_numpy(feature_map_2))
