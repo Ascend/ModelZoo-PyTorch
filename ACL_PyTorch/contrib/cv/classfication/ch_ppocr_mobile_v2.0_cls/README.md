@@ -64,7 +64,7 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | paddlepaddle                                                 | 2.3.2   | 仅支持X86服务器安装                                           |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
