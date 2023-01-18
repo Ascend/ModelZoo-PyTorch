@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 
 import torch
+import argparse
 import torch.onnx
 import torchvision.models as models
 from collections import OrderedDict
@@ -44,8 +45,8 @@ def convert(bs, ckpt_path="./model_lincls_best.pth.tar"):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 3:
-        convert(int(sys.argv[1]), sys.argv[2])
-    elif len(sys.argv) == 2:
-         convert(int(sys.argv[1]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--bs', type=int, default=1)
+    parser.add_argument('--weight', type=str, default="./model_lincls_best.pth.tar")
+    args = parser.parse_args()
+    convert(args.bs, args.weight)

@@ -1,229 +1,223 @@
-# Moco-v2 ONNX模型端到端推理指导
+# Moco-v2 模型推理指导
 
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 TopN精度](#62-TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
+
+----
+# 概述
+
+通过在MoCo框架中实现SimCLR的两个设计改进来验证其有效性，通过对MoCo的简单修改——即使用MLP投影头和更多的数据增强——建立了比SimCLR性能更好的更强的基线，并且不需要大规模的批量训练，SimCLR中使用的两个设计改进，即 MLP投影头 和 更强的数据增强，与MoCo和SimCLR框架正交，当与MoCo一起使用时，它们会带来更好的图像分类和目标检测迁移学习结果
+
++ 论文  
+    [Improved Baselines with Momentum Contrastive Learning](https://arxiv.org/abs/2003.04297)  
+    Xinlei Chen, Haoqi Fan, Ross Girshick, Kaiming He
+
++ 参考实现： 
+    ``` 
+    https://github.com/facebookresearch/moco
+    branch:master  
+    commit_id:78b69cafae80bc74cd1a89ac3fb365dc20d157d3
+    ```
+## 输入输出数据
++ 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | actual_input_1 | FLOAT32 | NCHW | bs x 3 x 224 x 224 | 
+
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output1      |  FLOAT32   | ND          | bs x 1000        |
 
 
+----
+# 推理环境
 
-## 1 模型概述
+- 该模型推理所需配套的软件如下：
 
--   **[论文地址](#11-论文地址)**  
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.7.5   | -          |
+    | torch     | 1.5.0   | -          |    
+    说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
--   **[代码地址](#12-代码地址)**  
 
-### 1.1 论文地址
-[moco-v2论文](https://arxiv.org/abs/2003.04297)  
+----
+# 快速上手
 
-### 1.2 代码地址
-[moco-v2代码](https://github.com/facebookresearch/moco)  
-branch:master  
-commit_id:78b69cafae80bc74cd1a89ac3fb365dc20d157d3
-  
-备注：commit_id是指基于该次提交时的模型代码做推理，通常选择稳定版本的最后一次提交，或代码仓最新的一次提交  
+## 安装
 
-## 2 环境说明
+- 安装推理过程所需的依赖
+    ```bash
+    pip3 install -r requirements.txt
+    ```
 
--   **[深度学习框架](#21-深度学习框架)**  
+## 准备数据集
 
--   **[python第三方库](#22-python第三方库)**  
+1. 获取原始数据集  
+    本模型推理项目使用 ILSVRC2012 数据集验证模型精度，请在 [ImageNet官网](https://gitee.com/link?target=http%3A%2F%2Fimage-net.org%2F) 自行下载，并按照以下的目录结构存放图片与标签文件。   
+    ```
+    ILSVRC2012
+    ├── val_label.txt
+    ├── images
+    │   ├── ILSVRC2012_val_00000001.jpeg
+    │   ├── ILSVRC2012_val_00000002.jpeg
+    │   .....
+    │   ├── ILSVRC2012_val_00050000.jpeg
+    ```
 
-### 2.1 深度学习框架
-```
-CANN == 5.1.RC1
-onnx == 1.7.0
-pytorch == 1.5.0
-torchvision == 0.6.0
-```
 
-### 2.2 python第三方库
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
+    ```
+    mkdir -p prep_dataset
+    python3 imagenet_torch_preprocess.py --input_img_dir ${datasets_path}/ILSVRC2012/images --output_img_dir ./prep_dataset
+    ```
+    其中"datasets_path"表示处理前原数据集的地址，"prep_dataset"表示生成数据集的文件夹名称。
 
-```
-numpy == 1.18.5
-pillow == 7.2.0
-```
+    
+    运行后，将会得到如下形式的文件夹：
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+    ```
+    ├── prep_dataset
+    │    ├──input_00000.bin
+    │    ├──......     	 
+    ```
 
-## 3 模型转换
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+## 模型转换
 
--   **[onnx转om模型](#32-onnx转om模型)**  
 
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
+1. 下载pth权重文件  
 [moco-v2预训练pth权重文件](https://www.hiascend.com/zh/software/modelzoo/detail/1/79c64b56e43642c3a2e62a84f9ed9897)  
 
-**注意：**
-> 预训练pth权重文件的文件名为model_lincls_best.pth.tar，无需修改，在后续流程中直接使用
+    然后执行执行以下命令生成 ONNX 模型：
+    ```bash
+    python3 pthtar2onnx.py --bs 1 --weight model_lincls_best.pth.tar
+    ```
+    参数说明：
+    + --bs: 输入模型的数据量
+    + --weight: 输入的pth模型
 
-2.执行pth2onnx脚本，生成onnx模型文件
-```
-python3 pthtar2onnx.py 1 model_lincls_best.pth.tar
-```
+2. ONNX 模型转 OM 模型  
 
-"1": bs大小
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
 
-"model_lincls_best.pth.tar": 输入的pth模型
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+    chip_name=310P3  # 根据 step1 的结果设值
+    bs=1  # 根据需要自行设置 
 
-修改bs大小来修改对应的输出onnx模型的命名；目前已通过测试的bs为1，4，8，16，32，64;
+    
+    # 执行 ATC 进行模型转换
+    atc --model=./moco-v2-bs1.onnx \
+        --framework=5 \
+        --output=moco-v2-atc-${bs} \
+        --input_format=NCHW \
+        --input_shape="actual_input_1:1,3,224,224" \
+        --log=error \
+        --soc_version=Ascend${chip_name} \
+    ```
 
-**注意：**
->此模型采用动态batchsize方式导出，存在精度和性能问题，暂无法规避，建议采用导出固定batchsize的方式
-
-### 3.2 onnx转om模型
-
-1.设置环境变量
-
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23310P424%7C251366513%7C22892968%7C251168373)，需要指定输出节点以去除无用输出，可以使用netron开源可视化工具查看具体的输出节点名：
-
-使用atc将onnx模型 ${chip_name}可通过npu-smi info指令查看
-
-![img_1.png](https://images.gitee.com/uploads/images/2022/0713/160919_4b1ec998_8317185.png)
-
-执行ATC命令
-
-```shell
-atc --model=moco-v2-bs1.onnx --framework=5 --output=moco-v2-atc-bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,224,224" --log=info --soc_version=Ascend${chip_name} 
-```
-参数说明：
---model：为ONNX模型文件。 \
---framework：5代表ONNX模型。 \
---output：输出的OM模型。 \
---input_format：输入数据的格式。 \
---input_shape：输入数据的shape。 \
---log：日志级别。 \
---soc_version：处理器型号。 
-
-## 4 数据集预处理
-
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签存放路径分别为/path/dataset/ILSVRC2012_img_val/val与/path/val_label.txt
-
-### 4.2 数据集预处理
-1.预处理脚本imagenet_torch_preprocess.py
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-mkdir -p prep_dataset
-python3.7 imagenet_torch_preprocess.py ${datasets_path}/imageNet/val ./prep_dataset
-```
-“${datasets_path}/imageNet/val”：原始数据验证集（.jpeg）所在路径。
-
-“./prep_dataset”：为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本get_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-
-```
-python3.7 get_info.py bin ./prep_dataset ./dataset_prep_bin.info 224 224
-```
-“bin”：生成的数据集文件格式。
-
-“./prep_dataset”：预处理后的数据文件的路径。
-
-“./dataset_prep_bin.info”：生成的数据集文件保存的路径。
-## 5 离线推理
-
--   **[benchmark工具概述](#51-benchmark工具概述)**  
-
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310/310P上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-
-```
-chmod u+x benchmark.${arch}
-./benchmark.x86_64 -model_type=vision -batch_size=1 -device_id=0 -input_text_path=./dataset_prep_bin.info -input_width=224 -input_height=224 -om_path=./moco-v2-atc-bs1.om -useDvpp=False -output_binary=False
-```
-推理后的输出默认在当前目录result下。
-
-## 6 精度对比
-
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[TopN精度](#62-TopN精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理TopN精度统计
-
-后处理统计TopN精度
-
-调用vision_metric_ImageNet.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python3.7 vision_metric_ImageNet.py result/dumpOutput_device0/ ./val_label.txt ./ result.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+    
 
 
-### 6.2 TOPN精度
+## 推理验证
 
-测试得到精度：
-```
-Model                  Acc@1        Acc@5
-moco-v2_bs32_310	   67.31	    87.82
-moco-v2_bs32_310P	   67.28	    87.82
-```
-### 6.3 精度对比
-将得到的310om离线模型推理TopN精度与310P的精度对比，精度下降在1%范围之内，故精度达标。  
+1. 对数据集推理  
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+    ```bash
+    python3 -m ais_bench \
+        --model moco-v2-atc-${bs} \
+        --input ./ prep_dataset/ \ 
+        --output ./ \
+        --output_dirname ./result/ \
+        --outfmt TXT \
+        --batchsize ${bs}
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --output_dirname 用于存放推理结果的子目录名，位于--output指定的目录下
+    + --outfmt 推理结果文件的保存格式
+    + --batchsize 模型每次输入bin文件的数量,本例中为1。
 
-## 7 性能对比
 
--   **[npu性能数据](#71-npu性能数据)**  
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python3 -m ais_bench --model moco-v2-atc-bs1 --batchsize ${bs}
+    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
 
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device。为快速获取性能数据，也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准。这里给出两种方式，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。  
-1.benchmark工具在整个数据集上推理获得性能数据  
-性能表格为：
-|         | 310      | 310P    | T4       | 310P/310   | 310P/T4  |
-|---------|----------|---------|----------|------------|----------|
-| bs1     | 1604.244 | 1371.17 | 915.818  | 0.854714   | 1.497208 |
-| bs4     | 2172.888 | 3288.38 | 1313.518 | 1.513368   | 2.503371 |
-| bs8     | 2418.532 | 3045.12 | 1066.401 | 1.259078   | 2.855511 |
-| bs16    | 2444.788 | 2974.07 | 1692.353 | 1.216494   | 1.757358 |
-| bs32    | 2237.228 | 2607.27 | 1734.916 | 1.165402   | 1.502822 |
-| bs64    | 1703.216 | 2551.53 | 1870.913 | 1.498066   | 1.363789 |
-| 最优batch | 2444.788 | 3288.38 | 1870.913 | 1.345057 | 1.757634 |
+3. 精度验证  
 
-**性能优化：**  
+    执行后处理脚本，根据推理结果计算OM模型的精度：
+    ```bash
+    python3 vision_metric_ImageNet.py  --folder-davinci-target result/dumpOutput_device0/ --annotation-file-path ./val_label.txt --result-json-path ./ --json-file-name result.json
+    ```
+    参数说明：
+    + --folder-davinci-target: 存放推理结果的目录路径
+    + --annotation-file-path: 标签文件路径
+    + --result-json-path: 精度文件保存路径。
+    + --json-file-name: 精度文件名。
+    
+    运行成功后，程序会将各top1~top5的正确率记录在 result_bs1.json 文件中，可执行以下命令查看：
+    ```
+    python3 -m json.tool result.json
+    ```
 
->没有遇到性能不达标的问题，故不需要进行性能优化
+
+----
+# 性能&精度
+
+在310P设备上，OM模型的精度为  **{Top1Acc=67.41% Top5Acc=88.02%}**，当batchsize设为4时模型性能最优，达 836.0 fps。
+
+| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
+| --------- | --------- | ----------- | --------------- | --------- |
+|Ascend310P3| 1         | ILSVRC2012  | Top1Acc=67.41% Top5Acc=88.02%| 836.2 fps |
+|Ascend310P3| 4         | ILSVRC2012  | Top1Acc=67.41% Top5Acc=88.02%| 836.0 fps |
+|Ascend310P3| 8         | ILSVRC2012  | Top1Acc=67.41% Top5Acc=88.02%| 497.9 fps |
+|Ascend310P3| 16        | ILSVRC2012  | Top1Acc=67.41% Top5Acc=88.02%| 244.4 fps |
+|Ascend310P3| 32        | ILSVRC2012  | Top1Acc=67.41% Top5Acc=88.02%| 79.5 fps |
+|Ascend310P3| 64        | ILSVRC2012  | Top1Acc=67.41% Top5Acc=88.02%| 39.5 fps |

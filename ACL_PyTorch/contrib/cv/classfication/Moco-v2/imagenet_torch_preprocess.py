@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import argparse
 import os
 from PIL import Image
 import numpy as np
@@ -38,6 +38,8 @@ def preprocess(src_path, save_path):
 
 
 if __name__ == "__main__":
-    input_img_dir = sys.argv[1]
-    output_img_dir = sys.argv[2]
-    preprocess(input_img_dir, output_img_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_img_dir', type=str, default="")
+    parser.add_argument('--output_img_dir', type=str, default="")
+    args = parser.parse_args()
+    preprocess(args.input_img_dir, args.output_img_dir)

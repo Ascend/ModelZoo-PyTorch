@@ -1,5 +1,5 @@
 #coding = utf-8
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 import os
 import sys
+import argparse
 import json
 import numpy as np
 import time
@@ -153,16 +154,24 @@ def create_visualization_statistical_result(prediction_file_path,
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--folder_davinci_target', type=str, default="")
+    parser.add_argument('--annotation_file_path', type=str, default="")
+    parser.add_argument('--result_json_path', type=str, default="")
+    parser.add_argument('--json_file_name', type=str, default="")
+    args = parser.parse_args()
+    
+
     start = time.time()
     try:
         # txt file path
-        folder_davinci_target = sys.argv[1]       
+        folder_davinci_target = args.folder_davinci_target     
         # annotation files path, "val_label.txt"
-        annotation_file_path = sys.argv[2]                
+        annotation_file_path = args.annotation_file_path               
         # the path to store the results json path
-        result_json_path = sys.argv[3]
+        result_json_path = args.result_json_path 
         # result json file name
-        json_file_name = sys.argv[4]
+        json_file_name = args.json_file_name 
     except IndexError:
         print("Stopped!")
         exit(1)
