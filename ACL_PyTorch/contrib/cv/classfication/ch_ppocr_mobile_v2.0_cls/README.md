@@ -217,7 +217,7 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
             -   --insert_op_conf：插入算子的配置文件路径与文件名，例如aipp预处理算子。
             -   --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的首层卷积会有性能收益。
 
-           运行成功后生成ch_ppocr_mobile_v2.0_cls_bs${batchsize}模型文件。${batchsize}为模型输入的batch size。
+           运行成功后生成`ch_ppocr_mobile_v2.0_cls_bs${batchsize}`模型文件。`${batchsize}`为模型输入的batch size。
 
 2. 开始推理验证。
 
