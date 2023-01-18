@@ -108,7 +108,7 @@
 
     | 参数        | 说明                                          |
     | ----------- | --------------------------------------------- |
-    | img_path    | 数据集路径(./datasets/hpatches/)              |
+    | img_path    | 数据集路径(./datasets/HPatches/)              |
     | result_path | 数据预处理得到的bin文件保存位置(./pre_result) |
 
 ## 模型推理<a name="section183221994799"></a>。
@@ -170,10 +170,10 @@
          退出虚拟环境，进行onnx到om的转换
          ```
          atc --framework=5 \
-             --model=superpoint.onnx \
-             --output=sp \
+             --model=sp-{batch_size}.onnx \
+             --output=sp-{batch_size} \
              --input_format=NCHW \
-             --input_shape="image:1,1,240,320" \
+             --input_shape="image:{batch_size},1,240,320" \
              --soc_version=${chip_name}
          ```
 

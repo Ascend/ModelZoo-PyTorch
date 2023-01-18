@@ -123,7 +123,8 @@ CSWin Transformer（cross-shape window）是Swin-Transformer的改进版，它�
    执行CSWin_Transformer_preprocess.py脚本，完成预处理。
 
    ```
-   python ../CSWin_Transformer_preprocess.py --data ${dataset_path} --savepath ${savePath}
+   mkdir ../${savePath}
+   python ../CSWin_Transformer_preprocess.py --data ${dataset_path} --savepath ../${savePath}
    ```
    - 参数说明：
 

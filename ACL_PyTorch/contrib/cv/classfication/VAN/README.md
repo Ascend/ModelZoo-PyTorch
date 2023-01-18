@@ -95,13 +95,11 @@ VAN模型基于一种新的大核注意（LKA）模块，以实现自注意中�
     运行preprocess.py脚本对数据进行预处理
 
     ```shell 
-    python3 ./VAN_preprocess.py VAN ${scr_path}/val ./${save_path}
+    python3 ./VAN_preprocess.py VAN ${scr_path} ./${save_path}
     ```
 
     参数说明：
-
-    - model_type：数据预处理方式为VAN
-    - ${scr_path}/val：原始数据验证集（.jpeg）所在路径
+    - ${scr_path}：原始数据验证集（.jpeg）所在路径
     - ${save_path}：输出的二进制文件（.bin）存放路径
 
 
@@ -125,13 +123,14 @@ VAN模型基于一种新的大核注意（LKA）模块，以实现自注意中�
        2. 使用pth2onnx.py导出onnx文件，运行VAN_pth2onnx.py脚本。
 
            ```shell
-           python3 VAN_pth2onnx.py ./${onnx_path} ./${van.pth}
+           python3 VAN_pth2onnx.py ./van.onnx ./${van.pth}
            ```
 
            参数说明：
 
            - ${onnx_path}：onnx模型的保存路径
-           - ${van_pth}：模型权重文件
+           
+           生成van.onnx文件
 
     3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -163,12 +162,12 @@ VAN模型基于一种新的大核注意（LKA）模块，以实现自注意中�
 
             ```shell
             atc --framework=5 \
-                --model=${onnx_path} \
+                --model=van.onnx \
                 --input_format=NCHW \
-                --input_shape="image:16,3,224,224" \
-                --output=${om_path} \
+                --input_shape="image:${batchsize},3,224,224" \
+                --output=van_${batchsize} \
                 --op_precision_mode=op_precision.ini \
-                --soc_version=${chip_name}
+                --soc_version=Ascend${chip_name}
             ```
 
             参数说明：
@@ -197,7 +196,7 @@ VAN模型基于一种新的大核注意（LKA）模块，以实现自注意中�
     2. 执行推理。
 
         ```shell
-        python3 -m ais_bench --model ${om_path} --input ${prep_dataset} --output ${output} --outfmt TXT --batchsize=${bs}
+        python3 -m ais_bench --model van_${batchsize}.om --input ${prep_dataset} --output ./ --output_dirname=result_${batchsize} --outfmt TXT --batchsize=${batchsize}
         ```
 
         参数说明：
@@ -205,13 +204,15 @@ VAN模型基于一种新的大核注意（LKA）模块，以实现自注意中�
         - --input：输入数据的路径
         - --output：推理结果存放路径
         - --outfmt：输出数据的格式
+
+        推理结果保存在result_${batchsize}文件中
     
 3. 精度验证。
 
     调用VAN_postprocess.py脚本将推理结果与label进行比对，结果保存在result.json
 
     ```shell
-    python3 VAN_postprocess.py --anno_file=${val_label.txt} --benchmark_out=${result_path}} --result_file=./result.json
+    python3 VAN_postprocess.py --anno_file=${val_label.txt} --benchmark_out=${result_path} --result_file=./result.json
     ```
 
     - 参数说明：

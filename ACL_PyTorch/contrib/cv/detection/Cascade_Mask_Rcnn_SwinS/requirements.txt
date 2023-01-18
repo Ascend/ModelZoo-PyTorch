@@ -1,6 +1,6 @@
 torch==1.8.0
-torchvision==0.9.0
+torchvision==0.9.1
 mmcv-full==1.4.0
-mmdet==2.11.0
 onnx==1.12.0
 onnxruntime==1.12.1
+numpy

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) Soumith Chintala 2016,
+# Copyright (c) Soumith Chintala 2022,
 # All rights reserved
 #
 # Copyright 2020 Huawei Technologies Co., Ltd
@@ -59,23 +59,36 @@ def resize(img, size, interpolation=Image.BILINEAR):
     else:
         return img.resize(size[::-1], interpolation)
 
-def preprocess(mode_type, src_path, save_path):
-    files = os.listdir(src_path)
-    file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
-    thread_pool = multiprocessing.Pool(len(file_batches))
-    for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch, save_path))
-    thread_pool.close()
-    thread_pool.join()
-    print("in thread, except will not report! please ensure bin files generated.")
 
 def gen_input_bin(mode_type, file_batches, batch):
     i = 0
     for file in file_batches[batch]:
         i = i + 1
-        # print("batch", batch, file, "===", i)
+        print("batch", batch, file, "===", i)
 
         # RGBA to RGB
+        image = Image.open(os.path.join(src_path, file)).convert('RGB')
+        image = resize(image, model_config[mode_type]['resize']) # Resize
+        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
+        img = np.array(image, dtype=np.float32)
+        img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
+        img = img / 255. # ToTensor: div 255
+        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
+        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
+        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+
+
+def preprocess(mode_type, src_path, save_path):
+    files = os.listdir(src_path)
+    file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
+    for batch in tqdm(range(len(file_batches)), desc="Preprocess"):
+        gen_input_bin(mode_type, file_batches, batch)
+
+    print("in thread, except will not report! please ensure bin files generated.")
+
+def gen_input_bin(mode_type, file_batches, batch):
+    i = 0
+    for file in file_batches[batch]:
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
         image = resize(image, model_config[mode_type]['resize'])  # Resize
         image = center_crop(image, model_config[mode_type]['centercrop'])  # CenterCrop

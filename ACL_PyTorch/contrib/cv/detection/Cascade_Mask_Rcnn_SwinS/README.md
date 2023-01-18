@@ -97,7 +97,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
    执行“cascade_maskrcnn_preprocess.py”脚本，完成预处理。
    
    ```shell
-   python3.7 cascade_maskrcnn_preprocess.py \
+   python cascade_maskrcnn_preprocess.py \
    --image_src_path=./data/coco/val2017 \
    --bin_file_path=val2017_bin \
    --input_height=800 \
@@ -124,7 +124,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
       运行pytorch2onnx.py脚本。
 
          ```shell
-         python3.7 Swin-Transformer-Object-Detection/tools/deployment/pytorch2onnx.py \
+         python Swin-Transformer-Object-Detection/tools/deployment/pytorch2onnx.py \
          Swin-Transformer-Object-Detection/configs/swin/cascade_mask_rcnn_swin_small_patch4_window7_mstrain_480-800_giou_4conv1f_adamw_3x_coco.py \
          cascade_mask_rcnn_swin_small_patch4_window7.pth \
          --output-file swin-s.onnx
@@ -170,7 +170,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
          --input_format=NCHW \
          --input_shape="input:1,3,800,1216" \
          --log=debug \
-         --soc_version=Ascend${芯片类型} \
+         --soc_version=Ascend${chip_name} \
          --op_precision_mode=op_precision.ini \
          ```
       
@@ -197,7 +197,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
    2. 执行推理。
    
       ```shell
-      python3.7 -m ais_bench --batchsize 1 --model ./swin-s_bs1.om --input "./val2017_bin" --output ais_results --output_dirname bs1
+      python -m ais_bench --batchsize 1 --model ./swin-s_bs1.om --input "./val2017_bin" --output ./ --output_dirname bs1
       ```
    - 参数说明：
       - model：om文件路径。
@@ -211,7 +211,7 @@ Cascade R-CNN是一种对象检测体系结构，旨在通过增加阈值来解�
 	调用cascade_maskrcnn_postprocess.py评测map精度。
       
          ```shell
-         python3.7 cascade_maskrcnn_postprocess.py \
+         python cascade_maskrcnn_postprocess.py \
          --ann_file_path=./data/coco/annotations/instances_val2017.json \
          --bin_file_path=./ais_results/bs1 \
          --input_height=800 \

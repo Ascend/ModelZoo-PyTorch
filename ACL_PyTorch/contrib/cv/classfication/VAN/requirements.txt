@@ -4,6 +4,4 @@ onnx == 1.12.0
 tqdm
 numpy
 argparse
-json
-sys
-os
+timm
