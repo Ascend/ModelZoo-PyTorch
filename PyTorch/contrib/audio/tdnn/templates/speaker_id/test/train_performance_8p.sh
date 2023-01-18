@@ -80,31 +80,20 @@ source ${test_path_dir}/env_npu.sh
 export WORLD_SIZE=8
 export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='211225'
-
+KERNEL_NUM=$(($(nproc)/8))
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do
     export RANK=$RANK_ID
+    PID_START=$((KERNEL_NUM * RANK_ID))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    nohup taskset -c $PID_START-$PID_END python3.7 train.py train.yaml \
+			--distributed_launch \
+			--distributed_backend=hccl \
+			--local_rank ${RANK_ID} \
+			--batch_size=$batch_size \
+			--number_of_epochs=$train_epochs \
+			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_8p.log 2>&1 &
 
-    if [ $(uname -m) = "aarch64" ]
-	then
-	    let a=0+RANK_ID*24
-		let b=23+RANK_ID*24
-        taskset -c $a-$b python3 train.py train.yaml \
-			--distributed_launch \
-			--distributed_backend=hccl \
-			--local_rank ${RANK_ID} \
-			--batch_size=$batch_size \
-			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_8p.log 2>&1 &
-	else
-        python3.7 train.py train.yaml \
-			--distributed_launch \
-			--distributed_backend=hccl \
-			--local_rank ${RANK_ID} \
-			--batch_size=$batch_size \
-			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_8p.log 2>&1 &
-	fi
 done
 wait
 
