@@ -83,7 +83,7 @@ def main():
     incorrect = 0
     numel = 0
     for i in tqdm(range(len(infos))):
-        result_path = os.path.join(result_dir, '%d_1.bin'%i)
+        result_path = os.path.join(result_dir, '%d_0.bin'%i)
         result = np.fromfile(result_path, dtype='float32')
         result = result.reshape(-1,2)
         result = result.argmax(1)

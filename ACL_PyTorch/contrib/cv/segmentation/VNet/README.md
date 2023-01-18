@@ -1,280 +1,249 @@
-# VNet Onnx模型端到端推理指导
-- [VNet Onnx模型端到端推理指导](#vnet-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 模型转换](#3-模型转换)
-		- [3.1 pth转onnx模型](#31-pth转onnx模型)
-		- [3.2 onnx转om模型](#32-onnx转om模型)
-	- [4 数据集预处理](#4-数据集预处理)
-		- [4.1 数据集获取](#41-数据集获取)
-		- [4.2 数据集预处理](#42-数据集预处理)
-		- [4.3 生成数据集信息文件](#43-生成数据集信息文件)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-		- [6.1 离线推理精度](#61-离线推理精度)
-		- [6.2 开源精度](#62-开源精度)
-		- [6.3 精度对比](#63-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 310性能数据](#71-310性能数据)
-		- [7.2 310P性能数据](#72-310p性能数据)
-		- [7.3 T4性能数据](#73-t4性能数据)
-		- [7.4 性能对比](#74-性能对比)
+#  VNet 模型-推理指导
 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
 
-## 1 模型概述
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[论文地址](#11-论文地址)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
--   **[代码地址](#12-代码地址)**  
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-### 1.1 论文地址
-[VNet论文](https://arxiv.org/abs/1606.04797)  
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 1.2 代码地址
-[VNet代码](https://github.com/mattmacy/vnet.pytorch)  
-branch:master  
-commit_id:a00c8ea16bcaea2bddf73b2bf506796f70077687  
-备注：commit_id是指基于该次提交时的模型代码做推理，通常选择稳定版本的最后一次提交，或代码仓最新的一次提交  
+------
 
-## 2 环境说明
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
--   **[深度学习框架](#21-深度学习框架)**  
+V-Net是一个早期的全卷积的三维图像分割网络，基本网络架构与2D图像分割网络U-Net相似，为了处理3D医学图像，采用了3D卷积模块和3D转置卷积模块。
 
--   **[python第三方库](#22-python第三方库)**  
+- 参考论文：
 
-### 2.1 深度学习框架
-```
-CANN 5.1.RC1
-pytorch = 1.5.0
-torchvision = 0.6.0
-onnx = 1.7.0
-```
+  [V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation](https://arxiv.org/abs/1606.04797)
 
-### 2.2 python第三方库
+- 参考实现：
 
-```
-numpy == 1.20.3
-opencv-python == 4.5.2.54
-SimpleITK == 2.1.0
-tqdm == 4.61.1
-```
+  ```
+  url=https://github.com/mattmacy/vnet.pytorch
+  branch=master
+  commit_id=a00c8ea16bcaea2bddf73b2bf506796f70077687
+  ```
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+## 输入输出数据<a name="section540883920406"></a>
 
-## 3 模型转换
+- 输入数据
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+  | 输入数据      | 数据类型 | 大小                         | 数据排布格式 |
+  | ------------- | -------- | ---------------------------- | ------------ |
+  | actual_input1 | FP32     | batchsize x 1 x 64 x 80 x 80 | ND           |
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+- 输出数据
 
-### 3.1 pth转onnx模型
+  | 输出数据 | 数据类型 | 大小                         | 数据排布格式 |
+  | -------- | -------- | ---------------------------- | ------------ |
+  | output1  | FP32     | batchsize x 64 x 80 x 80 x 2 | ND           |
 
-1.VNet模型代码下载
-```
-git clone https://github.com/mattmacy/vnet.pytorch
-cd vnet.pytorch
-git checkout a00c8ea16bcaea2bddf73b2bf506796f70077687
-```
-2.对原代码进行修改，以满足数据集预处理及模型转换等功能。
-```
-patch -p1 < ../vnet.patch
-cd ..
-```
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-3.获取权重文件vnet_model_best.pth.tar
+- 该模型需要以下插件与驱动
 
-4.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 vnet_pth2onnx.py vnet_model_best.pth.tar vnet.onnx
-```
+  **表 1** 版本配套表
 
-### 3.2 onnx转om模型
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.12.1  | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-使用atc将onnx模型转换为om模型文件，工具使用方法可以参考[CANN 5.0.1 开发辅助工具指南 (推理) 01]
-```
-atc --model=./vnet.onnx --framework=5 --output=vnet_bs1 --input_format=NCDHW --input_shape="actual_input_1:1,1,64,80,80" --log=info --soc_version=Ascend310
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-```
+## 获取源码<a name="section4622531142816"></a>
 
-## 4 数据集预处理
+1. 获取本仓源码。
 
--   **[数据集获取](#41-数据集获取)**  
+2. 获取开源模型代码，和第1步源码置于同级目录下。
 
--   **[数据集预处理](#42-数据集预处理)**  
+   ```
+   git clone https://github.com/mattmacy/vnet.pytorch
+   cd vnet.pytorch
+   git checkout a00c8ea16bcaea2bddf73b2bf506796f70077687
+   ```
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+3. 对源码进行修改，以满足数据集预处理及模型转换等功能。
 
-### 4.1 数据集获取
-该模型使用[LUNA16数据集](https://luna16.grand-challenge.org/Download/)的888例CT数据进行肺部区域分割。全部888例CT数据分别存储在subset0.zip~subset9.zip共10个文件中，解压后需要将所有文件移动到vnet.pytorch/luna16/lung_ct_image目录下。另有与CT数据一一对应的分割真值文件存放于seg-lungs-LUNA16.zip文件，将其解压到vnet.pytorch/luna16/seg-lungs-LUNA16目录。
-```
-cd vnet.pytorch/luna16/lung_ct_image  
-wget https://zenodo.org/record/3723295/files/subset0.zip
-wget https://zenodo.org/record/4121926/files/subset7.zip
-7za x subset0.zip
-```
-**说明：** 
->   数据集subset0~subset6在3723295链接下载，subset7~subset9在4121926链接下载，解压后lung_ct_image包含888个.raw文件和888个.mhd文件
+   ```
+   cd vnet.pytorch
+   patch -p1 < ../vnet.patch
+   cd ..
+   ```
 
-### 4.2 数据集预处理
-1.执行原代码仓提供的数据集预处理脚本。
-```
-cd vnet.pytorch  
-python normalize_dataset.py ./luna16 2.5 128 160 160  
-cd ..
-```
+4. 安装必要依赖。
 
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 vnet_preprocess.py ./vnet.pytorch/luna16 ./prep_bin ./vnet.pytorch/test_uids.txt
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prep_bin ./vnet_prep_bin.info 80 80
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息  
-## 5 离线推理
+## 准备数据集<a name="section183221994411"></a>
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
--   **[离线推理](#52-离线推理)**  
+1. 获取原始数据集。
 
-### 5.1 benchmark工具概述
+   该模型使用[LUNA16数据集](https://luna16.grand-challenge.org/Download/)自行划分的测试集进行测试。这里提供已处理过的数据[下载链接](https://pan.baidu.com/s/1Vg8e6UISiWhpjsabSHCuew?pwd=55mc)，下载解压后上传至服务器，和第1步源码置于同级目录下，数据目录结构如下所示：
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN 5.0.1 推理benchmark工具用户指南 01]
-获取推理benchmark工具软件包：解压后获取benchmark工具运行脚本benchmark.{arch}和scripts目录，该目录下包含各种模型处理脚本，包括模型预处理脚本、模型后处理脚本、精度统计脚本等。
+   ```
+   ├── luna16  
+         ├──normalized_lung_ct
+              ├──1.3.6.1.4.1.14519.5.2.1.6279.6001.997611074084993415992563148335.mhd                    
+              ├──...                     
+         ├──normalized_lung_mask
+              ├──1.3.6.1.4.1.14519.5.2.1.6279.6001.997611074084993415992563148335.mhd
+              ├──...     
+   ```
+   
+3. 执行预处理脚本，生成数据集预处理后的bin文件
 
-获取地址：https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software
+   ```
+   python3 vnet_preprocess.py ./luna16 ${prep_bin} ./test_uids.txt
+   ```
 
-Ascend-cann-benchmark_{version}_Linux-{arch}.zip
+   参数说明：
 
-{version}为软件包的版本号；{arch}为CPU架构，请用户根据实际需要获取对应的软件包。
+   - --参数1：数据集路径。
+   - --参数2：指定保存bin文件的路径，比如 prep_bin。
+   - --参数3：测试样本名文件路径。
 
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=vnet_bs1.om -input_text_path=./vnet_prep_bin.info -input_width=80 -input_height=80 -output_binary=True -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_deviceX(X为对应的device_id)，每个输入对应一个_X.bin文件的输出。
+## 模型推理<a name="section741711594517"></a>
 
-## 6 精度对比
+1. 模型转换。
 
--   **[离线推理精度](#61-离线推理精度)**  
--   **[开源精度](#62-开源精度)**  
--   **[精度对比](#63-精度对比)**  
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-### 6.1 离线推理精度
+   1. 获取权重文件。
 
-后处理统计精度
+      点击下载权重文件 [vnet_model_best.pth.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/VNET/PTH/vnet_model_best.pth.tar)
 
-调用vnet_postprocess.py脚本将推理结果与语义分割真值进行比对，可以获得精度数据。
-```
-python3.7 vnet_postprocess.py result/dumpOutput_device0 ./vnet.pytorch/luna16/normalized_lung_mask ./vnet.pytorch/test_uids.txt
-```
-第一个为benchmark输出目录，第二个为真值所在目录，第三个为测试集样本的序列号。  
-310精度测试结果：
-```
-Test set: Error: 2497889/439091200 (0.5689%)
-```
-310P精度测试结果：
-```
-Test set: Error: 2485695/439091200 (0.5661%)
-```
-经过对batchsize为1/4/8/16/32/64的om测试，精度数据均如上。
+   2. 导出onnx文件。
 
-### 6.2 开源精度
-[原代码仓公布精度](https://github.com/mattmacy/vnet.pytorch/blob/master/README.md)
-```
-Model   Error rate 
-VNet    0.355% 
-```
-### 6.3 精度对比
-将得到的om离线模型推理IoU精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
+      1. 使用vnet_pth2onnx.py导出动态batch的onnx文件。
 
-## 7 性能对比
+         ```
+         python3 vnet_pth2onnx.py vnet_model_best.pth.tar vnet.onnx
+         ```
 
--   **[310性能数据](#71-310性能数据)**  
--   **[310P性能数据](#72-310P性能数据)**  
--   **[T4性能数据](#73-T4性能数据)**  
--   **[性能对比](#74-性能对比)**  
+         参数说明：
 
-### 7.1 310性能数据
-1.benchmark工具在整个数据集上推理获得性能数据  
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
+         - --参数1：模型权重文件路径。
+         - --参数2：ONNX模型文件保存路径。
 
-batch1：Interface throughputRate: 7.91715
-batch4：Interface throughputRate: 8.5008
-batch8：Interface throughputRate: 8.00694
-batch16：Interface throughputRate: 8.11015
-batch32：Interface throughputRate: 7.91441
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-2.执行parse脚本，计算单卡吞吐率
-```
-python parse.py result/perf_vision_batchsize_1_device_0.txt
-```
-batch1_310吞吐率为31.6686fps
-batch4_310吞吐率为34.0032fps
-batch8_310吞吐率为32.02776fps
-batch16_310吞吐率为32.4406fps
-batch32_310吞吐率为31.65764fps
+      1. 配置环境变量。
 
-### 7.2 310P性能数据
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：  
+      2. 执行命令查看芯片名称（${chip_name}）。
 
-batch1：Interface throughputRate: 65.5303 ,310P吞吐率为65.5303fps
-batch4：Interface throughputRate: 64.5802 ,310P吞吐率为64.5802fps
-batch8：Interface throughputRate: 64.3861 ,310P吞吐率为64.3861fps
-batch16：Interface throughputRate: 63.617 ,310P吞吐率为63.617fps
-batch32：Interface throughputRate: 59.7592 ,310P吞吐率为59.7592fps
-batch64：Interface throughputRate: 61.1219 ,310P吞吐率为61.1219fps
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-### 7.3 T4性能数据
-在装有T4卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务，TensorRT版本：7.2.3.4，cuda版本：11.0，cudnn版本：8.2  
-batch1性能：
-```
-trtexec --onnx=vnet.onnx --fp16 --shapes=actual_input_1:1x1x64x80x80 --threads
-```
+   4. 执行ATC命令。
 
-batch1 t4单卡吞吐率：1000/(91.687/1)=10.90667fps  
-batch4 t4单卡吞吐率：1000/(360.984/4)=11.08082fps
-batch8 t4单卡吞吐率：1000/(813.193/8)=9.83776fps
-batch16 t4单卡吞吐率：1000/(1563.66/16)=10.41219fps
-batch32 t4单卡吞吐率：1000/(5932.02/32)=5.39445fps
-batch64 t4单卡吞吐率：1000/(13051.4/64)=4.90369fps
+      ```
+      # bs = [1, 4, 8, 16, 32, 64]
+      atc --model=vnet.onnx --framework=5 --output=vnet_bs${bs} --input_format=NCDHW --input_shape="actual_input_1:${bs},1,64,80,80" --log=error --soc_version=Ascend${chip_name}
+      ```
 
-### 7.4 性能对比
+      运行成功后生成vnet_bs${bs}.om模型文件。
 
-310 310P T4性能对比如下(benchmark推理工具)
-| batch | 310      | 310P     | T4       | 310P/310 | 310P/T4   |
-|-------|----------|---------|----------|---------|----------|
-| 1     | 31.6686  | 65.5303 | 10.90667 | 2.06925 | 6.00828  |
-| 4     | 34.0032  | 64.5802 | 11.08082 | 1.89924 | 5.82811  |
-| 8     | 32.02776 | 64.3861 | 9.83776  | 2.01032 | 6.54479  |
-| 16    | 32.4406  | 63.617  | 10.41219 | 1.96103 | 6.10986  |
-| 32    | 31.65764 | 59.7592 | 5.39445  | 1.88767 | 11.07790 |
-| 64    | -        | 61.1219 | 4.90369  | -       | 12.46447 |
-|       |          |         |          |         |          |
-| 最优  | 34.0032  | 65.5303 | 11.08082 |         |          |
-		
-对于所有batchsize，310P性能均高于310性能1.2倍，同时310P性能均高于T4性能1.6倍，性能达标。  
- **性能优化：**  
->没有遇到性能不达标的问题，故不需要进行性能优化
+      参数说明：
 
+      - --model：为ONNX模型文件。
+      - --framework：5代表ONNX模型。
+      - --output：输出的OM模型。
+      - --input_format：输入数据的格式。
+      - --input_shape：输入数据的shape。
+      - --log：日志级别。
+      - --soc_version：处理器型号。
+
+2. 开始推理验证。
+
+   1. 使用ais-bench工具进行推理。
+
+      ais-bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
+
+   2. 执行推理。
+
+      ```
+      python3 -m ais_bench --model=vnet_bs${bs}.om  --batchsize=${bs} \
+      --input ${prep_bin} --output result --output_dirname result_bs${bs} --outfmt BIN
+      ```
+      
+      参数说明：
+      
+      - --model：om模型路径。
+      - --batchsize：批次大小。
+      - --input：输入数据所在路径。
+      - --output：推理结果输出路径。
+      - --output_dirname：推理结果输出子文件夹。
+      - --outfmt：推理结果输出格式
+   
+3. 精度验证。
+
+   调用vnet_postprocess.py脚本与真值标签比对，可以获得精度数据。
+
+   ```
+   python3 vnet_postprocess.py ${result_dir} ./luna16/normalized_lung_mask ./test_uids.txt
+   ```
+
+   参数说明：
+
+   - --参数1：生成推理结果所在路径，比如这里为result/result_bs${bs}。
+   - --参数2：真值标签数据路径。
+   - --参数3：测试样本名文件路径。
+
+4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+   ```
+   python3 -m ais_bench --model=vnet_bs${bs}.om --loop=50 --batchsize=${bs}
+   ```
+
+   参数说明：
+
+   - --model：om模型路径。
+   - --batchsize：批次大小。
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，VNet模型的性能和精度参考下列数据。
+
+| 芯片型号    | Batch Size | 数据集 | 开源精度（Point Accuracy） | 参考精度（Point Accuracy） |
+| ----------- | ---------- | ------ | -------------------------- | -------------------------- |
+| Ascend310P3 | 1          | LUNA16 | 99.645%                    | 99.409%                    |
+
+| 芯片型号    | Batch Size | 参考性能（FPS） |
+| ----------- | ---------- | --------------- |
+| Ascend310P3 | 1          | 44.49           |
+| Ascend310P3 | 4          | 43.12           |
+| Ascend310P3 | 8          | 43.06           |
+| Ascend310P3 | 16         | 42.88           |
+| Ascend310P3 | 32         | 42.55           |
+| Ascend310P3 | 64         | 41.94           |
