@@ -196,7 +196,7 @@ def main(args):
         for _, (img, local_labels) in enumerate(train_loader):
             global_step += 1
             start_time = time.time()
-            if args.perf_only and global_step > 1000:
+            if args.perf_steps and global_step > args.perf_steps:
                 exit()
             img = img.npu()
             local_labels = local_labels.npu()
@@ -263,5 +263,5 @@ if __name__ == "__main__":
         description="Distributed Arcface Training in Pytorch")
     parser.add_argument("config", type=str, help="py config file")
     parser.add_argument("--local_rank", type=int, default=0, help="local_rank")
-    parser.add_argument("--perf_only", action="store_true", default=False, help="enable perf mode")
+    parser.add_argument("--perf_steps", type=int, default=0, help="number of steps on performance mode")
     main(parser.parse_args())

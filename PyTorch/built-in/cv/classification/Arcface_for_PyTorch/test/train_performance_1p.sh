@@ -68,10 +68,14 @@ do
     else
         mkdir -p ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     fi
+    
+    KERNEL_NUM=$(($(nproc)/8))
+    PID_START=$((KERNEL_NUM * RANK_ID))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
 
-    python3 -u train.py \
+    taskset -c $PID_START-$PID_END python3 -u train.py \
         configs/glint360k_r100.py \
-        --local_rank=${RANK_ID} --perf_only > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --local_rank=${RANK_ID} --perf_steps=2000 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 

@@ -21,7 +21,6 @@ RANK_ID_START=0
 RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
-data_path="/npu/traindata/imagenet_pytorch/"
 # 指定训练所使用的npu device卡id
 device_id=0
 
