@@ -60,7 +60,7 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
     ```shell
     ### npu环境变量
-    source {deepspeech_root}/scripts/env_new.sh
+    source {deepspeech_root}/test/env_npu.sh
     git clone https://github.com/SeanNaren/warp-ctc.git
     cd warp-ctc
     git checkout -b pytorch_bindings origin/pytorch_bindings
@@ -71,7 +71,7 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 - 安装依赖。
 
   ```
-  pip install -r requirements.txt
+  pip3.7 install -r requirements.txt
   ```
   
 - 如果需要在多机或者多卡上训练该模型，那么需要按照以下步骤安装etcd。
@@ -95,7 +95,11 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
     执行完成后目录结构如下所示：
    ```
-   ├── data/an4_dataset
+   ├── data
+      ├──an4_train_manifest.csv
+      ├──an4_val_manifest.csv 
+      ├──an4_test_manifest.csv  
+      ├──an4_dataset
          ├──train                    
          ├──val
          ├──test          
@@ -120,8 +124,8 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
      启动单卡训练。
 
      ```
-     bash run_1p.sh         # 精度训练
-     bash train_performance_1p.sh  # 性能训练
+     bash ./test/train_full_1p.sh --data_path=./data/         # 精度训练
+     bash ./test/train_performance_1p.sh --data_path=./data/  # 性能训练
      ```
 
    - 单机8卡训练
@@ -129,8 +133,8 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
      启动8卡训练。
 
      ```
-     bash run_8p.sh         # 精度训练
-     bash train_performance_8p.sh  # 性能训练   
+     bash ./test/train_full_8p.sh --data_path=./data/           # 精度训练
+     bash ./test/train_performance_8p.sh --data_path=./data/    # 性能训练   
      ```
 
    模型训练脚本参数说明如下。
