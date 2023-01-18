@@ -27,10 +27,7 @@ MINOVERLAP = 0.5  # default value (defined in the PASCAL VOC2012 challenge)
 top_margin = 0.15  # in percentage of the figure height
 bottom_margin = 0.05  # in percentage of the figure height
 parser = argparse.ArgumentParser()
-parser.add_argument('-na', '--no-animation',
-                    help="no animation is shown.", action="store_true")
-parser.add_argument('-np', '--no-plot',
-                    help="no plot is shown.", action="store_true")
+
 parser.add_argument(
     '-q', '--quiet', help="minimalistic console output.", action="store_true")
 parser.add_argument('-i', '--ignore', nargs='+', type=str,
@@ -93,14 +90,6 @@ if not args.no_animation:
 # try to import Matplotlib
 # if the user didn't choose the option --no-plot
 draw_plot = False
-if not args.no_plot:
-    try:
-        import matplotlib.pyplot as plt
-
-        draw_plot = True
-    except ImportError:
-        print("\"matplotlib\" not found,install it to get the plots.")
-        args.no_plot = True
 
 
 def log_average_miss_rate(precision, fp_cumsum, num_images):
