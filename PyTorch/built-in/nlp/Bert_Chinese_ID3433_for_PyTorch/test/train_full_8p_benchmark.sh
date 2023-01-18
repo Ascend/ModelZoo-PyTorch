@@ -1,4 +1,5 @@
 #!/bin/bash
+export BERT_BENCHMARK=1
 cur_path=`pwd`
 #集合通信参数,不需要修改
 export RANK_SIZE=8
@@ -12,12 +13,11 @@ Network="Bert_Chinese_ID3433_for_PyTorch"
 #训练epoch
 train_epochs=3
 #训练batch_size 默认bert base batch size, 该参数外部可传入
-batch_size=32
+batch_size=240
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
 warmup_ratio=0.0
 weight_decay=0.0
-
 
 #获取外部传参，可扩展
 for para in $*
@@ -38,6 +38,7 @@ do
         source activate $conda_name
     fi
 done
+
 #判断是否使用conda环境
 if [[ $conda_name != "" ]];then
    cp -r $data_path/* $cur_path/../
@@ -87,18 +88,15 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
-else
-    train_epochs=1
 fi
 
 nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --model_type bert \
         --config_name ./bert-${model_size}-chinese/config.json \
         --tokenizer_name ./bert-${model_size}-chinese \
-        --max_seq_length 512 \
+        --max_seq_length 128 \
         --train_file ${data_path} \
         --eval_metric_path ./accuracy.py \
-        --line_by_line \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
@@ -109,12 +107,12 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --per_device_train_batch_size ${batch_size} \
         --per_device_eval_batch_size ${batch_size} \
         --do_train \
+        --dataloader_drop_last true \
         --do_eval \
         --eval_accumulation_steps 100 \
         --fp16 \
         --warmup_ratio ${warmup_ratio} \
         --weight_decay ${weight_decay} \
-        --dataloader_drop_last true \
         --fp16_opt_level O2 \
         --loss_scale 8192 \
         --use_combine_grad \
@@ -146,7 +144,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量

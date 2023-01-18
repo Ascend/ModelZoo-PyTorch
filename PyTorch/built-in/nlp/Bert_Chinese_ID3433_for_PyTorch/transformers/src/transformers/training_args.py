@@ -718,7 +718,10 @@ class TrainingArguments:
             "help": "Timeout(seconds) for operations executed against the process group, the value of the flag `timeout` passed to "
             "`init_process_group`."
         },
-    )    
+    )
+    use_combine_ddp: bool = field(
+        default=False, metadata={"help": "Whether to use combine_ddp instead of DDP."}
+    )
     dataloader_pin_memory: bool = field(
         default=True, metadata={"help": "Whether or not to pin memory for DataLoader."}
     )

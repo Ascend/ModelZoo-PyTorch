@@ -15,7 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 from typing import TYPE_CHECKING
 
 from ...file_utils import _LazyModule, is_flax_available, is_tf_available, is_tokenizers_available, is_torch_available
@@ -30,21 +30,39 @@ if is_tokenizers_available():
     _import_structure["tokenization_bert_fast"] = ["BertTokenizerFast"]
 
 if is_torch_available():
-    _import_structure["modeling_bert"] = [
-        "BERT_PRETRAINED_MODEL_ARCHIVE_LIST",
-        "BertForMaskedLM",
-        "BertForMultipleChoice",
-        "BertForNextSentencePrediction",
-        "BertForPreTraining",
-        "BertForQuestionAnswering",
-        "BertForSequenceClassification",
-        "BertForTokenClassification",
-        "BertLayer",
-        "BertLMHeadModel",
-        "BertModel",
-        "BertPreTrainedModel",
-        "load_tf_weights_in_bert",
-    ]
+    use_benchmark_bert = os.getenv('BERT_BENCHMARK', default=0)
+    if int(use_benchmark_bert):
+        _import_structure["modeling_bert_benchmark"] = [
+            "BERT_PRETRAINED_MODEL_ARCHIVE_LIST",
+            "BertForMaskedLM",
+            "BertForMultipleChoice",
+            "BertForNextSentencePrediction",
+            "BertForPreTraining",
+            "BertForQuestionAnswering",
+            "BertForSequenceClassification",
+            "BertForTokenClassification",
+            "BertLayer",
+            "BertLMHeadModel",
+            "BertModel",
+            "BertPreTrainedModel",
+            "load_tf_weights_in_bert",
+        ]
+    else:
+        _import_structure["modeling_bert"] = [
+            "BERT_PRETRAINED_MODEL_ARCHIVE_LIST",
+            "BertForMaskedLM",
+            "BertForMultipleChoice",
+            "BertForNextSentencePrediction",
+            "BertForPreTraining",
+            "BertForQuestionAnswering",
+            "BertForSequenceClassification",
+            "BertForTokenClassification",
+            "BertLayer",
+            "BertLMHeadModel",
+            "BertModel",
+            "BertPreTrainedModel",
+            "load_tf_weights_in_bert",
+        ]
 
 if is_tf_available():
     _import_structure["modeling_tf_bert"] = [

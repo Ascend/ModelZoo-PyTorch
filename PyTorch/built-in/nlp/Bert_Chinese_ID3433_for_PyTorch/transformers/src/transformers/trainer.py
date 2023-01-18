@@ -1053,7 +1053,7 @@ class Trainer:
         # Mixed precision training with apex (torch < 1.6)
         if self.use_apex:
             if training:
-                model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level, loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
+                model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level, loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad, combine_ddp=True if self.args.use_combine_ddp else None)
             elif self.optimizer is None:
                 model = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level, loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
 
@@ -1100,12 +1100,13 @@ class Trainer:
 
             if self.args.ddp_bucket_cap_mb is not None:
                 kwargs["bucket_cap_mb"] = self.args.ddp_bucket_cap_mb
-            model = nn.parallel.DistributedDataParallel(
-                model,
-                device_ids=[self.args.local_rank] if self.args._n_gpu != 0 else None,
-                output_device=self.args.local_rank if self.args._n_gpu != 0 else None,
-                **kwargs,
-            )
+            if not self.args.use_combine_ddp:
+                model = nn.parallel.DistributedDataParallel(
+                    model,
+                    device_ids=[self.args.local_rank] if self.args._n_gpu != 0 else None,
+                    output_device=self.args.local_rank if self.args._n_gpu != 0 else None,
+                    **kwargs,
+                )
 
         return model
 
