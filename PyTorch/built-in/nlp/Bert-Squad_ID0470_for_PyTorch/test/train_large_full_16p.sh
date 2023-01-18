@@ -56,6 +56,7 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_dump_step		     data dump step, default is 10
     --profiling		           if or not profiling for performance debug, default is False
     --data_path		           source data of training
+    --batch_size                train batch size
     -h/--help		             show help message
     "
     exit 1
@@ -96,6 +97,8 @@ do
             one_node_ip=`echo ${para#*=}`
     elif [[ $para == --linux_num* ]];then
             linux_num=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 

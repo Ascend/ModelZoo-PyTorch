@@ -28,6 +28,8 @@ Network="Bert-Squad_ID0470_for_PyTorch"
 train_epochs=2
 #训练batch_size
 batch_size=96
+#训练device_id
+device_id=0
 #训练step
 train_steps=
 #学习率
@@ -45,6 +47,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --ckpt_path* ]];then
         ckpt_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -69,7 +75,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-ASCEND_DEVICE_ID=0
+ASCEND_DEVICE_ID=$device_id
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/
 mkdir -p results/SQUAD

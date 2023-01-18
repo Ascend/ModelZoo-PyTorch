@@ -29,6 +29,8 @@ Network="Bert-Squad_ID0470_for_PyTorch"
 train_epochs=1
 #训练batch_size
 batch_size=32
+#训练device_id
+device_id=0
 #训练step
 train_steps=
 #学习率
@@ -50,6 +52,8 @@ if [[ $1 == --help || $1 == -h ]];then
     --data_dump_step		     data dump step, default is 10
     --profiling		           if or not profiling for performance debug, default is False
     --data_path		           source data of training
+    --batch_size                train batch size
+    --device_id                 train device id
     -h/--help		             show help message
     "
     exit 1
@@ -78,6 +82,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --ckpt_path* ]];then
         ckpt_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
     fi
 done
 
@@ -92,10 +100,10 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
-    ASCEND_DEVICE_ID=0
 fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
+ASCEND_DEVICE_ID=$device_id
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/

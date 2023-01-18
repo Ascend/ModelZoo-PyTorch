@@ -46,6 +46,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --ckpt_path* ]];then
         ckpt_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
