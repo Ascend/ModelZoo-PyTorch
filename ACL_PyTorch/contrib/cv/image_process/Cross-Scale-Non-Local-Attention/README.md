@@ -1,195 +1,209 @@
-### Cross-Scale-Non-Local-Attention模型PyTorch离线推理指导
-
-#### 1 环境准备
-
-1.安装必要的依赖
-
-`pip3.7 install -r requirements.txt` 
-
-2.上传源码包到服务器任意目录并解压（如：/home/HwHiAiUser）。
-
-```
-├── benchmark.aarch64            //离线推理工具（适用ARM架构） 
-├── benchmark.x86_64             //离线推理工具（适用x86架构）
-├── CSNLN_postprocess.py     //数据后处理脚本（包含输出精度）  
-├── CSNLN_preprocess.py      //数据预处理脚本  
-├── CSNLN_pth2onnx.py       //pth转onnx脚本
-├── csnln_x4_bs1.om              //onnx转化的om文件
-├── model_x4.pt              //权重文件 
-├── get_info.py                   //用于获取二进制数据集信息的脚本 
-```
-
-3.获取开源模型代码
-
-
-```
-git clone https://github.com/SHI-Labs/Cross-Scale-Non-Local-Attention.git -b master
-cd Cross-Scale-Non-Local-Attention/
-git reset af168f99afad2d9a04a3e4038522987a5a975e86 --hard
-cd ../
-```
-
-4.获取权重文件 Cross-Scale-Non-Local-Attention预训练pth权重文件
-
-model_x4.pt放在当前目录
-
-5.获取Set5数据集
-
-`wget https://cv.snu.ac.kr/research/EDSR/benchmark.tar`
-
-解压并获取benchmark目录下的Set5数据集，放在当前目录,文件目录结构如下
-
-```
-Cross-Scale-Non-Local-Attention
-├── Set5
-│   ├── HR
-│   ├── LR_bicubic
-│   │   ├── X2
-│   │   ├── X3
-│   │   ├── X4
-```
-
-- 数据预处理。
-
-```
-python3.7.5 CSNLN_preprocess.py --s  ./Set5/LR_bicubic/X4/ --d prep_dataset
-```
-
-“CSNLN_preprocess.py”：预处理脚本文件。
-
-“./Set5/LR_bicubic/X4/”：数据集路径。
-
-“prep_dataset”：数据预处理之后存放的路径。
-
-- 生成数据集info文件
-
-“prep_bin.info”
-
-```
-python3.7.5 get_info.py bin prep_dataset/bin_56 prep_bin.info 56 56
-```
-
-“get_info.py”：脚本文件。
-
-“./prep_dataset”：预处理后的数据文件的**相对路径。**
-
-“./prep_bin.info”：生成的数据集文件保存的路径。
-
-6.获取benchmark工具
-
-```
-https://gitee.com/ascend/cann-benchmark/tree/master/infer
-```
-
-将benchmark.x86_64或benchmark.aarch64放到当前目录
-
-#### 2 离线推理
-
-310p上执行，执行时使npu-smi info查看设备状态，确保device空闲
-
-使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
-
-#### 模型转换
-
-1. 获取权重文件。
-
-   从源码包中获取权重文件“model_x4.pt”。
-
-2. 导出onnx文件。
-
-   1. 使用
-
-      “model_x4.pt”
-
-      导出onnx文件。
-
-      “CSNLN_pth2onnx.py”
-
-      ```
-      python3.7.5 CSNLN_pth2onnx.py --n_feats 128 --pre_train model_x4.pt --save csnln_x4.onnx
-      ```
-
-      “CSNLN_pth2onnx.py”为执行脚本。
-
-      --pre_train：权重文件。
-
-      --save：生成的onnx文件。
-
-      获得“csnln_x4.onnx”文件。
-
-3. 编辑环境变量
-
-   ```
-   source /usr/local/Ascend/.../set_env.sh
-   ```
-
-4. 执行ATC命令，生成om文件
-
-   ```
-   atc --framework=5 --model=csnln_x4_perf.onnx --output=csnln_x4_bs1 --input_format=NCHW --input_shape="input.1:1,3,56,56" --log=debug --soc_version=Ascend310p
-   ```
-
-   ​	--soc_version：根据npu-smi info 填写。
-
-#### 推理验证
-
-使用Benchmark工具进行推理。
-
-1. 执行以下命令增加Benchmark工具可执行权限，并根据OS架构选择工具，如果是X86架构，工具选择benchmark.x86_64，如果是Arm，选择benchmark.aarch64 。
-
-   ```
-   chmod u+x benchmark.x86_64
-   ```
-
-   - 二进制输入
-
-     ```
-     ./benchmark.x86_64 -model_type=vision -batch_size=1 -device_id=0 -om_path=csnln_x4_bs1.om -input_text_path=prep_bin.info -input_width=56 -input_height=56 -useDvpp=false -output_binary=true 
-     ```
-
-     参数说明：
-
-   - -model_type：模型类型
-
-   - -om_path：om文件路径
-
-   - -device_id：NPU设备编号
-
-   - -batch_size：参数规模
-
-   - -input_text_path：图片二进制信息
-
-   - -input_width：输入图片宽度
-
-   - -input_height：输入图片高度
-
-   - -useDvpp：是否使用Dvpp
-
-   - -output_binary：输出二进制形式
-
-   推理后的输出默认在当前目录“result”下。
-
-2. 精度验证。
-
-   ```
-   python3.7.5 CSNLN_postprocess.py --hr  ./Set5/HR/ --res result/dumpOutput_device0 --save_path res_png
-   ```
-
-   --hr：生成推理结果所在路径。
-
-   --res：标签数据。
-
-   --save_path：生成结果文件。
-
-   “datasets_path”：Set5的路径。
-
-   “result/dumpOutput_device0”：推理结果目录。
-
-   “res_png”：保存推理完成之后的图片路径
-
-|      | 精度    | 性能       |
-| ---- | ----- | -------- |
-| bs1  | 32.57 | 0.314836 |
-
+# Cross-Scale-Non-Local-Attention 模型推理指导
+
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
+
+----
+# 概述
+
+在自然图像中，跨尺度的图像相似性是普遍的，本文使用跨尺度的Non-Local注意力模型，有效挖掘图像内部先验知识，在多个实验中证明所提出的方法在多个SISR基准测试中取得了最先进的性能。
+
++ 论文  
+    [Image Super-Resolution with Cross-Scale Non-Local Attention and Exhaustive Self-Exemplars Mining](https://arxiv.org/pdf/2111.06377.pdf)  
+    Yiqun Mei, Yuchen Fan, Yuqian Zhou, Lichao Huang, Thomas S. Huang, Humphrey Shi
+
++ 参考实现：  
+    https://github.com/SHI-Labs/Cross-Scale-Non-Local-Attention.git
+
+## 输入输出数据
++ 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | input.1| FLOAT32 | NCHW | batch_size x 3 x 56 x 56 | 
+
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output1      |  FLOAT32   | NCHW | batch_size x 3 x 224 x 224        |
+
+
+----
+# 推理环境
+
+- 该模型推理所需配套的软件如下：
+
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.7.5   | -          |
+
+   说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
+
+
+----
+# 快速上手
+
+## 安装
+
+- 安装推理过程所需的依赖
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+
+- 获取源码
+    ```bash
+    git clone https://github.com/SHI-Labs/Cross-Scale-Non-Local-Attention.git -b master
+    cd Cross-Scale-Non-Local-Attention/
+    git reset af168f99afad2d9a04a3e4038522987a5a975e86 --hard
+    cd ../
+    ```
+## 准备数据集
+
+1. 获取原始数据集  
+    本模型推理项目使用 Set5 数据集验证模型精度，请点击 [**set5**](https://cv.snu.ac.kr/research/EDSR/benchmark.tar) 自行下载，并按照以下的目录结构存放图片与标签文件。   
+    ```
+    Cross-Scale-Non-Local-Attention
+    ├── Set5
+    │   ├── HR
+    │   ├── LR_bicubic
+    │   │   ├── X2
+    │   │   ├── X3
+    │   │   ├── X4
+    ```
+
+
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
+    ```bash
+    python3 CSNLN_preprocess.py --s  ./Set5/LR_bicubic/X4/ --d prep_dataset
+    ```
+    其中"s"表示处理前原数据集的地址，"d"表示生成数据集的文件夹名称
+
+
+
+## 模型转换
+
+1. PyTroch 模型转 ONNX 模型  
+
+    从源码包中获取权重文件“model_x4.pt”
+ 
+    然后执行执行以下命令生成 ONNX 模型：
+    ```
+    python3 CSNLN_pth2onnx.py --n_feats 128 --pre_train model_x4.pt --save csnln_x4.onnx
+    ```
+    参数说明：
+     + --n_feats : 特征大小。
+     + --pre_train : 权重文件路径。
+     + --save : onnx保存路径。
+
+2. ONNX 模型转 OM 模型  
+
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
+
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+    chip_name=310P3  # 根据 step1 的结果设值
+    batch_size=1  # 根据需要自行设置 
+  
+    # 执行 ATC 进行模型转换
+    atc --model=./csnln_x4_perf.onnx \
+        --framework=5 \
+        --output=csnln_x4_bs1 \
+        --input_format=NCHW \
+        --input_shape="input.1:1,3,56,56" \
+        --log=error \
+        --soc_version=Ascend${chip_name} 
+
+    ```
+
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+    
+
+
+## 推理验证
+
+1. 对数据集推理  
+    该离线模型使用ais_infer作为推理工具，请参考[**安装文档**](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer#%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85)安装推理后端包aclruntime与推理前端包ais_bench。完成安装后，执行以下命令预处理后的数据进行推理。
+    ```bash
+    python3 -m ais_bench \
+        --model csnln_x4_bs1.om \
+        --input ./prep_dataset/bin_56 \ 
+        --output ./result/ \
+        --outfmt BIN \
+        --batchsize 1
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --outfmt 推理结果文件的保存格式
+    + --batchsize 模型每次输入bin文件的数量
+
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python3 -m ais_bench --model csnln_x4_bs1.om --batchsize 1
+    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
+
+3. 精度验证  
+
+    执行后处理脚本，根据推理结果计算OM模型的精度：
+    ```bash
+    python3 CSNLN_postprocess.py --hr  ./Set5/HR/ --res result/dumpOutput_device0 --save_path res_png
+    ```
+    参数说明：
+    + --hr：生成推理结果所在路径。
+    + --res：标签数据。
+    + --save_path：生成结果文件。
+    + --json-file-name: 精度文件名。
+    + --batch-size: 输入文件数量。
+    
+
+----
+# 性能&精度
+
+在310P设备上，OM模型的精度为  
+
+| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
+| --------- | --------- | ----------- | --------------- | --------- |
+|Ascend310P3| 1         | Set5  | 32.57 | 0.7163 fps |
 
 备注：由于内存限制，离线模型不支持多batch
