@@ -46,6 +46,9 @@ def remove(model_name, output_name):
     onnx.save(model, model_name, output_name)
 
 if __name__ == "__main__":
-    model_name = sys.argv[1]
-    output_name = sys.argv[2]
-    remove(model_name, output_name)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_name', type=str, default="./mae_finetuned_vit_base.pth")
+    parser.add_argument('--output_name', type=str, default="./mae_dynamicbs.onnx")
+    args = parser.parse_args()
+
+    remove(args.model_name, args.output_name)

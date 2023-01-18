@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-import sys
+import argparse
 import numpy as np
 from PIL import Image
 
@@ -81,7 +81,14 @@ def deepmar_onnx(file_path, bin_path, image_info):
 
 
 if __name__ == "__main__":
-    file_path = os.path.abspath(sys.argv[1])
-    bin_path = os.path.abspath(sys.argv[2])
-    image_info = sys.argv[3]
-    deepmar_onnx(file_path, bin_path, image_info)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file_path', default='', type=str)
+    parser.add_argument('--bin_path', default='', type=str)
+    parser.add_argument('--image_info', default='', type=str)
+    args = parser.parse_args()
+
+    file_path = os.path.abspath(args.file_path)
+    bin_path = os.path.abspath(args.bin_path)
+    
+    deepmar_onnx(file_path, bin_path, args.image_info)

@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import argparse
 import torch
-from baseline.model import DeepMAR
 import torch.onnx
-from collections import OrderedDict
 import torch._utils
-import sys
+from baseline.model import DeepMAR
+from collections import OrderedDict
+
 
 def proc_nodes_module(checkpoint, AttrName):
     new_state_dict = OrderedDict()
@@ -31,7 +31,7 @@ def proc_nodes_module(checkpoint, AttrName):
     return new_state_dict
 
 
-def convert(batch_size):
+def convert(batch_size, input_file, output_file):
     checkpoint = torch.load(input_file, map_location='cpu')
     checkpoint['state_dict'] = proc_nodes_module(checkpoint, 'state_dict')
     model = DeepMAR.DeepMAR_ResNet50()
@@ -49,7 +49,11 @@ def convert(batch_size):
 
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    batch_size = sys.argv[3]
-    convert(int(batch_size))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_file', type=str, default="")
+    parser.add_argument('--output_file', type=str, default="")
+    parser.add_argument('--batch_size', type=int, default="")
+    args = parser.parse_args()
+
+
+    convert(args.batch_size, args.input_file, args.output_file)

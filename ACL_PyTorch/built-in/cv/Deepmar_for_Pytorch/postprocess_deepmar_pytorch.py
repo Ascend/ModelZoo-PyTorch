@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-import sys
+import argparse
 import json
 import numpy as np
 
@@ -102,7 +102,13 @@ def postprocess_deepmar(npu_result, label_file):
 
 
 if __name__ == "__main__":
-    npu_result = os.path.abspath(sys.argv[1])
-    label_file = os.path.abspath(sys.argv[2])
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--npu_result', type=str, default="./mae_finetuned_vit_base.pth")
+    parser.add_argument('--label_file', type=str, default="./mae_dynamicbs.onnx")
+    args = parser.parse_args()
+
+    npu_result = os.path.abspath(args.npu_result)
+    label_file = os.path.abspath(args.label_file)
     postprocess_deepmar(npu_result, label_file)
 
