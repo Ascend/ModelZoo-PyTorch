@@ -37,9 +37,9 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型     | 大小 | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | batchsize x 1 x imgH x imgW | FLOAT32  | NCHW           |
+  | output1  | FLOAT32 | batchsize x 1 x imgH x imgW  | NCHW           |
 
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -187,11 +187,11 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
          ```
          atc --framework=5 \
              --model=./ch_PP-OCRv3_det.onnx \
-             --output=./ch_PP-OCRv3_det_bs${batchsize} \
-             --input_format=NCHW \
-             --input_shape="x:${batchsize},3,-1,-1" \
+             --output=./ch_PP-OCRv3_det_bs1 \
+             --input_format=ND \
+             --input_shape="x:1,3,-1,-1" \
              --soc_version=Ascend${chip_name} \
-             --dynamic_image_size="736,736;736,800;736,960;736,992;736,1184;736,1248;736,1280;768,928;832,1536;992,736;1088,736;1184,736"
+             --dynamic_dims="736,736;736,800;736,960;736,992;736,1184;736,1248;736,1280;768,928;832,1536;992,736;1088,736;1184,736"
          ```
     
          - 参数说明：
@@ -203,10 +203,9 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --dynamic_image_size：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
+           -   --dynamic_dims：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
     
-           `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
-           运行成功后生成`ch_PP-OCRv3_det_bs${batchsize}.om`模型文件。
+           运行成功后生成`ch_PP-OCRv3_det_bs1.om`模型文件。
 
 2. 开始推理验证。
 
@@ -216,22 +215,19 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 
    b. 执行推理。
+      在当前目录下运行以下指令
+      ```
+      python -m ais_bench --model=ch_PP-OCRv3_det_bs1.om --input=./prep_data_dir/img_npy --output=./ --output_dirname=results_bs1 --auto_set_dymdims_mode=1 --outfmt=NPY
+      ```
 
-      ```
-      python3 ch_PP-OCRv3_det_ais_infer.py \
-          --ais_infer=${path_to_ais_bench}/ais_infer.py \
-          --model=./ch_PP-OCRv3_det_bs${batchsize}.om \
-          --input=./prep_data_dir/img_bin \
-          --output=results_bs${batchsize}
-      ```
-    
       -   参数说明：
-           -   --ais_infer：ais_infer.py脚本路径
            -   --model：om模型路径。
-           -   --input：预处理后的numpy文件存放路径。
-           -   --output:推理结果存放路径
-      `${path_to_ais_bench}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
-      推理完成后结果保存在`ch_PP-OCRv3_det/results_bs${batchsize}`目录下。
+           -   --inputs：输入数据集路径。
+           -   --batchsize：om模型输入的batchsize。
+           -   --auto_set_dymdims_mode：设置自动匹配动态shape
+           -   --outfmt：输出数据格式
+      推理结果保存在当前目录的results_bs1文件夹下
+
 
 
    c. 精度验证。
@@ -241,7 +237,9 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
       ```
       python3 ch_PP-OCRv3_det_postprocess.py \
           -c PaddleOCR/configs/det/ch_PP-OCRv3/ch_PP-OCRv3_det_cml.yml \
-          -o Global.infer_img=imgs/ res_dir=results_bs${batchsize} save_dir=${output_path}/ \
+          -o Global.infer_img=imgs/ 
+             res_dir=results_bs1 \
+             save_dir=${output_path}/ \
              info_path=prep_data_dir/img_info.pkl
       ```
     
@@ -251,7 +249,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
             -   -o：可选参数：Global.infer_img表示样本图片路径，res_dir表示推理结果保存路径，save_dir表示后处理结果保存路径，
                             info_path表示预处理后的结果pkl文件的路径。
     
-      `${output_path}`为精度验证结果的保存路径，`results_bs${batchsize}`为推理结果的保存路径，命令执行完成后，每个推理结果对应的检测图片保存在  `checkpoints/det_db/det_results_Student/`目录下：
+      `${output_path}`为精度验证结果的保存路径，`results_bs1`为推理结果的保存路径，命令执行完成后，每个推理结果对应的检测图片保存在  `checkpoints/det_db/det_results_Student/`目录下：
     
       在线推理命令如下：
     
@@ -270,28 +268,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
     
       可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。
 
-   d. 性能验证。
 
-      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-    
-      ```
-      python3 -m ais_bench \
-          --model=./ch_PP-OCRv3_det_bs${batchsize}.om \
-          --loop=50 \
-          --dymHW=736,992 \
-          --batchsize=${batchsize}
-      ```
-    
-      -   参数说明：
-    
-          -   --model：om模型路径。
-          -   --loop：推理次数。
-          -   --dymHW：动态分辨率参数，指定模型输入的实际H、W。
-          -   --batchsize：om模型的batch。
-    
-      `${batchsize}`表示不同batch的om模型。
-    
-      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -300,11 +277,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1          | 样例图片 | 见备注 | 320.55 fps |
-|Ascend310P3| 4          | 样例图片 | 见备注 | 307.33 fps |
-|Ascend310P3| 8          | 样例图片 | 见备注 | 298.52 fps |
-|Ascend310P3| 16         | 样例图片 | 见备注 | 292.25 fps |
-|Ascend310P3| 32         | 样例图片 | 见备注 | 288.39 fps |
-|Ascend310P3| 64         | 样例图片 | 见备注 | 259.84 fps |
+|Ascend310P3| 1          | 样例图片 | 见备注 | 215 fps |
+
 
    - 备注：将OM推理结果后处理后，与在线推理结果进行对比，对于每张验证图片，两者得到的文本框数量与位置均一致，可判定OM精度正常。

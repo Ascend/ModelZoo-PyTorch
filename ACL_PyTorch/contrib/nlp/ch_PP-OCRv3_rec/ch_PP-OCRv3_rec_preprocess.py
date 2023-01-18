@@ -75,12 +75,7 @@ def main(config, device, logger, vdl_writer, data_path):
             
         images = np.expand_dims(batch[0], axis=0)
         image_name = "{}.npy".format(os.path.basename(im_file)[:-4])
-
-        if images.shape == (1, 3, 48, 320):
-            images.tofile(os.path.join(data_path, image_name))
-            
-        if images.shape == (1, 3, 48, 620):
-            images.tofile(os.path.join(data_path, image_name))
+        np.save(os.path.join(data_path, image_name), images)
         
         pbar.update(1)
     

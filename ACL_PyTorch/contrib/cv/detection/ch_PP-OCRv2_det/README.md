@@ -29,15 +29,6 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
   model_name=ch_PP-OCRv2_det
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -50,9 +41,9 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型   | 大小 | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | batchsize x 1 x imgH x imgW | FLOAT32  | NCHW           |
+  | output1  | FLOAT32 | batchsize x 1 x imgH x imgW  | NCHW           |
 
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -88,8 +79,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
    ```
    pip3 install -r requirements.txt
    cd PaddleOCR
-   python3 setup.py install
-   export PYTHONPATH=$(echo $(pwd)):$PYTHONPATH
+   python setup.py install
    cd ..
    ```
 
@@ -111,7 +101,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
    在`ch_PP-OCRv2_det`工作目录下，执行ch_PP-OCRv2_det_preprocess.py脚本，完成预处理。
 
    ```
-    python3 ch_PP-OCRv2_det_preprocess.py \
+    python ch_PP-OCRv2_det_preprocess.py \
         -c PaddleOCR/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml \
         -o Global.infer_img=./imgs/
    ```
@@ -206,11 +196,11 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
          ```
          atc --framework=5 \
              --model=./ch_PP-OCRv2_det.onnx \
-             --output=./ch_PP-OCRv2_det_bs${batchsize} \
-             --input_format=NCHW \
-             --input_shape="x:${batchsize},3,-1,-1" \
+             --output=./ch_PP-OCRv2_det_bs1 \
+             --input_format=ND \
+             --input_shape="x:1,3,-1,-1" \
              --soc_version=Ascend${chip_name} \
-             --dynamic_image_size="736,736;736,800;736,960;736,992;736,1184;736,1248;736,1280;768,928;832,1536;992,736;1088,736;1184,736"
+             --dynamic_dims="736,736;736,800;736,960;736,992;736,1184;736,1248;736,1280;768,928;832,1536;992,736;1088,736;1184,736"
          ```
 
          - 参数说明：
@@ -222,10 +212,9 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --dynamic_image_size：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
+           -   --dynamic_dims：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
 
-           `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
-           运行成功后生成`ch_PP-OCRv2_det_bs${batchsize}.om`模型文件。
+           运行成功后生成`ch_PP-OCRv2_det_bs1.om`模型文件。
 
 2. 开始推理验证。
 
@@ -235,24 +224,18 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
 
    b.  执行推理。
-
+      在当前目录下运行以下指令
       ```
-      python3 ch_PP-OCRv2_det_ais_infer.py \
-          --ais_infer=${path_to_ais_bench}/ais_infer.py \
-          --model=./ch_PP-OCRv2_det_bs${batchsize}.om \
-          --inputs=./pre_data \
-          --batchsize=${batchsize}
+      python -m ais_bench --model=ch_PP-OCRv2_det_bs1.om --input=pre_data --output=./ --output_dirname=results_bs1 --auto_set_dymdims_mode=1 --outfmt=NPY
       ```
 
       -   参数说明：
-           -   --ais_infer：ais_infer.py脚本路径
            -   --model：om模型路径。
            -   --inputs：输入数据集路径。
-           -   --batchsize：om模型的batchsize。
-
-      `${path_to_ais_bench}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。。
-
-      推理完成后结果保存在`ch_PP-OCRv2_det/results_bs${batchsize}`目录下。
+           -   --batchsize：om模型输入的batchsize。
+           -   --auto_set_dymdims_mode：设置自动匹配动态shape
+           -   --outfmt：输出数据格式
+      推理结果保存在当前目录的results_bs1文件夹下
 
 
    c.  精度验证。
@@ -260,9 +243,9 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
       执行后处理脚本`ch_PP-OCRv2_det_postprocess.py`，参考命令如下：
 
       ```
-      python3 ch_PP-OCRv2_det_postprocess.py \
+      python ch_PP-OCRv2_det_postprocess.py \
           -c PaddleOCR/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml \
-          -o Global.infer_img="./imgs/" Global.infer_results=${output_path}
+          -o Global.infer_img="./imgs/" Global.infer_results=result_bs1
       ```
 
       -   参数说明：
@@ -270,12 +253,12 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
             -   -c：模型配置文件。
             -   -o：可选参数：Global.infer_img表示样本图片路径，Global.infer_results表示om推理结果路径。
 
-      ${output_path}为推理结果的保存路径，命令执行完成后，每个推理结果对应的检测图片保存在`${output_path}/det_results/`目录下：
+      result_bs1为推理结果的保存路径，命令执行完成后，每个推理结果对应的检测图片保存在`result_bs1/det_results/`目录下：
 
       在线推理命令如下：
 
       ```
-      python3 PaddleOCR/tools/infer_det.py \
+      python PaddleOCR/tools/infer_det.py \
           -c PaddleOCR/configs/det/ch_PP-OCRv2/ch_PP-OCRv2_det_cml.yml \
           -o Global.infer_img="./imgs/" \
           Global.pretrained_model="./checkpoint/ch_PP-OCRv2_det_distill_train/best_accuracy"
@@ -285,29 +268,6 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
       可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。
 
-   d.  性能验证。
-
-      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-      ```
-      python3 -m ais_bench \
-          --model=./ch_PP-OCRv2_det_bs${batchsize}.om \
-          --loop=50 \
-          --dymHW=768,928 \
-          --batchsize=${batchsize}
-      ```
-
-      -   参数说明：
-
-          -   --model：om模型路径。
-          -   --loop：推理次数。
-          -   --dymHW：动态分辨率参数，指定模型输入的实际H、W。
-          -   --batchsize：om模型的batch。
-
-      `${batchsize}`表示不同batch的om模型。
-
-      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
-
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -315,11 +275,6 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1          | 样例图片 | 见备注 | 401.416 fps |
-|Ascend310P3| 4          | 样例图片 | 见备注 | 302.236 fps |
-|Ascend310P3| 8          | 样例图片 | 见备注 | 295.902 fps |
-|Ascend310P3| 16         | 样例图片 | 见备注 | 288.953 fps |
-|Ascend310P3| 32         | 样例图片 | 见备注 | 286.025 fps |
-|Ascend310P3| 64         | 样例图片 | 见备注 | 287.518 fps |
+|Ascend310P3| 1          | 样例图片 | 见备注 | 232 fps |
 
    - 备注：可以将om后处理得到的样例图片的推理结果，与在线推理得到的样例图片的推理结果进行对比，观察文本检测框的效果，来验证om的推理精度。

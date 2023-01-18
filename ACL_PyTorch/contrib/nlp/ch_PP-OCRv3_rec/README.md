@@ -97,7 +97,8 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
    ```
     python3 ch_PP-OCRv3_rec_preprocess.py \
         -c PaddleOCR/configs/rec/PP-OCRv3/ch_PP-OCRv3_rec_distillation.yml \
-        -o Global.infer_img=PaddleOCR/doc/imgs_words/ch/ Global.bin_data=./image_npy
+        -o Global.infer_img=PaddleOCR/doc/imgs_words/ch/ \
+        Global.bin_data=./image_npy
 
    ```
 
@@ -184,9 +185,9 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
          ```
          atc --framework=5 \
              --model=./ch_PP-OCRv3_rec.onnx \
-             --output=./ch_PP-OCRv3_rec_bs${batchsize} \
-             --input_format=NCHW \
-             --input_shape="x:${batchsize},3,-1,-1" \
+             --output=./ch_PP-OCRv3_rec_bs1 \
+             --input_format=ND \
+             --input_shape="x:1,3,-1,-1" \
              --dynamic_dims="48,320;48,620"  \
              --log=error  \
              --soc_version=Ascend${chip_name}
@@ -203,9 +204,8 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
            -   --soc\_version：处理器型号。
            -   --dynamic_dims：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
 
-           `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
 
-           运行成功后生成`ch_PP-OCRv3_rec_bs${batchsize}.om`模型文件。
+           运行成功后生成`ch_PP-OCRv3_rec_bs1.om`模型文件。
 
 2. 开始推理验证。
 
@@ -217,15 +217,16 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
    b.  执行推理。
 
       ```
-      python -m ais_bench --model=ch_PP-OCRv3_rec_bs${batchsize}.om --input=./image_npy --output=./ --output_dirname=results_bs${batchsize} --auto_set_dymdims_mode=1 --outputSize 100000
+      python -m ais_bench --model=ch_PP-OCRv3_rec_bs1.om --input=./image_npy --output=./ --output_dirname=results_bs1 --auto_set_dymdims_mode=1
       ```
 
       -   参数说明：
            -   --model：om模型路径。
            -   --inputs：输入数据集路径。
            -   --batchsize：om模型输入的batchsize。
+           -   --auto_set_dymdims_mode：设置自动匹配动态shape
 
-      推理完成后结果保存在`results_bs${batchsize}`目录下。
+      推理完成后结果保存在`results_bs1`目录下。
 
       >**说明：** 
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
@@ -283,32 +284,6 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
       
       将后理的om推理结果与在线推理结果进行对比。
 
-   d.  性能验证。
-
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-      ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
-          --model=./ch_PP-OCRv3_rec_dybs_320.om \
-          --loop=50 \
-          --dymBatch=${batchsize} \
-          --batchsize=${batchsize}
-      ```
-
-      -   参数说明：
-
-          -   --model：om模型路径。
-          -   --loop：推理次数。
-          -   --dymBatch：om模型的batch。
-          -   --batchsize：om模型的batch。
-
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
-
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能，如下所示（仅供参考，以实现推理性能为准）：
-
-      ```
-       [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(3.30181999206543): 4845.8123212196415
-      ```
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -317,9 +292,4 @@ ch_PP-OCRv3_rec是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
 
 | 芯片型号   | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ------------ | ---------- | ---------- | --------------- |
-|Ascend310P3| 1            | 样例图片 | 与在线推理结果一致 | 1547.795 fps |
-|Ascend310P3| 4            | 样例图片 | 与在线推理结果一致 | 3639.606 fps |
-|Ascend310P3| 8            | 样例图片 | 与在线推理结果一致 | 4499.437 fps |
-|Ascend310P3| 16           | 样例图片 | 与在线推理结果一致 | 4845.812 fps |
-|Ascend310P3| 32           | 样例图片 | 与在线推理结果一致 | 4293.146 fps |
-|Ascend310P3| 64           | 样例图片 | 与在线推理结果一致 | 4153.195 fps |
+|Ascend310P3| 1            | 样例图片 | 与在线推理结果一致 | 1411.795 fps |

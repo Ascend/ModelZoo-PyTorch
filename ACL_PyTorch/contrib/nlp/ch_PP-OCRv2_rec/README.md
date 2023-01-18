@@ -184,9 +184,9 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
          ```
          atc --framework=5 \
              --model=./ch_PP-OCRv2_rec.onnx \
-             --output=./ch_PP-OCRv2_rec_bs${batchsize} \
-             --input_format=NCHW \
-             --input_shape="x:${batchsize},3,-1,-1" \
+             --output=./ch_PP-OCRv2_rec_bs1 \
+             --input_format=ND \
+             --input_shape="x:1,3,-1,-1" \
              --dynamic_dims="32,320;32,413"  \
              --log=error  \
              --soc_version=Ascend${chip_name}
@@ -201,11 +201,10 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --dynamic_image_size：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
+           -   --dynamic_dims：设置输入图片的动态分辨率参数。适用于执行推理时，每次处理图片宽和高不固定的场景。
 
-           `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
 
-           运行成功后生成`ch_PP-OCRv2_rec_bs${batchsize}.om`模型文件。
+           运行成功后生成`ch_PP-OCRv2_rec_bs1.om`模型文件。
 
 2. 开始推理验证。
 
@@ -217,15 +216,16 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
    b.  执行推理。
 
       ```
-      python -m ais_bench --model=ch_PP-OCRv2_rec_bs${batchsize}.om --input=./pre_data/ --output=./ --output_dirname=results_bs${batchsize} --auto_set_dymdims_mode=1 --outputSize 100000 --outfmt=NPY
+      python -m ais_bench --model=ch_PP-OCRv2_rec_bs1.om --input=./pre_data/ --output=./ --output_dirname=results_bs1 --auto_set_dymdims_mode=1 --outfmt=NPY
       ```
 
       -   参数说明：
            -   --model：om模型路径。
            -   --inputs：输入数据集路径。
            -   --batchsize：om模型输入的batchsize。
+           -   --auto_set_dymdims_mode：设置自动匹配动态shape
 
-      推理完成后结果保存在`results_bs${batchsize}`目录下。
+      推理完成后结果保存在`results_bs1`目录下。
 
       >**说明：** 
       >执行ais-infer工具请选择与运行环境架构相同的命令。参数详情请参见。
@@ -282,33 +282,6 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
       ```
 
 
-   d.  性能验证。
-
-      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-      ```
-      python ${path_to_ais-infer}/ais_infer.py \
-          --model=./ch_PP-OCRv2_rec_bss${batchsize}.om \
-          --dymHW=32,320 \
-          --loop=20 \
-          --batchsize=${batchsize}
-      ```
-
-      -   参数说明：
-
-          -   --model：om模型路径。
-          -   --loop：推理次数。
-          -   --dymHW：指定动态shape模型的H和W。
-          -   --batchsize：om模型的batch。
-
-      `${path_to_ais-infer}`为ais_infer.py脚本的存放路径。`${batchsize}`表示不同batch的om模型。
-
-      纯推理完成后，在ais-infer的屏显日志中`throughput`为计算的模型推理性能，如下所示：
-
-      ```
-      [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(5.840699934959412): 2739.3977054414777
-      ```
-
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -316,9 +289,4 @@ ch_PP-OCRv2_rec是基于[PP-OCRv2](https://arxiv.org/abs/2109.03144)的中文文
 
 | 芯片型号   | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ------------ | ---------- | ---------- | --------------- |
-|Ascend310P3| 1            | 样例图片 | 与在线推理结果一致 | 272.386 fps  |
-|Ascend310P3| 4            | 样例图片 | 与在线推理结果一致 | 964.959 fps  |
-|Ascend310P3| 8            | 样例图片 | 与在线推理结果一致 | 1700.879 fps |
-|Ascend310P3| 16           | 样例图片 | 与在线推理结果一致 | 2739.397 fps |
-|Ascend310P3| 32           | 样例图片 | 与在线推理结果一致 | 2561.762 fps |
-|Ascend310P3| 64           | 样例图片 | 与在线推理结果一致 | 2458.243 fps |
+|Ascend310P3| 1            | 样例图片 | 与在线推理结果一致 | 260 fps  |

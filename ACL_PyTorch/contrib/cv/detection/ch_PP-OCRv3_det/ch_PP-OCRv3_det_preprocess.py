@@ -42,7 +42,7 @@ def main():
     ops = create_operators(transforms, global_config)
 
     pre_dir = Path(config['prep_dir'])
-    bin_dir = pre_dir/'img_bin'
+    bin_dir = pre_dir/'img_npy'
     bin_dir.mkdir(parents=True, exist_ok=True)
     info_path = pre_dir/'img_info.pkl'
 

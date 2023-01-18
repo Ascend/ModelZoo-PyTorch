@@ -129,8 +129,8 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
        ```
        通过以下命令将获取的训练权重转为推理模型。
        ```
-       python3 /PaddleOCR/tools/export_model.py 
-               -c PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_train_v2.0.yml \
+       python3 ./PaddleOCR/tools/export_model.py \
+               -c PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_v2.0.yml \
                -o Global.pretrained_model=ch_ppocr_server_v2.0_rec_train/best_accuracy \
                Global.save_inference_dir=ch_ppocr_server_v2.0_rec_infer/
        ```
@@ -143,7 +143,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
 
          ```
          paddle2onnx \
-             --model_dir ch_server_v2.0_rec_infer \
+             --model_dir ch_ppocr_server_v2.0_rec_infer \
              --model_filename inference.pdmodel \
              --params_filename inference.pdiparams \
              --save_file ch_ppocr_server_v2.0_rec.onnx \
@@ -154,6 +154,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
 
          参数说明请通过`paddle2onnx -h`命令查看。
          运行后在当前目录下获得`ch_ppocr_server_v2.0_rec.onnx`文件。
+
       2. 执行以下命令修改onnx模型的domin
          ```
          python3 del_domin.py ./ch_ppocr_server_v2.0_rec.onnx ./ch_ppocr_server_v2.0_rec_new.onnx
@@ -194,11 +195,12 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
          ```
          atc --framework=5 \
              --model=./ch_ppocr_server_v2.0_rec_new.onnx \
-             --output=./ch_ppocr_server_v2.0_rec_bs1 \
+             --output=./ch_ppocr_server_v2.0_rec_1 \
              --input_shape="x:1,3,-1,-1" \
+             --input_format=ND \
              --log=error \
-             --soc_version=${chip_name} \
-             --dynamic_image_size="32,320;32,413"
+             --soc_version=Ascend{chip_name} \
+             --dynamic_dims="32,320;32,413"
          ```
 
          - 参数说明：
@@ -224,29 +226,25 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
    b.  执行推理。
       在当前目录下运行以下指令
       ```
-      python3 ch_server_rec_ais_infer.py \
-          --ais_infer=${path_to_ais_bench}/ais_infer.py \
-          --model=./ch_ppocr_server_rec_bs${batchsize}.om \
-          --inputs=./pre_data \
-          --batchsize=${batchsize}
+      python -m ais_bench --model=ch_ppocr_server_v2.0_rec_bs1.om --input=./pre_data --output=./ --output_dirname=results_bs1--auto_set_dymdims_mode=1 --outfmt=NPY
       ```
 
       -   参数说明：
-
            -   --model：om模型路径。
-           -   --input：npy文件路径。
-
-
-      推理完成后在当前`ch_ppocr_server_v2.0_rec`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
+           -   --inputs：输入数据集路径。
+           -   --batchsize：om模型输入的batchsize。
+           -   --auto_set_dymdims_mode：设置自动匹配动态shape
+           -   --outfmt：输出数据格式
+      推理结果保存在当前目录的results_bs1文件夹下
 
 
    c.  精度验证。
       在`ch_ppocr_server_v2.0_rec`工作目录下执行后处理脚本`ch_server_rec_postprocess.py`，参考命令如下：
 
       ```
-      python3 ch_server_rec_postprocess.py \
+      python ch_server_rec_postprocess.py \
           -c PaddleOCR/configs/rec/ch_ppocr_v2.0/rec_chinese_common_train_v2.0.yml \
-          -o Global.infer_results=./
+          -o Global.infer_results=./results_bs1
       ```
 
       -   参数说明：
@@ -260,30 +258,6 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
       Infer Results:  {'word_1.png': ('韩国小馆', 0.998046875), 'word_2.png': ('汉阳鹦鹉家居建材市场E区25-26号', 0.9932725429534912), 'word_3.png': ('电话：15952301928', 0.9931640625), 'word_4.png': ('实力活力', 0.998046875), 'word_5.png': ('西湾监管', 0.99609375)}
       ```
 
-   d.  性能验证。
-
-      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-      ```
-      python3 -m ais_bench \
-          --model=./ch_ppocr_server_v2.0_rec_bs${bs}.om \
-          --dymHW=32,320 \
-          --loop=100 \
-          --batchsize=${bs}
-      ```
-
-      -   参数说明：
-
-          -   --model：om模型路径。
-          -   --loop：推理次数。
-          -   --batchsize：om模型的batch。
-
-      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能，如下所示：
-
-      ```
-       throughput 1000*batchsize(16)/NPU_compute_time.mean(11.091549987792968): 1634.0495925374837
-      ```
-
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -291,9 +265,4 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
 
 | 芯片型号   | Batch Size   | 数据集 | 精度 | 性能            |
 | --------- | ------------ | ---------- | ---------- |---------------|
-|Ascend310P3| 1            | 样例图片 | 与在线推理结果一致 | 294.77 fps    |
-|Ascend310P3| 4            | 样例图片 | 与在线推理结果一致 | 896.68 fps   |
-|Ascend310P3| 8            | 样例图片 | 与在线推理结果一致 | 1244.42 fps  |
-|Ascend310P3| 16           | 样例图片 | 与在线推理结果一致 | 1634.04 fps  |
-|Ascend310P3| 32           | 样例图片 | 与在线推理结果一致 | 591.15 fps |
-|Ascend310P3| 64           | 样例图片 | 与在线推理结果一致 | 592.75 fps |
+|Ascend310P3| 1            | 样例图片 | 与在线推理结果一致 | 289 fps    |
