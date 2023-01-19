@@ -59,8 +59,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 5.1.RC2 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | paddlepaddle                                                 | 2.3.2   | -                                                            |
-  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+  | paddlepaddle                                                 | 2.3.2   | 仅支持x86服务器安装                                               |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
@@ -155,12 +154,6 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
          参数说明请通过`paddle2onnx -h`命令查看。
          运行后在当前目录下获得`ch_ppocr_server_v2.0_rec.onnx`文件。
 
-      2. 执行以下命令修改onnx模型的domin
-         ```
-         python3 del_domin.py ./ch_ppocr_server_v2.0_rec.onnx ./ch_ppocr_server_v2.0_rec_new.onnx
-         ```
-         运行后在`onnx`目录下获得`ch_ppocr_server_v2.0_rec_new.onnx`文件
-
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
@@ -194,7 +187,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
          在`ch_ppocr_server_v2.0_rec`目录下运行以下指令将onnx模型转换为om模型。
          ```
          atc --framework=5 \
-             --model=./ch_ppocr_server_v2.0_rec_new.onnx \
+             --model=./ch_ppocr_server_v2.0_rec.onnx \
              --output=./ch_ppocr_server_v2.0_rec_1 \
              --input_shape="x:1,3,-1,-1" \
              --input_format=ND \

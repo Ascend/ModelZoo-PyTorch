@@ -20,4 +20,3 @@ premailer
 openpyxl
 attrdict
 sympy
-torch==1.12.0

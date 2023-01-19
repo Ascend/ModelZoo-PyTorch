@@ -58,7 +58,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 5.1.RC2 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | paddlepaddle                                                 | 2.3.2   | -                                                            |
+  | paddlepaddle                                                 | 2.3.2   | 仅支持x86服务器安装                                          |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -79,7 +79,6 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
 
    ```
    pip3 install -r requirements.txt
-   cd PaddleOCR
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -144,11 +143,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
                 --enable_onnx_checker True \
                 --input_shape_dict="{'x':[-1,3,-1,-1]}"
             ```
-       3. 执行以下命令修改onnx模型的domin
-          ```
-          python3 del_domin.py ch_ppocr_server_det.onnx ch_ppocr_server_det_new.onnx
-          ```
-          运行后获得`ch_ppocr_server_det_new.onnx`文件
+          运行后获得`ch_ppocr_server_det.onnx`文件
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -184,7 +179,7 @@ ch_PP-OCRv2_det是基于PP-OCRv2的中文文本检测模型，PP-OCRv2在PP-OCR�
          
          ```
          atc --framework=5 \
-             --model=./ch_ppocr_server_det_new.onnx \
+             --model=./ch_ppocr_server_det.onnx \
              --output=./ch_ppocr_server_det_bs1 \
              --input_format=ND \
              --input_shape="x:1,3,-1,-1" \
