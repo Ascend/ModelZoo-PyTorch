@@ -77,7 +77,7 @@ start_time=$(date +%s)
 source test/env_npu.sh
 export WORLD_SIZE=1
 export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='211225'
+export MASTER_PORT='11225'
 
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
 do

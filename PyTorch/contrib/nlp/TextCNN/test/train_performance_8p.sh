@@ -6,8 +6,8 @@
 Network="TextCNN"
 
 export WORLD_SIZE=8
-export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='80002'
+export MASTER_ADDR=$(hostname -I |awk '{print $1}')
+export MASTER_PORT='18888'
 
 # 训练batch_size
 batch_size=400
@@ -76,19 +76,17 @@ do
 	    let b=23+RANK_ID*24
         taskset -c $a-$b python3.7 run.py \
     			--data_path ${data_path} \
-			--local_rank ${RANK_ID} \
-			--model TextCNN \
-			--world_size 8 \
-			--distributed \
-			--addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    			--local_rank ${RANK_ID} \
+    			--model TextCNN \
+    			--world_size 8 \
+    			--distributed > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	else
         python3.7 run.py \
     			--data_path ${data_path} \
-			--local_rank ${RANK_ID} \
-			--model TextCNN \
-			--world_size 8 \
-			--distributed \
-			--addr $(hostname -I |awk '{print $1}') > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    			--local_rank ${RANK_ID} \
+    			--model TextCNN \
+    			--world_size 8 \
+    			--distributed > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	fi
 done
 

@@ -23,7 +23,7 @@ export RANK_SIZE=1
 
 export WORLD_SIZE=1
 export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='80001'
+export MASTER_PORT='18888'
 export TASK_QUEUE_ENABLE=1
 export DYNAMIC_OP="ADD"
 # 数据集路径,保持为空,不需要修改

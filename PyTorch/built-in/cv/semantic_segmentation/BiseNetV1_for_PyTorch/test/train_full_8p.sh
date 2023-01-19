@@ -3,7 +3,7 @@
 #集合通信参数,不需要修改
 export RANK_SIZE=8
 export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='66666'
+export MASTER_PORT='18888'
 
 #网络名称,同目录名称,需要模型审视修改
 Network="BiseNetV1_for_Pytorch"

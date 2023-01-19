@@ -6,7 +6,7 @@ cur_path=`pwd`
 #集合通信参数,不需要修改
 export RANK_SIZE=1
 export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='80002'
+export MASTER_PORT='18888'
 
 # 数据集路径,保持为空,不需要修改
 data_path=""

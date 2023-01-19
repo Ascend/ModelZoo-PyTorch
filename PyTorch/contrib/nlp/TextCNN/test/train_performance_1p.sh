@@ -6,8 +6,8 @@
 Network="TextCNN"
 
 export WORLD_SIZE=1
-export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='80001'
+export MASTER_ADDR=$(hostname -I |awk '{print $1}')
+export MASTER_PORT='18888'
 
 # 训练batch_size
 batch_size=400

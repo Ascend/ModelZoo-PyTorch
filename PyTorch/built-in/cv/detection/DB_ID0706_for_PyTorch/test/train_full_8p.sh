@@ -17,7 +17,7 @@ Network="DB_ID0706_for_PyTorch"
 
 export WORLD_SIZE=8
 export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='80002'
+export MASTER_PORT='18888'
 export TASK_QUEUE_ENABLE=0
 export DYNAMIC_OP="ADD"
 # 训练batch_size

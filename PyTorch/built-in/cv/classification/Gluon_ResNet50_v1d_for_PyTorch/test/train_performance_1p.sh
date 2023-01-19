@@ -7,7 +7,7 @@ Network="gluon_resnet50_v1d_ID4132_for_PyTorch"
 
 export WORLD_SIZE=1
 export MASTER_ADDR='127.0.0.1'
-export MASTER_PORT='80002'
+export MASTER_PORT='18888'
 
 # 训练batch_size
 batch_size=256

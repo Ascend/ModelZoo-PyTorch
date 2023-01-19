@@ -32,8 +32,6 @@ parser.add_argument('--embedding', default='pre_trained', type=str, help='random
 parser.add_argument('--word', default=False, type=bool, help='True for word, False for char')
 # DDP argument.
 parser.add_argument('--dist_backend', default='hccl', type=str, help='hccl for npu, must!')
-parser.add_argument('--addr', default='127.0.0.1', type=str, help='hccl ip address')
-parser.add_argument('--Port', default='888888', type=str, help='hccl ip Port')
 parser.add_argument('--world_size', default=1, type=int, help='ddp world size')
 parser.add_argument('--local_rank', default=0, type=int, help='local rank')
 parser.add_argument('--num_epochs', default=20, type=int, help='number of train epoch')
@@ -45,10 +43,8 @@ args = parser.parse_args()
 def main():
     dataset = args.data_path  # 数据集
     print("args.world_size = ", args.world_size)
-    os.environ["MASTER_ADDR"] = args.addr
-    os.environ["MASTER_PORT"] = args.Port
-    print("args.addr = ", args.addr)
-    print("args.Port = ", args.Port)
+    print("args.addr = ", os.environ["MASTER_ADDR"])
+    print("args.Port = ", os.environ["MASTER_PORT"])
     args.rank = 0
 
     if args.distributed:
