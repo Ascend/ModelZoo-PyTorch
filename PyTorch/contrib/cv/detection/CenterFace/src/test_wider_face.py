@@ -16,10 +16,10 @@ import sys
 import os
 import scipy.io as sio
 import cv2
-
+import torch
 
 path = os.path.dirname(__file__)
-CENTERNET_PATH = os.path.join(path,'../src/lib')
+CENTERNET_PATH = os.path.join(path, '../src/lib')
 sys.path.insert(0, CENTERNET_PATH)
 
 from detectors.detector_factory import detector_factory
@@ -28,8 +28,8 @@ from datasets.dataset_factory import get_dataset
 
 
 def test_img(MODEL_PATH):
-    debug = 1            # draw and show the result image
-    TASK = 'multi_pose'  
+    debug = 1  # draw and show the result image
+    TASK = 'multi_pose'
     input_h, intput_w = 800, 800
     opt = opts().init('--task {} --load_model {} --debug {} --input_h {} --input_w {}'.format(
         TASK, MODEL_PATH, debug, intput_w, input_h).split(' '))
@@ -39,9 +39,10 @@ def test_img(MODEL_PATH):
     img = '../readme/000388.jpg'
     ret = detector.run(img)['results']
 
+
 def test_vedio(MODEL_PATH, vedio_path=None):
-    debug = -1            # return the result image with draw
-    TASK = 'multi_pose'  
+    debug = -1  # return the result image with draw
+    TASK = 'multi_pose'
     vis_thresh = 0.45
     input_h, intput_w = 800, 800
     opt = opts().init('--task {} --load_model {} --debug {} --input_h {} --input_w {} --vis_thresh {}'.format(
@@ -57,10 +58,11 @@ def test_vedio(MODEL_PATH, vedio_path=None):
             res = detector.run(frame)
             cv2.imshow('face detect', res['plot_img'])
 
-        if cv2.waitKey(1)&0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()
+
 
 def test_wider_Face(MODEL_PATH, project_path):
     Path = project_path + '/data/wider_face/WIDER_val/images/'
@@ -69,14 +71,17 @@ def test_wider_Face(MODEL_PATH, project_path):
     file_list = wider_face_mat['file_list']
     save_path = project_path + '/output/widerface/'
 
-    debug = 0            # return the detect result without show
+    debug = 0  # return the detect result without show
     threshold = 0.05
-    TASK = 'multi_pose'  
+    TASK = 'multi_pose'
     input_h, intput_w = 800, 800
     opt = opts().init('--task {} --load_model {} --debug {} --vis_thresh {} --input_h {} --input_w {}'.format(
         TASK, MODEL_PATH, debug, threshold, input_h, intput_w).split(' '))
+    ASCEND_DEVICE_ID = os.environ.get("ASCEND_DEVICE_ID", None)
+    if ASCEND_DEVICE_ID is not None:
+        torch.npu.set_device(int(ASCEND_DEVICE_ID))
     detector = detector_factory[opt.task](opt)
-    
+
     for index, event in enumerate(event_list):
         file_list_item = file_list[index][0]
         im_dir = event[0][0]
@@ -87,9 +92,9 @@ def test_wider_Face(MODEL_PATH, project_path):
             zip_name = '%s/%s.jpg' % (im_dir, im_name)
             print(os.path.join(Path, zip_name))
             img_path = os.path.join(Path, zip_name)
-            
+
             dets = detector.run(img_path)['results']
-            
+
             f = open(save_path + im_dir + '/' + im_name + '.txt', 'w')
             f.write('{:s}\n'.format('%s/%s.jpg' % (im_dir, im_name)))
             f.write('{:d}\n'.format(len(dets)))
@@ -103,7 +108,7 @@ def test_wider_Face(MODEL_PATH, project_path):
 if __name__ == '__main__':
     project_path = os.path.abspath(os.path.dirname(os.getcwd()))
     MODEL_PATH = project_path + "/exp/multi_pose/mobilev2_10/model_best.pth"
-    #MODEL_PATH1 = '/root/wc/CenterFace-NPU/exp/multi_pose/mobilev2_10/model_5.pth'
-    #test_img(MODEL_PATH)
-    #test_vedio(MODEL_PATH)
+    # MODEL_PATH1 = '/root/wc/CenterFace-NPU/exp/multi_pose/mobilev2_10/model_5.pth'
+    # test_img(MODEL_PATH)
+    # test_vedio(MODEL_PATH)
     test_wider_Face(MODEL_PATH, project_path)
