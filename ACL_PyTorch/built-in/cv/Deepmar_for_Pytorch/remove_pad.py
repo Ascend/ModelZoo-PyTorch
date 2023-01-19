@@ -14,7 +14,7 @@
 
 import onnx
 import sys
-
+import argparse
 def remove(model_name, output_name):
     model = onnx.load(model_name)
     indexAve =0
@@ -43,7 +43,7 @@ def remove(model_name, output_name):
                 max_idx -= 1
                 rm_cnt += 1
     onnx.checker.check_model(model)
-    onnx.save(model, model_name, output_name)
+    onnx.save(model, output_name)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
