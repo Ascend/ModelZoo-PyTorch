@@ -20,6 +20,8 @@ batch_size=64
 #训练epoch数
 epochs=100
 
+bin=True
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -27,6 +29,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --more_path1* ]];then
         more_path1=`echo ${para#*=}`
+    elif [[ $para == --bin* ]];then
+        bin=`echo ${para#*=}`
     fi
 done
 
@@ -109,7 +113,8 @@ do
     --epochs $epochs \
     --num_workers 32 \
     --batch_size $batch_size \
-    --use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --use_color_jitter_opti \
+    --bin ${bin} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 

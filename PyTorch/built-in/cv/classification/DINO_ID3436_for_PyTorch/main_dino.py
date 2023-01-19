@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import ast
 import argparse
 import os
 import sys
@@ -141,6 +142,7 @@ def get_args_parser():
     parser.add_argument('--use_color_jitter_opti', action='store_true',
                         help='use color jitter optimize, it is an approximate implementation of algorithm. '
                              'Helps performance when CPU is weak')
+    parser.add_argument('--bin', default=False, type=ast.literal_eval, help='enable bin mode')
     return parser
 
 
@@ -551,5 +553,9 @@ class DataAugmentationDINO(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DINO', parents=[get_args_parser()])
     args = parser.parse_args()
+    if args.bin:
+        torch.npu.set_compile_mode(jit_compile=False)
+    else:
+        torch.npu.set_compile_mode(jit_compile=True)
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     train_dino(args)

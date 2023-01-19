@@ -120,6 +120,7 @@ DINO 是一个非监督的图像语义分割模型，模型结合transformer采�
      启动单卡训练。
 
      ```
+     # --bin=True 表示开启二进制，--bin=False开启静态，不加参数默认走二进制
      bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 性能训练
      ```
 
@@ -128,6 +129,7 @@ DINO 是一个非监督的图像语义分割模型，模型结合transformer采�
      启动8卡训练。
 
      ```
+     # --bin=True 表示开启二进制，--bin=False开启静态，不加参数默认走二进制
      bash ./test/train_full_8p.sh --data_path=/data/xxx/         # 精度训练
      bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 性能训练   
      ```

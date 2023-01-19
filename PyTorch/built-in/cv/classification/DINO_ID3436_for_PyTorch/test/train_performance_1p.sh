@@ -22,6 +22,7 @@ epochs=1
 # 指定训练所使用的npu device卡id
 device_id=0
 num_steps=200
+bin=True
 
 #参数校验，不需要修改
 for para in $*
@@ -30,6 +31,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --more_path1* ]];then
         more_path1=`echo ${para#*=}`
+    elif [[ $para == --bin* ]];then
+        bin=`echo ${para#*=}`        
     fi
 done
 
@@ -121,7 +124,8 @@ nohup python3.7 -u -m torch.distributed.launch \
     --epochs $epochs \
     --num_steps $num_steps \
     --batch_size $batch_size \
-    --use_color_jitter_opti > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --use_color_jitter_opti \
+    --bin ${bin} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
