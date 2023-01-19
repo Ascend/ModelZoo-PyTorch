@@ -1,336 +1,182 @@
-# Tacotron2模型-推理指导
+# Tacotron2_dyn推理指导
+
+- [概述](#概述)
+- [推理环境准备](#推理环境准备)
+- [快速上手](#快速上手)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能&精度](#模型推理性能&精度)
+
+******
 
 
-- [概述](#ZH-CN_TOPIC_0000001172161501)
+# 概述
+Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框架。模型从下到上可以看作由两部分组成：
+1. 声谱预测网络：一个Encoder-Attention-Decoder网络，输入字符序列，用于预测梅尔频谱的帧序列。
+2. 声码器（vocoder）：一个WaveNet的修订版，输入预测的梅尔频谱帧序列，用于生成时域波形。
 
-- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
-
-- [快速上手](#ZH-CN_TOPIC_0000001126281700)
-
-  - [获取源码](#section183221994400)
-  - [准备数据集](#section183221994411)
-  - [模型推理](#section741711594517)
-
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-
-
-
-
-
-# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
-
-Tacotron 模型是一个直接从文本合成语音的神经网络架构。系统由两部分构成，一个循环seq2seq结构的特征预测网络，把字符向量映射为梅尔声谱图，后面再接一个WaveNet模型的修订版，把梅尔声谱图合成为时域波形。
-
-- 参考实现：
-
+- 版本说明：
   ```
-  url=https://github.com/NVIDIA/DeepLearningExamples.git 
-  branch=master
-  commit_id=9a6c5241d76de232bc221825f958284dc84e6e35
-  model_name=tacotron2
+  url=https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/Tacotron2
+  commit_id=7ce175430ff9af25b040ffe2bceb5dfc9d2e39ad
+  model_name=Tacotron2
   ```
 
-  通过Git获取对应commit\_id的代码方法如下：
+### 输入输出数据
 
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
+- 输入数据
 
+  | 输入数据 | 数据类型 |        大小         | 数据排布格式 |
+  | :------: | :------: | :-----------------: | :----------: |
+  |   seq    |  INT64   | batchsize x seq_len |      ND      |
+  | seq_lens |  INT32   |      batchsize      |      ND      |
 
-## 输入输出数据<a name="section540883920406"></a>
+- 输出数据
 
-- encoder输入数据
-
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | ------------------------- | ------------ |
-  | sequences | batchsize x text_seq | INT64 | ND |
-  | sequence_lengths | batchsize | INT32 | ND |
+  | 输出数据 | 数据类型 |        大小         | 数据排布格式 |
+  | :------: | :------: | :-----------------: | :----------: |
+  |   wavs   | FLOAT32  | batchsize x wav_len |      ND      |
 
 
-- encoder输出数据
-
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | -------- | ------------ |
-  | memory | batchsize x mem_seq x 512| FLOAT32  | ND |
-  | processed_memory | batchsize x mem_seq x 128 | FLOAT32  | ND |
-  | lens  | batchsize | FLOAT32  | INT32 |
-
-- decoder_iter输入数据
-
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | ------------------------- | ------------ |
-  | decoder_input | batchsize x 80 | FLOAT32 | ND |
-  | attention_hidden | batchsize x 1024 | FLOAT32 | ND |
-  | attention_cell | batchsize x 1024 | FLOAT32 | ND |
-  | decoder_hidden | batchsize x 1024 | FLOAT32 | ND |
-  | decoder_cell | batchsize x 1024 | FLOAT32 | ND |
-  | attention_weights | batchsize x seq_len | FLOAT32 | ND |
-  | attention_weights_cum | batchsize x seq_len | FLOAT32 | ND |
-  | attention_context | batchsize x 512 | FLOAT32 | ND |
-  | memory | batchsize x seq_len x 512 | FLOAT32 | ND |
-  | processed_memory | batchsize x seq_len x 128 | FLOAT32 | ND |
-  | mask | batchsize x seq_len | BOOL | ND |
-
-
-- decoder_iter输出数据
-
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | -------- | ------------ |
-  | decoder_output | batchsize x 80 | FLOAT32 | ND |
-  | gate_prediction | batchsize x 1 | FLOAT32 | ND |
-  | out_attention_hidden | batchsize x 1024 | FLOAT32 | ND |
-  | out_attention_cell | batchsize x 1024 | FLOAT32 | ND |
-  | out_decoder_hidden| batchsize x 1024 | FLOAT32 | ND |
-  | out_decoder_cell | batchsize x 1024 | FLOAT32 | ND |
-  | out_decoder_weights | batchsize x seq_len | FLOAT32 | ND |
-  | out_decoder_weights_cum | batchsize x seq_len | FLOAT32 | ND |
-  | out_attention_context | batchsize x 512 | FLOAT32 | ND |
-
-
-- postnet输入数据
-
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | ------------------------- | ------------ |
-  | mel_outputs | batchsize x 80 x mel_seq | FLOAT32 | ND |
-
-
-- postnet输出数据
-
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
-  | -------- | -------- | -------- | ------------ |
-  | mel_outputs_postnet  | batchsize x 80 x mel_seq | FLOAT32  | ND           |
-
-
-
-
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
-
-- 该模型需要以下插件与驱动
-
+# 推理环境准备
+- 该模型需要以下插件与驱动  
   **表 1**  版本配套表
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.10.1  | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
-安装依赖。
 
+# 快速上手
+
+## 获取源码
+
+1. 获取`Pytorch`源码  
+   ```
+   git clone https://github.com/NVIDIA/DeepLearningExamples.git
+   cd DeepLearningExamples
+   git reset --hard 7ce175430ff9af25b040ffe2bceb5dfc9d2e39ad
+   cd PyTorch/SpeechSynthesis/Tacotron2
+   mkdir -p output/audio  # 新建output文件夹，作为模型结果的默认保存路径
+   mkdir checkpoints
+   ```
+   
+2. 安装依赖  
    ```
    pip3 install -r requirements.txt
    ```
-   > **须知：** 
-   > dllogger容易安装失败，可通过下载《[源码](https://github.com/NVIDIA/dllogger)》，解压后进入dllogger目录，执行python3 setup.py install。
 
-   om_gener安装
-
+3. 获取`OM`推理代码  
+   将推理部署代码放到`Pytorch`源码相应目录下。
    ```
-   git clone https://gitee.com/peng-ao/om_gener.git
-   cd om_gener
-   pip3 install .
-   ```
-
-## 获取源码<a name="section183221994400"></a>
-在工作目录下执行下述命令获取源码并切换到相应路径。
-
-   ```
-   git clone https://github.com/NVIDIA/DeepLearningExamples.git   
-   cd DeepLearningExamples
-   git reset --hard 9a6c5241d76de232bc221825f958284dc84e6e35
-   cd PyTorch/SpeechSynthesis/Tacotron2
-   tacotron_path=$(pwd)
-   mkdir output
-   mkdir checkpoints
+   Tacotron2_dyn_for_PyTorch
+    ├── cvt_tacotron2onnx.py  放到Tacotron2/tensorrt下
+    ├── cvt_waveglow2onnx.py  放到Tacotron2/tensorrt下
+    ├── atc.sh        放到Tacotron2下
+    └── om_val.py     放到Tacotron2下
    ```
 
-## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。
-
-    本模型支持LJ Speech 13100条文本数据集，包括12500条训练数据集，100条校验数据集和500条测试数据集。
-
-2. 数据预处理。
-
-   参考《[开源代码](https://github.com/NVIDIA/DeepLearningExamples/tree/master/PyTorch/SpeechSynthesis/Tacotron2/filelists)》中处理后的数据集，用于推理
+## 准备数据集
+- 该模型使用`LJSpeech`数据集进行精度评估，`Pytorch`源码仓下已包含验证数据（500条文本数据），文件结构如下：
+   ```
+   filelists
+   └── ljs_audio_text_test_filelist.txt
+   ```
 
 
+## 模型推理
+### 1 模型转换  
+将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
 
-## 模型推理<a name="section741711594517"></a>
+1. 获取权重文件  
+   `nvidia_tacotron2pyt_fp32_20190427`：[下载地址](https://ngc.nvidia.com/catalog/models/nvidia:tacotron2_pyt_ckpt_fp32)  
+   `nvidia_waveglowpyt_fp32_20190427`：[下载地址](https://ngc.nvidia.com/catalog/models/nvidia:waveglow_ckpt_fp32)  
+   将下载的模型文件`nvidia_tacotron2pyt_fp32_20190427`和`nvidia_waveglowpyt_fp32_20190427`放在新建的`checkpoints`文件夹下。
 
-1. 模型转换。
+2. 导出`ONNX`模型  
+   运行`pth2onnx.py`导出`ONNX`模型，结果默认保存在`output/onnx`文件夹下。  
+   ```
+   python3 tensorrt/cvt_tacotron2onnx.py --tacotron2 ./checkpoints/nvidia_tacotron2pyt_fp32_20190427 -o output/onnx/ -bs 1
+   python3 tensorrt/cvt_waveglow2onnx.py --waveglow ./checkpoints/nvidia_waveglowpyt_fp32_20190427 -o output/onnx/ --config-file config.json
+   ```
 
-   本模型基于开源框架PyTorch训练的Tacotron2进行模型转换。使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+3. 使用`ATC`工具将`ONNX`模型转为`OM`模型  
+   3.1 配置环境变量  
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   ```
+   > **说明：**  
+   > 该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-    1. 在checkpoints目录下获取权重文件。
+   3.2 执行命令查看芯片名称（得到`atc`命令参数中`soc_version`）
+   ```
+   npu-smi info
+   #该设备芯片名为Ascend310P3 （自行替换）
+   回显如下：
+   +-------------------+-----------------+------------------------------------------------------+
+   | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+   | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+   +===================+=================+======================================================+
+   | 0       310P3     | OK              | 15.8         42                0    / 0              |
+   | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+   +===================+=================+======================================================+
+   | 1       310P3     | OK              | 15.4         43                0    / 0              |
+   | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+   +===================+=================+======================================================+
+   ```
 
-        ```
-        cd checkpoints
-        wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/waveglow_ckpt_fp32/versions/19.09.0/zip -O waveglow_ckpt_fp32_19.09.0.zip
-        unzip waveglow_ckpt_fp32_19.09.0.zip
-        wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/tacotron2_pyt_ckpt_fp32/versions/19.09.0/zip -O tacotron2_pyt_ckpt_fp32_19.09.0.zip
-        unzip tacotron2_pyt_ckpt_fp32_19.09.0.zip
-        ```
+   3.3 执行ATC命令  
+   运行`atc.sh`导出`OM`模型，默认保存在`output/om`文件夹下。
+   ```
+   bash atc.sh --soc Ascend310P3 --bs 1
+   ```
+      - `atc`命令参数说明（参数见`atc.sh`）：
+        -   `--model`：ONNX模型文件
+        -   `--framework`：5代表ONNX模型
+        -   `--output`：输出的OM模型
+        -   `--input_format`：输入数据的格式
+        -   `--input_shape`：输入数据的shape
+        -   `--log`：日志级别
+        -   `--soc_version`：处理器型号
 
-        > **须知：** 
-        > waveglow作为辅助模型，用于验证tacotron2模型的精度。tacotron2输出频谱文件，通过waveglow得到音频文件。
-   2. 导出onnx文件。
-      1. 使用ModelZoo获取的源码包中的文件替换“DeepLearningExamples/PyTorch/SpeechSynthesis/Tacotron2”目录下的文件。
-         ```
-         git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
-         cd ModelZoo-PyTorch/ACL_PyTorch/contrib/audio/Tacotron2
-         cp acl_net.py addweight.py om_infer_acl.py onnx_infer.py data_process.py atc_static.sh onnxsim.sh $tacotron_path
-         cp get_out_node.py get_out_type.py $tacotron_path/output
-         cp convert_tacotron22onnx.py convert_waveglow2onnx.py $tacotron_path/tensorrt 
-         ```
-      2. 需侵入式修改onnx文件，修改/usr/local/python3.7.5/lib/python3.7/site-packages/onnx/init.py， 在load_model函数中函数首添加load_external_data=False，并且在/usr/local/python3.7.5/lib/python3.7/site-packages/onnx/checker.py中的check_model中C.check_model(protobuf_string)注释掉，以上文件路径可能与描述不同，在自己安装的onnx路径下查找即可
-   
-      3. 使用pth导出onnx。
+    
+### 2 开始推理验证
 
-            1.运行convert_tacotron22onnx.py，并备份权重。
+1. 安装`ais_bench`推理工具  
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-            ```
-            cd $tacotron_path 
-            python3.7 tensorrt/convert_tacotron22onnx.py --tacotron2 ./checkpoints/nvidia_tacotron2pyt_fp32_20190427 -o output/ --fp32 --batch_size=4 --iter=1
-            cd output
-            mkdir iter
-            mv *.weight 3* iter/
-            ```
-         > **说明：** 
-         >注意使用不同版本的onnx生成的权重节点名称可能不同，请自行更改上述生成的权重名称。
-         
+2. 执行推理  
+   运行`om_val.py`推理OM模型，合成语音默认保存在`output/audio`文件夹下。
+   ```
+   # 推理tacotron2 om
+   python3 val.py -i filelists/ljs_audio_text_test_filelist.txt -bs 1 -device_id 0
+    
+   # 推理waveglow生成wav文件
+   python3 val.py -i filelists/ljs_audio_text_test_filelist.txt -o output/audio -bs 1 -device_id 0 --gen_wav
+   ```
+   其中，`bs`为模型`batch_size`，`device_id`设置推理用第几号卡。
 
-            2.生成100层或其它层数叠加的decoder模型。
+3. 性能验证  
+   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，Tacotron2包括多个子模型，各子模型测试性能的参考命令如下：
+   ```
+   python3 -m ais_bench --model output/om/encoder_dyn.om --loop 20 --batchsize ${bs} --dymShape "sequences:${bs},${seq_len};sequence_lengths:${bs}" --outputSize "3000000,3000000,3000000"
+   python3 -m ais_bench --model output/om/decoder_iter_dyn.om --loop 20 --batchsize ${bs} --dymShape "decoder_input:${bs},80;attention_hidden:${bs},1024;attention_cell:${bs},1024;decoder_hidden:${bs},1024;decoder_cell:${bs},1024;attention_weights:${bs},${seq_len};attention_weights_cum:${bs},${seq_len};attention_context:${bs},512;memory:${bs},${seq_len},512;processed_memory:${bs},${seq_len},128;mask:${bs},${seq_len}" --outputSize "20000,20000,20000,20000,20000,20000,20000,20000,20000"
+   python3 -m ais_bench --model output/om/postnet_dyn.om --loop 20 --batchsize ${bs} --dymShape "mel_outputs:${bs},80,250" --outputSize "640000"
+   ```
+   其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度。
 
-            ```
-            cd $tacotron_path
-            python3.7 tensorrt/convert_tacotron22onnx.py --tacotron2 ./checkpoints/nvidia_tacotron2pyt_fp32_20190427 -o output/ --fp32 --batch_size=4 --iter=100
-            cd output
-            rm -rf 2*
-            ```
-           > **说明：** 
-           >注意该步骤生成的权重占用磁盘空间约7GB，请注意预留空间。
+# 模型推理性能&精度
 
-            3.生成waveglow模型。
-            ```
-            cd $tacotron_path
-            python3.7 tensorrt/convert_waveglow2onnx.py --waveglow ./checkpoints/nvidia_waveglowpyt_fp32_20190427 --config-file config.json -o output/ --fp32
-            ```
+调用ACL接口推理计算，性能&精度参考下列数据。
 
-        获得encoder.onnx, decoder_iter.onnx, postnet.onnx文件。
-
-2. 优化ONNX文件。
-
-    1. 执行命令增加工具可执行权限。
-
-        ```
-        chmod +x onnxsim.sh
-        ```
-
-    2. 修改decoder_iter模型，将权重共享并加载到onnx中, 并进行优化。
-
-        ```
-        python3 addweight.py $tacotron_path/output/iter $tacotron_path/output/decoder_iter.onnx $tacotron_path/output/decoder_iter_weight.onnx
-        ```
-
-        - 参数说明：
-
-          - 第一个参数代表需要共享的权重路径。
-          - 第二个参数代表共享权重前的onnx文件。
-          - 第三个参数代表共享权重后的onnx文件。
-
-        ```
-        ./onnxsim.sh $tacotron_path/output/decoder_iter_weight.onnx $tacotron_path/output/decoder_sim_100.onnx 4 128
-        ```
-
-        - 参数说明：
-
-          - 第一个参数代表需要优化的onnx文件。
-          - 第二个参数代表优化后的onnx文件。
-          - 第三个参数代表batchsize。
-          - 第三个参数代表seq_len。
-
-       获得decoder_sim_100.onnx文件。
-
-3. 使用ATC工具将ONNX模型转OM模型。
-
-    1. 配置环境变量。
-
-        ```
-        source /usr/local/Ascend/ascend-toolkit/set_env.sh
-        export ASCEND_GLOBAL_LOG_LEVEL=3
-        /usr/local/Ascend/driver/tools/msnpureport -g error -d 0
-        ```
-
-        > **说明：** 
-        >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
-
-    2. 执行命令查看芯片名称（$\{chip\_name\}）。
-
-        ```
-        npu-smi info
-        #该设备芯片名为Ascend310P3 （自行替换）
-        回显如下：
-        +-------------------+-----------------+------------------------------------------------------+
-        | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-        | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-        +===================+=================+======================================================+
-        | 0       310P3     | OK              | 15.8         42                0    / 0              |
-        | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
-        +===================+=================+======================================================+
-        | 1       310P3     | OK              | 15.4         43                0    / 0              |
-        | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
-        +===================+=================+======================================================+
-        ```
-
-    3. 执行ATC命令。
-
-        ```
-        bash atc_static.sh Ascend${chip_name} 4 128# Ascend310P3
-        ```
-
-        - 参数说明：
-
-          - 第一个参数代表芯片类型。
-          - 第二个参数代表batchsize。
-          - 第三个参数代表seq_len。
-
-
-        运行成功后生成<u>***encoder_static.om***, ***decoder_static.om***, ***postnet_static.om***</u>模型文件。
-
-4. 开始推理验证。
-
-    a.  使用om_infer_acl.py进行推理。
-
-    ```
-    python3.7 om_infer_acl.py -i filelists/ljs_audio_text_test_filelist.txt -bs 4 -max_inputlen 128 -max_decode_iter 20 --device_id 0
-    ```
-
-    b.  精度验证。
-
-    此模型特殊，模型精度依靠人主观和原始的txt文本比对。
-
-
-
-# 模型推理性能<a name="ZH-CN_TOPIC_0000001172201573"></a>
-
-性能参考下列数据。
-
-| 模型              | 310性能   | 310P性能   | T4性能     | 310P/310 | 310P/T4 |
-|-----------------|---------|----------|----------|----------|---------|
-| Tacotron2(bs1)  | 1611.32 | 2942.48  | 606.36   | 1.82     | 4.85    |
-| Tacotron2(bs4)  | 5762.64 | 9808.69  | 2431.74  | 1.70     | 4.03    |
-| Tacotron2(bs8)  | 9959.2  | 18891.84 | 4312.98  | 1.89     | 4.38    |
-| Tacotron2(bs16) | 15664.52| 33508.43 | 9040.19  | 2.13     | 3.71    |
-| Tacotron2(bs32) | 9059    | 8965.99  | 11328.52 | 0.99     | 0.79    |
-| 最优bs          | 15664.52| 33508.43 | 11328.52 | 2.13     | 2.95    |
-> **须知：** 
->tacotron2_items_per_sec作为本模型性能评价指标。
+|  芯片型号   | Batch Size |  数据集  |       精度       |    性能     |
+| :---------: | :--------: | :------: | :--------------: | :---------: |
+| Ascend310P3 |     1      | LJSpeech | 人工判断语音质量 | 636 wavs/s  |
+| Ascend310P3 |     4      | LJSpeech | 人工判断语音质量 | 2076 wavs/s |
+- 说明：由于模型推理为多个子模型串联，仅测量单个子模型性能没有意义，故性能采用端到端推理LJSpeech验证集中500条文本数据测得。
