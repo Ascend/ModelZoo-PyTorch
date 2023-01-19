@@ -130,7 +130,7 @@
 
    1. 获取权重文件。
 
-      下载地址[pth权重文件](https://cv.snu.ac.kr/research/EDSR/model_pytorch.tar)，解压得到 `edsr_x2.pt` 文件。
+      下载地址[pth权重文件](https://pan.baidu.com/s/14CLdFSsGQJ4D5zJlOWHtHA)(提取码：w5ay),解压得到 `edsr_baseline_x2-1bc95232.pt` 文件。
 
    2. 导出onnx文件。
 
@@ -141,7 +141,7 @@
          ```
          # pth转换为ONNX
          mkdir -p models/onnx
-         python3 edsr_pth2onnx.py --pth edsr_x2.pt --onnx models/onnx/edsr_x2_dynamic.onnx --size 1020
+         python3 edsr_pth2onnx.py --pth edsr_baseline_x2-1bc95232.pt --onnx models/onnx/edsr_x2_dynamic.onnx --size 1020
          ```
 
          - 参数说明：
