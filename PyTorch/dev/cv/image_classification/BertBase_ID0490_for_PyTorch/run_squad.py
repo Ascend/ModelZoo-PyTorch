@@ -760,6 +760,12 @@ def _compute_softmax(scores):
 
 
 def main():
+    option = {}
+    print("=====================================")
+    option["MM_BMM_ND_ENABLE"] = 'disable'
+    print("option[MM_BMM_ND_ENABLE]",option["MM_BMM_ND_ENABLE"])
+    print("=====================================")
+    torch.npu.set_option(option)
     parser = argparse.ArgumentParser()
 
     ## Required parameters
