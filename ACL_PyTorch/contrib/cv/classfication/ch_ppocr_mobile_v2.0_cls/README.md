@@ -3,6 +3,10 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
+
+
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -11,37 +15,28 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
   ******
 
 
 
-
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/angle_class.md#%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D)]内置的中文文本方向分类器，对检测到的文本行文字角度分类，支持0和180度的分类。文本方向分类器主要用于图片非0度的场景下，该场景下需要对图片里检测到的文字进行分类，便于后续进行转正操作后将图片送入识别模型。
 
-ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/angle_class.md#%E6%96%B9%E6%B3%95%E4%BB%8B%E7%BB%8D)]内置的中文文本方向分类器，支持了0和180度的分类。
+
 
 - 参考实现：
 
   ```
-  url=https://github.com/PaddlePaddle/PaddleOCR.git
-  branch=release/2.5
+  url=https://github.com/PaddlePaddle/PaddleOCR
   commit_id=a40f64a70b8d290b74557a41d869c0f9ce4959d5
   model_name=ch_ppocr_mobile_v2.0_cls
   ```
 
-- 通过Git获取对应commit\_id的代码方法如下：
 
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
+
+
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -54,24 +49,31 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | batchsize x 2 | FLOAT32  | ND           |
+  | output1  | FLOAT32  | batchsize x 2 | ND           |
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-- 该模型需要以下插件与驱动
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下插件与驱动   
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                    | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| paddlepaddle                                                 | 2.3.2   | 仅支持X86服务器安装                                           |
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | paddlepaddle                                                 | 2.3.2   | 仅支持X86服务器安装                                           |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+
+## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
 
@@ -92,89 +94,84 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
    cd ..
    ```
 
-
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
 
-该模型在PaddleOCR提供的中文文本方向分类[[样本集](https://github.com/PaddlePaddle/PaddleOCR/tree/release/2.5/doc/imgs_words/ch)]进行精度验证，该样本集在`ch_ppocr_mobile_v2.0_cls/PaddleOCR/doc/imgs_words/ch`目录下，包括5张图片样本，其[[在线推理](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/angle_class.md#6-%E9%A2%84%E6%B5%8B)]结果如下：
-
-  **表 2**  图片样本在线推理结果
-
-| 图片       | 结果             | 
-| ---------- | ---------------- |
-| word_1.jpg | ('0', 0.9998784) |
-| word_2.jpg | ('0', 1.0)       |
-| word_3.jpg | ('0', 1.0)       |
-| word_4.jpg | ('0', 0.9999982) |
-| word_5.jpg | ('0', 0.9999988) |
-
-2. 数据预处理。
-
-数据预处理将原始数据集转换为模型输入的数据。
-
-在`ch_ppocr_mobile_v2.0_cls`工作目录下，执行en_PP-OCRv3_rec_preprocess.py脚本，完成预处理。
+   该模型在PaddleOCR提供的中文文本方向分类[[样本集](https://github.com/PaddlePaddle/PaddleOCR/tree/release/2.5/doc/imgs_words/ch)]进行精度验证，该样本集在 ./PaddleOCR/doc/imgs_words/ch 目录下。目录结构如下：
 
    ```
-    python3 ch_ppocr_mobile_v2.0_cls_preprocess.py \
+   ch_ppocr_mobile_v2.0_cls
+   ├── PaddleOCR
+      ├── doc
+          ├── imgs_words
+              ├── ch
+                  ├── words_1.jpg
+   ```
+
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行ch_ppocr_mobile_v2.0_cls_preprocess.py脚本，完成预处理。
+
+   ```
+   python3 ch_ppocr_mobile_v2.0_cls_preprocess.py \
         -c PaddleOCR/configs/cls/cls_mv3.yml \
         -o Global.infer_img=PaddleOCR/doc/imgs_words/ch
    ```
+   运行成功后，在pre_data文件夹下生成bin文件。目录结构如下：
+    ```
+   ch_ppocr_mobile_v2.0_cls
+   ├── PaddleOCR
+   ├── pre_data
+      ├── words_1.bin
+    ```
 
-   - 参数说明：
-
-       -   -c：模型配置文件。
-       -   -o：可选参数列表: Global.infer_img表示图片路径。
-
-运行后在`ch_ppocr_mobile_v2.0_cls/pre_data`路径中保存生成的二进制数据。
 
 ## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
-   使用`paddle2onnx`将模型权重文件转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   使用paddle2onnx工具将模型权重文件转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 获取权重文件。
 
-      推理权重链接为：https://paddleocr.bj.bcebos.com/dygraph_v2.0/ch/ch_ppocr_mobile_v2.0_cls_infer.tar。
+        推理权重下载链接为：https://paddleocr.bj.bcebos.com/dygraph_v2.0/ch/ch_ppocr_mobile_v2.0_cls_infer.tar。
 
-      在`ch_ppocr_mobile_v2.0_cls`工作目录下可通过以下命令获取推理权重。
+        通过以下命令可以得到权重文件。
 
-      ```
+       ```
        wget -nc -P ./inference https://paddleocr.bj.bcebos.com/dygraph_v2.0/ch/ch_ppocr_mobile_v2.0_cls_infer.tar
-       cd ./inference && tar xf ch_ppocr_mobile_v2.0_cls_infer.tar && cd ..
-      ```
+       cd ./inference
+       tar xf ch_ppocr_mobile_v2.0_cls_infer.tar
+       cd ..
+       ```
 
    2. 导出onnx文件。
 
-      1. 使用paddle2onnx工具导出onnx文件。
+      使用paddle2onnx工具导出onnx文件。
 
-         在`ch_ppocr_mobile_v2.0_cls`工作目录下通过运行以下命令获取onnx文件。
+        ```
+        paddle2onnx \
+            --model_dir ./inference/ch_ppocr_mobile_v2.0_cls_infer \
+            --model_filename inference.pdmodel \
+            --params_filename inference.pdiparams \
+            --save_file ./ch_ppocr_mobile_v2.0_cls.onnx \
+            --opset_version 11 \
+            --enable_onnx_checker True \
+            --input_shape_dict="{'x':[-1,3,48,192]}"
+        ```
 
-         ```
-          paddle2onnx \
-              --model_dir ./inference/ch_ppocr_mobile_v2.0_cls_infer \
-              --model_filename inference.pdmodel \
-              --params_filename inference.pdiparams \
-              --save_file ./ch_ppocr_mobile_v2.0_cls.onnx \
-              --opset_version 11 \
-              --enable_onnx_checker True \
-              --input_shape_dict="{'x':[-1,3,48,192]}"
-         ```
+        获得ch_ppocr_mobile_v2.0_cls.onnx文件。
 
-         参数说明请通过`paddle2onnx -h`命令查看。
-         运行后在`ch_ppocr_mobile_v2.0_cls`目录下获得`ch_ppocr_mobile_v2.0_cls.onnx`文件。
+        参数说明请通过`paddle2onnx -h`命令查看
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-
-         > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
@@ -208,92 +205,71 @@ ch_ppocr_mobile_v2.0_cls为[[PaddleOCR](https://github.com/PaddlePaddle/PaddleOC
              --enable_small_channel=1
          ```
 
-         `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
-
          - 参数说明：
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --insert_op_conf：插入算子的配置文件路径与文件名，例如aipp预处理算子。
-           -   --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的首层卷积会有性能收益。
+            -   --model：为ONNX模型文件。
+            -   --framework：5代表ONNX模型。
+            -   --output：输出的OM模型。
+            -   --input\_format：输入数据的格式。
+            -   --input\_shape：输入数据的shape。
+            -   --log：日志级别。
+            -   --soc\_version：处理器型号。
+            -   --insert_op_conf：插入算子的配置文件路径与文件名，例如aipp预处理算子。
+            -   --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的首层卷积会有性能收益。
 
-          运行成功后生成`ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om`模型文件。
+           运行成功后生成`ch_ppocr_mobile_v2.0_cls_bs${batchsize}`模型文件。`${batchsize}`为模型输入的batch size。
 
 2. 开始推理验证。
 
-a.  安装ais_bench推理工具。  
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+   1. 安装ais_bench推理工具。
 
-执行ais_bench推理工具推理命令，如下：
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   ```
-    python3 -m ais_bench \
+   2. 执行推理。
+
+        ```
+        python3 -m ais_bench \
         --model=./ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om \
         --input=./pre_data \
         --output=./ \
         --batchsize=${batchsize}
-   ```
+        ```
 
-`${batchsize}`表示不同batch的om模型。
-   -   参数说明：
+        -   参数说明：
 
-       -   --model：om模型路径。
-       -   --input：bin文件路径。
-       -   --output：推理结果保存路径。
-       -   --batchsize：om模型的batch。
+            -   --model：om模型路径。
+            -   --input：bin文件路径。
+            -   --output：推理结果保存路径。
+            -   --batchsize：模型输入的batch size。
 
-推理完成后在当前`ch_ppocr_mobile_v2.0_cls`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_12_04-15_46_57`。
+        推理后的输出默认在当前目录下。
 
 
-b.  精度验证。
+   3. 精度验证。
 
-执行后处理脚本`ch_ppocr_mobile_v2.0_cls_postprocess.py`，参考命令如下：
+      调用脚本得到数据集的推理结果，结果通过屏显显示。
 
-   ```
-    python3 ch_ppocr_mobile_v2.0_cls_postprocess.py --config=PaddleOCR/configs/cls/cls_mv3.yml --opt=results=${output_path}
-   ```
-${output_path}为推理结果的保存路径。
+      ```
+      python3 ch_ppocr_mobile_v2.0_cls_postprocess.py --config=PaddleOCR/configs/cls/cls_mv3.yml --opt=results=${output_path}
+      ```
 
-   -   参数说明：
+      - 参数说明：
 
-       -   --config：模型配置文件。
-       -   --opt：推理结果路径。
+        - config：模型配置文件。
+        - opt：模型推理保存路径。
 
-推理结果通过屏显显示，如下：
+   4. 性能验证。
 
-   ```
-    {'word_1.jpg': [('0', 0.9980469)], 
-     'word_2.jpg': [('0', 0.9980469)], 
-     'word_3.jpg': [('0', 0.9980469)], 
-     'word_4.jpg': [('0', 0.9980469)], 
-     'word_5.jpg': [('0', 0.9980469)]}
-   ```
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-c.  性能验证。
+        ```
+         python3 -m ais_bench --model=$ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om --loop=100 --batchsize=${batch_size}
+        ```
 
-可以使用ais_bench推理工具的纯推理模式验证模型性能，命令如下。
+      - 参数说明：
+        - --model：om模型文件路径。
+        - --batchsize：模型输入对应的batch size。
 
-   ```
-    python3 -m ais_bench \
-        --model=./ch_ppocr_mobile_v2.0_cls_bs${batchsize}.om \
-        --loop=50 \
-        --batchsize=${batchsize}
-   ```
-
- `${batchsize}`表示不同batch的om模型。
-
-   -   参数说明：
-
-       -   --model：om模型路径。
-       -   --loop：推理次数。
-       -   --batchsize：om模型的batch。
-    
-纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -302,9 +278,9 @@ c.  性能验证。
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1                | 样例图片 | 与在线推理一致 | 1756.851  fps |
-|Ascend310P3| 4                | 样例图片 | 与在线推理一致 | 7367.839  fps |
-|Ascend310P3| 8                | 样例图片 | 与在线推理一致 | 13141.683 fps |
-|Ascend310P3| 16               | 样例图片 | 与在线推理一致 | 18906.942 fps |
-|Ascend310P3| 32               | 样例图片 | 与在线推理一致 | 24095.478 fps |
-|Ascend310P3| 64               | 样例图片 | 与在线推理一致 | 31958.773 fps |
+|    310P       |        1     |    样例图片    |     与在线推理一致       |     2607.56      |
+|    310P       |        4     |           |            |     8621.80     |
+|    310P       |       8      |           |            |     14915.91    |
+|    310P       |       16     |           |            |     21204.41    |
+|    310P       |       32     |           |            |     26886.69    |
+|    310P       |       64     |    样例图片    |      与在线推理一致      |     30269.34    |
