@@ -36,7 +36,7 @@ interval=50
 #conda环境的名称
 conda_name=py1
 #训练的epoch数
-total_epochs=12
+total_epochs=1
 
 
 #参数校验，不需要修改
