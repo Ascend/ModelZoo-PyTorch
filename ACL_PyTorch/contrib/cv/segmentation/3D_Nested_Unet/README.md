@@ -278,7 +278,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
       > 注：可执行以下命令进行一键式进行所有数据集的前后处理以及npu推理。
       >```
-      >python3 infer.py  --environment=$pwd_path/ --interpreter=python3 --npu_interpreter="python3 ${ais_bench_path}/ais_infer.py" --om_path=./nnunetplusplus.om --device=0
+      >python3 infer.py  --environment=$pwd_path/ --interpreter=python3 --npu_interpreter="python3 -m ais_bench" --om_path=./nnunetplusplus.om --device=0
       >```
       >
 
@@ -286,6 +286,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
       ```
       mkdir  $pwd_path/RESULTS_FOLDER/nnUNet/3d_fullres/Task003_Liver/nnUNetPlusPlusTrainerV2__nnUNetPlansv2.1/fold_0/validation_raw/
       cp -rf $pwd_path/output/* $pwd_path/RESULTS_FOLDER/nnUNet/3d_fullres/Task003_Liver/nnUNetPlusPlusTrainerV2__nnUNetPlansv2.1/fold_0/validation_raw/
+      rm $pwd_path/RESULTS_FOLDER/nnUNet/3d_fullres/Task003_Liver/nnUNetPlusPlusTrainerV2__nnUNetPlansv2.1/fold_0/validation_raw/*_0000.nii.gz
       nnUNet_train 3d_fullres nnUNetPlusPlusTrainerV2 003 0 --validation_only
       ```
       实验的精度将记录在$pwd_path/RESULTS_FOLDER/nnUNet/3d_fullres/Task003_Liver/nnUNetPlusPlusTrainerV2__nnUNetPlansv2.1/fold_0/validation_raw/summary.json中。

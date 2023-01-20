@@ -52,13 +52,12 @@ def infer(args):
         os.system(f"mv {args.environment}/output/{tmpname} {args.environment}/output/{filename}")
         os.system(f"rm {args.environment}/input_bins/* -rf")
         os.system(f"{args.interpreter} 3d_nested_unet_preprocess.py --file_path {args.environment}/input_bins/")
+        os.system(f"rm {args.environment}/result/bs1 -rf")
         os.system("{} --model={} --input={}/input_bins/  --output={}/result/ --output_dirname=bs1 --outfmt=BIN  --batchsize=1 --device={}" \
                   .format(args.npu_interpreter, args.om_path, args.environment, args.environment, args.device))
         os.system(f"rm {args.environment}/result/bs1/*[1-4].bin")
         changebin(f"{args.environment}/result/bs1/")
         os.system(f"{args.interpreter} 3d_nested_unet_postprocess.py --file_path {args.environment}/result/bs1/")
-        os.system(f"rm {args.environment}/result/bs1/* -rf")
-     
         
 
 if __name__ == '__main__':

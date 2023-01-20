@@ -114,12 +114,12 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 1. 获取原始数据集。
 
-   本模型支持[ICDAR2013 数据集](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2F%3Fch%3D2)及相应[评测方法代码](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2Fstandalones%2Fscript_test_ch2_t1_e2-1577983067.zip)。用户可自行获取ICDAR2013数据集及评测方法代码上传到服务器，可放置于任意路径下，以"./datasets"和"./script"目录为例。
+   本模型支持[ICDAR2013 数据集](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2F%3Fch%3D2)及相应[精度评测代码](https://gitee.com/link?target=https%3A%2F%2Frrc.cvc.uab.es%2Fstandalones%2Fscript_test_ch2_t1_e2-1577983067.zip)。用户可自行获取ICDAR2013数据集及评测方法代码上传到服务器，可放置于任意路径下，以"./datasets"和"./script"目录为例。
 
    ```
    ├──datasets
          ├──Challenge2_Test_Task12_Images
-   ├──script
+   ├──script                                 //精度验证时会用到
          ├──gt.zip
          ├──readme.txt
          ├──rrc_evaluation_funcs_1_1.py
@@ -226,7 +226,7 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
       3. 执行ATC命令。
 
          ```
-         atc --framework=5 --model=ctpn_change_1000x462.onnx --output=ctpn_bs1 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=error --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=ctpn_1000x462.onnx --output=ctpn_bs1 --input_format=NCHW --input_shape="image:1,3,-1,-1" --dynamic_image_size="248,360;280,550;319,973;458,440;477,636;631,471;650,997;753,1000;997,744;1000,462" --log=error --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -247,10 +247,10 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理(${ais_infer_path}请根据实际的推理工具路径填写)。
+   2. 执行推理。
 
       ```
-      python3 task_process.py --interpreter="python3 ${ais_infer_path}/ais_infer.py" --om_path=./ctpn_bs1.om --src_dir=./pre_bin/images_bin --res_dir=./result --batch_size=1 --device=0
+      python3 task_process.py --interpreter="python3 -m ais_bench" --om_path=./ctpn_bs1.om --src_dir=./pre_bin/images_bin --res_dir=./result --batch_size=1 --device=0
       ```
       - 参数说明：
          - --interpreter:推理工具。

@@ -144,7 +144,7 @@ U-2-Net是基于UNet提出的一种新的网络结构，网络基于encode-decod
 
          ```
          mkdir models
-         python pth2onnx.py
+         python3 pth2onnx.py --model_dir=./workspace/U-2-Net/saved_models/u2net/u2net.pth --out_path=./models/u2net.onnx
          ```
 
          获得./models/u2net.onnx文件。

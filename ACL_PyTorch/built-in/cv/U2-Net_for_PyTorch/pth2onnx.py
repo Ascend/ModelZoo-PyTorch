@@ -12,21 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import os
 import sys
+import argparse
+
 import torch
 
 sys.path.append('./workspace/U-2-Net')
+
 from model import U2NET
 
 
-WORK_DIR = './workspace/U-2-Net'
-
-
 if __name__ == '__main__':
-    model_dir = os.path.join(WORK_DIR, 'saved_models/u2net/u2net.pth')
-    out_path = './models/u2net.onnx'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_dir', default="./workspace/U-2-Net/saved_models/u2net/u2net.pth",
+                        type=str, help='dir of model')
+    parser.add_argument('--out_path', default="./models/u2net.onnx", type=str,
+                        help='path of onnx ')
+    args = parser.parse_args()
+    
+    model_dir = args.model_dir
+    out_path = args.out_path
+    
     net = U2NET(3, 1)
     net.load_state_dict(torch.load(model_dir, map_location=torch.device('cpu')))
     net.eval()
