@@ -58,6 +58,11 @@ FCOS是一个全卷积的one-stage目标检测模型，相比其他目标检测�
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
+- 安装依赖。
+
+  ```
+  pip install -r requirements.txt
+  ```
   
 - 准备mmcv环境。
   1. 进入源码包根目录，下载mmcv，最好是1.2.7版本的（版本要求是1.2.5以上，1.3.0以下）。
@@ -110,13 +115,6 @@ FCOS是一个全卷积的one-stage目标检测模型，相比其他目标检测�
     ```
     if cached_x.grad_fn.next_functions[0][0].variable is not x:
     ```
-
-- 安装依赖。
-
-  ```
-  pip install -r requirements.txt
-  ```
-
 
 ## 准备数据集
 

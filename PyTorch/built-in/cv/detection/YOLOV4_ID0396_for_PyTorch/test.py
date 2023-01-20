@@ -115,10 +115,10 @@ def test(data,
     niou = iouv.numel()
 
     # Dataloader
+    path = data['test'] if opt.task == 'test' else data['val']  # path to val/test images
     if not training:
         img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
         _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
-        path = data['test'] if opt.task == 'test' else data['val']  # path to val/test images
         dataloader = create_dataloader(path, imgsz, batch_size, imgsz + 32, opt,
                                        hyp=None, augment=False, cache=False, pad=0.0, rect=True)[0]
 
