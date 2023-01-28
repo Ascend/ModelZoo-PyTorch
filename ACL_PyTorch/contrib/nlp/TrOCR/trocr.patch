@@ -277,7 +277,7 @@ index d3266ce..cca3b34 100644
 -
 +        return cand_bbsz_idx_out, eos_mask_out, cand_scores_out, tokens_out, scores_out, attn_out
 diff --git a/unilm/trocr/task.py b/unilm/trocr/task.py
-index 8925276..798d146 100644
+index 8925276..a071d70 100644
 --- a/unilm/trocr/task.py
 +++ b/unilm/trocr/task.py
 @@ -9,8 +9,8 @@ try:
@@ -291,7 +291,7 @@ index 8925276..798d146 100644
  
  import logging
  
-@@ -260,3 +260,71 @@ class SROIETextRecognitionTask(LegacyFairseqTask):
+@@ -260,3 +260,74 @@ class SROIETextRecognitionTask(LegacyFairseqTask):
              search_strategy=search_strategy,
              **extra_gen_cls_kwargs,
          )
@@ -312,13 +312,16 @@ index 8925276..798d146 100644
 +        )
 +        finished = [False]
 +        path = "../../out/"
-+        filelist = os.listdir(path)
-+        cand_bbsz_idx_out = np.fromfile(os.path.join(path + filelist[0] + "/tfm_img_" + str(sample['id'].item()) + "_0.bin"), dtype=np.int32).reshape([31,1,20])
-+        eos_mask_out = np.fromfile(os.path.join(path + filelist[0] + "/tfm_img_" + str(sample['id'].item()) + "_1.bin"), dtype=bool).reshape([31,1,20])
-+        cand_scores_out = np.fromfile(os.path.join(path + filelist[0] + "/tfm_img_" + str(sample['id'].item()) + "_2.bin"), dtype=np.float32).reshape([31,1,20])
-+        tokens_out = np.fromfile(os.path.join(path + filelist[0] + "/tfm_img_" + str(sample['id'].item()) + "_3.bin"), dtype=np.int32).reshape([31,10,202])
-+        scores_out = np.fromfile(os.path.join(path + filelist[0] + "/tfm_img_" + str(sample['id'].item()) + "_4.bin"), dtype=np.float32).reshape([31,10,201])
-+        attn_out = np.fromfile(os.path.join(path + filelist[0] + "/tfm_img_" + str(sample['id'].item()) + "_5.bin"), dtype=np.float32).reshape([31,10,578,202])
++        result_path = [d.path for d in os.scandir(path) if d.is_dir()]
++        file_path_base = os.path.join(result_path[0], "tfm_img_" + str(sample['id'].item()))
++
++        cand_bbsz_idx_out = np.fromfile(file_path_base + "_0.bin", dtype=np.int32).reshape([31,1,20])
++        eos_mask_out = np.fromfile(file_path_base + "_1.bin", dtype=bool).reshape([31,1,20])
++        cand_scores_out = np.fromfile(file_path_base + "_2.bin", dtype=np.float32).reshape([31,1,20])
++        tokens_out = np.fromfile(file_path_base + "_3.bin", dtype=np.int32).reshape([31,10,202])
++        scores_out = np.fromfile(file_path_base + "_4.bin", dtype=np.float32).reshape([31,10,201])
++        attn_out = np.fromfile(file_path_base + "_5.bin", dtype=np.float32).reshape([31,10,578,202])
++
 +        for i in range(0, 30):
 +            k = i+1
 +            cand_bbsz_idx = torch.from_numpy(cand_bbsz_idx_out[k])
@@ -363,7 +366,6 @@ index 8925276..798d146 100644
 +                        List[Dict[str, Tensor]], finalized[sent]
 +                    )
 +        return finalized
-\ No newline at end of file
 diff --git a/fairseq/fairseq/search.py b/fairseq/fairseq/search.py
 index a71e7801..8ac6344c 100644
 --- a/fairseq/fairseq/search.py
@@ -438,3 +440,26 @@ index c5591915..e8a64b4a 100644
          ],
          dependency_links=dependency_links,
          packages=find_packages(
+
+diff --git a/fairseq/fairseq/file_utils.py b/fairseq/fairseq/file_utils.py
+index b99da2e8..15b60fae 100644
+--- a/fairseq/fairseq/file_utils.py
++++ b/fairseq/fairseq/file_utils.py
+@@ -265,7 +265,7 @@ def http_get(url, temp_file):
+     import requests
+     from tqdm import tqdm
+
+-    req = request_wrap_timeout(partial(requests.get, url, stream=True), url)
++    req = request_wrap_timeout(partial(requests.get, url, stream=True, verify=False), url)
+     content_length = req.headers.get("Content-Length")
+     total = int(content_length) if content_length is not None else None
+     progress = tqdm(unit="B", total=total)
+@@ -297,7 +297,7 @@ def get_from_cache(url, cache_dir=None):
+             import requests
+
+             response = request_wrap_timeout(
+-                partial(requests.head, url, allow_redirects=True), url
++                partial(requests.head, url, allow_redirects=True, verify=False), url
+             )
+             if response.status_code != 200:
+                 etag = None
