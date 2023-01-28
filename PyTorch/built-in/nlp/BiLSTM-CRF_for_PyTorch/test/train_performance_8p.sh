@@ -5,6 +5,14 @@ Network="BiLstm_for_PyTorch"
 batch_size=64
 export RANK_SIZE=1
 
+#参数校验，不需要修改
+for para in $*
+do
+    if [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
+    fi
+done
+
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=$(pwd)
@@ -39,10 +47,11 @@ fi
 for i in $(seq 7 -1 0)
     do
       nohup python3 -u runner.py \
-          --amp_opt_level="O2"\
+          --amp_opt_level="O2" \
           --distributed \
-          --seed=42\
-          --local_rank=$i >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${i}.log 2>&1 &
+          --seed=42 \
+          --batch_size=${batch_size} \
+          --local_rank=$i > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${i}.log 2>&1 &
     done
 
 wait
@@ -80,8 +89,7 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep "Epoch =" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $9}'|sed 's/,$//' >> $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
-
+grep 'step/total_step' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ':' '{print $3}' | awk -F ' ' '{print $1}' > $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
