@@ -115,10 +115,10 @@ def test(data,
     niou = iouv.numel()
 
     # Dataloader
-    path = data['test'] if opt.task == 'test' else data['val']  # path to val/test images
     if not training:
         img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
         _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
+        path = data['test'] if opt.task == 'test' else data['val']  # path to val/test images
         dataloader = create_dataloader(path, imgsz, batch_size, imgsz + 32, opt,
                                        hyp=None, augment=False, cache=False, pad=0.0, rect=True)[0]
 
@@ -270,7 +270,7 @@ def test(data,
             from pycocotools.cocoeval import COCOeval
 
             imgIds = [int(Path(x).stem) for x in dataloader.dataset.img_files]
-            cocoGt = COCO(glob.glob(path.split('val')[0] + 'annotations/instances_val2017.json')[0])  # initialize COCO ground truth api
+            cocoGt = COCO(glob.glob(data['val'].split('val')[0] + 'annotations/instances_val2017.json')[0])  # initialize COCO ground truth api
             cocoDt = cocoGt.loadRes(f)  # initialize COCO pred api
             cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
             cocoEval.params.imgIds = imgIds  # image IDs to evaluate
