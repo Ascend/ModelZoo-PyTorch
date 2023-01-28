@@ -40,6 +40,11 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        echo "conda_name: $conda_name"
+        source activate $conda_name
     fi
 done
 #校验是否传入data_path,不需要修改
@@ -85,6 +90,7 @@ start_time=$(date +%s)
 
 cd ${cur_path}
 python3 setup.py build_ext --inplace > ${test_path_dir}/build.log
+cd ${test_path_dir}
 
 nohup taskset -c 0-23 python3.7 -u ${cur_path}/train.py $data_path \
     --restore-file $ROBERTA_PATH \
