@@ -88,6 +88,7 @@ nohup python3.7 run_mlm.py \
         --max_seq_length 128 \
         --train_file ${data_path} \
         --eval_metric_path ./accuracy.py \
+        --line_by_line \
         --dataloader_drop_last true \
         --pad_to_max_length \
         --remove_unused_columns false \

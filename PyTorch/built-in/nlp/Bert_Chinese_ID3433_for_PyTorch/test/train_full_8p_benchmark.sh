@@ -97,6 +97,7 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --max_seq_length 128 \
         --train_file ${data_path} \
         --eval_metric_path ./accuracy.py \
+        --line_by_line \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
