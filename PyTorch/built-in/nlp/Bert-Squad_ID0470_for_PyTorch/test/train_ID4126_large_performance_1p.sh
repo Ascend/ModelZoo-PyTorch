@@ -92,10 +92,11 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
+    ASCEND_DEVICE_ID=0
 fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-ASCEND_DEVICE_ID=0
+#ASCEND_DEVICE_ID=0
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/
 mkdir -p results/SQUAD
