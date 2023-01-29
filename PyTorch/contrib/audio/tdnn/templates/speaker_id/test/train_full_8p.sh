@@ -27,6 +27,8 @@ do
         workers=`echo ${para#*=}`
     elif [[ $para == --data_folder* ]];then
         data_folder=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -92,7 +94,7 @@ do
 			--local_rank ${RANK_ID} \
 			--batch_size=$batch_size \
 			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_full_8p.log 2>&1 &
+			--data_folder=$data_folder > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_full_8p.log 2>&1 &
 done
 wait
 
@@ -105,7 +107,7 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_full_8p.log|awk -F " " '{print $NF}'|awk 'END {print}'|cut -d ")" -f1`
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_full_8p.log|awk -F "(" '{print $NF}'|awk 'END {print}'|cut -d ")" -f1`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

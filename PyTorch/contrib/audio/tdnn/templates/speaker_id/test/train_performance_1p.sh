@@ -25,6 +25,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_folder* ]];then
         data_folder=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`    
     fi
 done
 
@@ -88,16 +90,16 @@ do
 	    let a=0+RANK_ID*24
 		let b=23+RANK_ID*24
         taskset -c $a-$b python3 train.py train.yaml \
-			--local_rank ${RANK_ID} \
+			--local_rank ${ASCEND_DEVICE_ID} \
 			--batch_size=$batch_size \
 			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
+			--data_folder=$data_folder > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
 	else
         python3.7 train.py train.yaml \
-			--local_rank ${RANK_ID} \
+			--local_rank ${ASCEND_DEVICE_ID} \
 			--batch_size=$batch_size \
 			--number_of_epochs=$train_epochs \
-			--data_folder=$data_folder >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
+			--data_folder=$data_folder > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_perf_1p.log 2>&1 &
 	fi
 done
 wait

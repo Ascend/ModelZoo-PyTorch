@@ -316,7 +316,8 @@ if __name__ == "__main__":
     #end try
 
     # Initialize ddp (useful only for multi-GPU DDP training).
-    sb.utils.distributed.ddp_init_group(run_opts)
+    if run_opts["distributed_launch"]:
+        sb.utils.distributed.ddp_init_group(run_opts)
 
     # Load hyperparameters file with command-line overrides.
     overrides = {"data_folder": run_opts["data_folder"],
