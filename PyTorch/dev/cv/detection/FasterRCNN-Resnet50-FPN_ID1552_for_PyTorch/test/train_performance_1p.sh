@@ -8,7 +8,7 @@ cp -r ../detectron2/data/dataset_mapper.py /home/tmp/Faster_Mask_RCNN_for_PyTorc
 cur_path=`pwd`
 
 unset PYTHONPATH
-source /usr/local/Ascend/bin/setenv.bash
+source /usr/local/Ascend/latest/bin/setenv.bash
 export LD_PERLOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/tensorflow_core/libtensorflow_framework.so.1
 
 #集合通信参数,不需要修改
@@ -63,7 +63,7 @@ python3 ../tools/train_net.py \
 	SOLVER.IMS_PER_BATCH $batch_size \
 	SOLVER.BASE_LR $base_lr \
 	SOLVER.MAX_ITER $num_train_steps \
-	SOLVER.STEPS $LR_step_1,$LR_step_2 \
+	SOLVER.STEPS $LR_step_1,$LR_step_2 > $cur_path/output/train_${ASCEND_DEVICE_ID}.log
 
 wait
 
