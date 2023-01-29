@@ -63,9 +63,10 @@ e2e_time=$(($end_time - $start_time))
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
-#输出性能FPS，需要模型审视修改
-FPS=$(grep "Totaltime" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "," '{print $2}' | awk -F "S" '{print $1}')
-FPS=$[$batch_size*1800/$FPS]
+sed -i "s|\r|\n|g" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+# 输出性能FPS
+average_step_time=$(grep "step_time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print $4}' | awk 'BEGIN{count=0}{if(NR>3){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}')
+FPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${average_step_time}'}')
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
