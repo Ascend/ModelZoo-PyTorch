@@ -494,7 +494,7 @@ def main():
         # Epoch Log #
         #############
         FPS = fps_all / (step - 2)
-        time_log = 'Ep {}, {:.2f}s, FPS {:.2f}'.format(ep + 1, time.time() - ep_st, FPS)
+        time_log = 'Ep {}, {:.2f}s, FPS {:.2f}'.format(ep + 1, time.time() - ep_st, fps_step)
 
         if cfg.g_loss_weight > 0:
             g_log = (', gp {:.2%}, gm {:.2%}, '

@@ -595,7 +595,7 @@ def main(npu, ngpus_per_node, args):
         #############
         if args.npu is 0:
             FPS = fps_all / (step - 3)
-            time_log = 'Ep {}, {:.2f}s, FPS {:.2f}'.format(ep + 1, time.time() - ep_st, FPS)
+            time_log = 'Ep {}, {:.2f}s, FPS {:.2f}'.format(ep + 1, time.time() - ep_st, fps_step)
 
             if cfg.g_loss_weight > 0:
                 g_log = (', gp {:.2%}, gm {:.2%}, '
