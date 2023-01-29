@@ -74,11 +74,11 @@ ln -s ${data_path} ${default_data_path}/.
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
 {
-python3.7.5 -m torch.distributed.launch --nproc_per_node=8 8p_npu_main.py --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120'  --port='34577' --num_epochs=160
-python3.7.5 test_wider_face.py
+python3 -m torch.distributed.launch --nproc_per_node=8 8p_npu_main.py --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120'  --port='34577' --num_epochs=160
+python3 test_wider_face.py
 cd $cur_path/evaluate
-python3.7.5 setup.py build_ext --inplace
-python3.7.5 evaluation.py --pred $cur_path/output/widerface
+python3 setup.py build_ext --inplace
+python3 evaluation.py --pred $cur_path/output/widerface
 } > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     
 wait
