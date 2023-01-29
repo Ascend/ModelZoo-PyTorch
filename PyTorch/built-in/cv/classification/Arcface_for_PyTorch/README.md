@@ -165,8 +165,11 @@ Arcface-Torch可以高效快速地训练大规模人脸识别训练集。本模�
 
 **_当前发行版本中存在的问题描述。_**
 
-因sklearn自身bug，若运行环境为ARM，则需要手动导入so，以下是root python环境里的示例
+1.因sklearn自身bug，若运行环境为ARM，则需要手动导入so，以下是root python环境里的示例
 ```export LD_PRELOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0```
+
+
+2.如果遇到了这个报错“OSError: libarmpl_lp64_mp.so: cannot open shared object file: No such file or directory”，则可以参照这个issue处理，https://github.com/apache/mxnet/issues/19234 。
 
 
 
