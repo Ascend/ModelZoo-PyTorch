@@ -149,10 +149,10 @@ def setup(args):
 
 def main(args):
     #开启模糊编译
-    torch.npu.global_step_inc()
-    option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "NMSWithMask,BatchMultiClassNonMaxSuppression"
-    torch.npu.set_option(option)
+    torch.npu.set_compile_mode(jit_compile=False)
+    #option = {}
+    #option["NPU_FUZZY_COMPILE_BLACKLIST"] = "NMSWithMask,BatchMultiClassNonMaxSuppression"
+    #torch.npu.set_option(option)
     cfg = setup(args)
 
     """
