@@ -40,6 +40,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
@@ -87,7 +89,7 @@ fi
 
 #################启动训练脚本#################
 start_time=$(date +%s)
-nohup python3 -m yolox.tools.train -n yolox-s -d 8 -b 128 --fp16 -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 -m yolox.tools.train -n yolox-s -d 8 -b ${batch_size} --fp16 -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################

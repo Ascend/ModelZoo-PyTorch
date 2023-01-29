@@ -1,8 +1,6 @@
 #!/bin/bash
 cur_time=`date +%Y%m%d%H%M%S`
 
-export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
-
 cur_path=`pwd`
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ];then
@@ -39,6 +37,10 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
@@ -71,6 +73,8 @@ if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
 else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
+# 指定单卡训练卡id
+export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 # 指定数据集路径
 export YOLOX_DATADIR=$data_path
@@ -94,7 +98,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 start_time=$(date +%s)
-nohup python3 -m yolox.tools.train -n yolox-s -d 1 -b 16 --fp16 -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 -m yolox.tools.train -n yolox-s -d 1 -b ${batch_size} --fp16 -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
