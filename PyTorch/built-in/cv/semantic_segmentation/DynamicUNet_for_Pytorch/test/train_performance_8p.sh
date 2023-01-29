@@ -2,7 +2,7 @@
 
 #网络名称，同目录名称
 Network="DynamicUNet_ID4080_for_Pytorch"
-batch_size=32
+batch_size=4
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -17,6 +17,8 @@ do
         more_path1=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -73,6 +75,7 @@ nohup python3.7 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py
 --lr 0.0001 --epochs 50 --worker 8 \
 --log-iter 1 --val-epoch 5 --perf-only \
 --pretrained ${pretrained_model} \
+--batch-size ${batch_size} \
 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

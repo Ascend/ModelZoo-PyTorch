@@ -445,6 +445,7 @@ if __name__ == '__main__':
         cudnn.benchmark = True
         NPU_CALCULATE_DEVICE = os.getenv('ASCEND_DEVICE_ID', 0)
         args.device = "cuda:{}".format(NPU_CALCULATE_DEVICE)
+        torch.cuda.set_device(args.device)
     else:
         args.distributed = False
         args.device = "cpu"

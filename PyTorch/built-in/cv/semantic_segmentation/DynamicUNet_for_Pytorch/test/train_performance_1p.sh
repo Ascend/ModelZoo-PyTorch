@@ -2,13 +2,16 @@
 
 #网络名称，同目录名称
 Network="DynamicUNet_ID4080_for_Pytorch"
-batch_size=32
+batch_size=4
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
 # 预训练模型路径
 more_path1=""
+
+# 指定训练所使用的npu device卡id
+device_id=0
 
 #参数校验，不需要修改
 for para in $*
@@ -17,8 +20,23 @@ do
         more_path1=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
+
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -44,8 +62,6 @@ if [ x"${cur_path_last_dirname}" == x"test" ]; then
 else
 	test_path_dir=${cur_path}/test
 fi
-
-ASCEND_DEVICE_ID=0
 
 #################创建日志输出目录，不需要修改#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ]; then
@@ -73,6 +89,7 @@ nohup python3 -u runner.py \
 --lr 0.0001 --epochs 50 --worker 8 \
 --log-iter 1 --val-epoch 5 --perf-only \
 --pretrained ${pretrained_model} \
+--batch-size ${batch_size} \
 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
