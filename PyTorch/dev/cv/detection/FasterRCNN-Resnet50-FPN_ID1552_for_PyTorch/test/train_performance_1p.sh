@@ -9,7 +9,6 @@ cur_path=`pwd`
 
 unset PYTHONPATH
 source /usr/local/Ascend/latest/bin/setenv.bash
-export LD_PERLOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/tensorflow_core/libtensorflow_framework.so.1
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
