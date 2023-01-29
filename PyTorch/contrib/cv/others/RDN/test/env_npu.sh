@@ -42,6 +42,7 @@ export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
+export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
 
 ulimit -SHn 512000
 
