@@ -35,9 +35,9 @@ if torch.__version__ >= "1.8":
     option['ACL_OP_COMPILER_CACHE_MODE'] = "enable"  # cache功能启用
     option['ACL_OP_COMPILER_CACHE_DIR'] = "./cache"  # cache所在的文件夹
 
-option['ACL_OP_SELECT_IMPL_MODE'] = "high_precision"
-option['ACL_OPTYPELIST_FOR_IMPLMODE'] = "NLLLoss,NLLLossGrad"
-option["MM_BMM_ND_ENABLE"] = 'disable'
+option['MM_BMM_ND_ENABLE'] = 'disable'
+option['ACL_OP_SELECT_IMPL_MODE'] = "high_performance"
+option['ACL_OPTYPELIST_FOR_IMPLMODE'] = "LayerNorm"
 torch.npu.set_option(option)
 import datasets
 from datasets import load_dataset, load_metric

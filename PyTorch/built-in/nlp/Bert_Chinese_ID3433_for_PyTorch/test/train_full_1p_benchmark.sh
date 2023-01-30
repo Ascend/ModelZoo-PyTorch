@@ -1,23 +1,22 @@
 #!/bin/bash
-cur_path=`pwd`
+export BERT_BENCHMARK=1
 #集合通信参数,不需要修改
-export RANK_SIZE=8
+export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 device_id=0
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Bert_Chinese_ID3433_for_PyTorch"
+Network="Bert_Chinese_for_PyTorch"
 #训练epoch
 train_epochs=3
 #训练batch_size 默认bert base batch size, 该参数外部可传入
-batch_size=32
+batch_size=240
 # 训练模型是bert base 还是bert large，默认bert base
 model_size=base
 warmup_ratio=0.0
 weight_decay=0.0
-
 
 #获取外部传参，可扩展
 for para in $*
@@ -32,17 +31,10 @@ do
       warmup_ratio=`echo ${para#*=}`
     elif [[ $para == --weight_decay* ]];then
       weight_decay=`echo ${para#*=}`
-    elif [[ $para == --conda_name* ]];then
-        conda_name=`echo ${para#*=}`
-        source set_conda.sh
-        source activate $conda_name
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
     fi
 done
-#判断是否使用conda环境
-if [[ $conda_name != "" ]];then
-   cp -r $data_path/* $cur_path/../
-   data_path=$data_path/'train_huawei.txt'
-fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -87,23 +79,21 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
-else
-    train_epochs=1
 fi
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
+nohup python3.7 run_mlm.py \
         --model_type bert \
         --config_name ./bert-${model_size}-chinese/config.json \
         --tokenizer_name ./bert-${model_size}-chinese \
-        --max_seq_length 512 \
+        --max_seq_length 128 \
         --train_file ${data_path} \
         --eval_metric_path ./accuracy.py \
         --line_by_line \
+        --dataloader_drop_last true \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
         --dataloader_num_workers 4 \
-        --use_combine_ddp \
         --num_train_epochs ${train_epochs} \
         --overwrite_output_dir \
         --per_device_train_batch_size ${batch_size} \
@@ -114,12 +104,10 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --fp16 \
         --warmup_ratio ${warmup_ratio} \
         --weight_decay ${weight_decay} \
-        --dataloader_drop_last true \
         --fp16_opt_level O2 \
         --loss_scale 8192 \
         --use_combine_grad \
         --optim adamw_apex_fused_npu \
-        --distributed_process_group_timeout 5400 \
         --output_dir ./output > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
@@ -146,7 +134,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据，不需要修改
 #吞吐量

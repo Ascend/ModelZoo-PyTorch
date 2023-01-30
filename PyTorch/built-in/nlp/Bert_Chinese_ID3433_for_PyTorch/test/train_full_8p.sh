@@ -100,6 +100,8 @@ nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
+        --dataloader_num_workers 4 \
+        --use_combine_ddp \
         --num_train_epochs ${train_epochs} \
         --overwrite_output_dir \
         --per_device_train_batch_size ${batch_size} \
