@@ -75,6 +75,7 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 
   /bin/cp -f mmcv_need/_functions.py ${mmcv_path}/mmcv/parallel/
   /bin/cp -f mmcv_need/scatter_gather.py ${mmcv_path}/mmcv/parallel/
+  /bin/cp -f mmcv_need/distributed.py ${mmcv_path}/mmcv/parallel/
   /bin/cp -f mmcv_need/dist_utils.py ${mmcv_path}/mmcv/runner/
   ```
 ## 准备数据集
