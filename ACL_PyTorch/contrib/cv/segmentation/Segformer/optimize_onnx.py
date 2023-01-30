@@ -12,60 +12,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from magiconnx import OnnxGraph
-import onnx
 import sys
 import os
+import numpy as np
+from auto_optimizer import OnnxGraph
 
-def remove_node(_graph):
-    '''remove nodes'''
-    invalid_nodes = ["Resize_1428", "Resize_2925", "Resize_4422", "Resize_4567", "Unsqueeze_4574"]
-    for node_name in invalid_nodes:
-        in_rename_map = {}
-        for node_id, node in enumerate(_graph.node):
-            if node.name == node_name:
-                in_name = node.input[0]
-                out_name = node.output[0]
-                in_rename_map = {out_name: in_name}
-                del _graph.node[node_id]
-                break
+
+def remove_node_and_print(_graph, node):
+    print(f"Removed: {node.name}")
+    _graph.remove(node.name)
     
-        for node_id, node in enumerate(_graph.node):
-            for in_id, in_name in enumerate(node.input):
-                if in_name in in_rename_map:
-                    node.input[in_id] = in_rename_map[in_name]
-        print("[info]remove: ", node_name)
+
+def get_resize_node_after_conv(_graph, conv_node):
+    ''' Conv -> Relu -> [Resize] '''
+    relu_node = _graph.get_next_nodes(conv_node.outputs[0])[0]
+    if relu_node.op_type != "Relu":
+        return None
+    
+    relu_next_nodes = _graph.get_next_nodes(relu_node.outputs[0])
+    for next_node in relu_next_nodes:
+        if next_node.op_type == "Resize":
+            return next_node
+
+    return None
+
+
+def remove_or_modify_resize(_graph):
+    for conv_node in _graph.get_nodes("Conv"):
+        conv_weight = conv_node.inputs[1]
+        conv_weight_shape = _graph[conv_weight].value.shape
+        
+        if conv_weight_shape == (256, 32, 1, 1):
+            '''Remove'''
+            resize_node = get_resize_node_after_conv(_graph, conv_node)
+            remove_node_and_print(_graph, resize_node)
+        
+        elif conv_weight_shape == (256, 64, 1, 1) or conv_weight_shape == (256, 160, 1, 1):
+            '''Change mode to nearest'''
+            resize_node = get_resize_node_after_conv(_graph, conv_node)
+            if resize_node:
+                print(f"Modified: {resize_node.name}")
+                resize_node["mode"] = b"nearest"
+
+    '''Remove the last Resize node'''
+    resize_node = _graph.get_nodes("Resize")[-1]
+    remove_node_and_print(_graph, resize_node)
+    return _graph
+
+
+def remove_unsqueeze(_graph):
+    '''Remove the last Unsqueeze node'''
+    unsqueeze_node = _graph.get_nodes("Unsqueeze")[-1]
+    remove_node_and_print(_graph, unsqueeze_node)
     return _graph
 
 
 def insert_cast(_graph):
-    '''insert cast change output to int32'''
-    nodes = _graph.node
-    for i in range(len(nodes)):
-        if nodes[i].op_type == 'ArgMax':
-            argmax = nodes[i]
-            argmax_id = i
-    cast_input0 = "cast_in"
-    cast_output0 = "output"
-    cast_new = onnx.helper.make_node(
-        "Cast",
-        inputs=[cast_input0],
-        outputs=[cast_output0],
-        name="Cast_new",
-        to=getattr(onnx.TensorProto, "INT32"))
-    argmax.output[0] = cast_input0
-    _graph.node.insert(argmax_id + 1, cast_new)
-    print("[info]insert: Cast_new op after ", argmax.name)
+    '''Insert Cast to make the model output in the INT32 format'''
+    argmax_node = _graph.get_nodes("ArgMax")[0]
+    new_cast_node = _graph.add_node('Cast_new', 'Cast', attrs={'to': 6})  # 6 -> INT32
+    print(f"Inserted: {new_cast_node.name} after {argmax_node.name}")
+    _graph.insert_node(argmax_node.name, new_cast_node)
     return _graph
-
-
-def resize_optimize(resize_nodes, speeds, accs):
-    '''Resize mode to nearest'''
-    for node in resize_nodes:
-        # print("node.name={}".format(node.name))   
-        if node['mode'] == b'linear' and node.name not in speeds and node.name not in accs:
-            print("[info]{} mode to 'nearest'".format(node.name))  
-            node['mode'] = b'nearest'
 
 
 if __name__ == '__main__':
@@ -75,19 +83,13 @@ if __name__ == '__main__':
     out_onnx = sys.argv[2]
     in_onnx = os.path.realpath(in_onnx)
     out_onnx = os.path.realpath(out_onnx)
-    onnx_model = onnx.load(in_onnx)
-    graph = onnx_model.graph
-    graph = remove_node(graph)
-    graph = insert_cast(graph)
-    onnx.save(onnx_model, out_onnx)
-    onnx_graph = OnnxGraph(out_onnx)
+    
+    onnx_graph = OnnxGraph.parse(in_onnx)
+    onnx_graph = remove_or_modify_resize(onnx_graph)
+    onnx_graph = remove_unsqueeze(onnx_graph)
+    onnx_graph = insert_cast(onnx_graph)
 
-    phs = onnx_graph.get_nodes("Placeholder")
-    phs[1].dtype = 'int32'
-    print("[info]modify output detype to 'int32'")
+    onnx_graph.outputs[0].dtype = np.dtype("int32")
+    print("Modify output dtype to 'int32'")
 
-    _speeds = ["Resize_1514", "Resize_3011", "Resize_4508"]
-    _accs = ["Resize_1491", "Resize_2988", "Resize_4485"]
-    _resize_nodes = onnx_graph.get_nodes(op_type='Resize')
-    resize_optimize(_resize_nodes, _speeds, _accs)
     onnx_graph.save(out_onnx)

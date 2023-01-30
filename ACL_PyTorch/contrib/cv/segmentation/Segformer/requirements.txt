@@ -1,2 +1,5 @@
-te==0.4.0
+decorator
+te==1.0.1
 tqdm==4.64.1
+torch==1.7.0
+torchvision==0.8.0

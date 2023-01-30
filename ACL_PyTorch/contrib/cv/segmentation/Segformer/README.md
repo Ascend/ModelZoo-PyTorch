@@ -32,18 +32,6 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
   model_name=Segformer-MIT-B0
   ```
 
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
@@ -68,8 +56,8 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| 固件与驱动                                                   | 22.0.4  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.7.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -78,32 +66,53 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
 ## 获取源码<a name="section4622531142816"></a>
 
-1. 获取源码。
-
+1. 获取本仓代码
+   ```bash
+   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
+   cd ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/segmentation/Segformer
    ```
-    git clone https://github.com/open-mmlab/mmsegmentation.git
-    cd mmsegmentation
-    git reset --hard 0e37281884193838417a43802bb7a4c854d2067e
-    patch -p1 < ../Segformer.patch
-    pip3 install -v -e .
-    cd ..
+   文件说明
+   ```
+   Segformer
+     ├── README.md                  # 此文档
+     ├── Segformer_preprocess.py    # 数据集预处理脚本
+     ├── Segformer_postprocess.py   # 推理结果后处理脚本
+     ├── Segformer.patch            # 修改模型源码的patch文件
+     └── optimize_onnx.py           # ONNX模型优化脚本
    ```
 
-2. 安装依赖。
-
+2. 获取模型源码
+   ```bash
+   git clone https://github.com/open-mmlab/mmsegmentation.git
+   cd mmsegmentation
+   git reset --hard 0e37281884193838417a43802bb7a4c854d2067e
+   patch -p1 < ../Segformer.patch
+   pip3 install -v -e .
+   cd ..
    ```
-   # 可参考以下步骤配置环境：
 
-    pip3 install torch==1.7.0 torchvision==0.8.0
-    pip3 install mmcv-full==1.4.3 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.7.0/index.html
-    pip3 install -r requirements.txt
+3. 安装依赖。
 
-    git clone https://gitee.com/Ronnie_zheng/MagicONNX.git
-    cd MagicONNX
-    git checkout dev
-    git reset --hard cb071bb62f34bfae405af52063d7a2a4b101358a
-    pip3 install .
-    cd ..
+   安装Python依赖库
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+   从源码安装mmcv-full
+   ```bash
+   git clone https://github.com/open-mmlab/mmcv.git
+   cd mmcv
+   git reset --hard ccdc61c0878d27ac7cccfecd7b474320817f0bbf
+   pip3 install -r requirements.txt
+   MMCV_WITH_OPS=1 pip3 install -v -e .
+   cd ..
+   ```
+   安装改图工具
+   ```bash
+   git clone https://gitee.com/ascend/msadvisor.git
+   cd msadvisor/auto-optimizer
+   pip3 install -r requirements.txt
+   python3 setup.py install
+   cd ../..
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -112,15 +121,15 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
    下载 [cityscpaes数据集](https://www.cityscapes-dataset.com)，解压后数据集目录结构如下：
    ```
-    |-- cityscapes
-        |-- gtFine
-            |-- test
-            |-- train
-            |-- val
-        |-- leftImg8bit
-            |-- test
-            |-- train
-            |-- val
+   cityscapes
+     ├── gtFine
+     │     ├── test
+     │     ├── train
+     │     └── val
+     └── leftImg8bit
+           ├── test
+           ├── train
+           └── val
    ```
 
 2. 数据预处理。
@@ -129,11 +138,12 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
    执行Segformer_preprocess.py脚本，完成预处理。
 
-   ```
+   ```bash
    python3 ./Segformer_preprocess.py ${data_path}/cityscapes/leftImg8bit/val ./prep_dataset
    ```
-   ${data_path}/cityscapes/leftImg8bit/val：验证集路径。
-    ./prep_dataset：预处理后的 bin 文件存放路径。
+   - 参数说明：
+      - ${data_path}/cityscapes/leftImg8bit/val：验证集路径。
+      - ./prep_dataset：预处理后的 bin 文件存放路径。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -144,7 +154,9 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
    1. 获取权重文件。
 
-      wget https://download.openmmlab.com/mmsegmentation/v0.5/segformer/segformer_mit-b0_8x1_1024x1024_160k_cityscapes/segformer_mit-b0_8x1_1024x1024_160k_cityscapes_20211208_101857-e7f88502.pth
+   ```bash
+   wget https://download.openmmlab.com/mmsegmentation/v0.5/segformer/segformer_mit-b0_8x1_1024x1024_160k_cityscapes/segformer_mit-b0_8x1_1024x1024_160k_cityscapes_20211208_101857-e7f88502.pth
+   ```
 
    2. 导出onnx文件。
 
@@ -152,7 +164,7 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
          运行pytorch2onnx.py脚本。
 
-         ```
+         ```bash
          python3 mmsegmentation/tools/pytorch2onnx.py \
          mmsegmentation/configs/segformer/segformer_mit-b0_8x1_1024x1024_160k_cityscapes.py \
          --checkpoint segformer_mit-b0_8x1_1024x1024_160k_cityscapes_20211208_101857-e7f88502.pth \
@@ -161,27 +173,27 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
          --dynamic-export
          ```
 
-         获得segformer_dynamicbs.onnx文件。
+         获得 ```segformer_dynamicbs.onnx``` 文件。
 
       2. 优化ONNX文件。
 
          使用onnx-simplifier简化onnx模型
-         ```
+         ```bash
          onnxsim segformer_dynamicbs.onnx segformer_dynamicbs_sim.onnx
          ```
 
          使用optimize_onnx.py优化onnx模型
-         ```
+         ```bash
          python3 optimize_onnx.py segformer_dynamicbs_sim.onnx segformer_dynamicbs_sim_opt.onnx
          ```
 
-         获得segformer_dynamicbs_sim_opt.onnx文件。
+         获得 ```segformer_dynamicbs_sim_opt.onnx``` 文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
-         ```
+         ```bash
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
@@ -190,7 +202,7 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-         ```
+         ```bash
          npu-smi info
          # 该设备芯片名为 Ascend310P3
          回显如下：
@@ -207,7 +219,7 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
          ```
 
       3. 执行ATC命令。
-         ```
+         ```bash
          atc --framework=5 \
          --model=segformer_dynamicbs_sim_opt.onnx \
          --output=segformer_bs${batch_size} \
@@ -227,7 +239,7 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
            
-           运行成功后生成 segformer_bs${batch_size}.om 模型文件。
+           运行成功后生成 ```segformer_bs${batch_size}.om``` 模型文件。
 
 
 
@@ -240,7 +252,7 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
    b.  执行推理。
 
-      ```
+      ```bash
       python3 -m ais_bench \
       --model=./segformer_bs${batch_size}.om \
       --input=./prep_dataset \
@@ -264,21 +276,21 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
       我们将后处理与精度验证一起放在了Segformer_postprocess.py文件中，脚本执行完毕后即可生成精度结果。
 
-      ```
-      python3 Segformer_postprocess.py --json_path=${path_to_json}/sumary.json --dataset_path=${data_path}
+      ```bash
+      python3 Segformer_postprocess.py --json_path=./xxxx_xx_xx-xx_xx_xx_sumary.json --dataset_path=${data_path}
       ```
 
       -   参数说明：
 
-           -   --json_path：ais_bench推理工具生成的json文件路径；${path_to_json}代表sumary.json文件的存放路径。
-           -   --dataset_path：cityscpaes数据集所在路径；比如：若cityscpaes存放在/opt/npu/cityscpaes，则--dataset_path=/opt/npu/
+           -   --json_path：ais_bench推理工具生成的json文件路径
+           -   --dataset_path：cityscpaes数据集所在父路径；比如：若cityscpaes存放在/opt/npu/cityscpaes，则--dataset_path=/opt/npu/
 
 
    d.  性能验证。
 
       使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，命令如下：
 
-      ```
+      ```bash
       python3 -m ais_bench --model=./segformer_bs${batch_size}.om --loop=50 --batchsize=${batch_size}
       ```
 
@@ -287,8 +299,9 @@ Segformer是一个简单、高效但功能强大的语义分割框架，它将 T
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   |   数据集   |    精度    |       性能       |
-| --------- | ---------- | ---------- | ---------- | --------------- |
-| 310P      |    1       | cityscapes |  mIoU = 75.94  |  6.37 fps  |
-| 310P      |    4       | cityscapes |  mIoU = 75.94  |  5.60 fps  |
+| 芯片型号 | Batch Size |   数据集   |      精度      |    性能    |  基准性能  |
+| :-----: | :--------: | :--------: | :------------: | :-------: | :-------: |
+|   310P  |      1     | cityscapes |  mIoU = 75.94  |  6.01 fps | 10.61 fps |
+|   310P  |      4     | cityscapes |  mIoU = 75.94  |  5.94 fps | 10.65 fps |
+
 注：该模型支持的batchsize为1，4。
