@@ -2,3 +2,4 @@ albumentations==0.5.2
 opencv-python==4.6.0.66
 Pillow==6.2.2
 tqdm
+scikit-learn==1.0.2
