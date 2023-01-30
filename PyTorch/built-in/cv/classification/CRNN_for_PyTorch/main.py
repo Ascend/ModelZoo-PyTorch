@@ -172,7 +172,7 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
             break
         if args.pro and i >= 1000:
             break
-        if args.training_type and args.num_steps > args.stop_step:
+        if args.training_type and num_steps > args.stop_step:
             import sys
             sys.exit()
         elif args.start_step<= num_steps <= args.stop_step and args.profiling == 'CANN':
