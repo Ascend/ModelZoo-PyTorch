@@ -8,8 +8,7 @@ cp -r ../detectron2/data/dataset_mapper.py /home/tmp/Faster_Mask_RCNN_for_PyTorc
 cur_path=`pwd`
 
 unset PYTHONPATH
-source /usr/local/Ascend/bin/setenv.bash
-export LD_PERLOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/tensorflow_core/libtensorflow_framework.so.1
+source /usr/local/Ascend/latest/bin/setenv.bash
 
 #集合通信参数,不需要修改
 export RANK_SIZE=1
@@ -47,7 +46,20 @@ export DETECTRON2_DATASETS=$data_path
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
+for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
+do
+    #设置环境变量，不需要修改
+    echo "Device ID: $ASCEND_DEVICE_ID"
+    export RANK_ID=$RANK_ID
 
+    #创建DeviceID输出目录，不需要修改
+    if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
+        rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
+        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/
+    else
+        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/
+    fi
+done
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 python3 ../tools/train_net.py \
 	--config-file ../configs/COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml \
@@ -63,32 +75,13 @@ python3 ../tools/train_net.py \
 	SOLVER.IMS_PER_BATCH $batch_size \
 	SOLVER.BASE_LR $base_lr \
 	SOLVER.MAX_ITER $num_train_steps \
-	SOLVER.STEPS $LR_step_1,$LR_step_2 \
+	SOLVER.STEPS $LR_step_1,$LR_step_2 > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 
 wait
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
-
-
-for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
-do
-    #设置环境变量，不需要修改
-    echo "Device ID: $ASCEND_DEVICE_ID"
-    export RANK_ID=$RANK_ID
-
-    #创建DeviceID输出目录，不需要修改
-    if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
-        rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/
-    else
-        mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID/
-    fi
-done
-
-cat $ckpt_path/log.txt > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log
-
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
