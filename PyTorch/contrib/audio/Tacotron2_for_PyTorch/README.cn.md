@@ -107,7 +107,9 @@ Tacotron2是一个从文字直接转化为语音的神经网络。这个体系�
      启动单卡训练。
 
      ```
-     bash run_1p.sh --train_epochs=训练周期数
+     bash ./test/train_full_1p.sh --data_path=./LJSpeech-1.1
+
+     bash ./test/train_performance_1p.sh --data_path=./LJSpeech-1.1
      ```
 
    - 单机8卡训练
@@ -115,7 +117,9 @@ Tacotron2是一个从文字直接转化为语音的神经网络。这个体系�
      启动8卡训练。
 
      ```
-     bash run_8p.sh --train_epochs=训练周期数
+     bash ./test/train_full_8p.sh --data_path=./LJSpeech-1.1
+
+     bash ./test/train_performance_8p.sh --data_path=./LJSpeech-1.1
      ```
 
    模型训练脚本参数说明如下。
