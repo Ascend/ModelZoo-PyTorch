@@ -262,7 +262,7 @@ def main():
     bs = args.bs
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=bs*device_num,
+        batch_size=bs,
         shuffle=(train_sampler is None),
         num_workers=num_workers,
         pin_memory=True,
@@ -276,7 +276,7 @@ def main():
             transforms.ToTensor(),
             normalize,
         ])),
-        batch_size=bs*device_num,
+        batch_size=bs,
         shuffle=(train_sampler is None),
         num_workers=num_workers,
         pin_memory=True,
