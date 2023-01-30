@@ -74,6 +74,12 @@ def parse_option():
 
 
 def main(config):
+    option = {}
+    print("=====================================")
+    option["MM_BMM_ND_ENABLE"] = 'disable'
+    print("option[MM_BMM_ND_ENABLE]",option["MM_BMM_ND_ENABLE"])
+    print("=====================================")
+    torch.npu.set_option(option)
     data_loader_train = build_loader(config, logger, is_pretrain=True)
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
