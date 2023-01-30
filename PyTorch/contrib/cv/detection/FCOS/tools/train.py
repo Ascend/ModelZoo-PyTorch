@@ -36,7 +36,7 @@ import os
 import os.path as osp
 import time
 import warnings
-
+import ast
 import mmcv
 import torch
 from mmcv import Config, DictAction
@@ -108,7 +108,7 @@ def parse_args():
         default='none',
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
-
+    parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
     args = parser.parse_args()
 
     if 'LOCAL_RANK' not in os.environ:
@@ -127,7 +127,9 @@ def parse_args():
 
 def main():
     args = parse_args()
-
+    if args.bin:
+        print('enable run time2.0 model now!')
+        torch.npu.set_compile_mode(jit_compile=False)    
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
