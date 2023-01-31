@@ -1,6 +1,4 @@
 #!/bin/bash
-
-
 #集合通信参数,不需要修改
 export RANK_SIZE=1
 
@@ -35,6 +33,7 @@ fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
+	device_id=$ASCEND_DEVICE_ID
 elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -65,12 +64,14 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
+
 # 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
+
 
 # 数据集软链到脚本工程内部
 cur_path=`pwd`
@@ -81,16 +82,13 @@ mkdir -p ${cur_path}/data/
 rm -rf ${default_data_path}/wider_face
 ln -s ${data_path} ${default_data_path}/.
 
+# 训练前模型编译
+cd $cur_path/src/lib/external
+make
+wait
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-{
-python3.7.5 main.py  --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id
-python3.7.5 test_wider_face.py
-cd $cur_path/evaluate
-python3.7.5 setup.py build_ext --inplace
-python3.7.5 evaluation.py --pred $cur_path/output/widerface
-} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-    
+python3.7.5 main.py  --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
