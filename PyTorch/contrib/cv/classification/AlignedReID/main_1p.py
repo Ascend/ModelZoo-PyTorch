@@ -18,6 +18,8 @@ import sys
 sys.path.insert(0, '.')
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.autograd import Variable
 import torch.npu
 import torch.nn as nn
