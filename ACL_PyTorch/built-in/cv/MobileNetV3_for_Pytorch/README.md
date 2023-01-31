@@ -63,21 +63,22 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
    git reset --hard adc0ca87e1dd8136cd000ae81869934060171689
    mkdir -p output imagenet # 新建output文件夹，作为模型结果的默认保存路径
    ```
-   
-2. 安装依赖  
-   ```
-   pip3 install -r requirements.txt
-   ```
 
-3. 获取`OM`推理代码  
+2. 获取`OM`推理代码  
    将推理部署代码放在`mobilenetv3`源码仓目录下。
    ```
     MobileNetV3_for_PyTorch
     ├── data               放到mobilenetv3下
     ├── pth2onnx.py        放到mobilenetv3下
     ├── atc.sh             放到mobilenetv3下
-    └── om_val.py          放到mobilenetv3下
+    ├── om_val.py          放到mobilenetv3下
+    └── requirements.txt   放到mobilenetv3下
    ```   
+   
+3. 安装依赖  
+   ```
+   pip3 install -r requirements.txt
+   ```
 
 
 ## 准备数据集
@@ -155,8 +156,8 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
 1. 安装`ais_bench`推理工具  
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-2. 执行推理  
-   运行`om_val.py`推理OM模型，结果默认保存在`output`文件夹下。
+2. 执行推理 & 精度验证  
+   运行`om_val.py`推理OM模型，得到模型精度结果。
    ```
    python3 om_val.py --dataset=imagenet --checkpoint=output/mbv3_small_bs1.om --batch=1
    ```

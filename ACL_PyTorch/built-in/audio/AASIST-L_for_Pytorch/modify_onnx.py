@@ -107,7 +107,7 @@ def replace_gather(model):
         ge_node = model.get_next_nodes(e_node.outputs[0])[0]
         f_node.inputs = [node.outputs[1]]
         f_out = 'fatten_out_' + str(i)
-        f_node.outputs = [f_node]
+        f_node.outputs = [f_out]
         g_node.inputs = [ge_node.inputs[0], f_out]
         g_out = 'gather_out_' + str(i)
         g_node.outputs = [g_out]

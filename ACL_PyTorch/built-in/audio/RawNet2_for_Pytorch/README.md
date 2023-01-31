@@ -1,99 +1,177 @@
-# RawNet2模型推理指导
+# RawNet2-推理指导
 
--   [1 文件说明](#1-文件说明)
--   [2 环境准备](#2-环境准备)
-	-   [2.1 文件下载](#21-文件下载)
-	-   [2.2 文件拷贝](#22-文件拷贝)
-	-   [2.3 设置环境变量](#23-设置环境变量)
--   [3 端到端推理步骤](#3-端到端推理步骤)
-    -   [3.1 修改pytorch模型源码](#31-修改pytorch模型源码)
-	-   [3.2 pth转onnx模型](#32-pth转onnx模型)
-	-   [3.3 修改导出的onnx模型](#33-修改导出的onnx模型)
-	-   [3.4 利用ATC工具转换为om模型](#34-利用ATC工具转换为om模型)
-	-   [3.5 om模型推理](#35-om模型推理)
+- [概述](#概述)
+- [推理环境准备](#推理环境准备)
+- [快速上手](#快速上手)
+  - [获取源码](#获取源码)
+  - [准备数据集](#准备数据集)
+  - [模型推理](#模型推理)
+- [模型推理性能&精度](#模型推理性能&精度)
 
-------
+******
 
-## 1 文件说明
-```
-RawNet2_for_Pytorch  
-  ├── pth2onnx.py       pytorch模型导出onnx模型  
-  ├── modify_onnx.py    修改导出的onnx模型  
-  ├── atc.sh            onnx模型转om  
-  ├── om_infer.py       推理导出的om模型  
-  └── acl_net.py        PyACL推理工具代码  
-```
 
-## 2 环境准备
+# 概述
+RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征，这是传统计算方法得不到的。
+该模型提出了尺度向量用来自适应缩放特征图，同时引入了sinc卷积替代首层的普通卷积，实现了说话人验证的欺骗识别。
 
-### 2.1 文件下载
-- [RawNet2_Pytorch源码下载](https://github.com/asvspoof-challenge/2021/tree/main/LA/Baseline-RawNet2)
+- 版本说明：
   ```
-  git clone https://github.com/asvspoof-challenge/2021.git
-  cd 2021/LA/Baseline-RawNet2/
+  url=https://github.com/asvspoof-challenge/2021
+  commit_id=aae41bb3f4f38795ebf6901c7bbf3461e4ad662b
+  model_name=RawNet2
   ```
-- [权重下载](https://www.asvspoof.org/asvspoof2021/pre_trained_DF_RawNet2.zip)
-- [数据集下载](https://datashare.ed.ac.uk/handle/10283/3336)  
-  om推理采用ASVspoof2019数据集的验证集进行精度评估。
 
-### 2.2 文件拷贝
-拷贝pth2onnx.py，modify_onnx.py，atc.sh，om_infer.py，acl_net.py文件到2021/LA/Baseline-RawNet2/目录下。  
-将下载的权重文件pre_trained_DF_RawNet2.pth放在和代码同一目录下。  
-在同一目录下创建data目录并将下载的数据集放入，data目录中的文件结构如下所示。
-```
-data  
-  └── LA  
-    ├── ASVspoof2019_LA_asv_protocols
-    ├── ASVspoof2019_LA_asv_scores
-    ├── ASVspoof2019_LA_cm_protocols
-    ├── ASVspoof2019_LA_dev
-    ├── ASVspoof2019_LA_eval
-    └── ASVspoof2019_LA_train
-```
+# 推理环境准备
+- 该模型需要以下插件与驱动  
+  **表 1**  版本配套表
 
-### 2.3 设置环境变量
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
+| 配套                                                     | 版本     | 环境准备指导                                                 |
+| ------------------------------------------------------- |--------| ------------------------------------------------------------ |
+| 固件与驱动                                                | 22.0.3 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                    | 6.0.0  | -                                                            |
+| Python                                                  | 3.7.5  | -                                                            |
+| PyTorch                                                 | 1.10.1 | -                                                            |
+| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \      | \                                                            |
 
-## 3 端到端推理步骤
 
-### 3.1 修改pytorch模型源码
-导onnx模型需要修改2021/LA/Baseline-RawNet2/model.py中的SincConv类，在该类的forward函数中增加一行，如下所示。
-```python
-self.band_pass = torch.from_numpy(self.band_pass.numpy())   # 增加行，和下行缩进保持一致
-band_pass_filter=self.band_pass.to(self.device)  # 根据该行代码找到增加位置
-```
+# 快速上手
 
-### 3.2 pth导出onnx 
-```python
-python3.7 pth2onnx.py \
-        --pth_model=pre_trained_DF_RawNet2.pth \
-        --onnx_model=rawnet2_ori.onnx \
-        --batch_size=1
-```
+## 获取源码
 
-### 3.3 修改导出的onnx模型
-```python
-python3.7 -m onnxsim rawnet2_ori.onnx rawnet2_sim.onnx
+1. 获取`Pytorch`源码  
+   ```
+   git clone https://github.com/asvspoof-challenge/2021.git
+   cd 2021/LA/Baseline-RawNet2/
+   git reset --hard aae41bb3f4f38795ebf6901c7bbf3461e4ad662b
+   ```
+   
+2. 安装依赖  
+   ```
+   pip3 install -r requirements.txt
+   ```
+   
 
-python3.7 modify_onnx.py \
-        --input_onnx=rawnet2_sim.onnx \
-        --output_onnx=rawnet2_modify.onnx
-```
+3. 获取`OM`推理代码  
+   将推理部署代码放在`aasist`源码仓目录下。
+   ```
+   RawNet2_for_Pytorch
+    ├── pth2onnx.py        放到Baseline-RawNet2下
+    ├── modify_onnx.py     放到Baseline-RawNet2下
+    ├── evaluation.py      放到Baseline-RawNet2下
+    └── om_val.py          放到Baseline-RawNet2下
+   ```   
 
-### 3.4 利用ATC工具转换为om模型
-```shell
-bash atc.sh rawnet2_modify.onnx rawnet2_modify input:1,64600
-```
-注：目前ATC支持的onnx算子版本为11
 
-### 3.5 om模型推理
-```python
-python3.7 om_infer.py \
-    --batch_size=1 \
-    --om_path=rawnet2_modify.om \
-    --eval_output='rawnet2_modify_om.txt' \
-    --database_path='data/LA/' \
-    --protocols_path='data/LA/'
-```
+## 准备数据集
+- 该模型使用`LA`数据集进行精度评估，下载[LA数据集](https://datashare.ed.ac.uk/handle/10283/3336)，将下载的数据集放到`Baseline-RawNet2`源码仓目录下，文件结构如下：
+   ```
+   LA
+   └── ASVspoof2019_LA_cm_protocols
+      └── LA.cm.eval.trl.txt
+   └── ASVspoof2019_LA_eval
+      └── flac
+        ├── LA_E_1000147.flac
+        ├── LA_E_1000273.flac
+        ├── ……
+        └── LA_E_A9997819.flac
+   ```
+
+
+## 模型推理
+### 1 模型转换  
+将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
+
+1. 获取权重文件  
+   下载[权重下载](https://www.asvspoof.org/asvspoof2021/pre_trained_DF_RawNet2.zip)，放在`Baseline-RawNet2`目录下。
+ 
+
+2. 导出`ONNX`模型  
+   导`onnx`模型需要修改`2021/LA/Baseline-RawNet2/model.py`中的`SincConv`类，在该类的`forward`函数中增加一行，如下所示。  
+   ```
+   self.band_pass = torch.from_numpy(self.band_pass.numpy())   # 增加行，和下行缩进保持一致
+   band_pass_filter=self.band_pass.to(self.device)  # 根据该行代码找到增加位置
+   ```
+   运行`pth2onnx.py`导出`ONNX`模型。  
+   ```
+   python3 pth2onnx.py --pth_model=pre_trained_DF_RawNet2.pth --onnx_model=rawnet2_bs1.onnx --batch_size=1
+   ```
+   修改导出的`onnx`模型，提升模型性能。
+   请先安装 [onnx改图接口工具](https://gitee.com/peng-ao/om_gener)  
+   ```
+   python3 -m onnxsim rawnet2_bs1.onnx rawnet2_bs1.onnx
+   python3 modify_onnx.py --input_onnx=rawnet2_bs1.onnx --output_onnx=rawnet2_bs1.onnx
+   ```
+
+3. 使用`ATC`工具将`ONNX`模型转为`OM`模型  
+   3.1 配置环境变量  
+   ```
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   ```
+   > **说明：**  
+     该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+
+   3.2 执行命令查看芯片名称（得到`atc`命令参数中`soc_version`）
+   ```
+   npu-smi info
+   #该设备芯片名为Ascend310P3 （自行替换）
+   回显如下：
+   +-------------------+-----------------+------------------------------------------------------+
+   | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+   | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+   +===================+=================+======================================================+
+   | 0       310P3     | OK              | 15.8         42                0    / 0              |
+   | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+   +===================+=================+======================================================+
+   | 1       310P3     | OK              | 15.4         43                0    / 0              |
+   | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+   +===================+=================+======================================================+
+   ```
+
+   3.3 执行ATC命令  
+   运行`atc.sh`导出`OM`模型，默认保存在`output`文件夹下。
+   ```
+   atc --model=rawnet2_bs1.onnx \
+       --output=rawnet2_bs1 \
+       --input_shape=input:1,64600 \
+       --input_format=ND \
+       --log=error \
+       --framework=5 \
+       --soc_version=Ascend310P3 \
+       --optypelist_for_implmode="Sigmoid" \
+       --op_select_implmode=high_performance
+   ```
+      - `atc`命令参数说明：
+        -   `--model`：ONNX模型文件
+        -   `--framework`：5代表ONNX模型
+        -   `--output`：输出的OM模型
+        -   `--input_format`：输入数据的格式
+        -   `--input_shape`：输入数据的shape
+        -   `--log`：日志级别
+        -   `--soc_version`：处理器型号
+
+    
+### 2 开始推理验证
+
+1. 安装`ais_bench`推理工具  
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+2. 执行推理 & 精度验证  
+   运行`om_val.py`推理OM模型，合成语音默认保存在`output/wavs`文件夹下。
+   ```
+   python3 om_val.py --om=rawnet2_bs1.om --batch=1
+   ```
+
+3. 性能验证  
+   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
+   ```
+   python3 -m ais_bench --model rawnet2_bs1.om --loop 1000 --batchsize 1 
+   ```
+
+# 模型推理性能&精度
+
+调用ACL接口推理计算，性能&精度参考下列数据。
+
+|   芯片型号   | Batch Size |   数据集    | 精度EER  | 精度min-tDCF |     性能     |
+|:-----------:|:----------:|:--------:|:------:|:----------:|:----------:|
+| Ascend310P3 |     1      |      LA  | 4.867% |   0.113    | 230.08 fps |

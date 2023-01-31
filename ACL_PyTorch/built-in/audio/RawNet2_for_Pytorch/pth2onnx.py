@@ -25,7 +25,7 @@ from model import RawNet
 def convert(pth_model, onnx_model, batch_size):
     dir_yaml = os.path.splitext('model_config_RawNet')[0] + '.yaml'
     with open(dir_yaml, 'r') as f_yaml:
-        parser1 = yaml.load(f_yaml)
+        parser1 = yaml.load(f_yaml, Loader=yaml.FullLoader)
     model = RawNet(parser1['model'], 'cpu')
     checkpoint = torch.load(pth_model, map_location='cpu')
     model.load_state_dict(checkpoint)
@@ -40,7 +40,6 @@ def convert(pth_model, onnx_model, batch_size):
                       opset_version=11,
                       dynamic_axes=None,
                       export_params=True,
-                      verbose=True,
                       do_constant_folding=True)
 
 
@@ -56,13 +55,6 @@ def get_parser():
 
 
 if __name__ == "__main__":
-    '''
-    Example:
-        python3.7 pth2onnx.py \
-            --pth_model=pre_trained_DF_RawNet2.pth \
-            --onnx_model=rawnet2_ori.onnx \
-            --batch_size=1
-    '''
     parser = get_parser()
     args = parser.parse_args()
     convert(args.pth_model, args.onnx_model, args.batch_size)

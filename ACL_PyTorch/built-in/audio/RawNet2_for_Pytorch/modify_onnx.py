@@ -52,7 +52,7 @@ def make_conv2d_split_node(mod, conv_node, weight, chk_idx, chk_sz, ksz):
 
 def shape_dim_extend(mod, io_map):
     # NCD -> NCHW
-    rshp_node = mod.get_node("Reshape_9")
+    rshp_node = mod.get_node("Reshape_0")
     shape_node = mod.get_node(rshp_node.input_name[1])
     shape_value = shape_node.const_value
     rng = np.random.randint(0, 7393)
@@ -83,7 +83,7 @@ def shape_dim_extend(mod, io_map):
             new_weight_node = mod.add_const_node(f"const_weight_{rng}", np.expand_dims(weight_value, axis=2))
             mod.node_replace(weight_node, new_weight_node)
 
-    g_node = mod.get_node("MaxPool_13")
+    g_node = mod.get_node("MaxPool_4")
     rng = np.random.randint(0, 7393)
     kernel_shape = [1] + g_node.get_attr('kernel_shape', AT.LIST_INT)
     pads = g_node.get_attr('pads', AT.LIST_INT) * 2
@@ -94,7 +94,7 @@ def shape_dim_extend(mod, io_map):
                      "strides": (AT.LIST_INT, strides)})
 
     # NCHW -> NCD
-    res_node = mod.get_node('MaxPool_13')
+    res_node = mod.get_node('MaxPool_4')
     squeeze_node = mod.add_new_node(f"Squeeze_{np.random.randint(0, 7393)}", "Squeeze",
                                     {"axes": (AT.LIST_INT, [2])})
     squeeze_node.set_input_node(0, [res_node])
@@ -104,7 +104,7 @@ def shape_dim_extend(mod, io_map):
     # NCD -> NCHW
     g_nodes = mod.get_nodes_by_optype("Conv")
     for g_node in g_nodes:
-        if g_node.name != "Conv_11" and mod.get_node(g_node.input_name[0]).op_type != "LeakyRelu":
+        if g_node.name != "Conv_2" and mod.get_node(g_node.input_name[0]).op_type != "LeakyRelu":
             rng = np.random.randint(0, 7393)
             unsqueeze_node = mod.add_new_node(f"Unsqueeze_{rng}", "Unsqueeze",
                                               {"axes": (AT.LIST_INT, [2])})
@@ -145,7 +145,7 @@ def make_model(input_onnx, output_onnx):
     # solve accuracy problem
     gather_nodes = mod.get_nodes_by_optype("Gather")
     for g_node in gather_nodes:
-        if g_node.name == 'Gather_203':
+        if g_node.name == 'Gather_112':
             indices_node = mod.add_const_node(f'Const_{g_node.input_name[1]}', np.array(28).astype('int64'))
             g_node.set_input_node(1, [indices_node])
 
@@ -153,7 +153,7 @@ def make_model(input_onnx, output_onnx):
     shape_dim_extend(mod, io_map)
 
     # conv split
-    conv_node = mod.get_node("Conv_11")
+    conv_node = mod.get_node("Conv_2")
     weight_node = mod.get_node(conv_node.input_name[1])
     weight_value = weight_node.const_value
 
