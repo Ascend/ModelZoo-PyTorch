@@ -22,6 +22,8 @@ from torch.cuda._utils import _get_device_index
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
+TORCH_MAJOR = int(torch.__version__.split('.')[0])
+TORCH_MINOR = int(torch.__version__.split('.')[1])
 
 def _find_tensors(obj):  # pragma: no cover
     r"""
@@ -93,7 +95,10 @@ class LightningDistributedDataParallel(DistributedDataParallel):
         return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
 
     def forward(self, *inputs, **kwargs):  # pragma: no cover
-        self._sync_params()
+        if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
+            self._sync_params()
+        else:
+            self._sync_params_and_buffers()
         if self.device_ids:
             # inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
             if len(self.device_ids) == 1:
