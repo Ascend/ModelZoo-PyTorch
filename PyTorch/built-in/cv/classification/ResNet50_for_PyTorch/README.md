@@ -138,7 +138,7 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
 
      ```
      bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size*所有卡数 --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
-     如若遇到逻辑卡号与物理卡号不一致的情况，请手动在./test/train_performance_multinodes.sh中添加传参，例如--device_list='0,1,2,3'
+     如若遇到逻辑卡号与物理卡号不一致的情况，请手动在./test/train_performance_multinodes.sh中添加传参，例如--device-list='0,1,2,3'
      ```
 
    --data\_path参数填写数据集路径。
