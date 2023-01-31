@@ -1,0 +1,6 @@
+onnx==1.10.2
+onnxruntime==1.10.0
+onnx-simplifier==0.3.6
+tqdm==4.62.3
+numpy==1.21.5
+torch==1.9.0

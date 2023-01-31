@@ -1,0 +1,1 @@
+python3 transformerxl_large_postprocess.py --om_out_path=${1} --target_path=${2}
