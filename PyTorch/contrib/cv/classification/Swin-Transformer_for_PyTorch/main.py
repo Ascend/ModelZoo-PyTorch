@@ -52,6 +52,7 @@ try:
 except ImportError:
     amp = None
 
+perf = False
 
 def parse_option():
     parser = argparse.ArgumentParser('Swin Transformer training and evaluation script', add_help=False)
@@ -90,6 +91,8 @@ def parse_option():
     parser.add_argument('--nnodes', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--node_rank', default=-1, type=int, help='node rank for distributed training')
     parser.add_argument('--nproc_per_node', default=8, type=int, help='rank size')
+    parser.add_argument('--perf', action='store_true', default=False, help='train steps')
+
 
     args, unparsed = parser.parse_known_args()
 
@@ -190,7 +193,11 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
     model.train()
     optimizer.zero_grad()
 
-    num_steps = len(data_loader)
+    if perf:
+        num_steps = 499
+    else:
+        num_steps = len(data_loader)
+
     batch_time = AverageMeter()
     loss_meter = AverageMeter()
     norm_meter = AverageMeter()
@@ -201,6 +208,11 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
     step_ign = 0
     for idx, (samples, targets) in enumerate(data_loader):
         date_meter.update((time.time() - end))
+
+        if perf:
+            if step_ign > 499:
+                break
+
         step_ign += 1
         if step_ign < 5:
             start = time.time()
@@ -342,7 +354,7 @@ def throughput(data_loader, model, logger):
 
 if __name__ == '__main__':
     args, config = parse_option()
-    
+    perf = args.perf
     option = {}
     option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
     k_dir = "./kernel_meta"
