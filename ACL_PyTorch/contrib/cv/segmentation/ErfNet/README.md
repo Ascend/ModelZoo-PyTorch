@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+  - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -55,7 +57,7 @@ ErfNet(Efficient Residual Factorized Network)是一个能够实现准确和快�
   | output1  | FLOAT32  | batchsize x 20 x 512 x 1024 | NCHW         |
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -181,14 +183,14 @@ ErfNet(Efficient Residual Factorized Network)是一个能够实现准确和快�
 
          - 参数说明：
 
-            - --model：为ONNX模型文件。
-            - --framework：5代表ONNX模型。
-            - --output：输出的OM模型。
-            - --input\_format：输入数据的格式。
-            - --input\_shape：输入数据的shape。
-            - --log：日志级别。
-            - --soc\_version：处理器型号。
-            - --output_type: 网络输出类型。
+            - --model：为ONNX模型文件
+            - --framework：5代表ONNX模型
+            - --output：输出的OM模型
+            - --input\_format：输入数据的格式
+            - --input\_shape：输入数据的shape
+            - --log：日志级别
+            - --soc\_version：处理器型号
+            - --output_type: 网络输出类型
 
           运行成功后生成ErfNet_bs1.om模型文件。
 

@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+   - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -55,7 +57,7 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
   | output   | FLOAT32  | 1 x 4 x 51 | ND           |
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -112,13 +114,13 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
       ```
       - 参数说明：
    
-         - “c51.model”：权重文件。
+         - “c51.model”：权重文件
 
-         - “c51.stats”：模型配置文件。
+         - “c51.stats”：模型配置文件
 
-         - “dataset/states”：stats输出的二进制文件（.pth）所在路径。
+         - “dataset/states”：stats输出的二进制文件（.pth）所在路径
 
-         - “dataset/actions”：action输出的二进制文件（.pth）所在路径。
+         - “dataset/actions”：action输出的二进制文件（.pth）所在路径
    
       运行成功后生成文件：
    
@@ -133,9 +135,9 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
       ```
       - 参数说明：
    
-         - “dataset/states”：预处理后的数据文件的相对路径。
+         - “dataset/states”：预处理后的数据文件的相对路径
 
-         - “dataset/bin”：生成的数据集文件保存的路径。
+         - “dataset/bin”：生成的数据集文件保存的路径
 
          - “dataset/out”：bin文件推理后的保存根目录
    
@@ -200,16 +202,16 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
 
          - 参数说明：
 
-            - --model：为ONNX模型文件。
-            - --framework：5代表ONNX模型。
-            - --output：输出的OM模型。
-            - --input\_format：输入数据的格式。
-            - --input\_shape：输入数据的shape。
-            - --log：日志级别。
-            - --soc\_version：处理器型号。
-            - --op_select_implmode: 高性能模式。
+            - --model：为ONNX模型文件
+            - --framework：5代表ONNX模型
+            - --output：输出的OM模型
+            - --input\_format：输入数据的格式
+            - --input\_shape：输入数据的shape
+            - --log：日志级别
+            - --soc\_version：处理器型号
+            - --op_select_implmode: 高性能模式
 
-           运行成功后生成c51_bs1.om模型文件。
+         运行成功后生成c51_bs1.om模型文件。
 
 2. 开始推理验证。
    
@@ -224,15 +226,15 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
 
          - 参数说明：
          
-            - --model:    om模型的路径
+            - --model：om模型的路径
 
-            - --input:    输入的bin文件目录
+            - --input：输入的bin文件目录
 
-            - --output:   推理结果输出路径
+            - --output：推理结果输出路径
          
-            - --outfmt:   输出数据的格式
+            - --outfmt：输出数据的格式
 
-            - --batchsize :   模型输入批次大小
+            - --batchsize：模型输入批次大小
    
          说明： 执行ais_bench工具请选择与运行环境架构相同的命令。
 
@@ -246,11 +248,11 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
 
          - 参数说明：
 
-            -   “dataset/actions”：保存的输出action的路径。
+            -   “dataset/actions”：保存的输出action的路径
 
-            -   “dataset/out/${time_stamp}”：离线推理结果的路径。
+            -   “dataset/out/${time_stamp}”：离线推理结果的路径
 
-            -  “1000”：参数输出比较的个数。
+            -  “1000”：参数输出比较的个数
    
    4. 性能验证。
 

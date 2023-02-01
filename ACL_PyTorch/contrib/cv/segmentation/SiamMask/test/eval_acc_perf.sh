@@ -8,18 +8,11 @@ export PYTHONPATH=$PYTHONPATH:$modeldir:$expdir
 
 
 cd $expdir
-python3.7 $workdir/SiamMask_test.py \
-    --config config_vot.json \
-    --mask --refine \
-    --dataset VOT2016\
-    --msame_path $workdir\
-    --save_path $workdir/om_io_files\
-    --om_path $workdir\
-    --device 0
+python3 $workdir/SiamMask_test.py --config config_vot.json --mask --refine --dataset VOT2016 --msame_path $workdir --save_path $workdir/om_io_files --om_path $workdir --device 0
 
 echo "====accuracy data===="
 cd $workdir
-python3.7 SiamMask_eval.py --dataset VOT2016 --tracker_prefix C --result_dir $expdir/test/VOT2016
+python3 SiamMask_eval.py --dataset VOT2016 --tracker_prefix C --result_dir $expdir/test/VOT2016
 
 arch=`uname -m`
 ./benchmark.${arch} -round=10 -om_path=mask.om -device_id=0 -batch_size=1 > perf_mask.txt

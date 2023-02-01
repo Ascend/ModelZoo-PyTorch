@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+   - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -18,26 +20,6 @@
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
 TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师BERT模型中的大量知识有效地萃取到小型学生BERT模型中，在加速推理和减少模型大小的同时保持准确性。
-
-- 参考实现：
-
-  ```
-  url=https://github.com/ShangtongZhang/DeepRL
-  branch=master
-  commit_id=13dd18042414ad112bd0bd383a836d8d739e8acf
-  model_name=C51
-  ``` 
- 
-  通过Git获取对应commit_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -86,7 +68,7 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型将使用到SST-2验证集的dev.tsv文件，通过[链接](https://cloud.easyscholar.cc/externalLinksController/chain/SST-2.zip?ckey=xpHPs51VaLh%2Fe6JlUc0mG6PEY%2BYHjBqk9LhT9WVYqL7eZu7WmXxb8m9Xxw6lf4ns)下载，获取成功后重命名为glue_dir/SST-2，放到当前工作目录即可。
+   本模型将使用到SST-2验证集的dev.tsv文件，通过[链接](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip)下载，获取成功后重命名为glue_dir/SST-2，放到当前工作目录即可。
 
 2. 数据预处理。
 
@@ -94,7 +76,7 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
    bash ./test/preprocess_data.sh
    ```
 
-   输出：input_ids, segment_ids, input_mask三个文件夹各放置872笔数据对应的二进制数据文件
+   输出：input_ids, segment_ids, input_mask三个文件夹各放置872笔数据对应的二进制数据文件。
    
 ## 模型推理<a name="section741711594517"></a>
 
@@ -108,15 +90,15 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
        
    2. 导出onnx文件。
 
-         pth权重文件转onnx，并对onnx进行简化
+         pth权重文件转onnx，并对onnx进行简化。
 
          ```
          bash ./test/pth2onnx.sh ${bs}
          ```
 
-         注：${bs}代表批大小
+         注：bs代表批大小。
 
-         输出：若执行bash ./test/pth2onnx.sh 1，则生成TinyBERT_bs1.onnx和TinyBERT_sim_bs1.onnx
+         输出：若执行bash ./test/pth2onnx.sh 1，则生成TinyBERT_bs1.onnx和TinyBERT_sim_bs1.onnx。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -124,9 +106,9 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
       bash ./test/onnx2om.sh ${bs} ${chip_name}
       ```
 
-      注：${bs}代表批大小；${chip_name}代表处理器型号
+      注：bs代表批大小；chip_name代表处理器型号。
 
-      输出：若执行bash ./test/onnx2om.sh 1 710，则生成TinyBERT_bs1.om
+      输出：若执行bash ./test/onnx2om.sh 1 310P3，则生成TinyBERT_bs1.om。
 
 2. 开始推理验证。
    
@@ -140,7 +122,7 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
          bash ./test/ais_inference.sh ${bs}
          ```
 
-         注：${bs}代表批大小
+         注：bs代表批大小。
 
          输出：若执行bash ./test/ais_inference.sh 1，则在当前路径的result文件夹内生成一个新的文件夹，同时在屏幕上打印出性能数据。
 
@@ -150,23 +132,23 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
          bash ./test/postprocess_data.sh ${filename}
          ```
 
-         注：${filename}代表步骤2中新生成文件夹的名字
+         注：filename代表步骤2中新生成文件夹的名字。
 
-         输出：若步骤2中在/result路径下新生成的文件夹名为ais_infer_result_bs1，执行命令bash ./test/postprocess_data.sh ais_infer_result_bs1,则会在屏幕上打印出精度数据
+         输出：若步骤2中在/result路径下新生成的文件夹名为ais_infer_result_bs1，执行命令bash ./test/postprocess_data.sh ais_infer_result_bs1,则会在屏幕上打印出精度数据。
 
-         将TinyBERT_sim.onnx上传至T4服务器，测试onnx性能
+         将TinyBERT_sim.onnx上传至T4服务器，测试onnx性能。
       
          ```
          trtexec --onnx=TinyBERT_sim_bs${bs}.onnx --workspace=5000 --threads
          ```
-         输出：得到GPU下的推理性能
+         输出：得到GPU下的推理性能。
    
    4. 性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 -m ais_bench --model c51_bs1.om --loop 1000 --batchsize 1
+      python3 -m ais_bench --model TinyBERT_bs1.om --loop 1000 --batchsize 1
       ```
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -185,8 +167,8 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
 
 备注：
 
-- 该模型不支持动态shape;
+- 该模型不支持动态shape
 
-- 性能单位:fps/card，精度为百分比;
+- 性能单位：fps/card，精度为百分比
 
-- bs指batch_size.
+- bs指batch_size

@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+   - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -55,7 +57,7 @@ SRCNN是一种一种用于单一图像超级分辨率的深度学习方法，该
   | 11       | FLOAT32  | batchsize x 1 x 256 x 256 | NCHW         |
 
 
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -182,13 +184,13 @@ SRCNN是一种一种用于单一图像超级分辨率的深度学习方法，该
 
          - 参数说明：
 
-            - --model：为ONNX模型文件。
-            - --framework：5代表ONNX模型。
-            - --output：输出的OM模型。
-            - --input_format：输入数据的格式。
-            - --input_shape：输入数据的shape。
-            - --log：日志级别。
-            - --soc_version：处理器型号。
+            - --model：为ONNX模型文件
+            - --framework：5代表ONNX模型
+            - --output：输出的OM模型
+            - --input_format：输入数据的格式
+            - --input_shape：输入数据的shape
+            - --log：日志级别
+            - --soc_version：处理器型号
 
            运行成功后生成srcnn_x2.om模型文件。
 
