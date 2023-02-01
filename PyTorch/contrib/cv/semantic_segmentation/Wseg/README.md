@@ -25,7 +25,6 @@ https://github.com/visinf/1-stage-wseg/tree/master/data
 ## Training
 
 To train a model, run `train_1P_NPU.py` or `train_8P_NPU.py` with the desired model architecture and the path to the sbd dataset:
-Attention: The performance of 8P needs to be multiplied by 8.
 ```bash
 # training 1p accuracy
 bash ./test/train_full_1P.sh --data_path=real_data_path

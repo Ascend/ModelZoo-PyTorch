@@ -180,7 +180,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 
-FPS=`grep -a 'Im/Sec: '  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_8P_${ASCEND_DEVICE_ID}_0.log|awk '{print $17}'|awk 'END {print}'`
+fps=`grep -a 'Im/Sec: '  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_8P_${ASCEND_DEVICE_ID}_0.log|awk '{print $17}'|awk 'END {print}'`
+FPS=`awk 'BEGIN{printf "%.2f\n", 8.0*'${fps}'}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
