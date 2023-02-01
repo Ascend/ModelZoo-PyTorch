@@ -25,6 +25,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -82,7 +84,7 @@ wait
 
 python3 ./main.py \
     --data ${data_path} \
-    --npu 0 \
+    --gpu ${device_id} \
     -a inception_v3 \
     -b ${batch_size} \
     --lr ${learning_rate} \

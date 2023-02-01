@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3 ./main-8p.py \
+python3 ./main.py \
     -a inception_v3 \
     --evaluate \
     --resume=${resume} \
