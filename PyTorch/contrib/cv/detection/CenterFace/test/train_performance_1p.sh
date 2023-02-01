@@ -6,7 +6,7 @@ export RANK_SIZE=1
 data_path=""
 
 #网络名称,同目录名称,需要模型审视修改
-Network="CenterFace"
+Network="CenterFace_ID4089_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=32
