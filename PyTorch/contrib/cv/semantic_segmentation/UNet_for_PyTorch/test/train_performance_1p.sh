@@ -38,6 +38,18 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+# 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+	device_id=$ASCEND_DEVICE_ID
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
+
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -73,7 +85,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 nohup python3.7.5 -u train.py \
-    ${data_path} \
+    ${data_path}/dsb2018_96 \
     --optimizer Adam \
     --epochs 1 \
     --batch_size 16 \
@@ -104,13 +116,13 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
 # 获取性能数据，不需要修改
 # 吞吐量
 ActualFPS=${FPS}
 # 单迭代训练时长
-TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
+TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep Epoch: ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
