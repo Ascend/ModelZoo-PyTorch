@@ -3,9 +3,9 @@
 This implements training of AlignedReID on the ImageNet dataset.
 - Reference implementation：
 ```
-url=https://github.com/pytorch/examples/blob/master/imagenet/main.py
+url=https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch
 branch=master 
-commit_id=49e1a8847c8c4d8d3c576479cb2fe2fd2ac583de
+commit_id=2e2d45450d69a3a81e15d18fe85c2eebbde742e4 
 ```
 
 ## AlignedReID Detail
