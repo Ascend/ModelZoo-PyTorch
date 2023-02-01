@@ -68,6 +68,7 @@ python3.7 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-1p \
   --data_dir $data_path \
   --dataset_name ydshieh/coco_dataset_script \
   --dataset_config_name=2017 \
+  --dataloader_num_workers 8 \
   --image_column image_path --caption_column caption \
   --remove_unused_columns=False \
   --do_train --do_eval --fp16 --dataloader_drop_last \
