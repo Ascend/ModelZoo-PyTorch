@@ -38,6 +38,13 @@ def parse_arg():
     parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
     parser.add_argument('--npu', help='npu id', type=str)
     parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
+    parser.add_argument('--pro', type=ast.literal_eval, default=False, help='enable control steps number')
+    parser.add_argument('--training_debug', type=ast.literal_eval, default=False, help='enable control train_model is debug')
+    parser.add_argument('--training_type', type=ast.literal_eval, default=False, help="enable control train_model is 'GE' or 'CANN'")
+    parser.add_argument('--profiling', type=str, default='NONE',help='choose profiling way--CANN,GE,NONE')
+    parser.add_argument('--max_step', default=10, type=int, help='start_step')
+    parser.add_argument('--start_step', default=0, type=int, help='start_step')
+    parser.add_argument('--stop_step', default=1000, type=int,help='stop_step')
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
         config = yaml.safe_load(f)
@@ -66,7 +73,7 @@ def main():
 
     # process_device_map = utils.device_id_to_process_device_map(config.DISTRIBUTED.DEVICE_LIST)
 
-    npus_per_node = 8
+    npus_per_node = int(os.environ["RANK_SIZE"])
     # if config.DISTRIBUTED.DEVICE_LIST !='':
     #     npus_per_node = len(process_device_map)
     # else:
@@ -172,7 +179,7 @@ def main():
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[npu], broadcast_buffers=False)
 
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
-    if distributed and config.DISTRIBUTED.RANK % npus_per_node == 0:
+    if config.DISTRIBUTED.RANK % npus_per_node == 0:
         checkpoint_dir, log_dir = utils.create_output_folder(config)
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):
         train(config, train_loader, train_dataset, converter, model, criterion, optimizer, device, epoch, npus_per_node,
@@ -182,7 +189,7 @@ def main():
         best_acc = max(acc, best_acc)
         print("is best:", is_best)
         print("best acc is:", best_acc)
-        if distributed and config.DISTRIBUTED.RANK % npus_per_node == 0:
+        if config.DISTRIBUTED.RANK % npus_per_node == 0:
             if config.TRAIN.AMP:
                 torch.save(
                     {
@@ -203,34 +210,56 @@ def main():
                     }, os.path.join(checkpoint_dir, "checkpoint_{}_acc_{:.4f}.pth".format(epoch, acc))
                 )
 
+class NoProfiling():
+    def __enter__(self):
+        ...
+    def __exit__(self):
+        ...
 
 def train(config, train_loader, dataset, converter, model, criterion, optimizer, device, epoch, npus_per_node, npu):
+    config, args = parse_arg()
     utils.seed_everything()
     batch_time = utils.AverageMeter()
     data_time = utils.AverageMeter()
     losses = utils.AverageMeter()
     model.train()
     end = time.time()
+    num_steps = 0
+    distributed = npus_per_node > 1
     for i, (inp, idx) in enumerate(train_loader):
-        data_time.update((time.time() - end) * 1000)
-        labels = idx
-        inp = inp.to(device)
-        preds = model(inp)
-        batch_size = inp.size(0)
-        text, length = converter.encode(labels)
-        preds_size = torch.IntTensor([preds.size(0)] * batch_size)  # timestep * batchsize
-        text = text.to(device)
-        length = length.to(device)
-        preds_size = preds_size.to(device)
-        loss = criterion(preds, text, preds_size, length)
-        optimizer.zero_grad()
-        if config.TRAIN.AMP:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+        if not distributed and args.training_debug and i >= args.max_step:
+            break
+        if not distributed and args.pro and i >= 1000:
+            break
+        if not distributed and args.training_type and args.num_steps > args.stop_step:
+            import sys
+            sys.exit()
+        elif not distributed and args.start_step<= num_steps <= args.stop_step and args.profiling == 'CANN':
+            profiling = torch.npu.profile(profiler_result_path="./CANN_prof")
+        elif not distributed and num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
+            profiling = torch.npu.profile(profiler_result_path="./GE_prof")
         else:
-            loss.backward()
-        optimizer.step()
-        losses.update(loss.item(), inp.size(0))
+            profiling = NoProfiling()
+        with profiling: 
+            data_time.update((time.time() - end) * 1000)
+            labels = idx
+            inp = inp.to(device)
+            preds = model(inp)
+            batch_size = inp.size(0)
+            text, length = converter.encode(labels)
+            preds_size = torch.IntTensor([preds.size(0)] * batch_size)  # timestep * batchsize
+            text = text.to(device)
+            length = length.to(device)
+            preds_size = preds_size.to(device)
+            loss = criterion(preds, text, preds_size, length)
+            optimizer.zero_grad()
+            if config.TRAIN.AMP:
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
+            optimizer.step()
+            losses.update(loss.item(), inp.size(0))
         if i == 9:
             batch_time.reset()
             data_time.reset()

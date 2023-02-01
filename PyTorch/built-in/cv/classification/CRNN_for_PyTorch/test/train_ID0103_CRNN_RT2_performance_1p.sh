@@ -110,7 +110,7 @@ sed -i "s|TEST_ROOT.*$|TEST_ROOT\: ${data_path}/IIIT5K_lmdb|g" ${cur_path}/LMDB_
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 
-python3 main.py \
+python3 main_8p.py \
     --bin=${bin}\
     --pro=${pro} \
     --training_debug=${training_debug} \
