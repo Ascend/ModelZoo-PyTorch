@@ -56,7 +56,7 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
 | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| paddlepaddle                                                 | 2.3.2   | -                                                            |
+| paddlepaddle                                                 | 2.3.2   | 仅支持x86环境安装                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -81,12 +81,11 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
    python3 setup.py install
    export PYTHONPATH=$(echo $(pwd)):$PYTHONPATH
    cd ..
-   git clone https://gitee.com/ascend/auto-optimizer.git
-   cd auto-optimizer
-   pip3 install -r requirements.txt
-   python3 setup.py install
-   cd ..
    ```
+
+3. 安装auto-optimizer工具
+
+   安装方式参考[auto-optimizer开源链接](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)。
 
 ## 准备数据集<a name="section183221994411"></a>
 
