@@ -85,7 +85,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 nohup python3.7.5 -u train.py \
-    ${data_path}/dsb2018_96 \
+    ${data_path} \
     --optimizer Adam \
     --epochs 1 \
     --batch_size 16 \
