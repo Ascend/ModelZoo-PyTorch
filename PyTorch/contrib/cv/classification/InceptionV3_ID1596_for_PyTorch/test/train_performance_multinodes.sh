@@ -95,7 +95,7 @@ do
   then
     PID_START=$((KERNEL_NUM*i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3 ./main-8p.py \
+    taskset -c $PID_START-$PID_END python3 ./main.py \
       -a inception_v3 \
       --amp \
       --loss_scale=128 \
@@ -118,7 +118,7 @@ do
       --label-smoothing=0.1 \
       --batch-size=${batch_size} > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
   else
-    python3 ./main-8p.py \
+    python3 ./main.py \
       -a inception_v3 \
       --amp \
       --loss_scale=128 \

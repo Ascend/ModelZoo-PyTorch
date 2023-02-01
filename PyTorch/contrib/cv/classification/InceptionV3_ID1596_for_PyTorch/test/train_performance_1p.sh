@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="InceptionV3_ID1596_for_PyTorch"
 # 训练batch_size
-batch_size=128
+batch_size=256
 # 训练使用的npu卡数
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
@@ -25,6 +25,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -82,7 +84,7 @@ wait
 
 python3 ./main.py \
     --data ${data_path} \
-    --npu 0 \
+    --gpu ${device_id} \
     -a inception_v3 \
     -b ${batch_size} \
     --lr ${learning_rate} \
