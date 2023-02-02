@@ -161,6 +161,7 @@ def parse_args():
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
     parser.add_argument("--profile", default=0, type=int)
+    parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
     config = parser.parse_args()
 
     return config
@@ -359,7 +360,8 @@ def validate(config, val_loader, model, criterion):
 
 def main():
     config = vars(parse_args())
-
+    if config['bin_mode']:
+        torch.npu.set_compile_mode(jit_compile=False)
     if config['name'] is None:
         if config['deep_supervision']:
             config['name'] = '%s_%s_wDS' % (config['dataset'], config['arch'])
