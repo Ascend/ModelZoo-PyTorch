@@ -49,9 +49,15 @@ from utils.Randaugmentations import Randaugment
 import math
 from PIL import Image
 import re
-import collections.abc as container_abcs
-string_classes = str
-int_classes = int
+
+TORCH_MAJOR = int(torch.__version__.split('.')[0])
+TORCH_MINOR = int(torch.__version__.split('.')[1])
+if TORCH_MAJOR == 1 and TORCH_MINOR <= 8:
+	from torch._six import container_abcs, string_classes, int_classes
+else:
+    import collections.abc as container_abcs
+    string_classes = str
+    int_classes = int
 
 np_str_obj_array_pattern = re.compile(r'[SaUO]')
 
