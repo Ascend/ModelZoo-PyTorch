@@ -117,6 +117,8 @@ parser.add_argument('--checkpoint-freq', default=0, type=int,
                                       'n: save diff file per n epoch'
                                       '-1:no checkpoint,not support')
 parser.add_argument('--device-list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
+parser.add_argument('--perf', default=False, action='store_true',
+                    help='use performance mode to train the model')
 # apex
 parser.add_argument('--amp', default=False, action='store_true',
                     help='use amp to train the model')
@@ -334,7 +336,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node)
 
-        if (epoch + 1) % (args.eval_freq) == 0 or epoch == args.epochs - 1:
+        if ((epoch + 1) % (args.eval_freq) == 0 or epoch == args.epochs - 1) and not args.perf:
             # evaluate on validation set
             acc1 = validate(val_loader, model, criterion, args, ngpus_per_node)
 
@@ -382,8 +384,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         optimizer.zero_grad()
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
-        if i > 100:
-            pass
+        if i > 100 and args.perf:
+            break
         data_time.update(time.time() - end)
 
         loc = 'npu:{}'.format(args.gpu)

@@ -127,6 +127,7 @@ nohup python3.7 ${cur_path}/main.py  \
       --epochs $train_epochs \
       --dist-backend 'hccl' \
       --stop-step-num 50 \
+      --perf \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
