@@ -79,6 +79,7 @@ if [ $(uname -m) = "aarch64" ]; then
       --image_column image_path --caption_column caption \
       --remove_unused_columns=False \
       --do_train --do_eval --fp16 --dataloader_drop_last \
+      --dataloader_num_workers 8 \
       --fp16_opt_level O2 --loss_scale 12800000 --use_combine_grad \
       --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
       --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
@@ -92,6 +93,7 @@ else
     --model_name_or_path "$model_path" \
     --data_dir $data_path \
     --dataset_name ydshieh/coco_dataset_script \
+    --dataloader_num_workers 8 \
     --dataset_config_name=2017 \
     --image_column image_path --caption_column caption \
     --remove_unused_columns=False \
