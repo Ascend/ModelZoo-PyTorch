@@ -78,7 +78,7 @@ wait
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-python3 -m torch.distributed.launch --nproc_per_node=8 8p_npu_main.py --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120'  --port='34577' --num_epochs=160 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 -m torch.distributed.launch --nproc_per_node=8 8p_npu_main.py --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120'  --port='29500' --num_epochs=160 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 python3 test_wider_face.py >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
