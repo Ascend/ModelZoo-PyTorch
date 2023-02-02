@@ -19,7 +19,7 @@ train_epochs=1
 device_id=0
 # 学习率
 learning_rate=0.001
-
+bin_mode=0
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -29,6 +29,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --more_path1* ]];then
         more_path1=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=1
     fi
 done
 
@@ -64,7 +66,6 @@ fi
 
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -85,6 +86,8 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 nohup python3.7.5 -u train.py \
+    --device_id $device_id \
+    --bin_mode ${bin_mode} \
     ${data_path} \
     --optimizer Adam \
     --epochs 1 \
@@ -103,6 +106,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $NF}'|awk 'END {print}'`
+CompileTime=`grep Epoch  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep Time|head -n 2|awk -F "Time" '{print$2}'|awk '{sum+=$1} END {print sum}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -141,3 +145,4 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
