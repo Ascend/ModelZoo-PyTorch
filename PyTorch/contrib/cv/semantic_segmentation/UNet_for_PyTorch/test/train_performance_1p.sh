@@ -64,7 +64,6 @@ fi
 
 
 #################创建日志输出目录，不需要修改#################
-ASCEND_DEVICE_ID=0
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
     rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
@@ -85,6 +84,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 nohup python3.7.5 -u train.py \
+    --device_id $device_id \
     ${data_path} \
     --optimizer Adam \
     --epochs 1 \

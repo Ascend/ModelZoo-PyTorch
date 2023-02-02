@@ -155,6 +155,7 @@ def parse_args():
     
     parser.add_argument('--num_workers', default=4, type=int)
     parser.add_argument("--device", default="npu", type=str)
+    parser.add_argument("--device_id", default=0, type=int)
     parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                         help='evaluate model on validation set')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
@@ -381,9 +382,9 @@ def main():
     if config['num_gpus'] > 1:
         init_process_group(proc_rank=config['rank_id'], world_size=config['num_gpus'], device_type=config['device'])
     elif config['device'] == "npu":
-        torch.npu.set_device(0)
+        torch.npu.set_device(config['device_id'])
     elif config['device'] == "gpu":
-        torch.cuda.set_device(0)
+        torch.cuda.set_device(config['device_id'])
 
     loc = ""
     if config['device'] == "npu":  
