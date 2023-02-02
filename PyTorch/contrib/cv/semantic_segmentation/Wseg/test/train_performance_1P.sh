@@ -8,16 +8,20 @@ Network="Wseg_for_PyTorch"
 batch_size=16
 # 训练使用的npu卡数
 export RANK_SIZE=1
+#设置是否进行验证
+export RUN_VALIDATION=0
 # 数据集路径,保持为空,不需要修改
 data_path=""
 # 训练epoch
-train_epochs=6
+train_epochs=4
 ## 指定训练所使用的npu device卡id
 device_id=0
 ## 加载数据进程数
-workers=8
+workers=20
 ## 学习率设置  8P为0.008，1P为0.001
 LR=0.001
+#分布式进程数设置
+world_size=1
 
 # 设置数据集参数
 DS=pascal_voc
@@ -72,12 +76,10 @@ data_path=\"${data_path}\"
 sed -i 's#DATA_ROOT:.*$#DATA_ROOT: '$data_path'#' ${yaml_path}
 sed -i 's#NUM_WORKERS:.*$#NUM_WORKERS: '$workers'#' ${yaml_path}
 sed -i 's#NUM_EPOCHS:.*$#NUM_EPOCHS: '$train_epochs'#' ${yaml_path}
-#sed -i '0,s#TRAIN:BATCH_SIZE:.*$#BATCH_SIZE: '$batch_size'#' ${yaml_path}
-#sed -i "0,/batch_size.*$/s//batch_size\ = ${batch_size}/g" ${argsFilePath}
+#sed -i 's#TRAIN:BATCH_SIZE:.*$#BATCH_SIZE: '$batch_size'#' ${yaml_path}
 sed -i 's#LR:.*$#LR: '$LR'#' ${yaml_path}
 
 echo "exchange confige!"
-
 #################创建日志输出目录，不需要修改#################
 
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
@@ -86,7 +88,6 @@ if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
 else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
-
 
 #################启动训练（train）脚本#################
 #训练开始时间，不需要修改
@@ -98,72 +99,21 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log
-python3.7 train_1P_NPU.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $ASCEND_DEVICE_ID > $TRAIN_LOG_FILE 2>&1 &
-echo "LOG: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log"
 
-wait
+export MASTER_ADDR=localhost
+export MASTER_PORT=1222
 
-
-#################启动验证(infer)脚本#################
-
-# 预测阶段参数
-# 加载最佳模型文件
-model_id=`grep -a 'Saving checkpoint with score'  $TRAIN_LOG_FILE`
-best_epoch=${model_id:0-2:2}
-best_score=${model_id:0-18:4}
-md_id=${model_id:0:5}
-echo $model_id
-echo $best_epoch
-echo $best_score
-SNAPSHOT=e0${best_epoch}Xs0.${best_score:0-4:1}${best_score:0-2:2}
-# 无需填写
-EXTRA_ARGS=
-# limiting threads
-NUM_THREADS=6
-
-set OMP_NUM_THREADS=$NUM_THREADS
-export OMP_NUM_THREADS=$NUM_THREADS
-
-# Code goes here
-
-LISTNAME=`basename $FILELIST .txt`
-SAVE_DIR=${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_1P_${ASCEND_DEVICE_ID}
-LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_1P_${ASCEND_DEVICE_ID}.log
-#echo 1
-
-if [ ! -d $SAVE_DIR ]; then
-  echo "Creating directory: $SAVE_DIR"
-  mkdir -p $SAVE_DIR
+if [ $(uname -m) = "aarch64" ];then
+    let p_start=0
+    let p_end=23
+    TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log
+    taskset -c $p_start-$p_end python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank ${ASCEND_DEVICE_ID} --workers ${workers} --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
+    echo "LOG: $TRAIN_LOG_FILE"
 else
-  echo "Saving to: $SAVE_DIR"
+    workers=8
+    python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank ${ASCEND_DEVICE_ID} --workers ${workers} --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
 fi
-
-python3.7 infer_val.py --dataset $DS \
-                         --cfg $CONFIG \
-                         --exp $EXP \
-                         --run $RUN_ID \
-                         --resume $SNAPSHOT \
-                         --infer-list $FILELIST \
-                         --workers $NUM_THREADS \
-                         --mask-output-dir $SAVE_DIR \
-                         --local_rank $ASCEND_DEVICE_ID \
-                         $EXTRA_ARGS > $LOG_FILE 2>&1 &
-
 wait
-
-##################计算并获取精度################
-
-LISTNAME=`basename $FILELIST .txt`
-
-# without CRF
-data_path_len=${#data_path}
-data_path=${data_path:1:data_path_len-2}
-python3.7 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
-
-wait
-
-echo "Log: ${SAVE_DIR}.eval"
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -178,11 +128,7 @@ FPS=`grep -a 'Im/Sec: '  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
-#输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'mIoU: '  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_1P_${ASCEND_DEVICE_ID}.eval|awk '{print $2}'|awk 'END {print}'`
-
 #打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总
@@ -215,6 +161,5 @@ echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

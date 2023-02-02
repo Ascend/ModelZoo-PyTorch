@@ -18,6 +18,8 @@ device_id=0
 workers=8
 ## 学习率设置  8P为0.008，1P为0.001
 LR=0.001
+#分布式进程数设置
+world_size=1
 
 # 设置数据集参数
 DS=pascal_voc
@@ -100,8 +102,11 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
+export MASTER_ADDR=localhost
+export MASTER_PORT=1222
+
 TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log
-python3.7 train_1P_NPU.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $ASCEND_DEVICE_ID > $TRAIN_LOG_FILE 2>&1 &
+python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $ASCEND_DEVICE_ID --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
 echo "LOG: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}"
 
 wait

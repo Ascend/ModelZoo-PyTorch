@@ -14,11 +14,13 @@
 
 import os
 import re
+import apex
 import torch
 import math
 import numpy as np
 
 import torchvision.utils as vutils
+import matplotlib.font_manager as fm
 
 from PIL import Image, ImageDraw, ImageFont
 from utils.checkpoints import Checkpoint
@@ -110,24 +112,17 @@ class BaseTrainer(object):
     @staticmethod
     def get_optim(params, cfg):
 
-        if not hasattr(torch.optim, cfg.OPT):
-            print("Optimiser {} not supported".format(cfg.OPT))
-            raise NotImplementedError
-
-        optim = getattr(torch.optim, cfg.OPT)
-
         if cfg.OPT == 'Adam':
             upd = torch.optim.Adam(params, lr=cfg.LR, \
                                    betas=(cfg.BETA1, 0.999), \
                                    weight_decay=cfg.WEIGHT_DECAY)
+        elif cfg.OPT == 'NpuFusedSGD':
+            upd = apex.optimizers.NpuFusedSGD(params, lr=cfg.LR, momentum=cfg.MOMENTUM, weight_decay=cfg.WEIGHT_DECAY)
         elif cfg.OPT == 'SGD':
             print("Using SGD >>> learning rate = {:4.3e}, momentum = {:4.3e}, weight decay = {:4.3e}".format(cfg.LR, cfg.MOMENTUM, cfg.WEIGHT_DECAY))
             upd = torch.optim.SGD(params, lr=cfg.LR, \
                                   momentum=cfg.MOMENTUM, \
                                   weight_decay=cfg.WEIGHT_DECAY)
-
-        else:
-            upd = optim(params, lr=cfg.LR)
 
         upd.zero_grad()
 
