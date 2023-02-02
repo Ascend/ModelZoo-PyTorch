@@ -40,7 +40,8 @@ def add_global_arguments(parser):
                         help="Path to a file list")
     parser.add_argument("--mask-output-dir", type=str, default='results/',
                         help="Path where to save masks")
-
+    parser.add_argument('--world-size', default=8, type=int,
+                        help='number of distributed processes')
     #
     # Configuration
     #
