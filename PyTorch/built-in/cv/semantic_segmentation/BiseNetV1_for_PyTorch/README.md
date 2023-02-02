@@ -113,13 +113,15 @@ cd $BiseNetV1_for_PyTorch
 bash ./test/train_performance_8p.sh
 ```
 
-### Training result for `BiseNetV1`
+### Training result for `BiseNetV1` (training with BN)
 
-| mIoU | FPS | Npu_nums | Steps | AMP_Type | CPU |
-|:----:|:---:|:--------:|:-----:|:--------:|:---:|
-|  -   |  -  |    1     |  400  |    O1    | ARM |
-|  -   |  -  |    8     |  400  |    O1    | ARM |
-|  -   |  -  |    8     | 40000 |    O1    | ARM |
+| Name      | mIoU  | FPS |  Device  | Npu_nums | Steps | AMP_Type | CPU |
+|-----------|:-----:|:---:|:--------:|:--------:|:-----:|:--------:|:---:|
+| 1p-*PU    |   -   |  9  |    -     |    -     |  400  |    O1    | x86 |
+| 1p-NPU1.8 |   -   | 12  |   910A   |    1     |  400  |    O1    | ARM |
+| 8p-*PU    | 75.80 | 62  |    -     |    -     | 40000 |    O1    | x86 |
+| 8p-NPU1.8 |   -   | 88  |   910A   |    8     |  400  |    O1    | ARM |
+| 8p-NPU1.8 | 76.03 | 88  |   910A   |    8     | 40000 |    O1    | ARM |
 
 ### Notes
 It is recommended to use `python` or `python3.7` to execute the model training process. If you need to use `python3`, run the following commands before using `python3` due to the `2to3` dependency.
