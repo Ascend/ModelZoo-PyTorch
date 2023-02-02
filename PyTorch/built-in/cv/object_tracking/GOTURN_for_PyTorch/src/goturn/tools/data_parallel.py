@@ -95,7 +95,7 @@ class LightningDistributedDataParallel(DistributedDataParallel):
         return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
 
     def forward(self, *inputs, **kwargs):  # pragma: no cover
-        if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
+        if TORCH_MAJOR == 1 and TORCH_MINOR <= 8:
             self._sync_params()
         else:
             self._sync_params_and_buffers()

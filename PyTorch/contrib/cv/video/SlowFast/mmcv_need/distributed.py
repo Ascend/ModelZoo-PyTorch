@@ -60,7 +60,7 @@ class MMDistributedDataParallel(DistributedDataParallel):
                       logger='mmcv')
 
         if getattr(self, 'require_forward_param_sync', True):
-            if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
+            if TORCH_MAJOR == 1 and TORCH_MINOR <= 8:
                 self._sync_params()
             else:
                 self._sync_params_and_buffers()
@@ -104,7 +104,7 @@ class MMDistributedDataParallel(DistributedDataParallel):
                       logger='mmcv')
 
         if getattr(self, 'require_forward_param_sync', True):
-            if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
+            if TORCH_MAJOR == 1 and TORCH_MINOR <= 8:
                 self._sync_params()
             else:
                 self._sync_params_and_buffers()
