@@ -88,12 +88,18 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=""
+else
+    PREC=" --fp16 --fp16-scale-window 1500 \ "
+fi
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
-
+echo "cur_path:${cur_path}"
 #python3 setup.py build_ext --inplace 
 pip3 install --editable . 
 #sed -i "s|pass|break|g" train.py
@@ -144,13 +150,12 @@ do
 	    --encoder-attention-heads 4 \
 	    --encoder-ffn-embed-dim 1024 \
 	    --seed 12345 \
-	    --fp16 \
-	    --fp16-scale-window 1500 \
+	    $PREC \
 	    --ddp-backend no_c10d \
 	    --disable-validation \
 	    --distributed-no-spawn \
 	    --max-tokens 15000 \
-        --max-sentences 1000 \
+            --max-sentences 1000 \
 	    --required-batch-size-multiple 32 \
 	    --batch-size ${batch_size} \
             --max-epoch 1 \
@@ -214,4 +219,3 @@ echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Ca
 echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
