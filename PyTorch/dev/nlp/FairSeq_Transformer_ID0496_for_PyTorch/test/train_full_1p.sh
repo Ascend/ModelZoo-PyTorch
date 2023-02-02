@@ -88,6 +88,12 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=""
+else
+    PREC=" --fp16 --fp16-scale-window 1500 \ "
+fi
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -144,13 +150,12 @@ do
 	    --encoder-attention-heads 4 \
 	    --encoder-ffn-embed-dim 1024 \
 	    --seed 12345 \
-	    --fp16 \
-	    --fp16-scale-window 1500 \
+	    $PREC \
 	    --ddp-backend no_c10d \
 	    --disable-validation \
 	    --distributed-no-spawn \
-        --max-tokens 15000 \
-        --max-sentences 1000 \
+            --max-tokens 15000 \
+            --max-sentences 1000 \
 	    --required-batch-size-multiple 32 \
 	    --batch-size 512 \
             --max-epoch 2000 \

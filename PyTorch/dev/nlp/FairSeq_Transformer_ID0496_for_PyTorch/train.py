@@ -459,6 +459,12 @@ def cli_main():
     args = options.parse_args_and_arch(parser)
     if args.bin :
         torch.npu.set_compile_mode(jit_compile=False)
+    
+    option = {}
+    if not args.fp16:
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+    option["MM_BMM_ND_ENABLE"] = "enable"
+    torch.npu.set_option(option)
 
     if args.distributed_init_method is None:
         distributed_utils.infer_init_method(args)
