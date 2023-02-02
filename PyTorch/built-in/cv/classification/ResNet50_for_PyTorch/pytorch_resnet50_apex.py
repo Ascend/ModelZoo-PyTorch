@@ -652,20 +652,12 @@ class LabelSmoothing(nn.Module):
         self.smoothing = smoothing
 
     def forward(self, x, target):
-        # 图模式
-        if args.graph_mode:
-            logprobs = torch.nn.functional.log_softmax(x, dim=-1)
-        else:
-            logprobs = torch.nn.functional.log_softmax(x, dim=-1).to("cpu")
-        nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1))
+        logprobs = torch.nn.functional.log_softmax(x, dim=-1)
+        nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1)).to(CALCULATE_DEVICE)
         nll_loss = nll_loss.squeeze(1)
         smooth_loss = -logprobs.mean(dim=-1)
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
-        # 图模式
-        if args.graph_mode:
-            return loss.mean()
-        else:
-            return loss.mean().to(CALCULATE_DEVICE)
+        return loss.mean()
 
 def lr_policy(lr_fn, logger=None):
     if logger is not None:
