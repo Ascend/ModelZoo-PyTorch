@@ -10,6 +10,19 @@ from typing import Optional
 import numpy as np
 from datasets import ClassLabel, load_dataset, load_metric
 
+import torch
+try:
+    import torch_npu
+except Exception as e:
+    print('ERROR: Only supports torch >= 1.8 with torch_npu installed.')
+    raise e
+from torch_npu.contrib import transfer_to_npu
+
+torch.npu.set_compile_mode(jit_compile=False)
+option = {}
+option["MM_BMM_ND_ENABLE"] = 'disable'
+torch.npu.set_option(option)
+
 import layoutlmft.data.datasets.xfun
 import transformers
 from layoutlmft.data import DataCollatorForKeyValueExtraction
@@ -27,6 +40,7 @@ from transformers import (
 )
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from transformers.utils import check_min_version
+from layoutlmft.utils import NPUTrainingArguments
 
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
@@ -37,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 def main():
 
-    parser = HfArgumentParser((ModelArguments, XFUNDataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser((ModelArguments, XFUNDataTrainingArguments, NPUTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.

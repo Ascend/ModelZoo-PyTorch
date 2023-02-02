@@ -8,6 +8,19 @@ import sys
 import numpy as np
 from datasets import ClassLabel, load_dataset
 
+import torch
+try:
+    import torch_npu
+except Exception as e:
+    print('ERROR: Only supports torch >= 1.8 with torch_npu installed.')
+    raise e
+from torch_npu.contrib import transfer_to_npu
+
+torch.npu.set_compile_mode(jit_compile=False)
+option = {}
+option["MM_BMM_ND_ENABLE"] = 'disable'
+torch.npu.set_option(option)
+
 import layoutlmft.data.datasets.xfun
 import transformers
 from layoutlmft import AutoModelForRelationExtraction
@@ -25,6 +38,7 @@ from transformers import (
     set_seed,
 )
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
+from layoutlmft.utils import NPUTrainingArguments
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +49,7 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, XFUNDataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser((ModelArguments, XFUNDataTrainingArguments, NPUTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.

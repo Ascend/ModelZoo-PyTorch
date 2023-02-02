@@ -18,7 +18,7 @@ from .models.layoutxlm import (
     LayoutXLMTokenizer,
     LayoutXLMTokenizerFast,
 )
-
+from .utils import NPUTrainingArguments
 
 CONFIG_MAPPING.update([("layoutlmv2", LayoutLMv2Config), ("layoutxlm", LayoutXLMConfig)])
 MODEL_NAMES_MAPPING.update([("layoutlmv2", "LayoutLMv2"), ("layoutxlm", "LayoutXLM")])
