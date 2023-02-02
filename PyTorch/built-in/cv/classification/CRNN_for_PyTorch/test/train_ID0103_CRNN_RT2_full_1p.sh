@@ -100,6 +100,12 @@ fi
 #################启动训练脚本#################
 #训练开始时间，不需要修改
 start_time=$(date +%s)
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 
 # 必要参数替换配置文件
 cur_path=`pwd`
@@ -110,7 +116,7 @@ sed -i "s|TEST_ROOT.*$|TEST_ROOT\: ${data_path}/IIIT5K_lmdb|g" ${cur_path}/LMDB_
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 
-python3 main.py \
+python3 main_8p.py \
     --bin=${bin}\
     --pro=${pro} \
     --training_debug=${training_debug} \

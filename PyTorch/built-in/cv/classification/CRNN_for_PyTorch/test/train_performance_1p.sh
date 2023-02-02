@@ -90,8 +90,9 @@ export SWITCH_MM_OUTPUT_ENABLE=1
 /usr/local/Ascend/driver/tools/msnpureport -g error -d 0
 /usr/local/Ascend/driver/tools/msnpureport -g error -d 4
 
-python3.7 main.py \
-    --cfg LMDB_config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3.7 main_8p.py \
+    --cfg LMDB_config.yaml \
+    --npu $ASCEND_DEVICE_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     
 wait
 
