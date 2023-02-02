@@ -213,11 +213,11 @@ def main():
 class NoProfiling():
     def __enter__(self):
         ...
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         ...
 
 def train(config, train_loader, dataset, converter, model, criterion, optimizer, device, epoch, npus_per_node, npu):
-    config, args = parse_arg()
+    _, args = parse_arg()
     utils.seed_everything()
     batch_time = utils.AverageMeter()
     data_time = utils.AverageMeter()
