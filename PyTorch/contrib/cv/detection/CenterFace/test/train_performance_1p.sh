@@ -28,9 +28,9 @@ do
 done
 
 if [[ $precision_mode == "must_keep_origin_dtype" ]];then
-    PREC=""
+    PREC=" --use_fp32 "
 else
-    PREC=" --use_fp16 "
+    PREC=""
 fi
 
 #校验是否传入data_path,不需要修改
