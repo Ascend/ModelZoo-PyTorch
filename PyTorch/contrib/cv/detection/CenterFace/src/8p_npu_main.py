@@ -42,8 +42,6 @@ def main(opt, qtepoch=[0,]):
   opt = opts().update_dataset_info_and_set_heads(opt, Dataset)
   if opt.local_rank ==0:
     print(opt)
-  os.environ['MASTER_ADDR'] = '127.0.0.1'
-  os.environ['MASTER_PORT'] = opt.port
   device_id = int(opt.device_list.split(',')[int(opt.local_rank)])
   opt.device = 'npu:{}'.format(device_id)
  
