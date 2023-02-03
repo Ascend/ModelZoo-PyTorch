@@ -109,6 +109,8 @@ echo "Final Performance images/sec : $FPS"
 #打印，不需要修改
 #echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
+#输出编译时间
+CompileTime=`grep "FPS:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | head -n 2|awk -F "Iter_Time: " '{print $2}' |awk '{sum += $1} END {print sum}'`
 
 #性能看护结果汇总
 #训练用例信息，不需要修改
@@ -137,3 +139,4 @@ echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${
 echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
