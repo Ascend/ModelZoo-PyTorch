@@ -59,7 +59,10 @@ def main(args):
     cfg = get_config(args.config)
     # global control random seed
     setup_seed(seed=cfg.seed, cuda_deterministic=False)
-
+    if not cfg.fp16:
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+        torch.npu.set_option(option)
     torch.npu.set_device(args.local_rank)
 
     os.makedirs(cfg.output, exist_ok=True)

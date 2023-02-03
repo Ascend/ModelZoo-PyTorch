@@ -18,12 +18,20 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
     fi
 done
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=""
+else
+    PREC=" --use_fp16 "
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -88,7 +96,7 @@ make
 wait
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-python3.7.5 main.py  --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3.7.5 main.py $PREC --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
@@ -110,7 +118,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 #获取性能数据，不需要修改
 #吞吐量
