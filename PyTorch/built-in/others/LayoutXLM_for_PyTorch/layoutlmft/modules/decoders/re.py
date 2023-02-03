@@ -102,7 +102,8 @@ class REDecoder(nn.Module):
 
     def get_predicted_relations(self, logits, relations, entities):
         pred_relations = []
-        for i, pred_label in enumerate(logits.argmax(-1)):
+        logits_list = logits.argmax(-1).tolist() # To reduce h2d-copy, for higher efficiency
+        for i, pred_label in enumerate(logits_list):
             if pred_label != 1:
                 continue
             rel = {}

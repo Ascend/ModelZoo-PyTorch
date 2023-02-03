@@ -159,7 +159,7 @@ class LayoutLMv2SelfAttention(nn.Module):
             attention_scores += rel_pos
         if self.has_spatial_attention_bias:
             attention_scores += rel_2d_pos
-        attention_scores = attention_scores.float().masked_fill_(attention_mask.to(torch.bool), float("-inf"))
+        attention_scores = attention_scores.float().masked_fill_(attention_mask.to(torch.bool), -10000.)
         attention_probs = F.softmax(attention_scores, dim=-1, dtype=torch.float32).type_as(value_layer)
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
@@ -564,7 +564,8 @@ class VisualBackbone(nn.Module):
             and torch.distributed.get_rank() > -1
         ):
             self_rank = torch.distributed.get_rank()
-            node_size = torch.cuda.device_count()
+            # To avoid exceptions training with 4 devices, while NPU not supporting 'CUDA_VISIBLE_DEVICES' yet.
+            node_size = torch.distributed.get_world_size()
             world_size = torch.distributed.get_world_size()
             assert world_size % node_size == 0
 
