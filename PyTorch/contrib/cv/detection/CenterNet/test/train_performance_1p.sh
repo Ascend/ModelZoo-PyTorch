@@ -107,7 +107,7 @@ echo "Final Performance images/sec : $FPS"
 echo "E2E Training Duration sec : $e2e_time"
 
 #输出编译时间
-CompileTime=`grep iter_time ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| head -n 2 |awk -F "iter_time = " '{print $2}' | awk '{sum+=$1} END {print"",sum}' |sed s/[[:space:]]//g`
+CompileTime=`grep 'iter_time' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 2|awk -F "iter_time = " '{print $2}'| awk '{print $1}'|awk '{sum += $1} END {print sum}'`
 
 #性能看护结果汇总
 #训练用例信息，不需要修改
