@@ -49,8 +49,8 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
   | 配套       | 版本                                                                           |
   |------------------------------------------------------------------------------| ------------------------------------------------------------ |
   | 硬件 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
-  | 固件与驱动 | [6.0.rc1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
+  | 固件与驱动 | [6.0.0](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
+  | CANN       | [6.0.0](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
   | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)                       |
 
 - 环境准备指导。
@@ -114,6 +114,19 @@ pip install -r requirements.txt
    pip3.7 list | grep mm
    ```
 
+4.编译安装Opencv-python
+
+为了获得最好的图像处理性能，***请编译安装opencv-python而非直接安装***。编译安装步骤如下：
+
+```
+export GIT_SSL_NO_VERIFY=true
+git clone https://github.com/opencv/opencv.git
+cd opencv
+mkdir -p build
+cd build
+cmake -D BUILD_opencv_python3=yes -D BUILD_opencv_python2=no -D PYTHON3_EXECUTABLE=/usr/local/python3.7.5/bin/python3.7m -D PYTHON3_INCLUDE_DIR=/usr/local/python3.7.5/include/python3.7m -D PYTHON3_LIBRARY=/usr/local/python3.7.5/lib/libpython3.7m.so -D PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/python3.7.5/lib/python3.7/site-packages/numpy/core/include -D PYTHON3_PACKAGES_PATH=/usr/local/python3.7.5/lib/python3.7/site-packages -D PYTHON3_DEFAULT_EXECUTABLE=/usr/local/python3.7.5/bin/python3.7m ..
+make -j$nproc
+make 
 ## 准备数据集
 
    用户自行获取coco2017数据集，上传至服务器并解压，解压后目录如下所示：
@@ -180,15 +193,16 @@ pip install -r requirements.txt
 | NAME     | Acc@1 |  FPS | Epochs | AMP_Type | PyTorch版本 |
 |----------| ----- | ---: |--------| -------: | -------:    |
 | 1p-NPU   | -     |  8   | 273      |        - |       1.5   |
-| 1p-NPU   | -     |  30  | 273      |       O2 |       1.8   |
+| 1p-NPU   | -     |  118  | 273      |       O2 |       1.8   |
 | 8p-NPU   | 27    | 41   | 273    |        - |       1.5   |
-| 8p-NPU   | 25.5 | 243  | 273    |       O2 |       1.8   |
+| 8p-NPU   | 25.5 | 948  | 273    |       O2 |       1.8   |
 
 
 
 # 版本说明
 
 ## 变更
+2023.2.3：更新基线
 
 2022.9.28：更新内容，重新发布。
 
