@@ -8,6 +8,8 @@
 谢谢！
 
 ## 支持模型列表（按字母顺序排序）
+>**说明：** 
+>以下无精度指标的模型均需人工与在线推理结果比较
 
 ##  规范模型
 CV-classfication
@@ -488,12 +490,11 @@ CV-gan
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=1>精度</th>
+        <th align="center" rowspan=2>精度</th>
 	<th colspan=2>最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
-    <tr>
-        <td nowrap="nowrap">推理结果对比</td>
+    <tr>   
         <td>310P</td>
         <td>310</td>
     </tr>
@@ -502,7 +503,7 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/StarGAN">  StarGAN </a>
         </td>
         <td>celeba</td>
-	<td>与在线推理结果一致</td>
+        <td></td>
 	<td>1281(bs8)</td>
         <td></td>
 	<td nowrap="nowrap">bs x 3 x 128 x 128 <br> bs x 5</td>
@@ -512,7 +513,7 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/StyleGAN2-ADA">   StyleGAN2-ADA </a>
         </td>
         <td>代码仓提供</td>
-	<td>与在线推理结果一致</td>
+        <td></td>
 	<td></td>
         <td>19(bs1)</td>
 	<td nowrap="nowrap">1 x 512</td>
@@ -615,14 +616,13 @@ Audio
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=4>精度</th>
+        <th align="center" colspan=3>精度</th>
 	<th rowspan=2>310P最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
         <td nowrap="nowrap">WER</td>
         <td>CER</td>
-        <td>人工判断语音质量</td>
         <td>Acc</td>
     </tr>
     <tr>
@@ -632,7 +632,6 @@ Audio
         <td>an4</td>
 	<td>9.573</td>
         <td>5.515</td>
-        <td></td>
         <td></td>
 	<td>7.74(bs32)</td>
 	<td nowrap="nowrap">bs x 1 x 161 x 621 <br> bs x 1</td>
@@ -645,7 +644,6 @@ Audio
 	<td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>430(分档)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
@@ -656,7 +654,6 @@ Audio
         <td>LJSpeech</td>
 	<td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
 	<td>11.9(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
@@ -668,7 +665,6 @@ Audio
         <td>LJSpeech</td>
 	<td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
 	<td>682(bs8 mel_len:250)</td>
 	<td nowrap="nowrap">多尺度</td>
@@ -680,7 +676,6 @@ Audio
         <td>LJSpeech</td>
 	<td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
 	<td>33508(bs16)</td>
 	<td nowrap="nowrap">多尺度</td>
@@ -691,7 +686,6 @@ Audio
         </td>
         <td>Mini Librispeech</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td>99.93%</td>
 	<td>1682(bs64)</td>
@@ -704,12 +698,11 @@ Nlp
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=2>精度</th>
+        <th align="center" colspan=1>精度</th>
 	<th rowspan=2>310P最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
-        <td nowrap="nowrap">人工判断语句是否相符</td>
         <td>Acc</td>
     </tr>
     <tr>
@@ -717,7 +710,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/albert">  albert </a>
         </td>
         <td>SST-2</td>
-	<td></td>
         <td>92.8%</td>
 	<td>1327(bs8)</td>
 	<td nowrap="nowrap">bs x 128</td>
@@ -727,7 +719,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Bert_Base_Chinese_for_Pytorch">  Bert_Base_Chinese_for_Pytorch </a>
         </td>
         <td>zhwiki</td>
-	<td></td>
         <td>77.94%</td>
 	<td>254(bs8)</td>
 	<td nowrap="nowrap">bs x 384</td>
@@ -737,7 +728,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Ernie3_for_Pytorch">  Ernie3_for_Pytorch </a>
         </td>
         <td>Clue</td>
-	<td></td>
         <td>49%</td>
 	<td>1313(bs8)</td>
 	<td nowrap="nowrap">bs x 128</td>
@@ -747,7 +737,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/m2m_100">  m2m_100 </a>
         </td>
         <td>sacrebleu</td>
-	<td>语句意思相符</td>
         <td></td>
 	<td>35(bs1)</td>
 	<td nowrap="nowrap">1 x 90</td>
@@ -757,7 +746,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/roberta">  roberta </a>
         </td>
         <td>SST-2</td>
-	<td></td>
         <td>94.7%</td>
 	<td>996(bs64)</td>
 	<td nowrap="nowrap">bs x 70</td>
@@ -767,7 +755,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/SAST">  SAST </a>
         </td>
         <td>ICDAR</td>
-	<td></td>
         <td>91.3%</td>
 	<td>22(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 896 x 1536</td>
@@ -784,7 +771,7 @@ CV-classfication
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=4>精度</th>
+        <th align="center" colspan=3>精度</th>
 	<th colspan=2>最优性能（对应bs）</th>
 	<th rowspan=2>输入shape</th>
     </tr>
@@ -792,7 +779,6 @@ CV-classfication
 	<td>Top1Acc</td>
 	<td>Top5Acc</td>
         <td>mAP</td>
-        <td nowrap="nowrap">推理 <br> 结果 <br> 对比</td>
         <td>310P</td>
         <td>310</td>
     </tr>
@@ -803,7 +789,6 @@ CV-classfication
         <td>CIFAR-10</td>
 	<td>62.2%</td>
 	<td></td>
-        <td></td>
         <td></td>
 	<td>7806.96(bs16)</td>
         <td></td>
@@ -817,7 +802,6 @@ CV-classfication
 	<td>95.34%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>830.7165(bs10)</td>
         <td></td>
 	<td>10 x 3 x 16 x 112 x 112</td>
@@ -829,7 +813,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>56.56%</td>
 	<td>79.1%</td>
-        <td></td>
         <td></td>
 	<td>12672(bs64)</td>
         <td></td>
@@ -843,7 +826,6 @@ CV-classfication
 	<td>75.28%</td>
 	<td>92.56%</td>
         <td></td>
-        <td></td>
 	<td>87537(bs64)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -856,7 +838,6 @@ CV-classfication
 	<td>67.69%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>114.34(bs1)</td>
         <td></td>
 	<td>bs x 400 x 100</td>
@@ -868,7 +849,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>84.68%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>516.00(bs8)</td>
         <td></td>
@@ -882,7 +862,6 @@ CV-classfication
 	<td></td>
         <td></td>
 	<td></td>
-        <td>与在线推理结果一致</td>
 	<td>31958.773(bs64)</td>
         <td></td>
 	<td>bs x 3 x 48 x 192</td>
@@ -895,7 +874,6 @@ CV-classfication
 	<td>83.85%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>257.7437(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -907,7 +885,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>80.8%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>867.716(bs8)</td>
         <td></td>
@@ -920,7 +897,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>81.37%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>102.9(bs1)</td>
         <td></td>
@@ -933,7 +909,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>82.094%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>461.9(bs8)</td>
         <td></td>
@@ -946,7 +921,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>79.79%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>3251(bs4)</td>
         <td></td>
@@ -959,7 +933,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>83.3%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>223.5(bs16)</td>
          <td></td>
@@ -974,7 +947,6 @@ CV-classfication
         <td>94.83%</td>
         <td></td>
         <td></td>
-        <td></td>
         <td>415(bs1)</td>
         <td>bs x 3 x 224 x 224</td>
     </tr>
@@ -985,7 +957,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>79.47%</td>
 	<td>94.54%</td>
-        <td></td>
         <td></td>
 	<td>567(bs4)</td>
         <td></td>
@@ -999,7 +970,6 @@ CV-classfication
 	<td>81.073%</td>
 	<td>96.325%</td>
         <td></td>
-        <td></td>
 	<td>1245.1167(bs4)</td>
         <td></td>
 	<td>bs x 3 x 16 x 112 x 112</td>
@@ -1011,7 +981,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>75.940%</td>
 	<td>92.774%</td>
-        <td></td>
         <td></td>
 	<td>1409.692(bs8)</td>
         <td></td>
@@ -1025,7 +994,6 @@ CV-classfication
 	<td>76.25%</td>
 	<td>92.56%</td>
         <td></td>
-        <td></td>
 	<td>739.02(bs16)</td>
         <td></td>
 	<td>bs x 3 x 300 x 300</td>
@@ -1037,7 +1005,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>77.2%</td>
 	<td>92.8%</td>
-        <td></td>
         <td></td>
 	<td>166.408(bs64)</td>
         <td></td>
@@ -1051,7 +1018,6 @@ CV-classfication
 	<td>84.4%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>75.9(bs32)</td>
         <td></td>
 	<td>bs x 3 x 600 x 600</td>
@@ -1063,7 +1029,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>82.26%</td>
 	<td></td>
-        <td></td>
         <td></td>
 	<td>1859(bs64)</td>
         <td></td>
@@ -1077,7 +1042,6 @@ CV-classfication
 	<td>79.0%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>984(bs4)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1089,7 +1053,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>83.588%</td>
 	<td></td>
-        <td></td>
         <td></td>
 	<td>6.99(bs32)</td>
         <td></td>
@@ -1103,7 +1066,6 @@ CV-classfication
 	<td>94.23%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>9981(bs16)</td>
         <td></td>
 	<td>bs x 3 x 32 x 32</td>
@@ -1115,7 +1077,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>73.98%</td>
 	<td></td>
-        <td></td>
         <td></td>
 	<td>4974(bs8)</td>
         <td></td>
@@ -1129,7 +1090,6 @@ CV-classfication
 	<td>92.12%</td>
 	<td>99.56%</td>
         <td></td>
-        <td></td>
 	<td>85(bs4)</td>
         <td></td>
 	<td>bs x 3 x 8 x 224 x 224</td>
@@ -1141,7 +1101,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>69.77%</td>
 	<td>89.51%</td>
-        <td></td>
         <td></td>
 	<td>6287.326287(bs8)</td>
         <td></td>
@@ -1155,7 +1114,6 @@ CV-classfication
 	<td>76.51%</td>
 	<td>93.22%</td>
         <td></td>
-        <td></td>
 	<td>2250(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1168,7 +1126,6 @@ CV-classfication
 	<td>80.15%</td>
 	<td>95.24%</td>
         <td></td>
-        <td></td>
 	<td>1310.5(bs8)</td>
         <td></td>
 	<td>bs x 3 x 299 x 299</td>
@@ -1180,7 +1137,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>79.99%</td>
 	<td>94.86%</td>
-        <td></td>
         <td></td>
 	<td>1498.5(bs4)</td>
         <td></td>
@@ -1195,7 +1151,6 @@ CV-classfication
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
         <td>746(bs16)</td>
         <td>bs x 3 x 112 x 112</td>
     </tr>
@@ -1205,7 +1160,6 @@ CV-classfication
         </td>
         <td>ImageNet</td>
         <td>83.3%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td>407.14(bs8)</td>
@@ -1219,7 +1173,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>83.52%%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>266.8(bs1)</td>
         <td></td>
@@ -1232,7 +1185,6 @@ CV-classfication
         <td>ImageNet</td>
 	<td>73.48%</td>
         <td></td>
-	<td></td>
         <td></td>
 	<td>10650.988(bs16)</td>
         <td></td>
@@ -1246,7 +1198,6 @@ CV-classfication
 	<td>75.62%</td>
         <td>92.47%</td>
 	<td></td>
-        <td></td>
 	<td>6998.89(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1258,7 +1209,6 @@ CV-classfication
         <td>ImageNet</td>
         <td>67.28%</td>
         <td>87.82%</td>
-        <td></td>
         <td></td>
         <td>3288.38(bs4)</td>
         <td></td>
@@ -1272,7 +1222,6 @@ CV-classfication
 	<td></td>
         <td></td>
 	<td>82.55%</td>
-        <td></td>
 	<td>4075(bs8)</td>
         <td></td>
 	<td>bs x 3 x 256 x 128</td>
@@ -1285,7 +1234,6 @@ CV-classfication
 	<td></td>
         <td></td>
 	<td>68.64%</td>
-        <td></td>
 	<td>1564.274(bs4)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
@@ -1298,7 +1246,6 @@ CV-classfication
 	<td>81.76%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>203.256(bs4)</td>
         <td></td>
 	<td>bs x 3 x 331 x 331</td>
@@ -1311,7 +1258,6 @@ CV-classfication
 	<td>97.35%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>2374.11(bs1)</td>
         <td></td>
 	<td>bs x 3 x 2500</td>
@@ -1324,7 +1270,6 @@ CV-classfication
 	<td>82.82%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>112.383(bs1)</td>
         <td></td>
 	<td>1 x 1024 x 3</td>
@@ -1337,7 +1282,6 @@ CV-classfication
 	<td>88.4%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>partone7825(bs4)  parttwo5127(bs1)</td>
         <td></td>
 	<td nowrap="nowrap">partone[bs, 512, 3] [bs, 3, 32, 512] <br> parttwo[bs, 3, 128] [bs, 131, 64, 128]</td>
@@ -1350,7 +1294,6 @@ CV-classfication
 	<td>89.23%</td>
         <td>97.45%</td>
 	<td></td>
-        <td></td>
 	<td>84.7777(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1363,7 +1306,6 @@ CV-classfication
 	<td></td>
         <td></td>
 	<td>85.9%</td>
-        <td></td>
 	<td>4417.628(bs16)</td>
         <td></td>
 	<td>bs x 3 x 256 x 128</td>
@@ -1376,7 +1318,6 @@ CV-classfication
 	<td>77.86%</td>
         <td>93.72%</td>
 	<td></td>
-        <td></td>
 	<td>4417.628(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1388,7 +1329,6 @@ CV-classfication
         <td>ImageNet</td>
         <td>81.22%</td>
         <td>95.36%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td>347(bs32)</td>
@@ -1403,7 +1343,6 @@ CV-classfication
         <td>93.54%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>1604(bs16)</td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1415,7 +1354,6 @@ CV-classfication
 	<td>78.31%</td>
         <td>94.05%</td>
 	<td></td>
-        <td></td>
 	<td>1908(bs16)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
@@ -1429,7 +1367,6 @@ CV-classfication
         <td>89.09%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>6038(bs16)</td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1441,7 +1378,6 @@ CV-classfication
 	<td>73.31%</td>
         <td>91.44%</td>
 	<td></td>
-        <td></td>
 	<td>5967(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1454,7 +1390,6 @@ CV-classfication
 	<td>79.9%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>9329(bs16)</td>
         <td></td>
 	<td>bs x 3 x 32 x 32</td>
@@ -1467,7 +1402,6 @@ CV-classfication
 	<td>76.14%</td>
         <td>92.87%</td>
 	<td></td>
-        <td></td>
 	<td>4250(bs64)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
@@ -1480,7 +1414,6 @@ CV-classfication
 	<td>77.37%</td>
         <td>93.77%</td>
 	<td></td>
-        <td></td>
 	<td>2823(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1493,7 +1426,6 @@ CV-classfication
 	<td>77.61%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>3985(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1506,7 +1438,6 @@ CV-classfication
 	<td>77.64%</td>
         <td>93.74%</td>
 	<td></td>
-        <td></td>
 	<td>2333(bs4)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1519,7 +1450,6 @@ CV-classfication
 	<td>78.24%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>927.09(bs4)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1532,7 +1462,6 @@ CV-classfication
 	<td>77.36%</td>
         <td>93.76%</td>
 	<td></td>
-        <td></td>
 	<td>2690(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1545,7 +1474,6 @@ CV-classfication
 	<td>79.06%</td>
         <td>94.44%</td>
 	<td></td>
-        <td></td>
 	<td>1804.86(bs4)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1558,7 +1486,6 @@ CV-classfication
 	<td>79.3%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>842.25(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1571,7 +1498,6 @@ CV-classfication
 	<td>74.08%</td>
         <td>91.67%</td>
 	<td></td>
-        <td></td>
 	<td>3595.13(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1584,7 +1510,6 @@ CV-classfication
 	<td>65.55%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>28070(bs32)</td>
         <td></td>
 	<td>bs x 3 x 32 x 32</td>
@@ -1597,7 +1522,6 @@ CV-classfication
 	<td>77.54%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>2416(bs8)</td>
         <td></td>
 	<td>bs x 3 x 32 x 32</td>
@@ -1610,7 +1534,6 @@ CV-classfication
 	<td>81.25%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>298.7(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1623,7 +1546,6 @@ CV-classfication
 	<td>81.5%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>462.96(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1636,7 +1558,6 @@ CV-classfication
 	<td>74.19%</td>
         <td>91.95%</td>
 	<td></td>
-        <td></td>
 	<td>8408(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1649,7 +1570,6 @@ CV-classfication
 	<td>86.4%</td>
         <td>98%</td>
 	<td></td>
-        <td></td>
 	<td>132(bs8)</td>
         <td></td>
 	<td>bs x 3 x 384 x 384</td>
@@ -1662,7 +1582,6 @@ CV-classfication
 	<td>81.15%</td>
         <td>95.42%</td>
 	<td></td>
-        <td></td>
 	<td>564.7(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1675,7 +1594,6 @@ CV-classfication
 	<td>81.4%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>194.66(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1688,7 +1606,6 @@ CV-classfication
 	<td>77.68%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>7.53(bs1)</td>
         <td></td>
 	<td>1 x 3 x 3 x 8 x 224 x 224</td>
@@ -1701,7 +1618,6 @@ CV-classfication
 	<td>81.5%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>274(bs8)</td>
         <td></td>
 	<td>bs x 196 x 16 x 24</td>
@@ -1714,7 +1630,6 @@ CV-classfication
 	<td></td>
         <td>94.43%</td>
 	<td></td>
-        <td></td>
 	<td>3249(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1727,7 +1642,6 @@ CV-classfication
 	<td>81.22%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>613(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1740,7 +1654,6 @@ CV-classfication
 	<td>82.78%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>874(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1753,7 +1666,6 @@ CV-classfication
 	<td>71.76%</td>
         <td>90.80%</td>
 	<td></td>
-        <td></td>
 	<td>1316.24(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1766,7 +1678,6 @@ CV-classfication
 	<td>80.6%</td>
         <td>94.5%</td>
 	<td></td>
-        <td></td>
 	<td>0.607(bs1)</td>
         <td></td>
 	<td>1 x 12 x 3 x 32 x 224 x 224</td>
@@ -1779,7 +1690,6 @@ CV-classfication
 	<td>81.37%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>1013(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1792,7 +1702,6 @@ CV-classfication
 	<td>82.53%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>124(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1805,7 +1714,6 @@ CV-classfication
 	<td>76.77%</td>
         <td>93.43%</td>
 	<td></td>
-        <td></td>
 	<td>1767(bs4)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1818,7 +1726,6 @@ CV-classfication
 	<td>78.86%</td>
         <td>94.29%</td>
 	<td></td>
-        <td></td>
 	<td>1151(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1831,7 +1738,6 @@ CV-classfication
 	<td>78.48%</td>
         <td>94.09%</td>
 	<td></td>
-        <td></td>
 	<td>2097(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1845,7 +1751,6 @@ CV-classfication
         <td>94.2%</td>
 	<td></td>
         <td></td>
-        <td></td>
 	<td>813(bs8)</td>
 	<td>bs x 3 x 299 x 299</td>
     </tr>
@@ -1857,7 +1762,6 @@ CV-classfication
 	<td>81.86%</td>
         <td></td>
 	<td></td>
-        <td></td>
 	<td>443(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -1869,7 +1773,7 @@ CV-detection
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=9>精度</th>
+        <th align="center" colspan=8>精度</th>
 	<th colspan=2>最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
@@ -1879,7 +1783,6 @@ CV-detection
         <td nowrap="nowrap">DSC-score</td>
         <td nowrap="nowrap">F1-score</td>
         <td>Top1Acc</td>
-        <td nowrap="nowrap">推理 <br> 结果 <br> 对比</td>
         <td>ODS</td>
         <td>余弦相似度</td>
         <td>loss</td>
@@ -1895,7 +1798,6 @@ CV-detection
         <td></td>
         <td>25.6%</td>
         <td></td>
-	<td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1917,7 +1819,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>137(bs1)</td>
         <td></td>
 	<td>bs x 3 x 736 x 736</td>
@@ -1929,7 +1830,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>71.47%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1953,7 +1853,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>34617(bs16)</td>
         <td></td>
 	<td nowrap="nowrap">TEM[bs, 400, 100] <br> PEM[bs, 3, 100]</td>
@@ -1965,7 +1864,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>51.4%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1989,7 +1887,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -2001,7 +1898,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>41.9%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2025,7 +1921,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3.8(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -2037,7 +1932,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>40.5%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2061,7 +1955,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td></td>
         <td></td>
 	<td>1 x 3 x 512 x 512</td>
@@ -2076,7 +1969,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -2094,7 +1986,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -2108,7 +1999,6 @@ CV-detection
         </td>
         <td>随机数</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2133,7 +2023,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>169(bs64)</td>
         <td></td>
 	<td>多尺度</td>
@@ -2148,7 +2037,6 @@ CV-detection
         <td></td>
         <td></td>
         <td>78.9%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2169,7 +2057,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>840(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -2180,7 +2067,6 @@ CV-detection
         </td>
         <td>ICDAR2015</td>
 	<td>78.29%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2205,7 +2091,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>95(bs8)</td>
         <td></td>
 	<td>bs x 3 x 704 x 1280</td>
@@ -2217,7 +2102,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>53%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2238,7 +2122,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -2252,7 +2135,6 @@ CV-detection
         </td>
         <td>MOT17</td>
 	<td>83.7%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2277,7 +2159,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>2.47(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -2289,7 +2170,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>41.1%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2313,7 +2193,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>15(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -2328,7 +2207,6 @@ CV-detection
         <td></td>
         <td></td>
         <td>87.2%</td>
-        <td></td>
         <td></td>
         <td></td> 
         <td></td>
@@ -2349,7 +2227,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>65(bs4)</td>
         <td></td>
 	<td>bs x 3 x 800 x 1333</td>
@@ -2360,7 +2237,6 @@ CV-detection
         </td>
         <td>ICDAR2015</td>
 	<td>86.4%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2385,7 +2261,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>20(bs1)</td>
         <td></td>
 	<td>bs x 3 x 800 x 1216</td>
@@ -2396,7 +2271,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>40.6%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2421,7 +2295,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>65(bs4)</td>
         <td></td>
 	<td>bs x 3 x 512 x 512</td>
@@ -2433,7 +2306,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>40.5%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2457,7 +2329,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>175(bs4)</td>
         <td></td>
  	<td>bs x 3 x 331x 331</td>
@@ -2468,7 +2339,6 @@ CV-detection
         </td>
         <td>VOC</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2493,7 +2363,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>219(bs1)</td>
         <td></td>
         <td nowrap="nowrap">bs x 3 x 736 x 1312</td>
@@ -2504,7 +2373,6 @@ CV-detection
         </td>
         <td>ICDAR2015</td>
 	<td>85.72%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2529,7 +2397,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>8.9(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1000 x 1000</td>
@@ -2540,7 +2407,6 @@ CV-detection
         </td>
         <td>BSDS500</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2565,7 +2431,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>445(bs16)</td>
         <td></td>
         <td>bs x 3 x 320 x 320</td>
@@ -2577,7 +2442,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>27.9%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2601,7 +2465,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>16.52(bs1)</td>
         <td></td>
         <td>1 x 3 x 1344 X 1344</td>
@@ -2612,7 +2475,6 @@ CV-detection
         </td>
         <td>KITTI</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2637,7 +2499,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3176(bs4)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
@@ -2648,7 +2509,6 @@ CV-detection
         </td>
         <td>VOC2007</td>
 	<td>69.8%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2673,7 +2533,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>5.9(bs8)</td>
         <td></td>
         <td>bs x 3 x 800 x 1216</td>
@@ -2691,7 +2550,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>180.36(bs1)</td>
         <td></td>
         <td>1 x 3 x 512 x 512</td>
@@ -2702,7 +2560,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>42.2%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2727,7 +2584,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>751(bs16)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
@@ -2745,7 +2601,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>126(bs16)</td>
         <td></td>
         <td>bs x 3 x 608 x 608</td>
@@ -2756,7 +2611,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>52.1%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2781,7 +2635,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>890(bs64)</td>
         <td></td>
         <td>bs x 3 x 640 x 640</td>
@@ -2799,7 +2652,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>890(bs4)</td>
         <td></td>
         <td>bs x 3 x 640 x 640</td>
@@ -2810,7 +2662,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>51%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -3592,12 +3443,11 @@ CV-gan
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=4>精度</th>
+        <th align="center" colspan=3>精度</th>
 	<th rowspan=2>310P最优性能（对应bs）</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
-        <td>推理结果对比</td>
         <td nowrap="nowrap">IS</td>
         <td>FID</td>
         <td>Acc</td>
@@ -3607,7 +3457,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/BigGAN"> BigGAN </a>
         </td>
         <td>噪声数据</td>
-	<td></td>
         <td>94.009</td>
         <td>10</td>
         <td></td>
@@ -3619,7 +3468,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/CGAN"> CGAN </a>
         </td>
         <td>随机数</td>
-	<td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -3631,7 +3479,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/CycleGAN"> CycleGAN </a>
         </td>
         <td>maps</td>
-	<td></td>
         <td></td>
         <td></td>
         <td>CycleGAN_Ga 1 <br> CycleGAN_Gb 0.99</td>
@@ -3643,7 +3490,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/DCGAN"> DCGAN </a>
         </td>
         <td>噪声数据</td>
-	<td></td>
         <td></td>
         <td></td>
         <td>1</td>
@@ -3655,7 +3501,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DG-Net"> DG-Net </a>
         </td>
         <td>Market-1501</td>
-	<td></td>
         <td></td>
         <td>18.12</td>
         <td></td>
@@ -3667,7 +3512,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/GAN"> GAN </a>
         </td>
         <td>随机数</td>
-	<td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -3679,7 +3523,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/Pix2Pix"> Pix2Pix </a>
         </td>
         <td>facades</td>
-	<td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -3691,7 +3534,6 @@ CV-gan
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/gan/Pix2pixHD">  Pix2pixHD </a>
         </td>
         <td>cityscapes</td>
-	<td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -3952,12 +3794,11 @@ CV-super_resolution
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=3>精度</th>
+        <th align="center" colspan=2>精度</th>
 	<th rowspan=2>310P最优性能（对应bs）</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
-        <td>推理结果对比</td>
         <td>PSNR</td>
         <td>SSIM</td>
     </tr>
@@ -3966,7 +3807,6 @@ CV-super_resolution
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/FLAVR_for_PyTorch">  FLAVR_for_PyTorch </a>
         </td>
         <td>UCF101</td>
-        <td></td>
         <td>29.83</td>
         <td>94.46%</td>
 	<td>77(bs16)</td>
@@ -3977,7 +3817,6 @@ CV-super_resolution
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/super_resolution/RCAN">  RCAN </a>
         </td>
         <td>Set5</td>
-        <td></td>
         <td>38.25</td>
         <td>96.06%</td>
 	<td>12(bs1)</td>
@@ -3988,7 +3827,6 @@ CV-super_resolution
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/super_resolution/RDN">   RDN </a>
         </td>
         <td>Set5</td>
-        <td></td>
         <td>38.27</td>
         <td></td>
 	<td>47(bs1)</td>
@@ -3999,7 +3837,6 @@ CV-super_resolution
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/super_resolution/Real-ESRGAN">  Real-ESRGAN </a>
         </td>
         <td>代码仓提供</td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
 	<td>251(bs4)</td>
@@ -4010,7 +3847,6 @@ CV-super_resolution
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/super_resolution/SRCNN">  SRCNN </a>
         </td>
         <td>Set5</td>
-        <td></td>
         <td>36.33</td>
         <td></td>
 	<td>2361(bs1)</td>
@@ -4214,7 +4050,7 @@ Audio
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=5>精度</th>
+        <th align="center" colspan=4>精度</th>
 	<th colspan=2>最优性能（对应bs）</th>
 	<th rowspan=2>输入shape</th>
     </tr>
@@ -4223,7 +4059,6 @@ Audio
         <td>WER</td>
         <td>ROC_AUC</td>
         <td>mel_loss</td>
-        <td>人工判断语音质量</td>
         <td>310P</td>
         <td>310</td>
     </tr>
@@ -4233,7 +4068,6 @@ Audio
         </td>
         <td>LA</td>
         <td>0.979</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4250,7 +4084,6 @@ Audio
         <td>0.94</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>12.1(bs8)</td>
         <td></td>
 	<td nowrap="nowrap">bs x 559280</td>
@@ -4263,7 +4096,6 @@ Audio
         <td></td>
         <td></td>
         <td>0.9991</td>
-        <td></td>
         <td></td>
 	<td>1536(bs4)</td>
         <td></td>
@@ -4278,7 +4110,6 @@ Audio
         <td></td>
         <td></td>
         <td>11.33</td>
-        <td></td>
 	<td>126(bs8)</td>
         <td></td>
  	<td nowrap="nowrap">bs x 200</td>
@@ -4290,7 +4121,6 @@ Audio
         <td>LibriSpeech</td>
         <td></td>
         <td>9.726</td>
-        <td></td>
         <td></td>
         <td></td>
 	<td>29(bs1)</td>
@@ -4306,7 +4136,6 @@ Audio
         <td>18.9075</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>83.4(bs64)</td>
         <td></td>
 	<td nowrap="nowrap">bs x 390 x 243</td>
@@ -4317,7 +4146,6 @@ Audio
         </td>
         <td>VoxCeleb1</td>
         <td>2.5%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4334,7 +4162,6 @@ Audio
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td></td>
         <td>0.82(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
@@ -4346,7 +4173,6 @@ Audio
         <td>librispeech</td>
         <td></td>
         <td>98.69%</td>
-        <td></td>
         <td></td>
         <td></td>
 	<td></td>
@@ -4362,7 +4188,6 @@ Audio
         <td>2.96%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>157(bs16)</td>
         <td></td>
 	<td nowrap="nowrap">bs x 10000</td>
@@ -4376,7 +4201,6 @@ Audio
         <td></td>
         <td></td>
         <td></td>
-        <td>与在线推理结果一致</td>
 	<td>3(1 x 80 x 154)</td>
         <td></td>
 	<td nowrap="nowrap">多尺度</td>
@@ -4387,7 +4211,6 @@ Audio
         </td>
         <td>aishell</td>
         <td>5.67%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4425,13 +4248,12 @@ Nlp
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=8>精度</th>
+        <th align="center" colspan=7>精度</th>
 	<th rowspan=2>310P最优性能（对应bs）</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
         <td>Acc</td>
-        <td nowrap="nowrap">推理 <br> 结果 <br> 对比</td>
         <td>WER</td>
         <td>余弦相似度</td>
         <td>loss</td>
@@ -4445,7 +4267,6 @@ Nlp
         </td>
         <td>squad</td>
         <td>88.78%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4467,7 +4288,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>138.09(bs8)</td>
 	<td nowrap="nowrap">bs x 512 <br> bs x 37</td>
     </tr>
@@ -4477,7 +4297,6 @@ Nlp
         </td>
         <td>PaddleOCR</td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -4493,7 +4312,6 @@ Nlp
         </td>
         <td>PaddleOCR</td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -4509,7 +4327,6 @@ Nlp
         </td>
         <td>PaddleOCR</td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -4524,7 +4341,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/CNN_Transformer_for_Pytorch"> CNN_Transformer_for_Pytorch </a>
         </td>
         <td>Librispeech</td>
-        <td></td>
         <td></td>
         <td>0.0556</td>
         <td></td>
@@ -4547,7 +4363,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>5(bs64)</td>
 	<td nowrap="nowrap">bs x 256</td>
     </tr>
@@ -4556,7 +4371,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/ELMo"> ELMo </a>
         </td>
         <td>1 Billion Word</td>
-        <td></td>
         <td></td>
         <td></td>
         <td>99.6%</td>
@@ -4573,7 +4387,6 @@ Nlp
         </td>
         <td>PaddleOCR</td>
         <td></td>
-        <td>与在线推理结果一致</td>
         <td></td>
         <td></td>
         <td></td>
@@ -4588,7 +4401,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/GPT2_for_Pytorch">  GPT2_for_Pytorch </a>
         </td>
         <td>wiki_zh_2019</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4608,7 +4420,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
         <td>22.69</td>
         <td></td>
         <td></td>
@@ -4620,7 +4431,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/hubert">   hubert </a>
         </td>
         <td>test-clean</td>
-        <td></td>
         <td></td>
         <td>2.13</td>
         <td></td>
@@ -4643,7 +4453,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>1546(bs16)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 100</td>
     </tr>
@@ -4653,7 +4462,6 @@ Nlp
         </td>
         <td>LMDB</td>
         <td>77.38%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4675,7 +4483,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>7418(bs16)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 100</td>
     </tr>
@@ -4691,7 +4498,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>31(bs1)</td>
 	<td nowrap="nowrap">1 x 3 x 32 x 100</td>
     </tr>
@@ -4700,7 +4506,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/SpanBERT">  SpanBERT </a>
         </td>
         <td>SQuAD 1.1</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4723,7 +4528,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>2617(bs64)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 100</td>
     </tr>
@@ -4733,7 +4537,6 @@ Nlp
         </td>
         <td>THUCNews</td>
         <td>90.47%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4755,7 +4558,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>11160(bs64)</td>
 	<td nowrap="nowrap">bs x 4 x 84 x 84</td>
     </tr>
@@ -4765,7 +4567,6 @@ Nlp
         </td>
         <td>Multi30k</td>
         <td>40.92%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4786,7 +4587,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
         <td>1.966</td>
 	<td>287(bs1)</td>
 	<td nowrap="nowrap">80 x 1 <br> 160 x 1 x 512</td>
@@ -4796,7 +4596,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/TrOCR">  TrOCR </a>
         </td>
         <td>IAM</td>
-        <td></td>
         <td></td>
         <td>4.25</td>
         <td></td>
@@ -4812,7 +4611,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/VilBert_for_Pytorch"> VilBert_for_Pytorch </a>
         </td>
         <td>coco</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
