@@ -75,7 +75,11 @@ Centerface的非官方版本，实现了速度和准确性之间的最佳平衡�
 ## 准备数据集 & 预训练模型
    * 准备数据
 
-      请用户自行准备好数据集，包含训练集和验证集两部分，可选用的数据集包括WIDER-FACE等。本机解压“WIDER_FACE_DATA_ALL.zip”文件里面有“annotations.zip”、“labels”、“WIDER_train.zip”、“WIDER_val.zip”、“groud_truth”文件。在当前源码包根目录下建立“data/wider_face/image”文件夹。将“annotations.zip”、“labels”、“WIDER_train.zip”、“WIDER_val.zip”复制到服务器的源码包根目录“data/wider_face”目录下并解压，“groud_truth”复制到源码包根目录下。将“WIDER_train”中的“images”复制到源码包根目录下的“data/wider_face/image”文件夹中。数据集目录结构参考：
+     1，请用户自行准备好数据集，包含训练集和验证集两部分，可选用的数据集包括WIDER-FACE和模型链接https://download.pytorch.org/models/mobilenet_v2-b0353104.pth。
+
+     2，本机解压“WIDER_FACE_DATA_ALL.zip”文件里面有“annotations.zip”、“labels”、“WIDER_train.zip”、“WIDER_val.zip”、“groud_truth”文件。在当前源码包根目录下建 
+        立“data/wider_face/image”文件夹。将“annotations.zip”、“labels”、“WIDER_train.zip”、“WIDER_val.zip”复制到服务器的源码包根目录“data/wider_face”目录下 
+        并解压，“groud_truth”复制到源码包根目录下。将“WIDER_train”中的“images”复制到源码包根目录下的“data/wider_face/image”文件夹中。数据集目录结构参考：
       ```
         ├── data
             ├──wider_face
@@ -93,11 +97,12 @@ Centerface的非官方版本，实现了速度和准确性之间的最佳平衡�
                                 ├──图片2
                                 ...
                                 ..
-        ├── groud_truth
-            ├── wider_easy_val.mat
-            ├── wider_face_val.mat
-            ├── wider_hard_val.mat
-            ├── wider_medium_val.mat
+               ├── groud_truth
+                         ├── wider_easy_val.mat
+                         ├── wider_face_val.mat
+                         ├── wider_hard_val.mat
+                         ├── wider_medium_val.mat
+               |--mobilenet_v2-b0353104.pth
       ```
    * 下载预训练模型
 
