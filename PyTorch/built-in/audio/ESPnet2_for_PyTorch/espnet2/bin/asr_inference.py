@@ -359,7 +359,7 @@ def inference(
     )
 
     if ngpu >= 1:
-        device = "cuda"
+        device = "npu"
     else:
         device = "cpu"
 

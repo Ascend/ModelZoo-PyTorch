@@ -106,11 +106,11 @@ class Stft(torch.nn.Module, InversibleInterface):
                 stft_kwargs["return_complex"] = False
             output = torch.stft(input, **stft_kwargs)
         else:
-            if self.training:
-                raise NotImplementedError(
-                    "stft is implemented with librosa on this device, which does not "
-                    "support the training mode."
-                )
+            # if self.training:
+            #     raise NotImplementedError(
+            #         "stft is implemented with librosa on this device, which does not "
+            #         "support the training mode."
+            #     )
 
             # use stft_kwargs to flexibly control different PyTorch versions' kwargs
             stft_kwargs = dict(

@@ -28,6 +28,9 @@ def time_warp(x: torch.Tensor, window: int = 80, mode: str = DEFAULT_TIME_WARP_M
     center = torch.randint(window, t - window, (1,))[0]
     warped = torch.randint(center - window, center + window, (1,))[0] + 1
 
+    center = center.item()
+    warped = warped.item()
+
     # left: (Batch, Channel, warped, Freq)
     # right: (Batch, Channel, time - warped, Freq)
     left = torch.nn.functional.interpolate(

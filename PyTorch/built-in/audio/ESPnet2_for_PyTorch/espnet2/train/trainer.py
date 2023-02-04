@@ -21,6 +21,7 @@ import torch
 import torch.nn
 import torch.optim
 from typeguard import check_argument_types
+from apex import amp
 
 from espnet2.iterators.abs_iter_factory import AbsIterFactory
 from espnet2.main_funcs.average_nbest_models import average_nbest_models
@@ -137,7 +138,7 @@ class Trainer:
     ):
         states = torch.load(
             checkpoint,
-            map_location=f"cuda:{torch.cuda.current_device()}" if ngpu > 0 else "cpu",
+            map_location=f"npu:{torch.npu.current_device()}" if ngpu > 0 else "cpu",
         )
         model.load_state_dict(states["model"])
         reporter.load_state_dict(states["reporter"])
@@ -182,21 +183,24 @@ class Trainer:
 
         output_dir = Path(trainer_options.output_dir)
         reporter = Reporter()
-        if trainer_options.use_amp:
-            if LooseVersion(torch.__version__) < LooseVersion("1.6.0"):
-                raise RuntimeError(
-                    "Require torch>=1.6.0 for  Automatic Mixed Precision"
-                )
-            if trainer_options.sharded_ddp:
-                if fairscale is None:
-                    raise RuntimeError(
-                        "Requiring fairscale. Do 'pip install fairscale'"
-                    )
-                scaler = fairscale.optim.grad_scaler.ShardedGradScaler()
-            else:
-                scaler = GradScaler()
-        else:
-            scaler = None
+        # if trainer_options.use_amp:
+        #     if LooseVersion(torch.__version__) < LooseVersion("1.6.0"):
+        #         raise RuntimeError(
+        #             "Require torch>=1.6.0 for  Automatic Mixed Precision"
+        #         )
+        #     if trainer_options.sharded_ddp:
+        #         if fairscale is None:
+        #             raise RuntimeError(
+        #                 "Requiring fairscale. Do 'pip install fairscale'"
+        #             )
+        #         scaler = fairscale.optim.grad_scaler.ShardedGradScaler()
+        #     else:
+        #         scaler = GradScaler()
+        # else:
+        #     scaler = None
+
+        scaler = None
+        torch.npu.set_compile_mode(jit_compile=False)
 
         if trainer_options.resume and (output_dir / "checkpoint.pth").exists():
             cls.resume(
@@ -214,6 +218,10 @@ class Trainer:
             logging.warning(
                 f"The training has already reached at max_epoch: {start_epoch}"
             )
+
+        amp.register_half_function(torch, 'npu_linear')
+        if trainer_options.use_amp:
+            model, optimizers = amp.initialize(model, optimizers, opt_level="O1", combine_grad=True, loss_scale="512")
 
         if distributed_option.distributed:
             if trainer_options.sharded_ddp:
@@ -569,23 +577,28 @@ class Trainer:
             reporter.register(stats, weight)
 
             with reporter.measure_time("backward_time"):
-                if scaler is not None:
-                    # Scales loss.  Calls backward() on scaled loss
-                    # to create scaled gradients.
-                    # Backward passes under autocast are not recommended.
-                    # Backward ops run in the same dtype autocast chose
-                    # for corresponding forward ops.
-                    scaler.scale(loss).backward()
+                # if scaler is not None:
+                #     # Scales loss.  Calls backward() on scaled loss
+                #     # to create scaled gradients.
+                #     # Backward passes under autocast are not recommended.
+                #     # Backward ops run in the same dtype autocast chose
+                #     # for corresponding forward ops.
+                #     scaler.scale(loss).backward()
+                # else:
+                #     loss.backward()
+                if options.use_amp:
+                    with amp.scale_loss(loss, optimizers) as scaled_loss:
+                        scaled_loss.backward()
                 else:
                     loss.backward()
 
             if iiter % accum_grad == 0:
-                if scaler is not None:
-                    # Unscales the gradients of optimizer's assigned params in-place
-                    for iopt, optimizer in enumerate(optimizers):
-                        if optim_idx is not None and iopt != optim_idx:
-                            continue
-                        scaler.unscale_(optimizer)
+                # if scaler is not None:
+                #     # Unscales the gradients of optimizer's assigned params in-place
+                #     for iopt, optimizer in enumerate(optimizers):
+                #         if optim_idx is not None and iopt != optim_idx:
+                #             continue
+                #         scaler.unscale_(optimizer)
 
                 # gradient noise injection
                 if grad_noise:
@@ -598,11 +611,20 @@ class Trainer:
                     )
 
                 # compute the gradient norm to check if it is normal or not
-                grad_norm = torch.nn.utils.clip_grad_norm_(
-                    model.parameters(),
-                    max_norm=grad_clip,
-                    norm_type=grad_clip_type,
-                )
+                if options.use_amp:
+                    for iopt, optimizer in enumerate(optimizers):
+                        if optim_idx is not None and iopt != optim_idx:
+                            continue
+                        grad_norm = optimizer.clip_optimizer_grad_norm_fused(
+                            max_norm=grad_clip,
+                            norm_type=grad_clip_type
+                        )
+                else:
+                    grad_norm = torch.nn.utils.clip_grad_norm_(
+                        model.parameters(),
+                        max_norm=grad_clip,
+                        norm_type=grad_clip_type,
+                    )
                 # PyTorch<=1.4, clip_grad_norm_ returns float value
                 if not isinstance(grad_norm, torch.Tensor):
                     grad_norm = torch.tensor(grad_norm)
@@ -618,12 +640,12 @@ class Trainer:
                     #   on this optimizer since the last update().
                     # Note that if the gradient has inf/nan values,
                     # scaler.step skips optimizer.step().
-                    if scaler is not None:
-                        for iopt, optimizer in enumerate(optimizers):
-                            if optim_idx is not None and iopt != optim_idx:
-                                continue
-                            scaler.step(optimizer)
-                            scaler.update()
+                    # if scaler is not None:
+                    #     for iopt, optimizer in enumerate(optimizers):
+                    #         if optim_idx is not None and iopt != optim_idx:
+                    #             continue
+                    #         scaler.step(optimizer)
+                    #         scaler.update()
 
                 else:
                     all_steps_are_invalid = False
@@ -633,14 +655,15 @@ class Trainer:
                         ):
                             if optim_idx is not None and iopt != optim_idx:
                                 continue
-                            if scaler is not None:
-                                # scaler.step() first unscales the gradients of
-                                # the optimizer's assigned params.
-                                scaler.step(optimizer)
-                                # Updates the scale for next iteration.
-                                scaler.update()
-                            else:
-                                optimizer.step()
+                            # if scaler is not None:
+                            #     # scaler.step() first unscales the gradients of
+                            #     # the optimizer's assigned params.
+                            #     scaler.step(optimizer)
+                            #     # Updates the scale for next iteration.
+                            #     scaler.update()
+                            # else:
+                            #     optimizer.step()
+                            optimizer.step()
                             if isinstance(scheduler, AbsBatchStepScheduler):
                                 scheduler.step()
                 for iopt, optimizer in enumerate(optimizers):

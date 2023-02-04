@@ -21,6 +21,8 @@ from typing import Union
 import humanfriendly
 import numpy as np
 import torch
+from torch_npu.contrib import transfer_to_npu
+from torch_npu.contrib.module import NpuPreGenDropout
 import torch.multiprocessing
 import torch.nn
 import torch.optim
@@ -28,6 +30,7 @@ from torch.utils.data import DataLoader
 from typeguard import check_argument_types
 from typeguard import check_return_type
 import yaml
+import psutil
 
 from espnet import __version__
 from espnet.utils.cli_utils import get_commandline_args
@@ -81,6 +84,12 @@ if LooseVersion(torch.__version__) >= LooseVersion("1.5.0"):
 else:
     from torch.multiprocessing.spawn import SpawnContext as ProcessContext
 
+def cpu_affinity(rank_id, rank_size):
+    count = psutil.cpu_count()
+    p = psutil.Process()
+    used_cpus_num = count // rank_size
+    used_cpus = [i for i in range(rank_id * used_cpus_num, (rank_id + 1) * used_cpus_num)]
+    p.cpu_affinity(used_cpus)
 
 optim_classes = dict(
     adam=torch.optim.Adam,
@@ -132,6 +141,8 @@ try:
         fusedlamb=apex.optimizers.FusedLAMB,
         fusednovograd=apex.optimizers.FusedNovoGrad,
         fusedsgd=apex.optimizers.FusedSGD,
+        npufusedadam=apex.optimizers.NpuFusedAdam,
+        npufusedsgd=apex.optimizers.NpuFusedSGD
     )
     del apex
 except ImportError:
@@ -319,11 +330,17 @@ class AbsTask(ABC):
             default=0,
             help="The number of gpus. 0 indicates CPU mode",
         )
+        group.add_argument(
+            "--device",
+            type=str,
+            default="npu",
+            help="default devcie is npu",
+        )
         group.add_argument("--seed", type=int, default=0, help="Random seed")
         group.add_argument(
             "--num_workers",
             type=int,
-            default=1,
+            default=8,
             help="The number of workers used for DataLoader",
         )
         group.add_argument(
@@ -1013,6 +1030,7 @@ class AbsTask(ABC):
             sys.exit(0)
         cls.check_required_command_args(args)
 
+        args.rank_size = args.ngpu
         # "distributed" is decided using the other command args
         resolve_distributed_mode(args)
         if not args.distributed or not args.multiprocessing_distributed:
@@ -1072,6 +1090,8 @@ class AbsTask(ABC):
     @classmethod
     def main_worker(cls, args: argparse.Namespace):
         assert check_argument_types()
+        if args.distributed and args.multiprocessing_distributed:
+            cpu_affinity(args.local_rank, args.rank_size)
 
         # 0. Init distributed process
         distributed_option = build_dataclass(DistributedOption, args)
@@ -1156,6 +1176,8 @@ class AbsTask(ABC):
 
         logging.info(pytorch_cudnn_version())
         logging.info(model_summary(model))
+        NpuPreGenDropout.enable_dropout_ensemble(model)
+
         for i, (o, s) in enumerate(zip(optimizers, schedulers), 1):
             suf = "" if i == 1 else str(i)
             logging.info(f"Optimizer{suf}:\n{o}")
@@ -1817,6 +1839,7 @@ class AbsTask(ABC):
 
         with config_file.open("r", encoding="utf-8") as f:
             args = yaml.safe_load(f)
+        args["device"] = "cpu"
         args = argparse.Namespace(**args)
         model = cls.build_model(args)
         if not isinstance(model, AbsESPnetModel):
@@ -1825,10 +1848,10 @@ class AbsTask(ABC):
             )
         model.to(device)
         if model_file is not None:
-            if device == "cuda":
-                # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
+            if device == "npu":
+                # NOTE(kamo): "npu" for torch.load always indicates npu:0
                 #   in PyTorch<=1.4
-                device = f"cuda:{torch.cuda.current_device()}"
+                device = f"npu:{torch.npu.current_device()}"
             model.load_state_dict(torch.load(model_file, map_location=device))
 
         return model, args
