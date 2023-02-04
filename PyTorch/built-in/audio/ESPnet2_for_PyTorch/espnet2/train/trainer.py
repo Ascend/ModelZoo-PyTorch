@@ -183,21 +183,6 @@ class Trainer:
 
         output_dir = Path(trainer_options.output_dir)
         reporter = Reporter()
-        # if trainer_options.use_amp:
-        #     if LooseVersion(torch.__version__) < LooseVersion("1.6.0"):
-        #         raise RuntimeError(
-        #             "Require torch>=1.6.0 for  Automatic Mixed Precision"
-        #         )
-        #     if trainer_options.sharded_ddp:
-        #         if fairscale is None:
-        #             raise RuntimeError(
-        #                 "Requiring fairscale. Do 'pip install fairscale'"
-        #             )
-        #         scaler = fairscale.optim.grad_scaler.ShardedGradScaler()
-        #     else:
-        #         scaler = GradScaler()
-        # else:
-        #     scaler = None
 
         scaler = None
         torch.npu.set_compile_mode(jit_compile=False)
@@ -577,15 +562,6 @@ class Trainer:
             reporter.register(stats, weight)
 
             with reporter.measure_time("backward_time"):
-                # if scaler is not None:
-                #     # Scales loss.  Calls backward() on scaled loss
-                #     # to create scaled gradients.
-                #     # Backward passes under autocast are not recommended.
-                #     # Backward ops run in the same dtype autocast chose
-                #     # for corresponding forward ops.
-                #     scaler.scale(loss).backward()
-                # else:
-                #     loss.backward()
                 if options.use_amp:
                     with amp.scale_loss(loss, optimizers) as scaled_loss:
                         scaled_loss.backward()
@@ -593,12 +569,6 @@ class Trainer:
                     loss.backward()
 
             if iiter % accum_grad == 0:
-                # if scaler is not None:
-                #     # Unscales the gradients of optimizer's assigned params in-place
-                #     for iopt, optimizer in enumerate(optimizers):
-                #         if optim_idx is not None and iopt != optim_idx:
-                #             continue
-                #         scaler.unscale_(optimizer)
 
                 # gradient noise injection
                 if grad_noise:
@@ -633,20 +603,6 @@ class Trainer:
                     logging.warning(
                         f"The grad norm is {grad_norm}. Skipping updating the model."
                     )
-
-                    # Must invoke scaler.update() if unscale_() is used in the iteration
-                    # to avoid the following error:
-                    #   RuntimeError: unscale_() has already been called
-                    #   on this optimizer since the last update().
-                    # Note that if the gradient has inf/nan values,
-                    # scaler.step skips optimizer.step().
-                    # if scaler is not None:
-                    #     for iopt, optimizer in enumerate(optimizers):
-                    #         if optim_idx is not None and iopt != optim_idx:
-                    #             continue
-                    #         scaler.step(optimizer)
-                    #         scaler.update()
-
                 else:
                     all_steps_are_invalid = False
                     with reporter.measure_time("optim_step_time"):
@@ -655,14 +611,6 @@ class Trainer:
                         ):
                             if optim_idx is not None and iopt != optim_idx:
                                 continue
-                            # if scaler is not None:
-                            #     # scaler.step() first unscales the gradients of
-                            #     # the optimizer's assigned params.
-                            #     scaler.step(optimizer)
-                            #     # Updates the scale for next iteration.
-                            #     scaler.update()
-                            # else:
-                            #     optimizer.step()
                             optimizer.step()
                             if isinstance(scheduler, AbsBatchStepScheduler):
                                 scheduler.step()
