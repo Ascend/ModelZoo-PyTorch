@@ -10,6 +10,9 @@ from typing import Union
 
 import numpy as np
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+from torch_npu.contrib.module import NpuPreGenDropout
 from torch.nn.parallel import data_parallel
 from typeguard import check_argument_types
 
@@ -48,7 +51,7 @@ def calc_perplexity(
     )
 
     if ngpu >= 1:
-        device = "cuda"
+        device = "npu"
     else:
         device = "cpu"
 
@@ -61,6 +64,7 @@ def calc_perplexity(
     wrapped_model = ForwardAdaptor(model, "nll")
     wrapped_model.to(dtype=getattr(torch, dtype)).eval()
     logging.info(f"Model:\n{model}")
+    NpuPreGenDropout.enable_dropout_ensemble(model)
 
     # 3. Build data-iterator
     loader = LMTask.build_streaming_iterator(

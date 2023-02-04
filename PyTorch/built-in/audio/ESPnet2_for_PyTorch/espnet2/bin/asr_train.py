@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import torch_npu
 from espnet2.tasks.asr import ASRTask
 
 

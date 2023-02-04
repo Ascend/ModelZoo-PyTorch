@@ -7,6 +7,7 @@
 """Positionwise feed forward layer definition."""
 
 import torch
+from torch_npu.contrib.module import NpuPreGenDropout
 
 
 class PositionwiseFeedForward(torch.nn.Module):
@@ -25,8 +26,12 @@ class PositionwiseFeedForward(torch.nn.Module):
         self.w_1 = torch.nn.Linear(idim, hidden_units)
         self.w_2 = torch.nn.Linear(hidden_units, idim)
         self.dropout = torch.nn.Dropout(dropout_rate)
+        self.dropout_npu = NpuPreGenDropout(dropout_rate)
         self.activation = activation
 
     def forward(self, x):
         """Forward function."""
-        return self.w_2(self.dropout(self.activation(self.w_1(x))))
+        if x.device == torch.device('cpu'):
+            return self.w_2(self.dropout(self.activation(self.w_1(x))))
+        else:
+            return self.w_2(self.dropout_npu(self.activation(self.w_1(x))))

@@ -11,6 +11,7 @@ import math
 import numpy
 import torch
 from torch import nn
+from torch_npu.contrib.module import NpuPreGenDropout
 
 
 class MultiHeadedAttention(nn.Module):
@@ -36,6 +37,7 @@ class MultiHeadedAttention(nn.Module):
         self.linear_out = nn.Linear(n_feat, n_feat)
         self.attn = None
         self.dropout = nn.Dropout(p=dropout_rate)
+        self.dropout_npu = NpuPreGenDropout(p=dropout_rate)
 
     def forward_qkv(self, query, key, value):
         """Transform query, key and value.
@@ -87,7 +89,10 @@ class MultiHeadedAttention(nn.Module):
         else:
             self.attn = torch.softmax(scores, dim=-1)  # (batch, head, time1, time2)
 
-        p_attn = self.dropout(self.attn)
+        if self.attn.device == torch.device('cpu'):
+            p_attn = self.dropout(self.attn)
+        else:
+            p_attn = self.dropout_npu(self.attn)
         x = torch.matmul(p_attn, value)  # (batch, head, time1, d_k)
         x = (
             x.transpose(1, 2).contiguous().view(n_batch, -1, self.h * self.d_k)
