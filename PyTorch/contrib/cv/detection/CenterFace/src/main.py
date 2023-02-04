@@ -34,6 +34,11 @@ if torch.__version__ >= "1.8":
 
 def main(opt, qtepoch=[0,]):
 
+  if opt.use_fp32:
+      option = {}
+      option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+      torch.npu.set_option(option)
+
   torch.manual_seed(opt.seed)
   torch.backends.cudnn.benchmark = not opt.not_cuda_benchmark and not opt.test
   Dataset = get_dataset(opt.dataset, opt.task)
@@ -51,7 +56,8 @@ def main(opt, qtepoch=[0,]):
       model.load_state_dict(checkpoint['state_dict'], strict=False)
 
   optimizer = torch.optim.Adam(model.parameters(), opt.lr)
-  model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0)
+  if not opt.use_fp32:
+      model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0)
   start_epoch = 0
   if opt.load_model != '':
     model, optimizer, start_epoch = load_model(

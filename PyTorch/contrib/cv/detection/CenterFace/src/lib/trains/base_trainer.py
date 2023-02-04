@@ -90,9 +90,11 @@ class BaseTrainer(object):
       loss = loss.mean()
       if phase == 'train':
         self.optimizer.zero_grad()
-        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+        if opt.use_fp32:
+          loss.backward()
+        else:
+          with amp.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
-          #loss.backward()
         self.optimizer.step()
       batch_time.update(time.time() - end)
       end = time.time()

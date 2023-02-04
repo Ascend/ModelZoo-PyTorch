@@ -333,7 +333,11 @@ if __name__ == '__main__':
 
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
-
+    else:
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+        torch.npu.set_option(option)
+        
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank = int(os.environ["RANK"])
         world_size = int(os.environ['WORLD_SIZE'])

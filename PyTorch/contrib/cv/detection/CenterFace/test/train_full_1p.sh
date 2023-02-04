@@ -8,7 +8,7 @@ export RANK_SIZE=1
 data_path=""
 
 #网络名称,同目录名称,需要模型审视修改
-Network="CenterFace"
+Network="CenterFace_ID4089_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=32
@@ -20,12 +20,20 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
     fi
 done
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=" --use_fp32 "
+else
+    PREC=""
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -84,7 +92,7 @@ ln -s ${data_path} ${default_data_path}/.
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
 {
-python3 main.py  --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=160 --device_list=$device_id
+python3 main.py $PREC --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=160 --device_list=$device_id
 python3 test_wider_face.py
 cd $cur_path/evaluate
 python3 setup.py build_ext --inplace
@@ -115,7 +123,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 #获取性能数据，不需要修改
 #吞吐量
