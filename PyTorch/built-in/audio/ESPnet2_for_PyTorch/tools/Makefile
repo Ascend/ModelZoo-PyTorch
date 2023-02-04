@@ -60,21 +60,21 @@ endif
 bc.done: activate_python.sh
 	. ./activate_python.sh && { command -v bc || conda install -y bc -c conda-forge; }
 	touch bc.done
-cmake.done: activate_python.sh
-	. ./activate_python.sh && { command -v cmake || conda install -y cmake; }
-	touch cmake.done
-flac.done: activate_python.sh
-	. ./activate_python.sh && { command -v flac || conda install -y libflac -c conda-forge; }
-	touch flac.done
-ffmpeg.done: activate_python.sh
-	. ./activate_python.sh && { command -v ffmpeg || conda install -y ffmpeg -c conda-forge; }
-	touch ffmpeg.done
-sox.done: activate_python.sh
-	. ./activate_python.sh && { command -v sox || conda install -y sox -c conda-forge; }
-	touch sox.done
-sndfile.done: activate_python.sh
-	. ./activate_python.sh && { python3 -c "from ctypes.util import find_library as F; assert F('sndfile') is not None" || conda install -y libsndfile=1.0.28 -c conda-forge; }
-	touch sndfile.done
+# cmake.done: activate_python.sh
+# 	. ./activate_python.sh && { command -v cmake || conda install -y cmake; }
+# 	touch cmake.done
+# flac.done: activate_python.sh
+# 	. ./activate_python.sh && { command -v flac || conda install -y libflac -c conda-forge; }
+# 	touch flac.done
+# ffmpeg.done: activate_python.sh
+# 	. ./activate_python.sh && { command -v ffmpeg || conda install -y ffmpeg -c conda-forge; }
+# 	touch ffmpeg.done
+# sox.done: activate_python.sh
+# 	. ./activate_python.sh && { command -v sox || conda install -y sox -c conda-forge; }
+# 	touch sox.done
+# sndfile.done: activate_python.sh
+# 	. ./activate_python.sh && { python3 -c "from ctypes.util import find_library as F; assert F('sndfile') is not None" || conda install -y libsndfile=1.0.28 -c conda-forge; }
+# 	touch sndfile.done
 ifneq ($(strip $(USE_CONDA)),)
 conda_packages.done: bc.done cmake.done flac.done ffmpeg.done sox.done sndfile.done
 else
@@ -92,12 +92,12 @@ sph2pipe.done:
 
 
 pytorch.done: activate_python.sh
-ifeq ($(strip $(USE_CONDA)),)
-	. ./activate_python.sh && ./installers/install_torch.sh "false" "${TH_VERSION}" "${CUDA_VERSION}"
-else
-	. ./activate_python.sh && ./installers/install_torch.sh "true" "${TH_VERSION}" "${CUDA_VERSION}"
-endif
-	touch pytorch.done
+# ifeq ($(strip $(USE_CONDA)),)
+# 	. ./activate_python.sh && ./installers/install_torch.sh "false" "${TH_VERSION}" "${CUDA_VERSION}"
+# else
+# 	. ./activate_python.sh && ./installers/install_torch.sh "true" "${TH_VERSION}" "${CUDA_VERSION}"
+# endif
+# 	touch pytorch.done
 
 # NOTE(kamo): conda_packages is not necessary for installation of espnet, but add it the dependencies just in case.
 espnet.done: pytorch.done conda_packages.done
