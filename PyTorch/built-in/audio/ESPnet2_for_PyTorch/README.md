@@ -97,7 +97,7 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
   
      ```
      chmod +x -R ../../TEMPLATE/asr1
-     chmod +x ../../../../egs/aishell/asr1/local/download_and_untar.sh
+     chmod +x ../../../egs/aishell/asr1/local/download_and_untar.sh
      chmod +x -R local
      chmod +x run.sh
      ```
