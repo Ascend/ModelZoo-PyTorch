@@ -15,13 +15,14 @@ batch_bins: 2000000
 accum_grad: 1
 max_epoch: 15  # 15epoch is enougth
 
-optim: adam
+optim: npufusedadam
 optim_conf:
    lr: 0.001
 scheduler: warmuplr
 scheduler_conf:
    warmup_steps: 25000
 
+use_amp: true
 best_model_criterion:
 -   - valid
     - loss
