@@ -8,6 +8,7 @@
 
 import torch
 from torch import nn
+from torch_npu.contrib.module import NpuPreGenDropout
 
 from espnet.nets.pytorch_backend.transformer.layer_norm import LayerNorm
 
@@ -54,6 +55,7 @@ class DecoderLayer(nn.Module):
         self.norm2 = LayerNorm(size)
         self.norm3 = LayerNorm(size)
         self.dropout = nn.Dropout(dropout_rate)
+        self.dropout_npu = NpuPreGenDropout(dropout_rate)
         self.normalize_before = normalize_before
         self.concat_after = concat_after
         if self.concat_after:
@@ -97,6 +99,9 @@ class DecoderLayer(nn.Module):
             tgt_q_mask = None
             if tgt_mask is not None:
                 tgt_q_mask = tgt_mask[:, -1:, :]
+
+        if tgt_q.device != torch.device('cpu'):
+            self.dropout = self.dropout_npu
 
         if self.concat_after:
             tgt_concat = torch.cat(

@@ -8,6 +8,7 @@
 
 import math
 import torch
+from torch_npu.contrib.module import NpuPreGenDropout
 
 
 def _pre_hook(
@@ -50,6 +51,7 @@ class PositionalEncoding(torch.nn.Module):
         self.reverse = reverse
         self.xscale = math.sqrt(self.d_model)
         self.dropout = torch.nn.Dropout(p=dropout_rate)
+        self.dropout_npu = NpuPreGenDropout(p=dropout_rate)
         self.pe = None
         self.extend_pe(torch.tensor(0.0).expand(1, max_len))
         self._register_load_state_dict_pre_hook(_pre_hook)
@@ -88,7 +90,10 @@ class PositionalEncoding(torch.nn.Module):
         """
         self.extend_pe(x)
         x = x * self.xscale + self.pe[:, : x.size(1)]
-        return self.dropout(x)
+        if x.device == torch.device('cpu'):
+            return self.dropout(x)
+        else:
+            return self.dropout(x)
 
 
 class ScaledPositionalEncoding(PositionalEncoding):

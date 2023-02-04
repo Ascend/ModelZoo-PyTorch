@@ -10,7 +10,7 @@
 import torch
 
 from torch import nn
-
+from torch_npu.contrib.module import NpuPreGenDropout
 from espnet.nets.pytorch_backend.transformer.layer_norm import LayerNorm
 
 
@@ -70,6 +70,7 @@ class EncoderLayer(nn.Module):
             self.norm_conv = LayerNorm(size)  # for the CNN module
             self.norm_final = LayerNorm(size)  # for the final output of the block
         self.dropout = nn.Dropout(dropout_rate)
+        self.dropout_npu = NpuPreGenDropout(dropout_rate)
         self.size = size
         self.normalize_before = normalize_before
         self.concat_after = concat_after
@@ -96,6 +97,9 @@ class EncoderLayer(nn.Module):
             x, pos_emb = x_input[0], x_input[1]
         else:
             x, pos_emb = x_input, None
+
+        if x.device != torch.device('cpu'):
+            self.dropout = self.dropout_npu
 
         skip_layer = False
         # with stochastic depth, residual connection `x + f(x)` becomes
