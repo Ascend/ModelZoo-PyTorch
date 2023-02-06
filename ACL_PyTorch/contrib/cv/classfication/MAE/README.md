@@ -57,7 +57,11 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     ```bash
     pip3 install -r requirements.txt
     ```
-
+- 获取源码
+    ```bash
+    git clone https://github.com/facebookresearch/mae.git
+    git reset --hard be47fef7a727943547afb0c670cf1b26034c3c89
+    ```
 ## 准备数据集
 
 1. 获取原始数据集  
@@ -78,7 +82,7 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     ```bash
     python3 MAE_preprocess.py --image-path /opt/npu/imageNet/val --prep-image ./prep_dataset_batch_size1/ --batch-size 1
     ```
-    其中"image-path"表示处理前原数据集的地址，"prep-image"表示生成数据集的文件夹名称(将在文件夹名      称后会自动标识对应batch size，"batch-size"表示生成数据集对应的batch size
+    其中"image-path"表示处理前原数据集的地址，"prep-image"表示生成数据集的文件夹名称(将在文件夹名称后会自动标识对应batchsize，"batch-size"表示生成数据集对应的batchsize（建议使用默认值1,即可支持所有batchsize的推理）
 
     
     运行后，将会得到如下形式的文件夹：
@@ -157,6 +161,9 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     + --output: OM模型路径，无需加后缀
     + --log：日志级别
     + --soc_version: 处理器型号
+    + --optypelist_for_implmode: 列举算子optype的列表
+    + --enable_small_channel: 是否使能small channel的优化
+
     
 
 
@@ -166,10 +173,9 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
     python3 -m ais_bench \
-        --model mae_batch_size${batch_size} \
-        --input ./ prep_dataset_batch_size1/ \ 
-        --output ./ \
-        --output_dirname ./result/ \
+        --model mae_batch_size${batch_size}.om \
+        --input ./prep_dataset_batch_size1/ \ 
+        --output ./result/ \
         --outfmt TXT \
         --batchsize ${batch_size}
     ```
@@ -177,7 +183,6 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     + --model OM模型路径
     + --input 存放预处理后数据的目录路径
     + --output 用于存放推理结果的父目录路径
-    + --output_dirname 用于存放推理结果的子目录名，位于--output指定的目录下
     + --outfmt 推理结果文件的保存格式
     + --batchsize 模型每次输入bin文件的数量
 
@@ -188,7 +193,7 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
     + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
     ```bash
-    python3 -m ais_bench --model inceptionv3_batch_size${batch_size}.om --batchsize ${batch_size}
+    python3 -m ais_bench --model mae_batch_size${batch_size}.om --batchsize ${batch_size}
     ```
     执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
 
@@ -197,7 +202,7 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     执行后处理脚本，根据推理结果计算OM模型的精度：
     ```bash
     python3 MAE_postprocess.py \
-        --folder-davinci-target ./result/outputs_batch_size1/ \
+        --folder-davinci-target ./result/ \
         --annotation-file-path ./ILSVRC2012/val_label.txt \
         --result-json-path ./result \
         --json-file-name result_batch_size1.json \
@@ -208,7 +213,7 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
     + --annotation-file-path: 标签文件路径
     + --result-json-path: 精度文件保存路径。
     + --json-file-name: 精度文件名。
-    + --batch-size: 输入文件数量。
+    + --batch-size: 输入文件数量，当使用ais_bench工具推理时，参数为1。
     
     运行成功后，程序会将各top1~top5的正确率记录在 result_batch_size1.json 文件中，可执行以下命令查看：
     ```
