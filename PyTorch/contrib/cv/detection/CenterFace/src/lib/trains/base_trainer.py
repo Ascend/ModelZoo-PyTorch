@@ -97,6 +97,8 @@ class BaseTrainer(object):
             scaled_loss.backward()
         self.optimizer.step()
       batch_time.update(time.time() - end)
+      if iter_id < 3 and epoch==1:
+        print('iter_time={}'.format(time.time() - end))
       end = time.time()
       if opt.local_rank ==0:
         Bar.suffix = '{phase}: [{0}][{1}/{2}]|Tot: {total:} |ETA: {eta:} '.format(
