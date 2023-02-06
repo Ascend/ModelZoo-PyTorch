@@ -54,7 +54,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-sed -i "s|/train_tmp/glint360k|$data_path|g" ${cur_path}/configs/glint360k_r100.py
+sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|$data_path|g" ${cur_path}/configs/glint360k_r100.py
 sed -i "s|config.num_epoch = 20|config.num_epoch = $train_epochs|g" ${cur_path}/configs/glint360k_r100.py
 
 if [[ $precision_mode == "must_keep_origin_dtype" ]];then
@@ -90,7 +90,6 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
-sed -i "s|$data_path|/train_tmp/glint360k|g" ${cur_path}/configs/glint360k_r100.py
 sed -i "s|config.num_epoch = $train_epochs|config.num_epoch = 20|g" ${cur_path}/configs/glint360k_r100.py
 
 training_log=${test_path_dir}/output/${ASCEND_DEVICE_ID}/training_${ASCEND_DEVICE_ID}.log

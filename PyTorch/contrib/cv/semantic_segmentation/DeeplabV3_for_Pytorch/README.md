@@ -192,7 +192,7 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 
 **表 2**  训练结果展示表
 
-| NAME    | mIOU |  FPS | Epochs | AMP_Type |
+| NAME    | aACC |  FPS | Epochs | AMP_Type |
 | ------- | ----- | ---: | ------ | -------: |
 | 1p-torch1.5 | 90.97   |  6.657 | 1000     |        - |
 | 1p-torch1.8  | 91.11     |  6.806 | 1000      |       O2 |
