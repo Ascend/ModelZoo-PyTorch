@@ -9,7 +9,8 @@
 
 ## 支持模型列表（按字母顺序排序）
 >**说明：** 
->以下无精度指标的模型均需人工与在线推理结果比较
+>**以下无精度指标的模型均需人工与在线推理结果比较**
+>**因使用版本差异，模型性能可能存在波动，性能仅供参考**
 
 ##  规范模型
 CV-classfication
@@ -1941,23 +1942,6 @@ CV-detection
 	<td>6.5(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
-    </tr>
-    <tr>
-        <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CenterNet_for_Pytorch">  CenterNet_for_Pytorch </a>
-        </td>
-        <td>coco</td>
-	<td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-	<td></td>
-        <td></td>
-	<td>1 x 3 x 512 x 512</td>
     </tr>
     <tr>
         <td>
