@@ -237,6 +237,10 @@ if __name__ == '__main__':
 
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
+    else:
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+        torch.npu.set_option(option)
 
     distributed = int(os.environ['RANK_SIZE']) > 1
     if 'RANK_SIZE' in os.environ and 'RANK_ID' in os.environ:
