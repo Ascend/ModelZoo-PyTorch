@@ -162,7 +162,7 @@ def knn_classifier(train_features, train_labels, test_features, test_labels, k, 
         distances, indices = similarity.topk(k, largest=True, sorted=True)
         distances, indices = distances.npu(), indices.npu()
         candidates = train_labels.view(1, -1).expand(batch_size, -1)
-        retrieved_neighbors = torch.gather(candidates, 1, indices)
+        retrieved_neighbors = torch.gather(candidates, 1, indices).long()
 
         retrieval_one_hot.resize_(batch_size * k, num_classes).zero_()
         retrieval_one_hot.scatter_(1, retrieved_neighbors.view(-1, 1), 1)
