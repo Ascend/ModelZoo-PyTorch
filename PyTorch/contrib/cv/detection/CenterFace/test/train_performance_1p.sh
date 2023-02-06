@@ -13,6 +13,8 @@ batch_size=32
 
 # 指定训练所使用的npu device卡id
 device_id=0
+# 指定二进制训练模式，默认bin_mode=0（非二进制）
+bin_mode=0
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -24,6 +26,14 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        export PATH=/home/anaconda3/bin:$PATH
+        export LD_LIBRARY_PATH=/home/anaconda3/lib:$LD_LIBRARY_PATH
+        echo "conda_name: $conda_name"
+        source activate $conda_name
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=1
     fi
 done
 
@@ -96,7 +106,7 @@ make
 wait
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-python3.7.5 main.py $PREC --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 main.py $PREC --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id --bin_mode ${bin_mode} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
@@ -106,8 +116,9 @@ e2e_time=$(( $end_time - $start_time ))
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
-#输出性能FPS，需要模型审视修改
+#输出性能FPS、CompileTime，需要模型审视修改
 FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " = " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+CompileTime=`grep iter_time ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|head -n 2|awk -F "=" '{sum+=$2}END{print sum}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -146,3 +157,4 @@ echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${C
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 # echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

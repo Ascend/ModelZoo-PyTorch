@@ -130,6 +130,7 @@ class opts(object):
         action="store_true",
     )
     self.parser.add_argument('--pretrained_weight_path', default='', help='pretrained weight path')
+    self.parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
 
     # test
     self.parser.add_argument('--flip_test', action='store_true',
