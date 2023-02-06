@@ -26,7 +26,7 @@
 + 模型输入  
     | input-name | data-type | data-format |input-shape |
     | ---------- | --------- | ----------- | ---------- |
-    | input1  |  FLOAT32  | NCHW         | batchsize x 3 x 1024 x 1024   |
+    | input1  |  FLOAT32  | NCHW         | batchsize x 3 x 1024 x 2048   |
 
 + 模型输出  
     | output-name |  data-type | data-format |output-shape |
