@@ -66,11 +66,39 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
   
 - 安装依赖（根据模型需求，按需添加所需依赖）。
 
+  **【关键**】mmcv-full的安装，当前支持版本mmcv-full 1.7.1，安装过程如下
+  
+  1、卸载原有的mmcv 和 mmcv-full，参考命令：
+  
   ```
-  pip install -r requirements.txt
+  pip3 uninstall mmcv
+  pip3 uninstall mmcv-full
   ```
   
-
+  2、下载mmcv-full 1.7.1的压缩包，参考命令：
+  
+  浏览器输入地址下载
+  
+  ```
+  https://github.com/open-mmlab/mmcv/archive/refs/tags/v1.7.1.zip
+  ```
+  
+  3、上传到服务器，解压并重新编译mmcv-full 1.7.1（若此步骤不做，训练后的Eval会报错），参考命令：
+  
+  ```
+  unzip mmcv-1.7.1.zip
+  ```
+  
+  提前source环境变量，类似这种方式，（xxx需要替换为你的安装目录） source xxx/ascend-toolkit/set_env.sh
+  
+  进入有setup.py那集目录，执行如下编译命令（估计耗时10分钟左右）
+  
+  ```
+  MMCV_WITH_OPS=1 FORCE_NPU=1 python3 setup.py build_ext
+  MMCV_WITH_OPS=1 FORCE_NPU=1 python3 setup.py develop
+  ```
+  
+  等待执行结束，安装完成。
 
 ## 准备数据集
 
@@ -136,8 +164,9 @@ MMDetection 是一个基于 PyTorch 的目标检测开源工具箱。计算机�
       bash train_performance_8p.sh --data_path=xx/xx/coco2017
    ```
    
+
 训练完成后，pth文件保存在./work_dirs下面，并输出模型训练精度和性能信息。
-   
+
    注意：train_full_8p.sh为通用的8P全量精度训练脚本，train_full_8p_resume.sh 在train_full_8p.sh的基础上新增了异常退出后复跑机制，注意是规避三方组件异常退出等，确保训练可以完成。
 
 
