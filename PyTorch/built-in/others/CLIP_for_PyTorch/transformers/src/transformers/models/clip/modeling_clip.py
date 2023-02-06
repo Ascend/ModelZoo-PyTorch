@@ -32,6 +32,7 @@ from ...file_utils import (
 from ...modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling
 from ...modeling_utils import PreTrainedModel
 from ...utils import logging
+from ...utils.npu_module import NpuLinear
 from .configuration_clip import CLIPConfig, CLIPTextConfig, CLIPVisionConfig
 
 
@@ -185,10 +186,10 @@ class CLIPAttention(nn.Module):
         self.scale = self.head_dim**-0.5
         self.dropout = config.attention_dropout
 
-        self.k_proj = nn.Linear(self.embed_dim, self.embed_dim)
-        self.v_proj = nn.Linear(self.embed_dim, self.embed_dim)
-        self.q_proj = nn.Linear(self.embed_dim, self.embed_dim)
-        self.out_proj = nn.Linear(self.embed_dim, self.embed_dim)
+        self.k_proj = NpuLinear(self.embed_dim, self.embed_dim)
+        self.v_proj = NpuLinear(self.embed_dim, self.embed_dim)
+        self.q_proj = NpuLinear(self.embed_dim, self.embed_dim)
+        self.out_proj = NpuLinear(self.embed_dim, self.embed_dim)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
@@ -203,6 +204,7 @@ class CLIPAttention(nn.Module):
         """Input shape: Batch x Time x Channel"""
 
         bsz, tgt_len, embed_dim = hidden_states.size()
+        hidden_states = hidden_states.view(-1, hidden_states.size()[-1]).clone().npu_format_cast(29)
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scale
@@ -215,7 +217,7 @@ class CLIPAttention(nn.Module):
         value_states = value_states.view(*proj_shape)
 
         src_len = key_states.size(1)
-        attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
+        attn_weights = torch.npu_bmmV2(query_states, key_states.transpose(1, 2), [])
 
         if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
             raise ValueError(
@@ -253,7 +255,7 @@ class CLIPAttention(nn.Module):
 
         attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
 
-        attn_output = torch.bmm(attn_probs, value_states)
+        attn_output = torch.npu_bmmV2(attn_probs, value_states, [])
 
         if attn_output.size() != (bsz * self.num_heads, tgt_len, self.head_dim):
             raise ValueError(
@@ -262,9 +264,10 @@ class CLIPAttention(nn.Module):
 
         attn_output = attn_output.view(bsz, self.num_heads, tgt_len, self.head_dim)
         attn_output = attn_output.transpose(1, 2)
-        attn_output = attn_output.reshape(bsz, tgt_len, embed_dim)
+        attn_output = attn_output.reshape(bsz * tgt_len, embed_dim)
 
         attn_output = self.out_proj(attn_output)
+        attn_output = attn_output.view(bsz, tgt_len, embed_dim)
 
         return attn_output, attn_weights_reshaped
 
@@ -274,13 +277,17 @@ class CLIPMLP(nn.Module):
         super().__init__()
         self.config = config
         self.activation_fn = ACT2FN[config.hidden_act]
-        self.fc1 = nn.Linear(config.hidden_size, config.intermediate_size)
-        self.fc2 = nn.Linear(config.intermediate_size, config.hidden_size)
+        self.fc1 = NpuLinear(config.hidden_size, config.intermediate_size)
+        self.fc2 = NpuLinear(config.intermediate_size, config.hidden_size)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        bsz, tgt_len, embed_dim = hidden_states.shape
+        hidden_states = hidden_states.view(-1, hidden_states.size()[-1]).clone().npu_format_cast(29)
+
         hidden_states = self.fc1(hidden_states)
         hidden_states = self.activation_fn(hidden_states)
         hidden_states = self.fc2(hidden_states)
+        hidden_states = hidden_states.view(bsz, tgt_len, embed_dim)
         return hidden_states
 
 
@@ -762,6 +769,7 @@ class CLIPVisionTransformer(nn.Module):
             raise ValueError("You have to specify pixel_values")
 
         hidden_states = self.embeddings(pixel_values)
+        hidden_states = hidden_states.npu_format_cast(29)
         hidden_states = self.pre_layrnorm(hidden_states)
 
         encoder_outputs = self.encoder(
