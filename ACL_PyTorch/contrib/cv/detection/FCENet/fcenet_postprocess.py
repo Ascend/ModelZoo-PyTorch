@@ -74,16 +74,13 @@ def get_boundary_single(score_map, scale):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_path',type=str,default='./result/')
-    parser.add_argument('--instance_file',type=str,default='./mmocr/data/icdar2015/instances_test.json')
-    parser.add_argument('--output_file',type=str,default='./boundary_results.txt')
+    parser.add_argument('--input_path', type=str, default='./result/')
+    parser.add_argument('--instance_file', type=str, default='./mmocr/data/icdar2015/instances_test.json')
+    parser.add_argument('--output_file', type=str, default='./boundary_results.txt')
     args = parser.parse_args()
-    #print(args.input_path)
-    #print(args.output_file)
-    #prediction_file_path = './result/'
     prediction_file_path = args.input_path
     for root, dirs, files in os.walk(prediction_file_path):
-        prediction_file_path = os.path.join(prediction_file_path,dirs[0])
+        prediction_file_path = os.path.join(prediction_file_path, dirs[-1])
         break
     container = []
     count = 0
@@ -96,7 +93,6 @@ if __name__ == '__main__':
                  container[i][j].append([])
                  
     img_idx = []
-    #file_name = './mmocr/data/icdar2015/instances_test.json'
     file_name = args.instance_file
     img_name = []
 
@@ -113,17 +109,19 @@ if __name__ == '__main__':
         img_idx.append(int(img_num))
     
     for tfile_name in tqdm(os.listdir(prediction_file_path)):
+        if tfile_name.split('.')[1] is not 'txt':
+            continue
         tmp = tfile_name.split('.')[0]
         index = tmp.rfind('_')
         img_name = tmp[:index]
-        index1 = img_name.rfind('_')
+        img_name_copy = img_name
+        index1 = img_name_copy.rfind('_')
         img_name = tmp[:index1]
-
-        index2 = img_name.rfind('_')+1
-        flag = int(img_name[index2:])
+        index2 = img_name_copy.rfind('_')+1
+        flag = int(img_name_copy[index2:])
         
         lines = ''
-        with open(os.path.join(prediction_file_path,tfile_name), 'r') as f:
+        with open(os.path.join(prediction_file_path, tfile_name), 'r') as f:
             for line in f.readlines():
                 line = line.strip()
                 lines = lines+' '+line

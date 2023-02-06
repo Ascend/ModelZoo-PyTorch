@@ -18,7 +18,7 @@ import os
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-
+from tqdm.contrib import tzip
 import mmcv
 import numpy as np
 import torch
@@ -218,13 +218,11 @@ class MMOCR:
                 arr_chunks = [
                     arrays[i:i + n] for i in range(0, len(arrays), n)
                 ]
-                #for chunk in arr_chunks:
-                #print("arr_chunks:",arr_chunks)
-                #print("filenames:",filenames)
+
                 for (chunk,filename) in zip(arr_chunks,filenames) :
                     model_inference(model, chunk, filename, batch_mode=True)
         else:
-            for (arr,filename) in zip(arrays,filenames) :
+            for (arr,filename) in tzip(arrays,filenames) :
                 model_inference(model, arr, filename, batch_mode=False)
 
     # Arguments pre-processing function

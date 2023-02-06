@@ -50,7 +50,8 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.RC1 | -          |
     | Python    | 3.7.5   | -          |
-    
+    | torch    | 1.8.0   | -          |    
+
     说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
 
@@ -115,7 +116,6 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     参数说明：
     + --dynamic-export: 是否动态导出onnx模型
     + --output-file: 输出onnx的文件名。
-    + --shape ：输出onnx的可输入数据量
 
 
 2. ONNX 模型转 OM 模型  
@@ -174,8 +174,7 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     python3 -m ais_bench \
         --model ./fcenet_bs${batch_size} \
         --input ./preprocessed_imgs/ \ 
-        --output ./ \
-        --output_dirname ./result/ \
+        --output ./result \
         --outfmt TXT \
         --batchsize ${batch_size}
     ```
@@ -183,7 +182,6 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     + --model OM模型路径
     + --input 存放预处理后数据的目录路径
     + --output 用于存放推理结果的父目录路径
-    + --output_dirname 用于存放推理结果的子目录名，位于--output指定的目录下
     + --outfmt 推理结果文件的保存格式
     + --batchsize 模型每次输入bin文件的数量,本例中为1。
 
@@ -203,8 +201,8 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     执行后处理脚本，根据推理结果计算OM模型的精度：
     ```bash
     python3 fcenet_postprocess.py \
-        --input_path=./result \
-        --instance_file=./mmocr/data/icdar2015/instances_test.json \
+            --input_path=./result \
+            --instance_file=./mmocr/data/icdar2015/instances_test.json \
         --output_file=./boundary_results.txt
     python3 eval.py \
     ./mmocr/configs/textdet/fcenet/fcenet_r50_fpn_1500e_icdar2015.py \
