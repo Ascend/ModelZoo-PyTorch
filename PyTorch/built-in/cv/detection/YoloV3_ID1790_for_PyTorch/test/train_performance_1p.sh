@@ -40,7 +40,7 @@ do
     if [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
       echo "PATH TRAIN BEFORE: $PATH"
-      source set_conda.sh --conda_name=$conda_name
+      source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
       source activate $conda_name
       echo "PATH TRAIN AFTER: $PATH"
     fi
