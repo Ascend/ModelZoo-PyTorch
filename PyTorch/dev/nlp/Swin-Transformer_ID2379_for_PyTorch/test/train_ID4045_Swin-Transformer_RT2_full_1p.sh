@@ -20,10 +20,15 @@ RANK_ID_START=0
 #进入到conda环境
 #source activate py8
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="O1"
+
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
@@ -54,9 +59,6 @@ learning_rate=0.495
 
 #TF2.X独有，不需要修改
 #export NPU_LOOP_SIZE=${train_steps}
-
-#维测参数，precision_mode需要模型审视修改
-precision_mode="O1"
 #维持参数，以下不需要修改
 over_dump=False
 data_dump_flag=False

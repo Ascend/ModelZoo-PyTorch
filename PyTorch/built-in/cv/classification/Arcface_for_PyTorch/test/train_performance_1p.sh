@@ -98,7 +98,7 @@ grep "Training" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVIC
 # 训练用例信息，不需要修改
 BatchSize=`grep "total_batch_size" ${training_log} |awk '{print $5}'`
 DeviceType=`uname -m`
-if [[ $precision_mode == "O0" ]];then
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
 else
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
