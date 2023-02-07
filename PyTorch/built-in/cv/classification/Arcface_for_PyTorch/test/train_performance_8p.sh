@@ -48,7 +48,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|$data_path|g" ${cur_path}/configs/glint360k_r100.py
+sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|'"$data_path"'|g" ${cur_path}/configs/glint360k_r100.py
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
