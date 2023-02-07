@@ -40,7 +40,7 @@ do
     if [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
       echo "PATH TRAIN BEFORE: $PATH"
-      source set_conda.sh --conda_name=$conda_name
+      source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
       source activate $conda_name
       echo "PATH TRAIN AFTER: $PATH"
     fi
@@ -111,6 +111,10 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'/'${time}'}'`
+
+#输出CompileTime
+time2=`grep -a 'Epoch'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep time|head -n 1|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|sed '/^$/d'|sed 's/.$//'`
+CompileTime=`awk 'BEGIN{printf "%.2f\n", ('${time2}'-'${time}')*50}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -145,6 +149,7 @@ echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${Cas
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CompileTime = ${CompileTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 #退出anaconda环境
 if [ -n "$conda_name" ];then
     echo "conda $conda_name deactivate"
