@@ -15,9 +15,8 @@
 import onnx
 import sys
 
-batchsize = sys.argv[1]
 
-onnx_path = '../swin_net_bs{}.onnx'.format(batchsize)
+onnx_path = sys.argv[1]
 onnx_model = onnx.load(onnx_path)
 graph = onnx_model.graph
 
@@ -129,4 +128,5 @@ for i, node in enumerate(onnx_model.graph.node):
             print("add cast int64->int32 before", node.name)
             add_cast(i+slide, node, "INT32")
 
-onnx.save(onnx_model, '../swin_mod_bs{}.onnx'.format(batchsize))
+save_path = sys.argv[2]
+onnx.save(onnx_model, save_path)

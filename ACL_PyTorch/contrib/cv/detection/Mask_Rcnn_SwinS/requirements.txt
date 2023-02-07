@@ -11,6 +11,6 @@ python-dateutil==2.8.2
 sympy==1.10
 terminaltables==3.1.10
 torch==1.8.0
-torchvision
+torchvision==0.9.1
 cython
 numpy

@@ -18,6 +18,8 @@ import argparse
 import cv2
 import numpy as np
 import copy
+from tqdm import tqdm
+
 
 def postprocess_bboxes(bboxes, image_size, net_input_width, net_input_height):
     w = image_size[0]
@@ -93,7 +95,6 @@ if __name__ == '__main__':
     parser.add_argument("--net_input_height", type=int, default=800)
     parser.add_argument("--ifShowDetObj", action="store_true", help="if input the para means True, neither False.")
     flags = parser.parse_args()
-    flags.bin_data_path = os.path.join(flags.bin_data_path, sorted(os.listdir(flags.bin_data_path))[-1])
 
     img_size_dict = dict()
     with open(flags.test_annotation)as f:
@@ -143,7 +144,6 @@ if __name__ == '__main__':
                              'test_mode': True})
 
     coco_class_map = {id:name for id, name in enumerate(coco_dataset.CLASSES)}
-    #print(dir(coco_dataset))
     results = []
 
     cnt = 0
@@ -151,16 +151,15 @@ if __name__ == '__main__':
     infer_failed = []
     needtopop = []
     data_infos = copy.copy(coco_dataset.data_infos)
-    for idx, data in enumerate(data_infos):
+    for idx, data in tqdm(enumerate(data_infos)):
         ids = data['id']
         result = []
         cnt = cnt + 1
-        bin_file_l = glob.glob(bin_path + '/*0' + str(ids) + '_output_1.bin')
+        bin_file_l = glob.glob(bin_path + '/*0' + str(ids) + '_1.bin')
         if len(bin_file_l) > 0:
             bin_file = bin_file_l[0]
             bin_file = bin_file[bin_file.rfind('/') + 1:]
             bin_file = bin_file[:bin_file.rfind('_')]
-            print(cnt - 1, bin_file)
             path_base = os.path.join(bin_path, bin_file)
             bin_name = bin_file.split('_')[0]
             res_buff = []
@@ -253,11 +252,10 @@ if __name__ == '__main__':
         else:
             print("[ERROR] file not exist", path_base + "_1.bin")
             needtopop.append(idx)
-    print(needtopop)
     for idx in sorted(needtopop)[::-1]:
         coco_dataset.data_infos.pop(idx)
         coco_dataset.img_ids.pop(idx)
     save_variable(results, './results.txt')
     # results = load_variavle('./results.txt')
 
-    eval_results = coco_dataset.evaluate(results, metric=['bbox', 'segm'], classwise=True)
+    eval_results = coco_dataset.evaluate(results, metric=['bbox'], classwise=True)

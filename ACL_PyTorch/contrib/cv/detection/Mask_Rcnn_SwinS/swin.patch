@@ -1,17 +1,5 @@
-diff --git a/mmdet/apis/inference.py b/mmdet/apis/inference.py
-index d0ab834c..48648b35 100644
---- a/mmdet/apis/inference.py
-+++ b/mmdet/apis/inference.py
-@@ -148,7 +148,6 @@ def inference_detector(model, imgs):
-     # forward the model
-     with torch.no_grad():
-         results = model(return_loss=False, rescale=True, **data)
--
-     if not is_batch:
-         return results[0]
-     else:
 diff --git a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
-index a7f1c62f..25992e6b 100644
+index a7f1c62..25992e6 100644
 --- a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
 +++ b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
 @@ -323,15 +323,34 @@ def onnx_delta2bbox(rois,
@@ -58,7 +46,7 @@ index a7f1c62f..25992e6b 100644
      x1, y1 = rois[..., 0], rois[..., 1]
      x2, y2 = rois[..., 2], rois[..., 3]
 diff --git a/mmdet/core/export/onnx_helper.py b/mmdet/core/export/onnx_helper.py
-index 9f6b9a01..b626e1b0 100644
+index 9f6b9a0..b626e1b 100644
 --- a/mmdet/core/export/onnx_helper.py
 +++ b/mmdet/core/export/onnx_helper.py
 @@ -78,6 +78,54 @@ def get_k_for_topk(k, size):
@@ -229,7 +217,7 @@ index 9f6b9a01..b626e1b0 100644
 +    dets, labels = batch_nms_op(boxes, scores, score_threshold, iou_threshold, max_output_boxes_per_class, max_output_boxes_per_class)
 +    return dets, labels
 diff --git a/mmdet/core/export/pytorch2onnx.py b/mmdet/core/export/pytorch2onnx.py
-index b8261eed..ffb6bc1e 100644
+index b8261ee..ffb6bc1 100644
 --- a/mmdet/core/export/pytorch2onnx.py
 +++ b/mmdet/core/export/pytorch2onnx.py
 @@ -96,6 +96,7 @@ def build_model_from_cfg(config_path, checkpoint_path, cfg_options=None):
@@ -241,7 +229,7 @@ index b8261eed..ffb6bc1e 100644
  
  
 diff --git a/mmdet/models/backbones/swin.py b/mmdet/models/backbones/swin.py
-index c9f1455a..e3b367dd 100644
+index b8eccfc..8c669c1 100644
 --- a/mmdet/models/backbones/swin.py
 +++ b/mmdet/models/backbones/swin.py
 @@ -191,10 +191,13 @@ class ShiftWindowMSA(BaseModule):
@@ -281,7 +269,7 @@ index c9f1455a..e3b367dd 100644
              x = shifted_x
  
 diff --git a/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py b/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
-index 355d8822..1c1beb3f 100644
+index 355d882..1c1beb3 100644
 --- a/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
 +++ b/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
 @@ -330,15 +330,15 @@ class FCNMaskHead(BaseModule):
@@ -310,7 +298,7 @@ index 355d8822..1c1beb3f 100644
  
  def _do_paste_mask(masks, boxes, img_h, img_w, skip_empty=True):
 diff --git a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
-index 1b569ce1..5dec2c06 100644
+index dbc5aef..dbf3740 100644
 --- a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 +++ b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 @@ -5,6 +5,31 @@ from mmcv.runner import force_fp32
@@ -361,7 +349,7 @@ index 1b569ce1..5dec2c06 100644
          num_levels = len(feats)
          expand_dims = (-1, self.out_channels * out_size[0] * out_size[1])
 diff --git a/mmdet/models/roi_heads/standard_roi_head.py b/mmdet/models/roi_heads/standard_roi_head.py
-index 3fdd82ad..7fffb378 100644
+index 3fdd82a..7fffb37 100644
 --- a/mmdet/models/roi_heads/standard_roi_head.py
 +++ b/mmdet/models/roi_heads/standard_roi_head.py
 @@ -343,8 +343,8 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
@@ -376,7 +364,7 @@ index 3fdd82ad..7fffb378 100644
  
      def bbox_onnx_export(self, x, img_metas, proposals, rcnn_test_cfg,
 diff --git a/tools/deployment/pytorch2onnx.py b/tools/deployment/pytorch2onnx.py
-index 5c786f85..7b67a57a 100644
+index ee856cc..57e90db 100644
 --- a/tools/deployment/pytorch2onnx.py
 +++ b/tools/deployment/pytorch2onnx.py
 @@ -24,7 +24,8 @@ def pytorch2onnx(model,
@@ -398,7 +386,7 @@ index 5c786f85..7b67a57a 100644
      img_list, img_meta_list = [one_img], [[one_meta]]
  
      if skip_postprocess:
-@@ -92,9 +95,9 @@ def pytorch2onnx(model,
+@@ -92,12 +95,13 @@ def pytorch2onnx(model,
          output_file,
          input_names=[input_name],
          output_names=output_names,
@@ -410,8 +398,13 @@ index 5c786f85..7b67a57a 100644
 +        # do_constant_folding=True,
          verbose=show,
          opset_version=opset_version,
-         dynamic_axes=dynamic_axes)
-@@ -288,6 +291,9 @@ def parse_args():
+-        dynamic_axes=dynamic_axes)
++        dynamic_axes=dynamic_axes,
++        enable_onnx_checker=False)
+ 
+     model.forward = origin_forward
+ 
+@@ -274,6 +278,9 @@ def parse_args():
          help='Whether to export model without post process. Experimental '
          'option. We do not guarantee the correctness of the exported '
          'model.')
@@ -421,7 +414,7 @@ index 5c786f85..7b67a57a 100644
      args = parser.parse_args()
      return args
  
-@@ -300,11 +306,11 @@ if __name__ == '__main__':
+@@ -286,11 +293,11 @@ if __name__ == '__main__':
  
      assert args.opset_version == 11, 'MMDet only support opset 11 now'
  
@@ -438,7 +431,7 @@ index 5c786f85..7b67a57a 100644
  
      cfg = Config.fromfile(args.config)
      if args.cfg_options is not None:
-@@ -342,16 +348,5 @@ if __name__ == '__main__':
+@@ -328,16 +335,5 @@ if __name__ == '__main__':
          test_img=args.test_img,
          do_simplify=args.simplify,
          dynamic_export=args.dynamic_export,
