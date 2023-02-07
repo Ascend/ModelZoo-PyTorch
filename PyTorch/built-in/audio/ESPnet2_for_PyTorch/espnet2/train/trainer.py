@@ -14,6 +14,7 @@ from typing import Optional
 from typing import Sequence
 from typing import Tuple
 from typing import Union
+import copy
 
 import humanfriendly
 import numpy as np
@@ -343,7 +344,7 @@ class Trainer:
                 )
 
                 # 5. Save and log the model and update the link to the best model
-                torch.save(model.state_dict(), output_dir / f"{iepoch}epoch.pth")
+                torch.save(copy.deepcopy(model).to("cpu").state_dict(), output_dir / f"{iepoch}epoch.pth")
 
                 # Creates a sym link latest.pth -> {iepoch}epoch.pth
                 p = output_dir / "latest.pth"
