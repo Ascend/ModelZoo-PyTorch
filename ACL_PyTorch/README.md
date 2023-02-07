@@ -1774,7 +1774,7 @@ CV-detection
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=8>精度</th>
+        <th align="center" colspan=7>精度</th>
 	<th colspan=2>最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
@@ -1785,7 +1785,6 @@ CV-detection
         <td nowrap="nowrap">F1-score</td>
         <td>Top1Acc</td>
         <td>ODS</td>
-        <td>余弦相似度</td>
         <td>loss</td>
         <td>310P</td>
         <td>310</td>
@@ -1798,7 +1797,6 @@ CV-detection
 	<td></td>
         <td></td>
         <td>25.6%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1819,7 +1817,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>137(bs1)</td>
         <td></td>
 	<td>bs x 3 x 736 x 736</td>
@@ -1831,7 +1828,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>71.47%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1853,7 +1849,6 @@ CV-detection
         <td>74.34%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>34617(bs16)</td>
         <td></td>
 	<td nowrap="nowrap">TEM[bs, 400, 100] <br> PEM[bs, 3, 100]</td>
@@ -1865,7 +1860,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>51.4%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1887,7 +1881,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -1899,7 +1892,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>41.9%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1921,7 +1913,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3.8(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -1938,7 +1929,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>6.5(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -1949,7 +1939,6 @@ CV-detection
         </td>
         <td>PaddleOCR</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -1972,7 +1961,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>232(bs1)</td>
         <td></td>
 	<td>多尺度</td>
@@ -1988,7 +1976,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td>0.999</td>
         <td></td>
 	<td>140(bs1)</td>
         <td></td>
@@ -2000,7 +1987,6 @@ CV-detection
         </td>
         <td>ICDAR2013</td>
 	<td>86.84%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2023,7 +2009,6 @@ CV-detection
         <td>78.9%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>1642(bs1)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -2040,7 +2025,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>840(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
@@ -2051,7 +2035,6 @@ CV-detection
         </td>
         <td>ICDAR2015</td>
 	<td>78.29%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2074,7 +2057,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>95(bs8)</td>
         <td></td>
 	<td>bs x 3 x 704 x 1280</td>
@@ -2091,7 +2073,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>6.18(bs1)</td>
         <td></td>
 	<td>bs x 3 x 1536x 1536</td>
@@ -2102,7 +2083,6 @@ CV-detection
         </td>
         <td>PaddleOCR</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2125,7 +2105,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>12(bs32)</td>
         <td></td>
 	<td>bs x 3 x 608 x 1088</td>
@@ -2137,7 +2116,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>44.2%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2159,7 +2137,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>8(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1216 x 1216</td>
@@ -2171,7 +2148,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>37.2%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2192,7 +2168,6 @@ CV-detection
         <td></td>
         <td>87.2%</td>
         <td></td>
-        <td></td> 
         <td></td>
 	<td>28.9(bs1)</td>
         <td></td>
@@ -2210,7 +2185,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>65(bs4)</td>
         <td></td>
 	<td>bs x 3 x 800 x 1333</td>
@@ -2221,7 +2195,6 @@ CV-detection
         </td>
         <td>ICDAR2015</td>
 	<td>86.4%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2244,7 +2217,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>20(bs1)</td>
         <td></td>
 	<td>bs x 3 x 800 x 1216</td>
@@ -2255,7 +2227,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>40.6%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2278,7 +2249,6 @@ CV-detection
         <td>37.8%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>65(bs4)</td>
         <td></td>
 	<td>bs x 3 x 512 x 512</td>
@@ -2290,7 +2260,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>40.5%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2312,7 +2281,6 @@ CV-detection
         <td>82.5%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>175(bs4)</td>
         <td></td>
  	<td>bs x 3 x 331x 331</td>
@@ -2323,7 +2291,6 @@ CV-detection
         </td>
         <td>VOC</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2346,7 +2313,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>219(bs1)</td>
         <td></td>
         <td nowrap="nowrap">bs x 3 x 736 x 1312</td>
@@ -2357,7 +2323,6 @@ CV-detection
         </td>
         <td>ICDAR2015</td>
 	<td>85.72%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2380,7 +2345,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>8.9(bs1)</td>
         <td></td>
 	<td>1 x 3 x 1000 x 1000</td>
@@ -2396,7 +2360,6 @@ CV-detection
         <td></td>
         <td></td>
         <td>79.8%</td>
-	<td></td>
         <td></td>
         <td></td>
         <td>89(bs1)</td>
@@ -2414,7 +2377,6 @@ CV-detection
         <td>79.6%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>445(bs16)</td>
         <td></td>
         <td>bs x 3 x 320 x 320</td>
@@ -2426,7 +2388,6 @@ CV-detection
         <td>coco</td>
 	<td></td>
         <td>27.9%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2448,7 +2409,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>16.52(bs1)</td>
         <td></td>
         <td>1 x 3 x 1344 X 1344</td>
@@ -2459,7 +2419,6 @@ CV-detection
         </td>
         <td>KITTI</td>
 	<td></td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2482,7 +2441,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3176(bs4)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
@@ -2493,7 +2451,6 @@ CV-detection
         </td>
         <td>VOC2007</td>
 	<td>69.8%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2516,7 +2473,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>5.9(bs8)</td>
         <td></td>
         <td>bs x 3 x 800 x 1216</td>
@@ -2533,7 +2489,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>180.36(bs1)</td>
         <td></td>
         <td>1 x 3 x 512 x 512</td>
@@ -2544,7 +2499,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>42.2%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2567,7 +2521,6 @@ CV-detection
         <td>77.26%</td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>751(bs16)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
@@ -2584,7 +2537,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>126(bs16)</td>
         <td></td>
         <td>bs x 3 x 608 x 608</td>
@@ -2595,7 +2547,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>52.1%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -2618,7 +2569,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>890(bs64)</td>
         <td></td>
         <td>bs x 3 x 640 x 640</td>
@@ -2635,7 +2585,6 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>890(bs4)</td>
         <td></td>
         <td>bs x 3 x 640 x 640</td>
@@ -2646,7 +2595,6 @@ CV-detection
         </td>
         <td>coco</td>
 	<td>51%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4232,14 +4180,13 @@ Nlp
     <tr>
         <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=7>精度</th>
+        <th align="center" colspan=6>精度</th>
 	<th rowspan=2>310P最优性能（对应bs）</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
         <td>Acc</td>
         <td>WER</td>
-        <td>余弦相似度</td>
         <td>loss</td>
         <td>BLEU</td>
         <td>F1</td>
@@ -4251,7 +4198,6 @@ Nlp
         </td>
         <td>squad</td>
         <td>88.78%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4271,7 +4217,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>138.09(bs8)</td>
 	<td nowrap="nowrap">bs x 512 <br> bs x 37</td>
     </tr>
@@ -4280,7 +4225,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/ch_ppocr_server_v2.0_rec"> ch_ppocr_server_v2.0_rec </a>
         </td>
         <td>PaddleOCR</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4301,7 +4245,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>260(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
@@ -4310,7 +4253,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/ch_PP-OCRv3_rec">  ch_PP-OCRv3_rec </a>
         </td>
         <td>PaddleOCR</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4331,7 +4273,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>52(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
@@ -4341,7 +4282,6 @@ Nlp
         </td>
         <td>MNLI</td>
         <td>90.46%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4357,7 +4297,6 @@ Nlp
         <td>1 Billion Word</td>
         <td></td>
         <td></td>
-        <td>99.6%</td>
         <td></td>
         <td></td>
         <td></td>
@@ -4376,7 +4315,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>6144(bs16)</td>
 	<td nowrap="nowrap">bs x 3 x 48 x 320</td>
     </tr>
@@ -4385,7 +4323,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/GPT2_for_Pytorch">  GPT2_for_Pytorch </a>
         </td>
         <td>wiki_zh_2019</td>
-        <td></td>
         <td></td>
         <td></td>
         <td>16.5</td>
@@ -4400,7 +4337,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/GNMT">   GNMT </a>
         </td>
         <td>newstest2014</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4421,7 +4357,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>3(bs1)</td>
 	<td nowrap="nowrap">1 x 580000</td>
     </tr>
@@ -4431,7 +4366,6 @@ Nlp
         </td>
         <td>LMDB</td>
         <td>84.79%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4451,7 +4385,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>24219(bs64)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 100</td>
     </tr>
@@ -4461,7 +4394,6 @@ Nlp
         </td>
         <td>LMDB</td>
         <td>80.63%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4481,7 +4413,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>31(bs1)</td>
 	<td nowrap="nowrap">1 x 3 x 32 x 100</td>
     </tr>
@@ -4490,7 +4421,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/SpanBERT">  SpanBERT </a>
         </td>
         <td>SQuAD 1.1</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4511,7 +4441,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>2617(bs64)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 100</td>
     </tr>
@@ -4521,7 +4450,6 @@ Nlp
         </td>
         <td>THUCNews</td>
         <td>90.47%</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4541,7 +4469,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>11160(bs64)</td>
 	<td nowrap="nowrap">bs x 4 x 84 x 84</td>
     </tr>
@@ -4556,7 +4483,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>48(bs1)</td>
 	<td nowrap="nowrap">1 x 15</td>
     </tr>
@@ -4565,7 +4491,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/TransformerXL_for_Pytorch">   TransformerXL_for_Pytorch </a>
         </td>
         <td>enwik8</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -4586,7 +4511,6 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
 	<td>8(bs1)</td>
 	<td nowrap="nowrap">1 x 3 x 384 x 384</td>
     </tr>
@@ -4595,7 +4519,6 @@ Nlp
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/VilBert_for_Pytorch"> VilBert_for_Pytorch </a>
         </td>
         <td>coco</td>
-        <td></td>
         <td></td>
         <td></td>
         <td></td>
