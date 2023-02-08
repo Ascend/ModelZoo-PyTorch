@@ -109,7 +109,7 @@ if __name__ == '__main__':
         img_idx.append(int(img_num))
     
     for tfile_name in tqdm(os.listdir(prediction_file_path)):
-        if tfile_name.split('.')[1] is not 'txt':
+        if tfile_name.split('.')[1] != 'txt':
             continue
         tmp = tfile_name.split('.')[0]
         index = tmp.rfind('_')
