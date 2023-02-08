@@ -1,7 +1,7 @@
 cython
 git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI&egg=pycocotools
 submitit
-torchvision
+torchvision==0.9.1
 scipy
 packaging
 
