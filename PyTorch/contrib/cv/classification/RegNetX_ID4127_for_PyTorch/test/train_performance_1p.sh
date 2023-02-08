@@ -26,6 +26,8 @@ do
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -103,7 +105,7 @@ taskset -c $PID_START-$PID_END python3.7 -u imagenet_fast.py \
   --warmup 5 \
   --device-list ${ASCEND_DEVICE_ID} \
   --loss-scale 16.0 \
-  --rank ${RANK_ID} \
+  --rank ${device_id} \
   --world-size 1\
   --local_rank $RANK_ID \
   --log-name 'train_1p.log' \
