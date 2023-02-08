@@ -6,7 +6,6 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=0
 export HCCL_WHITELIST_DISABLE=1
 export MASTER_ADDR=127.0.0.1
 export MASTER_PORT=23456
-export RANK=8
 export WORLD_SIZE=8
 export NPU_WORLD_SIZE=8
 
@@ -116,7 +115,7 @@ sed -i "s|if idx > 50: break|if idx > 50: pass|g" main.py
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     #设置环境变量，不需要修改
-    export RANK_ID=$RANK_ID
+    export RANK=$RANK_ID
     ASCEND_DEVICE_ID=$RANK_ID
     export NPU_CALCULATE_DEVICE=$RANK_ID
     echo "Device ID: $ASCEND_DEVICE_ID"
@@ -156,8 +155,8 @@ ASCEND_DEVICE_ID=0
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep FPS  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS:" '{print $2}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
-#FPS=`awk 'BEGIN{printf "%.2f\n",'${batch_size}'*'${perf}'}'`
+fps=`grep FPS  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS:" '{print $2}'|tail -n +2|awk '{sum+=$1} END {print"",sum/NR}'|sed s/[[:space:]]//g`
+FPS=`awk 'BEGIN{printf "%.2f\n",'${fps}'*8}'`
 
 
 #打印，不需要修改
