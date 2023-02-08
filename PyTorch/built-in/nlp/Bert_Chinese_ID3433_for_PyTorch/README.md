@@ -27,29 +27,19 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
   code_path=PyTorch/built-in/nlp
   ```
 
-- 通过Git获取代码方法如下：
-
-   ```
-   git clone {url}       # 克隆仓库的代码
-   cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-   ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       |[1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)|
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2)|
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
+  | Torch_Version      | 三方库依赖版本                      |
+  | :--------: | :----------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -73,11 +63,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 1. 获取数据集。
 
-    下载zhwiki。
-
-    ```
-    wget https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2 --no-check-certificate
-    ```
+    下载 `zhwiki` 数据集。
 
     解压得到zhwiki-latest-pages-articles.xml。
 
@@ -201,7 +187,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      ```
      
     
-     
+  --data\_path 参数填写数据集路径，需写到数据集的一级目录。   
 
 
 
@@ -238,11 +224,13 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 **表2**  训练结果展示表
 
-| NAME    | Acc@1 |  FPS | Epochs | 
-| :-----: | :---: | :--: | :----: | 
-| 8p-竞品 | 0.59 | 898 | 3    |
-| 8p-NPU(X86)  | 0.59 | 936 | 3    |
-| 8p-NPU(ARM)  | 0.59 | 860 | 3    |
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V |  - | - |  3   |    O2     |      1.5      |
+| 8p-竞品V |  0.59 | 898 |  3   |    O2     |      1.5      |
+| 1p-NPU  |  - | 128.603  |  3   |    O2    |      1.8      |
+| 8p-NPU  |  0.59 | 936.505  |  3   |    O2    |      1.8      |
+
 
 # 版本说明
 
@@ -250,7 +238,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 2022.08.24：首次发布
 
-## 已知问题
+## FAQ
 
 1. Q:第一次运行报类似"xxx **socket timeout** xxx"的错误该怎么办？
 
