@@ -339,7 +339,7 @@ def main():
     args.world_size = len(devices) * args.world_size
     args.rank = args.rank * len(devices) + args.gpu
     dist.init_process_group(backend='hccl',  # init_method='env://',
-                            world_size=args.world_size, rank=args.rank)
+                            world_size=args.world_size, rank=args.local_rank)
     print('world_size = ', args.world_size)
 
     # create model
