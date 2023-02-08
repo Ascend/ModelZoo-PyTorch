@@ -228,6 +228,7 @@ en_PP-OCRv3_det是基于[[PP-OCRv3](https://github.com/PaddlePaddle/PaddleOCR/bl
            -   --batchsize：om模型输入的batchsize。
            -   --auto_set_dymdims_mode：设置自动匹配动态shape
            -   --outfmt：输出数据格式
+           
       推理结果保存在当前目录的results_bs1文件夹下
 
 

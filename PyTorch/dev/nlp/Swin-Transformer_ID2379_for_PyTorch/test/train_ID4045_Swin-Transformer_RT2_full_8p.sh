@@ -55,7 +55,7 @@ learning_rate=
 #export NPU_LOOP_SIZE=${train_steps}
 
 #维测参数，precision_mode需要模型审视修改
-precision_mode="allow_mix_precision"
+precision_mode="O1"
 #维持参数，以下不需要修改
 over_dump=False
 data_dump_flag=False
@@ -85,11 +85,11 @@ for para in $*
 do
     if [[ $para == --precision_mode* ]];then
         apex_opt_level=`echo ${para#*=}`
-                    if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
-                            echo "[ERROR] para \"precision_mode\" must be config O1 or O2 or O3"
+                    if [[ $apex_opt_level != "O0" ]] && [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
+                            echo "[ERROR] para \"precision_mode\" must be config O0 or O1 or O2 or O3"
                             exit 1
                     fi
-        PREC="--apex --apex-opt-level "$apex_opt_level
+        PREC="--amp-opt-level "$apex_opt_level
 
 elif [[ $para == --over_dump* ]];then
         over_dump=`echo ${para#*=}`
@@ -190,7 +190,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "O0" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
+
 
 ##获取性能数据
 #吞吐量，不需要修改

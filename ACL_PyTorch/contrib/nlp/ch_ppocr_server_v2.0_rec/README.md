@@ -188,7 +188,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
          ```
          atc --framework=5 \
              --model=./ch_ppocr_server_v2.0_rec.onnx \
-             --output=./ch_ppocr_server_v2.0_rec_1 \
+             --output=./ch_ppocr_server_v2.0_rec_bs1 \
              --input_shape="x:1,3,-1,-1" \
              --input_format=ND \
              --log=error \
@@ -228,6 +228,7 @@ ch_ppocr_server_v2.0_rec是一种通用的中文中文的识别模型，它的�
            -   --batchsize：om模型输入的batchsize。
            -   --auto_set_dymdims_mode：设置自动匹配动态shape
            -   --outfmt：输出数据格式
+           
       推理结果保存在当前目录的results_bs1文件夹下
 
 

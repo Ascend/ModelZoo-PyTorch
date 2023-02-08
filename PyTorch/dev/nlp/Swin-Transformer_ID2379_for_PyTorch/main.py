@@ -333,7 +333,7 @@ if __name__ == '__main__':
 
     if config.AMP_OPT_LEVEL != "O0":
         assert amp is not None, "amp not installed!"
-
+        
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank = int(os.environ["RANK"])
         world_size = int(os.environ['WORLD_SIZE'])

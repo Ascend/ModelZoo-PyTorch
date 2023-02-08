@@ -20,10 +20,15 @@ RANK_ID_START=0
 #进入到conda环境
 #source activate py8
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="O1"
+
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
+    if [[ $para == --data_path* ]];then
+	data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
@@ -55,8 +60,6 @@ learning_rate=0.495
 #TF2.X独有，不需要修改
 #export NPU_LOOP_SIZE=${train_steps}
 
-#维测参数，precision_mode需要模型审视修改
-precision_mode="allow_mix_precision"
 #维持参数，以下不需要修改
 over_dump=False
 data_dump_flag=False
@@ -89,11 +92,11 @@ for para in $*
 do
     if [[ $para == --precision_mode* ]];then
         apex_opt_level=`echo ${para#*=}`
-                    if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
-                            echo "[ERROR] para \"precision_mode\" must be config O1 or O2 or O3"
+                    if [[ $apex_opt_level != "O0" ]] && [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
+                            echo "[ERROR] para \"precision_mode\" must be config O0 or O1 or O2 or O3"
                             exit 1
                     fi
-        PREC="--apex --apex-opt-level "$apex_opt_level
+        PREC="--amp-opt-level "$apex_opt_level
 
 elif [[ $para == --over_dump* ]];then
         over_dump=`echo ${para#*=}`
@@ -111,6 +114,8 @@ elif [[ $para == --over_dump* ]];then
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode="True"
     fi
 done
 
@@ -200,7 +205,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "O0" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
+
 
 ##获取性能数据
 #吞吐量，不需要修改
@@ -228,4 +238,3 @@ echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Cas
 
 
 #sed -i "s|is_npu|is_cuda|g"  /home/anaconda3/envs/py8/lib/python3.7/site-packages/torch/nn/modules/batchnorm.py
-

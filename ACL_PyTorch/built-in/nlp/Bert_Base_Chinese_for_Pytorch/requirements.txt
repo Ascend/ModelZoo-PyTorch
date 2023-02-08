@@ -5,5 +5,5 @@ datasets == 2.3.0
 onnx
 onnx-simplifier == 0.3.10
 wikiextractor
-sklearn
+sklearn == 0.0
 tqdm

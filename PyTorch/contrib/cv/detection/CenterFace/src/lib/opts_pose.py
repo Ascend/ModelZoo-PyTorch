@@ -30,6 +30,7 @@ class opts(object):
                              help='coco | kitti | coco_hp | pascal | pig | face | facehp')
     self.parser.add_argument('--exp_id', default='dla')
     self.parser.add_argument('--test', action='store_true')
+    self.parser.add_argument('--use_fp32', action='store_true')
     self.parser.add_argument('--debug', type=int, default=0,
                              help='level of visualization.'
                                   '-1: return the result image' 
@@ -129,6 +130,7 @@ class opts(object):
         action="store_true",
     )
     self.parser.add_argument('--pretrained_weight_path', default='', help='pretrained weight path')
+    self.parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
 
     # test
     self.parser.add_argument('--flip_test', action='store_true',

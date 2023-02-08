@@ -111,7 +111,9 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
 
 
 3. 预处理数据集。
-   python yolo4_preprocess.py coco_2014.info yolov4_bin
+   ```
+   python preprocess_yolov4_pytorch.py coco_2014.info yolov4_bin
+   ```
 
 ## 模型推理<a name="section741711594517"></a>
 1. 模型转换。

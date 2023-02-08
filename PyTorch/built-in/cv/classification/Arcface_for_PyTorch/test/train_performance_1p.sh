@@ -15,12 +15,14 @@ arch="arcface"
 train_epochs=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
-
+precision_mode="allow_mix_precision"
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
@@ -52,9 +54,12 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-sed -i "s|/train_tmp/glint360k|$data_path|g" ${cur_path}/configs/glint360k_r100.py
+sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|'"$data_path"'|g" ${cur_path}/configs/glint360k_r100.py
 sed -i "s|config.num_epoch = 20|config.num_epoch = $train_epochs|g" ${cur_path}/configs/glint360k_r100.py
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    sed -i "s|config.fp16 = True|config.fp16 = False|g" ${cur_path}/configs/glint360k_r100.py
+fi
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     # 设置环境变量，不需要修改
@@ -85,7 +90,6 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
-sed -i "s|$data_path|/train_tmp/glint360k|g" ${cur_path}/configs/glint360k_r100.py
 sed -i "s|config.num_epoch = $train_epochs|config.num_epoch = 20|g" ${cur_path}/configs/glint360k_r100.py
 
 training_log=${test_path_dir}/output/${ASCEND_DEVICE_ID}/training_${ASCEND_DEVICE_ID}.log
@@ -94,7 +98,12 @@ grep "Training" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVIC
 # 训练用例信息，不需要修改
 BatchSize=`grep "total_batch_size" ${training_log} |awk '{print $5}'`
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
+
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"

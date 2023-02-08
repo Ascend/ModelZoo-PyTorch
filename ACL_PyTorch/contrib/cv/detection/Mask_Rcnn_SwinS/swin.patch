@@ -1,0 +1,452 @@
+diff --git a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
+index a7f1c62..25992e6 100644
+--- a/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
++++ b/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py
+@@ -323,15 +323,34 @@ def onnx_delta2bbox(rois,
+                 [0.0000, 0.3161, 4.1945, 0.6839],
+                 [5.0000, 5.0000, 5.0000, 5.0000]])
+     """
+-    means = deltas.new_tensor(means).view(1,
+-                                          -1).repeat(1,
+-                                                     deltas.size(-1) // 4)
+-    stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(-1) // 4)
++    # means = deltas.new_tensor(means).view(1,-1).repeat(1, deltas.size(-1) // 4)
++    # stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(-1) // 4)
++    # fix shape for means and stds when exporting onnx
++    if torch.onnx.is_in_onnx_export():
++        means = deltas.new_tensor(means).view(1, -1).repeat(1, deltas.size(-1).numpy() // 4)
++        stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(-1).numpy() // 4)
++    else:
++        means = deltas.new_tensor(means).view(1, -1).repeat(1, deltas.size(-1) // 4)
++        stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(-1) // 4)
+     denorm_deltas = deltas * stds + means
+-    dx = denorm_deltas[..., 0::4]
+-    dy = denorm_deltas[..., 1::4]
+-    dw = denorm_deltas[..., 2::4]
+-    dh = denorm_deltas[..., 3::4]
++    # dx = denorm_deltas[..., 0::4]
++    # dy = denorm_deltas[..., 1::4]
++    # dw = denorm_deltas[..., 2::4]
++    # dh = denorm_deltas[..., 3::4]
++    shape1 = denorm_deltas.shape[1]
++    shape2 = denorm_deltas.shape[2]//4
++
++    if denorm_deltas.shape[1] > 4:
++        denorm_deltas = denorm_deltas.reshape(-1, shape1, shape2, 4)
++        dx = denorm_deltas[:, :, :, 0:1].reshape(-1, shape1, shape2)
++        dy = denorm_deltas[:, :, :, 1:2].reshape(-1, shape1, shape2)
++        dw = denorm_deltas[:, :, :, 2:3].reshape(-1, shape1, shape2)
++        dh = denorm_deltas[:, :, :, 3:4].reshape(-1, shape1, shape2)
++    else:
++        dx = denorm_deltas[..., 0::4]
++        dy = denorm_deltas[..., 1::4]
++        dw = denorm_deltas[..., 2::4]
++        dh = denorm_deltas[..., 3::4]
+ 
+     x1, y1 = rois[..., 0], rois[..., 1]
+     x2, y2 = rois[..., 2], rois[..., 3]
+diff --git a/mmdet/core/export/onnx_helper.py b/mmdet/core/export/onnx_helper.py
+index 9f6b9a0..b626e1b 100644
+--- a/mmdet/core/export/onnx_helper.py
++++ b/mmdet/core/export/onnx_helper.py
+@@ -78,6 +78,54 @@ def get_k_for_topk(k, size):
+         pass
+     return ret_k
+ 
++class BatchNMSOp(torch.autograd.Function):
++    @staticmethod
++    def forward(ctx, bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++        """
++        boxes (torch.Tensor): boxes in shape (batch, N, C, 4).
++        scores (torch.Tensor): scores in shape (batch, N, C).
++        return:
++            nmsed_boxes: (1, N, 4)
++            nmsed_scores: (1, N)
++            nmsed_classes: (1, N)
++            nmsed_num: (1,)
++        """
++
++        # Phony implementation for onnx export
++        nmsed_boxes = bboxes[:, :max_total_size, 0, :]
++        nmsed_scores = scores[:, :max_total_size, 0]
++        nmsed_classes = torch.arange(max_total_size, dtype=torch.long).repeat(scores.shape[0])
++        nmsed_num = torch.Tensor([max_total_size])
++
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++    @staticmethod
++    def symbolic(g, bboxes, scores, score_thr, iou_thr, max_size_p_class, max_t_size):
++        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = g.op('BatchMultiClassNMS',
++            bboxes, scores, score_threshold_f=score_thr, iou_threshold_f=iou_thr,
++            max_size_per_class_i=max_size_p_class, max_total_size_i=max_t_size, outputs=4)
++        return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
++
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++    bs = bboxes.shape[0]
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(bs, bboxes.shape[1], -1, 4).half()
++        scores = scores.reshape(bs, scores.shape[1], -1).half()
++    else:
++        bboxes = bboxes.reshape(bs, bboxes.shape[1], -1, 4)
++        scores = scores.reshape(bs, scores.shape[1], -1)
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,
++        score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat([nmsed_boxes.reshape(bs, max_total_size, 4), nmsed_scores.reshape(bs, max_total_size, 1)], -1).reshape(bs, -1, 5)
++    labels = nmsed_classes.reshape(bs, max_total_size)
++    return dets, labels
+ 
+ def add_dummy_nms_for_onnx(boxes,
+                            scores,
+@@ -115,109 +163,6 @@ def add_dummy_nms_for_onnx(boxes,
+         tuple[Tensor, Tensor]: dets of shape [N, num_det, 5]
+             and class labels of shape [N, num_det].
+     """
+-    max_output_boxes_per_class = torch.LongTensor([max_output_boxes_per_class])
+-    iou_threshold = torch.tensor([iou_threshold], dtype=torch.float32)
+-    score_threshold = torch.tensor([score_threshold], dtype=torch.float32)
+-    batch_size = scores.shape[0]
+-    num_class = scores.shape[2]
+-
+-    nms_pre = torch.tensor(pre_top_k, device=scores.device, dtype=torch.long)
+-    nms_pre = get_k_for_topk(nms_pre, boxes.shape[1])
+-
+-    if nms_pre > 0:
+-        max_scores, _ = scores.max(-1)
+-        _, topk_inds = max_scores.topk(nms_pre)
+-        batch_inds = torch.arange(batch_size).view(
+-            -1, 1).expand_as(topk_inds).long()
+-        # Avoid onnx2tensorrt issue in https://github.com/NVIDIA/TensorRT/issues/1134 # noqa: E501
+-        transformed_inds = boxes.shape[1] * batch_inds + topk_inds
+-        boxes = boxes.reshape(-1, 4)[transformed_inds, :].reshape(
+-            batch_size, -1, 4)
+-        scores = scores.reshape(-1, num_class)[transformed_inds, :].reshape(
+-            batch_size, -1, num_class)
+-        if labels is not None:
+-            labels = labels.reshape(-1, 1)[transformed_inds].reshape(
+-                batch_size, -1)
+-
+-    scores = scores.permute(0, 2, 1)
+-    num_box = boxes.shape[1]
+-    # turn off tracing to create a dummy output of nms
+-    state = torch._C._get_tracing_state()
+-    # dummy indices of nms's output
+-    num_fake_det = 2
+-    batch_inds = torch.randint(batch_size, (num_fake_det, 1))
+-    cls_inds = torch.randint(num_class, (num_fake_det, 1))
+-    box_inds = torch.randint(num_box, (num_fake_det, 1))
+-    indices = torch.cat([batch_inds, cls_inds, box_inds], dim=1)
+-    output = indices
+-    setattr(DummyONNXNMSop, 'output', output)
+-
+-    # open tracing
+-    torch._C._set_tracing_state(state)
+-    selected_indices = DummyONNXNMSop.apply(boxes, scores,
+-                                            max_output_boxes_per_class,
+-                                            iou_threshold, score_threshold)
+-
+-    batch_inds, cls_inds = selected_indices[:, 0], selected_indices[:, 1]
+-    box_inds = selected_indices[:, 2]
+-    if labels is None:
+-        labels = torch.arange(num_class, dtype=torch.long).to(scores.device)
+-        labels = labels.view(1, num_class, 1).expand_as(scores)
+-    scores = scores.reshape(-1, 1)
+-    boxes = boxes.reshape(batch_size, -1).repeat(1, num_class).reshape(-1, 4)
+-    pos_inds = (num_class * batch_inds + cls_inds) * num_box + box_inds
+-    mask = scores.new_zeros(scores.shape)
+-    # Avoid onnx2tensorrt issue in https://github.com/NVIDIA/TensorRT/issues/1134 # noqa: E501
+-    # PyTorch style code: mask[batch_inds, box_inds] += 1
+-    mask[pos_inds, :] += 1
+-    scores = scores * mask
+-    boxes = boxes * mask
+-
+-    scores = scores.reshape(batch_size, -1)
+-    boxes = boxes.reshape(batch_size, -1, 4)
+-    labels = labels.reshape(batch_size, -1)
+-
+-    nms_after = torch.tensor(
+-        after_top_k, device=scores.device, dtype=torch.long)
+-    nms_after = get_k_for_topk(nms_after, num_box * num_class)
+-
+-    if nms_after > 0:
+-        _, topk_inds = scores.topk(nms_after)
+-        batch_inds = torch.arange(batch_size).view(-1, 1).expand_as(topk_inds)
+-        # Avoid onnx2tensorrt issue in https://github.com/NVIDIA/TensorRT/issues/1134 # noqa: E501
+-        transformed_inds = scores.shape[1] * batch_inds + topk_inds
+-        scores = scores.reshape(-1, 1)[transformed_inds, :].reshape(
+-            batch_size, -1)
+-        boxes = boxes.reshape(-1, 4)[transformed_inds, :].reshape(
+-            batch_size, -1, 4)
+-        labels = labels.reshape(-1, 1)[transformed_inds, :].reshape(
+-            batch_size, -1)
+-
+-    scores = scores.unsqueeze(2)
+-    dets = torch.cat([boxes, scores], dim=2)
+-    return dets, labels
+-
+ 
+-class DummyONNXNMSop(torch.autograd.Function):
+-    """DummyONNXNMSop.
+-
+-    This class is only for creating onnx::NonMaxSuppression.
+-    """
+-
+-    @staticmethod
+-    def forward(ctx, boxes, scores, max_output_boxes_per_class, iou_threshold,
+-                score_threshold):
+-
+-        return DummyONNXNMSop.output
+-
+-    @staticmethod
+-    def symbolic(g, boxes, scores, max_output_boxes_per_class, iou_threshold,
+-                 score_threshold):
+-        return g.op(
+-            'NonMaxSuppression',
+-            boxes,
+-            scores,
+-            max_output_boxes_per_class,
+-            iou_threshold,
+-            score_threshold,
+-            outputs=1)
++    dets, labels = batch_nms_op(boxes, scores, score_threshold, iou_threshold, max_output_boxes_per_class, max_output_boxes_per_class)
++    return dets, labels
+diff --git a/mmdet/core/export/pytorch2onnx.py b/mmdet/core/export/pytorch2onnx.py
+index b8261ee..ffb6bc1 100644
+--- a/mmdet/core/export/pytorch2onnx.py
++++ b/mmdet/core/export/pytorch2onnx.py
+@@ -96,6 +96,7 @@ def build_model_from_cfg(config_path, checkpoint_path, cfg_options=None):
+         assert (dataset is not None)
+         model.CLASSES = dataset.CLASSES
+     model.cpu().eval()
++    model.roi_head.bbox_head.reg_class_agnostic = True
+     return model
+ 
+ 
+diff --git a/mmdet/models/backbones/swin.py b/mmdet/models/backbones/swin.py
+index b8eccfc..8c669c1 100644
+--- a/mmdet/models/backbones/swin.py
++++ b/mmdet/models/backbones/swin.py
+@@ -191,10 +191,13 @@ class ShiftWindowMSA(BaseModule):
+ 
+         # cyclic shift
+         if self.shift_size > 0:
+-            shifted_query = torch.roll(
+-                query,
+-                shifts=(-self.shift_size, -self.shift_size),
+-                dims=(1, 2))
++            shifted_query = torch.cat((query[:, self.shift_size:, :, :], query[:, :self.shift_size, :, :]), dim=1)
++            shifted_query = torch.cat((shifted_query[:, :, self.shift_size:, :], shifted_query[:, :, :self.shift_size, :]), dim=2)
++
++            # shifted_query = torch.roll(
++            #     query,
++            #     shifts=(-self.shift_size, -self.shift_size),
++            #     dims=(1, 2))
+ 
+             # calculate attention mask for SW-MSA
+             img_mask = torch.zeros((1, H_pad, W_pad, 1), device=query.device)
+@@ -238,10 +241,13 @@ class ShiftWindowMSA(BaseModule):
+         shifted_x = self.window_reverse(attn_windows, H_pad, W_pad)
+         # reverse cyclic shift
+         if self.shift_size > 0:
+-            x = torch.roll(
+-                shifted_x,
+-                shifts=(self.shift_size, self.shift_size),
+-                dims=(1, 2))
++            x = torch.cat((shifted_x[:, -self.shift_size:, :, :], shifted_x[:, :-self.shift_size, :, :]), dim=1)
++            x = torch.cat((x[:, :, -self.shift_size:, :], x[:, :, :-self.shift_size, :]), dim=2)
++
++            # x = torch.roll(
++            #     shifted_x,
++            #     shifts=(self.shift_size, self.shift_size),
++            #     dims=(1, 2))
+         else:
+             x = shifted_x
+ 
+diff --git a/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py b/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
+index 355d882..1c1beb3 100644
+--- a/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
++++ b/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
+@@ -330,15 +330,15 @@ class FCNMaskHead(BaseModule):
+         # No need to consider rescale and scale_factor while exporting to ONNX
+         img_h, img_w = ori_shape[:2]
+         threshold = rcnn_test_cfg.mask_thr_binary
+-        if not self.class_agnostic:
+-            box_inds = torch.arange(mask_pred.shape[0])
+-            mask_pred = mask_pred[box_inds, labels][:, None]
+-        masks, _ = _do_paste_mask(
+-            mask_pred, bboxes, img_h, img_w, skip_empty=False)
+-        if threshold >= 0:
+-            # should convert to float to avoid problems in TRT
+-            masks = (masks >= threshold).to(dtype=torch.float)
+-        return masks
++        # if not self.class_agnostic:
++        #     box_inds = torch.arange(mask_pred.shape[0])
++        #     mask_pred = mask_pred[box_inds, labels][:, None]
++        # masks, _ = _do_paste_mask(
++        #     mask_pred, bboxes, img_h, img_w, skip_empty=False)
++        # if threshold >= 0:
++        #     # should convert to float to avoid problems in TRT
++        #     masks = (masks >= threshold).to(dtype=torch.float)
++        return mask_pred
+ 
+ 
+ def _do_paste_mask(masks, boxes, img_h, img_w, skip_empty=True):
+diff --git a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+index dbc5aef..dbf3740 100644
+--- a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
++++ b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+@@ -5,6 +5,31 @@ from mmcv.runner import force_fp32
+ from mmdet.models.builder import ROI_EXTRACTORS
+ from .base_roi_extractor import BaseRoIExtractor
+ 
++import torch.onnx.symbolic_helper as sym_help
++
++class RoiExtractor(torch.autograd.Function):
++    @staticmethod
++    def forward(self, f0, f1, f2, f3, rois, aligned=1, finest_scale=56, pooled_height=7, pooled_width=7,
++                         pool_mode='avg', roi_scale_factor=0, sample_num=0, spatial_scale=[0.25, 0.125, 0.0625, 0.03125]):
++        """
++        feats (torch.Tensor): feats in shape (batch, 256, H, W).
++        rois (torch.Tensor): rois in shape (k, 5).
++        return:
++            roi_feats (torch.Tensor): (k, 256, pooled_width, pooled_width)
++        """
++
++        # phony implementation for shape inference
++        k = rois.size()[0]
++        roi_feats = torch.ones(k, 256, pooled_height, pooled_width)
++        return roi_feats
++
++    @staticmethod
++    def symbolic(g, f0, f1, f2, f3, rois, aligned=1, finest_scale=56, pooled_height=7, pooled_width=7):
++        # TODO: support tensor list type for feats
++        #f_tensors = sym_help._unpack_list(feats)
++        roi_feats = g.op('RoiExtractor', f0, f1, f2, f3, rois, aligned_i=1, finest_scale_i=56, pooled_height_i=pooled_height, pooled_width_i=pooled_width,
++                         pool_mode_s='avg', roi_scale_factor_i=0, sample_num_i=0, spatial_scale_f=[0.25, 0.125, 0.0625, 0.03125], outputs=1)
++        return roi_feats
+ 
+ @ROI_EXTRACTORS.register_module()
+ class SingleRoIExtractor(BaseRoIExtractor):
+@@ -57,6 +82,14 @@ class SingleRoIExtractor(BaseRoIExtractor):
+     @force_fp32(apply_to=('feats', ), out_fp16=True)
+     def forward(self, feats, rois, roi_scale_factor=None):
+         """Forward function."""
++        # Work around to export onnx for npu
++        if torch.onnx.is_in_onnx_export():
++            out_size = self.roi_layers[0].output_size
++            roi_feats = RoiExtractor.apply(feats[0], feats[1], feats[2], feats[3], rois, 1, 56, out_size[0],
++                                                    out_size[1])
++        # roi_feats = RoiExtractor.apply(list(feats), rois)
++        return roi_feats
++
+         out_size = self.roi_layers[0].output_size
+         num_levels = len(feats)
+         expand_dims = (-1, self.out_channels * out_size[0] * out_size[1])
+diff --git a/mmdet/models/roi_heads/standard_roi_head.py b/mmdet/models/roi_heads/standard_roi_head.py
+index 3fdd82a..7fffb37 100644
+--- a/mmdet/models/roi_heads/standard_roi_head.py
++++ b/mmdet/models/roi_heads/standard_roi_head.py
+@@ -343,8 +343,8 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
+         segm_results = self.mask_head.onnx_export(mask_pred, det_bboxes,
+                                                   det_labels, self.test_cfg,
+                                                   max_shape)
+-        segm_results = segm_results.reshape(batch_size, num_det, max_shape[0],
+-                                            max_shape[1])
++        # segm_results = segm_results.reshape(batch_size, num_det, max_shape[0],
++        #                                     max_shape[1])
+         return segm_results
+ 
+     def bbox_onnx_export(self, x, img_metas, proposals, rcnn_test_cfg,
+diff --git a/tools/deployment/pytorch2onnx.py b/tools/deployment/pytorch2onnx.py
+index ee856cc..57e90db 100644
+--- a/tools/deployment/pytorch2onnx.py
++++ b/tools/deployment/pytorch2onnx.py
+@@ -24,7 +24,8 @@ def pytorch2onnx(model,
+                  test_img=None,
+                  do_simplify=False,
+                  dynamic_export=None,
+-                 skip_postprocess=False):
++                 skip_postprocess=False,
++                 batch_size=1):
+ 
+     input_config = {
+         'input_shape': input_shape,
+@@ -33,6 +34,8 @@ def pytorch2onnx(model,
+     }
+     # prepare input
+     one_img, one_meta = preprocess_example_input(input_config)
++    if batch_size > 1:
++        one_img = one_img.repeat(batch_size,1,1,1)
+     img_list, img_meta_list = [one_img], [[one_meta]]
+ 
+     if skip_postprocess:
+@@ -92,12 +95,13 @@ def pytorch2onnx(model,
+         output_file,
+         input_names=[input_name],
+         output_names=output_names,
+-        export_params=True,
+-        keep_initializers_as_inputs=True,
+-        do_constant_folding=True,
++        # export_params=True,
++        # keep_initializers_as_inputs=True,
++        # do_constant_folding=True,
+         verbose=show,
+         opset_version=opset_version,
+-        dynamic_axes=dynamic_axes)
++        dynamic_axes=dynamic_axes,
++        enable_onnx_checker=False)
+ 
+     model.forward = origin_forward
+ 
+@@ -274,6 +278,9 @@ def parse_args():
+         help='Whether to export model without post process. Experimental '
+         'option. We do not guarantee the correctness of the exported '
+         'model.')
++    parser.add_argument(
++        '--batch_size',
++        type=int, default=1)
+     args = parser.parse_args()
+     return args
+ 
+@@ -286,11 +293,11 @@ if __name__ == '__main__':
+ 
+     assert args.opset_version == 11, 'MMDet only support opset 11 now'
+ 
+-    try:
+-        from mmcv.onnx.symbolic import register_extra_symbolics
+-    except ModuleNotFoundError:
+-        raise NotImplementedError('please update mmcv to version>=v1.0.4')
+-    register_extra_symbolics(args.opset_version)
++    # try:
++    #     from mmcv.onnx.symbolic import register_extra_symbolics
++    # except ModuleNotFoundError:
++    #     raise NotImplementedError('please update mmcv to version>=v1.0.4')
++    # register_extra_symbolics(args.opset_version)
+ 
+     cfg = Config.fromfile(args.config)
+     if args.cfg_options is not None:
+@@ -328,16 +335,5 @@ if __name__ == '__main__':
+         test_img=args.test_img,
+         do_simplify=args.simplify,
+         dynamic_export=args.dynamic_export,
+-        skip_postprocess=args.skip_postprocess)
+-
+-    # Following strings of text style are from colorama package
+-    bright_style, reset_style = '\x1b[1m', '\x1b[0m'
+-    red_text, blue_text = '\x1b[31m', '\x1b[34m'
+-    white_background = '\x1b[107m'
+-
+-    msg = white_background + bright_style + red_text
+-    msg += 'DeprecationWarning: This tool will be deprecated in future. '
+-    msg += blue_text + 'Welcome to use the unified model deployment toolbox '
+-    msg += 'MMDeploy: https://github.com/open-mmlab/mmdeploy'
+-    msg += reset_style
+-    warnings.warn(msg)
++        skip_postprocess=args.skip_postprocess,
++        batch_size=args.batch_size)
