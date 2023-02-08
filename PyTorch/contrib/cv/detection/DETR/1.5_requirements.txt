@@ -1,0 +1,7 @@
+cython
+git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI&egg=pycocotools
+submitit
+torchvision==0.2.2.post3
+scipy
+packaging
+

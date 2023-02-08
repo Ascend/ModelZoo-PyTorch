@@ -26,29 +26,18 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
   code_path=PyTorch/contrib/cv/detection
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
 # 准备训练环境
 
 ## 准备环境
 
 - 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件 | [1.0.13](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [21.0.4](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.0.4](https://www.hiascend.com/software/cann/commercial?version=5.0.4) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3; pillow==8.4.0|
+  | PyTorch 1.8 | torchvision==0.9.1; pillow==9.1.0  |
 
 - 环境准备指导。
 
@@ -56,16 +45,19 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
 
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt
+
+  pip install -r 1.8_requirements.txt
   ```
-> 注意: pillow建议安装更新的版本。如果无法直接安装对应版本的torchvision，可以使用源代码安装对应版本。源代码参考链接:https://github.com/pytorch/vision， 建议pilow为9.1.0，torchvision为0.6.0
+
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   用户自行获取原始数据集COCO2017[http://cocodataset.org](http://cocodataset.org/#download)等，将数据集上传到服务器任意路径下并解压。
+   用户自行获取原始数据集COCO2017，将数据集上传到服务器任意路径下并解压。
 
    目录结构如下：
     ```bash
@@ -107,7 +99,7 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
      bash ./test/train_performance_8p.sh --data_path=/data/xxx/
      ```
 
-   --data_path：数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -135,12 +127,12 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
 **表 2**  训练结果展示表
 
 
-|DEVICE   |   Epochs/steps   |  FPS    |  LOSS
-| ------- | -----            | ------  |-------: |
-|GPU(1P)  |     1000 steps   |  12.7   |
-|NPU(1P)  |     1000 steps   |   0.2   |
-|GPU(8P)  |      2 Epochs    |  73.5   | 24.4104
-|NPU(8P)  |      2 Epochs    | 0.489   | 24.9557
+| Name    |  LOSS   |   FPS    |  Epochs/steps   |  AMP_Type | Torch_version |
+| ------- |-------: |  ------- |   -----         | ------    | ------------  |
+|1p-竞品v | -       |   12.7   |  1000steps      |  O0       |    1.5       |
+|8p-竞品v | -       |   73.5   |   2epochs       |  O0       |    1.5       |
+|1p-NPU   | 24.4104 |   0.2    |  1000steps      |  O0       |    1.5       |
+|8p-NPU   | 24.9557 |   0.489  |  2 epochs       |  O0       |    1.5       |
 
 # 版本说明
 
