@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.2.2.post3
 onnx==1.9.0
 numpy==1.19.4
 opencv-python==4.4.0.46
