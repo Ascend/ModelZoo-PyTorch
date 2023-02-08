@@ -29,31 +29,18 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
   code_path=PyTorch/contrib/nlp
   ```
 
-- 通过Git获取代码方法如下：
-
-   ```
-   git clone {url}       # 克隆仓库的代码
-   cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-   ```
-  
-- 通过单击“立即下载”，下载源码包。
-
-
-
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.15.3](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)|
-  | 固件与驱动 | [22.0.0.3](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC1.1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1.1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
+  | Torch_Version  | 三方库依赖版本                    |
+  | :------------: | :------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -71,7 +58,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 
 1. 获取数据集。
 
-   下载[SST-2和STS-B](https://gitee.com/liuyj-suda-an/albert_full/tree/master/dataset)数据集,在模型根目录下创建dataset目录，并放入数据集。
+   用户自行下载 `SST-2` 和 `STS-B` 数据集,在模型根目录下创建 `dataset` 目录，并放入数据集。
 
    数据集目录结构参考如下所示。
 
@@ -92,7 +79,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
    ```
 
 ## 下载预训练模型
-下载[albert_base_v2](https://gitee.com/liuyj-suda-an/albert_full/tree/master/prev_trained_model)，在模型根目录下创建prev_trained_model目录，并放入预训练模型。
+下载`albert_base_v2`，在模型根目录下创建 `prev_trained_model` 目录，并放入预训练模型。
 
 # 开始训练
 
@@ -113,7 +100,8 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=real_data_path   
+     bash ./test/train_full_1p.sh --data_path=real_data_path         #单卡精度
+     bash ./test/train_performance_1p.sh --data_path=real_data_path  #单卡性能
      ```
 
    - 单机8卡训练
@@ -121,10 +109,12 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path  
+     bash ./test/train_full_8p.sh --data_path=real_data_path         #8卡精度
+     bash ./test/train_performance_8p.sh --data_path=real_data_path  #8卡性能
+     bash ./test/train_eval_8p.sh --data_path=real_data_path         #8卡评测  
      ```
 
-   --data\_path参数填写数据集路径。
+   --data\_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -146,18 +136,16 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 
-
 # 训练结果展示
 
 **表2**  训练结果展示表
 
-| NAME    | Acc@1 |  FPS | Epochs | 
-| :-----: | :---: | :--: | :----: | 
-| 1p-竞品 | 0.927 |  517 |   2   |
-| 1p-NPU  | 0.932 |  393 | 2     |
-| 8p-竞品 | 0.914 | 3327 | 7    |
-| 8p-NPU  | 0.927 | 2675 | 7    |
-
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V | 0.927 | 517  |   2    |    O1     |      1.5      |
+| 8p-竞品V | 0.914 | 3327 |  7   |    O1     |      1.5      |
+|  1p-NPU  | 0.932 | 445.21  |   2    |    O2    |      1.8      |
+|  8p-NPU  | 0.927 | 3111.56  |  7   |    O2    |      1.8      |
 
 
 # 版本说明
@@ -166,9 +154,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 
 2022.08.24：首次发布
 
-
-
-## 已知问题
+## FAQ
 
 无。
 
