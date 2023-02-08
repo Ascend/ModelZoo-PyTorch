@@ -23,6 +23,11 @@ do
         batch_size=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+      conda_name=`echo ${para#*=}`
+      export PATH=/home/anaconda3/bin:$PATH
+      export LD_LIBRARY_PATH=/home/anaconda3/lib:$LD_LIBRARY_PATH
+      source activate $conda_name
     fi
 done
 
