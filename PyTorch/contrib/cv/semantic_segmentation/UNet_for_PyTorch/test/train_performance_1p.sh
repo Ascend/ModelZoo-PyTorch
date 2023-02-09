@@ -20,6 +20,11 @@ device_id=0
 # 学习率
 learning_rate=0.001
 bin_mode=0
+#使能profiling，默认为False
+profiling=False
+start_step=20
+stop_step=30
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -31,8 +36,19 @@ do
         more_path1=`echo ${para#*=}`
     elif [[ $para == --bin_mode* ]];then
         bin_mode=1
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+
     fi
 done
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -88,6 +104,9 @@ fi
 nohup python3.7.5 -u train.py \
     --device_id $device_id \
     --bin_mode ${bin_mode} \
+    --start_step ${start_step} \
+    --stop_step ${stop_step} \
+    --profiling ${profiling} \
     ${data_path} \
     --optimizer Adam \
     --epochs 1 \
