@@ -107,10 +107,10 @@ python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  ma
           --local_rank $ASCEND_DEVICE_ID  \
           --data-path ${data_path} \
           --batch-size ${batch_size} \
-          --start_step $start_step \
-          --stop_step $stop_step \
-          --profiling $profiling \
-          --bin_mode $bin_mode \
+          --start_step ${start_step} \
+          --stop_step ${stop_step} \
+          --profiling ${profiling} \
+          --bin_mode ${bin_mode} \
 	  --perf > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
