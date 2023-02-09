@@ -27,30 +27,20 @@ MBART 是一种序列到序列去噪自动编码器，使用 BART 目标在多�
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/nlp
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-    | 配套       | 版本                                                         |
-    | ---------- | ------------------------------------------------------------ |
-    | 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-    | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-    | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-    | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -110,11 +100,13 @@ train_data
         | -- valid.en_XX-de_DE.en_XX.idx
 
 ```
+> **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 ## 方法二. 下载数据集并自行处理
 ### 1. 分词处理
 1. 下载原始数据集并放于在源码包根目录下新建的“src_data/”目录下，以en_ro数据集为例。
-2. 下载并安装SPM [here](https://github.com/google/sentencepiece)
+2. 下载并安装SPM
 ```bash
 SPM=/path/to/sentencepiece/build/src/spm_encode
 MODEL=sentence.bpe.model
@@ -160,10 +152,10 @@ fairseq-preprocess \
   --workers 70
 
 ```
-## 获取与训练模型
+## 获取预训练模型
 
 1. 下载mbart.CC25.tar.gz
-   wget https://dl.fbaipublicfiles.com/fairseq/models/mbart/mbart.CC25.tar.gz
+   
 2. tar -xzvf mbart.CC25.tar.gz
 3. 将模型放于工程根目录下，其目录结构如下:
 ```
@@ -192,7 +184,7 @@ mbart.cc25
      启动单卡训练。
 
      ```
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
      data_path为数据集路径，若训练en_ro数据集，路径写到en_ro；若训练en_de数据集，路径写到en_de ，同时需要将训练脚本中dropout的参数设置为0.1，target-lang设置为de_DE
      
@@ -201,8 +193,8 @@ mbart.cc25
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
      
      data_path为数据集路径，若训练en_ro数据集，路径写到en_ro；若训练en_de数据集，路径写到en_de ，同时需要将训练脚本中dropout的参数设置为0.1，total-num-update与max-update设置为300000，target-lang设置为de_DE
@@ -228,16 +220,16 @@ mbart.cc25
 # 训练结果展示
 
 **表 2**  en_ro数据集训练结果展示表
-| NAME  | Acc@1  | FPS   | Torch |
-|---|---|---|---|
-| 8p-竞品  |   | 39281.96 | 1.8 |
-| 8p-NPU   | 37.4 | 36171.24 | 1.8 |
+| NAME  | Acc@1  | FPS  | Epochs | AMP_Type | Torch_Version |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 8p-竞品V  | - | 39281.96 | - | - | 1.8 |
+| 8p-NPU   | 37.4 | 36171.24 | - | - | 1.8 |
 
 **表 3**  en_de数据集训练结果展示表
-| NAME  | Acc@1  | FPS  | Torch |
-|---|---|---|---|
-| 8p-竞品  |   | 38365.15 | 1.8 |
-| 8p-NPU   | 32.5  | 35320.3   | 1.8 |
+| NAME  | Acc@1  | FPS  | Epochs | AMP_Type | Torch_Version |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 8p-竞品V  | - | 38365.15 |- | - | 1.8 |
+| 8p-NPU   | 32.5  | 35320.3   |- | - | 1.8 |
 
 # 版本说明
 
@@ -245,6 +237,6 @@ mbart.cc25
 
 2022.12.14：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
