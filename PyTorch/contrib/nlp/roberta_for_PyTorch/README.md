@@ -29,31 +29,19 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
   code_path=PyTorch/contrib/nlp
   ```
 
-- 通过Git获取代码方法如下：
-
-   ```
-   git clone {url}       # 克隆仓库的代码
-   cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-   ```
-  
-- 通过单击“立即下载”，下载源码包。
-
-
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)       |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -67,14 +55,13 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
   ```
 
 
-
 ## 训练准备
 
 1. 获取数据集。
 
-   下载`SST-2`数据集，请参考`examples/roberta/preprocess_GLUE_tasks.sh`。
+   下载 `SST-2` 数据集，请参考 `examples/roberta/preprocess_GLUE_tasks.sh` 。
 
-   `SST-2`数据集目录结构参考如下所示。
+   `SST-2` 数据集目录结构参考如下所示。
 
    ```
    ├── SST-2
@@ -95,9 +82,12 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
               │──valid.bin
               │——valid.idx              
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+
 2. 获取预训练模型
 
-    下载预训练模型 [RoBERTa.base](https://dl.fbaipublicfiles.com/fairseq/models/roberta.base.tar.gz) , 解压至源码包路径下：“./pre_train_model/RoBERTa.base/model.pt”。
+    下载预训练模型 `RoBERTa.base` , 解压至源码包路径下：“./pre_train_model/RoBERTa.base/model.pt”。
 
 
 # 开始训练
@@ -114,28 +104,32 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 
    该模型支持单机单卡训练和单机8卡训练。
 
+   - 单机单卡训练
+
+     启动单卡训练。
+
+     ```
+     bash ./test/train_performance_1p.sh --data_path=real_data_path  # 单卡性能
+     ```
+
    - 单机8卡训练
 
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path   
+     bash ./test/train_full_8p.sh --data_path=real_data_path  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=real_data_path # 8卡性能 
      ```
 
-   - 单机性能
+  - 单机8卡评测
 
-     单卡性能。
-
-     ```
-     bash ./test/train_performance_1p.sh --data_path=real_data_path  
-     ```
-     8卡性能。
+     启动8卡评测。
 
      ```
-     bash ./test/train_performance_8p.sh --data_path=real_data_path  
+     bash test/train_eval_8p.sh
      ```
 
-   --data_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -159,12 +153,12 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 
 **表2**  训练结果展示表
 
-| NAME    | Acc@1 |  FPS | Epochs |
-| :-----: | :---: | :--: | :----: |
-| 1p-竞品 | 0.927     |  397 |   1   |
-| 1p-NPU  | 0.938     |  216 | 1     |
-| 8p-竞品 | 0.943 | 2997 | 10    |
-| 8p-NPU  | 0.969 | 1985 | 10    |
+| NAME    | Acc@1 |  FPS | Epochs | AMP_Type | Torch_Version |
+| :-----: | :---: | :--: | :----: | :----: | :----: |
+| 1p-竞品V | 0.927     |  397 |   1   | - | 1.5 |
+| 8p-竞品V | 0.943 | 2997 | 10    | - | 1.5 |
+| 1p-NPU  | 0.938     |  553.997 | 1     | O2 | 1.8 |
+| 8p-NPU  | 0.969 | 4414.01 | 10    | O2 | 1.8 |
 
 
 
@@ -176,7 +170,7 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 
 
 
-## 已知问题
+## FAQ
 
 无。
 
