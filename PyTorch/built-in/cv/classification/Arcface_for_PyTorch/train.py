@@ -279,7 +279,7 @@ if __name__ == "__main__":
     parser.add_argument("config", type=str, help="py config file")
     parser.add_argument("--local_rank", type=int, default=0, help="local_rank")
     parser.add_argument("--perf_steps", type=int, default=0, help="number of steps on performance mode")
-    parser.add_argument('--profiling', type=str, default='NONE',help='choose profiling way--CANN,GE,NONE')
+    parser.add_argument('--profiling', type=str, default='False',help='profiling')
     parser.add_argument('--start_step', default=90, type=int, help='start_step')
     parser.add_argument('--stop_step', default=100, type=int,help='stop_step')
     main(parser.parse_args())
