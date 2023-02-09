@@ -160,6 +160,7 @@ echo "------------------ Final result ------------------"
 time=`grep -a 'time:'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
 total_size=$((batch_size * RANK_SIZE))
 FPS=`awk 'BEGIN{printf "%.2f\n", '${total_size}'/'${time}'}'`
+#输出训练精度,需要模型审视修改
 Train_accuracy=`grep -a 'Epoch(val)' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "bbox_mAP: " '{print $2}'|awk -F "," '{print $1}'|tail -1`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -172,8 +173,6 @@ BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}${name_bind}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
-#输出训练精度,需要模型审视修改
-train_accuracy=`grep -ri  "Epoch(val)"  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $11}'| tr -d ','`
 ##获取性能数据
 grep "time:" $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log > traintime.log
 sed -i '1,10d' traintime.log
@@ -185,9 +184,7 @@ ActualFPS=`echo "scale=2;${temp1} / ${TrainingTime}"|bc`
 grep "loss:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $(NF-2)}' |awk -F "," '{print $1}'> $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
-if [ x"${etp_flag}" != x"true" ];then
-    train_accuracy=${Train_accuracy}
-fi
+
 
 #关键信息打印到${CaseName}.log中，不需要修改
 echo "Network = ${Network}" > $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
@@ -198,5 +195,5 @@ echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseN
 echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${Train_accuracy}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
