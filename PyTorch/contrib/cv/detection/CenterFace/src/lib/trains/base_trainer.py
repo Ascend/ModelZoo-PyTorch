@@ -35,6 +35,12 @@ class ModleWithLoss(torch.nn.Module):
     loss, loss_stats = self.loss(outputs, batch)
     return outputs[-1], loss, loss_stats
 
+class NoProfiling():
+    def __enter__(self):
+        ...
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        ...
+
 class BaseTrainer(object):
   def __init__(self, opt, model, optimizer=None):
     self.opt = opt
@@ -82,59 +88,64 @@ class BaseTrainer(object):
         start_time = time.time()
       data_time.update(time.time() - end)
       
-      for k in batch:
-        if k != 'meta':
-          batch[k] = batch[k].to(device=opt.device, non_blocking=True)
-      
-      output, loss, loss_stats = model_with_loss(batch)
-      loss = loss.mean()
-      if phase == 'train':
-        self.optimizer.zero_grad()
-        if opt.use_fp32:
-          loss.backward()
-        else:
-          with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-            scaled_loss.backward()
-        self.optimizer.step()
-      batch_time.update(time.time() - end)
-      if iter_id < 3 and epoch==1:
-        print('iter_time={}'.format(time.time() - end))
-      end = time.time()
-      if opt.local_rank ==0:
-        Bar.suffix = '{phase}: [{0}][{1}/{2}]|Tot: {total:} |ETA: {eta:} '.format(
-        epoch, iter_id, num_iters, phase=phase,
-        total=bar.elapsed_td, eta=bar.eta_td)
-      for l in avg_loss_stats:
-        avg_loss_stats[l].update(
-          loss_stats[l].mean().item(), batch['input'].size(0))
-        if opt.local_rank ==0:
-          Bar.suffix = Bar.suffix + '|{} {:.4f} '.format(l, avg_loss_stats[l].avg)
-      if not opt.hide_data_time and opt.local_rank ==0:
-        Bar.suffix = Bar.suffix + '|Data {dt.val:.3f}s({dt.avg:.3f}s) ' \
-          '|Net {bt.avg:.3f}s'.format(dt=data_time, bt=batch_time)
-      if opt.print_iter > 0 and opt.local_rank==0:
-        if iter_id % opt.print_iter == 0:
-          print('{}/{}| {}'.format(opt.task, opt.exp_id, Bar.suffix)) 
+      if opt.start_step<= iter_id <= opt.stop_step and opt.profiling == 'True' and epoch=2:
+        profiling = torch.npu.profile(profiler_result_path="./CANN_prof")
       else:
-        bar.next()
-      
-      if opt.debug > 0:
-        self.debug(batch, output, iter_id)
-      
-      if opt.test:
-        self.save_result(output, batch, results)
-      del output, loss, loss_stats
-      if iter_id == (len(data_loader)-1) and opt.local_rank ==0:        
-        all_time =(time.time()-start_time)
-        avg_time = all_time/(len(data_loader)-5)
-        if opt.world_size == -1:
-          fps = opt.batch_size/avg_time
-        else:
-          fps = opt.batch_size*opt.world_size/avg_time
-        print('')
-        print('all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(all_time,avg_time,opt.batch_size,fps))
-        print('')
+        profiling = NoProfiling()
+      with profiling:
+        for k in batch:
+          if k != 'meta':
+            batch[k] = batch[k].to(device=opt.device, non_blocking=True)
         
+        output, loss, loss_stats = model_with_loss(batch)
+        loss = loss.mean()
+        if phase == 'train':
+          self.optimizer.zero_grad()
+          if opt.use_fp32:
+            loss.backward()
+          else:
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+              scaled_loss.backward()
+          self.optimizer.step()
+        batch_time.update(time.time() - end)
+        if iter_id < 3 and epoch==1:
+          print('iter_time={}'.format(time.time() - end))
+        end = time.time()
+        if opt.local_rank ==0:
+          Bar.suffix = '{phase}: [{0}][{1}/{2}]|Tot: {total:} |ETA: {eta:} '.format(
+          epoch, iter_id, num_iters, phase=phase,
+          total=bar.elapsed_td, eta=bar.eta_td)
+        for l in avg_loss_stats:
+          avg_loss_stats[l].update(
+            loss_stats[l].mean().item(), batch['input'].size(0))
+          if opt.local_rank ==0:
+            Bar.suffix = Bar.suffix + '|{} {:.4f} '.format(l, avg_loss_stats[l].avg)
+        if not opt.hide_data_time and opt.local_rank ==0:
+          Bar.suffix = Bar.suffix + '|Data {dt.val:.3f}s({dt.avg:.3f}s) ' \
+            '|Net {bt.avg:.3f}s'.format(dt=data_time, bt=batch_time)
+        if opt.print_iter > 0 and opt.local_rank==0:
+          if iter_id % opt.print_iter == 0:
+            print('{}/{}| {}'.format(opt.task, opt.exp_id, Bar.suffix)) 
+        else:
+          bar.next()
+        
+        if opt.debug > 0:
+          self.debug(batch, output, iter_id)
+        
+        if opt.test:
+          self.save_result(output, batch, results)
+        del output, loss, loss_stats
+        if iter_id == (len(data_loader)-1) and opt.local_rank ==0:        
+          all_time =(time.time()-start_time)
+          avg_time = all_time/(len(data_loader)-5)
+          if opt.world_size == -1:
+            fps = opt.batch_size/avg_time
+          else:
+            fps = opt.batch_size*opt.world_size/avg_time
+          print('')
+          print('all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(all_time,avg_time,opt.batch_size,fps))
+          print('')
+          
     bar.finish()
     ret = {k: v.avg for k, v in avg_loss_stats.items()}
     ret['time'] = bar.elapsed_td.total_seconds() / 60.

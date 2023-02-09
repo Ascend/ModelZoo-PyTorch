@@ -16,6 +16,12 @@ train_epochs=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 precision_mode="allow_mix_precision"
+
+#使能profiling，默认为False
+profiling=False
+start_step=90
+stop_step=100
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -28,8 +34,22 @@ do
         source set_conda.sh
         echo "conda_name: $conda_name"
         source activate $conda_name
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     fi
 done
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+    profiling=True
+elif [[ $profiling == "CANN" ]];then
+    profiling=True
+fi
+
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -80,6 +100,9 @@ do
 
     taskset -c $PID_START-$PID_END python3 -u train.py \
         configs/glint360k_r100.py \
+        --profiling ${profiling} \
+        --start_step ${start_step} \
+        --stop_step ${stop_step} \
         --local_rank=${RANK_ID} --perf_steps=2000 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait

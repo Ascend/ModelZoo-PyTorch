@@ -3,7 +3,7 @@
 ##################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE resume
 # 网络名称，同目录名称
-Network="retinaface"
+Network="Retinaface_ID4015_for_PyTorch"
 # 训练batch_size
 batch_size=2048
 # 训练使用的npu卡数
@@ -56,8 +56,12 @@ fi
 ##################启动训练脚本##################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-source ${test_path_dir}/env.sh
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
 
 weights=`find -name 'Resnet50*' | xargs ls -t | head -1`
 python3.7 test_widerface.py -m $weights &

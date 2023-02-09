@@ -15,6 +15,11 @@ batch_size=32
 device_id=0
 # 指定二进制训练模式，默认bin_mode=0（非二进制）
 bin_mode=0
+#使能profiling，默认为False
+profiling=False
+start_step=90
+stop_step=100
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -34,8 +39,21 @@ do
         source activate $conda_name
     elif [[ $para == --bin_mode* ]];then
         bin_mode=1
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     fi
 done
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+    profiling=True
+elif [[ $profiling == "CANN" ]];then
+    profiling=True
+fi
 
 if [[ $precision_mode == "must_keep_origin_dtype" ]];then
     PREC=" --use_fp32 "
@@ -51,7 +69,7 @@ fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
-	device_id=$ASCEND_DEVICE_ID
+    device_id=$ASCEND_DEVICE_ID
 elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}
     echo "device id is ${ASCEND_DEVICE_ID}"
@@ -106,7 +124,15 @@ make
 wait
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-python3 main.py $PREC --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=2 --device_list=$device_id --bin_mode ${bin_mode} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 main.py $PREC --batch_size=$batch_size \
+    --lr=5e-4 \
+    --lr_step='75,95' \
+    --num_epochs=2 \
+    --device_list=$device_id \
+    --profiling ${profiling} \
+    --start_step ${start_step} \
+    --stop_step ${stop_step} \
+    --bin_mode ${bin_mode} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################

@@ -3,7 +3,7 @@
 ##################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="retinaface"
+Network="Retinaface_ID4015_for_PyTorch"
 # 训练batch size
 batch_size=256
 # 训练使用的npu卡数
@@ -64,12 +64,14 @@ fi
 ##################启动训练脚本##################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
-# source 环境变量
-source ${test_path_dir}/env.sh
-
-currentDir=$(cd "$(dirname "$0")";pwd)/..
-python3.7 -u ${currentDir}/train.py \
-    --data=${data_path} \
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+python3 train.py \
+    --data_path=${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --workers=8 \
     --dist-url='tcp://127.0.0.1:50003' \
@@ -84,7 +86,8 @@ python3.7 -u ${currentDir}/train.py \
     --loss-scale=128. \
     --opt-level=O2 \
     --distributed \
-    --device-list=${device_id_list} > ${test_path_dir}/output/logs/log_train_performance_8p.log &
+    --max_steps=100 \
+    --device-list=${device_id_list} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 wait
 
 ##################获取训练数据##################
@@ -96,14 +99,14 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 # ***********************修改了路径***************************
-FPS=`grep -a 'FPS'  ${test_path_dir}/output/logs/log_train_performance_8p.log|awk -F " " '{print $7}'|awk 'END {print}'`
+FPS=`grep -a 'FPS'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $7}'|awk 'END {print}'`
 FPS=`echo "${FPS} * ${RANK_SIZE}" |bc`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
 # ***********************修改了路径***************************
-train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/logs/log_train_performance_8p.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
+train_accuracy=`grep -a '* Acc@1' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -122,7 +125,7 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 # ***********************修改了路径***************************
-grep Epoch: ${test_path_dir}/output/logs/log_train_performance_8p.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep Epoch: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
