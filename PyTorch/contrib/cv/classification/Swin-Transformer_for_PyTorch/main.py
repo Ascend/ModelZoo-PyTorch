@@ -428,7 +428,7 @@ if __name__ == '__main__':
 
     # print config
     logger.info(config.dump())
-    args = parser.parse_args() 
+
     if args.bin_mode:
         torch.npu.set_compile_mode(jit_compile=False)
         print("use rt2+bin train model") 
