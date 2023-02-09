@@ -48,9 +48,6 @@ done
 
 if [[ $profiling == "GE" ]];then
     export GE_PROFILING_TO_STD_OUT=1
-    profiling=True
-elif [[ $profiling == "CANN" ]];then
-    profiling=True
 fi
 
 # 校验是否传入data_path,不需要修改
