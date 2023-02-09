@@ -118,7 +118,7 @@ if [[ $autotune == True ]]; then
 fi
 #数据集处理
 mkdir -p $cur_path/data
-ln -snf $data_path/coco $cur_path/data/
+ln -s $data_path/coco $cur_path/data/
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
