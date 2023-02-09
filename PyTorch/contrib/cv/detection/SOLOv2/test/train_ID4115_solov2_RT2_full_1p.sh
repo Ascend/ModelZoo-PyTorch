@@ -116,7 +116,7 @@ python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $a
       --start_step=$start_step --profiling=$profiling  --rt2_bin=$rt2_bin > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
-      --out  results_solo.pkl --eval segm --data_root=$data_path/coco/ >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --out  results_solo.pkl --eval segm --data_root=$data_path >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
