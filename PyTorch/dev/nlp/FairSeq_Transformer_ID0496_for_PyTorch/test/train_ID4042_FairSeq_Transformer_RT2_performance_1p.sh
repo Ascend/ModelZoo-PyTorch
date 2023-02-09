@@ -87,6 +87,12 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=""
+else
+    PREC=" --fp16 --fp16-scale-window 1500 "
+fi
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -143,8 +149,7 @@ do
 	    --encoder-attention-heads 4 \
 	    --encoder-ffn-embed-dim 1024 \
 	    --seed 12345 \
-	    --fp16 \
-	    --fp16-scale-window 1500 \
+	    $PREC \
 	    --ddp-backend no_c10d \
 	    --disable-validation \
 	    --distributed-no-spawn \
@@ -187,7 +192,11 @@ echo "Final Performance images/sec : $FPS"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据
 #吞吐量，不需要修改
