@@ -12,6 +12,13 @@ export WORLD_SIZE=1
 data_path_info=$1
 data_path=`echo ${data_path_info#*=}`
 device_id=0
+#使能profiling，默认为False
+profiling=False
+start_step=90
+stop_step=100
+#指定二进制训练模式，默认bin_mode=0（非二进制）
+bin_mode=0
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -28,8 +35,20 @@ do
       export PATH=/home/anaconda3/bin:$PATH
       export LD_LIBRARY_PATH=/home/anaconda3/lib:$LD_LIBRARY_PATH
       source activate $conda_name
+    elif [[ $para == --start_step* ]];then
+        start_step=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --bin_mode* ]];then
+        bin_mode=`echo ${para#*=}`
     fi
 done
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+fi
 
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -88,6 +107,10 @@ python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  ma
           --local_rank $ASCEND_DEVICE_ID  \
           --data-path ${data_path} \
           --batch-size ${batch_size} \
+          --start_step ${start_step} \
+          --stop_step ${stop_step} \
+          --profiling ${profiling} \
+          --bin_mode ${bin_mode} \
 	  --perf > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

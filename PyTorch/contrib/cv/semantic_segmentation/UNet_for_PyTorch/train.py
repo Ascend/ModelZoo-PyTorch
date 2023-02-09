@@ -160,12 +160,19 @@ def parse_args():
                         help='evaluate model on validation set')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
-    parser.add_argument("--profile", default=0, type=int)
+    parser.add_argument('--start_step', default=0, type=int, help='start_step')
+    parser.add_argument('--stop_step', default=20, type=int, help='stop_step')
+    parser.add_argument('--profiling', type=str, default='False', help='choose profiling way--CANN,GE,False')
     parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
     config = parser.parse_args()
 
     return config
 
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self,exc_type,exc_val,exc_tb):
+        pass
 
 def profiling(loader, model, loss_fun, optimizer, loc, config):
     # switch to train mode
@@ -256,41 +263,50 @@ def train(config, train_loader, model, criterion, optimizer, epoch):
 
     step = 0
     end = time.time()
+    i = 0
     for input, target, _ in train_loader:
         data_time.update(time.time() - end)
         step += 1
         input = input.npu()
         target = target.npu()
 
-        # compute output
-        if config['deep_supervision']:
-            outputs = model(input)
-            loss = 0
-            for output in outputs:
-                loss += criterion(output, target)
-            loss /= len(outputs)
-            iou_now = iou_score(outputs[-1], target)
+        if i <= config['stop_step'] and i >= config['start_step'] and config['profiling'] == 'CANN':
+            prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
+        elif i <= config['stop_step'] and i >= config['start_step'] and config['profiling'] == 'GE':
+            prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
         else:
-            output = model(input)
-            torch.npu.synchronize()
-            loss = criterion(output, target)
-            torch.npu.synchronize()
-            iou_now = iou_score(output, target)
-
-        losses.update(loss.item(), input.size(0))
-        iou.update(iou_now, input.size(0))
-
-        # compute gradient and do optimizing step
-        optimizer.zero_grad()
-        torch.npu.synchronize()
-        if config["amp"]:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+            prof_manager = NoProfiling()
+        with prof_manager:
+            # compute output
+            if config['deep_supervision']:
+                outputs = model(input)
+                loss = 0
+                for output in outputs:
+                    loss += criterion(output, target)
+                loss /= len(outputs)
+                iou_now = iou_score(outputs[-1], target)
+            else:
+                output = model(input)
                 torch.npu.synchronize()
-        else:
-            loss.backward()
-        optimizer.step()
-        torch.npu.synchronize()
+                loss = criterion(output, target)
+                torch.npu.synchronize()
+                iou_now = iou_score(output, target)
+
+            losses.update(loss.item(), input.size(0))
+            iou.update(iou_now, input.size(0))
+
+            # compute gradient and do optimizing step
+            optimizer.zero_grad()
+            torch.npu.synchronize()
+            if config["amp"]:
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+                    torch.npu.synchronize()
+            else:
+                loss.backward()
+            optimizer.step()
+            torch.npu.synchronize()
+        i = i + 1
 
         batch_time.update(time.time() - end)
         end = time.time()
@@ -509,9 +525,9 @@ def main():
         val_iou = validate(config, val_loader, model, criterion)
         return
 
-    if config['profile']:
-        profiling(train_loader, model, criterion, optimizer, loc, config)
-        return
+    #if config['profile']:
+    #    profiling(train_loader, model, criterion, optimizer, loc, config)
+    #    return
 
     best_iou = 0
     trigger = 0
