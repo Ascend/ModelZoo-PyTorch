@@ -5,3 +5,4 @@ h5py
 opencv-python
 imageio
 scikit-video
+torchvision==0.9.1
