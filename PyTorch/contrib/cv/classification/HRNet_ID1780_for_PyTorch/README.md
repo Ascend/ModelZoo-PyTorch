@@ -27,29 +27,18 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
   code_path=PyTorch/contrib/cv/classification
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件 | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -108,8 +97,8 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
 
      启动单卡训练
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 1p精度
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 1性能
      ```
 
    - 单机8卡训练
@@ -117,17 +106,19 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8p精度
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8p性能
      ```
-    - 单机8卡评估
-        ```
-        bash ./test/train_eval_8p.sh --data_path=xxx --device_id=xxx
-        ```
+   - 单机单卡评测
 
-   --data_path：数据集路径。
+     启动单卡评测。
+     ```
+     bash ./test/train_eval_1p.sh --data_path=xxx --device_id=xxx  # 1p评测
+     ```
 
-   --device_id：设备号。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+
+   --device_id参数填写使用哪个设备。
 
    模型训练脚本参数说明如下。
 
@@ -153,12 +144,13 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
 
 **表 2**  训练结果展示表
 
-| 名称         | Acc1      | FPS       |
-| :---------:  | :------: | :------:  |
-| 1p-1.5      | -        | 33.3       |
-| 1p-1.8      | -        | 55.5       |
-| 8p-1.5      | 76.4     | 218.4      |
-| 8p-1.8      | 76.65     | 356      |
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V |   -   | -    |   1    |    -     |      1.5      |
+| 8p-竞品V |   -   |  -   |  100   |    -     |      1.5      |
+|  1p-NPU  |   -   | 84.1  |   1    |    O2    |      1.8      |
+|  8p-NPU  |  76.65  | 533.2  |  100   |    O2    |      1.8      |
+
 
 # 版本说明
 
