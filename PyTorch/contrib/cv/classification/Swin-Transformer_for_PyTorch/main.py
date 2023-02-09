@@ -92,7 +92,10 @@ def parse_option():
     parser.add_argument('--node_rank', default=-1, type=int, help='node rank for distributed training')
     parser.add_argument('--nproc_per_node', default=8, type=int, help='rank size')
     parser.add_argument('--perf', action='store_true', default=False, help='train steps')
-
+    parser.add_argument('--bin_mode', default=0, type=int, help='Use rt2 in the model: 0->not bin,1->bin')
+    parser.add_argument('--start_step', default=90, type=int, help='start_step')
+    parser.add_argument('--stop_step', default=100, type=int, help='stop_step')
+    parser.add_argument('--profiling', type=str, default='False',help='choose profiling way--CANN,GE,False')
 
     args, unparsed = parser.parse_known_args()
 
@@ -102,6 +105,11 @@ def parse_option():
     os.environ['MASTER_PORT'] = args.port
     return args, config
 
+class NoProfiling(object):
+    def __enter__(self):
+        pass
+    def __exit__(self,exc_type,exc_val,exc_tb):
+        pass
 
 def main(config):
     dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn = build_loader(config)
@@ -206,63 +214,72 @@ def train_one_epoch(config, model, criterion, data_loader, optimizer, epoch, mix
     start = time.time()
     end = time.time()
     step_ign = 0
+    i = 0
     for idx, (samples, targets) in enumerate(data_loader):
         date_meter.update((time.time() - end))
 
         if PERF and step_ign > 499:
             break
 
-        step_ign += 1
-        if step_ign < 5:
-            start = time.time()
-        samples = samples.npu(non_blocking=True)
-        targets = targets.npu(non_blocking=True)
-        if mixup_fn is not None:
-            samples, targets = mixup_fn(samples, targets)
-        outputs = model(samples)
-
-        if config.TRAIN.ACCUMULATION_STEPS > 1:
-            loss = criterion(outputs, targets)
-            loss = loss / config.TRAIN.ACCUMULATION_STEPS
-            if config.AMP_OPT_LEVEL != "O0":
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-                if config.TRAIN.CLIP_GRAD:
-                    grad_norm = torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), config.TRAIN.CLIP_GRAD)
-                else:
-                    grad_norm = get_grad_norm(amp.master_params(optimizer))
-            else:
-                loss.backward()
-                if config.TRAIN.CLIP_GRAD:
-                    grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.TRAIN.CLIP_GRAD)
-                else:
-                    grad_norm = get_grad_norm(model.parameters())
-            if (idx + 1) % config.TRAIN.ACCUMULATION_STEPS == 0:
-                optimizer.step()
-                optimizer.zero_grad()
-                lr_scheduler.step_update(epoch * num_steps + idx)
+        if i <= args.stop_step and i >= args.start_step and args.profiling == 'CANN':
+            prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
+        elif i <= args.stop_step and i >= args.start_step and args.profiling == 'GE':
+            prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
         else:
-            loss = criterion(outputs, targets)
-            optimizer.zero_grad()
-            if config.AMP_OPT_LEVEL != "O0":
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-                if config.TRAIN.CLIP_GRAD:
-                    grad_norm = torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), config.TRAIN.CLIP_GRAD)
+            prof_manager = NoProfiling()
+        with prof_manager:
+            step_ign += 1
+            if step_ign < 5:
+                start = time.time()
+            samples = samples.npu(non_blocking=True)
+            targets = targets.npu(non_blocking=True)
+            if mixup_fn is not None:
+                samples, targets = mixup_fn(samples, targets)
+            outputs = model(samples)
+
+            if config.TRAIN.ACCUMULATION_STEPS > 1:
+                loss = criterion(outputs, targets)
+                loss = loss / config.TRAIN.ACCUMULATION_STEPS
+                if config.AMP_OPT_LEVEL != "O0":
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                    if config.TRAIN.CLIP_GRAD:
+                        grad_norm = torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), config.TRAIN.CLIP_GRAD)
+                    else:
+                        grad_norm = get_grad_norm(amp.master_params(optimizer))
                 else:
-                    grad_norm = get_grad_norm(amp.master_params(optimizer))
+                    loss.backward()
+                    if config.TRAIN.CLIP_GRAD:
+                        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.TRAIN.CLIP_GRAD)
+                    else:
+                        grad_norm = get_grad_norm(model.parameters())
+                if (idx + 1) % config.TRAIN.ACCUMULATION_STEPS == 0:
+                    optimizer.step()
+                    optimizer.zero_grad()
+                    lr_scheduler.step_update(epoch * num_steps + idx)
             else:
-                loss.backward()
-                if config.TRAIN.CLIP_GRAD:
-                    grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.TRAIN.CLIP_GRAD)
+                loss = criterion(outputs, targets)
+                optimizer.zero_grad()
+                if config.AMP_OPT_LEVEL != "O0":
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                    if config.TRAIN.CLIP_GRAD:
+                        grad_norm = torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), config.TRAIN.CLIP_GRAD)
+                    else:
+                        grad_norm = get_grad_norm(amp.master_params(optimizer))
                 else:
-                    grad_norm = get_grad_norm(model.parameters())
-            optimizer.step()
-            lr_scheduler.step_update(epoch * num_steps + idx)
-        torch.npu.synchronize()
-        loss_meter.update(loss.item(), targets.size(0))
-        norm_meter.update(grad_norm)
-        batch_time.update(time.time() - end)
+                    loss.backward()
+                    if config.TRAIN.CLIP_GRAD:
+                        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.TRAIN.CLIP_GRAD)
+                    else:
+                        grad_norm = get_grad_norm(model.parameters())
+                optimizer.step()
+                lr_scheduler.step_update(epoch * num_steps + idx)
+            torch.npu.synchronize()
+            loss_meter.update(loss.item(), targets.size(0))
+            norm_meter.update(grad_norm)
+            batch_time.update(time.time() - end)
+        i = i + 1
 
         if idx % config.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
@@ -411,5 +428,9 @@ if __name__ == '__main__':
 
     # print config
     logger.info(config.dump())
+    args = parser.parse_args() 
+    if args.bin_mode:
+        torch.npu.set_compile_mode(jit_compile=False)
+        print("use rt2+bin train model") 
 
     main(config)
