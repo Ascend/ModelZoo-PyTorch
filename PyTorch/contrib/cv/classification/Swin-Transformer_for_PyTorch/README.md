@@ -25,29 +25,18 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
   code_path=PyTorch/contrib/cv/classification
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
 # 准备训练环境
 
 ## 准备环境
 
-  - 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+  - 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-    **表 1** 版本配套表
+  **表 1**  版本支持表
 
-       | 配套      | 版本                                                                               |
-       |----------------------------------------------------------------------------------| ------------------------------------------------------------ |
-       | 硬件  | [1.0.15.3](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)    |
-       | NPU固件与驱动  | [22.0.0.3](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)    |
-       | CANN    | [5.1.RC1.1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1.1) |
-       | PyTorch | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)                           |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
 
 - 环境准备指导。
 
@@ -55,20 +44,23 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   用户自行获取原始数据集，下载开源数据[ImageNet](http://www.image-net.org/)训练集和验证集，将数据集上传到服务器任意路径下并解压。
+   用户自行获取 `ImageNet` 数据集，将数据集上传到服务器任意路径下并解压。
 
-2. 数据预处理。
-  按照训练集格式处理验证集，可以使用以下[脚本](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh)。
-  以ImageNet数据集为例，数据集目录结构参考如下所示。
+   数据集目录结构参考如下所示。
 
    ```
    ├── ImageNet
@@ -106,8 +98,6 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
    cd /${模型文件夹名称} 
    ```
 
-
-
 2. 运行训练脚本。
 
    该模型支持单机单卡训练和单机8卡训练。
@@ -117,11 +107,8 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=real_data_path
-     ```
-     测试单卡性能。
-     ```
-     bash ./test/train_performance_1p.sh --data_path=real_data_path
+     bash ./test/train_full_1p.sh --data_path=real_data_path  # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=real_data_path # 单卡性能
      
      ```
 
@@ -130,22 +117,21 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path
-     ```
-      测试8卡性能。
-     ```
-     bash ./test/train_performance_8p.sh --data_path=real_data_path
+     bash ./test/train_full_8p.sh --data_path=real_data_path  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=real_data_path # 8卡性能
      ```
 
-   - 启动8卡评估。
+   - 单机8卡评测
+   
+     启动8卡评测。
 
      ```
-     bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=real_pre_train_model_path
+     bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=real_pre_train_model_path #8卡评测
      ```
 
-
-
-   --data_path参数填写数据集路径，--pth_path参数填写模型参数保存地址。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   
+   --pth_path参数填写训练权重生成路径，需写到权重文件的一级目录。
 
 3. 模型训练脚本参数说明如下。
 
@@ -159,18 +145,16 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
 
 # 训练结果展示
 
-
-
 **表 2** 训练结果展示表
 
-| NAME      | Acc@1 |     FPS | Epochs | AMP_Type |
-|-----------|-------|--------:|--------| -------: |
-| 1p-竞品V    | -     |     284 | 1      |        - |
-| 1p-竞品A    | -     |       - | 1      |        - |
-| 1p-NPU1.8 | -     |  429.22 | 1      |       O2 |
-| 8p-竞品V    | 81.1  |    1906 | 300    |        - |
-| 8p-竞品A    | 81.1  |    2876 | 300    |        - |
-| 8p-NPU1.8 | 81.0  | 3220.63 | 300    |       O2 |
+| NAME      | Acc@1 |     FPS | Epochs | AMP_Type | Torch_Version |
+|:---------:|:-----:|:-------:|:------:|:-------: |:---:|
+| 1p-竞品V  | -     |     284 | 1      |        - | 1.5 |
+| 8p-竞品V  | 81.1  |    1906 | 300    |        - | 1.5 |
+| 1p-竞品A  | -     |       - | 1      |        - | 1.5 |
+| 8p-竞品A  | 81.1  |    2876 | 300    |        - | 1.5 |
+| 1p-NPU | -     |  432.41 | 1      |       O2 | 1.8 |
+| 8p-NPU | 81.0  | 3600.85 | 300    |       O2 | 1.8 |
 
 
 
@@ -180,10 +164,5 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
 
 2022.12.20：更新readme，重新发布。
 
-
-
-## 已知问题
-
-
-
+## FAQ
 无。
