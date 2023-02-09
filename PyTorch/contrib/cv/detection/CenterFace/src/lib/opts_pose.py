@@ -260,6 +260,8 @@ class opts(object):
                              help='use ground truth human joint local offset.')
     self.parser.add_argument('--eval_oracle_dep', action='store_true', 
                              help='use ground truth depth.')
+    self.parser.add_argument('--distributed_launch', default=False, action='store_true', 
+                             help='This flag enables training with DDP.')
 
   def parse(self, args=''):
     if args == '':
