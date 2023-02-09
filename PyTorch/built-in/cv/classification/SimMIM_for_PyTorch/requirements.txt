@@ -1,8 +1,0 @@
-pyyaml
-scipy
-termcolor
-timm==0.6.7
-torchvision
-yacs==0.1.8
-pillow==9.1.0
-opencv-python==4.6.0.66
