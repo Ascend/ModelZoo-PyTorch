@@ -28,41 +28,37 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件    | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
+  | PyTorch 1.11 | timm==0.4.5 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+  
+  pip install -r 1.11_requirements.txt  # PyTorch1.11版本
   ```
-
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 ## 准备数据集
 
@@ -111,7 +107,7 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
    ```
 
 2. 运行训练脚本。
-    
+   
    1. 预训练
     ```bash
     # pre-training 1p performance，单p上运行1个epoch，运行时间约为1h
@@ -160,29 +156,29 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
 
 **表 2**   MAE Pre-Training Result
 
-| NAME | LOSS | FPS | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: | :------: |
-| 1p-GPU  | -      | 320   | 1        | -       |
-| 1p-NPU | -     | 328  | 1      | O2      |
-| 8p-GPU | 0.4107 | 2399 | 400 | - |
-| 8p-NPU | 0.4107 | 2515 | 400 | O2 |
+| NAME | LOSS | FPS | Epochs   | AMP_Type | Torch_Version |
+| :------: | :------:  | :------: | :------: | :------: | :------: |
+| 1p-GPU  | -      | 320   | 1        | -       | 1.5    |
+| 1p-NPU | -     | 328  | 1      | O2      | 1.8  |
+| 8p-GPU | 0.4107 | 2399 | 400 | - | 1.5 |
+| 8p-NPU | 0.4107 | 2515 | 400 | O2 | 1.8 |
 
 **表 3**   MAE Fine-Tuning Result
 
-| NAME | Acc@1 | FPS | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: | :------: |
-| 1p-GPU  | -      | 218   | 1        | -       |
-| 1p-NPU | -     | 306   | 1      | O2      |
-| 8p-GPU | 83.07 | 1538 | 100 | - |
-| 8p-NPU | 83.34 | 2263 | 100 | O2 |
+| NAME | Acc@1 | FPS | Epochs   | AMP_Type | Torch_Version |
+| :------: | :------:  | :------: | :------: | :------: | :------: |
+| 1p-GPU  | -      | 218   | 1        | -       | 1.5    |
+| 1p-NPU | -     | 306   | 1      | O2      | 1.8   |
+| 8p-GPU | 83.07 | 1538 | 100 | - | 1.5 |
+| 8p-NPU | 83.34 | 2263 | 100 | O2 | 1.8 |
 
 # 版本说明
 
 ## 变更
 
-2022.12.22：更新Readme。
+2022.12.22：更新readme，重新发布。
 
-## 已知问题
+## FAQ
 
 无。
 

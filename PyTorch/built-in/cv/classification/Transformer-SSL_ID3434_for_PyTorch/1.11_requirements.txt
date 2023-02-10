@@ -1,0 +1,7 @@
+torchvision==0.9.1
+pillow==9.1.0
+opencv-python==4.4.0.46
+termcolor==1.1.0
+yacs==0.1.8
+diffdist
+timm==0.4.5
