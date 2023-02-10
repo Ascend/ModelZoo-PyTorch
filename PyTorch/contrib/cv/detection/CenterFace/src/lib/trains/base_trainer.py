@@ -88,7 +88,7 @@ class BaseTrainer(object):
         start_time = time.time()
       data_time.update(time.time() - end)
       
-      if opt.start_step<= iter_id <= opt.stop_step and opt.profiling == 'True' and epoch=2:
+      if opt.start_step<= iter_id <= opt.stop_step and opt.profiling == 'True' and epoch==2:
         profiling = torch.npu.profile(profiler_result_path="./CANN_prof")
       else:
         profiling = NoProfiling()
