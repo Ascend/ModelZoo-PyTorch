@@ -56,15 +56,17 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
 
 1. 获取数据集。
 
-    用户自行获取 `rirs_noises` 数据集，将数据集分别解压至 `./data/LibriSpeech` 和 `./data/RIRS_NOISES` 文件夹路径下，数据集目录结构参考如下：
+    用户自行获取 `train-clean-5` 数据集和 `rirs_noises` 数据集，将数据集分别解压至服务器任意目录下新建的 `data/LibriSpeech` 和 `data/RIRS_NOISES` 文件夹路径下，数据集目录结构参考如下：
 
    ```
    ├── data
-   │    ├──LibriSpeech├──train-clean-5
-   │    │                                         
-   │    ├──RIRS_NOISES├──pointsource_noises
-                      ├──real_rirs_isotropic_noises
-                      ├──simulated_rirs           
+       ├──LibriSpeech
+          ├──train-clean-5
+                                                
+       ├──RIRS_NOISES
+          ├──pointsource_noises
+          ├──real_rirs_isotropic_noises
+          ├──simulated_rirs           
    ```
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
