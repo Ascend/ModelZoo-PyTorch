@@ -25,30 +25,20 @@
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
 
 - 环境准备指导。
 
@@ -56,18 +46,23 @@
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，将数据集上传到服务器任意路径下并解压。
-
-   以ImageNet2012数据集为例，数据集目录结构参考如下所示。
+   用户自行获取 `ImageNet2012` 数据集，将数据集上传到服务器任意路径下并解压。
+   
+   数据集目录结构参考如下所示。
 
    ```
    ├── ImageNet2012
@@ -114,7 +109,8 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/    
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能    
      ```
 
    - 单机8卡训练
@@ -122,10 +118,18 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/   
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能 
      ```
+  
+   - 单机8卡评测
 
-   --data\_path参数填写数据集路径。
+     启动8卡评测。
+
+     ```
+     bash ./test/train_eval_8p.sh --data_path=/data/xxx/  # 8卡评测
+     ```
+   --data\_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -146,20 +150,18 @@
    --wd                                //权重衰减
    --gpu                               //卡号
    ```
-
-　
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME    | Acc@1  | FPS     | Epochs | AMP_Type | Torch_version |
-| ------- | ------ | :------ | ------ | :------- | :------------ |
-| 1p-竞品 | -      | 126     | 1      | -        | -             |
-| 8p-竞品 | 79.22  | 1200    | 90     | -        | -             |
-| 1p-NPU  | -      | 482     | 1      | O2       | 1.8           |
-| 8p-NPU  | 79.422 | 3765    | 90     | O2       | 1.8           |
+| NAME    | Acc@1  | FPS     | Epochs | AMP_Type | Torch_Version |
+| :-----: | :----: | :-----: | :----: | :------: | :-----------: |
+| 1p-竞品V | -      | 126     | 1      | -     | 1.5      |
+| 8p-竞品V | 79.22  | 1200    | 90     | -        | 1.5        |
+| 1p-NPU  | -      | 482     | 1      | O2       | 1.8        |
+| 8p-NPU  | 79.422 | 3765    | 90     | O2       | 1.8         |
 
 
 
@@ -169,7 +171,7 @@
 
 2020.12.10：首次发布
 
-## 已知问题
+## FAQ
 
 无。
 
