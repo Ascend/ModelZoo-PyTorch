@@ -18,8 +18,6 @@ import os
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-else:
-    import torch.npu
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks

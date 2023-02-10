@@ -42,8 +42,6 @@ import torch.distributed as dist
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-else:
-    import torch.npu
 import os
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', 0))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', 0))

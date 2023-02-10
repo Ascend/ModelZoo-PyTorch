@@ -18,8 +18,6 @@ from util import util
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-else:
-    import torch.npu
 import models
 import data
 """!!!!!!!!!!!!!!!npu8p修改的地方!!!!!!!!!!!!!!!!!!1"""

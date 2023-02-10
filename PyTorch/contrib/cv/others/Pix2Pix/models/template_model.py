@@ -32,8 +32,6 @@ You need to implement the following functions:
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-else:
-    import torch.npu
 from .base_model import BaseModel
 from . import networks
 

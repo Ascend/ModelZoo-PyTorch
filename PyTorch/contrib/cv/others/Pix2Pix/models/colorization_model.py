@@ -16,8 +16,6 @@ from .pix2pix_model import Pix2PixModel
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-else:
-    import torch.npu
 from skimage import color  # used for lab2rgb
 import numpy as np
 

@@ -15,8 +15,6 @@
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-else:
-    import torch.npu
 import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel
