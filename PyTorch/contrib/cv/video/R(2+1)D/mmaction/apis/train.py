@@ -121,6 +121,7 @@ def train_model(model,
         meta=meta)
     # an ugly workaround to make .log and .log.json filenames the same
     runner.timestamp = timestamp
+    setattr(runner, "batch_size", cfg.data.get('videos_per_gpu', 1)) 
 
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
