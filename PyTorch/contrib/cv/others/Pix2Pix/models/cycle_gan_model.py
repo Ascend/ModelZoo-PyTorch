@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
-import torch.npu
+import torch
+import torch_npu
 import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel

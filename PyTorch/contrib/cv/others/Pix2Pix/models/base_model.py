@@ -15,7 +15,8 @@ import os
 
 
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
-import torch.npu
+import torch
+import torch_npu
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks

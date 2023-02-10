@@ -13,7 +13,8 @@
 # limitations under the License.
 import random
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
-import torch.npu
+import torch
+import torch_npu
 
 
 class ImagePool():
