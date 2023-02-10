@@ -1,0 +1,6 @@
+torchvision==0.2.2.post3
+Pillow==8.4.0
+-r requirements/build.txt
+-r requirements/optional.txt
+-r requirements/runtime.txt
+-r requirements/tests.txt
