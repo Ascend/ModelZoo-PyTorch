@@ -14,7 +14,10 @@
 from .pix2pix_model import Pix2PixModel
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 from skimage import color  # used for lab2rgb
 import numpy as np
 

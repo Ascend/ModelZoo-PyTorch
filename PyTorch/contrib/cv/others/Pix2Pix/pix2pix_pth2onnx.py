@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 import os
 from options.test_options import TestOptions
 from data import create_dataset

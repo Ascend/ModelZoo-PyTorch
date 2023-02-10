@@ -30,7 +30,10 @@ You need to implement the following functions:
 """
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 from .base_model import BaseModel
 from . import networks
 

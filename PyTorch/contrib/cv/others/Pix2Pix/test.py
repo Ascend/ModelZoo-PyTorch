@@ -47,7 +47,10 @@ from util.visualizer import save_images
 from util import html
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 # python test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_label2photo_pretrained --norm instance 
 # python test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_label2photo_pretrained --save_onnx True  
 # python test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_pix2pix_1p_bs1_lr0002_ep200 --norm instance 

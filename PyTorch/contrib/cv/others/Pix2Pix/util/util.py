@@ -15,7 +15,10 @@
 from __future__ import print_function
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
 import torch
-import torch_npu
+if torch.__version__ >= "1.8":
+    import torch_npu
+else:
+    import torch.npu
 import numpy as np
 from PIL import Image
 import os
