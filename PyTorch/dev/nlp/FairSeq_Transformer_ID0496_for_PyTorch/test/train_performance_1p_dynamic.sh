@@ -107,7 +107,7 @@ fi
 if [[ $precision_mode == "must_keep_origin_dtype" ]];then
     PREC=""
 else
-    PREC=" --fp16 --fp16-scale-window 1500 \ "
+    PREC=" --fp16 --fp16-scale-window 1500 "
 fi
 
 #训练开始时间，不需要修改
