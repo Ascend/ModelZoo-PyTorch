@@ -49,6 +49,9 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
   ```
   pip install -r requirements.txt
   ```
+  > **说明:**
+  >
+  > 只需执行一条对应的Pytorch版本依赖安装命令。
 
 ## 准备数据集
 
@@ -97,8 +100,8 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
 
      启动单卡训练
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 1p精度
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 1性能
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -106,14 +109,14 @@ HRNet，是一个用于图像分类的高分辨网络。通过并行连接高分
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8p精度
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8p性能
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
    - 单机单卡评测
 
      启动单卡评测。
      ```
-     bash ./test/train_eval_1p.sh --data_path=xxx --device_id=xxx  # 1p评测
+     bash ./test/train_eval_1p.sh --data_path=xxx --device_id=xxx  # 单卡评测
      ```
 
    --data_path参数填写数据集路径，需写到数据集的一级目录。

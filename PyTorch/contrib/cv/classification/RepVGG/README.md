@@ -48,6 +48,9 @@ RepVgg是一个分类网络，该网络是在VGG网络的基础上进行改进�
   ```
   pip install -r requirements.txt
   ```
+  > **说明:**
+  >
+  > 只需执行一条对应的Pytorch版本依赖安装命令。
 
 ## 准备数据集
 
@@ -96,7 +99,7 @@ RepVgg是一个分类网络，该网络是在VGG网络的基础上进行改进�
      启动单卡训练。
 
      ```
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 1p性能
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -104,22 +107,22 @@ RepVgg是一个分类网络，该网络是在VGG网络的基础上进行改进�
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8p精度
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
 
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8p性能
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
    - 单机8卡评测
 
      启动8卡评测
       ```
-      bash ./test/train_eval_8p.sh --data_path=/data/xxx/  # 8p评测
+      bash ./test/train_eval_8p.sh --data_path=/data/xxx/  # 8卡评测
       ```
 
    - 单机单卡微调
 
      启动单1卡微调
       ```
-      bash ./test/train_finetune_1p.sh --data_path=/data/xxx/  # 1p微调
+      bash ./test/train_finetune_1p.sh --data_path=/data/xxx/  # 单卡微调
       ```
 
     --data_path参数填写数据集路径，需写到数据集的一级目录。
