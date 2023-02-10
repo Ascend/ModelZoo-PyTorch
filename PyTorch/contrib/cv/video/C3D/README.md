@@ -1,4 +1,4 @@
-#  C3D
+#  C3D for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -16,23 +16,14 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
 
   ```
   url=https://github.com/open-mmlab/mmaction2/blob/master/configs/recognition/c3d/README.md
-  branch=master 
   commit_id=2b6f9ac69b3609b96a514501ffe30fc90545f518
   ```
-
-
+  
 - 适配昇腾 AI 处理器的实现：
 
   ```
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/video
-  ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
   ```
   
 - 通过单击“立即下载”，下载源码包。
@@ -41,26 +32,30 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套        | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动  | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip3 install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
+
 - 安装 mmcv（在模型源码包根目录下执行以下操作）。
   ```
   export GIT_SSL_NO_VERIFY=1
@@ -86,8 +81,6 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
    用户自行获取原始数据集，可选用的开源数据集包括ucf101等，将获取好的数据集上传至在源码包根目录下新建的"data/"文件夹下并解压。
 
    以ucf101数据集为例，数据集目录结构参考如下所示。
-
-
     ```
     data
     ├── ucf101
@@ -111,6 +104,8 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
     │   │   │   ├── ...
     │   │   │   ├── v_YoYo_g25_c05
     ```
+   > **说明：** 
+   > 该数据集的训练过程脚本只作为一种参考示例。
 
 # 开始训练
 
@@ -130,56 +125,59 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh
-     bash ./test/test_1p.sh
+     bash ./test/train_performance_1p.sh  #单卡性能
+     
+     bash ./test/train_full_1p.sh  #单卡精度
+     
+     bash ./test/test_1p.sh  #单卡精度测试
      ```
-
+   
    - 单机8卡训练
-
+   
      启动8卡训练。
-
+   
      ```
-     bash ./test/train_full_8p.sh
-     bash ./test/test_8p.sh
+     bash ./test/train_performance_8p.sh  #8卡性能
+     
+     bash ./test/train_full_8p.sh  #8卡精度
+     
+     bash ./test/test_8p.sh  #8卡精度测试
      ```
-
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
    --data_path                         //数据集路径
-   --batch_size                        //训练批次大小，默认为3
+   --batch_size                        //训练批次大小
    --validate                          //启动验证
    --rank_id                           //训练卡id
    --seed                              //种子设定
    ```
 
    训练完成后，权重文件保存在当前路径下，并在test/output中输出模型训练精度和性能信息。
-   
+
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME    | Acc@1 | FPS    | Epochs | AMP_Type | Torch_version |
-| ------- | ----- | :----- | ------ | :------- | ------------- |
-| 1p-竞品 | -     | -      | -      | -        | -             |
-| 8p-竞品 | -     | -      | -      | -        | -             |
-| 1p-NPU  | -     | 59.155 | 1      | O2       | 1.5           |
-| 1p-NPU  | -     | 63.39  | 1      | O2       | 1.8           |
-| 8p-NPU  | 80.44 | 450.783| 30     | O2       | 1.5           |
-| 8p-NPU  | 81.42 | 474.6  | 30     | O2       | 1.8           |
+|   NAME   | Acc@1 |  FPS   | Epochs | AMP_Type | Torch_version |
+| :------: | :---: | :----: | :----: | :------: | :-----------: |
+| 1p-竞品V |   -   |   -    |   -    |    -     |       -       |
+| 8p-竞品V |   -   |   -    |   -    |    -     |       -       |
+|  1p-NPU  |   -   | 58.93  |   1    |    O2    |      1.8      |
+|  8p-NPU  | 81.42 | 443.83 |   30   |    O2    |      1.8      |
 
 
 # 版本说明
 
 ## 变更
 
-2022.12.07：更新pytorch1.8版本，重新发布。
+2023.02.13：更新readme，重新发布。
 
 2021.02.14：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
