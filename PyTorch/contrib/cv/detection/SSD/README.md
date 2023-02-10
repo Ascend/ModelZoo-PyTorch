@@ -106,7 +106,7 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
    ├── mmdet
    ├── tools
    ```
-> **说明：** 
+   > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
 
 
@@ -147,7 +147,7 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
      启动8卡评测。
 
      ```
-     bash test/train_eval_8p.sh --data_path=xxx # 8卡评测
+     bash ./test/train_eval_8p.sh --data_path=xxx # 8卡评测
      ```
 
    - 多机多卡性能数据获取流程
@@ -155,7 +155,7 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
      ```shell
      1. 安装环境
      2. 开始训练，每个机器所请按下面提示进行配置
-             bash ./test/train_performance_multinodes.sh  --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
+             bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
      ```
    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
@@ -173,7 +173,8 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
    --options                           //合并配置文件(不推荐)
    --cfg-options                       //合并配置文件(推荐)
    --launcher                          //作业启动器
-
+   ```
+   
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
  3. 计算FPS值。
