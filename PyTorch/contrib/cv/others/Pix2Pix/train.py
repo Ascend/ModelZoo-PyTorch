@@ -39,7 +39,9 @@ from util.visualizer import Visualizer
 import torch.distributed as dist
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
 # import torch
-import torch.npu
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import os
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', 0))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', 0))

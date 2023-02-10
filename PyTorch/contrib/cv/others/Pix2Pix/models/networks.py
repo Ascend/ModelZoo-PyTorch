@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
-import torch.npu
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 from torch.nn import init
 import functools

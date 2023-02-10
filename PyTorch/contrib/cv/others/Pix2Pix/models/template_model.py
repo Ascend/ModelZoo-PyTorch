@@ -29,7 +29,9 @@ You need to implement the following functions:
     <optimize_parameters>: Update network weights; it will be called in every training iteration.
 """
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
-import torch.npu
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 from .base_model import BaseModel
 from . import networks
 

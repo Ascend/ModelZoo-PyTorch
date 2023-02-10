@@ -15,7 +15,9 @@ import argparse
 import os
 from util import util
 """!!!!!!!!!!!!!!!npu修改的地方!!!!!!!!!!!!!!!!!!1"""
-import torch.npu
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import models
 import data
 """!!!!!!!!!!!!!!!npu8p修改的地方!!!!!!!!!!!!!!!!!!1"""
