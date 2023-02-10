@@ -61,12 +61,13 @@ currentDir=$(cd "$(dirname -- "$0")";pwd)
 
 gpus=8
 port=29111
+num_worker=$(($(nproc)/8))
 currentDir=$(cd "$(dirname "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
 taskset -c 0-47 python3.7.5 -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
-    ${currentDir}/../train.py --resume-from . --launcher pytorch --cfg-options total_epochs=1 data.videos_per_gpu=${batch_size} \
+    ${currentDir}/../train.py --resume-from . --launcher pytorch --cfg-options total_epochs=1 data.videos_per_gpu=${batch_size} data.workers_per_gpu=$num_worker \
     --gpu-ids 0 --data_root ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsn_train_per_8p_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 

@@ -66,10 +66,10 @@ start_time=$(date +%s)
 # 非平台场景时source 环境变量
 
 currentDir=$(cd "$(dirname -- "$0")";pwd)
-
+num_worker=$(($(nproc)/8))
 source ${currentDir}/env_npu.sh
 
-python3.7.5 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options total_epochs=1 data.videos_per_gpu=${batch_size} \
+python3.7.5 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options total_epochs=1 data.videos_per_gpu=${batch_size} data.workers_per_gpu=$num_worker \
 --resume-from . > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsn_train_per_1p_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 
