@@ -52,9 +52,12 @@ FCOS是一个全卷积的one-stage目标检测模型，相比其他目标检测�
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r 1.5_requirements.txt
-  pip install -r 1.8_requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
   
 - 准备mmcv环境。
   1. 进入源码包根目录，下载mmcv，最好是1.2.7版本的（版本要求是1.2.5以上，1.3.0以下）。
@@ -133,8 +136,8 @@ FCOS是一个全卷积的one-stage目标检测模型，相比其他目标检测�
               ├── 000000000285.jpg
               ├── ...
    ```
-
-
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 # 开始训练
 
