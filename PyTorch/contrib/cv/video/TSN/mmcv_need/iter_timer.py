@@ -22,13 +22,18 @@ class IterTimerHook(Hook):
 
     def before_epoch(self, runner):
         self.t = time.time()
+        self.step_count = 0
 
     def before_iter(self, runner):
-        runner.log_buffer.update({'data_time': time.time() - self.t})
+        if self.step_count > 2:
+            runner.log_buffer.update({'data_time': time.time() - self.t})
 
     def after_iter(self, runner):
-        if runner.distributed:
-            runner.log_buffer.update({'time': time.time() - self.t, 'fps': runner.batch_size * 8 / (time.time() - self.t)})
+        if self.step_count > 2:
+            if runner.distributed:
+                runner.log_buffer.update({'time': time.time() - self.t, 'fps': runner.batch_size * 8 / (time.time() - self.t)})
+            else:
+                runner.log_buffer.update({'time': time.time() - self.t, 'fps': runner.batch_size / (time.time() - self.t)})
         else:
-            runner.log_buffer.update({'time': time.time() - self.t, 'fps': runner.batch_size / (time.time() - self.t)})
+            self.step_count += 1
         self.t = time.time()
