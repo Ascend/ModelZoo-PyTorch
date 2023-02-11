@@ -19,6 +19,7 @@ import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          Fp16OptimizerHook, OptimizerHook, build_optimizer)
+from .runner_profiling import RunnerProfiling
 from mmcv.utils import build_from_cfg
 
 from mmdet.core import DistEvalHook, EvalHook
@@ -106,13 +107,21 @@ def train_detector(model,
     else:
         model = MMDataParallel(
             model, device_ids=cfg.npu_ids)
-
-    runner = EpochBasedRunner(
-        model,
-        optimizer=optimizer,
-        work_dir=cfg.work_dir,
-        logger=logger,
-        meta=meta)
+    if cfg.profiling == "True":
+        runner = RunnerProfiling(
+            model,
+            optimizer=optimizer,
+            work_dir=cfg.work_dir,
+            logger=logger,
+            meta=meta,
+            max_iters=cfg.stop_step)
+    else:
+        runner = EpochBasedRunner(
+            model,
+            optimizer=optimizer,
+            work_dir=cfg.work_dir,
+            logger=logger,
+            meta=meta)
     # an ugly workaround to make .log and .log.json filenames the same
     runner.timestamp = timestamp
 
