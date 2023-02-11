@@ -27,6 +27,10 @@ batch_size=64
 # 指定训练所使用的npu device卡id
 device_id=0
 
+#适配profiling，默认为False
+profiling=False
+stop_step=100
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -36,21 +40,32 @@ do
         batch_size=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
-    fi
-    if [[ $para == --conda_name* ]];then
+    elif [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
       echo "PATH TRAIN BEFORE: $PATH"
       source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
       source activate $conda_name
       echo "PATH TRAIN AFTER: $PATH"
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
+    elif [[ $para == --stop_step* ]];then
+        stop_step=`echo ${para#*=}`
     fi
 done
+
+if [[ $profiling == "GE" ]];then
+    export GE_PROFILING_TO_STD_OUT=1
+    profiling=True
+elif [[ $profiling == "CANN" ]];then
+    profiling=True
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
+
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
@@ -68,6 +83,8 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
+else
+    pip3.7 install -v -e .
 fi
 
 
@@ -97,6 +114,8 @@ taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/yolo/yolov3_d5
     --cfg-options optimizer.lr=0.001 data.samples_per_gpu=${batch_size} \
     --seed 0  \
     --local_rank 0 \
+    --profiling ${profiling} \
+    --stop_step ${stop_step} \
     --npu_ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

@@ -83,6 +83,8 @@ def parse_args():
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--master-addr', type=str, default='127.0.0.1', help='master addr')
     parser.add_argument('--master-port', type=str, default='23333', help='master port')
+    parser.add_argument('--profiling', type=str, default='False', help='profiling')
+    parser.add_argument('--stop_step', default=100, type=int,help='profiling stop_step')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -105,6 +107,7 @@ def main():
     os.environ['MASTER_PORT'] = args.master_port
 
     cfg = Config.fromfile(args.config)
+    cfg.profiling, cfg.stop_step = args.profiling, args.stop_step
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # import modules from string list.
