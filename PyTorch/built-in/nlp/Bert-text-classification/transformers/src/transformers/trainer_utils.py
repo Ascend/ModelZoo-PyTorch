@@ -58,10 +58,11 @@ def set_seed(seed: int):
     np.random.seed(seed)
     if is_torch_available():
         torch.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
+        torch.npu.manual_seed_all(seed)
         # ^^ safe to call this function even if cuda is not available
     if is_tf_available():
         tf.random.set_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
 
 
 class EvalPrediction(NamedTuple):

@@ -1,201 +1,176 @@
-<!---
-Copyright 2020 The HuggingFace Team. All rights reserved.
+# Bert_text_classification for PyTorch
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
-# Text classification examples
-
-## GLUE tasks
-
-Based on the script [`run_glue.py`](https://github.com/huggingface/transformers/blob/master/examples/pytorch/text-classification/run_glue.py).
-
-Fine-tuning the library models for sequence classification on the GLUE benchmark: [General Language Understanding
-Evaluation](https://gluebenchmark.com/). This script can fine-tune any of the models on the [hub](https://huggingface.co/models)
-and can also be used for a dataset hosted on our [hub](https://huggingface.co/datasets) or your own data in a csv or a JSON file 
-(the script might need some tweaks in that case, refer to the comments inside for help).
-
-GLUE is made up of a total of 9 different tasks. Here is how to run the script on one of them:
-
-```bash
-export TASK_NAME=mrpc
-
-python run_glue.py \
-  --model_name_or_path bert-base-cased \
-  --task_name $TASK_NAME \
-  --do_train \
-  --do_eval \
-  --max_seq_length 128 \
-  --per_device_train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir /tmp/$TASK_NAME/
-```
-
-where task name can be one of cola, sst2, mrpc, stsb, qqp, mnli, qnli, rte, wnli.
-
-We get the following results on the dev set of the benchmark with the previous commands (with an exception for MRPC and
-WNLI which are tiny and where we used 5 epochs instead of 3). Trainings are seeded so you should obtain the same
-results with PyTorch 1.6.0 (and close results with different versions), training times are given for information (a
-single Titan RTX was used):
-
-| Task  | Metric                       | Result      | Training time |
-|-------|------------------------------|-------------|---------------|
-| CoLA  | Matthews corr                | 56.53       | 3:17          |
-| SST-2 | Accuracy                     | 92.32       | 26:06         |
-| MRPC  | F1/Accuracy                  | 88.85/84.07 | 2:21          |
-| STS-B | Pearson/Spearman corr.       | 88.64/88.48 | 2:13          |
-| QQP   | Accuracy/F1                  | 90.71/87.49 | 2:22:26       |
-| MNLI  | Matched acc./Mismatched acc. | 83.91/84.10 | 2:35:23       |
-| QNLI  | Accuracy                     | 90.66       | 40:57         |
-| RTE   | Accuracy                     | 65.70       | 57            |
-| WNLI  | Accuracy                     | 56.34       | 24            |
-
-Some of these results are significantly different from the ones reported on the test set of GLUE benchmark on the
-website. For QQP and WNLI, please refer to [FAQ #12](https://gluebenchmark.com/faq) on the website.
-
-The following example fine-tunes BERT on the `imdb` dataset hosted on our [hub](https://huggingface.co/datasets):
-
-```bash
-python run_glue.py \
-  --model_name_or_path bert-base-cased \
-  --dataset_name imdb  \
-  --do_train \
-  --do_predict \
-  --max_seq_length 128 \
-  --per_device_train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir /tmp/imdb/
-```
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
 
-### Mixed precision training
+# 概述
 
-If you have a GPU with mixed precision capabilities (architecture Pascal or more recent), you can use mixed precision
-training with PyTorch 1.6.0 or latest, or by installing the [Apex](https://github.com/NVIDIA/apex) library for previous
-versions. Just add the flag `--fp16` to your command launching one of the scripts mentioned above!
+## 简述
 
-Using mixed precision training usually results in 2x-speedup for training with the same final results:
+BERT的全称是Bidirectional Encoder Representation from Transformers，即双向Transformer的Encoder，是一种用于自然语言处理（NLP）的预训练技术。Bert-base模型是一个12层，768维，12个自注意头（self attention head）,110M参数的神经网络结构，它的整体框架是由多层transformer的编码器堆叠而成的。该模型完成的是文本分类的下游任务，主要针对CoLA、SST-2、MRPC、STS-B、QQP、MNLI、QNLI、RTE和WNLI这九个数据集进行评估。
 
-| Task  | Metric                       | Result      | Training time | Result (FP16) | Training time (FP16) |
-|-------|------------------------------|-------------|---------------|---------------|----------------------|
-| CoLA  | Matthews corr                | 56.53       | 3:17          | 56.78         | 1:41                 |
-| SST-2 | Accuracy                     | 92.32       | 26:06         | 91.74         | 13:11                |
-| MRPC  | F1/Accuracy                  | 88.85/84.07 | 2:21          | 88.12/83.58   | 1:10                 |
-| STS-B | Pearson/Spearman corr.       | 88.64/88.48 | 2:13          | 88.71/88.55   | 1:08                 |
-| QQP   | Accuracy/F1                  | 90.71/87.49 | 2:22:26       | 90.67/87.43   | 1:11:54              |
-| MNLI  | Matched acc./Mismatched acc. | 83.91/84.10 | 2:35:23       | 84.04/84.06   | 1:17:06              |
-| QNLI  | Accuracy                     | 90.66       | 40:57         | 90.96         | 20:16                |
-| RTE   | Accuracy                     | 65.70       | 57            | 65.34         | 29                   |
-| WNLI  | Accuracy                     | 56.34       | 24            | 56.34         | 12                   |
+- 参考实现：
+
+  ```
+  url=https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification
+  commit_id=d1d3ac94033b6ea1702b203dcd74beab68d42d83
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/nlp/
+  ```
 
 
-## PyTorch version, no Trainer
+# 准备训练环境
 
-Based on the script [`run_glue_no_trainer.py`](https://github.com/huggingface/transformers/blob/master/examples/pytorch/text-classification/run_glue_no_trainer.py).
+## 准备环境
 
-Like `run_glue.py`, this script allows you to fine-tune any of the models on the [hub](https://huggingface.co/models) on a
-text classification task, either a GLUE task or your own data in a csv or a JSON file. The main difference is that this
-script exposes the bare training loop, to allow you to quickly experiment and add any customization you would like.
+- 当前模型支持的 Pytorch 版本和已知已知三方库依赖如下所示。
 
-It offers less options than the script with `Trainer` (for instance you can easily change the options for the optimizer
-or the dataloaders directly in the script) but still run in a distributed setup, on TPU and supports mixed precision by
-the mean of the [🤗 `Accelerate`](https://github.com/huggingface/accelerate) library. You can use the script normally
-after installing it:
+  **表 1**  版本支持表
+ 
+  | Torch_Version |                        三方库依赖版本                                                          |
+  |:-------------:|:-------------------------------------------------------------------------------------------:|
+  |  Pytorch_1.8  | python-crfsuite==0.9.6; six==1.12.0; sklearn-crfsuite==0.3.6; tabulate==0.8.3; tqdm==4.31.1 |
 
-```bash
-pip install accelerate
-```
 
-then
+- 环境准备指导。
 
-```bash
-export TASK_NAME=mrpc
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
 
-python run_glue_no_trainer.py \
-  --model_name_or_path bert-base-cased \
-  --task_name $TASK_NAME \
-  --max_length 128 \
-  --per_device_train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir /tmp/$TASK_NAME/
-```
+- 安装依赖：
 
-You can then use your usual launchers to run in it in a distributed environment, but the easiest way is to run
+  ```
+  pip install -r requirements.txt
+  ```
 
-```bash
-accelerate config
-```
+- 安装transformers：
 
-and reply to the questions asked. Then
+  ```
+  cd transformers
+  pip3 install -e ./
+  cd ..
+  ```
 
-```bash
-accelerate test
-```
+## 准备数据集
 
-that will check everything is ready for training. Finally, you can launch training with
+该模型数据集由脚本自动下载，无需手动下载。数据目录结构如下：
+   ```
+    $data_path
+     └── test
+     └── validation
+     └── train
+   ```
+  > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。 
 
-```bash
-export TASK_NAME=mrpc
+## 获取预训练模型
+   请参考原始仓库上的README.md进行预训练模型获取。将获取的预训练模型bert-large-cased放在源码根目录下。在获取预训练模型之前需执行以下命令。
+   ```
+    git lfs install 
+   ```
 
-accelerate launch run_glue_no_trainer.py \
-  --model_name_or_path bert-base-cased \
-  --task_name $TASK_NAME \
-  --max_length 128 \
-  --per_device_train_batch_size 32 \
-  --learning_rate 2e-5 \
-  --num_train_epochs 3 \
-  --output_dir /tmp/$TASK_NAME/
-```
+# 开始训练
 
-This command is the same and will work for:
+## 训练模型
+1. 进入解压后的源码包根目录
+    ```
+     cd /${模型文件名称} 
+     ```
+2. 运行训练脚本。
 
-- a CPU-only setup
-- a setup with one GPU
-- a distributed training with several GPUs (single or multi node)
-- a training on TPUs
+   该模型支持单机单卡训练和单机8卡训练。
 
-Note that this library is in alpha release so your feedback is more than welcome if you encounter any problem using it.
+   - 单机单卡训练
 
-## XNLI
+     启动单卡训练。
 
-Based on the script [`run_xnli.py`](https://github.com/huggingface/transformers/examples/pytorch/text-classification/run_xnli.py).
+     ```
+     bash ./test/train_full_1p.sh --train_epochs=$train_epochs --TASK=$TASK  # 单卡精度训练 
+     ```
 
-[XNLI](https://www.nyu.edu/projects/bowman/xnli/) is a crowd-sourced dataset based on [MultiNLI](http://www.nyu.edu/projects/bowman/multinli/). It is an evaluation benchmark for cross-lingual text representations. Pairs of text are labeled with textual entailment annotations for 15 different languages (including both high-resource language such as English and low-resource languages such as Swahili).
+   - 单机8卡训练
 
-#### Fine-tuning on XNLI
+     启动8卡训练。
 
-This example code fine-tunes mBERT (multi-lingual BERT) on the XNLI dataset. It runs in 106 mins on a single tesla V100 16GB.
+     ```
+     bash ./test/train_full_8p.sh --train_epochs=$train_epoch --TASK=$TASK   # 8卡精度、性能训练
+     ```
+    `--train_epochs`参数填写训练的总epoch数;
 
-```bash
-python run_xnli.py \
-  --model_name_or_path bert-base-multilingual-cased \
-  --language de \
-  --train_language en \
-  --do_train \
-  --do_eval \
-  --per_device_train_batch_size 32 \
-  --learning_rate 5e-5 \
-  --num_train_epochs 2.0 \
-  --max_seq_length 128 \
-  --output_dir /tmp/debug_xnli/ \
-  --save_steps -1
-```
+    `--TASK`参数填写任务的名称（从cola、sst2、mrpc、stsb、qqp、mnli、qnli、rte和wnli中选择一个填写）。
+    - 模型训练脚本参数说明如下。
 
-Training with the previously defined hyper-parameters yields the following results on the **test** set:
+      ```
+      公共参数：
+      --dataloader_num_workers             //dataloader开启的线程数
+      --do_train                          //开启训练
+      --device                            //训练所使用的设备
+      --do_eval                           //开启评估
+      --per_device_train_batch_size       //batchsize
+      --learning_rate                     //学习率参数
+      --optim                             //使用的优化器
+      --output_dir                        //checkpoint保存的路径
+      ```
+ 
+# 训练结果展示
 
-```bash
-acc = 0.7093812375249501
-```
+**表 2**  单卡训练结果展示表
+
+| TASK  |           Metric           | 1p-精度(竞品A) | 1p-精度(NPU)  | AMP_Type | Epoch | Torch_Version |
+|:-----:|:--------------------------:|:----------:|:-----------:|:--------:|:-----:|:-------------:|
+| CoLA  |       Matthews corr        |    60.5    |    63.75    |    O2    |   3   |      1.8      |
+| SST-2 |          Accuracy          |    94.9    |    93.23    |    O2    |   3   |      1.8      |
+| MRPC  |             F1             |    89.3    |    90.28    |    O2    |   5   |      1.8      |
+| STS-B |        Spearman cor        |    86.5    |    88.76    |    O2    |   3   |      1.8      |
+|  QQP  |             F1             |    72.1    |    86.42    |    O2    |   3   |      1.8      |
+| MNLI  | Matched acc/MisMatched acc | 86.7/85.9  | 86.55/86.41 |    O2    |   3   |      1.8      |
+| QNLI  |          Accuracy          |    92.7    |    92.5     |    O2    |   3   |      1.8      |
+|  RTE  |          Accuracy          |    70.1    |    69.49    |    O2    |   5   |      1.8      |
+| WNLI  |          Accuracy          |   51.56    |    53.12    |    O2    |   3   |      1.8      |
+
+**表 3**  8卡训练结果展示表
+
+| TASK  |           Metric           | 8p-精度(竞品A)  | 8p-精度(NPU)  | 8p-性能(竞品A)<br/>sample/s | 8p-性能(NPU)<br/>sample/s | AMP_Type | Epoch | Torch_Version |
+|:-----:|:--------------------------:|:-----------:|:-----------:|:-----------------------:|:-----------------------:|:--------:|:-----:|:-------------:|
+| CoLA  |       Matthews corr        |    58.54    |    58.05    |         645.91          |         671.59          |    O2    |   3   |      1.8      |
+| SST-2 |          Accuracy          |    92.43    |    93.0     |         661.16          |        1035.794         |    O2    |   3   |      1.8      |
+| MRPC  |             F1             |    86.45    |    86.21    |         593.55          |         594.652         |    O2    |   5   |      1.8      |
+| STS-B |        Spearman cor        |    83.21    |    84.91    |         596.55          |         684.513         |    O2    |   5   |      1.8      |
+|  QQP  |             F1             |    87.79    |    87.81    |         668.16          |        1079.288         |    O2    |   3   |      1.8      |
+| MNLI  | Matched acc/MisMatched acc | 86.35/86.02 | 86.27/86.34 |         660.60          |        1060.108         |    O2    |   3   |      1.8      |
+| QNLI  |          Accuracy          |    92.44    |    92.44    |         671.134         |        1046.222         |    O2    |   3   |      1.8      |
+|  RTE  |          Accuracy          |    56.68    |    66.06    |         565.00          |         451.087         |    O2    |   5   |      1.8      |
+| WNLI  |          Accuracy          |    50.7     |    57.75    |         236.51          |         39.987          |    O2    |   1   |      1.8      |
+
+
+
+# 版本说明
+
+## 变更
+
+2023.02.11：首次发布。
+
+## FAQ
+   - 由于某些数据集较小，在进行8p训练时，竞品和NPU的精度均会较1p训练出现一定程度上的下降。
+   - 因sklearn自身bug，若运行环境为ARM，则需要手动导入so，以下是root python环境里的示例
+
+     ```export LD_PRELOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0```
+
+
+
+
+
+
+
+
+
+
