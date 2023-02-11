@@ -14,3 +14,4 @@ flask
 editdistance
 scikit-image==0.17.2
 imgaug==0.2.8
+Pillow==9.1.0
