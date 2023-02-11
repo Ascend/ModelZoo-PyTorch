@@ -21,6 +21,8 @@ import _init_paths
 import os
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.utils.data
 from opts_pose import opts
 from models.model import create_model, load_model, save_model
@@ -29,8 +31,10 @@ from datasets.dataset_factory import get_dataset
 from trains.train_factory import train_factory
 from datasets.sample.multi_pose import Multiposebatch
 from apex import amp
-if torch.__version__ >= "1.8":
-    import torch_npu
+import torch.npu
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 
 def main(opt, qtepoch=[0,]):
   if opt.bin_mode:
@@ -44,12 +48,19 @@ def main(opt, qtepoch=[0,]):
   torch.backends.cudnn.benchmark = not opt.not_cuda_benchmark and not opt.test
   Dataset = get_dataset(opt.dataset, opt.task)
   opt = opts().update_dataset_info_and_set_heads(opt, Dataset)
-  print(opt)
-  opt.device=f'npu:' + opt.device_list
+  if opt.local_rank ==0:
+    print(opt)
+  device_id = int(opt.device_list.split(',')[int(opt.local_rank)])
+  opt.device = 'npu:{}'.format(device_id)
+
   torch.npu.set_device(opt.device)
+  if opt.distributed_launch:
+    dist.init_process_group(backend='hccl', world_size=opt.world_size, rank=opt.local_rank)
+
+  print('process{},device:{}'.format(opt.local_rank,opt.device))
   print('Creating model...')
   model = create_model(opt.arch, opt.heads, opt.head_conv)
-  model = model.to(opt.device)  
+  model = model.to(opt.device)
   if opt.pretrained:
       checkpoint = torch.load(opt.pretrained_weight_path, map_location='cpu')
       if 'module.' in list(checkpoint['state_dict'].keys())[0]:
@@ -57,17 +68,22 @@ def main(opt, qtepoch=[0,]):
       model.load_state_dict(checkpoint['state_dict'], strict=False)
 
   optimizer = torch.optim.Adam(model.parameters(), opt.lr)
-  if not opt.use_fp32:
-      model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0)
+  if not opt.use_fp32 or opt.distributed_launch:
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0)
   start_epoch = 0
   if opt.load_model != '':
     model, optimizer, start_epoch = load_model(
       model, opt.load_model, optimizer, opt.resume, opt.lr, opt.lr_step)
-
+  print('start_epoch:{}'.format(start_epoch))
   Trainer = train_factory[opt.task]
   trainer = Trainer(opt, model, optimizer)
-  trainer.set_device(opt.gpus, opt.chunk_sizes, opt.device)
+  if opt.distributed_launch:
+    trainer.set_device(opt.device_list, opt.chunk_sizes, opt.device)
+  else:
+    trainer.set_device(opt.gpus, opt.chunk_sizes, opt.device)
   print('Setting up data...')
+  if opt.distributed_launch:
+    train_sampler = torch.utils.data.distributed.DistributedSampler(Dataset(opt, 'train'))
   val_loader = torch.utils.data.DataLoader(
       Dataset(opt, 'val'), 
       batch_size=1, 
@@ -82,10 +98,11 @@ def main(opt, qtepoch=[0,]):
     return
 
   train_loader = torch.utils.data.DataLoader(
-      Dataset(opt, 'train'), 
-      batch_size=opt.batch_size, 
-      shuffle=True,
+      Dataset(opt, 'train'),
+      batch_size=opt.batch_size,
+      shuffle=False if opt.distributed_launch else True,
       num_workers=opt.num_workers,
+      sampler=train_sampler if opt.distributed_launch else None,
       pin_memory=True,
       drop_last=True,
       collate_fn=Multiposebatch
@@ -95,32 +112,40 @@ def main(opt, qtepoch=[0,]):
   best = 1e10
   for epoch in range(start_epoch + 1, opt.num_epochs + 1):
     qtepoch.append(epoch)
+    if opt.distributed_launch:
+        train_sampler.set_epoch(epoch)
     mark = epoch if opt.save_all else 'last'
     log_dict_train, _ = trainer.train(epoch, train_loader)
-    if opt.val_intervals > 0 and epoch % opt.val_intervals == 0:
-      save_model(os.path.join(opt.save_dir, 'model_{}.pth'.format(mark)), 
-                 epoch, model, optimizer)
-    print(" ")
-    print(" ")
-    print(" ")
-    print('best:{} metric:{}  epotchs:{}'.format(best,log_dict_train[opt.metric],epoch))
-    print(" ")
-    print(" ")
-    print(" ")
-    if log_dict_train[opt.metric] < best:
-      best = log_dict_train[opt.metric]
-      save_model(os.path.join(opt.save_dir, 'model_best.pth'), 
-                   epoch, model)
-    else:
-      save_model(os.path.join(opt.save_dir, 'model_last.pth'), 
-                 epoch, model, optimizer)
+    if opt.local_rank == 0:
+        str1 ='epoch:{}|'.format(epoch)
+        for k, v in log_dict_train.items():
+          str2 ='{} {:8f}|'.format(k,v)
+          str1 = str1 +str2
+        print(str1)
+        if opt.val_intervals > 0 and epoch % opt.val_intervals == 0:
+          save_model(os.path.join(opt.save_dir, 'model_{}.pth'.format(mark)),
+                     epoch, model, optimizer)
+
+        print('best:{} metric:{}  epotchs:{}'.format(best,log_dict_train[opt.metric],epoch))
+
+        if log_dict_train[opt.metric] < best:
+          best = log_dict_train[opt.metric]
+          save_model(os.path.join(opt.save_dir, 'model_best.pth'),
+                       epoch, model)
+        else:
+          save_model(os.path.join(opt.save_dir, 'model_last.pth'),
+                     epoch, model, optimizer)
+
     if epoch in opt.lr_step:
-      save_model(os.path.join(opt.save_dir, 'model_{}.pth'.format(epoch)), 
-                 epoch, model, optimizer)
-      lr = opt.lr * (0.1 ** (opt.lr_step.index(epoch) + 1))
-      print('Drop LR to', lr)
-      for param_group in optimizer.param_groups:
-          param_group['lr'] = lr
+
+        if opt.local_rank == 0:
+            save_model(os.path.join(opt.save_dir, 'model_{}.pth'.format(epoch)), epoch, model, optimizer)
+        lr = opt.lr * (0.1 ** (opt.lr_step.index(epoch) + 1))
+        if opt.local_rank == 0:
+            print('Drop LR to', lr)
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
 
 if __name__ == '__main__':
   opt = opts().parse()
