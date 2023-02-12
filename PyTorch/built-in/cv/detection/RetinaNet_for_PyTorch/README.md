@@ -26,39 +26,33 @@ RetinaNet提出了一种使用Focal Loss的全新结构RetinaNet，使用ResNet+
   code_path=PyTorch/built-in/cv/detection
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件    | [1.0.10](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [21.01](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [3.3.0](https://www.hiascend.com/software/cann/commercial?version=3.3.0) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 - 编译安装mmcv。
 
   ```
@@ -124,7 +118,6 @@ RetinaNet提出了一种使用Focal Loss的全新结构RetinaNet，使用ResNet+
    │          ├── 000000000285.jpg
    │          │   ...              
    ```
-
    > **说明：** 
    > 该数据集的训练过程脚本只作为一种参考示例。
 
@@ -148,16 +141,20 @@ RetinaNet提出了一种使用Focal Loss的全新结构RetinaNet，使用ResNet+
 
      ```
      chmod +x ./tools/dist_train.sh
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
-
+   
      启动8卡训练。
    
      ```
      chmod +x ./tools/dist_train.sh
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
    
    - 多机多卡性能数据获取流程。
@@ -165,9 +162,9 @@ RetinaNet提出了一种使用Focal Loss的全新结构RetinaNet，使用ResNet+
      ```
      bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
      ```
-
-   --data\_path参数填写数据集路径。
-
+   
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   
    模型训练脚本参数说明如下。
    
    ```
@@ -186,19 +183,19 @@ RetinaNet提出了一种使用Focal Loss的全新结构RetinaNet，使用ResNet+
 
 **表 2**  训练结果展示表
 
-|  NAME  |  mAP  | FPS  | Epochs | AMP_Type |
-| :----: | :---: | :--: | :----: | :------: |
-| 1p-NPU | 0.366 |  17  |   1    |    O1    |
-| 8p-NPU | 0.360 | 112  |   12   |    O1    |
+|  NAME  |  mAP  | FPS  | Epochs | AMP_Type | Torch_Version |
+| :----: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-NPU | - |  17  |   1    |    O1    |      1.8      |
+| 8p-NPU | 0.360 | 112  |   12   |    O1    |      1.8      |
 
 # 版本说明
 
 ## 变更
 
-2022.12.23：更新readme，重新发布。
+2023.02.14：更新readme，重新发布。
 
 2021.04.12：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
