@@ -24,37 +24,27 @@
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件    | [1.0.11](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.0.2](https://www.hiascend.com/software/cann/commercial?version=5.0.2) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/) |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
   pip install -r requirements.txt
   ```
@@ -112,7 +102,7 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -120,12 +110,12 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
-   --data\_path参数填写数据集路径。
+   --data\_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
    
@@ -156,21 +146,21 @@
 
 **表 2**  训练结果展示表
 
-|  NAME   | Acc@1  | FPS  | Npu_nums | Epochs | AMP_Type |
-| :-----: | :----: | :--: | :------: | :----: | :------: |
-| 1p-竞品 |   -    | 122  |    1     |   1    |    O1    |
-| 1p-NPU  |        | 96.8 |    1     |   1    |    O1    |
-| 8p-竞品 | 80.772 | 5207 |    8     |   8    |    O1    |
-| 8p-NPU  | 80.64  | 2981 |    8     |   8    |    O1    |
+|   NAME   | Acc@1  |   FPS    | Npu_nums | Epochs | AMP_Type | Torch_Version |
+| :------: | :----: | :------: | :------: | :----: | :------: | :-----------: |
+| 1p-竞品V |   -    |   122    |    1     |   1    |    O1    |      1.5      |
+| 8p-竞品V | 80.772 |   5207   |    8     |   8    |    O1    |      1.5      |
+|  1p-NPU  |   -    | 614.548  |    1     |   1    |    O1    |      1.8      |
+|  8p-NPU  | 80.55  | 4497.745 |    8     |   8    |    O1    |      1.8      |
 
 # 版本说明
 
 ## 变更
 
-2022.12.23：更新readme，重新发布。
+2022.02.13：更新readme，重新发布。
 
 2021.09.08：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
