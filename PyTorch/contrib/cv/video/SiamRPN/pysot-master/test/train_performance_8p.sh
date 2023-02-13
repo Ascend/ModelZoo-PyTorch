@@ -64,6 +64,7 @@ do
         --is_performance \
         --max_step 1000 \
         --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_per_${ASCEND_DEVICE_ID}.log 2>&1 &
+ fi
 done
 
 wait

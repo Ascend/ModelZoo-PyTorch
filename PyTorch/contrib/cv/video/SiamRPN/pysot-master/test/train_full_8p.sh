@@ -60,6 +60,7 @@ do
     nohup python3.7 -u ${test_path_dir}/../tools_8p/train.py \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml\
         --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+ fi
 done
 
 wait

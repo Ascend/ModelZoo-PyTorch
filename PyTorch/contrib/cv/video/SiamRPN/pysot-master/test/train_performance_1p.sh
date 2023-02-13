@@ -59,6 +59,7 @@ else
         --is_performance \
         --max_step 1000 \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu_performace/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_per_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
 wait
 
 
