@@ -50,6 +50,8 @@ do
         conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
         server_index=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 

@@ -50,6 +50,8 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
