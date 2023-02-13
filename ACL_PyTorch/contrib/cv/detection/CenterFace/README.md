@@ -121,10 +121,11 @@
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 导出onnx文件。
+   1. 获取权重文件[model_best.pth](https://pan.baidu.com/s/1F-lCdERXGzQ-TGnNCuhoIg?pwd=ojhe)。
+   2. 导出onnx文件。
 
-      使用model_best.pth导出onnx文件。将pth2onnx.py移动到center-face/src/lib目录下
-
+      使用pth2onnx.py导出onnx文件。将pth2onnx.py移动到center-face/src/lib目录下
+      
       在center-face/src/lib目录下，运行pth2onnx.py脚本。
 
       ```
@@ -133,7 +134,7 @@
 
       在目录center-face/src下，获得 CenterFace.onnx 文件。
 
-   2. 使用ATC工具将ONNX模型转OM模型。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
