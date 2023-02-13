@@ -34,6 +34,7 @@ from datasets import load_dataset
 from PIL import Image
 from torchvision.transforms import CenterCrop, ConvertImageDtype, Normalize, Resize
 from torchvision.transforms.functional import InterpolationMode
+import torchvision.transforms.functional
 
 import transformers
 from transformers import (
@@ -51,9 +52,6 @@ from transformers.utils.versions import require_version
 
 option = {}
 import torch_npu
-option['ACL_OP_COMPILER_CACHE_MODE'] = "enable"  # cache功能启用
-option['ACL_OP_COMPILER_CACHE_DIR'] = "./cache"  # cache所在的文件夹
-torch.npu.set_option(option)
 
 logger = logging.getLogger(__name__)
 
@@ -388,10 +386,42 @@ def main():
         examples["attention_mask"] = text_inputs.attention_mask
         return examples
 
+    def img_to_tensor(pic):
+        """Convert a ``PIL Image`` to tensor.
+        Args:
+            pic (PIL Image ): Image to be converted to tensor.
+
+        Returns:
+            Tensor: Converted image.
+        """
+        default_dtype = torch.uint8
+        import numpy as np
+        try:
+            import accimage
+        except ImportError:
+            accimage = None
+
+        if accimage is not None and isinstance(pic, accimage.Image):
+            nppic = np.zeros([pic.channels, pic.height, pic.width], dtype=np.float32)
+            pic.copyto(nppic)
+            return torch.from_numpy(nppic).to(dtype=default_dtype)
+
+        # handle PIL Image
+        mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
+        img = torch.from_numpy(np.array(pic, mode_to_nptype.get(pic.mode, np.uint8), copy=True))
+
+        if pic.mode == "1":
+            img = 255 * img
+        img = img.view(pic.size[1], pic.size[0], len(pic.getbands()))
+        # put it from HWC to CHW format
+        img = img.permute((2, 0, 1)).contiguous()
+        if isinstance(img, torch.ByteTensor):
+            return img.to(dtype=default_dtype)
+        else:
+            return img.to(dtype=default_dtype) * 255
+
     def transform_images(examples):
-        import torchvision.transforms.functional
-        images = [(torchvision.transforms.functional.to_tensor(Image.open(image_file).convert('RGB')) * 255).
-                  to(torch.uint8) for image_file in examples[image_column]]
+        images = [img_to_tensor(Image.open(image_file).convert('RGB')) for image_file in examples[image_column]]
         examples["pixel_values"] = [image_transformations(image) for image in images]
         return examples
 
@@ -512,4 +542,9 @@ def main():
 
 
 if __name__ == "__main__":
+    option = {}
+    option['MM_BMM_ND_ENABLE'] = 'disable'
+    option['ACL_OP_SELECT_IMPL_MODE'] = "high_performance"
+    option['ACL_OPTYPELIST_FOR_IMPLMODE'] = "LayerNorm"
+    torch.npu.set_option(option)
     main()
