@@ -28,8 +28,11 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Optional
+import numpy as np
+import math
 
 import torch
+import torch_npu
 from datasets import load_dataset
 from PIL import Image
 from torchvision.transforms import CenterCrop, ConvertImageDtype, Normalize, Resize
@@ -49,9 +52,6 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
-
-option = {}
-import torch_npu
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +189,6 @@ class Transform(torch.nn.Module):
     def __init__(self, image_size, mean, std):
         super().__init__()
         self.transforms = torch.nn.Sequential(
-            Resize([image_size], interpolation=InterpolationMode.BICUBIC),
             CenterCrop(image_size),
             ConvertImageDtype(torch.float),
             Normalize(mean, std),
@@ -372,8 +371,9 @@ def main():
 
     # 7. Preprocessing the datasets.
     # Initialize torchvision transforms and jit it for faster processing.
+    cfg_img_size = config.vision_config.image_size
     image_transformations = Transform(
-        config.vision_config.image_size, feature_extractor.image_mean, feature_extractor.image_std
+        cfg_img_size, feature_extractor.image_mean, feature_extractor.image_std
     )
     image_transformations = torch.jit.script(image_transformations)
 
@@ -387,41 +387,21 @@ def main():
         return examples
 
     def img_to_tensor(pic):
-        """Convert a ``PIL Image`` to tensor.
-        Args:
-            pic (PIL Image ): Image to be converted to tensor.
-
-        Returns:
-            Tensor: Converted image.
-        """
-        default_dtype = torch.uint8
-        import numpy as np
-        try:
-            import accimage
-        except ImportError:
-            accimage = None
-
-        if accimage is not None and isinstance(pic, accimage.Image):
-            nppic = np.zeros([pic.channels, pic.height, pic.width], dtype=np.float32)
-            pic.copyto(nppic)
-            return torch.from_numpy(nppic).to(dtype=default_dtype)
-
-        # handle PIL Image
-        mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
-        img = torch.from_numpy(np.array(pic, mode_to_nptype.get(pic.mode, np.uint8), copy=True))
-
-        if pic.mode == "1":
-            img = 255 * img
-        img = img.view(pic.size[1], pic.size[0], len(pic.getbands()))
-        # put it from HWC to CHW format
-        img = img.permute((2, 0, 1)).contiguous()
-        if isinstance(img, torch.ByteTensor):
-            return img.to(dtype=default_dtype)
+        # pre resize for better performace
+        width, height = pic.size
+        if width > height:
+            newsz = [cfg_img_size, math.floor(width / height * cfg_img_size)]
         else:
-            return img.to(dtype=default_dtype) * 255
+            newsz = [math.floor(height / width * cfg_img_size), cfg_img_size]
+        pic = pic.resize(newsz, Image.BICUBIC).convert('RGB')
+        # HWC to CHW
+        img = np.transpose(np.array(pic, np.uint8, copy=True), (2, 0, 1))
+        # convert to tensor
+        img = torch.from_numpy(img)
+        return img
 
     def transform_images(examples):
-        images = [img_to_tensor(Image.open(image_file).convert('RGB')) for image_file in examples[image_column]]
+        images = [img_to_tensor(Image.open(image_file)) for image_file in examples[image_column]]
         examples["pixel_values"] = [image_transformations(image) for image in images]
         return examples
 
