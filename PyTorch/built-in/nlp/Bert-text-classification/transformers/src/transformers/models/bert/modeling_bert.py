@@ -286,25 +286,16 @@ class BertSelfAttention(nn.Module):
         return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
 
     def fuse_add_softmax_dropout(self, attn_mask, attn_scores, attention_head_size, p):
-        high_performance_support_hw = [128, 256, 384, 512]
-        n, c, h, w = attn_scores.size()
-        if h in high_performance_support_hw and (n * c) % 32 == 0:
-            if self.training:
-                drop_p = p
-            else:
-                drop_p = 0
-            _, _, attn_probs = torch.npu_dropout_with_add_softmax(attn_scores, attn_mask,
-                                                                  1 / math.sqrt(attention_head_size), drop_p, -1)
-        else:                  
-            # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
-            attn_scores = torch.add(attn_mask, attn_scores, alpha=(1 / math.sqrt(attention_head_size)))
 
-            # Normalize the attention scores to probabilities.chrome
-            attn_probs = nn.functional.softmax(attn_scores, dim=-1)
+        # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
+        attn_scores = torch.add(attn_mask, attn_scores, alpha=(1 / math.sqrt(attention_head_size)))
 
-            # This is actually dropping out entire tokens to attend to, which might
-            # seem a bit unusual, but is taken from the original Transformer paper.
-            attn_probs = self.dropout(attn_probs)    
+        # Normalize the attention scores to probabilities.chrome
+        attn_probs = nn.functional.softmax(attn_scores, dim=-1)
+
+        # This is actually dropping out entire tokens to attend to, which might
+        # seem a bit unusual, but is taken from the original Transformer paper.
+        attn_probs = self.dropout(attn_probs)
         
         return attn_probs
 
@@ -476,7 +467,7 @@ class BertAttention(nn.Module):
 class BertIntermediate(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
+        self.dense = NpuLinear(config.hidden_size, config.intermediate_size)
         if isinstance(config.hidden_act, str):
             self.intermediate_act_fn = ACT2FN[config.hidden_act]
         else:
@@ -1425,19 +1416,21 @@ class BertForMaskedLM(BertPreTrainedModel):
 
         sequence_output = outputs[0]
         prediction_scores = self.cls(sequence_output)
+        bs, seq_len, ft = prediction_scores.shape
+        prediction_scores = prediction_scores.view(-1, self.config.vocab_size).float()
 
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
-            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            masked_lm_loss = loss_fct(prediction_scores, labels.view(-1))
 
         if not return_dict:
-            output = (prediction_scores,) + outputs[2:]
+            output = (prediction_scores.view(bs, seq_len, ft),) + outputs[2:]
             return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
 
         return MaskedLMOutput(
             loss=masked_lm_loss,
-            logits=prediction_scores,
+            logits=prediction_scores.view(bs, seq_len, ft),
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )

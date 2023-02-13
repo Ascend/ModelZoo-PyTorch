@@ -15,7 +15,8 @@
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE."""
 # You can also adapt this script on your own text classification task. Pointers for this are left as comments.
-
+import ssl
+ssl.SSLContext.verify_mode = property(lambda self:ssl.CERT_NONE,lambda self, newval:None)
 import logging
 import os
 import random
@@ -26,6 +27,9 @@ from typing import Optional
 import datasets
 import numpy as np
 from datasets import load_dataset, load_metric
+import torch
+if torch.__version__ > "1.8":
+    import torch_npu
 
 import transformers
 from transformers import (
@@ -75,7 +79,10 @@ class DataTrainingArguments:
     into argparse arguments to be able to specify them on
     the command line.
     """
-
+    data_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "The path of data "},
+    )
     task_name: Optional[str] = field(
         default=None,
         metadata={"help": "The name of the task to train on: " + ", ".join(task_to_keys.keys())},
@@ -285,8 +292,8 @@ def main():
         else:
             # Loading a dataset from local json files
             raw_datasets = load_dataset("json", data_files=data_files, cache_dir=model_args.cache_dir)
-    # See more about loading any type of standard or custom dataset at
-    # https://huggingface.co/docs/datasets/loading_datasets.html.
+        # See more about loading any type of standard or custom dataset at
+        # https://huggingface.co/docs/datasets/loading_datasets.html.
 
     # Labels
     if data_args.task_name is not None:
@@ -438,7 +445,7 @@ def main():
 
     # Get the metric function
     if data_args.task_name is not None:
-        metric = load_metric("glue", data_args.task_name)
+        metric = load_metric("./glue.py", data_args.task_name)
     else:
         metric = load_metric("accuracy")
 
@@ -553,12 +560,6 @@ def main():
         kwargs["dataset_tags"] = "glue"
         kwargs["dataset_args"] = data_args.task_name
         kwargs["dataset"] = f"GLUE {data_args.task_name.upper()}"
-
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
-
 
 def _mp_fn(index):
     # For xla_spawn (TPUs)
