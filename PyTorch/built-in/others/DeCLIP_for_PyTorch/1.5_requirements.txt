@@ -1,0 +1,13 @@
+torchvision==0.2.2.post3
+Pillow==8.4.0
+timm
+ftfy
+regex
+kestrel
+yacs
+sklearn
+easydict==1.9
+tensorboardX
+textaugment
+requests
+ipdb
