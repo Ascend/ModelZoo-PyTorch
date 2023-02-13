@@ -16,12 +16,12 @@ DynamicUNet 模型是一个图像分割任务上的SOTA模型，它赢得了许�
 - 参考实现：
 
   ```
-    -  dynamic_unet
-        - https://github.com/fastai/fastai/blob/master/fastai/vision/models/unet.py
-        - commit_id: 7ec403cd41079bc81d80d48de67f7ab2b8141929
-    - awesome-semantic-segmentation-pytorch
-        - https://github.com/Tramac/awesome-semantic-segmentation-pytorch
-        - commit_id: 9d9e25da10e2299cf0c84b6e0be1c49085565d22  
+  dynamic_unet:
+   url=https://github.com/fastai/fastai/blob/master/fastai/vision/models/unet.py
+   commit_id=7ec403cd41079bc81d80d48de67f7ab2b8141929
+  awesome-semantic-segmentation-pytorch:
+   url=https://github.com/Tramac/awesome-semantic-segmentation-pytorch
+   commit_id=9d9e25da10e2299cf0c84b6e0be1c49085565d22  
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -78,6 +78,8 @@ DynamicUNet 模型是一个图像分割任务上的SOTA模型，它赢得了许�
             ├── SegmentationObject
             └── SegmentationClass              
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 ## 获取预训练模型
 该模型的训练需要 `resnet50-19c8e357.pth` 预训练模型，在训练过程中其会自动下载，若存在网络等问题无法在训练时下载，请手动下载并放置于任意目录下，且在训练时需指定 `--more_path1=path/to/resnet50` 。预训练模型目录结构参考如下：
@@ -117,7 +119,7 @@ DynamicUNet 模型是一个图像分割任务上的SOTA模型，它赢得了许�
      bash ./test/train_performance_8p.sh --more_path1=path/to/resnet50 # 8卡性能   
      ```
 
-   **注：more_path1为可选参数，用于指定预训练模型位置**
+   **注：more_path1为可选参数，用于指定预训练模型位置。**
 
    模型训练脚本参数说明如下。
 
