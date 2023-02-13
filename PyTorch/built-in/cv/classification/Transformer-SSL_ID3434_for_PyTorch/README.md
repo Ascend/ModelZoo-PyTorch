@@ -28,42 +28,37 @@ Transformer-SSL 是一个以Swin-Transformer作为骨干网络的自监督模型
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动  | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.6.0；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
+  | PyTorch 1.11 | timm==0.4.5 |
 
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
-  ```
-  pip install timm==0.3.2 --no-dependencies
-  pip install -r requirements.txt
-  ```
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  ```
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+  
+  pip install -r 1.11_requirements.txt  # PyTorch1.11版本
+  ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 ## 准备数据集
 
@@ -125,11 +120,13 @@ Transformer-SSL 是一个以Swin-Transformer作为骨干网络的自监督模型
    
    ```
    bash ./test/train_performance_8p.sh --data_path=数据集路径  # 8p性能
-   bash ./test/train_full_8p.sh --data_path=数据集路径         # 8p精度
+   bash ./test/train_full_8p.sh --data_path=数据集路径  # 8p精度
    ```
 
    **脚本默认情况下会将 checkpoint 保存在 `output` 目录下。 如果想要从头开始训练，请先移除`output`目录**
 
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   
    模型训练脚本参数说明如下。
    
    ```
@@ -145,22 +142,22 @@ Transformer-SSL 是一个以Swin-Transformer作为骨干网络的自监督模型
 
 **表 2**  训练结果展示表
 
-|  NAME   | Acc@1 |  FPS   | Npu_nums | Epochs   | AMP_Type | CPU |
-|:-------:|:-----:|:------:| :------: | :------: | :------: |:---:|
-| NPU+1.5 |   -   |  171   | 1        | 1        | O1       | X86 |
-| NPU+1.5 | 67.48 |  1256  | 8        | 100      | O1       | X86 |
-| NPU+1.8 |   -   | 161.39 | 1        | 1        | O1       | X86 |
-| NPU+1.8 | 68.35 |  1199  | 8        | 100      | O1       | X86 |
-| NPU+1.8 | -        | 140       | 1        | 1        | O1       | ARM |
-| NPU+1.8 | 67.48    | 1150      | 8        | 100      | O1       | ARM |
-| NPU+1.8 | 74.14 |  1150  | 8        | 300      | O1       | ARM |
-| NPU+1.8 | 68.47 |  1845  | 16       | 100      | O1       | ARM |
+|  NAME   | Acc@1 |  FPS   | Epochs   | AMP_Type | Torch_Version | CPU |
+|:-------:|:-----:|:------:| :------: | :------: |:---:|-----|
+| 1p_NPU |   -   |  171   | 1        | O1       | 1.5 | X86 |
+| 8p_NPU | 67.48 |  1256  | 100      | O1       | 1.5 | X86 |
+| 1p_NPU |   -   | 161.39 | 1        | O1       | 1.8 | X86 |
+| 8p_NPU | 68.35 |  1199  | 100      | O1       | 1.8 | X86 |
+| 1p_NPU | -        | 140       | 1        | O1       | 1.8 | ARM |
+| 8p_NPU | 67.48    | 1150      | 100      | O1       | 1.8 | ARM |
+| 8p_NPU | 74.14 |  1150  | 300      | O1       | 1.8 | ARM |
+| 16p_NPU | 68.47 |  1845  | 100      | O1       | 1.8 | ARM |
 
 
 # 版本说明
 ## 变更
 
-2023.01.09：整改Readme发布。
+2023.01.09：整改readme，重新发布。
 
-## 已知问题
+## FAQ
 无。
