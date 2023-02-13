@@ -23,7 +23,7 @@ Network="ESPnet2_for_PyTorch"
 batch_size=32
 
 #训练起始stage
-stage=-1
+stage=1
 
 
 # 指定训练所使用的npu device卡id, 暂不支持修改

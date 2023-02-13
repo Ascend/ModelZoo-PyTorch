@@ -23,7 +23,7 @@ Network="ESPnet2_for_PyTorch"
 batch_size=256
 
 #训练起始stage
-stage=11
+stage=1
 
 #训练epoch, 不需要修改
 epochs=5
@@ -62,7 +62,7 @@ start_time=$(date +%s)
 
 nohup bash run.sh \
   --stage ${stage} \
-  --max_epoch ${epochs} \
+  --asr_args "--max_epoch ${epochs}" \
   --ngpu 8 &
 
 wait
