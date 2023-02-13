@@ -109,7 +109,7 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
 
 1. 获取数据集。
 
-   本次训练采用[aishell-1](https://www.aishelltech.com/kysjcp)数据集，stage1自行下载并解压数据，下载时间较长，请耐心等待。该数据集包含由 400 位说话人录制的超过 170 小时的语音。数据集目录结构参考如下所示。
+   本次训练采用[aishell-1](https://www.aishelltech.com/kysjcp)数据集，该数据集包含由 400 位说话人录制的超过 170 小时的语音。数据集目录结构参考如下所示。
 
    ```
     /downloads
@@ -118,6 +118,9 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
            ├── resource_aishell
            └── resource_aishell.tgz
    ```
+   程序运行stage 1 时自行下载并解压数据，下载时间较长，请耐心等待。 如果本地已有aishell数据集，可通过如下软连接命令进行指定。
+   
+   ```ln -s ${本地aishell数据集文件夹}/ downloads```
 
 
 # 开始训练
@@ -149,7 +152,12 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
 模型训练脚本参数说明如下。
 
 ```shell
---stage   # 可选参数，默认为-1，即从数据下载开始启动训练。
+--stage   # 可选参数，默认为1，可选范围为：1~16。 
+# stage 1 ~ stage 5 数据集下载与准备
+# stage 6 ~ stage 9 语言模型训练
+# stage 10 ~ stage 11 ASR模型训练
+# stage 12 ~ stage 13 在线推理及精度统计
+# stage 14 ~ stage 16 模型打包及上传
 ```
 
 
