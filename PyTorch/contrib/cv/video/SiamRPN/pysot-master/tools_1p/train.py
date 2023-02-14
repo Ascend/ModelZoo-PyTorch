@@ -294,7 +294,7 @@ def main():
     logger.info("model prepare done")
 
     dist_model, optimizer = amp.initialize(dist_model, optimizer, opt_level="O1",
-                                           loss_scale=32)
+                                           loss_scale=32, combine_grad=True)
 
     # start training
 

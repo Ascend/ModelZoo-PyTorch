@@ -17,9 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
+import os
 from yacs.config import CfgNode as CN
 
+num_workers = os.cpu_count() // 8
 __C = CN()
 
 cfg = __C
@@ -73,7 +74,7 @@ __C.TRAIN.START_EPOCH = 0
 
 __C.TRAIN.BATCH_SIZE = 32
 
-__C.TRAIN.NUM_WORKERS = 1
+__C.TRAIN.NUM_WORKERS = num_workers
 
 __C.TRAIN.MOMENTUM = 0.9
 

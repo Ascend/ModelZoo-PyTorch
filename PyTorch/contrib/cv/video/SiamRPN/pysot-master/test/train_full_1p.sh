@@ -55,7 +55,7 @@ else
         --master_port=2333 \
         ${test_path_dir}/../tools_1p/train.py \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-
+fi
 wait
 
 
