@@ -75,9 +75,9 @@ DPN，简单高效的模块化双路径网络用于图像分类，提出了一�
 
    ```
    git clone https://github.com/Cadene/pretrained-models.pytorch.git
-   cd ./pretrainedmodels/models/
+   cd pretrained-models.pytorch
    patch -p1 < ../dpn.diff,其中dpn.diff是通过git diff > ./dpn.diff生成的
-   cd..
+   cd ..
    ```
 
 2. 安装依赖。
