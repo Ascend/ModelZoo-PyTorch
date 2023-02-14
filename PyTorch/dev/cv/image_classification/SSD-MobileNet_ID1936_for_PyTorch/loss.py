@@ -96,10 +96,10 @@ class MultiBoxLoss(nn.Module):
 
         assert n_priors == predicted_locs.size(1) == predicted_scores.size(1)
 
-        true_locs = torch.zeros((batch_size, n_priors, 4), dtype=torch.float).to(
-            f'npu:{NPU_CALCULATE_DEVICE}')  # (N, 8732, 4)
-        true_classes = torch.zeros((batch_size, n_priors), dtype=torch.long).to(
-            f'npu:{NPU_CALCULATE_DEVICE}')  # (N, 8732)
+        true_locs = torch.zeros((batch_size, n_priors, 4), dtype=torch.float,
+                                device=f'npu:{NPU_CALCULATE_DEVICE}')  # (N, 8732, 4)
+        true_classes = torch.zeros((batch_size, n_priors), dtype=torch.long,
+                                   device=f'npu:{NPU_CALCULATE_DEVICE}')  # (N, 8732)
 
         # For each image
         for i in range(batch_size):
