@@ -47,6 +47,8 @@ over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling=False
+# 指定训练所使用的npu device卡id
+device_id=0
 
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
@@ -89,6 +91,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --test_path_dir* ]];then
         test_path_dir=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -97,8 +103,6 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-# 指定训练所使用的npu device卡id
-device_id=0
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then

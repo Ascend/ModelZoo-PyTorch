@@ -92,6 +92,8 @@ do
         one_node_ip=`echo ${para#*=}`
     elif [[ $para == --linux_num* ]];then
         linux_num=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 

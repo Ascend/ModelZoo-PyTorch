@@ -46,6 +46,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --model_path* ]];then
         model_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -95,6 +97,7 @@ taskset -c 0-23 nohup python3.7 -W ignore train.py experiments/seg_detector/ic15
         --resume ${model_path}/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --amp \
+        --batch_size $batch_size \
         --epochs ${train_epochs} \
         --device_list "${ASCEND_DEVICE_ID}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait

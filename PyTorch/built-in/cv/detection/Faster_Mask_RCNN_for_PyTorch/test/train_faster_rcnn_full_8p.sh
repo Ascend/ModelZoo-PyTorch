@@ -32,6 +32,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -82,7 +84,7 @@ nohup python3.7 tools/train_net.py \
         AMP 1\
         OPT_LEVEL O2 \
         LOSS_SCALE_VALUE 64 \
-        SOLVER.IMS_PER_BATCH 64 \
+        SOLVER.IMS_PER_BATCH $batch_size \
         SOLVER.MAX_ITER 11250 \
         SEED 1234 \
         MODEL.RPN.NMS_THRESH 0.8 \

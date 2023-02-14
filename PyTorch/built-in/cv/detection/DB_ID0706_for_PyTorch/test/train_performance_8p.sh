@@ -41,6 +41,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --model_path* ]];then
         model_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -94,7 +96,7 @@ taskset -c 0-${cpu_number} nohup python3.7 -W ignore train.py experiments/seg_de
     --local_rank 0 \
     --dist_backend 'hccl' \
     --world_size 1 \
-    --batch_size 128 \
+    --batch_size ${batch_size} \
     --lr 0.056 \
     --addr $(hostname -I |awk '{print $1}') \
     --amp \
