@@ -36,7 +36,7 @@ from torch import nn
 import torch.utils.model_zoo as model_zoo
 from collections import OrderedDict
 import math
-from tools.voc_eval_lib.model import config
+
 
 
 __all__ = ['MobileNetV2']
@@ -314,9 +314,7 @@ class MobileNetSeg(nn.Module):
 def mobilenetv2_10(pretrained=True, **kwargs):
     model = MobileNetV2(width_mult=1.0)
     if pretrained:
-        # state_dict = model_zoo.load_url(model_urls['mobilenet_v2'],
-        #                                       progress=True)
-        state_dict = torch.load(os.path.join(config.cfg.DATA_DIR, 'wider_face/mobilenet_v2-b0353104.pth'))
+        state_dict = model_zoo.load_url(model_urls['mobilenet_v2'],progress=True)
         load_model(model,state_dict)
     return model
 
