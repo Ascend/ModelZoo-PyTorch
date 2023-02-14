@@ -6,14 +6,11 @@
 -   [训练结果展示](#训练结果展示)
 -   [版本说明](#版本说明)
 
-
-
 # 概述
 
 ## 简述
 
 YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，提升了检测精度，尤其对于小物体的检测能力。YOLOv3算法使用一个单独神经网络作用在图像上，将图像划分多个区域并且预测边界框和每个区域的概率。
-
 
 - 参考实现：
 
@@ -28,115 +25,116 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/cv/detection
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 进入gitee.com/ascend/ModelZoo-PyTorch，下载zip文件，并将ModelZoo-PyTorch里面的YoloV3_ID1790_for_PyTorch压缩包传至服务器上并解压。
 
 # 准备训练环境
 
 ## 准备环境
 
- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+ - 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+   **表 1**  版本支持表
 
-  | 配套       | 版本                                                                           |
-  |------------------------------------------------------------------------------| ------------------------------------------------------------ |
-  | 硬件 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
-  | 固件与驱动 | [6.0.0](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
-  | CANN       | [6.0.0](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)                       |
+   | Torch_Version      | 三方库依赖版本                  |
+   | :--------: | :----------------------------------------------------------: |
+   | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+   | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
 
-- 环境准备指导。
+ - 环境准备指导。
 
-  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
-## 安装依赖
+ - 安装依赖
 
-```shell
-pip install -r requirements.txt
-```
-
-## 安装mmcv与mmdet
-1. 进入解压后的源码包根目录。
-
+   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
    ```
-   cd /${模型文件夹名称} 
+   pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
    ```
+   > **说明：** 
+   >只需执行一条对应的PyTorch版本依赖安装命令。
 
-2. 编译 MMCV。
+ - 安装 `mmcv` 与 `mmdet`。
+   1. 进入解压后的源码包根目录。
+
+      ```
+      cd /${模型文件夹名称} 
+      ```
+
+   2. 编译 `MMCV`。
    
-   ```
-   cd ../
-   git clone -b v1.2.7 --depth=1 https://github.com/open-mmlab/mmcv.git
+      ```
+      cd ../
+      git clone -b v1.2.7 --depth=1 https://github.com/open-mmlab/mmcv.git
 
-   export MMCV_WITH_OPS=1
-   export MAX_JOBS=8
-   source ${模型文件夹名称}/test/env_npu.sh
+      export MMCV_WITH_OPS=1
+      export MAX_JOBS=8
+      source ${模型文件夹名称}/test/env_npu.sh
 
-   cd mmcv
-   python3.7 setup.py build_ext
-   python3.7 setup.py develop
-   pip3.7 list | grep mmcv
-   ```
+      cd mmcv
+      python3.7 setup.py build_ext
+      python3.7 setup.py develop
+      pip3.7 list | grep mmcv
+      ```
    
-   将mmcv_need目录下的文件替换到mmcv的安装目录下。
-   安装完后执行以下命令：
+      将 `mmcv_need` 目录下的文件替换到 `mmcv` 的安装目录下。
+      安装完后执行以下命令：
+      
+      ```
+      cd ${模型文件夹名称} 
+      cp -f mmcv_need/_functions.py ../mmcv/mmcv/parallel/
+      cp -f mmcv_need/builder.py ../mmcv/mmcv/runner/optimizer/
+      cp -f mmcv_need/data_parallel.py ../mmcv/mmcv/parallel/
+      cp -f mmcv_need/dist_utils.py ../mmcv/mmcv/runner/
+      cp -f mmcv_need/distributed.py ../mmcv/mmcv/parallel/
+      cp -f mmcv_need/optimizer.py ../mmcv/mmcv/runner/hooks/
+      ```
+      
+      或者运行 `env_set.sh` 脚本，进行 `MMCV` 的安装
+
+      ```
+      bash env_set.sh
+      ```
    
-   ```
-   cd ${模型文件夹名称} 
-   cp -f mmcv_need/_functions.py ../mmcv/mmcv/parallel/
-   cp -f mmcv_need/builder.py ../mmcv/mmcv/runner/optimizer/
-   cp -f mmcv_need/data_parallel.py ../mmcv/mmcv/parallel/
-   cp -f mmcv_need/dist_utils.py ../mmcv/mmcv/runner/
-   cp -f mmcv_need/distributed.py ../mmcv/mmcv/parallel/
-   cp -f mmcv_need/optimizer.py ../mmcv/mmcv/runner/hooks/
-   ```
-   
-   或者运行env_set.sh脚本，进行MMCV的安装
+   3. 安装 `mmdet`。
 
-   ```
-   bash env_set.sh
-   ```
-   
-3. 安装mmdet。
-   执行以下命令，安装mmdet
-   ```
-   cd YoloV3_for_PyTorch
-   pip3.7 install -r requirements/build.txt
-   pip3.7 install -v -e .
-   pip3.7 list | grep mm
-   ```
+      执行以下命令，安装 `mmdet`。
+      ```
+      cd YoloV3_for_PyTorch
+      pip3.7 install -r requirements/build.txt
+      pip3.7 install -v -e .
+      pip3.7 list | grep mm
+      ```
 
-4.编译安装Opencv-python
+   4. 编译安装 `Opencv-python`。
 
-为了获得最好的图像处理性能，***请编译安装opencv-python而非直接安装***。编译安装步骤如下：
+      为了获得最好的图像处理性能，***请编译安装 `opencv-python` 而非直接安装***。编译安装步骤如下：
 
-```
-export GIT_SSL_NO_VERIFY=true
-git clone https://github.com/opencv/opencv.git
-cd opencv
-mkdir -p build
-cd build
-cmake -D BUILD_opencv_python3=yes -D BUILD_opencv_python2=no -D PYTHON3_EXECUTABLE=/usr/local/python3.7.5/bin/python3.7m -D PYTHON3_INCLUDE_DIR=/usr/local/python3.7.5/include/python3.7m -D PYTHON3_LIBRARY=/usr/local/python3.7.5/lib/libpython3.7m.so -D PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/python3.7.5/lib/python3.7/site-packages/numpy/core/include -D PYTHON3_PACKAGES_PATH=/usr/local/python3.7.5/lib/python3.7/site-packages -D PYTHON3_DEFAULT_EXECUTABLE=/usr/local/python3.7.5/bin/python3.7m ..
-make -j$nproc
-make 
+      ```
+      export GIT_SSL_NO_VERIFY=true
+      git clone https://github.com/opencv/opencv.git
+      cd opencv
+      mkdir -p build
+      cd build
+      cmake -D BUILD_opencv_python3=yes -D BUILD_opencv_python2=no -D PYTHON3_EXECUTABLE=/usr/local/python3.7.5/bin/python3.7m -D PYTHON3_INCLUDE_DIR=/usr/local/python3.7.5/include/python3.7m -D PYTHON3_LIBRARY=/usr/local/python3.7.5/lib/libpython3.7m.so -D PYTHON3_NUMPY_INCLUDE_DIRS=/usr/local/python3.7.5/lib/python3.7/site-packages/numpy/core/include -D PYTHON3_PACKAGES_PATH=/usr/local/python3.7.5/lib/python3.7/site-packages -D PYTHON3_DEFAULT_EXECUTABLE=/usr/local/python3.7.5/bin/python3.7m ..
+      make -j$nproc
+      make 
+      ```
+
 ## 准备数据集
 
-   用户自行获取coco2017数据集，上传至服务器并解压，解压后目录如下所示：
+1. 获取数据集。
+
+   用户自行获取 `coco2017` 数据集，上传至服务器任意目录下并解压，数据集目录结构参考如下所示。
 
    ```shell script
-   ├── coco2017: #根目录
+   ├── coco2017 #根目录
          ├──train2017 #训练集图片，约118287张
          ├──val2017 #验证集图片，约5000张
          │──annotations #标注目录             
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 
 # 开始训练
@@ -158,8 +156,8 @@ make
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=real_data_path     # 1p精度
-     bash ./test/train_performance_1p.sh --data_path=real_data_path    # 1p性能
+     bash ./test/train_full_1p.sh --data_path=real_data_path     # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=real_data_path    # 单卡性能
      ```
 
    - 单机8卡训练
@@ -167,36 +165,39 @@ make
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path     # 8p精度
-     bash ./test/train_performance_8p.sh --data_path=real_data_path    # 8p性能   
+     bash ./test/train_full_8p.sh --data_path=real_data_path     # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=real_data_path    # 8卡性能   
      ```
 
    - 多机多卡性能数据获取流程
 
      ```shell
-     	1. 安装环境
-     	2. 开始训练，每个机器所请按下面提示进行配置
-             bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
+     1. 安装环境
+     2. 开始训练，每个机器所请按下面提示进行配置
+       bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
      ```
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
-   --data_path                              //数据集路径
+   --optimizer.lr                      //初始学习率
+   --data.samples_per_gpu              //每个设备上的训练批次大小
+   --npu_ids                           //训练设备卡号
    ```
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME     | Acc@1 |  FPS | Epochs | AMP_Type | PyTorch版本 |
-|----------| ----- | ---: |--------| -------: | -------:    |
-| 1p-NPU   | -     |  8   | 273      |        - |       1.5   |
-| 1p-NPU   | -     |  118  | 273      |       O2 |       1.8   |
-| 8p-NPU   | 27    | 41   | 273    |        - |       1.5   |
-| 8p-NPU   | 25.5 | 948  | 273    |       O2 |       1.8   |
-
+| NAME     | Acc@1 |  FPS | Epochs | AMP_Type | Torch_Version |
+|:--------:| :---: | :---: |:-----:| :------: | :-------:    |
+| 1p-竞品V | - | - | 273 | - | 1.5 |
+| 8p-竞品V | - | - | 273 | - | 1.5 |
+| 1p-NPU   | -     |  91.21  | 273      |       O2 |       1.8   |
+| 8p-NPU   | 25.5 | 914.29  | 273    |       O2 |       1.8   |
 
 
 # 版本说明
@@ -208,34 +209,41 @@ make
 
 2022.3.18：首次发布。
 
-## 已知问题
+## FAQ
 
-### hipcc检查问题
-若在训练模型时，有报"which: no hipcc in (/usr/local/sbin:..." 的日志打印问题，
-而hipcc是amd和nvidia平台需要的，npu并不需要。
-建议在torch/utils/cpp_extension.py文件中修改代码，当检查hipcc时，抑制输出。
-将 hipcc = subprocess.check_output(['which', 'hipcc']).decode().rstrip('\r\n')修改为
-hipcc = subprocess.check_output(['which', 'hipcc'], stderr=subporcess.DEVNULL).decode().rstrip('\r\n')
+1. hipcc检查问题。
 
-### invalid pointer问题
-在Ubuntu、x86服务器上训练模型，有时会报invalid pointer的错误。
-解决方法：去掉scikit-image这个依赖，pip3 uninstall scikit-image
+    若在训练模型时，有报"which: no hipcc in (/usr/local/sbin:..." 的日志打印问题，而hipcc是amd和nvidia平台需要的，npu并不需要。
+    
+    建议在torch/utils/cpp_extension.py文件中修改代码，当检查hipcc时，抑制输出。
 
-### 单卡训练时，如何指定使用第几张卡进行训练
-1. 修改 tools/train.py脚本
- 将133行，cfg.npu_ids = range(world_size) 注释掉
- 同时在meta['exp_name'] = osp.basename(args.config)后添加如下一行
- torch.npu.set_device(args.npu_ids[0])
-2. 修改train_1p.sh
-在PORT=29500 ./tools/dist_train.sh configs/yolo/yolov3_d53_320_273e_coco.py 1 --cfg-options optimizer.lr=0.001 --seed 0 --local_rank 0 后增加一个配置参数
---npu_ids k （k即为指定的第几张卡）
+    将 hipcc = subprocess.check_output(['which', 'hipcc']).decode().rstrip('\r\n') 修改为 hipcc = subprocess.check_output(['which', 'hipcc'], stderr=subporcess.DEVNULL).decode().rstrip('\r\n')
 
-### 报No module named 'mmcv._ext'问题
-在宿主机上训练模型，有时会报No module named 'mmcv._ext'问题，或者别的带有mmcv的报错。
-解决方法：这一般是因为宿主机上安装了多个版本的mmcv，而训练脚本调用到了不匹配yolov3模型使用的mmcv，因此报mmcv的错误。
-为了解决这个问题，建议在启动训练脚本前，先导入已经安装的符合yolov3模型需要的mmcv路径的环境变量。
-export PYTHONPATH=mmcv的路径:$PYTHONPATH
-   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+2. invalid pointer 问题。
+
+    在Ubuntu、x86服务器上训练模型，有时会报invalid pointer的错误。
+
+    解决方法：去掉scikit-image这个依赖，pip3 uninstall scikit-image
+
+3. 单卡训练时，如何指定使用第几张卡进行训练。
+
+    3.1. 修改 `tools/train.py` 脚本。
+
+       将133行，cfg.npu_ids = range(world_size) 注释掉。
+       同时在meta['exp_name'] = osp.basename(args.config)后添加如下一行
+       torch.npu.set_device(args.npu_ids[0])
+
+    3.2. 修改 `train_1p.sh` 。
+
+       在PORT=29500 ./tools/dist_train.sh configs/yolo/yolov3_d53_320_273e_coco.py 1 --cfg-options optimizer.lr=0.001 --seed 0 --local_rank 0 后增加一个配置参数 --npu_ids k （k即为指定的第几张卡）
+
+4. 报 No module named 'mmcv._ext' 问题。
+
+   在宿主机上训练模型，有时会报No module named 'mmcv._ext'问题，或者别的带有mmcv的报错。
+
+   解决方法：这一般是因为宿主机上安装了多个版本的mmcv，而训练脚本调用到了不匹配yolov3模型使用的mmcv，因此报mmcv的错误。
+
+   为了解决这个问题，建议在启动训练脚本前，先导入已经安装的符合 `yolov3` 模型需要的 `mmcv` 路径的环境变量。`export PYTHONPATH=mmcv的路径:$PYTHONPATH` 。
 
 
 
