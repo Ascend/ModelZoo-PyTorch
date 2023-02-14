@@ -26,42 +26,20 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/others
   ``` 
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
-
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
-- 所需依赖。
-
-  **表 2**  依赖列表
-  
-  | 依赖名称    | 版本             |
-  | ----------- | ---------------- |
-  | torch       | 1.8.1+ascend.rc2 |
-  | torch-npu   | 1.8.1rc2         |
-  | Pillow      | 9.2.0            |
-  | apex        | -                |
-  | torchvision | 0.2.2.post2           |
 
 - 环境准备指导。
 
@@ -77,9 +55,10 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
 
 1. 获取数据集。
 
-   用户自行获取原始数据集，下载[criteo数据集](https://labs.criteo.com/2014/02/kaggle-display-advertising-challenge-dataset/)，将数据集上传到服务器任意路径下并解压。
+   用户自行获取`criteo` 数据集，将数据集上传到服务器任意路径下并解压。
 
-   解压后的目录结构如下：
+   数据集目录结构参考如下所示。
+
 
    ```
    ├── criteo
@@ -93,9 +72,12 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
    >该数据集的训练过程脚本只作为一种参考示例。
 
 2. 数据预处理。
-- 将源码包根目录下的criteo_preprocess.py拷贝到数据集路径
-- 进入数据集目录并执行 python3 criteo_preprocess.py train.txt
-- 执行上述脚本后，在当前路径下生成 wdl_trainval.pkl, wdl_test.pkl, wdl_infer.txt
+   - 将源码包根目录下的 `criteo_preprocess.py` 拷贝到数据集路径。
+   - 进入数据集目录并执行如下命令。
+     ```
+     python3 criteo_preprocess.py train.txt
+     ```
+   - 执行上述脚本后，在当前路径下生成 `wdl_trainval.pkl`, `wdl_test.pkl`, `wdl_infer.txt`。
 
 # 开始训练
 
@@ -116,7 +98,8 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/    
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/ # 单卡性能
      ```
 
    - 单机8卡训练
@@ -124,10 +107,11 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/   
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ # 8卡性能   
      ```
 
-   --data\_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -154,18 +138,17 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
 
    ```
    
-   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息（保存在output目录下）。
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
-**表 3**  训练结果展示表
-
+**表 2**  训练结果展示表
 
 | NAME    | Acc@1  | FPS     | Epochs | AMP_Type | Torch_version |
-| ------- | ------ | :------ | ------ | :------- | :------------ |
-| 1p-NPU  | -      | 51154.6454 | 3     | O1       | 1.5           |
+| :-------: | :------: | :------: | :------: | :-------: | :------------: |
+| 1p-竞品V| - | - | 3 | - | 1.5 |
+| 8p-竞品V| - | - | 3 | - | 1.5 |
 | 1p-NPU  | -      | 51883.6480 | 3     | O1       | 1.8           |
-| 8p-NPU  | 0.7978 | 171545.5429 | 3     | O1       | 1.5           |
 | 8p-NPU  | 0.7961 | 214769.5062 | 3     | O1       | 1.8           |
 
 
@@ -177,6 +160,6 @@ Wide&Deep是一个同时具有Memorization和Generalization功能的CTR预估模
 
 2021.03.18：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
