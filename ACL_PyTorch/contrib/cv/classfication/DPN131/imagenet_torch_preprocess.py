@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import multiprocessing
+import numpy as np
 import os
 import sys
 from PIL import Image
-import numpy as np
-import multiprocessing
 
 
 model_config = {
@@ -68,30 +68,31 @@ def resize(img, size, interpolation=Image.BILINEAR):
         return img.resize(size[::-1], interpolation)
 
 
-def gen_input_bin(mode_type, file_batches, batch):
+def gen_input_bin(m_type, file_batches, batch):
     i = 0
     for file in file_batches[batch]:
-        i = i + 1
-        print("batch", batch, file, "===", i)
+        temp = os.listdir(os.path.join(src_path, file))
+        for f in temp:
+            i = i + 1
+            print("batch", batch, file, "===", i)
+            # RGBA to RGB
+            image = Image.open(os.path.join(src_path, file, f)).convert('RGB')
+            image = resize(image, model_config[m_type]['resize']) # Resize
+            image = center_crop(image, model_config[m_type]['centercrop'])  # CenterCrop
+            img = np.array(image, dtype=np.float32)
+            img = img.transpose(2, 0, 1)  # ToTensor: HWC -> CHW
+            img = img / 255.  # ToTensor: div 255
+            img -= np.array(model_config[m_type]['mean'], dtype=np.float32)[:, None, None]  # Normalize: mean
+            img /= np.array(model_config[m_type]['std'], dtype=np.float32)[:, None, None]  # Normalize: std
+            img.tofile(os.path.join(save_path, f.split('.')[0] + ".bin"))
 
-        # RGBA to RGB
-        image = Image.open(os.path.join(src_path, file)).convert('RGB')
-        image = resize(image, model_config[mode_type]['resize']) # Resize
-        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
-        img = np.array(image, dtype=np.float32)
-        img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
-        img = img / 255. # ToTensor: div 255
-        img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
-        img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
-
-def preprocess(mode_type, src_path, save_path):
-    files = os.listdir(src_path)
+def preprocess(m_type, s_path):
+    files = os.listdir(s_path)
     file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch))
+        thread_pool.apply_async(gen_input_bin, args=(m_type, file_batches, batch))
     thread_pool.close()
     thread_pool.join()
     print("in thread, except will not report! please ensure bin files generated.")
@@ -113,5 +114,5 @@ if __name__ == '__main__':
         raise Exception(model_type_help)
     if not os.path.isdir(save_path):
         os.makedirs(os.path.realpath(save_path))
-    preprocess(mode_type, src_path, save_path)
+    preprocess(mode_type, src_path)
 

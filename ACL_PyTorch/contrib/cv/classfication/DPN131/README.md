@@ -75,9 +75,9 @@ DPN，简单高效的模块化双路径网络用于图像分类，提出了一�
 
    ```
    git clone https://github.com/Cadene/pretrained-models.pytorch.git
-   cd ./pretrainedmodels/models/
+   cd pretrained-models.pytorch
    patch -p1 < ../dpn.diff,其中dpn.diff是通过git diff > ./dpn.diff生成的
-   cd..
+   cd ..
    ```
 
 2. 安装依赖。
@@ -104,11 +104,12 @@ DPN，简单高效的模块化双路径网络用于图像分类，提出了一�
 
    ```
    mkdir pre_dataset
-   python3.7 imagenet_torch_preprocess.py /local/DPN131/imagenet/val ./pre_dataset
+   python3.7 imagenet_torch_preprocess.py dpn131 /local/DPN131/imagenet/val ./pre_dataset
 
    ```
    
    - 参数说明：
+     dpn131,选择处理的模式
    
      /local/DPN131/imagenet/val，验证集文件所在路径
          
@@ -250,9 +251,9 @@ DPN，简单高效的模块化双路径网络用于图像分类，提出了一�
 
 | 芯片型号 | Batch Size | 数据集 | 精度                    | 性能   |
 | --------- |------------| ---------- |-----------------------|------|
-|   310P3        | 1          |  ImageNet          | 79.47/Top1 94.54/Top5 | 384 |
-|   310P3        | 4          |  ImageNet          | 79.47/Top1 94.54/Top5  | 567 |
-|   310P3        | 8          |  ImageNet          | 79.47/Top1 94.54/Top5  | 483 |
-|   310P3        | 16         |  ImageNet          | 79.47/Top1 94.54/Top5  | 388 |
-|   310P3        | 32         |  ImageNet          | 79.47/Top1 94.54/Top5  | 353 |
-|   310P3        | 64         |  ImageNet          | 79.47/Top1 94.54/Top5  | 348 |
+|   310P3        | 1          |  ImageNet          | 79.42/Top1 94.58/Top5 | 384 |
+|   310P3        | 4          |  ImageNet          | 79.42/Top1 94.58/Top5 | 567 |
+|   310P3        | 8          |  ImageNet          | 79.42/Top1 94.58/Top5 | 483 |
+|   310P3        | 16         |  ImageNet          | 79.42/Top1 94.58/Top5 | 388 |
+|   310P3        | 32         |  ImageNet          | 79.42/Top1 94.58/Top5 | 353 |
+|   310P3        | 64         |  ImageNet          | 79.42/Top1 94.58/Top5 | 348 |
