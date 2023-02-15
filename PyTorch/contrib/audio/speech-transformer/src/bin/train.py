@@ -144,7 +144,7 @@ parser.add_argument('--num_of_gpus', default=8, type=int)
 parser.add_argument('--world_size',default=8, type = int)
 parser.add_argument('--val_batch_size', default=64, type=int,
                     help='Val batch size')
-parser.add_argument('--no-bin', default=False, action='store_true')
+parser.add_argument('--no-bin', default=False, action='store_true',
                     help='identifier to enable binary mode')
 
 IS_DISTRIBUTED = False
