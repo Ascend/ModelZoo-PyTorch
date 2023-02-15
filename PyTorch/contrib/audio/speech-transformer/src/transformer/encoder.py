@@ -74,9 +74,10 @@ class Encoder(nn.Module):
         """
         enc_slf_attn_list = []
         # Prepare masks
-        non_pad_mask = get_non_pad_mask(padded_input, input_lengths=input_lengths)
+        non_pad_mask = get_non_pad_mask(padded_input, input_lengths=input_lengths).npu(non_blocking=True)
         length = padded_input.size(1)
-        slf_attn_mask = get_attn_pad_mask(padded_input, input_lengths, length)
+        slf_attn_mask = get_attn_pad_mask(padded_input, input_lengths, length).npu(non_blocking=True)
+        padded_input = padded_input.npu(non_blocking=True)
 
         # Forward
         enc_output = self.dropout(
