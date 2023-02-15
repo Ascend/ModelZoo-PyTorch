@@ -44,7 +44,7 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
 
    请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
- - 安装依赖
+ - 安装依赖。
 
    在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
    ```
@@ -169,11 +169,11 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
      bash ./test/train_performance_8p.sh --data_path=real_data_path    # 8卡性能   
      ```
 
-   - 多机多卡性能数据获取流程
+   - 多机多卡性能数据获取流程。
 
      ```shell
      1. 安装环境
-     2. 开始训练，每个机器所请按下面提示进行配置
+     2. 开始训练，每个机器请按下面提示进行配置
        bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
      ```
    --data_path参数填写数据集路径，需写到数据集的一级目录。
@@ -203,7 +203,7 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
 # 版本说明
 
 ## 变更
-2023.2.3：更新基线
+2023.2.3：更新基线。
 
 2022.9.28：更新内容，重新发布。
 
@@ -225,19 +225,7 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
 
     解决方法：去掉scikit-image这个依赖，pip3 uninstall scikit-image
 
-3. 单卡训练时，如何指定使用第几张卡进行训练。
-
-    3.1. 修改 `tools/train.py` 脚本。
-
-       将133行，cfg.npu_ids = range(world_size) 注释掉。
-       同时在meta['exp_name'] = osp.basename(args.config)后添加如下一行
-       torch.npu.set_device(args.npu_ids[0])
-
-    3.2. 修改 `train_1p.sh` 。
-
-       在PORT=29500 ./tools/dist_train.sh configs/yolo/yolov3_d53_320_273e_coco.py 1 --cfg-options optimizer.lr=0.001 --seed 0 --local_rank 0 后增加一个配置参数 --npu_ids k （k即为指定的第几张卡）
-
-4. 报 No module named 'mmcv._ext' 问题。
+3. 报 No module named 'mmcv._ext' 问题。
 
    在宿主机上训练模型，有时会报No module named 'mmcv._ext'问题，或者别的带有mmcv的报错。
 
