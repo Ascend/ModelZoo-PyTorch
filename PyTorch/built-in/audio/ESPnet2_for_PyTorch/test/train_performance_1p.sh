@@ -31,6 +31,12 @@ epochs=5
 # 指定训练所使用的npu device卡id, 暂不支持修改
 device_id=0
 
+for para in $*
+do
+    if [[ $para == --stage* ]];then
+        stage=`echo ${para#*=}`
+    fi
+done
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ ${device_id} ];then

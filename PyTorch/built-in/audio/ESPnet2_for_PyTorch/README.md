@@ -74,7 +74,7 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
   
   3. 运行模型前，还需安装：
 
-  - boost: ubuntu上可使用 apt install libboost-all-dev命令安装，其它系统请选择合适命令安装
+  - boost: ubuntu上可使用 ```apt install libboost-all-dev```命令安装，centos上使用 ```yum install boost-devel``` 命令安装
   - kenlm：进入<espnet-root>/tools目录，执行make kenlm.done
   
   4. 更新软连接：
