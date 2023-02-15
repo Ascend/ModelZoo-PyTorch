@@ -27,30 +27,20 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/audio
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                                          |
-  |-----------------------------------------------------------------------------| ------------------------------------------------------------ |
-  | 硬件 | [1.0.11.SPC002](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.0.2](https://www.hiascend.com/software/cann/commercial?version=5.0.2)    |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)                      |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -71,10 +61,10 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 - 安装依赖。
 
   ```
-  pip3.7 install -r requirements.txt
+  pip install -r requirements.txt
   ```
   
-- 如果需要在多机或者多卡上训练该模型，那么需要按照以下步骤安装etcd。
+- 如果需要在多机或者多卡上训练该模型，那么需要按照以下步骤安装 `etcd`。
 
     ```shell
     sudo apt-get install etcd
@@ -91,9 +81,9 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
    python3.7 an4.py
    ```
 
-2. 或者您还可以自行下载数据集解压至源码包根目录下的`data/`文件夹下。
+2. 或者您还可以自行下载数据集解压至源码包根目录下的 `data/` 文件夹下。
 
-    执行完成后目录结构如下所示：
+   数据集目录结构参考如下所示。
    ```
    ├── data
       ├──an4_train_manifest.csv
@@ -104,6 +94,8 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
          ├──val
          ├──test          
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 # 开始训练
 
@@ -124,8 +116,8 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=./data/         # 精度训练
-     bash ./test/train_performance_1p.sh --data_path=./data/  # 性能训练
+     bash ./test/train_full_1p.sh --data_path=./data/ # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=./data/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -133,9 +125,11 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=./data/           # 精度训练
-     bash ./test/train_performance_8p.sh --data_path=./data/    # 性能训练   
+     bash ./test/train_full_8p.sh --data_path=./data/ # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=./data/    # 8卡性能   
      ```
+   
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -151,12 +145,12 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
 **表 2**  训练结果展示表
 
-| NAME  |  WER   |  CER   | Epochs | APEX | FPS  |
-| :---: | :----: | :----: | :----: | :--: | :--: |
-| NPU1P | 9.444  | 5.723  |   70   |  O2  |  4   |
-| NPU8P | 17.464 | 10.926 |   70   |  O2  |  22  |
-| GPU1P | 10.349 | 7.076  |   70   |  O2  |  94  |
-| GPU8P | 15.265 | 9.834  |   70   |  O2  | 377  |
+| NAME  |  WER   |  CER   | FPS  | Epochs | AMP_Type | Torch_Version |
+| :---: | :----: | :----: | :----: | :--: | :--: | :--: |
+| 1P-竞品V | 10.349 | 7.076  |   94  |  70   |  O2  | 1.5 |
+| 8P-竞品V | 15.265 | 9.834  |  377  |   70  |  O2  | 1.5 |
+| 1P-NPU | 9.444  | 5.723  |  4   |   70   |  O2  | 1.8 |
+| 8P-NPU | 17.464 | 10.926 |   22  |  70   |  O2  | 1.8 |
 
 
 # 版本说明
@@ -165,7 +159,7 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
 2022.12.20：整改Readme，重新发布。
 
-## 已知问题
+## FAQ
 
 无。
 
