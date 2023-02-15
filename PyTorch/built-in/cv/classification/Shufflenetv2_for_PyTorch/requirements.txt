@@ -1,5 +1,0 @@
-Numpy
-Pillow
-Requests
-Decorator
-sympy
