@@ -1,3 +1,0 @@
-fastai
-ninja
-tqdm
