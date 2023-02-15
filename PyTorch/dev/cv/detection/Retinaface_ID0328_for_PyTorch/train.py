@@ -30,13 +30,17 @@ from models.retinaface import RetinaFace
 from apex import amp
 import apex
 import sys
-torch.npu.set_start_fuzz_compile_step(3)
+
+if torch.__version__ >= "1.8":
+    torch.npu.set_compile_mode(jit_compile=False)
+else:
+    torch.npu.set_start_fuzz_compile_step(3)
 
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
 if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
-    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
+    torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')    
 
 parser = argparse.ArgumentParser(description='Retinaface Training')
 parser.add_argument('--training_dataset', default='./data/widerface', help='Training dataset directory')
@@ -66,6 +70,11 @@ if args.network == "mobile0.25":
     cfg = cfg_mnet
 elif args.network == "resnet50":
     cfg = cfg_re50
+
+if args.apex_opt_level == 'O0':
+    option = {}
+    option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
+    torch.npu.set_option(option)
 
 rgb_mean = (104, 117, 123) # bgr order
 num_classes = 2
@@ -113,7 +122,11 @@ cudnn.benchmark = True
 
 optimizer = apex.optimizers.NpuFusedSGD(net.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
 if args.apex:
-    net, optimizer = amp.initialize(net, optimizer, opt_level = args.apex_opt_level, combine_grad=True)
+    if args.apex_opt_level == 'O0':
+        optimizer = optim.SGD(net.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
+        net, optimizer = amp.initialize(net, optimizer, opt_level = args.apex_opt_level, combine_grad=False)
+    else:
+        net, optimizer = amp.initialize(net, optimizer, opt_level = args.apex_opt_level, combine_grad=True)
 criterion = MultiBoxLoss(num_classes, 0.35, True, 0, True, 7, 0.35, False)
 
 priorbox = PriorBox(cfg, image_size=(img_dim, img_dim))
@@ -141,7 +154,10 @@ def train():
     
     #prof_cnt = 0
     for iteration in range(start_iter, max_iter):
-        torch.npu.global_step_inc()
+        if torch.__version__ >= "1.8":
+            torch.npu.set_compile_mode(jit_compile=False)
+        else:
+            torch.npu.global_step_inc()
         if args.max_steps and iteration > args.max_steps:
             pass
         if iteration % epoch_size == 0:

@@ -183,6 +183,10 @@ parser.add_argument('-t',
                     '--fine-tuning',
                     action='store_true',
                     help='transfer learning + fine tuning - train only the last FC layer.')
+parser.add_argument('--precision_mode',
+                    default='allow_mix_precision',
+                    type=str,
+                    help='precision_mode')
 # 图模式
 parser.add_argument('--graph_mode',
                     action='store_true',
@@ -235,6 +239,11 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.gpu is not None:
         print("Use GPU: {} for training".format(args.gpu))
+
+    if args.precision_mode == "must_keep_origin_dtype":
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
+        torch.npu.set_option(option) 
 
     if args.distributed:
         if args.dist_url == "env://" and args.rank == -1:
@@ -316,8 +325,10 @@ def main_worker(gpu, ngpus_per_node, args):
         {'params': [param for name, param in model.named_parameters() if name[-4:] != 'bias'], 'weight_decay': args.weight_decay}],
                                 args.lr,
                                 momentum=args.momentum)  # torch.optim.  apex.optimizers.NpuFusedSGD
-    
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=1024, verbosity=1,combine_grad=False)
+    if args.precision_mode == "must_keep_origin_dtype":
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O0", verbosity=1,combine_grad=False)
+    else:
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale=1024, verbosity=1,combine_grad=False)
 
     # optionally resume from a checkpoint
     if args.resume:

@@ -85,6 +85,8 @@ def parse_args():
     parser.add_argument('--master-port', type=str, default='23333', help='master port')
     parser.add_argument('--profiling', type=str, default='False', help='profiling')
     parser.add_argument('--stop_step', default=100, type=int,help='profiling stop_step')
+    parser.add_argument('--precision_mode', default='allow_mix_precision', type=str,help='precision_mode')
+    
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -102,6 +104,11 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    if args.precision_mode == 'must_keep_origin_dtype':
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
+        torch.npu.set_option(option)
 
     os.environ['MASTER_ADDR'] = args.master_addr
     os.environ['MASTER_PORT'] = args.master_port
@@ -174,6 +181,7 @@ def main():
                     f'deterministic: {args.deterministic}')
         set_random_seed(args.seed, deterministic=args.deterministic)
     cfg.seed = args.seed
+    cfg.precision_mode = args.precision_mode
     meta['seed'] = args.seed
     meta['exp_name'] = osp.basename(args.config)
 

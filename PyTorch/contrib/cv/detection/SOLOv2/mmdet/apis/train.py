@@ -249,8 +249,12 @@ def _dist_train(model,
         cfg.opt_level = 'O0'
     amp.register_float_function(torch, 'sigmoid')
     optimizer = build_optimizer(model, cfg.optimizer)
-    model, optimizer = amp.initialize(model.npu(), optimizer,
-                                      opt_level=cfg.opt_level, loss_scale=128.0, combine_grad=True)
+    if cfg.opt_level == 'O0':
+        model, optimizer = amp.initialize(model.npu(), optimizer,
+                                          opt_level=cfg.opt_level, combine_grad=False)
+    else:
+        model, optimizer = amp.initialize(model.npu(), optimizer,
+                                          opt_level=cfg.opt_level, loss_scale=128.0, combine_grad=True)
     find_unused_parameters = cfg.get('find_unused_parameters', False)
     # put model on gpus
 
@@ -347,8 +351,12 @@ def _non_dist_train(model,
         cfg.opt_level = 'O0'
     amp.register_float_function(torch, 'sigmoid')
     optimizer = build_optimizer(model, cfg.optimizer)
-    model, optimizer = amp.initialize(model.npu(), optimizer,
-                                      opt_level=cfg.opt_level, loss_scale=128.0, combine_grad=True)
+    if cfg.opt_level == 'O0':
+        model, optimizer = amp.initialize(model.npu(), optimizer,
+                                        opt_level=cfg.opt_level, combine_grad=False)
+    else:
+        model, optimizer = amp.initialize(model.npu(), optimizer,
+                                        opt_level=cfg.opt_level, loss_scale=128.0, combine_grad=True)
     # put model on gpus
     model = MMDataParallel(model.npu(), device_ids=range(cfg.gpus))
 
