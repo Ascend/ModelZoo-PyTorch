@@ -91,7 +91,10 @@ def train_detector(model,
 
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
-    model, optimizer = amp.initialize(model, optimizer, opt_level='O1', loss_scale='64', combine_grad=True)
+    if cfg.precision_mode == 'must_keep_origin_dtype':
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O0', combine_grad=False)
+    else:
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O1', loss_scale='64', combine_grad=True)
     amp.register_float_function(torch, 'sigmoid')
 
     # put model on gpus

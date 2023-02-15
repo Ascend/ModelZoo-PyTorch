@@ -4,6 +4,9 @@
 #集合通信参数,不需要修改
 export RANK_SIZE=1
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
+
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -20,6 +23,8 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -86,7 +91,7 @@ for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list='0' --dataset pascal --num_epochs 5 --lr_step 45,60,75 --port='34578' --world_size 1  --batch_size $batch_size --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+taskset -c $PID_START-$PID_END python3.7  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list='0' --dataset pascal --num_epochs 5 --lr_step 45,60,75 --port='34578' --world_size 1 --precision_mode=$precision_mode --batch_size $batch_size --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 
 wait

@@ -31,6 +31,9 @@ device_id=0
 profiling=False
 stop_step=100
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -38,6 +41,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
@@ -114,6 +119,7 @@ taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/yolo/yolov3_d5
     --cfg-options optimizer.lr=0.001 data.samples_per_gpu=${batch_size} \
     --seed 0  \
     --local_rank 0 \
+    --precision_mode ${precision_mode} \
     --profiling ${profiling} \
     --stop_step ${stop_step} \
     --npu_ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

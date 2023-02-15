@@ -67,6 +67,10 @@ def device_id_to_process_device_map(device_list):
 
 
 def main(opt, qtepoch=[0,]):
+  if opt.precision_mode == 'must_keep_origin_dtype':
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
+        torch.npu.set_option(option)
   if opt.bin_model != 0:
         torch.npu.set_compile_mode(jit_compile=False) 
         print("use bin train model")
@@ -101,8 +105,12 @@ def main(opt, qtepoch=[0,]):
       model.load_state_dict(checkpoint['state_dict'], strict=False)
 
   # optimizer = torch.optim.Adam(model.parameters(), opt.lr)
-  optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), opt.lr)   
-  model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0,combine_grad=True) ###npu
+  if opt.precision_mode == 'must_keep_origin_dtype':
+    optimizer = torch.optim.Adam(model.parameters(), opt.lr)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O0", combine_grad=False) ###npu
+  else:
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), opt.lr) 
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0,combine_grad=True) ###npu
   start_epoch = 0
   if opt.load_model != '':
     model, optimizer, start_epoch = load_model(

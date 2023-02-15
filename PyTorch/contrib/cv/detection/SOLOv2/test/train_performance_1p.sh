@@ -60,15 +60,17 @@ else
 fi
 
 #非平台场景时source 环境变量
-check_etp_flag=`env | grep etp_running_flag`
-etp_flag=`echo ${check_etp_flag#*=}`
-if [ x"${etp_flag}" != x"true" ];then
-    source ${cur_path}/test/env_npu.sh
-fi
+#check_etp_flag=`env | grep etp_running_flag`
+#etp_flag=`echo ${check_etp_flag#*=}`
+#if [ x"${etp_flag}" != x"true" ];then
+#    source ${cur_path}/test/env_npu.sh
+#fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export NPUID=0
 export RANK=0
+export PYTHONPATH=${cur_path}/../mmcv:$PYTHONPATH
+cd ${cur_path}/../
 python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 \
       --batch_size=${batch_size} --data_root=$data_path --gpu-ids ${device_id} --train_performance=True > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait

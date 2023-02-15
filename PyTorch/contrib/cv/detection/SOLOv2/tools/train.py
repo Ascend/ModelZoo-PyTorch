@@ -109,6 +109,10 @@ def main():
 
     option["ACL_OP_SELECT_IMPL_MODE"] = 'high_precision'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
+    if args.opt_level == 'O0':
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
+        torch.npu.set_option(option)
     print('option', option)
     torch.npu.set_option(option)
     os.environ['MASTER_ADDR'] = os.getenv('MASTER_ADDR', '127.0.0.1')
