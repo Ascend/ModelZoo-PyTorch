@@ -11,7 +11,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
 [comment]: <> (- [配套环境]&#40;#ZH-CN_TOPIC_0000001126121892&#41;)
 
@@ -60,8 +60,8 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 
    | 配套                                                         | 版本    | 环境准备指导                                                 |
    | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-   | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-   | CANN                                                         | 5.1.RC2 | -                                                            |
+   | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+   | CANN                                                         | 6.0.RC1 | -                                                            |
    | Python                                                       | 3.7.13   | -                                                            |
    | PyTorch                                                      | 1.10.0   | -                                                            |
    | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -88,20 +88,26 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 ## 准备数据集<a name="section183221994411"></a>
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
    
-   数据集名称: [LibriSpeech-test_clean](https://www.openslr.org/resources/12/test-clean.tar.gz) 
+   本模型使用LibriSpeech测试集，下载 [LibriSpeech-test_clean](https://www.openslr.org/resources/12/test-clean.tar.gz) 后解压。目录结构如下：
+   ```
+   data2vec
+   ├── transformers
+   ├── LibriSpeech
+      ├── test-clean
+      ├── BOOKS.TXT
+      ├── ...
+   ```
 
 
 
-2. 数据预处理。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   数据预处理将原始数据集转换为模型输入的数据。
-
-   执行下面的命令，完成预处理。
+   执行data2vec_preprocess.py脚本，完成预处理。
 
    ```
-   python3 data2vec_preprocess.py --input="./LibriSpeech/test-clean/" --batch_size=${bs} --output="./data/bin_out_bs${bs}"
+   python3 data2vec_preprocess.py --input="./LibriSpeech/test-clean/" --output="./data/bin_in"
    ```
-   运行后生成的文件存放在/data/bin_out_bs${bs}
+   运行后生成的文件存放在/data/bin_in
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -110,7 +116,7 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   a. 获取权重文件。
+   1. 获取权重文件。
 
        
        ```
@@ -124,10 +130,11 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
         wget https://huggingface.co/facebook/data2vec-audio-base-960h/raw/main/vocab.json -P data2vec_pytorch_model
        ```
 
-   b. 导出onnx文件。
+   2. 导出onnx文件。
    
-      1. 运行下面的命令导出onnx文件。
-      
+      1. 使用data2vec_pth2onnx.py导出onnx文件。
+
+         运行data2vec_pth2onnx.py脚本。
 
          ```
          python3 data2vec_pth2onnx.py
@@ -135,35 +142,25 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 
          获得data2vec.onnx文件。
       
-      2. 使用onnxsim固定batch
+      2. 优化ONNX文件。(安装[auto-optimzer](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)工具)
 
          ```
-         python3 -m onnxsim --input-shape="${bs},559280" data2vec.onnx data2vec_bs${bs}.onnx
+         python3 data2vec_modify.py -m1 data2vec.onnx -m2 data2ve_new.onnx
          ```
-         
-         获得data2vec_bs${bs}.onnx文件
-      3. 优化ONNX文件。(使用[MagicONNX](https://gitee.com/Ronnie_zheng/MagicONNX/tree/master))
+         - 参数说明：
+            - --input_name(m1)：onnx文件路径。
+            - --output_name(m2): 优化后的onnx文件路径。
 
-         ```
-         python3 data2vec_modify.py --input_path data2vec_bs${bs}.onnx --output_path data2vec_bs${bs}_new.onnx
-         ```
-         data2vec_modify.py共有两个参数： \
-         --input_path：原onnx文件 \
-         --output_path: 优化后的onnx文件
-
-         获得data2vec_bs${bs}_new.onnx文件
+         获得data2vec_new.onnx文件
     
 
-   c. 使用ATC工具将ONNX模型转OM模型。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-
-         > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
@@ -186,7 +183,7 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
       3. 执行ATC命令。
 
          ```
-         atc --model=data2vec_bs${bs}_new.onnx \
+         atc --model=data2vec_new.onnx \
              --framework=5 \
              --input_shape="modelInput:${bs},559280" \
              --output=data2vec_bs${bs} \
@@ -196,13 +193,13 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 
          - 参数说明：
 
-           --model：为ONNX模型文件。 \
-           --framework：5代表ONNX模型。 \
-           --output：输出的OM模型。 \
-           --input\_format：输入数据的格式。  
-           --input\_shape：输入数据的shape。 \
-           --log：日志级别。 \
-           --soc\_version：处理器型号。 
+           - --model：为ONNX模型文件。
+           - --framework：5代表ONNX模型。
+           - --output：输出的OM模型。
+           - --input\_format：输入数据的格式。  
+           - --input\_shape：输入数据的shape。
+           - --log：日志级别。
+           - --soc\_version：处理器型号。 
            
          运行成功后生成data2vec_bs${bs}.om模型文件。
 
@@ -219,37 +216,38 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
       ```
       python3 -m ais_bench \
               --model data2vec_bs${bs}.om \
-              --input "data/bin_out_bs${bs}" \
+              --input "data/bin_in" \
               --output "./" \
-              --output_dirname "data/bin_om_out_bs${bs}"
-              --batchsize=${bs}
+              --output_dirname "data/bin_out"
       ```
 
-   -   参数说明：\
-      --model：om文件路径。 \
-      --input：输入数据所在的文件夹。 \
-      --output：推理结果输出路径。 \
-      --output_dirname：推理结果输出子文件夹。
+      -   参数说明：\
+         - --model：om文件路径。
+         - --input：输入数据所在的文件夹。
+         - --output：推理结果输出路径。
+         - --output_dirname：推理结果输出子文件夹。
 
-         推理后的输出默认在当前目录下以时间命名。
+      推理后的输出默认在data/bin_out目录下。
 
 
-   c.  数据后处理
-      调用数据后处理脚本将模型输出转换为文本
+   3.  数据后处理
+      调用数据后处理脚本将模型输出转换为文本。
 
       ```
-      python3 data2vec_postprocess.py --input "data/bin_om_out_bs${bs}" --batch_size ${bs}
+      python3 data2vec_postprocess.py --input "data/bin_out"
       ```
-   d.  精度验证。
+      运行成功后得到文件/data/infered_texts.txt。
+
+   4.  精度验证。
 
       调用脚本与数据集标签ground_truth_texts.txt比对，可以获得Accuracy数据。
 
       ```
-      python3 data2vec_eval_accuracy.py --ground_truth_text "./data/ground_truth_texts.txt" --infered_text "./data/infered_texts_bs${bs}.txt"
+      python3 data2vec_eval_accuracy.py --ground_truth_text "./data/ground_truth_texts.txt" --infered_text "./data/infered_texts.txt"
       ```
       -   参数说明\
-         --ground_truth_text：真实值所在的路径 \
-         --infered_text：推理值所在的路径
+         - --ground_truth_text：真实文本所在的路径。
+         - --infered_text：推理文本所在的路径。
 
     
     
@@ -258,11 +256,6 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 
    | NPU芯片型号 | Batch Size     | 数据集      | 精度(wer)  | 性能 (fps)      |
    | ---------  | -------------- | ----------  | ---------- | --------------- |
-   |Ascend310P3 |      1         | LibriSpeech |    0.94  |     11.731         |
-   |Ascend310P3 |      4         | LibriSpeech |    0.94  |     11.953         |
-   |Ascend310P3 |      8         | LibriSpeech |    0.94  |     12.118         |
-   |Ascend310P3 |      16        | LibriSpeech |    0.94  |     12.076         |
-   |Ascend310P3 |      32        | LibriSpeech |    0.94  |     10.633         |
-   |Ascend310P3 |      64        | LibriSpeech |    内存不足  |   -           |
+   |Ascend310P3 |      1         | LibriSpeech |    0.94  |     11.154         |
 
 

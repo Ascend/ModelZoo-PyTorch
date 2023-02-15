@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +13,13 @@
 # limitations under the License.
 
 import os
-import sys
 import glob
+from tqdm import tqdm
 import json
 import numpy as np
 import scipy.signal as sps
 import soundfile
 import argparse
-
-from collections import defaultdict
 
 
 input_size = 559280
@@ -72,33 +70,26 @@ def find_files(path, pattern="*.flac"):
     return filenames
 
 
-def pre_process(speech_dir, output_dir, batch_size):
+def pre_process(speech_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)
-    batch_i_filename_map_path = "./data/batch_i_filename_map_bs{}.json".format(batch_size)
+    filename_map_path = "./data/filename_map.json"
     filelist = find_files(speech_dir, pattern="*.flac")
-    batch_i_filename_map = defaultdict(list)
+    filename_map = dict()
     sample_count = 0
-    batch_count = 0
-    batch_data = []
-    for file in filelist:
+    data_count = 0
+    for file in tqdm(filelist):
         data = load_speech(file)
         if data is None:
             continue
         sample_count += 1
-        batch_data.append(data)
-        batch_key = "batch_{}".format(batch_count)
-        batch_i_filename_map[batch_key].append(
-            os.path.basename(file).replace('.flac', ''))
-        if sample_count % batch_size == 0:
-            batch_file_name = os.path.join(output_dir, batch_key+".bin")
-            batch_count += 1
-            with open(batch_file_name, 'wb') as f:
-                print(batch_file_name)
-                f.write(np.array(batch_data).tobytes())
-            batch_data.clear()
+        key = str(data_count)
+        filename_map[key] = os.path.basename(file).replace('.flac', '')
+        data_file_name = os.path.join(output_dir, key+".bin")
+        data_count += 1
+        np.array(data).tofile(data_file_name)
 
-    with open(batch_i_filename_map_path, 'w', encoding='utf-8') as f:
-        json.dump(batch_i_filename_map, f)
+    with open(filename_map_path, 'w', encoding='utf-8') as f:
+        json.dump(filename_map, f)
     print("Binary file saved in: ", output_dir)
 
     # 把原始多个真实文本文件写到一个文件
@@ -119,14 +110,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', help='dataset path',
                         default="/opt/npu/LibriSpeech/test-clean/")
-    parser.add_argument('--batch_size', help='batch size', default=1)
     parser.add_argument('--output', help='out bin path',
-                        default="data/bin_out_bs1/")
+                        default="data/bin_out/")
     args = parser.parse_args()
 
     base_dir = args.input
     out_dir = args.output
-    batch_size = int(args.batch_size)
 
-    pre_process(base_dir, out_dir, batch_size)
+    pre_process(base_dir, out_dir)
 

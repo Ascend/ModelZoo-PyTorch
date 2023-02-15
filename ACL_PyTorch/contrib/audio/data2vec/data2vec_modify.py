@@ -1,89 +1,86 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
-# Licensed under the BSD 3-Clause License  (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# https://opensource.org/licenses/BSD-3-Clause
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
-import numpy as np
-from magiconnx import OnnxGraph
+
+
 import argparse
-def conv1d2conv2d(graph, node_conv):
-    if node_conv == 'Conv_1':
-        graph[node_conv]['dilations'] = [1, 1]
-        m = graph[node_conv]['kernel_shape'][0]
-        graph[node_conv]['kernel_shape'] = [1, m]
-        graph[node_conv]['pads'] = [0, 0, 0, 0]
-        graph[node_conv]['strides'] = [1, 5]
-        wight = graph[graph[node_conv].node.input[1]].value
-        graph[graph[node_conv].node.input[1]].value = np.expand_dims(wight, axis=2)
-    else:
-        graph[node_conv]['dilations'] = [1, 1]
-        m = graph[node_conv]['kernel_shape'][0]
-        graph[node_conv]['kernel_shape'] = [1, m]
-        graph[node_conv]['pads'] = [0, 0, 0, 0]
-        graph[node_conv]['strides'] = [1, 2]
-        wight = graph[graph[node_conv].node.input[1]].value
-        graph[graph[node_conv].node.input[1]].value = np.expand_dims(wight, axis=2)
+import numpy as np
+from auto_optimizer import OnnxGraph
 
-def transfer_structure(graph, beg_node, end_node):
-    if beg_node != 'Conv_71':
-        squeeze_name = end_node + 'squeeze'
-        OnnxGraph.add_node(graph, squeeze_name, 'Squeeze', attrs={'axes': [2]})
-        graph.insert_node(end_node, graph[squeeze_name], mode='after')
-    if beg_node != 'Conv_89':
-        unsqueeze_name = beg_node + 'unsqueeze'
-        OnnxGraph.add_node(graph, unsqueeze_name, 'Unsqueeze', attrs={'axes': [2]})
-        graph.insert_node(beg_node, graph[unsqueeze_name], mode='before')
-    conv1d2conv2d(graph, beg_node)
 
-def fix_conv1d(model_path, out_path, beg_list, end_list, transpose1_list, transpose2_list):
-    graph = OnnxGraph(model_path)
-    change_perm(graph, transpose1_list, transpose2_list)
-    for idx, beg_node in enumerate(beg_list):
-        end_node = end_list[idx]
-        transfer_structure(graph, beg_node, end_node)
-    graph.save(out_path)
+def conv1d2conv2d(model):
+    conv_nodes = model.get_nodes('Conv')
+    for node in conv_nodes:
+        attrs = node.attrs
+        dil = attrs['dilations'][0]
+        ks = attrs['kernel_shape'][0]
+        pads = attrs['pads']
+        stride = attrs['strides'][0]
+        attrs['dilations'] = [1, dil]
+        attrs['kernel_shape'] = [1, ks]
+        attrs['pads'] = [0, pads[0], 0, pads[1]]
+        attrs['strides'] = [1, stride]
+        name = node.inputs[1]
+        weights = model[name].value
+        weights = np.expand_dims(weights, axis=-2)
+        model[name].value = weights
+    return model
 
-def change_reduce(graph, reduce_list):
-    for name in reduce_list:
-        graph[name]['axes'] = 1
 
-def change_weight(graph, transpose2_list, mul_list, add_list):
-    for idx, name in enumerate(mul_list):
-        graph[graph[name].node.input[1]].value = graph[graph[name].node.input[1]].value.reshape(-1, 1, 1)
-        graph[graph[add_list[idx]].node.input[1]].value = \
-            graph[graph[add_list[idx]].node.input[1]].value.reshape(-1, 1, 1)
-        graph[add_list[idx]].node.output[0] = graph[transpose2_list[idx]].node.output[0]
-        graph.del_node(transpose2_list[idx], auto_connection=False)
+def change_perm(model):
+    trans_nodes = model.get_nodes('Transpose')
+    for node in trans_nodes:
+        next_node = model.get_next_nodes(node.outputs[0])[0]
+        if next_node.op_type == 'ReduceMean':
+            node.attrs['perm'] = [0, 2, 3, 1]
+        elif next_node.op_type == 'Div':
+            node.attrs['perm'] = [0, 3, 1, 2]
+        elif next_node.op_type == 'Add':
+            node.attrs['perm'] = [0, 2, 3, 1]
+        elif next_node.op_type == 'Conv':
+            node.attrs['perm'] = [0, 3, 1, 2]
+    return model
 
-def del_trans(graph, transpose1_list, beg_list):
-    for idx, name in enumerate(transpose1_list):
-        graph[beg_list[idx]].node.output[0] = graph[name].node.output[0]
-        graph.del_node(name, auto_connection=False)
 
-def change_perm(graph, transpose1_list, transpose2_list):
-    for trans1 in transpose1_list:
-        graph[trans1]['perm'] = [0, 2, 3, 1]
-    for trans2 in transpose2_list:
-        graph[trans2]['perm'] = [0, 3, 1, 2]
+def change_dim(model):
+    first_node = model.get_next_nodes('modelInput')[0]
+    if first_node.op_type == 'Unsqueeze':
+        first_node.attrs['axes'] = [1, 2]
+    trans_nodes = model.get_nodes('Transpose')
+    for node in trans_nodes:
+        next_node = model.get_next_nodes(node.outputs[0])[0]
+        if next_node.op_type == 'Add':
+            sq_node = model.add_node('Squeeze_conv', 'Squeeze', attrs={'axes':[1]})
+            model.insert_node(next_node.name, sq_node)
+    return model
 
-if __name__ == '__main__':
+
+def change_conv(input_model, output_model):
+    model = OnnxGraph.parse(input_model)
+    model = conv1d2conv2d(model)
+    model = change_perm(model)
+    model = change_dim(model)
+    model.infershape()
+    model.save(output_model)
+    return
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_path', help='ground truth text', default="data2vec.onnx")
-    parser.add_argument('--output_path', help='infered text', default="data2vec_new.onnx")
+    parser.add_argument('-m1', '--input_name', required=True, help='filepath of the original onnx model')
+    parser.add_argument('-m2', '--output_name', required=True, help='filepath of the modified onnx model')
     args = parser.parse_args()
-    beg_node = ['Conv_1', 'Conv_24', 'Conv_46', 'Conv_68', 'Conv_90', 'Conv_112', 'Conv_134']
-    end_node = ['Mul_23', 'Mul_45', 'Mul_67', 'Mul_89', 'Mul_111', 'Mul_133', 'Mul_155']
-    transpose1_list = ['Transpose_2', 'Transpose_25', 'Transpose_47',
-                       'Transpose_69', 'Transpose_91', 'Transpose_113', 'Transpose_135']
-    transpose2_list = ['Transpose_15', 'Transpose_37', 'Transpose_59',
-                       'Transpose_81', 'Transpose_103', 'Transpose_125', 'Transpose_147']
-    fix_conv1d(args.input_path, args.output_path, beg_node, end_node, transpose1_list, transpose2_list)
+
+    input_name = args.input_name
+    output_name = args.output_name
+    change_conv(input_name, output_name)
