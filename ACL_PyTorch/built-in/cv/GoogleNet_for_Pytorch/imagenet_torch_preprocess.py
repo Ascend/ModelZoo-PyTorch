@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,171 +14,114 @@
 
 import os
 import sys
-import json
+from PIL import Image
+from tqdm import tqdm
 import numpy as np
-import time
-
-np.set_printoptions(threshold=sys.maxsize)
-
-LABEL_FILE = "HiAI_label.json"
+import multiprocessing
 
 
-def gen_file_name(img_name):
-    full_name = img_name.split('/')[-1]
-    index = full_name.rfind('.')
-    return full_name[:index]
+model_config = {
+    'resnet': {
+        'resize': 256,
+        'centercrop': 224,
+        'mean': [0.485, 0.456, 0.406],
+        'std': [0.229, 0.224, 0.225],
+    },
+    'inceptionv3': {
+        'resize': 342,
+        'centercrop': 299,
+        'mean': [0.485, 0.456, 0.406],
+        'std': [0.229, 0.224, 0.225],
+    },
+    'inceptionv4': {
+        'resize': 342,
+        'centercrop': 299,
+        'mean': [0.5, 0.5, 0.5],
+        'std': [0.5, 0.5, 0.5],
+    },
+}
 
 
-def cre_groundtruth_dict(gtfile_path):
-    """
-    :param filename: file contains the imagename and label number
-    :return: dictionary key imagename, value is label number
-    """
-    img_gt_dict = {}
-    for gtfile in os.listdir(gtfile_path):
-        if (gtfile != LABEL_FILE):
-            with open(os.path.join(gtfile_path, gtfile), 'r') as f:
-                gt = json.load(f)
-                ret = gt["image"]["annotations"][0]["category_id"]
-                img_gt_dict[gen_file_name(gtfile)] = ret
-    return img_gt_dict
+def center_crop(img, output_size):
+    if isinstance(output_size, int):
+        output_size = (int(output_size), int(output_size))
+    image_width, image_height = img.size
+    crop_height, crop_width = output_size
+    crop_top = int(round((image_height - crop_height) / 2.))
+    crop_left = int(round((image_width - crop_width) / 2.))
+    return img.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
 
 
-def cre_groundtruth_dict_fromtxt(gtfile_path):
-    """
-    :param filename: file contains the imagename and label number
-    :return: dictionary key imagename, value is label number
-    """
-    img_gt_dict = {}
-    with open(gtfile_path, 'r')as f:
-        for line in f.readlines():
-            temp = line.strip().split(" ")
-            imgName = temp[0].split(".")[0]
-            imgLab = temp[1]
-            img_gt_dict[imgName] = imgLab
-    return img_gt_dict
+def resize(img, size, interpolation=Image.BILINEAR):
+    if isinstance(size, int):
+        w, h = img.size
 
-
-def load_statistical_predict_result(filepath):
-    """
-    function:
-    the prediction esult file data extraction
-    input:
-    result file:filepath
-    output:
-    n_label:numble of label
-    data_vec: the probabilitie of prediction in the 1000
-    :return: probabilities, numble of label, in_type, color
-    """
-    with open(filepath, 'r')as f:
-        data = f.readline()
-        temp = data.strip().split(" ")
-        n_label = len(temp)
-        if data == '':
-            n_label = 0
-        data_vec = np.zeros((n_label), dtype=np.float32)
-        in_type = ''
-        color = ''
-        if n_label == 0:
-            in_type = f.readline()
-            color = f.readline()
+        if (w <= h and w == size) or (h <= w and h == size):
+            return img
+            
+        if w < h:
+            ow = size
+            oh = int(size * h / w)
         else:
-            for ind, prob in enumerate(temp):
-                data_vec[ind] = np.float32(prob)
-    return data_vec, n_label, in_type, color
+            oh = size
+            ow = int(size * w / h)
 
+        return img.resize((ow, oh), interpolation)
 
-def create_visualization_statistical_result(prediction_file_path,
-                                            result_store_path, json_file_name,
-                                            img_gt_dict, topn=5):
-    """
-    :param prediction_file_path:
-    :param result_store_path:
-    :param json_file_name:
-    :param img_gt_dict:
-    :param topn:
-    :return:
-    """
-    writer = open(os.path.join(result_store_path, json_file_name), 'w')
-    table_dict = {}
-    table_dict["title"] = "Overall statistical evaluation"
-    table_dict["value"] = []
-
-    count = 0
-    resCnt = 0
-    n_labels = 0
-    count_hit = np.zeros(topn)
-    for tfile_name in os.listdir(prediction_file_path):
-        count += 1
-        temp = tfile_name.split('.')[0]
-        index = temp.rfind('_')
-        img_name = temp[:index]
-        filepath = os.path.join(prediction_file_path, tfile_name)
-        ret = load_statistical_predict_result(filepath)
-        prediction = ret[0]
-        n_labels = ret[1]
-        sort_index = np.argsort(-prediction)
-        gt = img_gt_dict[img_name]
-        if (n_labels == 1000):
-            realLabel = int(gt)
-        elif (n_labels == 1001):
-            realLabel = int(gt) + 1
-        else:
-            realLabel = int(gt)
-
-        resCnt = min(len(sort_index), topn)
-        for i in range(resCnt):
-            if (str(realLabel) == str(sort_index[i])):
-                count_hit[i] += 1
-                break
-
-    if 'value' not in table_dict.keys():
-        print("the item value does not exist!")
     else:
-        table_dict["value"].extend(
-            [{"key": "Number of images", "value": str(count)},
-             {"key": "Number of classes", "value": str(n_labels)}])
-        if count == 0:
-            accuracy = 0
+        return img.resize(size[::-1], interpolation)
+
+
+def gen_input_bin(mode_type, file_batches, batch, src_path, save_path):
+    for file in tqdm(file_batches[batch]):
+        # RGBA to RGB
+        image = Image.open(file[1]).convert('RGB')
+        image = resize(image, model_config[mode_type]['resize']) # Resize
+        image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
+
+        img = np.array(image).astype(np.int8)
+        img.tofile(os.path.join(save_path, file[0].split('.')[0] + ".bin"))
+
+
+def preprocess(mode_type, src_path, save_path):
+    files = os.listdir(src_path)
+    image_infos = []
+    for file_name in files:
+        file_path = os.path.join(src_path, file_name)
+        if os.path.isdir(file_path):
+            image_infos += [(image_name, os.path.join(file_path, image_name)) \
+            for image_name in os.listdir(file_path)]
         else:
-            accuracy = np.cumsum(count_hit) / count
-        for i in range(resCnt):
-            table_dict["value"].append({"key": "Top" + str(i + 1) + " accuracy",
-                                        "value": str(
-                                            round(accuracy[i] * 100, 2)) + '%'})
-        json.dump(table_dict, writer)
-    writer.close()
+            image_infos.append((file_name, file_path))
+    image_infos.sort()
+    if len(image_infos) < 500:
+        file_batches = [image_infos[0 : len(image_infos)]]
+    else:
+        file_batches = [image_infos[i:i + 500] for i in range(0, len(image_infos), 500) if image_infos[i:i + 500] != []]
+    thread_pool = multiprocessing.Pool(len(file_batches))
+    for batch in range(len(file_batches)):
+    #    gen_input_bin(mode_type, file_batches, batch, src_path, save_path)
+        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch, src_path, save_path))
+    thread_pool.close()
+    thread_pool.join()
+    print("in thread, except will not report! please ensure bin files generated.")
 
 
 if __name__ == '__main__':
-    start = time.time()
-    try:
-        # txt file path
-        folder_davinci_target = sys.argv[1]
-        # annotation files path, "val_label.txt"
-        annotation_file_path = sys.argv[2]
-        # the path to store the results json path
-        result_json_path = sys.argv[3]
-        # result json file name
-        json_file_name = sys.argv[4]
-    except IndexError:
-        print("Stopped!")
-        exit(1)
-
-    if not (os.path.exists(folder_davinci_target)):
-        print("target file folder does not exist.")
-
-    if not (os.path.exists(annotation_file_path)):
-        print("Ground truth file does not exist.")
-
-    if not (os.path.exists(result_json_path)):
-        print("Result folder doesn't exist.")
-
-    img_label_dict = cre_groundtruth_dict_fromtxt(annotation_file_path)
-    create_visualization_statistical_result(folder_davinci_target,
-                                            result_json_path, json_file_name,
-                                            img_label_dict, topn=5)
-
-    elapsed = (time.time() - start)
-    print("Time used:", elapsed)
+    if len(sys.argv) < 4:
+        raise Exception("usage: python3 xxx.py [model_type] [src_path] [save_path]")
+    mode_type = sys.argv[1]
+    src_path = sys.argv[2]
+    save_path = sys.argv[3]
+    src_path = os.path.realpath(src_path)
+    save_path = os.path.realpath(save_path)
+    if mode_type not in model_config:
+        model_type_help = "model type: "
+        for key in model_config.keys():
+            model_type_help += key
+            model_type_help += ' '
+        raise Exception(model_type_help)
+    if not os.path.isdir(save_path):
+        os.makedirs(os.path.realpath(save_path))
+    preprocess(mode_type, src_path, save_path)
 
