@@ -144,7 +144,7 @@ parser.add_argument('--num_of_gpus', default=8, type=int)
 parser.add_argument('--world_size',default=8, type = int)
 parser.add_argument('--val_batch_size', default=64, type=int,
                     help='Val batch size')
-parser.add_argument('--no-bin', default=False, action='store_true',
+parser.add_argument('--bin', default=True, type=bool,
                     help='identifier to enable binary mode')
 
 IS_DISTRIBUTED = False
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     option={}
     option['ACL_OP_SELECT_IMPL_MODE'] = 'high_performance'
     torch.npu.set_option(option)
-    if not args.no_bin:
+    if args.bin:
         torch.npu.set_compile_mode(jit_compile=False)
     main(args)
 
