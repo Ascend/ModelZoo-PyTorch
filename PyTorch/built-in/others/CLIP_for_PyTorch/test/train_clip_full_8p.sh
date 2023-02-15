@@ -8,6 +8,7 @@ train_epochs=3
 batch_size=64
 model_path=""
 data_path=""
+device_id=0
 
 for para in $*; do
   if [[ $para == --model_name* ]]; then
@@ -34,8 +35,15 @@ if [[ $data_path == "" ]]; then
   exit 1
 fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
-ASCEND_DEVICE_ID=0
-echo "device id is ${ASCEND_DEVICE_ID}"
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
 
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=$(pwd)
@@ -80,7 +88,7 @@ if [ $(uname -m) = "aarch64" ]; then
       --remove_unused_columns=False \
       --do_train --do_eval --fp16 --dataloader_drop_last \
       --dataloader_num_workers 8 \
-      --fp16_opt_level O2 --loss_scale 12800000 --use_combine_grad \
+      --fp16_opt_level O2 --loss_scale 12800000 --optim adamw_apex_fused_npu --use_combine_grad \
       --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
       --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
       --overwrite_output_dir \
@@ -98,7 +106,7 @@ else
     --image_column image_path --caption_column caption \
     --remove_unused_columns=False \
     --do_train --do_eval --fp16 --dataloader_drop_last \
-    --fp16_opt_level O2 --loss_scale 12800000 --use_combine_grad \
+    --fp16_opt_level O2 --loss_scale 12800000 --optim adamw_apex_fused_npu --use_combine_grad \
     --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
     --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
     --overwrite_output_dir >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &

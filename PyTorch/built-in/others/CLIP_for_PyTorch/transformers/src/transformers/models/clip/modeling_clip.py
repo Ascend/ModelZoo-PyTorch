@@ -192,7 +192,7 @@ class CLIPAttention(nn.Module):
         self.out_proj = NpuLinear(self.embed_dim, self.embed_dim)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
+        return torch.npu_confusion_transpose(tensor, [0, 2, 1, 3], [bsz, seq_len, self.num_heads, self.head_dim], False)
 
     def forward(
         self,
@@ -204,24 +204,22 @@ class CLIPAttention(nn.Module):
         """Input shape: Batch x Time x Channel"""
 
         bsz, tgt_len, embed_dim = hidden_states.size()
-        hidden_states = hidden_states.view(-1, hidden_states.size()[-1]).clone().npu_format_cast(29)
+        hidden_states = hidden_states.view(-1, embed_dim).clone().npu_format_cast(29)
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scale
-        key_states = self._shape(self.k_proj(hidden_states), -1, bsz)
-        value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
+        key_states = self._shape(self.k_proj(hidden_states), tgt_len, bsz)
+        value_states = self._shape(self.v_proj(hidden_states), tgt_len, bsz)
 
         proj_shape = (bsz * self.num_heads, -1, self.head_dim)
-        query_states = self._shape(query_states, tgt_len, bsz).view(*proj_shape)
-        key_states = key_states.view(*proj_shape)
-        value_states = value_states.view(*proj_shape)
+        query_states = self._shape(query_states, tgt_len, bsz)
 
-        src_len = key_states.size(1)
-        attn_weights = torch.npu_bmmV2(query_states, key_states.transpose(1, 2), [])
+        src_len = key_states.size(2)
+        attn_weights = torch.npu_bmmV2(query_states, key_states.permute(0, 1, 3, 2), [])
 
-        if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
+        if attn_weights.size() != (bsz, self.num_heads, tgt_len, src_len):
             raise ValueError(
-                f"Attention weights should be of size {(bsz * self.num_heads, tgt_len, src_len)}, but is {attn_weights.size()}"
+                f"Attention weights should be of size {(bsz, self.num_heads, tgt_len, src_len)}, but is {attn_weights.size()}"
             )
 
         # apply the causal_attention_mask first
@@ -230,16 +228,14 @@ class CLIPAttention(nn.Module):
                 raise ValueError(
                     f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {causal_attention_mask.size()}"
                 )
-            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len) + causal_attention_mask
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights = attn_weights + causal_attention_mask
 
         if attention_mask is not None:
             if attention_mask.size() != (bsz, 1, tgt_len, src_len):
                 raise ValueError(
                     f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
                 )
-            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len) + attention_mask
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights = attn_weights + attention_mask
 
         attn_weights = nn.functional.softmax(attn_weights, dim=-1)
 
@@ -248,23 +244,14 @@ class CLIPAttention(nn.Module):
             # make sure that attn_weights keeps its gradient.
             # In order to do so, attn_weights have to reshaped
             # twice and have to be reused in the following
-            attn_weights_reshaped = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights_reshaped.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights_reshaped = attn_weights.clone()
         else:
             attn_weights_reshaped = None
 
         attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
 
         attn_output = torch.npu_bmmV2(attn_probs, value_states, [])
-
-        if attn_output.size() != (bsz * self.num_heads, tgt_len, self.head_dim):
-            raise ValueError(
-                f"`attn_output` should be of size {(bsz, self.num_heads, tgt_len, self.head_dim)}, but is {attn_output.size()}"
-            )
-
-        attn_output = attn_output.view(bsz, self.num_heads, tgt_len, self.head_dim)
-        attn_output = attn_output.transpose(1, 2)
-        attn_output = attn_output.reshape(bsz * tgt_len, embed_dim)
+        attn_output = torch.npu_confusion_transpose(attn_output, [0, 2, 1, 3], [bsz*tgt_len, embed_dim], True)
 
         attn_output = self.out_proj(attn_output)
         attn_output = attn_output.view(bsz, tgt_len, embed_dim)
