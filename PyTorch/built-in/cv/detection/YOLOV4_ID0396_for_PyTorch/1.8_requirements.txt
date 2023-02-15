@@ -5,3 +5,4 @@ pycocotools == 2.0.2
 tqdm
 pillow == 9.1.0
 tensorboard == 1.15.0
+torchvision==0.9.1
