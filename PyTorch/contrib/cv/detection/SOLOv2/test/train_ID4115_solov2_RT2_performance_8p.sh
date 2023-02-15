@@ -135,7 +135,7 @@ do
     else
         python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
-            --opt-level O1 \
+            --opt-level $apex \
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
@@ -174,7 +174,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+f [[ $apex == "O0" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
