@@ -1,4 +1,4 @@
-# ResNet50_for_PyTorch
+# ResNet50 for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -26,42 +26,37 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
   code_path=PyTorch/built-in/cv/classification
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | pillow==8.4.0 |
+  | PyTorch 1.8 | pillow==9.1.0 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
+
 - 源码安装DLLogger库。
   ```
-  下载源码链接： https://github.com/NVIDIA/dllogger.git
+  下载源码链接： git clone https://github.com/NVIDIA/dllogger.git
   进入源码一级目录执行： python3.7 setup.py install
   ```
 
@@ -119,9 +114,9 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
      
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -129,9 +124,17 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
+     ```
+
+   - 单机单卡评测
+
+     启动单卡评测。
+
+     ```
+     bash ./test/train_eval_1p.sh --data_path=/data/xxx/
      ```
 
    - 多机多卡性能数据获取流程。
@@ -141,7 +144,7 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
      如若遇到逻辑卡号与物理卡号不一致的情况，请手动在./test/train_performance_multinodes.sh中添加传参，例如--device-list='0,1,2,3'
      ```
 
-   --data\_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -170,21 +173,21 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
 
 **表 2**  训练结果展示表
 
-| Type | Acc@1 | FPS       | Epochs   |
-| :------: | :------:  | :------: | :------: |
-| NPU-1p | -  | 1517.157 | 1      |
-| NPU-8p | 77.193 | 10752.654 | 90     |
-| GPU-1p | - | 2065 | 1 |
-| GPU-8p | - | 14268 | 90 |
+| NAME | Acc@1 | FPS       | Epochs   | AMP_Type | Torch_Version |
+| :------: | :------:  | :------: | :------: | :------: | :------: |
+| 1p-竞品V |   -    |   2065   |   1    | O2    | 1.5   |
+| 8p-竞品V |   -    |  14268   |   90   | O2   | 1.5  |
+| 1p-NPU |   -    | 1259.591 |   1    | O2 | 1.8 |
+| 8p-NPU | 76.702 | 11898.83 | 90 | O2 | 1.8 |
 
 # 版本说明
 
 ## 变更
 
-2022.12.27：更新readme，重新发布。
+2023.02.16：更新readme，重新发布。
 
 2021.07.08：首次发布。
 
-## 已知问题
+## FAQ
 
 本模型单卡和多卡使用不同的脚本，脚本配置有差异， 会影响到线性度， 目前正在重构中。
