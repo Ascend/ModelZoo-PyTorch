@@ -7,7 +7,6 @@
 -   [版本说明](版本说明.md)
 
 
-
 # 概述
 ## 简述
 
@@ -17,7 +16,6 @@
 
   ```
   url=https://github.com/rwightman/pytorch-image-models
-  branch=master
   commit_id=8880f696b6b8368a76296126476ea020fc7c814c
   ```
 
@@ -27,30 +25,19 @@
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件 | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.6.0 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
 
 - 环境准备指导。
 
@@ -58,16 +45,20 @@
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
-  注意:pillow建议安装更新的版本。如果无法直接安装对应版本的torchvision，可以使用源代码安装对应版本。源代码参考链接:https://github.com/pytorch/vision， 建议pilow为9.1.0，torchvision为0.6.0
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   下载开源数据集包括ImageNet，将数据集上传到服务器任意路径下并解压。
+   用户自行下载 `ImageNet` 数据集，将数据集上传到服务器任意路径下并解压。
    
    数据集目录结构参考如下所示。
 
@@ -93,6 +84,8 @@
                     │──图片2
                     │   ...              
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 # 开始训练
 
@@ -113,9 +106,9 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/    
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/    # 单卡精度
      
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -123,12 +116,12 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/   
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/   # 8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ 
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ # 8卡性能
      ```
 
-    --data_path: 数据集路径
+    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -156,12 +149,12 @@
 
 **表 2**  训练结果展示表
 
-| NAME    | Acc@1  |    FPS  | Epochs | AMP_Type |
-| ------- | -----  |   ---:  | ------ | -------: |
-| 1p-NPU  |   -    |   608 | 1      |    O2    |
-| 1p-NPU  |   -    |    380      |   1     |    O2    |
-| 8p-NPU  | 75.1 | 9068 | 600    |    O2    |
-| 8p-GPU  | 75.34 |    3885      |   600     |    O2    |
+| NAME    | Acc@1  |    FPS  | Epochs | AMP_Type | Torch_Version |
+| :-----: | :----: |  :---:  | :----: | :------: |  :-------:    |
+| 1p-竞品V| - | - | 1  | O2 | 1.5 |
+| 8p-竞品V| 75.34 | 3885   | 600    |    O2    | 1.5 |
+| 1p-NPU  |   -  | 1660.49 |   1    |    O2    | 1.8 |
+| 8p-NPU  | 75.1 | 6630.56 | 600    |    O2    | 1.8 |
 
 
 # 版本说明
@@ -172,7 +165,7 @@
 
 2021.07.05：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
 
