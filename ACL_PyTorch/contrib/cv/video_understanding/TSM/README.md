@@ -25,13 +25,13 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
 
   | 输入数据 | 数据类型 | 大小                          | 数据排布格式 |
   | -------- | -------- | ----------------------------- | ------------ |
-  | pos      | RGB_FP32 | batchsize x 8 x 3 x 224 x 224 | NCDHW        |
+  | input    | RGB_FP32 | batchsize x 8 x 3 x 224 x 224 | NCDHW        |
 
 - 输出数据
 
-  | 输出数据 | 数据类型 | 大小    | 数据排布格式 |
+  | 输出数据  | 数据类型 | 大小    | 数据排布格式 |
   | -------- | -------- | ------- | ------------ |
-  | output_0 | FLOAT32  | 1 x 101 | ND           |
+  | output   | FLOAT32  | 1 x 101 | ND           |
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -41,10 +41,10 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
 
   | 配套                                                            | 版本    | 环境准备指导                                                                                          |
   | --------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-  | 固件与驱动                                                      | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                            | 5.1.RC2 | -                                                                                                     |
+  | 固件与驱动                                                      | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                            | 6.0.RC1 | -                                                                                                     |
   | Python                                                          | 3.7.5   | -                                                                                                     |
-  | PyTorch                                                         | 1.12.0  | -                                                                                                     |
+  | PyTorch                                                         | 1.9.0  | -                                                                                                     |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
 
 
@@ -89,7 +89,6 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
 
    ```shell
    python TSM_preprocess.py \
-          --batch_size 1 \
           --data_root ${dataset}/rawframes/ \
           --ann_file ${dataset}/ucf101_val_split_1_rawframes.txt \
           --output_dir preprocess_bin
@@ -111,18 +110,32 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
       [TSM基于mmaction2预训练的权重文件](https://download.openmmlab.com/mmaction/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth)
 
    2. 导出onnx文件。
+   
+      1. 使用pytorch2onnx.py导出onnx文件。
 
-      ```shell
-        # 本文以batchsize=1为例进行说明
-        python mmaction2/tools/deployment/pytorch2onnx.py \
-                mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py \
-                ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth \
-                --output-file=tsm.onnx --softmax --shape 1 8 3 224 224
-      ```
-      建议使用onnxsim简化onnx模型
-      ```shell
-      onnxsim tsm.onnx tsm_sim.onnx
-      ```
+         运行pytorch2onnx.py脚本。
+
+         ```shell
+         cd mmaction2
+         python tools/deployment/pytorch2onnx.py \
+                configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py \
+                ../tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth \
+                --output-file=../tsm_bs${bs}.onnx --softmax --shape ${bs} 8 3 224 224
+         cd ..
+         ```
+         获得tsm_bs${bs}.onnx文件。
+      
+      2. 优化ONNX文件。(安装[auto-optimzer](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)工具)
+
+         ```shell
+         onnxsim tsm_bs${bs}.onnx tsm_sim_bs${bs}.onnx
+         python3 modify_onnx.py -m1 tsm_sim_bs${bs}.onnx -m2 tsm_sim_new_bs${bs}.onnx
+         ```
+         - 参数说明：
+            - --input_name(m1)：onnx文件路径。
+            - --output_name(m2): 优化后的onnx文件路径。
+
+         获得tsm_sim_new_bs${bs}.onnx文件
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -153,10 +166,9 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
       3. 执行ATC命令。
 
           ```shell
-          bs=1    # 以batchsize=1为例，其它batch自行修改
-          atc --model=tsm.onnx \
+          atc --model=tsm_sim_new_bs${bs}.onnx \
               --framework=5 \
-              --output=tsm_bs1 \
+              --output=tsm_bs${bs} \
               --input_format=NCDHW \
               --log=error \
               --soc_version=${chip_name}
@@ -172,7 +184,7 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
               -   --log：日志级别。
               -   --soc\_version：处理器型号。
 
-              运行成功后生成 `tsm_bs1.om` 模型文件。
+          运行成功后生成 `tsm_bs${bs}.om` 模型文件。
 
 2. 开始推理验证。
 
@@ -183,43 +195,42 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
    2. 执行推理。
 
       ```shell
-      bs=1
       python -m ais_bench \
-          --model ./tsm_bs1.om \
+          --model ./tsm_bs${bs}.om \
           --input ./ucf101/preprocess_bin \
           --output ./inference_result \
-          --output_dirname bs$bs \
-          --outfmt TXT \
-          --batchsize $bs
-
+          --output_dirname out \
+          --outfmt TXT
       ```
+      推理后的输出默认在当前目录inference_result下。
 
    3. 精度验证。
 
       ```python
       python TSM_postprocess.py  \
-                --result_path=inference_result/bs1_summary.json \
-                --info_path=ucf101/ucf101.info \
+                --result_path=inference_result/out_summary.json \
+                --info_path=ucf101/ucf101.info
       ```
       - 参数说明：
         - --result_path：推理结果对应的文件夹
         - --info_path：数据集info文件路径
 
+   4. 性能验证。
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      ```shell
+      python3 -m ais_bench --model=tsm_bs${bs}.om --loop=20
+      ```
+      - 参数说明：
+      - --model：om模型路径。
+
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-- 精度
 
-  | Batch_size | Framework | Container | Precision | Dataset | Accuracy                | Ascend AI Processor |
-  | ---------- | --------- | --------- | --------- | ------- | ----------------------- | ------------------- |
-  | 1          | PyTorch   | NA        | fp16      | UCF101  | top1:0.9402 top5:0.9958 | Ascend 310          |
-  | 1          | PyTorch   | NA        | fp16      | UCF101  | top1:0.9402 top5:0.9958 | Ascend 310P         |
-
-- 性能
-
-  | Model | Batch Size | 310 (FPS/Card) | 310p (FPS/Card) | T4 (FPS/Card) | 310p/310 | 310p/T4 |
-  | ----- | ---------- | -------------- | --------------- | ------------- | -------- | ------- |
-  | TSM   | 1          | 24.80          | 171.04          | 98.01         | 7.16     | 1.81    |
-  | TSM   | 4          | 22.48          | 132.23          | 107.90        | 5.88     | 1.22    |
-  | TSM   | 8          | 20.25          | 123.814         | 100.0         | 6.11     | 1.23    |
-  | TSM   | 16         | 19.86          | 119.71          | 101.89        | 6.02     | 1.17    |
-  | TSM   | 32         | 18.90          | 99.78           | 100.91        | 5.27     | 0.98    |
+  | NPU芯片型号 | Batch Size | 数据集      | 精度(wer)                | 性能 (fps)   |
+  | ---------- | ---------- | ----------- | ------------------------ | ----------- |
+  |  310P3     | 1          | UCF-101     | top1:0.9448 top5:0.9963  | 194.07      |
+  |  310P3     | 4          | UCF-101     | top1:0.9448 top5:0.9963  | 161.49      |
+  |  310P3     | 8          | UCF-101     | top1:0.9448 top5:0.9963  | 157.07      |
+  |  310P3     | 16         | UCF-101     | top1:0.9448 top5:0.9963  | 156.06      |
+  |  310P3     | 32         | UCF-101     | top1:0.9448 top5:0.9963  | 143.98      |
+  |  310P3     | 64         | UCF-101     | top1:0.9448 top5:0.9963  | 134.72      |

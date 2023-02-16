@@ -90,6 +90,7 @@ def main():
             for batch in range(imgs.shape[0]):
                 file_.write(
                     f'{args.batch_size * i + batch} {label.cpu().numpy()[batch]}')
+                file_.write('\n')
 
             if imgs.shape[0] != args.batch_size:
                 imgs = F.pad(imgs, (0, 0, 0, 0, 0, 0, 0, 0, 0,
