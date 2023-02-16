@@ -1,0 +1,8 @@
+numpy
+opencv-python >= 4.1
+matplotlib
+pycocotools == 2.0.2
+tqdm
+pillow == 8.4.0
+tensorboard == 1.15.0
+torchvision==0.6.0

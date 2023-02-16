@@ -24,36 +24,28 @@ R-FCN是一个目标检测网络。位移不变性是卷积网络一个重要的
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/cv/detection
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}        # 克隆仓库的代码 
-  cd {code_path}         # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
+  | PyTorch 1.11 | numpy==1.21.6 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型需要的依赖。
   ```
   pip install -r requirements.txt
   ```
@@ -163,7 +155,7 @@ R-FCN是一个目标检测网络。位移不变性是卷积网络一个重要的
             ├── VOCreadxml.m
             ├── VOCwritexml.m
             └── VOCxml2struct.m           
-      ```
+    ```
 
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
@@ -198,7 +190,9 @@ R-FCN是一个目标检测网络。位移不变性是卷积网络一个重要的
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=数据集路径    
+     bash ./test/train_full_1p.sh --data_path=数据集路径  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=数据集路径  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -206,10 +200,12 @@ R-FCN是一个目标检测网络。位移不变性是卷积网络一个重要的
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=数据集路径 
+     bash ./test/train_full_8p.sh --data_path=数据集路径  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=数据集路径  # 8卡性能
      ```
 
-    --data_path参数填写数据集路径。
+    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
     模型训练脚本参数说明如下。  
    ```
@@ -230,22 +226,20 @@ R-FCN是一个目标检测网络。位移不变性是卷积网络一个重要的
 
 **表 2**  训练结果展示表
 
-| NAME    | Acc@1 |  FPS | Epochs | AMP_Type |
-| ------- | ----- | ---: | ------ | -------: |
-| 1p-NPU1.5 | -     |  9.684826 | 1      |        - |
-| 1p-NPU1.8  | -     |  10.078 | 1      |       O2 |
-| 8p-NPU1.5 | 0.702 | 70.3923 | 20    |        - |
-| 8p-NPU1.8  | 0.7048 | 75.219 | 20    |       O2 |
+| NAME    | Acc@1 |  FPS | Epochs | AMP_Type | Torch_Version |
+| :-----: | :---: | :--: | :----: | :------: | :------: |
+| 1p-NPU  | -     | 10.071 | 1      |       O2 |    1.8 |
+| 8p-NPU  | 0.7048 | 86.811 | 20    |       O2 |    1.8 |
 
 
 # 版本说明
 
 ## 变更
 
-2022.07.05：更新torch1.8版本，重新发布。
+2023.02.15：更新readme，重新发布。
 
 2020.07.08：首次发布。
 
-## 已知问题
+## FAQ
 
 无。

@@ -6,3 +6,4 @@ easydict
 matplotlib
 pyyaml 
 imageio
+numpy==1.21.6
