@@ -144,12 +144,18 @@ CRAFT模型是一个文本检测模型。
       3. 执行ATC命令。
 
          ```
+         mkdir CRAFT-pytorch/output
          cp craft_atc.sh CRAFT-pytorch/
-         bash craft_atc.sh Ascend${chip_name} # Ascend310P3
+         bash craft_atc.sh --model {onnx_model} --bs {batch_size} --soc Ascend${chip_name}
+         示例:
+         bash craft_atc.sh --model craft --bs 1 --soc Ascend310P3
          ```
+           - 参数说明：
+             - --model：onnx模型名称
+             - --bs：模型batchsize
+             - --soc: 使用的卡
 
-
-           运行成功后生成craft.om模型文件。
+            运行成功后生成craft_{bs}.om模型文件。
 
 4. 开始推理验证
 
@@ -162,14 +168,19 @@ CRAFT模型是一个文本检测模型。
       调用以下脚本，会打印出余弦相似度
       ```
       cp cosine_similarity.py CRAFT-pytorch/
-      python3 cosine_similarity.py
+      python3 cosine_similarity.py --bs {batch_size} --model_path {om_model_path}
+      示例:
+      python3 cosine_similarity.py --bs 1 --model_path ./output/craft_bs1.om
       ```
+      - 参数说明：
+        - --model_path：om模型所在路径
+        - --bs：模型batchsize
 
    4. 性能验证
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 -m ais_bench --model=craft.om --loop=20 --batchsize=1
+      python3 -m ais_bench --model=craft.om --loop=1000 --batchsize=1
       ```
 
       - 参数说明：
@@ -183,6 +194,11 @@ CRAFT模型是一个文本检测模型。
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
-| -------- | ---------- | ------ | ---- | ---- |
-|     310P3     |    1        |  随机数据  |   余弦相似度:0.999   |  140fps  |
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能     |
+| -------- |------------| ------ | ---- |--------|
+|     310P3     | 1          |  随机数据  |   余弦相似度:0.999   | 140fps |
+|     310P3     | 4          |  随机数据  |   余弦相似度:0.999   | 103fps |
+|     310P3     | 8          |  随机数据  |   余弦相似度:0.999   | 109fps |
+|     310P3     | 16         |  随机数据  |   余弦相似度:0.999   | 97fps  |
+|     310P3     | 32         |  随机数据  |   余弦相似度:0.999   | 92fps  |
+|     310P3     | 64         |  随机数据  |   余弦相似度:0.999   | 91fps  |
