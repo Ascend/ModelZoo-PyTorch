@@ -17,8 +17,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 - 参考实现：
 
   ```
-  url=https://github.com/lonePatient/albert_pytorch
-  branch=master 
+  url=https://github.com/lonePatient/albert_pytorch 
   commit_id=46de9ec6b54f4901f78cf8c19696a16ad4f04dbc
   ```
 
@@ -46,7 +45,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-- 安装依赖：
+- 安装依赖。
 
   ```
   pip install -r requirements.txt
@@ -58,7 +57,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 
 1. 获取数据集。
 
-   用户自行下载 `SST-2` 和 `STS-B` 数据集,在模型根目录下创建 `dataset` 目录，并放入数据集。
+   用户自行下载 `SST-2` 和 `STS-B` 数据集，在模型根目录下创建 `dataset` 目录，并放入数据集。
 
    数据集目录结构参考如下所示。
 
@@ -77,9 +76,12 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
               │──train.tsv
               │   ...              
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+
 
 ## 下载预训练模型
-下载`albert_base_v2`，在模型根目录下创建 `prev_trained_model` 目录，并放入预训练模型。
+下载 `albert_base_v2` 预训练模型，在模型根目录下创建 `prev_trained_model` 目录，并将预训练模型放置在该目录下。
 
 # 开始训练
 
@@ -110,10 +112,16 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 
      ```
      bash ./test/train_full_8p.sh --data_path=real_data_path         #8卡精度
-     bash ./test/train_performance_8p.sh --data_path=real_data_path  #8卡性能
-     bash ./test/train_eval_8p.sh --data_path=real_data_path         #8卡评测  
+     bash ./test/train_performance_8p.sh --data_path=real_data_path  #8卡性能 
      ```
 
+   - 单机8卡评测
+
+     启动8卡评测。
+
+     ```
+     bash ./test/train_eval_8p.sh --data_path=real_data_path  #8卡评测
+     ```
    --data\_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
@@ -152,7 +160,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
 
 ## 变更
 
-2022.08.24：首次发布
+2022.08.24：首次发布。
 
 ## FAQ
 
