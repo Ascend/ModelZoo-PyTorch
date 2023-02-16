@@ -22,6 +22,7 @@ from my_allennlp.allennlp.modules.elmo import Elmo
 import torch
 import argparse
 import numpy as np
+from tqdm import tqdm
 
 
 def main():
@@ -40,11 +41,13 @@ def main():
     similarity = 0
     nums = len(os.listdir(opt.inputs))
     cos = torch.nn.CosineSimilarity(dim=0)
-    for i in range(nums):
-        input_file = np.fromfile(opt.inputs + '{0}.bin'.format(i), dtype='int32').reshape((1, 8, 50))
+    for idx, i in enumerate(tqdm(range(nums))):
+        input_file = np.fromfile(opt.inputs + '{0}.bin'.format(i), 
+                                dtype='int32').reshape((1, 8, 50))
         input_file = torch.from_numpy(input_file)
         
-        om_output_file = np.fromfile(om_output_path + '{0}_0.bin'.format(i), dtype='float32').reshape((1, 8, 1024))
+        om_output_file = np.fromfile(os.path.join(om_output_path, '{0}_0.bin'.format(i)), 
+                                    dtype='float32').reshape((1, 8, 1024))
         om_output_file = torch.Tensor(om_output_file.flatten().astype(dtype='float64'))
         output = elmo.forward(input_file)
         

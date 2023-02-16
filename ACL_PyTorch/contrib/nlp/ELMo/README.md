@@ -80,12 +80,11 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
    ```
    pip3 install -r requirements.txt
-   git clone https://gitee.com/Ronnie_zheng/MagicONNX.git
-   cd MagicONNX/
-   git checkout dev
-   pip3 install .
-   cd ..
    ```
+
+3. 安装auto-optimizer工具
+
+   安装方式参考[auto-optimizer开源链接](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)。
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -176,7 +175,7 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
 
          ```
          python3 -m onnxsim elmo.onnx elmo_sim.onnx
-         python3 opt_onnx.py elmo_sim.onnx elmo_sim_opt.onnx
+         python -m auto_optimizer optimize elmo_sim.onnx elmo_sim_opt.onnx
          ```
 
          获得elmo_sim_opt.onnx文件。
@@ -246,7 +245,8 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
        python3 -m ais_bench \
            --model ./elmo_sim_opt.om \
            --input ./bin_path \
-           --output ./ 
+           --output ./ \
+           --batchsize 1
        ```
 
       -   参数说明：
@@ -254,17 +254,18 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
            -   --model：模型路径
            -   --input：数据集文件夹路径
            -   --output：输出路径
+           -   --batchsize: om模型的batchsize
 
       推理完成后在当前工作目录生成推理结果，命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
 
 
    3.  精度对比。
 
-       1. 调用脚本将onnx推理结果和om推理结果比对，计算余弦相似度，相似度大于99%即为达标。
+       1. 调用脚本将om的推理结果与模型在线推理结果进行比对，计算余弦相似度，相似度大于99%即为达标。
 
          ```
          python3 elmo_postprocess.py \
-             --onnx_input "bin_path/" \
+             --inputs "bin_path/" \
              --om_out ${output_path} \
              --option_file ./elmo_2x4096_512_2048cnn_2xhighway_options.json \
              --weight_file ./elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5
@@ -277,16 +278,22 @@ ELMo模型是用于训练得到单词词向量的，不同于以往常用的word
           - --option_file: 模型option文件路径
           - --weight_file: 模型weight文件路径
        
-       ${output_path}为推理结果的保存路径，与onnx推理结果比对余弦相似度为99.99%，精度达标。
+       ${output_path}为推理结果的保存路径，与onnx推理结果比对余弦相似度为99.60%。
 
 
    4.  性能对比。
 
-       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+       可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
        ```
-       python3 -m ais_bench --model ./elmo_sim_opt.om --loop=20 
+       python3 -m ais_bench --model ./elmo_sim_opt.om --loop 20 --batchsize 1
        ```
+
+       -   参数说明：
+
+           -   --model：模型路径
+           -   --loop：推理次数
+           -   --batchsize: om模型的batchsize
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
