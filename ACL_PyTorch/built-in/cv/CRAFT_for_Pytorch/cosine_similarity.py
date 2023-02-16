@@ -13,8 +13,15 @@
 # limitations under the License.
 # ============================================================================
 from ais_bench.infer.interface import InferSession
+import argparse
 import numpy as np
 import onnxruntime
+
+parser = argparse.ArgumentParser(description='CRAFT Text Detection')
+parser.add_argument('--model_path', default='output/craft_bs1.om', type=str, help='om model path')
+parser.add_argument('--bs', default=1, type=int, help='om model bs')
+args = parser.parse_args()
+
 
 def cos_sim(a, b):
     a_norm = np.linalg.norm(a)
@@ -22,10 +29,11 @@ def cos_sim(a, b):
     cos = np.dot(a, b)/(a_norm * b_norm)
     return cos
 
+
 if __name__ == '__main__':
     DEVICE = 0
-    input_data = np.random.random((1, 3, 640, 640)).astype("float32")
-    net = InferSession(DEVICE, "craft.om")
+    input_data = np.random.random((args.bs, 3, 640, 640)).astype("float32")
+    net = InferSession(DEVICE, args.model_path)
     output_data = net.infer([input_data])
     y = output_data[0].flatten()
     feature = output_data[1].flatten()
