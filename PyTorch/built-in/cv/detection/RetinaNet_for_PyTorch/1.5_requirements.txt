@@ -1,3 +1,4 @@
+torchvision==0.2.2.post3
 -r requirements/build.txt
 -r requirements/optional.txt
 -r requirements/runtime.txt
