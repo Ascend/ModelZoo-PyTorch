@@ -63,6 +63,9 @@ def main(cfg: FairseqConfig) -> None:
     if isinstance(cfg, argparse.Namespace):
         cfg = convert_namespace_to_omegaconf(cfg)
 
+    if cfg.distributed_training.distributed_world_size == 1:
+        torch.npu.set_device(cfg.distributed_training.device_id)
+        
     utils.import_user_module(cfg.common)
 
     if distributed_utils.is_master(cfg.distributed_training) and "job_logging_cfg" in cfg:
