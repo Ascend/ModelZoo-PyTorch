@@ -55,8 +55,6 @@ parser.add_argument('--apex-opt-level', default='O2', type=str,
                          'O0 for FP32 training, O1 for mixed precision training.')
 parser.add_argument('--loss-scale-value', default=128., type=float,
                     help='loss scale using in amp, default -1 means dynamic')
-parser.add_argument('--max_steps', default=None, type=int, metavar='N',
-                        help='number of total steps to run')
 args = parser.parse_args()
 
 if torch.__version__ >= "1.8":
@@ -161,8 +159,6 @@ def train():
             torch.npu.set_compile_mode(jit_compile=False)
         else:
             torch.npu.global_step_inc()
-        if args.max_steps and iteration > args.max_steps:
-            pass
         if iteration % epoch_size == 0:
             batch_iterator_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
             batch_iterator_sampler.set_epoch(epoch)

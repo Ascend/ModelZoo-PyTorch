@@ -59,8 +59,6 @@ parser.add_argument('--apex-opt-level', default='O2', type=str,
                          'O0 for FP32 training, O1 for mixed precision training.')
 parser.add_argument('--loss-scale-value', default=128., type=float,
                     help='loss scale using in amp, default -1 means dynamic')
-parser.add_argument('--max_steps', default=None, type=int, metavar='N',
-                        help='number of total steps to run')
 args = parser.parse_args()
 
 if not os.path.exists(args.save_folder):
@@ -158,8 +156,6 @@ def train():
             torch.npu.set_compile_mode(jit_compile=False)
         else:
             torch.npu.global_step_inc()
-        if args.max_steps and iteration > args.max_steps:
-            pass
         if iteration % epoch_size == 0:
             # create batch iterator
             batch_iterator = iter(data.DataLoader(dataset, batch_size, shuffle=True, num_workers=num_workers, collate_fn=detection_collate))
@@ -194,7 +190,7 @@ def train():
         batch_time = load_t1 - load_t0
         eta = int(batch_time * (max_iter - iteration))
 
-        if iteration >= max_iter:
+        if iteration > max_iter:
             pass
             
         print('Epoch:{}/{} || Epochiter: {}/{} || Iter: {}/{} || Loc: {:.4f} Cla: {:.4f} Landm: {:.4f} total_loss: {:.4f} || LR: {:.8f} || Batchtime: {:.4f} s || ETA: {}'
