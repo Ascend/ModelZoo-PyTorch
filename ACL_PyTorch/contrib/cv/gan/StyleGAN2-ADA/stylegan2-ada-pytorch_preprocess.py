@@ -49,21 +49,22 @@ import os
 import torch
 import argparse
 
+from tqdm import tqdm
+
 
 def main(args):
     # set up option
     z_dim = 512
     c_dim = 0
-    bs = args.batch_size
+    bs = 1
     num = args.num_input
     save_path = args.save_path
 
     # create save path dir
-    save_path = os.path.join(save_path, "bs{}".format(bs))
     os.makedirs(save_path, exist_ok=True)
 
     # generate input
-    for i in range(num):
+    for i in tqdm(range(num)):
         z = torch.randn([bs, z_dim])
         c = torch.empty([bs, c_dim])
         input = torch.cat((z, c), 1).numpy()

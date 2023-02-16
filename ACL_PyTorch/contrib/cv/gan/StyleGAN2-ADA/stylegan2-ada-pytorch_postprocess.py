@@ -49,6 +49,8 @@ import torch
 import os
 import numpy as np
 import argparse
+
+from tqdm import tqdm
 from perf_gpu import save_image_grid
 
 
@@ -57,15 +59,14 @@ def test_om(args):
     image_path = args.image_path
     bin_list = os.listdir(bin_path)
     bin_list.sort()
-    for i in range(len(bin_list)):
+    for i in tqdm(range(len(bin_list))):
         images = np.fromfile(os.path.join(bin_path, bin_list[i]), dtype=np.float32)
         images = torch.Tensor(images)
         images = images.reshape(-1, 3, 512, 512)
         bs = images.shape[0]
         grid_size = (4, 4) if bs == 16 else (1, 1)
-        save_path = os.path.join(image_path, "bs{}_om".format(bs))
-        os.makedirs(save_path, exist_ok=True)
-        save_image_grid(images, os.path.join(save_path, f'gen_image_{i:04d}') + ".png", drange=[-1, 1],
+        os.makedirs(image_path, exist_ok=True)
+        save_image_grid(images, os.path.join(image_path, f'gen_image_{i:04d}') + ".png", drange=[-1, 1],
                         grid_size=grid_size)
 
 

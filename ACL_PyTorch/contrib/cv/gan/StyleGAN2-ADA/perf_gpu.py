@@ -56,6 +56,8 @@ import argparse
 import PIL.Image
 import functools
 
+from tqdm import tqdm
+
 
 def save_image_grid(img, fname, drange, grid_size):
     lo, hi = drange
@@ -84,10 +86,9 @@ def main(args):
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     grid_size = (1, 1)
-    input_path = os.path.join(input_path, 'bs{}'.format(bs))
     input_files = os.listdir(input_path)
     input_files.sort()
-    image_path = os.path.join(image_path, 'bs{}_pkl'.format(bs))
+    image_path = os.path.join(image_path, 'pkl_img')
     os.makedirs(image_path, exist_ok=True)
     # load model
     start = time.time()
@@ -95,7 +96,7 @@ def main(args):
         G = pickle.load(f)['G_ema'].to(device)
 
     G.forward = functools.partial(G.forward, force_fp32=True)
-    for i in range(len(input_files)):
+    for i in tqdm(range(len(input_files))):
         input_file = input_files[i]
         input_file = os.path.join(input_path, input_file)
         input_file = np.fromfile(input_file, dtype=np.float32)
@@ -114,7 +115,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pkl_file', type=str, default='./G_ema_bs8_8p_kimg1000.pkl')
-    parser.add_argument('--input_path', type=str, default='./input')
+    parser.add_argument('--input_path', type=str, default='./pre_data')
     parser.add_argument('--image_path', type=str, default='./results')
     parser.add_argument('--batch_size', type=int, default=1)
     args = parser.parse_args()
