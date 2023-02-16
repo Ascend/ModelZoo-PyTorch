@@ -46,9 +46,9 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r 1.5_requirements.txt
+  pip install -r 1.5_requirements.txt  # Pytorch1.5版本
 
-  pip install -r 1.8_requirements.txt
+  pip install -r 1.8_requirements.txt  # Pytorch1.8版本
   ```
   > **说明:**
   > 只需执行一条对应的PyTorch版本依赖安装命令。
@@ -67,6 +67,8 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
         ├── train2017
         ├── val2017
     ```
+   > **说明：**
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 # 开始训练
 

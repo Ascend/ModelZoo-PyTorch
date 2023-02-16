@@ -48,9 +48,9 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r 1.5_requirements.txt
+  pip install -r 1.5_requirements.txt  # Pytorch1.5版本
 
-  pip install -r 1.8_requirements.txt
+  pip install -r 1.8_requirements.txt  # Pytorch1.8版本
   ```
   > **说明:**
   > 只需执行一条对应的PyTorch版本依赖安装命令。
