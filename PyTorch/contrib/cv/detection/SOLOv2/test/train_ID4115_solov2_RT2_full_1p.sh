@@ -144,7 +144,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'accu'
+if [[ $apex == "O0" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'accu'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'accu'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
