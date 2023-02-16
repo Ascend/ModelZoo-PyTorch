@@ -20,6 +20,11 @@ import torch
 from craft import CRAFT
 from collections import OrderedDict
 
+parser = argparse.ArgumentParser(description='CRAFT Text Detection')
+parser.add_argument('--trained_model', default='weights/craft_mlt_25k.pth', type=str, help='pretrained model')
+
+args = parser.parse_args()
+
 
 def copyStateDict(state_dict):
     if list(state_dict.keys())[0].startswith("module"):
@@ -37,18 +42,17 @@ def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
 
 
-parser = argparse.ArgumentParser(description='CRAFT Text Detection')
-parser.add_argument('--trained_model', default='weights/craft_mlt_25k.pth', type=str, help='pretrained model')
-
-args = parser.parse_args()
-
-if __name__ == '__main__':
+def pth2onnx(pth_path):
     # load net
-    net = CRAFT()     # initialize
-    print('Loading weights from checkpoint (' + args.trained_model + ')')
+    net = CRAFT()  # initialize
+    print('Loading weights from checkpoint (' + pth_path + ')')
     net.load_state_dict(copyStateDict(torch.load(args.trained_model, map_location='cpu')))
     net.eval()
     x = torch.randn(1, 3, 640, 640, requires_grad=False)
     dynamic_axes = {'input': {0: '-1'}}
     torch.onnx.export(net, (x), "craft.onnx", input_names=['input'], output_names=['y', 'feature'],
                       opset_version=11, verbose=False, dynamic_axes=dynamic_axes)
+
+
+if __name__ == '__main__':
+    pth2onnx(args.trained_model)

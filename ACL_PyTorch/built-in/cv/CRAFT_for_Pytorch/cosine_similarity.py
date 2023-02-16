@@ -30,10 +30,10 @@ def cos_sim(a, b):
     return cos
 
 
-if __name__ == '__main__':
-    DEVICE = 0
-    input_data = np.random.random((args.bs, 3, 640, 640)).astype("float32")
-    net = InferSession(DEVICE, args.model_path)
+def cal_eval(model_path, bs):
+    device = 0
+    input_data = np.random.random((bs, 3, 640, 640)).astype("float32")
+    net = InferSession(device, model_path)
     output_data = net.infer([input_data])
     y = output_data[0].flatten()
     feature = output_data[1].flatten()
@@ -48,3 +48,8 @@ if __name__ == '__main__':
     cos_2 = cos_sim(feature, onnx_feature)
     print("cosine_1:", cos_1)
     print("cosine_2:", cos_2)
+
+
+if __name__ == '__main__':
+    cal_eval(args.model_path, args.bs)
+
