@@ -11,7 +11,7 @@
 
 ## 简述
 
-mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer Text-to-Text Transformer 的简写。跟BERT一样，T5也是Google出品的预训练模型。T5的理念就是“万事皆可Seq2Seq”，它使用了标准的Encoder-Decoder模型，并且构建了无监督/有监督的文本生成预训练任务，最终将效果推向了一个新高度。
+MT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer Text-to-Text Transformer 的简写。跟BERT一样，T5也是Google出品的预训练模型。T5的理念就是“万事皆可Seq2Seq”，它使用了标准的Encoder-Decoder模型，并且构建了无监督/有监督的文本生成预训练任务，最终将效果推向了一个新高度。
 
 - 参考实现：
 
@@ -26,40 +26,31 @@ mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/nlp/
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套        | 版本                                                                            |
-  |-------------------------------------------------------------------------------| ------------------------------------------------------------ |
-  | 硬件 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)                                                                    |
-  | NPU固件与驱动   | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1)  |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)                        |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型需要的依赖。
   ```
-  pip3 install -r requirements.txt
+  pip install -r requirements.txt
   ```
+  
 - 配置运行环境。
 
   ```
@@ -74,7 +65,7 @@ mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
    
    可以联网直接运行脚本，会自动下载数据集wmt16。
 
-   也可以提前下载好数据集，放到 ./dataset 目录，然后软链接到指定路径，dataset目录结构如下
+   也可以提前下载好数据集，放到新建立的 ./dataset 目录中，然后软链接到指定路径，dataset目录结构如下。
 
    ```
    ├── dataset
@@ -103,7 +94,8 @@ mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
 
 ## 获取预训练模型
 
-- 从https://huggingface.co/google/mt5-small/tree/main 中获取预训练模型放到指定的位置如./mt5-small中。需要下载的文件如下：config.json, pytorch_model.bin, special_tokens_map.json, spiece.model, tokenizer_config.json。
+- 用户自行获取预训练模型并放到指定的位置，如存放到新建立的./mt5-small目录中。需要下载的文件如下：config.json， pytorch_model.bin，special_tokens_map.json，spiece.model，tokenizer_config.json。
+
 
 # 开始训练
 
@@ -112,7 +104,7 @@ mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
 1. 进入解压后的源码包根目录。
 
    ```
-   cd ${模型文件夹名称}/
+   cd /${模型文件夹名称}
    ```
 
 2. 运行训练脚本。
@@ -124,7 +116,9 @@ mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --model_path=real_path
+     bash ./test/train_full_1p.sh --model_path=real_path  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --model_path=real_path  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -132,58 +126,60 @@ mT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh  --model_path=real_path
+     bash ./test/train_full_8p.sh --model_path=real_path  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --model_path=real_path  # 8卡性能
      ```
 
+   - 单机8卡评测
+
+     启动8卡评测。
+
+     ```
+     bash ./test/train_eval_8p.sh --model_path=real_path
+     ```
+
+   --model_path参数填写预训练模型路径，写到一级目录即可。
+   
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
-    --model_name_or_path  ./mt5-small  // 模型名称或路径
-    --do_train \
-    --do_eval \
-    --source_lang en \        // 翻译的源语言
-    --target_lang ro \      // 翻译的目标语言
-    --source_prefix "translate English to Romanian: " \
-    --dataset_name wmt16 \    
-    --dataset_config_name ro-en \    
-    --output_dir ./tst-translation \    # 模型输出目录
-    --per_device_train_batch_size=4 \
-    --per_device_eval_batch_size=4 \
-    --overwrite_output_dir \
-    --predict_with_generate \
-    --pad_to_max_length \
-    --fp16 \
-    --use_combine_grad True \
-    --optim adamw_apex_fused_npu \
-    --use_combine_ddp True \
-    --half_precision_backend apex \
-    --max_step 1000 \
-    --save_step 5000
+   --addr                              //主机地址
+   --weight_decay                      //权重衰减
+   --seed                              //随机数种子设置
+   --npu_id                            //npu训练卡id号
+   --loss_scale                        //混合精度loss scale大小
+   --init_checkpoint                   //模型权重初始化
+   --train_batch_size                  //训练批次大小
+   --use_npu                           //使用npu进行训练
+   --num_train_epochs                  //训练周期数
    ```
-
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME   |    BLEU | 性能(it/s) |  steps | AMP_Type |
-|--------|--------:|---------:|-------:|---------:|
-| 1p-竞品A |       - |        - |   1000 |       O0 |
-| 1p-NPU |       - |      4.5 |   1000 |       O1 |
-| 8p-竞品A | 18.7866 |    24.32 |  57219 |       O0 |
-| 8p-NPU | 18.3343 |    30.88 |  57219 |       O1 |
+|   NAME   |  BLEU   | FPS(it/s) | steps | AMP_Type | Torch_Version |
+| :------: | :-----: | :-------: | :---: | :------: | :-----------: |
+| 1p-竞品A |    -    |     -     | 1000  |    O0    |      1.5      |
+| 8p-竞品A | 18.7866 |   24.32   | 57219 |    O0    |      1.5      |
+|  1p-NPU  |    -    |    4.5    | 1000  |    O1    |      1.8      |
+|  8p-NPU  | 18.3343 |   30.88   | 57219 |    O1    |      1.8      |
 
 
 # 版本说明
 
 ## 变更
 
-2022.11.14：首次发布
+2023.02.20：更新readme，重新发布。
 
-## 已知问题
+2022.11.14：首次发布。
 
-无。
+## FAQ
+
+无。	
 
 
 
