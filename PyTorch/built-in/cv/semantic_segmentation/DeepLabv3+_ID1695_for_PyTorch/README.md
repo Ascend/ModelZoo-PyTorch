@@ -40,6 +40,7 @@ DeepLabv3+是Google提出的DeepLab系列的第4代语义分割网络，此模�
   | :-----------: | :-------------------------------: |
   |  PyTorch 1.5  | torchvision==0.6.0；pillow==8.4.0 |
   |  PyTorch 1.8  | torchvision==0.9.1；pillow==9.1.0 |
+  |  PyTorch 1.11 | numpy==1.21.6 |
   
 - 环境准备指导。
 
