@@ -240,7 +240,7 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
         请用下列语句执行推理流程：
         
         ```
-        python3 -m ais_bench --model model/d7_bs1.om --input ./bin_save --output ./result --outfmt BIN --batchsize=1 --infer_queue_count=1
+        python3 -m ais_bench --model model/d7_bs1.om --input ./bin_save --output ./ --output_dirname=result --outfmt BIN --batchsize=1 --infer_queue_count=1
         ```
         
          参数说明：
@@ -248,6 +248,7 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
         - model：模型类型。
         - input：经过预处理后的bin文件路径。
         - output：输出文件路径。
+        - output_dirname：输出文件目录
         - outfmt：输出文件格式。
         - batchsize：批次大小。
         - infer_queue_count: 推理队列的数据最大数量。

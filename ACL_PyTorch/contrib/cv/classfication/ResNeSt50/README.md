@@ -141,6 +141,10 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
          ```
 
          获得resnest50.onnx文件。
+      2. 使用onnxsim简化模型
+         ```
+         python3 -m onnxsim --input-shape="1,3,224,224" --dynamic-input_shape resnest50.onnx resnest50_sim.onnx
+         ```
 
 
 
@@ -174,7 +178,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
          ```
          atc --framework=5 \
-             --model=./resnest50.onnx \
+             --model=./resnest50)_sim.onnx \
              --output=resnest50_bs${bs} \
              --input_format=NCHW \
              --input_shape="actual_input_1:${bs},3,224,224" \

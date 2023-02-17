@@ -75,8 +75,6 @@ end = time.time()
 last_idx = len(loader) - 1
 
 om_data = args.omfile
-result_file_name = list(os.listdir(om_data))[0]
-om_data = f"{om_data}/{result_file_name}/"
 files = list(set([file.split('_')[0] for file in os.listdir(om_data)]))
 files.sort()
 
