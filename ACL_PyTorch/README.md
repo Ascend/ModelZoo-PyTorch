@@ -726,6 +726,15 @@ Nlp
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Bert_Uncased_Huggingface">  Bert_Uncased_Huggingface </a>
+        </td>
+        <td>SQuAD 1.1</td>
+        <td>88.2%</td>
+	<td>328.64(bs4)</td>
+	<td nowrap="nowrap">bs x 384</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Ernie3_for_Pytorch">  Ernie3_for_Pytorch </a>
         </td>
         <td>Clue</td>
