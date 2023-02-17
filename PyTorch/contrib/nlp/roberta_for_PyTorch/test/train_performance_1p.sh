@@ -45,6 +45,10 @@ do
         source set_conda.sh
         echo "conda_name: $conda_name"
         source activate $conda_name
+    elif [[ $para == --device_id* ]];then
+        device_id=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 #校验是否传入data_path,不需要修改
@@ -68,6 +72,12 @@ fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
 fi
 
 #非平台场景时source 环境变量
@@ -95,7 +105,7 @@ cd ${test_path_dir}
 nohup taskset -c 0-23 python3.7 -u ${cur_path}/train.py $data_path \
     --restore-file $ROBERTA_PATH \
     --max-positions 512 \
-    --batch-size $MAX_SENTENCES \
+    --batch-size $batch_size \
     --max-tokens 8800 \
     --pad-length 70 \
     --task sentence_prediction \
@@ -116,7 +126,7 @@ nohup taskset -c 0-23 python3.7 -u ${cur_path}/train.py $data_path \
     --best-checkpoint-metric accuracy --maximize-best-checkpoint-metric \
     --distributed-world-size $DISTRIBUTED_WORLD_SIZE \
     --distributed-backend $DISTRIBUTED_BACKEND \
-    --device-id 0\
+    --device-id $device_id \
     --npu \
     --log-file $OUTPUT_DIR/1p_npu_performance.log \
     --no-progress-bar \
