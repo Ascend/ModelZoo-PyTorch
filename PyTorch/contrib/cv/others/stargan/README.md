@@ -1,4 +1,4 @@
-# StarGAN
+# StarGAN for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -26,52 +26,40 @@
   code_path=PyTorch/contrib/cv/others
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.11](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [21.0.2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.0.2](https://www.hiascend.com/software/cann/commercial?version=5.0.2) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 ## 准备数据集
 
 
 1. 获取数据集。
 
-   CelebA数据集可以从链接下载，也可以使用wget下载。
-
-   ```
-   wget -N https://www.dropbox.com/s/d1kjpkqklf0uw77/celeba.zip?dl=0
-   ```
-
-   将数据集移动到源码包根目录，并运行“unzip_dataset.sh”脚本。执行后在根目录的“./data”文件夹下生成数据集。
+   请用户自行下载CelebA数据集。将数据集移动到源码包根目录，并运行“unzip_dataset.sh”脚本。执行后在根目录的“./data”文件夹下生成数据集。
 
    ```
    bash ./unzip_dataset.sh
@@ -79,7 +67,7 @@
 
    数据集中包含两部分，一部分是训练图片，即128x128的CelebA人脸照片。另一部分是一个包含特征属性的list_attr_celeba.txt文件。
 
-   数据集目录结构参考：
+   数据集目录结构参考如下：
 
    ```
    ├ data
@@ -110,9 +98,9 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
      
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -120,12 +108,12 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  #8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  #8卡性能
      ```
 
-   --data_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
    
@@ -146,21 +134,21 @@
 
 **表 2**  训练结果展示表
 
-| Type | FPS       | Epochs   | AMP_Type |
-| :------: | :------:  | :------: | :------: |
-| NPU-1p   | 95     | 1      | O1       |
-| NPU-8p | 615   | 50      | O1       |
-| GPU-1p | 62 | 1 | O1 |
-| GPU-8p | 517 | 50 | O1 |
+| NAME | Acc@1  | FPS       | Epochs   | AMP_Type | Torch_Version |
+| :------: | :------:  | :------: | :------: | :------: | :------: |
+| 1p-竞品V | - | 62 | 1 | O1 | 1.5 |
+| 8p-竞品V | - | 517 | 50 | O1 | 1.5 |
+| NPU-1p   | -    | 95     | 1      | O1       | 1.5    |
+| NPU-8p | -  | 615   | 50      | O1       | 1.5    |
 
 # 版本说明
 
 ## 变更
 
-2022.12.27：更新readme，重新发布。
+2022.02.14：更新readme，重新发布。
 
 2021.07.08：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
