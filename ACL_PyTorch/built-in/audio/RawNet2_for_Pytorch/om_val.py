@@ -94,8 +94,20 @@ def produce_evaluation_file(data_loader, model, save_path, trial_path):
     fname_list = []
     score_list = []
     for batch_x, utt_id in tqdm(data_loader):
-        batch_x = batch_x.numpy().astype(np.float32)
-        batch_out = model.infer(batch_x)[0]
+        # handle the case where the last batch is not divisible
+        infer_batch = batch_x.shape[0]
+        padding = False
+        batch_size = model.get_inputs()[0].shape[0]
+        if infer_batch != batch_size:
+            batch_x = np.pad(batch_x, ((0, batch_size - infer_batch), (0, 0)), 'constant', constant_values=0)
+            padding = True
+        else:
+            batch_x = batch_x.numpy().astype(np.float32)
+
+        batch_out = model.infer([batch_x])[0]
+        if padding == True:
+            batch_out = batch_out[:infer_batch]
+
         batch_score = (batch_out[:, 1]).ravel()
         # add outputs
         fname_list.extend(utt_id)

@@ -224,7 +224,7 @@ def conv1d_to_conv2d(model, bs):
             weights = np.expand_dims(weights, axis=-2)
             model[name].value = weights
             prev_unsq = model.get_prev_node(node.inputs[0])
-            prev_unsq.attrs['axes'] = [0, 1]
+            prev_unsq.attrs['axes'] = [1, 2]
             next_unsq = model.get_next_nodes(node.outputs[0])[0]
             next_abs = model.get_next_nodes(next_unsq.outputs[0])[0]
             next_maxpool = model.get_next_nodes(next_abs.outputs[0])[0]

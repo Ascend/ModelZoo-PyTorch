@@ -53,18 +53,18 @@ RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征�
    
 
 3. 获取`OM`推理代码  
-   将推理部署代码放在`aasist`源码仓目录下。
+   将推理部署代码放在`2021/LA/Baseline-RawNet2`源码仓目录下。
    ```
    RawNet2_for_Pytorch
-    ├── pth2onnx.py        放到Baseline-RawNet2下
-    ├── modify_onnx.py     放到Baseline-RawNet2下
-    ├── evaluation.py      放到Baseline-RawNet2下
-    └── om_val.py          放到Baseline-RawNet2下
+    ├── pth2onnx.py        放到2021/LA/Baseline-RawNet2下
+    ├── modify_onnx.py     放到2021/LA/Baseline-RawNet2下
+    ├── evaluation.py      放到2021/LA/Baseline-RawNet2下
+    └── om_val.py          放到2021/LA/Baseline-RawNet2下
    ```   
 
 
 ## 准备数据集
-- 该模型使用`LA`数据集进行精度评估，下载[LA数据集](https://datashare.ed.ac.uk/handle/10283/3336)，将下载的数据集放到`Baseline-RawNet2`源码仓目录下，文件结构如下：
+- 该模型使用`LA`数据集进行精度评估，下载[LA数据集](https://datashare.ed.ac.uk/handle/10283/3336)，将下载的数据集放到`2021/LA/Baseline-RawNet2`源码仓目录下，文件结构如下：
    ```
    LA
    └── ASVspoof2019_LA_cm_protocols
@@ -83,7 +83,7 @@ RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征�
 将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
 
 1. 获取权重文件  
-   下载[权重下载](https://www.asvspoof.org/asvspoof2021/pre_trained_DF_RawNet2.zip)，放在`Baseline-RawNet2`目录下。
+   下载[权重下载](https://www.asvspoof.org/asvspoof2021/pre_trained_DF_RawNet2.zip)，放在`2021/LA/Baseline-RawNet2`目录下。
  
 
 2. 导出`ONNX`模型  
@@ -97,7 +97,7 @@ RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征�
    python3 pth2onnx.py --pth_model=pre_trained_DF_RawNet2.pth --onnx_model=rawnet2_bs1.onnx --batch_size=1
    ```
    修改导出的`onnx`模型，提升模型性能。
-   请先安装 [onnx改图接口工具](https://gitee.com/peng-ao/om_gener)  
+   请先安装 [onnx改图接口工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)   
    ```
    python3 -m onnxsim rawnet2_bs1.onnx rawnet2_bs1.onnx
    python3 modify_onnx.py --input_onnx=rawnet2_bs1.onnx --output_onnx=rawnet2_bs1.onnx
@@ -157,7 +157,7 @@ RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征�
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 2. 执行推理 & 精度验证  
-   运行`om_val.py`推理OM模型，合成语音默认保存在`output/wavs`文件夹下。
+   运行`om_val.py`推理OM模型，得到模型精度结果。
    ```
    python3 om_val.py --om=rawnet2_bs1.om --batch=1
    ```
@@ -175,3 +175,8 @@ RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征�
 |   芯片型号   | Batch Size |   数据集    | 精度EER  | 精度min-tDCF |     性能     |
 |:-----------:|:----------:|:--------:|:------:|:----------:|:----------:|
 | Ascend310P3 |     1      |      LA  | 4.867% |   0.113    | 230.08 fps |
+| Ascend310P3 |     4      |      LA  | 4.867% |   0.113    | 404.58 fps |
+| Ascend310P3 |     8      |      LA  | 4.867% |   0.113    | 543.79 fps |
+| Ascend310P3 |     16     |      LA  | 4.867% |   0.113    | 593.40 fps |
+| Ascend310P3 |     32     |      LA  | 4.867% |   0.113    | 608.81 fps |
+| Ascend310P3 |     64     |      LA  | 4.867% |   0.113    | 619.84 fps |
