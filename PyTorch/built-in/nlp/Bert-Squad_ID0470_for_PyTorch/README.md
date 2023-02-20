@@ -48,6 +48,7 @@ BERT-Large模型是一个24层，1024维，24个自注意头（self attention he
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型需要的依赖。
   ```
   pip install -r requirements.txt
   ```
