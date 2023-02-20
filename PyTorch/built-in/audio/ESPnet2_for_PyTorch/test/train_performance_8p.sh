@@ -56,8 +56,8 @@ else
     mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 fi
 
-asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_sp/train.log
-result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_sp/RESULTS.md
+asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_max_epoch${epochs}_sp/train.log
+result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_max_epoch${epochs}_sp/RESULTS.md
 
 
 #################启动训练脚本#################
@@ -83,8 +83,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 ITERS=`grep "epoch results:" $asr_log |head -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
-MINUTIES=`grep "epoch results:" $asr_log |tail -n 1 | awk -F " time=" '{print$2}' | awk -F " " '{print$1}'`
-FPS=`awk 'BEGIN{printf "%.2f",('$ITERS' / ('$MINUTIES' * 60))}'`
+SECONDS=`grep "elapsed time" $asr_log | awk '{print$14}'`
+FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' * '$epochs') / '$SECONDS')}'`
 
 #输出训练精度,需要模型审视修改
 dev_accuracy=`grep "valid.acc.ave/dev" ${result} | tail -n 1 | awk -F "|" '{print$5}'`
