@@ -27,6 +27,10 @@ batch_size=64
 # 指定训练所使用的npu device卡id
 device_id=0
 
+
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -34,6 +38,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     fi
@@ -92,6 +98,7 @@ python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
     --cfg-options optimizer.lr=0.001 data.samples_per_gpu=${batch_size} \
     --seed 0  \
     --local_rank 0 \
+    --precision_mode ${precision_mode} \
     --npu_ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -120,7 +127,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
