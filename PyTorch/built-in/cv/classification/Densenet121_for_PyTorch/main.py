@@ -384,7 +384,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         optimizer.zero_grad()
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
-        if i > 100 and args.perf:
+        if i > 1000 and args.perf:
             break
         data_time.update(time.time() - end)
 

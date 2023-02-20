@@ -85,7 +85,7 @@ export ENABLE_RUNTIME_V2=1
 echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
 echo "Runtime2.0 BLACKLIST: $RUNTIME_V2_BLACKLIST"
 
-sed -i "s|if self.iter >= 100:pass|if self.iter >= 100:break|g" ${test_path_dir}/../yolox/core/trainer.py
+sed -i "s|if self.iter >= 100:pass|if self.iter >= 1000:break|g" ${test_path_dir}/../yolox/core/trainer.py
 sed -i "s|for self.epoch in range(self.start_epoch, self.max_epoch):|for self.epoch in range(self.start_epoch, 1):|g" ${test_path_dir}/../yolox/core/trainer.py
 
 #################启动训练脚本#################

@@ -450,7 +450,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
             print("args.graph_mode")
             torch.npu.enable_graph_mode()
 
-        if i > 100:
+        if i > 1000:
             pass
         # measure data loading time
         data_time.update(time.time() - end)
