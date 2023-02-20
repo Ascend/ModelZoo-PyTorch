@@ -114,7 +114,7 @@
    获取[fast_res50_256x192.pth](https://drive.google.com/open?id=1kQhnMRURFiy7NsdS8EFL-8vtqEXOgECn)，在工程目录下新建文件夹models，将pth文件放置到models文件夹内：
 
    ```
-   mkdir -p modelsu
+   mkdir -p models
    mv fast_res50_256x192.pth models
    ```
 
@@ -245,7 +245,7 @@
              -   --batchsize：推理模型对应的batchsize。
 
 
-        推理后的输出默认在当前目录outputs/bs32下。
+        推理后的输出默认在当前目录outputs/bs1下。
 
    3.  精度验证。
 

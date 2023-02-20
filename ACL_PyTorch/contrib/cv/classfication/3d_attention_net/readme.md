@@ -235,7 +235,7 @@
              -   --outfmt: 输出数据格式。
              -   --batchsize：推理模型对应的batchsize。
 
-        推理后的输出默认在当前目录outputs/bs32下。
+        推理后的输出默认在当前目录outputs/bs1下。
 
    3.  精度验证。
 
