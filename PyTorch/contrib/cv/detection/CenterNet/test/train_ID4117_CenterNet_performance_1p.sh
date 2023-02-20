@@ -22,7 +22,7 @@ device_id=0
 precision_mode="allow_mix_precision"
 
 # 使能RT2.0
-export ENABLE_RUNTIME_V2=1
+export ENABLE_RUNTIME_V2=0
 echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
 
 # 调试
@@ -184,7 +184,11 @@ echo "Final Train Accuracy : ${train_accuracy}"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 #获取性能数据，不需要修改
 #吞吐量
