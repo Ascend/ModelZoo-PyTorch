@@ -46,7 +46,7 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
     | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.RC1 | -          |
     | Python    | 3.7.5   | -          |
-    
+    | Torch    | 1.11   | -          |   
     说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
 
@@ -76,7 +76,7 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
 ## 准备数据集
 
 1. 获取原始数据集  
-    ​获取Imagenet数据集：imagenet2012，下载其中ILSVRC2012/图片及其标注文件（images， val_label.txt），将数据集置于convmixer_1536_20根目录下，sdsad数据集目录结构如下：
+    ​获取Imagenet数据集：imagenet2012，下载其中ILSVRC2012/图片及其标注文件（images， val_label.txt），将数据集置于convmixer_1536_20根目录下，数据集目录结构如下：
     ```
     ILSVRC2012
     ├── val_label.txt
@@ -92,13 +92,15 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
     数据预处理，将原始数据集转换为模型输入的数据。
     执行convmixer_preprocess.py脚本，完成预处理。
     ```bash
+    datasets_path=./ILSVRC2012/
+    batch_size=1
     python3 convmixer_preprocess.py \
-    ​    --image-path ${datasets_path}/images/ \
-    ​    --prep-image ./prep_image_bs${batch_size} \
-    ​    --batch-size ${batch_size}
+        --image-path ${datasets_path}/images/ \
+        --prep-image ./prep_image_bs${batch_size} \
+        --batch-size ${batch_size}
     ```
     参数说明：
-    + --datasets_path: 原始数据验证集所在路径。
+    + --image-path: 原始数据验证集所在路径。
     + --batch_size: 每个后处理文件所包含的数据量。
     
     
@@ -174,18 +176,19 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
 
 1. 安装ais_bench推理工具，请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
     ```bash
-    python3 -m ais_bench
-        --model ./convmixer_1536_20_${batch_size} \
-        --input ./data/kinetics-skeleton/ \
-        --output result  \
-        --output_dirname ./st_gcn_bs${bs}_out
-        --batchsize ${batch_size}
+    mkdir result
+    python3 -m ais_bench \
+        --model ./convmixer_1536_20_bs1.om \
+        --input ./prep_image_bs1/ \
+        --output ./result \
+        --batchsize ${batch_size} \
+        --format TXT
     ```
     参数说明：
     + --model: OM模型路径
     + --input: 存放预处理后数据的目录路径
     + --output: 用于存放推理结果的父目录路径
-    + --output_dirname: 用于存放推理结果的子目录路径，位于--output指定的目录下
+    + --format : 推理结果的数据格式
     + --batchsize: 模型一次处理多少样本
 
 2. 性能验证  
@@ -204,12 +207,14 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
     
     此步骤需要将NPU服务器上OM模型的推理结果复制到GPU服务器上，然后再GPU服务器上执行后处理脚本，根据推理结果计算OM模型的精度：
     ```bash
-    python3 convmixer_eval_acc.py --folder-davinci-target ./result/outputs_bs1_om/ --annotation-file-path ./ILSVRC2012/val_label.txt --result-json-path ./result --json-file-name result_bs1.json --batch-size ${batch_size}
+    python3 convmixer_eval_acc.py --folder-davinci-target ./result/ --annotation-file-path ./ILSVRC2012/val_label.txt --result-json-path ./ --json-file-name result_bs${batch_size}.json --batch-size ${batch_size}
     ```
     参数说明：
-    + --result_dir: 存放推理结果的目录路径
-    + --label_path: 标签文件所在路径
-    
+    + --folder-davinci-target: 存放推理结果的目录路径
+    + --annotation-file-path: 标签文件所在路径
+    + --result-json-path: 推理结果文件保存路径
+    + --json-file-name: 推理结果文件名
+    + --batch-size: 推理所使用的batchsize
     运行成功后，程序会打印出模型的精度指标：
     ```
     top1:81.37%
@@ -222,9 +227,12 @@ ConMixer在思想上类似于ViT和MLP-Mixer，它直接将patch作为输入，�
 
 | 芯片型号 | Batch Size | 数据集       | 精度        | 性能               |
 | -------- | ---------- | ------------ | ----------- | ------------------ |
-| 310P3    | 1          | Imagenet2012 | top1:81.37% | 102.91136243948735 |
-| 310P3    | 4          | Imagenet2012 | top1:81.37% | 95.795763362348555 |
-
+| 310P3    | 1          | Imagenet2012 | top1:81.37% | 113.42 |
+| 310P3    | 4          | Imagenet2012 | top1:81.37% | 105.39 |
+| 310P3    | 8          | Imagenet2012 | top1:81.37% | 112.20 |
+| 310P3    | 16          | Imagenet2012 | top1:81.37% | 113.84 |
+| 310P3    | 32          | Imagenet2012 | top1:81.37% | 112.64 |
+| 310P3    | 64          | Imagenet2012 | top1:81.37% | 110.05 |
 说明：
 
 Top1表示预测结果中概率最大的类别与真实类别一致的概率，其值越大说明分类模型的效果越优

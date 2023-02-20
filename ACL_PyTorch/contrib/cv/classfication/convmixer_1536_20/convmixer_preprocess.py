@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import math
 import torch
 import argparse
 import numpy as np
-
+from tqdm import trange
 from PIL import Image
 from torchvision import transforms
 
@@ -56,10 +56,7 @@ def img_preprocess(args):
 
     suffix_len = -5
     file_list.sort(key=lambda x:int(x[suffix_len-8:suffix_len]))
-    for i in range(int(np.ceil(len(file_list) / args.batch_size))):
-        if i % 100 == 0:
-            print("has generated input {:05d}...".format(i*args.batch_size))
-
+    for i in trange(int(np.ceil(len(file_list) / args.batch_size))):
         for idx in range(args.batch_size):
             file_index = i * args.batch_size + idx
             if file_index < len(file_list):

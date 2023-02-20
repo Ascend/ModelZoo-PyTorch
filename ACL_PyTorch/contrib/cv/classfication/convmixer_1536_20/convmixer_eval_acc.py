@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import sys
 import json
 import time
 import argparse
+from tqdm import tqdm
 import numpy as np
 
 
@@ -66,7 +67,8 @@ def load_statistical_predict_result(filepath, index):
     """
     the prediction esult file data extraction
     """
-    with open(filepath, 'r')as f:
+
+    with open(filepath, 'r') as f:
         for i, index_data in enumerate(f):
             if i == index:
                 data = index_data
@@ -99,7 +101,8 @@ def create_visualization_statistical_result(prediction_file_path,
     resCnt = 0
     n_labels = 0
     count_hit = np.zeros(topn)
-    for tfile_name in os.listdir(prediction_file_path):
+    print(prediction_file_path)
+    for tfile_name in tqdm(os.listdir(prediction_file_path)):
         for i in range(batch_size):
             count += 1
             temp = tfile_name.split('.')[0]
