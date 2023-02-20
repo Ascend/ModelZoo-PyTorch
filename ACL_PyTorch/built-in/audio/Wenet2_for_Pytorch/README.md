@@ -191,7 +191,7 @@ ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code
 
 1. 模型转换。
 
-   本模型基于开源框架PyTorch训练的Tacotron2进行模型转换。使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   本模型基于开源框架PyTorch训练的Wenet进行模型转换。使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    下载权重链接：https://github.com/wenet-e2e/wenet/blob/main/docs/pretrained_models.md
 
@@ -208,9 +208,10 @@ ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code
         mkdir -p ${wenet_path}/examples/aishell/s0/onnx/
         cp -r 20210601_u2pp_conformer_exp/20210601_u2++_conformer_exp/* ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp
         cp -r examples/aishell/s0/data/test/data.list ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/
+        ```
    ```
         
-        ```
+   ```
         cp -r examples/aishell/s0/data/test/text ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/
         cp -r ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/global_cmvn ${wenet_path}/exp/20210601_u2++_conformer_exp
         cd  ${code_path}
@@ -220,7 +221,7 @@ ${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code
         cp -r adaptdecoder.py ${wenet_path}/examples/aishell/s0/
         cp -r *.sh ${wenet_path}/examples/aishell/s0/
         ```
-        
+
    2. 导出onnx文件。
 
       1. 运行以下命令导出对应的onnx。
@@ -354,8 +355,18 @@ python3 wenet/bin/recognize_om.py --config=${wenet_path}/examples/aishell/s0/exp
 
 # 模型推理性能<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-性能参考下列数据。
+性能参考下列数据，因为GPU上decoder部分存在性能bug(比onnxruntime还慢)，我们仅提供encoder部分（对应ctc_greedy_search和ctc_prefix_beam_search）的性能，在数据测试集上的打点性能(最优batch)。
+
+非流式
 
 | 模型              | 310P性能   | T4性能     | 310P/T4 |
 |-----------------|----------|----------|---------|
-| Wenet | 226fps | 213fps | 1.061 |
+| Wenet动态shape bs=32） | 40s      | 42s    | 1.05 |
+| Wenet分档 (bs=32) | 37s | 42s | 1.13 |
+
+流式(纯推理)
+
+| 模型           | 310P性能 | T4性能  | 310P/T4 |
+| -------------- | -------- | ------- | ------- |
+| Wenet（bs=64） | 2439fps  | 1714fps | 1.42    |
+
