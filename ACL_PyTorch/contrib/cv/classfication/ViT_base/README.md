@@ -111,7 +111,7 @@
          ```
          # 以bs1为例
          mkdir -p models/onnx
-         python3 Vit_base_pth2onnx.py --batch_size 1 --model_path B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz --save_dir models/onnx
+         python3 Vit_base_pth2onnx.py --batch_size 1 --model_path B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz --save_dir models/onnx --model_name vit_base_patch32_224
          ```
 
          获得vit_base_bs1.onnx文件。
@@ -119,10 +119,13 @@
       2. 优化ONNX文件。
 
          ```
+         # bs1为例
          python3 -m onnxsim models/onnx/vit_base_bs1.onnx models/onnx/vit_base_bs1_sim.onnx
+         # 输入参数: 1.原始模型文件路径 2.优化模型文件路径 3.batchsize
+         python3 opt_vit.py models/onnx/vit_base_bs1_sim.onnx models/onnx/vit_base_bs1_opt.onnx 1
          ```
 
-         获得vit_base_bs1_sim.onnx文件。
+         获得vit_base_bs1_opt.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -155,7 +158,7 @@
          ```
          # bs1为例
          mkdir -p models/om
-         atc --framework=5 --model=models/onnx/vit_base_bs1_sim.onnx --output=models/om/vit_base_bs1 --input_format=NCHW --input_shape="input:1,3,224,224" --log=debug --soc_version=${chip_name} --precision_mode=allow_mix_precision --modify_mixlist=ops_info.json --enable_small_channel=1 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         atc --framework=5 --model=models/onnx/vit_base_bs1_opt.onnx --output=models/om/vit_base_bs1 --input_format=NCHW --input_shape="input:1,3,224,224" --log=debug --soc_version=${chip_name} --enable_small_channel=1 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
          ```
 
          - 参数说明：
@@ -223,17 +226,19 @@
 
 | 模型                     | 仓库pth精度 | 310离线推理精度 | 310P离线推理精度 |
 |--------------------------|-------------|-----------------|------------------|
-| ViT_base_patch32_224 bs1 | top1:80.724 | top1:80.714     | top1:80.68       |
-| ViT_base_patch32_224 bs8 | top1:80.724 | top1:80.714     | top1:80.68       |
+| ViT_base_patch32_224 bs1 | top1:80.724 | top1:80.714     | top1:80.65       |
+| ViT_base_patch32_224 bs8 | top1:80.724 | top1:80.714     | top1:80.65       |
+
 
    2.性能对比
 
-| Throughput | 310      | 310P      | T4       | 310P/310 | 310P/T4 |
-|------------|----------|-----------|----------|----------|---------|
-| bs1        | 321.2008 | 437.4932  | 454.6053 | 1.36     | 0.96    |
-| bs4        | 444.8147 | 913.6696  | 1087.731 | 2.05     | 0.84    |
-| bs8        | 433.9089 | 1136.1216 | 1325.098 | 2.62     | 0.86    |
-| bs16       | 424.4384 | 1155.0095 | 1562.866 | 2.72     | 0.74    |
-| bs32       | 413.3992 | 1189.4850 | 1873.690 | 2.88     | 0.63    |
-| bs64       | 400.4219 | 1021.1106 | 1832.656 | 2.55     | 0.56    |
-| 最优batch  | 444.8147 | 1189.4850 | 1873.690 | 2.67     | 0.63    |
+| Throughput |      310 |      310P | 310P/310 |
+|------------|----------|-----------|----------|
+| bs1        | 321.2008 |  412.4932 |     1.28 |
+| bs4        | 444.8147 | 1074.8210 |     2.42 |
+| bs8        | 433.9089 | 1319.7835 |     3.04 |
+| bs16       | 424.4384 | 1511.8729 |     3.56 |
+| bs32       | 413.3992 | 1489.4850 |     3.60 |
+| bs64       | 400.4219 | 1301.1106 |     3.25 |
+| 最优batch  | 444.8147 | 1511.8729 |     3.40 |
+
