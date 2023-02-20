@@ -160,7 +160,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+if [[ $precision_mode == "O0" ]];then
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
 else
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
