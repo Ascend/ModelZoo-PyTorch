@@ -83,11 +83,11 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
    cd yolact_edge
    git reset a9a00281b33b3ac90253a4939773308a8f95e21d --hard
    ```
-   clone源码仓后，需要将pth2onnx.py、yolact.patch、preprocess.py、postprocess.py、requirements.txt文件拷贝到源码仓内。目录结构如下：
+   clone源码仓后，需要将pth2onnx.py、yolact_edge.patch、preprocess.py、postprocess.py、requirements.txt文件拷贝到源码仓内。目录结构如下：
    ```
    yolact_edge
    ├── pth2onnx.py
-   ├── yolact.patch
+   ├── yolact_edge.patch
    ├── preprocess.py
    ├── postprocess.py
    ├── requirements.txt
@@ -129,7 +129,7 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
    执行preprocess.py脚本，完成预处理。
 
    ```
-   python3 preprocess.py 
+   python3 preprocess.py --image_path ./data/coco/val2017 --json_file ./data/coco/annotations/instances_val2017.json --save_path ./inputs
    ```
    - 参数说明
       - image_path：图片所在文件夹，默认为 ./data/coco/val2017
@@ -203,10 +203,10 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
 
       3. 执行ATC命令。
 
-         ```
+         ```shell
          atc --model yolact_edge.onnx \
              --framework 5 \
-             --output yolact_edge \
+             --output yolact_edge_bs${batch_size} \
              --log error \
              --soc_version Ascend${chip_name} \
              --input_shape "image:${batch_size},3,550,550"
@@ -221,7 +221,7 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           运行成功后生成yolact_edge.om模型文件。
+           运行成功后生成`yolact_edge_bs${batch_size}.om`模型文件。
 
 2. 开始推理验证。
 
@@ -231,8 +231,8 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
 
    2. 执行推理。
 
-      ```
-      python3 -m ais_bench --model yolact_edge.om --input inputs/bin_file/ --output output
+      ```shell
+      python3 -m ais_bench --model yolact_edge_bs${batch_size}.om --input inputs/bin_file/ --output ./ --output_dirname output
       ```
 
       -  参数说明：
@@ -248,12 +248,17 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
       调用脚本与数据集标签比对，可以获得mAP数据。
 
       ```
-      python3 postprocess.py --file_path output/${timestamp} 
+      python3 postprocess.py --file_path output \
+            --trained_model yolact_edge_resnet50_54_800000.pth \
+            --config yolact_edge_resnet50_config \
+            --image_path ./data/coco/val2017 \
+            --json_file ./data/coco/annotations/instances_val2017.json \
+            --ids_path ./inputs/ids.json
       ```
 
       - 参数说明：
 
-        - file_path：推理结果所在路径，timestamp为自动生成的时间戳。
+        - file_path：推理结果所在路径，默认为output。
         - trained_model：模型权重，默认为 yolact_edge_resnet50_54_800000.pth。
         - config：模型配置，默认为 yolact_edge_resnet50_config。
         - image_path：原始图片的存储路径，默认为 ./data/coco/val2017。
@@ -279,10 +284,10 @@ YolactEdge模型是一个边缘设备上的实时实例分割模型。YolactEdge
 调用ACL接口推理计算，性能参考下列数据。
 
 | 芯片型号 | Batch Size   | 数据集 | 精度(mAP) | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-|    310P    |      1    |    COCO    |     27.96     |      270.35       |
-|    310P    |       4   |    COCO    |          |     201.08        |
-|    310P    |       8   |    COCO    |          |     175.41        |
-|    310P    |      16    |    COCO    |          |    178.71         |
-|    310P    |     32     |    COCO    |          |    183.77         |
-|    310P    |    64      |    COCO    |          |    183.11         |
+| --------- | ---------- | ---------- | -------- | ----------------- |
+|    310P    |    1      |    COCO    |   27.96  |      270.35       |
+|    310P    |    4      |    COCO    |          |      201.08       |
+|    310P    |    8      |    COCO    |          |      175.41       |
+|    310P    |    16     |    COCO    |          |      178.71       |
+|    310P    |    32     |    COCO    |          |      183.77       |
+|    310P    |    64     |    COCO    |          |      183.11       |

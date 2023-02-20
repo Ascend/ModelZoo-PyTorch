@@ -112,7 +112,7 @@ index b6efdf7..2de113e 100644
  
 +            return outs, proto_out
 +        
-+    def postprocess(self, outs, proto_out)
++    def postprocess(self, outs, proto_out):
          with timer.env('pred_heads'):
              pred_outs = { 'loc': [], 'conf': [], 'mask': [], 'priors': [] }
  

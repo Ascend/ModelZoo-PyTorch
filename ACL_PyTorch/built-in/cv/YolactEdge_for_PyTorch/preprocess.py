@@ -16,6 +16,7 @@ import numpy as np
 import json
 import os
 import argparse
+from tqdm import tqdm
 from yolact_edge.data import COCODetection
 from yolact_edge.utils.augmentations import BaseTransform
 
@@ -42,7 +43,7 @@ if __name__ == '__main__':
         os.mkdir(bin_path)
     with open(json_path, 'w') as f:
         json.dump(ids, f)
-    for it, image_idx in enumerate(range(dataset_size)):
+    for it, image_idx in tqdm(enumerate(range(dataset_size))):
         img, gt, gt_masks, h, w, num_crowd = dataset.pull_item(image_idx)
         batch = img.unsqueeze(0)
         data = batch.numpy()
