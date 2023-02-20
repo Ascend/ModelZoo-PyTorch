@@ -5,7 +5,7 @@ progress
 matplotlib
 easydict
 scipy
-torchvision==0.9.1
+torchvision==0.2.2.post3
 pillow==8.4.0
 decorator
 sympy
