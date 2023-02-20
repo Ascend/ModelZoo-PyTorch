@@ -82,8 +82,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 ITERS=`grep "epoch results:" $asr_log |head -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
-MINUTIES=`grep "epoch results:" $asr_log |tail -n 1 | awk -F " time=" '{print$2}' | awk -F " " '{print$1}'`
-FPS=`awk 'BEGIN{printf "%.2f",('$ITERS' / ('$MINUTIES' * 60))}'`
+SECONDS=`grep "elapsed time" $asr_log | awk '{print$14}'`
+FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' * '$epochs') / '$SECONDS')}'`
 
 #打印，不需要修改
 echo "Final Performance iters/sec : $FPS"
