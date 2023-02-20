@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 
 import os
 import sys
+from tqdm import trange
+import argparse
 sys.path.append("./LResNet")
 import pickle
 from glob import glob
@@ -35,7 +37,7 @@ def jpg2bin(data_path, save_dir):
     ])
 
     bins, issame_list = pickle.load(open(data_path, 'rb'), encoding='bytes')
-    for i in range(len(bins)):
+    for i in trange(len(bins)):
         _bin = bins[i]
         img_np_arr = np.frombuffer(_bin, np.uint8)
         img = cv2.imdecode(img_np_arr, cv2.IMREAD_COLOR)
@@ -48,8 +50,6 @@ def jpg2bin(data_path, save_dir):
         img.tofile(os.path.join(save_dir, str(i) + ".bin"))
         img_flip.tofile(os.path.join(save_dir, str(i) + "_flip" + ".bin"))
 
-        if (i+1) % 1000 == 0:
-            print('loading bin', (i+1))
 
     np.save('data/lfw_list', np.array(issame_list))
     print('success load data')
@@ -65,15 +65,24 @@ def bin2info(bin_dir, data_info, width, height):
 
 
 if __name__ == '__main__':
-    file_type = sys.argv[1]
-    data_path = sys.argv[2]
-    info_path = sys.argv[3]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file_type', type=str, default="jpg")
+    parser.add_argument('--data_path', type=str, default="./data/lfw.bin")
+    parser.add_argument('--info_path', type=str, default="./data/lfw")
+    parser.add_argument('--width;', type=str, default="112")
+    parser.add_argument('--height;', type=str, default="112")
+
+
+    args = parser.parse_args()
+
+    file_type = args.file_type
+    data_path = args.data_path
+    info_path = args.info_path
+
     if file_type == 'bin':
-        width = sys.argv[4]
-        height = sys.argv[5]
-        assert len(sys.argv) == 6, 'The number of input parameters must be equal to 5'
-        bin2info(data_path, info_path, width, height)
+        width = args.width
+        height = args.height
     elif file_type == 'jpg':
-        assert len(sys.argv) == 4, 'The number of input parameters must be equal to 3'
         jpg2bin(data_path, info_path)
 

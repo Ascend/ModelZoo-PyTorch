@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License
-
+import argparse
 import sys
 sys.path.append("./LResNet")
 
@@ -51,4 +51,9 @@ def pth2onnx(input_file, output_file, batch_size):
 
 
 if __name__ == '__main__':
-    pth2onnx(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--source', type=str, default="./model/model_ir_se100.pth")
+    parser.add_argument('--target', type=str, default="./model/model_ir_se100_bs16.onnx")
+    parser.add_argument('--batchsize', type=int, default="1")
+    args = parser.parse_args()
+    pth2onnx(args.source, args.target, args.batchsize)

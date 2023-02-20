@@ -1,382 +1,220 @@
 # LResNet100E-IR Onnx模型端到端推理指导
 
-+ [1模型概述](#1 模型概述)
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
 
-  + [1.1 论文地址](##1.1 论文地址)
-  + [1.2 代码地址](##1.2 代码地址)
+----
+# 概述
 
-+ [2 环境说明](#2 环境说明)
+在本文中，作者首先介绍了一种附加角裕度损失（ArcFace），它不仅具有清晰的几何解释还显著增强了辨别力。由于ArcFace容易受到大量标签的影响噪声，我们进一步提出了子中心ArcFace，其中每个类包含K个子中心，训练样本只需要接近K个正子中心中的任何一个。副中心ArcFace鼓励一个占主导地位的子类，其中包含大多数干净的面部和包括硬面部或噪声面部的非优势子类。基于这种自行隔离，我们提高了性能通过在巨大的真实世界噪音下自动净化原始网页。除了鉴别特征嵌入，我们还探索逆问题，将特征向量映射到人脸图像。无需培训任何额外的发生器或鉴别器预训练的ArcFace模型只能通过以下方式为训练数据内外的受试者生成保持身份的人脸图像使用网络梯度和批量归一化（BN）先验。大量实验表明，ArcFace可以增强识别特征嵌入以及增强生成人脸合成。
 
-  + [2.1 深度学习框架](##2.1 深度学习框架)
-  + [2.2 python第三方库](##2.2 python第三方库)
++ 论文  
+    [LResNet100E-IR论文](https://arxiv.org/pdf/1801.07698.pdf)  
+    Jiankang Deng, Jia Guo, Jing Yang, Niannan Xue, Irene Kotsia, and Stefanos Zafeiriou
 
-+ [3 模型转换](#3 模型转换)
++ 参考实现：  
+    https://github.com/TreB1eN/InsightFace_Pytorch
 
-  + [3.1 pth转onnx模型](##3.1 pth转onnx模型)
-  + [3.2 onnx转om模型](##3.2 onnx转om模型)
+## 输入输出数据
++ 模型输入    
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | image | FLOAT32 | NCHW | batch_size x 3 x 112 x 112 | 
 
-+ [4 数据集预处理](#4 数据集预处理)
-
-  + [4.1 数据集获取](##4.1 数据集获取)
-  + [4.2 数据集预处理](##4.2 数据集预处理)
-  + [4.3 生成预处理数据集信息文件](##4.3 生成预处理数据集信息文件)
-
-+ [5 离线推理](#5 离线推理)
-
-  + [5.1 benchmark工具概述](##5.1 benchmark工具概述)
-  + [5.2 离线推理](##5.2 离线推理)
-
-+ [6 精度对比](#6 精度对比)
-
-  + [6.1 离线推理精度统计](##6.1 离线推理精度统计)
-  + [6.2 开源精度](##6.2 开源精度)
-  + [6.3 精度对比](##6.3 精度对比)
-
-+ [7 性能对比](#7 性能对比)
-
-  + [7.1 npu性能数据](##7.1 npu性能数据)
-  + [7.2 gpu和npu性能对比](##7.2 gpu和npu性能对比)
-
-  
-
-## 1 模型概述
-
-### 1.1 论文地址
-
-[LResNet100E-IR论文](https://arxiv.org/pdf/1801.07698.pdf )
-
-### 1.2 代码地址
-
-[LResNet100E-IR代码](https://github.com/TreB1eN/InsightFace_Pytorch )
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output1      |  FLOAT32   | ND          | batch_size x 512        |
 
 
+----
+# 推理环境
 
-## 2 环境说明
+- 该模型推理所需配套的软件如下：
 
-### 2.1 深度学习框架
-
-```
-torch==1.5.0
-torchvision==0.6.0
-onnx==1.10.1
-onnx-simplifier==0.3.6
-```
-
-### 2.2 python第三方库
-
-```
-numpy==1.21.2
-opencv-python==4.5.3.56
-pillow==8.3.2
-tqdm==4.62.2
-scikit-learn==0.24.2
-```
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.7.5   | -          |
+    
+    说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
 
+----
+# 快速上手
 
-## 3 模型转换
+## 安装
 
-### 3.1 pth转onnx模型
+- 安装推理过程所需的依赖
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+- 获取源码
+    ```bash
+    cd LResNet100E-IR
 
-1.LResNet100E-IR模型代码下载
-
-```bash
-# 切换到工作目录
-cd LResNet100E-IR
-
-git clone https://github.com/TreB1eN/InsightFace_Pytorch.git ./LResNet
-cd LResNet
-patch -p1 < ../LResNet.patch
-rm -rf ./work_space/* 
-mkdir ./work_space/history && mkdir ./work_space/log && mkdir ./work_space/models && mkdir ./work_space/save
-cd ..
-```
-
-2.获取模型权重，并放在工作目录的model文件夹下
-
-OBS： [model_ir_se100.pth](obs://l-resnet100e-ir/infer/model_ir_se100.pth)  云盘：[model_ir_se100.pth](https://drive.google.com/file/d/1rbStth01wP20qFpot06Cy6tiIXEEL8ju/view?usp=sharing)
-
-```bash
-mkdir model
-mv model_ir_se100.pth ./model/
-```
-
-
-
-3.使用 LResNet_pth2onnx.py 脚本将pth模型文件转为onnx模型文件
-
-+ 参数1：pth模型权重的路径
-
-+ 参数2：onnx模型权重的存储路径
-
-+ 参数3：batch size
-
-```bash.
-python LResNet_pth2onnx.py ./model/model_ir_se100.pth ./model/model_ir_se100_bs1.onnx 1
-python LResNet_pth2onnx.py ./model/model_ir_se100.pth ./model/model_ir_se100_bs16.onnx 16
-```
-
-4.使用 onnxsim 工具优化onnx模型
-
-+ 参数1：输入的shape
-+ 参数2：onnx模型权重的存储路径
-+ 参数3：优化后onnx模型权重的存储路径
-
-```
-python -m onnxsim --input-shape="1,3,112,112" ./model/model_ir_se100_bs1.onnx ./model/model_ir_se100_bs1_sim.onnx
-python -m onnxsim --input-shape="16,3,112,112" ./model/model_ir_se100_bs16.onnx ./model/model_ir_se100_bs16_sim.onnx
-```
-
-5.使用tensorRT工具测试onnx模型性能
-
-```
-./trtexec --onnx=model/model_ir_se100_bs1_sim.onnx --fp16 --shapes=image:1x3x112x112 --device=0
-./trtexec --onnx=model/model_ir_se100_bs16_sim.onnx --fp16 --shapes=image:16x3x112x112 --device=0
-```
-
-
-
-### 3.2 onnx转om模型
-
-1.设置环境变量
-
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-
-2.使用 atc 将 onnx 模型转换为 om 模型文件，工具使用方法可以参考[CANN V100R020C10 开发辅助工具指南 (推理) 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164868?idPath=23710424%7C251366513%7C22892968%7C251168373)
-
-```bash
-atc --framework=5 --model=./model/model_ir_se100_bs1_sim.onnx --output=model/model_ir_se100_bs1 --input_format=NCHW --input_shape="image:1,3,112,112" --log=debug --soc_version=Ascend310 
-
-atc --framework=5 --model=./model/model_ir_se100_bs16_sim.onnx --output=model/model_ir_se100_bs16 --input_format=NCHW --input_shape="image:16,3,112,112" --log=debug --soc_version=Ascend310 
-```
-
-
-
-## 4 数据集预处理
-
-### 4.1 数据集获取
-
+    git clone https://github.com/TreB1eN/InsightFace_Pytorch.git ./LResNet
+    cd LResNet
+    patch -p1 < ../LResNet.patch
+    rm -rf ./work_space/* 
+    mkdir ./work_space/history && mkdir ./work_space/log && mkdir ./work_space/models && mkdir ./work_space/save
+    cd ..
+    ```
+## 准备数据集
 获取LFW数据集，放在工作目录的data目录下
 
-OBS： [lfw.bin](obs://l-resnet100e-ir/infer/lfw.bin) 云盘： [lfw.bin](https://drive.google.com/file/d/1mRB0A8f0b5GhH7w0vNMGdPjSWF-VJJLY/view?usp=sharing) 
 
-```bash
-mkdir data
-mv lfw.bin ./data
-```
-
-
-
-### 4.2 数据集预处理
-
-执行预处理脚本，会在工作目录的data目录下生成数据集预处理后的 bin 文件和 lfw 数据集标签
-
-+ 参数1：'jpg'模式，功能是生成数据 bin 文件和 target 文件
-+ 参数2：lfw数据集文件位置
-+ 参数3：数据bin文件存放目录
-
-```
-python LResNet_preprocess.py 'jpg' './data/lfw.bin' './data/lfw'
-```
-
-### 4.3 生成预处理数据集信息文件
-
-执行生成数据集信息脚本，会在工作目录下生成数据集信息文件
-
-+ 参数1：'bin'模式，功能是生成数据集信息文件
-+ 参数2：数据bin文件存放目录
-+ 参数3：info文件存储路径
-+ 参数4：宽
-+ 参数5：高
-
-```
-python LResNet_preprocess.py 'bin' './data/lfw' './lfw.info' 112 112
-```
-
-
-
-## 5 离线推理
-
-### 5.1 benchmark工具概述
-
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考[CANN V100R020C10 推理benchmark工具用户指南 01](https://support.huawei.com/enterprise/zh/doc/EDOC1100164874?idPath=23710424%7C251366513%7C22892968%7C251168373)
-
-### 5.2 离线推理
-
-1.设置环境变量
-
-```bash
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-
-2.执行离线推理, 输出结果默认保存在当前目录result/dumpOutput_device0
-
-```bash
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=./model/model_ir_se100_bs1.om -input_text_path=./lfw.info -input_width=112 -input_height=112 -output_binary=False -useDvpp=False
-
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=16 -om_path=./model/model_ir_se100_bs16.om -input_text_path=./lfw.info -input_width=112 -input_height=112 -output_binary=False -useDvpp=False
-```
-
-
-
-## 6 精度对比
-
-### 6.1 离线推理精度统计
-
-执行后处理脚本统计om模型推理结果的Accuracy
-
-+ 参数1：om模型预测结果目录
-+ 参数2：lfw数据集target 文件
-
-```shell
-python LResNet_postprocess.py ./result/dumpOutput_device0 ./data/lfw_list.npy
-```
-
-控制台输出如下信息
-
-```
-accuracy: 0.9976666666666667
-best_thresholds: 1.4140000000000001
-```
-
-
-
-### 6.2 开源精度
-
-源代码仓公布精度
-
-```
-Model				Dataset		Accuracy
-LResNet100E-IR 		LFW			0.998
-```
-
-
-
-### 6.3 精度对比
-
-将得到的om离线模型推理Accuracy与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
-
-
-
-## 7 性能对比
-
-### 7.1 npu性能数据
-
-**1. batch_size=1**
-
-```
-[e2e] throughputRate: 78.7504, latency: 304761
-[data read] throughputRate: 130.821, moduleLatency: 7.64405
-[preprocess] throughputRate: 130.473, moduleLatency: 7.66442
-[infer] throughputRate: 78.9751, Interface throughputRate: 82.9307, moduleLatency: 12.4253
-[post] throughputRate: 78.975, moduleLatency: 12.6622
-```
-
-batch_size=1 Ascend310单卡吞吐率：82.9307*4=331.7228 fps
-
-
-
-**2. batch_size=4**
-
-```
-[e2e] throughputRate: 127.206, latency: 188671
-[data read] throughputRate: 140.878, moduleLatency: 7.09834
-[preprocess] throughputRate: 140.464, moduleLatency: 7.11927
-[infer] throughputRate: 127.885, Interface throughputRate: 133.476, moduleLatency: 7.72563
-[post] throughputRate: 31.971, moduleLatency: 31.2783
-```
-
-batch_size=4 Ascend310单卡吞吐率：133.476*4=533.904 fps
-
-
-
-**3. batch_size=8**
-
-```
-[e2e] throughputRate: 122.035, latency: 196665
-[data read] throughputRate: 123.164, moduleLatency: 8.11925
-[preprocess] throughputRate: 122.857, moduleLatency: 8.13957
-[infer] throughputRate: 122.739, Interface throughputRate: 142.639, moduleLatency: 7.46171
-[post] throughputRate: 15.3423, moduleLatency: 65.1795
-```
-
-batch_size=16 Ascend310单卡吞吐率：142.639*4=570.556 fps
-
-
-
-**4. batch_size=16**
-
-```
-[e2e] throughputRate: 136.597, latency: 175699
-[data read] throughputRate: 151.992, moduleLatency: 6.57929
-[preprocess] throughputRate: 151.467, moduleLatency: 6.60209
-[infer] throughputRate: 137.626, Interface throughputRate: 149.166, moduleLatency: 7.10235
-[post] throughputRate: 8.6015, moduleLatency: 116.259
-```
-
-batch_size=16 Ascend310单卡吞吐率：149.166*4=596.664 fps
-
-
-
-**5. batch_size=32**
-
-```
-[e2e] throughputRate: 125.799, latency: 190780
-[data read] throughputRate: 127.155, moduleLatency: 7.86443
-[preprocess] throughputRate: 126.743, moduleLatency: 7.89
-[infer] throughputRate: 126.596, Interface throughputRate: 143.838, moduleLatency: 7.36579
-[post] throughputRate: 3.95601, moduleLatency: 252.78
-```
-
-batch_size=16 Ascend310单卡吞吐率：143.838*4=575.352 fps
-
-
-
-### 7.2 npu性能优化
-
-OBS：[model_ir_se100_bs1.om](obs://l-resnet100e-ir/infer/model_ir_se100_bs1.om)  [model_ir_se100_bs16.om](obs://l-resnet100e-ir/infer/model_ir_se100_bs16.om) 云盘：[model_ir_se100_bs1.om](https://drive.google.com/file/d/1G9XFmmzmz5YJHN6RCrRiSRsfrQnfjZBM/view?usp=sharing)  [model_ir_se100_bs16.om](https://drive.google.com/file/d/1goyeBp3LZ_eai1fO01SofZXaHp4fcLB4/view?usp=sharing)
-
-**1. batch_size=1**
-
-```
-[e2e] throughputRate: 78.7239, latency: 304863
-[data read] throughputRate: 123.916, moduleLatency: 8.06996
-[preprocess] throughputRate: 123.534, moduleLatency: 8.09494
-[infer] throughputRate: 79.1652, Interface throughputRate: 83.2064, moduleLatency: 12.3888
-[post] throughputRate: 79.165, moduleLatency: 12.6318
-```
-
-batch_size=1 Ascend310单卡吞吐率：83.2064*4=332.8256 fps
-
-**2. batch_size=16**
-
-```
-[e2e] throughputRate: 129.278, latency: 185646
-[data read] throughputRate: 130.232, moduleLatency: 7.67858
-[preprocess] throughputRate: 129.894, moduleLatency: 7.69859
-[infer] throughputRate: 129.767, Interface throughputRate: 186.532, moduleLatency: 5.76826
-[post] throughputRate: 8.1103, moduleLatency: 123.3
-```
-
-batch_size=16 Ascend310单卡吞吐率：186.532*4=746.128 fps
-
-### 7.3 npu性能优化前后对比
-
-| batch size |  优化前  |  优化后  |
-| :--------: | :------: | :------: |
-|     1      | 331.7228 | 332.8256 |
-|     16     | 596.664  | 746.128  |
-
-
-
-### 7.4 gpu和npu性能对比
-
-| batch size | GPU(FPS) | NPU(FPS) |
-| :--------: | -------- | -------- |
-|     1      | 241.5686 | 332.8256 |
-|     16     | 678.984  | 746.128  |
-
-
-
+1. 获取原始数据集  
+    OBS： [lfw.bin](obs://l-resnet100e-ir/infer/lfw.bin) 云盘： [lfw.bin](https://drive.google.com/file/d/1mRB0A8f0b5GhH7w0vNMGdPjSWF-VJJLY/view?usp=sharing) 
+ 
+    ```bash
+    mkdir data
+    mv lfw.bin ./data
+    ```
+
+
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
+    ```bash
+    python3 LResNet_preprocess.py --file_type jpg --data_path ./data/lfw.bin --info_path ./data/lfw --width 112  --height 112
+    ```
+    其中"file_type"表示生成数据 bin 文件和 target 文件模式，"data_path"表示原始数据集路径，"info_path"表示数据集保存路径，"width,height"表示数据图片宽高
+
+
+## 模型转换
+
+1. PyTroch 模型转 ONNX 模型  
+
+    获取模型权重，并放在工作目录的model文件夹下
+    OBS： [model_ir_se100.pth](obs://l-resnet100e-ir/infer/model_ir_se100.pth)  云盘：[model_ir_se100.pth](https://drive.google.com/file/d/1rbStth01wP20qFpot06Cy6tiIXEEL8ju/view?usp=sharing)
+
+    ```bash
+    mkdir model
+    mv model_ir_se100.pth ./model/
+    ```
+ 
+    然后执行执行以下命令生成 ONNX 模型：
+    ```
+    python3 LResNet_pth2onnx.py --source ./model/model_ir_se100.pth --target ./model/model_ir_se100_bs1.onnx --batchsize 1
+    python3 -m onnxsim --input-shape="1,3,112,112" ./model/model_ir_se100_bs1.onnx ./model/model_ir_se100_bs1_sim.onnx
+
+    ```
+    参数说明：
+     + --source: 预训练权重文件的路径。若不指定，则会通过在线方式获取。
+     + --target: 生成ONNX模型的保存路径
+     + --batchsize: 模型batch
+
+2. ONNX 模型转 OM 模型  
+
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
+
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+    chip_name=310P3  # 根据 step1 的结果设值
+    batch_size=1  # 根据需要自行设置 
+
+    
+    # 执行 ATC 进行模型转换
+    atc --framework=5 --model=./model/model_ir_se100_bs${batch_size}_sim.onnx --output=model/model_ir_se100_bs${batch_size} --input_format=NCHW --input_shape="image:${batch_size},3,112,112" --log=debug --soc_version=Ascend${chip_name}
+    ```
+
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+
+## 推理验证
+
+1. 对数据集推理  
+    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
+    ```bash
+    mkdir result
+    python3 -m ais_bench \
+        --model model/model_ir_se100_bs${batch_size}.om \
+        --input ./data/lfw/ \ 
+        --output ./result/ \
+        --outfmt TXT \
+        --batchsize ${batch_size}
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --outfmt 推理结果文件的保存格式
+    + --batchsize 模型每次输入bin文件的数量
+
+
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python3 -m ais_bench --model model/model_ir_se100_bs${batch_size}.om --batchsize ${batch_size}
+    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
+
+3. 精度验证  
+
+    执行后处理脚本，根据推理结果计算OM模型的精度：
+    ```bash
+    python3 LResNet_postprocess.py \
+        --result ./result/ \
+        --data_path ./data/lfw_list.npy \
+    ```
+    参数说明：
+    + --result: 存放推理结果的目录路径
+    + --data_path: 原始数据集路径
+    
+    运行成功后，控制台输出如下信息：
+    ```
+    accuracy: 0.9976666666666667
+    best_thresholds: 1.4140000000000001
+    ```
+
+
+
+----
+# 性能&精度
+
+在310P设备上，OM模型的精度为  **{Top1@Acc=83.52%}**，当batchsize设为1时模型性能最优，达 266.8 fps。
+
+| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
+| --------- | --------- | ----------- | --------------- | --------- |
+|Ascend310P3| 1         | IFW | 0.9976 | 582.65 fps |
+|Ascend310P3| 4         | ILSVRC2012  | 0.9976 | 1184.08 fps |
+|Ascend310P3| 8         | ILSVRC2012  | 0.9976 | 1454.05 fps |
+|Ascend310P3| 16        | ILSVRC2012  | 0.9976 | 1461.82 fps |
+|Ascend310P3| 32        | ILSVRC2012  | 0.9976 | 1410.92 fps |
+|Ascend310P3| 64        | ILSVRC2012  | 0.9976 | 1354.52 fps |
