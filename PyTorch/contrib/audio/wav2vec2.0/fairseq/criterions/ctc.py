@@ -123,57 +123,27 @@ class CtcCriterion(FairseqCriterion):
                 input_lengths = lprobs.new_full(
                     (lprobs.size(1),), lprobs.size(0), dtype=torch.int
                 )
-        if 0:
-            # print(pad_mask.shape)
-            B, len_mask = sample["target"].shape
-            len_mask_paded = (len_mask // 16 + 1) * 16
-            target_paded = sample["target"].new_zeros((B, len_mask_paded))
-            target_paded[:, :len_mask] = sample["target"]
-            pad_mask = (target_paded == self.pad_idx) | (
-                    target_paded == self.eos_idx
-            )
-            target_paded[pad_mask] = self.blank_idx
-            targets_flat = target_paded.flatten()
-            if "target_lengths" in sample:
-                target_lengths = sample["target_lengths"]
-            else:
-                target_lengths = pad_mask.new_full((B,), value=len_mask_paded)  # sum(-1)
-
-            # print(f'{lprobs.shape} {targets_flat.shape} {input_lengths.shape} {target_lengths.shape}')
-            loss = F.ctc_loss(
-                lprobs,
-                targets_flat,
-                input_lengths,
-                target_lengths,
-                blank=self.blank_idx,
-                reduction="sum",
-                zero_infinity=self.zero_infinity,
-            )
+        pad_mask = (sample["target"] != self.pad_idx) & (
+                sample["target"] != self.eos_idx
+        )
+        targets_flat = sample["target"].masked_select(pad_mask)
+        if "target_lengths" in sample:
+            target_lengths = sample["target_lengths"]
         else:
-            pad_mask = (sample["target"] != self.pad_idx) & (
-                    sample["target"] != self.eos_idx
-            )
-            targets_flat = sample["target"].masked_select(pad_mask)
-            tf_length = len(targets_flat)
-            tf_length_tgt = ((tf_length // 64) + 1) * 64
-            pads = (0, tf_length_tgt - tf_length)
-            targets_flat = F.pad(targets_flat.cpu(), pads, value=self.blank_idx)
-            targets_flat = targets_flat.npu()
+            target_lengths = pad_mask.sum(-1)
+        lprobs = lprobs.cpu()
+        input_lengths = input_lengths.cpu()
+        target_lengths = target_lengths.cpu()
 
-            if "target_lengths" in sample:
-                target_lengths = sample["target_lengths"]
-            else:
-                target_lengths = pad_mask.sum(-1)
-
-            loss = F.ctc_loss(
-                lprobs,
-                targets_flat,
-                input_lengths,
-                target_lengths,
-                blank=self.blank_idx,
-                reduction="sum",
-                zero_infinity=self.zero_infinity,
-            )
+        loss = F.ctc_loss(
+            lprobs,
+            targets_flat,
+            input_lengths,
+            target_lengths,
+            blank=self.blank_idx,
+            reduction="sum",
+            zero_infinity=self.zero_infinity,
+        )
 
         ntokens = (
             sample["ntokens"] if "ntokens" in sample else target_lengths.sum().item()
