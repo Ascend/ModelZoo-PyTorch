@@ -5,7 +5,6 @@
 
     - [输入输出数据](#section540883920406)
 
-- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
@@ -23,9 +22,6 @@
 
 EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用迁移学习数据集上达到了相当不错的准确率，参数量也大大减少，说明其具备良好的迁移能力，且能够显著提升模型效果。
 
-  ```
-  url=https://github.com/rwightman/pytorch-image-models
-  ```
 
 - 参考实现：
 
@@ -48,7 +44,6 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
   | --------| -------- | -------- | ------------ |
   | output  | FLOAT32  | batchsize x 1000 | ND           |
 
-- 该模型需要以下插件与驱动  
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -72,8 +67,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
 1. 获取源码。
 
-
-   ```sh
+   ```
    git clone https://github.com/facebookresearch/pycls
    cd pycls
    git reset f20820e01eef7b9a47b77f13464e3e77c44d5e1f --hard
@@ -141,18 +135,18 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
          运行pth2onnx脚本。
 
          ```
-         python3.7 Efficient-B1_pth2onnx.py
+         python3.7 Efficient-B1_pth2onnx.py EN-B1_dds_8gpu.pyth ./pycls/configs/dds_baselines/effnet/EN-B1_dds_8gpu.yaml Efficient-b1.onnx
          ```
 
          获得Efficient-b1.onnx文件。
 
       2. 优化ONNX文件。
 
-         ```sh
-         python3.7 -m onnxsim --overwrite-input-shape="image:8,3,240,240" ./Efficient-b1.onnx efficient_B1_onnxsim.onnx
+         ```
+         python3.7 -m onnxsim ./Efficient-b1.onnx b1_sim.onnx
          ```
 
-         获得efficient_B1_onnxsim.onnx文件。
+         获得b1_sim.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -183,7 +177,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       3. 执行ATC命令。
 
          ```
-          atc --model=efficient_B1_onnxsim.onnx --framework=5 --input_format=NCHW --input_shape="image:8,3,240,240" --output=Efficientnet_b1_bs8 --soc_version=Ascend${chip\_name\} --log=debug 
+          atc --model=b1_sim.onnx --framework=5 --input_format=NCHW --input_shape="image:8,3,240,240" --output=b1_bs8 --soc_version=Ascend${chip\_name\} --log=debug 
          ```
 
          - 参数说明：
@@ -196,11 +190,12 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
            -   --soc_version：处理器型号。
            -   --log：日志级别。
 
-           运行成功后生成<u>***Efficientnet_b1_bs8.om***</u>模型文件。
+           运行成功后生成<u>***b1_bs8***</u>模型文件。
 
 2. 开始推理验证。
 
    1. 使用ais_bench工具进行推理。
+
       ais_bench工具获取及使用方式请点击查看[ais_bench推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)
 
    2. 建立软链接
@@ -220,7 +215,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
         ```
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
-        python3.7 -m ais_bench --model Efficientnet_b1_bs8.om --input ./soft_link --output ./ --outfmt TXT --device 0  
+        python3.7 -m ais_bench --model b1_bs8.om --input ./soft_link --output ./ --outfmt TXT --device 0  
         ```
 
         -   参数说明：
@@ -254,7 +249,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3.7 -m ais_bench --model ./Efficientnet_b1_bs8.om --loop 5
+         python3.7 -m ais_bench --model ./b1_bs8.om
         ```
 
       - 参数说明：
