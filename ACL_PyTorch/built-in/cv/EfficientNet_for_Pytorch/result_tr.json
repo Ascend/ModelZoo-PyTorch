@@ -1,1 +1,0 @@
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "71.83%"}, {"key": "Top2 accuracy", "value": "82.48%"}, {"key": "Top3 accuracy", "value": "86.84%"}, {"key": "Top4 accuracy", "value": "89.03%"}, {"key": "Top5 accuracy", "value": "90.54%"}]}
