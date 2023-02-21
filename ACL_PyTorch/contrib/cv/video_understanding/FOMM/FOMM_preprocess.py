@@ -14,6 +14,7 @@
 import matplotlib
 matplotlib.use('Agg')
 import os, sys
+sys.path.append('./first-order-model')
 import yaml
 from argparse import ArgumentParser
 from time import gmtime, strftime

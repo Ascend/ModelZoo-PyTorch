@@ -1,0 +1,38 @@
+From d34e2516c575eee7aeef2805acee3b9ac661549a Mon Sep 17 00:00:00 2001
+From: sunyuqi3 <sunyuqi3@huawei.com>
+Date: Tue, 21 Feb 2023 11:39:19 +0800
+Subject: [PATCH] fomm
+
+---
+ extract.py | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/extract.py b/extract.py
+index b8dea18..c4ff33e 100644
+--- a/extract.py
++++ b/extract.py
+@@ -104,7 +104,10 @@ def extract_body_pose(in_folder, is_video, image_shape, column):
+ 
+     model = get_model('vgg19')
+     model.load_state_dict(torch.load(weight_name))
+-    model = torch.nn.DataParallel(model).cuda()
++    if torch.cuda.is_available():
++        model = torch.nn.DataParallel(model).cuda()
++    else:
++        model = torch.nn.DataParallel(model)
+     model.float()
+     model.eval()
+ 
+@@ -153,7 +156,8 @@ def extract_body_id(in_folder, is_video, image_shape, column):
+     net.load_state_dict(torch.load('reid_baseline/reid_model.pth'))
+     net.model.fc = nn.Sequential()
+     net.classifier = nn.Sequential()
+-    net.cuda()
++    if torch.cuda.is_available():
++        net.cuda()
+ 
+     data_transforms = transforms.Compose([
+         transforms.ToPILImage(),
+-- 
+2.39.0.windows.2
+

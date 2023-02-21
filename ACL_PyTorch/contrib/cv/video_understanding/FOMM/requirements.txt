@@ -9,7 +9,6 @@ imageio-ffmpeg
 kiwisolver
 lockfile
 matplotlib
-magiconnx
 networkx
 numpy
 onnx
@@ -19,7 +18,6 @@ pandas
 pillow
 pycparser
 pyparsing
-pytorch
 pytz
 pywavelets
 pyyaml

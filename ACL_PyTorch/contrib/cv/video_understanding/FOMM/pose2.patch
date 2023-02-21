@@ -1,0 +1,34 @@
+From 57b248df4404b4c9c621230d75f23dbe6c6326e8 Mon Sep 17 00:00:00 2001
+From: sunyuqi3 <sunyuqi3@huawei.com>
+Date: Tue, 21 Feb 2023 11:41:26 +0800
+Subject: [PATCH] coco
+
+---
+ evaluate/coco_eval.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/evaluate/coco_eval.py b/evaluate/coco_eval.py
+index 1e6be74..31bd4dc 100644
+--- a/evaluate/coco_eval.py
++++ b/evaluate/coco_eval.py
+@@ -36,6 +36,8 @@ MID_1 = [1, 8,  9, 1,  11, 12, 1, 2, 3,
+ MID_2 = [8, 9, 10, 11, 12, 13, 2, 3, 4,
+          16, 5, 6, 7, 17, 0, 14, 15, 16, 17]
+ 
++device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
++
+ 
+ def eval_coco(outputs, dataDir, imgIds):
+     """Evaluate images on Coco test set
+@@ -131,7 +133,7 @@ def get_outputs(multiplier, img, model, preprocess):
+         batch_images[m, :, :im_data.shape[1], :im_data.shape[2]] = im_data
+ 
+     # several scales as a batch
+-    batch_var = torch.from_numpy(batch_images).cuda().float()
++    batch_var = torch.from_numpy(batch_images).to(device).float()
+     predicted_outputs, _ = model(batch_var)
+     output1, output2 = predicted_outputs[-2], predicted_outputs[-1]
+     heatmaps = output2.cpu().data.numpy().transpose(0, 2, 3, 1)
+-- 
+2.39.0.windows.2
+
