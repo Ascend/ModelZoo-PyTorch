@@ -132,7 +132,7 @@ from .trainer_utils import (
 )
 from .training_args import OptimizerNames, ParallelMode, TrainingArguments
 from .utils import logging
-
+from .utils.npu_module import clip_optimizer_grad_norm_fused
 
 _is_torch_generator_available = False
 _is_native_amp_available = False
@@ -1468,7 +1468,7 @@ class Trainer:
                             # Some models (like FullyShardedDDP) have a specific way to do gradient clipping
                             model.clip_grad_norm_(args.max_grad_norm)
                         elif self.args.use_combine_grad:
-                            self.optimizer.clip_optimizer_grad_norm_fused(args.max_grad_norm)
+                            clip_optimizer_grad_norm_fused(self.optimizer, args.max_grad_norm)
                         else:
                             # Revert to normal clipping otherwise, handling Apex or full precision
                             nn.utils.clip_grad_norm_(
