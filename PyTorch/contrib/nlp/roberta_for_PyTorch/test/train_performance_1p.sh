@@ -6,6 +6,8 @@ cur_path=`pwd`
 #集合通信参数,不需要修改
 export RANK_SIZE=1
 
+# 指定训练所使用的npu device卡id
+device_id=0
 #数据集路径,保持为空,不需要修改
 data_path=""
 
