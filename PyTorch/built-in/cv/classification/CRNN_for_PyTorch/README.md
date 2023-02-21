@@ -136,7 +136,7 @@ CRNN (Convolutional Recurrent Neural Network) 于2015年由华中科技大学的
 |  NAME  | Acc@1 |    FPS    | Epochs | AMP_Type | Torch_Version |
 | :----: | :---: | :-------: | :----: | :------: | :-----------: |
 | 1p-NPU |   -   | 11733.53  |   1    |    O2    |      1.8      |
-| 8p-NPU | 76.7  | 106510.27 |  100   |    O2    |      1.8      |
+| 8p-NPU | 0.75  | 106510.27 |  100   |    O2    |      1.8      |
 
 
 # 版本说明
