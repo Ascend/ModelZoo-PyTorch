@@ -16,9 +16,9 @@
 import sys
 sys.path.append('./RCF-pytorch')
 import os
-from models import RCF
 import argparse
 import torch
+from models import RCF
 
 
 # change pth to onnx
@@ -37,26 +37,24 @@ def rcf_pth2onnx(args):
     model.eval()
     input_names = ['image']
     output_names = ['output1', 'output2', 'output3', 'output4', 'output5', 'output6']
-    h_list, w_list, bs_list = args.height, args.width, args.batch_size
-    for i in range(len(h_list)):
-        h, w, bs = h_list[i], w_list[i], bs_list[i]
-        dummy_input = torch.randn(bs, 3, h, w).to(device)
-        output_file = args.onnx_name + '_{}x{}.onnx'.format(h, w)
-        os.system('rm -rf {}'.format(output_file))
-        torch.onnx.export(model, dummy_input, output_file, input_names = input_names, output_names = output_names, opset_version=11, verbose=True)
+    dummy_input = torch.randn(1, 3, 321, 481).to(device)
+    dynamic_axes = {"image": {0: "-1", 2: "-1", 3: "-1"},
+                    "output1": {0: "-1", 2: "-1", 3: "-1"},
+                    "output2": {0: "-1", 2: "-1", 3: "-1"},
+                    "output3": {0: "-1", 2: "-1", 3: "-1"},
+                    "output4": {0: "-1", 2: "-1", 3: "-1"},
+                    "output5": {0: "-1", 2: "-1", 3: "-1"},
+                    "output6": {0: "-1", 2: "-1", 3: "-1"},}
+    torch.onnx.export(model, dummy_input, args.onnx_name, input_names=input_names,
+                      output_names=output_names, opset_version=11, verbose=True,
+                      dynamic_axes=dynamic_axes)
     
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='rcf pth to onnx') # change model parameters
-    parser.add_argument('-p', '--pth_path', default='RCF-pytorch/RCFcheckpoint_epoch12.pth',
+    parser.add_argument('-p', '--pth_path', default='RCFcheckpoint_epoch12.pth',
                         type=str, help='pth model path')
-    parser.add_argument('-o', '--onnx_name', default='rcf_bs1',
+    parser.add_argument('-o', '--onnx_name', default='rcf.onnx',
                         type=str, help='onnx model path')
-    parser.add_argument('--batch_size', nargs='+',
-                        type=int, help='batch size')
-    parser.add_argument('--height', nargs='+',
-                        type=int, help='input height')
-    parser.add_argument('--width', nargs='+',
-                        type=int, help='input width')
     args = parser.parse_args()
     rcf_pth2onnx(args)
