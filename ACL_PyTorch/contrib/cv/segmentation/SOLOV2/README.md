@@ -105,6 +105,9 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    cd ..
    ```
 
+3. 安装auto-optimizer改图工具。
+   请访问[auto-optimizer](https://gitee.com/ascend/tools/msadvsior/auto-optimizer)改图工具代码仓，根据readme文档进行工具安装。
+
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
@@ -169,7 +172,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件：“SOLO_R50_1x.pth”，请将其放在与“pth2onnx.py”文件同一目录内。
+       从源码包中获取权重文件：“SOLOv2_R50_1x.pth”，请将其放在与“pth2onnx.py”文件同一目录内。
 
    2. 安装环境
 
@@ -177,12 +180,12 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
    3. 导出onnx文件。
 
-      1. 使用“SOLO_R50_1x.pth”，导出onnx文件。
+      1. 使用“SOLOv2_R50_1x.pth”，导出onnx文件。
 
          运行“pth2onnx.py”脚本。
 
          ```
-         python3 pth2onnx.py --config SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py --pth_path SOLOv2_R50_1x.pth --out SOLOv2.onnx --shape 800 1216
+         python3 solov2_pth2onnx.py --config SOLO/configs/solov2/solov2_r50_fpn_8gpu_1x.py --pth_path SOLOv2_R50_1x.pth --out SOLOv2.onnx --shape 800 1216
          ```
 
          获得SOLOv2.onnx文件。
@@ -194,6 +197,14 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
          ```
 
          获得SOLOv2_sim.onnx文件。
+
+      3. 使用auto_optimizer工具改图。
+
+         ```
+         python3 -m auto_optimizer optimize SOLOv2_sim.onnx SOLOv2_opt.onnx
+         ```
+
+         获得SOLOv2_opt.onnx文件。
 
    4. 使用ATC工具将ONNX模型转OM模型。
 
@@ -232,7 +243,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
          文件内容：  OpType::MatMulV2:InputDtype:float16,OutputDtype:float16
 
          ```
-         atc --framework=5 --model=SOLOv2_sim.onnx --output=solov2  --input_format=NCHW --input_shape="input:1,3,800,1216" --customize_dtypes=customize_dtypes.cfg --precision_mode=force_fp16 --log=error --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=SOLOv2_opt.onnx --output=solov2  --input_format=NCHW --input_shape="input:1,3,800,1216" --customize_dtypes=customize_dtypes.cfg --precision_mode=force_fp16 --log=error --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -260,7 +271,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
    推理完成后即可输出性能结果。
 
    ```
-   python3 -m ais_bench --model ../solov2.om --input ../val2017_bin/ --output ./result/ --outfmt BIN --loop 1
+   python3 -m ais_bench --model ./solov2.om --input ./val2017_bin/ --output ./result/ --outfmt BIN --loop 1
    ```
 
    * 参数说明：
@@ -295,6 +306,6 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
 | 芯片型号 | Batch Size | 数据集   | 精度   | 性能        |
 | -------- | ---------- | -------- | ------ | ----------- |
-| 310P3    | 1          | coco2017 | 34.0％ | 17.3309 fps |
+| 310P3    | 1          | coco2017 | 34.0％ | 22.1411 fps |
 
 备注：离线模型不支持多batch。
