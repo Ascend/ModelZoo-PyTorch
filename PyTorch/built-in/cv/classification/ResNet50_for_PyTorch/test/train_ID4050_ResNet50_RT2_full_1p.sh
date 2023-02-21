@@ -11,7 +11,8 @@ export RANK_SIZE=1
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
-
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
 # 训练epoch 90
 train_epochs=90
 # 指定训练所使用的npu device卡id
@@ -28,6 +29,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -90,6 +93,7 @@ nohup python3.7 ./pytorch_resnet50_apex.py \
     -b ${batch_size} \
     --lr 0.2 \
     --warmup 5 \
+    --precision_mode=${precision_mode} \
     --label-smoothing=0.1 \
     --epochs ${train_epochs} \
     --optimizer-batch-size 512 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -105,7 +109,11 @@ e2e_time=$(( $end_time - $start_time ))
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
