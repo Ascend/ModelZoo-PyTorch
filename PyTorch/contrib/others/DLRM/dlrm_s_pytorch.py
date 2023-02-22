@@ -98,6 +98,8 @@ import sklearn.metrics
 
 # pytorch
 import torch
+if torch.__version__ >= 1.8:
+    import torch_npu
 import torch.nn as nn
 from torch._ops import ops
 from torch.autograd.profiler import record_function
@@ -128,6 +130,9 @@ with warnings.catch_warnings():
 
 exc = getattr(builtins, "IOError", "FileNotFoundError")
 
+class NpuLinear(nn.Linear):
+    def forward(self, input):
+        return torch.npu_linear(input, self.weight, self.bias)
 
 def time_wrap(use_npu):
     if use_npu:
@@ -219,7 +224,7 @@ class DLRM_Net(nn.Module):
             m = ln[i + 1]
 
             # construct fully connected operator
-            LL = nn.Linear(int(n), int(m), bias=True)
+            LL = NpuLinear(int(n), int(m), bias=True)
 
             # initialize the weights
             # with torch.no_grad():
@@ -280,7 +285,7 @@ class DLRM_Net(nn.Module):
                 ).astype(np.float32)
                 EE.embs.weight.data = torch.tensor(W, requires_grad=True)
             else:
-                EE = nn.EmbeddingBag(n, m, mode="sum", sparse=True)
+                EE = nn.Embedding(n, m)
                 # initialize embeddings
                 # nn.init.uniform_(EE.weight, a=-np.sqrt(1 / n), b=np.sqrt(1 / n))
                 W = np.random.uniform(
@@ -457,11 +462,7 @@ class DLRM_Net(nn.Module):
                 ly.append(QV)
             else:
                 E = emb_l[k]
-                V = E(
-                    sparse_index_group_batch,
-                    sparse_offset_group_batch,
-                    per_sample_weights=per_sample_weights,
-                )
+                V = E(sparse_index_group_batch)
 
                 ly.append(V)
 
@@ -495,7 +496,7 @@ class DLRM_Net(nn.Module):
             (batch_size, d) = x.shape
             T = torch.cat([x] + ly, dim=1).view((batch_size, -1, d))
             # perform a dot product
-            Z = torch.bmm(T, torch.transpose(T, 1, 2))
+            Z = torch.npu_bmmV2(T, T.permute(0, 2, 1), [])
             # append dense feature with the interactions (into a row vector)
             # approach 1: all
             # Zflat = Z.view((batch_size, -1))
@@ -508,7 +509,8 @@ class DLRM_Net(nn.Module):
             offset = 1 if self.arch_interaction_itself else 0
             li = torch.tensor([i for i in range(ni) for j in range(i + offset)])
             lj = torch.tensor([j for i in range(nj) for j in range(i + offset)])
-            Zflat = Z[:, li, lj]
+            l = li * nj + lj
+            Zflat = Z.reshape(-1, ni * nj)[:, l]
             # concatenate dense features and interactions
             R = torch.cat([x] + [Zflat], dim=1)
         elif self.arch_interaction_op == "cat":

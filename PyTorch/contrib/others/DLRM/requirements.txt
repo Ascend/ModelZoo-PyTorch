@@ -3,6 +3,5 @@ numpy
 onnx
 pydot
 torchviz
-scikit-learn
+scikit-learn==0.20.4
 tqdm
-mlperf-logging
