@@ -332,7 +332,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=False, sampler=train_sampler)
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -411,7 +411,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         if torch.cuda.is_available():
             target = target.cuda(args.gpu, non_blocking=True)
         images = images.to(CALCULATE_DEVICE, non_blocking=True)
-        target = target.to(torch.int32).to(CALCULATE_DEVICE, non_blocking=True)
+        target = target.to(CALCULATE_DEVICE, non_blocking=True).to(torch.int32)
 
         # compute output
         loss,output = get_loss(model, target, images, criterion)
