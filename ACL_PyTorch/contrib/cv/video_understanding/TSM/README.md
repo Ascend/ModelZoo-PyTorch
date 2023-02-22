@@ -31,7 +31,7 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
 
   | 输出数据  | 数据类型 | 大小    | 数据排布格式 |
   | -------- | -------- | ------- | ------------ |
-  | output   | FLOAT32  | 1 x 101 | ND           |
+  | output   | FLOAT32  | batchsize x 101 | ND           |
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -58,13 +58,14 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
     git clone https://github.com/open-mmlab/mmaction2.git
     cd mmaction2
     git reset --hard 5fa8faa
+    pip3 install -e .
     cd ..
     ```
 
 2. 安装依赖
 
     ```shell
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     ```
 
 
@@ -80,6 +81,7 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
     bash extract_rgb_frames_opencv.sh
     bash generate_videos_filelist.sh
     bash generate_rawframes_filelist.sh
+    cd ../../../../
     ```
     本项目默认将数据集存放于 `dataset=mmaction2/data/ucf101`
 
@@ -88,7 +90,7 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
    执行 `TSM_preprocess.py` 脚本，完成预处理。
 
    ```shell
-   python TSM_preprocess.py \
+   python3 TSM_preprocess.py \
           --data_root ${dataset}/rawframes/ \
           --ann_file ${dataset}/ucf101_val_split_1_rawframes.txt \
           --output_dir preprocess_bin
@@ -116,12 +118,10 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
          运行pytorch2onnx.py脚本。
 
          ```shell
-         cd mmaction2
-         python tools/deployment/pytorch2onnx.py \
-                configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py \
-                ../tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth \
-                --output-file=../tsm_bs${bs}.onnx --softmax --shape ${bs} 8 3 224 224
-         cd ..
+         python3 mmaction2/tools/deployment/pytorch2onnx.py \
+                mmaction2/configs/recognition/tsm/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py \
+                ./tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb_20210630-1fae312b.pth \
+                --output-file=./tsm_bs${bs}.onnx --softmax --shape ${bs} 8 3 224 224
          ```
          获得tsm_bs${bs}.onnx文件。
       
@@ -206,10 +206,10 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
 
    3. 精度验证。
 
-      ```python
+      ```shell
       python TSM_postprocess.py  \
-                --result_path=inference_result/out_summary.json \
-                --info_path=ucf101/ucf101.info
+            --result_path=inference_result/out_summary.json \
+            --info_path=ucf101/ucf101.info
       ```
       - 参数说明：
         - --result_path：推理结果对应的文件夹
