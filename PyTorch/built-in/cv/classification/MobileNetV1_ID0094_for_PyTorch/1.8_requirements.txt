@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.9.1
 pip
 numpy
 pillow==9.1.0
