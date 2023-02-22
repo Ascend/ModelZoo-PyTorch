@@ -27,29 +27,20 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
 
 - 环境准备指导。
 
@@ -57,16 +48,21 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   下载开源数据集包括ImageNet2012，将数据集上传到服务器任意路径下并解压。
+   用户自行下载 `ImageNet2012` 开源数据集，将数据集上传到服务器任意路径下并解压。
     
    数据集目录结构参考如下所示。
 
@@ -92,14 +88,12 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
                     │──图片2
                     │   ...              
    ```
-
-
-
-
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 ## 获取预训练模型
     
-用户自行获取[预训练模型](https://conversationhub.blob.core.windows.net/beit-share-public/beit/beit_base_patch16_224_pt22k_ft22k.pth)。将获取好的“beit_base_patch16_224_pt22k_ft22k.pth”权重文件上传到在源码包根目录下新建的“./checkpoints”目录下。
+用户自行获取预训练模型，将获取的 `beit_base_patch16_224_pt22k_ft22k.pth` 权重文件放至在源码包根目录下新建的 `checkpoints` 目录下。
 
 # 开始训练
 
@@ -120,10 +114,9 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/    
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度  
      
-     #test/train_performance_1p，单p上训练60个step，运行时间为34秒,输出性能日志./output/0/train_0_perf.log
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -131,22 +124,21 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
      启动8卡训练。
 
      ```
-     #test/train_full_8p，8p上训练30个epoch，运行时间大约为11小时,输出精度日志./output/0/train_0.log
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/   
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/   # 8卡精度
 
-     #test/train_performance_8p，8p上训练60个step，运行时间为37秒,输出性能日志./output/0/train_0_perf.log
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/    # training performance
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/    # 8卡性能
      ```
-   - 单机单卡验证
+   - 单机单卡评测
 
-     启动单卡验证。
+     启动单卡评测。
 
      ```
-     # 参考示例：bash ./test/train_eval_1p.sh --data_path=./data/imagenet --resume=./checkpoints/beit_base_patch16_224_pt22k_ft22kto1k.pth
-     bash ./test/train_eval_1p.sh --data_path=/data/xxx/ --resume=XXX
+     bash ./test/train_eval_1p.sh --data_path=/data/xxx/ --resume=XXX # 单卡评测
      ```
 
-   --data_path参数填写数据集路径；--resume为生成的权重文件路径，请用户根据实际修改。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   
+   --resume参数填写训练权重生成路径，需写到权重文件的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -160,7 +152,7 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
    --lr                                //初始学习率
    --update_freq                       //更新频率
    --warmup_epochs                     //热身训练轮次
-   --epoch                             //重复训练次数
+   --epochs                            //重复训练次数
    --layer_decay                       //层衰减
    --drop_decay                        //丢失衰减    
    --weight_decay                      //权重衰减
@@ -179,12 +171,12 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
 
 **表 2**  训练结果展示表
 
-| NAME    | Acc@1 |  FPS | Epochs | AMP_Type | s/per step | PyTorch版本 |
-| ------- | ----- | ---: | ------ | -------: |-------:| ------- |
-| 1p-NPU | -     |  162 | 1      |        O2 |   0.414 |1.5    |
-| 1p-NPU  | -     |  149 | 1      |       O2 |    0.425    |1.8    |
-| 8p-NPU | 85.279 | 1210 | 30    |        O2 |  0.422 |1.5    |
-| 8p-NPU  | 85.238 | 1157 | 30    |       O2 |     0.450   |1.8    |
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V | - | - | 1  | - | 1.5 |
+| 8p-竞品V | - | - | 90 | - | 1.5 |
+| 1p-NPU  | -     |  149 | 1      |       O2 |1.8    |
+| 8p-NPU  | 85.238 | 1157 | 30    |       O2 |1.8    |
 
 
 # 版本说明
@@ -193,7 +185,7 @@ BEiT是一种自监督视觉表示模型，提出了一种用于预训练视觉T
 
 2022.10.24：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
 

@@ -9,4 +9,4 @@ einops
 tensorboardX
 scipy
 decorator
-torchvision
+torchvision==0.2.2.post3
