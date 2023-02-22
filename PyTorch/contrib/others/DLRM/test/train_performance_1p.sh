@@ -117,6 +117,7 @@ echo "------------------ Final result ------------------"
 FPS_LIST=`grep -a 'Finished'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|wc -l`
 FPS_LIST=`expr ${FPS_LIST} - 1`
 FPS=`grep -a 'Finished'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "," '{print $2}'|tail -${FPS_LIST} |awk '{a+=$1} END { if (NR !=0) printf("%.3f",a/NR)}'`
+FPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}*1000'/'${FPS}'}')
 #打印，不需要修改
 echo "Final Performance sec/images : $FPS"
 

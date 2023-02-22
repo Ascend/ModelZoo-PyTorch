@@ -117,6 +117,7 @@ FPS_LIST=`grep -a 'Finished'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_
 FPS_LIST=`expr ${FPS_LIST} - 1`
 FPS=`grep -a 'Finished'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "," '{print $2}'|tail -${FPS_LIST} |awk '{a+=$1} END { if (NR !=0) printf("%.3f",a/NR)}'`
 #打印，不需要修改
+FPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}*1000'/'${FPS}'}')
 echo "Final Performance sec/images : $FPS"
 
 #输出训练精度,需要模型审视修改
