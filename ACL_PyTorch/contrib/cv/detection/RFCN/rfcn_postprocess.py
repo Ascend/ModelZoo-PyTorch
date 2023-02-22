@@ -58,7 +58,6 @@ def parse_args():
     parser.add_argument("--image_folder_path", dest="file_path", default="./RFCN-pytorch.1.0/data/VOCdevkit2007/VOC2007/JPEGImages/",help='image of dataset')
     parser.add_argument("--input",dest="input", default="./result/dumpOutput_device0/")
     parser.add_argument("--output",dest="output", default="./output")
-    parser.add_argument("--test_annotation", default="./demo.info")
     parser.add_argument("--net_input_width", default=1344)
     parser.add_argument("--net_input_height", default=1344)
     parser.add_argument('--dataset', dest='dataset',help='training dataset',default='pascal_voc', type=str)
@@ -170,11 +169,11 @@ if __name__ == '__main__':
             return data
 
         rois = torch.from_numpy(
-            read_data(npu_result+'{}_1.bin'.format(imglist[i]), [1, 300, 5]))
+            read_data(npu_result+'/'+'{}_0.bin'.format(imglist[i]), [1, 300, 5]))
         cls_prob = torch.from_numpy(
-            read_data(npu_result+'{}_2.bin'.format(imglist[i]), [1, 300, 21]))
+            read_data(npu_result+'/'+'{}_1.bin'.format(imglist[i]), [1, 300, 21]))
         bbox_pred = torch.from_numpy(
-            read_data(npu_result+'{}_3.bin'.format(imglist[i]), [1, 300, 84]))
+            read_data(npu_result+'/'+'{}_2.bin'.format(imglist[i]), [1, 300, 84]))
         scores = cls_prob.data
         boxes = rois.data[:, :, 1:5]
 

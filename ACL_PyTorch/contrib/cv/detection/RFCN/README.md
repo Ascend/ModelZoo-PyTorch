@@ -80,6 +80,8 @@ RFCN基于faster rcnn的基础上对roi pooling这部分进行了改进，与之
    cd RFCN-pytorch.1.0
    git reset --hard e32e6db63f13c7f27c42bb3a9c447d42cc0b81e4
    cd ..
+
+   patch -re -p0 < RFCN.patch
    ```
 
 2. 安装依赖
@@ -87,7 +89,6 @@ RFCN基于faster rcnn的基础上对roi pooling这部分进行了改进，与之
    ```
    cd RFCN-pytorch.1.0
    pip3 install -r requirements.txt
-   conda install pytorch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 cudatoolkit=10.2 -c pytorch
    ```
 3. 编译
    ```
@@ -104,9 +105,11 @@ RFCN基于faster rcnn的基础上对roi pooling这部分进行了改进，与之
    ```
    cd data
    git clone https://github.com/pdollar/coco.git 
-   cd coco/PythonAPI
+   cd coco
+   git reset --hard 8c9bcc3c
+   cd ./PythonAPI
    make
-   cd ../../..
+   cd ../../../..
    ```
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -243,4 +246,4 @@ RFCN基于faster rcnn的基础上对roi pooling这部分进行了改进，与之
 
 | 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
 | -------- | ---------- | ------ | ---- | ---- |
-|   310P3       |    1        |   coco     |  0.6993    |   16.52   |
+|   310P3       |    1        |   VOC2007     |  0.6993    |   12.52   |
