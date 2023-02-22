@@ -137,6 +137,13 @@ class Decoder(nn.Module):
                                               encoder_input_lengths,
                                               output_length)
 
+        ys_in_pad = ys_in_pad.npu(non_blocking=True)
+        ys_out_pad = ys_out_pad.npu(non_blocking=True)
+        encoder_padded_outputs = encoder_padded_outputs.npu(non_blocking=True)
+        non_pad_mask = non_pad_mask.npu(non_blocking=True)
+        slf_attn_mask = slf_attn_mask.npu(non_blocking=True)
+        dec_enc_attn_mask = dec_enc_attn_mask.npu(non_blocking=True)
+        
         # Forward
         dec_output = self.dropout(self.tgt_word_emb(ys_in_pad) * self.x_logit_scale +
                                   self.positional_encoding(ys_in_pad))

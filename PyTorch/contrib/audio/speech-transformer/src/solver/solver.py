@@ -181,9 +181,9 @@ class Solver(object):
         for i, (data) in enumerate(data_loader):
             padded_input, input_lengths, padded_target = data
             if self.args.is_npu:
-                padded_input = padded_input.npu()
-                input_lengths = input_lengths.npu()
-                padded_target = padded_target.npu()
+                padded_input = padded_input.cpu()
+                input_lengths = input_lengths.cpu()
+                padded_target = padded_target.cpu()
             else:
                 padded_input = padded_input.cuda()
                 input_lengths = input_lengths.cuda()
@@ -203,15 +203,16 @@ class Solver(object):
 
             total_loss += loss.item()
 
-            if i % self.print_freq == 0:
+            if i % self.print_freq == 0 and self.args.local_rank == 0:
                 if cross_valid:
                     print('cross_valid | ', end='')
                 print('Epoch {0} | Iter {1} | Average Loss {2:.3f} | '
-                      'Current Loss {3:.6f} | {4:.1f} ms/batch | local_rank {5} | FPS {6:.1f}'.format(
+                      'Current Loss {3:.6f} | {4:.1f} s/batch | local_rank {5} | FPS {6:.1f}'.format(
                           epoch + 1, i + 1, total_loss / (i + 1),
-                          loss.item(), 1000 * (time.time() - start) / (i + 1), self.args.local_rank, self.args.batch_size * self.num_of_gpus / (time.time() - my_timer)),
+                          loss.item(), time.time() - my_timer, self.args.local_rank, self.args.batch_size * self.num_of_gpus / (time.time() - my_timer)),
                       flush=True)
 
+            torch.npu.synchronize()
             my_timer = time.time()
             # visualizing loss using visdom
             if self.visdom_epoch and not cross_valid:
