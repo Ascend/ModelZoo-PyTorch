@@ -249,7 +249,7 @@ Dense Prediction Transformer (DPT) 是一种基于 transformer 以 encoder-decod
    
    3. 精度验证。
    
-      调用后处理脚本 `dpt_postprocess.py` 与数据集标签 val\_label.txt 比对，可以获得 Accuracy 数据，结果保存在 result.json 中。
+      调用后处理脚本 `dpt_postprocess.py` ,将推理结果与标签进行对比，获得mIoU精度数据。
    
       ```bash
       python3 dpt_postprocess.py \
