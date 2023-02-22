@@ -26,7 +26,7 @@
   ```
   url=https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch.git
   branch=master
-  commit_id=4a6ab9849c84c1186932c4c8519c689aae341f4b
+  commit_id=2e2d45450d69a3a81e15d18fe85c2eebbde742e4
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -83,7 +83,7 @@
    ```
    git clone https://github.com/huanghoujing/AlignedReID-Re-Production-Pytorch.git 
    cd AlignedReID-Re-Production-Pytorch
-   git reset --hard 4a6ab9849c84c1186932c4c8519c689aae341f4b
+   git reset --hard 2e2d45450d69a3a81e15d18fe85c2eebbde742e4
    patch -p1 < ../all.patch
    cd ..
    ```
