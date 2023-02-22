@@ -76,8 +76,7 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
 1. 获取源码。
 
    ```
-   https://github.com/qfgaohao/pytorch-ssd.git
-   cd pytorch-ssd/
+   git clone https://github.com/qfgaohao/pytorch-ssd.git
    ```
    
 2. 安装依赖
@@ -90,15 +89,20 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   本模型使用VOC2007数据集
-
-    ```
-    ├── VOC2007
-    |   ├── JPEGImages
-    |   |    ├── xxx.JPEG
-    │   |    ├── ......
-    |   ├
-    ```
+   本模型支持VOC2007 4952张图片的验证集。请用户需自行获取[VOC2007数据集](http://host.robots.ox.ac.uk/pascal/VOC)，上传数据集到服务器任意目录并解压（如：/home/datasets/VOCdevkit/）。
+   解压后数据集目录结构：
+   ```
+   └─VOCdevkit
+       └─VOC2007
+           ├──SegmentationObject # 实例分割图像
+           ├──SegmentationClass  # 语义分割图像
+           ├──JPEGImages         # 训练集和验证集图片
+           ├──Annotations        # 图片标注信息（label）
+           ├──ImageSets          # 训练集验证集相关数据
+           │    ├── Segmentation
+           │    ├── Main
+           │    └── Layout
+   ```
    
 2. 数据预处理，将原始数据集转换为模型输入的数据。
 
@@ -126,7 +130,7 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
          运行vgg16_ssd_pth2onnx.py脚本。
 
          ```
-      python3.7 vgg16_ssd_pth2onnx.py ./vgg16-ssd-mp-0_7726.pth vgg16_ssd.onnx
+         python3.7 vgg16_ssd_pth2onnx.py ./vgg16-ssd-mp-0_7726.pth vgg16_ssd.onnx
          ```
    
          获得`vgg16_ssd.onnx`文件。
@@ -160,7 +164,9 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
          3. 执行ATC命令。
    
             ```
-            atc --model=./vgg16_ssd.onnx --framework=5 --output=vgg16_ssd --input_format=NCHW --input_shape="actual_input_1:1,3,300,300" --log=info --soc_version=$Ascend${chip_name} 
+            atc --model=./vgg16_ssd.onnx --framework=5 --output=vgg16_ssd_bs{batch_size} --input_format=NCHW --input_shape="actual_input_1:{batch_size},3,300,300" --log=info --soc_version={chip_name} 
+            示例
+            atc --model=./vgg16_ssd.onnx --framework=5 --output=vgg16_ssd_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,300,300" --log=info --soc_version=Ascend310P3
             ```
    
             - 参数说明：
@@ -174,7 +180,7 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
               -   --soc\_version：处理器型号。
             
    
-              运行成功后生成`vgg16_ssd.om`模型文件。
+              运行成功后生成`vgg16_ssd_bs{batch_size}.om`模型文件。
    
 2. 开始推理验证
 
@@ -185,7 +191,13 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
    2. 执行推理。
 
         ```
-        python3 -m ais_bench --model vgg16_ssd.om \
+        python3 -m ais_bench --model vgg16_ssd_bs{batch_size}.om \
+   				--input prep_bin \
+   				--output ./ \
+   				--output_dirname result \
+   				--outfmt BIN
+        示例
+        python3 -m ais_bench --model vgg16_ssd_bs1.om \
    				--input prep_bin \
    				--output ./ \
    				--output_dirname result \
@@ -208,7 +220,7 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
 
    3. 精度验证。
 
-      调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
+      调用ssd_pth_postprocess.py脚本推理结果与label比对，可以获得每个类别以及所有类别的精度，结果保存在eval_results中。
       ```
       python3 ssd_pth_postprocess.py ./VOC2007/ ./voc-model-labels.txt ./result/ ./eval_results/
       ```
@@ -216,15 +228,15 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
         - ./result: 推理结果
         - voc-model-labels.txt: 验证label
         - ./eval_results/: 保存结果路径
-      
 
-结果保存在当前目录的result.json
       
 4. 性能验证
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
    
    ```
-      python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+   python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size}
+   示例
+   python3 -m ais_bench --model=vgg16_ssd_bs1.om --loop=20 --batchsize=1
    ```
    
    - 参数说明：
@@ -246,3 +258,5 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
 |     310P3     |    16        | VOC2007 | acc:0.7726 |  751  |
 |     310P3     |    32        | VOC2007 |   acc:0.7726   |  730  |
 |     310P3     |    64        | VOC2007 |   acc:0.7726   |  718  |
+
+说明：精度是所有类别的平均值

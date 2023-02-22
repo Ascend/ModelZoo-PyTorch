@@ -135,8 +135,8 @@ if __name__ == "__main__":
         image = dataset.get_image(i)
         image_id = dataset.ids[i]
         height, width, _ = image.shape
-        scores_id = str(image_id)+'_1.bin'
-        boxes_id = str(image_id)+'_2.bin'
+        scores_id = str(image_id)+'_0.bin'
+        boxes_id = str(image_id)+'_1.bin'
         boxes = np.fromfile(os.path.join(npu_result, boxes_id), dtype='float32').reshape((1,8732,4))
         scores = np.fromfile(os.path.join(npu_result, scores_id), dtype='float32').reshape((1,8732,21))        
         boxes = torch.from_numpy(boxes)
