@@ -1,0 +1,2 @@
+timm==0.4.12
+torchvision==0.2.2.post3

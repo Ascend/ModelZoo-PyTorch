@@ -1,4 +1,5 @@
 # Evo-Levit for PyTorch
+
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
 -   [开始训练](#开始训练)
@@ -25,29 +26,20 @@ Evo-ViT的具体框架设计，包括基于全局class attention的token选择�
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}        # 克隆仓库的代码   
-  cd {code_path}         # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial ) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1 ) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
 
 - 环境准备指导。
 
@@ -55,24 +47,27 @@ Evo-ViT的具体框架设计，包括基于全局class attention的token选择�
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install timm==0.4.12
-  pip install torchvision==0.9.1
-  pip install torch_npu-1.8.1rc2.20220607-cp37-cp37m-linux_aarch64.whl
-  pip install torch-1.8.1+ascend.rc2.20220607-cp37-cp37m-linux_aarch64.whl
-  pip install apex-0.1+ascend.20220607-cp37-cp37m-linux_aarch64.whl
-  ```
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
   
-- 关于timm包的NPU优化补丁。
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+  ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
+  
+- 关于 `timm` 包的NPU优化补丁。
 
   ```
-  # 需要先cd到当前文件目录，一般timm包的安装位置在/usr/local/lib/python3.7/dist-packages/timm/
-  #先后生成补丁并升级包
-  diff -uN {timm_path}/data/mixup.py {code_path}/fix_timm/mixup.py >mixup.patch
-  diff -uN {timm_path}/optim/optim_factory.py {code_path}/fix_timm/optim_factory.py >optim.patch
+  # 需要先cd到模型源码包根目录下
+  # 执行以下命令，先后生成补丁并升级包
+  diff -uN {timm_path}/data/mixup.py ./fix_timm/mixup.py >mixup.patch
+  diff -uN {timm_path}/optim/optim_factory.py ./fix_timm/optim_factory.py >optim.patch
   patch -p0 {timm_path}/data/mixup.py mixup.patch
   patch -p0 {timm_path}/optim/optim_factory.py optim.patch
   ```
+  > **说明：**
+  > timm_path为timm包的安装路径，一般timm包的安装位置在/usr/local/lib/python3.7/dist-packages/timm/。
 
   
 
@@ -81,9 +76,9 @@ Evo-ViT的具体框架设计，包括基于全局class attention的token选择�
 
 1. 获取数据集。
 
-   用户自行获取原始数据集ImageNet2012，将数据集上传到服务器任意路径下并解压。
+   用户自行获取原始数据集 `ImageNet2012` ，将数据集上传到服务器任意路径下并解压。
 
-   以ImageNet2012数据集为例，数据集目录结构参考如下所示。
+   以 `ImageNet2012` 数据集为例，数据集目录结构参考如下所示。
 
    ```
    ├── ImageNet2012
@@ -109,14 +104,11 @@ Evo-ViT的具体框架设计，包括基于全局class attention的token选择�
    ```
 
    > **说明：** 
-   > 数据集路径以用户自行定义的路径为准
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 ## 获取预训练模型
 
-Evo-Vit模型训练需要配置teacher—model，获取方式为在GitHub的[Evo-Vit]([GitHub - YifanXu74/Evo-ViT: Official implement of Evo-ViT: Slow-Fast Token Evolution for Dynamic Vision Transformer](https://github.com/YifanXu74/Evo-ViT)),checkpoint文件可以在该仓库自行下载，也可以直接使用网址进行下载，网址如下
-https://dl.fbaipublicfiles.com/deit/regnety_160-a5fe301d.pth
-
-预训练模型需要放置在模型文件夹下，与main_levit.py或者README处于同级目录下。与源码中的配置参数的默认值 ”./regnety_160-a5fe301d.pth“保持一致。
+`Evo-Vit` 模型训练需要配置 `teacher—model` ，用户自行获取 `regnety_160-a5fe301d.pth` 预训练模型，可参考GitHub的[Evo-Vit](https://github.com/YifanXu74/Evo-ViT)。将获取的预训练模型放置在源码包根目录下。与源码中的配置参数的默认值 `./regnety_160-a5fe301d.pth` 保持一致。
 
 # 开始训练
 
@@ -129,14 +121,16 @@ https://dl.fbaipublicfiles.com/deit/regnety_160-a5fe301d.pth
 
 2. 运行训练脚本。
 
-   该模型支持单机单卡训练和单机8卡训练，开始训练前，请用户根据实际路径配置data_path参数。
+   该模型支持单机单卡训练和单机8卡训练。
 
    - 单机单卡训练
 
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1P.sh --data_path=/data/xxx/    
+     bash ./test/train_full_1P.sh --data_path=/data/xxx/  # 单卡精度
+     
+     bash ./test/train_performance_1P.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -144,19 +138,22 @@ https://dl.fbaipublicfiles.com/deit/regnety_160-a5fe301d.pth
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8P.sh --data_path=/data/xxx/   
+     bash ./test/train_full_8P.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8P.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
-   --data\_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
    --data_path                         //数据集路径     
-   --epochs                            //重复训练次数
+   --model                             //模型名称
    --batch-size                        //训练批次大小
-   --nproc_per_node                    //数字表示启用单卡还是多卡
+   --input-size                        //输入图像大小
+   --output_dir                        //输出路径
    ```
    
    训练完成后，权重文件保存在当前路径的save中，并输出模型训练精度和性能信息。
@@ -165,13 +162,12 @@ https://dl.fbaipublicfiles.com/deit/regnety_160-a5fe301d.pth
 
 **表 2**  训练结果展示表
 
-| NAME   | PT版本 |  精度 | FPS    | Epochs | AMP_Type |
-| ------ | ------ | ----: | ------ | -----: | -------- |
-| 1P-GPU | 1.8.1  |     - | 51     |      1 | O1       |
-| 1P-NPU | 1.8.1  |     - | 66.93  |      1 | O1       |
-| 8P-GPU | 1.8.1  | 73.54 | 487    |    100 | O1       |
-| 8P-NPU | 1.8.1  | 74.32 | 510.72 |    100 | O1       |
-
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V | - | 51 | 1 | O1 | 1.8 |
+| 8p-竞品V | 73.54 | 487 | 100 | O1 | 1.8 |
+| 1p-NPU | - | 66.93 | 1 | O1 | 1.8 |
+| 8p-NPU | 74.32 | 510.72 | 100 | O1 | 1.8 |
 
 # 版本说明
 
@@ -179,6 +175,6 @@ https://dl.fbaipublicfiles.com/deit/regnety_160-a5fe301d.pth
 
 2022.11.09：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
