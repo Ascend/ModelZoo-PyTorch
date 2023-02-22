@@ -1,4 +1,4 @@
-# AlexNet
+# AlexNet for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -24,29 +24,20 @@ AlexNet采用了8层CNN，以惊人的巨大优势赢得了2012年ImageNet大规
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
 
 - 环境准备指导。
 
@@ -54,9 +45,14 @@ AlexNet采用了8层CNN，以惊人的巨大优势赢得了2012年ImageNet大规
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
@@ -106,30 +102,37 @@ AlexNet采用了8层CNN，以惊人的巨大优势赢得了2012年ImageNet大规
 
 2. 运行训练脚本。
 
-    ```bash
-    # training 1p accuracy
-    bash ./test/train_full_1p.sh --data_path=xxx    
+   该模型支持单机单卡训练和单机8卡训练。
 
-    # training 1p performance
-    bash ./test/train_performance_1p.sh --data_path=xxx    
+   - 单机单卡训练
 
-    # training 8p accuracy
-    bash ./test/train_full_8p.sh --data_path=xxx    
+     启动单卡训练。
 
-    # training 8p performance
-    bash ./test/train_performance_8p.sh --data_path=xxx    
+     ```
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
+     ```
 
-    # eval default 8p
-    bash ./test/train_eval_8p.sh --data_path=xxx
+   - 单机8卡训练
 
-    ```
-   --data\_path参数填写数据集路径。
+     启动8卡训练。
 
-日志路径:
-    
-    test/output/devie_id/train_${device_id}.log           # training detail log
-    test/output/devie_id/AlexNet_ID2663_for_PyTorch_bs1024_8p_acc.log  # 8p training performance result log
-    test/output/devie_id/train_AlexNet_ID2663_for_PyTorch_bs1024_8p_acc_loss.txt   # 8p training accuracy result log
+     ```
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
+     ```
+
+   - 单机8卡评测
+
+     启动8卡评测。
+
+     ```
+     bash ./test/train_eval_8p.sh --data_path=/data/xxx/  # 8卡评测
+     ```
+
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -162,12 +165,10 @@ AlexNet采用了8层CNN，以惊人的巨大优势赢得了2012年ImageNet大规
 **表 2**  训练结果展示表
 
 | NAME    | Acc@1  | FPS      | Epochs | AMP_Type | Torch_version |
-| ------- | ------ | :------  | ------ | :------- | :------------ |
-| 1p-竞品 | -      | 2996.857 | 1      | -        | -             |
-| 8p-竞品 | 57.958 | 6426.515 | 90     | -        | -             |
-| 1p-NPU  | -      | 8457.054 | 1      | O2       | 1.5           |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V | -      | 2996.857 | 1      | -        | 1.5          |
+| 8p-竞品V | 57.958 | 6426.515 | 90     | -        | 1.5          |
 | 1p-NPU  | -      | 9408.206 | 1      | O2       | 1.8           |
-| 8p-NPU  | 57.693 | 4680.428 | 90     | O2       | 1.5           |
 | 8p-NPU  | 57.885 | 4766.216 | 90     | O2       | 1.8           |
 
 # 版本说明
@@ -178,6 +179,6 @@ AlexNet采用了8层CNN，以惊人的巨大优势赢得了2012年ImageNet大规
 
 2020.07.08：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
