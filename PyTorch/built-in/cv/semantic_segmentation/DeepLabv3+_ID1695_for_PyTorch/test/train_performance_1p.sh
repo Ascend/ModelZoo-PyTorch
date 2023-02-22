@@ -38,6 +38,10 @@ do
             exit 1
         fi
         PREC="--apex --apex-opt-level "$apex_opt_level
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+	    source set_conda.sh
+	    source activate $conda_name
     fi
 done
 
