@@ -100,9 +100,14 @@ def main(args):
             cfg.sample_rate, cfg.fp16)
         module_partial_fc.train().npu()
         # TODO the params of partial fc must be last in the params list
-        opt_backbone = apex.optimizers.NpuFusedSGD(
-            params=[{"params": backbone.parameters()}],
-            lr=cfg.lr, momentum=0.9, weight_decay=cfg.weight_decay)
+        if cfg.fp16:
+            opt_backbone = apex.optimizers.NpuFusedSGD(
+                params=[{"params": backbone.parameters()}],
+                lr=cfg.lr, momentum=0.9, weight_decay=cfg.weight_decay)
+        else:
+            opt_backbone = torch.optim.SGD(
+                params=[{"params": backbone.parameters()}],
+                lr=cfg.lr, momentum=0.9, weight_decay=cfg.weight_decay)
 
         opt_pfc = torch.optim.SGD(
             params=[{"params": module_partial_fc.parameters()}],
@@ -113,9 +118,14 @@ def main(args):
             margin_loss, cfg.embedding_size, cfg.num_classes,
             cfg.sample_rate, cfg.fp16)
         module_partial_fc.train().npu()
-        opt_backbone = apex.optimizers.NpuFusedAdamW(
-            params=[{"params": backbone.parameters()}],
-            lr=cfg.lr, weight_decay=cfg.weight_decay)
+        if cfg.fp16:
+            opt_backbone = apex.optimizers.NpuFusedAdamW(
+                params=[{"params": backbone.parameters()}],
+                lr=cfg.lr, weight_decay=cfg.weight_decay)
+        else:
+            opt_backbone = torch.optim.AdamW(
+                params=[{"params": backbone.parameters()}],
+                lr=cfg.lr, weight_decay=cfg.weight_decay)
 
         opt_pfc = torch.optim.AdamW(
             params=[{"params": module_partial_fc.parameters()}],
@@ -149,8 +159,11 @@ def main(args):
         backbone, [opt_backbone, opt_pfc] = amp.initialize(backbone, [opt_backbone, opt_pfc], opt_level="O1",
                                                            scale_window=100, combine_grad=True, combine_ddp=combine_ddp,
                                                            ddp_replica_count=6, loss_scale=256.)
-        opt_pfc.accelerate = False
-        opt_pfc.combine_ddp = False
+    else:
+        backbone, [opt_backbone, opt_pfc] = amp.initialize(backbone, [opt_backbone, opt_pfc], opt_level="O0",
+                                                            loss_scale=1.)
+    opt_pfc.accelerate = False
+    opt_pfc.combine_ddp = False
 
     if combine_ddp:
         module_backbone = backbone

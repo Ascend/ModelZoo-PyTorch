@@ -176,8 +176,13 @@ class IResNet(nn.Module):
         x = torch.flatten(x, 1)
         x = self.dropout(x)
 
-        with amp.disable_casts():
-            x = self.fc(x.float() if self.fp16 else x)
+        if self.fp16:
+            with amp.disable_casts():
+                x = self.fc(x.float())
+                x = self.features(x)
+        # O0 use amp.disable_casts will raise error: AmpState object has no attribute handle
+        else:
+            x = self.fc(x)
             x = self.features(x)
         return x
 
