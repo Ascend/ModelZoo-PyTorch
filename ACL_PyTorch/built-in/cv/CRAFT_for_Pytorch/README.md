@@ -79,6 +79,7 @@ CRAFT模型是一个文本检测模型。
    git clone https://github.com/clovaai/CRAFT-pytorch.git
    cd CRAFT-pytorch/
    git reset e332dd8b718e291f51b66ff8f9ef2c98ee4474c8 --hard
+   cd ..
    ```
    
 2. 安装依赖
@@ -109,6 +110,7 @@ CRAFT模型是一个文本检测模型。
       ```
       cp export_onnx.py CRAFT-pytorch/
       cp craft_mlt_25k.pth CRAFT-pytorch/
+      cd CRAFT-pytorch
       python3 export_onnx.py --trained_model craft_mlt_25k.pth
       ```
 
@@ -144,8 +146,10 @@ CRAFT模型是一个文本检测模型。
       3. 执行ATC命令。
 
          ```
+         cd ..
          mkdir CRAFT-pytorch/output
          cp craft_atc.sh CRAFT-pytorch/
+         cd CRAFT-pytorch
          bash craft_atc.sh --model {onnx_model} --bs {batch_size} --soc Ascend${chip_name}
          示例:
          bash craft_atc.sh --model craft --bs 1 --soc Ascend310P3
@@ -167,7 +171,9 @@ CRAFT模型是一个文本检测模型。
 
       调用以下脚本，会打印出余弦相似度
       ```
+      cd ..
       cp cosine_similarity.py CRAFT-pytorch/
+      cd CRAFT-pytorch
       python3 cosine_similarity.py --bs {batch_size} --model_path {om_model_path}
       示例:
       python3 cosine_similarity.py --bs 1 --model_path ./output/craft_bs1.om
@@ -180,7 +186,10 @@ CRAFT模型是一个文本检测模型。
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 -m ais_bench --model=craft.om --loop=1000 --batchsize=1
+      cd output
+      python3 -m ais_bench --model={om_model_path} --loop=1000 --batchsize={batch_size}
+      示例:
+      python3 -m ais_bench --model=craft_bs1.om --loop=1000 --batchsize=1
       ```
 
       - 参数说明：
@@ -202,3 +211,5 @@ CRAFT模型是一个文本检测模型。
 |     310P3     | 16         |  随机数据  |   余弦相似度:0.999   | 97fps  |
 |     310P3     | 32         |  随机数据  |   余弦相似度:0.999   | 92fps  |
 |     310P3     | 64         |  随机数据  |   余弦相似度:0.999   | 91fps  |
+
+说明：模型的两个输出的余弦相似度与ONNX相比都是0.999
