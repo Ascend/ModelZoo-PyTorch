@@ -103,7 +103,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 weights=`find -name 'Resnet50*' | xargs ls -t | head -1`
-python3.7 test_widerface.py -m $weights &
+python3.7 test_widerface.py -m $weights --dataset_folder ${data_path}/val/images/ &
 
 
 wait
@@ -111,7 +111,7 @@ wait
 echo "Finish test_widerface.py"
 
 cd widerface_evaluate
-python3.7 evaluation.py > eval_result.txt &
+python3.7 evaluation.py --gt ${data_path}/wider_face_split/  > eval_result.txt &
 
 wait
 
@@ -127,7 +127,7 @@ echo "Final Performance images/sec : $FPS"
 # 输出训练精度,需要模型审视修改
 # ***********************************修改了路径*******************************
 # 打印，不需要修改
-cat eval_result.txt
+cat eval_result.txt >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 echo "E2E Training Duration sec : $e2e_time"
 
 # 性能看护结果汇总
@@ -146,6 +146,7 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 # ********************************************修改了路径*****************************
 grep Epoch: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
+train_accuracy=`grep Easy ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log | awk '{print $NF}'`
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
@@ -158,4 +159,5 @@ echo "CaseName = ${CaseName}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${Cas
 echo "ActualFPS = ${ActualFPS}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
