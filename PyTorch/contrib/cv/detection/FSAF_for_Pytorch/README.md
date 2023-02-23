@@ -18,7 +18,7 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
 
   ```
   url=https://github.com/open-mmlab/mmdetection
-  commit_id=xxx
+  commit_id=2028b0c189d676ce0c7ad31f24f8a68107220855
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -49,24 +49,24 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r 1.5_requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
 
-  pip install -r 1.8_requirements.txt
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
-- 安装环境
-  1. 克隆`mmcv`库并放置在当前项目目录
+  > **说明:** 只需执行一条对应的PyTorch版本依赖安装命令。
+- 安装环境。
+  1. 克隆`mmcv`库并放置在当前项目目录。
 
      ```
      git clone -b v1.2.7 git://github.com/open-mmlab/mmcv.git
      ```
-  2. 用当前项目目录下`mmcv_need`替换`mmcv`目录下的子目录`mmcv`
+  2. 用当前项目目录下`mmcv_need`替换`mmcv`目录下的子目录`mmcv`。
      ```
-     cd FSAF
      rm -rf mmcv/mmcv
      cp -r mmcv_need mmcv
      mv mmcv/mmcv_need mmcv/mmcv
      ```
-  3. 配置编译mmcv
+  3. 配置编译mmcv。
      ```sh
      cd mmcv
      export MMCV_WITH_OPS=1
@@ -75,7 +75,7 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
      python3.7.5 setup.py develop
      pip3.7.5 list | grep mmcv
      ```
-  4. 安装mmdetection
+  4. 安装mmdetection。
      ```sh
      cd mmdetection
      pip3.7.5 install -r requirements/build.txt
@@ -91,10 +91,8 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
      ```
 ## 准备数据集
 
-1. 获取数据集。
-
-   用户自行获取原始数据集，可选用的开源数据集包括COCO等，
-   并把你的数据集放置在`$FSAF/mmdetection/data` 下.
+  用户自行获取原始数据集，可选用的开源数据集包括COCO等，
+   并将你的数据集放置在`$FSAF/mmdetection/data` 下。
 
    以COCO2017数据集为例，数据集目录结构参考如下所示。
 
@@ -143,9 +141,9 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh  # 单卡精度
 
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_1p.sh  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -153,9 +151,9 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh  # 8卡精度
 
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_8p.sh  # 8卡性能
      ```
 
    - 单机8卡评测
@@ -163,10 +161,10 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
      启动8卡评测。
 
      ```
-     bash ../test/train_eval_8p.sh 测试模型路径 {可不传，默认为./work_dirs/fsaf_r50_fpn_1x_coco/latest.pth}
+     bash ./test/train_eval_8p.sh real_model_path  # 8卡评测
      ```
 
-   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   real_model_path参数为实际模型路径，可不传，默认为./work_dirs/fsaf_r50_fpn_1x_coco/latest.pth。
 
    模型训练脚本参数说明如下。
 

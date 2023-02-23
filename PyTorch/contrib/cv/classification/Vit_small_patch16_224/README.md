@@ -12,13 +12,13 @@
 
 ## 简述
 
-Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片分类上，通过图片分成一个个patch，然后把这些patch组合在一起作为对图像的序列化操作，就形成了类似文本类数据，从而开创了新的图片任务处理思路.
+Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片分类上，通过图片分成一个个patch，然后把这些patch组合在一起作为对图像的序列化操作，就形成了类似文本类数据，从而扩展了视觉任务处理思路。
 
 - 参考实现：
 
   ```
   url=https://github.com/rwightman/pytorch-image-models
-  commit_id=xxx
+  commit_id=a41de1f666f9187e70845bbcf5b092f40acaf097
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -49,12 +49,11 @@ Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
-
+  > **说明:** 只需执行一条对应的PyTorch版本依赖安装命令。
 ## 准备数据集
-
-1. 获取数据集。
 
    用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。
 
@@ -105,9 +104,9 @@ Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
 
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -115,38 +114,32 @@ Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
 
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
-     ```
-
-   - 单机单卡微调
-
-     ```
-     bash test/train_finetune_1p.sh --data_path=real_data_path --weight_path=real_pre_train_model_path
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
-   --weight_path参数填写训练权重生成路径，需写到权重文件的一级目录。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
-   --data                               //数据集路径
-   --model                              //使用模型，默认：densenet121
+   --model                              //使用模型，默认：vit_small_patch16_224
    -j                                   //加载数据进程数
-   --opt                                // 使用优化器, 默认：fusedadamw
+   --opt                                //使用优化器,
    --epochs                             //重复训练次数
    -b                                   //训练批次大小
-   --lr                                 //初始学习率，默认：0.01
+   --lr                                 //初始学习率
    --mixup                              //数据增强mixup系数
-   --weight_decay                       //权重衰减，默认：0.0001
+   --weight_decay                       //权重衰减
    --apex-amp                           //是否使用混合精度
-   --drop                               // dropout系数
+   --drop                               //dropout系数
+   --drop-path                          //drop-path系数
    --device_num                         //使用卡数量
    --npu                                //使用设备
+   --combine_grad                       //使能combine_grad功能
    ```
 
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
@@ -155,12 +148,12 @@ Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片
 
 **表 2**  训练结果展示表
 
-|   Name  | Acc@1  |   FPS   | AMP_Type | Epochs | Torch_Version |
-| :----:  | :---:  |  :-----: |:------: | :----: |  :----: |
-| 1p-竞品v |   -   | 586.67  |    O2    |   1    |  1.5   |
-| 8p-竞品v | 67.65 | 304.06  |    O2    |   1    |  1.5   |
-| 1p-Npu  |  -     | 4556.28 |    O2    |  100   |  1.5  |
-| 8p-NPU  | 67.67  |  2373.80 |   O2    |  100   |  1.5  |
+|   Name  | Acc@1  |   FPS   | Epochs | AMP_Type |  Torch_Version |
+| :----:  | :---:  |  :-----:| :----: | :------: |   :----: |
+| 1p-竞品v |   -   | 586.67  |   1    |   O2    |   1.5   |
+| 8p-竞品v | 67.65 | 304.06  |   1    |   O2    |   1.5   |
+| 1p-Npu  |  -     | 4556.28 |  100   |   O2    |   1.8  |
+| 8p-NPU  | 67.67  |  2373.80 | 100   |   O2    |   1.8  |
 
 # 版本说明
 
