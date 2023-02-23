@@ -130,7 +130,7 @@ ShuffleNetV2Plus是ShuffleNetV2的增强版本，它在ShuffleNetV2的基础上�
      启动8卡评测。
 
      ```
-     bash ./test/train_eval_8p.sh --data_path=/data/xxx/  # 对应修改评测脚本中的resume参数，指定ckpt文件路径
+     bash ./test/train_eval_8p.sh --data_path=/data/xxx/  # 启动评测前对应修改评测脚本中的resume参数，指定ckpt文件路径
      ```
 
     --data_path参数填写数据集路径，需写到数据集的一级目录。
