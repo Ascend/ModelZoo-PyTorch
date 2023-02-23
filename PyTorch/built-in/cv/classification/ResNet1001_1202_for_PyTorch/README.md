@@ -1,4 +1,4 @@
-# ResNet_1001_1202_for_PyTorch
+# ResNet_1001_1202 for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -29,40 +29,40 @@ ResNet18的含义是指网络中有18-layer。
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/cv/classification
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件    | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | pillow==8.4.0 |
+  | PyTorch 1.8 | pillow==9.1.0 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install git+https://github.com/NVIDIA/dllogger.git
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+  ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
+
+- 源码安装DLLogger库。
+  ```
+  下载源码链接： git clone https://github.com/NVIDIA/dllogger.git
+  进入源码一级目录执行： python3.7 setup.py install
   ```
 
 
@@ -84,6 +84,9 @@ ResNet18的含义是指网络中有18-layer。
         ├── readme.html
         └── test_batch
    ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+
 
 # 开始训练
 
@@ -104,8 +107,9 @@ ResNet18的含义是指网络中有18-layer。
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/cifar-10/ --arch=模型名称 --device_id=NPU卡ID 
-     bash ./test/train_performance_1p.sh --data_path=/data/cifar-10/ --arch=模型名称 --device_id=NPU卡ID 
+     bash ./test/train_full_1p.sh --data_path=/data/cifar-10/ --arch=模型名称 --device_id=NPU卡ID  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/cifar-10/ --arch=模型名称 --device_id=NPU卡ID  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -113,17 +117,29 @@ ResNet18的含义是指网络中有18-layer。
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/cifar-10/ --arch=模型名称
-     bash ./test/train_performance_8p.sh --data_path=/data/cifar-10/ --arch=模型名称
+     bash ./test/train_full_8p.sh --data_path=/data/cifar-10/ --arch=模型名称  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/cifar-10/ --arch=模型名称  # 8卡性能
      ```
 
-   注：arch选resnet1001或resnet1202，默认为resnet1001
+   注：arch选resnet1001或resnet1202，默认为resnet1001。
+   
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
-   --data_path                              //数据集路径
+   --data                              //数据集路径
+   --arch                              //使用模型，默认：resnet1001
+   --epochs                            //训练周期数
+   --batch-size                        //训练批次大小
+   --lr                                //初始学习率
+   --momentum                          //动量
+   --weight-decay                      //权重衰减
+   --world-size                        //分布式训练节点数
+   --seed                              //随机数种子设置
+   --addr                              //主机地址    
    ```
    
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
@@ -132,19 +148,19 @@ ResNet18的含义是指网络中有18-layer。
 
 **表 2**  ResNet1001训练结果展示表
 
-| NAME     | Acc@1  | FPS     | Epochs | Torch_version |
-|--------  | ------ | :------ | ------ | :------------ |
-| 1p-竞品A | -      | 106.679 | 1      | -             |
-| 8p-竞品A | 94.164 | 124.031 | 200    | -             |
+| NAME     | Acc@1  | FPS     | Epochs | Torch_Version |
+|:------:  | :----: | :-----: | :----: | :-----------: |
+| 1p-竞品A | -      | 106.679 | 1      | 1.5          |
+| 8p-竞品A | 94.164 | 124.031 | 200    | 1.5          |
 | 1p-NPU   | -      | 150.329  | 1     | 1.8           |
 | 8p-NPU   | 93.796 | 124.031  | 200   | 1.8           |
 
 **表 3**  ResNet1202训练结果展示表
 
 | NAME     | Acc@1  | FPS     | Epochs | Torch_version |
-|--------  | ------ | :------ | ------ | :------------ |
-| 1p-竞品A | -      | 103.328 | -      | -             |
-| 8p-竞品A | 92.449 | 108.277 | 200    | -             |
+|:------:  | :----: | :-----: | :----: | :-----------: |
+| 1p-竞品A | -      | 103.328 | 1     | 1.5          |
+| 8p-竞品A | 92.449 | 108.277 | 200    | 1.5          |
 | 1p-NPU   | -      | 112.162  | 1     | 1.8           |
 | 8p-NPU   | 92.927 | 94.069   | 200   | 1.8           |
 
@@ -152,7 +168,7 @@ ResNet18的含义是指网络中有18-layer。
 
 ## 变更
 
-2023.01.09：更新readme发布。
+2023.02.21：更新readme，重新发布。
 
-## 已知问题
+## FAQ
 无。
