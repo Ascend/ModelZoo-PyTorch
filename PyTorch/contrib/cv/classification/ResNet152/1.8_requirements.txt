@@ -1,0 +1,3 @@
+torchvision==0.9.1
+onnx
+pillow==9.1.0
