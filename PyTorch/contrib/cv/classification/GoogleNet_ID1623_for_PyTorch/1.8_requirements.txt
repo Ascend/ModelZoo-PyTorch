@@ -4,4 +4,4 @@ decorator
 sympy
 scipy
 pyyaml
-pillow
+pillow==9.1.0

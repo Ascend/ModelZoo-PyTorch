@@ -1,0 +1,7 @@
+torchvision==0.2.2.post3
+numpy
+decorator
+sympy
+scipy
+pyyaml
+pillow==8.4.0
