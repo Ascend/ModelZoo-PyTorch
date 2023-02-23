@@ -1,0 +1,5 @@
+torchvision==0.6.0
+munch
+tqdm
+scipy
+pillow==9.1.0

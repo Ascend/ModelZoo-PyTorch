@@ -1,5 +1,0 @@
-torchvision
-munch
-tqdm
-scipy
-pillow==9.1.0
