@@ -1,0 +1,7 @@
+torchvision==0.2.2.post3
+munch
+tqdm
+scipy
+pillow==9.1.0
+decorator
+sympy
