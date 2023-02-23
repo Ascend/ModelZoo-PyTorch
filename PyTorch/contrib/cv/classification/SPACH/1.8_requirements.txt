@@ -1,5 +1,5 @@
 torchvision==0.9.1
-pillow
+pillow==9.1.0
 mpmath
 requests
 timm==0.4.5
