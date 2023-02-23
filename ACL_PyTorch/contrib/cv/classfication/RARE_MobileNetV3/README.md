@@ -109,6 +109,7 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
    ```
    mkdir -p ./train_data/data_lmdb_release/
    unzip -d ./train_data/data_lmdb_release/ evaluation.zip
+   mv ./train_data/data_lmdb_release/evaluation ./train_data/data_lmdb_release/validation
    ```
 
 2. 数据预处理。
