@@ -34,6 +34,7 @@ if [[ $data_path == "" ]];then
 fi
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
+    device_id=${ASCEND_DEVICE_ID}
     echo "device id is ${ASCEND_DEVICE_ID}"
 elif [ ${device_id} ];then
     export ASCEND_DEVICE_ID=${device_id}
@@ -88,7 +89,7 @@ KERNEL_NUM=$(($(nproc)/8))
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
-PID_START=$((KERNEL_NUM * RANK_ID))
+PID_START=$((KERNEL_NUM * device_id))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 taskset -c $PID_START-$PID_END python3.7  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list=$device_id --dataset pascal --num_epochs 5 --lr_step 45,60,75 --port='34578' --world_size 1  --batch_size $batch_size --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
