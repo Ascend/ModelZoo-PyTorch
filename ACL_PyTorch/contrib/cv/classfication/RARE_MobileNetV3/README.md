@@ -186,15 +186,15 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
          使用onnxsim工具优化onnx模型，命令如下。
 
          ```
-          onnxsim RARE_MobileNetV3_tps_dybs.onnx RARE_MobileNetV3_tps_sim_dybs.onnx --skip-shape-inference
+         python3 -m onnxsim RARE_MobileNetV3_tps_dybs.onnx RARE_MobileNetV3_tps_sim_dybs.onnx --skip-shape-inference
          ```
 
          使用opt_onnx.py脚本优化onnx模型，主要是替换GridSample算子。
 
          ```
           python3 opt_onnx.py \
-              --in_onnx=./RARE_Resnet34_vd_sim_dybs.onnx \
-              --out_onnx=./RARE_Resnet34_vd_sim_opt_dybs.onnx
+              --in_onnx=./RARE_MobileNetV3_tps_sim_dybs.onnx \
+              --out_onnx=./RARE_MobileNetV3_tps_sim_dybs_fix.onnx
          ```
 
          - 参数说明：
@@ -237,7 +237,7 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
 
          ```
          atc --framework=5 \
-             --model=./RARE_MobileNetV3_tps_sim_opt_dybs.onnx \
+             --model=./RARE_MobileNetV3_tps_sim_dybs_fix.onnx \
              --output=./RARE_MobileNetV3_tps_bs${batchsize} \
              --input_format=NCHW \
              --input_shape="x:${batchsize},3,32,100" \
@@ -268,7 +268,7 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
    b.  执行推理。
 
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench \
           --model=./RARE_MobileNetV3_tps_bs${batchsize}.om \
           --input=./rare_bindata \
           --batchsize=${batchsize} \
@@ -317,7 +317,7 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench \
           --model=./RARE_MobileNetV3_tps_bs${batchsize}.om \
           --loop=50 \
           --batchsize=${batchsize}
