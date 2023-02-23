@@ -1,5 +1,23 @@
+diff --git a/configs/rec/rec_mv3_tps_bilstm_att.yml b/configs/rec/rec_mv3_tps_bilstm_att.yml
+index 6c347e76..d7dee1d5 100644
+--- a/configs/rec/rec_mv3_tps_bilstm_att.yml
++++ b/configs/rec/rec_mv3_tps_bilstm_att.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: True
++  use_gpu: False
+   epoch_num: 72
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -97,5 +97,5 @@ Eval:
+   loader:
+     shuffle: False
+     drop_last: False
+-    batch_size_per_card: 256
++    batch_size_per_card: 1
+     num_workers: 1
 diff --git a/configs/rec/rec_r34_vd_tps_bilstm_att.yml b/configs/rec/rec_r34_vd_tps_bilstm_att.yml
-index 8919aae7..63e6e744 100644
+index 8919aae7..4ff40430 100644
 --- a/configs/rec/rec_r34_vd_tps_bilstm_att.yml
 +++ b/configs/rec/rec_r34_vd_tps_bilstm_att.yml
 @@ -1,5 +1,5 @@
@@ -9,15 +27,7 @@ index 8919aae7..63e6e744 100644
    epoch_num: 400
    log_smooth_window: 20
    print_batch_step: 10
-@@ -89,12 +89,12 @@ Eval:
-           img_mode: BGR
-           channel_first: False
-       - AttnLabelEncode: # Class handling label
--      - RecResizeImg:
-+      - SVTRRecResizeImg:
-           image_shape: [3, 32, 100]
-       - KeepKeys:
-           keep_keys: ['image', 'label', 'length'] # dataloader will return list in this order
+@@ -96,5 +96,5 @@ Eval:
    loader:
      shuffle: False
      drop_last: False
