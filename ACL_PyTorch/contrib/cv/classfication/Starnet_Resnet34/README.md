@@ -109,6 +109,7 @@ Starnet是一个对于不规则的文字具有鲁棒性的识别模型模型，�
    ```
    mkdir -p ./train_data/data_lmdb_release/
    unzip -d ./train_data/data_lmdb_release/ evaluation.zip
+   mv ./train_data/data_lmdb_release/evaluation ./train_data/data_lmdb_release/validation
    ```
 
 2. 数据预处理。
@@ -185,7 +186,7 @@ Starnet是一个对于不规则的文字具有鲁棒性的识别模型模型，�
          使用onnxsim工具优化onnx模型，命令如下。
 
          ```
-          onnxsim Starnet_Resnet34_tps_dybs.onnx Starnet_Resnet34_tps_sim_dybs.onnx --skip-shape-inference
+         python3 -m onnxsim Starnet_Resnet34_tps_dybs.onnx Starnet_Resnet34_tps_sim_dybs.onnx --skip-shape-inference
          ```
 
          使用opt_onnx.py脚本优化onnx模型，主要是替换GridSample算子。
