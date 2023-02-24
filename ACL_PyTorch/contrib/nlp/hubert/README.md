@@ -212,7 +212,7 @@ HuBERT是一种学习自监督语音表征的新方法。通过在聚类和预�
       
       3. 执行ATC命令。
       
-         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
+         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为1的om模型的命令如下，对于其他的batch size，可作相应的修改。
          
          ```
          atc --framework=5 --model=hubert.onnx --output=hubert --input_format=ND --input_shape="source:1,580000" --soc_version=Ascend${chip_name} --log=error
