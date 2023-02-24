@@ -1,2 +1,0 @@
-opencv-python
-pillow==9.1.0
