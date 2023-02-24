@@ -18,7 +18,7 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
 
   ```
   url=https://github.com/sail-sg/volo
-  commit_id=cf35775
+  commit_id=cf35775276a887ccd749ad82c3ba0ac034020cc9
 
   ```
 
@@ -50,14 +50,14 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明:** 只需执行一条对应的PyTorch版本依赖安装命令。
 
 ## 准备数据集
 
-1. 获取数据集。
-
-   1. 用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。
+用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。用户还需自行下载token标签数据`label_top5_train_nfnet`
 
    以ImageNet2012数据集为例，数据集目录结构参考如下所示。
 
@@ -83,12 +83,21 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
                     │──图片2
                     │   ...
    ```
+   `label_top5_train_nfnet`数据集目录结构参考如下所示。
+   ```
+   label_top5_train_nfnet
+        ├──n02106662
+              │──n02106662_122.pt
+              │──n02106662_12323.pt
+              │   ...
+        ├──n02950826
+              │──n02950826_11940.pt
+              │──n02950826_17059.pt
+              │   ...
+   ```
 
    > **说明：**
    >该数据集的训练过程脚本只作为一种参考示例。
-   2. 下载token标签数据`label_top5_train_nfnet`。
-
-## 获取预训练模型（可选）
 
 # 开始训练
 
@@ -109,9 +118,9 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/ --label_path=/data/xxx
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/ --label_path=/data/xxx  # 单卡精度
 
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/ --label_path=/data/xxx
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/ --label_path=/data/xxx  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -119,38 +128,32 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/ --label_path=/data/xxx
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/ --label_path=/data/xxx  # 8卡精度
 
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ --label_path=/data/xxx
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ --label_path=/data/xxx  # 8卡性能
      ```
-   - 单机微调
 
-     启动单卡微调
-
-     ```
-     bash test/train_finetune_1p.sh --data_path=real_data_path --weight_path=real_pre_train_model_path
-     ```
    - 单机单卡评测
 
-     启动8卡评测。
+     启动单卡评测。
 
      ```
-     bash test/train_eval_1p.sh --data_path=real_data_path --weight_path=real_pre_train_model_path
+     bash test/train_eval_1p.sh --data_path=real_data_path --weight_path=real_pre_train_model_path  # 单卡评测
      ```
 
    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    --label_path参数填写token标签数据，需填写到数据集的一级目录。
 
-   --weight_path参数填写模型权重路径
+   --weight_path参数填写模型权重路径。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
-   --data_path                              //数据集路径
-   --model                                 //主机地址
-   --img-size                              //使用模型，默认：densenet121
+   --data_path                             //数据集路径
+   --model                                 //模型名字
+   --img-size                              //数据集图片大小
    -j                                      //加载数据进程数
    --epoch                                 //重复训练次数
    -b                                      //训练批次大小
