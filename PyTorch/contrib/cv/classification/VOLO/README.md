@@ -57,7 +57,7 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
 
 ## 准备数据集
 
-用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。用户还需自行下载token标签数据`label_top5_train_nfnet`
+用户自行获取原始数据集，可选用的开源数据集包括ImageNet2012，CIFAR-10等，将数据集上传到服务器任意路径下并解压。用户还需自行下载token标签数据`label_top5_train_nfnet`。
 
    以ImageNet2012数据集为例，数据集目录结构参考如下所示。
 
@@ -138,14 +138,14 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
      启动单卡评测。
 
      ```
-     bash test/train_eval_1p.sh --data_path=real_data_path --weight_path=real_pre_train_model_path  # 单卡评测
+     bash ./test/train_eval_1p.sh --data_path=/data/xxx/ --weight_path=real_pre_train_model_path  # 单卡评测
      ```
 
    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    --label_path参数填写token标签数据，需填写到数据集的一级目录。
 
-   --weight_path参数填写模型权重路径。
+   --weight_path参数填写模型权重路径，需填写到权重文件的一级目录。
 
    模型训练脚本参数说明如下。
 
