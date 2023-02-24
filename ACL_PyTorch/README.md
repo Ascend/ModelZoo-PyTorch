@@ -768,6 +768,15 @@ Nlp
         <td>91.3%</td>
 	<td>22(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 896 x 1536</td>
+</tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/PPOCRV2.5_det_db_mv3">  PPOCRV2.5_det_db_mv3 </a>
+        </td>
+        <td>icdar2015</td>
+        <td>75%</td>
+	<td>172(bs24)</td>
+	<td nowrap="nowrap">24 x 3 x 736 x 1280</td>
 </table>
 
 
