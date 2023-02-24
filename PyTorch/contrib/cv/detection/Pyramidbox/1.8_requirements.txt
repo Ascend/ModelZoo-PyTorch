@@ -14,9 +14,6 @@ pillow==9.1.0
 scipy
 six
 sympy
-te
-tensor-fused-plugin 0.1+ascend
-topi==0.4.0
 torchvision==0.9.1
 tqdm
 traitlets

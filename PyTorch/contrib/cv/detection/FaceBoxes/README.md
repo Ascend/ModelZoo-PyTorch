@@ -18,7 +18,7 @@ FaceBoxes是一款可以在cpu上实现实时，高准确率的目标检测模�
 
   ```
   url=https://github.com/zisianw/FaceBoxes.PyTorch
-  commit_id=9bc5811
+  commit_id=9bc5811fe8c409a50c9f23c6a770674d609a2c3a
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -49,13 +49,13 @@ FaceBoxes是一款可以在cpu上实现实时，高准确率的目标检测模�
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r 1.5_requirements.txt
-
-  pip install -r 1.8_requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明:** 只需执行一条对应的PyTorch版本依赖安装命令。
 - 编译环境
 
-  导入环境变量
+  导入环境变量。
    ```bash
    source scripts/npu_set_env.sh
    ```
@@ -68,14 +68,13 @@ FaceBoxes是一款可以在cpu上实现实时，高准确率的目标检测模�
 
 ## 准备数据集
 
-1. 获取数据集。
-
-   用户自行获取原始数据集，可选用的开源数据集包括WIDER_FACE等，将图片放在这个如下目录下（数据集包含32203张图片）：
+   用户自行获取原始数据集，可选用的开源数据集包括WIDER_FACE等，将图片放在如下所示目录下（数据集包含32203张图片）。
 
    ```bash
+   # $FaceBoxes_ROOT 为项目根目录
    $FaceBoxes_ROOT/data/WIDER_FACE/images/
    ```
-   下载转换后的[标注文件]将他们放在这个目录下：
+   下载转换后的标注文件将其放在这个目录下。
 
    ```bash
    $FaceBoxes_ROOT/data/WIDER_FACE/annotations/
@@ -122,9 +121,9 @@ FaceBoxes是一款可以在cpu上实现实时，高准确率的目标检测模�
      启动单卡训练。
 
      ```
-     bash ./scripts/train_1p.sh
+     bash ./scripts/train_1p.sh  # 单卡精度
 
-     bash ./scripts/train_performance_1p.shxxx/
+     bash ./scripts/train_performance_1p.sh  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -132,17 +131,17 @@ FaceBoxes是一款可以在cpu上实现实时，高准确率的目标检测模�
      启动8卡训练。
 
      ```
-     bash ./scripts/train_8p.sh
+     bash ./scripts/train_8p.sh  # 8卡精度
 
-     bash ./scripts/train_performance_8p.sh
+     bash ./scripts/train_performance_8p.sh  # 8卡性能
      ```
 
-   - 单机评测
+   - 单机单卡评测
 
-     启动评测。
+     启动单卡评测。
 
      ```
-     bash test.sh
+     bash test.sh  # 单卡评测
      ```
 
    模型训练脚本参数说明如下。
