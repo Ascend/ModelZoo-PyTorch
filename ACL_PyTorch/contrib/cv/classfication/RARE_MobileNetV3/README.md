@@ -344,9 +344,9 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
 0.8295350950281469   0.9234362194454302
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 261.020  fps |
-|Ascend310P3| 4                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 229.540 fps |
-|Ascend310P3| 8                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 175.500 fps |
-|Ascend310P3| 16               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 123.355 fps |
-|Ascend310P3| 32               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 68.291 fps |
-|Ascend310P3| 64               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 36.114 fps |
+|Ascend310P3| 1                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 257.020  fps |
+|Ascend310P3| 4                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 883.660 fps |
+|Ascend310P3| 8                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1275.500 fps |
+|Ascend310P3| 16               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1703.355 fps |
+|Ascend310P3| 32               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1808.291 fps |
+|Ascend310P3| 64               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1949.114 fps |
