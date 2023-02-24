@@ -1,0 +1,7 @@
+numpy
+opencv-python
+Pillow==8.4.0
+pyyaml
+torchvision==0.2.2.post3
+decorator
+sympy
