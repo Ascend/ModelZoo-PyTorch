@@ -60,7 +60,9 @@ MAE的方法非常简单，随机MASK住图片里的一些块，然后再去重�
 - 获取源码
     ```bash
     git clone https://github.com/facebookresearch/mae.git
+    cd mae
     git reset --hard be47fef7a727943547afb0c670cf1b26034c3c89
+    cd ..
     ```
 ## 准备数据集
 
