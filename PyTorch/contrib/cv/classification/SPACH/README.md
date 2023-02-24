@@ -1,4 +1,4 @@
-# SPACH
+# SPACH for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -27,44 +27,40 @@ SPACH是由来自Microsoft Research和中国科学技术大学的学者提出的
     code_path=PyTorch/contrib/cv/classification
     ```
 
-- 通过Git获取代码方法如下：
-
-    ```
-    git clone {url}       # 克隆仓库的代码
-    cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-    ```
-
-- 通过单击“立即下载”，下载源码包。
-
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-   表 1 版本配套表
+  **表 1**  版本支持表
 
-    |    配套   |    版本   |
-    |----------|---------- |
-    | 固件与驱动 |  [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial )  |
-    |   CANN    |  [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-    |  PyTorch  |  [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)   |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
+  
 - 环境准备指导。
 
-    请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
-- 安装numactl：
-
-  ```
-  apt-get install numactl # for Ubuntu
-  yum install numactl # for CentOS
-  ```
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+  ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
+
+- 安装numactl。
+
+  ```
+  apt-get install numactl  # for Ubuntu
+  yum install numactl  # for CentOS
   ```
 
 
@@ -121,7 +117,9 @@ SPACH是由来自Microsoft Research和中国科学技术大学的学者提出的
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/    
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -129,47 +127,52 @@ SPACH是由来自Microsoft Research和中国科学技术大学的学者提出的
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/   
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
-   --data_path参数填写数据集路径。
+   - 单机8卡评测
 
+     启动8卡评测。
 
+     ```
+     bash ./test/train_eval_8p.sh --data_path=/data/xxx --resume=ckpt_path
+     ```
+   
 
-   模型训练脚本参数说明如下：
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
-    ```
-    公共参数：
-    --model                             //使用模型
-    --nsockets_per_node                 //每个节点上要启动的进程数   
-    --num_workers                       //加载数据进程数
-    --ncores_per_socket                 //每个插槽的CPU内核数
-    --master_addr                       //主机地址
-    --data-pathum                       //数据集位置
-    --weight-decay                      //权重衰减
-    --npu                               //是否使用npu
-    --pin-mem                           //CPU内存固定在数据加载器中
-    --batch-size                        //训练批次大小
-    --dist-eval                         //启用分布式评估
-    ```
-    
+   --resume参数填写模型训练生成的ckpt文件路径，写到文件的一级目录即可。
+
+   模型训练脚本参数说明如下。
+
+   ```
+   公共参数：
+   --data-path                         //数据集路径
+   --model                             //使用模型  
+   --num_workers                       //加载数据进程数
+   --weight-decay                      //权重衰减
+   --npu                               //是否使用npu
+   --batch-size                        //训练批次大小
+   --dist-eval                         //启用分布式评估
+   --epochs                            //训练周期数
+   --seed                              //随机数种子设置
+   ```
+   
     训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
-    
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME    | Acc@1 |  FPS | Epochs | AMP_Type | Torch_version |
-| ------- |----- | ---: | ------ | ------- | -------: |
-| 1p-竞品 | -   |298.9424 | 5      |        - | - |
-| 1p-NPU  | -   |342.728 | 5      |       O2 | 1.5 |
-| 1p-NPU  | -   |384.99| 5      |       O2 | 1.8 |
-| 8p-竞品 | 81.6 |2604.2726 | 300   |        - | - |
-| 8p-NPU  | 82.1 |2632.68 | 300    |       O2 | 1.5 |
+| NAME    | Acc@1 |  FPS | Epochs | AMP_Type | Torch_Version |
+| :-----: |:---: | :--: | :----: | :-----: | :------: |
+| 1p-竞品V | -   |298.9424 | 1      |       O2 | 1.5 |
+| 8p-竞品V | 81.6 |2604.2726 | 300 |    O2    | 1.5 |
+| 1p-NPU  | -   |384.99| 1      |       O2 | 1.8 |
 | 8p-NPU  | 81.23 |2936.68 | 300    |       O2 | 1.8 |
-
 
 
 
@@ -177,9 +180,9 @@ SPACH是由来自Microsoft Research和中国科学技术大学的学者提出的
 
 ## 变更
 
-2022.10.11：更新pytorch1.8版本，并发布。
+2023.02.23：更新readme，重新发布。
 
 2022.04.27：首次发布。
 
-## 已知问题
+## FAQ
 无。
