@@ -107,9 +107,9 @@ VGG19包含了19个隐藏层（16个卷积层和3个全连接层）
 
 2. 数据预处理。
 
-   将原始数据集转换为模型输入的二进制数据。执行“vgg19_preprocess.py”脚本。
+   将原始数据集转换为模型输入的二进制数据。执行“VGG19_preprocess.py”脚本。
    ```python
-   python vgg19_preprocess.py ${dataset_dir} ./prep_dataset
+   python VGG19_preprocess.py ${dataset_dir} ./prep_dataset
    ```
    - 参数说明
       - ${datasets_path}：原始数据验证集（.jpeg）所在路径
@@ -129,10 +129,10 @@ VGG19包含了19个隐藏层（16个卷积层和3个全连接层）
 
    2. 导出onnx文件。
 
-      使用 pth2onnx.py 导出onnx文件。
+      使用 VGG19_pth2onnx.py 导出onnx文件。
 
       ```python
-      python3 pth2onnx.py --pth_path=./vgg19-dcbb9e9d.pth --out=./VGG19.onnx
+      python3 VGG19_pth2onnx.py --pth_path=./vgg19-dcbb9e9d.pth --out=./VGG19.onnx
       ```
 
       获得 `VGG19.onnx` 文件。
