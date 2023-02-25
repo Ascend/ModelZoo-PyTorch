@@ -64,10 +64,12 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    ```
    espnet_onnx 
               ├──Conformer_for_Pytorch
-                    ├── pth2onnx.py        放到Conformer_for_Pytorch下
-                    ├── modify_onnx.py     放到Conformer_for_Pytorch下
-                    └── om_val.py          放到Conformer_for_Pytorch下
-              ├── export_acc.patch   放到espnet_onnx下
+                    ├── pth2onnx.py        		放到Conformer_for_Pytorch下
+                    ├── modify_onnx_lm.py     		放到Conformer_for_Pytorch下
+                    ├── modify_onnx_decoder.py     放到Conformer_for_Pytorch下
+                    ├── graph_fusion.py     		放到Conformer_for_Pytorch下
+                    └── om_val.py          		放到Conformer_for_Pytorch下
+              ├── export_acc.patch   				放到espnet_onnx下
    ```
 
 
@@ -84,7 +86,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    
    指定参数为：Conformer + specaug + speed perturbation: feats=raw, n_fft=512, hop_length=128
    
-   点击With Transformer LM中的Model link链接下载asr_train_asr_conformer3_raw_char_batch_bins4000000_accum_grad4_sp_valid.acc.ave.zip文件，将该文件
+   点击With Transformer LM中的Model link链接下载asr_train_asr_conformer3_raw_char_batch_bins4000000_accum_grad4_sp_valid.acc.ave.zip文件，将该文件和pth2onnx.py文件置于同一目录下
 
 
 2. 导出`ONNX`模型    
@@ -109,8 +111,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    ```
    导出的onnx文件正常在/root/.cache/espnet_onnx/asr_train_asr_qkv/full目录下，在/root/.cache/espnet_onnx/asr_train_asr_qkv目录下则有配置文件config.yaml配置文件以及feats_stats.npz文件
    
-   修改导出的`onnx`模型，修改xformer_decoder.onnx文件以及transformer_lm.onnx文件，原因是两模型中存在Gather算子indices为-1的场景，当前CANN还不支持该场景，有精度问题。
-   请先安装 [onnx改图接口工具](https://gitee.com/peng-ao/om_gener)  
+   修改导出的`onnx`模型，修改xformer_decoder.onnx文件以及transformer_lm.onnx文件，原因是两模型中存在Gather算子indices为-1的场景，当前CANN还不支持该场景，有精度问题，并且可以优化部分性能。
    
    ```
    python3 modify_onnx_decoder.py
@@ -153,7 +154,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 1. 修改配置参数
    
 
-修改/root/.cache/espnet_onnx/asr_train_asr_qkv/目录下config配置文件参数，给每个模型增加input_size,output_size参数，给出样例如下
+修改/root/.cache/espnet_onnx/asr_train_asr_qkv/目录下config配置文件参数，给每个模型增加input_size,output_size参数以及修改对应的weight参数中的ctc, decoder, lm，给出样例如下
 
 | 项      | 子项        | 路径或值                                                     |
 | :------ | ----------- | ------------------------------------------------------------ |
@@ -167,8 +168,8 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 |         | input_size  | 10000000                                                     |
 |         | output_size | 100000000                                                    |
 | lm      | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/transformer_lm.om |
-|         | input_size  |                                                              |
-|         | output_size |                                                              |
+|         | input_size  | 10000000                                                     |
+|         | output_size | 10000000                                                     |
 | weights | ctc         | 0.3                                                          |
 |         | decoder     | 0.7                                                          |
 |         | lm          | 0.3                                                          |
@@ -180,6 +181,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 
    ```
    python3 om_val.py --dataset_path /test/S0768 --model_path /root/.cache/espnet_onnx/asr_train_asr_qkv
+   
    python3 compute-wer.py --char=1 --v=1 text om.txt > offline_wer
    #text是标杆文件
    ```
