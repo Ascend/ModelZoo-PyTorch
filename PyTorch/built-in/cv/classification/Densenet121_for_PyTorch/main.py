@@ -425,7 +425,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
                 optimizer.step()
                 optimizer.zero_grad()
 
-        if i % args.print_freq == 0:
+        if i < 11 or i % args.print_freq == 0:
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                         and args.rank % ngpus_per_node == 0):
                 progress.display(i)
