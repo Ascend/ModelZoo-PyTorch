@@ -120,7 +120,7 @@ nohup python3.7 ${cur_path}/main.py  \
       --lr 0.1 \
       --momentum 0.9 \
       --amp \
-      --print-freq 1 \
+      --print-freq 100 \
       --eval-freq 5 \
       --gpu ${ASCEND_DEVICE_ID} \
       --batch-size $batch_size \

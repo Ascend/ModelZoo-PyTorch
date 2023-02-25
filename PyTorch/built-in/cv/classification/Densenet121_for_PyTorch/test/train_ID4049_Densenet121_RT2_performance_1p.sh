@@ -119,7 +119,7 @@ nohup python3.7 ${cur_path}/main.py  \
       --momentum 0.9 \
       --amp \
       --bin \
-      --print-freq 1 \
+      --print-freq 100 \
       --eval-freq 5 \
       --batch-size $batch_size \
       --epochs $train_epochs \
