@@ -147,29 +147,30 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      ```
 
 
-   - 双机16卡训练
+   - 多机多卡训练
    
-     启动base双机16卡训练。
+     启动base多机多卡训练。
 
      ```
-     bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx  # 16卡精度训练
-     bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx  # 16卡性能训练
+     bash test/train_full_multinodes.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --nnodes=node_number --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx  # 多机多卡精度训练
+     bash test/train_performance_multinodes.sh --data_path=dataset_file_path --batch_size=32 --model_size=base --nnodes=node_number --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx  #多机多卡性能训练
      ```
-	 
-     启动large双机16卡训练。
+     
+     启动large多机多卡训练。
 
      ```
-     bash test/train_full_16p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡精度训练
-     bash test/train_performance_16p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 16卡性能训练
+     bash test/train_full_multinodes.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --nnodes=node_number --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 多机多卡精度训练
+     bash test/train_performance_multinodes --data_path=dataset_file_path --batch_size=16 --model_size=large --nnodes=node_number --node_rank=node_id --master_addr=x.x.x.x --master_port=xxxx --warmup_ratio=0.1 --weight_decay=0.00001 # 多机多卡性能训练
      ```
 
      ```
-	   --data_path：  数据集路径
-	   --model_size： 训练model是base或者是large
-	   --device_id：  单卡训练时所使用的device_id
-	   --node_rank:   集群节点序号，master节点是0， 其余节点依次加1
-	   --master_addr：master节点服务器的ip
-	   --master_port: 分布式训练中,master节点使用的端口
+       --data_path：  数据集路径
+       --device_number: 每台服务器上要使用的训练卡数
+       --model_size： 训练model是base或者是large
+       --device_id：  单卡训练时所使用的device_id
+       --node_rank:   集群节点序号，master节点是0， 其余节点依次加1
+       --master_addr：master节点服务器的ip
+       --master_port: 分布式训练中,master节点使用的端口
      ```
    
    - 双机8卡训练  
