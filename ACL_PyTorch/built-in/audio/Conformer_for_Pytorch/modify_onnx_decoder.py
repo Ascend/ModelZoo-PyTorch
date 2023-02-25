@@ -17,4 +17,4 @@
 from graph_fusion import GraphFusion
 input_model = "transformer_lm.onnx"
 output_model = "transformer_lm_revise.onnx"
-GraphFusion(input_model=input_model, output_model=output_model, opt_type=1)
+GraphFusion(input_model=input_model, output_model=output_model, opt_type=2)
