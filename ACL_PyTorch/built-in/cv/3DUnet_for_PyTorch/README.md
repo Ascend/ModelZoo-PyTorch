@@ -83,6 +83,7 @@
    cd nnUNet/
    git reset b38c69b345b2f60cd0d053039669e8f988b0c0af --hard
    cd ../
+   rm -rf nnUnet
    mv nnUNet nnUnet
    ```
    打补丁
@@ -99,7 +100,7 @@
       import头文件
 
       ```
-      ais_bench.infer.interface import InferSession 
+      from ais_bench.infer.interface import InferSession 
       ```
 
       __init__函数中增加
@@ -222,9 +223,9 @@
       3. 执行ATC命令。
 
          ```
-         atc --model=./224_224_160_dynamic_bs.onnx --framework=5 --output=3DUnet_bs{batch_size} --input_format=ND --input_shape="input:{batch_size},4,224,224,160" --log=info --soc_version={chip_name} --out_nodes="Conv_80:0"
+         atc --model=./build/model/224_224_160_dyanmic_bs.onnx --framework=5 --output=./build/model/3DUnet_bs{batch_size} --input_format=ND --input_shape="input:{batch_size},4,224,224,160" --log=info --soc_version={chip_name} --out_nodes="Conv_80:0"
          示例
-         atc --model=./224_224_160_dynamic_bs.onnx --framework=5 --output=3DUnet_bs1 --input_format=ND --input_shape="input:1,4,224,224,160" --log=info --soc_version=Ascend310P3 --out_nodes="Conv_80:0"
+         atc --model=./build/model/224_224_160_dyanmic_bs.onnx --framework=5 --output=./build/model/3DUnet_bs1 --input_format=ND --input_shape="input:1,4,224,224,160" --log=info --soc_version=Ascend310P3 --out_nodes="Conv_80:0"
          ```
    
             - 参数说明：
@@ -268,7 +269,7 @@
       ```
       python3 -m ais_bench --model=${om_model_path} --loop=1000 --batchsize=${batch_size}
       示例
-      python3 -m ais_bench --model=3DUnet_bs1.om --loop=1000 --batchsize=1
+      python3 -m ais_bench --model=./build/model/3DUnet_bs1.om --loop=1000 --batchsize=1
       ```
 
       - 参数说明：

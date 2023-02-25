@@ -20,7 +20,7 @@ index 0651e2f..29ad467 100644
  import onnxruntime
  
  from brats_QSL import get_brats_QSL
-+ais_bench.infer.interface import InferSession 
++from ais_bench.infer.interface import InferSession
 +
  
  class _3DUNET_ONNXRuntime_SUT():
