@@ -12,52 +12,81 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import sys
 import argparse
+
 import numpy as np
-from magiconnx import OnnxGraph
 
-def conv1d2conv2d(graph, node_conv):
-    if node_conv == 'Conv_1':
-        graph[node_conv]['dilations'] = [1, 1]
-        m = graph[node_conv]['kernel_shape'][0]
-        graph[node_conv]['kernel_shape'] = [1, m]
-        graph[node_conv]['pads'] = [0, 0, 0, 0]
-        graph[node_conv]['strides'] = [1, 5]
-        wight = graph[graph[node_conv].node.input[1]].value
-        graph[graph[node_conv].node.input[1]].value = np.expand_dims(wight, axis=2)
-        graph[graph['Reshape_3'].node.input[1]].value = np.array([0, 512, 1, -1])
-        Mul = graph[graph['Mul_9'].node.input[1]].value
-        graph[graph['Mul_9'].node.input[1]].value = np.squeeze(Mul)
-        Add = graph[graph['Add_10'].node.input[1]].value
-        graph[graph['Add_10'].node.input[1]].value = Add.reshape(1, 512, 1, 1)
+from auto_optimizer import OnnxGraph, OnnxNode
+
+
+def convert_conv1d_to_conv2d(graph: OnnxGraph, conv: OnnxNode) -> bool:
+    attrs = ('dilations', 'kernel_shape', 'strides')
+    for attr in attrs:
+        if attr in conv.attrs.keys():
+            val = conv[attr][0]
+            conv[attr] = [1, val]
+
+    if 'pads' in conv.attrs.keys():
+        pds = conv['pads'][0]
+        conv['pads'] = [0, pds, 0, pds]
+
+    conv_w = graph[conv.inputs[1]].value
+    conv_w = np.expand_dims(conv_w, axis=-2)
+    graph[conv.inputs[1]].value = conv_w
+    return True
+
+
+def validate_insert_mode(insert_mode: str) -> bool:
+    if isinstance(insert_mode, str) and insert_mode in ('before', 'after'):
+        return True
     else:
-        graph[node_conv]['dilations'] = [1, 1]
-        m = graph[node_conv]['kernel_shape'][0]
-        graph[node_conv]['kernel_shape'] = [1, m]
-        graph[node_conv]['pads'] = [0, 0, 0, 0]
-        graph[node_conv]['strides'] = [1, 2]
-        wight = graph[graph[node_conv].node.input[1]].value
-        graph[graph[node_conv].node.input[1]].value = np.expand_dims(wight, axis=2)
+        raise ValueError(f'Invalid insert_mode: "{insert_mode}", which should be one of ["before", "after"].')
 
-def transfer_structure(graph, beg_node, end_node):
-    if beg_node != 'Conv_1':
-        squeeze_name = end_node + 'squeeze'
-        OnnxGraph.add_node(graph, squeeze_name, 'Squeeze', attrs={'axes': [2]})
-        graph.insert_node(end_node, graph[squeeze_name], mode='after')
-    if beg_node != 'Conv_19':
-        unsqueeze_name = beg_node + 'unsqueeze'
-        OnnxGraph.add_node(graph, unsqueeze_name, 'Unsqueeze', attrs={'axes': [2]})
-        graph.insert_node(beg_node, graph[unsqueeze_name], mode='before')
-    conv1d2conv2d(graph, beg_node)
 
-def fix_conv1d(model_path, out_path, beg_list, end_list):
-    graph = OnnxGraph(model_path)
-    for idx, beg_node in enumerate(beg_list):
-        end_node = end_list[idx]
-        transfer_structure(graph, beg_node, end_node)
-    graph.save(out_path)
+def insert_unsqueeze(graph: OnnxGraph, node: OnnxNode, attrs: dict, insert_mode: str) -> bool:
+    if not attrs.get('axes'):
+        raise RuntimeError('Insert unsqueeze failed, missing the attribute "axes".')
+
+    validate_insert_mode(insert_mode)
+    op_name = f'Unsqueeze_{insert_mode}_{node.name}'
+    unsqueeze = graph.add_node(op_name, 'Unsqueeze', attrs = attrs)
+    graph.insert_node(node.name, unsqueeze, mode=insert_mode)
+
+
+
+def insert_squeeze(graph: OnnxGraph, node: OnnxNode, attrs: dict, insert_mode: str) -> bool:
+    if not attrs.get('axes'):
+        raise RuntimeError('Insert squeeze failed, missing the attribute "axes".')
+
+    validate_insert_mode(insert_mode)
+    op_name = f'Squeeze_{insert_mode}_{node.name}'
+    squeeze = graph.add_node(op_name, 'Squeeze', attrs = attrs)
+    graph.insert_node(node.name, squeeze, mode=insert_mode)
+
+
+def optimize(model_path: str, save_path: str) -> None:
+    graph = OnnxGraph.parse(model_path)
+
+    for conv in graph.get_nodes("Conv")[:-1]:
+        convert_conv1d_to_conv2d(graph, conv)
+
+    first_conv = graph.get_nodes("Conv")[0]
+    insert_unsqueeze(graph, first_conv, {'axes': [2]}, 'before')
+
+    first_transpose = graph.get_nodes("Transpose")[0]
+    insert_squeeze(graph, first_transpose, {'axes': [2]}, 'before')
+
+    first_reshape = graph.get_nodes("Reshape")[0]
+    graph[first_reshape.inputs[1]].value = np.array([0, 512, 1, -1])
+
+    first_mul = graph.get_nodes("Mul")[0]
+    graph[first_mul.inputs[1]].value = np.squeeze(graph[first_mul.inputs[1]].value)
+
+    first_add = graph.get_nodes("Add")[0]
+    graph[first_add.inputs[1]].value = np.reshape(graph[first_add.inputs[1]].value, (1, 512, 1, 1))
+
+    graph.save(save_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -65,9 +94,8 @@ if __name__ == '__main__':
                          default="wav2vec2.onnx")
     parser.add_argument('--output_model_path', help='the path of ONNX model to be saved',
                          default="wav2vec2_modified.onnx")
-
     args = parser.parse_args()
-    beg_node = ['Conv_19', 'Conv_28', 'Conv_37', 'Conv_46', 'Conv_55', 'Conv_64', 'Conv_1']
-    end_node = ['Mul_27', 'Mul_36', 'Mul_45', 'Mul_54', 'Mul_63', 'Mul_72', 'Mul_18']
 
-    fix_conv1d(args.input_model_path, args.output_model_path, beg_node, end_node)
+    optimize(args.input_model_path, save_path=args.output_model_path)
+
+    print("Done.")
