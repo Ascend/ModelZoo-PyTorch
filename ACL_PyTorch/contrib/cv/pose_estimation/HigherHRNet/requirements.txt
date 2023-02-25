@@ -2,7 +2,7 @@ onnx==1.8.1
 onnx-simplifier
 opencv-python==4.5.4.60
 torch==1.8.0
-torchvision==0.6.0
+torchvision==0.9.0
 numpy==1.21.4
 Pillow==8.4.0
 EasyDict==1.7

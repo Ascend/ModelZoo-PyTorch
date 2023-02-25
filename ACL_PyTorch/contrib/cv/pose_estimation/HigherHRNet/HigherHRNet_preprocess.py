@@ -17,10 +17,11 @@ import os
 import argparse
 from tqdm import tqdm
 import torch
+import numpy as np
 import torchvision.transforms
-
 import sys
 sys.path.append('./HigherHRNet-Human-Pose-Estimation')
+
 from lib.dataset.build import make_test_dataloader
 from lib.config import update_config
 from lib.config import cfg
@@ -46,12 +47,9 @@ def preprocess(config):
         image_resized, center, scale = resize_align_multi_scale(
             image, input_size, 1.0, min(config.TEST.SCALE_FACTOR), scale_list
         )
-        # hxw
-        prefix = 'shape_{}x{}'.format(
-            image_resized.shape[0], image_resized.shape[1])
 
-        output_path = os.path.join(opt.output, prefix)
-        output_path_flip = os.path.join(opt.output_flip, prefix)
+        output_path = opt.output
+        output_path_flip = opt.output_flip
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
@@ -64,13 +62,13 @@ def preprocess(config):
         image_resized = image_resized.numpy()
         image_resized_flip = image_resized_flip.numpy()
 
-        output_name = "{:0>12d}.bin".format(idx)
+        output_name = "{:0>12d}.npy".format(idx)
         output_path = os.path.join(output_path, output_name)
-        image_resized.tofile(output_path)
+        np.save(output_path, image_resized)
 
-        output_name_flip = "{:0>12d}.bin".format(idx)
+        output_name_flip = "{:0>12d}.npy".format(idx)
         output_path_flip = os.path.join(output_path_flip, output_name_flip)
-        image_resized_flip.tofile(output_path_flip)
+        np.save(output_path_flip, image_resized_flip)
 
 
 if __name__ == '__main__':

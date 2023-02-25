@@ -72,7 +72,7 @@ def export_onnx(config, weights, onnx_path, bs):
     output_names = ["output1", "output2"]
     dummy_input = torch.zeros(
         bs, 3, config.DATASET.INPUT_SIZE, config.DATASET.INPUT_SIZE)
-    dynamic_axes = {"input": {2: "-1", 3: "-1"},
+    dynamic_axes = {"input": {0: "-1", 2: "-1", 3: "-1"},
                     "output1": {0: "-1"},
                     "output2": {0: "-1"}}
 
