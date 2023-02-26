@@ -69,7 +69,7 @@ start_time=$(date +%s)
 
 nohup bash run.sh \
   --stage ${stage} \
-  --asr_args "--max_epoch ${epochs} --batch_bins 32000000 --optim_conf '{lr:0.004}'" \
+  --asr_args "--max_epoch ${epochs} --batch_bins 32000000 --optim_conf '{lr: 0.004}'" \
   --ngpu 8 &
 
 wait
