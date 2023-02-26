@@ -53,8 +53,8 @@ else
     mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 fi
 
-asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch_bins32000000_optim_conf\'{lr:0.004}\'_sp/train.log
-result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch_bins32000000_optim_conf\'{lr:0.004}\'_sp/RESULTS.md
+asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch_bins32000000_optim_conf{lr:0.004}_sp/train.log
+result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch_bins32000000_optim_conf{lr:0.004}_sp/RESULTS.md
 
 
 #################启动训练脚本#################
