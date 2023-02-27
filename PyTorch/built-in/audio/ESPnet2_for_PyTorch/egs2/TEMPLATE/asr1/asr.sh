@@ -871,9 +871,8 @@ if ! "${skip_train}"; then
             # TODO(kamo): Parallelize?
             log "Perplexity calculation started... log: '${lm_exp}/perplexity_test/lm_calc_perplexity.log'"
             # shellcheck disable=SC2086
-            ${cuda_cmd} --gpu "${ngpu}" "${lm_exp}"/perplexity_test/lm_calc_perplexity.log \
+            ${cuda_cmd} "${lm_exp}"/perplexity_test/lm_calc_perplexity.log \
                 ${python} -m espnet2.bin.lm_calc_perplexity \
-                    --ngpu "${ngpu}" \
                     --data_path_and_name_and_type "${lm_test_text},text,text" \
                     --train_config "${lm_exp}"/config.yaml \
                     --model_file "${lm_exp}/${inference_lm}" \
