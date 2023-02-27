@@ -149,6 +149,8 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
         -   `--input_shape`：输入数据的shape
         -   `--log`：日志级别
         -   `--soc_version`：处理器型号
+        -   `--input_fp16_nodes`：指定输入数据类型为FP16的输入节点名称
+        -   `--output_type`：指定网络输出数据类型或指定某个输出节点的输出类型
 
     
 ### 2 开始推理验证
