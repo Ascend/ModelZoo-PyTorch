@@ -81,7 +81,7 @@ echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 ITERS=`grep "epoch results:" $asr_log |head -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
 SECONDS=`grep "elapsed time" $asr_log | awk '{print$14}'`
-FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' * 50) / '$SECONDS')}'`
+FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' * 50 *8) / '$SECONDS')}'`
 
 #输出训练精度,需要模型审视修改
 dev_accuracy=`grep "valid.acc.ave/dev" ${result} | tail -n 1 | awk -F "|" '{print$5}'`
