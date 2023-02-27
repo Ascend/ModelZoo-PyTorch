@@ -23,6 +23,8 @@ import parse
 def pt2onnx(ar):
     data, model, _ = parse.load_data_model(ar)
     input = tuple(data[0].values())
+    if ar.max_seq_length <= input[0].shape[-1]:
+        input = tuple([i[:, :ar.max_seq_length] for i in input])
     # 跟踪一个批次的运算
     model.eval()
     torch.onnx.export(model, input, ar.onnx_path,
@@ -40,12 +42,14 @@ def main():
                         help="dir of onnx, gen onnx name via bs")
     parser.add_argument("--batch_size", default=16, type=int,
                         help="Batch size.")
+    parser.add_argument("--max_seq_length", default=128, type=int,
+                        help="max seq length.")
     ar = parser.parse_args()
 
     ar.pth_arg_path = ar.pth_dir + "training_args.bin"
     ar.data_type = 'dev'
     ar.data_path = './albert_pytorch/dataset/SST-2'
-    ar.model_name = "albert_bs{}".format(ar.batch_size)
+    ar.model_name = "albert_seq{}_bs{}".format(ar.max_seq_length, ar.batch_size)
     ar.onnx_path = "{}/{}.onnx".format(ar.onnx_dir, ar.model_name)
 
     if not os.path.exists(ar.onnx_dir):
