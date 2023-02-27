@@ -372,6 +372,8 @@ if __name__ == '__main__':
     args, config = parse_option()
     PERF = args.perf
     option = {}
+    if config.AMP_OPT_LEVEL == "O0":
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
     option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
     k_dir = "./kernel_meta"
     if not os.path.exists(k_dir):
@@ -413,7 +415,7 @@ if __name__ == '__main__':
         linear_scaled_warmup_lr = linear_scaled_warmup_lr * config.TRAIN.ACCUMULATION_STEPS
         linear_scaled_min_lr = linear_scaled_min_lr * config.TRAIN.ACCUMULATION_STEPS
     config.defrost()
-    config.NPU = True
+    #config.NPU = True
     config.WORLD_SIZE = world_size
     config.freeze()
 
