@@ -15,11 +15,13 @@
 import os
 import sys
 import json
-from collections import defaultdict
-
 import torch
 import torch.nn.functional as F
 import numpy as np
+
+from tqdm import tqdm
+from collections import defaultdict
+
 
 CLASS_NAMES = {0: 'brush_hair', 1: 'cartwheel', 2: 'catch', 3: 'chew', 4: 'clap', 5: 'climb', 
                6: 'climb_stairs', 7: 'dive', 8: 'draw_sword', 9: 'dribble', 10: 'drink', 
@@ -63,7 +65,7 @@ def evaluate(result_path, class_names, output_topk, val_json_file):
     # read bin results and batch info
     bin_list = os.listdir(result_path)
 
-    for i in range(len(bin_list)):
+    for i in tqdm(range(len(bin_list))):
         if 'sumary.json' not in bin_list[i]:
             bin_path = os.path.join(result_path, bin_list[i])
             # bin output name format: {video_name}_output_0.bin
@@ -91,7 +93,7 @@ def evaluate(result_path, class_names, output_topk, val_json_file):
 
     with open(val_json_file, 'w') as f:
         json.dump(inference_results, f)
-
+    print("results val_json_file saved to: {}".format(val_json_file))
 
 if __name__ == "__main__":
     evaluate(sys.argv[1], CLASS_NAMES, int(sys.argv[2]), 'val.json')

@@ -35,7 +35,7 @@
 
   | 输入数据  | 大小      | 数据类型                | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    |  10 x 3 x 16 x 112 x 112 | FLOAT32|  ND|
+  | input    |  10 x 3 x 16 x 112 x 112 | FLOAT32|  NCDHW|
 
 
 - 输出数据
@@ -78,7 +78,7 @@
     ```
 2. 获取开源代码仓并整理代码结构。
    ```
-   git clone https://github.com/kenshohara/3D-ResNets-PyTorch.git 
+   git clone https://github.com/kenshohara/3D-ResNets-PyTorch.git
    mv 3D-ResNets_postprocess.py 3D-ResNets_preprocess.py 3D-ResNets_pth2onnx.py eval_accuracy.py 3D-ResNets-PyTorch/
    ```
 
@@ -91,7 +91,8 @@
 4. 安装依赖。
 
    ```
-   pip install -r requirements.txt
+   pip3 install -r requirements.txt
+   cd 3D-ResNets-PyTorch/
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -102,16 +103,27 @@
    数据目录结构请参考：
     ```
     ├──hmdb51
-        ├──image1
-           ├──image1_1
-              ├──image.jpg
-           ├──image1_2
-              ├──image.jpg
-        ├──image2
-           ├──image2_1
-              ├──image.jpg
-           ├──image2_2
-              ├──image.jpg
+        ├──brush_hair
+        |  ├──April_09_brush_hair_u_nm_np1_ba_goo_0
+        |  |  ├──image_00001.jpg
+        |  |  ├──image_00002.jpg
+        |  |  ...
+        |  ├──April_09_brush_hair_u_nm_np1_ba_goo_1
+        |  |  ├──image_00001.jpg
+        |  |  ├──image_00002.jpg
+        |  |  ...
+        |  ...
+        ├──cartwheel
+        |  ├──(Rad)Schlag_die_Bank!_cartwheel_f_cm_np1_le_med_0
+        |     ├──image_00001.jpg
+        |     ├──image_00002.jpg
+        |     ...
+        |  ├──Acrobacias_de_un_fenomeno_cartwheel_f_cm_np1_ba_bad_8
+        |     ├──image_00001.jpg
+        |     ├──image_00002.jpg
+        |     ...
+        |  ...
+        ...
     ```
 
 2. 数据预处理。
@@ -120,7 +132,12 @@
    在3D-ResNets-PyTorch目录下，执行3D-ResNets_postprocess.py脚本。
 
    ```
-   python 3D-ResNets_preprocess.py --video_path=hmdb51 --annotation_path=hmdb51_1.json --output_path=Binary_hmdb51 --dataset=hmdb51 --inference_batch_size=1
+   python3 3D-ResNets_preprocess.py \
+      --video_path=hmdb51 \
+      --annotation_path=../hmdb51_1.json \
+      --output_path=Binary_hmdb51 \
+      --dataset=hmdb51 \
+      --inference_batch_size=1
    ```
     - 参数说明：  
        
@@ -128,7 +145,7 @@
       - --annotation_path：数据集信息路径。
       - --output_path：输出目录。
       - --dataset：数据集类型，默认hmdb51。
-      - --inference_batch_size：推理batch_size。
+      - --inference_batch_size：推理数据batch_size。
 
    运行完预处理脚本会在当前目录输出hmdb51.info文件和Binary_hmdb51二进制文件夹，包含视频片段名字和长度信息，用于后处理。
 
@@ -146,7 +163,16 @@
 
          在3D-ResNets-PyTorch目录下，执行3D-ResNets_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令。
          ```
-         python 3D-ResNets_pth2onnx.py --root_path=./ --video_path=hmdb51 --annotation_path=hmdb51_1.json --result_path=result --dataset=hmdb51 --model=resnet --model_depth=50 --n_classes=51 --resume_path=save_700.pth
+         python3 3D-ResNets_pth2onnx.py \
+            --root_path=./ \
+            --video_path=hmdb51 \
+            --annotation_path=../hmdb51_1.json \
+            --result_path=./ \
+            --dataset=hmdb51 \
+            --model=resnet \
+            --model_depth=50 \
+            --n_classes=51 \
+            --resume_path=save_700.pth
          ```
          - 参数说明：
              - --root_path：工作目录。
@@ -194,7 +220,13 @@
       3. 执行ATC命令。此模型当前仅支持batch_size=10。
 
          ```
-         atc --model=3D-Resnets.onnx --framework=5 --output=3D-ResNets --input_format=NCHW --input_shape="input:10,3,16,112,112" --log=info --soc_version=Ascend${chip_name}
+         atc --model=3D-ResNets.onnx \
+            --framework=5 \
+            --output=3D-ResNets \
+            --input_format=NCHW \
+            --input_shape="input:10,3,16,112,112" \
+            --log=info \
+            --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -209,8 +241,6 @@
            
            运行成功后生成 3D-ResNets.om 模型文件。
 
-
-
 2. 开始推理验证。
 
    1. 安装ais_bench推理工具。
@@ -224,15 +254,14 @@
    3. 执行推理命令。
 
       ```
-      python -m ais_bench --model 3D-ResNets.om --input Binary_hmdb51 --output result --batchsize=10
+      python3 -m ais_bench --model=3D-ResNets.om --input=Binary_hmdb51 --output=result --batchsize=10
       ```
         -  参数说明：
     
            - --model：模型地址。
            - --input：预处理完的数据集文件夹。
            - --output：推理结果保存路径。
-           - --output_dirname：推理结果输出子文件夹。
-           - --batchsize：模型batch size 默认为1。
+           - --batchsize：om模型的batchsize。
     
         推理后的输出默认在当前目录result下。
     
@@ -242,11 +271,11 @@
        1. 运行后处理脚本3D-ResNets_postprocess.py将推理结果处理成json文件。
     
           ```
-          python 3D-ResNets_postprocess.py result/dumpout_bs10/ 1
+          python3 3D-ResNets_postprocess.py result/${result_path} 1
           ```
           -  参数说明：
     
-              - result/dumpout_bs10/：推理结果的路径。
+              - result/${result_path}：ais_bench工具生成的推理结果的路径。
               - 1：选择统计精度的topK的K值，如1表示统计top 1精度。
 
             运行成功后生成val.json文件。
@@ -254,14 +283,14 @@
        2. 运行eval_accuracy.py脚本与数据集标签hmdb51_1.json比对，可以获得Accuracy数据。
     
           ```
-          python eval_accuracy.py hmdb51_1.json val.json --subset validation --k 1 --ignore
+          python3 eval_accuracy.py ../hmdb51_1.json val.json --subset=validation -k=1 --ignore
           ```
           -  参数说明：
     
-             - hmdb51_1.json：数据集的标签文件。
+             - ../hmdb51_1.json：数据集的标签文件。
              - val.json 是后处理输出的json文件。
              - --subset：选择评测的子集，默认为validation。
-             - --k：选择统计精度的topK的K值，如1表示统计top 1精度。
+             - -k：选择统计精度的topK的K值，如1表示统计top 1精度。
              - --ignore：忽略缺失数据。
 
     5. 性能验证。
@@ -269,12 +298,12 @@
        可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
        ```
-       python -m ais_bench --model=3D-ResNets.om --loop=20 --batchsize=10
+       python3 -m ais_bench --model=3D-ResNets.om --loop=20 --batchsize=10
        ```
        - 参数说明：
             - --model：om模型的路径
             - --loop: 推理次数
-            - --batchsize：数据集batch_size的大小
+            - --batchsize：om模型的batchsize
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>

@@ -86,7 +86,7 @@ def main_worker(index, opt):
         output_names=['output'],
         export_params=True,
         do_constant_folding=True,
-        verbose=True,
+        verbose=False,
         opset_version=11)
     print('3D-ResNets.onnx export success')
 
