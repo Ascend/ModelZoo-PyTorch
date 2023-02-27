@@ -42,7 +42,7 @@ def build_optimizer(config, model):
     elif opt_lower == 'adamw':
         optimizer = optim.AdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
                                 lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
-    if config.NPU:
+    if config.AMP_OPT_LEVEL != "O0":
         from npu_fused_adamw import NpuFusedAdamW
         optimizer = NpuFusedAdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
                                   lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
