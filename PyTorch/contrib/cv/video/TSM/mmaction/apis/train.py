@@ -1,4 +1,18 @@
-# Copyright 2020 Huawei Technologies Co., Ltd## Licensed under the Apache License, Version 2.0 (the "License");# you may not use this file except in compliance with the License.# You may obtain a copy of the License at## http://www.apache.org/licenses/LICENSE-2.0## Unless required by applicable law or agreed to in writing, software# distributed under the License is distributed on an "AS IS" BASIS,# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.# See the License for the specific language governing permissions and# limitations under the License.# ============================================================================import copy as cp
+# Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+import copy as cp
 import os.path as osp
 
 from apex import amp
@@ -80,9 +94,11 @@ def train_model(model,
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
 
+    model = model.npu()
+
     # Allow Amp to perform casts as required by the opt_level
     if cfg.AMP:
-        model, optimizer = amp.initialize(model.npu(), optimizer, opt_level=cfg.OPT_LEVEL, loss_scale=cfg.LOSS_SCALE)
+        model, optimizer = amp.initialize(model.npu(), optimizer, opt_level=cfg.OPT_LEVEL, loss_scale=cfg.LOSS_SCALE, combine_grad=cfg.COMBINE_GRAD)
 
     # put model on gpus
     if distributed:
@@ -94,11 +110,6 @@ def train_model(model,
             device_ids=[torch.npu.current_device()],
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
-    else:
-        # In 1-p training, we don't use Dataparallel
-        # model = MMDataParallel(
-        #     model.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
-        model = model.npu()
 
     Runner = OmniSourceRunner if cfg.omnisource else EpochBasedRunner
     runner = Runner(
