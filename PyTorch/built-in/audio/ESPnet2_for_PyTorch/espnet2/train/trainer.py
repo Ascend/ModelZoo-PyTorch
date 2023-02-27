@@ -187,6 +187,9 @@ class Trainer:
 
         scaler = None
         torch.npu.set_compile_mode(jit_compile=False)
+        option = {}
+        option["MM_BMM_ND_ENABLE"] = 'disable'
+        torch.npu.set_option(option)
 
         if trainer_options.resume and (output_dir / "checkpoint.pth").exists():
             cls.resume(
