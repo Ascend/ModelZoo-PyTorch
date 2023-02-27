@@ -16,7 +16,7 @@
 
 
 DATA_SET="LibriSpeech"
-DATA_ROOT_DIR="/home/cyl_dataset"
+DATA_ROOT_DIR="/home/dataset"
 DATA_DIR="${DATA_ROOT_DIR}/${DATA_SET}"
 
 if [ ! -d "$DATA_DIR" ]
