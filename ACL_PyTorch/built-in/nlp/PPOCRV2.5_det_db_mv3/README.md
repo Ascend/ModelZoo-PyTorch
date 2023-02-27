@@ -207,7 +207,7 @@
       在`PaddleOCR`目录执行
 
       ```
-      python3 eval_npu.py -c ./configs/det/det_mv3_db.yml -o Global.use_gpu=False Global.device_id=0 Global.om_path=om/db_mv3_24bs.om
+      python3 eval_npu.py -c ./configs/det/det_mv3_db.yml -o Global.use_gpu=False Global.device_id=0 Global.om_path=om/db_mv3_24bs.om Global.save_npu_path=npu_result
       ```
 
       -   参数说明：
@@ -215,6 +215,7 @@
            -   Global.use_gpu：是否使能gpu
            -   Global.device_id：选择npu的device_id
            -   Global.om_path：om文件路径
+           -   Global.save_npu_path: 推理结果保存路径
 
       推理完成后结果打屏显示
 

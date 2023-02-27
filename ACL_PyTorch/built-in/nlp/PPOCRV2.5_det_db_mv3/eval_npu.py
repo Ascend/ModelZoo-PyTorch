@@ -16,7 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
+import os
 from tqdm import tqdm
 from ppocr.data import build_dataloader
 from ppocr.postprocess import build_post_process
@@ -24,16 +24,17 @@ from ppocr.metrics import build_metric
 import tools.program as program
 import paddle
 import numpy as np
-from ais_bench.infer.interface import InferSession
+from ais_bench.infer.interface import InferSession, MemorySummary
 
 
 def eval(session_dbnet,
          valid_dataloader,
          post_process_class,
-         eval_class):
+         eval_class,
+         save_npu_path):
     with paddle.no_grad():
         pbar = tqdm(
-            total=len(valid_dataloader) // 24,
+            total=(len(valid_dataloader)+4) // 24,
             desc='eval model:',
             position=0,
             leave=True)
@@ -50,10 +51,15 @@ def eval(session_dbnet,
             if len(temp) == 24:
                 result_array.append(temp)
                 temp = []
-        
-        for images_bstch in  result_array:
+
+        zeros = np.zeros((1,3,736,1280),dtype=np.float32)
+        while len(temp) != 24:
+            temp.append((zeros,'pass','',''))
+        result_array.append(temp)
+
+        for ind, images_batch in  enumerate(result_array):
             temp_imgs = []
-            for imge, _, _, _ in images_bstch:
+            for imge, _, _, _ in images_batch:
                 temp_imgs.append(imge)
             
             imges = np.concatenate(temp_imgs, axis=0)
@@ -61,10 +67,14 @@ def eval(session_dbnet,
             
             for i in range(24):
                 preds = outputs[i,:,:,:][np.newaxis,:]
+                
                 preds = {'maps': preds}
             # Evaluate the results of the current batch
-                post_result = post_process_class(preds, images_bstch[i][1])
-                eval_class(post_result, images_bstch[i])
+                if images_batch[i][1] == 'pass':
+                    continue
+                np.save(f'{save_npu_path}/{ind}_{i}.npy', preds)
+                post_result = post_process_class(preds, images_batch[i][1])
+                eval_class(post_result, images_batch[i])
             pbar.update(1)
            
         # Get final metric，eg. acc or hmean
@@ -74,6 +84,8 @@ def eval(session_dbnet,
   
     return metric
 
+
+
 def main():
     global_config = config['Global']
     # build dataloader
@@ -81,7 +93,10 @@ def main():
 
     # build post process
     post_process_class = build_post_process(config['PostProcess'],
-                                            global_config)   
+                                            global_config)
+    
+
+   
 
     # om
     device_id = global_config['device_id']
@@ -91,15 +106,22 @@ def main():
     # build metric
     eval_class = build_metric(config['Metric'])
 
+    save_npu_path = global_config['save_npu_path']
+    if not os.path.exists(save_npu_path):
+        os.mkdir(save_npu_path)
     # start eval
     metric = eval(session_dbnet, valid_dataloader, post_process_class,
-                          eval_class)
+                          eval_class, save_npu_path)
 
-    total_time = 0
     s = session_dbnet.sumary()
-    total_time += np.mean(s.exec_time_list)
-    
-    metric['fps'] = 1000 * 24 / total_time
+
+    metric['fps_without_d2h_h2d'] = 1000 * 24 / np.mean(s.exec_time_list)
+    metric['fps_with_d2h_h2d'] = 1000 * 24 / (np.mean(s.exec_time_list) + \
+        np.mean(MemorySummary.get_H2D_time_list()) + \
+            np.mean(MemorySummary.get_D2H_time_list()))
+    metric['h2d(ms)'] = np.mean(MemorySummary.get_H2D_time_list())
+    metric['d2h(ms)'] = np.mean(MemorySummary.get_D2H_time_list())
+
     logger.info('metric eval ***************')
     for k, v in metric.items():
         logger.info('{}:{}'.format(k, v))
