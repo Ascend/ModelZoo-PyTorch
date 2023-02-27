@@ -286,10 +286,10 @@ def main():
         os.mkdir("./test/mel_tgt_pth")
     if not os.path.exists("./test/mel_out_pth"):
         os.mkdir("./test/mel_out_pth")
-    if not os.path.exists("./test/input_bin"):
-        os.mkdir("./test/input_bin")
+    if not os.path.exists(args.output):
+        os.mkdir(args.output)
     info_name = "./test/input_bin_info.info"
-    dataset_path = "./LJSpeech-1.1/"
+    dataset_path = args.dataset_path
 
     with open(info_name, 'w') as file:
         for i, b in enumerate(batches):
@@ -307,7 +307,7 @@ def main():
                 text_padded.zero_()
                 text_padded[:, :b['text'].size(1)] = b['text']
                 input_bin = np.array(text_padded)
-                input_bin.tofile(f"./test/input_bin/data{i}.bin")
+                input_bin.tofile(args.output + f"/data{i}.bin")
                 file.write(f"{i} input_bin/data{i}.bin")
                 file.write('\n')
 
