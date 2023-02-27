@@ -415,7 +415,6 @@ if __name__ == '__main__':
         linear_scaled_warmup_lr = linear_scaled_warmup_lr * config.TRAIN.ACCUMULATION_STEPS
         linear_scaled_min_lr = linear_scaled_min_lr * config.TRAIN.ACCUMULATION_STEPS
     config.defrost()
-    #config.NPU = True
     config.WORLD_SIZE = world_size
     config.freeze()
 
