@@ -50,7 +50,6 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.RC1 | -          |
     | Python    | 3.7.5   | -          |
-    | torch    | 1.8.0   | -          |    
 
     说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
@@ -68,6 +67,7 @@ FCENet，使用傅里叶变换来得到文本的包围框，该方法在弯曲�
     ```
     git clone https://github.com/open-mmlab/mmocr.git
     cd mmocr
+    git reset --hard 662f87106cfeca636523787b4b17a8e8967edc1c
     patch -p1 < ../fcenet.patch
     pip3 install -r requirements.txt
     pip3 install -v -e . # or "python setup.py develop"
