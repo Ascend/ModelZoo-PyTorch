@@ -162,9 +162,6 @@ do
 	    --num-workers 1 \
 	    --log-interval 1 \
 	    --save-interval 1 \
-            --profiling CANN \
-            --start_step 0\
-            --stop_step 10\
 	    --share-decoder-input-output-embed > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
