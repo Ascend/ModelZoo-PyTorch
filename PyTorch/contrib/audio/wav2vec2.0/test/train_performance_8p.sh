@@ -123,7 +123,8 @@ fairseq-hydra-train \
     task.data=./data/manifest \
     hydra.run.dir=$PWD \
     distributed_training.distributed_world_size=8 \
-    optimization.max_update=2000 \
+    optimization.max_update=800 \
+    dataset.validate_after_updates=10000 \
     --config-dir ./examples/wav2vec/config/finetuning --config-name base_100h \
     > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

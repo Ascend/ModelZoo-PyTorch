@@ -133,7 +133,7 @@ class RawAudioDataset(FairseqDataset):
 
         if self.pad:
             #target_size = min(max(sizes), self.max_sample_size)
-            target_size = ((min(max(sizes), self.max_sample_size)) // 16000 + 1) * 16000
+            target_size = ((min(max(sizes), self.max_sample_size)) // 64000 + 1) * 64000
         else:
             target_size = min(min(sizes), self.max_sample_size)
 
