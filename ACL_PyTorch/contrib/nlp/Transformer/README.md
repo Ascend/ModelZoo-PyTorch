@@ -71,9 +71,9 @@
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.6.0   | -                                                            |
+| PyTorch                                                      | 1.8.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -90,13 +90,11 @@
 
 2. 将ModelZoo-PyTorch/ACL_PyTorch/contrib/nlp/Transformer目录下的文件上传到服务器，并放到attention-is-all-you-need-pytorch源码目录下，后续操作均在开源项目attention-is-all-you-need-pytorch目录下进行。源码包中的文件及作用如下:
 
-    **注意：开源项目attention-is-all-you-need-pytorch目录下也有`requirements.txt `，以ModelZoo-PyTorch/ACL_PyTorch/contrib/nlp/Transformerr目录下的`requirements.txt `为准。**
+   **注意：开源项目attention-is-all-you-need-pytorch目录下也有`requirements.txt `，以ModelZoo-PyTorch/ACL_PyTorch/contrib/nlp/Transformerr目录下的`requirements.txt `为准。**
 
    ```
-   ├── gener_core                     // 配合Transformer_modify_onnx.py使用
    ├── LICENSE                        // Apache LICENCE
    ├── modelzoo_level.txt             // 模型精度性能结果
-   ├── perf_t4.py                     // T4性能测试文件
    ├── README.md                      // 模型离线推理说明README
    ├── requirements.txt               // 环境依赖
    ├── Transformer_bleu_score.py      // 精度计算脚本
@@ -110,10 +108,23 @@
 
    ```bash
    pip3 install -r requirements.txt   # 注意是ModelZoo-PyTorch仓中Transformer目录下的requirements.txt。约30分钟。
-   python -m spacy download en      # 下载spacy语言模型
-   python -m spacy download de
+   python3 -m spacy download en      # 下载spacy语言模型
+   python3 -m spacy download de
    ```
-   说明：python -m spacy download en下载过慢可以直接使用昇腾社区上已经下载好的模型。点击[链接]((https://www.hiascend.com/zh/software/modelzoo/models/detail/2/6513bfc21a674137837e889652626b68))，单击立即下载，下载压缩包，压缩包中de和en文件夹即为下载好的语言模型，将其拷贝到当前工作目录即可。
+   说明：python3 -m spacy download en下载过慢或代理错误可以直接使用昇腾社区上已经下载好的模型。点击[链接](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Transformer/PTH/de-en.zip)，压缩包中de和en文件夹即为下载好的语言模型，将其拷贝到当前工作目录即可。
+
+4. 安装改图依赖[auto-optimizer](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)。
+
+   ```
+   # 安装改图工具auto-optimizer
+   git clone https://gitee.com/ascend/msadvisor.git
+   cd msadvisor/auto-optimizer
+   python3 -m pip install .
+   
+   # 解决auto-optimizer依赖与requirements.txt中的冲突
+   pip3 install click==7.1.2
+   
+   ```
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -135,10 +146,7 @@
          ├──val.de
          ├──val.en
          ├──validation.tar.gz
-         
    ```
-   
-   
    
 2. 数据预处理。
 
@@ -152,7 +160,7 @@
    
       ```bash
       mkdir ./pkl_file
-      python3.7 preprocess.py -lang_src de -lang_trg en -share_vocab -save_data ./pkl_file/m30k_deen_shr.pkl
+      python3 preprocess.py -lang_src de -lang_trg en -share_vocab -save_data ./pkl_file/m30k_deen_shr.pkl
       ```
       - 参数说明：
          - -lang_src：源语言模型文件。
@@ -160,17 +168,17 @@
          - -share_vocab：允许共享词典。
          - -save_data：pkl文件保存路径。
 
-      运行成功后，生成/pkl_file/m30k_deen_shr.pkl文件。
+      运行成功后，生成/pkl_file/m30k_deen_shr.pkl文件（该命令若运行时被中断在重新运行时需要先删除.data文件夹）。
 
    3. 执行Transformer_preprocess.py脚本，把测试集数据转成bin文件（忽略测试集中长度大于15的句子）。
 
       ```bash
       mkdir -p ./pre_data/len15
-      python3.7 Transformer_preprocess.py --src_lang=de --trg_lang=en --src_lang_mode_path=de --trg_lang_mode_path=en --dataset_parent_path=.data --pre_data_save_path=./pre_data/len15 --align_length 15
+      python3 Transformer_preprocess.py --src_lang=de --trg_lang=en --src_lang_mode_path=de --trg_lang_mode_path=en --dataset_parent_path=.data --pre_data_save_path=./pre_data/len15 --align_length 15
       ```
 
       - 参数说明：
-         
+        
          - --src_lang：源语言。
          - --trg_lang：目标语言。
          - --src_lang_mode_path：源语言模型文件路径。
@@ -194,7 +202,7 @@
 
    2. 获取权重文件。
 
-       本文以开源项目中的“WMT'16 Multimodal Translation: de-en”任务为例，训练好的权重文件transformer_trained_0.chkpt可从[链接](https://www.hiascend.com/zh/software/modelzoo/models/detail/2/6513bfc21a674137837e889652626b68)中获取。点击该链接后，在弹出的网页中点击“立即下载”，下载压缩包，解压该压缩包，其中model文件夹中包含权重文件。以model/transformer_trained_0.chkpt形式的目录结构放到当前工作目录。
+       本文以开源项目中的“WMT'16 Multimodal Translation: de-en”任务为例，训练好的权重文件transformer_trained_0.chkpt可从[链接](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Transformer/PTH/transformer_trained_0.chkpt)中获取。以model/transformer_trained_0.chkpt形式的目录结构放到当前工作目录。
 
    3. 导出onnx文件。
 
@@ -257,7 +265,7 @@
       3. 运行Transformer_ckpt2onnx.py导出onnx模型。（用时约4分钟）
    
          ```bash
-         python3.7 Transformer_ckpt2onnx.py -data_pkl ./pkl_file/m30k_deen_shr.pkl -model ./model/transformer_trained_0.chkpt -no_cuda -max_seq_len 15
+         python3 Transformer_ckpt2onnx.py -data_pkl ./pkl_file/m30k_deen_shr.pkl -model ./model/transformer_trained_0.chkpt -no_cuda -max_seq_len 15
          ```
 
          导出后的onnx模型为transformer_greedySearch_input15_maxSeqLen15.onnx。导出onnx名称可以在Transformer_ckpt2onnx.py文件中更改。
@@ -265,7 +273,7 @@
       4. 简化onnx模型（用时约10分钟）。
    
          ```bash
-         python3.7 -m onnxsim ./model/transformer_greedySearch_input15_maxSeqLen15.onnx ./model/transformer_greedySearch_input15_maxSeqLen15_sim.onnx
+         python3 -m onnxsim ./model/transformer_greedySearch_input15_maxSeqLen15.onnx ./model/transformer_greedySearch_input15_maxSeqLen15_sim.onnx
          ```
          该命令中的两个路径，第一个路径为初始onnx路径，第二个路径为简化后的onnx的存储路径。
 
@@ -273,7 +281,7 @@
          运行Transformer_modify_onnx.py脚本：
    
          ```bash
-         python3.7 Transformer_modify_onnx.py --input_model_path ./model/transformer_greedySearch_input15_maxSeqLen15_sim.onnx --output_model_path ./model/transformer_greedySearch_input15_maxSeqLen15_sim_mod.onnx
+         python3 Transformer_modify_onnx.py --input_model_path ./model/transformer_greedySearch_input15_maxSeqLen15_sim.onnx --output_model_path ./model/transformer_greedySearch_input15_maxSeqLen15_sim_mod.onnx
          ```
          该命令所得到的结果./model/transformer_greedySearch_input15_maxSeqLen15_sim_mod.onnx，即为最终onnx，共经历导出、简化、修改三步。
    
@@ -332,9 +340,7 @@
            -   --soc\_version：处理器型号。
            
          
-         运行成功后生成<u>***transformer_greedySearch_input15_maxSeqLen15_finalom.om***</u>模型文件。
-
-
+         运行成功后生成 transformer_greedySearch_input15_maxSeqLen15_finalom.om 模型文件。
 
 2. 开始推理验证。
 
@@ -350,43 +356,18 @@
       配置之后执行以下命令：
 
       ```bash
-      mkdir ais_result
-      python3 -m ais-bench --model ./model/transformer_greedySearch_input15_maxSeqLen15_finalom.om  --input ./pre_data/len15 --output ./ais_result 
+      python3 -m ais_bench --model ./model/transformer_greedySearch_input15_maxSeqLen15_finalom.om  --input ./pre_data/len15 --output ./result --output_dirname result_bs1
       ```
       - 参数说明：
          - --model：om模型路径
          - --input：数据预处理步骤最终生成二进制的文件夹
          - --output：推理结果输出目录。
-
-
-      使用以上命令的输出结果中有类似以下信息：
-
-      ```
-      [INFO] output path:./ais_result/2022_08_23-09_22_56
-      ```
-
-      该信息是指在--output指明的路径下，以时间为名称的文件夹，其中存储了推理结果。
-
-
-
-      “安装ais_bench推理工具” 小节的以上内容为在310P使用ais_bench推理工具进行推理的说明。本模型在310上使用了benchmark推理工具进行推理。在310上推理的命令如下：
-
-      ```bash
-      rm -rf result
-      chmod a+x benchmark.x86_64
-      ./benchmark.x86_64 -model_type=nlp -batch_size=1 -device_id=0 -om_path=./model/transformer_greedySearch_input15_maxSeqLen15_finalom.om -input_text_path=./pre_data/len15/bin_file.info
-      ```
-
-      执行./benchmark.x86_64工具请选择与运行环境架构相同的命令。参数详情请参见《[CANN 推理benchmark工具用户指南](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
-
-      **注意**：使用benchmark进行推理，默认将推理结果输出至当前目录的result文件夹中。因此在推理数据后处理时，`--bin_file_path `参数为`./result/dumpOutput_device0`
-
-
+         - --output_dirname：推理结果输出子文件夹
 
    2. 推理数据后处理。
 
       ```bash
-      python3.7 Transformer_postprocess.py --bin_file_path ./ais_result/2022_08_23-09_22_56 --data_pkl ./pkl_file/m30k_deen_shr.pkl --result_path len15_ais_infer_result
+      python3 Transformer_postprocess.py --bin_file_path ./result/result_bs1 --data_pkl ./pkl_file/m30k_deen_shr.pkl --result_path len15_ais_bench_result
       ```
       - 参数说明：
          - --bin_file_path：使用ais_bench推理工具进行推理时的output path，请注意修改。
@@ -398,7 +379,7 @@
    3. 精度验证。
 
       ```bash
-      python3.7 Transformer_bleu_score.py --ground_truth_file_path=./pre_data/len15/test_en_len15.txt --pred_file_path=./len15_ais_infer_result/pred_sentence.txt
+      python3 Transformer_bleu_score.py --ground_truth_file_path=./pre_data/len15/test_en_len15.txt --pred_file_path=./len15_ais_bench_result/pred_sentence.txt
       ```
       - 参数说明：
          - --ground_truth_file_path：标杆数据路径（在数据预处理的第3小步已根据测试数据集生成）。
@@ -406,14 +387,8 @@
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+调用ACL接口推理计算，性能和精度参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集   | 精度   | 性能     |
-| -------- | ---------- | -------- | ------ | -------- |
-| 310      | 1          | Multi30k | 0.4094 | 19.74692 |
-| 310P     | 1          | Multi30k | 0.4092 | 48.48272 |
-| T4       | 1          | 全1数据   | -      | 38.64337 |
-
-**说明：**
-
-1. 在310上的性能使用benchmark测得，在310P上的性能使用ais_bench测得。
+| 芯片型号 | Batch Size | 数据集   | 精度（BLEU score） | 性能（FPS） |
+| -------- | ---------- | -------- | ------------------ | ----------- |
+| 310P     | 1          | Multi30k | 0.4098             | 65.4429     |
