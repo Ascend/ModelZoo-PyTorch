@@ -59,6 +59,11 @@ Centerface的非官方版本，实现了速度和准确性之间的最佳平衡�
   cd ${模型文件夹名称}/src/lib/external
   make
   ```
+  ```
+  # 安装评测时用到的bbox库扩展方法bbox_overlaps
+  cd ${模型文件夹名称}/evaluate
+  python3.7 setup.py install
+  ```  
 ## 准备数据集
    * 准备数据
 
