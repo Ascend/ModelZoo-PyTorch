@@ -69,7 +69,7 @@ ori_batch_bins=`cat $conf_file | grep batch_bins:`
 ori_lr=`cat $conf_file | grep lr:`
 sed -i "s|$ori_epoch|max_epoch: 5|g" $conf_file
 sed -i "s|$ori_batch_bins|batch_bins: 4000000|g" $conf_file
-sed -i "s|$ori_lr|lr: 0.0005|g" $conf_file
+sed -i "s|$ori_lr|   lr: 0.0005|g" $conf_file
 start_time=$(date +%s)
 
 nohup bash run.sh \
