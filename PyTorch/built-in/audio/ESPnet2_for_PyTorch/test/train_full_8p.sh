@@ -53,8 +53,8 @@ else
     mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 fi
 
-asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch_bins32000000_optim_conf{lr:0.004}_sp/train.log
-result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch_bins32000000_optim_conf{lr:0.004}_sp/RESULTS.md
+asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_sp/train.log
+result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_sp/RESULTS.md
 
 
 #################启动训练脚本#################
@@ -62,11 +62,18 @@ result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_batch
 # 必要参数替换配置文件
 cd $cur_path/egs2/aishell/asr1
 
+# 修改配置文件超参
+conf_file=$cur_path/egs2/aishell/asr1/conf/tuning/train_asr_conformer.yaml
+ori_epoch=`cat $conf_file | grep max_epoch:`
+ori_batch_bins=`cat $conf_file | grep batch_bins:`
+ori_lr=`cat $conf_file | grep lr:`
+sed -i "s|$ori_epoch|max_epoch: 50|g" $conf_file
+sed -i "s|$ori_batch_bins|batch_bins: 32000000|g" $conf_file
+sed -i "s|$ori_lr|lr: 0.004|g" $conf_file
 start_time=$(date +%s)
 
 nohup bash run.sh \
   --stage ${stage} \
-  --asr_args "--batch_bins 32000000 --optim_conf '{lr: 0.004}'" \
   --ngpu 8 &
 
 wait
@@ -79,9 +86,9 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-ITERS=`grep "epoch results:" $asr_log |head -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
+ITERS=`grep "epoch results:" $asr_log |tail -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
 SECONDS=`grep "elapsed time" $asr_log | awk '{print$14}'`
-FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' * 50 *8) / '$SECONDS')}'`
+FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' *8) / '$SECONDS')}'`
 
 #输出训练精度,需要模型审视修改
 dev_accuracy=`grep "valid.acc.ave/dev" ${result} | tail -n 1 | awk -F "|" '{print$5}'`
