@@ -72,7 +72,7 @@ else
 fi
 
 if [[ $precision_mode == "O0" ]];then
-    adv_param = " --amp-opt-level O0 \ "
+    adv_param = " --amp-opt-level O0 "
 else
     adv_param = ""
 fi
@@ -112,7 +112,7 @@ fi
 python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  main.py \
           --output=output/test \
           --one_epoch \
-          $adv_param
+          $adv_param \
           --cfg configs/swin_tiny_patch4_window7_224.yaml \
           --local_rank $ASCEND_DEVICE_ID  \
           --data-path ${data_path} \
