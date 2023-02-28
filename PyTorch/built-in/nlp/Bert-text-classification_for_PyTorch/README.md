@@ -130,12 +130,12 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 | CoLA  |       Matthews corr        |    60.5    |    63.75    |    O2    |   3   |      1.8      |
 | SST-2 |          Accuracy          |    94.9    |    93.23    |    O2    |   3   |      1.8      |
 | MRPC  |             F1             |    89.3    |    90.28    |    O2    |   5   |      1.8      |
-| STS-B |        Spearman cor        |    86.5    |    88.76    |    O2    |   3   |      1.8      |
+| STS-B |        Spearman cor        |    86.5    |    88.76    |    O2    |   3   |      1.8      | 
 |  QQP  |             F1             |    72.1    |    86.42    |    O2    |   3   |      1.8      |
 | MNLI  | Matched acc/MisMatched acc | 86.7/85.9  | 86.55/86.41 |    O2    |   3   |      1.8      |
 | QNLI  |          Accuracy          |    92.7    |    92.5     |    O2    |   3   |      1.8      |
 |  RTE  |          Accuracy          |    70.1    |    69.49    |    O2    |   5   |      1.8      |
-| WNLI  |          Accuracy          |   51.56    |    53.12    |    O2    |   3   |      1.8      |
+| WNLI  |          Accuracy          |   53.12    |    53.12    |    O2    |   1   |      1.8      |
 
 **表 3**  8卡训练结果展示表
 
