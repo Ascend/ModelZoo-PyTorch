@@ -23,16 +23,15 @@ if __name__ == '__main__':
     with open(mask_path,'r') as f:
         file = f.read()
         f.close()
-
-    useful_str =  re.findall(f'ave_latency: (.*)ms', file)[0]
-    second+=float(useful_str)
+    useful_str = re.findall(f'mean = (.*?),', file)[0]
+    second += float(useful_str)
 
     with open(refine_path, 'r') as f:
         file = f.read()
         f.close()
-    useful_str = re.findall(f'ave_latency: (.*)ms', file)[0]
+    useful_str = re.findall(f'mean = (.*?),', file)[0]
     second += float(useful_str)
 
     result = 1000/(second/4)
-    print(f'310 bs{1} fps:{result}')
+    print(f'310P3 bs{1} fps:{result}')
 

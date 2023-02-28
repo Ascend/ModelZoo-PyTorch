@@ -35,6 +35,9 @@ from utils.tracker_config import TrackerConfig
 from utils.config_helper import load_config
 from utils.pyvotkit.region import vot_overlap, vot_float2str
 
+from ais_bench.infer.interface import InferSession
+
+
 thrs = np.arange(0.3, 0.5, 0.05)
 
 parser = argparse.ArgumentParser(description='Test SiamMask')
@@ -53,8 +56,6 @@ parser.add_argument('--gt', action='store_true', help='whether use gt rect for d
 parser.add_argument('--video', default='', type=str, help='test special video')
 parser.add_argument('--cpu', action='store_true', help='cpu mode')
 parser.add_argument('--debug', action='store_true', help='debug mode')
-parser.add_argument('--save_path', type=str, default='om_io_files')
-parser.add_argument('--msame_path', type=str, default='.')
 parser.add_argument('--om_path',type=str,default='.')
 parser.add_argument('--device', type=str, default=0)
 
@@ -138,7 +139,7 @@ def generate_anchor(cfg, score_size):
     return anchor
 
 
-def siamese_init(im, target_pos, target_sz, anchors, anchor_num, anchor, path, hp=None):
+def siamese_init(im, target_pos, target_sz, anchors, anchor_num, hp=None):
     state = dict()
     state['im_h'] = im.shape[0]
     state['im_w'] = im.shape[1]
@@ -160,8 +161,7 @@ def siamese_init(im, target_pos, target_sz, anchors, anchor_num, anchor, path, h
     z_crop = get_subwindow_tracking(im, target_pos, p.exemplar_size, s_z, avg_chans)
 
     z = Variable(z_crop.unsqueeze(0))
-    np_z = z.cpu().numpy()
-    np_z.tofile(f"{path}/t_0.bin")
+    np_z = np.ascontiguousarray(z.cpu().numpy())
 
     if p.windowing == 'cosine':
         window = np.outer(np.hanning(p.score_size), np.hanning(p.score_size))
@@ -174,10 +174,17 @@ def siamese_init(im, target_pos, target_sz, anchors, anchor_num, anchor, path, h
     state['window'] = window
     state['target_pos'] = target_pos
     state['target_sz'] = target_sz
+
+    om_path_mask = os.path.join(args.om_path, 'mask.om')
+    state['model_mask'] = InferSession(int(args.device), om_path_mask)
+    om_path_refine = os.path.join(args.om_path, 'refine.om')
+    state['model_refine'] = InferSession(int(args.device), om_path_refine)
+    state['np_z'] = np_z
+
     return state
 
 
-def siamese_track(state, im, path, frame, mask_enable=False, refine_enable=False):
+def siamese_track(state, im, mask_enable=False, refine_enable=False):
     p = state['p']
     avg_chans = state['avg_chans']
     window = state['window']
@@ -195,35 +202,17 @@ def siamese_track(state, im, path, frame, mask_enable=False, refine_enable=False
 
     # extract scaled crops for search region x at previous target position
     x_crop = Variable(get_subwindow_tracking(im, target_pos, p.instance_size, round(s_x), avg_chans).unsqueeze(0))
-    np_x = x_crop.cpu().numpy()
-    np_x.tofile(f"{path}/s_{frame}.bin")
+    np_z = state['np_z']
+    np_x = np.ascontiguousarray(x_crop.cpu().numpy())
 
-    input_str = f"{path}/t_0.bin,{path}/s_{frame}.bin"
-    out_str = path
-    cmd_str = f"{args.msame_path}/msame --model \"{args.om_path}/mask.om\" --input \"{input_str}\" --output \"{out_str}\" --outfmt BIN --device {args.device}"
-    os.system(command=cmd_str)
-
-    tmp_dir_name = os.listdir(out_str)
-    tmp_dir_path = [f"{out_str}/{name}" for name in tmp_dir_name if os.path.isdir(f"{out_str}/{name}")]
-    for p_ in tmp_dir_path:
-        mv_cmd = f"mv {p_}/* {out_str}"
-        os.system(mv_cmd)
-        os.system(f"rm -rf {p_}")
-
-    score = np.fromfile(f"{path}/mask_output_0.bin",dtype=np.float32)
-    score = torch.from_numpy(score.reshape((-1, 10, 25, 25)))
-    delta = np.fromfile(f'{path}/mask_output_1.bin',dtype=np.float32)
-    delta = torch.from_numpy(delta.reshape((-1, 20, 25, 25)))
-    mask = np.fromfile(f'{path}/mask_output_2.bin',dtype=np.float32)
-    mask = torch.from_numpy(mask.reshape((1, 3969, 25, 25)))
-    f0 = np.fromfile(f"{path}/mask_output_3.bin",dtype=np.float32)
-    f0 = torch.from_numpy(f0.reshape((-1, 64, 125, 125)))
-    f1 = np.fromfile(f"{path}/mask_output_4.bin",dtype=np.float32)
-    f1 = torch.from_numpy(f1.reshape((-1, 256, 63, 63)))
-    f2 = np.fromfile(f"{path}/mask_output_5.bin",dtype=np.float32)
-    f2 = torch.from_numpy(f2.reshape((-1, 512, 31, 31)))
-    corr_feature = np.fromfile(f"{path}/mask_output_6.bin",dtype=np.float32)
-    corr_feature = torch.from_numpy(corr_feature.reshape((-1, 256, 25, 25)))
+    output_mask = state['model_mask'].infer([np_z, np_x])
+    score = torch.from_numpy(output_mask[0])
+    delta = torch.from_numpy(output_mask[1])
+    mask = torch.from_numpy(output_mask[2])
+    f0 = torch.from_numpy(output_mask[3])
+    f1 = torch.from_numpy(output_mask[4])
+    f2 = torch.from_numpy(output_mask[5])
+    corr_feature = torch.from_numpy(output_mask[6])
 
     delta = delta.permute(1, 2, 3, 0).contiguous().view(4, -1).data.cpu().numpy()
     score = F.softmax(score.permute(1, 2, 3, 0).contiguous().view(2, -1).permute(1, 0), dim=1).data[:,
@@ -283,36 +272,11 @@ def siamese_track(state, im, path, frame, mask_enable=False, refine_enable=False
             p2 = torch.nn.functional.pad(f2, [4, 4, 4, 4])[:, :, pos[0]:pos[0] + 15, pos[1]:pos[1] + 15]
             p3 = corr_feature[:, :, pos[0], pos[1]].view(-1, 256, 1, 1)
 
-            refine_in = f"{path}/refine_in_{frame}"
-            refine_out = f"{path}/refine_out_{frame}"
-            mkdir(refine_in)
-            mkdir(refine_out)
-
-            np_p0 = p0.cpu().numpy()
-            np_p0.tofile(f"{refine_in}/p0.bin")
-            np_p1 = p1.cpu().numpy()
-            np_p1.tofile(f"{refine_in}/p1.bin")
-            np_p2 = p2.cpu().numpy()
-            np_p2.tofile(f"{refine_in}/p2.bin")
-            np_p3 = p3.cpu().numpy()
-            np_p3.tofile(f"{refine_in}/p3.bin")
-
-            p_in_str = f"{refine_in}/p0.bin,{refine_in}/p1.bin,{refine_in}/p2.bin,{refine_in}/p3.bin"
-            p_out_str = refine_out + '/'
-            cmd_str = f"{args.msame_path}/msame --model \"{args.om_path}/refine.om\" --input \"{p_in_str}\" --output \"{p_out_str}\" --outfmt bin --device {args.device}"
-            os.system(cmd_str)
-
-            # del
-            tmp_dir_name = os.listdir(refine_out)
-            tmp_dir_path = [f"{refine_out}/{name}" for name in tmp_dir_name if os.path.isdir(f"{refine_out}/{name}")]
-            for p_ in tmp_dir_path:
-                mv_cmd = f"mv {p_}/* {refine_out}"
-                os.system(mv_cmd)
-                os.system(f"rm -rf {p_}")
-
-            mask = np.fromfile(f"{refine_out}/refine_output_0.bin",dtype=np.float32)
-            mask = torch.from_numpy(mask.reshape((1, 16129))).sigmoid().squeeze().view(
-                p.out_size, p.out_size).cpu().data.numpy()
+            output_refine = state['model_refine'].infer([np.ascontiguousarray(p0.cpu().numpy()),
+                                                         np.ascontiguousarray(p1.cpu().numpy()),
+                                                         np.ascontiguousarray(p2.cpu().numpy()),
+                                                         np.ascontiguousarray(p3.cpu().numpy())])
+            mask = torch.from_numpy(output_refine[0]).sigmoid().squeeze().view(p.out_size, p.out_size).cpu().data.numpy()
 
         else:
             mask = mask[0, :, delta_y, delta_x].sigmoid(). \
@@ -381,10 +345,6 @@ def track_vot(video, cfg, hp=None, mask_enable=False, refine_enable=False):
 
     anchors = cfg['anchors']
     anchor_num = len(anchors["ratios"]) * len(anchors["scales"])
-    anchor = Anchors(anchors)
-    name = video['name']
-    dir_path = f"{args.save_path}/{name}"
-    mkdir(dir_path)
 
     for f, image_file in enumerate(image_files):
         im = cv2.imread(image_file)
@@ -393,11 +353,11 @@ def track_vot(video, cfg, hp=None, mask_enable=False, refine_enable=False):
             cx, cy, w, h = get_axis_aligned_bbox(gt[f])
             target_pos = np.array([cx, cy])
             target_sz = np.array([w, h])
-            state = siamese_init(im, target_pos, target_sz, anchors, anchor_num, anchor, dir_path, hp)  # init tracker
+            state = siamese_init(im, target_pos, target_sz, anchors, anchor_num, hp)  # init tracker
             location = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
             regions.append(1 if 'VOT' in args.dataset else gt[f])
         elif f > start_frame:  # tracking
-            state = siamese_track(state, im, dir_path, f, mask_enable, refine_enable)  # track
+            state = siamese_track(state, im, mask_enable, refine_enable)  # track
             if mask_enable:
                 location = state['ploygon'].flatten()
                 mask = state['mask']
@@ -522,11 +482,6 @@ def MultiBatchIouMeter(thrs, outputs, targets, start=None, end=None):
     return res
 
 
-def mkdir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-
 def main():
     global args, logger, v_id
     args = parser.parse_args()
@@ -540,7 +495,6 @@ def main():
     logger.info(args)
 
     dataset = load_dataset(args.dataset)
-    mkdir(args.save_path)
 
     total_lost = 0  # VOT
     speed_list = []
