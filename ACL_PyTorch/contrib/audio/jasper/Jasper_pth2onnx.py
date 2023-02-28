@@ -20,7 +20,7 @@ from common import helpers
 from jasper.model import Jasper
 
 
-def pth2onnx(ckpt_path, out_path, bs):
+def pth2onnx(ckpt_path, out_path):
     cfg = config.load('configs/jasper10x5dr_speedp-online_speca.yaml')
     model = Jasper(encoder_kw=config.encoder(cfg),
                    decoder_kw=config.decoder(cfg, n_classes=29))
@@ -29,22 +29,20 @@ def pth2onnx(ckpt_path, out_path, bs):
     model.load_state_dict(state_dict, strict=True)
     model.eval()
 
-    bs = int(bs)
-    feats = torch.randn([bs, 64, 4000], dtype=torch.float32)
-    feat_lens = torch.tensor([1000], dtype=torch.int32)
-    dynamic_axes = {'feats': {2: '-1'}, 'output': {1: '-1'}}
+    feats = torch.randn([1, 64, 4000], dtype=torch.float32)
+    feat_lens = torch.tensor([1], dtype=torch.int32)
+    dynamic_axes = {'feats': {0: '-1'}, 'feat_lens': {0: '-1'}, 
+                    'prob': {0: '-1'}, 'label': {0: '-1'}}
     torch.onnx.export(model,
                       (feats, feat_lens),
                       out_path,
                       input_names=['feats', 'feat_lens'],
-                      output_names=['output'],
+                      output_names=['prob', 'label'],
                       dynamic_axes=dynamic_axes,
-                      #verbose=True,
                       opset_version=11)
 
 
 if __name__ == '__main__':
     ckpt_path = sys.argv[1]
     out_path = sys.argv[2]
-    bs = sys.argv[3]
-    pth2onnx(ckpt_path, out_path, bs)
+    pth2onnx(ckpt_path, out_path)

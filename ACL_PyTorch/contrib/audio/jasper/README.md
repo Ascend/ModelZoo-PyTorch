@@ -35,14 +35,14 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 - 输入数据
 
   | 输入数据 | 数据类型 | 大小               | 数据排布格式 |
-  | -------- | -------- | ------------------ | ------------ |
-  | input    | RGB_FP16 | batchsize x 64 x-1 | ND           |
+  | -------- | -------- | ------------------- | ------------ |
+  | input    | FP16     | batchsize x 64 x 4000 | ND           |
 
 - 输出数据
 
   | 输出数据 | 数据类型 | 大小                | 数据排布格式 |
   | -------- | -------- | ------------------- | ------------ |
-  | output   | FP16     | batchsize x -1 x 29 | ND           |
+  | output   | FP16     | batchsize x 2000 x 29 | ND           |
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
@@ -50,10 +50,10 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 
 | 配套                                                            | 版本    | 环境准备指导                                                                                          |
 | --------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| 固件与驱动                                                      | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                            | 5.1.RC2 | -                                                                                                     |
+| 固件与驱动                                                      | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                            | 6.0.RC1 | -                                                                                                     |
 | Python                                                          | 3.7.5   | -                                                                                                     |
-| PyTorch                                                         | 1.8.0   | -                                                                                                     |
+| PyTorch                                                         | 1.11.0   | -                                                                                                     |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -66,15 +66,16 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
    git clone https://github.com/NVIDIA/DeepLearningExamples.git
    cd DeepLearningExamples
    git reset --hard 15af494a8e7e0c33fcbdc6ef9cc12e3929e313aa
+   mv ../Jasper.patch ./
+   git apply Jasper.patch
    cd PyTorch/SpeechRecognition/Jasper      # 将本仓库中代码拷贝到此目录下执行
    ```
+   将requirements.txt，Jasper_preprocess.py，Jasper_pth2onnx.py，Jasper_postprocess.py拷贝到DeepLearningExamples/PyTorch/SpeechRecognition/Jasper目录下。
 
 2. 安装依赖。
 
    ```shell
    pip3 install -r requirements.txt
-   sudo apt install libsndfile1
-   sudo apt install sox
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -100,21 +101,44 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   使用代码仓 Japser/utils目录下的convert_librispeech.py 脚本原始数据（.flac）转化为语音文件（.wav）。
+   1. 使用代码仓 Japser/utils目录下的convert_librispeech.py 脚本原始数据（.flac）转化为语音文件（.wav）。
 
-   ```shell
-   python ./utils/convert_librispeech.py \
-          --input_dir ${dataset_dir}/test-other \
-          --dest_dir ${dataset_dir}/test-other-wav \
-          --output_json ${dataset_dir}/librispeech-test-other-wav.json
-   ```
+      ```shell
+      python3 ./utils/convert_librispeech.py \
+            --input_dir ${dataset_dir}/test-other \
+            --dest_dir ${dataset_dir}/test-other-wav \
+            --output_json ${dataset_dir}/librispeech-test-other-wav.json
+      ```
 
       - 参数说明：
-          - --input_dir： 原始数据验证集（.flac）所在路径
-          - --dest_dir： 输出文件（.wav）所在路径
-          - --output_json：wav对应的元信息json文件
+         - input_dir： 原始数据验证集（.flac）所在路径
+         - dest_dir： 输出文件（.wav）所在路径
+         - output_json：wav对应的元信息json文件
 
-      每个 .flac 对应生成一个.wav文件 。
+      每个 .flac 对应生成一个.wav文件，保存在${dataset_dir}/test-other-wav目录下。
+      
+   2. 执行Jasper_preprocess.py脚本，完成预处理。
+      ```shell
+      python3 Jasper_preprocess.py --dataset_dir ${dataset_dir} \
+              --val_manifests ${dataset_dir}/librispeech-test-other-wav.json \
+              --model_config configs/jasper10x5dr_speedp-online_speca.yaml \
+              --max_duration 40 \
+              --pad_to_max_duration \
+              --save_bin_0 ./prep_data_0 \
+              --save_bin_1 ./prep_data_1 \
+              --json_file ./agg_txts.json
+      ```
+      - 参数说明：
+         - dataset_dir：数据集所在路径。
+         - val_manifests：数据信息的json文件。
+         - model_config：模型配置文件。
+         - max_duration：最大pad数目。
+         - pad_to_max_duration：是否pad。
+         - save_bin_0：input0存储路径。
+         - save_bin_1：input1存储路径。
+         - json_file：存储处理后的数据信息的json文件
+
+      运行成功生成prep_data_0，prep_data_1文件夹和agg_txts.json文件。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -133,32 +157,22 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 
          将nvidia_jasper_210205.pt 文件移动到checkpoint文件夹下。
 
-       - 注释所有apex依赖和源工程代码修改。
-
-         将源码中Jasper.patch文件移动到代码仓“DeepLearningExamples”目录下，执行命令。
-
-         ```shell
-         git apply Jasper.patch
-         ```
-
-         注：若无法打patch可手动执行。
-
    2. 导出onnx文件。
 
-      将源码中Jasper_pth2onnx.py脚本移动到代码仓“DeepLearningExamples/PyTorch/SpeechRecognition/Jasper”目录下，执行如下命令。
+      运行Jasper_pth2onnx.py脚本，导出onnx模型。
 
       ```
-      python Jasper_pth2onnx.py  checkpoint/nvidia_jasper_210205.pt jasper_bs1.onnx 1
+      python3 Jasper_pth2onnx.py  checkpoint/nvidia_jasper_210205.pt jasper.onnx
       ```
 
-      该转换过程执行时间较长请耐心等待。运行成功后在当前目录生成 jasper_bs1.onnx 模型文件。
+      该转换过程执行时间较长请耐心等待。运行成功后在当前目录生成 jasper.onnx 模型文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```shell
-          source /usr/local/Ascend/ascend_tooklit/set_env.sh
+         source /usr/local/Ascend/ascend-tooklit/set_env.sh
          ```
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
@@ -182,12 +196,12 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
       3. 执行ATC命令。
 
          ```shell
-          atc --model=jasper_bs1.onnx \
+         atc --model=jasper.onnx \
              --framework=5 \
              --input_format=ND \
-             --input_shape="feats:1,64,4000;feat_lens:1" \
-             --output=jasper_bs1 \
-             --soc_version=${chip_name} \
+             --input_shape="feats:${bs},64,4000;feat_lens:${bs}" \
+             --output=jasper_bs${bs} \
+             --soc_version=Ascend${chip_name} \
              --log=error
          ```
 
@@ -201,7 +215,7 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-         运行成功后生成jasper_bs1.om模型文件。
+         运行成功后生成jasper_bs${bs}.om模型文件。
 
 2. 开始推理验证。
 
@@ -209,53 +223,58 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   2. 使用pyACL进行推理。
-
-      执行 om_infer_acl.py进行离线推理。
+   2. 执行推理。
 
       ```shell
-      # 使用jasper_1batch.om模型在LibriSpeech数据集的dev-clean上进行推理，推理结果保存在result_bs1.txt中
-      # 执行离线推理后会输出wer值，与参考精度值比较，保证精度差异在1%以内即可。
-      # 对于不同batch size的om模型，需要修改batch_size参数
-      python Jasper_infer_acl.py \
-              --batch_size 1 \
-              --model ./jasper_bs1.om \
-              --val_manifests ${dataset_dir}/librispeech-test-other-wav.json \
-              --model_config configs/jasper10x5dr_speedp-online_speca.yaml \
-              --dataset_dir ${dataset_dir} \
-              --max_duration 40 \
-              --pad_to_max_duration \
-              --save_predictions ./result_bs1.txt
+      python3 -m ais_bench --model jasper_bs${bs}.om --input "prep_data_0,prep_data_1" --output ./ --output_dirname result
       ```
+      -  参数说明：
+         - model：om文件路径。
+         - input：模型输入文件路径。
+         - output：输出文件路径。
+         - output_dirname：输出文件子目录。
+      运行成功后，得到result文件夹。
 
    3. 精度验证。
 
-      执行离线推理后会输出wer值，与[官方给出的wer=9.66](https://ngc.nvidia.com/catalog/models/nvidia:jasper_pyt_onnx_fp16_amp/version)进行对比，保证精度差异在1%以内即可。
+      调用脚本与数据集标签比对，可以获得wer数据。
+
+      ```shell
+      python3 Jasper_postprocess.py \
+            --model_config configs/jasper10x5dr_speedp-online_speca.yaml \
+            --save_bin ./result \
+            --json_file ./agg_txts.json
+      ```
+
+      - 参数说明：
+
+        - model_config：模型配置文件。
+        - save_bin：推理结果存储路径。
+        - json_file：预处理得到的json文件。
 
    4. 性能验证
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：执行推理。
 
       ```shell
-      python3 -m ais_bench --model jasper_bs1.om --batchsize 1 --loop 20
+      python3 -m ais_bench --model jasper_bs${bs}.om --loop 20
       ```
 
-      -   参数说明：
+      - 参数说明：
 
-           -   --model：om模型。
-           -   --loop：纯推理循环次数。
-           -   --batchsize：batchsize的值
+         - model：om模型。
+         - loop：纯推理循环次数。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集                        | 精度  | 性能  |
-| -------- | ---------- | ----------------------------- | ----- | ----- |
-| 310P3    | 1          | LibriSpeech-test-other.tar.gz | 9.726 | 29.25 |
-| 310P3    | 4          | LibriSpeech-test-other.tar.gz | 9.726 | 28.59 |
-| 310P3    | 8          | LibriSpeech-test-other.tar.gz | 9.726 | 21.23 |
-| 310P3    | 16         | LibriSpeech-test-other.tar.gz | 9.726 | 28.21 |
-| 310P3    | 32         | LibriSpeech-test-other.tar.gz | 9.726 | 28.54 |
-| 310P3    | 64         | LibriSpeech-test-other.tar.gz | 9.726 | 26.37 |
+| 芯片型号 | Batch Size | 数据集                  | 精度  | 性能  |
+| -------- | ---------- | ---------------------- | ----- | ----- |
+| 310P3    | 1          | LibriSpeech-test-other | 9.709 | 41.37 |
+| 310P3    | 4          | LibriSpeech-test-other |       | 37.64 |
+| 310P3    | 8          | LibriSpeech-test-other |       | 36.57 |
+| 310P3    | 16         | LibriSpeech-test-other |       | 34.39 |
+| 310P3    | 32         | LibriSpeech-test-other |       | 34.38 |
+| 310P3    | 64         | LibriSpeech-test-other |       | 34.46 |

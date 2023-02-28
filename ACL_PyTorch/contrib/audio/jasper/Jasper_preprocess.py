@@ -1,5 +1,5 @@
 """
-Copyright 2021 Huawei Technologies Co., Ltd
+Copyright 2023 Huawei Technologies Co., Ltd
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@ limitations under the License.
 """
 
 import argparse
-from numpy.testing._private.utils import measure
+import os
+import json
+import numpy as np
 from tqdm import tqdm
 
 import torch
@@ -24,30 +26,26 @@ from jasper import config
 from common import helpers
 from common.dataset import (AudioDataset, get_data_loader)
 from common.features import FilterbankFeatures
-from common.helpers import process_evaluation_epoch
-from jasper.model import GreedyCTCDecoder
-
-from acl_net import AclModel
 
 
 def get_parser():
     parser = argparse.ArgumentParser(description='Jasper')
-    parser.add_argument('--batch_size', default=16, type=int,
-                        help='Data batch size')
     parser.add_argument('--dataset_dir', type=str,
                         help='Absolute path to dataset folder')
     parser.add_argument('--val_manifests', type=str, nargs='+',
                         help='Relative path to evaluation dataset manifest files')
-    parser.add_argument('--model', default=None, type=str,
-                        help='Path to om model')
     parser.add_argument('--model_config', type=str, required=True,
                         help='Relative model config path given dataset floder')
     parser.add_argument("--max_duration", default=None, type=float,
                         help='maximum duration of sequences. if None uses attribute from model configuration file')
     parser.add_argument("--pad_to_max_duration", action='store_true',
                         help='pad to maximum duration of sequences')
-    parser.add_argument('--save_predictions', type=str, default=None,
-                        help='Save predictions in text form at this location')
+    parser.add_argument('--save_bin_0', type=str, default='./prep_data_0',
+                        help='Save input 0 in bin format at this location')
+    parser.add_argument('--save_bin_1', type=str, default='./prep_data_1',
+                        help='Save input 1 in bin format at this location')
+    parser.add_argument('--json_file', type=str, default="./agg_txts.json",
+                        help='json file name')
     parser.add_argument("--device_id", default=0,
                         type=int, help='Select device for inference')
     parser.add_argument('--cpu_run', default=True, choices=['True', 'False'],
@@ -61,6 +59,12 @@ def main():
 
     parser = get_parser()
     args = parser.parse_args()
+    path_0 = args.save_bin_0
+    path_1 = args.save_bin_1
+    if not os.path.exists(path_0):
+        os.makedirs(path_0)
+    if not os.path.exists(path_1):
+        os.makedirs(path_1)
 
     cfg = config.load(args.model_config)
     if args.max_duration is not None:
@@ -83,28 +87,17 @@ def main():
                            **dataset_kw)
 
     data_loader = get_data_loader(dataset,
-                                  args.batch_size,
+                                  1,
                                   multi_gpu=False,
                                   shuffle=False,
                                   num_workers=4,
                                   drop_last=False)
 
     feat_proc = FilterbankFeatures(**features_kw)
-
-    measurements = {}
-    om_model = AclModel(device_id=args.device_id,
-                        model_path=args.model,
-                        sync_infer=args.sync_infer,
-                        measurements=measurements,
-                        key='per_infer_time_ns',
-                        cpu_run=args.cpu_run)
-
     feat_proc.to('cpu')
     feat_proc.eval()
 
     agg = {'txts': [], 'preds': [], 'logits': []}
-
-    greedy_decoder = GreedyCTCDecoder()
 
     for it, batch in enumerate(tqdm(data_loader)):
 
@@ -114,33 +107,16 @@ def main():
         feats = feats.numpy()
         feat_lens = feat_lens.numpy()
 
-        # om infer
-        batch_rank = 4000
         inputs = [feats, feat_lens]
-        dims = [args.batch_size, 64, batch_rank, args.batch_size]
-        dims_info = {'dimCount': 4, 'name': '', 'dims': dims}
-        res = om_model(inputs, dims_info)
-        # because om has random order, so use if branch to get target result
-        for item in res:
-            if len(item.shape) == 3:
-                log_probs = item
-                break
-
-        preds = greedy_decoder(torch.tensor(log_probs))
-
         if txt is not None:
             agg['txts'] += helpers.gather_transcripts([txt], [txt_lens],
                                                       symbols)
-        agg['preds'] += helpers.gather_predictions([preds], symbols)
-        agg['logits'].append(log_probs)
-
-    wer, _ = process_evaluation_epoch(agg)
-    print(f'eval_wer: {100 * wer}')
-
-    if args.save_predictions:
-        with open(args.save_predictions, 'w') as f:
-            f.write('\n'.join(agg['preds']))
-
+            feats_name = "{:0>12d}.bin".format(it)
+            lens_name = "{:0>12d}.bin".format(it)
+            feats.tofile(os.path.join(path_0, feats_name))
+            feat_lens.tofile(os.path.join(path_1, lens_name))
+    with open(args.json_file, "w") as f:
+        json.dump(agg, f)
 
 if __name__ == "__main__":
     main()
