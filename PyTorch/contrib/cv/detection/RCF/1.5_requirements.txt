@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.2.2.post3
 onnx
 opencv-python
 numpy
@@ -7,5 +7,4 @@ decorator
 sympy
 mpmath
 matplotlib
-Pillow==9.1.0
-
+Pillow==8.4.0
