@@ -24,18 +24,32 @@
 
 - 参考实现：
 
-  ```
-  url=https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
-  mode_name=vit_base_patch32_224
-  ```
+```
+url=https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
+mode_name = [
+    vit_base_patch8_224, 
+   vit_base_patch16_224, 
+   vit_base_patch16_384, 
+   vit_base_patch32_224,
+   vit_base_patch32_384,
+]
+```
 
 ## 输入输出数据<a name="section540883920406"></a>
 
 - 输入数据
 
-  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
-  | -------- | -------- | ------------------------- | ------------ |
-  | input    | FLOAT32  | batchsize x 3 x 224 x 224 | NCHW         |
+   1. 对于 vit_base_patch8_224、vit_base_patch16_224 和 vit_base_patch32_224
+
+      | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+      | -------- | -------- | ------------------------- | ------------ |
+      | input    | FLOAT32  | batchsize x 3 x 224 x 224 | NCHW         |
+
+   2. 对于 vit_base_patch16_384 和 vit_base_patch32_384
+
+      | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+      | -------- | -------- | ------------------------- | ------------ |
+      | input    | FLOAT32  | batchsize x 3 x 384 x 384 | NCHW         |
 
 - 输出数据
 
@@ -51,10 +65,10 @@
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 22.0.4  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.8.0+ | -                                                            |
+  | PyTorch                                                      | 1.8.0+  | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
@@ -65,16 +79,25 @@
 
 1. 获取源码。
 
-   ```
-   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git        # 克隆仓库的代码
-   git checkout master         # 切换到对应分支
-   cd ACL_PyTorch/contrib/cv/ViT_base              # 切换到模型的代码仓目录
+   ```bash
+   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git  # 克隆仓库的代码
+   git checkout master                                      # 切换到对应分支
+   cd ACL_PyTorch/contrib/cv/ViT_base                       # 切换到模型的代码仓目录
    ```
 
 2. 安装依赖。
 
-   ```
+   ```bash
    pip3 install -r requirements.txt
+   ```
+
+3. 安装改图工具 auto-optimizer
+   ```bash
+   git clone https://gitee.com/ascend/msadvisor.git
+   cd msadvisor/auto-optimizer
+   pip3 install -r requirements.txt
+   python3 setup.py install
+   cd ../..
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -93,39 +116,71 @@
 
    执行预处理脚本:
 
+   ```bash
+   # img_size为预处理输出的图像尺寸，可选224或384，需要和模型相对应。
+   img_size=224
+
+   python3 Vit_base_preprocess.py --data_path ImageNet/val/ --store_path ./prep_dataset/${img_size} --image_size ${img_size}
    ```
-   mkdir -p prep_dataset
-   python3 Vit_base_preprocess.py --data-path ImageNet/val/ --store-path ./prep_dataset
-   ```
+   - 参数说明：
+      - --data_path: 数据集路径
+      - --store_path: 预处理结果保存路径
+      - --image_size: 图像尺寸
 
 ## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
-   获取 B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz权重。具体下载链接可参考：https://github.com/rwightman/pytorch-image-models/blob/main/timm/models/vision_transformer.py
+   获取模型权重。
+   下载链接可参考：https://github.com/rwightman/pytorch-image-models/blob/main/timm/models/vision_transformer.py
+
+   模型变体较多，可按需下载。根据下表通过搜索文件名找到对应的权重文件下载地址，下载到当前目录下。
+
+   |            模型变体|                                                                                                文件名|
+   |--------------------|------------------------------------------------------------------------------------------------------|
+   | vit_base_patch8_224|  B_8-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz|
+   |vit_base_patch16_224| B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz|
+   |vit_base_patch16_384| B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_384.npz|
+   |vit_base_patch32_224|B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz|
+   |vit_base_patch32_384|  B_32-i21k-300ep-lr_0.001-aug_light1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_384.npz|
+
+   然后将权重文件重命名为```模型变体名称.npz```
+   ```bash
+   # 以 vit_base_patch8_224 为例
+   mv B_8-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz vit_base_patch8_224.npz
+   ```
 
    1. 导出onnx文件。
 
       1. 使用以下脚本导出onnx文件:
 
-         ```
-         # 以bs1为例
-         mkdir -p models/onnx
-         python3 Vit_base_pth2onnx.py --batch_size 1 --model_path B_32-i21k-300ep-lr_0.001-aug_medium1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz --save_dir models/onnx --model_name vit_base_patch32_224
-         ```
+         ```bash
+         # bs为Batch Size，可根据需要设置，此处以1为例
+         bs=1
 
-         获得vit_base_bs1.onnx文件。
+         # model_name为模型变体名称，可根据需要设置，此处以 vit_base_patch8_224 为例
+         model_name=vit_base_patch8_224
+
+         python3 Vit_base_pth2onnx.py --batch_size ${bs} --model_path ${model_name}.npz --save_dir models/onnx --model_name ${model_name}
+         ```
+         - 参数说明：
+            - --batch_size: 批次大小
+            - --model_path: 模型权重npz文件路径
+            - --save_dir: 保存onnx文件的目录
+            - --model_name: 模型变体名称
+         ---
+         获得```vit_base_patch8_224_bs1.onnx```文件。
 
       2. 优化ONNX文件。
 
-         ```
-         # bs1为例
-         python3 -m onnxsim models/onnx/vit_base_bs1.onnx models/onnx/vit_base_bs1_sim.onnx
+         ```bash
+         python3 -m onnxsim models/onnx/${model_name}_bs${bs}.onnx models/onnx/${model_name}_bs${bs}_sim.onnx
+         
          # 输入参数: 1.原始模型文件路径 2.优化模型文件路径 3.batchsize
-         python3 opt_vit.py models/onnx/vit_base_bs1_sim.onnx models/onnx/vit_base_bs1_opt.onnx 1
+         python3 opt_vit.py models/onnx/${model_name}_bs${bs}_sim.onnx models/onnx/${model_name}_bs${bs}_opt.onnx ${bs}
          ```
 
-         获得vit_base_bs1_opt.onnx文件。
+         获得```vit_base_patch8_224_bs1_opt.onnx```文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -155,26 +210,23 @@
 
       3. 执行ATC命令。
 
-         ```
-         # bs1为例
+         ```bash
          mkdir -p models/om
-         atc --framework=5 --model=models/onnx/vit_base_bs1_opt.onnx --output=models/om/vit_base_bs1 --input_format=NCHW --input_shape="input:1,3,224,224" --log=debug --soc_version=${chip_name} --enable_small_channel=1 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         atc --framework=5 --model=models/onnx/${model_name}_bs${bs}_opt.onnx --output=models/om/${model_name}_bs${bs} --input_format=NCHW --input_shape="input:${bs},3,${img_size},${img_size}" --log=debug --soc_version=${chip_name} --enable_small_channel=1 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
          ```
 
          - 参数说明：
 
-           -   --model：为ONNX模型文件。
-           -   --framework：5代表ONNX模型。
-           -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --log：日志级别。
-           -   --soc\_version：处理器型号。
-           -   --precision_model: 精度模式。
-           -   --modify_mixlist: 算子精度配置文件。
+           - --model：为ONNX模型文件。
+           - --framework：5代表ONNX模型。
+           - --output：输出的OM模型。
+           - --input_format：输入数据的格式。
+           - --log：日志级别。
+           - --soc_version：处理器型号。
+         ---
+         运行成功后生成```vit_base_patch8_224_bs1.om```模型文件。
 
-           运行成功后生成vit_base_bs1.om模型文件。
-
-2. 开始推理验证。<u>***根据实际推理工具编写***</u>
+2. 开始推理验证。
 
    1. 安装ais_bench推理工具。
 
@@ -182,63 +234,59 @@
 
    2. 执行推理。
 
-        ```
-        # 以bs1为例
-        mkdir -p outputs/bs1
-        python3 -m ais_bench --model models/om/vit_base_bs1.om --input prep_dataset/ --output outputs/bs1 --device 1 --batchsize 1
+        ```bash
+        python3 -m ais_bench --model models/om/${model_name}_bs${bs}.om --input prep_dataset/${img_size} --output outputs/ --output_dir ${model_name}_bs${bs} --device 1
         ```
 
         -   参数说明：
+            - --model：om文件路径
+            - --input：输入文件
+            - --output：输出目录
+            - --device：NPU设备编号
 
-             -   --model：om文件路径。
-             -   --input：输入文件。
-             -   --output：输出目录。
-             -   --device：NPU设备编号。
-             -   --batchsize: 模型对应batchsize。
-
-
-        推理后的输出默认在当前目录outputs/bs1下。
+         ---
+        推理后的输出默认在当前目录```outputs/${model_name}_bs${bs}```下。
 
 
    3. 精度验证。
 
       调用脚本与GT label，可以获得精度数据:
 
-      ```
-      # 以bs1为例
-      python3 Vit_base_postprocess.py --save_path result_bs1.json --input_dir ./outputs/bs1/${timestamp} --label_path ImageNet/val_label.txt
+      ```bash
+      python3 Vit_base_postprocess.py --save_path result_${model_name}_bs${bs}.json --input_dir ./outputs/${model_name}_bs${bs} --label_path ImageNet/val_label.txt
       ```
 
       - 参数说明：
+         - --input_dir：为生成推理结果所在路径
+         - --label_path：为标签数据路径
+         - --save_path: 结果保存路径
 
-        - --input_dir：为生成推理结果所在路径
-
-        - --label_path：为标签数据路径
-
-        - --save_path: 结果保存路径
+   4. 执行纯推理验证性能。
+      ```bash
+      python3 -m ais_bench --model models/om/${model_name}_bs${bs}.om --device 1 --loop 100
+      ```
+        -   参数说明：
+            - --model：om文件路径
+            - --device：NPU设备编号
+            - --loop: 纯推理次数
+      
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-   调用ACL接口推理计算，性能参考下列数据。
 
-   1.精度对比
-
-| 模型                     | 仓库pth精度 | 310离线推理精度 | 310P离线推理精度 |
-|--------------------------|-------------|-----------------|------------------|
-| ViT_base_patch32_224 bs1 | top1:80.724 | top1:80.714     | top1:80.65       |
-| ViT_base_patch32_224 bs8 | top1:80.724 | top1:80.714     | top1:80.65       |
-
-
-   2.性能对比
-
-| Throughput |      310 |      310P | 310P/310 |
-|------------|----------|-----------|----------|
-| bs1        | 321.2008 |  412.4932 |     1.28 |
-| bs4        | 444.8147 | 1074.8210 |     2.42 |
-| bs8        | 433.9089 | 1319.7835 |     3.04 |
-| bs16       | 424.4384 | 1511.8729 |     3.56 |
-| bs32       | 413.3992 | 1489.4850 |     3.60 |
-| bs64       | 400.4219 | 1301.1106 |     3.25 |
-| 最优batch  | 444.8147 | 1511.8729 |     3.40 |
+|芯片型号|            模型变体|   Batch Size|  数据集|    参考精度|    NPU精度|性能(fps)|
+|:------:|:------------------:|:-----------:|:------:|:----------:|:---------:|:-------:|
+|   310P3| ViT_base_patch8_224|            1|ImageNet| top1: 85.80|top1: 85.64|  72.8417|
+|   310P3| ViT_base_patch8_224| 1 (最优性能)|ImageNet| top1: 85.80|top1: 85.64|  72.8417|
+|   310P3|ViT_base_patch16_224|            1|ImageNet| top1: 84.53|top1: 84.23| 332.7798|
+|   310P3|ViT_base_patch16_224| 8 (最优性能)|ImageNet| top1: 84.53|top1: 84.23| 462.6925|
+|   310P3|ViT_base_patch16_384|            1|ImageNet| top1: 86.01|top1: 85.84| 102.1311|
+|   310P3|ViT_base_patch16_384| 4 (最优性能)|ImageNet| top1: 86.01|top1: 85.84| 103.0801|
+|   310P3|ViT_base_patch32_224|            1|ImageNet| top1: 80.72|top1: 80.65| 408.3216|
+|   310P3|ViT_base_patch32_224|16 (最优性能)|ImageNet| top1: 80.72|top1: 80.65|1590.8380|
+|   310P3|ViT_base_patch32_384|            1|ImageNet| top1: 83.35|top1: 83.28| 247.7265|
+|   310P3|ViT_base_patch32_384| 8 (最优性能)|ImageNet| top1: 83.35|top1: 83.28| 531.9361|
+|   310  |ViT_base_patch32_224|            1|ImageNet| top1: 80.72|top1: 80.71| 321.2008|
+|   310  |ViT_base_patch32_224| 4 (最优性能)|ImageNet| top1: 80.72|top1: 80.71| 444.8147|
 

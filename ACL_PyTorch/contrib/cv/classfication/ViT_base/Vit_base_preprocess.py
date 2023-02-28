@@ -16,52 +16,118 @@ limitations under the License.
 
 
 import os
-from PIL import Image
-import numpy as np
-import timm
-from timm.data import resolve_data_config
-from timm.data.transforms_factory import create_transform
 import argparse
+import multiprocessing
+
+import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 
-parser = argparse.ArgumentParser(description='Path', add_help=False)
-parser.add_argument('--data-path', metavar='DIR',
-                    help='path to dataset')
-parser.add_argument('--store-path', metavar='DIR',
-                    help='path to store')
-parser.add_argument('--model-name', default='vit_base_patch32_224',
-                    type=str, help='mode name for vit')
-parser.add_argument('--dtype', default='float32',
-                    type=str, help='dtype for input data')
+model_config = {
+    224: {
+        'resize': 248,
+        'centercrop': 224,
+        'mean': [0.5, 0.5, 0.5],
+        'std': [0.5, 0.5, 0.5],
+    },
+    384: {
+        'resize': 384,
+        'centercrop': 384,
+        'mean': [0.5, 0.5, 0.5],
+        'std': [0.5, 0.5, 0.5],
+    },
+}
 
 
-def preprocess(src_path, save_path):
-    model = timm.create_model(args.model_name)
-    model.eval()
-    config = resolve_data_config({}, model=model)
-    transform = create_transform(**config)
-    in_files = os.listdir(src_path)
-    def process(image_path):
-        file_name = os.path.basename(image_path)
-        input_image = Image.open(image_path).convert('RGB')
-        input_tensor = transform(input_image)
-        img = np.array(input_tensor).astype(args.dtype)
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Path', add_help=False)
+    parser.add_argument('--image_size', required=True, type=int,
+                        help='The output image size.')
+    parser.add_argument('--data_path', metavar='DIR',
+                        help='path to dataset')
+    parser.add_argument('--store_path', metavar='DIR',
+                        help='path to store')
+    return parser.parse_args()
+
+
+def center_crop(img, output_size):
+    if isinstance(output_size, int):
+        output_size = (int(output_size), int(output_size))
+    image_width, image_height = img.size
+    crop_height, crop_width = output_size
+    crop_top = int(round((image_height - crop_height) / 2.))
+    crop_left = int(round((image_width - crop_width) / 2.))
+    return img.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
+
+
+def resize(img, size, interpolation=Image.BICUBIC):
+    if isinstance(size, int):
+        w, h = img.size
+        if (w <= h and w == size) or (h <= w and h == size):
+            return img
+        if w < h:
+            ow = size
+            oh = int(size * h / w)
+            return img.resize((ow, oh), interpolation)
+        else:
+            oh = size
+            ow = int(size * w / h)
+            return img.resize((ow, oh), interpolation)
+    else:
+        return img.resize(size[::-1], interpolation)
+
+
+def normalize(img, means, variances):
+    img = np.array(img)
+    for channel, (mean, variance) in enumerate(zip(means, variances)):
+        img[:, :, channel] = (img[:, :, channel] - mean) / variance
+    return img
+
+
+def get_input_bin(file_batches, batch, save_path, image_size):
+    for file_name, file_path in tqdm(file_batches[batch]):
+        image = Image.open(file_path).convert('RGB')
+        image = resize(image, model_config[image_size]['resize']) # Resize
+        image = center_crop(image, model_config[image_size]['centercrop']) # CenterCrop
+
+        img = np.array(image).astype(np.float32) / 255
+        img = normalize(img, model_config[image_size]['mean'], model_config[image_size]['std']) # Normalization
+        img = img.transpose((2, 0, 1))
         img.tofile(os.path.join(save_path, file_name.split('.')[0] + ".bin"))
 
-    image_path_list = []
-    for file_name in tqdm(in_files):
+
+def preprocess(src_path, save_path, image_size):
+    files = os.listdir(src_path)
+    image_infos = []
+    for file_name in files:
         file_path = os.path.join(src_path, file_name)
         if os.path.isdir(file_path):
-            for image_name in os.listdir(file_path):
-                image_path = os.path.join(file_path, image_name)
-                image_path_list.append(image_path)
+            image_infos += [(image_name, os.path.join(file_path, image_name)) \
+            for image_name in os.listdir(file_path)]
         else:
-            image_path_list.append(file_path)
-    for image_path in tqdm(image_path_list):
-        process(image_path)
+            image_infos.append((file_name, file_path))
+
+    image_infos.sort()
+    if len(image_infos) < 500:
+        file_batches = [image_infos[0 : len(image_infos)]]
+    else:
+        file_batches = [image_infos[i:i + 500] for i in range(0, len(image_infos), 500) if image_infos[i:i + 500] != []]
+
+    thread_pool = multiprocessing.Pool(len(file_batches))
+    for batch in range(len(file_batches)):
+        thread_pool.apply_async(get_input_bin, args=(file_batches, batch, save_path, image_size))
+
+    thread_pool.close()
+    thread_pool.join()
+    print("In multi-threading, errors will not be reported! Please ensure bin files are generated correctly.")
+    print("Done.")
 
 
 if __name__ == "__main__":
-    args = parser.parse_args()
-    preprocess(args.data_path, args.store_path)
+    args = parse_arguments()
+
+    if not os.path.exists(args.store_path):
+        os.makedirs(args.store_path)
+
+    preprocess(args.data_path, args.store_path, args.image_size)
