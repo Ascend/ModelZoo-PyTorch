@@ -1,6 +1,6 @@
 librosa==0.8.0
 scipy==1.7.1
-torch==1.8.0
+torch==1.9.0
 onnxruntime==1.6.0
 numpy==1.21.5
 onnx==1.12.0

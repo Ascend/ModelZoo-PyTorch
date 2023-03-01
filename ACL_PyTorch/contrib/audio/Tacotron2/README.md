@@ -204,10 +204,16 @@ Tacotron 模型是一个直接从文本合成语音的神经网络架构。系�
             mkdir iter
             mv *.weight 3* iter/
             ```
+         - 参数说明：
+
+          - 第一个参数代表权重路径。
+          - 第二个参数代表输出路径。
+          - 第三个参数代表参数是fp32。
+          - 第四个参数代表模型batch。
+          - 第五个参数代表层数。
          > **说明：** 
          >注意使用不同版本的onnx生成的权重节点名称可能不同，请自行更改上述生成的权重名称。
-            
-
+         
             2.生成100层或其它层数叠加的decoder模型。
 
             ```
@@ -216,6 +222,13 @@ Tacotron 模型是一个直接从文本合成语音的神经网络架构。系�
             cd output
             rm -rf 2*
             ```
+         - 参数说明：
+
+          - 第一个参数代表权重路径。
+          - 第二个参数代表输出路径。
+          - 第三个参数代表参数是fp32。
+          - 第四个参数代表模型batch。
+          - 第五个参数代表层数。
            > **说明：** 
            >注意该步骤生成的权重占用磁盘空间约7GB，请注意预留空间。
 
@@ -224,7 +237,13 @@ Tacotron 模型是一个直接从文本合成语音的神经网络架构。系�
             cd $tacotron_path
             python3.7 tensorrt/convert_waveglow2onnx.py --waveglow ./checkpoints/nvidia_waveglowpyt_fp32_20190427 --config-file config.json -o output/ --fp32
             ```
+            - 参数说明：
 
+          - 第一个参数代表需要共享的权重路径。
+          - 第二个参数代表配置文件。
+          - 第三个参数代表输出路径。
+          - 第四个参数参数是fp32。
+          
         获得encoder.onnx, decoder_iter.onnx, postnet.onnx文件。
 
 2. 优化ONNX文件。
@@ -313,7 +332,15 @@ Tacotron 模型是一个直接从文本合成语音的神经网络架构。系�
     ```
     python3.7 om_infer_acl.py -i filelists/ljs_audio_text_test_filelist.txt -bs 4 -max_inputlen 128 -max_decode_iter 20 --device_id 0
     ```
+    - 参数说明：
 
+    - 第一个参数代表数据输入路径。
+    - 第二个参数代表模型batch。
+    - 第三个参数代表最大输入长度。
+    - 第四个参数代表模型decode层数。
+    - 第五个参数代表芯片序号。
+   运行成功后生成result.txt文件，记录性能。
+   
     b.  精度验证。
 
     此模型特殊，模型精度依靠人主观和原始的txt文本比对。
