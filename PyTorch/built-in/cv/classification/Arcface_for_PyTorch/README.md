@@ -51,6 +51,7 @@ Arcface-Torch可以高效快速地训练大规模目标识别训练集。本模�
   pip install -r requirements.txt
   ```
 
+
 ## 准备数据集
 
 1. 获取数据集。
@@ -152,17 +153,22 @@ Arcface-Torch可以高效快速地训练大规模目标识别训练集。本模�
 
 ## FAQ
 
-1.因sklearn自身bug，若运行环境为ARM，则需要手动导入so，以下是root python环境里的示例。
+1. 因sklearn自身bug，若运行环境为ARM，则需要手动导入so，以下是root python环境里的示例。
 
-```
-export LD_PRELOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
-```
+   ```
+   export LD_PRELOAD=/usr/local/python3.7.5/lib/python3.7/site-packages/scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
+   ```
 
-2.如果遇到了这个报错“OSError: libarmpl_lp64_mp.so: cannot open shared object file: No such file or directory”，则可以参照这个issue处理，https://github.com/apache/mxnet/issues/19234 。
+2. 若在ARM环境中，使用三方库**mxnet**遇到这个报错“OSError: libarmpl_lp64_mp.so: cannot open shared object file: No such file or directory”，可参考以下方法对**mxnet**进行源码安装。
 
-
-
-
-
-
-
+   ```
+   pip uninstall mxnet --y
+   wget https://archive.apache.org/dist/incubator/mxnet/1.9.1/apache-mxnet-src-1.9.1-incubating.tar.gz 
+   tar -xvf apache-mxnet-src-1.9.1-incubating.tar.gz; cd apache-mxnet-src-1.9.1-incubating
+   cp config/linux_arm.cmake config.cmake
+   mkdir build; cd build
+   cmake ..
+   cmake --build .   # 编译时间较久（约4h），请耐心等待。
+   cd ../
+   python -m pip install --user -e ./python
+   ```
