@@ -53,9 +53,9 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
+  | CANN                                                         | 6.0.RC1 | [CANN推理架构准备](https://www/hiascend.com/software/cann/commercial) |
   | Python                                                       | 3.7.5   | 创建anaconda环境时指定python版本即可，conda create -n ${your_env_name} python==3.7.5 |
-  | PyTorch                                                      | 1.6.0   | -                                                            |
+  | PyTorch                                                      | 1.11.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
@@ -67,7 +67,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 1. 获取源码。
 
    ```sh
-   git clone https://github.com/lukemelas/EfficientNet-PyTorch
+   git clone https://github.com/facebookresearch/pycls
    cd pycls
    git reset f20820e01eef7b9a47b77f13464e3e77c44d5e1f --hard
    cd ..
@@ -112,7 +112,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       ```
       - 参数说明：
 
-         -   ./val：同上述val数据集**绝对路径**。
+         -   ./val：val数据集**绝对路径**。
          -   ./prep_dataset：保存数据集处理后二进制文件的文件夹**绝对路径**。
 
 
@@ -138,13 +138,6 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
 
          获得Efficient-b0.onnx文件。
 
-      2. 优化ONNX文件。
-
-         ```
-         python3.7 -m onnxsim Efficient-b0.onnx b0_sim.onnx
-         ```
-
-         获得b0_sim.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -175,7 +168,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       3. 执行ATC命令。
 
          ```
-         atc --model=b0_sim.onnx --framework=5 --input_shape="image:8,3,224,224"--output=b0_bs8 --soc_version=Ascend${chip\_name\}
+         atc --model=Efficient-b0.onnx --framework=5 --input_shape="image:8,3,224,224"--output=b0_bs8 --soc_version=Ascend${chip\_name\}
          ```
 
          - 参数说明：
@@ -203,8 +196,13 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       
       2. 建立软链接（若无法建立，可尝试切换root用户重新建立）
          ```
-         find /home/${username}/ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/classfication/EfficientNet-B1/prep_dataset/ -name "*.bin" | xargs -i ln -sf {} /home/${username}/ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/classfication/EfficientNet-B1/soft_link/
+         find ./prep_dataset/ -name "*.bin" | xargs -i ln -sf {} ./soft_link/
          ```
+         -   参数说明：
+
+            -   ./prep_dataset/：必须为prep_dataset的绝对路径。
+            -   ./soft_link/：必须为soft_link的绝对路径。
+
 
    2. 执行推理。
 
@@ -219,8 +217,8 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
              -   --model：om文件路径。
              -   --input：数据预处理后保存文件的路径。
              -   --output：输出文件夹路径。
-             -   --outfmt：输出格式（一般为BIN或者TXT，若改为BIN需要修改imagenet_acc_eval.py）。
-             -   --device：NPU的ID，默认填0。
+             -   --outfmt：输出格式
+             -   --device：NPU的ID
 
         推理后的输出默认在当前目录参数output创建的输出文件夹下，此处为outputs文件夹。
 
@@ -244,7 +242,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3.7 -m ais_bench --model=${om_model_path}
+         python3.7 -m ais_bench --model=b0_bs8.om
         ```
 
       - 参数说明：

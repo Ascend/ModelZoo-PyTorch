@@ -30,7 +30,7 @@ _EIG_VECS = [
 _MEAN = [0.485, 0.456, 0.406]
 _STD = [0.229, 0.224, 0.225]
 
-train_size = 240
+train_size = 224
 test_size = 274
 
 def trans(im):
