@@ -84,7 +84,14 @@ def parse_arguments():
 if __name__ == '__main__':
     args = parse_arguments()
     onnx_graph = OnnxGraph(args.input_path)
-    optimize_manager_base = OptimizerManager(onnx_graph)
-    optimize_manager_base.apply()
-    merge_add(onnx_graph)
-    onnx_graph.save(args.out_path)
+    model_name = os.path.basename(args.input_path)
+    model_name = os.path.splitext(model_name)[0].replace('_sim', '')
+    if model_name in ["swin_large_patch4_window12_384_bs16",
+                      "swin_large_patch4_window12_384_bs32",
+                      "swin_large_patch4_window12_384_bs64"]:
+        onnx_graph.save(args.out_path)
+    else:
+        optimize_manager_base = OptimizerManager(onnx_graph)
+        optimize_manager_base.apply()
+        merge_add(onnx_graph)
+        onnx_graph.save(args.out_path)

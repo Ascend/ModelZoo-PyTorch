@@ -161,7 +161,7 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
            
            --max_seq_length: 模型对应seq，默认为128，支持：16/32/64/128。
 
-         获得outputs/albert_bs32.onnx文件。
+         获得outputs/albert_seq128_bs32.onnx文件。
 
       2. 优化ONNX文件。
 
