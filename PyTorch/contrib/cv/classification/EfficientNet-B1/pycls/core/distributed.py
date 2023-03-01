@@ -70,7 +70,8 @@ def init_process_group(proc_rank, world_size, port='29588'):
 
 def destroy_process_group():
     """Destroys the default process group."""
-    torch.distributed.destroy_process_group()
+    #torch.distributed.destroy_process_group()
+    return 0
 
 
 def scaled_all_reduce(tensors):

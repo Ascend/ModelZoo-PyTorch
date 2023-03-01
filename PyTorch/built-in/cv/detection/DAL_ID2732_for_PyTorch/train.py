@@ -258,7 +258,7 @@ def train_model(args, hyps):
                 torch.save(chkpt, './weights/deploy%g.pth'% epoch)
 
     # end training
-    dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
+    #dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()
 
 
