@@ -32,10 +32,14 @@ epochs=1
 # 指定训练所使用的npu device卡id
 device_id=
 
+precision_mode="allow_mix_precision"
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
-    if [[ $para == --data_path* ]];then
+    if [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
+    elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
@@ -65,6 +69,12 @@ elif [ ${device_id} ];then
 else
     "[Error] device id must be config"
     exit 1
+fi
+
+if [ ${precision_mode} == "must_keep_origin_dtype" ];then
+    adv_param=""
+else
+    adv_param=" --fp16 "
 fi
 
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
@@ -101,7 +111,7 @@ start_time=$(date +%s)
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * ASCEND_DEVICE_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3 -m yolox.tools.train -n yolox-s -d 1 -b ${batch_size} --fp16 -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+taskset -c $PID_START-$PID_END python3 -m yolox.tools.train -n yolox-s -d 1 -b ${batch_size} ${adv_param} -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
@@ -127,8 +137,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+    CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 #获取性能数据，不需要修改
 #吞吐量
 ActualFPS=${FPS}

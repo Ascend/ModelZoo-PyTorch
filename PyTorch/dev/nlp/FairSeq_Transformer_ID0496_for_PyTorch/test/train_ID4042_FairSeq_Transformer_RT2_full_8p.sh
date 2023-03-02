@@ -94,6 +94,12 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=""
+else
+    PREC=" --fp16 --fp16-scale-window 1500 "
+fi
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -153,8 +159,7 @@ do
 	    --encoder-attention-heads 4 \
 	    --encoder-ffn-embed-dim 1024 \
 	    --seed 12345 \
-	    --fp16 \
-	    --fp16-scale-window 1500 \
+	    $PREC \
 	    --ddp-backend no_c10d \
 	    --disable-validation \
 	    --distributed-no-spawn \
@@ -194,14 +199,10 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
-if [ $bin_mode == "True" ];then
-    CaseName=$CaseName"_binary"
-fi
-
-if [ $bin_analysis == "True" ];then
-    cmd1=`ls -l /usr/local/Ascend/CANN-1.82/opp/op_impl/built-in/ai_core/tbe/kernel/config/ascend910|grep -v total|awk -F " " '{print $9}'|awk -F "." '{print $1}'`
-    echo "cmd1=$cmd1" >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 fi
 
 

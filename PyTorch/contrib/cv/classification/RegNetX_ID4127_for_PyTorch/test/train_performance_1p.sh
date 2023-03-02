@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="RegNetX_for_PyTorch"
+Network="RegNetX_ID4127_for_PyTorch"
 # 训练batch_size
 batch_size=128
 # 训练使用的npu卡数
