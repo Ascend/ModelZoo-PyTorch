@@ -1,0 +1,4 @@
+torchvision==0.9.1
+numpy
+opencv-python
+Pillow==9.1.0
