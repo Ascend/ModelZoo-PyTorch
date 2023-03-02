@@ -1,12 +1,26 @@
-# Copyright 2020 Huawei Technologies Co., Ltd## Licensed under the Apache License, Version 2.0 (the "License");# you may not use this file except in compliance with the License.# You may obtain a copy of the License at## http://www.apache.org/licenses/LICENSE-2.0## Unless required by applicable law or agreed to in writing, software# distributed under the License is distributed on an "AS IS" BASIS,# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.# See the License for the specific language governing permissions and# limitations under the License.# ============================================================================import argparse
+# Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+import argparse
 import glob
 import json
 import os.path as osp
 import random
 
 from mmcv.runner import set_random_seed
-from data.anno_txt2json import lines2dictlist
-from data.parse_file_list import (parse_directory, parse_diving48_splits,
+from anno_txt2json import lines2dictlist
+from parse_file_list import (parse_directory, parse_diving48_splits,
                                         parse_hmdb51_split,
                                         parse_jester_splits,
                                         parse_kinetics_splits,

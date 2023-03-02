@@ -79,8 +79,8 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=24,
-    workers_per_gpu=12,
+    videos_per_gpu=16,
+    workers_per_gpu=4,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
         type=dataset_type,
@@ -102,7 +102,7 @@ evaluation = dict(
 
 # optimizer
 optimizer = dict(
-    lr=0.0075,  # this lr is used for 8 gpus
+    lr=0.01,  # this lr is used for 8 gpus
     weight_decay=0.0005)
 
 # runtime settings
@@ -113,7 +113,7 @@ load_from = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_
 DEVICE_ID = 0
 AMP = True
 OPT_LEVEL = "O2"
-LOSS_SCALE = 128.0
+LOSS_SCALE = None
 COMBINE_GRAD = True
 
 dist_params=dict(backend='hccl')

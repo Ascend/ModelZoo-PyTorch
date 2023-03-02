@@ -56,7 +56,8 @@ TSN模型从视频中采样N帧图像并通过最简单直接地对N帧图像分
 
 - 安装 MMCV：
   ```
-  git clone -b v1.3.9 https://github.com/open-mmlab/mmcv.git  #在源码目录下
+  cd ${TSM}
+  git clone -b v1.3.9 https://github.com/open-mmlab/mmcv.git
   cd mmcv
   pip install -e ./
   ```
@@ -84,20 +85,24 @@ TSN模型从视频中采样N帧图像并通过最简单直接地对N帧图像分
 2. 数据集预处理
 
    ```
-   mkdir data #在源码目录下
+   mkdir ${TSM}/data
    ```
   - ucf101预处理后进行数据软连接：
    
     ```
-    ln -s /the/datasets/path data/ucf101
+    ln -s ${ucf101} data/ucf101
     ```
-  - somethingv2请先进行软连接，再执行脚本：
+  - somethingv2请先进行解压和软连接，再执行预处理脚本：
     ```
-    ln -s /the/datasets/path data/sthv2
+    cd ${sthv2}
+    cat 20bn-something-something-v2-?? | tar zx #将原始数据进行解压
+    mv ${sthv2}/20bn-something-something-v2 ${sthv2}/videos #重命名原始数据集
 
-    bash datasets/sthv2_prepare.sh
+    cd ${TSM}
+    ln -s ${sthv2} data/sthv2
+    bash dataset/sthv2_prepare.sh
     ```
-    /the/datasets/path参数填写数据集的路径，需写到数据集的一级目录，预处理后的文件目录结构与datasets/README.MD中Step 6保持一致。
+    数据集的路径需写到数据集的一级目录，预处理后的文件目录结构与datasets/README.MD中Step 6保持一致。
 
 # 开始训练
 
@@ -155,10 +160,8 @@ TSN模型从视频中采样N帧图像并通过最简单直接地对N帧图像分
 
 | NAME   | ACC    | FPS      | Epoch | AMP_Type | Torch_Version |
 |--------|--------|----------|-------|----------|---------------|
-| 1p-NPU |        | - | 1     | O2       | 1.8           |
-| 8p-NPU |        | 348 | 50     | O2      | 1.8          |
-| 1p-竞品V | 0.5895 | - | 1     | O2      | 1.8           |
-| 8p-竞品V | 0.5895| - | 50     | O2      | 1.8           |
+| 8p-NPU | 0.5911 |    152   |   50  |  O2      | 1.8           |
+| 8p-竞品V | 0.5895|    116   |   50  |  O2      | 1.8           |
 
 # 版本说明
 

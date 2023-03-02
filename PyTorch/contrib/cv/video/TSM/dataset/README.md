@@ -64,7 +64,6 @@ In the context of the whole project, the folder structure of ucf101 will look li
 │   │   ├── videos
 │   │   │   ├── ApplyEyeMakeup
 │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
-
 │   │   │   ├── YoYo
 │   │   │   │   ├── v_YoYo_g25_c05.avi
 │   │   ├── rawframes
@@ -79,6 +78,7 @@ In the context of the whole project, the folder structure of ucf101 will look li
 │   │   │   │   ├── ...
 │   │   │   │   ├── v_YoYo_g25_c05
 ```
+
 In the context of the whole project, the folder structure of sthv2 will look like:
 ```
 ├── data
@@ -86,6 +86,8 @@ In the context of the whole project, the folder structure of sthv2 will look lik
 │   │   ├── sthv2_{train,val}_list_rawframes.txt
 │   │   ├── sthv2_{train,val}_list_videos.txt
 │   │   ├── annotations
+│   |   |   ├── something-something-v2-labels.json
+│   |   |   ├── ...
 │   |   ├── videos
 │   |   |   ├── 1.mp4
 │   |   |   ├── 2.mp4
