@@ -299,6 +299,17 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_Dynamic_for_PyTorch">  CRNN_Dynamic_for_PyTorch </a>
+        </td>
+        <td>IIIT5K_lmdb</td>
+	<td>66.8%</td>
+        <td></td>
+        <td></td>
+	<td>5.9~6.1s(E2E)</td>
+	<td>bs x 1 x 32 x len</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/Detr">  Detr </a>
         </td>
         <td>coco</td>
@@ -777,6 +788,7 @@ Nlp
         <td>75%</td>
 	<td>172(bs24)</td>
 	<td nowrap="nowrap">24 x 3 x 736 x 1280</td>
+
 </table>
 
 
