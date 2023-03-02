@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.2.2.post3
 fvcore
 pycocotools
 cloudpickle

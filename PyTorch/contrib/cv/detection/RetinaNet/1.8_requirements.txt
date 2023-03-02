@@ -1,0 +1,5 @@
+torchvision==0.9.1
+fvcore
+pycocotools
+cloudpickle
+tensorboard
