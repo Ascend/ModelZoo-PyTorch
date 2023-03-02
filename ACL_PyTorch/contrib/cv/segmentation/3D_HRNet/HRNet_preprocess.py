@@ -15,13 +15,14 @@
 import os
 import argparse
 import numpy as np
-
+from tqdm import tqdm
 import sys
-sys.path.append('HRNet-Semantic-Segmentation/lib/')
+import datasets
 
+sys.path.append('HRNet-Semantic-Segmentation/lib/')
 from config import config
 from config import update_config
-import datasets
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='HRNet preprocess process.')
@@ -55,7 +56,7 @@ def preprocess(src_path, save_path):
                         base_size=config.TEST.BASE_SIZE,
                         crop_size=test_size,
                         downsample_rate=1)
-    for image, _, _, name in test_dataset:
+    for image, _, _, name in tqdm(test_dataset):
         image = np.array(image).astype(np.float32)
         # print(image.shape)
         image.tofile(os.path.join(save_path, name + '.bin'))
