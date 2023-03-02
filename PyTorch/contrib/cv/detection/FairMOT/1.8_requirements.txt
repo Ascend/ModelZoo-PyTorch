@@ -10,6 +10,6 @@ motmetrics
 matplotlib
 lap
 openpyxl
-Pillow
+Pillow==9.1.0
 tensorboardX
 fvcore
