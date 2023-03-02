@@ -14,12 +14,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import numpy as np
 from PIL import Image
 import torch
 import multiprocessing
 import time
+import argparse
 from Pytorch_UNet.dice_loss import dice_coeff
 
 gl_resDir = "new_result/bs1/"
@@ -131,9 +131,15 @@ if __name__ == '__main__':
     if gl_res_txt in os.listdir(os.getcwd()):
         os.remove(gl_res_txt)
 
-    gl_resDir = sys.argv[1]
-    gl_labelDir = sys.argv[2]
-    gl_res_txt = sys.argv[3]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', default='result/bs1')
+    parser.add_argument('--label', default='./carvana/train_masks')
+    parser.add_argument('--result', default='./result.txt')
+    args = parser.parse_args()
+
+    gl_resDir = args.output
+    gl_labelDir = args.label
+    gl_res_txt = args.result
 
     resLis = os.listdir(gl_resDir)
     resLis_list = [resLis[i:i + 300] for i in range(0, 5000, 300) if resLis[i:i + 300] != []]
@@ -152,6 +158,5 @@ if __name__ == '__main__':
         with open(gl_res_txt) as f:
             ret = list(map(float, f.read().replace(', ', ' ').strip().split(' ')))
         print('IOU Average ：{}'.format(sum(ret) / len(ret)))
-        os.system('rm -rf {}'.format(gl_res_txt))
     except:
         print('Failed to process data...')
