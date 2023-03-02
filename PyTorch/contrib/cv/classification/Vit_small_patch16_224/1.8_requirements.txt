@@ -1,0 +1,2 @@
+pyyaml
+torchvision==0.9.1
