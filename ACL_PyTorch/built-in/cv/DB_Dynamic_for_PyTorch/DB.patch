@@ -1,0 +1,63 @@
+diff --git a/convert_to_onnx.py b/convert_to_onnx.py
+index 3a1f0cc..4e01a60 100644
+--- a/convert_to_onnx.py
++++ b/convert_to_onnx.py
+@@ -4,6 +4,9 @@ import torch
+ import numpy as np
+ from concern.config import Configurable, Config
+ 
++import ssl
++ssl._create_default_https_context = ssl._create_unverified_context
++
+ 
+ def main():
+     parser = argparse.ArgumentParser(description='Convert model to ONNX')
+@@ -27,7 +30,6 @@ class Demo:
+     def __init__(self, experiment, args, cmd=dict()):
+         self.RGB_MEAN = np.array([122.67891434, 116.66876762, 104.00698793])
+         self.experiment = experiment
+-        experiment.load('evaluation', **args)
+         self.args = cmd
+         self.structure = experiment.structure
+         self.model_path = self.args['resume']
+@@ -43,7 +45,7 @@ class Demo:
+             torch.set_default_tensor_type('torch.FloatTensor')
+ 
+     def init_model(self):
+-        model = self.structure.builder.build(self.device)
++        model = self.experiment.structure.builder.build(self.device)
+         return model
+ 
+     def resume(self, model, path):
+@@ -65,13 +67,14 @@ class Demo:
+         img = (img / 255. - 0.5) / 0.5  # torch style norm
+         img = img.transpose((2, 0, 1))
+         img = torch.from_numpy(img).unsqueeze(0).float()
+-        dynamic_axes = {'input': {0: 'batch_size', 2: 'height', 3: 'width'},
+-                        'output': {0: 'batch_size', 2: 'height', 3: 'width'}}
++        dynamic_axes = {'input': { 2: 'height', 3: 'width'},
++                        'output': {2: 'height', 3: 'width'}}
+         with torch.no_grad():
+             img = img.to(self.device)
+             torch.onnx.export(model.model.module, img, self.output_path, input_names=['input'],
+-                              output_names=['output'], dynamic_axes=dynamic_axes, keep_initializers_as_inputs=False,
+-                              verbose=False, opset_version=12)
++                              output_names=['output'], dynamic_axes=dynamic_axes, 
++                              #keep_initializers_as_inputs=False,
++                              verbose=False, opset_version=10)
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/experiments/seg_detector/ic15_resnet50_deform_thre.yaml b/experiments/seg_detector/ic15_resnet50_deform_thre.yaml
+index 7b411e2..842decc 100644
+--- a/experiments/seg_detector/ic15_resnet50_deform_thre.yaml
++++ b/experiments/seg_detector/ic15_resnet50_deform_thre.yaml
+@@ -10,7 +10,7 @@ define:
+             class: Builder
+             model: SegDetectorModel
+             model_args:
+-                backbone: deformable_resnet50
++                backbone: resnet50
+                 decoder: SegDetector
+                 decoder_args: 
+                     adaptive: True
