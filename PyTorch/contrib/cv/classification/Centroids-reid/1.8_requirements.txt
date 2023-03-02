@@ -1,0 +1,8 @@
+einops
+mlflow
+opencv-python
+pytorch-lightning==1.1.4
+torchvision==0.9.1
+tqdm
+yacs
+protobuf==3.19.6
