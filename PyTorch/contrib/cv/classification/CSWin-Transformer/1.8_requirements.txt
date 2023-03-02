@@ -16,3 +16,4 @@ torchvision==0.9.1
 pyyaml
 decorator
 sympy
+Pillow==9.1.0
