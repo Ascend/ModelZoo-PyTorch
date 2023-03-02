@@ -1,3 +1,0 @@
-torchvision
-Pandas
-opencv-python
