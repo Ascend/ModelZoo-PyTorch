@@ -24,8 +24,7 @@ import time
 from loguru import logger
 
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
+import torch_npu
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
@@ -124,7 +123,7 @@ class Trainer:
         data_end_time = time.time()
 
         with torch.npu.amp.autocast(enabled=self.amp_training):
-        	outputs = self.model(inps, targets)
+            outputs = self.model(inps, targets)
 
         loss = outputs["total_loss"]
 
