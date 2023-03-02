@@ -139,17 +139,17 @@ MnasNet是Google研究小组2019年在论文《MnasNet: Platform-Aware Neural Ar
    模型训练脚本参数说明如下。
    
    ```
-    公共参数：
-    --device                            //使用设备，gpu或npu
-    --workers                           //加载数据进程数      
-    --epochs                             //重复训练次数
-    --batch-size                        //训练批次大小
-    --lr                                //初始学习率，默认：0.1
-    --momentum                          //动量，默认：0.9
-    --weight-decay                      //权重衰减，默认：0.0001
-    多卡训练参数：
-    --multiprocessing-distributed       //是否使用多卡训练
-    --device-list '0,1,2,3,4,5,6,7'     //多卡训练指定训练用卡
+   公共参数：
+   --device                            //使用设备，gpu或npu
+   --workers                           //加载数据进程数      
+   --epochs                             //重复训练次数
+   --batch-size                        //训练批次大小
+   --lr                                //初始学习率，默认：0.1
+   --momentum                          //动量，默认：0.9
+   --weight-decay                      //权重衰减，默认：0.0001
+   多卡训练参数：
+   --multiprocessing-distributed       //是否使用多卡训练
+   --device-list '0,1,2,3,4,5,6,7'     //多卡训练指定训练用卡
    ```
    
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
@@ -160,6 +160,8 @@ MnasNet是Google研究小组2019年在论文《MnasNet: Platform-Aware Neural Ar
 
 | NAME | Acc@1  | FPS  | Epochs | AMP_Type | Torch_Version |
 | :----: | :--: | :----: | :------: | :---: | :---: |
+| 1p-竞品V | - | 809 | 6 | O2 | 1.5 |
+| 8p-竞品V | 73.046 | 1408 | 300 | O2 | 1.5 |
 | 1p-NPU |   -    | 2569.8 |   6   |    O1    |  1.8  |
 | 8p-NPU | 72.819 | 14413.78 |  300   |    O1    |  1.8  |
 
@@ -172,3 +174,4 @@ MnasNet是Google研究小组2019年在论文《MnasNet: Platform-Aware Neural Ar
 ## FAQ
 
 无。
+
