@@ -5,8 +5,8 @@ opencv_python
 loguru
 scikit-image
 tqdm
-torchvision
-Pillow
+torchvision==0.2.2.post3
+Pillow==8.4.0
 thop
 ninja
 tabulate
