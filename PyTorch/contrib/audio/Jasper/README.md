@@ -26,29 +26,19 @@ Jasper语音识别网络是基于注意力机制的编码器-解码器架构，�
   code_path=PyTorch/contrib/audio
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.5.0](https://gitee.com/ascend/pytorch/tree/v1.5.0/)       |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -56,8 +46,9 @@ Jasper语音识别网络是基于注意力机制的编码器-解码器架构，�
 
 - 安装依赖。
 
+  在模型源码包根目录下执行命令。
   ```
-  pip3.7 install -r requirements.txt
+  pip install -r requirements.txt
   ```
 
 ## 准备数据集
@@ -65,31 +56,32 @@ Jasper语音识别网络是基于注意力机制的编码器-解码器架构，�
 
 1. 获取数据集。
 
-   用户可以自行获取原始数据集，可以选用开源数据集包括Librispeech等。也可以直接进入源码包根目录下运行以下两个命令下载数据集并进行预处理。脚本中的DATA_ROOT_DIR为数据集输出目录。
+   用户可以自行获取 `LibriSpeech` 原始数据集，并上传到服务器 `/home/dataset` 目录下。也可以直接进入源码包根目录下运行以下两个命令下载数据集并进行预处理。
 
-    ```
-    bash scripts/download_librispeech.sh
-    bash scripts/preprocess_librispeech.sh
-    ```
+   ```
+   bash scripts/download_librispeech.sh
+   bash scripts/preprocess_librispeech.sh
+   ```
 
    数据集目录结构参考如下所示。
 
    ```
    ├── dataset
-         ├──dev-clean-wav
-         ├──dev-other-wav
-         │──librispeech-train-clean-100-wav.json
-         │──librispeech-train-clean-360-wav.json      
-         ├──librispeech-train-clean-500-wav.json
-         │──librispeech-dev-clean-wav.json
-         │──librispeech-dev-other-wav.json
-         ├──librispeech-test-clean-wav.json                     
-         ├──librispeech-test-other-wav.json   
-         ├──test-clean-wav
-         │──test-other-wav
-         │──train-clean-100-wav     
-         ├──train-clean-360-wav
-         │──train-clean-500-wav
+        |——LibriSpeech
+            ├──dev-clean-wav
+            ├──dev-other-wav
+            │──librispeech-train-clean-100-wav.json
+            │──librispeech-train-clean-360-wav.json      
+            ├──librispeech-train-clean-500-wav.json
+            │──librispeech-dev-clean-wav.json
+            │──librispeech-dev-other-wav.json
+            ├──librispeech-test-clean-wav.json                     
+            ├──librispeech-test-other-wav.json   
+            ├──test-clean-wav
+            │──test-other-wav
+            │──train-clean-100-wav     
+            ├──train-clean-360-wav
+            │──train-clean-500-wav
                   
    ```
 
@@ -115,9 +107,9 @@ Jasper语音识别网络是基于注意力机制的编码器-解码器架构，�
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=/data/xxx/
+     bash ./test/train_full_1p.sh --data_path=/home/dataset/LibriSpeech/  # 单卡精度
      
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_1p.sh --data_path=/home/dataset/LibriSpeech/ # 单卡性能
      ```
 
    - 单机8卡训练
@@ -125,46 +117,47 @@ Jasper语音识别网络是基于注意力机制的编码器-解码器架构，�
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/
+     bash ./test/train_full_8p.sh --data_path=/home/dataset/LibriSpeech/  # 8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/
+     bash ./test/train_performance_8p.sh --data_path=/home/dataset/LibriSpeech/ # 8卡性能
      ```
 
-   --data_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录，此模型默认为 `/home/dataset/LibriSpeech/`。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
    --amp                               //是否使用混合精度
-   --data_mode                         //训练数据集名称
-   --data_path                         //数据集目录   
-   --eavl_data_mode                    //验证集名称
-   --max_iter                          //最多迭代步数，控制训练步数，如果为-1，则不加以控制  
-   --start_epoch                       //从第几个epoch开始训练
-   --learning-rate                     //学习率
+   --dataset_dir                       //数据集目录   
+   --val_manifests                     //验证集路径
+   --model_config                      //模型配置文件  
+   --output_dir                        //输出路径
+   --lr                                //学习率
+   --min_lr                            //最小学习率
    --weight-decay                      //权重衰减
    --prediction-frequency              //在dev set评估之间的steps
    --resume                            //权重路径
    --epochs                            //重复训练次数
    --batch-size                        //训练批次大小
-   --backend                           //后台通信方式
-   --dist-url                          //设置分布式训练网址
-   --distributed                       //是否使用多卡训练
    --seed                              //随机种子
+   --optimizer                         //优化器
    ```
+
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| 名称   | WER      | 性能/fps       | Epochs |
-| :------: | :------:  | :------: | :------: |  
-| GPU-1p   |    -    |   10       | 1 |     
-| GPU-8p   |  10.73  |   78      | 30 |
-| NPU-1p   |    -    |   4       | 1 |
-| NPU-8p   |  10.89  |  34     | 30 |
+
+|   NAME   | WER | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |  
+| 1p-竞品V |    -    |   10       | 1 |  - | 1.5 |   
+| 8p-竞品V |  10.73  |   78      | 30 | - | 1.5 |
+| 1p-NPU   |    -    |   4       | 1 | - | 1.5 |
+| 8p-NPU   |  10.89  |  34     | 30 | - | 1.5 |
 
 
 # 版本说明
@@ -174,6 +167,6 @@ Jasper语音识别网络是基于注意力机制的编码器-解码器架构，�
 2023.1.10：更新readme，重新发布。
 
 
-## 已知问题
+## FAQ
 
-暂无。
+无。
