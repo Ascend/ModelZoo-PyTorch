@@ -144,7 +144,7 @@ Cascade R-CNN是目标检测two-stage算法的代表之一，使用cascade回归
 
    1. 获取权重文件。
 
-       该推理项目使用源码包中的权重文件（cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth）。
+       [cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Cascade_RCNN_R101_FPN/PTH/cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth)
 
    2. 导出onnx文件。
 
