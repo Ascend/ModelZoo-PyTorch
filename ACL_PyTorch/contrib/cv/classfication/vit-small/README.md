@@ -117,7 +117,7 @@ Vision Transformer是一个经典的图像分类网络。以前的cv领域虽然
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件：`S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz`，请将其放在与`vit_small_patch16_224_pth2onnx.py`文件同一目录内。
+      从源码包中获取权重文件：[S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Vitsmall/PTH/S_16-i21k-300ep-lr_0.001-aug_light1-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz)，请将其放在与`vit_small_patch16_224_pth2onnx.py`文件同一目录内。
 
    2. 导出onnx文件。
 
