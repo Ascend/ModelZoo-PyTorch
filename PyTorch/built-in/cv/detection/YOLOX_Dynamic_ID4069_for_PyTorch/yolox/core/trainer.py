@@ -24,10 +24,11 @@ import time
 from loguru import logger
 
 import torch
+import torch_npu
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 
-from apex import amp
+# from apex import amp
 
 from yolox.data import DataPrefetcher
 from yolox.exp import Exp
@@ -61,11 +62,11 @@ class Trainer:
         # training related attr
         self.max_epoch = exp.max_epoch
         self.amp_training = args.fp16
-        self.scaler = torch.cuda.amp.GradScaler(enabled=args.fp16)
+        self.scaler = torch.npu.amp.GradScaler(enabled=args.fp16)
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
-        self.device = "cuda:{}".format(self.local_rank) if self.is_distributed else "cuda:{}".format(
+        self.device = "npu:{}".format(self.local_rank) if self.is_distributed else "npu:{}".format(
             int(os.getenv('NPU_CALCULATE_DEVICE', 0)))
         self.use_model_ema = exp.ema
         self.save_history_ckpt = exp.save_history_ckpt
@@ -121,18 +122,18 @@ class Trainer:
         inps, targets = self.exp.preprocess(inps, targets, self.input_size)
         data_end_time = time.time()
 
-        # with torch.cuda.amp.autocast(enabled=self.amp_training):
-        outputs = self.model(inps, targets)
+        with torch.npu.amp.autocast(enabled=self.amp_training):
+            outputs = self.model(inps, targets)
 
         loss = outputs["total_loss"]
 
         self.optimizer.zero_grad()
-        # self.scaler.scale(loss).backward()
-        # self.scaler.step(self.optimizer)
-        # self.scaler.update()
-        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-            scaled_loss.backward()
-        self.optimizer.step()
+        self.scaler.scale(loss).backward()
+        self.scaler.step(self.optimizer)
+        self.scaler.update()
+        # with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+        #     scaled_loss.backward()
+        # self.optimizer.step()
 
         if self.use_model_ema:
             self.ema_model.update(self.model)
@@ -154,7 +155,7 @@ class Trainer:
         logger.info("exp value:\n{}".format(self.exp))
 
         # model related init
-        torch.cuda.set_device(self.device)
+        torch.npu.set_device(self.device)
         model = self.exp.get_model()
         logger.info(
             "Model Summary: {}".format(get_model_info(model, self.exp.test_size))
@@ -166,7 +167,7 @@ class Trainer:
 
         # value of epoch will be set in `resume_train`
         model = self.resume_train(model)
-        model, self.optimizer = amp.initialize(model, self.optimizer, opt_level="O1", loss_scale=1024)
+        # model, self.optimizer = amp.initialize(model, self.optimizer, opt_level="O1", loss_scale=1024)
 
         # data related init
         self.no_aug = self.start_epoch >= self.max_epoch - self.exp.no_aug_epochs
