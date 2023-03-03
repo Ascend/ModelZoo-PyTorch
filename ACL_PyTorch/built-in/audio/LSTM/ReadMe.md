@@ -213,7 +213,7 @@ LSTM是一种特殊的RNN模型，与普通RNN相比，LSTM可以更好地解决
 
    1. 获取权重文件。
 
-      [前往昇腾社区下载权重文件](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/6ef4e3eb3ba74c0ca6c58cbe88cbb7c5/1)
+      [前往昇腾社区下载权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/LSTM/PTH/ctc_best_model.pth)
 
       源码包中已提供ctc_best_model.pth权重文件。在当前目录下创建checkpoint/ctc_fbank_cnn/目录并将权重文件移到到该目录下。
       ```
