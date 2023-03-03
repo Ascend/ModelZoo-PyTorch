@@ -326,6 +326,7 @@ class Progbar(object):
         self._seen_so_far = 0
         self._values = collections.OrderedDict()
         self._start = time.time()
+        self._actual_start = time.time()
         self._last_update = 0
 
     def update(self, current, values=None):
@@ -358,7 +359,7 @@ class Progbar(object):
         self._seen_so_far = current
 
         now = time.time()
-        info = ' - %.0fs' % (now - self._start)
+        info = ' - %.3fs' % (now - self._actual_start)
         if self.verbose == 1:
             if (now - self._last_update < self.interval and
                     self.target is not None and current < self.target):
