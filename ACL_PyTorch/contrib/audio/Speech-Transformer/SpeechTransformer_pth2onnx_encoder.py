@@ -11,10 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import argparse
+import sys
 import torch
 import torch.nn as nn
-import argparse
 from collections import OrderedDict
+
+sys.path.append('../../src/utils/')
+sys.path.append('../../src/transformer/')
 from module import PositionalEncoding
 from utils import (get_attn_pad_mask, get_non_pad_mask,  pad_list)
 from encoder import EncoderLayer
