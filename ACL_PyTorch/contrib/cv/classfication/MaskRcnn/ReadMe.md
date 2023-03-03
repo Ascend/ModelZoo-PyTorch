@@ -139,7 +139,7 @@ pass
 
 ### 4.2 生成onnx模型
 
-1.运行命令，在outpu文件夹下生成model.onnx文件，从源码包中获取训练后的权重文件maskrcnn.pth。
+1.运行命令，在outpu文件夹下生成model.onnx文件，获取权重文件[maskrcnn.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Mask-RCNN/PTH/maskrcnn.pth)
 ```
 python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml --output ./output --export-method tracing --format onnx MODEL.WEIGHTS maskrcnn.pth MODEL.DEVICE cpu
 ```
