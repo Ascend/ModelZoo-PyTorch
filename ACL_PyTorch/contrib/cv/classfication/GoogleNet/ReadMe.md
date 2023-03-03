@@ -112,7 +112,7 @@ GoogleNet是一种用于图像分类的卷积神经网络，这个模型的默�
 
 1. 模型转换。
 
-   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   使用PyTorch将模型权重文件[googlenet-1378be20.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/GoogleNet/PTH/googlenet-1378be20.pth)转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 导出onnx文件。
 
