@@ -232,7 +232,7 @@
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件ctc_best_model.pth。
+       从源码包中获取权重文件[ctc_best_model.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/LSTM/PTH/ctc_best_model.pth)。
     在LSTM目录下创建checkpoint/ctc_fbank_cnn/目录并将权重文件移到到该目录下。
        
        ```
