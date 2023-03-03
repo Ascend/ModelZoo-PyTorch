@@ -14,12 +14,14 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
+import argparse
+
 import numpy as np
 from PIL import Image
 import torch
 import multiprocessing
-import time
-import argparse
+
 from Pytorch_UNet.dice_loss import dice_coeff
 
 gl_resDir = "new_result/bs1/"
@@ -105,7 +107,7 @@ def eval_res(img_file, mask_file):
     return dice_coeff(image, mask).item()
 
 
-def get_iou(resLis_list, batch):
+def get_iou(resLis_list, batch, gl_res_txt):
     sum_eval = 0.0
     for file in resLis_list[batch]:
         seval = eval_res(file, file.replace('.bin', '_mask.gif'))
@@ -148,7 +150,7 @@ if __name__ == '__main__':
     lock = multiprocessing.Lock()
     pool = multiprocessing.Pool(len(resLis_list))
     for batch in range(len(resLis_list)):
-        pool.apply_async(get_iou, args=(resLis_list, batch))
+        pool.apply_async(get_iou, args=(resLis_list, batch, gl_res_txt))
     pool.close()
     pool.join()
     print('Multiple processes executed successfully')
