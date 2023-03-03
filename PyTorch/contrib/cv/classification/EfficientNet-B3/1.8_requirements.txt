@@ -1,0 +1,10 @@
+isort==4.3.21
+fvcore
+parameterized
+setuptools
+simplejson
+yacs
+torchvision==0.9.1
+Pillow==9.1.0
+pycls
+

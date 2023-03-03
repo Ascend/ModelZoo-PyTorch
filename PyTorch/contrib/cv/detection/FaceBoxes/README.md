@@ -1,117 +1,188 @@
-# FaceBoxes
+# FaceBoxes for PyTorch
 
-本项目实现了FaceBoxes从GPU到NPU上训练的迁移，源开源代码仓[FaceBoxes.Pytorch](https://github.com/zisianw/FaceBoxes.PyTorch)
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-## FaceBoxes Detail
 
-本项目对于FaceBoxes.Pytorch做出了如下更改：
 
-1. 将设备从Nvidia GPU迁移到Huawei NPU上。
-2. 在源代码的基础上添加了Apex混合精度进行优化。
-3. 在模型迁移到NPU上后一些不支持或性能较低的算子放到CPU上进行规避。
-4. 针对测试结果添加了新的评估脚本。
+# 概述
 
-## Requirements
+## 简述
 
-```bash
-pip install -r requirements.txt
-```
+FaceBoxes是一款可以在cpu上实现实时，高准确率的目标检测模型。它包含快速消化卷积层和多尺度卷积层，快速消化卷积层用来解决CPU上的实时问题，多尺度卷积层用来提高目标在不同尺度下的检测性能。
 
-- NPU 配套的run包安装
-- Python3.7.5
-- PyTorch（NPU版本）
-- Apex（NPU版本）
+- 参考实现：
 
-### 导入环境变量
+  ```
+  url=https://github.com/zisianw/FaceBoxes.PyTorch
+  commit_id=9bc5811fe8c409a50c9f23c6a770674d609a2c3a
+  ```
 
-```bash
-source scripts/npu_set_env.sh
-```
+- 适配昇腾 AI 处理器的实现：
 
-### 编译
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/contrib/cv/detection
+  ```
 
-```bash
-git clone https://github.com/Levi0223/FDDB_Evaluation.git
-cd FDDB_Evaluation
-python3 setup.py build_ext --inplace
-mv ../convert.py ../split.py ./
-```
+# 准备训练环境
 
-### 准备数据集
-数据集下载参考源代码仓
+## 准备环境
 
-1. 下载[WIDER_FACE](https://github.com/zisianw/FaceBoxes.PyTorch)数据集，将图片放在这个目录下（数据集包含32203张图片）：
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
+  **表 1**  版本支持表
+
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
+
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+
+- 安装依赖。
+
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  ```
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+  ```
+  > **说明:** 只需执行一条对应的PyTorch版本依赖安装命令。
+- 编译环境
+
+  导入环境变量。
    ```bash
-   $FaceBoxes_ROOT/data/WIDER_FACE/images/
+   source scripts/npu_set_env.sh
+   ```
+   ```bash
+   git clone https://github.com/Levi0223/FDDB_Evaluation.git
+   cd FDDB_Evaluation
+   python3 setup.py build_ext --inplace
+   mv ../convert.py ../split.py ./
    ```
 
-   下载转换后的[标注文件](https://github.com/zisianw/FaceBoxes.PyTorch)，将他们放在这个目录下：
+## 准备数据集
+
+   用户自行获取原始数据集，可选用的开源数据集包括WIDER_FACE等，将图片放在如下所示目录下（数据集包含32203张图片）。
+
+   ```bash
+   # $FaceBoxes_ROOT 为项目根目录
+   $FaceBoxes_ROOT/data/WIDER_FACE/images/
+   ```
+   下载转换后的标注文件将其放在这个目录下。
 
    ```bash
    $FaceBoxes_ROOT/data/WIDER_FACE/annotations/
    ```
 
-   最终数据集目录结构如下：
+   以WiderFace数据集为例，数据集目录结构参考如下所示。
 
-   ![输入图片说明](https://images.gitee.com/uploads/images/2021/0927/121855_9a16b40b_6515416.png "屏幕截图.png")
-
-2. 下载[FDDB](https://github.com/zisianw/FaceBoxes.PyTorch)数据集，将图片放在这个目录下（数据集包含2845张图片）：
-
-   ```bash
-   $FaceBoxes_ROOT/data/FDDB/images/
+   ```
+   data
+    ├── WIDER_FACE
+    │   ├── images
+    |   │   ├──0--Parade
+    |   │   ├── ...
+    |   │   ├──38--Tennis
+    │   |   ├── ...
+    │   ├── annotations
+    |   │   ├──0_Parade_marchingband_1_100.xml
+    |   │   ├── ...
+    |   │   ├──0_Parade_marchingband_1_6.xml
+    │   |   ├── ...
+    │   ├── img_list.txt
    ```
 
-   最终数据集目录结构如下：
+   > **说明：**
+   >该数据集的训练过程脚本只作为一种参考示例。
 
-   ![输入图片说明](https://images.gitee.com/uploads/images/2021/0927/121924_9f00b12c_6515416.png "屏幕截图.png")
 
-## Trainning
+# 开始训练
 
-### 单卡性能评估
+## 训练模型
 
-```bash
-### 输出单卡FPS
-bash scripts/train_performance_1p.sh
-```
+1. 进入解压后的源码包根目录。
 
-### 单卡训练
+   ```
+   cd /${模型文件夹名称}
+   ```
 
-```bash
-### 单卡全量训练
-bash scripts/train_1p.sh
-##  日志文件在当前目录下的1p_train.log
-```
+2. 运行训练脚本。
 
-### 多卡性能评估
+   该模型支持单机单卡训练和单机8卡训练。
 
-```bash
-### 输出多卡FPS
-bash scripts/train_performance_8p.sh
-```
+   - 单机单卡训练
 
-### 多卡训练
+     启动单卡训练。
 
-```bash
-### 多卡全量训练
-bash scripts/train_8p.sh
-##  日志文件在当前目录下的8p_train.log
-```
+     ```
+     bash ./scripts/train_1p.sh  # 单卡精度
 
-### Test
+     bash ./scripts/train_performance_1p.sh  # 单卡性能
+     ```
 
-```bash
-### 测试训练得到的权重文件，生成FDDB_dets.txt
-bash test.sh
-##  日志文件在当前目录下的test.log
-### 解析FDDB_dets.txt文件，打印最终精度
-bash eval.sh
-```
+   - 单机8卡训练
 
-## Performance
+     启动8卡训练。
 
-|         |   AP   | APEX | lOSS_SCALE | EPOCH |
-| :-----: | :----: | :--: | :--------: | :---: |
-| **GPU** | 0.9440 |  O2  |    128     |  300  |
-| **NPU** | 0.9396 |  O2  |    128     |  300  |
+     ```
+     bash ./scripts/train_8p.sh  # 8卡精度
 
+     bash ./scripts/train_performance_8p.sh  # 8卡性能
+     ```
+
+   - 单机单卡评测
+
+     启动单卡评测。
+
+     ```
+     bash test.sh  # 单卡评测
+     ```
+
+   模型训练脚本参数说明如下。
+
+   ```
+   公共参数：
+   --training_dataset                  //数据集路径
+   --dist_url                          //分布式地址
+   --multiprocessing-distributed       //是否使用多卡训练
+   --print-freq                        //使用频率
+   --num_workers                       //加载数据进程数
+   --world_size                        //使用卡数
+   --epoch                             //重复训练次数
+   --batch-size                        //训练批次大小
+   --device                            //使用设备
+   --rank                              //使用卡排名
+   多卡训练参数：
+   --device-list '0,1,2,3,4,5,6,7'     //多卡训练指定训练用卡
+   ```
+
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V |   -   | -  |   1    |    O2     |      1.5      |
+| 8p-竞品V | 0.944 | - |  300   |   O2     |      1.5      |
+|  1p-NPU  |   -   | -  |   1    |    O2   |      1.5      |
+|  8p-NPU  | 0.9396  | -  |  300   |    O2    |      1.5      |
+
+# 版本说明
+
+## 变更
+
+2020.10.14：更新内容，重新发布。
+
+2020.07.08：首次发布。
+
+## FAQ
+
+无。

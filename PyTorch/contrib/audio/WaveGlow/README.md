@@ -16,7 +16,6 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
 
   ```
   url=https://github.com/NVIDIA/waveglow.git
-  branch=master
   commit_id=8afb643df59265016af6bd255c7516309d675168
   ```
 
@@ -27,29 +26,19 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
   code_path=PyTorch/contrib/audio
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
 
 - 环境准备指导。
 
@@ -57,16 +46,22 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
 
 - 安装依赖。
 
+  在模型源码包根目录下执行命令。
   ```
   pip3.7 install -r requirements.txt
+
   # 检查安装依赖是否成功
   import librosa
+
   # 若import librosa提示 sndfile 找不到
   apt-get/yum install libsndfile
+
   # 若 scikit-learn 报错，则使用conda安装
   pip3.7 install scikit-learn
+
   # 若numpy被前面安装的内容更新，则重新安装(numpy版本需1.20及以下)
   pip3.7 install numpy==1.20
+
   # 若 sympy 报错，则pip/conda安装
   pip3.7 install sympy
   ```
@@ -111,7 +106,7 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
 
      ```
      
-     bash ./test/train_performance_1p.sh --data_path=数据集路径 --output_directory=./checkpoints  
+     bash ./test/train_performance_1p.sh --data_path=数据集路径 --output_directory=./checkpoints  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -119,19 +114,22 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=数据集路径 --output_directory=./checkpoints  
+     bash ./test/train_full_8p.sh --data_path=数据集路径 --output_directory=./checkpoints  # 8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=数据集路径 --output_directory=./checkpoints
+     bash ./test/train_performance_8p.sh --data_path=数据集路径 --output_directory=./checkpoints  # 8卡性能
      ```
      
-   - 单机8卡评估
+   - 单机8卡评测
      
-     启动8卡评估。
-     
-     ```
-     bash test/train_eval_8p.sh --data_path=数据集路径 --pth_path=checkpoints/waveglow_21000
+     启动8卡评测。
      
      ```
+     bash ./test/train_eval_8p.sh --data_path=数据集路径 --pth_path=./checkpoints/waveglow_21000  # 8卡评测     
+     ```
+   
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   
+   --pth_path参数填写训练权重生成路径，需写到权重文件的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -150,18 +148,20 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
    --c                                 //glow网络配置json文件
    ```
 
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
 
-| NAME | Accuracy |    FPS    | Npu_nums | Epochs   | AMP_Type |
+| NAME | Accuracy |    FPS    | Epochs   | AMP_Type | Torch_Version |
 | :------: | :------: | :------:  | :------: | :------: | :------: |
-| GPU | -        | 0.007     | 1        | 1        | O2       |
-| GPU | -5.6     | 0.42      | 8        | 313      | O2       |
-| NPU | -        | 0.002     | 1        | 1        | O2       |
-| NPU | -5.6     | 0.21      | 8        | 313      | O2       |
+| 1p-竞品V | -        | 0.007     | 1        | O2       | 1.5 |
+| 8p-竞品V | -5.6     | 0.42      | 313      | O2       | 1.5 |
+| 1p-NPU | -        | 0.002     | 1        | O2       | 1.8 |
+| 8p-NPU | -5.6     | 0.21      | 313      | O2       | 1.8 |
 
 
 
@@ -172,6 +172,6 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
 2023.1.10：更新readme，重新发布。
 
 
-## 已知问题
+## FAQ
 
-暂无。
+无。

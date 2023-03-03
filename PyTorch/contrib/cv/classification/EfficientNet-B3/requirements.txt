@@ -1,7 +1,0 @@
-isort==4.3.21
-fvcore
-parameterized
-setuptools
-simplejson
-yacs
-

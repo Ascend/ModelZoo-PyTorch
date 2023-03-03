@@ -467,6 +467,16 @@ CV-segmentation
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DB_Dynamic_for_PyTorch"> DB_Dynamic_for_PyTorch </a>
+        </td>
+        <td>icdar2015</td>
+        <td></td>
+	<td></td>
+	<td>E2E: 9.3s</td>
+	<td>1 x 3 x h x w</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/DeeplabV3"> DeeplabV3 </a>
         </td>
         <td>Cityscapes</td>

@@ -129,7 +129,7 @@ StarGAN是 Yunjey Choi 等人于 17年11月 提出的一个模型。该模型可
 
    1. 获取权重文件。
 
-       该推理项目使用源码包中的权重文件（200000-G.pth）。
+       [200000-G.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/StarGan/PTH/200000-G.pth)
 
    2. 导出onnx文件。
 

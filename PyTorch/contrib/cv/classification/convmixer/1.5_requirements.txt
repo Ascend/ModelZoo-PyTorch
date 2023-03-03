@@ -1,0 +1,3 @@
+torchvision==0.6.0
+pyyaml
+pillow==8.4.0

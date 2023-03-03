@@ -177,7 +177,7 @@ C3D一种简单而有效的方法，用于使用在大规模监督视频数据�
 
    1. 获取权重文件。
 
-       [pth文件](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/0ddef04ca7ef44c991bee48b2c154258/1)为使用310训练得到的权重文件。
+       [pth文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/C3D/PTH/C3D.pth)
 
    2. 导出onnx文件。
 

@@ -105,7 +105,7 @@ StyleGAN2-ADA是具有自适应鉴别器增强（ADA）的StyleGAN2，用有限�
 
    1. 获取权重文件。
 
-       权重文件为：G_ema_bs8_8p_kimg1000.pkl，[获取链接](https://pan.baidu.com/s/1tEDu9ru1jkVhsJfkOtmSlg?pwd=6q5k)  
+       权重文件为：[G_ema_bs8_8p_kimg1000.pkl](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/StyleGAN/PTH/G_ema_bs8_8p_kimg1000.pkl) 
        将获取的权重文件放在当前工作路径下。
 
    2. 导出onnx文件。
