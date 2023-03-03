@@ -26,7 +26,6 @@ from Pytorch_UNet.dice_loss import dice_coeff
 
 gl_resDir = "new_result/bs1/"
 gl_labelDir = "SegmentationClass/"
-gl_res_txt = 'res_data.txt'
 
 
 def getUnique(img):
@@ -107,7 +106,7 @@ def eval_res(img_file, mask_file):
     return dice_coeff(image, mask).item()
 
 
-def get_iou(resLis_list, batch, gl_res_txt):
+def get_iou(resLis_list, batch):
     sum_eval = 0.0
     for file in resLis_list[batch]:
         seval = eval_res(file, file.replace('.bin', '_mask.gif'))
@@ -130,9 +129,6 @@ def get_iou(resLis_list, batch, gl_res_txt):
 
 if __name__ == '__main__':
 
-    if gl_res_txt in os.listdir(os.getcwd()):
-        os.remove(gl_res_txt)
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', default='result/bs1')
     parser.add_argument('--label', default='./carvana/train_masks')
@@ -143,6 +139,9 @@ if __name__ == '__main__':
     gl_labelDir = args.label
     gl_res_txt = args.result
 
+    if gl_res_txt in os.listdir(os.getcwd()):
+        os.remove(gl_res_txt)
+
     resLis = os.listdir(gl_resDir)
     resLis_list = [resLis[i:i + 300] for i in range(0, 5000, 300) if resLis[i:i + 300] != []]
 
@@ -150,7 +149,7 @@ if __name__ == '__main__':
     lock = multiprocessing.Lock()
     pool = multiprocessing.Pool(len(resLis_list))
     for batch in range(len(resLis_list)):
-        pool.apply_async(get_iou, args=(resLis_list, batch, gl_res_txt))
+        pool.apply_async(get_iou, args=(resLis_list, batch))
     pool.close()
     pool.join()
     print('Multiple processes executed successfully')
