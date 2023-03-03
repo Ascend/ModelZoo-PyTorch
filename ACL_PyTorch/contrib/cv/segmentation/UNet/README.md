@@ -80,7 +80,7 @@ python3 preprocess_unet_pth.py /opt/npu/carvana/train ./prep_bin
 
 #### 3.1.1 获取权重文件。
 
-在源码包中已经提供权重文件UNet.pth。
+[UNet.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Unet/PTH/UNet.pth)
 
 #### 3.1.2 导出onnx文件
 
