@@ -150,7 +150,8 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
    1. 获取权重文件。
 
-       该推理项目使用源码包中的权重文件（iter_183250.pt”和“resnet34-333f7ec4.pth）。
+       [iter_183250.pt](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SSD-Resnet34/PTH/iter_183250.pt) 和 [resnet34-333f7ec4.pth](
+https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SSD-Resnet34/PTH/resnet34-333f7ec4.pth)
 
    2. 导出onnx文件。
 
