@@ -119,7 +119,7 @@ HRNet（High-Resolution Net）是针对2D人体姿态估计（Human Pose Estimat
 
    1. 获取权重文件。
 
-      [HRNet预训练pth权重文件](https://www.hiascend.com/zh/software/modelzoo/models/detail/C/1b0cc204871ae9a872c7bb4f96a4f665/1)
+      [HRNet预训练pth权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/HrNet/PTH/model_best.pth.tar)
 
       ```
       进入网页点击下载模型，压缩包中有model_best.pth.tar的权重文件
@@ -142,7 +142,7 @@ HRNet（High-Resolution Net）是针对2D人体姿态估计（Human Pose Estimat
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/......
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
