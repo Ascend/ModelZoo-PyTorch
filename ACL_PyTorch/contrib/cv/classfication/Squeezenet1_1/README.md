@@ -108,7 +108,7 @@ Squeezenet的设计采用了卷积替换、减少卷积通道数和降采样操�
 
    1. 获取权重文件。
 
-      从开源仓获取权重文件[squeezenet1_1-f364aa15.pth](https://download.pytorch.org/models/squeezenet1_1-f364aa15.pth)
+      [squeezenet1_1-f364aa15.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Squeezenet1_1/PTH/squeezenet1_1-f364aa15.pth)
 
    2. 导出onnx文件。
 
