@@ -93,6 +93,12 @@ BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
+total_training_time=`grep -a 'time'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'| awk '{a+=$1} END {printf("%.3f",a)}'`
+total_eval_time=`grep -a 'elapsed'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "10000/10000" '{print $2}'|awk -F "elapsed: " '{print $2}'| awk -F "s" '{print $1}'| awk '{a+=$1} END {printf("%.3f",a)}'`
+maximum=`grep -a 'time'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+train_average=`echo "50000 / $total_training_time" | bc`
+e2e_average=`echo "50000 / $e2e_time" | bc`
+
 ##获取性能数据，不需要修改
 #吞吐量
 ActualFPS=${FPS}
@@ -116,3 +122,9 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "train_training_time : $total_training_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "train_eval_time : $total_eval_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "total_time : $e2e_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "training maximum images/sec : $maximum" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "training average images/sec : $train_average" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "end to end average images/sec : $e2e_average" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
