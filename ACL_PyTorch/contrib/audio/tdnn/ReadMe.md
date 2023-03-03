@@ -127,7 +127,9 @@ pip install --editable .
 ## 3 模型转换
 
 本模型基于开源框架PyTorch训练的TDNN模型进行转换。  
-首先使用PyTorch将模型权重文件tdnn.pth转换为tdnn.onnx文件，再使用ATC工具将tdnn.onnx文件转为tdnn.om文件。  
+首先使用PyTorch将模型权重文件[tdnn.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/TDNN/PTH/classifier.ckpt
+
+https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/TDNN/PTH/embedding_model.ckpt)转换为tdnn.onnx文件，再使用ATC工具将tdnn.onnx文件转为tdnn.om文件。  
 
 -   **[pth转onnx模型](#31-pth转onnx模型)**  
 
