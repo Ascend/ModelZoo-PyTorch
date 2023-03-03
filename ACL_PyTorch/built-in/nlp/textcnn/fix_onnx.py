@@ -23,7 +23,7 @@ import numpy as np
 
 batch_size = sys.argv[1]
 
-graph = OnnxGraph(f'onnx_sim_dir/textcnn_{batch_size}bs_sim.onnx')
+graph = OnnxGraph.parse(f'onnx_sim_dir/textcnn_{batch_size}bs_sim.onnx')
 
 
 

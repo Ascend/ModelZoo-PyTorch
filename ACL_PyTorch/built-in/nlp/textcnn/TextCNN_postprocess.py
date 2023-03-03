@@ -21,10 +21,6 @@ top1_acc = 0
 top5_acc = 0
 total = 0
 
-for file_name in os.listdir(result_root):
-    if file_name.endswith('.json'):
-        os.remove(result_root + file_name)
-result_root += os.listdir(result_root)[0]
 
 for result_path in os.listdir(result_root):
     label = int(result_path.split('.')[0].split('_')[1])
