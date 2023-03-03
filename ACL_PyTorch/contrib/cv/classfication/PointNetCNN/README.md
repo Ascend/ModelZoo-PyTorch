@@ -150,7 +150,7 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
 
    1. 获取权重文件。
    
-      从源码包中获取权重文件："pointcnn_epoch240.pth"
+      从源码包中获取权重文件："[pointcnn_epoch240.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/PointNetCnn/PTH/pointcnn_epoch240.pth)"
 
    2. 导出onnx文件。
 
