@@ -267,7 +267,7 @@ I3D是一种新的基于2D ConvNet 膨胀的双流膨胀3D ConvNet (I3D)。一�
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件，并新建目录“mmaction2/checkpoints”，将权重文件重命名为“i3d_nl_dot_product_r50.pth”，并保存在“checkpoints”目录下。
+      从源码包中获取[权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/I3D-Nonlocal/PTH/i3d_nl_dot_product_r50.pth)，并新建目录“mmaction2/checkpoints”，将权重文件重命名为“i3d_nl_dot_product_r50.pth”，并保存在“checkpoints”目录下。
 
    2. 导出onnx文件。
 
