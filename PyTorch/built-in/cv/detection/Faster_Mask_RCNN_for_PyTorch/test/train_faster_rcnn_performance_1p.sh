@@ -20,7 +20,7 @@ data_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Faster_RCNN_for_PyTorch"
+Network="Faster_RCNN_ID0101_for_PyTorch"
 #训练batch_size
 batch_size=8
 #训练step
