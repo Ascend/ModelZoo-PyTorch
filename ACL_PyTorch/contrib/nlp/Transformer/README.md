@@ -194,7 +194,7 @@
 
 1. 模型转换。
 
-   使用PyTorch将模型权重文件.chkpt转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   使用PyTorch将模型[权重文件.chkpt](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Transformer/PTH/transformer_trained_0.chkpt)转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 安装ais_bench推理工具
 
