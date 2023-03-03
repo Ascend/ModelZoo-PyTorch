@@ -121,7 +121,7 @@
 
    1. 获取权重文件。
 
-       该推理项目使用源码包中的权重文件（RetinaNet-detectron2.pkl）。
+       [RetinaNet-detectron2.pkl](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Retinanet/PTH/RetinaNet-detectron2.pkl)
 
    2. 导出onnx文件。
 
