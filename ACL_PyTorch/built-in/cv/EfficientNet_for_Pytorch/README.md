@@ -106,7 +106,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
          -   ./val：下载且未分类的ImageNet的val数据集**绝对路径**（如果需要保留val文件夹请先备份）。
          -   ./ILSVRC2012_devkit_t12：官方提供的deckit文件夹**绝对路径**。
 
-   2. 然后将原始数据集转换为模型输入的数据，执行Efficient-B1_preprocess.py脚本，完成预处理。
+   2. 然后将原始数据集转换为模型输入的数据，执行Efficient-B0_preprocess.py脚本，完成预处理。
       ```
       python3.7 Efficient-B0_preprocess.py ./val ./prep_dataset
       ```
@@ -196,7 +196,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       
       2. 建立软链接（若无法建立，可尝试切换root用户重新建立）
          ```
-         find ./prep_dataset/ -name "*.bin" | xargs -i ln -sf {} ./soft_link/
+         find /home/EfficientNet_for_Pytorch/prep_dataset/ -name "*.bin" | xargs -i ln -sf {} /home/EfficientNet_for_Pytorch/soft_link/
          ```
          -   参数说明：
 
@@ -209,7 +209,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
         ```
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         mkdir outputs
-        python3.7 -m ais_bench --model b0_bs8.om --input prep_dataset/ --output ./outputs/ --outfmt=TXT --device 0  
+        python3.7 -m ais_bench --model b0_bs8.om --input ./soft_link/ --output ./outputs/ --outfmt=TXT --device 0  
         ```
 
         -   参数说明：
