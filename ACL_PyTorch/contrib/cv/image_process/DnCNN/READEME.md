@@ -118,11 +118,9 @@ DnCNN作为去噪神经网络非常出名，这个网络强调了residual learni
 
    1. 获取权重文件。
 
-      [DnCNN预训练pth权重文件](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/4ab8abf42ef54bb9b461aca384c6313e/1)
+      [DnCNN预训练pth权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Dncnn/PTH/net.pth)
 
-      ```
-      进入网页点击立即下载，压缩包中有net.pth的权重文件
-      ```
+   
 
    2. 导出onnx文件。
 
