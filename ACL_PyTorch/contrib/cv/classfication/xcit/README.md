@@ -135,7 +135,7 @@ Xcit是针对于图片处理设计的基于Transformer架构的神经网络。�
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件：“xcit_small_12_p16.pth”。
+       从源码包中获取权重文件：[xcit_small_12_p16.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/XCIT/PTH/xcit_small_12_p16_224.pth)。
 
    2. 导出onnx文件。
 
