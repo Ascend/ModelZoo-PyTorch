@@ -1,6 +1,0 @@
-attrs
-numpy
-torchvision
-Pillow==9.1.0
-tqdm
-setproctitle
