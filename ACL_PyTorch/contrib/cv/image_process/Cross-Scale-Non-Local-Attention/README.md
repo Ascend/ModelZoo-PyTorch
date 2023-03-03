@@ -93,7 +93,7 @@
 
 1. PyTroch 模型转 ONNX 模型  
 
-    从源码包中获取权重文件“model_x4.pt”
+    获取权重文件[model_x4.pt](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Cross-Scale-Non-Local-Attention/PTH/model_x4.pt)
  
     然后执行执行以下命令生成 ONNX 模型：
     ```
