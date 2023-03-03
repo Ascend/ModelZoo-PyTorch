@@ -138,10 +138,10 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
       （waveglow为语音生成器，不在本模型范围内, 但为了确保代码能正常运行，需要下载）
 
    2. 获取pt输出
-      为了后面推理结束后将om模型推理精度与原pt模型精度进行对比，将输入数据在pt模型中前传得到的输出tensor存为pth文件存入test/mel_out_pth文件夹下
+      为了后面推理结束后将om模型推理精度与原pt模型精度进行对比，脚本运行结束会在test文件夹下创建mel_tgt_pth用于存放pth模型输入数据，mel_out_pth用于存放pth输出数据，input_bin用于存放二进制数据集，input_bin_info.info用于存放二进制数据集的相对路径信息
 
       ```
-      python3 data_process.py -i phrases/tui_val100.tsv -o ./test/input_bin --dataset-path=./LJSpeech-1.1 --fastpitch ./nvidia_fastpitch_210824.pt --waveglow ./nvidia_waveglow256pyt_fp16.pt
+      python3 data_process.py -i phrases/tui_val100.tsv --dataset-path=./LJSpeech-1.1 --fastpitch ./nvidia_fastpitch_210824.pt --waveglow ./nvidia_waveglow256pyt_fp16.pt
       ```
       - 参数说明：
          -   -i：保存数据集文件的路径的tsv文件
@@ -234,7 +234,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
    3. 执行推理。
 
         ```
-        python3 -m ais_bench --model FastPitch_bs1.om --input test/input_bin --output result --output_dirname output_bs1 --outfmt BIN
+        python3 -m ais_bench --model FastPitch_bs1.om --input test/input_bin --output result --outfmt BIN
         ```
 
         -   参数说明：
@@ -249,11 +249,14 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
    4. 精度验证。
 
-      调用脚本与数据集标签比对，可以获得Accuracy数据。
+      调用脚本分别对比input中创建的mel_tgt_pth输入数据和ais_bench推理结果./result/{}，以及pthm模型mel_out_pth输出数据，可以分别获得om和pth模型的Accuracy数据。
 
       ```
-      python3 infer_test.py result/output_bs1
+      python3 infer_test.py ./result/{}
       ```
+      -   参数说明：
+         -   ./result/{}：ais_bench推理结果保存路径
+
 
    5. 性能验证。
 
@@ -273,17 +276,13 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
 调用ACL接口推理计算，性能参考下列数据。
 
-|mel_loss  |   om     |     pth   |
-| -------- | -------- | --------- |
-|bs1	     |  11.260  |   13.400  |
-|bs4	     |  11.260  |   13.400  |
 
 
-| 芯片型号 | Batch Size | 数据集| 性能|
-| --------- | ----| ----------|---------|
-| 310P3 |  1       | LJSpeech-1.1 |   202.265      |
-| 310P3 |  4       | LJSpeech-1.1t |    249.906      |
-| 310P3 |  8       | LJSpeech-1.1 |  240.211     |
-| 310P3 |  16       | LJSpeech-1.1 |   239.614      |
-| 310P3 |  32       | LJSpeech-1.1 |    232.589      |
-| 310P3 |  64       | LJSpeech-1.1 |  214.174     |
+| 芯片型号 | Batch Size | 数据集| 性能|  om精度    |   pth精度      
+| --------- | ----| ----------|---------|   ------   |--------
+| 310P3 |  1       | LJSpeech-1.1 |   202.265      |    mel_loss:11.260     |     mel_loss:13.400
+| 310P3 |  4       | LJSpeech-1.1t |    249.906      |  mel_loss:11.260       |  mel_loss:13.400
+| 310P3 |  8       | LJSpeech-1.1 |  240.211     |      mel_loss:11.260      |mel_loss:13.400
+| 310P3 |  16       | LJSpeech-1.1 |   239.614      |   mel_loss:11.260      | mel_loss:13.400
+| 310P3 |  32       | LJSpeech-1.1 |    232.589      |  mel_loss:11.260     |mel_loss:13.400
+| 310P3 |  64       | LJSpeech-1.1 |  214.174     |     mel_loss:11.260      |mel_loss:13.400
