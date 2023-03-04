@@ -75,6 +75,10 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
+cd $cur_path
+
+python3.7 setup.py build develop > $cur_path/log.txt
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 nohup python3.7 tools/train_net.py \
