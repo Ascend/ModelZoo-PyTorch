@@ -111,11 +111,17 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'Train:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "/s" '{print $2}'|awk '{print $2}'`
+total_training_time=`grep "Train:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "Time: " '{print $2}' | awk -F " " '{print $1}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a)}'`
+total_eval_time=`grep "Test" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "Time: " '{print $2}' | awk -F " " '{print $1}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a)}'`
+total_sample=`awk -v ep=${epochs} 'BEGIN{print(ep*1281167)}'`
+maximum=`grep "Train:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "Time: " '{print $2}' | awk -F " " '{print $2}' | awk 'BEGIN {max = 0} {if ($1+0 > max+0) max=$1} END {print max}' `
+train_average=`awk -v ts=${total_sample} -v ttt=$total_training_time 'BEGIN{print(ts/ttt)}'`
 #输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '*** Best metric: ' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk '{print $4}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
+e2e_average=`awk -v ts=${total_sample} -v et=$e2e_time 'BEGIN{print(ts/et)}'`
 
 #稳定性精度看护结果汇总
 #训练用例信息，不需要修改
@@ -149,3 +155,11 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+
+# perf report
+echo "total_training_time : $total_training_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "total_eval_time : $total_eval_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "total_time : $e2e_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "training maximum images/sec : $maximum" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "training average images/sec : $train_average" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "end to end average images/sec : $e2e_average" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
