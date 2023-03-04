@@ -20,7 +20,7 @@ if [[ $config == 'ucf101' ]];then
     batch_size=36
     train_epochs=32
 elif [[ $config == 'sthv2' ]];then
-    batch_size=24
+    batch_size=16
     train_epochs=50
 fi
 

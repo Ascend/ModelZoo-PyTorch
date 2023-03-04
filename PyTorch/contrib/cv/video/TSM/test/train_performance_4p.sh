@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="TSM"
 # 训练使用的npu卡数
-export RANK_SIZE=1
+export RANK_SIZE=4
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -66,11 +66,12 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u train.py \
+python3.7 -m torch.distributed.launch --nproc_per_node=4 --master_port=29111 train.py \
     --resume-from . \
+    --launcher pytorch \
     --cfg-options total_epochs=1 \
     --config_name $config \
-    --local_rank $ASCEND_DEVICE_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --gpu-ids 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -112,4 +113,3 @@ echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${Ca
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-
