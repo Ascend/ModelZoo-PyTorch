@@ -326,6 +326,7 @@ class Progbar(object):
         self._seen_so_far = 0
         self._values = collections.OrderedDict()
         self._start = time.time()
+        self._actual_start = time.time()
         self._last_update = 0
 
     def update(self, current, values=None):
@@ -358,7 +359,7 @@ class Progbar(object):
         self._seen_so_far = current
 
         now = time.time()
-        info = ' - %.0fs' % (now - self._start)
+        info = ' - %.3fs' % (now - self._actual_start)
         if self.verbose == 1:
             if (now - self._last_update < self.interval and
                     self.target is not None and current < self.target):
@@ -410,12 +411,6 @@ class Progbar(object):
                 world_size = 1 if 'WORLD_SIZE' not in os.environ else int(os.environ['WORLD_SIZE'])
                 FPS =  1 / time_per_unit * int(os.environ['BATCH_SIZE']) * world_size
                 info += ' FPS: %.0f' % FPS
-                # if time_per_unit >= 1:
-                #     info += ' %.0fs/step' % time_per_unit
-                # elif time_per_unit >= 1e-3:
-                #     info += ' %.0fms/step' % (time_per_unit * 1e3)
-                # else:
-                #     info += ' %.0fus/step' % (time_per_unit * 1e6)
 
             for k in self._values:
                 info += ' - %s:' % k

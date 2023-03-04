@@ -37,6 +37,7 @@
 # [valid_f1]  token_level: 97.06； entity_level: 95.90
 
 import os
+import time
 import numpy as np
 import torch
 import torch_npu
@@ -44,6 +45,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import random
+
 from bert4torch.snippets import sequence_padding, Callback, ListDataset, seed_everything
 from bert4torch.optimizers import get_linear_schedule_with_warmup
 from bert4torch.layers import CRF
@@ -214,6 +216,7 @@ else:
 def evaluate(data):
     X, Y, Z = 1e-10, 1e-10, 1e-10
     X2, Y2, Z2 = 1e-10, 1e-10, 1e-10
+    start = time.time()
     for token_ids, label, seq_length in tqdm(data):
         token_ids = token_ids.to('npu', non_blocking=True)
         label = label.to('npu', non_blocking=True)
@@ -234,6 +237,7 @@ def evaluate(data):
         X2 += len(entity_pred.intersection(entity_true))
         Y2 += len(entity_pred)
         Z2 += len(entity_true)
+    print(' - eval_time_cost: %.3fs' % (time.time() - start), flush=True)
     f1, precision, recall = 2 * X / (Y + Z), X / Y, X / Z
     f2, precision2, recall2 = 2 * X2 / (Y2 + Z2), X2/ Y2, X2 / Z2
     return f1, precision, recall, f2, precision2, recall2
@@ -277,7 +281,7 @@ class Evaluator(Callback):
 
 
 if __name__ == '__main__':
-    
+    torch_npu.npu.set_compile_mode(jit_compile=False)
     evaluator = Evaluator()
     if distributed:
         model.module.fit(train_dataloader, train_sampler, epochs=args.train_epochs, steps_per_epoch=None, callbacks=[evaluator]) #evaluator
