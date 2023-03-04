@@ -37,6 +37,7 @@
 # [valid_f1]  token_level: 97.06； entity_level: 95.90
 
 import os
+import time
 import numpy as np
 import torch
 import torch_npu
@@ -44,7 +45,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import random
-import time
+
 from bert4torch.snippets import sequence_padding, Callback, ListDataset, seed_everything
 from bert4torch.optimizers import get_linear_schedule_with_warmup
 from bert4torch.layers import CRF

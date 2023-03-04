@@ -411,12 +411,6 @@ class Progbar(object):
                 world_size = 1 if 'WORLD_SIZE' not in os.environ else int(os.environ['WORLD_SIZE'])
                 FPS =  1 / time_per_unit * int(os.environ['BATCH_SIZE']) * world_size
                 info += ' FPS: %.0f' % FPS
-                # if time_per_unit >= 1:
-                #     info += ' %.0fs/step' % time_per_unit
-                # elif time_per_unit >= 1e-3:
-                #     info += ' %.0fms/step' % (time_per_unit * 1e3)
-                # else:
-                #     info += ' %.0fus/step' % (time_per_unit * 1e6)
 
             for k in self._values:
                 info += ' - %s:' % k
