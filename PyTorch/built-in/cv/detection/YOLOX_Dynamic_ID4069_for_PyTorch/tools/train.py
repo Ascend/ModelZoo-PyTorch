@@ -133,6 +133,11 @@ def main(exp: Exp, args):
     configure_omp()
     cudnn.benchmark = True
 
+    option = {}
+    if not args.fp16:
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+    torch.npu.set_option(option)
+
     trainer = exp.get_trainer(args)
     trainer.train()
 
