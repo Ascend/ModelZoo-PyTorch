@@ -67,6 +67,7 @@ fi
 
 rm -rf ./outputs
 mkdir ./outputs
+cp -r $data_path/prev_trained_model ./
 export BERT_BASE_DIR=./prev_trained_model/albert_base_v2
 export DATA_DIR=${data_path}
 export OUTPUR_DIR=./outputs
