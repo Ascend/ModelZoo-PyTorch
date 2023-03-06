@@ -18,7 +18,7 @@
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-YOLO
+UNet是由FCN改进而来的图像分割模型，其网络结构像U型，分为特征提取部分和上采样特征融合部分。
 
 - 参考实现：
 
@@ -114,17 +114,17 @@ YOLO
       1. 移动unet_pth2onnx.py至Pytorch_Unet目录，使用unet_pth2onnx.py导出onnx文件。
 
          ```
-         mv unet_pth2onnx.py ./Pytorch_Unet
-         python3 ./Pytorch_Unet/unet_pth2onnx.py ./UNet.pth ./UNet_dynamic_bs.onnx
+         mv unet_pth2onnx.py ./Pytorch_UNet
+         python3 ./Pytorch_UNet/unet_pth2onnx.py ./UNet.pth ./UNet_dynamic_bs.onnx
          ```
          
          获得UNet_dynamic_bs.onnx文件。
 
       2. 使用onnxsim精简onnx文件。
          ```
-         python3 -m onnxsim --input-shape="1,3,572,572" UNet_dynamic_bs.onnx unet_carvana_sim.onnx
+         python3 -m onnxsim --dynamic-input-shape --input-shape="1,3,572,572" UNet_dynamic_bs.onnx UNet_dynamic_sim.onnx
          ```
-         获得unet_carvana_sim.onnx文件。
+         获得UNet_dynamic_sim.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -155,7 +155,7 @@ YOLO
       3. 执行ATC命令。
 
          ```
-         atc --model=unet_carvana_sim.onnx --framework=5 --output=unet_bs${batch_size} --input_format=NCHW --input_shape='actual_input_1:${batch_size},3,572,572' --log=info --soc_version=Ascend${chip_name}
+         atc --model=UNet_dynamic_sim.onnx --framework=5 --output=UNet_bs${batch_size} --input_format=NCHW --input_shape='actual_input_1:${batch_size},3,572,572' --log=info --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -168,7 +168,7 @@ YOLO
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           运行成功后生成<u>***unet_bs${batch_size}.om***</u>模型文件。
+           运行成功后生成<u>***UNet_bs${batch_size}.om***</u>模型文件。
 
 2. 开始推理验证
 
@@ -179,7 +179,7 @@ YOLO
    2. 执行推理。
 
       ```
-      python3 -m ais_bench --model=unet_bs${batch_size}.om --input=./prep_bin --output=result --output_dirname=bs${batch_size} --batchsize=${batch_size}
+      python3 -m ais_bench --model=UNet_bs${batch_size}.om --input=./prep_bin --output=result --output_dirname=bs${batch_size} --batchsize=${batch_size}
       ```
 
       - 参数说明：
@@ -218,7 +218,7 @@ YOLO
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-        python3 -m ais_bench --model=unet_bs${batch_size}.om --loop=100 --batchsize=${batch_size}
+        python3 -m ais_bench --model=UNet_bs${batch_size}.om --loop=100 --batchsize=${batch_size}
         ```
 
       - 参数说明：
@@ -231,9 +231,9 @@ YOLO
 
 | 芯片型号          | Batch Size | 数据集       | 精度             | 性能      |
 |---------------|------------|-----------|----------------|---------|
-| Ascend310P3   | 1          | carvana   | IOU:0.986305   | 74.3212 |
-| Ascend310P3   | 4          | carvana   | IOU:0.986305   | 72.2933 |
-| Ascend310P3   | 8          | carvana   | IOU:0.986305   | 70.9595 |
-| Ascend310P3   | 16         | carvana   | IOU:0.986305   | 71.3831 |
-| Ascend310P3   | 32         | carvana   | IOU:0.986305   | 69.6161 |
-| Ascend310P3   | 64         | carvana   | IOU:0.986305   | 49.4164 |
+| Ascend310P3   | 1          | carvana   | IOU:0.986305   | 75.0603 |
+| Ascend310P3   | 4          | carvana   | IOU:0.986305   | 71.2920 |
+| Ascend310P3   | 8          | carvana   | IOU:0.986305   | 68.5334 |
+| Ascend310P3   | 16         | carvana   | IOU:0.986305   | 67.7102 |
+| Ascend310P3   | 32         | carvana   | IOU:0.986305   | 65.5027 |
+| Ascend310P3   | 64         | carvana   | IOU:0.986305   | 49.0184 |
