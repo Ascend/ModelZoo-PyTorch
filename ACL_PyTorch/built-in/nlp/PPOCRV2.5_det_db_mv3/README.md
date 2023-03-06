@@ -69,6 +69,7 @@
    git clone -b release/2.5 https://github.com/PaddlePaddle/PaddleOCR.git
    cd PaddleOCR 
    git reset --hard 7f2d05cfe4e
+   patch -p1 < ../db.patch
    cd ..
    ```
 
@@ -177,7 +178,7 @@
          atc --framework=5 --model=db_mv3.onnx --output=om/db_mv3_24bs \
          --input_format=NCHW --input_shape="x:24,3,736,1280" \
          --log=error --op_select_implmode=high_performance --optypelist_for_implmode=Sigmoid \
-         --soc_version=Ascend${chip_name}
+         --soc_version=Ascend${chip_name} --enable_small_channel=1 --insert_op_conf=aipp_dbnet.cfg
          ```
 
          - 参数说明：
@@ -191,6 +192,8 @@
            -   --soc\_version：处理器型号。
            -   --op_select_implmode: 算子模式的选择
            -   --optypelist_for_implmode：具体哪个算子
+           -   --enable_small_channel: 使能C0特效
+           -   --insert_op_conf：aipp配置文件
 
 
          运行成功后在`om`文件夹内生成`db_mv3_24bs.om`模型文件。
@@ -207,7 +210,7 @@
       在`PaddleOCR`目录执行
 
       ```
-      python3 eval_npu.py -c ./configs/det/det_mv3_db.yml -o Global.use_gpu=False Global.device_id=0 Global.om_path=om/db_mv3_24bs.om Global.save_npu_path=npu_result
+      python3 eval_npu.py -c ./configs/det/det_mv3_db.yml -o Global.use_gpu=False Global.device_id=0 Global.om_path=om/db_mv3_24bs.om Global.save_npu_path=npu_result Global.batch_size=24
       ```
 
       -   参数说明：
@@ -216,6 +219,7 @@
            -   Global.device_id：选择npu的device_id
            -   Global.om_path：om文件路径
            -   Global.save_npu_path: 推理结果保存路径
+           -   Global.batch_size: 模型推理bs
 
       推理完成后结果打屏显示
 
@@ -240,4 +244,4 @@
 
 | 芯片型号   | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ------------ | ---------- | ---------- | --------------- |
-|310P3| 24           | ICDAR2015 | 75% | 172  |
+|310P3| 24           | ICDAR2015 | 73% | 187  |

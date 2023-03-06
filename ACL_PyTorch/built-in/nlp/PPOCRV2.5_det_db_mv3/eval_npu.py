@@ -31,29 +31,46 @@ def eval(session_dbnet,
          valid_dataloader,
          post_process_class,
          eval_class,
-         save_npu_path):
+         save_npu_path,
+         batch_size):
+    div, mod = divmod(len(valid_dataloader),batch_size)
+    if mod == 0:
+        total_epoch = div
+    else:
+        total_epoch = div + 1
     with paddle.no_grad():
         pbar = tqdm(
-            total=(len(valid_dataloader)+4) // 24,
+            total=total_epoch,
             desc='eval model:',
             position=0,
             leave=True)
         temp = []
         result_array = []
-        for idx, batch in enumerate(valid_dataloader):
+        shape_ = None
+        for batch in valid_dataloader:
             temp_item = []
-            for item in batch:
+            for ind, item in enumerate(batch):
                 if isinstance(item, paddle.Tensor):
-                    temp_item.append(item.numpy())
+                    if ind == 0:
+                        # NCHW ----> CHW, N==1
+                        ig = item.numpy()[0]
+                        # CHW ----> HWC
+                        ig = ig.transpose((1,2,0))
+                        ig = np.ascontiguousarray(ig)
+                        shape_ = ig.shape
+                        ig = ig[np.newaxis,:].astype(np.uint8)
+                        temp_item.append(ig)
+                    else:
+                        temp_item.append(item.numpy())
                 else:
                     temp_item.append(item)
             temp.append(temp_item)
-            if len(temp) == 24:
+            if len(temp) == batch_size:
                 result_array.append(temp)
                 temp = []
 
-        zeros = np.zeros((1,3,736,1280),dtype=np.float32)
-        while len(temp) != 24:
+        zeros = np.zeros((1,*shape_),dtype=np.float32)
+        while len(temp) != batch_size:
             temp.append((zeros,'pass','',''))
         result_array.append(temp)
 
@@ -65,7 +82,7 @@ def eval(session_dbnet,
             imges = np.concatenate(temp_imgs, axis=0)
             outputs = session_dbnet.infer([imges])[0]
             
-            for i in range(24):
+            for i in range(batch_size):
                 preds = outputs[i,:,:,:][np.newaxis,:]
                 
                 preds = {'maps': preds}
@@ -95,9 +112,8 @@ def main():
     post_process_class = build_post_process(config['PostProcess'],
                                             global_config)
     
-
-   
-
+    # bs
+    batch_size = int(global_config['batch_size'])
     # om
     device_id = global_config['device_id']
     om_path = global_config['om_path']
@@ -111,12 +127,12 @@ def main():
         os.mkdir(save_npu_path)
     # start eval
     metric = eval(session_dbnet, valid_dataloader, post_process_class,
-                          eval_class, save_npu_path)
+                          eval_class, save_npu_path,batch_size)
 
     s = session_dbnet.sumary()
 
-    metric['fps_without_d2h_h2d'] = 1000 * 24 / np.mean(s.exec_time_list)
-    metric['fps_with_d2h_h2d'] = 1000 * 24 / (np.mean(s.exec_time_list) + \
+    metric['fps_without_d2h_h2d'] = 1000 * batch_size / np.mean(s.exec_time_list)
+    metric['fps_with_d2h_h2d'] = 1000 * batch_size / (np.mean(s.exec_time_list) + \
         np.mean(MemorySummary.get_H2D_time_list()) + \
             np.mean(MemorySummary.get_D2H_time_list()))
     metric['h2d(ms)'] = np.mean(MemorySummary.get_H2D_time_list())

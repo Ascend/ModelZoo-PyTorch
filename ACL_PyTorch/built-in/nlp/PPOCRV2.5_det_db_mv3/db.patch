@@ -1,0 +1,24 @@
+diff --git a/configs/det/det_mv3_db.yml b/configs/det/det_mv3_db.yml
+index 6edf0b91..3ae07de6 100644
+--- a/configs/det/det_mv3_db.yml
++++ b/configs/det/det_mv3_db.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: True
+   use_xpu: false
+   epoch_num: 1200
+   log_smooth_window: 20
+@@ -117,9 +117,9 @@ Eval:
+       - DetResizeForTest:
+           image_shape: [736, 1280]
+       - NormalizeImage:
+-          scale: 1./255.
+-          mean: [0.485, 0.456, 0.406]
+-          std: [0.229, 0.224, 0.225]
++          scale: 1 # 1./255.
++          mean: [0, 0, 0] # [0.485, 0.456, 0.406]
++          std: [1, 1, 1,] # [0.229, 0.224, 0.225]
+           order: 'hwc'
+       - ToCHWImage:
+       - KeepKeys:
