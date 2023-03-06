@@ -12,24 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import argparse
+
 import torch
 import torch.onnx
 import torchvision.models as models
 
+
 def pth2onnx(input_file, output_file):
-    model = models.resnet18(pretrained=False)
+    model = models.resnet18()
     checkpoint = torch.load(input_file, map_location=None)
     model.load_state_dict(checkpoint)
-
     model.eval()
+
     input_names = ["image"]
     output_names = ["class"]
     dynamic_axes = {'image': {0: '-1'}, 'class': {0: '-1'}}
     dummy_input = torch.randn(1, 3, 224, 224)
-    torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, verbose=True, opset_version=11)
+    torch.onnx.export(
+        model, 
+        dummy_input, 
+        output_file, 
+        input_names = input_names, 
+        dynamic_axes = dynamic_axes, 
+        output_names = output_names, 
+        opset_version=11
+    )
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Path', add_help=False)
+    parser.add_argument('--checkpoint', required=True, metavar='DIR',
+                        help='path to checkpoint file')
+    parser.add_argument('--save_dir', default="resnet18.onnx", type=str,
+                        help='save dir for onnx model')
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    pth2onnx(input_file, output_file)
+    args = parse_arguments()
+    pth2onnx(args.checkpoint, args.save_dir)
