@@ -1,9 +1,9 @@
-#encoding=utf-8
+# encoding=utf-8
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
 batch_size=440
-Network='albert'
+Network='albert_ID0335_for_PyTorch'
 RANK_SIZE=8
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -34,7 +34,6 @@ if [ x"${cur_path_last_diename}" == x"test" ];then
 else
     test_path_dir=${cur_path}/test
 fi
-
 # 指定训练所使用的npu device卡id
 device_id=0
 
@@ -79,7 +78,7 @@ for i in $(seq 7 -1 0)
     do
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END  python3.7 ./run_classifier.py \
+        nohup taskset -c $PID_START-$PID_END python3.7 ./run_classifier.py \
         --device=$DEVICE \
         --model_type=$BERT_MODEL \
         --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \
@@ -93,19 +92,17 @@ for i in $(seq 7 -1 0)
         --max_seq_length=128 \
         --batch_size=${batch_size} \
         --learning_rate=180e-5 \
-        --num_train_epochs=7.0 \
+        --num_train_epochs=2.0 \
         --logging_steps=10 \
         --save_steps=10 \
         --overwrite_output_dir \
         --seed=42 \
         --local_rank=$i \
         --fp16 \
-        --fp16_opt_level=O2 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --fp16_opt_level=O2  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     done
 
 wait
-
-
 ##################获取训练数据################
 #训练结束时间，不需要修改
 end_time=$(date +%s)
@@ -135,7 +132,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 ActualFPS=${FPS}
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
-grep -a 'loss' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss: " '{print $2}' |awk -F " " '{print $1}'>> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep -a 'loss' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F "loss: " '{print $2}' |awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 #最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
