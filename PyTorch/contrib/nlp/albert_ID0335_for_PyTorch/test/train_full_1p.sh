@@ -1,9 +1,9 @@
-# encoding=utf-8
+#encoding=utf-8
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
 batch_size=440
-Network='albert'
+Network='albert_ID0335_for_PyTorch'
 RANK_SIZE=1
 # 指定训练所使用的npu device卡id
 device_id=0
@@ -92,12 +92,11 @@ nohup python3.7 ./run_classifier.py \
   --num_train_epochs=2.0 \
   --logging_steps=80 \
   --save_steps=80 \
+  --device-id ${device_id} \
   --overwrite_output_dir \
   --seed=42 \
   --fp16 \
-  --device-id $device_id \
   --fp16_opt_level=O2  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-  
 wait
 ##################获取训练数据################
 #训练结束时间，不需要修改
