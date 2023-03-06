@@ -1,275 +1,209 @@
-# xception 模型端到端推理指导
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 benchmark工具概述](#51-benchmark工具概述)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理TopN精度统计](#61-离线推理TopN精度统计)
-	-   [6.2 开源TopN精度](#62-开源TopN精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
+#  xception 模型推理指导
+
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
+
+----
+# 概述
+
+Xception是Google公司继Inception后提出的对 Inception-v3 的另一种改进。作者认为，通道之间的相关性与空间相关性最好要分开处理。于是采用 Separable Convolution来替换原来 Inception-v3中的卷积操作。
+
++ 论文  
+    [xception论文](https://arxiv.org/abs/1610.02357)  
+    François Chollet
+
++ 参考实现：  
+    [xception代码](https://github.com/tstandley/Xception-PyTorch)  
+
+## 输入输出数据
++ 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | image | FLOAT32 | NCHW | BATCHS_SIZE,3,299,299 | 
+
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output1      |  FLOAT32   | NCHW          | BATCHS_SIZE,1000        |
 
 
+----
+# 推理环境
 
-## 1 模型概述
+- 该模型推理所需配套的软件如下：
 
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)** 
-### 1.1 论文地址
-[xception论文](https://arxiv.org/abs/1610.02357)  
-
-### 1.2 代码地址
-[xception代码](https://github.com/tstandley/Xception-PyTorch)  
-
-branch:master  
-commit id:7b9718bb525fefc95f507306e685aa8998d0492c
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.7.5   | -          |
+    
+    说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
 
+----
+# 快速上手
 
+## 安装
 
-### 2.1 深度学习框架
-```
-CANN 5.0.1
-
-pytorch >= 1.5.0
-torchvision >= 0.6.0
-onnx >= 1.7.0
-```
-
-### 2.2 python第三方库
-
-```
-numpy == 1.18.5
-Pillow == 7.2.0
-opencv-python == 4.2.0.34
-```
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
-
-
-
-## 3 模型转换
-
--   **[pth转onnx模型](#31-pth转onnx模型)**  
-
--   **[onnx转om模型](#32-onnx转om模型)**  
-
-### 3.1 pth转onnx模型
-
-1.下载pth权重文件  
-xception预训练pth权重文件
- 
-```
-https://ascend-model-file.obs.cn-north-4.myhuaweicloud.com/%E4%BA%A4%E4%BB%98%E4%BB%B6/cv/image_classification/xception/pth/xception-c0a72b38.pth.tar  
-```
-文件md5sum:203a36dce3e49d45e5d742efbad5ba65 
-
-
-2.下载xception源码：  
-```
-git clone https://github.com/tstandley/Xception-PyTorch
-cd Xception-PyTorch  
-git reset 7b9718bb525fefc95f507306e685aa8998d0492c --hard  
-cd ..
-```
+- 安装推理过程所需的依赖
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+- 获取源码
+    ```
+    git clone https://github.com/tstandley/Xception-PyTorch
+    cd Xception-PyTorch  
+    git reset 7b9718bb525fefc95f507306e685aa8998d0492c --hard  
+    cd ..
+    ```
 如果使用补丁文件修改了模型代码则将补丁打入模型代码，如果需要引用模型代码仓的类或函数通过sys.path.append(r"./Xception-PyTorch")添加搜索路径。
 
-3.编写pth2onnx脚本xception_pth2onnx.py  
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
+## 准备数据集
 
-4.执行pth2onnx脚本，生成onnx模型文件
-```
-python3.7 xception_pth2onnx.py  xception-c0a72b38.pth.tar  xception.onnx
-```
-
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
-
-### 3.2 onnx转om模型
-
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 01
-```
-atc --framework=5 --model=xception.onnx --output=xception_1 --input_format=NCHW --input_shape="image:1,3,299,299" --log=debug --soc_version=Ascend310 
-```
- **模型转换要点：**  
->此模型转换为onnx不需要修改开源代码仓代码，故不需要特殊说明
+1. 获取原始数据集  
+    该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/dataset/ILSVRC2012//val与/root/dataset/ILSVRC2012/val_label.txt。 
 
 
 
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
+    ```bash
+    python3 img_preprocess.py --src_path /root/dataset/ILSVRC2012/images/ --save_path ./pre_dataset
+    ```
+    其中"src_path"表示处理前原数据集的地址，"save_path"表示生成数据集的文件夹名称
 
-## 4 数据集预处理
+    运行后，将会得到如下形式的文件夹：
 
--   **[数据集获取](#41-数据集获取)**  
-
--   **[数据集预处理](#42-数据集预处理)**  
-
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
-
-### 4.1 数据集获取
-该模型使用[ImageNet官网](http://www.image-net.org)的5万张验证集进行测试，图片与标签分别存放在/root/datasets/imagenet/val与/root/datasets/imagenet/val_label.txt。 
-
-### 4.2 数据集预处理
-1.预处理脚本img_preprocess.py
-
-
-2.执行预处理脚本，生成数据集预处理后的bin文件
-```
-python3.7 img_preprocess.py /opt/npu/imagenet/val ./pre_dataset
-```
-### 4.3 生成数据集信息文件
-1.生成数据集信息文件脚本gen_dataset_info.py
-
-2.执行生成数据集信息脚本，生成数据集信息文件
-```
-python3.7 gen_dataset_info.py bin ./prepro_dataset ./xception.info 299 299
-```
-第一个参数为模型输入的类型，第二个参数为生成的bin文件路径，第三个为输出的info文件，后面为宽高信息
+    ```
+    ├── pre_dataset
+    │    ├──ILSVRC2012_val_00000003.bin
+    │    ├──......     	 
+    ```
 
 
+## 模型转换
+
+1. PyTroch 模型转 ONNX 模型  
+
+    xception预训练pth[权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Xception/PTH/xception-c0a72b38.pth.tar)
+ 
+
+    然后执行执行以下命令生成 ONNX 模型：
+    ```
+    python3 xception_pth2onnx.py  --input_file xception-c0a72b38.pth.tar  --output_file xception.onnx
+    ```
+    参数说明：
+     + --input_file: 参数配置文件路径
+     + --output_file: 生成ONNX模型的保存路径
 
 
+2. ONNX 模型转 OM 模型  
 
-## 5 离线推理
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+    chip_name=310P3  # 根据 step1 的结果设值
+    # 执行 ATC 进行模型转换
+    atc --framework=5 --model=xception.onnx --output=xception_1 --input_format=NCHW --input_shape="image:1,3,299,299" --log=debug  --soc_version=Ascend${chip_name}
+    ```
 
--   **[离线推理](#52-离线推理)**  
-
-### 5.1 benchmark工具概述
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
-### 5.2 离线推理
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -device_id=0 -batch_size=1 -om_path=xception.om -input_text_path=./xception.info -input_width=299 -input_height=299 -output_binary=False -useDvpp=False
-```
-输出结果默认保存在当前目录result/dumpOutput_device{0}，模型只有一个名为class的输出，shape为bs * 1000，数据类型为FP32，对应1000个分类的预测结果，每个输入对应的输出对应一个_x.bin文件。
-
-
-
-## 6 精度对比
-
--   **[离线推理TopN精度](#61-离线推理TopN精度)**  
--   **[开源TopN精度](#62-开源TopN精度)**  
--   **[精度对比](#63-精度对比)**  
-
-### 6.1 离线推理TopN精度统计
-
-后处理统计TopN精度
-
-调用imagenet_acc_eval.py脚本推理结果与label比对，可以获得Accuracy Top5数据，结果保存在result.json中。
-```
-python imagenet_acc_eval.py result/dumpOutput_device0/ /root/datasets/imagenet/val_label.txt ./ result.json
-```
-第一个为benchmark输出目录，第二个为数据集配套标签，第三个是生成文件的保存目录，第四个是生成的文件名。  
-查看输出结果：
-```
-{"title": "Overall statistical evaluation", "value": [{"key": "Number of images", "value": "50000"}, {"key": "Number of classes", "value": "1000"}, {"key": "Top1 accuracy", "value": "78.35%"}, {"key": "Top2 accuracy", "value": "88.11%"}, {"key": "Top3 accuracy", "value": "91.39%"}, {"key": "Top4 accuracy", "value": "93.16%"}, {"key": "Top5 accuracy", "value": "94.31%"}]}
-```
-经过对bs1与bs16的om测试，本模型batch1的精度与batch16的精度没有差别，精度数据均如上。
-
-### 6.2 开源TopN精度
-  
-```
-torchvision官网精度
-
-Model               Acc@1     Acc@5
-Xception            78.892    94.292   
-```
-### 6.3 精度对比
-将得到的om离线模型推理TopN精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。
-精度调试：
-没有遇到精度不达标的问题，故不需要进行精度调试
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+ 
 
 
+## 推理验证
+
+1. 对数据集推理  
+    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
+    ```bash
+    mkdir results
+    python3 -m ais_bench \
+        --model ./xception_1.om \
+        --input ./pre_dataset \
+        --output ./results \
+        --outfmt BIN \
+        --batchsize 1
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --outfmt 推理结果文件的保存格式
+    + --batchsize 模型每次输入bin文件的数量
 
 
-## 7 性能对比
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python3 -m ais_bench --model xception_1.om --batchsize 1
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
 
--   **[npu性能数据](#71-npu性能数据)**  
+3. 精度验证  
 
-### 7.1 npu性能数据
-benchmark工具在整个数据集上推理时也会统计性能数据，但是推理整个数据集较慢，如果这么测性能那么整个推理期间需要确保独占device，使用npu-smi info可以查看device是否空闲。也可以使用benchmark纯推理功能测得性能数据，但是由于随机数不能模拟数据分布，纯推理功能测的有些模型性能数据可能不太准，benchmark纯推理功能测性能仅为快速获取大概的性能数据以便调试优化使用，可初步确认benchmark工具在整个数据集上推理时由于device也被其它推理任务使用了导致的性能不准的问题。模型的性能以使用benchmark工具在整个数据集上推理得到bs1与bs16的性能数据为准，对于使用benchmark工具测试的batch4，8，32的性能数据在README.md中如下作记录即可。
-1.benchmark工具在整个数据集上推理获得性能数据
-batch1的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_1_device_0.txt：
-```
+    执行后处理脚本，根据推理结果计算OM模型的精度：
+    ```bash
+    python3 imagenet_acc_eval.py --folder_davinci_target ./results/****** --annotation_file_path /root/dataset/ILSVRC2012/val_label.txt --result_json_path ./ --json_file_name result.json
+    ```
+    参数说明：
+    + --folder_davinci_target: 存放推理结果的目录路径
+    + --annotation_file_path: 标签文件路径
+    + --result_json_path: 后处理结果路径。
+    + --json_file_name: 推理保存节点数。
+    运行成功后，程序会将各top1~top5的正确率记录在 result.json 文件中，可执行以下命令查看：
+    ```
 
-[e2e] throughputRate: 108.021, latency: 462872
-[data read] throughputRate: 111.695, moduleLatency: 8.95293
-[preprocess] throughputRate: 111.375, moduleLatency: 8.97865
-[infer] throughputRate: 108.345, Interface throughputRate: 158.623, moduleLatency: 9.01342
-[post] throughputRate: 108.345, moduleLatency: 9.22979
-```
-Interface throughputRate: 158.623，158.623x4=634.492既是batch1 310单卡吞吐率
+----
+# 性能&精度
 
-batch16的性能，benchmark工具在整个数据集上推理后生成result/perf_vision_batchsize_16_device_1.txt：
-```
-[e2e] throughputRate: 127.923, latency: 390859
-[data read] throughputRate: 131.925, moduleLatency: 7.58008
-[preprocess] throughputRate: 131.775, moduleLatency: 7.5887
-[infer] throughputRate: 128.194, Interface throughputRate: 198.865, moduleLatency: 7.58156
-[post] throughputRate: 8.012, moduleLatency: 124.813
-```
+在310P设备上，OM模型的精度为  **{top1:78.8%;top5:94.33%}**，当batchsize设为1时模型性能最优，达 22.06 fps。
 
-Interface throughputRate: 198.865，198.865x4=795.46既是batch16 310单卡吞吐率
-batch4性能：
-```
-[e2e] throughputRate: 119.972, latency: 416763
-[data read] throughputRate: 124.007, moduleLatency: 8.06404
-[preprocess] throughputRate: 123.625, moduleLatency: 8.08897
-[infer] throughputRate: 120.284, Interface throughputRate: 182.215, moduleLatency: 8.10143
-[post] throughputRate: 30.071, moduleLatency: 33.2546
-```
-batch4 310单卡吞吐率：182.215x4=728.86fps
-batch8性能：
-```
-[e2e] throughputRate: 129.279, latency: 386759
-[data read] throughputRate: 133.583, moduleLatency: 7.486
-[preprocess] throughputRate: 133.456, moduleLatency: 7.49308
-[infer] throughputRate: 129.749, Interface throughputRate: 203.357, moduleLatency: 7.49475
-[post] throughputRate: 16.2184, moduleLatency: 61.6582
-```
-
-batch8 310单卡吞吐率：203.357x4=813.428fps
+| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
+| --------- | --------- | ----------- | --------------- | --------- |
+|Ascend310P3| 1         | imagenet  | top1:78.8%;top5:94.33% | 799.4563 fps |
+|Ascend310P3| 4         | imagenet  | top1:78.8%;top5:94.33% | 1374.5468 fps |
+|Ascend310P3| 8         | imagenet  | top1:78.8%;top5:94.33% | 1491.660 fps |
+|Ascend310P3| 16         | imagenet  | top1:78.8%;top5:94.33% | 1506.938 fps |
+|Ascend310P3| 32        | imagenet  | top1:78.8%;top5:94.33% | 1424.2953 fps |
+|Ascend310P3| 64         | imagenet  | top1:78.8%;top5:94.33% | 829.0842 fps |
 
 
-batch32性能：
-```
-[e2e] throughputRate: 112.895, latency: 442890
-[data read] throughputRate: 116.539, moduleLatency: 8.5808
-[preprocess] throughputRate: 116.412, moduleLatency: 8.59021
-[infer] throughputRate: 113.12, Interface throughputRate: 164.302, moduleLatency: 8.62059
-[post] throughputRate: 3.53608, moduleLatency: 282.799
-```
-batch32 310单卡吞吐率：164.302x4=657.208fps
-
- **性能优化：**  
-
-
-batch32纯推理性能达标
 
 

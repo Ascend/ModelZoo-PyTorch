@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import sys
+import argparse
 import torch
 sys.path.append(r"./Xception-PyTorch")
-from xception import xception
 import torch.onnx
-
+from xception import xception
 
 def pth2onnx(input_file, output_file):
     model = xception(pretrained=False)
@@ -34,7 +34,10 @@ def pth2onnx(input_file, output_file):
     torch.onnx.export(model, dummy_input, output_file, input_names = input_names, dynamic_axes = dynamic_axes, output_names = output_names, verbose=True, opset_version=11)
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    pth2onnx(input_file, output_file)
+    parser = argparse.ArgumentParser(description='preprocess of MaskRCNN PyTorch model')
+    parser.add_argument("--input_file", default="./coco2017/", help='image of dataset')
+    parser.add_argument("--output_file", default="./coco2017_bin/", help='Preprocessed image buffer')
+    flags = parser.parse_args()    
+
+    pth2onnx(flags.input_file, flags.output_file)
 

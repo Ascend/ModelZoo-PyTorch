@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,12 @@
 # limitations under the License.
 import os
 import sys
+import argparse
 import numpy as np
 from PIL import Image
 import torch
 from torchvision import transforms
-
+from tqdm import tqdm
 def preprocess(src_path, save_path):
 
     preprocess = transforms.Compose([
@@ -29,9 +30,8 @@ def preprocess(src_path, save_path):
 
     i = 0
     in_files = os.listdir(src_path)
-    for file in in_files:
+    for file in tqdm(in_files):
         i = i + 1
-        print(file, "===", i)
         input_image = Image.open(src_path + '/' + file).convert('RGB')
         input_tensor = preprocess(input_image)
         img = np.array(input_tensor).astype(np.float32)
@@ -39,10 +39,13 @@ def preprocess(src_path, save_path):
         
 
 if __name__ == "__main__":
-    src_path = sys.argv[1] 
-    save_path= sys.argv[2]
-    src_path = os.path.realpath(src_path)
-    save_path = os.path.realpath(save_path)
+    parser = argparse.ArgumentParser(description='preprocess of MaskRCNN PyTorch model')
+    parser.add_argument("--src_path", default="./coco2017/", help='image of dataset')
+    parser.add_argument("--save_path", default="./coco2017_bin/", help='Preprocessed image buffer')
+    flags = parser.parse_args()    
+
+    src_path = os.path.realpath(flags.src_path)
+    save_path = os.path.realpath(flags.save_path)
     if not os.path.isdir(save_path):
         os.makedirs(os.path.realpath(save_path))
     preprocess(src_path,save_path)
