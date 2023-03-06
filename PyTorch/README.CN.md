@@ -19,7 +19,7 @@
 - [3DUNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/semantic_segmentation/3DUNet)
 - [ADNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/others/ADNet)
 - [AdvancedEAST](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/detection/AdvancedEAST)
-- [albert](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/nlp/albert)
+- [albert_ID0335_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/nlp/albert_ID0335_for_PyTorch)
 - [Arcface_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/cv/classification/Arcface_for_PyTorch)
 - [Bert_Chinese_ID3433_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/nlp/Bert_Chinese_ID3433_for_PyTorch)
 - [Bert-CRF_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/built-in/nlp/Bert-CRF_for_PyTorch)
@@ -147,7 +147,7 @@
     
 - [3D_Nested_Unet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/others/3D_Nested_Unet)
 - [3Dmppe_RootNet](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/pose_estimation/3Dmppe_RootNet)
-- [albert](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/nlp/albert)
+- [albert_ID0335_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/nlp/albert_ID0335_for_PyTorch)
 - [AlexNet_ID2663_for_PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/AlexNet_ID2663_for_PyTorch)
 - [AlignedReID](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/classification/AlignedReID)
 - [AlphaPose](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch/contrib/cv/pose_estimation/AlphaPose)
