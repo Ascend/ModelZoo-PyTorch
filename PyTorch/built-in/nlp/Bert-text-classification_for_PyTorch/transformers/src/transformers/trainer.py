@@ -29,6 +29,7 @@ import warnings
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from torch._six import inf
 
 from tqdm.auto import tqdm
 
@@ -1467,7 +1468,7 @@ class Trainer:
                             # Some models (like FullyShardedDDP) have a specific way to do gradient clipping
                             model.clip_grad_norm_(args.max_grad_norm)
                         elif self.args.use_combine_grad:
-                            self.optimizer.clip_optimizer_grad_norm_fused(args.max_grad_norm)
+                            clip_optimizer_grad_norm_fused(self.optimizer, args.max_grad_norm)
                         else:
                             # Revert to normal clipping otherwise, handling Apex or full precision
                             nn.utils.clip_grad_norm_(
@@ -1535,7 +1536,6 @@ class Trainer:
             # Clean the state at the end of training
             delattr(self, "_past")
 
-        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         if args.load_best_model_at_end and self.state.best_model_checkpoint is not None:
             # Wait for everyone to get here so we are sur the model has been saved by process 0.
             if is_torch_tpu_available():
@@ -1625,7 +1625,6 @@ class Trainer:
             self._globalstep_last_logged = self.state.global_step
             self.store_flos()
 
-            self.log(logs)
 
         metrics = None
         if self.control.should_evaluate:
@@ -3055,3 +3054,31 @@ class Trainer:
             tensors = distributed_concat(tensors)
 
         return nested_numpify(tensors)
+
+def clip_grad_norm_fused(combined_grads, combined_grad_masks, max_norm, norm_type):
+    max_norm = float(max_norm)
+    norm_type = float(norm_type)
+    tmp_lst = []
+    if norm_type == inf:
+        for combined_grad, combined_grad_mask in zip(combined_grads, combined_grad_masks):
+            if combined_grad is not None:
+                tmp_lst.append(combined_grad.float().abs().mul_(combined_grad_mask).max())
+        total_norm = max(tmp_lst)
+    else:
+        for combined_grad, combined_grad_mask in zip(combined_grads, combined_grad_masks):
+            if combined_grad is not None:
+                combined_grad = combined_grad.float()
+                tmp_lst.append(combined_grad.mul(combined_grad).mul_(combined_grad_mask).sum())
+        total_norm = torch.stack(tmp_lst).sum().pow(1/norm_type)
+    clip_coef = max_norm / (total_norm + 1e-6)
+    if clip_coef < 1:
+        for combined_grad in combined_grads:
+            if combined_grad is not None:
+                combined_grad.mul_(clip_coef)
+    return total_norm
+
+def clip_optimizer_grad_norm_fused(self, max_norm, norm_type=2):
+    combined_grads = self.get_optimizer_combined_grads()
+    combined_grad_masks = self.get_optimizer_combined_grad_masks()
+    total_norm = clip_grad_norm_fused(combined_grads, combined_grad_masks, max_norm, norm_type)
+    return total_norm
