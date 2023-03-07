@@ -17,6 +17,7 @@ data_path="/npu/traindata/imagenet_pytorch/"
 export ASCEND_GLOBAL_LOG_LEVEL=3
 
 export TASK_QUEUE_ENABLE=0
+unset HCCL_WHITELIST_DISABLE
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
