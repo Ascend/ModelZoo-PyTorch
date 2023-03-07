@@ -275,7 +275,10 @@ class Evaluator(Callback):
         f1, precision, recall, f2, precision2, recall2 = evaluate(valid_dataloader)
         if f2 > self.best_val_f1:
             self.best_val_f1 = f2
-            # model.save_weights('best_model.pt')
+            if distributed and args.local_rank == 0:
+                model.module.save_weights('best_model.pt')
+            if not distributed:
+                model.save_weights('best_model.pt')
         print(f'[val-token  level] f1: {f1:.5f}, p: {precision:.5f} r: {recall:.5f}')
         print(f'[val-entity level] f1: {f2:.5f}, p: {precision2:.5f} r: {recall2:.5f} best_f1: {self.best_val_f1:.5f}\n')
 
