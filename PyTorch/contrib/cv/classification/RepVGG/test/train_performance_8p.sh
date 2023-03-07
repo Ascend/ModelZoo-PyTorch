@@ -75,7 +75,7 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 nohup taskset -c $PID_START-$PID_END python3.7 -u train.py \
 -a RepVGG-A0 \
 --data ${data_path} \
---epochs 3 \
+--epochs 1 \
 --workers 192 \
 --batch-size=${batch_size} \
 --lr 1.6 \
