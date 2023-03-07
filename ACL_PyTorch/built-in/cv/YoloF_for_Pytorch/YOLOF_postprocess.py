@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import numpy as np
 import argparse
 from mmdet.core import bbox2result
 from mmdet.datasets import build_dataset
-
+from tqdm import tqdm
 ann_file = '/annotations/instances_val2017.json'
 img_prefix = '/val2017/'
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     num_classes = int(args.num_classes)
     outputs = []
     with open(args.meta_info_path, "r") as fp:
-        for line in fp:
+        for line in tqdm(fp):
             _, file_path, scalar = line.split()
             scalar = float(scalar)
             file_name = file_path.split("/")[1].replace(".bin", "")
