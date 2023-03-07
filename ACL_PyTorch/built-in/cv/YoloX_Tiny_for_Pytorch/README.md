@@ -30,7 +30,7 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
   ```
   url=https://github.com/open-mmlab/mmdetection.git
   commit_id=3e2693151add9b5d6db99b944da020cba837266b
-  model_name=YoloF
+  model_name=YoloX
   ```
 
 
@@ -61,7 +61,7 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.8.0   | -                                                            |
@@ -87,12 +87,14 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
    git reset 0cd44a6799ec168f885b4ef5b776fb135740487d --hard
    pip3 install -v -e .
    mmdeploy_path=$(pwd)
+   cd ..
    ```
    
 2. 安装依赖
 
    ```
    pip3 install -r requirements.txt
+   pip3 install mmcv-full==1.5.0 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.8.0/index/html
    ```
 
 
@@ -106,27 +108,45 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
       ├── annotations
       └── val2017 
       ```
-   
+2. 数据预处理
+   1. 将原始数据转化为二进制文件（.bin）。
+   执行YOLOX_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的val2017_bin文件夹中。
+   ```
+   python3 YOLOX_preprocess.py --image_src_path /root/datasets/coco/val2017 --bin_file_path ./val2017_bin --meta_file_path ./val2017_bin_meta
+   ```   
+   - 参数说明：
+     - --image_src_path：为数据集路径。
+     - --bin_file_path：二进制文件夹路径
+     - --meta_file_path：保存预处理scalar的meta数据文件路径
+
+
+   2. 获取二进制数据集信息
+   ```
+   python3 gen_dataset_info.py /root/datasets/coco ${mmdetection_path}/configs/yolox/yolox_tiny_8x8_300e_coco.py val2017_bin val2017_bin_meta yolox.info yolox_meta.info 640 640
+   ```
+   执行gen_dataset_info.py生成yolox.info和yolox_meta.info，命令最后的俩个640分别是图片的宽和高，生成的info文件会在后处理中用到
+
+   - 参数说明：
+     - /root/datasets/coco：为数据集路径(val2017的上层目录，即coco的路径)
+     - ${mmdetection_path}/configs/yolox/yolox_s_8x8_300e_coco.py：固定参数，为该模型的配置
+     - val2017_bin：二进制文件路径
+     - val2017_bin_meta：二进制meta文件路径
+
 
 ## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
-   1. 点击链接https://github.com/open-mmlab/mmdetection/tree/master/configs/yolox  下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。放到mmdeploy_path目录下
-
-      ![yolox_tiny_download](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/built-in/cv/YoloX_Tiny_for_Pytorch/yolox_tiny.png)
+   1. [yolox_tiny](https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_tiny_8x8_300e_coco/yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth)下载YOLOX-s对应的weights， 名称为yolox_tiny_8x8_300e_coco_20211124_171234-b4047906.pth。放到mmdeploy_path目录下
 
    2. 数据集运行转模型脚本。
 
    ```
-   cp -r YoloX_Tiny_for_Pytorch ${mmdeploy_path}
    bash test/pth2onnx.sh ${mmdetection_path} ${mmdeploy_path}
-   #配置环境变量
-   source /usr/local/Ascend/ascend-toolkit/set_env.sh
    ```
-   注意：量化要求使用onnxruntime版本为1.6.0；bbox_nms.py文件添加了BatchNMS自定义符号；deploy.py文件修改了headless参数为True，避免onnxruntime对onnx的推理；pytorch2onnx.py增加了enable_onnx_checker参数为false，避免对自定义算子的校验
+   会在mmdeploy/work_dir中生成end2end.onnx模型文件
 
-   1. 执行命令查看芯片名称（$\{chip\_name\}）。
+   3. 执行命令查看芯片名称（$\{chip\_name\}）。
 
    ```
    npu-smi info
@@ -147,9 +167,20 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
    4. 执行ATC命令。
 
    ```
-   bash test/onnx2om.sh /root/datasets/coco/val2017 ${mmdeploy_path}/work_dir/end2end.onnx yoloxint8.onnx Ascend${chip_name} # Ascend310P3
+   #配置环境变量
+   source /usr/local/Ascend/ascend-toolkit/set_env.sh
+   atc --framework=5 --model=${mmdeploy_path}/work_dir/end2end.onnx --output=yolox_bs8 --input_format=NCHW --op_precision_mode=op_precision.ini --input_shape="input:8,3,640,640" --log=error --soc_version=Ascend${soc_version}
    ```
-
+   - 参数说明：
+     - --model：为ONNX模型文件。
+     - --framework：5代表ONNX模型。
+     - --output：输出的OM模型。
+     - --input_format：输入数据的格式。
+     - --input_shape：输入数据的shape。
+     - --log：日志级别。
+     - --soc_version：处理器型号。
+   生成yolox_bs8.om模型文件
+   
 2. 开始推理验证
 
    1. 安装ais_bench推理工具。
@@ -157,32 +188,47 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装
 
    2. 执行推理。
+      ```
+      python3 -m ais_bench --model ./yolox_bs8.om --input val2017_bin --output ./outputs --outfmt BIN
+      ```
+      - 参数说明：
+        - --model：om模型的路径
+        - --input：二进制数据集路径
+        - --output：保存推理结果的路径（未指定具体文件名时，会在该文件夹下生成时间戳文件夹保存推理结果）
+        - --outfmt：输出文件格式，由于后处理脚本要求，此处为BIN
 
-        1. 精度
+   3. 精度测试
+      ```
+      python3 YOLOX_postprocess.py --dataset_path /root/datasets/coco --model_config ${mmdetection_path}/configs/yolox/yolox_tiny_8x8_300e_coco.py --bin_data_path ./outputs/2023_03_06-15_16_37/
+      ```
+      - 参数说明：
+        - --datasets_path：coco数据集的路径(路径中不需要加val2017)
+        - --model_config：模型配置文件
+        - --bin_data_path：保存二进制推理结果的文件夹路径，需替换成对应的文件夹，路径末尾的/需要加上
+      执行精度测试后会在当前文件夹下生成results.txt文件，用于保存bbox_map的值
 
-        ```
-        bash test/eval_acc.sh --datasets_path=/root/datasets/coco --batch_size=64 --mmdetection_path=${mmdetection_path}
-        ```
 
-        结果保存在results.txt文件中
+   4. 性能测试：
 
-        2. 性能测试：
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-           可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+      ```
+      python3 -m ais_bench --model=./yolox_bs8.om --loop=10
+      ```
 
-           ```
-           python3 -m ais_bench --model=${om_model_path} --loop=1000 --batchsize=${batch_size}
-           ```
+      - 参数说明：
+         - --model：om模型
 
-           - 参数说明：
-             - --model：om模型
-             - --batchsize：模型batchsize
-             - --loop: 循环次数
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+调用ACL接口推理计算，性能参考下列数据，高于主仓精度
 
 | 芯片型号 | Batch Size | 数据集 | 精度 | 310P性能 |
 | -------- | ---------- | ------ | ---- | ---- |
-|     310P3     |   64   | coco2017 | map:0.331 |  890fps  |
+|     310P3     |   1   | coco2017 | bbox_map:0.3336 |  304.55fps  |
+|     310P3     |   4   | coco2017 | bbox_map:0.3336 |  722.44fps  |
+|     310P3     |   8   | coco2017 | bbox_map:0.3336 |  730.87fps  |
+|     310P3     |   16   | coco2017 | bbox_map:0.3336 |  694.14fps  |
+|     310P3     |   32   | coco2017 | bbox_map:0.3336 |  692.28fps  |
+|     310P3     |   64   | coco2017 | bbox_map:0.3336 |  689.18fps  |
