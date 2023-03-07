@@ -15,7 +15,7 @@ fi
 # 指定训练所使用的npu device卡id
 device_id=0
 # 网络名称，同目录名称
-Network="RepVGG"
+Network="RepVGG_ID1258_for_PyTorch"
 # 训练batch_size
 batch_size=4096
 
@@ -75,7 +75,7 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 nohup taskset -c $PID_START-$PID_END python3.7 -u train.py \
 -a RepVGG-A0 \
 --data ${data_path} \
---epochs 3 \
+--epochs 1 \
 --workers 192 \
 --batch-size=${batch_size} \
 --lr 1.6 \
