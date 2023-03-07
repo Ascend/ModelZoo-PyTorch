@@ -20,6 +20,7 @@ device_id=0
 workers=64
 
 export TASK_QUEUE_ENABLE=0
+unset HCCL_WHITELIST_DISABLE
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
