@@ -1,249 +1,267 @@
-# MaskRcnn Onnx模型端到端推理指导
-- [MaskRcnn Onnx模型端到端推理指导](#MaskRcnn-onnx模型端到端推理指导)
-	- [1 模型概述](#1-模型概述)
-		- [1.1 论文地址](#11-论文地址)
-		- [1.2 代码地址](#12-代码地址)
-	- [2 环境说明](#2-环境说明)
-		- [2.1 深度学习框架](#21-深度学习框架)
-		- [2.2 python第三方库](#22-python第三方库)
-	- [3 数据集预处理](#3-数据集预处理)
-		- [3.1 数据集获取](#31-数据集获取)
-		- [3.2 数据集预处理](#32-数据集预处理)
-		- [3.3 生成数据集信息文件](#33-生成数据集信息文件)
-	- [4 模型转换](#3-模型转换)
-	    - [4.1 安装detectrin2库](#41-安装detectrin2库) 
-		- [4.2 生成onnx模型](#42-生成onnx模型)
-		- [4.3 onnx转om模型](#43-onnx转om模型)
-	- [5 离线推理](#5-离线推理)
-		- [5.1 benchmark工具概述](#51-benchmark工具概述)
-		- [5.2 离线推理](#52-离线推理)
-	- [6 精度对比](#6-精度对比)
-		- [6.1 精度对比](#61-精度对比)
-	- [7 性能对比](#7-性能对比)
-		- [7.1 310性能数据](#71-310性能数据)
-		- [7.2 310p性能数据](#72-310p性能数据)
-		- [7.3 T4性能数据](#73-t4性能数据)
-		- [7.4 性能对比](#74-性能对比)
+# Mask RCNN 模型推理指导
+
+- [概述](#概述)
+    - [输入输出数据](#输入输出数据)
+- [推理环境](#推理环境)
+- [快速上手](#快速上手)
+    - [获取源码](#获取源码)
+    - [准备数据集](#准备数据集)
+    - [模型转换](#模型转换)
+    - [推理验证](#推理验证)
+- [性能&精度](#性能精度)
+
+----
+# 概述
+
+Mask RCNN是一个实例分割（Instance segmentation）算法，它是一个多任务的网络，可以用来做“目标检测”、“目标实例分割”、“目标关键点检测”。
+
++ 论文  
+    [论文](https://arxiv.org/pdf/1703.06870.pdf)  
+    Kaiming He Georgia Gkioxari Piotr Dollar Ross Girshick
+
++ 参考实现：  
+    https://github.com/facebookresearch/detectron2
+
+## 输入输出数据
++ 模型输入  
+    | input-name | data-type | data-format |input-shape |
+    | ---------- | --------- | ----------- | ---------- |
+    | image | FLOAT32 | NCHW | 1,3,1344,1344 | 
+
++ 模型输出  
+    | output-name |  data-type | data-format |output-shape |
+    | ----------- | ---------- | ----------- | ----------- |
+    | output1      |  FLOAT32   | NCHW          | 100,4        |
+    | output2      |  FLOAT32   | NCHW          | 100        |
+    | output3      |  FLOAT32   | NCHW          | 100,80,28,28        |
+    | output4      |  FLOAT32   | NCHW          | 100        |
+
+----
+# 推理环境
+
+- 该模型推理所需配套的软件如下：
+
+    | 配套      | 版本    | 环境准备指导 |
+    | --------- | ------- | ---------- |
+    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 6.0.RC1 | -          |
+    | Python    | 3.7.5   | -          |
+    
+    说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
 
-## 1 模型概述
+----
+# 快速上手
 
--   **[论文地址](#11-论文地址)**  
+## 安装
 
--   **[代码地址](#12-代码地址)**  
+- 安装推理过程所需的依赖
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+- 获取源码
+    ```
+    git clone https://github.com/facebookresearch/detectron2到当前文件夹
+    cd detectron2/
+    git reset --hard 068a93a 
+    ```
+    2.安装detectron2。
+    ```
+    rm -rf detectron2/build/ **/*.so
+    pip install -e .
+    ```
 
-### 1.1 论文地址
-[论文](https://arxiv.org/pdf/1703.06870.pdf)  
+- 修改源代码
+    ```
+    patch -p1 < ../maskrcnn_detectron2.diff
+    cd ..
+    ```
 
-### 1.2 代码地址
-[代码](https://github.com/facebookresearch/detectron2) 
-``` 
-branch=master
-commit_id=068a93a
-```
-## 2 环境说明
+- 找到自己conda环境中的pytorch安装地址
+    ```
+    # 打开/root/anaconda3/envs/自己创建的环境名称/lib/python3.7/site-packages/torch/onnx/utils.py文件
+    搜索_check_onnx_proto(proto)并注释代码，添加pass代码，后保存并退出。
+    # _check_onnx_proto(proto)
+    pass       
+    ```
 
--   **[深度学习框架](#21-深度学习框架)**  
+## 准备数据集
 
--   **[python第三方库](#22-python第三方库)**  
-
-### 2.1 深度学习框架
-```
-CANN 5.1.RC1
-python = 3.7.5
-pytorch = 1.8.0
-torchvision = 0.9.0
-onnx = 1.8.0
-```
-
-### 2.2 python第三方库
-
-```
-numpy == 1.20.1
-Pillow == 8.2.0
-opencv-python == 4.5.1.48
-pycocotools == 12.0
-detectron2 == 0.4
-```
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
->   pycocotools库通过 pip3.7 install "git+https://gitee.com/ztdztd/cocoapi.git#subdirectory=pycocotools"  安装
+1. 获取原始数据集  
+    本模型推理项目使用 coco 数据集验证模型精度，请在自行下载，并在当前目录创建datasets文件夹放置COCO数据集，其中annotations目录存放coco数据集的instances_val2017.json，val2017目录存放coco数据集的5000张验证图片。。   
 
 
-## 3 数据集预处理
+2. 数据预处理  
+    执行前处理脚本将原始数据转换为OM模型输入需要的bin/npy文件。
+    ```bash
+    python3 maskrcnn_pth_preprocess_detectron2.py --image_src_path=/root/dataset/coco//val2017 --bin_file_path=val2017_bin --model_input_height=1344 --model_input_width=1344
+    ```
+    其中"image_src_path"表示处理前原数据集的地址，"bin_file_path"表示生成数据集的文件夹名称
 
--   **[数据集获取](#31-数据集获取)**  
+    运行后，将会得到如下形式的文件夹：
 
--   **[数据集预处理](#32-数据集预处理)**  
+    ```
+    ├── val2017_bin
+    │    ├──000000000139.bin
+    │    ├──......     	 
+    ```
 
--   **[生成数据集信息文件](#33-生成数据集信息文件)**  
+3 生成数据集信息文件
+    使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。
+    运行成功后，在当前目录中生成maskrcnn.info。
+    之后JPG图片info文件生成,运行成功后，在当前目录中生成maskrcnn_jpeg.info。
+    ```
+    python3 get_info.py --file_type bin  --file_path ./val2017_bin --info_name  maskrcnn.info --width 1344 --height 1344
+    python3 get_info.py --file_type jpg  --file_path ./datasets/coco/val2017  --info_name maskrcnn_jpeg.info
+    ```
 
-### 3.1 数据集获取
-1.datasets/coco目录下有annotations与val2017，annotations目录存放coco数据集的instances_val2017.json，val2017目录存放coco数据集的5000张验证图片。
-2.在服务器home目录下创建自己的文件夹，并将数据集存放于根目录。
+## 模型转换
 
-### 3.2 数据集预处理
-1.将原始数据（.jpg）转化为二进制文件（.bin）。通过缩放、均值方差手段归一化，输出为二进制文件。
-  执行maskrcnn_pth_preprocess_detectron2.py脚本。
-2.运行成成功后，生成二进制文件val2017_bin。 
-```
-# 执行以下命令：
-   python3.7 maskrcnn_pth_preprocess_detectron2.py --image_src_path=./datasets/coco/val2017 --bin_file_path=val2017_bin --model_input_height=1344 --model_input_width=1344
-```
-### 3.3 生成数据集信息文件
-1.使用get_info.py脚本，输入已经得到的二进制文件，输出生成二进制数据集的info文件。
-  运行成功后，在当前目录中生成maskrcnn.info。
-```
-python3.7 get_info.py bin ./val2017_bin maskrcnn.info 1344 1344
+1. PyTroch 模型转 ONNX 模型  
 
-```
-2.JPG图片info文件生成,运行成功后，在当前目录中生成maskrcnn_jpeg.info。
-```
-python3.7 get_info.py jpg ./datasets/coco/val2017 maskrcnn_jpeg.info
-```
+    从源码包中获取训练后的权重文件[maskrcnn.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/script/Faster_Mask_RCNNforPyTorch/zh/1.1/Faster_Mask_RCNN_for_PyTorch.zip)。
 
-## 3 模型转换
+    然后执行执行以下命令生成 ONNX 模型：
+    ```
+    python3 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml --output         ./output --export-method tracing --format onnx MODEL.WEIGHTS MaskRCNN.pth MODEL.DEVICE cpu
+    ```
+    参数说明：
+     + --config-file: 参数配置文件路径
+     + --output: 生成ONNX模型的保存路径
+     + --export-method: 导出模型的模式
+     + --format: 导出文件的格式
+     + MODEL.WEIGHTS: 权重文件路径
+     + MODEL.DEVICE: 硬件设备
 
--   **[安装detectrin2库](#41-安装detectrin2库)**  
--   **[生成onnx模型](#42-生成onnx模型)**
--   **[onnx转om模型](#43-onnx转om模型)**  
 
-### 4.1 安装detectrin2库
+2. ONNX 模型转 OM 模型  
 
-1.下载代码仓，到ModleZoo获取的源码包根目录下
-```
-git clone https://github.com/facebookresearch/detectron2到当前文件夹
-cd detectron2/
-git reset --hard 068a93a 
-```
-2.安装detectron2。
-```
-rm -rf detectron2/build/ **/*.so
-pip install -e .
-```
+    step1: 查看NPU芯片名称 \${chip_name}
+    ```bash
+    npu-smi info
+    ```
+    例如该设备芯片名为 310P3，回显如下：
+    ```
+    +-------------------+-----------------+------------------------------------------------------+
+    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+    +===================+=================+======================================================+
+    | 0       310P3     | OK              | 15.8         42                0    / 0              |
+    | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+    +===================+=================+======================================================+
+    | 1       310P3     | OK              | 15.4         43                0    / 0              |
+    | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+    +===================+=================+======================================================+
+    ```
 
-3.修改源代码
-```
-patch -p1 < ../maskrcnn_detectron2.diff
-cd ..
-```
+    step2: ONNX 模型转 OM 模型
+    ```bash
+    # 配置环境变量
+    source /usr/local/Ascend/ascend-toolkit/set_env.sh
+    
+    chip_name=310P3  # 根据 step1 的结果设值
+    
+    # 执行 ATC 进行模型转换
+    atc --model=model_py1.8.onnx --framework=5 --output=maskrcnn_detectron2_npu --input_format=NCHW --input_shape="0:4,3,1344,1344" --out_nodes="Cast_1673:0;Gather_1676:0;Reshape_1667:0;Slice_1706:0" --log=error --soc_version=Ascend${chip_name}
+    ```
 
-4.找到自己conda环境中的pytorch安装地址
-```
-# 打开/root/anaconda3/envs/自己创建的环境名称/lib/python3.7/site-packages/torch/onnx/utils.py文件
-  搜索_check_onnx_proto(proto)并注释代码，添加pass代码，后保存并退出。
-# _check_onnx_proto(proto)
-pass       
-```
+   参数说明：
+    + --framework: 5代表ONNX模型
+    + --model: ONNX模型路径
+    + --input_shape: 模型输入数据的shape
+    + --input_format: 输入数据的排布格式
+    + --output: OM模型路径，无需加后缀
+    + --log：日志级别
+    + --soc_version: 处理器型号
+    + --out_nodes: 输出节点名
+ 
 
-### 4.2 生成onnx模型
 
-1.运行命令，在outpu文件夹下生成model.onnx文件，获取权重文件[maskrcnn.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Mask-RCNN/PTH/maskrcnn.pth)
-```
-python3.7 detectron2/tools/deploy/export_model.py --config-file detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml --output ./output --export-method tracing --format onnx MODEL.WEIGHTS maskrcnn.pth MODEL.DEVICE cpu
-```
-2. 将其改名.
-```
-mv output/model.onnx model_py1.8.onnx
-```
-**说明：**  
->该模型目前仅支持batchsize=1。
+## 推理验证
 
- **模型转换要点：**  
-### 4.3 onnx转om模型
+1. 对数据集推理  
+    安装ais_bench推理工具。请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。完成安装后，执行以下命令预处理后的数据进行推理。
+    ```bash
+    python3 -m ais_bench \
+        --model ./maskrcnn_detectron2_npu.om \
+        --input ./MaskRcnn/val2017_bin \
+        --output ./results \
+        --outfmt BIN \
+        --batchsize 1
+    ```
+    参数说明：
+    + --model OM模型路径
+    + --input 存放预处理后数据的目录路径
+    + --output 用于存放推理结果的父目录路径
+    + --outfmt 推理结果文件的保存格式
+    + --batchsize 模型每次输入bin文件的数量
 
-1.运行atc_crnn.sh脚本将2.2生成的model.onnx文件转换om模型,引用环境变量  
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.查看卡的型号，步骤3中的${chip_name}通过该命令查询
-```
-npu-smi info
-```
-3.onnx文件转为离线推理模型文件.om文件(请勿直接执行，请根据2中查找的卡型号修改命令)
-```
-atc --model=model_py1.8.onnx --framework=5 --output=maskrcnn_detectron2_npu --input_format=NCHW --input_shape="0:1,3,1344,1344" --out_nodes="Cast_1673:0;Gather_1676:0;Reshape_1667:0;Slice_1706:0" --log=error --soc_version=Ascend${chip_name}
-```
 
-## 5 离线推理
+2. 性能验证  
+    对于性能的测试，需要注意以下三点：
+    + 测试前，请通过`npu-smi info`命令查看NPU设备状态，请务必在NPU设备空闲的状态下进行性能测试。
+    + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
+    + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
+    ```bash
+    python3 -m ais_bench --model ./maskrcnn_detectron2_npu.om --batchsize 1
+    ```
+    执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
 
--   **[benchmark工具概述](#51-benchmark工具概述)**  
+3. 精度验证  
 
--   **[离线推理](#52-离线推理)**  
+    执行后处理脚本，根据推理结果计算OM模型的精度：
+    ```bash
+    python3 maskrcnn_pth_postprocess_detectron2.py --bin_data_path=./results/****/ --test_annotation=maskrcnn_jpeg.info --det_results_path=./ret_npuinfer/ --net_out_num=4 --net_input_height=1344 --net_input_width=1344 --ifShowDetObj
+    ```
+    参数说明：
+    + --bin_data_path: 存放推理结果的目录路径
+    + --test_annotation: 标签文件路径
+    + --det_results_path: 后处理结果路径。
+    + --net_out_num: 推理保存节点数。
+    + --ifShowDetObj: 是否显示后处理结果。
+    运行成功后，程序会将各top1~top5的正确率记录在 result_batch_size1.json 文件中，可执行以下命令查看：
+    ```
+    |   AP   |  AP50  |  AP75  |  APs   |  APm   |  APl   |
+    |:------:|:------:|:------:|:------:|:------:|:------:|
+    | 32.720 | 53.714 | 35.030 | 17.926 | 36.745 | 43.239 |
+    INFO:detectron2.evaluation.coco_evaluation:Per-category bbox AP: 
+    | category      | AP     | category     | AP     | category       | AP     |
+    |:--------------|:-------|:-------------|:-------|:---------------|:-------|
+    | person        | 49.031 | bicycle      | 24.471 | car            | 37.608 |
+    | motorcycle    | 33.499 | airplane     | 51.994 | bus            | 54.955 |
+    | train         | 52.013 | truck        | 26.909 | boat           | 20.703 |
+    | traffic light | 20.208 | fire hydrant | 58.406 | stop sign      | 59.202 |
+    | parking meter | 42.271 | bench        | 17.270 | bird           | 29.241 |
+    | cat           | 57.822 | dog          | 52.798 | horse          | 51.655 |
+    | sheep         | 40.412 | cow          | 41.296 | elephant       | 55.590 |
+    | bear          | 63.353 | zebra        | 59.513 | giraffe        | 58.204 |
+    | backpack      | 11.383 | umbrella     | 29.291 | handbag        | 8.690  |
+    | tie           | 25.047 | suitcase     | 27.523 | frisbee        | 54.205 |
+    | skis          | 16.496 | snowboard    | 24.286 | sports ball    | 40.624 |
+    | kite          | 34.385 | baseball bat | 17.272 | baseball glove | 26.036 |
+    | skateboard    | 39.424 | surfboard    | 28.258 | tennis racket  | 38.406 |
+    | bottle        | 30.770 | wine glass   | 26.648 | cup            | 33.797 |
+    | fork          | 19.167 | knife        | 10.838 | spoon          | 8.791  |
+    | bowl          | 34.025 | banana       | 18.077 | apple          | 15.500 |
+    | sandwich      | 27.840 | orange       | 26.399 | broccoli       | 19.014 |
+    | carrot        | 15.487 | hot dog      | 25.517 | pizza          | 44.300 |
+    | donut         | 34.920 | cake         | 24.026 | chair          | 18.909 |
+    | couch         | 32.853 | potted plant | 18.867 | bed            | 33.891 |
+    | dining table  | 20.198 | toilet       | 45.900 | tv             | 48.958 |
+    | laptop        | 49.705 | mouse        | 47.144 | remote         | 20.852 |
+    | keyboard      | 40.347 | cell phone   | 28.539 | microwave      | 43.172 |
+    | oven          | 25.629 | toaster      | 16.271 | sink           | 27.563 |
+    | refrigerator  | 42.297 | book         | 10.381 | clock          | 45.611 |
+    | vase          | 30.711 | scissors     | 25.720 | teddy bear     | 36.962 |
+    | hair drier    | 0.000  | toothbrush   | 12.242 |                |        |
+    ```
 
-### 5.1 benchmark工具概述
 
-benchmark工具为华为自研的模型推理工具，支持多种模型的离线推理，能够迅速统计出模型在Ascend310上的性能，支持真实数据和纯推理两种模式，配合后处理脚本，可以实现诸多模型的端到端过程，获取工具及使用方法可以参考CANN 5.0.1 推理benchmark工具用户指南 01
-### 5.2 离线推理
-1.增加benchmark.{arch}可执行权限:
-```
-chmod u+x benchmark.x86_64
-```
-2.执行离线推理
-```
-./benchmark.x86_64 -model_type=vision -om_path=maskrcnn_detectron2_npu.om -device_id=0 -batch_size=1 -input_text_path=maskrcnn.info -input_width=1344 -input_height=1344 -useDvpp=false -output_binary=true
-```
-推理后的输出默认在当前目录result下。
-3.调用后处理脚本maskrcnn_pth_postprocess_detectron2获取txt文件
-```
-python3.7 maskrcnn_pth_postprocess_detectron2.py --bin_data_path=./result/dumpOutput_device0/ --test_annotation=maskrcnn_jpeg.info --det_results_path=./ret_npuinfer/ --net_out_num=4 --net_input_height=1344 --net_input_width=1344 --ifShowDetObj
-```
+----
+# 性能&精度
 
-## 6 精度对比
+在310P设备上，OM模型的精度为  **{AP@50:53.714}**，当batchsize设为1时模型性能最优，达 22.06 fps。
 
--   **[精度对比](#61-精度对比)**  
-
-### 6.1 离线推理mAP精度
-```
-model	    Ap	    AP50	  AP75	    Aps	    APm	    APl	
-MaskRcnn	32.739	53.770	  35.056	17.911  36.798  43.272
-```
-将得到的om离线模型推理mAP精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
-
-## 7 性能对比
-
--   **[310性能数据](#71-310性能数据)**
--   **[310p性能数据](#72-310p性能数据)**  
--   **[T4性能数据](#73-T4性能数据)**  
--   **[性能对比](#74-性能对比)**  
-
-### 7.1 310性能数据
-1.benchmark工具在整个数据集上推理获得性能数据  
-
-batch1初始性能：
-```
-[e2e] throughputRate: 1.77441, latency: 2.81784e+06
-[data read] throughputRate: 1.83966, moduleLatency: 543.58
-[preprocess] throughputRate: 1.80165, moduleLatency: 555.046
-[infer] throughputRate: 1.77503, Interface throughputRate: 2.00815, moduleLatency: 561.56
-[post] throughputRate: 1.775, moduleLatency: 563.381
-```
-batch1 310单卡吞吐率：2.00815 * 4 = 8.0326fps
-
-### 7.2 310p性能数据
-在装有310p卡的服务器上测试gpu性能，测试过程请确保卡没有运行其他任务
-
-batch1性能：
-```
-[e2e] throughputRate: 5.74867, latency: 869767
-[data read] throughputRate: 6.02356, moduleLatency: 166.015
-[preprocess] throughputRate: 5.8614, moduleLatency: 170.608
-[infer] throughputRate: 5.7554, Interface throughputRate: 11.4222, moduleLatency: 163.148
-[post] throughputRate: 5.75507, moduleLatency: 173.76
-```
-batch1 310p单卡吞吐率：11.4222
-
-### 7.3 T4性能数据
-在装有T4卡的服务器上进行在线推理
-batch1性能：
-```
-1 / 0.1633 = 6.12 fps
-```
-
-### 7.4 性能对比
-batch1： (310)2.00815 * 4 = 8.0326fps < (310p) 11.422fps
-batch1： (T4)1 / 0.1633 = 6.12 fps < (310p) 11.422fps
-310p上的性能为310性能上的1.2倍以上，310p上的性能为T4性能上的1.6倍以上,性能达标。
+| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
+| --------- | --------- | ----------- | --------------- | --------- |
+|Ascend310P3| 1         | COCO2017  | AP@50:53.714 | 22.06 fps |
