@@ -83,7 +83,6 @@ print(device)
 
 maxlen = 256
 batch_size = int(os.environ["BATCH_SIZE"])
-local_rank = args.local_rank if distributed else -1
 warm_factor = 0.1
 categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
 categories_id2label = {i: k for i, k in enumerate(categories)}
@@ -276,7 +275,7 @@ class Evaluator(Callback):
         f1, precision, recall, f2, precision2, recall2 = evaluate(valid_dataloader)
         if f2 > self.best_val_f1:
             self.best_val_f1 = f2
-            if distributed and args.local_rank()==0:
+            if distributed and args.local_rank == 0:
                 model.module.save_weights('best_model.pt')
             if not distributed:
                 model.save_weights('best_model.pt')
