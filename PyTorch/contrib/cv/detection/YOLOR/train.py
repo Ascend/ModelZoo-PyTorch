@@ -504,9 +504,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                                        ['results.png', 'precision-recall_curve.png']]})
         print('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
 
-    #else:
-        #dist.destroy_process_group()
-
     wandb.run.finish() if wandb and wandb.run else None
     torch.cuda.empty_cache()
     

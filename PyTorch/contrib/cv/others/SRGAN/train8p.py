@@ -302,7 +302,6 @@ def main_worker(gpu, ngpus_per_node, args):
             avt.print_time('epoch')
     if args.rank == 0:
         save_training_log(results)
-        #dist.destroy_process_group()
         avt.print_time('end')
 
 
