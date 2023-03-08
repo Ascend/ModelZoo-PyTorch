@@ -59,7 +59,7 @@ Transformer-XL是一个自然语言处理框架，在Transformer的基础上提�
   | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fpies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.12.1  | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -169,16 +169,23 @@ Transformer-XL是一个自然语言处理框架，在Transformer的基础上提�
       2. 使用[onnx-simplifer工具](https://github.com/daquexian/onnx-simplifier#python-version)进行简化。
 
          ```
+         # 安装改图工具
+         git clone https://gitee.com/ascend/msadvisor.git
+         cd msadvisor/auto-optimizer
+         python3 -m pip install .
+         cd ../..
+         
+         # 运行改图脚本
          python3 -m onnxsim model.onnx model_sim.onnx
          ```
 
          参数说明：
-
+   
          - --参数1：简化前onnx模型文件。
          - --参数2：简化后onnx模型文件。
-
+   
       3. 安装[auto_optimizer工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer#%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B)，运行fix_onnx.py脚本优化模型。
-
+   
          ```
          python3 fix_onnx.py -i model_sim.onnx -o model_fix.onnx
          ```
@@ -187,17 +194,17 @@ Transformer-XL是一个自然语言处理框架，在Transformer的基础上提�
 
          - --i/--input_onnx：修改前onnx模型文件。
          - --o/--output_onnx：修改后onnx模型文件。
-
+   
    3. 使用ATC工具将ONNX模型转OM模型。
-
+   
       1. 配置环境变量。
-
+   
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-
+   
       2. 执行命令查看芯片名称（${chip_name}）。
-
+   
          ```
          npu-smi info
          #该设备芯片名为Ascend310P3 （自行替换）
@@ -213,9 +220,9 @@ Transformer-XL是一个自然语言处理框架，在Transformer的基础上提�
          | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
          +===================+=================+======================================================+
          ```
-
+   
    4. 执行ATC命令。
-
+   
       ```
       bash atc.sh model_fix.onnx model_tsxl Ascend${chip_name}
       ```
@@ -223,7 +230,7 @@ Transformer-XL是一个自然语言处理框架，在Transformer的基础上提�
       运行成功后生成model_tsxl.om模型文件。
       
       参数说明：
-
+   
       - --参数1：输入的onnx文件。
       - --参数2：输出的om文件。
       - --参数3：芯片型号。
