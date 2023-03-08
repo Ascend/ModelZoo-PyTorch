@@ -60,11 +60,11 @@ def main():
     # Data Loader
     batchsize = int(args.batchsize)
     vocab = Vocab(opts.vocab_file)
-    dev_dataset = SpeechDataset(vocab, opts.valid_scp_path, opts.valid_lab_path, opts)
+    dev_dataset = SpeechDataset(vocab, opts.test_scp_path, opts.test_lab_path, opts)
     dev_loader = SpeechDataLoader(dev_dataset, batch_size=batchsize, shuffle=False, num_workers=opts.num_workers,
                                   drop_last=True, pin_memory=True)
 
-    bin_path = "./lstm_bin"
+    bin_path = "./lstm_bin_bs" + args.batchsize
     if os.path.exists(bin_path):
         shutil.rmtree(bin_path)
     os.makedirs(bin_path)

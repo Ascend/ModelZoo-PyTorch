@@ -76,7 +76,7 @@ def test():
     with torch.no_grad():
         for i, data in zip(range(test_num), test_loader):
             inputs, input_sizes, targets, target_sizes, utt_list = data
-            probs_1_np  = np.load('{}{}.0.npy'.format(npu_path, i))
+            probs_1_np  = np.load('{}/inputs_{}_0.npy'.format(npu_path, i))
             probs_1 = torch.from_numpy(probs_1_np)
 
             max_length = probs_1.size(0)
