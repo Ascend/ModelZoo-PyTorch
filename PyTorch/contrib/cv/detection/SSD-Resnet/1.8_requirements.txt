@@ -1,0 +1,5 @@
+torchvision==0.9.1
+matplotlib == 3.4.3
+pycocotools == 2.0.2
+decorator == 5.0.7
+sympy == 1.9
