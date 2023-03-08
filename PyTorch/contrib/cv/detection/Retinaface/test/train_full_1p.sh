@@ -81,7 +81,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 python3 train.py \
-    --data_path=${data_path} \
+    --data=${data_path}/train/label.txt \
     --addr=$(hostname -I |awk '{print $1}') \
     --workers=16 \
     --dist-url='tcp://127.0.0.1:50000' \

@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 python3 train.py \
-    --data_path=${data_path} \
+    --data=${data_path}/train/label.txt \
     --addr=$(hostname -I |awk '{print $1}') \
     --workers=8 \
     --dist-url='tcp://127.0.0.1:50003' \

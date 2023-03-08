@@ -67,13 +67,9 @@ parser.add_argument('--loss-scale', default=64., type=float, help='loss scale us
 parser.add_argument('--opt-level', default='O2', type=str, help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--warmup_epoch', default=1, type=int, help='warm up')
 parser.add_argument('--distributed', action='store_true', help='distributed')
-parser.add_argument('--data_path', default='.',
-                    help='Training dataset directory')
 parser.add_argument('--max_steps', default=None, type=int, metavar='N',
                         help="number of total steps to run")
 args = parser.parse_args()
-args.data = os.path.join(args.data_path, args.data)
-args.val_data = os.path.join(args.data_path, args.val_data)
 if torch.cuda.is_available():
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 else:
@@ -369,7 +365,7 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
         # measure elapsed time
         if not args.distributed or (args.distributed and args.gpu == 0):
             progress.display(i)
-        if i >= args.max_steps and args.max_steps:
+        if args.max_steps and i >= args.max_steps:
             break
     if not args.distributed or (args.distributed and args.gpu == 0):
         if batch_time.avg > 0:
