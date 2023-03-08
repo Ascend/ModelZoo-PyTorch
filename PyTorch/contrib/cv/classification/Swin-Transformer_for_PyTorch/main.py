@@ -129,7 +129,7 @@ def main(config):
     if config.AMP_OPT_LEVEL != "O0":
         model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL, loss_scale='dynamic',
                                           combine_grad=True)
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK],
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[config.LOCAL_RANK],
                                                           broadcast_buffers=False)
     model_without_ddp = model.module
 
