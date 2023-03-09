@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="ArcFace_for_PyTorch"
+Network="ArcFace_ID4078_for_PyTorch"
 
 export WORLD_SIZE=8
 export MASTER_ADDR='127.0.0.1'
@@ -16,12 +16,15 @@ RANK_ID_START=0
 arch="arcface"
 # 数据集路径,保持为空,不需要修改
 data_path=""
+precision_mode="allow_mix_precision"
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -50,6 +53,9 @@ fi
 
 sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|'"$data_path"'|g" ${cur_path}/configs/glint360k_r100.py
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    sed -i "s|config.fp16 = True|config.fp16 = False|g" ${cur_path}/configs/glint360k_r100.py
+fi
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     # 设置环境变量，不需要修改
@@ -94,7 +100,11 @@ grep "Training" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVIC
 # 训练用例信息，不需要修改
 BatchSize=`grep "total_batch_size" ${training_log} |awk '{print $5}'`
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
