@@ -61,7 +61,7 @@ for para in $*
 do
     if [[ $para == --precision_mode* ]];then
         apex_opt_level=`echo ${para#*=}`
-                    if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
+                    if [[ $apex_opt_level != "O0" ]] && [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
                             echo "[ERROR] para \"precision_mode\" must be config O1 or O2 or O3"
                             exit 1
                     fi
@@ -119,7 +119,7 @@ wait
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-#nohup python3 train.py --training_dataset=${data_path} --network resnet50 --apex > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+#nohup python3 train.py --training_dataset=${data_path} --network resnet50 $PREC > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 export MASTER_ADDR=localhost
 export MASTER_PORT=29688
 export HCCL_WHITELIST_DISABLE=1
@@ -165,7 +165,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $apex_opt_level == "O0" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
