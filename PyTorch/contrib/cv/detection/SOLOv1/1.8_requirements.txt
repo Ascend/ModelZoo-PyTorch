@@ -1,0 +1,6 @@
+torchvision==0.9.1
+pillow==9.1.0
+-r requirements/runtime.txt
+-r requirements/optional.txt
+-r requirements/tests.txt
+-r requirements/build.txt
