@@ -1,4 +1,5 @@
-torchvision
+torchvision==0.9.1
+pillow==9.1.0
 opencv-python==4.5.3.56
 easydict==1.9
 cython==0.29.24
