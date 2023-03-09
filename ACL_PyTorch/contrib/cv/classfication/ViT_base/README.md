@@ -80,9 +80,9 @@ mode_name = [
 1. 获取源码。
 
    ```bash
-   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git  # 克隆仓库的代码
-   git checkout master                                      # 切换到对应分支
-   cd ACL_PyTorch/contrib/cv/ViT_base                       # 切换到模型的代码仓目录
+   git clone https://gitee.com/ascend/ModelZoo-PyTorch.git        # 克隆仓库的代码
+   git checkout master                                            # 切换到对应分支
+   cd ACL_PyTorch/contrib/cv/classfication/ViT_base     # 切换到模型的代码仓目录
    ```
 
 2. 安装依赖。
