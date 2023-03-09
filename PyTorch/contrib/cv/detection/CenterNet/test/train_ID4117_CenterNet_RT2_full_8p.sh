@@ -18,6 +18,9 @@ port=23456
 # 指定训练所使用的npu device卡id
 device_id=0
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
+
 # 使能RT2.0
 export ENABLE_RUNTIME_V2=1
 echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
@@ -50,6 +53,8 @@ do
         start_step=`echo ${para#*=}`
     elif [[ $para == --num_iters* ]];then
         num_iters=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -124,6 +129,7 @@ taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --lr_step 45,60,75 \
             --port=${cur_port} \
             --world_size 8  \
+            --precision_mode=$precision_mode \
             --batch_size ${DIS_BS} \
             --lr 3.54e-4 \
             --num_workers ${KERNEL_NUM} \
@@ -163,7 +169,12 @@ echo "Final Train Accuracy : ${train_accuracy}"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
+
 
 #获取性能数据，不需要修改
 #吞吐量

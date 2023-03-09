@@ -22,8 +22,17 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    PREC=" --use_fp32 "
+else
+    PREC=""
+fi
+
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -78,7 +87,7 @@ wait
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-python3 -m torch.distributed.launch --nproc_per_node=8 main.py --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120' --num_epochs=160 --distributed_launch > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 -m torch.distributed.launch --nproc_per_node=8 main.py $PREC --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120' --num_epochs=160 --distributed_launch > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 python3 test_wider_face.py >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -111,7 +120,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 #获取性能数据，不需要修改
 #吞吐量
