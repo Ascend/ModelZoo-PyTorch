@@ -693,7 +693,6 @@ def main_worker(gpu, ngpus_per_node, args):
                 run_evaluation(args, all_actions_by_subject[subject], model_pos, None, keypoints, dataset, pad, causal_shift, kps_left, kps_right, joints_left, joints_right, action_filter)
                 if args.rank % ngpus_per_node == 0:
                     print('')
-    dist.destroy_process_group()
 
 if __name__ == "__main__":
     main()

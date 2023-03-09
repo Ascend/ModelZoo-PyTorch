@@ -508,8 +508,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         #         wandb.log({"Results": [wandb.Image(str(save_dir / x), caption=x) for x in
         #                                ['results.png', 'precision-recall_curve.png']]})
         logger.info('%g epochs completed in %.3f hours.\n' % (epoch - start_epoch + 1, (time.time() - t0) / 3600))
-    else:
-        dist.destroy_process_group()
 
     wandb.run.finish() if wandb and wandb.run else None
     torch.npu.empty_cache()
