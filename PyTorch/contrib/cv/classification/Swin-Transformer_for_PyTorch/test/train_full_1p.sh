@@ -36,9 +36,9 @@ if [[ $data_path == "" ]];then
 fi
 
 if [[ $precision_mode == "O0" ]];then
-    adv_param = " --amp-opt-level O0 "
+    adv_param=" --amp-opt-level O0 "
 else
-    adv_param = ""
+    adv_param=""
 fi
 
 ###############指定训练脚本执行路径###############

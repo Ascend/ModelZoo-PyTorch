@@ -35,6 +35,8 @@ epochs=1
 # 指定训练所使用的npu device卡id
 device_id=
 
+precision_mode="allow_mix_precision"
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -44,12 +46,14 @@ do
         batch_size=`echo ${para#*=}`
     elif [[ $para == --epochs* ]];then
         epochs=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source $test_path_dir/set_conda.sh
         source activate $conda_name
     fi
-done
+do/ne
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -66,6 +70,13 @@ elif [ ${device_id} ];then
 else
     "[Error] device id must be config"
     exit 1
+fi
+
+
+if [ ${precision_mode} == "must_keep_origin_dtype" ];then
+    adv_param=""
+else
+    adv_param=" --fp16 "
 fi
 
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
@@ -89,7 +100,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 start_time=$(date +%s)
-nohup python3 -m yolox.tools.train -n yolox-s -d 8 -b ${batch_size} --fp16 -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 -m yolox.tools.train -n yolox-s -d 8 -b ${batch_size} ${adv_param} -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
@@ -111,7 +122,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+    CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 #获取性能数据，不需要修改
 #吞吐量

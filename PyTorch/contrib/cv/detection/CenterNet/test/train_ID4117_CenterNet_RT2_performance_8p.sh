@@ -50,6 +50,8 @@ do
         start_step=`echo ${para#*=}`
     elif [[ $para == --num_iters* ]];then
         num_iters=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -134,6 +136,7 @@ taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --lr_step 45,60,75 \
             --port=$cur_port \
             --world_size 8  \
+            --precision_mode=$precision_mode \
             --batch_size ${DIS_BS} \
             --lr 3.54e-4 \
             --num_workers ${KERNEL_NUM} \
@@ -172,7 +175,11 @@ echo "Final Train Accuracy : ${train_accuracy}"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 #获取性能数据，不需要修改
 #吞吐量
