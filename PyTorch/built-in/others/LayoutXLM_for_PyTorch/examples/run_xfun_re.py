@@ -18,6 +18,7 @@ from torch_npu.contrib import transfer_to_npu
 
 torch.npu.set_compile_mode(jit_compile=False)
 option = {}
+option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Conv2DBackpropFilter,Conv2DBackpropInput,Conv2D"
 option["MM_BMM_ND_ENABLE"] = 'disable'
 torch.npu.set_option(option)
 

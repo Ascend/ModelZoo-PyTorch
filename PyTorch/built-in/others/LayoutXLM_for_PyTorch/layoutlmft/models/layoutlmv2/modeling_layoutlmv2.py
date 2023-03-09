@@ -134,16 +134,16 @@ class LayoutLMv2SelfAttention(nn.Module):
         return q, k, v
 
     def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        head_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        past_key_value=None,
-        output_attentions=False,
-        rel_pos=None,
-        rel_2d_pos=None,
+            self,
+            hidden_states,
+            attention_mask=None,
+            head_mask=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            past_key_value=None,
+            output_attentions=False,
+            rel_pos=None,
+            rel_2d_pos=None,
     ):
         q, k, v = self.compute_qkv(hidden_states)
 
@@ -199,16 +199,16 @@ class LayoutLMv2Attention(nn.Module):
         self.pruned_heads = self.pruned_heads.union(heads)
 
     def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        head_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        past_key_value=None,
-        output_attentions=False,
-        rel_pos=None,
-        rel_2d_pos=None,
+            self,
+            hidden_states,
+            attention_mask=None,
+            head_mask=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            past_key_value=None,
+            output_attentions=False,
+            rel_pos=None,
+            rel_2d_pos=None,
     ):
         self_outputs = self.self(
             hidden_states,
@@ -241,16 +241,16 @@ class LayoutLMv2Layer(nn.Module):
         self.output = LayoutLMv2Output(config)
 
     def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        head_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        past_key_value=None,
-        output_attentions=False,
-        rel_pos=None,
-        rel_2d_pos=None,
+            self,
+            hidden_states,
+            attention_mask=None,
+            head_mask=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            past_key_value=None,
+            output_attentions=False,
+            rel_pos=None,
+            rel_2d_pos=None,
     ):
         # decoder uni-directional self-attention cached key/values tuple is at positions 1,2
         self_attn_past_key_value = past_key_value[:2] if past_key_value is not None else None
@@ -329,7 +329,7 @@ def relative_position_bucket(relative_position, bidirectional=True, num_buckets=
 
     # The other half of the buckets are for logarithmically bigger bins in positions up to max_distance
     val_if_large = max_exact + (
-        torch.log(n.float() / max_exact) / math.log(max_distance / max_exact) * (num_buckets - max_exact)
+            torch.log(n.float() / max_exact) / math.log(max_distance / max_exact) * (num_buckets - max_exact)
     ).to(torch.long)
     val_if_large = torch.min(val_if_large, torch.full_like(val_if_large, num_buckets - 1))
 
@@ -396,19 +396,19 @@ class LayoutLMv2Encoder(nn.Module):
         return rel_2d_pos
 
     def forward(
-        self,
-        hidden_states,
-        attention_mask=None,
-        head_mask=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        past_key_values=None,
-        use_cache=None,
-        output_attentions=False,
-        output_hidden_states=False,
-        return_dict=True,
-        bbox=None,
-        position_ids=None,
+            self,
+            hidden_states,
+            attention_mask=None,
+            head_mask=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            past_key_values=None,
+            use_cache=None,
+            output_attentions=False,
+            output_hidden_states=False,
+            return_dict=True,
+            bbox=None,
+            position_ids=None,
     ):
         all_hidden_states = () if output_hidden_states else None
         all_self_attentions = () if output_attentions else None
@@ -558,10 +558,10 @@ class VisualBackbone(nn.Module):
         assert isinstance(model.backbone, detectron2.modeling.backbone.FPN)
         self.backbone = model.backbone
         if (
-            config.convert_sync_batchnorm
-            and torch.distributed.is_available()
-            and torch.distributed.is_initialized()
-            and torch.distributed.get_rank() > -1
+                config.convert_sync_batchnorm
+                and torch.distributed.is_available()
+                and torch.distributed.is_initialized()
+                and torch.distributed.get_rank() > -1
         ):
             self_rank = torch.distributed.get_rank()
             # To avoid exceptions training with 4 devices, while NPU not supporting 'CUDA_VISIBLE_DEVICES' yet.
@@ -604,7 +604,7 @@ class VisualBackbone(nn.Module):
             config.image_feature_pool_shape.append(self.backbone.output_shape()[self.out_feature_key].channels)
         assert self.backbone.output_shape()[self.out_feature_key].channels == config.image_feature_pool_shape[2]
 
-    def forward(self, images):      
+    def forward(self, images):
         images_input = ((images if torch.is_tensor(images) else images.tensor) - self.pixel_mean) / self.pixel_std
         features = self.backbone(images_input)
         features = features[self.out_feature_key]
@@ -674,20 +674,20 @@ class LayoutLMv2Model(LayoutLMv2PreTrainedModel):
         return embeddings
 
     def forward(
-        self,
-        input_ids=None,
-        bbox=None,
-        image=None,
-        attention_mask=None,
-        token_type_ids=None,
-        position_ids=None,
-        head_mask=None,
-        inputs_embeds=None,
-        encoder_hidden_states=None,
-        encoder_attention_mask=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
+            self,
+            input_ids=None,
+            bbox=None,
+            image=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
     ):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -714,24 +714,24 @@ class LayoutLMv2Model(LayoutLMv2PreTrainedModel):
         final_shape = torch.Size(final_shape)
 
         visual_bbox_x = (
-            torch.arange(
-                0,
-                1000 * (self.config.image_feature_pool_shape[1] + 1),
-                1000,
-                device=device,
-                dtype=bbox.dtype,
-            )
-            // self.config.image_feature_pool_shape[1]
+                torch.arange(
+                    0,
+                    1000 * (self.config.image_feature_pool_shape[1] + 1),
+                    1000,
+                    device=device,
+                    dtype=bbox.dtype,
+                )
+                // self.config.image_feature_pool_shape[1]
         )
         visual_bbox_y = (
-            torch.arange(
-                0,
-                1000 * (self.config.image_feature_pool_shape[0] + 1),
-                1000,
-                device=device,
-                dtype=bbox.dtype,
-            )
-            // self.config.image_feature_pool_shape[0]
+                torch.arange(
+                    0,
+                    1000 * (self.config.image_feature_pool_shape[0] + 1),
+                    1000,
+                    device=device,
+                    dtype=bbox.dtype,
+                )
+                // self.config.image_feature_pool_shape[0]
         )
         visual_bbox = torch.stack(
             [
@@ -807,6 +807,147 @@ class LayoutLMv2Model(LayoutLMv2PreTrainedModel):
             return_dict=return_dict,
         )
         sequence_output = encoder_outputs[0]
+
+        return sequence_output
+
+
+
+class LayoutLMv2ModelForTokenClassification(LayoutLMv2Model):
+    def forward(
+            self,
+            input_ids=None,
+            bbox=None,
+            image=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
+    ):
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        if input_ids is not None and inputs_embeds is not None:
+            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+        elif input_ids is not None:
+            input_shape = input_ids.size()
+        elif inputs_embeds is not None:
+            input_shape = inputs_embeds.size()[:-1]
+        else:
+            raise ValueError("You have to specify either input_ids or inputs_embeds")
+
+        device = input_ids.device if input_ids is not None else inputs_embeds.device
+
+        visual_shape = list(input_shape)
+        visual_shape[1] = self.config.image_feature_pool_shape[0] * self.config.image_feature_pool_shape[1]
+        visual_shape = torch.Size(visual_shape)
+        final_shape = list(input_shape)
+        final_shape[1] += visual_shape[1]
+        final_shape = torch.Size(final_shape)
+
+        visual_bbox_x = (
+                torch.arange(
+                    0,
+                    1000 * (self.config.image_feature_pool_shape[1] + 1),
+                    1000,
+                    device=device,
+                    dtype=bbox.dtype,
+                )
+                // self.config.image_feature_pool_shape[1]
+        )
+        visual_bbox_y = (
+                torch.arange(
+                    0,
+                    1000 * (self.config.image_feature_pool_shape[0] + 1),
+                    1000,
+                    device=device,
+                    dtype=bbox.dtype,
+                )
+                // self.config.image_feature_pool_shape[0]
+        )
+        visual_bbox = torch.stack(
+            [
+                visual_bbox_x[:-1].repeat(self.config.image_feature_pool_shape[0], 1),
+                visual_bbox_y[:-1].repeat(self.config.image_feature_pool_shape[1], 1).transpose(0, 1),
+                visual_bbox_x[1:].repeat(self.config.image_feature_pool_shape[0], 1),
+                visual_bbox_y[1:].repeat(self.config.image_feature_pool_shape[1], 1).transpose(0, 1),
+            ],
+            dim=-1,
+        ).view(-1, bbox.size(-1))
+        visual_bbox = visual_bbox.repeat(final_shape[0], 1, 1)
+        final_bbox = torch.cat([bbox, visual_bbox], dim=1)
+
+        if attention_mask is None:
+            attention_mask = torch.ones(input_shape, device=device)
+
+        visual_attention_mask = torch.ones(visual_shape, device=device)
+        final_attention_mask = torch.cat([attention_mask, visual_attention_mask], dim=1)
+
+        if token_type_ids is None:
+            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+
+        if position_ids is None:
+            seq_length = input_shape[1]
+            position_ids = self.embeddings.position_ids[:, :seq_length]
+            position_ids = position_ids.expand_as(input_ids)
+
+        visual_position_ids = torch.arange(0, visual_shape[1], dtype=torch.long, device=device).repeat(
+            input_shape[0], 1
+        )
+        final_position_ids = torch.cat([position_ids, visual_position_ids], dim=1)
+
+        if bbox is None:
+            bbox = torch.zeros(tuple(list(input_shape) + [4]), dtype=torch.long, device=device)
+
+        text_layout_emb = self._calc_text_embeddings(
+            input_ids=input_ids,
+            bbox=bbox,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+        )
+
+        visual_emb = self._calc_img_embeddings(
+            image=image,
+            bbox=visual_bbox,
+            position_ids=visual_position_ids,
+        )
+        final_emb = torch.cat([text_layout_emb, visual_emb], dim=1)
+
+        extended_attention_mask = final_attention_mask.unsqueeze(1).unsqueeze(2)
+
+        extended_attention_mask = extended_attention_mask.to(dtype=self.dtype)
+        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+
+        if head_mask is not None:
+            if head_mask.dim() == 1:
+                head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+                head_mask = head_mask.expand(self.config.num_hidden_layers, -1, -1, -1, -1)
+            elif head_mask.dim() == 2:
+                head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)
+            head_mask = head_mask.to(dtype=next(self.parameters()).dtype)
+        else:
+            head_mask = [None] * self.config.num_hidden_layers
+
+        encoder_outputs = self.encoder(
+            final_emb,
+            extended_attention_mask,
+            bbox=final_bbox,
+            position_ids=final_position_ids,
+            head_mask=head_mask,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+
+        sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output)
 
         if not return_dict:
@@ -825,7 +966,7 @@ class LayoutLMv2ForTokenClassification(LayoutLMv2PreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.num_labels = config.num_labels
-        self.layoutlmv2 = LayoutLMv2Model(config)
+        self.layoutlmv2 = LayoutLMv2ModelForTokenClassification(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
 
@@ -835,19 +976,19 @@ class LayoutLMv2ForTokenClassification(LayoutLMv2PreTrainedModel):
         return self.layoutlmv2.embeddings.word_embeddings
 
     def forward(
-        self,
-        input_ids=None,
-        bbox=None,
-        image=None,
-        attention_mask=None,
-        token_type_ids=None,
-        position_ids=None,
-        head_mask=None,
-        inputs_embeds=None,
-        labels=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
+            self,
+            input_ids=None,
+            bbox=None,
+            image=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            labels=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
     ):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
@@ -902,17 +1043,17 @@ class LayoutLMv2ForRelationExtraction(LayoutLMv2PreTrainedModel):
         self.init_weights()
 
     def forward(
-        self,
-        input_ids,
-        bbox,
-        labels=None,
-        image=None,
-        attention_mask=None,
-        token_type_ids=None,
-        position_ids=None,
-        head_mask=None,
-        entities=None,
-        relations=None,
+            self,
+            input_ids,
+            bbox,
+            labels=None,
+            image=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            entities=None,
+            relations=None,
     ):
         outputs = self.layoutlmv2(
             input_ids=input_ids,
@@ -925,7 +1066,7 @@ class LayoutLMv2ForRelationExtraction(LayoutLMv2PreTrainedModel):
         )
 
         seq_length = input_ids.size(1)
-        sequence_output, image_output = outputs[0][:, :seq_length], outputs[0][:, seq_length:]
+        sequence_output, image_output = outputs[:, :seq_length], outputs[:, seq_length:]
         sequence_output = self.dropout(sequence_output)
         loss, pred_relations = self.extractor(sequence_output, entities, relations)
 
@@ -934,5 +1075,5 @@ class LayoutLMv2ForRelationExtraction(LayoutLMv2PreTrainedModel):
             entities=entities,
             relations=relations,
             pred_relations=pred_relations,
-            hidden_states=outputs[0],
+            hidden_states=outputs,
         )
