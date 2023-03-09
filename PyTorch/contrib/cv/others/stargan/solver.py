@@ -272,7 +272,7 @@ class Solver(object):
                 
                 if iters == 5:
                     epoch_start_time = time.time()
-                if iters > 2000:
+                if iters > 1000:
                     pass
                 # Generate target domain labels randomly.
                 rand_idx = torch.randperm(label_org.size(0))
