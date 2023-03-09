@@ -94,7 +94,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --train_epochs=$train_epochs --TASK=$TASK  # 单卡精度训练 
+     bash ./test/train_full_1p.sh --train_epochs=$train_epochs --TASK=$TASK  # 单卡精度性能训练 
      ```
 
    - 单机8卡训练
@@ -103,6 +103,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
      ```
      bash ./test/train_full_8p.sh --train_epochs=$train_epoch --TASK=$TASK   # 8卡精度、性能训练
+     bash ./test/train_performance_8p_wnli.sh               #wnli 8卡性能
      ```
     `--train_epochs`参数填写训练的总epoch数;
 
@@ -125,31 +126,31 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 **表 2**  单卡训练结果展示表
 
-| TASK  |           Metric           | 1p-精度(竞品A) | 1p-精度(NPU)  | AMP_Type | Epoch | Torch_Version |
-|:-----:|:--------------------------:|:----------:|:-----------:|:--------:|:-----:|:-------------:|
-| CoLA  |       Matthews corr        |    60.5    |    63.75    |    O2    |   3   |      1.8      |
-| SST-2 |          Accuracy          |    94.9    |    93.23    |    O2    |   3   |      1.8      |
-| MRPC  |             F1             |    89.3    |    90.28    |    O2    |   5   |      1.8      |
-| STS-B |        Spearman cor        |    86.5    |    88.76    |    O2    |   3   |      1.8      | 
-|  QQP  |             F1             |    72.1    |    86.42    |    O2    |   3   |      1.8      |
-| MNLI  | Matched acc/MisMatched acc | 86.7/85.9  | 86.55/86.41 |    O2    |   3   |      1.8      |
-| QNLI  |          Accuracy          |    92.7    |    92.5     |    O2    |   3   |      1.8      |
-|  RTE  |          Accuracy          |    70.1    |    69.49    |    O2    |   5   |      1.8      |
-| WNLI  |          Accuracy          |   53.12    |    53.12    |    O2    |   1   |      1.8      |
+| TASK  |           Metric           | 1p-精度(竞品A) | 1p-精度(NPU)  | 1p-性能(竞品A)<br/>sample/s | 1p-性能(NPU)<br/>sample/s | AMP_Type | Epoch | Torch_Version |
+|:-----:|:--------------------------:|:----------:|:-----------:|:-----------------------:|:-----------------------:|:--------:|:-----:|:-------------:|
+| CoLA  |       Matthews corr        |   63.81    |    63.23    |         203.362         |         242.865         |    O2    |   3   |      1.8      |
+| SST-2 |          Accuracy          |    93.0    |    93.92    |         208.024         |         242.869         |    O2    |   3   |      1.8      |
+| MRPC  |             F1             |   90.17    |    90.29    |         207.063         |         244.989         |    O2    |   5   |      1.8      |
+| STS-B |        Spearman cor        |   88.92    |    89.49    |         201.876         |         246.16          |    O2    |   3   |      1.8      | 
+|  QQP  |             F1             |   87.03    |    87.97    |         207.756         |         242.804         |    O2    |   3   |      1.8      |
+| MNLI  | Matched acc/MisMatched acc | 86.71/86.8 | 86.46/86.09 |         207.809         |         245.052         |    O2    |   3   |      1.8      |
+| QNLI  |          Accuracy          |   91.82    |    91.9     |         208.137         |         242.437         |    O2    |   3   |      1.8      |
+|  RTE  |          Accuracy          |   65.34    |    68.75    |         204.021         |         242.835         |    O2    |   5   |      1.8      |
+| WNLI  |          Accuracy          |    50.7    |    54.69    |         205.816         |         239.393         |    O2    |   1   |      1.8      |
 
 **表 3**  8卡训练结果展示表
 
 | TASK  |           Metric           | 8p-精度(竞品A)  | 8p-精度(NPU)  | 8p-性能(竞品A)<br/>sample/s | 8p-性能(NPU)<br/>sample/s | AMP_Type | Epoch | Torch_Version |
 |:-----:|:--------------------------:|:-----------:|:-----------:|:-----------------------:|:-----------------------:|:--------:|:-----:|:-------------:|
-| CoLA  |       Matthews corr        |    58.54    |    58.05    |         645.91          |         671.59          |    O2    |   3   |      1.8      |
-| SST-2 |          Accuracy          |    92.43    |    93.0     |         661.16          |        1035.794         |    O2    |   3   |      1.8      |
-| MRPC  |             F1             |    86.45    |    86.21    |         593.55          |         594.652         |    O2    |   5   |      1.8      |
-| STS-B |        Spearman cor        |    83.21    |    84.91    |         596.55          |         684.513         |    O2    |   5   |      1.8      |
-|  QQP  |             F1             |    87.79    |    87.81    |         668.16          |        1079.288         |    O2    |   3   |      1.8      |
-| MNLI  | Matched acc/MisMatched acc | 86.35/86.02 | 86.27/86.34 |         660.60          |        1060.108         |    O2    |   3   |      1.8      |
-| QNLI  |          Accuracy          |    92.44    |    92.44    |         671.134         |        1046.222         |    O2    |   3   |      1.8      |
-|  RTE  |          Accuracy          |    56.68    |    66.06    |         565.00          |         451.087         |    O2    |   5   |      1.8      |
-| WNLI  |          Accuracy          |    50.7     |    57.75    |         236.51          |         39.987          |    O2    |   1   |      1.8      |
+| CoLA  |       Matthews corr        |    58.3     |    62.16    |         1474.32         |        1340.928         |    O2    |   3   |      1.8      |
+| SST-2 |          Accuracy          |    92.78    |    93.0     |        1606.601         |        1490.631         |    O2    |   3   |      1.8      |
+| MRPC  |             F1             |    84.86    |    87.23    |         666.44          |        1120.797         |    O2    |   5   |      1.8      |
+| STS-B |        Spearman cor        |    85.74    |    87.43    |         876.796         |         1237.05         |    O2    |   5   |      1.8      |
+|  QQP  |             F1             |    88.02    |    87.67    |        1694.026         |        1511.692         |    O2    |   3   |      1.8      |
+| MNLI  | Matched acc/MisMatched acc | 86.36/86.36 | 85.19/85.33 |        1726.692         |        1511.887         |    O2    |   3   |      1.8      |
+| QNLI  |          Accuracy          |    91.95    |    91.10    |        1700.906         |        1498.031         |    O2    |   3   |      1.8      |
+|  RTE  |          Accuracy          |    58.12    |    65.34    |        1042.305         |        1010.221         |    O2    |   5   |      1.8      |
+| WNLI  |          Accuracy          |    43.66    |    55.32    |         498.107         |                         |    O2    |   1   |      1.8      |
 
 
 

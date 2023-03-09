@@ -486,6 +486,10 @@ class TrainingArguments:
         default=-1,
         metadata={"help": "If > 0: set total number of training steps to perform. Override num_train_epochs."},
     )
+    skip_steps: int = field(
+        default=0,
+        metadata={"help": "If > 0: Skiping n steps to avoid load time."},
+    )
     lr_scheduler_type: SchedulerType = field(
         default="linear",
         metadata={"help": "The scheduler type to use."},
