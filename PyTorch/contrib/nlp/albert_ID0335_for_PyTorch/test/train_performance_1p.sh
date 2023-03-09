@@ -78,11 +78,11 @@ TASK_NAME="SST-2"
 start_time=$(date +%s)
 nohup python3.7 ./run_classifier.py \
   --device=$DEVICE \
-  --model_type=$BERT_MODEL \
-  --model_name_or_path=$BERT_BASE_DIR/$BERT_MODEL \
+  --model_type=SST \
+  --model_name_or_path=$BERT_BASE_DIR/ \
   --task_name=$TASK_NAME \
   --data_dir=$DATA_DIR/$TASK_NAME/ \
-  --spm_model_file=$BERT_BASE_DIR/$BERT_MODEL/30k-clean.model \
+  --spm_model_file=$BERT_BASE_DIR/30k-clean.model \
   --output_dir=$OUTPUR_DIR/$TASK_NAME/ \
   --do_train \
   --do_eval \
