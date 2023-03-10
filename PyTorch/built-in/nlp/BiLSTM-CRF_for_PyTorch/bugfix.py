@@ -40,7 +40,7 @@ if torch.__version__ >= "1.8":
     from torch_npu.contrib import transfer_to_npu
 from apex import amp
 import apex
-
+from torch_npu.utils.profiler import Profile
 
 class NoProfiling(object):
     def __enter__(self):
@@ -165,35 +165,26 @@ class BilstmModel(object):
         for e in range(1, self.epoches + 1):
             self.step = 0
             losses = 0.
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)), profile_type=os.getenv("PROFILE_TYPE"))
             for ind in range(0, len(word_lists), batch):
                 if self.args.iteration_num != -1 and self.args.iteration_num < (self.step + 1):
                     break
-                collect_turn = self.args.p_start_step < (self.step + 1) <= self.args.iteration_num
-                if self.args.profiling == "GE" and collect_turn:
-                    manage = torch.npu.profile('./GE_prof')
-                elif self.args.profiling == "CANN" and collect_turn:
-                    manage = torch.npu.profile("./CANN_prof")
-                else:
-                    if self.args.profiling in ["GE", "CANN"] and self.args.iteration_num < (self.step + 1):
-                        break
-                    manage = NoProfiling()
-                with manage:
-                    batch_sents = word_lists[ind:ind + batch]
-                    batch_tags = tag_lists[ind:ind + batch]
-
-                    losses += self.train_step(batch_sents,
-                                            batch_tags, word2id, tag2id)
-
-                    if self.step % TrainingConfig.print_step == 0:
-                        total_step = (len(word_lists) // batch + 1)
-                        print("Epoch {}, step/total_step: {}/{} {:.2f}% Loss:{:.4f} step_time:{:.6f}".format(
-                            e, self.step, total_step,
-                            100. * self.step / total_step,
-                            losses / self.print_step,
-                            time.time() - end_time
-                        ))
-                        losses = 0.
-                    end_time = time.time()
+                batch_sents = word_lists[ind:ind + batch]
+                batch_tags = tag_lists[ind:ind + batch]
+                profiler.start()
+                losses += self.train_step(batch_sents,
+                                        batch_tags, word2id, tag2id)
+                profiler.end()
+                if self.step % TrainingConfig.print_step == 0:
+                    total_step = (len(word_lists) // batch + 1)
+                    print("Epoch {}, step/total_step: {}/{} {:.2f}% Loss:{:.4f} step_time:{:.6f}".format(
+                        e, self.step, total_step,
+                        100. * self.step / total_step,
+                        losses / self.print_step,
+                        time.time() - end_time
+                    ))
+                    losses = 0.
+                end_time = time.time()
             # 每轮结束测试在验证集上的性能，保存最好的一个
             val_loss = self.validate(
                 dev_word_lists, dev_tag_lists, word2id, tag2id)
@@ -213,6 +204,7 @@ class BilstmModel(object):
 
         batch = self.batch_size
         end_time = time.time()
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)), profile_type=os.getenv("PROFILE_TYPE"))
         for e in range(1, self.epoches + 1):
             self.step = 0
             losses = 0.
@@ -220,6 +212,7 @@ class BilstmModel(object):
                 self.model.train()
                 self.step += 1
                 # forward
+                profiler.start()
                 scores = self.model(tensorized_sents, lengths)
 
                 # 计算损失 更新参数
@@ -228,6 +221,7 @@ class BilstmModel(object):
                 with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                     scaled_loss.backward()
                 self.optimizer.step()
+                profiler.end()
                 losses += loss.item()
 
                 if self.step % TrainingConfig.print_step == 0:
