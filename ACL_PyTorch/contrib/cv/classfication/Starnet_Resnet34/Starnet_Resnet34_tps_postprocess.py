@@ -17,10 +17,10 @@ import sys
 from tqdm import tqdm
 import numpy as np
 import paddle
-import tools.program as program
 from ppocr.data import build_dataloader
 from ppocr.metrics import build_metric
 from ppocr.postprocess import build_post_process
+import tools.program as program
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
