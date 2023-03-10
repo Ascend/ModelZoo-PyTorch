@@ -22,7 +22,7 @@ from ppocr.data import build_dataloader
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
-def main(config, device, logger, vdl_writer, data_path):
+def main(configs, devices, loggers, vdl_writers, data_paths):
     valid_dataloader = build_dataloader(config, 'Eval', device, logger)
 
     pbar = tqdm(
