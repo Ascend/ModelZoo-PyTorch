@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="SSD-Resnet"
+Network="SSD-Resnet_ID3530_for_Pytorch"
 # 训练batch_size
 batch_size=32
 # 训练使用的npu卡数
@@ -79,6 +79,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 RANK_ID_START=0
+sed -i "s|./resnet34-333f7ec4.pth|${data_path}/resnet34-333f7ec4.pth|g" ${cur_path}/resnet.py
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 	KERNEL_NUM=$(($(nproc)/8))
@@ -96,10 +97,12 @@ do
           --loss_scale=32 \
           --device_id=${device_id}\
           --tag='train'\
-          --local_rank $RANK_ID &
+          --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
     
 wait
+
+sed -i "s|${data_path}/resnet34-333f7ec4.pth|./resnet34-333f7ec4.pth|g" ${cur_path}/resnet.py
 ##################获取训练数据################
 #训练结束时间，不需要修改
 end_time=$(date +%s)
