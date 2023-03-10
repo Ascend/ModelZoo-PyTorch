@@ -48,18 +48,6 @@ from torch.nn.parallel import DistributedDataParallel as NativeDDP
 from timm.models.efficientnet_blocks import ConvBnAct
 from timm.models.layers import drop_path
 
-def forward(self, x):
-    shortcut = x
-    x = self.conv(x)
-    x = self.bn1(x)
-    x = self.act1(x)
-    if self.has_residual:
-        if self.drop_path_rate > 0.:
-            x = drop_path(x, self.drop_path_rate, self.training)
-        x = x + shortcut
-    return x
-ConvBnAct.forward = forward
-
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint,\
     convert_splitbn_model, model_parameters
@@ -90,8 +78,21 @@ except AttributeError:
 try:
     import wandb
     has_wandb = True
-except ImportError: 
+except ImportError:
     has_wandb = False
+
+
+def forward(self, x):
+    shortcut = x
+    x = self.conv(x)
+    x = self.bn1(x)
+    x = self.act1(x)
+    if self.has_residual:
+        if self.drop_path_rate > 0.:
+            x = drop_path(x, self.drop_path_rate, self.training)
+        x = x + shortcut
+    return x
+ConvBnAct.forward = forward
 
 torch.backends.cudnn.benchmark = True
 _logger = logging.getLogger('train')
@@ -397,6 +398,7 @@ def main():
     elif args.apex_amp or args.native_amp:
         _logger.warning("Neither APEX or native Torch AMP is available, using float32. "
                         "Install NVIDA apex or upgrade to PyTorch 1.6")
+    os.environ["use_amp"] = use_amp
 
     random_seed(args.seed, args.rank)
 
@@ -465,7 +467,13 @@ def main():
     del opt_cfg['opt']
 
     parameters = add_weight_decay(model)
-    optimizer = apex.optimizers.NpuFusedRMSpropTF(parameters, **opt_cfg)
+    optimizer = None
+    if use_amp == 'apex':
+        optimizer = apex.optimizers.NpuFusedRMSpropTF(parameters, **opt_cfg)
+    elif use_amp == 'native':
+        optimizer = torch_npu.optim.NpuFusedRMSpropTF(parameters, **opt_cfg)
+    else:
+        raise RuntimeError('amp is necessary on NPU.')
 
     # setup automatic mixed-precision (AMP) loss scaling and op casting
     amp_autocast = suppress  # do nothing
@@ -478,6 +486,7 @@ def main():
     elif use_amp == 'native':
         amp_autocast = torch.cuda.amp.autocast
         loss_scaler = NativeScaler()
+        loss_scaler._scaler = torch.cuda.amp.GradScaler(dynamic=False)
         if args.local_rank == 0:
             _logger.info('Using native Torch AMP. Training in mixed precision.')
     else:
@@ -753,7 +762,10 @@ def train_one_epoch(
             optimizer.step()
 
         if model_ema is not None:
-            model_ema.update(model, optimizer.get_model_combined_params()[0])
+            if str(os.environ['use_amp']) == 'apex':
+                model_ema.update(model, optimizer.get_model_combined_params()[0])
+            elif str(os.environ['use_amp']) == 'native':
+                model_ema.update(model, optimizer.get_combined_params()[0])
 
         torch.cuda.synchronize()
         num_updates += 1
