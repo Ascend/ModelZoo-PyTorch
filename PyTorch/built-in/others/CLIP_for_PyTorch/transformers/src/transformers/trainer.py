@@ -132,7 +132,7 @@ from .trainer_utils import (
 )
 from .training_args import OptimizerNames, ParallelMode, TrainingArguments
 from .utils import logging
-from .utils.npu_module import clip_optimizer_grad_norm_fused
+from .utils.npu_module import clip_optimizer_grad_norm_fused, Data_prefetcher
 
 _is_torch_generator_available = False
 _is_native_amp_available = False
@@ -1230,18 +1230,18 @@ class Trainer:
                 )
                 # May be slightly incorrect if the last batch in the training datalaoder has a smaller size but it's
                 # the best we can do.
-                num_train_samples = args.max_steps * total_train_batch_size
+                num_train_samples = (args.max_steps - args.skip_steps) * total_train_batch_size
             else:
                 max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
                 num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = len(self.train_dataset) * args.num_train_epochs
+                num_train_samples = len(self.train_dataset) * args.num_train_epochs - (args.skip_steps * total_train_batch_size)
         else:
             # see __init__. max_steps is set when the dataset has no __len__
             max_steps = args.max_steps
             # Setting a very large number of epochs so we go as many times as necessary over the iterator.
             num_train_epochs = sys.maxsize
             num_update_steps_per_epoch = max_steps
-            num_train_samples = args.max_steps * total_train_batch_size
+            num_train_samples = (args.max_steps - args.skip_steps) * total_train_batch_size
 
         if DebugOption.UNDERFLOW_OVERFLOW in self.args.debug:
             if self.args.n_gpu > 1:
@@ -1400,8 +1400,13 @@ class Trainer:
             self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
 
             step = -1
-            for step, inputs in enumerate(epoch_iterator):
-
+            # for step, inputs in enumerate(epoch_iterator): # replaced by prefetcher
+            prefetcher = Data_prefetcher(epoch_iterator, args.device)
+            inputs = prefetcher.next()
+            while inputs:
+                step += 1
+                if epoch == 0 and step == args.skip_steps:
+                    start_time = time.time()
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -1509,6 +1514,7 @@ class Trainer:
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
+                inputs = prefetcher.next()
             if step < 0:
                 logger.warning(
                     f"There seems to be not a single sample in your epoch_iterator, stopping training at step"
@@ -1576,7 +1582,7 @@ class Trainer:
         self._total_loss_scalar += tr_loss.item()
         train_loss = self._total_loss_scalar / self.state.global_step
 
-        metrics = speed_metrics("train", start_time, num_samples=num_train_samples, num_steps=self.state.max_steps)
+        metrics = speed_metrics("train", start_time, num_samples=num_train_samples, num_steps=self.state.max_steps - args.skip_steps)
         self.store_flos()
         metrics["total_flos"] = self.state.total_flos
         metrics["train_loss"] = train_loss
@@ -2009,7 +2015,7 @@ class Trainer:
             `torch.Tensor`: The tensor with training loss on this batch.
         """
         model.train()
-        inputs = self._prepare_inputs(inputs)
+        # inputs = self._prepare_inputs(inputs) # replaced by prefetcher
 
         if is_sagemaker_mp_enabled():
             scaler = self.scaler if self.do_grad_scaling else None

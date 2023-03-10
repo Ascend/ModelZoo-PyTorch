@@ -91,7 +91,7 @@ if [ $(uname -m) = "aarch64" ]; then
       --fp16_opt_level O2 --loss_scale 12800000 --optim adamw_apex_fused_npu --use_combine_grad \
       --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
       --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
-      --save_steps 1500 \
+      --save_steps 15000 --skip_steps 10 \
       --overwrite_output_dir \
       --local_rank $i >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
   done
@@ -110,7 +110,7 @@ else
     --fp16_opt_level O2 --loss_scale 12800000 --optim adamw_apex_fused_npu --use_combine_grad \
     --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
     --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
-    --save_steps 1500 \
+    --save_steps 15000 --skip_steps 10 \
     --overwrite_output_dir >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 
