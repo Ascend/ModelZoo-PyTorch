@@ -16,9 +16,8 @@ import os
 import sys
 import numpy as np
 from tqdm import tqdm
-import tools.program as program
 from ppocr.data import build_dataloader
-
+import tools.program as program
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
