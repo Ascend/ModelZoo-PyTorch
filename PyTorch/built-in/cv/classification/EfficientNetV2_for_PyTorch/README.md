@@ -142,6 +142,8 @@ EfficientNetV2是Efficient的改进版，accuracy达到了发布时的SOTA水平
 --workers                            //训练进程数
 --model                              //训练模型名
 --batch-size                         //训练批次大小
+--apex-amp                           //使用apex进行混合精度训练（默认）
+--native-amp                         //使用amp进行混合精度训练，启用时须将--apex-amp删除
    ```
 
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
