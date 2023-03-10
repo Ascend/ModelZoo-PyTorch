@@ -14,20 +14,16 @@
 
 import os
 import sys
-
-__dir__ = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(__dir__)
-sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
-
-import paddle
-import numpy as np
-import tools.program as program
-
 from tqdm import tqdm
+import numpy as np
+import paddle
+import tools.program as program
 from ppocr.data import build_dataloader
 from ppocr.metrics import build_metric
 from ppocr.postprocess import build_post_process
-
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(__dir__)
+sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
 
 def main(config, device, logger, vdl_writer):
     valid_dataloader = build_dataloader(config, 'Eval', device, logger)
