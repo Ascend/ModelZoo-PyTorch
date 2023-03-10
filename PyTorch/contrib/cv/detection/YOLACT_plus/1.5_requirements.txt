@@ -1,0 +1,9 @@
+Cython==0.29.23
+numpy==1.18.5
+opencv-python==4.2.0.34
+Pillow==8.4.0
+pycocotools==2.0.2
+torchvision==0.6.0
+h5py==2.10.0
+scipy==1.6.2
+matplotlib==3.3.4
