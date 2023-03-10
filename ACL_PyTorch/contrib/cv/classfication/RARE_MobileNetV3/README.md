@@ -91,18 +91,21 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
    python3 setup.py install
    export PYTHONPATH=$(echo $(pwd)):$PYTHONPATH
    cd ..
-   git clone https://gitee.com/ascend/auto-optimizer.git
-   cd auto-optimizer
-   pip3 install -r requirements.txt
-   python3 setup.py install
+   git clone https://gitee.com/ascend/msadvisor.git
+   cd msadvisor/auto-optimizer
+   python3 -m pip install --upgrade pip
+   python3 -m pip install wheel
+   python3 -m pip install .  
+   python3 -m pip install .[inference]   
+   python3 -m pip install .[inference,simplify]
    cd ..
-   ```
+```
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
 
-   该模型在以LMDB格式(LMDBDataSet)存储的IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE数据集上进行评估，共计12067个评估数据，数据介绍参考[[DTRB](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here)]，数据集[[下载链接](https://www.dropbox.com/sh/i39abvnefllx2si/AAAbAYRvxzRp3cIE5HzqUw3ra?dl=0)]。
+该模型在以LMDB格式(LMDBDataSet)存储的IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE数据集上进行评估，共计12067个评估数据，数据介绍参考[[DTRB](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here)]，数据集[[下载链接](https://www.dropbox.com/sh/i39abvnefllx2si/AAAbAYRvxzRp3cIE5HzqUw3ra?dl=0)]。
    
    下载后将其中的`evaluation.zip`压缩包存放在`RARE_Resnet34_vd`目录下，并通过以下命令进行解压。 
 
