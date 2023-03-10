@@ -269,7 +269,14 @@ parser.add_argument('--graph_mode',
 # 二进制
 parser.add_argument('--bin_mode',
                     action='store_true',
-                    help='whether to enable binary mode.')                   
+                    help='whether to enable binary mode.')
+
+# 精度模式
+parser.add_argument('--precision_mode',
+                    default='allow_mix_precision',
+                    type=str,
+                    help='precision_mode')
+
 best_acc1 = 0
 
 def nvidia_model_config(args):
@@ -362,6 +369,13 @@ def device_id_to_process_device_map(device_list):
 def main():
     args = parser.parse_args()
     print(args)
+
+    if args.precision_mode == "must_keep_origin_dtype":
+        args.fp16 = False
+        option = {}
+        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
+        torch.npu.set_option(option)
+
     if args.seed is not None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -514,7 +528,10 @@ def main_worker(gpu, ngpus_per_node, args):
                             dynamic_loss_scale=args.dynamic_loss_scale)
 
     lr_scheduler = nvidia_lr_policy(args)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O2",loss_scale = 1024,verbosity=1)
+    if args.precision_mode == "must_keep_origin_dtype":
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O0",verbosity=1)
+    else:
+        model, optimizer = amp.initialize(model, optimizer, opt_level="O2",loss_scale = 1024,verbosity=1)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
