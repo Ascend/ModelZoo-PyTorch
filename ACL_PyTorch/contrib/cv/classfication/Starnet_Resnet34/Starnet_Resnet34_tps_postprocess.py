@@ -26,12 +26,12 @@ sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
 
 def main(configs, devices, loggers, vdl_writers):
-    valid_dataloader = build_dataloader(config, 'Eval', device, logger)
+    valid_dataloader = build_dataloader(configs, 'Eval', devices, loggers)
 
     eval_class = build_metric(config['Metric'])
 
-    global_config = config['Global']
-    post_process_class = build_post_process(config['PostProcess'], global_config)
+    global_config = configs['Global']
+    post_process_class = build_post_process(configs['PostProcess'], global_config)
     
     pbar = tqdm(
             total=len(valid_dataloader),
@@ -41,7 +41,7 @@ def main(configs, devices, loggers, vdl_writers):
             
     for idx, batch in enumerate(valid_dataloader):
             result_name = "img_{}_0.bin".format(idx)           
-            result_path = os.path.join(__dir__, config['results'], result_name)
+            result_path = os.path.join(__dir__, configs['results'], result_name)
             
             preds = paddle.to_tensor(np.fromfile(result_path, dtype=np.float32).reshape(1, 25, 38))
                         
