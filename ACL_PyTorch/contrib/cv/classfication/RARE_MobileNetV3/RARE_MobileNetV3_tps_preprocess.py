@@ -16,17 +16,15 @@ import os
 import sys
 import numpy as np
 
+from tqdm import tqdm
+from ppocr.data import build_dataloader
+import tools.program as program
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
 
-from tqdm import tqdm
-import tools.program as program
-from ppocr.data import build_dataloader
-
-
-def main(config, device, logger, vdl_writer, data_path):
-    valid_dataloader = build_dataloader(config, 'Eval', device, logger)
+def main(configs, devices, loggers, vdl_writers, data_paths):
+    valid_dataloader = build_dataloader(configs, 'Eval', devices, loggers)
 
     pbar = tqdm(
             total=len(valid_dataloader),
@@ -37,7 +35,7 @@ def main(config, device, logger, vdl_writer, data_path):
     for idx, batch in enumerate(valid_dataloader):
         img_name = 'img_{}.bin'.format(idx)
         
-        batch[0].numpy().tofile(os.path.join(data_path, img_name))
+        batch[0].numpy().tofile(os.path.join(data_paths, img_name))
         
         pbar.update(1)
     
