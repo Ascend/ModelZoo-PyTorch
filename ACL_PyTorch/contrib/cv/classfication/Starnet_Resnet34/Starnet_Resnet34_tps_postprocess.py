@@ -25,7 +25,7 @@ __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
 
-def main(config, device, logger, vdl_writer):
+def main(configs, devices, loggers, vdl_writers):
     valid_dataloader = build_dataloader(config, 'Eval', device, logger)
 
     eval_class = build_metric(config['Metric'])
