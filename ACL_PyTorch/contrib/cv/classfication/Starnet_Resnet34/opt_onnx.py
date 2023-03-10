@@ -21,7 +21,8 @@ def create_grid_sample(onnx_in, onnx_out):
     graph.remove('p2o.Squeeze.9', maps={})
     graph.remove('p2o.Add.16', maps={})
     graph.remove('p2o.Transpose.5', maps={})
-    gridsample = graph.add_node('D_gridsample', 'GridSample', [], [], {'padding_mode':b'zeros', 'mode':b'bilinear','align_corners':1})
+    gridsample = graph.add_node('D_gridsample', 'GridSample', \
+[], [], {'padding_mode':b'zeros', 'mode':b'bilinear','align_corners':1})
     graph['D_gridsample'].inputs=['transpose_3.tmp_0', 'transpose_4.tmp_0']
     graph['D_gridsample'].outputs=['tmp_11']
     graph['p2o.Transpose.6'].inputs=['tmp_11']
