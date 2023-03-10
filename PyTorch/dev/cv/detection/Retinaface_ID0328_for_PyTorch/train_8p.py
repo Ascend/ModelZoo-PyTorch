@@ -63,7 +63,10 @@ else:
     torch.npu.set_start_fuzz_compile_step(3)
 
 if not os.path.exists(args.save_folder):
-    os.mkdir(args.save_folder)
+    try:
+        os.mkdir(args.save_folder)
+    except:
+        pass
 cfg = None
 if args.network == "mobile0.25":
     cfg = cfg_mnet
