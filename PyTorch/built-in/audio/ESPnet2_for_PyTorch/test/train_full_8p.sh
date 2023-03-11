@@ -86,9 +86,11 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-ITERS=`grep "epoch results:" $asr_log |tail -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
-SECONDS=`grep "elapsed time" $asr_log | awk '{print$14}'`
-FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' *8) / '$SECONDS')}'`
+MINUTES=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' | awk -F " " '{print$1}' | awk '{sum += $1};END {print sum}'`
+SECOND=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' | awk -F " " '{print$4}' | awk '{sum += $1};END {print sum}'`
+TOTAL_TIME=`awk 'BEGIN{printf "%.2f",('$MINUTES'*60+'$SECOND')}'`
+# 计算公式为：数据集数量 * 倍速数目 * epoch / 训练总时间
+FPS=`awk 'BEGIN{printf "%.2f",(120098*3*50 / '$TOTAL_TIME')}'`
 
 #输出训练精度,需要模型审视修改
 dev_accuracy=`grep "valid.acc.ave/dev" ${result} | tail -n 1 | awk -F "|" '{print$5}'`
