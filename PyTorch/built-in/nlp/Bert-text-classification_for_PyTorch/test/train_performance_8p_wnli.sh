@@ -8,9 +8,9 @@ device_id=0
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
 #训练epoch
-train_epochs=3
+train_epochs=80
 #训练任务
-TASK=""
+TASK=wnli
 #训练batch_size 默认bert base batch size, 该参数外部可传入
 batch_size=32
 
