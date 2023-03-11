@@ -69,7 +69,7 @@ def eval(session_dbnet,
                 result_array.append(temp)
                 temp = []
 
-        zeros = np.zeros((1,*shape_),dtype=np.float32)
+        zeros = np.zeros((1,*shape_),dtype=np.uint8)
         while len(temp) != batch_size:
             temp.append((zeros,'pass','',''))
         result_array.append(temp)
