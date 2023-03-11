@@ -34,7 +34,7 @@ GPT-2 模型只使用了多个Masked Self-Attention和Feed Forward Neural Networ
   model_name=ACL_PyTorch/built-in/nlp/GPT2_for_Pytorch
   ```
 
-
+> <font size=4 color=red>说明：所有脚本都在GPT2的仓下运行</font>
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -153,7 +153,7 @@ GPT-2 模型只使用了多个Masked Self-Attention和Feed Forward Neural Networ
             使用auto-optimizer改图，获取安装使用请参考[这里](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)
 
             ```
-            python3 opt_onnx_updata.py onnx_sim_and_modify/gpt2_4bs_sim.onnx onnx_sim_and_modify/gpt2_4bs_sim_modify.onnx
+            python3 opt_onnx_update.py onnx_sim_and_modify/gpt2_4bs_sim.onnx onnx_sim_and_modify/gpt2_4bs_sim_modify.onnx
             ```
             最终获得`gpt2_4bs_sim_modify.onnx`文件
 
@@ -227,7 +227,7 @@ GPT-2 模型只使用了多个Masked Self-Attention和Feed Forward Neural Networ
              -   model_path：om文件路径。
              -   batch_size：模型bs
 
-        推理后的输出精度结果默认在当前目录`eval_result_npu/result.txt`下。
+        推理后的输出精度结果默认在当前目录`eval_result_npu/result.txt`下,性能数据会打屏显示
 
         >**说明：** 
         >执行ais-bench工具请选择与运行环境架构相同的命令

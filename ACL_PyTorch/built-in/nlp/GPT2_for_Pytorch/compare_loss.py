@@ -117,6 +117,10 @@ def main():
             f.write(
                 f'{np.exp(total_loss.detach().numpy() / total_steps)}'
                 )
+    
+    print(f"NPU的FPS: \
+        {1000 * batch_size / np.mean(session.sumary().exec_time_list)}"
+        )
 
 if __name__ == '__main__':
     main()
