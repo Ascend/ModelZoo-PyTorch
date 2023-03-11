@@ -150,7 +150,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 | MNLI  | Matched acc/MisMatched acc | 86.36/86.36 | 85.19/85.33 |        1726.692         |        1511.887         |    O2    |   3   |      1.8      |
 | QNLI  |          Accuracy          |    91.95    |    91.10    |        1700.906         |        1498.031         |    O2    |   3   |      1.8      |
 |  RTE  |          Accuracy          |    58.12    |    65.34    |        1042.305         |        1010.221         |    O2    |   5   |      1.8      |
-| WNLI  |          Accuracy          |    43.66    |    55.32    |         498.107         |                         |    O2    |   1   |      1.8      |
+| WNLI  |          Accuracy          |    43.66    |    55.32    |         498.107         |         338.084         |    O2    |   1   |      1.8      |
 
 
 
