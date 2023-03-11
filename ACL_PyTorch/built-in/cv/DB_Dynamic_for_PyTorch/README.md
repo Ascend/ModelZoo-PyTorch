@@ -74,7 +74,7 @@
    ```shell
    git clone https://github.com/MhLiao/DB 
    cd DB
-   git reset 4ac194d0357fd102ac871e37986cb8027ecf094e --hard
+   git reset e5a12f5c2f0c2b4a345b5b8392307ef73481d5f6 --hard
    patch -p1 < ../DB.patch
    cd ..
    ```
@@ -119,6 +119,8 @@
 
    1. 获取权重文件。
 
+      在`DB`目录下
+
        ```sh
        wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/DBnet/PTH/ic15_resnet50 -O DB/ic15_resnet50
        ```
@@ -129,7 +131,7 @@
       1. 在DB目录中使用convert_to_onnx.py导出onnx文件
 
          ```shell
-         python3 ../convert_to_onnx.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml resume ./ic15_resnet50 dbnet.onnx
+         python3 ./convert_to_onnx.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml ./ic15_resnet50 dbnet.onnx
          ```
          
          获得`dbnet.onnx`文件 
