@@ -29,8 +29,6 @@ export COMBINED_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
-#关闭Runtime2.0
-export ENABLE_RUNTIME_V2=0
 
 #设置device侧日志登记为error
 msnpureport -g error -d 0

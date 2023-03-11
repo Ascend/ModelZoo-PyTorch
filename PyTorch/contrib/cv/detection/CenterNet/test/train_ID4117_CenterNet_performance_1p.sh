@@ -21,10 +21,6 @@ device_id=0
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=0
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
-
 # 调试
 bin_model=0  # 0 nobin other bin
 profiling=''

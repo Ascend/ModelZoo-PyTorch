@@ -45,9 +45,6 @@ export DYNAMIC_OP="ADD#MUL"
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_IF_IP=$(hostname -I |awk '{print $1}')
 
-# 设置是否开启runtime2.0 0-关闭/1-开启
-export ENABLE_RUNTIME_V2=0
-
 path_lib=$(python3.7 -c """
 import sys
 import re
