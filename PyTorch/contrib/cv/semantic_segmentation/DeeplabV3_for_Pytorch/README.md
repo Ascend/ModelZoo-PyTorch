@@ -125,7 +125,7 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 
 ## 获取预训练模型
 
-运行训练脚本会自动下载预训练模型，若无法自动下载，可手动下载resnet50_v1c.pth，并放到/root/.cache/torch/checkpoints/文件夹下。
+运行训练脚本会自动下载预训练模型，若无法自动下载，可手动下载resnet50_v1c.pth，并放到/root/.cache/torch/hup/checkpoints/文件夹下。
 
 # 开始训练
 
