@@ -67,9 +67,13 @@ conf_file=$cur_path/egs2/aishell/asr1/conf/tuning/train_asr_conformer.yaml
 ori_epoch=`cat $conf_file | grep max_epoch:`
 ori_batch_bins=`cat $conf_file | grep batch_bins:`
 ori_lr=`cat $conf_file | grep lr:`
+ori_warmup_steps=`cat $conf_file | grep warmup_steps:`
+ori_accum_grad=`cat $conf_file | grep accum_grad:`
 sed -i "s|$ori_epoch|max_epoch: 5|g" $conf_file
-sed -i "s|$ori_batch_bins|batch_bins: 32000000|g" $conf_file
-sed -i "s|$ori_lr|   lr: 0.004|g" $conf_file
+sed -i "s|$ori_batch_bins|batch_bins: 16000000|g" $conf_file
+sed -i "s|$ori_lr|   lr: 0.0005|g" $conf_file
+sed -i "s|$ori_warmup_steps|   warmup_steps: 30000|g" $conf_file
+sed -i "s|$ori_accum_grad|accum_grad: 1|g" $conf_file
 start_time=$(date +%s)
 
 nohup bash run.sh \
