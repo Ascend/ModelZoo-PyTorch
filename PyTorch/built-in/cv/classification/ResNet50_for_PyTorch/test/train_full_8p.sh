@@ -104,9 +104,9 @@ e2e_time=$(( $end_time - $start_time ))
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 if [[ $precision_mode == "must_keep_origin_dtype" ]];then
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'full'
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
 else
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'full'
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 fi
 
 # 结果打印，不需要修改

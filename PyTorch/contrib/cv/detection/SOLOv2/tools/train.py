@@ -95,6 +95,7 @@ def parse_args():
     parser.add_argument('--stop_step', type=int, default=20,help='stop lag')
     parser.add_argument('--profiling', type=str, default='None',help='choose profiling way: CANN, GE, None')
     parser.add_argument('--interval', type=int, default=50,help='loss lag')
+    parser.add_argument('--precision_mode', default='allow_mix_precision', type=str, help='precision_mode')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -109,7 +110,7 @@ def main():
 
     option["ACL_OP_SELECT_IMPL_MODE"] = 'high_precision'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
-    if args.opt_level == 'O0':
+    if args.precision_mode == 'must_keep_origin_dtype':
         option = {}
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
         torch.npu.set_option(option)
@@ -130,6 +131,7 @@ def main():
     cfg.total_epochs = args.total_epochs
     cfg.data.imgs_per_gpu = args.batch_size
     cfg.log_config.interval = args.interval
+    cfg.precision_mode = args.precision_mode
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True

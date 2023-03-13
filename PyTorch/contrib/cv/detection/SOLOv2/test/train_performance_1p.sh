@@ -16,6 +16,9 @@ Network="SOLOv2"
 batch_size=2
 device_id=0
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -25,6 +28,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --apex* ]];then
         apex=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
     fi
@@ -69,7 +74,7 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export NPUID=0
 export RANK=0
-python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 \
+python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --precision_mode $precision_mode --autoscale-lr --seed 0 --total_epochs 1 \
       --batch_size=${batch_size} --data_root=$data_path --gpu-ids ${device_id} --train_performance=True > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
@@ -94,7 +99,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $apex == "O0" ]];then
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
 else
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'

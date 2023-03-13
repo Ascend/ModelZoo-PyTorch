@@ -249,7 +249,7 @@ def _dist_train(model,
         cfg.opt_level = 'O0'
     amp.register_float_function(torch, 'sigmoid')
     optimizer = build_optimizer(model, cfg.optimizer)
-    if cfg.opt_level == 'O0':
+    if cfg.opt_level == 'O0' and cfg.precision_mode == 'must_keep_origin_dtype':
         model, optimizer = amp.initialize(model.npu(), optimizer,
                                           opt_level=cfg.opt_level, combine_grad=False)
     else:
@@ -275,7 +275,7 @@ def _dist_train(model,
 
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None and cfg.opt_level != 'O0':
+    if fp16_cfg is not None and cfg.precision_mode != 'must_keep_origin_dtype':
         optimizer_config = Fp16OptimizerHook(**cfg.optimizer_config,
                                              **fp16_cfg)
     else:
@@ -351,7 +351,7 @@ def _non_dist_train(model,
         cfg.opt_level = 'O0'
     amp.register_float_function(torch, 'sigmoid')
     optimizer = build_optimizer(model, cfg.optimizer)
-    if cfg.opt_level == 'O0':
+    if cfg.opt_level == 'O0' and cfg.precision_mode == 'must_keep_origin_dtype':
         model, optimizer = amp.initialize(model.npu(), optimizer,
                                         opt_level=cfg.opt_level, combine_grad=False)
     else:
@@ -370,7 +370,7 @@ def _non_dist_train(model,
     runner.timestamp = timestamp
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None and cfg.opt_level != 'O0':
+    if fp16_cfg is not None and cfg.precision_mode != 'must_keep_origin_dtype':
         optimizer_config = Fp16OptimizerHook(
             **cfg.optimizer_config, **fp16_cfg, distributed=False)
     else:
