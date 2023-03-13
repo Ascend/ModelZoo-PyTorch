@@ -22,7 +22,7 @@ from tqdm import tqdm
 from experiment import Experiment
 from data.data_loader import DistributedSampler
 from apex import amp
-
+from torch_npu.contrib.module.utils_tools import Profile
 def seed_everything(seed):
     os.environ['PYTHONHASHSEED'] = str(seed)
     torch.manual_seed(seed)
@@ -125,7 +125,8 @@ class Trainer:
             self.logger.info('Training epoch ' + str(epoch))
             self.logger.epoch(epoch)
             self.total = len(train_data_loader)
-
+            prof_type = os.getenv("PROFILE_TYPE", None)
+            profiler = Profile(profile_type=prof_type)
             for batch in train_data_loader:
                 current_step = self.steps
                 collect_turn = current_step > collect_start and  current_step <= collect_end
@@ -150,9 +151,10 @@ class Trainer:
                     self.logger.report_time('Validating ')
                     if self.logger.verbose:
                         torch.npu.synchronize()
-
+                    profiler.start()
                     loss_item = self.train_step(model, optimizer, batch,
                                     epoch=epoch, step=self.steps)
+                    profiler.end()
                     losses.update(loss_item)
                     if self.logger.verbose:
                         torch.npu.synchronize()

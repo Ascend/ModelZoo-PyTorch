@@ -67,6 +67,9 @@ def main(args):
         main_worker(0, npus_per_node, args)
 
 def main_worker(dev, npus_per_node, args):
+    os.environ['PROFILE_TYPE'] = args.prof_type
+    if args.prof_type == 'GE':
+        os.environ['GE_PROFILING_TO_STD_OUT'] = '1'
     if args['bin']:
         torch.npu.set_compile_mode(jit_compile=False)
         print("use bin train model")
@@ -143,6 +146,9 @@ if __name__ == '__main__':
     parser.add_argument('--profiling', default='', type=str, help='type of profiling')
     parser.add_argument('--start_step', default=-1, type=int, help='number of start step')
     parser.add_argument('--stop_step', default=-1, type=int, help='number of stop step')
+    parser.add_argument("--prof_type", default='None',
+                       	 choices=['TORCH', 'CANN', 'GE', 'None'],
+                       	 help="The type of profile.")
     parser.set_defaults(debug=False)
     parser.set_defaults(benchmark=True)
 
