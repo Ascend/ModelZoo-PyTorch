@@ -137,7 +137,7 @@
 
 2. 改图
 
-   运行fix.py
+   使用`auto-optimizer`进行改图，安装参考[链接](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)，而后运行`fix.py`
    ```
    python3 fix.py crnn_dy_raw.onnx crnn_dy.onnx
    ```
@@ -198,7 +198,7 @@
     b. 执行推理
 
     ```
-    pytohn3 postpossess_CRNN_pytorch.py --input_npy input_npy --label ./label.txt --device 0 --om_path om/crnn_dy.om
+    python3 postpossess_CRNN_pytorch.py --input_npy input_npy --label ./label.txt --device 0 --om_path om/crnn_dy.om
     ```
 
     参数说明:

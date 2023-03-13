@@ -70,7 +70,7 @@ def gen_data_label(test_dir, output_npy):
                     h, w = img.size
                     new_h = 32
                     new_w = int(h / new_h) * w if h > 32 else 100
-                    new_w = max(32, min(new_w, 6400))
+                    new_w = max(32, min(new_w, 320))
                     transform = resizeNormalize((new_w, new_h))
                     img = transform(img)
                     img = np.array(img, np.float32)
