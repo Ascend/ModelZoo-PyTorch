@@ -100,6 +100,7 @@
    1. 执行parse_testdata.py脚本。
    
    ```
+   touch label.txt
    python3 parse_testdata.py --test_dir ./IIIT5K_lmdb --output_npy input_npy
    ```
    参数说明
@@ -107,7 +108,7 @@
    + output_npy: 结果保存文件夹
           
    
-   执行成功后，结果保存在*./input_npy*文件夹下，标签数据label.txt生成在当前目录下。
+   执行成功后，结果保存在*./input_npy*文件夹下，生成标签数据label.txt。
 
 
 ## 模型推理<a name="section741711594517"></a>

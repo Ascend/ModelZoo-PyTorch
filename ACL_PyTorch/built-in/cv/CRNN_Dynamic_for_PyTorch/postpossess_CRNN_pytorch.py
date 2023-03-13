@@ -17,7 +17,7 @@ import time
 import argparse
 import numpy as np
 import torch
-from ais_bench.infer.Interface import InferSession
+from ais_bench.infer.interface import InferSession
 
 class strLabelConverter(object):
     """Convert between str and label.
@@ -124,7 +124,7 @@ def get_Acc(input_npy, label, session):
 
         data = np.load(f'{input_npy}/test_{index}.npy')
         t0 = time.time()
-        preds = session.infer([data], "dymshape", custom_size=10000000)[0]
+        preds = session.infer([data], "dymshape", custom_sizes=10000000)[0]
         t += (time.time() - t0)
         preds = torch.from_numpy(preds)
         preds_size = torch.LongTensor([preds.size(0)])
