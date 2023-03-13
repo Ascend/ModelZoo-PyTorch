@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="stargan"
+Network="stargan_for_PyTorch"
 # 训练batch_size
 batch_size=16
 # 训练使用的npu卡数
@@ -11,7 +11,7 @@ export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 # 训练epoch
-train_epochs=2
+train_epochs=1
 # 指定训练所使用的npu device卡id
 device_id=0
 
@@ -74,6 +74,11 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
+#参数替换
+sed -i "s|/celeba/images|/Img/img_celeba|g" ${cur_path}/main.py
+sed -i "s|/celeba/list_attr_celeba.txt|/Anno/list_attr_celeba.txt|g" ${cur_path}/main.py
+sed -i "s|pass|break|g" ${cur_path}/solver.py
+
 nohup python3 -u ./main.py \
     --mode train \
     --folder_dir stargan_NPU_1p \
@@ -85,6 +90,11 @@ nohup python3 -u ./main.py \
     --dataset_dir ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
+
+#参数回改
+sed -i "s|/Img/img_celeba|/celeba/images|g" ${cur_path}/main.py
+sed -i "s|/Anno/list_attr_celeba.txt|/celeba/list_attr_celeba.txt|g" ${cur_path}/main.py
+sed -i "s|break|pass|g" ${cur_path}/solver.py
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改

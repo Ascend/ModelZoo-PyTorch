@@ -5,3 +5,4 @@ opencv-python==4.6.0.66
 onnx==1.8.1
 pillow==8.3.0
 scikit-image==0.16.2
+scikit-learn

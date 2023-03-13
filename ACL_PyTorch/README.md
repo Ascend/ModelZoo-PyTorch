@@ -299,6 +299,17 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_Dynamic_for_PyTorch">  CRNN_Dynamic_for_PyTorch </a>
+        </td>
+        <td>IIIT5K_lmdb</td>
+	<td>66.8%</td>
+        <td></td>
+        <td></td>
+	<td>5.9~6.1s(E2E)</td>
+	<td>bs x 1 x 32 x len</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/Detr">  Detr </a>
         </td>
         <td>coco</td>
@@ -453,6 +464,16 @@ CV-segmentation
 	<td>88%</td>
 	<td>19(bs16)</td>
 	<td>bs x 3 x 736 x 1280</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DB_Dynamic_for_PyTorch"> DB_Dynamic_for_PyTorch </a>
+        </td>
+        <td>icdar2015</td>
+        <td></td>
+	<td></td>
+	<td>E2E: 9.3s</td>
+	<td>1 x 3 x h x w</td>
     </tr>
     <tr>
         <td>
@@ -768,6 +789,16 @@ Nlp
         <td>91.3%</td>
 	<td>22(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 896 x 1536</td>
+</tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/PPOCRV2.5_det_db_mv3">  PPOCRV2.5_det_db_mv3 </a>
+        </td>
+        <td>icdar2015</td>
+        <td>75%</td>
+	<td>172(bs24)</td>
+	<td nowrap="nowrap">24 x 3 x 736 x 1280</td>
+
 </table>
 
 
@@ -1346,18 +1377,6 @@ CV-classfication
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ResNet101">  ResNet101 </a>
-        </td>
-        <td>ImageNet</td>
-	<td>77.37%</td>
-        <td>93.54%</td>
-	<td></td>
-        <td></td>
-	<td>1604(bs16)</td>
-	<td>bs x 3 x 224 x 224</td>
-    </tr>
-    <tr>
-        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ResNet152"> ResNet152 </a>
         </td>
         <td>ImageNet</td>
@@ -1367,18 +1386,6 @@ CV-classfication
 	<td>1908(bs16)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
-    </tr>
-    <tr>
-        <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ResNet18"> ResNet18 </a>
-        </td>
-        <td>ImageNet</td>
-	<td>69.74%</td>
-        <td>89.09%</td>
-	<td></td>
-        <td></td>
-	<td>6038(bs16)</td>
-	<td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
         <td>
@@ -1406,6 +1413,18 @@ CV-classfication
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet18_Pytorch_Infer">  Resnet18_Pytorch_Infer </a>
+        </td>
+        <td>ImageNet</td>
+	<td>69.75%</td>
+        <td>89.10%</td>
+	<td></td>
+	<td>10796(bs16)</td>
+        <td></td>
+	<td>bs x 3 x 256 x 256</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_Pytorch_Infer">  Resnet50_Pytorch_Infer </a>
         </td>
         <td>ImageNet</td>
@@ -1414,6 +1433,18 @@ CV-classfication
 	<td></td>
 	<td>4250(bs64)</td>
         <td></td>
+	<td>bs x 3 x 256 x 256</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet101_Pytorch_Infer">  ResNet101_Pytorch_Infer </a>
+        </td>
+        <td>ImageNet</td>
+	<td>77.38%</td>
+        <td>93.56%</td>
+	<td></td>
+        <td>2793(bs8)</td>
+	<td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
     <tr>

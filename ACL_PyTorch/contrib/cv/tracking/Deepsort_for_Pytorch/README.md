@@ -62,8 +62,8 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
 
   | 配套       | 版本                               | 环境准备指导                                                 |
   | ---------- | ---------------------------------- | ------------------------------------------------------------ |
-  | 固件与驱动 | 1.0.16（NPU驱动固件版本为5.1.RC2） | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN       | 5.1.RC2                            | -                                                            |
+  | 固件与驱动 | 22.0.4（NPU驱动固件版本为6.3.RC1） | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN       | 6.3.RC1                            | -                                                            |
   | Python     | 3.7.5                              | -                                                            |
 
 
@@ -104,7 +104,7 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   该模型使用MOT16训练集的部分进行测试。用户需自行获取数据集，将数据集放到源码路径下，下载 [demo.avi](https://pan.baidu.com/s/1xdIcLQZfJUAldJ6Ag63_sQ?pwd=5g1n) 并将其移动到deep_sort_pytorch目录下。目录结构如下：
+   该模型使用MOT16训练集的部分进行测试。用户需自行获取数据集，将数据集放到源码路径下，下载 [demo.avi](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6) 并将其移动到deep_sort_pytorch目录下。目录结构如下：
 
    ```
    deep_sort_pytorch
@@ -144,7 +144,7 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
          在deep_sort_pytorch目录下，运行yolov3_deepsort.py脚本。
 
          ```
-         python yolov3_deepsort.py demo.avi --cpu
+         python3 yolov3_deepsort.py demo.avi --cpu
          ```
 
          - 参数说明：
@@ -239,14 +239,13 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
 
    2. 精度验证。
 
-      调用脚本yolov3_deepsort_eval.py获取精度。
+      将acl_net_dynamic.py脚本放置在detector/YOLOv3/以及deep_sort/deep目录下，将yolov3-sim.om和deep_dims.om以及我们提供的yolov3_deepsort_eval.py放在deep_sort_pytorch目录下，调用脚本yolov3_deepsort_eval.py获取精度。
 
       ```
-      python yolov3_deepsort_eval.py
+      python3 yolov3_deepsort_eval.py --data_root=./MOT16/train
       ```
-
-      > 如果出现AssertionError错误，需要注释掉报错的代码，然后重新执行以上命令。
-
+	- 参数说明：
+	   -  --data_root 数据集路径
    3. 性能验证。
 
       1. 安装ais_bench推理工具。
@@ -266,7 +265,6 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
             - --dymDims: 动态维度参数，指定模型输入的实际shape。
             - --loop：循环的次数。
 
-​        
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -274,4 +272,4 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
 
   | 芯片型号 | Batch Size | 数据集   | 精度 | 性能    |
   | -------- | ---------- | -------- | ------ | ------- |
-  | 310P3    | 1          | MOT16 | 30.1 |  yolov3：467.9347；deep：3157.5623  |
+  | 310P3    | 1          | MOT16 | 30.0 |  yolov3：464.29；deep：3283.53 |

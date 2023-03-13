@@ -119,11 +119,11 @@ nohup python3.7 ${cur_path}/main.py  \
       --momentum 0.9 \
       --amp \
       --bin \
-      --print-freq 1 \
+      --print-freq 100 \
       --eval-freq 5 \
       --batch-size $batch_size \
       --epochs $train_epochs \
-      --stop-step-num 50 \
+      --stop-step-num 1000 \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 

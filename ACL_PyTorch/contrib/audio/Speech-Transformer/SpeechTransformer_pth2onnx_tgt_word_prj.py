@@ -11,9 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import torch
-from transformer import Transformer
 import argparse
+import sys
+import torch
+
+sys.path.append('../../src/utils/')
+sys.path.append('../../src/transformer/')
+from transformer import Transformer
 
 
 parser = argparse.ArgumentParser("Speech-Transformer-pth2onnx-decoder")

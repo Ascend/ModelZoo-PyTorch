@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
 import os
 import sys
 import json
-import numpy as np
 import time
-
+import argparse
+import numpy as np
+from tqdm import tqdm
 np.set_printoptions(threshold=sys.maxsize)
 
 LABEL_FILE = "HiAI_label.json"
@@ -108,12 +109,16 @@ def create_visualization_statistical_result(prediction_file_path,
     resCnt = 0
     n_labels = 0
     count_hit = np.zeros(topn)
-    for tfile_name in os.listdir(prediction_file_path):
+    for tfile_name in tqdm(os.listdir(prediction_file_path)):
         count += 1
         temp = tfile_name.split('.')[0]
+
+        if tfile_name.split('.')[1] != 'txt':
+            continue
         index = temp.rfind('_')
         img_name = temp[:index]
         filepath = os.path.join(prediction_file_path, tfile_name)
+
         ret = load_statistical_predict_result(filepath)
         prediction = ret[0]
         n_labels = ret[1]
@@ -151,16 +156,23 @@ def create_visualization_statistical_result(prediction_file_path,
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='preprocess of MaskRCNN PyTorch model')
+    parser.add_argument("--folder_davinci_target", default="./coco2017/", help='image of dataset')
+    parser.add_argument("--annotation_file_path", default="./coco2017_bin/", help='Preprocessed image buffer')
+    parser.add_argument("--result_json_path", default="./coco2017_bin/", help='Preprocessed image buffer')
+    parser.add_argument("--json_file_name", default="./coco2017_bin/", help='Preprocessed image buffer')
+    flags = parser.parse_args()    
+
     start = time.time()
     try:
         # txt file path
-        folder_davinci_target = sys.argv[1]
+        folder_davinci_target = flags.folder_davinci_target
         # annotation files path, "val_label.txt"
-        annotation_file_path = sys.argv[2]
+        annotation_file_path = flags.annotation_file_path
         # the path to store the results json path
-        result_json_path = sys.argv[3]
+        result_json_path = flags.result_json_path
         # result json file name
-        json_file_name = sys.argv[4]
+        json_file_name = flags.json_file_name
     except IndexError:
         print("Stopped!")
         exit(1)

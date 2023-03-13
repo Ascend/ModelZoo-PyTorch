@@ -422,7 +422,10 @@ class BaseModel(nn.Module):
            prefix: None表示按照当前的key加载, 传入string表示按照variable_mapping()中原始的key保存
         '''
         if prefix is None:
-            torch.save(self.state_dict(), save_path)
+            state_dict_save = {}
+            for k, v in self.state_dict().items():
+                state_dict_save[k] = v.cpu()
+            torch.save(state_dict_save, save_path)
         else:  
             # 按照variable_mapping()中原始的key保存，方便其他官方代码加载模型
             eval_str = 'self.variable_mapping()' if prefix == '' else f'self.{prefix}.variable_mapping()'

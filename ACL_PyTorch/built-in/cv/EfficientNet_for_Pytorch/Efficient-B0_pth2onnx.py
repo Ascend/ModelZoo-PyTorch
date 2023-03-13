@@ -11,18 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import argparse
 import sys
+import os
 import torch
 import torch.onnx
-from collections import OrderedDict
-
 sys.path.append(r"./pycls")
 from pycls import models
-import os
 
 
-def main()
+def main():
     parser = argparse.ArgumentParser(description="Efficient-b0 Inference")
     args = parser.parse_args()
 

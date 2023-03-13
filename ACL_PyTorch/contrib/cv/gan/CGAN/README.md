@@ -99,7 +99,7 @@ CGAN(条件生成对抗网络,Conditional Generative Adversarial Nets）是生�
 
    1. 获取权重文件。
 
-       权重文件为：CGAN_G.pth，[获取链接](https://pan.baidu.com/s/170-L8Fn1CrYwKy43yUkHyQ?pwd=tsus)  
+       权重文件为：[CGAN_G.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/CGAN/PTH/CGAN_G.pth)  
        将获取的权重文件放在当前工作路径下。
 
    2. 导出onnx文件。

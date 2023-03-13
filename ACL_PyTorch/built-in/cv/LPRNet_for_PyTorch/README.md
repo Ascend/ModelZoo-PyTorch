@@ -5,8 +5,6 @@
 
     - [输入输出数据](#section540883920406)
 
-
-
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -248,7 +246,7 @@ LPRNet(License Plate Recognition Network)是一个实时的轻量化、高质量
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-         -自定义参数说明：
+         - 自定义参数说明：
            - {batchsize}需要指定为要生成的om模型的批处理大小， 如 1、4、8、16等。
 
          运行成功后生成 LPRNet_bs{batchsize}.om 模型文件，保存在 `models` 路径下。

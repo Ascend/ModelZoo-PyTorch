@@ -26,6 +26,9 @@ Network="YoloV3_ID1790_for_PyTorch"
 #训练batch_size,,需要模型审视修改
 batch_size=64
 
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -33,6 +36,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
     if [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
@@ -117,6 +122,7 @@ do
             --launcher pytorch \
             --cfg-options data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
+            --precision_mode ${precision_mode} \
             --seed 0 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
@@ -124,6 +130,7 @@ do
             --launcher pytorch \
             --cfg-options data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
+            --precision_mode ${precision_mode} \
             --seed 0 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
@@ -142,7 +149,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`grep -a 'time'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
+time=`grep -a 'Epoch'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -154,7 +161,11 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量

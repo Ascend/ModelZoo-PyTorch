@@ -35,10 +35,13 @@ DLRM（Deep Learning Recommendation Model）是深度学习推荐模型的实现
 - 当前模型支持的 Pytorch 版本和已知已知三方库依赖如下所示。
 
   **表 1**  版本支持表
-   
-  | Torch_Version |    三方库依赖版本  |
+ 
+  | Torch_Version | 三方库依赖版本    |
   |---------------|-----|
-  | Pytorch_1.8   | scikit-learn==0.20.4  |
+  | Pytorch 1.5   |   scikit-learn==0.20.4  |
+  | Pytorch 1.8   |  scikit-learn==0.20.4   |
+
+
 
   
 
@@ -49,9 +52,11 @@ DLRM（Deep Learning Recommendation Model）是深度学习推荐模型的实现
   
 
 - 安装依赖：
+  
+  在模型源码包根目录下执行命令，安装模型需要的依赖。
 
-  ```
-  pip install -r requirements.txt
+   ```
+   pip install -r requirements.txt
   ```
 
 - 安装mlperf-logging：
@@ -62,28 +67,31 @@ DLRM（Deep Learning Recommendation Model）是深度学习推荐模型的实现
   ```
 
 ## 准备数据集
+1. 获取数据集
 
-1.获取数据集
-
-  用户自行获取原始数据集，数据集为kaggle所提供的Criteo数据集，将获得的数据集上传到服务器的任意路径下载，数据集目录结构参考如下：
-
-    ```
+   用户自行获取原始数据集，数据集为kaggle所提供的Criteo数据集，将获得的数据集上传到服务器的任意路径，数据集目录结构参考如下：
+    
+   ```
     $data_path
-     └── train.txt
-     └── test.txt
-    ```
-  > **说明：** 
+      └── train.txt
+      └── test.txt
+   ```
+   > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
-  
-2.数据集预处理
- 
-参照源码包目录下的data_utils.py文件进行数据集的预处理。
+      
+2. 数据集预处理
 
+   参照源码包目录下的data_utils.py文件进行数据集的预处理。脚本如下：
+   
+    ```
+    python data_utils.py --raw-data-file="<path-to-train.txt>"  
+    ```
+   `--raw-data-file`参数填写train.txt文件实际所在的路径。
 
 # 开始训练
 
 ## 训练模型
-1. 进入解压后的源码包根目录
+1. 进入解压后的源码包根目录。
     ```
      cd /${模型文件名称} 
      ```
@@ -100,21 +108,23 @@ DLRM（Deep Learning Recommendation Model）是深度学习推荐模型的实现
      bash ./test/train_performance_1p.sh --data_path=$data_path  # 单卡性能 
      ```
 
-     `--data_path`参数填写数据集的路径;
+`--data_path`参数填写数据集的路径，需写到数据集的一级目录。
 
-    - 模型训练脚本参数说明如下。
+模型训练脚本参数说明如下。
 
-      ```
-      公共参数：
-      --test-freq                     //每多少step进行eval
-      --loss-function                 //损失函数
-      --learning-rate                 //学习率 
-      --mini-batch-size               //batchsize
-      --print-freq                    //每多少step打印一次
-      --nepochs                       //训练的epoch数
-      --local_rank                    //使用哪张卡进行训练
-      --use-npu                       //是否使用NPU进行训练
-      ```
+ ```
+ 公共参数：
+ --data_path                     //训练集路径
+ --test-freq                     //每多少step进行eval
+ --loss-function                 //损失函数
+ --learning-rate                 //学习率 
+ --mini-batch-size               //batchsize
+ --print-freq                    //每多少step打印一次
+ --nepochs                       //训练的epoch数
+ --local_rank                    //使用哪张卡进行训练
+ --use-npu                       //是否使用NPU进行训练
+ ```
+训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
  
 # 训练结果展示
 
@@ -136,7 +146,7 @@ DLRM（Deep Learning Recommendation Model）是深度学习推荐模型的实现
 
 2022.03.18：首次发布。
 
-2023.02.21: 更新内容，重新发布。
+2023.02.21：更新内容，重新发布。
 
 ## FAQ
    无。

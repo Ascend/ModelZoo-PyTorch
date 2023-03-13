@@ -53,10 +53,10 @@ If you save dataset in other path, please modify dataset path in ../config/tsm_k
 ## Step 6. Check Directory Structure
 After the whole data process for UCF-101 preparation, you will get the rawframes, videos and annotation files for UCF-101.
 
-In the context of the whole project, the folder structure will look like:
+In the context of the whole project, the folder structure of ucf101 will look like:
 ```
-opt
-├── npu
+
+├── data
 │   ├── ucf101
 │   │   ├── ucf101_{train,val}_split_{1,2,3}_rawframes.txt
 │   │   ├── ucf101_{train,val}_split_{1,2,3}_videos.txt
@@ -64,7 +64,6 @@ opt
 │   │   ├── videos
 │   │   │   ├── ApplyEyeMakeup
 │   │   │   │   ├── v_ApplyEyeMakeup_g01_c01.avi
-
 │   │   │   ├── YoYo
 │   │   │   │   ├── v_YoYo_g25_c05.avi
 │   │   ├── rawframes
@@ -78,4 +77,32 @@ opt
 │   │   │   │   ├── v_YoYo_g01_c01
 │   │   │   │   ├── ...
 │   │   │   │   ├── v_YoYo_g25_c05
+```
+
+In the context of the whole project, the folder structure of sthv2 will look like:
+```
+├── data
+│   ├── sthv2
+│   │   ├── sthv2_{train,val}_list_rawframes.txt
+│   │   ├── sthv2_{train,val}_list_videos.txt
+│   │   ├── annotations
+│   |   |   ├── something-something-v2-labels.json
+│   |   |   ├── ...
+│   |   ├── videos
+│   |   |   ├── 1.mp4
+│   |   |   ├── 2.mp4
+│   |   |   ├──...
+│   |   ├── rawframes
+│   |   |   ├── 1
+│   |   |   |   ├── img_00001.jpg
+│   |   |   |   ├── img_00002.jpg
+│   |   |   |   ├── ...
+│   |   |   |   ├── flow_x_00001.jpg
+│   |   |   |   ├── flow_x_00002.jpg
+│   |   |   |   ├── ...
+│   |   |   |   ├── flow_y_00001.jpg
+│   |   |   |   ├── flow_y_00002.jpg
+│   |   |   |   ├── ...
+│   |   |   ├── 2
+│   |   |   ├── ...
 ```

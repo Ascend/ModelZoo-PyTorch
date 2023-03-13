@@ -124,7 +124,7 @@ ICNet主要研究具有挑战性的实时语义分割问题。它有许多实际
 
    1. 获取权重文件。
 
-       从该目录下获取模型权重rankid0_icnet_resnet50_192_0.687_best_model.pth
+       从该目录下获取模型权重[rankid0_icnet_resnet50_192_0.687_best_model.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/ICNet/PTH/rankid0_icnet_resnet50_192_0.687_best_model.pth)
 
    2. 导出onnx文件。
 

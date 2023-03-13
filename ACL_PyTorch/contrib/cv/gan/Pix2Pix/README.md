@@ -138,7 +138,7 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 
    1. 获取权重文件。
 
-      下载权重文件[latest_net_G.pth](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/a6f8e32cece64665973056e8cda253d1/1)，放到./checkpoints/facades_label2photo_pretrained目录下。
+      下载权重文件[latest_net_G.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Pix2pix/PTH/Pix2Pix_pth.pth)，放到./checkpoints/facades_label2photo_pretrained目录下。
 
    2. 导出onnx文件。
 

@@ -36,6 +36,8 @@
 
 - 输入数据
 
+  说明：原仓默认的seq_length为70
+
   | 输入数据   | 数据类型 | 大小                      | 数据排布格式 |
   | --------   | -------- | ------------------------- | ------------ |
   | src_tokens | INT64    | batchsize x seq_len       | ND           |
@@ -78,6 +80,9 @@
 
    ```
    pip3 install -r requirements.txt
+   git clone https://gitee.com/ascend/msadvisor && cd msadvisor && git checkout master
+   cd auto-optimizer && python3 -m pip install .
+   cd ../..
    ```
 
    安装模型依赖:
@@ -119,7 +124,7 @@
 
      - --pad_length: 模型输入seq长度
 
-  生成预处理数据在 `./data/SST-2-bin/roberta_base_bin` 
+  生成预处理数据在 `./data/SST-2-bin/roberta_base_bin_70`
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -151,16 +156,18 @@
            
            - --pad_length: 模型输入seq长度
 
-         获得roberta_base_batch_1.onnx文件。
+         获得roberta_base_seq70_bs1.onnx文件。
 
       2. 优化ONNX文件。
 
          ```
          # 以bs1为例
-         python3 -m onnxsim outputs/roberta_base_batch_1.onnx outputs/roberta_base_batch_1_sim.onnx
+         python3 -m onnxsim outputs/roberta_base_seq70_bs1.onnx outputs/roberta_base_seq70_bs1_sim.onnx
+         # 输入参数: {原始模型} {修改后的模型路径} {batch_size} {seq_length}
+         python3 opt_onnx.py outputs/roberta_base_seq70_bs1_sim.onnx outputs/roberta_base_seq70_bs1_opt.onnx 1 70
          ```
 
-         获得roberta_base_batch_1_sim.onnx文件。
+         获得roberta_base_seq70_bs1_opt.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -192,7 +199,7 @@
 
          ```
          # bs1为例
-         atc --framework=5 --model=./outputs/roberta_base_batch_1_sim.onnx --output=./outputs/roberta_base_batch_1 --input_format=ND --input_shape="src_tokens:1,70" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=./outputs/roberta_base_seq70_bs1_opt.onnx --output=./outputs/roberta_base_seq70_bs1 --input_format=ND --input_shape="src_tokens:1,70" --log=debug --soc_version=${chip_name} --op_precision_mode=precision.ini
          ```
 
          - 参数说明：
@@ -203,8 +210,9 @@
            -   --input\_format：输入数据的格式。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
+           -   --op_precision_mode: 指定部分算子采用特定精度模式。
 
-           运行成功后生成模型文件roberta_base_batch_1.om。
+           运行成功后生成模型文件roberta_base_seq70_bs1.om。
 
 2. 开始推理验证。
 
@@ -217,7 +225,7 @@
         ```
         # 以bs1为例
         mkdir -p results/bs1
-        python3 -m ais_bench --model outputs/roberta_base_batch_1.om --input ./data/SST-2-bin/roberta_base_bin --output results/ --output_dirname bs1 --device 1 --batchsize 1
+        python3 -m ais_bench --model outputs/roberta_base_seq70_bs1.om --input ./data/SST-2-bin/roberta_base_bin_70 --output results/ --output_dirname seq70_bs1 --device 1 --batchsize 1
         ```
 
         -   参数说明：
@@ -229,7 +237,7 @@
              -   --batchsize: 模型对应batchsize。
 
 
-        推理后的输出默认在当前目录results/bs1下。
+        推理后的输出默认在当前目录results/seq70_bs1下。
 
 
    3. 精度验证。
@@ -238,7 +246,7 @@
 
       ```
       # 以bs1为例
-      python3 RoBERTa_postprocess.py --res_path=./results/bs1/ --data_path=./data/SST-2-bin
+      python3 RoBERTa_postprocess.py --res_path=./results/seq70_bs1/ --data_path=./data/SST-2-bin
       ```
 
       - 参数说明：
@@ -251,19 +259,30 @@
 
    调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集 | 精度       | 性能        |
-|----------|------------|--------|------------|-------------|
-| 310P3    |          1 | SST-2  | Acc: 94.7% | 71.30 fps   |
-| 310P3    |          4 | SST-2  | -          | 256.64 fps  |
-| 310P3    |          8 | SST-2  | -          | 454.30 fps  |
-| 310P3    |         16 | SST-2  | -          | 733.52 fps  |
-| 310P3    |         32 | SST-2  | -          | 770.76 fps  |
-| 310P3    |         64 | SST-2  | -          | 996.27 fps  |
-| 310      |          1 | SST-2  | Acc: 94.4% | 12.01 fps   |
-| 310      |         16 | SST-2  | -          | 98.49 fps   |
-| 基准性能 |          1 | SST-2  | Acc: 94.8% | 494.31 fps  |
-| 基准性能 |          4 | SST-2  | -          | 1010.19 fps |
-| 基准性能 |          8 | SST-2  | -          | 1265.02 fps |
-| 基准性能 |         16 | SST-2  | -          | 1342.00 fps |
-| 基准性能 |         32 | SST-2  | -          | 1223.91 fps |
-| 基准性能 |         64 | SST-2  | -          | 1371.96 fps |
+   默认seq_length为70的精度/性能如下：
+
+   基准精度：ACC: 94.8%
+
+   | 芯片型号 | Batch Size | 数据集 | 精度       | 性能      |
+   |----------|------------|--------|------------|-----------|
+   | 310P3    | 1          | SST-2  | Acc: 94.0% | 205 fps   |
+   | 310P3    | 4          | SST-2  | -          | 817 fps   |
+   | 310P3    | 8          | SST-2  | -          | 1244 fps  |
+   | 310P3    | 16         | SST-2  | -          | 1463 fps  |
+   | 310P3    | 32         | SST-2  | -          | 1473 fps  |
+   | 310P3    | 64         | SST-2  | -          | 1206 fps  |
+   | 310      | 1          | SST-2  | Acc: 94.4% | 12.01 fps |
+   | 310      | 16         | SST-2  | -          | 98.49 fps |
+
+   其他seq_length下部分精度性能如下（仅展示bs1/最优bs）:
+
+   | seq_length | Batch Size | 数据集 | 基准精度   | 310P精度   | 310P性能 |
+   |------------|------------|--------|------------|------------|----------|
+   | 16         | 1          | SST-2  | Acc: 86.7% | Acc: 86.6% | 602fps   |
+   | 16         | 64         | SST-2  | -          | -          | 8649fps  |
+   | 32         | 1          | SST-2  | Acc: 93.8% | Acc: 93.2% | 508fps   |
+   | 32         | 64         | SST-2  | -          | -          | 4718fps  |
+   | 64         | 1          | SST-2  | Acc: 94.7% | Acc: 94.1% | 405fps   |
+   | 64         | 32         | SST-2  | -          | -          | 2413fps  |
+   | 128        | 1          | SST-2  | Acc: 94.7% | Acc: 94.1% | 418fps   |
+   | 128        | 32         | SST-2  | -          | -          | 1100fps  |

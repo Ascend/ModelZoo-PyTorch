@@ -141,7 +141,7 @@ EfficientDet该论文首先提出了一种加权双向特征金字塔网络（Bi
 
    1. 获取权重文件。
 
-       请从源码包中获取训练好的pkl权重文件：d7.pth
+      [d7.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/EffcientDet-D7/PTH/d7.pth)
 
        请在EfficientDetD7目录下创建model文件夹，并将d7.pth文件移入model文件夹中。
 

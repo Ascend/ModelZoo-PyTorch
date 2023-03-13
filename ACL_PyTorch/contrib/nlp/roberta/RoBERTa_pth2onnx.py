@@ -62,7 +62,8 @@ if __name__ == "__main__":
                         help='fix the pad length of one sentence')
     parser.add_argument('--batch_size', default=1, type=int, help='batch size')
     args = parser.parse_args()
+
     ONNX_OUTPUT_PATH = os.path.join(
-        args.onnx_path, "roberta_base_batch_{}.onnx".format(args.batch_size))
+        args.onnx_path, "roberta_base_seq{}_bs{}.onnx".format(args.pad_length, args.batch_size))
     pth2onnx(args.checkpoint_path, args.checkpoint_file, args.data_name_or_path,
              args.batch_size, args.pad_length, ONNX_OUTPUT_PATH)

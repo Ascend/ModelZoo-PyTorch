@@ -34,6 +34,8 @@
 
 - 输入数据
 
+  说明：官方SwinTransformer仓的输入图片宽高相等，具体尺寸可参考配置：如swin_base_patch4_window12_384配置对应尺寸为384。
+
   | 输入数据 | 数据类型 | 大小                           | 数据排布格式 |
   | -------- | -------- | -------------------------      | ------------ |
   | image    | FLOAT16 | batchsize x 3 x height x width | NCHW         |
@@ -106,6 +108,12 @@
    ```
    python3 preprocess.py --img_size 384 --input_dir /opt/npu/imagenet/val --out_dir ./preprocessed_data
    ```
+   
+   - 参数说明：
+
+     -   --img_size：模型输入尺寸：384/224。
+     -   --input_dir：原始数据文件夹地址。
+     -   --out_dir：预处理数据输出路径。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -120,6 +128,13 @@
          ```
          python3 pth2onnx.py --input_path swin_base_patch4_window12_384_22kto1k.pth --out_path models/onnx/swin_base_patch4_window12_384_bs${bs}.onnx --model_name swin_base_patch4_window12_384 --batch_size ${bs}
          ```
+         
+         - 参数说明：
+
+           -   --input_path：模型权重文件所在路径。
+           -   --out_path：输出onnx文件所在路径。
+           -   --model_name：模型名。
+           -   --batch_size：模型对应batch_size。
 
          获得swin_base_patch4_window12_384_bs${bs}.onnx文件。
 
@@ -223,19 +238,28 @@
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-   调用ACL接口推理计算，性能参考下列数据。
+   调用ACL接口推理计算，性能参考下列数据（具体配置为：swin_base_patch4_window12_384）。
 
-| 芯片型号 | Batch Size | 数据集   | 精度                            | 性能    |
-|----------|------------|----------|---------------------------------|---------|
-| 310P3    |          1 | ImageNet | Top1 Acc: 86.4%;Top5 Acc: 98.0% | 104 fps |
-| 310P3    |          4 | ImageNet | -                               | 121 fps |
-| 310P3    |          8 | ImageNet | -                               | 132 fps |
-| 310P3    |         16 | ImageNet | -                               | 129 fps |
-| 310P3    |         32 | ImageNet | -                               | 129 fps |
-| 310P3    |         64 | ImageNet | -                               | 131 fps |
-| 基准性能 |          1 | ImageNet | Top1 Acc: 86.4%;Top5 Acc: 98.0% | 217 fps |
-| 基准性能 |          4 | ImageNet | -                               | 332 fps |
-| 基准性能 |          8 | ImageNet | -                               | 339 fps |
-| 基准性能 |         16 | ImageNet | -                               | 351 fps |
-| 基准性能 |         32 | ImageNet | -                               | 357 fps |
-| 基准性能 |         64 | ImageNet | -                               | 363 fps |
+   | 芯片型号 | Batch Size | 数据集   | 精度                            | 性能    |
+   |----------|------------|----------|---------------------------------|---------|
+   | 310P3    | 1          | ImageNet | Top1 Acc: 86.4%;Top5 Acc: 98.0% | 104 fps |
+   | 310P3    | 4          | ImageNet | -                               | 121 fps |
+   | 310P3    | 8          | ImageNet | -                               | 132 fps |
+   | 310P3    | 16         | ImageNet | -                               | 129 fps |
+   | 310P3    | 32         | ImageNet | -                               | 129 fps |
+   | 310P3    | 64         | ImageNet | -                               | 131 fps |
+   | 基准性能 | 1          | ImageNet | Top1 Acc: 86.4%;Top5 Acc: 98.0% | 217 fps |
+   | 基准性能 | 4          | ImageNet | -                               | 332 fps |
+   | 基准性能 | 8          | ImageNet | -                               | 339 fps |
+   | 基准性能 | 16         | ImageNet | -                               | 351 fps |
+   | 基准性能 | 32         | ImageNet | -                               | 357 fps |
+   | 基准性能 | 64         | ImageNet | -                               | 363 fps |
+
+  其他配置参考性能精度如下(更新bs1/最优bs)：
+  
+   | 芯片型号 | config                         | Batch Size | 数据集   | 参考精度                        | NPU精度                           | 性能    |
+   |----------|--------------------------------|------------|----------|---------------------------------|-----------------------------------|---------|
+   | 310P3    | swin_large_patch4_window12_384 | 1          | ImageNet | Top1 Acc: 87.3%;Top5 Acc: 98.2% | Top1 Acc: 87.27%;Top5 Acc: 98.23% | 51 fps  |
+   | 310P3    | -                              | 8          | ImageNet | -                               | -                                 | 76 fps  |
+   | 310P3    | swin_large_patch4_window7_224  | 1          | ImageNet | Top1 Acc: 86.3%;Top5 Acc: 97.9% | Top1 Acc: 86.19%;Top5 Acc: 97.83% | 112 fps |
+   | 310P3    | -                              | 8          | ImageNet | -                               | -                                 | 204 fps |

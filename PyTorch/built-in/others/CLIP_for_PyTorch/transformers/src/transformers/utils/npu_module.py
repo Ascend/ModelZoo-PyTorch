@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Mapping
+from typing import Any, Union
+
 import torch
 import torch.nn as nn
 import torch_npu
@@ -70,3 +73,46 @@ def clip_optimizer_grad_norm_fused(self, max_norm, norm_type=2):
     combined_grad_masks = self.get_optimizer_combined_grad_masks()
     total_norm = clip_grad_norm_fused(combined_grads, combined_grad_masks, max_norm, norm_type)
     return total_norm
+
+class Data_prefetcher():
+    def __init__(self, loader, device):
+        self.loader = iter(loader)
+        self.device = device
+        self.stream = torch.npu.Stream()
+        self.preload()
+
+    def prepare_input(self, data: Union[torch.Tensor, Any]) -> Union[torch.Tensor, Any]:
+        """
+        Prepares one `data` before feeding it to the model, be it a tensor or a nested list/dictionary of tensors.
+        """
+        if isinstance(data, Mapping):
+            return type(data)({k: self.prepare_input(v) for k, v in data.items()})
+        elif isinstance(data, (tuple, list)):
+            return type(data)(self.prepare_input(v) for v in data)
+        elif isinstance(data, torch.Tensor):
+            kwargs = dict(device=self.device, non_blocking=True)
+            return data.to(**kwargs)
+        return data
+
+    def preload(self):
+        try:
+            self.inputs = next(self.loader)
+        except StopIteration:
+            self.inputs = None
+            return
+
+        with torch.npu.stream(self.stream):
+            self.inputs = self.prepare_input(self.inputs)
+            if len(self.inputs) == 0:
+                raise ValueError(
+                    "The batch received was empty, your model won't be able to train on it. Double-check that your "
+                    f"training dataset contains keys expected by the model: {','.join(self._signature_columns)}."
+                )
+
+    def next(self):
+        torch.npu.current_stream().wait_stream(self.stream)
+        inputs = self.inputs
+        self.preload()
+        return inputs
+
+    

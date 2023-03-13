@@ -41,6 +41,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
     parser.add_argument('--config', default='config/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py',
                         help='train config file path')
+    parser.add_argument('--config_name', default='ucf101',
+                        help='train config file name')
     parser.add_argument('--work-dir', default='./result',
                         help='the dir to save logs and models')
     parser.add_argument('--resume-from', default='.', help='the checkpoint file to resume from')
@@ -79,19 +81,12 @@ def parse_args():
 def main():
     args = parse_args()
 
+    # Set config
+    configs_dict = {'ucf101':'config/tsm_k400_pretrained_r50_1x1x8_25e_ucf101_rgb.py', 'sthv2':'config/tsm_r50_1x1x8_50e_sthv2_rgb.py'}
+    args.config = configs_dict[args.config_name]
     cfg = Config.fromfile(args.config)
 
     cfg.merge_from_dict(args.cfg_options)
-
-    if args.data_root != '.':
-        cfg.data.train.ann_file = os.path.join(args.data_root, cfg.data.train.ann_file[9:])
-        cfg.data.train.data_prefix = os.path.join(args.data_root, cfg.data.train.data_prefix[9:])
-
-        cfg.data.val.ann_file = os.path.join(args.data_root, cfg.data.val.ann_file[9:])
-        cfg.data.val.data_prefix = os.path.join(args.data_root, cfg.data.val.data_prefix[9:])
-
-        cfg.data.test.ann_file = os.path.join(args.data_root, cfg.data.test.ann_file[9:])
-        cfg.data.test.data_prefix = os.path.join(args.data_root, cfg.data.test.data_prefix[9:])
 
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):

@@ -24,7 +24,7 @@ def get_IS_FID(args):
     # Lists to hold images and labels for images
     img_npz_name = 'gen_img' + '_bs' + str(args.batch_size) + '.npz'
     img = np.load(img_npz_name)['x']
-    label_npz_name = 'gen_y' + '_bs' + str(args.batch_size) + '.npz'
+    label_npz_name = 'gen_y' + '.npz'
     label = np.load(label_npz_name)['y']
 
     # Get Inception Score and FID

@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import argparse
 import os
-import sys
 import cv2
 from glob import glob
-
+from tqdm import tqdm
 
 def get_bin_info(file_path, info_name, width, height):
     bin_images = glob(os.path.join(file_path, '*.bin'))
+    
     with open(info_name, 'w') as file:
         for index, img in enumerate(bin_images):
             content = ' '.join([str(index), img, width, height])
             file.write(content)
             file.write('\n')
-
 
 def get_jpg_info(file_path, info_name):
     extensions = ['jpg', 'jpeg', 'JPG', 'JPEG']
@@ -34,7 +33,7 @@ def get_jpg_info(file_path, info_name):
     for extension in extensions:
         image_names.append(glob(os.path.join(file_path, '*.' + extension)))  
     with open(info_name, 'w') as file:
-        for image_name in image_names:
+        for image_name in tqdm(image_names):
             if len(image_name) == 0:
                 continue
             else:
@@ -48,14 +47,20 @@ def get_jpg_info(file_path, info_name):
 
 
 if __name__ == '__main__':
-    file_type = sys.argv[1]
-    file_path = sys.argv[2]
-    info_name = sys.argv[3]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file_type", default="./origin_pictures.info")
+    parser.add_argument("--file_path", default="./result/dumpOutput_device0/")
+    parser.add_argument("--info_name", default="./detection-results/")
+    parser.add_argument("--width", type=str, default=4)
+    parser.add_argument("--height", type=str, default=1344)
+    flags = parser.parse_args()
+
+    file_type = flags.file_type
+    file_path = flags.file_path
+    info_name = flags.info_name
     if file_type == 'bin':
-        width = sys.argv[4]
-        height = sys.argv[5]
-        assert len(sys.argv) == 6, 'The number of input parameters must be equal to 5'
+        width = flags.width
+        height = flags.height
         get_bin_info(file_path, info_name, width, height)
     elif file_type == 'jpg':
-        assert len(sys.argv) == 4, 'The number of input parameters must be equal to 3'
         get_jpg_info(file_path, info_name)

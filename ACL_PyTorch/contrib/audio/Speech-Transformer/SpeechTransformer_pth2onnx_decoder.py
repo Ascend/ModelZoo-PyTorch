@@ -11,13 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import argparse
 import torch
 import torch.nn as nn
 from collections import OrderedDict
+
+import sys
+sys.path.append('../../src/utils/')
+sys.path.append('../../src/transformer/')
 from module import PositionalEncoding
 from utils import get_subsequent_mask
 from decoder import DecoderLayer
-import argparse
 
 
 parser = argparse.ArgumentParser("Speech-Transformer-pth2onnx-decoder")

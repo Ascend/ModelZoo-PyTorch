@@ -1,198 +1,239 @@
-​       
-# UNet模型PyTorch离线推理指导
+# Unet模型-推理指导
 
-## 1 环境准备 
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-### 1.1 安装必要的依赖
+    - [输入输出数据](#section540883920406)
 
-测试环境可能已经安装其中的一些不同版本的库了，故手动测试时不推荐使用该命令安装  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
-```
-pip3 install -r requirements.txt  
-```
-说明：PyTorch选用开源1.7.0版本
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-requirements.txt中的相关依赖如下：
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-```
-torch==1.7.0
-torchvision==0.8.0
-onnx==1.8.1
-opencv-python==4.5.1.48
-onnx-simplifier==0.3.3
-Pillow==8.1.2
-protobuf==3.20.0
-decorator
-tqdm
-```
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-### 1.2 获取，修改与安装开源模型代码  
+  ******
 
-获取[ATC UNet (FP16)](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/02704892d4914bb191b5b11c86e7c94c)源码包
-单击“立即下载”，上传源码包到服务器任意目录并解压
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-```
-├── preprocess_unet_pth.py           //数据集预处理脚本，通过均值方差处理归一化图片，生成图片二进制文件
-├── ReadMe.md
-├── UNet.pth                         //训练后的权重文件
-├── UNet_bs1.om                      //batchsize为1的离线模型
-├── UNet_dynamic_bs.onnx             //onnx格式的模型文件
-├── UNet_atc.sh                      //onnx模型转换om模型脚本
-├── unet_pth2onnx.py                 //用于转换pth模型文件到onnx模型文件
-├── revise_UNet.py                   //用于删除多余的pad节点，提升性能
-└── postprocess_unet_pth.py          //验证推理结果脚本，比对benchmark输出的分类结果和标签，给出Accuracy
-```
+UNet是由FCN改进而来的图像分割模型，其网络结构像U型，分为特征提取部分和上采样特征融合部分。
 
-下载代码仓并做预处理
+- 参考实现：
 
-```shell
-git clone https://github.com/milesial/Pytorch-UNet.git
-cd Pytorch-UNet
-git reset --hard 6aa14cb
-mv ./Pytorch-UNet ./Pytorch_UNet
-```
+  ```
+  url=https://github.com/milesial/Pytorch-UNet
+  commit_id=6aa14cbbc445672d97190fec06d5568a0a004740
+  model_name=UNet
+  ```
 
-### 1.3  安装ais_bench推理工具
+## 输入输出数据<a name="section540883920406"></a>
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+- 输入数据
 
-## 2准备数据集   
+  | 输入数据 | 数据类型    | 大小                        | 数据排布格式 |
+  |---------|---------------------------| ------------------------- | ------------ |
+  | input    | FLOAT32 | batchsize x 3 x 572 x 572 | NCHW         |
 
-###   2.1 获取原始数据集
+- 输出数据
 
-本模型支持carvana数据集，用户需自行获取数据集。数据集train.zip以及train_masks.zip分别作为训练和标签文件。上传并解压到ModleZoo源码包的根目录中。
+  | 输出数据 | 数据类型 | 大小                        | 数据排布格式 |
+  | -------- |---------------------------|--------| ------------ |
+  | output   | FLOAT32  | batchsize x 3 x 388 x 388 | NCHW   |
 
-### 2.2 数据预处理
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
-将原始数据（.jpg）转化为二进制文件（.bin）。执行preprocess_unet_pth.py脚本。
+- 该模型需要以下插件与驱动
 
-```
-python3 preprocess_unet_pth.py /opt/npu/carvana/train ./prep_bin
-```
+  **表 1**  版本配套表
 
-第一个参数为原始数据验证集所在路径，第二个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。运行成成功后，生成二进制文件夹prep_bin。
+  | 配套                                                         | 版本      | 环境准备指导                                                 |
+  |---------| ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.4  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.3.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.7.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-## 3 离线推理 
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-### 3.1 模型转换
+## 获取源码<a name="section4622531142816"></a>
 
-使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+1. 获取源码。
 
-#### 3.1.1 获取权重文件。
-
-在源码包中已经提供权重文件UNet.pth。
-
-#### 3.1.2 导出onnx文件
-
-将源码包中的unet_pth2onnx.py脚本移到Pytorch_UNet目录，并使用unet_pth2onnx.py脚本将.pth文件转换为.onnx文件
-
-```
-mv unet_pth2onnx.py ./Pytorch_UNet/
-python3 ./Pytorch_UNet/unet_pth2onnx.py ./UNet.pth ./UNet_dynamic_bs.onnx
-```
-
-第一个参数为输入权重文件路径，第二个参数为输出onnx文件路径。运行成功后，在当前目录生成UNet_dynamic_bs.onnx模型文件。
-
-
-使用onnxsim精简onnx文件（需安装onnx-simplifer）
-
-```
-python3 -m onnxsim --input-shape="1,3,572,572" UNet_dynamic_bs.onnx unet_carvana_sim.onnx
-```
-
-运行成功后，在当前目录生成unet_carvana_sim.onnx模型文件。
-
-
-使用revise_UNet.py删除精简后的onnx文件中的多余pad节点。若用户执行自己的模型需要在脚本中修改输入和输出的模型名称。该步骤去除多余的pad节点，用于提高模型性能，用户可根据shape大小自行决定是否去除pad节点。
-
-```
-python3 revise_UNet.py
-```
-
-运行成功后，在当前目录生成unet_carvana_sim_final.onnx文件用于转om模型。
-
-使用ATC工具将.onnx文件转换为.om文件，导出.onnx模型文件时需设置算子版本为11。
-
-#### 3.1.3 使用ATC工具将ONNX模型转OM模型
-
-##### 3.1.3.1配置环境变量
-
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-
-此环境变量可能需要根据实际CANN安装路径修改
-
-##### 3.1.3.2执行命令，将.onnx文件转为离线推理模型文件.om文件
-
-${chip_name}可通过`npu-smi info`指令查看，例：310P3
-
-```
-atc --model=./unet_carvana_sim_final.onnx --framework=5 --output=UNet_bs1 --input_format=NCHW --input_shape="actual_input_1:1,3,572,572" --log=info --soc_version=${chip_name}
-```
-
-- 参数说明：
-  - --model：为ONNX模型文件。
-  - --framework：5代表ONNX模型。
-  - --output：输出的OM模型。
-  - --input_format：输入数据的格式。
-  - --input_shape：输入数据的shape。
-  - --log：日志级别。
-  - --soc_version：处理器型号。
-
-运行成功后生成的UNet_bs1.om文件用于图片输入推理的模型文件。
-
-### 3.2 开始推理验证
-安装ais_bench推理工具  
-
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
-#### 3.2.1 使用ais_bench推理工具执行推理
-
-```
-python3 -m ais_bench --model ./UNet_bs1.om --input "./prep_bin" --batchsize 1 --output new_result/
-```
-
-输出文件夹通常根据系统当前时间命名，如2022_08_05-13_01_09，为便于操作，可以更改输出文件夹的名字
-
-```
-cd new_result
-mv 2022_08_05-13_01_09/ bs1
-cd ..
-```
-
-#### 3.2.2 数据处理
-
-处理summary.json文件，依据json文件信息更改推理输出文件的名字（注意根据实际需要更改json_parser.py文件中推理输出对应的路径）
-
-```
-python3 json_parser.py "new_result/bs1/"
-```
-
-#### 3.2.3 精度验证
-
-调用postprocess_unet_pth.py脚本与train_masks标签数据比对，可以获得Accuracy数据。
-
-```
-python3 postprocess_unet_pth.py new_result/bs1 /opt/npu/carvana/train/train_masks ./result.txt
-```
-
-第一个参数为生成推理结果所在路径，第二个参数为标签数据图片文件夹，第三个参数为保存各个文件IOU计算结果。
-
-**性能验证：** 
-
-|      | 310     | 310P     | T4      | 310P/310 | 310P/T4 |
-|------|---------|---------|---------|---------|--------|
-| bs1  | 44.3952 | 78.6449 | 38.4451 | 1.7715  | 2.0456 |
-| bs4  | 42.5848 | 74.7858 | 35.5334 | 1.7562  | 2.1047 |
-| bs8  | 42.3648 | 73.2978 | 35.3507 | 1.7302  | 2.0734 |
-| bs16 | 41.9352 | 72.7301 | 35.7969 | 1.7343  | 2.0317 |
-| bs32 | 41.8216 | 71.5737 | 35.6670 | 1.7114  | 2.0067 |
-| 最优bs | 44.3952 | 78.6449 | 38.4451 | 1.7715  | 2.0456 |
-
-在最优batch下。310P推理性能满足 310P＞1.2倍310 310P＞1.6倍T4。
+   ```
+   git clone https://github.com/milesial/Pytorch-UNet.git
+   cd Pytorch-UNet
+   git reset --hard 6aa14cb
+   cd ..
+   mv ./Pytorch-UNet ./Pytorch_UNet
+   ```
    
+2. 安装依赖
 
-**精度验证：** 
+   ```
+   pip3 install -r requirements.txt
+   ```
 
-|      | 310      | 310P      |
-|------|----------|----------|
-| bs1  | 0.986427 | 0.986395 |
-| bs16 | 0.986427 | 0.986395 |
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型支持carvana数据集，[下载链接](https://www.kaggle.com/competitions/carvana-image-masking-challenge/data)。数据集train.zip以及train_masks.zip分别作为训练和标签文件，上传并解压到源码包路径下，目录结构如下：
+
+   ```
+   carvana
+   ├── train
+   └── train_masks 
+   ```
+   
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   执行preprocess_unet_pth.py脚本，将原始数据（.jpg）转化为二进制文件（.bin）。
+   ```
+   python3 preprocess_unet_pth.py --src_path=./carvana/train --save_bin_path=./prep_bin
+   ```
+   
+    - 参数说明：
+      - --src_path：原始数据集所在路径。
+      - --save_bin_path：输出的二进制文件所在路径。
+
+## 模型推理<a name="section741711594517"></a>
+
+1. 模型转换。
+
+   使用Pytorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   1. 获取权重文件。
+
+      UNet.pth权重文件[下载链接](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Unet/PTH/UNet.pth)。
+
+   2. 导出onnx文件。
+
+      1. 移动unet_pth2onnx.py至Pytorch_Unet目录，使用unet_pth2onnx.py导出onnx文件。
+
+         ```
+         mv unet_pth2onnx.py ./Pytorch_UNet
+         python3 ./Pytorch_UNet/unet_pth2onnx.py ./UNet.pth ./UNet_dynamic_bs.onnx
+         ```
+         
+         获得UNet_dynamic_bs.onnx文件。
+
+      2. 使用onnxsim精简onnx文件。
+         ```
+         python3 -m onnxsim --dynamic-input-shape --input-shape="1,3,572,572" UNet_dynamic_bs.onnx UNet_dynamic_sim.onnx
+         ```
+         获得UNet_dynamic_sim.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
+         ```
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
+
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
+
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
+
+      3. 执行ATC命令。
+
+         ```
+         atc --model=UNet_dynamic_sim.onnx --framework=5 --output=UNet_bs${batch_size} --input_format=NCHW --input_shape='actual_input_1:${batch_size},3,572,572' --log=info --soc_version=Ascend${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成<u>***UNet_bs${batch_size}.om***</u>模型文件。
+
+2. 开始推理验证
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+
+   2. 执行推理。
+
+      ```
+      python3 -m ais_bench --model=UNet_bs${batch_size}.om --input=./prep_bin --output=result --output_dirname=bs${batch_size} --batchsize=${batch_size}
+      ```
+
+      - 参数说明：
+
+        -   --model：om文件路径。
+        -   --input：输入数据目录。
+        -   --output：推理结果输出路径。
+        -   --output_dirname: 推理结果输出目录。
+
+   3. 精度验证。
+
+      1. 处理summary.json文件，依据json文件信息更改推理输出文件名称。
+
+         ```
+         python3 json_parse.py --output=result/bs${batch_size}
+         ```
+
+         - 参数说明：
+
+           - --output：推理结果生成路径。
+      
+      2. 调用postprocess_unet_pth.py脚本与train_masks标签数据比对，可以获得Accuracy数据。
+
+         ```
+         python3 postprocess_unet_pth.py --output=result/bs${batch_size} --label=./carvana/train_masks --result=./result.txt
+         ```
+
+         - 参数说明：
+
+           - --output：推理结果生成路径。
+           - --label：标签文件路径。
+           - --result：生成IOU结果文件。
+
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+        ```
+        python3 -m ais_bench --model=UNet_bs${batch_size}.om --loop=100 --batchsize=${batch_size}
+        ```
+
+      - 参数说明：
+        - --model：om文件路径。
+        - --batchsize：batch大小
+
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号          | Batch Size | 数据集       | 精度             | 性能      |
+|---------------|------------|-----------|----------------|---------|
+| Ascend310P3   | 1          | carvana   | IOU:0.986305   | 75.0603 |
+| Ascend310P3   | 4          | carvana   | IOU:0.986305   | 71.2920 |
+| Ascend310P3   | 8          | carvana   | IOU:0.986305   | 68.5334 |
+| Ascend310P3   | 16         | carvana   | IOU:0.986305   | 67.7102 |
+| Ascend310P3   | 32         | carvana   | IOU:0.986305   | 65.5027 |
+| Ascend310P3   | 64         | carvana   | IOU:0.986305   | 49.0184 |

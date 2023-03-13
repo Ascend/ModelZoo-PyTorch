@@ -79,7 +79,7 @@ protobuf==3.20.0
 ### 3.1 pth转onnx模型
 
 1.准备pth权重文件  
-使用训练好的pth权重文件
+使用训练好的[pth权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/NAS-FPN/PTH/retinanet_r50_nasfpn_crop640_50e_coco-0ad1f644.pth)
 
 2.使用开源仓，获取开源命令
 

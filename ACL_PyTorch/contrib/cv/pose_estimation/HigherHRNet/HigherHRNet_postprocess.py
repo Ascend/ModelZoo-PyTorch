@@ -32,16 +32,12 @@ from lib.core.inference import aggregate_results
 from lib.utils.transforms import get_multi_scale_size
 
 
-def get_output_data(dump_dir, idx, size, dtype=np.float32):
+def get_output_data(dump_dir, idx):
     input_data = []
-    output_1_shape = [1, 34, size[1] // 4, size[0] // 4]
-    output_2_shape = [1, 17, size[1] // 2, size[0] // 2]
-    input_1_file = os.path.join(dump_dir, "{:0>12d}_0.bin".format(idx))
-    input_2_file = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
-    input_data_1 = np.fromfile(input_1_file,
-                               dtype=dtype)[: 1 * 34 * (size[0] // 4) * (size[1] // 4)].reshape(output_1_shape)
-    input_data_2 = np.fromfile(input_2_file,
-                               dtype=dtype)[: 1 * 17 * (size[0] // 2) * (size[1] // 2)].reshape(output_2_shape)
+    input_1_file = os.path.join(dump_dir, "{:0>12d}_0.npy".format(idx))
+    input_2_file = os.path.join(dump_dir, "{:0>12d}_1.npy".format(idx))
+    input_data_1 = np.load(input_1_file)
+    input_data_2 = np.load(input_2_file)
 
     input_data_1 = torch.tensor(input_data_1, dtype=torch.float32)
     input_data_2 = torch.tensor(input_data_2, dtype=torch.float32)
@@ -90,7 +86,7 @@ def postprocess(config, output_dir):
         num_heatmaps = 0
         heatmaps = []
         tags = []
-        outputs = get_output_data(opt.dump_dir, idx, base_size)
+        outputs = get_output_data(opt.dump_dir, idx)
         for i, output in enumerate(outputs):
             if len(outputs) > 1 and i != len(outputs) - 1:
                 output = torch.nn.functional.interpolate(
@@ -118,7 +114,7 @@ def postprocess(config, output_dir):
 
         heatmaps_avg = 0
         num_heatmaps = 0
-        outputs_flip = get_output_data(opt.dump_dir_flip, idx, base_size)
+        outputs_flip = get_output_data(opt.dump_dir_flip, idx)
 
         for i in range(len(outputs_flip)):
             output = outputs_flip[i]

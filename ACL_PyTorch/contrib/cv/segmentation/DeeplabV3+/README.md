@@ -144,7 +144,7 @@ DeepLabV3+就是属于典型的DilatedFCN，它是Google提出的DeepLab系列�
 
    1. 获取权重文件。
 
-      下载[源码包](https://www.hiascend.com/zh/software/modelzoo/models/detail/1/76f4e072a489484f98073591b912ad16/1)， 从源码包中获取训练后的权重文件deeplab-resnet.pth.tar。
+      [deeplab-resnet.pth.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Deeplabv3%2B/PTH/deeplab-resnet.pth.tar)
 
    2. 导出onnx文件。
 

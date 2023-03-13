@@ -125,7 +125,7 @@ def load_dataset(split, data_path=None, pad_length=128, combine=False):
     return dataset
 
 
-def data_tofile(dataset, batch_size, bin_path, label_path):
+def data_tofile(dataset, batch_size, bin_path, label_path, pad_length):
     """generate data and label bin file to local"""
     
     itr = torch.utils.data.DataLoader(
@@ -141,6 +141,8 @@ def data_tofile(dataset, batch_size, bin_path, label_path):
         labels.append(data["target"].numpy())
         src_tokens = os.path.join(
             bin_path, "src_tokens_" + str(index) + '.bin')
+        if src_tokens_np.shape[1] > pad_length:
+            src_tokens_np = src_tokens_np[:, :pad_length]
         src_tokens_np.tofile(src_tokens)
     np.array(labels).tofile(label_path)
 
@@ -165,11 +167,11 @@ def main():
     dataset = load_dataset(
         split=args.data_kind, data_path=args.data_path, pad_length=args.pad_length)
     # save data to local
-    bin_path = os.path.join(args.data_path, "roberta_base_bin")
+    bin_path = os.path.join(args.data_path, f"roberta_base_bin_{args.pad_length}")
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
     label_path = os.path.join(args.data_path, "roberta_base.label")
-    data_tofile(dataset, args.batch_size, bin_path, label_path)
+    data_tofile(dataset, args.batch_size, bin_path, label_path, args.pad_length)
 
 
 if __name__ == "__main__":

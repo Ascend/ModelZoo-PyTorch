@@ -90,13 +90,11 @@ def prepare_noise_label(embedding, batch_size, dim_z=120, nclasses=1000, device=
 def input_preprocess(embedding, args):
     noise_path = args.prep_noise
     noise_path = os.path.realpath(noise_path)
-    noise_path = noise_path + '_bs' + str(args.batch_size)
     if not os.path.exists(noise_path):
         os.makedirs(noise_path)
 
     label_path = args.prep_label
     label_path = os.path.realpath(label_path)
-    label_path = label_path + '_bs' + str(args.batch_size)
     if not os.path.exists(label_path):
         os.makedirs(label_path)
 
@@ -111,7 +109,7 @@ def input_preprocess(embedding, args):
         y += [y_.cpu().numpy()]
 
     y = np.concatenate(y, 0)[:args.num_inputs]
-    y_npz_filename = 'gen_y' + '_bs' + str(args.batch_size) + '.npz'
+    y_npz_filename = 'gen_y' + '.npz'
     np.savez(y_npz_filename, **{'y': y})
 
 

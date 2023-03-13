@@ -10,7 +10,8 @@ batch_size=4096
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
 data_path=""
-
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
 # 训练epoch 90
 train_epochs=1
 # 加载数据进程数
@@ -23,6 +24,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -73,6 +76,7 @@ nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --workers=${workers} \
         --learning-rate=1.6 \
         --warmup=8 \
+        --precision_mode=${precision_mode} \
         --label-smoothing=0.1 \
         --mom=0.9 \
         --weight-decay=1.0e-04  \
@@ -100,7 +104,11 @@ sed -i "s|break|pass|g" ./DistributedResnet50/main_apex_d76_npu.py
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"

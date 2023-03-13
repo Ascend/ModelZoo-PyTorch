@@ -1,0 +1,5 @@
+h5py
+FFmpeg
+FFprobe
+tensorboard
+Pillow==8.4.0

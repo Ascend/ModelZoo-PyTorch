@@ -17,43 +17,45 @@ from copy import deepcopy
 import onnx
 from onnx import (helper, TensorProto)
 from onnx.onnx_ml_pb2 import ModelProto
-from magiconnx import OnnxGraph
+from auto_optimizer import OnnxGraph
 import numpy as np
 
 
 batch_size = sys.argv[1]
 
-graph = OnnxGraph(f'onnx_sim_dir/textcnn_{batch_size}bs_sim.onnx')
+graph = OnnxGraph.parse(f'onnx_sim_dir/textcnn_{batch_size}bs_sim.onnx')
 
 
 
 
-graph.del_node('Squeeze_5',{0:0},auto_connection=True)
-graph.del_node('Squeeze_11',{0:0},auto_connection=True)
-graph.del_node('Squeeze_17',{0:0},auto_connection=True)
+graph.remove('Squeeze_5',{0:0})
+graph.remove('Squeeze_11',{0:0})
+graph.remove('Squeeze_17',{0:0})
 
 Maxpool_1 = graph.add_node('maxpool_1',
                   'MaxPool',
-                  {'ceil_mode': 0, 'kernel_shape': [31,1], 'pads': 0, 'strides':[31,1]})
-graph['MaxPool_6'] = Maxpool_1
+                  attrs={'ceil_mode': 0, 'kernel_shape': [31,1], 'pads': 0, 'strides':[31,1]})
+graph.insert_node("Relu_4", Maxpool_1, mode='after')
 
 
 Maxpool_2 = graph.add_node('maxpool_2',
                   'MaxPool',
-                  {'ceil_mode': 0, 'kernel_shape': [30,1], 'pads': 0, 'strides':[30,1]})
-graph['MaxPool_12'] = Maxpool_2
+                  attrs={'ceil_mode': 0, 'kernel_shape': [30,1], 'pads': 0, 'strides':[30,1]})
+graph.insert_node("Relu_10", Maxpool_2, mode='after')
 
 
 Maxpool_3 = graph.add_node('maxpool_3',
                   'MaxPool',
-                  {'ceil_mode': 0, 'kernel_shape': [29,1], 'pads': 0, 'strides':[29,1]})
-graph['MaxPool_18'] = Maxpool_3
+                  attrs={'ceil_mode': 0, 'kernel_shape': [29,1], 'pads': 0, 'strides':[29,1]})
+graph.insert_node("Relu_16", Maxpool_3, mode='after')
 
-graph.del_node('Squeeze_7',{0:0},auto_connection=True)
-graph.del_node('Squeeze_13',{0:1},auto_connection=True)
-graph.del_node('Squeeze_19',{0:2},auto_connection=True)
+graph.remove('Squeeze_7',{0:0})
+graph.remove('Squeeze_13',{0:0})
+graph.remove('Squeeze_19',{0:0})
 
-
+graph.remove('MaxPool_6')
+graph.remove('MaxPool_12')
+graph.remove('MaxPool_18')
 
 
 squeeze = graph.add_node('squeeze_1',

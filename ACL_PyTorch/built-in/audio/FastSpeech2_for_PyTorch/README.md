@@ -150,6 +150,8 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
         -   `--input_shape`：输入数据的shape
         -   `--log`：日志级别
         -   `--soc_version`：处理器型号
+        -   `--input_shape_range`：指定模型输入数据的shape范围
+        -   `--dynamic_dims`：设置ND格式下动态维度的档位
 
     
 ### 2 开始推理验证

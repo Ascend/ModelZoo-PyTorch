@@ -1,0 +1,3 @@
+torchvision==0.9.1
+timm==0.4.5
+einops==0.4.1

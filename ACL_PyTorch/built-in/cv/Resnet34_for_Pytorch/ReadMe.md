@@ -27,7 +27,7 @@
    python3.7 get_info.py bin ./prep_bin ./BinaryImageNet.info 256 256
    ```
 
-3. 从torchvision下载resnet34模型或者指定自己训练好的pth文件路径，通过pth2onnx.py脚本转化为onnx模型
+3. 从torchvision下载[resnet34模型](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/ResNet34/PTH/resnet34-b627a593.pth)或者指定自己训练好的pth文件路径，通过pth2onnx.py脚本转化为onnx模型
 
    ```shell
    python3.7 pth2onnx.py ./resnet34-333f7ec4.pth ./resnet34_dynamic.onnx

@@ -1,0 +1,8 @@
+decorator==5.1.1
+future==0.18.2
+mpmath==1.2.1
+numpy==1.21.6
+Pillow==9.1.0
+sympy==1.10.1
+torchvision==0.9.1
+timm==0.3.2

@@ -149,6 +149,8 @@ RawNet2是用于说话人验证的模型，可提取原生音频的潜在特征�
         -   `--input_shape`：输入数据的shape
         -   `--log`：日志级别
         -   `--soc_version`：处理器型号
+        -   `--optypelist_for_implmode`：设置optype列表中算子的实现方式
+        -   `--op_select_implmode`：选择算子是高精度实现还是高性能实现
 
     
 ### 2 开始推理验证

@@ -37,6 +37,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
   | attention_mask | INT64    | batchsize x seq_len       | ND           |
   | token_type_ids | INT64    | batchsize x seq_len       | ND           |
 
+  说明：该模型默认的seq_len为128
+
 - 输出数据
 
   | 输出数据 | 大小               | 数据类型 | 数据排布格式 |
@@ -74,9 +76,9 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
    ```
    pip3 install -r requirements.txt
-   git clone https://gitee.com/Ronnie_zheng/MagicONNX.git MagicONNX
-   cd MagicONNX && git checkout dev
-   pip3 install . && cd ..
+   git clone https://gitee.com/ascend/msadvisor && cd msadvisor && git checkout master
+   cd auto-optimizer && python3 -m pip install .
+   cd ../..
    ```
 
 2. 获取开源代码仓。
@@ -115,7 +117,7 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
    执行“Albert_preprocess.py”脚本，完成预处理。
 
    ```
-   python3 Albert_preprocess.py --pth_dir=./albert_pytorch/outputs/SST-2/ --data_path=./albert_pytorch/dataset/SST-2/ --save_dir ./preprocessed_data
+   python3 Albert_preprocess.py --pth_dir=./albert_pytorch/outputs/SST-2/ --data_path=./albert_pytorch/dataset/SST-2/ --save_dir ./preprocessed_data_seq128 --seq 128
    ```
    - 参数说明：
 
@@ -123,7 +125,9 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
      --data-path：原始数据集所在路径
 
-     --save_dir: 预处理数据保存路径, 其中gt_label保存在 `${save_dir}/label.npy` 
+     --save_dir: 预处理数据保存路径, 其中gt_label保存在 `${save_dir}/label.npy`
+     
+     --seq: 对应的seq长度，默认为128，支持：16/32/64/128
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -143,8 +147,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
          运行“Albert_pth2onnx.py”脚本。
 
          ```
-         # pth转换为ONNX，此处以bs32为例
-         python3 ./Albert_pth2onnx.py --batch_size=32 --pth_dir=./albert_pytorch/outputs/SST-2/ --onnx_dir=./outputs/
+         # pth转换为ONNX，此处以seq128/bs32为例
+         python3 ./Albert_pth2onnx.py --batch_size=32 --pth_dir=./albert_pytorch/outputs/SST-2/ --onnx_dir=./outputs/ --max_seq_length=128
          ```
 
          - 参数说明：
@@ -154,15 +158,17 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
            --pth_dir：权重所在路径。
 
            --onnx_dir: 输出onnx文件所在目录。
+           
+           --max_seq_length: 模型对应seq，默认为128，支持：16/32/64/128。
 
-         获得outputs/albert_bs32.onnx文件。
+         获得outputs/albert_seq128_bs32.onnx文件。
 
       2. 优化ONNX文件。
 
          ```
-         # 以bs32为例
-         python3 -m onnxsim ./outputs/albert_bs32.onnx ./outputs/albert_bs32s.onnx
-         python3 opt_onnx.py ./outputs/albert_bs32s.onnx ./outputs/albert_bs32_opt.onnx
+         # 以seq128/bs32为例
+         python3 -m onnxsim ./outputs/albert_seq128_bs32.onnx ./outputs/albert_seq128_bs32_sim.onnx
+         python3 opt_onnx.py --input_file ./outputs/albert_seq128_bs32_sim.onnx --output_file ./outputs/albert_seq128_bs32_opt.onnx
          ```
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -196,8 +202,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
       3. 执行ATC命令。
          ```
-         # 以bs32为例
-         atc --input_format=ND --framework=5 --model=./outputs/albert_bs32_opt.onnx --output=./outputs/albert_bs32 --log=error --soc_version=${chip_name} --input_shape="input_ids:32,128;attention_mask:32,128;token_type_ids:32,128" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         # 以seq128/bs32为例
+         atc --input_format=ND --framework=5 --model=./outputs/albert_seq128_bs32_opt.onnx --output=./outputs/albert_seq128_bs32 --log=error --soc_version=${chip_name} --input_shape="input_ids:32,128;attention_mask:32,128;token_type_ids:32,128" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
          ```
 
          - 参数说明：
@@ -209,10 +215,21 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
+           -   --optypelist_for_implmode：需要指定精度模式的算子。
+           -   --op_select_implmode：特定算子需要采取的精度模式。
 
-           运行成功后生成albert_b32.om模型文件。
+           运行成功后生成albert_seq128_b32.om模型文件。
 
+         对于`seq16`对应的模型，ATC命令有所区别，如下：
+        
+         ```
+         # 以seq16/bs64为例
+         atc --input_format=ND --framework=5 --model=./outputs/albert_seq16_bs64_opt.onnx --output=./outputs/albert_seq16_bs64 --log=error --soc_version=${chip_name} --input_shape="input_ids:64,16;attention_mask:64,16;token_type_ids:64,16" --op_precision_mode=precision.ini
+         ```
 
+         - 额外参数说明：
+
+           -   --op_precision_mode：算子精度模式配置输入。
 
 2. 开始推理验证。
 
@@ -224,27 +241,27 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
         ```
         # 以bs32为例
-        mkdir -p results/bs32
-        python3 -m ais_bench --model outputs/albert_bs32.om --input ./preprocessed_data/input_ids,./preprocessed_data/attention_mask,./preprocessed_data/token_type_ids --output results/bs32 --outfmt NPY --batchsize 32
+        python3 -m ais_bench --model outputs/albert_seq128_bs32.om --input ./preprocessed_data_seq128/input_ids,./preprocessed_data_seq128/attention_mask,./preprocessed_data_seq128/token_type_ids --output results --output_dirname seq128_bs32 --outfmt NPY --batchsize 32
         ```
         -   参数说明：
 
              -   --model：om文件路径。
              -   --input：输入文件。
              -   --output：输出目录。
+             -   --output_dirname：输出文件名。
              -   --device：NPU设备编号。
              -   --outfmt: 输出数据格式。
              -   --batchsize：推理模型对应的batchsize。
 
 
-        推理后的输出默认在当前目录outputs/bs32下。
+        推理后的输出默认在当前目录outputs/seq128_bs32下。
 
    3.  精度验证。
 
       调用Albert_postprocess.py脚本与数据集标签比对，获得Accuracy数据。
 
       ```
-      python3 Albert_postprocess.py --result_dir results/bs32/${timestamp} --label_path preprocessed_data/label.npy
+      python3 Albert_postprocess.py --result_dir results/seq128_bs32 --label_path preprocessed_data_seq128/label.npy
       ```
 
       -   参数说明：
@@ -256,23 +273,36 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-精度参考下列数据:
+seq128对应的精度性能如下：
 
-| device |   ACC |
-|--------|-------|
-| 基准   | 92.8% |
-| 310    | 92.7% |
-| 310P   | 92.8% |
+精度:
+
+| device | ACC(seq128) |
+|--------|-------------|
+| 基准   |       92.8% |
+| 310    |       92.7% |
+| 310P   |       92.8% |
 
 
-性能参考下列数据。
+性能：
 
 
-| 模型        | 基准性能 | 310性能   | 310P3性能  |
-| :------:    | :------: | :------:  | :------:   |
-| Albert bs1  | 516fps   | 231.39fps | 794.49fps  |
-| Albert bs16 | 851fps   | 300.83fps | 1288.93fps |
-| Albert bs4  | 934fps   |           | 1200.07fps |
-| Albert bs8  | 908fps   |           | 1327.35fps |
-| Albert bs32 | 905fps   |           | 1266.09fps |
-| Albert bs64 | 1064fps  |           | 1205.49fps |
+| 模型        | 310性能   | 310P3性能 |
+| :------:    | :------:  | :------:  |
+| Albert bs1  | 231.39fps | 763fps    |
+| Albert bs4  |           | 1148fps   |
+| Albert bs8  |           | 1321fps   |
+| Albert bs16 | 300.83fps | 1350fps   |
+| Albert bs32 |           | 1320fps   |
+| Albert bs64 |           | 1330fps   |
+
+其他seq精度性能结果如下(不同seq模型：展示bs1和最优bs精度/性能)：
+
+| seq | batch size | pth精度 | 310P精度 | 310P性能 |
+|-----|------------|---------|----------|----------|
+|  16 |          1 | 58.5%   | 58.6%    | 1180fps  |
+|  16 |         64 | -       | -        | 9775fps  |
+|  32 |          1 | 79.8%   | 80.4%    | 926fps   |
+|  32 |         64 | -       | -        | 5843fps  |
+|  64 |          1 | 92.7%   | 92.8%    | 582fps   |
+|  64 |         32 | -       | -        | 2937fps  |

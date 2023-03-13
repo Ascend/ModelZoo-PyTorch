@@ -197,7 +197,7 @@ R(2+1)D是应用于视频理解领域的时空卷积模块，它明确地将3d�
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件：“best_top1_acc_epoch_35.pth”
+       从源码包中获取权重文件：“[best_top1_acc_epoch_35.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/R%282%2B1%29D/PTH/best_top1_acc_epoch_35.pth)”
 
    2. 导出onnx文件。
 

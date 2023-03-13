@@ -79,7 +79,7 @@ fi
 # ******************从D:\Pytorch_Work_Space_2\Retinaface\scripts\run_8p.sh中粘取的指令****************
 
 python3 train.py \
-    --data_path=${data_path} \
+    --data=${data_path}/train/label.txt \
     --addr=$(hostname -I |awk '{print $1}') \
     --workers=8 \
     --dist-url='tcp://127.0.0.1:50003' \
@@ -146,7 +146,7 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 # ********************************************修改了路径*****************************
 grep Epoch: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -v Test|awk -F "Loss" '{print $NF}' | awk -F " " '{print $1}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
-train_accuracy=`grep Easy ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log | awk '{print $NF}'`
+train_accuracy=`grep Easy ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log | awk '{print $NF}'`
 # 最后一个迭代loss值，不需要修改
 ActualLoss=`awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 

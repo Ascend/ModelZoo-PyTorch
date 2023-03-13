@@ -121,7 +121,7 @@
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件[model_best.pth](https://pan.baidu.com/s/1F-lCdERXGzQ-TGnNCuhoIg?pwd=ojhe)。
+   1. 获取权重文件[model_best.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/CenterFace/PTH/model_best.pth)。
    2. 导出onnx文件。
 
       使用pth2onnx.py导出onnx文件。将pth2onnx.py移动到center-face/src/lib目录下

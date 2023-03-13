@@ -13,11 +13,15 @@
 # limitations under the License.
 import json
 import os
+import argparse
 
-import sys
-file_dir = sys.argv[1]
+parser = argparse.ArgumentParser()
+parser.add_argument('--output', default='result/bs1')
+args = parser.parse_args()
 
-with open(file_dir + "sumary.json",'r') as load_f:
+file_dir = args.output
+
+with open(file_dir.rstrip('/') + "_summary.json",'r') as load_f:
     load_dict = json.load(load_f)
 
 print(load_dict.keys())
@@ -30,4 +34,4 @@ for i in load_dict.keys():
     data = load_dict[i]
     infile = os.path.basename(data['infiles'][0])
     outfile = os.path.basename(data['outfiles'][0])
-    os.rename(file_dir + outfile, file_dir + infile)
+    os.rename(os.path.join(file_dir + outfile), os.path.join(file_dir + infile))

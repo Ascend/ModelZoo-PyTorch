@@ -13,23 +13,7 @@
 # limitations under the License.
 
 # -*- coding:utf-8 -*-
-
-import numpy as np
-import copy
-from gener_core.mod_modify.interface import AttrType as AT
-from gener_core.mod_modify.onnx_graph import OXGraph
-
-mod = OXGraph("transformer_lm.onnx")
-Gather = mod.get_node("/Gather_2")
-Add = mod.get_node("/after_norm/Add_1")
-Shape_new = mod.add_new_node(Gather.name + "shape", "Shape")
-Shape_new.set_input_node(0, [Add])
-Gather_new = mod.add_new_node(Gather.name + "gather", "Gather", {"axis":(AT.LIST_INT, [0])})
-Gather_new_in2 = mod.add_const_node(Gather_new.name + "input2", np.array(1))
-Gather_new.set_input_node(0, [Shape_new, Gather_new_in2])
-
-Sub_new = mod.add_new_node(Gather.name + "sub", "Sub")
-Sub_new_in2 = mod.add_const_node(Sub_new.name + "input2", np.array(1))
-Sub_new.set_input_node(0, [Gather_new, Sub_new_in2])
-Gather.set_input_node(0, [Add, Sub_new])
-mod.save_new_model("transformer_lm_revise.onnx")
+from graph_fusion import GraphFusion
+input_model = "transformer_lm.onnx"
+output_model = "transformer_lm_revise.onnx"
+GraphFusion(input_model=input_model, output_model=output_model, opt_type=1)

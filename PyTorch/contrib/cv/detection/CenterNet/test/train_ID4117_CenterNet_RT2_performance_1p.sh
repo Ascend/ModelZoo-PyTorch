@@ -131,7 +131,7 @@ KERNEL_NUM=$(($(nproc)/8))
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
-PID_START=$((KERNEL_NUM * RANK_ID))
+PID_START=$((KERNEL_NUM * device_id))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --exp_id pascal_resdcn18_384 \

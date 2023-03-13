@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
 
 import os
 import argparse
-import numpy as np
 import cv2
-import mmcv
 import torch
 import pickle as pk
+import numpy as np
+from tqdm import tqdm
+import mmcv
 import multiprocessing
 
 flags = None
@@ -26,11 +27,9 @@ flags = None
 
 def gen_input_bin(file_batches, batch):
     i = 0
-    for file in file_batches[batch]:
+    for file in tqdm(file_batches[batch]):
         if file.endswith("jpg"):
             i = i + 1
-            print("batch", batch, file, "===", i)
-
             image = mmcv.imread(os.path.join(flags.image_src_path, file))
             # ori_shape = image.shape
             image, scalar = mmcv.imrescale(image, (flags.model_input_height, flags.model_input_width), return_scale=True)

@@ -172,7 +172,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
    1. 获取权重文件。
 
-       从源码包中获取权重文件：“SOLOv2_R50_1x.pth”，请将其放在与“pth2onnx.py”文件同一目录内。
+      获取权重文件：[SOLOv2_R50_1x.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SOLOV2/PTH/SOLOv2_R50_1x.pth)，请将其放在与“pth2onnx.py”文件同一目录内。
 
    2. 安装环境
 

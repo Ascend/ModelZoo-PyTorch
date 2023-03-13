@@ -1,0 +1,4 @@
+torchvision==0.2.2.post3
+kaldiio==2.17.2
+editdistance==0.5.3
+tensorboard==1.15.0

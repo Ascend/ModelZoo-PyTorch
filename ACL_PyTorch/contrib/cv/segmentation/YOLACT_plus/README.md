@@ -97,7 +97,7 @@ patch -p1 < ../dcnv2.diff
 
 #### 3、获取权重文件
 
-官方训练完毕的权重文件：yolact_plus_resnet50_54_800000.pth
+官方训练完毕的权重文件：[yolact_plus_resnet50_54_800000.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Yolact_plus/PTH/yolact_plus_resnet50_54_800000.pth)
 
 训练完毕的权重文件放于./weights目录下
 

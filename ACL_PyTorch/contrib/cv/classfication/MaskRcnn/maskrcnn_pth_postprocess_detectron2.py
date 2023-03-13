@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ import os
 import argparse
 import cv2
 import numpy as np
-
+from tqdm import tqdm
 def postprocess_bboxes(bboxes, image_size, net_input_width, net_input_height):
     org_w = image_size[0]
     org_h = image_size[1]
@@ -116,23 +116,22 @@ if __name__ == '__main__':
     results = []
 
     cnt = 0
-    for bin_file in sorted(total_img):
+    for bin_file in tqdm(sorted(total_img)):
         cnt = cnt + 1
-        print(cnt - 1, bin_file)
         path_base = os.path.join(bin_path, bin_file)
         res_buff = []
-        for num in range(1, flags.net_out_num + 1):
+        for num in range(0, flags.net_out_num):
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if num == 1:
+                if num == 0:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 4])
-                elif num == 2:
+                elif num == 1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 1])
-                elif num == 3:
+                elif num == 2:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     buf = np.reshape(buf, [100, 1])
-                elif num == 4:
+                elif num == 3:
                     bboxes = np.fromfile(path_base + "_" + str(num - 3) + ".bin", dtype="float32")
                     bboxes = np.reshape(bboxes, [100, 4])
                     bboxes = torch.from_numpy(bboxes)

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from copy import deepcopy
+import os
+
 import torch
 
 class ModelEmaV2Npu(torch.nn.Module):
@@ -53,7 +55,10 @@ class ModelEmaV2Npu(torch.nn.Module):
     def update(self, model, model_params_fused):
         with torch.no_grad():
             if not self.is_fused:
-                from apex.contrib.combine_tensors import combine_npu
+                if str(os.environ['use_amp']) == 'apex':
+                    from apex.contrib.combine_tensors import combine_npu
+                elif str(os.environ['use_amp']) == 'native':
+                    from torch_npu.utils import npu_combine_tensors as combine_npu
                 decay = []
                 no_decay = []
                 for name, param in self.module.named_parameters():

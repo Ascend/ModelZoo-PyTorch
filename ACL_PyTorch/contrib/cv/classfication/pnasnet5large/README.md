@@ -126,7 +126,7 @@ PNAS是一种学习卷积神经网络（CNN）结构的方法，该方法比现�
 
    1. 获取权重文件。
 
-       由于源代码问题，加载下载好的权重文件会报错，所以选择根据脚本自动下载权重文件。
+       由于源代码问题，加载下载好的[权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/PNASNet5Large/PTH/pnasnet5large-bf079911.pth)会报错，所以选择根据脚本自动下载权重文件。
 
    2. 导出onnx文件。
 

@@ -187,6 +187,9 @@ class Trainer:
 
         scaler = None
         torch.npu.set_compile_mode(jit_compile=False)
+        option = {}
+        option["MM_BMM_ND_ENABLE"] = 'disable'
+        torch.npu.set_option(option)
 
         if trainer_options.resume and (output_dir / "checkpoint.pth").exists():
             cls.resume(
@@ -504,61 +507,60 @@ class Trainer:
                 all_steps_are_invalid = False
                 continue
 
-            with autocast(scaler is not None):
-                with reporter.measure_time("forward_time"):
-                    retval = model(**batch)
+            with reporter.measure_time("forward_time"):
+                retval = model(**batch)
 
-                    # Note(kamo):
-                    # Supporting two patterns for the returned value from the model
-                    #   a. dict type
-                    if isinstance(retval, dict):
-                        loss = retval["loss"]
-                        stats = retval["stats"]
-                        weight = retval["weight"]
-                        optim_idx = retval.get("optim_idx")
-                        if optim_idx is not None and not isinstance(optim_idx, int):
-                            if not isinstance(optim_idx, torch.Tensor):
-                                raise RuntimeError(
-                                    "optim_idx must be int or 1dim torch.Tensor, "
-                                    f"but got {type(optim_idx)}"
-                                )
-                            if optim_idx.dim() >= 2:
-                                raise RuntimeError(
-                                    "optim_idx must be int or 1dim torch.Tensor, "
-                                    f"but got {optim_idx.dim()}dim tensor"
-                                )
-                            if optim_idx.dim() == 1:
-                                for v in optim_idx:
-                                    if v != optim_idx[0]:
-                                        raise RuntimeError(
-                                            "optim_idx must be 1dim tensor "
-                                            "having same values for all entries"
-                                        )
-                                optim_idx = optim_idx[0].item()
-                            else:
-                                optim_idx = optim_idx.item()
+                # Note(kamo):
+                # Supporting two patterns for the returned value from the model
+                #   a. dict type
+                if isinstance(retval, dict):
+                    loss = retval["loss"]
+                    stats = retval["stats"]
+                    weight = retval["weight"]
+                    optim_idx = retval.get("optim_idx")
+                    if optim_idx is not None and not isinstance(optim_idx, int):
+                        if not isinstance(optim_idx, torch.Tensor):
+                            raise RuntimeError(
+                                "optim_idx must be int or 1dim torch.Tensor, "
+                                f"but got {type(optim_idx)}"
+                            )
+                        if optim_idx.dim() >= 2:
+                            raise RuntimeError(
+                                "optim_idx must be int or 1dim torch.Tensor, "
+                                f"but got {optim_idx.dim()}dim tensor"
+                            )
+                        if optim_idx.dim() == 1:
+                            for v in optim_idx:
+                                if v != optim_idx[0]:
+                                    raise RuntimeError(
+                                        "optim_idx must be 1dim tensor "
+                                        "having same values for all entries"
+                                    )
+                            optim_idx = optim_idx[0].item()
+                        else:
+                            optim_idx = optim_idx.item()
 
-                    #   b. tuple or list type
-                    else:
-                        loss, stats, weight = retval
-                        optim_idx = None
+                #   b. tuple or list type
+                else:
+                    loss, stats, weight = retval
+                    optim_idx = None
 
-                stats = {k: v for k, v in stats.items() if v is not None}
-                if ngpu > 1 or distributed:
-                    # Apply weighted averaging for loss and stats
-                    loss = (loss * weight.type(loss.dtype)).sum()
+            stats = {k: v for k, v in stats.items() if v is not None}
+            if ngpu > 1 or distributed:
+                # Apply weighted averaging for loss and stats
+                loss = (loss * weight.type(loss.dtype)).sum()
 
-                    # if distributed, this method can also apply all_reduce()
-                    stats, weight = recursive_average(stats, weight, distributed)
+                # if distributed, this method can also apply all_reduce()
+                stats, weight = recursive_average(stats, weight, distributed)
 
-                    # Now weight is summation over all workers
-                    loss /= weight
-                if distributed:
-                    # NOTE(kamo): Multiply world_size because DistributedDataParallel
-                    # automatically normalizes the gradient by world_size.
-                    loss *= torch.distributed.get_world_size()
+                # Now weight is summation over all workers
+                loss /= weight
+            if distributed:
+                # NOTE(kamo): Multiply world_size because DistributedDataParallel
+                # automatically normalizes the gradient by world_size.
+                loss *= torch.distributed.get_world_size()
 
-                loss /= accum_grad
+            loss /= accum_grad
 
             reporter.register(stats, weight)
 

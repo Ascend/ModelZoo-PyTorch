@@ -20,7 +20,7 @@ epochs=2
 Network="Resnet50_cifar_for_PyTorch"
 export RANK_SIZE=8
 #训练batch_size,,需要模型审视修改
-batch_size=4096
+batch_size=128
 
 #参数校验，不需要修改
 for para in $*
@@ -66,7 +66,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-bash ./tools/dist_train.sh  ./configs/resnet/resnet50_8xb16_cifar100_perf.py 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+bash ./tools/dist_train.sh  ./configs/resnet/resnet50_8xb16_cifar100_perf.py 8 --cfg-options data.samples_per_gpu=16 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

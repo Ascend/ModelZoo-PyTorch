@@ -85,6 +85,7 @@ def load_data_model(ar):
     args.device = 'cpu'
     args.local_rank = -1
     args.batch_size = ar.batch_size
+    args.max_seq_length = ar.max_seq_length
 
     prefix="./albert_pytorch"
     args.output_dir=prefix+args.output_dir[1:]

@@ -133,4 +133,6 @@ if __name__ == '__main__':
     # compute accuracy
     # print(infered_result_dict)
     wer = eval_accuracy(ground_truth_dict, infered_result_dict)
-    print("wer:", wer)
+    
+    print(f"Err: {wer}")
+    print(f"Acc: {1 - wer}")

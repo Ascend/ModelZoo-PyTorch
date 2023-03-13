@@ -2,4 +2,5 @@ numpy == 1.18.5
 opencv-python == 4.2.0.34
 torch == 1.6.0
 torchvision ==  0.7.0
+onnx==1.7.0
 Pillow == 7.2.0

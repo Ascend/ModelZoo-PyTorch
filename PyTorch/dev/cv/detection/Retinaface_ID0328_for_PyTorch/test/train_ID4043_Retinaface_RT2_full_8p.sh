@@ -122,7 +122,7 @@ do
     export NPU_CALCULATE_DEVICE=${i}
     export RANK=${rank}
     echo run process ${rank}
-    python3 train_8p.py --training_dataset=${data_path} --network resnet50 --apex > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${i}.log 2>&1 &
+    python3 train_8p.py --training_dataset=${data_path} --network resnet50 $PREC > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${i}.log 2>&1 &
     let rank++
 done
 wait

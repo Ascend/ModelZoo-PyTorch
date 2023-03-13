@@ -188,7 +188,7 @@ VOLO采用两阶段架构设计，同时考虑了更具细粒度的token表示�
       
       3. 执行ATC命令。
       
-         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
+         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为8的om模型的命令如下，对于其他的batch size，可作相应的修改。
          
          ```
          atc --framework=5 --model=volo_modify_bs8.onnx --output=volo_bs8 --input_format=NCHW --input_shape="input:8,3,224,224" --log=debug --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize

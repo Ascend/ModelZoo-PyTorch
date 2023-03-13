@@ -3,6 +3,8 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+  - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -145,33 +147,33 @@ refine
       ```
       bash test/pth2om.sh
       ```
+      
+      > **说明**：请根据CANN软件包实际安装路径以及实际使用芯片名称对脚本进行对应修改。
 
 2. 开始推理验证。
-   
-   1. 获取benchmark推理工具和msame推理工具。
 
-      获取[benchmark](https://support.huawei.com/enterprise/zh/doc/EDOC1100191895/b42baaf7)，将benchmark.x86_64或benchmark.aarch64放到当前的目录。
+    1. 安装ais_bench推理工具。
 
-      获取[msame](https://gitee.com/ascend/tools/tree/master/msame#https://gitee.com/ascend/tools.git)并编译出可执行文件，放到当前目录。
+        请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   2.  执行推理。
+    2.  执行推理。
 
         ```
         bash test/eval_acc_perf.sh
         ```
+        
+        > **说明**：请根据CANN软件包实际安装路径对脚本进行对应修改。
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能和精度参考下列数据。
 
-| 模型     |                  官网pth精度                   | 310离线推理精度  | 基准性能  |  310性能  |
-| :------: | :-------------------------------------------: | :-------------: | :------: | :-------: |
-| SiamMask | [0.433](https://github.com/foolwood/SiamMask) |      0.427      | 91.41FPS | 302.35FPS |
+| 模型     |                  官网pth精度                   | 310P3离线推理精度  | 基准性能    |  310P3性能  |
+| :------: | :-------------------------------------------: | :---------------: | :--------: | :---------: |
+| SiamMask | [0.433](https://github.com/foolwood/SiamMask) |      0.427        | 91.41 FPS  | 1673.94 FPS |
 
 ### 备注
 
-- msame保存为bin格式并以float32加载比TXT格式精度高一些，性能也更好。
 - 由于pytorch与onnx框架实现引起的bn算子属性epsilon，momentum在两种框架下略微不同，onnx精度与pth精度差了一点，但是om与onnx精度一致。
 - 因为SiamMask是前后帧连续处理，即上一帧的输入作为下一帧的输出，在Refine模块中进行动态pad，因此模型需要拆分为两段。因为SiamMask部分卷积存在使用自定义kernel来对输入进行卷积操作，导致卷积存在kernel和input的双输入的情况，[issue](http://github.com/onnx/onnx-tensorrt/issues/645)，故在线推理测试性能。计算的是拆分的两部分模型合在一起完整推理的性能。
 - 因为SiamMask在corr部分固定了reshape之后的形状，并且针对前后帧连续处理，所以模型不支持多batch。
-- 推理速度较慢的问题目前出在io部分。如果`msame`支持将数据从内存中读写而不必须从`.bin`文件中读写，速度将会进一步加快。

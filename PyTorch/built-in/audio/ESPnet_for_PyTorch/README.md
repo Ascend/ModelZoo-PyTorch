@@ -1,90 +1,174 @@
-## ESPnet模型训练方法
+# ESPnet for PyTorch
 
-### 0.简介
+- [概述](#概述)
+- [准备训练环境](#准备训练环境)
+- [开始训练](#开始训练)
+- [训练结果展示](#训练结果展示)
+- [版本说明](#版本说明)
 
-模型代码基于 [GitHub - espnet/espnet at v.0.10.5](https://github.com/espnet/espnet/tree/v.0.10.5) ，对其中的子集egs/aishell/asr1进行了NPU的适配优化，相应的配置文件为 [espnet/train_pytorch_conformer_kernel15.yaml at v.0.10.5 · espnet/espnet · GitHub](https://github.com/espnet/espnet/blob/v.0.10.5/egs/aishell/asr1/conf/tuning/train_pytorch_conformer_kernel15.yaml) 。
+# 概述
+ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。从另一个角度来说，ESPNet和HTK、Kaldi是一个性质的东西，都是开源的NLP工具；引用论文作者的话：ESPnet是基于一个基于Attention的编码器-解码器网络，另包含部分CTC组件。
 
-
-
-### 1.安装依赖
-
-```
-pip3 install -r requirements.txt
-```
-
-
-
-### 2.安装ESPnet
-
-1）安装好相应的cann包、pytorch和apex包，并设置好pytorch运行的环境变量；
-
-2）基于espnet官方的安装说明进行安装： [Installation — ESPnet 202205 documentation](https://espnet.github.io/espnet/installation.html) 
-
-安装过程比较复杂，需注意以下几点：
-
-- 安装依赖的软件包时，当前模型可以只安装cmake/sox/sndfile ；
-
-- 安装kaldi时，当前模型调测选择了OpenBLAS作为BLAS库，在compile kaldi & install阶段，使用如下命令安装：
+- 参考实现：
 
   ```
-  $ cd <kaldi-root>/src
-  $ ./configure --openblas-root=../tools/OpenBLAS/install --use-cuda=no
-  $ make -j clean depend; make -j <NUM-CPU>
+  url=https://github.com/espnet/espnet/tree/v.0.10.5
+  commit_id=b053cf10ce22901f9c24b681ee16c1aa2c79a8c2
   ```
 
-- 安装espnet时，步骤1中的git clone ESPnet代码替换为下载本modelzoo中ESPnet的代码；步骤3中设置python环境，若当前已有可用的python环境，可以选择D选项执行；步骤4中进入tools目录后，直接使用make命令进行安装，不需要指定PyTorch版本;
+- 适配昇腾 AI 处理器的实现：
 
-- custom tool installation这一步可以选择不安装。最后通过check installation步骤检查安装结果；
-
-3）运行模型前，还需安装：
-
-- boost: ubuntu上可使用 apt install libboost-all-dev命令安装，其它系统请选择合适命令安装
-- kenlm：进入<espnet-root>/tools目录，执行make kenlm.done
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/audio
+  ```
 
 
+# 准备训练环境
 
-### 3.训练
+## 准备环境
 
-#### 原模型训练方法
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-进入egs/aishell/asr1目录，执行以下命令进行训练：
+  **表 1**  版本支持表
 
-```
-bash run.sh
-```
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |                        
 
-常用参数：
+- 环境准备指导。
 
---stage <-1 ~ 5>、 --stop_stage <-1 ~ 5>：控制模型训练的起始、终止阶段。模型包含-1 ~ 5个训练阶段，其中-1 ~ 2为数据下载、准备、特征生成等阶段，3为LM训练，4为ASR训练，5为decoding。首次运行时请从-1开始，-1 ~ 2阶段执行过一次之后，后续可以从stage 3开始训练。LM和ASR是在NPU上运行的，其余都在CPU上运行。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖。
 
---ngpu <1 or 8>： 控制模型进行1P or 8P训练。
+  在模型源码包根目录下执行命令。
+  ```
+  pip3 install -r requirements.txt
+  ```
+- 安装ESPnet。
 
-#### 执行test目录下脚本进行训练
+  1. 安装好相应的cann包、pytorch和apex包，并设置好pytorch运行的环境变量；
 
-单卡训练
+  2. 基于espnet官方的安装说明进行安装： [Installation — ESPnet 202205 documentation](https://espnet.github.io/espnet/installation.html) 
 
-```
-bash ./test/train_full_1p.sh --stage=起始stage --data_path=数据集路径
-```
+     安装过程比较复杂，需注意以下几点：
 
-多卡训练
+     - 安装依赖的软件包时，当前模型可以只安装cmake/sox/sndfile ；
 
-```
-bash ./test/train_full_8p.sh --stage=起始stage --data_path=数据集路径
-```
+     - 安装kaldi时，当前模型调测选择了OpenBLAS作为BLAS库，在compile kaldi & install阶段，使用如下命令安装：
 
-注：
+       ```
+       $ cd <kaldi-root>/src
+       $ ./configure --openblas-root=../tools/OpenBLAS/install --use-cuda=no
+       $ make -j clean depend; make -j <NUM-CPU>
+       ```
 
---stage为可选参数，默认为-1，即从数据下载开始。若之前数据下载、准备、特征生成等阶段已完成，可从stage 3开始训练。
+     - 安装espnet时，步骤1中的git clone ESPnet代码替换为下载本modelzoo中ESPnet的代码；步骤3中设置python环境，若当前已有可用的python环境，可以选择D选项执行；步骤4中进入tools目录后，直接使用make命令进行安装，不需要指定PyTorch版本;
 
---data_path为必选参数。
+     - custom tool installation这一步可以选择不安装。最后通过check installation步骤检查安装结果；
+
+  3. 运行模型前，还需安装：
+
+  - boost: ubuntu上可使用 apt install libboost-all-dev命令安装，其它系统请选择合适命令安装；
+  - kenlm：进入<espnet-root>/tools目录，执行make kenlm.done 。
+  
+
+## 准备数据集
+
+1. 获取数据集。
+
+   用户自行下载 `aishell-1` 数据集，并将下载好的数据集放置服务器的任意目录下。该数据集包含由 400 位说话人录制的超过 170 小时的语音。数据集目录结构参考如下所示。
+
+   ```
+    aishell-1
+       ├── data_aishell.tgz
+       |
+       └── resource_aishell.tgz
+   ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 
+# 开始训练
 
-### Q&A
+## 训练模型
 
-1. arm环境上运行时遇到加载so报错，ImportError: /.../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0: cannot allocate memory in static TLS block，可以通过加载环境变量LD_PRELOAD解决：
+1. 进入解压后的源码包根目录。
 
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练和单机8卡训练。
+
+   - 单机单卡训练
+
+     启动单卡训练。
+     
+     ```
+     bash ./test/train_full_1p.sh --stage=起始stage --data_path=/data/xxx/  # 单卡精度
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
+     ```
+
+   - 单机8卡训练
+
+     启动8卡训练。
+    
+     ```
+     bash ./test/train_full_8p.sh --stage=起始stage --data_path=/data/xxx/  # 8卡精度
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
+     ```
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+
+   模型训练脚本参数说明如下。
+
+   ```shell
+   --stage              //模型训练的起始阶段，默认为-1，即从数据下载开始启动训练。若之前数据下载、准备、特征生成等阶段已完成，可配置--stage=3开始训练。
+   --stop_stage         //模型训练的终止阶段
+   --data               //数据集路径
+   --ngpu               //训练设备卡数量
+   --test_output_dir    //输出路径
+   ```
+   > **说明：**
+   >--stage <-1 ~ 5>、--stop_stage <-1 ~ 5>：控制模型训练的起始、终止阶段。模型包含 -1 ~ 5 训练阶段，其中 -1 ~ 2 为数据下载、准备、特征生成等阶段，3为LM训练，4为ASR训练，5为decoding。首次运行时请从 -1 开始，-1 ~ 2 阶段执行过一次之后，后续可以从stage 3 开始训练。LM和ASR是在NPU上运行的，其余都在CPU上运行。
+
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+|   NAME   | Error | FPS(iters/sec)  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V |  -   | -  |   -    |    -     |      1.5      |
+| 8p-竞品V | - | - |  -  |    -     |      1.5      |
+|  1p-NPU  |   -   | -  |   -    |    -    |      1.8      |
+|  8p-NPU  |  -  | -  |  -   |    -    |      1.8      |
+
+
+# 版本说明
+
+## 变更
+
+2022.08.17：首次发布。
+
+## FAQ
+
+Q：arm环境上运行时遇到加载so报错，ImportError: /.../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0: cannot allocate memory in static TLS block。
+
+A: 可以通过加载环境变量 `LD_PRELOAD` 解决：
 ```
 export LD_PRELOAD=/.../scikit_learn.libs/libgomp-d22c30c5.so.1.0.0
 ```
+
+
+
+
+
+
+

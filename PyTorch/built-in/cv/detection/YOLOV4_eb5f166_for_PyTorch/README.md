@@ -1,4 +1,4 @@
-# YOLOV4_eb5f166_for_PyTorch
+# YOLOV4_eb5f166 for PyTorch
 
 -   [概述](概述.md)
 -   [准备训练环境](准备训练环境.md)
@@ -28,71 +28,69 @@ YOLO算法作为one-stage目标检测算法最典型的代表，其基于深度�
   code_path=PyTorch/built-in/cv/detection
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
-
-
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动  | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.6.0；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip3.7 install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
-  pillow建议安装较新版本，与之对应的torchvision版本如果无法直接安装，可使用源码安装对应的版本，源码参考链接：https://github.com/pytorch/vision 
-  建议：Pillow版本是9.1.0 torchvision版本是0.6.0。
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
+1. 获取数据集。
 
-   用户自行获取coco数据集，包含images图片和annotations文件。其中images图片和annotations文件从[coco官网](https://cocodataset.org/#download)获取，另外还需要labels图片，用户可以从[google drive](https://drive.google.com/uc?export=download&id=1cXZR_ckHki6nddOmcysCuuJFM--T-Q6L)中获取。将获取后的数据集解压放置服务器的任意目录下(建议放到源码包根目录XXX/coco/下)。
+   用户自行获取coco数据集，包含images图片和annotations文件。其中images图片和annotations文件可从**coco**官网获取，另外还需自行获取**labels**图片。将获取后的数据集解压放置服务器的任意目录下(建议放到源码包根目录XXX/coco/下)。
 
-  数据集目录结构如下所示：
+   数据集目录结构参考如下所示。
 
-```
-    coco
-       |-- annotations
-       |-- images
-          |-- train2017
-          |-- val2017   
-       |-- labels
-          |-- train2017
-          |-- val2017
-```	  
-  用户自行获取VOC数据集，包含VOCtrainval_06-Nov-2007.zip、VOCtest_06-Nov-2007.zip、VOCtrainval_11-May-2012.zip，从[VOC官网](http://host.robots.ox.ac.uk/pascal/VOC/)获取。将获取后的数据集解压放置服务器的任意目录下，得到名为VOCDevkit的目录。
+   ```
+   coco
+      |-- annotations
+      |-- images
+         |-- train2017
+         |-- val2017   
+      |-- labels
+         |-- train2017
+         |-- val2017
+   ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+   
+   用户还需自行获取VOC数据集，包含VOCtrainval_06-Nov-2007.zip、VOCtest_06-Nov-2007.zip、VOCtrainval_11-May-2012.zip，可从**VOC**官网获取。将获取后的数据集解压放置服务器的任意目录下，得到名为VOCDevkit的目录。
 
-  数据集目录结构如下所示：
+   数据集目录结构如下所示：
 
-```
-    VOCDevkit
-       |-- VOC2007
-       |-- VOC2012
-```	  
+   ```
+   VOCDevkit
+      |-- VOC2007
+      |-- VOC2012
+   ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+
 
 # 开始训练
 
@@ -112,25 +110,26 @@ YOLO算法作为one-stage目标检测算法最典型的代表，其基于深度�
 
      启动单卡训练。
 
-     ```
-     bash ./test/train_full_1p.sh --data_path=real_data_path  # COCO数据集，1p精度    
-     bash ./test/train_performance_1p.sh --data_path=real_data_path  # COCO数据集，1p性能
-     bash ./test/train_full_voc_1p.sh --data_path=real_data_path  # VOC数据集，1p精度    
-     bash ./test/train_performance_voc_1p.sh --data_path=real_data_path  # VOC数据集，1p性能
+     ```shell
+     bash ./test/train_full_1p.sh --data_path=real_data_path  # COCO数据集，单卡精度    
+     bash ./test/train_performance_1p.sh --data_path=real_data_path  # COCO数据集，单卡性能
+     bash ./test/train_full_voc_1p.sh --data_path=real_data_path  # VOC数据集，单卡精度    
+     bash ./test/train_performance_voc_1p.sh --data_path=real_data_path  # VOC数据集，单卡性能
      ```
 
    - 单机8卡训练
 
      启动8卡训练。
 
+     ```shell
+     bash ./test/train_full_8p.sh --data_path=real_data_path  # COCO数据集，8卡精度    
+     bash ./test/train_performance_8p.sh --data_path=real_data_path  # COCO数据集，8卡性能
+     bash ./test/train_full_voc_8p.sh --data_path=real_data_path  # VOC数据集，8卡精度    
+     bash ./test/train_performance_voc_8p.sh --data_path=real_data_path  # VOC数据集，8卡性能
      ```
-     bash ./test/train_full_8p.sh --data_path=real_data_path  # COCO数据集，8p精度    
-     bash ./test/train_performance_8p.sh --data_path=real_data_path  # COCO数据集，8p性能
-     bash ./test/train_full_voc_8p.sh --data_path=real_data_path  # VOC数据集，8p精度    
-     bash ./test/train_performance_voc_8p.sh --data_path=real_data_path  # VOC数据集，8p性能
+   
 
-     ```
-   --data_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -144,28 +143,28 @@ YOLO算法作为one-stage目标检测算法最典型的代表，其基于深度�
    --img                               //训练图像大小，默认640 640
    --epochs                            //重复训练次数，默认：300
    ```
-   
+
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 
 # 训练结果展示
 
-**表 2**  训练结果展示表，COCO数据集，单卡32batchsize
+**表 2**  训练结果展示表，COCO数据集，单卡32 batch size
 
 | NAME     | mAP |  FPS | AMP_Type |
 | -------  | -----  | ---: | -------: |
 | 1p-竞品A  | - | 79.04 |       O1 |
-| 1p-NPU   | - | 95.67 |       O1 |
 | 8p-竞品A  | 0.480 | 568.32 |       O1 |
+| 1p-NPU   | - | 95.67 |       O1 |
 | 8p-NPU   | 0.480 | 721.92 |       O1 |
 
-**表 3**  训练结果展示表，VOC数据集，单卡16batchsize
+**表 3**  训练结果展示表，VOC数据集，单卡16 batch size
 
 | NAME     | mAP50 |  FPS | AMP_Type |
 | -------  | -----  | ---: | -------: |
 | 1p-竞品A  | - | 71.11 |       O1 |
-| 1p-NPU   | - | 83.12 |       O1 |
 | 8p-竞品A  | 0.854 | 491.32 |       O1 |
+| 1p-NPU   | - | 83.12 |       O1 |
 | 8p-NPU   | 0.859 | 603.5 |       O1 |
 
 
@@ -173,8 +172,10 @@ YOLO算法作为one-stage目标检测算法最典型的代表，其基于深度�
 
 ## 变更
 
+2023.02.22：更新readme，重新发布。
+
 2022.11.30：首次发布。
 
-## 已知问题
+## FAQ
 
 无。

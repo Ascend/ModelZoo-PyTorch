@@ -127,7 +127,7 @@ PAMTRI是一种姿态感知多任务重新识别框架，它通过关键点、�
 
    1. 获取权重文件。
 
-      权重文件都存放在源码库的models目录下，可直接使用
+      [权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/PAMTRI/PTH/densenet121-a639ec97.pth)都存放在源码库的models目录下，可直接使用
 
    2. 导出onnx文件。
 

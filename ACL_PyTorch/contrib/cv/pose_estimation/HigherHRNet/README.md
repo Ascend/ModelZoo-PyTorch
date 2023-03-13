@@ -102,7 +102,7 @@
 
 1. 获取原始数据集。
 
-   本模型支持COCO2017 4952张图片的验证集。请用户需自行获取[COCO2017](https://cocodataset.org/)数据集，上传数据集到本项目路径下。目录结构如下：
+   本模型支持COCO2017验证集。请用户需自行获取[COCO2017](https://cocodataset.org/)数据集，上传数据集到本项目路径下。目录结构如下：
    > 因为模型代码开源仓配置文件限制，请注意数据集配置路径
 
    ```
@@ -129,7 +129,7 @@
    执行 `HigherHRNet_preprocess.py` 脚本，完成预处理。
 
    ```shell
-   python3 HigherHRNet_preprocess.py --output prep_output_dir --output_flip prep_output_flip_dir
+   python3 HigherHRNet_preprocess.py --output prep_dir --output_flip prep_flip_dir
    ```
 
    + 参数说明：
@@ -146,26 +146,21 @@
 
        获取权重文件 [pose_higher_hrnet_w32_512.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/HigherHRNet/PTH/pose_higher_hrnet_w32_512.pth)
 
-       ```shell
-       mkdir models
-       mv pose_higher_hrnet_w32_512.pth models
-       ```
-
    2. 导出onnx文件。
 
       使用HigherHRNet_pth2onnx.py导出onnx文件。
 
       ```shell
       python3 HigherHRNet_pth2onnx.py \
-              --weights models/pose_higher_hrnet_w32_512.pth \
-              --onnx_path  models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx
+              --weights pose_higher_hrnet_w32_512.pth \
+              --onnx_path  higher_hrnet_dynamic.onnx
       ```
 
       - 参数说明：
         - --weights：为pth模型文件输入。
         - --onnx_path：onnx文件输出。
 
-      获得pose_higher_hrnet_w32_512_bs1_dynamic.onnx文件。
+      获得higher_hrnet_dynamic.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -197,11 +192,11 @@
 
          ```shell
           atc --framework=5 \
-             --model=models/pose_higher_hrnet_w32_512_bs1_dynamic.onnx \
-             --output=models/pose_higher_hrnet_w32_512_bs1_dynamic \
-             --input_format=NCHW \
+             --model=higher_hrnet_dynamic.onnx \
+             --output=higher_hrnet_dynamic \
+             --input_format=ND \
              --input_shape="input:1,3,-1,-1" \
-             --dynamic_image_size="1024,512;960,512;896,512;832,512;768,512;704,512;640,512;576,512;512,512;512,576;512,640;512,704;512,768;512,832;512,896;512,960;512,1024" \
+             --dynamic_dims="1024,512;960,512;896,512;832,512;768,512;704,512;640,512;576,512;512,512;512,576;512,640;512,704;512,768;512,832;512,896;512,960;512,1024" \
              --out_nodes="Conv_770:0;Conv_795:0"\
              --soc_version=Ascend${chip_name}
          ```
@@ -213,10 +208,10 @@
            -   --output：输出的OM模型。
            -   --input\_format：输入数据的格式。
            -   --input\_shape：输入数据的shape。
-           -   --log：日志级别。
+           -   --dynamic_dims：图片的动态分辨率参数。
            -   --soc\_version：处理器型号。
 
-         运行成功后生成pose_higher_hrnet_w32_512_bs1_dynamic.om模型文件。
+         运行成功后生成pose_higher_hrnet_dynamic.om模型文件。
 
 2. 开始推理验证。
 
@@ -226,55 +221,43 @@
 
    2. 执行推理。
 
-        因为该模型需要指定的动态batch参数较多，这里将ais_bench工具写到HigherHRNet_ais_infer.py脚本中来执行。
-
-        ```shell
-         python3 HigherHRNet_ais_infer.py --bs 1
-        ```
-
-        也可参考下列命令来一个一个手动执行：
-
-        ```shell
-          python3 -m ais_bench \
-                --model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om \
-                --input="./prep_output_dir/shape_512x512/" \
-                --output=./ --ouyput_dirname=bs1_dir \
-                --outfmt BIN \
-                --batchsize 1 \
-                --dymHW=512,512
-
+      ```shell
          python3 -m ais_bench \
-                --model=./models/pose_higher_hrnet_w32_512_bs1_dynamic.om \
-                --input="./prep_output_dir/shape_512x512/" \
-                --output=./ --ouyput_dirname=bs1_flip_dir \
-                --outfmt BIN \
-                --batchsize 1 \
-                --dymHW=512,512
-        ```
+                --model=higher_hrnet_dynamic.om \
+                --input=./prep_dir \
+                --output=./ --output_dirname=output_dir \
+                --outfmt NPY \
+                --auto_set_dymdims_mode 1
+         python3 -m ais_bench \
+                --model=higher_hrnet_dynamic.om \
+                --input=./prep_flip_dir \
+                --output=./ --output_dirname=output_flip_dir \
+                --outfmt NPY \
+                --auto_set_dymdims_mode 1
+      ```
 
-        -   参数说明：
+      -  参数说明：
 
-         -   --model：om模型。
-         -   --input：模型需要的输入。
-         -   --output：推理结果输出路径。
-         -   --outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
-         -   --dymHW：动态分辨率参数。
-         -   --ouyput_dirname:推理结果输出子文件夹。可选参数。与参数output搭配使用。
-         -   --batchsize：模型batch size 默认为1 。
+         - model：om模型。
+         - input：模型需要的输入。
+         - output：推理结果输出路径。
+         - outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+         - output_dirname:推理结果输出子文件夹。可选参数。与参数output搭配使用。
+         - auto_set_dymdims_mode：自动匹配输入数据的shape。
 
-        HigherHRNet中的特征金字塔包括HRNet的特征图输出和通过转置卷积进行上采样的高分辨率输出,其中bs1_dir 是特征图输出的推理结果，bs1_flip_dir是高分辨率输出的推理结果。
+        HigherHRNet中的特征金字塔包括HRNet的特征图输出和通过转置卷积进行上采样的高分辨率输出,其中output_dir是特征图输出的推理结果，output_flip_dir是高分辨率输出的推理结果。
 
 
    3. 精度验证。
 
       ```shell
-      python3 HigherHRNet_postprocess.py  --dump_dir './new_bs1_dir' --dump_dir_flip './new_bs1_flip'
+      python3 HigherHRNet_postprocess.py  --dump_dir ./output_dir --dump_dir_flip ./output_flip_dir
       ```
 
       - 参数说明：
 
-        - --dump_dir：生成推理结果所在路径。
-        - --dump_dir_flip：生成推理结果所在路径。
+        - --dump_dir：生成特征图推理结果所在路径。
+        - --dump_dir_flip：生成高分辨率推理结果所在路径。
 
       后处理输出的结果，日志保存在“output”目录下。
 
@@ -282,27 +265,6 @@
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| Precision |         |
-| --------- | ------- |
-| 标杆精度  | AP:67.1 |
-| 310P3精度 | AP:67.1 |
-
-| 芯片型号 | Input Shape | 数据集   | 性能(aoe) |
-| -------- | ----------- | -------- | --------- |
-| 310P3    | 512,512     | coco2017 | 254.82    |
-| 310P3    | 512,1024    | coco2017 | 130.65    |
-| 310P3    | 1024,512    | coco2017 | 121.60    |
-| 310P3    | 512,576     | coco2017 | 229.55    |
-| 310P3    | 512,640     | coco2017 | 213.09    |
-| 310P3    | 512,704     | coco2017 | 188.57    |
-| 310P3    | 512,768     | coco2017 | 171.64    |
-| 310P3    | 512,832     | coco2017 | 160.206   |
-| 310P3    | 512,896     | coco2017 | 140.543   |
-| 310P3    | 512,960     | coco2017 | 143.704   |
-| 310P3    | 576,512     | coco2017 | 227.66    |
-| 310P3    | 640,512     | coco2017 | 196.288   |
-| 310P3    | 704,512     | coco2017 | 187.76    |
-| 310P3    | 768,512     | coco2017 | 178.99    |
-| 310P3    | 832,512     | coco2017 | 157.56    |
-| 310P3    | 896,512     | coco2017 | 153.25    |
-| 310P3    | 960,512     | coco2017 | 140.85    |
+| 芯片型号 | Batch Size | 数据集   | 精度（AP）  |  性能(aoe) |
+| -------- | ----------- | -------- | --------- | --------- |
+| 310P3    |    1        | coco2017 |   67.1%   | 185.28    |

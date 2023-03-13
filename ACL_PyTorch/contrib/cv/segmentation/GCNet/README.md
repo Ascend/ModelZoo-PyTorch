@@ -155,7 +155,7 @@ GCNet最初在arxiv中被提出。结合Non-Local Networks (NLNet)和Squeeze-Exc
 
    1. 获取权重文件。
 
-       该推理项目使用源码包中的权重文件（mask_rcnn_r50_fpn_r4_gcb_c3-c5_1x_coco_20200204-17235656.pth）。
+       该推理项目使用权重文件[mask_rcnn_r50_fpn_r4_gcb_c3-c5_1x_coco_20200204-17235656.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/GCNet/PTH/mask_rcnn_r50_fpn_r4_gcb_c3-c5_1x_coco_20200204-17235656.pth)
 
    2. 导出onnx文件。
 

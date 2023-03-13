@@ -180,7 +180,7 @@ SOLOV1模型是一个box-free的实例分割模型，其引入“实例类别”
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件：“SOLO_R50_1x.pth”，请将其放在与“solov1_pth2onnx.py”文件同一目录内。
+      从源码包中获取权重文件：[SOLO_R50_1x.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/SOLOV1/PTH/SOLO_R50_1x.pth)，请将其放在与“solov1_pth2onnx.py”文件同一目录内。
 
    2. 导出onnx文件。
 

@@ -133,7 +133,7 @@ FastSCNN：快速分割卷积神经网络（Fast-SCNN），一种基于高分辨
 
    1. 获取权重文件。
         
-        −	该推理项目使用源码包中的权重文件fast_scnn_segmentron.pth，放到/home/HwHiAiUser/FastSCNN/目录下。
+        −	该推理项目使用权重文件[fast_scnn_segmentron.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Fastscnn/PTH/fast_scnn_segmentron.pth)
 
 
    2. 导出onnx文件。

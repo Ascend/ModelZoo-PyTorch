@@ -146,6 +146,7 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
         -   `--input_shape`：输入数据的shape
         -   `--log`：日志级别
         -   `--soc_version`：处理器型号
+        -   `--dynamic_dims`：设置ND格式下动态维度的档位
 
     
 ### 2 开始推理验证

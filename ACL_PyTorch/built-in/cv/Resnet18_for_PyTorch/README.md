@@ -4,45 +4,37 @@
 
  ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差学习的概念，通过增加直连通道来保护信息的完整性，解决信息丢失、梯度消失、梯度爆炸等问题，让很深的网络也得以训练。ResNet有不同的网络层数，常用的有18-layer、34-layer、50-layer、101-layer、152-layer。 
 
--   **[论文地址](#11-论文地址)**  
-
--   **[代码地址](#12-代码地址)**  
-
 ### 1.1 论文地址
 [ResNet18论文](https://arxiv.org/pdf/1512.03385.pdf)  
 
 ### 1.2 代码地址
 [ResNet18代码](https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py)  
-branch:master
-commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
 ### 输入输出数据
-
-- #### 输入输出数据
-
+  
   - 输入数据
-
+    
     | 输入数据 | 大小                      | 数据类型 | 数据排布格式 |
     | -------- | ------------------------- | -------- | ------------ |
-    | input    | batchsize x 3 x 224 x 224 | RGB_FP32 | NCHW         |
-
+    |   image  | batchsize x 3 x 256 x 256 | RGB_FP32 |    NCHW      |
+  
   - 输出数据
-
+    
     | 输出数据 | 大小             | 数据类型 | 数据排布格式 |
     | -------- | ---------------- | -------- | ------------ |
-    | output1  | batchsize x 1000 | FLOAT32  | ND           |
+    |   class  | batchsize x 1000 |  FLOAT32 |       ND     |
 
 
 ## 推理环境准备
 
 - 该模型需要以下插件与驱动
-
-  | 配套                                                         | 版本                                                         | 环境准备指导                                                 |
-  | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | [1.0.15](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | [5.1.RC1](https://www.hiascend.com/software/cann/commercial?version=5.1.RC1) |                                                              |
-  | PyTorch                                                      | [1.5.1](https://github.com/pytorch/pytorch/tree/v1.5.1)      |                                                              |
-  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |                                                              |                                                              |
+  
+  | 配套                                        | 版本      | 环境准备指导                                                                                        |
+  | ----------------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+  | 固件与驱动                                     | 22.0.4  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                      | 6.0.RC1 |                                                                                               |
+  | PyTorch                                   | 1.5.1   |                                                                                               |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |         |                                                              |
 
 - 该模型需要以下依赖。
 
@@ -81,26 +73,30 @@ commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
    ```
    
 
-#### 准备数据集
+## 准备数据集
 
-1. 获取原始数据集。
+本模型使用ImageNet 50000张图片的验证集，请前往[ImageNet官网](https://image-net.org/download.php)下载数据集:
 
-   本模型使用ImageNet官网的5万张验证集进行测试，请用户自行获取该数据集，上传数据集到服务器任意目录（如：*/home/HwHiAiUser/dataset*）。图片与标签分别存放在*/home/HwHiAiUser/dataset*/imagenet/val与*/home/HwHiAiUser/dataset*/imagenet/val_label.txt位置。
+```
+├── ImageNet
+|   ├── val
+|   |    ├── ILSVRC2012_val_00000001.JPEG
+│   |    ├── ILSVRC2012_val_00000002.JPEG
+│   |    ├── ......
+|   ├── val_label.txt
+```
+
+执行预处理脚本:
+
+```bash
+python3 imagenet_torch_preprocess.py --data_path ./ImageNet/val/ --save_dir ./prep_dataset
+```
+参数说明：
+- --data_path：原始数据验证集val目录路径
+- --save_dir：输出的二进制文件（.bin）所在路径
    
 
-2. 数据预处理。
-
-   执行预处理脚本，生成数据集预处理后的bin文件。
-
-   ```
-   python3 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/imagenet/val ./prep_dataset
-   ```
-
-   第一个参数为模型类型，第二个参数为原始数据验证集（.jpeg）所在路径，第三个参数为输出的二进制文件（.bin）所在路径。每个图像对应生成一个二进制文件。
-
-   
-
-#### 模型推理
+## 模型推理
 
 1. 模型转换。
 
@@ -110,32 +106,25 @@ commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
    1. 获取权重文件。
 
-      单击[Link](https://download.pytorch.org/models/resnet18-f37072fd.pth)在PyTorch开源框架获中取经过训练的Resnet18权重文件resnet18-f37072fd.pth，源码中已提供下载权重文件。
-
-   2. 安装torchvision。模型代码在torchvision中，arm下需源码安装，参考torchvision官网。
-
-      执行以下命令。
-
-      ```shell
-      git clone https://github.com/pytorch/vision
-      cd vision
-      python3 setup.py install
-      cd ..
+      从PyTorch开源框架获取经过训练的Resnet18权重文件```resnet18-f37072fd.pth```
+      ```bash
+      wget https://download.pytorch.org/models/resnet18-f37072fd.pth
       ```
 
-   3. 导出onnx文件。
+   2. 导出onnx文件。
 
-      resnet18_pth2onnx.py脚本将.pth文件转换为.onnx文件，执行如下命令在当前目录生成resnet18.onnx模型文件。
-
-      ```shell
-      python3 resnet18_pth2onnx.py ./resnet18-f37072fd.pth resnet18.onnx
+      将.pth文件转换为.onnx文件，执行如下命令在当前目录生成```resnet18.onnx```模型文件。
+      
+      ```bash
+      python3 resnet18_pth2onnx.py --checkpoint ./resnet18-f37072fd.pth --save_dir ./resnet18.onnx
       ```
-
-      使用ATC工具将.onnx文件转换为.om文件，导出.onnx模型文件时需设置算子版本为11。
+      参数说明：
+      - --checkpoint：模型权重pth文件
+      - --save_dir：输出的onnx模型的路径
 
       
 
-   4. 使用ATC工具将ONNX模型转OM模型。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 执行命令查看芯片名称（${chip_name}）。
 
@@ -145,10 +134,14 @@ commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
       2. 使用atc将onnx模型转换为om模型文件。
    
-         ```shell
-      source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```bash
+         # 设置环境变量
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+
+         # bs为批次大小，请根据需要设置
+         bs=8
          
-      atc --framework=5 --model=./resnet18.onnx --output=resnet18_bs1 --input_format=NCHW --input_shape="image:1,3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
+         atc --framework=5 --model=./resnet18.onnx --output=resnet18_bs${bs} --input_format=NCHW --input_shape="image:${bs},3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
          ```
    
          参数说明：
@@ -167,38 +160,54 @@ commit_id:7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
 2. 开始推理验证。
 
-a.  安装ais_bench推理工具。
+   a.  安装ais_bench推理工具。
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-b.  执行推理。
+   b.  执行推理。
 
-```shell
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    
-python3 -m ais_bench --model ./resnet18_bs1.om --input ./prep_dataset/ --output ./result/ --outfmt TXT
-```
+   ```bash
+   python3 -m ais_bench --model ./resnet18_bs${bs}.om --input ./prep_dataset/ --output ./result/ --output_dir resnet18_bs${bs} --outfmt TXT
+   ```
 
--   参数说明：   
-    --model：模型地址
-    --input：预处理完的数据集文件夹
-    --output：推理结果保存地址
-    --outfmt：推理结果保存格式
+   参数说明：   
+   - --model：模型地址
+   - --input：预处理完的数据集文件夹
+   - --output：推理结果保存地址
+   - --outfmt：推理结果保存格式
 
-运行成功后会在result/xxxx_xx_xx-xx-xx-xx（时间戳）下生成推理输出的txt文件。
+   运行成功后会在result/resnet18_bs${bs}下生成推理输出的txt文件。
 
+   c.  精度验证。
 
-c.  精度验证。
+   调用imagenet_acc_eval.py脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 
-调用imagenet_acc_eval.py脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据，结果保存在result.json中。
+   ```bash
+   python3 imagenet_acc_eval.py result/resnet18_bs${bs} ./ImageNet/val_label.txt ./ result.json
+   ```
 
-```shell
-python3 imagenet_acc_eval.py result/result/xxxx_xx_xx-xx-xx-xx（时间戳） /home/HwHiAiUser/datasets/imagenet/val_label.txt ./ result.json
-```
+   第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称。
 
-第一个参数为生成推理结果所在路径，第二个参数为标签数据，第三个参数为生成结果文件路径，第四个参数为生成结果文件名称。
+3. 执行纯推理验证性能。
+   ```bash
+   python3 -m ais_bench --model resnet18_bs${bs}.om --device 1 --loop 100
+   ```
+   - 参数说明：
+      - --model：om文件路径
+      - --device：NPU设备编号
+      - --loop: 纯推理次数
 
+## 模型推理性能和精度
 
+官方的参考精度为：Top1: 69.758%， Top5: 89.078%
 
-
-
+| 芯片型号    | Batch size | 精度                     | 性能(fps) |
+| :---------: | :--------: |:------------------------:|:---------:|
+| Ascend310P3 | 1          |Top1: 69.75%, Top5: 89.10%|  3222.06  |
+| Ascend310P3 | 4          |                          |  7587.69  |
+| Ascend310P3 | 8          |                          | 10672.90  |
+| Ascend310P3 | 16         |Top1: 69.75%, Top5: 89.10%| 10796.21  |
+| Ascend310P3 | 32         |                          |  9983.37  |
+| Ascend310P3 | 64         |                          | 10111.24  |
+| Ascend310P3 | 128        |                          |  9676.27  |
+| Ascend310P3 | 256        |                          |  9697.05  |

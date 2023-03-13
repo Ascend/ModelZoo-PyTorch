@@ -48,7 +48,7 @@
     | 固件与驱动 | 1.0.17 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.RC1 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | Python    | 3.7.5   | -          |
-    | PyTorch   | 1.9.1  | -          |
+    | PyTorch   | 1.9.0 | -          |
 
 
 ----
@@ -137,7 +137,7 @@
 1. PyTroch 模型转 ONNX 模型  
 
     step1: 下载pth权重文件  
-    本推理项目使用开源仓提供的预训练好的权重文件，可从 [GoogleDrive](https://drive.google.com/file/d/1WCYyur5ZaWczH15ecmeDowrW30xcLrCn/view?usp=sharing)/[BaiduDrive(code:bghd)](https://pan.baidu.com/s/1Fjm5yVq1JDpGjh4bdgdDLA) 获取，下载完成后将权重文件 tusimple_18.pth 存放于 UFLD 目录下。
+    本推理项目使用开源仓提供的预训练好的权重文件，可从[链接](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Ultra-Fast-Lane-Detection/PTH/tusimple_18.pth)获取，下载完成后将权重文件 tusimple_18.pth 存放于 UFLD 目录下。
 
     step2: 生成 ONNX 模型
     ```shell
@@ -210,10 +210,6 @@
 
     使用ais_infer工具将预处理后的数据传入模型并执行推理：
     ```shell
-    # 设置环境变量
-    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-    source /etc/profile
-    
     # 对预处理后的数据进行推理
     python3 -m ais_bench --model ./UFLD/tusimple_bs1.om --input ./UFLD/TuSimple_bin --output ./UFLD/result --output_dirname result_bs1
     ```

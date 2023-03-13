@@ -20,7 +20,7 @@ data_path=""
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
-Network="Faster_RCNN_for_PyTorch"
+Network="Faster_RCNN_ID0101_for_PyTorch"
 #训练batch_size
 batch_size=8
 #训练step
@@ -76,6 +76,10 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
+
+cd $cur_path
+
+python3.7 setup.py build develop > $cur_path/log.txt
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)

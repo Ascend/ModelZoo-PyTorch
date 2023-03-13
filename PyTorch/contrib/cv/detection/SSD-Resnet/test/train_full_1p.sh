@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="SSD-Resnet"
+Network="SSD-Resnet_ID3530_for_Pytorch"
 # 训练batch_size
 batch_size=32
 # 训练使用的npu卡数
@@ -81,6 +81,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export HCCL_CONNECT_TIMEOUT=1800
 export WORLD_SIZE=$RANK_SIZE
+sed -i "s|./resnet34-333f7ec4.pth|${data_path}/resnet34-333f7ec4.pth|g" ${cur_path}/resnet.py
 python3.7 ./train.py \
     --data=${data_path} \
     --num-workers=${workers} \
@@ -92,10 +93,11 @@ python3.7 ./train.py \
     --lr-decay-epochs 44 55 \
     --device_id=${device_id}\
     --tag='train'\
-    --evaluation 40 50 55 60 65 70 75 80 85 \
+    --evaluation 40 50 55 60 65 70 75 80 85 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     
 wait
 
+sed -i "s|${data_path}/resnet34-333f7ec4.pth|./resnet34-333f7ec4.pth|g" ${cur_path}/resnet.py
 ##################获取训练数据################
 #训练结束时间，不需要修改
 end_time=$(date +%s)

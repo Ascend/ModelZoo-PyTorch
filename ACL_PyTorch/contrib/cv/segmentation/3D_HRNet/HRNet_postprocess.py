@@ -76,11 +76,11 @@ def main():
     table_dict = {}
     table_dict["title"] = "overall statistical evaluation"
 
-    result1_ids = glob(os.path.join(result_dir, '*' + '1.bin'))
+    result1_ids = glob(os.path.join(result_dir, '*' + '0.bin'))
     result1_ids = [os.path.splitext(os.path.basename(p))[0] for p in result1_ids]
     result1_ids.sort()
 
-    result2_ids = glob(os.path.join(result_dir, '*' + '2.bin'))
+    result2_ids = glob(os.path.join(result_dir, '*' + '1.bin'))
     result2_ids = [os.path.splitext(os.path.basename(p))[0] for p in result2_ids]
     result2_ids.sort()
 

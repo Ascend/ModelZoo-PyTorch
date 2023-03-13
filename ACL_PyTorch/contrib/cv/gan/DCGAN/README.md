@@ -131,9 +131,8 @@ DCGAN是生成对抗网络GAN中一种常见的模型结构。其中的生成器
 
    1. 获取权重文件。
 
-       获取DCGAN预训练权重文件:
+       获取DCGAN预训练权重文件:[checkpoint-amp-epoch_200.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/DCGAN/PTH/checkpoint-amp-epoch_200.pth)
 
-       从源码包中获取原始pth文件。
 
 
    2. 导出onnx文件。

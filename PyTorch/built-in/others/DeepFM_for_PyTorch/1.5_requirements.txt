@@ -1,0 +1,6 @@
+pandas
+sklearn
+tqdm
+tensorflow
+torchvision==0.2.2.post3
+pillow==9.1.0

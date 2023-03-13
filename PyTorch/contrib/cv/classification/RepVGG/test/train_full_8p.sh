@@ -15,7 +15,7 @@ fi
 # 指定训练所使用的npu device卡id
 device_id=0
 # 网络名称，同目录名称
-Network="RepVGG"
+Network="RepVGG_ID1258_for_PyTorch"
 # 训练batch_size
 batch_size=4096
 

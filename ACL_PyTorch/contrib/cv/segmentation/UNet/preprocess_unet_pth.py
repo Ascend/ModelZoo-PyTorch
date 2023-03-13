@@ -13,10 +13,9 @@
 # limitations under the License.
 # -*- coding: utf-8 -*-
 
-import sys
 import time
 import shutil
-
+import argparse
 import os
 import numpy as np
 from PIL import Image
@@ -63,8 +62,11 @@ def preprocess_images(src_path, save_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        raise Exception("usage: python3 xxx.py [src_path] [save_path]")
-    src_path = sys.argv[1]
-    save_path = sys.argv[2]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--src_path', default='./carvana/train')
+    parser.add_argument('--save_bin_path', default='./prep_bin')
+    args = parser.parse_args()
+
+    src_path = args.src_path
+    save_path = args.save_bin_path
     preprocess_images(src_path, save_path)

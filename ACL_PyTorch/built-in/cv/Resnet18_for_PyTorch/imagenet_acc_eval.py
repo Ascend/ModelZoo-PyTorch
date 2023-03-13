@@ -15,8 +15,9 @@
 import os
 import sys
 import json
-import numpy as np
 import time
+
+import numpy as np
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -99,7 +100,7 @@ def create_visualization_statistical_result(prediction_file_path,
     :param topn:
     :return:
     """
-    writer = open(os.path.join(result_store_path, json_file_name), 'w')
+    writer = os.fdopen(os.open(os.path.join(result_store_path, json_file_name), os.O_RDWR|os.O_CREAT, 0o644), "w")
     table_dict = {}
     table_dict["title"] = "Overall statistical evaluation"
     table_dict["value"] = []
@@ -160,7 +161,7 @@ if __name__ == '__main__':
         # the path to store the results json path
         result_json_path = sys.argv[3]
         # result json file name
-        json_file_name = sys.argv[4]
+        json_file_path = sys.argv[4]
     except IndexError:
         print("Stopped!")
         exit(1)
@@ -176,7 +177,7 @@ if __name__ == '__main__':
 
     img_label_dict = cre_groundtruth_dict_fromtxt(annotation_file_path)
     create_visualization_statistical_result(folder_davinci_target,
-                                            result_json_path, json_file_name,
+                                            result_json_path, json_file_path,
                                             img_label_dict, topn=5)
 
     elapsed = (time.time() - start)

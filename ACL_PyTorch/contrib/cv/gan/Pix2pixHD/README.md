@@ -156,7 +156,7 @@ Pix2PixHD作为pix2pix的改进版本，是一个经典的图像生成网络，�
 
    1. 获取权重文件。
 
-       下载[权重文件latest_net_G.pth](https://drive.google.com/file/d/1h9SykUnuZul7J3Nbms2QGH1wa85nbN2-/view?usp=sharing),放置"./pix2pixHD/checkpoints/label2city_1024p/"路径下。
+       下载[权重文件latest_net_G.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Pix2pixHD/PTH/latest_net_G.pth),放置"./pix2pixHD/checkpoints/label2city_1024p/"路径下。
        
 
    2. 导出onnx文件。

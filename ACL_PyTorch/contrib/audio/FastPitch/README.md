@@ -58,7 +58,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.6.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -73,13 +73,19 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
    ```
    git clone https://github.com/NVIDIA/DeepLearningExamples
+   cd ./DeepLearningExamples
+   git checkout master
+   git reset --hard 6610c05c330b887744993fca30532cbb9561cbde
+   mv ../p1.patch ./
+   patch -p1 < p1.patch
+   cd ..
    git clone https://github.com/NVIDIA/dllogger.git
-   cd dllogger
+   cd ./dllogger
    git checkout 26a0f8f1958de2c0c460925ff6102a4d2486d6cc
    cd ..
    export PYTHONPATH=dllogger:${PYTHONPATH}
    ```
-
+   
 2. 安装依赖。
 
    ```
@@ -101,17 +107,20 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
    - FastPitch模型的输入数据是由文字编码组成，输入长度不等，模型已经将其补零成固定长度200。将输入数据转换为bin文件方便后续推理，存入test/input_bin文件夹下，且生成生成数据集预处理后的bin文件以及相应的info文件。
    - 在语音合成推理过程中，输出为mel图谱，本模型的输出维度为batch_size×900×80。将其输出tensor存为pth文件存入test/mel_tgt_pth文件夹下。
-   - 同时，为了后面推理结束后将推理精度与原模型pth权重精度进行对比，将输入数据在pth模型中前传得到的输出tensor存为pth文件存入test/mel_out_pth文件夹下。
-
+   
    以上步骤均执行下面指令完成：
    
    ```
    python3 DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/prepare_dataset.py --wav-text-filelists DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/filelists/ljs_audio_text_val.txt --n-workers 16 --batch-size 1 --dataset-path ./LJSpeech-1.1 --extract-mels --f0-method pyin
    ```
+   - 参数说明：
+      -   --wav-text-filelists：包含数据集文件路径的txt文件
+      -   --n-workers：使用的CPU核心数
+      -   --batch-size：批次数
+      -   --dataset-path：数据集路径
+      -   --extract-mels：默认参数
+      -   --f0-method：默认参数，代码中只包含了pyin选项，不可替换
 
-   ```
-   python3 data_process.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch pretrained_models/fastpitch/nvidia_fastpitch_210824.pt --waveglow pretrained_models/waveglow/nvidia_waveglow256pyt_fp16.pt
-   ```
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -128,12 +137,25 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
       ```
       （waveglow为语音生成器，不在本模型范围内, 但为了确保代码能正常运行，需要下载）
 
-   2. 导出onnx文件。
+   2. 获取pt输出
+      为了后面推理结束后将om模型推理精度与原pt模型精度进行对比，脚本运行结束会在test文件夹下创建mel_tgt_pth用于存放pth模型输入数据，mel_out_pth用于存放pth输出数据，input_bin用于存放二进制数据集，input_bin_info.info用于存放二进制数据集的相对路径信息
+
+      ```
+      python3 data_process.py -i phrases/tui_val100.tsv --dataset-path=./LJSpeech-1.1 --fastpitch ./nvidia_fastpitch_210824.pt --waveglow ./nvidia_waveglow256pyt_fp16.pt
+      ```
+      - 参数说明：
+         -   -i：保存数据集文件的路径的tsv文件
+         -   -o：输出二进制数据集路径
+         -   --dataset-path：数据集路径
+         -   --fastpitch：fastpitch权重文件路径
+         -   --waveglow：waveglow权重文件路径
+
+   3. 导出onnx文件。
 
       1. 使用pth2onnx.py导出onnx文件。
 
          ```
-         python3 pth2onnx.py -i phrases/tui_val100.tsv -o ./output/audio_tui_val100 --log-file ./output/audio_tui_val100/nvlog_infer.json --fastpitch nvidia_fastpitch_210824.pt --waveglow nvidia_waveglow256pyt_fp16.pt --wn-channels 256 --energy-conditioning --batch-size 1
+         python3 pth2onnx.py -i phrases/tui_val100.tsv --fastpitch nvidia_fastpitch_210824.pt --waveglow nvidia_waveglow256pyt_fp16.pt --energy-conditioning --batch-size 1
          ```
 
          获得FastPitch.onnx文件。
@@ -146,7 +168,14 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
          获得FastPitch_sim.onnx文件。
 
-   3. 使用ATC工具将ONNX模型转OM模型。
+         - 参数说明：
+            -   FastPitch.onnx：原onnx模型文件
+            -   FastPitch_sim.onnx：onnxsim生成的简化onnx模型文件
+            -   --dynamic-input-shape：动态shape
+            -   --input-shape：输入的shape(batchsize,200)
+
+
+   4. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
@@ -205,7 +234,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
    3. 执行推理。
 
         ```
-        python3 -m ais_bench --model FastPitch_bs1.om --input test/input_bin --output result --output_dirname output_bs1 --outfmt BIN
+        python3 -m ais_bench --model FastPitch_bs1.om --input test/input_bin --output result --outfmt BIN
         ```
 
         -   参数说明：
@@ -220,11 +249,14 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
    4. 精度验证。
 
-      调用脚本与数据集标签比对，可以获得Accuracy数据。
+      调用脚本分别对比input中创建的mel_tgt_pth输入数据和ais_bench推理结果./result/{}，以及pthm模型mel_out_pth输出数据，可以分别获得om和pth模型的Accuracy数据。
 
       ```
-      python3 infer_test.py result/output_bs1
+      python3 infer_test.py ./result/{}
       ```
+      -   参数说明：
+         -   ./result/{}：ais_bench推理结果保存路径
+
 
    5. 性能验证。
 
@@ -244,17 +276,13 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
 调用ACL接口推理计算，性能参考下列数据。
 
-|mel_loss  |   om     |     pth   |
-| -------- | -------- | --------- |
-|bs1	     |  11.246  |   11.265  |
-|bs16	     |  11.330  |   11.265  |
 
 
-| Model     | Batch Size |T4 Throughput/Card |  310 Throughput/Card |  310P3 Throughput/Card |
-| --------- | ---------- | ------------------ | -------------------- | --------------------- |
-| FasfPitch | 1          | 28.828             | 54.1476              |         90.2718       |
-| FasfPitch | 4          | -                  | 51.728               |         123.7534      |
-| FasfPitch | 8          | -                  | 51.3684              |         126.9909      |
-| FasfPitch | 16         | 64.94              | 51.714               |         124.2424      |
-| FasfPitch | 32         | -                  | 52.0696              |         124.1726      |
-| FasfPitch | 64         | -                  | -                    |         84.8399       |   
+| 芯片型号 | Batch Size | 数据集| 性能|  om精度    |   pth精度      
+| --------- | ----| ----------|---------|   ------   |--------
+| 310P3 |  1       | LJSpeech-1.1 |   202.265      |    mel_loss:11.260     |     mel_loss:13.400
+| 310P3 |  4       | LJSpeech-1.1t |    249.906      |  mel_loss:11.260       |  mel_loss:13.400
+| 310P3 |  8       | LJSpeech-1.1 |  240.211     |      mel_loss:11.260      |mel_loss:13.400
+| 310P3 |  16       | LJSpeech-1.1 |   239.614      |   mel_loss:11.260      | mel_loss:13.400
+| 310P3 |  32       | LJSpeech-1.1 |    232.589      |  mel_loss:11.260     |mel_loss:13.400
+| 310P3 |  64       | LJSpeech-1.1 |  214.174     |     mel_loss:11.260      |mel_loss:13.400

@@ -26,40 +26,33 @@
   code_path=PyTorch/contrib/cv/detection
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1** 版本配套表
+  **表 1**  版本支持表
 
-  | 配套          | 版本                                                         |
-  | ------------- | ------------------------------------------------------------ |
-  | 硬件          | [1.0.16](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | NPU固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN          | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch       | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | - |
+  | PyTorch 1.8 | - |
+  
 - 环境准备指导。
 
-  请参考《[Pytorch框架训练环境准备](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fdocument%2Fdetail%2Fzh%2FModelZoo%2Fpytorchframework%2Fptes)》。
-
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型需要的依赖。
   ```
   pip install -r requirements.txt
-  注：只有opencv-python==3.4.3.18时，模型收敛，其他版本不收敛！
   ```
+  > **说明：** 
+  >只有opencv-python==3.4.3.18版本时，模型收敛，其他版本不收敛！
+
 
 ## 准备数据集
 
@@ -72,32 +65,32 @@
    ```
    ├── SynthText 
    │    ├──类别1├──序号1──图片1、2、3、4 
-   │    │         │           
-   │    │         ├──序号2──图片1、2、3、4 
+   │    │      │  ...         
+   │    │      ├──序号xx──图片1、2、3、4 
    │    │                      
-   │    ├──类别2 ├──序号1──图片1、2、3、4 
-                     │ 
-                     ├──序号2──图片1、2、3、4
+   │    ├──类别2├──序号1──图片1、2、3、4 
+   |           |  ...
+   |           ├──序号xx──图片1、2、3、4
    
    ├── ICDAR2015
    │    ├──ch4_training_vocabularies_per_image├──voc_img_1.txt
-   │    │                                       │           
-   │    │                                       ├──voc_img_2.txt 
+   │    │                                     │  ...         
+   │    │                                     ├──voc_img_xxx.txt 
    │    │                                      
    │    ├──ch4_training_localization_transcription_gt├──gt_img_1.txt 
-   │    │                                              │ 
-   │    │                                              ├──gt_img_2.txt
+   │    │                                            │  ...
+   │    │                                            ├──gt_img_xxx.txt
    │    │                      
    │    ├──ch4_training_images├──img_1.jpg 
-   │    │                       │           
-   │    │                       ├──img_2.jpg 
+   │    │                     │  ...           
+   │    │                     ├──img_xxx.jpg 
    │    │                      
    │    ├──ch4_training_vocabulary.txt
    │    │  
    |    ├──ch4_test_images
    │    |    ├──img_1.jpg
-   │    │    |
-   │    │    │──img_2.jpg
+   │    │    |  ...
+   │    │    │──img_xxx.jpg
    │    │
    |    ├──gt.zip                           
    ```
@@ -123,9 +116,9 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_pretrain_1p.sh --data_path=./data/SynthText
-     bash ./test/train_full_finetune_1p.sh --data_path=./data/ICDAR2015 
-     bash ./test/test_1p.sh --data_path=./data/ICDAR2015
+     bash ./test/train_full_pretrain_1p.sh --data_path=/data/xxx/SynthText
+     bash ./test/train_full_finetune_1p.sh --data_path=/data/xxx/ICDAR2015 
+     bash ./test/test_1p.sh --data_path=/data/xxx/ICDAR2015
      ```
 
    - 单机8卡训练
@@ -133,9 +126,9 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_pretrain_8p.sh --data_path=./data/SynthText
-     bash ./test/train_full_finetune_8p.sh --data_path=./data/ICDAR2015 
-     bash ./test/test_8p.sh --data_path=./data/ICDAR2015
+     bash ./test/train_full_pretrain_8p.sh --data_path=/data/xxx/SynthText
+     bash ./test/train_full_finetune_8p.sh --data_path=/data/xxx/ICDAR2015 
+     bash ./test/test_8p.sh --data_path=/data/xxx/ICDAR2015
      ```
 
    --data_path参数填写数据集路径。
@@ -164,21 +157,20 @@
 
    - 单机单卡训练
 
-     启动单卡训练
+     启动单卡训练。
 
      ```
-     bash ./test/train_performance_1p.sh --data_path=./data/ICDAR2015
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/ICDAR2015
      ```
 
    - 单机8卡训练
 
-     启动8卡训练
+     启动8卡训练。
 
      ```
-     bash ./test/train_performance_8p.sh --data_path=./data/ICDAR2015
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ICDAR2015
      ```
 
-   
    --data_path参数填写数据集路径。
    
    模型评估脚本参数说明如下。
@@ -199,19 +191,19 @@
 
 **表 2** 训练结果展示表
 
-| NAME      | Hmean  | FPS     | Epochs | AMP_Type |
-| --------- | ------ | ------- | ------ | -------- |
-| 1p-NPU1.5 | -      | 16.101  | 20     | -        |
-| 1p-NPU1.8 | -      | 21.263  | 20     | O2       |
-| 8p-NPU1.5 | 81.838 | 77.614  | 583    | -        |
-| 8p-NPU1.8 | 80.796 | 54.3062 | 583    | O2       |
+|  NAME  | Hmean  |   FPS   | Epochs | AMP_Type | Torch_Version |
+| :----: | :----: | :-----: | :----: | :------: | :-----------: |
+| 1p-NPU |   -    | 21.263  |   20   |    O2    |      1.8      |
+| 8p-NPU | 80.796 | 54.3062 |  583   |    O2    |      1.8      |
 
 # 版本说明
 
 ## 变更
 
+2023.03.02：更新readme，重新发布。
+
 2022.09.16：首次发布。
 
-## 已知问题
+## FAQ
 
 无。

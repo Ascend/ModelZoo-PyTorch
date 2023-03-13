@@ -46,10 +46,12 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r 1.5_requirements.txt
+  pip install -r 1.5_requirements.txt  # Pytorch1.5版本
 
-  pip install -r 1.8_requirements.txt
+  pip install -r 1.8_requirements.txt  # Pytorch1.8版本
   ```
+  > **说明:**
+  > 只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
@@ -65,6 +67,8 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
         ├── train2017
         ├── val2017
     ```
+   > **说明：**
+   >该数据集的训练过程脚本只作为一种参考示例。
 
 # 开始训练
 
@@ -85,7 +89,7 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
 
      启动单卡训练
      ```
-     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 1p性能
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -93,9 +97,9 @@ DETR提出了一种将对象检测视为直接集合预测问题，能够一次�
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8p精度
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
 
-     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8p性能
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
    --data_path参数填写数据集路径，需写到数据集的一级目录。

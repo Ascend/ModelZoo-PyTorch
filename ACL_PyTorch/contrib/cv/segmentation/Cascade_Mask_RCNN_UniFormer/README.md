@@ -138,7 +138,7 @@ UniFormer（Unified transFormer）在arxiv中引入（更多细节可以在arxiv
 
    1. 获取权重文件。
 
-       该推理项目使用源码包中的权重文件（cascade_mask_rcnn_3x_ms_hybrid_base.pth）。
+       [cascade_mask_rcnn_3x_ms_hybrid_base.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Cascade_Mask_Rcnn_UniFormer/PTH/cascade_mask_rcnn_3x_ms_hybrid_base.pth)
 
    2. 导出onnx文件。
 

@@ -1010,7 +1010,7 @@ class CRF(nn.Module):
         # shape: (batch_size,)
         tags_flat = tags.flatten()
         tags0_idx = tags_flat[idx1]
-        score = self.start_transitions[tags0_idx]
+        score = self.start_transitions.data[tags0_idx]
         emissions_flat = emissions.flatten()
         index2 = idx1 * num_tags + tags0_idx
         score += emissions_flat[index2]
@@ -1018,7 +1018,7 @@ class CRF(nn.Module):
         sliced_tags2 = npu_slice(tags, [0, 1], [batch_size, seq_length])
         tags_index = (sliced_tags1 * num_tags + sliced_tags2).flatten()
         sliced_mask_flat = npu_slice(mask, [0, 1], [batch_size, seq_length]).flatten()
-        score += (self.transitions.flatten()[tags_index] * sliced_mask_flat).reshape(-1, seq_length-1).sum(1)
+        score += (self.transitions.data.flatten()[tags_index] * sliced_mask_flat).reshape(-1, seq_length-1).sum(1)
 
         tags_index2 = (idx2 + sliced_tags2.unsqueeze(2)).flatten()
         score += (emissions_flat[tags_index2] * sliced_mask_flat).reshape(-1, seq_length-1).sum(1)
@@ -1029,7 +1029,7 @@ class CRF(nn.Module):
         index3 = idx1 + seq_ends
         last_tags = tags_flat[index3]
         # shape: (batch_size,)
-        score += self.end_transitions[last_tags]
+        score += self.end_transitions.data[last_tags]
 
         return score
 
@@ -1040,8 +1040,8 @@ class CRF(nn.Module):
             seq_length = emissions.size(1)
 
         emissions_cpu = emissions.cpu()
-        start_transitions_cpu = self.start_transitions.cpu()
-        transitions_cpu = self.transitions.cpu()
+        start_transitions_cpu = self.start_transitions.data.cpu()
+        transitions_cpu = self.transitions.data.cpu()
         mask_cpu = mask.bool().cpu()
 
         # Start transition score and first emission; score has size of
@@ -1079,7 +1079,7 @@ class CRF(nn.Module):
         # End transition score
         # shape: (batch_size, num_tags)
         score = score.npu()
-        score += self.end_transitions
+        score += self.end_transitions.data
 
         # Sum (log-sum-exp) over all possible tags
         # shape: (batch_size,)
@@ -1100,7 +1100,7 @@ class CRF(nn.Module):
 
         # Start transition and first emission
         # shape: (batch_size, num_tags)
-        score = self.start_transitions.cpu() + emissions[:, 0]
+        score = self.start_transitions.data.cpu() + emissions[:, 0]
         history_idx = torch.zeros((batch_size, seq_length, self.num_tags, nbest), dtype=torch.long, device=device)
         oor_idx = torch.zeros((batch_size, self.num_tags, nbest), dtype=torch.long, device=device)
         oor_tag = torch.full((batch_size, seq_length, nbest), pad_tag, dtype=torch.long, device=device)
@@ -1115,7 +1115,7 @@ class CRF(nn.Module):
 
         # Viterbi algorithm recursive case: we compute the score of the best tag sequence
         # for every possible next tag
-        transitions_cpu = self.transitions.cpu()
+        transitions_cpu = self.transitions.data.cpu()
         for i in range(1, seq_length):
             if i == 1:
                 broadcast_score = score.unsqueeze(-1)
@@ -1148,7 +1148,7 @@ class CRF(nn.Module):
             history_idx[:, i - 1] = indices
 
         # End transition score shape: (batch_size, num_tags, nbest)
-        end_score = score + self.end_transitions.cpu().unsqueeze(-1)
+        end_score = score + self.end_transitions.data.cpu().unsqueeze(-1)
         _, end_tag = end_score.view(batch_size, -1).topk(nbest, dim=1)
 
         # shape: (batch_size,)

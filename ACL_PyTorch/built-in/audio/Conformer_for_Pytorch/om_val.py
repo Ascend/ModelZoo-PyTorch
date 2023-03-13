@@ -36,6 +36,7 @@ def main(args):
     total_t = 0
     files = findAllFile(args.dataset_path)
     files = list(files)
+    num = len(files)
     st = time.time()
     for fl in files:
         y, sr = librosa.load(fl, sr=16000)
@@ -45,7 +46,7 @@ def main(args):
             res = "".join(nbest[0][1])
             f.write('{} {}\n'.format(fl.split('/')[-1].split('.')[0], res))
     et = time.time()
-    print("total_t:", (et-st)/3600)
+    print("wavs/second:", num/(et-st))
     if speech2text.encoder_m is not None:
         speech2text.encoder_m.encoder.release_model()
     if speech2text.decoder_m is not None:

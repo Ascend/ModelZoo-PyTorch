@@ -145,7 +145,7 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
    1. 获取权重文件。
 
-        从源码包中获取权重文件：“an4_pretrained_v3.ckpt”。
+        获取权重文件：[an4_pretrained_v3.ckpt](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/DeepSpeech2/PTH/an4_pretrained_v3.ckpt)
 
    2. 导出onnx文件。
 

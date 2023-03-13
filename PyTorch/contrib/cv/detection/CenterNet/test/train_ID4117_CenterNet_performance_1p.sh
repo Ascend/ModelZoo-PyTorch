@@ -21,10 +21,6 @@ device_id=0
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_mix_precision"
 
-# 使能RT2.0
-export ENABLE_RUNTIME_V2=0
-echo "Runtime2.0 : $ENABLE_RUNTIME_V2"
-
 # 调试
 bin_model=0  # 0 nobin other bin
 profiling=''
@@ -131,7 +127,7 @@ KERNEL_NUM=$(($(nproc)/8))
 
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
-PID_START=$((KERNEL_NUM * RANK_ID))
+PID_START=$((KERNEL_NUM * device_id))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 taskset -c $PID_START-$PID_END python3  main_npu_8p.py ctdet \
             --exp_id pascal_resdcn18_384 \

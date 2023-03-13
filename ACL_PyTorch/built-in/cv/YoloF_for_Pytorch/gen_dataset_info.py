@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,24 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import argparse
 import sys
+import pickle as pk
 import mmcv
 from mmdet.datasets import build_dataset
-import pickle as pk
+
 
 ann_file = '/annotations/instances_val2017.json'
 img_prefix = '/val2017/'
 
 if __name__ == '__main__':
-    image_src_path = sys.argv[1]
-    config_path = sys.argv[2]
-    bin_path = sys.argv[3]
-    meta_path = sys.argv[4]
-    info_name = sys.argv[5]
-    info_meta_name = sys.argv[6]
-    width = int(sys.argv[7])
-    height = int(sys.argv[8])
+    parser = argparse.ArgumentParser(description='preprocess of YOLOX PyTorch model')
+    parser.add_argument("--image_src_path", default="/opt/npu/coco/val2017", help='image of dataset')
+    parser.add_argument("--config_path", default="./configs/yolof/yolof_r50_c5_8x8_1x_coco.py", \
+                                                                 help='Preprocessed image buffer')
+    parser.add_argument("--bin_path", default="val2017_bin", help='Get image meta')
+    parser.add_argument("--meta_path", default="val2017_bin_meta", type=str, help='input tensor height')
+    parser.add_argument("--info_name", default="yolof.info", type=str, help='input tensor width')
+    parser.add_argument("--info_meta_name", default="yolof_meta.info ", type=str, help='input tensor width')
+    parser.add_argument("--width", default=640, type=int, help='image pad value')
+    parser.add_argument("--height", default=640, type=int, help='image pad value')
+    flags = parser.parse_args()
+
+    image_src_path = flags.image_src_path
+    config_path = flags.config_path
+    bin_path = flags.bin_path
+    meta_path = flags.meta_path
+    info_name = flags.info_name
+    info_meta_name = flags.info_meta_name
+    width = int(flags.width)
+    height = int(flags.height)
 
     cfg = mmcv.Config.fromfile(config_path)
     cfg.data.test.ann_file = image_src_path + ann_file

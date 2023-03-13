@@ -340,7 +340,7 @@ class AbsTask(ABC):
         group.add_argument(
             "--num_workers",
             type=int,
-            default=8,
+            default=1,
             help="The number of workers used for DataLoader",
         )
         group.add_argument(

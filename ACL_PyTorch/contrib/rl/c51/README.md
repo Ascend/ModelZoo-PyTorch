@@ -153,7 +153,7 @@ C51是一种值分布强化学习算法，C51算法的框架依然是DQN算法�
 
    1. 获取权重文件。
 
-      通过训练获取c51.model权重文件。
+      [c51.model](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/C51/PTH/c51.model)
        
    2. 导出onnx文件。
 

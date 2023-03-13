@@ -132,7 +132,6 @@ taskset -c $PID_START-$PID_END python3.7 -u ./train.py $data_path  \
     --distributed-world-size $RANK_SIZE \
     --distributed-no-spawn \
     --npu \
-    --no-save \
     --num-workers $(($(nproc)/8)) \
     --load-checkpoint-on-all-dp-ranks \
     --device-id $RANK_ID \

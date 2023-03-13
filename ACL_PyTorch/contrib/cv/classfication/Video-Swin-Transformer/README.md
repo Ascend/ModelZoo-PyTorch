@@ -143,7 +143,7 @@ Video swin transformer是一种基于Transformer的视频识别主干网络结�
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 获取权重文件。
-      [swin_small_patch244_window877_kinetics400_1k.pth](#https://github.com/SwinTransformer/storage/releases/download/v1.0.4/swin_small_patch244_window877_kinetics400_1k.pth)
+      [swin_small_patch244_window877_kinetics400_1k.pth](https://github.com/SwinTransformer/storage/releases/download/v1.0.4/swin_small_patch244_window877_kinetics400_1k.pth)
       将下载好的权重文件放入源码根目录
    2. 导出onnx文件。
 

@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="Swin-Transformer_for_PyTorch"
+Network="Swin-Transformer_ID4136_for_PyTorch"
 # 训练batch_size
 batch_size=256
 # 训练使用的npu卡数
@@ -12,6 +12,7 @@ export WORLD_SIZE=1
 data_path_info=$1
 data_path=`echo ${data_path_info#*=}`
 device_id=0
+precision_mode="O2"
 #使能profiling，默认为False
 profiling=False
 start_step=90
@@ -43,6 +44,8 @@ do
         profiling=`echo ${para#*=}`
     elif [[ $para == --bin_mode* ]];then
         bin_mode=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -66,6 +69,12 @@ elif [ ${device_id} ];then
 else
     "[Error] device id must be config"
     exit 1
+fi
+
+if [[ $precision_mode == "O0" ]];then
+    adv_param=" --amp-opt-level O0 "
+else
+    adv_param=""
 fi
 
 ###############指定训练脚本执行路径###############
@@ -103,6 +112,7 @@ fi
 python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345  main.py \
           --output=output/test \
           --one_epoch \
+          $adv_param \
           --cfg configs/swin_tiny_patch4_window7_224.yaml \
           --local_rank $ASCEND_DEVICE_ID  \
           --data-path ${data_path} \
@@ -139,8 +149,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 
+if [[ $precision_mode == "O0" ]];then
+    CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+    CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 ##获取性能数据，不需要修改
 #吞吐量
 ActualFPS=${FPS}

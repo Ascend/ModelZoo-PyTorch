@@ -19,7 +19,7 @@ epochs=200
 Network="Resnet50_cifar_for_PyTorch"
 export RANK_SIZE=8
 #训练batch_size,,需要模型审视修改
-batch_size=4096
+batch_size=128
 
 #参数校验，不需要修改
 for para in $*
@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-bash ./tools/dist_train.sh  ./configs/resnet/resnet50_8xb16_cifar100.py 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+bash ./tools/dist_train.sh  ./configs/resnet/resnet50_8xb16_cifar100.py 8 --cfg-options data.samples_per_gpu=16 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -93,6 +93,14 @@ BatchSize=${batch_size}
 DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
+total_training_time=`grep -a 'time'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'| awk '{a+=$1} END {printf("%.3f",a)}'`
+total_eval_time=`grep -a 'elapsed'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "10000/10000" '{print $2}'|awk -F "elapsed: " '{print $2}'| awk -F "s" '{print $1}'| awk '{a+=$1} END {printf("%.3f",a)}'`
+min_step_time=`grep -a 'time'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'NR==1{min=$1;next}{min=min<$1?min:$1}END{print min}'`
+maximum=`awk -v bs=${BatchSize} -v mt=${min_step_time} 'BEGIN{print(bs/mt)}'`
+total_sample=`awk -v sample=50000 -v te=${epochs} 'BEGIN{print(sample*te)}'`
+train_average=`awk -v ts=${total_sample} -v ttt=${total_training_time} 'BEGIN{print(ts/ttt)}'`
+e2e_average=`awk -v ts=${total_sample} -v et=${e2e_time} 'BEGIN{print(ts/et)}'`
+
 ##获取性能数据，不需要修改
 #吞吐量
 ActualFPS=${FPS}
@@ -116,3 +124,9 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "train_training_time : $total_training_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "train_eval_time : $total_eval_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "total_time : $e2e_time" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "training maximum images/sec : $maximum" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "training average images/sec : $train_average" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log
+echo "end to end average images/sec : $e2e_average" >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_perf_report.log

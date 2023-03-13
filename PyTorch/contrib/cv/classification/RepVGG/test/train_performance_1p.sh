@@ -14,7 +14,7 @@ fi
 # 指定训练所使用的npu device卡id
 device_id=0
 # 网络名称，同目录名称
-Network="RepVGG"
+Network="RepVGG_ID1258_for_PyTorch"
 # 训练batch_size
 batch_size=512
 # 训练使用的npu卡数
@@ -48,6 +48,9 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
+    train_epochs=3
+else
+    train_epochs=1
 fi
 
 #################创建日志输出目录，不需要修改#################
@@ -69,7 +72,7 @@ nohup python3.7 -u train.py \
     -a RepVGG-A0 \
     --data ${data_path} \
     --workers 32 \
-    --epochs 3 \
+    --epochs=${train_epochs} \
     --batch-size=${batch_size} \
     --lr 0.2 \
     --wd 4e-5 \

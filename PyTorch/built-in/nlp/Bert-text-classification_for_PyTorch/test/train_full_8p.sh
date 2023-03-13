@@ -101,6 +101,7 @@ do
                 --use_combine_grad \
                 --optim adamw_apex_fused_npu \
                 --overwrite_output_dir \
+                --save_steps 50000\
                 --output_dir /tmp/$TASK/ > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         nohup  python3.7 run_glue.py  --local_rank=${RANK_ID} \
@@ -120,6 +121,8 @@ do
                 --use_combine_grad \
                 --optim adamw_apex_fused_npu \
                 --overwrite_output_dir \
+                --save_steps 50000\
+                --skip_steps 5 \
                 --output_dir /tmp/$TASK/ > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
@@ -144,6 +147,10 @@ elif [ x"${TASK}" == x"stsb" ];then
     train_accuracy=`grep "eval_spearmanr" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $3}'`
 elif [ x"${TASK}" == x"mrpc" ] || [ x"${TASK}" == x"qqp" ];then
     train_accuracy=`grep "eval_f1" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $3}'`
+elif [ x"${TASK}" == x"mnli" ];then
+     train_accuracy_match=`grep "eval_accuracy" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 1 |awk 'END {print $3}'`
+     train_accuracy_mismatch=`grep "eval_accuracy" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $3}'`
+     train_accuracy=${train_accuracy_match}' '${train_accuracy_mismatch}
 else
     train_accuracy=`grep "eval_accuracy" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $3}'`
 fi

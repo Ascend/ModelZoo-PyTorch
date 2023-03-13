@@ -121,7 +121,7 @@ SSD网络是继YOLO之后的one-stage目标检测网络，是为了改善YOLO网
 
    1. 获取权重文件。
 
-       到对应git仓获取VGG SSD对应的权重文件vgg16-ssd-mp-0_7726.pth
+       到对应git仓获取VGG SSD对应的权重文件[vgg16-ssd-mp-0_7726.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/VGG16/PTH/vgg16-397923af.pth)
        
    2. 导出onnx文件。
 

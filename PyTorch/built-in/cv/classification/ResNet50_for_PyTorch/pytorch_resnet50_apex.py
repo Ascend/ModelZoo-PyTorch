@@ -43,7 +43,7 @@ from apex import amp
 BATCH_SIZE = 512
 EPOCHS_SIZE = 100
 TRAIN_STEP = 8000
-LOG_STEP = 1
+LOG_STEP = 100
 
 CALCULATE_DEVICE = "npu:7"
 PRINT_DEVICE = "cpu"
@@ -512,7 +512,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % LOG_STEP == 0:
+        if i < 11 or i % LOG_STEP == 0:
             progress.display(i)
 
         if i == TRAIN_STEP:

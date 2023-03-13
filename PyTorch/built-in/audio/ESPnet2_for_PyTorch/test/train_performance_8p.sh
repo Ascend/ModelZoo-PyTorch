@@ -25,8 +25,6 @@ batch_size=256
 #训练起始stage
 stage=1
 
-#训练epoch, 不需要修改
-epochs=5
 
 # 指定训练所使用的npu device卡id, 暂不支持修改
 device_id=0
@@ -37,7 +35,6 @@ do
         stage=`echo ${para#*=}`
     fi
 done
-
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ ${device_id} ];then
@@ -56,8 +53,8 @@ else
     mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 fi
 
-asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_max_epoch${epochs}_sp/train.log
-result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_max_epoch${epochs}_sp/RESULTS.md
+asr_log=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_sp/train.log
+result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_sp/RESULTS.md
 
 
 #################启动训练脚本#################
@@ -65,11 +62,18 @@ result=$cur_path/egs2/aishell/asr1/exp/asr_train_asr_conformer_raw_zh_char_max_e
 # 必要参数替换配置文件
 cd $cur_path/egs2/aishell/asr1
 
+# 修改配置文件超参
+conf_file=$cur_path/egs2/aishell/asr1/conf/tuning/train_asr_conformer.yaml
+ori_epoch=`cat $conf_file | grep max_epoch:`
+ori_batch_bins=`cat $conf_file | grep batch_bins:`
+ori_lr=`cat $conf_file | grep lr:`
+sed -i "s|$ori_epoch|max_epoch: 5|g" $conf_file
+sed -i "s|$ori_batch_bins|batch_bins: 32000000|g" $conf_file
+sed -i "s|$ori_lr|   lr: 0.004|g" $conf_file
 start_time=$(date +%s)
 
 nohup bash run.sh \
   --stage ${stage} \
-  --asr_args "--max_epoch ${epochs}" \
   --ngpu 8 &
 
 wait
@@ -82,9 +86,11 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-ITERS=`grep "epoch results:" $asr_log |head -n 1 | awk -F "total_count=" '{print$2}' | awk -F "," '{print$1}'`
-SECONDS=`grep "elapsed time" $asr_log | awk '{print$14}'`
-FPS=`awk 'BEGIN{printf "%.2f",(('$ITERS' * '$epochs') / '$SECONDS')}'`
+MINUTES=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' | awk -F " " '{print$1}' | awk '{sum += $1};END {print sum}'`
+SECOND=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' | awk -F " " '{print$4}' | awk '{sum += $1};END {print sum}'`
+TOTAL_TIME=`awk 'BEGIN{printf "%.2f",('$MINUTES'*60+'$SECOND')}'`
+# 计算公式为：数据集数量 * 倍速数目 * epoch / 训练总时间
+FPS=`awk 'BEGIN{printf "%.2f",(120098*3*5 / '$TOTAL_TIME')}'`
 
 #输出训练精度,需要模型审视修改
 dev_accuracy=`grep "valid.acc.ave/dev" ${result} | tail -n 1 | awk -F "|" '{print$5}'`

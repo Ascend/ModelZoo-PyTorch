@@ -98,7 +98,7 @@
 
 
 1. 下载pth权重文件  
-[moco-v2预训练pth权重文件](https://www.hiascend.com/zh/software/modelzoo/detail/1/79c64b56e43642c3a2e62a84f9ed9897)  
+[moco-v2预训练pth权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/MocoV2/PTH/model_lincls_best.pth.tar)  
 
     然后执行执行以下命令生成 ONNX 模型：
     ```bash

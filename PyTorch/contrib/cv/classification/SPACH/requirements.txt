@@ -1,8 +1,0 @@
-torchvision==0.9.1
-pillow
-mpmath
-requests
-timm==0.4.5
-einops==0.4.1
-decorator
-sympy

@@ -124,7 +124,7 @@
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件：`checkpoint`。
+      从源码包中获取权重文件：[checkpoint](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/RotaE/PTH/checkpoint)。
 
    2. 导出onnx文件。
 

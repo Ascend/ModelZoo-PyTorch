@@ -1,7 +1,0 @@
-torchvision==0.9.1
-numpy
-decorator
-sympy
-scipy
-pyyaml
-pillow
