@@ -16,12 +16,14 @@ data_path=""
 train_epochs=10
 # 加载数据进程数
 workers=4
-
+prof_type=None
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --prof_type* ]];then
+        prof_type=`echo ${para#*=}`
     fi
 done
 
@@ -70,6 +72,7 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 taskset -c $PID_START-$PID_END python3.7 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
         --train_epochs ${train_epochs} \
         --data_path ${data_path} \
+        --prof_type ${prof_type} \
         --workers ${workers} > $cur_path/test/output/${i}/train_${i}.log 2>&1 &
 wait
 ASCEND_DEVICE_ID=0

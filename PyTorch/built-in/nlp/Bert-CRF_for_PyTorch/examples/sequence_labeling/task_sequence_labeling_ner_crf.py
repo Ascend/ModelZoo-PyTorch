@@ -67,9 +67,16 @@ parser.add_argument("--local_rank", type=int, default=0)
 parser.add_argument("--train_epochs", type=int, default=20)
 parser.add_argument("--data_path", type=str, default='')
 parser.add_argument("--workers", type=int, default=4)
-args = parser.parse_args()
+parser.add_argument("--prof_type", default='None',
+                       	 choices=['TORCH', 'CANN', 'GE', 'None'],
+                       	 help="The type of profile.")
 
-distributed = 'WORLD_SIZE' in os.environ 
+args = parser.parse_args()
+os.environ['PROFILE_TYPE'] = args.prof_type
+if args.prof_type == 'GE':
+    os.environ['GE_PROFILING_TO_STD_OUT'] = '1'
+
+distributed = 'WORLD_SIZE' in os.environ
 
 if distributed:
     torch.distributed.init_process_group(backend='hccl', world_size=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
@@ -152,11 +159,11 @@ if distributed:
     train_dataset = MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train')
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, \
-        num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, collate_fn=collate_fn, drop_last=True, pin_memory=True) 
+        num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, collate_fn=collate_fn, drop_last=True, pin_memory=True)
 else:
     train_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train'), batch_size=batch_size, \
-        num_workers=args.workers, shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True) 
-valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), batch_size=batch_size, collate_fn=collate_fn) 
+        num_workers=args.workers, shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True)
+valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), batch_size=batch_size, collate_fn=collate_fn)
 
 # 定义bert上的模型结构
 class Model(BaseModel):
@@ -291,6 +298,6 @@ if __name__ == '__main__':
     else:
         model.fit(train_dataloader, None, epochs=args.train_epochs, steps_per_epoch=None, callbacks=[evaluator]) #evaluator
 
-else: 
+else:
 
     model.load_weights('best_model.pt')

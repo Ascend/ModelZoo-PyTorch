@@ -38,7 +38,7 @@ learning_rate=6e-5
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_fp32_to_fp16"
-
+prof_type=None
 #参数校验，不需要修改
 for para in $*
 do
@@ -50,6 +50,8 @@ do
         batch_size=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
+    elif [[ $para == --prof_type* ]];then
+        prof_type=`echo ${para#*=}`
     fi
 done
 
@@ -119,6 +121,7 @@ do
 		  --npu_id ${ASCEND_DEVICE_ID} \
 		  --do_lower_case \
 		  --output_dir results/SQUAD \
+          --prof_type ${prof_type} \
 		  --config_file bert_base_config.json > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait

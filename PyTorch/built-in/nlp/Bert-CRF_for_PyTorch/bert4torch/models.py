@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from inspect import isfunction
+import os
 import torch
 import torch.nn as nn
 import torch_npu
@@ -27,6 +28,7 @@ from bert4torch.snippets import ProgbarLogger, EarlyStopping, FGM, PGD, VAT, Ite
 from bert4torch.activations import get_activation
 from collections import OrderedDict
 import warnings
+from torch_npu.contrib.module.utils_tools import Profile
 try:
     from apex import amp
     amp.register_half_function(torch.nn.functional, 'softmax')
@@ -41,11 +43,11 @@ class BaseModel(nn.Module):
         self.global_step, self.local_step, self.total_steps, self.epoch, self.steps_per_epoch, self.train_dataloader = 0, 0, 0, 0, None, None
         self.resume_step, self.resume_epoch = 0, 0
         self.callbacks = []
-    
+
     def save_steps_params(self, save_path):
         '''保存训练过程参数
         '''
-        step_params = {'resume_step': (self.local_step+1) % self.steps_per_epoch, 
+        step_params = {'resume_step': (self.local_step+1) % self.steps_per_epoch,
                        'resume_epoch': self.epoch + (self.local_step+1) // self.steps_per_epoch}
         torch.save(step_params, save_path)
 
@@ -53,7 +55,7 @@ class BaseModel(nn.Module):
         '''导入训练过程参数
         '''
         step_params = torch.load(save_path)
-        self.resume_step = step_params['resume_step'] 
+        self.resume_step = step_params['resume_step']
         self.resume_epoch = step_params['resume_epoch']
         return step_params
 
@@ -266,6 +268,7 @@ class BaseModel(nn.Module):
         # local_step: 当前epoch内的训练步数，不同epoch中相同local_step对应的batch数据不一定相同，在steps_per_epoch=None时相同
         # bti：在dataloader中的index，不同epoch中相同的bti对应的batch数据一般相同，除非重新生成dataloader
         self.bti = 0
+        prof_type = os.getenv("PROFILE_TYPE", None)
         for epoch in range(self.resume_epoch, epochs):
             self.epoch = epoch
             if train_sampler is not None:
@@ -275,7 +278,7 @@ class BaseModel(nn.Module):
             self.callback_fun('epoch_begin')
             start = time.time()
             self.callbacks[0].seen = resume_step
-            
+            profiler = Profile(profile_type=prof_type)
             for local_step in range(resume_step, self.steps_per_epoch):
                 self.local_step = local_step
                 self.global_step = self.epoch * self.steps_per_epoch + self.local_step
@@ -307,11 +310,12 @@ class BaseModel(nn.Module):
 
                 self.train()  # 设置为train模式
                 # 入参个数判断，如果入参>=3表示是多个入参，如果=2则表示是一个入参
+                profiler.start()
                 output, loss, loss_detail = self.train_step(train_X, train_y, grad_accumulation_steps, seq_length)
                 end = time.time()
                 step_time = end - start
                 start = time.time()
-                
+
                 retain_graph = True if self.adversarial['name'] in {'gradient_penalty', 'vat'} else False
                 if self.use_amp:  # 混合精度
                     scale_before_step = self.scaler.get_scale()
@@ -325,7 +329,7 @@ class BaseModel(nn.Module):
 
                 # 对抗训练
                 loss, loss_detail = self.adversarial_training(train_X, train_y, output, loss, loss_detail, grad_accumulation_steps)
-                
+
                 # 参数更新, 真实的参数更新次数要除以grad_accumulation_steps，注意调整总的训练步数
                 if (self.global_step+1) % grad_accumulation_steps == 0:
                     skip_scheduler = False
@@ -344,7 +348,7 @@ class BaseModel(nn.Module):
                         else:
                             torch.nn.utils.clip_grad_norm_(self.parameters(), self.clip_grad_norm)
                         self.optimizer.step()
-
+                    profiler.end()
                     self.optimizer.zero_grad()  # 清梯度
                     if (self.scheduler is not None) and not skip_scheduler:
                         if isinstance(self.scheduler, (tuple, list)):
@@ -361,7 +365,7 @@ class BaseModel(nn.Module):
                 logs.update(logs_loss_detail)
                 if self.global_step == resume_step:
                     self.callbacks[0].add_metrics(list(logs_loss_detail.keys()), add_position=1)
-                    
+
                 # 添加metrics至log打印
                 for metric, func in self.metrics.items():
                     perf = metric_mapping(metric, func, output, train_y)  # 内置的一些accuracy指标
@@ -372,7 +376,7 @@ class BaseModel(nn.Module):
                             logs.update(perf)
                         elif isinstance(metric, str):  # 直接传入回调函数(有key)
                             logs[metric] = perf
-                
+
                 self.callback_fun('batch_end', logs)
 
                 self.bti += 1
@@ -396,7 +400,7 @@ class BaseModel(nn.Module):
             return output[return_all]
         else:
             raise ValueError('Return format error')
-    
+
     def load_weights(self, load_path, strict=True, prefix=None):
         '''加载模型权重
            save_path: 权重加载路径
@@ -426,7 +430,7 @@ class BaseModel(nn.Module):
             for k, v in self.state_dict().items():
                 state_dict_save[k] = v.cpu()
             torch.save(state_dict_save, save_path)
-        else:  
+        else:
             # 按照variable_mapping()中原始的key保存，方便其他官方代码加载模型
             eval_str = 'self.variable_mapping()' if prefix == '' else f'self.{prefix}.variable_mapping()'
             mapping = eval(eval_str)
@@ -436,7 +440,7 @@ class BaseModel(nn.Module):
                 k = mapping.get(k, k)
                 state_dict_raw[k] = v
             torch.save(state_dict_raw, save_path)
-    
+
 
 class BaseModelDP(BaseModel, nn.DataParallel):
     '''DataParallel模式使用多gpu的方法
@@ -536,7 +540,7 @@ class BERT_BASE(BaseModel):
         #     layer_norm_cond_hidden_act or 'linear',
         # ]
         self.output_all_encoded_layers = kwargs.get('output_all_encoded_layers', False)
-        
+
 
     def forward(self, inputs):
         """定义模型的执行流程
@@ -613,7 +617,7 @@ class BERT_BASE(BaseModel):
         file_state_dict = torch.load(checkpoint, map_location='cpu')  # 加载模型文件
         mapping = mapping or self.variable_mapping()
         parameters_set = set([i[0] for i in self.named_parameters()])  # 可更新的变量
-        
+
         # 如果模型文件和模型结构中同时存在，且不在预设的mapping中，则更新mapping
         # 主要是如为了在外部继承BERT后有其他layer，也能自动从checkpoint中加载进来
         for layer_name in parameters_set:
@@ -640,10 +644,10 @@ class BERT_BASE(BaseModel):
 
         # 将ckpt的权重load到模型结构中
         self.load_state_dict(state_dict_new, strict=False)
-    
+
     # def get_inputs(self):
     #     pass
-    
+
     # def set_inputs(self, inputs, additional_input_layers=None):
     #     """设置input和inputs属性
     #     """
@@ -657,12 +661,12 @@ class BERT_BASE(BaseModel):
 
     def apply_final_layers(self, inputs):
         raise NotImplementedError
-    
+
     def apply_on_layer_begin(self, l_i, inputs):
         '''新增对layer block输入进行操作的函数
         '''
         return inputs
-    
+
     def apply_on_layer_end(self, l_i, inputs):
         '''新增对layer block输出进行操作的函数
         '''
@@ -780,10 +784,10 @@ class BERT(BERT_BASE):
         self.layer_norm_conds = layer_norm_cond
         self.layer_add_embs = layer_add_embs
         self.conditional_size = layer_norm_cond.weight.size(1) if layer_norm_cond is not None else None
-        self.embeddings = BertEmbeddings(self.vocab_size, self.embedding_size, self.hidden_size, self.max_position, self.segment_vocab_size, self.shared_segment_embeddings, 
+        self.embeddings = BertEmbeddings(self.vocab_size, self.embedding_size, self.hidden_size, self.max_position, self.segment_vocab_size, self.shared_segment_embeddings,
                                          self.dropout_rate, self.conditional_size, **get_kw(BertEmbeddings, kwargs))
-        kwargs['max_position'] = self.max_position  # 相对位置编码需要使用    
-        layer = BertLayer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, self.hidden_act, 
+        kwargs['max_position'] = self.max_position  # 相对位置编码需要使用
+        layer = BertLayer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, self.hidden_act,
                           is_dropout=self.is_dropout, conditional_size=self.conditional_size, **get_kw(BertLayer, kwargs))
         self.encoderLayer = nn.ModuleList([copy.deepcopy(layer) if layer_id in self.keep_hidden_layers else Identity() for layer_id in range(self.num_hidden_layers)])
         if self.with_pool:
@@ -839,7 +843,7 @@ class BERT(BERT_BASE):
         else:  # 自定义word_embedding，目前仅有VAT中使用
             attention_mask = self.attention_mask_cache
         self.attention_mask_cache = attention_mask  # 缓存上次用的attention_mask
-        
+
         self.compute_attention_bias([token_ids, segment_ids])  # 根据lm或者unilm需要对mask做调整
         if self.attention_bias is not None:
             attention_mask = attention_mask * self.attention_bias  # 不可访问padding
@@ -853,7 +857,7 @@ class BERT(BERT_BASE):
             attention_mask = attention_mask.to(dtype=next(self.parameters()).dtype)  # 兼容fp16
         except StopIteration:
             attention_mask = attention_mask.to(dtype=torch.float32)
-        
+
         # 对mask矩阵中，数值为0的转换成很大的负数，使得不需要attention的位置经过softmax后,分数趋近于0
         # attention_mask = (1.0 - attention_mask) * -10000.0
         # conditional layer_norm
@@ -904,7 +908,7 @@ class BERT(BERT_BASE):
         if not self.output_all_encoded_layers:
             encoded_layers.append(hidden_states)
         return [encoded_layers, conditional_emb]
-    
+
     def apply_final_layers(self, inputs):
         """根据剩余参数决定输出
         """
@@ -935,7 +939,7 @@ class BERT(BERT_BASE):
             mlm_scores = mlm_activation(mlm_scores)
         else:
             mlm_scores = None
-        
+
         outputs = [value for value in [encoded_layers, pooled_output, mlm_scores, nsp_scores] if value is not None]
         return outputs if len(outputs) > 1 else outputs[0]
 
@@ -1138,7 +1142,7 @@ class RoFormer(BERT):
     def __init__(self, *args, **kwargs):
         kwargs.update({'p_bias': 'rotary'})
         super(RoFormer, self).__init__(*args, **kwargs)
-    
+
     def load_variable(self, state_dict, name, prefix='roformer'):
         return super().load_variable(state_dict, name, prefix)
 
@@ -1185,7 +1189,7 @@ class RoFormerV2(RoFormer):
             mlm_scores = self.mlmDecoder(sequence_output)
         else:
             mlm_scores = None
-        
+
         outputs = [value for value in [encoded_layers, mlm_scores] if value is not None]
         return outputs if len(outputs) > 1 else outputs[0]
 
@@ -1197,7 +1201,7 @@ class GAU_alpha(RoFormerV2):
 
         layer = self.GAU_Layer(**kwargs)
         self.encoderLayer = nn.ModuleList([copy.deepcopy(layer) if layer_id in self.keep_hidden_layers else Identity() for layer_id in range(self.num_hidden_layers)])
-    
+
     def load_variable(self, state_dict, name, prefix=''):
         variable = state_dict[name]
         return self.load_embeddings(variable) if name in {'embeddings.word_embeddings.weight', 'mlmDecoder.weight'} else variable
@@ -1219,7 +1223,7 @@ class GAU_alpha(RoFormerV2):
             hidden_states = self.layerNorm1((hidden_states, conditional_emb))
             return hidden_states
 
-    
+
 class ELECTRA(BERT):
     """Google推出的ELECTRA模型
     链接：https://arxiv.org/abs/2003.10555
@@ -1249,12 +1253,12 @@ class ELECTRA(BERT):
 
     def variable_mapping(self):
         mapping = super(ELECTRA, self).variable_mapping(prefix='electra')
-        mapping.update({'dense.weight': 'discriminator_predictions.dense.weight', 
+        mapping.update({'dense.weight': 'discriminator_predictions.dense.weight',
                         'dense.bias': 'discriminator_predictions.dense.bias',
                         'dense_prediction.weight': 'discriminator_predictions.dense_prediction.weight',
                         'dense_prediction.bias': 'discriminator_predictions.dense_prediction.bias'}
                         )
-        for del_key in ['pooler.weight', 'pooler.bias', 'nsp.weight', 'nsp.bias', 'mlmDense.weight', 'mlmDense.bias', 
+        for del_key in ['pooler.weight', 'pooler.bias', 'nsp.weight', 'nsp.bias', 'mlmDense.weight', 'mlmDense.bias',
                         'mlmLayerNorm.weight', 'mlmLayerNorm.bias', 'mlmBias', 'mlmDecoder.weight', 'mlmDecoder.bias']:
             del mapping[del_key]
 
@@ -1288,7 +1292,7 @@ class Encoder(BERT):
         super().__init__(*args, **kwargs)
         # encoder需要返回encoder_attention_mask
         self.encoder_attention_mask = None
-    
+
     def forward(self, inputs):
         """因为encoder需要返回encoder_attention_mask，因此这里从新定义一下，多返回一个参数
         """
@@ -1342,7 +1346,7 @@ class Decoder(LM_Mask, BERT):
         if not self.output_all_encoded_layers:
             decoded_layers.append(hidden_states)
         return [decoded_layers, conditional_emb]
-    
+
     def apply_final_layers(self, inputs):
         outputs = []
         hidden_states =  super().apply_final_layers(inputs)  # outputs为decoder顶层的hidden_states [btz, seq_len, hdsz]
@@ -1504,13 +1508,13 @@ class BART(Transformer):
 class T5_Encoder(Encoder):
     @insert_arguments(version='t5.1.0')
     def __init__(self, *args, **kwargs):
-        kwargs.update({'p_bias': 't5_relative', 'relative_attention_num_buckets': kwargs.get('relative_attention_num_buckets'), 'version': self.version, 
+        kwargs.update({'p_bias': 't5_relative', 'relative_attention_num_buckets': kwargs.get('relative_attention_num_buckets'), 'version': self.version,
                        'bias': False, 'norm_mode': 'rmsnorm'})  # p_bias来控制embedding阶段无pos_embedding，t5不使用bias，并且使用rmsnorm
         super().__init__(*args, **kwargs)
         del self.embeddings.layerNorm
 
         # t5的layernorm都在前面，因此重新定义了下
-        layer = T5Layer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, self.hidden_act, is_dropout=self.is_dropout, 
+        layer = T5Layer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, self.hidden_act, is_dropout=self.is_dropout,
                             conditional_size=self.conditional_size, **get_kw(BertLayer, kwargs))
         self.encoderLayer = nn.ModuleList([copy.deepcopy(layer) for _ in range(self.num_hidden_layers)])
 
@@ -1556,7 +1560,7 @@ class T5_Encoder(Encoder):
                 mapping.update({f'{prefix}encoderLayer.{i}.feedForward.intermediateDense.weight': f'encoder.block.{i}.layer.1.DenseReluDense.wi_0.weight',
                                 f'{prefix}encoderLayer.{i}.feedForward.intermediateDense1.weight': f'encoder.block.{i}.layer.1.DenseReluDense.wi_1.weight'})
         return mapping
-    
+
 
 class T5_Decoder(Decoder):
     @insert_arguments(version='t5.1.0')
@@ -1567,10 +1571,10 @@ class T5_Decoder(Decoder):
         del self.embeddings.layerNorm
 
         # t5的layernorm都在前面，因此重新定义了下
-        layer = T5Layer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, self.hidden_act, is_dropout=self.is_dropout, 
+        layer = T5Layer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, self.hidden_act, is_dropout=self.is_dropout,
                             conditional_size=self.conditional_size, is_decoder=True, **get_kw(BertLayer, kwargs))
         self.decoderLayer = nn.ModuleList([copy.deepcopy(layer) for _ in range(self.num_hidden_layers)])
-        
+
         # 把第二层后的相对位置编码的权重绑定到第一层上，变相实现仅由第一层计算
         for i in range(1, self.num_hidden_layers):
             self.decoderLayer[i].multiHeadAttention.relative_positions_encoding.weight = self.decoderLayer[0].multiHeadAttention.relative_positions_encoding.weight
@@ -1725,7 +1729,7 @@ class GPT2(LM_Mask, BERT):
         mapping.update({'LayerNormFinal.weight': 'gpt2.LayerNormFinal.weight',
                         'LayerNormFinal.bias': 'gpt2.LayerNormFinal.bias'})
         return mapping
-    
+
     class Gpt2Layer(BertLayer):
         '''未定义在layer.py中是因为该层针对gpt2_mlm模型，不可复用
         顺序：LN --> Att --> Add --> LN --> FFN --> Add
@@ -1793,7 +1797,7 @@ class GPT2_ML(LM_Mask, BERT):
 class Transformer_XL(BERT):
     '''构建transformer-xl模型, 已加载
     项目: https://github.com/kimiyoung/transformer-xl
-    不同点:  
+    不同点:
         1) 简化了原有的AdaptiveEmbedding(可选)和未使用ProjectedAdaptiveLogSoftmax, 直接输出last_hidden_state
         2) mems修改了transformer中初始化为zero_tensor, 改为包含最后一层, 原项目初始化为empty_tensor
         3) SinusoidalPositionEncoding一般是sincos间隔排列, 这里是先sin后cos
@@ -1828,7 +1832,7 @@ class Transformer_XL(BERT):
             self.r_s_bias = None
 
         # transformer block
-        layer = XlnetLayer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size, 
+        layer = XlnetLayer(self.hidden_size, self.num_attention_heads, self.dropout_rate, self.attention_probs_dropout_prob, self.intermediate_size,
                            self.hidden_act, is_dropout=self.is_dropout, conditional_size=self.conditional_size, r_w_bias=self.r_w_bias, r_r_bias=self.r_r_bias,
                            r_s_bias=None, **get_kw(BertLayer, kwargs))
         self.encoderLayer = nn.ModuleList([copy.deepcopy(layer) if layer_id in self.keep_hidden_layers else Identity() for layer_id in range(self.num_hidden_layers)])
@@ -1939,18 +1943,18 @@ class Transformer_XL(BERT):
             layer_inputs[0] = hidden_states
             layer_inputs = self.apply_on_layer_end(i, layer_inputs)
             encoded_layers.append(hidden_states)
-        
+
         # 原实现中word_emb, pos_emb和core_out(hidden_states)使用同一个dropout
         hidden_states = self.dropout(hidden_states)
         qlen = inputs[0].size(1)  # query长度
         mlen = self.mems[0].size(0) if self.mems is not None else 0
         self._update_mems(encoded_layers, mlen, qlen)
-        
+
         if not self.output_all_encoded_layers:
             # 不返回所有层，即返回顶层
             encoded_layers = encoded_layers[:1] + [hidden_states]
         return [encoded_layers, conditional_emb]
-    
+
     def load_variable(self, state_dict, name, prefix=''):
         # 这里由于预训练模型使用了AdapterEmbedding，因此暂不支持
         if (self.keep_tokens is not None) or (self.compound_tokens is not None):
@@ -1969,7 +1973,7 @@ class XLNET(Transformer_XL):
         self.bi_data = bi_data
         kwargs['rel_shift_opt'] = 'xlnet'
         super().__init__(*args, **kwargs)
-    
+
     def relative_positional_encoding(self, qlen, klen, device):
         # 生成pos_emb, 这里使用sincos的位置编码, transformer_xl里面有-1
         if self.attn_type == 'bi':
@@ -1977,7 +1981,7 @@ class XLNET(Transformer_XL):
         elif self.attn_type == "uni":
             beg, end = klen, -1
         else:
-            raise ValueError(f"Unknown `attn_type` {self.attn_type}.") 
+            raise ValueError(f"Unknown `attn_type` {self.attn_type}.")
 
         # 前向的emb
         pos_seq = torch.arange(beg, end, -1.0, device=device, dtype=torch.long)
@@ -2069,10 +2073,10 @@ def build_transformer_model(
         configs['dropout_rate'] = configs.get('hidden_dropout_prob')
     if 'segment_vocab_size' not in configs:
         configs['segment_vocab_size'] = configs.get('type_vocab_size', 2)
-    
+
     models = {
         'bert': BERT,
-        'roberta': BERT,  
+        'roberta': BERT,
         'albert': ALBERT,
         'albert_unshared': ALBERT_Unshared,
         'nezha': NEZHA,
@@ -2127,6 +2131,6 @@ def build_transformer_model(
     transformer.apply(transformer.init_model_weights)  # 初始化权重
 
     if checkpoint_path is not None:
-        transformer.load_weights_from_pytorch_checkpoint(checkpoint_path)   
+        transformer.load_weights_from_pytorch_checkpoint(checkpoint_path)
     transformer.configs = configs
     return transformer
