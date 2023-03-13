@@ -36,6 +36,8 @@ rt2_bin=1
 conda_name=py1
 #loss输出的间隔
 interval=50
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
 
 #参数校验，不需要修改
 for para in $*
@@ -58,6 +60,8 @@ do
         profiling=`echo ${para#*=}`
     elif [[ $para == --rt2_bin* ]];then
         rt2_bin=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
@@ -122,6 +126,7 @@ do
         taskset -c $a-$b python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
+            --precision_mode $precision_mode \
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
@@ -135,6 +140,7 @@ do
         python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
+            --precision_mode $precision_mode \
             --gpus 8 \
             --autoscale-lr \
             --seed 0 \
@@ -175,7 +181,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $apex == "O0" ]];then
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
 else
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
