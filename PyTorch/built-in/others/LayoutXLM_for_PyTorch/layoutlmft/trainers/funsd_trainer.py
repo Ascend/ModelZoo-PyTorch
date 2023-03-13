@@ -51,7 +51,8 @@ class FunsdTrainer(Trainer):
 
         # Mixed precision training with apex (torch < 1.6)
         if self.use_apex and training:
-            model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level, combine_grad=True)
+            model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level,
+                                                   combine_grad=True)
 
         # Multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
@@ -128,7 +129,7 @@ class FunsdTrainer(Trainer):
                 optimizer_kwargs = {"scale_parameter": False, "relative_step": False}
             else:
                 optimizer_cls = AdamW
-                if self._use_apex:
+                if self.use_apex:
                     from apex.optimizers import NpuFusedAdamW
                     optimizer_cls = NpuFusedAdamW
                 optimizer_kwargs = {
