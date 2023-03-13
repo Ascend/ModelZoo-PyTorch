@@ -98,8 +98,8 @@ index 9bdab0f8..5de5f7aa 100644
 +        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 1, 3, 2])
 +        batch_P_prime = paddle.add(batch_P_prime, paddle.zeros((1, 3, 100, 32)))
 +        batch_I_r = paddle.transpose(batch_P_prime, perm=[0, 1, 3, 2])
-++
-++        # batch_I_r = F.grid_sample(x=image, grid=batch_P_prime)
++
++        # batch_I_r = F.grid_sample(x=image, grid=batch_P_prime)
          return batch_I_r
 diff --git a/ppocr/modeling/transforms/tps_spatial_transformer.py b/ppocr/modeling/transforms/tps_spatial_transformer.py
 index cb1cb10a..d7d7b315 100644
