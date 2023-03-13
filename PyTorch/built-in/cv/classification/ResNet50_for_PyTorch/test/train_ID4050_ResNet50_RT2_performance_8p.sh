@@ -76,7 +76,7 @@ nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
         --workers=${workers} \
         --learning-rate=1.6 \
         --warmup=8 \
-        --precision_mode=${precision_mode} \        
+        --precision_mode=${precision_mode} \
         --label-smoothing=0.1 \
         --mom=0.9 \
         --weight-decay=1.0e-04  \
