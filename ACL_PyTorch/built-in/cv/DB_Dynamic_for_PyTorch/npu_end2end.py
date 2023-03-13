@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import argparse
 import time
 import os
-import logging
 from tqdm import tqdm
 
 import numpy as np
@@ -24,14 +22,13 @@ import onnxruntime as ort
 
 from ais_bench.infer.interface import InferSession
 
-logger = logging.getLogger(__name__)
-
 
 
 def com_cos(p1, p2):
     vec1 = p1.reshape(1,-1)
     vec2 = p2.reshape(1,-1)
     return vec1.dot(vec2.T) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
 def main(data_path, onnx_path, npu_session, onnx_session):
 
     # onnxruntime
@@ -59,7 +56,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='infer E2E')
     parser.add_argument("--data_path", default="./pre_npy", help='data path')
     parser.add_argument("--onnx_path", default="./dbnet_fix.onnx", help='onnx path')
-    parser.add_argument("--device", default=0, help='npu device')
+    parser.add_argument("--device", default=0, type=int, help='npu device')
     parser.add_argument("--om_path", default="./om/dbnet_fix_linux_x86_64.om", help='om path')
     flags = parser.parse_args()
     

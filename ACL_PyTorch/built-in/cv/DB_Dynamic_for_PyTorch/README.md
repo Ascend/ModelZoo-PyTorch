@@ -122,7 +122,7 @@
       在`DB`目录下
 
        ```sh
-       wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/DBnet/PTH/ic15_resnet50 -O DB/ic15_resnet50
+       wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/DBnet/PTH/ic15_resnet50 -O ./ic15_resnet50
        ```
 
    2. 导出onnx文件。
@@ -208,7 +208,7 @@
    
 
         ```shell
-        python3 -m npu_end2end.py --data_path DB/input_npy --onnx_path ./dbnet_fix.onnx  --device 0 --om_path om/dbnet_fix.om
+        python3 npu_end2end.py --data_path DB/input_npy --onnx_path ./dbnet_fix.onnx  --device 0 --om_path om/dbnet_fix.om
         ```
 
         -   参数说明：
@@ -244,4 +244,4 @@
 
 | 芯片型号 |  数据集   | 精度 | E2E(s)  |
 | :------: | :-------: | :--: | :---: |
-|  310P3   | icdar2015 | cosineSimilarity:0.99 | 9.3s左右 |
+|  310P3   | icdar2015 | cosineSimilarity:0.99 | 9.9s左右 |
