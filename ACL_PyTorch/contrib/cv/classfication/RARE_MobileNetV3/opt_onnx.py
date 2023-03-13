@@ -16,16 +16,16 @@ import argparse
 from auto_optimizer import OnnxGraph
 def create_grid_sample(onnx_in, onnx_out):
     graph = OnnxGraph.parse(onnx_in)
-    graph.remove('p2o.Unsqueeze.8', maps={})
-    graph.remove('p2o.Pad.0', maps={})
-    graph.remove('p2o.Squeeze.9', maps={})
-    graph.remove('p2o.Add.16', maps={})
-    graph.remove('p2o.Transpose.5', maps={})
+    graph.remove('Unsqueeze_8')
+    graph.remove('Pad_0')
+    graph.remove('Squeeze_9')
+    graph.remove('Add_9')
+    graph.remove('Transpose_6')
     gridsample = graph.add_node('D_gridsample', 'GridSample', \
 [], [], {'padding_mode':b'zeros', 'mode':b'bilinear','align_corners':1})
     graph['D_gridsample'].inputs=['transpose_3.tmp_0', 'transpose_4.tmp_0']
     graph['D_gridsample'].outputs=['tmp_11']
-    graph['p2o.Transpose.6'].inputs=['tmp_11']
+    graph['Transpose_7'].inputs=['tmp_11']
     graph.update_map()
     graph.save(onnx_out)
 
