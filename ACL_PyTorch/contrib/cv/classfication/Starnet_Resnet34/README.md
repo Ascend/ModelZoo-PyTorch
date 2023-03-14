@@ -268,7 +268,7 @@ Starnet是一个对于不规则的文字具有鲁棒性的识别模型模型，�
    b.  执行推理。
 
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench  \
           --model=./Starnet_Resnet34_tps_bs${batchsize}.om \
           --input=./rare_bindata \
           --batchsize=${batchsize} \
@@ -317,7 +317,7 @@ Starnet是一个对于不规则的文字具有鲁棒性的识别模型模型，�
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 ${path_to_ais-infer}/ais_infer.py \
+      python3 -m ais_bench  \
           --model=./Starnet_Resnet34_tps_bs${batchsize}.om \
           --loop=50 \
           --batchsize=${batchsize}
