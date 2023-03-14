@@ -63,6 +63,7 @@ def main(args):
         option = {}
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
         torch.npu.set_option(option)
+        torch.npu.config.allow_internal_format=False
     torch.npu.set_device(args.local_rank)
 
     os.makedirs(cfg.output, exist_ok=True)

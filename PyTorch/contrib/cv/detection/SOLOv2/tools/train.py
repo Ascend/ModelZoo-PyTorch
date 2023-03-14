@@ -114,6 +114,7 @@ def main():
         option = {}
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
         torch.npu.set_option(option)
+        torch.npu.config.allow_internal_format=False
     print('option', option)
     torch.npu.set_option(option)
     os.environ['MASTER_ADDR'] = os.getenv('MASTER_ADDR', '127.0.0.1')

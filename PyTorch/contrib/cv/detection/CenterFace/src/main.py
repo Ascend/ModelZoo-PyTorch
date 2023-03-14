@@ -43,6 +43,7 @@ def main(opt, qtepoch=[0,]):
       option = {}
       option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
       torch.npu.set_option(option)
+      torch.npu.config.allow_internal_format=False
 
   torch.manual_seed(opt.seed)
   torch.backends.cudnn.benchmark = not opt.not_cuda_benchmark and not opt.test
