@@ -34,6 +34,10 @@ def register_torch_optimizers() -> List:
         if module_name.startswith('__'):
             continue
         _optim = getattr(torch.optim, module_name)
+        if hasattr(torch.optim, 'NpuFusedOptimizerBase') and \
+                inspect.isclass(_optim) and \
+                issubclass(_optim, torch.optim.NpuFusedOptimizerBase):
+            continue
         if inspect.isclass(_optim) and issubclass(_optim,
                                                   torch.optim.Optimizer):
             OPTIMIZERS.register_module()(_optim)
