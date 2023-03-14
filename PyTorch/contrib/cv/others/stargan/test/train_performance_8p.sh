@@ -85,7 +85,6 @@ nohup python3 -u ./main.py \
     --dataset_dir ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
 ##################获取训练数据################
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
