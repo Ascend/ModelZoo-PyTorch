@@ -98,7 +98,7 @@ do
             --rank 0 \
             --multiprocessing-distributed > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup python3.7 .main.py \
+        nohup python3.7 main.py \
             --data $data_path \
             --amp \
             --world-size 1 \
