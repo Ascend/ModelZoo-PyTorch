@@ -79,7 +79,7 @@
 1. 安装依赖。
 
    ```
-   pip3 install -r requirments.txt
+   pip3 install -r requirements.txt
    ```
 
 

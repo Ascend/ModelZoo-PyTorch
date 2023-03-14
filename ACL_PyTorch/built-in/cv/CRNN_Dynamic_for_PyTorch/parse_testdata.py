@@ -67,7 +67,7 @@ def gen_data_label(test_dir, output_npy):
                 try:
                     img = Image.open(buf).convert('L')
                     # transform
-                    h, w = img.size
+                    w, h = img.size
                     new_h = 32
                     new_w = int(h / new_h) * w if h > 32 else 100
                     new_w = max(32, min(new_w, 320))
