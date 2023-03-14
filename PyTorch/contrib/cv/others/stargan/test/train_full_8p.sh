@@ -72,10 +72,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-#参数替换
-sed -i "s|/celeba/images|/Img/img_celeba|g" ${cur_path}/main.py
-sed -i "s|/celeba/list_attr_celeba.txt|/Anno/list_attr_celeba.txt|g" ${cur_path}/main.py
-
 nohup python3 -u ./main.py \
     --mode train \
     --folder_dir stargan_NPU_8p \
@@ -87,10 +83,6 @@ nohup python3 -u ./main.py \
     --dataset_dir ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
-#参数回改
-sed -i "s|/Img/img_celeba|/celeba/images|g" ${cur_path}/main.py
-sed -i "s|/Anno/list_attr_celeba.txt|/celeba/list_attr_celeba.txt|g" ${cur_path}/main.py
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改

@@ -72,12 +72,9 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    sed -i "s|pass|break|g" ${cur_path}/solver.py
 fi
-
-#参数替换
-sed -i "s|/celeba/images|/Img/img_celeba|g" ${cur_path}/main.py
-sed -i "s|/celeba/list_attr_celeba.txt|/Anno/list_attr_celeba.txt|g" ${cur_path}/main.py
-sed -i "s|pass|break|g" ${cur_path}/solver.py
 
 nohup python3 -u ./main.py \
     --mode train \
@@ -90,11 +87,6 @@ nohup python3 -u ./main.py \
     --dataset_dir ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-
-#参数回改
-sed -i "s|/Img/img_celeba|/celeba/images|g" ${cur_path}/main.py
-sed -i "s|/Anno/list_attr_celeba.txt|/celeba/list_attr_celeba.txt|g" ${cur_path}/main.py
-sed -i "s|break|pass|g" ${cur_path}/solver.py
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改
