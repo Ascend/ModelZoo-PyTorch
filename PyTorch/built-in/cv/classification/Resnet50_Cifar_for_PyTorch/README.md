@@ -115,11 +115,11 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 
      启动8卡训练。
      ```
-     bash ./test/train_performance_8p.sh        # batchsize=168卡性能
-     bash ./test/train_performance_8p_bs32.sh   # batchsize=328卡性能
+     bash ./test/train_performance_8p.sh        # batchsize=16 8卡性能
+     bash ./test/train_performance_8p_bs32.sh   # batchsize=32 8卡性能
      
-     bash ./test/train_full_8p.sh               # batchsize=168卡精度
-     bash ./test/train_full_8p_bs32.sh          # batchsize=328卡精度 
+     bash ./test/train_full_8p.sh               # batchsize=16 8卡精度
+     bash ./test/train_full_8p_bs32.sh          # batchsize=32 8卡精度 
      ```
 
      注意：模型训练所需要的数据集（cifar100）脚本会自动下载，请保持网络畅通。如果已有数据集，也可用传参的方式传入，如以下命令：
