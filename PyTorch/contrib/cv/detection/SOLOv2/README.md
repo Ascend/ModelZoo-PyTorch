@@ -79,7 +79,10 @@ SOLOv2建立了一个简单，直接，快速的实例分割框架，具有很�
    pip install "git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI"
    pip install -v -e .
    ```
-
+   
+```
+注意：安装mmdet的时候，如果自动卸载已安装torch，可以使用命令pip install -v -e . --no-deps安装
+```
 ## 准备数据集
 
 1. 获取数据集。

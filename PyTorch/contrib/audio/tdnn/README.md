@@ -51,6 +51,10 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
     pip install --editable .
     ```
 
+```
+注意：安装依赖环境时，如果自动卸载torch，可以将'pip install --editable .'替换为'pip install --editable . --no-deps'。
+```
+
 
 ## 准备数据集
 
