@@ -77,6 +77,10 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
    ```
     git lfs install 
    ```
+   在预训练模型下载完毕之后执行以下命令：
+   ```
+    cp -f ./config.json ./bert-large-cased/
+   ```
 
 # 开始训练
 
