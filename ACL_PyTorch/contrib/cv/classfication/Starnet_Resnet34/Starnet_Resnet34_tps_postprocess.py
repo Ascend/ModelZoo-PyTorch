@@ -43,7 +43,7 @@ def main(configs, devices, loggers, vdl_writers):
             result_name = "img_{}_0.bin".format(idx)           
             result_path = os.path.join(__dir__, configs['results'], result_name)
             
-            preds = paddle.to_tensor(np.fromfile(result_path, dtype=np.float32).reshape(1, 25, 38))
+            preds = paddle.to_tensor(np.fromfile(result_path, dtype=np.float32).reshape(1, 25, 37))
                         
             batch = [item.numpy() for item in batch]        
             post_result = post_process_class(preds, batch[1])
