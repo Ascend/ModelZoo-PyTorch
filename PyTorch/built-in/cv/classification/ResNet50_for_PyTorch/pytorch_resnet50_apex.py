@@ -243,7 +243,8 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.precision_mode == "must_keep_origin_dtype":
         option = {}
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
-        torch.npu.set_option(option) 
+        torch.npu.set_option(option)
+        torch.npu.config.allow_internal_format=False
 
     if args.distributed:
         if args.dist_url == "env://" and args.rank == -1:

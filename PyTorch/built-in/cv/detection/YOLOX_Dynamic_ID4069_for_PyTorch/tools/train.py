@@ -136,6 +136,7 @@ def main(exp: Exp, args):
     option = {}
     if not args.fp16:
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+        torch.npu.config.allow_internal_format=False
     torch.npu.set_option(option)
 
     trainer = exp.get_trainer(args)

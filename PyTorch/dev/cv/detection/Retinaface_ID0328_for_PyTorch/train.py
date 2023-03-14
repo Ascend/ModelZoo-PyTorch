@@ -73,6 +73,7 @@ if args.apex_opt_level == 'O0':
     option = {}
     option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
     torch.npu.set_option(option)
+    torch.npu.config.allow_internal_format=False
 
 rgb_mean = (104, 117, 123) # bgr order
 num_classes = 2

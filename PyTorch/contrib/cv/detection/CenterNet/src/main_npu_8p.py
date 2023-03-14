@@ -71,6 +71,7 @@ def main(opt, qtepoch=[0,]):
         option = {}
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
         torch.npu.set_option(option)
+        torch.npu.config.allow_internal_format=False
   if opt.bin_model != 0:
         torch.npu.set_compile_mode(jit_compile=False) 
         print("use bin train model")

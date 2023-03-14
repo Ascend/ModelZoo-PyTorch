@@ -375,6 +375,7 @@ def main():
         option = {}
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
         torch.npu.set_option(option)
+        torch.npu.config.allow_internal_format=False
 
     if args.seed is not None:
         random.seed(args.seed)

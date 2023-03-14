@@ -374,6 +374,7 @@ if __name__ == '__main__':
     option = {}
     if config.AMP_OPT_LEVEL == "O0":
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+        torch.npu.config.allow_internal_format=False
     option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
     k_dir = "./kernel_meta"
     if not os.path.exists(k_dir):
