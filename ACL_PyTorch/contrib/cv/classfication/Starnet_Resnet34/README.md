@@ -344,9 +344,9 @@ Starnet是一个对于不规则的文字具有鲁棒性的识别模型模型，�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 376.7  fps |
-|Ascend310P3| 4                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 362.4 fps |
-|Ascend310P3| 8                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 199.1 fps |
-|Ascend310P3| 16               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 113.4 fps |
-|Ascend310P3| 32               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 36.9 fps |
-|Ascend310P3| 64               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 18.0 fps |
+|Ascend310P3| 1                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 478.8652  fps |
+|Ascend310P3| 4                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 1351.03640 fps |
+|Ascend310P3| 8                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 1762.73029 fps |
+|Ascend310P3| 16               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 1983.8578 fps |
+|Ascend310P3| 32               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 2067.5093 fps |
+|Ascend310P3| 64               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8437, 'norm_edit_dis': 0.9346} | 2071.3276 fps |
