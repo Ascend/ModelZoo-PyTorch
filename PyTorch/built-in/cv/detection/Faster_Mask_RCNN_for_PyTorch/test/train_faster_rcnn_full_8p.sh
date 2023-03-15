@@ -81,21 +81,54 @@ python3.7 setup.py build develop > $cur_path/log.txt
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3.7 tools/train_net.py \
-        --config-file configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
-        --device-ids 0 1 2 3 4 5 6 7 \
-        --num-gpus 8\
-        AMP 1\
-        OPT_LEVEL O2 \
-        LOSS_SCALE_VALUE 64 \
-        SOLVER.IMS_PER_BATCH $batch_size \
-        SOLVER.MAX_ITER 11250 \
-        SEED 1234 \
-        MODEL.RPN.NMS_THRESH 0.8 \
-        MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
-        MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
-        DATALOADER.NUM_WORKERS 8 \
-        SOLVER.BASE_LR 0.02 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+KERNEL_NUM=$(($(nproc)/8))
+#################启动训练脚本#################
+if [ $(uname -m) = "aarch64" ]
+then
+    for i in $(seq 0 7)
+    do
+    if [ -d ${cur_path}/test/output/${i} ];
+    then
+        rm -rf ${cur_path}/test/output/${i}
+        mkdir -p ${cur_path}/test/output/${i}
+    else
+        mkdir -p ${cur_path}/test/output/${i}
+    fi
+    export LOCAL_RANK=$i
+    PID_START=$((KERNEL_NUM * LOCAL_RANK))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END python3.7 tools/train_net.py \
+            --config-file configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
+            --num-gpus 8 \
+            AMP 1 \
+            OPT_LEVEL O2 \
+            LOSS_SCALE_VALUE 64 \
+            SOLVER.IMS_PER_BATCH $batch_size \
+            SOLVER.MAX_ITER 11250 \
+            SEED 1234 \
+            MODEL.RPN.NMS_THRESH 0.8 \
+            MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
+            MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
+            DATALOADER.NUM_WORKERS 8 \
+            SOLVER.BASE_LR 0.02 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    done
+else
+    nohup python3.7 tools/train_net.py \
+            --config-file configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
+            --device-ids 0 1 2 3 4 5 6 7 \
+            --num-gpus 8 \
+            AMP 1 \
+            OPT_LEVEL O2 \
+            LOSS_SCALE_VALUE 64 \
+            SOLVER.IMS_PER_BATCH $batch_size \
+            SOLVER.MAX_ITER 11250 \
+            SEED 1234 \
+            MODEL.RPN.NMS_THRESH 0.8 \
+            MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
+            MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
+            DATALOADER.NUM_WORKERS 8 \
+            SOLVER.BASE_LR 0.02 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
 wait
 #修改参数
 sed -i "s|\"coco_2017_train\": (\"$data_path/coco/train2017\", \"$data_path/coco/annotations/instances_train2017.json\")|\"coco_2017_train\": (\"coco/train2017\", \"coco/annotations/instances_train2017.json\")|g" $cur_path/detectron2/data/datasets/builtin.py
@@ -109,7 +142,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep FPS $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
+FPS=`grep FPS $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'NR==2'|awk '{print $3}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

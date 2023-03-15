@@ -70,13 +70,16 @@ def launch(main_func, num_gpus_per_machine, num_machines=1, machine_rank=0, dist
         os.environ['MASTER_ADDR'] = args[0].master_addr
         os.environ['MASTER_PORT'] = args[0].master_port
         os.environ["WORLD_SIZE"] = str(world_size)
-
-        mp.spawn(
-            _distributed_worker,
-            nprocs=num_gpus_per_machine,
-            args=(main_func, world_size, num_gpus_per_machine, machine_rank, dist_url, args),
-            daemon=False,
-        )
+        if 'LOCAL_RANK' in os.environ:
+            _distributed_worker(int(os.environ["LOCAL_RANK"]), main_func, 
+                world_size, num_gpus_per_machine, machine_rank, dist_url, args)
+        else:
+            mp.spawn(
+                _distributed_worker,
+                nprocs=num_gpus_per_machine,
+                args=(main_func, world_size, num_gpus_per_machine, machine_rank, dist_url, args),
+                daemon=False,
+            )
     else:
         argsd = dict(zip(args[0].opts[0::2], args[0].opts[1::2]))
         os.environ['KERNEL_NAME_ID'] = \

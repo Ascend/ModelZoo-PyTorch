@@ -285,9 +285,10 @@ class RPN(nn.Module):
         )
         # Fill with the ignore label (-1), then set positive and negative labels
         label.fill_(-1)
-        label[pos_idx.long()] = 1
-        label[neg_idx.long()] = 0
-        return label
+        label = label.cpu()
+        label[pos_idx.cpu().long()] = 1
+        label[neg_idx.cpu().long()] = 0
+        return label.npu()
 
     @torch.jit.unused
     @torch.no_grad()

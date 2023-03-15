@@ -124,21 +124,24 @@ def select_foreground_proposals_fix_shape(
             bg_index_all = nonzero_tuple(~fg_selection_mask)[0]
             bg_index_index_keep = torch.randperm(
                 bg_index_all.numel(), device=bg_index_all.device
-            )[:(fix_num-fg_selection_mask_num)]
-            bg_index_keep = bg_index_all[bg_index_index_keep]
+            )[:(fix_num-fg_selection_mask_num)].cpu()
+            bg_index_keep = bg_index_all.cpu()[bg_index_index_keep]
+            fg_selection_mask = fg_selection_mask.cpu()
             fg_selection_mask[bg_index_keep.long()] = True
+            fg_selection_mask = fg_selection_mask.npu()
         elif fg_selection_mask_num > fix_num:
             fg_index_all = nonzero_tuple(fg_selection_mask)[0]
             fg_index_index_del = torch.randperm(
                 fg_index_all.numel(), device=fg_index_all.device
             )[:(fg_selection_mask_num-fix_num)]
-            fg_index_del = fg_index_all[fg_index_index_del]
+            fg_index_del = fg_index_all.cpu()[fg_index_index_del.cpu()]
+            fg_selection_mask = fg_selection_mask.cpu()
             fg_selection_mask[fg_index_del.long()] = False
+            fg_selection_mask = fg_selection_mask.npu()
 
         fg_proposals.append(proposals_per_image[fg_selection_mask])
         fg_selection_masks.append(fg_selection_mask)
     return fg_proposals, fg_selection_masks
-
 
 def select_proposals_with_visible_keypoints(proposals: List[Instances]) -> List[Instances]:
     """
@@ -277,8 +280,9 @@ class ROIHeads(torch.nn.Module):
         sampled_fg_idxs, sampled_bg_idxs = subsample_labels(
             gt_classes, self.batch_size_per_image, self.positive_fraction, self.num_classes
         )
+        gt_classes = gt_classes.cpu()
         sampled_idxs = torch.cat([sampled_fg_idxs, sampled_bg_idxs], dim=0).long()
-        return sampled_idxs, gt_classes[sampled_idxs]
+        return sampled_idxs.npu(), gt_classes[sampled_idxs].npu()
 
     @torch.no_grad()
     def label_and_sample_proposals(
