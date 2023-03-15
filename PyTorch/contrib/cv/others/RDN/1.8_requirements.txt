@@ -1,0 +1,5 @@
+h5py
+Pillow==9.1.0
+numpy
+decorator
+sympy

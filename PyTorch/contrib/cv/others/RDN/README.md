@@ -25,46 +25,42 @@ RDN主要是提出了网络结构RDB(residual dense blocks)，它本质上就是
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/contrib/cv/others
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/) |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | pillow==8.4.0 |
+  | PyTorch 1.8 | pillow==9.1.0 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   请用户自行准备好数据集，包含训练集和验证集两部分，训练集使用DIV2K，验证集使用Set5。将准备好的训练集和验证集上传至服务器任意目录下并解压，解压后的训练集和验证集目录结构如下所示。
+   请用户自行准备数据集，包含训练集和验证集两部分，训练集使用DIV2K，验证集使用Set5。将准备好的训练集和验证集上传至服务器任意目录下并解压，解压后的训练集和验证集目录结构参考如下所示。
 
    ```
    ├── data
@@ -74,6 +70,7 @@ RDN主要是提出了网络结构RDB(residual dense blocks)，它本质上就是
 
    > **说明：** 
    > 该数据集的训练过程脚本只作为一种参考示例。  
+
 
 # 开始训练
 
@@ -94,7 +91,9 @@ RDN主要是提出了网络结构RDB(residual dense blocks)，它本质上就是
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh  --data_path=数据集路径
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -102,25 +101,25 @@ RDN主要是提出了网络结构RDB(residual dense blocks)，它本质上就是
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh  --data_path=数据集路径
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
-   --data\_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
    ```
    公共参数：
    --data_path                         //数据集路径
-   --model                             //使用模型
-   --workers                           //加载数据进程数
-   --device_id                         //指定训练用卡
+   --device_id                         //设置训练用卡ID
    --epochs                            //重复训练次数
-   --batch_size                        //训练批次大小，默认为64
-   --lr                                //初始学习率，默认：5e-4
-   --weight_decay                      //权重衰减，默认：1e-4
-   --growth_rate					             //增长率
-   --loss_scale_value                  //混合精度lossscale大小
+   --batch-size                        //训练批次大小
+   --lr                                //初始学习率
+   --weight_decay                      //权重衰减
+   --seed      					    //随机数种子设置
+   --loss_scale_value                  //混合精度loss scale大小
    --apex_opt_level                    //混合精度类型
    ```
    
@@ -131,22 +130,18 @@ RDN主要是提出了网络结构RDB(residual dense blocks)，它本质上就是
 **表 2**  训练结果展示表
 
 | NAME    | Acc@1  | FPS      | Epochs | AMP_Type | Torch_version |
-| ------- | ------ | :------  | ------ | :------- | :------------ |
-| 1p-竞品 | -      | -        | -      | -        | -             |
-| 8p-竞品 | -      | -        | -      | -        | -             |
-| 1p-NPU  | -      | 240      | 1      | O1       | 1.5           |
+| :-----: | :-----: | :------: | :----: | :------: | :----------: |
 | 1p-NPU  | -      | 544      | 1      | O1       | 1.8           |
-| 8p-NPU  | 37.95  | 1716     | 800    | O1       | 1.5           |
 | 8p-NPU  | 37.97  | 4337     | 800    | O1       | 1.8           |
 
 # 版本说明
 
 ## 变更
 
-2022.11.30: 更新pytorch1.8版本。
+2023.03.15: 更新readme，重新发布。
 
 2022.01.30：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
