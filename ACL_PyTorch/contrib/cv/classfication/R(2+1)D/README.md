@@ -288,7 +288,7 @@ R(2+1)D是应用于视频理解领域的时空卷积模块，它明确地将3d�
 
     ```
     mkdir predata_bts1_om_out
-    python3 -m ais_bench --model /home/HwHiAiUser/r2plus1d_bs16.om --input  /home/HwHiAiUser/predata_bts16  --batchsize 16 --output "./predata_bts1_om_out" --outfmt TXT
+    python3 -m ais_bench --model /home/HwHiAiUser/r2plus1d_bs1.om --input  /home/HwHiAiUser/predata_bts1  --batchsize 1 --output "./predata_bts1_om_out" --outfmt TXT
     ```
     
     -   参数说明：
