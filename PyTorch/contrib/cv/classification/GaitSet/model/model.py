@@ -312,8 +312,8 @@ class Model:
                 triplet_feature = feature.permute(1, 0, 2).contiguous()
                 triplet_label = target_label.unsqueeze(0).cpu().repeat(triplet_feature.size(0), 1)
 
-                triplet_feature = triplet_feature.cpu()
-                triplet_label = triplet_label.cpu()
+                triplet_feature = triplet_feature.to(self.local_device)
+                triplet_label = triplet_label.to(self.local_device)
 
                 (full_loss_metric, hard_loss_metric, mean_dist, full_loss_num
                 ) = self.triplet_loss(triplet_feature, triplet_label)
