@@ -126,7 +126,6 @@ def main():
     cfg.total_epochs = args.total_epochs
     cfg.data.imgs_per_gpu = args.batch_size
     cfg.log_config.interval = args.interval
-    cfg.precision_mode = args.precision_mode
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
