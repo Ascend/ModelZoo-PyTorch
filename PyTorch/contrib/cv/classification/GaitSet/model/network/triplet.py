@@ -1,3 +1,17 @@
+# Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the BSD 3-Clause License (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://spdx.org/licenses/BSD-3-Clause.html
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -41,6 +55,6 @@ class TripletLoss(nn.Module):
 
     def batch_dist(self, x):
         x2 = torch.sum(x ** 2, 2)
-        dist = x2.unsqueeze(2) + x2.unsqueeze(2).transpose(1, 2) - 2 * torch.matmul(x.npu(), x.npu().transpose(1, 2)).cpu().float()
-        dist = torch.sqrt(F.relu(dist))
-        return dist
+        dist = x2.unsqueeze(2) + x2.unsqueeze(2).transpose(1, 2) - 2 * torch.matmul(x, x.transpose(1, 2)).float()
+        dist = torch.sqrt(F.relu(dist.cpu()))
+        return dist.npu()
