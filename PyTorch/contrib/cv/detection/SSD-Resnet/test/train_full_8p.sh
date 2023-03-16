@@ -77,10 +77,11 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+else
+    sed -i "s|orig_state_dict = torch.load('./resnet34-333f7ec4.pth')|orig_state_dict = torch.load('${data_path}/resnet34-333f7ec4.pth')|g" ${cur_path}/resnet.py
 fi
 export HCCL_CONNECT_TIMEOUT=1800
 RANK_ID_START=0
-sed -i "s|./resnet34-333f7ec4.pth|${data_path}/resnet34-333f7ec4.pth|g" ${cur_path}/resnet.py
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 	KERNEL_NUM=$(($(nproc)/8))
@@ -103,7 +104,6 @@ done
     
 wait
 
-sed -i "s|${data_path}/resnet34-333f7ec4.pth|./resnet34-333f7ec4.pth|g" ${cur_path}/resnet.py
 ##################获取训练数据################
 #训练结束时间，不需要修改
 end_time=$(date +%s)
