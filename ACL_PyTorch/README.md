@@ -227,6 +227,7 @@ CV-classfication
 	<td>bs x 3 x 224 x 224</td>
 </table>
 
+
 CV-detection
 
 <table align="center">
@@ -1684,6 +1685,18 @@ CV-classfication
         <td></td>
 	<td></td>
 	<td>613(bs16)</td>
+        <td></td>
+	<td>bs x 3 x 224 x 224</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Twins-SVT-L">  Twins-SVT-L </a>
+        </td>
+        <td>ImageNet</td>
+	<td>83.7%</td>
+        <td></td>
+	<td></td>
+	<td>175.2209(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
