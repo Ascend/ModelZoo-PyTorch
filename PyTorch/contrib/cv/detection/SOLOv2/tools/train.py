@@ -95,7 +95,6 @@ def parse_args():
     parser.add_argument('--stop_step', type=int, default=20,help='stop lag')
     parser.add_argument('--profiling', type=str, default='None',help='choose profiling way: CANN, GE, None')
     parser.add_argument('--interval', type=int, default=50,help='loss lag')
-    parser.add_argument('--precision_mode', default='allow_mix_precision', type=str, help='precision_mode')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -110,11 +109,6 @@ def main():
 
     option["ACL_OP_SELECT_IMPL_MODE"] = 'high_precision'
     option['ACL_OPTYPELIST_FOR_IMPLMODE'] = 'Sqrt'
-    if args.precision_mode == 'must_keep_origin_dtype':
-        option = {}
-        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
-        torch.npu.set_option(option)
-        torch.npu.config.allow_internal_format=False
     print('option', option)
     torch.npu.set_option(option)
     os.environ['MASTER_ADDR'] = os.getenv('MASTER_ADDR', '127.0.0.1')

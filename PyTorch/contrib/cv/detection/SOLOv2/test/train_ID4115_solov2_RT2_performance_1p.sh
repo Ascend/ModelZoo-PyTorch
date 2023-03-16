@@ -37,8 +37,6 @@ rt2_bin=1
 conda_name=py1
 #loss输出的间隔
 interval=1
-#维测参数，precision_mode需要模型审视修改
-precision_mode="allow_mix_precision"
 
 #参数校验，不需要修改
 for para in $*
@@ -61,8 +59,6 @@ do
         profiling=`echo ${para#*=}`
     elif [[ $para == --rt2_bin* ]];then
         rt2_bin=`echo ${para#*=}`
-    elif [[ $para == --precision_mode* ]];then
-        precision_mode=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
@@ -117,7 +113,7 @@ export NPUID=0
 export RANK=0
 export PYTHONPATH=${cur_path}/../mmcv:$PYTHONPATH
 cd ${cur_path}/../
-python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --precision_mode $precision_mode --autoscale-lr --seed 0 --total_epochs 1 --batch_size=$batch_size\
+python3.7 tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py --opt-level $apex --autoscale-lr --seed 0 --total_epochs 1 --batch_size=$batch_size\
       --data_root=$data_path --gpu-ids $device_id --fps_lag=$fps_lag --steps_per_epoch=$steps_per_epoch  --train_performance=True --interval=$interval\
       --start_step=$start_step --stop_step=$stop_step --profiling=$profiling --rt2_bin=$rt2_bin > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
@@ -150,7 +146,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+if [[ $apex == "O0" ]];then
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
 else
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
