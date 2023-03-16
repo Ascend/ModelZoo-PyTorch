@@ -1,0 +1,137 @@
+diff --git a/configs/rec/rec_mv3_tps_bilstm_att.yml b/configs/rec/rec_mv3_tps_bilstm_att.yml
+index 6c347e76..d7dee1d5 100644
+--- a/configs/rec/rec_mv3_tps_bilstm_att.yml
++++ b/configs/rec/rec_mv3_tps_bilstm_att.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: True
++  use_gpu: False
+   epoch_num: 72
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -97,5 +97,5 @@ Eval:
+   loader:
+     shuffle: False
+     drop_last: False
+-    batch_size_per_card: 256
++    batch_size_per_card: 1
+     num_workers: 1
+diff --git a/configs/rec/rec_r34_vd_tps_bilstm_att.yml b/configs/rec/rec_r34_vd_tps_bilstm_att.yml
+index 8919aae7..4ff40430 100644
+--- a/configs/rec/rec_r34_vd_tps_bilstm_att.yml
++++ b/configs/rec/rec_r34_vd_tps_bilstm_att.yml
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: True
++  use_gpu: False
+   epoch_num: 400
+   log_smooth_window: 20
+   print_batch_step: 10
+@@ -96,5 +96,5 @@ Eval:
+   loader:
+     shuffle: False
+     drop_last: False
+-    batch_size_per_card: 256
+-    num_workers: 8
++    batch_size_per_card: 1
++    num_workers: 1
+diff --git a/ppocr/modeling/transforms/tps.py b/ppocr/modeling/transforms/tps.py
+index 9bdab0f8..5de5f7aa 100644
+--- a/ppocr/modeling/transforms/tps.py
++++ b/ppocr/modeling/transforms/tps.py
+@@ -19,13 +19,13 @@ https://github.com/clovaai/deep-text-recognition-benchmark/blob/master/modules/t
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+-
++import os
+ import math
+ import paddle
+ from paddle import nn, ParamAttr
+ from paddle.nn import functional as F
+ import numpy as np
+-
++import paddle.nn as nn
+ 
+ class ConvBNLayer(nn.Layer):
+     def __init__(self,
+@@ -233,6 +233,7 @@ class GridGenerator(nn.Layer):
+ 
+     def build_inv_delta_C_paddle(self, C):
+         """ Return inv_delta_C which is needed to calculate T """
++        '''
+         F = self.F
+         hat_eye = paddle.eye(F, dtype='float64')  # F x F
+         hat_C = paddle.norm(
+@@ -259,7 +260,8 @@ class GridGenerator(nn.Layer):
+                     axis=1)  # 1 x F+3
+             ],
+             axis=0)
+-        inv_delta_C = paddle.inverse(delta_C)
++        '''
++        inv_delta_C = paddle.to_tensor(np.load(os.path.join(os.getcwd(), 'inv_delta_C.npy')))
+         return inv_delta_C  # F+3 x F+3
+ 
+     def build_P_hat_paddle(self, C, P):
+@@ -304,5 +306,26 @@ class TPS(nn.Layer):
+         batch_P_prime = self.grid_generator(batch_C_prime, image.shape[2:])
+         batch_P_prime = batch_P_prime.reshape(
+             [-1, image.shape[2], image.shape[3], 2])
+-        batch_I_r = F.grid_sample(x=image, grid=batch_P_prime)
++        image = paddle.transpose(image, perm=[0, 1, 3, 2])
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 2, 1, 3])
++
++        image = paddle.add(image, paddle.zeros((1, 3, 100, 32)))
++        batch_P_prime = paddle.add(batch_P_prime, paddle.zeros((1, 100, 32, 2)))
++
++        image = paddle.transpose(image, perm=[0, 1, 3, 2])
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 2, 1, 3])
++
++        my_pad = nn.Pad2D(padding=[1, 0, 0, 0])
++
++        batch_P_prime = my_pad(batch_P_prime)
++
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 3, 1, 2])
++
++        batch_P_prime = batch_P_prime + image
++
++        batch_P_prime = paddle.transpose(batch_P_prime, perm=[0, 1, 3, 2])
++        batch_P_prime = paddle.add(batch_P_prime, paddle.zeros((1, 3, 100, 32)))
++        batch_I_r = paddle.transpose(batch_P_prime, perm=[0, 1, 3, 2])
++
++        # batch_I_r = F.grid_sample(x=image, grid=batch_P_prime)
+         return batch_I_r
+diff --git a/ppocr/modeling/transforms/tps_spatial_transformer.py b/ppocr/modeling/transforms/tps_spatial_transformer.py
+index cb1cb10a..d7d7b315 100644
+--- a/ppocr/modeling/transforms/tps_spatial_transformer.py
++++ b/ppocr/modeling/transforms/tps_spatial_transformer.py
+@@ -29,9 +29,27 @@ import itertools
+ 
+ def grid_sample(input, grid, canvas=None):
+     input.stop_gradient = False
+-    output = F.grid_sample(input, grid)
++    input = paddle.transpose(input, perm=[0,1,3,2])
++    grid = paddle.transpose(grid, perm=[0,2,1,3])
++
++    input = paddle.add(input, paddle.zeros((1,3,256,64)))
++    grid = paddle.add(grid, paddle.zeros((1,100,32,2)))
++
++    input = paddle.transpose(input, perm=[0,1,3,2])
++    grid = paddle.transpose(grid, perm=[0,2,1,3])
++
++    my_pad = nn.Pad2D(padding=[1,0,0,0])
++    grid = my_pad(grid)
++    grid = paddle.transpose(grid, perm=[0,3,1,2])
++    grid = grid + input[:,:,:32,:100]
++
++    grid = paddle.transpose(grid, perm=[0,1,3,2])
++    grid = paddle.add(grid, paddle.zeros((1,3,100,32)))
++    grid = paddle.transpose(grid, perm=[0,1,3,2])
++
++
+     if canvas is None:
+-        return output
++        return grid
+     else:
+         input_mask = paddle.ones(shape=input.shape)
+         output_mask = F.grid_sample(input_mask, grid)
