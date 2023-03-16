@@ -1,0 +1,85 @@
+diff -Naru a/mmocr/mmocr/apis/test.py b/mmocr/mmocr/apis/test.py
+--- a/mmocr/mmocr/apis/test.py	2023-03-08 06:23:39.187901738 +0000
++++ b/mmocr/mmocr/apis/test.py	2023-03-08 06:26:02.671898414 +0000
+@@ -1,5 +1,6 @@
+ # Copyright (c) OpenMMLab. All rights reserved.
+ import os.path as osp
++import time
+ 
+ import mmcv
+ import numpy as np
+@@ -68,10 +69,15 @@
+     model.eval()
+     results = []
+     dataset = data_loader.dataset
++    duration_list = []
+     prog_bar = mmcv.ProgressBar(len(dataset))
+     for data in data_loader:
+         with torch.no_grad():
++            start_time = time.time()
+             result = model(return_loss=False, rescale=True, **data)
++            end_time = time.time()
++            duration = (end_time - start_time) * 1000
++            duration_list.append(duration)
+ 
+         batch_size = len(result)
+         if show or out_dir:
+@@ -154,4 +160,15 @@
+ 
+         for _ in range(batch_size):
+             prog_bar.update()
++            time_spent = np.sum(duration_list)
++
++    batch_size = data_loader.batch_size
++    avg_time_without_first = np.mean(duration_list[1:])
++    throughput = 1000 * batch_size / avg_time_without_first
++
++    print(f'\n[INFO] {"-"*22}Performance Summary{"-"*23}')
++    print(f'[INFO] Total time: {time_spent:.3f} ms.')
++    print(f'[INFO] Average time without first time: {avg_time_without_first:.3f} ms.')
++    print(f'[INFO] Throughput: {throughput:.3f} fps.')
++    print(f'[INFO] {"-"*64}')
+     return results
+diff -Naru a/mmocr/mmocr/models/kie/extractors/sdmgr.py b/mmocr/mmocr/models/kie/extractors/sdmgr.py
+--- a/mmocr/mmocr/models/kie/extractors/sdmgr.py	2023-03-08 06:23:39.191901738 +0000
++++ b/mmocr/mmocr/models/kie/extractors/sdmgr.py	2023-03-08 06:26:02.671898414 +0000
+@@ -92,6 +92,13 @@
+                 edges=F.softmax(edge_preds, -1))
+         ]
+ 
++    def forward_onnx(self, relations, texts, mask):
++        node_preds, edge_preds = self.bbox_head.forward(relations, texts, mask)
++        return dict(
++            nodes=F.softmax(node_preds, -1),
++            edges=F.softmax(edge_preds, -1)
++        )
++
+     def extract_feat(self, img, gt_bboxes):
+         if self.visual_modality:
+             x = super().extract_feat(img)[-1]
+diff -Naru a/mmocr/mmocr/models/kie/heads/sdmgr_head.py b/mmocr/mmocr/models/kie/heads/sdmgr_head.py
+--- a/mmocr/mmocr/models/kie/heads/sdmgr_head.py	2023-03-08 06:23:39.191901738 +0000
++++ b/mmocr/mmocr/models/kie/heads/sdmgr_head.py	2023-03-08 06:26:02.671898414 +0000
+@@ -84,6 +84,22 @@
+         node_cls, edge_cls = self.node_cls(nodes), self.edge_cls(embed_edges)
+         return node_cls, edge_cls
+ 
++    def forward_onnx(self, relations, texts, mask, x=None):
++        num_text, num_char = texts.size()
++        embed_nodes = self.node_embed(texts.clamp(min=0).long())
++        rnn_nodes, _ = self.rnn(embed_nodes)
++        nodes = torch.mul(rnn_nodes, mask).sum(dim=1)
++
++        if x is not None:
++            nodes = self.fusion([x, nodes])
++        all_edges = relations.view(-1, 5)
++        embed_edges = self.edge_embed(all_edges.float())
++        embed_edges = F.normalize(embed_edges)
++        for gnn_layer in self.gnn_layers:
++            nodes, embed_edges = gnn_layer(nodes, embed_edges, [num_text])
++        node_cls, edge_cls = self.node_cls(nodes), self.edge_cls(embed_edges)
++        return node_cls, edge_cls
++
+ 
+ class GNNLayer(nn.Module):
+ 

@@ -1,0 +1,10 @@
+torch==1.13.0
+torchaudio==0.13.0
+torchvision==0.14.0
+openmim
+mmcv-full==1.7.0
+mmdet==2.25.3
+decorator 
+sympy
+numpy==1.23.5
+tqdm
