@@ -377,6 +377,17 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/build-in/cv/Retinanet_Resnet18"> Retinanet_r18(int8) </a>
+        </td>
+        <td>coco</td>
+	<td></td>
+        <td>31.6%</td>
+        <td></td>
+	<td>16.78(bs1)</td>
+	<td>1 x 3 x 1216 x 1216</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/SSD"> SSD </a>
         </td>
         <td>coco</td>
