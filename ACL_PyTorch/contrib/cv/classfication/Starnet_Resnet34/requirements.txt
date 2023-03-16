@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+paddlepaddle==2.3.2
+paddle2onnx==0.9.8
+onnxruntime==1.9.0
+pyyaml==6.0
+onnx==1.12.0
+lanms-nova==1.0.1
+opencv-contrib-python==4.4.0.46
+imgaug==0.4.0
+torch==1.12.1
+onnx-simplifier==0.4.8
+shapely
+scikit-image
+pyclipper
+lmdb
+tqdm
+numpy
+visualdl
+rapidfuzz
+cython
+lxml
+premailer
+openpyxl
+attrdict
+sympy
