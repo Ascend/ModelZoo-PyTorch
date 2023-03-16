@@ -117,17 +117,17 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
    执行“Albert_preprocess.py”脚本，完成预处理。
 
    ```
-   python3 Albert_preprocess.py --pth_dir=./albert_pytorch/outputs/SST-2/ --data_path=./albert_pytorch/dataset/SST-2/ --save_dir ./preprocessed_data_seq128 --seq 128
+   python3 Albert_preprocess.py --pth_dir=./albert_pytorch/outputs/SST-2/ --data_dir=./albert_pytorch/dataset/SST-2/ --save_dir ./preprocessed_data_seq128 --max_seq_length 128
    ```
    - 参数说明：
 
      --pth_dir: 模型权重所在路径
 
-     --data-path：原始数据集所在路径
+     --data_dir：原始数据集所在路径
 
      --save_dir: 预处理数据保存路径, 其中gt_label保存在 `${save_dir}/label.npy`
      
-     --seq: 对应的seq长度，默认为128，支持：16/32/64/128
+     --max_seq_length: 对应的seq长度，默认为128，支持：16/32/64/128
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -148,7 +148,7 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
          ```
          # pth转换为ONNX，此处以seq128/bs32为例
-         python3 ./Albert_pth2onnx.py --batch_size=32 --pth_dir=./albert_pytorch/outputs/SST-2/ --onnx_dir=./outputs/ --max_seq_length=128
+         python3 ./Albert_pth2onnx.py --batch_size=32 --pth_dir=./albert_pytorch/outputs/SST-2/ --data_dir=./albert_pytorch/datasets/SST-2/ --onnx_dir=./outputs/ --max_seq_length=128
          ```
 
          - 参数说明：
@@ -156,6 +156,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
            --batch_size: 导出模型batchsize。
 
            --pth_dir：权重所在路径。
+           
+           --data_dir: 数据集所在路径。
 
            --onnx_dir: 输出onnx文件所在目录。
            

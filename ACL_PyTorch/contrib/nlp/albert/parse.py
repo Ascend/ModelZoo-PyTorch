@@ -87,11 +87,11 @@ def load_data_model(ar):
     args.batch_size = ar.batch_size
     args.max_seq_length = ar.max_seq_length
 
-    prefix="./albert_pytorch"
-    args.output_dir=prefix+args.output_dir[1:]
-    args.data_dir=prefix+args.data_dir[1:]
-    args.vocab_file=prefix+args.vocab_file[1:]
-    args.spm_model_file=prefix+args.spm_model_file[1:]
+    prefix = ar.prefix_dir
+    args.output_dir = ar.pth_dir
+    args.data_dir = ar.data_dir
+    args.vocab_file = prefix + args.vocab_file[1:]
+    args.spm_model_file = prefix + args.spm_model_file[1:]
 
     logger.args = args
     tokenizer = tokenization_albert.FullTokenizer(vocab_file=args.vocab_file, do_lower_case=args.do_lower_case,

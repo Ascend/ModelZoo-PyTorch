@@ -36,8 +36,12 @@ def pt2onnx(ar):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--prefix_dir", type=str, default='./albert_pytorch',
+                        help="prefix dir for ori model code")
     parser.add_argument("--pth_dir", type=str, default='./albert_pytorch/outputs/SST-2/',
                         help="dir of pth, load args.bin and model.bin")
+    parser.add_argument("--data_dir", type=str, default='./albert_pytorch/datasets/SST-2/',
+                        help="dir of datasets")
     parser.add_argument("--onnx_dir", type=str, default='./outputs/',
                         help="dir of onnx, gen onnx name via bs")
     parser.add_argument("--batch_size", default=16, type=int,
@@ -48,7 +52,6 @@ def main():
 
     ar.pth_arg_path = ar.pth_dir + "training_args.bin"
     ar.data_type = 'dev'
-    ar.data_path = './albert_pytorch/dataset/SST-2'
     ar.model_name = "albert_seq{}_bs{}".format(ar.max_seq_length, ar.batch_size)
     ar.onnx_path = "{}/{}.onnx".format(ar.onnx_dir, ar.model_name)
 

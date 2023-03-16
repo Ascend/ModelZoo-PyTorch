@@ -46,20 +46,22 @@ def dump_label(save_dir, gt_label):
 def om_pre(ar):
     ar.batch_size = 1
     data, _, label = parse.load_data_model(ar)
-    dump_input_data(ar.save_dir, data, ar.seq)
+    dump_input_data(ar.save_dir, data, ar.max_seq_length)
     dump_label(ar.save_dir, label)
     print('data num: %d' % len(data))
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--prefix_dir", type=str, default='./albert_pytorch',
+                        help="prefix dir for ori model code")
     parser.add_argument("--pth_dir", type=str, default='./albert_pytorch/outputs/SST-2/',
                         help="dir of pth, load args.bin and model.bin")
-    parser.add_argument("--data_path", type=str, default='./albert_pytorch/dataset/SST-2/',
+    parser.add_argument("--data_dir", type=str, default='./albert_pytorch/dataset/SST-2/',
                         help="dir of dataset")
     parser.add_argument("--save_dir", type=str, default='',
                         help="save dir for preprocessed data")
-    parser.add_argument("--seq", type=int, default=128,
+    parser.add_argument("--max_seq_length", type=int, default=128,
                         help="seq length for input data.")
     ar = parser.parse_args()
 
