@@ -108,7 +108,7 @@ PORT=$master_port ./tools/dist_train.sh ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x
     --seed 0 \
     --no-validate \
     --opt-level O1 \
-    --loss-scale 32.0 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --loss-scale 32.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
