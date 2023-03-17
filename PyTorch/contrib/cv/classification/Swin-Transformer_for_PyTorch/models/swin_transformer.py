@@ -279,7 +279,10 @@ class WindowAttention(nn.Module):
         relative_position_bias = torch.index_select(self.relative_position_bias_table, 0, self.relative_position_index).view(
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # nH, Wh*Ww, Wh*Ww
-        attn = attn + relative_position_bias.unsqueeze(0).half()
+        if attn.dtype == torch.float16:
+            attn = attn + relative_position_bias.unsqueeze(0).half()
+        else:
+            attn = attn + relative_position_bias.unsqueeze(0)
 
         if mask is not None:
             nW = mask.shape[0]
