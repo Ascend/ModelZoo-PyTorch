@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import os
-import numpy as np
 import json
 import argparse
+import numpy as np
 import cv2
 
 CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -77,15 +77,14 @@ def coco_postprocess(bbox: np.ndarray, image_size,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--bin_data_path", default="./result/dumpOutput_device0")
-    parser.add_argument("--test_annotation", default="./coco2017_jpg.info")
+    parser.add_argument("--test_annotation", default="./coco2017.info")
     parser.add_argument("--det_results_path", default="./detection-results")
-    parser.add_argument("--img_path", default="./val2017/")
+    parser.add_argument("--img_path", default="coco/val2017/", help="required when ifShowDetObj is open")
     parser.add_argument("--net_out_num", default=2)
     parser.add_argument("--net_input_width", default=640)
     parser.add_argument("--net_input_height", default=640)
     parser.add_argument("--prob_thres", default=0.05)
-    parser.add_argument("--ifShowDetObj", action="store_true", help="if input the para means True, neither False.")
-    parser.add_argument("--is_ais_infer", action="store_true")
+    parser.add_argument("--ifShowDetObj", action="store_true", help="show boxes in the pictures.")
     flags = parser.parse_args()
     # generate dict according to annotation file for query resolution
     # load width and height of input images
@@ -102,53 +101,31 @@ if __name__ == '__main__':
     # read bin file for generate predict result
     bin_path = flags.bin_data_path
     det_results_path = flags.det_results_path
-    img_path = flags.img_path
     os.makedirs(det_results_path, exist_ok=True)
     total_img = set([name[:name.rfind('_')]
                      for name in os.listdir(bin_path) if "bin" in name])
-
-    # convert ais_bench result name to original bin_file name
-    if flags.is_ais_infer:
-        name_dic = dict()
-        with open(os.path.join(bin_path, "sumary.json"), 'r') as f:
-            sumary = json.load(f)
-            print(type(sumary))
-            print(type(sumary["filesinfo"]))
-        for value in sumary["filesinfo"].values():
-            img_name = value["infiles"][0].split("/")[-1].split(".")[0]
-            out_name_0 = value["outfiles"][0].split("/")[-1]
-            out_name_0 = out_name_0[:out_name_0.rfind('_')]
-            out_name_1 = value["outfiles"][1].split("/")[-1]
-            out_name_1 = out_name_1[:out_name_1.rfind('_')]
-            name_dic[out_name_1] = img_name
-            name_dic[out_name_0] = img_name
-            print(out_name_0, ", ", out_name_1, ",", img_name)
 
     for bin_file in sorted(total_img):
         path_base = os.path.join(bin_path, bin_file)
         # load all detected output tensor
         res_buff = []
-        for num in range(1, flags.net_out_num + 1):
-            if flags.is_ais_infer:
-                    num -= 1
+        for num in range(flags.net_out_num):
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
-                if flags.is_ais_infer and num==0 or not flags.is_ais_infer and num == 1:
+                if num==0:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")
                     buf = np.reshape(buf, [100, 5])
-                elif flags.is_ais_infer and num==1 or not flags.is_ais_infer and num == 2:
+                elif num==1:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="int64")
                     buf = np.reshape(buf, [100, 1])
                 res_buff.append(buf)
             else:
                 print("[ERROR] file not exist", path_base + "_" + str(num) + ".bin")
         res_tensor = np.concatenate(res_buff, axis=1)
-        if flags.is_ais_infer:
-            bin_file = name_dic[bin_file]
         current_img_size = img_size_dict[bin_file]
-        print("[TEST]---------------------------concat{} imgsize{}".format(len(res_tensor), current_img_size))
         predbox = coco_postprocess(res_tensor, current_img_size, flags.net_input_width, flags.net_input_height)
 
         if flags.ifShowDetObj == True:
+            img_path = flags.img_path
             pic = os.path.join(img_path, bin_file +'.jpg')
             imgCur = cv2.imread(pic)
 
@@ -176,4 +153,3 @@ if __name__ == '__main__':
         det_results_file = os.path.join(det_results_path, bin_file + ".txt")
         with open(det_results_file, "w") as detf:
             detf.write(det_results_str)
-        print(det_results_str)

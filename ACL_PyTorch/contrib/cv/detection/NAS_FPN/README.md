@@ -1,341 +1,297 @@
-# NAS-FPN模型PyTorch离线推理指导
-
--   [1 模型概述](#1-模型概述)
-	-   [1.1 论文地址](#11-论文地址)
-	-   [1.2 代码地址](#12-代码地址)
--   [2 环境说明](#2-环境说明)
-	-   [2.1 深度学习框架](#21-深度学习框架)
-	-   [2.2 python第三方库](#22-python第三方库)
--   [3 模型转换](#3-模型转换)
-	-   [3.1 pth转onnx模型](#31-pth转onnx模型)
-	-   [3.2 onnx转om模型](#32-onnx转om模型)
--   [4 数据集预处理](#4-数据集预处理)
-	-   [4.1 数据集获取](#41-数据集获取)
-	-   [4.2 数据集预处理](#42-数据集预处理)
-	-   [4.3 生成数据集信息文件](#43-生成数据集信息文件)
--   [5 离线推理](#5-离线推理)
-	-   [5.1 安装ais_bench推理工具](#51-安装ais_bench推理工具)
-	-   [5.2 离线推理](#52-离线推理)
--   [6 精度对比](#6-精度对比)
-	-   [6.1 离线推理mAP精度统计](#61-离线推理mAP精度统计)
-	-   [6.2 开源mAP精度](#62-开源mAP精度)
-	-   [6.3 精度对比](#63-精度对比)
--   [7 性能对比](#7-性能对比)
-	-   [7.1 npu性能数据](#71-npu性能数据)
-
-
-
-## 1 模型概述
+# NAS_FPN模型-推理指导
 
--   **[论文地址](#11-论文地址)**  
 
--   **[代码地址](#12-代码地址)**  
+- [概述](#ZH-CN_TOPIC_0000001172161501)
 
-### 1.1 论文地址
-[NAS-FPN论文](https://arxiv.org/pdf/1904.07392.pdf)  
+    - [输入输出数据](#section540883920406)
 
-### 1.2 代码地址
-[NAS-FPN代码](https://pytorch.org/hub/pytorch_vision_mobilenet_v2/)  
-branch:master  
-commit_id:a21eb25535f31634cef332b09fc27d28956fb24b
 
-## 2 环境说明
 
--   **[深度学习框架](#21-深度学习框架)**  
+- [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
--   **[python第三方库](#22-python第三方库)**  
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
-### 2.1 深度学习框架
-```
-CANN 5.1.RC1
-torch==1.7.0
-torchvision==0.8.0
-onnx==1.8.0
-onnxruntime==1.9.0
-```
+  - [获取源码](#section4622531142816)
+  - [准备数据集](#section183221994411)
+  - [模型推理](#section741711594517)
 
-### 2.2 python第三方库
-
-```
-numpy==1.20.0
-mmdet==2.8.0
-mmcv-full==1.2.4
-opencv-python==4.4.0.46
-mmpycocotools==12.0.3
-protobuf==3.20.0
-```
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-**说明：** 
->   X86架构：pytorch，torchvision和onnx可以通过官方下载whl包安装，其它可以通过pip3.7 install 包名 安装
->
->   Arm架构：pytorch，torchvision和onnx可以通过源码编译安装，其它可以通过pip3.7 install 包名 安装
+  ******
 
-## 3 模型转换
 
--   **[pth转onnx模型](#31-pth转onnx模型)**  
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+在目标检测中，不同尺度的特征在建模语义信息和细节信息上具有不同的表现，因此对多尺度的特征进行融合对于提升检测效果至关重要。NAS-FPN自动的对自顶向下和自底向上的双向融合策略进行搜索，从而得到优于FPN和PANet的融合策略。NAS-FPN 与 RetinaNet 框架中的若干骨干模型相结合，实现了优于当前最佳目标检测模型的准确率和延迟权衡。该架构将移动检测准确率提高了 2 AP。
 
--   **[onnx转om模型](#32-onnx转om模型)**  
+<u>***简单描述模型的结构、应用、优点等信息。***</u>
 
-### 3.1 pth转onnx模型
 
-1.准备pth权重文件  
-使用训练好的[pth权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/NAS-FPN/PTH/retinanet_r50_nasfpn_crop640_50e_coco-0ad1f644.pth)
+- 参考实现：
 
-2.使用开源仓，获取开源命令
+  ```
+  url=https://github.com/open-mmlab/mmdetection
+  commit_id=a21eb25535f31634cef332b09fc27d28956fb24b
+  ```
 
-```
-git clone https://github.com/open-mmlab/mmdetection.git
-cd mmdetection  
-git reset a21eb25535f31634cef332b09fc27d28956fb24b --hard
-pip install -v -e .
-```
-3.mmdetection代码迁移，执行命令。
-```
-patch -p1 < ../NAS_FPN.patch   
-cd ..
-```
 
-4.修改mmcv安装包以适配模型。
 
-通过命令找到mmcv-full安装位置。
-```
-pip3 show mmcv-full
-```
-返回mmcv安装位置（如：xxx/lib/python3.7/site-packages）。利用提供的change文件夹中的patch文件，完成补丁操作，命令参考如下示例,请用户根据安装包位置自行修改。
-```
-cd change
-patch -p0 xxx/lib/python3.7/site-packages/mmcv/ops/deform_conv.py deform_conv.patch
-patch -p0 xxx/lib/python3.7/site-packages/mmcv/ops/merge_cells.py merge_cells.patch
-```
+## 输入输出数据<a name="section540883920406"></a>
 
-5.调用“mmdetection/tools”目录中的“pytorch2onnx”脚本导出ONNX模型。
+- 输入数据
 
-当前框架原因仅支持batchsize=1的场景。
-```
-python3 mmdetection/tools/pytorch2onnx.py mmdetection/configs/nas_fpn/retinanet_r50_nasfpn_crop640_50e_coco.py xxx.pth --output-file=nas_fpn.onnx --shape=640 --verify --show
-```
-参数说明：
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 640 x 640 | NCHW         |
 
-"mmdetection/configs/nas_fpn/retinanet_r50_nasfpn_crop640_50e_coco.py"：模型执行文件，不需要修改。
 
-"xxx.pth": 输入pth文件路径。
+- 输出数据
 
---output-file：输出onnx文件路径
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
+  | -------- | -------- | -------- | ------------ |
+  | boxes    | FLOAT32  | 100 x 5  | ND           |
+  | labels   | FLOAT32  | 100      | ND           |
 
---shape=640：shape，应指定为640
 
---verify：是否验证onnx
 
---show：是否显示onnx结构
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
- **说明：**  
->注意目前ATC支持的onnx算子版本为11
+- 该模型需要以下插件与驱动   
 
+  **表 1**  版本配套表
 
-### 3.2 onnx转om模型
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.7.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
 
-2.使用atc将onnx模型转换为om模型文件，工具使用方法可以参考CANN 5.0.1 开发辅助工具指南 (推理) 
-${chip_name}可通过npu-smi info指令查看，例：310P3
 
-![Image](https://gitee.com/ascend/ModelZoo-PyTorch/raw/master/ACL_PyTorch/images/310P3.png)
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-```
-atc \
---model=./nas_fpn.onnx \
---framework=5 \
---output=nas_fpn_bs1 \
---input_format=NCHW \
---input_shape="input:1,3,640,640" \
---log=error \
---soc_version=${chip_name} \
---out_nodes="Concat_1487:0;Reshape_1489:0"
-```
-运行成功后生成“nas_fpn_bs1.om”模型文件。
-## 4 数据集预处理
+## 获取源码<a name="section4622531142816"></a>
 
--   **[数据集获取](#41-数据集获取)**  
+1. 获取源码。
 
--   **[数据集预处理](#42-数据集预处理)**  
+    ```
+    git clone https://github.com/open-mmlab/mmdetection.git
+    cd mmdetection  
+    git reset a21eb25535f31634cef332b09fc27d28956fb24b --hard
+    pip3 install -v -e .
+    patch -p1 < ../NAS_FPN.patch   
+    cd ..
+    ```
 
--   **[生成数据集信息文件](#43-生成数据集信息文件)**  
+2. 安装依赖。
+    ```
+    pip3 install -r requirements.txt
+    pip3 install openmim
+    mim install mmcv-full==1.2.4
+    mim install mmpycocotools==12.0.3
+    ```
 
-### 4.1 数据集获取
-本模型已在coco 2017数据集上验证过精度。推理数据集采用coco_val_2017，请用户自行获取coco_val_2017数据集。
+    通过命令找到mmcv-full安装位置。
+    ```shell
+    pip3 show mmcv-full
+    ```
+    
+    修改mmcv中的算子脚本，使其支持导出onnx
+    ```shell
+    patch -p0 xxx/lib/python3.7/site-packages/mmcv/ops/merge_cells.py merge_cells.patch
+    ```
 
-将instances_val2017.json文件和val2017文件夹按照如下目录结构上传并解压数据集到ModelZoo的源码包路径下。
-```
-├── coco    
-       └── val2017                 // 验证集文件夹
-├── instances_val2017.json    //验证集标注信息      
-```
+## 准备数据集<a name="section183221994411"></a>
 
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-### 4.2 数据集预处理
-将原始数据（.jpg）转化为二进制文件（.bin）。转化方法参考mmdetection预处理方法，以获得最佳精度。以coco_2017数据集为例，通过缩放、均值方差手段归一化，输出为二进制文件。
+    本模型支持coco2017验证集。获取数据集后，将annotations文件和val2017文件夹解压并上传数据集到源码包路径下。目录结构如下：
 
-执行“mmdetection_coco_preprocess.py”脚本。
-```
-python3 mmdetection_coco_preprocess.py --image_folder_path ./coco/val2017 --bin_folder_path val2017_bin
-```
-参数说明：
+    ```
+    NAS_FPN
+    ├── coco      
+        ├── annotations
+        └── val2017
+    ```
 
---image_folder_path：原始数据验证集（.jpeg）所在路径。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
 
---bin_folder_path：输出的二进制文件（.bin）所在路径。
+    执行mmdetection_coco_preprocess脚本，完成预处理。
 
-每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成“val2017_bin”二进制文件夹。
-### 4.3 生成数据集info文件
-生成bin文件的输入info文件。
+    ```
+    python3 mmdetection_coco_preprocess.py --image_folder_path ./coco/val2017 --bin_folder_path val2017_bin 
+    ```
+    - 参数说明：
+        - --image_folder_path：原始数据验证集图片所在路径。
+        - --bin_folder_path：输出的二进制文件所在路径。
+        
+    运行成功后在主目录下得到val2017_bin文件夹。
 
-使用ais_bench推理需要输入图片数据集的info文件，用于获取数据集。使用“get_info.py”脚本，输入已经获得的图片文件，输出生成图片数据集的info文件。运行“get_info.py”脚本。
 
-```
-python3 get_info.py jpg ./coco/val2017 coco2017_jpg.info
-```
+## 模型推理<a name="section741711594517"></a>
 
-参数说明:
+1. 模型转换。
 
-“jpg”：生成的数据集文件格式。
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-“./coco/val2017”：预处理后的数据文件的相对路径。
+   1. 获取权重文件。
 
-“coco2017_jpg.info”：生成的数据集文件保存的路径。
+       [NAS_FPN权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/NAS-FPN/PTH/retinanet_r50_nasfpn_crop640_50e_coco-0ad1f644.pth)
 
-运行成功后，在当前目录中生成“coco2017_jpg.info”。
+   2. 导出onnx文件。
 
-## 5 离线推理
+        使用mmdetection/tools中的pytorch2onnx.py导出onnx文件。
 
--   **[安装ais_bench推理工具](#51-安装ais_bench推理工具)**  
+        ```shell
+        python3 mmdetection/tools/pytorch2onnx.py mmdetection/configs/nas_fpn/retinanet_r50_nasfpn_crop640_50e_coco.py retinanet_r50_nasfpn_crop640_50e_coco-0ad1f644.pth --output-file=nas_fpn.onnx --shape=640
+        ```
+        - 参数说明：
+            - 第一个参数为配置文件路径。
+            - 第二个参数为权重文件路径。
+            - --shape：输入数据大小。
+            - --output-file：转出的onnx模型路径。
 
--   **[离线推理](#52-离线推理)**  
+        获得nas_fpn.onnx文件。
 
-### 5.1 安装ais_bench推理工具
 
-请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
-### 5.2 离线推理
-昇腾芯片上执行，执行时使npu-smi info查看设备状态，确保device空闲
+      1. 配置环境变量。
 
-1.设置环境变量
-```
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-```
-2.执行离线推理
+         ```
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         ```
 
-执行推理
-```
-python3 -m ais_bench --model ../NAS_FPN/nas_fpn_1.om --input ../NAS_FPN/val2017_bin --output ../result/
-```
-参数说明:
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
---model：模型地址
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
---input：预处理完的数据集文件夹
+      3. 执行ATC命令。
 
---output：推理结果保存地址
+        ```shell
+        atc --model=./nas_fpn.onnx \
+            --framework=5 \
+            --output=nas_fpn_bs1 \
+            --input_format=NCHW \
+            --input_shape="input:1,3,640,640" \
+            --log=error \
+            --soc_version=Ascend${chip_name}
+        ```
 
+         - 参数说明：
 
-## 6 精度对比
+           -  --model：为ONNX模型文件。
+           -  --framework：5代表ONNX模型。
+           -  --output：输出的OM模型。
+           -  --input\_format：输入数据的格式。
+           -  --input\_shape：输入数据的shape。
+           -  --log：日志级别。
+           -  --soc\_version：处理器型号。
 
--   **[离线推理mAP精度](#61-离线推理mAP精度)**  
--   **[开源mAP精度](#62-开源mAP精度)**  
--   **[精度对比](#63-精度对比)**  
+           运行成功后生成nas_fpn_bs1.om模型文件。
 
-### 6.1 离线推理mAP精度统计
+2. 开始推理验证。
 
-后处理统计mAP精度
+   1. 安装ais_bench推理工具。
 
-调用mmdetection_coco_postprocess.py脚本，将二进制数据转化为txt文件，同时生成画出检测框后的图片，直观展示推理结果。
-```
-python3 mmdetection_coco_postprocess.py --bin_data_path=../result/2022_xx_xx-xx_xx_xx/ --prob_thres=0.05 --ifShowDetObj --det_results_path=detection-results --test_annotation=coco2017_jpg.info --img_path /opt/npu/coco/val2017 --is_ais_infer
-```
-参数说明:
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
---bin_data_path：推理输出目录。
+   2. 执行推理。
 
---prob_thres：目标框的置信度阈值，低于阈值的框将被舍弃。
+        ```shell
+        python3 -m ais_bench --model nas_fpn_bs1.om --input val2017_bin --output ./ --output_dirname result
+        ```
 
---ifShowDetObj：决定是否生成检测图片。
+        -  参数说明：
 
---det_results：后处理输出目录。
+            -  model：模型路径。
+            -  input：模型的输入，预处理生成的文件路径。
+            -  output：模型输出目录。
+            -  output_dirname：模型的输出子目录。
 
---test_annotation：原始图片信息文件，步骤4.3生成。
+        推理后的输出默认在当前目录result下。
 
---img_path：推理数据集。
 
---is_ais_infer: 是否使用的是ais_infer进行推理。
+   3. 精度验证。
+      - 运行get_info.py脚本，生成图片数据info文件。
 
+         ```shell
+         python get_info.py jpg ./coco/val2017 val2017.info
+         ```
 
-评测结果的mAP值需要使用官方的pycocotools工具，首先将后处理输出的txt文件转化为coco数据集评测精度的标准json格式。
+        - 参数说明：
+            - 第一个参数为生成的数据集文件格式
+            - 第二个参数为原始数据文件相对路径
+            - 第三个参数为生成的info文件名
 
-执行转换脚本。
-```
-python3 txt_to_json.py --npu_txt_path=detection-results 
-```
-参数说明:
+         运行成功后，在当前目录生成val2017.info。
 
---json_output_file=coco_detection_result
+      - 执行后处理脚本，将二进制数据转化为txt文件：
+         ```shell
+         python mmdetection_coco_postprocess.py \
+               --bin_data_path=./result \
+               --test_annotation=val2017.info \
+               --det_results_path=detection-results
+         ```
 
---npu_txt_path: txt文件目录，上述后处理步骤中的 det_results 对应的目录
+        - 参数说明：
+            - --bin_data_path: 推理结果所在路径。
+            - --test_annotation: 原始图片信息文件。
+            - --det_results_path：后处理输出目录。
 
---json_output_file: 结果生成文件
+      - 执行转换脚本，将txt文件转化为json文件：
+        ```shell
+        python3 txt_to_json.py --npu_txt_path=detection-results --json_output_file=coco_detection_result
+        ```
 
-调用“coco_eval.py”脚本，输出推理结果的详细评测报告。
-```
-python3 coco_eval.py --ground_truth=/opt/npu/coco/annotations/instances_val2017.json --detection_result=coco_detection_result.json
-```
-参数说明:
+        - 参数说明：
+            - --npu_txt_path: txt文件目录。
+            - --json_output_file: 生成的json文件。
 
---ground_truth: coco数据集标准文件
+      - 调用`coco_eval.py`脚本，输出精度报告：
+        ```shell
+        python3 coco_eval.py --ground_truth=coco/annotations/instances_val2017.json --detection_result=coco_detection_result.json
+        ```
 
---detection_result: 模型推理结果文件
+        - 参数说明：
+            - --ground_truth: coco数据集标准文件。
+            - --detection_result: 模型推理结果文件。
 
-### 6.2 开源mAP精度
-[开源代码仓精度](https://github.com/megvii-model/ShuffleNet-Series/tree/master/ShuffleNetV2%2B)
+   4. 性能验证。
 
-```
-Model          mAP     
-NAS-FPN        0.405      
-```
-### 6.3 精度对比
-将得到的om离线模型推理mAP精度与该模型github代码仓上公布的精度对比，精度下降在1%范围之内，故精度达标。  
- **精度调试：**  
->没有遇到精度不达标的问题，故不需要进行精度调试
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-## 7 性能对比
+        ```
+         python3.7 -m ais_bench --model=${om_model_path} --loop=20
+        ```
 
--   **[npu性能数据](#71-npu性能数据)**  
+      - 参数说明：
+        - --model：om模型路径。
+        - --loop：推理次数。
 
-### 7.1 npu性能数据
-1.ais_bench推理工具在整个数据集上推理获得性能数据  
-batch1的性能，ais_bench推理工具在整个数据集上推理后生成result/sumary.json：  
-```
-"NPU_compute_time": {
-   "min": 14.676570892333984, 
-   "max": 18.673419952392578, 
-   "mean": 16.08246865272522, 
-   "median": 15.99884033203125, 
-   "percentile(99%)": 17.815630435943604}, 
-"H2D_latency": {"min": 0.8842945098876953, 
-   "max": 9.976387023925781, 
-   "mean": 0.9730440616607666, 
-   "median": 0.9641647338867188, 
-   "percentile(99%)": 1.1441969871521003}, 
-"D2H_latency": 
-   {"min": 0.02193450927734375, 
-   "max": 0.1983642578125, 
-   "mean": 0.05659308433532715, 
-   "median": 0.054836273193359375, 
-   "percentile(99%)": 0.11205911636352545}, 
-   "throughput": 62.17950873049252}
-```
-Interface throughputRate:1000 * batchsize/npu_compute_time.mean=62.30既是batch1 310P单卡吞吐率
 
-**性能优化：**  
 
->没有遇到性能不达标的问题，故不需要进行性能优化
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用ACL接口推理计算，性能参考下列数据。
+
+| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| --------- | ------------ | ---------- | ------------ | --------------- |
+|   310P3   |       1      |   COCO2017 |  map: 0.404  |      72.68      |
+
+仅支持batch size为1
