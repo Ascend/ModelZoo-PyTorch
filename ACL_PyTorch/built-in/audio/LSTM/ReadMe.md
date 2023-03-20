@@ -129,7 +129,7 @@ LSTM是一种特殊的RNN模型，与普通RNN相比，LSTM可以更好地解决
    5. 配置源码。
       ```
       cd ../src/
-      ./configure --shared --mathlib=OPENBALS
+      ./configure --shared --mathlib=OPENBLAS
       ```
       
       ```
@@ -220,7 +220,7 @@ LSTM是一种特殊的RNN模型，与普通RNN相比，LSTM可以更好地解决
 
    2. 导出onnx文件。
 
-      移动LSTM_pth2onnx.py至steps目录下，使用LSTM_pth2onnx.py导出onnx文件。
+      移动LSTM_pth2onnx.py至steps目录下，使用LSTM_pth2onnx.py导出onnx文件。注：如果torch版本高于1.8，需要将models/model_ctc.py文件中import torch_npu注释。
 
       ```
       mv LSTM_pth2onnx.py ./steps/
