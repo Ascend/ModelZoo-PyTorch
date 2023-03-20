@@ -46,7 +46,6 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
   | Torch_Version      | 三方库依赖版本                                 |
   | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   
 - 环境准备指导。
@@ -64,7 +63,7 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
 - 安装Ascend DeepSpeed 
   
-  请参考(https://gitee.com/ascend/DeepSpeed)并完成安装
+  请参考并完成安装（https://gitee.com/ascend/DeepSpeed.git）
 
 - 克隆原始仓
 
@@ -149,7 +148,7 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
 ## 变更
 
-2023.02.20：首次发布
+2023.03.20：首次发布
 
 ## 已知问题
 
