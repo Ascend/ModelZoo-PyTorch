@@ -56,8 +56,9 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt  # PyTorch1.8版本
+  pip3 install -r requirements.txt  # PyTorch1.8版本
   ```
+
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。
 
@@ -75,13 +76,6 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
   git checkout b4d4a0e
   cd -
   ```
-
-- 安装依赖（根据模型需求，按需添加所需依赖）。
-
-  ```
-  pip install -r requirements.txt
-  ```
-
 
 ## 准备数据集
 
