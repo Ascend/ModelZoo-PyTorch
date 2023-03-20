@@ -100,7 +100,7 @@ class ModulatedDeformConv2dFunction(Function):
             padding=[ctx.padding, ctx.padding, ctx.padding, ctx.padding],
             dilation=[1, 1, ctx.dilation, ctx.dilation],
             groups=ctx.groups, deformable_groups=ctx.deformable_groups, modulated=True)
-        kernel_hxw = weight.shape[2] * weight.shape[3]
+        kernel_hxw = weight.shape[2] * weight.shape[3] * ctx.deformable_groups
         grad_offset[:, 1::2, :, :] = grad_offset_all[:, :kernel_hxw, :, :]
         grad_offset[:, ::2, :, :] = grad_offset_all[:, kernel_hxw:kernel_hxw * 2, :, :]
         grad_mask = grad_offset_all[:, -kernel_hxw:, :, :]
