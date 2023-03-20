@@ -1,7 +1,8 @@
-diff -Nur ./b/GaitSet/config.py ./a/GaitSet/config.py
---- ./b/GaitSet/config.py	2022-11-28 11:08:05.942889018 +0000
-+++ ./a/GaitSet/config.py	2022-11-28 06:35:36.526304318 +0000
-@@ -2,7 +2,7 @@
+diff --git a/config.py b/config.py
+index a13f61d..c688274 100644
+--- a/config.py
++++ b/config.py
+@@ -2,7 +2,7 @@ conf = {
      "WORK_PATH": "./work",
      "CUDA_VISIBLE_DEVICES": "0,1,2,3",
      "data": {
@@ -10,12 +11,13 @@ diff -Nur ./b/GaitSet/config.py ./a/GaitSet/config.py
          'resolution': '64',
          'dataset': 'CASIA-B',
          # In CASIA-B, data of subject #5 is incomplete.
-diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
---- ./b/GaitSet/model/model.py	2022-11-28 11:08:05.942889018 +0000
-+++ ./a/GaitSet/model/model.py	2022-11-28 11:14:08.166901973 +0000
+diff --git a/model/model.py b/model/model.py
+index 3f0737c..3056a1b 100644
+--- a/model/model.py
++++ b/model/model.py
 @@ -1,20 +1,77 @@
 -import math
-+﻿import math
++锘縤mport math
  import os
  import os.path as osp
  import random
@@ -93,7 +95,7 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
  
  class Model:
      def __init__(self,
-@@ -53,18 +110,48 @@
+@@ -53,18 +110,48 @@ class Model:
          self.total_iter = total_iter
  
          self.img_size = img_size
@@ -154,7 +156,7 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
          self.hard_loss_metric = []
          self.full_loss_metric = []
          self.full_loss_num = []
-@@ -81,47 +168,52 @@
+@@ -81,47 +168,52 @@ class Model:
          view = [batch[i][2] for i in range(batch_size)]
          seq_type = [batch[i][3] for i in range(batch_size)]
          label = [batch[i][4] for i in range(batch_size)]
@@ -220,7 +222,7 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
                      for j in range(feature_num)]
              batch[4] = np.asarray(batch_frames)
  
-@@ -129,6 +221,14 @@
+@@ -129,6 +221,14 @@ class Model:
          return batch
  
      def fit(self):
@@ -235,7 +237,7 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
          if self.restore_iter != 0:
              self.load(self.restore_iter)
  
-@@ -136,89 +236,113 @@
+@@ -136,89 +236,113 @@ class Model:
          self.sample_type = 'random'
          for param_group in self.optimizer.param_groups:
              param_group['lr'] = self.lr
@@ -384,7 +386,7 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
          self.encoder.eval()
          source = self.test_source if flag == 'test' else self.train_source
          self.sample_type = 'all'
-@@ -233,26 +357,65 @@
+@@ -233,26 +357,65 @@ class Model:
          view_list = list()
          seq_type_list = list()
          label_list = list()
@@ -456,7 +458,7 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
          torch.save(self.encoder.state_dict(),
                     osp.join('checkpoint', self.model_name,
                              '{}-{:0>5}-encoder.ptm'.format(
-@@ -262,11 +425,18 @@
+@@ -262,11 +425,18 @@ class Model:
                              '{}-{:0>5}-optimizer.ptm'.format(
                                  self.save_name, self.restore_iter)))
  
@@ -480,19 +482,21 @@ diff -Nur ./b/GaitSet/model/model.py ./a/GaitSet/model/model.py
 +                'checkpoint', self.model_name,
 +                '{}-{:0>5}-encoder.ptm'.format(self.save_name, restore_iter)), map_location=torch.device('cpu')))
 +            self.encoder = wrapped.module
-diff -Nur ./b/GaitSet/model/network/gaitset.py ./a/GaitSet/model/network/gaitset.py
---- ./b/GaitSet/model/network/gaitset.py	2022-11-28 11:08:05.946889019 +0000
-+++ ./a/GaitSet/model/network/gaitset.py	2022-11-28 11:23:17.242921609 +0000
-@@ -117,4 +117,4 @@
+diff --git a/model/network/gaitset.py b/model/network/gaitset.py
+index 45c2e34..e1b7375 100644
+--- a/model/network/gaitset.py
++++ b/model/network/gaitset.py
+@@ -117,4 +117,4 @@ class SetNet(nn.Module):
          feature = feature.matmul(self.fc_bin[0])
          feature = feature.permute(1, 0, 2).contiguous()
  
 -        return feature, None
 +        return feature
-diff -Nur ./b/GaitSet/model/network/triplet.py ./a/GaitSet/model/network/triplet.py
---- ./b/GaitSet/model/network/triplet.py	2022-11-28 11:08:05.946889019 +0000
-+++ ./a/GaitSet/model/network/triplet.py	2022-11-28 11:16:53.890907899 +0000
-@@ -14,20 +14,21 @@
+diff --git a/model/network/triplet.py b/model/network/triplet.py
+index ebb96d5..35a1780 100644
+--- a/model/network/triplet.py
++++ b/model/network/triplet.py
+@@ -14,20 +14,21 @@ class TripletLoss(nn.Module):
          n, m, d = feature.size()
          hp_mask = (label.unsqueeze(1) == label.unsqueeze(2)).byte().view(-1)
          hn_mask = (label.unsqueeze(1) != label.unsqueeze(2)).byte().view(-1)
@@ -519,15 +523,24 @@ diff -Nur ./b/GaitSet/model/network/triplet.py ./a/GaitSet/model/network/triplet
          full_loss_metric = F.relu(self.margin + full_hp_dist - full_hn_dist).view(n, -1)
  
          full_loss_metric_sum = full_loss_metric.sum(1)
-diff -Nur ./b/GaitSet/model/utils/data_set.py ./a/GaitSet/model/utils/data_set.py
---- ./b/GaitSet/model/utils/data_set.py	2022-11-28 11:08:05.946889019 +0000
-+++ ./a/GaitSet/model/utils/data_set.py	2022-11-28 11:14:50.190903475 +0000
-@@ -1,4 +1,3 @@
--import torch.utils.data as tordata
- import numpy as np
- import os.path as osp
- import os
-@@ -15,11 +14,11 @@
+diff --git a/model/utils/data_loader.py b/model/utils/data_loader.py
+index aa02ccc..53af26d 100644
+--- a/model/utils/data_loader.py
++++ b/model/utils/data_loader.py
+@@ -39,7 +39,7 @@ def load_data(dataset_path, resolution, dataset, pid_num, pid_shuffle, cache=Tru
+         os.makedirs('partition', exist_ok=True)
+         np.save(pid_fname, pid_list)
+ 
+-    pid_list = np.load(pid_fname)
++    pid_list = np.load(pid_fname, allow_pickle=True)
+     train_list = pid_list[0]
+     test_list = pid_list[1]
+     train_source = DataSet(
+diff --git a/model/utils/data_set.py b/model/utils/data_set.py
+index 2048fbc..8d7415a 100644
+--- a/model/utils/data_set.py
++++ b/model/utils/data_set.py
+@@ -15,11 +15,11 @@ class DataSet(tordata.Dataset):
          self.label = label
          self.cache = cache
          self.resolution = int(resolution)
@@ -541,7 +554,7 @@ diff -Nur ./b/GaitSet/model/utils/data_set.py ./a/GaitSet/model/utils/data_set.p
          self.label_set = set(self.label)
          self.seq_type_set = set(self.seq_type)
          self.view_set = set(self.view)
-@@ -57,16 +56,16 @@
+@@ -57,16 +57,16 @@ class DataSet(tordata.Dataset):
          if not self.cache:
              data = [self.__loader__(_path) for _path in self.seq_dir[index]]
              frame_set = [set(feature.coords['frame'].values.tolist()) for feature in data]
@@ -561,7 +574,7 @@ diff -Nur ./b/GaitSet/model/utils/data_set.py ./a/GaitSet/model/utils/data_set.p
  
          return data, frame_set, self.view[
              index], self.seq_type[index], self.label[index],
-@@ -79,6 +78,7 @@
+@@ -79,6 +79,7 @@ class DataSet(tordata.Dataset):
                        for _img_path in imgs
                        if osp.isfile(osp.join(flie_path, _img_path))]
          num_list = list(range(len(frame_list)))
@@ -569,10 +582,11 @@ diff -Nur ./b/GaitSet/model/utils/data_set.py ./a/GaitSet/model/utils/data_set.p
          data_dict = xr.DataArray(
              frame_list,
              coords={'frame': num_list},
-diff -Nur ./b/GaitSet/model/utils/evaluator.py ./a/GaitSet/model/utils/evaluator.py
---- ./b/GaitSet/model/utils/evaluator.py	2022-11-28 11:08:05.946889019 +0000
-+++ ./a/GaitSet/model/utils/evaluator.py	2022-11-28 11:15:12.742904282 +0000
-@@ -4,8 +4,8 @@
+diff --git a/model/utils/evaluator.py b/model/utils/evaluator.py
+index 9fd0b3a..626fbfb 100644
+--- a/model/utils/evaluator.py
++++ b/model/utils/evaluator.py
+@@ -4,8 +4,8 @@ import numpy as np
  
  
  def cuda_dist(x, y):
