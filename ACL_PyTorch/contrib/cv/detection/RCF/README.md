@@ -22,11 +22,7 @@
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
-
-
-
-<u>***简单描述模型的结构、应用、优点等信息。***</u>
-
+RCF（Richer Convolutional Features）通过自动学习将所有卷积层的信息组合起来，从而能够获得不同尺度的更加精细的特征。RCF包含基于VGG 16 Backbone的五个层级的特征提取架构，更加充分利用对象的多尺度和多级信息来全面地执行图像到图像的预测。RCF 不只是使用了每个层级的输出，而是使用了每个层级中所有卷积层的输出进行融合（Conv + sum）后，作为边缘检测的输入。
 
 - 参考实现：
 
@@ -105,6 +101,8 @@
     git clone https://github.com/Walstruzz/edge_eval_python.git
     cd edge_eval_python
     git reset --hard 3e2a532ab939f71794d4cc3eb74cbf0797982b4c
+    cd cxx/src
+    source build.sh
     mv ../__init__.py impl/
     cd ..
     ```
