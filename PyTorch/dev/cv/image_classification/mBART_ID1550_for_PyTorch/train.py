@@ -74,7 +74,7 @@ if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
 
 
 def train(opt):
-    if args.ND:
+    if opt.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
     else:
