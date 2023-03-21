@@ -52,6 +52,7 @@ if torch.__version__ >= "1.8":
 import torch.nn as nn
 import torch.optim as optim
 import yaml
+import ast
 try:
     from apex import amp
 except ModuleNotFoundError:
@@ -276,6 +277,7 @@ def parse_args():
                         help='stop_step')
     training.add_argument('--bin', type=bool, default=True,
                         help='if bin')
+    training.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
     val = parser.add_argument_group('validation setup')
     val.add_argument('--eval_tgt_len', type=int, default=192,
                      help='Number of tokens to predict for evaluation')
@@ -815,6 +817,11 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
 
 def main():
     args = parse_args()
+    if args.ND:
+        print('***********allow_internal_format = False*******************')
+        torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
     if args.affinity != 'disabled':
         nproc_per_node = torch.cuda.device_count()
         affinity = utils.gpu_affinity.set_affinity(

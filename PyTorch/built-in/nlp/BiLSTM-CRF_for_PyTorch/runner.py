@@ -15,7 +15,7 @@
 
 import argparse
 import os
-
+import ast
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
@@ -54,13 +54,18 @@ def parse_option():
     parser.add_argument("--profiling", type=str, help='profiling type')
     parser.add_argument("--p_start_step", type=int, default=-1, help='profiling start step')
     parser.add_argument("--iteration_num", type=int, default=-1, help='train iteration number')
-
+    parser.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
     args = parser.parse_args()
 
     return args
 
 
 def main():
+    if args.ND:
+        print('***********allow_internal_format = False*******************')
+        torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
     if args.bin_mode:
         print('bin_mode is on')
         torch.npu.set_compile_mode(jit_compile=False)

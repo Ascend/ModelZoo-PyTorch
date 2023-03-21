@@ -28,6 +28,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import argparse
+import ast
 
 def get_argparse():
     parser = argparse.ArgumentParser()
@@ -122,4 +123,5 @@ def get_argparse():
     parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
     parser.add_argument("--server_ip", type=str, default="", help="For distant debugging.")
     parser.add_argument("--server_port", type=str, default="", help="For distant debugging.")
+    parser.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
     return parser

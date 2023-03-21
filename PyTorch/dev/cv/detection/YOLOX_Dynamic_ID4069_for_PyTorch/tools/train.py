@@ -21,6 +21,7 @@
 import argparse
 import random
 import warnings
+import ast
 from loguru import logger
 
 import torch
@@ -112,12 +113,18 @@ def make_parser():
         default=None,
         nargs=argparse.REMAINDER,
     )
+    parser.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
     return parser
 
 
 @logger.catch
 def main(exp: Exp, args):
     torch.npu.set_compile_mode(jit_compile=False)
+    if args.ND:
+        print('***********allow_internal_format = False*******************')
+        torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
     if exp.seed is not None:
         random.seed(exp.seed)
         torch.manual_seed(exp.seed)

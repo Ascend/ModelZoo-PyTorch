@@ -37,6 +37,7 @@ from __future__ import print_function
 import configargparse
 import onmt
 import os
+import ast
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
@@ -256,6 +257,7 @@ def model_opts(parser):
               choices=["O0", "O1", "O2", "O3"],
               help="For FP16 training, the opt_level to use."
                    "See https://nvidia.github.io/apex/amp.html#opt-levels.")
+
 
 
 def preprocess_opts(parser):
@@ -657,6 +659,7 @@ def train_opts(parser):
               help="Sample rate.")
     group.add('--window_size', '-window_size', type=float, default=.02,
               help="Window size for spectrogram in seconds.")
+    group.add('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
 
     # Option most relevant to image input
     group.add('--image_channel_size', '-image_channel_size',
