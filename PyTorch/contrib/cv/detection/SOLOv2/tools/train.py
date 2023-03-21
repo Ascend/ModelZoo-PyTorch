@@ -18,6 +18,7 @@ import os
 import os.path as osp
 import time
 import sys
+import ast
 sys.path.append('./')
 
 import mmcv
@@ -95,7 +96,7 @@ def parse_args():
     parser.add_argument('--stop_step', type=int, default=20,help='stop lag')
     parser.add_argument('--profiling', type=str, default='None',help='choose profiling way: CANN, GE, None')
     parser.add_argument('--interval', type=int, default=50,help='loss lag')
-    parser.add_argument("--ND", type=str, default='1', help="enable nd compile")
+    parser.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -218,9 +219,10 @@ if __name__ == '__main__':
     if args.rt2_bin:
         print('Enable bin compile mode....')
         torch.npu.set_compile_mode(jit_compile=False)
-    if args.ND == '1':
-        torch.npu.config.allow_internal_format = True
-    else:
+    if args.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
+
     main()

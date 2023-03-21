@@ -535,7 +535,7 @@ def train_iteration(model, i, mems, data_chunks, target_chunks, scaler,
 def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
           optimizer_sparse, scheduler, scheduler_sparse, scaler, vocab, epoch,
           last_batch, last_iter, train_step, best_val_loss, meters,
-          timeout_handler, device, args, sys=None):
+          timeout_handler, device, args):
     # Turn on training mode which enables dropout.
     model.train()
     if not torch.__version__ >= "1.8":
