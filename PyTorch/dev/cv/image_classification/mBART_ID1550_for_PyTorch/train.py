@@ -49,6 +49,7 @@ from models.utils.model_utils import load_model_state, save_state, get_perplexit
 
 """Train models."""
 import torch
+
 if torch.__version__ >= "1.8":
     import torch_npu
 
@@ -71,7 +72,13 @@ if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DE
 if torch.npu.current_device() != NPU_CALCULATE_DEVICE:
     torch.npu.set_device(f'npu:{NPU_CALCULATE_DEVICE}')
 
+
 def train(opt):
+    if args.ND:
+        print('***********allow_internal_format = False*******************')
+        torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
     ArgumentParser.validate_train_opts(opt)
     ArgumentParser.update_model_opts(opt)
     ArgumentParser.validate_model_opts(opt)
@@ -155,22 +162,22 @@ def train(opt):
     if cuda_condition:
         model.npu()
     ############# Change Start ##################
-    #if cuda_condition and torch.npu.device_count() > 1:
+    # if cuda_condition and torch.npu.device_count() > 1:
     #    print("Using %d GPUS for BERT" % torch.npu.device_count())
     #    model = nn.DataParallel(model, device_ids=[0, 1, 2, 3])
     ############# Change End ####################
-    
+
     optimizer = apex.optimizers.NpuFusedAdam(model.parameters(),
-                                                lr=opt.learning_rate,
-                                                betas=(0.9, 0.98), eps=1e-9)
+                                             lr=opt.learning_rate,
+                                             betas=(0.9, 0.98), eps=1e-9)
 
     model, optimizer = amp.initialize(model, optimizer,
-                                          opt_level="O2",
-                                          combine_grad=True)
+                                      opt_level="O2",
+                                      combine_grad=True)
 
     optimizer = NoamOpt(model_dim, 1, 2000, optimizer)
     ############# Change Start ##################
-    #optimizer = NoamOpt(model_dim, 1, 2000, torch.optim.Adam(model.parameters(),
+    # optimizer = NoamOpt(model_dim, 1, 2000, torch.optim.Adam(model.parameters(),
     #                                                         lr=opt.learning_rate,
     #                                                         betas=(0.9, 0.98), eps=1e-9))
     ############# Change End ####################
@@ -206,7 +213,9 @@ def train(opt):
             if i % opt.report_every == 0 and i > 0:
                 elapsed = time.time() - start
                 print("Epoch: %s, Step: %d Loss: %f PPL: %f Tokens per Sec: %f, time/step(s):%.4f, FPS: %.3f" %
-                      (epoch, i, loss / batch.ntokens, get_perplexity(loss / batch.ntokens), tokens / elapsed,step_time,FPS))
+                      (
+                      epoch, i, loss / batch.ntokens, get_perplexity(loss / batch.ntokens), tokens / elapsed, step_time,
+                      FPS))
                 start = time.time()
                 tokens = 0
                 # checkpoint = "checkpoint.{}.".format(total_loss / total_tokens) + 'epoch' + str(epoch) + ".pt"
@@ -216,7 +225,8 @@ def train(opt):
         save_state(os.path.join(model_dir, checkpoint), model, criterion, optimizer, global_steps, fields, opt)
 
         if previous_best > loss_average:
-            save_state(os.path.join(model_dir, 'checkpoints_best.pt'), model, criterion, optimizer, global_steps, fields, opt)
+            save_state(os.path.join(model_dir, 'checkpoints_best.pt'), model, criterion, optimizer, global_steps,
+                       fields, opt)
             previous_best = loss_average
 
 

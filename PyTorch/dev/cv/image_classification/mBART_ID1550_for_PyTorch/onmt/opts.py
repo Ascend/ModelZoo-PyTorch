@@ -258,6 +258,7 @@ def model_opts(parser):
                    "See https://nvidia.github.io/apex/amp.html#opt-levels.")
 
 
+
 def preprocess_opts(parser):
     """ Pre-procesing options """
     # Data options
@@ -657,6 +658,7 @@ def train_opts(parser):
               help="Sample rate.")
     group.add('--window_size', '-window_size', type=float, default=.02,
               help="Window size for spectrogram in seconds.")
+    group.add('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
 
     # Option most relevant to image input
     group.add('--image_channel_size', '-image_channel_size',

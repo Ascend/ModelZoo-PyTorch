@@ -191,10 +191,15 @@ parser.add_argument('--precision_mode',
 parser.add_argument('--graph_mode',
                     action='store_true',
                     help='whether to enable graph mode.')
+parser.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
 best_acc1 = 0
 args = parser.parse_args()
 def main():
-    
+    if args.ND:
+        print('***********allow_internal_format = False*******************')
+        torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
     if args.npu is None:
         args.npu = 0
     global CALCULATE_DEVICE

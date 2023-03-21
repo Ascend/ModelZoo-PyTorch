@@ -45,6 +45,7 @@ def parse_arg():
     parser.add_argument('--max_step', default=10, type=int, help='start_step')
     parser.add_argument('--start_step', default=0, type=int, help='start_step')
     parser.add_argument('--stop_step', default=1000, type=int,help='stop_step')
+    parser.add_argument('--ND', type=ast.literal_eval, default=False, help="enable nd compile")
     args = parser.parse_args()
     with open(args.cfg, 'r') as f:
         config = yaml.safe_load(f)
@@ -56,6 +57,11 @@ def parse_arg():
 def main():
     # load config
     config, args = parse_arg()
+    if args.ND:
+        print('***********allow_internal_format = False*******************')
+        torch.npu.config.allow_internal_format = False
+    else:
+        torch.npu.config.allow_internal_format = True
     npu = args.npu
     if args.bin:
         print('enable run time2.0 model now!')
@@ -240,7 +246,7 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
             profiling = torch.npu.profile(profiler_result_path="./GE_prof")
         else:
             profiling = NoProfiling()
-        with profiling: 
+        with profiling:
             data_time.update((time.time() - end) * 1000)
             labels = idx
             inp = inp.to(device)
