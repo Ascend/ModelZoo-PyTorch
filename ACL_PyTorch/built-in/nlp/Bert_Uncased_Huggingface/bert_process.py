@@ -22,7 +22,7 @@ from tqdm import tqdm
 import numpy as np
 
 from torch.utils.data import DataLoader
-from datasets import load_dataset, load_metric
+from datasets import load_dataset, load_metric, load_from_disk
 from transformers import (
     AutoTokenizer,
     DataCollatorWithPadding,
@@ -48,6 +48,11 @@ def parse_args():
         type=str,
         choices=["preprocess", "postprocess"],
         required=True,
+    )
+    parser.add_argument(
+        "--offline_download",
+        action="store_true",
+        help="If passed, download datasets from local file.",
     )
 
     # Required for preprocess
@@ -196,10 +201,15 @@ def main():
     args = parse_args()
 
     # Initialize datasets,tokenizer and metric
-    raw_datasets = load_dataset(args.dataset_name, None)
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, use_fast=True)
-    if args.process_mode == "postprocess":
-        metric = load_metric("squad")
+    if args.offline_download:
+        raw_datasets = load_from_disk("./squad/data")
+        if args.process_mode == "postprocess":
+            metric = load_metric("./squad/metric/squad.py")
+    else:
+        raw_datasets = load_dataset(args.dataset_name, None)
+        if args.process_mode == "postprocess":
+            metric = load_metric("squad")
 
     # Validation Feature Creation
     eval_examples = raw_datasets["validation"]

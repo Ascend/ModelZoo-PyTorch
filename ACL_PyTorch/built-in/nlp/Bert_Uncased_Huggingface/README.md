@@ -118,11 +118,31 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
 1. 获取原始数据集。
 
-   该模型使用 [SQuAD v1.1](https://huggingface.co/datasets/squad) 数据集，下载过程已包含在 bert_process.py 处理脚本中。
-
-3. 执行 bert_process.py 脚本，生成数据集预处理后的npy文件
+   该模型使用 [SQuAD v1.1](https://huggingface.co/datasets/squad) 数据集，下载过程已包含在 bert_process.py 处理脚本中。若因网络原因无法下载，需预先[下载](https://pan.baidu.com/s/1aph8lNX9WOT5e7Yf8doWhg?pwd=data)数据集相关文件，解压后和源码置于同级目录下。
 
    ```
+   <project>
+   |-- squad
+   |   |-- data
+   |   |   |-- dataset_dict.json
+   |   |   |-- train
+   |   |   |   |-- data-00000-of-00001.arrow
+   |   |   |   |-- dataset_info.json
+   |   |   |   `-- state.json
+   |   |   `-- validation
+   |   |       |-- data-00000-of-00001.arrow
+   |   |       |-- dataset_info.json
+   |   |       `-- state.json
+   |   `-- metric
+   |       |-- evaluate.py
+   |       `-- squad.py
+   |-- README.md
+   |-- ......
+   ```
+
+2. 执行 bert_process.py 脚本，生成数据集预处理后的npy文件
+
+   ```shell
    # model_size = [base, large]
    # seq = [64, 128, 256, 320, 384, 512]
    
@@ -133,16 +153,18 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    --pad_to_max_length \
    --max_seq_length ${seq} \
    # --doc_stride ${stride}
+   # --offline_download
    ```
-   
+
    参数说明：
-   
+
    - --model_path：模型配置和权重文件所在文件夹路径。
    - --process_mode：此处为**预处理模式**。
    - --save_dir：预处理后数据的保存路径。
    - --pad_to_max_length：静态模型需要添加此参数。
    - --max_seq_length：序列长度 `${seq}`。
    - --doc_stride：当序列长度 `${seq}` 小于等于 128 时需设置此参数为合适值（参考精度数据部分的 doc_stride 值）。
+   - --offline_download：若采用离线下载模式下载数据集，需要添加此参数。
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -159,7 +181,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
       执行如下命令，采用 [transformers.onnx](https://huggingface.co/docs/transformers/serialization#export-to-onnx) 模块导出动态onnx文件。
 
-      ```
+      ```shell
       # BERT-Base
       python3 -m transformers.onnx --model=./bert_base/ --feature=question-answering onnx/
       mv onnx/model.onnx onnx/bert_base_dynamic.onnx
@@ -177,7 +199,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
    3. 简化并转换为静态onnx文件。
 
-      ```
+      ```shell
       # model_size = [base, large]
       # seq = [64, 128, 256, 320, 384, 512]
       # bs = [1, 4, 8, 16, 32, 64]
@@ -194,7 +216,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
    4. 修改静态onnx文件。
 
-      ```
+      ```shell
       # model_size = [base, large]
       # seq = [64, 128, 256, 320, 384, 512]
       # bs = [1, 4, 8, 16, 32, 64]
@@ -239,7 +261,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
    6. 执行ATC命令。
 
-      ```
+      ```shell
       # model_size = [base, large]
       # seq = [64, 128, 256, 320, 384, 512]
       # bs = [1, 4, 8, 16, 32, 64]
@@ -273,13 +295,13 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
    2. 执行推理。
 
-      ```
+      ```shell
       # model_size = [base, large]
       # seq = [64, 128, 256, 320, 384, 512]
       # bs = [1, 4, 8, 16, 32, 64]
       
       python3 -m ais_bench --model=om/bert_${model_size}_seq${seq}_bs${bs}.om  --batchsize=${bs} \
-      --input prep_data/input_ids,${prep_data}/attention_mask,${prep_data}/token_type_ids \
+      --input ${prep_data}/input_ids,${prep_data}/attention_mask,${prep_data}/token_type_ids \
       --output result --output_dirname result_bs${bs} --outfmt NPY
       ```
       
@@ -296,7 +318,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
    调用 bert_process.py 脚本获得精度数据。
 
-   ```
+   ```shell
    # model_size = [base, large]
    # seq = [64, 128, 256, 320, 384, 512]
    # bs = [1, 4, 8, 16, 32, 64]
@@ -309,8 +331,9 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    --max_seq_length ${seq} \
    --result_dir ./result/result_bs${bs}
    # --doc_stride ${stride}
+   # --offline_download
    ```
-
+   
    参数说明：
    
    - --model_path：模型配置和权重文件所在文件夹路径。
@@ -319,10 +342,11 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    - --max_seq_length：序列长度 `${seq}`。
    - --result_dir：推理结果所在路径。
    - --doc_stride：当序列长度 `${seq}` 小于等于 128 时需设置此参数，需要与前处理统一（参考精度数据参考的 doc_stride 值）。
+   - --offline_download：若采用离线下载模式下载数据集，需要添加此参数。
    
 4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-   ```
+   ```shell
    # model_size = [base, large]
    # seq = [64, 128, 256, 320, 384, 512]
    # bs = [1, 4, 8, 16, 32, 64]
