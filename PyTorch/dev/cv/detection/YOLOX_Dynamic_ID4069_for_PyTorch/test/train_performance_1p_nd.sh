@@ -122,7 +122,7 @@ start_time=$(date +%s)
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * ASCEND_DEVICE_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3 -m yolox.tools.train -n yolox-s -d 1 -ND ${ND} -b ${batch_size} ${adv_param} -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+taskset -c $PID_START-$PID_END python3 -m yolox.tools.train -n yolox-s -d 1 --ND=${ND} -b ${batch_size} ${adv_param} -f exps/example/yolox_voc/yolox_voc_s.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
