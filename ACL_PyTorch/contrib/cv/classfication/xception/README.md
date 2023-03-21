@@ -156,7 +156,7 @@ Xception是Google公司继Inception后提出的对 Inception-v3 的另一种改�
         --model ./xception_1.om \
         --input ./pre_dataset \
         --output ./results \
-        --outfmt BIN \
+        --outfmt TXT \
         --batchsize 1
     ```
     参数说明：
