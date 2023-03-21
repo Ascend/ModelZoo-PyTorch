@@ -139,13 +139,6 @@ DB(Differentiable Binarization)是一种使用可微分二值图来实时文字�
         bash ./test/train_performance_8p.sh --data_path=${datasets} --model_path=${pretrain_model}    # 8卡性能    
       ```
     
-   - 单机单卡评测
-
-     启动单卡评测。
-    
-      ```
-      bash ./eval_precision.sh
-      ```
    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。

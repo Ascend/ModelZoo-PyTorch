@@ -1,2 +1,0 @@
-source env.sh
-python3.7 eval.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume outputs/workspace/${PWD##*/}/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/final --box_thresh 0.6
