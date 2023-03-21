@@ -37,6 +37,7 @@ from __future__ import print_function
 import configargparse
 import onmt
 import os
+import ast
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
     NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE'))
