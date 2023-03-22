@@ -1,0 +1,5 @@
+torchvision==0.2.2.post3
+onnx
+Pillow==8.4.0
+opencv-python
+Shapely

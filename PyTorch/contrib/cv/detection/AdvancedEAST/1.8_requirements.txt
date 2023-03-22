@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.9.1
 onnx
 Pillow==9.1.0
 opencv-python
