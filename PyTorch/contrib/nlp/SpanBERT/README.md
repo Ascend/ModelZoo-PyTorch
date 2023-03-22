@@ -26,52 +26,46 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
     code_path=PyTorch/contrib/nlp
     ```
 
-- 通过Git获取代码方法如下：
-  
-    ```
-    git clone {url}        # 克隆仓库的代码   
-    cd {code_path}         # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-    ```
-
-
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==8.4.0 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   请用户需自行获取SQuAD 1.1数据集，下载地址为:[https://github.com/rajpurkar/SQuAD-explorer/tree/master/dataset](https://github.com/rajpurkar/SQuAD-explorer/tree/master/dataset)。上传数据集到服务器任意目录并解压。
-
-   数据集目录结构如下所示：  
+   请用户需自行获取SQuAD 1.1数据集，将下载好的数据集上传到服务器任意目录并解压。
+   数据集目录结构如下所示：
 
        ├── SQuAD 1.1
-       	├──train-v1.1.json                 
-       	├──dev-v1.1.json  
+             ├──train-v1.1.json                 
+             ├──dev-v1.1.json  
 
    > **说明：** 
    > 该数据集的训练过程脚本只作为一种参考示例。
@@ -80,7 +74,8 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
 
 1. 下载dict.txt文件。
 
-   请用户需自行获取，下载地址为[https://github.com/facebookresearch/SpanBERT/tree/main/pretraining]( https://github.com/facebookresearch/SpanBERT/tree/main/pretraining)，将其放在SpanBERT/pretraining目录下。
+   请用户根据“参考实现”源码链接，将源码 `SpanBERT/pretraining` 目录下的 dict.txt 文件下载到本模型 `SpanBERT/pretraining`  目录下。
+
 
 # 开始训练
 
@@ -101,7 +96,7 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
      启动单卡性能。
 
      ```
-     bash ./test/train_performance_1p.sh --data_path=数据集路径
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/  # 单卡性能
      ```
 
    - 单机8卡训练
@@ -109,21 +104,24 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=数据集路径 
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
      ```
 
-    --data_path参数填写数据集路径。
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
     模型训练脚本参数说明如下。  
    ```
    公共参数：
-    --data_path                           //数据集路径     
-    --train_epochs                        //重复训练次数
-    --batch_size                          //训练批次大小
-    --learning_rate                       //初始学习率
-    --RANK_ID                             //默认卡号
-    --ASCEND_DEVICE_ID                    //默认设备号
-    --test_path_dir                       //包含test文件夹的路径
+   --train_file                          //数据集路径
+   --batch_size                          //训练批次大小
+   --npu_id                              //设置训练卡id
+   --learning_rate                       //初始学习率
+   --loss_scale                          //loss scale大小
+   --num_train_epochs                    //训练周期数
+   --do_train                            //设置是否进行训练
+   --seed                                //随机数种子设置
    ```
    
    训练完成后，权重文件默认会写入到squad_output目录下，并输出模型训练精度和性能信息到test下output文件夹内。
@@ -133,29 +131,25 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
 
 **表 2**  训练结果展示表
 
-|  F1  | FPS  | Npu_nums | Epochs | AMP_Type | loss scale | Torch |
-| :--: | :--: | :------: | :----: | :------: | :--------: | :---: |
-|  -   | 24.3 |    1     |   4    |    O2    |   128.0    |  1.5  |
-| 91.9 | 47.2 |    8     |   4    |    O2    |   128.0    |  1.5  |
-|  -   | 13.9 |    1     |   1    |    O2    |   128.0    |  1.8  |
-| 91.9 | 44.4 |    8     |   4    |    O2    |   128.0    |  1.8  |
+|  NAME  |  F1  | FPS  | Epochs | AMP_Type | Torch_Version |
+| :----: | :--: | :--: | :----: | :------: | :-----------: |
+| 1p-NPU |  -   | 13.9 |   1    |    O2    |      1.8      |
+| 8p-NPU | 91.9 | 44.4 |   4    |    O2    |      1.8      |
 
 
 # 版本说明
 
 ## 变更
 
-2022.11.01：更新torch1.8版本，重新发布。
+2023.03.13：更新readme，重新发布。
 
 2022.07.01：首次发布。
 
-## 已知问题
+## FAQ
 
-当网络环境不能访问`https://dl.fbaipublicfiles.com`时，删除SpanBERT/code/pytorch_pretrained_bert目录下的file_utils.py，并将file_utils_for_network.py文件名修改为file_utils.py，然后在SpanBERT/cache目录下下载好预训练模型。
+1. 当网络环境不能访问`https://dl.fbaipublicfiles.com`时，删除SpanBERT/code/pytorch_pretrained_bert目录下的file_utils.py，将file_utils_for_network.py文件名修改为file_utils.py，根据实际需要在SpanBERT/cache目录下下载好预训练模型。
 
-网址:
-
- 'spanbert-base-cased': `https://dl.fbaipublicfiles.com/fairseq/models/spanbert_hf_base.tar.gz`,    
-
- 'spanbert-large-cased': `https://dl.fbaipublicfiles.com/fairseq/models/spanbert_hf.tar.gz`
-
+   ```
+   spanbert-base-cased:  https://dl.fbaipublicfiles.com/fairseq/models/spanbert_hf_base.tar.gz
+   spanbert-large-cased: https://dl.fbaipublicfiles.com/fairseq/models/spanbert_hf.tar.gz
+   ```
