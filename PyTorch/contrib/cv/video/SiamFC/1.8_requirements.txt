@@ -1,0 +1,16 @@
+torchvision==0.9.1
+matplotlib
+pandas
+tensorboardX
+numpy
+opencv-python
+cython
+yacs
+scikit-image
+scikit-learn
+python-lmdb
+scipy
+pillow<=7.0.0
+shapely
+tqdm
+easydict
