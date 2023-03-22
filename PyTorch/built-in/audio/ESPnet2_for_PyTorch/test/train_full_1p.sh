@@ -86,9 +86,10 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-MINUTES=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' | awk -F " " '{print$1}' | awk '{sum += $1};END {print sum}'`
-SECOND=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' | awk -F " " '{print$4}' | awk '{sum += $1};END {print sum}'`
-TOTAL_TIME=`awk 'BEGIN{printf "%.2f",('$MINUTES'*60+'$SECOND')}'`
+HOURS=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' |awk -F " seconds" '{print$1}' | awk -F " " '{if(NF>5) {print$(NF-5)} else {print 0}}'| awk '{sum += $1};END {print sum}'`
+MINUTES=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' |awk -F " seconds" '{print$1}' | awk -F " " '{print$(NF-3)}'| awk '{sum += $1};END {print sum}'`
+SECOND=`grep "epoch results:" $asr_log | awk -F " time=" '{print$2}' |awk -F " seconds" '{print$1}' | awk -F " " '{print$(NF)}'| awk '{sum += $1};END {print sum}'`
+TOTAL_TIME=`awk 'BEGIN{printf "%.2f",('$HOURS'*3600+'$MINUTES'*60+'$SECOND')}'`
 # 计算公式为：数据集数量 * 倍速数目 * epoch / 训练总时间
 FPS=`awk 'BEGIN{printf "%.2f",(120098*3*50 / '$TOTAL_TIME')}'`
 
