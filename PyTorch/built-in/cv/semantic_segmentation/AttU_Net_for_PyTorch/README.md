@@ -22,47 +22,42 @@ Attention U-Net 将注意力机制应用于UNet分割网络中，可以实现对
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/cv/semantic_segmentation
   ```
-  
-- 通过Git获取代码方法如下：
 
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 固件与驱动 | [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
-
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | pillow==8.4.0 |
+  | PyTorch 1.8 | pillow==9.1.0 |
+  
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
 1. 获取数据集。
 
-   用户自行下载 [ISIC 2018 dataset](https://challenge2018.isic-archive.com/task1/training/) 原始数据集。注意，仅仅需要下载2018年的 Training Data 和 Training Ground Truth。本任务用到的 Training Data 和 Training Ground Truth 类别的压缩包分别为 ISIC2018_Task1-2_Training_Input.zip 和 ISIC2018_Task1_Training_GroundTruth.zip。
+   用户自行下载 **ISIC 2018 dataset**原始数据集。注意，仅仅需要下载2018年的 Training Data 和 Training Ground Truth。本任务用到的 Training Data 和 Training Ground Truth 类别的压缩包分别为 ISIC2018_Task1-2_Training_Input.zip 和 ISIC2018_Task1_Training_GroundTruth.zip。
 
    下载完成并解压，将数据集放至在源码包根目录下新建的 ISIC/dataset 目录下或者在 dataset.py 中修改路径参数为数据集文件所在路径，然后运行 dataset.py 将数据集划分为三部分，分别用于 training、validation和test，三部分的比例是70%、10% 和20%。数据集总共包含2594张图片，其中1815用于training，259 用于validation，剩下的520用于testing。
 
@@ -91,89 +86,79 @@ Attention U-Net 将注意力机制应用于UNet分割网络中，可以实现对
    > **说明：** 
    > 数据集路径以用户自行定义的路径为准
 
+
 # 开始训练
 
 ## 训练模型
+
 1. 进入解压后的源码包根目录。
 
-    ```
-    cd /${模型文件夹名称} 
-    ```
+   ```
+   cd /${模型文件夹名称} 
+   ```
 
 2. 运行训练脚本。
 
-    ```bash
-    # training 1p full，单p上运行150个epoch，运行时间大约10h
-    bash ./test/train_full_1p.sh --data_path=real_data_path --epochs=150
+   该模型支持单机单卡训练和单机8卡训练。
 
-    # training 1p performance，单p上运行10个epoch，运行时间大约30min
-    bash ./test/train_performance_1p.sh --data_path=real_data_path --epochs=10
+   - 单机单卡训练
 
-    # training 8p full，8p上运行150个epoch，运行时间约为2.5h
-    bash ./test/train_full_8p.sh --data_path=real_data_path --epochs=150
+     启动单卡训练。
 
-    # training 8p performance，8p上运行10个epoch，运行时间约为5min
-    bash ./test/train_performance_8p.sh --data_path=real_data_path --epochs=10
-    ```
+     ```
+     bash ./test/train_full_1p.sh --data_path=/data/xxx/  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --data_path=/data/xxx/ --epochs=10 # 单卡性能
+     ```
 
-    real_data_path为用户数据集实际存放路径。
+   - 单机8卡训练
 
-日志路径:
+     启动8卡训练。
 
-- 日志生成路径
+     ```
+     bash ./test/train_full_8p.sh --data_path=/data/xxx/  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --data_path=/data/xxx/ --epochs=10  # 8卡性能
+     ```
 
-```
-test/output/
-```
-- 日志备份路径
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
-```
-test/backup/1p_full/			# 1p精度
-test/backup/1p_performance/		# 1p性能
-test/backup/8p_full/			# 8p精度
-test/backup/8p_performance/		# 8p性能
-```
    模型训练脚本参数说明如下：
 
-
+   ```
     公共参数：
-    --data                              //数据集路径
-    --addr                              //主机地址
-    --arch                              //使用模型
-    --workers                           //加载数据进程数，（1p:32/8p:128）  
-    --epoch                             //重复训练次数，默认150
-    --batch-size                        //训练批次大小，（1p:16/8p128）
-    --lr                                //初始学习率，（1p:0.0002/8p:0.0016）
-    --momentum                          //动量，（momentum1:0.5/momentum2:0.999）
-    --weight_decay                      //权重衰减，默认：0.0001
-    --amp                               //是否使用混合精度
-    --loss-scale                        //混合精度lossscale大小，默认dynamic
-    --opt-level                         //混合精度类型
-    多卡训练参数：
-    --multiprocessing-distributed       //是否使用多卡训练
-    --device-list '0,1,2,3,4,5,6,7'     //多卡训练指定训练用卡
+    --batch-size                        //训练批次大小
+    --image_size                        //图片大小
+    --num_epochs                        //训练周期数
+    --data_path                         //数据集路径
+    --apex                              //是否使用混合精度进行训练  
+    ---apex_opt_level                   //混合精度类型
+    --seed                              //随机数种子设置
+    --npu_idx                           //设置训练卡id
+    --loss_scale_value                  //设置loss scale值
+   ```
+   
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME   | Acc@1 |    FPS | Epochs | AMP_Type |
-| ------ | ----- | -----: | ------ | -------: |
-| 1p-1.5 | -     |     65 | 10     |       O2 |
-| 1p-1.8 | -     | 138.54 | 10     |       O2 |
-| 8p-1.5 | 0.899 |    500 | 150    |       O2 |
-| 8p-1.8 | 0.95  | 845.93 | 150    |       O2 |
+|  NAME  | Acc@1 |  FPS   | Epochs | AMP_Type | Torch_Version |
+| :----: | :---: | :----: | :----: | :------: | :-----------: |
+| 1p-NPU |   -   | 138.54 |   10   |    O2    |      1.8      |
+| 8p-NPU | 0.95  | 845.93 |  150   |    O2    |      1.8      |
 
 
 # 版本说明
 
 ## 变更
 
-2022.09.26：更新pytorch1.8版本，重新发布。
+2023.03.13：更新readme，重新发布。
 
 2020.08.17：首次发布。
 
-## 已知问题
+## FAQ
 
 无。
