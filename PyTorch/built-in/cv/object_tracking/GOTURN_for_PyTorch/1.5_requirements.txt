@@ -1,6 +1,6 @@
 loguru==0.4.0
 torchsummary==1.5.1
-torchvision==0.9.1
+torchvision==0.2.2.post3
 tqdm==4.43.0
 imutils==0.5.3
 torch_lr_finder==0.1
