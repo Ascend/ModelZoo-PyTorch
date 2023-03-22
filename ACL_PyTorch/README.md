@@ -4203,7 +4203,7 @@ Audio
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/WeNet"> WeNet </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/Wenet2_for_Pytorch"> WeNet </a>
         </td>
         <td>aishell</td>
         <td>5.67%</td>
