@@ -1,0 +1,5 @@
+torchvision==0.9.1
+numpy==1.21.6
+decorator==5.1.1
+sympy==1.10.1
+pillow==9.1.0

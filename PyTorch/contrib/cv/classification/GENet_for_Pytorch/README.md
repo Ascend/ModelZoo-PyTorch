@@ -1,4 +1,4 @@
-# GENet_for_PyTorch
+# GENet for PyTorch
 
 -   [概述](#概述)
 -   [准备训练环境](#准备训练环境)
@@ -25,29 +25,19 @@
   code_path=PyTorch/contrib/cv/classification
   ```
 
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本配套表
+  **表 1**  版本支持表
 
-  | 配套       | 版本                                                         |
-  | ---------- | ------------------------------------------------------------ |
-  | 硬件       | [1.0.17](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | 固件与驱动 | [6.0.RC1](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial) |
-  | CANN       | [6.0.RC1](https://www.hiascend.com/software/cann/commercial?version=6.0.RC1) |
-  | PyTorch    | [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)       |
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3 |
+  | PyTorch 1.8 | torchvision==0.9.1 |
 
 - 环境准备指导。
 
@@ -55,23 +45,24 @@
 
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip3.7 install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
 
-
-1. 获取CIFAR-10数据
-   * 在源码包根目录下创建data目录。
-   * 数据集获取方式请参考：http://www.cs.toronto.edu/~kriz/cifar.html 。
-   * 将下载好的CIFAR-10数据集上传至data目录，而后解压。
-
-    数据集目录结构参考如下所示。
-
-    ```
-    ├──cifar-10-batches-py
+1. 获取数据集
+   用户自行获取 `CIFAR-10` 数据集，上传至服务器模型源码包根目录下新建的 `data` 目录下并解压。
+   
+   数据集目录结构参考如下所示。
+   ```
+   ├──cifar-10-batches-py
         ├── batches.meta            
         ├── data_batch_1   
         ├── data_batch_2
@@ -80,9 +71,7 @@
         ├── data_batch_5                         
         ├── readme.html
         └── test_batch           
-    ```
-
-
+   ```
    > **说明：** 
    > 该数据集的训练过程脚本只作为一种参考示例。
 
@@ -105,9 +94,9 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_path=./data
+     bash ./test/train_full_1p.sh --data_path=./data  # 单卡精度
      
-     bash ./test/train_performance_1p.sh --data_path=./data
+     bash ./test/train_performance_1p.sh --data_path=./data # 单卡性能
      ```
 
    - 单机8卡训练
@@ -115,12 +104,20 @@
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=./data
+     bash ./test/train_full_8p.sh --data_path=./data  # 8卡精度
      
-     bash ./test/train_performance_8p.sh --data_path=./data
+     bash ./test/train_performance_8p.sh --data_path=./data # 8卡性能
+     ```
+  
+   - 单机8卡评测
+
+     启动8卡评测。
+
+     ```
+     bash ./test/train_eval_8p.sh --data_path=./data  # 启动评测脚本前，需对应修改评测脚本中的--resume参数，指定ckpt文件路径
      ```
 
-   data_path是数据集路径
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -132,20 +129,26 @@
    --DataPath                          //数据集路径
    --rank                              //rank数量
    --dist-url                          //设置分布式训练网址
-   --multiprocessing-distributed       //使用分布式多卡训练
    --world-size                        //分布式训练节点数量
+   --workers                           //数据加载进程
+   --batch_size                        //训练批次大小
+   --device                            //训练设备
+   多卡训练参数：
+   --multiprocessing-distributed       //使用分布式多卡训练
    ```
+
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| Acc@1 |    FPS    | Device Type | Device Nums | Epochs | AMP_Type |
-|:-----:|:---------:|:-----------:|:-----------:|:------:|:--------:|
-| 94.73 | 2900.000  |     NPU     |      1      |  300   |    O2    |
-| 95.23 | 16912.437 |     NPU     |      8      |  300   |    O2    |
-| 94.76 | 1350.074  |     GPU     |      1      |  300   |    O2    |
-| 94.81 | 6536.289  |     GPU     |      8      |  300   |    O2    |
+|   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :----: | :------: | :-----------: |
+| 1p-竞品V | 94.76 | 1350.074 |  300   |  O2  |    1.5    |
+| 8p-竞品V | 94.81 | 6536.289 |  300   |  O2  |    1.5    |
+|  1p-NPU  | 94.73 | 2900.000 |  300   |  O2  |    1.8    |
+|  8p-NPU  | 95.23 | 16912.437 |  300  |  O2  |    1.8    |
 
 # 版本说明
 
@@ -153,7 +156,6 @@
 
 2023.1.30：更新readme，重新发布。
 
-
-## 已知问题
+## FAQ
 
 无。
