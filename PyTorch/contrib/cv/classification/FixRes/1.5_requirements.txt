@@ -1,0 +1,6 @@
+attrs
+numpy
+torchvision==0.2.2.post3
+Pillow==9.1.0
+tqdm
+setproctitle
