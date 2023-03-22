@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.2.2.post3
 opencv-python
 numpy
 scikit-image==0.16.2

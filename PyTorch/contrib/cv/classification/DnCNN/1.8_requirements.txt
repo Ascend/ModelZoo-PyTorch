@@ -1,0 +1,5 @@
+torchvision==0.9.1
+opencv-python
+numpy
+scikit-image==0.16.2
+sympy
