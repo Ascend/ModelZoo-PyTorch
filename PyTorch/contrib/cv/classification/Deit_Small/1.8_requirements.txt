@@ -1,0 +1,4 @@
+torchvision==0.9.1
+pillow==9.1.0
+onnx
+timm==0.4.12
