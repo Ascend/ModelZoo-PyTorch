@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import sys
+import argparse
+import os
+
+import numpy as np
+import torch
+from tqdm import tqdm
+
 from tool import get_multi_scale_size, resize_align_multi_scale
 sys.path.append(r"./DEKR")
 from tools import _init_paths
-from tqdm import tqdm
-import argparse
-import os
-import numpy as np
-import torch
 from lib.config import update_config, cfg
 from lib.dataset.transforms import FLIP_CONFIG
 from lib.dataset import make_test_dataloader
@@ -53,13 +55,11 @@ def parse_args():
     return args
 
 
-def get_output_data(dump_dir, idx, size, dtype=np.float32):
-    heatmap_shape = [1, 18, size[1] // 4, size[0] // 4]
-    offset_shape = [1, 34, size[1] // 4, size[0] // 4]
-    heatmap_file = os.path.join(dump_dir, "{:0>12d}_0.bin".format(idx))
-    offset_file = os.path.join(dump_dir, "{:0>12d}_1.bin".format(idx))
-    heatmap_data = np.fromfile(heatmap_file, dtype=dtype)[: 1 * 18 * (size[0] // 4) * (size[1] // 4)].reshape(heatmap_shape)
-    offset_data = np.fromfile(offset_file, dtype=dtype)[: 1 * 34 * (size[0] // 4) * (size[1] // 4)].reshape(offset_shape)
+def get_output_data(dump_dir, idx):
+    heatmap_file = os.path.join(dump_dir, "{:0>12d}_0.npy".format(idx))
+    offset_file = os.path.join(dump_dir, "{:0>12d}_1.npy".format(idx))
+    heatmap_data = np.load(heatmap_file)
+    offset_data = np.load(offset_file)
 
     heatmap_data = torch.tensor(heatmap_data, dtype=torch.float32)
     offset_data = torch.tensor(offset_data, dtype=torch.float32)
@@ -108,13 +108,13 @@ def postprocess(config, final_output_dir):
             image, cfg.DATASET.INPUT_SIZE, 1.0, 1.0, scale_list
         )
 
-        heatmap, offset = get_output_data(opt.dump_dir, idx, base_size)
+        heatmap, offset = get_output_data(opt.dump_dir, idx)
         posemap = offset_to_pose(offset, flip=False)
 
         flip_index_heat = FLIP_CONFIG['COCO_WITH_CENTER']
         flip_index_offset = FLIP_CONFIG['COCO']
 
-        heatmap_flip, offset_flip = get_output_data(opt.dump_dir_flip, idx, base_size)
+        heatmap_flip, offset_flip = get_output_data(opt.dump_dir_flip, idx)
         heatmap_flip = torch.flip(heatmap_flip, [3])
         heatmap = (heatmap + heatmap_flip[:, flip_index_heat, :, :]) / 2.0
 

@@ -1,14 +1,14 @@
 # DEKR模型-推理指导
 
-
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
-  - [输入输出数据](#section540883920406)
+    - [输入输出数据](#section540883920406)
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
+  - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
@@ -23,7 +23,6 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
 
 
-
 - 参考实现：
 
   ```
@@ -33,18 +32,6 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
   model_name=DEKR(pose_hrnet_w32)
   ```
 
-  
-
-
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -58,10 +45,10 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
 - 输出数据
 
-  | 输出数据 | 大小                                                         | 数据类型 | 数据排布格式 |
-  | -------- | ------------------------------------------------------------ | -------- | ------------ |
-  | output1  | batchsize x 18 x 128 x 192;<br/>batchsize x 18 x 128 x 128;<br/>batchsize x 18 x 192 x 128;<br/>batchsize x 18 x 128 x 256;<br/>batchsize x 18 x 256 x 128 | FLOAT32  | NCHW         |
-  | output2  | batchsize x 34 x 128 x 192;<br/>batchsize x 34 x 128 x 128;<br/>batchsize x 34 x 192 x 128;<br/>batchsize x 34 x 128 x 256;<br/>batchsize x 34 x 256 x 128 | FLOAT32  | NCHW         |
+  | 输出数据 | 数据类型 | 大小                                                         | 数据排布格式 |
+  | -------- | ------------ | -------------------------------------------------------- | ------------ |
+  | output1  | FLOAT32  | batchsize x 18 x 128 x 192;<br/>batchsize x 18 x 128 x 128;<br/>batchsize x 18 x 192 x 128;<br/>batchsize x 18 x 128 x 256;<br/>batchsize x 18 x 256 x 128 | NCHW         |
+  | output2  | FLOAT32  | batchsize x 34 x 128 x 192;<br/>batchsize x 34 x 128 x 128;<br/>batchsize x 34 x 192 x 128;<br/>batchsize x 34 x 128 x 256;<br/>batchsize x 34 x 256 x 128 | NCHW         |
 
 
 
@@ -74,17 +61,26 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| 固件与驱动                                                    | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | PyTorch                                                      | 1.8.0   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+## 获取源码<a name="section4622531142816"></a>
 
+1. 获取源码。
 
+   ```shell
+   git clone https://github.com/HRNet/DEKR.git
+   cd DEKR
+   git reset --hard 7a303139e92bdf3eab8d899415ccac37374285a4
+   patch -p1 < ../DEKR.patch
+   cd ..
+   ```
 
-1. 安装依赖。
+2. 安装依赖。
 
    ```
    pip3 install -r requirements.txt
@@ -92,32 +88,16 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
 2. 获取源代码
 
-   ```
-   git clone https://github.com/HRNet/DEKR.git                    # 克隆仓库的代码
-   cd DEKR                                                        # 切换到模型的代码仓目录
-   git reset --hard 7a303139e92bdf3eab8d899415ccac37374285a4      # 代码设置到对应的commit_id（可选）
-   patch -p1 < ../DEKR.patch                                      # 修改源代码
-   cd ..
-   ```
 
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
 
-   推理数据集采用 COCO_Val 2017，获取链接如下：
-
    ```
-   mkdir -p data/coco/images
-   cd data/coco/images
-   wget https://images.cocodataset.org/zips/val2017.zip --no-check-certificate
-   cd ..
-   wget https://images.cocodataset.org/annotations/annotations_trainval2017.zip --no-check-certificate
-   unzip annotations_trainval2017.zip
-   cd ../../
+   mkdir data
    ```
-
-   将 person_keypoints_val2017.json 文件和 val2017.zip 文件按照如下目录结构上传到 ModelZoo 的源码包路径下。
+   推理数据集采用 COCO_Val 2017，将 person_keypoints_val2017.json 文件和 val2017.zip 文件上传到主目录data文件夹下，目录结构如下：
 
    ```
    data
@@ -128,7 +108,6 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
            `-- val2017.zip
    ```
 
-   
 
 2. 数据预处理。
 
@@ -142,15 +121,13 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
    - 参数说明：
 
-     -    DATASET.ROOT：原始数据验证集所在路径。
-     -    --output：原始图像输出的二进制文件（.bin）所在路径。
-     -    --output_flip：原始图像flip后输出的二进制文件（.bin）所在路径。
+     -  DATASET.ROOT：原始数据验证集所在路径。
+     -  --output：原始图像输出的二进制文件（.npy）所在路径。
+     -  --output_flip：原始图像flip后输出的二进制文件（.npy）所在路径。
 
    - 注：每个图像对应生成两个二进制文件。
 
-   
-
-   运行成功后，分别在 prep_data 和 prep_data_flip 两个文件夹下生成对应的 bin 文件。
+   运行成功后，分别在 prep_data 和 prep_data_flip 两个文件夹下生成对应的 npy 文件。
 
 
 
@@ -163,7 +140,7 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
    1. 获取权重文件。
 
-      - [获取链接](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh)
+      - [权重链接](https://mailustceducn-my.sharepoint.com/:f:/g/personal/aa397601_mail_ustc_edu_cn/EmoNwNpq4L1FgUsC9KbWezABSotd3BGOlcWCdkBi91l50g?e=HWuluh)
       - 找到 model/pose_coco/pose_dekr_hrnetw32_coco.pth 和 model/rescore/final_rescore_coco_kpt.pth 两个权重文件，下载并放在 models 文件夹下。
       ```
       mkdir -p models
@@ -186,8 +163,8 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
          
          - 参数说明：
          
-           -    --output: onnx文件的输出路径。
-           -    TEST.MODEL_FILE: pth权重文件所在路径。
+           -  --output: onnx文件的输出路径。
+           -  TEST.MODEL_FILE: pth权重文件所在路径。
 
    3. 使用 ATC 工具将 ONNX 模型转 OM 模型。
 
@@ -220,12 +197,12 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
       3. 执行 ATC 命令。
 
-         ```
+         ```shell
          atc --framework=5 \
              --model=models/dekr_bs1.onnx \
-             -output=models/dekr_bs1 --input_format=NCHW \
+             --output=models/dekr_bs1 --input_format=ND \
              --input_shape="image:1,3,-1,-1" \
-             --dynamic_image_size="512,768;512,512;768,512;512,1024;1024,512" \
+             --dynamic_dims="512,768;512,512;768,512;512,1024;1024,512" \
              --soc_version=Ascend${chip_name} \
              --log=error
          ```
@@ -237,7 +214,7 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
            -   --output：输出的OM模型。
            -   --input\_format：输入数据的格式。
            -   --input\_shape：输入数据的shape。
-           -   --dynamic_image_size：动态分档的宽高。
+           -   --dynamic_dims：图片的动态分辨率参数。
            -   --log：设置ATC模型转换过程中显示日志的级别。
            -   --soc\_version：处理器型号。
            
@@ -247,45 +224,51 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 
 2. 开始推理验证。
 
-   a.  安装ais_bench推理工具。
+   1. 安装ais_bench推理工具。
 
-   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   b.  执行推理。
+   2. 执行推理。
 
-   运行 DEKR_ais_infer 脚本。
-   ```
-   python3 DEKR_ais_infer.py --bs 1 
-   ```
+      ```shell
+      python3 -m ais_bench \
+            --model=models/dekr_bs1.om \
+            --input=./prep_data \
+            --output=./ --output_dirname=out \
+            --outfmt NPY \
+            --auto_set_dymdims_mode 1
+      python3 -m ais_bench \
+            --model=higher_hrnet_dynamic.om \
+            --input=./prep_data_flip \
+            --output=./ --output_dirname=out_flip \
+            --outfmt NPY \
+            --auto_set_dymdims_mode 1
+      ```
    
-   - 参数说明：
-      -    --bs: batchsize大小，默认为1。
+      - 参数说明：
 
-   c.  精度验证。
+         - model：om模型。
+         - input：模型需要的输入。
+         - output：推理结果输出路径。
+         - outfmt：输出数据的格式，默认”BIN“，可取值“NPY”、“BIN”、“TXT”。
+         - output_dirname:推理结果输出子文件夹。可选参数。与参数output搭配使用。
+         - auto_set_dymdims_mode：自动匹配输入数据的shape。
 
-   运行 DEKR_postprocess.py 脚本，与 final_rescore_coco_kpt.pth 比对，可以获得精度数据。
-   ```
-   python3 DEKR_postprocess.py \
-       --dump_dir './out' \
-       --dump_dir_flip './out_flip' \
-       RESCORE.MODEL_FILE models/final_rescore_coco_kpt.pth
-   ```
+   3. 精度验证。
 
-   - 参数说明：
-     -    --dump_dir: 原始图像执行推理后的输出，默认为'./out'。
-     -    --dump_dir_flip: 原始图像flip后执行推理的输出，默认为'./out_flip'。
-     -    RESCORE.MODEL_FILE: 验证模型文件所在路径。
+      运行 DEKR_postprocess.py 脚本，与 final_rescore_coco_kpt.pth 比对，可以获得精度数据。
+      ```shell
+      python3 DEKR_postprocess.py \
+         --dump_dir './out' \
+         --dump_dir_flip './out_flip' \
+         RESCORE.MODEL_FILE models/final_rescore_coco_kpt.pth
+      ```
+
+      - 参数说明：
+         -  --dump_dir: 原始图像执行推理后的输出，默认为'./out'。
+         -  --dump_dir_flip: 原始图像flip后执行推理的输出，默认为'./out_flip'。
+         -  RESCORE.MODEL_FILE: 验证模型文件所在路径。
    
-   d. 性能验证。
-
-   采用ais_bench推理工具纯推理模式，执行以下命令：
-
-   ```
-   python3 -m ais_bench \
-       --model models/dekr_bs1.om \
-       --output out --dymHW 512,512 --loop 50
-   ```
-
 
 
 
@@ -294,7 +277,7 @@ DEKR采用的是自底向上的范式，准确地回归关键点位置需要学�
 调用 ACL 接口推理计算，性能参考下列数据。
 
 | 芯片型号  | Batch Size |    数据集     | 精度      | 性能       |
-|:-----:| :--------: | :-----------: | --------- | ---------- |
-| 310P3 |     1      | coco_val 2017 | AP: 0.677 | 11.555 fps |
+| ------- | ---------- | ------------- | --------- | ---------- |
+| 310P3   |     1      |   coco2017    | AP: 0.677 |  7.72      |
 
 - 说明：该模型只支持bs1。
