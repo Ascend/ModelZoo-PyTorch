@@ -1,4 +1,4 @@
-torchvision
+torchvision==0.2.2.post3
 matplotlib == 3.4.3
 pycocotools == 2.0.2
 decorator == 5.0.7
