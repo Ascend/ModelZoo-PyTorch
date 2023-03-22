@@ -26,39 +26,36 @@
     ```
     url=https://gitee.com/ascend/ModelZoo-PyTorch.git
     code_path=PyTorch/contrib/cv/semantic_segmentation
-
-- 通过Git获取代码方法如下：
-
-    ```
-    git clone {url}       # 克隆仓库的代码
-    cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
     ```
 
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
 ## 准备环境
 
-- 当前模型支持的固件与驱动、 CANN 以及 PyTorch 如下表所示。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-   表 1 版本配套表
+  **表 1**  版本支持表
 
-    |    配套   |    版本   |
-    |----------|---------- |
-    | 固件与驱动 |  [5.1.RC2](https://www.hiascend.com/hardware/firmware-drivers?tag=commercial)  |
-    |   CANN    |  [5.1.RC2](https://www.hiascend.com/software/cann/commercial?version=5.1.RC2) |
-    |  PyTorch  |  [1.8.1](https://gitee.com/ascend/pytorch/tree/master/)|
-
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
+  
 - 环境准备指导。
 
-    请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
 - 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt
+  pip install -r 1.5_requirements.txt  # PyTorch1.5版本
+  
+  pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   ```
+  > **说明：** 
+  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 准备数据集
@@ -86,23 +83,23 @@
               ├──图片3
               ├──图片4     
               ├──图片5   
-     ```
+    ```
 
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
 
 2. 数据预处理。
 
-    数据集训练前需要做预处理操作，裁剪保存，数据集处理后，放入目录下，在训练脚本中指定数据集路径，可正常使用。
+    训练前需要进行数据集预处理，对原始数据集进行裁剪保存，请在源码包根目录下执行以下命令。
 
     ```
     python3.7 ./dataset_make.py --input_zip_path=raw_data_path --dataset_path=real_traindata_path
-    #python3.7 ./dataset_make.py --input_zip_path=/home/dataset/dataset_RCAN/DIV2K/ --dataset_path=/home/dataset/dataset_RCAN/dataset_DIV2K/
 
+    # raw_data_path为下载的两个DIV2K压缩包所在的目录路径。
+    # real_traindata_path为存储最终增强数据集的路径。
+
+    示例：python3.7 ./dataset_make.py --input_zip_path=/home/dataset/dataset_RCAN/DIV2K/ --dataset_path=/home/dataset/dataset_RCAN/dataset_DIV2K/
     ```
-    raw_data_path为下载的两个DIV2K压缩包所在的目录路径。
-
-    real_traindata_path为存储最终增强数据集的路径。
 
 # 开始训练
 
@@ -123,77 +120,67 @@
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path
-     #bash ./test/train_full_1p.sh --train_dataset_dir=/home/dataset/dataset_RCAN/dataset_DIV2K/ --test_dataset_dir=/home/dataset/dataset_RCAN/Set5/original/
+     bash ./test/train_full_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path  # 单卡精度
+     
+     bash ./test/train_performance_1p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path  # 单卡性能
+    
+     示例：bash ./test/train_full_1p.sh --train_dataset_dir=/home/dataset/dataset_RCAN/dataset_DIV2K/ --test_dataset_dir=/home/dataset/dataset_RCAN/Set5/original/
      ```
-
+   
    - 单机8卡训练
-
+   
      启动8卡训练。
-
+   
      ```
-     bash ./test/train_full_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path --outputs_dir=real_output_path 
-     #bash ./test/train_full_8p.sh --train_dataset_dir=/home/dataset/dataset_RCAN/dataset_DIV2K/ --test_dataset_dir=/home/dataset/dataset_RCAN/Set5/original/  
+     bash ./test/train_full_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path  # 8卡精度
+     
+     bash ./test/train_performance_8p.sh --train_dataset_dir=real_traindata_path --test_dataset_dir=real_testdata_path  # 8卡性能
+     
+     示例：bash ./test/train_full_8p.sh --train_dataset_dir=/home/dataset/dataset_RCAN/dataset_DIV2K/ --test_dataset_dir=/home/dataset/dataset_RCAN/Set5/original/
      ```
 
+   --train_dataset_dir参数填写训练集路径，目录层级参考上述示例。
 
-
+   --test_dataset_dir参数填写测试集路径，目录层级参考上述示例。
 
    模型训练脚本参数说明如下。
 
-    ```
-    公共参数：
-    --arch                              //网络模型选择，默认："RCAN"
-    --train_dataset_dir                 //训练数据文件路径
-    --test_dataset_dir                  //测试数据文件路径
-    --outputs_dir                       //输出文件文件夹
-    --patch_size                        //输入尺寸，默认：48
-    --batch_size                        //批大小，默认：160
-    --num_epochs                        //训练轮数，默认：600
-    --lr                                //学习率，默认：1e-4
-    --workers                           //加载数据线程数，默认：8
-    --seed                              //随机种子，默认：123
-    --scale                             //超分辨率倍数，默认：2
-    --num_features                      //网络模型参数1，默认：64
-    --num_rg                            //网络模型参数2，默认：10
-    --num_rcab                          //网络模型参数3，默认：20
-    --reduction                         //网络模型参数4，默认：16
-    --ifcontinue                        //是否断点继续训练，默认：False
-    --checkpoint_path                   //断点训练的存储路径
-    --iffinetuning                      //是否微调训练，默认：False
-    --finetuning_checkpoint_path        //微调训练的存储路径
-    --amp                               //是否混合精度，默认：False
-    --loss_scale                        //混合精度等级，默认：128.0
-    --opt_level                         //混合精度等级，默认：'O2'             
-    --device                            //设备，默认："npu"
-    --device_list                       //设备列表，默认：'0,1,2,3,4,5,6,7'
-    --device_id                         //单卡选用设备，默认：None
-    --world_size                        //多卡环境数量，默认：1
-    --multiprocessing_distributed       //是否使用多卡
-    ```
-    
-    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+   ```
+   公共参数：
+   --arch                              //网络模型选择，默认："RCAN"
+   --train_dataset_dir                 //训练数据文件路径
+   --test_dataset_dir                  //测试数据文件路径
+   --batch_size                        //训练批次大小
+   --num_epochs                        //训练周期数
+   --lr                                //初始学习率
+   --workers                           //加载数据线程数
+   --seed                              //随机数种子设置
+   --amp                               //是否使用混合精度
+   --loss_scale                        //设置loss scale大小
+   --opt_level                         //混合精度类型
+   --device_id                         //训练卡ID设置
+   ```
+
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
 | NAME    | PSNR |  FPS | Epochs | AMP_Type | Torch_version |
-| ------- |----- | ---: | ------ | ------- | -------: |
-| 1p-竞品 | -   |  - | 1      |        - | - |
-| 1p-NPU  | -   |277.56 | 1      |       O2 | 1.5 |
+| :-----: |:---: | :--: | :----: | :-----: | :------: |
+| 1p-竞品V | -   |  - | 1      |      O2 | 1.5 |
+| 8p-竞品V | 38.12  | 828 | 600  |      O2 | 1.5 |
 | 1p-NPU  | -   |280.168| 1      |       O2 | 1.8 |
-| 8p-竞品 | 38.12  | 828 | 600  |        - | - |
-| 8p-NPU  | 38.11 | 1148.31 | 600   |       O2 | 1.5 |
 | 8p-NPU  | 37.815 |1303.86 | 600    |      O2 | 1.8 |
 
 # 版本说明
 
 ## 变更
 
-2022.10.12：更新pytorch1.8版本，并发布。
+2023.03.15：更新readme，重新发布。
 
 2021.01.10：首次发布。
 
-## 已知问题
+## FAQ
 无。
