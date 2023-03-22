@@ -9,4 +9,3 @@ pycocotools
 rapidfuzz>=2.0.0
 scikit-image
 mmdet
-torchvision==0.9.1
