@@ -644,6 +644,30 @@ CV-tracking
 	<td nowrap="nowrap">bs x 3 x 416 x 416</td>
 </table>
 
+CV-image_registration
+<table align="center">
+    <tr>
+        <th rowspan=2>Name</th>
+	<th rowspan=2>Dataset</th>
+        <th align="center" colspan=2>精度</th>
+	<th rowspan=2>310P最优性能(对应bs)</th>
+	<th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+        <td nowrap="nowrap">Auc@20</td>
+        <td>Precision</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/SuperGlue_with_SuperPoint_for_Pytorch"> SuperGlue_with_SuperPoint_for_Pytorch </a>
+        </td>
+        <td>YFCC100M</td>
+	<td>75.04%</td>
+        <td>97.85%</td>
+	<td>31.10s(e2e)</td>
+	<td nowrap="nowrap">1 x 1 x 1200 x 1600</td>
+</table>
+
 Audio
 
 <table align="center">
@@ -3432,7 +3456,7 @@ CV-face
 	<td>1502(bs16)</td>
 	<td>bs x 3 x 1000 x 1000</td>
 </table>
- 
+
 CV-gan
 
 <table align="center">
