@@ -37,12 +37,11 @@ do
         data_path=`echo ${para#*=}`
     fi
 done
-
 if [[ $apex_opt_level=="O0" ]];then
-    prec=""
+    prec=$PREC
 else
-    prec="--loss-scale=128. --amp"
-fi   
+    prec="--loss-scale=128. --amp $PREC"
+fi
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
@@ -103,7 +102,6 @@ python3 train.py \
     --device_num=8 \
     --rank=0 \
     $prec \
-    $PREC \
     --distributed \
     --device-list=${device_id_list} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 wait
