@@ -99,7 +99,7 @@ test_accuracy=`grep "valid.acc.ave/test" ${result} | tail -n 1 | awk -F "|" '{pr
 train_accuracy=${dev_accuracy}' '${test_accuracy}
 
 #打印，不需要修改
-echo "Final Performance iters/sec : $FPS"
+echo "Final Performance waves/sec : $FPS"
 
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"

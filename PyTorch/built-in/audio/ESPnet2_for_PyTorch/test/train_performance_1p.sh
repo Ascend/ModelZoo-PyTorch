@@ -94,7 +94,7 @@ TOTAL_TIME=`awk 'BEGIN{printf "%.2f",('$HOURS'*3600+'$MINUTES'*60+'$SECOND')}'`
 FPS=`awk 'BEGIN{printf "%.2f",(120098*3*5 / '$TOTAL_TIME')}'`
 
 #打印，不需要修改
-echo "Final Performance iters/sec : $FPS"
+echo "Final Performance waves/sec : $FPS"
 
 #打印，不需要修改
 echo "E2E Training Duration sec : $e2e_time"
