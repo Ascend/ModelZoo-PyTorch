@@ -82,7 +82,7 @@ do
         PID_END=$((PID_START + KERNEL_NUM - 1))
         nohup taskset -c $PID_START-$PID_END python3.7 main.py \
             --data ${data_path} \
-            --addr ${master_addr} \            
+            --addr ${master_addr} \
             --amp \
             --world-size ${world_size} \
             --seed 60 \
@@ -97,7 +97,7 @@ do
     else
         nohup python3.7 main.py \
             --data ${data_path} \
-            --addr ${master_addr} \            
+            --addr ${master_addr} \
             --amp \
             --world-size ${world_size} \
             --seed 60 \
