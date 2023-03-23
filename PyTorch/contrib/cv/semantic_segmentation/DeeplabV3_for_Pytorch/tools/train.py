@@ -121,7 +121,7 @@ def main():
             _optim = getattr(apex.optimizers, module_name)
             if inspect.isclass(_optim) and issubclass(_optim,
                                                       torch.optim.Optimizer):
-                OPTIMIZERS.register_module()(_optim)
+                OPTIMIZERS.register_module(module=_optim, force=True)
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
