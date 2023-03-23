@@ -59,12 +59,20 @@ do
             conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
             server_index=`echo ${para#*=}`
-
+    elif [[ $para == --one_node_ip* ]];then
+        one_node_ip=`echo ${para#*=}`
+    elif [[ $para == --linux_num* ]];then
+        linux_num=`echo ${para#*=}`
 	fi
 done
+if [[ $conf_path == "" ]];then
+    one_node_ip=$one_node_ip
+    linux_num=$linux_num
+else 
+    one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
+    linux_num=`find $conf_path -name "server_*.info" |wc -l`
+fi
 
-one_node_ip=`find $conf_path -name "server_*0.info"|awk -F "server_" '{print $2}'|awk -F "_" '{print $1}'`
-linux_num=`find $conf_path -name "server_*.info" |wc -l`
 
 
 if [[ $data_path  == "" ]];then
@@ -155,6 +163,8 @@ wait
 
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
+
+export ASCEND_DEVICE_ID=0
 
 
 #结果打印，不需要修改

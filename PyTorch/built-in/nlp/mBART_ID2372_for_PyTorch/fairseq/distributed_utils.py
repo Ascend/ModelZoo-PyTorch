@@ -143,8 +143,7 @@ def infer_init_method(args, force_distributed=False):
 
     elif args.distributed_world_size > 1 or force_distributed:
         # fallback for single node with multiple GPUs
-        assert args.distributed_world_size <= torch.npu.device_count()
-        os.environ['MASTER_ADDR'] = '127.0.0.1'
+        
         os.environ['MASTER_PORT'] = '29688'
         args.distributed_init_method = "env://"
 
