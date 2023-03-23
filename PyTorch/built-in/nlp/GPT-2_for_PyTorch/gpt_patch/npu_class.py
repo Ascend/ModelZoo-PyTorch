@@ -119,6 +119,7 @@ class MatmulApply(torch.autograd.Function):
         ctx.save_for_backward(self, mat2)
         result = torch.matmul(self, mat2.transpose(-2, -1))
         return result
+
     @staticmethod
     def backward(ctx, grad):
         # da: grad * b

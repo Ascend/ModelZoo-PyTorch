@@ -56,15 +56,13 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip3 install -r requirements.txt  # PyTorch1.8版本
+  pip3 install -r requirements.txt
   ```
 
-  > **说明：** 
-  >只需执行一条对应的PyTorch版本依赖安装命令。
 
 - 安装Ascend DeepSpeed 
   
-  请参考并完成安装（https://gitee.com/ascend/DeepSpeed.git）
+  请参考 <https://gitee.com/ascend/DeepSpeed.git> 并完成安装
 
 - 克隆原始仓
 
@@ -98,11 +96,6 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 >该数据集的训练过程脚本只作为一种参考示例。
 
 
-## 获取预训练模型（可选）
-
-- 本模型不涉及
-
-
 # 开始训练
 
 ## 训练模型
@@ -115,26 +108,48 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
 2. 运行训练脚本。
 
-   该模型支持单机8卡训练。
+   该模型支持单机8卡训练，由于多卡训练使能了多种并行特性，单卡没有相匹配的模型，故不支持单卡训练。
 
    - 单机8卡训练
 
      启动8卡训练。
 
      ```
-     bash ./tests/train_GPT345M_full_8p.sh   
+     bash ./test/train_full_8p.sh --data_path=$real_data_path --model_size=$selected_model_size
+     bash ./test/train_performance_8p.sh --data_path=$real_data_path --model_size=$selected_model_size
      ```
-   
-   训练完成后，权重文件保存在./ckpts/ckpts_tmp下，并输出模型训练精度和性能信息。
+   - 备注：model_size代表模型参数量，目前只提供了4种：345M、1.3B、2.7B、3.7B，用户可从4种之中选1种，也可不选默认model_size=345M
+   - 训练完成后，权重文件保存在./ckpts/ckpts_tmp下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
-**表 2**  训练结果展示表(GPT-2-345M)
+**表 2**  训练结果展示表
 
-| NAME     | PPL    | samples/s | Steps     |
-| -------  | -----  |----------:| ------    |
-| 8p-竞品V  | 2.668  |   37.8 | 500000    |
-| 8p-NPU   | 2.676 |   59.7  | 500000    |
+| NAME     | params |  PPL  | samples/s | seq_len | Steps     |
+| -------  | -----  | -----  |------- | ----- | ------    |
+| 8p-竞品V  | 345M  | 26.375  |   37.8 | 1024 | 500000    |
+| 8p-NPU   | 345M | 26.485 |   59.7  | 1024 | 500000    |
+
+**表 3**  训练结果展示表
+
+| NAME     | params | PPL    | samples/s | seq_len |
+| -------  | -----  | -----  |------- | ----- |
+| 8p-竞品V  | 1.3B  | - |  15.71 | 1024 |
+| 8p-NPU   | 1.3B  | - |  21.47  | 1024 |
+
+**表 4**  训练结果展示表
+
+| NAME     | params | PPL    | samples/s | seq_len |
+| -------  | -----  | -----  |------- | ----- |
+| 8p-竞品V  | 2.7B  | - |   4.125 | 2048 |
+| 8p-NPU   | 2.7B  | - |   5.280  | 2048 |
+
+**表 5**  训练结果展示表
+
+| NAME     | params | PPL    | samples/s | seq_len |
+| -------  | -----  | -----  |------- | ----- |
+| 8p-竞品V  | 3.7B  | - |   3.120 | 2048 |
+| 8p-NPU   | 3.7B  | - |   4.558  | 2048 |
 
 备注：一定要有竞品和NPU。
 

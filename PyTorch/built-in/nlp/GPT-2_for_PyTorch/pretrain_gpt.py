@@ -16,16 +16,19 @@
 """Pretrain GPT"""
 import os
 import sys
+
 sys.path.insert(0, './Megatron-DeepSpeed')
 import deepspeed_npu
 import torch
 import torch_npu
 import apex
+from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU
+from torch.optim import AdamW
 
-from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU as Adam
-#from torch.optim import AdamW as Adam
-apex.optimizers.FusedAdam = Adam
+apex.optimizers.FusedAdam = FusedAdamNPU if 'FusedAdam' in os.environ else AdamW
+
 import compression
+
 sys.modules["deepspeed.compression"] = compression
 
 from gpt_patch import gpt_patch

@@ -25,6 +25,7 @@ import deepspeed
 import megatron
 import pretrain_gpt
 
+from torch import distributed as dist
 from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
 from deepspeed.runtime.utils import see_memory_usage
 from deepspeed.pipe import PipelineModule, LayerSpec, TiedLayerSpec
@@ -50,6 +51,7 @@ from megatron.mpu.layers import ColumnParallelLinear, RowParallelLinear
 from megatron.model.fused_layer_norm import MixedFusedLayerNorm
 
 from .npu_class import NpuDropout, MatmulApply
+
 
 def model_provider(pre_process=True, post_process=True):
     print_rank_0('building GPT model ...')
@@ -131,7 +133,6 @@ def EmbeddingInit(self,
         self.tokentype_embeddings = None
 
     # Embeddings dropout
-    # self.embedding_dropout = torch.nn.Dropout(embedding_dropout_prob)
     self.embedding_dropout = NpuDropout(embedding_dropout_prob)
 
 
@@ -149,7 +150,6 @@ def ParallelAttentionInit(self, init_method,
     if self.apply_query_key_layer_scaling:
         self.attention_softmax_in_fp32 = True
     self.layer_number = max(1, layer_number)
-    # self.attention_type = attention_type
     self.attention_type = None
     self.attn_mask_type = attn_mask_type
     self.num_attention_heads = args.num_attention_heads
@@ -309,20 +309,22 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
     if confusion_transpose:
         # NZ: [b * sq, np, hn] -> [b, np, sq, hn]
         query_layer = query_layer.npu_confusion_transpose((0, 2, 1, 3), (batch_size, query_layer.size(0) // batch_size,
-                                                                        self.num_attention_heads_per_partition,
-                                                                        self.hidden_size_per_attention_head),
-                                                        False).npu_format_cast(29)
+                                                                         self.num_attention_heads_per_partition,
+                                                                         self.hidden_size_per_attention_head),
+                                                          False)
         # # NZ: [b * sq, np, hn] -> [b, np, hn, sq]
         key_layer = key_layer.npu_confusion_transpose((0, 2, 1, 3), (batch_size, key_layer.size(0) // batch_size,
-                                                                    self.num_attention_heads_per_partition,
-                                                                    self.hidden_size_per_attention_head),
-                                                    False).npu_format_cast(29)
+                                                                     self.num_attention_heads_per_partition,
+                                                                     self.hidden_size_per_attention_head),
+                                                      False)
         matmul_result = matmul_transpose(query_layer, key_layer)
     else:
-        query_layer = query_layer.reshape(batch_size, query_layer.size(0) // batch_size, self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
+        query_layer = query_layer.reshape(batch_size, query_layer.size(0) // batch_size,
+                                          self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
         query_layer = query_layer.transpose(1, 2)
 
-        key_layer = key_layer.reshape(batch_size, key_layer.size(0) // batch_size, self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
+        key_layer = key_layer.reshape(batch_size, key_layer.size(0) // batch_size,
+                                      self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
         key_layer = key_layer.permute(0, 2, 3, 1)
         matmul_result = torch.matmul(query_layer, key_layer)
 
@@ -333,7 +335,8 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
     if get_key_value:
         with torch.no_grad():
             if layer_past is not None:
-                attention_mask = attention_mask[..., attention_scores.size(3) - 1, :attention_scores.size(3)].unsqueeze(2)
+                attention_mask = attention_mask[..., attention_scores.size(3) - 1, :attention_scores.size(3)].unsqueeze(
+                    2)
             else:
                 attention_mask = attention_mask[..., :attention_scores.size(3), :attention_scores.size(3)]
 
@@ -356,11 +359,12 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
     if confusion_transpose:
         # NZ: [b * sk, np, hn] -> [b, np, sk, hn]
         value_layer = value_layer.npu_confusion_transpose((0, 2, 1, 3), (batch_size, value_layer.size(0) // batch_size,
-                                                                        self.num_attention_heads_per_partition,
-                                                                        self.hidden_size_per_attention_head),
-                                                        False).npu_format_cast(29)
+                                                                         self.num_attention_heads_per_partition,
+                                                                         self.hidden_size_per_attention_head),
+                                                          False)
     else:
-        value_layer = value_layer.reshape(batch_size, value_layer.size(0) // batch_size, self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
+        value_layer = value_layer.reshape(batch_size, value_layer.size(0) // batch_size,
+                                          self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
         value_layer = value_layer.transpose(1, 2)
 
     # matmul: [b * np, sq, hn]
@@ -368,13 +372,13 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
 
     # [b * sq, h]
     if confusion_transpose:
-        context_layer = context_layer.npu_confusion_transpose((0, 2, 1, 3), (context_layer.size(0) * context_layer.size(2),
-                                                            context_layer.size(1) * context_layer.size(3)),
-                                                            True).npu_format_cast(29)
+        context_layer = context_layer.npu_confusion_transpose((0, 2, 1, 3),
+                                                              (context_layer.size(0) * context_layer.size(2),
+                                                               context_layer.size(1) * context_layer.size(3)),
+                                                              True)
     else:
         context_layer = context_layer.transpose(1, 2)
         context_layer = context_layer.reshape(context_layer.size(0) * context_layer.size(1), -1)
-        context_layer = torch.npu_format_cast(context_layer, 29)
 
     output, bias = self.dense(context_layer)
 
@@ -406,7 +410,6 @@ def ParallelMLPInit(self, init_method, output_layer_init_method, moe=False):
         moe=False)
     self.dense_h_to_4h.weight.data = torch.npu_format_cast(self.dense_h_to_4h.weight.data, 29)
     self.dense_h_to_4h.bias.data = torch.npu_format_cast(self.dense_h_to_4h.bias.data, 29)
-
 
     self.bias_gelu_fusion = args.bias_gelu_fusion
     self.activation_func = torch.nn.functional.gelu
@@ -525,7 +528,6 @@ def ParallelTransformerLayerForward(self, hidden_states, attention_mask, encoder
         mlp_output, mlp_bias = self.mlp(layernorm_output)
     else:
         mlp_output, moe_loss, _ = self.mlp(layernorm_output)
-    #mlp_output, mlp_bias = self.mlp(layernorm_output)
 
     # Second residual connection.
     if self.apply_residual_connection_post_layernorm:
@@ -538,7 +540,7 @@ def ParallelTransformerLayerForward(self, hidden_states, attention_mask, encoder
         if self.num_experts <= 1:
             output = bias_dropout_add_func(mlp_output, mlp_bias, residual, self.hidden_dropout)
         else:
-           output = mlp_output + residual
+            output = mlp_output + residual
 
     if get_key_value:
         output = [output, presents]
@@ -552,7 +554,6 @@ def ColumnParallelLinearForward(self, input_):
     # Matrix multiply.
 
     bias = self.bias if not self.skip_bias_add else None
-    # bias = None
     input_shape = input_parallel.size()
     if input_parallel.dim() == 3:
         input_parallel = input_parallel.view(-1, input_shape[2])
@@ -764,6 +765,7 @@ def parallel_lm_logits(input_, word_embeddings_weight, parallel_output,
 
     return mpu.gather_from_tensor_model_parallel_region(logits_parallel)
 
+
 def CrossEntropy(output, labels):
     labels, loss_mask = labels[0], labels[1]
     args = get_args()
@@ -784,33 +786,35 @@ def CrossEntropy(output, labels):
             loss = torch.sum(losses.view(-1) * loss_mask) / loss_mask.sum()
     return loss
 
-def FusedScaleMaskSoftmaxInit(
-            self,
-            input_in_fp16,
-            input_in_bf16,
-            attn_mask_type,
-            scaled_masked_softmax_fusion,
-            mask_func,
-            softmax_in_fp32,
-            scale,
-    ):
-        super(FusedScaleMaskSoftmax, self).__init__()
-        self.input_in_fp16 = input_in_fp16
-        self.input_in_bf16 = input_in_bf16
-        assert not (
-                self.input_in_fp16 and self.input_in_bf16
-        ), "both fp16 and bf16 flags cannot be active at the same time."
-        self.input_in_float16 = self.input_in_fp16 or self.input_in_bf16
-        self.attn_mask_type = attn_mask_type
-        self.scaled_masked_softmax_fusion = scaled_masked_softmax_fusion
-        self.mask_func = mask_func
-        self.softmax_in_fp32 = softmax_in_fp32
-        self.scale = scale
-        self.mask_tri = None
 
-        assert (
-                self.scale is None or softmax_in_fp32
-        ), "softmax should be in fp32 when scaled"
+def FusedScaleMaskSoftmaxInit(
+        self,
+        input_in_fp16,
+        input_in_bf16,
+        attn_mask_type,
+        scaled_masked_softmax_fusion,
+        mask_func,
+        softmax_in_fp32,
+        scale,
+):
+    super(FusedScaleMaskSoftmax, self).__init__()
+    self.input_in_fp16 = input_in_fp16
+    self.input_in_bf16 = input_in_bf16
+    assert not (
+            self.input_in_fp16 and self.input_in_bf16
+    ), "both fp16 and bf16 flags cannot be active at the same time."
+    self.input_in_float16 = self.input_in_fp16 or self.input_in_bf16
+    self.attn_mask_type = attn_mask_type
+    self.scaled_masked_softmax_fusion = scaled_masked_softmax_fusion
+    self.mask_func = mask_func
+    self.softmax_in_fp32 = softmax_in_fp32
+    self.scale = scale
+    self.mask_tri = None
+
+    assert (
+            self.scale is None or softmax_in_fp32
+    ), "softmax should be in fp32 when scaled"
+
 
 def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
     # [b, np, sq, sk]
@@ -823,18 +827,20 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
     # constraints on various tensor dimensions to enable warp based
     # optimization and upper triangular optimization (for causal mask)
     custom_kernel_constraint = key_seq_len > 16 and key_seq_len <= 2048 and \
-        query_seq_len % 4 == 0 and attn_batch_size % 4 == 0
+                               query_seq_len % 4 == 0 and attn_batch_size % 4 == 0
 
     # invoke custom kernel
     if self.input_in_float16 and mask is not None and \
-        custom_kernel_constraint and self.scaled_masked_softmax_fusion:
+            custom_kernel_constraint and self.scaled_masked_softmax_fusion:
         scale = self.scale if self.scale is not None else 1.0
 
         if self.attn_mask_type == AttnMaskType.causal:
             assert query_seq_len == key_seq_len, \
                 "causal mask is only for self attention"
             if self.mask_tri is None:
-                self.mask_tri = torch.triu(torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device), diagonal=1).npu_format_cast(29).bool()
+                self.mask_tri = torch.triu(
+                    torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
+                    diagonal=1).npu_format_cast(29).bool()
             probs = torch.npu_scaled_masked_softmax(input, self.mask_tri, self.scale * (1.0 / norm_factor), False)
             probs = probs.half()
         else:
@@ -844,6 +850,7 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
         probs = torch_npu.npu_scaled_masked_softmax(input, mask, self.scale * (1.0 / norm_factor), False)
 
     return probs
+
 
 def MixedFusedLayerNormInit(self, normalized_shape, eps=1e-5):
     super(MixedFusedLayerNorm, self).__init__()
@@ -856,8 +863,10 @@ def MixedFusedLayerNormInit(self, normalized_shape, eps=1e-5):
     self.bias = torch.nn.Parameter(torch.Tensor(*normalized_shape))
     self.reset_parameters()
 
+
 def MixedFusedLayerNormForward(self, input):
     return torch.nn.functional.layer_norm(input, self.normalized_shape, self.weight, self.bias, self.eps)
+
 
 from deepspeed.runtime import engine
 from deepspeed.utils import logger, log_dist
@@ -865,6 +874,7 @@ from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU
 from deepspeed.runtime.config import LAMB_OPTIMIZER, ONEBIT_ADAM_OPTIMIZER
 from deepspeed.runtime.fp16.fused_optimizer import FP16_Optimizer
 from deepspeed.runtime.fp16.unfused_optimizer import FP16_UnfusedOptimizer
+
 
 def _configure_fp16_optimizer(self, optimizer):
     initial_dynamic_scale = self.initial_dynamic_scale()
@@ -918,6 +928,7 @@ def _configure_fp16_optimizer(self, optimizer):
 
     return optimizer
 
+
 def _compile_dependencies():
     if torch.distributed.get_rank() == 0:
         start_time = time.time()
@@ -926,6 +937,36 @@ def _compile_dependencies():
         compile_helper()
         print('>>> done with dataset index builder. Compilation time: {:.3f} '
               'seconds'.format(time.time() - start_time), flush=True)
+
+
+@classmethod
+def FromMeta(cls, meta, local_part, group, device='cuda'):
+    # Fixbug for NPU 
+    meta = meta.long()  
+    assert meta.dtype == torch.long
+    dummy = torch.ones(dist.get_world_size(group=group))
+    part_obj = cls(tensor=dummy, group=group)
+
+    meta = meta.tolist()
+
+    # [N, list0, ..., listN-1]
+    part_obj.orig_size = meta[1:(1 + meta[0])]
+    meta = meta[1 + meta[0]:]
+
+    part_obj.orig_device = device
+    part_obj.local_data = local_part.detach()
+
+    part_obj.group = group
+
+    # Partition is encoded like the rowptr of a CSR matrix:
+    # [num_parts, rank, 0, part_1, ..., part_num_parts]
+    # TODO: support shuffle between different partition granularities
+    assert part_obj.num_parts == meta[0]
+    assert part_obj.rank == meta[1]
+    part_obj.partition = meta[2:]  # length num_parts+1
+
+    return part_obj
+
 
 # set npu option
 option = {
@@ -939,7 +980,9 @@ option = {
 print("option:", option)
 torch.npu.set_option(option)
 
+# fix mismatch for NPU in deepspeed
 engine.DeepSpeedEngine._configure_fp16_optimizer = _configure_fp16_optimizer
+deepspeed.runtime.utils.PartitionedTensor.from_meta = FromMeta
 
 # replace with NPU dropout
 pretrain_gpt.model_provider = model_provider
@@ -972,4 +1015,3 @@ megatron.model.gpt_model.CrossEntropy = CrossEntropy
 megatron.model.fused_layer_norm.MixedFusedLayerNorm.__init__ = MixedFusedLayerNormInit
 megatron.model.fused_layer_norm.MixedFusedLayerNorm.forward = MixedFusedLayerNormForward
 megatron.initialize._compile_dependencies = _compile_dependencies
-
