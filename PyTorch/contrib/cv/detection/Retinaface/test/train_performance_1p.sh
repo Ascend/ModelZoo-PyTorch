@@ -22,13 +22,25 @@ learning_rate=0.001
 
 for para in $*
 do
-    if [[ $para == --device_id* ]];then
+    if [[ $para == --precision_mode* ]];then
+        apex_opt_level=`echo ${para#*=}`
+                    if [[ $apex_opt_level != "O0" ]] && [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
+                            echo "[ERROR] para \"precision_mode\" must be config O0 O1 or O2 or O3"
+                            exit 1
+                    fi
+        PREC="--opt-level "$apex_opt_level
+    elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     fi
 done
 
+if [[ $apex_opt_level=="O0" ]];then
+    prec=$PREC
+else
+    prec="--loss-scale=128. --amp $PREC"
+fi   
 # 校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
@@ -88,9 +100,7 @@ python3 train.py \
     --batch-size=${batch_size} \
     --epochs=${train_epochs} \
     --rank=0 \
-    --amp \
-    --opt-level='O2' \
-    --loss-scale=128. \
+    $prec \
     --max_steps=100 \
     --device-list=${ASCEND_DEVICE_ID} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 wait
@@ -120,8 +130,11 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
-
+if [[ $apex_opt_level == "O0" ]];then
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+else
+        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 # 获取性能数据，不需要修改
 # 吞吐量
 ActualFPS=${FPS}

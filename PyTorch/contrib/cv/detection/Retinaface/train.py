@@ -161,7 +161,8 @@ def main_worker(gpu, ngpus_per_node, args):
         args.gpu = process_device_map[gpu]
     else:
         args.gpu = int(args.device_list)
-
+    if args.opt_level == 'O0':
+        torch.npu.config.allow_internal_format=False
     print("[npu id:", args.gpu, "]", "++++++++++++++++ before set LOCAL_DEVICE_ID:", os.environ['LOCAL_DEVICE_ID'])
     os.environ['LOCAL_DEVICE_ID'] = str(args.gpu)
     print("[npu id:", args.gpu, "]", "++++++++++++++++ LOCAL_DEVICE_ID:", os.environ['LOCAL_DEVICE_ID'])
