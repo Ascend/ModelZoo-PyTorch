@@ -25,7 +25,7 @@
   ```shell
   url=https://github.com/open-mmlab/mmdetection
   commit_id=c14dd6c42efb63f662a63fe403198bac82f47aa6
-  model_name=retinanet_r50_fpn_1x_coco
+  model_name=retinanet_r18_fpn_1x_coco
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -53,7 +53,7 @@
   | 配套       | 版本    | 环境准备指导                                                                                          |
   | ---------- | ------- | ----------------------------------------------------------------------------------------------------- |
   | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN       | 6.0.RC1 | -                                                                                                     |
+  | CANN       | 6.3.RC1 | -                                                                                                     |
   | Python     | 3.7.5   | -                                                                                                     |
   | PyTorch    | 1.10.0   | -                                                                                                     |
 
@@ -73,8 +73,6 @@
 2. 安装依赖。
 
    ```shell
-   pip3 install -U openmim
-   mim install mmcv-full
    pip3 install -r requirements.txt
    cd mmdetection
    pip3 install -v -e .
@@ -122,6 +120,7 @@
       1. 使用pytorch2onnx.py导出onnx文件。
 
          ```shell
+         export PYTHONPATH=`pwd`/mmdetection:$PYTHONPATH
          python3 mmdetection/tools/deployment/pytorch2onnx.py mmdetection/configs/retinanet/retinanet_r18_fpn_1x_coco.py retinanet_r18_fpn_1x_coco_20220407_171055-614fd399.pth --shape 1216 --output-file retinanet.onnx
          ```
           - 参数说明：
@@ -132,23 +131,23 @@
 
          运行成功后获得retinanet.onnx文件。
 
-      2. 修改ONNX文件。
-         请访问[auto-optimizer改图工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
+       2. 量化
+
+         ```shell
+         amct_onnx calibration --model retinanet.onnx --save_path ./amct --input_shape "input:1,3,1216,1216" --data_dir ./input_data/ --data_types "float32" --calibration_config amct.cfg
+         mv Retinanet_Resnet18_result_deploy_model.onnx retinanet_int8.onnx
+         ```
+         获得量化后的retinanet_int8.onnx
+
+      3. 修改ONNX文件。
+
+          请访问[auto-optimizer改图工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 	 
-	```shell
-	python3 -m auto_optimizer retinanet.onnx retinanet_fix.onnx -k 4,8
-	```
+          ```shell
+          python3 -m auto_optimizer optimize retinanet_int8.onnx retinanet_fix.onnx -k 4,8
+          ```
+          获得retinanet_fix.onnx文件。
 
-         获得retinanet_fix.onnx文件。
-      
-       3. 量化
-
-	```shell
-	amct_onnx calibration --model retinanet.onnx --save_path ./ --input_shape "input:1,3,1216,1216" --data_dir ./input_data/ --data_types "float32" --calibration_config amct,cfg
-	mv result_deploy_model.onnx retinanet_int8.onnx
-	```
-	
-	获得量化后的retinanet_int8.onnx
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -179,7 +178,7 @@
       3. 执行ATC命令。
 
          ```shell
-         atc --model=retinanet_int8.onnx \
+         atc --model=retinanet_fix.onnx \
             --framework=5 \
             --output=retinanet \
             --log=error \
@@ -221,25 +220,11 @@
 
 
    3. 精度验证。
-      - 运行get_info.py脚本，生成图片数据info文件。
-
-         ```shell
-         python3 get_info.py jpg ./data/coco/val2017 val2017.info
-         ```
-
-         - 参数说明：
-            - 第一个参数为生成的数据集文件格式
-            - 第二个参数为原始数据文件相对路径
-            - 第三个参数为生成的info文件名
-
-         运行成功后，在当前目录生成val2017.info。
-
-      
       - 执行后处理脚本，计算 mAP 精度：
          ```shell
          python3 retinanet_postprocess.py \
                --bin_data_path=./output_data/ \
-               --test_annotation=val2017.info \
+               --test_annotation=data/coco/val2017/ \
                --ground_truth=data/coco/annotations/instances_val2017.json
          ```
 
@@ -265,7 +250,7 @@
 调用ACL接口推理计算，性能参考下列数据。
 开源仓精度（mAP）：31.7
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| 芯片型号 | Batch Size   | 数据集 | 精度  | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 |  310P3    |         1        |   COCO2017 | mAP：31.6  |     16.78      |
 该模型仅支持batch size为1

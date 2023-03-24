@@ -19,6 +19,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 import mmcv
+from glob import glob
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     # generate dict according to annotation file for query resolution
     # load width and height of input images
     img_size_dict = dict()
-    jpg_info = get_jpg_info(test_annotation)
+    jpg_info = get_jpg_info(flags.test_annotation)
     for temp in jpg_info:
         img_file_path = temp[0]
         img_name = temp[0].split("/")[-1].split(".")[0]
