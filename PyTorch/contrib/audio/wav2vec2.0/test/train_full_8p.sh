@@ -8,7 +8,7 @@ Network="wav2vec2.0"
 
 #训练step
 #train_steps=`expr 1281167 / ${batch_size}`
-batch_size=16
+batch_size=8
 #学习率
 learning_rate=''
 # 指定训练所使用的npu device卡id
@@ -120,6 +120,7 @@ echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2
 echo "$data_path"
 fairseq-hydra-train \
     task.data=./data/manifest \
+    dataset.batch_size=$batch_size \
     hydra.run.dir=$PWD \
     distributed_training.distributed_world_size=8 \
     optimization.max_update=20000 \
