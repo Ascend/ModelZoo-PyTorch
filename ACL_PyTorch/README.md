@@ -876,7 +876,7 @@ CV-classfication
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/3d_resnets"> 3d_resnets </a>
         </td>
         <td>hmdb51</td>
-	<td>95.34%</td>
+	<td>62.22%</td>
 	<td></td>
         <td></td>
 	<td>830.7165(bs10)</td>
