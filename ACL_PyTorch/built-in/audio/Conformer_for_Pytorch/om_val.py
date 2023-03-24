@@ -30,9 +30,7 @@ def findAllFile(base):
 
 def main(args):
     # define related paths
-    speech2text = Speech2Text(model_dir=args.model_path, providers=["NPUExecutionProvider"])
-    if os.path.exists("om.txt"):
-        os.remove("om.txt")
+    speech2text = Speech2Text(model_dir=args.model_path, providers=["NPUExecutionProvider"], device_id=args.device_id)
     total_t = 0
     files = findAllFile(args.dataset_path)
     files = list(files)
@@ -41,12 +39,12 @@ def main(args):
     for fl in files:
         y, sr = librosa.load(fl, sr=16000)
         nbest = speech2text(y)
-        with open("om.txt", 'a') as f:
+        with open(args.result_path, 'a') as f:
             res = ""
             res = "".join(nbest[0][1])
             f.write('{} {}\n'.format(fl.split('/')[-1].split('.')[0], res))
     et = time.time()
-    print("wavs/second:", num/(et-st))
+    print("wav/second:", num/(et-st))
     if speech2text.encoder_m is not None:
         speech2text.encoder_m.encoder.release_model()
     if speech2text.decoder_m is not None:
@@ -57,10 +55,13 @@ def main(args):
         speech2text.joint_network_m.joint_session.release_model()
     if speech2text.lm_m is not None:
         speech2text.lm_m.lm_session.release_model()
-
+    release_acl(args.device_id)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ASVspoof detection system")
     parser.add_argument("--dataset_path", default='test/S0768', type=str, help="datapath")
     parser.add_argument('--model_path', default="/root/.cache/espnet_onnx/asr_train_asr_qkv", type=str, help='path to the om model and config')
+    parser.add_argument('--result_path', default="om.txt", type=str, help='path to result')
+    parser.add_argument('--device_id', default=0, type=int, help='path to the om model and config')
 
     main(parser.parse_args())
