@@ -47,7 +47,6 @@ from megatron.mpu.mappings import copy_to_tensor_model_parallel_region, gather_f
 from megatron.training import get_model, get_learning_rate_scheduler
 from megatron.utils import unwrap_model
 from megatron.checkpointing import load_checkpoint
-from megatron.mpu.layers import ColumnParallelLinear, RowParallelLinear
 from megatron.model.fused_layer_norm import MixedFusedLayerNorm
 
 from .npu_class import NpuDropout, MatmulApply
@@ -79,7 +78,7 @@ def model_provider(pre_process=True, post_process=True):
             # Convert attention mask to binary:
             attention_mask = (attention_mask < 0.5)
             if args.fp16:
-                attention_mask = attention_mask.half().npu_format_cast(29)
+                attention_mask = attention_mask.half()
             elif args.bf16:
                 attention_mask = attention_mask.bfloat16()
 
@@ -168,7 +167,7 @@ def ParallelAttentionInit(self, init_method,
             3 * projection_size,
             gather_output=False,
             init_method=init_method)
-        self.query_key_value.weight.data = torch.npu_format_cast(self.query_key_value.weight.data, 29)
+        
     elif self.attention_type == AttnType.cross_attn:
         self.query = mpu.ColumnParallelLinear(
             args.hidden_size,
@@ -187,25 +186,19 @@ def ParallelAttentionInit(self, init_method,
             projection_size,
             gather_output=False,
             init_method=init_method)
-        self.query.weight.data = self.query.weight.data.npu_format_cast(29)
-        self.query.bias.data = self.query.bias.data.npu_format_cast(29)
 
         self.key = mpu.ColumnParallelLinear(
             args.hidden_size,
             projection_size,
             gather_output=False,
             init_method=init_method)
-        self.key.weight.data = self.key.weight.data.npu_format_cast(29)
-        self.key.bias.data = self.key.bias.data.npu_format_cast(29)
 
         self.value = mpu.ColumnParallelLinear(
             args.hidden_size,
             projection_size,
             gather_output=False,
             init_method=init_method)
-        self.value.weight.data = self.value.weight.data.npu_format_cast(29)
-        self.value.bias.data = self.value.bias.data.npu_format_cast(29)
-
+        
     coeff = None
     self.norm_factor = math.sqrt(self.hidden_size_per_attention_head)
     if self.apply_query_key_layer_scaling:
@@ -233,8 +226,6 @@ def ParallelAttentionInit(self, init_method,
         input_is_parallel=True,
         init_method=output_layer_init_method,
         skip_bias_add=False)
-    self.dense.weight.data = torch.npu_format_cast(self.dense.weight.data, 29)
-    self.dense.bias.data = torch.npu_format_cast(self.dense.bias.data, 29)
 
     if deepspeed.checkpointing.is_configured():
         global get_cuda_rng_tracker, checkpoint
@@ -408,8 +399,6 @@ def ParallelMLPInit(self, init_method, output_layer_init_method, moe=False):
         init_method=init_method,
         skip_bias_add=False,
         moe=False)
-    self.dense_h_to_4h.weight.data = torch.npu_format_cast(self.dense_h_to_4h.weight.data, 29)
-    self.dense_h_to_4h.bias.data = torch.npu_format_cast(self.dense_h_to_4h.bias.data, 29)
 
     self.bias_gelu_fusion = args.bias_gelu_fusion
     self.activation_func = torch.nn.functional.gelu
@@ -426,8 +415,6 @@ def ParallelMLPInit(self, init_method, output_layer_init_method, moe=False):
         init_method=output_layer_init_method,
         skip_bias_add=False,
         moe=False)
-    self.dense_4h_to_h.weight.data = torch.npu_format_cast(self.dense_4h_to_h.weight.data, 29)
-    self.dense_4h_to_h.bias.data = torch.npu_format_cast(self.dense_4h_to_h.bias.data, 29)
 
 
 def ParallelMLPForward(self, hidden_states):
@@ -756,10 +743,18 @@ def parallel_lm_logits(input_, word_embeddings_weight, parallel_output,
     # Parallel logits.
     input_parallel = mpu.copy_to_tensor_model_parallel_region(input_)
     # Matrix multiply.
-    if bias is None:
-        logits_parallel = torch.nn.functional.linear(input_parallel, word_embeddings_weight)
+    input_shape = input_parallel.size()
+    if input_parallel.dim() == 3:
+        if bias is None:
+            logits_parallel = torch.nn.functional.linear(input_parallel, word_embeddings_weight)
+        else:
+            logits_parallel = torch.nn.functional.linear(input_parallel, word_embeddings_weight, bias)
     else:
-        logits_parallel = torch.nn.functional.linear(input_parallel, word_embeddings_weight, bias)
+        if bias is None:
+            logits_parallel = torch.npu_linear(input_parallel, word_embeddings_weight)
+        else:
+            logits_parallel = torch.npu_linear(input_parallel, word_embeddings_weight, bias)
+    logits_parallel = torch.npu_format_cast(logits_parallel, 2)
     if parallel_output:
         return logits_parallel
 
@@ -810,6 +805,8 @@ def FusedScaleMaskSoftmaxInit(
     self.softmax_in_fp32 = softmax_in_fp32
     self.scale = scale
     self.mask_tri = None
+    p = torch.npu.get_device_properties(0) if torch.npu.is_available() else None
+    self.fused = p.name in ['Ascend910A', 'Ascend910ProB'] if p is not None else False
 
     assert (
             self.scale is None or softmax_in_fp32
@@ -828,12 +825,12 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
     # optimization and upper triangular optimization (for causal mask)
     custom_kernel_constraint = key_seq_len > 16 and key_seq_len <= 2048 and \
                                query_seq_len % 4 == 0 and attn_batch_size % 4 == 0
-
+    
     # invoke custom kernel
-    if self.input_in_float16 and mask is not None and \
+    if self.input_in_float16 and self.fused and \
             custom_kernel_constraint and self.scaled_masked_softmax_fusion:
         scale = self.scale if self.scale is not None else 1.0
-
+        
         if self.attn_mask_type == AttnMaskType.causal:
             assert query_seq_len == key_seq_len, \
                 "causal mask is only for self attention"
@@ -841,13 +838,34 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
                 self.mask_tri = torch.triu(
                     torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
                     diagonal=1).npu_format_cast(29).bool()
-            probs = torch.npu_scaled_masked_softmax(input, self.mask_tri, self.scale * (1.0 / norm_factor), False)
+            probs = torch.npu_scaled_masked_softmax(input, self.mask_tri, scale * (1.0 / norm_factor), False)
             probs = probs.half()
         else:
             assert self.attn_mask_type == AttnMaskType.padding
-            probs = ScaledMaskedSoftmax.apply(input, mask, scale)
+            probs = torch.npu_scaled_masked_softmax(input, mask, scale * (1.0 / norm_factor), False)
+            probs = probs.half()
     else:
-        probs = torch_npu.npu_scaled_masked_softmax(input, mask, self.scale * (1.0 / norm_factor), False)
+        if self.input_in_float16 and self.softmax_in_fp32:
+            input = input.float()
+
+        if self.scale is not None:
+            input = input * (scale * 1.0 / norm_factor)
+
+        if self.attn_mask_type == AttnMaskType.causal:
+            if self.mask_tri is None:
+                self.mask_tri = torch.triu(
+                    torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
+                    diagonal=1).npu_format_cast(29).bool()
+            mask_output = self.mask_func(input, self.mask_tri)
+        else:
+            mask_output = self.mask_func(input, mask) if mask is not None else input
+        probs = torch.nn.Softmax(dim=-1)(mask_output)
+
+        if self.input_in_float16 and self.softmax_in_fp32:
+            if self.input_in_fp16:
+                probs = probs.half()
+            else:
+                probs = probs.bfloat16()
 
     return probs
 
@@ -942,7 +960,7 @@ def _compile_dependencies():
 @classmethod
 def FromMeta(cls, meta, local_part, group, device='cuda'):
     # Fixbug for NPU 
-    meta = meta.long()  
+    meta = meta.long()
     assert meta.dtype == torch.long
     dummy = torch.ones(dist.get_world_size(group=group))
     part_obj = cls(tensor=dummy, group=group)
@@ -968,10 +986,31 @@ def FromMeta(cls, meta, local_part, group, device='cuda'):
     return part_obj
 
 
+def cast_weight(self, device):
+    def _format_cast(module, class_name):
+        if (issubclass(class_name, (mpu.ColumnParallelLinear, \
+            mpu.RowParallelLinear, mpu.VocabParallelEmbedding))) \
+                and not torch.npu.get_mm_bmm_format_nd():
+            module.weight.data = module.weight.data.to(device)
+            module.weight.data = torch_npu.npu_format_cast(module.weight.data, 29) # ACL_FORMAT_FRACTAL_NZ
+
+    # supported devices list: "npu"(from module.npu), "xla"(from module.to)
+    support_cast_devices = [torch_npu.npu.native_device, torch_npu.npu.npu_device]
+    if device is None or not any(support_cast_device in str(device) for support_cast_device in support_cast_devices):
+        return
+
+    current_class = self.__class__
+    _format_cast(self, current_class)
+
+    if not self.children:
+        return 
+
+    for sub_module in self.children():
+        if isinstance(sub_module, torch.nn.Module):
+            sub_module.cast_weight(device)
+
 # set npu option
 option = {
-    "ACL_OP_COMPILER_CACHE_MODE": "enable",
-    "ACL_OP_COMPILER_CACHE_DIR": "./cache",
     "MM_BMM_ND_ENABLE": "disable",
     "ACL_OP_SELECT_IMPL_MODE": "high_performance",
     "ACL_OPTYPELIST_FOR_IMPLMODE": "LayerNorm",
@@ -979,6 +1018,9 @@ option = {
 
 print("option:", option)
 torch.npu.set_option(option)
+
+# cast weight for NPU
+torch.nn.Module.cast_weight = cast_weight
 
 # fix mismatch for NPU in deepspeed
 engine.DeepSpeedEngine._configure_fp16_optimizer = _configure_fp16_optimizer
