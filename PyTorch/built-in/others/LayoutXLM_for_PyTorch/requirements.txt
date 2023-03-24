@@ -1,7 +1,4 @@
--f https://download.pytorch.org/whl/torch_stable.html
--f https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.7/index.html
-
-datasets==1.6.2
+datasets==2.7.1
 transformers==4.5.1
 detectron2==0.3
 seqeval==1.2.2

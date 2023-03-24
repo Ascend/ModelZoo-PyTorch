@@ -36,13 +36,20 @@ LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消�
 
   | Torch_Version     | 三方库依赖版本 
   | --------          |:---------:
-  | PyTorch 1.8       |  transformers==4.5.1; detectron2==0.3; seqeval==1.2.2
+  | PyTorch 1.8       | transformers==4.5.1; detectron2==0.3; seqeval==1.2.2; datasets==2.7.1; packaging==21.0
 
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
 - 安装依赖。
+
+
+  ```bash
+  # 安装detectron2
+  git clone https://github.com/facebookresearch/detectron2.git -b v0.3
+  python -m pip install -e detectron2
+  ```
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
 
@@ -54,7 +61,7 @@ LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消�
 ## 准备数据集
 - 在有网络的情况下，模型训练需要的数据集会在训练开始之前由训练脚本自动下载，无需准备数据集。
 
-- 在没有网络的情况下，用户也可以自行下载xfun-zh数据集，并且移动到 */root/.cache/huggingface/datasets/xfun/xfun.zh-831af64820269186/0.0.0/affa7f771c23899f4ea7b3b522db75470abe55a08e8cf96de60597348837b9ed* 路径下，数据集目录参考结构如下所示：
+- 在没有网络的情况下，用户也可以自行下载xfun-zh数据集，并且移动到 */root/.cache/huggingface/datasets/xfun/xfun.zh/0.0.0/affa7f771c23899f4ea7b3b522db75470abe55a08e8cf96de60597348837b9ed* 路径下，数据集目录参考结构如下所示：
 
    ```
    0.0.0
@@ -156,4 +163,11 @@ LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消�
 
 2023.03.09：首次发布。
 ## FAQ
-无。
+1.下载数据集时，出现报错**SSLCertVerificationError**时，可以将 _/site-packages/requests/api.py_ 下的 
+```python 
+return session.request(method=method, url=url, **kwargs)  
+```
+修改为
+```python 
+return session.request(method=method, url=url, verify=False, **kwargs)
+```
