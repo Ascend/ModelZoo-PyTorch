@@ -5,7 +5,7 @@ model_name=layoutxlm
 batch_size=64
 max_steps=1000
 device_id=0
-WORLD_SIZE=1
+WORLD_SIZE=8
 
 for para in $*; do
   if [[ $para == --model_name* ]]; then
@@ -86,6 +86,7 @@ ActualLoss=$(grep "eval_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_
 
 #打印，不需要修改
 echo "Final Eval Loss : ${ActualLoss}"
+echo "TrainAccuracy : ${train_acc}"
 echo "E2E Training Duration sec : $e2e_time"
 
 #性能看护结果汇总

@@ -5,7 +5,7 @@ model_name=layoutxlm
 max_steps=500
 batch_size=16
 device_id=0
-WORLD_SIZE=1
+WORLD_SIZE=8
 
 for para in $*; do
   if [[ $para == --model_name* ]]; then
