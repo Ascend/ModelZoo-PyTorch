@@ -92,6 +92,7 @@ if [ $(uname -m) = "aarch64" ]
                 --use_combine_grad \
                 --overwrite_output_dir \
                 --save_steps 50000\
+                --skip_steps 5 \
                 --output_dir /tmp/$TASK/ > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         nohup  python3.7 run_glue.py --model_name_or_path bert-large-cased \
