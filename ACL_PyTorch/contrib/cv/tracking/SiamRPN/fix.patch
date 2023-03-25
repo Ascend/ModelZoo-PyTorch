@@ -1,0 +1,578 @@
+diff --git a/pysot/core/config.py b/pysot/core/config.py
+index 90959a0..a3545ab 100644
+--- a/pysot/core/config.py
++++ b/pysot/core/config.py
+@@ -1,5 +1,3 @@
+-# Copyright (c) SenseTime. All Rights Reserved.
+-
+ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+@@ -14,6 +12,19 @@ cfg = __C
+ __C.META_ARC = "siamrpn_r50_l234_dwxcorr"
+ 
+ __C.CUDA = True
++# ------------------------------------------------------------------------ #
++# Path
++# ------------------------------------------------------------------------ #
++__C.OM_PATH = '/home/SiamRPN/SiamRPN.om'
++__C.CROP_PATH = 'home/SiamRPN/crop'
++__C.DEVICE_ID = 1
++__C.DATASET_NAME = 'VOT2016'
++__C.JSON_PATH = '/root/datasets/VOT2016'
++__C.DATA_PATH = '/root/datasets/VOT2016'
++__C.RESULT_PATH = '/root/datasets/VOT2016/results'
++__C.MODEL_PATH ='/home/SiamRPN/pysot/experiments/siamrpn_r50_l234_dwxcorr/model.pth'
++__C.CONFIG_PATH = '/home/SiamRPN/pysot/experiments/siamrpn_r50_l234_dwxcorr/config.yaml'
++
+ 
+ # ------------------------------------------------------------------------ #
+ # Training options
+@@ -171,7 +182,7 @@ __C.BACKBONE = CN()
+ __C.BACKBONE.TYPE = 'res50'
+ 
+ __C.BACKBONE.KWARGS = CN(new_allowed=True)
+-
++# print(__C.BACKBONE.KWARGS,'----' )
+ # Pretrained backbone weights
+ __C.BACKBONE.PRETRAINED = ''
+ 
+diff --git a/pysot/models/model_builder.py b/pysot/models/model_builder.py
+index c6d0d1e..ff75fd2 100644
+--- a/pysot/models/model_builder.py
++++ b/pysot/models/model_builder.py
+@@ -9,9 +9,9 @@ import torch.nn as nn
+ import torch.nn.functional as F
+ 
+ from pysot.core.config import cfg
+-from pysot.models.loss import select_cross_entropy_loss, weight_l1_loss
++
+ from pysot.models.backbone import get_backbone
+-from pysot.models.head import get_rpn_head, get_mask_head, get_refine_head
++from pysot.models.head import get_rpn_head
+ from pysot.models.neck import get_neck
+ 
+ 
+@@ -32,56 +32,35 @@ class ModelBuilder(nn.Module):
+         self.rpn_head = get_rpn_head(cfg.RPN.TYPE,
+                                      **cfg.RPN.KWARGS)
+ 
+-        # build mask head
+-        if cfg.MASK.MASK:
+-            self.mask_head = get_mask_head(cfg.MASK.TYPE,
+-                                           **cfg.MASK.KWARGS)
+-
+-            if cfg.REFINE.REFINE:
+-                self.refine_head = get_refine_head(cfg.REFINE.TYPE)
+-
+     def template(self, z):
+         zf = self.backbone(z)
+-        if cfg.MASK.MASK:
+-            zf = zf[-1]
+         if cfg.ADJUST.ADJUST:
+             zf = self.neck(zf)
+         self.zf = zf
+ 
+     def track(self, x):
+         xf = self.backbone(x)
+-        if cfg.MASK.MASK:
+-            self.xf = xf[:-1]
+-            xf = xf[-1]
+         if cfg.ADJUST.ADJUST:
+             xf = self.neck(xf)
+         cls, loc = self.rpn_head(self.zf, xf)
+-        if cfg.MASK.MASK:
+-            mask, self.mask_corr_feature = self.mask_head(self.zf, xf)
+         return {
+-                'cls': cls,
+-                'loc': loc,
+-                'mask': mask if cfg.MASK.MASK else None
+-               }
++            'cls': cls,
++            'loc': loc,
++        }
+ 
+     def mask_refine(self, pos):
+         return self.refine_head(self.xf, self.mask_corr_feature, pos)
+ 
+     def log_softmax(self, cls):
+         b, a2, h, w = cls.size()
+-        cls = cls.view(b, 2, a2//2, h, w)
++        cls = cls.view(b, 2, a2 // 2, h, w)
+         cls = cls.permute(0, 2, 3, 4, 1).contiguous()
+         cls = F.log_softmax(cls, dim=4)
+         return cls
+ 
+     def forward(self, data):
+-        """ only used in training
+-        """
+-        template = data['template'].cuda()
+-        search = data['search'].cuda()
+-        label_cls = data['label_cls'].cuda()
+-        label_loc = data['label_loc'].cuda()
+-        label_loc_weight = data['label_loc_weight'].cuda()
++        template = data['template'].cpu()
++        search = data['search'].cpu()
+ 
+         # get feature
+         zf = self.backbone(template)
+@@ -94,22 +73,6 @@ class ModelBuilder(nn.Module):
+             zf = self.neck(zf)
+             xf = self.neck(xf)
+         cls, loc = self.rpn_head(zf, xf)
++        outputs = {'cls': cls, 'loc': loc}
+ 
+-        # get loss
+-        cls = self.log_softmax(cls)
+-        cls_loss = select_cross_entropy_loss(cls, label_cls)
+-        loc_loss = weight_l1_loss(loc, label_loc, label_loc_weight)
+-
+-        outputs = {}
+-        outputs['total_loss'] = cfg.TRAIN.CLS_WEIGHT * cls_loss + \
+-            cfg.TRAIN.LOC_WEIGHT * loc_loss
+-        outputs['cls_loss'] = cls_loss
+-        outputs['loc_loss'] = loc_loss
+-
+-        if cfg.MASK.MASK:
+-            # TODO
+-            mask, self.mask_corr_feature = self.mask_head(zf, xf)
+-            mask_loss = None
+-            outputs['total_loss'] += cfg.TRAIN.MASK_WEIGHT * mask_loss
+-            outputs['mask_loss'] = mask_loss
+         return outputs
+diff --git a/pysot/tracker/base_tracker.py b/pysot/tracker/base_tracker.py
+index 96bcd3c..b1db6e8 100644
+--- a/pysot/tracker/base_tracker.py
++++ b/pysot/tracker/base_tracker.py
+@@ -90,6 +90,4 @@ class SiameseTracker(BaseTracker):
+         im_patch = im_patch[np.newaxis, :, :, :]
+         im_patch = im_patch.astype(np.float32)
+         im_patch = torch.from_numpy(im_patch)
+-        if cfg.CUDA:
+-            im_patch = im_patch.cuda()
+         return im_patch
+diff --git a/pysot/tracker/siamrpn_tracker.py b/pysot/tracker/siamrpn_tracker.py
+index 24c10da..29dec73 100644
+--- a/pysot/tracker/siamrpn_tracker.py
++++ b/pysot/tracker/siamrpn_tracker.py
+@@ -7,14 +7,15 @@ from __future__ import unicode_literals
+ 
+ import numpy as np
+ import torch.nn.functional as F
+-
++import torch
++import sys
+ from pysot.core.config import cfg
+ from pysot.utils.anchor import Anchors
+ from pysot.tracker.base_tracker import SiameseTracker
+-
++from ais_bench.infer.interface import InferSession
+ 
+ class SiamRPNTracker(SiameseTracker):
+-    def __init__(self, model):
++    def __init__(self):
+         super(SiamRPNTracker, self).__init__()
+         self.score_size = (cfg.TRACK.INSTANCE_SIZE - cfg.TRACK.EXEMPLAR_SIZE) // \
+             cfg.ANCHOR.STRIDE + 1 + cfg.TRACK.BASE_SIZE
+@@ -23,8 +24,11 @@ class SiamRPNTracker(SiameseTracker):
+         window = np.outer(hanning, hanning)
+         self.window = np.tile(window.flatten(), self.anchor_num)
+         self.anchors = self.generate_anchor(self.score_size)
+-        self.model = model
+-        self.model.eval()
++
++        device_id = cfg.DEVICE_ID
++        om_path = cfg.OM_PATH
++
++        self.om_context = InferSession(device_id, om_path)
+ 
+     def generate_anchor(self, score_size):
+         anchors = Anchors(cfg.ANCHOR.STRIDE,
+@@ -88,7 +92,8 @@ class SiamRPNTracker(SiameseTracker):
+         z_crop = self.get_subwindow(img, self.center_pos,
+                                     cfg.TRACK.EXEMPLAR_SIZE,
+                                     s_z, self.channel_average)
+-        self.model.template(z_crop)
++
++        self.z_crop = z_crop.data.cpu().contiguous().numpy()
+ 
+     def track(self, img):
+         """
+@@ -106,10 +111,17 @@ class SiamRPNTracker(SiameseTracker):
+                                     cfg.TRACK.INSTANCE_SIZE,
+                                     round(s_x), self.channel_average)
+ 
+-        outputs = self.model.track(x_crop)
+-
+-        score = self._convert_score(outputs['cls'])
+-        pred_bbox = self._convert_bbox(outputs['loc'], self.anchors)
++        x_crop = x_crop.data.cpu().contiguous().numpy()
++        outputs = self.om_context.infer([self.z_crop, x_crop])
++        if outputs[0].shape == (1, 20, 25, 25):
++            data_cls = torch.from_numpy(outputs[1])
++            data_loc = torch.from_numpy(outputs[0])
++        else:
++            data_cls = torch.from_numpy(outputs[0])
++            data_loc = torch.from_numpy(outputs[1])
++
++        score = self._convert_score(data_cls)
++        pred_bbox = self._convert_bbox(data_loc, self.anchors)
+ 
+         def change(r):
+             return np.maximum(r, 1. / r)
+diff --git a/pysot/tracker/tracker_builder.py b/pysot/tracker/tracker_builder.py
+index d358261..6651085 100644
+--- a/pysot/tracker/tracker_builder.py
++++ b/pysot/tracker/tracker_builder.py
+@@ -17,5 +17,5 @@ TRACKS = {
+          }
+ 
+ 
+-def build_tracker(model):
+-    return TRACKS[cfg.TRACK.TYPE](model)
++def build_tracker():
++    return TRACKS[cfg.TRACK.TYPE]()
+diff --git a/pysot/utils/model_load.py b/pysot/utils/model_load.py
+index dbc184d..de4b2ad 100644
+--- a/pysot/utils/model_load.py
++++ b/pysot/utils/model_load.py
+@@ -46,9 +46,8 @@ def remove_prefix(state_dict, prefix):
+ 
+ def load_pretrain(model, pretrained_path):
+     logger.info('load pretrained model from {}'.format(pretrained_path))
+-    device = torch.cuda.current_device()
+     pretrained_dict = torch.load(pretrained_path,
+-        map_location=lambda storage, loc: storage.cuda(device))
++                                 map_location=torch.device('cpu'))
+     if "state_dict" in pretrained_dict.keys():
+         pretrained_dict = remove_prefix(pretrained_dict['state_dict'],
+                                         'module.')
+diff --git a/toolkit/datasets/video.py b/toolkit/datasets/video.py
+index 9063a1e..a150b13 100644
+--- a/toolkit/datasets/video.py
++++ b/toolkit/datasets/video.py
+@@ -15,7 +15,7 @@ class Video(object):
+         self.gt_traj = gt_rect
+         self.attr = attr
+         self.pred_trajs = {}
+-        self.img_names = [os.path.join(os.path.abspath(root), os.path.abspath(x)) for x in img_names]
++        self.img_names = [os.path.join(root, x) for x in img_names]
+         self.imgs = None
+ 
+         if load_img:
+@@ -40,7 +40,7 @@ class Video(object):
+         if isinstance(tracker_names, str):
+             tracker_names = [tracker_names]
+         for name in tracker_names:
+-            traj_file = os.path.join(path, name, self.name+'.txt')
++            traj_file = os.path.join(path, name, 'model', 'baseline', self.name+'.txt')
+             if os.path.exists(traj_file):
+                 with open(traj_file, 'r') as f :
+                     pred_traj = [list(map(float, x.strip().split(',')))
+diff --git a/toolkit/datasets/vot.py b/toolkit/datasets/vot.py
+index f66d7c1..9ffe15e 100644
+--- a/toolkit/datasets/vot.py
++++ b/toolkit/datasets/vot.py
+@@ -97,7 +97,9 @@ class VOTDataset(Dataset):
+     """
+     def __init__(self, name, dataset_root, load_img=False):
+         super(VOTDataset, self).__init__(name, dataset_root)
+-        with open(os.path.join(dataset_root, name+'.json'), 'r') as f:
++        dataset_root = dataset_root.split('/results')[0]
++        dataset_name = dataset_root.split('/')[-1] + '.json'
++        with open(os.path.join(dataset_root, dataset_name), 'r') as f:
+             meta_data = json.load(f)
+ 
+         # load videos
+diff --git a/toolkit/evaluation/ar_benchmark.py b/toolkit/evaluation/ar_benchmark.py
+index 935474b..af2269f 100644
+--- a/toolkit/evaluation/ar_benchmark.py
++++ b/toolkit/evaluation/ar_benchmark.py
+@@ -7,7 +7,7 @@ import itertools
+ import numpy as np
+ 
+ from colorama import Style, Fore
+-from ..utils import calculate_failures, calculate_accuracy
++from toolkit.utils.statistics import calculate_failures, calculate_accuracy
+ 
+ class AccuracyRobustnessBenchmark:
+     """
+diff --git a/toolkit/evaluation/eao_benchmark.py b/toolkit/evaluation/eao_benchmark.py
+index a92d8b6..1db6826 100644
+--- a/toolkit/evaluation/eao_benchmark.py
++++ b/toolkit/evaluation/eao_benchmark.py
+@@ -4,7 +4,7 @@ import numpy as np
+ 
+ from glob import glob
+ 
+-from ..utils import calculate_failures, calculate_accuracy, calculate_expected_overlap
++from toolkit.utils.statistics import calculate_failures, calculate_accuracy, calculate_expected_overlap
+ 
+ class EAOBenchmark:
+     """
+diff --git a/tools/eval.py b/tools/eval.py
+index 8bc1dae..cac8482 100644
+--- a/tools/eval.py
++++ b/tools/eval.py
+@@ -9,19 +9,19 @@ import argparse
+ from glob import glob
+ from tqdm import tqdm
+ from multiprocessing import Pool
+-from toolkit.datasets import OTBDataset, UAVDataset, LaSOTDataset, \
+-        VOTDataset, NFSDataset, VOTLTDataset
+-from toolkit.evaluation import OPEBenchmark, AccuracyRobustnessBenchmark, \
+-        EAOBenchmark, F1Benchmark
++from toolkit.datasets.vot import VOTDataset
++from toolkit.evaluation.ar_benchmark import AccuracyRobustnessBenchmark
++from toolkit.evaluation.eao_benchmark import EAOBenchmark
++from pysot.core.config import cfg
+ 
+ parser = argparse.ArgumentParser(description='tracking evaluation')
+ parser.add_argument('--tracker_path', '-p', type=str,
+                     help='tracker result path')
+-parser.add_argument('--dataset', '-d', type=str,
++parser.add_argument('--dataset', '-d', default='VOT2016', type=str,
+                     help='dataset name')
+ parser.add_argument('--num', '-n', default=1, type=int,
+                     help='number of thread to eval')
+-parser.add_argument('--tracker_prefix', '-t', default='',
++parser.add_argument('--tracker_prefix', '-t', default='model',
+                     type=str, help='tracker name')
+ parser.add_argument('--show_video_level', '-s', dest='show_video_level',
+                     action='store_true')
+@@ -30,17 +30,24 @@ args = parser.parse_args()
+ 
+ 
+ def main():
+-    tracker_dir = os.path.join(args.tracker_path, args.dataset)
+-    trackers = glob(os.path.join(args.tracker_path,
++    # fix config
++    if args.dataset != cfg.DATASET_NAME:
++        j_path = os.path.join(cfg.JSON_PATH.split('VOT')[0], args.dataset)
++        d_path = os.path.join(cfg.DATA_PATH.split('VOT')[0], args.dataset)
++        r_path = os.path.join(cfg.RESULT_PATH.split('VOT')[0], args.dataset, 'results')
++        opts = ['JSON_PATH', j_path, 'DATA_PATH', d_path, 'RESULT_PATH', r_path, 'DATASET_NAME', args.dataset]
++        cfg.merge_from_list(opts)
++
++    tracker_dir = os.path.join(cfg.RESULT_PATH, args.dataset)
++    trackers = glob(os.path.join(cfg.RESULT_PATH,
+                                  args.dataset,
+-                                 args.tracker_prefix+'*'))
++                                 args.tracker_prefix + '*'))
+     trackers = [os.path.basename(x) for x in trackers]
+ 
+     assert len(trackers) > 0
+     args.num = min(args.num, len(trackers))
+ 
+-    root = os.path.realpath(os.path.join(os.path.dirname(__file__),
+-                            '../testing_dataset'))
++    root = os.path.realpath(os.path.join(cfg.RESULT_PATH))
+     root = os.path.join(root, args.dataset)
+     if 'OTB' in args.dataset:
+         dataset = OTBDataset(args.dataset, root)
+@@ -49,15 +56,15 @@ def main():
+         success_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
+-                trackers), desc='eval success', total=len(trackers), ncols=100):
++                                                trackers), desc='eval success', total=len(trackers), ncols=100):
+                 success_ret.update(ret)
+         precision_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_precision,
+-                trackers), desc='eval precision', total=len(trackers), ncols=100):
++                                                trackers), desc='eval precision', total=len(trackers), ncols=100):
+                 precision_ret.update(ret)
+         benchmark.show_result(success_ret, precision_ret,
+-                show_video_level=args.show_video_level)
++                              show_video_level=args.show_video_level)
+     elif 'LaSOT' == args.dataset:
+         dataset = LaSOTDataset(args.dataset, root)
+         dataset.set_tracker(tracker_dir, trackers)
+@@ -65,20 +72,20 @@ def main():
+         success_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
+-                trackers), desc='eval success', total=len(trackers), ncols=100):
++                                                trackers), desc='eval success', total=len(trackers), ncols=100):
+                 success_ret.update(ret)
+         precision_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_precision,
+-                trackers), desc='eval precision', total=len(trackers), ncols=100):
++                                                trackers), desc='eval precision', total=len(trackers), ncols=100):
+                 precision_ret.update(ret)
+         norm_precision_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_norm_precision,
+-                trackers), desc='eval norm precision', total=len(trackers), ncols=100):
++                                                trackers), desc='eval norm precision', total=len(trackers), ncols=100):
+                 norm_precision_ret.update(ret)
+         benchmark.show_result(success_ret, precision_ret, norm_precision_ret,
+-                show_video_level=args.show_video_level)
++                              show_video_level=args.show_video_level)
+     elif 'UAV' in args.dataset:
+         dataset = UAVDataset(args.dataset, root)
+         dataset.set_tracker(tracker_dir, trackers)
+@@ -86,15 +93,15 @@ def main():
+         success_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
+-                trackers), desc='eval success', total=len(trackers), ncols=100):
++                                                trackers), desc='eval success', total=len(trackers), ncols=100):
+                 success_ret.update(ret)
+         precision_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_precision,
+-                trackers), desc='eval precision', total=len(trackers), ncols=100):
++                                                trackers), desc='eval precision', total=len(trackers), ncols=100):
+                 precision_ret.update(ret)
+         benchmark.show_result(success_ret, precision_ret,
+-                show_video_level=args.show_video_level)
++                              show_video_level=args.show_video_level)
+     elif 'NFS' in args.dataset:
+         dataset = NFSDataset(args.dataset, root)
+         dataset.set_tracker(tracker_dir, trackers)
+@@ -102,15 +109,15 @@ def main():
+         success_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_success,
+-                trackers), desc='eval success', total=len(trackers), ncols=100):
++                                                trackers), desc='eval success', total=len(trackers), ncols=100):
+                 success_ret.update(ret)
+         precision_ret = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval_precision,
+-                trackers), desc='eval precision', total=len(trackers), ncols=100):
++                                                trackers), desc='eval precision', total=len(trackers), ncols=100):
+                 precision_ret.update(ret)
+         benchmark.show_result(success_ret, precision_ret,
+-                show_video_level=args.show_video_level)
++                              show_video_level=args.show_video_level)
+     elif args.dataset in ['VOT2016', 'VOT2017', 'VOT2018', 'VOT2019']:
+         dataset = VOTDataset(args.dataset, root)
+         dataset.set_tracker(tracker_dir, trackers)
+@@ -118,17 +125,17 @@ def main():
+         ar_result = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(ar_benchmark.eval,
+-                trackers), desc='eval ar', total=len(trackers), ncols=100):
++                                                trackers), desc='eval ar', total=len(trackers), ncols=100):
+                 ar_result.update(ret)
+ 
+         benchmark = EAOBenchmark(dataset)
+         eao_result = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval,
+-                trackers), desc='eval eao', total=len(trackers), ncols=100):
++                                                trackers), desc='eval eao', total=len(trackers), ncols=100):
+                 eao_result.update(ret)
+         ar_benchmark.show_result(ar_result, eao_result,
+-                show_video_level=args.show_video_level)
++                                 show_video_level=args.show_video_level)
+     elif 'VOT2018-LT' == args.dataset:
+         dataset = VOTLTDataset(args.dataset, root)
+         dataset.set_tracker(tracker_dir, trackers)
+@@ -136,10 +143,10 @@ def main():
+         f1_result = {}
+         with Pool(processes=args.num) as pool:
+             for ret in tqdm(pool.imap_unordered(benchmark.eval,
+-                trackers), desc='eval f1', total=len(trackers), ncols=100):
++                                                trackers), desc='eval f1', total=len(trackers), ncols=100):
+                 f1_result.update(ret)
+         benchmark.show_result(f1_result,
+-                show_video_level=args.show_video_level)
++                              show_video_level=args.show_video_level)
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/tools/test.py b/tools/test.py
+index f1e61b5..9cbc622 100644
+--- a/tools/test.py
++++ b/tools/test.py
+@@ -22,10 +22,12 @@ from toolkit.utils.region import vot_overlap, vot_float2str
+ 
+ 
+ parser = argparse.ArgumentParser(description='siamrpn tracking')
+-parser.add_argument('--dataset', type=str,
++parser.add_argument('--dataset', type=str, default='VOT2016',
+         help='datasets')
+ parser.add_argument('--config', default='', type=str,
+         help='config file')
++parser.add_argument('--device', default=0, type=int,
++        help='npu id')
+ parser.add_argument('--snapshot', default='', type=str,
+         help='snapshot of models to eval')
+ parser.add_argument('--video', default='', type=str,
+@@ -38,26 +40,33 @@ torch.set_num_threads(1)
+ 
+ def main():
+     # load config
+-    cfg.merge_from_file(args.config)
+-
++    #cfg.merge_from_file(args.config)
++    # fix config
++    if args.dataset != cfg.DATASET_NAME:
++        j_path = os.path.join(cfg.JSON_PATH.split('VOT')[0], args.dataset)
++        d_path = os.path.join(cfg.DATA_PATH.split('VOT')[0], args.dataset)
++        r_path = os.path.join(cfg.RESULT_PATH.split('VOT')[0], args.dataset, 'results')
++        opts = ['JSON_PATH', j_path, 'DATA_PATH', d_path, 'RESULT_PATH', r_path, 'DATASET_NAME', args.dataset,
++                'DEVICE_ID', args.device]
++        cfg.merge_from_list(opts)
+     cur_dir = os.path.dirname(os.path.realpath(__file__))
+-    dataset_root = os.path.join(cur_dir, '../testing_dataset', args.dataset)
++    dataset_root = os.path.join(cfg.JSON_PATH)
+ 
+     # create model
+-    model = ModelBuilder()
++    # model = ModelBuilder()
+ 
+     # load model
+-    model = load_pretrain(model, args.snapshot).cuda().eval()
++    # model = load_pretrain(model, args.snapshot).cuda().eval()
+ 
+     # build tracker
+-    tracker = build_tracker(model)
++    tracker = build_tracker()
+ 
+     # create dataset
+     dataset = DatasetFactory.create_dataset(name=args.dataset,
+                                             dataset_root=dataset_root,
+                                             load_img=False)
+ 
+-    model_name = args.snapshot.split('/')[-1].split('.')[0]
++    model_name = cfg.MODEL_PATH.split('/')[-1].split('.')[0]
+     total_lost = 0
+     if args.dataset in ['VOT2016', 'VOT2018', 'VOT2019']:
+         # restart tracking
+@@ -69,6 +78,7 @@ def main():
+             frame_counter = 0
+             lost_number = 0
+             toc = 0
++            avg_speed = 0
+             pred_bboxes = []
+             for idx, (img, gt_bbox) in enumerate(video):
+                 if len(gt_bbox) == 4:
+@@ -118,7 +128,7 @@ def main():
+                     cv2.waitKey(1)
+             toc /= cv2.getTickFrequency()
+             # save results
+-            video_path = os.path.join('results', args.dataset, model_name,
++            video_path = os.path.join(cfg.RESULT_PATH, args.dataset, model_name,
+                     'baseline', video.name)
+             if not os.path.isdir(video_path):
+                 os.makedirs(video_path)
+@@ -129,10 +139,13 @@ def main():
+                         f.write("{:d}\n".format(x))
+                     else:
+                         f.write(','.join([vot_float2str("%.4f", i) for i in x])+'\n')
++            speed = idx / toc
+             print('({:3d}) Video: {:12s} Time: {:4.1f}s Speed: {:3.1f}fps Lost: {:d}'.format(
+                     v_idx+1, video.name, toc, idx / toc, lost_number))
+             total_lost += lost_number
++            avg_speed += speed
+         print("{:s} total lost: {:d}".format(model_name, total_lost))
++        print('average speed:', avg_speed, 'fps')
+     else:
+         # OPE tracking
+         for v_idx, video in enumerate(dataset):

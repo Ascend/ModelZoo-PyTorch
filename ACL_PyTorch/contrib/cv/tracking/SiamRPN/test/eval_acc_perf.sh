@@ -13,12 +13,13 @@
 # limitations under the License.
 
 source /usr/local/Ascend/ascend-toolkit/set_env.sh
-
+data=$1
+device_id=$2
 # test
-python pysot/tools/test.py
+python pysot/tools/test.py --dataset ${data} --device ${device_id}
 
 # eval
-python pysot/tools/eval.py
+python pysot/tools/eval.py --dataset ${data}
 
 
 

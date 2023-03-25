@@ -89,7 +89,7 @@ SiamRPN是一个能实时完成视觉物体跟踪并呈现出顶级性能的基�
    确认获取的开源pysot项目文件存放在/home/SiamRPN目录下，进入/home/SiamRPN/pysot目录下执行
 
    ```
-   patch -N -p1 < ../SiamRPN.patch
+   patch -N -p1 < ../fix.patch
    ```
 
 2. 安装依赖。
@@ -149,8 +149,11 @@ SiamRPN是一个能实时完成视觉物体跟踪并呈现出顶级性能的基�
     2. 执行推理、精度验证与性能验证。
 
         ```
-        bash test/eval_acc_perf.sh
+        bash test/eval_acc_perf.sh VOT2016 1
         ```
+       参数说明：
+       - VOT2016 使用的推理数据集
+       - 1 使用的npu卡号
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
