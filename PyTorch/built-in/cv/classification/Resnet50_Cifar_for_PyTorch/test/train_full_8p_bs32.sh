@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-bash ./tools/dist_train.sh  ./configs/resnet/resnet50_8xb16_cifar100_cos.py 8 --cfg-options data.samples_per_gpu=32 --cfg-options optimizer.lr=0.2 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+bash ./tools/dist_train.sh  ./configs/resnet/resnet50_8xb16_cifar100_cos.py 8 --cfg-options data.samples_per_gpu=32 optimizer.lr=0.2 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
