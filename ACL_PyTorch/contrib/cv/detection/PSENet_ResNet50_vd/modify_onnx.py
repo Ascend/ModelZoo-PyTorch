@@ -34,5 +34,6 @@ if __name__ == '__main__':
         node['mode'] = 'linear'
         node['nearest_mode'] = 'floor'
         graph[node.inputs[1]].value = np.array([], dtype=np.float32)
+    graph = graph.simplify()
     graph.save(out_onnx)
     print("[info]modify onnx success! onnx saved to : {}".format(out_onnx))

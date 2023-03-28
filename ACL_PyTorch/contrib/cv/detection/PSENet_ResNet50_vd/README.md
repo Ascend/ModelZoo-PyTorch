@@ -1,7 +1,8 @@
 # PSENet_ResNet50_vd模型-推理指导
 
-
 - [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
@@ -11,9 +12,10 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+  ******
+
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
@@ -35,14 +37,14 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | RGB_FP32 | batchsize x 3 x 736 x 1312 | NCHW         |
+  | input    | RGB_FP32 | batchsize x 3 x 736 x 1312 | NCHW        |
 
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | batchsize x 7 x 184 x 328 | FLOAT32  | NCHW           |
+  | output1  | FLOAT32  | batchsize x 7 x 184 x 328 | NCHW         |
 
 
 # 推理环境准备
@@ -83,28 +85,20 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
    cd ..
    ```
 
-3. 安装auto-optimizer工具
-
-   安装方式参考[auto-optimizer开源链接](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)。
-
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   ICDAR 2015 数据集包含1000张训练图像和500张测试图像。参考[[PaddleOCR数据集](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/dataset/ocr_datasets.md)]数据处理方式，ICDAR 2015 数据集可以点击[[链接](https://rrc.cvc.uab.es/?ch=4&com=downloads)]进行下载，首次下载需注册。注册完成登陆后，下载下图中红色框标出的部分。
+   IICDAR 2015 数据集包含1000张训练图像和500张测试图像。参考PaddleOCR数据集数据处理方式，ICDAR 2015 数据集可以点击链接进行下载，本模型需下载Test Set Images(43.3MB)。
 
-   <p align="center">
-    <img src="../../../../images/icda2015_download.png" align="middle" width = "700"/>
-   <p align="center">
-
-   将数据集`ch4_test_images.zip`放在`PSENet_ResNet50_vd`工作目录下，通过以下命令创建`train_data/icdar2015/text_localization`路径，将下载的数据集保存该路径下，并在该路径下通过以下命令进行解压保存并获取标签文件。
+   将数据集`ch4_test_images.zip`放在工作目录下，通过以下命令创建`train_data/icdar2015/ch4_test_images`路径，并通过以下命令进行解压保存并获取标签文件。
    ```
    mkdir -p ./train_data/icdar2015/ch4_test_images/
    unzip -d ./train_data/icdar2015/ch4_test_images/ ch4_test_images.zip
    wget -P ./train_data/icdar2015/ https://paddleocr.bj.bcebos.com/dataset/test_icdar2015_label.txt
    ```
 
-2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
+2. 数据预处理。
 
    数据预处理将原始数据集转换为模型输入的数据。
 
@@ -132,29 +126,30 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
 
    1. 获取权重文件。
 
-       训练权重链接为：https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_r50_vd_pse_v2.0_train.tar。
-       在`PSENet_ResNet50_vd`工作目录下可通过以下命令获取训练权重并转为推理模型。
-       ```
-       wget -nc -P ./checkpoint https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_r50_vd_pse_v2.0_train.tar
-       cd ./checkpoint && tar xf det_r50_vd_pse_v2.0_train.tar && cd ..
-       python3 PaddleOCR/tools/export_model.py \
+      训练权重链接为：https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_r50_vd_pse_v2.0_train.tar。
+
+      在`PSENet_ResNet50_vd`工作目录下可通过以下命令获取训练权重并转为推理模型。
+      ```
+      wget -nc -P ./checkpoint https://paddleocr.bj.bcebos.com/dygraph_v2.1/en_det/det_r50_vd_pse_v2.0_train.tar
+      cd ./checkpoint && tar xf det_r50_vd_pse_v2.0_train.tar && cd ..
+      python3 PaddleOCR/tools/export_model.py \
            -c PaddleOCR/configs/det/det_r50_vd_pse.yml \
            -o Global.pretrained_model=./checkpoint/det_r50_vd_pse_v2.0_train/best_accuracy  \
            Global.save_inference_dir=./inference/det_pse
-       ```
+      ```
       
-       - 参数说明：
+      - 参数说明：
 
-            -   -c：模型配置文件。
-            -   -o: 模型入参信息。
-            -   Global.pretrained_model：权重文件保存路径。
-            -   Global.save_inference_dir：paddleocr推理模型保存路径。
+         -  -c：模型配置文件。
+         -  -o: 模型入参信息。
+         -  Global.pretrained_model：权重文件保存路径。
+         -  Global.save_inference_dir：paddleocr推理模型保存路径。
 
    2. 导出onnx文件。
 
       1. 使用paddle2onnx工具导出onnx文件。
 
-         在`PSENet_ResNet50_vd`工作目录下通过运行以下命令获取onnx模型。
+         运行paddle2onnx工具获取onnx模型。
 
          ```
          paddle2onnx \
@@ -168,20 +163,15 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
          ```
 
          参数说明请通过`paddle2onnx -h`命令查看。
-         运行后在`PSENet_ResNet50_vd`目录下获得PSENet_ResNet50_vd_dybs.onnx文件。
+         运行后获得PSENet_ResNet50_vd_dybs.onnx文件。
 
       2. 优化onnx模型。
-         
-         a.使用onnx-simplifier工具简化onnx模型，onnx-simplifier工具说明参考[官方链接](https://github.com/daquexian/onnx-simplifier)。
-         
-         ```
-          onnxsim PSENet_ResNet50_vd_dybs.onnx PSENet_ResNet50_vd_sim_dybs.onnx
-         ```
+         请访问[auto-optimizer优化工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 
-         b.在`PSENet_ResNet50_vd`工作目录下通过运行以下命令优化onnx模型，优化点为：Resize算子按Paddle定义参数导出的onnx模型有精度问题，因此将按PyTorch定义重新构造Resize参数。
+         运行modify_onnx.py脚本优化onnx模型，优化点为：Resize算子按Paddle定义参数导出的onnx模型有精度问题，因此将按PyTorch定义重新构造Resize参数。
 
          ```
-          python3 modify_onnx.py PSENet_ResNet50_vd_sim_dybs.onnx PSENet_ResNet50_vd_sim_md_dybs.onnx
+         python3 modify_onnx.py PSENet_ResNet50_vd_dybs.onnx PSENet_ResNet50_vd_md_dybs.onnx
          ```
 
          参数说明:第一个为输入onnx，第二个为输出onnx。
@@ -217,12 +207,12 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
 
       3. 执行ATC命令。
 	  
-         ```
+         ```shell
          atc --framework=5 \
              --model=./PSENet_ResNet50_vd_sim_md_dybs.onnx \
-             --output=./PSENet_ResNet50_vd_bs${batchsize} \
+             --output=./PSENet_ResNet50_vd_bs${bs} \
              --input_format=NCHW \
-             --input_shape="x:${batchsize},3,736,1312" \
+             --input_shape="x:${bs},3,736,1312" \
              --log=error \
              --soc_version=Ascend${chip_name} \
              --insert_op_conf=PSENet_ResNet50_vd_aipp.cfg
@@ -238,81 +228,66 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
-           运行成功后生成`PSENet_ResNet50_vd_bs${batchsize}.om`模型文件。
+           `${bs}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
+
+           运行成功后生成`PSENet_ResNet50_vd_bs${bs}.om`模型文件。
 
 2. 开始推理验证。
 
-   a.  安装ais_bench推理工具。
+   1. 安装ais_bench推理工具。
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
-   b.  执行推理。
+   2. 执行推理。
 
       ```
       python3 -m ais_bench \
-          --model=./PSENet_ResNet50_vd_bs${batchsize}.om \
+          --model=./PSENet_ResNet50_vd_bs${bs}.om \
           --input=./data_bin \
-          --batchsize=${batchsize} \
-          --output=./
+          --output=./ \
+          --output_dirname=output
       ```
 
-      -   参数说明：
+      -  参数说明：
 
-           -   --model：om模型路径。
-           -   --input：bin文件路径。
-           -   --batchsize：om模型的batch。
-           -   --output：推理结果保存路径。
+         -  --model：om模型路径。
+         -  --input：bin文件路径。
+         -  --output：推理结果保存路径。
+         -  --output_dirname：推理结果保存路径子目录。
 
-      `${batchsize}`表示不同batch的om模型。
-
-      推理完成后在当前`PSENet_ResNet50_vd`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
+      推理完成后在当前目录生成output文件夹。
 
 
-   c.  精度验证。
+   3. 精度验证。
 
       执行后处理脚本`PSENet_ResNet50_vd_postprocess.py`，参考命令如下：
 
       ```
       python3 PSENet_ResNet50_vd_postprocess.py \
         -c PaddleOCR/configs/det/det_r50_vd_pse.yml \
-        -o info_dir=./data_info res_dir=./${output_path}
+        -o info_dir=./data_info res_dir=./output
       ```
 
-      -   参数说明：
+      -  参数说明：
 
-            -   -c：模型配置文件。
-            -   -o：可选参数，info_dir表示数据信息路径；res_dir表示推理结果路径，${output_path}为推理结果的保存目录。
+         - -c：模型配置文件。
+         - -o：可选参数，info_dir表示数据信息路径；res_dir表示推理结果路径。
 
-      推理结果通过屏显显示，参考如下：
+      推理结果通过屏显显示。
 
-      ```
-       precision:0.8572170301142263
-       recall:0.7948964853153587
-       hmean:0.8248813389957531
-      ```
-
-   d.  性能验证。
+   4. 性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 -m ais_bench \
-          --model=./PSENet_ResNet50_vd_bs${batchsize}.om \
-          --loop=50 \
-          --batchsize=${batchsize}
+      python3 -m ais_bench --model=./PSENet_ResNet50_vd_bs${bs}.om --loop=50
       ```
 
-      -   参数说明：
+      -  参数说明：
 
-          -   --model：om模型路径。
-          -   --loop：推理次数。
-          -   --batchsize：om模型的batch。
-
-      `${batchsize}`表示不同batch的om模型。
-
-      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能。
+         - --model：om模型路径。
+         - --loop：推理次数。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -321,9 +296,9 @@ PSENet([Shape Robust Text Detection with Progressive Scale Expansion Network](ht
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ----------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1           | ICDAR 2015 | precision: 0.8572 | 51.756 fps |
-|Ascend310P3| 4           | ICDAR 2015 | precision: 0.8572 | 31.439 fps |
-|Ascend310P3| 8           | ICDAR 2015 | precision: 0.8572 | 24.985 fps |
-|Ascend310P3| 16          | ICDAR 2015 | precision: 0.8572 | 25.137 fps |
-|Ascend310P3| 32          | ICDAR 2015 | precision: 0.8572 | 25.192 fps |
-|Ascend310P3| 64          | ICDAR 2015 | precision: 0.8572 | 25.150 fps |
+|Ascend310P3| 1           | ICDAR 2015 | precision: 0.8572 |  51.138  |
+|Ascend310P3| 4           | ICDAR 2015 | precision: 0.8572 |  47.276  |
+|Ascend310P3| 8           | ICDAR 2015 | precision: 0.8572 |  47.675  |
+|Ascend310P3| 16          | ICDAR 2015 | precision: 0.8572 |  48.256  |
+|Ascend310P3| 32          | ICDAR 2015 | precision: 0.8572 |  48.538  |
+|Ascend310P3| 64          | ICDAR 2015 | precision: 0.8572 |  38.610  |
