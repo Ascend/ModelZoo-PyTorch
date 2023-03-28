@@ -233,4 +233,4 @@ if __name__=="__main__":
     postprocess_match_results(option, pairs, results)
 
     e2e_time = time.time() - start_time
-    print('E2E time(ms): {}s'.format(e2e_time * 1000 / len(images0)))
+    print('E2E time(s): {}s'.format(e2e_time / len(images0)))
