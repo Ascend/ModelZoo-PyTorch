@@ -43,12 +43,10 @@ import modeling
 from optimization import BertAdam, warmup_linear
 from tokenization import (BasicTokenizer, BertTokenizer, whitespace_tokenize)
 from utils import is_main_process, format_step
-from torch_npu.contrib.module.utils_tools import Profile
+from torch_npu.utils.profiler import Profile
 import dllogger, time
 from apex.optimizers import npu_fused_bert_adam, NpuFusedBertAdam
 
-# torch._C._jit_set_profiling_mode(False)
-# torch._C._jit_set_profiling_executor(False)
 
 if sys.version_info[0] == 2:
     import cPickle as pickle
@@ -739,32 +737,6 @@ def _compute_softmax(scores):
     return probs
 
 
-
-# from apex.multi_tensor_apply import multi_tensor_applier
-# class GradientClipper:
-#     """
-#     Clips gradient norm of an iterable of parameters.
-#     """
-#     def __init__(self, max_grad_norm):
-#         self.max_norm = max_grad_norm
-#         if multi_tensor_applier.available:
-#             import amp_C
-#             self._overflow_buf = torch.cuda.IntTensor([0])
-#             self.multi_tensor_l2norm = amp_C.multi_tensor_l2norm
-#             self.multi_tensor_scale = amp_C.multi_tensor_scale
-#         else:
-#             raise RuntimeError('Gradient clipping requires cuda extensions')
-#
-#     def step(self, parameters):
-#         l = [p.grad for p in parameters if p.grad is not None]
-#         total_norm, _ = multi_tensor_applier(self.multi_tensor_l2norm, self._overflow_buf, [l], False)
-#         total_norm = total_norm.item()
-#         if (total_norm == float('inf')): return
-#         clip_coef = self.max_norm / (total_norm + 1e-6)
-#         if clip_coef < 1:
-#             multi_tensor_applier(self.multi_tensor_scale, self._overflow_buf, [l, l], clip_coef)
-
-
 def main():
     parser = argparse.ArgumentParser()
 
@@ -909,14 +881,8 @@ def main():
     parser.add_argument('--graph_mode',
                         action='store_true',
                         help='whether to enable graph mode.')
-    parser.add_argument("--prof_type", default='None',
-                       	 choices=['TORCH', 'CANN', 'GE', 'None'],
-                       	 help="The type of profile.")
 
     args = parser.parse_args()
-
-    if args.prof_type == 'GE':
-        os.environ['GE_PROFILING_TO_STD_OUT'] = '1'
 
     args.fp16 = args.fp16 or args.amp
 
@@ -1106,11 +1072,6 @@ def main():
         dllogger.log(step="PARAMETER", data={"training_features": len(train_features)})
         dllogger.log(step="PARAMETER", data={"train_batch_size":args.train_batch_size})
         dllogger.log(step="PARAMETER", data={"steps":num_train_optimization_steps})
-        # all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-        # all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
-        # all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
-        # all_start_positions = torch.tensor([f.start_position for f in train_features], dtype=torch.long)
-        # all_end_positions = torch.tensor([f.end_position for f in train_features], dtype=torch.long)
 
         all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.int32)
         all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.int32)
@@ -1135,7 +1096,8 @@ def main():
             #train_iter = tqdm(train_dataloader, desc="Iteration", disable=args.disable_progress_bar) if is_main_process() else train_dataloader
             train_iter = train_dataloader
             step_start_time = time.time()
-            profiler = Profile(profile_type=args.prof_type)
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                               profile_type=os.getenv("PROFILE_TYPE"))
             for step, batch in enumerate(train_iter):
                 # 图模式
                 if args.graph_mode:

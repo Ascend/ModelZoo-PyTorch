@@ -36,7 +36,6 @@ train_epochs=1
 
 # 指定训练所使用的npu device卡id
 device_id=0
-prof_type=None
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -48,8 +47,6 @@ do
         model_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
-    elif [[ $para == --prof_type* ]];then
-        prof_type=`echo ${para#*=}`
     fi
 done
 
@@ -101,7 +98,6 @@ taskset -c 0-23 nohup python3.7 -W ignore train.py experiments/seg_detector/ic15
         --amp \
         --batch_size $batch_size \
         --epochs ${train_epochs} \
-        --prof_type ${prof_type} \
         --device_list "${ASCEND_DEVICE_ID}" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

@@ -67,14 +67,8 @@ parser.add_argument("--local_rank", type=int, default=0)
 parser.add_argument("--train_epochs", type=int, default=20)
 parser.add_argument("--data_path", type=str, default='')
 parser.add_argument("--workers", type=int, default=4)
-parser.add_argument("--prof_type", default='None',
-                       	 choices=['TORCH', 'CANN', 'GE', 'None'],
-                       	 help="The type of profile.")
 
 args = parser.parse_args()
-os.environ['PROFILE_TYPE'] = args.prof_type
-if args.prof_type == 'GE':
-    os.environ['GE_PROFILING_TO_STD_OUT'] = '1'
 
 distributed = 'WORLD_SIZE' in os.environ
 
