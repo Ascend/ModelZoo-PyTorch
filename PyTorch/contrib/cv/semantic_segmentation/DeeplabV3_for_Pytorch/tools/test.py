@@ -19,6 +19,8 @@ import os
 
 import mmcv
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
@@ -154,12 +156,12 @@ def main():
         efficient_test = args.eval_options.get('efficient_test', False)
 
     if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
+        model = MMDataParallel(model.npu(), device_ids=[0])
         outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
                                   efficient_test, args.opacity)
     else:
         model = MMDistributedDataParallel(
-            model.cuda(),
+            model.npu(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,

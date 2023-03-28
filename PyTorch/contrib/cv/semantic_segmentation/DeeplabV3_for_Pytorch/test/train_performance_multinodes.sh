@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="DeeplabV3_for_PyTorch"
 # 训练batch_size
-batch_size=48
+batch_size=6
 # 训练使用的npu卡数
 export RANK_SIZE=8
 # 数据集路径,保持为空,不需要修改
@@ -117,6 +117,7 @@ do
             --seed 1 \
             --deterministic \
             --device npu \
+            --no-validate \
             --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} data.samples_per_gpu=${batch_size} \
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
@@ -127,10 +128,17 @@ do
             --seed 1 \
             --deterministic \
             --device npu \
+            --no-validate \
             --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} data.samples_per_gpu=${batch_size} \
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
+
+wait
+
+python3.7 ${cur_path}/tools/test.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
+        ${cur_path}/work_dirs/deeplabv3_r50-d8_512x1024_40k_cityscapes/latest.pth \
+        --eval mIoU >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
