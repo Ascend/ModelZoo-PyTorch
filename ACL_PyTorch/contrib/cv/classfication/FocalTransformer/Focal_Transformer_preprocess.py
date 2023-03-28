@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import os
+import argparse
+
 import numpy as np
+from tqdm import tqdm
 import PIL.Image as Image
+from torchvision import transforms
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data.transforms import _pil_interp
-from torchvision import transforms
-import argparse
-from tqdm import tqdm
 
 def build_transform():
     t = []
@@ -39,11 +40,20 @@ def preprocess(src_path, save_path):
     preprocess = build_transform()
 
     in_files = sorted(os.listdir(src_path))
-    for idx, file in enumerate(tqdm(in_files)):
-        input_image = Image.open(src_path + '/' + file).convert('RGB')
+    image_files = []
+    for file_name in in_files:
+        file_path = os.path.join(src_path, file_name)
+        if os.path.isdir(file_path):
+            image_files += [(image_name, 
+                            os.path.join(file_path, image_name)) 
+                            for image_name in os.listdir(file_path)]
+        else:
+            image_files.append((file_name, file_path))
+    for idx, file in enumerate(tqdm(image_files)):
+        input_image = Image.open(file[1]).convert('RGB')
         input_tensor = preprocess(input_image)
         img = np.array(input_tensor).astype(np.float32)
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+        img.tofile(os.path.join(save_path, file[0].split('.')[0] + ".bin"))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

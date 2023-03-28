@@ -33,16 +33,6 @@ Focal-Transformer是一个可用于图像分类、目标检测和语义分割的
   model_name=Focal-fast-S
   ```
 
-通过Git获取对应commit_id的代码方法如下：
-
-```
-git clone {repository_url}        # 克隆仓库的代码
-cd {repository_name}              # 切换到模型的代码仓目录
-git checkout {branch/tag}         # 切换到对应分支
-git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-```
-
 ## 输入输出数据
 
 - 输入数据
@@ -54,9 +44,9 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | 1 x 1000 | FLOAT32  | ND           |
+  | output1  | FLOAT32  | 1 x 1000 | ND           |
 
 
 # 推理环境准备\[所有版本\]
@@ -67,8 +57,8 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.15  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
+| 固件与驱动                                                    | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.13  | -                                                            |
 | PyTorch                                                      | 1.8.1   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -81,15 +71,11 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
    ```
    git clone https://github.com/microsoft/Focal-Transformer.git
-   cd Focal-Transformer
    ```
 
-2. 下载本仓，将该模型目录下的Python脚本、requirements.txt与补丁文件复制到上一步克隆的Focal-Transformer目录。
-
-3. 安装依赖。
+2. 安装依赖。
 
    ```
-   pip3 install torch==1.8.1 torchvision==0.9.1
    pip3 install -r requirements.txt
    ```
 
@@ -97,24 +83,20 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
 1. 获取原始数据集。
 
-   数据集：ImageNet Large Scale Visual Recognition Challenge 2012 (ILSVRC2012)
+   本模型采用ImageNet验证集。
 
-   下载地址：https://image-net.org/challenges/LSVRC/2012/2012-downloads.php
+   数据集：[ImageNet Large Scale Visual Recognition Challenge 2012 (ILSVRC2012)](https://image-net.org/challenges/LSVRC/2012/2012-downloads.php)
 
    推理只需验证集即Validation images (all tasks) 以及对应的标签文件val_label.txt。
 
-   存放路径：./imageNet
+   存放路径：./ImageNet
 
    目录结构：
 
    ```
-   ├── imageNet
+   ├── ImageNet
        ├── val
-       	├── ILSVRC2012_val_00000001.JPEG
-       	├── ILSVRC2012_val_00000002.JPEG
-       	...
-       	├── ILSVRC2012_val_00050000.JPEG
-       ├── val_label.txt
+       └── val_label.txt
    ```
 
    
@@ -125,15 +107,15 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
    执行Focal_Transformer_preprocess.py脚本，完成预处理。
 
-   input_path：验证集路径
-
-   output_path：输出bin文件路径
-
-   ```
+   ```shell
    python3 Focal_Transformer_preprocess.py \
-   --input_path imageNet/val \
+   --input_path ImageNet/val \
    --output_path infer/databin/
    ```
+
+   - 参数说明：
+      - input_path：验证集路径。
+      - output_path：输出bin文件路径。
 
 
 ## 模型推理
@@ -144,33 +126,32 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 
    1. 获取权重文件
 
-       百度网盘链接：https://pan.baidu.com/s/1psU8YUmGifNiLoNTySwOfg  提取码：tbsz
+      [FocalTransformer模型权重](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FocalvTransformer/PTH/focalv2-small-useconv-is224-ws7.pth)
 
    2. 导出onnx文件。
 
       1. 使用Focal_Transformer_pth2onnx.py导出onnx文件。
 
-         ```
+         ```shell
          python3 Focal_Transformer_pth2onnx.py \
-         --code_path ${code_path} \
-         --input_path ${pth_model_path} \
-         --output_path ${onnx_model_path}
+                 --code_path ./Focal-Transformer \
+                 --input_path ./focalv2-small-useconv-is224-ws7.pth \
+                 --output_path ./focalv2.onnx
          ```
          
-         code_path：模型源码文件所在路径
+         - 参数说明：
+            - code_path：模型源码文件所在路径。
+            - input_path：预训练pth模型路径。
+            - output_path：输出onnx模型路径
          
-         input_path：预训练pth模型路径
-         
-         output_path：输出onnx模型路径
-         
-         获得focalv2-small-useconv-is224-ws7.onnx文件。
+         获得focalv2.onnx文件。
    
    3. 使用ATC工具将ONNX模型转OM模型。
    
       1. 配置环境变量。
    
          ```
-         source /usr/local/Ascend/ascend-toolkit/set_env.sh  
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
    
          > **说明：** 
@@ -195,18 +176,17 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
          ```
    
       3. 执行ATC命令。
-         ```
+         ```shell
          atc --framework=5 \
-         --model=infer/focalv2-small-useconv-is224-ws7.onnx \
-         --output=infer/focalv2-small-useconv-is224-ws7_bs${batch_size} \
-         --input_format=NCHW
-         --input_shape="image:${batch_size},3,224,224" \
+         --model=./focalv2.onnx \
+         --output=./focalv2_bs1 \
+         --input_format=NCHW \
+         --input_shape="image:1,3,224,224" \
          --log=error \
          --soc_version=Ascend${chip_name}
          ```
          
          - 参数说明：
-         
            -   --model：为ONNX模型文件。
            -   --framework：5代表ONNX模型。
            -   --output：输出的OM模型。
@@ -215,69 +195,66 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
          
-         
-         运行成功后生成focalv2-small-useconv-is224-ws7_bs1.om模型文件。
+         运行成功后生成`focalv2_bs1.om`模型文件。
 
 
 
 2. 开始推理验证。
 
-	a. 安装ais_bench推理工具。
+   1. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
    
-	b. 执行推理。
+   2. 执行推理。
 
-    ```
-    mkdir -p ${output_path}
-    
-    python3 -m ais_bench \
-    --model infer/focalv2-small-useconv-is224-ws7_bs${batch_size}.om \
-    --input ${input_path} \
-    --output ${output_path} \
-    --outfmt TXT
-    ```
+      ```shell
+      python3 -m ais_bench \
+               --model ./focalv2_bs1.om \
+               --input infer/databin/ \
+               --output infer/ \
+               --output_dirname output \
+               --outfmt TXT
+      ```
    
-   - 参数说明：
-   
-        -   model：om模型路径。
-        -   input：bin数据集路径。
-	     -   output：推理结果路径。
-        -   outfmt：推理结果格式
+      - 参数说明：
+         - model：om模型路径。
+         - input：bin数据集路径。
+         - output：推理结果路径。
+         - output_dirname：推理结果子目录。
+         - outfmt：推理结果格式。
 
    
-   c. 精度验证。
+   3. 精度验证。
    
-   调用脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+      调用脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+      
+      ```shell
+      python3 Focal_Transformer_postprocess.py \
+            --input_path infer/output \
+            --label_path ImageNet/val_label.txt \
+            --output_path infer/result.json
+      ```
+      
+      - 参数说明：
+      
+         - input_path：推理结果路径。
+         - label_path：标签路径。
+         - output_path：精度验证json结果。
    
-    ```
-    python3 Focal_Transformer_postprocess.py \
-    --input_path infer/result/2022_08_27-14_15_13 \
-    --label_path imageNet/val_label.txt \
-    --output_path infer/result.json
-    ```
-   
-   - 参数说明：
-   
-        -   input_path：推理结果路径。
-        -   label_path：标签路径。
-        -   output_path：精度验证json结果。
-   
-   脚本逐张处理测试集中的图片，json文件包含每张图片的测试结果以及当前的平均精度，格式如下。
-   
-   ```
-   val index 图片编号 Acc@1 当前图片top1精度（当前测试平均top1精度） Acc@5 当前图片top5精度（当前测试平均top5精度）
-   ```
+      json文件包含每张图片的测试结果以及当前的平均精度
    
    
-   
-   d. 性能验证。
-   
-   可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-   
-    ```
-    python3 -m ais_bench --model infer/focalv2-small-useconv-is224-ws7_bs${batch_size}.om --batchsize ${batch_size} --loop 20 
-    ```
+   4. 性能验证。
+
+      可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+      python3 -m ais_bench --model=focalv2_bs1.om --loop=20 --batchsize=${batch_size}
+      ```
+
+      - 参数说明：
+        - --model：om模型文件路径。
+        - --batchsize：模型输入对应的batch size。
 
 
 
@@ -286,10 +263,7 @@ cd {code_path}                    # 切换到模型代码所在路径，若仓�
 调用ACL接口推理计算，精度仅支持Batch Size为1的情况，性能参考下列数据。
 
 | 芯片型号      | Batch Size | 数据集     | 精度    | 性能    |
-| ------------- | ---------- | ---------- | ------- | ------- |
-| Ascend  310P3 | 1          | ImageNet1k | 83.588% | 6.06fps |
-| Ascend  310P3 | 4          | ImageNet1k | /       | 6.57fps |
-| Ascend  310P3 | 8          | ImageNet1k | /       | 6.72fps |
-| Ascend  310P3 | 16         | ImageNet1k | /       | 6.74fps |
-| Ascend  310P3 | 32         | ImageNet1k | /       | 6.99fps |
-| Ascend  310P3 | 64         | ImageNet1k | /       | 6.99fps |
+| ------------ | ---------- | ---------- | ------- | ------- |
+|    310P3     | 1          | ImageNet1k | 83.586% |  7.96   |
+
+模型仅支持batch size为1

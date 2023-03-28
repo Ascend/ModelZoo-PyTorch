@@ -1,3 +1,5 @@
+torch==1.8.1
+torchvision==0.9.1
 timm==0.3.2
 opencv-python==4.4.0.46
 termcolor==1.1.0

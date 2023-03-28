@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import torch
-from timm.utils import accuracy, AverageMeter
 import os
-from tqdm import tqdm
-import argparse
 import json
+import argparse
+
+import torch
+import numpy as np
+from timm.utils import accuracy, AverageMeter
+from tqdm import tqdm
+
 
 def postprocess(result_path, val_label, output_path):
       if not os.path.exists(os.path.split(output_path)[0]):
@@ -29,18 +31,20 @@ def postprocess(result_path, val_label, output_path):
       target = np.loadtxt(val_label, dtype=np.int32, usecols=1)
       print(f'val size is {len(target)}')
 
+      val_result = dict()
+      for i in tqdm(range(len(target))):
+            output = torch.tensor(np.loadtxt(os.path.join(result_path,result[i]),dtype=np.float32)).unsqueeze(dim=0)
+            acc1, acc5 = accuracy(output, torch.tensor([target[i]]), topk=(1, 5))
+            acc1_meter.update(acc1.item())
+            acc5_meter.update(acc5.item())
+            val_result[result[i]] = {'Acc@1': acc1_meter.val, 'Acc@5': acc5_meter.val}
+      val_result['summary'] = {'Acc@1': acc1_meter.avg, 'Acc@5': acc5_meter.avg}
+      print('Acc@1:', acc1_meter.avg)
+      print('Acc@5:', acc5_meter.avg)
       filename = output_path
       with open(filename, 'w') as file_obj:
-            for i in tqdm(range(len(target))):
-                  output = torch.tensor(np.loadtxt(os.path.join(result_path,result[i]),dtype=np.float32)).unsqueeze(dim=0)
-                  acc1, acc5 = accuracy(output, torch.tensor([target[i]]), topk=(1, 5))
-                  acc1_meter.update(acc1.item())
-                  acc5_meter.update(acc5.item())
-                  val_result = (f'val index {i}    '
-                                f'Acc@1 {acc1_meter.val:.3f} ({acc1_meter.avg:.3f})    '
-                                f'Acc@5 {acc5_meter.val:.3f} ({acc5_meter.avg:.3f})')
-                  json.dump(val_result, file_obj)
-                  file_obj.write('\n')
+            json.dump(val_result, file_obj)
+
 
 if __name__ == '__main__':
       parser = argparse.ArgumentParser()
