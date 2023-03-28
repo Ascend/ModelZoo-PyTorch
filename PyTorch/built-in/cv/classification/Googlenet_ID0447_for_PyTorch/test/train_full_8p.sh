@@ -111,7 +111,7 @@ FPS=`grep -a 'Epoch:'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度,需要模型审视修改
-train_accuracy=`grep -a 'acc1:' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "acc1:" '{print $NF}'|awk -F " " '{print $1}'|awk 'END {print}'`
+train_accuracy=`grep -a 'Acc@1' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'|awk 'BEGIN{max=0} {if ($1>max) max=$1} END{print max}'`
 #打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
