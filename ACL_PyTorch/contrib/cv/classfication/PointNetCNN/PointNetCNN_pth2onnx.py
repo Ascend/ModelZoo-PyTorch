@@ -15,23 +15,20 @@
 import os
 import sys
 import torch
-import torch.onnx
 from collections import OrderedDict
+from torch import nn
+from torch.autograd import Variable
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(BASE_DIR)
-sys.path.append(os.path.join(BASE_DIR, 'models'))
-sys.path.append(os.path.join(BASE_DIR, 'utils'))
+sys.path.append('./utils')
 from utils.model import RandPointCNN
 from utils.util_funcs import knn_indices_func_gpu, knn_indices_func_cpu
 from utils.util_layers import Dense
 
-from torch import nn
-from torch.autograd import Variable
 
 AbbPointCNN = lambda a, b, c, d, e: RandPointCNN(a, b, 3, c, d, e, knn_indices_func_gpu)
 
 NUM_CLASS = 40
+
 
 class Classifier(nn.Module):
 
@@ -60,6 +57,7 @@ class Classifier(nn.Module):
         logits_mean = torch.mean(logits, dim=1)
         return logits_mean
 
+
 def proc_nodes_module(checkpoint):
     new_state_dict = OrderedDict()
     for k, v in checkpoint.items():
@@ -71,22 +69,23 @@ def proc_nodes_module(checkpoint):
     return new_state_dict
 
 
-
-def pth2onnx(input_file,output_file):
+def pth2onnx(input_path, output_path):
     model = Classifier()
-    checkpoint = torch.load(input_file, map_location='cpu')
+    checkpoint = torch.load(input_path, map_location='cpu')
     checkpoint = proc_nodes_module(checkpoint)
     model.load_state_dict(checkpoint)
     model.eval()
 
     input_names = ["P_sampled", "P_patched"]
     output_names = ["out"]
-    dynamic_axes = {'P_sampled': {0: '-1'}, "P_patched": {0: '-1'}, 'out': {0: '-1'}}
-    dummy_input = [torch.randn((1, 1024, 3),dtype=torch.float32).to(device="cpu"),torch.randn((1, 1024, 3),dtype=torch.float32).to(device="cpu")]
-    torch.onnx.export(model, dummy_input, output_file, input_names=input_names, 
-                      output_names=output_names, verbose=True, opset_version=11)
+    input_0 = torch.randn((1, 1024, 3), dtype=torch.float32)
+    input_1 = torch.randn((1, 1024, 3), dtype=torch.float32)
+    dummy_input = [input_0, input_1]
+    torch.onnx.export(model, dummy_input, output_path, input_names=input_names,
+                      output_names=output_names, opset_version=11)
+
 
 if __name__ == "__main__":
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    pth2onnx(input_file,output_file)
+    pth2onnx(input_file, output_file)

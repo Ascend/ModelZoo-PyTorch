@@ -1,7 +1,8 @@
 # PointNetCNN模型-推理指导
 
-
 - [概述](#ZH-CN_TOPIC_0000001172161501)
+
+    - [输入输出数据](#section540883920406)
 
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
@@ -11,9 +12,7 @@
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
 
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
-
-- [配套环境](#ZH-CN_TOPIC_0000001126121892)
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
   ******
 
@@ -31,16 +30,6 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
   commit_id=6ec6c291cf97923a84fb6ed8c82e98bf01e7e96d
   ``` 
 
-  通过Git获取对应commit\_id的代码方法如下：
-
-  ```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -48,49 +37,30 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  |  input1  |   FP32   |   batchsize x 1024 x 3   |   ND       |
-  |  input2  |   FP32   |   batchsize x 1024 x 3   |   ND       |
+  |  input1  |   FP32   |   1 x 1024 x 3   |   ND       |
+  |  input2  |   FP32   |   1 x 1024 x 3   |   ND       |
 
 
 - 输出数据
 
-  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | output1  | 40 x 1 | FLOAT32  | ND           |
+  | output1  | FLOAT32  | 1 x 40   | ND           |
 
 
 
-
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
-  **表 1**  版本配套表
+  | 配套                                                         | 版本    | 环境准备指导                                                 |
+  | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
-| 配套                                                         | 版本    | 环境准备指导                                                   |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                    | 22.0.2 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 5.1.RC2 | -                                                            |
-| PyTorch                                                      | 1.8.0   | -                                                            |
-
-  **表 2**  环境依赖表
-
-| 依赖                                                         | 版本    | 
-| ------------------------------------------------------------ | ------- | 
-| Python                                                       | 3.7.5   | 
-| PyTorch                                                      | 1.8.0   |
-| TorchVision                                                       | 0.9.0   | 
-| onnx                                                      | 1.10.2   |
-| onnxruntime                                                       | 1.21.1   | 
-| onnx-simplifier                                                      | 0.3.6   |
-| numpy                                                       | 1.21.5   | 
-| h5py                                                      | 3.7.0  |
-| scipy                                                       | 1.2.0   | 
-| sklearn                                                      | 0.0   |
-| Pillow                                                       | 9.2.0   | 
-| six                                                      | 1.16.0   |
-| decorator                                                       | 5.1.1   | 
-| tqdm                                                      | 4.64.1   |
 
 
 
@@ -122,10 +92,16 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
    
    ```
    mkdir data
-   cd data
-   wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/classfication/PointNetCNN/modelnet40_ply_hdf5_2048.zip
-   unzip -d  modelnet40_ply_hdf5_2048 modelnet40_ply_hdf5_2048.zip
-   cd ..
+   ```
+   
+   目录结构如下：
+
+   ```
+   PointNetCNN
+   ├── data
+      └── modelnet40_ply_hdf5_2048
+         ├── ply_data_test0.h5
+         ├── ...
    ```
 
 2. 数据预处理。\(请拆分sh脚本，将命令分开填写\)
@@ -135,10 +111,12 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
    执行PointNetCNN_preprocess.py脚本，完成预处理。
 
    ```
-   python3.7 PointNetCNN_preprocess.py ./prep_dataset ./labels
+   python3 PointNetCNN_preprocess.py ./prep_dataset ./labels
    ```
    "./prep_dataset"：输出的二进制文件（.bin）所在路径。
+
    "./labels"：标签文件目录。
+
    每个图像对应生成一个二进制文件。运行成功后，在当前目录下生成"prep_dataset"二进制文件夹。
 
 
@@ -150,7 +128,7 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
 
    1. 获取权重文件。
    
-      从源码包中获取权重文件："[pointcnn_epoch240.pth](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/PointNetCnn/PTH/pointcnn_epoch240.pth)"
+      [PointNetCNN权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/PointNetCnn/PTH/pointcnn_epoch240.pth)
 
    2. 导出onnx文件。
 
@@ -159,38 +137,31 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
          运行PointNetCNN_pth2onnx.py脚本。
 
          ```
-         python3.7 PointNetCNN_pth2onnx.py  pointcnn_epoch240.pth pointnetcnn.onnx 
+         python3 PointNetCNN_pth2onnx.py  pointcnn_epoch240.pth pointnetcnn.onnx 
          ```
 
          获得pointnetcnn.onnx文件。
-      2. 删除onnx的split和concat算子
+
+      2. 优化onnx模型
+
+         请访问[aoto-optimizer优化工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 
          ```
-         git clone https://gitee.com/Ronnie_zheng/MagicONNX.git -b dev
-         cd MagicONNX
-         pip3 install .
-         cd ..
-         python3.7 PointNetCNN_DelConcatSplit.py
+         python3 PointNetCNN_modify_onnx.py pointnetcnn.onnx pointnetcnn_new.onnx
          ```
+         - 参数说明：
+            - pointnetcnn.onnx：输入模型路径。
+            - pointnetcnn_new.onnx：修改后的模型路径。
 
-      3. 优化ONNX文件。
-
-         ```
-         python3.7 -m onnxsim pointnetcnn_modify.onnx pointnetcnn_sim.onnx  --input-shape P_sampled:1,1024,3 P_patched:1,1024,3
-         ```
-
-         获得pointnetcnn_sim.onnx文件。
+         得到pointnetcnn_new.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```
-          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
-
-         > **说明：** 
-         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
@@ -211,8 +182,8 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
          ```
 
       3. 执行ATC命令。
-         ```
-         atc --framework=5 --model=./pointnetcnn_sim.onnx --input_format=ND --input_shape="P_sampled:1,1024,3;P_patched:1,1024,3" --output=pointnetcnn_bs1 --log=error --soc_version=${chip_name}
+         ```shell
+         atc --framework=5 --model=./pointnetcnn_new.onnx --input_format=ND --output=pointnetcnn_bs1 --log=error --soc_version=Ascend${chip_name}
          ```
 
          - 参数说明：
@@ -239,8 +210,7 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
    b.  执行推理。
 
       ```
-      mkdir ais_result
-      python3.7 -m ais_bench --model ./pointnetcnn_bs1.om --batchsize 1 --input "prep_dataset,prep_dataset" --output ./ais_result --outfmt "TXT"
+      python3 -m ais_bench --model ./pointnetcnn_bs1.om --input "prep_dataset,prep_dataset" --output ./ --output_dirnam result --outfmt "TXT"
       ```
 
       -   参数说明：
@@ -249,41 +219,44 @@ PointNetCNN是一个简单而通用的从点云中学习特征的框架。在图
            -   batchsize：批大小，即1次迭代所使用的样本量。
            -   input：输入的bin数据文件。
            -   output：结果保存路径。
+           -   output_dirnam：结果保存子目录。
            -   outfmt：输出数据格式。
-		...
 
-      输出结果保存在当前目录ais_result/X(X为执行推理的时间)文件夹下。
+      输出结果保存在当前目录result文件夹下。
 
 
    c.  精度验证。
 
-      调用脚本与数据集标签labels/label*.npy比对，可以获得Accuracy数据，结果保存在result_bs1.json中。
+      调用PointNetCNN_postprocess脚本与数据集标签labels/label*.npy比对，可以获得Accuracy数据，结果保存在result_bs1.json中。
 
       ```
-      python3.7 PointNetCNN_postprocess.py ./labels/label ./ais_result > result_bs1.json
+      python3 PointNetCNN_postprocess.py ./labels/label ./result
       ```
 
       ./labels/label：标签文件路径 
     
-      ./ais_result：ais_bench推理结果
+      ./result：ais_bench推理结果
     
-      result_bs1.json：为生成结果文件
 
 
    d.  性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
 
+      ```shell
+      python3 -m ais_bench --model=${om_model_path} --loop=20
       ```
-       python3.7 -m ais_bench --model=./pointnetcnn_bs1.om --loop=20 --batchsize=1
-      ```
+
+      - 参数说明：
+        - --model：om模型文件路径。
+        - --loop：推理次数。
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-|     310*4     |     1             |     modelnet40       |     82.37%       |       32.5866          |
-|     310P     |     1             |     modelnet40       |     82.82%       |       112.383          |
-|     T4     |     1             |     modelnet40       |     82.37%       |       137.044          |
+| --------- | -------------- | ---------- | ---------- | --------------- |
+|   310P3   |     1          | modelnet40 |   83.06%   |    273.37       |
+
+仅支持batch size为1
