@@ -366,24 +366,13 @@ CV-detection
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/Retinanet"> Retinanet </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/build-in/cv/Retinanet_for_Pytorch"> Retinanet_r50_fpn_1x </a>
         </td>
         <td>coco</td>
 	<td></td>
-        <td>38.3%</td>
+        <td>36.3%</td>
         <td></td>
-	<td>17(bs1)</td>
-	<td>1 x 3 x 224 x 224</td>
-    </tr>
-    <tr>
-        <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/build-in/cv/Retinanet_Resnet18"> Retinanet_r18(int8) </a>
-        </td>
-        <td>coco</td>
-	<td></td>
-        <td>31.6%</td>
-        <td></td>
-	<td>16.78(bs1)</td>
+	<td>15.48(bs1)</td>
 	<td>1 x 3 x 1216 x 1216</td>
     </tr>
     <tr>
@@ -1128,10 +1117,10 @@ CV-classfication
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/FocalTransformer">  FocalTransformer </a>
         </td>
         <td>ImageNet</td>
-	<td>83.588%</td>
+	<td>83.586%</td>
 	<td></td>
         <td></td>
-	<td>6.99(bs32)</td>
+	<td>7.96(bs1)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1347,7 +1336,7 @@ CV-classfication
 	<td>82.82%</td>
         <td></td>
 	<td></td>
-	<td>112.383(bs1)</td>
+	<td>273(bs1)</td>
         <td></td>
 	<td>1 x 1024 x 3</td>
     </tr>
@@ -2103,22 +2092,6 @@ CV-detection
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/DSFD">   DSFD </a>
-        </td>
-        <td>WIDERFace</td>
-	<td></td>
-        <td>93.47%</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-	<td>840(bs32)</td>
-        <td></td>
-	<td>bs x 3 x 224 x 224</td>
-    </tr>
-    <tr>
-        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/EAST_MobileNetV3">   EAST_MobileNetV3 </a>
         </td>
         <td>ICDAR2015</td>
@@ -2138,14 +2111,14 @@ CV-detection
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/EAST_ResNet50_vd">  EAST_ResNet50_vd </a>
         </td>
         <td>ICDAR2015</td>
-	<td>88.58%</td>
+	<td>88.63%</td>
         <td></td>
         <td></td>
         <td></td>
         <td></td>
         <td></td>
         <td></td>
-	<td>95(bs8)</td>
+	<td>91(bs1)</td>
         <td></td>
 	<td>bs x 3 x 704 x 1280</td>
     </tr>
@@ -2347,13 +2320,13 @@ CV-detection
         </td>
         <td>coco</td>
 	<td></td>
-        <td>40.5%</td>
+        <td>40.4%</td>
         <td></td>
         <td></td>
         <td></td>
         <td></td>
         <td></td>
-	<td>62(bs1)</td>
+	<td>72(bs1)</td>
         <td></td>
 	<td>1 x 3 x 640 x 640</td>
     </tr>
@@ -2450,7 +2423,7 @@ CV-detection
         <td>79.8%</td>
         <td></td>
         <td></td>
-        <td>89(bs1)</td>
+        <td>93(bs1)</td>
         <td nowrap="nowrap">bs x 3 x 321 x 481 <br> bs x 3 x 481 x 321</td>
     </tr>
     <tr>
@@ -2484,6 +2457,22 @@ CV-detection
 	<td>4.3(bs1)</td>
         <td></td>
         <td>1 x 3 x 1344 X 1244</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/Retinanet"> Retinanet </a>
+        </td>
+        <td>coco</td>
+	<td></td>
+        <td>38.3%</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+	<td>17(bs1)</td>
+        <td></td>
+	<td>1 x 3 x 224 x 224</td>
     </tr>
     <tr>
         <td>
@@ -3694,7 +3683,7 @@ CV-pose_estimation
         <td></td>
         <td>67.7%</td>
         <td></td>
-	<td>11(bs1)</td>
+	<td>7.72(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
     <tr>
@@ -3706,7 +3695,7 @@ CV-pose_estimation
         <td></td>
         <td>67.1%</td>
         <td></td>
-	<td>254(Input Shape 512,512)</td>
+	<td>185(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
     <tr>
@@ -3984,11 +3973,11 @@ CV-video_understanding
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/FOMM">  FOMM </a>
         </td>
         <td>taichi</td>
-        <td>6.806</td>
-        <td>0.035</td>
+        <td>6.7975</td>
+        <td>0.036</td>
         <td></td>
         <td></td>
-	<td>kp detector:860(bs1) <br> generator:14(bs1)</td>
+	<td>kp detector:957(bs1) <br> generator:7(bs1)</td>
 	<td nowrap="nowrap">kp detecto:1 x 3 x 256 x 256 <br> generator:多尺度</td>
     </tr>
     <tr>
@@ -4034,9 +4023,9 @@ CV-video_understanding
         <td>UCF-101</td>
         <td></td>
         <td></td>
-        <td>94.02%</td>
-        <td>99.58%</td>
-	<td>171(bs1)</td>
+        <td>94.48%</td>
+        <td>99.63%</td>
+	<td>194(bs1)</td>
 	<td nowrap="nowrap">bs x 8 x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -4104,7 +4093,7 @@ Audio
         <td>0.94</td>
         <td></td>
         <td></td>
-	<td>12.1(bs8)</td>
+	<td>11(bs1)</td>
         <td></td>
 	<td nowrap="nowrap">bs x 559280</td>
     </tr>
@@ -4140,12 +4129,12 @@ Audio
         </td>
         <td>LibriSpeech</td>
         <td></td>
-        <td>9.726</td>
+        <td>9.709</td>
         <td></td>
         <td></td>
-	<td>29(bs1)</td>
+	<td>41(bs1)</td>
         <td></td>
-	<td nowrap="nowrap">bs x 64 x -1</td>
+	<td nowrap="nowrap">bs x 64 x 4000</td>
     </tr>
     <tr>
         <td>
