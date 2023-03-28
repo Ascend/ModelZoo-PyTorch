@@ -27,7 +27,7 @@ data_path=""
 train_epochs=1
 # 学习率
 learning_rate=0.1
-device_id=0,1,2,3,4,5,6,7
+device_id=0
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
