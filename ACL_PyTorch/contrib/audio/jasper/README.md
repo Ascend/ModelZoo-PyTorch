@@ -172,7 +172,7 @@ Jasper是应用于自动语音识别（ASR）的端到端声学模型，该模�
       1. 配置环境变量。
 
          ```shell
-         source /usr/local/Ascend/ascend-tooklit/set_env.sh
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。

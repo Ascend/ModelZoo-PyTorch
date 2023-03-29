@@ -78,7 +78,7 @@ U-2-Net是基于UNet提出的一种新的网络结构，网络基于encode-decod
    git clone https://github.com/xuebinqin/U-2-Net.git -b master
    cd U-2-Net
    git reset --hard a179b4bfd80f84dea2c76888c0deba9337799b60
-   cd ..
+   cd ../../
    ```
    
    目录结构如下：

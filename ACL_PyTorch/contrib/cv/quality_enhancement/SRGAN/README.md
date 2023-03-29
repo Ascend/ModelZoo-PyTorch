@@ -89,6 +89,8 @@
    ├──pix2pixhd_preprocess.py
    ├──pix2pixhd_postprocess.py
    ├──pix2pixhd_pth2onnx.py
+   ├──estimate_per.py
+   ├──srgan_om_infer.py
    ├──eidt_onnx.py
    ├──model.py
    ├──LICENCE
@@ -110,8 +112,9 @@
    本模型支持Set5验证集。用户需自行获取数据集，可将数据集放置于任意路径下以"./datasets"将包路径下。目录结构如下：
 
    ```
-   ./datasets
-      ├──Set5    //原始的只有5张数据集图片的路径。
+   ├──./datasets
+         ├──Set5    //原始的只有5张数据集图片的路径。
+            ├── ***.png
    ```
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
@@ -129,11 +132,11 @@
    2. 对图片进行预处理
 
       ```
-      python3 srgan_preprocess.py  --src_path=./datasets/Set5_X2/ ve_path=./preprocess_data
+      python3 srgan_preprocess.py  --src_path=./datasets/Set5_X2/ --save_path=./preprocess_data
       ```
       - 参数说明：
          - --src_path：缩放2倍的图片路径。
-         - --result_path：预处理的完成后的路径 。
+         - --save_path：预处理的完成后的路径 。
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -201,7 +204,7 @@
       3. 执行ATC命令。
 
          ```
-         atc --model=./srgan_fix.onnx --framework=5 --output=./srgan_bs1 --input_format=NCHW --input_shape="lrImage:1,3,-1,-1" --dynamic_image_size="140,140;256,256;172,114;128,128;144,144" --log=info --soc_version=Ascend{chip_name} 
+         atc --model=./srgan_fix.onnx --framework=5 --output=./srgan_bs1 --input_format=NCHW --input_shape="lrImage:1,3,-1,-1" --dynamic_image_size="140,140;256,256;172,114;128,128;144,144" --log=error --soc_version=Ascend{chip_name} 
          ```
 
          - 参数说明：
@@ -259,9 +262,9 @@
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | :----------: | ---------- | ---------- | --------------- |
-|   Ascend310P  |  1  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308    |  379.036   |
-|   Ascend310P  |  4  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  374.082   |
-|   Ascend310P  |  8  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  380.647   |
-|   Ascend310P  |  16  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  377.447   |
-|   Ascend310P  |  32  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  379.026   |
-|   Ascend310P  |  64  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  370.578   |
+|   Ascend310P3  |  1  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308    |  379.036   |
+|   Ascend310P3  |  4  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  374.082   |
+|   Ascend310P3  |  8  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  380.647   |
+|   Ascend310P3  |  16  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  377.447   |
+|   Ascend310P3  |  32  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  379.026   |
+|   Ascend310P3  |  64  |   Set5    |   PSNR: 33.4391;SSIM: 0.9308      |  370.578   |
