@@ -1,0 +1,177 @@
+diff --git a/config/doc_ner_best.yaml b/config/doc_ner_best.yaml
+index 841d992..00d7bbc 100644
+--- a/config/doc_ner_best.yaml
++++ b/config/doc_ner_best.yaml
+@@ -51,19 +51,16 @@ embeddings:
+   TransformerWordEmbeddings-0:
+     layers: '-1'
+     model: xlnet-large-cased
+-    embedding_name: /home/yongjiang.jy/.flair/embeddings/xlnet-first-docv2_10epoch_1batch_4accumulate_0.000005lr_10000lrrate_eng_monolingual_nocrf_fast_norelearn_sentbatch_sentloss_finetune_nodev_saving_ner4/xlnet-large-cased
+     pooling_operation: first
+     v2_doc: true
+   TransformerWordEmbeddings-1:
+     layers: '-1'
+     model: xlm-roberta-large
+-    embedding_name: /home/yongjiang.jy/.flair/embeddings/xlmr-first-docv2_10epoch_1batch_4accumulate_0.000005lr_10000lrrate_eng_monolingual_nocrf_fast_norelearn_sentbatch_sentloss_finetune_nodev_saving_ner3/xlm-roberta-large
+     pooling_operation: first
+     v2_doc: true
+   TransformerWordEmbeddings-2:
+     layers: '-1'
+     model: roberta-large
+-    embedding_name: /home/yongjiang.jy/.flair/embeddings/en-xlmr-first-docv2_10epoch_1batch_4accumulate_0.000005lr_10000lrrate_eng_monolingual_nocrf_fast_norelearn_sentbatch_sentloss_finetune_nodev_saving_ner5/roberta-large
+     pooling_operation: first
+     v2_doc: true
+   TransformerWordEmbeddings-3:
+@@ -73,7 +70,6 @@ embeddings:
+   TransformerWordEmbeddings-4:
+     layers: -1,-2,-3,-4
+     model: bert-base-cased
+-    embedding_name: /home/yongjiang.jy/.cache/torch/transformers/bert-base-cased
+     pooling_operation: first
+   TransformerWordEmbeddings-5:
+     layers: -1,-2,-3,-4
+@@ -91,8 +87,8 @@ model:
+ model_name: xlnet-task-docv2_en-xlmr-task-tuned-docv2_en-xlmr-task-docv2_elmo_bert-four-large-pred_bert-four-old-pred_multi-bert-four-pred_word_flair_mflair_150epoch_32batch_0.1lr_800hidden_eng_crf_reinforce_freeze_sentbatch_5patience_nodev_ner4
+ ner:
+   Corpus: CONLL_03_ENGLISH
+-  tag_dictionary: resources/taggers/ner_tags.pkl
+-target_dir: resources/taggers/
++  tag_dictionary: ACE/resources/taggers/ner_tags.pkl
++target_dir: ACE/resources/taggers/
+ targets: ner
+ teacher_annealing: false
+ train:
+diff --git a/flair/custom_data_loader.py b/flair/custom_data_loader.py
+index aa8c229..3e1f424 100644
+--- a/flair/custom_data_loader.py
++++ b/flair/custom_data_loader.py
+@@ -211,7 +211,7 @@ class ColumnDataLoader:
+ 				for embedding in self.model.embeddings.embeddings:
+ 					if 'Char' in embedding.name:
+ 						max_char_len.append(max([len(w.text) for w in sentence]))
+-
++			max_len = 124
+ 			batch = BatchedData(batch)
+ 			for embedding in self.model.embeddings.embeddings:
+ 				if 'Word:' in embedding.name:
+diff --git a/flair/embeddings.py b/flair/embeddings.py
+index e88441c..4acc533 100644
+--- a/flair/embeddings.py
++++ b/flair/embeddings.py
+@@ -108,12 +108,12 @@ class Embeddings(torch.nn.Module):
+             embedding_length = self.embedding_length
+         sentence_lengths = [len(x) for x in sentences]
+         if not assign_zero:
+-            sentence_tensor = torch.zeros([len(sentences),max(sentence_lengths),embedding_length]).type_as(sentences[0][0]._embeddings[self.name])
++            sentence_tensor = torch.zeros([len(sentences),124,embedding_length]).type_as(sentences[0][0]._embeddings[self.name])
+             for sent_id, sentence in enumerate(sentences):
+                 for token_id, token in enumerate(sentence):
+                     sentence_tensor[sent_id,token_id]=token._embeddings[self.name]
+         else:
+-            sentence_tensor = torch.zeros([len(sentences),max(sentence_lengths),embedding_length]).float()
++            sentence_tensor = torch.zeros([len(sentences),124,embedding_length]).float()
+         sentence_tensor = sentence_tensor.cpu()
+         sentences.features[self.name]=sentence_tensor
+         return sentences
+@@ -1215,6 +1215,7 @@ class ELMoEmbeddings(TokenEmbeddings):
+         for sentence in sentences:
+             sentence_words.append([token.text for token in sentence])
+         # pdb.set_trace()
++        self.ee.cuda_device = -1
+         embeddings = self.ee.embed_batch(sentence_words)
+ 
+         for i, sentence in enumerate(sentences):
+diff --git a/flair/models/sequence_tagger_model.py b/flair/models/sequence_tagger_model.py
+index 57889dd..823cc3c 100644
+--- a/flair/models/sequence_tagger_model.py
++++ b/flair/models/sequence_tagger_model.py
+@@ -809,7 +809,8 @@ class SequenceTagger(flair.nn.Model):
+ 
+ 			return sentences
+ 
+-	def forward(self, sentences: List[Sentence], prediction_mode = False):
++	def forward(self, sentence_tensor: torch.Tensor, lengths_tensor: torch.Tensor, prediction_mode = False):
++		"""
+ 		# self.zero_grad()
+ 		lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+ 
+@@ -915,7 +916,7 @@ class SequenceTagger(flair.nn.Model):
+ 			  )
+ 			# sentence_tensor = sentence_tensor.to(flair.device)
+ 		# # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
+-
++		"""
+ 		sentence_tensor = sentence_tensor.transpose_(0, 1)
+ 		if self.new_drop:
+ 		  sentence_tensor = self.dropout1(sentence_tensor)
+@@ -932,14 +933,14 @@ class SequenceTagger(flair.nn.Model):
+ 
+ 		if self.use_rnn:
+ 			packed = torch.nn.utils.rnn.pack_padded_sequence(
+-				sentence_tensor, lengths, enforce_sorted=False
++				sentence_tensor, lengths_tensor, enforce_sorted=False
+ 			)
+ 
+ 			# if initial hidden state is trainable, use this state
+ 			if self.train_initial_hidden_state:
+ 				initial_hidden_state = [
+-					self.lstm_init_h.unsqueeze(1).repeat(1, len(sentences), 1),
+-					self.lstm_init_c.unsqueeze(1).repeat(1, len(sentences), 1),
++					self.lstm_init_h.unsqueeze(1).repeat(1, lengths_tensor.shape[0], 1),
++					self.lstm_init_c.unsqueeze(1).repeat(1, lengths_tensor.shape[0], 1),
+ 				]
+ 				rnn_output, hidden = self.rnn(packed, initial_hidden_state)
+ 			else:
+@@ -967,7 +968,7 @@ class SequenceTagger(flair.nn.Model):
+ 			
+ 			# transpose to batch_first mode
+ 			sentence_tensor = sentence_tensor.transpose_(0, 1)
+-			batch_size = len(sentences)
++			batch_size = sentence_tensor.shape[1]
+ 			word_in = torch.tanh(self.word2cnn(sentence_tensor)).transpose(2,1).contiguous()
+ 			for idx in range(self.nlayers):
+ 				if idx == 0:
+@@ -987,25 +988,27 @@ class SequenceTagger(flair.nn.Model):
+ 			self.time=time.time()
+ 		features = self.linear(sentence_tensor)
+ 		
+-		self.mask=self.sequence_mask(torch.tensor(lengths),longest_token_sequence_in_batch).cuda().type_as(features)
++		self.mask=self.sequence_mask(lengths_tensor,sentence_tensor.shape[1]).to(flair.device).type_as(features)
+ 		if self.use_mfvi:
+ 			# self.sent_feats=sentence_tensor
+ 			token_feats=sentence_tensor
+ 			unary_score=features
+ 			
+-			features=self.mfvi(token_feats,unary_score,self.mask,lengths=torch.LongTensor(lengths).to(flair.device))
++			features=self.mfvi(token_feats,unary_score,self.mask,lengths=torch.LongTensor(lengths_tensor.numpy().tolist()).to(flair.device))
+ 		if (self.biaf_attention or self.use_transition_attention):
+ 			if self.token_level_attention:
+ 				self.sent_feats=sentence_tensor
+ 			elif self.use_rnn:
+-				self.sent_feats=torch.cat([sentence_tensor[:,0],sentence_tensor[torch.arange(len(sentences)),output_lengths-1]],-1)
++				self.sent_feats=torch.cat([sentence_tensor[:,0],sentence_tensor[torch.arange(sentence_tensor.shape[0]),output_lengths-1]],-1)
+ 			elif not (self.use_language_vector and self.use_language_attention): # use sentence feature of bert model
+ 				# self.embeddings.embeddings[0].__class__.__name__
+ 				self.sent_feats=self.embeddings.embeddings[0].pooled_output
++		"""
+ 		if self.enhanced_crf:
+ 			if self.debug:
+ 				pdb.set_trace()
+ 			self.set_enhanced_transitions(sentences)
++		"""
+ 
+ 		return features
+ 
+diff --git a/flair/trainers/distillation_trainer.py b/flair/trainers/distillation_trainer.py
+index d7820f8..a5afd79 100644
+--- a/flair/trainers/distillation_trainer.py
++++ b/flair/trainers/distillation_trainer.py
+@@ -1157,7 +1157,7 @@ class ModelDistiller(ModelTrainer):
+ 					# embedding.reset_elmo()
+ 					# continue
+ 					# pdb.set_trace()
+-					embedding.ee.elmo_bilm.cuda(device=embedding.ee.cuda_device)
++					#embedding.ee.elmo_bilm.cuda(device=embedding.ee.cuda_device)
+ 					states=[x.to(flair.device) for x in embedding.ee.elmo_bilm._elmo_lstm._states]
+ 					embedding.ee.elmo_bilm._elmo_lstm._states = states
+ 					for idx in range(len(embedding.ee.elmo_bilm._elmo_lstm._states)):
