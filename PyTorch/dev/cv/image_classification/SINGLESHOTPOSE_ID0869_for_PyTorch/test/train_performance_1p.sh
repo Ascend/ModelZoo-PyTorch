@@ -82,6 +82,10 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+	        source set_conda.sh
+	        source activate $conda_name
     elif [[ $para == --ci_cp* ]];then
         ci_cp=`echo ${para#*=}`
     fi
