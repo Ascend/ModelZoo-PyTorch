@@ -100,7 +100,7 @@ def main(config, args):
     optimizer = build_optimizer(config, model)
     if config.AMP_OPT_LEVEL != "O0":
         try:
-            model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL, combine_grad=True, user_cast_preferred=True)
+            model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL)
         except:
             print('user_cast_preferred not supported in current apex version. Update for high performance.')
             model, optimizer = amp.initialize(model, optimizer, opt_level=config.AMP_OPT_LEVEL, combine_grad=True)
