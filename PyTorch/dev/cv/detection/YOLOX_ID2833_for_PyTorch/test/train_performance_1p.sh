@@ -38,8 +38,17 @@ do
       conda_name=`echo ${para#*=}`
       #echo "PATH TRAIN BEFORE: $PATH"
       #source set_conda.sh --conda_name=$conda_name
-      source ${test_path_dir}/set_conda1.sh
-      source activate $conda_name
+      i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+      j="1.8"
+      result=$(echo $i | grep "${j}")
+      if [[ "$result" != "" ]]
+      then
+          source ${test_path_dir}/set_conda1.sh
+          source activate $conda_name
+      else
+          source ${test_path_dir}/set_conda1.sh
+          source activate py9
+      fi
       #echo "PATH TRAIN AFTER: $PATH"
     fi
 done
