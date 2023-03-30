@@ -230,11 +230,18 @@ def _get_global_gloo_group():
     """
     Return a process group based on gloo backend, containing all the ranks
     The result is cached.
-    """
+    
+    Since torch_npu does not support 'gloo', modify the code to avoid the
+    problem of cluster training caused by 'gloo'.
+
+    The original code is as follows.
+
     if dist.get_backend() == "hccl":
         return dist.new_group(backend="gloo")
     else:
         return dist.group.WORLD
+    """
+    return dist.group.WORLD
 
 
 def _serialize_to_tensor(data, group):
