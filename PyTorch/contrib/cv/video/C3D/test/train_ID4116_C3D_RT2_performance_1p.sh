@@ -33,7 +33,15 @@ do
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
         source set_conda.sh
-        source activate $conda_name
+        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+        j="1.8"
+        result=$(echo $i | grep "${j}")
+        if [[ "$result" != "" ]]
+        then
+            source activate $conda_name
+        else
+            source activate py2_1.11
+        fi
     fi
 done
 
