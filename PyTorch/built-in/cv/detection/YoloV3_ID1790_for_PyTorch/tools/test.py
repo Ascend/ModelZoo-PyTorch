@@ -18,6 +18,8 @@ import warnings
 
 import mmcv
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
@@ -187,13 +189,13 @@ def main():
         model.CLASSES = dataset.CLASSES
 
     if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
+        model = MMDataParallel(model.npu(), device_ids=[0])
         outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
                                   args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
+            model.npu(),
+            device_ids=[torch.npu.current_device()],
             broadcast_buffers=False)
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
