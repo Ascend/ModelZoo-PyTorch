@@ -8,8 +8,17 @@ do
 		data_path=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
-        source set_conda.sh
-        source activate $conda_name
+        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+        j="1.8"
+        result=$(echo $i | grep "${j}")
+        if [[ "$result" != "" ]]
+        then
+            source set_conda.sh
+            source activate $conda_name
+        else
+            source ${test_path_dir}/set_conda.sh --conda_name=py8_1.11
+            source activate py8_1.11
+        fi
 	fi
 done
 
