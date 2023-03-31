@@ -105,11 +105,12 @@ fi
 #let b=RANK_ID+1
 #let c=b*12-1
 chmod +x ${cur_path}/tools/dist_train.sh
+chmod +x ${cur_path}/tools/dist_test.sh
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-sed -i "s|total_epochs = 273|total_epochs = 1|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
+sed -i "s|total_epochs = 273|total_epochs = 5|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 sed -i "s|data/coco/|$data_path/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
@@ -136,6 +137,7 @@ do
             data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
             --seed 0 \
+            --no-validate \
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
@@ -146,13 +148,22 @@ do
             data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
             --seed 0 \
+            --no-validate \
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 
 wait
+
+./tools/dist_test.sh configs/yolo/yolov3_d53_320_273e_coco.py \
+    ./work_dirs/yolov3_d53_320_273e_coco/latest.pth 8 \
+    --eval bbox \
+    --gpu-collect >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+
+wait
+
 sed -i "s|$data_path/|data/coco/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
-sed -i "s|total_epochs = 1|total_epochs = 273|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
+sed -i "s|total_epochs = 5|total_epochs = 273|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 #8p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
 ASCEND_DEVICE_ID=0
 
