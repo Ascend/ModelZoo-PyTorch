@@ -31,6 +31,18 @@ do
         more_path1=`echo ${para#*=}`
     elif [[ $para == --bin* ]];then
         bin=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+        j="1.8"
+        result=$(echo $i | grep "${j}")
+        if [[ "$result" != "" ]]
+        then
+            echo "pass"
+        else
+            source ${test_path_dir}/set_conda.sh
+            source activate conda_name
+        fi
     fi
 done
 
@@ -55,17 +67,6 @@ else
 fi
 
 
-#设置conda
-i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
-j="1.8"
-result=$(echo $i | grep "${j}")
-if [[ "$result" != "" ]]
-then
-    echo "pass"
-else
-    source ${test_path_dir}/set_conda.sh
-    source activate py1
-fi
 
 # 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`
