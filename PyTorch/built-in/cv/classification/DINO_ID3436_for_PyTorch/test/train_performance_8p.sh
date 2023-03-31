@@ -34,6 +34,7 @@ do
     fi
 done
 
+
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
@@ -51,6 +52,19 @@ if [ x"${cur_path_last_dirname}" == x"test" ]; then
     cur_path=`pwd`
 else
     test_path_dir=${cur_path}/test
+fi
+
+
+#设置conda
+i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+j="1.8"
+result=$(echo $i | grep "${j}")
+if [[ "$result" != "" ]]
+then
+    echo "pass"
+else
+    source ${test_path_dir}/set_conda.sh
+    source activate py1
 fi
 
 # 非平台场景时source 环境变量
