@@ -356,16 +356,7 @@ class opts(object):
                    'wh': 2 if not opt.cat_spec_wh else 2 * opt.num_classes}
       if opt.reg_offset:
         opt.heads.update({'reg': 2})
-    # elif opt.task == 'multi_pose':
-    #   # assert opt.dataset in ['coco_hp']
-    #   opt.flip_idx = dataset.flip_idx
-    #   opt.heads = {'hm': opt.num_classes, 'wh': 2, 'hps': dataset.num_joints*2}
-    #   if opt.reg_offset:
-    #     opt.heads.update({'reg': 2})
-    #   if opt.hm_hp:
-    #     opt.heads.update({'hm_hp': dataset.num_joints})
-    #   if opt.reg_hp_offset:
-    #     opt.heads.update({'hp_offset': 2})
+
     elif opt.task == 'multi_pose':
       opt.flip_idx = dataset.flip_idx
       opt.heads = {'hm': opt.num_classes, 'wh': 2, 'hm_offset': 2, 'landmarks': dataset.num_joints * 2}
@@ -380,9 +371,6 @@ class opts(object):
       'ctdet': {'default_resolution': [512, 512], 'num_classes': 1,
                 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225],
                 'dataset': 'pig'},
-    # 'ctdet': {'default_resolution': [512, 512], 'num_classes': 1,
-    #           'mean': [0.408, 0.447, 0.470], 'std': [0.289, 0.274, 0.278],
-    #           'dataset': 'coco'},
       'exdet': {'default_resolution': [512, 512], 'num_classes': 80,
                 'mean': [0.408, 0.447, 0.470], 'std': [0.289, 0.274, 0.278],
                 'dataset': 'coco'},

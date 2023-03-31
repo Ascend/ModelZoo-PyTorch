@@ -36,12 +36,6 @@ class ModleWithLoss(torch.nn.Module):
     loss, loss_stats = self.loss(outputs, batch)
     return outputs[-1], loss, loss_stats
 
-class NoProfiling():
-    def __enter__(self):
-        ...
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        ...
-
 class BaseTrainer(object):
   def __init__(self, opt, model, optimizer=None):
     self.opt = opt

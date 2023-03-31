@@ -89,7 +89,7 @@ class BaseTrainer(object):
       if len(self.opt.device_list) > 1:
         model_with_loss = self.model_with_loss.module
       model_with_loss.eval()
-      torch.npu.empty_cache() ###npu change
+      torch.npu.empty_cache()  # npu change
 
     opt = self.opt
     results = {}
@@ -109,7 +109,7 @@ class BaseTrainer(object):
       ###FPS
       if iter_id == 5:
         start_time = time.time()
-      ###FPS
+      # FPS
       data_time.update(time.time() - end)
       profiler.start()
       for k in batch:
@@ -119,11 +119,8 @@ class BaseTrainer(object):
       loss = loss.mean()
       if phase == 'train':
         self.optimizer.zero_grad()
-        ###amp
         with amp.scale_loss(loss, self.optimizer) as scaled_loss:
             scaled_loss.backward()
-        #loss.backward()
-        ###amp
         self.optimizer.step()
         profiler.end()
         batch_time.update(time.time() - end)
@@ -164,7 +161,8 @@ class BaseTrainer(object):
           else:
             fps =  opt.batch_size * opt.world_size/avg_time
           print('')
-          print('epoch = {}, all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(epoch ,all_time,avg_time,opt.batch_size,fps))
+          print('epoch = {}, all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(
+              epoch ,all_time,avg_time,opt.batch_size,fps))
           print('')
         ###FPS
 

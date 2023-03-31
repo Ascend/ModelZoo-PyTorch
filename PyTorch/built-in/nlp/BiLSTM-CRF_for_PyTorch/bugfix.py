@@ -165,7 +165,8 @@ class BilstmModel(object):
         for e in range(1, self.epoches + 1):
             self.step = 0
             losses = 0.
-            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)), profile_type=os.getenv("PROFILE_TYPE"))
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                               profile_type=os.getenv("PROFILE_TYPE"))
             for ind in range(0, len(word_lists), batch):
                 if self.args.iteration_num != -1 and self.args.iteration_num < (self.step + 1):
                     break
@@ -204,7 +205,8 @@ class BilstmModel(object):
 
         batch = self.batch_size
         end_time = time.time()
-        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)), profile_type=os.getenv("PROFILE_TYPE"))
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for e in range(1, self.epoches + 1):
             self.step = 0
             losses = 0.
