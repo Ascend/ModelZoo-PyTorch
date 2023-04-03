@@ -125,8 +125,6 @@ def lovasz_hinge_flat(logits, labels):
       labels: [P] Tensor, binary ground truth labels (0 or 1)
       ignore: label to ignore
     """
-    logits = logits.to("cpu")
-    labels = labels.to("cpu")   
     if len(labels) == 0:
         # only void pixels, the gradients should be 0
         return logits.sum() * 0.
@@ -135,32 +133,11 @@ def lovasz_hinge_flat(logits, labels):
     errors_sorted, perm = torch.sort(errors, dim=0, descending=True)
     perm = perm.data
     gt_sorted = labels[perm]
+    gt_sorted = gt_sorted.to("cpu")
     grad = lovasz_grad(gt_sorted)
+    grad = grad.npu()
     loss = torch.dot(F.relu(errors_sorted), Variable(grad))
-    loss = loss.npu()
     return loss
-
-"""
-sort算子在npu上跑的版本
-"""
-# def lovasz_hinge_flat(logits, labels):
-#     """
-#     Binary Lovasz hinge loss
-#       logits: [P] Variable, logits at each prediction (between -\infty and +\infty)
-#       labels: [P] Tensor, binary ground truth labels (0 or 1)
-#       ignore: label to ignore
-#     """   
-#     if len(labels) == 0:
-#         # only void pixels, the gradients should be 0
-#         return logits.sum() * 0.
-#     signs = 2. * labels.float() - 1.
-#     errors = (1. - logits * Variable(signs))
-#     errors_sorted, perm = torch.sort(errors, dim=0, descending=True)
-#     perm = perm.data
-#     gt_sorted = labels[perm]
-#     grad = lovasz_grad(gt_sorted)
-#     loss = torch.dot(F.relu(errors_sorted), Variable(grad))
-#     return loss
 
 
 def flatten_binary_scores(scores, labels, ignore=None):
