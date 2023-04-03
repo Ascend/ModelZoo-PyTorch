@@ -158,8 +158,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 # FPS=`grep -a 'FPS'  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
-sum_FPS=`grep 'mmcv.runner.runner:FPS:' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{sum +=$NF};END{print sum}'`
-num_FPS=`grep 'mmcv.runner.runner:FPS:' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | wc -l`
+sum_FPS=`grep 'FPS:' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{sum +=$NF};END{print sum}'`
+num_FPS=`grep 'FPS:' $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | wc -l`
 FPS=$(awk 'BEGIN{printf "%.2f\n",'${sum_FPS}'/'${num_FPS}'}')
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -189,7 +189,7 @@ TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要模型审视修改
 # grep Epoch: $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|grep eta:|awk -F "loss: " '{print $NF}' | awk -F "," '{print $1}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
-grep  'mmcv.runner.runner:Epoch' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep eta: | awk -F "loss: " '{print $NF}' | awk -F "," '{print $1}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep  'mmcv.runner.runner' $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | grep loss | awk -F "loss: " '{print $NF}' | awk -F "," '{print $1}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
 ActualLoss=$(awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt)
