@@ -173,6 +173,17 @@ CV-classfication
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/SCNet"> SCNet </a>
+        </td>
+        <td>ImageNet</td>
+	<td>80.34%</td>
+        <td></td>
+	<td></td>
+	<td>2331(bs4)</td>
+	<td>bs x 3 x 224 x 224</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Shufflenetv1"> Shufflenetv1 </a>
         </td>
         <td>ImageNet</td>
@@ -3696,6 +3707,18 @@ CV-pose_estimation
         <td>67.1%</td>
         <td></td>
 	<td>185(bs1)</td>
+	<td nowrap="nowrap">多尺度</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/HRNet_mmlab_for_pytorch"> HRNet_mmlab_for_pytorch </a>
+        </td>
+        <td>coco</td>
+        <td></td>
+        <td></td>
+        <td>65.3%</td>
+        <td></td>
+	<td>151(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
     <tr>
