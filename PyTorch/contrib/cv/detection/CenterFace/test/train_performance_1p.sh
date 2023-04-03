@@ -124,7 +124,7 @@ make
 wait
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-python3 main.py $PREC --batch_size=$batch_size \
+taskset -c 0-23 python3 main.py $PREC --batch_size=$batch_size \
     --lr=5e-4 \
     --lr_step='75,95' \
     --num_epochs=2 \
