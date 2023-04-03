@@ -14,16 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import contextlib
 import logging
-import numpy as np
 import time
 import weakref
 import torch
+import numpy as np
 from apex import amp
 
 import detectron2.utils.comm as comm
 from detectron2.utils.events import EventStorage
+from torch_npu.utils.profiler import Profile
 
 __all__ = ["HookBase", "TrainerBase", "SimpleTrainer"]
 
@@ -149,6 +151,8 @@ class TrainerBase:
         with EventStorage(start_iter) as self.storage:
             try:
                 self.before_train()
+                profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                                  profile_type=os.getenv('PROFILE_TYPE'))
                 for self.iter in range(start_iter, max_iter):
                     # if self.iter == 2:
                     #     with torch.autograd.profiler.profile(record_shapes=True,use_npu=True) as prof:
@@ -158,9 +162,11 @@ class TrainerBase:
                     #     prof.export_chrome_trace("MaskRCNN_O2.prof")
                     #     break
                     start_time = time.time()
+                    profile.start()
                     self.before_step()
                     self.run_step()
                     self.after_step()
+                    profile.end()
                     if self.iter < 2:
                         print("step_time = %.4f" % (time.time() - start_time), flush=True)
             except Exception:
