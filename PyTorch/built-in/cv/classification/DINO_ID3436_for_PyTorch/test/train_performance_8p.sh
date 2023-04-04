@@ -40,7 +40,7 @@ do
         then
             echo "pass"
         else
-            source ${test_path_dir}/set_conda.sh
+            source ${cur_path}/set_conda.sh
             source activate conda_name
         fi
     fi
