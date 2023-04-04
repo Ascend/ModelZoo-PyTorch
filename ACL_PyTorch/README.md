@@ -640,7 +640,7 @@ CV-tracking
         </td>
         <td>MOT16</td>
 	<td>30.1%</td>
-	<td>yolov3:467(bs1) <br> deep:3157(bs1)</td>
+	<td>yolov3:467(bs1) <br> deep:2950(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 416 x 416</td>
 </table>
 
