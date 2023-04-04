@@ -16,7 +16,7 @@ do
             source set_conda.sh
             source activate $conda_name
         else
-            source ${test_path_dir}/set_conda.sh --conda_name=py8_1.11
+            source ${cur_path}/set_conda.sh --conda_name=py8_1.11
             source activate py8_1.11
         fi
 	fi
