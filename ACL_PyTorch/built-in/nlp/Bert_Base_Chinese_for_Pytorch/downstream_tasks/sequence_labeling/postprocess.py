@@ -135,7 +135,7 @@ if __name__ == '__main__':
     categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
     categories_id2label = {i: k for i, k in enumerate(categories)}
     model = Model(args).to("cpu")
-    model.load_weights(args.ckpt_path)
+    model.load_weights(args.ckpt_path, strict=False)
     crf = model.crf
 
     seqeval_result, f1_score, precision, recall, \

@@ -40,7 +40,7 @@ class Model(BaseModel):
 def pth2onnx(args):
     # build model
     model = Model(args).to("cpu")
-    model.load_weights(args.input_path)
+    model.load_weights(args.input_path, strict=False)
 
     # build data
     def build_input_data(shape=(1, 256), low=1, high=1024, dtype="int64"):
