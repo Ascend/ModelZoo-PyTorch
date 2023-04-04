@@ -75,6 +75,7 @@ ch_PP-OCRv3_det是基于PP-OCRv3的中文文本检测模型，PP-OCRv3在PP-OCR2
    ```
    pip3 install -r requirements.txt
    cd PaddleOCR
+   pip3 install -r requirements.txt
    python3 setup.py install
    cd ..
    ```

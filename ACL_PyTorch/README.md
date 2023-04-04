@@ -2055,6 +2055,22 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ch_PP-OCRv3_det">  ch_PP-OCRv3_det</a>
+        </td>
+        <td>PaddleOCR</td>
+	<td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+	<td>215(bs1)</td>
+        <td></td>
+	<td>1 x 3 x -1 x -1</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRAFT_for_Pytorch">   CRAFT_for_Pytorch </a>
         </td>
         <td>随机数</td>
