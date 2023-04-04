@@ -157,10 +157,10 @@ GMA着重解决光流估计中被遮挡点的光流估计问题。GMA定义的�
 
          获得GMA.onnx文件。
 
-      2. 优化ONNX文件。优化onnx需要安装[MagicONNX](https://gitee.com/Ronnie_zheng/MagicONNX.git)的dev分支
+      2. 请访问[auto-optimizer改图工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 
          ```
-         python3 modify.py GMA_${bs}.onnx GMA_m_${bs}.onnx
+         python3 -m auto_optimizer optimize GMA_${bs}.onnx GMA_m_${bs}.onnx -k 4
          ```
 
          获得GMA_m.onnx文件。
