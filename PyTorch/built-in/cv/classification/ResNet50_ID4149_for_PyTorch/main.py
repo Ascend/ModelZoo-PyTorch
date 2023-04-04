@@ -388,6 +388,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
+        start_time = time.time()
 
         lr_scheduler(optimizer, i, epoch)
 
@@ -417,6 +418,8 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+        if i < 2:
+            print("step_time = %.4f" % (time.time() - start_time), flush=True)
 
         if i % args.print_freq == 0:
             if not args.distributed or (args.distributed and args.rank % args.ngpus_per_node == 0):
