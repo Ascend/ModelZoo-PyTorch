@@ -31,8 +31,21 @@ do
         more_path1=`echo ${para#*=}`
     elif [[ $para == --bin* ]];then
         bin=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+        j="1.8"
+        result=$(echo $i | grep "${j}")
+        if [[ "$result" != "" ]]
+        then
+            echo "pass"
+        else
+            source ${test_path_dir}/set_conda.sh
+            source activate conda_name
+        fi
     fi
 done
+
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -52,6 +65,8 @@ if [ x"${cur_path_last_dirname}" == x"test" ]; then
 else
     test_path_dir=${cur_path}/test
 fi
+
+
 
 # 非平台场景时source 环境变量
 check_etp_flag=`env | grep etp_running_flag`

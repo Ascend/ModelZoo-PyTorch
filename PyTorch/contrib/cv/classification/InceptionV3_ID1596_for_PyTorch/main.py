@@ -396,6 +396,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
+        start_time = time.time()
         target = target.to(torch.int32)
         images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False)
 
@@ -428,6 +429,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+        if i < 2:
+            print("step_time = %.4f" % (time.time() - start_time), flush=True)
 
     if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                                                 and args.rank % ngpus_per_node == 0):

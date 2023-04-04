@@ -81,14 +81,26 @@ ln -s ${data_path} ${default_data_path}/.
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
-{
-python3.7.5 -m torch.distributed.launch --nproc_per_node=8 main.py $PREC --device_list='0,1,2,3,4,5,6,7' --world_size=8 --batch_size=$batch_size --lr=2.5e-3 --lr_step='85,120' --num_epochs=2 --distributed_launch
-python3.7.5 test_wider_face.py
-cd $cur_path/evaluate
-python3.7.5 setup.py build_ext --inplace
-python3.7.5 evaluation.py --pred $cur_path/output/widerface
-} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-    
+
+RANK_ID_START=0
+
+for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++))
+do
+    echo ${RANK_ID}
+    KERNEL_NUM=$(($(nproc)/8))
+    PID_START=$((KERNEL_NUM * RANK_ID))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END python3.7  main.py $PREC \
+    --device_list='0,1,2,3,4,5,6,7' \
+    --world_size=8 \
+    --batch_size=$batch_size \
+    --local_rank ${RANK_ID} \
+    --lr=2.5e-3 \
+    --lr_step='85,120' \
+    --num_epochs=2 \
+    --distributed_launch > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
+
 wait
 
 ##################获取训练数据################

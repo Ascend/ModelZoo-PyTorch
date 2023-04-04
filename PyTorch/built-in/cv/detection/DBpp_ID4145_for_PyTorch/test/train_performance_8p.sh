@@ -28,8 +28,17 @@ do
         cur_path=`pwd`
         echo --$cur_path
         cd $cur_path
-        source ${cur_path}/set_conda.sh --conda_name=$conda_name
-        source activate $conda_name
+        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+        j="1.8"
+        result=$(echo $i | grep "${j}")
+        if [[ "$result" != "" ]]
+        then
+            source ${cur_path}/set_conda.sh --conda_name=$conda_name
+            source activate $conda_name
+        else
+            source ${test_path_dir}/set_conda.sh --conda_name=py4_1.11
+            source activate py4_1.11
+        fi
         cd -
     fi
 done
@@ -114,4 +123,5 @@ echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/
 echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log

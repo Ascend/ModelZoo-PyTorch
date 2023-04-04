@@ -19,6 +19,7 @@ import pickle
 import numpy as np
 import tqdm
 
+
 def postprocess_bboxes(bboxes, image_size, net_input_width, net_input_height):
     org_w = image_size[0]
     org_h = image_size[1]
@@ -81,10 +82,10 @@ if __name__ == '__main__':
     inputs = DatasetCatalog.get('coco_2017_val')
     outputs = []
     for bin_file in tqdm.tqdm(sorted(total_img)):
-
+        cnt = cnt + 1
         path_base = os.path.join(bin_path, bin_file)
         res_buff = []
-        for num in range(0, flags.net_out_num ):
+        for num in range(0, flags.net_out_num):
             if os.path.exists(path_base + "_" + str(num) + ".bin"):
                 if num == 0:
                     buf = np.fromfile(path_base + "_" + str(num) + ".bin", dtype="float32")

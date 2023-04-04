@@ -88,7 +88,7 @@ e2e_time=$(($end_time - $start_time))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "Epoch" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print}' | awk -F ", " '{print $2}')
+FPS=$(grep "Epoch" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 2 | awk "NR==1 {print}" | awk -F "${max_steps}" '{print $NF}' | awk -F "]" '{print $1}' | awk -F ", " '{print $2}' | sed 's/^[ \t]*//g')
 unit="it/s"
 IsUnit=$(echo $FPS | grep "${unit}")
 if [[ "$IsUnit" != "" ]]

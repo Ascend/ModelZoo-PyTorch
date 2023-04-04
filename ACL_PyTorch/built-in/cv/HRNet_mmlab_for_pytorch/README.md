@@ -47,7 +47,7 @@
 
   | 输出数据 | 数据类型 | 大小               | 数据排布格式 |
   | -------- |------------------| -------- | ------------ |
-  | output1  | FLOAT32  | 1 x 34 x H‘ x W’ | ND           |
+  | output  | FLOAT32  | 1 x 34 x H‘ x W’ | ND           |
 
 
 
@@ -102,7 +102,26 @@
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   本操作封装在数据推理过程中，无须操作。
+   1. 使用ModelZoo获取的源码包中的文件复制到源码目录下。
+         ```
+         cd ModelZoo-PyTorch/ACL_PyTorch/cv/HRNet_mmlab_for_pytorch
+         cp preprocess.py postprocess.py  local/mmpose/tools
+         cp run_infer.py local/mmpose/
+         cp pytorch2onnx.py local/mmpose/tools/deployment
+         ```
+   2. 运行preprocess.py处理数据集
+         ```
+         cd mmpose
+         python3.7 tools/preprocess.py configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/hrnet_w32_coco_512x512.py --pre_data ./pre_data
+         ```
+      - 参数说明：
+
+           -   第一个参数表示使用的配置文件。
+           -   第二个参数表示数据集和标签保存路径。
+
+         pre_data文件夹下生成处理后的数据集data1和data2以及标签文件label.json,data1和data2包含各档位shape(总共36档位)的数据。
+
+        
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -117,14 +136,7 @@
       ```
       
    2. 导出onnx文件。
-      1.使用ModelZoo获取的源码包中的文件替换mmpose目录下的文件
-         ```
-         cp pytorch2onnx.py mmpose/tools/deployment
-         cp test.py mmpose/tools
-         cp associative_embedding.py mmpose/mmpose/models/detectors
-         ```
-
-      2.使用pth导出ONNX。
+      使用pth导出ONNX。
 
          运行官方脚本导出ONNX。
 
@@ -169,60 +181,83 @@
       3. 执行ATC命令。
 
          ```
-         bash atc_hrnet.sh Ascend${chip_name} # Ascend310P3
+         bash atc_hrnet.sh Ascend${chip_name} ${bs}
          示例
-         bash atc_hrnet.sh Ascend310P3
+         bash atc_hrnet.sh Ascend310P3 1
          ```
 
          - 参数说明：
 
            -   第一个参数代表芯片类型。
+           -   第二个参数代表模型的batch。
 
-           运行成功后生成hrnet.om模型文件。
+           运行成功后生成hrnet_bs{batch}.om模型文件。
 
-2. 开始推理验证。
+   2. 开始推理验证。
 
-   1. 安装ais_bench推理工具。
+      1. 安装ais_bench推理工具。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
+         请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)代码仓，根据readme文档进行工具安装。
 
-   2. 执行推理。
+      2. 执行推理。
 
-        ```
-        export PYTHONPATH='./mmpose/'
-        python3 tools/test.py configs/body/2d_kpt_sview_rgb_img/assoiciate_embedding/coco/hrnet_w32_coco_512x512.py --out ./result.json --eval mAP
-        ```
+          a.  使用run_infer.py进行推理, 该文件调用aclruntime的后端封装的python的whl包进行推理。
 
-        -   参数说明：
+          ```
+          python3.7 run_infer.py  --data_path ./pre_data --out_put ./output --result ./result --batch_size 1 --device_id 0
+         ```
+         - 参数说明：
 
-             -   第一个参数表示配置文件路径
-             -   第二个参数表示输出保存路径。
-             -   第三个参数表示使用的评价指标。
+           - 第一个参数代表数据输入路径。
+           - 第二个参数代表临时处理数据保存路径。
+           - 第三个参数代表最后处理完数据保存路径。
+           - 第四个参数代表模型batch。
+           - 第五个参数代表芯片序号。
+           
+           运行成功后生成result文件夹保存处理后数据集。
+   
+       b.  精度验证。
 
-    可以获得AR/AP数据，结果保存在result.json中。
+         ```
+          python3.7 tools/postprocess.py configs/body/2d_kpt_sview_rgb_img/associative_embedding/coco/hrnet_w32_coco_512x512.py --dataset ./result --eval mAP --label_dir ./pre_data/label.json
+         ```
+         - 参数说明：
 
-   3.性能验证。
+           - 第一个参数表示使用的配置文件。
+           - 第二个参数表示处理后的数据集路径。
+           - 第三个参数表示使用的评价指标。
+           - 第四个参数表示标签
 
-      可使用ais_bench推理工具的纯推理模式验证不同档位的om模型的性能，参考命令如下：
+      3.性能验证。
 
-        ```
-        python3 -m ais_bench --model hrnet.om --dymDims input:1,3,{h},{w} --output ./ --outfmt BIN --loop 1000
-        示例
-        python3 -m ais_bench --model hrnet.om --dymDims input:1,3,512,512 --output ./ --outfmt BIN --loop 1000
-        ```
+         可使用ais_bench推理工具的纯推理模式验证不同档位的om模型的性能，参考命令如下：
 
-      - 参数说明：
-        - --model：需要验证om模型所在路径
-        - --dymDims:需要验证模型的输入
-        - --output：验证输出的保存位置
-        - --outfmt：验证输出的保存格式
-        - --loop:验证循环次数
+           ```
+           python3 -m ais_bench --model hrnet.om --dymDims input:{bs},3,{h},{w} --output ./ --outfmt BIN --loop 1000 --batchsize {bs} --device {id}
+           示例
+           python3 -m ais_bench --model hrnet.om --dymDims input:1,3,512,512 --output ./ --outfmt BIN --loop 1000 --batchsize 1 --device 0
+           ```
+
+         - 参数说明：
+           - --model：需要验证om模型所在路径
+           - --dymDims:需要验证模型的输入
+           - --output：验证输出的保存位置
+           - --outfmt：验证输出的保存格式
+           - --loop:验证循环次数
+           - --batchsize：模型的batch
+           - --device:使用的芯片序号
       
-      或者使用脚本map_postprocess.py进行统一验证，结果输出在屏幕上
+         或者使用脚本map_postprocess.py进行统一验证，结果输出在屏幕上
 
-       ```
-       python3 map_postprocess.py
-       ```
+          ```
+          python3 map_postprocess.py --bs {bs} --device {id}
+          示例
+          python3 map_postprocess.py --bs 1 --device 0
+          ```
+
+         - 参数说明：
+           - --bs：模型的batch
+           - --device:使用的芯片序号
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -232,5 +267,7 @@
 | 芯片型号 | Batch Size | 数据集  | 精度                | 性能  |
 | --------- |------------|------|-------------------|-----|
 |   310P3        | 1          | coco | 0.653/AP 0.709/AR | 151 |
+|   310P3        | 4          | coco | 0.653/AP 0.709/AR | 149 |
+|   310P3        | 8          | coco | 0.653/AP 0.709/AR | 132 |
 
-说明：源代码数据处理只支持单batch，OM为分档模型，性能是平均FPS性能
+说明：OM为分档模型，性能是平均FPS性能

@@ -74,6 +74,8 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+        if i < 2:
+            print("step_time = %.4f" % (time.time() - start_time), flush=True)
         
         list1.append(batch_time.val)
         list2.append(losses.val)

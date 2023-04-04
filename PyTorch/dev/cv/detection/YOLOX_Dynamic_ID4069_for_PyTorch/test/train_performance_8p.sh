@@ -53,7 +53,7 @@ do
         source $test_path_dir/set_conda.sh
         source activate $conda_name
     fi
-do/ne
+done
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then

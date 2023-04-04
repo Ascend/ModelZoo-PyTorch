@@ -104,6 +104,7 @@ start_time=$(date +%s)
 
 sed -i "s|total_epochs = 273|total_epochs = 1|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 sed -i "s|data/coco/|$data_path/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
+sed -i "s|interval=50,|interval=1,|g" configs/_base_/default_runtime.py
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export RANK_SIZE=8
@@ -139,6 +140,8 @@ done
 wait
 sed -i "s|$data_path/|data/coco/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 sed -i "s|total_epochs = 1|total_epochs = 273|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
+sed -i "s|interval=1,|interval=50,|g" configs/_base_/default_runtime.py
+
 #8p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
 ASCEND_DEVICE_ID=0
 
@@ -149,7 +152,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-time=`grep -a 'Epoch'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|awk 'END {print}'|sed 's/.$//'`
+time=`grep -a 'Epoch'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|grep -n '[[:space:]]mmdet[[:space:]]' | awk -F "time: " '{print $2}'|awk -F "," '{print $1}'|tail -100 | awk '{sum+=$1} END{print sum/NR}'`
 FPS=`awk 'BEGIN{printf "%.2f\n", '${RANK_SIZE}'*'${batch_size}'/'${time}'}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

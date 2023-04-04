@@ -301,7 +301,8 @@ class SimpleTrainer(TrainerBase):
         # gather metrics among all workers for logging
         # This assumes we do DDP-style training, which is currently the only
         # supported method in detectron2.
-        all_metrics_dict = comm.gather(metrics_dict)
+        # due to HCCL does not support gather, replace gather with all_gather 
+        all_metrics_dict = comm.all_gather(metrics_dict)
 
         if comm.is_main_process():
             if "data_time" in all_metrics_dict[0]:

@@ -133,6 +133,11 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
         mv pytorch-YOLOv4/yolov4_-1_3_608_608_dynamic.onnx .
         ```
 
+        使用onnxsim简化模型
+        ```
+        python -m onnxsim yolov4_-1_3_608_608_dynamic.onnx yolov4_-1_3_608_608_dynamic.onnx
+        ```
+        
         获得 `yolov4_-1_3_608_608_dynamic.onnx` 文件。
 
         - 参数说明：
@@ -176,6 +181,8 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
                --input_format=NCHW \
                --input_shape="input:${batchsize},3,608,608" \
                --log=error \
+               --insert_op_conf=aipp.config \
+               --enable_small_channel=1 \
                --soc_version=Ascend${chip_name} 
           ```
 
@@ -246,10 +253,10 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|    Ascend310P3       |       1    |   coco2014         |     60.3%       |   160              |
-|    Ascend310P3       |       4       |   coco2014        |            |           178      |
-|    Ascend310P3       |       8       |    coco2014       |            |     173            |
-|    Ascend310P3       |      16       |     coco2014      |    60.3%        |      173           |
-|    Ascend310P3       |   32          |    coco2014      |            |     166            |
-|    Ascend310P3       |   64          |    coco2014      |            |        148         |
+|    Ascend310P3       |       1    |   coco2014         |     60.3%       |   152.80              |
+|    Ascend310P3       |       4       |   coco2014        |            |           170.82      |
+|    Ascend310P3       |       8       |    coco2014       |            |     171.15            |
+|    Ascend310P3       |      16       |     coco2014      |    60.3%        |      170.97           |
+|    Ascend310P3       |   32          |    coco2014      |            |     170.36            |
+|    Ascend310P3       |   64          |    coco2014      |            |        167.28         |
 
