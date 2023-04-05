@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 
@@ -116,6 +129,7 @@ class ABILanguageDecoder(BaseDecoder):
         embed = embed.permute(1, 0, 2)
         location_mask = self._get_location_mask(self.max_seq_len,
                                                 tokens.device)
+
         output = query
         for m in self.decoder_layers:
             output = m(
@@ -124,6 +138,7 @@ class ABILanguageDecoder(BaseDecoder):
                 value=embed,
                 attn_masks=location_mask,
                 key_padding_mask=padding_mask)
+
         output = output.permute(1, 0, 2)  # (N, T, E)
 
         logits = self.cls(output)  # (N, T, C)
@@ -161,7 +176,9 @@ class ABILanguageDecoder(BaseDecoder):
             diagonal and zeros elsewhere.
         """
         mask = torch.eye(seq_len, device=device)
-        mask = mask.float().masked_fill(mask == 1, float('-inf'))
+
+        mask = mask.float().masked_fill(mask == 1, -1000.)
+
         return mask
 
     @staticmethod

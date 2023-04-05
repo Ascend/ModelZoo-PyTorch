@@ -6,11 +6,6 @@ import warnings
 from setuptools import find_packages, setup
 
 
-def readme():
-    with open('README.md', encoding='utf-8') as f:
-        content = f.read()
-    return content
-
 
 version_file = 'mmocr/version.py'
 is_windows = sys.platform == 'win32'
@@ -35,7 +30,7 @@ def add_mim_extension():
     else:
         return
 
-    filenames = ['tools', 'configs', 'model-index.yml']
+    filenames = ['tools', 'configs']
     repo_path = osp.dirname(__file__)
     mim_path = osp.join(repo_path, 'mmocr', '.mim')
     os.makedirs(mim_path, exist_ok=True)
@@ -171,15 +166,8 @@ if __name__ == '__main__':
     setup(
         name='mmocr',
         version=get_version(),
-        description='OpenMMLab Text Detection, OCR, and NLP Toolbox',
-        long_description=readme(),
-        long_description_content_type='text/markdown',
-        maintainer='MMOCR Authors',
-        maintainer_email='openmmlab@gmail.com',
-        keywords='Text Detection, OCR, KIE, NLP',
-        packages=find_packages(exclude=('configs', 'tools', 'demo')),
+        packages=find_packages(exclude=('configs', 'tools')),
         include_package_data=True,
-        url='https://github.com/open-mmlab/mmocr',
         classifiers=[
             'Development Status :: 4 - Beta',
             'License :: OSI Approved :: Apache Software License',
@@ -190,7 +178,6 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
         ],
-        license='Apache License 2.0',
         install_requires=parse_requirements('requirements/runtime.txt'),
         extras_require={
             'all': parse_requirements('requirements.txt'),

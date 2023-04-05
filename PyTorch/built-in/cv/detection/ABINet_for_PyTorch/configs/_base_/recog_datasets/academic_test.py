@@ -1,3 +1,17 @@
+# Copyright 2022 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Text Recognition Testing set, including:
 # Regular Datasets: IIIT5K, SVT, IC13
 # Irregular Datasets: IC15, SVTP, CT80
@@ -54,4 +68,4 @@ test6 = {key: value for key, value in test1.items()}
 test6['img_prefix'] = test_img_prefix6
 test6['ann_file'] = test_ann_file6
 
-test_list = [test1, test2, test3, test4, test5, test6]
+test_list = [test1]

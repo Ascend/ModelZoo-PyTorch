@@ -1,240 +1,189 @@
-<div align="center">
-  <img src="resources/mmocr-logo.png" width="500px"/>
-  <div>&nbsp;</div>
-  <div align="center">
-    <b><font size="5">OpenMMLab website</font></b>
-    <sup>
-      <a href="https://openmmlab.com">
-        <i><font size="4">HOT</font></i>
-      </a>
-    </sup>
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    <b><font size="5">OpenMMLab platform</font></b>
-    <sup>
-      <a href="https://platform.openmmlab.com">
-        <i><font size="4">TRY IT OUT</font></i>
-      </a>
-    </sup>
-  </div>
-  <div>&nbsp;</div>
+# ABINet for PyTorch
 
-[![build](https://github.com/open-mmlab/mmocr/workflows/build/badge.svg)](https://github.com/open-mmlab/mmocr/actions)
-[![docs](https://readthedocs.org/projects/mmocr/badge/?version=latest)](https://mmocr.readthedocs.io/en/latest/?badge=latest)
-[![codecov](https://codecov.io/gh/open-mmlab/mmocr/branch/main/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmocr)
-[![license](https://img.shields.io/github/license/open-mmlab/mmocr.svg)](https://github.com/open-mmlab/mmocr/blob/main/LICENSE)
-[![PyPI](https://badge.fury.io/py/mmocr.svg)](https://pypi.org/project/mmocr/)
-[![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/open-mmlab/mmocr.svg)](https://github.com/open-mmlab/mmocr/issues)
-[![Percentage of issues still open](https://isitmaintained.com/badge/open/open-mmlab/mmocr.svg)](https://github.com/open-mmlab/mmocr/issues)
-<a href="https://console.tiyaro.ai/explore?q=mmocr&pub=mmocr"> <img src="https://tiyaro-public-docs.s3.us-west-2.amazonaws.com/assets/try_on_tiyaro_badge.svg"></a>
+-   [概述](#1)
+-   [准备训练环境](#2)
+-   [开始训练](#3)
+-   [训练结果展示](#4)
+-   [版本说明](#5)
 
-[📘Documentation](https://mmocr.readthedocs.io/) |
-[🛠️Installation](https://mmocr.readthedocs.io/en/latest/install.html) |
-[👀Model Zoo](https://mmocr.readthedocs.io/en/latest/modelzoo.html) |
-[🆕Update News](https://mmocr.readthedocs.io/en/latest/changelog.html) |
-[🤔Reporting Issues](https://github.com/open-mmlab/mmocr/issues/new/choose)
+# 概述
 
-</div>
+## 简述
 
-<div align="center">
+ABINet的特点即是autonomous（自治的）、bidirectional（双向的）、iterative（迭代的）。它由2个自治的模型vision model（视觉模型）和language model（语言学模型）组成，视觉模型直接以图像数据作为输入，语言学模型则以视觉模型的输出概率向量作为输入概率向量。大量实验表明，ABINet在低质量图像上具有优势，并在几个主流基准上取得了最先进的结果。此外，通过集成自我训练训练的ABINet在实现人的级别识别方面显示出有希望的改进。
+- 参考实现：
+  
+  ```bash
+    url=https://github.com/open-mmlab/mmocr/tree/1.x/configs/textrecog/abinet
+    commit_id=53e72e4440677cb6397a7c32b56608e36f46e1d4
+  ```
 
-English | [简体中文](README_zh-CN.md)
+- 适配昇腾 AI 处理器的实现：
 
-</div>
+  ```bash
+    url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+    code_path=PyTorch/built-in/cv/detection
+  ```
 
-## Introduction
+# 准备训练环境
 
-MMOCR is an open-source toolbox based on PyTorch and mmdetection for text detection, text recognition, and the corresponding downstream tasks including key information extraction. It is part of the [OpenMMLab](https://openmmlab.com/) project.
+## 准备环境
 
-The main branch works with **PyTorch 1.6+**.
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-<div align="center">
-  <img src="resources/illustration.jpg"/>
-</div>
+  ****表 1**** 版本支持表
 
-### Major Features
+  | Torch_Version     | 三方库依赖版本 
+  | --------          |:---------:
+  | PyTorch 1.8       |  mmcv==1.7.1
 
-- **Comprehensive Pipeline**
+- 环境准备指导。
 
-  The toolbox supports not only text detection and text recognition, but also their downstream tasks such as key information extraction.
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
-- **Multiple Models**
+- 安装依赖。
 
-  The toolbox supports a wide variety of state-of-the-art models for text detection, text recognition and key information extraction.
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
 
-- **Modular Design**
+  ```bash
+  pip install -r requirements.txt
+  pip install -e .
+  ```
+  
+## 准备训练数据集
 
-  The modular design of MMOCR enables users to define their own optimizers, data preprocessors, and model components such as backbones, necks and heads as well as losses. Please refer to [Getting Started](https://mmocr.readthedocs.io/en/latest/getting_started.html) for how to construct a customized model.
+- 第一步：参考源码实现，下载 `mjsynth.tar.gz`
+- 第二步：参考源码实现，下载 `shuffle_labels.txt`和`label.txt`
+- 第三步：
 
-- **Numerous Utilities**
+```bash
+cd /${模型文件夹名称}
+mkdir -p data/mixture
+cd data/mixture
 
-  The toolbox provides a comprehensive set of utilities which can help users assess the performance of models. It includes visualizers which allow visualization of images, ground truths as well as predicted bounding boxes, and a validation tool for evaluating checkpoints during training.  It also includes data converters to demonstrate how to convert your own data to the annotation files which the toolbox supports.
+mkdir Syn90k && cd Syn90k
 
-## What's New
+mv /path/to/mjsynth.tar.gz .
 
-While the stable version (0.6.3) and the preview version (1.0.0) are being maintained concurrently now, the former version will be deprecated by the end of 2022. Therefore, we recommend users upgrade to [MMOCR 1.0](https://github.com/open-mmlab/mmocr/tree/1.x) to fruitful new features and better performance brought by the new architecture. Check out our [maintenance plan](https://mmocr.readthedocs.io/en/dev-1.x/migration/overview.html) for how we will maintain them in the future.
+tar -xzf mjsynth.tar.gz
 
-### 💎 Stable version
-
-v0.6.3 was released in 2022-11-03.
-
-This release enhances the inference script and fixes a bug that might cause failure on TorchServe.
-
-Read [Changelog](https://mmocr.readthedocs.io/en/latest/changelog.html) for more details!
-
-### 🌟 Preview of 1.x version
-
-A brand new version of **MMOCR v1.0.0rc3** was released in 2022-11-03:
-
-1. We release several pretrained models using [oCLIP-ResNet](https://github.com/open-mmlab/mmocr/blob/1.x/configs/backbone/oclip/README.md) as the backbone, which is a ResNet variant trained with [oCLIP](https://www.ecva.net/papers/eccv_2022/papers_ECCV/papers/136880282.pdf) and can significantly boost the performance of text detection models.
-
-2. Preparing datasets is troublesome and tedious, especially in OCR domain where multiple datasets are usually required. In order to free our users from laborious work, we designed a [Dataset Preparer](https://mmocr.readthedocs.io/en/dev-1.x/user_guides/data_prepare/dataset_preparer.html) to help you get a bunch of datasets ready for use, with only **one line of command**! Dataset Preparer is also crafted to consist of a series of reusable modules, each responsible for handling one of the standardized phases throughout the preparation process, shortening the development cycle on supporting new datasets.
-
-3. **New engines**. MMOCR 1.x is based on [MMEngine](https://github.com/open-mmlab/mmengine), which provides a general and powerful runner that allows more flexible customizations and significantly simplifies the entrypoints of high-level interfaces.
-
-4. **Unified interfaces**. As a part of the OpenMMLab 2.0 projects, MMOCR 1.x unifies and refactors the interfaces and internal logics of train, testing, datasets, models, evaluation, and visualization. All the OpenMMLab 2.0 projects share the same design in those interfaces and logics to allow the emergence of multi-task/modality algorithms.
-
-5. **Cross project calling**. Benefiting from the unified design, you can use the models implemented in other OpenMMLab projects, such as MMDet. We provide an example of how to use MMDetection's Mask R-CNN through `MMDetWrapper`. Check our documents for more details. More wrappers will be released in the future.
-
-6. **Stronger visualization**. We provide a series of useful tools which are mostly based on brand-new visualizers. As a result, it is more convenient for the users to explore the models and datasets now.
-
-7. **More documentation and tutorials**. We add a bunch of documentation and tutorials to help users get started more smoothly. Read it [here](https://mmocr.readthedocs.io/en/dev-1.x/).
-
-8. **One-stop Dataset Preparaion**. Multiple datasets are instantly ready with only one line of command, via our [Dataset Preparer](https://mmocr.readthedocs.io/en/dev-1.x/user_guides/data_prepare/dataset_preparer.html).
-
-Find more new features in [1.x branch](https://github.com/open-mmlab/mmocr/tree/1.x). Issues and PRs are welcome!
-
-## Installation
-
-MMOCR depends on [PyTorch](https://pytorch.org/), [MMCV](https://github.com/open-mmlab/mmcv) and [MMDetection](https://github.com/open-mmlab/mmdetection).
-Below are quick steps for installation.
-Please refer to [Install Guide](https://mmocr.readthedocs.io/en/latest/install.html) for more detailed instruction.
-
-```shell
-conda create -n open-mmlab python=3.8 pytorch=1.10 cudatoolkit=11.3 torchvision -c pytorch -y
-conda activate open-mmlab
-pip3 install openmim
-mim install mmcv-full
-mim install mmdet
-git clone https://github.com/open-mmlab/mmocr.git
-cd mmocr
-pip3 install -e .
+mv /path/to/shuffle_labels.txt .
+mv /path/to/label.txt .
 ```
 
-## Get Started
+## 准备测试数据集
 
-Please see [Getting Started](https://mmocr.readthedocs.io/en/latest/getting_started.html) for the basic usage of MMOCR.
+- 第一步：参考源码实现，下载 `IIIT5K-Word_V3.0.tar.gz`
+- 第二步：参考源码实现，下载 `train_label.txt`和`test_label.txt`
+- 第三步：
 
-## [Model Zoo](https://mmocr.readthedocs.io/en/latest/modelzoo.html)
+```bash
+cd /${模型文件夹名称}/data/mixture
 
-Supported algorithms:
+mkdir IIIT5K && cd IIIT5K
 
-<details open>
-<summary>Text Detection</summary>
+mv /path/to/IIIT5K-Word_V3.0.tar.gz .
 
-- [x] [DBNet](configs/textdet/dbnet/README.md) (AAAI'2020) / [DBNet++](configs/textdet/dbnetpp/README.md) (TPAMI'2022)
-- [x] [Mask R-CNN](configs/textdet/maskrcnn/README.md) (ICCV'2017)
-- [x] [PANet](configs/textdet/panet/README.md) (ICCV'2019)
-- [x] [PSENet](configs/textdet/psenet/README.md) (CVPR'2019)
-- [x] [TextSnake](configs/textdet/textsnake/README.md) (ECCV'2018)
-- [x] [DRRG](configs/textdet/drrg/README.md) (CVPR'2020)
-- [x] [FCENet](configs/textdet/fcenet/README.md) (CVPR'2021)
+tar -xzf IIIT5K-Word_V3.0.tar.gz
 
-</details>
-
-<details open>
-<summary>Text Recognition</summary>
-
-- [x] [ABINet](configs/textrecog/abinet/README.md) (CVPR'2021)
-- [x] [CRNN](configs/textrecog/crnn/README.md) (TPAMI'2016)
-- [x] [MASTER](configs/textrecog/master/README.md) (PR'2021)
-- [x] [NRTR](configs/textrecog/nrtr/README.md) (ICDAR'2019)
-- [x] [RobustScanner](configs/textrecog/robust_scanner/README.md) (ECCV'2020)
-- [x] [SAR](configs/textrecog/sar/README.md) (AAAI'2019)
-- [x] [SATRN](configs/textrecog/satrn/README.md) (CVPR'2020 Workshop on Text and Documents in the Deep Learning Era)
-- [x] [SegOCR](configs/textrecog/seg/README.md) (Manuscript'2021)
-
-</details>
-
-<details open>
-<summary>Key Information Extraction</summary>
-
-- [x] [SDMG-R](configs/kie/sdmgr/README.md) (ArXiv'2021)
-
-</details>
-
-<details open>
-<summary>Named Entity Recognition</summary>
-
-- [x] [Bert-Softmax](configs/ner/bert_softmax/README.md) (NAACL'2019)
-
-</details>
-
-Please refer to [model_zoo](https://mmocr.readthedocs.io/en/latest/modelzoo.html) for more details.
-
-## Contributing
-
-We appreciate all contributions to improve MMOCR. Please refer to [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the contributing guidelines.
-
-## Acknowledgement
-
-MMOCR is an open-source project that is contributed by researchers and engineers from various colleges and companies. We appreciate all the contributors who implement their methods or add new features, as well as users who give valuable feedbacks.
-We hope the toolbox and benchmark could serve the growing research community by providing a flexible toolkit to reimplement existing methods and develop their own new OCR methods.
-
-## Citation
-
-If you find this project useful in your research, please consider cite:
-
-```bibtex
-@article{mmocr2021,
-    title={MMOCR:  A Comprehensive Toolbox for Text Detection, Recognition and Understanding},
-    author={Kuang, Zhanghui and Sun, Hongbin and Li, Zhizhong and Yue, Xiaoyu and Lin, Tsui Hin and Chen, Jianyong and Wei, Huaqiang and Zhu, Yiqin and Gao, Tong and Zhang, Wenwei and Chen, Kai and Zhang, Wayne and Lin, Dahua},
-    journal= {arXiv preprint arXiv:2108.06543},
-    year={2021}
-}
+mv /path/to/train_label.txt .
+mv /path/to/test_label.txt .
 ```
+目录结构参考如下所示：
 
-## License
+   ```
+   mixture
+   |——————IIIT5K
+   |        └—————— lexicon.txt
+   |        └—————— test/
+   |        └—————— test_label.txt
+   |        └—————— train/
+   |        └—————— train_label.txt
+   ```
 
-This project is released under the [Apache 2.0 license](LICENSE).
+## 数据预处理
 
-## Projects in OpenMMLab
+```
+cd /${模型文件夹名称}
+python tools/data/utils/lmdb_converter.py data/mixture/Syn90k/label.txt data/mixture/Syn90k/label.lmdb --label-only
+```
+执行以上代码，将会在data目录生成Syn90k文件夹，目录结构参考如下所示：
 
-- [MMCV](https://github.com/open-mmlab/mmcv): OpenMMLab foundational library for computer vision.
-- [MIM](https://github.com/open-mmlab/mim): MIM installs OpenMMLab packages.
-- [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.
-- [MMDetection](https://github.com/open-mmlab/mmdetection): OpenMMLab detection toolbox and benchmark.
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d): OpenMMLab's next-generation platform for general 3D object detection.
-- [MMRotate](https://github.com/open-mmlab/mmrotate): OpenMMLab rotated object detection toolbox and benchmark.
-- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation): OpenMMLab semantic segmentation toolbox and benchmark.
-- [MMOCR](https://github.com/open-mmlab/mmocr): OpenMMLab text detection, recognition, and understanding toolbox.
-- [MMYOLO](https://github.com/open-mmlab/mmyolo): OpenMMLab YOLO series toolbox and benchmark.
-- [MMPose](https://github.com/open-mmlab/mmpose): OpenMMLab pose estimation toolbox and benchmark.
-- [MMHuman3D](https://github.com/open-mmlab/mmhuman3d): OpenMMLab 3D human parametric model toolbox and benchmark.
-- [MMSelfSup](https://github.com/open-mmlab/mmselfsup): OpenMMLab self-supervised learning toolbox and benchmark.
-- [MMRazor](https://github.com/open-mmlab/mmrazor): OpenMMLab model compression toolbox and benchmark.
-- [MMFewShot](https://github.com/open-mmlab/mmfewshot): OpenMMLab fewshot learning toolbox and benchmark.
-- [MMAction2](https://github.com/open-mmlab/mmaction2): OpenMMLab's next-generation action understanding toolbox and benchmark.
-- [MMTracking](https://github.com/open-mmlab/mmtracking): OpenMMLab video perception toolbox and benchmark.
-- [MMFlow](https://github.com/open-mmlab/mmflow): OpenMMLab optical flow toolbox and benchmark.
-- [MMEditing](https://github.com/open-mmlab/mmediting): OpenMMLab image and video editing toolbox.
-- [MMGeneration](https://github.com/open-mmlab/mmgeneration): OpenMMLab image and video generative models toolbox.
-- [MMDeploy](https://github.com/open-mmlab/mmdeploy): OpenMMLab model deployment framework.
+   ```
+   mixture
+   |——————Syn90k
+   |        └—————— label.lmdb
+   |        └—————— label.txt
+   |        └—————— mnt/
+   |        └—————— shuffle_labels.txt
+   ```
 
-## Welcome to the OpenMMLab community
+## 准备预训练模型
+- 下载预训练模型abinet_pretrain-1bed979b.pth,路径为/path/to/abinet_pretrain-1bed979b.pth。
 
-Scan the QR code below to follow the OpenMMLab team's [**Zhihu Official Account**](https://www.zhihu.com/people/openmmlab) and join the OpenMMLab team's [**QQ Group**](https://r.vansin.top/?r=join-qq), or join the official communication WeChat group by adding the WeChat, or join our [**Slack**](https://join.slack.com/t/mmocrworkspace/shared_invite/zt-1ifqhfla8-yKnLO_aKhVA2h71OrK8GZw)
+# 开始训练
 
-<div align="center">
-<img src="https://raw.githubusercontent.com/open-mmlab/mmcv/master/docs/en/_static/zhihu_qrcode.jpg" height="400" />  <img src="https://cdn.vansin.top/OpenMMLab/q3.png" height="400" />  <img src="https://raw.githubusercontent.com/open-mmlab/mmcv/master/docs/en/_static/wechat_qrcode.jpg" height="400" />
-</div>
+## 训练模型
 
-We will provide you with the OpenMMLab community
+1. 进入解压后的源码包根目录。
 
-- 📢 share the latest core technologies of AI frameworks
-- 💻 Explaining PyTorch common module source Code
-- 📰 News related to the release of OpenMMLab
-- 🚀 Introduction of cutting-edge algorithms developed by OpenMMLab
-  🏃 Get the more efficient answer and feedback
-- 🔥 Provide a platform for communication with developers from all walks of life
+   ```bash
+   cd /${模型文件夹名称} 
+   ```
 
-The OpenMMLab community looks forward to your participation! 👬
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练、单机8卡训练。
+
+   + 单机单卡训练
+
+     启动单卡训练：
+
+     ```bash
+     bash test/train_full_1p.sh --load_from=/path/to/abinet_pretrain-1bed979b.pth    #单卡训练
+     
+     bash test/train_performance_1p.sh  #单卡性能测试
+     ```
+   
+   + 单机8卡训练
+   
+     启动8卡训练：
+   
+     ```bash
+     bash test/train_full_8p.sh --load_from=/path/to/abinet_pretrain-1bed979b.pth   #多卡训练
+     
+     bash test/train_performance_8p.sh   #多卡性能测试
+     ```
+     
+     
+   + 脚本中调用的python命令参数说明如下：
+     
+      ```bash
+      --work-dir                                     // 训练结果和checkpoint保存路径
+      --load-from                                    // 加载的预训练参数路径
+      --resume-from                                  // 用于恢复训练的上一次训练保存的参数路径
+      --seed                                         // 随机种子
+     ```
+     训练完成后，权重文件保存在work-dir路径下，并输出模型训练精度和性能信息。
+     
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME     | 0_word_acc_ignore_case |   FPS    | AMP_Type | Epochs | Batch Size |
+| -------- |:---------:|:--------:| :------: | ------ | ---------- | 
+| 1p-NPU   |  -   | 224.56  |    O1    | -      | 192         |
+| 1p-竞品V |  -   |  248.614 |    O1    | -      | 192         |
+| 8p-NPU   |  0.7603   | 1525.929 |    O1    | 6     | 1536         |
+| 8p-竞品V |  0.7667  | 1,712.37  |    O1    | 6      | 1536         |
+
+
+
+# 版本说明
+
+## 变更
+
+2023.03.17：首次发布。
+## FAQ
+无。

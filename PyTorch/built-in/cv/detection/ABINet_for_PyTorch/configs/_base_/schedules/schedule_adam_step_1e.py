@@ -13,14 +13,10 @@
 # limitations under the License.
 #
 # optimizer
-optimizer = dict(type='Adam', lr=4e-4)
+optimizer = dict(type='Adam', lr=1e-3)
 optimizer_config = dict(grad_clip=None)
 # learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=100,
-    warmup_ratio=1.0 / 3,
-    step=[11])
-runner = dict(type='EpochBasedRunner', max_epochs=12)
+lr_config = dict(policy='step', step=[3, 4])
+# running settings
+runner = dict(type='EpochBasedRunner', max_epochs=1)
 checkpoint_config = dict(interval=1)

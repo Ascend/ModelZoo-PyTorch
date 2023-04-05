@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
 import operator
@@ -109,8 +122,8 @@ def stitch_boxes_into_lines(boxes, max_x_dist=10, min_y_overlap_ratio=0.8):
             merged_box = {}
             merged_box['text'] = ' '.join(
                 [x_sorted_boxes[idx]['text'] for idx in box_group])
-            x_min, y_min = float('inf'), float('inf')
-            x_max, y_max = float('-inf'), float('-inf')
+            x_min, y_min = float('1000'), float('1000')
+            x_max, y_max = float('-1000'), float('-1000')
             for idx in box_group:
                 x_max = max(np.max(x_sorted_boxes[idx]['box'][::2]), x_max)
                 x_min = min(np.min(x_sorted_boxes[idx]['box'][::2]), x_min)
