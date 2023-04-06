@@ -91,7 +91,7 @@ taskset -c 0-95 python3.7 -m torch.distributed.launch --nproc_per_node=1 --maste
     --launcher pytorch \
     --device npu \
     --seed 1 \
-    --options data.workers_per_gpu=${workers} \
+    --options data.workers_per_gpu=${workers} evaluation.interval=10000 \
     --deterministic > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -109,7 +109,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS: " '{print $2}' | awk -F "," '{print $1}' | awk 'END {print}'`
+FPS=`grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 7 | head -n 6 | awk -F "FPS: " '{print $2}' | awk -F "," '{print $1}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

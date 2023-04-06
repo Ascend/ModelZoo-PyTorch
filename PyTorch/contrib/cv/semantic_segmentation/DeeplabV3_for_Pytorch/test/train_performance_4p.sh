@@ -89,7 +89,7 @@ do
             --seed 1 \
             --deterministic \
             --device npu \
-            --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} \
+            --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} evaluation.interval=10000 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
@@ -97,7 +97,7 @@ do
             --seed 1 \
             --deterministic \
             --device npu \
-            --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} \
+            --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} evaluation.interval=10000 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
@@ -116,7 +116,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS: " '{print $2}' | awk -F "," '{print $1}' | awk 'END {print}'`
+FPS=`grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 7 | head -n 6 | awk -F "FPS: " '{print $2}' | awk -F "," '{print $1}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
