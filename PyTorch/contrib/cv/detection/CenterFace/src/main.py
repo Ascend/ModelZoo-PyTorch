@@ -71,7 +71,7 @@ def main(opt, qtepoch=[0,]):
       model.load_state_dict(checkpoint['state_dict'], strict=False)
 
   optimizer = torch.optim.Adam(model.parameters(), opt.lr)
-  if not opt.use_fp32 or opt.distributed_launch:
+  if not opt.use_fp32:
     model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0)
   start_epoch = 0
   if opt.load_model != '':
