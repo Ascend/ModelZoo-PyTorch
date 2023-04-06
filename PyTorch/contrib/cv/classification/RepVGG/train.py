@@ -402,6 +402,11 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler, 
     # switch to train mode
     model.train()
 
+    mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).view(1, 3, 1, 1)
+    std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1)
+    device = torch.device('npu')
+    mean = mean.to(device, non_blocking=True)
+    std = std.to(device, non_blocking=True)
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
@@ -411,7 +416,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler, 
             target = target.to(torch.int32)
             
         if 'npu' in args.device:
-            images = images.npu(non_blocking=True)
+            images = images.npu(non_blocking=True).permute(0, 3, 1, 2).to(torch.float).sub(mean).div(std)
             target = target.npu(non_blocking=True)
             
         # compute output

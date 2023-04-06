@@ -35,6 +35,7 @@ import torchvision.datasets as datasets
 import os
 import torchvision.transforms as transforms
 import PIL
+import numpy as np
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -107,7 +108,6 @@ def load_checkpoint(model, ckpt_path):
 
 def read_hdf5(file_path):
     import h5py
-    import numpy as np
     result = {}
     with h5py.File(file_path, 'r') as f:
         for k in f.keys():
@@ -186,6 +186,19 @@ def get_ImageNet_val_dataset(args, trans):
         val_dataset = datasets.ImageFolder(traindir, trans)
     return val_dataset
 
+def fast_collate(batch):
+    imgs = [img[0] for img in batch]
+    targets = torch.tensor([target[1] for target in batch], dtype=torch.int64)
+    w = imgs[0].size[0]
+    h = imgs[0].size[1]
+    tensor = torch.zeros((len(imgs), h, w, 3), dtype=torch.uint8)
+    for i, img in enumerate(imgs):
+        nump_array = np.asarray(img, dtype=np.uint8)
+        if nump_array.ndim < 3:
+            nump_array = np.expand_dims(nump_array, axis=-1)
+        tensor[i] += torch.from_numpy(nump_array)
+
+    return tensor, targets
 
 def get_default_train_trans(args):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -193,9 +206,7 @@ def get_default_train_trans(args):
     if (not hasattr(args, 'resolution')) or args.resolution == 224:
         trans = transforms.Compose([
             transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize])
+            transforms.RandomHorizontalFlip()])
     else:
         raise ValueError('Not yet implemented.')
     return trans
@@ -229,7 +240,8 @@ def get_default_ImageNet_train_sampler_loader(args):
         train_sampler = None
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+        collate_fn=fast_collate, num_workers=args.workers,
+        pin_memory=True, sampler=train_sampler)
     return train_sampler, train_loader
 
 
