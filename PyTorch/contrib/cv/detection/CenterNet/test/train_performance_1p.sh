@@ -12,7 +12,6 @@ Network="CenterNet"
 
 #训练batch_size,,需要模型审视修改
 batch_size=32
-
 # 指定训练所使用的npu device卡id
 device_id=0
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
@@ -78,9 +77,9 @@ ln -nsf ${data_path} $cur_path/data
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 # cd $cur_path/src
 # {
-# python main_npu_1p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --dataset pascal --num_epochs 5 
+# python main_npu_1p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --dataset pascal --num_epochs 5
 # } > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-    
+
 cd $cur_path/src
 
 RANK_ID_START=0

@@ -33,7 +33,7 @@ class opts(object):
     self.parser.add_argument('--use_fp32', action='store_true')
     self.parser.add_argument('--debug', type=int, default=0,
                              help='level of visualization.'
-                                  '-1: return the result image' 
+                                  '-1: return the result image'
                                   '1: only show the final detection results'
                                   '2: show the network output features'
                                   '3: use matplot to display' # useful when lunching training with ipython notebook
@@ -47,7 +47,7 @@ class opts(object):
                              help='resume an experiment. '
                                   'Reloaded the optimizer parameter and '
                                   'set load_model to model_last.pth '
-                                  'in the exp dir if load_model is empty.') 
+                                  'in the exp dir if load_model is empty.')
     self.parser.add_argument('--train_json', default=None, help='the train file labels')
     self.parser.add_argument('--val_json', default=None, help='the test file labels')
     self.parser.add_argument('--output_video', type=str, default='../output/res_3.mp4')
@@ -59,28 +59,28 @@ class opts(object):
                              help='dataloader threads. 0 for single-thread.')
     self.parser.add_argument('--not_cuda_benchmark', action='store_true',
                              help='disable when the input size is not fixed.')
-    self.parser.add_argument('--seed', type=int, default=317, 
+    self.parser.add_argument('--seed', type=int, default=317,
                              help='random seed') # from CornerNet
-    self.parser.add_argument('--local_rank', type=int, default=0, 
-                             help='the current process id') 
-    self.parser.add_argument('--port', type=str, default='44444', 
-                             help='port') 
-    self.parser.add_argument('--world_size', type=int, default=-1, 
-                             help='world_size') 
+    self.parser.add_argument('--local_rank', type=int, default=0,
+                             help='the current process id')
+    self.parser.add_argument('--port', type=str, default='44444',
+                             help='port')
+    self.parser.add_argument('--world_size', type=int, default=-1,
+                             help='world_size')
     # log
-    self.parser.add_argument('--print_iter', type=int, default=0, 
+    self.parser.add_argument('--print_iter', type=int, default=0,
                              help='disable progress bar and print to screen.')
     self.parser.add_argument('--hide_data_time', action='store_true',
                              help='not display time during training.')
     self.parser.add_argument('--save_all', action='store_true', default=True,
                              help='save model to disk every 5 epochs.')
-    self.parser.add_argument('--metric', default='loss', 
+    self.parser.add_argument('--metric', default='loss',
                              help='main metric to save best model')
     self.parser.add_argument('--vis_thresh', type=float, default=0.4,
                              help='visualization threshold.')
-    self.parser.add_argument('--debugger_theme', default='white', 
+    self.parser.add_argument('--debugger_theme', default='white',
                              choices=['white', 'black'])
-    
+
     # model
     self.parser.add_argument('--arch', default='mobilev2_10',
                              help='model architecture. Currently tested'
@@ -95,14 +95,14 @@ class opts(object):
                              help='output stride. Currently only supports 4.')
 
     # input
-    self.parser.add_argument('--input_res', type=int, default=-1, 
+    self.parser.add_argument('--input_res', type=int, default=-1,
                              help='input height and width. -1 for default from '
                              'dataset. Will be overriden by input_h | input_w')
-    self.parser.add_argument('--input_h', type=int, default=-1, 
+    self.parser.add_argument('--input_h', type=int, default=-1,
                              help='input height. -1 for default from dataset.')
-    self.parser.add_argument('--input_w', type=int, default=-1, 
+    self.parser.add_argument('--input_w', type=int, default=-1,
                              help='input width. -1 for default from dataset.')
-    
+
     # train
     self.parser.add_argument('--device_list', type=str, default='0',
                              help='device list')
@@ -143,7 +143,7 @@ class opts(object):
     self.parser.add_argument('--nms', action='store_true',
                              help='run nms in testing.')
     self.parser.add_argument('--K', type=int, default=200,
-                             help='max number of output objects.') 
+                             help='max number of output objects.')
     self.parser.add_argument('--not_prefetch_test', action='store_true',
                              help='not use parallal data pre-processing.')
     self.parser.add_argument('--fix_res', action='store_true',
@@ -172,7 +172,7 @@ class opts(object):
                              help='not use the color augmenation '
                                   'from CornerNet')
     # multi_pose
-    self.parser.add_argument('--aug_rot', type=float, default=0, 
+    self.parser.add_argument('--aug_rot', type=float, default=0,
                              help='probability of applying '
                                   'rotation augmentation.')
     # ddd
@@ -211,7 +211,7 @@ class opts(object):
     self.parser.add_argument('--rot_weight', type=float, default=1,
                              help='loss weight for orientation.')
     self.parser.add_argument('--peak_thresh', type=float, default=0.2)
-    
+
     # task
     # ctdet
     self.parser.add_argument('--norm_wh', action='store_true',
@@ -244,23 +244,23 @@ class opts(object):
                                   'human joint heatmaps.')
     self.parser.add_argument('--not_reg_bbox', action='store_true',
                              help='not regression bounding box size.')
-    
+
     # ground truth validation
-    self.parser.add_argument('--eval_oracle_hm', action='store_true', 
+    self.parser.add_argument('--eval_oracle_hm', action='store_true',
                              help='use ground center heatmap.')
-    self.parser.add_argument('--eval_oracle_wh', action='store_true', 
+    self.parser.add_argument('--eval_oracle_wh', action='store_true',
                              help='use ground truth bounding box size.')
-    self.parser.add_argument('--eval_oracle_offset', action='store_true', 
+    self.parser.add_argument('--eval_oracle_offset', action='store_true',
                              help='use ground truth local heatmap offset.')
-    self.parser.add_argument('--eval_oracle_kps', action='store_true', 
+    self.parser.add_argument('--eval_oracle_kps', action='store_true',
                              help='use ground truth human pose offset.')
-    self.parser.add_argument('--eval_oracle_hmhp', action='store_true', 
+    self.parser.add_argument('--eval_oracle_hmhp', action='store_true',
                              help='use ground truth human joint heatmaps.')
-    self.parser.add_argument('--eval_oracle_hp_offset', action='store_true', 
+    self.parser.add_argument('--eval_oracle_hp_offset', action='store_true',
                              help='use ground truth human joint local offset.')
-    self.parser.add_argument('--eval_oracle_dep', action='store_true', 
+    self.parser.add_argument('--eval_oracle_dep', action='store_true',
                              help='use ground truth depth.')
-    self.parser.add_argument('--distributed_launch', default=False, action='store_true', 
+    self.parser.add_argument('--distributed_launch', default=False, action='store_true',
                              help='This flag enables training with DDP.')
 
   def parse(self, args=''):
@@ -268,7 +268,6 @@ class opts(object):
       opt = self.parser.parse_args()
     else:
       opt = self.parser.parse_args(args)
-
     opt.gpus_str = opt.gpus
     opt.gpus = [int(gpu) for gpu in opt.gpus.split(',')]
     opt.gpus = [i for i in range(len(opt.gpus))] if opt.gpus[0] >=0 else [-1]
@@ -313,7 +312,7 @@ class opts(object):
     opt.save_dir = os.path.join(opt.exp_dir, opt.arch)
     opt.debug_dir = os.path.join(opt.save_dir, 'debug')
     print('The output will be saved to ', opt.save_dir)
-    
+
     if opt.resume and opt.load_model == '':
       model_path = opt.save_dir[:-4] if opt.save_dir.endswith('TEST') \
                   else opt.save_dir
@@ -334,11 +333,11 @@ class opts(object):
     opt.output_w = opt.input_w // opt.down_ratio
     opt.input_res = max(opt.input_h, opt.input_w)
     opt.output_res = max(opt.output_h, opt.output_w)
-    
+
     if opt.task == 'exdet':
       # assert opt.dataset in ['coco']
       num_hm = 1 if opt.agnostic_ex else opt.num_classes
-      opt.heads = {'hm_t': num_hm, 'hm_l': num_hm, 
+      opt.heads = {'hm_t': num_hm, 'hm_l': num_hm,
                    'hm_b': num_hm, 'hm_r': num_hm,
                    'hm_c': opt.num_classes}
       if opt.reg_offset:
@@ -357,16 +356,7 @@ class opts(object):
                    'wh': 2 if not opt.cat_spec_wh else 2 * opt.num_classes}
       if opt.reg_offset:
         opt.heads.update({'reg': 2})
-    # elif opt.task == 'multi_pose':
-    #   # assert opt.dataset in ['coco_hp']
-    #   opt.flip_idx = dataset.flip_idx
-    #   opt.heads = {'hm': opt.num_classes, 'wh': 2, 'hps': dataset.num_joints*2}
-    #   if opt.reg_offset:
-    #     opt.heads.update({'reg': 2})
-    #   if opt.hm_hp:
-    #     opt.heads.update({'hm_hp': dataset.num_joints})
-    #   if opt.reg_hp_offset:
-    #     opt.heads.update({'hp_offset': 2})
+
     elif opt.task == 'multi_pose':
       opt.flip_idx = dataset.flip_idx
       opt.heads = {'hm': opt.num_classes, 'wh': 2, 'hm_offset': 2, 'landmarks': dataset.num_joints * 2}
@@ -381,18 +371,15 @@ class opts(object):
       'ctdet': {'default_resolution': [512, 512], 'num_classes': 1,
                 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225],
                 'dataset': 'pig'},
-    # 'ctdet': {'default_resolution': [512, 512], 'num_classes': 1,
-    #           'mean': [0.408, 0.447, 0.470], 'std': [0.289, 0.274, 0.278],
-    #           'dataset': 'coco'},
-      'exdet': {'default_resolution': [512, 512], 'num_classes': 80, 
+      'exdet': {'default_resolution': [512, 512], 'num_classes': 80,
                 'mean': [0.408, 0.447, 0.470], 'std': [0.289, 0.274, 0.278],
                 'dataset': 'coco'},
       'multi_pose': {
-        'default_resolution': [512, 512], 'num_classes': 1, 
+        'default_resolution': [512, 512], 'num_classes': 1,
         'mean': [0.408, 0.447, 0.470], 'std': [0.289, 0.274, 0.278],
         'dataset': 'facehp', 'num_joints': 5,
         'flip_idx': [[0, 1], [3, 4]]},
-      'ddd': {'default_resolution': [384, 1280], 'num_classes': 3, 
+      'ddd': {'default_resolution': [384, 1280], 'num_classes': 3,
                 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225],
                 'dataset': 'kitti'},
     }

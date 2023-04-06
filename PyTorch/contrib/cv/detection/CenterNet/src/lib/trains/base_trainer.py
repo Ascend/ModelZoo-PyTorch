@@ -34,6 +34,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import time
 import torch
 import torch.npu
@@ -41,6 +42,7 @@ from progress.bar import Bar
 from models.data_parallel import DataParallel
 from utils.utils import AverageMeter
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torch_npu.utils.profiler import Profile
 from apex import amp
 
 class NoProling(object):
@@ -69,12 +71,7 @@ class BaseTrainer(object):
     self.model_with_loss = ModelWithLoss(model, self.loss)
 
   def set_device(self, gpus, chunk_sizes, device):
-    # if len(gpus) > 1:
-    #   self.model_with_loss = DataParallel(
-    #     self.model_with_loss, device_ids=gpus,
-    #     chunk_sizes=chunk_sizes).to(device)
     if len(gpus)>1:
-        # self.model_with_loss = DDP(self.model_with_loss,device_ids=[device],broadcast_buffers=False,find_unused_parameters=True)  #coco
         self.model_with_loss = DDP(self.model_with_loss,device_ids=[device],broadcast_buffers=False)
     else:
       self.model_with_loss = self.model_with_loss.to(device)
@@ -92,7 +89,7 @@ class BaseTrainer(object):
       if len(self.opt.device_list) > 1:
         model_with_loss = self.model_with_loss.module
       model_with_loss.eval()
-      torch.npu.empty_cache() ###npu change
+      torch.npu.empty_cache()  # npu change
 
     opt = self.opt
     results = {}
@@ -103,61 +100,29 @@ class BaseTrainer(object):
     end = time.time()
     fps = 0
     avg_time = 0
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)), profile_type=os.getenv("PROFILE_TYPE"))
     for iter_id, batch in enumerate(data_loader):
       if iter_id >= num_iters:
         break
-      collect_turn = iter_id > opt.start_step and  iter_id <= opt.num_iters
-      if(opt.profiling == 'GE' and collect_turn):
-          manage = torch.npu.profile('../GE_prof')
-      elif(opt.profiling == 'CANN' and collect_turn):
-          manage = torch.npu.profile('../CANN_prof')
-      else:
-          if opt.profiling in ['CANN', 'GE'] and iter_id > opt.num_iters:
-              break
-          manage = NoProling()
-      with manage:
-        # step fps
-        per_step_time_start=time.time()
-        ###FPS
-        if iter_id == 5:
-          start_time = time.time()
-        ###FPS
-        data_time.update(time.time() - end)
-
-          ###prof
-        if iter_id == 10 and opt.debug_prof:
-          with torch.autograd.profiler.profile(record_shapes=True, use_npu=True) as prof:
-            for k in batch:
-              if k != 'meta':
-                batch[k] = batch[k].to(device=opt.device, non_blocking=True)
-            output, loss, loss_stats = model_with_loss(batch)
-            loss = loss.mean()
-            if phase == 'train':
-              self.optimizer.zero_grad()
-            ###amp
-              with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
-            #loss.backward()
-            ###amp
-              self.optimizer.step()
-          print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-          prof.export_chrome_trace(opt.debug_dir+"/output.prof") # "output.prof"为输出文件地址
-          ###prof
-        else:
-          for k in batch:
-            if k != 'meta':
-              batch[k] = batch[k].to(device=opt.device, non_blocking=True)
-          output, loss, loss_stats = model_with_loss(batch)
-          loss = loss.mean()
-          if phase == 'train':
-            self.optimizer.zero_grad()
-            ###amp
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
-            #loss.backward()
-            ###amp
-            self.optimizer.step()
-
+      # step fps
+      per_step_time_start=time.time()
+      ###FPS
+      if iter_id == 5:
+        start_time = time.time()
+      # FPS
+      data_time.update(time.time() - end)
+      profiler.start()
+      for k in batch:
+        if k != 'meta':
+          batch[k] = batch[k].to(device=opt.device, non_blocking=True)
+      output, loss, loss_stats = model_with_loss(batch)
+      loss = loss.mean()
+      if phase == 'train':
+        self.optimizer.zero_grad()
+        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
+        self.optimizer.step()
+        profiler.end()
         batch_time.update(time.time() - end)
         end = time.time()
 
@@ -196,7 +161,8 @@ class BaseTrainer(object):
           else:
             fps =  opt.batch_size * opt.world_size/avg_time
           print('')
-          print('epoch = {}, all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(epoch ,all_time,avg_time,opt.batch_size,fps))
+          print('epoch = {}, all_time = {} ,avg_time = {}, batch_size = {}, FPS = {}'.format(
+              epoch ,all_time,avg_time,opt.batch_size,fps))
           print('')
         ###FPS
 

@@ -7,7 +7,6 @@ export RANK_SIZE=1
 
 # 指定训练所使用的npu device卡id
 device_id=0
-
 #参数校验，不需要修改
 for para in $*
 do
