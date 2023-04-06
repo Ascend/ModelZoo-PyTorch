@@ -62,7 +62,7 @@ Shufflenetv2是Shufflenet的升级版本，作为轻量级网络，通过遵循�
   | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.12.1  | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
@@ -118,7 +118,7 @@ Shufflenetv2是Shufflenet的升级版本，作为轻量级网络，通过遵循�
 
    1. 获取权重文件。
 
-       从开源仓获取权重文件[shufflenetv2_x0.5-f707e7126e.pth](https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth)
+       从开源仓获取权重文件[shufflenetv2_x1-5666bf0f80.pth](https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth)
 
    2. 导出onnx文件。
 
