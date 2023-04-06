@@ -158,7 +158,8 @@ def main():
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
     criterion_smooth = CrossEntropyLabelSmooth(1000, 0.1)
-    model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, combine_grad=True)
+    # 动态loss scale无法触发精度溢出检测，原因是1980B精度溢出检测机制没有适配，目前先改成静态loss scale规避
+    model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, combine_grad=True,loss_scale=16) 
     loss_function = criterion_smooth.npu()
     if args.device_num > 1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], broadcast_buffers=False)
