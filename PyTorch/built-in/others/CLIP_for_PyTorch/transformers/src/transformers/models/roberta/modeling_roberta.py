@@ -192,29 +192,6 @@ class RobertaSelfAttention(nn.Module):
         new_x_shape = (self.bs, x.size()[0] // self.bs) + (self.num_attention_heads, self.attention_head_size)
         return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
 
-    def fuse_add_softmax_dropout(self, attn_mask, attn_scores, attention_head_size, p):
-        high_performance_support_hw = [128, 256, 384, 512]
-        n, c, h, w = attn_scores.size()
-        if h in high_performance_support_hw and (n * c) % 32 == 0:
-            if self.training:
-                drop_p = p
-            else:
-                drop_p = 0
-            _, _, attn_probs = torch.npu_dropout_with_add_softmax(attn_scores, attn_mask,
-                                                                  1 / math.sqrt(attention_head_size), drop_p, -1)
-        else:
-            # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
-            attn_scores = torch.add(attn_mask, attn_scores, alpha=(1 / math.sqrt(attention_head_size)))
-
-            # Normalize the attention scores to probabilities.chrome
-            attn_probs = nn.functional.softmax(attn_scores, dim=-1)
-
-            # This is actually dropping out entire tokens to attend to, which might
-            # seem a bit unusual, but is taken from the original Transformer paper.
-            attn_probs = self.dropout(attn_probs)
-
-        return attn_probs
-
     def forward(
         self,
         hidden_states,
@@ -282,19 +259,14 @@ class RobertaSelfAttention(nn.Module):
                 relative_position_scores_key = torch.einsum("bhrd,lrd->bhlr", key_layer, positional_embedding)
                 attention_scores = attention_scores + relative_position_scores_query + relative_position_scores_key
 
-        if attention_mask is not None:
-            # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
-            attention_probs = self.fuse_add_softmax_dropout(attention_mask, attention_scores, self.attention_head_size,
-                                                            self.attention_probs_dropout_prob)
-        else:
-            attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+        attention_scores = torch.add(attention_mask, attention_scores, alpha=(1 / math.sqrt(self.attention_head_size)))
 
-            # Normalize the attention scores to probabilities.
-            attention_probs = nn.functional.softmax(attention_scores, dim=-1)
+        # Normalize the attention scores to probabilities.
+        attention_probs = nn.functional.softmax(attention_scores, dim=-1)
 
-            # This is actually dropping out entire tokens to attend to, which might
-            # seem a bit unusual, but is taken from the original Transformer paper.
-            attention_probs = self.dropout(attention_probs)
+        # This is actually dropping out entire tokens to attend to, which might
+        # seem a bit unusual, but is taken from the original Transformer paper.
+        attention_probs = self.dropout(attention_probs)
 
         # Mask heads if we want to
         if head_mask is not None:
@@ -308,6 +280,7 @@ class RobertaSelfAttention(nn.Module):
         outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
 
         if self.is_decoder:
+
             outputs = outputs + (past_key_value,)
         return outputs
 
