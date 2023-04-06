@@ -2736,11 +2736,11 @@ CV-segmentation
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/3D_HRNet"> 3D_HRNet </a>
         </td>
         <td>Cityscapes</td>
-	<td>80.83%</td>
+	<td></td>
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
+        <td>80.83%</td>
         <td></td>
         <td></td>
 	<td>9(bs1)</td>
