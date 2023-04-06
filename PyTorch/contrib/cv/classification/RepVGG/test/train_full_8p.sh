@@ -89,7 +89,7 @@ nohup taskset -c $PID_START-$PID_END python3.7 -u train.py \
 --custom-weight-decay \
 --amp \
 --opt-level "O2" \
---loss-scale-value "dynamic" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+--loss-scale-value "128" > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 ##################获取训练数据################
