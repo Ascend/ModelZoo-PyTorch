@@ -18,7 +18,7 @@ from .string_util import StringStrip
 __all__ = [
     'Registry', 'build_from_cfg', 'get_root_logger', 'collect_env',
     'is_3dlist', 'is_type_list', 'is_none_or_type', 'equal_len', 'is_2dlist',
-    'valid_boundary', 'lmdb_converter', 'drop_orientation',
+    'valid_boundary', 'drop_orientation',
     'convert_annotations', 'is_not_png', 'list_to_file', 'list_from_file',
     'is_on_same_line', 'stitch_boxes_into_lines', 'StringStrip',
     'revert_sync_batchnorm', 'bezier_to_polygon', 'sort_points',

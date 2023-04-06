@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 import warnings
@@ -7,10 +20,6 @@ import numpy as np
 import torch
 from mmdet.models.builder import DETECTORS
 
-from mmocr.models.textdet.detectors.single_stage_text_detector import \
-    SingleStageTextDetector
-from mmocr.models.textdet.detectors.text_detector_mixin import \
-    TextDetectorMixin
 from mmocr.models.textrecog.recognizer.encode_decode_recognizer import \
     EncodeDecodeRecognizer
 
@@ -32,83 +41,6 @@ def inference_with_session(sess, io_binding, input_name, output_names,
     sess.run_with_iobinding(io_binding)
     pred = io_binding.copy_outputs_to_cpu()
     return pred
-
-
-@DETECTORS.register_module()
-class ONNXRuntimeDetector(TextDetectorMixin, SingleStageTextDetector):
-    """The class for evaluating onnx file of detection."""
-
-    def __init__(self,
-                 onnx_file: str,
-                 cfg: Any,
-                 device_id: int,
-                 show_score: bool = False):
-        if 'type' in cfg.model:
-            cfg.model.pop('type')
-        SingleStageTextDetector.__init__(self, **(cfg.model))
-        TextDetectorMixin.__init__(self, show_score)
-        import onnxruntime as ort
-
-        # get the custom op path
-        ort_custom_op_path = ''
-        try:
-            from mmcv.ops import get_onnxruntime_op_path
-            ort_custom_op_path = get_onnxruntime_op_path()
-        except (ImportError, ModuleNotFoundError):
-            warnings.warn('If input model has custom op from mmcv, \
-                you may have to build mmcv with ONNXRuntime from source.')
-        session_options = ort.SessionOptions()
-        # register custom op for onnxruntime
-        if osp.exists(ort_custom_op_path):
-            session_options.register_custom_ops_library(ort_custom_op_path)
-        sess = ort.InferenceSession(onnx_file, session_options)
-        providers = ['CPUExecutionProvider']
-        options = [{}]
-        is_cuda_available = ort.get_device() == 'GPU'
-        if is_cuda_available:
-            providers.insert(0, 'CUDAExecutionProvider')
-            options.insert(0, {'device_id': device_id})
-
-        sess.set_providers(providers, options)
-
-        self.sess = sess
-        self.device_id = device_id
-        self.io_binding = sess.io_binding()
-        self.output_names = [_.name for _ in sess.get_outputs()]
-        for name in self.output_names:
-            self.io_binding.bind_output(name)
-        self.cfg = cfg
-
-    def forward_train(self, img, img_metas, **kwargs):
-        raise NotImplementedError('This method is not implemented.')
-
-    def aug_test(self, imgs, img_metas, **kwargs):
-        raise NotImplementedError('This method is not implemented.')
-
-    def extract_feat(self, imgs):
-        raise NotImplementedError('This method is not implemented.')
-
-    def simple_test(self,
-                    img: torch.Tensor,
-                    img_metas: Iterable,
-                    rescale: bool = False):
-        onnx_pred = inference_with_session(self.sess, self.io_binding, 'input',
-                                           self.output_names, img)
-        onnx_pred = torch.from_numpy(onnx_pred[0])
-        if len(img_metas) > 1:
-            boundaries = [
-                self.bbox_head.get_boundary(*(onnx_pred[i].unsqueeze(0)),
-                                            [img_metas[i]], rescale)
-                for i in range(len(img_metas))
-            ]
-
-        else:
-            boundaries = [
-                self.bbox_head.get_boundary(*onnx_pred, img_metas, rescale)
-            ]
-
-        return boundaries
-
 
 @DETECTORS.register_module()
 class ONNXRuntimeRecognizer(EncodeDecodeRecognizer):
@@ -199,63 +131,6 @@ class ONNXRuntimeRecognizer(EncodeDecodeRecognizer):
             results.append(dict(text=string, score=score))
 
         return results
-
-
-@DETECTORS.register_module()
-class TensorRTDetector(TextDetectorMixin, SingleStageTextDetector):
-    """The class for evaluating TensorRT file of detection."""
-
-    def __init__(self,
-                 trt_file: str,
-                 cfg: Any,
-                 device_id: int,
-                 show_score: bool = False):
-        if 'type' in cfg.model:
-            cfg.model.pop('type')
-        SingleStageTextDetector.__init__(self, **(cfg.model))
-        TextDetectorMixin.__init__(self, show_score)
-        from mmcv.tensorrt import TRTWrapper, load_tensorrt_plugin
-        try:
-            load_tensorrt_plugin()
-        except (ImportError, ModuleNotFoundError):
-            warnings.warn('If input model has custom op from mmcv, \
-                you may have to build mmcv with TensorRT from source.')
-        model = TRTWrapper(
-            trt_file, input_names=['input'], output_names=['output'])
-
-        self.model = model
-        self.device_id = device_id
-        self.cfg = cfg
-
-    def forward_train(self, img, img_metas, **kwargs):
-        raise NotImplementedError('This method is not implemented.')
-
-    def aug_test(self, imgs, img_metas, **kwargs):
-        raise NotImplementedError('This method is not implemented.')
-
-    def extract_feat(self, imgs):
-        raise NotImplementedError('This method is not implemented.')
-
-    def simple_test(self,
-                    img: torch.Tensor,
-                    img_metas: Iterable,
-                    rescale: bool = False):
-        with torch.cuda.device(self.device_id), torch.no_grad():
-            trt_pred = self.model({'input': img})['output']
-        if len(img_metas) > 1:
-            boundaries = [
-                self.bbox_head.get_boundary(*(trt_pred[i].unsqueeze(0)),
-                                            [img_metas[i]], rescale)
-                for i in range(len(img_metas))
-            ]
-
-        else:
-            boundaries = [
-                self.bbox_head.get_boundary(*trt_pred, img_metas, rescale)
-            ]
-
-        return boundaries
-
 
 @DETECTORS.register_module()
 class TensorRTRecognizer(EncodeDecodeRecognizer):

@@ -14,7 +14,7 @@
 
 _base_ = [
     '../../_base_/default_runtime.py',
-    '../../_base_/schedules/schedule_adam.py',
+    '../../_base_/schedules/schedule_adam_step_1e.py',
     '../../_base_/recog_pipelines/abinet_pipeline.py',
     '../../_base_/recog_models/abinet.py',
     '../../_base_/recog_datasets/MJ_train.py',

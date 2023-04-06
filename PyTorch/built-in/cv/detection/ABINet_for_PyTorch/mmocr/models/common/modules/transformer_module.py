@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import torch
@@ -22,11 +35,10 @@ class ScaledDotProductAttention(nn.Module):
         self.dropout = nn.Dropout(attn_dropout)
 
     def forward(self, q, k, v, mask=None):
-
         attn = torch.matmul(q / self.temperature, k.transpose(2, 3))
 
         if mask is not None:
-            attn = attn.masked_fill(mask == 0, float('-inf'))
+            attn = attn.masked_fill(mask == 0, -1000.)
 
         attn = self.dropout(F.softmax(attn, dim=-1))
         output = torch.matmul(attn, v)
@@ -67,7 +79,7 @@ class MultiHeadAttention(nn.Module):
         self.linear_k = nn.Linear(self.dim_k, self.dim_k, bias=qkv_bias)
         self.linear_v = nn.Linear(self.dim_v, self.dim_v, bias=qkv_bias)
 
-        self.attention = ScaledDotProductAttention(d_k**0.5, dropout)
+        self.attention = ScaledDotProductAttention(d_k ** 0.5, dropout)
 
         self.fc = nn.Linear(self.dim_v, d_model, bias=qkv_bias)
         self.proj_drop = nn.Dropout(dropout)

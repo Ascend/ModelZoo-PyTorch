@@ -1,4 +1,16 @@
-#!/usr/bin/env python
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import copy
@@ -20,6 +32,14 @@ from mmocr.datasets import build_dataset
 from mmocr.models import build_detector
 from mmocr.utils import (collect_env, get_root_logger, is_2dlist,
                          setup_multi_processes)
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
+torch.npu.set_compile_mode(jit_compile=False)
+option = {}
+option["NPU_FUZZY_COMPILE_BLACKLIST"] = "MaskedFill"
+option["MM_BMM_ND_ENABLE"] = 'disable'
+torch.npu.set_option(option)
 
 
 class TrainArg:
@@ -52,19 +72,19 @@ def parse_args(arg_list=None):
         '--gpus',
         type=int,
         help='(Deprecated, please use --gpu-id) number of gpus to use '
-        '(only applicable to non-distributed training).')
+             '(only applicable to non-distributed training).')
     group_gpus.add_argument(
         '--gpu-ids',
         type=int,
         nargs='+',
         help='(Deprecated, please use --gpu-id) ids of gpus to use '
-        '(only applicable to non-distributed training)')
+             '(only applicable to non-distributed training)')
     group_gpus.add_argument(
         '--gpu-id',
         type=int,
         default=0,
         help='id of gpu to use '
-        '(only applicable to non-distributed training)')
+             '(only applicable to non-distributed training)')
     parser.add_argument('--seed', type=int, default=None, help='Random seed.')
     parser.add_argument(
         '--diff-seed',
@@ -79,18 +99,18 @@ def parse_args(arg_list=None):
         nargs='+',
         action=DictAction,
         help='Override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file (deprecate), '
-        'change to --cfg-options instead.')
+             'in xxx=yyy format will be merged into config file (deprecate), '
+             'change to --cfg-options instead.')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
         action=DictAction,
         help='Override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file. If the value to '
-        'be overwritten is a list, it should be of the form of either '
-        'key="[a,b]" or key=a,b .The argument also allows nested list/tuple '
-        'values, e.g. key="[(a,b),(c,d)]". Note that the quotation marks '
-        'are necessary and that no white space is allowed.')
+             'in xxx=yyy format will be merged into config file. If the value to '
+             'be overwritten is a list, it should be of the form of either '
+             'key="[a,b]" or key=a,b .The argument also allows nested list/tuple '
+             'values, e.g. key="[(a,b),(c,d)]". Note that the quotation marks '
+             'are necessary and that no white space is allowed.')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
@@ -114,7 +134,6 @@ def parse_args(arg_list=None):
 
 
 def run_train_cmd(args):
-
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)

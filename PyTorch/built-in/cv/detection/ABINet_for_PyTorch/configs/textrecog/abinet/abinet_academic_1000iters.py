@@ -14,7 +14,7 @@
 
 _base_ = [
     '../../_base_/default_runtime.py',
-    '../../_base_/schedules/schedule_adam.py',
+    '../../_base_/schedules/schedule_adam_step_1000iters.py',
     '../../_base_/recog_pipelines/abinet_pipeline.py',
     '../../_base_/recog_models/abinet.py',
     '../../_base_/recog_datasets/MJ_train.py',
@@ -29,7 +29,7 @@ test_pipeline = {{_base_.test_pipeline}}
 
 data = dict(
     samples_per_gpu=192,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     val_dataloader=dict(samples_per_gpu=1),
     test_dataloader=dict(samples_per_gpu=1),
     train=dict(
@@ -45,4 +45,4 @@ data = dict(
         datasets=test_list,
         pipeline=test_pipeline))
 
-evaluation = dict(interval=1, metric='acc')
+evaluation = dict(interval=10000, metric='acc')
