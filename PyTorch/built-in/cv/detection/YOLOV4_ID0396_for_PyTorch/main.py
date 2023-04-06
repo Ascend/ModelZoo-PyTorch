@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 import warnings
-warnings.filterwarnings("ignore")
 import argparse
 import math
 import os
@@ -21,25 +20,25 @@ import random
 import time
 from pathlib import Path
 
-import numpy as np
+import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.distributed as dist
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.utils.data
-import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
-import yaml
-
-import apex
-from apex import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
+from torch_npu.utils.profiler import Profile
 
+import apex
+from tqdm import tqdm
+from apex import amp
+import numpy as np
 
 import test  # import test.py to get mAP after each epoch
+import yaml
 from models.models import *
 from utils.datasets import create_dataloader
 from utils.general import (
@@ -48,6 +47,8 @@ from utils.general import (
     get_latest_run, check_git_status, check_file, increment_dir, print_mutation, plot_evolution)
 from utils.google_utils import attempt_download
 from utils.torch_utils import init_seeds, ModelEMA, select_device, intersect_dicts
+
+warnings.filterwarnings("ignore")
 
 NPU_CALCULATE_DEVICE = int(os.getenv('NPU_CALCULATE_DEVICE',0))
 
@@ -191,8 +192,6 @@ def train(hyp, opt, device, tb_writer=None):
     if rank in [-1, 0]:
         labels = np.concatenate(dataset.labels, 0)
         c = torch.tensor(labels[:, 0])  # classes
-        # cf = torch.bincount(c.long(), minlength=nc) + 1.
-        # model._initialize_biases(cf.to(device))
         plot_labels(labels, save_dir=log_dir)
         if tb_writer:
             tb_writer.add_histogram('classes', c, 0)
@@ -235,8 +234,6 @@ def train(hyp, opt, device, tb_writer=None):
                     dataset.indices = indices.cpu().numpy()
 
         # Update mosaic border
-        # b = int(random.uniform(0.25 * imgsz, 0.75 * imgsz + gs) // gs * gs)
-        # dataset.mosaic_border = [b - imgsz, -b]  # height, width borders
 
         mloss = torch.zeros(4, device=device)  # mean losses
         if rank != -1:
@@ -247,6 +244,9 @@ def train(hyp, opt, device, tb_writer=None):
             pbar = tqdm(pbar, total=nb)  # progress bar
         optimizer.zero_grad()
         start_time = time.time()
+        profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                          profile_type=os.getenv('PROFILE_TYPE'))
+
         for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
             begine_time = time.time()
             if i == 5:
@@ -281,15 +281,13 @@ def train(hyp, opt, device, tb_writer=None):
                 print('targets len larger than nt_max, schedule to more bigger =', nt_max)
             pad_size = nt_max - nt
             pad_target = torch.nn.functional.pad(targets, [0, 0, 0, pad_size])
+            profile.start()
             pred = model(imgs)
 
             # Loss
             loss, loss_items = compute_loss(pred, pad_target.to(device), model)  # scaled by batch_size
             if rank != -1:
                 loss *= opt.world_size  # gradient averaged between devices in DDP mode
-            # if not torch.isfinite(loss):
-            #     print('WARNING: non-finite loss, ending training ', loss_items)
-            #     return results
 
             # Backward
             if opt.amp:
@@ -306,6 +304,7 @@ def train(hyp, opt, device, tb_writer=None):
                     x = torch.tensor([1.]).to(device)
                     params_fp32_fused = optimizer.get_model_combined_params()
                     ema.update(model, 'npu', params_fp32_fused[0])
+            profile.end()
 
             # Print
             if rank in [-1, 0]:
@@ -454,9 +453,6 @@ def main_worker(opt):
     # Train
     if not opt.evolve:
         tb_writer = None
-        # if opt.global_rank in [-1, 0]:
-        #     print('Start Tensorboard with "tensorboard --logdir %s", view at http://localhost:6006/' % opt.logdir)
-        #     tb_writer = SummaryWriter(log_dir=increment_dir(Path(opt.logdir) / 'exp', opt.name))  # runs/exp
         train(hyp, opt, device, tb_writer)
 
     # Evolve hyperparameters (optional)
@@ -606,5 +602,5 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='npu', type=str, help='npu or cpu')
     parser.add_argument('--stop_step_num', default=None, type=int,
                         help='after the stop_step, killing the training task')
-    opt = parser.parse_args()
-    main(opt)
+    opts = parser.parse_args()
+    main(opts)
