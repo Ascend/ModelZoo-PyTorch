@@ -31,8 +31,6 @@ else
   test_path_dir=${cur_path}/test
 fi
 
-source ${test_path_dir}/env_npu.sh
-
 ASCEND_DEVICE_ID=0
 
 if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ]; then
