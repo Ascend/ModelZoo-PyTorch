@@ -35,7 +35,7 @@ device_id=0
 train_steps=
 #学习率
 learning_rate=6e-5
-
+prof_type=None
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_fp32_to_fp16"
@@ -86,6 +86,8 @@ do
         batch_size=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
+    elif [[ $para == --prof_type* ]];then
+        prof_type=`echo ${para#*=}`
     fi
 done
 
@@ -122,7 +124,7 @@ do
         mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     fi
 
-    
+
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
     nohup python3.7 run_squad.py \
@@ -151,8 +153,9 @@ do
 		  --do_lower_case \
 		  --output_dir ${cur_path}/results \
 		  --config_file bert_config.json \
+          --prof_type ${prof_type} \
 		  --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-done 
+done
 wait
 
 #训练结束时间，不需要修改
