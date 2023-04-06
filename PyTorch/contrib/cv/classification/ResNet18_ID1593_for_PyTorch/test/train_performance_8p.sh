@@ -104,7 +104,7 @@ then
             -a resnet18 \
             --addr=$(hostname -I |awk '{print $1}') \
             --seed=49 \
-            --workers=128 \
+            --workers=192 \
             --learning-rate=${learning_rate} \
             --mom=0.9 \
             --weight-decay=1.0e-04  \

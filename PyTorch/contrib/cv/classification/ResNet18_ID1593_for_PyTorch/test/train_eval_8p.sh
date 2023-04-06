@@ -16,7 +16,7 @@ train_epochs=120
 # 学习率
 learning_rate=1.4
 # 加载数据进程数
-workers=128
+workers=192
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
