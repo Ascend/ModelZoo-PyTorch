@@ -100,7 +100,7 @@ def subsample_labels_anchors(
     num_pos = pos_mask.sum()
     neg_idx, neg_mask = torch.npu_random_choice_with_mask(negative, num_samples)
     num_neg = min(neg_mask.sum(), num_samples - num_pos)
-    return pos_idx.reshape((-1,))[:num_pos], neg_idx.reshape((-1,))[:num_neg]
+    return pos_idx.reshape((-1,)).cpu()[:num_pos], neg_idx.reshape((-1,)).cpu()[:num_neg]
 
 def subsample_labels_proposals(
     labels: torch.Tensor, num_samples: int, positive_fraction: float, bg_label: int

@@ -77,23 +77,59 @@ else
     sed -i "s|./R-101.pkl|${data_path}/R-101.pkl|g" configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml
     python3.7 setup.py build develop
 fi
-python3.7 tools/train_net.py \
-        --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
-        --device-ids 0 1 2 3 4 5 6 7 \
-        --num-gpus 8 \
-        AMP 1\
-        OPT_LEVEL O2 \
-        LOSS_SCALE_VALUE 64 \
-        SOLVER.IMS_PER_BATCH ${batch_size} \
-        SOLVER.MAX_ITER ${max_iter} \
-        SOLVER.STEPS "(30000, 40000)" \
-        SEED 1234 \
-        MODEL.RPN.NMS_THRESH 0.8 \
-        MODEL.ROI_HEADS.NMS_THRESH_TEST 0.6 \
-        MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
-        MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
-        DATALOADER.NUM_WORKERS ${workers} \
-        SOLVER.BASE_LR 0.08 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+
+KERNEL_NUM=$(($(nproc)/8))
+#################启动训练脚本#################
+if [ $(uname -m) = "aarch64" ]
+then
+    for i in $(seq 0 7)
+    do
+    if [ -d ${cur_path}/test/output/${i} ];
+    then
+        rm -rf ${cur_path}/test/output/${i}
+        mkdir -p ${cur_path}/test/output/${i}
+    else
+        mkdir -p ${cur_path}/test/output/${i}
+    fi
+    export LOCAL_RANK=$i
+    PID_START=$((KERNEL_NUM * LOCAL_RANK))
+    PID_END=$((PID_START + KERNEL_NUM - 1))
+    taskset -c $PID_START-$PID_END python3.7 tools/train_net.py \
+            --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
+            --num-gpus 8 \
+            AMP 1\
+            OPT_LEVEL O2 \
+            LOSS_SCALE_VALUE 64 \
+            SOLVER.IMS_PER_BATCH ${batch_size} \
+            SOLVER.MAX_ITER ${max_iter} \
+            SOLVER.STEPS "(30000, 40000)" \
+            SEED 1234 \
+            MODEL.RPN.NMS_THRESH 0.8 \
+            MODEL.ROI_HEADS.NMS_THRESH_TEST 0.6 \
+            MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
+            MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
+            DATALOADER.NUM_WORKERS ${workers} \
+            SOLVER.BASE_LR 0.08 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    done
+else
+    nohup python3.7 tools/train_net.py \
+            --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
+            --device-ids 0 1 2 3 4 5 6 7 \
+            --num-gpus 8 \
+            AMP 1\
+            OPT_LEVEL O2 \
+            LOSS_SCALE_VALUE 64 \
+            SOLVER.IMS_PER_BATCH ${batch_size} \
+            SOLVER.MAX_ITER ${max_iter} \
+            SOLVER.STEPS "(30000, 40000)" \
+            SEED 1234 \
+            MODEL.RPN.NMS_THRESH 0.8 \
+            MODEL.ROI_HEADS.NMS_THRESH_TEST 0.6 \
+            MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO 2 \
+            MODEL.ROI_MASK_HEAD.POOLER_SAMPLING_RATIO 2 \
+            DATALOADER.NUM_WORKERS ${workers} \
+            SOLVER.BASE_LR 0.08 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+fi
 
 wait
 
@@ -112,7 +148,7 @@ fi
 #结果打印，不需要修
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-grep "d2.utils.events" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep "fps" | awk -F "fps: " '{print $2}' >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log
+grep "d2.utils.events" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | grep "fps" | tail -n 5 | awk -F "fps: " '{print $2}' >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log
 FPS=`cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_fps.log | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"

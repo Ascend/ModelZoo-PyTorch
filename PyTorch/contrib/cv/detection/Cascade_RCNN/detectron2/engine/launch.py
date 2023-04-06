@@ -66,15 +66,19 @@ def launch(main_func, num_gpus_per_machine, num_machines=1, machine_rank=0, dist
                 "file:// is not a reliable init_method in multi-machine jobs. Prefer tcp://"
             )
         os.environ['MASTER_ADDR'] = '127.0.0.1'
-        os.environ['MASTER_PORT'] = str(_find_free_port())
+        os.environ['MASTER_PORT'] = str(29500)
         os.environ["WORLD_SIZE"] = str(world_size)
 
-        mp.spawn(
-            _distributed_worker,
-            nprocs=num_gpus_per_machine,
-            args=(main_func, world_size, num_gpus_per_machine, machine_rank, dist_url, args),
-            daemon=False,
-        )
+        if 'LOCAL_RANK' in os.environ:
+            _distributed_worker(int(os.environ["LOCAL_RANK"]), main_func,
+                                world_size, num_gpus_per_machine, machine_rank, dist_url, args)
+        else:
+            mp.spawn(
+                _distributed_worker,
+                nprocs=num_gpus_per_machine,
+                args=(main_func, world_size, num_gpus_per_machine, machine_rank, dist_url, args),
+                daemon=False,
+            )
     else:
         argsd = dict(zip(args[0].opts[0::2], args[0].opts[1::2]))
         torch.npu.set_device(argsd['MODEL.DEVICE'])
