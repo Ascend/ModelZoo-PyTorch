@@ -17,6 +17,8 @@ arch="arcface"
 # 数据集路径,保持为空,不需要修改
 data_path=""
 precision_mode="allow_mix_precision"
+#训练步数
+train_steps=2000
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -49,6 +51,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+    train_steps=4000
 fi
 
 sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|'"$data_path"'|g" ${cur_path}/configs/glint360k_r100.py
@@ -77,11 +80,11 @@ do
         PID_END=$((PID_START + KERNEL_NUM - 1))
         taskset -c $PID_START-$PID_END python3 -u train.py \
             configs/glint360k_r100.py \
-            --local_rank=${RANK_ID} --perf_steps=4000 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --local_rank=${RANK_ID} --perf_steps=${train_steps} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3 -u train.py \
             configs/glint360k_r100.py \
-            --local_rank=${RANK_ID} --perf_steps=4000 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --local_rank=${RANK_ID} --perf_steps=${train_steps} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 
