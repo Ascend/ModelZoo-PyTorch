@@ -1179,6 +1179,11 @@ if ! "${skip_eval}"; then
              _opts+="--ngram_file ${ngram_exp}/${inference_ngram}"
         fi
 
+        # 推理阶段在CPU中进行，arm架构下算子计算存在计算准确性问题，规避处理
+        if [ $(uname -m) = "aarch64" ]; then
+            _opts+=" --dtype float64 "
+        fi
+
         # 2. Generate run.sh
         log "Generate '${asr_exp}/${inference_tag}/run.sh'. You can resume the process from stage 12 using this script"
         mkdir -p "${asr_exp}/${inference_tag}"; echo "${run_args} --stage 12 \"\$@\"; exit \$?" > "${asr_exp}/${inference_tag}/run.sh"; chmod +x "${asr_exp}/${inference_tag}/run.sh"
