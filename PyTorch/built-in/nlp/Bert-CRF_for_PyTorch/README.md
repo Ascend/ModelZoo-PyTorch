@@ -124,6 +124,11 @@ $data_path
      
      bash ./test/train_performance_8p.sh --data_path=$data_path # 8卡性能
      ```
+     启动高性能8卡训练。
+
+     ```
+     bash ./test/train_full_8p_fast.sh --data_path=$data_path  # 8卡精度
+     ```
    --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
@@ -149,8 +154,14 @@ $data_path
 | 1p-NPU   | best_F1: 0.96499 | 145 | 20 |      O1 | 1.8 |
 | 8p-NPU   | best_F1: 0.92388 | 944.5 | 20 |      O1 | 1.8 |
 
+**表 3**  高性能8卡训练结果展示表
+
+| NAME     | Accuracy-Highest |  samples/s | Epochs | AMP_Type | Torch_Version |
+| :------: | :-----:  | :---: | :-------: | :-----: | :-----------: |
+| 8p-NPU   | best_F1: 0.92723 | 2802 | 20 |      O2 | 1.8 |
+
 > **说明：**
-> 本模型在X86平台上性能显著高于ARM，若要达到表中性能，请注意必须在x86平台上进行性能测试，并将cpu设置为performance模式。
+> 高性能8卡训练脚本与普通8卡脚本在参数设置上有区别：1、每张卡的batchsize由16提升为128；2、混合精度模式采用O2。
 
 # 版本说明
 

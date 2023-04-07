@@ -67,13 +67,16 @@ parser.add_argument("--local_rank", type=int, default=0)
 parser.add_argument("--train_epochs", type=int, default=20)
 parser.add_argument("--data_path", type=str, default='')
 parser.add_argument("--workers", type=int, default=4)
+parser.add_argument("--lr", type=float, default=2e-5)
+parser.add_argument("--opt_level", type=str, default="O1")
 
 args = parser.parse_args()
 
 distributed = 'WORLD_SIZE' in os.environ
 
 if distributed:
-    torch.distributed.init_process_group(backend='hccl', world_size=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
+    torch.distributed.init_process_group(backend='hccl', \
+        world_size=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
     torch.npu.set_device(args.local_rank)
     device = f'npu:{args.local_rank}'
 else:
@@ -151,19 +154,25 @@ def collate_fn(batch):
 # 转换数据集
 if distributed:
     train_dataset = MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train')
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, \
+        num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, \
-        num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, collate_fn=collate_fn, drop_last=True, pin_memory=True)
+        num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, \
+            collate_fn=collate_fn, drop_last=True, pin_memory=True)
 else:
-    train_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train'), batch_size=batch_size, \
-        num_workers=args.workers, shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True)
-valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), batch_size=batch_size, collate_fn=collate_fn)
+    train_dataloader = DataLoader(
+        MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train'), \
+        batch_size=batch_size, num_workers=args.workers, \
+        shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True)
+valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), \
+    batch_size=batch_size, collate_fn=collate_fn)
 
 # 定义bert上的模型结构
 class Model(BaseModel):
     def __init__(self):
         super().__init__()
-        self.bert = build_transformer_model(config_path=config_path, checkpoint_path=checkpoint_path, segment_vocab_size=0)
+        self.bert = build_transformer_model(config_path=config_path, \
+            checkpoint_path=checkpoint_path, segment_vocab_size=0)
         self.fc = nn.Linear(768, len(categories))  # 包含首尾
         self.crf = CRF(len(categories))
 
@@ -184,13 +193,15 @@ model = Model().to(device)
 
 print(model)
 if 'npu' in device:
-    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=2e-5)
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O1", loss_scale='dynamic', combine_grad=True)
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=args.lr)
+    model, optimizer = amp.initialize(model, optimizer, \
+        opt_level=args.opt_level, loss_scale=128, combine_grad=True)
 else:
-    optimizer = optim.Adam(model.parameters(), lr=2e-5)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 updates_total = len(train_dataloader) * args.train_epochs
-scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warm_factor*updates_total, num_training_steps=updates_total)
+scheduler = get_linear_schedule_with_warmup(optimizer, \
+    num_warmup_steps=warm_factor*updates_total, num_training_steps=updates_total)
 
 class Loss(nn.Module):
     def forward(self, outputs, labels, seq_length=None):
@@ -210,9 +221,11 @@ if distributed:
 
 # 支持多种自定义metrics = ['accuracy', acc, {acc: acc}]均可
 if distributed:
-    model.module.compile(loss=Loss(), optimizer=optimizer, metrics=acc, use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
+    model.module.compile(loss=Loss(), optimizer=optimizer, metrics=acc, \
+        use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
 else:
-    model.compile(loss=Loss(), optimizer=optimizer, metrics=acc, use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
+    model.compile(loss=Loss(), optimizer=optimizer, metrics=acc, \
+        use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
 
 def evaluate(data):
     X, Y, Z = 1e-10, 1e-10, 1e-10
@@ -288,9 +301,11 @@ if __name__ == '__main__':
     torch_npu.npu.set_compile_mode(jit_compile=False)
     evaluator = Evaluator()
     if distributed:
-        model.module.fit(train_dataloader, train_sampler, epochs=args.train_epochs, steps_per_epoch=None, callbacks=[evaluator]) #evaluator
+        model.module.fit(train_dataloader, train_sampler, epochs=args.train_epochs, \
+            steps_per_epoch=None, callbacks=[evaluator])
     else:
-        model.fit(train_dataloader, None, epochs=args.train_epochs, steps_per_epoch=None, callbacks=[evaluator]) #evaluator
+        model.fit(train_dataloader, None, epochs=args.train_epochs, \
+            steps_per_epoch=None, callbacks=[evaluator])
 
 else:
 

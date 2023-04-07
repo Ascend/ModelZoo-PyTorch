@@ -1038,11 +1038,14 @@ class CRF(nn.Module):
         # mask: (batch_size, seq_length)
         if seq_length is None:
             seq_length = emissions.size(1)
-
-        emissions_cpu = emissions.cpu()
-        start_transitions_cpu = self.start_transitions.data.cpu()
-        transitions_cpu = self.transitions.data.cpu()
-        mask_cpu = mask.bool().cpu()
+        batch_size = emissions.size(0)
+        
+        # when the batch size is not greater than 32, cpu performance is better
+        small_batch = batch_size <= 32 
+        emissions_cpu = emissions.cpu() if small_batch else emissions
+        start_transitions_cpu = self.start_transitions.data.cpu() if small_batch else self.start_transitions
+        transitions_cpu = self.transitions.data.cpu() if small_batch else self.transitions
+        mask_cpu = mask.bool().cpu() if small_batch else mask.bool()
 
         # Start transition score and first emission; score has size of
         # (batch_size, num_tags) where for each batch, the j-th column stores
@@ -1319,11 +1322,6 @@ class TplinkerHandshakingKernel(nn.Module):
             self.lamtha = nn.Parameter(torch.rand(hidden_size))
         elif inner_enc_type == "lstm":
             self.inner_context_lstm = nn.LSTM(hidden_size, hidden_size, num_layers=1, bidirectional=False, batch_first=True)
-        
-        # 自行实现的用torch.gather方式来做，避免循环，目前只实现了cat方式
-        # tag_ids = [(i, j) for i in range(maxlen) for j in range(maxlen) if j >= i]
-        # gather_idx = torch.tensor(tag_ids, dtype=torch.long).flatten()[None, :, None]
-        # self.register_buffer('gather_idx', gather_idx)
 
     def enc_inner_hiddens(self, seq_hiddens, inner_enc_type="lstm"):
         # seq_hiddens: (batch_size, seq_len, hidden_size)
@@ -1333,7 +1331,8 @@ class TplinkerHandshakingKernel(nn.Module):
             elif pooling_type == "max_pooling":
                 pooling, _ = torch.max(seqence, dim = -2)
             elif pooling_type == "mix_pooling":
-                pooling = self.lamtha * torch.mean(seqence, dim = -2) + (1 - self.lamtha) * torch.max(seqence, dim = -2)[0]
+                pooling = self.lamtha * torch.mean(seqence, dim = -2) + \
+                    (1 - self.lamtha) * torch.max(seqence, dim = -2)[0]
             return pooling
         if "pooling" in inner_enc_type:
             inner_context = torch.stack([pool(seq_hiddens[:, :i+1, :], inner_enc_type) for i in range(seq_hiddens.size()[1])], dim = 1)
@@ -1372,17 +1371,6 @@ class TplinkerHandshakingKernel(nn.Module):
             shaking_hiddens_list.append(shaking_hiddens)
         long_shaking_hiddens = torch.cat(shaking_hiddens_list, dim = 1)
         return long_shaking_hiddens
-
-        # def handshaking_kernel(self, last_hidden_state):
-        #     '''获取(0,0),(0,1),...,(99,99))对应的序列id
-        #     '''
-        #     btz, _, hdsz = last_hidden_state.shape
-        #     gather_idx = self.gather_idx.repeat(btz, 1, hdsz)
-        #     concat_hidden_states = torch.gather(last_hidden_state, dim=1, index=gather_idx)  # [btz, pair_len*2, hdsz]
-        #     concat_hidden_states = concat_hidden_states.reshape(btz, -1, 2, hdsz)  # concat方式 [btz, pair_len, 2, hdsz]
-        #     shaking_hiddens = torch.cat(torch.chunk(concat_hidden_states, chunks=2, dim=-2), dim=-1).squeeze(-2)  # [btz, pair_len, hdsz*2]
-        #     return shaking_hiddens
-
 
 class MixUp(nn.Module):
     '''mixup方法实现
