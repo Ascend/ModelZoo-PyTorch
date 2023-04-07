@@ -41,7 +41,7 @@ do
             echo "pass"
         else
             source ${cur_path}/set_conda.sh
-            source activate conda_name
+            source activate $conda_name
         fi
     fi
 done
