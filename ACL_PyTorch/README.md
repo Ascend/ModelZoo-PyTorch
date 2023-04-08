@@ -2081,7 +2081,7 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-	<td>140(bs1)</td>
+	<td>132(bs1)</td>
         <td></td>
 	<td>1 x 3 x 640 x 640</td>
     </tr>
