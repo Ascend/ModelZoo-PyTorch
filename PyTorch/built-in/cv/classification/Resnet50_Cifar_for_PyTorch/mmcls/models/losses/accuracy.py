@@ -16,7 +16,7 @@ from numbers import Number
 import numpy as np
 import torch
 import torch.nn as nn
-
+import platform
 
 def accuracy_numpy(pred, target, topk=(1, ), thrs=0.):
     if isinstance(thrs, Number):
@@ -77,7 +77,11 @@ def accuracy_torch(pred, target, topk=(1, ), thrs=0.):
         for thr in thrs:
             # Only prediction values larger than thr are counted as correct
             _correct = correct & (pred_score.t() > thr)
-            correct_k = _correct[:k].reshape(-1).float().sum(0, keepdim=True)
+            # 规避处理：torch1.11原生框架在arm cpu下处理sum输入数据为float类型时导致推理精度不达标
+            if platform.machine() == "aarch64" :             
+                correct_k = _correct[:k].reshape(-1).double().sum(0, keepdim=True)
+            else:
+                correct_k = _correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res_thr.append((correct_k.mul_(100. / num)))
         if res_single:
             res.append(res_thr[0])
