@@ -137,9 +137,10 @@ def train_model(model,
     train_loader_cfg = {**loader_cfg, **cfg.data.get('train_dataloader', {})}
 
     data_loaders = [build_dataloader(ds, **train_loader_cfg) for ds in dataset]
-    optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), 0.1,
-                                            momentum=0.9,
-                                            weight_decay=0.0005
+    optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), 
+                                            lr=cfg.optimizer.lr,
+                                            momentum=cfg.optimizer.momentum,
+                                            weight_decay=cfg.optimizer.weight_decay
                                             )
     model, optimizer = apex.amp.initialize(model.npu(), optimizer,
                                            opt_level="O2",
