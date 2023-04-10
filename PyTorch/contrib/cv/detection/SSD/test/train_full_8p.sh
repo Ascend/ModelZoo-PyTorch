@@ -74,8 +74,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-export TASK_QUEUE_ENABLE=0
-rm -rf kernel_meta/
+
 PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

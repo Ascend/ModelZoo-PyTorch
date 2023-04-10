@@ -193,6 +193,7 @@ def main():
 
 
 if __name__ == '__main__':
+    torch_npu.npu.set_compile_mode(jit_compile=False)
     option = {}
     option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BatchMultiClassNonMaxSuppression"
     torch.npu.set_option(option)

@@ -21,7 +21,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 #设置Event日志开启标志,0-关闭/1-开启
 export ASCEND_GLOBAL_EVENT_ENABLE=0
 #设置是否开启taskque,0-关闭/1-开启
-export TASK_QUEUE_ENABLE=0
+export TASK_QUEUE_ENABLE=1
 #设置是否开启PTCopy,0-关闭/1-开启
 export PTCOPY_ENABLE=1
 #设置是否开启combined标志,0-关闭/1-开启
