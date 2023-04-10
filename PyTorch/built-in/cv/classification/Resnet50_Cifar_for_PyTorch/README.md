@@ -104,22 +104,26 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
      启动单卡训练。
 
      ```
-     bash ./test/train_performance_1p.sh       # batchsize=16单卡性能
-     bash ./test/train_performance_1p_bs32.sh  # batchsize=32单卡性能
+     bash ./test/train_performance_1p.sh         # batchsize=16  单卡性能
+     bash ./test/train_performance_1p_bs32.sh    # batchsize=32  单卡性能
+     bash ./test/train_performance_1p_bs256.sh   # batchsize=256 单卡性能
      
-     bash ./test/train_full_1p.sh         # batchsize=16单卡精度
-     bash ./test/train_full_1p_bs32.sh    # batchsize=32单卡精度
+     bash ./test/train_full_1p.sh                # batchsize=16  单卡精度
+     bash ./test/train_full_1p_bs32.sh           # batchsize=32  单卡精度
+     bash ./test/train_full_1p_bs256.sh          # batchsize=256 单卡精度
      ```
 
    - 单机8卡训练
 
      启动8卡训练。
      ```
-     bash ./test/train_performance_8p.sh        # batchsize=16 8卡性能
-     bash ./test/train_performance_8p_bs32.sh   # batchsize=32 8卡性能
+     bash ./test/train_performance_8p.sh         # batchsize=16  8卡性能
+     bash ./test/train_performance_8p_bs32.sh    # batchsize=32  8卡性能
+     bash ./test/train_performance_8p_bs256.sh   # batchsize=256 8卡性能
      
-     bash ./test/train_full_8p.sh               # batchsize=16 8卡精度
-     bash ./test/train_full_8p_bs32.sh          # batchsize=32 8卡精度 
+     bash ./test/train_full_8p.sh                # batchsize=16  8卡精度
+     bash ./test/train_full_8p_bs32.sh           # batchsize=32  8卡精度 
+     bash ./test/train_full_8p_bs256.sh          # batchsize=256 8卡精度 
      ```
 
      注意：模型训练所需要的数据集（cifar100）脚本会自动下载，请保持网络畅通。如果已有数据集，也可用传参的方式传入，如以下命令：
@@ -156,14 +160,16 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 
 **表 2**  训练结果展示表
 
-|  NAME  | Acc@1 |  FPS  | Epochs | AMP_Type | Torch_Version | batch_size |
-|:------:|:-----:|:-----:|:------:|:--------:|:-------------:|:----------:|
-| 1p-NPU |   -   | 4196  |   2    |    O2    |      1.8      |    512     |
-| 8p-NPU | 61.65 | 32507 |  200   |    O2    |      1.8      |    4096    |
-| 1p-NPU |   -   |  390  |   2    |    O2    |      1.8      |     16     |
-| 1p-NPU |   -   |  233  |   3    |    O2    |      1.8      |     32     |
-| 8p-NPU | 80.0  | 1523  |   2    |    O2    |      1.8      |    128     |
-| 8p-NPU | 80.0  | 1706  |  200   |    O2    |      1.8      |    256     |
+|  NAME  | Acc@1 |  FPS  | Epochs | AMP_Type | Torch_Version | batch_size | Device |
+|:------:|:-----:|:-----:|:------:|:--------:|:-------------:|:----------:|:------:|
+| 1p-NPU |   -   | 4196  |   2    |    O2    |      1.8      |    512     |  910   |
+| 8p-NPU | 61.65 | 32507 |  200   |    O2    |      1.8      |    4096    |  910   |
+| 1p-NPU |   -   |  390  |   2    |    O2    |      1.8      |     16     |  910   |
+| 1p-NPU |   -   |  233  |   3    |    O2    |      1.8      |     32     |  910   |
+| 8p-NPU | 80.0  | 1523  |   2    |    O2    |      1.8      |    128     |  910   |
+| 8p-NPU | 80.0  | 1706  |  200   |    O2    |      1.8      |    256     |  910   |
+| 1p-NPU |   -   | 3938  |   2    |    O2    |      1.8      |    256     |  910B  |
+| 8p-NPU | 82.53 | 23011 |  200   |    O2    |      1.8      |    2048    |  910B  |
 
 
 # 版本说明
