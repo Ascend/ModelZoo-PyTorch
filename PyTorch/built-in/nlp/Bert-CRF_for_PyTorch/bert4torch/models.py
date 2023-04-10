@@ -313,9 +313,6 @@ class BaseModel(nn.Module):
                 # 入参个数判断，如果入参>=3表示是多个入参，如果=2则表示是一个入参
                 profiler.start()
                 output, loss, loss_detail = self.train_step(train_X, train_y, grad_accumulation_steps, seq_length)
-                end = time.time()
-                step_time = end - start
-                start = time.time()
 
                 retain_graph = True if self.adversarial['name'] in {'gradient_penalty', 'vat'} else False
                 if self.use_amp:  # 混合精度
@@ -359,10 +356,14 @@ class BaseModel(nn.Module):
                                 scheduler.step()
                         else:
                             self.scheduler.step()
-
+                            
+                end = time.time()
+                step_time = end - start
+                start = time.time()
+                
                 # 添加loss至log打印
                 logs.update({'loss': loss.item()})
-                if local_step > 5:
+                if local_step > 1:
                     logs['step time'] = step_time
                 logs_loss_detail = {k: v.item() if isinstance(v, torch.Tensor) else v for k, v in loss_detail.items()}
                 logs.update(logs_loss_detail)

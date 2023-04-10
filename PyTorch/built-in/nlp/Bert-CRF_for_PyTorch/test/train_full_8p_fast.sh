@@ -5,7 +5,7 @@
 # 网络名称，同目录名称
 Network="Bertbase-crf"
 # 训练batch_size
-export BATCH_SIZE=128
+export BATCH_SIZE=192
 # 训练使用的npu卡数
 export WORLD_SIZE=8
 export MASTER_ADDR=127.0.0.1
@@ -16,11 +16,13 @@ data_path=""
 # 训练epoch 20
 train_epochs=20
 # 加载数据进程数
-workers=16
+workers=24
 # 学习率
-lr=1.6e-4
+lr=2.4e-4
 # 混合精度模式
 opt_level="O2"
+# warmup factor
+warm_factor=0.3
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -79,6 +81,7 @@ taskset -c $PID_START-$PID_END python3.7 examples/sequence_labeling/task_sequenc
         --data_path ${data_path} \
         --workers ${workers} \
         --lr ${lr} \
+        --warm_factor ${warm_factor} \
         --opt_level ${opt_level} > $cur_path/test/output/${i}/train_${i}.log 2>&1 &
 done
 wait
@@ -97,7 +100,7 @@ CaseName=${Network}_bs${BatchSize}_${RANK}'p'_'acc'
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $6}' &> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
-FPS=`cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | sort -n | tail -5 | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
+FPS=`cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | sort -n | tail -$((train_epochs-1)) | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 total_training_time=`grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk '{print $4}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a)}'`
 total_eval_time=`grep "eval_time_cost" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "eval_time_cost:" '{print $2}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a)}'`
 steps=`grep "FPS" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "/" 'END {print $1}' `

@@ -340,7 +340,7 @@ class Progbar(object):
                 `value_for_last_step` will be displayed as-is.
                 Else, an average of the metric over time will be displayed.
         """
-        if current == 5:
+        if current == 2:
             self._start = time.time()
         values = values or []
         for k, v in values:
@@ -392,8 +392,8 @@ class Progbar(object):
             self._total_width = len(bar)
             sys.stdout.write(bar)
 
-            if current > 5:
-                time_per_unit = (now - self._start) / (current - 5)
+            if current > 2:
+                time_per_unit = (now - self._start) / (current - 2)
             else:
                 time_per_unit = 0
             if self.target is not None and current < self.target:

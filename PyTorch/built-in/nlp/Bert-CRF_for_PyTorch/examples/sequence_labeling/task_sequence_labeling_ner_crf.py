@@ -69,6 +69,7 @@ parser.add_argument("--data_path", type=str, default='')
 parser.add_argument("--workers", type=int, default=4)
 parser.add_argument("--lr", type=float, default=2e-5)
 parser.add_argument("--opt_level", type=str, default="O1")
+parser.add_argument("--warm_factor", type=float, default=0.1)
 
 args = parser.parse_args()
 
@@ -87,7 +88,7 @@ print(device)
 
 maxlen = 256
 batch_size = int(os.environ["BATCH_SIZE"])
-warm_factor = 0.1
+warm_factor = args.warm_factor
 categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
 categories_id2label = {i: k for i, k in enumerate(categories)}
 categories_label2id = {k: i for i, k in enumerate(categories)}
@@ -156,14 +157,14 @@ if distributed:
     train_dataset = MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train')
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, \
         num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, \
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, prefetch_factor=8, \
         num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, \
-            collate_fn=collate_fn, drop_last=True, pin_memory=True)
+            collate_fn=collate_fn, drop_last=True, pin_memory=True, persistent_workers=True)
 else:
     train_dataloader = DataLoader(
         MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train'), \
-        batch_size=batch_size, num_workers=args.workers, \
-        shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True)
+        batch_size=batch_size, num_workers=args.workers, prefetch_factor=8, \
+        shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True, persistent_workers=True)
 valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), \
     batch_size=batch_size, collate_fn=collate_fn)
 

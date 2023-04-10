@@ -1042,16 +1042,16 @@ class CRF(nn.Module):
         
         # when the batch size is not greater than 32, cpu performance is better
         small_batch = batch_size <= 32 
-        emissions_cpu = emissions.cpu() if small_batch else emissions
+        emissions_cpu = emissions.transpose(0, 1).cpu() if small_batch else emissions.transpose(0, 1)
         start_transitions_cpu = self.start_transitions.data.cpu() if small_batch else self.start_transitions
         transitions_cpu = self.transitions.data.cpu() if small_batch else self.transitions
-        mask_cpu = mask.bool().cpu() if small_batch else mask.bool()
+        mask_cpu = mask.bool().transpose(0, 1).cpu() if small_batch else mask.bool().transpose(0, 1)
 
         # Start transition score and first emission; score has size of
         # (batch_size, num_tags) where for each batch, the j-th column stores
         # the score that the first timestep has tag j
         # shape: (batch_size, num_tags)
-        score = start_transitions_cpu + emissions_cpu[:, 0]
+        score = start_transitions_cpu + emissions_cpu[0]
 
         for i in range(1, seq_length):
             # Broadcast score for every possible next tag
@@ -1060,7 +1060,7 @@ class CRF(nn.Module):
 
             # Broadcast emission score for every possible current tag
             # shape: (batch_size, 1, num_tags)
-            broadcast_emissions = emissions_cpu[:, i].unsqueeze(1)
+            broadcast_emissions = emissions_cpu[i].unsqueeze(1)
 
             # Compute the score tensor of size (batch_size, num_tags, num_tags) where
             # for each sample, entry at row i and column j stores the sum of scores of all
@@ -1077,7 +1077,7 @@ class CRF(nn.Module):
 
             # Set score to the next score if this timestep is valid (mask == 1)
             # shape: (batch_size, num_tags)
-            score = torch.where(mask_cpu[:, i].unsqueeze(1).bool(), next_score, score)
+            score = torch.where(mask_cpu[i].unsqueeze(1).bool(), next_score, score)
 
         # End transition score
         # shape: (batch_size, num_tags)
