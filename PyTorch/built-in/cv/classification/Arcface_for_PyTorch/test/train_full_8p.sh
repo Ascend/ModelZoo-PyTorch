@@ -126,7 +126,7 @@ grep "agedb_30" ${training_log} >> ${agedb_30_accuracy_log}
 train_lfw_accuracy_highest=`grep -a 'Accuracy-Highest' ${lfw_accuracy_log} |awk 'END {print $4}'`
 train_cfp_fp_accuracy_highest=`grep -a 'Accuracy-Highest' ${cfp_fp_accuracy_log} |awk 'END {print $4}'`
 train_agedb_30_accuracy_highest=`grep -a 'Accuracy-Highest' ${agedb_30_accuracy_log} |awk 'END {print $4}'`
-train_accuracy="'lfw': ${train_lfw_accuracy_highest} 'cfp_fp': ${train_cfp_fp_accuracy_highest} 'agedb_30': ${train_agedb_30_accuracy_highest}"
+train_accuracy=${train_lfw_accuracy_highest}
 
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
