@@ -6,6 +6,7 @@ Network="clip"
 model_name=clip
 train_epochs=3
 batch_size=64
+rank_size=16
 model_path=""
 data_path=""
 device_id=0
@@ -69,51 +70,34 @@ source ${cur_path}/test/env_npu.sh
 start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
-if [ $(uname -m) = "aarch64" ]; then
-  export MASTER_ADDR=127.0.0.1
-  export MASTER_PORT=29500
-  export WORLD_SIZE=8
-  for i in $(seq 0 7); do
-    export RANK=${i}
-    let p_start=0+24*i
-    let p_end=23+24*i
-    taskset -c $p_start-$p_end $CMD \
-      python3.7 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
-      --num_train_epochs ${train_epochs} \
-      --model_name_or_path "$model_path" \
-      --data_dir $data_path \
-      --dataset_name ydshieh/coco_dataset_script \
-      --dataset_config_name=2017 \
-      --dataloader_num_workers 8 \
-      --image_column image_path --caption_column caption \
-      --remove_unused_columns=False \
-      --do_train --do_eval --fp16 --dataloader_drop_last \
-      --fp16_opt_level O2 --loss_scale 12800000 --optim adamw_apex_fused_npu --use_combine_grad \
-      --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
-      --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
-      --save_steps 15000 --max_steps 1000 --skip_steps 10 \
-      --overwrite_output_dir \
-      --local_rank $i >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-  done
-else
-  python3.7 -m torch.distributed.launch --nproc_per_node 8 \
-    ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
+KERNEL_NUM=(($(nproc)/rank_size))
+export MASTER_ADDR=127.0.0.1
+export MASTER_PORT=29500
+export WORLD_SIZE=16
+for i in $(seq 0 15); do
+  export RANK=${i}
+  let p_start=$((0+KERNEL_NUM*i))
+  let p_end=$((p_start+KERNEL_NUM-1))
+  taskset -c $p_start-$p_end $CMD \
+    python3.7 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
     --num_train_epochs ${train_epochs} \
     --model_name_or_path "$model_path" \
     --data_dir $data_path \
     --dataset_name ydshieh/coco_dataset_script \
     --dataset_config_name=2017 \
-    --dataloader_num_workers 8 \
     --image_column image_path --caption_column caption \
     --remove_unused_columns=False \
     --do_train --do_eval --fp16 --dataloader_drop_last \
+    --dataloader_num_workers 8 \
     --fp16_opt_level O2 --loss_scale 12800000 --optim adamw_apex_fused_npu --use_combine_grad \
     --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
     --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
-    --save_steps 15000 --max_steps 1000 --skip_steps 10 \
+    --save_steps 15000 --skip_steps 10 \
     --ddp_bucket_cap_mb 150 \
-    --overwrite_output_dir >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-fi
+    --overwrite_output_dir \
+    --local_rank $i >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+done
+
 
 wait
 

@@ -49,16 +49,14 @@ CLIP (Contrastive Language-Image Pre-Training，以下简称 CLIP) 模型是 Ope
 - 安装依赖。
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
-  ```
-  pip install -r requirements.txt
+  ```bash
+  python3 -m pip install -r requirements.txt
   ```
 
 - 安装transformers。
 
   ```bash
-  cd transformers
-  pip3 install -e ./
-  cd ..
+  python3 -m pip install -e transformers
   ```
 
 
@@ -188,12 +186,15 @@ CLIP (Contrastive Language-Image Pre-Training，以下简称 CLIP) 模型是 Ope
 
 **表 2**  训练结果展示表
 
-| NAME     | eval loss |   FPS    | AMP_Type | Epochs | Batch Size |
-| -------- |:---------:|:--------:| :------: | ------ | ---------- |
-| 1p-NPU   |  1.6863   |  440  |    O2    | 3      | 64         |
-| 1p-竞品A |  1.7202   | 510  |    O2    | 3      | 64         |
-| 8p-NPU   |  1.5812   | 2800 |    O2    | 3      | 64         |
-| 8p-竞品A |  1.5994   | 3340  |    O2    | 3      | 64         |
+|    NAME    | eval loss |   FPS    | AMP_Type | Epochs | Batch Size |
+| :--------: |:---------:|:--------:| :------: | :----: | :--------: |
+|  1p-竞品A  |  1.7202   |    510   |    O2    | 3      | 64         |
+|  1p-NPU    |  1.6863   |   440    |    O2    | 3      | 64         |
+|  1p-NPU_arm|  1.6863   |   310    |    O2    | 3      | 64         |
+|  8p-竞品A  |  1.5994   |   3340   |    O2    | 3      | 64         |
+|  8p-NPU    |  1.5812   |   2800   |    O2    | 3      | 64         |
+|  8p-NPU_arm|  1.5812   |   2200   |    O2    | 3      | 64         |
+
 
 # 版本说明
 

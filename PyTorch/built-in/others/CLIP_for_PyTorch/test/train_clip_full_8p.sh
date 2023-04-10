@@ -111,6 +111,7 @@ else
     --per_device_train_batch_size=$batch_size --per_device_eval_batch_size=$batch_size \
     --learning_rate="5e-5" --warmup_steps="0" --weight_decay 0.1 \
     --save_steps 15000 --skip_steps 10 \
+    --ddp_bucket_cap_mb 150 \
     --overwrite_output_dir >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 

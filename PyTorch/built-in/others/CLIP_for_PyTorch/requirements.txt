@@ -5,3 +5,8 @@ sentencepiece == 0.1.96
 protobuf == 3.14
 wikiextractor
 sklearn
+torchvision == 0.9.1
+Pillow
+decorator
+sympy
+scipy
