@@ -188,6 +188,12 @@ def main(args):
 if __name__ == "__main__":
     args = default_argument_parser().parse_args()
     print("Command Line Args:", args)
+    # FP32模式下BoundingBoxDecode和NMSwithMask有功能问题，添加变量允许走fp16
+    option = {'ACL_PRECISION_MODE': 'allow_fp32_to_fp16'}
+    # LogSoftmaxV2算子在二进制下有精度问题，添加至黑名单规避
+    option['NPU_FUZZY_COMPILE_BLACKLIST'] = 'LogSoftmaxV2'
+    torch_npu.npu.set_option(option)
+    
     launch(
         main,
         args.num_gpus,

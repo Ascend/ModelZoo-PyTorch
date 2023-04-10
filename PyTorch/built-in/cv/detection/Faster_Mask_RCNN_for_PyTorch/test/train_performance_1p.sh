@@ -140,7 +140,6 @@ fi
 
 cd $cur_path
 
-python3.7 setup.py build develop > $cur_path/log.txt
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
