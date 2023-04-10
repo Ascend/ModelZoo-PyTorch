@@ -30,3 +30,4 @@ do
 	--launcher pytorch ${@:3} \
 	&
 done
+wait

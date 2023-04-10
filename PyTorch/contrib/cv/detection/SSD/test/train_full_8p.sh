@@ -87,9 +87,8 @@ e2e_time=$(( $end_time - $start_time ))
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-fps_list=$(python3.7 calc_fps.py ./work_dirs/ssd300_coco_npu_8p/*.json ${RANK_SIZE} ${batch_size})
-FPS=`echo ${fps_list##* }`
-FPS=${FPS%\}*}
+average_step_time=$(grep "time" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F ":" '{print $8}' | awk -F "," '{print $1}' | awk 'BEGIN{count=0}{if(NR>3){sum+=$NF;count+=1}}END{printf "%.4f\n", sum/count}')
+FPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*'${RANK_SIZE}'/'${average_step_time}'}')
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
