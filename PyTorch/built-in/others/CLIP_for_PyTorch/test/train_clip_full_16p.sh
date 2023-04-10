@@ -70,7 +70,7 @@ source ${cur_path}/test/env_npu.sh
 start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
-KERNEL_NUM=(($(nproc)/rank_size))
+KERNEL_NUM=$(($(nproc)/rank_size))
 export MASTER_ADDR=127.0.0.1
 export MASTER_PORT=29500
 export WORLD_SIZE=16
