@@ -1,4 +1,20 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 """Evaluation Metrics for Semantic Segmentation"""
+import platform
 import torch
 import numpy as np
 
@@ -54,6 +70,8 @@ class SegmentationMetric(object):
         """
         pixAcc = 1.0 * self.total_correct / (2.220446049250313e-16 + self.total_label)  # remove np.spacing(1)
         IoU = 1.0 * self.total_inter / (2.220446049250313e-16 + self.total_union)
+        if platform.machine() == "aarch64":
+            IoU = IoU.double()
         mIoU = IoU.mean().item()
         return pixAcc, mIoU
 
