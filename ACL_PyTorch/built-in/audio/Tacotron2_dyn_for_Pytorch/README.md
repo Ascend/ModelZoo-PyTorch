@@ -169,6 +169,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    参考[pyACL demo](https://gitee.com/peng-ao/pyacl?_from=gitee_search)，根据readme文档安装demo库。  
 
 3. 执行推理  
+   不开启缓存功能时，推荐使用`om_val.py`；开启缓存功能时，推荐使用`val_pyacl_cache.py`。脚本的具体说明请见后。  
    运行`om_val.py`或`val_pyacl_cache.py`推理OM模型，合成语音默认保存在`output/audio`文件夹下。
    ```
    # 推理tacotron2 om。如果选择使能缓存，请将'om_val.py'改为'val_pyacl_cache.py'
@@ -189,10 +190,16 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度。
 
 5. pyACL demo实现缓存的代码说明  
+   我们在pyacl库上，基于ACL实现缓存功能，并开放了相关接口，暂未同步到ais_bench库。  
    如需基于ACL实现缓存功能，需要熟悉ACL提供的python接口，请参见昇腾社区的[CANN文档](https://www.hiascend.com/document/detail/zh/canncommercial/601/inferapplicationdev/aclpythondevg/aclpythondevg_01_0002.html)中 `pyACL API参考`章节。
    这里对[pyACL demo](https://gitee.com/peng-ao/pyacl?_from=gitee_search)中实现缓存功能的方式进行说明。
 
-   5.1 Demo对外开放接口  
+   5.1 脚本说明  
+   - `om_val.py`是整改后调用ais_bench的脚本,推荐使用，不带有缓存接口。  
+   - `val_pyacl_cache.py`是调用pyacl库的脚本，开启了缓存功能。  
+   - `val_pyacl.py`是调用pyacl库的脚本，未开启缓存功能。其与`om_val.py`功能一致，两者差异点在调用的接口为ais_bench/pyacl。其与`val_pyacl_cache.py`调用接口一致，两者差异点为缓存功能的使能/不使能，为说明缓存接口的使用一并附上。  
+
+   5.2 Demo对外开放接口  
       Demo中与缓存功能相关的接口参数如下，调用方式可参考从val_pyacl.py到val_pyacl_cache.py的改动。  
    - `AclNet`类初始化接口参数说明：
       - `out_to_in`：表示输出输入对应关系，索引的输出数据迭代后缓存在device侧，下次迭代按对应关系传给输入
@@ -204,14 +211,14 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
       - `first_step`：为True时，会传入模型所有输入数据，为False时，只传入除pin_input索引的以外的输入数据
       - `last_step`：为True时，会输出模型所有输出数据，为False时，只传出out_idx索引的输出数据
 
-   5.2 Device侧资源申请  
+   5.3 Device侧资源申请  
    - Device侧内存申请  
       模型初始化时，脚本在`_gen_data_buffer`函数中，使用pyACL提供的`acl.rt.malloc`接口申请Device内存。内存地址保存在self.input_data和self.output_data，以供创建`aclDataBuffer`类型的数据。  
    - aclmdlDataset类型的数据创建  
       因为调用pyACL提供的`acl.mdl.execute`接口进行推理时，输入和输出需要为`aclmdlDataset`类型的数据，所以提前从申请的Device内存中创建。  
       具体实现是，调用模型进行推理前，脚本在`_gen_dataset`函数中，使用pyACL提供的`acl.mdl.create_dataset`接口，从self.input_data和self.output_data中保存的Device内存地址创建aclmdlDataset类型的数据，保存在self.load_input_dataset和self.load_input_dataset中，以供后续数据传输和模型推理时使用。  
 
-   5.3 数据搬运  
+   5.4 数据搬运  
    调用模型进行推理前后，脚本在`_data_interaction`函数中进行判断，以决定数据在Host和Device之间搬运的方式。  
    - 传入输入数据时  
       - 在`out_to_in`索引中的数据直接在Device侧赋值，即使用缓存；  
@@ -221,7 +228,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
       - 只有`out_idx`索引的数据才进行Device2Host搬运，调用`acl.rt.memcpy`接口，从self.input_data中保存的Device内存地址搬运到Host；  
       - 其他数据不搬运。  
 
-   5.4 模型推理  
+   5.5 模型推理  
    脚本在`forward`函数中，调用pyACL提供的`acl.mdl.execute`接口进行推理。输入和输出使用之前创建的`aclmdlDataset`类型的数据。  
 
 # 模型推理性能&精度
