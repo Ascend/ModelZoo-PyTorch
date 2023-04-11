@@ -138,7 +138,11 @@ parser.add_argument('--gp', default=None, type=str, metavar='POOL',
 parser.add_argument('--img-size', type=int, default=None, metavar='N',
                     help='Image patch size (default: None => model default)')
 parser.add_argument('--input-size', default=None, nargs=3, type=int,
-                    metavar='N N N', help='Input all image dimensions (d h w, e.g. --input-size 3 224 224), uses model default if empty')
+                    metavar='N N N',
+                    help='Input all image dimensions (d h w, e.g. --input-size 3 224 224) to train, uses model default if empty')
+parser.add_argument('--eval-input-size', default=None, nargs=3, type=int,
+                    metavar='N N N',
+                    help='Input all image dimensions (d h w, e.g. --eval-input-size 3 224 224) to eval, uses model default if empty')
 parser.add_argument('--crop-pct', default=None, type=float,
                     metavar='N', help='Input image center crop percent (for validation only)')
 parser.add_argument('--mean', type=float, nargs='+', default=None, metavar='MEAN',
@@ -574,9 +578,11 @@ def main():
     train_interpolation = args.train_interpolation
     if args.no_aug or not train_interpolation:
         train_interpolation = data_config['interpolation']
+
+    train_input_size = data_config['input_size']
     loader_train = create_loader(
         dataset_train,
-        input_size=data_config['input_size'],
+        input_size=train_input_size,
         batch_size=args.batch_size,
         is_training=True,
         use_prefetcher=args.prefetcher,
@@ -604,9 +610,13 @@ def main():
         worker_seeding=args.worker_seeding,
     )
 
+    if 'eval_input_size' in args and args.eval_input_size is not None:
+        eval_input_size = args.eval_input_size
+    else:
+        eval_input_size = data_config['input_size']
     loader_eval = create_loader(
         dataset_eval,
-        input_size=data_config['input_size'],
+        input_size=eval_input_size,
         batch_size=args.validation_batch_size or args.batch_size,
         is_training=False,
         use_prefetcher=args.prefetcher,
@@ -652,7 +662,8 @@ def main():
             exp_name = '-'.join([
                 datetime.now().strftime("%Y%m%d-%H%M%S"),
                 safe_model_name(args.model),
-                str(data_config['input_size'][-1])
+                str(train_input_size[-1]),
+                str(eval_input_size[-1])
             ])
         output_dir = get_outdir(args.output if args.output else './output/train', exp_name)
         decreasing = True if eval_metric == 'loss' else False
@@ -882,8 +893,10 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 
     return metrics
 
+
 class AverageMeter:
     """Computes and stores the average and current value"""
+
     def __init__(self, skip_num=5):
         self.reset()
         self.skip_num = skip_num
@@ -903,6 +916,7 @@ class AverageMeter:
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
 
 if __name__ == '__main__':
     main()
