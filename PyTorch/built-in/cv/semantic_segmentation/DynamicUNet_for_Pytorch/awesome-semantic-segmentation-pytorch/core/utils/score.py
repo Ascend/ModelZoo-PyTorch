@@ -1,6 +1,7 @@
 """Evaluation Metrics for Semantic Segmentation"""
 import torch
 import numpy as np
+import platform
 
 __all__ = ['SegmentationMetric', 'batch_pix_accuracy', 'batch_intersection_union',
            'pixelAccuracy', 'intersectionAndUnion', 'hist_info', 'compute_score']
@@ -54,6 +55,8 @@ class SegmentationMetric(object):
         """
         pixAcc = 1.0 * self.total_correct / (2.220446049250313e-16 + self.total_label)  # remove np.spacing(1)
         IoU = 1.0 * self.total_inter / (2.220446049250313e-16 + self.total_union)
+        if platform.machine() == "aarch64":
+            IoU = IoU.double()
         mIoU = IoU.mean().item()
         return pixAcc, mIoU
 
