@@ -85,7 +85,7 @@ nohup bash distributed_train.sh 8 \
     --decay-rate .97 \
     --opt rmsproptf \
     --opt-eps .001 \
-    -j 8 \
+    -j 16 \
     --warmup-lr 4e-6 \
     --weight-decay 1e-5 \
     --drop 0.3 \
@@ -97,7 +97,9 @@ nohup bash distributed_train.sh 8 \
     --apex-amp \
     --model-ema \
     --model-ema-decay 0.9999 \
-    --mixup 0.2 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --mixup 0.2 \
+    --input-size 3 224 224 \
+    --eval-input-size 3 288 288 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #8p情况下仅0卡(主节点)有完整日志,因此后续日志提取仅涉及0卡
