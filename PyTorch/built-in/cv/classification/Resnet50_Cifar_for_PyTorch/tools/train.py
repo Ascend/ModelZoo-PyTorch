@@ -35,6 +35,8 @@ from mmcls.models import build_classifier
 from mmcls.utils import (auto_select_device, collect_env, get_root_logger,
                          setup_multi_processes)
 
+print("Set jit compile False.")
+torch_npu.npu.set_compile_mode(jit_compile=False)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a model')
