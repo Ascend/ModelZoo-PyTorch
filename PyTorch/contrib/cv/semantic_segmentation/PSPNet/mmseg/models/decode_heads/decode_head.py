@@ -240,7 +240,7 @@ class BaseDecodeHead(nn.Module, metaclass=ABCMeta):
     def cls_seg(self, feat):
         """Classify each pixel."""
         if self.dropout is not None:
-            feat = self.dropout(feat.cpu()).npu()
+            feat = self.dropout(feat)
         output = self.conv_seg(feat)
         return output
 

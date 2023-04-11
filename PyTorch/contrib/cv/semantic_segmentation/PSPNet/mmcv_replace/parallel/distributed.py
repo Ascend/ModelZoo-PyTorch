@@ -51,7 +51,7 @@ from torch.nn.parallel.distributed import (DistributedDataParallel,
                                            _find_tensors)
 
 from mmcv import print_log
-from mmcv.utils import TORCH_VERSION
+from mmcv.utils import TORCH_VERSION,digit_version
 from .scatter_gather import scatter_kwargs
 
 TORCH_MAJOR = int(torch.__version__.split('.')[0])
@@ -87,12 +87,16 @@ class MMDistributedDataParallel(DistributedDataParallel):
             print_log(
                 'Reducer buckets have been rebuilt in this iteration.',
                 logger='mmcv')
-
-        if getattr(self, 'require_forward_param_sync', True):
-            if TORCH_MAJOR == 1 and TORCH_MINOR <= 8:
-                self._sync_params()
-            else:
-                self._sync_params_and_buffers()
+        
+        if ('parrots' not in TORCH_VERSION
+                and digit_version(TORCH_VERSION) >= digit_version('1.11.0a0')):
+            if self._check_sync_bufs_post_fwd():
+                self._sync_buffers()
+        else:
+            if (getattr(self, 'require_forward_param_sync', False)
+                    and self.require_forward_param_sync):
+                    self._sync_params()
+                
         if self.device_ids and False:
             inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
             if len(self.device_ids) == 1:
@@ -132,11 +136,15 @@ class MMDistributedDataParallel(DistributedDataParallel):
                 'Reducer buckets have been rebuilt in this iteration.',
                 logger='mmcv')
 
-        if getattr(self, 'require_forward_param_sync', True):
-            if TORCH_MAJOR == 1 and TORCH_MINOR <= 8:
-                self._sync_params()
-            else:
-                self._sync_params_and_buffers()
+        if ('parrots' not in TORCH_VERSION
+                and digit_version(TORCH_VERSION) >= digit_version('1.11.0a0')):
+            if self._check_sync_bufs_post_fwd():
+                self._sync_buffers()
+        else:
+            if (getattr(self, 'require_forward_param_sync', False)
+                    and self.require_forward_param_sync):
+                    self._sync_params()
+
         if self.device_ids:
             inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
             if len(self.device_ids) == 1:
