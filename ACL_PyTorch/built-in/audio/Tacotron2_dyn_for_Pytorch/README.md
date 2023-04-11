@@ -1,12 +1,16 @@
 # Tacotron2_dyn推理指导
 
+- [Tacotron2\_dyn推理指导](#tacotron2_dyn推理指导)
 - [概述](#概述)
+    - [输入输出数据](#输入输出数据)
 - [推理环境准备](#推理环境准备)
 - [快速上手](#快速上手)
   - [获取源码](#获取源码)
   - [准备数据集](#准备数据集)
   - [模型推理](#模型推理)
-- [模型推理性能&精度](#模型推理性能&精度)
+    - [1 模型转换](#1-模型转换)
+    - [2 开始推理验证](#2-开始推理验证)
+- [模型推理性能\&精度](#模型推理性能精度)
 
 ******
 
@@ -48,7 +52,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
 | 固件与驱动                                                   | 22.0.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
 | CANN                                                         | 6.0.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.10.1  | -                                                            |
+| PyTorch                                                      | 1.11.0  | [AscendPytorch安装](https://gitee.com/ascend/pytorch/tree/v1.11.0/) |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
@@ -77,8 +81,10 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    Tacotron2_dyn_for_PyTorch
     ├── cvt_tacotron2onnx.py  放到Tacotron2/tensorrt下
     ├── cvt_waveglow2onnx.py  放到Tacotron2/tensorrt下
-    ├── atc.sh        放到Tacotron2下
-    └── om_val.py     放到Tacotron2下
+    ├── atc.sh                放到Tacotron2下
+    ├── om_val.py             放到Tacotron2下
+    ├── val_pyacl.sh          放到Tacotron2下
+    └── val_pyacl_cache.sh    放到Tacotron2下
    ```
 
 
@@ -152,19 +158,30 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
 1. 安装`ais_bench`推理工具  
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-2. 执行推理  
-   运行`om_val.py`推理OM模型，合成语音默认保存在`output/audio`文件夹下。
+2. 使能缓存功能（可选）  
+   Tacotron2模型的decoder部分有自回归机制，前一步的输出会作为后一步的输入使用。如果使能缓存功能，将中间数据保存到device，可以减少循环推理中间过程中H2D和D2H的数据搬运次数，从而提升端到端的推理性能。  
+   这里的缓存功能基于pyACL实现，可参考[pyACL demo](https://gitee.com/peng-ao/pyacl?_from=gitee_search)。  
+
+   2.1 使能CANN的ACL组件  
+   参考[CANN V100R020C10 应用软件开发指南](https://support.huawei.com/enterprise/zh/doc/EDOC1100164876/7af18685)，修改环境变量。  
+
+   2.2 下载`pyACL demo`  
+   参考[pyACL demo](https://gitee.com/peng-ao/pyacl?_from=gitee_search)，根据readme文档安装demo库。  
+
+3. 执行推理  
+   不开启缓存功能时，推荐使用`om_val.py`；开启缓存功能时，推荐使用`val_pyacl_cache.py`。脚本的具体说明请见后。  
+   运行`om_val.py`或`val_pyacl_cache.py`推理OM模型，合成语音默认保存在`output/audio`文件夹下。
    ```
-   # 推理tacotron2 om
-   python3 val.py -i filelists/ljs_audio_text_test_filelist.txt -bs 1 -device_id 0
+   # 推理tacotron2 om。如果选择使能缓存，请将'om_val.py'改为'val_pyacl_cache.py'
+   python3 om_val.py -i filelists/ljs_audio_text_test_filelist.txt -bs 1 -device_id 0
     
-   # 推理waveglow生成wav文件
-   python3 val.py -i filelists/ljs_audio_text_test_filelist.txt -o output/audio -bs 1 -device_id 0 --gen_wav
+   # 推理waveglow生成wav文件。如果选择使能缓存，请将'om_val.py'改为'val_pyacl_cache.py'
+   python3 om_val.py -i filelists/ljs_audio_text_test_filelist.txt -o output/audio -bs 1 -device_id 0 --gen_wav
    ```
    其中，`bs`为模型`batch_size`，`device_id`设置推理用第几号卡。
 
-3. 性能验证  
-   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，Tacotron2包括多个子模型，各子模型测试性能的参考命令如下：
+4. 性能验证  
+   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能。Tacotron2包括多个子模型，各子模型测试性能的参考命令如下：
    ```
    python3 -m ais_bench --model output/om/encoder_dyn.om --loop 20 --batchsize ${bs} --dymShape "sequences:${bs},${seq_len};sequence_lengths:${bs}" --outputSize "3000000,3000000,3000000"
    python3 -m ais_bench --model output/om/decoder_iter_dyn.om --loop 20 --batchsize ${bs} --dymShape "decoder_input:${bs},80;attention_hidden:${bs},1024;attention_cell:${bs},1024;decoder_hidden:${bs},1024;decoder_cell:${bs},1024;attention_weights:${bs},${seq_len};attention_weights_cum:${bs},${seq_len};attention_context:${bs},512;memory:${bs},${seq_len},512;processed_memory:${bs},${seq_len},128;mask:${bs},${seq_len}" --outputSize "20000,20000,20000,20000,20000,20000,20000,20000,20000"
@@ -172,12 +189,57 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    ```
    其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度。
 
+5. pyACL demo实现缓存的代码说明  
+   我们在pyacl库上，基于ACL实现缓存功能，并开放了相关接口，暂未同步到ais_bench库。  
+   如需基于ACL实现缓存功能，需要熟悉ACL提供的python接口，请参见昇腾社区的[CANN文档](https://www.hiascend.com/document/detail/zh/canncommercial/601/inferapplicationdev/aclpythondevg/aclpythondevg_01_0002.html)中 `pyACL API参考`章节。
+   这里对[pyACL demo](https://gitee.com/peng-ao/pyacl?_from=gitee_search)中实现缓存功能的方式进行说明。
+
+   5.1 脚本说明  
+   - `om_val.py`是整改后调用ais_bench的脚本,推荐使用，不带有缓存接口。  
+   - `val_pyacl_cache.py`是调用pyacl库的脚本，开启了缓存功能。  
+   - `val_pyacl.py`是调用pyacl库的脚本，未开启缓存功能。其与`om_val.py`功能一致，两者差异点在调用的接口为ais_bench/pyacl。其与`val_pyacl_cache.py`调用接口一致，两者差异点为缓存功能的使能/不使能，为说明缓存接口的使用一并附上。  
+
+   5.2 Demo对外开放接口  
+      Demo中与缓存功能相关的接口参数如下，调用方式可参考从val_pyacl.py到val_pyacl_cache.py的改动。  
+   - `AclNet`类初始化接口参数说明：
+      - `out_to_in`：表示输出输入对应关系，索引的输出数据迭代后缓存在device侧，下次迭代按对应关系传给输入
+      - `pin_input`：表示每次迭代都不变的输入索引，索引的数据传入后缓存在device，每次迭代时直接读取，若不存在，可不写
+      - `out_idx`：为每次迭代后需要传到device的输出索引，后续一般用于跳出循环的判断条件，若不存在判断条件，可不写  
+      - out_to_in和pin_input中指定的中间数据，在推理过程中缓存在Device侧，不会搬运到Host侧
+  
+   - `AclNet`实例对象的调用接口参数说明：
+      - `first_step`：为True时，会传入模型所有输入数据，为False时，只传入除pin_input索引的以外的输入数据
+      - `last_step`：为True时，会输出模型所有输出数据，为False时，只传出out_idx索引的输出数据
+
+   5.3 Device侧资源申请  
+   - Device侧内存申请  
+      模型初始化时，脚本在`_gen_data_buffer`函数中，使用pyACL提供的`acl.rt.malloc`接口申请Device内存。内存地址保存在self.input_data和self.output_data，以供创建`aclDataBuffer`类型的数据。  
+   - aclmdlDataset类型的数据创建  
+      因为调用pyACL提供的`acl.mdl.execute`接口进行推理时，输入和输出需要为`aclmdlDataset`类型的数据，所以提前从申请的Device内存中创建。  
+      具体实现是，调用模型进行推理前，脚本在`_gen_dataset`函数中，使用pyACL提供的`acl.mdl.create_dataset`接口，从self.input_data和self.output_data中保存的Device内存地址创建aclmdlDataset类型的数据，保存在self.load_input_dataset和self.load_input_dataset中，以供后续数据传输和模型推理时使用。  
+
+   5.4 数据搬运  
+   调用模型进行推理前后，脚本在`_data_interaction`函数中进行判断，以决定数据在Host和Device之间搬运的方式。  
+   - 传入输入数据时  
+      - 在`out_to_in`索引中的数据直接在Device侧赋值，即使用缓存；  
+      - 在`pin_input`中的数据保持上次迭代的不变，即使用缓存；  
+      - 其他数据才涉及Host2Device搬运，调用`acl.rt.memcpy`接口，从Host搬运到self.input_data里保存的Device内存地址。  
+   - 传出输出数据时  
+      - 只有`out_idx`索引的数据才进行Device2Host搬运，调用`acl.rt.memcpy`接口，从self.input_data中保存的Device内存地址搬运到Host；  
+      - 其他数据不搬运。  
+
+   5.5 模型推理  
+   脚本在`forward`函数中，调用pyACL提供的`acl.mdl.execute`接口进行推理。输入和输出使用之前创建的`aclmdlDataset`类型的数据。  
+
 # 模型推理性能&精度
 
 调用ACL接口推理计算，性能&精度参考下列数据。
 
-|  芯片型号   | Batch Size |  数据集  |       精度       |    性能     |
-| :---------: | :--------: | :------: | :--------------: | :---------: |
-| Ascend310P3 |     1      | LJSpeech | 人工判断语音质量 | 636 wavs/s  |
-| Ascend310P3 |     4      | LJSpeech | 人工判断语音质量 | 2076 wavs/s |
+|  芯片型号   | Batch Size |  缓存  |  数据集  |       精度       |    性能     |
+| :---------: | :--------: | :------: | :------: | :--------------: | :---------: |
+| Ascend310P3 |     1      | Disabled | LJSpeech | 人工判断语音质量 | 490 wavs/s  |
+| Ascend310P3 |     1      | Enabled | LJSpeech | 人工判断语音质量 | 646 wavs/s  |
+| Ascend310P3 |     4      | Disabled | LJSpeech | 人工判断语音质量 | 1709 wavs/s |
+| Ascend310P3 |     4      | Enabled | LJSpeech | 人工判断语音质量 | 2456 wavs/s |
+- 测试环境：数据在单台x86 CPU服务器下测得，CPU型号为 Intel Xeon Gold 6140 @ 2.30GHz.
 - 说明：由于模型推理为多个子模型串联，仅测量单个子模型性能没有意义，故性能采用端到端推理LJSpeech验证集中500条文本数据测得。
