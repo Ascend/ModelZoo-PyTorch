@@ -142,7 +142,8 @@ class COCOEvaluator(DatasetEvaluator):
     def evaluate(self):
         if self._distributed:
             comm.synchronize()
-            predictions = comm.gather(self._predictions, dst=0)
+            # due to HCCL does not support gather, replace gather with all_gather 
+            predictions = comm.all_gather(self._predictions)
             predictions = list(itertools.chain(*predictions))
 
             if not comm.is_main_process():
