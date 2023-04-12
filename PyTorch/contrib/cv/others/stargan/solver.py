@@ -208,7 +208,10 @@ class Solver(object):
         self.build_model(rank)
         print(torch.__version__)
 
-
+        # FP32模式下Conv2D算子编译失败，添加变量走FP16
+        option = {'ACL_PRECISION_MODE':'allow_fp32_to_fp16'}
+        torch_npu.npu.set_option(option)
+        
         ########################################################################################################################
         # Set DDP.
         # Use nccl for GPU, hccl for NPU.
@@ -238,7 +241,7 @@ class Solver(object):
             self.G = nn.parallel.DistributedDataParallel(self.G, device_ids = [rank], broadcast_buffers=False)
             self.D = nn.parallel.DistributedDataParallel(self.D, device_ids = [rank], broadcast_buffers=False)
         ########################################################################################################################
-
+         
         # Fetch fixed inputs for debugging.
         data_iter = iter(self.data_loader)
         x_fixed, c_org = next(data_iter)
