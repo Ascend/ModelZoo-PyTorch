@@ -1096,17 +1096,15 @@ class CRF(nn.Module):
         if pad_tag is None:
             pad_tag = 0
 
-        emissions = emissions.cpu()
-        mask = mask.cpu()
         device = emissions.device
         batch_size, seq_length = mask.shape
 
         # Start transition and first emission
         # shape: (batch_size, num_tags)
-        score = self.start_transitions.data.cpu() + emissions[:, 0]
-        history_idx = torch.zeros((batch_size, seq_length, self.num_tags, nbest), dtype=torch.long, device=device)
-        oor_idx = torch.zeros((batch_size, self.num_tags, nbest), dtype=torch.long, device=device)
-        oor_tag = torch.full((batch_size, seq_length, nbest), pad_tag, dtype=torch.long, device=device)
+        score = self.start_transitions.data + emissions[:, 0]
+        history_idx = torch.zeros((batch_size, seq_length, self.num_tags, nbest), dtype=torch.int, device=device)
+        oor_idx = torch.zeros((batch_size, self.num_tags, nbest), dtype=torch.int, device=device)
+        oor_tag = torch.full((batch_size, seq_length, nbest), pad_tag, dtype=torch.int, device=device)
 
         # - score is a tensor of size (batch_size, num_tags) where for every batch,
         #   value at column j stores the score of the best tag sequence so far that ends
@@ -1118,23 +1116,24 @@ class CRF(nn.Module):
 
         # Viterbi algorithm recursive case: we compute the score of the best tag sequence
         # for every possible next tag
-        transitions_cpu = self.transitions.data.cpu()
+        transitions = self.transitions.data
         for i in range(1, seq_length):
             if i == 1:
                 broadcast_score = score.unsqueeze(-1)
                 broadcast_emission = emissions[:, i].unsqueeze(1)
                 # shape: (batch_size, num_tags, num_tags)
-                next_score = broadcast_score + transitions_cpu + broadcast_emission
+                next_score = broadcast_score + transitions + broadcast_emission
             else:
                 broadcast_score = score.unsqueeze(-1)
                 broadcast_emission = emissions[:, i].unsqueeze(1).unsqueeze(2)
                 # shape: (batch_size, num_tags, nbest, num_tags)
-                next_score = broadcast_score + transitions_cpu.unsqueeze(1) + broadcast_emission
+                next_score = broadcast_score + transitions.unsqueeze(1) + broadcast_emission
 
             # Find the top `nbest` maximum score over all possible current tag
             # shape: (batch_size, nbest, num_tags)
             next_score, indices = next_score.view(batch_size, -1, self.num_tags).topk(nbest, dim=1)
-
+            
+            indices = indices.int()
             if i == 1:
                 score = score.unsqueeze(-1).expand(-1, -1, nbest)
                 indices = indices * nbest
@@ -1151,19 +1150,19 @@ class CRF(nn.Module):
             history_idx[:, i - 1] = indices
 
         # End transition score shape: (batch_size, num_tags, nbest)
-        end_score = score + self.end_transitions.data.cpu().unsqueeze(-1)
+        end_score = score + self.end_transitions.data.unsqueeze(-1)
         _, end_tag = end_score.view(batch_size, -1).topk(nbest, dim=1)
 
         # shape: (batch_size,)
-        seq_ends = mask.long().sum(dim=1) - 1
+        seq_ends = mask.int().sum(dim=1) - 1
 
         # insert the best tag at each sequence end (last position with mask == 1)
         history_idx.scatter_(1, seq_ends.view(-1, 1, 1, 1).expand(-1, 1, self.num_tags, nbest),
                              end_tag.view(-1, 1, 1, nbest).expand(-1, 1, self.num_tags, nbest))
 
         # The most probable path for each sequence
-        best_tags_arr = torch.zeros((batch_size, seq_length, nbest), dtype=torch.long, device=device)
-        best_tags = torch.arange(nbest, dtype=torch.long, device=device).view(1, -1).expand(batch_size, -1)
+        best_tags_arr = torch.zeros((batch_size, seq_length, nbest), dtype=torch.int, device=device)
+        best_tags = torch.arange(nbest, dtype=torch.int, device=device).view(1, -1).expand(batch_size, -1)
         for idx in range(seq_length - 1, -1, -1):
             best_tags = torch.gather(history_idx[:, idx].view(batch_size, -1), 1, best_tags)
             best_tags_arr[:, idx] = torch.div(best_tags.data.view(batch_size, -1), nbest, rounding_mode='floor')

@@ -232,6 +232,8 @@ def evaluate(data):
     X, Y, Z = 1e-10, 1e-10, 1e-10
     X2, Y2, Z2 = 1e-10, 1e-10, 1e-10
     start = time.time()
+    val_scores = []
+    val_labels = []
     for token_ids, label, seq_length in tqdm(data):
         token_ids = token_ids.to('npu', non_blocking=True)
         label = label.to('npu', non_blocking=True)
@@ -246,13 +248,20 @@ def evaluate(data):
         Y += scores.gt(0).sum().item()
         Z += label.gt(0).sum().item()
 
+        val_scores.append(scores)
+        val_labels.append(label)
+
+    print(' - eval_time_cost: %.3fs' % (time.time() - start), flush=True)
+    print('Accumulating evaluation results ...', flush=True)
+    start = time.time()
+    for scores, label in zip(val_scores, val_labels):
         # entity粒度
         entity_pred = trans_entity2tuple(scores)
         entity_true = trans_entity2tuple(label)
         X2 += len(entity_pred.intersection(entity_true))
         Y2 += len(entity_pred)
         Z2 += len(entity_true)
-    print(' - eval_time_cost: %.3fs' % (time.time() - start), flush=True)
+    print('DONE (time_cost: %.3fs)' % (time.time() - start), flush=True)
     f1, precision, recall = 2 * X / (Y + Z), X / Y, X / Z
     f2, precision2, recall2 = 2 * X2 / (Y2 + Z2), X2/ Y2, X2 / Z2
     return f1, precision, recall, f2, precision2, recall2

@@ -18,11 +18,11 @@ train_epochs=20
 # 加载数据进程数
 workers=24
 # 学习率
-lr=2.4e-4
+lr=3.2e-4
 # 混合精度模式
 opt_level="O2"
 # warmup factor
-warm_factor=0.3
+warm_factor=0.4
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
