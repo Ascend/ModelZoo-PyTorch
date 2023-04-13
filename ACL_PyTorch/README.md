@@ -322,6 +322,17 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DBNet_MobileNetV3">  DBNet_MobileNetV3 </a>
+        </td>
+        <td>ICDAR2015</td>
+	<td></td>
+        <td></td>
+        <td>77.5%</td>
+	<td>196(bs1)</td>
+	<td>bs x 736 x 1280 x 3</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/Detr">  Detr </a>
         </td>
         <td>coco</td>
