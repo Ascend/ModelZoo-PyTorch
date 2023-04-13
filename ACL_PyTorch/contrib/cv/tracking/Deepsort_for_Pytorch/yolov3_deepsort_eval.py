@@ -28,7 +28,7 @@ import acl
 def mkdir_if_missing(dir):
     os.makedirs(dir, exist_ok=True)
 
-def main(data_root='', seqs=('',), args=""):
+def main(data_root='', seqs=('',), args):
     data_root = args.data_root
     logger = get_logger()
     logger.setLevel(logging.INFO)
@@ -77,6 +77,7 @@ def parse_args():
     parser.add_argument("--frame_interval", type=int, default=1)
     parser.add_argument("--display_width", type=int, default=800)
     parser.add_argument("--display_height", type=int, default=600)
+    parser.add_argument("--device", type=int, default=0)
     parser.add_argument("--save_path", type=str, default="./output/")
     parser.add_argument("--cpu", dest="use_cuda", action="store_false", default=True)
     parser.add_argument("--camera", action="store", dest="cam", type=int, default="-1")
@@ -84,13 +85,14 @@ def parse_args():
     return parser.parse_args()
 
 if __name__ == '__main__':
+    args = parse_args()
     ret = acl.init()
     assert ret == 0
-    ret = acl.rt.set_device(0)
+    ret = acl.rt.set_device(args.device)
     assert ret == 0
-    context, ret = acl.rt.create_context(1)
+    context, ret = acl.rt.create_context(args.device)
     assert  ret == 0
-    args = parse_args()
+
 
     seqs_str = '''MOT16-02       
                   MOT16-04
@@ -106,7 +108,7 @@ if __name__ == '__main__':
     main(seqs=seqs,
          args=args)
 
-    ret = acl.rt.reset_device(0)
+    ret = acl.rt.reset_device(args.device)
     assert ret == 0
 
     context, ret = acl.rt.get_context()

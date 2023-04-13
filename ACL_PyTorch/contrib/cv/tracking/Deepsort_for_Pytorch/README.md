@@ -242,10 +242,11 @@ Deepsort是一种多目标跟踪方法，简单有效。该方法将外观信息
       将acl_net_dynamic.py脚本放置在detector/YOLOv3/以及deep_sort/deep目录下，将yolov3-sim.om和deep_dims.om以及我们提供的yolov3_deepsort_eval.py放在deep_sort_pytorch目录下，调用脚本yolov3_deepsort_eval.py获取精度。
 
       ```
-      python3 yolov3_deepsort_eval.py --data_root=./MOT16/train
+      python3 yolov3_deepsort_eval.py --data_root=./MOT16/train --device=0
       ```
 	- 参数说明：
 	   -  --data_root 数据集路径
+           -  --device 芯片id
    3. 性能验证。
 
       1. 安装ais_bench推理工具。
