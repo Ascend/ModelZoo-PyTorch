@@ -81,7 +81,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 2. 安装依赖。
 
    ```
-   pip3.7.5 install -r requirements.txt	
+   pip3 install -r requirements.txt	
    ```
 
 ​		
@@ -106,7 +106,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
    执行imagenet_torch_preprocess.py脚本，生成数据集预处理后的bin文件，存放在当前目录下的prep_dataset文件夹中。
 
    ```
-   python3.7.5 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/imagenet/val ./prep_dataset	
+   python3 imagenet_torch_preprocess.py resnet /home/HwHiAiUser/dataset/imagenet/val ./prep_dataset	
    ```
    
    - 参数说明
@@ -131,7 +131,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
       1. 执行脚本。
 
          ```
-         python3.7.5 mobilenet-v1_pth2onnx.py mobilenet_sgd_rmsprop_69.526.tar mobilenet-v1.onnx
+         python3 mobilenet-v1_pth2onnx.py mobilenet_sgd_rmsprop_69.526.tar mobilenet-v1.onnx
          ```
          
          获得mobilenet-v1.onnx文件。
@@ -173,7 +173,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
       
       3. 执行ATC命令。
       
-         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
+         使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为32的om模型的命令如下，对于其他的batch size，可作相应的修改。
          
          ```
          atc --framework=5 --model=./mobilenet-v1.onnx --input_format=NCHW --input_shape="image:32,3,224,224" --output=mobilenet-v1_bs32 --log=debug --soc_version=Ascend${chip_name}
@@ -200,11 +200,11 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    b.  执行推理。
 
-   使用batch size为16的om模型文件进行推理，其他batch size可作相应的修改，推理后的输出在当前目录的result文件夹下。
+   使用batch size为32的om模型文件进行推理，其他batch size可作相应的修改，推理后的输出在当前目录的result文件夹下。
 
    ```
    mkdir ./result
-   python3.7.5 -m ais_bench --model ./mobilenet-v1_bs32.om --input ./prep_dataset --batchsize 32 --output ./result --outfmt "TXT" --device 0
+   python3 -m ais_bench --model ./mobilenet-v1_bs32.om --input ./prep_dataset --batchsize 32 --output ./result --outfmt "TXT" --device 0
    ```
 
    - 参数说明：
@@ -225,10 +225,10 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
 
    c.  精度验证。
 
-   调用脚本与数据集标签val\_label.txt比对，生成精度验证结果文件，结果保存在result_bs16.json中。
+   调用脚本与数据集标签val\_label.txt比对，生成精度验证结果文件，结果保存在result_bs32.json中。
 
    ```
-   python3.7.5 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ /home/HwHiAiUser/dataset/imagenet/val_label.txt ./ result_bs32.json
+   python3 imagenet_acc_eval.py ./result/2022_08_21-23_31_47/ /home/HwHiAiUser/dataset/imagenet/val_label.txt ./ result_bs32.json
    ```
 
    - 参数说明：
@@ -240,7 +240,7 @@ MobileNetV1是一种基于流水线结构，使用深度级可分离卷积构建
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
    ```
-   python3.7.5 -m ais_bench --model ./mobilenet-v1_bs32.om --batchsize 32 --output ./result --loop 1000 --device 0
+   python3 -m ais_bench --model ./mobilenet-v1_bs32.om --batchsize 32 --output ./result --loop 1000 --device 0
    ```
       
    - 参数说明：
