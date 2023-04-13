@@ -85,7 +85,7 @@ YOLACT是2019年发表在ICCV上面的一个实时实例分割的模型，它主
    git checkout master
    git reset --hard 57b8f2d95e62e2e649b382f516ab41f949b57239
 
-   patch -p1 < ../YOLACT.
+   patch -p1 < ../YOLACT.patch
    
    cp ../YOLACT_preprocess.py ./
    cp ../YOLACT_postprocess.py  ./
@@ -101,6 +101,7 @@ YOLACT是2019年发表在ICCV上面的一个实时实例分割的模型，它主
          ├─YOLACT_preprocess.py
          ├─YOLACT_postprocess.py
       ├─modelzoo_level.txt
+      ├─YOLACT.patch
       ├─requirements.txt
       ├─LICENSE
       ├─README.md

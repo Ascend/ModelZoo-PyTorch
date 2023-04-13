@@ -89,7 +89,7 @@ StyleGAN2-ADA是具有自适应鉴别器增强（ADA）的StyleGAN2，用有限�
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   执行pkl2onnx.py脚本，完成预处理。
+   执行stylegan2-ada-pytorch_preprocess.py脚本，完成预处理。
 
    ```
    python3 stylegan2-ada-pytorch_preprocess.py --num_input=200 --save_path=./pre_data
