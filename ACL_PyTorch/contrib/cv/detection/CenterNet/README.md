@@ -150,7 +150,8 @@ CenterNet 是在 2019 年提出的用于目标检测的模型，相比传统依�
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。放在当前目录下 [ctdet_coco_dla_2x.pth](https://gitee.com/link?target=https%3A%2F%2Fdrive.google.com%2Fopen%3Fid%3D1pl_-ael8wERdUREEnaIfqOV_VF2bEVRT)
+   1. 获取权重文件。放在当前目录下 [ctdet_coco_dla_2x.pth](https://pan.baidu.com/s/1e8TIeBvWzb15UEHWCDZcSQ )
+       提取码：d446
 
    2. 导出onnx文件。
 
