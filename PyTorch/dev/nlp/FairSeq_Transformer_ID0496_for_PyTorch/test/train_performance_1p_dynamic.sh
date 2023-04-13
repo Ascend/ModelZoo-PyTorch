@@ -166,7 +166,7 @@ do
 	    --encoder-attention-heads 4 \
 	    --encoder-ffn-embed-dim 1024 \
 	    --seed 12345 \
-        --fp32-scale-tolerance=0.25 \
+        --fp16-scale-tolerance=0.25 \
 	    $PREC \
 	    --ddp-backend no_c10d \
 	    --disable-validation \
