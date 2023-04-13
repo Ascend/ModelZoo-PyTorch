@@ -1,0 +1,10 @@
+diff -Naru a/configs/det/det_mv3_db.yml b/configs/det/det_mv3_db.yml
+--- a/configs/det/det_mv3_db.yml	2023-03-16 08:48:41.133714917 +0000
++++ b/configs/det/det_mv3_db.yml	2023-03-16 08:49:22.225715420 +0000
+@@ -1,5 +1,5 @@
+ Global:
+-  use_gpu: true
++  use_gpu: false
+   use_xpu: false
+   use_mlu: false
+   epoch_num: 1200
