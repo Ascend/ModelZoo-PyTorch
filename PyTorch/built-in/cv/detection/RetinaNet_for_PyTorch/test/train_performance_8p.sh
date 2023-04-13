@@ -79,6 +79,17 @@ do
     elif [[ $para == --bind_core* ]]; then
         bind_core=`echo ${para#*=}`
         name_bind="_bindcore"
+    elif [[ $para == --conda* ]];then
+        conda=`echo ${para#*=}`
+        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
+        result=$(echo "$i"|awk -F '.' '{print $2}')
+        echo "$i"
+        echo "$result"
+        if [[ "$result" != "11" ]];then
+            echo "in conda py9"
+            source set_conda.sh
+            source activate py9
+        fi
     fi
 done
 
