@@ -13,6 +13,9 @@
 # limitations under the License.
 # ============================================================================
 
+import os
+import datetime
+
 from model import Generator
 from model import Discriminator
 from torch.autograd import Variable
@@ -21,10 +24,10 @@ from data_loader import get_loader
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
+if torch.__version__ >= '1.8':
+    import torch_npu
 import numpy as np
-import os
 import time
-import datetime
 from apex import amp
 import math
 from averageMeter import AverageMeter
