@@ -849,7 +849,7 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
             input = input.float()
 
         if self.scale is not None:
-            input = input * (scale * 1.0 / norm_factor)
+            input = input * (self.scale * 1.0 / norm_factor)
 
         if self.attn_mask_type == AttnMaskType.causal:
             if self.mask_tri is None:

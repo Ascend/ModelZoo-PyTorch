@@ -67,7 +67,7 @@ parser.add_argument("--local_rank", type=int, default=0)
 parser.add_argument("--train_epochs", type=int, default=20)
 parser.add_argument("--data_path", type=str, default='')
 parser.add_argument("--workers", type=int, default=4)
-parser.add_argument("--lr", type=float, default=2e-5)
+parser.add_argument("--lr", type=float, default=4e-5)
 parser.add_argument("--opt_level", type=str, default="O1")
 parser.add_argument("--warm_factor", type=float, default=0.1)
 
@@ -194,11 +194,11 @@ model = Model().to(device)
 
 print(model)
 if 'npu' in device:
-    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=args.lr)
+    optimizer = apex.optimizers.NpuFusedAdamW(model.parameters(), lr=args.lr)
     model, optimizer = amp.initialize(model, optimizer, \
-        opt_level=args.opt_level, loss_scale=128, combine_grad=True)
+        opt_level=args.opt_level, loss_scale=256, combine_grad=True)
 else:
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.AdamW(model.parameters(), lr=args.lr)
 
 updates_total = len(train_dataloader) * args.train_epochs
 scheduler = get_linear_schedule_with_warmup(optimizer, \
