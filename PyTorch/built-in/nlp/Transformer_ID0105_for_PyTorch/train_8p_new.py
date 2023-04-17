@@ -252,7 +252,9 @@ def train(args, trainer, datasets, epoch_itr):
             loss = trainer.train_step(sample, update_params=True, last_step=(i == len(itr) - 1))
             if loss != None:
                 losses.update(loss)
-
+        # Execute torch.npu.empty_cache() to avoid oom on PT1.11
+        if i == 3:
+            torch.npu.empty_cache()
         if i >= 4:
             t = time.time()
             batch_time.update((t - end)/update_freq)
