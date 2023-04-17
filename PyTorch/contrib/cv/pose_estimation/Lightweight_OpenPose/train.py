@@ -38,6 +38,19 @@ from modules.loss import l2_loss, AverageMeter, ProgressMeter
 from modules.load_state import load_state, load_from_mobilenet
 from val import evaluate
 from multi_epochs_dataloaders import MultiEpochsDataLoader
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)  # To prevent freeze of DataLoaderl
@@ -359,6 +372,9 @@ def train(train_loader, model, optimizer, epoch, args, ngpus_per_node):
     model.train()
 
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, batch_data in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -376,6 +392,7 @@ def train(train_loader, model, optimizer, epoch, args, ngpus_per_node):
         keypoint_maps = keypoint_maps.to(args.loc, non_blocking=True).to(torch.float)
         paf_maps = paf_maps.to(args.loc, non_blocking=True).to(torch.float)
 
+        profile.start()
         stages_output = model(images)
 
         losses = []
@@ -393,6 +410,7 @@ def train(train_loader, model, optimizer, epoch, args, ngpus_per_node):
         else:
             loss.backward()
         optimizer.step()
+        profile.end()
 
         # measure elapsed time
         cost_time = time.time() - end

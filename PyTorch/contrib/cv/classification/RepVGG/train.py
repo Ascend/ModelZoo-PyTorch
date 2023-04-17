@@ -48,11 +48,25 @@ import torch.multiprocessing as mp
 import torch.utils.data
 import torch.utils.data.distributed
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from utils import AverageMeter, accuracy, ProgressMeter, get_default_ImageNet_val_loader, get_default_ImageNet_train_sampler_loader, log_msg
+from utils import AverageMeter, accuracy, ProgressMeter
+from utils import get_default_ImageNet_val_loader, get_default_ImageNet_train_sampler_loader, log_msg
 
 from repvgg import get_RepVGG_func_by_name
 from apex import amp
 from apex.optimizers import NpuFusedSGD
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 IMAGENET_TRAINSET_SIZE = 1281167
 
@@ -136,7 +150,8 @@ def sgd_optimizer(model, lr, momentum, weight_decay, use_custwd):
         if (use_custwd and ('rbr_dense' in key or 'rbr_1x1' in key)) or 'bias' in key or 'bn' in key:
             apply_weight_decay = 0
         if 'bias' in key:
-            apply_lr = 2 * lr       #   Just a Caffe-style common practice. Made no difference.
+            # Just a Caffe-style common practice. Made no difference.
+            apply_lr = 2 * lr 
         params += [{'params': [value], 'lr': apply_lr, 'weight_decay': apply_weight_decay}]
         
     params_dict = {}
@@ -156,8 +171,8 @@ def sgd_optimizer(model, lr, momentum, weight_decay, use_custwd):
     optimizer = NpuFusedSGD(params, lr, momentum=momentum)
     return optimizer
 
-
-def load_my_pretrained_state_dict(model, state_dict, is_finetune):  #custom function to load model when not all dict elements
+# custom function to load model when not all dict elements
+def load_my_pretrained_state_dict(model, state_dict, is_finetune):
     own_state = model.state_dict()
     for name, param in state_dict.items():
         if name not in own_state:
@@ -310,10 +325,12 @@ def main_worker(args):
 
     optimizer = sgd_optimizer(model, args.lr, args.momentum, args.weight_decay, args.custom_weight_decay)
 
-    lr_scheduler = CosineAnnealingLR(optimizer=optimizer, T_max=args.epochs * IMAGENET_TRAINSET_SIZE // args.batch_size // args.num_gpus)
+    lr_scheduler = CosineAnnealingLR(optimizer=optimizer,
+                                     T_max=args.epochs * IMAGENET_TRAINSET_SIZE // args.batch_size // args.num_gpus)
 
     if args.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale_value, combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level,
+                                          loss_scale=args.loss_scale_value, combine_grad=True)
 
     if args.num_gpus > 1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[cur_device], broadcast_buffers=False)
@@ -408,6 +425,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler, 
     mean = mean.to(device, non_blocking=True)
     std = std.to(device, non_blocking=True)
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -419,6 +439,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler, 
             images = images.npu(non_blocking=True).permute(0, 3, 1, 2).to(torch.float).sub(mean).div(std)
             target = target.npu(non_blocking=True)
             
+        profile.start()
         # compute output
         output = model(images)
 
@@ -442,6 +463,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, lr_scheduler, 
         else:
             loss.backward()
         optimizer.step()
+        profile.end()
 
         # measure elapsed time
         batch_time.update(time.time() - end)

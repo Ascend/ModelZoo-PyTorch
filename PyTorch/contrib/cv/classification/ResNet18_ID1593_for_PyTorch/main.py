@@ -38,6 +38,19 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import resnet as nvmodels
 import numpy as np
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -533,6 +546,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
     end = time.time()
     step_per_epoch = len(train_loader)
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         cur_step = epoch * step_per_epoch + i
         # measure data loading time
@@ -541,6 +557,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
         target = target.to(torch.int32).to(loc, non_blocking=True)
 
+        profile.start()
         # compute output
         output = model(images)
         loss = criterion(output, target)
@@ -559,6 +576,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         else:
             loss.backward()
         optimizer.step()
+        profile.end()
 
         # measure elapsed time
         cost_time = time.time() - end

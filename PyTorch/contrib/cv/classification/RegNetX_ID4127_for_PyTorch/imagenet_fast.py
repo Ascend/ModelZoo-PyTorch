@@ -24,6 +24,7 @@ import shutil
 import time
 import random
 import numpy as np
+import warnings
 
 import torch
 if torch.__version__ >= "1.8":
@@ -41,14 +42,25 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from flops_counter import get_model_complexity_info
+from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p
+from utils.regnet import RegNet
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
 from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-from utils import Bar, Logger, AverageMeter, accuracy, mkdir_p
-from utils.regnet import RegNet
-
-import warnings
 
 import apex
 
@@ -660,6 +672,9 @@ def train(train_loader, model, criterion, optimizer, epoch, use_npu, gpu, ngpus,
 
     batch_idx = -1
 
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     while inputs is not None:
         loc = 'npu:{}'.format(gpu)
         targets = targets.to(torch.int32)
@@ -674,6 +689,7 @@ def train(train_loader, model, criterion, optimizer, epoch, use_npu, gpu, ngpus,
         else:
             print_flag = False
 
+        profile.start()
         if args.cutmix:
             if printflag == False:
                 print('using cutmix !')
@@ -712,6 +728,7 @@ def train(train_loader, model, criterion, optimizer, epoch, use_npu, gpu, ngpus,
             optimizer.step(print_flag=print_flag)
         else:
             optimizer.step()
+        profile.end()
 
         if batch_idx % args.print_freq == 0:
             # measure accuracy and record loss
