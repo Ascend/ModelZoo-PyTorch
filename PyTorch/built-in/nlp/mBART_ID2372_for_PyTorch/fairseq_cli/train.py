@@ -32,6 +32,7 @@ from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
 from fairseq.modules.multihead_attention import MHAConfig
+from torch_npu.utils.profiler import Profile
 
 
 logging.basicConfig(
@@ -274,12 +275,16 @@ def train(args, trainer, task, epoch_itr):
     num_updates = trainer.get_num_updates()
     visited = False
     MHAConfig.set_fussion()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
     for i, samples in enumerate(progress):
         start_time = time.time()
         with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
             "train_step-%d" % i
         ):
+            profile.start()
             log_output = trainer.train_step(samples)
+            profile.end()
             if hasattr(trainer.model, "all_reduce") and (trainer.optimizer.fp16_tmp_grads is not None) and (not visited) and (epoch_itr.epoch <= 1):
                 trainer.first_grad = wrapper_model_all_reduce(trainer.model, trainer.optimizer.fp16_tmp_grads, trainer.reduce_stream)
                 visited = True
