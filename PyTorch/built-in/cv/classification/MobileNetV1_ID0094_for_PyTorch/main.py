@@ -33,17 +33,15 @@ import argparse
 import os
 import shutil
 import time
+import random
 import torch
 if torch.__version__ >= "1.8":
-    import torch_npu
-if torch.__version__ >= '1.8.1':
     import torch_npu
 import torch.nn.parallel
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
-import random
 import numpy as np
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
@@ -51,6 +49,7 @@ import torchvision.models as models
 import torch.distributed as dist
 import apex
 from apex import amp
+from torch_npu.utils.profiler import Profile
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -350,7 +349,6 @@ def profiling(data_loader, model, criterion, optimizer, args):
         optimizer.step()
 
     for step, (images, target) in enumerate(data_loader):
-        # loc = 'npu:{}'.format(args.gpu)
         loc = CALCULATE_DEVICE
         images = images.to(loc, non_blocking=True).to(torch.float)
         target = target.to(torch.int32).to(loc, non_blocking=True)
@@ -364,7 +362,7 @@ def profiling(data_loader, model, criterion, optimizer, args):
     prof.export_chrome_trace("output.prof")
 
 
-def train(train_loader, model, criterion, optimizer, epoch, args, device, apex=False):
+def train(train_loader, model, criterion, optimizer, epoch, args, device, use_apex=False):
     batch_time = AverageMeter()
     img_per_s = AverageMeter()
     data_time = AverageMeter()
@@ -375,33 +373,37 @@ def train(train_loader, model, criterion, optimizer, epoch, args, device, apex=F
     # switch to train mode
     model.train()
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+    for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         target = target.to(device)
-        input = input.to(device)
-        input_var = torch.autograd.Variable(input)
+        images = images.to(device)
+        input_var = torch.autograd.Variable(images)
         target_var = torch.autograd.Variable(target)
 
+        profile.start()
         # compute output
         output = model(input_var)
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))
-        top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
+        losses.update(loss.item(), images.size(0))
+        top1.update(prec1.item(), images.size(0))
+        top5.update(prec5.item(), images.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        if apex:
+        if use_apex:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
             loss.backward()
         optimizer.step()
+        profile.end()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -432,9 +434,9 @@ def validate(val_loader, model, criterion, device, args):
     # switch to evaluate mode
     model.eval()
     end = time.time()
-    for i, (input, target) in enumerate(val_loader):
+    for i, (images, target) in enumerate(val_loader):
         target = target.to(device)
-        input_var = input.to(device)
+        input_var = images.to(device)
         target_var = target
 
         # compute output
@@ -443,9 +445,9 @@ def validate(val_loader, model, criterion, device, args):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))
-        top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
+        losses.update(loss.item(), images.size(0))
+        top1.update(prec1.item(), images.size(0))
+        top5.update(prec5.item(), images.size(0))
 
         # measure elapsed time
         batch_time.update(time.time() - end)

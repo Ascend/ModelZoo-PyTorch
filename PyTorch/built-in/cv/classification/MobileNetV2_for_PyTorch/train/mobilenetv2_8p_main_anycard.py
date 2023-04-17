@@ -46,6 +46,7 @@ import apex
 from apex import amp
 
 from multi_epochs_dataloader import MultiEpochsDataLoader,NoProfiling
+from torch_npu.utils.profiler import Profile
 
 BATCH_SIZE = 6144
 OPTIMIZER_BATCH_SIZE = 6144
@@ -354,99 +355,92 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
 
     # steps_per_epoch = len(train_loader)
     steps_per_epoch = train_loader_len
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
     print('==========step per epoch======================', steps_per_epoch)
     for i, (images, target) in enumerate(train_loader):
         #图模式
         if args.graph_mode:
             print("graph mode on")
             torch.npu.enable_graph_mode()
-        if i >= 200:
-            pass
-        if args.profiling in ['CANN','GE'] and i >= args.stop_step:
-            pass
-        if i <= args.stop_step and i >= args.start_step and args.profiling == 'CANN':
-                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
-        elif i <= args.stop_step and i >= args.start_step and args.profiling == 'GE':
-            prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
-        else:
-            prof_manager = NoProfiling()
         # measure data loading time
         data_time.update(time.time() - end)
 
-        with prof_manager:
-            global_step = epoch * steps_per_epoch + i
-            lr = adjust_learning_rate(optimizer, global_step, steps_per_epoch, args)
-            #图模式
-            if args.graph_mode:
-                images = images.to(loc, non_blocking = True)
-                target = target.to(loc, non_blocking = True)
-                images = images.to(torch.float).sub(mean).div(std)
-                target = target.to(torch.int32)
-                # compute output
-                output = model(images)
-                loss = criterion(output, target)
-                acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            else:
-                target = target.to(torch.int32)
-                images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
-                target = target.to(loc, non_blocking=True)
-                # compute output
-                output = model(images)
-                stream = torch.npu.current_stream()
-                stream.synchronize()
+        profile.start()
+        global_step = epoch * steps_per_epoch + i
+        lr = adjust_learning_rate(optimizer, global_step, steps_per_epoch, args)
+        #图模式
+        if args.graph_mode:
+            images = images.to(loc, non_blocking = True)
+            target = target.to(loc, non_blocking = True)
+            images = images.to(torch.float).sub(mean).div(std)
+            target = target.to(torch.int32)
+            # compute output
+            output = model(images)
+            loss = criterion(output, target)
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        else:
+            target = target.to(torch.int32)
+            images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
+            target = target.to(loc, non_blocking=True)
+            # compute output
+            output = model(images)
+            stream = torch.npu.current_stream()
+            stream.synchronize()
 
-                loss = criterion(output, target)
-                stream = torch.npu.current_stream()
-                stream.synchronize()
+            loss = criterion(output, target)
+            stream = torch.npu.current_stream()
+            stream.synchronize()
 
-                # measure accuracy and record loss
-                acc1, acc5 = accuracy(output, target, topk=(1, 5))
-                losses.update(loss.item(), images.size(0))
-                top1.update(acc1[0], images.size(0))
-                top5.update(acc5[0], images.size(0))
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
-            # compute gradient and do SGD step
-            if args.benchmark == 0:
-                optimizer.zero_grad()
+        # compute gradient and do SGD step
+        if args.benchmark == 0:
+            optimizer.zero_grad()
 
-            if args.amp:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
-            #图模式
-            if not args.graph_mode:
-                stream = torch.npu.current_stream()
-                stream.synchronize()
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        #图模式
+        if not args.graph_mode:
+            stream = torch.npu.current_stream()
+            stream.synchronize()
 
-            if args.benchmark == 0:
+        if args.benchmark == 0:
+            optimizer.step()
+        elif args.benchmark == 1:
+            batch_size_multiplier = int(OPTIMIZER_BATCH_SIZE / args.batch_size)
+            bm_optimizer_step = ((i + 1) % batch_size_multiplier) == 0
+            if bm_optimizer_step:
+                for param_group in optimizer.param_groups:
+                    for param in param_group['params']:
+                        param.grad /= batch_size_multiplier
                 optimizer.step()
-            elif args.benchmark == 1:
-                batch_size_multiplier = int(OPTIMIZER_BATCH_SIZE / args.batch_size)
-                bm_optimizer_step = ((i + 1) % batch_size_multiplier) == 0
-                if bm_optimizer_step:
-                    for param_group in optimizer.param_groups:
-                        for param in param_group['params']:
-                            param.grad /= batch_size_multiplier
-                    optimizer.step()
-                    optimizer.zero_grad()
-            #图模式
-            if args.graph_mode:
-                torch.npu.launch_graph()
-                if i == len(train_loader):
-                    torch.npu.synchronize()
-            else:
-                stream = torch.npu.current_stream()
-                stream.synchronize()
+                optimizer.zero_grad()
+        #图模式
+        if args.graph_mode:
+            torch.npu.launch_graph()
+            if i == len(train_loader):
+                torch.npu.synchronize()
+        else:
+            stream = torch.npu.current_stream()
+            stream.synchronize()
 
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-            if i % args.print_freq == 0:
-                if not args.multiprocessing_distributed or (args.multiprocessing_distributed
-                                                            and args.rank % ngpus_per_node == 0):
-                    progress.display(i)
+        if i % args.print_freq == 0:
+            if not args.multiprocessing_distributed or (args.multiprocessing_distributed
+                                                        and args.rank % ngpus_per_node == 0):
+                progress.display(i)
+        profile.end()
     #图模式
     if args.graph_mode:
         print("graph mode off")
