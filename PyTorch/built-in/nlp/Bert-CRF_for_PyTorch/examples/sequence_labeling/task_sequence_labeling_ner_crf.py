@@ -70,6 +70,7 @@ parser.add_argument("--workers", type=int, default=4)
 parser.add_argument("--lr", type=float, default=4e-5)
 parser.add_argument("--opt_level", type=str, default="O1")
 parser.add_argument("--warm_factor", type=float, default=0.1)
+parser.add_argument("--eval_interval", type=int, default=1)
 
 args = parser.parse_args()
 
@@ -128,6 +129,53 @@ class MyDataset(ListDataset):
 # 建立分词器
 tokenizer = Tokenizer(dict_path, do_lower_case=True)
 
+class InfiniteDataLoader(DataLoader):
+    """Dataloader that reuses workers
+    Uses same syntax as vanilla DataLoader
+    The code is adapted from
+    https://github.com/ultralytics/ultralytics/blob/main/ultralytics/yolo/data/dataloaders/v5loader.py
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Dataloader that reuses workers for same syntax as vanilla DataLoader."""
+        super().__init__(*args, **kwargs)
+        object.__setattr__(self, 'batch_sampler', _RepeatSampler(self.batch_sampler))
+        self.iterator = super().__iter__()
+
+    def __len__(self):
+        """Returns the length of batch_sampler's sampler."""
+        return len(self.batch_sampler.sampler)
+
+    def __iter__(self):
+        """Creates a sampler that infinitely repeats."""
+        for _ in range(len(self)):
+            yield next(self.iterator)
+
+
+class _RepeatSampler:
+    """Sampler that repeats forever
+    The code is adapted from
+    https://github.com/ultralytics/ultralytics/blob/main/ultralytics/yolo/data/dataloaders/v5loader.py
+
+    Args:
+        sampler (Dataset.sampler): The sampler to repeat.
+    """
+
+    def __init__(self, sampler):
+        """Sampler that repeats dataset samples infinitely."""
+        self.sampler = sampler
+
+    def __iter__(self):
+        """Infinite loop iterating over a given sampler."""
+        while True:
+            yield from iter(self.sampler)
+
+def seed_worker(worker_id):
+    """Set dataloader worker seed https://pytorch.org/docs/stable/notes/randomness.html#dataloader."""
+    worker_seed = torch.initial_seed() % 2 ** 32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
 def collate_fn(batch):
     batch_token_ids, batch_labels = [], []
     for d in batch:
@@ -152,19 +200,26 @@ def collate_fn(batch):
     batch_labels = torch.tensor(batch_labels, dtype=torch.long)
     return batch_token_ids, batch_labels, length
 
+
+""" build generator for InfiniteDataLoader.
+    The magic number 6148914691236517205 is from
+    https://github.com/ultralytics/ultralytics/blob/main/ultralytics/yolo/data/dataloaders/v5loader.py"""
+generator = torch.Generator()
+generator.manual_seed(6148914691236517205 + args.local_rank)
+
 # 转换数据集
 if distributed:
     train_dataset = MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train')
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, \
         num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, prefetch_factor=8, \
+    train_dataloader = InfiniteDataLoader(train_dataset, batch_size=batch_size, generator=generator, \
         num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, \
-            collate_fn=collate_fn, drop_last=True, pin_memory=True, persistent_workers=True)
+            collate_fn=collate_fn, drop_last=True, pin_memory=True, worker_init_fn=seed_worker)
 else:
-    train_dataloader = DataLoader(
+    train_dataloader = InfiniteDataLoader(
         MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train'), \
-        batch_size=batch_size, num_workers=args.workers, prefetch_factor=8, \
-        shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True, persistent_workers=True)
+        batch_size=batch_size, num_workers=args.workers, generator=generator, \
+        shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True, worker_init_fn=seed_worker)
 valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), \
     batch_size=batch_size, collate_fn=collate_fn)
 
@@ -296,15 +351,16 @@ class Evaluator(Callback):
         self.best_val_f1 = 0.
 
     def on_epoch_end(self, steps, epoch, logs=None):
-        f1, precision, recall, f2, precision2, recall2 = evaluate(valid_dataloader)
-        if f2 > self.best_val_f1:
-            self.best_val_f1 = f2
-            if distributed and args.local_rank == 0:
-                model.module.save_weights('best_model.pt')
-            if not distributed:
-                model.save_weights('best_model.pt')
-        print(f'[val-token  level] f1: {f1:.5f}, p: {precision:.5f} r: {recall:.5f}')
-        print(f'[val-entity level] f1: {f2:.5f}, p: {precision2:.5f} r: {recall2:.5f} best_f1: {self.best_val_f1:.5f}\n')
+        if (epoch + 1) % args.eval_interval == 0:
+            f1, precision, recall, f2, precision2, recall2 = evaluate(valid_dataloader)
+            if f2 > self.best_val_f1:
+                self.best_val_f1 = f2
+                if distributed and args.local_rank == 0:
+                    model.module.save_weights('best_model.pt')
+                if not distributed:
+                    model.save_weights('best_model.pt')
+            print(f'[val-token  level] f1: {f1:.5f}, p: {precision:.5f} r: {recall:.5f}')
+            print(f'[val-entity level] f1: {f2:.5f}, p: {precision2:.5f} r: {recall2:.5f} best_f1: {self.best_val_f1:.5f}\n')
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ export MASTER_PORT=29500
 data_path=""
 
 # 适配更大batch-size，训练epoch增加到25
-train_epochs=25
+train_epochs=50
 # 加载数据进程数
 workers=24
 # 学习率
@@ -23,6 +23,8 @@ lr=3.2e-4
 opt_level="O2"
 # warmup factor
 warm_factor=0.3
+# 多个epoch做一次eval
+eval_interval=5
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
@@ -82,7 +84,8 @@ taskset -c $PID_START-$PID_END python3.7 examples/sequence_labeling/task_sequenc
         --workers ${workers} \
         --lr ${lr} \
         --warm_factor ${warm_factor} \
-        --opt_level ${opt_level} > $cur_path/test/output/${i}/train_${i}.log 2>&1 &
+        --opt_level ${opt_level} \
+        --eval_interval ${eval_interval} > $cur_path/test/output/${i}/train_${i}.log 2>&1 &
 done
 wait
 ASCEND_DEVICE_ID=0
