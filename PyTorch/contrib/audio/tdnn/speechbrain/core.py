@@ -53,6 +53,19 @@ from speechbrain.dataio.sampler import DistributedSamplerWrapper
 from speechbrain.dataio.sampler import ReproducibleRandomSampler
 import apex
 from apex.optimizers import NpuFusedAdam
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 logger = logging.getLogger(__name__)
 DEFAULT_LOG_CONFIG = os.path.dirname(os.path.abspath(__file__))
@@ -812,15 +825,9 @@ class Brain:
                 # Currently to get here, shuffle == False, so not passing it.
                 # Otherwise we'd have to handle deleting it (but it is already
                 # deleted).
-                # self.train_sampler = DistributedSampler(
-                    # dataset,
-                    # rank=self.rank,
-                    # shuffle=shuffle,
-                # )
                 self.train_sampler = None
 
                 # with DistributedSamplerWrapper, one must disable shuffling for dataloader
-                # loader_kwargs["shuffle"] = False
                 loader_kwargs["shuffle"] = True
             else:  # batch_sampler was specified
                 # TODO: Could a DistributedSamplerWrapper actually work
@@ -1118,31 +1125,16 @@ class Brain:
                                      prefix="Epoch: [{}]".format(epoch))
             end = time.time()
 
+            profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                              profile_type=os.getenv('PROFILE_TYPE'))
+
             for ix, batch in enumerate(train_set):
                 self.step = ix + 1
                 data_time.update(time.time() - end)
 
-                #控制step
-    
-                # if self.step > 6:
-                #     with torch.autograd.profiler.profile(use_npu=True) as prof:
-                #         with torch.autograd.profiler.record_function("compute_forward"):
-                #             outputs = self.compute_forward(batch, Stage.TRAIN)
-                #         with torch.autograd.profiler.record_function("compute_objectives"):
-                #             loss = self.compute_objectives(outputs, batch, Stage.TRAIN)
-                #         self.optimizer.zero_grad()
-                #         with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                #                 scaled_loss.backward()
-                #         self.optimizer.step()
-                #     # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-                #     prof.export_chrome_trace("output_NPU_bs64_mm_O1.prof")
-
-                #     import sys
-                #     sys.exit()
-
-
-
+                profile.start()
                 loss = self.fit_batch(batch)
+                profile.end()
 
                 batch_time.update(time.time() - end)
                 fps.update(len(batch) / batch_time.val * int(os.environ["WORLD_SIZE"]))
@@ -1150,7 +1142,6 @@ class Brain:
                 self.avg_train_loss = self.update_average(
                     loss, self.avg_train_loss
                 )
-                # t.set_postfix(train_loss=self.avg_train_loss)
                 losses.update(loss.item())
                 if sb.utils.distributed.if_main_process():
                     progress.display(ix)
@@ -1164,8 +1155,6 @@ class Brain:
                     and time.time() - last_ckpt_time
                     >= self.ckpt_interval_minutes * 60.0
                 ):
-                    # run_on_main(self._save_intra_epoch_ckpt)
-                    # last_ckpt_time = time.time()
                     if sb.utils.distributed.if_main_process():
                         self._save_intra_epoch_ckpt()
                     last_ckpt_time = time.time()

@@ -14,15 +14,6 @@ import os
 import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-# We need to setup root logger before importing any fairseq libraries.
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-    stream=sys.stdout,
-)
-logger = logging.getLogger("fairseq_cli.train")
-
 import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -39,6 +30,28 @@ from fairseq.file_io import PathManager
 from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
+# We need to setup root logger before importing any fairseq libraries.
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    stream=sys.stdout,
+)
+logger = logging.getLogger("fairseq_cli.train")
 
 
 def main(cfg: FairseqConfig) -> None:
@@ -309,23 +322,18 @@ def train(
     should_stop = False
     num_updates = trainer.get_num_updates()
     logger.info("Start iterating over samples")
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, samples in enumerate(progress):
         if i == len(progress) - 1:
             break
-        if i > 30000:
-            cann_profiling_path = '/home/crm/fairseq-main/cann_profiling'
-            if not os.path.exists(cann_profiling_path):
-                os.mkdir(cann_profiling_path)
-            with torch.npu.profile(cann_profiling_path):
-                with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
-                        "train_step-%d" % i
-                ):
-                    log_output = trainer.train_step(samples)
-            exit(0)
+        profile.start()
         with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
             "train_step-%d" % i
         ):
             log_output = trainer.train_step(samples)
+        profile.end()
 
         if log_output is not None:  # not OOM, overflow, ...
             # log mid-epoch stats
@@ -567,9 +575,6 @@ def cli_main(
                 distributed_utils.call_main(cfg, main)
     else:
         distributed_utils.call_main(cfg, main)
-
-    # if cfg.common.use_plasma_view:
-    #     server.server.kill()
 
 
 if __name__ == "__main__":

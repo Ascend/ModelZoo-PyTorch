@@ -23,17 +23,9 @@ import os
 from posixpath import commonpath
 import sys
 from typing import Dict, Optional, Any, List, Tuple, Callable
+import time
 
 from torch import cuda
-
-# We need to setup root logger before importing any fairseq libraries.
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-    stream=sys.stdout,
-)
-logger = logging.getLogger("fairseq_cli.train")
 
 import numpy as np
 import torch
@@ -54,7 +46,28 @@ from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
 from omegaconf import DictConfig, OmegaConf
-import time
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
+# We need to setup root logger before importing any fairseq libraries.
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    stream=sys.stdout,
+)
+logger = logging.getLogger("fairseq_cli.train")
 
 os.environ['MASTER_ADDR'] = '127.0.0.1' 
 os.environ['MASTER_PORT'] = '29688'
@@ -304,30 +317,16 @@ def train(
     btsize = cfg.dataset.batch_size
     numdevices = cfg.distributed_training.distributed_world_size
     fps_li = []
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, samples in enumerate(progress):
-        if cfg.common.use_profile and i == cfg.common.profile_step:
-            # profile at profile_step
-            use_npu = False
-            use_cuda = False
-            if cfg.common.npu:
-                use_npu = True
-            elif cfg.common.gpu:
-                use_cuda = True
-            with torch.autograd.profiler.profile(use_npu=use_npu, use_cuda=use_cuda) as prof:
-                with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
-                    "train_step-%d" % i
-                ):
-                    log_output = trainer.train_step(samples)
-            print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-            if cfg.common.log_file:
-                prof.export_chrome_trace("{}.prof".format(cfg.common.log_file))
-            else:
-                prof.export_chrome_trace("output.prof")
-        else :
-            with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
-                "train_step-%d" % i
-            ):
-                log_output = trainer.train_step(samples)
+        profile.start()
+        with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
+            "train_step-%d" % i
+        ):
+            log_output = trainer.train_step(samples)
+        profile.end()
 
         if log_output is not None:  # not OOM, overflow, ...
             # log mid-epoch stats
@@ -548,9 +547,6 @@ def cli_main(
                 distributed_utils.call_main(cfg, main)
     else:
         distributed_utils.call_main(cfg, main)
-
-    # if cfg.common.use_plasma_view:
-    #     server.server.kill()
 
 
 if __name__ == "__main__":

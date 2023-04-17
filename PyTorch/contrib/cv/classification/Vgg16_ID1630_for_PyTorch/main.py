@@ -74,6 +74,19 @@ import math
 from apex import amp
 import apex
 import numpy as np
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
@@ -370,6 +383,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
     end = time.time()
     steps_per_epoch = len(train_loader)
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -386,6 +402,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         else:
             stream = torch.cuda.current_stream()
 
+        profile.start()
         # compute output
         output = model(images)
         stream.synchronize()
@@ -410,6 +427,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         stream.synchronize()
         optimizer.step()
         stream.synchronize()
+        profile.end()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
