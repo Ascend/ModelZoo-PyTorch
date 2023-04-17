@@ -29,6 +29,19 @@ from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper, reduce_tensor
 
 from models.swin_transformer import NpuDropPath
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 try:
     # noinspection PyUnresolvedReferences
@@ -158,6 +171,9 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
 
     start = time.time()
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for idx, (samples_1, samples_2, targets) in enumerate(data_loader):
         if idx == args.steps:
             exit(0)
@@ -166,6 +182,7 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
         samples_2 = samples_2.npu(non_blocking=True)
         targets = targets.npu(non_blocking=True)
 
+        profile.start()
         loss = model(samples_1, samples_2, optimizer)
 
         optimizer.zero_grad()
@@ -183,6 +200,7 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler, 
             else:
                 grad_norm = get_grad_norm(model.parameters())
         optimizer.step()
+        profile.end()
 
         torch.npu.synchronize()
         batch_time.update(time.time() - end)

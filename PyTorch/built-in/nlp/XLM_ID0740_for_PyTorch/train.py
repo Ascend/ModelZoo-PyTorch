@@ -35,6 +35,19 @@ from xlm.model import check_model_params, build_model
 from xlm.model.memory import HashingMemory
 from xlm.trainer import SingleTrainer, EncDecTrainer
 from xlm.evaluation.evaluator import SingleEvaluator, EncDecEvaluator
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 
 def get_parser():
@@ -288,10 +301,14 @@ def main(params):
         trainer.n_sentences = 0
 
         step = 0
+        profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                          profile_type=os.getenv('PROFILE_TYPE'))
+
         while trainer.n_sentences < trainer.epoch_size:
             if trainer.n_sentences > 32000:
               pass
             start_time = time.time()
+            profile.start()
             # CLM steps
             for lang1, lang2 in shuf_order(params.clm_steps, params):
                 trainer.clm_step(lang1, lang2, params.lambda_clm)
@@ -317,6 +334,7 @@ def main(params):
                 trainer.bt_step(lang1, lang2, lang3, params.lambda_bt)
 
             trainer.iter()
+            profile.end()
 
             if step < 2 and trainer.epoch == 0:
                 step += 1

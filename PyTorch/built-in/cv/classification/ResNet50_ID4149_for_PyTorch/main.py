@@ -1,3 +1,24 @@
+# Copyright 2021 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Copyright (c) 2019-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+#
+
 import argparse
 import os
 import random
@@ -25,6 +46,19 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import Subset
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -385,6 +419,9 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
     std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1).to(device, non_blocking=True)
 
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -396,6 +433,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
         images = images.to(device, non_blocking=True).to(torch.float).sub(mean).div(std)
         target = target.to(device, non_blocking=True)
 
+        profile.start()
         # compute output
         output = model(images)
         loss = criterion(output, target)
@@ -414,6 +452,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
         else:
             loss.backward()
         optimizer.step()
+        profile.end()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
