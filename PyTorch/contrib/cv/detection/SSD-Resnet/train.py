@@ -11,18 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from base_model import Loss
 import sys
 import os
+import time
+import io
+import gc
+import logging
+from bisect import bisect       # for lr_scheduler
+from contextlib import redirect_stdout
 from opt_loss import OptLoss
 from mlperf_logger import configure_logger, log_start, log_end, log_event, set_seeds, get_rank, barrier
 from mlperf_logging.mllog import constants
 import torch
 from torch.autograd import Variable
-import time
-import numpy as np
-import io
-from bisect import bisect       # for lr_scheduler
+from base_model import Loss
 from apex import amp
 from ssd300 import SSD300
 from master_params import create_flat_master
@@ -32,13 +34,26 @@ from box_coder import dboxes300_coco, build_ssd300_coder
 from async_evaluator import AsyncEvaluator
 from eval import coco_eval
 from apex.optimizers import NpuFusedSGD
-import gc
 from torch.nn.parallel import DistributedDataParallel
+import numpy as np
 # necessary pytorch imports
 import torch.utils.data.distributed
 import torch.distributed as dist
 if torch.__version__ >= '1.8':
     import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 # Apex imports
 try:
@@ -48,13 +63,8 @@ try:
     from apex.parallel import DistributedDataParallel as DDP
     from apex.fp16_utils import *
     from apex.multi_tensor_apply import multi_tensor_applier
-    #import amp_C
 except ImportError:
     raise ImportError("Please install APEX from https://github.com/nvidia/apex")
-
-from contextlib import redirect_stdout
-
-import logging
 
 
 class Logger(object):
@@ -63,17 +73,17 @@ class Logger(object):
     def __init__(self, filename=""):
         self.logfile = filename
         self.terminal = sys.stdout
-        # self.log = open(filename, "a")
         return
 
     def write(self, message):
         self.terminal.write(message)
         if self.logfile != "":
             try:
-                self.log = open(self.logfile, "a")
+                fd = os.open(self.logfile, os.O_RDWR|os.O_CREAT)
+                self.log = os.fdopen(fd, "a")
                 self.log.write(message)
-                self.log.close()
-            except:
+                self.log.close(fd)
+            except Exception:
                 pass
 
     def flush(self):
@@ -122,7 +132,6 @@ def check_async_evals(args, evaluator, threshold):
     # Note: Already caught the non-distributed case above, can assume broadcast is available
     with torch.no_grad():
         finish_tensor = torch.tensor([finished], dtype=torch.int32, device=torch.device('npu'))
-        # torch.distributed.all_reduce(finish_tensor)
         torch.distributed.broadcast(finish_tensor, src=0)
 
         # >= 1 ranks has seen final accuracy
@@ -189,8 +198,6 @@ def train300_mlperf_coco(args):
     ssd300.train()
     ssd300.npu()
     dboxes = dboxes300_coco()
-    # Note: No reason not to use optimised loss
-    #loss_func = OptLoss()
     loss_func = Loss(dboxes)
     loss_func.npu()
 
@@ -283,9 +290,6 @@ def train300_mlperf_coco(args):
     # Cause cudnnFind for dgrad, wgrad to run
     loss.backward(dloss)
 
-    # Necessary import in init
-    #from pycocotools.coco import COCO
-
     encoder = build_ssd300_coder()
 
     evaluator = AsyncEvaluator(num_threads=1)
@@ -327,7 +331,8 @@ def train300_mlperf_coco(args):
             train_model = ssd300.module if args.distributed else ssd300
 
             if args.distributed and args.allreduce_running_stats:
-                if args.rank == 0: print("averaging bn running means and vars")
+                if args.rank == 0:
+                    print("averaging bn running means and vars")
                 # make sure every node has the same running bn stats before
                 # using them to evaluate, or saving the model for inference
                 world_size = float(torch.distributed.get_world_size())
@@ -373,6 +378,9 @@ def train300_mlperf_coco(args):
                   metadata={'epoch_num': epoch + 1,
                             'current_iter_nufm': iter_num})
 
+        profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                          profile_type=os.getenv('PROFILE_TYPE'))
+
         for i, data in enumerate(train_loader):
             (img, bbox, label, _) = data
             img = img.npu()
@@ -390,7 +398,7 @@ def train300_mlperf_coco(args):
                     if args.profile_nvtx:
                         torch.autograd._disable_profiler()
                     torch.npu.profiler.stop()
-                return
+                sys.exit()
 
             if args.warmup is not None:
                 lr_warmup(optim, args.warmup, iter_num, epoch, current_lr, args)
@@ -399,6 +407,7 @@ def train300_mlperf_coco(args):
                 print("No labels in batch")
                 continue
 
+            profile.start()
             ploc, plabel = ssd300(img)
             ploc, plabel = ploc.float(), plabel.float()
 
@@ -425,13 +434,13 @@ def train300_mlperf_coco(args):
 
                 avg_samples_per_sec = num_elapsed_samples * args.N_gpu / elapsed_time
 
-                print("Epoch:{:4d}, Iteration: {:6d}, Loss function: {:5.3f}, Average Loss: {:.3f}, avg. samples / sec: {:.2f}"\
-                            .format(epoch, iter_num, loss.item(), avg_loss, avg_samples_per_sec), end="\n")
+                print("Epoch:{:4d}, Iteration: {:6d}, Loss function: {:5.3f}, Average Loss: {:.3f},\
+                      avg. samples / sec: {:.2f}".format(epoch, iter_num, loss.item(),\
+                      avg_loss, avg_samples_per_sec), end="\n")
 
                 last_printed_iter = iter_num
                 start_elapsed_time = time.time()
                 num_elapsed_samples = 0
-
 
             with amp.scale_loss(loss, optim) as scaled_loss:
                 scaled_loss.backward()
@@ -439,12 +448,12 @@ def train300_mlperf_coco(args):
 
             optim.step()
 
-
             # Likely a decent skew here, let's take this opportunity to set the
             # gradients to None.  After DALI integration, playing with the
             # placement of this is worth trying.
 
             optim.zero_grad()
+            profile.end()
 
             # Don't check every iteration due to cost of broadcast
             if iter_num % 20 == 0:
@@ -455,18 +464,17 @@ def train300_mlperf_coco(args):
 
             iter_num += 1
 
-        #train_loader.reset()
         log_end(key=constants.EPOCH_STOP, metadata={'epoch_num': epoch + 1})
 
     return False
 
 def main():
-    # torch.multiprocessing.set_start_method('spawn')
     configure_logger(constants.SSD)
     log_start(key=constants.INIT_START, log_all_ranks=True)
     args = parse_args()
     sys.stdout = Logger("test/output/%s/%s_%s.log"%(args.device_id,args.tag,args.device_id))
-    sys.stderr = Logger("test/output/%s/%s_%s.log"%(args.device_id,args.tag,args.device_id))#1p
+    # 1p
+    sys.stderr = Logger("test/output/%s/%s_%s.log"%(args.device_id,args.tag,args.device_id))
     if args.local_rank == 0:
         print(args)
 
@@ -488,6 +496,7 @@ def main():
 
 if __name__ == "__main__":
     option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,BNTrainingUpdate,BNTrainingUpdateGrad"
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,
+                                             BNTrainingUpdate,BNTrainingUpdateGrad"
     torch.npu.set_option(option)
     main()

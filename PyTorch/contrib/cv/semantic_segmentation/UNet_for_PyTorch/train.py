@@ -32,9 +32,9 @@ import shutil
 import time
 import warnings
 from glob import glob
+from collections import OrderedDict
 from albumentations.augmentations.functional import optical_distortion
 from tqdm import tqdm
-from collections import OrderedDict
 import numpy as np
 
 import torch
@@ -60,6 +60,19 @@ from sklearn.model_selection import train_test_split
 from utils import AverageMeter, str2bool
 from apex import amp
 from apex.optimizers import NpuFusedAdam
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 
 ARCH_NAMES = archs.__all__
@@ -237,7 +250,6 @@ def init_process_group(proc_rank, world_size, device_type="npu", port="29588", d
     print("Done init_process_group")
 
     # Set the GPU to use
-    #torch.cuda.set_device(proc_rank)
     if device_type == "npu":
         torch.npu.set_device(proc_rank)
     elif device_type == "gpu":
@@ -251,12 +263,12 @@ def train(config, train_loader, model, criterion, optimizer, epoch):
     if config['num_gpus'] > 1:
         batch_time = AverageMeter('Time', ':6.3f', start_count_index=3)
         data_time = AverageMeter('Data', ':6.3f', start_count_index=3)
-    losses = AverageMeter('Loss', ':6.8f')
+    train_losses = AverageMeter('Loss', ':6.8f')
     iou = AverageMeter('Iou', ':6.4f')
 
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses, iou],
+        [batch_time, data_time, train_losses, iou],
         prefix="Epoch: [{}]".format(epoch + 1))
 
     model.train()
@@ -264,48 +276,46 @@ def train(config, train_loader, model, criterion, optimizer, epoch):
     step = 0
     end = time.time()
     i = 0
-    for input, target, _ in train_loader:
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
+    for image, target, _ in train_loader:
         data_time.update(time.time() - end)
         step += 1
-        input = input.npu()
+        image= image.npu()
         target = target.npu()
 
-        if i <= config['stop_step'] and i >= config['start_step'] and config['profiling'] == 'CANN':
-            prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
-        elif i <= config['stop_step'] and i >= config['start_step'] and config['profiling'] == 'GE':
-            prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
+        profile.start()
+        # compute output
+        if config['deep_supervision']:
+            outputs = model(image)
+            loss = 0
+            for output in outputs:
+                loss += criterion(output, target)
+            loss /= len(outputs)
+            iou_now = iou_score(outputs[-1], target)
         else:
-            prof_manager = NoProfiling()
-        with prof_manager:
-            # compute output
-            if config['deep_supervision']:
-                outputs = model(input)
-                loss = 0
-                for output in outputs:
-                    loss += criterion(output, target)
-                loss /= len(outputs)
-                iou_now = iou_score(outputs[-1], target)
-            else:
-                output = model(input)
-                torch.npu.synchronize()
-                loss = criterion(output, target)
-                torch.npu.synchronize()
-                iou_now = iou_score(output, target)
-
-            losses.update(loss.item(), input.size(0))
-            iou.update(iou_now, input.size(0))
-
-            # compute gradient and do optimizing step
-            optimizer.zero_grad()
+            output = model(image)
             torch.npu.synchronize()
-            if config["amp"]:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-                    torch.npu.synchronize()
-            else:
-                loss.backward()
-            optimizer.step()
+            loss = criterion(output, target)
             torch.npu.synchronize()
+            iou_now = iou_score(output, target)
+
+        train_losses.update(loss.item(), image.size(0))
+        iou.update(iou_now, image.size(0))
+
+        # compute gradient and do optimizing step
+        optimizer.zero_grad()
+        torch.npu.synchronize()
+        if config["amp"]:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+                torch.npu.synchronize()
+        else:
+            loss.backward()
+        optimizer.step()
+        torch.npu.synchronize()
+        profile.end()
         i = i + 1
 
         batch_time.update(time.time() - end)
@@ -318,16 +328,17 @@ def train(config, train_loader, model, criterion, optimizer, epoch):
 
     if config['num_gpus'] == 1 or (config['num_gpus'] > 1
                                                and config['rank_id'] % config['num_gpus'] == 0):
-        print("[npu id:", config['rank_id'], "]", '* FPS@all {:.3f}'.format(config['num_gpus'] * config['batch_size'] / (batch_time.avg * config['num_gpus'])))
+        print("[npu id:", config['rank_id'], "]", '* FPS@all {:.3f}'\
+              .format(config['num_gpus'] * config['batch_size'] / (batch_time.avg * config['num_gpus'])))
 
 
 def validate(config, val_loader, model, criterion):
     batch_time = AverageMeter('Time', ':6.3f')
-    losses = AverageMeter('Loss', ':.4e')
+    val_losses = AverageMeter('Loss', ':.4e')
     iou = AverageMeter('Iou', ':6.4f')
     progress = ProgressMeter(
         len(val_loader),
-        [batch_time, losses, iou],
+        [batch_time, val_losses, iou],
         prefix='Test: ')
 
     # switch to evaluate mode
@@ -336,28 +347,28 @@ def validate(config, val_loader, model, criterion):
     with torch.no_grad():
         step = 0
         end = time.time()
-        for input, target, _ in val_loader:
+        for image, target, _ in val_loader:
             step += 1
-            input = input.npu()
+            image = image.npu()
             target = target.npu()
 
             # compute output
             if config['deep_supervision']:
-                outputs = model(input)
+                outputs = model(image)
                 loss = 0
                 for output in outputs:
                     loss += criterion(output, target)
                 loss /= len(outputs)
                 iou_now = iou_score(outputs[-1], target)
             else:
-                output = model(input)
+                output = model(image)
                 torch.npu.synchronize()
                 loss = criterion(output, target)
                 torch.npu.synchronize()
                 iou_now = iou_score(output, target)
 
-            losses.update(loss.item(), input.size(0))
-            iou.update(iou_now, input.size(0))
+            val_losses.update(loss.item(), image.size(0))
+            iou.update(iou_now, image.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -441,7 +452,8 @@ def main():
         raise NotImplementedError
 
     if config["amp"]:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=config["opt_level"], loss_scale=config["loss_scale"], combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=config["opt_level"], \
+                                          loss_scale=config["loss_scale"], combine_grad=True)
 
     if config["num_gpus"] > 1:
         #Make model replica operate on the current device
@@ -455,7 +467,9 @@ def main():
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, factor=config['factor'], patience=config['patience'],
                                                    verbose=1, min_lr=config['min_lr'])
     elif config['scheduler'] == 'MultiStepLR':
-        scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[int(e) for e in config['milestones'].split(',')], gamma=config['gamma'])
+        scheduler = lr_scheduler.MultiStepLR(optimizer,
+                                             milestones=[int(e) for e in config['milestones'].split(',')],
+                                             gamma=config['gamma'])
     elif config['scheduler'] == 'ConstantLR':
         scheduler = None
     else:
@@ -517,17 +531,12 @@ def main():
         val_dataset,
         batch_size=int(config['batch_size'] / config['num_gpus']),
         shuffle=False,
-        #sampler=val_sampler,
         num_workers=int(config['num_workers'] / config['num_gpus']),
         drop_last=False)
 
     if config['evaluate']:
         val_iou = validate(config, val_loader, model, criterion)
         return
-
-    #if config['profile']:
-    #    profiling(train_loader, model, criterion, optimizer, loc, config)
-    #    return
 
     best_iou = 0
     trigger = 0

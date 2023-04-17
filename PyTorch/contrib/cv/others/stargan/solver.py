@@ -32,8 +32,21 @@ from apex import amp
 import math
 from averageMeter import AverageMeter
 import matplotlib.pyplot as plt
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
 
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 import sys
+
 def flush_print(func):
     def new_print(*args, **kwargs):
         func(*args, **kwargs)
@@ -274,6 +287,11 @@ class Solver(object):
             # =================================================================================== #
             #                             1. Preprocess input data                                #
             # =================================================================================== #
+            profile_g = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                              profile_type=os.getenv('PROFILE_TYPE'))
+            profile_d = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                              profile_type=os.getenv('PROFILE_TYPE'))
+
             for iters, (x_real, label_org) in enumerate(self.data_loader):
                 
                 if iters == 5:
@@ -297,61 +315,33 @@ class Solver(object):
             #                             2. Train the discriminator                              #
             # =================================================================================== #
 
-            # Compute loss with real images.
-                if not self.distributed:
-                    with torch.autograd.profiler.profile(use_npu=True) as prof:  
-                        out_src, out_cls = self.D(x_real)
-                        d_loss_real = - torch.mean(out_src)
-                        d_loss_cls = self.classification_loss(out_cls, label_org)
+                # Compute loss with real images.
+                profile_d.start()
+                out_src, out_cls = self.D(x_real)
+                d_loss_real = - torch.mean(out_src)
+                d_loss_cls = self.classification_loss(out_cls, label_org)
 
-                        # Compute loss with fake images.
-                        x_fake = self.G(x_real, c_trg)
-                        out_src, out_cls = self.D(x_fake.detach())
-                        d_loss_fake = torch.mean(out_src)
+                # Compute loss with fake images.
+                x_fake = self.G(x_real, c_trg)
+                out_src, out_cls = self.D(x_fake.detach())
+                d_loss_fake = torch.mean(out_src)
 
-                        # Compute loss for gradient penalty.
-                        alpha = torch.rand(x_real.size(0), 1, 1, 1).to(loc)
-                        x_hat = (alpha * x_real.data + (1 - alpha) * x_fake.data).requires_grad_(True)
-                        out_src, _ = self.D(x_hat)
-                        d_loss_gp = self.gradient_penalty(out_src, x_hat, loc)
+                # Compute loss for gradient penalty.
+                alpha = torch.rand(x_real.size(0), 1, 1, 1).to(loc)
+                x_hat = (alpha * x_real.data + (1 - alpha) * x_fake.data).requires_grad_(True)
+                out_src, _ = self.D(x_hat)
+                d_loss_gp = self.gradient_penalty(out_src, x_hat, loc)
 
-                        # Backward and optimize.
-                        d_loss = d_loss_real + d_loss_fake + self.lambda_cls * d_loss_cls + self.lambda_gp * d_loss_gp
-                        self.reset_grad()
-                        if self.amp:
-                            with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
-                                scaled_loss.backward()  
-                        else:
-                            d_loss.backward()
-                        self.d_optimizer.step()
-
-                    # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-                    prof.export_chrome_trace("StarGAN_npu1p.prof")
-                else :
-                    out_src, out_cls = self.D(x_real)
-                    d_loss_real = - torch.mean(out_src)
-                    d_loss_cls = self.classification_loss(out_cls, label_org)
-
-                    # Compute loss with fake images.
-                    x_fake = self.G(x_real, c_trg)
-                    out_src, out_cls = self.D(x_fake.detach())
-                    d_loss_fake = torch.mean(out_src)
-
-                    # Compute loss for gradient penalty.
-                    alpha = torch.rand(x_real.size(0), 1, 1, 1).to(loc)
-                    x_hat = (alpha * x_real.data + (1 - alpha) * x_fake.data).requires_grad_(True)
-                    out_src, _ = self.D(x_hat)
-                    d_loss_gp = self.gradient_penalty(out_src, x_hat, loc)
-
-                    # Backward and optimize.
-                    d_loss = d_loss_real + d_loss_fake + self.lambda_cls * d_loss_cls + self.lambda_gp * d_loss_gp
-                    self.reset_grad()
-                    if self.amp:
-                        with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
-                            scaled_loss.backward()  
-                    else:
-                        d_loss.backward()
-                    self.d_optimizer.step()
+                # Backward and optimize.
+                d_loss = d_loss_real + d_loss_fake + self.lambda_cls * d_loss_cls + self.lambda_gp * d_loss_gp
+                self.reset_grad()
+                if self.amp:
+                    with amp.scale_loss(d_loss, self.d_optimizer) as scaled_loss:
+                        scaled_loss.backward()  
+                else:
+                    d_loss.backward()
+                self.d_optimizer.step()
+                profile_d.end()
 
                 # Logging.
                 loss = {}
@@ -363,49 +353,27 @@ class Solver(object):
             # =================================================================================== #
             
                 if (iters+1) % self.n_critic == 0:
-                    if not self.distributed:
-                        with torch.autograd.profiler.profile(use_npu=True) as prof:  
-                            # Original-to-target domain.
-                            x_fake = self.G(x_real, c_trg)
-                            out_src, out_cls = self.D(x_fake)
-                            g_loss_fake = - torch.mean(out_src)
-                            g_loss_cls = self.classification_loss(out_cls, label_trg)
+                    profile_g.start()
+                    # Original-to-target domain.
+                    x_fake = self.G(x_real, c_trg)
+                    out_src, out_cls = self.D(x_fake)
+                    g_loss_fake = - torch.mean(out_src)
+                    g_loss_cls = self.classification_loss(out_cls, label_trg)
 
-                            # Target-to-original domain.
-                            x_reconst = self.G(x_fake, c_org)
-                            g_loss_rec = torch.mean(torch.abs(x_real - x_reconst))
+                    # Target-to-original domain.
+                    x_reconst = self.G(x_fake, c_org)
+                    g_loss_rec = torch.mean(torch.abs(x_real - x_reconst))
 
-                            # Backward and optimize.
-                            g_loss = g_loss_fake + self.lambda_rec * g_loss_rec + self.lambda_cls * g_loss_cls
-                            self.reset_grad()
-                            if self.amp:
-                                with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
-                                    scaled_loss.backward()
-                            else:
-                                g_loss.backward()
-                            self.g_optimizer.step()
-                        # print(prof.key_averages().table(sort_by="self_cpu_time_total"))
-                        prof.export_chrome_trace("StarGAN_npu1p.prof")
+                    # Backward and optimize.
+                    g_loss = g_loss_fake + self.lambda_rec * g_loss_rec + self.lambda_cls * g_loss_cls
+                    self.reset_grad()
+                    if self.amp:
+                        with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
+                            scaled_loss.backward()
                     else:
-                        # Original-to-target domain.
-                        x_fake = self.G(x_real, c_trg)
-                        out_src, out_cls = self.D(x_fake)
-                        g_loss_fake = - torch.mean(out_src)
-                        g_loss_cls = self.classification_loss(out_cls, label_trg)
-
-                        # Target-to-original domain.
-                        x_reconst = self.G(x_fake, c_org)
-                        g_loss_rec = torch.mean(torch.abs(x_real - x_reconst))
-
-                        # Backward and optimize.
-                        g_loss = g_loss_fake + self.lambda_rec * g_loss_rec + self.lambda_cls * g_loss_cls
-                        self.reset_grad()
-                        if self.amp:
-                            with amp.scale_loss(g_loss, self.g_optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            g_loss.backward()
-                        self.g_optimizer.step()
+                        g_loss.backward()
+                    self.g_optimizer.step()
+                    profile_g.end()
 
                     # Logging.
                     loss["G Loss"] = g_loss.item()

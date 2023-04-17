@@ -42,6 +42,19 @@ from timm.utils import ApexScaler
 from timm.data import create_dataset,create_loader,resolve_data_config,Mixup, FastCollateMixup, AugMixDataset
 from timm.models import model_parameters, create_model
 from collections import OrderedDict
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data_dir', metavar='DIR',
@@ -418,14 +431,6 @@ def main_worker(gpu, ngpus_per_node, args):
         scriptable=args.torchscript,
         checkpoint_path=args.initial_checkpoint)
         data_config = resolve_data_config(vars(args), model=model, verbose=args.local_rank == 0)
-        #model = timm.create_model("vit_base_patch32_224_in21k",pretrained=True,num_classes=1000)
-        #print("loading model of yours...")
-        #pretrained_dict = torch.load("./model_best.pth.tar", map_location="cpu")["state_dict"]
-        #model.load_state_dict({k.replace('module.',''):v for k, v in pretrained_dict.items()})
-        #if "fc.weight" in pretrained_dict:
-        #    pretrained_dict.pop('fc.weight')
-        #    pretrained_dict.pop('fc.bias')
-        #model.load_state_dict(pretrained_dict, strict=False)
     else:
         print("=> creating model vit_base_patch32")
         model = model = timm.create_model("vit_base_patch32_224",num_classes=1000)
@@ -703,6 +708,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
     model.train()
 
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -715,6 +723,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
             images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
 
+        profile.start()
         # compute output
         output = model(images)
         loss = criterion(output, target)
@@ -738,6 +747,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
             optimizer.step()
         if args.device == 'npu':
             torch.npu.synchronize()
+        profile.end()
 
         # measure elapsed time
         cost_time = time.time() - end
