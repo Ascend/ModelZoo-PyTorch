@@ -43,6 +43,19 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import models
 from models import resnet_0_6_0
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -292,8 +305,6 @@ def main_worker(gpu, ngpus_per_node, args):
             # When using a single GPU per process and per
             # DistributedDataParallel, we need to divide the batch size
             # ourselves based on the total number of GPUs we have
-            # args.batch_size = int(args.batch_size / ngpus_per_node)
-            # args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
             if args.pretrained:
                 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False,
                                                                   find_unused_parameters=True)
@@ -495,6 +506,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
     model.train()
 
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -507,6 +521,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
             images = images.cuda(args.gpu, non_blocking=True)
             target = target.cuda(args.gpu, non_blocking=True)
 
+        profile.start()
         # compute output
         output = model(images)
         loss = criterion(output, target)
@@ -522,6 +537,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
         optimizer.step()
+        profile.end()
         cost_time = time.time() - end
         batch_time.update(cost_time)
         end = time.time()

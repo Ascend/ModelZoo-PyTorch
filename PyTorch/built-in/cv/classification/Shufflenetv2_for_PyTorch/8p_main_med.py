@@ -43,6 +43,19 @@ import apex
 from apex import amp
 from multi_epochs_dataloader import MultiEpochsDataLoader
 import pretrained_model_loader
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 OPTIMIZER_BATCH_SIZE = 2048
 model_names = sorted(name for name in models.__dict__
@@ -344,6 +357,9 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
 
     steps_per_epoch = train_loader_len
     print('==========step per epoch======================', steps_per_epoch)
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -352,6 +368,7 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
         images = images.to(loc, non_blocking=True).to(torch.float).sub(mean).div(std)
         target = target.to(loc, non_blocking=True)
 
+        profile.start()
         # compute output
         output = model(images)
         loss = criterion(output, target)
@@ -386,6 +403,7 @@ def train(train_loader, train_loader_len, model, criterion, optimizer, epoch, ar
                         param.grad /= BATCH_SIZE_multiplier
                 optimizer.step()
                 optimizer.zero_grad()
+        profile.end()
         stream = torch.npu.current_stream()
         stream.synchronize()
 

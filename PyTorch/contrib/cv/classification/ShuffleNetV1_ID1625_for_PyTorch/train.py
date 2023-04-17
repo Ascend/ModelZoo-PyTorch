@@ -20,22 +20,33 @@
 
 
 import os
+import warnings
+import argparse
+import time
+import random
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-if torch.__version__ >= '1.8':
-    import torch_npu
 import apex
 from apex import amp
-import argparse
 import torch.nn as nn
-import time
-import warnings
-import random
 import torch.distributed as dist
 from network import ShuffleNetV1
 from utils import accuracy, AvgrageMeter, CrossEntropyLabelSmooth, save_checkpoint, get_lastest_model, get_parameters
 from utils import get_pytorch_train_loader, get_pytorch_val_loader, adjust_learning_rate
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 warnings.filterwarnings('ignore')
 best_acc1 = 0
@@ -236,6 +247,9 @@ def train(model, device, args, epoch, bn_process=False):
     std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1)
     mean = mean.to(device, non_blocking=True)
     std = std.to(device, non_blocking=True)
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for iters, (data, target) in enumerate(train_loader):
         if bn_process:
             adjust_bn_momentum(model, iters)
@@ -245,12 +259,14 @@ def train(model, device, args, epoch, bn_process=False):
         data = data.to(device, non_blocking=True).to(torch.float).sub(mean).div(std)
         target = target.to(device, non_blocking=True)
         handle_data_time = time.time() - d_st
+        profile.start()
         output = model(data)
         loss = loss_function(output, target)
         optimizer.zero_grad()
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
         optimizer.step()
+        profile.end()
         prec1, prec5 = accuracy(output, target, topk=(1, 5))
         torch.npu.synchronize()
         train_time = time.time() - d_st

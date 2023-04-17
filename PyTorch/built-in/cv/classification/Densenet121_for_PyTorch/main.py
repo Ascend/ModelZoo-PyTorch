@@ -39,6 +39,19 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 from densenet_0_2_2 import densenet121
 from apex import amp
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 BATCH_SIZE = 512
 OPTIMIZER_BATCH_SIZE = 2048
@@ -382,6 +395,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
     end = time.time()
     if args.benchmark == 1:
         optimizer.zero_grad()
+
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         if i > 1000 and args.perf:
@@ -392,6 +409,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         target = target.to(torch.int32)
         images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False).to(torch.int32)
 
+        profile.start()
         # compute output
         output = model(images)
 
@@ -424,6 +442,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
                         param.grad /= BATCH_SIZE_multiplier
                 optimizer.step()
                 optimizer.zero_grad()
+        profile.end()
 
         if i < 11 or i % args.print_freq == 0:
             if not args.multiprocessing_distributed or (args.multiprocessing_distributed
