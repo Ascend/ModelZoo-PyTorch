@@ -8,12 +8,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import time
 import logging
 import sys
 import torch
 from apex import amp
 from core.evaluate import accuracy
+from torch_npu.utils.profiler import Profile
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,9 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
     list2 = []
     list3 = []
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (input, target) in enumerate(train_loader):
         if stop_step:
             # reduce time for 1p perf test
@@ -42,6 +47,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
         # measure data loading time
         data_time.update(time.time() - end)
         start_time = time.time()
+        profile.start()
         # compute output
         input = input.npu()
         output = model(input)
@@ -55,6 +61,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
         with amp.scale_loss(loss, optimizer) as scaled_loss:
             scaled_loss.backward()
         optimizer.step()
+        profile.end()
 
         # measure accuracy and record loss
         losses.update(loss.item(), input.size(0))

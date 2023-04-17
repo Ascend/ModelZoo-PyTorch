@@ -37,6 +37,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 from inception import inception_v3
+from torch_npu.utils.profiler import Profile
 
 from apex import amp
 import apex
@@ -389,6 +390,9 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
             and args.rank % ngpus_per_node == 0):
         print('==========step per epoch======================', steps_per_epoch)
 
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
@@ -396,6 +400,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
         target = target.to(torch.int32)
         images, target = images.to(loc, non_blocking=False), target.to(loc, non_blocking=False)
 
+        profile.start()
         # compute output
         loss,output = get_loss(model, target, images, criterion)
         # measure accuracy and record loss
@@ -413,6 +418,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, ngpus_per_node
 
         optimizer.step()
         optimizer.zero_grad()
+        profile.end()
         fps.update(args.batch_size/(time.time() - end))
 
         if i % args.print_freq == 0:

@@ -20,6 +20,7 @@ import torch
 
 import util.misc as misc
 import util.lr_sched as lr_sched
+from torch_npu.utils.profiler import Profile
 
 def train_one_epoch(model: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
@@ -41,6 +42,9 @@ def train_one_epoch(model: torch.nn.Module,
         print('log_dir: {}'.format(log_writer.log_dir))
 
     start_FPS = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+
     for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         if os.environ.get("CONTROL_STEPS"):
             if data_iter_step > int(os.environ.get("CONTROL_STEPS")):
@@ -55,6 +59,7 @@ def train_one_epoch(model: torch.nn.Module,
 
         samples = samples.to(device, non_blocking=True)
 
+        profile.start()
         with amp_autocast():
             loss, _, _ = model(samples, mask_ratio=args.mask_ratio)
 
@@ -71,6 +76,7 @@ def train_one_epoch(model: torch.nn.Module,
             optimizer.zero_grad()
 
         torch.npu.synchronize()
+        profile.end()
 
         metric_logger.update(loss=loss_value)
 
