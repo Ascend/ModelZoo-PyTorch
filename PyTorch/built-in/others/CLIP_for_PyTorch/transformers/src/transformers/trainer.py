@@ -133,6 +133,19 @@ from .trainer_utils import (
 from .training_args import OptimizerNames, ParallelMode, TrainingArguments
 from .utils import logging
 from .utils.npu_module import clip_optimizer_grad_norm_fused, Data_prefetcher
+try:
+    from torch_npu.utils.profiler import Profile
+except:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 _is_torch_generator_available = False
 _is_native_amp_available = False
@@ -969,7 +982,8 @@ class Trainer:
         for key, value in params.items():
             if not hasattr(self.args, key):
                 logger.warning(
-                    f"Trying to set {key} in the hyperparameter search but there is no corresponding field in `TrainingArguments`."
+                    f"Trying to set {key} in the hyperparameter search \
+                      but there is no corresponding field in `TrainingArguments`."
                 )
                 continue
             old_attr = getattr(self.args, key, None)
@@ -1053,9 +1067,13 @@ class Trainer:
         # Mixed precision training with apex (torch < 1.6)
         if self.use_apex:
             if training:
-                model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level, loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
+                model, self.optimizer = amp.initialize(model, self.optimizer,
+                                                       opt_level=self.args.fp16_opt_level,
+                                                       loss_scale=self.args.loss_scale,
+                                                       combine_grad=self.args.use_combine_grad)
             elif self.optimizer is None:
-                model = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level, loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
+                model = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level,
+                                       loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
 
         # Multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
@@ -1234,7 +1252,8 @@ class Trainer:
             else:
                 max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
                 num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = len(self.train_dataset) * args.num_train_epochs - (args.skip_steps * total_train_batch_size)
+                num_train_samples = len(self.train_dataset) * args.num_train_epochs - \
+                                    (args.skip_steps * total_train_batch_size)
         else:
             # see __init__. max_steps is set when the dataset has no __len__
             max_steps = args.max_steps
@@ -1248,7 +1267,8 @@ class Trainer:
                 # nn.DataParallel(model) replicates the model, creating new variables and module
                 # references registered here no longer work on other gpus, breaking the module
                 raise ValueError(
-                    "Currently --debug underflow_overflow is not supported under DP. Please use DDP (torch.distributed.launch)."
+                    "Currently --debug underflow_overflow is not supported under DP.
+                     Please use DDP (torch.distributed.launch)."
                 )
             else:
                 debug_overflow = DebugUnderflowOverflow(self.model)  # noqa
@@ -1403,6 +1423,9 @@ class Trainer:
             # for step, inputs in enumerate(epoch_iterator): # replaced by prefetcher
             prefetcher = Data_prefetcher(epoch_iterator, args.device)
             inputs = prefetcher.next()
+            profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                              profile_type=os.getenv('PROFILE_TYPE'))
+
             while inputs:
                 step += 1
                 if epoch == 0 and step == args.skip_steps:
@@ -1422,6 +1445,7 @@ class Trainer:
                 if step % args.gradient_accumulation_steps == 0:
                     self.control = self.callback_handler.on_step_begin(args, self.state, self.control)
 
+                profile.start()
                 if (
                     ((step + 1) % args.gradient_accumulation_steps != 0)
                     and args.local_rank != -1
@@ -1445,7 +1469,8 @@ class Trainer:
 
                 self.current_flos += float(self.floating_point_ops(inputs))
 
-                # Optimizer step for deepspeed must be called on every step regardless of the value of gradient_accumulation_steps
+                # Optimizer step for deepspeed must be called on every step
+                # regardless of the value of gradient_accumulation_steps
                 if self.deepspeed:
                     self.deepspeed.step()
 
@@ -1511,6 +1536,7 @@ class Trainer:
                     self._maybe_log_save_evaluate(tr_loss, model, trial, epoch, ignore_keys_for_eval)
                 else:
                     self.control = self.callback_handler.on_substep_end(args, self.state, self.control)
+                profile.end()
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
