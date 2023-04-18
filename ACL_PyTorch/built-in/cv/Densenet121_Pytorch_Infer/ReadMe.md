@@ -118,7 +118,7 @@ Densenet 针对 Resnet 的冗余结构提出了改进：让网络中的每一层
 
    1. 获取权重文件。
 
-       从开源仓获取权重文件[densenet121-a639ec97.pth](*https://download.pytorch.org/models/densenet121-a639ec97.pth*)
+       从开源仓获取权重文件[densenet121-a639ec97.pth](https://download.pytorch.org/models/densenet121-a639ec97.pth)
 
    2. 导出onnx文件。
 
@@ -234,9 +234,9 @@ Densenet 针对 Resnet 的冗余结构提出了改进：让网络中的每一层
 
 | 芯片型号    | Batch Size | 数据集   | 精度指标1（Acc@1） | 精度指标2（Acc@5） | 性能（FPS） |
 | ----------- | ---------- | -------- | ------------------ | ------------------ | ----------- |
-| Ascend310P3 | 1          | ImageNet | 71.43              | 91.96              | 1147.06     |
-| Ascend310P3 | 4          | ImageNet | 71.43              | 91.96              | 2125.39     |
-| Ascend310P3 | 8          | ImageNet | 71.43              | 91.96              | 2368.25     |
-| Ascend310P3 | 16         | ImageNet | 71.43              | 91.96              | 1739.55     |
-| Ascend310P3 | 32         | ImageNet | 71.43              | 91.96              | 1452.45     |
-| Ascend310P3 | 64         | ImageNet | 71.43              | 91.96              | 1277.14     |
+| Ascend310P3 | 1          | ImageNet | 74.43              | 91.96              | 1147.06     |
+| Ascend310P3 | 4          | ImageNet | 74.43              | 91.96              | 2125.39     |
+| Ascend310P3 | 8          | ImageNet | 74.43              | 91.96              | 2368.25     |
+| Ascend310P3 | 16         | ImageNet | 74.43              | 91.96              | 1739.55     |
+| Ascend310P3 | 32         | ImageNet | 74.43              | 91.96              | 1452.45     |
+| Ascend310P3 | 64         | ImageNet | 74.43              | 91.96              | 1277.14     |
